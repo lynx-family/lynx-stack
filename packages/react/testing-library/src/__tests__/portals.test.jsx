@@ -217,6 +217,9 @@ describe('createPortal (useRef + useEffect)', () => {
   });
 
   it('moves children when the target container changes', () => {
+    vi.spyOn(lynx.getNativeApp(), 'callLepusMethod');
+    const callLepusMethodCalls = lynx.getNativeApp().callLepusMethod.mock.calls;
+
     let swap;
     function App() {
       const aHostRef = useRef(null);
@@ -243,9 +246,84 @@ describe('createPortal (useRef + useEffect)', () => {
     expect(getByTestId('a')).toContainElement(getByTestId('p'));
     expect(getByTestId('b')).not.toContainElement(getByTestId('p'));
 
+
+    {
+      const snapshotPatch = JSON.parse(callLepusMethodCalls[0][1]['data']).patchList[0].snapshotPatch;
+      const formattedSnapshotPatch = prettyFormatSnapshotPatch(snapshotPatch);
+      expect(formattedSnapshotPatch).toMatchInlineSnapshot(`
+        [
+          {
+            "id": 2,
+            "op": "CreateElement",
+            "type": "__snapshot_73047_test_15",
+          },
+          {
+            "id": 2,
+            "op": "SetAttributes",
+            "values": [
+              1,
+              1,
+            ],
+          },
+          {
+            "beforeId": null,
+            "childId": 2,
+            "op": "InsertBefore",
+            "parentId": -1,
+            "slotIndex": 0,
+          },
+          {
+            "id": 3,
+            "op": "CreateElement",
+            "type": "__snapshot_73047_test_16",
+          },
+          {
+            "beforeId": null,
+            "childId": 3,
+            "identifier": "[react-ref-2-0]",
+            "op": "nodesRefInsertBefore",
+          },
+        ]
+      `);
+    }
+
     act(() => swap());
     expect(getByTestId('b')).toContainElement(getByTestId('p'));
     expect(getByTestId('a')).not.toContainElement(getByTestId('p'));
+
+
+    {
+      const snapshotPatch = JSON.parse(callLepusMethodCalls[1][1]['data']).patchList[0].snapshotPatch;
+      const formattedSnapshotPatch = prettyFormatSnapshotPatch(snapshotPatch);
+      expect(formattedSnapshotPatch).toMatchInlineSnapshot(`
+        [
+          {
+            "childId": 3,
+            "identifier": "[react-ref-2-0]",
+            "op": "nodesRefRemoveChild",
+          },
+        ]
+      `);
+    }
+    {
+      const snapshotPatch = JSON.parse(callLepusMethodCalls[2][1]['data']).patchList[0].snapshotPatch;
+      const formattedSnapshotPatch = prettyFormatSnapshotPatch(snapshotPatch);
+      expect(formattedSnapshotPatch).toMatchInlineSnapshot(`
+        [
+          {
+            "id": 4,
+            "op": "CreateElement",
+            "type": "__snapshot_73047_test_16",
+          },
+          {
+            "beforeId": null,
+            "childId": 4,
+            "identifier": "[react-ref-2-1]",
+            "op": "nodesRefInsertBefore",
+          },
+        ]
+      `);
+    }
   });
 });
 
