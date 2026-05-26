@@ -2,6 +2,7 @@
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
 import fs from 'node:fs/promises'
+import { tmpdir } from 'node:os'
 import path from 'node:path'
 
 import type { RsbuildPlugin, Rspack } from '@rsbuild/core'
@@ -78,6 +79,12 @@ describe('Lazy', () => {
       const { pluginReactLynx } = await import('../src/pluginReactLynx.js')
       let backgroundJSContent = ''
 
+      // Isolate the dist root so this build cannot race other tests in this
+      // package writing to the default `test/dist/` directory.
+      const tmp = await fs.mkdtemp(
+        path.join(tmpdir(), 'rspeedy-react-test-lazy-standalone-'),
+      )
+
       const rsbuild = await createRspeedy({
         rspeedyConfig: {
           source: {
@@ -91,7 +98,7 @@ describe('Lazy', () => {
           },
           output: {
             distPath: {
-              root: './dist/standalone-lazy-bundle',
+              root: tmp,
             },
           },
           plugins: [
@@ -181,6 +188,12 @@ describe('Lazy', () => {
     const entryNamesOfBeforeEncode: string[][] = []
     let backgroundJSContent = ''
 
+    // Isolate the dist root so this build cannot race other tests in this
+    // package writing to the default `test/dist/` directory.
+    const tmp = await fs.mkdtemp(
+      path.join(tmpdir(), 'rspeedy-react-test-lazy-bundle-'),
+    )
+
     const rsbuild = await createRspeedy({
       rspeedyConfig: {
         source: {
@@ -193,7 +206,7 @@ describe('Lazy', () => {
         },
         output: {
           distPath: {
-            root: './dist/lazy-bundle',
+            root: tmp,
           },
         },
         plugins: [

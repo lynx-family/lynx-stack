@@ -9,13 +9,13 @@ a system prompt for an A2UI generation agent.
 Generate a system prompt with the built-in A2UI basic catalog:
 
 ```bash
-npx @lynx-js/a2ui-cli@latest generate prompt --out dist/a2ui-system-prompt.txt
+npx @lynx-js/a2ui-cli generate prompt --out dist/a2ui-system-prompt.txt
 ```
 
 Generate catalog artifacts for a custom catalog:
 
 ```bash
-npx @lynx-js/a2ui-cli@latest generate catalog \
+npx @lynx-js/a2ui-cli generate catalog \
   --catalog-dir src/catalog \
   --source src/functions \
   --out-dir dist/catalog
@@ -24,7 +24,7 @@ npx @lynx-js/a2ui-cli@latest generate catalog \
 Generate a system prompt for a custom catalog:
 
 ```bash
-npx @lynx-js/a2ui-cli@latest generate prompt \
+npx @lynx-js/a2ui-cli generate prompt \
   --catalog-dir dist/catalog \
   --catalog-id https://example.com/catalogs/custom/v1/catalog.json \
   --out dist/a2ui-system-prompt.txt
@@ -39,7 +39,8 @@ like `<Component>/catalog.json`.
 
 ### `generate catalog`
 
-Delegates catalog extraction to `@lynx-js/a2ui-catalog-extractor`.
+Uses the internal `@lynx-js/a2ui-catalog-extractor` engine. Keep user-facing
+scripts on `npx @lynx-js/a2ui-cli generate catalog`.
 
 Useful options:
 

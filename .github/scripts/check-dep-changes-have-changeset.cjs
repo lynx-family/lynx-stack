@@ -44,7 +44,15 @@ function findMissingChangesets({
   readCurrent,
   readBase,
 }) {
-  const willBump = new Set(releases.map((r) => r.name));
+  // `changeset status` lists every package in `releases`, including the ones
+  // that are not bumped (`type: 'none'`). Only the packages that are actually
+  // bumped ship their `package.json` change, so the rest must not be treated as
+  // covered by a changeset.
+  const willBump = new Set(
+    releases
+      .filter((r) => r.type && r.type !== 'none')
+      .map((r) => r.name),
+  );
   const missing = [];
   for (const file of changedFiles) {
     const cur = readCurrent(file);

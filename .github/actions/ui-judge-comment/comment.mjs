@@ -129,13 +129,17 @@ function normalizeResult(result, index) {
   }
 
   return {
+    demoId: stringValue(result.demoId),
     dimension: stringValue(result.dimension) || 'visual-correctness',
+    dimensionLabel: stringValue(result.dimensionLabel),
+    dimensions: normalizeDimensionResults(result.dimensions, index),
     error: normalizeError(result.error),
     reference: stringValue(result.reference),
     score: normalizeScore(result.score, index),
     steps: normalizeSteps(result.steps),
     task: stringValue(result.task),
     url: stringValue(result.url),
+    weight: normalizeWeight(result.weight, index),
   };
 }
 
@@ -147,6 +151,54 @@ function normalizeScore(value, index) {
     );
   }
   return Math.max(0, Math.min(5, Math.round(score)));
+}
+
+function normalizeDimensionResults(dimensions, resultIndex) {
+  if (!Array.isArray(dimensions)) return [];
+
+  return dimensions.map((dimensionResult, dimensionIndex) =>
+    normalizeDimensionResult(
+      dimensionResult,
+      `${resultIndex}.${dimensionIndex}`,
+    )
+  );
+}
+
+function normalizeDimensionResult(result, index) {
+  if (!result || typeof result !== 'object') {
+    throw new Error(
+      `UI Judge dimension result at index ${index} must be an object.`,
+    );
+  }
+
+  const dimension = stringValue(result.dimension);
+  if (!dimension) {
+    throw new Error(
+      `UI Judge dimension result at index ${index} is missing dimension.`,
+    );
+  }
+
+  return {
+    dimension,
+    dimensionLabel: stringValue(result.dimensionLabel) || dimension,
+    error: normalizeError(result.error),
+    score: normalizeScore(result.score, index),
+    steps: normalizeSteps(result.steps),
+    url: stringValue(result.url),
+    weight: normalizeWeight(result.weight, index),
+  };
+}
+
+function normalizeWeight(value, index) {
+  if (value === undefined || value === null || value === '') return undefined;
+
+  const weight = typeof value === 'number' ? value : Number(value);
+  if (!Number.isFinite(weight) || weight <= 0) {
+    throw new Error(
+      `UI Judge result at index ${index} has an invalid dimension weight.`,
+    );
+  }
+  return weight;
 }
 
 function normalizeError(error) {
@@ -169,16 +221,30 @@ function normalizeSteps(steps) {
 function formatComment({ marker, results, title }) {
   const average = results.reduce((sum, result) => sum + result.score, 0)
     / results.length;
-  const failedCount = results.filter((result) => result.error).length;
+  const dimensionColumns = buildDimensionColumns(results);
+  const weightedSummary = buildWeightedSummary(results);
+  const failedCount = results.filter((result) => hasResultError(result)).length;
   const runLink = getRunLink();
   const lines = [
     marker,
     `### ${escapeMarkdown(title)}`,
     '',
-    `Average score: **${formatScore(average)} / 5** across ${
-      pluralize(results.length, 'result')
-    }.`,
   ];
+
+  if (weightedSummary) {
+    lines.push(
+      `GEQI weighted score: **${
+        formatScore(weightedSummary.score)
+      } / 100** across ${pluralize(results.length, 'example')}.`,
+      `Average visual-correctness score: **${formatScore(average)} / 5**.`,
+    );
+  } else {
+    lines.push(
+      `Average score: **${formatScore(average)} / 5** across ${
+        pluralize(results.length, 'result')
+      }.`,
+    );
+  }
 
   if (failedCount > 0) {
     lines.push(
@@ -188,12 +254,27 @@ function formatComment({ marker, results, title }) {
     );
   }
 
-  lines.push(
-    '',
-    '| # | Dimension | Score | Page | Status |',
-    '| - | - | -: | - | - |',
-    ...results.map((result, index) => formatTableRow(result, index)),
-  );
+  if (weightedSummary) {
+    lines.push(
+      '',
+      '| Dimension | Weight | Average | Results | Status |',
+      '| - | -: | -: | -: | - |',
+      ...weightedSummary.dimensions.map((dimension) =>
+        formatDimensionSummaryRow(dimension)
+      ),
+    );
+  }
+
+  lines.push('');
+  if (dimensionColumns.length > 0) {
+    lines.push(...formatDimensionColumnTable(results, dimensionColumns));
+  } else {
+    lines.push(
+      '| # | Example | Dimension | Weight | Score | Page | Status |',
+      '| - | - | - | -: | -: | - | - |',
+      ...results.map((result, index) => formatTableRow(result, index)),
+    );
+  }
 
   const details = results
     .map((result, index) => formatResultDetails(result, index))
@@ -216,23 +297,234 @@ function formatComment({ marker, results, title }) {
   return lines.join('\n');
 }
 
+function hasResultError(result) {
+  return Boolean(result.error)
+    || result.dimensions.some((dimensionResult) => dimensionResult.error);
+}
+
+function buildDimensionColumns(results) {
+  const columns = new Map();
+  for (const result of results) {
+    for (const dimensionResult of result.dimensions) {
+      if (columns.has(dimensionResult.dimension)) continue;
+
+      columns.set(dimensionResult.dimension, {
+        dimension: dimensionResult.dimension,
+        label: dimensionResult.dimensionLabel || dimensionResult.dimension,
+        weight: dimensionResult.weight,
+      });
+    }
+  }
+  return [...columns.values()];
+}
+
+function buildWeightedSummary(results) {
+  const weightedResults = getWeightedDimensionResults(results);
+  if (weightedResults.length === 0) return undefined;
+
+  const dimensionsById = new Map();
+  for (const result of weightedResults) {
+    const existing = dimensionsById.get(result.dimension);
+    if (existing) {
+      existing.count += 1;
+      existing.errorCount += result.error ? 1 : 0;
+      existing.score += result.score;
+      continue;
+    }
+
+    dimensionsById.set(result.dimension, {
+      count: 1,
+      dimension: result.dimension,
+      errorCount: result.error ? 1 : 0,
+      label: result.dimensionLabel || result.dimension,
+      score: result.score,
+      weight: result.weight,
+    });
+  }
+
+  const dimensions = [...dimensionsById.values()].map((dimension) => ({
+    ...dimension,
+    average: dimension.score / dimension.count,
+  }));
+  const totalWeight = dimensions.reduce(
+    (sum, dimension) => sum + dimension.weight,
+    0,
+  );
+  if (totalWeight <= 0) return undefined;
+
+  return {
+    dimensions,
+    score: dimensions.reduce(
+      (sum, dimension) =>
+        sum + (dimension.average / 5) * (dimension.weight / totalWeight) * 100,
+      0,
+    ),
+  };
+}
+
+function getWeightedDimensionResults(results) {
+  const weightedResults = [];
+  for (const result of results) {
+    if (result.dimensions.length > 0) {
+      weightedResults.push(
+        ...result.dimensions.filter((dimensionResult) =>
+          dimensionResult.weight
+        ),
+      );
+      continue;
+    }
+
+    if (result.weight) {
+      weightedResults.push(result);
+    }
+  }
+  return weightedResults;
+}
+
+function formatDimensionSummaryRow(dimension) {
+  const status = dimension.errorCount > 0
+    ? `${dimension.errorCount} error${dimension.errorCount === 1 ? '' : 's'}`
+    : 'OK';
+  return [
+    escapeTableCell(dimension.label),
+    `${formatScore(dimension.weight)}%`,
+    `${formatScore(dimension.average)} / 5`,
+    String(dimension.count),
+    status,
+  ].join(' | ').replace(/^/, '| ').replace(/$/, ' |');
+}
+
+function formatDimensionColumnTable(results, dimensionColumns) {
+  const headers = [
+    '#',
+    'Example',
+    'Visual Correctness',
+    ...dimensionColumns.map((dimension) =>
+      formatDimensionColumnHeader(dimension)
+    ),
+    'GEQI',
+    'Page',
+    'Status',
+  ];
+  const alignment = [
+    '-',
+    '-',
+    '-:',
+    ...dimensionColumns.map(() => '-:'),
+    '-:',
+    '-',
+    '-',
+  ];
+
+  return [
+    formatTableLine(headers),
+    formatTableLine(alignment),
+    ...results.map((result, index) =>
+      formatDimensionColumnTableRow(result, index, dimensionColumns)
+    ),
+  ];
+}
+
+function formatDimensionColumnHeader(dimension) {
+  const weight = dimension.weight ? ` (${formatScore(dimension.weight)}%)` : '';
+  return `${dimension.label}${weight}`;
+}
+
+function formatDimensionColumnTableRow(result, index, dimensionColumns) {
+  const page = result.url
+    ? `[preview](${sanitizeUrlForMarkdown(result.url)})`
+    : 'n/a';
+  const status = hasResultError(result) ? 'Error' : 'OK';
+  return formatTableLine([
+    String(index + 1),
+    result.demoId || 'n/a',
+    `${result.score} / 5`,
+    ...dimensionColumns.map((dimension) =>
+      formatDimensionScoreCell(result, dimension)
+    ),
+    formatGeqiScoreCell(result.dimensions),
+    page,
+    status,
+  ]);
+}
+
+function formatDimensionScoreCell(result, dimension) {
+  const dimensionResult = result.dimensions.find((candidate) =>
+    candidate.dimension === dimension.dimension
+  );
+  if (!dimensionResult) return 'n/a';
+  return `${dimensionResult.score} / 5`;
+}
+
+function formatGeqiScoreCell(dimensions) {
+  const geqiScore = calculateGeqiScore(dimensions);
+  return geqiScore === undefined ? 'n/a' : `${formatScore(geqiScore)} / 100`;
+}
+
+function calculateGeqiScore(dimensions) {
+  const weightedDimensions = dimensions.filter((dimension) => dimension.weight);
+  const totalWeight = weightedDimensions.reduce(
+    (sum, dimension) => sum + dimension.weight,
+    0,
+  );
+  if (totalWeight <= 0) return undefined;
+
+  return weightedDimensions.reduce(
+    (sum, dimension) =>
+      sum + (dimension.score / 5) * (dimension.weight / totalWeight) * 100,
+    0,
+  );
+}
+
 function formatTableRow(result, index) {
   const page = result.url
     ? `[preview](${sanitizeUrlForMarkdown(result.url)})`
     : 'n/a';
-  const status = result.error ? 'Error' : 'OK';
-  return [
+  const status = hasResultError(result) ? 'Error' : 'OK';
+  return formatTableLine([
     String(index + 1),
-    escapeTableCell(result.dimension),
+    result.demoId || 'n/a',
+    result.dimensionLabel || result.dimension,
+    result.weight ? `${formatScore(result.weight)}%` : 'n/a',
     `${result.score} / 5`,
     page,
     status,
-  ].join(' | ').replace(/^/, '| ').replace(/$/, ' |');
+  ]);
 }
 
 function formatResultDetails(result, index) {
   const lines = [`#### Result ${index + 1}`, ''];
 
+  if (result.demoId) {
+    lines.push(`- Example: ${truncateText(result.demoId)}`);
+  }
+  if (result.dimensionLabel || result.dimension) {
+    lines.push(
+      `- Dimension: ${truncateText(result.dimensionLabel || result.dimension)}`,
+    );
+  }
+  if (result.weight) {
+    lines.push(`- Weight: ${formatScore(result.weight)}%`);
+  }
+  lines.push(`- Visual correctness: ${result.score} / 5`);
+  if (result.dimensions.length > 0) {
+    lines.push(
+      '- GEQI dimensions:',
+      ...result.dimensions.map((dimensionResult) =>
+        `  - ${
+          truncateText(dimensionResult.dimensionLabel)
+        }: ${dimensionResult.score} / 5${
+          dimensionResult.weight
+            ? ` (${formatScore(dimensionResult.weight)}%)`
+            : ''
+        }${
+          dimensionResult.error
+            ? `, error: ${truncateText(dimensionResult.error.message)}`
+            : ''
+        }`
+      ),
+    );
+  }
   if (result.task) {
     lines.push(`- Task: ${truncateText(result.task)}`);
   }
@@ -387,6 +679,13 @@ function pluralize(count, word) {
 
 function escapeTableCell(value) {
   return escapeMarkdown(value).replaceAll('|', '\\|');
+}
+
+function formatTableLine(values) {
+  return values.map((value) => escapeTableCell(value)).join(' | ').replace(
+    /^/,
+    '| ',
+  ).replace(/$/, ' |');
 }
 
 function escapeMarkdown(value) {

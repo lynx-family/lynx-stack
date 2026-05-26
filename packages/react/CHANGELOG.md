@@ -1,5 +1,13 @@
 # @lynx-js/react
 
+## 0.121.1
+
+### Patch Changes
+
+- Disable vnode reuse of different slot index in preact's diff, fixing a bug that `__RemoveElement` was called with mismatched parent and child element. ([#2664](https://github.com/lynx-family/lynx-stack/pull/2664))
+
+- Fix list update indices when existing items are updated after inserting siblings before them. ([#2518](https://github.com/lynx-family/lynx-stack/pull/2518))
+
 ## 0.121.0
 
 ### Minor Changes

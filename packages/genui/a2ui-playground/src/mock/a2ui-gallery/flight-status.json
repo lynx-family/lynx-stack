@@ -130,7 +130,7 @@
               },
               "returnType": "string"
             },
-            "variant": "h3"
+            "variant": "h4"
           },
           {
             "id": "status-col",
@@ -177,7 +177,7 @@
               },
               "returnType": "string"
             },
-            "variant": "h3"
+            "variant": "h4"
           }
         ]
       }

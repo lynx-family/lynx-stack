@@ -13,40 +13,51 @@ export function createGenUIGuideReadmeDocs(options: {
   en: SidebarGroup;
   zh: SidebarGroup;
 } {
-  const packageRoot = path.join(
+  const a2uiPackageRoot = path.join(
     options.repositoryRoot,
-    'packages/genui/a2ui-catalog-extractor',
+    'packages/genui/a2ui',
   );
 
   syncReadme({
-    languageSwitch:
-      'English | <a href="/zh/guide/genui/a2ui-catalog-extractor">简体中文</a>',
+    languageSwitch: 'English | <a href="/zh/guide/genui/a2ui">简体中文</a>',
     outFile: path.join(
       options.websiteRoot,
-      'docs/en/guide/genui/a2ui-catalog-extractor.md',
+      'docs/en/guide/genui/a2ui.md',
     ),
-    sourceFile: path.join(packageRoot, 'README.md'),
-    switchPattern: /^English \| \[简体中文\]\(\.\/readme\.zh_cn\.md\)$/m,
+    sourceFile: path.join(a2uiPackageRoot, 'README.md'),
+    switchPattern: /^English \| \[简体中文\]\(\.\/README_zh\.md\)$/m,
   });
 
   syncReadme({
-    languageSwitch:
-      '<a href="/guide/genui/a2ui-catalog-extractor">English</a> | 简体中文',
+    languageSwitch: '<a href="/guide/genui/a2ui">English</a> | 简体中文',
     outFile: path.join(
+      options.websiteRoot,
+      'docs/zh/guide/genui/a2ui.md',
+    ),
+    sourceFile: path.join(a2uiPackageRoot, 'README_zh.md'),
+    switchPattern: /^\[English\]\(\.\/README\.md\) \| 简体中文$/m,
+  });
+
+  removeGeneratedDoc(
+    path.join(
+      options.websiteRoot,
+      'docs/en/guide/genui/a2ui-catalog-extractor.md',
+    ),
+  );
+  removeGeneratedDoc(
+    path.join(
       options.websiteRoot,
       'docs/zh/guide/genui/a2ui-catalog-extractor.md',
     ),
-    sourceFile: path.join(packageRoot, 'readme.zh_cn.md'),
-    switchPattern: /^\[English\]\(\.\/README\.md\) \| 简体中文$/m,
-  });
+  );
 
   return {
     en: {
       text: 'GenUI',
       items: [
         {
-          text: 'A2UI Catalog Extractor',
-          link: '/guide/genui/a2ui-catalog-extractor',
+          text: 'A2UI',
+          link: '/guide/genui/a2ui',
         },
       ],
     },
@@ -54,8 +65,8 @@ export function createGenUIGuideReadmeDocs(options: {
       text: 'GenUI',
       items: [
         {
-          text: 'A2UI Catalog Extractor',
-          link: '/zh/guide/genui/a2ui-catalog-extractor',
+          text: 'A2UI',
+          link: '/zh/guide/genui/a2ui',
         },
       ],
     },
@@ -82,4 +93,10 @@ function syncReadme(options: {
 
   fs.mkdirSync(path.dirname(options.outFile), { recursive: true });
   fs.writeFileSync(options.outFile, nextContent);
+}
+
+function removeGeneratedDoc(outFile: string): void {
+  if (fs.existsSync(outFile)) {
+    fs.rmSync(outFile);
+  }
 }

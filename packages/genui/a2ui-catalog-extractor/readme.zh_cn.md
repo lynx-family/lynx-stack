@@ -2,10 +2,14 @@
 
 [English](./README.md) | 简体中文
 
-`@lynx-js/a2ui-catalog-extractor` 会把 TypeScript 组件接口转换成 A2UI
-组件 catalog JSON。你只需要用 TypeScript `interface` 写一次组件的公开
-契约，用普通 TypeDoc 注释描述字段，然后让这个包生成 A2UI agent 可以读取的
-JSON Schema。
+`@lynx-js/a2ui-catalog-extractor` 是
+`npx @lynx-js/a2ui-cli generate catalog` 背后的内部 TypeDoc extraction engine。它会把 TypeScript 组件接口转换成 A2UI
+组件 catalog JSON。你只需要用 TypeScript `interface` 写一次组件的公开契约，
+用普通 TypeDoc 注释描述字段，然后通过公开的 `npx @lynx-js/a2ui-cli` 命令生成
+A2UI agent 可以读取的 JSON Schema。
+
+用户脚本请使用 `npx @lynx-js/a2ui-cli generate catalog`。这个包主要作为
+extraction 行为和测试的实现层。
 
 ## 它解决什么问题
 
@@ -51,10 +55,10 @@ agent 哪些 props 合法、哪些 props 必填、哪些 enum 值可用，以及
 
 ### 包管理器
 
-把 extractor 安装为开发依赖：
+通过 `npx` 执行公开 CLI 包：
 
 ```bash
-pnpm add -D @lynx-js/a2ui-catalog-extractor
+npx @lynx-js/a2ui-cli --help
 ```
 
 然后在你的 package 中加入脚本：
@@ -62,7 +66,7 @@ pnpm add -D @lynx-js/a2ui-catalog-extractor
 ```json
 {
   "scripts": {
-    "build:catalog": "a2ui-catalog-extractor --catalog-dir src/catalog --out-dir dist/catalog"
+    "build:catalog": "npx @lynx-js/a2ui-cli generate catalog --catalog-dir src/catalog --out-dir dist/catalog"
   }
 }
 ```
@@ -123,7 +127,7 @@ export interface QuickStartCardProps {
 运行：
 
 ```bash
-a2ui-catalog-extractor --catalog-dir src/catalog --out-dir dist/catalog
+npx @lynx-js/a2ui-cli generate catalog --catalog-dir src/catalog --out-dir dist/catalog
 ```
 
 extractor 会扫描 catalog 目录，找到带 `@a2uiCatalog` 的 interface，并为每个
@@ -378,16 +382,12 @@ export interface CardProps {
 
 ## CLI 参考
 
-这个包暴露独立的 `a2ui-catalog-extractor` binary。单独的
-`@lynx-js/a2ui-cli` 包也把这个流程暴露为
-`a2ui-cli generate catalog`。
+公开 CLI 入口是 `npx @lynx-js/a2ui-cli generate catalog`。它会在内部委托给这个包。
 
 ### 生成 catalog artifacts
 
 ```bash
-a2ui-catalog-extractor [options]
-# 或
-a2ui-cli generate catalog [options]
+npx @lynx-js/a2ui-cli generate catalog [options]
 ```
 
 | 选项                    | 说明                                                           | 默认值         |
@@ -405,7 +405,10 @@ a2ui-cli generate catalog [options]
 扫描器接受 `.ts`、`.tsx`、`.js`、`.jsx`、`.mts` 和 `.cts` 文件。它会忽略
 `.d.ts`、`node_modules`、`dist` 和 `.turbo`。
 
-## 编程 API
+## 仓库内部编程 API
+
+这些导出主要面向 `@lynx-js/a2ui-cli` 维护者、extractor 测试和仓库内部工具；它们不是给产品代码接入的外部集成面。
+产品构建脚本应该调用 `npx @lynx-js/a2ui-cli generate catalog`，而不是直接 import 这个包。
 
 ### 从源码文件生成 components
 
@@ -470,7 +473,7 @@ writeCatalogComponents(components, {
 等价的 CLI 命令是：
 
 ```bash
-a2ui-catalog-extractor --typedoc-json typedoc.json --out-dir dist/catalog
+npx @lynx-js/a2ui-cli generate catalog --typedoc-json typedoc.json --out-dir dist/catalog
 ```
 
 ### 创建完整 A2UI catalog 对象

@@ -2024,7 +2024,7 @@ describe('Config', () => {
     test('defineDCE should do DCE before bundle', async () => {
       const { pluginReactLynx } = await import('../src/pluginReactLynx.js')
 
-      const rsbuild = await createRspeedy({
+      const rsbuild = await createRspeedyWithTempDistRoot({
         rspeedyConfig: {
           source: {
             entry: {
@@ -2122,7 +2122,7 @@ describe('Config', () => {
       vi.stubEnv('NODE_ENV', 'production')
 
       const entryName = 'pure-funcs'
-      const rsbuild = await createRspeedy({
+      const rsbuild = await createRspeedyWithTempDistRoot({
         rspeedyConfig: {
           source: {
             entry: {

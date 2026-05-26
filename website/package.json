@@ -19,6 +19,8 @@
     "react-dom": "19.2.4"
   },
   "devDependencies": {
+    "@lynx-js/a2ui-cli": "workspace:*",
+    "@lynx-js/a2ui-reactlynx": "workspace:*",
     "@lynx-js/chunk-loading-webpack-plugin": "workspace:*",
     "@lynx-js/config-rsbuild-plugin": "workspace:*",
     "@lynx-js/css-extract-webpack-plugin": "workspace:*",

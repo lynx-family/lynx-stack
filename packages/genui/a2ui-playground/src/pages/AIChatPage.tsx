@@ -143,6 +143,7 @@ const jsonExtensions = [json(), EditorView.lineWrapping];
 
 const PROVIDER_PRESETS = [
   { id: 'gpt-5.4', label: 'gpt5.4', model: 'gpt-5.4' },
+  { id: 'gpt-5.5', label: 'gpt5.5', model: 'gpt-5.5' },
   { id: 'custom', label: 'Custom API key', model: '' },
 ] as const;
 
@@ -153,10 +154,10 @@ function isProviderPresetId(value: unknown): value is ProviderPresetId {
 }
 
 const EMPTY_PROVIDER_SETTINGS: ProviderSettings = {
-  preset: 'gpt-5.4',
+  preset: 'gpt-5.5',
   apiKey: '',
   baseURL: 'https://api.openai.com/v1',
-  model: 'gpt-5.4',
+  model: 'gpt-5.5',
 };
 
 function compactProviderLabel(settings: ProviderSettings): string {
@@ -1501,7 +1502,7 @@ export function AIChatPage(
                   disabled={isGenerating || inputValue.trim().length === 0}
                   onClick={handleSend}
                 >
-                  <span className='chatSendIcon' aria-hidden='true'>-&gt;</span>
+                  <span className='chatSendIcon' aria-hidden='true'>↖</span>
                   {isGenerating ? 'Generating' : 'Send'}
                 </button>
               </div>

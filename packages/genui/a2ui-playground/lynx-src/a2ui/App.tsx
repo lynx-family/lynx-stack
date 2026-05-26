@@ -6,6 +6,7 @@ import {
   Button,
   Card,
   CheckBox,
+  ChoicePicker,
   Column,
   Divider,
   Icon,
@@ -35,6 +36,7 @@ import type {
 import buttonManifest from '@lynx-js/a2ui-reactlynx/catalog/Button/catalog.json';
 import cardManifest from '@lynx-js/a2ui-reactlynx/catalog/Card/catalog.json';
 import checkBoxManifest from '@lynx-js/a2ui-reactlynx/catalog/CheckBox/catalog.json';
+import choicePickerManifest from '@lynx-js/a2ui-reactlynx/catalog/ChoicePicker/catalog.json';
 import columnManifest from '@lynx-js/a2ui-reactlynx/catalog/Column/catalog.json';
 import dividerManifest from '@lynx-js/a2ui-reactlynx/catalog/Divider/catalog.json';
 import iconManifest from '@lynx-js/a2ui-reactlynx/catalog/Icon/catalog.json';
@@ -94,6 +96,7 @@ const ALL_BUILTINS: readonly CatalogInput[] = [
   manifestEntry(Divider, dividerManifest),
   manifestEntry(Icon, iconManifest),
   manifestEntry(CheckBox, checkBoxManifest),
+  manifestEntry(ChoicePicker, choicePickerManifest),
   manifestEntry(LineChart, lineChartManifest),
   manifestEntry(PieChart, pieChartManifest),
   manifestEntry(RadioGroup, radioGroupManifest),

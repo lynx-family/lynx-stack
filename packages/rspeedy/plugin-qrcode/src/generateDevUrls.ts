@@ -26,14 +26,13 @@ export default function generateDevUrls(
 
   const defaultFilename = '[name].[platform].bundle'
   const { filename } = config.output ?? {}
-  let name: string
-  if (!filename) {
-    name = defaultFilename
-  } else if (typeof filename === 'object') {
-    name = filename.bundle ?? filename.template ?? defaultFilename
-  } else {
-    name = filename
-  }
+  const bundle = typeof filename === 'object'
+    ? filename.bundle ?? filename.template
+    : filename
+  // QRCode always points at the Lynx main bundle.
+  const name = (typeof bundle === 'function'
+    ? bundle({ lazyBundle: false, entryName: entry, platform: 'lynx' })
+    : bundle) ?? defaultFilename
 
   const customSchema = schemaFn(
     new URL(
