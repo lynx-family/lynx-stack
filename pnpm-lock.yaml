@@ -804,6 +804,9 @@ importers:
 
   packages/genui/ui-judge:
     dependencies:
+      '@lynx-js/genui':
+        specifier: workspace:*
+        version: link:..
       '@midscene/web':
         specifier: ^1.8.0
         version: 1.8.0(@playwright/test@1.58.2)(playwright@1.58.2)

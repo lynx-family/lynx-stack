@@ -34,6 +34,7 @@ import type {
   ServerToClientMessage,
   UserActionPayload,
 } from '@lynx-js/genui/a2ui';
+import { catalogManifests } from '@lynx-js/genui/a2ui/catalog';
 import {
   useCallback,
   useEffect,
@@ -45,40 +46,11 @@ import {
   useState,
 } from '@lynx-js/react';
 
-import buttonManifest from '../../.generated/a2ui/catalog/Button/catalog.json';
-import cardManifest from '../../.generated/a2ui/catalog/Card/catalog.json';
-import checkBoxManifest from '../../.generated/a2ui/catalog/CheckBox/catalog.json';
-import choicePickerManifest from '../../.generated/a2ui/catalog/ChoicePicker/catalog.json';
-import columnManifest from '../../.generated/a2ui/catalog/Column/catalog.json';
-import dateTimeInputManifest from '../../.generated/a2ui/catalog/DateTimeInput/catalog.json';
-import dividerManifest from '../../.generated/a2ui/catalog/Divider/catalog.json';
-import iconManifest from '../../.generated/a2ui/catalog/Icon/catalog.json';
-import imageManifest from '../../.generated/a2ui/catalog/Image/catalog.json';
-import lineChartManifest from '../../.generated/a2ui/catalog/LineChart/catalog.json';
-import listManifest from '../../.generated/a2ui/catalog/List/catalog.json';
-import modalManifest from '../../.generated/a2ui/catalog/Modal/catalog.json';
-import pieChartManifest from '../../.generated/a2ui/catalog/PieChart/catalog.json';
-import radioGroupManifest from '../../.generated/a2ui/catalog/RadioGroup/catalog.json';
-import rowManifest from '../../.generated/a2ui/catalog/Row/catalog.json';
-import sliderManifest from '../../.generated/a2ui/catalog/Slider/catalog.json';
-import tabsManifest from '../../.generated/a2ui/catalog/Tabs/catalog.json';
-import textManifest from '../../.generated/a2ui/catalog/Text/catalog.json';
-import textFieldManifest from '../../.generated/a2ui/catalog/TextField/catalog.json';
 import { createMockAgent } from '../../examples/io-mock/mockAgent.js';
 import type { MockAgentProgress } from '../../examples/io-mock/mockAgent.js';
 
 const DEFAULT_STREAM_DELAY_MS = 800;
 
-// Compose every built-in. There is intentionally no all-in-one aggregate
-// shipped from the package — this list makes the cost of "everything"
-// visible and lets the bundler tree-shake when you only need a few.
-//
-// Function entries are included because the gallery payloads use A2UI
-// basic-catalog calls such as `formatDate` in dynamic props and checks.
-//
-// To include component schemas, pair each component with its `catalog.json`
-// manifest — see
-// `packages/genui/a2ui/src/catalog/README.md`.
 function manifestEntry(
   component: unknown,
   manifest: CatalogManifest,
@@ -87,25 +59,25 @@ function manifestEntry(
 }
 
 const ALL_BUILTINS: readonly CatalogInput[] = [
-  manifestEntry(Text, textManifest),
-  manifestEntry(Image, imageManifest),
-  manifestEntry(Row, rowManifest),
-  manifestEntry(Column, columnManifest),
-  manifestEntry(List, listManifest),
-  manifestEntry(Card, cardManifest),
-  manifestEntry(Modal, modalManifest),
-  manifestEntry(Button, buttonManifest),
-  manifestEntry(Divider, dividerManifest),
-  manifestEntry(Icon, iconManifest),
-  manifestEntry(CheckBox, checkBoxManifest),
-  manifestEntry(ChoicePicker, choicePickerManifest),
-  manifestEntry(DateTimeInput, dateTimeInputManifest),
-  manifestEntry(LineChart, lineChartManifest),
-  manifestEntry(PieChart, pieChartManifest),
-  manifestEntry(RadioGroup, radioGroupManifest),
-  manifestEntry(Slider, sliderManifest),
-  manifestEntry(TextField, textFieldManifest),
-  manifestEntry(Tabs, tabsManifest),
+  manifestEntry(Text, catalogManifests.Text),
+  manifestEntry(Image, catalogManifests.Image),
+  manifestEntry(Row, catalogManifests.Row),
+  manifestEntry(Column, catalogManifests.Column),
+  manifestEntry(List, catalogManifests.List),
+  manifestEntry(Card, catalogManifests.Card),
+  manifestEntry(Modal, catalogManifests.Modal),
+  manifestEntry(Button, catalogManifests.Button),
+  manifestEntry(Divider, catalogManifests.Divider),
+  manifestEntry(Icon, catalogManifests.Icon),
+  manifestEntry(CheckBox, catalogManifests.CheckBox),
+  manifestEntry(ChoicePicker, catalogManifests.ChoicePicker),
+  manifestEntry(DateTimeInput, catalogManifests.DateTimeInput),
+  manifestEntry(LineChart, catalogManifests.LineChart),
+  manifestEntry(PieChart, catalogManifests.PieChart),
+  manifestEntry(RadioGroup, catalogManifests.RadioGroup),
+  manifestEntry(Slider, catalogManifests.Slider),
+  manifestEntry(TextField, catalogManifests.TextField),
+  manifestEntry(Tabs, catalogManifests.Tabs),
   ...basicFunctions,
 ];
 

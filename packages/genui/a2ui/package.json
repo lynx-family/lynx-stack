@@ -133,7 +133,7 @@
   "types": "./dist/index.d.ts",
   "scripts": {
     "build": "tsc --project tsconfig.build.json && npm run build:catalog",
-    "build:catalog": "genui a2ui generate catalog --catalog-dir src/catalog --out-dir dist/catalog",
+    "build:catalog": "genui a2ui generate catalog --catalog-dir src/catalog --out-dir dist/catalog && node scripts/writeCatalogManifestIndex.js",
     "test": "rstest"
   },
   "dependencies": {

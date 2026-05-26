@@ -1,26 +1,9 @@
 // Copyright 2026 The Lynx Authors. All rights reserved.
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
+import { catalogManifests } from '@lynx-js/genui/a2ui/catalog';
+
 import type { ProtocolName } from './utils/protocol.js';
-import buttonManifest from '../../.generated/a2ui/catalog/Button/catalog.json';
-import cardManifest from '../../.generated/a2ui/catalog/Card/catalog.json';
-import checkBoxManifest from '../../.generated/a2ui/catalog/CheckBox/catalog.json';
-import choicePickerManifest from '../../.generated/a2ui/catalog/ChoicePicker/catalog.json';
-import columnManifest from '../../.generated/a2ui/catalog/Column/catalog.json';
-import dateTimeInputManifest from '../../.generated/a2ui/catalog/DateTimeInput/catalog.json';
-import dividerManifest from '../../.generated/a2ui/catalog/Divider/catalog.json';
-import iconManifest from '../../.generated/a2ui/catalog/Icon/catalog.json';
-import imageManifest from '../../.generated/a2ui/catalog/Image/catalog.json';
-import lineChartManifest from '../../.generated/a2ui/catalog/LineChart/catalog.json';
-import listManifest from '../../.generated/a2ui/catalog/List/catalog.json';
-import modalManifest from '../../.generated/a2ui/catalog/Modal/catalog.json';
-import pieChartManifest from '../../.generated/a2ui/catalog/PieChart/catalog.json';
-import radioGroupManifest from '../../.generated/a2ui/catalog/RadioGroup/catalog.json';
-import rowManifest from '../../.generated/a2ui/catalog/Row/catalog.json';
-import sliderManifest from '../../.generated/a2ui/catalog/Slider/catalog.json';
-import tabsManifest from '../../.generated/a2ui/catalog/Tabs/catalog.json';
-import textManifest from '../../.generated/a2ui/catalog/Text/catalog.json';
-import textFieldManifest from '../../.generated/a2ui/catalog/TextField/catalog.json';
 
 export interface ComponentProp {
   name: string;
@@ -120,7 +103,7 @@ export const COMPONENT_CATALOG: ComponentDoc[] = [
     name: 'Text',
     category: 'Display',
     description: 'Displays a text string with optional style variant.',
-    props: schemaToProps(textManifest),
+    props: schemaToProps(catalogManifests.Text),
     usage: {
       a2ui: {
         id: 'greeting',
@@ -184,7 +167,7 @@ export const COMPONENT_CATALOG: ComponentDoc[] = [
     category: 'Display',
     description:
       'Renders a Material icon by name. Default icon names can be browsed at https://a2ui-composer.ag-ui.com/icons.',
-    props: schemaToProps(iconManifest),
+    props: schemaToProps(catalogManifests.Icon),
     usage: {
       a2ui: [
         {
@@ -375,7 +358,7 @@ export const COMPONENT_CATALOG: ComponentDoc[] = [
     name: 'Image',
     category: 'Display',
     description: 'Displays an image from a URL or data binding.',
-    props: schemaToProps(imageManifest),
+    props: schemaToProps(catalogManifests.Image),
     usage: {
       a2ui: {
         id: 'hero-image',
@@ -426,7 +409,7 @@ export const COMPONENT_CATALOG: ComponentDoc[] = [
     name: 'Divider',
     category: 'Display',
     description: 'A visual separator line used to divide content sections.',
-    props: schemaToProps(dividerManifest),
+    props: schemaToProps(catalogManifests.Divider),
     usage: {
       a2ui: [
         {
@@ -552,7 +535,7 @@ export const COMPONENT_CATALOG: ComponentDoc[] = [
     category: 'Chart',
     description:
       'Plots one or more numeric series over category labels with native SVG rendering.',
-    props: schemaToProps(lineChartManifest),
+    props: schemaToProps(catalogManifests.LineChart),
     usage: {
       a2ui: {
         id: 'sales-chart',
@@ -628,7 +611,7 @@ export const COMPONENT_CATALOG: ComponentDoc[] = [
     category: 'Chart',
     description:
       'Renders pie and donut slices with native SVG arcs and a responsive legend.',
-    props: schemaToProps(pieChartManifest),
+    props: schemaToProps(catalogManifests.PieChart),
     usage: {
       a2ui: {
         id: 'revenue-share',
@@ -690,7 +673,7 @@ export const COMPONENT_CATALOG: ComponentDoc[] = [
     name: 'Card',
     category: 'Layout',
     description: 'A container that renders one child component inside a card.',
-    props: schemaToProps(cardManifest),
+    props: schemaToProps(catalogManifests.Card),
     usage: {
       a2ui: {
         id: 'profile-card',
@@ -827,7 +810,7 @@ export const COMPONENT_CATALOG: ComponentDoc[] = [
     category: 'Layout',
     description:
       'A modal dialog that opens from a trigger component and displays one content component.',
-    props: schemaToProps(modalManifest),
+    props: schemaToProps(catalogManifests.Modal),
     usage: {
       a2ui: [
         {
@@ -878,7 +861,7 @@ export const COMPONENT_CATALOG: ComponentDoc[] = [
     category: 'Layout',
     description:
       'A horizontal layout container that arranges children in a row.',
-    props: schemaToProps(rowManifest),
+    props: schemaToProps(catalogManifests.Row),
     usage: {
       a2ui: {
         id: 'action-row',
@@ -1012,7 +995,7 @@ export const COMPONENT_CATALOG: ComponentDoc[] = [
     category: 'Layout',
     description:
       'A vertical layout container that arranges children in a column.',
-    props: schemaToProps(columnManifest),
+    props: schemaToProps(catalogManifests.Column),
     usage: {
       a2ui: {
         id: 'main-column',
@@ -1124,7 +1107,7 @@ export const COMPONENT_CATALOG: ComponentDoc[] = [
     category: 'Data',
     description:
       'A scrollable list that renders children or uses a template for dynamic items.',
-    props: schemaToProps(listManifest),
+    props: schemaToProps(catalogManifests.List),
     usage: {
       a2ui: {
         id: 'item-list',
@@ -1217,7 +1200,7 @@ export const COMPONENT_CATALOG: ComponentDoc[] = [
     name: 'Button',
     category: 'Input',
     description: 'An interactive button that triggers an action when pressed.',
-    props: schemaToProps(buttonManifest),
+    props: schemaToProps(catalogManifests.Button),
     usage: {
       a2ui: {
         id: 'submit-btn',
@@ -1272,7 +1255,7 @@ export const COMPONENT_CATALOG: ComponentDoc[] = [
     category: 'Input',
     description:
       'A labeled text input with short text, long text, numeric, and obscured variants.',
-    props: schemaToProps(textFieldManifest),
+    props: schemaToProps(catalogManifests.TextField),
     usage: {
       a2ui: {
         id: 'name-input',
@@ -1350,7 +1333,7 @@ export const COMPONENT_CATALOG: ComponentDoc[] = [
     name: 'CheckBox',
     category: 'Input',
     description: 'A toggleable checkbox with label and action support.',
-    props: schemaToProps(checkBoxManifest),
+    props: schemaToProps(catalogManifests.CheckBox),
     usage: {
       a2ui: {
         id: 'agree-checkbox',
@@ -1388,7 +1371,7 @@ export const COMPONENT_CATALOG: ComponentDoc[] = [
     name: 'Slider',
     category: 'Input',
     description: 'A numeric range input backed by lynx-ui slider primitives.',
-    props: schemaToProps(sliderManifest),
+    props: schemaToProps(catalogManifests.Slider),
     usage: {
       a2ui: {
         id: 'volume-slider',
@@ -1433,7 +1416,7 @@ export const COMPONENT_CATALOG: ComponentDoc[] = [
     category: 'Input',
     description:
       'A date and/or time input with a calendar panel and configurable output format.',
-    props: schemaToProps(dateTimeInputManifest),
+    props: schemaToProps(catalogManifests.DateTimeInput),
     usage: {
       a2ui: {
         id: 'date-input',
@@ -1495,7 +1478,7 @@ export const COMPONENT_CATALOG: ComponentDoc[] = [
     category: 'Input',
     description:
       'A single- or multi-select choice picker with checkbox and chip styles.',
-    props: schemaToProps(choicePickerManifest),
+    props: schemaToProps(catalogManifests.ChoicePicker),
     usage: {
       a2ui: {
         id: 'city-picker',
@@ -1577,7 +1560,7 @@ export const COMPONENT_CATALOG: ComponentDoc[] = [
     name: 'Tabs',
     category: 'Layout',
     description: 'A tab bar that switches between multiple child components.',
-    props: schemaToProps(tabsManifest),
+    props: schemaToProps(catalogManifests.Tabs),
     usage: {
       a2ui: {
         id: 'details-tabs',
@@ -1669,7 +1652,7 @@ export const COMPONENT_CATALOG: ComponentDoc[] = [
     category: 'Input',
     description:
       'A group of mutually exclusive radio options with selection support.',
-    props: schemaToProps(radioGroupManifest),
+    props: schemaToProps(catalogManifests.RadioGroup),
     usage: {
       a2ui: {
         id: 'size-picker',
