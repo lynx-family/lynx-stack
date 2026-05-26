@@ -89,6 +89,7 @@ export {
   Button,
   Card,
   CheckBox,
+  ChoicePicker,
   Column,
   Divider,
   Image,

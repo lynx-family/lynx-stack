@@ -4,6 +4,7 @@
 import buttonManifest from '@lynx-js/a2ui-reactlynx/catalog/Button/catalog.json';
 import cardManifest from '@lynx-js/a2ui-reactlynx/catalog/Card/catalog.json';
 import checkBoxManifest from '@lynx-js/a2ui-reactlynx/catalog/CheckBox/catalog.json';
+import choicePickerManifest from '@lynx-js/a2ui-reactlynx/catalog/ChoicePicker/catalog.json';
 import columnManifest from '@lynx-js/a2ui-reactlynx/catalog/Column/catalog.json';
 import dividerManifest from '@lynx-js/a2ui-reactlynx/catalog/Divider/catalog.json';
 import iconManifest from '@lynx-js/a2ui-reactlynx/catalog/Icon/catalog.json';
@@ -31,6 +32,8 @@ export interface ComponentProp {
 export interface ComponentUsageExample {
   label: string;
   value: object | object[];
+  data?: unknown;
+  dataPath?: string;
 }
 
 export type ComponentCategory =
@@ -1420,6 +1423,89 @@ export const COMPONENT_CATALOG: ComponentDoc[] = [
             min: 0,
             max: 1,
           },
+        },
+      ],
+      openui: [],
+    },
+  },
+  {
+    name: 'ChoicePicker',
+    category: 'Input',
+    description:
+      'A single- or multi-select choice picker with checkbox and chip styles.',
+    props: schemaToProps(choicePickerManifest),
+    usage: {
+      a2ui: {
+        id: 'city-picker',
+        component: 'ChoicePicker',
+        label: 'City',
+        variant: 'mutuallyExclusive',
+        displayStyle: 'chips',
+        options: [
+          { label: '旧金山', value: 'san-francisco' },
+          { label: '东京', value: 'tokyo' },
+          { label: '巴黎', value: 'paris' },
+          { label: '纽约', value: 'new-york' },
+        ],
+        value: ['tokyo'],
+      },
+      openui: {},
+    },
+    usageExamples: {
+      a2ui: [
+        {
+          label: 'Single Select Chips',
+          value: {
+            id: 'city-picker',
+            component: 'ChoicePicker',
+            label: 'City',
+            variant: 'mutuallyExclusive',
+            displayStyle: 'chips',
+            options: [
+              { label: '旧金山', value: 'san-francisco' },
+              { label: '东京', value: 'tokyo' },
+              { label: '巴黎', value: 'paris' },
+              { label: '纽约', value: 'new-york' },
+            ],
+            value: { path: '/city' },
+          },
+          data: { city: ['tokyo'] },
+        },
+        {
+          label: 'Multi Select Checkbox',
+          value: {
+            id: 'diet-picker',
+            component: 'ChoicePicker',
+            label: 'Dietary preferences',
+            variant: 'multipleSelection',
+            displayStyle: 'checkbox',
+            options: [
+              { label: 'Vegetarian', value: 'vegetarian' },
+              { label: 'Low sugar', value: 'low-sugar' },
+              { label: 'High protein', value: 'high-protein' },
+            ],
+            value: { path: '/diet' },
+          },
+          data: { diet: ['vegetarian', 'high-protein'] },
+        },
+        {
+          label: 'Filterable Chips',
+          value: {
+            id: 'interest-picker',
+            component: 'ChoicePicker',
+            label: 'Interests',
+            variant: 'multipleSelection',
+            displayStyle: 'chips',
+            filterable: true,
+            options: [
+              { label: 'Design', value: 'design' },
+              { label: 'Engineering', value: 'engineering' },
+              { label: 'Research', value: 'research' },
+              { label: 'Product', value: 'product' },
+            ],
+            value: { path: '/interests' },
+          },
+          data: { interests: ['design'] },
         },
       ],
       openui: [],

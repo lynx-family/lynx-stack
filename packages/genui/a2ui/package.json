@@ -95,6 +95,11 @@
       "default": "./dist/catalog/CheckBox/index.js"
     },
     "./catalog/CheckBox/catalog.json": "./dist/catalog/CheckBox/catalog.json",
+    "./catalog/ChoicePicker": {
+      "types": "./dist/catalog/ChoicePicker/index.d.ts",
+      "default": "./dist/catalog/ChoicePicker/index.js"
+    },
+    "./catalog/ChoicePicker/catalog.json": "./dist/catalog/ChoicePicker/catalog.json",
     "./catalog/RadioGroup": {
       "types": "./dist/catalog/RadioGroup/index.d.ts",
       "default": "./dist/catalog/RadioGroup/index.js"
