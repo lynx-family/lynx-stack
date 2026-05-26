@@ -1,5 +1,11 @@
 # @lynx-js/externals-loading-webpack-plugin
 
+## 0.2.0
+
+### Minor Changes
+
+- feat: support retrying `fetchBundle` on timeout via a new `retries` option (defaults to `0`). ([#2681](https://github.com/lynx-family/lynx-stack/pull/2681))
+
 ## 0.1.1
 
 ### Patch Changes
