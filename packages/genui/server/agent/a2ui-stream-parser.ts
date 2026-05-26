@@ -19,6 +19,21 @@ function isRecord(value: unknown): value is Record<string, unknown> {
   return value !== null && typeof value === 'object' && !Array.isArray(value);
 }
 
+function stableStringify(value: unknown): string {
+  if (Array.isArray(value)) {
+    return `[${value.map((item) => stableStringify(item)).join(',')}]`;
+  }
+
+  if (isRecord(value)) {
+    const entries = Object.keys(value)
+      .sort()
+      .map((key) => `${JSON.stringify(key)}:${stableStringify(value[key])}`);
+    return `{${entries.join(',')}}`;
+  }
+
+  return JSON.stringify(value);
+}
+
 function hasRecordKey(
   value: Record<string, unknown>,
   key: string,
@@ -107,39 +122,13 @@ function placeholderId(id: string): string {
   return `loading_${id}`;
 }
 
-function createPlaceholderComponent(
-  id: string,
-  expectedComponent?: string,
-): ComponentRecord {
-  if (expectedComponent === 'Image') {
-    return {
-      id: placeholderId(id),
-      component: 'Image',
-      url: '',
-      variant: 'mediumFeature',
-    };
-  }
-
+function createPlaceholderComponent(id: string): ComponentRecord {
   return {
     id: placeholderId(id),
     component: 'Text',
     text: 'Loading...',
     variant: 'caption',
   };
-}
-
-function expectedPlaceholderComponent(
-  childId: string,
-  seen: Map<string, ComponentRecord>,
-): string | undefined {
-  const component = seen.get(childId);
-  if (component) return component.component;
-  if (
-    /image|photo|picture|thumbnail|avatar|cover|poster|hero/iu.test(childId)
-  ) {
-    return 'Image';
-  }
-  return undefined;
 }
 
 function collectChildRefs(component: ComponentRecord): string[] {
@@ -188,10 +177,7 @@ function replaceMissingChildRefs(
 
   const replaceRef = (id: string) => {
     if (seen.has(id)) return id;
-    const placeholder = createPlaceholderComponent(
-      id,
-      expectedPlaceholderComponent(id, seen),
-    );
+    const placeholder = createPlaceholderComponent(id);
     placeholders.set(placeholder.id, placeholder);
     return placeholder.id;
   };
@@ -280,6 +266,10 @@ export class A2UIProtocolMessageStreamParser {
   private seenComponentsBySurface = new Map<
     string,
     Map<string, ComponentRecord>
+  >();
+  private yieldedComponentContentBySurface = new Map<
+    string,
+    Map<string, string>
   >();
   private createdSurfaceIds = new Set<string>();
 
@@ -401,11 +391,24 @@ export class A2UIProtocolMessageStreamParser {
     });
     if (components.length === 0) return;
 
+    const yielded = this.yieldedComponentContentBySurface.get(surfaceId)
+      ?? new Map<string, string>();
+    const changedComponents = components.filter((component) => {
+      const content = stableStringify(component);
+      return yielded.get(component.id) !== content;
+    });
+    if (changedComponents.length === 0) return;
+
+    for (const component of changedComponents) {
+      yielded.set(component.id, stableStringify(component));
+    }
+    this.yieldedComponentContentBySurface.set(surfaceId, yielded);
+
     messages.push({
       version: 'v0.9',
       updateComponents: {
         surfaceId,
-        components,
+        components: changedComponents,
       },
     });
   }

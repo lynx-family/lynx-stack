@@ -193,7 +193,7 @@ export async function POST(req: Request) {
           const newMessages = protocolParser.push(chunk);
           if (newMessages.length > 0) {
             streamedMessages.push(...newMessages);
-            enqueue('message', { messages: streamedMessages });
+            enqueue('message', { messages: newMessages });
             log('protocol.messages', {
               chunkCount,
               newMessageCount: newMessages.length,
@@ -235,6 +235,12 @@ export async function POST(req: Request) {
         const validationOptions = {
           requireCreateSurface: false,
           existingSurfaceIds: body.surfaceId ? [body.surfaceId] : [],
+          existingDataModelBySurface: body.surfaceId
+            ? {
+              [body.surfaceId]: validatedConversation.conversation?.dataModel
+                ?? {},
+            }
+            : {},
         };
         const v = validateA2UIOutput(
           finalText ?? '',

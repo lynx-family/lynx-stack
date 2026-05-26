@@ -119,30 +119,40 @@ function buildHardRules(catalogId: string): string {
 10. Card.child is exactly one id; wrap multiple elements in Row/Column/List.
 11. Buttons MUST include a non-empty "action.event.name". Button has NO "label"
    prop – provide the label via a child Text component ("child": "<text-id>").
-12. Any "{path:...}" reference MUST be populated by some updateDataModel in the
+12. When using Modal for a confirmation flow, do NOT put the server action on
+   the Modal trigger. The trigger only opens the modal. Put a separate confirm
+   Button inside Modal.content, and attach the action to that confirm Button.
+13. Render a Modal by placing the Modal component itself where the trigger
+   should appear. Do NOT also list the trigger component as a sibling in the
+   parent container, because Modal renders its trigger internally.
+14. The "weight" prop is a small layout ratio for Row/Column children, not CSS
+   font-weight. Do NOT use values like 400, 500, 600, or 700 for typography.
+   Use text variants for typography, and use small weights such as 1, 1.5, 2,
+   3, or 5 only when balancing sibling layout.
+15. Any "{path:...}" reference MUST be populated by some updateDataModel in the
    same response.
-13. In an updateDataModel message, "path" MUST be inside "updateDataModel",
+16. In an updateDataModel message, "path" MUST be inside "updateDataModel",
     never at the top level. Correct:
     { "version": "v0.9", "updateDataModel": { "surfaceId": "main", "path": "/", "value": {} } }
     Wrong:
     { "version": "v0.9", "updateDataModel": { "surfaceId": "main", "value": {} }, "path": "/" }
-14. Ids are kebab-case, unique per surface ("root", "title-text", "submit-btn").
-15. Do not invent components outside the catalog.
-16. No comments, trailing commas or unknown fields.
-17. If the user asks for impossible, unsafe, or unsupported UI, render a concise
+17. Ids are kebab-case, unique per surface ("root", "title-text", "submit-btn").
+18. Do not invent components outside the catalog.
+19. No comments, trailing commas or unknown fields.
+20. If the user asks for impossible, unsafe, or unsupported UI, render a concise
     explanatory A2UI surface using supported components rather than prose.
-18. If the latest user message starts with "A2UI_USER_ACTION:", this is an
+21. If the latest user message starts with "A2UI_USER_ACTION:", this is an
     action response for an existing surface. Return a non-empty JSON array with
     updateDataModel and/or updateComponents for that same surfaceId. Do NOT
     return [] and do NOT create a new surface unless the action explicitly asks
     to replace the whole UI.
-19. For action responses, prefer the smallest valid patch: one updateDataModel
+22. For action responses, prefer the smallest valid patch: one updateDataModel
     for changed data, plus one updateComponents only if the visible structure
     needs to change.
-20. For UI that should change after a button tap, keep the initial response in
+23. For UI that should change after a button tap, keep the initial response in
     the pre-action state. Put confirmation, success, or result details in the
     action response instead of showing them before the action happens.
-21. For Image.url, provide a short English image search query such as
+24. For Image.url, provide a short English image search query such as
     "fresh pasta on a table" or "city skyline at night". Do NOT invent photo
     CDN URLs. The server resolves Image.url values through its image provider.
 `;

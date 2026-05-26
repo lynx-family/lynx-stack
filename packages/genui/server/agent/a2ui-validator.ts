@@ -111,6 +111,7 @@ export interface ValidationResult {
 export interface ValidationOptions {
   requireCreateSurface?: boolean;
   existingSurfaceIds?: string[];
+  existingDataModelBySurface?: Record<string, unknown>;
 }
 
 export interface A2UIValidationDebugEntry {
@@ -329,6 +330,16 @@ export function validateA2UIOutput(
   const allPaths: { surfaceId: string; path: string }[] = [];
   const providedPaths: { surfaceId: string; path: string }[] = [];
 
+  for (
+    const [surfaceId, dataModel] of Object.entries(
+      options.existingDataModelBySurface ?? {},
+    )
+  ) {
+    for (const path of flattenProvidedPaths('/', dataModel)) {
+      providedPaths.push({ surfaceId, path });
+    }
+  }
+
   for (const msg of messages) {
     if ('createSurface' in msg && msg.createSurface) {
       surfaces.add(msg.createSurface.surfaceId);
@@ -349,6 +360,7 @@ export function validateA2UIOutput(
             componentSpecs.get(comp.component)!,
             errors,
           );
+          validateRendererSemantics(comp, errors);
         } else {
           errors.push(
             `Unknown component "${comp.component}" (id=${comp.id}). Allowed: ${
@@ -611,6 +623,25 @@ function validateComponentAgainstCatalog(
       `${comp.id}.${prop.name}`,
     );
     errors.push(...propErrors);
+  }
+}
+
+function validateRendererSemantics(
+  comp: A2UIComponent,
+  errors: string[],
+): void {
+  const weight = (comp as { weight?: unknown }).weight;
+  if (typeof weight !== 'number') return;
+  if (!Number.isFinite(weight) || weight <= 0) {
+    errors.push(
+      `Component "${comp.id}" (${comp.component}) has invalid weight "${weight}". Use a positive finite layout ratio.`,
+    );
+    return;
+  }
+  if (weight > 12) {
+    errors.push(
+      `Component "${comp.id}" (${comp.component}) has weight "${weight}", but weight is a small Row/Column layout ratio, not CSS font-weight. Use values like 1, 1.5, 2, 3, or 5.`,
+    );
   }
 }
 

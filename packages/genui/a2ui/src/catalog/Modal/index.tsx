@@ -74,7 +74,13 @@ export function Modal(
     >
       <view className='modal-trigger' bindtap={handleOpen}>
         {trigger
-          ? <NodeRenderer component={trigger} surface={surface} />
+          ? (
+            <NodeRenderer
+              component={trigger}
+              surface={surface}
+              suppressActionDispatch={true}
+            />
+          )
           : null}
       </view>
       <DialogView className='modal-view' overlayLevel={4}>

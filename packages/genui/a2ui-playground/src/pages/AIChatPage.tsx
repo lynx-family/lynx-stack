@@ -52,6 +52,10 @@ interface TokenUsage {
   totalTokens: number;
 }
 
+interface A2UIResponseMessageMeta {
+  final: boolean;
+}
+
 interface ProviderSettings {
   preset: ProviderPresetId;
   apiKey: string;
@@ -540,9 +544,13 @@ function parseCompletedArrayItems(raw: string): unknown[] {
 async function readA2UIResponse(
   response: BrowserResponse,
   onText: (text: string) => void,
-  onMessages: (messages: unknown[]) => void,
+  onMessages: (messages: unknown[], meta: A2UIResponseMessageMeta) => void,
   onUsage?: (usage: TokenUsage) => void,
-  options: { publishPartialMessages?: boolean } = {},
+  options: {
+    parseDeltaMessages?: boolean;
+    publishPartialMessages?: boolean;
+    publishText?: boolean;
+  } = {},
 ): Promise<unknown[]> {
   const contentType = response.headers.get('content-type') ?? '';
   if (!contentType.includes('text/event-stream')) {
@@ -555,7 +563,7 @@ async function readA2UIResponse(
       const usage = parseUsage((payload as A2UIDonePayload).usage);
       if (usage) onUsage?.(usage);
     }
-    onMessages(messages);
+    onMessages(messages, { final: true });
     return messages;
   }
 
@@ -566,7 +574,9 @@ async function readA2UIResponse(
   let buffer = '';
   let generatedText = '';
   let latestMessages: unknown[] = [];
+  const parseDeltaMessages = options.parseDeltaMessages ?? true;
   const publishPartialMessages = options.publishPartialMessages ?? true;
+  const publishText = options.publishText ?? true;
 
   while (true) {
     const { done, value } = await reader.read();
@@ -582,12 +592,12 @@ async function readA2UIResponse(
         const deltaData = parsed.data as { text?: unknown };
         if (typeof deltaData.text === 'string') {
           generatedText += deltaData.text;
-          onText(generatedText);
-          if (!publishPartialMessages) continue;
+          if (publishText) onText(generatedText);
+          if (!publishPartialMessages || !parseDeltaMessages) continue;
           const completed = parseCompletedArrayItems(generatedText);
           if (completed.length > latestMessages.length) {
             latestMessages = completed;
-            onMessages(latestMessages);
+            onMessages(latestMessages, { final: false });
           }
         }
         continue;
@@ -598,7 +608,7 @@ async function readA2UIResponse(
         const messages = normalizeA2UIMessages(parsed.data);
         if (messages.length > 0) {
           latestMessages = messages;
-          onMessages(latestMessages);
+          onMessages(latestMessages, { final: false });
         }
         continue;
       }
@@ -611,7 +621,7 @@ async function readA2UIResponse(
         }
         if (doneMessages.length > 0) {
           latestMessages = doneMessages;
-          onMessages(latestMessages);
+          onMessages(latestMessages, { final: true });
         } else {
           throw new Error(normalizeErrorPayload(parsed.data));
         }
@@ -640,7 +650,7 @@ const SUGGESTED_PROMPTS: Array<{ label: string; text: string }> = [
   {
     label: '🛍️ Product card with Buy',
     text:
-      'Create a product card for a limited-edition sneaker. Include name, a photo, price ($189), a short description, and a "Buy Now" button. When tapped, show an order confirmation with a fake order number and estimated delivery.',
+      'Create a product card for a limited-edition sneaker. Include name, a photo, price ($189), a short description, and a "Buy Now" button. When tapped, show a purchase confirmation step with a "Confirm Purchase" button. Only the Confirm Purchase button should submit the action; after the action response, replace the card with an order success page showing a fake order number and estimated delivery.',
   },
   {
     label: '⚡ Quiz card with actions',
@@ -804,7 +814,6 @@ export function AIChatPage(
     () => readProviderSettings(),
   );
   const [renderUrl, setRenderUrl] = useState<string>('');
-  const [generatedJson, setGeneratedJson] = useState<string>('');
   const [previewMessages, setPreviewMessages] = useState<unknown[] | null>(
     null,
   );
@@ -888,14 +897,13 @@ export function AIChatPage(
     // Re-run on streaming updates so generated chunks keep the chat pinned to
     // the latest message.
     void messages;
-    void generatedJson;
     void isGenerating;
     void previewMessages;
     if (!followBottomRef.current) return;
     const container = chatMessagesRef.current;
     if (!container) return;
     container.scrollTop = container.scrollHeight;
-  }, [messages, generatedJson, isGenerating, previewMessages]);
+  }, [messages, isGenerating, previewMessages]);
 
   useEffect(() => {
     const container = chatMessagesRef.current;
@@ -993,6 +1001,41 @@ export function AIChatPage(
     [baseUrl, protocol, theme],
   );
 
+  const publishStreamingPreviewMessages = useCallback(
+    (deltaMessages: unknown[]) => {
+      if (deltaMessages.length === 0) return;
+      const accumulatedMessages = [
+        ...latestPreviewMessagesRef.current,
+        ...deltaMessages,
+      ];
+      latestPreviewMessagesRef.current = accumulatedMessages;
+      setPreviewMessages(accumulatedMessages);
+
+      const initData = {
+        protocol,
+        demoUrl: DEFAULT_A2UI_DEMO_URL,
+        messages: [],
+        theme,
+        instant: true,
+        liveAction: deltaMessages.length > 0,
+      };
+
+      setRenderUrl((current) => {
+        if (current) {
+          const targetOrigin = targetOriginForFrame(current);
+          previewFrameRef.current?.contentWindow?.postMessage(
+            { type: 'A2UI_LIVE_MESSAGES', messages: deltaMessages },
+            targetOrigin,
+          );
+          return current;
+        }
+
+        return buildRenderUrl(initData, baseUrl);
+      });
+    },
+    [baseUrl, protocol, theme],
+  );
+
   const handlePreviewLoad = useCallback(() => {
     publishPreviewMessages(latestPreviewMessagesRef.current);
   }, [publishPreviewMessages]);
@@ -1012,7 +1055,6 @@ export function AIChatPage(
 
     hydratedActiveIdRef.current = activeId;
     setMessages(buildChatMessagesFromHistory(persistedMessages));
-    setGeneratedJson('');
     setTokenUsage({
       promptTokens: 0,
       completionTokens: 0,
@@ -1060,7 +1102,6 @@ export function AIChatPage(
       { role: 'ai', content: 'Connecting to A2UI agent...' },
     ]);
     setInputValue('');
-    setGeneratedJson('');
     setPreviewMessages(null);
     latestPreviewMessagesRef.current = [];
     setTokenUsage({
@@ -1094,18 +1135,35 @@ export function AIChatPage(
 
         const finalMessages = await readA2UIResponse(
           response,
-          (nextText) => {
-            setGeneratedJson(nextText);
+          () => {
             setMessages((prev) => {
               const next = prev.slice();
               next[next.length - 1] = {
                 role: 'ai',
-                content: `Generating A2UI JSON... ${nextText.length} chars`,
+                content: 'Streaming A2UI messages...',
               };
               return next;
             });
           },
-          publishPreviewMessages,
+          (nextMessages, meta) => {
+            if (controller.signal.aborted) return;
+            if (meta.final) {
+              publishPreviewMessages(nextMessages);
+              return;
+            }
+            publishStreamingPreviewMessages(nextMessages);
+            setMessages((prev) => {
+              const next = prev.slice();
+              next[next.length - 1] = {
+                role: 'ai',
+                content:
+                  `Streaming ${latestPreviewMessagesRef.current.length} A2UI message${
+                    latestPreviewMessagesRef.current.length === 1 ? '' : 's'
+                  }...`,
+              };
+              return next;
+            });
+          },
           (usage) => {
             if (controller.signal.aborted) return;
             setTokenUsage((prev) => ({
@@ -1113,6 +1171,10 @@ export function AIChatPage(
               completionTokens: prev.completionTokens + usage.completionTokens,
               totalTokens: prev.totalTokens + usage.totalTokens,
             }));
+          },
+          {
+            parseDeltaMessages: false,
+            publishText: false,
           },
         );
 
@@ -1163,6 +1225,7 @@ export function AIChatPage(
     inputValue,
     isGenerating,
     publishPreviewMessages,
+    publishStreamingPreviewMessages,
     providerRequestOptions,
     recordTurn,
   ]);

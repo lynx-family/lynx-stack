@@ -79,6 +79,7 @@ function buildNodeRecursive(
   props?: Record<string, unknown>,
   setValue?: (key: string, value: unknown) => void,
   sendAction?: (action: Record<string, unknown>) => void,
+  suppressActionDispatch = false,
 ): ReactNode {
   const tag = component.component;
   const Component = catalog.get(tag);
@@ -120,9 +121,11 @@ function buildNodeRecursive(
         id={component.id ?? ''}
         surface={surface}
         setValue={setValue}
-        sendAction={(a: Record<string, unknown>) => {
-          void sendAction?.(a);
-        }}
+        sendAction={suppressActionDispatch
+          ? undefined
+          : (a: Record<string, unknown>) => {
+            void sendAction?.(a);
+          }}
         dataContextPath={component.dataContextPath}
       />
     </>
@@ -234,6 +237,7 @@ function NodeRendererImpl(
   props: {
     component: ComponentInstance;
     surface: Surface;
+    suppressActionDispatch?: boolean;
     renderUnsupported?:
       | ((info: UnsupportedInfo) => ReactNode)
       | undefined;
@@ -242,6 +246,7 @@ function NodeRendererImpl(
   const {
     component: initialComponent,
     surface,
+    suppressActionDispatch = false,
     renderUnsupported,
   } = props;
   const { catalog: activeCatalog, processor } = useA2UIContext();
@@ -307,6 +312,7 @@ function NodeRendererImpl(
       (a: Record<string, unknown>) => {
         void sendAction(a as unknown as Parameters<typeof sendAction>[0]);
       },
+      suppressActionDispatch,
     )
   );
 }

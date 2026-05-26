@@ -10,7 +10,7 @@ import '../../../styles/catalog/Image.css';
  */
 export interface ImageProps extends GenericComponentProps {
   /** Image URL or path binding. */
-  url: string | { path: string };
+  url: string;
   fit?: 'contain' | 'cover' | 'fill' | 'none' | 'scale-down';
   mode?: 'scaleToFill' | 'aspectFit' | 'aspectFill' | 'center';
   variant?:
@@ -23,22 +23,9 @@ export interface ImageProps extends GenericComponentProps {
   weight?: number;
 }
 
-function imageSourceFromServer(value: unknown): string | undefined {
-  const raw = typeof value === 'string'
-    ? value
-    : (value && typeof value === 'object'
-        && typeof (value as { path?: unknown }).path === 'string'
-      ? (value as { path: string }).path
-      : undefined);
-  const src = raw?.trim();
-  if (!src) return undefined;
-  return src;
-}
-
 export function Image(
   props: ImageProps,
 ): import('@lynx-js/react').ReactNode {
-  const src = imageSourceFromServer(props.url);
   const fit = props.fit ?? 'fit';
   const mode = props.mode ?? (() => {
     switch (fit) {
@@ -63,7 +50,7 @@ export function Image(
       key={props.id}
       className={className}
       auto-size={true}
-      src={src ?? ''}
+      src={props.url ?? ''}
       mode={mode}
     />
   );
