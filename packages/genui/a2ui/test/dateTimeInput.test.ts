@@ -7,6 +7,7 @@ import {
   buildDateTimeMonthPage,
   compareDateTimeParts,
   formatDateTimeInputValue,
+  getDateTimeDialogTitle,
   getDateTimeInputPlaceholder,
   getWeekdayLabels,
   incrementDateTimePart,
@@ -47,6 +48,9 @@ describe('DateTimeInput utils', () => {
     expect(normalizeDateTimeInputValue(undefined)).toBeNull();
     expect(normalizeDateTimeInputValue('bad')).toBeNull();
     expect(normalizeDateTimeInputValue({ path: '/date' })).toBeNull();
+    expect(normalizeDateTimeInputValue('2026-02-31')).toBeNull();
+    expect(normalizeDateTimeInputValue('2026-13-01')).toBeNull();
+    expect(normalizeDateTimeInputValue('24:99')).toBeNull();
   });
 
   test('normalizes modes with a usable fallback', () => {
@@ -149,12 +153,28 @@ describe('DateTimeInput utils', () => {
         1,
       ).minute,
     ).toBe(0);
+    expect(
+      incrementDateTimePart(
+        { year: 2026, month: 5, day: 26, hour: 23, minute: 59 },
+        'minute',
+        -121,
+      ).minute,
+    ).toBe(58);
   });
 
-  test('normalizes labels, placeholders, and weekday labels', () => {
+  test('normalizes labels, titles, placeholders, and weekday labels', () => {
     expect(normalizeDateTimeInputLabel('Due')).toBe('Due');
     expect(normalizeDateTimeInputLabel(7)).toBe('7');
     expect(normalizeDateTimeInputLabel({ path: '/label' })).toBe('');
+    expect(
+      getDateTimeDialogTitle('', { enableDate: false, enableTime: true }),
+    ).toBe('Select time');
+    expect(
+      getDateTimeDialogTitle('', { enableDate: true, enableTime: false }),
+    ).toBe('Select date');
+    expect(
+      getDateTimeDialogTitle('Due', { enableDate: false, enableTime: true }),
+    ).toBe('Due');
     expect(
       getDateTimeInputPlaceholder({ enableDate: true, enableTime: true }),
     ).toBe('Select date and time');

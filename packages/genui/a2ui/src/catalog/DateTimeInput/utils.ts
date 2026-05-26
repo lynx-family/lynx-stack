@@ -69,6 +69,21 @@ function isValidDate(value: Date): boolean {
   return !Number.isNaN(value.getTime());
 }
 
+function daysInMonth(year: number, month: number): number {
+  return createLocalDate(year, month, 0).getDate();
+}
+
+function isValidDatePart(year: number, month: number, day: number): boolean {
+  return month >= 1
+    && month <= 12
+    && day >= 1
+    && day <= daysInMonth(year, month);
+}
+
+function isValidTimePart(hour: number, minute: number): boolean {
+  return hour >= 0 && hour <= 23 && minute >= 0 && minute <= 59;
+}
+
 function partsFromDate(value: Date): DateTimeParts {
   return {
     year: value.getFullYear(),
@@ -87,12 +102,23 @@ function parseDateTimeString(value: string): DateTimeParts | null {
     .exec(trimmed);
   if (dateTimeMatch) {
     const [, year, month, day, hour = '0', minute = '0'] = dateTimeMatch;
+    const yearValue = Number(year);
+    const monthValue = Number(month);
+    const dayValue = Number(day);
+    const hourValue = Number(hour);
+    const minuteValue = Number(minute);
+    if (
+      !isValidDatePart(yearValue, monthValue, dayValue)
+      || !isValidTimePart(hourValue, minuteValue)
+    ) {
+      return null;
+    }
     const date = createLocalDate(
-      Number(year),
-      Number(month) - 1,
-      Number(day),
-      Number(hour),
-      Number(minute),
+      yearValue,
+      monthValue - 1,
+      dayValue,
+      hourValue,
+      minuteValue,
     );
     return isValidDate(date) ? partsFromDate(date) : null;
   }
@@ -101,12 +127,15 @@ function parseDateTimeString(value: string): DateTimeParts | null {
   if (timeMatch) {
     const today = new Date();
     const [, hour, minute] = timeMatch;
+    const hourValue = Number(hour);
+    const minuteValue = Number(minute);
+    if (!isValidTimePart(hourValue, minuteValue)) return null;
     const date = createLocalDate(
       today.getFullYear(),
       today.getMonth(),
       today.getDate(),
-      Number(hour),
-      Number(minute),
+      hourValue,
+      minuteValue,
     );
     return isValidDate(date) ? partsFromDate(date) : null;
   }
@@ -342,6 +371,13 @@ export function getDateTimeInputPlaceholder(mode: DateTimeInputMode): string {
   return 'Select date';
 }
 
+export function getDateTimeDialogTitle(
+  label: string,
+  mode: DateTimeInputMode,
+): string {
+  return label || getDateTimeInputPlaceholder(mode);
+}
+
 export function withDate(
   parts: DateTimeParts,
   date: Date,
@@ -361,7 +397,7 @@ export function incrementDateTimePart(
 ): DateTimeParts {
   const limit = part === 'hour' ? 24 : 60;
   const current = parts[part];
-  const next = (current + delta + limit) % limit;
+  const next = ((current + delta) % limit + limit) % limit;
   return {
     ...parts,
     [part]: next,
