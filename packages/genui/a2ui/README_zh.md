@@ -1,5 +1,7 @@
 # Lynx GenUI
 
+[English](./README.md) | 简体中文
+
 Lynx GenUI 面向已经熟悉 React 的开发者：你继续写可信的 ReactLynx 组件，AI 只负责从这些组件中选择、组合，并生成 Lynx
 原生界面。
 
@@ -254,7 +256,7 @@ npx @lynx-js/a2ui-cli generate catalog \
 - 校验或修复模型输出，再把 A2UI messages 返回给 Client。
 - 不要让不可信浏览器请求传入模型凭证、base URL 或模型选择。
 
-典型请求形状如下：
+典型请求结构如下：
 
 ```sh
 curl https://your-domain.example/api/a2ui/chat \
@@ -303,7 +305,7 @@ curl https://your-domain.example/api/a2ui/chat \
 ]
 ```
 
-正常开发时不需要手写这些 JSON。理解这个形状主要是为了方便调试。
+正常开发时不需要手写这些 JSON。理解这个结构主要是为了方便调试。
 
 主要接口：
 

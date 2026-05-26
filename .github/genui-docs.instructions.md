@@ -1,8 +1,8 @@
 ---
-applyTo: "packages/genui/Readme*.md"
+applyTo: "packages/genui/a2ui/README*.md"
 ---
 
-Write `packages/genui/Readme*.md` for external app developers who use A2UI from their own ReactLynx projects, not for contributors developing inside `lynx-stack`. Avoid monorepo setup, Turbo commands, package folder maps, private package names, local sample-server startup, localhost-only endpoints, and repository test commands in these user-facing docs.
+Write `packages/genui/a2ui/README*.md` for external app developers who use A2UI from their own ReactLynx projects, not for contributors developing inside `lynx-stack`. Avoid monorepo setup, Turbo commands, package folder maps, private package names, local sample-server startup, localhost-only endpoints, and repository test commands in these user-facing docs.
 
 When documenting the GenUI workflow, frame the happy path as Catalog -> Agent -> Client. Catalog docs should distinguish the client renderer catalog built with `defineCatalog` / `serializeCatalog` from whatever catalog-reference format an agent backend uses for prompts; do not imply the server accepts the client `SerializedCatalog` payload directly unless a conversion layer exists.
 

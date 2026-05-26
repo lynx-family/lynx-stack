@@ -2294,6 +2294,12 @@ importers:
         specifier: 19.2.4
         version: 19.2.4(react@19.2.4)
     devDependencies:
+      '@lynx-js/a2ui-cli':
+        specifier: workspace:*
+        version: link:../packages/genui/a2ui-cli
+      '@lynx-js/a2ui-reactlynx':
+        specifier: workspace:*
+        version: link:../packages/genui/a2ui
       '@lynx-js/chunk-loading-webpack-plugin':
         specifier: workspace:*
         version: link:../packages/webpack/chunk-loading-webpack-plugin

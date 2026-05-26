@@ -13,10 +13,34 @@ export function createGenUIGuideReadmeDocs(options: {
   en: SidebarGroup;
   zh: SidebarGroup;
 } {
-  const packageRoot = path.join(
+  const a2uiPackageRoot = path.join(
+    options.repositoryRoot,
+    'packages/genui/a2ui',
+  );
+  const catalogExtractorPackageRoot = path.join(
     options.repositoryRoot,
     'packages/genui/a2ui-catalog-extractor',
   );
+
+  syncReadme({
+    languageSwitch: 'English | <a href="/zh/guide/genui/a2ui">简体中文</a>',
+    outFile: path.join(
+      options.websiteRoot,
+      'docs/en/guide/genui/a2ui.md',
+    ),
+    sourceFile: path.join(a2uiPackageRoot, 'README.md'),
+    switchPattern: /^English \| \[简体中文\]\(\.\/README_zh\.md\)$/m,
+  });
+
+  syncReadme({
+    languageSwitch: '<a href="/guide/genui/a2ui">English</a> | 简体中文',
+    outFile: path.join(
+      options.websiteRoot,
+      'docs/zh/guide/genui/a2ui.md',
+    ),
+    sourceFile: path.join(a2uiPackageRoot, 'README_zh.md'),
+    switchPattern: /^\[English\]\(\.\/README\.md\) \| 简体中文$/m,
+  });
 
   syncReadme({
     languageSwitch:
@@ -25,7 +49,7 @@ export function createGenUIGuideReadmeDocs(options: {
       options.websiteRoot,
       'docs/en/guide/genui/a2ui-catalog-extractor.md',
     ),
-    sourceFile: path.join(packageRoot, 'README.md'),
+    sourceFile: path.join(catalogExtractorPackageRoot, 'README.md'),
     switchPattern: /^English \| \[简体中文\]\(\.\/readme\.zh_cn\.md\)$/m,
   });
 
@@ -36,7 +60,7 @@ export function createGenUIGuideReadmeDocs(options: {
       options.websiteRoot,
       'docs/zh/guide/genui/a2ui-catalog-extractor.md',
     ),
-    sourceFile: path.join(packageRoot, 'readme.zh_cn.md'),
+    sourceFile: path.join(catalogExtractorPackageRoot, 'readme.zh_cn.md'),
     switchPattern: /^\[English\]\(\.\/README\.md\) \| 简体中文$/m,
   });
 
@@ -44,6 +68,10 @@ export function createGenUIGuideReadmeDocs(options: {
     en: {
       text: 'GenUI',
       items: [
+        {
+          text: 'A2UI',
+          link: '/guide/genui/a2ui',
+        },
         {
           text: 'A2UI Catalog Extractor',
           link: '/guide/genui/a2ui-catalog-extractor',
@@ -53,6 +81,10 @@ export function createGenUIGuideReadmeDocs(options: {
     zh: {
       text: 'GenUI',
       items: [
+        {
+          text: 'A2UI',
+          link: '/zh/guide/genui/a2ui',
+        },
         {
           text: 'A2UI Catalog Extractor',
           link: '/zh/guide/genui/a2ui-catalog-extractor',
