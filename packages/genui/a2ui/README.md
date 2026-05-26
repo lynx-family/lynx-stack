@@ -260,6 +260,26 @@ Key options:
 | `--out <file>`          | Write the generated prompt to a file instead of stdout.                      |
 | `--appendix <text>`     | Add extra agent instructions to the generated prompt.                        |
 
+Catalog authoring details:
+
+- Put `@a2uiCatalog` on the props `interface`, not on the component function.
+  You can pass the component name explicitly, such as `@a2uiCatalog ProductTile`.
+  If the tag is empty, the generator infers the name by removing a trailing
+  `Props` or `ComponentProps` from the interface name.
+- TypeDoc comments become schema metadata: summary text and `@remarks` become
+  `description`, `@defaultValue` or `@default` become `default`,
+  `@deprecated` becomes `deprecated: true`, and optional properties are omitted
+  from `required`. For object or array defaults, put the JSON value inside a
+  code span, such as `` @defaultValue `{}` ``.
+- Supported prop types include `string`, `number`, `boolean`, string literal
+  enums, unions, arrays, inline object types, and `Record<string, T>`.
+- Avoid `any`, `unknown`, `null`, `undefined`, `never`, `void`, nullable
+  unions, most imported aliases, referenced external interfaces, and
+  non-string `Record` keys. Inline the agent-facing fields directly in the
+  marked interface.
+- The scanner accepts `.ts`, `.tsx`, `.js`, `.jsx`, `.mts`, and `.cts` files.
+  It ignores `.d.ts`, `node_modules`, `dist`, and `.turbo`.
+
 Operational notes:
 
 - Keep generated catalog artifacts in your package build output and commit API

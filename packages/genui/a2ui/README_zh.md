@@ -236,6 +236,21 @@ npx @lynx-js/a2ui-cli generate catalog \
 | `--out <file>`          | 将生成的 prompt 写入文件，而不是输出到 stdout。                |
 | `--appendix <text>`     | 为生成的 prompt 添加额外 Agent 指令。                          |
 
+Catalog 编写细节：
+
+- 把 `@a2uiCatalog` 放在 props `interface` 上，不要放在组件函数上。你可以显式写组件名，例如
+  `@a2uiCatalog ProductTile`。如果 tag 内容为空，生成器会从 interface 名中去掉结尾的 `Props` 或
+  `ComponentProps` 来推断组件名。
+- TypeDoc 注释会变成 schema 元数据：summary 文本和 `@remarks` 会进入 `description`，`@defaultValue` 或
+  `@default` 会进入 `default`，`@deprecated` 会变成 `deprecated: true`，可选属性不会放入
+  `required`。对象或数组默认值建议把 JSON 放进 code span，例如 `` @defaultValue `{}` ``。
+- 支持的 props 类型包括 `string`、`number`、`boolean`、字符串字面量 enum、union、数组、内联 object type，以及
+  `Record<string, T>`。
+- 避免使用 `any`、`unknown`、`null`、`undefined`、`never`、`void`、nullable union、大多数导入 alias、外部
+  interface reference，以及非 string 的 `Record` key。请把 Agent 可见字段直接内联在被标记的 interface 里。
+- 扫描器接受 `.ts`、`.tsx`、`.js`、`.jsx`、`.mts` 和 `.cts` 文件；会忽略 `.d.ts`、`node_modules`、`dist` 和
+  `.turbo`。
+
 实现注意事项：
 
 - 将生成的 catalog artifacts 放进包的构建输出；如果包契约依赖这些 manifests，记得随变更一起提交。

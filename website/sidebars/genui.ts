@@ -17,10 +17,6 @@ export function createGenUIGuideReadmeDocs(options: {
     options.repositoryRoot,
     'packages/genui/a2ui',
   );
-  const catalogExtractorPackageRoot = path.join(
-    options.repositoryRoot,
-    'packages/genui/a2ui-catalog-extractor',
-  );
 
   syncReadme({
     languageSwitch: 'English | <a href="/zh/guide/genui/a2ui">简体中文</a>',
@@ -42,27 +38,18 @@ export function createGenUIGuideReadmeDocs(options: {
     switchPattern: /^\[English\]\(\.\/README\.md\) \| 简体中文$/m,
   });
 
-  syncReadme({
-    languageSwitch:
-      'English | <a href="/zh/guide/genui/a2ui-catalog-extractor">简体中文</a>',
-    outFile: path.join(
+  removeGeneratedDoc(
+    path.join(
       options.websiteRoot,
       'docs/en/guide/genui/a2ui-catalog-extractor.md',
     ),
-    sourceFile: path.join(catalogExtractorPackageRoot, 'README.md'),
-    switchPattern: /^English \| \[简体中文\]\(\.\/readme\.zh_cn\.md\)$/m,
-  });
-
-  syncReadme({
-    languageSwitch:
-      '<a href="/guide/genui/a2ui-catalog-extractor">English</a> | 简体中文',
-    outFile: path.join(
+  );
+  removeGeneratedDoc(
+    path.join(
       options.websiteRoot,
       'docs/zh/guide/genui/a2ui-catalog-extractor.md',
     ),
-    sourceFile: path.join(catalogExtractorPackageRoot, 'readme.zh_cn.md'),
-    switchPattern: /^\[English\]\(\.\/README\.md\) \| 简体中文$/m,
-  });
+  );
 
   return {
     en: {
@@ -72,10 +59,6 @@ export function createGenUIGuideReadmeDocs(options: {
           text: 'A2UI',
           link: '/guide/genui/a2ui',
         },
-        {
-          text: 'A2UI Catalog Extractor',
-          link: '/guide/genui/a2ui-catalog-extractor',
-        },
       ],
     },
     zh: {
@@ -84,10 +67,6 @@ export function createGenUIGuideReadmeDocs(options: {
         {
           text: 'A2UI',
           link: '/zh/guide/genui/a2ui',
-        },
-        {
-          text: 'A2UI Catalog Extractor',
-          link: '/zh/guide/genui/a2ui-catalog-extractor',
         },
       ],
     },
@@ -114,4 +93,10 @@ function syncReadme(options: {
 
   fs.mkdirSync(path.dirname(options.outFile), { recursive: true });
   fs.writeFileSync(options.outFile, nextContent);
+}
+
+function removeGeneratedDoc(outFile: string): void {
+  if (fs.existsSync(outFile)) {
+    fs.rmSync(outFile);
+  }
 }
