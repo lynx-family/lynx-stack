@@ -49,7 +49,11 @@ export type {
   CssModuleLocalsConvention,
 } from './config/output/css-modules.js'
 export type { DistPath } from './config/output/dist-path.js'
-export type { Filename } from './config/output/filename.js'
+export type {
+  BundleFilename,
+  BundleFilenameContext,
+  Filename,
+} from './config/output/filename.js'
 export type { Minify } from './config/output/minify.js'
 export type { SourceMap } from './config/output/source-map.js'
 export type { Output } from './config/output/index.js'

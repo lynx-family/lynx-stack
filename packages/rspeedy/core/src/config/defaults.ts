@@ -70,6 +70,14 @@ function getFilename(filename: string | Filename | undefined): Filename {
     ?? filename?.template
     ?? DEFAULT_FILENAME
 
+  // When `bundle` is a function, we cannot mirror it onto the deprecated
+  // string-only `template` field.
+  if (typeof finalFilename === 'function') {
+    return {
+      bundle: finalFilename,
+    }
+  }
+
   return {
     bundle: finalFilename,
     template: finalFilename,

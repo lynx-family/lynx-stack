@@ -34,6 +34,16 @@ export interface BuildCache {
 }
 
 // @public
+export type BundleFilename = string | ((context: BundleFilenameContext) => string);
+
+// @public
+export interface BundleFilenameContext {
+    entryName?: string | undefined;
+    lazyBundle: boolean;
+    platform: string;
+}
+
+// @public
 export interface ChunkSplit {
     override?: Rspack.Configuration extends {
         optimization?: {
@@ -205,7 +215,7 @@ export interface ExposedAPI {
 // @public
 export interface Filename {
     assets?: Rspack.AssetModuleFilename;
-    bundle?: string | undefined;
+    bundle?: BundleFilename | undefined;
     css?: Rspack.CssFilename | undefined;
     font?: Rspack.AssetModuleFilename | undefined;
     image?: Rspack.AssetModuleFilename | undefined;
