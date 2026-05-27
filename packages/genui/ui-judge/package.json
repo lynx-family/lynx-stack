@@ -20,7 +20,7 @@
   ],
   "scripts": {
     "build": "rslib build",
-    "test": "playwright test"
+    "test": "pnpm --dir ../a2ui-catalog-extractor build && pnpm --dir ../a2ui build && playwright test"
   },
   "dependencies": {
     "@lynx-js/genui": "workspace:*",
@@ -28,6 +28,8 @@
     "@playwright/test": "^1.58.2"
   },
   "devDependencies": {
+    "@lynx-js/genui-a2ui": "workspace:*",
+    "@lynx-js/genui-a2ui-catalog-extractor": "workspace:*",
     "@types/node": "^24.10.13"
   },
   "engines": {

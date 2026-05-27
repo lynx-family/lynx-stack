@@ -102,6 +102,13 @@
     "typedoc": "^0.28.19",
     "zod": "^3.25.76"
   },
+  "devDependencies": {
+    "@lynx-js/genui-a2ui": "workspace:*",
+    "@lynx-js/genui-a2ui-catalog-extractor": "workspace:*",
+    "@lynx-js/genui-a2ui-prompt": "workspace:*",
+    "@lynx-js/genui-cli": "workspace:*",
+    "@lynx-js/genui-openui": "workspace:*"
+  },
   "peerDependencies": {
     "@lynx-js/lynx-ui": "^3.133.0",
     "@lynx-js/react": "^0.121.0"

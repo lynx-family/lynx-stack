@@ -266,6 +266,9 @@ function printPackageVersion() {
 }
 
 function isMain(moduleUrl) {
-  return process.argv[1] !== undefined
-    && moduleUrl === pathToFileURL(process.argv[1]).href;
+  if (process.argv[1] === undefined) {
+    return false;
+  }
+
+  return moduleUrl === pathToFileURL(fs.realpathSync(process.argv[1])).href;
 }

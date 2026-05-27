@@ -620,6 +620,22 @@ importers:
       zod:
         specifier: ^3.25.76
         version: 3.25.76
+    devDependencies:
+      '@lynx-js/genui-a2ui':
+        specifier: workspace:*
+        version: link:a2ui
+      '@lynx-js/genui-a2ui-catalog-extractor':
+        specifier: workspace:*
+        version: link:a2ui-catalog-extractor
+      '@lynx-js/genui-a2ui-prompt':
+        specifier: workspace:*
+        version: link:a2ui-prompt
+      '@lynx-js/genui-cli':
+        specifier: workspace:*
+        version: link:cli
+      '@lynx-js/genui-openui':
+        specifier: workspace:*
+        version: link:openui
 
   packages/genui/a2ui:
     dependencies:
@@ -815,6 +831,12 @@ importers:
         specifier: ^1.58.2
         version: 1.58.2
     devDependencies:
+      '@lynx-js/genui-a2ui':
+        specifier: workspace:*
+        version: link:../a2ui
+      '@lynx-js/genui-a2ui-catalog-extractor':
+        specifier: workspace:*
+        version: link:../a2ui-catalog-extractor
       '@types/node':
         specifier: ^24.10.13
         version: 24.10.13
