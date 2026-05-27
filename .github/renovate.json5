@@ -4,6 +4,8 @@
     "config:recommended",
     ":maintainLockFilesWeekly",
     "helpers:pinGitHubActionDigests",
+    // Delay npm updates by 3 days so risky or unpublished releases have time to surface.
+    "security:minimumReleaseAgeNpm",
   ],
 
   // Exclude `examples` from "config:recommended"
