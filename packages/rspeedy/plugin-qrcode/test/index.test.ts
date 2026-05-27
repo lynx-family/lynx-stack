@@ -17,7 +17,11 @@ import { beforeEach, describe, expect, onTestFinished, test, vi } from 'vitest'
 import type { Config, ExposedAPI } from '@lynx-js/rspeedy'
 
 import { getRandomNumberInRange } from './port.js'
-import { pluginQRCode } from '../src/index.js'
+import {
+  pluginQRCode,
+  withFullscreenSchema,
+  wrapPrintUrlsWithFullscreen,
+} from '../src/index.js'
 
 const exit = vi.fn()
 
@@ -104,6 +108,7 @@ describe('Plugins - Terminal', () => {
             plugins: [
               pluginStubRspeedyAPI(),
               pluginQRCode({
+                fullscreen: false,
                 schema(url) {
                   return `--${url}--`
                 },
@@ -169,6 +174,7 @@ describe('Plugins - Terminal', () => {
             plugins: [
               pluginStubRspeedyAPI(),
               pluginQRCode({
+                fullscreen: false,
                 schema(url) {
                   return {
                     foo: `==${url}==`,
@@ -249,6 +255,7 @@ describe('Plugins - Terminal', () => {
             plugins: [
               pluginStubRspeedyAPI(),
               pluginQRCode({
+                fullscreen: false,
                 schema(url) {
                   return `==${url}==`
                 },
@@ -509,6 +516,173 @@ describe('Plugins - Terminal', () => {
       await server.waitDevCompileSuccess()
 
       expect(renderUnicodeCompact).toBeCalledTimes(1)
+    })
+  })
+
+  describe('fullscreen printUrls hint', () => {
+    const params = { urls: [], port: 0, routes: [] } as never
+
+    test('appends ∟ Fullscreen under Lynx URL', () => {
+      const wrapped = wrapPrintUrlsWithFullscreen(() => [
+        { label: 'Lynx', url: 'http://example.com/foo/main.lynx.bundle' },
+      ])
+
+      expect(wrapped(params)).toEqual([
+        { label: 'Lynx', url: 'http://example.com/foo/main.lynx.bundle' },
+        {
+          label: '∟ Fullscreen',
+          url: 'http://example.com/foo/main.lynx.bundle?fullscreen=true',
+        },
+      ])
+    })
+
+    test('preserves existing query params on Lynx URL', () => {
+      const wrapped = wrapPrintUrlsWithFullscreen(() => [
+        {
+          label: 'Lynx',
+          url: 'http://example.com/foo/main.lynx.bundle?dev=1',
+        },
+      ])
+
+      expect(wrapped(params)).toContainEqual({
+        label: '∟ Fullscreen',
+        url: 'http://example.com/foo/main.lynx.bundle?dev=1&fullscreen=true',
+      })
+    })
+
+    test('does not append for non-Lynx entries', () => {
+      const wrapped = wrapPrintUrlsWithFullscreen(() => [
+        { label: 'Web', url: 'http://example.com/foo/main.web.bundle' },
+        { label: '∟ Preview', url: 'http://example.com/foo/__web_preview' },
+      ])
+
+      expect(wrapped(params)).not.toContainEqual(
+        expect.objectContaining({ label: '∟ Fullscreen' }),
+      )
+    })
+
+    test('passes through string entries untouched', () => {
+      const wrapped = wrapPrintUrlsWithFullscreen(() => [
+        'http://example.com/foo/main.lynx.bundle',
+      ])
+
+      expect(wrapped(params)).toEqual([
+        'http://example.com/foo/main.lynx.bundle',
+      ])
+    })
+
+    test('handles undefined return from previous printUrls', () => {
+      const wrapped = wrapPrintUrlsWithFullscreen(() => undefined)
+
+      expect(wrapped(params)).toEqual([])
+    })
+
+    test('falls back to string concat when URL parsing fails', () => {
+      const wrapped = wrapPrintUrlsWithFullscreen(() => [
+        { label: 'Lynx', url: 'not-a-url' },
+        { label: 'Lynx', url: 'not-a-url?dev=1' },
+      ])
+
+      expect(wrapped(params)).toEqual([
+        { label: 'Lynx', url: 'not-a-url' },
+        { label: '∟ Fullscreen', url: 'not-a-url?fullscreen=true' },
+        { label: 'Lynx', url: 'not-a-url?dev=1' },
+        { label: '∟ Fullscreen', url: 'not-a-url?dev=1&fullscreen=true' },
+      ])
+    })
+
+    test('appends with all Lynx-labelled entries', () => {
+      const wrapped = wrapPrintUrlsWithFullscreen(() => [
+        { label: 'Lynx', url: 'http://example.com/a.lynx.bundle' },
+        { label: 'Web', url: 'http://example.com/a.web.bundle' },
+        { label: 'Lynx', url: 'http://example.com/b.lynx.bundle' },
+      ])
+
+      const result = wrapped(params) as Array<
+        { label: string, url: string } | string
+      >
+
+      expect(result).toHaveLength(5)
+      expect(
+        result.filter((e) =>
+          typeof e !== 'string' && e.label === '∟ Fullscreen'
+        ),
+      ).toEqual([
+        {
+          label: '∟ Fullscreen',
+          url: 'http://example.com/a.lynx.bundle?fullscreen=true',
+        },
+        {
+          label: '∟ Fullscreen',
+          url: 'http://example.com/b.lynx.bundle?fullscreen=true',
+        },
+      ])
+    })
+  })
+
+  describe('fullscreen schema', () => {
+    test('wraps string schema into { default, fullscreen }', () => {
+      const wrapped = withFullscreenSchema(() =>
+        'http://example.com/main.lynx.bundle'
+      )
+
+      expect(wrapped('http://example.com/main.lynx.bundle')).toEqual({
+        default: 'http://example.com/main.lynx.bundle',
+        fullscreen: 'http://example.com/main.lynx.bundle?fullscreen=true',
+      })
+    })
+
+    test('adds fullscreen entry to object schema', () => {
+      const wrapped = withFullscreenSchema(() => ({
+        http: 'http://example.com/main.lynx.bundle',
+        lynx: 'lynx://example.com/main.lynx.bundle',
+      }))
+
+      expect(wrapped('http://example.com/main.lynx.bundle')).toEqual({
+        http: 'http://example.com/main.lynx.bundle',
+        lynx: 'lynx://example.com/main.lynx.bundle',
+        fullscreen: 'http://example.com/main.lynx.bundle?fullscreen=true',
+      })
+    })
+
+    test('preserves existing query params on first URL', () => {
+      const wrapped = withFullscreenSchema(() => ({
+        http: 'http://example.com/main.lynx.bundle?dev=1',
+      }))
+
+      expect(wrapped('http://example.com/main.lynx.bundle')).toEqual({
+        http: 'http://example.com/main.lynx.bundle?dev=1',
+        fullscreen: 'http://example.com/main.lynx.bundle?dev=1&fullscreen=true',
+      })
+    })
+
+    test('falls back to string concat when URL parsing fails', () => {
+      const wrapped = withFullscreenSchema(() => 'not-a-url?dev=1')
+
+      expect(wrapped('not-a-url')).toEqual({
+        default: 'not-a-url?dev=1',
+        fullscreen: 'not-a-url?dev=1&fullscreen=true',
+      })
+    })
+
+    test('passes through empty object schema unchanged', () => {
+      const wrapped = withFullscreenSchema(() => ({}))
+
+      expect(wrapped('http://example.com/main.lynx.bundle')).toEqual({})
+    })
+
+    test('appends fullscreen after the user-defined entries', () => {
+      const wrapped = withFullscreenSchema(() => ({
+        http: 'http://example.com/main.lynx.bundle',
+        lynx: 'lynx://example.com/main.lynx.bundle',
+      }))
+
+      const result = wrapped('http://example.com/main.lynx.bundle') as Record<
+        string,
+        string
+      >
+
+      expect(Object.keys(result)).toEqual(['http', 'lynx', 'fullscreen'])
     })
   })
 })
