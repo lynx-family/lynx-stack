@@ -21,7 +21,8 @@ function devServerOrigin(api: RsbuildPluginAPI): string | undefined {
     // Rspeedy will normalized dev.assetPrefix to string
     throw new Error(errorMsg)
   }
-  return new URL(assetPrefix.replaceAll('<port>', String(port))).origin
+  const url = new URL(assetPrefix.replaceAll('<port>', String(port)))
+  return (url.origin + url.pathname).replace(/\/$/, '')
 }
 
 interface LynxTemplatePluginExposure {
