@@ -174,7 +174,7 @@ export declare class StorageModule {
     );
   });
 
-  it('writes generated files from a temp extension package', () => {
+  it('writes generated files from a temp library package', () => {
     const root = createFixture({
       manifest: {
         platforms: {
@@ -281,11 +281,11 @@ export declare class StorageModule {
     },
   );
 
-  it('fails clearly when lynx.ext.json is missing', () => {
+  it('fails clearly when lynx.lib.json is missing', () => {
     const root = createTempDir();
     fs.mkdirSync(path.join(root, 'types'), { recursive: true });
 
-    expect(() => generate({ root })).toThrow(/Missing lynx\.ext\.json/);
+    expect(() => generate({ root })).toThrow(/Missing lynx\.lib\.json/);
   });
 
   it('fails clearly when android packageName is missing', () => {
@@ -371,7 +371,7 @@ export declare class BadModule {
 
   it('fails clearly for duplicate module names across files', () => {
     const root = createTempDir();
-    writeJson(path.join(root, 'lynx.ext.json'), {
+    writeJson(path.join(root, 'lynx.lib.json'), {
       platforms: {
         android: { packageName: 'com.example.dupe' },
         ios: {},
@@ -407,7 +407,7 @@ function createFixture(options: {
   types: string;
 }): string {
   const root = createTempDir();
-  writeJson(path.join(root, 'lynx.ext.json'), options.manifest);
+  writeJson(path.join(root, 'lynx.lib.json'), options.manifest);
   fs.mkdirSync(path.join(root, 'types'), { recursive: true });
   fs.writeFileSync(path.join(root, 'types/index.d.ts'), options.types);
   return root;

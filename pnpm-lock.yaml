@@ -854,7 +854,7 @@ importers:
         specifier: ^8.8.5
         version: 8.8.5
 
-  packages/lynx/create-lynx-extension:
+  packages/lynx/create-lynx-library:
     dependencies:
       '@clack/prompts':
         specifier: 1.0.1

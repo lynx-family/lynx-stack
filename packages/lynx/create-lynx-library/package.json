@@ -1,7 +1,7 @@
 {
-  "name": "create-lynx-extension",
+  "name": "create-lynx-library",
   "version": "0.1.0",
-  "description": "Create Native Autolink Lynx extensions",
+  "description": "Create Native Autolink Lynx libraries",
   "keywords": [
     "Lynx",
     "Autolink",
@@ -10,7 +10,7 @@
   "repository": {
     "type": "git",
     "url": "https://github.com/lynx-family/lynx-stack.git",
-    "directory": "packages/lynx/create-lynx-extension"
+    "directory": "packages/lynx/create-lynx-library"
   },
   "license": "Apache-2.0",
   "sideEffects": false,
@@ -22,7 +22,7 @@
     }
   },
   "bin": {
-    "create-lynx-extension": "./dist/cli.js"
+    "create-lynx-library": "./dist/cli.js"
   },
   "files": [
     "CHANGELOG.md",
