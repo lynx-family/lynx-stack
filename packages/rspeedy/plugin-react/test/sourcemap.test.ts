@@ -6,6 +6,7 @@
 import { glob, mkdir, mkdtemp, readFile, rm, writeFile } from 'node:fs/promises'
 import { tmpdir } from 'node:os'
 import path from 'node:path'
+import { fileURLToPath } from 'node:url'
 
 import type { RsbuildPlugin } from '@rsbuild/core'
 import { SourceMapConsumer } from 'source-map'
@@ -45,8 +46,9 @@ async function buildSourcemapFixture(
     rspeedyConfig: {
       source: {
         entry: {
-          main: new URL('./fixtures/sourcemap/index.tsx', import.meta.url)
-            .pathname,
+          main: fileURLToPath(
+            new URL('./fixtures/sourcemap/index.tsx', import.meta.url),
+          ),
         },
       },
       output: {

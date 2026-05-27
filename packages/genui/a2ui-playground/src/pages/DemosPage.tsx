@@ -45,7 +45,7 @@ const ALL_SCENARIOS: Scenario[] = [
   ...DYNAMIC_PRESETS,
 ];
 
-const DESKTOP_PREVIEW_MIN_WIDTH = 360;
+const DESKTOP_PREVIEW_MIN_WIDTH = 420;
 const DESKTOP_CODE_MIN_WIDTH = 360;
 const COMPACT_CODE_MIN_HEIGHT = 220;
 const COMPACT_PREVIEW_MIN_HEIGHT = 320;
@@ -93,8 +93,8 @@ export function DemosPage(props: {
     desktopOffsetSelector: '.sidebar',
     desktopPrimaryMinSize: DESKTOP_CODE_MIN_WIDTH,
     desktopSecondaryMinSize: DESKTOP_PREVIEW_MIN_WIDTH,
-    initialPrimarySize: 320,
-    initialSecondarySize: 480,
+    initialPrimarySize: 360,
+    initialSecondarySize: 760,
   });
 
   const currentScenario = useMemo(
@@ -300,7 +300,7 @@ export function DemosPage(props: {
       />
 
       <PreviewPanel
-        className='previewPanel'
+        className='previewPanel examplesPreviewPanel'
         style={previewPanelStyle}
         title='Lynx Preview'
         showPreviewModeSwitch

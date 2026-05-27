@@ -65,7 +65,7 @@ export function pickChatOptions(body: {
   const allowOverride = clientOverridesAllowed();
   return {
     resourceId: body.resourceId,
-    model: body.model,
+    model: allowOverride ? body.model : undefined,
     apiKey: allowOverride ? body.apiKey : undefined,
     baseURL: allowOverride ? body.baseURL : undefined,
     catalog: body.catalog,

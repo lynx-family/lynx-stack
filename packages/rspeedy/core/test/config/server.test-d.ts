@@ -120,7 +120,7 @@ describe('Config - Server', () => {
     assertType<Server>({
       proxy: [
         {
-          context: ['/auth', '/api'],
+          pathFilter: ['/auth', '/api'],
           target: 'http://localhost:3000',
         },
       ],

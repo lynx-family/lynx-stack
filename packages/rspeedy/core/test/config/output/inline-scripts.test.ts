@@ -31,11 +31,33 @@ describe('output.inlineScripts', () => {
 
   test('defaults with enableChunkSplitting', async () => {
     const rspeedy = await createStubRspeedy({
-      performance: {
-        chunkSplit: {
-          strategy: 'split-by-size',
-        },
+      splitChunks: {
+        maxSize: 50_000,
       },
+
+      plugins: [
+        {
+          name: 'test',
+          setup(api: RsbuildPluginAPI) {
+            api.modifyRsbuildConfig((config) => {
+              expect(config.output?.inlineScripts).toBe(false)
+            })
+            api.modifyBundlerChain((_, { environment }) => {
+              expect(environment.config.output.inlineScripts).toBe(false)
+            })
+          },
+        },
+      ],
+    })
+
+    await rspeedy.initConfigs()
+
+    expect.assertions(2)
+  })
+
+  test('defaults with empty splitChunks object', async () => {
+    const rspeedy = await createStubRspeedy({
+      splitChunks: {},
 
       plugins: [
         {

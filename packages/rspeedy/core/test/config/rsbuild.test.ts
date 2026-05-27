@@ -7,8 +7,64 @@ import type { RsbuildPlugin } from '@rsbuild/core'
 import { describe, expect, test } from 'vitest'
 
 import { toRsbuildConfig } from '../../src/config/rsbuild/index.js'
+import type { Config } from '../../src/index.js'
 
 describe('Config - toRsBuildConfig', () => {
+  describe('splitChunks', () => {
+    test('defaults splitChunks to false', () => {
+      const rsbuildConfig = toRsbuildConfig({})
+
+      expect(rsbuildConfig.splitChunks).toBe(false)
+    })
+
+    test('passes top-level splitChunks to Rsbuild', () => {
+      const rsbuildConfig = toRsbuildConfig({
+        splitChunks: {
+          preset: 'single-vendor',
+        },
+      })
+
+      expect(rsbuildConfig.splitChunks).toStrictEqual({
+        preset: 'single-vendor',
+      })
+    })
+
+    test('passes explicit top-level splitChunks false to Rsbuild', () => {
+      const rsbuildConfig = toRsbuildConfig({
+        splitChunks: false,
+      })
+
+      expect(rsbuildConfig.splitChunks).toBe(false)
+    })
+
+    test('lets legacy performance.chunkSplit enable chunk splitting', () => {
+      const rsbuildConfig = toRsbuildConfig({
+        performance: {
+          chunkSplit: {
+            strategy: 'single-vendor',
+          },
+        },
+      })
+
+      expect(rsbuildConfig.splitChunks).toBeUndefined()
+      expect(rsbuildConfig.performance?.chunkSplit).toStrictEqual({
+        strategy: 'single-vendor',
+      })
+    })
+
+    test('keeps legacy performance.chunkSplit all-in-one disabled', () => {
+      const rsbuildConfig = toRsbuildConfig({
+        performance: {
+          chunkSplit: {
+            strategy: 'all-in-one',
+          },
+        },
+      })
+
+      expect(rsbuildConfig.splitChunks).toBe(false)
+    })
+  })
+
   describe('Dev', () => {
     test('transform empty dev', () => {
       const rsbuildConfig = toRsbuildConfig({
@@ -59,7 +115,7 @@ describe('Config - toRsBuildConfig', () => {
   describe('Define', () => {
     test('transform empty define', () => {
       const rsbuildConfig = toRsbuildConfig({
-        source: { define: void 0 },
+        source: { define: void 0 } as unknown as Config['source'],
       })
       expect(rsbuildConfig.source?.define).toStrictEqual(undefined)
     })
@@ -437,11 +493,11 @@ describe('Config - toRsBuildConfig', () => {
   })
 
   describe('Performance', () => {
-    test('transform performance.profile', () => {
+    test('omit removed rsbuild performance.profile', () => {
       const rsbuildConfig = toRsbuildConfig({
         performance: { profile: true },
       })
-      expect(rsbuildConfig.performance?.profile).toBe(true)
+      expect('profile' in (rsbuildConfig.performance ?? {})).toBe(false)
     })
 
     test('transform performance.removeConsole true', () => {
@@ -541,7 +597,7 @@ describe('Config - toRsBuildConfig', () => {
       const rsbuildConfig = toRsbuildConfig({
         source: {},
       })
-      expect(rsbuildConfig.source?.alias).toStrictEqual(
+      expect(rsbuildConfig.resolve?.alias).toStrictEqual(
         undefined,
       )
       expect(rsbuildConfig.source?.tsconfigPath).toMatchInlineSnapshot(
@@ -625,6 +681,18 @@ describe('Config - toRsBuildConfig', () => {
   })
 
   describe('Server', () => {
+    test('transform default server.host', () => {
+      const rsbuildConfig = toRsbuildConfig({})
+      expect(rsbuildConfig.server?.host).toBe('0.0.0.0')
+    })
+
+    test('transform server.host', () => {
+      const rsbuildConfig = toRsbuildConfig({
+        server: { host: '127.0.0.1' },
+      })
+      expect(rsbuildConfig.server?.host).toBe('127.0.0.1')
+    })
+
     test('transform server.compress: undefined (no server)', () => {
       const rsbuildConfig = toRsbuildConfig({})
       expect(rsbuildConfig.server?.compress).toBeUndefined()
@@ -689,7 +757,7 @@ describe('Config - toRsBuildConfig', () => {
           alias: {},
         },
       })
-      expect(rsbuildConfig.source?.alias).toStrictEqual(
+      expect(rsbuildConfig.resolve?.alias).toStrictEqual(
         {},
       )
     })
@@ -702,10 +770,10 @@ describe('Config - toRsBuildConfig', () => {
           },
         },
       })
-      expect(rsbuildConfig.source?.alias).toStrictEqual(
+      expect(rsbuildConfig.resolve?.alias).toStrictEqual(
         { foo: 'bar' },
       )
-      expect(rsbuildConfig.source?.alias).not.toStrictEqual({
+      expect(rsbuildConfig.resolve?.alias).not.toStrictEqual({
         foo: 'baz',
       })
     })

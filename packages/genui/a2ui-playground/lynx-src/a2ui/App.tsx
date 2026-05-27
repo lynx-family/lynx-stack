@@ -8,6 +8,7 @@ import {
   CheckBox,
   ChoicePicker,
   Column,
+  DateTimeInput,
   Divider,
   Icon,
   Image,
@@ -38,6 +39,7 @@ import cardManifest from '@lynx-js/a2ui-reactlynx/catalog/Card/catalog.json';
 import checkBoxManifest from '@lynx-js/a2ui-reactlynx/catalog/CheckBox/catalog.json';
 import choicePickerManifest from '@lynx-js/a2ui-reactlynx/catalog/ChoicePicker/catalog.json';
 import columnManifest from '@lynx-js/a2ui-reactlynx/catalog/Column/catalog.json';
+import dateTimeInputManifest from '@lynx-js/a2ui-reactlynx/catalog/DateTimeInput/catalog.json';
 import dividerManifest from '@lynx-js/a2ui-reactlynx/catalog/Divider/catalog.json';
 import iconManifest from '@lynx-js/a2ui-reactlynx/catalog/Icon/catalog.json';
 import imageManifest from '@lynx-js/a2ui-reactlynx/catalog/Image/catalog.json';
@@ -97,6 +99,7 @@ const ALL_BUILTINS: readonly CatalogInput[] = [
   manifestEntry(Icon, iconManifest),
   manifestEntry(CheckBox, checkBoxManifest),
   manifestEntry(ChoicePicker, choicePickerManifest),
+  manifestEntry(DateTimeInput, dateTimeInputManifest),
   manifestEntry(LineChart, lineChartManifest),
   manifestEntry(PieChart, pieChartManifest),
   manifestEntry(RadioGroup, radioGroupManifest),
@@ -339,6 +342,7 @@ export function App() {
 
   const storeRef = useRef<MessageStore | null>(null);
   const agentRef = useRef<ReturnType<typeof createMockAgent> | null>(null);
+  const pendingLiveMessagesRef = useRef<unknown[] | null>(null);
   const [store, setStore] = useState<MessageStore | null>(null);
   const [error, setError] = useState<string>('');
   const playbackMode = useMemo(
@@ -380,6 +384,15 @@ export function App() {
   const isPlaybackPaused = useMemo(
     () => effectiveData.playbackPaused === true,
     [effectiveData.playbackPaused],
+  );
+  const pushLiveMessagesToStore = useCallback(
+    (targetStore: MessageStore, messages: unknown) => {
+      const normalized = normalizeProtocolMessages(messages);
+      for (const msg of normalized) {
+        targetStore.push(msg);
+      }
+    },
+    [],
   );
   const postPlaybackSync = useCallback((state: MockAgentProgress) => {
     NativeModules.bridge?.call?.(
@@ -445,6 +458,22 @@ export function App() {
     },
   );
 
+  useLynxGlobalEventListener(
+    'A2UI_LIVE_MESSAGES',
+    (messages: unknown) => {
+      const currentStore = storeRef.current;
+      if (!currentStore) {
+        pendingLiveMessagesRef.current = Array.isArray(messages)
+          ? messages
+          : [messages];
+        return;
+      }
+      pushLiveMessagesToStore(currentStore, messages);
+      agentRef.current?.stop();
+      agentRef.current = null;
+    },
+  );
+
   useEffect(() => {
     playbackPausedRef.current = isPlaybackPaused;
   }, [isPlaybackPaused]);
@@ -496,9 +525,18 @@ export function App() {
       storeRef.current = next;
       agentRef.current = agent;
       setStore(next);
+      const pendingLiveMessages = pendingLiveMessagesRef.current;
+      if (pendingLiveMessages) {
+        pendingLiveMessagesRef.current = null;
+        pushLiveMessagesToStore(next, pendingLiveMessages);
+        agent.stop();
+        agentRef.current = null;
+      }
       syncPlaybackAgent();
       // Begin streaming the demo's initial messages into the buffer.
-      void agent.start();
+      if (agentRef.current === agent) {
+        void agent.start();
+      }
     };
 
     run()
@@ -515,7 +553,13 @@ export function App() {
       storeRef.current = null;
       agentRef.current = null;
     };
-  }, [isInstantPreview, postPlaybackSync, streamConfig, streamDelay]);
+  }, [
+    isInstantPreview,
+    postPlaybackSync,
+    pushLiveMessagesToStore,
+    streamConfig,
+    streamDelay,
+  ]);
 
   return (
     <view

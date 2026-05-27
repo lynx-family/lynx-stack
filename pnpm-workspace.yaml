@@ -33,6 +33,9 @@ ignorePatchFailures: false
 optimisticRepeatInstall: true
 resolutionMode: "lowest-direct"
 
+# Match Renovate's npm minimum release age; pnpm also guards lockfile maintenance.
+minimumReleaseAge: 4320
+
 # Default catalogs
 catalog:
   "@microsoft/api-extractor": "7.58.2"
@@ -51,12 +54,13 @@ catalogs:
 
   # Rsbuild monorepo packages
   rsbuild:
-    "@rsbuild/core": "1.7.5"
+    "@rsbuild/core": "2.0.6"
 
   # Rspack monorepo packages
   rspack:
-    "@rspack/cli": "1.7.9"
-    "@rspack/core": "1.7.9"
+    "@rspack/cli": "2.0.3"
+    "@rspack/core": "2.0.3"
+    "@rspack/dev-server": "2.0.1"
     "@rspack/test-tools": "1.5.6"
 
   # Rstest monorepo packages
@@ -65,8 +69,8 @@ catalogs:
     "@rstest/core": "0.8.1"
 
 overrides:
-  "@rspack/core@^1": "$@rspack/core"
-  "@rsbuild/core@1>@rspack/core": "$@rspack/core"
+  "@rspack/core": "$@rspack/core"
+  "@rsbuild/core>@rspack/core": "$@rspack/core"
   "@rsdoctor/rspack-plugin>@rspack/core": "$@rspack/core"
   "@rsdoctor/types>@rspack/core": "$@rspack/core"
 

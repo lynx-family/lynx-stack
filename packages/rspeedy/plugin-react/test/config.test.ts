@@ -6,6 +6,7 @@ import { mkdtemp, rm } from 'node:fs/promises'
 import { createRequire } from 'node:module'
 import { tmpdir } from 'node:os'
 import path from 'node:path'
+import { fileURLToPath } from 'node:url'
 
 import type { RsbuildInstance, Rspack } from '@rsbuild/core'
 import { afterAll, describe, expect, test, vi } from 'vitest'
@@ -1807,6 +1808,61 @@ describe('Config', () => {
         `)
     })
 
+    test('splitChunks.preset: "default"', async () => {
+      const { pluginReactLynx } = await import('../src/pluginReactLynx.js')
+
+      const rsbuild = await createRspeedy({
+        rspeedyConfig: {
+          plugins: [
+            pluginReactLynx(),
+            pluginStubRspeedyAPI(),
+          ],
+          splitChunks: {
+            preset: 'default',
+          },
+        },
+      })
+
+      const [config] = await rsbuild.initConfigs()
+
+      if (config?.optimization?.splitChunks === undefined) {
+        expect.fail('should have config.optimization.splitChunks')
+      }
+
+      expect(config.optimization.splitChunks).not.toBe(false)
+
+      if (config.optimization.splitChunks === false) {
+        expect.unreachable('splitChunks is not false')
+      }
+
+      expect(config.optimization.splitChunks.cacheGroups).toHaveProperty(
+        'preact',
+      )
+    })
+
+    test('splitChunks overrides performance.chunkSplit', async () => {
+      const { pluginReactLynx } = await import('../src/pluginReactLynx.js')
+
+      const rsbuild = await createRspeedy({
+        rspeedyConfig: {
+          plugins: [
+            pluginReactLynx(),
+            pluginStubRspeedyAPI(),
+          ],
+          splitChunks: false,
+          performance: {
+            chunkSplit: {
+              strategy: 'split-by-experience',
+            },
+          },
+        },
+      })
+
+      const [config] = await rsbuild.initConfigs()
+
+      expect(config?.optimization?.splitChunks).toBe(false)
+    })
+
     test('performance.chunkSplit.strategy: "split-by-experience" along with extractStr: true', async () => {
       const { pluginReactLynx } = await import('../src/pluginReactLynx.js')
 
@@ -2028,8 +2084,9 @@ describe('Config', () => {
         rspeedyConfig: {
           source: {
             entry: {
-              main: new URL('./fixtures/defineDCE/basic.js', import.meta.url)
-                .pathname,
+              main: fileURLToPath(
+                new URL('./fixtures/defineDCE/basic.js', import.meta.url),
+              ),
             },
           },
           environments: {
@@ -2061,9 +2118,9 @@ describe('Config', () => {
         rspeedyConfig: {
           source: {
             entry: {
-              [entryName]:
-                new URL('./fixtures/defineDCE/macros.js', import.meta.url)
-                  .pathname,
+              [entryName]: fileURLToPath(
+                new URL('./fixtures/defineDCE/macros.js', import.meta.url),
+              ),
             },
           },
           output: {
@@ -2126,9 +2183,9 @@ describe('Config', () => {
         rspeedyConfig: {
           source: {
             entry: {
-              [entryName]:
-                new URL('./fixtures/pure-funcs/basic.js', import.meta.url)
-                  .pathname,
+              [entryName]: fileURLToPath(
+                new URL('./fixtures/pure-funcs/basic.js', import.meta.url),
+              ),
             },
           },
           output: {
@@ -2825,10 +2882,24 @@ describe('Config', () => {
     interface Rule {
       test?: RegExp
       use?: Array<{ loader: string }>
+      oneOf?: Rule[]
       [key: string]: unknown
     }
 
     const rules = config?.module?.rules as Rule[] | undefined
+    const getLoaderBranches = (rule: Rule): string[][] => {
+      const loaderBranch = rule.use?.map((u: { loader: string }) => u.loader)
+        ?? []
+      const oneOfBranches = rule.oneOf?.flatMap(rule => getLoaderBranches(rule))
+        ?? []
+
+      return oneOfBranches.length > 0
+        ? [
+          ...loaderBranch.length > 0 ? [loaderBranch] : [],
+          ...oneOfBranches,
+        ]
+        : [loaderBranch]
+    }
 
     test('css rules should be rsbuild default', () => {
       expect(
@@ -2837,13 +2908,11 @@ describe('Config', () => {
           && typeof rule === 'object'
           && rule.test
           && rule.test.toString() === (/\.css$/).toString()
-        ).map((rule: Rule) =>
-          (rule?.use?.map((u: { loader: string }) => u.loader)) ?? []
-        ),
+        ).flatMap(rule => getLoaderBranches(rule)),
       ).toMatchInlineSnapshot(`
         [
           [
-            "<ROOT>/node_modules/<PNPM_INNER>/@rspack/core/dist/cssExtractLoader.js",
+            "<ROOT>/node_modules/<PNPM_INNER>/@rsbuild/core/dist/cssUrlLoader.mjs",
             "<ROOT>/node_modules/<PNPM_INNER>/@rsbuild/core/compiled/css-loader/index.js",
             "builtin:lightningcss-loader",
           ],
@@ -2852,6 +2921,11 @@ describe('Config', () => {
             "builtin:lightningcss-loader",
           ],
           [],
+          [
+            "<ROOT>/node_modules/<PNPM_INNER>/@rspack/core/dist/cssExtractLoader.js",
+            "<ROOT>/node_modules/<PNPM_INNER>/@rsbuild/core/compiled/css-loader/index.js",
+            "builtin:lightningcss-loader",
+          ],
         ]
       `)
     })
@@ -2863,17 +2937,14 @@ describe('Config', () => {
           && rule.test
           && rule.test.toString()
             === (/\.(?:js|jsx|mjs|cjs|ts|tsx|mts|cts)$/).toString()
-        ).map((rule: Rule) =>
-          (rule?.use?.map((u: { loader: string }) => u.loader)) ?? []
-        ),
+        ).flatMap(rule => getLoaderBranches(rule)),
       ).toMatchInlineSnapshot(`
         [
+          [],
           [
             "builtin:swc-loader",
             "<ROOT>/packages/webpack/react-webpack-plugin/lib/loaders/testing.js",
           ],
-          [],
-          [],
         ]
       `)
     })

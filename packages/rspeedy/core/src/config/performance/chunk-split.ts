@@ -6,6 +6,8 @@ import type { Rspack } from '@rsbuild/core'
 /**
  * {@inheritdoc Performance.chunkSplit}
  *
+ * @deprecated Use the top-level {@link Config.splitChunks} option instead.
+ *
  * @public
  */
 export interface ChunkSplit {
@@ -107,6 +109,8 @@ export interface ChunkSplit {
 /**
  * {@inheritdoc Performance.chunkSplit}
  *
+ * @deprecated Use the top-level {@link Config.splitChunks} option instead.
+ *
  * @public
  */
 export interface ChunkSplitBySize {
@@ -174,6 +178,8 @@ export interface ChunkSplitBySize {
 
 /**
  * {@inheritdoc Performance.chunkSplit}
+ *
+ * @deprecated Use the top-level {@link Config.splitChunks} option instead.
  *
  * @public
  */
