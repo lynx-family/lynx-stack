@@ -11,6 +11,7 @@ import {
 } from 'react';
 import type { CSSProperties, ReactNode } from 'react';
 
+import { CopyToast, useCopyToast } from './CopyToast.js';
 import { PreviewSimulationBar } from './PreviewSimulationBar.js';
 import { QrCode } from './QrCode.js';
 import { componentsByMessage } from '../demos.js';
@@ -198,6 +199,7 @@ export function PreviewPanel(props: PreviewPanelProps) {
   const [nativeCopied, setNativeCopied] = useState(false);
   const [nativeCopyFailed, setNativeCopyFailed] = useState(false);
   const [nativeQrError, setNativeQrError] = useState('');
+  const { showCopyToast, toast: copyToast } = useCopyToast();
   const [liveComponents, setLiveComponents] = useState<string[]>([]);
   const liveTimersRef = useRef<ReturnType<typeof setTimeout>[]>([]);
   const buildSeqRef = useRef(0);
@@ -483,6 +485,7 @@ export function PreviewPanel(props: PreviewPanelProps) {
   const handleCopyUrl = (key: string, value: string) => {
     if (key === 'webPreview') {
       void copyToClipboard(value).then((ok) => {
+        showCopyToast(ok);
         setWebCopyFailed(false);
         if (!ok) {
           setWebCopied(false);
@@ -497,6 +500,7 @@ export function PreviewPanel(props: PreviewPanelProps) {
     }
 
     void copyToClipboard(value).then((ok) => {
+      showCopyToast(ok);
       setNativeCopyFailed(false);
       if (!ok) {
         setNativeCopied(false);
@@ -520,6 +524,7 @@ export function PreviewPanel(props: PreviewPanelProps) {
               : 'previewPanel')}
           style={panelStyle}
         >
+          <CopyToast toast={copyToast} />
           <div className='previewPanelHeader'>
             <span className='previewPanelTitle'>{title}</span>
             {headerAfterTitle}
