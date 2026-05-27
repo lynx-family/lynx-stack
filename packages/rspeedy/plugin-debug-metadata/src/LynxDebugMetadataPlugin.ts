@@ -28,6 +28,7 @@ import {
   createUiSourceMap,
 } from './collectors/ui-source-map.js'
 import { DEBUG_METADATA_ASSET_NAME } from './constants.js'
+import { getReleaseDefine, getReleaseRuntime } from './release-banner.js'
 import { rewriteTrailerToAbsoluteUrl } from './source-mapping-url-rewriter.js'
 
 /**
@@ -84,6 +85,13 @@ export class LynxDebugMetadataPluginImpl {
     this.options = options
 
     const { RawSource } = compiler.webpack.sources
+
+    new compiler.webpack.BannerPlugin({
+      test: /\.js$/,
+      raw: true,
+      banner: ({ chunk }) =>
+        getReleaseDefine(chunk?.hash ?? '') + getReleaseRuntime(),
+    }).apply(compiler)
 
     let gitCache: GitMetadata | null | undefined
     const getGit = (): GitMetadata | null => {
