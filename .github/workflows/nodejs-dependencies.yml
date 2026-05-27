@@ -6,6 +6,7 @@ name: NodeJS Dependencies
     paths:
       - package.json
       - pnpm-lock.yaml
+      - pnpm-workspace.yaml
       - "**/package.json"
   merge_group:
     types: [checks_requested]
