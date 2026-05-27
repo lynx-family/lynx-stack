@@ -90,6 +90,7 @@ export {
   Card,
   CheckBox,
   ChoicePicker,
+  DateTimeInput,
   Column,
   Divider,
   Image,
