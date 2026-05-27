@@ -136,6 +136,38 @@ fn bool_jsx_attr(value: bool) -> JSXAttrValue {
   })
 }
 
+struct FlexNumericToStringVisitor;
+
+impl VisitMut for FlexNumericToStringVisitor {
+  fn visit_mut_key_value_prop(&mut self, key_value_prop: &mut KeyValueProp) {
+    key_value_prop.value.visit_mut_with(self);
+
+    let is_flex_key = match &key_value_prop.key {
+      PropName::Ident(ident) => ident.sym.as_ref() == "flex",
+      PropName::Str(s) => s.value.to_string_lossy().as_ref() == "flex",
+      _ => false,
+    };
+
+    if !is_flex_key {
+      return;
+    }
+
+    if let Expr::Lit(Lit::Num(number)) = &*key_value_prop.value {
+      key_value_prop.value = Box::new(Expr::Lit(Lit::Str(Str {
+        span: number.span,
+        value: number.value.to_string().into(),
+        raw: None,
+      })));
+    }
+  }
+}
+
+fn normalize_flex_numeric_value(expr: &Expr) -> Expr {
+  let mut expr = expr.clone();
+  expr.visit_mut_with(&mut FlexNumericToStringVisitor);
+  expr
+}
+
 impl DynamicPart {
   fn to_updater(&self, runtime_id: Expr, target: TransformTarget, exp_index: i32) -> Expr {
     match target {
@@ -828,9 +860,9 @@ where
                           span,
                           ..
                         })) => {
-                          let expr = &**expr;
-                          if is_literal(expr) {
-                            if let Some(s) = get_string_inline_style_from_literal(expr, span) {
+                          let expr = normalize_flex_numeric_value(expr);
+                          if is_literal(&expr) {
+                            if let Some(s) = get_string_inline_style_from_literal(&expr, span) {
                               // <view style={{backgroundColor: "red"}} />;
                               // <view style={`background-color: red;`} />;
                               let s = Lit::Str(Str {
@@ -847,7 +879,7 @@ where
                             }
                           } else {
                             self.dynamic_parts.push(DynamicPart::Attr(
-                              expr.clone(),
+                              expr,
                               self.element_index,
                               attr_name.clone(),
                             ));
