@@ -10,16 +10,16 @@ import { fileURLToPath } from 'node:url';
 
 import { cancel, isCancel, multiselect, text } from '@clack/prompts';
 
-import type { CreateLynxExtensionOptions, ExtensionType } from './index.js';
+import type { CreateLynxLibraryOptions, LibraryFeature } from './index.js';
 import {
-  EXTENSION_TYPES,
-  createLynxExtension,
-  parseExtensionTypes,
+  LIBRARY_FEATURES,
+  createLynxLibrary,
+  parseLibraryFeatures,
 } from './index.js';
 
 export interface CliOptions {
   dir?: string;
-  types?: ExtensionType[];
+  features?: LibraryFeature[];
   packageName?: string;
   androidPackage?: string;
   moduleName?: string;
@@ -58,20 +58,20 @@ const DEFAULT_PROMPTS: CliPrompts = {
   text,
   multiselect,
 };
-const DEFAULT_PROJECT_NAME = 'lynx-extension';
-const EXTENSION_TYPE_LABELS: Record<ExtensionType, string> = {
+const DEFAULT_PROJECT_NAME = 'lynx-library';
+const LIBRARY_FEATURE_LABELS: Record<LibraryFeature, string> = {
   'native-module': 'Native Module',
   element: 'Element',
   service: 'Service',
 };
-const EXTENSION_TYPE_HINTS: Record<ExtensionType, string> = {
+const LIBRARY_FEATURE_HINTS: Record<LibraryFeature, string> = {
   'native-module': 'JS bridge APIs implemented by native code',
   element: 'native UI element registered through Autolink',
   service: 'native service implementation registered globally',
 };
 
 /**
- * Parses command-line arguments for the extension scaffold CLI.
+ * Parses command-line arguments for the library scaffold CLI.
  */
 export function parseArgs(argv: string[]): CliOptions {
   const options: CliOptions = { help: false };
@@ -94,10 +94,10 @@ export function parseArgs(argv: string[]): CliOptions {
       continue;
     }
 
-    if (arg === '--types' || arg === '--type') {
-      options.types = [
-        ...(options.types ?? []),
-        ...parseExtensionTypes(readValue(argv, index, arg)),
+    if (arg === '--features' || arg === '--feature') {
+      options.features = [
+        ...(options.features ?? []),
+        ...parseLibraryFeatures(readValue(argv, index, arg)),
       ];
       index += 1;
       continue;
@@ -161,30 +161,30 @@ function readValue(argv: string[], index: number, option: string): string {
 }
 
 /**
- * Prints usage information for the extension scaffold CLI.
+ * Prints usage information for the library scaffold CLI.
  */
 function printHelp(runtime: CliRuntime): void {
-  runtime.info(`Usage: create-lynx-extension [dir] [options]
+  runtime.info(`Usage: create-lynx-library [dir] [options]
 
 Options:
   --dir, -d <dir>              Target directory.
-  --type, --types <list>       Comma-separated list or "all".
+  --feature, --features <list> Comma-separated list or "all".
   --package-name <name>        npm package name.
-  --android-package <name>     Android package name for lynx.ext.json.
+  --android-package <name>     Android package name for lynx.lib.json.
   --module-name <name>         Native module class name.
   --element-name <name>        Element tag name.
   --service-name <name>        Service class name.
   --help, -h                   Show this help message.
 
-Extension types:
+Library features:
   native-module                JS bridge APIs implemented by native code.
   element                      Native UI element registered through Autolink.
   service                      Native service implementation registered globally.
 
 Examples:
-  create-lynx-extension
-  create-lynx-extension lynx-button --types native-module,element,service
-  create-lynx-extension lynx-kit --types all
+  create-lynx-library
+  create-lynx-library lynx-button --features native-module,element,service
+  create-lynx-library lynx-kit --features all
 `);
 }
 
@@ -197,8 +197,8 @@ async function fillInteractiveOptions(
 ): Promise<CliOptions> {
   const next: CliOptions = { ...options };
   const needsPrompt = next.dir === undefined
-    || next.types === undefined
-    || next.types.length === 0;
+    || next.features === undefined
+    || next.features.length === 0;
 
   if (!needsPrompt) {
     return next;
@@ -210,8 +210,8 @@ async function fillInteractiveOptions(
     if (next.dir === undefined) {
       missingOptions.push('--dir');
     }
-    if (next.types === undefined || next.types.length === 0) {
-      missingOptions.push('--types');
+    if (next.features === undefined || next.features.length === 0) {
+      missingOptions.push('--features');
     }
 
     throw new Error(
@@ -240,19 +240,19 @@ async function fillInteractiveOptions(
     runtime,
   ).trim();
 
-  if (next.types === undefined || next.types.length === 0) {
-    next.types = checkCancel<ExtensionType[]>(
-      await prompts.multiselect<ExtensionType>({
+  if (next.features === undefined || next.features.length === 0) {
+    next.features = checkCancel<LibraryFeature[]>(
+      await prompts.multiselect<LibraryFeature>({
         input: runtime.input,
         output: runtime.output,
         message:
-          'Select extension types (Use <space> to select, <enter> to continue)',
-        options: EXTENSION_TYPES.map((type) => ({
-          value: type,
-          label: EXTENSION_TYPE_LABELS[type],
-          hint: EXTENSION_TYPE_HINTS[type],
+          'Select library features (Use <space> to select, <enter> to continue)',
+        options: LIBRARY_FEATURES.map((feature) => ({
+          value: feature,
+          label: LIBRARY_FEATURE_LABELS[feature],
+          hint: LIBRARY_FEATURE_HINTS[feature],
         })),
-        initialValues: [...EXTENSION_TYPES],
+        initialValues: [...LIBRARY_FEATURES],
         required: true,
       }),
       runtime,
@@ -282,13 +282,13 @@ export async function main(
     throw new Error('Target directory is required');
   }
 
-  if (options.types === undefined || options.types.length === 0) {
-    throw new Error('At least one extension type is required');
+  if (options.features === undefined || options.features.length === 0) {
+    throw new Error('At least one library feature is required');
   }
 
-  const createOptions: CreateLynxExtensionOptions = {
+  const createOptions: CreateLynxLibraryOptions = {
     dir: path.resolve(options.dir),
-    types: options.types,
+    features: options.features,
   };
 
   if (options.packageName !== undefined) {
@@ -307,13 +307,13 @@ export async function main(
     createOptions.serviceName = options.serviceName;
   }
 
-  const files = createLynxExtension(createOptions);
+  const files = createLynxLibrary(createOptions);
 
   runtime.info(formatSuccessMessage({
     dir: createOptions.dir,
     filesCount: files.length,
     packageManager: detectPackageManager(),
-    types: options.types,
+    features: options.features,
   }));
 }
 
@@ -371,31 +371,33 @@ function formatSuccessMessage({
   dir,
   filesCount,
   packageManager,
-  types,
+  features,
 }: {
   dir: string;
   filesCount: number;
   packageManager: PackageManager;
-  types: ExtensionType[];
+  features: LibraryFeature[];
 }): string {
-  // Display extension types in the canonical order from EXTENSION_TYPES.
-  const selectedTypes = EXTENSION_TYPES.filter((type) => types.includes(type));
-  const typeSummary = selectedTypes
-    .map((type) => `  - ${EXTENSION_TYPE_LABELS[type]}`)
+  // Display library features in the canonical order from LIBRARY_FEATURES.
+  const selectedFeatures = LIBRARY_FEATURES.filter((feature) =>
+    features.includes(feature)
+  );
+  const featureSummary = selectedFeatures
+    .map((feature) => `  - ${LIBRARY_FEATURE_LABELS[feature]}`)
     .join('\n');
   const nextSteps = [
     `1. cd ${formatTargetDir(dir)}`,
     `2. ${packageManager} install`,
   ];
 
-  if (selectedTypes.includes('native-module')) {
+  if (selectedFeatures.includes('native-module')) {
     nextSteps.push(`3. ${packageManager} run codegen`);
   }
 
   return `Created ${filesCount} files in ${dir}
 
-Extension types:
-${typeSummary}
+Library features:
+${featureSummary}
 
 Next steps:
 ${nextSteps.map((step) => `  ${step}`).join('\n')}`;

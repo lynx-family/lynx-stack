@@ -28,17 +28,17 @@ afterEach(() => {
   process.exitCode = undefined;
 });
 
-describe('create-lynx-extension CLI', () => {
+describe('create-lynx-library CLI', () => {
   it('parses positional and flag options', () => {
     expect(
       parseArgs([
-        'demo-extension',
-        '--types',
+        'demo-library',
+        '--features',
         'native-module,element',
-        '--type',
+        '--feature',
         'service',
         '--package-name',
-        '@example/demo-extension',
+        '@example/demo-library',
         '--android-package',
         'com.example.demo',
         '--module-name',
@@ -50,9 +50,9 @@ describe('create-lynx-extension CLI', () => {
       ]),
     ).toEqual({
       help: false,
-      dir: 'demo-extension',
-      types: ['native-module', 'element', 'service'],
-      packageName: '@example/demo-extension',
+      dir: 'demo-library',
+      features: ['native-module', 'element', 'service'],
+      packageName: '@example/demo-library',
       androidPackage: 'com.example.demo',
       moduleName: 'DemoModule',
       elementName: 'x-demo',
@@ -66,8 +66,8 @@ describe('create-lynx-extension CLI', () => {
       /Unexpected positional argument/,
     );
     expect(() => parseArgs(['--dir'])).toThrow(/--dir requires a value/);
-    expect(() => parseArgs(['--types', '--dir'])).toThrow(
-      /--types requires a value/,
+    expect(() => parseArgs(['--features', '--dir'])).toThrow(
+      /--features requires a value/,
     );
   });
 
@@ -77,21 +77,21 @@ describe('create-lynx-extension CLI', () => {
     await main(['--help'], runtime);
 
     expect(runtime.info).toHaveBeenCalledWith(
-      expect.stringContaining('Usage: create-lynx-extension'),
+      expect.stringContaining('Usage: create-lynx-library'),
     );
   });
 
   it('creates a scaffold from non-interactive flags', async () => {
-    const dir = createTempPath('cli-extension');
+    const dir = createTempPath('cli-library');
     const runtime = createRuntime();
 
     await main([
       '--dir',
       dir,
-      '--types',
+      '--features',
       'native-module,element',
       '--package-name',
-      '@example/cli-extension',
+      '@example/cli-library',
       '--android-package',
       'com.example.cli',
       '--module-name',
@@ -107,14 +107,14 @@ describe('create-lynx-extension CLI', () => {
     );
     expect(runtime.info).toHaveBeenCalledWith(
       expect.stringContaining(
-        'Extension types:\n  - Native Module\n  - Element',
+        'Library features:\n  - Native Module\n  - Element',
       ),
     );
     expect(runtime.info).toHaveBeenCalledWith(
       expect.stringContaining('Next steps:'),
     );
     expect(read(dir, 'package.json')).toContain(
-      '"name": "@example/cli-extension"',
+      '"name": "@example/cli-library"',
     );
     expect(read(dir, 'android/src/main/java/com/example/cli/CliModule.java'))
       .toContain('@LynxAutolinkNativeModule(name = "CliModule")');
@@ -123,17 +123,17 @@ describe('create-lynx-extension CLI', () => {
     );
   });
 
-  it('creates an all-in-one scaffold from the shorthand type flag', async () => {
-    const dir = createTempPath('all-extension');
+  it('creates an all-in-one scaffold from the shorthand feature flag', async () => {
+    const dir = createTempPath('all-library');
     const runtime = createRuntime();
 
     await main([
       '--dir',
       dir,
-      '--types',
+      '--features',
       'all',
       '--package-name',
-      '@example/all-extension',
+      '@example/all-library',
       '--android-package',
       'com.example.all',
     ], runtime);
@@ -144,21 +144,21 @@ describe('create-lynx-extension CLI', () => {
     expect(
       read(
         dir,
-        'android/src/main/java/com/example/all/AllExtensionModule.java',
+        'android/src/main/java/com/example/all/AllLibraryModule.java',
       ),
     )
-      .toContain('@LynxAutolinkNativeModule(name = "AllExtensionModule")');
+      .toContain('@LynxAutolinkNativeModule(name = "AllLibraryModule")');
     expect(
       read(
         dir,
-        'android/src/main/java/com/example/all/AllExtensionElement.java',
+        'android/src/main/java/com/example/all/AllLibraryElement.java',
       ),
     )
-      .toContain('@LynxAutolinkElement(name = "x-all-extension")');
+      .toContain('@LynxAutolinkElement(name = "x-all-library")');
     expect(
       read(
         dir,
-        'android/src/main/java/com/example/all/AllExtensionService.java',
+        'android/src/main/java/com/example/all/AllLibraryService.java',
       ),
     )
       .toContain('@LynxAutolinkService');
@@ -166,12 +166,12 @@ describe('create-lynx-extension CLI', () => {
 
   it('fails in non-interactive mode when required options are missing', async () => {
     await expect(main([], createRuntime())).rejects.toThrow(
-      /Missing required options in non-interactive mode: --dir, --types/,
+      /Missing required options in non-interactive mode: --dir, --features/,
     );
   });
 
-  it('prompts with project text and extension type multiselect controls', async () => {
-    const dir = createTempPath('interactive-extension');
+  it('prompts with project text and library feature multiselect controls', async () => {
+    const dir = createTempPath('interactive-library');
     const textPrompt = vi.fn().mockResolvedValue(dir);
     const multiselectPrompt = vi.fn().mockResolvedValue([
       'native-module',
@@ -190,9 +190,9 @@ describe('create-lynx-extension CLI', () => {
 
     expect(textPrompt).toHaveBeenCalledWith(
       expect.objectContaining({
-        defaultValue: 'lynx-extension',
+        defaultValue: 'lynx-library',
         message: 'Project name or path',
-        placeholder: 'lynx-extension',
+        placeholder: 'lynx-library',
       }),
     );
     expect(multiselectPrompt).toHaveBeenCalledWith(
@@ -204,7 +204,7 @@ describe('create-lynx-extension CLI', () => {
     const multiselectOptions = multiselectPrompt.mock.calls[0]?.[0] as
       | { message?: string }
       | undefined;
-    expect(multiselectOptions?.message).toContain('Select extension types');
+    expect(multiselectOptions?.message).toContain('Select library features');
     expect(multiselectPrompt).toHaveBeenCalledWith(
       expect.objectContaining({
         options: [
@@ -217,13 +217,13 @@ describe('create-lynx-extension CLI', () => {
         ],
       }),
     );
-    expect(read(dir, 'ios/src/InteractiveExtensionService.h')).toContain(
-      '@protocol InteractiveExtensionServiceProtocol',
+    expect(read(dir, 'ios/src/InteractiveLibraryService.h')).toContain(
+      '@protocol InteractiveLibraryServiceProtocol',
     );
   });
 
-  it('rejects empty interactive type answers', async () => {
-    const dir = createTempPath('interactive-extension');
+  it('rejects empty interactive feature answers', async () => {
+    const dir = createTempPath('interactive-library');
     const runtime = createRuntime({
       isTTY: true,
       prompts: {
@@ -235,7 +235,7 @@ describe('create-lynx-extension CLI', () => {
     });
 
     await expect(main(['--dir', dir], runtime)).rejects.toThrow(
-      /At least one extension type is required/,
+      /At least one library feature is required/,
     );
   });
 
@@ -253,10 +253,10 @@ describe('create-lynx-extension CLI', () => {
   });
 
   it('recognizes npm bin symlinks as executable entrypoints', () => {
-    const binPath = path.join('node_modules', '.bin', 'create-lynx-extension');
+    const binPath = path.join('node_modules', '.bin', 'create-lynx-library');
     const cliPath = path.join(
       'node_modules',
-      'create-lynx-extension',
+      'create-lynx-library',
       'dist',
       'cli.js',
     );
@@ -297,7 +297,7 @@ function createRuntime(
 }
 
 function createTempPath(name: string): string {
-  const parent = fs.mkdtempSync(path.join(os.tmpdir(), 'lynx-extension-cli-'));
+  const parent = fs.mkdtempSync(path.join(os.tmpdir(), 'lynx-library-cli-'));
   tempDirs.push(parent);
   return path.join(parent, name);
 }
