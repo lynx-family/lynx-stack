@@ -709,6 +709,9 @@ importers:
       '@rsbuild/plugin-react':
         specifier: ^2.0.0
         version: 2.0.0(@rsbuild/core@2.0.6(core-js@3.48.0))(@rspack/core@2.0.3(@swc/helpers@0.5.21))
+      '@rstest/core':
+        specifier: catalog:rstest
+        version: 0.8.1(jsdom@27.4.0)
       '@types/qrcode':
         specifier: ^1.5.5
         version: 1.5.5
