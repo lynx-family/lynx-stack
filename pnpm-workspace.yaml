@@ -35,6 +35,11 @@ resolutionMode: "lowest-direct"
 
 # Match Renovate's npm minimum release age; pnpm also guards lockfile maintenance.
 minimumReleaseAge: 4320
+# First-party `@lynx-js/*` packages (e.g. the dated-snapshot `@lynx-js/internal-preact`
+# and `@lynx-js/preact-devtools` builds) are trusted and publish fresh releases that
+# would otherwise be blocked by `minimumReleaseAge`.
+minimumReleaseAgeExclude:
+  - "@lynx-js/*"
 
 # Default catalogs
 catalog:

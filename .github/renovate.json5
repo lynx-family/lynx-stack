@@ -111,6 +111,15 @@
       "rangeStrategy": "pin",
     },
     {
+      // First-party `@lynx-js/*` packages are trusted and publish fresh
+      // releases (e.g. the dated-snapshot preact builds above), so they should
+      // not be delayed by `security:minimumReleaseAgeNpm`.
+      "matchPackageNames": [
+        "@lynx-js/**",
+      ],
+      "minimumReleaseAge": "0 days",
+    },
+    {
       "groupName": "API Extractor",
       "groupSlug": "api-extractor",
       "matchPackageNames": [
