@@ -16,11 +16,7 @@ function devServerOrigin(api: RsbuildPluginAPI): string | undefined {
   if (!api.context.devServer) return
   const port = api.context.devServer.port
   const { assetPrefix } = api.getNormalizedConfig().dev
-  if (typeof assetPrefix !== 'string') {
-    const errorMsg = 'dev.assetPrefix is not string, skip printing QRCode'
-    // Rspeedy will normalized dev.assetPrefix to string
-    throw new Error(errorMsg)
-  }
+  if (typeof assetPrefix !== 'string') return
   const url = new URL(assetPrefix.replaceAll('<port>', String(port)))
   return (url.origin + url.pathname).replace(/\/$/, '')
 }

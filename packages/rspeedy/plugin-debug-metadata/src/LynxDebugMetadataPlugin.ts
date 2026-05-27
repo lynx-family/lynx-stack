@@ -170,13 +170,14 @@ export class LynxDebugMetadataPluginImpl {
               rspeedy,
             },
           }
+          const intermediate = args.intermediate.replace(/\\/g, '/')
           const debugMetadataAssetName = path.posix.format({
-            dir: args.intermediate,
+            dir: intermediate,
             base: DEBUG_METADATA_ASSET_NAME,
           })
           intermediateByEntryKey.set(
             entryKey(args.entryNames),
-            args.intermediate,
+            intermediate,
           )
           compilation.emitAsset(
             debugMetadataAssetName,
