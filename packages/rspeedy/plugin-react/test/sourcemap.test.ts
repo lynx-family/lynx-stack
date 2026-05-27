@@ -183,13 +183,13 @@ describe('Sourcemap', () => {
       const btRelease = releaseOf(background)
 
       // `minify: false` keeps the banner var name, so the release is greppable.
-      // The release is the chunk hash, which is also the source-map artifact
-      // `key` — that's what reverse-resolution locates the container by.
+      // The release is `debugmetadata:` + the chunk hash; the bare hash is the
+      // source-map artifact `key` reverse-resolution locates the container by.
       expect(mtRelease, 'main-thread should declare a release').toMatch(
-        /^[0-9a-f]+$/,
+        /^debugmetadata:[0-9a-f]+$/,
       )
       expect(btRelease, 'background should declare a release').toMatch(
-        /^[0-9a-f]+$/,
+        /^debugmetadata:[0-9a-f]+$/,
       )
       // The injected runtime registers the release with the Lynx engine.
       expect(mainThread).toContain('_SetSourceMapRelease')
