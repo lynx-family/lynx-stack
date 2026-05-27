@@ -4,6 +4,7 @@
 import fs from 'node:fs/promises'
 import { tmpdir } from 'node:os'
 import path from 'node:path'
+import { fileURLToPath } from 'node:url'
 
 import type { RsbuildPlugin, Rspack } from '@rsbuild/core'
 import { describe, expect, test, vi } from 'vitest'
@@ -89,11 +90,12 @@ describe('Lazy', () => {
         rspeedyConfig: {
           source: {
             entry: {
-              main: new URL(
-                './fixtures/standalone-lazy-bundle/index.tsx',
-                import.meta.url,
-              )
-                .pathname,
+              main: fileURLToPath(
+                new URL(
+                  './fixtures/standalone-lazy-bundle/index.tsx',
+                  import.meta.url,
+                ),
+              ),
             },
           },
           output: {
@@ -198,16 +200,21 @@ describe('Lazy', () => {
       rspeedyConfig: {
         source: {
           entry: {
-            main: new URL(
-              './fixtures/lazy-bundle/index.tsx',
-              import.meta.url,
-            ).pathname,
+            main: fileURLToPath(
+              new URL(
+                './fixtures/lazy-bundle/index.tsx',
+                import.meta.url,
+              ),
+            ),
           },
         },
         output: {
           distPath: {
             root: tmp,
           },
+        },
+        performance: {
+          profile: true,
         },
         plugins: [
           pluginReactLynx(),
@@ -293,8 +300,8 @@ describe('Lazy', () => {
             "main",
           ],
           [
-            "./LazyComponent.js-react__main-thread",
             "./LazyComponent.js-react__background",
+            "./LazyComponent.js-react__main-thread",
           ],
         ]
       `)
@@ -331,10 +338,12 @@ describe('Lazy', () => {
       rspeedyConfig: {
         source: {
           entry: {
-            main: new URL(
-              './fixtures/lazy-bundle/index.tsx',
-              import.meta.url,
-            ).pathname,
+            main: fileURLToPath(
+              new URL(
+                './fixtures/lazy-bundle/index.tsx',
+                import.meta.url,
+              ),
+            ),
           },
         },
         output: {

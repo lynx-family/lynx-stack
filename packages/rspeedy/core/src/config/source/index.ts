@@ -154,12 +154,7 @@ export interface Source {
    *
    * - Notably, if a `typeof` prefix is attached to the key, it will be exclusively defined for `typeof` calls."
    */
-  define?:
-    | Record<
-      string,
-      string | number | boolean | undefined | Record<string, unknown>
-    >
-    | undefined
+  define?: Rspack.DefinePluginOptions
 
   /**
    * The {@link Entry} option is used to set the entry module.

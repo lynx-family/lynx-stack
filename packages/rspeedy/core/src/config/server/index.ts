@@ -138,7 +138,7 @@ export interface Server {
   /**
    * Specify the host that the Rspeedy Server listens to.
    *
-   * @defaultValue undefined
+   * @defaultValue "0.0.0.0"
    *
    * @remarks
    * During `rspeedy dev`, if `server.host` is unset, the dev plugin resolves dev-server-related URLs and client host settings with a detected local IPv4 address, such as `192.168.1.50`. If you have multiple network interfaces, set `server.host` explicitly to choose the desired address.

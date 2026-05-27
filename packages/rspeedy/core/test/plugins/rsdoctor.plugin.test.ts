@@ -14,12 +14,13 @@ describe('Plugins - Rsdoctor', () => {
 
     const rsbuild = await createStubRspeedy({})
 
-    const compiler = await rsbuild.createCompiler<Rspack.Compiler>()
+    const compiler = await rsbuild.createCompiler() as Rspack.Compiler
 
-    const { options } = compiler.options.plugins.find(
-      (plugin) => (typeof plugin === 'object'
-        && plugin?.['isRsdoctorPlugin'] === true),
-    ) as RsdoctorRspackPlugin<[]>
+    const { options } = compiler.options.plugins
+      ?.find(
+        (plugin) => (typeof plugin === 'object'
+          && plugin?.['isRsdoctorPlugin'] === true),
+      ) as RsdoctorRspackPlugin<[]>
 
     expect(options.linter.rules).toEqual({
       'ecma-version-check': [
@@ -51,12 +52,13 @@ describe('Plugins - Rsdoctor', () => {
       },
     })
 
-    const compiler = await rsbuild.createCompiler<Rspack.Compiler>()
+    const compiler = await rsbuild.createCompiler() as Rspack.Compiler
 
-    const { options } = compiler.options.plugins.find(
-      (plugin) => (typeof plugin === 'object'
-        && plugin?.['isRsdoctorPlugin'] === true),
-    ) as RsdoctorRspackPlugin<[]>
+    const { options } = compiler.options.plugins
+      ?.find(
+        (plugin) => (typeof plugin === 'object'
+          && plugin?.['isRsdoctorPlugin'] === true),
+      ) as RsdoctorRspackPlugin<[]>
 
     expect(options.experiments?.enableNativePlugin).toStrictEqual({
       'chunkGraph': false,
@@ -81,12 +83,13 @@ describe('Plugins - Rsdoctor', () => {
       },
     })
 
-    const compiler = await rsbuild.createCompiler<Rspack.Compiler>()
+    const compiler = await rsbuild.createCompiler() as Rspack.Compiler
 
-    const { options } = compiler.options.plugins.find(
-      (plugin) => (typeof plugin === 'object'
-        && plugin?.['isRsdoctorPlugin'] === true),
-    ) as RsdoctorRspackPlugin<[]>
+    const { options } = compiler.options.plugins
+      ?.find(
+        (plugin) => (typeof plugin === 'object'
+          && plugin?.['isRsdoctorPlugin'] === true),
+      ) as RsdoctorRspackPlugin<[]>
 
     expect(options.linter.rules).toEqual({
       'ecma-version-check': [
@@ -123,12 +126,13 @@ describe('Plugins - Rsdoctor', () => {
       },
     })
 
-    const compiler = await rsbuild.createCompiler<Rspack.Compiler>()
+    const compiler = await rsbuild.createCompiler() as Rspack.Compiler
 
-    const { options } = compiler.options.plugins.find(
-      (plugin) => (typeof plugin === 'object'
-        && plugin?.['isRsdoctorPlugin'] === true),
-    ) as RsdoctorRspackPlugin<[]>
+    const { options } = compiler.options.plugins
+      ?.find(
+        (plugin) => (typeof plugin === 'object'
+          && plugin?.['isRsdoctorPlugin'] === true),
+      ) as RsdoctorRspackPlugin<[]>
 
     expect(options.linter.rules).toEqual({
       'cross-chunks-package': [
@@ -157,12 +161,13 @@ describe('Plugins - Rsdoctor', () => {
       },
     })
 
-    const compiler = await rsbuild.createCompiler<Rspack.Compiler>()
+    const compiler = await rsbuild.createCompiler() as Rspack.Compiler
 
-    const { options } = compiler.options.plugins.find(
-      (plugin) => (typeof plugin === 'object'
-        && plugin?.['isRsdoctorPlugin'] === true),
-    ) as RsdoctorRspackPlugin<[]>
+    const { options } = compiler.options.plugins
+      ?.find(
+        (plugin) => (typeof plugin === 'object'
+          && plugin?.['isRsdoctorPlugin'] === true),
+      ) as RsdoctorRspackPlugin<[]>
 
     expect(options.supports.banner).toBe(false)
   })

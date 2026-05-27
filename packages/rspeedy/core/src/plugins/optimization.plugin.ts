@@ -9,7 +9,9 @@ export function pluginOptimization(): RsbuildPlugin {
     name: 'lynx:rsbuild:optimization',
     setup(api) {
       api.modifyBundlerChain((chain, { CHAIN_ID, isProd }) => {
-        const rule = chain.module.rules.get(CHAIN_ID.RULE.JS)
+        const rule = chain.module
+          .rule(CHAIN_ID.RULE.JS)
+          .oneOf(CHAIN_ID.ONE_OF.JS_MAIN)
         chain
           .module
           .rule('js-override-strict')

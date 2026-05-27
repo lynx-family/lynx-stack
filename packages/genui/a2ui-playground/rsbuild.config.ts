@@ -211,21 +211,20 @@ export default defineConfig({
         watch: true,
       },
     ],
-  },
-  dev: {
-    setupMiddlewares: [
-      (middlewares) => {
-        middlewares.unshift((req, res, next) => {
-          if (req.url?.startsWith('/__rspeedy_url')) {
-            const url = buildRspeedyBundleUrl(req.socket.localPort ?? PORT);
-            res.setHeader('Content-Type', 'application/json');
-            res.setHeader('Cache-Control', 'no-store');
-            res.end(JSON.stringify({ url }));
-            return;
-          }
-          next();
-        });
-      },
-    ],
+    setup: ({ server, action }) => {
+      if (action !== 'dev') {
+        return;
+      }
+      server.middlewares.use((req, res, next) => {
+        if (req.url?.startsWith('/__rspeedy_url')) {
+          const url = buildRspeedyBundleUrl(req.socket.localPort ?? PORT);
+          res.setHeader('Content-Type', 'application/json');
+          res.setHeader('Cache-Control', 'no-store');
+          res.end(JSON.stringify({ url }));
+          return;
+        }
+        next();
+      });
+    },
   },
 });

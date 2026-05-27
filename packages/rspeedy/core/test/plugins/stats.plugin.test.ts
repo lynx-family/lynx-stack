@@ -9,19 +9,17 @@ describe('stats plugin', () => {
   test('no DEBUG', async () => {
     vi.stubEnv('DEBUG', '')
     const rspeedy = await createStubRspeedy({})
-    await rspeedy.unwrapConfig()
 
-    const config = rspeedy.getRsbuildConfig()
+    const config = rspeedy.getRspeedyConfig()
 
-    expect(config.performance?.profile).toBe(false)
+    expect(config.performance?.profile).toBeUndefined()
   })
 
   test('DEBUG', async () => {
     vi.stubEnv('DEBUG', 'rspeedy')
     const rspeedy = await createStubRspeedy({})
-    await rspeedy.unwrapConfig()
 
-    const config = rspeedy.getRsbuildConfig()
+    const config = rspeedy.getRspeedyConfig()
 
     expect(config.performance?.profile).toBe(true)
   })
@@ -31,9 +29,8 @@ describe('stats plugin', () => {
     const rspeedy = await createStubRspeedy({
       performance: { profile: false },
     })
-    await rspeedy.unwrapConfig()
 
-    const config = rspeedy.getRsbuildConfig()
+    const config = rspeedy.getRspeedyConfig()
 
     expect(config.performance?.profile).toBe(false)
   })

@@ -158,7 +158,7 @@ export function Component<T extends WebComponentClass>(
       override setAttribute(qualifiedName: string, value: string): void {
         if (
           value.toString() === 'false'
-          && !target.notToFilterFalseAttributes?.has(qualifiedName)
+          && !CustomElement.notToFilterFalseAttributes?.has(qualifiedName)
           && !qualifiedName.startsWith('data-')
         ) {
           this.removeAttribute(qualifiedName);
@@ -176,7 +176,7 @@ export function Component<T extends WebComponentClass>(
         ) {
           if (
             attr.value === 'false'
-            && !target.notToFilterFalseAttributes?.has(attr.name)
+            && !CustomElement.notToFilterFalseAttributes?.has(attr.name)
             && !attr.name.startsWith('data-')
           ) {
             this.removeAttributeNode(attr);
@@ -194,7 +194,7 @@ export function Component<T extends WebComponentClass>(
         super.attributeChangedCallback
           && super.attributeChangedCallback(name, oldValue, newValue);
         if (
-          !target.notToFilterFalseAttributes?.has(name)
+          !CustomElement.notToFilterFalseAttributes?.has(name)
           && !name.startsWith('data-')
         ) {
           if (oldValue === 'false') oldValue = null;

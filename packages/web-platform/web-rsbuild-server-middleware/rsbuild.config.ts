@@ -20,11 +20,7 @@ export default defineConfig({
     overrideBrowserslist: ['last 2 Chrome versions'],
     assetPrefix: 'http://lynx-web-core-mocked.localhost/',
   },
-  performance: {
-    chunkSplit: {
-      strategy: 'all-in-one',
-    },
-  },
+  splitChunks: false,
   tools: {
     rspack: {
       experiments: {
