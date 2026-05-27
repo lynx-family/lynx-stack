@@ -44,6 +44,11 @@ export class MountQueue {
   private lastArmedSnapshot = new Set<string>();
 
   constructor(maxConcurrent: number) {
+    if (!Number.isInteger(maxConcurrent) || maxConcurrent < 0) {
+      throw new RangeError(
+        `maxConcurrent must be a non-negative integer, got ${maxConcurrent}`,
+      );
+    }
     this.maxConcurrent = maxConcurrent;
   }
 

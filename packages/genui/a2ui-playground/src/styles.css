@@ -1308,7 +1308,7 @@ html[data-theme="dark"] .phoneHomeIndicator {
   text-align: center;
   max-width: 22ch;
   /* Subtle "still working" pulse — never bouncy or distracting. */
-  animation: cardPreviewPulse 1.8s ease-in-out infinite;
+  animation: card-preview-pulse 1.8s ease-in-out infinite;
 }
 
 .cardPreviewLoadingDots {
@@ -1320,9 +1320,9 @@ html[data-theme="dark"] .phoneHomeIndicator {
   width: 4px;
   height: 4px;
   border-radius: 50%;
-  background: currentColor;
+  background: currentcolor;
   opacity: 0.35;
-  animation: cardPreviewDot 1.2s ease-in-out infinite;
+  animation: card-preview-dot 1.2s ease-in-out infinite;
 }
 
 .cardPreviewLoadingDots span:nth-child(2) {
@@ -1333,7 +1333,7 @@ html[data-theme="dark"] .phoneHomeIndicator {
   animation-delay: 0.3s;
 }
 
-@keyframes cardPreviewPulse {
+@keyframes card-preview-pulse {
   0%, 100% {
     opacity: 0.55;
   }
@@ -1342,7 +1342,7 @@ html[data-theme="dark"] .phoneHomeIndicator {
   }
 }
 
-@keyframes cardPreviewDot {
+@keyframes card-preview-dot {
   0%, 100% {
     transform: translateY(0);
     opacity: 0.25;

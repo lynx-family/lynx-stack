@@ -53,7 +53,7 @@ by a queue.
 
 ## Architecture
 
-```
+```text
 DemosListPage
   └─ <MountQueueProvider maxConcurrent={4}>
      └─ ExampleCard (× 43)
