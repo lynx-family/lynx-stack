@@ -1803,6 +1803,7 @@ export function AIChatPage(
           style={previewPanelStyle}
           title='Lynx Preview'
           showPreviewModeSwitch
+          showSimulationBar={false}
           previewSource={previewSource}
         >
           <PreviewViewport

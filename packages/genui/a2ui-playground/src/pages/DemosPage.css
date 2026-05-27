@@ -543,6 +543,86 @@ html[data-theme="dark"] .detailBackButton:hover {
   flex-shrink: 0;
 }
 
+/* ── Examples Preview Split ── */
+.examplesPreviewPanel {
+  display: grid;
+  grid-template-columns: minmax(360px, 1fr) minmax(280px, 340px);
+  grid-template-rows: auto auto auto minmax(0, 1fr);
+  overflow: hidden;
+}
+
+.examplesPreviewPanel .previewPanelHeader {
+  grid-column: 1 / -1;
+  grid-row: 1;
+}
+
+.examplesPreviewPanel .previewPanelBody {
+  grid-column: 1;
+  grid-row: 2 / 5;
+  border-right: 1px solid var(--geist-border);
+}
+
+.examplesPreviewPanel .simulationBar {
+  grid-column: 2;
+  grid-row: 2;
+  align-items: flex-start;
+  flex-wrap: wrap;
+  padding: 10px 16px;
+  border-bottom: 1px solid var(--geist-border);
+}
+
+.examplesPreviewPanel .liveComponentStack {
+  grid-column: 2;
+  grid-row: 3;
+  align-items: stretch;
+  flex-direction: column;
+  flex-wrap: wrap;
+  gap: 8px;
+  min-height: 64px;
+  padding: 10px 16px;
+  overflow-x: hidden;
+  overflow-y: auto;
+  border-top: none;
+  border-bottom: 1px solid var(--geist-border);
+}
+
+.examplesPreviewPanel .liveComponentTags {
+  flex-wrap: wrap;
+}
+
+.examplesPreviewPanel .previewQrSection {
+  grid-column: 2;
+  grid-row: 4;
+  min-height: 0;
+  overflow: auto;
+  border-top: none;
+}
+
+@media (min-width: 981px) and (max-width: 1280px) {
+  .examplesPreviewPanel {
+    display: flex;
+  }
+
+  .examplesPreviewPanel .previewPanelHeader,
+  .examplesPreviewPanel .previewPanelBody,
+  .examplesPreviewPanel .simulationBar,
+  .examplesPreviewPanel .liveComponentStack,
+  .examplesPreviewPanel .previewQrSection {
+    border-right: none;
+    grid-column: auto;
+    grid-row: auto;
+  }
+
+  .examplesPreviewPanel .liveComponentStack,
+  .examplesPreviewPanel .previewQrSection {
+    border-top: 1px solid var(--geist-border);
+  }
+
+  .examplesPreviewPanel .previewQrSection {
+    overflow: auto;
+  }
+}
+
 @media (max-width: 980px) {
   .demosPage {
     flex-direction: column;
@@ -565,5 +645,29 @@ html[data-theme="dark"] .detailBackButton:hover {
     min-height: 480px;
     border-left: none;
     border-top: 1px solid var(--geist-border);
+  }
+
+  .examplesPreviewPanel {
+    display: flex;
+    overflow: visible;
+  }
+
+  .examplesPreviewPanel .previewPanelHeader,
+  .examplesPreviewPanel .previewPanelBody,
+  .examplesPreviewPanel .simulationBar,
+  .examplesPreviewPanel .liveComponentStack,
+  .examplesPreviewPanel .previewQrSection {
+    border-right: none;
+    grid-column: auto;
+    grid-row: auto;
+  }
+
+  .examplesPreviewPanel .liveComponentStack {
+    border-top: 1px solid var(--geist-border);
+  }
+
+  .examplesPreviewPanel .previewQrSection {
+    border-top: 1px solid var(--geist-border);
+    overflow: visible;
   }
 }
