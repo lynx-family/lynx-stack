@@ -23,9 +23,7 @@ jobs:
         uses: lynx-infra/cache@5c6160a6a4c7fca80a2f3057bb9dfc9513fcb732
         with:
           path: .turbo
-          # Must stay byte-for-byte identical to the key in workflow-build.yml
-          # so fail-on-cache-miss restores that commit's build-all .turbo.
-          key: turbo-v5-${{ runner.os }}-${{ hashFiles('packages/**/src/**/*.rs') }}-${{ hashFiles('pnpm-lock.yaml') }}-${{ github.sha }}
+          key: turbo-v4-${{ runner.os }}-${{ hashFiles('**/packages/**/src/**/*.rs') }}-${{ github.sha }}
           fail-on-cache-miss: true
       - name: Setup Pages
         id: pages

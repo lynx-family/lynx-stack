@@ -70,6 +70,12 @@ catalogs:
     "@rstest/core": "0.8.1"
 
 overrides:
+  # Published @lynx-js/lynx-ui-* (pulled in by packages/genui/a2ui) peer-depend on
+  # @lynx-js/react@^0.121.0 and would otherwise drag a published @lynx-js/react copy
+  # into the workspace alongside the workspace one. Two copies = two snapshotManager
+  # singletons, which breaks ReactLynx snapshot registration ("BackgroundSnapshot not
+  # found"). Force every @lynx-js/react to the single workspace copy.
+  "@lynx-js/react": "workspace:*"
   "@rspack/core": "$@rspack/core"
   "@rsbuild/core>@rspack/core": "$@rspack/core"
   "@rsdoctor/rspack-plugin>@rspack/core": "$@rspack/core"

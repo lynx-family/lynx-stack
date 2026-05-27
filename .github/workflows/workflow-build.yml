@@ -95,19 +95,15 @@ jobs:
         uses: lynx-infra/cache@5c6160a6a4c7fca80a2f3057bb9dfc9513fcb732
         with:
           path: .turbo
-          # The key is scoped by both the Rust transform sources (*.rs) and the
-          # dependency graph (pnpm-lock.yaml). Turbo's per-task hash does not
-          # fully capture the compiled snapshot output, so a cache built against
-          # a different dependency graph must NOT be replayed here.
-          key: turbo-v5-${{ runner.os }}-${{ hashFiles('packages/**/src/**/*.rs') }}-${{ hashFiles('pnpm-lock.yaml') }}-${{ github.sha }}
-          # We can only restore caches that share the same Rust transform sources
-          # AND the same dependency graph (same *.rs hash and pnpm-lock.yaml hash):
+          key: turbo-v4-${{ runner.os }}-${{ hashFiles('packages/**/src/**/*.rs') }}-${{ github.sha }}
+          # We can restore caches from:
           #   1. Previous commit from base branch (merge base or base SHA)
-          #   2. Any cache with a matching *.rs + lockfile hash
+          #   2. Any cache
           restore-keys: |
-            turbo-v5-${{ runner.os }}-${{ hashFiles('packages/**/src/**/*.rs') }}-${{ hashFiles('pnpm-lock.yaml') }}-${{ needs.get-merge-base.outputs.merge-base }}
-            turbo-v5-${{ runner.os }}-${{ hashFiles('packages/**/src/**/*.rs') }}-${{ hashFiles('pnpm-lock.yaml') }}-${{ github.event.pull_request.base.sha || github.event.merge_group.base_sha || github.event.push.before }}
-            turbo-v5-${{ runner.os }}-${{ hashFiles('packages/**/src/**/*.rs') }}-${{ hashFiles('pnpm-lock.yaml') }}-
+            turbo-v4-${{ runner.os }}-${{ hashFiles('packages/**/src/**/*.rs') }}-${{ needs.get-merge-base.outputs.merge-base }}
+            turbo-v4-${{ runner.os }}-${{ hashFiles('packages/**/src/**/*.rs') }}-${{ github.event.pull_request.base.sha || github.event.merge_group.base_sha || github.event.push.before }}
+            turbo-v4-${{ runner.os }}-${{ hashFiles('packages/**/src/**/*.rs') }}-
+            turbo-v4-${{ runner.os }}-
       - name: Install
         run: |
           npm install -g corepack@latest
