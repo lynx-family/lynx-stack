@@ -13,7 +13,9 @@ export const RELEASE_DEFINE = '__DEBUG_METADATA_RELEASE__'
 export const RELEASE_PREFIX = 'debugmetadata:'
 
 export function getReleaseDefine(release: string): string {
-  return `var ${RELEASE_DEFINE} = ${JSON.stringify(RELEASE_PREFIX + release)};\n`
+  return `var ${RELEASE_DEFINE} = ${
+    JSON.stringify(RELEASE_PREFIX + release)
+  };\n`
 }
 
 export function getReleaseRuntime(): string {
