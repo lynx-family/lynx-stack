@@ -9,6 +9,7 @@ import cardManifest from './catalog/Card/catalog.json';
 import checkBoxManifest from './catalog/CheckBox/catalog.json';
 import choicePickerManifest from './catalog/ChoicePicker/catalog.json';
 import columnManifest from './catalog/Column/catalog.json';
+import dateTimeInputManifest from './catalog/DateTimeInput/catalog.json';
 import dividerManifest from './catalog/Divider/catalog.json';
 import iconManifest from './catalog/Icon/catalog.json';
 import imageManifest from './catalog/Image/catalog.json';
@@ -95,6 +96,7 @@ const CATALOG_MANIFESTS = [
   textFieldManifest,
   checkBoxManifest,
   choicePickerManifest,
+  dateTimeInputManifest,
   radioGroupManifest,
   sliderManifest,
 ] as const;
@@ -108,6 +110,8 @@ const COMPONENT_SUMMARIES: Record<string, string> = {
   ChoicePicker:
     'Single- or multi-select choice picker with checkbox and chip display styles.',
   Column: 'Vertical layout container.',
+  DateTimeInput:
+    'Date and/or time input with a calendar panel. Without outputFormat, date-enabled inputs write YYYY-MM-DD.',
   Divider: 'Horizontal or vertical separator line.',
   Icon: 'Display an icon by name.',
   Image: 'Display an image by URL.',

@@ -595,7 +595,8 @@
   border-radius: var(--geist-radius-lg);
   font-size: 14px;
   line-height: 1.5;
-  word-break: break-word;
+  overflow-wrap: anywhere;
+  word-break: normal;
   flex-shrink: 0;
 }
 
@@ -724,6 +725,9 @@
 }
 
 .chatMessageAction.chatMessageActionExpanded .chatMessageBody {
+  display: flex;
+  align-items: center;
+  gap: 8px;
   padding: 8px 12px;
   border-bottom: 1px solid var(--geist-border);
   background: var(--geist-background);
@@ -760,45 +764,61 @@
   flex-direction: column;
 }
 
-.chatMessagePayloadLabel {
-  padding: 6px 12px;
-  border-bottom: 1px solid var(--geist-border);
-  background: var(--geist-background);
-  color: var(--geist-secondary);
-  font-size: 10px;
-  font-weight: 700;
-  letter-spacing: 0.06em;
-  text-transform: uppercase;
+.chatMessageChunks {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 10px;
+  max-height: 520px;
+  overflow-y: auto;
+  background: var(--geist-surface);
 }
 
-.chatMessagePayloadEditor .cm-editor {
-  height: auto;
-  max-height: 320px;
+.chatMessageChunk {
+  border: 1px solid var(--geist-border);
+  border-radius: var(--geist-radius-md);
+  overflow: hidden;
+  background: var(--geist-background);
+  flex-shrink: 0;
+}
+
+.chatMessageSingleChunk {
+  margin: 10px;
+  border: 1px solid var(--geist-border);
+  border-radius: var(--geist-radius-md);
+  overflow: hidden;
+  background: var(--geist-background);
+}
+
+.chatMessageChunkHeader {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 32px;
+  padding: 4px 10px;
+  border-bottom: 1px solid var(--geist-border);
+  background: color-mix(in srgb, var(--geist-surface) 88%, transparent);
+}
+
+.chatMessageChunkIndex {
+  font-family: var(--geist-mono);
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--geist-secondary);
+}
+
+.chatMessageChunkJson {
+  margin: 0;
+  max-height: 260px;
+  overflow: auto;
+  padding: 8px 10px;
+  color: var(--geist-secondary);
   font-family: var(--geist-mono);
   font-size: 12px;
-  background: var(--geist-surface);
-  color: var(--geist-foreground);
-}
-
-.chatMessagePayloadEditor .cm-scroller {
-  max-height: 320px;
-  overflow: auto;
-}
-
-.chatMessagePayloadEditor .cm-gutters {
-  background: color-mix(in srgb, var(--geist-surface) 88%, var(--geist-border));
-  color: var(--geist-secondary);
-  border-right: 1px solid
-    color-mix(in srgb, var(--geist-border) 82%, transparent);
-}
-
-.chatMessagePayloadEditor .cm-content {
-  caret-color: var(--geist-foreground);
-}
-
-.chatMessagePayloadEditor .cm-activeLine,
-.chatMessagePayloadEditor .cm-activeLineGutter {
-  background: color-mix(in srgb, var(--geist-foreground) 4%, transparent);
+  line-height: 1.55;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+  word-break: normal;
 }
 
 .chatGeneratedJson {
@@ -827,41 +847,24 @@
   text-transform: uppercase;
 }
 
-.chatGeneratedJsonBadge {
-  padding: 1px 6px;
+.chatJsonCopyButton {
+  margin-left: auto;
+  min-width: 52px;
+  height: 24px;
+  padding: 0 8px;
   border: 1px solid var(--geist-border);
   border-radius: 4px;
   background: var(--geist-surface);
-  color: var(--geist-secondary);
-  font-size: 10px;
-  font-weight: 500;
-  letter-spacing: 0;
-}
-
-.chatGeneratedJsonEditor .cm-editor {
-  height: auto;
-  max-height: 480px;
-  font-family: var(--geist-mono);
-  font-size: 13px;
-  background: var(--geist-surface);
   color: var(--geist-foreground);
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0;
+  text-transform: none;
+  cursor: pointer;
 }
 
-.chatGeneratedJsonEditor .cm-scroller {
-  max-height: 480px;
-  overflow: auto;
-}
-
-.chatGeneratedJsonEditor .cm-gutters {
-  background: color-mix(in srgb, var(--geist-surface) 88%, var(--geist-border));
-  color: var(--geist-secondary);
-  border-right: 1px solid
-    color-mix(in srgb, var(--geist-border) 82%, transparent);
-}
-
-.chatGeneratedJsonEditor .cm-activeLine,
-.chatGeneratedJsonEditor .cm-activeLineGutter {
-  background: color-mix(in srgb, var(--geist-foreground) 4%, transparent);
+.chatJsonCopyButton:hover {
+  background: color-mix(in srgb, var(--geist-foreground) 6%, transparent);
 }
 
 .chatInputArea {

@@ -5,7 +5,7 @@ import { defineConfig } from 'vitest/config';
 
 export default defineConfig({
   test: {
-    name: 'lynx/create-lynx-extension',
+    name: 'lynx/create-lynx-library',
     coverage: {
       include: ['src/**'],
     },

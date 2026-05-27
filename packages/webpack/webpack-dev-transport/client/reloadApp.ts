@@ -1,7 +1,7 @@
 // Copyright 2024 The Lynx Authors. All rights reserved.
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
-import hotEmitter from 'webpack/hot/emitter.js';
+import { emitter } from '@rspack/core/hot/emitter.js';
 
 import type { Options, Status } from './index.js';
 
@@ -39,7 +39,7 @@ function reloadApp({ hot, liveReload }: Options, status: Status): void {
   }
 
   if (hot) {
-    hotEmitter.emit('webpackHotUpdate', status.currentHash);
+    emitter.emit('webpackHotUpdate', status.currentHash);
   } // allow refreshing the page only if liveReload isn't disabled
   else if (liveReload) {
     const intervalId = +setInterval(() => {

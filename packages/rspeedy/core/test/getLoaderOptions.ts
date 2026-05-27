@@ -11,9 +11,8 @@ export function getLoaderOptions<T>(
   config
     .module
     ?.rules
-    ?.some(rule => {
-      res = getRuleOptions(rule)
-      return res
+    ?.forEach(rule => {
+      res = getRuleOptions(rule) ?? res
     })
 
   return res
@@ -37,9 +36,15 @@ export function getLoaderOptions<T>(
       return null
     }
 
-    const oneOfRule = rule.oneOf?.find((rule) => getRuleOptions(rule))
-    if (oneOfRule) {
-      return oneOfRule.options as T
+    if (rule.oneOf) {
+      let oneOfMatch: T | null = null
+      for (const oneOfRule of rule.oneOf) {
+        const oneOfResult = getRuleOptions(oneOfRule)
+        if (oneOfResult) {
+          oneOfMatch = oneOfResult
+        }
+      }
+      return oneOfMatch
     }
 
     if (typeof rule.use === 'string' && check(rule.use)) {
@@ -61,7 +66,7 @@ export function getLoaderOptions<T>(
         if (typeof u === 'string') {
           return false
         }
-        if (check(u.loader)) {
+        if (u && typeof u === 'object' && check(u.loader)) {
           result = u.options as T
           return true
         }

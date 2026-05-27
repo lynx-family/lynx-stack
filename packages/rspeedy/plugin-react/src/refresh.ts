@@ -9,43 +9,26 @@ import type {
   RspackChain,
 } from '@rsbuild/core'
 
-import {
-  ReactRefreshRspackPlugin,
-  ReactRefreshWebpackPlugin,
-} from '@lynx-js/react-refresh-webpack-plugin'
+import { ReactRefreshRspackPlugin } from '@lynx-js/react-refresh-webpack-plugin'
 import { LAYERS } from '@lynx-js/react-webpack-plugin'
 
 const PLUGIN_NAME_REACT_REFRESH = 'lynx:react:refresh'
 
 export function applyRefresh(api: RsbuildPluginAPI): void {
-  api.modifyWebpackChain?.(async (chain, { CHAIN_ID, environment, isProd }) => {
-    if (!isProd && environment.config.dev?.hmr !== false) {
-      await applyRefreshRules(api, chain, CHAIN_ID, ReactRefreshWebpackPlugin)
-    }
-  })
   api.modifyBundlerChain(async (chain, { isProd, CHAIN_ID, environment }) => {
     if (!isProd && environment.config.dev?.hmr !== false) {
-      // biome-ignore lint/correctness/useHookAtTopLevel: not react hooks
-      const { resolve } = api.useExposed<
-        { resolve: (request: string) => Promise<string> }
-      >(Symbol.for('@lynx-js/react/internal:resolve'))!
-
       await Promise.all([
         applyRefreshRules(api, chain, CHAIN_ID, ReactRefreshRspackPlugin),
-        resolve('@lynx-js/react/refresh').then(refresh => {
-          chain.resolve.alias.set('@lynx-js/react/refresh$', refresh)
-        }),
       ])
     }
   })
 }
 
-async function applyRefreshRules<Bundler extends 'webpack' | 'rspack'>(
+async function applyRefreshRules(
   api: RsbuildPluginAPI,
   chain: RspackChain,
   CHAIN_ID: ChainIdentifier,
-  ReactRefreshPlugin: Bundler extends 'rspack' ? typeof ReactRefreshRspackPlugin
-    : typeof ReactRefreshWebpackPlugin,
+  ReactRefreshPlugin: typeof ReactRefreshRspackPlugin,
 ) {
   // biome-ignore lint/correctness/useHookAtTopLevel: not react hooks
   const { resolve } = api.useExposed<
@@ -57,6 +40,8 @@ async function applyRefreshRules<Bundler extends 'webpack' | 'rspack'>(
     resolve('@lynx-js/react/refresh'),
     resolve('@lynx-js/react/worklet-runtime'),
   ])
+
+  chain.resolve.alias.set('@lynx-js/react/refresh$', refresh)
 
   // Place the ReactRefreshRspackPlugin at beginning to make the `react-refresh`
   // being injected at first.

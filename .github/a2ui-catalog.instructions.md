@@ -33,3 +33,5 @@ When verifying `packages/genui/a2ui-playground`, remember that `pnpm -F @lynx-js
 For known A2UI playground examples, keep the web preview URL on `?demo=<id>` instead of swapping it to the payload-store `messagesUrl`. `render.html` intentionally fetches known demo JSON in the browser shell and passes resolved messages into Lynx, avoiding fetch differences in the Lynx worker runtime; use payload-store URLs for custom edited JSON.
 
 For interactive A2UI playground component examples, bind mutable props through `{ path: ... }` and provide matching example data so the component preview emits an initial `updateDataModel` before `updateComponents`. Literal values render the initial state but cannot be changed by `setValue`, which only writes back to data-bound props.
+
+For the built-in `DateTimeInput`, keep date-enabled default output as `YYYY-MM-DD` unless `outputFormat` is explicitly provided. Implement calendar behavior inside `packages/genui/a2ui` with local helpers that borrow the `lynx-ui-calendar` windowing/date patterns as needed, because `@lynx-js/lynx-ui-calendar` is not an available package dependency here.

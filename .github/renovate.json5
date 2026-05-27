@@ -4,6 +4,8 @@
     "config:recommended",
     ":maintainLockFilesWeekly",
     "helpers:pinGitHubActionDigests",
+    // Delay npm updates by 3 days so risky or unpublished releases have time to surface.
+    "security:minimumReleaseAgeNpm",
   ],
 
   // Exclude `examples` from "config:recommended"
@@ -107,6 +109,15 @@
       "followTag": "latest",
       "ignoreUnstable": false,
       "rangeStrategy": "pin",
+    },
+    {
+      // First-party `@lynx-js/*` packages are trusted and publish fresh
+      // releases (e.g. the dated-snapshot preact builds above), so they should
+      // not be delayed by `security:minimumReleaseAgeNpm`.
+      "matchPackageNames": [
+        "@lynx-js/**",
+      ],
+      "minimumReleaseAge": "0 days",
     },
     {
       "groupName": "API Extractor",

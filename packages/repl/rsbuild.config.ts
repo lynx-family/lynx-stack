@@ -60,11 +60,7 @@ export default defineConfig({
       },
     },
   },
-  performance: {
-    chunkSplit: {
-      strategy: 'all-in-one',
-    },
-  },
+  splitChunks: false,
   plugins: [
     pluginReact(),
     pluginWebPlatform({

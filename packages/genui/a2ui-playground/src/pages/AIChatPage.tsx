@@ -1,14 +1,13 @@
 // Copyright 2026 The Lynx Authors. All rights reserved.
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
-import { json } from '@codemirror/lang-json';
-import CodeMirror, { EditorView } from '@uiw/react-codemirror';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
 import './AIChatPage.css';
 
 import { ConfirmDialog } from '../components/ConfirmDialog.js';
 import { ConversationListPanel } from '../components/ConversationListPanel.js';
+import { CopyToast, useCopyToast } from '../components/CopyToast.js';
 import { PageHeader } from '../components/PageHeader.js';
 import { PanelResizeHandle } from '../components/PanelResizeHandle.js';
 import { PreviewPanel } from '../components/PreviewPanel.js';
@@ -16,6 +15,7 @@ import { PreviewViewport } from '../components/PreviewViewport.js';
 import { useConversation } from '../hooks/useConversation.js';
 import type { ModelChatMessage } from '../hooks/useConversation.js';
 import { useResizablePanels } from '../hooks/useResizablePanels.js';
+import { copyToClipboard } from '../utils/clipboard.js';
 import { DEFAULT_A2UI_DEMO_URL } from '../utils/demoUrl.js';
 import type { Protocol } from '../utils/protocol.js';
 import { buildRenderUrl } from '../utils/renderUrl.js';
@@ -24,7 +24,6 @@ interface ChatMessage {
   role: 'user' | 'ai' | 'action' | 'json' | 'status';
   content: string | React.ReactNode;
   payload?: unknown;
-  payloadLabel?: string;
   tone?: 'info' | 'pending' | 'success' | 'error';
 }
 
@@ -51,6 +50,10 @@ interface TokenUsage {
   promptTokens: number;
   completionTokens: number;
   totalTokens: number;
+}
+
+interface A2UIResponseMessageMeta {
+  final: boolean;
 }
 
 interface ProviderSettings {
@@ -139,7 +142,6 @@ const ONLINE_A2UI_SERVER_ORIGIN = 'https://genui-server.vercel.app';
 const ONLINE_A2UI_CHAT_URL = `${ONLINE_A2UI_SERVER_ORIGIN}/a2ui/stream`;
 const LOCAL_A2UI_SERVER_PORT = '3060';
 const PROVIDER_SETTINGS_STORAGE_KEY = 'a2ui-playground-provider-settings';
-const jsonExtensions = [json(), EditorView.lineWrapping];
 
 const PROVIDER_PRESETS = [
   { id: 'gpt-5.4', label: 'gpt5.4', model: 'gpt-5.4' },
@@ -225,6 +227,14 @@ function getA2UIActionStreamEndpoint(): string {
   );
 }
 
+function targetOriginForFrame(src: string): string {
+  try {
+    return new URL(src, window.location.href).origin;
+  } catch {
+    return window.location.origin;
+  }
+}
+
 function canForwardApiKeyToEndpoint(raw: string): boolean {
   try {
     const endpoint = new URL(raw, window.location.origin);
@@ -287,7 +297,7 @@ function parseSseData(raw: string): unknown {
 function safeStringifyPayload(value: unknown): string {
   if (typeof value === 'string') {
     // Streaming JSON often arrives minified (no spaces/newlines) — try to
-    // re-pretty-print it so CodeMirror can show it across multiple lines.
+    // re-pretty-print it so the generated output is easy to scan.
     try {
       return JSON.stringify(JSON.parse(value), null, 2);
     } catch {
@@ -299,6 +309,74 @@ function safeStringifyPayload(value: unknown): string {
   } catch {
     return String(value);
   }
+}
+
+function payloadToChunks(value: unknown): unknown[] {
+  if (Array.isArray(value)) return value;
+  if (typeof value !== 'string') return [value];
+  try {
+    const parsed = JSON.parse(value) as unknown;
+    return Array.isArray(parsed) ? parsed : [parsed];
+  } catch {
+    return [value];
+  }
+}
+
+function JsonPayloadViewer(
+  props: {
+    payload: unknown;
+    onCopy: (text: string) => void;
+    singleBlock?: boolean;
+  },
+) {
+  const { onCopy, payload, singleBlock = false } = props;
+  if (singleBlock) {
+    const payloadStr = safeStringifyPayload(payload);
+    return (
+      <div className='chatMessagePayload'>
+        <div className='chatMessageSingleChunk'>
+          <div className='chatMessageChunkHeader'>
+            <span className='chatMessageChunkIndex'>Request</span>
+            <button
+              type='button'
+              className='chatJsonCopyButton'
+              onClick={() => onCopy(payloadStr)}
+            >
+              Copy
+            </button>
+          </div>
+          <pre className='chatMessageChunkJson'>{payloadStr}</pre>
+        </div>
+      </div>
+    );
+  }
+
+  const chunks = payloadToChunks(payload);
+
+  return (
+    <div className='chatMessagePayload'>
+      <div className='chatMessageChunks'>
+        {chunks.map((message, index) => {
+          const messageStr = JSON.stringify(message, null, 2);
+          return (
+            <div className='chatMessageChunk' key={index}>
+              <div className='chatMessageChunkHeader'>
+                <span className='chatMessageChunkIndex'>#{index + 1}</span>
+                <button
+                  type='button'
+                  className='chatJsonCopyButton'
+                  onClick={() => onCopy(messageStr)}
+                >
+                  Copy
+                </button>
+              </div>
+              <pre className='chatMessageChunkJson'>{messageStr}</pre>
+            </div>
+          );
+        })}
+      </div>
+    </div>
+  );
 }
 
 function readProviderSettings(): ProviderSettings {
@@ -389,6 +467,27 @@ function normalizeA2UIMessages(payload: unknown): unknown[] {
   return [];
 }
 
+function includesCreateSurface(messages: unknown[]): boolean {
+  return messages.some((message) =>
+    Boolean(
+      message
+        && typeof message === 'object'
+        && 'createSurface' in message
+        && (message as { createSurface?: unknown }).createSurface,
+    )
+  );
+}
+
+function buildPreviewMessagesFromHistory(
+  history: ModelChatMessage[],
+): unknown[] {
+  return history.flatMap((message) =>
+    message.role === 'assistant'
+      ? normalizeA2UIMessages(message.content)
+      : []
+  );
+}
+
 function parseCompletedArrayItems(raw: string): unknown[] {
   const trimmed = raw.trimStart();
   if (!trimmed.startsWith('[')) return [];
@@ -446,9 +545,13 @@ function parseCompletedArrayItems(raw: string): unknown[] {
 async function readA2UIResponse(
   response: BrowserResponse,
   onText: (text: string) => void,
-  onMessages: (messages: unknown[]) => void,
+  onMessages: (messages: unknown[], meta: A2UIResponseMessageMeta) => void,
   onUsage?: (usage: TokenUsage) => void,
-  options: { publishPartialMessages?: boolean } = {},
+  options: {
+    parseDeltaMessages?: boolean;
+    publishPartialMessages?: boolean;
+    publishText?: boolean;
+  } = {},
 ): Promise<unknown[]> {
   const contentType = response.headers.get('content-type') ?? '';
   if (!contentType.includes('text/event-stream')) {
@@ -461,7 +564,7 @@ async function readA2UIResponse(
       const usage = parseUsage((payload as A2UIDonePayload).usage);
       if (usage) onUsage?.(usage);
     }
-    onMessages(messages);
+    onMessages(messages, { final: true });
     return messages;
   }
 
@@ -472,7 +575,9 @@ async function readA2UIResponse(
   let buffer = '';
   let generatedText = '';
   let latestMessages: unknown[] = [];
+  const parseDeltaMessages = options.parseDeltaMessages ?? true;
   const publishPartialMessages = options.publishPartialMessages ?? true;
+  const publishText = options.publishText ?? true;
 
   while (true) {
     const { done, value } = await reader.read();
@@ -488,13 +593,23 @@ async function readA2UIResponse(
         const deltaData = parsed.data as { text?: unknown };
         if (typeof deltaData.text === 'string') {
           generatedText += deltaData.text;
-          onText(generatedText);
-          if (!publishPartialMessages) continue;
+          if (publishText) onText(generatedText);
+          if (!publishPartialMessages || !parseDeltaMessages) continue;
           const completed = parseCompletedArrayItems(generatedText);
           if (completed.length > latestMessages.length) {
             latestMessages = completed;
-            onMessages(latestMessages);
+            onMessages(latestMessages, { final: false });
           }
+        }
+        continue;
+      }
+
+      if (parsed.event === 'message') {
+        if (!publishPartialMessages) continue;
+        const messages = normalizeA2UIMessages(parsed.data);
+        if (messages.length > 0) {
+          latestMessages = messages;
+          onMessages(latestMessages, { final: false });
         }
         continue;
       }
@@ -507,7 +622,7 @@ async function readA2UIResponse(
         }
         if (doneMessages.length > 0) {
           latestMessages = doneMessages;
-          onMessages(latestMessages);
+          onMessages(latestMessages, { final: true });
         } else {
           throw new Error(normalizeErrorPayload(parsed.data));
         }
@@ -536,7 +651,7 @@ const SUGGESTED_PROMPTS: Array<{ label: string; text: string }> = [
   {
     label: '🛍️ Product card with Buy',
     text:
-      'Create a product card for a limited-edition sneaker. Include name, a photo, price ($189), a short description, and a "Buy Now" button. When tapped, show an order confirmation with a fake order number and estimated delivery.',
+      'Create a product card for a limited-edition sneaker. Include name, a photo, price ($189), a short description, and a "Buy Now" button. When tapped, show a purchase confirmation step with a "Confirm Purchase" button. Only the Confirm Purchase button should submit the action; after the action response, replace the card with an order success page showing a fake order number and estimated delivery.',
   },
   {
     label: '⚡ Quiz card with actions',
@@ -545,23 +660,131 @@ const SUGGESTED_PROMPTS: Array<{ label: string; text: string }> = [
   },
 ];
 
+function parsePersistedUserAction(content: string): {
+  action: Record<string, unknown>;
+  name: string;
+} | null {
+  const prefix = 'A2UI_USER_ACTION:';
+  if (!content.startsWith(prefix)) return null;
+  try {
+    const parsed = JSON.parse(content.slice(prefix.length).trim()) as unknown;
+    if (!parsed || typeof parsed !== 'object') return null;
+    const action = (parsed as { action?: unknown }).action;
+    if (!action || typeof action !== 'object') return null;
+    const record = action as Record<string, unknown>;
+    const event = record.event;
+    const eventName = event && typeof event === 'object'
+      ? (event as { name?: unknown }).name
+      : undefined;
+    return {
+      action: record,
+      name: typeof record.name === 'string'
+        ? record.name
+        : (typeof eventName === 'string' ? eventName : 'unknown'),
+    };
+  } catch {
+    return null;
+  }
+}
+
+function createActionForwardingStatus(actionName: string): ChatMessage {
+  return {
+    role: 'status',
+    tone: 'info',
+    content: (
+      <>
+        <span className='chatMessageStatusIcon' aria-hidden='true'>
+          📤
+        </span>
+        <span>
+          Lynx Preview triggered{' '}
+          <code className='chatMessageStatusInline'>{actionName}</code>,
+          forwarding request to agent...
+        </span>
+      </>
+    ),
+  };
+}
+
+function createAgentRespondedStatus(count: number): ChatMessage {
+  return {
+    role: 'status',
+    tone: 'success',
+    content: (
+      <>
+        <span className='chatMessageStatusIcon' aria-hidden='true'>
+          📥
+        </span>
+        <span>
+          Agent responded with {count} A2UI{' '}
+          {count === 1 ? 'message' : 'messages'}.
+        </span>
+      </>
+    ),
+  };
+}
+
+function createPreviewReadyStatus(): ChatMessage {
+  return {
+    role: 'status',
+    tone: 'info',
+    content: (
+      <>
+        <span className='chatMessageStatusIcon' aria-hidden='true'>
+          ✨
+        </span>
+        <span>UI updated. Ready for the next action.</span>
+      </>
+    ),
+  };
+}
+
 function buildChatMessagesFromHistory(
   history: ModelChatMessage[],
 ): ChatMessage[] {
   if (history.length === 0) return [WELCOME_MESSAGE];
   const next: ChatMessage[] = [WELCOME_MESSAGE];
+  let previousWasAction = false;
   for (const message of history) {
     if (message.role === 'user') {
+      const action = parsePersistedUserAction(message.content);
+      if (action) {
+        next.push(createActionForwardingStatus(action.name));
+        next.push({
+          role: 'action',
+          content: `⚡ Action: ${action.name}`,
+          payload: action.action,
+        });
+        previousWasAction = true;
+        continue;
+      }
       next.push({ role: 'user', content: message.content });
+      previousWasAction = false;
       continue;
     }
     if (message.role === 'assistant') {
+      if (previousWasAction) {
+        const actionMessages = normalizeA2UIMessages(message.content);
+        if (actionMessages.length > 0) {
+          next.push(createAgentRespondedStatus(actionMessages.length));
+          next.push({
+            role: 'action',
+            content: `✅ Applied ${actionMessages.length} ${
+              actionMessages.length === 1 ? 'message' : 'messages'
+            } to Lynx Preview`,
+            payload: actionMessages,
+          });
+          next.push(createPreviewReadyStatus());
+          previousWasAction = false;
+          continue;
+        }
+      }
       next.push({
         role: 'json',
         content: 'Generated Output',
         payload: message.content,
-        payloadLabel: 'JSON',
       });
+      previousWasAction = false;
     }
   }
   return next;
@@ -592,7 +815,6 @@ export function AIChatPage(
     () => readProviderSettings(),
   );
   const [renderUrl, setRenderUrl] = useState<string>('');
-  const [generatedJson, setGeneratedJson] = useState<string>('');
   const [previewMessages, setPreviewMessages] = useState<unknown[] | null>(
     null,
   );
@@ -605,6 +827,7 @@ export function AIChatPage(
     completionTokens: 0,
     totalTokens: 0,
   });
+  const { showCopyToast, toast: copyToast } = useCopyToast();
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const chatMessagesRef = useRef<HTMLDivElement>(null);
   const followBottomRef = useRef<boolean>(true);
@@ -613,6 +836,7 @@ export function AIChatPage(
   const actionAbortRef = useRef<AbortController | null>(null);
   const hydratedActiveIdRef = useRef<string | null>(null);
   const latestPreviewMessagesRef = useRef<unknown[]>([]);
+  const renderUrlRef = useRef('');
   const {
     containerRef: pageRef,
     handleResizeStart: handlePanelResizeStart,
@@ -630,6 +854,13 @@ export function AIChatPage(
     initialSecondarySize: 560,
   });
 
+  const handleCopyText = useCallback(
+    (text: string) => {
+      void copyToClipboard(text).then(showCopyToast);
+    },
+    [showCopyToast],
+  );
+
   const providerRequestOptions = useMemo(
     () => toProviderRequestOptions(providerSettings),
     [providerSettings],
@@ -641,6 +872,10 @@ export function AIChatPage(
   useEffect(() => {
     providerRequestOptionsRef.current = providerRequestOptions;
   }, [providerRequestOptions]);
+
+  useEffect(() => {
+    renderUrlRef.current = renderUrl;
+  }, [renderUrl]);
 
   useEffect(() => {
     try {
@@ -660,25 +895,24 @@ export function AIChatPage(
   }, [providerSettings]);
 
   useEffect(() => {
-    // Re-run on every render so streaming text growth & async editor mounts
-    // both keep the chat pinned to the latest message.
+    // Re-run on streaming updates so generated chunks keep the chat pinned to
+    // the latest message.
     void messages;
-    void generatedJson;
     void isGenerating;
+    void previewMessages;
     if (!followBottomRef.current) return;
     const container = chatMessagesRef.current;
     if (!container) return;
     container.scrollTop = container.scrollHeight;
-  }, [messages, generatedJson, isGenerating]);
+  }, [messages, isGenerating, previewMessages]);
 
   useEffect(() => {
     const container = chatMessagesRef.current;
     if (!container) return;
     if (typeof ResizeObserver === 'undefined') return;
-    // Async-mounted CodeMirror editors and streaming JSON expand the container
-    // height after React commits. ResizeObserver fires for those layout shifts
-    // and lets us keep the chat pinned to the bottom while the user is in
-    // "follow" mode.
+    // Streaming generated output expands the container height after React
+    // commits. ResizeObserver fires for those layout shifts and lets us keep
+    // the chat pinned to the bottom while the user is in "follow" mode.
     const sizeObserver = new ResizeObserver(() => {
       if (!followBottomRef.current) return;
       container.scrollTop = container.scrollHeight;
@@ -687,8 +921,8 @@ export function AIChatPage(
     Array.from(container.children).forEach((child: Element) => {
       sizeObserver.observe(child);
     });
-    // Newly inserted message rows must also be observed so their delayed
-    // CodeMirror layout still triggers the bottom-pin behavior. We use a
+    // Newly inserted message rows must also be observed so delayed chunk
+    // rendering still triggers the bottom-pin behavior. We use a
     // MutationObserver instead of re-running this effect on every messages
     // change so it stays a one-time setup.
     const childObserver = new MutationObserver((entries) => {
@@ -718,7 +952,7 @@ export function AIChatPage(
     const distanceFromBottom = container.scrollHeight
       - container.scrollTop
       - container.clientHeight;
-    // 32px hysteresis: small upward scrolls inside CodeMirror still count as
+    // 32px hysteresis: small upward scrolls inside generated output still count as
     // "at bottom"; once the user is clearly above we stop auto-following so
     // their reading position is respected.
     followBottomRef.current = distanceFromBottom <= 32;
@@ -745,7 +979,7 @@ export function AIChatPage(
       const initData = {
         protocol,
         demoUrl: DEFAULT_A2UI_DEMO_URL,
-        messages: nextMessages,
+        messages: [],
         theme,
         instant: true,
         liveAction: nextMessages.length > 0,
@@ -753,9 +987,46 @@ export function AIChatPage(
 
       setRenderUrl((current) => {
         if (current) {
+          const targetOrigin = targetOriginForFrame(current);
           previewFrameRef.current?.contentWindow?.postMessage(
-            { type: 'INIT_LYNX_VIEW', data: initData },
-            window.location.origin,
+            { type: 'A2UI_LIVE_MESSAGES', messages: nextMessages },
+            targetOrigin,
+          );
+          return current;
+        }
+
+        const nextRenderUrl = buildRenderUrl(initData, baseUrl);
+        return nextRenderUrl;
+      });
+    },
+    [baseUrl, protocol, theme],
+  );
+
+  const publishStreamingPreviewMessages = useCallback(
+    (deltaMessages: unknown[]) => {
+      if (deltaMessages.length === 0) return;
+      const accumulatedMessages = [
+        ...latestPreviewMessagesRef.current,
+        ...deltaMessages,
+      ];
+      latestPreviewMessagesRef.current = accumulatedMessages;
+      setPreviewMessages(accumulatedMessages);
+
+      const initData = {
+        protocol,
+        demoUrl: DEFAULT_A2UI_DEMO_URL,
+        messages: [],
+        theme,
+        instant: true,
+        liveAction: deltaMessages.length > 0,
+      };
+
+      setRenderUrl((current) => {
+        if (current) {
+          const targetOrigin = targetOriginForFrame(current);
+          previewFrameRef.current?.contentWindow?.postMessage(
+            { type: 'A2UI_LIVE_MESSAGES', messages: deltaMessages },
+            targetOrigin,
           );
           return current;
         }
@@ -772,17 +1043,26 @@ export function AIChatPage(
 
   useEffect(() => {
     if (!isReady || isGenerating) return;
-    if (hydratedActiveIdRef.current === activeId) return;
+    const replayMessages = includesCreateSurface(persistedPreviewMessages)
+      ? persistedPreviewMessages
+      : buildPreviewMessagesFromHistory(persistedMessages);
+
+    if (hydratedActiveIdRef.current === activeId) {
+      if (!renderUrl && replayMessages.length > 0) {
+        publishPreviewMessages(replayMessages);
+      }
+      return;
+    }
+
     hydratedActiveIdRef.current = activeId;
     setMessages(buildChatMessagesFromHistory(persistedMessages));
-    setGeneratedJson('');
     setTokenUsage({
       promptTokens: 0,
       completionTokens: 0,
       totalTokens: 0,
     });
-    if (persistedPreviewMessages.length > 0) {
-      publishPreviewMessages(persistedPreviewMessages);
+    if (replayMessages.length > 0) {
+      publishPreviewMessages(replayMessages);
     } else {
       latestPreviewMessagesRef.current = [];
       setPreviewMessages(null);
@@ -795,6 +1075,7 @@ export function AIChatPage(
     persistedMessages,
     persistedPreviewMessages,
     publishPreviewMessages,
+    renderUrl,
   ]);
 
   useEffect(() => {
@@ -822,7 +1103,6 @@ export function AIChatPage(
       { role: 'ai', content: 'Connecting to A2UI agent...' },
     ]);
     setInputValue('');
-    setGeneratedJson('');
     setPreviewMessages(null);
     latestPreviewMessagesRef.current = [];
     setTokenUsage({
@@ -854,22 +1134,37 @@ export function AIChatPage(
           throw new Error(`A2UI agent request failed: ${response.status}`);
         }
 
-        let latestText = '';
         const finalMessages = await readA2UIResponse(
           response,
-          (nextText) => {
-            latestText = nextText;
-            setGeneratedJson(nextText);
+          () => {
             setMessages((prev) => {
               const next = prev.slice();
               next[next.length - 1] = {
                 role: 'ai',
-                content: `Generating A2UI JSON... ${nextText.length} chars`,
+                content: 'Streaming A2UI messages...',
               };
               return next;
             });
           },
-          publishPreviewMessages,
+          (nextMessages, meta) => {
+            if (controller.signal.aborted) return;
+            if (meta.final) {
+              publishPreviewMessages(nextMessages);
+              return;
+            }
+            publishStreamingPreviewMessages(nextMessages);
+            setMessages((prev) => {
+              const next = prev.slice();
+              next[next.length - 1] = {
+                role: 'ai',
+                content:
+                  `Streaming ${latestPreviewMessagesRef.current.length} A2UI message${
+                    latestPreviewMessagesRef.current.length === 1 ? '' : 's'
+                  }...`,
+              };
+              return next;
+            });
+          },
           (usage) => {
             if (controller.signal.aborted) return;
             setTokenUsage((prev) => ({
@@ -878,19 +1173,19 @@ export function AIChatPage(
               totalTokens: prev.totalTokens + usage.totalTokens,
             }));
           },
-          { publishPartialMessages: false },
+          {
+            parseDeltaMessages: false,
+            publishText: false,
+          },
         );
 
         if (finalMessages.length === 0) {
           throw new Error('A2UI agent did not return valid messages');
         }
 
-        const assistantContent = latestText.length > 0
-          ? latestText
-          : JSON.stringify(finalMessages);
         await recordTurn({
           userMessage,
-          assistantContent,
+          assistantContent: JSON.stringify(finalMessages),
           a2uiMessages: finalMessages,
           previewMessages: finalMessages,
         });
@@ -898,15 +1193,14 @@ export function AIChatPage(
           const next = prev.slice();
           next[next.length - 1] = {
             role: 'ai',
-            content: `Done. Rendered ${finalMessages.length} A2UI message${
+            content: `✅ Rendered ${finalMessages.length} A2UI message${
               finalMessages.length === 1 ? '' : 's'
-            }.`,
+            } to Lynx Preview`,
           };
           next.push({
             role: 'json',
             content: 'Generated Output',
-            payload: assistantContent,
-            payloadLabel: 'JSON',
+            payload: finalMessages,
           });
           return next;
         });
@@ -932,14 +1226,22 @@ export function AIChatPage(
     inputValue,
     isGenerating,
     publishPreviewMessages,
+    publishStreamingPreviewMessages,
     providerRequestOptions,
     recordTurn,
   ]);
 
   useEffect(() => {
     const handleMessage = (e: MessageEvent<unknown>) => {
+      const frameWindow = previewFrameRef.current?.contentWindow;
+      if (!frameWindow || e.source !== frameWindow) return;
+      if (e.origin !== targetOriginForFrame(renderUrlRef.current)) return;
       if (!e.data || typeof e.data !== 'object') return;
       const msg = e.data as Record<string, unknown>;
+      if (msg.type === 'A2UI_RENDER_READY') {
+        publishPreviewMessages(latestPreviewMessagesRef.current);
+        return;
+      }
       if (msg.type !== 'A2UI_USER_ACTION') return;
 
       const action = msg.action as {
@@ -974,27 +1276,11 @@ export function AIChatPage(
       setMessages((prev) => {
         const next: ChatMessage[] = [
           ...prev,
-          {
-            role: 'status' as const,
-            tone: 'info',
-            content: (
-              <>
-                <span className='chatMessageStatusIcon' aria-hidden='true'>
-                  📤
-                </span>
-                <span>
-                  Lynx Preview triggered{' '}
-                  <code className='chatMessageStatusInline'>{actionName}</code>
-                  , forwarding request to agent...
-                </span>
-              </>
-            ),
-          },
+          createActionForwardingStatus(actionName),
           {
             role: 'action' as const,
             content: `⚡ Action: ${actionName}`,
             payload: action,
-            payloadLabel: 'REQUEST',
           },
           {
             role: 'status' as const,
@@ -1045,36 +1331,31 @@ export function AIChatPage(
           }
 
           let responseMessages: unknown[] = [];
-          let latestActionText = '';
 
           await readA2UIResponse(
             response,
             (text) => {
               if (!text) return;
               if (signal.aborted) return;
-              latestActionText = text;
               setMessages((prev) => {
                 const next = prev.slice();
-                if (streamingIndex < 0 || streamingIndex >= next.length) {
-                  // First non-empty delta — insert the streaming card right
-                  // after the pending status row so the card appears only
-                  // when there is actual data to show.
-                  const insertAt = pendingIndex >= 0
-                      && pendingIndex < next.length
-                    ? pendingIndex + 1
-                    : next.length;
-                  next.splice(insertAt, 0, {
-                    role: 'action' as const,
-                    content: '✨ Streaming RESPONSE...',
-                    payload: text,
-                    payloadLabel: 'RESPONSE (streaming)',
-                  });
-                  streamingIndex = insertAt;
+                if (pendingIndex < 0 || pendingIndex >= next.length) {
                   return next;
                 }
-                next[streamingIndex] = {
-                  ...next[streamingIndex],
-                  payload: text,
+                next[pendingIndex] = {
+                  role: 'status' as const,
+                  tone: 'pending',
+                  content: (
+                    <>
+                      <span
+                        className='chatMessageActionSpinner'
+                        aria-hidden='true'
+                      />
+                      <span>
+                        Streaming response from agent... {text.length} chars
+                      </span>
+                    </>
+                  ),
                 };
                 return next;
               });
@@ -1082,6 +1363,31 @@ export function AIChatPage(
             (msgs) => {
               if (signal.aborted) return;
               responseMessages = msgs;
+              setMessages((prev) => {
+                const next = prev.slice();
+                if (streamingIndex < 0 || streamingIndex >= next.length) {
+                  const insertAt = pendingIndex >= 0
+                      && pendingIndex < next.length
+                    ? pendingIndex + 1
+                    : next.length;
+                  next.splice(insertAt, 0, {
+                    role: 'action' as const,
+                    content: '✨ Streaming RESPONSE...',
+                    payload: responseMessages,
+                  });
+                  streamingIndex = insertAt;
+                  return next;
+                }
+                next[streamingIndex] = {
+                  ...next[streamingIndex],
+                  payload: responseMessages,
+                };
+                return next;
+              });
+              previewFrameRef.current?.contentWindow?.postMessage(
+                { type: 'A2UI_ACTION_RESPONSE', messages: responseMessages },
+                targetOriginForFrame(renderUrlRef.current),
+              );
             },
             (usage) => {
               if (signal.aborted) return;
@@ -1100,39 +1406,23 @@ export function AIChatPage(
             throw new Error('Agent returned no A2UI messages');
           }
 
-          previewFrameRef.current?.contentWindow?.postMessage(
-            { type: 'A2UI_ACTION_RESPONSE', messages: responseMessages },
-            window.location.origin,
-          );
-
           const count = responseMessages.length;
-          const assistantContent = latestActionText.length > 0
-            ? latestActionText
-            : JSON.stringify(responseMessages);
+          const replayMessages = [
+            ...latestPreviewMessagesRef.current,
+            ...responseMessages,
+          ];
+          latestPreviewMessagesRef.current = replayMessages;
+          setPreviewMessages(replayMessages);
           await recordTurn({
             userMessage: userActionMessage,
-            assistantContent,
+            assistantContent: JSON.stringify(responseMessages),
             a2uiMessages: responseMessages,
-            previewMessages: responseMessages,
+            previewMessages: replayMessages,
           });
           setMessages((prev) => {
             const next = prev.slice();
             if (pendingIndex >= 0 && pendingIndex < next.length) {
-              next[pendingIndex] = {
-                role: 'status' as const,
-                tone: 'success',
-                content: (
-                  <>
-                    <span className='chatMessageStatusIcon' aria-hidden='true'>
-                      📥
-                    </span>
-                    <span>
-                      Agent responded with {count} A2UI{' '}
-                      {count === 1 ? 'message' : 'messages'}.
-                    </span>
-                  </>
-                ),
-              };
+              next[pendingIndex] = createAgentRespondedStatus(count);
             }
             const finalCard: ChatMessage = {
               role: 'action' as const,
@@ -1140,25 +1430,13 @@ export function AIChatPage(
                 count === 1 ? 'message' : 'messages'
               } to Lynx Preview`,
               payload: responseMessages,
-              payloadLabel: 'RESPONSE',
             };
             if (streamingIndex >= 0 && streamingIndex < next.length) {
               next[streamingIndex] = finalCard;
             } else {
               next.push(finalCard);
             }
-            next.push({
-              role: 'status' as const,
-              tone: 'info',
-              content: (
-                <>
-                  <span className='chatMessageStatusIcon' aria-hidden='true'>
-                    ✨
-                  </span>
-                  <span>UI updated. Ready for the next action.</span>
-                </>
-              ),
-            });
+            next.push(createPreviewReadyStatus());
             return next;
           });
         } catch (e) {
@@ -1203,7 +1481,7 @@ export function AIChatPage(
       actionAbortRef.current?.abort();
       actionAbortRef.current = null;
     };
-  }, [buildConversationContext, recordTurn]);
+  }, [buildConversationContext, publishPreviewMessages, recordTurn]);
 
   const handleKeyDown = useCallback(
     (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
@@ -1258,6 +1536,7 @@ export function AIChatPage(
       ref={pageRef}
       className={isPanelResizing ? 'chatPage resizing' : 'chatPage'}
     >
+      <CopyToast toast={copyToast} />
       <ConfirmDialog
         open={deleteConversationId !== null}
         title='Delete conversation?'
@@ -1332,66 +1611,68 @@ export function AIChatPage(
                 return 'chatMessageAI';
               })();
 
-              const payloadStr = msg.payload === undefined
-                ? null
-                : safeStringifyPayload(msg.payload);
+              const hasPayload = msg.payload !== undefined;
+              const payloadStr = hasPayload
+                ? safeStringifyPayload(msg.payload)
+                : '';
+              const isAppliedActionResponse = msg.role === 'action'
+                && typeof msg.content === 'string'
+                && msg.content.startsWith('✅ Applied ');
+              const isActionRequest = msg.role === 'action'
+                && typeof msg.content === 'string'
+                && msg.content.startsWith('⚡ Action:');
 
               const className = msg.role === 'action'
-                  && payloadStr !== null
+                  && hasPayload
                 ? `${baseClassName} chatMessageActionExpanded`
                 : baseClassName;
 
               return (
                 <div key={i} className={`chatMessage ${className}`}>
-                  <div className='chatMessageBody'>{msg.content}</div>
-                  {payloadStr === null
-                    ? null
-                    : (
-                      <div className='chatMessagePayload'>
-                        {msg.payloadLabel
-                          ? (
-                            <div className='chatMessagePayloadLabel'>
-                              {msg.payloadLabel}
-                            </div>
-                          )
-                          : null}
-                        <CodeMirror
-                          className='chatMessagePayloadEditor'
-                          value={payloadStr}
-                          extensions={jsonExtensions}
-                          editable={false}
-                          basicSetup={{
-                            lineNumbers: true,
-                            foldGutter: true,
-                            bracketMatching: true,
-                            closeBrackets: false,
-                            autocompletion: false,
-                          }}
-                        />
-                      </div>
-                    )}
+                  <div className='chatMessageBody'>
+                    <span>{msg.content}</span>
+                    {(msg.role === 'json' || isAppliedActionResponse)
+                        && hasPayload
+                      ? (
+                        <button
+                          type='button'
+                          className='chatJsonCopyButton'
+                          onClick={() => handleCopyText(payloadStr)}
+                        >
+                          Copy all
+                        </button>
+                      )
+                      : null}
+                  </div>
+                  {hasPayload
+                    ? (
+                      <JsonPayloadViewer
+                        payload={msg.payload}
+                        onCopy={handleCopyText}
+                        singleBlock={isActionRequest}
+                      />
+                    )
+                    : null}
                 </div>
               );
             })}
-            {isGenerating && generatedJson
+            {isGenerating && previewMessages && previewMessages.length > 0
               ? (
                 <div className='chatGeneratedJson'>
                   <div className='chatGeneratedJsonTitle'>
-                    Generated Output
-                    <span className='chatGeneratedJsonBadge'>JSON</span>
+                    <span>Generated Output</span>
+                    <button
+                      type='button'
+                      className='chatJsonCopyButton'
+                      onClick={() =>
+                        handleCopyText(safeStringifyPayload(previewMessages))}
+                    >
+                      Copy all
+                    </button>
                   </div>
-                  <CodeMirror
-                    className='chatGeneratedJsonEditor'
-                    value={generatedJson}
-                    extensions={jsonExtensions}
-                    editable={false}
-                    basicSetup={{
-                      lineNumbers: true,
-                      foldGutter: true,
-                      bracketMatching: true,
-                      closeBrackets: false,
-                      autocompletion: false,
-                    }}
+                  <JsonPayloadViewer
+                    payload={previewMessages}
+                    onCopy={handleCopyText}
                   />
                 </div>
               )
@@ -1522,6 +1803,7 @@ export function AIChatPage(
           style={previewPanelStyle}
           title='Lynx Preview'
           showPreviewModeSwitch
+          showSimulationBar={false}
           previewSource={previewSource}
         >
           <PreviewViewport

@@ -111,6 +111,24 @@ export interface ValidationResult {
 export interface ValidationOptions {
   requireCreateSurface?: boolean;
   existingSurfaceIds?: string[];
+  existingDataModelBySurface?: Record<string, unknown>;
+}
+
+export interface A2UIValidationDebugEntry {
+  error: string;
+  path: string;
+  value: unknown;
+}
+
+export interface A2UIValidationDebugData {
+  parsedType: string;
+  entries: A2UIValidationDebugEntry[];
+  rawText?: string;
+}
+
+export interface A2UIValidationDebugOptions {
+  includeRaw?: boolean;
+  previewChars?: number;
 }
 
 function stripCodeFenceWrapper(text: string): string {
@@ -210,6 +228,39 @@ export function extractJsonArray(text: string): unknown {
   return null;
 }
 
+export function getA2UIValidationDebugData(
+  raw: string,
+  errors: string[],
+  options: A2UIValidationDebugOptions = {},
+): A2UIValidationDebugData {
+  const parsed = extractJsonArray(raw);
+  const parsedType = parsed === null
+    ? 'null'
+    : (Array.isArray(parsed)
+      ? 'array'
+      : typeof parsed);
+  const hasJsonParseError = errors.some((error) =>
+    error.startsWith('Response was not valid JSON.')
+  );
+  const rawText = options.includeRaw
+    ? raw
+    : (hasJsonParseError
+      ? previewText(raw, options.previewChars ?? 500)
+      : undefined);
+  return {
+    parsedType,
+    ...(rawText === undefined ? {} : { rawText }),
+    entries: errors.map((error) => {
+      const path = extractValidationErrorPath(error);
+      return {
+        error,
+        path,
+        value: valueAtPath(parsed, path),
+      };
+    }),
+  };
+}
+
 export function validateA2UIOutput(
   raw: string,
   catalog: A2UICatalog,
@@ -279,6 +330,16 @@ export function validateA2UIOutput(
   const allPaths: { surfaceId: string; path: string }[] = [];
   const providedPaths: { surfaceId: string; path: string }[] = [];
 
+  for (
+    const [surfaceId, dataModel] of Object.entries(
+      options.existingDataModelBySurface ?? {},
+    )
+  ) {
+    for (const path of flattenProvidedPaths('/', dataModel)) {
+      providedPaths.push({ surfaceId, path });
+    }
+  }
+
   for (const msg of messages) {
     if ('createSurface' in msg && msg.createSurface) {
       surfaces.add(msg.createSurface.surfaceId);
@@ -299,6 +360,7 @@ export function validateA2UIOutput(
             componentSpecs.get(comp.component)!,
             errors,
           );
+          validateRendererSemantics(comp, errors);
         } else {
           errors.push(
             `Unknown component "${comp.component}" (id=${comp.id}). Allowed: ${
@@ -496,6 +558,35 @@ function flattenProvidedPaths(basePath: string, value: unknown): string[] {
   return paths.length > 0 ? paths : [normalized];
 }
 
+function extractValidationErrorPath(error: string): string {
+  const match = /^Schema violation at ([^:]+):/u.exec(error)
+    ?? /^Prop ([^ ]+) /u.exec(error);
+  return match?.[1] ?? '<root>';
+}
+
+function valueAtPath(value: unknown, path: string): unknown {
+  if (path === '<root>' || path === '') return value;
+  let current = value;
+  for (const segment of path.match(/[^.[\]]+/gu) ?? []) {
+    if (Array.isArray(current)) {
+      const index = Number(segment);
+      if (!Number.isInteger(index)) return undefined;
+      current = current[index];
+      continue;
+    }
+    if (!isRecord(current)) return undefined;
+    current = current[segment];
+  }
+  return current;
+}
+
+function previewText(raw: string, maxChars: number): string {
+  if (raw.length <= maxChars) return raw;
+  return `${raw.slice(0, maxChars)}... [truncated ${
+    raw.length - maxChars
+  } chars]`;
+}
+
 function validateComponentAgainstCatalog(
   comp: A2UIComponent,
   spec: A2UIComponentSpec,
@@ -532,6 +623,25 @@ function validateComponentAgainstCatalog(
       `${comp.id}.${prop.name}`,
     );
     errors.push(...propErrors);
+  }
+}
+
+function validateRendererSemantics(
+  comp: A2UIComponent,
+  errors: string[],
+): void {
+  const weight = (comp as { weight?: unknown }).weight;
+  if (typeof weight !== 'number') return;
+  if (!Number.isFinite(weight) || weight <= 0) {
+    errors.push(
+      `Component "${comp.id}" (${comp.component}) has invalid weight "${weight}". Use a positive finite layout ratio.`,
+    );
+    return;
+  }
+  if (weight > 12) {
+    errors.push(
+      `Component "${comp.id}" (${comp.component}) has weight "${weight}", but weight is a small Row/Column layout ratio, not CSS font-weight. Use values like 1, 1.5, 2, 3, or 5.`,
+    );
   }
 }
 

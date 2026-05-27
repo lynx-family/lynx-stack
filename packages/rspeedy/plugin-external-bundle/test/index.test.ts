@@ -65,7 +65,29 @@ type Middleware = (
   next: () => void,
 ) => void
 
-type SetupMiddlewares = (middlewares: Middleware[]) => Middleware[]
+type ServerSetup = (context: {
+  action: 'dev' | 'preview'
+  server: {
+    middlewares: {
+      use: (middleware: Middleware) => void
+    }
+  }
+}) => void
+
+function collectServerMiddlewares(setup: ServerSetup): Middleware[] {
+  const middlewares: Middleware[] = []
+  setup({
+    action: 'dev',
+    server: {
+      middlewares: {
+        use: (middleware) => {
+          middlewares.push(middleware)
+        },
+      },
+    },
+  })
+  return middlewares
+}
 
 describe('pluginExternalBundle', () => {
   test('should register ExternalsLoadingPlugin with correct options', async () => {
@@ -340,7 +362,7 @@ describe('pluginExternalBundle', () => {
       mainThread: { sectionPath: 'ReactLynx__main-thread' },
       async: false,
     })
-    expect(rsbuild.getNormalizedConfig().dev?.setupMiddlewares).toHaveLength(1)
+    expect(rsbuild.getNormalizedConfig().server?.setup).toBeDefined()
   })
 
   test('should keep reactlynx preset as bundlePath when assetPrefix contains placeholders', async () => {
@@ -585,7 +607,7 @@ describe('pluginExternalBundle', () => {
     expect(externals?.['./App.js']).toMatchObject({
       bundlePath: '/comp-lib.lynx.bundle',
     })
-    expect(rsbuild.getNormalizedConfig().dev?.setupMiddlewares).toHaveLength(1)
+    expect(rsbuild.getNormalizedConfig().server?.setup).toBeDefined()
   })
 
   test('should serve explicit bundlePath files from externalBundleRoot', async () => {
@@ -629,13 +651,13 @@ describe('pluginExternalBundle', () => {
 
       await rsbuild.inspectConfig()
 
-      const setupMiddlewares = rsbuild.getNormalizedConfig().dev
-        ?.setupMiddlewares as SetupMiddlewares[] | undefined
-      expect(setupMiddlewares).toHaveLength(1)
-      const firstSetupMiddleware = setupMiddlewares?.[0]
-      expect(firstSetupMiddleware).toBeDefined()
+      const serverSetup = rsbuild.getNormalizedConfig().server
+        ?.setup as ServerSetup | undefined
+      expect(serverSetup).toBeDefined()
 
-      const middlewares = firstSetupMiddleware ? firstSetupMiddleware([]) : []
+      const middlewares = serverSetup
+        ? collectServerMiddlewares(serverSetup)
+        : []
       expect(middlewares).toHaveLength(1)
       const firstMiddleware = middlewares[0]
       expect(firstMiddleware).toBeDefined()

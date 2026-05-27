@@ -1,7 +1,14 @@
 // Copyright 2026 The Lynx Authors. All rights reserved.
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
-import { createElement, useEffect, useMemo, useRef, useState } from 'react';
+import {
+  createElement,
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from 'react';
 import ReactDOM from 'react-dom/client';
 
 import './styles.css';
@@ -55,6 +62,11 @@ interface UserActionMessage {
 
 interface ActionResponseMessage {
   type: 'A2UI_ACTION_RESPONSE';
+  messages: unknown[];
+}
+
+interface LiveMessagesMessage {
+  type: 'A2UI_LIVE_MESSAGES';
   messages: unknown[];
 }
 
@@ -223,6 +235,58 @@ function Render() {
   const [playbackMode, setPlaybackMode] = useState(false);
   const lynxViewRef = useRef<LynxViewElement | null>(null);
   const lastPlaybackPausedRef = useRef<boolean | null>(null);
+  const pendingLiveMessagesRef = useRef<unknown[] | null>(null);
+  const pendingActionResponsesRef = useRef<unknown[][]>([]);
+  const pendingFlushTimerRef = useRef<number | null>(null);
+  const pendingFlushAttemptsRef = useRef(0);
+
+  const postRenderReady = useCallback(() => {
+    if (!window.parent || window.parent === window) return;
+    window.parent.postMessage({ type: 'A2UI_RENDER_READY' }, '*');
+  }, []);
+
+  const hasPendingA2UIEvents = useCallback(() => {
+    return pendingLiveMessagesRef.current !== null
+      || pendingActionResponsesRef.current.length > 0;
+  }, []);
+
+  const flushPendingA2UIEvents = useCallback(() => {
+    const lynxView = lynxViewRef.current;
+    if (!lynxView || typeof lynxView.sendGlobalEvent !== 'function') {
+      return false;
+    }
+
+    const liveMessages = pendingLiveMessagesRef.current;
+    if (liveMessages) {
+      pendingLiveMessagesRef.current = null;
+      lynxView.sendGlobalEvent('A2UI_LIVE_MESSAGES', [liveMessages]);
+    }
+
+    const actionResponses = pendingActionResponsesRef.current.splice(0);
+    for (const messages of actionResponses) {
+      lynxView.sendGlobalEvent('A2UI_ACTION_RESPONSE', [messages]);
+    }
+
+    return true;
+  }, []);
+
+  const schedulePendingA2UIFlush = useCallback(() => {
+    if (pendingFlushTimerRef.current !== null) return;
+
+    pendingFlushTimerRef.current = window.setTimeout(() => {
+      pendingFlushTimerRef.current = null;
+      const flushed = flushPendingA2UIEvents();
+      if (flushed || !hasPendingA2UIEvents()) {
+        pendingFlushAttemptsRef.current = 0;
+        return;
+      }
+
+      pendingFlushAttemptsRef.current += 1;
+      if (pendingFlushAttemptsRef.current < 200) {
+        schedulePendingA2UIFlush();
+      }
+    }, 50);
+  }, [flushPendingA2UIEvents, hasPendingA2UIEvents]);
 
   // Known demo: fetch the static JSON in the browser context (where fetch works)
   // and pass the resolved messages as initData, avoiding fetch in Lynx's worker thread.
@@ -310,10 +374,26 @@ function Render() {
         && typeof e.data === 'object'
         && (e.data as ActionResponseMessage).type === 'A2UI_ACTION_RESPONSE'
       ) {
-        const lynxView = lynxViewRef.current;
-        lynxView?.sendGlobalEvent?.('A2UI_ACTION_RESPONSE', [
+        pendingActionResponsesRef.current.push(
           (e.data as ActionResponseMessage).messages,
-        ]);
+        );
+        pendingFlushAttemptsRef.current = 0;
+        if (!flushPendingA2UIEvents()) {
+          schedulePendingA2UIFlush();
+        }
+        return;
+      }
+      if (
+        e.data
+        && typeof e.data === 'object'
+        && (e.data as LiveMessagesMessage).type === 'A2UI_LIVE_MESSAGES'
+      ) {
+        pendingLiveMessagesRef.current = (e.data as LiveMessagesMessage)
+          .messages;
+        pendingFlushAttemptsRef.current = 0;
+        if (!flushPendingA2UIEvents()) {
+          schedulePendingA2UIFlush();
+        }
         return;
       }
       if (!isInitLynxViewMessage(e.data)) {
@@ -327,8 +407,9 @@ function Render() {
     };
 
     window.addEventListener('message', handleMessage);
+    postRenderReady();
     return () => window.removeEventListener('message', handleMessage);
-  }, []);
+  }, [flushPendingA2UIEvents, postRenderReady, schedulePendingA2UIFlush]);
 
   useEffect(() => {
     const lynxView = lynxViewRef.current;
@@ -346,7 +427,9 @@ function Render() {
     if (typeof lynxView.reload === 'function') {
       lynxView.reload();
     }
-  }, [globalProps, initData]);
+    schedulePendingA2UIFlush();
+    postRenderReady();
+  }, [globalProps, initData, postRenderReady, schedulePendingA2UIFlush]);
 
   useEffect(() => {
     const lynxView = lynxViewRef.current;
@@ -373,7 +456,24 @@ function Render() {
         playbackPaused ? 'pause' : 'resume',
       ]);
     }
-  }, [globalProps, initData, playbackMode, playbackPaused]);
+    schedulePendingA2UIFlush();
+    postRenderReady();
+  }, [
+    globalProps,
+    initData,
+    playbackMode,
+    playbackPaused,
+    postRenderReady,
+    schedulePendingA2UIFlush,
+  ]);
+
+  useEffect(() => {
+    return () => {
+      if (pendingFlushTimerRef.current !== null) {
+        window.clearTimeout(pendingFlushTimerRef.current);
+      }
+    };
+  }, []);
 
   return createElement('lynx-view', {
     ref: lynxViewRef,

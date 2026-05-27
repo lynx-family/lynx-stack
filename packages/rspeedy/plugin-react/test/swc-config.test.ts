@@ -13,6 +13,21 @@ import { pluginStubRspeedyAPI } from './stub-rspeedy-api.plugin.js'
 // The Default JS RegExp of Rsbuild
 const SCRIPT_REGEXP = /\.(?:js|jsx|mjs|cjs|ts|tsx|mts|cts)$/
 
+function getLayerRule(
+  swcRule: Rspack.RuleSetRule,
+  issuerLayer: string,
+) {
+  return swcRule.oneOf?.find((rule): rule is Rspack.RuleSetRule => {
+    return rule !== '...' && rule.issuerLayer === issuerLayer
+  })
+}
+
+function getLayerRules(swcRule: Rspack.RuleSetRule) {
+  return swcRule.oneOf?.filter((rule): rule is Rspack.RuleSetRule => {
+    return rule !== '...' && rule.issuerLayer !== undefined
+  }) ?? []
+}
+
 describe('SWC configuration', () => {
   test('defaults', async () => {
     vi.stubEnv('NODE_ENV', 'development')
@@ -51,6 +66,7 @@ describe('SWC configuration', () => {
             "exportedEnum": false,
             "typeExports": true,
           },
+          "detectSyntax": "auto",
           "isModule": "unknown",
           "jsc": {
             "experimental": {
@@ -68,7 +84,7 @@ describe('SWC configuration', () => {
             },
             "target": "es2019",
             "transform": {
-              "decoratorVersion": "2022-03",
+              "decoratorVersion": "2023-11",
               "legacyDecorator": false,
               "optimizer": {
                 "simplify": true,
@@ -138,7 +154,12 @@ describe('SWC configuration', () => {
     )
 
     // Should have Rsbuild default values
-    expect(swcRule.type).toBe('javascript/auto')
+    expect(getLayerRule(swcRule, LAYERS.BACKGROUND)?.type).toBe(
+      'javascript/auto',
+    )
+    expect(getLayerRule(swcRule, LAYERS.MAIN_THREAD)?.type).toBe(
+      'javascript/auto',
+    )
     expect(swcRule.include).toMatchInlineSnapshot(`
       [
         {
@@ -147,7 +168,7 @@ describe('SWC configuration', () => {
         /\\\\\\.\\(\\?:ts\\|tsx\\|jsx\\|mts\\|cts\\)\\$/,
         /\\[\\\\\\\\/\\]@rsbuild\\[\\\\\\\\/\\]core\\[\\\\\\\\/\\]dist\\[\\\\\\\\/\\]/,
         "<ROOT>/packages/react",
-        /\\\\\\.\\(\\?:js\\|mjs\\|cjs\\)\\$/,
+        /\\\\\\.\\(\\?:js\\|jsx\\|mjs\\|cjs\\|ts\\|tsx\\|mts\\|cts\\)\\$/,
       ]
     `)
 
@@ -158,7 +179,7 @@ describe('SWC configuration', () => {
 
     // 1. Background Layer
     // 2. MainThread Layer
-    expect(swcRule.oneOf).toHaveLength(2)
+    expect(getLayerRules(swcRule)).toHaveLength(2)
 
     const backgroundRules = swcRule.oneOf.find(rule =>
       rule.issuerLayer === LAYERS.BACKGROUND
@@ -326,7 +347,12 @@ describe('SWC configuration', () => {
     )
 
     // Should have Rsbuild default values
-    expect(swcRule.type).toBe('javascript/auto')
+    expect(getLayerRule(swcRule, LAYERS.BACKGROUND)?.type).toBe(
+      'javascript/auto',
+    )
+    expect(getLayerRule(swcRule, LAYERS.MAIN_THREAD)?.type).toBe(
+      'javascript/auto',
+    )
     expect(swcRule.include).toMatchInlineSnapshot(`
       [
         {

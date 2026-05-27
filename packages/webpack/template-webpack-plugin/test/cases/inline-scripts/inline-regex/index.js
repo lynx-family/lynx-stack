@@ -60,15 +60,19 @@ it('should generate correct bar template', async () => {
   const { sourceContent, manifest } = JSON.parse(content);
   expect(sourceContent).toHaveProperty('appType', 'DynamicComponent');
   expect(manifest).toHaveProperty('/app-service.js');
-  // should have requireModuleAsyncCache polyfill
-  expect(manifest['/app-service.js']).toContain('var moduleCache = {}');
 
-  expect(manifest).not.toHaveProperty('/bar:background.rspack.bundle.js');
+  // A lazy bundle's background is always inlined regardless of
+  // `inlineScripts`, even though the matcher here does not select `bar`. It
+  // must be loaded synchronously when the bundle is required; externalizing
+  // it via `requireModuleAsync` leaves it unavailable at `installChunk` time.
+  expect(manifest).toHaveProperty('/bar:background.rspack.bundle.js');
   expect(manifest['/app-service.js']).toContain(
+    `module.exports=lynx.requireModule(\"/bar:background.rspack.bundle.js\"`,
+  );
+  expect(manifest['/app-service.js']).not.toContain(
     `lynx.requireModuleAsync(\"/bar:background.rspack.bundle.js\")`,
   );
 
-  it('inlined scripts should not have syntax error', () => {
-    eval(manifest['/app-service.js']);
-  });
+  // the inlined app-service should be valid JavaScript
+  expect(() => eval(manifest['/app-service.js'])).not.toThrow();
 });
