@@ -40,6 +40,11 @@ minimumReleaseAge: 4320
 # would otherwise be blocked by `minimumReleaseAge`.
 minimumReleaseAgeExclude:
   - "@lynx-js/*"
+# npm's abbreviated metadata omits the `time` field, so a strict check hard-fails
+# (`ERR_PNPM_MISSING_TIME`) on packages it cannot date — e.g. during
+# `pnpm dedupe --check`. Run non-strict so the age check is enforced when `time`
+# is available and skipped (with a warning) when it is not.
+minimumReleaseAgeStrict: false
 
 # Default catalogs
 catalog:
