@@ -160,6 +160,7 @@ function ExampleCard(props: ExampleCardProps) {
     if (!armed) return;
     const handler = (e: MessageEvent) => {
       if (e.source !== iframeRef.current?.contentWindow) return;
+      if (e.origin !== window.location.origin) return;
       const data = e.data as { type?: string } | null;
       if (data && data.type === 'A2UI_RENDER_READY') {
         handleRenderReady();
