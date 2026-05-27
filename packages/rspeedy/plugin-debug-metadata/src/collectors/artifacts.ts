@@ -92,8 +92,8 @@ function readSourceMap(
  * Unique key used by remapping services to match a map.
  *
  * - JS assets use `chunk.hash` so the value matches the
- *   `__SOURCEMAP_RELEASE__` banner `SlardarWebpackPlugin` bakes into
- *   the top of the JS at build time.
+ *   `__DEBUG_METADATA_RELEASE__` banner this plugin bakes into the top
+ *   of the JS at build time.
  * - CSS assets use `chunk.contentHash['css/mini-extract']` instead — `chunk.hash`
  *   would collide with the sibling JS asset's key when a single chunk
  *   produces both `*.js` and `*.css` (as MiniCssExtractPlugin does),

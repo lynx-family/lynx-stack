@@ -7,6 +7,9 @@
 import type { RsbuildPlugin } from '@rsbuild/core';
 
 // @public
+export const DEBUG_METADATA_ASSET_NAME = "debug-metadata.json";
+
+// @public
 export function pluginLynxDebugMetadata(): RsbuildPlugin;
 
 ```

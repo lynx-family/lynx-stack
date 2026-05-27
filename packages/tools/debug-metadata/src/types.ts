@@ -36,8 +36,8 @@ export interface SourceMapDebugSource {
   path: string;
   /**
    * Identifier that platform-side reverse symbolication uses to match
-   * this map. Defaults to the producing chunk's hash. Matches the
-   * `release` option Slardar's webpack plugin already understands.
+   * this map. Defaults to the producing chunk's hash, matching the
+   * `release` the `__DEBUG_METADATA_RELEASE__` banner reports at runtime.
    */
   key: string;
   /** Full Source Map v3 payload. */
