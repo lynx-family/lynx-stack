@@ -13,18 +13,20 @@ import type { CompilerHandle } from './middleware.js'
 const PLUGIN_NAME = 'lynx:debug-metadata'
 
 /**
- * Resolve the dev-server origin (plus path) used to rewrite source-map
- * trailers. `dev.assetPrefix` may be an absolute URL (`http://localhost:<port>/`)
+ * Resolve the origin (plus path) used to rewrite source-map trailers from a
+ * dev `assetPrefix`. The prefix may be an absolute URL (`http://localhost:<port>/`)
  * or a path-only public path (`/assets/`). The latter is resolved against a
  * placeholder base so it doesn't throw, and the placeholder origin is then
  * dropped so the rewritten trailer stays relative. Returns `undefined` when no
- * usable prefix can be derived.
+ * usable prefix can be derived (unparseable, or an empty root path).
+ *
+ * @param assetPrefix - `dev.assetPrefix`, possibly containing a `<port>` token.
+ * @param port - dev-server port substituted for `<port>`.
  */
-function devServerOrigin(api: RsbuildPluginAPI): string | undefined {
-  if (!api.context.devServer) return
-  const port = api.context.devServer.port
-  const { assetPrefix } = api.getNormalizedConfig().dev
-  if (typeof assetPrefix !== 'string') return
+export function resolveAssetPrefixOrigin(
+  assetPrefix: string,
+  port: number | string,
+): string | undefined {
   const prefix = assetPrefix.replaceAll('<port>', String(port))
   const placeholder = 'http://debug-metadata.placeholder'
   let url: URL
@@ -35,6 +37,13 @@ function devServerOrigin(api: RsbuildPluginAPI): string | undefined {
   }
   const origin = url.origin === placeholder ? '' : url.origin
   return (origin + url.pathname).replace(/\/$/, '') || undefined
+}
+
+function devServerOrigin(api: RsbuildPluginAPI): string | undefined {
+  if (!api.context.devServer) return
+  const { assetPrefix } = api.getNormalizedConfig().dev
+  if (typeof assetPrefix !== 'string') return
+  return resolveAssetPrefixOrigin(assetPrefix, api.context.devServer.port)
 }
 
 interface LynxTemplatePluginExposure {
