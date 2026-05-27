@@ -29,3 +29,5 @@ When implementing A2UI v0.9 functions in `packages/genui/a2ui`, keep function re
 When verifying `packages/genui/a2ui-playground`, remember that `pnpm -F @lynx-js/a2ui-reactlynx build` regenerates catalog JSON only. The playground consumes `@lynx-js/a2ui-reactlynx` through package exports under `dist/**`, so run `pnpm -F @lynx-js/a2ui-reactlynx exec tsc -p tsconfig.build.json` before rebuilding the playground if runtime TypeScript changed.
 
 For known A2UI playground examples, keep the web preview URL on `?demo=<id>` instead of swapping it to the payload-store `messagesUrl`. `render.html` intentionally fetches known demo JSON in the browser shell and passes resolved messages into Lynx, avoiding fetch differences in the Lynx worker runtime; use payload-store URLs for custom edited JSON.
+
+When changing the A2UI playground renderer catalog, keep the agent-facing catalog in `src/catalog/a2uiAgentCatalog.ts` aligned with the Lynx preview `ALL_BUILTINS` list. Chat and live-action requests send that catalog to the server so the prompt, catalog id hard rule, function definitions, and validator all reflect what the renderer can actually display.

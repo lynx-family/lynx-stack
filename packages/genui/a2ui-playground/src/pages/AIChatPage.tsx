@@ -7,6 +7,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
 import './AIChatPage.css';
 
+import { A2UI_AGENT_CATALOG } from '../catalog/a2uiAgentCatalog.js';
 import { ConfirmDialog } from '../components/ConfirmDialog.js';
 import { ConversationListPanel } from '../components/ConversationListPanel.js';
 import { PageHeader } from '../components/PageHeader.js';
@@ -845,6 +846,7 @@ export function AIChatPage(
           body: JSON.stringify({
             messages: [userMessage],
             conversation: requestConversation,
+            catalog: A2UI_AGENT_CATALOG,
             ...requestProviderOptions,
           }),
           signal: controller.signal,
@@ -1032,6 +1034,7 @@ export function AIChatPage(
               surfaceId: payload.surfaceId,
               action,
               conversation: requestConversation,
+              catalog: A2UI_AGENT_CATALOG,
               ...requestProviderOptions,
             }),
             signal,

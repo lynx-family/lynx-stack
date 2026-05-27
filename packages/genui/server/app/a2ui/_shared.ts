@@ -36,7 +36,7 @@ function clientOverridesAllowed(): boolean {
 
 export const MAX_BODY_BYTES = parsePositiveInt(
   process.env.A2UI_MAX_BODY_BYTES,
-  64 * 1024,
+  256 * 1024,
 );
 
 export const MAX_MESSAGE_CHARS = parsePositiveInt(
