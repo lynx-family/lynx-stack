@@ -97,6 +97,19 @@ interface ExampleCardProps {
   onKeyDown: (event: KeyboardEvent<HTMLDivElement>, id: string) => void;
 }
 
+function CardPreviewLoading(props: { title: string; revealed: boolean }) {
+  return (
+    <div className='cardPreviewLoading' data-revealed={props.revealed}>
+      <div className='cardPreviewLoadingTitle'>{props.title}</div>
+      <div className='cardPreviewLoadingDots' aria-hidden='true'>
+        <span />
+        <span />
+        <span />
+      </div>
+    </div>
+  );
+}
+
 function ExampleCard(props: ExampleCardProps) {
   const { badge, onKeyDown, onOpen, previewUrl, scenario } = props;
   const cardRef = useRef<HTMLDivElement>(null);
@@ -105,8 +118,13 @@ function ExampleCard(props: ExampleCardProps) {
   const timerRef = useRef<number | null>(null);
   const priority = useViewportPriority(cardRef);
   const { armed, markReady } = useQueuedMount(scenario.id, priority);
+  const [rendered, setRendered] = useState(false);
 
-  const handleMarkReady = useCallback(() => {
+  // Free the queue slot. Does NOT reveal the iframe — that's the
+  // RENDER_READY path's job. If we never hear from the iframe (web-core
+  // race, broken bundle, etc.), the loading overlay stays put so the
+  // user never sees a blank-white iframe peeking through.
+  const releaseSlot = useCallback(() => {
     if (readyRef.current) return;
     readyRef.current = true;
     if (timerRef.current !== null) {
@@ -116,19 +134,40 @@ function ExampleCard(props: ExampleCardProps) {
     markReady();
   }, [markReady]);
 
-  // Listen for the iframe's A2UI_RENDER_READY postMessage.
+  const handleRenderReady = useCallback(() => {
+    setRendered(true);
+    releaseSlot();
+  }, [releaseSlot]);
+
+  // When previewUrl changes (e.g. theme toggle rebuilds the URL with a
+  // new `?theme=` param), drop the rendered state so the loading overlay
+  // covers the iframe again until the new boot finishes — otherwise the
+  // user sees the old frame, then a white flash, then the new one.
+  // biome-ignore lint/correctness/useExhaustiveDependencies: previewUrl is intentionally a reset trigger; the effect body only resets local refs.
+  useEffect(() => {
+    readyRef.current = false;
+    setRendered(false);
+    if (timerRef.current !== null) {
+      window.clearTimeout(timerRef.current);
+      timerRef.current = null;
+    }
+  }, [previewUrl]);
+
+  // Listen for the iframe's A2UI_RENDER_READY postMessage. Stays
+  // attached even after the safety timeout, so a slow-but-eventually
+  // working iframe still gets its overlay faded out when it finishes.
   useEffect(() => {
     if (!armed) return;
     const handler = (e: MessageEvent) => {
       if (e.source !== iframeRef.current?.contentWindow) return;
       const data = e.data as { type?: string } | null;
       if (data && data.type === 'A2UI_RENDER_READY') {
-        handleMarkReady();
+        handleRenderReady();
       }
     };
     window.addEventListener('message', handler);
     return () => window.removeEventListener('message', handler);
-  }, [armed, handleMarkReady]);
+  }, [armed, handleRenderReady]);
 
   // Cleanup the safety timer if the card unmounts before it fires.
   useEffect(() => {
@@ -143,13 +182,14 @@ function ExampleCard(props: ExampleCardProps) {
   const handleIframeLoad = useCallback(() => {
     if (readyRef.current) return;
     if (timerRef.current !== null) return;
-    // Safety timeout: if A2UI_RENDER_READY never arrives, free the slot
-    // anyway so the queue can advance.
+    // Safety timeout: if A2UI_RENDER_READY never arrives, release the
+    // slot so the queue can advance. We do NOT set rendered=true here —
+    // the overlay stays on top so a failed iframe never shows blank.
     timerRef.current = window.setTimeout(() => {
       timerRef.current = null;
-      handleMarkReady();
+      releaseSlot();
     }, RENDER_READY_TIMEOUT_MS);
-  }, [handleMarkReady]);
+  }, [releaseSlot]);
 
   return (
     <div
@@ -161,7 +201,10 @@ function ExampleCard(props: ExampleCardProps) {
       tabIndex={0}
     >
       <div className='exampleCardPreview'>
-        <div className='exampleCardPreviewWindow'>
+        <div
+          className='exampleCardPreviewWindow'
+          style={{ position: 'relative' }}
+        >
           <PreviewViewport
             src={armed ? previewUrl : undefined}
             iframeTitle={`${scenario.title} preview`}
@@ -170,6 +213,14 @@ function ExampleCard(props: ExampleCardProps) {
             iframeRef={iframeRef}
             onLoad={handleIframeLoad}
           />
+          {armed
+            ? (
+              <CardPreviewLoading
+                title={scenario.title}
+                revealed={rendered}
+              />
+            )
+            : null}
         </div>
       </div>
       <div className='exampleCardBody'>
@@ -228,7 +279,10 @@ export function DemosListPage(
   );
 
   return (
-    <MountQueueProvider maxConcurrent={MAX_CONCURRENT}>
+    <MountQueueProvider
+      maxConcurrent={MAX_CONCURRENT}
+      resetKey={`${protocol.name}|${theme}`}
+    >
       <div className='examplePage'>
         <PageHeader
           className='examplePageHeader'

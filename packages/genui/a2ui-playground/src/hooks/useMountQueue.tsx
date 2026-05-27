@@ -18,12 +18,24 @@ const MountQueueContext = createContext<MountQueue | null>(null);
 
 interface MountQueueProviderProps {
   maxConcurrent: number;
+  /**
+   * Change to force a full queue reset (e.g. when the theme or protocol
+   * flips, which invalidates all rendered previews). Cards re-register
+   * with a fresh queue and the top-K visible ones get armed again, so
+   * the user still sees a staggered re-load instead of 43 simultaneous
+   * iframe reloads.
+   */
+  resetKey?: string | number;
   children: ReactNode;
 }
 
 export function MountQueueProvider(props: MountQueueProviderProps) {
-  const { children, maxConcurrent } = props;
-  const queue = useMemo(() => new MountQueue(maxConcurrent), [maxConcurrent]);
+  const { children, maxConcurrent, resetKey } = props;
+  // biome-ignore lint/correctness/useExhaustiveDependencies: resetKey is intentionally a reset trigger; we want a fresh queue when it changes.
+  const queue = useMemo(
+    () => new MountQueue(maxConcurrent),
+    [maxConcurrent, resetKey],
+  );
   return (
     <MountQueueContext.Provider value={queue}>
       {children}
