@@ -7,7 +7,7 @@ import path from 'node:path';
 
 import { afterEach, describe, expect, it } from 'vitest';
 
-import { createLynxExtension, parseExtensionTypes } from '../src/index.js';
+import { createLynxLibrary, parseLibraryFeatures } from '../src/index.js';
 
 const tempDirs: string[] = [];
 
@@ -17,28 +17,28 @@ afterEach(() => {
   }
 });
 
-describe('create-lynx-extension', () => {
-  it('parses non-interactive extension type flags', () => {
-    expect(parseExtensionTypes('native-module,element,service')).toEqual([
+describe('create-lynx-library', () => {
+  it('parses non-interactive library feature flags', () => {
+    expect(parseLibraryFeatures('native-module,element,service')).toEqual([
       'native-module',
       'element',
       'service',
     ]);
-    expect(parseExtensionTypes('ALL')).toEqual([
+    expect(parseLibraryFeatures('ALL')).toEqual([
       'native-module',
       'element',
       'service',
     ]);
-    expect(() => parseExtensionTypes('web')).toThrow(
-      /Unsupported extension type/,
+    expect(() => parseLibraryFeatures('web')).toThrow(
+      /Unsupported library feature/,
     );
   });
 
-  it('creates a mixed Native Autolink extension', () => {
+  it('creates a mixed Native Autolink library', () => {
     const dir = createTempDir('mixed');
-    const files = createLynxExtension({
+    const files = createLynxLibrary({
       dir,
-      types: ['native-module', 'element', 'service'],
+      features: ['native-module', 'element', 'service'],
       packageName: '@example/lynx-button',
       androidPackage: 'com.example.button',
       moduleName: 'ButtonModule',
@@ -52,7 +52,7 @@ describe('create-lynx-extension', () => {
     expect(files.map((file) => file.path)).toEqual(
       expect.arrayContaining([
         'package.json',
-        'lynx.ext.json',
+        'lynx.lib.json',
         'types/index.d.ts',
         'src/index.ts',
         'android/src/main/java/com/example/button/ButtonModule.java',
@@ -77,7 +77,7 @@ describe('create-lynx-extension', () => {
       '"@lynx-js/autolink-codegen": "^0.0.0"',
     );
     expect(read(dir, 'package.json')).not.toContain('workspace:');
-    expect(read(dir, 'lynx.ext.json')).toContain(
+    expect(read(dir, 'lynx.lib.json')).toContain(
       '"packageName": "com.example.button"',
     );
     expect(read(dir, 'ios/build.podspec')).toContain(
@@ -136,10 +136,10 @@ describe('create-lynx-extension', () => {
 
   it('creates Native Module only projects without element or service files', () => {
     const dir = createTempDir('module');
-    const files = createLynxExtension({
+    const files = createLynxLibrary({
       dir,
-      types: ['native-module'],
-      packageName: 'storage-extension',
+      features: ['native-module'],
+      packageName: 'storage-library',
       androidPackage: 'com.example.storage',
       moduleName: 'StorageModule',
     });
@@ -158,10 +158,10 @@ describe('create-lynx-extension', () => {
 
   it('creates Element and Service projects with Autolink markers', () => {
     const dir = createTempDir('view');
-    const files = createLynxExtension({
+    const files = createLynxLibrary({
       dir,
-      types: ['element', 'service'],
-      packageName: 'view-extension',
+      features: ['element', 'service'],
+      packageName: 'view-library',
       androidPackage: 'com.example.view',
       elementName: 'x-view',
       serviceName: 'ViewService',
@@ -191,9 +191,9 @@ describe('create-lynx-extension', () => {
     const dir = createTempDir('missing-version');
 
     expect(() =>
-      createLynxExtension({
+      createLynxLibrary({
         dir,
-        types: ['native-module'],
+        features: ['native-module'],
         dependencyVersions: {},
       })
     ).toThrow(
@@ -205,9 +205,9 @@ describe('create-lynx-extension', () => {
     const dir = createTempDir('invalid-json');
 
     expect(() =>
-      createLynxExtension({
+      createLynxLibrary({
         dir,
-        types: ['native-module'],
+        features: ['native-module'],
         packageName: 'bad"name',
         dependencyVersions: {
           '@lynx-js/autolink-codegen': '^0.123.0',
@@ -222,10 +222,10 @@ describe('create-lynx-extension', () => {
     const dir = createTempDir('escape');
 
     expect(() =>
-      createLynxExtension({
+      createLynxLibrary({
         dir,
-        types: ['native-module'],
-        packageName: 'escape-extension',
+        features: ['native-module'],
+        packageName: 'escape-library',
         androidPackage: 'com.example.escape',
         moduleName: '../../../../../../../../EscapeModule',
       })
@@ -236,7 +236,7 @@ describe('create-lynx-extension', () => {
     const dir = createTempDir('nonempty');
     fs.writeFileSync(path.join(dir, 'package.json'), '{}');
 
-    expect(() => createLynxExtension({ dir, types: ['native-module'] }))
+    expect(() => createLynxLibrary({ dir, features: ['native-module'] }))
       .toThrow(/not empty/);
   });
 
@@ -245,13 +245,13 @@ describe('create-lynx-extension', () => {
     fs.rmSync(dir, { recursive: true });
     fs.writeFileSync(dir, '');
 
-    expect(() => createLynxExtension({ dir, types: ['native-module'] }))
+    expect(() => createLynxLibrary({ dir, features: ['native-module'] }))
       .toThrow(/not a directory/);
   });
 });
 
 function createTempDir(name: string): string {
-  const parent = fs.mkdtempSync(path.join(os.tmpdir(), 'lynx-extension-'));
+  const parent = fs.mkdtempSync(path.join(os.tmpdir(), 'lynx-library-'));
   const dir = path.join(parent, name);
   fs.mkdirSync(dir, { recursive: true });
   tempDirs.push(parent);
