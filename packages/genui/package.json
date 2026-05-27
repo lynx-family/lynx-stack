@@ -1,0 +1,127 @@
+{
+  "name": "@lynx-js/genui",
+  "version": "0.0.1",
+  "description": "Generative UI for Lynx.",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/lynx-family/lynx-stack.git",
+    "directory": "packages/genui"
+  },
+  "license": "Apache-2.0",
+  "sideEffects": [
+    "**/*.css"
+  ],
+  "type": "module",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.js"
+    },
+    "./a2ui/styles/theme.css": "./a2ui/styles/theme.css",
+    "./a2ui": {
+      "types": "./a2ui/dist/index.d.ts",
+      "default": "./a2ui/dist/index.js"
+    },
+    "./a2ui/0.9": {
+      "types": "./a2ui/dist/index.d.ts",
+      "default": "./a2ui/dist/index.js"
+    },
+    "./a2ui/store": {
+      "types": "./a2ui/dist/store/index.d.ts",
+      "default": "./a2ui/dist/store/index.js"
+    },
+    "./a2ui/catalog": {
+      "types": "./a2ui/dist/catalog/index.d.ts",
+      "default": "./a2ui/dist/catalog/index.js"
+    },
+    "./a2ui/react": {
+      "types": "./a2ui/dist/react/index.d.ts",
+      "default": "./a2ui/dist/react/index.js"
+    },
+    "./a2ui/functions": {
+      "types": "./a2ui/dist/functions/index.d.ts",
+      "default": "./a2ui/dist/functions/index.js"
+    },
+    "./genui-cli": "./cli/bin/cli.js",
+    "./a2ui-prompt": {
+      "types": "./a2ui-prompt/dist/index.d.ts",
+      "default": "./a2ui-prompt/dist/index.js"
+    },
+    "./a2ui-catalog-extractor": {
+      "types": "./a2ui-catalog-extractor/dist/index.d.ts",
+      "default": "./a2ui-catalog-extractor/dist/index.js"
+    },
+    "./a2ui-catalog-extractor/cli": {
+      "types": "./a2ui-catalog-extractor/dist/cli.d.ts",
+      "default": "./a2ui-catalog-extractor/dist/cli.js"
+    },
+    "./a2ui-catalog-extractor/skill": "./a2ui-catalog-extractor/skills/a2ui-catalog-extractor/SKILL.md",
+    "./openui": {
+      "types": "./openui/dist/core/index.d.ts",
+      "default": "./openui/dist/core/index.js"
+    },
+    "./openui/catalog": {
+      "types": "./openui/dist/catalog/index.d.ts",
+      "default": "./openui/dist/catalog/index.js"
+    },
+    "./openui/styles/renderer.css": "./openui/dist/core/renderer.css"
+  },
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "bin": {
+    "a2ui-catalog-extractor": "./a2ui-catalog-extractor/bin/a2ui-catalog-extractor.js",
+    "a2ui-cli": "./cli/bin/cli.js",
+    "genui": "./cli/bin/cli.js",
+    "genui-cli": "./cli/bin/cli.js"
+  },
+  "files": [
+    "index.ts",
+    "dist",
+    "a2ui/dist",
+    "a2ui/styles",
+    "a2ui/README.md",
+    "cli/bin",
+    "cli/README.md",
+    "a2ui-prompt/dist",
+    "a2ui-prompt/README.md",
+    "a2ui-catalog-extractor/bin",
+    "a2ui-catalog-extractor/dist",
+    "a2ui-catalog-extractor/skills",
+    "a2ui-catalog-extractor/README.md",
+    "openui/dist",
+    "openui/README.md"
+  ],
+  "scripts": {
+    "build": "pnpm run clean && pnpm --dir a2ui-catalog-extractor build && pnpm --dir a2ui-prompt build && pnpm --dir openui build && pnpm --dir a2ui build && tsc --project tsconfig.build.json",
+    "clean": "node -e \"const fs=require('node:fs'); for (const path of ['dist','a2ui/dist','a2ui/tsconfig.build.tsbuildinfo','a2ui-catalog-extractor/dist','a2ui-prompt/dist','openui/dist','openui/tsconfig.build.tsbuildinfo']) fs.rmSync(path,{recursive:true,force:true});\""
+  },
+  "dependencies": {
+    "@a2ui/web_core": "0.9.1",
+    "@openuidev/lang-core": "^0.2.4",
+    "@preact/signals": "^2.5.1",
+    "typedoc": "^0.28.19",
+    "zod": "^3.25.76"
+  },
+  "devDependencies": {
+    "@lynx-js/genui-a2ui": "workspace:*",
+    "@lynx-js/genui-a2ui-catalog-extractor": "workspace:*",
+    "@lynx-js/genui-a2ui-prompt": "workspace:*",
+    "@lynx-js/genui-cli": "workspace:*",
+    "@lynx-js/genui-openui": "workspace:*"
+  },
+  "peerDependencies": {
+    "@lynx-js/lynx-ui": "^3.133.0",
+    "@lynx-js/react": "^0.121.0"
+  },
+  "peerDependenciesMeta": {
+    "@lynx-js/lynx-ui": {
+      "optional": true
+    }
+  },
+  "engines": {
+    "node": ">=22"
+  },
+  "publishConfig": {
+    "access": "public"
+  }
+}

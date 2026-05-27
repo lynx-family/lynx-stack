@@ -12,7 +12,7 @@ import type { GenericComponentProps } from '../store/types.js';
 
 /**
  * JSON Schema fragment describing a component's props. Produced at build time
- * by `@lynx-js/a2ui-catalog-extractor` from the component's TypeScript
+ * by `@lynx-js/genui/a2ui-catalog-extractor` from the component's TypeScript
  * interface marked with `@a2uiCatalog <Name>`. Optional at runtime — entries
  * that ship without a schema serialize to just `{ name }`.
  */
@@ -199,10 +199,10 @@ function resolveComponentInput(input: CatalogInput): ResolvedCatalogEntry {
  * so any `executeFunctionCall` after `defineCatalog` can route to them.
  *
  * @example
- * import { Text, Button } from '@lynx-js/a2ui-reactlynx';
- * import { defineCatalog, defineFunction } from '@lynx-js/a2ui-reactlynx';
- * import { required } from '@lynx-js/a2ui-reactlynx/functions';
- * import textManifest from '@lynx-js/a2ui-reactlynx/catalog/Text/catalog.json'
+ * import { Text, Button } from '@lynx-js/genui/a2ui';
+ * import { defineCatalog, defineFunction } from '@lynx-js/genui/a2ui';
+ * import { required } from '@lynx-js/genui/a2ui/functions';
+ * import textManifest from '@lynx-js/genui/a2ui/catalog/Text/catalog.json'
  *   with { type: 'json' };
  *
  * const catalog = defineCatalog([

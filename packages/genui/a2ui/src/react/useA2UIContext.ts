@@ -3,8 +3,8 @@
 // LICENSE file in the root directory of this source tree.
 import { useContext } from '@lynx-js/react';
 
-import { A2UIContext } from './A2UIProvider.jsx';
-import type { A2UIInternalContext } from './A2UIProvider.jsx';
+import { A2UIContext } from './A2UIProvider.js';
+import type { A2UIInternalContext } from './A2UIProvider.js';
 
 /**
  * Internal helper used by catalog-component hooks (`useAction`, the

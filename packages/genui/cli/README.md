@@ -1,21 +1,35 @@
-# A2UI CLI
+# GenUI CLI
 
-`@lynx-js/a2ui-cli` provides one command line entry point for A2UI agent setup.
-It can generate catalog artifacts from TypeScript catalog definitions and build
-a system prompt for an A2UI generation agent.
+`@lynx-js/genui-cli` is the command line entry point for GenUI workflows. It is
+structured by namespace so A2UI commands can live beside future OpenUI commands
+without adding another package or binary.
 
 ## Usage
+
+```bash
+genui <namespace> <command> [options]
+```
+
+Available namespaces:
+
+- `a2ui`: generate A2UI catalog artifacts and system prompts.
+- `openui`: reserved for future OpenUI workflows.
+
+The package also exposes `genui-cli` as an alias. `a2ui-cli` remains available as
+a compatibility alias for existing A2UI-only scripts.
+
+## A2UI Commands
 
 Generate a system prompt with the built-in A2UI basic catalog:
 
 ```bash
-npx @lynx-js/a2ui-cli generate prompt --out dist/a2ui-system-prompt.txt
+genui a2ui generate prompt --out dist/a2ui-system-prompt.txt
 ```
 
 Generate catalog artifacts for a custom catalog:
 
 ```bash
-npx @lynx-js/a2ui-cli generate catalog \
+genui a2ui generate catalog \
   --catalog-dir src/catalog \
   --source src/functions \
   --out-dir dist/catalog
@@ -24,7 +38,7 @@ npx @lynx-js/a2ui-cli generate catalog \
 Generate a system prompt for a custom catalog:
 
 ```bash
-npx @lynx-js/a2ui-cli generate prompt \
+genui a2ui generate prompt \
   --catalog-dir dist/catalog \
   --catalog-id https://example.com/catalogs/custom/v1/catalog.json \
   --out dist/a2ui-system-prompt.txt
@@ -35,12 +49,9 @@ npx @lynx-js/a2ui-cli generate prompt \
 artifacts. When `--catalog-dir` is provided, the directory must contain files
 like `<Component>/catalog.json`.
 
-## Commands
+### `genui a2ui generate catalog`
 
-### `generate catalog`
-
-Uses the internal `@lynx-js/a2ui-catalog-extractor` engine. Keep user-facing
-scripts on `npx @lynx-js/a2ui-cli generate catalog`.
+Delegates catalog extraction to `@lynx-js/genui/a2ui-catalog-extractor`.
 
 Useful options:
 
@@ -52,9 +63,9 @@ Useful options:
 - `--out-dir <dir>`: output directory for generated catalog artifacts. Defaults
   to `dist/catalog`.
 
-### `generate prompt`
+### `genui a2ui generate prompt`
 
-Delegates prompt construction to `@lynx-js/a2ui-prompt`.
+Delegates prompt construction to `@lynx-js/genui/a2ui-prompt`.
 
 Useful options:
 
@@ -64,3 +75,14 @@ Useful options:
   Defaults to the built-in A2UI basic catalog id.
 - `--out <file>`: write the prompt to a file instead of stdout.
 - `--appendix <text>`: append extra instructions to the generated prompt.
+
+## Compatibility
+
+Existing A2UI commands still work:
+
+```bash
+a2ui-cli generate catalog --catalog-dir src/catalog --out-dir dist/catalog
+a2ui-cli generate prompt --out dist/a2ui-system-prompt.txt
+```
+
+New scripts should prefer `genui a2ui ...`.

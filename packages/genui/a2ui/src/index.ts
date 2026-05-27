@@ -80,7 +80,7 @@ export type {
 // Built-in components — re-exported individually so apps can pick exactly
 // what they need:
 //
-//   import { Text, Button } from '@lynx-js/a2ui-reactlynx';
+//   import { Text, Button } from '@lynx-js/genui/a2ui';
 //   <A2UI catalogs={[Text, Button]} ... />
 //
 // There is intentionally no all-in-one aggregate — see

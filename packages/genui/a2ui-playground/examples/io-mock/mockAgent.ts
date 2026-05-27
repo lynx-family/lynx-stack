@@ -4,12 +4,12 @@
 //
 // Reference mock IO module. Pushes a fixed initial stream into the store
 // and serves canned responses to user actions. NOT shipped from
-// `@lynx-js/a2ui-reactlynx` — copy as a starting point for tests / demos.
+// `@lynx-js/genui/a2ui` — copy as a starting point for tests / demos.
 import type {
   MessageStore,
   ServerToClientMessage,
   UserActionPayload,
-} from '@lynx-js/a2ui-reactlynx';
+} from '@lynx-js/genui/a2ui';
 
 export interface MockAgentOptions {
   /** Streamed once after `start()`. */

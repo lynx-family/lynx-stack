@@ -1,4 +1,4 @@
-# @lynx-js/openui-reactlynx
+# @lynx-js/genui/openui
 
 ReactLynx renderer for the [OpenUI DSL](https://www.openui.com/). Parses
 OpenUI functional notation into a renderable tree and renders it via a
@@ -17,9 +17,9 @@ This package includes:
 
 ## Exports
 
-- `@lynx-js/openui-reactlynx`: `createOpenUiLibrary`, `defineComponent`,
+- `@lynx-js/genui/openui`: `createOpenUiLibrary`, `defineComponent`,
   `OpenUiRenderer`, parser utilities, and all core types.
-- `@lynx-js/openui-reactlynx/catalog`: re-exports of built-in catalog
+- `@lynx-js/genui/openui/catalog`: re-exports of built-in catalog
   components for tree-shake-friendly subpath access.
 
 ## Installation
@@ -29,7 +29,7 @@ Make sure your app provides the peer dependencies:
 - `@lynx-js/react`
 
 ```bash
-pnpm add @lynx-js/openui-reactlynx
+pnpm add @lynx-js/genui
 ```
 
 ## Quick Start
@@ -44,8 +44,8 @@ import {
   createOpenUiLibrary,
   createStreamingParser,
   OpenUiRenderer,
-} from '@lynx-js/openui-reactlynx';
-import type { ParseResult } from '@lynx-js/openui-reactlynx';
+} from '@lynx-js/genui/openui';
+import type { ParseResult } from '@lynx-js/genui/openui';
 import { useEffect, useMemo, useState } from '@lynx-js/react';
 
 const library = createOpenUiLibrary();
@@ -95,8 +95,8 @@ import {
   createOpenUiLibrary,
   createStreamingParser,
   OpenUiRenderer,
-} from '@lynx-js/openui-reactlynx';
-import type { ParseResult } from '@lynx-js/openui-reactlynx';
+} from '@lynx-js/genui/openui';
+import type { ParseResult } from '@lynx-js/genui/openui';
 import { useEffect, useMemo, useRef, useState } from '@lynx-js/react';
 
 const CHUNK_SIZE = 8;
@@ -151,10 +151,7 @@ object. Provided `components` and `componentGroups` are **merged** with
 the built-in defaults (appended after the defaults):
 
 ```tsx
-import {
-  createOpenUiLibrary,
-  defineComponent,
-} from '@lynx-js/openui-reactlynx';
+import { createOpenUiLibrary, defineComponent } from '@lynx-js/genui/openui';
 import { z } from 'zod/v4';
 
 const MyBanner = defineComponent({
