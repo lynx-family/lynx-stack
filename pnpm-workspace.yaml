@@ -35,7 +35,7 @@ optimisticRepeatInstall: true
 resolutionMode: "lowest-direct"
 
 # Match Renovate's npm minimum release age; pnpm also guards lockfile maintenance.
-minimumReleaseAge: 4320
+minimumReleaseAge: 0
 
 # Default catalogs
 catalog:
