@@ -10,6 +10,7 @@ import {
   useState,
 } from 'react';
 import type { CSSProperties, ReactNode } from 'react';
+import { Drawer } from 'vaul';
 
 import { CopyToast, useCopyToast } from './CopyToast.js';
 import { PreviewSimulationBar } from './PreviewSimulationBar.js';
@@ -190,6 +191,7 @@ export function PreviewPanel(props: PreviewPanelProps) {
   } = props;
   const [mode, setMode] = useState<PreviewMode>('phone');
   const [isFullscreen, setIsFullscreen] = useState(false);
+  const [shareOpen, setShareOpen] = useState(false);
   const [speed, setSpeed] = useState(1);
   const [simulationInfoOpen, setSimulationInfoOpen] = useState(false);
   const [renderUrl, setRenderUrl] = useState('');
@@ -515,6 +517,151 @@ export function PreviewPanel(props: PreviewPanelProps) {
     });
   };
 
+  // Rendered both inline (when the panel is wide enough) and inside the
+  // bottom sheet (when the panel is narrow). The function closes over all
+  // local state so both instances stay in sync without prop plumbing.
+  const renderExtras = () => (
+    <>
+      {previewSource?.kind === 'a2ui'
+        ? (
+          <div className='liveComponentStack' aria-live='polite'>
+            <span className='liveComponentLabel'>Components</span>
+            {liveComponents.length > 0
+              ? (
+                <div className='liveComponentTags'>
+                  {liveComponents.map((name) => (
+                    <span key={name} className='liveComponentTag'>
+                      {name}
+                    </span>
+                  ))}
+                </div>
+              )
+              : (
+                <span className='liveComponentEmpty'>
+                  Waiting for streamed components
+                </span>
+              )}
+          </div>
+        )
+        : null}
+      {previewQrPlaceholder
+        ? (
+          <div className='previewQrSection'>
+            <div className='previewQrContent'>
+              <div className='previewQrInfo'>
+                <div className='previewQrTitle'>
+                  {previewQrPlaceholder.title}
+                </div>
+                <div className='previewQrDesc'>
+                  {previewQrPlaceholder.description}
+                </div>
+                <div className='previewQrPlaceholder'>
+                  <span className='previewQrPlaceholderText'>
+                    {previewQrPlaceholder.placeholder}
+                  </span>
+                </div>
+              </div>
+            </div>
+          </div>
+        )
+        : (previewQrCards.length > 0
+          ? (
+            <div className='previewQrSection'>
+              {previewQrCards.map(({ key, item }) => {
+                const copied = key === 'webPreview' ? webCopied : nativeCopied;
+                const copyFailed = key === 'webPreview'
+                  ? webCopyFailed
+                  : nativeCopyFailed;
+                const error = key === 'webPreview' ? webQrError : nativeQrError;
+                const setError = key === 'webPreview'
+                  ? setWebQrError
+                  : setNativeQrError;
+
+                return (
+                  <div
+                    key={key}
+                    className={item.variant === 'alt'
+                      ? 'previewQrContent previewQrContentAlt'
+                      : 'previewQrContent'}
+                  >
+                    <div className='previewQrInfo'>
+                      <div className='previewQrTitle'>{item.title}</div>
+                      <div className='previewQrDesc'>
+                        {error && item.errorDescription
+                          ? item.errorDescription
+                          : item.description}
+                      </div>
+                      <div className='previewQrUrlRow'>
+                        <div
+                          className='previewQrUrlText'
+                          title={item.urlTitle ?? item.url}
+                        >
+                          {item.urlTitle ?? item.url}
+                        </div>
+                        <button
+                          type='button'
+                          className='previewQrCopyBtn'
+                          aria-label={item.copyButtonTitle ?? 'Copy URL'}
+                          title={copied
+                            ? 'Copied'
+                            : (copyFailed
+                              ? 'Copy failed'
+                              : (item.copyButtonTitle ?? 'Copy URL'))}
+                          onClick={() => {
+                            if (item.url) {
+                              handleCopyUrl(key, item.url);
+                            }
+                          }}
+                        >
+                          {copied
+                            ? 'Copied'
+                            : (copyFailed ? 'Failed' : 'Copy')}
+                        </button>
+                      </div>
+                    </div>
+                    {item.url && item.showQrCode !== false
+                      ? (
+                        <QrCode
+                          value={item.url}
+                          size={128}
+                          onErrorChange={setError}
+                        />
+                      )
+                      : null}
+                    {item.url && item.showQrCode === false
+                      ? (
+                        <div className='previewQrUnavailable'>
+                          <span className='previewQrUnavailableLabel'>
+                            QR unavailable
+                          </span>
+                          <span className='previewQrUnavailableSubtext'>
+                            URL too long to encode
+                          </span>
+                        </div>
+                      )
+                      : null}
+                    {!item.url && item.placeholder
+                      ? (
+                        <div className='previewQrPlaceholder'>
+                          <span className='previewQrPlaceholderText'>
+                            {item.placeholder}
+                          </span>
+                        </div>
+                      )
+                      : null}
+                  </div>
+                );
+              })}
+            </div>
+          )
+          : null)}
+    </>
+  );
+
+  const hasExtras = previewSource?.kind === 'a2ui'
+    || !!previewQrPlaceholder
+    || previewQrCards.length > 0;
+
   return (
     <PreviewPanelPreviewModeContext.Provider value={{ mode, setMode }}>
       <PreviewPanelRenderContext.Provider value={renderContext}>
@@ -533,6 +680,39 @@ export function PreviewPanel(props: PreviewPanelProps) {
             <div className='spacer' />
             {showPreviewModeSwitch
               ? <PreviewModeSwitch mode={mode} onChange={setMode} />
+              : null}
+            {hasExtras
+              ? (
+                <button
+                  type='button'
+                  className='previewInfoBtn'
+                  onClick={() => setShareOpen(true)}
+                  title='Open on phone'
+                  aria-label='Open this preview on a phone'
+                >
+                  <svg
+                    viewBox='0 0 24 24'
+                    width='16'
+                    height='16'
+                    fill='none'
+                    stroke='currentColor'
+                    strokeWidth='2'
+                    strokeLinecap='round'
+                    strokeLinejoin='round'
+                    aria-hidden='true'
+                  >
+                    <rect
+                      x='6'
+                      y='2'
+                      width='12'
+                      height='20'
+                      rx='2.5'
+                      ry='2.5'
+                    />
+                    <line x1='12' y1='18' x2='12.01' y2='18' />
+                  </svg>
+                </button>
+              )
               : null}
             <button
               type='button'
@@ -567,133 +747,29 @@ export function PreviewPanel(props: PreviewPanelProps) {
             )
             : null}
           <div className={bodyClass}>{children}</div>
-          {previewSource?.kind === 'a2ui'
+          <div className='previewPanelExtras'>{renderExtras()}</div>
+          {hasExtras
             ? (
-              <div className='liveComponentStack' aria-live='polite'>
-                <span className='liveComponentLabel'>Components</span>
-                {liveComponents.length > 0
-                  ? (
-                    <div className='liveComponentTags'>
-                      {liveComponents.map((name) => (
-                        <span key={name} className='liveComponentTag'>
-                          {name}
-                        </span>
-                      ))}
-                    </div>
-                  )
-                  : (
-                    <span className='liveComponentEmpty'>
-                      Waiting for streamed components
-                    </span>
-                  )}
-              </div>
+              <Drawer.Root
+                open={shareOpen}
+                onOpenChange={setShareOpen}
+              >
+                <Drawer.Portal>
+                  <Drawer.Overlay className='previewShareOverlay' />
+                  <Drawer.Content className='previewShareSheet'>
+                    <div className='previewShareHandle' aria-hidden='true' />
+                    <Drawer.Title className='previewShareTitle'>
+                      Preview info
+                    </Drawer.Title>
+                    <Drawer.Description className='previewShareDescription'>
+                      Components rendered and links to share this preview.
+                    </Drawer.Description>
+                    <div className='previewShareBody'>{renderExtras()}</div>
+                  </Drawer.Content>
+                </Drawer.Portal>
+              </Drawer.Root>
             )
             : null}
-          {previewQrPlaceholder
-            ? (
-              <div className='previewQrSection'>
-                <div className='previewQrContent'>
-                  <div className='previewQrInfo'>
-                    <div className='previewQrTitle'>
-                      {previewQrPlaceholder.title}
-                    </div>
-                    <div className='previewQrDesc'>
-                      {previewQrPlaceholder.description}
-                    </div>
-                    <div className='previewQrPlaceholder'>
-                      <span className='previewQrPlaceholderText'>
-                        {previewQrPlaceholder.placeholder}
-                      </span>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            )
-            : (
-              previewQrCards.length > 0
-                ? (
-                  <div className='previewQrSection'>
-                    {previewQrCards.map(({ key, item }) => {
-                      const copied = key === 'webPreview'
-                        ? webCopied
-                        : nativeCopied;
-                      const copyFailed = key === 'webPreview'
-                        ? webCopyFailed
-                        : nativeCopyFailed;
-                      const error = key === 'webPreview'
-                        ? webQrError
-                        : nativeQrError;
-                      const setError = key === 'webPreview'
-                        ? setWebQrError
-                        : setNativeQrError;
-
-                      return (
-                        <div
-                          key={key}
-                          className={item.variant === 'alt'
-                            ? 'previewQrContent previewQrContentAlt'
-                            : 'previewQrContent'}
-                        >
-                          <div className='previewQrInfo'>
-                            <div className='previewQrTitle'>{item.title}</div>
-                            <div className='previewQrDesc'>
-                              {error && item.errorDescription
-                                ? item.errorDescription
-                                : item.description}
-                            </div>
-                            <div className='previewQrUrlRow'>
-                              <div
-                                className='previewQrUrlText'
-                                title={item.urlTitle ?? item.url}
-                              >
-                                {item.urlTitle ?? item.url}
-                              </div>
-                              <button
-                                type='button'
-                                className='previewQrCopyBtn'
-                                aria-label={item.copyButtonTitle ?? 'Copy URL'}
-                                title={copied
-                                  ? 'Copied'
-                                  : (copyFailed
-                                    ? 'Copy failed'
-                                    : (item.copyButtonTitle ?? 'Copy URL'))}
-                                onClick={() => {
-                                  if (item.url) {
-                                    handleCopyUrl(key, item.url);
-                                  }
-                                }}
-                              >
-                                {copied
-                                  ? 'Copied'
-                                  : (copyFailed ? 'Failed' : 'Copy')}
-                              </button>
-                            </div>
-                          </div>
-                          {item.url && item.showQrCode !== false
-                            ? (
-                              <QrCode
-                                value={item.url}
-                                size={128}
-                                onErrorChange={setError}
-                              />
-                            )
-                            : null}
-                          {!item.url && item.placeholder
-                            ? (
-                              <div className='previewQrPlaceholder'>
-                                <span className='previewQrPlaceholderText'>
-                                  {item.placeholder}
-                                </span>
-                              </div>
-                            )
-                            : null}
-                        </div>
-                      );
-                    })}
-                  </div>
-                )
-                : null
-            )}
           {afterBody}
         </div>
       </PreviewPanelRenderContext.Provider>

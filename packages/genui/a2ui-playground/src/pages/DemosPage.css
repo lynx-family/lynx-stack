@@ -543,7 +543,26 @@ html[data-theme="dark"] .detailBackButton:hover {
   flex-shrink: 0;
 }
 
-/* ── Examples Preview Split ── */
+/* ── Examples Preview Split ──
+   The wrapper is the container query host so the panel's internal layout
+   (split vs stacked) reacts to the panel's actual width, not the viewport.
+   That way dragging the JSON/preview resize handle re-flows the split as
+   the panel itself crosses the threshold. */
+.examplesPreviewWrap {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  flex-shrink: 0;
+  container-type: inline-size;
+  container-name: previewPanel;
+}
+
+.examplesPreviewWrap > .previewPanel {
+  width: 100%;
+  max-width: none;
+  flex: 1;
+}
+
 .examplesPreviewPanel {
   display: grid;
   grid-template-columns: minmax(360px, 1fr) minmax(280px, 340px);
@@ -598,9 +617,16 @@ html[data-theme="dark"] .detailBackButton:hover {
   border-top: none;
 }
 
-@media (min-width: 981px) and (max-width: 1280px) {
+/* Collapse to a single vertical stack only when the panel can no longer
+   fit the split layout (phone col 360 + controls col 280 = 640 floor).
+   Keep the threshold close to that floor so dragging the JSON/preview
+   resize handle stays in the split layout through most of its range —
+   the user can drag from the 760 default down to ~660 before collapse. */
+@container previewPanel (max-width: 660px) {
   .examplesPreviewPanel {
     display: flex;
+    flex-direction: column;
+    overflow: visible;
   }
 
   .examplesPreviewPanel .previewPanelHeader,
@@ -608,21 +634,21 @@ html[data-theme="dark"] .detailBackButton:hover {
   .examplesPreviewPanel .simulationBar,
   .examplesPreviewPanel .liveComponentStack,
   .examplesPreviewPanel .previewQrSection {
-    border-right: none;
     grid-column: auto;
     grid-row: auto;
+    border-right: none;
   }
 
   .examplesPreviewPanel .liveComponentStack,
   .examplesPreviewPanel .previewQrSection {
     border-top: 1px solid var(--geist-border);
   }
-
-  .examplesPreviewPanel .previewQrSection {
-    overflow: auto;
-  }
 }
 
+/* Page-level mobile layout: sidebar/codePanel/previewPanel stack vertically.
+   The panel-internal layout still uses the container query above — once the
+   wrapper hits full viewport width, it's almost always >720 and the split
+   reappears even on tablet-sized screens. */
 @media (max-width: 980px) {
   .demosPage {
     flex-direction: column;
@@ -640,34 +666,13 @@ html[data-theme="dark"] .detailBackButton:hover {
     flex: 0 0 auto;
   }
 
-  .previewPanel {
+  .examplesPreviewWrap {
     width: 100%;
     min-height: 480px;
+  }
+
+  .examplesPreviewWrap > .previewPanel {
     border-left: none;
     border-top: 1px solid var(--geist-border);
-  }
-
-  .examplesPreviewPanel {
-    display: flex;
-    overflow: visible;
-  }
-
-  .examplesPreviewPanel .previewPanelHeader,
-  .examplesPreviewPanel .previewPanelBody,
-  .examplesPreviewPanel .simulationBar,
-  .examplesPreviewPanel .liveComponentStack,
-  .examplesPreviewPanel .previewQrSection {
-    border-right: none;
-    grid-column: auto;
-    grid-row: auto;
-  }
-
-  .examplesPreviewPanel .liveComponentStack {
-    border-top: 1px solid var(--geist-border);
-  }
-
-  .examplesPreviewPanel .previewQrSection {
-    border-top: 1px solid var(--geist-border);
-    overflow: visible;
   }
 }

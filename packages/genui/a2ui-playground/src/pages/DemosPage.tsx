@@ -299,19 +299,20 @@ export function DemosPage(props: {
         onPointerDown={handlePanelResizeStart}
       />
 
-      <PreviewPanel
-        className='previewPanel examplesPreviewPanel'
-        style={previewPanelStyle}
-        title='Lynx Preview'
-        showPreviewModeSwitch
-        previewSource={previewSource}
-      >
-        <PreviewViewport
-          key={previewRenderKey}
-          emptyTitle='Select a demo to preview'
-          emptySubTitle='Lynx rendering will appear here'
-        />
-      </PreviewPanel>
+      <div className='examplesPreviewWrap' style={previewPanelStyle}>
+        <PreviewPanel
+          className='previewPanel examplesPreviewPanel'
+          title='Lynx Preview'
+          showPreviewModeSwitch
+          previewSource={previewSource}
+        >
+          <PreviewViewport
+            key={previewRenderKey}
+            emptyTitle='Select a demo to preview'
+            emptySubTitle='Lynx rendering will appear here'
+          />
+        </PreviewPanel>
+      </div>
     </div>
   );
 }
