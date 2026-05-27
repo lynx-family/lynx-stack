@@ -276,27 +276,27 @@ describe('Sourcemap', () => {
         }
       })
       expect(functionName2Source).toMatchInlineSnapshot(`
-      {
-        "function renderComponent": {
-          "column": 0,
-          "line": 295,
-          "name": null,
-          "source": "preact.mjs",
-        },
-        "functionThatThrows": {
-          "column": 0,
-          "line": 19,
-          "name": null,
-          "source": "index.tsx",
-        },
-        "innerFunction": {
-          "column": 0,
-          "line": 14,
-          "name": null,
-          "source": "index.tsx",
-        },
-      }
-    `)
+        {
+          "function renderComponent": {
+            "column": 0,
+            "line": 296,
+            "name": null,
+            "source": "preact.mjs",
+          },
+          "functionThatThrows": {
+            "column": 2,
+            "line": 19,
+            "name": "functionThatThrows",
+            "source": "index.tsx",
+          },
+          "innerFunction": {
+            "column": 2,
+            "line": 14,
+            "name": "innerFunction",
+            "source": "index.tsx",
+          },
+        }
+      `)
       // clean
       cssConsumer.destroy()
       consumer.destroy()
