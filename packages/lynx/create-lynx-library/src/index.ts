@@ -5,11 +5,11 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
-export type ExtensionType = 'native-module' | 'element' | 'service';
+export type LibraryFeature = 'native-module' | 'element' | 'service';
 
-export interface CreateLynxExtensionOptions {
+export interface CreateLynxLibraryOptions {
   dir: string;
-  types: ExtensionType[];
+  features: LibraryFeature[];
   packageName?: string;
   androidPackage?: string;
   moduleName?: string;
@@ -33,7 +33,7 @@ interface TemplateContext {
   serviceName: string;
   serviceProtocolName: string;
   dependencyVersions: Record<string, string>;
-  types: Set<ExtensionType>;
+  features: Set<LibraryFeature>;
 }
 
 interface PackageJson {
@@ -43,7 +43,7 @@ interface PackageJson {
   peerDependencies?: Record<string, string>;
 }
 
-export const EXTENSION_TYPES: readonly ExtensionType[] = [
+export const LIBRARY_FEATURES: readonly LibraryFeature[] = [
   'native-module',
   'element',
   'service',
@@ -62,10 +62,10 @@ const PACKAGE_JSON_DEPENDENCY_FIELDS = [
 ] as const satisfies ReadonlyArray<keyof PackageJson>;
 
 /**
- * Creates a Native Autolink extension scaffold on disk.
+ * Creates a Native Autolink library scaffold on disk.
  */
-export function createLynxExtension(
-  options: CreateLynxExtensionOptions,
+export function createLynxLibrary(
+  options: CreateLynxLibraryOptions,
 ): CreatedFile[] {
   const targetDir = path.resolve(options.dir);
 
@@ -81,19 +81,19 @@ export function createLynxExtension(
     }
   }
 
-  const types = new Set(options.types);
+  const features = new Set(options.features);
 
-  if (types.size === 0) {
-    throw new Error('At least one extension type must be selected');
+  if (features.size === 0) {
+    throw new Error('At least one library feature must be selected');
   }
 
-  for (const type of types) {
-    if (!isExtensionType(type)) {
-      throw new Error(`Unsupported extension type: ${String(type)}`);
+  for (const feature of features) {
+    if (!isLibraryFeature(feature)) {
+      throw new Error(`Unsupported library feature: ${String(feature)}`);
     }
   }
 
-  const context = createContext(options, types);
+  const context = createContext(options, features);
   const files = createFiles(context);
 
   for (const file of files) {
@@ -106,35 +106,34 @@ export function createLynxExtension(
 }
 
 /**
- * Parses a comma-separated extension type list from CLI input.
+ * Parses a comma-separated library feature list from CLI input.
  */
-export function parseExtensionTypes(source: string): ExtensionType[] {
+export function parseLibraryFeatures(source: string): LibraryFeature[] {
   const normalizedSource = source.trim().toLowerCase();
 
   if (normalizedSource === 'all') {
-    return [...EXTENSION_TYPES];
+    return [...LIBRARY_FEATURES];
   }
 
-  const types = normalizedSource.split(',').map((type) => type.trim()).filter(
-    Boolean,
-  );
+  const features = normalizedSource.split(',').map((feature) => feature.trim())
+    .filter(Boolean);
 
-  if (types.length === 0) {
+  if (features.length === 0) {
     return [];
   }
 
-  return types.map((type) => {
-    if (!isExtensionType(type)) {
+  return features.map((feature) => {
+    if (!isLibraryFeature(feature)) {
       throw new Error(
-        `Unsupported extension type "${type}". Expected one of: ${
-          EXTENSION_TYPES.join(
+        `Unsupported library feature "${feature}". Expected one of: ${
+          LIBRARY_FEATURES.join(
             ', ',
           )
         }`,
       );
     }
 
-    return type;
+    return feature;
   });
 }
 
@@ -142,8 +141,8 @@ export function parseExtensionTypes(source: string): ExtensionType[] {
  * Derives template names and platform identifiers from scaffold options.
  */
 function createContext(
-  options: CreateLynxExtensionOptions,
-  types: Set<ExtensionType>,
+  options: CreateLynxLibraryOptions,
+  features: Set<LibraryFeature>,
 ): TemplateContext {
   const directoryName = path.basename(path.resolve(options.dir));
   const packageName = options.packageName
@@ -168,7 +167,7 @@ function createContext(
     serviceProtocolName: `${serviceName}Protocol`,
     dependencyVersions: options.dependencyVersions
       ?? readDefaultDependencyVersions(),
-    types,
+    features,
   };
 }
 
@@ -178,15 +177,15 @@ function createContext(
 function createFiles(context: TemplateContext): CreatedFile[] {
   const groups = ['template-common'];
 
-  if (context.types.has('native-module')) {
+  if (context.features.has('native-module')) {
     groups.push('template-native-module');
   }
 
-  if (context.types.has('element')) {
+  if (context.features.has('element')) {
     groups.push('template-element');
   }
 
-  if (context.types.has('service')) {
+  if (context.features.has('service')) {
     groups.push('template-service');
   }
 
@@ -231,7 +230,7 @@ function createFilesFromTemplateGroup(
  * Reads dependency versions carried by the published scaffold package metadata.
  *
  * This intentionally uses the target dependency's published version rewritten
- * from workspace protocol during packing, not create-lynx-extension's own
+ * from workspace protocol during packing, not create-lynx-library's own
  * package version.
  */
 function readDefaultDependencyVersions(): Record<string, string> {
@@ -287,7 +286,7 @@ function replacePackageDependencyVersions(
     throw new Error(
       `Template package.json "${filePath}" contains workspace dependencies without version mappings: ${
         Array.from(missingVersionPackages).join(', ')
-      }. Add these packages to create-lynx-extension's devDependencies.`,
+      }. Add these packages to create-lynx-library's devDependencies.`,
     );
   }
 
@@ -403,7 +402,7 @@ function resolveInside(targetDir: string, filePath: string): string {
  * Generates the package entry point.
  */
 function sourceIndex(context: TemplateContext): string {
-  if (!context.types.has('native-module')) {
+  if (!context.features.has('native-module')) {
     return `// Native Autolink package entry.
 `;
   }
@@ -416,7 +415,7 @@ function sourceIndex(context: TemplateContext): string {
  * Generates the initial native module type declarations.
  */
 function typesDeclaration(context: TemplateContext): string {
-  if (!context.types.has('native-module')) {
+  if (!context.features.has('native-module')) {
     return `// Add native module declarations here and run npm run codegen.
 `;
   }
@@ -431,10 +430,10 @@ export declare class ${context.moduleName} {
 }
 
 /**
- * Generates the example app import for the selected extension types.
+ * Generates the example app import for the selected library features.
  */
 function exampleImport(context: TemplateContext): string {
-  if (!context.types.has('native-module')) {
+  if (!context.features.has('native-module')) {
     return '';
   }
 
@@ -447,7 +446,7 @@ function exampleImport(context: TemplateContext): string {
  * Generates the example app native module action.
  */
 function exampleModuleButton(context: TemplateContext): string {
-  if (!context.types.has('native-module')) {
+  if (!context.features.has('native-module')) {
     return '';
   }
 
@@ -460,14 +459,16 @@ function exampleModuleButton(context: TemplateContext): string {
  * Generates the example app custom element usage.
  */
 function exampleElement(context: TemplateContext): string {
-  return context.types.has('element') ? `<${context.elementName} />` : '';
+  return context.features.has('element') ? `<${context.elementName} />` : '';
 }
 
 /**
  * Adds the service API pod only when the generated iOS service marker needs it.
  */
 function iosServiceApiDependency(context: TemplateContext): string {
-  return context.types.has('service') ? `  s.dependency 'LynxServiceAPI'` : '';
+  return context.features.has('service')
+    ? `  s.dependency 'LynxServiceAPI'`
+    : '';
 }
 
 /**
@@ -486,7 +487,7 @@ function toPascalCase(name: string): string {
     `${word.charAt(0).toUpperCase()}${word.slice(1)}`
   ).join('');
 
-  return result.length > 0 ? result : 'LynxExtension';
+  return result.length > 0 ? result : 'LynxLibrary';
 }
 
 /**
@@ -505,7 +506,7 @@ function toKebabCase(name: string): string {
  */
 function toJavaPackageSegment(name: string): string {
   const segment = toKebabCase(name).replaceAll('-', '');
-  return segment.length > 0 ? segment : 'extension';
+  return segment.length > 0 ? segment : 'library';
 }
 
 /**
@@ -516,8 +517,8 @@ function podspecName(packageName: string): string {
 }
 
 /**
- * Checks whether a string is a supported extension type.
+ * Checks whether a string is a supported library feature.
  */
-function isExtensionType(type: string): type is ExtensionType {
-  return (EXTENSION_TYPES as readonly string[]).includes(type);
+function isLibraryFeature(type: string): type is LibraryFeature {
+  return (LIBRARY_FEATURES as readonly string[]).includes(type);
 }
