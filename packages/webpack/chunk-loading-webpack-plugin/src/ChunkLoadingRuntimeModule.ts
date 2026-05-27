@@ -16,7 +16,7 @@ export function createChunkLoadingRuntimeModule(
   const { RuntimeGlobals, RuntimeModule, Template } = webpack;
   return class ChunkLoadingRuntimeModule extends RuntimeModule {
     constructor(public runtimeRequirements: ReadonlySet<string>) {
-      super('Lynx chunk loading', RuntimeModule.STAGE_ATTACH);
+      super('webpack/runtime/lynx chunk loading', RuntimeModule.STAGE_ATTACH);
     }
 
     override generate(): string | null {

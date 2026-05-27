@@ -13,7 +13,10 @@ export function createLynxCacheEventsRuntimeModule(
 ): LynxCacheEventsRuntimeModule {
   return class LynxCacheEventsRuntimeModule extends webpack.RuntimeModule {
     constructor() {
-      super('Lynx cache events', webpack.RuntimeModule.STAGE_TRIGGER);
+      super(
+        'webpack/runtime/lynx cache events',
+        webpack.RuntimeModule.STAGE_TRIGGER,
+      );
     }
 
     override generate(): string {
