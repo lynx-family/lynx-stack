@@ -60,6 +60,11 @@ interface A2UIPreviewSource {
   messages: unknown;
   actionMocks?: Record<string, unknown>;
   demoId?: string;
+  /**
+   * When true, build the render URL in playback mode so the Lynx app waits
+   * for `A2UI_PLAYBACK_PROGRESS` events instead of streaming on its own.
+   */
+  playbackMode?: boolean;
 }
 
 interface OpenUIPreviewSource {
@@ -310,9 +315,12 @@ export function PreviewPanel(props: PreviewPanelProps) {
           theme: previewSource.theme,
           demoId: previewSource.demoId,
           speed,
+          playbackMode: previewSource.playbackMode,
         },
         baseUrl,
       );
+      // Shared URLs always render normally — playback is a local-only
+      // visualization tool, not something a QR-scanner should land in.
       const shareUrl = buildRenderUrl(
         {
           protocol: previewSource.protocol,

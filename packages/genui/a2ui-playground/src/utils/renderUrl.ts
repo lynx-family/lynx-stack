@@ -19,6 +19,12 @@ export interface RenderInit {
   instant?: boolean;
   /** When true, actions in the preview are forwarded to the parent frame for live agent handling. */
   liveAction?: boolean;
+  /**
+   * When true, the preview waits for `A2UI_PLAYBACK_PROGRESS` events from the
+   * parent frame to advance the delivered chunk count instead of streaming on
+   * its own pace.
+   */
+  playbackMode?: boolean;
 }
 
 export function buildRenderUrl(init: RenderInit, baseUrl: string): string {
@@ -57,6 +63,10 @@ export function buildRenderUrl(init: RenderInit, baseUrl: string): string {
 
   if (init.liveAction) {
     url.searchParams.set('liveAction', '1');
+  }
+
+  if (init.playbackMode) {
+    url.searchParams.set('playbackMode', '1');
   }
 
   return url.toString();
