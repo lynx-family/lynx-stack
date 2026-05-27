@@ -84,6 +84,12 @@ function hashApiKey(apiKey: string | undefined): string {
   return createHash('sha256').update(apiKey).digest('hex');
 }
 
+function hashCatalog(catalog: A2UICatalog): string {
+  return `${catalog.id}:${
+    createHash('sha256').update(JSON.stringify(catalog)).digest('hex')
+  }`;
+}
+
 function buildDataModelSystemMessage(
   dataModel: Record<string, unknown>,
 ): ChatMessage {
@@ -105,9 +111,10 @@ export default class A2UIAgentService {
 
   private getAgent(opts: ChatOptions): Promise<A2UIAgent> {
     const startedAt = performance.now();
+    const catalog = opts.catalog ?? BASIC_CATALOG;
     const cacheKey = `${opts.baseURL ?? 'default'}:${opts.model ?? 'default'}:${
       hashApiKey(opts.apiKey)
-    }:${opts.catalog?.id ?? 'basic'}`;
+    }:${hashCatalog(catalog)}`;
     let cached = this.agentCache.get(cacheKey);
     if (cached) {
       opts.onPerformanceEvent?.('agent.cache.hit', {
@@ -122,7 +129,7 @@ export default class A2UIAgentService {
         apiKey: opts.apiKey,
         baseURL: opts.baseURL,
         model: opts.model,
-        catalog: opts.catalog,
+        catalog,
       })).agent,
     );
     this.agentCache.set(cacheKey, cached);
