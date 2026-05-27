@@ -18,7 +18,7 @@ const PLUGIN_NAME = 'lynx:debug-metadata'
  * or a path-only public path (`/assets/`). The latter is resolved against a
  * placeholder base so it doesn't throw, and the placeholder origin is then
  * dropped so the rewritten trailer stays relative. Returns `undefined` when no
- * usable prefix can be derived (unparseable, or an empty root path).
+ * usable prefix can be derived (unparsable, or an empty root path).
  *
  * @param assetPrefix - `dev.assetPrefix`, possibly containing a `<port>` token.
  * @param port - dev-server port substituted for `<port>`.

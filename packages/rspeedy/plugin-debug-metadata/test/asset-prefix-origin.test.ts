@@ -31,7 +31,7 @@ describe('resolveAssetPrefixOrigin', () => {
     expect(resolveAssetPrefixOrigin('/', 3020)).toBeUndefined()
   })
 
-  test('unparseable prefix yields undefined instead of throwing', () => {
+  test('unparsable prefix yields undefined instead of throwing', () => {
     expect(resolveAssetPrefixOrigin('http://', 3020)).toBeUndefined()
   })
 })
