@@ -12,13 +12,29 @@ import type { CompilerHandle } from './middleware.js'
 
 const PLUGIN_NAME = 'lynx:debug-metadata'
 
+/**
+ * Resolve the dev-server origin (plus path) used to rewrite source-map
+ * trailers. `dev.assetPrefix` may be an absolute URL (`http://localhost:<port>/`)
+ * or a path-only public path (`/assets/`). The latter is resolved against a
+ * placeholder base so it doesn't throw, and the placeholder origin is then
+ * dropped so the rewritten trailer stays relative. Returns `undefined` when no
+ * usable prefix can be derived.
+ */
 function devServerOrigin(api: RsbuildPluginAPI): string | undefined {
   if (!api.context.devServer) return
   const port = api.context.devServer.port
   const { assetPrefix } = api.getNormalizedConfig().dev
   if (typeof assetPrefix !== 'string') return
-  const url = new URL(assetPrefix.replaceAll('<port>', String(port)))
-  return (url.origin + url.pathname).replace(/\/$/, '')
+  const prefix = assetPrefix.replaceAll('<port>', String(port))
+  const placeholder = 'http://debug-metadata.placeholder'
+  let url: URL
+  try {
+    url = new URL(prefix, placeholder)
+  } catch {
+    return
+  }
+  const origin = url.origin === placeholder ? '' : url.origin
+  return (origin + url.pathname).replace(/\/$/, '') || undefined
 }
 
 interface LynxTemplatePluginExposure {
