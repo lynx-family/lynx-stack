@@ -71,6 +71,7 @@ import {
   Card,
   CheckBox,
   ChoicePicker,
+  DateTimeInput,
   Column,
   Divider,
   Icon,
@@ -96,6 +97,9 @@ import checkBoxManifest from '@lynx-js/a2ui-reactlynx/catalog/CheckBox/catalog.j
   type: 'json',
 };
 import choicePickerManifest from '@lynx-js/a2ui-reactlynx/catalog/ChoicePicker/catalog.json' with {
+  type: 'json',
+};
+import dateTimeInputManifest from '@lynx-js/a2ui-reactlynx/catalog/DateTimeInput/catalog.json' with {
   type: 'json',
 };
 import columnManifest from '@lynx-js/a2ui-reactlynx/catalog/Column/catalog.json' with {
@@ -156,6 +160,7 @@ export const allBuiltins = defineCatalog([
   [TextField, textFieldManifest],
   [CheckBox, checkBoxManifest],
   [ChoicePicker, choicePickerManifest],
+  [DateTimeInput, dateTimeInputManifest],
   [Icon, iconManifest],
   [RadioGroup, radioGroupManifest],
   [Slider, sliderManifest],

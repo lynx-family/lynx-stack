@@ -28,6 +28,7 @@ export { Button } from './Button/index.jsx';
 export { Card } from './Card/index.jsx';
 export { CheckBox } from './CheckBox/index.jsx';
 export { ChoicePicker } from './ChoicePicker/index.jsx';
+export { DateTimeInput } from './DateTimeInput/index.jsx';
 export { LineChart } from './LineChart/index.jsx';
 export { PieChart } from './PieChart/index.jsx';
 export { Column } from './Column/index.jsx';
