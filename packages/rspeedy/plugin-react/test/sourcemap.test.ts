@@ -165,6 +165,40 @@ describe('Sourcemap', () => {
   }, 25_000)
 
   test(
+    'debug-metadata injects a per-chunk source-map release banner',
+    async () => {
+      const tmp = await buildSourcemapFixture(undefined)
+      const mainThread = await readFile(
+        path.join(tmp, '.rspeedy/main/main-thread.js'),
+        'utf-8',
+      )
+      const background = await readFile(
+        path.join(tmp, '.rspeedy/main/background.js'),
+        'utf-8',
+      )
+
+      const mtRelease = releaseOf(mainThread)
+      const btRelease = releaseOf(background)
+
+      // `minify: false` keeps the banner var name, so the release is greppable.
+      // The release is the chunk hash, which is also the source-map artifact
+      // `key` — that's what reverse-resolution locates the container by.
+      expect(mtRelease, 'main-thread should declare a release').toMatch(
+        /^[0-9a-f]+$/,
+      )
+      expect(btRelease, 'background should declare a release').toMatch(
+        /^[0-9a-f]+$/,
+      )
+      // The injected runtime registers the release with the Lynx engine.
+      expect(mainThread).toContain('_SetSourceMapRelease')
+      expect(background).toContain('_SetSourceMapRelease')
+      // Per-chunk: main-thread and background carry their own (distinct) hash.
+      expect(mtRelease).not.toBe(btRelease)
+    },
+    25_000,
+  )
+
+  test(
     'sourcemap should map from compiled code to original source code',
     async () => {
       const tmp = await buildSourcemapFixture({ css: true })
@@ -273,4 +307,8 @@ describe('Sourcemap', () => {
 
 function normalizeSlashes(file: string) {
   return file.replaceAll(path.win32.sep, '/')
+}
+
+function releaseOf(src: string): string | undefined {
+  return (/var __DEBUG_METADATA_RELEASE__ = "([^"]+)"/.exec(src))?.[1]
 }
