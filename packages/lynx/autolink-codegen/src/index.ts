@@ -36,7 +36,7 @@ export interface NativeModuleSpec {
   methods: NativeModuleMethod[];
 }
 
-interface LynxExtJson {
+interface LynxLibJson {
   platforms: {
     android: {
       packageName: string;
@@ -205,7 +205,7 @@ function findMatchingBrace(source: string, openBraceIndex: number): number {
 }
 
 /**
- * Builds the generated JS facade, Android spec, and iOS spec file contents for an extension package.
+ * Builds the generated JS facade, Android spec, and iOS spec file contents for a library package.
  */
 export function generate(options: CodegenOptions = {}): GeneratedFile[] {
   const root = path.resolve(options.root ?? process.cwd());
@@ -704,14 +704,14 @@ function walkFiles(dir: string): string[] {
 }
 
 /**
- * Reads and normalizes the Native Autolink extension manifest.
+ * Reads and normalizes the Native Autolink library manifest.
  */
-function readManifest(root: string): LynxExtJson {
-  const manifestPath = path.join(root, 'lynx.ext.json');
+function readManifest(root: string): LynxLibJson {
+  const manifestPath = path.join(root, 'lynx.lib.json');
 
   if (!fs.existsSync(manifestPath)) {
     throw new Error(
-      `Missing lynx.ext.json in ${root}. Native Autolink codegen must run from an extension package root.`,
+      `Missing lynx.lib.json in ${root}. Native Autolink codegen must run from a library package root.`,
     );
   }
 
@@ -756,7 +756,7 @@ function readManifest(root: string): LynxExtJson {
 }
 
 /**
- * Reads a required object property from `lynx.ext.json`.
+ * Reads a required object property from `lynx.lib.json`.
  */
 function readObject(
   value: unknown,
@@ -777,7 +777,7 @@ function readObject(
 }
 
 /**
- * Reads a required non-empty string from `lynx.ext.json`.
+ * Reads a required non-empty string from `lynx.lib.json`.
  */
 function readRequiredString(
   value: Record<string, unknown>,
@@ -795,7 +795,7 @@ function readRequiredString(
 }
 
 /**
- * Reads an optional non-empty string from `lynx.ext.json`.
+ * Reads an optional non-empty string from `lynx.lib.json`.
  */
 function readOptionalString(
   value: Record<string, unknown>,

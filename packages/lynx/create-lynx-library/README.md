@@ -1,12 +1,12 @@
-# create-lynx-extension
+# create-lynx-library
 
-Create Native Autolink Lynx extensions.
+Create Native Autolink Lynx libraries.
 
 ```bash
-npm create lynx-extension
+npm create lynx-library
 ```
 
-The interactive flow lets you choose one or more extension types:
+The interactive flow lets you choose one or more library features:
 
 - Native Module
 - Element
@@ -15,9 +15,9 @@ The interactive flow lets you choose one or more extension types:
 For non-interactive usage:
 
 ```bash
-npm create lynx-extension -- \
+npm create lynx-library -- \
   --dir ./lynx-button \
-  --types native-module,element,service \
+  --features native-module,element,service \
   --package-name @example/lynx-button \
   --android-package com.example.button \
   --module-name ButtonModule \
@@ -25,9 +25,9 @@ npm create lynx-extension -- \
   --service-name ButtonService
 ```
 
-Use `--types all` to generate a package that contains all supported extension
-types.
+Use `--features all` to generate a package that contains all supported library
+features.
 
-Generated extensions include `lynx.ext.json`, JS facade sources, Android and
+Generated libraries include `lynx.lib.json`, JS facade sources, Android and
 iOS native examples, an example app skeleton, and a `codegen` script powered by
 the current published version of `@lynx-js/autolink-codegen`.
