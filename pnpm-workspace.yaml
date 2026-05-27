@@ -33,6 +33,9 @@ ignorePatchFailures: false
 optimisticRepeatInstall: true
 resolutionMode: "lowest-direct"
 
+# Match Renovate's npm minimum release age; pnpm also guards lockfile maintenance.
+minimumReleaseAge: 4320
+
 # Default catalogs
 catalog:
   "@microsoft/api-extractor": "7.58.2"
