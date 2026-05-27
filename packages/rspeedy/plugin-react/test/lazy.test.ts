@@ -469,10 +469,12 @@ describe('Lazy', () => {
       rspeedyConfig: {
         source: {
           entry: {
-            main: new URL(
-              './fixtures/lazy-bundle/index.tsx',
-              import.meta.url,
-            ).pathname,
+            main: fileURLToPath(
+              new URL(
+                './fixtures/lazy-bundle/index.tsx',
+                import.meta.url,
+              ),
+            ),
           },
         },
         output: {
