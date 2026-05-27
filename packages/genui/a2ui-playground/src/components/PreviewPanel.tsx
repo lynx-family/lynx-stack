@@ -83,6 +83,7 @@ interface PreviewPanelProps {
   headerAfterTitle?: ReactNode;
   previewSource?: PreviewPanelSource;
   showPreviewModeSwitch?: boolean;
+  showSimulationBar?: boolean;
   beforeBody?: ReactNode;
   bodyClassName?: string;
   children: ReactNode;
@@ -183,6 +184,7 @@ export function PreviewPanel(props: PreviewPanelProps) {
     headerAfterTitle,
     previewSource,
     showPreviewModeSwitch = false,
+    showSimulationBar = true,
     style,
     title,
   } = props;
@@ -542,7 +544,9 @@ export function PreviewPanel(props: PreviewPanelProps) {
             </button>
           </div>
           {beforeBody}
-          {previewSource && previewSource.kind !== 'placeholder'
+          {showSimulationBar
+              && previewSource
+              && previewSource.kind !== 'placeholder'
             ? (
               <PreviewSimulationBar
                 speed={speed}
