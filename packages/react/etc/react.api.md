@@ -4,6 +4,7 @@
 
 ```ts
 
+import { Children } from 'react';
 import { cloneElement } from 'react';
 import { Component } from 'react';
 import type { ComponentChild } from 'preact';
@@ -36,6 +37,8 @@ import { useRef } from 'react';
 import { useState } from 'react';
 import { useSyncExternalStore } from 'react';
 import type { VNode } from 'preact';
+
+export { Children }
 
 export { cloneElement }
 

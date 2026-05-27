@@ -5,7 +5,6 @@
 import './lynx.js';
 import './snapshot/lynx/component.js';
 import {
-  Children,
   Component,
   Fragment,
   PureComponent,
@@ -19,6 +18,7 @@ import {
   useSyncExternalStore,
 } from 'preact/compat';
 
+import { Children } from './compat/children.js';
 import {
   useCallback,
   useContext,
