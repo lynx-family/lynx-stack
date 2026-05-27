@@ -25,7 +25,8 @@
     "idb": "^8.0.3",
     "qrcode": "^1.5.4",
     "react": "19.2.4",
-    "react-dom": "19.2.4"
+    "react-dom": "19.2.4",
+    "vaul": "^1.1.2"
   },
   "devDependencies": {
     "@lynx-js/config-rsbuild-plugin": "workspace:*",
