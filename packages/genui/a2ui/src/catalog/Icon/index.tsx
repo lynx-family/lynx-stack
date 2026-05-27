@@ -13,8 +13,38 @@ function toMaterialName(name: string): string {
  * @a2uiCatalog Icon
  */
 export interface IconProps extends GenericComponentProps {
-  /** Material icon name (camelCase or snake_case), e.g. "info", "skipNext", "play_arrow". */
-  name: string | { path: string };
+  /** Google Material icon ligature name, e.g. "info", "account_circle", "arrow_back". */
+  name:
+    | 'account_circle'
+    | 'add'
+    | 'arrow_back'
+    | 'arrow_forward'
+    | 'camera'
+    | 'check'
+    | 'close'
+    | 'delete'
+    | 'edit'
+    | 'error'
+    | 'favorite'
+    | 'help'
+    | 'home'
+    | 'info'
+    | 'location_on'
+    | 'lock'
+    | 'mail'
+    | 'menu'
+    | 'more_vert'
+    | 'pause'
+    | 'person'
+    | 'play_arrow'
+    | 'refresh'
+    | 'search'
+    | 'send'
+    | 'settings'
+    | 'share'
+    | 'star'
+    | 'warning'
+    | { path: string };
   size?: 'sm' | 'md' | 'lg';
   color?: 'primary' | 'muted' | 'inherit';
 }
