@@ -22,7 +22,7 @@ export interface TextProps extends GenericComponentProps {
       | 'void';
   };
   variant?: 'h1' | 'h2' | 'h3' | 'h4' | 'h5' | 'caption' | 'body' | 'markdown';
-  weight?: number;
+  emphasis?: 'medium' | 'strong';
 }
 
 export function Text(
@@ -31,17 +31,7 @@ export function Text(
   const id = props.id;
   const text = props.text as string;
   const variant = props.variant ?? 'body';
-  const weight = props.weight;
-  let weightClass = '';
-  if (typeof weight === 'number') {
-    if (weight >= 2) {
-      weightClass = 'text-weight-2';
-    } else if (weight >= 1.5) {
-      weightClass = 'text-weight-1-5';
-    } else {
-      weightClass = 'text-weight-1';
-    }
-  }
+  const emphasisClass = props.emphasis ? `text-emphasis-${props.emphasis}` : '';
 
   if (variant === 'markdown') {
     return (
@@ -50,7 +40,7 @@ export function Text(
     );
   }
   return (
-    <text key={id} className={`text-${variant} ${weightClass}`}>
+    <text key={id} className={`text-${variant} ${emphasisClass}`}>
       {text}
     </text>
   );

@@ -39,21 +39,23 @@ and exactly ONE of the following keys:
 
 ## Required ordering for a fresh response
 1. createSurface  (with surfaceId + catalogId)
-2. updateComponents (the FIRST one MUST contain a component whose id is "root")
-3. zero or more updateDataModel  (populate dynamic data referenced by paths)
-4. (optional) further updateComponents / updateDataModel for incremental UI
+2. updateDataModel for every initial value referenced by a { "path": ... }
+   binding. Send this before the first component that reads those paths.
+3. updateComponents (the FIRST one MUST contain a component whose id is "root")
+4. (optional) further updateDataModel / updateComponents for incremental UI.
+   For each incremental bound component, send its data model value first, then
+   send the component that binds to it.
 
 ## Envelope semantics
 - createSurface creates a surface. Once created, its surfaceId and catalogId are
   fixed. To change catalog/theme, delete and recreate the surface.
 - updateComponents adds or replaces component definitions for that surface. It
-  may reference data paths that will be populated by updateDataModel.
-- updateDataModel replaces the whole data model when "path" is omitted or "/".
-  With a specific "path", it replaces only the value at that JSON Pointer.
-  Its fields MUST be nested inside "updateDataModel":
+  may reference data paths, but for smooth streaming those paths SHOULD already
+  be populated by an earlier updateDataModel in the same response.
+- updateDataModel has shape:
     { "version": "v0.9",
-      "updateDataModel": { "surfaceId": "main", "path": "/", "value": {} } }
-  Never put "path" beside "updateDataModel" at the top level of the message.
+      "updateDataModel": { "surfaceId": string, "path"?: string, "value"?: any } }
+  "path" defaults to "/" and "value" may be any JSON value.
 - deleteSurface removes a surface when the UI is no longer needed.
 
 ## Component model
@@ -109,50 +111,48 @@ function buildHardRules(catalogId: string): string {
 5. For a fresh non-action response, the first message MUST be createSurface with
    catalogId = "${catalogId}". Use surfaceId "main" unless the user specifies
    otherwise.
-6. For a fresh non-action response, the second message MUST be
-   updateComponents; its components list MUST contain exactly one component
-   with id "root".
-7. Use property-based component discriminators: "component": "Text", not
+6. For "{path:...}" bindings, send updateDataModel before the first
+   updateComponents message that contains components reading those paths. After
+   createSurface, either send a literal root/skeleton updateComponents first, or
+   send updateDataModel first when the first visible components use bindings.
+7. For a fresh non-action response, the first updateComponents message MUST
+   contain exactly one component with id "root".
+8. Use property-based component discriminators: "component": "Text", not
    wrapper objects such as { "Text": {...} }.
-8. Children are referenced by id only. NEVER inline a child component.
-9. Container references MUST point to components present in the same response.
-10. Card.child is exactly one id; wrap multiple elements in Row/Column/List.
-11. Buttons MUST include a non-empty "action.event.name". Button has NO "label"
-   prop – provide the label via a child Text component ("child": "<text-id>").
-12. When using Modal for a confirmation flow, do NOT put the server action on
+9. Children are referenced by id only. NEVER inline a child component.
+10. Container references MUST point to components present in the same response.
+11. Card.child is exactly one id; wrap multiple elements in Row/Column/List.
+12. Buttons MUST include a dispatchable "action": either non-empty
+   "action.event.name" or non-empty "action.functionCall.call". Button has NO
+   "label" prop – provide the label via a child Text component
+   ("child": "<text-id>").
+13. When using Modal for a confirmation flow, do NOT put the server action on
    the Modal trigger. The trigger only opens the modal. Put a separate confirm
    Button inside Modal.content, and attach the action to that confirm Button.
-13. Render a Modal by placing the Modal component itself where the trigger
+14. Render a Modal by placing the Modal component itself where the trigger
    should appear. Do NOT also list the trigger component as a sibling in the
    parent container, because Modal renders its trigger internally.
-14. The "weight" prop is a small layout ratio for Row/Column children, not CSS
+15. The "weight" prop is only a small Row/Column child layout ratio, not CSS
    font-weight. Do NOT use values like 400, 500, 600, or 700 for typography.
-   Use text variants for typography, and use small weights such as 1, 1.5, 2,
-   3, or 5 only when balancing sibling layout.
-15. Any "{path:...}" reference MUST be populated by some updateDataModel in the
-   same response.
-16. In an updateDataModel message, "path" MUST be inside "updateDataModel",
-    never at the top level. Correct:
-    { "version": "v0.9", "updateDataModel": { "surfaceId": "main", "path": "/", "value": {} } }
-    Wrong:
-    { "version": "v0.9", "updateDataModel": { "surfaceId": "main", "value": {} }, "path": "/" }
-17. Ids are kebab-case, unique per surface ("root", "title-text", "submit-btn").
-18. Do not invent components outside the catalog.
-19. No comments, trailing commas or unknown fields.
-20. If the user asks for impossible, unsafe, or unsupported UI, render a concise
+   Use Text.variant for base typography and Text.emphasis ("medium" or
+   "strong") for extra text emphasis.
+16. Ids are kebab-case, unique per surface ("root", "title-text", "submit-btn").
+17. Do not invent components outside the catalog.
+18. No comments, trailing commas or unknown fields.
+19. If the user asks for impossible, unsafe, or unsupported UI, render a concise
     explanatory A2UI surface using supported components rather than prose.
-21. If the latest user message starts with "A2UI_USER_ACTION:", this is an
+20. If the latest user message starts with "A2UI_USER_ACTION:", this is an
     action response for an existing surface. Return a non-empty JSON array with
     updateDataModel and/or updateComponents for that same surfaceId. Do NOT
     return [] and do NOT create a new surface unless the action explicitly asks
     to replace the whole UI.
-22. For action responses, prefer the smallest valid patch: one updateDataModel
+21. For action responses, prefer the smallest valid patch: one updateDataModel
     for changed data, plus one updateComponents only if the visible structure
     needs to change.
-23. For UI that should change after a button tap, keep the initial response in
+22. For UI that should change after a button tap, keep the initial response in
     the pre-action state. Put confirmation, success, or result details in the
     action response instead of showing them before the action happens.
-24. For Image.url, provide a short English image search query such as
+23. For Image.url, provide a short English image search query such as
     "fresh pasta on a table" or "city skyline at night". Do NOT invent photo
     CDN URLs. The server resolves Image.url values through its image provider.
 `;

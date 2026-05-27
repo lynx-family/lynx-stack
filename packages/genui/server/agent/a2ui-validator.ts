@@ -94,9 +94,16 @@ function isRecord(value: unknown): value is Record<string, unknown> {
   return value !== null && typeof value === 'object' && !Array.isArray(value);
 }
 
-function hasActionName(value: unknown): value is { event: { name: string } } {
+function hasDispatchableAction(value: unknown): boolean {
   if (!isRecord(value)) return false;
-  const candidate = value as { event?: unknown };
+
+  const candidate = value as { event?: unknown; functionCall?: unknown };
+  if (isRecord(candidate.functionCall)) {
+    const functionCall = candidate.functionCall as { call?: unknown };
+    return typeof functionCall.call === 'string'
+      && functionCall.call.length > 0;
+  }
+
   if (!isRecord(candidate.event)) return false;
   const event = candidate.event as { name?: unknown };
   return typeof event.name === 'string' && event.name.length > 0;
@@ -376,9 +383,9 @@ export function validateA2UIOutput(
         bucket.set(comp.id, comp);
         if (requiresAction.has(comp.component)) {
           const action = comp.action;
-          if (!hasActionName(action)) {
+          if (!hasDispatchableAction(action)) {
             errors.push(
-              `${comp.component} (id=${comp.id}) MUST carry action.event.name.`,
+              `${comp.component} (id=${comp.id}) MUST carry action.event.name or action.functionCall.call.`,
             );
           }
         }
