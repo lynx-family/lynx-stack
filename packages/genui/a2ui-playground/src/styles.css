@@ -956,8 +956,6 @@ html[data-theme="dark"] .phoneHomeIndicator {
   display: flex;
   flex-direction: column;
   gap: 8px;
-  max-height: 132px;
-  overflow-y: auto;
 }
 
 .previewQrContent {
@@ -1085,10 +1083,6 @@ html[data-theme="dark"] .phoneHomeIndicator {
 
   .previewPanelBody {
     min-height: 460px;
-  }
-
-  .previewQrSection {
-    max-height: 120px;
   }
 }
 

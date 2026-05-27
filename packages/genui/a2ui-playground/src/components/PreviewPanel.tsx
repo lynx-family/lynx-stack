@@ -664,7 +664,7 @@ export function PreviewPanel(props: PreviewPanelProps) {
                             ? (
                               <QrCode
                                 value={item.url}
-                                size={80}
+                                size={128}
                                 onErrorChange={setError}
                               />
                             )
