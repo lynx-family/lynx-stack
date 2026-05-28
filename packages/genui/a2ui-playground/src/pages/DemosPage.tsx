@@ -869,6 +869,10 @@ export function DemosPage(props: {
           className='previewPanel examplesPreviewPanel'
           title='Lynx Preview'
           showPreviewModeSwitch
+          // During playback, the inline playback header owns the speed control;
+          // hide PreviewPanel's duplicate "Simulated" speed bar to avoid two
+          // levers that fight each other.
+          showSimulationBar={!isPlaybackActive}
           previewSource={previewSource}
         >
           <PreviewViewport
