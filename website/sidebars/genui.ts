@@ -143,8 +143,8 @@ export const A2UI_EN_NAV_ITEMS = [
     link: '/guide/genui/a2ui/catalog',
   },
   {
-    text: 'Open Playground',
-    link: '/repl',
+    text: 'Playground',
+    link: '/a2ui',
   },
 ];
 
@@ -170,8 +170,8 @@ export const A2UI_ZH_NAV_ITEMS = [
     link: '/zh/guide/genui/a2ui/catalog',
   },
   {
-    text: '打开 Playground',
-    link: '/repl',
+    text: 'Playground',
+    link: '/a2ui',
   },
 ];
 
@@ -193,7 +193,7 @@ const A2UI_EN_LINK_REPLACEMENTS = [
   ['../src/catalog/README.md', '/guide/genui/a2ui/catalog'],
   [
     '../a2ui-playground/examples/README.md',
-    '/repl',
+    '/a2ui',
   ],
   [
     '../../a2ui-catalog-extractor/README.md',
@@ -209,7 +209,7 @@ const A2UI_ZH_LINK_REPLACEMENTS = [
   ['../src/catalog/readme_zh.md', '/zh/guide/genui/a2ui/catalog'],
   [
     '../a2ui-playground/examples/readme_zh.md',
-    '/repl',
+    '/a2ui',
   ],
   [
     '../../a2ui-catalog-extractor/readme.zh_cn.md',

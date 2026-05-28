@@ -754,8 +754,8 @@ const config: UserConfig = defineConfig({
       },
       {
         text: 'A2UI',
-        link: '/guide/genui/a2ui',
-        activeMatch: '/guide/genui/a2ui',
+        link: '/a2ui',
+        activeMatch: '^/(a2ui|guide/genui/a2ui)',
         items: A2UI_EN_NAV_ITEMS,
       },
       {
