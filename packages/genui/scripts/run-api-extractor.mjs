@@ -10,6 +10,7 @@ import { fileURLToPath } from 'node:url';
 const genuiRoot = dirname(dirname(fileURLToPath(import.meta.url)));
 const lockPath = join(genuiRoot, '.api-extractor.lock');
 const lockTimeoutMs = 10 * 60 * 1000;
+const entryPointTimeoutMs = 5 * 1000;
 const retryDelayMs = 500;
 
 const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
@@ -76,10 +77,61 @@ const run = (command, args) => {
   }
 };
 
+const getMainEntryPointFilePath = async () => {
+  const configPath = join(process.cwd(), 'api-extractor.json');
+  const config = await readFile(configPath, 'utf8');
+  const match = /"mainEntryPointFilePath"\s*:\s*"([^"]+)"/.exec(config);
+
+  if (!match) {
+    return null;
+  }
+
+  return match[1].replace('<projectFolder>', process.cwd());
+};
+
+const waitForMainEntryPoint = async () => {
+  const mainEntryPointFilePath = await getMainEntryPointFilePath();
+
+  if (!mainEntryPointFilePath) {
+    return true;
+  }
+
+  const start = Date.now();
+
+  while (Date.now() - start < entryPointTimeoutMs) {
+    if (existsSync(mainEntryPointFilePath)) {
+      return true;
+    }
+
+    await sleep(retryDelayMs);
+  }
+
+  return false;
+};
+
+const ensureMainEntryPoint = async () => {
+  if (await waitForMainEntryPoint()) {
+    return;
+  }
+
+  run('pnpm', ['run', 'build']);
+
+  if (await waitForMainEntryPoint()) {
+    return;
+  }
+
+  const mainEntryPointFilePath = await getMainEntryPointFilePath();
+
+  throw new Error(
+    `API Extractor entry point does not exist after build: ${mainEntryPointFilePath}`,
+  );
+};
+
 await acquireLock();
 
 try {
   run('pnpm', ['run', 'build']);
+  await ensureMainEntryPoint();
   run('api-extractor', ['run', '--verbose']);
 } finally {
   if (existsSync(lockPath)) {
