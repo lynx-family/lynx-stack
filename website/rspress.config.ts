@@ -16,6 +16,7 @@ import {
 import { camelCase } from 'change-case';
 
 import {
+  A2UI_EN_NAV_ITEMS,
   createAPI,
   createChangelogs,
   createGenUIGuideReadmeDocs,
@@ -753,7 +754,9 @@ const config: UserConfig = defineConfig({
       },
       {
         text: 'A2UI',
-        link: '/a2ui',
+        link: '/guide/genui/a2ui',
+        activeMatch: '/guide/genui/a2ui',
+        items: A2UI_EN_NAV_ITEMS,
       },
       {
         text: 'API',
