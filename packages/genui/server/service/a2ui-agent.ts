@@ -32,6 +32,10 @@ export interface ChatOptions {
   model?: string | undefined;
   catalog?: A2UICatalog | undefined;
   maxRepairAttempts?: number | undefined;
+  onPerformanceEvent?: (
+    event: string,
+    details?: Record<string, unknown>,
+  ) => void;
 }
 
 export interface A2UIResponse {
@@ -92,15 +96,26 @@ function buildDataModelSystemMessage(
   };
 }
 
+function sumContentChars(messages: ChatMessage[]): number {
+  return messages.reduce((total, message) => total + message.content.length, 0);
+}
+
 export default class A2UIAgentService {
   private agentCache = new Map<string, Promise<A2UIAgent>>();
 
   private getAgent(opts: ChatOptions): Promise<A2UIAgent> {
+    const startedAt = performance.now();
     const cacheKey = `${opts.baseURL ?? 'default'}:${opts.model ?? 'default'}:${
       hashApiKey(opts.apiKey)
     }:${opts.catalog?.id ?? 'basic'}`;
     let cached = this.agentCache.get(cacheKey);
-    if (cached) return cached;
+    if (cached) {
+      opts.onPerformanceEvent?.('agent.cache.hit', {
+        durationMs: performance.now() - startedAt,
+        cacheSize: this.agentCache.size,
+      });
+      return cached;
+    }
 
     cached = Promise.resolve(
       createA2UIAgent(pickDefined({
@@ -111,6 +126,10 @@ export default class A2UIAgentService {
       })).agent,
     );
     this.agentCache.set(cacheKey, cached);
+    opts.onPerformanceEvent?.('agent.cache.miss', {
+      durationMs: performance.now() - startedAt,
+      cacheSize: this.agentCache.size,
+    });
     return cached;
   }
 
@@ -123,12 +142,27 @@ export default class A2UIAgentService {
     opts: ChatOptions = {},
   ): Promise<MastraStreamResult> {
     const agent = await this.getAgent(opts);
-    return agent.stream(
-      this.toModelMessages(messages),
+    const modelMessagesStartedAt = performance.now();
+    const modelMessages = this.toModelMessages(messages);
+    opts.onPerformanceEvent?.('agent.model_messages.built', {
+      durationMs: performance.now() - modelMessagesStartedAt,
+      messageCount: messages.length,
+      contentChars: sumContentChars(messages),
+    });
+
+    const streamStartedAt = performance.now();
+    opts.onPerformanceEvent?.('agent.stream.invoke.started');
+    const result = agent.stream(
+      modelMessages,
       pickDefined({
         resourceId: opts.resourceId,
       }),
     ) as MastraStreamResult;
+    opts.onPerformanceEvent?.('agent.stream.invoke.completed', {
+      durationMs: performance.now() - streamStartedAt,
+      hasTextStream: Boolean(result.textStream),
+    });
+    return result;
   }
 
   public async streamAsAsyncIterable(
@@ -143,8 +177,20 @@ export default class A2UIAgentService {
       finishReason: unknown;
     }>;
   }> {
+    const buildConversationStartedAt = performance.now();
+    const preparedMessages = buildConversationMessages(messages, conversation);
+    opts.onPerformanceEvent?.('agent.conversation.built', {
+      durationMs: performance.now() - buildConversationStartedAt,
+      inputMessageCount: messages.length,
+      conversationHistoryCount: conversation?.history.length ?? 0,
+      dataModelKeyCount: conversation
+        ? Object.keys(conversation.dataModel).length
+        : 0,
+      preparedMessageCount: preparedMessages.length,
+      preparedContentChars: sumContentChars(preparedMessages),
+    });
     const streamResult: MastraStreamResult = await this.stream(
-      buildConversationMessages(messages, conversation),
+      preparedMessages,
       opts,
     );
     const raw = streamResult.textStream;
