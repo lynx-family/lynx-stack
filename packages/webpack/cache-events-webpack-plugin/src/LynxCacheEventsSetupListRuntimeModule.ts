@@ -25,7 +25,10 @@ export function createLynxCacheEventsSetupListRuntimeModule(
         LynxCacheEventsPluginOptions['setupListTransformer']
       >,
     ) {
-      super('Lynx cache events setup list', webpack.RuntimeModule.STAGE_NORMAL);
+      super(
+        'webpack/runtime/lynx cache events setup list',
+        webpack.RuntimeModule.STAGE_NORMAL,
+      );
     }
 
     override generate(): string {

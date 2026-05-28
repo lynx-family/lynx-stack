@@ -1236,6 +1236,9 @@ importers:
       '@lynx-js/chunk-loading-webpack-plugin':
         specifier: workspace:^
         version: link:../../webpack/chunk-loading-webpack-plugin
+      '@lynx-js/debug-metadata-rsbuild-plugin':
+        specifier: workspace:^
+        version: link:../plugin-debug-metadata
       '@lynx-js/web-rsbuild-server-middleware':
         specifier: workspace:*
         version: link:../../web-platform/web-rsbuild-server-middleware
@@ -1420,6 +1423,25 @@ importers:
       webpack:
         specifier: ^5.105.2
         version: 5.105.2(lightningcss@1.31.1)
+
+  packages/rspeedy/plugin-debug-metadata:
+    dependencies:
+      '@lynx-js/debug-metadata':
+        specifier: workspace:^
+        version: link:../../tools/debug-metadata
+    devDependencies:
+      '@lynx-js/template-webpack-plugin':
+        specifier: workspace:*
+        version: link:../../webpack/template-webpack-plugin
+      '@microsoft/api-extractor':
+        specifier: 'catalog:'
+        version: 7.58.2(@types/node@24.10.13)
+      '@rollup/plugin-typescript':
+        specifier: ^12.3.0
+        version: 12.3.0(patch_hash=926ba262ec682d27369f1a8648a0dfb657fb5f1b28539ca3628d292276c91c3d)(rollup@4.34.9)(tslib@2.8.1)(typescript@5.9.3)
+      '@rsbuild/core':
+        specifier: catalog:rsbuild
+        version: 2.0.6(core-js@3.48.0)
 
   packages/rspeedy/plugin-external-bundle:
     dependencies:
@@ -1795,6 +1817,12 @@ importers:
         specifier: ^2.3.11
         version: 2.3.11
 
+  packages/tools/debug-metadata:
+    devDependencies:
+      '@rollup/plugin-typescript':
+        specifier: ^12.3.0
+        version: 12.3.0(patch_hash=926ba262ec682d27369f1a8648a0dfb657fb5f1b28539ca3628d292276c91c3d)(rollup@4.34.9)(tslib@2.8.1)(typescript@5.9.3)
+
   packages/tools/vitest-setup:
     devDependencies:
       path-serializer:
@@ -2157,6 +2185,9 @@ importers:
 
   packages/webpack/react-webpack-plugin:
     dependencies:
+      '@lynx-js/debug-metadata':
+        specifier: workspace:^
+        version: link:../../tools/debug-metadata
       '@lynx-js/webpack-runtime-globals':
         specifier: workspace:*
         version: link:../webpack-runtime-globals

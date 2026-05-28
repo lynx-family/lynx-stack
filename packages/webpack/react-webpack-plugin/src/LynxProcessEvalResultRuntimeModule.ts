@@ -14,7 +14,10 @@ export function createLynxProcessEvalResultRuntimeModule(
     extends webpack.RuntimeModule
   {
     constructor() {
-      super('Lynx process eval result', webpack.RuntimeModule.STAGE_ATTACH);
+      super(
+        'webpack/runtime/lynx process eval result',
+        webpack.RuntimeModule.STAGE_ATTACH,
+      );
     }
 
     override generate(): string {

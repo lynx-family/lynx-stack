@@ -1,0 +1,43 @@
+{
+  "name": "@lynx-js/debug-metadata",
+  "version": "0.0.0",
+  "description": "Schema types and parser for the Lynx `debug-metadata.json` format.",
+  "keywords": [
+    "Lynx",
+    "debug",
+    "sourcemap",
+    "schema"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/lynx-family/lynx-stack.git",
+    "directory": "packages/tools/debug-metadata"
+  },
+  "license": "Apache-2.0",
+  "type": "module",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    },
+    "./package.json": "./package.json"
+  },
+  "main": "dist/index.js",
+  "module": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "files": [
+    "dist",
+    "!dist/**/*.js.map",
+    "CHANGELOG.md",
+    "README.md"
+  ],
+  "scripts": {
+    "test": "vitest run"
+  },
+  "devDependencies": {
+    "@rollup/plugin-typescript": "^12.3.0"
+  },
+  "engines": {
+    "node": ">=18"
+  }
+}

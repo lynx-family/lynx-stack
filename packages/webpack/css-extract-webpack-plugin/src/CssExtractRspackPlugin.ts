@@ -257,7 +257,7 @@ class CssExtractRspackPluginImpl {
             hash: string | null,
             hotUpdateFiles: Map<string, string>,
           ) {
-            super('lynx css hot update');
+            super('webpack/runtime/lynx css hot update');
             this.hash = hash;
             this.hotUpdateFiles = hotUpdateFiles;
           }

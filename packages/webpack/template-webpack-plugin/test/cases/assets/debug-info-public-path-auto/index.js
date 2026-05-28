@@ -1,17 +1,16 @@
 /// <reference types="@rstest/core/globals" />
 
+import { existsSync } from 'node:fs';
 import fs from 'node:fs/promises';
 import path from 'node:path';
 
-it('should have debug-info.json emitted', async () => {
-  const content = await fs.readFile(
-    path.resolve(__dirname, '.rspeedy/main/debug-info.json'),
-  );
-
-  expect(content.length).not.toBe(0);
+it('should not emit debug-info.json', () => {
+  expect(
+    existsSync(path.resolve(__dirname, '.rspeedy/main/debug-info.json')),
+  ).toBe(false);
 });
 
-it('should not have templateDebugUrl in tasm.json', async () => {
+it('should leave templateDebugUrl empty when publicPath is auto', async () => {
   const tasmJSON = await fs.readFile(
     path.resolve(__dirname, '.rspeedy/main/tasm.json'),
     'utf-8',
@@ -19,8 +18,5 @@ it('should not have templateDebugUrl in tasm.json', async () => {
 
   const { compilerOptions } = JSON.parse(tasmJSON);
 
-  expect(compilerOptions).not.toHaveProperty(
-    'templateDebugUrl',
-    'https://example.com/main/debug-info.json',
-  );
+  expect(compilerOptions).toHaveProperty('templateDebugUrl', '');
 });

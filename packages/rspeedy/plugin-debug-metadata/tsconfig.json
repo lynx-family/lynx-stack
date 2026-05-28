@@ -1,0 +1,12 @@
+{
+  "extends": ["./tsconfig.build.json"],
+  "compilerOptions": {
+    "rootDir": ".",
+    "noEmit": true,
+  },
+  "include": ["src", "test", "vitest.config.ts"],
+  "references": [
+    { "path": "../../webpack/template-webpack-plugin/tsconfig.build.json" },
+    { "path": "../../tools/debug-metadata/tsconfig.build.json" },
+  ],
+}
