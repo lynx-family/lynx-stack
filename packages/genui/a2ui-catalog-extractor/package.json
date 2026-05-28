@@ -32,7 +32,7 @@
     "README.md"
   ],
   "scripts": {
-    "api-extractor": "api-extractor run --verbose",
+    "api-extractor": "node ../scripts/run-api-extractor.mjs",
     "build": "tsc --project tsconfig.build.json",
     "test": "rstest"
   },

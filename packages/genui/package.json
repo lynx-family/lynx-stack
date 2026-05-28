@@ -92,7 +92,7 @@
     "openui/README.md"
   ],
   "scripts": {
-    "api-extractor": "api-extractor run --verbose",
+    "api-extractor": "node scripts/run-api-extractor.mjs",
     "build": "pnpm run clean && pnpm --dir a2ui-catalog-extractor build && pnpm --dir a2ui-prompt build && pnpm --dir openui build && pnpm --dir a2ui build && tsc --project tsconfig.build.json",
     "clean": "node -e \"require('node:fs').rmSync('dist',{recursive:true,force:true});\""
   },

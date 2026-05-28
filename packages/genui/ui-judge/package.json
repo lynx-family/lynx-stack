@@ -19,7 +19,7 @@
     "README.md"
   ],
   "scripts": {
-    "api-extractor": "api-extractor run --verbose",
+    "api-extractor": "node ../scripts/run-api-extractor.mjs",
     "build": "rslib build",
     "test": "pnpm --dir ../a2ui-catalog-extractor build && pnpm --dir ../a2ui build && playwright test"
   },

@@ -26,7 +26,7 @@
     "README.md"
   ],
   "scripts": {
-    "api-extractor": "api-extractor run --verbose",
+    "api-extractor": "node ../scripts/run-api-extractor.mjs",
     "build": "tsc -p tsconfig.build.json && cp src/core/renderer.css dist/core/renderer.css"
   },
   "dependencies": {
