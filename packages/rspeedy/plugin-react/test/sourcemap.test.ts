@@ -183,8 +183,9 @@ describe('Sourcemap', () => {
       const btRelease = releaseOf(background)
 
       // `minify: false` keeps the banner var name, so the release is greppable.
-      // The release is `debugmetadata:` + the chunk hash; the bare hash is the
-      // source-map artifact `key` reverse-resolution locates the container by.
+      // The release is `debugmetadata:` + a 160-bit sha1 over the chunk's
+      // modules; the bare hash equals the source-map artifact `key`
+      // reverse-resolution locates the container by.
       expect(mtRelease, 'main-thread should declare a release').toMatch(
         /^debugmetadata:[0-9a-f]+$/,
       )

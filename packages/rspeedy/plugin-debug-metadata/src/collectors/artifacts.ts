@@ -12,6 +12,8 @@ import type {
   SourceMapDebugSource,
 } from '@lynx-js/debug-metadata'
 
+import { computeChunkReleaseKey, computeReleaseKey } from '../release-banner.js'
+
 /**
  * Walk the chunks contributing to `entryNames` and collect a
  * {@link Artifact} per JS / CSS asset that has a sibling Source Map v3
@@ -45,7 +47,7 @@ export function collectArtifacts(
             kind: 'source-map',
             filename: path.posix.basename(mapPath),
             path: mapPath,
-            key: extractKey(chunk, file),
+            key: extractKey(compilation.chunkGraph, chunk, file),
             map,
           })
         } else if (kind === 'css') {
@@ -89,22 +91,24 @@ function readSourceMap(
 }
 
 /**
- * Unique key used by remapping services to match a map.
+ * Unique key used by remapping services to match a map — a 160-bit
+ * {@link computeChunkReleaseKey} over the chunk's module content.
  *
- * - JS assets use `chunk.hash` so the value matches the
- *   `__DEBUG_METADATA_RELEASE__` banner this plugin bakes into the top
- *   of the JS at build time.
- * - CSS assets use `chunk.contentHash['css/mini-extract']` instead — `chunk.hash`
- *   would collide with the sibling JS asset's key when a single chunk
- *   produces both `*.js` and `*.css` (as MiniCssExtractPlugin does),
- *   and CSS has no equivalent baked-in release identifier that forces
- *   the same value as the JS one.
+ * - JS assets use the chunk key directly, matching the
+ *   `__DEBUG_METADATA_RELEASE__` banner this plugin bakes into the top of the
+ *   JS at build time (both call {@link computeChunkReleaseKey} on the chunk).
+ * - CSS assets append a `'css'` discriminator — a chunk that emits both `*.js`
+ *   and `*.css` (as MiniCssExtractPlugin does) shares one set of modules, so
+ *   the bare chunk key would collide between the two; CSS has no banner that
+ *   must match it.
  */
-function extractKey(chunk: Rspack.Chunk, file: string): string {
-  if (file.endsWith('.css')) {
-    return chunk.contentHash?.['css/mini-extract'] ?? ''
-  }
-  return chunk.hash ?? ''
+function extractKey(
+  chunkGraph: Rspack.Compilation['chunkGraph'],
+  chunk: Rspack.Chunk,
+  file: string,
+): string {
+  const chunkKey = computeChunkReleaseKey(chunkGraph, chunk)
+  return file.endsWith('.css') ? computeReleaseKey(chunkKey, 'css') : chunkKey
 }
 
 /**
