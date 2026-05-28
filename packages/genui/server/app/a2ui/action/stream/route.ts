@@ -23,6 +23,7 @@ import {
   validateConversation,
 } from '../../_shared';
 import { corsHeaders, corsPreflight, jsonWithCors } from '../../cors';
+import { publishA2UIPayload } from '../../payload-publisher';
 import { checkRateLimit, rateLimitSseResponse } from '../../rate-limit';
 
 export const runtime = 'nodejs';
@@ -330,10 +331,15 @@ export async function POST(req: Request) {
           }
         }
 
+        const preview = validation.ok
+          ? await publishA2UIPayload(validation.messages)
+          : undefined;
+
         log('done.enqueued', {
           validationOk: validation.ok,
           validationErrorCount: validation.errors.length,
           messageCount: validation.messages.length,
+          hasPreviewUrl: Boolean(preview?.messagesUrl),
           repairAttempted: repair?.attempted ?? false,
           repairOk: repair?.ok,
           requestId,
@@ -343,6 +349,7 @@ export async function POST(req: Request) {
           usage,
           finishReason,
           validation,
+          preview,
           repair,
         });
       } catch (err: unknown) {

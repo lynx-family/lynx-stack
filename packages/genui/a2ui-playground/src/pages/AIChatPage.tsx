@@ -44,6 +44,10 @@ interface A2UIDonePayload {
   error?: unknown;
   message?: unknown;
   usage?: unknown;
+  preview?: {
+    messagesUrl?: unknown;
+    actionMocksUrl?: unknown;
+  };
 }
 
 interface TokenUsage {
@@ -54,6 +58,11 @@ interface TokenUsage {
 
 interface A2UIResponseMessageMeta {
   final: boolean;
+}
+
+interface PreviewPayloadUrls {
+  messagesUrl: string;
+  actionMocksUrl?: string;
 }
 
 interface ProviderSettings {
@@ -467,6 +476,21 @@ function normalizeA2UIMessages(payload: unknown): unknown[] {
   return [];
 }
 
+function normalizePreviewPayloadUrls(
+  payload: unknown,
+): PreviewPayloadUrls | null {
+  if (!payload || typeof payload !== 'object') return null;
+  const preview = (payload as A2UIDonePayload).preview;
+  if (!preview || typeof preview !== 'object') return null;
+  if (typeof preview.messagesUrl !== 'string') return null;
+  return {
+    messagesUrl: preview.messagesUrl,
+    actionMocksUrl: typeof preview.actionMocksUrl === 'string'
+      ? preview.actionMocksUrl
+      : undefined,
+  };
+}
+
 function includesCreateSurface(messages: unknown[]): boolean {
   return messages.some((message) =>
     Boolean(
@@ -551,6 +575,7 @@ async function readA2UIResponse(
     parseDeltaMessages?: boolean;
     publishPartialMessages?: boolean;
     publishText?: boolean;
+    onPreviewPayload?: (preview: PreviewPayloadUrls) => void;
   } = {},
 ): Promise<unknown[]> {
   const contentType = response.headers.get('content-type') ?? '';
@@ -563,6 +588,8 @@ async function readA2UIResponse(
     if (payload && typeof payload === 'object') {
       const usage = parseUsage((payload as A2UIDonePayload).usage);
       if (usage) onUsage?.(usage);
+      const preview = normalizePreviewPayloadUrls(payload);
+      if (preview) options.onPreviewPayload?.(preview);
     }
     onMessages(messages, { final: true });
     return messages;
@@ -619,6 +646,8 @@ async function readA2UIResponse(
         if (parsed.data && typeof parsed.data === 'object') {
           const usage = parseUsage((parsed.data as A2UIDonePayload).usage);
           if (usage) onUsage?.(usage);
+          const preview = normalizePreviewPayloadUrls(parsed.data);
+          if (preview) options.onPreviewPayload?.(preview);
         }
         if (doneMessages.length > 0) {
           latestMessages = doneMessages;
@@ -804,6 +833,7 @@ export function AIChatPage(
     isReady,
     messages: persistedMessages,
     previewMessages: persistedPreviewMessages,
+    previewPayloadUrls: persistedPreviewPayloadUrls,
     recordTurn,
     remove,
     rename,
@@ -818,6 +848,9 @@ export function AIChatPage(
   const [previewMessages, setPreviewMessages] = useState<unknown[] | null>(
     null,
   );
+  const [previewPayloadUrls, setPreviewPayloadUrls] = useState<
+    PreviewPayloadUrls | null
+  >(null);
   const [isGenerating, setIsGenerating] = useState<boolean>(false);
   const [deleteConversationId, setDeleteConversationId] = useState<
     string | null
@@ -836,6 +869,7 @@ export function AIChatPage(
   const actionAbortRef = useRef<AbortController | null>(null);
   const hydratedActiveIdRef = useRef<string | null>(null);
   const latestPreviewMessagesRef = useRef<unknown[]>([]);
+  const latestPreviewPayloadUrlsRef = useRef<PreviewPayloadUrls | null>(null);
   const renderUrlRef = useRef('');
   const {
     containerRef: pageRef,
@@ -859,6 +893,14 @@ export function AIChatPage(
       void copyToClipboard(text).then(showCopyToast);
     },
     [showCopyToast],
+  );
+
+  const updatePreviewPayloadUrls = useCallback(
+    (next: PreviewPayloadUrls | null) => {
+      latestPreviewPayloadUrlsRef.current = next;
+      setPreviewPayloadUrls(next);
+    },
+    [],
   );
 
   const providerRequestOptions = useMemo(
@@ -967,8 +1009,10 @@ export function AIChatPage(
       demoUrl: DEFAULT_A2UI_DEMO_URL,
       theme,
       messages: previewMessages,
+      messagesUrl: previewPayloadUrls?.messagesUrl,
+      actionMocksUrl: previewPayloadUrls?.actionMocksUrl,
     };
-  }, [previewMessages, protocol, theme]);
+  }, [previewMessages, previewPayloadUrls, protocol, theme]);
 
   const publishPreviewMessages = useCallback(
     (nextMessages: unknown[]) => {
@@ -1011,6 +1055,7 @@ export function AIChatPage(
       ];
       latestPreviewMessagesRef.current = accumulatedMessages;
       setPreviewMessages(accumulatedMessages);
+      updatePreviewPayloadUrls(null);
 
       const initData = {
         protocol,
@@ -1034,7 +1079,7 @@ export function AIChatPage(
         return buildRenderUrl(initData, baseUrl);
       });
     },
-    [baseUrl, protocol, theme],
+    [baseUrl, protocol, theme, updatePreviewPayloadUrls],
   );
 
   const handlePreviewLoad = useCallback(() => {
@@ -1061,11 +1106,13 @@ export function AIChatPage(
       completionTokens: 0,
       totalTokens: 0,
     });
+    updatePreviewPayloadUrls(persistedPreviewPayloadUrls);
     if (replayMessages.length > 0) {
       publishPreviewMessages(replayMessages);
     } else {
       latestPreviewMessagesRef.current = [];
       setPreviewMessages(null);
+      updatePreviewPayloadUrls(null);
       setRenderUrl('');
     }
   }, [
@@ -1074,8 +1121,10 @@ export function AIChatPage(
     isGenerating,
     persistedMessages,
     persistedPreviewMessages,
+    persistedPreviewPayloadUrls,
     publishPreviewMessages,
     renderUrl,
+    updatePreviewPayloadUrls,
   ]);
 
   useEffect(() => {
@@ -1104,6 +1153,7 @@ export function AIChatPage(
     ]);
     setInputValue('');
     setPreviewMessages(null);
+    updatePreviewPayloadUrls(null);
     latestPreviewMessagesRef.current = [];
     setTokenUsage({
       promptTokens: 0,
@@ -1176,6 +1226,7 @@ export function AIChatPage(
           {
             parseDeltaMessages: false,
             publishText: false,
+            onPreviewPayload: updatePreviewPayloadUrls,
           },
         );
 
@@ -1188,6 +1239,7 @@ export function AIChatPage(
           assistantContent: JSON.stringify(finalMessages),
           a2uiMessages: finalMessages,
           previewMessages: finalMessages,
+          previewPayloadUrls: latestPreviewPayloadUrlsRef.current,
         });
         setMessages((prev) => {
           const next = prev.slice();
@@ -1229,6 +1281,7 @@ export function AIChatPage(
     publishStreamingPreviewMessages,
     providerRequestOptions,
     recordTurn,
+    updatePreviewPayloadUrls,
   ]);
 
   useEffect(() => {
@@ -1331,6 +1384,7 @@ export function AIChatPage(
           }
 
           let responseMessages: unknown[] = [];
+          let responsePreviewPayloadUrls: PreviewPayloadUrls | null = null;
 
           await readA2UIResponse(
             response,
@@ -1398,6 +1452,11 @@ export function AIChatPage(
                 totalTokens: prev.totalTokens + usage.totalTokens,
               }));
             },
+            {
+              onPreviewPayload: (preview) => {
+                responsePreviewPayloadUrls = preview;
+              },
+            },
           );
 
           if (signal.aborted) return;
@@ -1413,11 +1472,14 @@ export function AIChatPage(
           ];
           latestPreviewMessagesRef.current = replayMessages;
           setPreviewMessages(replayMessages);
+          updatePreviewPayloadUrls(null);
           await recordTurn({
             userMessage: userActionMessage,
             assistantContent: JSON.stringify(responseMessages),
             a2uiMessages: responseMessages,
             previewMessages: replayMessages,
+            previewPayloadUrls: responsePreviewPayloadUrls,
+            snapshotPreviewPayloadUrls: null,
           });
           setMessages((prev) => {
             const next = prev.slice();
@@ -1481,7 +1543,12 @@ export function AIChatPage(
       actionAbortRef.current?.abort();
       actionAbortRef.current = null;
     };
-  }, [buildConversationContext, publishPreviewMessages, recordTurn]);
+  }, [
+    buildConversationContext,
+    publishPreviewMessages,
+    recordTurn,
+    updatePreviewPayloadUrls,
+  ]);
 
   const handleKeyDown = useCallback(
     (e: React.KeyboardEvent<HTMLTextAreaElement>) => {

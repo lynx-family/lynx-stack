@@ -10,6 +10,8 @@ import type { RsbuildPlugin } from '@rsbuild/core';
 import { pluginReact } from '@rsbuild/plugin-react';
 
 const PORT = Number(process.env.PORT ?? 3000);
+const CLIENT_PAYLOAD_STORE_ENABLED = process.env.NODE_ENV !== 'production'
+  && process.env.A2UI_PLAYGROUND_CLIENT_PAYLOAD_PUBLISH !== '0';
 
 // In-memory A2UI payload store. Keeps the dev-bundle / render URLs short
 // enough to fit inside a scannable QR code.
@@ -166,6 +168,11 @@ function buildRspeedyBundleUrl(port: number): string {
 export default defineConfig({
   plugins: [pluginReact(), a2uiPayloadPlugin],
   source: {
+    define: {
+      __A2UI_PLAYGROUND_CLIENT_PAYLOAD_STORE__: JSON.stringify(
+        CLIENT_PAYLOAD_STORE_ENABLED,
+      ),
+    },
     entry: {
       index: './src/entry.tsx',
       render: './src/render.tsx',
