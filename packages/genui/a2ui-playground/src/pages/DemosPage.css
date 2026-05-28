@@ -1059,3 +1059,116 @@ html[data-theme="dark"] .detailBackButton:hover {
     border-top: 1px solid var(--geist-border);
   }
 }
+
+/* Phone-sized tab mode: each tab is full screen, no inline split. */
+@media (max-width: 720px) {
+  .demosPage[data-active-tab="edit"] .examplesPreviewWrap {
+    display: none;
+  }
+  .demosPage[data-active-tab="preview"] .sidebar,
+  .demosPage[data-active-tab="preview"] .codePanel {
+    display: none;
+  }
+  .demosPage > .panelResizeHandle {
+    display: none;
+  }
+
+  /* Preview pane fills the viewport (minus top nav + bottom tab bar);
+     overrides the desktop .examplesPreviewWrap min-height: 480px. */
+  .demosPage[data-active-tab="preview"] .examplesPreviewWrap {
+    flex: 1;
+    width: 100%;
+    min-height: 0;
+  }
+
+  /* Sidebar collapses into a single horizontal strip: back-icon on the
+     left, scenarios scrolling as chips on the right. SCENARIOS heading
+     hides — its label is redundant when the chips are the only thing in
+     the strip. Drops the band from ~180px to ~52px. */
+  .demosPage[data-active-tab="edit"] .sidebar {
+    flex-direction: row;
+    align-items: stretch;
+    width: 100%;
+    max-height: none;
+    min-height: 0;
+    height: 52px;
+    overflow: hidden;
+    background: var(--geist-background);
+  }
+  /* Code panel grows to fill the remaining viewport instead of staying
+     pinned at min-height 280px (the desktop / <=980 default). */
+  .demosPage[data-active-tab="edit"] .codePanel {
+    flex: 1;
+    min-height: 0;
+  }
+  .sidebarTopNav {
+    flex: 0 0 auto;
+    padding: 8px 10px;
+    border-right: 1px solid var(--geist-border);
+  }
+  .detailBackLabel {
+    display: none;
+  }
+  .detailBackButton {
+    min-height: 32px;
+    padding: 6px 10px;
+    box-shadow: none;
+  }
+  .sidebarSection {
+    flex: 1;
+    min-width: 0;
+    padding: 0;
+    display: flex;
+    align-items: center;
+  }
+  .sidebarHeading {
+    display: none;
+  }
+  .scenarioList {
+    flex-direction: row;
+    gap: 6px;
+    padding: 6px 10px;
+    overflow-x: auto;
+    overflow-y: hidden;
+    width: 100%;
+  }
+  .scenarioItem {
+    flex: 0 0 auto;
+    flex-direction: row;
+    align-items: center;
+    width: auto;
+    min-height: 0;
+    padding: 6px 12px;
+    border-radius: 999px;
+    border-color: var(--geist-border);
+  }
+  .scenarioItem .scenarioDesc {
+    display: none;
+  }
+  .scenarioItem .scenarioName {
+    white-space: nowrap;
+    font-size: 12px;
+  }
+
+  /* Tighter toolbar so title + Reset/Clear/Render all stay on one row
+     in the constrained mobile width. */
+  .codePanelToolbar {
+    padding: 6px 10px;
+  }
+  .codePanelToolbar .toolbarBtn {
+    height: 26px;
+    padding: 0 8px;
+    font-size: 11px;
+  }
+  .codePanelToolbar .toolbarBtn.primary {
+    padding: 0 10px;
+  }
+  /* "A2UI Messages" was wrapping to two lines — keep it on one. */
+  .codePanelTitle {
+    white-space: nowrap;
+    font-size: 12px;
+  }
+  .codePanelBadge {
+    display: none;
+  }
+}

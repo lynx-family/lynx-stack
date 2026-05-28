@@ -8,6 +8,8 @@ import type { CSSProperties, PointerEvent as ReactPointerEvent } from 'react';
 
 import './DemosPage.css';
 
+import { MobileTabBar } from '../components/MobileTabBar.js';
+import type { MobilePaneTab } from '../components/MobileTabBar.js';
 import { PanelResizeHandle } from '../components/PanelResizeHandle.js';
 import { PreviewPanel } from '../components/PreviewPanel.js';
 import { PreviewViewport } from '../components/PreviewViewport.js';
@@ -146,6 +148,7 @@ export function DemosPage(props: {
   const [jsonEdited, setJsonEdited] = useState(false);
   const [previewRenderKey, setPreviewRenderKey] = useState(0);
   const [isPublishingPayload, setIsPublishingPayload] = useState(false);
+  const [activeMobileTab, setActiveMobileTab] = useState<MobilePaneTab>('edit');
   const [previewInput, setPreviewInput] = useState<PreviewInput | null>(() =>
     initialScenario
       ? {
@@ -624,6 +627,7 @@ export function DemosPage(props: {
     <div
       ref={pageRef}
       className={isPanelResizing ? 'demosPage resizing' : 'demosPage'}
+      data-active-tab={activeMobileTab}
     >
       <aside className='sidebar'>
         <div className='sidebarTopNav'>
@@ -870,6 +874,12 @@ export function DemosPage(props: {
           />
         </PreviewPanel>
       </div>
+
+      <MobileTabBar
+        activeTab={activeMobileTab}
+        onChange={setActiveMobileTab}
+        editLabel='Code'
+      />
     </div>
   );
 }

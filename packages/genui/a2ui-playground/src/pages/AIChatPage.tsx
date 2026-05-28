@@ -9,6 +9,8 @@ import { ConfirmDialog } from '../components/ConfirmDialog.js';
 import { ConversationListPanel } from '../components/ConversationListPanel.js';
 import { CopyToast, useCopyToast } from '../components/CopyToast.js';
 import { InstantExamplesStrip } from '../components/InstantExamplesStrip.js';
+import { MobileTabBar } from '../components/MobileTabBar.js';
+import type { MobilePaneTab } from '../components/MobileTabBar.js';
 import { PageHeader } from '../components/PageHeader.js';
 import { PanelResizeHandle } from '../components/PanelResizeHandle.js';
 import { PreviewPanel } from '../components/PreviewPanel.js';
@@ -854,6 +856,9 @@ export function AIChatPage(
     PreviewPayloadUrls | null
   >(null);
   const [isGenerating, setIsGenerating] = useState<boolean>(false);
+  const [activeMobileTab, setActiveMobileTab] = useState<MobilePaneTab>(
+    'edit',
+  );
   const [deleteConversationId, setDeleteConversationId] = useState<
     string | null
   >(null);
@@ -1665,6 +1670,7 @@ export function AIChatPage(
     <div
       ref={pageRef}
       className={isPanelResizing ? 'chatPage resizing' : 'chatPage'}
+      data-active-tab={activeMobileTab}
     >
       <CopyToast toast={copyToast} />
       <ConfirmDialog
@@ -1970,6 +1976,12 @@ export function AIChatPage(
           />
         </PreviewPanel>
       </div>
+
+      <MobileTabBar
+        activeTab={activeMobileTab}
+        onChange={setActiveMobileTab}
+        editLabel='Chat'
+      />
     </div>
   );
 }
