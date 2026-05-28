@@ -13,9 +13,9 @@ Each card immediately mounts a `<PreviewViewport>` that contains an
 `<iframe src="render.html?...&instant=1">`. Every iframe:
 
 1. Imports `@lynx-js/web-core/client` + `@lynx-js/web-elements/all`.
-2. Mounts `<lynx-view url="/main.web.js" thread-strategy="multi-thread" />`.
+2. Mounts `<lynx-view url="/a2ui.web.js" thread-strategy="multi-thread" />`.
 3. Web-core spawns a **dedicated Web Worker** per iframe (multi-thread mode).
-4. Fetches/parses `main.web.js`, boots the Lynx app, replays the demo
+4. Fetches/parses `a2ui.web.js`, boots the Lynx app, replays the demo
    messages with `instant=1`.
 
 Result: ~43 iframes × (web-core runtime + element registration + Worker
@@ -122,7 +122,7 @@ DemosListPage
 2. `PORT=5371 pnpm -C packages/genui/a2ui-playground dev` (unique port
    avoids conflicting with other devs servers).
 3. Open `http://localhost:5371` → click "Examples" tab.
-4. DevTools → Network: at most 4 in-flight `main.web.js` requests at
+4. DevTools → Network: at most 4 in-flight `a2ui.web.js` requests at
    any moment; rest queued/pending.
 5. DevTools → Performance: main thread idle within ~2 s of navigation.
 6. Scroll: more iframes mount as cards enter the viewport's

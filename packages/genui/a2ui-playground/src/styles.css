@@ -907,7 +907,7 @@ html[data-theme="dark"] .phoneHomeIndicator {
   font-weight: 500;
   color: var(--geist-foreground);
   white-space: nowrap;
-  animation: tagAppear 300ms ease-out;
+  animation: tag-appear 300ms ease-out;
 }
 
 .liveComponentEmpty {
@@ -916,7 +916,7 @@ html[data-theme="dark"] .phoneHomeIndicator {
   white-space: nowrap;
 }
 
-@keyframes tagAppear {
+@keyframes tag-appear {
   from {
     opacity: 0;
     transform: translateY(4px) scale(0.9);
