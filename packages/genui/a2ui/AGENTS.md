@@ -1,6 +1,6 @@
 # a2ui (packages/genui/a2ui)
 
-This package (`@lynx-js/a2ui-reactlynx`) is a **headless** ReactLynx
+This package (`@lynx-js/genui/a2ui`) is a **headless** ReactLynx
 renderer for the A2UI v0.9 protocol.
 
 ## How It Works (High Level)
@@ -122,13 +122,13 @@ User interactions are reported as `userAction` events:
 Run from repo root:
 
 ```bash
-pnpm -F @lynx-js/a2ui-reactlynx build
+pnpm -C packages/genui/a2ui build
 ```
 
 Notes:
 
 - The package's `build` script runs the
-  `@lynx-js/a2ui-catalog-extractor` to produce
+  `@lynx-js/genui/a2ui-catalog-extractor` to produce
   `dist/catalog/<Name>/catalog.json` manifests.
 - The root `tsc --build` (registered as `//#build`) is what produces
   `dist/<Name>/index.{js,d.ts}` for each catalog component (project
@@ -138,7 +138,7 @@ Notes:
 
 The build generates JSON schemas for catalog components:
 
-- Tool: `@lynx-js/a2ui-catalog-extractor` (TypeDoc-driven).
+- Tool: `@lynx-js/genui/a2ui-catalog-extractor` (TypeDoc-driven).
 - Inputs: `src/catalog/<Name>/index.tsx` files annotated with
   `@a2uiCatalog <Name>` JSDoc tags on the props interface.
 - Outputs: `dist/catalog/<Name>/catalog.json`.
@@ -163,5 +163,5 @@ When adding `src/catalog/<Name>/index.tsx`:
 3. Re-export the component from `src/catalog/index.ts`.
 4. Add `./catalog/<Name>` and `./catalog/<Name>/catalog.json` entries
    to the `exports` map in `package.json`.
-5. Run `pnpm -F @lynx-js/a2ui-reactlynx build` and confirm
+5. Run `pnpm -C packages/genui/a2ui build` and confirm
    `dist/catalog/<Name>/catalog.json` is generated.

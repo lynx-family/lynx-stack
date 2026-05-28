@@ -3,7 +3,7 @@
 // LICENSE file in the root directory of this source tree.
 import type * as v0_9 from '@a2ui/web_core/v0_9';
 
-import { NodeRenderer } from '../../react/A2UIRenderer.jsx';
+import { NodeRenderer } from '../../react/A2UIRenderer.js';
 import { useDataBinding } from '../../react/useDataBinding.js';
 import type { GenericComponentProps } from '../../store/types.js';
 

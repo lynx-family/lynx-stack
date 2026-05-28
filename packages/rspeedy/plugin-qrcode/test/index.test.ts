@@ -8,9 +8,11 @@ import { fileURLToPath } from 'node:url'
 import { isCancel } from '@clack/prompts'
 import { createRsbuild, logger } from '@rsbuild/core'
 import type {
+  EnvironmentContext,
   RsbuildEntry,
   RsbuildInstance,
   RsbuildPlugin,
+  RsbuildPluginAPI,
 } from '@rsbuild/core'
 import { beforeEach, describe, expect, onTestFinished, test, vi } from 'vitest'
 
@@ -279,6 +281,80 @@ describe('Plugins - Terminal', () => {
 
   describe('QRCode', () => {
     vi.mock('uqr')
+    test('cleans up preview qrcode shortcuts on restart and exit', async () => {
+      vi.resetModules()
+
+      const unregister = vi.fn()
+      const registerConsoleShortcuts = vi.fn().mockResolvedValue(unregister)
+      vi.doMock('../src/shortcuts.js', () => ({ registerConsoleShortcuts }))
+      onTestFinished(() => {
+        vi.doUnmock('../src/shortcuts.js')
+      })
+
+      const { pluginQRCode } = await import('../src/index.js')
+
+      let onAfterStartPreviewServer:
+        | ((params: {
+          environments: Record<string, EnvironmentContext>
+          port: number
+        }) => Promise<void>)
+        | undefined
+      let onExit: (() => void) | undefined
+      const onCloseDevServer = vi.fn()
+      const api = {
+        onAfterStartPreviewServer(handler: typeof onAfterStartPreviewServer) {
+          onAfterStartPreviewServer = handler
+        },
+        onAfterDevCompile: vi.fn(),
+        onCloseDevServer,
+        onExit(handler: () => void) {
+          onExit = handler
+        },
+        useExposed: vi.fn(),
+      } as unknown as RsbuildPluginAPI
+
+      await pluginQRCode().setup(api)
+
+      await onAfterStartPreviewServer?.({
+        environments: {
+          lynx: {
+            entry: {
+              main: join(
+                dirname(fileURLToPath(import.meta.url)),
+                'fixtures',
+                'hello-world',
+              ),
+            },
+          } as unknown as EnvironmentContext,
+        },
+        port: 3000,
+      })
+
+      expect(registerConsoleShortcuts).toBeCalledTimes(1)
+      expect(onCloseDevServer).not.toBeCalled()
+
+      await onAfterStartPreviewServer?.({
+        environments: {
+          lynx: {
+            entry: {
+              main: join(
+                dirname(fileURLToPath(import.meta.url)),
+                'fixtures',
+                'hello-world',
+              ),
+            },
+          } as unknown as EnvironmentContext,
+        },
+        port: 3001,
+      })
+
+      expect(unregister).toBeCalledTimes(1)
+
+      onExit?.()
+
+      expect(unregister).toBeCalledTimes(2)
+    })
+
     test('not print qrcode when build', async () => {
       const { renderUnicodeCompact } = await import('uqr')
 
@@ -516,7 +592,7 @@ describe('Plugins - Terminal', () => {
 async function usingDevServer(rsbuild: RsbuildInstance) {
   let done = false
   let hasErrors = false
-  rsbuild.onDevCompileDone({
+  rsbuild.onAfterDevCompile({
     handler: ({ stats }) => {
       hasErrors = stats.hasErrors()
       done = true

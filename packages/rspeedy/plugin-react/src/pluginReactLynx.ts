@@ -447,7 +447,7 @@ export function pluginReactLynx(
             config = mergeRsbuildConfig(config, {
               source: {
                 include: [
-                  /\.(?:js|mjs|cjs)$/,
+                  /\.(?:js|jsx|mjs|cjs|ts|tsx|mts|cts)$/,
                 ],
               },
             })

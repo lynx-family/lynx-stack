@@ -1,21 +1,21 @@
 # @lynx-js/autolink-codegen
 
-Native Autolink code generator for Lynx extensions.
+Native Autolink code generator for Lynx libraries.
 
 It scans `types/**/*.d.ts` for native module declarations annotated with
-`/** @lynxmodule */`, reads `lynx.ext.json`, and generates:
+`/** @lynxmodule */`, reads `lynx.lib.json`, and generates:
 
 - `generated/<ModuleName>.ts`
 - Android `<ModuleName>Spec.java`
 - iOS `<ModuleName>Spec.h` and `<ModuleName>Spec.m`
 
-Run it from an extension package:
+Run it from a library package:
 
 ```bash
 npx @lynx-js/autolink-codegen
 ```
 
-The installed binary name is `lynx-autolink-codegen`, so generated extensions
+The installed binary name is `lynx-autolink-codegen`, so generated libraries
 can use:
 
 ```json

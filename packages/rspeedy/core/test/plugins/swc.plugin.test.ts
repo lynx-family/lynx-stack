@@ -22,6 +22,7 @@ describe('Plugins - SWC', () => {
             "exportedEnum": true,
             "typeExports": true,
           },
+          "detectSyntax": "auto",
           "isModule": "unknown",
           "jsc": {
             "experimental": {
@@ -34,12 +35,10 @@ describe('Plugins - SWC', () => {
             },
             "parser": {
               "decorators": true,
-              "syntax": "typescript",
-              "tsx": false,
             },
             "target": "es2015",
             "transform": {
-              "decoratorVersion": "2022-03",
+              "decoratorVersion": "2023-11",
               "legacyDecorator": false,
             },
           },
@@ -61,6 +60,7 @@ describe('Plugins - SWC', () => {
             "exportedEnum": false,
             "typeExports": true,
           },
+          "detectSyntax": "auto",
           "isModule": "unknown",
           "jsc": {
             "experimental": {
@@ -73,12 +73,10 @@ describe('Plugins - SWC', () => {
             },
             "parser": {
               "decorators": true,
-              "syntax": "typescript",
-              "tsx": false,
             },
             "target": "es2019",
             "transform": {
-              "decoratorVersion": "2022-03",
+              "decoratorVersion": "2023-11",
               "legacyDecorator": false,
             },
           },
@@ -136,6 +134,7 @@ describe('Plugins - SWC', () => {
             "exportedEnum": false,
             "typeExports": true,
           },
+          "detectSyntax": "auto",
           "isModule": "unknown",
           "jsc": {
             "experimental": {
@@ -148,12 +147,10 @@ describe('Plugins - SWC', () => {
             },
             "parser": {
               "decorators": true,
-              "syntax": "typescript",
-              "tsx": false,
             },
             "target": "es2019",
             "transform": {
-              "decoratorVersion": "2022-03",
+              "decoratorVersion": "2023-11",
               "legacyDecorator": false,
             },
           },

@@ -28,7 +28,9 @@ describe('ReactLynx rsbuild', () => {
       rspeedyConfig: {
         source: {
           entry: {
-            main: new URL('./fixtures/basic.tsx', import.meta.url).pathname,
+            main: fileURLToPath(
+              new URL('./fixtures/basic.tsx', import.meta.url),
+            ),
           },
         },
         output: {
@@ -71,10 +73,12 @@ describe('ReactLynx rsbuild', () => {
       rspeedyConfig: {
         source: {
           entry: {
-            main: new URL(
-              './fixtures/element-template-basic.tsx',
-              import.meta.url,
-            ).pathname,
+            main: fileURLToPath(
+              new URL(
+                './fixtures/element-template-basic.tsx',
+                import.meta.url,
+              ),
+            ),
           },
         },
         output: {
@@ -117,10 +121,12 @@ describe('ReactLynx rsbuild', () => {
       rspeedyConfig: {
         source: {
           entry: {
-            main: new URL(
-              './fixtures/special-var-name/index.jsx',
-              import.meta.url,
-            ).pathname,
+            main: fileURLToPath(
+              new URL(
+                './fixtures/special-var-name/index.jsx',
+                import.meta.url,
+              ),
+            ),
           },
         },
         output: {

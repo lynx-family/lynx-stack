@@ -61,16 +61,19 @@ export function applyEntry(
 
     const rsbuildConfig = api.getRsbuildConfig()
     const userConfig = api.getRsbuildConfig('original')
-    const enableChunkSplitting =
-      rsbuildConfig.performance?.chunkSplit?.strategy !== 'all-in-one'
+    const chunkSplitStrategy = userConfig.performance?.chunkSplit?.strategy
+    const enableChunkSplitting = userConfig.splitChunks === undefined
+      ? (chunkSplitStrategy
+        ? chunkSplitStrategy !== 'all-in-one'
+        : rsbuildConfig.splitChunks !== false)
+      : rsbuildConfig.splitChunks !== false
+    const rspeedyConfig = api.context.callerName === 'rspeedy'
+      // biome-ignore lint/correctness/useHookAtTopLevel: This is not a React hook.
+      ? api.useExposed<ExposedAPI>(Symbol.for('rspeedy.api'))?.config
+      : undefined
 
     const isRspeedy = api.context.callerName === 'rspeedy'
     if (isRspeedy) {
-      // biome-ignore lint/correctness/useHookAtTopLevel: This is not a React hook.
-      const { config } = api.useExposed<ExposedAPI>(
-        Symbol.for('rspeedy.api'),
-      )!
-
       const entries = chain.entryPoints.entries() ?? {}
       const isLynx = environment.name === 'lynx'
         || environment.name.startsWith('lynx-')
@@ -85,9 +88,11 @@ export function applyEntry(
       Object.entries(entries).forEach(([entryName, entryPoint]) => {
         const { imports } = getChunks(entryName, entryPoint.values())
 
-        const bundleFilename = typeof config.output?.filename === 'object'
-          ? config.output.filename.bundle ?? config.output.filename.template
-          : config.output?.filename
+        const bundleFilename =
+          typeof rspeedyConfig?.output?.filename === 'object'
+            ? rspeedyConfig.output.filename.bundle
+              ?? rspeedyConfig.output.filename.template
+            : rspeedyConfig?.output?.filename
 
         let templateFilename: string
         // `lazyBundleFilename` is only set when `bundle` is a function.
@@ -284,7 +289,7 @@ export function applyEntry(
     let extractStr = originalExtractStr
     if (enableChunkSplitting && originalExtractStr) {
       ;(api.logger ?? console).warn(
-        '`extractStr` is changed to `false` because it is only supported in `all-in-one` chunkSplit strategy, please set `performance.chunkSplit.strategy` to `all-in-one` to use `extractStr.`',
+        '`extractStr` is changed to `false` because it is only supported when chunk splitting is disabled, please set `splitChunks` to `false` to use `extractStr.`',
       )
       extractStr = false
     }
@@ -314,13 +319,17 @@ export function applyEntry(
       }])
 
     function getDefaultProfile(): boolean | undefined {
-      const environmentProfile = userConfig.environments?.[environment.name]
-        ?.performance?.profile
+      // rsbuild v1
+      const environmentProfile = (
+        rspeedyConfig?.environments as
+          | Record<string, { performance?: { profile?: boolean } }>
+          | undefined
+      )?.[environment.name]?.performance?.profile
       if (environmentProfile !== undefined) {
         return environmentProfile
       }
 
-      const userProfile = userConfig.performance?.profile
+      const userProfile = rspeedyConfig?.performance?.profile
       if (userProfile !== undefined) {
         return userProfile
       }

@@ -1,3 +1,6 @@
+import { mkdirSync, writeFileSync } from 'node:fs'
+import path from 'node:path'
+
 import { defineConfig, type rsbuild } from '@rslib/core'
 import { pluginAreTheTypesWrong } from 'rsbuild-plugin-arethetypeswrong'
 import { pluginPublint } from 'rsbuild-plugin-publint'
@@ -15,10 +18,7 @@ export default defineConfig({
         // See: rsdoctor.plugin.ts
         tsgo: false,
       },
-      plugins: [pluginTypia()],
-      performance: {
-        profile: !!process.env.RSPEEDY_BUNDLE_ANALYSIS,
-      },
+      plugins: [pluginTypia(), pluginStatsJson()],
     },
     {
       format: 'esm',
@@ -100,6 +100,30 @@ function pluginTypia(): rsbuild.RsbuildPlugin {
               log: false,
             },
           ])
+      })
+    },
+  }
+}
+
+// https://rsbuild.rs/guide/upgrade/v1-to-v2#remove-performanceprofile
+function pluginStatsJson(): rsbuild.RsbuildPlugin {
+  return {
+    name: 'rspeedy:stats-json',
+    setup(api) {
+      if (!process.env.RSPEEDY_BUNDLE_ANALYSIS) {
+        return
+      }
+
+      api.onAfterBuild(({ stats }) => {
+        if (!stats) {
+          return
+        }
+
+        mkdirSync(api.context.distPath, { recursive: true })
+        writeFileSync(
+          path.join(api.context.distPath, 'stats.json'),
+          JSON.stringify(stats.toJson({}), null, 2),
+        )
       })
     },
   }

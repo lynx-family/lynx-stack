@@ -6,6 +6,7 @@ import { assertType, describe, test } from 'vitest'
 import type { Config } from '../../src/index.js'
 
 describe('Config - Performance', () => {
+  type RspeedyConfig = Config
   type Performance = Config['performance']
 
   test('empty', () => {
@@ -57,6 +58,29 @@ describe('Config - Performance', () => {
     })
     assertType<Performance>({
       chunkSplit: {},
+    })
+  })
+
+  test('splitChunks', () => {
+    assertType<RspeedyConfig>({
+      splitChunks: false,
+    })
+
+    assertType<RspeedyConfig>({
+      splitChunks: {
+        preset: 'single-vendor',
+      },
+    })
+
+    assertType<RspeedyConfig>({
+      splitChunks: {
+        chunks: 'initial',
+        cacheGroups: {
+          foo: {
+            minChunks: 3,
+          },
+        },
+      },
     })
   })
 

@@ -152,6 +152,15 @@ export class LynxEncodePluginImpl {
         const { encodeData, intermediateAssets } = args;
         const { manifest } = encodeData;
 
+        // A lazy bundle runs its background (bts) synchronously when the bundle
+        // is required, so every chunk in its manifest must be inlined into
+        // app-service.js; externalizing one via `requireModuleAsync` leaves the
+        // module unavailable at `installChunk` time. `inlineScripts` therefore
+        // only applies to card templates. (`DynamicComponent` is the encoder's
+        // appType for a lazy bundle.)
+        const isLazyBundle =
+          encodeData.sourceContent.appType === 'DynamicComponent';
+
         const [inlinedManifest, externalManifest] = Object.entries(
           manifest,
         )
@@ -166,7 +175,7 @@ export class LynxEncodePluginImpl {
                 }
               }
               let shouldInline = true;
-              if (!chunk?.hasRuntime()) {
+              if (!isLazyBundle && !chunk?.hasRuntime()) {
                 shouldInline = this.#shouldInlineScript(
                   name,
                   assert!.source.size(),

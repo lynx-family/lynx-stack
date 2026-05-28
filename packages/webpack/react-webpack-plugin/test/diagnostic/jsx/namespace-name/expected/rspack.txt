@@ -9,7 +9,7 @@ at node:internal/util:<LINE:COLUMN>
 at isomorphoicRun (<ROOT>/node_modules/<PNPM_INNER>/@rspack/core/dist/index.js:<LINE:COLUMN>)
 at runLoaders (<ROOT>/node_modules/<PNPM_INNER>/@rspack/core/dist/index.js:<LINE:COLUMN>)
 
-ERROR in ./jsx/namespace-name/index.jsx <LINE:COLUMN>-25
+ERROR in ./jsx/namespace-name/index.jsx <LINE:COLUMN>-26
 × ModuleError: JSX Namespace is disabled
 ╭─[<LINE:COLUMN>]
 1  function App() {

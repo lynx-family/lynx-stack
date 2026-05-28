@@ -60,6 +60,10 @@ export async function applyDefaultPlugins(
       pluginSourcemap()
     ),
 
+    import('./statsJson.plugin.js').then(({ pluginStatsJson }) =>
+      pluginStatsJson(config)
+    ),
+
     import('./swc.plugin.js').then(({ pluginSwc }) => pluginSwc()),
 
     import('./target.plugin.js').then(({ pluginTarget }) => pluginTarget()),

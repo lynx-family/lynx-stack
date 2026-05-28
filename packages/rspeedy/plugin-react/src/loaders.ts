@@ -58,7 +58,9 @@ export function applyTestingLoaders(
   options: Required<PluginReactLynxOptions>,
 ): void {
   api.modifyBundlerChain((chain, { CHAIN_ID }) => {
-    const rule = chain.module.rules.get(CHAIN_ID.RULE.JS)
+    const rule = chain.module
+      .rule(CHAIN_ID.RULE.JS)
+      .oneOf(CHAIN_ID.ONE_OF.JS_MAIN)
 
     rule
       .use(TESTING_RULE_NAME)
@@ -73,19 +75,21 @@ export function applyLoaders(
   options: Required<PluginReactLynxOptions>,
 ): void {
   api.modifyBundlerChain((chain, { CHAIN_ID }) => {
-    const rule = chain.module.rules.get(CHAIN_ID.RULE.JS)
+    const rule = chain.module.rule(CHAIN_ID.RULE.JS)
+    const jsMainRule = rule.oneOf(CHAIN_ID.ONE_OF.JS_MAIN)
+    const type = jsMainRule.get('type') as string | undefined
     // The Rsbuild default loaders:
     // - Rspack:
     //   - builtin:swc-loader
-    // - Webpack + plugin-swc:
-    //   - swc-loader
-    // - Webpack: None
-    const uses = rule.uses.entries() ?? {}
+    const uses = jsMainRule.uses.entries() ?? {}
 
     const backgroundRule = rule.oneOf(LAYERS.BACKGROUND)
     // dprint-ignore
     backgroundRule
       .issuerLayer(LAYERS.BACKGROUND)
+      .when(type !== undefined, rule => {
+        rule.type(type!)
+      })
       .uses
         .merge(uses)
       .end()
@@ -99,6 +103,9 @@ export function applyLoaders(
     // dprint-ignore
     mainThreadRule
       .issuerLayer(LAYERS.MAIN_THREAD)
+      .when(type !== undefined, rule => {
+        rule.type(type!)
+      })
       .uses
         .merge(uses)
       .end()
@@ -126,8 +133,9 @@ export function applyLoaders(
         .options(getLoaderOptions(api, options, true))
       .end()
 
-    // Clear the Rsbuild default loader.
-    // Otherwise, the JSX will be transformed by the `builtin:swc-loader`.
-    rule.uses.clear()
+    // Remove the Rsbuild default JS branch after cloning its loaders.
+    // Leaving an empty `JS_MAIN` oneOf in place causes it to match first and
+    // bypass our layer-specific SWC pipeline for TSX entries.
+    rule.oneOfs.delete(CHAIN_ID.ONE_OF.JS_MAIN)
   })
 }

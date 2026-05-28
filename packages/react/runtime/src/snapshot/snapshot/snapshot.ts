@@ -201,7 +201,7 @@ export class SnapshotInstance {
     ) {
       __SetAttribute(
         this.__element_root!,
-        'bundle-url',
+        'lazy-bundle-url',
         this.__snapshot_def.entryName,
       );
     }

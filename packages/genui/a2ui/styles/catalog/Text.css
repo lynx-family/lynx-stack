@@ -67,15 +67,11 @@
   line-height: 1.5;
 }
 
-.text-weight-1 {
-  font-weight: 500;
-}
-
-.text-weight-1-5 {
+.text-emphasis-medium {
   font-weight: 600;
 }
 
-.text-weight-2 {
+.text-emphasis-strong {
   font-weight: 700;
 }
 

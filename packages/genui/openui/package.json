@@ -1,6 +1,7 @@
 {
-  "name": "@lynx-js/openui-reactlynx",
+  "name": "@lynx-js/genui-openui",
   "version": "0.0.1",
+  "private": true,
   "repository": {
     "type": "git",
     "url": "git+https://github.com/lynx-family/lynx-stack.git",

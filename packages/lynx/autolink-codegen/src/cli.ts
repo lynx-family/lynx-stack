@@ -53,7 +53,7 @@ function printHelp(): void {
 Generate Native Autolink JS, Android, and iOS specs from types/**/*.d.ts.
 
 Options:
-  --root, -r <dir>  Extension package root. Defaults to the current directory.
+  --root, -r <dir>  Library package root. Defaults to the current directory.
   --help, -h        Show this help message.
 `);
 }
