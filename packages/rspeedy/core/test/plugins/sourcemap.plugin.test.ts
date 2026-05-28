@@ -28,7 +28,15 @@ describe('sourcemap.plugin', () => {
       const rspeedy = await createStubRspeedy({})
       const config = await rspeedy.unwrapConfig()
       expect(config.devtool).toBe(false)
-      expect(SourceMapDevToolPlugin).not.toBeCalled()
+      expect(SourceMapDevToolPlugin).toBeCalledWith(
+        expect.objectContaining({
+          filename: '[file].map[query]',
+          columns: true,
+          module: true,
+          noSources: false,
+          debugIds: false,
+        }),
+      )
     })
 
     test('with output.assetPrefix', async () => {
@@ -45,7 +53,15 @@ describe('sourcemap.plugin', () => {
 
       const config = await rspeedy.unwrapConfig()
       expect(config.devtool).toBe(false)
-      expect(SourceMapDevToolPlugin).not.toBeCalled()
+      expect(SourceMapDevToolPlugin).toBeCalledWith(
+        expect.objectContaining({
+          filename: '[file].map[query]',
+          columns: true,
+          module: true,
+          noSources: false,
+          debugIds: false,
+        }),
+      )
     })
 
     test('with output.assetPrefix with output.sourceMap.js: "source-map"', async () => {

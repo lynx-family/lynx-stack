@@ -26,11 +26,6 @@ export type {
   TasmCSSDiagnostic,
 } from './cssDiagnostics.js';
 export { WebEncodePlugin } from './WebEncodePlugin.js';
-export {
-  LynxDebugMetadataPlugin,
-  UI_SOURCE_MAP_RECORDS_BUILD_INFO,
-} from './LynxDebugMetadataPlugin.js';
-export type { LynxDebugMetadataPluginOptions } from './LynxDebugMetadataPlugin.js';
 export const CSSPlugins: {
   parserPlugins: typeof Plugins;
 } = {

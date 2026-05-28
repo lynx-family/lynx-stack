@@ -51,7 +51,6 @@
 }
 
 .datetime-input-icon,
-.datetime-dialog-close-icon,
 .datetime-calendar-nav-icon,
 .datetime-time-stepper-icon {
   font-family: var(--a2ui-icon-font-family);
@@ -79,7 +78,11 @@
   justify-content: center;
   width: 100%;
   height: 100%;
-  padding: 20px;
+  padding: 24px;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  left: 0;
   box-sizing: border-box;
 }
 
@@ -101,10 +104,11 @@
 .datetime-dialog-content {
   display: flex;
   flex-direction: column;
-  gap: 16px;
+  gap: 12px;
   width: 100%;
   max-width: 380px;
-  padding: 18px;
+  max-height: 82%;
+  padding: 16px;
   border-width: 1px;
   border-style: solid;
   border-color: var(--a2ui-color-border-strong);
@@ -112,6 +116,7 @@
   background-color: var(--a2ui-color-surface-strong);
   box-shadow: 0 16px 40px var(--a2ui-color-overlay);
   box-sizing: border-box;
+  overflow-y: auto;
   transition: opacity 0.18s ease, transform 0.18s ease;
 }
 
@@ -127,7 +132,6 @@
   transform: translateY(8px);
 }
 
-.datetime-dialog-header,
 .datetime-calendar-header,
 .datetime-dialog-actions {
   display: flex;
@@ -135,21 +139,11 @@
   align-items: center;
 }
 
-.datetime-dialog-header,
 .datetime-calendar-header {
   justify-content: space-between;
   gap: 12px;
 }
 
-.datetime-dialog-title {
-  min-width: 0;
-  color: var(--a2ui-color-on-surface);
-  font-size: 17px;
-  font-weight: 700;
-  line-height: 1.4;
-}
-
-.datetime-dialog-close,
 .datetime-calendar-nav {
   display: flex;
   align-items: center;
@@ -162,12 +156,10 @@
   color: var(--a2ui-color-text-muted);
 }
 
-.datetime-dialog-close.ui-active,
 .datetime-calendar-nav.ui-active {
   background-color: var(--a2ui-color-secondary);
 }
 
-.datetime-dialog-close-icon,
 .datetime-calendar-nav-icon {
   color: inherit;
   font-size: 20px;
@@ -176,7 +168,7 @@
 .datetime-calendar {
   display: flex;
   flex-direction: column;
-  gap: 10px;
+  gap: 8px;
   width: 100%;
   min-width: 0;
 }
@@ -201,7 +193,7 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  height: 24px;
+  height: 20px;
 }
 
 .datetime-weekday-text {
@@ -212,14 +204,14 @@
 }
 
 .datetime-month {
-  grid-template-rows: 40px 40px 40px 40px 40px 40px;
+  grid-template-rows: 34px 34px 34px 34px 34px 34px;
 }
 
 .datetime-day {
   display: flex;
   align-items: center;
   justify-content: center;
-  margin: 2px;
+  margin: 1px;
   border-width: 1px;
   border-style: solid;
   border-color: transparent;
@@ -262,7 +254,7 @@
 .datetime-time {
   display: flex;
   flex-direction: column;
-  gap: 10px;
+  gap: 8px;
   width: 100%;
   min-width: 0;
 }
@@ -279,7 +271,7 @@
   flex-direction: row;
   align-items: center;
   justify-content: center;
-  gap: 12px;
+  gap: 10px;
 }
 
 .datetime-time-field {
@@ -287,7 +279,7 @@
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  width: 72px;
+  width: 66px;
   min-width: 0;
   overflow: hidden;
   border-width: 1px;
@@ -299,16 +291,16 @@
 
 .datetime-time-value {
   color: var(--a2ui-color-on-surface);
-  font-size: 24px;
+  font-size: 22px;
   font-weight: 700;
-  line-height: 1.4;
+  line-height: 1.3;
 }
 
 .datetime-time-separator {
   color: var(--a2ui-color-text-muted);
-  font-size: 24px;
+  font-size: 22px;
   font-weight: 700;
-  line-height: 1.4;
+  line-height: 1.3;
 }
 
 .datetime-time-stepper {
@@ -316,7 +308,7 @@
   align-items: center;
   justify-content: center;
   width: 100%;
-  height: 30px;
+  height: 24px;
   color: var(--a2ui-color-text-muted);
 }
 
@@ -326,7 +318,7 @@
 
 .datetime-time-stepper-icon {
   color: inherit;
-  font-size: 22px;
+  font-size: 20px;
 }
 
 .datetime-dialog-actions {

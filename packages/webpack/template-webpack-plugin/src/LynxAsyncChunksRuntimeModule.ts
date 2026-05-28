@@ -17,7 +17,10 @@ export function createLynxAsyncChunksRuntimeModule(
     constructor(
       public getChunkName: (chunkName: string) => string,
     ) {
-      super('Lynx async chunks', webpack.RuntimeModule.STAGE_ATTACH);
+      super(
+        'webpack/runtime/lynx async chunks',
+        webpack.RuntimeModule.STAGE_ATTACH,
+      );
     }
 
     override generate(): string {

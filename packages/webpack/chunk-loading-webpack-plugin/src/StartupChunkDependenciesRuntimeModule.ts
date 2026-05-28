@@ -20,7 +20,10 @@ export function createStartupChunkDependenciesRuntimeModule(
     asyncChunkLoading: boolean;
 
     constructor(asyncChunkLoading: boolean) {
-      super('Lynx startup chunk dependencies', RuntimeModule.STAGE_ATTACH);
+      super(
+        'webpack/runtime/lynx startup chunk dependencies',
+        RuntimeModule.STAGE_ATTACH,
+      );
       this.asyncChunkLoading = asyncChunkLoading;
     }
 

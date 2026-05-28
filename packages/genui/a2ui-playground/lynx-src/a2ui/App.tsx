@@ -25,7 +25,7 @@ import {
   basicFunctions,
   createMessageStore,
   normalizePayloadToMessages as normalizeProtocolMessages,
-} from '@lynx-js/a2ui-reactlynx';
+} from '@lynx-js/genui/a2ui';
 import type {
   CatalogComponent,
   CatalogInput,
@@ -33,26 +33,8 @@ import type {
   MessageStore,
   ServerToClientMessage,
   UserActionPayload,
-} from '@lynx-js/a2ui-reactlynx';
-import buttonManifest from '@lynx-js/a2ui-reactlynx/catalog/Button/catalog.json';
-import cardManifest from '@lynx-js/a2ui-reactlynx/catalog/Card/catalog.json';
-import checkBoxManifest from '@lynx-js/a2ui-reactlynx/catalog/CheckBox/catalog.json';
-import choicePickerManifest from '@lynx-js/a2ui-reactlynx/catalog/ChoicePicker/catalog.json';
-import columnManifest from '@lynx-js/a2ui-reactlynx/catalog/Column/catalog.json';
-import dateTimeInputManifest from '@lynx-js/a2ui-reactlynx/catalog/DateTimeInput/catalog.json';
-import dividerManifest from '@lynx-js/a2ui-reactlynx/catalog/Divider/catalog.json';
-import iconManifest from '@lynx-js/a2ui-reactlynx/catalog/Icon/catalog.json';
-import imageManifest from '@lynx-js/a2ui-reactlynx/catalog/Image/catalog.json';
-import lineChartManifest from '@lynx-js/a2ui-reactlynx/catalog/LineChart/catalog.json';
-import listManifest from '@lynx-js/a2ui-reactlynx/catalog/List/catalog.json';
-import modalManifest from '@lynx-js/a2ui-reactlynx/catalog/Modal/catalog.json';
-import pieChartManifest from '@lynx-js/a2ui-reactlynx/catalog/PieChart/catalog.json';
-import radioGroupManifest from '@lynx-js/a2ui-reactlynx/catalog/RadioGroup/catalog.json';
-import rowManifest from '@lynx-js/a2ui-reactlynx/catalog/Row/catalog.json';
-import sliderManifest from '@lynx-js/a2ui-reactlynx/catalog/Slider/catalog.json';
-import tabsManifest from '@lynx-js/a2ui-reactlynx/catalog/Tabs/catalog.json';
-import textManifest from '@lynx-js/a2ui-reactlynx/catalog/Text/catalog.json';
-import textFieldManifest from '@lynx-js/a2ui-reactlynx/catalog/TextField/catalog.json';
+} from '@lynx-js/genui/a2ui';
+import { catalogManifests } from '@lynx-js/genui/a2ui/catalog';
 import {
   useCallback,
   useEffect,
@@ -68,17 +50,9 @@ import { createMockAgent } from '../../examples/io-mock/mockAgent.js';
 import type { MockAgentProgress } from '../../examples/io-mock/mockAgent.js';
 
 const DEFAULT_STREAM_DELAY_MS = 800;
+const A2UI_SCROLL_VIEW_ID = 'a2ui-scroll-view';
+const A2UI_SCROLL_BOTTOM_OFFSET = 1000000;
 
-// Compose every built-in. There is intentionally no all-in-one aggregate
-// shipped from the package — this list makes the cost of "everything"
-// visible and lets the bundler tree-shake when you only need a few.
-//
-// Function entries are included because the gallery payloads use A2UI
-// basic-catalog calls such as `formatDate` in dynamic props and checks.
-//
-// To include component schemas, pair each component with its `catalog.json`
-// manifest — see
-// `packages/genui/a2ui/src/catalog/README.md`.
 function manifestEntry(
   component: unknown,
   manifest: CatalogManifest,
@@ -87,25 +61,25 @@ function manifestEntry(
 }
 
 const ALL_BUILTINS: readonly CatalogInput[] = [
-  manifestEntry(Text, textManifest),
-  manifestEntry(Image, imageManifest),
-  manifestEntry(Row, rowManifest),
-  manifestEntry(Column, columnManifest),
-  manifestEntry(List, listManifest),
-  manifestEntry(Card, cardManifest),
-  manifestEntry(Modal, modalManifest),
-  manifestEntry(Button, buttonManifest),
-  manifestEntry(Divider, dividerManifest),
-  manifestEntry(Icon, iconManifest),
-  manifestEntry(CheckBox, checkBoxManifest),
-  manifestEntry(ChoicePicker, choicePickerManifest),
-  manifestEntry(DateTimeInput, dateTimeInputManifest),
-  manifestEntry(LineChart, lineChartManifest),
-  manifestEntry(PieChart, pieChartManifest),
-  manifestEntry(RadioGroup, radioGroupManifest),
-  manifestEntry(Slider, sliderManifest),
-  manifestEntry(TextField, textFieldManifest),
-  manifestEntry(Tabs, tabsManifest),
+  manifestEntry(Text, catalogManifests.Text),
+  manifestEntry(Image, catalogManifests.Image),
+  manifestEntry(Row, catalogManifests.Row),
+  manifestEntry(Column, catalogManifests.Column),
+  manifestEntry(List, catalogManifests.List),
+  manifestEntry(Card, catalogManifests.Card),
+  manifestEntry(Modal, catalogManifests.Modal),
+  manifestEntry(Button, catalogManifests.Button),
+  manifestEntry(Divider, catalogManifests.Divider),
+  manifestEntry(Icon, catalogManifests.Icon),
+  manifestEntry(CheckBox, catalogManifests.CheckBox),
+  manifestEntry(ChoicePicker, catalogManifests.ChoicePicker),
+  manifestEntry(DateTimeInput, catalogManifests.DateTimeInput),
+  manifestEntry(LineChart, catalogManifests.LineChart),
+  manifestEntry(PieChart, catalogManifests.PieChart),
+  manifestEntry(RadioGroup, catalogManifests.RadioGroup),
+  manifestEntry(Slider, catalogManifests.Slider),
+  manifestEntry(TextField, catalogManifests.TextField),
+  manifestEntry(Tabs, catalogManifests.Tabs),
   ...basicFunctions,
 ];
 
@@ -417,6 +391,23 @@ export function App() {
     agent.resume();
   }, []);
 
+  const scrollPreviewToBottom = useCallback(() => {
+    if (playbackPausedRef.current) return;
+    lynx.createSelectorQuery()
+      .select(`#${A2UI_SCROLL_VIEW_ID}`)
+      .invoke({
+        method: 'scrollTo',
+        params: {
+          offset: A2UI_SCROLL_BOTTOM_OFFSET,
+          smooth: true,
+        },
+        fail: () => {
+          // The first content-size event can fire before UI methods are ready.
+        },
+      })
+      .exec();
+  }, []);
+
   useLynxGlobalEventListener(
     'A2UI_PLAYBACK_CONTROL',
     (action: unknown) => {
@@ -583,7 +574,9 @@ export function App() {
             {store
               ? (
                 <scroll-view
+                  id={A2UI_SCROLL_VIEW_ID}
                   scroll-y
+                  bindcontentsizechanged={scrollPreviewToBottom}
                   style={{ flex: 1, minHeight: 0 }}
                   className={isPlaybackPaused ? 'a2ui-scrollPaused' : ''}
                 >

@@ -1,5 +1,5 @@
 {
-  "name": "@lynx-js/a2ui-reactlynx",
+  "name": "@lynx-js/genui-a2ui",
   "version": "0.0.0",
   "private": true,
   "license": "Apache-2.0",
@@ -132,8 +132,9 @@
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",
   "scripts": {
+    "api-extractor": "node ../scripts/run-api-extractor.mjs",
     "build": "tsc --project tsconfig.build.json && npm run build:catalog",
-    "build:catalog": "a2ui-cli generate catalog --catalog-dir src/catalog --out-dir dist/catalog",
+    "build:catalog": "genui a2ui generate catalog --catalog-dir src/catalog --out-dir dist/catalog && node scripts/writeCatalogManifestIndex.js",
     "test": "rstest"
   },
   "dependencies": {
@@ -141,10 +142,11 @@
     "@preact/signals": "^2.5.1"
   },
   "devDependencies": {
-    "@lynx-js/a2ui-cli": "workspace:*",
+    "@lynx-js/genui-cli": "workspace:*",
     "@lynx-js/lynx-ui": "^3.133.0",
     "@lynx-js/react": "workspace:*",
     "@lynx-js/types": "3.7.0",
+    "@microsoft/api-extractor": "catalog:",
     "@rstest/core": "catalog:rstest",
     "@types/react": "^18.3.28"
   },

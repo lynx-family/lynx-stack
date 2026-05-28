@@ -23,6 +23,13 @@ export function pluginTemplateWebpack() {
   return {
     name: PLUGIN_NAME,
     setup(api) {
+      // Expose the LynxTemplatePlugin class so that other rsbuild plugins
+      // (e.g. pluginLynxDebugMetadata, pluginLynxConfig) can hook into the
+      // template build via api.useExposed(Symbol.for('LynxTemplatePlugin')).
+      // Any rsbuild plugin that drives LynxTemplatePlugin should publish this
+      // exposure — DSL plugins like pluginReactLynx already do.
+      api.expose(Symbol.for('LynxTemplatePlugin'), { LynxTemplatePlugin });
+
       api.modifyBundlerChain((chain) => {
         // Step 1: Replace Rspeedy's default entries with the assets needed
         // by the Lynx template bundle.

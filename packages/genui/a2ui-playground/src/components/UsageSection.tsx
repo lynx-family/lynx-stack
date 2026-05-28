@@ -14,7 +14,7 @@ export function UsageSection() {
           </p>
           <pre className='codeBlock'>
             <code>{`// Import the v0.9 protocol
-import { Conversation } from '@lynx-js/a2ui-reactlynx/0.9';
+import { Conversation } from '@lynx-js/genui/a2ui/0.9';
 
 export default function App() {
   return (
@@ -30,7 +30,7 @@ export default function App() {
             Build a custom chat UI with full control over layout and state.
           </p>
           <pre className='codeBlock'>
-            <code>{`import { A2UIRender, useLynxClient } from '@lynx-js/a2ui-reactlynx/0.9';
+            <code>{`import { A2UIRender, useLynxClient } from '@lynx-js/genui/a2ui/0.9';
 
 export function CustomChat() {
   const { messages, sendMessage } = useLynxClient("https://api.com/chat");
@@ -69,7 +69,7 @@ export function CustomChat() {
           </p>
           <pre className='codeBlock'>
             <code>{`import { useState } from 'react';
-import { A2UIRender, useLynxClient } from '@lynx-js/a2ui-reactlynx/0.9';
+import { A2UIRender, useLynxClient } from '@lynx-js/genui/a2ui/0.9';
 
 export function SingleRequest() {
   const { sendMessage } = useLynxClient("https://api.com/chat", { keepHistory: false });

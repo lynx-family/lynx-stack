@@ -13,19 +13,35 @@ import { pluginStubRspeedyAPI } from './stub-rspeedy-api.plugin.js'
 // The Default JS RegExp of Rsbuild
 const SCRIPT_REGEXP = /\.(?:js|jsx|mjs|cjs|ts|tsx|mts|cts)$/
 
+function isRspackRule(rule: unknown): rule is Rspack.RuleSetRule {
+  return !!rule && typeof rule === 'object'
+}
+
 function getLayerRule(
   swcRule: Rspack.RuleSetRule,
   issuerLayer: string,
 ) {
-  return swcRule.oneOf?.find((rule): rule is Rspack.RuleSetRule => {
-    return rule !== '...' && rule.issuerLayer === issuerLayer
-  })
+  return getJsMainRule(swcRule)?.oneOf?.find(
+    (rule): rule is Rspack.RuleSetRule => {
+      return isRspackRule(rule) && rule.issuerLayer === issuerLayer
+    },
+  )
 }
 
 function getLayerRules(swcRule: Rspack.RuleSetRule) {
-  return swcRule.oneOf?.filter((rule): rule is Rspack.RuleSetRule => {
-    return rule !== '...' && rule.issuerLayer !== undefined
-  }) ?? []
+  return getJsMainRule(swcRule)?.oneOf?.filter(
+    (rule): rule is Rspack.RuleSetRule => {
+      return isRspackRule(rule) && rule.issuerLayer !== undefined
+    },
+  ) ?? []
+}
+
+function getJsMainRule(swcRule: Rspack.RuleSetRule) {
+  return swcRule.oneOf?.find((rule): rule is Rspack.RuleSetRule => {
+    return isRspackRule(rule)
+      && rule.type === 'javascript/auto'
+      && rule.resourceQuery === undefined
+  })
 }
 
 describe('SWC configuration', () => {
@@ -152,6 +168,7 @@ describe('SWC configuration', () => {
             === SCRIPT_REGEXP.toString()
       },
     )
+    assert(swcRule)
 
     // Should have Rsbuild default values
     expect(getLayerRule(swcRule, LAYERS.BACKGROUND)?.type).toBe(
@@ -172,19 +189,23 @@ describe('SWC configuration', () => {
       ]
     `)
 
-    // Rsbuild default loader should be removed
-    expect(swcRule.use).toBeUndefined()
-    expect(swcRule.loader).toBeUndefined()
-    expect(swcRule.options).toBeUndefined()
+    const jsMainRule = getJsMainRule(swcRule)
+    assert(jsMainRule)
+
+    // Rsbuild default JS branch should be kept, but its direct loader should
+    // be replaced by nested ReactLynx layer branches.
+    expect(jsMainRule?.use).toBeUndefined()
+    expect(jsMainRule?.loader).toBeUndefined()
+    expect(jsMainRule?.options).toBeUndefined()
 
     // 1. Background Layer
     // 2. MainThread Layer
     expect(getLayerRules(swcRule)).toHaveLength(2)
 
-    const backgroundRules = swcRule.oneOf.find(rule =>
-      rule.issuerLayer === LAYERS.BACKGROUND
+    const backgroundRules = jsMainRule?.oneOf?.find(rule =>
+      isRspackRule(rule) && rule.issuerLayer === LAYERS.BACKGROUND
     )
-    expect(backgroundRules).not.toBeUndefined()
+    assert(backgroundRules)
     expect({ module: { rules: [backgroundRules] } }).toHaveLoader(
       'builtin:swc-loader',
     )
@@ -195,10 +216,10 @@ describe('SWC configuration', () => {
       ReactWebpackPlugin.loaders.MAIN_THREAD,
     )
 
-    const mainThreadRules = swcRule.oneOf.find(rule =>
-      rule.issuerLayer === LAYERS.MAIN_THREAD
+    const mainThreadRules = jsMainRule?.oneOf?.find(rule =>
+      isRspackRule(rule) && rule.issuerLayer === LAYERS.MAIN_THREAD
     )
-    expect(mainThreadRules).not.toBeUndefined()
+    assert(mainThreadRules)
     expect({ module: { rules: [mainThreadRules] } }).toHaveLoader(
       'builtin:swc-loader',
     )
@@ -230,11 +251,10 @@ describe('SWC configuration', () => {
             === SCRIPT_REGEXP.toString()
       },
     )
+    assert(swcRule)
 
-    const mainThreadRule = swcRule.oneOf.find(rule =>
-      rule.issuerLayer === LAYERS.MAIN_THREAD
-    )
-    expect(mainThreadRule).not.toBeUndefined()
+    const mainThreadRule = getLayerRule(swcRule, LAYERS.MAIN_THREAD)
+    assert(mainThreadRule)
     expect({ module: { rules: [mainThreadRule] } }).toHaveLoader(
       'builtin:swc-loader',
     )
@@ -249,6 +269,7 @@ describe('SWC configuration', () => {
         rules: [mainThreadRule],
       },
     }, 'builtin:swc-loader')
+    assert(mainThreadLoaderOptions?.jsc)
     expect(mainThreadLoaderOptions.jsc.target).toBe('es2019')
   })
 
@@ -279,11 +300,10 @@ describe('SWC configuration', () => {
             === SCRIPT_REGEXP.toString()
       },
     )
+    assert(swcRule)
 
-    const backgroundRule = swcRule.oneOf.find(rule =>
-      rule.issuerLayer === LAYERS.BACKGROUND
-    )
-    expect(backgroundRule).not.toBeUndefined()
+    const backgroundRule = getLayerRule(swcRule, LAYERS.BACKGROUND)
+    assert(backgroundRule)
     expect({ module: { rules: [backgroundRule] } }).toHaveLoader(
       'builtin:swc-loader',
     )
@@ -299,12 +319,11 @@ describe('SWC configuration', () => {
         rules: [backgroundRule],
       },
     }, 'builtin:swc-loader')
+    assert(backgroundLoaderOptions?.jsc)
     expect(backgroundLoaderOptions.jsc.target).toBe('es2022')
 
-    const mainThreadRule = swcRule.oneOf.find(rule =>
-      rule.issuerLayer === LAYERS.MAIN_THREAD
-    )
-    expect(mainThreadRule).not.toBeUndefined()
+    const mainThreadRule = getLayerRule(swcRule, LAYERS.MAIN_THREAD)
+    assert(mainThreadRule)
     expect({ module: { rules: [mainThreadRule] } }).toHaveLoader(
       'builtin:swc-loader',
     )
@@ -319,6 +338,7 @@ describe('SWC configuration', () => {
         rules: [mainThreadRule],
       },
     }, 'builtin:swc-loader')
+    assert(mainThreadLoaderOptions?.jsc)
     expect(mainThreadLoaderOptions.jsc.target).toBe('es2019')
   })
 
@@ -345,6 +365,7 @@ describe('SWC configuration', () => {
             === SCRIPT_REGEXP.toString()
       },
     )
+    assert(swcRule)
 
     // Should have Rsbuild default values
     expect(getLayerRule(swcRule, LAYERS.BACKGROUND)?.type).toBe(

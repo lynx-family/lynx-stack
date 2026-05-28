@@ -14,7 +14,6 @@ import {
   buildDateTimeMonthPage,
   dateTimePartsToDate,
   formatDateTimeInputValue,
-  getDateTimeDialogTitle,
   getDateTimeInputPlaceholder,
   getDefaultDateTimeParts,
   getWeekdayLabels,
@@ -252,19 +251,6 @@ export function DateTimeInput(
             transition={true}
           />
           <DialogContent className='datetime-dialog-content' transition={true}>
-            <view className='datetime-dialog-header'>
-              <text className='datetime-dialog-title'>
-                {getDateTimeDialogTitle(labelText, mode)}
-              </text>
-              <view
-                className='datetime-dialog-close'
-                bindtap={handleCancel}
-                event-through={false}
-              >
-                <text className='datetime-dialog-close-icon'>close</text>
-              </view>
-            </view>
-
             {mode.enableDate
               ? (
                 <view className='datetime-calendar'>

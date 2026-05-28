@@ -18,6 +18,7 @@ import '@lynx-js/web-elements/index.css';
 
 import { decodeBase64Url } from './utils/base64url.js';
 import { DEFAULT_A2UI_DEMO_URL } from './utils/demoUrl.js';
+import { RENDER_INIT_DATA_QUERY_PARAM } from './utils/renderUrl.js';
 
 interface InitData {
   protocol?: '0.9' | 'a2ui' | 'openui';
@@ -95,9 +96,64 @@ function parseJsonParam(raw: string): unknown {
   }
 }
 
+function readString(value: unknown): string | undefined {
+  return typeof value === 'string' ? value : undefined;
+}
+
+function readBoolean(value: unknown): boolean | undefined {
+  return typeof value === 'boolean' ? value : undefined;
+}
+
+function readProtocol(value: unknown): InitData['protocol'] {
+  return value === '0.9' || value === 'a2ui' || value === 'openui'
+    ? value
+    : undefined;
+}
+
+function readTheme(value: unknown): InitData['theme'] {
+  return value === 'dark' ? 'dark' : (value === 'light' ? 'light' : undefined);
+}
+
+function readSpeed(value: unknown): number | undefined {
+  if (typeof value !== 'number' || !Number.isFinite(value) || value < 0) {
+    return undefined;
+  }
+  return value;
+}
+
+function readInitDataParam(raw: string | null): InitData | null {
+  if (!raw) return null;
+
+  const parsed = parseJsonParam(raw);
+  if (!parsed || typeof parsed !== 'object') return null;
+
+  const record = parsed as Record<string, unknown>;
+  const initData: InitData = {};
+
+  initData.protocol = readProtocol(record.protocol);
+  initData.messagesUrl = readString(record.messagesUrl);
+  if ('messages' in record) initData.messages = record.messages;
+  initData.actionMocksUrl = readString(record.actionMocksUrl);
+  if ('actionMocks' in record) initData.actionMocks = record.actionMocks;
+  initData.demoUrl = readString(record.demoUrl);
+  initData.speed = readSpeed(record.speed);
+  initData.instant = readBoolean(record.instant);
+  initData.playbackMode = readBoolean(record.playbackMode);
+  initData.theme = readTheme(record.theme);
+  initData.rawText = readString(record.rawText);
+  initData.rawTextUrl = readString(record.rawTextUrl);
+  initData.playbackPaused = readBoolean(record.playbackPaused);
+  initData.liveAction = readBoolean(record.liveAction);
+
+  return initData;
+}
+
 function parseInitDataFromQuery(): InitData | null {
   const params = new URLSearchParams(window.location.search);
 
+  const baseInitData = readInitDataParam(
+    params.get(RENDER_INIT_DATA_QUERY_PARAM),
+  );
   const protocol = params.get('protocol');
   const messagesUrl = params.get('messagesUrl');
   const demoUrl = params.get('demoUrl');
@@ -113,37 +169,35 @@ function parseInitDataFromQuery(): InitData | null {
   const rawTextUrl = params.get('rawTextUrl');
 
   if (
-    !protocol && !messagesUrl && !messages && !demoUrl && !demo && !rawText
-    && !rawTextUrl
+    !baseInitData && !protocol && !messagesUrl && !messages && !demoUrl
+    && !demo && !rawText && !rawTextUrl
   ) {
     return null;
   }
 
-  const protocolValue = protocol === '0.9' || protocol === 'a2ui'
-      || protocol === 'openui'
-    ? protocol
-    : undefined;
+  const protocolValue = readProtocol(protocol);
 
   const speedRaw = params.get('speed');
   const speedVal = speedRaw === null ? undefined : Number(speedRaw);
 
   const initData: InitData = {
-    protocol: protocolValue,
-    messagesUrl: messagesUrl ?? undefined,
-    actionMocksUrl: actionMocksUrl ?? undefined,
-    demoUrl: demoUrl ?? undefined,
-    messages: [], // Default to an empty array
+    ...baseInitData,
+    protocol: protocolValue ?? baseInitData?.protocol,
+    messagesUrl: messagesUrl ?? baseInitData?.messagesUrl,
+    actionMocksUrl: actionMocksUrl ?? baseInitData?.actionMocksUrl,
+    demoUrl: demoUrl ?? baseInitData?.demoUrl,
+    messages: baseInitData?.messages ?? [], // Default to an empty array
     speed: speedVal !== undefined && Number.isFinite(speedVal) && speedVal >= 0
       ? speedVal
-      : undefined,
-    instant: instant === '1' ? true : undefined,
-    playbackMode: playbackMode === '1' ? true : undefined,
-    theme: theme === 'dark'
-      ? 'dark'
-      : (theme === 'light' ? 'light' : undefined),
-    rawText: rawText ?? undefined,
-    rawTextUrl: rawTextUrl ?? undefined,
-    liveAction: params.get('liveAction') === '1' ? true : undefined,
+      : baseInitData?.speed,
+    instant: instant === '1' ? true : baseInitData?.instant,
+    playbackMode: playbackMode === '1' ? true : baseInitData?.playbackMode,
+    theme: readTheme(theme) ?? baseInitData?.theme,
+    rawText: rawText ?? baseInitData?.rawText,
+    rawTextUrl: rawTextUrl ?? baseInitData?.rawTextUrl,
+    liveAction: params.get('liveAction') === '1'
+      ? true
+      : baseInitData?.liveAction,
   };
 
   if (messages) {
