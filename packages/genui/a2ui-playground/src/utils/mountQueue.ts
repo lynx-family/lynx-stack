@@ -43,6 +43,7 @@ export class MountQueue {
   private nextOrder = 0;
   private lastArmedSnapshot = new Set<string>();
 
+  /** @param maxConcurrent Maximum number of concurrently armed (in-flight) cards. */
   constructor(maxConcurrent: number) {
     if (!Number.isInteger(maxConcurrent) || maxConcurrent < 0) {
       throw new RangeError(
@@ -52,6 +53,7 @@ export class MountQueue {
     this.maxConcurrent = maxConcurrent;
   }
 
+  /** Register a card; no-op if already registered. */
   register(id: string): void {
     if (this.entries.has(id)) return;
     this.entries.set(id, {
@@ -64,11 +66,13 @@ export class MountQueue {
     this.reschedule();
   }
 
+  /** Unregister a card and release any slot it occupied. */
   unregister(id: string): void {
     if (!this.entries.delete(id)) return;
     this.reschedule();
   }
 
+  /** Update a card's priority; may arm previously-skipped cards if the queue has free slots. */
   setPriority(id: string, priority: Priority): void {
     const entry = this.entries.get(id);
     if (!entry) return;
@@ -77,6 +81,7 @@ export class MountQueue {
     this.reschedule();
   }
 
+  /** Signal that an armed card has finished its first load; frees one slot for the next pending card. */
   markReady(id: string): void {
     const entry = this.entries.get(id);
     if (!entry || entry.ready) return;
@@ -84,10 +89,12 @@ export class MountQueue {
     this.reschedule();
   }
 
+  /** Returns `true` if the card currently has a concurrency slot granted. */
   isArmed(id: string): boolean {
     return this.entries.get(id)?.armed ?? false;
   }
 
+  /** Subscribe to arm-set changes. Returns an unsubscribe function. */
   subscribe(listener: Listener): () => void {
     this.listeners.add(listener);
     return () => {

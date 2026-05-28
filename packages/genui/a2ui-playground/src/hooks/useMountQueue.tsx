@@ -29,6 +29,7 @@ interface MountQueueProviderProps {
   children: ReactNode;
 }
 
+/** Provides a shared {@link MountQueue} to all descendant {@link useQueuedMount} callers. */
 export function MountQueueProvider(props: MountQueueProviderProps) {
   const { children, maxConcurrent, resetKey } = props;
   // biome-ignore lint/correctness/useExhaustiveDependencies: resetKey is intentionally a reset trigger; we want a fresh queue when it changes.
