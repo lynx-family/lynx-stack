@@ -17,10 +17,6 @@ export function createGenUIGuideReadmeDocs(options: {
     options.repositoryRoot,
     'packages/genui/a2ui',
   );
-  const a2uiPlaygroundExamplesRoot = path.join(
-    options.repositoryRoot,
-    'packages/genui/a2ui-playground/examples',
-  );
   const enGuideRoot = path.join(
     options.websiteRoot,
     'docs/en/guide/genui',
@@ -89,16 +85,6 @@ export function createGenUIGuideReadmeDocs(options: {
     replacements: A2UI_ZH_LINK_REPLACEMENTS,
     sourceFile: path.join(a2uiPackageRoot, 'src/catalog/readme_zh.md'),
   });
-  syncDoc({
-    outFile: path.join(enGuideRoot, 'a2ui/playground-examples.md'),
-    replacements: A2UI_EN_LINK_REPLACEMENTS,
-    sourceFile: path.join(a2uiPlaygroundExamplesRoot, 'README.md'),
-  });
-  syncDoc({
-    outFile: path.join(zhGuideRoot, 'a2ui/playground-examples.md'),
-    replacements: A2UI_ZH_LINK_REPLACEMENTS,
-    sourceFile: path.join(a2uiPlaygroundExamplesRoot, 'readme_zh.md'),
-  });
 
   removeGeneratedDoc(
     path.join(
@@ -157,8 +143,8 @@ export const A2UI_EN_NAV_ITEMS = [
     link: '/guide/genui/a2ui/catalog',
   },
   {
-    text: 'Playground README',
-    link: '/guide/genui/a2ui/playground-examples',
+    text: 'Open Playground',
+    link: '/repl',
   },
 ];
 
@@ -184,8 +170,8 @@ export const A2UI_ZH_NAV_ITEMS = [
     link: '/zh/guide/genui/a2ui/catalog',
   },
   {
-    text: 'Playground README',
-    link: '/zh/guide/genui/a2ui/playground-examples',
+    text: '打开 Playground',
+    link: '/repl',
   },
 ];
 
@@ -207,7 +193,7 @@ const A2UI_EN_LINK_REPLACEMENTS = [
   ['../src/catalog/README.md', '/guide/genui/a2ui/catalog'],
   [
     '../a2ui-playground/examples/README.md',
-    '/guide/genui/a2ui/playground-examples',
+    '/repl',
   ],
   [
     '../../a2ui-catalog-extractor/README.md',
@@ -223,7 +209,7 @@ const A2UI_ZH_LINK_REPLACEMENTS = [
   ['../src/catalog/readme_zh.md', '/zh/guide/genui/a2ui/catalog'],
   [
     '../a2ui-playground/examples/readme_zh.md',
-    '/zh/guide/genui/a2ui/playground-examples',
+    '/repl',
   ],
   [
     '../../a2ui-catalog-extractor/readme.zh_cn.md',
