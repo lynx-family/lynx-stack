@@ -7,6 +7,46 @@ import { LAYERS, ReactWebpackPlugin } from '@lynx-js/react-webpack-plugin'
 
 import type { PluginReactLynxOptions } from './pluginReactLynx.js'
 
+// The transforms an `es2019` SWC target lowers (i.e. ES2020+ syntax).
+// Expressed as an explicit `env.include` list so the main-thread baseline
+// no longer relies on `jsc.target` — `env` and `jsc.target` are mutually
+// exclusive, and moving to `env` lets the transform set be tuned via
+// `include`/`exclude` later without changing today's output.
+const MAIN_THREAD_ENV_INCLUDE = [
+  // ES2020
+  'transform-nullish-coalescing-operator',
+  'transform-optional-chaining',
+  'transform-export-namespace-from',
+  // ES2021
+  'transform-logical-assignment-operators',
+  'transform-numeric-separator',
+  // ES2022
+  'transform-class-properties',
+  'transform-class-static-block',
+  'transform-private-methods',
+  'transform-private-property-in-object',
+]
+
+// A high baseline so `env` auto-includes nothing beyond the explicit
+// `include` list above — that list is the canonical transform set.
+const MAIN_THREAD_ENV_TARGETS = { chrome: '120' }
+
+// Transforms an `es2015` baseline lowers that an `es2019` baseline does not
+// (ES2016~ES2019). The background layer inherits these via the base `env`;
+// the main thread strips them so it stays es2019-equivalent — while still
+// keeping any extra transforms the user added through `tools.swc.env.include`.
+const ES2016_TO_ES2019_INCLUDE = [
+  'transform-exponentiation-operator',
+  'transform-async-to-generator',
+  'transform-async-generator-functions',
+  'transform-dotall-regex',
+  'transform-named-capturing-groups-regex',
+  'transform-object-rest-spread',
+  'transform-unicode-property-regex',
+  'transform-json-strings',
+  'transform-optional-catch-binding',
+]
+
 function getLoaderOptions(
   api: RsbuildPluginAPI,
   options: Required<PluginReactLynxOptions>,
@@ -118,14 +158,29 @@ export function applyLoaders(
           .entries() as Rspack.RuleSetRule
         const swcLoaderOptions = swcLoaderRule
           .options as Rspack.SwcLoaderOptions
+        // `jsc.target` and `env` cannot coexist in SWC, so drop the target
+        // and express the main-thread baseline through `env`. The main thread
+        // is es2019-equivalent, so it strips the es2016~es2019 transforms the
+        // base (es2015) adds, while preserving any extra transforms the user
+        // configured through `tools.swc.env.include`.
+        const jsc = { ...swcLoaderOptions.jsc } as Record<string, unknown>
+        delete jsc['target']
+        const rspeedyBaseline = new Set([
+          ...MAIN_THREAD_ENV_INCLUDE,
+          ...ES2016_TO_ES2019_INCLUDE,
+        ])
+        const userInclude = (swcLoaderOptions.env?.include ?? []).filter(
+          (transform) => !rspeedyBaseline.has(transform),
+        )
         rule.use(CHAIN_ID.USE.SWC)
           .merge(swcLoaderRule)
           .options(
             {
               ...swcLoaderOptions,
-              jsc: {
-                ...swcLoaderOptions.jsc,
-                target: 'es2019',
+              jsc,
+              env: {
+                targets: MAIN_THREAD_ENV_TARGETS,
+                include: [...MAIN_THREAD_ENV_INCLUDE, ...userInclude],
               },
             } satisfies Rspack.SwcLoaderOptions,
           )

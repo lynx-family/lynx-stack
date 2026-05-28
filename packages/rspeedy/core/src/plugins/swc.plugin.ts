@@ -4,7 +4,11 @@
 
 import type { RsbuildPlugin } from '@rsbuild/core'
 
-import { getESVersionTarget } from '../utils/getESVersionTarget.js'
+import {
+  ES_ENV_TARGETS,
+  getESVersionEnvInclude,
+  getESVersionTarget,
+} from '../utils/getESVersionTarget.js'
 
 export function pluginSwc(): RsbuildPlugin {
   return {
@@ -15,11 +19,38 @@ export function pluginSwc(): RsbuildPlugin {
         return mergeRsbuildConfig(config, {
           tools: {
             swc(config) {
-              delete config.env
+              // Rspeedy expresses the compilation baseline through `env`
+              // (a high `targets` plus an explicit `include` transform list),
+              // which is mutually exclusive with `jsc.target` in SWC. Rather
+              // than silently dropping a user-configured `jsc.target`, surface
+              // a clear error that points to the supported alternative.
+              if (config.jsc?.target !== undefined) {
+                throw new Error(
+                  'Rspeedy manages the SWC compilation target via `env`, which '
+                    + 'is mutually exclusive with `jsc.target`. Remove '
+                    + '`tools.swc.jsc.target` (received '
+                    + `\`${JSON.stringify(config.jsc.target)}\`). To downlevel `
+                    + 'specific syntax, add the corresponding transforms to '
+                    + '`tools.swc.env.include` instead (e.g. '
+                    + '`[\'transform-class-properties\']`).',
+                )
+              }
 
+              // Keep any transforms the user added via `tools.swc.env.include`
+              // and merge them on top of Rspeedy's baseline. Rspeedy's
+              // `targets` always win (the baseline is intentionally high so the
+              // `include` list is canonical). Other `env` fields from the
+              // bundler default (e.g. `mode`) are intentionally not carried
+              // over, matching the previous `delete config.env` behavior.
+              const userInclude = config.env?.include ?? []
               config.jsc ??= {}
-
-              config.jsc.target ??= getESVersionTarget(isProd)
+              config.env = {
+                targets: ES_ENV_TARGETS,
+                include: [
+                  ...getESVersionEnvInclude(getESVersionTarget(isProd)),
+                  ...userInclude,
+                ],
+              }
             },
           },
         })
