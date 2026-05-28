@@ -621,10 +621,30 @@ export function DemosPage(props: {
       ));
 
   return (
-    <div
-      ref={pageRef}
-      className={isPanelResizing ? 'demosPage resizing' : 'demosPage'}
-    >
+    <div className='demosPageOuter'>
+      {/* Single, independent Speed control — applies to whatever "play"
+         happens next: default streaming when the iframe loads, or the chunk
+         cadence once the user presses ▶ Play. Single source of truth. */}
+      <div className='workspaceSpeedBar'>
+        <label className='simSpeedLabel' htmlFor='workspaceSpeed'>
+          Speed
+        </label>
+        <input
+          id='workspaceSpeed'
+          className='simSpeedSlider workspaceSpeedSlider'
+          type='range'
+          min='0.25'
+          max='4'
+          step='0.25'
+          value={playbackSpeed}
+          onChange={(e) => setPlaybackSpeed(Number(e.target.value))}
+        />
+        <span className='simSpeedValue'>{playbackSpeed}x</span>
+      </div>
+      <div
+        ref={pageRef}
+        className={isPanelResizing ? 'demosPage resizing' : 'demosPage'}
+      >
       <aside className='sidebar'>
         <div className='sidebarTopNav'>
           <button
@@ -689,23 +709,6 @@ export function DemosPage(props: {
                 )}
               <div className='spacer' />
               <div className='playbackHeaderControls'>
-                <label
-                  className='simSpeedLabel'
-                  htmlFor='inlinePbSpeed'
-                >
-                  Speed
-                </label>
-                <input
-                  id='inlinePbSpeed'
-                  className='simSpeedSlider'
-                  type='range'
-                  min='0.25'
-                  max='4'
-                  step='0.25'
-                  value={playbackSpeed}
-                  onChange={(e) => setPlaybackSpeed(Number(e.target.value))}
-                />
-                <span className='simSpeedValue'>{playbackSpeed}x</span>
                 {isPlaybackActive
                   ? (
                     <button
@@ -869,10 +872,12 @@ export function DemosPage(props: {
           className='previewPanel examplesPreviewPanel'
           title='Lynx Preview'
           showPreviewModeSwitch
-          // During playback, the inline playback header owns the speed control;
-          // hide PreviewPanel's duplicate "Simulated" speed bar to avoid two
-          // levers that fight each other.
-          showSimulationBar={!isPlaybackActive}
+          // The playback panel's single Speed slider drives both the URL
+          // `?speed=` for default streaming AND the playback chunk cadence,
+          // so PreviewPanel's own "Simulated" bar would just duplicate it.
+          showSimulationBar={false}
+          speed={playbackSpeed}
+          onSpeedChange={setPlaybackSpeed}
           previewSource={previewSource}
         >
           <PreviewViewport
@@ -884,6 +889,7 @@ export function DemosPage(props: {
             emptySubTitle='Lynx rendering will appear here'
           />
         </PreviewPanel>
+      </div>
       </div>
     </div>
   );
