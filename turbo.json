@@ -14,6 +14,7 @@
   "tasks": {
     "api-extractor": {
       "dependsOn": [
+        "build",
         "//#build"
       ],
       "cache": false

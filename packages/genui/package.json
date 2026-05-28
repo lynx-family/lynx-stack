@@ -94,7 +94,7 @@
   "scripts": {
     "api-extractor": "api-extractor run --verbose",
     "build": "pnpm run clean && pnpm --dir a2ui-catalog-extractor build && pnpm --dir a2ui-prompt build && pnpm --dir openui build && pnpm --dir a2ui build && tsc --project tsconfig.build.json",
-    "clean": "node -e \"const fs=require('node:fs'); for (const path of ['dist','a2ui/dist','a2ui/tsconfig.build.tsbuildinfo','a2ui-catalog-extractor/dist','a2ui-prompt/dist','openui/dist','openui/tsconfig.build.tsbuildinfo']) fs.rmSync(path,{recursive:true,force:true});\""
+    "clean": "node -e \"require('node:fs').rmSync('dist',{recursive:true,force:true});\""
   },
   "dependencies": {
     "@a2ui/web_core": "0.9.1",
