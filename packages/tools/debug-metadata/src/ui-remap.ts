@@ -23,18 +23,19 @@ export interface UiSourceLocation {
 
 /**
  * One UI node of the tree the Lynx engine dumps — the input to
- * {@link remapUiTree}. Three fields are assumed: `nodeIndex` and
- * `debugMetadataUrl` (required — they're what reverse-resolution keys
- * off) and an optional `children`. Every other field is opaque and
- * passes through untouched.
+ * {@link remapUiTree}. Three fields are read: `nodeIndex` and
+ * `debugMetadataUrl` drive reverse-resolution, and `children` is walked
+ * recursively. All three are optional because the engine emits nodes that
+ * carry no source mapping (e.g. raw-text nodes have no `nodeIndex`); such
+ * nodes pass through untouched. Every other field is opaque.
  *
  * @public
  */
 export interface UiNode {
   /** Compile-time node identity, looked up in the UI source map. */
-  nodeIndex: number;
+  nodeIndex?: number;
   /** URL/path of the `debug-metadata.json` covering this node. */
-  debugMetadataUrl: string;
+  debugMetadataUrl?: string;
   /** Child nodes, walked recursively. */
   children?: UiNode[];
   [field: string]: unknown;
@@ -60,12 +61,15 @@ function isRecord(value: unknown): value is Record<string, unknown> {
 }
 
 /**
- * Assert that a parsed value is a {@link UiNode} tree, recursively
- * checking the assumed fields: `nodeIndex` (number), `debugMetadataUrl`
- * (string), and an optional `children` array. Use it at trust boundaries
- * — e.g. right after `JSON.parse`-ing an engine dump — so malformed input
- * fails fast with a located error (`$.children[1]`-style path) instead of
- * crashing deep inside resolution.
+ * Assert that a parsed value is a {@link UiNode} tree. Use it at trust
+ * boundaries — e.g. right after `JSON.parse`-ing an engine dump — so
+ * malformed input fails fast with a located error (`$.children[1]`-style
+ * path) instead of crashing deep inside resolution.
+ *
+ * `nodeIndex`, `debugMetadataUrl` and `children` are all optional (the
+ * engine emits nodes with no source mapping, such as raw text); they are
+ * only rejected when present with the wrong type. A non-object, or a
+ * `children` that is not an array, is always rejected.
  *
  * @public
  */
@@ -76,10 +80,15 @@ export function assertUiNode(
   if (!isRecord(value)) {
     throw new Error(`Invalid UI node at ${path}: expected an object`);
   }
-  if (typeof value['nodeIndex'] !== 'number') {
+  if (
+    value['nodeIndex'] !== undefined && typeof value['nodeIndex'] !== 'number'
+  ) {
     throw new Error(`Invalid UI node at ${path}: "nodeIndex" must be a number`);
   }
-  if (typeof value['debugMetadataUrl'] !== 'string') {
+  if (
+    value['debugMetadataUrl'] !== undefined
+    && typeof value['debugMetadataUrl'] !== 'string'
+  ) {
     throw new Error(
       `Invalid UI node at ${path}: "debugMetadataUrl" must be a string`,
     );
@@ -228,13 +237,19 @@ export async function remapUiTree(
       out.children = await Promise.all(node.children.map(remapNode));
     }
 
-    const { lookup, repo } = await resolve(node.debugMetadataUrl);
-    const location = lookup.get(node.nodeIndex);
-    if (location !== undefined) {
-      out.repo = repo;
-      out.source = location.source;
-      out.line = location.line;
-      out.column = location.column;
+    if (
+      typeof node.debugMetadataUrl === 'string'
+      && node.debugMetadataUrl.length > 0
+      && typeof node.nodeIndex === 'number'
+    ) {
+      const { lookup, repo } = await resolve(node.debugMetadataUrl);
+      const location = lookup.get(node.nodeIndex);
+      if (location !== undefined) {
+        out.repo = repo;
+        out.source = location.source;
+        out.line = location.line;
+        out.column = location.column;
+      }
     }
 
     return out;

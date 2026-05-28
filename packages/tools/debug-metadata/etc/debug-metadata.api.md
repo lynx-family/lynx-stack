@@ -206,8 +206,8 @@ export interface UiNode {
     // (undocumented)
     [field: string]: unknown;
     children?: UiNode[];
-    debugMetadataUrl: string;
-    nodeIndex: number;
+    debugMetadataUrl?: string;
+    nodeIndex?: number;
 }
 
 // @public

@@ -190,6 +190,26 @@ describe('remapUiTree', () => {
       ),
     ).rejects.toThrow(/Invalid debug-metadata loaded from "[^"]+"/);
   });
+
+  test('passes nodes without source mapping through, never loading metadata', async () => {
+    const loader = vi.fn(() => Promise.resolve(load()));
+    const output = await remapUiTree(
+      {
+        // root has no nodeIndex/debugMetadataUrl (e.g. raw text)
+        sign: 1,
+        tag: 'raw-text',
+        children: [{ sign: 2, tag: 'raw-text' }],
+      },
+      loader,
+    );
+
+    expect(loader).not.toHaveBeenCalled();
+    expect(output).toEqual({
+      sign: 1,
+      tag: 'raw-text',
+      children: [{ sign: 2, tag: 'raw-text' }],
+    });
+  });
 });
 
 describe('assertUiNode', () => {
@@ -203,19 +223,23 @@ describe('assertUiNode', () => {
     ).not.toThrow();
   });
 
-  test('accepts a leaf node without children', () => {
-    expect(() => assertUiNode({ nodeIndex: 1, debugMetadataUrl: 'x' }))
-      .not.toThrow();
+  test('accepts nodes that omit nodeIndex / debugMetadataUrl', () => {
+    // e.g. raw-text nodes the engine emits without a nodeIndex.
+    expect(() => assertUiNode({ sign: 1, tag: 'raw-text' })).not.toThrow();
+    expect(() =>
+      assertUiNode({
+        nodeIndex: 1,
+        debugMetadataUrl: 'x',
+        children: [{ sign: 2, tag: 'raw-text' }],
+      })
+    ).not.toThrow();
   });
 
   test.each([
     [42, /at \$: expected an object/],
-    [{ debugMetadataUrl: 'x' }, /at \$: "nodeIndex" must be a number/],
-    [{ nodeIndex: 1 }, /at \$: "debugMetadataUrl" must be a string/],
-    [
-      { nodeIndex: 1, debugMetadataUrl: 'x', children: {} },
-      /at \$: "children" must be an array/,
-    ],
+    [{ nodeIndex: 'x' }, /at \$: "nodeIndex" must be a number/],
+    [{ debugMetadataUrl: 5 }, /at \$: "debugMetadataUrl" must be a string/],
+    [{ children: {} }, /at \$: "children" must be an array/],
   ])('rejects %o', (value, pattern) => {
     expect(() => assertUiNode(value)).toThrow(pattern);
   });
@@ -227,9 +251,9 @@ describe('assertUiNode', () => {
         debugMetadataUrl: 'x',
         children: [
           { nodeIndex: 2, debugMetadataUrl: 'y' },
-          { nodeIndex: 3 },
+          { nodeIndex: 'bad' },
         ],
       })
-    ).toThrow(/at \$\.children\[1\]: "debugMetadataUrl" must be a string/);
+    ).toThrow(/at \$\.children\[1\]: "nodeIndex" must be a number/);
   });
 });
