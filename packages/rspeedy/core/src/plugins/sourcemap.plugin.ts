@@ -14,7 +14,7 @@ export function pluginSourcemap(): RsbuildPlugin {
     name: 'lynx:rsbuild:sourcemap',
     pre: ['lynx:rsbuild:dev'],
     setup(api) {
-      api.modifyBundlerChain((chain, { isDev }) => {
+      api.modifyBundlerChain((chain, { isDev, environment }) => {
         const { dev, output, server } = api.getRsbuildConfig('current')
 
         const publicPath = isDev ? dev?.assetPrefix : output?.assetPrefix
@@ -53,8 +53,12 @@ export function pluginSourcemap(): RsbuildPlugin {
             }
             case 'undefined':
             case 'object': {
+              const isLynx = environment.name === 'lynx'
+                || environment.name.startsWith('lynx-')
               return output?.sourceMap?.js
-                ?? (isDev ? DEFAULT_DEV_DEVTOOL : false)
+                ?? (isDev
+                  ? DEFAULT_DEV_DEVTOOL
+                  : (isLynx ? 'source-map' : false))
             }
           }
         }

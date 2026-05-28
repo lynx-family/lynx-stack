@@ -22,9 +22,11 @@
     "README.md"
   ],
   "scripts": {
+    "api-extractor": "node ../scripts/run-api-extractor.mjs",
     "build": "rslib build"
   },
   "devDependencies": {
+    "@microsoft/api-extractor": "catalog:",
     "@types/node": "^24.10.13"
   },
   "engines": {

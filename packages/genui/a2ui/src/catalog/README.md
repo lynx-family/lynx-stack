@@ -57,10 +57,16 @@ agentChannel.handshake({ catalog: serializeCatalog(catalog) });
 The protocol name lives in the JSON as the top-level key, so the runtime
 never duplicates it.
 
-## "I really want every built-in" — the paste-able recipe
+## "I really want every built-in" - the paste-able recipe
+
+This includes every built-in component and the A2UI v0.9 basic-catalog
+function entries. The package intentionally does not export this as
+`catalog/all`; keep the list at the integration site so the bundle cost stays
+visible.
 
 ```tsx
 import {
+  basicFunctions,
   defineCatalog,
   Button,
   Card,
@@ -160,11 +166,13 @@ export const allBuiltins = defineCatalog([
   [RadioGroup, radioGroupManifest],
   [Slider, sliderManifest],
   [Tabs, tabsManifest],
+  ...basicFunctions,
 ]);
 ```
 
 Drop the `manifest` import + tuple form for any component whose schema you
-don't need to ship to the agent.
+don't need to ship to the agent. Keep `...basicFunctions` if your A2UI
+messages use function calls in dynamic props, actions, or validation checks.
 
 ## Custom components
 

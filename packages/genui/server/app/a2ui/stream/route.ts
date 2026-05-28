@@ -22,6 +22,7 @@ import {
 } from '../_shared';
 import type { A2UIChatBody } from '../_shared';
 import { corsHeaders, corsPreflight, jsonWithCors } from '../cors';
+import { publishA2UIPayload } from '../payload-publisher';
 import { checkRateLimit, rateLimitSseResponse } from '../rate-limit';
 
 export const runtime = 'nodejs';
@@ -68,12 +69,30 @@ export function OPTIONS(req: Request) {
 }
 
 export async function POST(req: Request) {
+  const { log, requestId } = createStreamLogger('/a2ui/stream');
+  log('request.received', {
+    contentLength: req.headers.get('content-length'),
+  });
+
   const decision = checkRateLimit(req);
   if (!decision.ok) {
+    log('rate_limit.rejected', {
+      retryAfterSec: decision.retryAfterSec,
+      remaining: decision.remaining,
+      resetAt: decision.resetAt,
+    });
     return rateLimitSseResponse(req, decision);
   }
+  log('rate_limit.accepted', {
+    remaining: decision.remaining,
+    resetAt: decision.resetAt,
+  });
 
   const parsed = await readJsonBodyWithLimit<A2UIChatBody>(req);
+  log(parsed.ok ? 'body.parsed' : 'body.rejected', {
+    ...parsed.metrics,
+    error: parsed.ok ? undefined : parsed.error,
+  });
   if (!parsed.ok) {
     return jsonWithCors(
       req,
@@ -83,8 +102,13 @@ export async function POST(req: Request) {
   }
   const body = parsed.body;
 
+  const validationStartedAt = performance.now();
   const validated = validateMessages(body.messages);
   if (!validated.ok) {
+    log('messages.rejected', {
+      durationMs: performance.now() - validationStartedAt,
+      error: validated.error,
+    });
     return jsonWithCors(
       req,
       { ok: false, error: validated.error },
@@ -94,22 +118,42 @@ export async function POST(req: Request) {
   const messages = validated.messages;
   const validatedConversation = validateConversation(body.conversation);
   if (!validatedConversation.ok) {
+    log('conversation.rejected', {
+      durationMs: performance.now() - validationStartedAt,
+      error: validatedConversation.error,
+    });
     return jsonWithCors(
       req,
       { ok: false, error: validatedConversation.error },
       { status: validatedConversation.status },
     );
   }
-  const opts = pickChatOptions(body);
+  log('request.validated', {
+    durationMs: performance.now() - validationStartedAt,
+  });
+  const opts = {
+    ...pickChatOptions(body),
+    onPerformanceEvent: (event: string, details = {}) => {
+      log(event, details);
+    },
+  };
   const service = getA2UIAgentService();
-  const { log, requestId } = createStreamLogger('/a2ui/stream');
 
   log('request.accepted', {
     messageCount: messages.length,
+    messageChars: messages.reduce(
+      (total, message) => total + message.content.length,
+      0,
+    ),
     conversationHistoryCount: validatedConversation.conversation?.history.length
       ?? 0,
+    conversationHistoryChars: validatedConversation.conversation?.history
+      .reduce((total, message) => total + message.content.length, 0) ?? 0,
     dataModelKeyCount: validatedConversation.conversation
       ? Object.keys(validatedConversation.conversation.dataModel).length
+      : 0,
+    dataModelChars: validatedConversation.conversation
+      ? JSON.stringify(validatedConversation.conversation.dataModel).length
       : 0,
     model: opts.model,
     hasBaseURL: Boolean(opts.baseURL),
@@ -124,20 +168,34 @@ export async function POST(req: Request) {
       };
 
       try {
+        const connectStartedAt = performance.now();
+        log('agent.connect.started');
         const { textStream, finalize } = await service.streamAsAsyncIterable(
           messages,
           opts,
           validatedConversation.conversation,
         );
+        log('agent.connect.completed', {
+          durationMs: performance.now() - connectStartedAt,
+        });
         const protocolParser = new A2UIProtocolMessageStreamParser();
         const streamedMessages: unknown[] = [];
         let streamedText = '';
         let chunkCount = 0;
+        let firstChunkLogged = false;
 
         log('upstream.stream.started');
 
         for await (const chunk of textStream) {
           chunkCount += 1;
+          if (!firstChunkLogged) {
+            firstChunkLogged = true;
+            log('upstream.first_chunk', {
+              durationSinceConnectStartedMs: performance.now()
+                - connectStartedAt,
+              chunkLength: chunk.length,
+            });
+          }
           streamedText += chunk;
           enqueue('delta', { text: chunk });
           const newMessages = protocolParser.push(chunk);
@@ -268,10 +326,15 @@ export async function POST(req: Request) {
           }
         }
 
+        const preview = validation.ok
+          ? await publishA2UIPayload(validation.messages)
+          : undefined;
+
         log('done.enqueued', {
           validationOk: validation.ok,
           validationErrorCount: validation.errors.length,
           messageCount: validation.messages.length,
+          hasPreviewUrl: Boolean(preview?.messagesUrl),
           repairAttempted: repair?.attempted ?? false,
           repairOk: repair?.ok,
           requestId,
@@ -281,6 +344,7 @@ export async function POST(req: Request) {
           usage,
           finishReason,
           validation,
+          preview,
           repair,
         });
       } catch (err: unknown) {

@@ -23,6 +23,7 @@ import {
   validateConversation,
 } from '../../_shared';
 import { corsHeaders, corsPreflight, jsonWithCors } from '../../cors';
+import { publishA2UIPayload } from '../../payload-publisher';
 import { checkRateLimit, rateLimitSseResponse } from '../../rate-limit';
 
 export const runtime = 'nodejs';
@@ -84,12 +85,30 @@ export function OPTIONS(req: Request) {
 }
 
 export async function POST(req: Request) {
+  const { log, requestId } = createStreamLogger('/a2ui/action/stream');
+  log('request.received', {
+    contentLength: req.headers.get('content-length'),
+  });
+
   const decision = checkRateLimit(req);
   if (!decision.ok) {
+    log('rate_limit.rejected', {
+      retryAfterSec: decision.retryAfterSec,
+      remaining: decision.remaining,
+      resetAt: decision.resetAt,
+    });
     return rateLimitSseResponse(req, decision);
   }
+  log('rate_limit.accepted', {
+    remaining: decision.remaining,
+    resetAt: decision.resetAt,
+  });
 
   const parsed = await readJsonBodyWithLimit<A2UIActionStreamBody>(req);
+  log(parsed.ok ? 'body.parsed' : 'body.rejected', {
+    ...parsed.metrics,
+    error: parsed.ok ? undefined : parsed.error,
+  });
   if (!parsed.ok) {
     return jsonWithCors(
       req,
@@ -99,7 +118,12 @@ export async function POST(req: Request) {
   }
   const body = parsed.body;
 
+  const validationStartedAt = performance.now();
   if (!body.action || !body.action.name) {
+    log('action.rejected', {
+      durationMs: performance.now() - validationStartedAt,
+      error: 'action.name is required',
+    });
     return jsonWithCors(
       req,
       { ok: false, error: 'action.name is required' },
@@ -108,6 +132,10 @@ export async function POST(req: Request) {
   }
 
   if (!body.surfaceId) {
+    log('action.rejected', {
+      durationMs: performance.now() - validationStartedAt,
+      error: 'surfaceId is required for action responses',
+    });
     return jsonWithCors(
       req,
       {
@@ -120,12 +148,19 @@ export async function POST(req: Request) {
 
   const validatedConversation = validateConversation(body.conversation);
   if (!validatedConversation.ok) {
+    log('conversation.rejected', {
+      durationMs: performance.now() - validationStartedAt,
+      error: validatedConversation.error,
+    });
     return jsonWithCors(
       req,
       { ok: false, error: validatedConversation.error },
       { status: validatedConversation.status },
     );
   }
+  log('request.validated', {
+    durationMs: performance.now() - validationStartedAt,
+  });
 
   const service = getA2UIAgentService();
   const payload = {
@@ -134,6 +169,11 @@ export async function POST(req: Request) {
   };
   const userContent = `A2UI_USER_ACTION: ${JSON.stringify(payload)}`;
   if (userContent.length > MAX_MESSAGE_CHARS) {
+    log('action.rejected', {
+      durationMs: performance.now() - validationStartedAt,
+      error: `synthesized user action exceeds ${MAX_MESSAGE_CHARS} characters`,
+      userContentLength: userContent.length,
+    });
     return jsonWithCors(
       req,
       {
@@ -149,16 +189,25 @@ export async function POST(req: Request) {
     content: userContent,
   };
 
-  const opts = pickChatOptions(body);
-  const { log, requestId } = createStreamLogger('/a2ui/action/stream');
+  const opts = {
+    ...pickChatOptions(body),
+    onPerformanceEvent: (event: string, details = {}) => {
+      log(event, details);
+    },
+  };
 
   log('request.accepted', {
     surfaceId: body.surfaceId,
     actionName: body.action.name,
     conversationHistoryCount: validatedConversation.conversation?.history.length
       ?? 0,
+    conversationHistoryChars: validatedConversation.conversation?.history
+      .reduce((total, message) => total + message.content.length, 0) ?? 0,
     dataModelKeyCount: validatedConversation.conversation
       ? Object.keys(validatedConversation.conversation.dataModel).length
+      : 0,
+    dataModelChars: validatedConversation.conversation
+      ? JSON.stringify(validatedConversation.conversation.dataModel).length
       : 0,
     userContentLength: userContent.length,
     model: opts.model,
@@ -174,20 +223,34 @@ export async function POST(req: Request) {
       };
 
       try {
+        const connectStartedAt = performance.now();
+        log('agent.connect.started');
         const { textStream, finalize } = await service.streamAsAsyncIterable(
           [userMessage],
           opts,
           validatedConversation.conversation,
         );
+        log('agent.connect.completed', {
+          durationMs: performance.now() - connectStartedAt,
+        });
         const protocolParser = new A2UIProtocolMessageStreamParser();
         const streamedMessages: unknown[] = [];
         let streamedText = '';
         let chunkCount = 0;
+        let firstChunkLogged = false;
 
         log('upstream.stream.started');
 
         for await (const chunk of textStream) {
           chunkCount += 1;
+          if (!firstChunkLogged) {
+            firstChunkLogged = true;
+            log('upstream.first_chunk', {
+              durationSinceConnectStartedMs: performance.now()
+                - connectStartedAt,
+              chunkLength: chunk.length,
+            });
+          }
           streamedText += chunk;
           enqueue('delta', { text: chunk });
           const newMessages = protocolParser.push(chunk);
@@ -330,10 +393,15 @@ export async function POST(req: Request) {
           }
         }
 
+        const preview = validation.ok
+          ? await publishA2UIPayload(validation.messages)
+          : undefined;
+
         log('done.enqueued', {
           validationOk: validation.ok,
           validationErrorCount: validation.errors.length,
           messageCount: validation.messages.length,
+          hasPreviewUrl: Boolean(preview?.messagesUrl),
           repairAttempted: repair?.attempted ?? false,
           repairOk: repair?.ok,
           requestId,
@@ -343,6 +411,7 @@ export async function POST(req: Request) {
           usage,
           finishReason,
           validation,
+          preview,
           repair,
         });
       } catch (err: unknown) {

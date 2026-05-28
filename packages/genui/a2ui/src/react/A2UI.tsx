@@ -13,9 +13,9 @@ import {
 } from '@lynx-js/react';
 import type { ReactNode } from '@lynx-js/react';
 
-import { A2UIProvider } from './A2UIProvider.js';
-import { A2UIRenderer } from './A2UIRenderer.js';
-import type { UnsupportedInfo } from './A2UIRenderer.js';
+import { A2UIProvider } from './A2UIProvider.jsx';
+import { A2UIRenderer } from './A2UIRenderer.jsx';
+import type { UnsupportedInfo } from './A2UIRenderer.jsx';
 import type { Catalog, CatalogInput } from '../catalog/defineCatalog.js';
 import { defineCatalog } from '../catalog/defineCatalog.js';
 import { MessageProcessor } from '../store/MessageProcessor.js';

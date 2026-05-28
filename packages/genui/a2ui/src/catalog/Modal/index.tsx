@@ -9,7 +9,7 @@ import {
 } from '@lynx-js/lynx-ui';
 import { useState } from '@lynx-js/react';
 
-import { NodeRenderer } from '../../react/A2UIRenderer.js';
+import { NodeRenderer } from '../../react/A2UIRenderer.jsx';
 import type {
   ComponentInstance,
   GenericComponentProps,

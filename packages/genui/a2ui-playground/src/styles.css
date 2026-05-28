@@ -1102,13 +1102,14 @@ html[data-theme="dark"] .phoneHomeIndicator {
 
 .previewQrUrlRow {
   margin-top: 6px;
-  display: flex;
+  display: inline-flex;
   align-items: center;
   gap: 8px;
+  max-width: 100%;
 }
 
 .previewQrUrlText {
-  flex: 1;
+  flex: 0 1 auto;
   min-width: 0;
   font-size: 11px;
   font-family: var(--geist-mono);

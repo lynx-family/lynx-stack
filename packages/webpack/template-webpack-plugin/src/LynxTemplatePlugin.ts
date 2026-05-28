@@ -24,7 +24,6 @@ import { cssChunksToMap } from '@lynx-js/css-serializer';
 import { RuntimeGlobals } from '@lynx-js/webpack-runtime-globals';
 
 import { createLynxAsyncChunksRuntimeModule } from './LynxAsyncChunksRuntimeModule.js';
-import { LynxDebugMetadataPlugin } from './LynxDebugMetadataPlugin.js';
 
 export type OriginManifest = Record<string, {
   content: string;
@@ -469,9 +468,6 @@ export class LynxTemplatePlugin {
       compiler,
       Object.assign({}, LynxTemplatePlugin.defaultOptions, this.options),
     );
-    new LynxDebugMetadataPlugin({
-      LynxTemplatePlugin,
-    }).apply(compiler);
   }
 }
 
@@ -789,23 +785,7 @@ class LynxTemplatePluginImpl {
       enableCSSSelector,
     );
 
-    let templateDebugUrl = '';
     const intermediatePosix = intermediate.replace(/\\/g, '/');
-    const debugInfoPath = path.posix.format({
-      dir: intermediatePosix,
-      base: 'debug-info.json',
-    });
-    // TODO: Support publicPath function
-    if (
-      typeof compiler.options.output.publicPath === 'string'
-      && compiler.options.output.publicPath !== 'auto'
-      && compiler.options.output.publicPath !== '/'
-    ) {
-      templateDebugUrl = new URL(
-        debugInfoPath,
-        compiler.options.output.publicPath,
-      ).toString();
-    }
 
     const encodeRawData: EncodeRawData = {
       compilerOptions: {
@@ -813,7 +793,8 @@ class LynxTemplatePluginImpl {
         useLepusNG: true,
         enableReuseContext: true,
         bundleModuleMode: 'ReturnByFunction',
-        templateDebugUrl,
+        // Will be filled later in `@lynx-js/debug-metadata-rsbuild-plugin`
+        templateDebugUrl: '',
 
         debugInfoOutside,
         defaultDisplayLinear,
@@ -838,6 +819,8 @@ class LynxTemplatePluginImpl {
           enableCSSInheritance,
           enableNewGesture,
           removeDescendantSelectorScope,
+          // Will be filled later in `@lynx-js/debug-metadata-rsbuild-plugin`
+          debugMetadataUrl: '',
         },
       },
       css: {
@@ -947,10 +930,6 @@ class LynxTemplatePluginImpl {
       });
 
       compilation.emitAsset(filename, new RawSource(template, false));
-
-      if (isDebug() || isDev) {
-        compilation.emitAsset(debugInfoPath, new RawSource(debugInfo));
-      }
 
       await hooks.afterEmit.promise({ outputName: filename });
     } catch (error) {

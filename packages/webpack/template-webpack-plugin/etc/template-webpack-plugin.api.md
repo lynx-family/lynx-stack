@@ -47,21 +47,6 @@ export interface EncodeOptions {
 }
 
 // @public
-export class LynxDebugMetadataPlugin {
-    constructor(options?: LynxDebugMetadataPluginOptions | undefined);
-    apply(compiler: Compiler): void;
-    static defaultOptions: Readonly<Omit<Required<LynxDebugMetadataPluginOptions>, 'LynxTemplatePlugin'>>;
-    // (undocumented)
-    protected options?: LynxDebugMetadataPluginOptions | undefined;
-}
-
-// @public
-export interface LynxDebugMetadataPluginOptions {
-    debugMetadataAssetName?: string;
-    LynxTemplatePlugin: typeof LynxTemplatePlugin;
-}
-
-// @public
 export class LynxEncodePlugin {
     constructor(options?: LynxEncodePluginOptions | undefined);
     apply(compiler: Compiler): void;
@@ -187,11 +172,6 @@ export interface TemplateHooks {
         cssDiagnostics?: string;
     }>;
 }
-
-// Warning: (ae-missing-release-tag) "UI_SOURCE_MAP_RECORDS_BUILD_INFO" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
-//
-// @public (undocumented)
-export const UI_SOURCE_MAP_RECORDS_BUILD_INFO = "lynxUiSourceMapRecords";
 
 // Warning: (ae-missing-release-tag) "WebEncodePlugin" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
 //
