@@ -8,10 +8,12 @@ import './AIChatPage.css';
 import { ConfirmDialog } from '../components/ConfirmDialog.js';
 import { ConversationListPanel } from '../components/ConversationListPanel.js';
 import { CopyToast, useCopyToast } from '../components/CopyToast.js';
+import { InstantExamplesStrip } from '../components/InstantExamplesStrip.js';
 import { PageHeader } from '../components/PageHeader.js';
 import { PanelResizeHandle } from '../components/PanelResizeHandle.js';
 import { PreviewPanel } from '../components/PreviewPanel.js';
 import { PreviewViewport } from '../components/PreviewViewport.js';
+import type { StaticDemo } from '../demos.js';
 import { useConversation } from '../hooks/useConversation.js';
 import type { ModelChatMessage } from '../hooks/useConversation.js';
 import { useResizablePanels } from '../hooks/useResizablePanels.js';
@@ -1494,6 +1496,67 @@ export function AIChatPage(
     [handleSend],
   );
 
+  const handleLoadExample = useCallback(
+    (demo: StaticDemo) => {
+      if (isGenerating) return;
+      const messages = Array.isArray(demo.messages)
+        ? (demo.messages as unknown[])
+        : [];
+      if (messages.length === 0) return;
+
+      abortRef.current?.abort();
+      actionAbortRef.current?.abort();
+
+      // Synthetic user message keeps follow-up prompts in context (e.g.
+      // "change the price to $99" sees what's on screen) while clearly
+      // labeling the entry as an offline example load.
+      const userMessage: ModelChatMessage = {
+        role: 'user',
+        content: `Load offline example: ${demo.title}${
+          demo.description ? `. ${demo.description}` : ''
+        }`,
+      };
+      const assistantContent = JSON.stringify(messages);
+
+      setInputValue('');
+      publishPreviewMessages(messages);
+
+      setMessages([
+        WELCOME_MESSAGE,
+        {
+          role: 'status' as const,
+          tone: 'info',
+          content: (
+            <>
+              <span className='chatMessageStatusIcon' aria-hidden='true'>
+                ⚡
+              </span>
+              <span>
+                Loaded offline example{' '}
+                <code className='chatMessageStatusInline'>{demo.title}</code>
+                {' '}
+                — no API call made.
+              </span>
+            </>
+          ),
+        },
+        {
+          role: 'json',
+          content: 'Recorded A2UI Stream',
+          payload: assistantContent,
+        },
+      ]);
+
+      void recordTurn({
+        userMessage,
+        assistantContent,
+        a2uiMessages: messages,
+        previewMessages: messages,
+      });
+    },
+    [isGenerating, publishPreviewMessages, recordTurn],
+  );
+
   const handleCreateConversation = useCallback(() => {
     void createNew();
   }, [createNew]);
@@ -1682,19 +1745,42 @@ export function AIChatPage(
           <div className='chatInputArea'>
             {messages.length === 1
               ? (
-                <div className='chatSuggestionsRow'>
-                  {SUGGESTED_PROMPTS.map((p) => (
-                    <button
-                      key={p.label}
-                      type='button'
-                      className='chatSuggestionChip'
-                      disabled={isGenerating}
-                      onClick={() => setInputValue(p.text)}
-                    >
-                      {p.label}
-                    </button>
-                  ))}
-                </div>
+                <>
+                  <InstantExamplesStrip
+                    protocol={protocol}
+                    theme={theme}
+                    disabled={isGenerating}
+                    onSelectExample={handleLoadExample}
+                    onBrowseAllHref={`#/${protocol.name}/examples`}
+                  />
+                  <div className='promptSuggestions'>
+                    <div className='promptSuggestionsHeader'>
+                      <span className='promptSuggestionsLabel'>
+                        <span
+                          className='promptSuggestionsLabelDot'
+                          aria-hidden='true'
+                        />
+                        Describe with a prompt
+                        <span className='promptSuggestionsLabelHint'>
+                          · uses online agent
+                        </span>
+                      </span>
+                    </div>
+                    <div className='promptSuggestionsRail'>
+                      {SUGGESTED_PROMPTS.map((p) => (
+                        <button
+                          key={p.label}
+                          type='button'
+                          className='chatSuggestionChip'
+                          disabled={isGenerating}
+                          onClick={() => setInputValue(p.text)}
+                        >
+                          {p.label}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                </>
               )
               : null}
             <div className='chatComposer'>
