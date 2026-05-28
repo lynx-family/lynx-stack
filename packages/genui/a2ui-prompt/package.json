@@ -1,6 +1,7 @@
 {
-  "name": "@lynx-js/a2ui-prompt",
+  "name": "@lynx-js/genui-a2ui-prompt",
   "version": "0.0.0",
+  "private": true,
   "description": "A2UI prompt and catalog rendering utilities for CLI prompt generation.",
   "repository": {
     "type": "git",

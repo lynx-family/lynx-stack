@@ -1,5 +1,5 @@
 @import "@lynx-js/luna-styles/index.css";
-@import "@lynx-js/a2ui-reactlynx/styles/theme.css";
+@import "@lynx-js/genui/a2ui/styles/theme.css";
 
 :root {
   display: flex;

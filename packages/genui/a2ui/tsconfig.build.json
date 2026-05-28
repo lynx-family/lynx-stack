@@ -3,6 +3,7 @@
   "compilerOptions": {
     "noEmit": false,
     "rootDir": "./src",
+    "jsx": "react-jsx",
     "tsBuildInfoFile": "./dist/tsconfig.build.tsbuildinfo",
   },
   "include": ["src"],

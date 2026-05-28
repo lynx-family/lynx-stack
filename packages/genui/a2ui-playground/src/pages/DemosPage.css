@@ -443,6 +443,25 @@ html[data-theme="dark"] .detailBackButton:hover {
   flex-direction: column;
 }
 
+.codePanel.resizing {
+  user-select: none;
+}
+
+.codePanelInner {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.codePanelEditorSection {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+}
+
 .codePanelToolbar {
   display: flex;
   align-items: center;
@@ -643,6 +662,370 @@ html[data-theme="dark"] .detailBackButton:hover {
   .examplesPreviewPanel .previewQrSection {
     border-top: 1px solid var(--geist-border);
   }
+}
+
+/* ═══════════════════════════════════════════
+   Inline Playback (embedded in Example detail)
+   ═══════════════════════════════════════════ */
+
+.playbackSplitter {
+  position: relative;
+  flex-shrink: 0;
+  height: 6px;
+  cursor: ns-resize;
+  background: var(--geist-background);
+  border-top: 1px solid var(--geist-border);
+  border-bottom: 1px solid var(--geist-border);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background var(--geist-transition);
+}
+
+.playbackSplitter::before {
+  content: "";
+  position: absolute;
+  inset: -4px 0;
+}
+
+.playbackSplitterGrip {
+  width: 28px;
+  height: 2px;
+  border-radius: 999px;
+  background: color-mix(
+    in srgb,
+    var(--geist-foreground) 18%,
+    transparent
+  );
+  transition: background var(--geist-transition);
+}
+
+.playbackSplitter:hover .playbackSplitterGrip,
+.playbackSplitter.active .playbackSplitterGrip {
+  background: color-mix(
+    in srgb,
+    var(--geist-foreground) 40%,
+    transparent
+  );
+}
+
+.playbackSplitter.active {
+  background: color-mix(
+    in srgb,
+    var(--geist-foreground) 4%,
+    var(--geist-background)
+  );
+}
+
+.playbackSection {
+  flex: 0 0 auto;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  background: color-mix(
+    in srgb,
+    var(--geist-surface) 60%,
+    var(--geist-background)
+  );
+  border-top: 1px solid var(--geist-border);
+  overflow: hidden;
+  /* Smooth grow/shrink as the panel toggles between idle bar and active. */
+  transition: height 220ms cubic-bezier(0.22, 0.61, 0.36, 1);
+}
+
+/* When playback sits above the editor, drop the top border — the page header
+   already separates it and the splitter handles the bottom edge. */
+.playbackSection.top {
+  border-top: none;
+}
+
+/* Idle: slim header strip, JSON editor is the 主角. */
+.playbackSection.idle {
+  background: var(--geist-background);
+}
+
+.playbackSectionHeader {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 0 12px;
+  height: 100%;
+  min-height: 0;
+  border-bottom: 1px solid var(--geist-border);
+  background: var(--geist-background);
+  flex-shrink: 0;
+}
+
+.playbackSection.active .playbackSectionHeader {
+  height: 40px;
+  flex-shrink: 0;
+}
+
+.playbackSection.idle .playbackSectionHeader {
+  border-bottom: none;
+}
+
+.playbackIdleHint {
+  font-size: 12px;
+  color: var(--geist-secondary);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  min-width: 0;
+}
+
+.playbackSectionTitle {
+  font-size: 13px;
+  font-weight: 600;
+  letter-spacing: -0.005em;
+  color: var(--geist-foreground);
+}
+
+.playbackSectionBadge {
+  font-size: 10px;
+  font-weight: 500;
+  padding: 1px 6px;
+  border-radius: 4px;
+  background: var(--geist-surface);
+  border: 1px solid var(--geist-border);
+  color: var(--geist-secondary);
+  text-transform: none;
+  letter-spacing: 0;
+}
+
+.playbackStateDot {
+  width: 7px;
+  height: 7px;
+  border-radius: 999px;
+  background: var(--geist-secondary);
+  margin-left: 2px;
+}
+
+.playbackStateDot.live {
+  background: var(--geist-success, #0070f3);
+  box-shadow: 0 0 0 0
+    color-mix(
+      in srgb,
+      var(--geist-success, #0070f3) 50%,
+      transparent
+    );
+  animation: playbackPulse 1.4s ease-out infinite;
+}
+
+.playbackStateDot.paused {
+  background: color-mix(
+    in srgb,
+    var(--geist-foreground) 45%,
+    transparent
+  );
+}
+
+.playbackStateDot.done {
+  background: var(--geist-success, #0070f3);
+  opacity: 0.6;
+}
+
+@keyframes playbackPulse {
+  0% {
+    box-shadow: 0 0 0 0
+      color-mix(
+        in srgb,
+        var(--geist-success, #0070f3) 50%,
+        transparent
+      );
+  }
+  100% {
+    box-shadow: 0 0 0 6px
+      color-mix(
+        in srgb,
+        var(--geist-success, #0070f3) 0%,
+        transparent
+      );
+  }
+}
+
+.playbackHeaderControls {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-shrink: 0;
+}
+
+.playbackProgressTrack {
+  position: relative;
+  flex-shrink: 0;
+  height: 24px;
+  display: flex;
+  align-items: center;
+  border-bottom: 1px solid var(--geist-border);
+  background: var(--geist-background);
+  overflow: hidden;
+}
+
+.playbackProgressFill {
+  position: absolute;
+  inset: 0 auto 0 0;
+  background: color-mix(
+    in srgb,
+    var(--geist-success, #0070f3) 14%,
+    transparent
+  );
+  transition: width 300ms ease-out;
+  pointer-events: none;
+}
+
+.playbackProgressTrack.active .playbackProgressFill {
+  background: color-mix(
+    in srgb,
+    var(--geist-success, #0070f3) 22%,
+    transparent
+  );
+}
+
+.playbackProgressLabel {
+  position: relative;
+  z-index: 1;
+  padding: 0 12px;
+  font-size: 11px;
+  font-weight: 500;
+  color: var(--geist-secondary);
+  font-family: var(--geist-mono);
+  letter-spacing: 0;
+}
+
+.playbackKbd {
+  display: inline-block;
+  font-family: var(--geist-mono);
+  font-size: 10px;
+  padding: 0 5px;
+  margin: 0 2px;
+  border: 1px solid var(--geist-border);
+  border-radius: 3px;
+  background: var(--geist-surface);
+  color: var(--geist-foreground);
+  line-height: 1.5;
+}
+
+.playbackStream {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  padding: 10px 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.playbackEmpty {
+  margin: auto 0;
+  text-align: center;
+  padding: 12px 24px;
+  color: var(--geist-secondary);
+}
+
+.playbackEmpty.subtle {
+  font-size: 12px;
+  opacity: 0.7;
+}
+
+.playbackEmptyTitle {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--geist-foreground);
+  margin-bottom: 4px;
+}
+
+.playbackEmptyDesc {
+  font-size: 12px;
+  line-height: 1.5;
+  color: var(--geist-secondary);
+  max-width: 38ch;
+  margin: 0 auto;
+}
+
+.playbackChunk {
+  border: 1px solid var(--geist-border);
+  border-radius: var(--geist-radius-md);
+  overflow: hidden;
+  background: var(--geist-background);
+  flex-shrink: 0;
+  transition: border-color var(--geist-transition);
+}
+
+.playbackChunk.live {
+  border-color: color-mix(
+    in srgb,
+    var(--geist-success, #0070f3) 50%,
+    var(--geist-border)
+  );
+  animation: playbackChunkAppear 260ms ease-out;
+}
+
+@keyframes playbackChunkAppear {
+  from {
+    opacity: 0;
+    transform: translateY(4px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.playbackChunkHeader {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 3px 10px;
+  background: color-mix(
+    in srgb,
+    var(--geist-surface) 60%,
+    var(--geist-background)
+  );
+  border-bottom: 1px solid var(--geist-border);
+}
+
+.playbackChunkIndex {
+  font-size: 10px;
+  font-family: var(--geist-mono);
+  font-weight: 600;
+  color: var(--geist-secondary);
+  letter-spacing: 0.02em;
+}
+
+.playbackChunkLiveTag {
+  font-size: 9px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--geist-success, #0070f3);
+  padding: 0 6px;
+  border-radius: 999px;
+  background: color-mix(
+    in srgb,
+    var(--geist-success, #0070f3) 12%,
+    transparent
+  );
+  border: 1px solid
+    color-mix(
+      in srgb,
+      var(--geist-success, #0070f3) 25%,
+      transparent
+    );
+  line-height: 1.4;
+}
+
+.playbackChunkJson {
+  margin: 0;
+  padding: 8px 10px;
+  font-family: var(--geist-mono);
+  font-size: 11px;
+  line-height: 1.55;
+  color: var(--geist-secondary);
+  white-space: pre-wrap;
+  overflow-wrap: break-word;
+  max-height: 200px;
+  overflow-y: auto;
 }
 
 /* Page-level mobile layout: sidebar/codePanel/previewPanel stack vertically.

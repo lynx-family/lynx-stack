@@ -15,7 +15,6 @@ import { DemosListPage } from './pages/DemosListPage.js';
 import { DemosPage } from './pages/DemosPage.js';
 import { OpenUIComponentsPage } from './pages/OpenUIComponentsPage.js';
 import { OpenUIDemosPage } from './pages/OpenUIDemosPage.js';
-import { PlaybackPage } from './pages/PlaybackPage.js';
 import type { Protocol, ProtocolName } from './utils/protocol.js';
 import { DEFAULT_PROTOCOL, getProtocol } from './utils/protocol.js';
 
@@ -24,7 +23,7 @@ const LYNX_LIGHT_LOGO =
 const LYNX_DARK_LOGO =
   'https://lf-lynx.tiktok-cdns.com/obj/lynx-artifacts-oss-sg/lynx-website/assets/lynx-light-logo.svg';
 
-type Tab = 'create' | 'examples' | 'components' | 'playback' | 'catalog';
+type Tab = 'create' | 'examples' | 'components' | 'catalog';
 
 interface TabDef {
   id: Tab;
@@ -35,7 +34,6 @@ const A2UI_TABS: TabDef[] = [
   { id: 'create', label: 'Create' },
   { id: 'examples', label: 'Examples' },
   { id: 'catalog', label: 'Catalog' },
-  { id: 'playback', label: 'Playback' },
 ];
 
 const OPENUI_TABS: TabDef[] = [
@@ -79,8 +77,9 @@ function parseHash(hash: string): Route {
   if (rest[0] === 'chat' || rest[0] === 'create') {
     return { protocol, tab: 'create' };
   }
+  // Back-compat: the standalone Playback tab is gone; route it to Examples.
   if (rest[0] === 'playback') {
-    return { protocol, tab: 'playback' };
+    return { protocol, tab: 'examples' };
   }
   // OpenUI has no create tab, default to examples.
   if (protocol.name === 'openui') return { protocol, tab: 'examples' };
@@ -178,8 +177,6 @@ export function App() {
             theme={theme}
           />
         );
-      case 'playback':
-        return <PlaybackPage key='playback' protocol={protocol} />;
       default:
         return <AIChatPage key='create' protocol={protocol} theme={theme} />;
     }
