@@ -7,7 +7,6 @@ import {
   buildDateTimeMonthPage,
   compareDateTimeParts,
   formatDateTimeInputValue,
-  getDateTimeDialogTitle,
   getDateTimeInputPlaceholder,
   getWeekdayLabels,
   incrementDateTimePart,
@@ -162,19 +161,10 @@ describe('DateTimeInput utils', () => {
     ).toBe(58);
   });
 
-  test('normalizes labels, titles, placeholders, and weekday labels', () => {
+  test('normalizes labels, placeholders, and weekday labels', () => {
     expect(normalizeDateTimeInputLabel('Due')).toBe('Due');
     expect(normalizeDateTimeInputLabel(7)).toBe('7');
     expect(normalizeDateTimeInputLabel({ path: '/label' })).toBe('');
-    expect(
-      getDateTimeDialogTitle('', { enableDate: false, enableTime: true }),
-    ).toBe('Select time');
-    expect(
-      getDateTimeDialogTitle('', { enableDate: true, enableTime: false }),
-    ).toBe('Select date');
-    expect(
-      getDateTimeDialogTitle('Due', { enableDate: false, enableTime: true }),
-    ).toBe('Due');
     expect(
       getDateTimeInputPlaceholder({ enableDate: true, enableTime: true }),
     ).toBe('Select date and time');
