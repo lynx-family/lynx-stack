@@ -621,30 +621,10 @@ export function DemosPage(props: {
       ));
 
   return (
-    <div className='demosPageOuter'>
-      {/* Single, independent Speed control — applies to whatever "play"
-         happens next: default streaming when the iframe loads, or the chunk
-         cadence once the user presses ▶ Play. Single source of truth. */}
-      <div className='workspaceSpeedBar'>
-        <label className='simSpeedLabel' htmlFor='workspaceSpeed'>
-          Speed
-        </label>
-        <input
-          id='workspaceSpeed'
-          className='simSpeedSlider workspaceSpeedSlider'
-          type='range'
-          min='0.25'
-          max='4'
-          step='0.25'
-          value={playbackSpeed}
-          onChange={(e) => setPlaybackSpeed(Number(e.target.value))}
-        />
-        <span className='simSpeedValue'>{playbackSpeed}x</span>
-      </div>
-      <div
-        ref={pageRef}
-        className={isPanelResizing ? 'demosPage resizing' : 'demosPage'}
-      >
+    <div
+      ref={pageRef}
+      className={isPanelResizing ? 'demosPage resizing' : 'demosPage'}
+    >
       <aside className='sidebar'>
         <div className='sidebarTopNav'>
           <button
@@ -872,10 +852,10 @@ export function DemosPage(props: {
           className='previewPanel examplesPreviewPanel'
           title='Lynx Preview'
           showPreviewModeSwitch
-          // The playback panel's single Speed slider drives both the URL
-          // `?speed=` for default streaming AND the playback chunk cadence,
-          // so PreviewPanel's own "Simulated" bar would just duplicate it.
-          showSimulationBar={false}
+          // Speed lives inside PreviewPanel's existing "Simulated" bar,
+          // but state is owned here so it also drives the parent's
+          // `A2UI_PLAYBACK_PROGRESS` tick interval during playback.
+          // Single source of truth, single visible knob, single code path.
           speed={playbackSpeed}
           onSpeedChange={setPlaybackSpeed}
           previewSource={previewSource}
@@ -889,7 +869,6 @@ export function DemosPage(props: {
             emptySubTitle='Lynx rendering will appear here'
           />
         </PreviewPanel>
-      </div>
       </div>
     </div>
   );

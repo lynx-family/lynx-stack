@@ -2,39 +2,10 @@
    Examples Page
    ═══════════════════════════════════════════ */
 
-.demosPageOuter {
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-  min-height: 0;
-  overflow: hidden;
-}
-
-.workspaceSpeedBar {
-  flex: 0 0 auto;
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  height: 40px;
-  padding: 0 16px;
-  border-bottom: 1px solid var(--geist-border);
-  background: color-mix(
-    in srgb,
-    var(--geist-surface) 50%,
-    var(--geist-background)
-  );
-}
-
-.workspaceSpeedSlider {
-  flex: 0 1 320px;
-  max-width: 320px;
-}
-
 .demosPage {
   display: flex;
   flex: 1;
   overflow: hidden;
-  min-height: 0;
 }
 
 .demosPage.resizing {
