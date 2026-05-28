@@ -189,9 +189,12 @@ const A2UI_EN_LINK_REPLACEMENTS = [
   ['./docs/architecture.md', '/guide/genui/a2ui/architecture'],
   ['./docs/catalogs.md', '/guide/genui/a2ui/catalogs'],
   ['./docs/custom-components.md', '/guide/genui/a2ui/custom-components'],
-  ['./src/catalog/README.md', '/guide/genui/a2ui/catalog'],
+  [
+    '[../src/catalog/README.md](../src/catalog/README.md)',
+    '[built-in catalog README](/guide/genui/a2ui/catalog)',
+  ],
   ['../src/catalog/README.md', '/guide/genui/a2ui/catalog'],
-  ['https://lynxjs.org/a2ui', '/a2ui'],
+  ['./src/catalog/README.md', '/guide/genui/a2ui/catalog'],
   [
     '../../a2ui-catalog-extractor/README.md',
     'https://github.com/lynx-family/lynx-stack/tree/main/packages/genui/a2ui-catalog-extractor#readme',
@@ -202,9 +205,12 @@ const A2UI_ZH_LINK_REPLACEMENTS = [
   ['./docs/architecture_zh.md', '/zh/guide/genui/a2ui/architecture'],
   ['./docs/catalogs_zh.md', '/zh/guide/genui/a2ui/catalogs'],
   ['./docs/custom-components_zh.md', '/zh/guide/genui/a2ui/custom-components'],
-  ['./src/catalog/readme_zh.md', '/zh/guide/genui/a2ui/catalog'],
+  [
+    '[../src/catalog/readme_zh.md](../src/catalog/readme_zh.md)',
+    '[内置 Catalog README](/zh/guide/genui/a2ui/catalog)',
+  ],
   ['../src/catalog/readme_zh.md', '/zh/guide/genui/a2ui/catalog'],
-  ['https://lynxjs.org/a2ui', '/a2ui'],
+  ['./src/catalog/readme_zh.md', '/zh/guide/genui/a2ui/catalog'],
   [
     '../../a2ui-catalog-extractor/readme.zh_cn.md',
     'https://github.com/lynx-family/lynx-stack/blob/main/packages/genui/a2ui-catalog-extractor/readme.zh_cn.md',
