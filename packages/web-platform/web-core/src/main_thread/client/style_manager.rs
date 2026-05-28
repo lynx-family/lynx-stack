@@ -9,7 +9,7 @@ use crate::template::template_sections::style_info::StyleSheetResource;
 use fnv::FnvHashMap;
 use wasm_bindgen::prelude::*;
 use wasm_bindgen::JsCast;
-use web_sys::{CssStyleSheet, HtmlStyleElement, Node};
+use web_sys::{CssStyleSheet, HtmlStyleElement, Node, ShadowRoot};
 
 pub struct StyleManager {
   root_node: Node,
@@ -135,11 +135,12 @@ impl StyleManager {
           .set_attribute("name", name)
           .map_err(|e| JsError::new(&format!("Failed to set attribute: {e:?}")))?;
       }
-      if let Some(parent) = self.root_node.parent_element() {
-        parent
-          .append_child(&new_font_face_element)
-          .map_err(|e| JsError::new(&format!("Failed to append child: {e:?}")))?;
-      }
+      self
+        .root_node
+        .unchecked_ref::<ShadowRoot>()
+        .host()
+        .append_child(&new_font_face_element)
+        .map_err(|e| JsError::new(&format!("Failed to append child: {e:?}")))?;
     }
 
     self
