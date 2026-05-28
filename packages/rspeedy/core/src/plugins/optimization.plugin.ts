@@ -9,14 +9,14 @@ export function pluginOptimization(): RsbuildPlugin {
     name: 'lynx:rsbuild:optimization',
     setup(api) {
       api.modifyBundlerChain((chain, { CHAIN_ID, isProd }) => {
-        const rule = chain.module
+        const jsRule = chain.module
           .rule(CHAIN_ID.RULE.JS)
-          .oneOf(CHAIN_ID.ONE_OF.JS_MAIN)
+        const jsMainRule = jsRule.oneOf(CHAIN_ID.ONE_OF.JS_MAIN)
         chain
           .module
           .rule('js-override-strict')
-          .type(rule.get('type') as string)
-          .test(rule.get('test') as RegExp)
+          .type(jsMainRule.get('type') as string)
+          .test(jsRule.get('test') as RegExp)
           // We do not directly apply this to `CHAIN_ID.RULE.JS` since it will not
           // includes the `node_modules` by default.
           .parser({

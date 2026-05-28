@@ -83,7 +83,9 @@ export function applyLoaders(
     //   - builtin:swc-loader
     const uses = jsMainRule.uses.entries() ?? {}
 
-    const backgroundRule = rule.oneOf(LAYERS.BACKGROUND)
+    jsMainRule.uses.clear()
+
+    const backgroundRule = jsMainRule.oneOf(LAYERS.BACKGROUND)
     // dprint-ignore
     backgroundRule
       .issuerLayer(LAYERS.BACKGROUND)
@@ -98,7 +100,7 @@ export function applyLoaders(
         .options(getLoaderOptions(api, options))
       .end()
 
-    const mainThreadRule = rule.oneOf(LAYERS.MAIN_THREAD)
+    const mainThreadRule = jsMainRule.oneOf(LAYERS.MAIN_THREAD)
 
     // dprint-ignore
     mainThreadRule
@@ -132,10 +134,5 @@ export function applyLoaders(
         .loader(ReactWebpackPlugin.loaders.MAIN_THREAD)
         .options(getLoaderOptions(api, options, true))
       .end()
-
-    // Remove the Rsbuild default JS branch after cloning its loaders.
-    // Leaving an empty `JS_MAIN` oneOf in place causes it to match first and
-    // bypass our layer-specific SWC pipeline for TSX entries.
-    rule.oneOfs.delete(CHAIN_ID.ONE_OF.JS_MAIN)
   })
 }
