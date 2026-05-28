@@ -3,7 +3,7 @@
 // LICENSE file in the root directory of this source tree.
 import { useState } from '@lynx-js/react';
 
-import { NodeRenderer } from '../../react/A2UIRenderer.js';
+import { NodeRenderer } from '../../react/A2UIRenderer.jsx';
 import type { GenericComponentProps, Surface } from '../../store/types.js';
 
 import '../../../styles/catalog/Tabs.css';
