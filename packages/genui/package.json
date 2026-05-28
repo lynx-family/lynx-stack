@@ -80,6 +80,7 @@
     "a2ui/dist",
     "a2ui/styles",
     "a2ui/README.md",
+    "a2ui/README_zh.md",
     "cli/bin",
     "cli/README.md",
     "a2ui-prompt/dist",
