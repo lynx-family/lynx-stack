@@ -21,6 +21,8 @@ import { DEFAULT_A2UI_DEMO_URL } from '../utils/demoUrl.js';
 import type { Protocol } from '../utils/protocol.js';
 import { buildRenderUrl } from '../utils/renderUrl.js';
 
+declare const __A2UI_PLAYGROUND_CLIENT_PAYLOAD_STORE__: boolean;
+
 export type PreviewMode = 'phone' | 'full';
 
 export interface PreviewPanelPreviewModeContextValue {
@@ -58,7 +60,9 @@ interface A2UIPreviewSource {
   demoUrl: string;
   theme: 'light' | 'dark';
   messages: unknown;
+  messagesUrl?: string;
   actionMocks?: Record<string, unknown>;
+  actionMocksUrl?: string;
   demoId?: string;
   /**
    * When true, build the render URL in playback mode so the Lynx app waits
@@ -158,13 +162,6 @@ function useRspeedyDevUrl(): string {
   return url;
 }
 
-function formatUrlForDisplay(url: string): string {
-  if (url.length <= 80) return url;
-  const head = url.slice(0, 44);
-  const tail = url.slice(-24);
-  return `${head}…${tail}`;
-}
-
 function buildOpenUIRenderUrl(
   rawText: string,
   baseUrl: string,
@@ -178,6 +175,18 @@ function buildOpenUIRenderUrl(
     url.searchParams.set('speed', String(speed));
   }
   return url.toString();
+}
+
+function absoluteUrl(url: string, origin: string): string {
+  try {
+    return new URL(url, origin).toString();
+  } catch {
+    return url;
+  }
+}
+
+function shouldUseClientPayloadStore(): boolean {
+  return __A2UI_PLAYGROUND_CLIENT_PAYLOAD_STORE__;
 }
 
 export function PreviewPanel(props: PreviewPanelProps) {
@@ -306,11 +315,27 @@ export function PreviewPanel(props: PreviewPanelProps) {
     }
 
     if (previewSource.kind === 'a2ui') {
+      const useClientPayloadStore = shouldUseClientPayloadStore();
+      const canSharePayload = !!previewSource.demoId
+        || !!previewSource.messagesUrl
+        || useClientPayloadStore;
+      const hasInlineMessages = Array.isArray(previewSource.messages)
+        ? previewSource.messages.length > 0
+        : previewSource.messages !== undefined;
+      if (!canSharePayload && !hasInlineMessages) {
+        setRenderUrl('');
+        setRenderShareUrl('');
+        setLynxDevUrl('');
+        return;
+      }
+
       const url = buildRenderUrl(
         {
           protocol: previewSource.protocol,
           demoUrl: previewSource.demoUrl ?? DEFAULT_A2UI_DEMO_URL,
+          messagesUrl: previewSource.messagesUrl,
           messages: previewSource.messages,
+          actionMocksUrl: previewSource.actionMocksUrl,
           actionMocks: previewSource.actionMocks,
           theme: previewSource.theme,
           demoId: previewSource.demoId,
@@ -325,7 +350,9 @@ export function PreviewPanel(props: PreviewPanelProps) {
         {
           protocol: previewSource.protocol,
           demoUrl: previewSource.demoUrl ?? DEFAULT_A2UI_DEMO_URL,
+          messagesUrl: previewSource.messagesUrl,
           messages: previewSource.messages,
+          actionMocksUrl: previewSource.actionMocksUrl,
           actionMocks: previewSource.actionMocks,
           theme: previewSource.theme,
           demoId: previewSource.demoId,
@@ -334,7 +361,12 @@ export function PreviewPanel(props: PreviewPanelProps) {
         shareBaseUrl,
       );
       setRenderUrl(url);
-      setRenderShareUrl(shareUrl);
+      setRenderShareUrl(canSharePayload ? shareUrl : '');
+
+      if (!canSharePayload) {
+        setLynxDevUrl('');
+        return;
+      }
 
       if (!rspeedyDevUrl) {
         setLynxDevUrl('');
@@ -354,6 +386,22 @@ export function PreviewPanel(props: PreviewPanelProps) {
           'messagesUrl',
           new URL(`demos/${previewSource.demoId}.json`, demosBase).toString(),
         );
+      } else if (previewSource.messagesUrl) {
+        uInline.searchParams.set('messagesUrl', previewSource.messagesUrl);
+        uInline.searchParams.delete('messages');
+        if (previewSource.actionMocksUrl) {
+          uInline.searchParams.set(
+            'actionMocksUrl',
+            previewSource.actionMocksUrl,
+          );
+          uInline.searchParams.delete('actionMocks');
+        } else if (previewSource.actionMocks) {
+          uInline.searchParams.set(
+            'actionMocks',
+            JSON.stringify(previewSource.actionMocks),
+          );
+          uInline.searchParams.delete('actionMocksUrl');
+        }
       } else {
         uInline.searchParams.set(
           'messages',
@@ -367,6 +415,93 @@ export function PreviewPanel(props: PreviewPanelProps) {
         }
       }
       setLynxDevUrl(uInline.toString());
+
+      if (
+        previewSource.demoId
+        || previewSource.messagesUrl
+        || !useClientPayloadStore
+      ) {
+        return;
+      }
+
+      void (async () => {
+        try {
+          const payloadOrigin = new URL(baseUrl).origin;
+          const res = await window.fetch(`${payloadOrigin}/__a2ui_payload`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              messages: previewSource.messages,
+              actionMocks: previewSource.actionMocks,
+            }),
+          });
+          if (!res.ok) return;
+          const data = (await res.json()) as {
+            messagesUrl?: string;
+            actionMocksUrl?: string;
+          };
+
+          if (seq !== buildSeqRef.current) return;
+          if (typeof data.messagesUrl !== 'string') return;
+
+          const messagesUrl = absoluteUrl(data.messagesUrl, payloadOrigin);
+          const actionMocksUrl = typeof data.actionMocksUrl === 'string'
+            ? absoluteUrl(data.actionMocksUrl, payloadOrigin)
+            : undefined;
+
+          const shortUrl = buildRenderUrl(
+            {
+              protocol: previewSource.protocol,
+              demoUrl: previewSource.demoUrl ?? DEFAULT_A2UI_DEMO_URL,
+              messagesUrl,
+              messages: previewSource.messages,
+              actionMocksUrl,
+              theme: previewSource.theme,
+              speed,
+              playbackMode: previewSource.playbackMode,
+            },
+            baseUrl,
+          );
+          const shortShareUrl = buildRenderUrl(
+            {
+              protocol: previewSource.protocol,
+              demoUrl: previewSource.demoUrl ?? DEFAULT_A2UI_DEMO_URL,
+              messagesUrl,
+              messages: previewSource.messages,
+              actionMocksUrl,
+              theme: previewSource.theme,
+              speed,
+            },
+            shareBaseUrl,
+          );
+          setRenderUrl(shortUrl);
+          setRenderShareUrl(shortShareUrl);
+
+          const u = new URL(rspeedyDevUrl);
+          if (speed !== 1) {
+            u.searchParams.set('speed', String(speed));
+          }
+          u.searchParams.set('theme', previewSource.theme);
+          u.searchParams.set('messagesUrl', messagesUrl);
+          u.searchParams.delete('messages');
+          if (actionMocksUrl) {
+            u.searchParams.set('actionMocksUrl', actionMocksUrl);
+            u.searchParams.delete('actionMocks');
+          } else if (previewSource.actionMocks) {
+            u.searchParams.set(
+              'actionMocks',
+              JSON.stringify(previewSource.actionMocks),
+            );
+            u.searchParams.delete('actionMocksUrl');
+          } else {
+            u.searchParams.delete('actionMocksUrl');
+            u.searchParams.delete('actionMocks');
+          }
+          setLynxDevUrl(u.toString());
+        } catch {
+          // Keep the inline URLs above if the local dev payload store is unavailable.
+        }
+      })();
       return;
     }
 
@@ -460,7 +595,9 @@ export function PreviewPanel(props: PreviewPanelProps) {
       return [];
     }
 
-    const showQrCode = previewSource.kind !== 'a2ui' || !!previewSource.demoId;
+    const showQrCode = previewSource.kind !== 'a2ui'
+      || !!previewSource.demoId
+      || !!previewSource.messagesUrl;
 
     const cards: Array<{ key: string; item: PreviewQrItem }> = [];
     if (renderShareUrl) {
@@ -470,7 +607,7 @@ export function PreviewPanel(props: PreviewPanelProps) {
           title: 'Web Preview',
           description: 'Opens in any mobile browser via Lynx for Web.',
           url: renderShareUrl,
-          urlTitle: formatUrlForDisplay(renderShareUrl),
+          urlTitle: renderShareUrl,
           copyButtonTitle: 'Copy render URL',
           showQrCode,
         },
@@ -483,7 +620,7 @@ export function PreviewPanel(props: PreviewPanelProps) {
           title: 'Native Preview',
           description: 'Opens in LynxExplorer for native rendering.',
           url: lynxDevUrl,
-          urlTitle: formatUrlForDisplay(lynxDevUrl),
+          urlTitle: lynxDevUrl,
           copyButtonTitle: 'Copy Lynx dev bundle URL',
           variant: 'alt',
           showQrCode,

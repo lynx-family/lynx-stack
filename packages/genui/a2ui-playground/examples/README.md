@@ -25,6 +25,42 @@ agent.start(); // streams initial messages into the buffer
 agent.onAction(action); // pushes the canned response to a user action
 ```
 
+## Supabase Storage payload publishing
+
+The A2UI server keeps AI-generated preview URLs short by uploading final
+validated `messages` to Supabase Storage before emitting the `done` SSE event.
+The playground still receives the full `messages` for immediate rendering, and
+uses `done.preview.messagesUrl` for Web Preview and Native Preview links.
+
+To test this locally, create a public bucket for preview payloads and start the
+server with Supabase S3 credentials:
+
+```bash
+SUPABASE_URL=https://koaijebcyqjpnvxajqhe.supabase.co \
+SUPABASE_S3_ACCESS_KEY_ID=<s3-access-key-id> \
+SUPABASE_S3_SECRET_ACCESS_KEY=<s3-secret-access-key> \
+SUPABASE_STORAGE_BUCKET=genui \
+pnpm dev
+```
+
+`SUPABASE_STORAGE_BUCKET` defaults to `genui`, and
+`SUPABASE_STORAGE_PREFIX` defaults to `a2ui`.
+`SUPABASE_STORAGE_REGION` defaults to `us-east-1`. The server writes through
+Supabase's S3-compatible Storage endpoint:
+
+```text
+a2ui/<id>/messages.json
+```
+
+Those objects must be in a public bucket and CORS-readable by the preview
+runtime.
+
+In local playground development, generated preview links use the playground
+dev server's in-memory payload store by default. Set
+`A2UI_PLAYGROUND_CLIENT_PAYLOAD_PUBLISH=0` when you want local development to
+exercise the server-side Supabase upload path instead. Production builds do
+not enable the dev-server payload store.
+
 ## Multi-turn chat shell pattern
 
 For chat UIs, give each turn (user prompt + agent response) its own
