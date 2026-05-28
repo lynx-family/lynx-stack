@@ -32,7 +32,7 @@ When a GenUI package builds a CLI or other generated artifact that another works
 
 When implementing A2UI v0.9 functions in `packages/genui/a2ui`, keep function resolution scoped to the active catalog first, with the global `FunctionRegistry` only as an escape hatch. Dynamic component props, checks, and function-call actions should all go through the same `resolveDynamicValue` / `executeFunctionCall` path so data bindings, nested function calls, zod argument coercion from `@a2ui/web_core`, and `formatString` data-context interpolation stay consistent.
 
-When verifying `packages/genui/a2ui-playground`, remember that `pnpm -F @lynx-js/genui-a2ui build` regenerates catalog JSON only. The playground consumes `@lynx-js/genui/a2ui` through package exports under `dist/**`, so run `pnpm -F @lynx-js/genui-a2ui exec tsc -p tsconfig.build.json` before rebuilding the playground if runtime TypeScript changed.
+When verifying `packages/genui/a2ui-playground`, remember that `pnpm -F @lynx-js/genui-a2ui build` first runs `tsc --project tsconfig.build.json` and then regenerates catalog JSON through `build:catalog`. The playground consumes `@lynx-js/genui/a2ui` through package exports under `dist/**`, so you normally do not need a separate `tsc` step unless you intentionally skipped the package `build` step.
 
 For known A2UI playground examples, keep the web preview URL on `?demo=<id>` instead of swapping it to the payload-store `messagesUrl`. `render.html` intentionally fetches known demo JSON in the browser shell and passes resolved messages into Lynx, avoiding fetch differences in the Lynx worker runtime; use payload-store URLs for custom edited JSON.
 
