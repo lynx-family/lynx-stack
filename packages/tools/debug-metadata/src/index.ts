@@ -43,3 +43,17 @@ export type { FieldResolver, QueryParams, ResolveResult } from './resolve.js';
 
 export { UI_SOURCE_MAP_RECORDS_BUILD_INFO } from './ui-source-map.js';
 export type { UiSourceMapRecord } from './ui-source-map.js';
+
+export {
+  assertUiNode,
+  buildUiSourceMapLookup,
+  isUiSourceMapData,
+  normalizeRepo,
+  remapUiTree,
+} from './ui-remap.js';
+export type {
+  DebugMetadataLoader,
+  RemappedUiNode,
+  UiNode,
+  UiSourceLocation,
+} from './ui-remap.js';

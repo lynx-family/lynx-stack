@@ -25,6 +25,9 @@
   "main": "dist/index.js",
   "module": "dist/index.js",
   "types": "dist/index.d.ts",
+  "bin": {
+    "debug-metadata": "./dist/cli.js"
+  },
   "files": [
     "dist",
     "!dist/**/*.js.map",
@@ -32,9 +35,11 @@
     "README.md"
   ],
   "scripts": {
+    "api-extractor": "api-extractor run --verbose",
     "test": "vitest run"
   },
   "devDependencies": {
+    "@microsoft/api-extractor": "catalog:",
     "@rollup/plugin-typescript": "^12.3.0"
   },
   "engines": {
