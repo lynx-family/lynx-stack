@@ -111,4 +111,4 @@ generated UI actions through `onAction`.
 - [Catalogs and manifests](./docs/catalogs.md)
 - [Custom components](./docs/custom-components.md)
 - [Built-in catalog composition](./src/catalog/README.md)
-- [Playground examples and full built-in walkthrough](../a2ui-playground/examples/README.md)
+- [Open the A2UI playground](https://lynxjs.org/a2ui)

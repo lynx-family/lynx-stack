@@ -1,21 +1,22 @@
 # A2UI playground examples
 
-Reference implementations that intentionally live outside
+Reference implementations that intentionally live **outside**
 `@lynx-js/genui/a2ui`. The package itself ships only:
 
-- `<A2UI>` - the transport-agnostic renderer.
-- `MessageStore` - a pure raw-message buffer.
-- Catalog APIs, built-in components, and protocol helpers.
+- `<A2UI>` — the protocol-naive renderer.
+- `MessageStore` — a pure raw-message buffer.
+- The catalog + custom-component-author API.
 
-Everything else, including talking to an Agent, chunking turns, and theming the
-chat shell, is the developer's choice. These examples show common shapes you
-can copy and adapt.
+Everything else — talking to an agent, chunking turns, theming the chat
+shell — is the developer's choice. These examples show common shapes;
+copy and adapt them.
 
 ## `io-mock/`
 
-`createMockAgent(store, opts)` returns a driver that pushes a fixed initial
-stream into the store and serves canned responses to user actions. The
-playground uses it to exercise demos without a real Agent.
+`createMockAgent(store, opts)` returns a driver that pushes a fixed
+initial stream into the store and serves canned responses to user
+actions. Used by the playground's `lynx-src/App.tsx` to exercise demos
+without a real agent.
 
 ```ts
 const store = createMessageStore();
@@ -26,10 +27,10 @@ agent.onAction(action); // pushes the canned response to a user action
 
 ## Multi-turn chat shell pattern
 
-For chat UIs, give each turn (user prompt + Agent response) its own
-`MessageStore` and render one `<A2UI messageStore={turnStore}>` per Agent
-turn. The shell only tracks turns; the renderer handles everything inside an
-Agent turn.
+For chat UIs, give each turn (user prompt + agent response) its own
+`MessageStore` and render one `<A2UI messageStore={turnStore}>` per
+agent turn. The shell only tracks turns; the renderer handles
+everything inside an agent turn.
 
 ```tsx
 function Conversation({ catalogs, respond }) {
@@ -51,210 +52,5 @@ function Conversation({ catalogs, respond }) {
 }
 ```
 
-Each `<A2UI>` only sees a bounded buffer; history is just a list of turns the
-shell maintains.
-
-## Walkthrough: use every built-in catalog entry
-
-Use this setup when your package wants to render the full A2UI v0.9 built-in
-catalog, matching the playground's `lynx-src/a2ui/App.tsx` integration.
-
-### 1. Use the built-in catalog on the Agent side
-
-If your backend uses the prompt helper, call `buildA2UISystemPrompt()` with no
-custom catalog:
-
-```ts
-import { buildA2UISystemPrompt } from '@lynx-js/genui/a2ui-prompt';
-
-const systemPrompt = buildA2UISystemPrompt();
-```
-
-If your setup uses the CLI, generate the prompt without `--catalog-dir`:
-
-```bash
-genui a2ui generate prompt --out dist/a2ui-system-prompt.txt
-```
-
-The server routes in `packages/genui/server/app/a2ui` also use the built-in
-catalog by default. Send a `catalog` request field only when you intentionally
-override the built-in catalog with a custom one.
-
-### 2. Compose every built-in in the Lynx client
-
-There is no `@lynx-js/genui/a2ui/catalog/all` export. Copy the complete list
-into your integration so bundlers can see exactly what you opted into.
-
-```tsx
-import {
-  A2UI,
-  Button,
-  Card,
-  CheckBox,
-  ChoicePicker,
-  Column,
-  DateTimeInput,
-  Divider,
-  Icon,
-  Image,
-  LineChart,
-  List,
-  Modal,
-  PieChart,
-  RadioGroup,
-  Row,
-  Slider,
-  Tabs,
-  Text,
-  TextField,
-  basicFunctions,
-  createMessageStore,
-  normalizePayloadToMessages,
-} from '@lynx-js/genui/a2ui';
-import type {
-  CatalogComponent,
-  CatalogInput,
-  CatalogManifest,
-  MessageStore,
-  ServerToClientMessage,
-  UserActionPayload,
-} from '@lynx-js/genui/a2ui';
-import { catalogManifests } from '@lynx-js/genui/a2ui/catalog';
-
-function manifestEntry(
-  component: unknown,
-  manifest: CatalogManifest,
-): readonly [CatalogComponent, CatalogManifest] {
-  return [component as CatalogComponent, manifest];
-}
-
-export const ALL_BUILTINS: readonly CatalogInput[] = [
-  manifestEntry(Text, catalogManifests.Text),
-  manifestEntry(Image, catalogManifests.Image),
-  manifestEntry(Row, catalogManifests.Row),
-  manifestEntry(Column, catalogManifests.Column),
-  manifestEntry(List, catalogManifests.List),
-  manifestEntry(Card, catalogManifests.Card),
-  manifestEntry(Modal, catalogManifests.Modal),
-  manifestEntry(Button, catalogManifests.Button),
-  manifestEntry(Divider, catalogManifests.Divider),
-  manifestEntry(Icon, catalogManifests.Icon),
-  manifestEntry(CheckBox, catalogManifests.CheckBox),
-  manifestEntry(ChoicePicker, catalogManifests.ChoicePicker),
-  manifestEntry(DateTimeInput, catalogManifests.DateTimeInput),
-  manifestEntry(LineChart, catalogManifests.LineChart),
-  manifestEntry(PieChart, catalogManifests.PieChart),
-  manifestEntry(RadioGroup, catalogManifests.RadioGroup),
-  manifestEntry(Slider, catalogManifests.Slider),
-  manifestEntry(TextField, catalogManifests.TextField),
-  manifestEntry(Tabs, catalogManifests.Tabs),
-  ...basicFunctions,
-];
-```
-
-The manifests let you serialize the same catalog for an Agent handshake when
-your transport needs it. `basicFunctions` registers client-side implementations
-for A2UI function calls such as `formatDate`, `formatString`,
-`formatCurrency`, `required`, `email`, and `and`.
-
-### 3. Push Agent messages into a `MessageStore`
-
-The store only buffers raw protocol messages. Your transport owns fetching,
-streaming, parsing, and retry behavior.
-
-```tsx
-const store = createMessageStore();
-
-function appendMessages(messages: readonly ServerToClientMessage[]) {
-  store.push(messages);
-}
-
-async function sendPrompt(input: string) {
-  const res = await fetch('/a2ui/chat', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ messages: [{ role: 'user', content: input }] }),
-  });
-
-  appendMessages(normalizePayloadToMessages(await res.json()));
-}
-```
-
-For fixtures and demos, the playground uses `createMockAgent(store, ...)` from
-`examples/io-mock/mockAgent.ts`. A production app should replace that mock with
-its own transport.
-
-### 4. Render and forward actions
-
-Render one `<A2UI>` for each active response buffer. When the generated UI
-fires an action, send it to your Agent service and push the returned messages
-back into the same store.
-
-```tsx
-function A2UISurface(props: {
-  store: MessageStore;
-  onAgentAction: (
-    action: UserActionPayload,
-  ) => Promise<readonly ServerToClientMessage[]>;
-}) {
-  return (
-    <A2UI
-      messageStore={props.store}
-      catalogs={ALL_BUILTINS}
-      className='a2ui-container'
-      wrapSurface={(children) => <view className='a2ui-light'>{children}</view>}
-      onAction={(action) => {
-        void props.onAgentAction(action).then((messages) => {
-          props.store.push(messages);
-        });
-      }}
-    />
-  );
-}
-```
-
-A matching JSON action endpoint can normalize the response the same way:
-
-```ts
-async function onAgentAction(action: UserActionPayload) {
-  const res = await fetch('/a2ui/action', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({
-      surfaceId: action.surfaceId,
-      action: {
-        name: action.name,
-        context: action.context,
-      },
-    }),
-  });
-
-  return normalizePayloadToMessages(await res.json());
-}
-```
-
-Use a different `key` when you want to reset `<A2UI>` for a new session or
-chat turn, because the component owns its `MessageProcessor` for the lifetime
-of the mount.
-
-### 5. Follow the playground package shape
-
-The playground separates the web control panel from the Lynx renderer:
-
-- `src/entry.tsx` renders the browser control panel.
-- `src/render.tsx` registers `<lynx-view>`, passes `initData` or
-  `globalProps`, and loads `./a2ui.web.js`.
-- `lynx-src/a2ui/App.tsx` reads that payload, creates a `MessageStore`, streams
-  messages into it, and renders `<A2UI catalogs={ALL_BUILTINS}>`.
-
-For a playground-style preview URL, build a `render.html` URL with
-`src/utils/renderUrl.ts` or pass equivalent query parameters:
-
-```txt
-/render.html?protocol=a2ui&demoUrl=./a2ui.web.js&demo=recs&speed=0
-```
-
-For live actions in the preview, set `liveAction: true`. The Lynx app sends
-`A2UI_USER_ACTION` through `NativeModules.bridge`; the web shell forwards it to
-the parent page, and the parent posts `A2UI_ACTION_RESPONSE` messages back into
-the same Lynx view.
+Each `<A2UI>` only sees a bounded buffer; history is just a list of
+turns the shell maintains.

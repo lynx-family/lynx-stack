@@ -101,4 +101,4 @@ async function sendPrompt(input: string) {
 - [Catalog 与 manifests](./docs/catalogs_zh.md)
 - [自定义组件](./docs/custom-components_zh.md)
 - [内置 Catalog 组合](./src/catalog/readme_zh.md)
-- [Playground examples 和完整内置 catalog 接入指南](../a2ui-playground/examples/readme_zh.md)
+- [打开 A2UI Playground](https://lynxjs.org/a2ui)
