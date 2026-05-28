@@ -2,7 +2,7 @@
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
 import type { Rspack } from '@rsbuild/core'
-import { assert, describe, expect, test, vi } from 'vitest'
+import { afterEach, assert, describe, expect, test, vi } from 'vitest'
 
 import { LAYERS, ReactWebpackPlugin } from '@lynx-js/react-webpack-plugin'
 
@@ -45,6 +45,14 @@ function getJsMainRule(swcRule: Rspack.RuleSetRule) {
 }
 
 describe('SWC configuration', () => {
+  // Each test sets its own `NODE_ENV` via `vi.stubEnv`; restore between tests
+  // so a stubbed value never leaks into a later test that relies on the base
+  // env (otherwise e.g. a leaked `production` flips dev-only config like the
+  // `@rsbuild/core/dist` include).
+  afterEach(() => {
+    vi.unstubAllEnvs()
+  })
+
   test('defaults', async () => {
     vi.stubEnv('NODE_ENV', 'development')
     const { pluginReactLynx } = await import('../src/pluginReactLynx.js')
@@ -282,7 +290,7 @@ describe('SWC configuration', () => {
   })
 
   test('user-configured jsc.target is rejected', async () => {
-    vi.stubEnv('NODE_ENV', 'production')
+    // Rejection is mode-independent — no `NODE_ENV` stub needed.
     const { pluginReactLynx } = await import('../src/pluginReactLynx.js')
     const rsbuild = await createRspeedy({
       rspeedyConfig: {
@@ -369,6 +377,8 @@ describe('SWC configuration', () => {
   })
 
   test('`include` defaults to all js file if not configured by user', async () => {
+    // `@rsbuild/core/dist` is only added to the include in development mode.
+    vi.stubEnv('NODE_ENV', 'development')
     const { pluginReactLynx } = await import('../src/pluginReactLynx.js')
     const rsbuild = await createRspeedy({
       rspeedyConfig: {
@@ -406,6 +416,7 @@ describe('SWC configuration', () => {
           "not": /\\[\\\\\\\\/\\]node_modules\\[\\\\\\\\/\\]/,
         },
         /\\\\\\.\\(\\?:ts\\|tsx\\|jsx\\|mts\\|cts\\)\\$/,
+        /\\[\\\\\\\\/\\]@rsbuild\\[\\\\\\\\/\\]core\\[\\\\\\\\/\\]dist\\[\\\\\\\\/\\]/,
         "<ROOT>/packages/react",
       ]
     `)
