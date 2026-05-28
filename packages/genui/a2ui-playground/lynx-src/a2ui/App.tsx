@@ -50,6 +50,8 @@ import { createMockAgent } from '../../examples/io-mock/mockAgent.js';
 import type { MockAgentProgress } from '../../examples/io-mock/mockAgent.js';
 
 const DEFAULT_STREAM_DELAY_MS = 800;
+const A2UI_SCROLL_VIEW_ID = 'a2ui-scroll-view';
+const A2UI_SCROLL_BOTTOM_OFFSET = 1000000;
 
 function manifestEntry(
   component: unknown,
@@ -389,6 +391,23 @@ export function App() {
     agent.resume();
   }, []);
 
+  const scrollPreviewToBottom = useCallback(() => {
+    if (playbackPausedRef.current) return;
+    lynx.createSelectorQuery()
+      .select(`#${A2UI_SCROLL_VIEW_ID}`)
+      .invoke({
+        method: 'scrollTo',
+        params: {
+          offset: A2UI_SCROLL_BOTTOM_OFFSET,
+          smooth: true,
+        },
+        fail: () => {
+          // The first content-size event can fire before UI methods are ready.
+        },
+      })
+      .exec();
+  }, []);
+
   useLynxGlobalEventListener(
     'A2UI_PLAYBACK_CONTROL',
     (action: unknown) => {
@@ -555,7 +574,9 @@ export function App() {
             {store
               ? (
                 <scroll-view
+                  id={A2UI_SCROLL_VIEW_ID}
                   scroll-y
+                  bindcontentsizechanged={scrollPreviewToBottom}
                   style={{ flex: 1, minHeight: 0 }}
                   className={isPlaybackPaused ? 'a2ui-scrollPaused' : ''}
                 >
