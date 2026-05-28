@@ -26,6 +26,7 @@
     "README.md"
   ],
   "scripts": {
+    "api-extractor": "node ../scripts/run-api-extractor.mjs",
     "build": "tsc -p tsconfig.build.json && cp src/core/renderer.css dist/core/renderer.css"
   },
   "dependencies": {
@@ -35,6 +36,7 @@
   "devDependencies": {
     "@lynx-js/react": "workspace:*",
     "@lynx-js/types": "3.7.0",
+    "@microsoft/api-extractor": "catalog:",
     "@types/react": "^18.3.28"
   },
   "publishConfig": {

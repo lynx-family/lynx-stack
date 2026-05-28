@@ -132,6 +132,7 @@
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",
   "scripts": {
+    "api-extractor": "node ../scripts/run-api-extractor.mjs",
     "build": "tsc --project tsconfig.build.json && npm run build:catalog",
     "build:catalog": "genui a2ui generate catalog --catalog-dir src/catalog --out-dir dist/catalog && node scripts/writeCatalogManifestIndex.js",
     "test": "rstest"
@@ -145,6 +146,7 @@
     "@lynx-js/lynx-ui": "^3.133.0",
     "@lynx-js/react": "workspace:*",
     "@lynx-js/types": "3.7.0",
+    "@microsoft/api-extractor": "catalog:",
     "@rstest/core": "catalog:rstest",
     "@types/react": "^18.3.28"
   },
