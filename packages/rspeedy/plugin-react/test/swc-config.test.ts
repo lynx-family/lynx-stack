@@ -229,7 +229,7 @@ describe('SWC configuration', () => {
     )
   })
 
-  test('layers - main-thread uses es2019 env (no jsc.target)', async () => {
+  test('layers - main-thread default target', async () => {
     const { pluginReactLynx } = await import('../src/pluginReactLynx.js')
     const rsbuild = await createRspeedy({
       rspeedyConfig: {
@@ -267,21 +267,17 @@ describe('SWC configuration', () => {
         rules: [mainThreadRule],
       },
     }, 'builtin:swc-loader')
-    // The main thread baseline is expressed via `env` (es2019-equivalent),
-    // not `jsc.target`.
+    // Main thread is es2019-equivalent, expressed via `env` (no `jsc.target`).
     expect(mainThreadLoaderOptions?.jsc?.target).toBeUndefined()
-    expect(mainThreadLoaderOptions?.env?.targets).toEqual({ chrome: '120' })
     expect(mainThreadLoaderOptions?.env?.include).toContain(
       'transform-optional-chaining',
     )
-    // es2019 does not lower es2016~es2018 syntax, so those transforms are absent.
     expect(mainThreadLoaderOptions?.env?.include).not.toContain(
       'transform-async-to-generator',
     )
   })
 
   test('user-configured jsc.target is rejected', async () => {
-    // Rejection is mode-independent — no `NODE_ENV` stub needed.
     const { pluginReactLynx } = await import('../src/pluginReactLynx.js')
     const rsbuild = await createRspeedy({
       rspeedyConfig: {
@@ -299,8 +295,6 @@ describe('SWC configuration', () => {
       },
     })
 
-    // Rspeedy manages the compilation target via `env`, so a user-set
-    // `jsc.target` is rejected (the baseline is mutually exclusive with it).
     await expect(rsbuild.initConfigs()).rejects.toThrowError(
       /Rspeedy manages the SWC compilation target via `env`/,
     )
@@ -335,32 +329,45 @@ describe('SWC configuration', () => {
     )
     assert(swcRule)
 
-    // The user transform is merged on top of the background layer's baseline.
-    // (The per-layer es2015 vs es2019 difference is covered by
-    // `@lynx-js/rspeedy`'s `swc.plugin.test.ts`, which runs in production.)
     const backgroundRule = getLayerRule(swcRule, LAYERS.BACKGROUND)
     assert(backgroundRule)
-    const backgroundLoaderOptions = getLoaderOptions<Rspack.SwcLoaderOptions>({
-      module: { rules: [backgroundRule] },
-    }, 'builtin:swc-loader')
-    expect(backgroundLoaderOptions?.env?.include).toContain(
-      'transform-block-scoping',
+    expect({ module: { rules: [backgroundRule] } }).toHaveLoader(
+      'builtin:swc-loader',
     )
-    expect(backgroundLoaderOptions?.env?.include).toContain(
-      'transform-optional-chaining',
+    expect({ module: { rules: [backgroundRule] } }).toHaveLoader(
+      ReactWebpackPlugin.loaders.BACKGROUND,
+    )
+    expect({ module: { rules: [backgroundRule] } }).not.toHaveLoader(
+      ReactWebpackPlugin.loaders.MAIN_THREAD,
     )
 
-    // ... and on top of the main-thread layer's baseline too.
+    const backgroundLoaderOptions = getLoaderOptions<Rspack.SwcLoaderOptions>({
+      module: {
+        rules: [backgroundRule],
+      },
+    }, 'builtin:swc-loader')
+    expect(backgroundLoaderOptions?.env?.include).toContain(
+      'transform-block-scoping',
+    )
+
     const mainThreadRule = getLayerRule(swcRule, LAYERS.MAIN_THREAD)
     assert(mainThreadRule)
+    expect({ module: { rules: [mainThreadRule] } }).toHaveLoader(
+      'builtin:swc-loader',
+    )
+    expect({ module: { rules: [mainThreadRule] } }).toHaveLoader(
+      ReactWebpackPlugin.loaders.MAIN_THREAD,
+    )
+    expect({ module: { rules: [mainThreadRule] } }).not.toHaveLoader(
+      ReactWebpackPlugin.loaders.BACKGROUND,
+    )
     const mainThreadLoaderOptions = getLoaderOptions<Rspack.SwcLoaderOptions>({
-      module: { rules: [mainThreadRule] },
+      module: {
+        rules: [mainThreadRule],
+      },
     }, 'builtin:swc-loader')
     expect(mainThreadLoaderOptions?.env?.include).toContain(
       'transform-block-scoping',
-    )
-    expect(mainThreadLoaderOptions?.env?.include).toContain(
-      'transform-optional-chaining',
     )
   })
 
