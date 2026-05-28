@@ -344,26 +344,53 @@ describe('Config', () => {
   const getBackgroundLayerOptions = async (rsbuild: RsbuildInstance) => {
     const [config] = await rsbuild.initConfigs()
 
-    for (const rule of config?.module?.rules ?? []) {
-      if (typeof rule === 'object' && rule?.oneOf) {
-        for (const oneOf of rule.oneOf) {
+    type RuleSetRuleItem =
+      | Rspack.RuleSetRule
+      | '...'
+      | false
+      | 0
+      | ''
+      | null
+      | undefined
+
+    const findBackgroundLayerOptions = (
+      rule: RuleSetRuleItem,
+    ): object | undefined => {
+      if (!rule || rule === '...' || typeof rule !== 'object') {
+        return undefined
+      }
+
+      if (Array.isArray(rule.use)) {
+        for (const use of rule.use) {
           if (
-            oneOf && typeof oneOf === 'object' && oneOf.use
-            && Array.isArray(oneOf.use)
+            typeof use === 'object' && use?.options
+            && typeof use.options === 'object'
+            && Object.hasOwn(use.options, 'enableRemoveCSSScope')
           ) {
-            for (const use of oneOf.use) {
-              if (
-                typeof use === 'object' && use?.options
-                && typeof use.options === 'object'
-                && Object.hasOwn(use.options, 'enableRemoveCSSScope')
-              ) {
-                return use.options
-              }
-            }
+            return use.options
           }
         }
       }
+
+      for (const nestedRule of rule.oneOf ?? []) {
+        const options = findBackgroundLayerOptions(nestedRule)
+        if (options) {
+          return options
+        }
+      }
+
+      return undefined
     }
+
+    for (const rule of config?.module?.rules ?? []) {
+      if (typeof rule === 'object') {
+        const options = findBackgroundLayerOptions(rule)
+        if (options) {
+          return options
+        }
+      }
+    }
+
     return undefined
   }
 
@@ -2599,16 +2626,12 @@ describe('Config', () => {
 
       const rspeedy = await createRspeedy({
         rspeedyConfig: {
-          environments: {
-            lynx: {
-              performance: {
-                profile: true,
-              },
-            },
-          },
           plugins: [
             pluginReactLynx(),
           ],
+          performance: {
+            profile: true,
+          },
         },
       })
 
@@ -2631,16 +2654,12 @@ describe('Config', () => {
 
       const rspeedy = await createRspeedy({
         rspeedyConfig: {
-          environments: {
-            lynx: {
-              performance: {
-                profile: false,
-              },
-            },
-          },
           plugins: [
             pluginReactLynx(),
           ],
+          performance: {
+            profile: false,
+          },
         },
       })
 
@@ -2945,6 +2964,7 @@ describe('Config', () => {
             "builtin:swc-loader",
             "<ROOT>/packages/webpack/react-webpack-plugin/lib/loaders/testing.js",
           ],
+          [],
         ]
       `)
     })
