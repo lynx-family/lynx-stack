@@ -2,7 +2,7 @@
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
 import type { Rspack } from '@rsbuild/core'
-import { afterEach, assert, describe, expect, test, vi } from 'vitest'
+import { assert, describe, expect, test, vi } from 'vitest'
 
 import { LAYERS, ReactWebpackPlugin } from '@lynx-js/react-webpack-plugin'
 
@@ -45,14 +45,6 @@ function getJsMainRule(swcRule: Rspack.RuleSetRule) {
 }
 
 describe('SWC configuration', () => {
-  // Each test sets its own `NODE_ENV` via `vi.stubEnv`; restore between tests
-  // so a stubbed value never leaks into a later test that relies on the base
-  // env (otherwise e.g. a leaked `production` flips dev-only config like the
-  // `@rsbuild/core/dist` include).
-  afterEach(() => {
-    vi.unstubAllEnvs()
-  })
-
   test('defaults', async () => {
     vi.stubEnv('NODE_ENV', 'development')
     const { pluginReactLynx } = await import('../src/pluginReactLynx.js')
@@ -120,7 +112,6 @@ describe('SWC configuration', () => {
   })
 
   test('with tools.swc', async () => {
-    vi.stubEnv('NODE_ENV', 'production')
     const { pluginReactLynx } = await import('../src/pluginReactLynx.js')
     const rsbuild = await createRspeedy({
       rspeedyConfig: {
@@ -316,7 +307,6 @@ describe('SWC configuration', () => {
   })
 
   test('layers - user env.include is merged into both layers', async () => {
-    vi.stubEnv('NODE_ENV', 'production')
     const { pluginReactLynx } = await import('../src/pluginReactLynx.js')
     const rsbuild = await createRspeedy({
       rspeedyConfig: {
@@ -345,7 +335,9 @@ describe('SWC configuration', () => {
     )
     assert(swcRule)
 
-    // Background (es2015) keeps the user transform on top of its baseline.
+    // The user transform is merged on top of the background layer's baseline.
+    // (The per-layer es2015 vs es2019 difference is covered by
+    // `@lynx-js/rspeedy`'s `swc.plugin.test.ts`, which runs in production.)
     const backgroundRule = getLayerRule(swcRule, LAYERS.BACKGROUND)
     assert(backgroundRule)
     const backgroundLoaderOptions = getLoaderOptions<Rspack.SwcLoaderOptions>({
@@ -355,11 +347,10 @@ describe('SWC configuration', () => {
       'transform-block-scoping',
     )
     expect(backgroundLoaderOptions?.env?.include).toContain(
-      'transform-async-to-generator',
+      'transform-optional-chaining',
     )
 
-    // Main thread (es2019) keeps the user transform too, but stays
-    // es2019-equivalent (no es2016~es2019 transforms).
+    // ... and on top of the main-thread layer's baseline too.
     const mainThreadRule = getLayerRule(swcRule, LAYERS.MAIN_THREAD)
     assert(mainThreadRule)
     const mainThreadLoaderOptions = getLoaderOptions<Rspack.SwcLoaderOptions>({
@@ -371,14 +362,9 @@ describe('SWC configuration', () => {
     expect(mainThreadLoaderOptions?.env?.include).toContain(
       'transform-optional-chaining',
     )
-    expect(mainThreadLoaderOptions?.env?.include).not.toContain(
-      'transform-async-to-generator',
-    )
   })
 
   test('`include` defaults to all js file if not configured by user', async () => {
-    // `@rsbuild/core/dist` is only added to the include in development mode.
-    vi.stubEnv('NODE_ENV', 'development')
     const { pluginReactLynx } = await import('../src/pluginReactLynx.js')
     const rsbuild = await createRspeedy({
       rspeedyConfig: {

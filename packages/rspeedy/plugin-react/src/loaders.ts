@@ -7,11 +7,9 @@ import { LAYERS, ReactWebpackPlugin } from '@lynx-js/react-webpack-plugin'
 
 import type { PluginReactLynxOptions } from './pluginReactLynx.js'
 
-// The transforms an `es2019` SWC target lowers (i.e. ES2020+ syntax).
-// Expressed as an explicit `env.include` list so the main-thread baseline
-// no longer relies on `jsc.target` — `env` and `jsc.target` are mutually
-// exclusive, and moving to `env` lets the transform set be tuned via
-// `include`/`exclude` later without changing today's output.
+// The transforms an `es2019` SWC target lowers (ES2020+ syntax), expressed as
+// an explicit `env.include` so the main thread no longer relies on
+// `jsc.target` (mutually exclusive with `env`). Output is unchanged.
 const MAIN_THREAD_ENV_INCLUDE = [
   // ES2020
   'transform-nullish-coalescing-operator',
@@ -27,14 +25,12 @@ const MAIN_THREAD_ENV_INCLUDE = [
   'transform-private-property-in-object',
 ]
 
-// A high baseline so `env` auto-includes nothing beyond the explicit
-// `include` list above — that list is the canonical transform set.
+// A high baseline so `env` auto-includes nothing beyond the explicit list.
 const MAIN_THREAD_ENV_TARGETS = { chrome: '120' }
 
-// Transforms an `es2015` baseline lowers that an `es2019` baseline does not
-// (ES2016~ES2019). The background layer inherits these via the base `env`;
-// the main thread strips them so it stays es2019-equivalent — while still
-// keeping any extra transforms the user added through `tools.swc.env.include`.
+// Transforms an `es2015` baseline lowers but `es2019` does not. The main
+// thread strips these from the base `env.include` to stay es2019-equivalent,
+// while keeping any extra transforms the user added via `tools.swc.env.include`.
 const ES2016_TO_ES2019_INCLUDE = [
   'transform-exponentiation-operator',
   'transform-async-to-generator',
@@ -158,11 +154,9 @@ export function applyLoaders(
           .entries() as Rspack.RuleSetRule
         const swcLoaderOptions = swcLoaderRule
           .options as Rspack.SwcLoaderOptions
-        // `jsc.target` and `env` cannot coexist in SWC, so drop the target
-        // and express the main-thread baseline through `env`. The main thread
-        // is es2019-equivalent, so it strips the es2016~es2019 transforms the
-        // base (es2015) adds, while preserving any extra transforms the user
-        // configured through `tools.swc.env.include`.
+        // `jsc.target` and `env` can't coexist in SWC: drop the target and
+        // express the es2019 main-thread baseline through `env`, keeping only
+        // the user's extra `env.include` transforms from the base config.
         const jsc = { ...swcLoaderOptions.jsc } as Record<string, unknown>
         delete jsc['target']
         const rspeedyBaseline = new Set([
