@@ -55,6 +55,11 @@
       "default": "./dist/catalog/List/index.js"
     },
     "./catalog/List/catalog.json": "./dist/catalog/List/catalog.json",
+    "./catalog/Loading": {
+      "types": "./dist/catalog/Loading/index.d.ts",
+      "default": "./dist/catalog/Loading/index.js"
+    },
+    "./catalog/Loading/catalog.json": "./dist/catalog/Loading/catalog.json",
     "./catalog/Card": {
       "types": "./dist/catalog/Card/index.d.ts",
       "default": "./dist/catalog/Card/index.js"

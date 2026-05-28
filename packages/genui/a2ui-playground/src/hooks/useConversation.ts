@@ -80,6 +80,15 @@ function cloneDataModel(
   }
 }
 
+function cloneDataValue(value: unknown): unknown {
+  if (value === null || typeof value !== 'object') return value;
+  try {
+    return JSON.parse(JSON.stringify(value)) as unknown;
+  } catch {
+    return value;
+  }
+}
+
 function truncateConversationHistory(
   history: ModelChatMessage[],
 ): ModelChatMessage[] {
@@ -108,7 +117,7 @@ function applyDataModel(
       delete model[key];
     }
     if (value && typeof value === 'object' && !Array.isArray(value)) {
-      Object.assign(model, value as Record<string, unknown>);
+      Object.assign(model, cloneDataValue(value) as Record<string, unknown>);
     }
     return;
   }
@@ -129,7 +138,7 @@ function applyDataModel(
   if (value === undefined) {
     delete cursor[last];
   } else {
-    cursor[last] = value;
+    cursor[last] = cloneDataValue(value);
   }
 }
 

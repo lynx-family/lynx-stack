@@ -9,6 +9,7 @@ import {
   errorMessage,
   pickChatOptions,
   readJsonBodyWithLimit,
+  validateAction,
   validateConversation,
 } from '../_shared';
 import { corsPreflight, jsonWithCors } from '../cors';
@@ -20,10 +21,7 @@ export const dynamic = 'force-dynamic';
 interface A2UIActionBody {
   conversation?: unknown;
   surfaceId?: string;
-  action: {
-    name: string;
-    context?: Record<string, unknown>;
-  };
+  action?: unknown;
   resourceId?: string;
   model?: string;
   apiKey?: string;
@@ -52,11 +50,12 @@ export async function POST(req: Request) {
   }
   const body = parsed.body;
 
-  if (!body.action || !body.action.name) {
+  const validatedAction = validateAction(body.action);
+  if (!validatedAction.ok) {
     return jsonWithCors(
       req,
-      { ok: false, error: 'action.name is required' },
-      { status: 400 },
+      { ok: false, error: validatedAction.error },
+      { status: validatedAction.status },
     );
   }
 
@@ -83,7 +82,7 @@ export async function POST(req: Request) {
   const service = getA2UIAgentService();
   const payload = {
     surfaceId: body.surfaceId,
-    action: body.action,
+    action: validatedAction.action,
   };
   const userContent = `A2UI_USER_ACTION: ${JSON.stringify(payload)}`;
   if (userContent.length > MAX_MESSAGE_CHARS) {

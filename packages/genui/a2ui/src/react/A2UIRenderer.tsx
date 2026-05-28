@@ -8,6 +8,8 @@ import { useA2UIContext } from './useA2UIContext.js';
 import { useAction } from './useAction.js';
 import { useCatalog } from './useCatalog.js';
 import { splitUnsupportedProps, useResolvedProps } from './useDataBinding.js';
+import { Loading } from '../catalog/Loading/index.jsx';
+import type { LoadingProps } from '../catalog/Loading/index.jsx';
 import type { ComponentInstance, Resource, Surface } from '../store/types.js';
 
 const noop = () => {
@@ -29,23 +31,8 @@ export interface UnsupportedInfo {
   fields?: string[];
 }
 
-function DefaultLoading(props: { id: string }) {
-  const content = `loading ${props.id}...`;
-  return (
-    <view
-      style={{
-        width: '100%',
-        minHeight: '20px',
-        padding: '10px',
-        border: '1px solid var(--a2ui-color-border)',
-        borderRadius: '4px',
-        backgroundColor: 'var(--a2ui-color-surface-muted)',
-        color: 'var(--a2ui-color-text-muted)',
-      }}
-    >
-      <text style={{ color: 'inherit' }}>{content}</text>
-    </view>
-  );
+function DefaultLoading(_props: { id: string }) {
+  return Loading({ variant: 'block' } as LoadingProps);
 }
 
 function DefaultUnsupportedNotice(props: UnsupportedInfo) {

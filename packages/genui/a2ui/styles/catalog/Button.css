@@ -28,12 +28,12 @@
 }
 
 .button-primary {
-  background-color: var(--a2ui-color-primary);
-  border-color: var(--a2ui-color-primary);
-  color: var(--a2ui-color-on-primary);
+  background-color: var(--a2ui-color-surface-strong);
+  border-color: var(--a2ui-color-border-strong);
+  color: var(--a2ui-color-on-surface);
   box-shadow:
-    0 10px 24px rgba(0, 85, 217, 0.16),
-    0 1px 0 rgba(255, 255, 255, 0.22) inset;
+    0 10px 24px var(--a2ui-color-overlay),
+    0 1px 0 rgba(255, 255, 255, 0.4) inset;
 }
 
 .button-borderless {

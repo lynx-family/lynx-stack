@@ -3,6 +3,7 @@
 // LICENSE file in the root directory of this source tree.
 
 import type { A2UIMessage } from './a2ui-validator';
+import { isLoadableImageSource } from './image-resolver';
 
 type A2UIUpdateComponentsMessage = Extract<
   A2UIMessage,
@@ -85,22 +86,22 @@ function isA2UIComponent(value: unknown): value is Record<string, unknown> & {
     && value.component.length > 0;
 }
 
-function isLoadableImageSource(value: unknown): value is string {
-  if (typeof value !== 'string') return false;
-  const src = value.trim();
-  if (!src) return false;
-  if (/^(?:https?:|data:image\/|blob:|file:)/iu.test(src)) return true;
-  if (/^(?:\/|\.\/|\.\.\/)/u.test(src)) return true;
-  return /\.(?:avif|gif|jpe?g|png|svg|webp)(?:[?#].*)?$/iu.test(src);
-}
-
-function isStreamRenderableComponent(
-  component: Record<string, unknown>,
-): boolean {
-  if (component.component !== 'Image') return true;
+function toStreamRenderableComponent(
+  component: Record<string, unknown> & { id: string; component: string },
+  pendingImagePaths?: Set<string>,
+): Record<string, unknown> & { id: string; component: string } {
+  if (component.component !== 'Image') return component;
   const url = component.url;
-  if (isRecord(url) && typeof url.path === 'string') return true;
-  return isLoadableImageSource(url);
+  if (isRecord(url) && typeof url.path === 'string') {
+    if (!pendingImagePaths?.has(normalizePointer(url.path))) {
+      return component;
+    }
+  } else if (isLoadableImageSource(url)) return component;
+  return {
+    id: component.id,
+    component: 'Loading',
+    variant: 'block',
+  };
 }
 
 function sniffUpdateComponentsSurfaceId(buffer: string): string | null {
@@ -122,12 +123,89 @@ function placeholderId(id: string): string {
   return `loading_${id}`;
 }
 
+function normalizePointer(path: string): string {
+  if (!path || path === '/') return '/';
+  return path.startsWith('/') ? path : `/${path}`;
+}
+
+function appendPointer(path: string, segment: string): string {
+  const encoded = segment.replace(/~/gu, '~0').replace(/\//gu, '~1');
+  return path === '/' ? `/${encoded}` : `${path}/${encoded}`;
+}
+
+function decodePointerSegment(segment: string): string {
+  return segment.replace(/~1/gu, '/').replace(/~0/gu, '~');
+}
+
+function lastPointerSegment(path: string): string {
+  const parts = normalizePointer(path).split('/').filter(Boolean);
+  const last = parts[parts.length - 1];
+  return last ? decodePointerSegment(last) : '';
+}
+
+function isImageLikeKey(key: string): boolean {
+  return /(?:^|[-_])(?:image|photo|picture|avatar|cover|poster|artwork|thumbnail)(?:$|[-_])/iu
+    .test(key);
+}
+
+function updatePendingImagePathsFromData(
+  value: unknown,
+  path: string,
+  pendingImagePaths: Set<string>,
+): void {
+  const normalizedPath = normalizePointer(path);
+  const key = lastPointerSegment(normalizedPath);
+  if (typeof value === 'string' && isImageLikeKey(key)) {
+    if (isLoadableImageSource(value)) {
+      pendingImagePaths.delete(normalizedPath);
+    } else {
+      pendingImagePaths.add(normalizedPath);
+    }
+    return;
+  }
+
+  if (Array.isArray(value)) {
+    value.forEach((item, index) =>
+      updatePendingImagePathsFromData(
+        item,
+        appendPointer(normalizedPath, String(index)),
+        pendingImagePaths,
+      )
+    );
+    return;
+  }
+
+  if (!isRecord(value)) return;
+  for (const [childKey, child] of Object.entries(value)) {
+    updatePendingImagePathsFromData(
+      child,
+      appendPointer(normalizedPath, childKey),
+      pendingImagePaths,
+    );
+  }
+}
+
 function createPlaceholderComponent(id: string): ComponentRecord {
   return {
     id: placeholderId(id),
-    component: 'Text',
-    text: 'Loading...',
-    variant: 'caption',
+    component: 'Loading',
+    variant: 'block',
+  };
+}
+
+function createSurfaceLoadingMessage(surfaceId: string): A2UIMessage {
+  return {
+    version: 'v0.9',
+    updateComponents: {
+      surfaceId,
+      components: [
+        {
+          id: ROOT_COMPONENT_ID,
+          component: 'Loading',
+          variant: 'block',
+        },
+      ],
+    },
   };
 }
 
@@ -271,6 +349,7 @@ export class A2UIProtocolMessageStreamParser {
     string,
     Map<string, string>
   >();
+  private pendingImagePathsBySurface = new Map<string, Set<string>>();
   private createdSurfaceIds = new Set<string>();
 
   public push(chunk: string): A2UIMessage[] {
@@ -329,8 +408,14 @@ export class A2UIProtocolMessageStreamParser {
           if (isA2UIMessage(parsed)) {
             if ('createSurface' in parsed && parsed.createSurface) {
               this.createdSurfaceIds.add(parsed.createSurface.surfaceId);
-            }
-            if (!isUpdateComponentsMessage(parsed)) {
+              messages.push(parsed);
+              messages.push(
+                createSurfaceLoadingMessage(parsed.createSurface.surfaceId),
+              );
+            } else if ('updateDataModel' in parsed && parsed.updateDataModel) {
+              this.updatePendingImagePaths(parsed);
+              messages.push(parsed);
+            } else if (!isUpdateComponentsMessage(parsed)) {
               messages.push(parsed);
             }
           }
@@ -375,15 +460,18 @@ export class A2UIProtocolMessageStreamParser {
       return;
     }
     if (!isA2UIComponent(parsed)) return;
-    if (!isStreamRenderableComponent(parsed)) return;
 
     const surfaceId = sniffUpdateComponentsSurfaceId(
       this.buffer.slice(0, start),
     );
     if (!surfaceId) return;
+    const renderable = toStreamRenderableComponent(
+      parsed,
+      this.pendingImagePathsBySurface.get(surfaceId),
+    );
     const seen = this.seenComponentsBySurface.get(surfaceId)
       ?? new Map<string, ComponentRecord>();
-    seen.set(parsed.id, parsed as ComponentRecord);
+    seen.set(renderable.id, renderable as ComponentRecord);
     this.seenComponentsBySurface.set(surfaceId, seen);
 
     const components = buildReachableComponentSnapshot(seen, {
@@ -411,6 +499,29 @@ export class A2UIProtocolMessageStreamParser {
         components: changedComponents,
       },
     });
+  }
+
+  private updatePendingImagePaths(
+    message: Extract<
+      A2UIMessage,
+      { updateDataModel: unknown }
+    >,
+  ): void {
+    const dataModel = message.updateDataModel as {
+      surfaceId: string;
+      path?: string;
+      value?: unknown;
+    };
+    if (!('value' in dataModel)) return;
+    const pendingImagePaths = this.pendingImagePathsBySurface.get(
+      dataModel.surfaceId,
+    ) ?? new Set<string>();
+    updatePendingImagePathsFromData(
+      dataModel.value,
+      dataModel.path ?? '/',
+      pendingImagePaths,
+    );
+    this.pendingImagePathsBySurface.set(dataModel.surfaceId, pendingImagePaths);
   }
 }
 

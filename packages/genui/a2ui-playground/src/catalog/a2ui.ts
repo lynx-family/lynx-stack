@@ -163,6 +163,41 @@ export const COMPONENT_CATALOG: ComponentDoc[] = [
     },
   },
   {
+    name: 'Loading',
+    category: 'Display',
+    description: 'Shows an animated skeleton placeholder for pending content.',
+    props: schemaToProps(catalogManifests.Loading),
+    usage: {
+      a2ui: {
+        id: 'loading-state',
+        component: 'Loading',
+        variant: 'block',
+      },
+      openui: {},
+    },
+    usageExamples: {
+      a2ui: [
+        {
+          label: 'Inline',
+          value: {
+            id: 'inline-loading',
+            component: 'Loading',
+            variant: 'inline',
+          },
+        },
+        {
+          label: 'Block',
+          value: {
+            id: 'block-loading',
+            component: 'Loading',
+            variant: 'block',
+          },
+        },
+      ],
+      openui: [],
+    },
+  },
+  {
     name: 'Icon',
     category: 'Display',
     description:
