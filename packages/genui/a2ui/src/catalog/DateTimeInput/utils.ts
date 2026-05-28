@@ -371,13 +371,6 @@ export function getDateTimeInputPlaceholder(mode: DateTimeInputMode): string {
   return 'Select date';
 }
 
-export function getDateTimeDialogTitle(
-  label: string,
-  mode: DateTimeInputMode,
-): string {
-  return label || getDateTimeInputPlaceholder(mode);
-}
-
 export function withDate(
   parts: DateTimeParts,
   date: Date,
