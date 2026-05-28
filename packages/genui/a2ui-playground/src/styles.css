@@ -733,7 +733,7 @@ html[data-theme="dark"] .phoneHomeIndicator {
   /* Container query host so the panel's own width drives extras visibility,
      unaffected by viewport-level decisions like the page's sidebar/code split. */
   container-type: inline-size;
-  container-name: previewPanel;
+  container-name: preview-panel;
 }
 
 /* Pass-through wrapper: children participate directly in the panel's
@@ -765,7 +765,7 @@ html[data-theme="dark"] .phoneHomeIndicator {
   background: var(--geist-surface);
 }
 
-@container previewPanel (max-width: 660px) {
+@container preview-panel (max-width: 660px) {
   .previewPanelExtras {
     display: none;
   }
@@ -1048,7 +1048,7 @@ html[data-theme="dark"] .phoneHomeIndicator {
   flex-direction: column;
   gap: 10px;
   container-type: inline-size;
-  container-name: previewQr;
+  container-name: preview-qr;
 }
 
 .previewQrContent {
@@ -1064,7 +1064,7 @@ html[data-theme="dark"] .phoneHomeIndicator {
 
 /* When this section is narrow (e.g. example page's 280-340px right column),
    give the QR a bit less weight so URL + Copy stay readable. */
-@container previewQr (max-width: 380px) {
+@container preview-qr (max-width: 380px) {
   .previewQrContent {
     gap: 10px;
   }
@@ -1240,7 +1240,7 @@ html[data-theme="dark"] .phoneHomeIndicator {
   padding: 0;
   margin: -1px;
   overflow: hidden;
-  clip: rect(0, 0, 0, 0);
+  clip-path: inset(50%);
   white-space: nowrap;
   border: 0;
 }
