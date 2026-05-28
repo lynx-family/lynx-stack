@@ -1819,6 +1819,9 @@ importers:
 
   packages/tools/debug-metadata:
     devDependencies:
+      '@microsoft/api-extractor':
+        specifier: 'catalog:'
+        version: 7.58.2(@types/node@24.10.13)
       '@rollup/plugin-typescript':
         specifier: ^12.3.0
         version: 12.3.0(patch_hash=926ba262ec682d27369f1a8648a0dfb657fb5f1b28539ca3628d292276c91c3d)(rollup@4.34.9)(tslib@2.8.1)(typescript@5.9.3)

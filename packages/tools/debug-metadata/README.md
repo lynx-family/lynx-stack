@@ -70,6 +70,29 @@ Registered fields:
 
 For direct lookups bypassing the `?field=` dispatch, the typed helpers `findArtifact`, `findSourceMap`, and `findBytecodeDebugInfo` are also exported.
 
+## Reverse-resolving a UI node tree
+
+The Lynx engine can dump the runtime UI tree as JSON, where each node carries a `nodeIndex` and the `debugMetadataUrl` of the `debug-metadata.json` that covers it. The `remap` CLI annotates every resolvable node with its source location (`repo`, `source`, `line`, `column`):
+
+```sh
+npx @lynx-js/debug-metadata remap --ui input.json            # → stdout
+npx @lynx-js/debug-metadata remap --ui input.json -o out.json
+```
+
+Only three fields are assumed on each node — `nodeIndex`, `debugMetadataUrl`, and `children`. Every other field passes through unchanged, and nodes that cannot be resolved (no `debugMetadataUrl`, or a `nodeIndex` the map doesn't know) are left exactly as they came in. A `debugMetadataUrl` may be an http(s) URL or a path relative to the input file.
+
+The same logic is available as an API:
+
+```ts
+import { remapUiTree } from '@lynx-js/debug-metadata';
+
+const remapped = await remapUiTree(rootNode, async (debugMetadataUrl) => {
+  // return the DebugMetadataAsset for this URL (fetch, fs, cache, …)
+});
+```
+
+`remapUiTree` calls the loader once per distinct `debugMetadataUrl`. The lower-level `buildUiSourceMapLookup` (nodeIndex → location) and `normalizeRepo` (git remote → `owner/repo`) helpers are exported too.
+
 ## Validation
 
 No runtime helpers are provided yet — the schema has nothing to validate beyond what the types already state. A `validateDebugMetadata` (or similar) will be added if the format grows fields whose runtime correctness cannot be expressed in the type system.
