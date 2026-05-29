@@ -77,7 +77,7 @@ export function getReleaseRuntime(name: string): string {
     e.name = 'LynxGetSourceMapReleaseError';
     if (typeof _SetSourceMapRelease === 'function') {
       _SetSourceMapRelease(e); // original filename from engine (e.g. 'lepus.js' or 'dynamic_component_name/main-thread.js')
-      e.stack = '    at <eval> (file://${name}.js:1:1)\\n';
+      e.stack = ${JSON.stringify(`    at <eval> (file://${name}.js:1:1)\n`)};
       _SetSourceMapRelease(e); // engineVersion > 2.13 reports an empty filename, so set it to the Rspeedy filename
     } else if (
       typeof lynxCoreInject !== 'undefined' &&
