@@ -1277,10 +1277,10 @@ importers:
         version: 2.0.6(core-js@3.48.0)
       '@rsbuild/plugin-css-minimizer':
         specifier: 2.0.0
-        version: 2.0.0(@rsbuild/core@2.0.6(core-js@3.48.0))(lightningcss@1.31.1)(webpack@5.105.2(lightningcss@1.31.1)(postcss@8.5.14))
+        version: 2.0.0(@rsbuild/core@2.0.6(core-js@3.48.0))(lightningcss@1.31.1)(webpack@5.105.2(@swc/core@1.15.30(@swc/helpers@0.5.21))(lightningcss@1.31.1)(postcss@8.5.14))
       '@rsdoctor/rspack-plugin':
         specifier: ~1.5.6
-        version: 1.5.6(@emnapi/core@1.10.0)(@emnapi/runtime@1.10.0)(@rsbuild/core@2.0.6(core-js@3.48.0))(@rspack/core@2.0.3(@swc/helpers@0.5.21))(webpack@5.105.2(lightningcss@1.31.1)(postcss@8.5.14))
+        version: 1.5.6(@emnapi/core@1.10.0)(@emnapi/runtime@1.10.0)(@rsbuild/core@2.0.6(core-js@3.48.0))(@rspack/core@2.0.3(@swc/helpers@0.5.21))(webpack@5.105.2(@swc/core@1.15.30(@swc/helpers@0.5.21))(lightningcss@1.31.1)(postcss@8.5.14))
       typescript:
         specifier: 5.1.6 - 5.9.x
         version: 5.9.3
@@ -1296,7 +1296,10 @@ importers:
         version: 12.3.0(patch_hash=926ba262ec682d27369f1a8648a0dfb657fb5f1b28539ca3628d292276c91c3d)(rollup@4.34.9)(tslib@2.8.1)(typescript@5.9.3)
       '@rsdoctor/core':
         specifier: ~1.5.6
-        version: 1.5.6(@emnapi/core@1.10.0)(@emnapi/runtime@1.10.0)(@rsbuild/core@2.0.6(core-js@3.48.0))(@rspack/core@2.0.3(@swc/helpers@0.5.21))(webpack@5.105.2(lightningcss@1.31.1)(postcss@8.5.14))
+        version: 1.5.6(@emnapi/core@1.10.0)(@emnapi/runtime@1.10.0)(@rsbuild/core@2.0.6(core-js@3.48.0))(@rspack/core@2.0.3(@swc/helpers@0.5.21))(webpack@5.105.2(@swc/core@1.15.30(@swc/helpers@0.5.21))(lightningcss@1.31.1)(postcss@8.5.14))
+      '@swc/core':
+        specifier: ^1.15.30
+        version: 1.15.30(@swc/helpers@0.5.21)
       chokidar:
         specifier: ^4.0.3
         version: 4.0.3
@@ -1344,7 +1347,7 @@ importers:
         version: 3.2.4(@types/debug@4.1.12)(@types/node@24.10.13)(@vitest/ui@3.2.4)(jsdom@27.4.0)(less@4.6.4)(lightningcss@1.31.1)(sass-embedded@1.99.0)(sass@1.99.0)(terser@5.31.6)
       webpack:
         specifier: ^5.105.2
-        version: 5.105.2(lightningcss@1.31.1)(postcss@8.5.14)
+        version: 5.105.2(@swc/core@1.15.30(@swc/helpers@0.5.21))(lightningcss@1.31.1)(postcss@8.5.14)
 
   packages/rspeedy/create-rspeedy:
     dependencies:
@@ -15728,9 +15731,9 @@ snapshots:
     optionalDependencies:
       '@rsbuild/core': 2.0.6(core-js@3.48.0)
 
-  '@rsbuild/plugin-css-minimizer@2.0.0(@rsbuild/core@2.0.6(core-js@3.48.0))(lightningcss@1.31.1)(webpack@5.105.2(lightningcss@1.31.1)(postcss@8.5.14))':
+  '@rsbuild/plugin-css-minimizer@2.0.0(@rsbuild/core@2.0.6(core-js@3.48.0))(lightningcss@1.31.1)(webpack@5.105.2(@swc/core@1.15.30(@swc/helpers@0.5.21))(lightningcss@1.31.1)(postcss@8.5.14))':
     dependencies:
-      css-minimizer-webpack-plugin: 8.0.0(lightningcss@1.31.1)(webpack@5.105.2(lightningcss@1.31.1)(postcss@8.5.14))
+      css-minimizer-webpack-plugin: 8.0.0(lightningcss@1.31.1)(webpack@5.105.2(@swc/core@1.15.30(@swc/helpers@0.5.21))(lightningcss@1.31.1)(postcss@8.5.14))
       reduce-configs: 1.1.2
     optionalDependencies:
       '@rsbuild/core': 2.0.6(core-js@3.48.0)
@@ -15843,13 +15846,13 @@ snapshots:
 
   '@rsdoctor/client@1.5.6': {}
 
-  '@rsdoctor/core@1.5.6(@emnapi/core@1.10.0)(@emnapi/runtime@1.10.0)(@rsbuild/core@2.0.6(core-js@3.48.0))(@rspack/core@2.0.3(@swc/helpers@0.5.21))(webpack@5.105.2(lightningcss@1.31.1)(postcss@8.5.14))':
+  '@rsdoctor/core@1.5.6(@emnapi/core@1.10.0)(@emnapi/runtime@1.10.0)(@rsbuild/core@2.0.6(core-js@3.48.0))(@rspack/core@2.0.3(@swc/helpers@0.5.21))(webpack@5.105.2(@swc/core@1.15.30(@swc/helpers@0.5.21))(lightningcss@1.31.1)(postcss@8.5.14))':
     dependencies:
       '@rsbuild/plugin-check-syntax': 1.6.1(@rsbuild/core@2.0.6(core-js@3.48.0))
-      '@rsdoctor/graph': 1.5.6(@rspack/core@2.0.3(@swc/helpers@0.5.21))(webpack@5.105.2(lightningcss@1.31.1)(postcss@8.5.14))
-      '@rsdoctor/sdk': 1.5.6(@rspack/core@2.0.3(@swc/helpers@0.5.21))(webpack@5.105.2(lightningcss@1.31.1)(postcss@8.5.14))
-      '@rsdoctor/types': 1.5.6(@rspack/core@2.0.3(@swc/helpers@0.5.21))(webpack@5.105.2(lightningcss@1.31.1)(postcss@8.5.14))
-      '@rsdoctor/utils': 1.5.6(@rspack/core@2.0.3(@swc/helpers@0.5.21))(webpack@5.105.2(lightningcss@1.31.1)(postcss@8.5.14))
+      '@rsdoctor/graph': 1.5.6(@rspack/core@2.0.3(@swc/helpers@0.5.21))(webpack@5.105.2(@swc/core@1.15.30(@swc/helpers@0.5.21))(lightningcss@1.31.1)(postcss@8.5.14))
+      '@rsdoctor/sdk': 1.5.6(@rspack/core@2.0.3(@swc/helpers@0.5.21))(webpack@5.105.2(@swc/core@1.15.30(@swc/helpers@0.5.21))(lightningcss@1.31.1)(postcss@8.5.14))
+      '@rsdoctor/types': 1.5.6(@rspack/core@2.0.3(@swc/helpers@0.5.21))(webpack@5.105.2(@swc/core@1.15.30(@swc/helpers@0.5.21))(lightningcss@1.31.1)(postcss@8.5.14))
+      '@rsdoctor/utils': 1.5.6(@rspack/core@2.0.3(@swc/helpers@0.5.21))(webpack@5.105.2(@swc/core@1.15.30(@swc/helpers@0.5.21))(lightningcss@1.31.1)(postcss@8.5.14))
       '@rspack/resolver': 0.2.8(@emnapi/core@1.10.0)(@emnapi/runtime@1.10.0)
       browserslist-load-config: 1.0.1
       es-toolkit: 1.45.1
@@ -15891,10 +15894,10 @@ snapshots:
       - utf-8-validate
       - webpack
 
-  '@rsdoctor/graph@1.5.6(@rspack/core@2.0.3(@swc/helpers@0.5.21))(webpack@5.105.2(lightningcss@1.31.1)(postcss@8.5.14))':
+  '@rsdoctor/graph@1.5.6(@rspack/core@2.0.3(@swc/helpers@0.5.21))(webpack@5.105.2(@swc/core@1.15.30(@swc/helpers@0.5.21))(lightningcss@1.31.1)(postcss@8.5.14))':
     dependencies:
-      '@rsdoctor/types': 1.5.6(@rspack/core@2.0.3(@swc/helpers@0.5.21))(webpack@5.105.2(lightningcss@1.31.1)(postcss@8.5.14))
-      '@rsdoctor/utils': 1.5.6(@rspack/core@2.0.3(@swc/helpers@0.5.21))(webpack@5.105.2(lightningcss@1.31.1)(postcss@8.5.14))
+      '@rsdoctor/types': 1.5.6(@rspack/core@2.0.3(@swc/helpers@0.5.21))(webpack@5.105.2(@swc/core@1.15.30(@swc/helpers@0.5.21))(lightningcss@1.31.1)(postcss@8.5.14))
+      '@rsdoctor/utils': 1.5.6(@rspack/core@2.0.3(@swc/helpers@0.5.21))(webpack@5.105.2(@swc/core@1.15.30(@swc/helpers@0.5.21))(lightningcss@1.31.1)(postcss@8.5.14))
       es-toolkit: 1.45.1
       path-browserify: 1.0.1
       source-map: 0.7.6
@@ -15913,13 +15916,13 @@ snapshots:
       - '@rspack/core'
       - webpack
 
-  '@rsdoctor/rspack-plugin@1.5.6(@emnapi/core@1.10.0)(@emnapi/runtime@1.10.0)(@rsbuild/core@2.0.6(core-js@3.48.0))(@rspack/core@2.0.3(@swc/helpers@0.5.21))(webpack@5.105.2(lightningcss@1.31.1)(postcss@8.5.14))':
+  '@rsdoctor/rspack-plugin@1.5.6(@emnapi/core@1.10.0)(@emnapi/runtime@1.10.0)(@rsbuild/core@2.0.6(core-js@3.48.0))(@rspack/core@2.0.3(@swc/helpers@0.5.21))(webpack@5.105.2(@swc/core@1.15.30(@swc/helpers@0.5.21))(lightningcss@1.31.1)(postcss@8.5.14))':
     dependencies:
-      '@rsdoctor/core': 1.5.6(@emnapi/core@1.10.0)(@emnapi/runtime@1.10.0)(@rsbuild/core@2.0.6(core-js@3.48.0))(@rspack/core@2.0.3(@swc/helpers@0.5.21))(webpack@5.105.2(lightningcss@1.31.1)(postcss@8.5.14))
-      '@rsdoctor/graph': 1.5.6(@rspack/core@2.0.3(@swc/helpers@0.5.21))(webpack@5.105.2(lightningcss@1.31.1)(postcss@8.5.14))
-      '@rsdoctor/sdk': 1.5.6(@rspack/core@2.0.3(@swc/helpers@0.5.21))(webpack@5.105.2(lightningcss@1.31.1)(postcss@8.5.14))
-      '@rsdoctor/types': 1.5.6(@rspack/core@2.0.3(@swc/helpers@0.5.21))(webpack@5.105.2(lightningcss@1.31.1)(postcss@8.5.14))
-      '@rsdoctor/utils': 1.5.6(@rspack/core@2.0.3(@swc/helpers@0.5.21))(webpack@5.105.2(lightningcss@1.31.1)(postcss@8.5.14))
+      '@rsdoctor/core': 1.5.6(@emnapi/core@1.10.0)(@emnapi/runtime@1.10.0)(@rsbuild/core@2.0.6(core-js@3.48.0))(@rspack/core@2.0.3(@swc/helpers@0.5.21))(webpack@5.105.2(@swc/core@1.15.30(@swc/helpers@0.5.21))(lightningcss@1.31.1)(postcss@8.5.14))
+      '@rsdoctor/graph': 1.5.6(@rspack/core@2.0.3(@swc/helpers@0.5.21))(webpack@5.105.2(@swc/core@1.15.30(@swc/helpers@0.5.21))(lightningcss@1.31.1)(postcss@8.5.14))
+      '@rsdoctor/sdk': 1.5.6(@rspack/core@2.0.3(@swc/helpers@0.5.21))(webpack@5.105.2(@swc/core@1.15.30(@swc/helpers@0.5.21))(lightningcss@1.31.1)(postcss@8.5.14))
+      '@rsdoctor/types': 1.5.6(@rspack/core@2.0.3(@swc/helpers@0.5.21))(webpack@5.105.2(@swc/core@1.15.30(@swc/helpers@0.5.21))(lightningcss@1.31.1)(postcss@8.5.14))
+      '@rsdoctor/utils': 1.5.6(@rspack/core@2.0.3(@swc/helpers@0.5.21))(webpack@5.105.2(@swc/core@1.15.30(@swc/helpers@0.5.21))(lightningcss@1.31.1)(postcss@8.5.14))
     optionalDependencies:
       '@rspack/core': 2.0.3(@swc/helpers@0.5.21)
     transitivePeerDependencies:
@@ -15949,12 +15952,12 @@ snapshots:
       - utf-8-validate
       - webpack
 
-  '@rsdoctor/sdk@1.5.6(@rspack/core@2.0.3(@swc/helpers@0.5.21))(webpack@5.105.2(lightningcss@1.31.1)(postcss@8.5.14))':
+  '@rsdoctor/sdk@1.5.6(@rspack/core@2.0.3(@swc/helpers@0.5.21))(webpack@5.105.2(@swc/core@1.15.30(@swc/helpers@0.5.21))(lightningcss@1.31.1)(postcss@8.5.14))':
     dependencies:
       '@rsdoctor/client': 1.5.6
-      '@rsdoctor/graph': 1.5.6(@rspack/core@2.0.3(@swc/helpers@0.5.21))(webpack@5.105.2(lightningcss@1.31.1)(postcss@8.5.14))
-      '@rsdoctor/types': 1.5.6(@rspack/core@2.0.3(@swc/helpers@0.5.21))(webpack@5.105.2(lightningcss@1.31.1)(postcss@8.5.14))
-      '@rsdoctor/utils': 1.5.6(@rspack/core@2.0.3(@swc/helpers@0.5.21))(webpack@5.105.2(lightningcss@1.31.1)(postcss@8.5.14))
+      '@rsdoctor/graph': 1.5.6(@rspack/core@2.0.3(@swc/helpers@0.5.21))(webpack@5.105.2(@swc/core@1.15.30(@swc/helpers@0.5.21))(lightningcss@1.31.1)(postcss@8.5.14))
+      '@rsdoctor/types': 1.5.6(@rspack/core@2.0.3(@swc/helpers@0.5.21))(webpack@5.105.2(@swc/core@1.15.30(@swc/helpers@0.5.21))(lightningcss@1.31.1)(postcss@8.5.14))
+      '@rsdoctor/utils': 1.5.6(@rspack/core@2.0.3(@swc/helpers@0.5.21))(webpack@5.105.2(@swc/core@1.15.30(@swc/helpers@0.5.21))(lightningcss@1.31.1)(postcss@8.5.14))
       launch-editor: 2.13.2
       safer-buffer: 2.1.2
       socket.io: 4.8.1
@@ -15983,7 +15986,7 @@ snapshots:
       - utf-8-validate
       - webpack
 
-  '@rsdoctor/types@1.5.6(@rspack/core@2.0.3(@swc/helpers@0.5.21))(webpack@5.105.2(lightningcss@1.31.1)(postcss@8.5.14))':
+  '@rsdoctor/types@1.5.6(@rspack/core@2.0.3(@swc/helpers@0.5.21))(webpack@5.105.2(@swc/core@1.15.30(@swc/helpers@0.5.21))(lightningcss@1.31.1)(postcss@8.5.14))':
     dependencies:
       '@types/connect': 3.4.38
       '@types/estree': 1.0.5
@@ -15991,7 +15994,7 @@ snapshots:
       source-map: 0.7.6
     optionalDependencies:
       '@rspack/core': 2.0.3(@swc/helpers@0.5.21)
-      webpack: 5.105.2(lightningcss@1.31.1)(postcss@8.5.14)
+      webpack: 5.105.2(@swc/core@1.15.30(@swc/helpers@0.5.21))(lightningcss@1.31.1)(postcss@8.5.14)
 
   '@rsdoctor/types@1.5.6(@rspack/core@2.0.3(@swc/helpers@0.5.21))(webpack@5.105.2(lightningcss@1.31.1))':
     dependencies:
@@ -16003,10 +16006,10 @@ snapshots:
       '@rspack/core': 2.0.3(@swc/helpers@0.5.21)
       webpack: 5.105.2(lightningcss@1.31.1)
 
-  '@rsdoctor/utils@1.5.6(@rspack/core@2.0.3(@swc/helpers@0.5.21))(webpack@5.105.2(lightningcss@1.31.1)(postcss@8.5.14))':
+  '@rsdoctor/utils@1.5.6(@rspack/core@2.0.3(@swc/helpers@0.5.21))(webpack@5.105.2(@swc/core@1.15.30(@swc/helpers@0.5.21))(lightningcss@1.31.1)(postcss@8.5.14))':
     dependencies:
       '@babel/code-frame': 7.26.2
-      '@rsdoctor/types': 1.5.6(@rspack/core@2.0.3(@swc/helpers@0.5.21))(webpack@5.105.2(lightningcss@1.31.1)(postcss@8.5.14))
+      '@rsdoctor/types': 1.5.6(@rspack/core@2.0.3(@swc/helpers@0.5.21))(webpack@5.105.2(@swc/core@1.15.30(@swc/helpers@0.5.21))(lightningcss@1.31.1)(postcss@8.5.14))
       '@types/estree': 1.0.5
       acorn: 8.15.0
       acorn-import-attributes: 1.9.5(acorn@8.15.0)
@@ -18205,7 +18208,7 @@ snapshots:
       '@rspack/core': 2.0.3(@swc/helpers@0.5.21)
       webpack: 5.105.2(lightningcss@1.31.1)
 
-  css-minimizer-webpack-plugin@8.0.0(lightningcss@1.31.1)(webpack@5.105.2(lightningcss@1.31.1)(postcss@8.5.14)):
+  css-minimizer-webpack-plugin@8.0.0(lightningcss@1.31.1)(webpack@5.105.2(@swc/core@1.15.30(@swc/helpers@0.5.21))(lightningcss@1.31.1)(postcss@8.5.14)):
     dependencies:
       '@jridgewell/trace-mapping': 0.3.29
       cssnano: 7.1.2(postcss@8.5.14)
@@ -18213,7 +18216,7 @@ snapshots:
       postcss: 8.5.14
       schema-utils: 4.3.3
       serialize-javascript: 7.0.5
-      webpack: 5.105.2(lightningcss@1.31.1)(postcss@8.5.14)
+      webpack: 5.105.2(@swc/core@1.15.30(@swc/helpers@0.5.21))(lightningcss@1.31.1)(postcss@8.5.14)
     optionalDependencies:
       lightningcss: 1.31.1
 
@@ -23320,6 +23323,18 @@ snapshots:
       ansi-escapes: 7.0.0
       supports-hyperlinks: 3.2.0
 
+  terser-webpack-plugin@5.6.0(@swc/core@1.15.30(@swc/helpers@0.5.21))(lightningcss@1.31.1)(postcss@8.5.14)(webpack@5.105.2(@swc/core@1.15.30(@swc/helpers@0.5.21))(lightningcss@1.31.1)(postcss@8.5.14)):
+    dependencies:
+      '@jridgewell/trace-mapping': 0.3.29
+      jest-worker: 27.5.1
+      schema-utils: 4.3.3
+      terser: 5.31.6
+      webpack: 5.105.2(@swc/core@1.15.30(@swc/helpers@0.5.21))(lightningcss@1.31.1)(postcss@8.5.14)
+    optionalDependencies:
+      '@swc/core': 1.15.30(@swc/helpers@0.5.21)
+      lightningcss: 1.31.1
+      postcss: 8.5.14
+
   terser-webpack-plugin@5.6.0(@swc/core@1.15.30(@swc/helpers@0.5.21))(lightningcss@1.31.1)(webpack@5.105.2(@swc/core@1.15.30(@swc/helpers@0.5.21))(lightningcss@1.31.1)):
     dependencies:
       '@jridgewell/trace-mapping': 0.3.29
@@ -24000,6 +24015,47 @@ snapshots:
       schema-utils: 4.3.3
       tapable: 2.3.0
       terser-webpack-plugin: 5.6.0(@swc/core@1.15.30(@swc/helpers@0.5.21))(lightningcss@1.31.1)(webpack@5.105.2(@swc/core@1.15.30(@swc/helpers@0.5.21))(lightningcss@1.31.1))
+      watchpack: 2.5.1
+      webpack-sources: 3.3.4
+    transitivePeerDependencies:
+      - '@minify-html/node'
+      - '@swc/core'
+      - '@swc/css'
+      - '@swc/html'
+      - clean-css
+      - cssnano
+      - csso
+      - esbuild
+      - html-minifier-terser
+      - lightningcss
+      - postcss
+      - uglify-js
+
+  webpack@5.105.2(@swc/core@1.15.30(@swc/helpers@0.5.21))(lightningcss@1.31.1)(postcss@8.5.14):
+    dependencies:
+      '@types/eslint-scope': 3.7.7
+      '@types/estree': 1.0.8
+      '@types/json-schema': 7.0.15
+      '@webassemblyjs/ast': 1.14.1
+      '@webassemblyjs/wasm-edit': 1.14.1
+      '@webassemblyjs/wasm-parser': 1.14.1
+      acorn: 8.15.0
+      acorn-import-phases: 1.0.4(acorn@8.15.0)
+      browserslist: 4.28.1
+      chrome-trace-event: 1.0.4
+      enhanced-resolve: 5.19.0
+      es-module-lexer: 2.0.0
+      eslint-scope: 5.1.1
+      events: 3.3.0
+      glob-to-regexp: 0.4.1
+      graceful-fs: 4.2.11
+      json-parse-even-better-errors: 2.3.1
+      loader-runner: 4.3.1
+      mime-types: 2.1.35
+      neo-async: 2.6.2
+      schema-utils: 4.3.3
+      tapable: 2.3.0
+      terser-webpack-plugin: 5.6.0(@swc/core@1.15.30(@swc/helpers@0.5.21))(lightningcss@1.31.1)(postcss@8.5.14)(webpack@5.105.2(@swc/core@1.15.30(@swc/helpers@0.5.21))(lightningcss@1.31.1)(postcss@8.5.14))
       watchpack: 2.5.1
       webpack-sources: 3.3.4
     transitivePeerDependencies:
