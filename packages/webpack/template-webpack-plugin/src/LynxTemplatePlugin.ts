@@ -471,33 +471,25 @@ export class LynxTemplatePlugin {
   }
 }
 
-interface Hash {
-  /**
-   * Update hash {@link https://nodejs.org/api/crypto.html#crypto_hash_update_data_inputencoding}
-   */
-  update(data: string | Buffer, inputEncoding?: string): Hash;
-
-  /**
-   * Calculates the digest {@link https://nodejs.org/api/crypto.html#crypto_hash_digest_encoding}
-   */
-  digest(encoding?: string): string | Buffer;
-}
-
 class LynxTemplatePluginImpl {
   name = 'LynxTemplatePlugin';
 
   static #taskQueue: Array<() => Promise<void>> | null = null;
-  protected hash: Hash;
+
+  // Per-compilation queue of in-flight template builds. react-rsbuild-plugin
+  // registers ONE LynxTemplatePlugin instance per entry, and `processAssets`
+  // taps at the same stage run serially — so awaiting each entry's build in its
+  // own tap would feed the worker pool one template at a time. Instead every
+  // entry pushes its un-awaited build promise into this shared (static, so it
+  // spans all the per-entry instances) queue, and a single coordinator tap
+  // awaits them together, letting the encodes run concurrently on the pool.
+  static #templateQueues: WeakMap<Compilation, Promise<void>[]> = new WeakMap();
 
   constructor(
     compiler: Compiler,
     options: Required<LynxTemplatePluginOptions>,
   ) {
     this.#options = options;
-
-    const { createHash } = compiler.webpack.util;
-
-    this.hash = createHash(compiler.options.output.hashFunction ?? 'xxhash64');
 
     // entryName to fileName conversion function
     const userOptionFilename = this.#options.filename;
@@ -516,20 +508,24 @@ class LynxTemplatePluginImpl {
       ),
     );
 
-    outputFileNames.forEach((outputFileName) => {
-      // convert absolute filename into relative so that webpack can
-      // generate it at correct location
-      let filename = outputFileName;
-      if (path.resolve(filename) === path.normalize(filename)) {
-        filename = path.relative(
-          /** Once initialized the path is always a string */
-          compiler.options.output.path!,
-          filename,
-        );
+    // convert absolute filenames into relative ones so that webpack can
+    // generate them at the correct location
+    const filenames = [...outputFileNames].map((outputFileName) => {
+      if (path.resolve(outputFileName) === path.normalize(outputFileName)) {
+        /** Once initialized the path is always a string */
+        return path.relative(compiler.options.output.path!, outputFileName);
       }
+      return outputFileName;
+    });
 
-      compiler.hooks.thisCompilation.tap(this.name, (compilation) => {
-        compilation.hooks.processAssets.tapPromise(
+    compiler.hooks.thisCompilation.tap(this.name, (compilation) => {
+      const templateQueue = LynxTemplatePluginImpl.#templateQueue(
+        compilation,
+        compiler,
+      );
+
+      for (const filename of filenames) {
+        compilation.hooks.processAssets.tap(
           {
             name: this.name,
             stage:
@@ -537,18 +533,18 @@ class LynxTemplatePluginImpl {
                * Generate the html after minification and dev tooling is done
                * and source-map is generated
                */
-              compiler.webpack.Compilation
-                .PROCESS_ASSETS_STAGE_OPTIMIZE_HASH,
+              compiler.webpack.Compilation.PROCESS_ASSETS_STAGE_OPTIMIZE_HASH,
           },
+          // Start this entry's build but don't await it here, so sibling
+          // entries' encodes all reach the worker pool together; the coordinator
+          // registered by `#templateQueue` awaits the whole queue.
           () => {
-            return this.#generateTemplate(
-              compiler,
-              compilation,
-              filename,
+            templateQueue.push(
+              this.#generateTemplate(compiler, compilation, filename),
             );
           },
         );
-      });
+      }
     });
 
     compiler.hooks.thisCompilation.tap(this.name, compilation => {
@@ -613,6 +609,33 @@ class LynxTemplatePluginImpl {
         }
       });
     }
+  }
+
+  /**
+   * The shared, per-compilation queue of in-flight template builds. The first
+   * call for a given compilation also registers the coordinator tap that awaits
+   * the whole queue — one stage after the per-entry generate taps have started
+   * the builds — so the encodes run concurrently on the worker pool.
+   */
+  static #templateQueue(
+    compilation: Compilation,
+    compiler: Compiler,
+  ): Promise<void>[] {
+    const existing = LynxTemplatePluginImpl.#templateQueues.get(compilation);
+    if (existing) {
+      return existing;
+    }
+
+    const queue: Promise<void>[] = [];
+    LynxTemplatePluginImpl.#templateQueues.set(compilation, queue);
+    compilation.hooks.processAssets.tapPromise({
+      name: 'LynxTemplatePlugin:await-templates',
+      stage: compiler.webpack.Compilation.PROCESS_ASSETS_STAGE_OPTIMIZE_HASH
+        + 1,
+    }, async () => {
+      await Promise.all(queue.splice(0));
+    });
+    return queue;
   }
 
   async #generateTemplate(
@@ -914,7 +937,14 @@ class LynxTemplatePluginImpl {
       const filename = compilation.getPath(filenameTemplate, {
         // @ts-expect-error we have a mock chunk here to make contenthash works in webpack
         chunk: {},
-        contentHash: this.hash.update(buffer).digest('hex').toString(),
+        // Hash this entry's own buffer with a fresh hash instance: templates are
+        // built concurrently, so a shared instance hash would interleave updates
+        // across entries and corrupt the content hash.
+        contentHash: compiler.webpack.util
+          .createHash(compiler.options.output.hashFunction ?? 'xxhash64')
+          .update(buffer)
+          .digest('hex')
+          .toString(),
       });
 
       const { template } = await hooks.beforeEmit.promise({
