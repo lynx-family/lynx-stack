@@ -35,16 +35,13 @@ rustc --version  # Required for native bindings
 # Full build (REQUIRED before running tests)
 pnpm turbo build
 
-# Focused package builds should still go through Turbo filtering
-pnpm turbo build --filter <package-or-task>
-
 # Development build with watching
 pnpm turbo watch build
 ```
 
-**⚠️ Critical**: Always run full build before tests. Watch mode only compiles TypeScript, not Rust components.
+**⚠️ Critical**: Always run `pnpm install --frozen-lockfile` when dependencies or generated toolchain state may be stale, then run the full repository build with `pnpm turbo build` before tests. Watch mode only compiles TypeScript, not Rust components.
 
-When narrowing builds to a package or task, prefer `pnpm turbo build --filter ...` over `pnpm build --filter ...` so Turbo dependency ordering, task outputs, and cache behavior remain consistent.
+Do not run ad hoc package-local builds such as `cd packages/... && pnpm build`, `rsbuild build`, or `rslib build` as a substitute for validation. Lynx Stack build artifacts are cross-package and can become stale or internally inconsistent when built outside Turbo. If you need a narrower build for diagnosis, still invoke it from the repository root through Turbo filtering, and run `pnpm turbo build` before relying on generated binary/e2e artifacts or updating snapshots.
 
 ### 3. Code Quality
 
