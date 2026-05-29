@@ -183,8 +183,9 @@ describe('Sourcemap', () => {
       const btRelease = releaseOf(background)
 
       // `minify: false` keeps the banner var name, so the release is greppable.
-      // The release is `debugmetadata:` + the chunk hash; the bare hash is the
-      // source-map artifact `key` reverse-resolution locates the container by.
+      // The release is `debugmetadata:` + a 160-bit sha1 over the chunk's
+      // modules; the bare hash equals the source-map artifact `key`
+      // reverse-resolution locates the container by.
       expect(mtRelease, 'main-thread should declare a release').toMatch(
         /^debugmetadata:[0-9a-f]+$/,
       )
@@ -194,6 +195,13 @@ describe('Sourcemap', () => {
       // The injected runtime registers the release with the Lynx engine.
       expect(mainThread).toContain('_SetSourceMapRelease')
       expect(background).toContain('_SetSourceMapRelease')
+      // The `[name]` placeholder in the runtime must be substituted with each
+      // file's own name (engineVersion > 2.13 reports the stack filename, so a
+      // literal `[name]` makes reverse-resolution target a non-existent file).
+      expect(mainThread).toContain('file://main-thread.js')
+      expect(background).toContain('file://background.js')
+      expect(mainThread).not.toContain('file://[name].js')
+      expect(background).not.toContain('file://[name].js')
       // Per-chunk: main-thread and background carry their own (distinct) hash.
       expect(mtRelease).not.toBe(btRelease)
     },

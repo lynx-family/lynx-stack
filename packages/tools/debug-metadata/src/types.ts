@@ -311,7 +311,7 @@ export interface DebugMetadataAsset {
    * named fields to this interface (and bumping the schema) rather than
    * by stuffing arbitrary keys at runtime.
    */
-  meta: {
+  buildInfo: {
     git?: GitMetadata;
     rspeedy?: RspeedyMeta;
   };

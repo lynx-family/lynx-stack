@@ -31,7 +31,7 @@ export interface BytecodeDebugInfoSource {
 // @public
 export interface DebugMetadataAsset {
     artifacts: Artifact[];
-    meta: {
+    buildInfo: {
         git?: GitMetadata;
         rspeedy?: RspeedyMeta;
     };

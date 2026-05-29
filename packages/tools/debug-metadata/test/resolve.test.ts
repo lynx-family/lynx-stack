@@ -65,7 +65,7 @@ const SAMPLE: DebugMetadataAsset = {
     },
   ],
   uiSourceMap: { version: 1, sources: [], mappings: [], uiMaps: [] },
-  meta: {
+  buildInfo: {
     git: {
       branch: 'main',
       commit: 'deadbeef',
@@ -188,9 +188,11 @@ describe('resolveField', () => {
     expect(resolveField(SAMPLE, 'ui-source-map')?.payload).toBe(
       SAMPLE.uiSourceMap,
     );
-    expect(resolveField(SAMPLE, 'meta')?.payload).toBe(SAMPLE.meta);
-    expect(resolveField(SAMPLE, 'git')?.payload).toBe(SAMPLE.meta.git);
-    expect(resolveField(SAMPLE, 'rspeedy')?.payload).toBe(SAMPLE.meta.rspeedy);
+    expect(resolveField(SAMPLE, 'buildInfo')?.payload).toBe(SAMPLE.buildInfo);
+    expect(resolveField(SAMPLE, 'git')?.payload).toBe(SAMPLE.buildInfo.git);
+    expect(resolveField(SAMPLE, 'rspeedy')?.payload).toBe(
+      SAMPLE.buildInfo.rspeedy,
+    );
   });
 });
 
@@ -202,7 +204,7 @@ describe('FIELDS / knownFields', () => {
         'artifacts',
         'bytecode-debug-info',
         'git',
-        'meta',
+        'buildInfo',
         'rspeedy',
         'source-map',
         'ui-source-map',

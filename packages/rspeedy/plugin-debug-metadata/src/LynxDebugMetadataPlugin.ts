@@ -28,7 +28,11 @@ import {
   createUiSourceMap,
 } from './collectors/ui-source-map.js'
 import { DEBUG_METADATA_ASSET_NAME } from './constants.js'
-import { getReleaseDefine, getReleaseRuntime } from './release-banner.js'
+import {
+  computeChunkReleaseKey,
+  getReleaseDefine,
+  getReleaseRuntime,
+} from './release-banner.js'
 import { rewriteTrailerToAbsoluteUrl } from './source-mapping-url-rewriter.js'
 
 /**
@@ -84,14 +88,7 @@ export class LynxDebugMetadataPluginImpl {
   ) {
     this.options = options
 
-    const { RawSource } = compiler.webpack.sources
-
-    new compiler.webpack.BannerPlugin({
-      test: /\.js$/,
-      raw: true,
-      banner: ({ chunk }) =>
-        getReleaseDefine(chunk?.hash ?? '') + getReleaseRuntime(),
-    }).apply(compiler)
+    const { ConcatSource, RawSource } = compiler.webpack.sources
 
     let gitCache: GitMetadata | null | undefined
     const getGit = (): GitMetadata | null => {
@@ -114,6 +111,35 @@ export class LynxDebugMetadataPluginImpl {
     }
 
     compiler.hooks.thisCompilation.tap(this.name, compilation => {
+      // Bake the per-chunk release banner into each JS asset here (rather than
+      // via `BannerPlugin`) so it can read `compilation.chunkGraph` to derive
+      // the release key. Runs at PROCESS_ASSETS_STAGE_ADDITIONS — before source
+      // maps are generated — so the maps account for the prepended banner.
+      compilation.hooks.processAssets.tap(
+        {
+          name: this.name,
+          stage: compiler.webpack.Compilation.PROCESS_ASSETS_STAGE_ADDITIONS,
+        },
+        () => {
+          for (const chunk of compilation.chunks) {
+            const release = computeChunkReleaseKey(
+              compilation.chunkGraph,
+              chunk,
+            )
+            for (const file of chunk.files) {
+              if (!file.endsWith('.js')) continue
+              const name = path.posix.basename(file, '.js')
+              const banner = getReleaseDefine(release)
+                + getReleaseRuntime(name)
+              compilation.updateAsset(
+                file,
+                old => new ConcatSource(banner, old),
+              )
+            }
+          }
+        },
+      )
+
       const templateHooks = this.options.LynxTemplatePlugin
         .getLynxTemplatePluginHooks(
           compilation as unknown as Parameters<
@@ -165,7 +191,7 @@ export class LynxDebugMetadataPluginImpl {
           const asset: DebugMetadataAsset = {
             artifacts: collectArtifacts(compilation, args.entryNames),
             uiSourceMap: createUiSourceMap(uiSourceMapRecords),
-            meta: {
+            buildInfo: {
               ...(git ? { git } : {}),
               rspeedy,
             },

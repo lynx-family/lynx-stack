@@ -12,7 +12,7 @@ Every Lynx entry build emits one `debug-metadata.json` under the entry's interme
 interface DebugMetadataAsset {
   artifacts: Artifact[]; // one entry per JS / CSS / bytecode bundle
   uiSourceMap: UiSourceMapData; // compact UI source-map payload
-  meta: { git?: GitMetadata; rspeedy?: RspeedyMeta };
+  buildInfo: { git?: GitMetadata; rspeedy?: RspeedyMeta };
 }
 ```
 
@@ -62,9 +62,9 @@ Registered fields:
 | `artifact`            | `filename`                  | full `Artifact`          |
 | `artifacts`           | —                           | `Artifact[]`             |
 | `ui-source-map`       | —                           | `UiSourceMapData`        |
-| `meta`                | —                           | `meta` block             |
-| `git`                 | —                           | `meta.git`               |
-| `rspeedy`             | —                           | `meta.rspeedy`           |
+| `buildInfo`           | —                           | `buildInfo` block        |
+| `git`                 | —                           | `buildInfo.git`          |
+| `rspeedy`             | —                           | `buildInfo.rspeedy`      |
 
 `FIELDS` is exported as a live `Map<string, FieldResolver>` — plugins can register their own at startup with a one-liner.
 
