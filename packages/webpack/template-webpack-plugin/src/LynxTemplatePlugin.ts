@@ -476,13 +476,8 @@ class LynxTemplatePluginImpl {
 
   static #taskQueue: Array<() => Promise<void>> | null = null;
 
-  // Per-compilation queue of in-flight template builds. react-rsbuild-plugin
-  // registers ONE LynxTemplatePlugin instance per entry, and `processAssets`
-  // taps at the same stage run serially — so awaiting each entry's build in its
-  // own tap would feed the worker pool one template at a time. Instead every
-  // entry pushes its un-awaited build promise into this shared (static, so it
-  // spans all the per-entry instances) queue, and a single coordinator tap
-  // awaits them together, letting the encodes run concurrently on the pool.
+  // Static so it spans the one-instance-per-entry plugins, whose serial
+  // same-stage taps would otherwise feed the encode pool one template at a time.
   static #templateQueues: WeakMap<Compilation, Promise<void>[]> = new WeakMap();
 
   constructor(
@@ -535,9 +530,8 @@ class LynxTemplatePluginImpl {
                */
               compiler.webpack.Compilation.PROCESS_ASSETS_STAGE_OPTIMIZE_HASH,
           },
-          // Start this entry's build but don't await it here, so sibling
-          // entries' encodes all reach the worker pool together; the coordinator
-          // registered by `#templateQueue` awaits the whole queue.
+          // Don't await here — the coordinator awaits the whole queue, so
+          // sibling entries' encodes reach the pool concurrently.
           () => {
             templateQueue.push(
               this.#generateTemplate(compiler, compilation, filename),
@@ -611,12 +605,8 @@ class LynxTemplatePluginImpl {
     }
   }
 
-  /**
-   * The shared, per-compilation queue of in-flight template builds. The first
-   * call for a given compilation also registers the coordinator tap that awaits
-   * the whole queue — one stage after the per-entry generate taps have started
-   * the builds — so the encodes run concurrently on the worker pool.
-   */
+  // Returns the compilation's template-build queue, lazily creating it and
+  // registering the coordinator tap (one stage later) that awaits the queue.
   static #templateQueue(
     compilation: Compilation,
     compiler: Compiler,
@@ -937,9 +927,8 @@ class LynxTemplatePluginImpl {
       const filename = compilation.getPath(filenameTemplate, {
         // @ts-expect-error we have a mock chunk here to make contenthash works in webpack
         chunk: {},
-        // Hash this entry's own buffer with a fresh hash instance: templates are
-        // built concurrently, so a shared instance hash would interleave updates
-        // across entries and corrupt the content hash.
+        // Fresh hash per buffer: builds run concurrently, so a shared instance
+        // hash would interleave updates across entries.
         contentHash: compiler.webpack.util
           .createHash(compiler.options.output.hashFunction ?? 'xxhash64')
           .update(buffer)
