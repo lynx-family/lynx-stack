@@ -28,21 +28,6 @@ const MAIN_THREAD_ENV_INCLUDE = [
 // A high baseline so `env` auto-includes nothing beyond the explicit list.
 const MAIN_THREAD_ENV_TARGETS = { chrome: '120' }
 
-// Transforms an `es2015` baseline lowers but `es2019` does not. The main
-// thread strips these from the base `env.include` to stay es2019-equivalent,
-// while keeping any extra transforms the user added via `tools.swc.env.include`.
-const ES2016_TO_ES2019_INCLUDE = [
-  'transform-exponentiation-operator',
-  'transform-async-to-generator',
-  'transform-async-generator-functions',
-  'transform-dotall-regex',
-  'transform-named-capturing-groups-regex',
-  'transform-object-rest-spread',
-  'transform-unicode-property-regex',
-  'transform-json-strings',
-  'transform-optional-catch-binding',
-]
-
 function getLoaderOptions(
   api: RsbuildPluginAPI,
   options: Required<PluginReactLynxOptions>,
@@ -155,17 +140,12 @@ export function applyLoaders(
         const swcLoaderOptions = swcLoaderRule
           .options as Rspack.SwcLoaderOptions
         // `jsc.target` and `env` can't coexist in SWC: drop the target and
-        // express the es2019 main-thread baseline through `env`, keeping only
-        // the user's extra `env.include` transforms from the base config.
+        // express the fixed es2019 main-thread baseline through `env`. The
+        // main thread targets an es2019 engine, so its baseline is a platform
+        // constant — user `tools.swc.env.include` only extends the base/
+        // background config, matching the previous `jsc.target` behavior.
         const jsc = { ...swcLoaderOptions.jsc } as Record<string, unknown>
         delete jsc['target']
-        const rspeedyBaseline = new Set([
-          ...MAIN_THREAD_ENV_INCLUDE,
-          ...ES2016_TO_ES2019_INCLUDE,
-        ])
-        const userInclude = (swcLoaderOptions.env?.include ?? []).filter(
-          (transform) => !rspeedyBaseline.has(transform),
-        )
         rule.use(CHAIN_ID.USE.SWC)
           .merge(swcLoaderRule)
           .options(
@@ -174,7 +154,7 @@ export function applyLoaders(
               jsc,
               env: {
                 targets: MAIN_THREAD_ENV_TARGETS,
-                include: [...MAIN_THREAD_ENV_INCLUDE, ...userInclude],
+                include: MAIN_THREAD_ENV_INCLUDE,
               },
             } satisfies Rspack.SwcLoaderOptions,
           )

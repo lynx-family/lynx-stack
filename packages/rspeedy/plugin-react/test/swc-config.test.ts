@@ -300,7 +300,7 @@ describe('SWC configuration', () => {
     )
   })
 
-  test('layers - user env.include is merged into both layers', async () => {
+  test('layers - user env.include applies to background, not the main-thread baseline', async () => {
     const { pluginReactLynx } = await import('../src/pluginReactLynx.js')
     const rsbuild = await createRspeedy({
       rspeedyConfig: {
@@ -341,6 +341,7 @@ describe('SWC configuration', () => {
       ReactWebpackPlugin.loaders.MAIN_THREAD,
     )
 
+    // The user transform reaches the background layer ...
     const backgroundLoaderOptions = getLoaderOptions<Rspack.SwcLoaderOptions>({
       module: {
         rules: [backgroundRule],
@@ -361,13 +362,19 @@ describe('SWC configuration', () => {
     expect({ module: { rules: [mainThreadRule] } }).not.toHaveLoader(
       ReactWebpackPlugin.loaders.BACKGROUND,
     )
+    // ... but not the main-thread layer, whose es2019 baseline is a fixed
+    // platform target (it does not accept user `env.include`, matching the
+    // previous `jsc.target` behavior).
     const mainThreadLoaderOptions = getLoaderOptions<Rspack.SwcLoaderOptions>({
       module: {
         rules: [mainThreadRule],
       },
     }, 'builtin:swc-loader')
-    expect(mainThreadLoaderOptions?.env?.include).toContain(
+    expect(mainThreadLoaderOptions?.env?.include).not.toContain(
       'transform-block-scoping',
+    )
+    expect(mainThreadLoaderOptions?.env?.include).toContain(
+      'transform-optional-chaining',
     )
   })
 
