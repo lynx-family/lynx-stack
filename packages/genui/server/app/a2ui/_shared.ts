@@ -20,6 +20,28 @@ export interface A2UIChatBody {
   validate?: boolean;
 }
 
+export type A2UIDispatchAction =
+  | {
+    event: {
+      name: string;
+      context?: Record<string, unknown>;
+    };
+  }
+  | {
+    functionCall: {
+      call: string;
+      args?: Record<string, unknown>;
+      returnType?: string;
+    };
+  };
+
+export interface ValidatedAction {
+  ok: true;
+  action: A2UIDispatchAction;
+  kind: 'event' | 'functionCall';
+  name: string;
+}
+
 function parsePositiveInt(
   raw: string | undefined,
   fallback: number,
@@ -78,6 +100,64 @@ export function errorMessage(
 ): { message: string; name?: string } {
   if (err instanceof Error) return { message: err.message, name: err.name };
   return { message: String(err) };
+}
+
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return value !== null && typeof value === 'object' && !Array.isArray(value);
+}
+
+export function validateAction(value: unknown):
+  | ValidatedAction
+  | { ok: false; status: number; error: string }
+{
+  if (!isRecord(value)) {
+    return {
+      ok: false,
+      status: 400,
+      error: 'action.event.name or action.functionCall.call is required',
+    };
+  }
+
+  const hasEvent = 'event' in value;
+  const hasFunctionCall = 'functionCall' in value;
+
+  if (hasEvent && hasFunctionCall) {
+    return {
+      ok: false,
+      status: 400,
+      error: 'exactly one of action.event or action.functionCall is required',
+    };
+  }
+
+  if (hasEvent && isRecord(value.event)) {
+    const name = value.event.name;
+    if (typeof name === 'string' && name.length > 0) {
+      return {
+        ok: true,
+        action: value as A2UIDispatchAction,
+        kind: 'event',
+        name,
+      };
+    }
+  }
+
+  if (hasFunctionCall && isRecord(value.functionCall)) {
+    const call = value.functionCall.call;
+    if (typeof call === 'string' && call.length > 0) {
+      return {
+        ok: true,
+        action: value as A2UIDispatchAction,
+        kind: 'functionCall',
+        name: call,
+      };
+    }
+  }
+
+  return {
+    ok: false,
+    status: 400,
+    error: 'action.event.name or action.functionCall.call is required',
+  };
 }
 
 export interface ValidatedMessages {

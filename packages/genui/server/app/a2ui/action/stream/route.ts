@@ -12,7 +12,10 @@ import {
   getA2UIValidationDebugData,
   validateA2UIOutput,
 } from '../../../../agent/a2ui-validator';
-import { resolveA2UIImageUrls } from '../../../../agent/image-resolver';
+import {
+  replacePendingA2UIImagesWithLoading,
+  resolveA2UIImageUrls,
+} from '../../../../agent/image-resolver';
 import { getA2UIAgentService } from '../../../../service/a2ui-agent';
 import type { ChatMessage } from '../../../../service/a2ui-agent';
 import {
@@ -20,6 +23,7 @@ import {
   errorMessage,
   pickChatOptions,
   readJsonBodyWithLimit,
+  validateAction,
   validateConversation,
 } from '../../_shared';
 import { corsHeaders, corsPreflight, jsonWithCors } from '../../cors';
@@ -54,10 +58,7 @@ function createStreamLogger(route: string) {
 interface A2UIActionStreamBody {
   conversation?: unknown;
   surfaceId?: string;
-  action: {
-    name: string;
-    context?: Record<string, unknown>;
-  };
+  action?: unknown;
   resourceId?: string;
   model?: string;
   apiKey?: string;
@@ -119,15 +120,16 @@ export async function POST(req: Request) {
   const body = parsed.body;
 
   const validationStartedAt = performance.now();
-  if (!body.action || !body.action.name) {
+  const validatedAction = validateAction(body.action);
+  if (!validatedAction.ok) {
     log('action.rejected', {
       durationMs: performance.now() - validationStartedAt,
-      error: 'action.name is required',
+      error: validatedAction.error,
     });
     return jsonWithCors(
       req,
-      { ok: false, error: 'action.name is required' },
-      { status: 400 },
+      { ok: false, error: validatedAction.error },
+      { status: validatedAction.status },
     );
   }
 
@@ -165,7 +167,7 @@ export async function POST(req: Request) {
   const service = getA2UIAgentService();
   const payload = {
     surfaceId: body.surfaceId,
-    action: body.action,
+    action: validatedAction.action,
   };
   const userContent = `A2UI_USER_ACTION: ${JSON.stringify(payload)}`;
   if (userContent.length > MAX_MESSAGE_CHARS) {
@@ -198,7 +200,8 @@ export async function POST(req: Request) {
 
   log('request.accepted', {
     surfaceId: body.surfaceId,
-    actionName: body.action.name,
+    actionKind: validatedAction.kind,
+    actionName: validatedAction.name,
     conversationHistoryCount: validatedConversation.conversation?.history.length
       ?? 0,
     conversationHistoryChars: validatedConversation.conversation?.history
@@ -220,6 +223,26 @@ export async function POST(req: Request) {
     async start(controller) {
       const enqueue = (event: string, data: unknown) => {
         controller.enqueue(encodeSSE(event, data));
+      };
+      const resolveMessagesForStreaming = async (
+        messages: Parameters<typeof resolveA2UIImageUrls>[0],
+      ) => {
+        const pendingImages = replacePendingA2UIImagesWithLoading(messages);
+        if (pendingImages.replacementCount > 0) {
+          const loadingMessages = splitA2UIProtocolMessages(
+            pendingImages.messages,
+          );
+          enqueue('message', { messages: loadingMessages });
+          log('images.loading.enqueued', {
+            replacementCount: pendingImages.replacementCount,
+            messageCount: loadingMessages.length,
+          });
+        }
+
+        const resolvedMessages = splitA2UIProtocolMessages(
+          await resolveA2UIImageUrls(messages),
+        );
+        return resolvedMessages;
       };
 
       try {
@@ -311,7 +334,7 @@ export async function POST(req: Request) {
           validationOptions,
         );
         let resolvedMessages = v.ok
-          ? splitA2UIProtocolMessages(await resolveA2UIImageUrls(v.messages))
+          ? await resolveMessagesForStreaming(v.messages)
           : [];
         log('validation.completed', {
           ok: v.ok,
@@ -357,8 +380,8 @@ export async function POST(req: Request) {
               finalText = repaired.text;
               usage = repaired.usage;
               finishReason = repaired.finishReason;
-              resolvedMessages = splitA2UIProtocolMessages(
-                await resolveA2UIImageUrls(repaired.messages),
+              resolvedMessages = await resolveMessagesForStreaming(
+                repaired.messages,
               );
               validation = {
                 ok: true,

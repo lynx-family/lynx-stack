@@ -15,6 +15,7 @@ import iconManifest from './catalog/Icon/catalog.json';
 import imageManifest from './catalog/Image/catalog.json';
 import lineChartManifest from './catalog/LineChart/catalog.json';
 import listManifest from './catalog/List/catalog.json';
+import loadingManifest from './catalog/Loading/catalog.json';
 import modalManifest from './catalog/Modal/catalog.json';
 import radioGroupManifest from './catalog/RadioGroup/catalog.json';
 import rowManifest from './catalog/Row/catalog.json';
@@ -89,6 +90,7 @@ const CATALOG_MANIFESTS = [
   rowManifest,
   columnManifest,
   listManifest,
+  loadingManifest,
   cardManifest,
   tabsManifest,
   modalManifest,
@@ -117,6 +119,7 @@ const COMPONENT_SUMMARIES: Record<string, string> = {
   Image: 'Display an image by URL.',
   LineChart: 'Display one or more numeric line series over shared labels.',
   List: 'Repeating layout container, commonly bound to a data path.',
+  Loading: 'Animated progress indicator for pending content.',
   Modal:
     'Modal dialog with a trigger component and a content component. The trigger opens the modal locally when tapped.',
   RadioGroup: 'Single-choice selector for a list of string options.',

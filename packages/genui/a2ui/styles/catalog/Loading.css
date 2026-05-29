@@ -1,0 +1,61 @@
+@import "../theme.css";
+
+.loading {
+  --a2ui-loading-base: var(--a2ui-color-surface-muted);
+  --a2ui-loading-glow: rgba(255, 255, 255, 0.34);
+  --a2ui-loading-highlight: var(--a2ui-color-border-strong);
+
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  justify-content: center;
+  flex-shrink: 0;
+  gap: 10px;
+}
+
+.loading-inline {
+  width: 100%;
+  min-height: 14px;
+}
+
+.loading-block {
+  width: 100%;
+  min-height: 48px;
+  padding: 6px 0;
+}
+
+.loading-skeleton {
+  height: 14px;
+  border-radius: 999px;
+  background: linear-gradient(
+    90deg,
+    var(--a2ui-loading-base) 0%,
+    var(--a2ui-loading-glow) 30%,
+    var(--a2ui-loading-highlight) 50%,
+    var(--a2ui-loading-glow) 70%,
+    var(--a2ui-loading-base) 100%
+  );
+  background-size: 220% 100%;
+  animation-name: a2ui-loading-shimmer;
+  animation-duration: 1200ms;
+  animation-timing-function: ease-in-out;
+  animation-iteration-count: infinite;
+}
+
+.loading-skeleton-primary {
+  width: 96%;
+}
+
+.loading-skeleton-secondary {
+  width: 68%;
+}
+
+@keyframes a2ui-loading-shimmer {
+  0% {
+    background-position: 120% 0;
+  }
+
+  100% {
+    background-position: -120% 0;
+  }
+}
