@@ -413,6 +413,16 @@ export function App() {
     (action: unknown) => {
       const agent = agentRef.current;
       if (!agent) return;
+      // In playback mode the parent ticker is the source of truth — route
+      // both pause and resume through `syncPlaybackAgent` so resume only
+      // unblocks the agent while `currentCount < playbackTargetCount`.
+      // Otherwise (with the new `delayMs: 0`) a stale resume would drain
+      // one extra message past the target before the next progress tick.
+      if (playbackMode) {
+        playbackPausedRef.current = action === 'pause';
+        syncPlaybackAgent();
+        return;
+      }
       if (action === 'pause') {
         agent.pause();
         return;
@@ -501,7 +511,13 @@ export function App() {
         // `delayMs: 0` makes `agent.start()` push every message into the
         // buffer in a tight loop, effectively a static "final state"
         // paint that matches upstream's `isInstantPreview` mode.
-        delayMs: streamConfig.instant ? 0 : streamDelay,
+        //
+        // In playback mode the parent frame is the single ticker — it sends
+        // `A2UI_PLAYBACK_PROGRESS` to advance the visible chunk count. The
+        // agent should drain instantly up to that target so the preview stays
+        // in lockstep with the chunk list, and the parent's speed slider
+        // becomes the only knob that matters.
+        delayMs: streamConfig.instant || playbackMode ? 0 : streamDelay,
         onProgress: (state) => {
           postPlaybackSync(state);
           syncPlaybackAgent();
@@ -546,6 +562,7 @@ export function App() {
     };
   }, [
     isInstantPreview,
+    playbackMode,
     postPlaybackSync,
     pushLiveMessagesToStore,
     streamConfig,

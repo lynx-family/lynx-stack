@@ -689,23 +689,6 @@ export function DemosPage(props: {
                 )}
               <div className='spacer' />
               <div className='playbackHeaderControls'>
-                <label
-                  className='simSpeedLabel'
-                  htmlFor='inlinePbSpeed'
-                >
-                  Speed
-                </label>
-                <input
-                  id='inlinePbSpeed'
-                  className='simSpeedSlider'
-                  type='range'
-                  min='0.25'
-                  max='4'
-                  step='0.25'
-                  value={playbackSpeed}
-                  onChange={(e) => setPlaybackSpeed(Number(e.target.value))}
-                />
-                <span className='simSpeedValue'>{playbackSpeed}x</span>
                 {isPlaybackActive
                   ? (
                     <button
@@ -869,6 +852,12 @@ export function DemosPage(props: {
           className='previewPanel examplesPreviewPanel'
           title='Lynx Preview'
           showPreviewModeSwitch
+          // Speed lives inside PreviewPanel's existing "Simulated" bar,
+          // but state is owned here so it also drives the parent's
+          // `A2UI_PLAYBACK_PROGRESS` tick interval during playback.
+          // Single source of truth, single visible knob, single code path.
+          speed={playbackSpeed}
+          onSpeedChange={setPlaybackSpeed}
           previewSource={previewSource}
         >
           <PreviewViewport
