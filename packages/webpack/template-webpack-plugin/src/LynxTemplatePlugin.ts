@@ -623,7 +623,15 @@ class LynxTemplatePluginImpl {
       stage: compiler.webpack.Compilation.PROCESS_ASSETS_STAGE_OPTIMIZE_HASH
         + 1,
     }, async () => {
-      await Promise.all(queue.splice(0));
+      // allSettled (not all): every encode was started eagerly, so wait for all
+      // of them to finish before the phase unwinds — otherwise a single
+      // rejection would let webpack move on while siblings still emit assets.
+      const results = await Promise.allSettled(queue.splice(0));
+      for (const result of results) {
+        if (result.status === 'rejected') {
+          compilation.errors.push(result.reason as WebpackError);
+        }
+      }
     });
     return queue;
   }
