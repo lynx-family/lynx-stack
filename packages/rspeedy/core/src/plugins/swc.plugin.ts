@@ -4,7 +4,11 @@
 
 import type { RsbuildPlugin } from '@rsbuild/core'
 
-import { getESVersionTarget } from '../utils/getESVersionTarget.js'
+import {
+  ES_ENV_TARGETS,
+  getESVersionEnvInclude,
+  getESVersionTarget,
+} from '../utils/getESVersionTarget.js'
 
 export function pluginSwc(): RsbuildPlugin {
   return {
@@ -15,11 +19,30 @@ export function pluginSwc(): RsbuildPlugin {
         return mergeRsbuildConfig(config, {
           tools: {
             swc(config) {
-              delete config.env
+              // `env` and `jsc.target` are mutually exclusive in SWC. Reject a
+              // user-set `jsc.target` instead of silently dropping it.
+              if (config.jsc?.target !== undefined) {
+                throw new Error(
+                  'Rspeedy manages the SWC compilation target via `env`, which '
+                    + 'is mutually exclusive with `jsc.target`. Remove '
+                    + '`tools.swc.jsc.target` (received '
+                    + `\`${JSON.stringify(config.jsc.target)}\`). To downlevel `
+                    + 'specific syntax, add the corresponding transforms to '
+                    + '`tools.swc.env.include` instead (e.g. '
+                    + '`[\'transform-class-properties\']`).',
+                )
+              }
 
-              config.jsc ??= {}
-
-              config.jsc.target ??= getESVersionTarget(isProd)
+              // Merge any user `env.include` on top of Rspeedy's baseline.
+              // `targets` stays owned by Rspeedy; other `env` fields from the
+              // bundler default (e.g. `mode`) are dropped, as before.
+              config.env = {
+                targets: ES_ENV_TARGETS,
+                include: [
+                  ...getESVersionEnvInclude(getESVersionTarget(isProd)),
+                  ...(config.env?.include ?? []),
+                ],
+              }
             },
           },
         })

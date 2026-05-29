@@ -1,7 +1,7 @@
 // Copyright 2024 The Lynx Authors. All rights reserved.
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
-import type { RsbuildPluginAPI, Rspack } from '@rsbuild/core'
+import type { Rspack } from '@rsbuild/core'
 import { assert, describe, expect, test, vi } from 'vitest'
 
 import { LAYERS, ReactWebpackPlugin } from '@lynx-js/react-webpack-plugin'
@@ -51,22 +51,6 @@ describe('SWC configuration', () => {
     const rsbuild = await createRspeedy({
       rspeedyConfig: {
         plugins: [
-          {
-            name: 'test:swc',
-            setup(api: RsbuildPluginAPI) {
-              api.modifyRsbuildConfig((config, { mergeRsbuildConfig }) => {
-                return mergeRsbuildConfig(config, {
-                  tools: {
-                    swc(config) {
-                      // Rspeedy does this
-                      delete config.env
-                      return config
-                    },
-                  },
-                })
-              })
-            },
-          },
           pluginStubRspeedyAPI(),
           pluginReactLynx(),
         ],
@@ -83,6 +67,22 @@ describe('SWC configuration', () => {
             "typeExports": true,
           },
           "detectSyntax": "auto",
+          "env": {
+            "include": [
+              "transform-nullish-coalescing-operator",
+              "transform-optional-chaining",
+              "transform-export-namespace-from",
+              "transform-logical-assignment-operators",
+              "transform-numeric-separator",
+              "transform-class-properties",
+              "transform-class-static-block",
+              "transform-private-methods",
+              "transform-private-property-in-object",
+            ],
+            "targets": {
+              "chrome": "120",
+            },
+          },
           "isModule": "unknown",
           "jsc": {
             "experimental": {
@@ -98,7 +98,6 @@ describe('SWC configuration', () => {
               "syntax": "typescript",
               "tsx": false,
             },
-            "target": "es2019",
             "transform": {
               "decoratorVersion": "2023-11",
               "legacyDecorator": false,
@@ -113,7 +112,6 @@ describe('SWC configuration', () => {
   })
 
   test('with tools.swc', async () => {
-    vi.stubEnv('NODE_ENV', 'production')
     const { pluginReactLynx } = await import('../src/pluginReactLynx.js')
     const rsbuild = await createRspeedy({
       rspeedyConfig: {
@@ -269,11 +267,17 @@ describe('SWC configuration', () => {
         rules: [mainThreadRule],
       },
     }, 'builtin:swc-loader')
-    assert(mainThreadLoaderOptions?.jsc)
-    expect(mainThreadLoaderOptions.jsc.target).toBe('es2019')
+    // Main thread is es2019-equivalent, expressed via `env` (no `jsc.target`).
+    expect(mainThreadLoaderOptions?.jsc?.target).toBeUndefined()
+    expect(mainThreadLoaderOptions?.env?.include).toContain(
+      'transform-optional-chaining',
+    )
+    expect(mainThreadLoaderOptions?.env?.include).not.toContain(
+      'transform-async-to-generator',
+    )
   })
 
-  test('layers - main-thread custom target', async () => {
+  test('user-configured jsc.target is rejected', async () => {
     const { pluginReactLynx } = await import('../src/pluginReactLynx.js')
     const rsbuild = await createRspeedy({
       rspeedyConfig: {
@@ -281,6 +285,29 @@ describe('SWC configuration', () => {
           swc: {
             jsc: {
               target: 'es2022',
+            },
+          },
+        },
+        plugins: [
+          pluginStubRspeedyAPI(),
+          pluginReactLynx(),
+        ],
+      },
+    })
+
+    await expect(rsbuild.initConfigs()).rejects.toThrowError(
+      /Rspeedy manages the SWC compilation target via `env`/,
+    )
+  })
+
+  test('layers - user env.include applies to background, not the main-thread baseline', async () => {
+    const { pluginReactLynx } = await import('../src/pluginReactLynx.js')
+    const rsbuild = await createRspeedy({
+      rspeedyConfig: {
+        tools: {
+          swc: {
+            env: {
+              include: ['transform-block-scoping'],
             },
           },
         },
@@ -314,13 +341,15 @@ describe('SWC configuration', () => {
       ReactWebpackPlugin.loaders.MAIN_THREAD,
     )
 
+    // The user transform reaches the background layer ...
     const backgroundLoaderOptions = getLoaderOptions<Rspack.SwcLoaderOptions>({
       module: {
         rules: [backgroundRule],
       },
     }, 'builtin:swc-loader')
-    assert(backgroundLoaderOptions?.jsc)
-    expect(backgroundLoaderOptions.jsc.target).toBe('es2022')
+    expect(backgroundLoaderOptions?.env?.include).toContain(
+      'transform-block-scoping',
+    )
 
     const mainThreadRule = getLayerRule(swcRule, LAYERS.MAIN_THREAD)
     assert(mainThreadRule)
@@ -333,13 +362,20 @@ describe('SWC configuration', () => {
     expect({ module: { rules: [mainThreadRule] } }).not.toHaveLoader(
       ReactWebpackPlugin.loaders.BACKGROUND,
     )
+    // ... but not the main-thread layer, whose es2019 baseline is a fixed
+    // platform target (it does not accept user `env.include`, matching the
+    // previous `jsc.target` behavior).
     const mainThreadLoaderOptions = getLoaderOptions<Rspack.SwcLoaderOptions>({
       module: {
         rules: [mainThreadRule],
       },
     }, 'builtin:swc-loader')
-    assert(mainThreadLoaderOptions?.jsc)
-    expect(mainThreadLoaderOptions.jsc.target).toBe('es2019')
+    expect(mainThreadLoaderOptions?.env?.include).not.toContain(
+      'transform-block-scoping',
+    )
+    expect(mainThreadLoaderOptions?.env?.include).toContain(
+      'transform-optional-chaining',
+    )
   })
 
   test('`include` defaults to all js file if not configured by user', async () => {

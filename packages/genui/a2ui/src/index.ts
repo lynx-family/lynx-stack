@@ -97,6 +97,7 @@ export {
   LineChart,
   PieChart,
   List,
+  Loading,
   Modal,
   RadioGroup,
   Row,

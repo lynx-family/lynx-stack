@@ -1387,11 +1387,10 @@ html[data-theme="dark"] .phoneHomeIndicator {
     padding: 0 10px;
   }
 
+  /* Logo alone is enough on mobile — drops the "Lynx GenUI Playground"
+     wordmark that was truncating to "Lynx GenUI Playg…" */
   .brand {
-    max-width: 130px;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
+    display: none;
   }
 
   .brandLogo {
@@ -1414,5 +1413,66 @@ html[data-theme="dark"] .phoneHomeIndicator {
 
   .phoneWrap {
     padding: 10px;
+  }
+}
+
+/* ── Mobile tab bar (per-page Edit/Preview swap) ──
+   Pages that opt in render <MobileTabBar /> as the last child of their
+   flex-column root, so the bar lands at the bottom naturally without
+   position: fixed/sticky overlap quirks. */
+.mobileTabBar {
+  display: none;
+  flex-shrink: 0;
+  background: var(--geist-background);
+  border-top: 1px solid var(--geist-border);
+  padding-bottom: env(safe-area-inset-bottom, 0px);
+}
+
+.mobileTab {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 2px;
+  padding: 8px 4px 7px;
+  background: transparent;
+  border: none;
+  color: var(--geist-secondary);
+  font-size: 11px;
+  font-weight: 500;
+  cursor: pointer;
+  position: relative;
+  transition: color var(--geist-transition);
+}
+
+.mobileTab:hover {
+  color: var(--geist-foreground);
+}
+
+.mobileTab.active {
+  color: var(--geist-foreground);
+  font-weight: 600;
+}
+
+.mobileTab.active::before {
+  content: "";
+  position: absolute;
+  top: -1px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 32px;
+  height: 2px;
+  background: var(--geist-foreground);
+  border-radius: 0 0 999px 999px;
+}
+
+.mobileTabLabel {
+  letter-spacing: 0.01em;
+}
+
+@media (max-width: 720px) {
+  .mobileTabBar {
+    display: flex;
   }
 }

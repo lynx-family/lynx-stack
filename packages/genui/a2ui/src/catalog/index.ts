@@ -40,6 +40,7 @@ export { Divider } from './Divider/index.jsx';
 export { Icon } from './Icon/index.jsx';
 export { Image } from './Image/index.jsx';
 export { List } from './List/index.jsx';
+export { Loading } from './Loading/index.jsx';
 export { Modal } from './Modal/index.jsx';
 export { RadioGroup } from './RadioGroup/index.jsx';
 export { Row } from './Row/index.jsx';

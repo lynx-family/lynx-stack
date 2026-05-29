@@ -324,6 +324,12 @@ export function LineChart(props: LineChartProps): ReactNode;
 // @public (undocumented)
 export function List(props: ListProps): ReactNode;
 
+// Warning: (ae-forgotten-export) The symbol "LoadingProps" needs to be exported by the entry point index.d.ts
+// Warning: (ae-missing-release-tag) "Loading" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
+//
+// @public (undocumented)
+export function Loading(props: LoadingProps): ReactNode;
+
 // Warning: (ae-missing-release-tag) "mergeCatalogs" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
 //
 // @public
@@ -611,6 +617,7 @@ export function useResolvedProps(properties: Record<string, unknown>, surface: S
 // dist/catalog/Image/index.d.ts:4:4 - (tsdoc-undefined-tag) The TSDoc tag "@a2uiCatalog" is not defined in this configuration
 // dist/catalog/LineChart/index.d.ts:9:4 - (tsdoc-undefined-tag) The TSDoc tag "@a2uiCatalog" is not defined in this configuration
 // dist/catalog/List/index.d.ts:4:4 - (tsdoc-undefined-tag) The TSDoc tag "@a2uiCatalog" is not defined in this configuration
+// dist/catalog/Loading/index.d.ts:4:4 - (tsdoc-undefined-tag) The TSDoc tag "@a2uiCatalog" is not defined in this configuration
 // dist/catalog/Modal/index.d.ts:4:4 - (tsdoc-undefined-tag) The TSDoc tag "@a2uiCatalog" is not defined in this configuration
 // dist/catalog/PieChart/index.d.ts:9:4 - (tsdoc-undefined-tag) The TSDoc tag "@a2uiCatalog" is not defined in this configuration
 // dist/catalog/RadioGroup/index.d.ts:4:4 - (tsdoc-undefined-tag) The TSDoc tag "@a2uiCatalog" is not defined in this configuration

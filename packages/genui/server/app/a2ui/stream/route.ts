@@ -11,7 +11,10 @@ import {
   getA2UIValidationDebugData,
   validateA2UIOutput,
 } from '../../../agent/a2ui-validator';
-import { resolveA2UIImageUrls } from '../../../agent/image-resolver';
+import {
+  replacePendingA2UIImagesWithLoading,
+  resolveA2UIImageUrls,
+} from '../../../agent/image-resolver';
 import { getA2UIAgentService } from '../../../service/a2ui-agent';
 import {
   errorMessage,
@@ -166,6 +169,26 @@ export async function POST(req: Request) {
       const enqueue = (event: string, data: unknown) => {
         controller.enqueue(encodeSSE(event, data));
       };
+      const resolveMessagesForStreaming = async (
+        messages: Parameters<typeof resolveA2UIImageUrls>[0],
+      ) => {
+        const pendingImages = replacePendingA2UIImagesWithLoading(messages);
+        if (pendingImages.replacementCount > 0) {
+          const loadingMessages = splitA2UIProtocolMessages(
+            pendingImages.messages,
+          );
+          enqueue('message', { messages: loadingMessages });
+          log('images.loading.enqueued', {
+            replacementCount: pendingImages.replacementCount,
+            messageCount: loadingMessages.length,
+          });
+        }
+
+        const resolvedMessages = splitA2UIProtocolMessages(
+          await resolveA2UIImageUrls(messages),
+        );
+        return resolvedMessages;
+      };
 
       try {
         const connectStartedAt = performance.now();
@@ -245,7 +268,7 @@ export async function POST(req: Request) {
           opts.catalog ?? BASIC_CATALOG,
         );
         let resolvedMessages = v.ok
-          ? splitA2UIProtocolMessages(await resolveA2UIImageUrls(v.messages))
+          ? await resolveMessagesForStreaming(v.messages)
           : [];
         log('validation.completed', {
           ok: v.ok,
@@ -290,8 +313,8 @@ export async function POST(req: Request) {
               finalText = repaired.text;
               usage = repaired.usage;
               finishReason = repaired.finishReason;
-              resolvedMessages = splitA2UIProtocolMessages(
-                await resolveA2UIImageUrls(repaired.messages),
+              resolvedMessages = await resolveMessagesForStreaming(
+                repaired.messages,
               );
               validation = {
                 ok: true,

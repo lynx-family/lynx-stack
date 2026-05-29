@@ -7,6 +7,27 @@ import { LAYERS, ReactWebpackPlugin } from '@lynx-js/react-webpack-plugin'
 
 import type { PluginReactLynxOptions } from './pluginReactLynx.js'
 
+// The transforms an `es2019` SWC target lowers (ES2020+ syntax), expressed as
+// an explicit `env.include` so the main thread no longer relies on
+// `jsc.target` (mutually exclusive with `env`). Output is unchanged.
+const MAIN_THREAD_ENV_INCLUDE = [
+  // ES2020
+  'transform-nullish-coalescing-operator',
+  'transform-optional-chaining',
+  'transform-export-namespace-from',
+  // ES2021
+  'transform-logical-assignment-operators',
+  'transform-numeric-separator',
+  // ES2022
+  'transform-class-properties',
+  'transform-class-static-block',
+  'transform-private-methods',
+  'transform-private-property-in-object',
+]
+
+// A high baseline so `env` auto-includes nothing beyond the explicit list.
+const MAIN_THREAD_ENV_TARGETS = { chrome: '120' }
+
 function getLoaderOptions(
   api: RsbuildPluginAPI,
   options: Required<PluginReactLynxOptions>,
@@ -118,14 +139,22 @@ export function applyLoaders(
           .entries() as Rspack.RuleSetRule
         const swcLoaderOptions = swcLoaderRule
           .options as Rspack.SwcLoaderOptions
+        // `jsc.target` and `env` can't coexist in SWC: drop the target and
+        // express the fixed es2019 main-thread baseline through `env`. The
+        // main thread targets an es2019 engine, so its baseline is a platform
+        // constant — user `tools.swc.env.include` only extends the base/
+        // background config, matching the previous `jsc.target` behavior.
+        const jsc = { ...swcLoaderOptions.jsc } as Record<string, unknown>
+        delete jsc['target']
         rule.use(CHAIN_ID.USE.SWC)
           .merge(swcLoaderRule)
           .options(
             {
               ...swcLoaderOptions,
-              jsc: {
-                ...swcLoaderOptions.jsc,
-                target: 'es2019',
+              jsc,
+              env: {
+                targets: MAIN_THREAD_ENV_TARGETS,
+                include: MAIN_THREAD_ENV_INCLUDE,
               },
             } satisfies Rspack.SwcLoaderOptions,
           )

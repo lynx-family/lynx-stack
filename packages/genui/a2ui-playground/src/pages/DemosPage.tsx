@@ -8,6 +8,8 @@ import type { CSSProperties, PointerEvent as ReactPointerEvent } from 'react';
 
 import './DemosPage.css';
 
+import { MobileTabBar } from '../components/MobileTabBar.js';
+import type { MobilePaneTab } from '../components/MobileTabBar.js';
 import { PanelResizeHandle } from '../components/PanelResizeHandle.js';
 import { PreviewPanel } from '../components/PreviewPanel.js';
 import { PreviewViewport } from '../components/PreviewViewport.js';
@@ -146,6 +148,7 @@ export function DemosPage(props: {
   const [jsonEdited, setJsonEdited] = useState(false);
   const [previewRenderKey, setPreviewRenderKey] = useState(0);
   const [isPublishingPayload, setIsPublishingPayload] = useState(false);
+  const [activeMobileTab, setActiveMobileTab] = useState<MobilePaneTab>('edit');
   const [previewInput, setPreviewInput] = useState<PreviewInput | null>(() =>
     initialScenario
       ? {
@@ -624,6 +627,7 @@ export function DemosPage(props: {
     <div
       ref={pageRef}
       className={isPanelResizing ? 'demosPage resizing' : 'demosPage'}
+      data-active-tab={activeMobileTab}
     >
       <aside className='sidebar'>
         <div className='sidebarTopNav'>
@@ -689,23 +693,6 @@ export function DemosPage(props: {
                 )}
               <div className='spacer' />
               <div className='playbackHeaderControls'>
-                <label
-                  className='simSpeedLabel'
-                  htmlFor='inlinePbSpeed'
-                >
-                  Speed
-                </label>
-                <input
-                  id='inlinePbSpeed'
-                  className='simSpeedSlider'
-                  type='range'
-                  min='0.25'
-                  max='4'
-                  step='0.25'
-                  value={playbackSpeed}
-                  onChange={(e) => setPlaybackSpeed(Number(e.target.value))}
-                />
-                <span className='simSpeedValue'>{playbackSpeed}x</span>
                 {isPlaybackActive
                   ? (
                     <button
@@ -869,6 +856,12 @@ export function DemosPage(props: {
           className='previewPanel examplesPreviewPanel'
           title='Lynx Preview'
           showPreviewModeSwitch
+          // Speed lives inside PreviewPanel's existing "Simulated" bar,
+          // but state is owned here so it also drives the parent's
+          // `A2UI_PLAYBACK_PROGRESS` tick interval during playback.
+          // Single source of truth, single visible knob, single code path.
+          speed={playbackSpeed}
+          onSpeedChange={setPlaybackSpeed}
           previewSource={previewSource}
         >
           <PreviewViewport
@@ -881,6 +874,12 @@ export function DemosPage(props: {
           />
         </PreviewPanel>
       </div>
+
+      <MobileTabBar
+        activeTab={activeMobileTab}
+        onChange={setActiveMobileTab}
+        editLabel='Code'
+      />
     </div>
   );
 }

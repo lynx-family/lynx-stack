@@ -26,16 +26,6 @@ export function applySWC(api: RsbuildPluginAPI): void {
         },
       },
       config,
-      {
-        tools: {
-          swc(config) {
-            // Avoid error: "`env` and `jsc.target` cannot be used together"
-            // since rslib will set env by default, we need to clear it
-            delete config.env
-            return config
-          },
-        },
-      },
     )
   })
 }

@@ -1,0 +1,14 @@
+{
+  "Loading": {
+    "properties": {
+      "variant": {
+        "type": "string",
+        "enum": [
+          "inline",
+          "block"
+        ]
+      }
+    },
+    "required": []
+  }
+}
