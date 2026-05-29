@@ -20,24 +20,14 @@ export interface A2UIChatBody {
   validate?: boolean;
 }
 
-export type A2UIDispatchAction =
-  | {
-    event: {
-      name: string;
-      context?: Record<string, unknown>;
-    };
-  }
-  | {
-    functionCall: {
-      call: string;
-      args?: Record<string, unknown>;
-      returnType?: string;
-    };
-  };
+export interface A2UIActionRequest {
+  name: string;
+  context?: Record<string, unknown>;
+}
 
 export interface ValidatedAction {
   ok: true;
-  action: A2UIDispatchAction;
+  action: A2UIActionRequest;
   kind: 'event' | 'functionCall';
   name: string;
 }
@@ -114,7 +104,27 @@ export function validateAction(value: unknown):
     return {
       ok: false,
       status: 400,
-      error: 'action.event.name or action.functionCall.call is required',
+      error: 'action.name is required',
+    };
+  }
+
+  if (typeof value.name === 'string' && value.name.length > 0) {
+    const action: A2UIActionRequest = { name: value.name };
+    if ('context' in value) {
+      if (!isRecord(value.context)) {
+        return {
+          ok: false,
+          status: 400,
+          error: 'action.context must be an object',
+        };
+      }
+      action.context = value.context;
+    }
+    return {
+      ok: true,
+      action,
+      kind: 'event',
+      name: value.name,
     };
   }
 
@@ -132,9 +142,20 @@ export function validateAction(value: unknown):
   if (hasEvent && isRecord(value.event)) {
     const name = value.event.name;
     if (typeof name === 'string' && name.length > 0) {
+      const action: A2UIActionRequest = { name };
+      if ('context' in value.event) {
+        if (!isRecord(value.event.context)) {
+          return {
+            ok: false,
+            status: 400,
+            error: 'action.event.context must be an object',
+          };
+        }
+        action.context = value.event.context;
+      }
       return {
         ok: true,
-        action: value as A2UIDispatchAction,
+        action,
         kind: 'event',
         name,
       };
@@ -144,9 +165,20 @@ export function validateAction(value: unknown):
   if (hasFunctionCall && isRecord(value.functionCall)) {
     const call = value.functionCall.call;
     if (typeof call === 'string' && call.length > 0) {
+      const action: A2UIActionRequest = { name: call };
+      if ('args' in value.functionCall) {
+        if (!isRecord(value.functionCall.args)) {
+          return {
+            ok: false,
+            status: 400,
+            error: 'action.functionCall.args must be an object',
+          };
+        }
+        action.context = value.functionCall.args;
+      }
       return {
         ok: true,
-        action: value as A2UIDispatchAction,
+        action,
         kind: 'functionCall',
         name: call,
       };
@@ -156,7 +188,7 @@ export function validateAction(value: unknown):
   return {
     ok: false,
     status: 400,
-    error: 'action.event.name or action.functionCall.call is required',
+    error: 'action.name is required',
   };
 }
 
