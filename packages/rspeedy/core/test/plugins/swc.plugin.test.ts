@@ -25,6 +25,7 @@ describe('Plugins - SWC', () => {
           "detectSyntax": "auto",
           "env": {
             "include": [
+              "transform-block-scoping",
               "transform-exponentiation-operator",
               "transform-async-to-generator",
               "transform-async-generator-functions",
@@ -87,6 +88,7 @@ describe('Plugins - SWC', () => {
           "detectSyntax": "auto",
           "env": {
             "include": [
+              "transform-block-scoping",
               "transform-nullish-coalescing-operator",
               "transform-optional-chaining",
               "transform-export-namespace-from",
@@ -204,6 +206,7 @@ describe('Plugins - SWC', () => {
           "detectSyntax": "auto",
           "env": {
             "include": [
+              "transform-block-scoping",
               "transform-nullish-coalescing-operator",
               "transform-optional-chaining",
               "transform-export-namespace-from",
