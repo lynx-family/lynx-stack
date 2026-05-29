@@ -189,7 +189,7 @@ export class LynxDebugMetadataPluginImpl {
           const asset: DebugMetadataAsset = {
             artifacts: collectArtifacts(compilation, args.entryNames),
             uiSourceMap: createUiSourceMap(uiSourceMapRecords),
-            meta: {
+            buildInfo: {
               ...(git ? { git } : {}),
               rspeedy,
             },

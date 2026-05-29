@@ -20,7 +20,7 @@ function metadata(
   return {
     artifacts: [],
     uiSourceMap,
-    meta: {
+    buildInfo: {
       git: {
         commit: 'deadbeef',
         rootDir: null,
@@ -181,8 +181,8 @@ describe('remapUiTree', () => {
   });
 
   test('throws a descriptive error when loaded JSON lacks a valid uiSourceMap', async () => {
-    // The old two-file format: a "meta" block but no embedded uiSourceMap.
-    const malformed = { meta: { git: { remoteUrl: 'x' } } } as never;
+    // The old two-file format: a "buildInfo" block but no embedded uiSourceMap.
+    const malformed = { buildInfo: { git: { remoteUrl: 'x' } } } as never;
     await expect(
       remapUiTree(
         { nodeIndex: 9000, debugMetadataUrl: META_URL },

@@ -12,7 +12,7 @@ Every Lynx entry build emits one `debug-metadata.json` under the entry's interme
 interface DebugMetadataAsset {
   artifacts: Artifact[]; // one entry per JS / CSS / bytecode bundle
   uiSourceMap: UiSourceMapData; // compact UI source-map payload
-  meta: { git?: GitMetadata; rspeedy?: RspeedyMeta };
+  buildInfo: { git?: GitMetadata; rspeedy?: RspeedyMeta };
 }
 ```
 

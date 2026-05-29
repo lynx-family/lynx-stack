@@ -26,7 +26,7 @@ GET <publicPath>/<intermediate>/debug-metadata.json?field=bytecode-debug-info&fi
 GET <publicPath>/<intermediate>/debug-metadata.json?field=artifact&filename=…
 GET <publicPath>/<intermediate>/debug-metadata.json?field=artifacts
 GET <publicPath>/<intermediate>/debug-metadata.json?field=ui-source-map
-GET <publicPath>/<intermediate>/debug-metadata.json?field=meta   (or git / rspeedy)
+GET <publicPath>/<intermediate>/debug-metadata.json?field=buildInfo   (or git / rspeedy)
 ```
 
 The middleware dispatches through the `FIELDS` registry in `@lynx-js/debug-metadata` — adding a new queryable field is a one-line `FIELDS.set(...)` in that package; no edits here. Resolvers' `payload` hook is honored automatically (e.g. `?field=source-map` returns the raw v3 map, not the `SourceMapDebugSource` wrapper).
