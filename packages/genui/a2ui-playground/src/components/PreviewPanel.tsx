@@ -592,7 +592,15 @@ export function PreviewPanel(props: PreviewPanelProps) {
       return;
     }
 
-    if (typeof window !== 'undefined' && window.innerWidth <= 980) {
+    // Auto-fullscreen on narrow but tab-less screens (721–980px). At ≤720
+    // the host page renders a MobileTabBar, and the Preview tab already
+    // gives the panel the full viewport — auto-fullscreening on top of
+    // that hides the tab bar and traps the user behind an X button.
+    if (
+      typeof window !== 'undefined'
+      && window.innerWidth > 720
+      && window.innerWidth <= 980
+    ) {
       setIsFullscreen(true);
     }
   }, [previewSource]);

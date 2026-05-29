@@ -1435,22 +1435,118 @@
     max-width: 100%;
   }
 
-  .chatComposerFooter {
+  /* Tab-mode: each tab is full screen, no inline split / resize handle.
+     Active pane is sized via .chatPage[data-active-tab='…'] rules below. */
+  .chatPage[data-active-tab="edit"] .previewPanel {
+    display: none;
+  }
+  .chatPage[data-active-tab="preview"] .chatPanel,
+  .chatPage[data-active-tab="preview"] .conversationPanel {
+    display: none;
+  }
+  .chatPageBody > .panelResizeHandle {
+    display: none;
+  }
+
+  /* The active pane fills the body — overrides the desktop sizing baked
+     into .conversationPanel / .chatPanel / .previewPanel. */
+  .chatPage[data-active-tab="edit"] .chatPanel,
+  .chatPage[data-active-tab="preview"] .previewPanel {
+    flex: 1;
+    width: 100%;
+    max-width: none;
+    min-height: 0;
+  }
+  .chatPage[data-active-tab="preview"] .previewPanel {
+    border-top: none;
+    border-left: none;
+  }
+
+  /* Conversation panel collapses into a single horizontal strip on
+     phones: +New Chat is an icon button on the left, conversations
+     scroll as compact one-line cards on the right. Drops from ~150px
+     to ~52px of vertical chrome. */
+  .chatPage[data-active-tab="edit"] .conversationPanel {
+    flex-direction: row;
     align-items: stretch;
-    flex-direction: column;
+    min-height: 0;
+    max-height: none;
+    height: 52px;
+    background: var(--geist-background);
+  }
+  .conversationPanelHeader,
+  .conversationPanelCreateRow {
+    flex: 0 0 auto;
+    width: auto;
+    min-height: 0;
+    padding: 8px;
+    border-bottom: none;
+    border-right: 1px solid var(--geist-border);
+    background: transparent;
+  }
+  .conversationNewButton {
+    width: 36px;
+    height: 36px;
+    padding: 0;
+    border-radius: 999px;
+    box-shadow: none;
+  }
+  .conversationNewButtonLabel {
+    display: none;
+  }
+  .conversationList {
+    flex: 1;
+    align-items: center;
+    padding: 6px 8px;
+    gap: 6px;
+  }
+  /* Keep the desktop card aesthetic on mobile: rounded rectangle, active
+     bar on the left, Edit/Del hidden by default and revealed only on the
+     active card (matching the desktop hover/active behavior). Vertically
+     center title + actions since the meta/date row is hidden — the
+     desktop card is a two-line block, the mobile chip is single-line. */
+  .conversationListItem {
+    flex: 0 0 auto;
+    width: auto;
+    min-width: 0;
+    max-width: 220px;
+    padding: 6px 8px 6px 12px;
+    align-items: center;
+  }
+  .conversationListItemMeta,
+  .conversationListItemPreview {
+    display: none;
+  }
+  .conversationListItemTitle {
+    font-size: 12px;
+    line-height: 1.25;
+  }
+  .conversationListItemActions {
+    opacity: 0;
+    pointer-events: none;
+    transform: none;
+    gap: 4px;
+  }
+  .conversationListItem-active .conversationListItemActions,
+  .conversationListItem:focus-within .conversationListItemActions {
+    opacity: 1;
+    pointer-events: auto;
   }
 
-  .chatProviderControl {
-    max-width: none;
-    width: 100%;
-  }
-
-  .chatProviderSelect {
-    max-width: none;
-    width: 100%;
-  }
-
+  /* Pill Send button (drops the desktop drop-shadow on mobile). */
   .chatSendBtn {
-    width: 100%;
+    min-width: 84px;
+    height: 38px;
+    padding: 0 14px;
+    font-size: 13px;
+    box-shadow: none;
+  }
+
+  /* Drop the "Create / Online Agent / Describe the UI…" header on
+     mobile — the chat input area itself communicates the same thing
+     and this band was eating ~120px of vertical space. (Token-usage
+     badge lives here too, only relevant for power users on desktop.) */
+  .chatHeader {
+    display: none;
   }
 }
