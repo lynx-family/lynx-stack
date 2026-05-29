@@ -126,9 +126,11 @@ export class LynxDebugMetadataPluginImpl {
               compilation.chunkGraph,
               chunk,
             )
-            const banner = getReleaseDefine(release) + getReleaseRuntime()
             for (const file of chunk.files) {
               if (!file.endsWith('.js')) continue
+              const name = path.posix.basename(file, '.js')
+              const banner = getReleaseDefine(release)
+                + getReleaseRuntime(name)
               compilation.updateAsset(
                 file,
                 old => new ConcatSource(banner, old),

@@ -61,7 +61,14 @@ export function getReleaseDefine(release: string): string {
   };\n`
 }
 
-export function getReleaseRuntime(): string {
+/**
+ * Runtime snippet that registers the release with the Lynx engine. `name` is the
+ * bundle's own file name without extension (e.g. `main-thread`); it is
+ * substituted into the synthetic stack frame so an engine that reads the stack
+ * filename (engineVersion > 2.13) reports the real file rather than a literal
+ * `[name].js`. The caller injects this per output file with that file's name.
+ */
+export function getReleaseRuntime(name: string): string {
   return `(function () {
   'use strict';
   try {
@@ -70,7 +77,7 @@ export function getReleaseRuntime(): string {
     e.name = 'LynxGetSourceMapReleaseError';
     if (typeof _SetSourceMapRelease === 'function') {
       _SetSourceMapRelease(e); // original filename from engine (e.g. 'lepus.js' or 'dynamic_component_name/main-thread.js')
-      e.stack = '    at <eval> (file://[name].js:1:1)\\n';
+      e.stack = '    at <eval> (file://${name}.js:1:1)\\n';
       _SetSourceMapRelease(e); // engineVersion > 2.13 reports an empty filename, so set it to the Rspeedy filename
     } else if (
       typeof lynxCoreInject !== 'undefined' &&
