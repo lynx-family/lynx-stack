@@ -94,6 +94,12 @@ interface PreviewPanelProps {
   previewSource?: PreviewPanelSource;
   showPreviewModeSwitch?: boolean;
   showSimulationBar?: boolean;
+  /** When provided, overrides PreviewPanel's internal speed state. The
+   *  parent becomes the single source of truth (e.g. a unified speed slider
+   *  living outside PreviewPanel).
+   */
+  speed?: number;
+  onSpeedChange?: (value: number) => void;
   beforeBody?: ReactNode;
   bodyClassName?: string;
   children: ReactNode;
@@ -200,13 +206,18 @@ export function PreviewPanel(props: PreviewPanelProps) {
     previewSource,
     showPreviewModeSwitch = false,
     showSimulationBar = true,
+    speed: speedProp,
+    onSpeedChange,
     style,
     title,
   } = props;
   const [mode, setMode] = useState<PreviewMode>('phone');
   const [isFullscreen, setIsFullscreen] = useState(false);
   const [shareOpen, setShareOpen] = useState(false);
-  const [speed, setSpeed] = useState(1);
+  const [internalSpeed, setInternalSpeed] = useState(1);
+  // If the parent supplies a speed, it owns it; otherwise we keep our own.
+  const speed = speedProp ?? internalSpeed;
+  const setSpeed = onSpeedChange ?? setInternalSpeed;
   const [simulationInfoOpen, setSimulationInfoOpen] = useState(false);
   const [renderUrl, setRenderUrl] = useState('');
   const [renderShareUrl, setRenderShareUrl] = useState('');
