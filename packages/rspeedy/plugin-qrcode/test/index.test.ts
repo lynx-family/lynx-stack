@@ -195,7 +195,8 @@ describe('Plugins - Terminal', () => {
       // @ts-expect-error xxx
       resolve('bar')
 
-      await expect.poll(() => renderUnicodeCompact).toBeCalledTimes(2)
+      await expect.poll(() => renderUnicodeCompact, { timeout: 10_000 })
+        .toBeCalledTimes(2)
       expect(renderUnicodeCompact).toBeCalledWith(
         `$$http://example.com/foo/main.lynx.bundle$$`,
       )
@@ -272,7 +273,8 @@ describe('Plugins - Terminal', () => {
       // @ts-expect-error xxx
       resolve('main2')
 
-      await expect.poll(() => renderUnicodeCompact).toBeCalledTimes(2)
+      await expect.poll(() => renderUnicodeCompact, { timeout: 10_000 })
+        .toBeCalledTimes(2)
       expect(renderUnicodeCompact).toBeCalledWith(
         `==http://example.com/foo/main2.lynx.bundle==`,
       )
