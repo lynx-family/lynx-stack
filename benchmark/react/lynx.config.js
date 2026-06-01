@@ -57,6 +57,9 @@ export default defineConfig({
         './src/patchProfile.ts',
         './cases/008-many-use-state/index.tsx',
       ],
+      '009-eval-bench': [
+        './cases/009-eval-bench/index.tsx',
+      ],
     },
   },
   plugins: [
