@@ -324,6 +324,23 @@ function safeStringifyPayload(value: unknown): string {
   }
 }
 
+function getGeneratedCharacterCount(value: unknown): number {
+  return safeStringifyPayload(value).length;
+}
+
+function formatCharacterCount(count: number): string {
+  return `${count.toLocaleString()} char${count === 1 ? '' : 's'}`;
+}
+
+function createRenderedPreviewContent(
+  messageCount: number,
+  characterCount: number,
+): string {
+  return `✅ Rendered ${messageCount} A2UI message${
+    messageCount === 1 ? '' : 's'
+  } (${formatCharacterCount(characterCount)}) to Lynx Preview`;
+}
+
 function payloadToChunks(value: unknown): unknown[] {
   if (Array.isArray(value)) return value;
   if (typeof value !== 'string') return [value];
@@ -812,6 +829,16 @@ function buildChatMessagesFromHistory(
           continue;
         }
       }
+      const generatedMessages = normalizeA2UIMessages(message.content);
+      if (generatedMessages.length > 0) {
+        next.push({
+          role: 'ai',
+          content: createRenderedPreviewContent(
+            generatedMessages.length,
+            getGeneratedCharacterCount(message.content),
+          ),
+        });
+      }
       next.push({
         role: 'json',
         content: 'Generated Output',
@@ -876,6 +903,7 @@ export function AIChatPage(
   const actionAbortRef = useRef<AbortController | null>(null);
   const hydratedActiveIdRef = useRef<string | null>(null);
   const latestPreviewMessagesRef = useRef<unknown[]>([]);
+  const generatedCharacterCountRef = useRef(0);
   const latestPreviewPayloadUrlsRef = useRef<PreviewPayloadUrls | null>(null);
   const renderUrlRef = useRef('');
   const bootstrappedRenderUrlRef = useRef<string | null>(null);
@@ -1023,6 +1051,11 @@ export function AIChatPage(
       actionMocksUrl: previewPayloadUrls?.actionMocksUrl,
     };
   }, [previewMessages, previewPayloadUrls, protocol, theme]);
+  const previewInfoHint = previewMessages
+    ? undefined
+    : (isGenerating
+      ? 'Generation is in progress. Web Preview and Native Preview links will appear once A2UI data arrives.'
+      : 'No A2UI data has been received yet. Send a message to generate Web Preview and Native Preview links.');
 
   const clearBootstrappedPreview = useCallback(() => {
     bootstrappedRenderUrlRef.current = null;
@@ -1249,6 +1282,7 @@ export function AIChatPage(
     setPreviewMessages(null);
     updatePreviewPayloadUrls(null);
     latestPreviewMessagesRef.current = [];
+    generatedCharacterCountRef.current = 0;
     setTokenUsage({
       promptTokens: 0,
       completionTokens: 0,
@@ -1280,18 +1314,32 @@ export function AIChatPage(
 
         const finalMessages = await readA2UIResponse(
           response,
-          () => {
+          (generatedText) => {
+            const characterCount = getGeneratedCharacterCount(generatedText);
+            generatedCharacterCountRef.current = characterCount;
             setMessages((prev) => {
               const next = prev.slice();
+              const messageCount = latestPreviewMessagesRef.current.length;
               next[next.length - 1] = {
                 role: 'ai',
-                content: 'Streaming A2UI messages...',
+                content: messageCount > 0
+                  ? `${
+                    createRenderedPreviewContent(
+                      messageCount,
+                      characterCount,
+                    )
+                  }...`
+                  : `Streaming A2UI messages (${
+                    formatCharacterCount(characterCount)
+                  })...`,
               };
               return next;
             });
           },
           (nextMessages, meta) => {
             if (controller.signal.aborted) return;
+            const characterCount = getGeneratedCharacterCount(nextMessages);
+            generatedCharacterCountRef.current = characterCount;
             if (meta.final) {
               publishPreviewMessages(nextMessages);
               return;
@@ -1301,10 +1349,12 @@ export function AIChatPage(
               const next = prev.slice();
               next[next.length - 1] = {
                 role: 'ai',
-                content:
-                  `Streaming ${latestPreviewMessagesRef.current.length} A2UI message${
-                    latestPreviewMessagesRef.current.length === 1 ? '' : 's'
-                  }...`,
+                content: `${
+                  createRenderedPreviewContent(
+                    latestPreviewMessagesRef.current.length,
+                    characterCount,
+                  )
+                }...`,
               };
               return next;
             });
@@ -1319,7 +1369,8 @@ export function AIChatPage(
           },
           {
             parseDeltaMessages: false,
-            publishText: false,
+            publishText: true,
+            publishPartialMessages: true,
             onPreviewPayload: updatePreviewPayloadUrls,
           },
         );
@@ -1337,11 +1388,14 @@ export function AIChatPage(
         });
         setMessages((prev) => {
           const next = prev.slice();
+          const characterCount = getGeneratedCharacterCount(finalMessages);
+          generatedCharacterCountRef.current = characterCount;
           next[next.length - 1] = {
             role: 'ai',
-            content: `✅ Rendered ${finalMessages.length} A2UI message${
-              finalMessages.length === 1 ? '' : 's'
-            } to Lynx Preview`,
+            content: createRenderedPreviewContent(
+              finalMessages.length,
+              characterCount,
+            ),
           };
           next.push({
             role: 'json',
@@ -2056,6 +2110,7 @@ export function AIChatPage(
           showPreviewModeSwitch
           showSimulationBar={false}
           previewSource={previewSource}
+          previewInfoHint={previewInfoHint}
         >
           <PreviewViewport
             src={renderUrl}
