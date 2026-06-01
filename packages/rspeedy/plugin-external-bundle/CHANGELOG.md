@@ -1,5 +1,11 @@
 # @lynx-js/external-bundle-rsbuild-plugin
 
+## 0.3.0
+
+### Minor Changes
+
+- Support Rsbuild v2 in the external bundle plugin by replacing the removed `dev.setupMiddlewares` integration with [`server.setup`](https://rsbuild.rs/guide/upgrade/v1-to-v2#others) and registering local external bundle asset middleware only during dev server startup. ([#2603](https://github.com/lynx-family/lynx-stack/pull/2603))
+
 ## 0.2.0
 
 ### Minor Changes

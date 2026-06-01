@@ -1,5 +1,11 @@
 # create-rspeedy
 
+## 0.15.0
+
+### Patch Changes
+
+- Bump `@lynx-js/preact-devtools` to `5.0.1-20260525112551-dfe2d03` in the React templates. ([#2710](https://github.com/lynx-family/lynx-stack/pull/2710))
+
 ## 0.14.5
 
 ## 0.14.4

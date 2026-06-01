@@ -1,5 +1,93 @@
 # @lynx-js/rspeedy
 
+## 0.15.0
+
+### Minor Changes
+
+- Add unified `debug-metadata.json` per Lynx entry. ([#2642](https://github.com/lynx-family/lynx-stack/pull/2642))
+
+  - New `@lynx-js/debug-metadata` schema package (zero-dep).
+  - New `@lynx-js/debug-metadata-rsbuild-plugin` emits the file and serves `?field=…` queries in dev.
+  - JS `//# sourceMappingURL=` and tasm `templateDebugUrl` repointed at the new endpoint.
+  - `debug-info.json` no longer written to disk.
+  - Auto-registered by Rspeedy — zero user config.
+
+- Default `output.sourceMap.js` to `source-map` for `lynx` environments in production when the project leaves it unset. The production default was previously `false` (no JS source map), which left the emitted `debug-metadata.json` without source maps and made reverse-resolution of production errors impossible without manual config. Non-`lynx` environments (e.g. `web`) are unchanged, and any explicit `output.sourceMap` is respected. ([#2642](https://github.com/lynx-family/lynx-stack/pull/2642))
+
+- Support a function form for `output.filename.bundle`. ([#2701](https://github.com/lynx-family/lynx-stack/pull/2701))
+
+  `output.filename.bundle` now accepts a function `(context: { lazyBundle: boolean; entryName?: string; platform: string }) => string` in addition to a string. The function is called once for the main bundle (`lazyBundle: false`) and once for the lazy bundles (`lazyBundle: true`), so a single config can control both the main bundle filename and the lazy bundle filename — without a dedicated `lazyBundle` field or a custom plugin.
+
+  ```js
+  import { execSync } from 'node:child_process'
+
+  import { defineConfig } from '@lynx-js/rspeedy'
+
+  const gitHash = execSync('git rev-parse --short HEAD').toString().trim()
+
+  export default defineConfig({
+    output: {
+      filename: {
+        bundle: ({ lazyBundle, platform }) =>
+          lazyBundle
+            ? `my-lazy-bundles/[name].[fullhash]-${gitHash}.bundle`
+            : `[name].${platform}.bundle`,
+      },
+    },
+  })
+  ```
+
+- **BREAKING CHANGE** ([#2603](https://github.com/lynx-family/lynx-stack/pull/2603))
+
+  [Rsbuild v2](https://rsbuild.rs/guide/upgrade/v1-to-v2) deprecated `performance.chunkSplit`, so configure chunk splitting with Rspeedy's top-level `splitChunks` option instead. Rspeedy still accepts the old `performance.chunkSplit` shape as a deprecated compatibility path, but new configs should migrate:
+
+  ```diff
+  import { defineConfig } from '@lynx-js/rspeedy';
+
+  export default defineConfig({
+  -  performance: {
+  -    chunkSplit: {
+  -      strategy: 'single-vendor',
+  -    },
+  -  },
+  +  splitChunks: {
+  +    preset: 'single-vendor',
+  +  },
+  });
+  ```
+
+  Move aliases from `source.alias` to `resolve.alias`:
+
+  ```diff
+  import { defineConfig } from '@lynx-js/rspeedy';
+
+  export default defineConfig({
+  -  source: {
+  -    alias: {
+  -      '@': './src',
+  -    },
+  -  },
+  +  resolve: {
+  +    alias: {
+  +      '@': './src',
+  +    },
+  +  },
+  });
+  ```
+
+- Express the SWC compilation baseline through `env` (a high `targets` plus an explicit `include` transform list) instead of `jsc.target`. The emitted build output is unchanged for existing projects. ([#2748](https://github.com/lynx-family/lynx-stack/pull/2748))
+
+  Because `env` and `jsc.target` are mutually exclusive in SWC, `tools.swc.jsc.target` is no longer accepted and now throws a clear error. To downlevel specific syntax, add the corresponding transforms to `tools.swc.env.include` instead — they extend the base/background baseline (the main thread keeps its fixed es2019 baseline, matching the previous `jsc.target` behavior).
+
+### Patch Changes
+
+- Updated dependencies [[`a839d59`](https://github.com/lynx-family/lynx-stack/commit/a839d59b7f477a86f2cd10215d0b754264e54425), [`409594b`](https://github.com/lynx-family/lynx-stack/commit/409594b9c51bb0c13f01c7d3f16949b27ebfdced), [`409594b`](https://github.com/lynx-family/lynx-stack/commit/409594b9c51bb0c13f01c7d3f16949b27ebfdced), [`445c6c7`](https://github.com/lynx-family/lynx-stack/commit/445c6c77c227bb30ae4a92f8385518cf8b4b8bc2)]:
+  - @lynx-js/debug-metadata-rsbuild-plugin@0.1.0
+  - @lynx-js/chunk-loading-webpack-plugin@0.3.5
+  - @lynx-js/cache-events-webpack-plugin@0.0.4
+  - @lynx-js/webpack-dev-transport@0.3.0
+  - @lynx-js/web-rsbuild-server-middleware@0.21.1
+
 ## 0.14.5
 
 ### Patch Changes
