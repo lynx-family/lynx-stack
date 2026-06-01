@@ -1,5 +1,18 @@
 # @lynx-js/react-webpack-plugin
 
+## 0.9.4
+
+### Patch Changes
+
+- Support the unified `debug-metadata.json` format and depend on `@lynx-js/debug-metadata`. ([#2642](https://github.com/lynx-family/lynx-stack/pull/2642))
+
+- Prefix Lynx runtime module names with `webpack/runtime/` (e.g. `Lynx async chunks` → `webpack/runtime/lynx async chunks`), matching the path-structured naming of the bundler's built-in runtime modules. The previous bare names had no path segment, so when they appear as a source-map `sources` entry under a `file://` module-filename template they collapsed into an invalid URL authority (the space-containing name became the host) and broke `SourceMapConsumer` parsing. ([#2642](https://github.com/lynx-family/lynx-stack/pull/2642))
+
+- Widen peer ranges to admit the new minor versions of `@lynx-js/template-webpack-plugin` (^0.12.0) and `@lynx-js/rspeedy` (^0.15.0) shipping with the unified `debug-metadata.json` feature. ([#2642](https://github.com/lynx-family/lynx-stack/pull/2642))
+
+- Updated dependencies [[`a839d59`](https://github.com/lynx-family/lynx-stack/commit/a839d59b7f477a86f2cd10215d0b754264e54425), [`409594b`](https://github.com/lynx-family/lynx-stack/commit/409594b9c51bb0c13f01c7d3f16949b27ebfdced), [`353363e`](https://github.com/lynx-family/lynx-stack/commit/353363e52dca3b252b39b34a3a87ce840dd308f3)]:
+  - @lynx-js/debug-metadata@0.1.0
+
 ## 0.9.3
 
 ### Patch Changes

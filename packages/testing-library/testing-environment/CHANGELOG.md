@@ -1,5 +1,11 @@
 # @lynx-js/testing-environment
 
+## 0.3.0
+
+### Minor Changes
+
+- Export `GlobalEventEmitter` as a public API and document the setup hooks (`onInjectBackgroundThreadGlobals`, `onInjectMainThreadGlobals`, `onSwitchedToBackgroundThread`, `onSwitchedToMainThread`, `onResetLynxTestingEnv`, `onInitWorkletRuntime`) to make `@lynx-js/testing-environment` a documented, first-class foundation for building framework-specific testing libraries. ([#2564](https://github.com/lynx-family/lynx-stack/pull/2564))
+
 ## 0.2.1
 
 ### Patch Changes

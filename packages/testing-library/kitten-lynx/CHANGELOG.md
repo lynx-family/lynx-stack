@@ -1,5 +1,11 @@
 # @lynx-js/kitten-lynx-test-infra
 
+## 0.1.3
+
+### Patch Changes
+
+- Add `KittenLynxView.url()` so Android test consumers can read the currently navigated Lynx bundle URL. ([#2716](https://github.com/lynx-family/lynx-stack/pull/2716))
+
 ## 0.1.2
 
 ### Patch Changes

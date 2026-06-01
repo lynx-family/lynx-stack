@@ -1,6 +1,6 @@
 {
   "name": "@lynx-js/debug-metadata",
-  "version": "0.0.0",
+  "version": "0.1.0",
   "description": "Schema types and parser for the Lynx `debug-metadata.json` format.",
   "keywords": [
     "Lynx",

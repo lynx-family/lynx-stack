@@ -1,5 +1,13 @@
 # @lynx-js/react
 
+## 0.121.2
+
+### Patch Changes
+
+- Rename the `bundle-url` element attribute to `lazy-bundle-url`. ([#2723](https://github.com/lynx-family/lynx-stack/pull/2723))
+
+  The attribute set on lazy bundle border elements (when a child belongs to a different lazy bundle entry than its parent) is renamed from `bundle-url` to `lazy-bundle-url` to make its purpose explicit.
+
 ## 0.121.1
 
 ### Patch Changes

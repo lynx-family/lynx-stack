@@ -1,5 +1,48 @@
 # @lynx-js/react-rsbuild-plugin
 
+## 0.17.0
+
+### Minor Changes
+
+- Support a function form for `output.filename.bundle`. ([#2701](https://github.com/lynx-family/lynx-stack/pull/2701))
+
+  `output.filename.bundle` now accepts a function `(context: { lazyBundle: boolean; entryName?: string; platform: string }) => string` in addition to a string. The function is called once for the main bundle (`lazyBundle: false`) and once for the lazy bundles (`lazyBundle: true`), so a single config can control both the main bundle filename and the lazy bundle filename — without a dedicated `lazyBundle` field or a custom plugin.
+
+  ```js
+  import { execSync } from 'node:child_process'
+
+  import { defineConfig } from '@lynx-js/rspeedy'
+
+  const gitHash = execSync('git rev-parse --short HEAD').toString().trim()
+
+  export default defineConfig({
+    output: {
+      filename: {
+        bundle: ({ lazyBundle, platform }) =>
+          lazyBundle
+            ? `my-lazy-bundles/[name].[fullhash]-${gitHash}.bundle`
+            : `[name].${platform}.bundle`,
+      },
+    },
+  })
+  ```
+
+- Support [Rsbuild v2](https://rsbuild.rs/guide/upgrade/v1-to-v2) and [Rspack v2](https://rspack.rs/guide/migration/rspack_1.x) in the React Rsbuild plugin, including the new CSS and JavaScript rule structure, Rspack-only refresh and CSS extraction plugins, top-level `splitChunks` handling, and Rspeedy profile configuration. ([#2603](https://github.com/lynx-family/lynx-stack/pull/2603))
+
+- Express the SWC compilation baseline through `env` (a high `targets` plus an explicit `include` transform list) instead of `jsc.target`. The emitted build output is unchanged for existing projects. ([#2748](https://github.com/lynx-family/lynx-stack/pull/2748))
+
+  Because `env` and `jsc.target` are mutually exclusive in SWC, `tools.swc.jsc.target` is no longer accepted and now throws a clear error. To downlevel specific syntax, add the corresponding transforms to `tools.swc.env.include` instead — they extend the base/background baseline (the main thread keeps its fixed es2019 baseline, matching the previous `jsc.target` behavior).
+
+### Patch Changes
+
+- Updated dependencies [[`409594b`](https://github.com/lynx-family/lynx-stack/commit/409594b9c51bb0c13f01c7d3f16949b27ebfdced), [`409594b`](https://github.com/lynx-family/lynx-stack/commit/409594b9c51bb0c13f01c7d3f16949b27ebfdced), [`9fffedb`](https://github.com/lynx-family/lynx-stack/commit/9fffedb68422bec3794cd714ced8057845b88eaf), [`d8be1ee`](https://github.com/lynx-family/lynx-stack/commit/d8be1ee6819c6bd43e4251e33ebb91d54aad35fd), [`409594b`](https://github.com/lynx-family/lynx-stack/commit/409594b9c51bb0c13f01c7d3f16949b27ebfdced), [`409594b`](https://github.com/lynx-family/lynx-stack/commit/409594b9c51bb0c13f01c7d3f16949b27ebfdced)]:
+  - @lynx-js/template-webpack-plugin@0.12.0
+  - @lynx-js/react-webpack-plugin@0.9.4
+  - @lynx-js/css-extract-webpack-plugin@0.7.2
+  - @lynx-js/react-alias-rsbuild-plugin@0.17.0
+  - @lynx-js/react-refresh-webpack-plugin@0.3.6
+  - @lynx-js/use-sync-external-store@1.5.0
+
 ## 0.16.3
 
 ### Patch Changes

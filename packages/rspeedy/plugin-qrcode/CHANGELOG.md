@@ -1,5 +1,15 @@
 # @lynx-js/qrcode-rsbuild-plugin
 
+## 0.5.0
+
+### Minor Changes
+
+- Support [Rsbuild v2](https://rsbuild.rs/guide/upgrade/v1-to-v2#plugin-api) and rename `api.onAfterStartProdServer` hook to `api.onAfterStartPreviewServer` and `api.onDevCompileDone` hook to `api.onAfterDevCompile`. ([#2603](https://github.com/lynx-family/lynx-stack/pull/2603))
+
+### Patch Changes
+
+- Support the `output.filename.bundle` function form. ([#2701](https://github.com/lynx-family/lynx-stack/pull/2701))
+
 ## 0.4.7
 
 ### Patch Changes
