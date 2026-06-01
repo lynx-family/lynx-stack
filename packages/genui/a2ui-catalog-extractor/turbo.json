@@ -19,6 +19,20 @@
       "outputs": [
         "dist/**"
       ]
+    },
+    "build:api": {
+      "dependsOn": [],
+      "inputs": [
+        "src/**",
+        "bin/**",
+        "package.json",
+        "rslib.config.ts",
+        "tsconfig.build.json",
+        "tsconfig.json"
+      ],
+      "outputs": [
+        "dist/**"
+      ]
     }
   }
 }

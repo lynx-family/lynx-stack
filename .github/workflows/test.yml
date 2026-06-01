@@ -100,7 +100,7 @@ jobs:
           exit 0
         fi
         ulimit -Sn 655350
-        pnpm --filter @lynx-js/ui-judge test
+        pnpm --filter @lynx-js/ui-judge run test:playwright
 
   ui-judge-comment:
     needs: ui-judge
@@ -356,6 +356,7 @@ jobs:
 
         # 8. Run the tests
         pnpm --filter @lynx-js/kitten-lynx-test-infra run test --coverage --reporter=github-actions --reporter=dot --reporter=junit --outputFile=test-report.junit.xml --coverage.reporter='json' --coverage.reporter='text' --testTimeout=50000 --no-cache --logHeapUsage --silent
+        UI_JUDGE_ANDROID_INTEGRATION=1 pnpm --filter @lynx-js/ui-judge run test:android --coverage --reporter=github-actions --reporter=dot --reporter=junit --outputFile=ui-judge-android-test-report.junit.xml --coverage.reporter='json' --coverage.reporter='text' --testTimeout=50000 --no-cache --logHeapUsage --silent
 
   test-typos:
     runs-on: lynx-ubuntu-24.04-medium

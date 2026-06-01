@@ -6,6 +6,29 @@
 
 import type { Page } from '@playwright/test';
 
+// Warning: (ae-missing-release-tag) "judgeAndroidAgent" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
+//
+// @public (undocumented)
+export function judgeAndroidAgent(options: JudgeAndroidAgentOptions): Promise<UiJudgeResult>;
+
+// Warning: (ae-missing-release-tag) "JudgeAndroidAgentOptions" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
+//
+// @public (undocumented)
+export interface JudgeAndroidAgentOptions {
+    // (undocumented)
+    dimension?: UiJudgeDimension;
+    // (undocumented)
+    page: KittenLynxJudgePage;
+    // (undocumented)
+    reference?: string;
+    // (undocumented)
+    steps?: string[];
+    // (undocumented)
+    task: string;
+    // (undocumented)
+    timeoutMs?: number;
+}
+
 // Warning: (ae-missing-release-tag) "judgePage" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
 //
 // @public (undocumented)
@@ -27,6 +50,20 @@ export interface JudgePageOptions {
     task: string;
     // (undocumented)
     timeoutMs?: number;
+}
+
+// Warning: (ae-missing-release-tag) "KittenLynxJudgePage" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
+//
+// @public (undocumented)
+export interface KittenLynxJudgePage {
+    // (undocumented)
+    screenshot(options?: {
+        format?: 'jpeg' | 'png' | 'webp';
+        path?: string;
+        quality?: number;
+    }): Promise<Buffer>;
+    // (undocumented)
+    url(): string;
 }
 
 // Warning: (ae-missing-release-tag) "UiJudgeDimension" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)

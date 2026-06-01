@@ -34,6 +34,7 @@
   "scripts": {
     "api-extractor": "node ../scripts/run-api-extractor.mjs",
     "build": "tsc --project tsconfig.build.json",
+    "build:api": "tsc --project tsconfig.build.json",
     "test": "rstest"
   },
   "dependencies": {

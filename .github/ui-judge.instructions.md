@@ -2,7 +2,11 @@
 applyTo: "packages/genui/ui-judge/**/*"
 ---
 
-When extending `@lynx-js/ui-judge`, keep `judgePage` as the only public runtime API until a caller needs more surface area. Callers own Playwright page setup, navigation, viewport, cookies, route mocks, and authentication. Additional dimensions should remain internal unless they are intentionally added to the package exports.
+When extending `@lynx-js/ui-judge`, keep the public runtime API small and platform-specific. Playwright callers use `judgePage` and own page setup, navigation, viewport, cookies, route mocks, and authentication. Additional dimensions should remain internal unless they are intentionally added to the package exports.
+
+When adding Android support to `@lynx-js/ui-judge`, keep the public call shape close to `judgePage`: accept the `KittenLynxView` returned by `@lynx-js/kitten-lynx-test-infra`'s `newPage()` as `page`. Callers should own the Kitten-Lynx connection, navigation, and teardown lifecycle, while UI Judge creates the internal Midscene agent adapter. For Android scoring, pass `screenshotIncluded: true` without web-only DOM requirements, and return `page.url()` through the existing result `url` field.
+
+Keep Android-specific `@lynx-js/ui-judge` tests on Vitest rather than Playwright. Use a dedicated `test:android` script and let Playwright tests stay under `test:playwright`, so the Android emulator CI job can run UI Judge's Kitten-Lynx coverage without pulling in browser fixtures.
 
 Midscene scoring in this package should use `aiNumber()` and return a JSON-serializable integer score from 0 to 5. Prompt text must cooperate with Midscene's `aiNumber()` parser by asking for the requested `Number` field, not a bare JSON number. Do not reintroduce letter grades or `GRADE:` output in prompts.
 
