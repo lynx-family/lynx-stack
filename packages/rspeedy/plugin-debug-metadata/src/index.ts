@@ -15,3 +15,7 @@
 
 export { pluginLynxDebugMetadata } from './pluginLynxDebugMetadata.js'
 export { DEBUG_METADATA_ASSET_NAME } from './constants.js'
+export {
+  type RewriteSourceMappingURLTrailersOptions,
+  rewriteSourceMappingURLTrailers,
+} from './LynxDebugMetadataPlugin.js'
