@@ -12,6 +12,7 @@ const config: RslibConfig = defineConfig({
     entry: {
       index: './src/index.ts',
     },
+    tsconfigPath: './tsconfig.build.json',
   },
 });
 
