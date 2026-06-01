@@ -113,7 +113,7 @@ function onLifecycleEventImpl(type: LifecycleConstant, data: unknown): void {
         );
         console.alog?.(
           '[ReactLynxDebug] BackgroundSnapshotInstance tree before hydration:\n'
-            + printSnapshotInstanceToString(__root as BackgroundSnapshotInstance),
+            + printSnapshotInstanceToString(__root),
         );
       }
       markTiming('hydrateParseSnapshotEnd');
@@ -125,7 +125,7 @@ function onLifecycleEventImpl(type: LifecycleConstant, data: unknown): void {
       if (typeof __ALOG__ !== 'undefined' && __ALOG__) {
         console.alog?.(
           '[ReactLynxDebug] BackgroundSnapshotInstance after hydration:\n'
-            + printSnapshotInstanceToString(__root as BackgroundSnapshotInstance),
+            + printSnapshotInstanceToString(__root),
         );
       }
       if (typeof __PROFILE__ !== 'undefined' && __PROFILE__) {

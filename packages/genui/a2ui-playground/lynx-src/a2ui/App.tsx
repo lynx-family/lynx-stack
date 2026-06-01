@@ -276,10 +276,10 @@ export function App() {
       try {
         return JSON.parse(rawInitData) as InitData;
       } catch {
-        return {} as InitData;
+        return {};
       }
     }
-    return (rawInitData ?? {}) as InitData;
+    return (rawInitData ?? {});
   }, [rawInitData]);
 
   const globalPropsData = useMemo(

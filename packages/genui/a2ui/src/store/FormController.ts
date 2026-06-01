@@ -43,7 +43,7 @@ export function createFormController(): FormController {
   });
   return {
     isValid,
-    outcomes: inputs as unknown as ReadonlyMap<string, Signal<CheckOutcome>>,
+    outcomes: inputs,
     setOutcome(componentId, outcome) {
       let entry = inputs.get(componentId);
       if (entry) {

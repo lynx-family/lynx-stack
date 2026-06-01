@@ -434,7 +434,6 @@ export function defineExternalBundleRslibConfig(
 
   return {
     lib: [
-      // eslint-disable-next-line import/namespace
       rsbuild.mergeRsbuildConfig<LibConfig>(
         DEFAULT_EXTERNAL_BUNDLE_LIB_CONFIG,
         {

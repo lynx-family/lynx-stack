@@ -181,7 +181,7 @@ export class ListUpdateInfoRecording implements ListUpdateInfo {
             position: j,
             type: c.type,
             ...c.__listItemPlatformInfo,
-          } as InsertAction);
+          });
           j++;
         });
       }
@@ -197,7 +197,7 @@ export class ListUpdateInfoRecording implements ListUpdateInfo {
         position: j + i,
         type: child.type,
         ...child.__listItemPlatformInfo,
-      } as InsertAction);
+      });
     }
 
     insertions.sort((a, b) => a.position - b.position);
@@ -226,7 +226,7 @@ export class ListUpdateInfoRecording implements ListUpdateInfo {
             // no flush
             flush: false,
             type: child.type,
-          } as UpdateAction);
+          });
         });
       }
     }

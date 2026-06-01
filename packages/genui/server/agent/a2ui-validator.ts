@@ -377,9 +377,7 @@ export function validateA2UIOutput(
           `updateDataModel references surfaceId "${sId}" before createSurface.`,
         );
       }
-      const updateDataModel = msg.updateDataModel as
-        & typeof msg.updateDataModel
-        & { value?: unknown };
+      const updateDataModel = msg.updateDataModel;
       if (
         !('value' in updateDataModel) || updateDataModel.value === undefined
       ) {

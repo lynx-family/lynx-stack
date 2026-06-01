@@ -182,7 +182,7 @@ const transformWorkletInner = (
       // This would result in the value of `workletCache` referencing its key.
       obj[key] = lynxWorkletImpl._workletMap[(subObj as Worklet)._wkltId]!
         .bind({ ...subObj });
-      obj[key].ctxRef = new WeakRef(subObj as object);
+      obj[key].ctxRef = new WeakRef(subObj);
       continue;
     }
     const isJsFn = '_jsFnId' in subObj;

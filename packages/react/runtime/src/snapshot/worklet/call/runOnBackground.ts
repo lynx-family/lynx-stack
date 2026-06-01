@@ -2,12 +2,7 @@
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
 
-import type {
-  ClosureValueType,
-  JsFnHandle,
-  RunWorkletCtxRetData,
-  Worklet,
-} from '@lynx-js/react/worklet-runtime/bindings';
+import type { ClosureValueType, JsFnHandle, Worklet } from '@lynx-js/react/worklet-runtime/bindings';
 import { WorkletEvents, delayRunOnBackground } from '@lynx-js/react/worklet-runtime/bindings';
 
 import { destroyTasks } from '../destroy.js';
@@ -60,7 +55,7 @@ function runJSFunction(event: RuntimeProxy.Event): void {
     data: JSON.stringify({
       resolveId: data.resolveId,
       returnValue,
-    } as RunWorkletCtxRetData),
+    }),
   });
 }
 
@@ -140,7 +135,7 @@ function dispatchRunBackgroundFunctionEvent(
       },
       params,
       resolveId,
-    } as RunOnBackgroundData),
+    }),
   });
 }
 

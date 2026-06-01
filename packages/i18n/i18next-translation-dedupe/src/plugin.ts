@@ -139,5 +139,5 @@ export function pluginLynxI18nextTranslationDedupe(): RsbuildPlugin {
           ]);
       });
     },
-  } as RsbuildPlugin;
+  };
 }

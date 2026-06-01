@@ -27,7 +27,7 @@ function isMeaningfulResponse(value: unknown): boolean {
   if (value === null || value === undefined) return false;
   if (Array.isArray(value)) return value.length > 0;
   if (typeof value === 'object') {
-    return Object.keys(value as Record<string, unknown>).length > 0;
+    return Object.keys(value).length > 0;
   }
   return true;
 }
@@ -377,11 +377,7 @@ export class MessageProcessor {
       }
 
       if ('updateDataModel' in message && message.updateDataModel) {
-        const { surfaceId, path, value } = message.updateDataModel as {
-          surfaceId: string;
-          path?: string;
-          value?: unknown;
-        };
+        const { surfaceId, path, value } = message.updateDataModel;
         const surface = this.getOrCreateSurface(surfaceId);
 
         const updates: { path: string; value: unknown }[] = [];

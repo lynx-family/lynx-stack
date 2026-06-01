@@ -16,7 +16,6 @@ import {
 } from './cssDiagnostics.js';
 import { LynxTemplatePlugin } from './LynxTemplatePlugin.js';
 import { getRequireModuleAsyncCachePolyfill } from './polyfill/requireModuleAsync.js';
-import type { EncodeWorkerOptions } from './worker/encode.js';
 
 const require = createRequire(import.meta.url);
 
@@ -265,7 +264,7 @@ export class LynxEncodePluginImpl {
         // @ts-expect-error ignore css_diagnostics type
         const { buffer, lepus_debug, css_diagnostics } = await (
           LynxEncodePlugin.encodePool.run(
-            { encodeOptions } as EncodeWorkerOptions,
+            { encodeOptions },
           ) as Promise<EncodeResult>
         );
 

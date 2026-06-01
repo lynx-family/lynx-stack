@@ -191,7 +191,7 @@ function A2UIImpl(props: A2UIProps): import('@lynx-js/react').ReactNode {
             surfaceId,
             surface,
             component: update as ResourceInfo['component'] & object,
-          } as ResourceInfo);
+          });
         }
       } else if (type === 'deleteSurface') {
         const targetId = (data as { targetId?: string }).targetId

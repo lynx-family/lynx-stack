@@ -106,7 +106,7 @@ export function collectUiSourceMapRecords(
       for (
         const module of compilation.chunkGraph.getChunkModulesIterable(chunk)
       ) {
-        moduleSet.add(module as ModuleWithUiSourceMapBuildInfo)
+        moduleSet.add(module)
       }
     }
   }

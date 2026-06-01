@@ -426,7 +426,7 @@ class ReactWebpackPlugin {
               for (
                 const { templateId, compiledTemplate }
                   of collectElementTemplatesFromModule(
-                    module as ModuleWithElementTemplateBuildInfo,
+                    module,
                   )
               ) {
                 elementTemplates[templateId] = compiledTemplate;

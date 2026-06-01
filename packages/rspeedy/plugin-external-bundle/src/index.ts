@@ -353,12 +353,12 @@ function createBuiltInExternalsPresetDefinitions(): ExternalsPresetDefinitions {
     reactlynx: {
       resolveExternals(value) {
         return createReactLynxExternals(
-          normalizeReactLynxPreset(value as ExternalsPresets['reactlynx']),
+          normalizeReactLynxPreset(value),
         )
       },
       resolveManagedAssets(value, context) {
         const preset = normalizeReactLynxPreset(
-          value as ExternalsPresets['reactlynx'],
+          value,
         )
         if (!preset || preset.url) {
           return new Map()

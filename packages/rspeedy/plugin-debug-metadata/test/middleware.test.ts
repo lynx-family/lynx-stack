@@ -69,7 +69,7 @@ function fakeCompiler(
           const data = files[toPosixKey(file)]
           if (data === undefined) {
             const err = Object.assign(new Error('ENOENT'), { code: 'ENOENT' })
-            cb(err as NodeJS.ErrnoException)
+            cb(err)
             return
           }
           cb(null, data)
@@ -423,7 +423,7 @@ describe('createDebugMetadataMiddleware', () => {
                 cb(
                   Object.assign(new Error('ENOENT'), {
                     code: 'ENOENT',
-                  }) as NodeJS.ErrnoException,
+                  }),
                 )
               },
             },
@@ -448,7 +448,7 @@ describe('createDebugMetadataMiddleware', () => {
                 cb(
                   Object.assign(new Error('ENOENT'), {
                     code: 'ENOENT',
-                  }) as NodeJS.ErrnoException,
+                  }),
                 )
               },
             },

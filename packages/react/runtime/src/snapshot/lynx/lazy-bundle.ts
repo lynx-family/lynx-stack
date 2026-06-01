@@ -48,7 +48,7 @@ export const makeSyncThen = function<T>(result: T): Promise<T>['then'] {
       const then = makeSyncThen(ret as TR1);
       p.then = then as Promise<Awaited<TR1>>['then'];
 
-      return p as Promise<TR1 | TR2>;
+      return p;
     }
 
     return this as Promise<TR1 | TR2>;

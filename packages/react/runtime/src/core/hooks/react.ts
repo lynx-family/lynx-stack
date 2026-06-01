@@ -102,7 +102,7 @@ function useStateWithProfile<S>(
   const genericSetState = setState as unknown as GenericSetState;
   const cachedTracedSetState = stateSetterTraceCache?.get(genericSetState);
   if (cachedTracedSetState) {
-    return [state, cachedTracedSetState as Dispatch<StateUpdater<S | undefined>>];
+    return [state, cachedTracedSetState];
   }
 
   const tracedSetState = ((nextState: StateUpdater<S | undefined>) => {
@@ -123,7 +123,7 @@ function useStateWithProfile<S>(
 }
 
 const useState: typeof usePreactState = (__BACKGROUND__ && isProfiling)
-  ? useStateWithProfile as typeof usePreactState
+  ? useStateWithProfile
   : usePreactState;
 
 /**
