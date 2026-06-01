@@ -50,7 +50,7 @@
     "picocolors": "^1.1.1",
     "terminal-link": "^4.0.0",
     "typia": "12.1.1",
-    "typia-rspack-plugin": "2.2.2",
+    "typia-rspack-plugin": "3.0.1",
     "webpack": "^5.105.2"
   },
   "peerDependencies": {

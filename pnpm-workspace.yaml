@@ -99,7 +99,12 @@ packageExtensions:
 patchedDependencies:
   "@napi-rs/cli@2.18.4": "patches/@napi-rs__cli@2.18.4.patch"
   "@rollup/plugin-typescript": "patches/@rollup__plugin-typescript.patch"
-  typia-rspack-plugin@2.2.2: "patches/typia-rspack-plugin@2.2.2.patch"
+
+peerDependencyRules:
+  allowedVersions:
+    "@rslib/core>typescript": "^5 || ^6"
+    "rsbuild-plugin-dts>typescript": "^5 || ^6"
+    "rsbuild-plugin-tailwindcss>tailwindcss": "^3 || ^4"
 
 strictDepBuilds: true
 

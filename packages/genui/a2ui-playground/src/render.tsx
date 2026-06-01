@@ -71,6 +71,11 @@ interface LiveMessagesMessage {
   messages: unknown[];
 }
 
+interface ReplayMessagesMessage {
+  type: 'A2UI_REPLAY_MESSAGES';
+  messages: unknown[];
+}
+
 interface LynxViewElement extends HTMLElement {
   initData?: InitData;
   globalProps?: unknown;
@@ -289,6 +294,7 @@ function Render() {
   const [playbackMode, setPlaybackMode] = useState(false);
   const lynxViewRef = useRef<LynxViewElement | null>(null);
   const lastPlaybackPausedRef = useRef<boolean | null>(null);
+  const pendingReplayMessagesRef = useRef<unknown[] | null>(null);
   const pendingLiveMessagesRef = useRef<unknown[] | null>(null);
   const pendingActionResponsesRef = useRef<unknown[][]>([]);
   const pendingFlushTimerRef = useRef<number | null>(null);
@@ -300,7 +306,8 @@ function Render() {
   }, []);
 
   const hasPendingA2UIEvents = useCallback(() => {
-    return pendingLiveMessagesRef.current !== null
+    return pendingReplayMessagesRef.current !== null
+      || pendingLiveMessagesRef.current !== null
       || pendingActionResponsesRef.current.length > 0;
   }, []);
 
@@ -308,6 +315,12 @@ function Render() {
     const lynxView = lynxViewRef.current;
     if (!lynxView || typeof lynxView.sendGlobalEvent !== 'function') {
       return false;
+    }
+
+    const replayMessages = pendingReplayMessagesRef.current;
+    if (replayMessages) {
+      pendingReplayMessagesRef.current = null;
+      lynxView.sendGlobalEvent('A2UI_REPLAY_MESSAGES', [replayMessages]);
     }
 
     const liveMessages = pendingLiveMessagesRef.current;
@@ -431,6 +444,19 @@ function Render() {
         pendingActionResponsesRef.current.push(
           (e.data as ActionResponseMessage).messages,
         );
+        pendingFlushAttemptsRef.current = 0;
+        if (!flushPendingA2UIEvents()) {
+          schedulePendingA2UIFlush();
+        }
+        return;
+      }
+      if (
+        e.data
+        && typeof e.data === 'object'
+        && (e.data as ReplayMessagesMessage).type === 'A2UI_REPLAY_MESSAGES'
+      ) {
+        pendingReplayMessagesRef.current = (e.data as ReplayMessagesMessage)
+          .messages;
         pendingFlushAttemptsRef.current = 0;
         if (!flushPendingA2UIEvents()) {
           schedulePendingA2UIFlush();

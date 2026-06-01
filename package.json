@@ -62,22 +62,8 @@
     "typescript-eslint": "^8.59.2",
     "vitest": "^3.2.4"
   },
-  "packageManager": "pnpm@11.0.8+sha512.4c4097e1dd2d42372c4e7fa5a791ff28fc75a484c7ac192e64b1df0fdef17594ba982f9b4fed9adfb3c757846f565b799b2763fb3733d1de1bcb82cf46684912",
+  "packageManager": "pnpm@11.5.0+sha512.dbfcc4f81cf48597afd4bc391ffdf12c11f1a9fb83a395bfa6b0a2d9cc2fd8ffebafdb1ccbd529632153f793904c2615b7f09fe1a345473fd1c35845172a8eb1",
   "engines": {
     "node": "^22 || ^24"
-  },
-  "pnpm": {
-    "peerDependencyRules": {
-      "allowedVersions": {
-        "@rslib/core>typescript": "^5 || ^6",
-        "rsbuild-plugin-dts>typescript": "^5 || ^6",
-        "rsbuild-plugin-tailwindcss>tailwindcss": "^3 || ^4"
-      }
-    },
-    "patchedDependencies": {
-      "@napi-rs/cli@2.18.4": "patches/@napi-rs__cli@2.18.4.patch",
-      "@rollup/plugin-typescript": "patches/@rollup__plugin-typescript.patch",
-      "typia-rspack-plugin@2.2.2": "patches/typia-rspack-plugin@2.2.2.patch"
-    }
   }
 }

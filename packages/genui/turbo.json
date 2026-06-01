@@ -35,6 +35,16 @@
         "a2ui-prompt/dist/**",
         "openui/dist/**"
       ]
+    },
+    "api-extractor": {
+      "dependsOn": [
+        "//#build",
+        "@lynx-js/genui-a2ui#build:api",
+        "@lynx-js/genui-a2ui-catalog-extractor#build:api",
+        "@lynx-js/genui-a2ui-prompt#build:api",
+        "@lynx-js/genui-openui#build:api"
+      ],
+      "cache": false
     }
   }
 }

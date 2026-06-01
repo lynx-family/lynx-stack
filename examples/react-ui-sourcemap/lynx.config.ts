@@ -103,83 +103,87 @@ function pluginMockDebugMetadataUpload(): RsbuildPlugin {
           );
         }
 
-        chain.plugin('example:mock-debug-metadata-upload').use({
-          apply(compiler) {
-            compiler.hooks.thisCompilation.tap(
-              'example:mock-debug-metadata-upload',
-              compilation => {
-                const hooks = exposed.LynxTemplatePlugin
-                  .getLynxTemplatePluginHooks(
-                    compilation as unknown as Parameters<
-                      typeof LynxTemplatePlugin.getLynxTemplatePluginHooks
-                    >[0],
-                  );
-
-                hooks.beforeEncode.tapPromise(
-                  {
-                    name: 'example:mock-debug-metadata-upload',
-                    stage: 1000,
-                  },
-                  async args => {
-                    const assetName = path.posix.format({
-                      dir: args.intermediate,
-                      base: DEBUG_METADATA_ASSET,
-                    });
-                    const debugMetadataAsset = compilation.getAsset(assetName);
-
-                    if (debugMetadataAsset) {
-                      const currentContent = debugMetadataAsset.source
-                        .source()
-                        .toString();
-                      const debugMetadata = JSON.parse(
-                        currentContent,
-                      ) as Record<
-                        string,
-                        unknown
-                      >;
-                      const currentMeta =
-                        typeof debugMetadata['meta'] === 'object'
-                          && debugMetadata['meta'] !== null
-                          ? debugMetadata['meta'] as Record<string, unknown>
-                          : {};
-
-                      compilation.updateAsset(
-                        assetName,
-                        new compiler.webpack.sources.RawSource(
-                          JSON.stringify(
-                            {
-                              ...debugMetadata,
-                              meta: {
-                                ...currentMeta,
-                                git,
-                              },
-                            },
-                            null,
-                            2,
-                          ),
-                        ),
-                      );
-                    }
-
-                    const debugMetadataUrl = await Promise.resolve(
-                      mockUploadDebugMetadata(
-                        args.filenameTemplate,
-                        args.intermediate,
-                      ),
+        chain.plugin('example:mock-debug-metadata-upload').use(
+          {
+            apply(compiler) {
+              compiler.hooks.thisCompilation.tap(
+                'example:mock-debug-metadata-upload',
+                compilation => {
+                  const hooks = exposed.LynxTemplatePlugin
+                    .getLynxTemplatePluginHooks(
+                      compilation as unknown as Parameters<
+                        typeof LynxTemplatePlugin.getLynxTemplatePluginHooks
+                      >[0],
                     );
 
-                    args.encodeData.sourceContent.config = {
-                      ...args.encodeData.sourceContent.config,
-                      debugMetadataUrl,
-                    };
+                  hooks.beforeEncode.tapPromise(
+                    {
+                      name: 'example:mock-debug-metadata-upload',
+                      stage: 1000,
+                    },
+                    async args => {
+                      const assetName = path.posix.format({
+                        dir: args.intermediate,
+                        base: DEBUG_METADATA_ASSET,
+                      });
+                      const debugMetadataAsset = compilation.getAsset(
+                        assetName,
+                      );
 
-                    return args;
-                  },
-                );
-              },
-            );
-          },
-        } satisfies Rspack.RspackPluginInstance);
+                      if (debugMetadataAsset) {
+                        const currentContent = debugMetadataAsset.source
+                          .source()
+                          .toString();
+                        const debugMetadata = JSON.parse(
+                          currentContent,
+                        ) as Record<
+                          string,
+                          unknown
+                        >;
+                        const currentMeta =
+                          typeof debugMetadata['meta'] === 'object'
+                            && debugMetadata['meta'] !== null
+                            ? debugMetadata['meta'] as Record<string, unknown>
+                            : {};
+
+                        compilation.updateAsset(
+                          assetName,
+                          new compiler.webpack.sources.RawSource(
+                            JSON.stringify(
+                              {
+                                ...debugMetadata,
+                                meta: {
+                                  ...currentMeta,
+                                  git,
+                                },
+                              },
+                              null,
+                              2,
+                            ),
+                          ),
+                        );
+                      }
+
+                      const debugMetadataUrl = await Promise.resolve(
+                        mockUploadDebugMetadata(
+                          args.filenameTemplate,
+                          args.intermediate,
+                        ),
+                      );
+
+                      args.encodeData.sourceContent.config = {
+                        ...args.encodeData.sourceContent.config,
+                        debugMetadataUrl,
+                      };
+
+                      return args;
+                    },
+                  );
+                },
+              );
+            },
+          } satisfies Rspack.RspackPluginInstance,
+        );
       });
     },
   };

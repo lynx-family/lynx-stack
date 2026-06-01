@@ -15,6 +15,7 @@ const idToKittenLynxView: Record<string, WeakRef<KittenLynxView>> = {};
 export class KittenLynxView {
   private static incId = 1;
   private _root?: ElementNode;
+  private _url = '';
   _channel!: CDPChannel;
   readonly id: number;
 
@@ -197,8 +198,10 @@ export class KittenLynxView {
               s.url === url || s.url === urlPath || url.endsWith(s.url)
               || s.url.endsWith(urlPath),
           );
-          if (suffixMatches.length === 1) {
-            matched = suffixMatches[0];
+          if (suffixMatches.length > 0) {
+            matched = suffixMatches.reduce((latest, session) =>
+              session.session_id > latest.session_id ? session : latest
+            );
           }
         }
 
@@ -236,6 +239,14 @@ export class KittenLynxView {
     if (!this._channel) {
       throw new Error('Failed to attach to session for URL: ' + url);
     }
+    this._url = url;
+  }
+
+  /**
+   * Returns the last URL successfully loaded by {@link goto}.
+   */
+  url(): string {
+    return this._url;
   }
 
   /**

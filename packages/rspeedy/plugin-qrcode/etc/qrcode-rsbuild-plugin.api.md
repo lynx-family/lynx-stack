@@ -14,6 +14,7 @@ export function pluginQRCode(options?: PluginQRCodeOptions): RsbuildPlugin;
 
 // @public
 export interface PluginQRCodeOptions {
+    fullscreen?: boolean | undefined;
     schema?: CustomizedSchemaFn | undefined;
 }
 

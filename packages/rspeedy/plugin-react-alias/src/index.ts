@@ -219,6 +219,28 @@ export function pluginReactAlias(options: Options): RsbuildPlugin {
             jsxDevRuntime.background,
           )
 
+        if (elementTemplate) {
+          chain
+            .resolve
+            .alias
+            .set(
+              '@lynx-js/react/element-template$',
+              elementTemplateEntry!,
+            )
+            .set(
+              '@lynx-js/react/element-template/internal$',
+              elementTemplateInternalEntry!,
+            )
+            .set(
+              '@lynx-js/react/element-template/jsx-runtime',
+              elementTemplateJsxRuntime!,
+            )
+            .set(
+              '@lynx-js/react/element-template/jsx-dev-runtime',
+              elementTemplateJsxDevRuntime!,
+            )
+        }
+
         if (reactCompat) {
           chain
             .resolve

@@ -5,11 +5,24 @@
 ```ts
 
 import type { RsbuildPlugin } from '@rsbuild/core';
+import type { Rspack } from '@rsbuild/core';
+import type { TemplateHooks } from '@lynx-js/template-webpack-plugin';
 
 // @public
 export const DEBUG_METADATA_ASSET_NAME = "debug-metadata.json";
 
 // @public
 export function pluginLynxDebugMetadata(): RsbuildPlugin;
+
+// @public
+export function rewriteSourceMappingURLs(compilation: Rspack.Compilation, args: Parameters<Parameters<TemplateHooks['beforeEncode']['tap']>[1]>[0], options?: RewriteSourceMappingURLsOptions): void;
+
+// @public
+export interface RewriteSourceMappingURLsOptions {
+    getSourceMappingURL?: (info: {
+        mapPath: string;
+        debugMetadataUrl: string;
+    }) => string;
+}
 
 ```

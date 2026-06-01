@@ -452,6 +452,34 @@ describe('Config', () => {
       ),
     )
     expect(config?.resolve?.alias).toHaveProperty(
+      '@lynx-js/react/element-template$',
+      expect.stringContaining(
+        '/packages/react/runtime/lib/element-template/index.js'
+          .replaceAll('/', path.sep),
+      ),
+    )
+    expect(config?.resolve?.alias).toHaveProperty(
+      '@lynx-js/react/element-template/internal$',
+      expect.stringContaining(
+        '/packages/react/runtime/lib/element-template/internal.js'
+          .replaceAll('/', path.sep),
+      ),
+    )
+    expect(config?.resolve?.alias).toHaveProperty(
+      '@lynx-js/react/element-template/jsx-runtime',
+      expect.stringContaining(
+        '/packages/react/runtime/lib/element-template/jsx-runtime/index.js'
+          .replaceAll('/', path.sep),
+      ),
+    )
+    expect(config?.resolve?.alias).toHaveProperty(
+      '@lynx-js/react/element-template/jsx-dev-runtime',
+      expect.stringContaining(
+        '/packages/react/runtime/lib/element-template/jsx-dev-runtime/index.js'
+          .replaceAll('/', path.sep),
+      ),
+    )
+    expect(config?.resolve?.alias).toHaveProperty(
       '@lynx-js/react/jsx-runtime',
       expect.stringContaining(
         '/packages/react/runtime/jsx-runtime/index.js'.replaceAll(

@@ -743,58 +743,64 @@ where
       let mut has_spread = false;
       let mut ignore_this_jsx = false;
       // ignore_this_jsx, default false,
-      // if some attr is removeComponentElement={true}, ignore_this_jsx = true
-      // if some attr is JSXSpread, ignore_this_jsx = true
+      // if some explicit attr is removeComponentElement={true}, ignore_this_jsx = true
+      // if compilerOnly is enabled and there is JSXSpread, ignore_this_jsx = true
       if !matches!(self.opts.add_component_element, Either::A(false)) {
-        // we use `iter().rev()` because JSXAttr will override previous SpreadElement
-        ignore_this_jsx = n.opening.attrs.iter().rev().any(|attr| match attr {
-          JSXAttrOrSpread::JSXAttr(attr) => match (&attr.name, &attr.value) {
-            (JSXAttrName::Ident(name), None) => name.sym == "removeComponentElement",
-            (
-              JSXAttrName::Ident(name),
-              Some(JSXAttrValue::JSXExprContainer(JSXExprContainer {
-                expr: JSXExpr::Expr(expr),
-                ..
-              })),
-            ) => {
-              name.sym == "removeComponentElement"
-                && match &**expr {
-                  Expr::Lit(Lit::Bool(Bool { value, .. })) => *value,
-                  _ => false,
-                }
-            }
-            (JSXAttrName::Ident(_), _) => false,
-            (JSXAttrName::JSXNamespacedName(_), None) => false,
-            (JSXAttrName::JSXNamespacedName(_), Some(_)) => false,
-            #[cfg(swc_ast_unknown)]
-            _ => false,
-          },
-          JSXAttrOrSpread::SpreadElement(spread) => {
-            if matches!(
-              self.opts.add_component_element,
-              Either::B(AddComponentElementConfig {
-                compiler_only: true
-              })
-            ) {
-              HANDLER.with(|handler| {
-                handler
-                  .struct_span_warn(
-                    spread.dot3_token,
-                    "addComponentElement: component with JSXSpread is ignored to avoid badcase, you can switch addComponentElement.compilerOnly to false to enable JSXSpread support",
-                  )
-                  .emit()
-              });
-            } else {
-              has_spread = true;
-            }
-            true
-          }
-          #[cfg(swc_ast_unknown)]
-          _ => panic!("unknown node"),
-        });
+        let mut remove_component_element = None;
+        let mut first_spread_span = None;
 
-        if matches!(self.opts.add_component_element, Either::A(true)) && has_spread {
-          ignore_this_jsx = false;
+        for attr in &n.opening.attrs {
+          match attr {
+            JSXAttrOrSpread::JSXAttr(attr) => {
+              let remove_component_element_value = match (&attr.name, &attr.value) {
+                (JSXAttrName::Ident(name), None) if name.sym == "removeComponentElement" => {
+                  Some(true)
+                }
+                (
+                  JSXAttrName::Ident(name),
+                  Some(JSXAttrValue::JSXExprContainer(JSXExprContainer {
+                    expr: JSXExpr::Expr(expr),
+                    ..
+                  })),
+                ) if name.sym == "removeComponentElement" => match &**expr {
+                  Expr::Lit(Lit::Bool(Bool { value, .. })) => Some(*value),
+                  _ => None,
+                },
+                _ => None,
+              };
+
+              if remove_component_element_value.is_some() {
+                remove_component_element = remove_component_element_value;
+              }
+            }
+            JSXAttrOrSpread::SpreadElement(spread) => {
+              has_spread = true;
+              first_spread_span.get_or_insert(spread.dot3_token);
+            }
+            #[cfg(swc_ast_unknown)]
+            _ => panic!("unknown node"),
+          }
+        }
+
+        ignore_this_jsx = remove_component_element == Some(true);
+
+        if matches!(
+          self.opts.add_component_element,
+          Either::B(AddComponentElementConfig {
+            compiler_only: true
+          })
+        ) && has_spread
+          && !ignore_this_jsx
+        {
+          HANDLER.with(|handler| {
+            handler
+              .struct_span_warn(
+                first_spread_span.unwrap(),
+                "addComponentElement: component with JSXSpread is ignored to avoid badcase, you can switch addComponentElement.compilerOnly to false to enable JSXSpread support",
+              )
+              .emit()
+          });
+          ignore_this_jsx = true;
         }
       }
 
@@ -1473,6 +1479,7 @@ mod tests {
     <Component item-key="111" lynx-key="222" style={s}/>;
     <Component {...props} lynx-key="222"/>;
     <Component {...props} lynx-key="222" id="!!!" className="!!!!"/>;
+    <Component removeComponentElement={true} {...props} lynx-key="222" id="!!!" className="!!!!"/>;
     <Component {...props} lynx-key="222" id="!!!" className="!!!!" removeComponentElement={true}/>;
     <Component {...props} lynx-key="222" id="!!!" className="!!!!" someProps={p}/>;
     <Component {...props} lynx-key="222" id="!!!" className="!!!!" style={s}/>;
@@ -1513,6 +1520,7 @@ mod tests {
     <Component item-key="111" lynx-key="222" style={s}/>;
     <Component {...props} lynx-key="222"/>;
     <Component {...props} lynx-key="222" id="!!!" className="!!!!"/>;
+    <Component removeComponentElement={true} {...props} lynx-key="222" id="!!!" className="!!!!"/>;
     <Component {...props} lynx-key="222" id="!!!" className="!!!!" removeComponentElement={true}/>;
     <Component {...props} lynx-key="222" id="!!!" className="!!!!" someProps={p}/>;
     <Component {...props} lynx-key="222" id="!!!" className="!!!!" style={s}/>;

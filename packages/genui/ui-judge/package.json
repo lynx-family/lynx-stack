@@ -21,18 +21,23 @@
   "scripts": {
     "api-extractor": "node ../scripts/run-api-extractor.mjs",
     "build": "rslib build",
-    "test": "pnpm --dir ../a2ui-catalog-extractor build && pnpm --dir ../a2ui build && playwright test"
+    "test": "pnpm run test:playwright",
+    "test:android": "vitest run --config vitest.config.ts",
+    "test:playwright": "playwright test"
   },
   "dependencies": {
     "@lynx-js/genui": "workspace:*",
+    "@midscene/core": "^1.8.0",
     "@midscene/web": "^1.8.0",
     "@playwright/test": "^1.58.2"
   },
   "devDependencies": {
     "@lynx-js/genui-a2ui": "workspace:*",
     "@lynx-js/genui-a2ui-catalog-extractor": "workspace:*",
+    "@lynx-js/kitten-lynx-test-infra": "workspace:*",
     "@microsoft/api-extractor": "catalog:",
-    "@types/node": "^24.10.13"
+    "@types/node": "^24.10.13",
+    "vitest": "^3.2.4"
   },
   "engines": {
     "node": ">=22"
