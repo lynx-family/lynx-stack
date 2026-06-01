@@ -1349,8 +1349,8 @@ importers:
         specifier: 12.1.1
         version: 12.1.1(typescript@5.9.3)
       typia-rspack-plugin:
-        specifier: 3.0.0
-        version: 3.0.0(@rspack/core@2.0.3(@swc/helpers@0.5.21))(typescript@5.9.3)(typia@12.1.1(typescript@5.9.3))
+        specifier: 3.0.1
+        version: 3.0.1(@rspack/core@2.0.3(@swc/helpers@0.5.21))(typescript@5.9.3)(typia@12.1.1(typescript@5.9.3))
       vitest:
         specifier: ^3.2.4
         version: 3.2.4(@types/debug@4.1.12)(@types/node@24.10.13)(@vitest/ui@3.2.4)(jsdom@27.4.0)(less@4.6.4)(lightningcss@1.31.1)(sass-embedded@1.99.0)(sass@1.99.0)(terser@5.31.6)
@@ -1454,8 +1454,8 @@ importers:
         specifier: 12.1.1
         version: 12.1.1(typescript@5.9.3)
       typia-rspack-plugin:
-        specifier: 3.0.0
-        version: 3.0.0(@rspack/core@2.0.3(@swc/helpers@0.5.21))(typescript@5.9.3)(typia@12.1.1(typescript@5.9.3))
+        specifier: 3.0.1
+        version: 3.0.1(@rspack/core@2.0.3(@swc/helpers@0.5.21))(typescript@5.9.3)(typia@12.1.1(typescript@5.9.3))
       webpack:
         specifier: ^5.105.2
         version: 5.105.2(lightningcss@1.31.1)
@@ -1595,8 +1595,8 @@ importers:
         specifier: 12.1.1
         version: 12.1.1(typescript@5.9.3)
       typia-rspack-plugin:
-        specifier: 3.0.0
-        version: 3.0.0(@rspack/core@2.0.3(@swc/helpers@0.5.21))(typescript@5.9.3)(typia@12.1.1(typescript@5.9.3))
+        specifier: 3.0.1
+        version: 3.0.1(@rspack/core@2.0.3(@swc/helpers@0.5.21))(typescript@5.9.3)(typia@12.1.1(typescript@5.9.3))
 
   packages/rspeedy/plugin-react-alias:
     devDependencies:
@@ -11881,8 +11881,8 @@ packages:
     engines: {node: '>=14.17'}
     hasBin: true
 
-  typia-rspack-plugin@3.0.0:
-    resolution: {integrity: sha512-I5tLN30Z4cwfdoEtIa9a+NyWOT3TXM0wH/VsafeuPriCX6Siau8xK9i5pdSle3/XFsMtScg22eWfD0deLPQV4w==}
+  typia-rspack-plugin@3.0.1:
+    resolution: {integrity: sha512-QejxXofRkakQJwmUukpXyhtLi7M37ZIA5CkwcHWqTdjL2rFMB8WroNSGPdMaWxfFd3+DwI6yO9aQ5S6VYdYxNA==}
     engines: {node: '>=18'}
     peerDependencies:
       '@rspack/core': 2.0.3
@@ -23682,7 +23682,7 @@ snapshots:
 
   typescript@5.9.3: {}
 
-  typia-rspack-plugin@3.0.0(@rspack/core@2.0.3(@swc/helpers@0.5.21))(typescript@5.9.3)(typia@12.1.1(typescript@5.9.3)):
+  typia-rspack-plugin@3.0.1(@rspack/core@2.0.3(@swc/helpers@0.5.21))(typescript@5.9.3)(typia@12.1.1(typescript@5.9.3)):
     dependencies:
       '@rspack/core': 2.0.3(@swc/helpers@0.5.21)
       typescript: 5.9.3

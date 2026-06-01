@@ -83,7 +83,7 @@
     "ts-blank-space": "^0.7.0",
     "type-fest": "^5.4.4",
     "typia": "12.1.1",
-    "typia-rspack-plugin": "3.0.0",
+    "typia-rspack-plugin": "3.0.1",
     "vitest": "^3.2.4",
     "webpack": "^5.105.2"
   },
