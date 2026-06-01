@@ -41,6 +41,8 @@ minimumReleaseAge: 4320
 # would otherwise be blocked by `minimumReleaseAge`.
 minimumReleaseAgeExclude:
   - "@lynx-js/*"
+  # typia-rspack-plugin uses trusted publish + staged publish
+  - "typia-rspack-plugin"
 # npm's abbreviated metadata omits the `time` field, so a strict check hard-fails
 # (`ERR_PNPM_MISSING_TIME`) on packages it cannot date — e.g. during
 # `pnpm dedupe --check`. Run non-strict so the age check is enforced when `time`
