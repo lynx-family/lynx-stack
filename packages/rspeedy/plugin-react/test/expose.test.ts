@@ -14,10 +14,10 @@ import { pluginStubRspeedyAPI } from './stub-rspeedy-api.plugin.js'
 import type { LynxTemplatePlugin, TemplateHooks } from '../src/index.js'
 
 describe('Expose', () => {
-  test('LynxTemplatePlugin', async () => {
+  test('LynxBundlePlugin', async () => {
     const { pluginReactLynx } = await import('../src/index.js')
 
-    let expose: { LynxTemplatePlugin: LynxTemplatePlugin } | undefined
+    let expose: { LynxBundlePlugin: LynxTemplatePlugin } | undefined
     let beforeEncodeArgs:
       | Parameters<Parameters<TemplateHooks['beforeEncode']['tap']>[1]>[0]
       | undefined
@@ -45,8 +45,8 @@ describe('Expose', () => {
             name: 'pluginThatUsesTemplateHooks',
             setup(api) {
               expose = api.useExposed<
-                { LynxTemplatePlugin: LynxTemplatePlugin }
-              >(Symbol.for('LynxTemplatePlugin'))
+                { LynxBundlePlugin: LynxTemplatePlugin }
+              >(Symbol.for('LynxBundlePlugin'))
               api.modifyBundlerChain(chain => {
                 const PLUGIN_NAME = 'pluginThatUsesTemplateHooks'
                 chain.plugin(PLUGIN_NAME).use({
@@ -54,7 +54,7 @@ describe('Expose', () => {
                     compiler.hooks.compilation.tap(
                       PLUGIN_NAME,
                       compilation => {
-                        const templateHooks = expose!.LynxTemplatePlugin
+                        const templateHooks = expose!.LynxBundlePlugin
                           .getLynxTemplatePluginHooks(
                             compilation as unknown as Parameters<
                               LynxTemplatePlugin['getLynxTemplatePluginHooks']
@@ -81,7 +81,7 @@ describe('Expose', () => {
     await rsbuild.initConfigs()
     expect(expose).toMatchInlineSnapshot(`
       {
-        "LynxTemplatePlugin": {
+        "LynxBundlePlugin": {
           "getLynxTemplatePluginHooks": [Function],
         },
       }
@@ -104,5 +104,40 @@ describe('Expose', () => {
         "/.rspeedy/main/background.js",
       ]
     `)
+  })
+
+  test('backward compat: old LynxTemplatePlugin symbol still works', async () => {
+    const { pluginReactLynx } = await import('../src/index.js')
+
+    let expose: { LynxBundlePlugin: LynxTemplatePlugin } | undefined
+
+    const rsbuild = await createRspeedy({
+      rspeedyConfig: {
+        source: {
+          entry: {
+            main: new URL('./fixtures/basic.tsx', import.meta.url).pathname,
+          },
+        },
+        plugins: [
+          pluginReactLynx(),
+          pluginStubRspeedyAPI(),
+          {
+            name: 'pluginThatUsesOldSymbol',
+            setup(api) {
+              expose = api.useExposed<
+                { LynxBundlePlugin: LynxTemplatePlugin }
+              >(Symbol.for('LynxTemplatePlugin'))
+            },
+          } as RsbuildPlugin,
+        ],
+      },
+    })
+
+    await rsbuild.initConfigs()
+    expect(expose).toBeDefined()
+    expect(expose!.LynxBundlePlugin).toBeDefined()
+    expect(expose!.LynxBundlePlugin.getLynxTemplatePluginHooks).toBeTypeOf(
+      'function',
+    )
   })
 })
