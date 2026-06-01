@@ -154,7 +154,9 @@ export function applyLoaders(
               jsc,
               env: {
                 targets: MAIN_THREAD_ENV_TARGETS,
-                include: MAIN_THREAD_ENV_INCLUDE,
+                // Lower `let`/`const` to `var` (QuickJS parses `var` faster),
+                // on top of the fixed es2019 baseline.
+                include: ['transform-block-scoping', ...MAIN_THREAD_ENV_INCLUDE],
               },
             } satisfies Rspack.SwcLoaderOptions,
           )

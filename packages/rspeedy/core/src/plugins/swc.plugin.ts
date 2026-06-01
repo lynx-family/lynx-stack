@@ -39,6 +39,11 @@ export function pluginSwc(): RsbuildPlugin {
               config.env = {
                 targets: ES_ENV_TARGETS,
                 include: [
+                  // Lower `let`/`const` to `var`. QuickJS parses `var` faster.
+                  // This is intentionally beyond what `jsc.target` lowered (it
+                  // keeps `let`/`const`), so it lives outside the baseline
+                  // `getESVersionEnvInclude` set.
+                  'transform-block-scoping',
                   ...getESVersionEnvInclude(getESVersionTarget(isProd)),
                   ...(config.env?.include ?? []),
                 ],
