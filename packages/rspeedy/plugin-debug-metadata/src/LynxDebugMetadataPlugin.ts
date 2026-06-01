@@ -33,7 +33,10 @@ import {
   getReleaseDefine,
   getReleaseRuntime,
 } from './release-banner.js'
-import { rewriteTrailerToAbsoluteUrl } from './source-mapping-url-rewriter.js'
+import {
+  rewriteTrailerToAbsoluteUrl,
+  rewriteTrailerToUrl,
+} from './source-mapping-url-rewriter.js'
 
 /**
  * The options of the {@link LynxDebugMetadataPlugin}.
@@ -325,9 +328,54 @@ type BeforeEncodeArgs = Parameters<
   Parameters<TemplateHooks['beforeEncode']['tap']>[1]
 >[0]
 
-function rewriteSourceMappingURLTrailers(
+/**
+ * Options for {@link rewriteSourceMappingURLTrailers}.
+ *
+ * @public
+ */
+export interface RewriteSourceMappingURLTrailersOptions {
+  /**
+   * Build the URL written into each rewritten trailer. Called once per JS
+   * asset with the bundler-relative `.map` path (e.g.
+   * `.rspeedy/main/background.14844a47.js.map`) and the already-resolved
+   * `debugMetadataUrl` baked into the template config. Must return an
+   * absolute URL.
+   *
+   * Omit to use the default — `${debugMetadataUrl}?field=source-map&path=
+   * <encoded mapPath>` — which assumes `debugMetadataUrl` is a query-less
+   * container URL (TOS / dev-server). Provide an override when the consumer
+   * wants a gateway URL with server-side field filtering (e.g.
+   * `https://slardar.../raw?tos_key=<digest>&field=source-map&path=...`).
+   */
+  getSourceMappingURL?: (
+    info: { mapPath: string, debugMetadataUrl: string },
+  ) => string
+}
+
+/**
+ * Rewrite the trailing `//# sourceMappingURL=...` (or `/*# sourceMappingURL ...`)
+ * comment in every JS asset emitted by the current template so it points at
+ * an absolute URL instead of the local bundler path. Both the raw compilation
+ * assets and the in-flight `encodeData` are updated, so the encoded tasm
+ * template embeds the rewritten trailer too.
+ *
+ * The URL is taken from `args.encodeData.sourceContent.config
+ * ['debugMetadataUrl']`; pass {@link RewriteSourceMappingURLTrailersOptions
+ * .getSourceMappingURL} to override the per-asset URL format.
+ *
+ * Intended call site: inside a `beforeEncode` tap, **after** `debugMetadataUrl`
+ * has been set on `encodeData.sourceContent.config`. The plugin already invokes
+ * this for the dev-server URL it bakes itself; production consumers that
+ * compute a hosted URL (e.g. a Slardar tos_key URL) at build time should call
+ * it themselves after setting the URL. No-op when `debugMetadataUrl` is unset
+ * or empty.
+ *
+ * @public
+ */
+export function rewriteSourceMappingURLTrailers(
   compilation: Rspack.Compilation,
   args: BeforeEncodeArgs,
+  options?: RewriteSourceMappingURLTrailersOptions,
 ): void {
   const debugMetadataUrl = args.encodeData.sourceContent.config[
     'debugMetadataUrl'
@@ -354,11 +402,14 @@ function rewriteSourceMappingURLTrailers(
     const asset = compilation.getAsset(assetName)
     if (!asset) continue
     const before = asset.source.source().toString()
-    const after = rewriteTrailerToAbsoluteUrl(
-      before,
+    const mapPath = `${assetName}.map`
+    const customUrl = options?.getSourceMappingURL?.({
+      mapPath,
       debugMetadataUrl,
-      `${assetName}.map`,
-    )
+    })
+    const after = customUrl === undefined
+      ? rewriteTrailerToAbsoluteUrl(before, debugMetadataUrl, mapPath)
+      : rewriteTrailerToUrl(before, customUrl)
     if (after === undefined) continue
     const newSource = new RawSource(after)
     compilation.updateAsset(assetName, newSource, asset.info)
