@@ -318,6 +318,7 @@ export function App() {
 
   const storeRef = useRef<MessageStore | null>(null);
   const agentRef = useRef<ReturnType<typeof createMockAgent> | null>(null);
+  const pendingReplayMessagesRef = useRef<unknown[] | null>(null);
   const pendingLiveMessagesRef = useRef<unknown[] | null>(null);
   const [store, setStore] = useState<MessageStore | null>(null);
   const [error, setError] = useState<string>('');
@@ -369,6 +370,13 @@ export function App() {
       }
     },
     [],
+  );
+  const replayMessagesToStore = useCallback(
+    (targetStore: MessageStore, messages: unknown) => {
+      targetStore.clear();
+      pushLiveMessagesToStore(targetStore, messages);
+    },
+    [pushLiveMessagesToStore],
   );
   const postPlaybackSync = useCallback((state: MockAgentProgress) => {
     NativeModules.bridge?.call?.(
@@ -462,6 +470,24 @@ export function App() {
   );
 
   useLynxGlobalEventListener(
+    'A2UI_REPLAY_MESSAGES',
+    (messages: unknown) => {
+      const currentStore = storeRef.current;
+      if (!currentStore) {
+        pendingReplayMessagesRef.current = Array.isArray(messages)
+          ? messages
+          : [messages];
+        return;
+      }
+      // Replays replace the preview buffer, making parent retries idempotent
+      // while the iframe and Lynx store finish booting.
+      replayMessagesToStore(currentStore, messages);
+      agentRef.current?.stop();
+      agentRef.current = null;
+    },
+  );
+
+  useLynxGlobalEventListener(
     'A2UI_LIVE_MESSAGES',
     (messages: unknown) => {
       const currentStore = storeRef.current;
@@ -534,6 +560,13 @@ export function App() {
       storeRef.current = next;
       agentRef.current = agent;
       setStore(next);
+      const pendingReplayMessages = pendingReplayMessagesRef.current;
+      if (pendingReplayMessages) {
+        pendingReplayMessagesRef.current = null;
+        replayMessagesToStore(next, pendingReplayMessages);
+        agent.stop();
+        agentRef.current = null;
+      }
       const pendingLiveMessages = pendingLiveMessagesRef.current;
       if (pendingLiveMessages) {
         pendingLiveMessagesRef.current = null;
@@ -567,6 +600,7 @@ export function App() {
     playbackMode,
     postPlaybackSync,
     pushLiveMessagesToStore,
+    replayMessagesToStore,
     streamConfig,
     streamDelay,
   ]);
