@@ -6,7 +6,14 @@ import { pluginQRCode } from '@lynx-js/qrcode-rsbuild-plugin';
 import { pluginReactLynx } from '@lynx-js/react-rsbuild-plugin';
 import { defineConfig } from '@lynx-js/rspeedy';
 
+const LYNX_NODE_ENV = process.env.NODE_ENV === 'development'
+  ? 'development'
+  : 'production';
+
 export default defineConfig({
+  dev: {
+    hmr: false,
+  },
   plugins: [
     pluginQRCode({
       schema(url) {
@@ -23,6 +30,10 @@ export default defineConfig({
     }),
   ],
   source: {
+    define: {
+      'process.env.NODE_ENV': JSON.stringify(LYNX_NODE_ENV),
+      'process.env[\'NODE_ENV\']': JSON.stringify(LYNX_NODE_ENV),
+    },
     entry: {
       a2ui: './lynx-src/a2ui/index.tsx',
       openui: './lynx-src/openui/index.tsx',

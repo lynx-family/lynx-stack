@@ -15,8 +15,15 @@ interface PlaygroundDemoPreviewOptions {
   theme?: 'light' | 'dark';
 }
 
+interface PlaygroundAndroidDemoOptions {
+  demoId: string;
+  theme?: 'light' | 'dark';
+}
+
 export interface PlaygroundPreviewServer {
   readonly baseUrl: string;
+  readonly port: number;
+  createAndroidDemoUrl(options: PlaygroundAndroidDemoOptions): string;
   createDemoPreviewUrl(options: PlaygroundDemoPreviewOptions): string;
   dispose(): Promise<void>;
   getLogs(): string;
@@ -122,6 +129,18 @@ export async function startPlaygroundPreviewServer(): Promise<
 
   return {
     baseUrl,
+    port,
+    createAndroidDemoUrl(options) {
+      const bundleUrl = new URL('/a2ui.lynx.js', baseUrl);
+      bundleUrl.searchParams.set(
+        'messagesUrl',
+        new URL(`/demos/${options.demoId}.json`, baseUrl).toString(),
+      );
+      bundleUrl.searchParams.set('instant', '1');
+      bundleUrl.searchParams.set('theme', options.theme ?? 'light');
+      bundleUrl.searchParams.set('fullscreen', 'true');
+      return bundleUrl.toString();
+    },
     createDemoPreviewUrl(options) {
       const renderUrl = new URL('/render.html', baseUrl);
       renderUrl.searchParams.set('protocol', options.protocol ?? 'a2ui');
@@ -185,13 +204,18 @@ async function waitForPlaygroundReady(
 ): Promise<void> {
   const deadline = Date.now() + READY_TIMEOUT_MS;
   const renderUrl = new URL('/render.html', baseUrl).toString();
-  const bundleUrl = new URL('/a2ui.web.js', baseUrl).toString();
+  const webBundleUrl = new URL('/a2ui.web.js', baseUrl).toString();
+  const lynxBundleUrl = new URL('/a2ui.lynx.js', baseUrl).toString();
 
   while (Date.now() < deadline) {
     const processError = getProcessError();
     if (processError) throw processError;
 
-    if (await fetchOk(renderUrl) && await fetchOk(bundleUrl)) {
+    if (
+      await fetchOk(renderUrl)
+      && await fetchOk(webBundleUrl)
+      && await fetchOk(lynxBundleUrl)
+    ) {
       return;
     }
 
