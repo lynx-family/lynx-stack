@@ -33,7 +33,10 @@ import {
   getReleaseDefine,
   getReleaseRuntime,
 } from './release-banner.js'
-import { rewriteTrailerToAbsoluteUrl } from './source-mapping-url-rewriter.js'
+import {
+  rewriteSourceMappingURL,
+  rewriteSourceMappingURLToAbsolute,
+} from './source-mapping-url-rewriter.js'
 
 /**
  * The options of the {@link LynxDebugMetadataPlugin}.
@@ -233,7 +236,7 @@ export class LynxDebugMetadataPluginImpl {
               }`
           }
 
-          rewriteSourceMappingURLTrailers(compilation, args)
+          rewriteSourceMappingURLs(compilation, args)
 
           return args
         },
@@ -321,13 +324,32 @@ function readTasmSection(
     : undefined
 }
 
-type BeforeEncodeArgs = Parameters<
-  Parameters<TemplateHooks['beforeEncode']['tap']>[1]
->[0]
+/**
+ * Options for {@link rewriteSourceMappingURLs}.
+ *
+ * @public
+ */
+export interface RewriteSourceMappingURLsOptions {
+  /**
+   * Override the URL written into each rewritten sourceMappingURL. Defaults
+   * to `${debugMetadataUrl}?field=source-map&path=<encoded mapPath>`.
+   */
+  getSourceMappingURL?: (
+    info: { mapPath: string, debugMetadataUrl: string },
+  ) => string
+}
 
-function rewriteSourceMappingURLTrailers(
+/**
+ * Rewrite the `//# sourceMappingURL=...` directive of every JS asset in the
+ * current template to an absolute URL. No-op when `debugMetadataUrl`
+ * (`args.encodeData.sourceContent.config['debugMetadataUrl']`) is unset.
+ *
+ * @public
+ */
+export function rewriteSourceMappingURLs(
   compilation: Rspack.Compilation,
-  args: BeforeEncodeArgs,
+  args: Parameters<Parameters<TemplateHooks['beforeEncode']['tap']>[1]>[0],
+  options?: RewriteSourceMappingURLsOptions,
 ): void {
   const debugMetadataUrl = args.encodeData.sourceContent.config[
     'debugMetadataUrl'
@@ -354,11 +376,14 @@ function rewriteSourceMappingURLTrailers(
     const asset = compilation.getAsset(assetName)
     if (!asset) continue
     const before = asset.source.source().toString()
-    const after = rewriteTrailerToAbsoluteUrl(
-      before,
+    const mapPath = `${assetName}.map`
+    const customUrl = options?.getSourceMappingURL?.({
+      mapPath,
       debugMetadataUrl,
-      `${assetName}.map`,
-    )
+    })
+    const after = customUrl === undefined
+      ? rewriteSourceMappingURLToAbsolute(before, debugMetadataUrl, mapPath)
+      : rewriteSourceMappingURL(before, customUrl)
     if (after === undefined) continue
     const newSource = new RawSource(after)
     compilation.updateAsset(assetName, newSource, asset.info)
