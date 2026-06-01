@@ -77,7 +77,7 @@ async function buildSourcemapFixture(
               )
             })
           },
-        } as RsbuildPlugin,
+        } satisfies RsbuildPlugin,
         // This is to simulate cases that there
         // are other loaders before our @lynx-js/react/transform
         // we can pass the sourcemap from previous loaders to our transform
@@ -109,7 +109,7 @@ async function buildSourcemapFixture(
                 .end()
             })
           },
-        } as RsbuildPlugin,
+        } satisfies RsbuildPlugin,
       ],
     },
   })

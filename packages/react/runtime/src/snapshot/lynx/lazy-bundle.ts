@@ -22,7 +22,7 @@ export const makeSyncThen = function<T>(result: T): Promise<T>['then'] {
         // if (onR) {
         //   return Promise.resolve(onR(e));
         // }
-        return Promise.reject(e as Error);
+        return Promise.reject(e instanceof Error ? e : new Error(String(e)));
       }
 
       if (ret && typeof (ret as PromiseLike<TR1>).then === 'function' /* `thenable` object */) {

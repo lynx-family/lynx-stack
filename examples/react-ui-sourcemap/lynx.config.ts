@@ -179,7 +179,7 @@ function pluginMockDebugMetadataUpload(): RsbuildPlugin {
               },
             );
           },
-        } as Rspack.RspackPluginInstance);
+        } satisfies Rspack.RspackPluginInstance);
       });
     },
   };

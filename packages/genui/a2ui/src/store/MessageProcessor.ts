@@ -377,7 +377,10 @@ export class MessageProcessor {
       }
 
       if ('updateDataModel' in message && message.updateDataModel) {
-        const { surfaceId, path, value } = message.updateDataModel;
+        const updateDataModel = message.updateDataModel as Record<string, unknown>;
+        const surfaceId = updateDataModel['surfaceId'] as string;
+        const path = updateDataModel['path'] as string | undefined;
+        const value = updateDataModel['value'];
         const surface = this.getOrCreateSurface(surfaceId);
 
         const updates: { path: string; value: unknown }[] = [];

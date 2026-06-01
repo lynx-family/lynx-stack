@@ -131,7 +131,7 @@ describe('Lazy', () => {
                       },
                     )
                   },
-                } as Rspack.RspackPluginInstance,
+                } satisfies Rspack.RspackPluginInstance,
               ],
             },
           },
@@ -234,7 +234,7 @@ describe('Lazy', () => {
                 )
               })
             },
-          } as RsbuildPlugin,
+          } satisfies RsbuildPlugin,
         ],
         tools: {
           rspack: {
@@ -259,7 +259,7 @@ describe('Lazy', () => {
                     },
                   )
                 },
-              } as Rspack.RspackPluginInstance,
+              } satisfies Rspack.RspackPluginInstance,
               {
                 name: 'beforeEncode-test',
                 apply(compiler) {
@@ -283,7 +283,7 @@ describe('Lazy', () => {
                     },
                   )
                 },
-              } as Rspack.RspackPluginInstance,
+              } satisfies Rspack.RspackPluginInstance,
             ],
           },
         },
@@ -369,7 +369,7 @@ describe('Lazy', () => {
                 )
               })
             },
-          } as RsbuildPlugin,
+          } satisfies RsbuildPlugin,
         ],
         tools: {
           rspack: {
@@ -406,7 +406,7 @@ describe('Lazy', () => {
                     done = true
                   })
                 },
-              } as Rspack.RspackPluginInstance,
+              } satisfies Rspack.RspackPluginInstance,
             ],
           },
         },
@@ -501,7 +501,7 @@ describe('Lazy', () => {
                 )
               })
             },
-          } as RsbuildPlugin,
+          } satisfies RsbuildPlugin,
         ],
         tools: {
           rspack: {
@@ -538,7 +538,7 @@ describe('Lazy', () => {
                     },
                   )
                 },
-              } as Rspack.RspackPluginInstance,
+              } satisfies Rspack.RspackPluginInstance,
             ],
           },
         },

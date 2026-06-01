@@ -67,10 +67,10 @@ describe('Expose', () => {
                       },
                     )
                   },
-                } as Rspack.RspackPluginInstance)
+                } satisfies Rspack.RspackPluginInstance)
               })
             },
-          } as RsbuildPlugin,
+          } satisfies RsbuildPlugin,
         ],
       },
     })
