@@ -51,6 +51,8 @@ jobs:
         run: |
           pnpm dprint check
           pnpm biome check
+      - name: Package Metadata Check
+        run: pnpm --package=@pnpm/meta-updater@2.0.6 dlx meta-updater --test
       - name: API Check
         run: pnpm turbo api-extractor
       - name: Changeset Check
@@ -59,6 +61,8 @@ jobs:
         run: node .github/scripts/check-no-major-changeset.cjs .changeset-status.json
       - name: Changeset Heading Check
         run: node .github/scripts/check-no-heading-changeset.cjs .changeset-status.json
+      - name: Dependency Changeset Check
+        run: node .github/scripts/check-dep-changes-have-changeset.cjs .changeset-status.json
 
   eslint:
     needs: build
@@ -67,6 +71,59 @@ jobs:
     with:
       runs-on: lynx-ubuntu-24.04-medium
       run: pnpm eslint . --flag v10_config_lookup_from_file
+
+  ui-judge:
+    needs: build
+    uses: ./.github/workflows/workflow-test.yml
+    secrets:
+      MIDSCENE_MODEL_API_KEY: ${{ secrets.MIDSCENE_MODEL_API_KEY }}
+      MIDSCENE_MODEL_BASE_URL: ${{ secrets.MIDSCENE_MODEL_BASE_URL }}
+      MIDSCENE_MODEL_FAMILY: ${{ secrets.MIDSCENE_MODEL_FAMILY }}
+      MIDSCENE_MODEL_NAME: ${{ secrets.MIDSCENE_MODEL_NAME }}
+      MIDSCENE_OPENAI_INIT_CONFIG_JSON: ${{ secrets.MIDSCENE_OPENAI_INIT_CONFIG_JSON }}
+    with:
+      runs-on: lynx-custom-container
+      is-web: true
+      upload-codecov: false
+      artifact-name: ui-judge-results
+      artifact-path: ui-judge-results.json
+      artifact-if-no-files-found: error
+      web-report-name: ui-judge-playwright-report
+      web-report-path: packages/genui/ui-judge/playwright-report
+      run: |
+        cd "$GITHUB_WORKSPACE"
+        set -eu
+        export UI_JUDGE_RESULT_FILE="$GITHUB_WORKSPACE/ui-judge-results.json"
+        if [ -z "${MIDSCENE_MODEL_NAME:-}" ] || [ -z "${MIDSCENE_MODEL_API_KEY:-}" ]; then
+          UI_JUDGE_RESULT_ERROR_MESSAGE="Midscene secrets are unavailable; UI Judge model test was skipped." node .github/scripts/write-ui-judge-result.mjs
+          echo "Midscene secrets are unavailable; skipping UI Judge."
+          exit 0
+        fi
+        ulimit -Sn 655350
+        pnpm --filter @lynx-js/ui-judge test
+
+  ui-judge-comment:
+    needs: ui-judge
+    if: always()
+    runs-on: lynx-ubuntu-24.04-medium
+    permissions:
+      contents: read
+      issues: write
+      pull-requests: write
+    steps:
+      - uses: actions/checkout@93cb6efe18208431cddfb8368fd83d5badbf9bfd # v5
+        if: ${{ github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name == github.repository && needs.ui-judge.result != 'skipped' && needs.ui-judge.result != 'cancelled' }}
+        with:
+          persist-credentials: false
+      - uses: actions/download-artifact@634f93cb2916e3fdff6788551b99b062d0335ce0 # v5
+        if: ${{ github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name == github.repository && needs.ui-judge.result != 'skipped' && needs.ui-judge.result != 'cancelled' }}
+        with:
+          name: ui-judge-results
+      - name: Comment UI Judge result
+        if: ${{ github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name == github.repository && needs.ui-judge.result != 'skipped' && needs.ui-judge.result != 'cancelled' }}
+        uses: ./.github/actions/ui-judge-comment
+        with:
+          result-file: ui-judge-results.json
 
   lighthouse:
     needs: build
@@ -80,6 +137,7 @@ jobs:
       runs-on: lynx-custom-container
       is-web: true
       run: |
+        ulimit -Sn 655350
         export NODE_OPTIONS="--max-old-space-size=32768"
         pnpm --filter @lynx-js/web-core-e2e run lh || echo "Lighthouse failed"
   playwright-web-elements:
@@ -98,41 +156,11 @@ jobs:
       codecov-flags: "e2e"
       web-report-path: "packages/web-platform/web-elements/playwright-report"
       run: |
+        ulimit -Sn 655350
         export NODE_OPTIONS="--max-old-space-size=32768"
         export PLAYWRIGHT_JUNIT_OUTPUT_NAME=test-report.junit.xml
         pnpm --filter @lynx-js/web-elements run test --reporter='github,dot,junit,html' --shard=${{ matrix.shard }}/2
         pnpm --filter @lynx-js/web-elements run coverage:ci
-  # playwright-linux:
-  #   needs: build
-  #   uses: ./.github/workflows/workflow-test.yml
-  #   secrets:
-  #     CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
-  #   name: Playwright ${{ matrix.thread }}-${{ matrix.render }} (${{ matrix.shard }}/3)
-  #   strategy:
-  #     fail-fast: false
-  #     matrix:
-  #       thread: [ALL_ON_UI]
-  #       render: [SSR, CSR]
-  #       shard: [1, 2, 3]
-  #       # exclude:
-  #       #   - thread: MULTI_THREAD
-  #       #     render: SSR
-  #   with:
-  #     runs-on: lynx-custom-container
-  #     is-web: true
-  #     web-report-name: "playwright-${{ matrix.thread }}-${{ matrix.render }}-shard${{ matrix.shard }}"
-  #     codecov-flags: "e2e"
-  #     run: |
-  #       if [ "${{ matrix.thread }}" = "MULTI_THREAD" ]; then
-  #         export ENABLE_MULTI_THREAD=true
-  #       fi
-  #       if [ "${{ matrix.render }}" = "SSR" ]; then
-  #         export ENABLE_SSR=true
-  #       fi
-  #       export NODE_OPTIONS="--max-old-space-size=32768"
-  #       export PLAYWRIGHT_JUNIT_OUTPUT_NAME=test-report.junit.xml
-  #       pnpm --filter @lynx-js/web-tests run test --reporter='github,dot,junit,html' --shard=${{ matrix.shard }}/3
-  #       pnpm --filter @lynx-js/web-tests run coverage:ci
   web-core-e2e:
     needs: build
     uses: ./.github/workflows/workflow-test.yml
@@ -154,6 +182,7 @@ jobs:
         if [ "${{ matrix.render }}" = "SSR" ]; then
           export ENABLE_SSR=true
         fi
+        ulimit -Sn 655350
         export NODE_OPTIONS="--max-old-space-size=32768"
         export PLAYWRIGHT_JUNIT_OUTPUT_NAME=test-report.junit.xml
         pnpm --filter @lynx-js/web-core-e2e run test --reporter='github,dot,junit,html' --shard=${{ matrix.shard }}/2
@@ -189,6 +218,9 @@ jobs:
     with:
       runs-on: lynx-ubuntu-24.04-medium
       run: |
+        # Generated smoke-test projects do not carry a packageManager pin, so
+        # keep this stage on pnpm 10 even when Corepack's registry default moves.
+        corepack prepare pnpm@10.29.3 --activate
         pnpm dlx @pnpm/registry-mock@4 prepare
         pnpm dlx @pnpm/registry-mock@4 &
         printf '\n//localhost:4873/:_authToken="this-is-a-fake-token"\n' >> ~/.npmrc
@@ -371,6 +403,8 @@ jobs:
       - benchmark
       - code-style-check
       - eslint
+      - ui-judge
+      - ui-judge-comment
       # - playwright-linux
       - playwright-web-elements
       - test-api

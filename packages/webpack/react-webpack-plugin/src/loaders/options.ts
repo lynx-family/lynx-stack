@@ -8,6 +8,7 @@ import type { LoaderContext } from '@rspack/core';
 import type {
   CompatVisitorConfig,
   DefineDceVisitorConfig,
+  ElementTemplateConfig,
   JsxTransformerConfig,
   ShakeVisitorConfig,
   TransformNodiffOptions,
@@ -17,9 +18,11 @@ const PLUGIN_NAME = 'react:webpack';
 export const JSX_IMPORT_SOURCE = {
   MAIN_THREAD: '@lynx-js/react/lepus',
   BACKGROUND: '@lynx-js/react',
+  ELEMENT_TEMPLATE: '@lynx-js/react/element-template',
 };
 const PUBLIC_RUNTIME_PKG = '@lynx-js/react';
 export const RUNTIME_PKG = '@lynx-js/react/internal';
+export const ELEMENT_TEMPLATE_RUNTIME_PKG = '@lynx-js/react/element-template';
 const OLD_RUNTIME_PKG = '@lynx-js/react-runtime';
 const COMPONENT_PKG = '@lynx-js/react-components';
 
@@ -85,6 +88,13 @@ export interface ReactLoaderOptions {
    * The engine version.
    */
   engineVersion?: string | undefined;
+
+  /**
+   * Whether to enable Element Template compilation.
+   *
+   * @experimental
+   */
+  experimental_useElementTemplate?: boolean | undefined;
 }
 
 function normalizeSlashes(file: string) {
@@ -106,8 +116,10 @@ function getCommonOptions(
     inlineSourcesContent,
     isDynamicComponent,
     engineVersion,
+    experimental_useElementTemplate,
     defineDCE = { define: {} },
   } = this.getOptions();
+  const useElementTemplate = experimental_useElementTemplate === true;
 
   const syntax = (/\.[mc]?tsx?$/.exec(this.resourcePath))
     ? 'typescript'
@@ -163,7 +175,7 @@ function getCommonOptions(
     ...(inputSourceMap && { inputSourceMap }),
     sourceMapColumns: this.sourceMap && !this.hot,
     inlineSourcesContent: inlineSourcesContent ?? !this.hot,
-    snapshot: {
+    snapshot: useElementTemplate ? false : {
       // TODO: config
       preserveJsx: false,
       // In standalone lazy bundle mode, we do not support HMR now.
@@ -177,6 +189,16 @@ function getCommonOptions(
       filename,
       isDynamicComponent: isDynamicComponent ?? false,
     },
+    elementTemplate: useElementTemplate
+      ? {
+        preserveJsx: false,
+        runtimePkg: ELEMENT_TEMPLATE_RUNTIME_PKG,
+        jsxImportSource: JSX_IMPORT_SOURCE.ELEMENT_TEMPLATE,
+        filename,
+        target: 'JS',
+        isDynamicComponent: isDynamicComponent ?? false,
+      } satisfies ElementTemplateConfig
+      : false,
     engineVersion: engineVersion ?? '',
     syntaxConfig: JSON.stringify({
       syntax,
@@ -208,6 +230,7 @@ export function getMainThreadTransformOptions(
   const commonOptions = getCommonOptions.call(this, inputSourceMap);
 
   const { shake } = this.getOptions();
+  const useElementTemplate = typeof commonOptions.elementTemplate === 'object';
 
   return {
     ...commonOptions,
@@ -217,11 +240,18 @@ export function getMainThreadTransformOptions(
         target: 'LEPUS',
       }
       : false,
-    snapshot: {
-      ...commonOptions.snapshot,
+    snapshot: useElementTemplate ? false : {
+      ...(commonOptions.snapshot as JsxTransformerConfig),
       jsxImportSource: JSX_IMPORT_SOURCE.MAIN_THREAD,
       target: 'LEPUS',
     },
+    elementTemplate: useElementTemplate
+      ? {
+        ...(commonOptions.elementTemplate as ElementTemplateConfig),
+        jsxImportSource: JSX_IMPORT_SOURCE.ELEMENT_TEMPLATE,
+        target: 'LEPUS',
+      } satisfies ElementTemplateConfig
+      : false,
     dynamicImport: {
       layer: `react__main-thread`,
       runtimePkg: RUNTIME_PKG,
@@ -250,6 +280,8 @@ export function getMainThreadTransformOptions(
         PUBLIC_RUNTIME_PKG,
         `${PUBLIC_RUNTIME_PKG}/legacy-react-runtime`,
         RUNTIME_PKG,
+        ELEMENT_TEMPLATE_RUNTIME_PKG,
+        `${ELEMENT_TEMPLATE_RUNTIME_PKG}/internal`,
         ...typeof commonOptions.compat === 'object'
           ? commonOptions.compat.oldRuntimePkg
           : [],
@@ -291,6 +323,7 @@ export function getBackgroundTransformOptions(
   inputSourceMap: string | undefined,
 ): TransformNodiffOptions {
   const commonOptions = getCommonOptions.call(this, inputSourceMap);
+  const useElementTemplate = typeof commonOptions.elementTemplate === 'object';
   return {
     ...commonOptions,
     compat: typeof commonOptions.compat === 'object'
@@ -303,10 +336,17 @@ export function getBackgroundTransformOptions(
       layer: `react__background`,
       runtimePkg: RUNTIME_PKG,
     },
-    snapshot: {
-      ...commonOptions.snapshot,
+    snapshot: useElementTemplate ? false : {
+      ...(commonOptions.snapshot as JsxTransformerConfig),
       jsxImportSource: JSX_IMPORT_SOURCE.BACKGROUND,
     },
+    elementTemplate: useElementTemplate
+      ? {
+        ...(commonOptions.elementTemplate as ElementTemplateConfig),
+        jsxImportSource: JSX_IMPORT_SOURCE.BACKGROUND,
+        target: 'JS',
+      } satisfies ElementTemplateConfig
+      : false,
     defineDCE: {
       define: {
         ...commonOptions.defineDCE?.define,

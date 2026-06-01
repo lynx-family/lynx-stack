@@ -9,9 +9,11 @@ import { pathToFileURL } from 'node:url';
 
 import {
   extractCatalogComponentsFromTypeDocJson,
+  extractCatalogFunctionsFromTypeDocJson,
   findCatalogSourceFiles,
+  writeCatalogArtifacts,
   writeCatalogComponents,
-  writeComponentCatalogs,
+  writeCatalogFunctions,
 } from './index.js';
 import type { TypeDocProject } from './index.js';
 
@@ -32,9 +34,9 @@ Options:
   --typedoc-json <file>
                        Read an existing TypeDoc JSON project instead of
                        running TypeDoc conversion.
-  --out-dir <dir>     Output directory for component catalog.json files.
-  --version           Print the package version.
-  --help              Print this help message.
+  --out-dir <dir>      Output directory for component catalog.json files.
+  --version            Print the package version.
+  --help               Print this help message.
 
 Defaults:
   --catalog-dir src/catalog
@@ -53,6 +55,8 @@ export function parseCliArgs(args: string[]): CliOptions {
   for (let index = 0; index < args.length; index += 1) {
     const arg = args[index]!;
     switch (arg) {
+      case 'catalog-extractor':
+        break;
       case '--catalog-dir':
         options.catalogDirs.push(readValue(args, ++index, arg));
         break;
@@ -107,12 +111,20 @@ export async function runCli(
     const components = extractCatalogComponentsFromTypeDocJson(project, {
       cwd,
     });
+    const functions = extractCatalogFunctionsFromTypeDocJson(project, {
+      cwd,
+    });
 
     writeCatalogComponents(components, {
       cwd,
       outDir: options.outDir,
     });
+    writeCatalogFunctions(functions, {
+      cwd,
+      outDir: options.outDir,
+    });
     printGeneratedComponents(components);
+    printGeneratedFunctions(functions);
     return 0;
   }
 
@@ -137,13 +149,29 @@ export async function runCli(
     );
   }
 
-  const components = await writeComponentCatalogs({
+  const { components, functions } = await writeCatalogArtifacts({
     cwd,
     outDir: options.outDir,
     sourceFiles: uniqueSourceFiles,
   });
 
   printGeneratedComponents(components);
+  printGeneratedFunctions(functions);
+
+  // Fail loudly if we matched source files but emitted no artifacts —
+  // this used to silently succeed on Windows when TypeDoc rejected
+  // backslash entry-point paths, and downstream packages then failed
+  // to import the missing `catalog.json` files.
+  if (components.length === 0 && functions.length === 0) {
+    console.error(
+      `[a2ui-catalog-extractor] Found ${uniqueSourceFiles.length} `
+        + `source file(s) but emitted 0 component catalogs and 0 `
+        + `function definitions. Make sure each catalog props interface `
+        + `is annotated with \`@a2uiCatalog <Name>\` and each function `
+        + `is annotated with \`@a2uiFunction <name>\`.`,
+    );
+    return 1;
+  }
 
   return 0;
 }
@@ -155,6 +183,14 @@ function printGeneratedComponents(components: { name: string }[]): void {
   }
 }
 
+function printGeneratedFunctions(functions: { name: string }[]): void {
+  if (functions.length === 0) return;
+  console.info(`Generated ${functions.length} A2UI function definition files.`);
+  for (const fn of functions) {
+    console.info(`Generated function definition for ${fn.name}`);
+  }
+}
+
 function readValue(args: string[], index: number, option: string): string {
   const value = args[index];
   if (!value || value.startsWith('-')) {
@@ -163,11 +199,19 @@ function readValue(args: string[], index: number, option: string): string {
   return value;
 }
 
+function isEntryScript(): boolean {
+  if (!process.argv[1]) return false;
+  const entryUrl = pathToFileURL(process.argv[1]).href;
+  if (import.meta.url === entryUrl) return true;
+  // The published bin shim does `import '../dist/cli.js'`. In that case the
+  // entry script is the bin shim, not this module — but we should still run.
+  return /[/\\]bin[/\\]a2ui-catalog-extractor\.[mc]?js$/.test(
+    process.argv[1],
+  );
+}
+
 try {
-  if (
-    process.argv[1]
-    && import.meta.url === pathToFileURL(process.argv[1]).href
-  ) {
+  if (isEntryScript()) {
     process.exitCode = await runCli(process.argv.slice(2));
   }
 } catch (error) {

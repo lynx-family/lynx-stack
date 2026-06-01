@@ -23,11 +23,7 @@ export default defineConfig({
     assetPrefix: 'auto',
     module: true,
   },
-  performance: {
-    chunkSplit: {
-      strategy: 'all-in-one',
-    },
-  },
+  splitChunks: false,
   tools: {
     htmlPlugin: false,
   },

@@ -34,12 +34,11 @@ export const __DynamicPartSlot: DynamicPartType = DynamicPartType.Slot;
 export const __DynamicPartMultiChildren: DynamicPartType = DynamicPartType.MultiChildren;
 export const __DynamicPartChildren: DynamicPartType = DynamicPartType.Children;
 export const __DynamicPartListChildren: DynamicPartType = DynamicPartType.ListChildren;
-export { __DynamicPartChildren_0 } from './snapshot/snapshot/dynamicPartType.js';
+export { __DynamicPartChildren_0, __DynamicPartSlotV2_0 } from './snapshot/snapshot/dynamicPartType.js';
 
 // v2 slot
 export const __DynamicPartSlotV2: DynamicPartType = DynamicPartType.SlotV2;
 export const __DynamicPartListSlotV2: DynamicPartType = DynamicPartType.ListSlotV2;
-export const __DynamicPartSlotV2_0: [DynamicPartType, number][] = [[DynamicPartType.SlotV2, 0]];
 
 export { updateSpread } from './snapshot/snapshot/spread.js';
 export { updateEvent } from './snapshot/snapshot/event.js';
@@ -59,7 +58,7 @@ export type { Options } from 'preact';
 
 export { loadDynamicJS, __dynamicImport } from './snapshot/lynx/dynamic-js.js';
 
-export { withInitDataInState } from './snapshot/compat/initData.js';
+export { withInitDataInState } from './core/initData.js';
 
 export { wrapWithLynxComponent } from './snapshot/compat/lynxComponent.js';
 

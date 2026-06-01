@@ -1,0 +1,23 @@
+Object {
+  "rootChild": Object {
+    "attributes": Object {},
+    "children": Array [
+      Object {
+        "attributes": Object {
+          "slot-id": 0,
+        },
+        "children": Array [],
+        "tag": "slot",
+      },
+      Object {
+        "attributes": Object {
+          "slot-id": 1,
+        },
+        "children": Array [],
+        "tag": "slot",
+      },
+    ],
+    "tag": "view",
+    "templateId": "_et_foo",
+  },
+}

@@ -15,3 +15,8 @@ export const DEFAULT_ENTRY_NAME = '__Card__';
  * Default CSS ID for snapshots.
  */
 export const DEFAULT_CSS_ID = 0;
+
+/**
+ * Default snapshot type for compiled snapshots.
+ */
+export const COMPILED_SNAPSHOT = '__snapshot';

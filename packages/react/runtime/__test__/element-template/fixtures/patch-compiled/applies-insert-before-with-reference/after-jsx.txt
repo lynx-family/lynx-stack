@@ -1,0 +1,7 @@
+"<page>
+  <view>
+    <view id=\"x\" />
+    <view id=\"a\" />
+    <view id=\"b\" />
+  </view>
+</page>"

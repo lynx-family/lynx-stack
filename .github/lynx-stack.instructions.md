@@ -13,3 +13,16 @@ applyTo: "packages/webpack/template-webpack-plugin/**/*"
 
 When changing initial CSS handling in template-webpack-plugin, add or update a code-splitting case that asserts the exact selector order in `tasm.json`, not just that CSS assets exist.
 Prefer a shared-plus-split initial chunk fixture when validating CSS merge order so the expected rule sequence follows the source import order clearly.
+
+---
+applyTo: ".github/workflows/**/*"
+---
+
+For Playwright-related CI jobs, add ulimit -Sn 655350 directly in each job's run block before invoking Playwright commands.
+
+---
+applyTo: "packages/web-platform/web-core-e2e/**/*"
+---
+
+For ReactLynx Playwright coverage in web-core-e2e, add fixtures under `tests/reactlynx/<test-title>/index.jsx` and use the same `<test-title>` string in `tests/reactlynx.spec.ts`.
+Skip WebKit for tests that depend on `page.mouse.wheel`, since the existing suites treat WebKit wheel support as unavailable.

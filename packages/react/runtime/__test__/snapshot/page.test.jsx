@@ -257,7 +257,7 @@ describe('support <page /> element attributes', () => {
     `);
   });
 
-  it('should support adjacent <page /> elements', () => {
+  it('should report error on multiple <page /> elements', async () => {
     function Comp() {
       return (
         <page>
@@ -274,11 +274,6 @@ describe('support <page /> element attributes', () => {
     }
     __root.__jsx = <Comp />;
     renderPage();
-    if (__root.__firstChild) {
-      __root.__firstChild.__element_root = __page;
-      __root.__firstChild.__firstChild = __root.__firstChild.__nextSibling;
-      __root.removeChild(__root.__firstChild);
-    }
     expect(__root.__element_root).toMatchInlineSnapshot(`
       <page
         cssId="default-entry-from-native:0"
@@ -286,6 +281,29 @@ describe('support <page /> element attributes', () => {
         <view />
       </page>
     `);
+
+    let errors = [];
+    // background render
+    {
+      globalEnvManager.switchToBackground();
+      vi.spyOn(lynx, 'reportError').mockImplementation((...args) => {
+        errors.push(args[0]);
+      });
+
+      render(<Comp />, __root);
+    }
+    await waitSchedule();
+    expect(errors).toMatchInlineSnapshot(`
+      [
+        [Error: Attempt to render more than one \`<page />\`, which is not supported.],
+        [Error: Attempt to render more than one \`<page />\`, which is not supported.],
+        [Error: Attempt to render more than one \`<page />\`, which is not supported.],
+        [Error: Attempt to render more than one \`<page />\`, which is not supported.],
+        [Error: Attempt to render more than one \`<page />\`, which is not supported.],
+        [Error: Attempt to render more than one \`<page />\`, which is not supported.],
+      ]
+    `);
+    vi.clearAllMocks();
   });
 
   it('should support switch <page /> to other element', async () => {

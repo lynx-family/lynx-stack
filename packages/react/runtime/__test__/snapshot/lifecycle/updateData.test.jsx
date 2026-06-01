@@ -28,6 +28,29 @@ afterEach(() => {
   vi.restoreAllMocks();
 });
 
+describe('main-thread updatePage initData', () => {
+  it('clears initData before resetPageData updates', () => {
+    renderPage({ stale: true, msg: 'init' });
+
+    updatePage({ msg: 'reset' }, { resetPageData: true });
+
+    expect(lynx.__initData).toEqual({ msg: 'reset' });
+  });
+
+  it('keeps initData unchanged for empty or non-object updatePage data', () => {
+    renderPage({ msg: 'init' });
+    const previousInitData = lynx.__initData;
+
+    updatePage({});
+    updatePage(null);
+    updatePage(undefined);
+    updatePage('ignored');
+
+    expect(lynx.__initData).toBe(previousInitData);
+    expect(lynx.__initData).toEqual({ msg: 'init' });
+  });
+});
+
 describe('triggerDataUpdated', () => {
   /**
    * This test verifies that updates initiated by `updateCardData` include the `"flushOptions":{"triggerDataUpdated":true}` property.

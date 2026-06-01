@@ -8,7 +8,13 @@
  * A rsbuild plugin that print the template.js url using QRCode.
  */
 
-import type { EnvironmentContext, RsbuildPlugin } from '@rsbuild/core'
+import type {
+  EnvironmentContext,
+  RsbuildEntry,
+  RsbuildPlugin,
+} from '@rsbuild/core'
+
+import type { ExposedAPI } from '@lynx-js/rspeedy'
 
 import { registerConsoleShortcuts } from './shortcuts.js'
 
@@ -101,13 +107,21 @@ export function pluginQRCode(
     name: 'lynx:rsbuild:qrcode',
     pre: ['lynx:rsbuild:api'],
     setup(api) {
-      api.onAfterStartProdServer(async ({ environments, port }) => {
-        await main(environments['lynx'], port)
+      let unregisterPreviewShortcuts: (() => void) | undefined
+
+      api.onExit(() => {
+        unregisterPreviewShortcuts?.()
+        unregisterPreviewShortcuts = undefined
+      })
+
+      api.onAfterStartPreviewServer(async ({ environments, port }) => {
+        unregisterPreviewShortcuts?.()
+        unregisterPreviewShortcuts = await main(getEntries(environments), port)
       })
 
       let printedQRCode = false
 
-      api.onDevCompileDone(async ({ stats, environments }) => {
+      api.onAfterDevCompile(async ({ stats, environments }) => {
         if (!api.context.devServer) {
           return
         }
@@ -122,33 +136,47 @@ export function pluginQRCode(
 
         printedQRCode = true
 
-        await main(environments['lynx'], api.context.devServer.port)
+        const unregister = await main(
+          getEntries(environments),
+          api.context.devServer.port,
+        )
+        if (unregister) {
+          api.onCloseDevServer(unregister)
+        }
       })
 
-      async function main(
-        environmentContext: EnvironmentContext | undefined,
-        port: number,
+      function getEntries(
+        environments: Record<string, EnvironmentContext> | undefined,
       ) {
-        if (!environmentContext) {
-          // Not lynx environment, skip print QRCode
+        // biome-ignore lint/correctness/useHookAtTopLevel: not react hooks
+        return api.useExposed<ExposedAPI>(Symbol.for('rspeedy.env.entries'))
+          ?.entries ?? environments?.['lynx']?.entry
+      }
+
+      async function main(
+        entries: RsbuildEntry | undefined,
+        port: number,
+      ): Promise<(() => void) | undefined> {
+        if (!entries) {
+          // No entry points, skip print QRCode
           return
         }
 
-        const entries = Object.keys(environmentContext.entry)
+        const entriesArray = Object.keys(entries)
 
-        if (entries.length === 0) {
+        if (entriesArray.length === 0) {
           return
         }
 
         const unregister = await registerConsoleShortcuts(
           {
-            entries,
+            entries: entriesArray,
             api,
             port,
             schema,
           },
         )
-        api.onCloseDevServer(unregister)
+        return unregister
       }
     },
   }

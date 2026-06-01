@@ -13,6 +13,7 @@ import * as CSS from '@lynx-js/css-serializer';
 import { cssChunksToMap } from '@lynx-js/css-serializer';
 import { Plugins } from '@lynx-js/css-serializer';
 import { SyncWaterfallHook } from '@rspack/lite-tapable';
+import Tinypool from 'tinypool';
 
 export { CSS }
 
@@ -34,6 +35,7 @@ export interface EncodeOptions {
         type?: 'lazy';
         content: string | Record<string, unknown>;
     }>;
+    elementTemplate?: Record<string, unknown>;
     // (undocumented)
     lepusCode: {
         root: string | undefined;
@@ -45,21 +47,6 @@ export interface EncodeOptions {
 }
 
 // @public
-export class LynxDebugMetadataPlugin {
-    constructor(options?: LynxDebugMetadataPluginOptions | undefined);
-    apply(compiler: Compiler): void;
-    static defaultOptions: Readonly<Omit<Required<LynxDebugMetadataPluginOptions>, 'LynxTemplatePlugin'>>;
-    // (undocumented)
-    protected options?: LynxDebugMetadataPluginOptions | undefined;
-}
-
-// @public
-export interface LynxDebugMetadataPluginOptions {
-    debugMetadataAssetName?: string;
-    LynxTemplatePlugin: typeof LynxTemplatePlugin;
-}
-
-// @public
 export class LynxEncodePlugin {
     constructor(options?: LynxEncodePluginOptions | undefined);
     apply(compiler: Compiler): void;
@@ -67,6 +54,7 @@ export class LynxEncodePlugin {
     static BEFORE_ENCODE_STAGE: number;
     static defaultOptions: Readonly<Required<LynxEncodePluginOptions>>;
     static ENCODE_STAGE: number;
+    static encodePool: Tinypool;
     // (undocumented)
     protected options?: LynxEncodePluginOptions | undefined;
 }
@@ -185,11 +173,6 @@ export interface TemplateHooks {
     }>;
 }
 
-// Warning: (ae-missing-release-tag) "UI_SOURCE_MAP_RECORDS_BUILD_INFO" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
-//
-// @public (undocumented)
-export const UI_SOURCE_MAP_RECORDS_BUILD_INFO = "lynxUiSourceMapRecords";
-
 // Warning: (ae-missing-release-tag) "WebEncodePlugin" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
 //
 // @public (undocumented)
@@ -209,6 +192,6 @@ export class WebEncodePlugin {
 
 // Warnings were encountered during analysis:
 //
-// lib/LynxTemplatePlugin.d.ts:68:9 - (ae-forgotten-export) The symbol "EncodeRawData" needs to be exported by the entry point index.d.ts
+// lib/LynxTemplatePlugin.d.ts:72:9 - (ae-forgotten-export) The symbol "EncodeRawData" needs to be exported by the entry point index.d.ts
 
 ```

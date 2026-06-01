@@ -18,15 +18,18 @@ export function onWorkletCtxUpdate(
   isFirstScreen: boolean,
   element: ElementNode,
 ): void {
-  if (worklet._execId !== undefined) {
-    globalThis.lynxWorkletImpl?._jsFunctionLifecycleManager?.addRef(worklet._execId, worklet);
-  }
   if (isFirstScreen && oldWorklet) {
     globalThis.lynxWorkletImpl?._hydrateCtx(worklet, oldWorklet);
   }
   // For old version dynamic component compatibility.
   if (isFirstScreen) {
     globalThis.lynxWorkletImpl?._eventDelayImpl.runDelayedWorklet(worklet, element);
+  }
+}
+
+export function retainWorkletCtx(worklet: Worklet): void {
+  if (worklet._execId !== undefined) {
+    globalThis.lynxWorkletImpl?._jsFunctionLifecycleManager?.addRef(worklet._execId, worklet);
   }
 }
 

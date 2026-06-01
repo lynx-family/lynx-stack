@@ -6,5 +6,10 @@
     "strict": true,
     "target": "ESNext",
   },
-  "include": ["catalog/**/*.tsx", "invalid/**/*.tsx"],
+  "include": [
+    "catalog/**/*.tsx",
+    "invalid/**/*.tsx",
+    "invalid/**/*.ts",
+    "functions/**/*.ts",
+  ],
 }

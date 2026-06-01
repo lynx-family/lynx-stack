@@ -1,5 +1,17 @@
 # @lynx-js/web-elements
 
+## 0.12.3
+
+### Patch Changes
+
+- fix: inherit box sizing and border radius for x-input parts ([#2661](https://github.com/lynx-family/lynx-stack/pull/2661))
+
+## 0.12.2
+
+### Patch Changes
+
+- fix: xmarkdown create img incorrectly ([#2540](https://github.com/lynx-family/lynx-stack/pull/2540))
+
 ## 0.12.1
 
 ### Patch Changes

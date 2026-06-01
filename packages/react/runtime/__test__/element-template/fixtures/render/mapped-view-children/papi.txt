@@ -1,0 +1,214 @@
+[
+  [
+    "__CreateTypedElementTemplate",
+    "page",
+    null,
+    null,
+    "0",
+    null
+  ],
+  [
+    "__CreateElementTemplate",
+    "_et_builtin_raw_text",
+    null,
+    [
+      "A"
+    ],
+    [],
+    -1
+  ],
+  [
+    "__CreateElementTemplate",
+    "_et_7a8c6_test_2",
+    null,
+    [
+      "A"
+    ],
+    [
+      [
+        {
+          "tag": "raw-text",
+          "attributes": {
+            "text": "A"
+          },
+          "children": [],
+          "templateId": "_et_builtin_raw_text"
+        }
+      ]
+    ],
+    -2
+  ],
+  [
+    "__CreateElementTemplate",
+    "_et_builtin_raw_text",
+    null,
+    [
+      "B"
+    ],
+    [],
+    -3
+  ],
+  [
+    "__CreateElementTemplate",
+    "_et_7a8c6_test_2",
+    null,
+    [
+      "B"
+    ],
+    [
+      [
+        {
+          "tag": "raw-text",
+          "attributes": {
+            "text": "B"
+          },
+          "children": [],
+          "templateId": "_et_builtin_raw_text"
+        }
+      ]
+    ],
+    -4
+  ],
+  [
+    "__CreateElementTemplate",
+    "_et_builtin_raw_text",
+    null,
+    [
+      "C"
+    ],
+    [],
+    -5
+  ],
+  [
+    "__CreateElementTemplate",
+    "_et_7a8c6_test_2",
+    null,
+    [
+      "C"
+    ],
+    [
+      [
+        {
+          "tag": "raw-text",
+          "attributes": {
+            "text": "C"
+          },
+          "children": [],
+          "templateId": "_et_builtin_raw_text"
+        }
+      ]
+    ],
+    -6
+  ],
+  [
+    "__CreateElementTemplate",
+    "_et_7a8c6_test_1",
+    null,
+    null,
+    [
+      [
+        {
+          "tag": "view",
+          "attributes": {
+            "id": "A"
+          },
+          "children": [
+            {
+              "tag": "text",
+              "attributes": {},
+              "children": [
+                {
+                  "tag": "slot",
+                  "attributes": {
+                    "slot-id": 0
+                  },
+                  "children": [
+                    {
+                      "tag": "raw-text",
+                      "attributes": {
+                        "text": "A"
+                      },
+                      "children": [],
+                      "templateId": "_et_builtin_raw_text"
+                    }
+                  ]
+                }
+              ]
+            }
+          ],
+          "templateId": "_et_7a8c6_test_2"
+        },
+        {
+          "tag": "view",
+          "attributes": {
+            "id": "B"
+          },
+          "children": [
+            {
+              "tag": "text",
+              "attributes": {},
+              "children": [
+                {
+                  "tag": "slot",
+                  "attributes": {
+                    "slot-id": 0
+                  },
+                  "children": [
+                    {
+                      "tag": "raw-text",
+                      "attributes": {
+                        "text": "B"
+                      },
+                      "children": [],
+                      "templateId": "_et_builtin_raw_text"
+                    }
+                  ]
+                }
+              ]
+            }
+          ],
+          "templateId": "_et_7a8c6_test_2"
+        },
+        {
+          "tag": "view",
+          "attributes": {
+            "id": "C"
+          },
+          "children": [
+            {
+              "tag": "text",
+              "attributes": {},
+              "children": [
+                {
+                  "tag": "slot",
+                  "attributes": {
+                    "slot-id": 0
+                  },
+                  "children": [
+                    {
+                      "tag": "raw-text",
+                      "attributes": {
+                        "text": "C"
+                      },
+                      "children": [],
+                      "templateId": "_et_builtin_raw_text"
+                    }
+                  ]
+                }
+              ]
+            }
+          ],
+          "templateId": "_et_7a8c6_test_2"
+        }
+      ]
+    ],
+    -7
+  ],
+  [
+    "__InsertNodeToElementTemplate",
+    "<page />",
+    0,
+    "<_et_7a8c6_test_1 />",
+    null
+  ]
+]

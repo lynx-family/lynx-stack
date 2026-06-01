@@ -20,6 +20,7 @@ import type {
   AppendElementPAPI,
   CreateComponentPAPI,
   CreateElementPAPI,
+  CreateFramePAPI,
   CreateImagePAPI,
   CreateListPAPI,
   CreatePagePAPI,
@@ -303,6 +304,15 @@ export function createElementAPI(
         );
         return { [uniqueIdSymbol]: id } as unknown as DecoratedHTMLElement;
       }) as CreateImagePAPI,
+      __CreateFrame: ((parentComponentUniqueId: number) => {
+        const htmlTag = LYNX_TAG_TO_HTML_TAG_MAP['frame']!;
+        const id = wasmContext.create_element(htmlTag, parentComponentUniqueId);
+        const el = { [uniqueIdSymbol]: id };
+        if (!config.enableCSSSelector) {
+          wasmContext.set_attribute(id, lynxUniqueIdAttribute, id.toString());
+        }
+        return el as unknown as DecoratedHTMLElement;
+      }) as CreateFramePAPI,
       __CreateRawText: ((text: string) => {
         const id = wasmContext.create_element('raw-text');
         wasmContext.set_attribute(id, 'text', text);

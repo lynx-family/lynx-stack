@@ -69,4 +69,21 @@ describe('jsFunctionLifecycle', () => {
       }
     `);
   });
+
+  it('should skip duplicated addRef() for the same object', () => {
+    const manager = new JsFunctionLifecycleManager();
+    const target = {};
+    manager.addRef(3, target);
+    manager.addRef(3, target);
+    manager.removeRef(3);
+    manager.fire();
+    expect(events[0]).toMatchInlineSnapshot(`
+      {
+        "data": [
+          3,
+        ],
+        "type": "Lynx.Worklet.releaseBackgroundWorkletCtx",
+      }
+    `);
+  });
 });

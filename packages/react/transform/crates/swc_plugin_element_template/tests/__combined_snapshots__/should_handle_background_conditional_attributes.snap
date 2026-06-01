@@ -12,15 +12,13 @@ expression: "serde_json::json!({\n    \"code\": code, \"templates\": template_sn
         "type": "view",
         "attributesArray": [
           {
-            "kind": "attribute",
+            "kind": "slot",
             "key": "data-a",
-            "binding": "slot",
             "attrSlotIndex": 0.0
           },
           {
-            "kind": "attribute",
+            "kind": "slot",
             "key": "b",
-            "binding": "slot",
             "attrSlotIndex": 1.0
           }
         ],
@@ -28,15 +26,14 @@ expression: "serde_json::json!({\n    \"code\": code, \"templates\": template_sn
       }
     },
     {
-      "template_id": "__et_builtin_raw_text__",
+      "template_id": "_et_builtin_raw_text",
       "template": {
         "kind": "element",
         "type": "raw-text",
         "attributesArray": [
           {
-            "kind": "attribute",
+            "kind": "slot",
             "key": "text",
-            "binding": "slot",
             "attrSlotIndex": 0
           }
         ],

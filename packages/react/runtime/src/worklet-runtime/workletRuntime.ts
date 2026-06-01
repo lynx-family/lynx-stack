@@ -55,7 +55,6 @@ function registerWorklet(_type: string, id: string, worklet: (...args: unknown[]
  */
 function runWorklet(ctx: Worklet, params: ClosureValueType[], options?: RunWorkletOptions): unknown {
   if (!validateWorklet(ctx)) {
-    console.warn('MainThreadFunction: Invalid function object: ' + JSON.stringify(ctx));
     return;
   }
 
@@ -106,7 +105,7 @@ function validateWorklet(ctx: unknown): ctx is Worklet {
   return typeof ctx === 'object' && ctx !== null && ('_wkltId' in ctx || '_lepusWorkletHash' in ctx);
 }
 
-const workletCache = new WeakMap<object, ClosureValueType | ((...args: unknown[]) => unknown)>();
+const workletCache = /*#__PURE__*/ new WeakMap<object, ClosureValueType | ((...args: unknown[]) => unknown)>();
 
 function transformWorklet(ctx: Worklet, isWorklet: true): (...args: unknown[]) => unknown;
 function transformWorklet(
@@ -183,7 +182,7 @@ const transformWorkletInner = (
       // This would result in the value of `workletCache` referencing its key.
       obj[key] = lynxWorkletImpl._workletMap[(subObj as Worklet)._wkltId]!
         .bind({ ...subObj });
-      obj[key].ctx = subObj;
+      obj[key].ctxRef = new WeakRef(subObj as object);
       continue;
     }
     const isJsFn = '_jsFnId' in subObj;

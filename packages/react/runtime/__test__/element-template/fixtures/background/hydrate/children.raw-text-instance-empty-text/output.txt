@@ -1,0 +1,4 @@
+Object {
+  "rawTextInstanceId": 3,
+  "stream": Array [],
+}

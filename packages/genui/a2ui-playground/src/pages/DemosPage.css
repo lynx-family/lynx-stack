@@ -1,0 +1,1174 @@
+/* ═══════════════════════════════════════════
+   Examples Page
+   ═══════════════════════════════════════════ */
+
+.demosPage {
+  display: flex;
+  flex: 1;
+  overflow: hidden;
+}
+
+.demosPage.resizing {
+  user-select: none;
+}
+
+.examplePage {
+  flex: 1;
+  overflow: auto;
+  padding: 0;
+  background: var(--geist-background);
+}
+
+.exampleColumns {
+  display: flex;
+  flex-direction: column;
+  gap: 28px;
+  padding: 24px 20px 24px;
+}
+
+.exampleSection {
+  min-width: 0;
+}
+
+.exampleSectionHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 14px;
+  padding-bottom: 8px;
+  border-bottom: 1px solid var(--geist-border);
+}
+
+.exampleSectionTitle {
+  margin: 0;
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: 0.11em;
+  text-transform: uppercase;
+  color: var(--geist-foreground);
+}
+
+.exampleSectionTitleLink {
+  margin: 0;
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: 0.11em;
+  text-transform: uppercase;
+  color: var(--geist-foreground);
+  text-decoration: none;
+}
+
+.exampleSectionTitleLink:hover {
+  text-decoration: underline;
+}
+
+.exampleGrid {
+  column-width: 300px;
+  column-gap: 14px;
+}
+
+.exampleGridFlow {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  gap: 14px;
+  column-gap: 14px;
+}
+
+.exampleGridFlow .exampleCard {
+  margin-bottom: 0;
+}
+
+.exampleCard {
+  display: inline-flex;
+  flex-direction: column;
+  gap: 10px;
+  min-height: 0;
+  padding: 12px;
+  border: 1px solid var(--geist-border);
+  border-radius: 18px;
+  background: var(--geist-surface);
+  box-shadow: var(--geist-shadow-sm);
+  cursor: pointer;
+  text-align: left;
+  transition:
+    transform var(--geist-transition),
+    border-color var(--geist-transition),
+    box-shadow var(--geist-transition),
+    background var(--geist-transition);
+  position: relative;
+  overflow: hidden;
+  width: 100%;
+  margin: 0 0 14px;
+  break-inside: avoid;
+  page-break-inside: avoid;
+  -webkit-column-break-inside: avoid;
+}
+
+.exampleCard::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    180deg,
+    color-mix(in srgb, var(--geist-background) 86%, transparent),
+    transparent
+  );
+  pointer-events: none;
+}
+
+.exampleCard:hover {
+  transform: translateY(-1px);
+  border-color: var(--geist-border-hover);
+  box-shadow: var(--geist-shadow-lg);
+}
+
+.exampleCardPreview {
+  position: relative;
+  z-index: 1;
+}
+
+.exampleCardPreviewWindow {
+  height: 240px;
+  border: 1px solid var(--geist-border);
+  border-radius: 16px;
+  overflow: hidden;
+  background: var(--geist-background);
+  box-shadow: none;
+}
+
+.exampleCardPreviewFrame {
+  width: 100%;
+  height: 100%;
+  border: 0;
+  display: block;
+  pointer-events: none;
+}
+
+.exampleCardTop {
+  display: flex;
+  align-items: start;
+  justify-content: space-between;
+  gap: 8px;
+  min-width: 0;
+}
+
+.exampleCardTitle {
+  flex: 1;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.01em;
+  line-height: 1.35;
+  color: var(--geist-secondary);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.exampleCardBody {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+  padding-top: 2px;
+}
+
+.exampleCardBadge {
+  flex-shrink: 0;
+  align-self: flex-start;
+  padding: 2px 6px;
+  border-radius: 999px;
+  border: 1px solid var(--geist-border);
+  background: color-mix(
+    in srgb,
+    var(--geist-background) 82%,
+    var(--geist-surface)
+  );
+  color: var(--geist-secondary);
+  font-size: 10px;
+  line-height: 1.2;
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+}
+
+.detailSidebar {
+  width: 280px;
+}
+
+.sidebarTopNav {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 8px 0 16px;
+}
+
+.detailBackButton {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 34px;
+  padding: 8px 14px;
+  border: 1px solid var(--geist-border);
+  border-radius: 999px;
+  background: color-mix(
+    in srgb,
+    var(--geist-background) 82%,
+    var(--geist-surface)
+  );
+  color: var(--geist-foreground);
+  font-size: 13px;
+  font-weight: 600;
+  line-height: 1;
+  letter-spacing: 0.01em;
+  cursor: pointer;
+  box-shadow: var(--geist-shadow-sm);
+  transition:
+    background var(--geist-transition),
+    border-color var(--geist-transition),
+    transform var(--geist-transition),
+    box-shadow var(--geist-transition);
+}
+
+.detailBackButton:hover {
+  border-color: var(--geist-border-hover);
+  background: var(--geist-background);
+  transform: translateY(-1px);
+  box-shadow: var(--geist-shadow-md);
+}
+
+html[data-theme="dark"] .detailBackButton {
+  background: color-mix(
+    in srgb,
+    var(--geist-background) 72%,
+    var(--geist-surface)
+  );
+}
+
+html[data-theme="dark"] .detailBackButton:hover {
+  background: color-mix(
+    in srgb,
+    var(--geist-background) 60%,
+    var(--geist-surface)
+  );
+}
+
+.detailBackIcon {
+  font-size: 15px;
+  line-height: 1;
+  color: var(--geist-secondary);
+}
+
+.detailBackLabel {
+  line-height: 1;
+}
+
+.detailWorkspace {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  background:
+    radial-gradient(circle at top right, rgba(0, 0, 0, 0.04), transparent 18%),
+    var(--geist-background);
+}
+
+.detailWorkspaceFullscreen {
+  background: var(--geist-background);
+}
+
+.detailHeader {
+  flex-shrink: 0;
+  display: flex;
+  align-items: end;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 18px 20px 16px;
+  border-bottom: 1px solid var(--geist-border);
+  background: var(--geist-background);
+}
+
+.detailHeaderCopy {
+  min-width: 0;
+}
+
+.detailEyebrow {
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--geist-secondary);
+  margin-bottom: 8px;
+}
+
+.detailTitle {
+  font-size: clamp(22px, 3vw, 34px);
+  font-weight: 750;
+  letter-spacing: -0.04em;
+  line-height: 1.05;
+}
+
+.detailDesc {
+  margin-top: 8px;
+  max-width: 820px;
+  color: var(--geist-secondary);
+  font-size: 14px;
+  line-height: 1.6;
+}
+
+.detailHeaderMeta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  justify-content: flex-end;
+}
+
+.detailPanels {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  overflow: hidden;
+}
+
+/* ── Sidebar ── */
+.sidebar {
+  width: 240px;
+  flex-shrink: 0;
+  border-right: 1px solid var(--geist-border);
+  background: var(--geist-background);
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+}
+
+.sidebarSection {
+  padding: 12px;
+}
+
+.sidebarSection + .sidebarSection {
+  border-top: 1px solid var(--geist-border);
+}
+
+.sidebarHeading {
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--geist-secondary);
+  padding: 0 8px;
+  margin-bottom: 8px;
+}
+
+.scenarioList {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.scenarioItem {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: 10px 12px;
+  min-height: 40px;
+  border: 1px solid transparent;
+  border-radius: var(--geist-radius-sm);
+  background: transparent;
+  cursor: pointer;
+  text-align: left;
+  transition:
+    background var(--geist-transition),
+    border-color var(--geist-transition),
+    color var(--geist-transition);
+  width: 100%;
+}
+
+.scenarioItem:hover {
+  background: var(--geist-surface);
+}
+
+.scenarioItem.active {
+  border-color: var(--geist-border-hover);
+  background: var(--geist-surface);
+}
+
+.scenarioItem.active .scenarioName {
+  color: var(--geist-foreground);
+}
+
+.scenarioItem.active .scenarioDesc {
+  color: var(--geist-secondary);
+}
+
+.scenarioName {
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--geist-foreground);
+}
+
+.scenarioTags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  margin-top: 4px;
+}
+
+.scenarioTag {
+  font-size: 10px;
+  font-weight: 500;
+  color: var(--geist-secondary);
+  padding: 1px 6px;
+  border-radius: 4px;
+  background: var(--geist-surface);
+  border: 1px solid var(--geist-border);
+}
+
+.scenarioDesc {
+  font-size: 11px;
+  color: var(--geist-secondary);
+  line-height: 1.4;
+}
+
+.sidebarChips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  padding: 0 8px;
+}
+
+/* ── Code Panel ── */
+.codePanel {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.codePanel.resizing {
+  user-select: none;
+}
+
+.codePanelInner {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.codePanelEditorSection {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.codePanelToolbar {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 12px;
+  border-bottom: 1px solid var(--geist-border);
+  background: var(--geist-background);
+  flex-shrink: 0;
+}
+
+.codePanelTitle {
+  font-size: 13px;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.codePanelBadge {
+  font-size: 10px;
+  font-weight: 500;
+  padding: 1px 6px;
+  border-radius: 4px;
+  background: var(--geist-surface);
+  border: 1px solid var(--geist-border);
+  color: var(--geist-secondary);
+}
+
+.toolbarActions {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.toolbarBtn {
+  height: 28px;
+  padding: 0 10px;
+  border: 1px solid var(--geist-border);
+  border-radius: var(--geist-radius-sm);
+  background: var(--geist-background);
+  color: var(--geist-secondary);
+  font-size: 12px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all var(--geist-transition);
+  white-space: nowrap;
+}
+
+.toolbarBtn:hover {
+  color: var(--geist-foreground);
+  border-color: var(--geist-border-hover);
+}
+
+.toolbarBtn:active {
+  transform: scale(0.97);
+}
+
+.toolbarBtn.primary {
+  background: var(--geist-accent);
+  border-color: var(--geist-accent);
+  color: var(--geist-accent-foreground);
+}
+
+.toolbarBtn.primary:hover {
+  opacity: 0.85;
+}
+
+.codeEditor {
+  flex: 1;
+  width: 100%;
+  min-height: 0;
+  overflow: hidden;
+}
+
+.codeEditor .cm-editor {
+  height: 100%;
+  font-family: var(--geist-mono);
+  font-size: 13px;
+  background: var(--geist-code-bg);
+}
+
+.codeEditor .cm-scroller {
+  overflow: auto;
+}
+
+.codeEditor .cm-gutters {
+  background: var(--geist-code-bg);
+  border-right: 1px solid var(--geist-border);
+}
+
+.codeError {
+  padding: 8px 12px;
+  background: var(--geist-error-light);
+  border-top: 1px solid var(--geist-error);
+  color: var(--geist-error);
+  font-size: 12px;
+  font-family: var(--geist-mono);
+  flex-shrink: 0;
+}
+
+/* ── Examples Preview Split ──
+   The wrapper is the container query host so the panel's internal layout
+   (split vs stacked) reacts to the panel's actual width, not the viewport.
+   That way dragging the JSON/preview resize handle re-flows the split as
+   the panel itself crosses the threshold. */
+.examplesPreviewWrap {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  flex-shrink: 0;
+  container-type: inline-size;
+  container-name: previewPanel;
+}
+
+.examplesPreviewWrap > .previewPanel {
+  width: 100%;
+  max-width: none;
+  flex: 1;
+}
+
+.examplesPreviewPanel {
+  display: grid;
+  grid-template-columns: minmax(360px, 1fr) minmax(280px, 340px);
+  grid-template-rows: auto auto auto minmax(0, 1fr);
+  overflow: hidden;
+}
+
+.examplesPreviewPanel .previewPanelHeader {
+  grid-column: 1 / -1;
+  grid-row: 1;
+}
+
+.examplesPreviewPanel .previewPanelBody {
+  grid-column: 1;
+  grid-row: 2 / 5;
+  border-right: 1px solid var(--geist-border);
+}
+
+.examplesPreviewPanel .simulationBar {
+  grid-column: 2;
+  grid-row: 2;
+  align-items: flex-start;
+  flex-wrap: wrap;
+  padding: 10px 16px;
+  border-bottom: 1px solid var(--geist-border);
+}
+
+.examplesPreviewPanel .liveComponentStack {
+  grid-column: 2;
+  grid-row: 3;
+  align-items: stretch;
+  flex-direction: column;
+  flex-wrap: wrap;
+  gap: 8px;
+  min-height: 64px;
+  padding: 10px 16px;
+  overflow-x: hidden;
+  overflow-y: auto;
+  border-top: none;
+  border-bottom: 1px solid var(--geist-border);
+}
+
+.examplesPreviewPanel .liveComponentTags {
+  flex-wrap: wrap;
+}
+
+.examplesPreviewPanel .previewQrSection {
+  grid-column: 2;
+  grid-row: 4;
+  min-height: 0;
+  overflow: auto;
+  border-top: none;
+}
+
+/* Collapse to a single vertical stack only when the panel can no longer
+   fit the split layout (phone col 360 + controls col 280 = 640 floor).
+   Keep the threshold close to that floor so dragging the JSON/preview
+   resize handle stays in the split layout through most of its range —
+   the user can drag from the 760 default down to ~660 before collapse. */
+@container previewPanel (max-width: 660px) {
+  .examplesPreviewPanel {
+    display: flex;
+    flex-direction: column;
+    overflow: visible;
+  }
+
+  .examplesPreviewPanel .previewPanelHeader,
+  .examplesPreviewPanel .previewPanelBody,
+  .examplesPreviewPanel .simulationBar,
+  .examplesPreviewPanel .liveComponentStack,
+  .examplesPreviewPanel .previewQrSection {
+    grid-column: auto;
+    grid-row: auto;
+    border-right: none;
+  }
+
+  .examplesPreviewPanel .liveComponentStack,
+  .examplesPreviewPanel .previewQrSection {
+    border-top: 1px solid var(--geist-border);
+  }
+}
+
+/* ═══════════════════════════════════════════
+   Inline Playback (embedded in Example detail)
+   ═══════════════════════════════════════════ */
+
+.playbackSplitter {
+  position: relative;
+  flex-shrink: 0;
+  height: 6px;
+  cursor: ns-resize;
+  background: var(--geist-background);
+  border-top: 1px solid var(--geist-border);
+  border-bottom: 1px solid var(--geist-border);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background var(--geist-transition);
+}
+
+.playbackSplitter::before {
+  content: "";
+  position: absolute;
+  inset: -4px 0;
+}
+
+.playbackSplitterGrip {
+  width: 28px;
+  height: 2px;
+  border-radius: 999px;
+  background: color-mix(
+    in srgb,
+    var(--geist-foreground) 18%,
+    transparent
+  );
+  transition: background var(--geist-transition);
+}
+
+.playbackSplitter:hover .playbackSplitterGrip,
+.playbackSplitter.active .playbackSplitterGrip {
+  background: color-mix(
+    in srgb,
+    var(--geist-foreground) 40%,
+    transparent
+  );
+}
+
+.playbackSplitter.active {
+  background: color-mix(
+    in srgb,
+    var(--geist-foreground) 4%,
+    var(--geist-background)
+  );
+}
+
+.playbackSection {
+  flex: 0 0 auto;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  background: color-mix(
+    in srgb,
+    var(--geist-surface) 60%,
+    var(--geist-background)
+  );
+  border-top: 1px solid var(--geist-border);
+  overflow: hidden;
+  /* Smooth grow/shrink as the panel toggles between idle bar and active. */
+  transition: height 220ms cubic-bezier(0.22, 0.61, 0.36, 1);
+}
+
+/* When playback sits above the editor, drop the top border — the page header
+   already separates it and the splitter handles the bottom edge. */
+.playbackSection.top {
+  border-top: none;
+}
+
+/* Idle: slim header strip, JSON editor is the 主角. */
+.playbackSection.idle {
+  background: var(--geist-background);
+}
+
+.playbackSectionHeader {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 0 12px;
+  height: 100%;
+  min-height: 0;
+  border-bottom: 1px solid var(--geist-border);
+  background: var(--geist-background);
+  flex-shrink: 0;
+}
+
+.playbackSection.active .playbackSectionHeader {
+  height: 40px;
+  flex-shrink: 0;
+}
+
+.playbackSection.idle .playbackSectionHeader {
+  border-bottom: none;
+}
+
+.playbackIdleHint {
+  font-size: 12px;
+  color: var(--geist-secondary);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  min-width: 0;
+}
+
+.playbackSectionTitle {
+  font-size: 13px;
+  font-weight: 600;
+  letter-spacing: -0.005em;
+  color: var(--geist-foreground);
+}
+
+.playbackSectionBadge {
+  font-size: 10px;
+  font-weight: 500;
+  padding: 1px 6px;
+  border-radius: 4px;
+  background: var(--geist-surface);
+  border: 1px solid var(--geist-border);
+  color: var(--geist-secondary);
+  text-transform: none;
+  letter-spacing: 0;
+}
+
+.playbackStateDot {
+  width: 7px;
+  height: 7px;
+  border-radius: 999px;
+  background: var(--geist-secondary);
+  margin-left: 2px;
+}
+
+.playbackStateDot.live {
+  background: var(--geist-success, #0070f3);
+  box-shadow: 0 0 0 0
+    color-mix(
+      in srgb,
+      var(--geist-success, #0070f3) 50%,
+      transparent
+    );
+  animation: playbackPulse 1.4s ease-out infinite;
+}
+
+.playbackStateDot.paused {
+  background: color-mix(
+    in srgb,
+    var(--geist-foreground) 45%,
+    transparent
+  );
+}
+
+.playbackStateDot.done {
+  background: var(--geist-success, #0070f3);
+  opacity: 0.6;
+}
+
+@keyframes playbackPulse {
+  0% {
+    box-shadow: 0 0 0 0
+      color-mix(
+        in srgb,
+        var(--geist-success, #0070f3) 50%,
+        transparent
+      );
+  }
+  100% {
+    box-shadow: 0 0 0 6px
+      color-mix(
+        in srgb,
+        var(--geist-success, #0070f3) 0%,
+        transparent
+      );
+  }
+}
+
+.playbackHeaderControls {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-shrink: 0;
+}
+
+.playbackProgressTrack {
+  position: relative;
+  flex-shrink: 0;
+  height: 24px;
+  display: flex;
+  align-items: center;
+  border-bottom: 1px solid var(--geist-border);
+  background: var(--geist-background);
+  overflow: hidden;
+}
+
+.playbackProgressFill {
+  position: absolute;
+  inset: 0 auto 0 0;
+  background: color-mix(
+    in srgb,
+    var(--geist-success, #0070f3) 14%,
+    transparent
+  );
+  transition: width 300ms ease-out;
+  pointer-events: none;
+}
+
+.playbackProgressTrack.active .playbackProgressFill {
+  background: color-mix(
+    in srgb,
+    var(--geist-success, #0070f3) 22%,
+    transparent
+  );
+}
+
+.playbackProgressLabel {
+  position: relative;
+  z-index: 1;
+  padding: 0 12px;
+  font-size: 11px;
+  font-weight: 500;
+  color: var(--geist-secondary);
+  font-family: var(--geist-mono);
+  letter-spacing: 0;
+}
+
+.playbackKbd {
+  display: inline-block;
+  font-family: var(--geist-mono);
+  font-size: 10px;
+  padding: 0 5px;
+  margin: 0 2px;
+  border: 1px solid var(--geist-border);
+  border-radius: 3px;
+  background: var(--geist-surface);
+  color: var(--geist-foreground);
+  line-height: 1.5;
+}
+
+.playbackStream {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  padding: 10px 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.playbackEmpty {
+  margin: auto 0;
+  text-align: center;
+  padding: 12px 24px;
+  color: var(--geist-secondary);
+}
+
+.playbackEmpty.subtle {
+  font-size: 12px;
+  opacity: 0.7;
+}
+
+.playbackEmptyTitle {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--geist-foreground);
+  margin-bottom: 4px;
+}
+
+.playbackEmptyDesc {
+  font-size: 12px;
+  line-height: 1.5;
+  color: var(--geist-secondary);
+  max-width: 38ch;
+  margin: 0 auto;
+}
+
+.playbackChunk {
+  border: 1px solid var(--geist-border);
+  border-radius: var(--geist-radius-md);
+  overflow: hidden;
+  background: var(--geist-background);
+  flex-shrink: 0;
+  transition: border-color var(--geist-transition);
+}
+
+.playbackChunk.live {
+  border-color: color-mix(
+    in srgb,
+    var(--geist-success, #0070f3) 50%,
+    var(--geist-border)
+  );
+  animation: playbackChunkAppear 260ms ease-out;
+}
+
+@keyframes playbackChunkAppear {
+  from {
+    opacity: 0;
+    transform: translateY(4px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.playbackChunkHeader {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 3px 10px;
+  background: color-mix(
+    in srgb,
+    var(--geist-surface) 60%,
+    var(--geist-background)
+  );
+  border-bottom: 1px solid var(--geist-border);
+}
+
+.playbackChunkIndex {
+  font-size: 10px;
+  font-family: var(--geist-mono);
+  font-weight: 600;
+  color: var(--geist-secondary);
+  letter-spacing: 0.02em;
+}
+
+.playbackChunkLiveTag {
+  font-size: 9px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--geist-success, #0070f3);
+  padding: 0 6px;
+  border-radius: 999px;
+  background: color-mix(
+    in srgb,
+    var(--geist-success, #0070f3) 12%,
+    transparent
+  );
+  border: 1px solid
+    color-mix(
+      in srgb,
+      var(--geist-success, #0070f3) 25%,
+      transparent
+    );
+  line-height: 1.4;
+}
+
+.playbackChunkJson {
+  margin: 0;
+  padding: 8px 10px;
+  font-family: var(--geist-mono);
+  font-size: 11px;
+  line-height: 1.55;
+  color: var(--geist-secondary);
+  white-space: pre-wrap;
+  overflow-wrap: break-word;
+  max-height: 200px;
+  overflow-y: auto;
+}
+
+/* Page-level mobile layout: sidebar/codePanel/previewPanel stack vertically.
+   The panel-internal layout still uses the container query above — once the
+   wrapper hits full viewport width, it's almost always >720 and the split
+   reappears even on tablet-sized screens. */
+@media (max-width: 980px) {
+  .demosPage {
+    flex-direction: column;
+  }
+
+  .sidebar {
+    width: 100%;
+    max-height: 180px;
+    border-right: none;
+    border-bottom: 1px solid var(--geist-border);
+  }
+
+  .codePanel {
+    min-height: 280px;
+    flex: 0 0 auto;
+  }
+
+  .examplesPreviewWrap {
+    width: 100%;
+    min-height: 480px;
+  }
+
+  .examplesPreviewWrap > .previewPanel {
+    border-left: none;
+    border-top: 1px solid var(--geist-border);
+  }
+}
+
+/* Phone-sized tab mode: each tab is full screen, no inline split. */
+@media (max-width: 720px) {
+  .demosPage[data-active-tab="edit"] .examplesPreviewWrap {
+    display: none;
+  }
+  .demosPage[data-active-tab="preview"] .sidebar,
+  .demosPage[data-active-tab="preview"] .codePanel {
+    display: none;
+  }
+  .demosPage > .panelResizeHandle {
+    display: none;
+  }
+
+  /* Preview pane fills the viewport (minus top nav + bottom tab bar);
+     overrides the desktop .examplesPreviewWrap min-height: 480px. */
+  .demosPage[data-active-tab="preview"] .examplesPreviewWrap {
+    flex: 1;
+    width: 100%;
+    min-height: 0;
+  }
+
+  /* Sidebar collapses into a single horizontal strip: back-icon on the
+     left, scenarios scrolling as chips on the right. SCENARIOS heading
+     hides — its label is redundant when the chips are the only thing in
+     the strip. Drops the band from ~180px to ~52px. */
+  .demosPage[data-active-tab="edit"] .sidebar {
+    flex-direction: row;
+    align-items: stretch;
+    width: 100%;
+    max-height: none;
+    min-height: 0;
+    height: 52px;
+    overflow: hidden;
+    background: var(--geist-background);
+  }
+  /* Code panel grows to fill the remaining viewport instead of staying
+     pinned at min-height 280px (the desktop / <=980 default). */
+  .demosPage[data-active-tab="edit"] .codePanel {
+    flex: 1;
+    min-height: 0;
+  }
+  .sidebarTopNav {
+    flex: 0 0 auto;
+    padding: 8px 10px;
+    border-right: 1px solid var(--geist-border);
+  }
+  .detailBackLabel {
+    display: none;
+  }
+  .detailBackButton {
+    min-height: 32px;
+    padding: 6px 10px;
+    box-shadow: none;
+  }
+  .sidebarSection {
+    flex: 1;
+    min-width: 0;
+    padding: 0;
+    display: flex;
+    align-items: center;
+  }
+  .sidebarHeading {
+    display: none;
+  }
+  .scenarioList {
+    flex-direction: row;
+    gap: 6px;
+    padding: 6px 10px;
+    overflow-x: auto;
+    overflow-y: hidden;
+    width: 100%;
+  }
+  .scenarioItem {
+    flex: 0 0 auto;
+    flex-direction: row;
+    align-items: center;
+    width: auto;
+    min-height: 0;
+    padding: 6px 12px;
+    border-radius: 999px;
+    border-color: var(--geist-border);
+  }
+  .scenarioItem .scenarioDesc {
+    display: none;
+  }
+  .scenarioItem .scenarioName {
+    white-space: nowrap;
+    font-size: 12px;
+  }
+
+  /* Tighter toolbar so title + Reset/Clear/Render all stay on one row
+     in the constrained mobile width. */
+  .codePanelToolbar {
+    padding: 6px 10px;
+  }
+  .codePanelToolbar .toolbarBtn {
+    height: 26px;
+    padding: 0 8px;
+    font-size: 11px;
+  }
+  .codePanelToolbar .toolbarBtn.primary {
+    padding: 0 10px;
+  }
+  /* "A2UI Messages" was wrapping to two lines — keep it on one. */
+  .codePanelTitle {
+    white-space: nowrap;
+    font-size: 12px;
+  }
+  .codePanelBadge {
+    display: none;
+  }
+}

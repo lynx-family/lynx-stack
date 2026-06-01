@@ -315,6 +315,14 @@ export interface PluginReactLynxOptions {
   experimental_isLazyBundle?: boolean
 
   /**
+   * Enable Element Template compile and runtime entries.
+   *
+   * @defaultValue `false`
+   * @experimental
+   */
+  experimental_useElementTemplate?: boolean
+
+  /**
    * Optimize bundle size by removing unused code by Minify.mainThreadOptions and Minify.backgroundOptions.
    *
    * When optimizeBundleSize or optimizeBundleSize.mainThread is true, main-thread code will be optimized.
@@ -378,6 +386,7 @@ export function pluginReactLynx(
     globalPropsMode: 'reactive',
 
     experimental_isLazyBundle: false,
+    experimental_useElementTemplate: false,
     optimizeBundleSize: false,
     enableUiSourceMap: false,
   }
@@ -390,6 +399,7 @@ export function pluginReactLynx(
   return [
     pluginReactAlias({
       lazy: resolvedOptions.experimental_isLazyBundle,
+      elementTemplate: resolvedOptions.experimental_useElementTemplate,
       LAYERS,
     }),
     {
@@ -437,7 +447,7 @@ export function pluginReactLynx(
             config = mergeRsbuildConfig(config, {
               source: {
                 include: [
-                  /\.(?:js|mjs|cjs)$/,
+                  /\.(?:js|jsx|mjs|cjs|ts|tsx|mts|cts)$/,
                 ],
               },
             })
@@ -487,6 +497,25 @@ export function pluginReactLynx(
         api.logger?.debug(
           `Using @lynx-js/react-webpack-plugin v${version} at ${webpackPluginPath}`,
         )
+      },
+    },
+    {
+      name: 'lynx:react:css-minify-guard',
+      enforce: 'post',
+      setup(api) {
+        if (resolvedOptions.enableRemoveCSSScope !== false) {
+          return
+        }
+
+        api.modifyRsbuildConfig((config, { mergeRsbuildConfig }) => {
+          return mergeRsbuildConfig(config, {
+            output: {
+              minify: {
+                css: false,
+              },
+            },
+          })
+        })
       },
     },
   ]

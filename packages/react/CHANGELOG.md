@@ -1,5 +1,65 @@
 # @lynx-js/react
 
+## 0.121.1
+
+### Patch Changes
+
+- Disable vnode reuse of different slot index in preact's diff, fixing a bug that `__RemoveElement` was called with mismatched parent and child element. ([#2664](https://github.com/lynx-family/lynx-stack/pull/2664))
+
+- Fix list update indices when existing items are updated after inserting siblings before them. ([#2518](https://github.com/lynx-family/lynx-stack/pull/2518))
+
+## 0.121.0
+
+### Minor Changes
+
+- Support `React.createElement(type, props, children)` API. ([#2360](https://github.com/lynx-family/lynx-stack/pull/2360))
+
+  ```jsx
+  React.createElement('view', { style }, <text>hello</text>);
+  // equivalent to
+  <view style={style}>
+    <text>hello</text>
+  </view>;
+
+  React.createElement(MyComponent, { style }, <view />);
+  // equivalent to
+  <MyComponent style={style}>
+    <view />
+  </MyComponent>;
+  ```
+
+### Patch Changes
+
+- Clear transient snapshot child props when removed snapshot subtrees are detached, preventing compiled `$*` child references from retaining deleted list holder or list item subtrees after removal. ([#2590](https://github.com/lynx-family/lynx-stack/pull/2590))
+
+- Add `createPortal` for rendering a subtree into a different ReactLynx element identified by a `NodesRef`. ([#2543](https://github.com/lynx-family/lynx-stack/pull/2543))
+
+  ```tsx
+  function App() {
+    const [host, setHost] = useState(null);
+    return (
+      <view>
+        <view ref={setHost} />
+        {host && createPortal(<text>hi</text>, host)}
+      </view>
+    );
+  }
+  ```
+
+- Default `fireEvent` to `bubbles: true` for the TouchEvent family in testing-library to match Lynx runtime semantics, and stop reassigning the read-only `Event.prototype` accessors which threw `TypeError` in strict mode. ([#2532](https://github.com/lynx-family/lynx-stack/pull/2532))
+
+- Set `bundle-url` on lazy bundle border elements. ([#2537](https://github.com/lynx-family/lynx-stack/pull/2537))
+
+- Stop warning when `runWorklet` receives an invalid or missing main-thread function object. Invalid worklet contexts are still ignored, but nullish handler values no longer produce noisy `MainThreadFunction: Invalid function object` console output. ([#2586](https://github.com/lynx-family/lynx-stack/pull/2586))
+
+- Retain main-thread worklet context references before offscreen snapshot elements are materialized, so event, ref, gesture, and spread callbacks stay alive until the DOM update path can attach them. ([#2592](https://github.com/lynx-family/lynx-stack/pull/2592))
+
+- Update the @lynx-js/tasm dependency to 0.0.39 and align React template attribute descriptors with it. ([#2643](https://github.com/lynx-family/lynx-stack/pull/2643))
+
+- Avoid retaining transformed nested worklet contexts after worklet transformation. ([#2591](https://github.com/lynx-family/lynx-stack/pull/2591))
+
+  Nested worklets transformed by the worklet runtime now keep their context recovery metadata through a weak reference, preventing cached transformed worklet functions from keeping list-item worklet contexts alive.
+
 ## 0.120.0
 
 ### Minor Changes

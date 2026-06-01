@@ -7,7 +7,13 @@ import { fileURLToPath } from 'node:url'
 
 import { isCancel } from '@clack/prompts'
 import { createRsbuild, logger } from '@rsbuild/core'
-import type { RsbuildInstance, RsbuildPlugin } from '@rsbuild/core'
+import type {
+  EnvironmentContext,
+  RsbuildEntry,
+  RsbuildInstance,
+  RsbuildPlugin,
+  RsbuildPluginAPI,
+} from '@rsbuild/core'
 import { beforeEach, describe, expect, onTestFinished, test, vi } from 'vitest'
 
 import type { Config, ExposedAPI } from '@lynx-js/rspeedy'
@@ -27,6 +33,13 @@ const pluginStubRspeedyAPI = (config: Config = {}): RsbuildPlugin => ({
       logger,
       version: '1.0.0',
     })
+  },
+})
+
+const pluginStubEnvEntries = (entries: RsbuildEntry): RsbuildPlugin => ({
+  name: 'lynx:rsbuild:env-entries',
+  setup(api) {
+    api.expose(Symbol.for('rspeedy.env.entries'), { entries })
   },
 })
 
@@ -182,7 +195,8 @@ describe('Plugins - Terminal', () => {
       // @ts-expect-error xxx
       resolve('bar')
 
-      await expect.poll(() => renderUnicodeCompact).toBeCalledTimes(2)
+      await expect.poll(() => renderUnicodeCompact, { timeout: 10_000 })
+        .toBeCalledTimes(2)
       expect(renderUnicodeCompact).toBeCalledWith(
         `$$http://example.com/foo/main.lynx.bundle$$`,
       )
@@ -259,7 +273,8 @@ describe('Plugins - Terminal', () => {
       // @ts-expect-error xxx
       resolve('main2')
 
-      await expect.poll(() => renderUnicodeCompact).toBeCalledTimes(2)
+      await expect.poll(() => renderUnicodeCompact, { timeout: 10_000 })
+        .toBeCalledTimes(2)
       expect(renderUnicodeCompact).toBeCalledWith(
         `==http://example.com/foo/main2.lynx.bundle==`,
       )
@@ -268,6 +283,80 @@ describe('Plugins - Terminal', () => {
 
   describe('QRCode', () => {
     vi.mock('uqr')
+    test('cleans up preview qrcode shortcuts on restart and exit', async () => {
+      vi.resetModules()
+
+      const unregister = vi.fn()
+      const registerConsoleShortcuts = vi.fn().mockResolvedValue(unregister)
+      vi.doMock('../src/shortcuts.js', () => ({ registerConsoleShortcuts }))
+      onTestFinished(() => {
+        vi.doUnmock('../src/shortcuts.js')
+      })
+
+      const { pluginQRCode } = await import('../src/index.js')
+
+      let onAfterStartPreviewServer:
+        | ((params: {
+          environments: Record<string, EnvironmentContext>
+          port: number
+        }) => Promise<void>)
+        | undefined
+      let onExit: (() => void) | undefined
+      const onCloseDevServer = vi.fn()
+      const api = {
+        onAfterStartPreviewServer(handler: typeof onAfterStartPreviewServer) {
+          onAfterStartPreviewServer = handler
+        },
+        onAfterDevCompile: vi.fn(),
+        onCloseDevServer,
+        onExit(handler: () => void) {
+          onExit = handler
+        },
+        useExposed: vi.fn(),
+      } as unknown as RsbuildPluginAPI
+
+      await pluginQRCode().setup(api)
+
+      await onAfterStartPreviewServer?.({
+        environments: {
+          lynx: {
+            entry: {
+              main: join(
+                dirname(fileURLToPath(import.meta.url)),
+                'fixtures',
+                'hello-world',
+              ),
+            },
+          } as unknown as EnvironmentContext,
+        },
+        port: 3000,
+      })
+
+      expect(registerConsoleShortcuts).toBeCalledTimes(1)
+      expect(onCloseDevServer).not.toBeCalled()
+
+      await onAfterStartPreviewServer?.({
+        environments: {
+          lynx: {
+            entry: {
+              main: join(
+                dirname(fileURLToPath(import.meta.url)),
+                'fixtures',
+                'hello-world',
+              ),
+            },
+          } as unknown as EnvironmentContext,
+        },
+        port: 3001,
+      })
+
+      expect(unregister).toBeCalledTimes(1)
+
+      onExit?.()
+
+      expect(unregister).toBeCalledTimes(2)
+    })
+
     test('not print qrcode when build', async () => {
       const { renderUnicodeCompact } = await import('uqr')
 
@@ -327,6 +416,55 @@ describe('Plugins - Terminal', () => {
             },
             plugins: [
               pluginStubRspeedyAPI(),
+              pluginQRCode(),
+            ],
+          },
+        },
+      )
+
+      await using server = await usingDevServer(rsbuild)
+
+      await server.waitDevCompileDone()
+
+      expect(renderUnicodeCompact).toBeCalledTimes(1)
+    })
+
+    test('print qrcode with exposed custom environment entries', async () => {
+      vi.stubEnv('NODE_ENV', 'development')
+      const { selectKey, isCancel } = await import('@clack/prompts')
+      vi.mocked(selectKey).mockResolvedValue('foo')
+      vi.mocked(isCancel).mockReturnValueOnce(false)
+      const { renderUnicodeCompact } = await import('uqr')
+      vi.mocked(renderUnicodeCompact).mockReturnValueOnce('<data>')
+
+      const entry = join(
+        dirname(fileURLToPath(import.meta.url)),
+        'fixtures',
+        'hello-world',
+      )
+
+      const rsbuild = await createRsbuild(
+        {
+          rsbuildConfig: {
+            dev: {
+              assetPrefix: 'http://example.com/foo/',
+            },
+            environments: {
+              custom: {},
+            },
+            server: {
+              port: getRandomNumberInRange(3000, 60000),
+            },
+            source: {
+              entry: {
+                main: entry,
+              },
+            },
+            plugins: [
+              pluginStubRspeedyAPI(),
+              pluginStubEnvEntries({
+                main: entry,
+              }),
               pluginQRCode(),
             ],
           },
@@ -456,7 +594,7 @@ describe('Plugins - Terminal', () => {
 async function usingDevServer(rsbuild: RsbuildInstance) {
   let done = false
   let hasErrors = false
-  rsbuild.onDevCompileDone({
+  rsbuild.onAfterDevCompile({
     handler: ({ stats }) => {
       hasErrors = stats.hasErrors()
       done = true

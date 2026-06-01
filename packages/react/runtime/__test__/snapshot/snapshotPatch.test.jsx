@@ -182,7 +182,7 @@ describe('insertBefore', () => {
     `);
   });
 
-  it('sets bundle-url when ensuring a child from a different entry', async function() {
+  it('sets lazy-bundle-url when ensuring a child from a different entry', async function() {
     const lazyEntryName = 'https://example.com/lazy/template.js';
     const lazySnapshot = createSnapshot(
       'cross-entry-child-for-bundle-url',
@@ -200,11 +200,11 @@ describe('insertBefore', () => {
     parent.insertBefore(child);
     parent.ensureElements();
 
-    expect(parent.__element_root.props['bundle-url']).toBeUndefined();
-    expect(child.__element_root.props['bundle-url']).toBe(lazyEntryName);
+    expect(parent.__element_root.props['lazy-bundle-url']).toBeUndefined();
+    expect(child.__element_root.props['lazy-bundle-url']).toBe(lazyEntryName);
   });
 
-  it('does not set bundle-url when ensuring a child from the same entry', async function() {
+  it('does not set lazy-bundle-url when ensuring a child from the same entry', async function() {
     const lazyEntryName = 'https://example.com/lazy/template.js';
     const parentSnapshot = createSnapshot(
       'same-entry-parent-for-bundle-url',
@@ -237,7 +237,7 @@ describe('insertBefore', () => {
     parent.insertBefore(child);
     parent.ensureElements();
 
-    expect(child.__element_root.props['bundle-url']).toBeUndefined();
+    expect(child.__element_root.props['lazy-bundle-url']).toBeUndefined();
   });
 
   it('insert in the middle', async function() {
@@ -1623,10 +1623,14 @@ describe('missing snapshot', () => {
   });
 
   it('should throw error when missing snapshot', () => {
-    expect(() => new BackgroundSnapshotInstance('missing-snapshot')).toThrowError(
-      'BackgroundSnapshot not found: missing-snapshot',
+    expect(() => new BackgroundSnapshotInstance('__snapshot_missing-snapshot')).toThrowError(
+      new Error('BackgroundSnapshot not found: __snapshot_missing-snapshot'),
     );
-    expect(() => new SnapshotInstance('missing-snapshot')).toThrowError('Snapshot not found: missing-snapshot');
+    expect(() => new SnapshotInstance('__snapshot_missing-snapshot')).toThrowError(
+      new Error(
+        'Snapshot not found: __snapshot_missing-snapshot. You can set environment variable `REACT_ALOG=true` and restart your dev server for troubleshooting.',
+      ),
+    );
   });
 });
 

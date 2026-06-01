@@ -3,9 +3,9 @@
 // LICENSE file in the root directory of this source tree.
 import type * as v0_9 from '@a2ui/web_core/v0_9';
 
-import { NodeRenderer } from '../../core/A2UIRender.jsx';
-import type { GenericComponentProps } from '../../core/types.js';
-import { useDataBinding } from '../../core/useDataBinding.js';
+import { NodeRenderer } from '../../react/A2UIRenderer.jsx';
+import { useDataBinding } from '../../react/useDataBinding.js';
+import type { GenericComponentProps } from '../../store/types.js';
 
 import '../../../styles/catalog/List.css';
 
@@ -22,7 +22,13 @@ export interface ListProps extends GenericComponentProps {
 export function List(
   props: ListProps,
 ): import('@lynx-js/react').ReactNode {
-  const { children, surface, dataContextPath, direction = 'vertical' } = props;
+  const {
+    children,
+    surface,
+    dataContextPath,
+    direction = 'vertical',
+    align = 'stretch',
+  } = props;
 
   interface ListItem {
     key: string;
@@ -80,7 +86,7 @@ export function List(
 
   return (
     <list
-      className={`list list-${String(direction)}`}
+      className={`list list-${String(direction)} list-align-${String(align)}`}
       scroll-orientation={direction === 'vertical' ? 'vertical' : 'horizontal'}
       list-type='single'
       span-count={1}

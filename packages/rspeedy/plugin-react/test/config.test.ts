@@ -6,6 +6,7 @@ import { mkdtemp, rm } from 'node:fs/promises'
 import { createRequire } from 'node:module'
 import { tmpdir } from 'node:os'
 import path from 'node:path'
+import { fileURLToPath } from 'node:url'
 
 import type { RsbuildInstance, Rspack } from '@rsbuild/core'
 import { afterAll, describe, expect, test, vi } from 'vitest'
@@ -343,26 +344,53 @@ describe('Config', () => {
   const getBackgroundLayerOptions = async (rsbuild: RsbuildInstance) => {
     const [config] = await rsbuild.initConfigs()
 
-    for (const rule of config?.module?.rules ?? []) {
-      if (typeof rule === 'object' && rule?.oneOf) {
-        for (const oneOf of rule.oneOf) {
+    type RuleSetRuleItem =
+      | Rspack.RuleSetRule
+      | '...'
+      | false
+      | 0
+      | ''
+      | null
+      | undefined
+
+    const findBackgroundLayerOptions = (
+      rule: RuleSetRuleItem,
+    ): object | undefined => {
+      if (!rule || rule === '...' || typeof rule !== 'object') {
+        return undefined
+      }
+
+      if (Array.isArray(rule.use)) {
+        for (const use of rule.use) {
           if (
-            oneOf && typeof oneOf === 'object' && oneOf.use
-            && Array.isArray(oneOf.use)
+            typeof use === 'object' && use?.options
+            && typeof use.options === 'object'
+            && Object.hasOwn(use.options, 'enableRemoveCSSScope')
           ) {
-            for (const use of oneOf.use) {
-              if (
-                typeof use === 'object' && use?.options
-                && typeof use.options === 'object'
-                && Object.hasOwn(use.options, 'enableRemoveCSSScope')
-              ) {
-                return use.options
-              }
-            }
+            return use.options
           }
         }
       }
+
+      for (const nestedRule of rule.oneOf ?? []) {
+        const options = findBackgroundLayerOptions(nestedRule)
+        if (options) {
+          return options
+        }
+      }
+
+      return undefined
     }
+
+    for (const rule of config?.module?.rules ?? []) {
+      if (typeof rule === 'object') {
+        const options = findBackgroundLayerOptions(rule)
+        if (options) {
+          return options
+        }
+      }
+    }
+
     return undefined
   }
 
@@ -386,11 +414,81 @@ describe('Config', () => {
         "defineDCE": undefined,
         "enableRemoveCSSScope": true,
         "engineVersion": "3.2",
+        "experimental_useElementTemplate": false,
         "inlineSourcesContent": true,
         "isDynamicComponent": false,
       }
     `)
   })
+
+  test('experimental_useElementTemplate wires aliases and loader/plugin options', async () => {
+    const { pluginReactLynx } = await import('../src/pluginReactLynx.js')
+
+    const rsbuild = await createRspeedy({
+      rspeedyConfig: {
+        plugins: [
+          pluginReactLynx({
+            experimental_useElementTemplate: true,
+          }),
+          pluginStubRspeedyAPI(),
+        ],
+      },
+    })
+
+    const [config] = await rsbuild.initConfigs()
+
+    expect(config?.resolve?.alias).toHaveProperty(
+      '@lynx-js/react$',
+      expect.stringContaining(
+        '/packages/react/runtime/lib/element-template/index.js'
+          .replaceAll('/', path.sep),
+      ),
+    )
+    expect(config?.resolve?.alias).toHaveProperty(
+      '@lynx-js/react/internal$',
+      expect.stringContaining(
+        '/packages/react/runtime/lib/element-template/internal.js'
+          .replaceAll('/', path.sep),
+      ),
+    )
+    expect(config?.resolve?.alias).toHaveProperty(
+      '@lynx-js/react/jsx-runtime',
+      expect.stringContaining(
+        '/packages/react/runtime/jsx-runtime/index.js'.replaceAll(
+          '/',
+          path.sep,
+        ),
+      ),
+    )
+    expect(config?.resolve?.alias).toHaveProperty(
+      '@lynx-js/react/jsx-dev-runtime',
+      expect.stringContaining(
+        '/packages/react/runtime/jsx-dev-runtime/index.js'.replaceAll(
+          '/',
+          path.sep,
+        ),
+      ),
+    )
+
+    expect(
+      await getBackgroundLayerOptions(rsbuild),
+    ).toHaveProperty('experimental_useElementTemplate', true)
+
+    const ReactWebpackPlugin = config?.plugins?.find((
+      p,
+    ): p is ReactWebpackPlugin => p?.constructor.name === 'ReactWebpackPlugin')
+
+    expect(ReactWebpackPlugin).toBeDefined()
+    expect(
+      (
+        ReactWebpackPlugin as unknown as {
+          options?: { experimental_useElementTemplate?: boolean }
+        }
+      ).options?.experimental_useElementTemplate,
+    )
+      .toBe(true)
+  })
+
   test('enableRemoveCSSScope can be set to undefined explicitly', async () => {
     const { pluginReactLynx } = await import('../src/pluginReactLynx.js')
 
@@ -413,6 +511,7 @@ describe('Config', () => {
         "defineDCE": undefined,
         "enableRemoveCSSScope": undefined,
         "engineVersion": "3.2",
+        "experimental_useElementTemplate": false,
         "inlineSourcesContent": true,
         "isDynamicComponent": false,
       }
@@ -1736,6 +1835,61 @@ describe('Config', () => {
         `)
     })
 
+    test('splitChunks.preset: "default"', async () => {
+      const { pluginReactLynx } = await import('../src/pluginReactLynx.js')
+
+      const rsbuild = await createRspeedy({
+        rspeedyConfig: {
+          plugins: [
+            pluginReactLynx(),
+            pluginStubRspeedyAPI(),
+          ],
+          splitChunks: {
+            preset: 'default',
+          },
+        },
+      })
+
+      const [config] = await rsbuild.initConfigs()
+
+      if (config?.optimization?.splitChunks === undefined) {
+        expect.fail('should have config.optimization.splitChunks')
+      }
+
+      expect(config.optimization.splitChunks).not.toBe(false)
+
+      if (config.optimization.splitChunks === false) {
+        expect.unreachable('splitChunks is not false')
+      }
+
+      expect(config.optimization.splitChunks.cacheGroups).toHaveProperty(
+        'preact',
+      )
+    })
+
+    test('splitChunks overrides performance.chunkSplit', async () => {
+      const { pluginReactLynx } = await import('../src/pluginReactLynx.js')
+
+      const rsbuild = await createRspeedy({
+        rspeedyConfig: {
+          plugins: [
+            pluginReactLynx(),
+            pluginStubRspeedyAPI(),
+          ],
+          splitChunks: false,
+          performance: {
+            chunkSplit: {
+              strategy: 'split-by-experience',
+            },
+          },
+        },
+      })
+
+      const [config] = await rsbuild.initConfigs()
+
+      expect(config?.optimization?.splitChunks).toBe(false)
+    })
+
     test('performance.chunkSplit.strategy: "split-by-experience" along with extractStr: true', async () => {
       const { pluginReactLynx } = await import('../src/pluginReactLynx.js')
 
@@ -1953,12 +2107,13 @@ describe('Config', () => {
     test('defineDCE should do DCE before bundle', async () => {
       const { pluginReactLynx } = await import('../src/pluginReactLynx.js')
 
-      const rsbuild = await createRspeedy({
+      const rsbuild = await createRspeedyWithTempDistRoot({
         rspeedyConfig: {
           source: {
             entry: {
-              main: new URL('./fixtures/defineDCE/basic.js', import.meta.url)
-                .pathname,
+              main: fileURLToPath(
+                new URL('./fixtures/defineDCE/basic.js', import.meta.url),
+              ),
             },
           },
           environments: {
@@ -1990,9 +2145,9 @@ describe('Config', () => {
         rspeedyConfig: {
           source: {
             entry: {
-              [entryName]:
-                new URL('./fixtures/defineDCE/macros.js', import.meta.url)
-                  .pathname,
+              [entryName]: fileURLToPath(
+                new URL('./fixtures/defineDCE/macros.js', import.meta.url),
+              ),
             },
           },
           output: {
@@ -2051,13 +2206,13 @@ describe('Config', () => {
       vi.stubEnv('NODE_ENV', 'production')
 
       const entryName = 'pure-funcs'
-      const rsbuild = await createRspeedy({
+      const rsbuild = await createRspeedyWithTempDistRoot({
         rspeedyConfig: {
           source: {
             entry: {
-              [entryName]:
-                new URL('./fixtures/pure-funcs/basic.js', import.meta.url)
-                  .pathname,
+              [entryName]: fileURLToPath(
+                new URL('./fixtures/pure-funcs/basic.js', import.meta.url),
+              ),
             },
           },
           output: {
@@ -2471,16 +2626,12 @@ describe('Config', () => {
 
       const rspeedy = await createRspeedy({
         rspeedyConfig: {
-          environments: {
-            lynx: {
-              performance: {
-                profile: true,
-              },
-            },
-          },
           plugins: [
             pluginReactLynx(),
           ],
+          performance: {
+            profile: true,
+          },
         },
       })
 
@@ -2503,16 +2654,12 @@ describe('Config', () => {
 
       const rspeedy = await createRspeedy({
         rspeedyConfig: {
-          environments: {
-            lynx: {
-              performance: {
-                profile: false,
-              },
-            },
-          },
           plugins: [
             pluginReactLynx(),
           ],
+          performance: {
+            profile: false,
+          },
         },
       })
 
@@ -2754,10 +2901,24 @@ describe('Config', () => {
     interface Rule {
       test?: RegExp
       use?: Array<{ loader: string }>
+      oneOf?: Rule[]
       [key: string]: unknown
     }
 
     const rules = config?.module?.rules as Rule[] | undefined
+    const getLoaderBranches = (rule: Rule): string[][] => {
+      const loaderBranch = rule.use?.map((u: { loader: string }) => u.loader)
+        ?? []
+      const oneOfBranches = rule.oneOf?.flatMap(rule => getLoaderBranches(rule))
+        ?? []
+
+      return oneOfBranches.length > 0
+        ? [
+          ...loaderBranch.length > 0 ? [loaderBranch] : [],
+          ...oneOfBranches,
+        ]
+        : [loaderBranch]
+    }
 
     test('css rules should be rsbuild default', () => {
       expect(
@@ -2766,13 +2927,11 @@ describe('Config', () => {
           && typeof rule === 'object'
           && rule.test
           && rule.test.toString() === (/\.css$/).toString()
-        ).map((rule: Rule) =>
-          (rule?.use?.map((u: { loader: string }) => u.loader)) ?? []
-        ),
+        ).flatMap(rule => getLoaderBranches(rule)),
       ).toMatchInlineSnapshot(`
         [
           [
-            "<ROOT>/node_modules/<PNPM_INNER>/@rspack/core/dist/cssExtractLoader.js",
+            "<ROOT>/node_modules/<PNPM_INNER>/@rsbuild/core/dist/cssUrlLoader.mjs",
             "<ROOT>/node_modules/<PNPM_INNER>/@rsbuild/core/compiled/css-loader/index.js",
             "builtin:lightningcss-loader",
           ],
@@ -2781,6 +2940,11 @@ describe('Config', () => {
             "builtin:lightningcss-loader",
           ],
           [],
+          [
+            "<ROOT>/node_modules/<PNPM_INNER>/@rspack/core/dist/cssExtractLoader.js",
+            "<ROOT>/node_modules/<PNPM_INNER>/@rsbuild/core/compiled/css-loader/index.js",
+            "builtin:lightningcss-loader",
+          ],
         ]
       `)
     })
@@ -2792,16 +2956,14 @@ describe('Config', () => {
           && rule.test
           && rule.test.toString()
             === (/\.(?:js|jsx|mjs|cjs|ts|tsx|mts|cts)$/).toString()
-        ).map((rule: Rule) =>
-          (rule?.use?.map((u: { loader: string }) => u.loader)) ?? []
-        ),
+        ).flatMap(rule => getLoaderBranches(rule)),
       ).toMatchInlineSnapshot(`
         [
+          [],
           [
             "builtin:swc-loader",
             "<ROOT>/packages/webpack/react-webpack-plugin/lib/loaders/testing.js",
           ],
-          [],
           [],
         ]
       `)

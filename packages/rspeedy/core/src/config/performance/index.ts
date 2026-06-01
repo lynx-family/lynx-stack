@@ -76,11 +76,14 @@ export interface Performance {
    * {@link Performance.chunkSplit} is used to configure the chunk splitting strategy.
    *
    * @defaultValue For web builds, Rsbuild currently uses `{ strategy: 'split-by-experience' }` when this option is unset.
+   *
+   * @deprecated Use the top-level {@link Config.splitChunks} option instead.
    */
   chunkSplit?: ChunkSplit | ChunkSplitBySize | ChunkSplitCustom | undefined
 
+  // TODO: Remove this option in Rspeedy v1 to align with Rsbuild v2.
   /**
-   * Whether capture timing information in the build time and the runtime, the same as the {@link https://rspack.rs/config/other-options#profile | profile} config of Rspack.
+   * Whether capture timing information in Lynx runtime integrations such as ReactLynx.
    *
    * @defaultValue Rspeedy sets this to `true` when `DEBUG` contains `rspeedy`; otherwise it leaves the option unset.
    *
@@ -88,11 +91,8 @@ export interface Performance {
    *
    * Enable profile.
    *
-   * - Rsbuild will auto-generate `dist/stats.json` file through bundle analyzer.
-   *
-   * - Rspack will include the build time information when generating `stats.json`.
-   *
    * - Frameworks like ReactLynx will include runtime information using `console.profile`.
+   * - Rspeedy will emit `dist/stats.json` after build for bundle analysis compatibility.
    *
    * ```ts
    * import { defineConfig } from '@lynx-js/rspeedy'

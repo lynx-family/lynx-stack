@@ -1,0 +1,70 @@
+[
+  [
+    "__CreateTypedElementTemplate",
+    "page",
+    null,
+    null,
+    "0",
+    null
+  ],
+  [
+    "__CreateElementTemplate",
+    "_et_7a8c6_test_3",
+    null,
+    [
+      "./assets/lynx-logo.png"
+    ],
+    null,
+    -1
+  ],
+  [
+    "__CreateElementTemplate",
+    "_et_builtin_raw_text",
+    null,
+    [
+      " src/App.tsx "
+    ],
+    [],
+    -2
+  ],
+  [
+    "__CreateElementTemplate",
+    "_et_7a8c6_test_1",
+    null,
+    [
+      "-3:0:",
+      "./assets/arrow.png"
+    ],
+    [
+      [
+        {
+          "tag": "image",
+          "attributes": {
+            "src": "./assets/lynx-logo.png",
+            "class": "Logo--lynx"
+          },
+          "children": [],
+          "templateId": "_et_7a8c6_test_3"
+        }
+      ],
+      [
+        {
+          "tag": "raw-text",
+          "attributes": {
+            "text": " src/App.tsx "
+          },
+          "children": [],
+          "templateId": "_et_builtin_raw_text"
+        }
+      ]
+    ],
+    -3
+  ],
+  [
+    "__InsertNodeToElementTemplate",
+    "<page />",
+    0,
+    "<_et_7a8c6_test_1 />",
+    null
+  ]
+]

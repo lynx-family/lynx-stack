@@ -29,10 +29,6 @@ export function commonConfig(
     environments: {
       web: {},
     },
-    performance: {
-      chunkSplit: {
-        strategy: 'all-in-one',
-      },
-    },
+    splitChunks: false,
   };
 }

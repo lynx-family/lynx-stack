@@ -49,6 +49,24 @@ describe('Config Validation', () => {
       const cases = [
         {},
         new Promise(p => p({})),
+        {
+          splitChunks: false,
+        },
+        {
+          splitChunks: {
+            preset: 'single-vendor',
+          },
+        },
+        {
+          splitChunks: {
+            chunks: 'initial',
+            cacheGroups: {
+              foo: {
+                minChunks: 3,
+              },
+            },
+          },
+        },
       ]
       cases.forEach(config => {
         expect(validate(config)).toStrictEqual(config)
@@ -247,7 +265,7 @@ describe('Config Validation', () => {
         [Error: Invalid configuration.
 
         Invalid config on \`$input.source.define\`.
-          - Expect to be (Record<string, string | number | boolean | Record<string, unknown> | undefined> | undefined)
+          - Expect to be (DefinePluginOptions | undefined)
           - Got: number
         ]
       `)
@@ -258,7 +276,7 @@ describe('Config Validation', () => {
         [Error: Invalid configuration.
 
         Invalid config on \`$input.source.define\`.
-          - Expect to be (Record<string, string | number | boolean | Record<string, unknown> | undefined> | undefined)
+          - Expect to be (DefinePluginOptions | undefined)
           - Got: array
         ]
       `)
@@ -269,39 +287,8 @@ describe('Config Validation', () => {
         [Error: Invalid configuration.
 
         Invalid config on \`$input.source.define\`.
-          - Expect to be (Record<string, string | number | boolean | Record<string, unknown> | undefined> | undefined)
+          - Expect to be (DefinePluginOptions | undefined)
           - Got: array
-        ]
-      `)
-
-      expect(
-        () => validate({ source: { define: { foo: null } } }),
-      ).toThrowErrorMatchingInlineSnapshot(`
-        [Error: Invalid configuration.
-
-        Invalid config on \`$input.source.define.foo\`.
-          - Expect to be (Record<string, unknown> | boolean | number | string | undefined)
-          - Got: null
-        ]
-      `)
-
-      expect(
-        () =>
-          validate({
-            source: {
-              define: {
-                bar: function() {
-                  return void 0
-                },
-              },
-            },
-          }),
-      ).toThrowErrorMatchingInlineSnapshot(`
-        [Error: Invalid configuration.
-
-        Invalid config on \`$input.source.define.bar\`.
-          - Expect to be (Record<string, unknown> | boolean | number | string | undefined)
-          - Got: function
         ]
       `)
     })
@@ -349,7 +336,7 @@ describe('Config Validation', () => {
         [Error: Invalid configuration.
 
         Invalid config on \`$input.source.entry.foo\`.
-          - Expect to be (Array<string> | EntryDescription.o2 | string)
+          - Expect to be (Array<string> | EntryDescription.o1 | string)
           - Got: number
         ]
       `)
@@ -422,7 +409,7 @@ describe('Config Validation', () => {
         [Error: Invalid configuration.
 
         Invalid config on \`$input.source.entry.main\`.
-          - Expect to be (Array<string> | EntryDescription.o2 | string)
+          - Expect to be (Array<string> | EntryDescription.o1 | string)
           - Got: number
         ]
       `)
@@ -2402,7 +2389,7 @@ describe('Config Validation', () => {
           [Error: Invalid configuration.
 
           Invalid config on \`$input.source.exclude\`.
-            - Expect to be (Array<RuleSetCondition>.o3 | undefined)
+            - Expect to be (Array<RuleSetCondition> | undefined)
             - Got: object
           ]
         `)
@@ -2470,7 +2457,7 @@ describe('Config Validation', () => {
           [Error: Invalid configuration.
 
           Invalid config on \`$input.source.include\`.
-            - Expect to be (Array<RuleSetCondition>.o3 | undefined)
+            - Expect to be (Array<RuleSetCondition> | undefined)
             - Got: object
           ]
         `)

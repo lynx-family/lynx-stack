@@ -3,7 +3,12 @@ import {
   MagicHeader0,
   MagicHeader1,
 } from '../../constants.js';
-import type { InitMessage, LoadTemplateMessage, MainMessage } from './types.js';
+import type {
+  HeartbreakMessage,
+  InitMessage,
+  LoadTemplateMessage,
+  MainMessage,
+} from './types.js';
 
 import { wasmInstance } from '../wasm.js';
 import type { PageConfig } from '../../types/PageConfig.js';
@@ -15,6 +20,9 @@ const wasmModuleLoadedPromise: Promise<void> = new Promise((resolve) => {
 
 import { loadStyleFromJSON } from './cssLoader.js';
 import { decodeBinaryMap } from '../../common/decodeUtils.js';
+
+const HEARTBREAK_INTERVAL_MS = 1000;
+let heartbreakTimer: ReturnType<typeof setTimeout> | undefined;
 
 class StreamReader {
   #reader: ReadableStreamDefaultReader<Uint8Array>;
@@ -97,14 +105,40 @@ function decodeJSONMap<T>(buffer: Uint8Array): Record<string, T> {
   return JSON.parse(jsonString);
 }
 
+function postHeartbreak() {
+  postMessage({ type: 'heartbreak' } as MainMessage);
+}
+
+function unrefTimer(timer: ReturnType<typeof setTimeout>) {
+  if (typeof timer === 'object' && timer !== null && 'unref' in timer) {
+    (timer as { unref: () => void }).unref();
+  }
+}
+
+function scheduleHeartbreak() {
+  if (heartbreakTimer !== undefined) {
+    return;
+  }
+  heartbreakTimer = setTimeout(() => {
+    heartbreakTimer = undefined;
+    postHeartbreak();
+  }, HEARTBREAK_INTERVAL_MS);
+  unrefTimer(heartbreakTimer);
+}
+
 self.onmessage = async (
-  event: MessageEvent<LoadTemplateMessage> | MessageEvent<InitMessage>,
+  event:
+    | MessageEvent<LoadTemplateMessage>
+    | MessageEvent<InitMessage>
+    | MessageEvent<HeartbreakMessage>,
 ) => {
   const data = event.data;
   if (data.type === 'init') {
     const { wasmModule } = data;
     wasmInstance.initSync({ module: wasmModule });
     wasmModuleLoadedResolve();
+  } else if (data.type === 'heartbreak') {
+    scheduleHeartbreak();
   } else if (data.type === 'load') {
     const {
       url,
@@ -462,3 +496,4 @@ async function handleJSON(
 }
 
 postMessage({ type: 'ready' } as MainMessage);
+scheduleHeartbreak();

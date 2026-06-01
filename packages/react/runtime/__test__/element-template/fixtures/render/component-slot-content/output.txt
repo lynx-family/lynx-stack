@@ -1,0 +1,6 @@
+<view>
+  <view>
+    <text text="custom" />
+    <text text="child" />
+  </view>
+</view>

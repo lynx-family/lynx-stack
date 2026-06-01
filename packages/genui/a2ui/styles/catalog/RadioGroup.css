@@ -1,4 +1,4 @@
-@import "./luna.css";
+@import "../theme.css";
 
 /* =========================
  * Radio Group
@@ -8,6 +8,7 @@
   display: flex;
   flex-direction: column;
   width: 100%;
+  min-width: 0;
 }
 
 .radio-group-container {
@@ -21,27 +22,39 @@
 /* Default: Standard vertical list */
 .radio-group-default .radio-group-container {
   flex-direction: column;
-  gap: 16px;
+  gap: 18px;
 }
 
 /* Row: Horizontal layout */
 .radio-group-row .radio-group-container {
   flex-direction: row;
   flex-wrap: wrap;
-  gap: 24px;
+  gap: 18px;
   align-items: center;
 }
 
 /* Card: Options look like cards */
 .radio-group-card .radio-option {
-  padding: 16px;
-  border: 1px solid var(--line);
-  border-radius: 8px;
-  background-color: var(--paper);
+  padding: 14px 16px;
+  border: 1px solid var(--a2ui-color-border);
+  border-radius: 14px;
+  background-color: var(--a2ui-color-surface);
+  box-shadow: 0 1px 0 rgba(255, 255, 255, 0.4) inset;
 }
 
 .radio-group-card .radio-option:active {
-  background-color: var(--neutral-film);
+  background-color: var(--a2ui-color-surface-muted);
+}
+
+.radio-group-invalid .radio-item {
+  border-color: var(--a2ui-color-error, #d92d20);
+}
+
+.radio-group-error {
+  margin-top: 2px;
+  color: var(--a2ui-color-error, #d92d20);
+  font-size: 10px;
+  line-height: 1.5;
 }
 
 /* =========================
@@ -52,13 +65,14 @@
   display: flex;
   flex-direction: row;
   align-items: center;
-  gap: 12px;
-  cursor: pointer;
+  gap: 14px;
+  min-width: 0;
 }
 
 .label {
-  font-size: 16px;
-  color: var(--content);
+  font-size: 15px;
+  font-weight: 500;
+  color: var(--a2ui-color-on-surface);
   line-height: 1.5;
 }
 
@@ -67,17 +81,16 @@
  * ========================= */
 
 .radio-item {
-  width: 20px;
-  height: 20px;
+  width: 22px;
+  height: 22px;
   border-radius: 50%;
-  border-width: 1.5px;
-  border-style: solid;
-  border-color: var(--line);
+  border: 1.5px solid var(--a2ui-color-border);
   display: flex;
   align-items: center;
   justify-content: center;
   background-color: transparent;
   flex-shrink: 0;
+  box-shadow: 0 1px 0 rgba(255, 255, 255, 0.4) inset;
 }
 
 .radio-item.ui-disabled {
@@ -85,12 +98,12 @@
 }
 
 .radio-item.ui-checked {
-  border-color: var(--primary);
-  background-color: var(--primary);
+  border-color: var(--a2ui-color-primary);
+  background-color: var(--a2ui-color-primary);
 }
 
 .radio-item.ui-active {
-  border-color: var(--primary-2);
+  border-color: var(--a2ui-color-primary-hover);
 }
 
 /* Indicator Dot */
@@ -103,8 +116,8 @@
 }
 
 .radio-indicator-dot {
-  width: 8px;
-  height: 8px;
+  width: 9px;
+  height: 9px;
   border-radius: 50%;
-  background-color: var(--primary-content);
+  background-color: var(--a2ui-color-on-primary);
 }

@@ -1,0 +1,68 @@
+[
+  {
+    "templateId": "_et_7a8c6_test_1",
+    "compiledTemplate": {
+      "kind": "element",
+      "type": "view",
+      "attributesArray": [],
+      "children": [
+        {
+          "kind": "elementSlot",
+          "type": "slot",
+          "elementSlotIndex": 0
+        },
+        {
+          "kind": "element",
+          "type": "text",
+          "attributesArray": [
+            {
+              "kind": "static",
+              "key": "text",
+              "value": "Hello"
+            }
+          ],
+          "children": []
+        },
+        {
+          "kind": "elementSlot",
+          "type": "slot",
+          "elementSlotIndex": 1
+        },
+        {
+          "kind": "element",
+          "type": "text",
+          "attributesArray": [
+            {
+              "kind": "static",
+              "key": "text",
+              "value": "World"
+            }
+          ],
+          "children": []
+        },
+        {
+          "kind": "elementSlot",
+          "type": "slot",
+          "elementSlotIndex": 2
+        }
+      ]
+    },
+    "sourceFile": "index.tsx"
+  },
+  {
+    "templateId": "_et_builtin_raw_text",
+    "compiledTemplate": {
+      "kind": "element",
+      "type": "raw-text",
+      "attributesArray": [
+        {
+          "kind": "slot",
+          "key": "text",
+          "attrSlotIndex": 0
+        }
+      ],
+      "children": []
+    },
+    "sourceFile": "<builtin>"
+  }
+]

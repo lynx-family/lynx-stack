@@ -1,12 +1,15 @@
 // Copyright 2026 The Lynx Authors. All rights reserved.
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
-import castGrid from './mock/messages/cast-grid.json';
-import citywalkList from './mock/messages/citywalk-list.json';
-import fridgeSearch from './mock/messages/fridge-search.json';
-import recs from './mock/messages/recs.json';
-import tripPlanner from './mock/messages/trip-planner.json';
-import workoutPlan from './mock/messages/workout-plan.json';
+import { A2UI_GALLERY_DEMOS } from './mock/a2ui-gallery/index.js';
+import castGrid from './mock/basic/cast-grid.json';
+import citywalkList from './mock/basic/citywalk-list.json';
+import fridgeSearch from './mock/basic/fridge-search.json';
+import hangzhouWeatherTrend from './mock/basic/hangzhou-weather-trend.json';
+import pieChartChinaEvShare from './mock/basic/pie-chart-china-ev-share.json';
+import recs from './mock/basic/recs.json';
+import tripPlanner from './mock/basic/trip-planner.json';
+import workoutPlan from './mock/basic/workout-plan.json';
 
 function collectComponentNamesFromMessages(
   value: unknown,
@@ -53,6 +56,28 @@ function tagsFromMessages(messages: unknown): string[] {
   return Array.from(out).sort((a, b) => a.localeCompare(b));
 }
 
+/**
+ * Extract new component names introduced by each message (in order).
+ * Returns an array parallel to the messages array: each entry is
+ * the list of component names that appear for the first time in that message.
+ */
+export function componentsByMessage(messages: unknown): string[][] {
+  if (!Array.isArray(messages)) return [];
+  const seen = new Set<string>();
+  return messages.map((msg) => {
+    const msgComponents = new Set<string>();
+    collectComponentNamesFromMessages(msg, msgComponents);
+    const newOnes: string[] = [];
+    for (const name of msgComponents) {
+      if (!seen.has(name)) {
+        seen.add(name);
+        newOnes.push(name);
+      }
+    }
+    return newOnes;
+  });
+}
+
 export interface StaticDemo {
   id: string;
   title: string;
@@ -69,7 +94,17 @@ export interface DynamicPreset {
   actionMocks?: Record<string, unknown>;
 }
 
-export const STATIC_DEMOS: StaticDemo[] = [
+export const OFFICIAL_STATIC_DEMOS: StaticDemo[] = A2UI_GALLERY_DEMOS.map(
+  (demo) => ({
+    id: demo.id,
+    title: demo.title,
+    description: demo.description,
+    tags: tagsFromMessages(demo.messages),
+    messages: demo.messages,
+  }),
+);
+
+export const EXTENDED_STATIC_DEMOS: StaticDemo[] = [
   {
     id: 'recs',
     title: 'Date-Night Restaurant Picks',
@@ -89,6 +124,22 @@ export const STATIC_DEMOS: StaticDemo[] = [
     title: 'Weekend Citywalk Coffee Picks',
     tags: tagsFromMessages(citywalkList),
     messages: citywalkList,
+  },
+  {
+    id: 'hangzhou-weather-trend',
+    title: 'Hangzhou Weather Trend',
+    description:
+      'Use LineChart to show a week-long temperature trend in Hangzhou.',
+    tags: tagsFromMessages(hangzhouWeatherTrend),
+    messages: hangzhouWeatherTrend,
+  },
+  {
+    id: 'pie-chart-china-ev-share',
+    title: '2025 China EV Brand Share',
+    description:
+      'A CPCA-based donut chart shows the 2025 passenger NEV share for major Chinese EV brands.',
+    tags: tagsFromMessages(pieChartChinaEvShare),
+    messages: pieChartChinaEvShare,
   },
   {
     id: 'fridge-search',
@@ -114,9 +165,16 @@ export const STATIC_DEMOS: StaticDemo[] = [
   },
 ];
 
+export const STATIC_DEMOS: StaticDemo[] = [
+  ...OFFICIAL_STATIC_DEMOS,
+  ...EXTENDED_STATIC_DEMOS,
+];
+
 export const DYNAMIC_PRESETS: DynamicPreset[] = [];
 
 export const SUPPORTED_COMPONENTS = tagsFromMessages([
   ...STATIC_DEMOS.flatMap((d) => d.messages as unknown[]),
   ...DYNAMIC_PRESETS.flatMap((d) => d.messages as unknown[]),
 ]);
+
+export const PLAYBACK_SCENARIOS = [...EXTENDED_STATIC_DEMOS];

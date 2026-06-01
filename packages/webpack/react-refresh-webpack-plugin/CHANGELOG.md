@@ -1,5 +1,11 @@
 # @lynx-js/react-refresh-webpack-plugin
 
+## 0.3.6
+
+### Patch Changes
+
+- Widen `@lynx-js/react-webpack-plugin` peer range to include `^0.9.0`. ([#2626](https://github.com/lynx-family/lynx-stack/pull/2626))
+
 ## 0.3.5
 
 ### Patch Changes

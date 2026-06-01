@@ -95,14 +95,14 @@ jobs:
         uses: lynx-infra/cache@5c6160a6a4c7fca80a2f3057bb9dfc9513fcb732
         with:
           path: .turbo
-          key: turbo-v4-${{ runner.os }}-${{ hashFiles('**/packages/**/src/**/*.rs') }}-${{ github.sha }}
+          key: turbo-v4-${{ runner.os }}-${{ hashFiles('packages/**/src/**/*.rs') }}-${{ github.sha }}
           # We can restore caches from:
           #   1. Previous commit from base branch (merge base or base SHA)
           #   2. Any cache
           restore-keys: |
-            turbo-v4-${{ runner.os }}-${{ hashFiles('**/packages/**/src/**/*.rs') }}-${{ needs.get-merge-base.outputs.merge-base }}
-            turbo-v4-${{ runner.os }}-${{ hashFiles('**/packages/**/src/**/*.rs') }}-${{ github.event.pull_request.base.sha || github.event.merge_group.base_sha || github.event.push.before }}
-            turbo-v4-${{ runner.os }}-${{ hashFiles('**/packages/**/src/**/*.rs') }}-
+            turbo-v4-${{ runner.os }}-${{ hashFiles('packages/**/src/**/*.rs') }}-${{ needs.get-merge-base.outputs.merge-base }}
+            turbo-v4-${{ runner.os }}-${{ hashFiles('packages/**/src/**/*.rs') }}-${{ github.event.pull_request.base.sha || github.event.merge_group.base_sha || github.event.push.before }}
+            turbo-v4-${{ runner.os }}-${{ hashFiles('packages/**/src/**/*.rs') }}-
             turbo-v4-${{ runner.os }}-
       - name: Install
         run: |
@@ -125,3 +125,61 @@ jobs:
           retention-days: 1
           overwrite: true
           include-hidden-files: true
+      # Publish PR previews to pkg.pr.new. Only runs on the Ubuntu leg of the
+      # build matrix, and only when the PR adds a changeset that actually
+      # bumps a publishable package. Fork PRs are included: this is a
+      # `pull_request` (not `pull_request_target`) workflow, so fork runs use
+      # a read-only token with no base-repo secrets, and are gated by the
+      # repo's required-approval setting — the same trust boundary the Build
+      # step above (which already runs fork install/build scripts) relies on.
+      - name: Fetch base ref for changeset status
+        if: >
+          matrix.runs-on.label == 'lynx-ubuntu-24.04-xlarge' &&
+          github.event_name == 'pull_request'
+        env:
+          BASE_REF: ${{ github.base_ref }}
+        # actions/checkout uses depth=1, so neither `origin/<base>` nor the
+        # PR/base merge-base are present. `changeset status --since=<ref>`
+        # calls `git merge-base <ref> HEAD`, which requires the common
+        # ancestor to be in local history. Deepen both refs iteratively until
+        # we have it.
+        run: |
+          git fetch --depth=1 origin "$BASE_REF":"refs/remotes/origin/$BASE_REF"
+          for _ in 1 2 3 4 5 6 7 8 9 10; do
+            if git merge-base "refs/remotes/origin/$BASE_REF" HEAD >/dev/null 2>&1; then
+              exit 0
+            fi
+            git fetch -q --deepen=10 origin "$BASE_REF":"refs/remotes/origin/$BASE_REF"
+            git fetch -q --deepen=10 origin HEAD
+          done
+          echo "::error::Unable to find a merge base between origin/$BASE_REF and HEAD after 10 deepen iterations" >&2
+          exit 1
+      - name: Collect packages with changesets
+        id: changeset
+        if: >
+          matrix.runs-on.label == 'lynx-ubuntu-24.04-xlarge' &&
+          github.event_name == 'pull_request'
+        env:
+          BASE_REF: ${{ github.base_ref }}
+        run: |
+          pnpm changeset status --since="origin/$BASE_REF" --output .changeset-status.json
+          PACKAGE_DIRS=$(node .github/scripts/list-changeset-packages.cjs .changeset-status.json | tr '\n' ' ')
+          if [ -z "$(echo "$PACKAGE_DIRS" | tr -d '[:space:]')" ]; then
+            echo "No publishable packages affected by changesets; skipping pkg.pr.new publish."
+            echo "skip=true" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+          echo "Publishing the following package directories to pkg.pr.new:"
+          printf '  %s\n' $PACKAGE_DIRS
+          {
+            echo "skip=false"
+            echo "package-dirs<<EOF"
+            echo "$PACKAGE_DIRS"
+            echo "EOF"
+          } >> "$GITHUB_OUTPUT"
+      - name: Publish to pkg.pr.new
+        if: steps.changeset.outputs.skip == 'false'
+        env:
+          PACKAGE_DIRS: ${{ steps.changeset.outputs.package-dirs }}
+        # zizmor: ignore[trusted-publishing] pkg.pr.new authenticates via its own GitHub App, not the npm trusted-publishing flow this heuristic suggests.
+        run: pnpm dlx pkg-pr-new publish --compact --pnpm $PACKAGE_DIRS

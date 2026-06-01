@@ -15,8 +15,8 @@
   },
   "dependencies": {
     "@rstack-dev/doc-ui": "1.12.3",
-    "react": "^19.2.4",
-    "react-dom": "^19.2.4"
+    "react": "19.2.4",
+    "react-dom": "19.2.4"
   },
   "devDependencies": {
     "@lynx-js/chunk-loading-webpack-plugin": "workspace:*",
@@ -24,6 +24,8 @@
     "@lynx-js/css-extract-webpack-plugin": "workspace:*",
     "@lynx-js/external-bundle-rsbuild-plugin": "workspace:*",
     "@lynx-js/externals-loading-webpack-plugin": "workspace:*",
+    "@lynx-js/genui": "workspace:*",
+    "@lynx-js/genui-cli": "workspace:*",
     "@lynx-js/lynx-bundle-rslib-config": "workspace:*",
     "@lynx-js/qrcode-rsbuild-plugin": "workspace:*",
     "@lynx-js/react": "workspace:*",
@@ -39,7 +41,7 @@
     "@lynx-js/webpack-runtime-globals": "workspace:*",
     "@microsoft/api-documenter": "~7.30.0",
     "@microsoft/api-extractor-model": "^7.33.6",
-    "@rsbuild/plugin-sass": "1.5.0",
+    "@rsbuild/plugin-sass": "1.5.2",
     "@rsbuild/plugin-type-check": "1.3.4",
     "@rsbuild/plugin-typed-css-modules": "1.2.2",
     "@rspress/core": "2.0.3",

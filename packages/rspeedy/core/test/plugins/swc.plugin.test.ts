@@ -1,7 +1,7 @@
 // Copyright 2024 The Lynx Authors. All rights reserved.
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
-import type { RsbuildPluginAPI } from '@rsbuild/core'
+import type { RsbuildPluginAPI, Rspack } from '@rsbuild/core'
 import { describe, expect, test } from 'vitest'
 
 import { createStubRspeedy } from '../createStubRspeedy.js'
@@ -22,6 +22,32 @@ describe('Plugins - SWC', () => {
             "exportedEnum": true,
             "typeExports": true,
           },
+          "detectSyntax": "auto",
+          "env": {
+            "include": [
+              "transform-exponentiation-operator",
+              "transform-async-to-generator",
+              "transform-async-generator-functions",
+              "transform-dotall-regex",
+              "transform-named-capturing-groups-regex",
+              "transform-object-rest-spread",
+              "transform-unicode-property-regex",
+              "transform-json-strings",
+              "transform-optional-catch-binding",
+              "transform-nullish-coalescing-operator",
+              "transform-optional-chaining",
+              "transform-export-namespace-from",
+              "transform-logical-assignment-operators",
+              "transform-numeric-separator",
+              "transform-class-properties",
+              "transform-class-static-block",
+              "transform-private-methods",
+              "transform-private-property-in-object",
+            ],
+            "targets": {
+              "chrome": "120",
+            },
+          },
           "isModule": "unknown",
           "jsc": {
             "experimental": {
@@ -34,12 +60,9 @@ describe('Plugins - SWC', () => {
             },
             "parser": {
               "decorators": true,
-              "syntax": "typescript",
-              "tsx": false,
             },
-            "target": "es2015",
             "transform": {
-              "decoratorVersion": "2022-03",
+              "decoratorVersion": "2023-11",
               "legacyDecorator": false,
             },
           },
@@ -61,6 +84,23 @@ describe('Plugins - SWC', () => {
             "exportedEnum": false,
             "typeExports": true,
           },
+          "detectSyntax": "auto",
+          "env": {
+            "include": [
+              "transform-nullish-coalescing-operator",
+              "transform-optional-chaining",
+              "transform-export-namespace-from",
+              "transform-logical-assignment-operators",
+              "transform-numeric-separator",
+              "transform-class-properties",
+              "transform-class-static-block",
+              "transform-private-methods",
+              "transform-private-property-in-object",
+            ],
+            "targets": {
+              "chrome": "120",
+            },
+          },
           "isModule": "unknown",
           "jsc": {
             "experimental": {
@@ -73,17 +113,62 @@ describe('Plugins - SWC', () => {
             },
             "parser": {
               "decorators": true,
-              "syntax": "typescript",
-              "tsx": false,
             },
-            "target": "es2019",
             "transform": {
-              "decoratorVersion": "2022-03",
+              "decoratorVersion": "2023-11",
               "legacyDecorator": false,
             },
           },
         }
       `)
+  })
+
+  test('user-configured jsc.target throws (target is managed via env)', async () => {
+    const rsbuild = await createStubRspeedy({
+      tools: {
+        swc: {
+          jsc: {
+            target: 'es5',
+          },
+        },
+      },
+    })
+
+    // `env` and `jsc.target` are mutually exclusive in SWC. Rspeedy controls
+    // the baseline via `env`, so a user-set `jsc.target` is rejected with a
+    // clear error rather than silently dropped.
+    await expect(rsbuild.unwrapConfig()).rejects.toThrowError(
+      /Rspeedy manages the SWC compilation target via `env`/,
+    )
+  })
+
+  test('user-configured env.include is merged onto the baseline', async () => {
+    const rsbuild = await createStubRspeedy({
+      mode: 'production',
+      tools: {
+        swc: {
+          env: {
+            // Extra transform the user opts into (e.g. lower let/const to var).
+            include: ['transform-block-scoping'],
+          },
+        },
+      },
+    })
+
+    const config = await rsbuild.unwrapConfig()
+    const loaderOptions = getLoaderOptions<Rspack.SwcLoaderOptions>(
+      config,
+      'builtin:swc-loader',
+    )
+
+    // The user's transform is honored ...
+    expect(loaderOptions?.env?.include).toContain('transform-block-scoping')
+    // ... on top of Rspeedy's baseline (es2015-equivalent in production) ...
+    expect(loaderOptions?.env?.include).toContain(
+      'transform-async-to-generator',
+    )
+    // ... and Rspeedy still owns `targets`.
+    expect(loaderOptions?.env?.targets).toEqual({ chrome: '120' })
   })
 
   test('modify swc config from plugin', async () => {
@@ -116,6 +201,23 @@ describe('Plugins - SWC', () => {
             "exportedEnum": false,
             "typeExports": true,
           },
+          "detectSyntax": "auto",
+          "env": {
+            "include": [
+              "transform-nullish-coalescing-operator",
+              "transform-optional-chaining",
+              "transform-export-namespace-from",
+              "transform-logical-assignment-operators",
+              "transform-numeric-separator",
+              "transform-class-properties",
+              "transform-class-static-block",
+              "transform-private-methods",
+              "transform-private-property-in-object",
+            ],
+            "targets": {
+              "chrome": "120",
+            },
+          },
           "isModule": "unknown",
           "jsc": {
             "experimental": {
@@ -128,12 +230,9 @@ describe('Plugins - SWC', () => {
             },
             "parser": {
               "decorators": true,
-              "syntax": "typescript",
-              "tsx": false,
             },
-            "target": "es2019",
             "transform": {
-              "decoratorVersion": "2022-03",
+              "decoratorVersion": "2023-11",
               "legacyDecorator": false,
             },
           },

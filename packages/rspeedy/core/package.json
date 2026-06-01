@@ -1,6 +1,6 @@
 {
   "name": "@lynx-js/rspeedy",
-  "version": "0.14.3",
+  "version": "0.14.5",
   "description": "A webpack/rspack-based frontend toolchain for Lynx",
   "keywords": [
     "webpack",
@@ -56,11 +56,12 @@
   "dependencies": {
     "@lynx-js/cache-events-webpack-plugin": "workspace:^",
     "@lynx-js/chunk-loading-webpack-plugin": "workspace:^",
+    "@lynx-js/debug-metadata-rsbuild-plugin": "workspace:^",
     "@lynx-js/web-rsbuild-server-middleware": "workspace:*",
     "@lynx-js/webpack-dev-transport": "workspace:^",
     "@lynx-js/websocket": "workspace:^",
     "@rsbuild/core": "catalog:rsbuild",
-    "@rsbuild/plugin-css-minimizer": "1.1.1",
+    "@rsbuild/plugin-css-minimizer": "2.0.0",
     "@rsdoctor/rspack-plugin": "~1.5.6"
   },
   "devDependencies": {
@@ -68,6 +69,7 @@
     "@microsoft/api-extractor": "catalog:",
     "@rollup/plugin-typescript": "^12.3.0",
     "@rsdoctor/core": "~1.5.6",
+    "@swc/core": "^1.15.30",
     "chokidar": "^4.0.3",
     "commander": "^13.1.0",
     "eventemitter3": "^5.0.4",
@@ -75,7 +77,7 @@
     "ipaddr.js": "^2.3.0",
     "javascript-stringify": "^2.1.0",
     "picocolors": "^1.1.1",
-    "rsbuild-plugin-arethetypeswrong": "0.2.0",
+    "rsbuild-plugin-arethetypeswrong": "0.3.1",
     "rsbuild-plugin-publint": "0.3.4",
     "tiny-invariant": "^1.3.3",
     "ts-blank-space": "^0.8.0",

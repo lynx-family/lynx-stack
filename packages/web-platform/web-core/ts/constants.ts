@@ -87,6 +87,7 @@ export const LYNX_TAG_TO_HTML_TAG_MAP: Record<string, string> =
       'input': 'x-input',
       'x-input-ng': 'x-input',
       'svg': 'x-svg',
+      'frame': 'lynx-view',
     }),
   );
 

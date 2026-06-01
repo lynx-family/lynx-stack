@@ -1,0 +1,5 @@
+Object {
+  "afterInstanceId": -11,
+  "managerHasAfter": true,
+  "stream": Array [],
+}

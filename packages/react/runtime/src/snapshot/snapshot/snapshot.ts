@@ -11,14 +11,14 @@
 import type { Worklet, WorkletRefImpl } from '@lynx-js/react/worklet-runtime/bindings';
 
 import { DEFAULT_CSS_ID, DEFAULT_ENTRY_NAME } from './constants.js';
-import { snapshotManager } from './definition.js';
+import { createRuntimeSnapshot, snapshotManager } from './definition.js';
 import type { Snapshot } from './definition.js';
 import { DynamicPartType, __DynamicPartChildren_0 } from './dynamicPartType.js';
 import { snapshotDestroyList } from './list.js';
 import type { PlatformInfo } from './platformInfo.js';
 import { unref } from './ref.js';
 import type { SerializedSnapshotInstance } from './types.js';
-import { traverseSnapshotInstance } from './utils.js';
+import { isCompiledSnapshot, traverseSnapshotInstance } from './utils.js';
 import { isDirectOrDeepEqual } from '../../utils.js';
 import { clearSnapshotVNodeSource } from '../debug/vnodeSource.js';
 import { SnapshotOperation, __globalSnapshotPatch } from '../lifecycle/patch/snapshotPatch.js';
@@ -40,6 +40,65 @@ export const snapshotInstanceManager: {
     }
   },
 };
+
+function isRemovedSnapshot(
+  value: unknown,
+  removedSnapshots: WeakSet<object>,
+): boolean {
+  return (typeof value === 'object' || typeof value === 'function') && value !== null
+    && removedSnapshots.has(value);
+}
+
+function clearRemovedSnapshotsFromArray(
+  values: unknown[],
+  removedSnapshots: WeakSet<object>,
+  seen = new WeakSet<object>(),
+): boolean {
+  if (seen.has(values)) {
+    return false;
+  }
+  seen.add(values);
+
+  let changed = false;
+  values.forEach((value, index) => {
+    if (isRemovedSnapshot(value, removedSnapshots)) {
+      values[index] = undefined;
+      changed = true;
+    } else if (Array.isArray(value) && clearRemovedSnapshotsFromArray(value, removedSnapshots, seen)) {
+      changed = true;
+    }
+  });
+  return changed;
+}
+
+function collectRemovedSnapshots(removedChild: SnapshotInstance): WeakSet<object> {
+  const removedSnapshots = new WeakSet<object>();
+  traverseSnapshotInstance(removedChild, snapshot => {
+    removedSnapshots.add(snapshot);
+  });
+  return removedSnapshots;
+}
+
+function clearTransientChildPropRefs(owner: SnapshotInstance, removedSnapshots: WeakSet<object>): void {
+  const props = (owner as unknown as { props?: Record<string, unknown> }).props;
+  if (!props) {
+    return;
+  }
+
+  for (const key of Object.keys(props)) {
+    // Named child props are transient staging refs. Once a child subtree is
+    // removed, they must not keep the old snapshots alive.
+    if (!key.startsWith('$')) {
+      continue;
+    }
+    const value = props[key];
+    if (isRemovedSnapshot(value, removedSnapshots)) {
+      delete props[key];
+    } else if (Array.isArray(value)) {
+      clearRemovedSnapshotsFromArray(value, removedSnapshots);
+    }
+  }
+}
 
 export let snapshotCreatorMap: Record<string, (uniqId: string) => string> = {};
 
@@ -95,13 +154,15 @@ export class SnapshotInstance {
     if (!snapshotManager.values.has(type) && type !== 'div') {
       if (snapshotCreatorMap[type]) {
         snapshotCreatorMap[type](type);
-      } else {
+      } else if (isCompiledSnapshot(type)) {
         let message = 'Snapshot not found: ' + type;
         if (__DEV__) {
           message +=
             '. You can set environment variable `REACT_ALOG=true` and restart your dev server for troubleshooting.';
         }
         throw new Error(message);
+      } else {
+        createRuntimeSnapshot(type);
       }
     }
     this.__snapshot_def = snapshotManager.values.get(type)!;
@@ -140,7 +201,7 @@ export class SnapshotInstance {
     ) {
       __SetAttribute(
         this.__element_root!,
-        'bundle-url',
+        'lazy-bundle-url',
         this.__snapshot_def.entryName,
       );
     }
@@ -423,6 +484,8 @@ export class SnapshotInstance {
 
   removeChild(child: SnapshotInstance): void {
     const __snapshot_def = this.__snapshot_def;
+    const removedSnapshots = collectRemovedSnapshots(child);
+    clearTransientChildPropRefs(this, removedSnapshots);
     if (__snapshot_def.isListHolder) {
       if (__pendingListUpdates.values) {
         (__pendingListUpdates.values[this.__id] ??= new ListUpdateInfoRecording(
@@ -432,6 +495,7 @@ export class SnapshotInstance {
 
       this.__removeChild(child);
       traverseSnapshotInstance(child, v => {
+        clearTransientChildPropRefs(v, removedSnapshots);
         snapshotInstanceManager.values.delete(v.__id);
       });
       // mark this child as deleted
@@ -451,6 +515,7 @@ export class SnapshotInstance {
         snapshotDestroyList(v);
       }
 
+      clearTransientChildPropRefs(v, removedSnapshots);
       v.__parent = null;
       v.__previousSibling = null;
       v.__nextSibling = null;

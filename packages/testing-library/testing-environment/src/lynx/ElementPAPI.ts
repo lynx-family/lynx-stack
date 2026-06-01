@@ -326,14 +326,13 @@ export const initElementTree = () => {
     }
 
     __RemoveElement(parent: LynxElement, child: LynxElement) {
-      let ch = parent.firstChild;
-      while (ch) {
-        if (ch === child) {
-          parent.removeChild(ch);
-          break;
-        }
-        ch = ch.nextSibling;
+      if (child.parentNode !== parent) {
+        throw new Error(
+          `child ${child.$$uiSign} is not in parent ${parent.$$uiSign}, cannot remove it!`,
+        );
       }
+
+      child.parentNode.removeChild(child);
     }
 
     __InsertElementBefore(
@@ -491,9 +490,21 @@ export const initElementTree = () => {
       index: number,
       ...args: any[]
     ): number {
-      // @ts-ignore
-      const { componentAtIndex, $$uiSign } = e;
-      return componentAtIndex(e, $$uiSign, index, ...args);
+      // `componentAtIndex` calls bare PAPI globals like `__SetAttribute`,
+      // which only resolve correctly when `global` is bound to the main
+      // thread copy. Mirror the worklet-event handler pattern in `__AddEvent`:
+      // flip to main thread, run, restore.
+      const isBackground = !__MAIN_THREAD__;
+      globalThis.lynxTestingEnv.switchToMainThread();
+      try {
+        // @ts-ignore
+        const { componentAtIndex, $$uiSign } = e;
+        return componentAtIndex(e, $$uiSign, index, ...args);
+      } finally {
+        if (isBackground) {
+          globalThis.lynxTestingEnv.switchToBackgroundThread();
+        }
+      }
     }
 
     /**
@@ -506,9 +517,17 @@ export const initElementTree = () => {
      * @param uiSign - The unique id of the list-item element
      */
     leaveListItem(e: LynxElement, uiSign: number) {
-      // @ts-ignore
-      const { enqueueComponent, $$uiSign } = e;
-      enqueueComponent(e, $$uiSign, uiSign);
+      const isBackground = !__MAIN_THREAD__;
+      globalThis.lynxTestingEnv.switchToMainThread();
+      try {
+        // @ts-ignore
+        const { enqueueComponent, $$uiSign } = e;
+        enqueueComponent(e, $$uiSign, uiSign);
+      } finally {
+        if (isBackground) {
+          globalThis.lynxTestingEnv.switchToBackgroundThread();
+        }
+      }
     }
 
     toJSON() {
@@ -516,6 +535,16 @@ export const initElementTree = () => {
     }
     __GetElementByUniqueId(uniqueId: number) {
       return this.uniqueId2Element.get(uniqueId);
+    }
+    __GetPageElement(): LynxElement | undefined {
+      return this.root;
+    }
+    __QuerySelector(
+      e: LynxElement,
+      cssSelector: string,
+      _params: object,
+    ): LynxElement | undefined {
+      return (e.querySelector(cssSelector) as LynxElement | null) ?? undefined;
     }
   })();
 };

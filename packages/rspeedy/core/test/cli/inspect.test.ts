@@ -6,7 +6,6 @@ import { mkdtemp } from 'node:fs/promises'
 import { tmpdir } from 'node:os'
 import path from 'node:path'
 
-import type { InspectConfigResult } from '@rsbuild/core'
 import { Command } from 'commander'
 import { beforeEach, describe, expect, test, vi } from 'vitest'
 
@@ -100,7 +99,7 @@ describe('CLI - Inspect', () => {
         const [inspectResult] = await Promise.all(
           vi.mocked(rsbuild!.inspectConfig).mock.results
             .filter(i => i.type === 'return')
-            .map(i => i.value as Promise<InspectConfigResult>),
+            .map(i => i.value),
         )
 
         expect(inspectResult).not.toBeUndefined()
@@ -179,7 +178,7 @@ describe('CLI - Inspect', () => {
         const [inspectResult] = await Promise.all(
           vi.mocked(rsbuild!.inspectConfig).mock.results
             .filter(i => i.type === 'return')
-            .map(i => i.value as Promise<InspectConfigResult>),
+            .map(i => i.value),
         )
 
         expect(inspectResult).not.toBeUndefined()
@@ -331,7 +330,7 @@ describe('CLI - Inspect', () => {
         const [inspectResult] = await Promise.all(
           vi.mocked(rsbuild!.inspectConfig).mock.results
             .filter(i => i.type === 'return')
-            .map(i => i.value as Promise<InspectConfigResult>),
+            .map(i => i.value),
         )
 
         expect(inspectResult).not.toBeUndefined()
@@ -401,12 +400,16 @@ describe('CLI - Inspect', () => {
 
         const { apply } = await import('../../src/cli/commands.js')
 
+        // Isolate the output dir so this inspect cannot race other tests
+        // writing to a shared relative `./dist` directory.
+        const tmp = await mkdtemp(path.join(tmpdir(), 'rspeedy-test-inspect-'))
+
         await apply(new Command('test')).parseAsync([
           'node',
           'rspeedy',
           'inspect',
           '--output',
-          './dist',
+          tmp,
           '--config',
           'foo/bar/config.js',
         ])
@@ -429,10 +432,10 @@ describe('CLI - Inspect', () => {
         const [inspectResult] = await Promise.all(
           vi.mocked(rsbuild!.inspectConfig).mock.results
             .filter(i => i.type === 'return')
-            .map(i => i.value as Promise<InspectConfigResult>),
+            .map(i => i.value),
         )
 
-        expect(inspectResult!.origin.rsbuildConfig.source.alias)
+        expect(inspectResult!.origin.rsbuildConfig.resolve.alias)
           .toHaveProperty(
             'foo',
             'bar',

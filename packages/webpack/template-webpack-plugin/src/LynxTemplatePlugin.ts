@@ -24,7 +24,6 @@ import { cssChunksToMap } from '@lynx-js/css-serializer';
 import { RuntimeGlobals } from '@lynx-js/webpack-runtime-globals';
 
 import { createLynxAsyncChunksRuntimeModule } from './LynxAsyncChunksRuntimeModule.js';
-import { LynxDebugMetadataPlugin } from './LynxDebugMetadataPlugin.js';
 
 export type OriginManifest = Record<string, {
   content: string;
@@ -49,10 +48,18 @@ export interface EncodeOptions {
     type?: 'lazy';
     content: string | Record<string, unknown>;
   }>;
+  /**
+   * Element template data used by encoders that support element template output.
+   */
+  elementTemplate?: Record<string, unknown>;
   [k: string]: unknown;
 }
 
-const LynxTemplatePluginHooksMap = new WeakMap<Compilation, TemplateHooks>();
+// Use `Symbol.for` so duplicate copies of this module (e.g. from an npm hoist
+// conflict that nests two copies under node_modules) share the same hooks slot.
+const LYNX_TEMPLATE_HOOKS_KEY: unique symbol = Symbol.for(
+  '@lynx-js/template-webpack-plugin/hooks',
+) as never;
 
 /**
  * To allow other plugins to alter the Template, this plugin executes
@@ -332,6 +339,7 @@ interface EncodeRawData {
     appType: string;
     config: Record<string, unknown>;
   };
+  elementTemplate?: Record<string, unknown>;
   [k: string]: unknown;
 }
 
@@ -347,13 +355,14 @@ export class LynxTemplatePlugin {
    * Returns all public hooks of the Lynx template webpack plugin for the given compilation
    */
   static getLynxTemplatePluginHooks(compilation: Compilation): TemplateHooks {
-    let hooks = LynxTemplatePluginHooksMap.get(compilation);
+    const stash = compilation as unknown as {
+      [LYNX_TEMPLATE_HOOKS_KEY]?: TemplateHooks;
+    };
+    let hooks = stash[LYNX_TEMPLATE_HOOKS_KEY];
     // Setup the hooks only once
     if (hooks === undefined) {
-      LynxTemplatePluginHooksMap.set(
-        compilation,
-        hooks = createLynxTemplatePluginHooks(),
-      );
+      hooks = createLynxTemplatePluginHooks();
+      stash[LYNX_TEMPLATE_HOOKS_KEY] = hooks;
     }
     return hooks;
   }
@@ -459,9 +468,6 @@ export class LynxTemplatePlugin {
       compiler,
       Object.assign({}, LynxTemplatePlugin.defaultOptions, this.options),
     );
-    new LynxDebugMetadataPlugin({
-      LynxTemplatePlugin,
-    }).apply(compiler);
   }
 }
 
@@ -779,23 +785,7 @@ class LynxTemplatePluginImpl {
       enableCSSSelector,
     );
 
-    let templateDebugUrl = '';
     const intermediatePosix = intermediate.replace(/\\/g, '/');
-    const debugInfoPath = path.posix.format({
-      dir: intermediatePosix,
-      base: 'debug-info.json',
-    });
-    // TODO: Support publicPath function
-    if (
-      typeof compiler.options.output.publicPath === 'string'
-      && compiler.options.output.publicPath !== 'auto'
-      && compiler.options.output.publicPath !== '/'
-    ) {
-      templateDebugUrl = new URL(
-        debugInfoPath,
-        compiler.options.output.publicPath,
-      ).toString();
-    }
 
     const encodeRawData: EncodeRawData = {
       compilerOptions: {
@@ -803,7 +793,8 @@ class LynxTemplatePluginImpl {
         useLepusNG: true,
         enableReuseContext: true,
         bundleModuleMode: 'ReturnByFunction',
-        templateDebugUrl,
+        // Will be filled later in `@lynx-js/debug-metadata-rsbuild-plugin`
+        templateDebugUrl: '',
 
         debugInfoOutside,
         defaultDisplayLinear,
@@ -828,6 +819,8 @@ class LynxTemplatePluginImpl {
           enableCSSInheritance,
           enableNewGesture,
           removeDescendantSelectorScope,
+          // Will be filled later in `@lynx-js/debug-metadata-rsbuild-plugin`
+          debugMetadataUrl: '',
         },
       },
       css: {
@@ -937,10 +930,6 @@ class LynxTemplatePluginImpl {
       });
 
       compilation.emitAsset(filename, new RawSource(template, false));
-
-      if (isDebug() || isDev) {
-        compilation.emitAsset(debugInfoPath, new RawSource(debugInfo));
-      }
 
       await hooks.afterEmit.promise({ outputName: filename });
     } catch (error) {

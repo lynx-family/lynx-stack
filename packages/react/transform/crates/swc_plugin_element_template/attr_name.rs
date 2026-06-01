@@ -63,12 +63,15 @@ impl AttrName {
   pub fn from_ns(ns: Ident, name: Ident) -> Self {
     let ns_str = ns.sym.as_ref();
     let name_str = name.sym.as_ref();
+    if name_str == "ref" {
+      return AttrName::WorkletRef;
+    }
+
     if ns_str != "main-thread" {
       return AttrName::Attr;
     }
 
     match name_str {
-      "ref" => AttrName::WorkletRef,
       "gesture" => AttrName::Gesture,
       _ if get_event_type_and_name(name_str).is_some() => AttrName::WorkletEvent,
       _ => AttrName::Attr,

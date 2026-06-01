@@ -704,6 +704,44 @@ mod test {
   }
 
   #[test]
+  fn test_frame_type_selector() {
+    let raw_style_info = RawStyleInfo {
+      css_id_to_style_sheet: FnvHashMap::from_iter(vec![(
+        0,
+        StyleSheet {
+          imports: vec![],
+          rules: vec![Rule {
+            nested_rules: vec![],
+            rule_type: RuleType::Declaration,
+            prelude: RulePrelude {
+              selector_list: vec![Selector {
+                simple_selectors: vec![OneSimpleSelector {
+                  selector_type: OneSimpleSelectorType::TypeSelector,
+                  value: "frame".to_string(),
+                }],
+              }],
+            },
+            declaration_block: DeclarationBlock {
+              declarations: vec![ParsedDeclaration {
+                property_id: CSSPropertyEnum::Height.into(),
+                is_important: false,
+                value_token_list: vec![ValueToken {
+                  token_type: crate::css_tokenizer::token_types::DIMENSION_TOKEN,
+                  value: "200px".to_string(),
+                }],
+              }],
+            },
+          }],
+        },
+      )]),
+      style_content_str_size_hint: 0,
+    };
+    let result = generate_string_buf(raw_style_info, true, None);
+    let expected = "lynx-view:not([l-e-name]){height:200px;}";
+    assert_eq!(result.style_content, expected);
+  }
+
+  #[test]
   fn test_multiple_selectors() {
     let raw_style_info = RawStyleInfo {
       css_id_to_style_sheet: FnvHashMap::from_iter(vec![(

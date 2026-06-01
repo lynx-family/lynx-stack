@@ -7,8 +7,9 @@
     "target": "esnext",
     "jsx": "preserve",
     "jsxImportSource": "@lynx-js/react",
-    "rootDir": "./src",
+    "noEmit": true,
+    "types": ["@rstest/core/globals"],
   },
-  "include": ["src"],
+  "include": ["src", "test", "rstest.config.ts"],
   "references": [],
 }

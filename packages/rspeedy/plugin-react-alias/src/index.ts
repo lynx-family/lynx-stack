@@ -9,6 +9,7 @@ import gte from 'semver/functions/gte.js'
 
 export interface Options {
   lazy?: boolean | undefined
+  elementTemplate?: boolean | undefined
 
   LAYERS: {
     MAIN_THREAD: string
@@ -21,7 +22,7 @@ export interface Options {
 const S_PLUGIN_REACT_ALIAS = Symbol.for('@lynx-js/plugin-react-alias')
 
 export function pluginReactAlias(options: Options): RsbuildPlugin {
-  const { LAYERS, lazy, rootPath } = options ?? {}
+  const { LAYERS, lazy, rootPath, elementTemplate } = options ?? {}
 
   return {
     name: 'lynx:react-alias',
@@ -68,17 +69,27 @@ export function pluginReactAlias(options: Options): RsbuildPlugin {
           jsxRuntimeMainThread,
           jsxDevRuntimeBackground,
           jsxDevRuntimeMainThread,
+          elementTemplateJsxRuntime,
+          elementTemplateJsxDevRuntime,
           preactHooks,
           hooksBackground,
           hooksMainThread,
           reactLepusBackground,
           reactLepusMainThread,
           reactCompat,
+          elementTemplateEntry,
+          elementTemplateInternalEntry,
         ] = await Promise.all([
           resolve('@lynx-js/react/jsx-runtime'),
           resolve('@lynx-js/react/lepus/jsx-runtime'),
           resolve('@lynx-js/react/jsx-dev-runtime'),
           resolve('@lynx-js/react/lepus/jsx-dev-runtime'),
+          elementTemplate
+            ? resolve('@lynx-js/react/element-template/jsx-runtime')
+            : Promise.resolve(null),
+          elementTemplate
+            ? resolve('@lynx-js/react/element-template/jsx-dev-runtime')
+            : Promise.resolve(null),
           resolvePreact('preact/hooks'),
           resolve('@lynx-js/react/hooks'),
           resolve('@lynx-js/react/lepus/hooks'),
@@ -87,15 +98,21 @@ export function pluginReactAlias(options: Options): RsbuildPlugin {
           gte(version, '0.111.9999')
             ? resolve('@lynx-js/react/compat')
             : Promise.resolve(null),
+          elementTemplate
+            ? resolve('@lynx-js/react/element-template')
+            : Promise.resolve(null),
+          elementTemplate
+            ? resolve('@lynx-js/react/element-template/internal')
+            : Promise.resolve(null),
         ])
 
         const jsxRuntime = {
           background: jsxRuntimeBackground,
-          mainThread: jsxRuntimeMainThread,
+          mainThread: elementTemplateJsxRuntime ?? jsxRuntimeMainThread,
         }
         const jsxDevRuntime = {
           background: jsxDevRuntimeBackground,
-          mainThread: jsxDevRuntimeMainThread,
+          mainThread: elementTemplateJsxDevRuntime ?? jsxDevRuntimeMainThread,
         }
         const reactLepus = {
           background: reactLepusBackground,
@@ -186,10 +203,21 @@ export function pluginReactAlias(options: Options): RsbuildPlugin {
           .alias
           .set(
             '@lynx-js/react$',
-            reactLepus.background,
+            elementTemplateEntry ?? reactLepus.background,
           )
-          .set('@lynx-js/react/jsx-runtime', jsxRuntime.background)
-          .set('@lynx-js/react/jsx-dev-runtime', jsxDevRuntime.background)
+          .set(
+            '@lynx-js/react/internal$',
+            elementTemplateInternalEntry
+              ?? chain.resolve.alias.get('@lynx-js/react/internal$'),
+          )
+          .set(
+            '@lynx-js/react/jsx-runtime',
+            jsxRuntime.background,
+          )
+          .set(
+            '@lynx-js/react/jsx-dev-runtime',
+            jsxDevRuntime.background,
+          )
 
         if (reactCompat) {
           chain

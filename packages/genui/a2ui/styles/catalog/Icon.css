@@ -1,0 +1,39 @@
+@import "../theme.css";
+
+.a2ui-icon {
+  font-family: var(--a2ui-icon-font-family);
+  font-style: normal;
+  font-weight: normal;
+  font-size: 24px;
+  line-height: 1;
+  letter-spacing: 1px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  color: var(--a2ui-color-on-background);
+}
+
+.a2ui-icon-sm {
+  font-size: 14px;
+}
+
+.a2ui-icon-md {
+  font-size: 24px;
+}
+
+.a2ui-icon-lg {
+  font-size: 32px;
+}
+
+.a2ui-icon-color-primary {
+  color: var(--a2ui-icon-color-primary);
+}
+
+.a2ui-icon-color-muted {
+  color: var(--a2ui-icon-color-muted);
+}
+
+.a2ui-icon-color-inherit {
+  color: inherit;
+}

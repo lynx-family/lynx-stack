@@ -1,6 +1,6 @@
 # a2ui-playground (packages/genui/a2ui-playground)
 
-This package is a playground app for `@lynx-js/a2ui-reactlynx`.
+This package is a playground app for `@lynx-js/genui/a2ui`.
 
 It supports:
 
@@ -22,7 +22,7 @@ the Lynx app and passes that `initData` to it.
 
 Web build has two entrypoints (see `rsbuild.config.ts`):
 
-- `src/entry.tsx`: the main control panel (tabs: Demos / Components / Chat)
+- `src/entry.tsx`: the main control panel (tabs: Create / Examples / Components)
 - `src/render.tsx`: a dedicated page (`/render.html`) that hosts a `<lynx-view>`
 
 `/render.html` is the important glue:
@@ -34,7 +34,7 @@ Web build has two entrypoints (see `rsbuild.config.ts`):
   reload when the init data changes.
 
 The control panel builds a `/render.html?...` URL with base64-encoded payload
-(`src/utils/renderUrl.ts`) and embeds it in an `<iframe>` (see `MobilePreview`).
+(`src/utils/renderUrl.ts`) and embeds it in an `<iframe>`(see `PreviewViewport.tsx`).
 
 ## Lynx App Architecture (What Runs Inside <lynx-view>)
 
@@ -42,7 +42,7 @@ The Lynx app entry is `lynx-src/index.tsx`, which renders `lynx-src/App.tsx`.
 
 Inside `lynx-src/App.tsx`:
 
-- It imports `@lynx-js/a2ui-reactlynx/catalog/all` to register catalog components.
+- It imports `@lynx-js/genui/a2ui/catalog/all` to register catalog components.
 - It reads `initData` via `useInitData()` (this is how `<lynx-view>` passes data
   into the Lynx runtime).
 - It uses `BaseClient` + `client.processor.processMessages(...)` to replay the

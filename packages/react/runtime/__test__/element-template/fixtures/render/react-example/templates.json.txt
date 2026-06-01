@@ -1,0 +1,280 @@
+[
+  {
+    "templateId": "_et_7a8c6_test_2",
+    "compiledTemplate": {
+      "kind": "element",
+      "type": "image",
+      "attributesArray": [
+        {
+          "kind": "slot",
+          "key": "src",
+          "attrSlotIndex": 0
+        },
+        {
+          "kind": "static",
+          "key": "class",
+          "value": "Logo--react"
+        }
+      ],
+      "children": []
+    },
+    "sourceFile": "index.tsx"
+  },
+  {
+    "templateId": "_et_7a8c6_test_3",
+    "compiledTemplate": {
+      "kind": "element",
+      "type": "image",
+      "attributesArray": [
+        {
+          "kind": "slot",
+          "key": "src",
+          "attrSlotIndex": 0
+        },
+        {
+          "kind": "static",
+          "key": "class",
+          "value": "Logo--lynx"
+        }
+      ],
+      "children": []
+    },
+    "sourceFile": "index.tsx"
+  },
+  {
+    "templateId": "_et_7a8c6_test_1",
+    "compiledTemplate": {
+      "kind": "element",
+      "type": "view",
+      "attributesArray": [],
+      "children": [
+        {
+          "kind": "element",
+          "type": "view",
+          "attributesArray": [
+            {
+              "kind": "static",
+              "key": "class",
+              "value": "Background"
+            }
+          ],
+          "children": []
+        },
+        {
+          "kind": "element",
+          "type": "view",
+          "attributesArray": [
+            {
+              "kind": "static",
+              "key": "class",
+              "value": "App"
+            }
+          ],
+          "children": [
+            {
+              "kind": "element",
+              "type": "view",
+              "attributesArray": [
+                {
+                  "kind": "static",
+                  "key": "class",
+                  "value": "Banner"
+                }
+              ],
+              "children": [
+                {
+                  "kind": "element",
+                  "type": "view",
+                  "attributesArray": [
+                    {
+                      "kind": "static",
+                      "key": "class",
+                      "value": "Logo"
+                    },
+                    {
+                      "kind": "slot",
+                      "key": "bindtap",
+                      "attrSlotIndex": 0
+                    }
+                  ],
+                  "children": [
+                    {
+                      "kind": "elementSlot",
+                      "type": "slot",
+                      "elementSlotIndex": 0
+                    }
+                  ]
+                },
+                {
+                  "kind": "element",
+                  "type": "text",
+                  "attributesArray": [
+                    {
+                      "kind": "static",
+                      "key": "class",
+                      "value": "Title"
+                    },
+                    {
+                      "kind": "static",
+                      "key": "text",
+                      "value": "React"
+                    }
+                  ],
+                  "children": []
+                },
+                {
+                  "kind": "element",
+                  "type": "text",
+                  "attributesArray": [
+                    {
+                      "kind": "static",
+                      "key": "class",
+                      "value": "Subtitle"
+                    },
+                    {
+                      "kind": "static",
+                      "key": "text",
+                      "value": "on Lynx"
+                    }
+                  ],
+                  "children": []
+                }
+              ]
+            },
+            {
+              "kind": "element",
+              "type": "view",
+              "attributesArray": [
+                {
+                  "kind": "static",
+                  "key": "class",
+                  "value": "Content"
+                }
+              ],
+              "children": [
+                {
+                  "kind": "element",
+                  "type": "image",
+                  "attributesArray": [
+                    {
+                      "kind": "slot",
+                      "key": "src",
+                      "attrSlotIndex": 1
+                    },
+                    {
+                      "kind": "static",
+                      "key": "class",
+                      "value": "Arrow"
+                    }
+                  ],
+                  "children": []
+                },
+                {
+                  "kind": "element",
+                  "type": "text",
+                  "attributesArray": [
+                    {
+                      "kind": "static",
+                      "key": "class",
+                      "value": "Description"
+                    },
+                    {
+                      "kind": "static",
+                      "key": "text",
+                      "value": "Tap the logo and have fun!"
+                    }
+                  ],
+                  "children": []
+                },
+                {
+                  "kind": "element",
+                  "type": "text",
+                  "attributesArray": [
+                    {
+                      "kind": "static",
+                      "key": "class",
+                      "value": "Hint"
+                    }
+                  ],
+                  "children": [
+                    {
+                      "kind": "element",
+                      "type": "raw-text",
+                      "attributesArray": [
+                        {
+                          "kind": "static",
+                          "key": "text",
+                          "value": "Edit"
+                        }
+                      ],
+                      "children": []
+                    },
+                    {
+                      "kind": "element",
+                      "type": "text",
+                      "attributesArray": [
+                        {
+                          "kind": "static",
+                          "key": "style",
+                          "value": "font-style:italic;color:rgba(255, 255, 255, 0.85)"
+                        }
+                      ],
+                      "children": [
+                        {
+                          "kind": "elementSlot",
+                          "type": "slot",
+                          "elementSlotIndex": 1
+                        }
+                      ]
+                    },
+                    {
+                      "kind": "element",
+                      "type": "raw-text",
+                      "attributesArray": [
+                        {
+                          "kind": "static",
+                          "key": "text",
+                          "value": "to see updates!"
+                        }
+                      ],
+                      "children": []
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "kind": "element",
+              "type": "view",
+              "attributesArray": [
+                {
+                  "kind": "static",
+                  "key": "style",
+                  "value": "flex:1"
+                }
+              ],
+              "children": []
+            }
+          ]
+        }
+      ]
+    },
+    "sourceFile": "index.tsx"
+  },
+  {
+    "templateId": "_et_builtin_raw_text",
+    "compiledTemplate": {
+      "kind": "element",
+      "type": "raw-text",
+      "attributesArray": [
+        {
+          "kind": "slot",
+          "key": "text",
+          "attrSlotIndex": 0
+        }
+      ],
+      "children": []
+    },
+    "sourceFile": "<builtin>"
+  }
+]

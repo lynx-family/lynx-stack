@@ -1,5 +1,50 @@
 # @lynx-js/web-core
 
+## 0.21.0
+
+### Minor Changes
+
+- feat: support global keyboard events (keydown/keyup) on web ([#2594](https://github.com/lynx-family/lynx-stack/pull/2594))
+
+  Register `keydown`/`keyup` listeners on `document` instead of the ShadowRoot, which never receives keyboard events. Handle the case where `target_unique_id` is 0 (no element in the Lynx tree) by falling back to `currentTarget`, enabling `global-bindkeydown` and `global-bindkeyup` to work correctly in web previews.
+
+### Patch Changes
+
+- Add lynx-view-relative coordinates to positional event payloads (matching native Lynx semantics) while preserving viewport/document coordinates for Web interop, and switch the `boundingClientRect` UI method to lynx-view-relative. ([#2583](https://github.com/lynx-family/lynx-stack/pull/2583))
+
+  The lynx-view's rect is cached by a new `BoundingClientRectService` (one per `LynxViewInstance`). The cache is invalidated by `transitionend`/`animationend` on the lynx-view itself (filtered to ignore descendants bubbling through) and by an idle-callback path throttled to at most one invalidation per 240 ms. This picks up CSS `transform`s and similar drifts that `ResizeObserver` would not catch, while bounding the cost when many events read the rect in a tight loop and avoiding event-modification feedback loops.
+
+  Coordinate model:
+
+  - `x`/`y` (top-level on `mouse*`; `detail.x`/`detail.y` on `click`/`touch*`; per-touch on `touches`/`targetTouches`/`changedTouches`) — lynx-view-relative (Lynx parity).
+  - `clientX`/`clientY`, `pageX`/`pageY` (top-level on `mouse*`/`click`; per-touch alongside the added `x`/`y`) — viewport- and document-relative, unchanged from the underlying DOM event (Web interop).
+  - `layoutchange.detail.{top,left,right,bottom}` is lynx-view-relative.
+  - The `boundingClientRect` UI method (`SelectorQuery#fields({rect: true})`, `NodesRef.invoke('boundingClientRect')`) returns lynx-view-relative coordinates.
+
+- Updated dependencies [[`531ef76`](https://github.com/lynx-family/lynx-stack/commit/531ef76434a513f1e0c47137ca1051e0dacf04f6)]:
+  - @lynx-js/web-elements@0.12.3
+  - @lynx-js/web-worker-rpc@0.21.0
+
+## 0.20.4
+
+### Patch Changes
+
+- Always clone touch event lists when creating cross-thread events so synthetic touch events only carry structured-clone-safe primitive fields. ([#2636](https://github.com/lynx-family/lynx-stack/pull/2636))
+
+- Conditionally pass Card and Component params based on cardType in background thread. ([#2610](https://github.com/lynx-family/lynx-stack/pull/2610))
+
+- Add bidirectional decode worker heartbreak liveness messages. ([#2599](https://github.com/lynx-family/lynx-stack/pull/2599))
+
+- Add web support for the `<frame>` element by mapping it to `<lynx-view>`. ([#2604](https://github.com/lynx-family/lynx-stack/pull/2604))
+
+- Stop redeclaring `fetch` as a chunk-scope binding. Reusing the host ([#2562](https://github.com/lynx-family/lynx-stack/pull/2562))
+  `window.fetch` from BTS chunks (instead of capturing the no-op stub the
+  chunk wrapper used to install) lets the renderer issue real network
+  requests.
+- Updated dependencies [[`c1db603`](https://github.com/lynx-family/lynx-stack/commit/c1db6034641954680c529e3a01a04077196cd94d)]:
+  - @lynx-js/web-elements@0.12.2
+  - @lynx-js/web-worker-rpc@0.20.4
+
 ## 0.20.3
 
 ### Patch Changes

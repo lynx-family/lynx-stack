@@ -26,13 +26,18 @@ export default tseslint.config(
 
       // Outputs
       '**/.rslib/**',
+      '**/.next/**',
       '**/.turbo/**',
+      '**/.vercel/**',
       '**/coverage/**',
       'output/**',
       'target/**',
       '**/test/js',
       '**/dist/**',
       '**/lib/**',
+      // rspeedy/rsbuild build output for the a2ui-playground (lynx bundle
+      // + the rsbuild static site that serves it).
+      'packages/genui/a2ui-playground/www/**',
       'website/doc_build/**',
       '.changeset/*',
       '**/CHANGELOG.md',
@@ -71,6 +76,7 @@ export default tseslint.config(
       'packages/react/transform/index.d.ts',
       'packages/react/transform/index.cjs',
       'packages/react/transform/**/index.d.ts',
+      'packages/genui/server/next-env.d.ts',
 
       // REPL examples use Lynx platform globals and are not subject to lint rules
       'packages/repl/src/examples/**',
@@ -92,6 +98,7 @@ export default tseslint.config(
       'packages/react/runtime/worklet-runtime/**',
       'packages/react/runtime/src/renderToOpcodes/**',
       'packages/react/runtime/src/snapshot/renderToOpcodes/**',
+      'packages/react/runtime/src/element-template/runtime/render/render-to-opcodes.ts',
       'packages/react/runtime/types/**',
 
       // TODO: enable eslint for react-runtime
@@ -262,6 +269,12 @@ export default tseslint.config(
       reportUnusedDisableDirectives: true,
     },
   },
+  {
+    files: ['packages/genui/index.ts'],
+    rules: {
+      'import/no-unresolved': 'off',
+    },
+  },
   // TypeScript-related
   {
     files: ['**/*.ts', '**/*.tsx'],
@@ -286,6 +299,7 @@ export default tseslint.config(
             'rslib.config.ts',
             'vitest.config.ts',
             'rstest.config.ts',
+            'packages/genui/index.ts',
           ],
           defaultProject: './tsconfig.json',
         },
@@ -447,6 +461,15 @@ export default tseslint.config(
     rules: {
       // TODO: enable header for examples
       'headers/header-format': 'off',
+    },
+  },
+  {
+    files: [
+      'packages/genui/server/**/*.{ts,tsx}',
+    ],
+    rules: {
+      'n/file-extension-in-import': 'off',
+      'n/no-unsupported-features/node-builtins': 'off',
     },
   },
 );

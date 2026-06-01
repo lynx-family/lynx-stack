@@ -6,7 +6,13 @@ import path from 'node:path';
 
 import type { LoaderContext } from '@rspack/core';
 
-import { JSX_IMPORT_SOURCE, RUNTIME_PKG } from './options.js';
+import type { ElementTemplateConfig } from '@lynx-js/react/transform';
+
+import {
+  ELEMENT_TEMPLATE_RUNTIME_PKG,
+  JSX_IMPORT_SOURCE,
+  RUNTIME_PKG,
+} from './options.js';
 import type { ReactLoaderOptions } from './options.js';
 
 function normalizeSlashes(file: string) {
@@ -22,6 +28,7 @@ function testingLoader(
     compat = false,
     defineDCE = { define: {} },
     engineVersion = '',
+    experimental_useElementTemplate = false,
     shake = false,
     transformPath = '@lynx-js/react/transform',
   } = this.getOptions();
@@ -57,13 +64,22 @@ function testingLoader(
       pluginName: '',
       filename: this.resourcePath,
       sourcemap: true,
-      snapshot: {
+      snapshot: experimental_useElementTemplate ? false : {
         preserveJsx: false,
         runtimePkg: RUNTIME_PKG,
         jsxImportSource: JSX_IMPORT_SOURCE.BACKGROUND,
         filename,
         target: 'MIXED',
       },
+      elementTemplate: experimental_useElementTemplate
+        ? {
+          preserveJsx: false,
+          runtimePkg: ELEMENT_TEMPLATE_RUNTIME_PKG,
+          jsxImportSource: JSX_IMPORT_SOURCE.ELEMENT_TEMPLATE,
+          filename,
+          target: 'MIXED',
+        } satisfies ElementTemplateConfig
+        : false,
       // snapshot: true,
       directiveDCE: false,
       defineDCE,

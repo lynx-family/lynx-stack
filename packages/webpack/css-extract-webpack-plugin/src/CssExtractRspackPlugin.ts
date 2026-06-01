@@ -204,10 +204,12 @@ class CssExtractRspackPluginImpl {
                   ...restCompilerOptions
                 },
               } = args.finalEncodeOptions;
+              const baseEncodeOptions = { ...args.finalEncodeOptions };
+              baseEncodeOptions.compilerOptions = restCompilerOptions;
+              delete baseEncodeOptions.elementTemplate;
               const { buffer } = await hooks.encode.promise({
                 encodeOptions: {
-                  ...args.finalEncodeOptions,
-                  compilerOptions: restCompilerOptions,
+                  ...baseEncodeOptions,
                   css,
                   lepusCode: {
                     root: undefined,
@@ -255,7 +257,7 @@ class CssExtractRspackPluginImpl {
             hash: string | null,
             hotUpdateFiles: Map<string, string>,
           ) {
-            super('lynx css hot update');
+            super('webpack/runtime/lynx css hot update');
             this.hash = hash;
             this.hotUpdateFiles = hotUpdateFiles;
           }

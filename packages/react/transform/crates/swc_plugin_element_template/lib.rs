@@ -21,13 +21,13 @@ mod asset;
 mod attr_name;
 mod extractor;
 mod lowering;
-mod slot;
 mod template_attribute;
 mod template_definition;
 mod template_slot;
 
 pub use self::asset::ElementTemplateAsset;
-use self::extractor::{ElementTemplateExtractor, ExtractedTemplateParts};
+use self::attr_name::AttrName;
+use self::extractor::{DynamicAttributePart, ElementTemplateExtractor, ExtractedTemplateParts};
 use self::lowering::LoweredRuntimeJsx;
 use self::template_slot::ET_SLOT_PLACEHOLDER_TAG;
 
@@ -54,6 +54,45 @@ fn lazy_runtime_id(init: impl FnOnce() -> Expr + 'static) -> Lazy<Expr, RuntimeI
   Lazy::new(Box::new(init))
 }
 
+fn require_runtime_id(runtime_pkg: String) -> Lazy<Expr, RuntimeIdInitializer> {
+  lazy_runtime_id(move || {
+    Expr::Call(CallExpr {
+      ctxt: SyntaxContext::default(),
+      span: DUMMY_SP,
+      callee: Callee::Expr(Box::new(Expr::Ident(
+        IdentName::new("require".into(), DUMMY_SP).into(),
+      ))),
+      args: vec![ExprOrSpread {
+        spread: None,
+        expr: Box::new(Expr::Lit(Lit::Str(Str {
+          span: DUMMY_SP,
+          value: runtime_pkg.into(),
+          raw: None,
+        }))),
+      }],
+      type_args: None,
+    })
+  })
+}
+
+fn internal_runtime_pkg(runtime_pkg: &str) -> String {
+  const INTERNAL_SUFFIXES: &[&str] = &[
+    "/internal",
+    "/internal.ts",
+    "/internal.js",
+    "/internal.mjs",
+    "/internal.cjs",
+  ];
+  if INTERNAL_SUFFIXES
+    .iter()
+    .any(|suffix| runtime_pkg.ends_with(suffix))
+  {
+    runtime_pkg.to_string()
+  } else {
+    format!("{runtime_pkg}/internal")
+  }
+}
+
 /// @internal
 #[derive(Deserialize, PartialEq, Clone, Debug)]
 #[serde(rename_all = "camelCase")]
@@ -75,6 +114,8 @@ impl Default for JSXTransformerConfig {
   fn default() -> Self {
     Self {
       preserve_jsx: false,
+      // Keep the authored runtime package stable. rspeedy aliases
+      // `@lynx-js/react` to the ET entry when Element Template is enabled.
       runtime_pkg: "@lynx-js/react".into(),
       jsx_import_source: Some("@lynx-js/react".into()),
       filename: Default::default(),
@@ -93,12 +134,11 @@ where
   filename_hash: String,
   pub content_hash: String,
   runtime_id: Lazy<Expr, RuntimeIdInitializer>,
+  internal_runtime_id: Lazy<Expr, RuntimeIdInitializer>,
   pub element_templates: Option<Rc<RefCell<Vec<ElementTemplateAsset>>>>,
   template_counter: u32,
   current_template_defs: Vec<ModuleItem>,
   comments: Option<C>,
-  slot_ident: Ident,
-  used_slot: bool,
 }
 
 impl<C> JSXTransformer<C>
@@ -131,28 +171,20 @@ where
       content_hash: "test".into(),
       runtime_id: match mode {
         TransformMode::Development => {
-          let runtime_pkg = format!("{}/internal", cfg.runtime_pkg);
-          lazy_runtime_id(move || {
-            Expr::Call(CallExpr {
-              ctxt: SyntaxContext::default(),
-              span: DUMMY_SP,
-              callee: Callee::Expr(Box::new(Expr::Ident(
-                IdentName::new("require".into(), DUMMY_SP).into(),
-              ))),
-              args: vec![ExprOrSpread {
-                spread: None,
-                expr: Box::new(Expr::Lit(Lit::Str(Str {
-                  span: DUMMY_SP,
-                  value: runtime_pkg.into(),
-                  raw: None,
-                }))),
-              }],
-              type_args: None,
-            })
-          })
+          let runtime_pkg = cfg.runtime_pkg.clone();
+          require_runtime_id(runtime_pkg)
         }
         TransformMode::Production | TransformMode::Test => {
           lazy_runtime_id(|| Expr::Ident(private_ident!("ReactLynx")))
+        }
+      },
+      internal_runtime_id: match mode {
+        TransformMode::Development => {
+          let runtime_pkg = internal_runtime_pkg(&cfg.runtime_pkg);
+          require_runtime_id(runtime_pkg)
+        }
+        TransformMode::Production | TransformMode::Test => {
+          lazy_runtime_id(|| Expr::Ident(private_ident!("ReactLynxInternal")))
         }
       },
       element_templates,
@@ -160,8 +192,6 @@ where
       template_counter: 0,
       current_template_defs: vec![],
       comments,
-      slot_ident: private_ident!("__etSlot"),
-      used_slot: false,
     }
   }
 
@@ -262,6 +292,33 @@ where
       extractor.into_extracted_template_parts()
     };
 
+    #[derive(Clone, Copy)]
+    enum AttrPlanAdapter {
+      Event,
+      Ref,
+      Spread,
+    }
+
+    let attr_plan_slots = dynamic_attrs
+      .iter()
+      .filter_map(|dynamic_attr| match dynamic_attr {
+        DynamicAttributePart::Attr {
+          attr_name: AttrName::Event,
+          slot_index,
+          ..
+        } => Some((*slot_index, AttrPlanAdapter::Event)),
+        DynamicAttributePart::Attr {
+          attr_name: AttrName::Ref,
+          slot_index,
+          ..
+        } => Some((*slot_index, AttrPlanAdapter::Ref)),
+        DynamicAttributePart::Spread { slot_index, .. } => {
+          Some((*slot_index, AttrPlanAdapter::Spread))
+        }
+        _ => None,
+      })
+      .collect::<Vec<_>>();
+
     let LoweredRuntimeJsx {
       attrs: rendered_attrs,
       children: rendered_children,
@@ -285,6 +342,47 @@ where
         entry_template_uid: Expr = entry_template_uid.clone(),
     ));
     self.current_template_defs.push(entry_template_uid_def);
+    if !attr_plan_slots.is_empty() {
+      let internal_runtime_id = self.internal_runtime_id.clone();
+      let mut attr_plan_elements = Vec::with_capacity(attr_plan_slots.len() * 2);
+      for (slot_index, adapter) in attr_plan_slots {
+        attr_plan_elements.push(Some(ExprOrSpread {
+          spread: None,
+          expr: Box::new(i32_to_expr(&slot_index)),
+        }));
+        let adapter_expr = match adapter {
+          AttrPlanAdapter::Event => quote!(
+            "$internal_runtime_id.adaptEventAttrSlot" as Expr,
+            internal_runtime_id: Expr = internal_runtime_id.clone(),
+          ),
+          AttrPlanAdapter::Ref => quote!(
+            "$internal_runtime_id.adaptRefAttrSlot" as Expr,
+            internal_runtime_id: Expr = internal_runtime_id.clone(),
+          ),
+          AttrPlanAdapter::Spread => quote!(
+            "$internal_runtime_id.adaptSpreadAttrSlot" as Expr,
+            internal_runtime_id: Expr = internal_runtime_id.clone(),
+          ),
+        };
+        attr_plan_elements.push(Some(ExprOrSpread {
+          spread: None,
+          expr: Box::new(adapter_expr),
+        }));
+      }
+
+      let attr_plan_expr = Expr::Array(ArrayLit {
+        span: DUMMY_SP,
+        elems: attr_plan_elements,
+      });
+      let attr_plan_def = ModuleItem::Stmt(quote!(
+          r#"$internal_runtime_id.__etAttrPlanMap[$template_ident] = $attr_plan_expr"#
+              as Stmt,
+          internal_runtime_id: Expr = internal_runtime_id.clone(),
+          template_ident: Expr = Expr::Ident(template_ident.clone()),
+          attr_plan_expr: Expr = attr_plan_expr,
+      ));
+      self.current_template_defs.push(attr_plan_def);
+    }
 
     let mut dynamic_attr_slot_cursor: usize = 0;
     let mut element_slot_index: i32 = 0;
@@ -378,26 +476,19 @@ where
         })),
       );
     }
-
-    if self.used_slot {
+    if let Some(Expr::Ident(internal_runtime_id)) = Lazy::get(&self.internal_runtime_id) {
       prepend_stmt(
         &mut n.body,
         ModuleItem::ModuleDecl(ModuleDecl::Import(ImportDecl {
           span: DUMMY_SP,
-          specifiers: vec![ImportSpecifier::Named(ImportNamedSpecifier {
+          specifiers: vec![ImportSpecifier::Namespace(ImportStarAsSpecifier {
             span: DUMMY_SP,
-            local: self.slot_ident.clone(),
-            imported: Some(ModuleExportName::Ident(Ident::new(
-              "__etSlot".into(),
-              DUMMY_SP,
-              SyntaxContext::default(),
-            ))),
-            is_type_only: false,
+            local: internal_runtime_id.clone(),
           })],
           src: Box::new(Str {
             span: DUMMY_SP,
             raw: None,
-            value: self.cfg.runtime_pkg.clone().into(),
+            value: internal_runtime_pkg(&self.cfg.runtime_pkg).into(),
           }),
           type_only: Default::default(),
           with: Default::default(),

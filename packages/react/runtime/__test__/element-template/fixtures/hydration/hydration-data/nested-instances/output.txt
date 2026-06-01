@@ -1,0 +1,8 @@
+Array [
+  Object {
+    "attributeSlots": Array [],
+    "elementSlots": Array [],
+    "templateKey": "_et_a94a8_test_2",
+    "uid": -1,
+  },
+]

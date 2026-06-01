@@ -3,12 +3,11 @@ use swc_core::{
   ecma::ast::*,
   quote,
 };
-use swc_plugins_shared::{jsx_helpers::jsx_children_to_expr, target::TransformTarget};
+use swc_plugins_shared::target::TransformTarget;
 
 use super::{
   attr_name::AttrName,
   extractor::{DynamicAttributePart, DynamicElementPart},
-  slot::{expr_to_jsx_child, lower_lepus_et_children_expr, wrap_in_slot},
   JSXTransformer,
 };
 
@@ -24,12 +23,11 @@ where
   pub(super) fn lower_runtime_jsx(
     &mut self,
     target: TransformTarget,
-    runtime_id: Expr,
+    _runtime_id: Expr,
     key: Option<JSXAttrValue>,
     dynamic_attrs: Vec<DynamicAttributePart>,
     dynamic_children: Vec<DynamicElementPart>,
   ) -> LoweredRuntimeJsx {
-    let mut rendered_slot_children: Vec<JSXElementChild> = vec![];
     let mut attr_slot_values: Vec<Option<ExprOrSpread>> = vec![];
     let mut rendered_attrs: Vec<JSXAttrOrSpread> = vec![];
 
@@ -58,12 +56,10 @@ where
             if target == TransformTarget::LEPUS {
               quote!("1" as Expr)
             } else {
-              quote!(
-                "$runtime_id.transformRef($value)" as Expr,
-                runtime_id: Expr = runtime_id.clone(),
-                value: Expr = value,
-              )
+              value
             }
+          } else if let AttrName::WorkletRef = attr_name {
+            quote!("null" as Expr)
           } else {
             value
           };
@@ -91,45 +87,6 @@ where
       }
     }
 
-    match (dynamic_children.len(), dynamic_children.first()) {
-      (0, _) => {}
-      (1, Some(DynamicElementPart::Slot(expr, 0))) => {
-        let child = expr_to_jsx_child(expr.clone());
-        if target != TransformTarget::LEPUS {
-          self.used_slot = true;
-        }
-        rendered_slot_children.push(wrap_in_slot(&self.slot_ident, 0, vec![child]));
-      }
-      _ => {
-        for dynamic_child in dynamic_children {
-          match dynamic_child {
-            DynamicElementPart::ListSlot(expr, element_index) => {
-              let child = expr_to_jsx_child(expr);
-              if target != TransformTarget::LEPUS {
-                self.used_slot = true;
-              }
-              rendered_slot_children.push(wrap_in_slot(
-                &self.slot_ident,
-                element_index,
-                vec![child],
-              ));
-            }
-            DynamicElementPart::Slot(expr, element_index) => {
-              let child = expr_to_jsx_child(expr);
-              if target != TransformTarget::LEPUS {
-                self.used_slot = true;
-              }
-              rendered_slot_children.push(wrap_in_slot(
-                &self.slot_ident,
-                element_index,
-                vec![child],
-              ));
-            }
-          }
-        }
-      }
-    }
-
     if !attr_slot_values.is_empty() {
       rendered_attrs.push(JSXAttrOrSpread::JSXAttr(JSXAttr {
         span: DUMMY_SP,
@@ -144,27 +101,25 @@ where
       }));
     }
 
-    if target == TransformTarget::LEPUS && !rendered_slot_children.is_empty() {
-      let children_expr = jsx_children_to_expr(rendered_slot_children);
-      let lowered_children_expr = lower_lepus_et_children_expr(children_expr, &self.slot_ident)
-        .expect("LEPUS ET children should already be lowered to slot arrays");
+    for dynamic_child in dynamic_children {
+      let (slot_index, expr) = match dynamic_child {
+        DynamicElementPart::Slot(expr, idx) | DynamicElementPart::ListSlot(expr, idx) => {
+          (idx, expr)
+        }
+      };
       rendered_attrs.push(JSXAttrOrSpread::JSXAttr(JSXAttr {
         span: DUMMY_SP,
-        name: JSXAttrName::Ident(IdentName::new("children".into(), DUMMY_SP)),
+        name: JSXAttrName::Ident(IdentName::new(format!("${}", slot_index).into(), DUMMY_SP)),
         value: Some(JSXAttrValue::JSXExprContainer(JSXExprContainer {
           span: DUMMY_SP,
-          expr: JSXExpr::Expr(Box::new(lowered_children_expr)),
+          expr: JSXExpr::Expr(Box::new(expr)),
         })),
       }));
-      return LoweredRuntimeJsx {
-        attrs: rendered_attrs,
-        children: vec![],
-      };
     }
 
     LoweredRuntimeJsx {
       attrs: rendered_attrs,
-      children: rendered_slot_children,
+      children: vec![],
     }
   }
 }

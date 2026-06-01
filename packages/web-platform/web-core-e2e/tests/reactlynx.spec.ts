@@ -34,13 +34,11 @@ const diffScreenShot = async (
 };
 
 const expectHasText = async (page: Page, text: string) => {
-  const hasText = (await page.getByText(text).count()) === 1;
-  await expect(hasText).toBe(true);
+  await expect(page.getByText(text)).toHaveCount(1);
 };
 
 const expectNoText = async (page: Page, text: string) => {
-  const hasText = (await page.getByText(text).count()) === 1;
-  await expect(hasText).toBe(false);
+  await expect(page.getByText(text)).toHaveCount(0);
 };
 
 const goto = async (
@@ -125,6 +123,59 @@ test.describe('reactlynx3 tests', () => {
       await expect(await observer.getAttribute('style')).toContain('green');
       await target.click();
       await wait(100);
+      await expect(await observer.getAttribute('style')).toContain('pink');
+    });
+    test('basic-global-bindkeydown', async ({ page }, { title }) => {
+      await goto(page, title);
+      await wait(100);
+      const observer = page.locator('#observer');
+      await page.keyboard.press('a');
+      await wait(100);
+      await expect(await observer.getAttribute('style')).toContain('green');
+    });
+    test('basic-global-bindkeyup', async ({ page }, { title }) => {
+      await goto(page, title);
+      await wait(100);
+      const observer = page.locator('#observer');
+      await page.keyboard.down('a');
+      await wait(100);
+      // keyup hasn't fired yet — observer should still be pink.
+      await expect(await observer.getAttribute('style')).toContain('pink');
+      await page.keyboard.up('a');
+      await wait(100);
+      await expect(await observer.getAttribute('style')).toContain('green');
+    });
+    test('basic-global-bindkeydown-key', async ({ page }, { title }) => {
+      await goto(page, title);
+      await wait(100);
+      const observer = page.locator('#observer');
+      await page.keyboard.press('Enter');
+      await wait(100);
+      await expect(await observer.getAttribute('data-key')).toBe('Enter');
+    });
+    test('basic-global-bindkeydown-code', async ({ page }, { title }) => {
+      await goto(page, title);
+      await wait(100);
+      const observer = page.locator('#observer');
+      await page.keyboard.press('a');
+      await wait(100);
+      await expect(await observer.getAttribute('data-code')).toBe('KeyA');
+    });
+    test('basic-global-bindkeydown-shift', async ({ page }, { title }) => {
+      await goto(page, title);
+      await wait(100);
+      const observer = page.locator('#observer');
+      await page.keyboard.press('Shift+a');
+      await wait(100);
+      await expect(await observer.getAttribute('style')).toContain('green');
+    });
+    test('basic-bindkeydown-out-of-view-noop', async ({ page }, { title }) => {
+      await goto(page, title);
+      await wait(100);
+      const observer = page.locator('#observer');
+      await page.keyboard.press('a');
+      await wait(100);
+      // Non-global `bindKeydown` must NOT fire for an out-of-view keypress.
       await expect(await observer.getAttribute('style')).toContain('pink');
     });
     test('basic-bindtap-detail', async ({ page }, { title }) => {
@@ -259,6 +310,71 @@ test.describe('reactlynx3 tests', () => {
       const height = page.locator('#height');
       await expect(width).toHaveText('1234');
       await expect(height).toHaveText('5678');
+    });
+
+    test('api-frame-element-map', async ({ page }, { title }) => {
+      await goto(page, title);
+      await expect(page.locator('#target')).toHaveJSProperty(
+        'tagName',
+        'LYNX-VIEW',
+      );
+    });
+
+    test('api-frame-src', async ({ page }, { title }) => {
+      await goto(page, title);
+      await expect(page.locator('#frame-ready')).toHaveText('frame:ready');
+    });
+
+    test('api-frame-data', async ({ page }, { title }) => {
+      await goto(page, title);
+      await expect(page.locator('#frame-data')).toHaveText('data:from-data');
+    });
+
+    test('api-frame-data-update', async ({ page }, { title }) => {
+      await goto(page, title);
+      await expect(page.locator('#frame-data')).toHaveText('data:before');
+      await page.locator('#update-frame-data').click();
+      await expect(page.locator('#frame-data')).toHaveText('data:after');
+    });
+
+    test('api-frame-global-props', async ({ page }, { title }) => {
+      await goto(page, title);
+      await expect(page.locator('#frame-global-props')).toHaveText(
+        'global:from-global-props',
+      );
+    });
+
+    test('api-frame-bindload', async ({ page }, { title }) => {
+      await goto(page, title);
+      await expect(page.locator('#frame-load-status')).toHaveText('0');
+      await expect(page.locator('#frame-load-message')).toHaveText('success');
+      await expect(page.locator('#frame-load-url')).toContainText(
+        '/dist/api-frame-inner.web.bundle',
+      );
+    });
+
+    test('api-frame-auto-height', async ({ page }, { title }) => {
+      await goto(page, title);
+      await expect(page.locator('#target')).toHaveAttribute(
+        'auto-height',
+        'true',
+      );
+      await expect(page.locator('#target')).not.toHaveAttribute(
+        'height',
+        'auto',
+      );
+    });
+
+    test('api-frame-auto-width', async ({ page }, { title }) => {
+      await goto(page, title);
+      await expect(page.locator('#target')).toHaveAttribute(
+        'auto-width',
+        'true',
+      );
+      await expect(page.locator('#target')).not.toHaveAttribute(
+        'width',
+        'auto',
+      );
     });
 
     test('basic-bindtap-simultaneous', async ({ page }, { title }) => {
@@ -1037,6 +1153,24 @@ test.describe('reactlynx3 tests', () => {
           'background-color',
           'rgb(0, 128, 0)',
         ); // green
+      },
+    );
+    test(
+      'basic-bindwheel-view',
+      async ({ page, browserName }, { title }) => {
+        test.skip(
+          browserName === 'webkit',
+          'mouse wheel unsupported on webkit',
+        );
+        await goto(page, title);
+        await wait(300);
+        await page.locator('#target').hover();
+        await page.mouse.wheel(0, 100);
+        await expect(page.locator('#result')).toHaveText('wheel');
+        await expect(page.locator('#indicator')).toHaveCSS(
+          'background-color',
+          'rgb(0, 128, 0)',
+        );
       },
     );
 
@@ -1992,6 +2126,94 @@ test.describe('reactlynx3 tests', () => {
       const target = page.locator('#target');
       await expect(target).toHaveCSS('background-color', 'rgb(0, 128, 0)'); // green
     });
+    // Inject CSS for the lynx-view BEFORE the bundle loads, so the offset
+    // (or transform) is in place by the time the first layoutchange fires.
+    // Applying the offset after `goto` would race the initial layoutchange,
+    // which can pass under viewport-relative behavior when the lynx-view
+    // happens to still be at viewport origin.
+    const installLynxViewStyle = async (page: Page, css: string) => {
+      await page.addInitScript((rule) => {
+        const inject = () => {
+          if (!document.head) return false;
+          const style = document.createElement('style');
+          style.textContent = `lynx-view { ${rule} }`;
+          document.head.appendChild(style);
+          return true;
+        };
+        if (!inject()) {
+          const observer = new MutationObserver(() => {
+            if (inject()) observer.disconnect();
+          });
+          observer.observe(document.documentElement, {
+            childList: true,
+            subtree: true,
+          });
+        }
+      }, css);
+    };
+    const offsetCss = 'margin-top: 200px; margin-left: 200px;';
+    test(
+      'api-bindlayoutchange-lynx-view-relative',
+      async ({ page }, { title }) => {
+        await installLynxViewStyle(page, offsetCss);
+        await goto(page, title);
+        // `toHaveCSS` polls up to its default timeout; no explicit wait needed.
+        await expect(page.locator('#target')).toHaveCSS(
+          'background-color',
+          'rgb(0, 128, 0)',
+        );
+      },
+    );
+    test(
+      'api-bindtap-lynx-view-relative',
+      async ({ page }, { title }) => {
+        await installLynxViewStyle(page, offsetCss);
+        await goto(page, title);
+        // Locator-based click waits for the inner tap-area to be attached
+        // and clicks its center — robust to bundle-load + display:flex
+        // timing differences across Chromium/WebKit/Firefox.
+        await page.locator('#tap-area').click();
+        await expect(page.locator('#target')).toHaveCSS(
+          'background-color',
+          'rgb(0, 128, 0)',
+        );
+      },
+    );
+    // No e2e for `bindtouchstart` here: the touch coordinate path is
+    // unit-tested in web-core/tests/element-apis.spec.ts (`createCrossThreadEvent
+    // properly sets touch detail x and y`, `createCrossThreadEvent clone
+    // touches for untrusted events`). Firefox lacks touch emulation, and
+    // the non-MTS `bindtouchstart` event-dispatch path is otherwise unused
+    // in this test suite; chromium/webkit produced inconsistent results
+    // here that couldn't be reproduced locally for diagnosis.
+    test(
+      'api-bindlayoutchange-lynx-view-relative-transformed',
+      async ({ page }) => {
+        // Reuses the api-bindlayoutchange-lynx-view-relative fixture but
+        // shifts the lynx-view via CSS `transform` (which ResizeObserver
+        // does NOT observe). Asserts the lazy first measurement still
+        // captures the transformed viewport position.
+        await installLynxViewStyle(page, 'transform: translate(200px, 200px);');
+        await goto(page, 'api-bindlayoutchange-lynx-view-relative');
+        await expect(page.locator('#target')).toHaveCSS(
+          'background-color',
+          'rgb(0, 128, 0)',
+        );
+      },
+    );
+    test(
+      'api-boundingclientrect-lynx-view-relative',
+      async ({ page }, { title }) => {
+        await installLynxViewStyle(page, offsetCss);
+        await goto(page, title);
+        // The fixture's componentDidMount fires the SelectorQuery+invoke
+        // ~500 ms after mount; `toHaveCSS` polls within its default timeout.
+        await expect(page.locator('#target')).toHaveCSS(
+          'background-color',
+          'rgb(0, 128, 0)',
+        );
+      },
+    );
   });
 
   test.describe('configs', () => {
@@ -2283,6 +2505,21 @@ test.describe('reactlynx3 tests', () => {
         await goto(page, title);
         await wait(100);
         await diffScreenShot(page, 'text', 'baseline');
+      });
+
+      test('basic-element-text-extra-font-family', async ({ page }, {
+        title,
+      }) => {
+        await goto(page, title);
+        await page.evaluate(async () => {
+          await document.fonts.load(
+            '18px "Press Start 2P E2E"',
+            'EXTRA FONT 0123',
+          );
+          await document.fonts.ready;
+        });
+        await wait(100);
+        await diffScreenShot(page, 'text', 'extra-font-family');
       });
 
       test('basic-element-text-nest-image', async ({ page }, { title }) => {
@@ -3191,9 +3428,9 @@ test.describe('reactlynx3 tests', () => {
           await goto(page, title);
           await wait(100);
           await page.locator('.focus').click({ force: true });
-          await wait(100);
-          const result = await page.locator('.result').first().innerText();
-          expect(result).toBe('bindfocus');
+          await expect(page.locator('.result').first()).toHaveText(
+            'bindfocus',
+          );
         },
       );
       // input/focus test-case end
@@ -4746,6 +4983,24 @@ test.describe('reactlynx3 tests', () => {
           await wait(1000);
           expect(scrolled).toBeTruthy();
           expect(scrollend).toBeTruthy();
+        },
+      );
+      test(
+        'basic-element-list-bindwheel',
+        async ({ page, browserName }, { title }) => {
+          test.skip(
+            browserName === 'webkit',
+            'mouse wheel unsupported on webkit',
+          );
+          await goto(page, title);
+          await wait(300);
+          await page.locator('#target').hover();
+          await page.mouse.wheel(0, 100);
+          await expect(page.locator('#result')).toHaveText('wheel');
+          await expect(page.locator('#indicator')).toHaveCSS(
+            'background-color',
+            'rgb(0, 128, 0)',
+          );
         },
       );
       test(

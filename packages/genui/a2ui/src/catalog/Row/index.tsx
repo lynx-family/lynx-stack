@@ -1,8 +1,8 @@
 // Copyright 2026 The Lynx Authors. All rights reserved.
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
-import { NodeRenderer } from '../../core/A2UIRender.jsx';
-import type { GenericComponentProps } from '../../core/types.js';
+import { NodeRenderer } from '../../react/A2UIRenderer.jsx';
+import type { GenericComponentProps } from '../../store/types.js';
 
 import '../../../styles/catalog/Row.css';
 
@@ -32,7 +32,9 @@ export function Row(props: RowProps): import('@lynx-js/react').ReactNode {
   const explicitChildren = Array.isArray(children) ? children : [];
 
   return (
-    <view className={`row alignment-${align} distribution-${justify}`}>
+    <view
+      className={`row alignment-${align} distribution-${justify}`}
+    >
       {explicitChildren.map((childId: string) => {
         const child = surface.components.get(childId);
         if (!child) return null;
@@ -44,7 +46,7 @@ export function Row(props: RowProps): import('@lynx-js/react').ReactNode {
           return (
             <view
               key={childId}
-              className='row-weighted-item'
+              className={`row-weighted-item row-weighted-item-${weight}`}
               style={{ flex: `${weight} ${weight} 0`, minWidth: 0 }}
             >
               <NodeRenderer

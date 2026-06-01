@@ -3,7 +3,7 @@ source: packages/react/transform/crates/swc_plugin_element_template/tests/elemen
 expression: "serde_json::json!({\n    \"code\": code, \"templates\": template_snapshot_json(&templates),\n})"
 ---
 {
-  "code": "import * as ReactLynx from \"@lynx-js/react\";\nconst _et_da39a_test_1 = \"_et_da39a_test_1\";\n<_et_da39a_test_1 attributeSlots={[\n    dynamicText\n]} children={[\n    dynamicText2\n]}/>;\n",
+  "code": "import * as ReactLynx from \"@lynx-js/react\";\nconst _et_da39a_test_1 = \"_et_da39a_test_1\";\n<_et_da39a_test_1 attributeSlots={[\n    dynamicText\n]} $0={dynamicText2}/>;\n",
   "templates": [
     {
       "template_id": "_et_da39a_test_1",
@@ -17,9 +17,8 @@ expression: "serde_json::json!({\n    \"code\": code, \"templates\": template_sn
             "type": "text",
             "attributesArray": [
               {
-                "kind": "attribute",
+                "kind": "static",
                 "key": "text",
-                "binding": "static",
                 "value": "Explicit Text Attribute"
               }
             ],
@@ -30,9 +29,8 @@ expression: "serde_json::json!({\n    \"code\": code, \"templates\": template_sn
             "type": "text",
             "attributesArray": [
               {
-                "kind": "attribute",
+                "kind": "slot",
                 "key": "text",
-                "binding": "slot",
                 "attrSlotIndex": 0.0
               }
             ],
@@ -54,15 +52,14 @@ expression: "serde_json::json!({\n    \"code\": code, \"templates\": template_sn
       }
     },
     {
-      "template_id": "__et_builtin_raw_text__",
+      "template_id": "_et_builtin_raw_text",
       "template": {
         "kind": "element",
         "type": "raw-text",
         "attributesArray": [
           {
-            "kind": "attribute",
+            "kind": "slot",
             "key": "text",
-            "binding": "slot",
             "attrSlotIndex": 0
           }
         ],

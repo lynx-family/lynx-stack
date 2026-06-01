@@ -1,0 +1,11 @@
+{
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    "noEmit": false,
+    "rootDir": "./src",
+    "jsx": "preserve",
+    "tsBuildInfoFile": "./dist/tsconfig.build.tsbuildinfo",
+  },
+  "include": ["src"],
+  "exclude": ["test"],
+}

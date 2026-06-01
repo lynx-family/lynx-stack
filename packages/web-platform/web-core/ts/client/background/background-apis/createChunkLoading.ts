@@ -8,7 +8,10 @@ import type {
   BundleInitReturnObj,
 } from '../../../types/index.js';
 
-export function createChunkLoading(entryTemplateUrl: string): {
+export function createChunkLoading(
+  entryTemplateUrl: string,
+  cardType: string,
+): {
   readScript: NativeApp['readScript'];
   loadScript: NativeApp['loadScript'];
   loadScriptAsync: NativeApp['loadScriptAsync'];
@@ -59,18 +62,18 @@ export function createChunkLoading(entryTemplateUrl: string): {
   const createBundleInitReturnObj = (
     jsContent: string,
   ): BundleInitReturnObj => {
-    const foo = new Function(
+    const paramNames: string[] = [
       'postMessage',
       'module',
       'exports',
       'lynxCoreInject',
-      'Card',
+      ...(cardType !== 'react' ? ['Card'] : []),
       'setTimeout',
       'setInterval',
       'clearInterval',
       'clearTimeout',
       'NativeModules',
-      'Component',
+      ...(cardType !== 'react' ? ['Component'] : []),
       'ReactLynx',
       'nativeAppId',
       'Behavior',
@@ -89,8 +92,8 @@ export function createChunkLoading(entryTemplateUrl: string): {
       'alert',
       'confirm',
       'prompt',
-      'fetch',
-      'XMLHttpRequest',
+      // 'fetch',
+      // 'XMLHttpRequest',
       'webkit',
       'Reporter',
       'print',
@@ -98,24 +101,27 @@ export function createChunkLoading(entryTemplateUrl: string): {
       // Lynx API
       'requestAnimationFrame',
       'cancelAnimationFrame',
+    ];
+    const foo = new Function(
+      ...paramNames,
       jsContent,
     ) as BTSChunkEntry;
     return {
       init(lynxCoreInject) {
         const module = { exports: {} };
         const tt = lynxCoreInject.tt as any;
-        foo(
+        const args: unknown[] = [
           undefined,
           module,
           module.exports,
           lynxCoreInject,
-          tt.Card.bind(tt),
+          ...(cardType !== 'react' ? [tt.Card.bind(tt)] : []),
           tt.setTimeout,
           tt.setInterval,
           tt.clearInterval,
           tt.clearTimeout,
           tt.NativeModules,
-          tt.Component.bind(tt),
+          ...(cardType !== 'react' ? [tt.Component.bind(tt)] : []),
           tt.ReactLynx,
           tt.nativeAppId,
           tt.Behavior,
@@ -134,15 +140,16 @@ export function createChunkLoading(entryTemplateUrl: string): {
           tt.alert,
           tt.confirm,
           tt.prompt,
-          tt.fetch,
-          tt.XMLHttpRequest,
+          // tt.fetch,
+          // tt.XMLHttpRequest,
           tt.webkit,
           tt.Reporter,
           tt.print,
           tt.global,
           tt.requestAnimationFrame,
           tt.cancelAnimationFrame,
-        );
+        ];
+        (foo as Function).apply(undefined, args);
         return module.exports;
       },
     };

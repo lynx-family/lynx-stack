@@ -1,4 +1,4 @@
-/// <reference types="@rspack/test-tools/rstest" />
+/// <reference types="@rstest/core/globals" />
 
 import fs from 'node:fs/promises';
 

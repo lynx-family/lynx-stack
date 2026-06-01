@@ -6,6 +6,7 @@
 import { glob, mkdir, mkdtemp, readFile, rm, writeFile } from 'node:fs/promises'
 import { tmpdir } from 'node:os'
 import path from 'node:path'
+import { fileURLToPath } from 'node:url'
 
 import type { RsbuildPlugin } from '@rsbuild/core'
 import { SourceMapConsumer } from 'source-map'
@@ -45,8 +46,9 @@ async function buildSourcemapFixture(
     rspeedyConfig: {
       source: {
         entry: {
-          main: new URL('./fixtures/sourcemap/index.tsx', import.meta.url)
-            .pathname,
+          main: fileURLToPath(
+            new URL('./fixtures/sourcemap/index.tsx', import.meta.url),
+          ),
         },
       },
       output: {
@@ -165,6 +167,48 @@ describe('Sourcemap', () => {
   }, 25_000)
 
   test(
+    'debug-metadata injects a per-chunk source-map release banner',
+    async () => {
+      const tmp = await buildSourcemapFixture(undefined)
+      const mainThread = await readFile(
+        path.join(tmp, '.rspeedy/main/main-thread.js'),
+        'utf-8',
+      )
+      const background = await readFile(
+        path.join(tmp, '.rspeedy/main/background.js'),
+        'utf-8',
+      )
+
+      const mtRelease = releaseOf(mainThread)
+      const btRelease = releaseOf(background)
+
+      // `minify: false` keeps the banner var name, so the release is greppable.
+      // The release is `debugmetadata:` + a 160-bit sha1 over the chunk's
+      // modules; the bare hash equals the source-map artifact `key`
+      // reverse-resolution locates the container by.
+      expect(mtRelease, 'main-thread should declare a release').toMatch(
+        /^debugmetadata:[0-9a-f]+$/,
+      )
+      expect(btRelease, 'background should declare a release').toMatch(
+        /^debugmetadata:[0-9a-f]+$/,
+      )
+      // The injected runtime registers the release with the Lynx engine.
+      expect(mainThread).toContain('_SetSourceMapRelease')
+      expect(background).toContain('_SetSourceMapRelease')
+      // The `[name]` placeholder in the runtime must be substituted with each
+      // file's own name (engineVersion > 2.13 reports the stack filename, so a
+      // literal `[name]` makes reverse-resolution target a non-existent file).
+      expect(mainThread).toContain('file://main-thread.js')
+      expect(background).toContain('file://background.js')
+      expect(mainThread).not.toContain('file://[name].js')
+      expect(background).not.toContain('file://[name].js')
+      // Per-chunk: main-thread and background carry their own (distinct) hash.
+      expect(mtRelease).not.toBe(btRelease)
+    },
+    25_000,
+  )
+
+  test(
     'sourcemap should map from compiled code to original source code',
     async () => {
       const tmp = await buildSourcemapFixture({ css: true })
@@ -242,27 +286,27 @@ describe('Sourcemap', () => {
         }
       })
       expect(functionName2Source).toMatchInlineSnapshot(`
-      {
-        "function renderComponent": {
-          "column": 0,
-          "line": 295,
-          "name": null,
-          "source": "preact.mjs",
-        },
-        "functionThatThrows": {
-          "column": 0,
-          "line": 19,
-          "name": null,
-          "source": "index.tsx",
-        },
-        "innerFunction": {
-          "column": 0,
-          "line": 14,
-          "name": null,
-          "source": "index.tsx",
-        },
-      }
-    `)
+        {
+          "function renderComponent": {
+            "column": 0,
+            "line": 296,
+            "name": null,
+            "source": "preact.mjs",
+          },
+          "functionThatThrows": {
+            "column": 2,
+            "line": 19,
+            "name": "functionThatThrows",
+            "source": "index.tsx",
+          },
+          "innerFunction": {
+            "column": 2,
+            "line": 14,
+            "name": "innerFunction",
+            "source": "index.tsx",
+          },
+        }
+      `)
       // clean
       cssConsumer.destroy()
       consumer.destroy()
@@ -273,4 +317,8 @@ describe('Sourcemap', () => {
 
 function normalizeSlashes(file: string) {
   return file.replaceAll(path.win32.sep, '/')
+}
+
+function releaseOf(src: string): string | undefined {
+  return (/var __DEBUG_METADATA_RELEASE__ = "([^"]+)"/.exec(src))?.[1]
 }

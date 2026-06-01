@@ -2,7 +2,9 @@
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
 import fs from 'node:fs/promises'
+import { tmpdir } from 'node:os'
 import path from 'node:path'
+import { fileURLToPath } from 'node:url'
 
 import type { RsbuildPlugin, Rspack } from '@rsbuild/core'
 import { describe, expect, test, vi } from 'vitest'
@@ -78,20 +80,27 @@ describe('Lazy', () => {
       const { pluginReactLynx } = await import('../src/pluginReactLynx.js')
       let backgroundJSContent = ''
 
+      // Isolate the dist root so this build cannot race other tests in this
+      // package writing to the default `test/dist/` directory.
+      const tmp = await fs.mkdtemp(
+        path.join(tmpdir(), 'rspeedy-react-test-lazy-standalone-'),
+      )
+
       const rsbuild = await createRspeedy({
         rspeedyConfig: {
           source: {
             entry: {
-              main: new URL(
-                './fixtures/standalone-lazy-bundle/index.tsx',
-                import.meta.url,
-              )
-                .pathname,
+              main: fileURLToPath(
+                new URL(
+                  './fixtures/standalone-lazy-bundle/index.tsx',
+                  import.meta.url,
+                ),
+              ),
             },
           },
           output: {
             distPath: {
-              root: './dist/standalone-lazy-bundle',
+              root: tmp,
             },
           },
           plugins: [
@@ -181,20 +190,31 @@ describe('Lazy', () => {
     const entryNamesOfBeforeEncode: string[][] = []
     let backgroundJSContent = ''
 
+    // Isolate the dist root so this build cannot race other tests in this
+    // package writing to the default `test/dist/` directory.
+    const tmp = await fs.mkdtemp(
+      path.join(tmpdir(), 'rspeedy-react-test-lazy-bundle-'),
+    )
+
     const rsbuild = await createRspeedy({
       rspeedyConfig: {
         source: {
           entry: {
-            main: new URL(
-              './fixtures/lazy-bundle/index.tsx',
-              import.meta.url,
-            ).pathname,
+            main: fileURLToPath(
+              new URL(
+                './fixtures/lazy-bundle/index.tsx',
+                import.meta.url,
+              ),
+            ),
           },
         },
         output: {
           distPath: {
-            root: './dist/lazy-bundle',
+            root: tmp,
           },
+        },
+        performance: {
+          profile: true,
         },
         plugins: [
           pluginReactLynx(),
@@ -280,8 +300,8 @@ describe('Lazy', () => {
             "main",
           ],
           [
-            "./LazyComponent.js-react__main-thread",
             "./LazyComponent.js-react__background",
+            "./LazyComponent.js-react__main-thread",
           ],
         ]
       `)
@@ -318,10 +338,12 @@ describe('Lazy', () => {
       rspeedyConfig: {
         source: {
           entry: {
-            main: new URL(
-              './fixtures/lazy-bundle/index.tsx',
-              import.meta.url,
-            ).pathname,
+            main: fileURLToPath(
+              new URL(
+                './fixtures/lazy-bundle/index.tsx',
+                import.meta.url,
+              ),
+            ),
           },
         },
         output: {
@@ -420,6 +442,158 @@ describe('Lazy', () => {
       if (tmpContent !== undefined) {
         await fs.writeFile(lazyComponentUrl, tmpContent)
       }
+      vi.unstubAllEnvs()
+    }
+  })
+
+  // Regression test for a lazy bundle whose background (bts) was externalized
+  // via `lynx.requireModuleAsync` and therefore unavailable when the bundle is
+  // required synchronously (the module is empty at `installChunk` time and
+  // loading crashes). This reproduces the production setup: `inlineScripts` is
+  // `false`, which is also the default once chunk splitting is enabled, and
+  // would externalize the background. A lazy bundle's background must always be
+  // inlined and required synchronously regardless of `inlineScripts`.
+  test('inlines lazy bundle background when inlineScripts is disabled', async () => {
+    vi.stubEnv('NODE_ENV', 'development')
+    const { pluginReactLynx } = await import('../src/pluginReactLynx.js')
+
+    let appServiceJSContent = ''
+
+    // Isolate the dist root so this build cannot race other tests in this
+    // package writing to the default `test/dist/` directory.
+    const tmp = await fs.mkdtemp(
+      path.join(tmpdir(), 'rspeedy-react-test-lazy-inline-scripts-'),
+    )
+
+    const rsbuild = await createRspeedy({
+      rspeedyConfig: {
+        source: {
+          entry: {
+            main: fileURLToPath(
+              new URL(
+                './fixtures/lazy-bundle/index.tsx',
+                import.meta.url,
+              ),
+            ),
+          },
+        },
+        output: {
+          distPath: {
+            root: tmp,
+          },
+          inlineScripts: false,
+        },
+        plugins: [
+          pluginReactLynx(),
+          {
+            name: 'test',
+            pre: ['lynx:react'],
+            setup(api) {
+              api.modifyBundlerChain((chain, { CHAIN_ID }) => {
+                const rule = chain.module
+                  .rules.get('css:react:main-thread')
+                  .uses.get(CHAIN_ID.USE.IGNORE_CSS)
+                rule.loader(
+                  // add .ts suffix to ignore-css-loader
+                  // this workaround is needed because vitest
+                  // runs on our ts files.
+                  rule.get('loader') as string + '.ts',
+                )
+              })
+            },
+          } as RsbuildPlugin,
+        ],
+        tools: {
+          rspack: {
+            plugins: [
+              {
+                name: 'capture-lazy-app-service',
+                apply(compiler) {
+                  compiler.hooks.compilation.tap(
+                    'capture-lazy-app-service',
+                    (compilation) => {
+                      const hooks = LynxTemplatePlugin
+                        .getLynxTemplatePluginHooks(
+                          compilation as unknown as Parameters<
+                            typeof LynxTemplatePlugin.getLynxTemplatePluginHooks
+                          >[0],
+                        )
+                      hooks.beforeEmit.tap(
+                        'capture-lazy-app-service',
+                        (args) => {
+                          // The host card legitimately loads the lazy bundle via
+                          // requireModuleAsync, so only inspect the dynamic
+                          // component's own template.
+                          if (
+                            args.entryNames.some((name) =>
+                              name.includes('LazyComponent')
+                            )
+                          ) {
+                            appServiceJSContent = args.finalEncodeOptions
+                              .manifest['/app-service.js']!
+                          }
+                          return args
+                        },
+                      )
+                    },
+                  )
+                },
+              } as Rspack.RspackPluginInstance,
+            ],
+          },
+        },
+      },
+    })
+
+    try {
+      await rsbuild.build()
+
+      // The lazy bundle's background is inlined and required synchronously.
+      expect(appServiceJSContent).toContain('lynx.requireModule(')
+      expect(appServiceJSContent).not.toContain('requireModuleAsync')
+
+      // Execute the generated app-service to confirm the background is required
+      // synchronously: a `requireModuleAsync` here would leave `module.exports`
+      // empty, which is the runtime failure observed in production.
+      const componentExports = { name: 'LazyComponent' }
+      let requireModuleAsyncWasCalled = false
+      const lynx = {
+        requireModule: () => componentExports,
+        requireModuleAsync: () => {
+          requireModuleAsyncWasCalled = true
+        },
+      }
+      // `globDynamicComponentEntry` is a global injected by the Lynx runtime and
+      // referenced by the generated app-service.
+      // @ts-expect-error injected runtime global
+      globalThis.globDynamicComponentEntry = undefined
+      // biome-ignore lint/suspicious/noExplicitAny: module factory cache
+      const mod: Record<string, any> = {}
+      const tt = {
+        define: (key: string, fn: (...args: unknown[]) => void) => {
+          mod[key] = fn
+        },
+        require: (key: string) => {
+          const mockModule = { exports: {} as unknown }
+          const args: unknown[] = Array(17).fill(undefined)
+          args[1] = mockModule
+          args[16] = lynx
+          // eslint-disable-next-line @typescript-eslint/no-unsafe-call
+          mod[key](...args)
+          return mockModule.exports
+        },
+      }
+
+      const { init } = eval(appServiceJSContent) as {
+        init: (arg: { tt: typeof tt }) => unknown
+      }
+      const result = init({ tt })
+
+      expect(requireModuleAsyncWasCalled).toBe(false)
+      expect(result).toBe(componentExports)
+    } finally {
+      // @ts-expect-error injected runtime global
+      delete globalThis.globDynamicComponentEntry
       vi.unstubAllEnvs()
     }
   })

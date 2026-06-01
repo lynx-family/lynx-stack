@@ -17,6 +17,8 @@ export default defineConfig({
         '**/*.bench.js',
         '**/*.bench.ts',
         '**/dist/**',
+        // rspeedy/rsbuild build output for the a2ui-playground.
+        'packages/genui/a2ui-playground/www/**',
         '.github/**',
         'examples/**',
         'packages/**/lib/**',
@@ -30,7 +32,6 @@ export default defineConfig({
         '**/eslint.config.js',
 
         'packages/tools/canary-release/**',
-        'packages/web-platform/web-tests/**',
         'packages/web-platform/web-core-e2e/**',
         'packages/webpack/test-tools/**',
         'packages/testing-library/test-environment/**',
@@ -80,7 +81,7 @@ export default defineConfig({
       'packages/use-sync-external-store/vitest.config.ts',
       'packages/web-platform/*/vitest.config.ts',
       'packages/webpack/*/vitest.config.ts',
-      'packages/lynx/gesture-runtime/vitest.config.ts',
+      'packages/lynx/*/vitest.config.ts',
       'packages/motion/vitest.config.ts',
     ],
   },

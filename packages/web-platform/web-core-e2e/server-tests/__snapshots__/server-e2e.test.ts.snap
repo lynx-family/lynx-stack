@@ -963,14 +963,14 @@ exports[`executeTemplate should run lepusCode.root from basic-element-x-refresh-
             ></div></div></template
         ><x-refresh-header class="refresh-header"
           ><x-image
-            src="http://localhost:3080/dist/static/image/img.c330e8ee.png"
+            src="http://localhost:3080/dist/static/image/img.c330e8eef2.png"
             style="width: 30px; height: 30px"
             ><template shadowrootmode="open"
               ><img
                 part="img"
                 alt=""
                 id="img"
-                src="http://localhost:3080/dist/static/image/img.c330e8ee.png"
+                src="http://localhost:3080/dist/static/image/img.c330e8eef2.png"
               /> </template></x-image></x-refresh-header
         ><scroll-view class="scroll-view" bounces="true" scroll-y="true"
           ><template shadowrootmode="open"
@@ -1058,26 +1058,26 @@ exports[`executeTemplate should run lepusCode.root from basic-element-x-refresh-
               part="bot-fade-mask"
             ></div></template
           ><x-image
-            src="http://localhost:3080/dist/static/image/img.c330e8ee.png"
+            src="http://localhost:3080/dist/static/image/img.c330e8eef2.png"
             style="width: 100%; height: 50%; background-color: #0ff"
             ><template shadowrootmode="open"
               ><img
                 part="img"
                 alt=""
                 id="img"
-                src="http://localhost:3080/dist/static/image/img.c330e8ee.png"
+                src="http://localhost:3080/dist/static/image/img.c330e8eef2.png"
               /> </template></x-image
           ><lynx-wrapper></lynx-wrapper></scroll-view
         ><x-refresh-footer class="refresh-footer"
           ><x-image
-            src="http://localhost:3080/dist/static/image/img.c330e8ee.png"
+            src="http://localhost:3080/dist/static/image/img.c330e8eef2.png"
             style="width: 30px; height: 30px"
             ><template shadowrootmode="open"
               ><img
                 part="img"
                 alt=""
                 id="img"
-                src="http://localhost:3080/dist/static/image/img.c330e8ee.png"
+                src="http://localhost:3080/dist/static/image/img.c330e8eef2.png"
               /> </template></x-image></x-refresh-footer
       ></x-refresh-view></div></template
 ></lynx-view>
@@ -1483,15 +1483,15 @@ exports[`executeTemplate should run lepusCode.root from config-css-remove-scope-
       }
       .basic:where([l-css-id="1865610"]):not([l-e-name]),
       .basic:where([l-css-id="3"]):not([l-e-name]) {
-        background-color: green;
         height: 100px;
         width: 100px;
+        background-color: green;
       }
       .basic:where([l-css-id="2"]):not([l-e-name]),
       .basic:where([l-css-id="1853379"]):not([l-e-name]) {
-        background-color: red;
         height: 100px;
         width: 100px;
+        background-color: red;
       }
     </style>
     <div part="page" lynx-default-overflow-visible="true">

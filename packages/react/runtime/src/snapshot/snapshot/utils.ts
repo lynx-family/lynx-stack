@@ -5,7 +5,7 @@
 /**
  * Utility functions for snapshot system.
  */
-
+import { COMPILED_SNAPSHOT } from './constants.js';
 import type { WithChildren } from './types.js';
 
 /**
@@ -28,3 +28,5 @@ export function traverseSnapshotInstance<I extends WithChildren>(
     traverseSnapshotInstance(vv as I, callback);
   }
 }
+
+export const isCompiledSnapshot: (type: string) => boolean = (type: string) => type.includes(COMPILED_SNAPSHOT);

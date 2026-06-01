@@ -2,7 +2,7 @@ import { createRequire } from 'node:module';
 import * as path from 'node:path';
 
 import type { Plugin } from 'vitest/config';
-import { defineConfig } from 'vitest/config';
+import { configDefaults, defineConfig } from 'vitest/config';
 
 const require = createRequire(import.meta.url);
 const runtimePkg = require.resolve('./src/internal.ts');
@@ -80,6 +80,11 @@ export default defineConfig({
       { find: '@lynx-js/react/internal', replacement: path.resolve(__dirname, './src/internal.ts') },
       { find: '@lynx-js/react/jsx-dev-runtime', replacement: path.resolve(__dirname, './jsx-dev-runtime/index.js') },
       { find: '@lynx-js/react/jsx-runtime', replacement: path.resolve(__dirname, './jsx-runtime/index.js') },
+      { find: /^@lynx-js\/react\/hooks$/, replacement: path.resolve(__dirname, './src/core/hooks/react.ts') },
+      {
+        find: /^@lynx-js\/react\/lepus\/hooks$/,
+        replacement: path.resolve(__dirname, './src/core/hooks/mainThread.ts'),
+      },
       { find: '@lynx-js/react/lepus', replacement: path.resolve(__dirname, './lepus/index.js') },
       {
         find: '@lynx-js/react/legacy-react-runtime',
@@ -90,6 +95,10 @@ export default defineConfig({
   },
   test: {
     name: 'react/runtime',
+    exclude: [
+      ...configDefaults.exclude,
+      '**/__test__/element-template/**',
+    ],
     server: {
       deps: {
         inline: [
@@ -105,9 +114,14 @@ export default defineConfig({
         'lepus/jsx-dev-runtime',
         'lepus/index.d.ts',
         'vitest.config.ts',
+        '__test__/element-template/**',
         '__test__/snapshot/utils/**',
+        '__test__/test-utils/**',
         'lib/**',
         'worklet-runtime/**',
+        'src/element-template/**',
+        'src/core/hooks/mainThread.ts',
+        'src/core/hooks/mainThreadImpl.ts',
         'src/shared/component-stack.ts',
         'src/shared/profile.ts',
         'src/index.ts',

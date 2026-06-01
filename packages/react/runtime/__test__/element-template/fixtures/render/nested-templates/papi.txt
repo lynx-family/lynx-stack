@@ -1,0 +1,80 @@
+[
+  [
+    "__CreateTypedElementTemplate",
+    "page",
+    null,
+    null,
+    "0",
+    null
+  ],
+  [
+    "__CreateElementTemplate",
+    "_et_builtin_raw_text",
+    null,
+    [
+      "X"
+    ],
+    [],
+    -1
+  ],
+  [
+    "__CreateElementTemplate",
+    "_et_7a8c6_test_1",
+    null,
+    null,
+    [
+      [
+        {
+          "tag": "raw-text",
+          "attributes": {
+            "text": "X"
+          },
+          "children": [],
+          "templateId": "_et_builtin_raw_text"
+        }
+      ]
+    ],
+    -2
+  ],
+  [
+    "__CreateElementTemplate",
+    "_et_7a8c6_test_2",
+    null,
+    null,
+    [
+      [
+        {
+          "tag": "view",
+          "attributes": {},
+          "children": [
+            {
+              "tag": "slot",
+              "attributes": {
+                "slot-id": 0
+              },
+              "children": [
+                {
+                  "tag": "raw-text",
+                  "attributes": {
+                    "text": "X"
+                  },
+                  "children": [],
+                  "templateId": "_et_builtin_raw_text"
+                }
+              ]
+            }
+          ],
+          "templateId": "_et_7a8c6_test_1"
+        }
+      ]
+    ],
+    -3
+  ],
+  [
+    "__InsertNodeToElementTemplate",
+    "<page />",
+    0,
+    "<_et_7a8c6_test_2 />",
+    null
+  ]
+]

@@ -14,6 +14,7 @@ import { isSdkVersionGt } from './utils/version.js';
 class JsFunctionLifecycleManager {
   private execIdRefCount = new Map<number, number>();
   private execIdSetToFire = new Set<number>();
+  private retainedObjects = new WeakSet<object>();
   private willFire = false;
   private registry?: FinalizationRegistry<number> = undefined;
 
@@ -22,6 +23,10 @@ class JsFunctionLifecycleManager {
   }
 
   addRef(execId: number, objToRef: object): void {
+    if (this.retainedObjects.has(objToRef)) {
+      return;
+    }
+    this.retainedObjects.add(objToRef);
     this.execIdRefCount.set(
       execId,
       (this.execIdRefCount.get(execId) ?? 0) + 1,

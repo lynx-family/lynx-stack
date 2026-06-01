@@ -61,16 +61,19 @@ export function applyEntry(
 
     const rsbuildConfig = api.getRsbuildConfig()
     const userConfig = api.getRsbuildConfig('original')
-    const enableChunkSplitting =
-      rsbuildConfig.performance?.chunkSplit?.strategy !== 'all-in-one'
+    const chunkSplitStrategy = userConfig.performance?.chunkSplit?.strategy
+    const enableChunkSplitting = userConfig.splitChunks === undefined
+      ? (chunkSplitStrategy
+        ? chunkSplitStrategy !== 'all-in-one'
+        : rsbuildConfig.splitChunks !== false)
+      : rsbuildConfig.splitChunks !== false
+    const rspeedyConfig = api.context.callerName === 'rspeedy'
+      // biome-ignore lint/correctness/useHookAtTopLevel: This is not a React hook.
+      ? api.useExposed<ExposedAPI>(Symbol.for('rspeedy.api'))?.config
+      : undefined
 
     const isRspeedy = api.context.callerName === 'rspeedy'
     if (isRspeedy) {
-      // biome-ignore lint/correctness/useHookAtTopLevel: This is not a React hook.
-      const { config } = api.useExposed<ExposedAPI>(
-        Symbol.for('rspeedy.api'),
-      )!
-
       const entries = chain.entryPoints.entries() ?? {}
       const isLynx = environment.name === 'lynx'
         || environment.name.startsWith('lynx-')
@@ -85,11 +88,39 @@ export function applyEntry(
       Object.entries(entries).forEach(([entryName, entryPoint]) => {
         const { imports } = getChunks(entryName, entryPoint.values())
 
-        const templateFilename = (
-          typeof config.output?.filename === 'object'
-            ? config.output.filename.bundle ?? config.output.filename.template
-            : config.output?.filename
-        ) ?? '[name].[platform].bundle'
+        const bundleFilename =
+          typeof rspeedyConfig?.output?.filename === 'object'
+            ? rspeedyConfig.output.filename.bundle
+              ?? rspeedyConfig.output.filename.template
+            : rspeedyConfig?.output?.filename
+
+        let templateFilename: string
+        // `lazyBundleFilename` is only set when `bundle` is a function.
+        // Otherwise `LynxTemplatePlugin` keeps its default
+        // (`async/[name].[fullhash].bundle`).
+        let lazyBundleFilename: string | undefined
+        if (typeof bundleFilename === 'function') {
+          // A single function controls both the main bundle and the lazy
+          // bundles via the `lazyBundle` flag, without a dedicated
+          // `lazyBundle` field.
+          templateFilename = bundleFilename({
+            lazyBundle: false,
+            entryName,
+            platform: environment.name,
+          })
+          lazyBundleFilename = bundleFilename({
+            lazyBundle: true,
+            // A lazy bundle name is resolved per async chunk, so there is no
+            // single entry name for it.
+            entryName: undefined,
+            platform: environment.name,
+          })
+            // `[name]` is replaced per async chunk by `LynxTemplatePlugin`, so
+            // we only resolve `[platform]` here.
+            .replaceAll('[platform]', environment.name)
+        } else {
+          templateFilename = bundleFilename ?? '[name].[platform].bundle'
+        }
 
         // We do not use `${entryName}__background` since the default CSS name is `[name]/[name].css`.
         // We would like to avoid adding `__background` to the output CSS filename.
@@ -185,6 +216,7 @@ export function applyEntry(
                 '[platform]',
                 environment.name,
               ),
+            ...(lazyBundleFilename ? { lazyBundleFilename } : {}),
             intermediate: path.posix.join(
               DEFAULT_DIST_PATH_INTERMEDIATE,
               entryName,
@@ -257,7 +289,7 @@ export function applyEntry(
     let extractStr = originalExtractStr
     if (enableChunkSplitting && originalExtractStr) {
       ;(api.logger ?? console).warn(
-        '`extractStr` is changed to `false` because it is only supported in `all-in-one` chunkSplit strategy, please set `performance.chunkSplit.strategy` to `all-in-one` to use `extractStr.`',
+        '`extractStr` is changed to `false` because it is only supported when chunk splitting is disabled, please set `splitChunks` to `false` to use `extractStr.`',
       )
       extractStr = false
     }
@@ -278,6 +310,8 @@ export function applyEntry(
         mainThreadChunks,
         extractStr,
         experimental_isLazyBundle,
+        experimental_useElementTemplate:
+          options.experimental_useElementTemplate,
         profile: getDefaultProfile(),
         workletRuntimePath: await resolve(
           `@lynx-js/react/${isDev ? 'worklet-dev-runtime' : 'worklet-runtime'}`,
@@ -285,13 +319,17 @@ export function applyEntry(
       }])
 
     function getDefaultProfile(): boolean | undefined {
-      const environmentProfile = userConfig.environments?.[environment.name]
-        ?.performance?.profile
+      // rsbuild v1
+      const environmentProfile = (
+        rspeedyConfig?.environments as
+          | Record<string, { performance?: { profile?: boolean } }>
+          | undefined
+      )?.[environment.name]?.performance?.profile
       if (environmentProfile !== undefined) {
         return environmentProfile
       }
 
-      const userProfile = userConfig.performance?.profile
+      const userProfile = rspeedyConfig?.performance?.profile
       if (userProfile !== undefined) {
         return userProfile
       }

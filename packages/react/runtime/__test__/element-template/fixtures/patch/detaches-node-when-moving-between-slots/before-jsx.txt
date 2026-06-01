@@ -1,0 +1,8 @@
+"<page>
+  <view />
+  <view>
+    <raw-text text=\"A\" />
+    <raw-text text=\"B\" />
+
+  </view>
+</page>"

@@ -15,7 +15,7 @@ describe('buildCache', () => {
 
     const config = await rspeedy.unwrapConfig()
 
-    expect(config.experiments?.cache).toBeFalsy()
+    expect(config.cache).toBeFalsy()
   })
 
   test('buildCache: true', async () => {
@@ -25,7 +25,7 @@ describe('buildCache', () => {
 
     const config = await rspeedy.unwrapConfig()
 
-    expect(config.experiments?.cache).toStrictEqual(
+    expect(config.cache).toStrictEqual(
       expect.objectContaining({
         type: 'persistent',
         version: 'lynx-test',
@@ -40,7 +40,7 @@ describe('buildCache', () => {
 
     const config = await rspeedy.unwrapConfig()
 
-    expect(config.experiments?.cache).toBeFalsy()
+    expect(config.cache).toBeFalsy()
   })
 
   test('buildCache.buildDependencies', async () => {
@@ -52,7 +52,7 @@ describe('buildCache', () => {
 
     const config = await rspeedy.unwrapConfig()
 
-    expect(config.experiments?.cache).toStrictEqual(
+    expect(config.cache).toStrictEqual(
       expect.objectContaining({
         // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
         buildDependencies: expect.arrayContaining(['foo.txt']),
@@ -71,7 +71,7 @@ describe('buildCache', () => {
 
     const config = await rspeedy.unwrapConfig()
 
-    expect(config.experiments?.cache).toStrictEqual(
+    expect(config.cache).toStrictEqual(
       expect.objectContaining({
         // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
         version: expect.stringMatching('lynx-test-'),
@@ -96,7 +96,7 @@ describe('buildCache', () => {
 
     const [config] = await rspeedy.initConfigs()
 
-    expect(config?.experiments?.cache).toStrictEqual(
+    expect(config?.cache).toStrictEqual(
       expect.objectContaining({
         // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
         buildDependencies: expect.arrayContaining([

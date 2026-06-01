@@ -6,6 +6,12 @@
       "allowTrailingCommas": true,
     },
   },
+  "files": {
+    // This generated stylesheet exceeds Biome's file-size limit and should be skipped entirely.
+    "ignore": [
+      "packages/genui/a2ui/styles/theme.css",
+    ],
+  },
   "organizeImports": {
     // We use `eslint-plugin-import` for imports sorting
     "enabled": false,
@@ -43,6 +49,7 @@
 
       "packages/tools/**",
       "packages/genui/a2ui/tools/**",
+      "packages/genui/openui/**",
 
       "packages/use-sync-external-store/test/**",
 
@@ -61,6 +68,8 @@
 
       // REPL examples use Lynx platform globals and are not subject to lint rules
       "packages/repl/src/examples/**",
+      // REPL generated artifacts can exceed Biome's file-size limit
+      "packages/repl/src/generated/**",
     ],
     "rules": {
       // We are migrating from ESLint to Biome

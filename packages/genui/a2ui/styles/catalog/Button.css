@@ -1,24 +1,83 @@
-@import "./luna.css";
+@import "../theme.css";
 
 .button {
-  display: flex;
+  display: inline-flex;
   justify-content: center;
   align-items: center;
   min-width: 0;
-  padding-left: 12px;
-  padding-right: 12px;
-  padding-top: 8px;
-  padding-bottom: 8px;
-  margin: 4px;
-  border-radius: 9999px;
-  background-color: var(--primary);
+  gap: 10px;
+  padding: 10px 16px;
+  margin: 6px 0;
+  border: 1px solid var(--a2ui-color-border);
+  border-radius: 12px;
+  background: var(--a2ui-color-surface);
+  box-shadow: 0 1px 0 rgba(255, 255, 255, 0.4) inset;
+  color: var(--a2ui-color-on-surface);
+  font-weight: 600;
+  transition:
+    background-color 0.18s ease,
+    transform 0.18s ease,
+    opacity 0.18s ease,
+    box-shadow 0.18s ease,
+    border-color 0.18s ease;
 }
 
 .button.ui-active {
-  background-color: var(--primary-2);
+  background-color: var(--a2ui-color-secondary-hover);
+  transform: translateY(1px);
 }
 
-.button-text {
+.button-primary {
+  background-color: var(--a2ui-color-surface-strong);
+  border-color: var(--a2ui-color-border-strong);
+  color: var(--a2ui-color-on-surface);
+  box-shadow:
+    0 10px 24px var(--a2ui-color-overlay),
+    0 1px 0 rgba(255, 255, 255, 0.4) inset;
+}
+
+.button-borderless {
+  background: none;
+  border: none;
+  padding-left: 0;
+  padding-right: 0;
+  color: var(--a2ui-color-primary);
+}
+
+.button-disabled {
+  opacity: 0.55;
+}
+
+.button-disabled.ui-active {
+  background-color: inherit;
+  transform: none;
+}
+
+.button-invalid {
+  opacity: 0.45;
+}
+
+.button-error {
+  margin-top: -2px;
+  color: var(--a2ui-color-error, #d92d20);
   font-size: 12px;
-  color: var(--primary-content);
+  line-height: 1.5;
+}
+
+.button-fallback {
+  color: inherit;
+  font-size: inherit;
+}
+
+.button .text-body,
+.button .text-caption,
+.button .text-h1,
+.button .text-h2,
+.button .text-h3,
+.button .text-h4,
+.button .text-h5,
+.button .text-price,
+.button .text-link,
+.button .text-label {
+  color: inherit;
 }

@@ -17,6 +17,8 @@ export function createLazyResolver(rspack: rspack, directory: string, conditionN
 // @public (undocumented)
 export interface Options {
     // (undocumented)
+    elementTemplate?: boolean | undefined;
+    // (undocumented)
     LAYERS: {
         MAIN_THREAD: string;
         BACKGROUND: string;

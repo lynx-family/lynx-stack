@@ -1,12 +1,12 @@
 // Copyright 2024 The Lynx Authors. All rights reserved.
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
-import { onWorkletCtxUpdate } from '@lynx-js/react/worklet-runtime/bindings';
+import { onWorkletCtxUpdate, retainWorkletCtx } from '@lynx-js/react/worklet-runtime/bindings';
 import type { Worklet } from '@lynx-js/react/worklet-runtime/bindings';
 
 import { describeInvalidValue } from '../debug/describeInvalidValue.js';
 import { isMainThreadHydrating } from '../lifecycle/patch/isMainThreadHydrating.js';
-import { SnapshotInstance } from '../snapshot/snapshot.js';
+import type { SnapshotInstance } from '../snapshot/snapshot.js';
 
 function formatEventAttribute(workletType: string, eventType: string, eventName: string): string {
   const suffix = eventType.endsWith('Event') ? eventType.slice(0, -'Event'.length) : eventType;
@@ -41,16 +41,24 @@ function updateWorkletEvent(
   eventType: string,
   eventName: string,
 ): void {
-  if (!snapshot.__elements) {
-    return;
-  }
   const rawValue = snapshot.__values![expIndex];
   if (__DEV__ && rawValue !== null && rawValue !== undefined && typeof rawValue !== 'object') {
+    if (!snapshot.__elements) {
+      return;
+    }
     reportInvalidWorkletValue(snapshot, elementIndex, workletType, eventType, eventName, rawValue);
     return;
   }
   const value = (rawValue ?? {}) as Worklet;
   value._workletType = workletType;
+
+  if (workletType === 'main-thread') {
+    retainWorkletCtx(value);
+  }
+
+  if (!snapshot.__elements) {
+    return;
+  }
 
   if (workletType === 'main-thread') {
     onWorkletCtxUpdate(value, oldValue, isMainThreadHydrating, snapshot.__elements[elementIndex]!);

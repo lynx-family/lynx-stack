@@ -37,7 +37,6 @@ import {
   __GetElementUniqueID,
   __GetTemplateParts,
   __UpdateListCallbacks,
-  __InvokeUIMethod,
   __QuerySelector,
   __QuerySelectorAll,
 } from './pureElementPAPIs.js';
@@ -58,6 +57,21 @@ const {
   set_inline_styles_in_str,
   set_inline_styles_in_key_value_vec,
 } = wasmInstance;
+
+function dispatchLynxViewLoadEvent(host: HTMLElement & { url?: string }) {
+  host.dispatchEvent(
+    new CustomEvent('load', {
+      detail: {
+        statusCode: 0,
+        statusMessage: 'success',
+        url: host.url ?? '',
+      },
+      bubbles: true,
+      cancelable: true,
+      composed: true,
+    }),
+  );
+}
 
 export function createElementAPI(
   rootDom: ShadowRoot,
@@ -171,6 +185,17 @@ export function createElementAPI(
     },
     __CreateImage(parentComponentUniqueId) {
       const dom = document.createElement('x-image') as DecoratedHTMLElement;
+      dom[uniqueIdSymbol] = wasmContext.create_element_common(
+        parentComponentUniqueId,
+        dom,
+        new WeakRef(dom),
+      );
+      return dom;
+    },
+    __CreateFrame(parentComponentUniqueId) {
+      const dom = document.createElement(
+        LYNX_TAG_TO_HTML_TAG_MAP['frame']!,
+      ) as DecoratedHTMLElement;
       dom[uniqueIdSymbol] = wasmContext.create_element_common(
         parentComponentUniqueId,
         dom,
@@ -591,7 +616,7 @@ export function createElementAPI(
         }
       };
     })(),
-    __InvokeUIMethod,
+    __InvokeUIMethod: mtsBinding.lynxViewInstance.invokeUIMethod,
     __QuerySelector,
     __QuerySelectorAll,
     __FlushElementTree: (_, options) => {
@@ -610,6 +635,9 @@ export function createElementAPI(
         backgroundThread.markTiming('ui_operation_flush_start', pipelineId);
         rootDom.appendChild(page);
         (rootDom.host as HTMLElement).style.display = 'flex';
+        dispatchLynxViewLoadEvent(
+          rootDom.host as HTMLElement & { url?: string },
+        );
         backgroundThread.markTiming('ui_operation_flush_end', pipelineId);
         backgroundThread.markTiming('layout_end', pipelineId);
         backgroundThread.markTiming('dispatch_end', pipelineId);

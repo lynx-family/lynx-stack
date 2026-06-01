@@ -44,7 +44,7 @@ jobs:
           corepack pnpm install --frozen-lockfile
       - name: build
         run: |
-          corepack pnpm turbo --filter !@lynx-js/web-tests --filter !benchx_cli --filter "!@lynx-js/benchmark-*" build --summarize
+          corepack pnpm turbo --filter !benchx_cli --filter "!@lynx-js/benchmark-*" build --summarize
       - name: Save Turbo Result
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
         with:
@@ -103,6 +103,7 @@ jobs:
       runs-on: lynx-custom-container
       is-web: true
       run: |
+        ulimit -Sn 655350
         export NODE_OPTIONS="--max-old-space-size=32768"
         export PLAYWRIGHT_JUNIT_OUTPUT_NAME=test-report.junit.xml
         pnpm --filter @lynx-js/web-elements run test --reporter='github,dot,junit,html'
@@ -117,10 +118,11 @@ jobs:
       runs-on: lynx-custom-container
       is-web: true
       run: |
+        ulimit -Sn 655350
         export NODE_OPTIONS="--max-old-space-size=32768"
         export PLAYWRIGHT_JUNIT_OUTPUT_NAME=test-report.junit.xml
-        pnpm --filter @lynx-js/web-tests run test --reporter='github,dot,junit,html'
-        pnpm --filter @lynx-js/web-tests run coverage:ci
+        pnpm --filter @lynx-js/web-core-e2e run test --reporter='github,dot,junit,html'
+        pnpm --filter @lynx-js/web-core-e2e run coverage:ci
   publish:
     timeout-minutes: 30
     needs: build
@@ -160,7 +162,7 @@ jobs:
           path: .turbo
       - name: build
         run: |
-          corepack pnpm turbo --filter !@lynx-js/web-tests build --filter !benchx_cli --filter "!@lynx-js/benchmark-*" --summarize
+          corepack pnpm turbo build --filter !benchx_cli --filter "!@lynx-js/benchmark-*" --summarize
       - name: Get current date
         id: date
         run: echo "::set-output name=date::$(date -u +'%Y-%m-%d %H:%M:%S')"
@@ -208,7 +210,7 @@ jobs:
           path: .turbo
       - name: build
         run: |
-          corepack pnpm turbo --filter !@lynx-js/web-tests --filter !benchx_cli --filter "!@lynx-js/benchmark-*" build --summarize
+          corepack pnpm turbo --filter !benchx_cli --filter "!@lynx-js/benchmark-*" build --summarize
       - name: version canary packages
         env:
           # changesets-changelog-github requires a GITHUB_TOKEN

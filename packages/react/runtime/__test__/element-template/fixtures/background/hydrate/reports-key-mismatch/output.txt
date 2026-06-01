@@ -1,0 +1,5 @@
+Object {
+  "afterInstanceId": 1,
+  "errorMessage": "ElementTemplate hydrate key mismatch: main='before' background='after'.",
+  "stream": Array [],
+}

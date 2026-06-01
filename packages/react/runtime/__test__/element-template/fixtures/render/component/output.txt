@@ -1,0 +1,7 @@
+<view>
+
+  <text text="Hello" />
+  <raw-text text="2" />
+  <text text="World" />
+  <raw-text text="3" />
+</view>

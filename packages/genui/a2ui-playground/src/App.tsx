@@ -1,43 +1,116 @@
 // Copyright 2026 The Lynx Authors. All rights reserved.
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
-import { useCallback, useEffect, useState } from 'react';
+import {
+  useCallback,
+  useEffect,
+  useLayoutEffect,
+  useMemo,
+  useState,
+} from 'react';
 
-import { ProtocolSwitch } from './components/ProtocolSwitch.js';
 import { AIChatPage } from './pages/AIChatPage.js';
 import { ComponentsPage } from './pages/ComponentsPage.js';
+import { DemosListPage } from './pages/DemosListPage.js';
 import { DemosPage } from './pages/DemosPage.js';
-import type { ProtocolVersion } from './utils/protocol.js';
-import { DEFAULT_PROTOCOL } from './utils/protocol.js';
+import { OpenUIComponentsPage } from './pages/OpenUIComponentsPage.js';
+import { OpenUIDemosPage } from './pages/OpenUIDemosPage.js';
+import type { Protocol, ProtocolName } from './utils/protocol.js';
+import { DEFAULT_PROTOCOL, getProtocol } from './utils/protocol.js';
 
-type Tab = 'chat' | 'demos' | 'components';
+const LYNX_LIGHT_LOGO =
+  'https://lf-lynx.tiktok-cdns.com/obj/lynx-artifacts-oss-sg/lynx-website/assets/lynx-dark-logo.svg';
+const LYNX_DARK_LOGO =
+  'https://lf-lynx.tiktok-cdns.com/obj/lynx-artifacts-oss-sg/lynx-website/assets/lynx-light-logo.svg';
 
-const TABS: { id: Tab; label: string }[] = [
-  { id: 'chat', label: 'AI Chat' },
-  { id: 'demos', label: 'Demos' },
+type Tab = 'create' | 'examples' | 'components' | 'catalog';
+
+interface TabDef {
+  id: Tab;
+  label: string;
+}
+
+const A2UI_TABS: TabDef[] = [
+  { id: 'create', label: 'Create' },
+  { id: 'examples', label: 'Examples' },
+  { id: 'catalog', label: 'Catalog' },
+];
+
+const OPENUI_TABS: TabDef[] = [
+  { id: 'examples', label: 'Examples' },
   { id: 'components', label: 'Components' },
 ];
 
 interface Route {
+  protocol: Protocol;
   tab: Tab;
   componentName?: string;
+  demoId?: string;
 }
 
 function parseHash(hash: string): Route {
   const cleaned = hash.replace(/^#\/?/u, '');
   const parts = cleaned.split('/');
-  if (parts[0] === 'demos') return { tab: 'demos' };
-  if (parts[0] === 'components') {
-    return { tab: 'components', componentName: parts[1] };
+
+  let protocol: Protocol = DEFAULT_PROTOCOL;
+  let rest = parts;
+
+  if (parts[0] === 'a2ui' || parts[0] === 'openui') {
+    protocol = getProtocol(parts[0]);
+    rest = parts.slice(1);
   }
-  return { tab: 'chat' };
+
+  if (rest[0] === 'demos' || rest[0] === 'examples') {
+    return {
+      protocol,
+      tab: 'examples',
+      demoId: rest[1],
+    };
+  }
+  if (rest[0] === 'components' || rest[0] === 'catalog') {
+    return {
+      protocol,
+      tab: protocol.name === 'a2ui' ? 'catalog' : 'components',
+      componentName: rest[1],
+    };
+  }
+  if (rest[0] === 'chat' || rest[0] === 'create') {
+    return { protocol, tab: 'create' };
+  }
+  // Back-compat: the standalone Playback tab is gone; route it to Examples.
+  if (rest[0] === 'playback') {
+    return { protocol, tab: 'examples' };
+  }
+  // OpenUI has no create tab, default to examples.
+  if (protocol.name === 'openui') return { protocol, tab: 'examples' };
+  return { protocol, tab: 'create' };
+}
+
+type Theme = 'light' | 'dark';
+
+function getSystemTheme(): Theme {
+  try {
+    return window.matchMedia?.('(prefers-color-scheme: dark)')?.matches
+      ? 'dark'
+      : 'light';
+  } catch {
+    return 'light';
+  }
 }
 
 export function App() {
   const [route, setRoute] = useState<Route>(() =>
     parseHash(window.location.hash)
   );
-  const [protocol, setProtocol] = useState<ProtocolVersion>(DEFAULT_PROTOCOL);
+  const [theme, setTheme] = useState<Theme>(getSystemTheme);
+
+  const protocol = route.protocol;
+  const tabs = protocol.name === 'openui' ? OPENUI_TABS : A2UI_TABS;
+
+  useLayoutEffect(() => {
+    document.documentElement.setAttribute('data-theme', theme);
+    document.documentElement.style.colorScheme = theme;
+  }, [theme]);
 
   useEffect(() => {
     const onHashChange = () => {
@@ -48,33 +121,95 @@ export function App() {
   }, []);
 
   const handleTabClick = useCallback((id: Tab) => {
-    window.location.hash = `#/${id}`;
-  }, []);
+    window.location.hash = `#/${protocol.name}/${id}`;
+  }, [protocol.name]);
 
-  const page = (() => {
+  const handleProtocolSelect = useCallback((name: ProtocolName) => {
+    // When switching to openui and current tab is create, fallback to examples.
+    const tab = name === 'openui' && route.tab === 'create'
+      ? 'examples'
+      : route.tab;
+    window.location.hash = `#/${name}/${tab}`;
+  }, [route.tab]);
+
+  const page = useMemo(() => {
+    if (protocol.name === 'openui') {
+      switch (route.tab) {
+        case 'components':
+        case 'catalog':
+          return (
+            <OpenUIComponentsPage
+              key='openui-components'
+              protocol={protocol}
+              componentName={route.componentName}
+            />
+          );
+        default:
+          return <OpenUIDemosPage key='openui-examples' protocol={protocol} />;
+      }
+    }
+
     switch (route.tab) {
-      case 'demos':
-        return <DemosPage key='demos' protocol={protocol} />;
+      case 'examples':
+        return route.demoId
+          ? (
+            <DemosPage
+              key='examples-detail'
+              protocol={protocol}
+              demoId={route.demoId}
+              theme={theme}
+            />
+          )
+          : (
+            <DemosListPage
+              key='examples-index'
+              protocol={protocol}
+              theme={theme}
+            />
+          );
+      case 'catalog':
       case 'components':
         return (
           <ComponentsPage
             key='components'
             protocol={protocol}
             componentName={route.componentName}
+            theme={theme}
           />
         );
       default:
-        return <AIChatPage key='chat' protocol={protocol} />;
+        return <AIChatPage key='create' protocol={protocol} theme={theme} />;
     }
-  })();
+  }, [protocol, route.tab, route.componentName, route.demoId, theme]);
+
+  const protocolVersionControl = (
+    <div className='protocolControl'>
+      <div className='protocolLabel'>Protocol</div>
+      <select
+        className='protocolSelect'
+        value={protocol.name}
+        onChange={(e) => handleProtocolSelect(e.target.value as ProtocolName)}
+      >
+        <option value='a2ui'>A2UI v0.9</option>
+        <option value='openui'>OpenUI v0.1</option>
+      </select>
+    </div>
+  );
 
   return (
     <div className='appShell'>
       <div className='topBar'>
-        <span className='brand'>A2UI Playground</span>
+        <div className='brandGroup'>
+          <img
+            className='brandLogo'
+            src={theme === 'dark' ? LYNX_DARK_LOGO : LYNX_LIGHT_LOGO}
+            alt='Lynx'
+          />
+          <span className='brand'>Lynx GenUI Playground</span>
+        </div>
 
         <nav className='tabNav'>
-          {TABS.map((t) => (
+          {tabs.map((t) => (
             <button
               key={t.id}
               type='button'
@@ -90,10 +225,17 @@ export function App() {
 
         <div className='spacer' />
 
-        <div className='protocolControl'>
-          <div className='protocolLabel'>Protocol</div>
-          <ProtocolSwitch value={protocol} onChange={setProtocol} />
-        </div>
+        {protocolVersionControl}
+
+        <button
+          type='button'
+          className='themeToggle'
+          onClick={() => setTheme((t) => (t === 'dark' ? 'light' : 'dark'))}
+          aria-label={`Switch to ${theme === 'dark' ? 'light' : 'dark'} mode`}
+          title={`Switch to ${theme === 'dark' ? 'light' : 'dark'} mode`}
+        >
+          {theme === 'dark' ? '\u2600' : '\u263E'}
+        </button>
       </div>
 
       <div className='appBody'>

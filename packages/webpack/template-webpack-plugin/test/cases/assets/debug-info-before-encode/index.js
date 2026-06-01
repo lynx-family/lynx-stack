@@ -1,14 +1,13 @@
-/// <reference types="@rspack/test-tools/rstest" />
+/// <reference types="@rstest/core/globals" />
 
+import { existsSync } from 'node:fs';
 import fs from 'node:fs/promises';
 import path from 'node:path';
 
-it('should have debug-info.json emitted', async () => {
-  const content = await fs.readFile(
-    path.resolve(__dirname, '.rspeedy/main/debug-info.json'),
-  );
-
-  expect(content.length).not.toBe(0);
+it('should not emit debug-info.json', () => {
+  expect(
+    existsSync(path.resolve(__dirname, '.rspeedy/main/debug-info.json')),
+  ).toBe(false);
 });
 
 it('should have custom templateDebugUrl in tasm.json from hook', async () => {
@@ -23,4 +22,15 @@ it('should have custom templateDebugUrl in tasm.json from hook', async () => {
     'templateDebugUrl',
     'https://custom-hook-url.com/debug-info.json',
   );
+});
+
+it('should leave debugMetadataUrl empty when the hook only sets templateDebugUrl', async () => {
+  const tasmJSON = await fs.readFile(
+    path.resolve(__dirname, '.rspeedy/main/tasm.json'),
+    'utf-8',
+  );
+
+  const { sourceContent } = JSON.parse(tasmJSON);
+
+  expect(sourceContent.config).toHaveProperty('debugMetadataUrl', '');
 });

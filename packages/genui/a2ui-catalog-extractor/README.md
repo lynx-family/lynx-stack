@@ -2,11 +2,15 @@
 
 English | [简体中文](./readme.zh_cn.md)
 
-`@lynx-js/a2ui-catalog-extractor` turns TypeScript component
-interfaces into A2UI component catalog JSON. You write the public
-component contract once as a TypeScript `interface`, describe it with
-normal TypeDoc comments, and let this package generate the JSON Schema
+`@lynx-js/genui/a2ui-catalog-extractor` is the internal TypeDoc-powered extraction
+engine behind `genui a2ui generate catalog`. It turns TypeScript component
+interfaces into A2UI component catalog JSON. You write the public component
+contract once as a TypeScript `interface`, describe it with normal TypeDoc
+comments, and run the public `genui a2ui` command to generate the JSON Schema
 that an A2UI agent can read.
+
+For user-facing scripts, use `genui a2ui generate catalog`. Treat
+this package as the implementation layer for extraction behavior and tests.
 
 ## What It Does
 
@@ -38,6 +42,7 @@ It can also wrap those generated components with a `catalogId`,
 - It does not ask you to write JSON Schema in comments.
 - It does not expand arbitrary imported type aliases or external
   interfaces.
+- It does not call an LLM or choose a model.
 
 The package consumes TypeDoc reflection data. This keeps the implementation
 small, but it also means catalog-facing shapes should be written inline in
@@ -53,10 +58,10 @@ the marked interface.
 
 ### Package manager
 
-Install it as a development dependency:
+Run the public CLI after installing `@lynx-js/genui`:
 
 ```bash
-pnpm add -D @lynx-js/a2ui-catalog-extractor
+genui a2ui --help
 ```
 
 Then add a script to your package:
@@ -64,7 +69,7 @@ Then add a script to your package:
 ```json
 {
   "scripts": {
-    "build:catalog": "a2ui-catalog-extractor --catalog-dir src/catalog --out-dir dist/catalog"
+    "build:catalog": "genui a2ui generate catalog --catalog-dir src/catalog --out-dir dist/catalog"
   }
 }
 ```
@@ -127,7 +132,7 @@ extractor that this interface should become a catalog component named
 Run:
 
 ```bash
-a2ui-catalog-extractor --catalog-dir src/catalog --out-dir dist/catalog
+genui a2ui generate catalog --catalog-dir src/catalog --out-dir dist/catalog
 ```
 
 The extractor scans the catalog directory, finds interfaces marked with
@@ -385,8 +390,14 @@ export interface CardProps {
 
 ## CLI Reference
 
+The public CLI entry point is
+`genui a2ui generate catalog`. It delegates to this package
+internally.
+
+### Generate catalog artifacts
+
 ```bash
-a2ui-catalog-extractor [options]
+genui a2ui generate catalog [options]
 ```
 
 | Option                  | Description                                                                  | Default        |
@@ -404,7 +415,13 @@ all inputs, removes duplicates, sorts them, and then runs TypeDoc.
 The scanner accepts `.ts`, `.tsx`, `.js`, `.jsx`, `.mts`, and `.cts`
 files. It ignores `.d.ts`, `node_modules`, `dist`, and `.turbo`.
 
-## Programmatic API
+## Repository-internal Programmatic API
+
+These exports are documented for maintainers of `@lynx-js/genui-cli`, extractor
+tests, and repository-internal tooling. They are not the external integration
+surface for product code. Product build scripts should call
+`genui a2ui generate catalog` instead of importing this package
+directly.
 
 ### Generate components from source files
 
@@ -412,7 +429,7 @@ files. It ignores `.d.ts`, `node_modules`, `dist`, and `.turbo`.
 import {
   extractCatalogComponents,
   writeComponentCatalogs,
-} from '@lynx-js/a2ui-catalog-extractor';
+} from '@lynx-js/genui/a2ui-catalog-extractor';
 
 const components = await extractCatalogComponents({
   sourceFiles: ['src/catalog/QuickStartCard.tsx'],
@@ -455,7 +472,7 @@ import * as fs from 'node:fs';
 import {
   extractCatalogComponentsFromTypeDocJson,
   writeCatalogComponents,
-} from '@lynx-js/a2ui-catalog-extractor';
+} from '@lynx-js/genui/a2ui-catalog-extractor';
 
 const projectJson = JSON.parse(
   await fs.promises.readFile('typedoc.json', 'utf8'),
@@ -470,7 +487,7 @@ writeCatalogComponents(components, {
 The equivalent CLI command is:
 
 ```bash
-a2ui-catalog-extractor --typedoc-json typedoc.json --out-dir dist/catalog
+genui a2ui generate catalog --typedoc-json typedoc.json --out-dir dist/catalog
 ```
 
 ### Create a full A2UI catalog object
@@ -482,7 +499,7 @@ the other top-level A2UI catalog fields:
 import {
   createA2UICatalog,
   extractCatalogComponents,
-} from '@lynx-js/a2ui-catalog-extractor';
+} from '@lynx-js/genui/a2ui-catalog-extractor';
 
 const components = await extractCatalogComponents({
   sourceFiles: ['src/catalog/QuickStartCard.tsx'],

@@ -1,0 +1,18 @@
+{
+  "name": "@lynx-js/example-template-webpack",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "build": "rspeedy build",
+    "dev": "rspeedy dev"
+  },
+  "devDependencies": {
+    "@lynx-js/qrcode-rsbuild-plugin": "workspace:*",
+    "@lynx-js/react": "workspace:*",
+    "@lynx-js/rspeedy": "workspace:*",
+    "@lynx-js/runtime-wrapper-webpack-plugin": "workspace:*",
+    "@lynx-js/template-webpack-plugin": "workspace:*",
+    "@rspack/core": "catalog:rspack"
+  }
+}

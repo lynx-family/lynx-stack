@@ -1,9 +1,16 @@
-@import "./luna.css";
+@import "../theme.css";
 
 .row {
   display: flex;
   flex-direction: row;
-  flex-wrap: wrap; /* Allow wrapping */
+  flex-wrap: nowrap;
+  gap: 18px;
+  width: 100%;
+  min-width: 0;
+}
+
+.row-weighted-item {
+  min-width: 0;
 }
 
 /* Alignment */
@@ -52,12 +59,12 @@
 
 /* Group: Standard horizontal grouping */
 .row-hint-group {
-  gap: 16px;
+  gap: 18px;
 }
 
 /* Compact: Tight grouping (e.g., icon + text) */
 .row-hint-compact {
-  gap: 8px;
+  gap: 10px;
 }
 
 /* Balanced: Good for space-between layouts */
@@ -68,9 +75,9 @@
 /* Toolbar: Specific for action bars */
 .row-hint-toolbar {
   width: 100%;
-  height: 56px;
-  padding: 0 16px;
+  height: 60px;
+  padding: 0 20px;
   align-items: center;
-  background-color: var(--paper);
-  border-bottom: 1px solid var(--line);
+  background-color: var(--a2ui-color-surface);
+  border-bottom: 1px solid var(--a2ui-color-border);
 }

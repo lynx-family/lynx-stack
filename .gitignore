@@ -5,6 +5,7 @@ www
 playwright-report
 test-results
 trace.zip
+midscene_run
 .turbo
 **/test/js
 .swc
@@ -50,5 +51,15 @@ target/
 # lighthouse-ci
 .lighthouseci
 
+# Claude
+.claude/
+
+# Codex
+.codex/
+
 # rslib
 .rslib
+
+# next
+.next
+.vercel

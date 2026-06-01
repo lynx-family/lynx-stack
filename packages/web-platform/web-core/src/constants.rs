@@ -32,6 +32,7 @@ lazy_static::lazy_static! {
     ("list", "x-list"),
     ("page", "div"),
     ("svg", "x-svg"),
+    ("frame", "lynx-view"),
   ]);
 
   pub static ref HTML_TAG_TO_LYNX_TAG_MAP: FnvHashMap<&'static str, &'static str> = FnvHashMap::from_iter(LYNX_TAG_TO_HTML_TAG_MAP
@@ -101,7 +102,9 @@ lazy_static::lazy_static! {
     "offset",
     "snap",
     "scrolltoupperedge",
-    "scrolltoloweredge"
+    "scrolltoloweredge",
+    "keydown",
+    "keyup"
   ]);
 
   pub static ref EVENT_TYPES: Vec<&'static str> = vec![

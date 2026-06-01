@@ -1,0 +1,45 @@
+{
+  "name": "@lynx-js/genui-openui",
+  "version": "0.0.1",
+  "private": true,
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/lynx-family/lynx-stack.git",
+    "directory": "packages/genui/openui"
+  },
+  "license": "Apache-2.0",
+  "type": "module",
+  "exports": {
+    ".": {
+      "types": "./dist/core/index.d.ts",
+      "default": "./dist/core/index.js"
+    },
+    "./catalog": {
+      "types": "./dist/catalog/index.d.ts",
+      "default": "./dist/catalog/index.js"
+    }
+  },
+  "main": "./dist/core/index.js",
+  "types": "./dist/core/index.d.ts",
+  "files": [
+    "dist",
+    "README.md"
+  ],
+  "scripts": {
+    "api-extractor": "node ../scripts/run-api-extractor.mjs",
+    "build": "tsc -p tsconfig.build.json && cp src/core/renderer.css dist/core/renderer.css"
+  },
+  "dependencies": {
+    "@openuidev/lang-core": "^0.2.4",
+    "zod": "^3.25.76"
+  },
+  "devDependencies": {
+    "@lynx-js/react": "workspace:*",
+    "@lynx-js/types": "3.7.0",
+    "@microsoft/api-extractor": "catalog:",
+    "@types/react": "^18.3.28"
+  },
+  "publishConfig": {
+    "access": "public"
+  }
+}

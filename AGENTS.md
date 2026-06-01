@@ -39,7 +39,9 @@ pnpm turbo build
 pnpm turbo watch build
 ```
 
-**⚠️ Critical**: Always run full build before tests. Watch mode only compiles TypeScript, not Rust components.
+**⚠️ Critical**: Always run `pnpm install --frozen-lockfile` when dependencies or generated toolchain state may be stale, then run the full repository build with `pnpm turbo build` before tests. Watch mode only compiles TypeScript, not Rust components.
+
+Do not run ad hoc package-local builds such as `cd packages/... && pnpm build`, `rsbuild build`, or `rslib build` as a substitute for validation. Lynx Stack build artifacts are cross-package and can become stale or internally inconsistent when built outside Turbo. If you need a narrower build for diagnosis, still invoke it from the repository root through Turbo filtering, and run `pnpm turbo build` before relying on generated binary/e2e artifacts or updating snapshots.
 
 ### 3. Code Quality
 
@@ -247,6 +249,10 @@ These instructions were generated through comprehensive analysis and testing of 
 - See `packages/web-platform/web-core/AGENTS.md` for specific instructions on `web-core`.
 
 Remember: This is a complex, multi-language monorepo. Always allow extra time for builds and tests, and follow the exact command sequences provided.
+
+## Commit conventions
+
+- Do **not** add `Co-Authored-By:` (or other AI-attribution) footers to commit messages. Authorship is tracked via the git author field; trailers like these add noise to the history.
 
 ## Submit knowledge updates
 

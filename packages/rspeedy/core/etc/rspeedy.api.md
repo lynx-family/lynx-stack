@@ -13,6 +13,7 @@ import { logger } from '@rsbuild/core';
 import type { PerformanceConfig } from '@rsbuild/core';
 import type { ProxyConfig } from '@rsbuild/core';
 import type { RsbuildConfig } from '@rsbuild/core';
+import type { RsbuildEntry } from '@rsbuild/core';
 import type { RsbuildInstance } from '@rsbuild/core';
 import { RsbuildPlugin } from '@rsbuild/core';
 import { RsbuildPluginAPI } from '@rsbuild/core';
@@ -33,6 +34,16 @@ export interface BuildCache {
 }
 
 // @public
+export type BundleFilename = string | ((context: BundleFilenameContext) => string);
+
+// @public
+export interface BundleFilenameContext {
+    entryName?: string | undefined;
+    lazyBundle: boolean;
+    platform: string;
+}
+
+// @public @deprecated
 export interface ChunkSplit {
     override?: Rspack.Configuration extends {
         optimization?: {
@@ -42,7 +53,7 @@ export interface ChunkSplit {
     strategy?: 'all-in-one' | 'split-by-module' | 'split-by-experience' | 'single-vendor' | undefined;
 }
 
-// @public
+// @public @deprecated
 export interface ChunkSplitBySize {
     maxSize?: number | undefined;
     minSize?: number | undefined;
@@ -54,7 +65,7 @@ export interface ChunkSplitBySize {
     strategy: 'split-by-size';
 }
 
-// @public
+// @public @deprecated
 export interface ChunkSplitCustom {
     splitChunks?: Rspack.Configuration extends {
         optimization?: {
@@ -75,6 +86,7 @@ export interface Config {
     resolve?: Resolve | undefined;
     server?: Server | undefined;
     source?: Source | undefined;
+    splitChunks?: RsbuildConfig['splitChunks'] | undefined;
     tools?: Tools | undefined;
 }
 
@@ -195,6 +207,7 @@ export interface EntryDescription {
 export interface ExposedAPI {
     config: Config;
     debug: (message: string | (() => string)) => void;
+    entries?: RsbuildEntry;
     exit: (code?: number) => Promise<void> | void;
     logger: typeof logger;
     version: string;
@@ -203,7 +216,7 @@ export interface ExposedAPI {
 // @public
 export interface Filename {
     assets?: Rspack.AssetModuleFilename;
-    bundle?: string | undefined;
+    bundle?: BundleFilename | undefined;
     css?: Rspack.CssFilename | undefined;
     font?: Rspack.AssetModuleFilename | undefined;
     image?: Rspack.AssetModuleFilename | undefined;
@@ -264,6 +277,7 @@ export interface Output {
 export interface Performance {
     // @beta
     buildCache?: BuildCache | boolean | undefined;
+    // @deprecated
     chunkSplit?: ChunkSplit | ChunkSplitBySize | ChunkSplitCustom | undefined;
     printFileSize?: PerformanceConfig['printFileSize'] | undefined;
     profile?: boolean | undefined;
@@ -326,7 +340,7 @@ export interface Source {
     alias?: Record<string, string | false | string[]> | undefined;
     assetsInclude?: Rspack.RuleSetCondition | undefined;
     decorators?: Decorators | undefined;
-    define?: Record<string, string | number | boolean | undefined | Record<string, unknown>> | undefined;
+    define?: Rspack.DefinePluginOptions;
     entry?: Entry | undefined;
     exclude?: Rspack.RuleSetCondition[] | undefined;
     include?: Rspack.RuleSetCondition[] | undefined;

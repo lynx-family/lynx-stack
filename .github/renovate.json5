@@ -4,6 +4,8 @@
     "config:recommended",
     ":maintainLockFilesWeekly",
     "helpers:pinGitHubActionDigests",
+    // Delay npm updates by 3 days so risky or unpublished releases have time to surface.
+    "security:minimumReleaseAgeNpm",
   ],
 
   // Exclude `examples` from "config:recommended"
@@ -90,6 +92,32 @@
       "matchPackageNames": [
         "/@prefresh/*/"
       ]
+    },
+    {
+      // These packages only publish dated snapshot builds (e.g.
+      // `5.0.1-<YYYYMMDDHHMMSS>-<sha>`) under the `latest` dist-tag. They are
+      // semver prereleases that sort *below* their stable baseline, so a plain
+      // `^x.y.z` range never sees them and Renovate gets stuck. Follow the
+      // `latest` tag and pin to it so each new build produces an update PR.
+      // Note: `@lynx-js/internal-preact` is consumed via the
+      // `"preact": "npm:@lynx-js/internal-preact@..."` alias; Renovate matches
+      // it by its resolved packageName.
+      "matchPackageNames": [
+        "@lynx-js/preact-devtools",
+        "@lynx-js/internal-preact",
+      ],
+      "followTag": "latest",
+      "ignoreUnstable": false,
+      "rangeStrategy": "pin",
+    },
+    {
+      // First-party `@lynx-js/*` packages are trusted and publish fresh
+      // releases (e.g. the dated-snapshot preact builds above), so they should
+      // not be delayed by `security:minimumReleaseAgeNpm`.
+      "matchPackageNames": [
+        "@lynx-js/**",
+      ],
+      "minimumReleaseAge": "0 days",
     },
     {
       "groupName": "API Extractor",

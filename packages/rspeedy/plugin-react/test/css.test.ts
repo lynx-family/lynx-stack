@@ -25,6 +25,79 @@ import { pluginReactLynx } from '../src/pluginReactLynx.js'
 const CSS_REGEXP = /\.css$/.toString()
 const SASS_REGEXP = /\.s(?:a|c)ss$/.toString()
 
+function findRule(
+  config: Rspack.Configuration | undefined,
+  predicate: (
+    rule: Rspack.RuleSetRule,
+    inheritedTest: string | undefined,
+  ) => boolean,
+): Rspack.RuleSetRule | undefined {
+  const visit = (
+    rules: Rspack.RuleSetRules | undefined,
+    inheritedTest?: string,
+  ): Rspack.RuleSetRule | undefined => {
+    for (const rule of rules ?? []) {
+      if (!rule || rule === '...' || typeof rule !== 'object') {
+        continue
+      }
+
+      const test = (rule.test as RegExp | undefined)?.toString()
+        ?? inheritedTest
+
+      if (predicate(rule, test)) {
+        return rule
+      }
+
+      const result = visit(rule.oneOf, test)
+      if (result) {
+        return result
+      }
+    }
+
+    return undefined
+  }
+
+  return visit(config?.module?.rules)
+}
+
+function findLayerRule(
+  config: Rspack.Configuration | undefined,
+  test: string,
+  issuerLayer: string,
+) {
+  return findRule(config, (rule, inheritedTest) => {
+    return inheritedTest === test && rule.issuerLayer === issuerLayer
+  })
+}
+
+function findInlineRule(
+  config: Rspack.Configuration | undefined,
+  test: string,
+) {
+  return findRule(config, (rule, inheritedTest) => {
+    return inheritedTest === test
+      && isRegExp(rule.resourceQuery)
+      && rule.resourceQuery.test('?inline')
+  })
+}
+
+function expectCssTransformRulesNotToHaveLightningCSS(
+  config: Rspack.Configuration | undefined,
+) {
+  for (
+    const rule of [
+      findLayerRule(config, CSS_REGEXP, LAYERS.BACKGROUND),
+      findLayerRule(config, CSS_REGEXP, LAYERS.MAIN_THREAD),
+      findInlineRule(config, CSS_REGEXP),
+    ]
+  ) {
+    expect(rule).not.toBeUndefined()
+    expect({ module: { rules: [rule] } }).not.toHaveLoader(
+      'builtin:lightningcss-loader',
+    )
+  }
+}
+
 describe('Plugins - CSS', () => {
   test('Use css-loader and CssExtractRspackPlugin.loader', async () => {
     const rsbuild = await createRspeedy({
@@ -79,6 +152,8 @@ describe('Plugins - CSS', () => {
   })
 
   test('Remove lightningcss-loader', async () => {
+    expect.hasAssertions()
+
     const rsbuild = await createRspeedy({
       rspeedyConfig: {
         environments: { lynx: {} },
@@ -88,11 +163,13 @@ describe('Plugins - CSS', () => {
 
     const [config] = await rsbuild.initConfigs()
 
-    // Not has `lightningcss-loader`
-    expect(config).not.toHaveLoader('builtin:lightningcss-loader')
+    // Not has `lightningcss-loader` in CSS transform branches
+    expectCssTransformRulesNotToHaveLightningCSS(config)
   })
 
   test('Remove lightningcss-loader when using web', async () => {
+    expect.hasAssertions()
+
     const rsbuild = await createRspeedy({
       rspeedyConfig: {
         environments: {
@@ -104,11 +181,13 @@ describe('Plugins - CSS', () => {
 
     const [config] = await rsbuild.initConfigs()
 
-    // Has `lightningcss-loader`
-    expect(config).not.toHaveLoader('builtin:lightningcss-loader')
+    // Not has `lightningcss-loader` in CSS transform branches
+    expectCssTransformRulesNotToHaveLightningCSS(config)
   })
 
   test('Not removing lightningcss-loader when using web and lynx', async () => {
+    expect.hasAssertions()
+
     const rsbuild = await createRspeedy({
       rspeedyConfig: {
         environments: {
@@ -131,10 +210,10 @@ describe('Plugins - CSS', () => {
 
     const [lynxConfig, webConfig] = await rsbuild.initConfigs()
 
-    // Lynx not has `lightningcss-loader`
-    expect(lynxConfig).not.toHaveLoader('builtin:lightningcss-loader')
-    // Web not has `lightningcss-loader`
-    expect(webConfig).not.toHaveLoader('builtin:lightningcss-loader')
+    // Lynx not has `lightningcss-loader` in CSS transform branches
+    expectCssTransformRulesNotToHaveLightningCSS(lynxConfig)
+    // Web not has `lightningcss-loader` in CSS transform branches
+    expectCssTransformRulesNotToHaveLightningCSS(webConfig)
   })
 
   describe('Layers', () => {
@@ -147,12 +226,10 @@ describe('Plugins - CSS', () => {
 
       const [config] = await rsbuild.initConfigs()
 
-      const backgroundRule = config?.module?.rules?.find(
-        (rule): rule is Rspack.RuleSetRule => {
-          return !!rule && rule !== '...'
-            && (rule.test as RegExp | undefined)?.toString() === CSS_REGEXP
-            && rule.issuerLayer === LAYERS.BACKGROUND
-        },
+      const backgroundRule = findLayerRule(
+        config,
+        CSS_REGEXP,
+        LAYERS.BACKGROUND,
       )
       expect(backgroundRule).not.toBeUndefined()
 
@@ -182,13 +259,10 @@ describe('Plugins - CSS', () => {
 
       const [config] = await rsbuild.initConfigs()
 
-      const backgroundRule = config?.module?.rules?.find(
-        (rule): rule is Rspack.RuleSetRule => {
-          return !!rule && rule !== '...'
-            && (rule.test as RegExp | undefined)?.toString()
-              === SASS_REGEXP
-            && rule.issuerLayer === LAYERS.BACKGROUND
-        },
+      const backgroundRule = findLayerRule(
+        config,
+        SASS_REGEXP,
+        LAYERS.BACKGROUND,
       )
 
       expect(backgroundRule).not.toBeUndefined()
@@ -209,12 +283,10 @@ describe('Plugins - CSS', () => {
 
       const [config] = await rsbuild.initConfigs()
 
-      const mainThreadRule = config?.module?.rules?.find(
-        (rule): rule is Rspack.RuleSetRule => {
-          return !!rule && rule !== '...'
-            && (rule.test as RegExp | undefined)?.toString() === CSS_REGEXP
-            && rule.issuerLayer === LAYERS.MAIN_THREAD
-        },
+      const mainThreadRule = findLayerRule(
+        config,
+        CSS_REGEXP,
+        LAYERS.MAIN_THREAD,
       )
 
       expect(mainThreadRule).not.toBeUndefined()
@@ -250,12 +322,10 @@ describe('Plugins - CSS', () => {
 
       const [config] = await rsbuild.initConfigs()
 
-      const mainThreadRule = config?.module?.rules?.find(
-        (rule): rule is Rspack.RuleSetRule => {
-          return !!rule && rule !== '...'
-            && (rule.test as RegExp | undefined)?.toString() === CSS_REGEXP
-            && rule.issuerLayer === LAYERS.MAIN_THREAD
-        },
+      const mainThreadRule = findLayerRule(
+        config,
+        CSS_REGEXP,
+        LAYERS.MAIN_THREAD,
       )
 
       expect(mainThreadRule).not.toBeUndefined()
@@ -290,12 +360,10 @@ describe('Plugins - CSS', () => {
 
       const [config] = await rsbuild.initConfigs()
 
-      const mainThreadRule = config?.module?.rules?.find(
-        (rule): rule is Rspack.RuleSetRule => {
-          return !!rule && rule !== '...'
-            && (rule.test as RegExp | undefined)?.toString() === CSS_REGEXP
-            && rule.issuerLayer === LAYERS.MAIN_THREAD
-        },
+      const mainThreadRule = findLayerRule(
+        config,
+        CSS_REGEXP,
+        LAYERS.MAIN_THREAD,
       )
 
       expect(mainThreadRule).not.toBeUndefined()
@@ -336,12 +404,10 @@ describe('Plugins - CSS', () => {
 
       const [config] = await rsbuild.initConfigs()
 
-      const backgroundRule = config?.module?.rules?.find(
-        (rule): rule is Rspack.RuleSetRule => {
-          return !!rule && rule !== '...'
-            && (rule.test as RegExp | undefined)?.toString() === CSS_REGEXP
-            && rule.issuerLayer === LAYERS.BACKGROUND
-        },
+      const backgroundRule = findLayerRule(
+        config,
+        CSS_REGEXP,
+        LAYERS.BACKGROUND,
       )
       expect(backgroundRule).not.toBeUndefined()
       expect({ module: { rules: [backgroundRule] } }).not.toHaveLoader(
@@ -370,12 +436,10 @@ describe('Plugins - CSS', () => {
 
       const [config] = await rsbuild.initConfigs()
 
-      const backgroundRule = config?.module?.rules?.find(
-        (rule): rule is Rspack.RuleSetRule => {
-          return !!rule && rule !== '...'
-            && (rule.test as RegExp | undefined)?.toString() === CSS_REGEXP
-            && rule.issuerLayer === LAYERS.BACKGROUND
-        },
+      const backgroundRule = findLayerRule(
+        config,
+        CSS_REGEXP,
+        LAYERS.BACKGROUND,
       )
       expect(backgroundRule).not.toBeUndefined()
       expect({ module: { rules: [backgroundRule] } }).not.toHaveLoader(
@@ -395,12 +459,10 @@ describe('Plugins - CSS', () => {
 
       const [config] = await rsbuild.initConfigs()
 
-      const mainThreadRule = config?.module?.rules?.find(
-        (rule): rule is Rspack.RuleSetRule => {
-          return !!rule && rule !== '...'
-            && (rule.test as RegExp | undefined)?.toString() === CSS_REGEXP
-            && rule.issuerLayer === LAYERS.MAIN_THREAD
-        },
+      const mainThreadRule = findLayerRule(
+        config,
+        CSS_REGEXP,
+        LAYERS.MAIN_THREAD,
       )
 
       expect(mainThreadRule).not.toBeUndefined()
@@ -426,13 +488,10 @@ describe('Plugins - CSS', () => {
 
       const [config] = await rsbuild.initConfigs()
 
-      const mainThreadRule = config?.module?.rules?.find(
-        (rule): rule is Rspack.RuleSetRule => {
-          return !!rule && rule !== '...'
-            && (rule.test as RegExp | undefined)?.toString()
-              === SASS_REGEXP
-            && rule.issuerLayer === LAYERS.MAIN_THREAD
-        },
+      const mainThreadRule = findLayerRule(
+        config,
+        SASS_REGEXP,
+        LAYERS.MAIN_THREAD,
       )
 
       expect(mainThreadRule).not.toBeUndefined()
@@ -463,13 +522,10 @@ describe('Plugins - CSS', () => {
 
       const [config] = await rsbuild.initConfigs()
 
-      const mainThreadRule = config?.module?.rules?.find(
-        (rule): rule is Rspack.RuleSetRule => {
-          return !!rule && rule !== '...'
-            && (rule.test as RegExp | undefined)?.toString()
-              === SASS_REGEXP
-            && rule.issuerLayer === LAYERS.MAIN_THREAD
-        },
+      const mainThreadRule = findLayerRule(
+        config,
+        SASS_REGEXP,
+        LAYERS.MAIN_THREAD,
       )
 
       expect(mainThreadRule).not.toBeUndefined()
@@ -497,13 +553,10 @@ describe('Plugins - CSS', () => {
 
       const [config] = await rsbuild.initConfigs()
 
-      const mainThreadRule = config?.module?.rules?.find(
-        (rule): rule is Rspack.RuleSetRule => {
-          return !!rule && rule !== '...'
-            && (rule.test as RegExp | undefined)?.toString()
-              === SASS_REGEXP
-            && rule.issuerLayer === LAYERS.MAIN_THREAD
-        },
+      const mainThreadRule = findLayerRule(
+        config,
+        SASS_REGEXP,
+        LAYERS.MAIN_THREAD,
       )
 
       expect(mainThreadRule).not.toBeUndefined()
@@ -526,13 +579,9 @@ describe('Plugins - CSS', () => {
 
       const [config] = await rsbuild.initConfigs()
 
-      const mainThreadRule = config?.module?.rules?.find(
-        (rule): rule is Rspack.RuleSetRule => {
-          return !!rule && rule !== '...'
-            && (rule.test as RegExp | undefined)?.toString() === CSS_REGEXP
-            && isRegExp(rule.resourceQuery)
-            && rule.resourceQuery.test('?inline')
-        },
+      const mainThreadRule = findInlineRule(
+        config,
+        CSS_REGEXP,
       )
 
       expect(mainThreadRule).not.toBeUndefined()
@@ -558,13 +607,9 @@ describe('Plugins - CSS', () => {
 
       const [config] = await rsbuild.initConfigs()
 
-      const mainThreadRule = config?.module?.rules?.find(
-        (rule): rule is Rspack.RuleSetRule => {
-          return !!rule && rule !== '...'
-            && (rule.test as RegExp | undefined)?.toString() === SASS_REGEXP
-            && isRegExp(rule.resourceQuery)
-            && rule.resourceQuery.test('?inline')
-        },
+      const mainThreadRule = findInlineRule(
+        config,
+        SASS_REGEXP,
       )
 
       expect(mainThreadRule).not.toBeUndefined()
@@ -610,6 +655,29 @@ describe('Plugins - CSS', () => {
           plugins: [
             pluginReactLynx({
               enableRemoveCSSScope: false,
+            }),
+            pluginStubRspeedyAPI(),
+          ],
+        },
+      })
+
+      const [config] = await rspeedy.initConfigs()
+
+      expect(
+        config?.optimization?.minimizer?.find(minimizer =>
+          minimizer && minimizer !== '...'
+          && minimizer.constructor.name === 'CssMinimizerPlugin'
+        ),
+      ).toBeUndefined()
+    })
+
+    test('with enableRemoveCSSScope: true', async () => {
+      vi.stubEnv('NODE_ENV', 'production')
+      const rspeedy = await createRspeedy({
+        rspeedyConfig: {
+          plugins: [
+            pluginReactLynx({
+              enableRemoveCSSScope: true,
             }),
             pluginStubRspeedyAPI(),
           ],

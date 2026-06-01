@@ -17,7 +17,7 @@ export function createCssChunkLoadingRuntimeModule(
 
   return class CssChunkLoadingRuntimeModule extends RuntimeModule {
     constructor(public runtimeRequirements: Set<string>) {
-      super('Lynx css loading', 10);
+      super('webpack/runtime/lynx css loading', 10);
 
       this.runtimeRequirements = runtimeRequirements;
     }

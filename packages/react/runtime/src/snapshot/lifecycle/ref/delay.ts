@@ -2,17 +2,9 @@
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
 
-import type { NodesRef, SelectorQuery } from '@lynx-js/types';
-
+import { SelectorRefProxy } from '../../../core/ref.js';
+import type { RefProxyForwardedMethods } from '../../../core/ref.js';
 import { hydrationMap } from '../../snapshot/snapshotInstanceHydrationMap.js';
-
-type FunctionPropertyNames<T> = {
-  [K in keyof T]: T[K] extends (...args: unknown[]) => unknown ? K : never;
-}[keyof T];
-
-type ForwardableNodesRefMethod = Exclude<FunctionPropertyNames<NodesRef>, 'exec'>;
-
-type RefTask = (nodesRef: NodesRef) => SelectorQuery;
 
 /**
  * A flag to indicate whether UI operations should be delayed.
@@ -58,61 +50,31 @@ function runDelayedUiOps(): void {
  * A proxy class designed for managing and executing reference-based tasks.
  * It delays the execution of tasks until hydration is complete.
  */
-class RefProxy {
+class RefProxy extends SelectorRefProxy<RefProxy> {
   private readonly refAttr: [snapshotInstanceId: number, expIndex: number];
-  private task: RefTask | undefined;
 
   constructor(refAttr: [snapshotInstanceId: number, expIndex: number]) {
+    super();
     this.refAttr = refAttr;
-    this.task = undefined;
 
-    return new Proxy(this, {
-      get: (target, prop, receiver) => {
-        if (
-          typeof prop === 'symbol'
-          || prop === 'then'
-          || prop in target
-          || typeof prop !== 'string'
-        ) {
-          return Reflect.get(target, prop, receiver);
-        }
-
-        const forward = <K extends ForwardableNodesRefMethod>(method: K) => {
-          return (...args: Parameters<NodesRef[K]>) => {
-            return new RefProxy(target.refAttr).setTask(method, args);
-          };
-        };
-
-        return forward(prop as ForwardableNodesRefMethod);
-      },
-    }) as RefProxy;
+    return this.createProxy();
   }
 
-  private setTask<K extends ForwardableNodesRefMethod>(
-    method: K,
-    args: Parameters<NodesRef[K]>,
-  ): this {
-    this.task = (nodesRef) => {
-      const nodesRefMethod = nodesRef[method] as (...params: Parameters<NodesRef[K]>) => SelectorQuery;
-      return nodesRefMethod.apply(nodesRef, args);
-    };
-    return this;
+  protected createProxyTarget(): RefProxy {
+    return new RefProxy(this.refAttr);
   }
 
-  exec(): void {
-    runOrDelay(() => {
-      const realRefId = hydrationMap.get(this.refAttr[0]) ?? this.refAttr[0];
-      const refSelector = `[react-ref-${realRefId}-${this.refAttr[1]}]`;
-      this.task!(lynx.createSelectorQuery().select(refSelector)).exec();
-    });
+  protected runOrDelay(task: () => void): void {
+    runOrDelay(task);
+  }
+
+  get selector(): string {
+    const realRefId = hydrationMap.get(this.refAttr[0]) ?? this.refAttr[0];
+    return `[react-ref-${realRefId}-${this.refAttr[1]}]`;
   }
 }
 
-type RefProxyForwardedMethods = {
-  [K in ForwardableNodesRefMethod]: (...args: Parameters<NodesRef[K]>) => RefProxy;
-};
-
-interface RefProxy extends RefProxyForwardedMethods {}
+interface RefProxy extends RefProxyForwardedMethods<RefProxy> {}
 
 /**
  * @internal

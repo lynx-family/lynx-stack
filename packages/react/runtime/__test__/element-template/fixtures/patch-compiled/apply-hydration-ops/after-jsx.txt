@@ -1,0 +1,10 @@
+"<page>
+  <view id=\"bg\">
+    <view id=\"b\" />
+    <text>
+      <raw-text text=\"BG\" />
+    </text>
+    <view id=\"a\" />
+    <image />
+  </view>
+</page>"

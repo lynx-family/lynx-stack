@@ -40,6 +40,8 @@ declare global {
   declare function __CreateText(parentComponentUniqueId: number): FiberElement;
   declare function __CreateImage(parentComponentUniqueId: number): FiberElement;
   declare function __CreateView(parentComponentUniqueId: number): FiberElement;
+  declare function __CreateScrollView(parentComponentUniqueId: number): FiberElement;
+  declare function __CreateFrame(parentComponentUniqueId: number): FiberElement;
   declare function __CreateRawText(s: string): FiberElement;
   declare function __CreateList(
     parentComponentUniqueId: number,
@@ -69,6 +71,11 @@ declare global {
   declare function __LastElement(parent: FiberElement): FiberElement;
   declare function __NextElement(parent: FiberElement): FiberElement;
   declare function __GetPageElement(): FiberElement | undefined;
+  declare function __QuerySelector(
+    e: FiberElement,
+    cssSelector: string,
+    params: object,
+  ): FiberElement | undefined;
   declare function __GetTemplateParts(e: FiberElement): Record<string, FiberElement>;
   declare function __AddDataset(node: FiberElement, key: string, value: any): void;
   declare function __SetDataset(

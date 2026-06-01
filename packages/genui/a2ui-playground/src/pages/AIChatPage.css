@@ -1,0 +1,1552 @@
+/* ═══════════════════════════════════════════
+   Create Page
+   ═══════════════════════════════════════════ */
+
+.chatPage {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.chatPage.resizing {
+  user-select: none;
+}
+
+.confirmDialogOverlay {
+  position: fixed;
+  inset: 0;
+  z-index: 1000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+  background: color-mix(in srgb, var(--geist-foreground) 38%, transparent);
+  backdrop-filter: blur(2px);
+}
+
+.confirmDialog {
+  width: min(420px, 100%);
+  border: 1px solid var(--geist-border);
+  border-radius: 8px;
+  background: var(--geist-background);
+  box-shadow:
+    0 18px 48px color-mix(in srgb, var(--geist-foreground) 18%, transparent),
+    0 4px 16px color-mix(in srgb, var(--geist-foreground) 10%, transparent);
+  overflow: hidden;
+}
+
+.confirmDialogBody {
+  padding: 22px 22px 16px;
+}
+
+.confirmDialogTitle {
+  margin: 0;
+  color: var(--geist-foreground);
+  font-size: 18px;
+  font-weight: 650;
+  line-height: 1.35;
+}
+
+.confirmDialogDescription {
+  margin: 8px 0 0;
+  color: var(--geist-secondary);
+  font-size: 14px;
+  line-height: 1.55;
+}
+
+.confirmDialogActions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+  padding: 14px 22px 20px;
+}
+
+.confirmDialogButton {
+  height: 36px;
+  min-width: 84px;
+  padding: 0 14px;
+  border: 1px solid var(--geist-border);
+  border-radius: var(--geist-radius-md);
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.confirmDialogButtonCancel {
+  background: var(--geist-surface);
+  color: var(--geist-foreground);
+}
+
+.confirmDialogButtonPrimary {
+  border-color: var(--geist-accent);
+  background: var(--geist-accent);
+  color: var(--geist-accent-foreground);
+}
+
+.confirmDialogButtonDanger {
+  border-color: color-mix(
+    in srgb,
+    var(--geist-error, #c0392b) 85%,
+    var(--geist-border)
+  );
+  background: var(--geist-error, #c0392b);
+  color: #fff;
+}
+
+.confirmDialogButton:hover {
+  opacity: 0.86;
+}
+
+.chatPageBody {
+  flex: 1;
+  min-width: 0;
+  min-height: 0;
+  display: flex;
+  overflow: hidden;
+}
+
+.conversationPanel {
+  width: 260px;
+  min-width: 220px;
+  max-width: 300px;
+  border-right: 1px solid var(--geist-border);
+  background: linear-gradient(
+    180deg,
+    color-mix(in srgb, var(--geist-background) 74%, var(--geist-surface)),
+    var(--geist-surface) 180px
+  );
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  flex-shrink: 0;
+}
+
+.conversationPanelHeader,
+.conversationPanelCreateRow {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  min-height: 72px;
+  padding: 12px;
+  border-bottom: 1px solid
+    color-mix(in srgb, var(--geist-border) 68%, transparent);
+  background: color-mix(in srgb, var(--geist-background) 62%, transparent);
+}
+
+.conversationNewButton {
+  width: 100%;
+  height: 44px;
+  margin: 0;
+  padding: 0 16px;
+  border: 1px solid var(--geist-border);
+  border-radius: 12px;
+  background: linear-gradient(
+    180deg,
+    var(--geist-background),
+    color-mix(in srgb, var(--geist-surface) 70%, var(--geist-background))
+  );
+  color: var(--geist-foreground);
+  font-size: 13px;
+  font-weight: 650;
+  line-height: 1;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  transition:
+    background var(--geist-transition),
+    border-color var(--geist-transition),
+    color var(--geist-transition),
+    box-shadow var(--geist-transition),
+    transform var(--geist-transition);
+  box-shadow: 0 6px 18px
+    color-mix(in srgb, var(--geist-foreground) 5%, transparent);
+}
+
+.conversationNewButton:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.conversationNewButton:hover {
+  border-color: color-mix(
+    in srgb,
+    var(--geist-foreground) 28%,
+    var(--geist-border)
+  );
+  background: color-mix(
+    in srgb,
+    var(--geist-background) 82%,
+    var(--geist-surface)
+  );
+  box-shadow: 0 10px 26px
+    color-mix(in srgb, var(--geist-foreground) 9%, transparent);
+}
+
+.conversationNewButtonIcon {
+  font-size: 16px;
+  line-height: 1;
+}
+
+.conversationNewButtonLabel {
+  line-height: 1;
+}
+
+.conversationNewButton:active {
+  transform: scale(0.96);
+}
+
+.conversationRecentRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 8px 12px 6px;
+}
+
+.conversationRecentLabel {
+  color: var(--geist-secondary);
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.conversationRecentClearButton {
+  height: 22px;
+  padding: 0 8px;
+  border: 1px solid var(--geist-border);
+  border-radius: 999px;
+  background: transparent;
+  color: var(--geist-secondary);
+  font-size: 11px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.conversationRecentClearButton:hover {
+  color: var(--geist-foreground);
+  border-color: var(--geist-border-hover);
+  background: var(--geist-surface);
+}
+
+.conversationRecentClearButton:disabled {
+  opacity: 0.35;
+  cursor: not-allowed;
+}
+
+.conversationList {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  padding: 8px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.conversationListItem {
+  position: relative;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 8px;
+  border: 1px solid var(--geist-border);
+  border-radius: var(--geist-radius-md);
+  background: var(--geist-background);
+  padding: 8px 8px 8px 12px;
+  transition:
+    border-color var(--geist-transition),
+    color var(--geist-transition);
+}
+
+.conversationListItem::before {
+  content: "";
+  position: absolute;
+  top: 9px;
+  bottom: 9px;
+  left: 5px;
+  width: 2px;
+  border-radius: 999px;
+  background: transparent;
+  transition: background var(--geist-transition);
+}
+
+.conversationListItem:hover {
+  border-color: color-mix(
+    in srgb,
+    var(--geist-foreground) 28%,
+    var(--geist-border)
+  );
+}
+
+.conversationListItem-active {
+  border-color: var(--geist-border);
+  background: var(--geist-background);
+}
+
+.conversationListItem-active::before {
+  background: color-mix(in srgb, var(--geist-foreground) 34%, transparent);
+}
+
+.conversationListItemMain {
+  min-width: 0;
+  padding: 0;
+  border: none;
+  background: transparent;
+  color: inherit;
+  text-align: left;
+  cursor: pointer;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.conversationListItemMain:disabled {
+  cursor: not-allowed;
+  opacity: 0.7;
+}
+
+.conversationListItemTitle {
+  overflow: hidden;
+  color: var(--geist-foreground);
+  font-size: 13px;
+  font-weight: 650;
+  line-height: 1.35;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.conversationListItemMeta,
+.conversationListItemPreview {
+  overflow: hidden;
+  color: var(--geist-secondary);
+  font-size: 11px;
+  line-height: 1.45;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.conversationListItemPreview {
+  color: color-mix(
+    in srgb,
+    var(--geist-secondary) 86%,
+    var(--geist-foreground)
+  );
+}
+
+.conversationListItemActions {
+  display: flex;
+  align-items: flex-start;
+  gap: 4px;
+  opacity: 0;
+  pointer-events: none;
+  transform: translateX(4px);
+  transition:
+    opacity var(--geist-transition),
+    transform var(--geist-transition);
+}
+
+.conversationListItem:hover .conversationListItemActions,
+.conversationListItem-active .conversationListItemActions,
+.conversationListItem:focus-within .conversationListItemActions {
+  opacity: 1;
+  pointer-events: auto;
+  transform: translateX(0);
+}
+
+.conversationIconButton {
+  height: 26px;
+  padding: 0 7px;
+  border: 1px solid var(--geist-border);
+  border-radius: 999px;
+  background: color-mix(
+    in srgb,
+    var(--geist-surface) 76%,
+    var(--geist-background)
+  );
+  color: var(--geist-secondary);
+  font-size: 10px;
+  font-weight: 600;
+  cursor: pointer;
+  transition:
+    background var(--geist-transition),
+    border-color var(--geist-transition),
+    color var(--geist-transition);
+}
+
+.conversationIconButton:hover {
+  color: var(--geist-foreground);
+  border-color: var(--geist-border-hover);
+  background: var(--geist-background);
+}
+
+.conversationIconButtonDanger:hover {
+  border-color: color-mix(
+    in srgb,
+    var(--geist-error, #c0392b) 55%,
+    var(--geist-border)
+  );
+  color: var(--geist-error, #c0392b);
+}
+
+.conversationIconButton:disabled {
+  opacity: 0.35;
+  cursor: not-allowed;
+}
+
+.conversationRenameInput {
+  width: 100%;
+  height: 28px;
+  min-width: 0;
+  border: 1px solid var(--geist-border);
+  border-radius: 4px;
+  background: var(--geist-background);
+  color: var(--geist-foreground);
+  font-size: 12px;
+  outline: none;
+  padding: 0 6px;
+}
+
+.chatPanel {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  min-height: 0;
+  background:
+    linear-gradient(
+      180deg,
+      color-mix(in srgb, var(--geist-surface) 52%, transparent),
+      transparent 180px
+    ),
+    var(--geist-background);
+}
+
+.chatHeader {
+  padding: 16px 24px 14px;
+  border-bottom: 1px solid var(--geist-border);
+  background: color-mix(in srgb, var(--geist-background) 92%, transparent);
+  backdrop-filter: blur(10px);
+  flex-shrink: 0;
+}
+
+.chatHeaderTitle {
+  font-size: 18px;
+  font-weight: 650;
+  letter-spacing: -0.02em;
+  line-height: 1.25;
+}
+
+.constructionBadge {
+  display: inline-flex;
+  align-items: center;
+  height: 20px;
+  padding: 0 8px;
+  border: 1px solid var(--geist-border);
+  border-radius: 999px;
+  background: var(--geist-surface);
+  color: var(--geist-secondary);
+  font-size: 11px;
+  font-weight: 600;
+  line-height: 1;
+  white-space: nowrap;
+}
+
+.chatTokenUsageBadge {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 26px;
+  margin-left: auto;
+  padding: 0 10px;
+  border: 1px solid var(--geist-border);
+  border-radius: 999px;
+  background: var(--geist-surface);
+  color: var(--geist-secondary);
+  font-family: var(--geist-mono);
+  font-size: 12px;
+  font-weight: 500;
+  line-height: 1;
+  white-space: nowrap;
+}
+
+.chatTokenUsageItem {
+  display: inline-flex;
+  align-items: center;
+}
+
+.chatTokenUsageTotal {
+  padding: 3px 7px;
+  border: 1px solid var(--geist-border);
+  border-radius: 999px;
+  background: var(--geist-background);
+  color: var(--geist-foreground);
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.chatHeaderSub {
+  margin: 4px 0 0;
+  font-size: 12px;
+  color: var(--geist-secondary);
+  line-height: 1.5;
+}
+
+.chatProviderToggle {
+  display: inline-flex;
+  align-items: center;
+  height: 28px;
+  margin-left: 4px;
+  padding: 0 10px;
+  border: 1px solid var(--geist-border);
+  border-radius: var(--geist-radius-md);
+  background: var(--geist-surface);
+  color: var(--geist-foreground);
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.chatProviderToggle:hover {
+  border-color: var(--geist-foreground);
+}
+
+.chatProviderPanel {
+  display: grid;
+  grid-template-columns:
+    minmax(150px, 1.2fr) minmax(180px, 1fr) minmax(130px, 0.8fr) auto;
+  gap: 8px;
+  align-items: end;
+  padding: 10px 20px 12px;
+  border-bottom: 1px solid var(--geist-border);
+  background: var(--geist-background);
+  flex-shrink: 0;
+}
+
+.chatProviderField {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  min-width: 0;
+}
+
+.chatProviderLabel {
+  color: var(--geist-secondary);
+  font-size: 11px;
+  font-weight: 600;
+}
+
+.chatProviderInput {
+  width: 100%;
+  height: 32px;
+  min-width: 0;
+  padding: 0 10px;
+  border: 1px solid var(--geist-border);
+  border-radius: var(--geist-radius-md);
+  background: var(--geist-background);
+  color: var(--geist-foreground);
+  font-family: var(--geist-mono);
+  font-size: 12px;
+  outline: none;
+}
+
+.chatProviderInput:focus {
+  border-color: var(--geist-foreground);
+}
+
+.chatProviderInput::placeholder {
+  color: var(--geist-secondary);
+}
+
+.chatProviderClearButton {
+  height: 32px;
+  padding: 0 12px;
+  border: 1px solid var(--geist-border);
+  border-radius: var(--geist-radius-md);
+  background: var(--geist-surface);
+  color: var(--geist-secondary);
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.chatProviderClearButton:hover {
+  color: var(--geist-foreground);
+  border-color: var(--geist-foreground);
+}
+
+.chatMessages {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  padding: 20px 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.chatMessage {
+  max-width: 80%;
+  padding: 10px 14px;
+  border-radius: var(--geist-radius-lg);
+  font-size: 14px;
+  line-height: 1.5;
+  overflow-wrap: anywhere;
+  word-break: normal;
+  flex-shrink: 0;
+}
+
+.chatMessageUser {
+  align-self: flex-end;
+  background: var(--geist-accent);
+  color: var(--geist-accent-foreground);
+  border-bottom-right-radius: 4px;
+}
+
+.chatMessageAI {
+  align-self: flex-start;
+  background: var(--geist-surface);
+  border: 1px solid var(--geist-border);
+  border-bottom-left-radius: 4px;
+}
+
+.chatMessageAction {
+  align-self: center;
+  max-width: 90%;
+  padding: 6px 12px;
+  background: transparent;
+  border: 1px dashed var(--geist-border);
+  border-radius: 999px;
+  color: var(--geist-secondary);
+  font-size: 12px;
+  font-family: var(--geist-mono);
+}
+
+.chatMessageActionPending {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.chatMessageActionSpinner {
+  width: 12px;
+  height: 12px;
+  border: 1.5px solid
+    color-mix(in srgb, var(--geist-secondary) 35%, transparent);
+  border-top-color: var(--geist-secondary);
+  border-radius: 50%;
+  display: inline-block;
+  animation: chat-message-action-spin 0.8s linear infinite;
+  flex-shrink: 0;
+}
+
+@keyframes chat-message-action-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.chatMessageAction.chatMessageActionExpanded {
+  align-self: flex-start;
+  width: 100%;
+  max-width: 80%;
+  padding: 0;
+  border: 1px solid var(--geist-border);
+  border-radius: var(--geist-radius-md);
+  background: var(--geist-surface);
+  overflow: hidden;
+}
+
+.chatMessageStatus {
+  align-self: stretch;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  max-width: 100%;
+  padding: 6px 10px;
+  border: none;
+  border-radius: var(--geist-radius-md);
+  background: transparent;
+  color: var(--geist-secondary);
+  font-size: 12px;
+  font-family: var(--geist-mono);
+  line-height: 1.5;
+}
+
+.chatMessageStatus .chatMessageBody {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.chatMessageStatusIcon {
+  font-size: 14px;
+  line-height: 1;
+  flex-shrink: 0;
+}
+
+.chatMessageStatusInline {
+  padding: 1px 6px;
+  border: 1px solid var(--geist-border);
+  border-radius: 4px;
+  background: var(--geist-surface);
+  color: var(--geist-foreground);
+  font-family: var(--geist-mono);
+  font-size: 11px;
+}
+
+.chatMessageStatus-info {
+  color: var(--geist-secondary);
+}
+
+.chatMessageStatus-pending {
+  color: var(--geist-foreground);
+}
+
+.chatMessageStatus-success {
+  color: color-mix(
+    in srgb,
+    var(--geist-success, #0a7d2c) 92%,
+    var(--geist-foreground)
+  );
+}
+
+.chatMessageStatus-error {
+  color: color-mix(
+    in srgb,
+    var(--geist-error, #c0392b) 92%,
+    var(--geist-foreground)
+  );
+}
+
+.chatMessageAction.chatMessageActionExpanded .chatMessageBody {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 12px;
+  border-bottom: 1px solid var(--geist-border);
+  background: var(--geist-background);
+  color: var(--geist-foreground);
+}
+
+.chatMessageJson {
+  align-self: flex-start;
+  width: 100%;
+  max-width: 80%;
+  padding: 0;
+  border: 1px solid var(--geist-border);
+  border-radius: var(--geist-radius-md);
+  background: var(--geist-surface);
+  overflow: hidden;
+}
+
+.chatMessageJson .chatMessageBody {
+  display: flex;
+  align-items: center;
+  min-height: 34px;
+  padding: 0 12px;
+  border-bottom: 1px solid var(--geist-border);
+  background: var(--geist-background);
+  color: var(--geist-secondary);
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.chatMessagePayload {
+  display: flex;
+  flex-direction: column;
+}
+
+.chatMessageChunks {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 10px;
+  max-height: 520px;
+  overflow-y: auto;
+  background: var(--geist-surface);
+}
+
+.chatMessageChunk {
+  border: 1px solid var(--geist-border);
+  border-radius: var(--geist-radius-md);
+  overflow: hidden;
+  background: var(--geist-background);
+  flex-shrink: 0;
+}
+
+.chatMessageSingleChunk {
+  margin: 10px;
+  border: 1px solid var(--geist-border);
+  border-radius: var(--geist-radius-md);
+  overflow: hidden;
+  background: var(--geist-background);
+}
+
+.chatMessageChunkHeader {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 32px;
+  padding: 4px 10px;
+  border-bottom: 1px solid var(--geist-border);
+  background: color-mix(in srgb, var(--geist-surface) 88%, transparent);
+}
+
+.chatMessageChunkIndex {
+  font-family: var(--geist-mono);
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--geist-secondary);
+}
+
+.chatMessageChunkJson {
+  margin: 0;
+  max-height: 260px;
+  overflow: auto;
+  padding: 8px 10px;
+  color: var(--geist-secondary);
+  font-family: var(--geist-mono);
+  font-size: 12px;
+  line-height: 1.55;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+  word-break: normal;
+}
+
+.chatGeneratedJson {
+  width: 100%;
+  max-width: 80%;
+  align-self: flex-start;
+  border: 1px solid var(--geist-border);
+  border-radius: var(--geist-radius-md);
+  overflow: hidden;
+  background: var(--geist-surface);
+  flex-shrink: 0;
+}
+
+.chatGeneratedJsonTitle {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 34px;
+  padding: 0 12px;
+  border-bottom: 1px solid var(--geist-border);
+  background: var(--geist-background);
+  color: var(--geist-secondary);
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.chatJsonCopyButton {
+  margin-left: auto;
+  min-width: 52px;
+  height: 24px;
+  padding: 0 8px;
+  border: 1px solid var(--geist-border);
+  border-radius: 4px;
+  background: var(--geist-surface);
+  color: var(--geist-foreground);
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0;
+  text-transform: none;
+  cursor: pointer;
+}
+
+.chatJsonCopyButton:hover {
+  background: color-mix(in srgb, var(--geist-foreground) 6%, transparent);
+}
+
+.chatInputArea {
+  padding: 12px 24px 18px;
+  border-top: 1px solid
+    color-mix(in srgb, var(--geist-border) 75%, transparent);
+  background:
+    linear-gradient(
+      180deg,
+      transparent,
+      color-mix(in srgb, var(--geist-background) 92%, transparent) 18px
+    ),
+    var(--geist-background);
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  flex-shrink: 0;
+}
+
+.chatSuggestionsRow {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+/* ── Prompt suggestions (online, costs tokens) ────────────────────────── */
+
+.promptSuggestions {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.promptSuggestionsHeader {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  padding: 0;
+}
+
+.promptSuggestionsLabel {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 5px;
+  color: var(--geist-secondary);
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+}
+
+.promptSuggestionsLabelDot {
+  display: inline-block;
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--geist-success, #0070f3);
+  align-self: center;
+}
+
+.promptSuggestionsLabelHint {
+  color: color-mix(in srgb, var(--geist-secondary) 70%, transparent);
+  font-weight: 500;
+}
+
+.promptSuggestionsRail {
+  display: flex;
+  flex-wrap: nowrap;
+  gap: 8px;
+  margin: 0 -24px;
+  padding: 2px 24px 6px;
+  overflow-x: auto;
+  overflow-y: hidden;
+  scroll-snap-type: x proximity;
+  scroll-padding-left: 24px;
+  scrollbar-width: thin;
+  scrollbar-color: var(--geist-border) transparent;
+}
+
+.promptSuggestionsRail::-webkit-scrollbar {
+  height: 5px;
+}
+
+.promptSuggestionsRail::-webkit-scrollbar-thumb {
+  background: var(--geist-border);
+  border-radius: 999px;
+}
+
+.chatSuggestionChip {
+  display: inline-flex;
+  flex-shrink: 0;
+  align-items: center;
+  height: 28px;
+  padding: 0 12px;
+  border: 1px solid var(--geist-border);
+  border-radius: 999px;
+  background: var(--geist-surface);
+  color: var(--geist-foreground);
+  font-size: 12px;
+  font-weight: 500;
+  cursor: pointer;
+  scroll-snap-align: start;
+  transition:
+    background var(--geist-transition),
+    border-color var(--geist-transition);
+  white-space: nowrap;
+}
+
+.chatSuggestionChip:hover {
+  background: color-mix(in srgb, var(--geist-surface) 80%, var(--geist-border));
+  border-color: var(--geist-foreground);
+}
+
+.chatSuggestionChip:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+/* ── Instant examples strip (offline, no API) ─────────────────────────── */
+
+.instantExamples {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin-top: 2px;
+}
+
+.instantExamplesHeader {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 0;
+}
+
+.instantExamplesLabel {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 5px;
+  color: var(--geist-secondary);
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+}
+
+.instantExamplesLabelIcon {
+  font-size: 11px;
+  line-height: 1;
+}
+
+.instantExamplesLabelHint {
+  color: color-mix(in srgb, var(--geist-secondary) 70%, transparent);
+  font-weight: 500;
+}
+
+.instantExamplesAllLink {
+  color: var(--geist-secondary);
+  font-size: 11px;
+  font-weight: 600;
+  text-decoration: none;
+  transition: color var(--geist-transition);
+}
+
+.instantExamplesAllLink:hover {
+  color: var(--geist-foreground);
+}
+
+.instantExamplesRail {
+  display: flex;
+  gap: 10px;
+  margin: 0 -24px;
+  padding: 4px 24px 8px;
+  overflow-x: auto;
+  overflow-y: hidden;
+  scroll-snap-type: x proximity;
+  scroll-padding-left: 24px;
+  scrollbar-width: thin;
+  scrollbar-color: var(--geist-border) transparent;
+}
+
+.instantExamplesRail::-webkit-scrollbar {
+  height: 5px;
+}
+
+.instantExamplesRail::-webkit-scrollbar-thumb {
+  background: var(--geist-border);
+  border-radius: 999px;
+}
+
+.instantTile {
+  position: relative;
+  display: flex;
+  flex: 0 0 auto;
+  flex-direction: column;
+  gap: 8px;
+  width: 244px;
+  cursor: pointer;
+  outline: none;
+  scroll-snap-align: start;
+  border-radius: 16px;
+  padding: 6px;
+  margin: -6px;
+  transition:
+    background var(--geist-transition),
+    transform 160ms cubic-bezier(0.2, 0.7, 0.2, 1);
+}
+
+.instantTile:hover {
+  background: var(--geist-surface);
+}
+
+.instantTile:hover .instantTileScreen {
+  border-color: var(--geist-foreground);
+}
+
+.instantTile:focus-visible {
+  background: var(--geist-surface);
+  box-shadow: 0 0 0 2px
+    color-mix(in srgb, var(--geist-foreground) 20%, transparent);
+}
+
+.instantTile:active {
+  transform: scale(0.98);
+}
+
+.instantTile-disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+.instantTileScreen {
+  position: relative;
+  height: 220px;
+  border: 1px solid var(--geist-border);
+  border-radius: 14px;
+  background: var(--geist-background);
+  overflow: hidden;
+  transition: border-color var(--geist-transition);
+}
+
+.instantTileScreen > * {
+  width: 100%;
+  height: 100%;
+}
+
+.instantTilePreviewSlot {
+  width: 100%;
+  height: 100%;
+  display: block;
+}
+
+.instantTilePreviewSlot > .previewEmpty {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+  padding: 8px;
+  color: var(--geist-secondary);
+  font-size: 10px;
+  font-weight: 500;
+  text-align: center;
+  background: linear-gradient(
+    180deg,
+    var(--geist-surface),
+    color-mix(in srgb, var(--geist-surface) 86%, var(--geist-background))
+  );
+}
+
+.instantTileScreen iframe {
+  width: 100%;
+  height: 100%;
+  border: 0;
+  display: block;
+  pointer-events: none;
+}
+
+.instantTileTitle {
+  color: var(--geist-foreground);
+  font-size: 12.5px;
+  font-weight: 600;
+  line-height: 1.3;
+  letter-spacing: -0.005em;
+  padding: 0 4px 2px;
+  overflow: hidden;
+  display: -webkit-box;
+  -webkit-line-clamp: 1;
+  -webkit-box-orient: vertical;
+}
+
+.chatComposer {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  min-height: 132px;
+  padding: 12px;
+  border: 1px solid var(--geist-border);
+  border-radius: 14px;
+  background: linear-gradient(
+    180deg,
+    var(--geist-background),
+    color-mix(in srgb, var(--geist-surface) 56%, var(--geist-background))
+  );
+  box-shadow:
+    0 1px 0 color-mix(in srgb, var(--geist-background) 90%, transparent) inset,
+    0 10px 30px color-mix(in srgb, var(--geist-foreground) 6%, transparent);
+  transition:
+    border-color var(--geist-transition),
+    box-shadow var(--geist-transition),
+    transform var(--geist-transition),
+    background var(--geist-transition);
+}
+
+.chatComposer:hover,
+.chatComposer:focus-within {
+  border-color: color-mix(
+    in srgb,
+    var(--geist-foreground) 42%,
+    var(--geist-border)
+  );
+  box-shadow:
+    0 1px 0 color-mix(in srgb, var(--geist-background) 95%, transparent) inset,
+    0 18px 42px color-mix(in srgb, var(--geist-foreground) 10%, transparent);
+}
+
+.chatComposer:focus-within {
+  transform: translateY(-1px);
+}
+
+.chatInput {
+  width: 100%;
+  min-height: 66px;
+  max-height: 220px;
+  padding: 2px 4px;
+  border: 0;
+  resize: vertical;
+  font-size: 14px;
+  line-height: 1.55;
+  font-family: inherit;
+  background: transparent;
+  color: var(--geist-foreground);
+  outline: none;
+}
+
+.chatInput::placeholder {
+  color: var(--geist-secondary);
+}
+
+.chatProviderConfig {
+  display: grid;
+  grid-template-columns:
+    minmax(180px, 1.3fr) minmax(120px, 0.8fr) minmax(160px, 1fr);
+  gap: 8px;
+}
+
+.chatProviderInputField {
+  display: block;
+  min-width: 0;
+  height: 34px;
+  padding: 0 10px;
+  border: 1px solid var(--geist-border);
+  border-radius: var(--geist-radius-sm);
+  background: var(--geist-background);
+  color: var(--geist-foreground);
+  font-size: 12px;
+  outline: none;
+  transition:
+    border-color var(--geist-transition),
+    background var(--geist-transition);
+}
+
+.chatProviderInputFieldUrl {
+  min-width: 180px;
+}
+
+.chatProviderInputField:focus {
+  border-color: var(--geist-foreground);
+}
+
+.chatComposerFooter {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.chatProviderControl {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  min-width: 0;
+  max-width: min(360px, 65%);
+  height: 34px;
+  padding: 0 8px 0 10px;
+  border: 1px solid var(--geist-border);
+  border-radius: 999px;
+  background: color-mix(
+    in srgb,
+    var(--geist-surface) 72%,
+    var(--geist-background)
+  );
+}
+
+.chatProviderStatus {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: color-mix(
+    in srgb,
+    var(--geist-success) 85%,
+    var(--geist-foreground)
+  );
+  box-shadow: 0 0 0 3px
+    color-mix(in srgb, var(--geist-success) 14%, transparent);
+  flex-shrink: 0;
+}
+
+.chatProviderSelect {
+  min-width: 0;
+  max-width: 260px;
+  height: 30px;
+  padding: 0 24px 0 0;
+  border: 0;
+  background: transparent;
+  color: var(--geist-secondary);
+  font-size: 12px;
+  font-weight: 600;
+  font-family: inherit;
+  outline: none;
+  cursor: pointer;
+}
+
+.chatProviderSelect:hover,
+.chatProviderSelect:focus {
+  color: var(--geist-foreground);
+}
+
+.chatSendBtn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  min-width: 104px;
+  height: 42px;
+  padding: 0 18px;
+  border: none;
+  border-radius: 999px;
+  background: var(--geist-accent);
+  color: var(--geist-accent-foreground);
+  font-size: 14px;
+  font-weight: 650;
+  cursor: pointer;
+  transition:
+    opacity var(--geist-transition),
+    transform var(--geist-transition),
+    box-shadow var(--geist-transition);
+  flex-shrink: 0;
+  box-shadow: 0 8px 18px
+    color-mix(in srgb, var(--geist-foreground) 16%, transparent);
+}
+
+.chatSendBtn:hover {
+  opacity: 0.85;
+  box-shadow: 0 10px 24px
+    color-mix(in srgb, var(--geist-foreground) 20%, transparent);
+}
+
+.chatSendBtn:active {
+  transform: scale(0.97);
+}
+
+.chatSendBtn:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+  box-shadow: none;
+}
+
+.chatSendIcon {
+  font-size: 15px;
+  line-height: 1;
+}
+
+@media (max-width: 980px) {
+  .chatPageBody {
+    flex-direction: column;
+    overflow-y: auto;
+  }
+
+  .chatPage {
+    min-height: 0;
+  }
+
+  .conversationPanel {
+    width: 100%;
+    max-width: none;
+    min-height: 132px;
+    max-height: 180px;
+    border-right: none;
+    border-bottom: 1px solid var(--geist-border);
+  }
+
+  .conversationList {
+    flex-direction: row;
+    overflow-x: auto;
+    overflow-y: hidden;
+  }
+
+  .conversationPanelHeader,
+  .conversationPanelCreateRow {
+    min-height: 56px;
+    padding: 8px 8px 6px;
+  }
+
+  .conversationRecentRow {
+    padding-top: 6px;
+  }
+
+  .conversationListItem {
+    width: 220px;
+    flex-shrink: 0;
+  }
+
+  .conversationListItemActions {
+    opacity: 1;
+    pointer-events: auto;
+    transform: none;
+  }
+
+  .chatPanel {
+    min-height: 400px;
+    flex: 0 0 auto;
+  }
+
+  .previewPanel {
+    width: 100%;
+    min-height: min(720px, 80vh);
+    border-left: none;
+    border-top: 1px solid var(--geist-border);
+  }
+
+  .chatTokenUsageBadge {
+    order: 3;
+    width: 100%;
+    margin-left: 0;
+    overflow-x: auto;
+  }
+
+  .chatHeader {
+    padding: 14px 16px 12px;
+  }
+
+  .chatMessages {
+    padding: 16px;
+  }
+
+  .chatInputArea {
+    padding: 10px 16px 14px;
+  }
+
+  .chatProviderConfig {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 720px) {
+  .chatMessage,
+  .chatMessageJson,
+  .chatGeneratedJson,
+  .chatMessageAction.chatMessageActionExpanded {
+    max-width: 100%;
+  }
+
+  /* Tab-mode: each tab is full screen, no inline split / resize handle.
+     Active pane is sized via .chatPage[data-active-tab='…'] rules below. */
+  .chatPage[data-active-tab="edit"] .previewPanel {
+    display: none;
+  }
+  .chatPage[data-active-tab="preview"] .chatPanel,
+  .chatPage[data-active-tab="preview"] .conversationPanel {
+    display: none;
+  }
+  .chatPageBody > .panelResizeHandle {
+    display: none;
+  }
+
+  /* The active pane fills the body — overrides the desktop sizing baked
+     into .conversationPanel / .chatPanel / .previewPanel. */
+  .chatPage[data-active-tab="edit"] .chatPanel,
+  .chatPage[data-active-tab="preview"] .previewPanel {
+    flex: 1;
+    width: 100%;
+    max-width: none;
+    min-height: 0;
+  }
+  .chatPage[data-active-tab="preview"] .previewPanel {
+    border-top: none;
+    border-left: none;
+  }
+
+  /* Conversation panel collapses into a single horizontal strip on
+     phones: +New Chat is an icon button on the left, conversations
+     scroll as compact one-line cards on the right. Drops from ~150px
+     to ~52px of vertical chrome. */
+  .chatPage[data-active-tab="edit"] .conversationPanel {
+    flex-direction: row;
+    align-items: stretch;
+    min-height: 0;
+    max-height: none;
+    height: 52px;
+    background: var(--geist-background);
+  }
+  .conversationPanelHeader,
+  .conversationPanelCreateRow {
+    flex: 0 0 auto;
+    width: auto;
+    min-height: 0;
+    padding: 8px;
+    border-bottom: none;
+    border-right: 1px solid var(--geist-border);
+    background: transparent;
+  }
+  .conversationNewButton {
+    width: 36px;
+    height: 36px;
+    padding: 0;
+    border-radius: 999px;
+    box-shadow: none;
+  }
+  .conversationNewButtonLabel {
+    display: none;
+  }
+  .conversationList {
+    flex: 1;
+    align-items: center;
+    padding: 6px 8px;
+    gap: 6px;
+  }
+  /* Keep the desktop card aesthetic on mobile: rounded rectangle, active
+     bar on the left, Edit/Del hidden by default and revealed only on the
+     active card (matching the desktop hover/active behavior). Vertically
+     center title + actions since the meta/date row is hidden — the
+     desktop card is a two-line block, the mobile chip is single-line. */
+  .conversationListItem {
+    flex: 0 0 auto;
+    width: auto;
+    min-width: 0;
+    max-width: 220px;
+    padding: 6px 8px 6px 12px;
+    align-items: center;
+  }
+  .conversationListItemMeta,
+  .conversationListItemPreview {
+    display: none;
+  }
+  .conversationListItemTitle {
+    font-size: 12px;
+    line-height: 1.25;
+  }
+  .conversationListItemActions {
+    opacity: 0;
+    pointer-events: none;
+    transform: none;
+    gap: 4px;
+  }
+  .conversationListItem-active .conversationListItemActions,
+  .conversationListItem:focus-within .conversationListItemActions {
+    opacity: 1;
+    pointer-events: auto;
+  }
+
+  /* Pill Send button (drops the desktop drop-shadow on mobile). */
+  .chatSendBtn {
+    min-width: 84px;
+    height: 38px;
+    padding: 0 14px;
+    font-size: 13px;
+    box-shadow: none;
+  }
+
+  /* Drop the "Create / Online Agent / Describe the UI…" header on
+     mobile — the chat input area itself communicates the same thing
+     and this band was eating ~120px of vertical space. (Token-usage
+     badge lives here too, only relevant for power users on desktop.) */
+  .chatHeader {
+    display: none;
+  }
+}

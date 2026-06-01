@@ -1,6 +1,6 @@
 {
   "name": "@lynx-js/react",
-  "version": "0.120.0",
+  "version": "0.121.1",
   "description": "ReactLynx is a framework for developing Lynx applications with familiar React.",
   "repository": {
     "type": "git",
@@ -36,6 +36,22 @@
     "./internal/document": {
       "types": "./runtime/lib/document.d.ts",
       "default": "./runtime/lib/document.js"
+    },
+    "./element-template": {
+      "types": "./runtime/lib/element-template/index.d.ts",
+      "default": "./runtime/lib/element-template/index.js"
+    },
+    "./element-template/internal": {
+      "types": "./runtime/lib/element-template/internal.d.ts",
+      "default": "./runtime/lib/element-template/internal.js"
+    },
+    "./element-template/jsx-runtime": {
+      "types": "./runtime/lib/element-template/jsx-runtime/index.d.ts",
+      "default": "./runtime/lib/element-template/jsx-runtime/index.js"
+    },
+    "./element-template/jsx-dev-runtime": {
+      "types": "./runtime/lib/element-template/jsx-dev-runtime/index.d.ts",
+      "default": "./runtime/lib/element-template/jsx-dev-runtime/index.js"
     },
     "./jsx-runtime": {
       "types": "./runtime/jsx-runtime/index.d.ts",
@@ -143,6 +159,18 @@
       "internal/document": [
         "./runtime/lib/document.d.ts"
       ],
+      "element-template": [
+        "./runtime/lib/element-template/index.d.ts"
+      ],
+      "element-template/internal": [
+        "./runtime/lib/element-template/internal.d.ts"
+      ],
+      "element-template/jsx-runtime": [
+        "./runtime/lib/element-template/jsx-runtime/index.d.ts"
+      ],
+      "element-template/jsx-dev-runtime": [
+        "./runtime/lib/element-template/jsx-dev-runtime/index.d.ts"
+      ],
       "jsx-runtime": [
         "./runtime/jsx-runtime/index.d.ts"
       ],
@@ -196,7 +224,7 @@
     "build": "rslib build"
   },
   "dependencies": {
-    "preact": "npm:@lynx-js/internal-preact@10.29.1-20260424024911-12b794f"
+    "preact": "npm:@lynx-js/internal-preact@10.29.1-20260519060144-e6da44c"
   },
   "devDependencies": {
     "@lynx-js/types": "3.7.0",

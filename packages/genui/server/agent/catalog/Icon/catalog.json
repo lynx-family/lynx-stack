@@ -1,0 +1,76 @@
+{
+  "Icon": {
+    "properties": {
+      "name": {
+        "oneOf": [
+          {
+            "type": "string",
+            "enum": [
+              "account_circle",
+              "add",
+              "arrow_back",
+              "arrow_forward",
+              "camera",
+              "check",
+              "close",
+              "delete",
+              "edit",
+              "error",
+              "favorite",
+              "help",
+              "home",
+              "info",
+              "location_on",
+              "lock",
+              "mail",
+              "menu",
+              "more_vert",
+              "pause",
+              "person",
+              "play_arrow",
+              "refresh",
+              "search",
+              "send",
+              "settings",
+              "share",
+              "star",
+              "warning"
+            ]
+          },
+          {
+            "type": "object",
+            "properties": {
+              "path": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "path"
+            ],
+            "additionalProperties": false
+          }
+        ],
+        "description": "Google Material icon ligature name, e.g. \"info\", \"account_circle\", \"arrow_back\"."
+      },
+      "size": {
+        "type": "string",
+        "enum": [
+          "sm",
+          "md",
+          "lg"
+        ]
+      },
+      "color": {
+        "type": "string",
+        "enum": [
+          "primary",
+          "muted",
+          "inherit"
+        ]
+      }
+    },
+    "required": [
+      "name"
+    ]
+  }
+}

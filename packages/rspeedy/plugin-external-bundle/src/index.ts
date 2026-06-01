@@ -254,7 +254,7 @@ export const builtInExternalsPresetDefinitions: ExternalsPresetDefinitions =
 export interface PluginExternalBundleOptions extends
   Pick<
     ExternalsLoadingPluginOptions,
-    'globalObject' | 'timeout'
+    'globalObject' | 'timeout' | 'retries'
   >
 {
   /**
@@ -799,32 +799,39 @@ export function pluginExternalBundle(
         }
 
         return mergeRsbuildConfig(config, {
-          dev: {
-            setupMiddlewares: [
-              (middlewares) => {
-                middlewares.unshift((
-                  req: IncomingMessage,
-                  res: ServerResponse,
-                  next: () => void,
-                ) => {
-                  const bundlePath = req.url
-                    ? localBundleAssets.get(req.url)
-                    : undefined
+          server: {
+            setup: ({ server, action }) => {
+              if (action !== 'dev') {
+                return
+              }
+              server.middlewares.use((
+                req: IncomingMessage,
+                res: ServerResponse,
+                next: () => void,
+              ) => {
+                const bundlePath = req.url
+                  ? localBundleAssets.get(req.url)
+                  : undefined
 
-                  if (bundlePath && existsSync(bundlePath)) {
-                    res.setHeader(
-                      'Content-Type',
-                      'application/octet-stream',
-                    )
-                    res.setHeader('Access-Control-Allow-Origin', '*')
-                    createReadStream(bundlePath).pipe(res)
-                    return
-                  }
-                  next()
-                })
-                return middlewares
-              },
-            ],
+                if (bundlePath && existsSync(bundlePath)) {
+                  res.setHeader(
+                    'Content-Type',
+                    'application/octet-stream',
+                  )
+                  res.setHeader('Access-Control-Allow-Origin', '*')
+                  const stream = createReadStream(bundlePath)
+                  stream.on('error', () => {
+                    if (!res.headersSent) {
+                      res.statusCode = 404
+                    }
+                    res.end()
+                  })
+                  stream.pipe(res)
+                  return
+                }
+                next()
+              })
+            },
           },
         })
       })
@@ -868,6 +875,7 @@ export function pluginExternalBundle(
             externals,
             globalObject: options.globalObject,
             timeout: options.timeout,
+            retries: options.retries,
           }),
         )
         return config

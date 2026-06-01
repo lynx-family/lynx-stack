@@ -235,13 +235,15 @@ export const elementTree = new (class {
   }
 
   __RemoveElement(parent: Element, child: Element) {
-    parent.children.forEach((ch, index) => {
-      if (ch === child) {
-        parent.children.splice(index, 1);
-        return;
-      }
-    });
-    parentMap.delete(child);
+    if (parentMap.get(child) === parent) {
+      parent.children.splice(parent.children.indexOf(child), 1);
+      parentMap.delete(child);
+    } else {
+      throw new Error(
+        // @ts-ignore
+        `child ${child.$$uiSign} is not in parent ${parent.$$uiSign}, cannot remove it!`,
+      );
+    }
   }
 
   __InsertElementBefore(
@@ -267,12 +269,49 @@ export const elementTree = new (class {
     parent.children.forEach((ch, index) => {
       if (ch === oldElement) {
         parent.children[index] = newElement;
+        parentMap.set(newElement, parent);
+        parentMap.delete(oldElement);
         return;
       }
     });
   }
 
   __FlushElementTree(): void {}
+
+  __GetPageElement(): Element | undefined {
+    return this.root;
+  }
+
+  /**
+   * Minimal Element-PAPI `__QuerySelector` mock — supports the only selector
+   * shape that ReactLynx's portal currently emits: `[attr-name]` (CSS
+   * attribute selector). Walks the subtree depth-first and returns the first
+   * element whose `props[attr-name]` is defined.
+   */
+  __QuerySelector(
+    e: Element,
+    cssSelector: string,
+    _params: { onlyCurrentComponent?: boolean },
+  ): Element | undefined {
+    const m = /^\[([^\]=]+)(?:=(?:"([^"]*)"|([^\]]*)))?\]$/.exec(cssSelector);
+    if (!m) return undefined;
+    const attrName = m[1]!;
+    const wantValue = m[2] ?? m[3];
+    const matches = (el: Element): boolean => {
+      const v = el.props?.[attrName];
+      if (v === undefined) return false;
+      return wantValue === undefined ? true : String(v) === wantValue;
+    };
+    const walk = (node: Element): Element | undefined => {
+      if (matches(node)) return node;
+      for (const child of node.children ?? []) {
+        const hit = walk(child);
+        if (hit) return hit;
+      }
+      return undefined;
+    };
+    return walk(e);
+  }
 
   __UpdateListComponents(list: Element, components: string[]) {}
 

@@ -101,17 +101,16 @@ export class WebEncodePlugin {
               root: encodeOptions.lepusCode.root!,
             },
             customSections: encodeOptions.customSections ?? {},
-            elementTemplates: encodeOptions['elementTemplates'] ?? {},
           };
+          if (encodeOptions.elementTemplate !== undefined) {
+            tasmJSONInfo['elementTemplate'] = encodeOptions.elementTemplate;
+          }
           const isExperimentalWebBinary = process
             .env['EXPERIMENTAL_USE_WEB_BINARY_TEMPLATE'];
-          if (isExperimentalWebBinary === 'true') {
-            const { encode } = await import('@lynx-js/web-core/encode');
-            return {
-              buffer: Buffer.from(encode(tasmJSONInfo as TasmJSONInfo)),
-              debugInfo: '',
-            };
-          } else if (isExperimentalWebBinary == null /*undefined or null */) {
+          if (
+            isExperimentalWebBinary === 'false'
+            || isExperimentalWebBinary === '0'
+          ) {
             return {
               buffer: Buffer.from(
                 JSON.stringify({
@@ -128,10 +127,11 @@ export class WebEncodePlugin {
               debugInfo: '',
             };
           } else {
-            // only allow 'true' or undefined/null
-            throw new Error(
-              `Unknown value of EXPERIMENTAL_USE_WEB_BINARY_TEMPLATE: ${isExperimentalWebBinary}. Expecting "true" or undefined.`,
-            );
+            const { encode } = await import('@lynx-js/web-core/encode');
+            return {
+              buffer: Buffer.from(encode(tasmJSONInfo as TasmJSONInfo)),
+              debugInfo: '',
+            };
           }
         });
       },

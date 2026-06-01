@@ -3,7 +3,7 @@ source: packages/react/transform/crates/swc_plugin_element_template/tests/elemen
 expression: "serde_json::json!({\n    \"code\": code, \"templates\": template_snapshot_json(&templates),\n})"
 ---
 {
-  "code": "import { __etSlot as __etSlot } from \"@lynx-js/react\";\nimport * as ReactLynx from \"@lynx-js/react\";\nconst _et_da39a_test_2 = \"_et_da39a_test_2\";\nconst _et_da39a_test_1 = \"_et_da39a_test_1\";\n<_et_da39a_test_1>{__etSlot(0, items)}{__etSlot(1, items.map((item)=><_et_da39a_test_2>{__etSlot(0, item)}</_et_da39a_test_2>))}</_et_da39a_test_1>;\n",
+  "code": "import * as ReactLynx from \"@lynx-js/react\";\nconst _et_da39a_test_2 = \"_et_da39a_test_2\";\nconst _et_da39a_test_1 = \"_et_da39a_test_1\";\n<_et_da39a_test_1 $0={items} $1={items.map((item)=><_et_da39a_test_2 $0={item}/>)}/>;\n",
   "templates": [
     {
       "template_id": "_et_da39a_test_2",
@@ -32,9 +32,8 @@ expression: "serde_json::json!({\n    \"code\": code, \"templates\": template_sn
             "type": "view",
             "attributesArray": [
               {
-                "kind": "attribute",
+                "kind": "static",
                 "key": "id",
-                "binding": "static",
                 "value": "1"
               }
             ],
@@ -51,9 +50,8 @@ expression: "serde_json::json!({\n    \"code\": code, \"templates\": template_sn
             "type": "view",
             "attributesArray": [
               {
-                "kind": "attribute",
+                "kind": "static",
                 "key": "id",
-                "binding": "static",
                 "value": "2"
               }
             ],
@@ -69,15 +67,14 @@ expression: "serde_json::json!({\n    \"code\": code, \"templates\": template_sn
       }
     },
     {
-      "template_id": "__et_builtin_raw_text__",
+      "template_id": "_et_builtin_raw_text",
       "template": {
         "kind": "element",
         "type": "raw-text",
         "attributesArray": [
           {
-            "kind": "attribute",
+            "kind": "slot",
             "key": "text",
-            "binding": "slot",
             "attrSlotIndex": 0
           }
         ],

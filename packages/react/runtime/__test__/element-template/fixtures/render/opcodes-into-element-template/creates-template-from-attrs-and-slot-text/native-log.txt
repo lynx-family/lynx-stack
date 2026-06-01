@@ -1,0 +1,49 @@
+Array [
+  Array [
+    "__CreateTypedElementTemplate",
+    "page",
+    null,
+    null,
+    "0",
+    null,
+  ],
+  Array [
+    "__CreateElementTemplate",
+    "_et_builtin_raw_text",
+    null,
+    Array [
+      "Hello",
+    ],
+    Array [],
+    -1,
+  ],
+  Array [
+    "__CreateElementTemplate",
+    "_et_foo",
+    null,
+    Array [
+      "test",
+    ],
+    Array [
+      ,
+      Array [
+        Object {
+          "attributes": Object {
+            "text": "Hello",
+          },
+          "children": Array [],
+          "tag": "raw-text",
+          "templateId": "_et_builtin_raw_text",
+        },
+      ],
+    ],
+    -2,
+  ],
+  Array [
+    "__InsertNodeToElementTemplate",
+    "<page />",
+    0,
+    "<_et_foo />",
+    null,
+  ],
+]
