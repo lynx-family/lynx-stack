@@ -1,6 +1,7 @@
 {
-  "name": "@lynx-js/openui-reactlynx",
+  "name": "@lynx-js/genui-openui",
   "version": "0.0.1",
+  "private": true,
   "repository": {
     "type": "git",
     "url": "git+https://github.com/lynx-family/lynx-stack.git",
@@ -25,7 +26,9 @@
     "README.md"
   ],
   "scripts": {
-    "build": "tsc -p tsconfig.build.json && cp src/core/renderer.css dist/core/renderer.css"
+    "api-extractor": "node ../scripts/run-api-extractor.mjs",
+    "build": "tsc -p tsconfig.build.json && cp src/core/renderer.css dist/core/renderer.css",
+    "build:api": "tsc -p tsconfig.build.json"
   },
   "dependencies": {
     "@openuidev/lang-core": "^0.2.4",
@@ -34,6 +37,7 @@
   "devDependencies": {
     "@lynx-js/react": "workspace:*",
     "@lynx-js/types": "3.7.0",
+    "@microsoft/api-extractor": "catalog:",
     "@types/react": "^18.3.28"
   },
   "publishConfig": {

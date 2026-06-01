@@ -185,7 +185,6 @@ describe('Plugins - Minify', () => {
             pluginOptions: {
               minify: CssMinimizerWebpackPlugin.cleanCssMinify,
               minimizerOptions: {
-                // @ts-expect-error mock
                 level: {
                   1: {
                     roundingPrecision: 'all=3,px=5',

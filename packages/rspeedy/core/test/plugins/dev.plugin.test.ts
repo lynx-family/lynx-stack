@@ -56,12 +56,6 @@ describe('Plugins - Dev', () => {
     expect(isIPv4(rsbuild.getRsbuildConfig().dev!.client!.host!)).toBe(true)
 
     assert(config.resolve?.alias)
-
-    expect(config.resolve.alias['webpack/hot/emitter.js']).toStrictEqual(
-      expect.stringContaining(
-        ('@rspack/core/hot/emitter.js').replaceAll('/', path.sep),
-      ),
-    )
   })
 
   test('provide HMR variables', async () => {
@@ -89,6 +83,10 @@ describe('Plugins - Dev', () => {
 
     const config = await rsbuild.unwrapConfig()
 
+    expect(config.resolve?.alias).toHaveProperty(
+      '@rspack/core/hot/emitter.js',
+      expect.stringContaining('hot/emitter.js'.replaceAll('/', path.sep)),
+    )
     expect(config.resolve?.alias).toHaveProperty(
       '@rspack/core/hot/dev-server',
       expect.stringContaining('hot/dev-server.js'.replaceAll('/', path.sep)),
@@ -142,34 +140,6 @@ describe('Plugins - Dev', () => {
     )
     // No @rsbuild/core/client/hmr is injected
     expect(entries).toHaveLength(0)
-  })
-
-  test('Rsbuild taps on compiler', async () => {
-    const rsbuild = await createStubRspeedy({})
-
-    const { rspack } = await import('@rsbuild/core')
-
-    const compiler = rspack.rspack({})
-
-    await rsbuild.createDevServer({ compiler })
-
-    // See: https://github.com/web-infra-dev/rsbuild/pull/2303
-    expect(compiler.hooks.compile.taps.map(i => i.name)).toMatchInlineSnapshot(
-      `[]`,
-    )
-
-    expect(compiler.hooks.invalid.taps.map(i => i.name)).toMatchInlineSnapshot(`
-      [
-        "rsbuild-dev-server",
-      ]
-    `)
-
-    expect(compiler.hooks.done.taps.map(i => i.name)).toMatchInlineSnapshot(`
-      [
-        "rsbuild-dev-server",
-        "rsbuild-dev-middleware",
-      ]
-    `)
   })
 
   test('dev.assetPrefix', async () => {

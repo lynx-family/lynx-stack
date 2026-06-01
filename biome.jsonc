@@ -6,6 +6,12 @@
       "allowTrailingCommas": true,
     },
   },
+  "files": {
+    // This generated stylesheet exceeds Biome's file-size limit and should be skipped entirely.
+    "ignore": [
+      "packages/genui/a2ui/styles/theme.css",
+    ],
+  },
   "organizeImports": {
     // We use `eslint-plugin-import` for imports sorting
     "enabled": false,

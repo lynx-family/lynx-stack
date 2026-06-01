@@ -25,8 +25,6 @@ import type { Library, RenderOutput } from './library.js';
 import { keyFrom } from './utils.js';
 import type { LegacyActionConfig } from '../catalog/Action/index.jsx';
 
-import './renderer.css';
-
 export type { Library, RenderOutput };
 
 interface FieldEntry {

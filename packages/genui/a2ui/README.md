@@ -1,145 +1,114 @@
-# @lynx-js/a2ui-reactlynx
+# @lynx-js/genui/a2ui
 
-ReactLynx renderer for the A2UI v0.9 protocol. **Headless** — the package
-ships no styles or chrome; consumers wrap surfaces themselves.
+English | [简体中文](./README_zh.md)
 
-This package includes:
+`@lynx-js/genui/a2ui` is the ReactLynx client runtime for A2UI v0.9. It
+consumes validated A2UI server-to-client JSON messages and renders trusted
+ReactLynx components in your app.
 
-- `<A2UI>`: all-in-one component that owns a `MessageProcessor`,
-  subscribes to a developer-supplied `MessageStore`, and renders the
-  most recent surface.
-- `MessageStore`: an append-only buffer of raw protocol messages the
-  developer pushes into from any IO transport (fetch, SSE, WebSocket,
-  in-process mock, …).
-- `defineCatalog` / `mergeCatalogs` / `serializeCatalog`: the pluggable
-  catalog API. No global registry — every consumer composes the set of
-  components they want available.
-- `catalog/<Name>`: built-in component renderers (`Text`, `Button`,
-  `Card`, `Column`, `Row`, `List`, `CheckBox`, `RadioGroup`, `Slider`,
-  `Image`, `Divider`, `Icon`, `Modal`, `Tabs`).
-- `catalog/<Name>/catalog.json`: per-component JSON-Schema manifests
-  for the agent handshake.
+Use this package when you already have, or plan to build, an Agent service that
+returns A2UI messages. The package does not host an Agent, call an LLM, own a
+backend route, or provide a chat shell. Your app owns the transport layer and
+pushes messages into the renderer.
 
-## Exports
+If you have never used A2UI before, think of it this way:
 
-- `@lynx-js/a2ui-reactlynx`: `<A2UI>`, `createMessageStore`,
-  `defineCatalog`, the built-ins, plus protocol types.
-- `@lynx-js/a2ui-reactlynx/catalog`: re-exports of the catalog API and
-  built-ins for tree-shake-friendly subpath access.
-- `@lynx-js/a2ui-reactlynx/catalog/<Name>`: import a single built-in.
-- `@lynx-js/a2ui-reactlynx/catalog/<Name>/catalog.json`: import the
-  per-component manifest.
-- `@lynx-js/a2ui-reactlynx/store`: `MessageStore`, `MessageProcessor`,
-  `Resource`, payload normalizers — the pure data layer.
-- `@lynx-js/a2ui-reactlynx/react`: lower-level renderer pieces for
-  consumers that want manual surface lifecycle control.
+- In React, your code chooses components and passes props.
+- In A2UI, an Agent chooses from a component catalog that your app publishes.
+- The client still renders real ReactLynx components. The model only sends data
+  that says which approved component to render and what props to use.
 
-## Installation
+The result is not arbitrary generated code. It is a ReactLynx UI tree assembled
+from a trusted catalog.
 
-Make sure your app provides the peer dependencies:
+## Install
 
-- `@lynx-js/react`
+Install the published GenUI package in a ReactLynx app:
+
+```sh
+pnpm add @lynx-js/genui @lynx-js/react
+```
+
+Import the optional default theme tokens once if you want to use the built-in
+light/dark CSS variables:
+
+```ts
+import '@lynx-js/genui/a2ui/styles/theme.css';
+```
 
 ## Quick Start
 
-1. Create a `MessageStore`.
-2. Wire your IO module (mock / SSE / fetch / …) to push raw protocol
-   messages into the store.
-3. Render `<A2UI messageStore={store} catalogs={[...]}>`.
+Create a `MessageStore`, register the components that generated UI is allowed
+to render, and forward generated actions back to your Agent service.
 
 ```tsx
 import {
   A2UI,
   Button,
   Text,
+  basicFunctions,
   createMessageStore,
-} from '@lynx-js/a2ui-reactlynx';
+  normalizePayloadToMessages,
+} from '@lynx-js/genui/a2ui';
 
 const store = createMessageStore();
+const catalogs = [Text, Button, ...basicFunctions];
 
-// Your IO module pushes raw v0.9 protocol messages into the store.
-// async function streamFromAgent(input: string) {
-//   for await (const msg of myAgent.stream(input)) store.push(msg);
-// }
+async function sendPrompt(input: string) {
+  const res = await fetch('/a2ui/chat', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ messages: [{ role: 'user', content: input }] }),
+  });
 
-export function A2UIScreen(): import('@lynx-js/react').ReactNode {
-  return (
-    <A2UI
-      messageStore={store}
-      catalogs={[Text, Button]}
-      className='surface-container'
-      onAction={(action) => {
-        // Forward to your agent — push the response messages back into
-        // the same store. Fire-and-forget; the renderer never awaits.
-      }}
-      wrapSurface={(c) => <view className='luna-light'>{c}</view>}
-    />
-  );
+  store.push(normalizePayloadToMessages(await res.json()));
 }
+
+<A2UI
+  messageStore={store}
+  catalogs={catalogs}
+  wrapSurface={(children) => <view className='a2ui-light'>{children}</view>}
+  onAction={(action) => {
+    void fetch('/a2ui/action', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(action),
+    })
+      .then((res) => res.json())
+      .then((payload) => store.push(normalizePayloadToMessages(payload)));
+  }}
+/>;
 ```
 
-The `<A2UI>` component is intentionally minimal:
+`MessageStore` stores raw protocol messages in arrival order. `<A2UI>`
+subscribes to it, processes new messages, renders the active surface, and emits
+generated UI actions through `onAction`.
 
-- It owns its own `MessageProcessor` per mount; passing a different
-  `messageStore` instance does **not** reset internal state — use a
-  `key` prop derived from your turn/session id when you want a fresh
-  session.
-- `onAction` is fire-and-forget. The renderer doesn't wait for a
-  response — your agent pushes follow-up messages back into the same
-  `messageStore`.
-- `className` applies to the surface root view (`surface-${surfaceId}`).
-- `wrapSurface` applies an outer wrapper around the rendered surface.
-- Both can be used for multi-theme switching; choose the layer that
-  matches your styling strategy.
+## What You Own
 
-## Catalogs
+| Part                   | Owner            | Role                                                                                                                     |
+| ---------------------- | ---------------- | ------------------------------------------------------------------------------------------------------------------------ |
+| `@lynx-js/genui/a2ui`  | This package     | ReactLynx renderer, `MessageStore`, catalog APIs, built-in components, protocol helpers, and client function entries.    |
+| `genui a2ui`           | GenUI CLI        | Build-time commands for generating custom catalog artifacts and A2UI system prompts.                                     |
+| Your Agent service     | Your application | Receives user prompts/actions, calls a model with the A2UI prompt and catalog, validates output, and returns messages.   |
+| Your transport adapter | Your application | Calls the Agent service, handles REST or streaming responses, writes messages into `MessageStore`, and forwards actions. |
 
-The package intentionally **does not** ship an "all-in-one" aggregate.
-Composition is per-component so bundlers can tree-shake what isn't
-referenced.
+## First Things To Know
 
-### Bare components (renderer-only)
+- Pass only the components you want generated UI to use through `catalogs`.
+- Include `...basicFunctions` when messages may use A2UI function calls such as
+  `formatString`, `formatDate`, `required`, `email`, or `and`.
+- Pair components with their `catalog.json` manifests when you need
+  `serializeCatalog(...)` to send JSON schemas to an Agent.
+- There is intentionally no `@lynx-js/genui/a2ui/catalog/all` export. Compose
+  the exact catalog you want at the integration site so bundle cost is visible.
+- For a new turn or session, mount `<A2UI>` with a different `key`; the
+  component owns its `MessageProcessor` for the lifetime of the mount.
 
-```ts
-import { defineCatalog, Text, Button } from '@lynx-js/a2ui-reactlynx';
+## More Docs
 
-const catalog = defineCatalog([Text, Button]);
-```
-
-The protocol name comes from `displayName ?? component.name`.
-
-> ⚠️ Production minifiers rewrite `function` names. For production
-> safety, set an explicit `displayName` on every custom component, or
-> pair it with its `catalog.json` manifest (the manifest key is
-> authoritative).
-
-### Paired with manifests (renderer + agent handshake)
-
-```ts
-import { Text, defineCatalog } from '@lynx-js/a2ui-reactlynx';
-import textManifest from '@lynx-js/a2ui-reactlynx/catalog/Text/catalog.json'
-  with { type: 'json' };
-
-const catalog = defineCatalog([[Text, textManifest]]);
-agentChannel.handshake({ catalog: serializeCatalog(catalog) });
-```
-
-See [`src/catalog/README.md`](src/catalog/README.md) for the full
-recipe (including the paste-able "every built-in" snippet).
-
-## Custom Components
-
-Any function returning a `ReactNode` works. The function's name (or
-`displayName`) is the protocol name the agent will use:
-
-```tsx
-function MyChart(props: { data: number[] }) { ... }
-MyChart.displayName = 'MyChart';
-
-<A2UI catalogs={[Text, Button, MyChart]} ... />;
-// Agent emits `{ component: 'MyChart', data: [...] }` → renders MyChart.
-```
-
-If you want schema introspection for a custom component, generate the
-manifest with `@lynx-js/a2ui-catalog-extractor` against your interface
-and pair it with the component the same way as the built-ins.
+- [Architecture and exports](./docs/architecture.md)
+- [Catalogs and manifests](./docs/catalogs.md)
+- [Custom components](./docs/custom-components.md)
+- [Built-in catalog composition](./src/catalog/README.md)
+- [Open the A2UI playground](https://lynxjs.org/a2ui)

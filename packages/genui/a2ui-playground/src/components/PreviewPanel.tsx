@@ -10,7 +10,9 @@ import {
   useState,
 } from 'react';
 import type { CSSProperties, ReactNode } from 'react';
+import { Drawer } from 'vaul';
 
+import { CopyToast, useCopyToast } from './CopyToast.js';
 import { PreviewSimulationBar } from './PreviewSimulationBar.js';
 import { QrCode } from './QrCode.js';
 import { componentsByMessage } from '../demos.js';
@@ -18,6 +20,8 @@ import { copyToClipboard } from '../utils/clipboard.js';
 import { DEFAULT_A2UI_DEMO_URL } from '../utils/demoUrl.js';
 import type { Protocol } from '../utils/protocol.js';
 import { buildRenderUrl } from '../utils/renderUrl.js';
+
+declare const __A2UI_PLAYGROUND_CLIENT_PAYLOAD_STORE__: boolean;
 
 export type PreviewMode = 'phone' | 'full';
 
@@ -56,8 +60,15 @@ interface A2UIPreviewSource {
   demoUrl: string;
   theme: 'light' | 'dark';
   messages: unknown;
+  messagesUrl?: string;
   actionMocks?: Record<string, unknown>;
+  actionMocksUrl?: string;
   demoId?: string;
+  /**
+   * When true, build the render URL in playback mode so the Lynx app waits
+   * for `A2UI_PLAYBACK_PROGRESS` events instead of streaming on its own.
+   */
+  playbackMode?: boolean;
 }
 
 interface OpenUIPreviewSource {
@@ -82,6 +93,13 @@ interface PreviewPanelProps {
   headerAfterTitle?: ReactNode;
   previewSource?: PreviewPanelSource;
   showPreviewModeSwitch?: boolean;
+  showSimulationBar?: boolean;
+  /** When provided, overrides PreviewPanel's internal speed state. The
+   *  parent becomes the single source of truth (e.g. a unified speed slider
+   *  living outside PreviewPanel).
+   */
+  speed?: number;
+  onSpeedChange?: (value: number) => void;
   beforeBody?: ReactNode;
   bodyClassName?: string;
   children: ReactNode;
@@ -150,13 +168,6 @@ function useRspeedyDevUrl(): string {
   return url;
 }
 
-function formatUrlForDisplay(url: string): string {
-  if (url.length <= 80) return url;
-  const head = url.slice(0, 44);
-  const tail = url.slice(-24);
-  return `${head}…${tail}`;
-}
-
 function buildOpenUIRenderUrl(
   rawText: string,
   baseUrl: string,
@@ -172,6 +183,18 @@ function buildOpenUIRenderUrl(
   return url.toString();
 }
 
+function absoluteUrl(url: string, origin: string): string {
+  try {
+    return new URL(url, origin).toString();
+  } catch {
+    return url;
+  }
+}
+
+function shouldUseClientPayloadStore(): boolean {
+  return __A2UI_PLAYGROUND_CLIENT_PAYLOAD_STORE__;
+}
+
 export function PreviewPanel(props: PreviewPanelProps) {
   const {
     afterBody,
@@ -182,12 +205,19 @@ export function PreviewPanel(props: PreviewPanelProps) {
     headerAfterTitle,
     previewSource,
     showPreviewModeSwitch = false,
+    showSimulationBar = true,
+    speed: speedProp,
+    onSpeedChange,
     style,
     title,
   } = props;
   const [mode, setMode] = useState<PreviewMode>('phone');
   const [isFullscreen, setIsFullscreen] = useState(false);
-  const [speed, setSpeed] = useState(1);
+  const [shareOpen, setShareOpen] = useState(false);
+  const [internalSpeed, setInternalSpeed] = useState(1);
+  // If the parent supplies a speed, it owns it; otherwise we keep our own.
+  const speed = speedProp ?? internalSpeed;
+  const setSpeed = onSpeedChange ?? setInternalSpeed;
   const [simulationInfoOpen, setSimulationInfoOpen] = useState(false);
   const [renderUrl, setRenderUrl] = useState('');
   const [renderShareUrl, setRenderShareUrl] = useState('');
@@ -198,6 +228,7 @@ export function PreviewPanel(props: PreviewPanelProps) {
   const [nativeCopied, setNativeCopied] = useState(false);
   const [nativeCopyFailed, setNativeCopyFailed] = useState(false);
   const [nativeQrError, setNativeQrError] = useState('');
+  const { showCopyToast, toast: copyToast } = useCopyToast();
   const [liveComponents, setLiveComponents] = useState<string[]>([]);
   const liveTimersRef = useRef<ReturnType<typeof setTimeout>[]>([]);
   const buildSeqRef = useRef(0);
@@ -295,23 +326,44 @@ export function PreviewPanel(props: PreviewPanelProps) {
     }
 
     if (previewSource.kind === 'a2ui') {
+      const useClientPayloadStore = shouldUseClientPayloadStore();
+      const canSharePayload = !!previewSource.demoId
+        || !!previewSource.messagesUrl
+        || useClientPayloadStore;
+      const hasInlineMessages = Array.isArray(previewSource.messages)
+        ? previewSource.messages.length > 0
+        : previewSource.messages !== undefined;
+      if (!canSharePayload && !hasInlineMessages) {
+        setRenderUrl('');
+        setRenderShareUrl('');
+        setLynxDevUrl('');
+        return;
+      }
+
       const url = buildRenderUrl(
         {
           protocol: previewSource.protocol,
           demoUrl: previewSource.demoUrl ?? DEFAULT_A2UI_DEMO_URL,
+          messagesUrl: previewSource.messagesUrl,
           messages: previewSource.messages,
+          actionMocksUrl: previewSource.actionMocksUrl,
           actionMocks: previewSource.actionMocks,
           theme: previewSource.theme,
           demoId: previewSource.demoId,
           speed,
+          playbackMode: previewSource.playbackMode,
         },
         baseUrl,
       );
+      // Shared URLs always render normally — playback is a local-only
+      // visualization tool, not something a QR-scanner should land in.
       const shareUrl = buildRenderUrl(
         {
           protocol: previewSource.protocol,
           demoUrl: previewSource.demoUrl ?? DEFAULT_A2UI_DEMO_URL,
+          messagesUrl: previewSource.messagesUrl,
           messages: previewSource.messages,
+          actionMocksUrl: previewSource.actionMocksUrl,
           actionMocks: previewSource.actionMocks,
           theme: previewSource.theme,
           demoId: previewSource.demoId,
@@ -320,7 +372,12 @@ export function PreviewPanel(props: PreviewPanelProps) {
         shareBaseUrl,
       );
       setRenderUrl(url);
-      setRenderShareUrl(shareUrl);
+      setRenderShareUrl(canSharePayload ? shareUrl : '');
+
+      if (!canSharePayload) {
+        setLynxDevUrl('');
+        return;
+      }
 
       if (!rspeedyDevUrl) {
         setLynxDevUrl('');
@@ -340,6 +397,22 @@ export function PreviewPanel(props: PreviewPanelProps) {
           'messagesUrl',
           new URL(`demos/${previewSource.demoId}.json`, demosBase).toString(),
         );
+      } else if (previewSource.messagesUrl) {
+        uInline.searchParams.set('messagesUrl', previewSource.messagesUrl);
+        uInline.searchParams.delete('messages');
+        if (previewSource.actionMocksUrl) {
+          uInline.searchParams.set(
+            'actionMocksUrl',
+            previewSource.actionMocksUrl,
+          );
+          uInline.searchParams.delete('actionMocks');
+        } else if (previewSource.actionMocks) {
+          uInline.searchParams.set(
+            'actionMocks',
+            JSON.stringify(previewSource.actionMocks),
+          );
+          uInline.searchParams.delete('actionMocksUrl');
+        }
       } else {
         uInline.searchParams.set(
           'messages',
@@ -353,6 +426,93 @@ export function PreviewPanel(props: PreviewPanelProps) {
         }
       }
       setLynxDevUrl(uInline.toString());
+
+      if (
+        previewSource.demoId
+        || previewSource.messagesUrl
+        || !useClientPayloadStore
+      ) {
+        return;
+      }
+
+      void (async () => {
+        try {
+          const payloadOrigin = new URL(baseUrl).origin;
+          const res = await window.fetch(`${payloadOrigin}/__a2ui_payload`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              messages: previewSource.messages,
+              actionMocks: previewSource.actionMocks,
+            }),
+          });
+          if (!res.ok) return;
+          const data = (await res.json()) as {
+            messagesUrl?: string;
+            actionMocksUrl?: string;
+          };
+
+          if (seq !== buildSeqRef.current) return;
+          if (typeof data.messagesUrl !== 'string') return;
+
+          const messagesUrl = absoluteUrl(data.messagesUrl, payloadOrigin);
+          const actionMocksUrl = typeof data.actionMocksUrl === 'string'
+            ? absoluteUrl(data.actionMocksUrl, payloadOrigin)
+            : undefined;
+
+          const shortUrl = buildRenderUrl(
+            {
+              protocol: previewSource.protocol,
+              demoUrl: previewSource.demoUrl ?? DEFAULT_A2UI_DEMO_URL,
+              messagesUrl,
+              messages: previewSource.messages,
+              actionMocksUrl,
+              theme: previewSource.theme,
+              speed,
+              playbackMode: previewSource.playbackMode,
+            },
+            baseUrl,
+          );
+          const shortShareUrl = buildRenderUrl(
+            {
+              protocol: previewSource.protocol,
+              demoUrl: previewSource.demoUrl ?? DEFAULT_A2UI_DEMO_URL,
+              messagesUrl,
+              messages: previewSource.messages,
+              actionMocksUrl,
+              theme: previewSource.theme,
+              speed,
+            },
+            shareBaseUrl,
+          );
+          setRenderUrl(shortUrl);
+          setRenderShareUrl(shortShareUrl);
+
+          const u = new URL(rspeedyDevUrl);
+          if (speed !== 1) {
+            u.searchParams.set('speed', String(speed));
+          }
+          u.searchParams.set('theme', previewSource.theme);
+          u.searchParams.set('messagesUrl', messagesUrl);
+          u.searchParams.delete('messages');
+          if (actionMocksUrl) {
+            u.searchParams.set('actionMocksUrl', actionMocksUrl);
+            u.searchParams.delete('actionMocks');
+          } else if (previewSource.actionMocks) {
+            u.searchParams.set(
+              'actionMocks',
+              JSON.stringify(previewSource.actionMocks),
+            );
+            u.searchParams.delete('actionMocksUrl');
+          } else {
+            u.searchParams.delete('actionMocksUrl');
+            u.searchParams.delete('actionMocks');
+          }
+          setLynxDevUrl(u.toString());
+        } catch {
+          // Keep the inline URLs above if the local dev payload store is unavailable.
+        }
+      })();
       return;
     }
 
@@ -432,7 +592,15 @@ export function PreviewPanel(props: PreviewPanelProps) {
       return;
     }
 
-    if (typeof window !== 'undefined' && window.innerWidth <= 980) {
+    // Auto-fullscreen on narrow but tab-less screens (721–980px). At ≤720
+    // the host page renders a MobileTabBar, and the Preview tab already
+    // gives the panel the full viewport — auto-fullscreening on top of
+    // that hides the tab bar and traps the user behind an X button.
+    if (
+      typeof window !== 'undefined'
+      && window.innerWidth > 720
+      && window.innerWidth <= 980
+    ) {
       setIsFullscreen(true);
     }
   }, [previewSource]);
@@ -446,7 +614,9 @@ export function PreviewPanel(props: PreviewPanelProps) {
       return [];
     }
 
-    const showQrCode = previewSource.kind !== 'a2ui' || !!previewSource.demoId;
+    const showQrCode = previewSource.kind !== 'a2ui'
+      || !!previewSource.demoId
+      || !!previewSource.messagesUrl;
 
     const cards: Array<{ key: string; item: PreviewQrItem }> = [];
     if (renderShareUrl) {
@@ -456,7 +626,7 @@ export function PreviewPanel(props: PreviewPanelProps) {
           title: 'Web Preview',
           description: 'Opens in any mobile browser via Lynx for Web.',
           url: renderShareUrl,
-          urlTitle: formatUrlForDisplay(renderShareUrl),
+          urlTitle: renderShareUrl,
           copyButtonTitle: 'Copy render URL',
           showQrCode,
         },
@@ -469,7 +639,7 @@ export function PreviewPanel(props: PreviewPanelProps) {
           title: 'Native Preview',
           description: 'Opens in LynxExplorer for native rendering.',
           url: lynxDevUrl,
-          urlTitle: formatUrlForDisplay(lynxDevUrl),
+          urlTitle: lynxDevUrl,
           copyButtonTitle: 'Copy Lynx dev bundle URL',
           variant: 'alt',
           showQrCode,
@@ -483,6 +653,7 @@ export function PreviewPanel(props: PreviewPanelProps) {
   const handleCopyUrl = (key: string, value: string) => {
     if (key === 'webPreview') {
       void copyToClipboard(value).then((ok) => {
+        showCopyToast(ok);
         setWebCopyFailed(false);
         if (!ok) {
           setWebCopied(false);
@@ -497,6 +668,7 @@ export function PreviewPanel(props: PreviewPanelProps) {
     }
 
     void copyToClipboard(value).then((ok) => {
+      showCopyToast(ok);
       setNativeCopyFailed(false);
       if (!ok) {
         setNativeCopied(false);
@@ -509,6 +681,151 @@ export function PreviewPanel(props: PreviewPanelProps) {
     });
   };
 
+  // Rendered both inline (when the panel is wide enough) and inside the
+  // bottom sheet (when the panel is narrow). The function closes over all
+  // local state so both instances stay in sync without prop plumbing.
+  const renderExtras = () => (
+    <>
+      {previewSource?.kind === 'a2ui'
+        ? (
+          <div className='liveComponentStack' aria-live='polite'>
+            <span className='liveComponentLabel'>Components</span>
+            {liveComponents.length > 0
+              ? (
+                <div className='liveComponentTags'>
+                  {liveComponents.map((name) => (
+                    <span key={name} className='liveComponentTag'>
+                      {name}
+                    </span>
+                  ))}
+                </div>
+              )
+              : (
+                <span className='liveComponentEmpty'>
+                  Waiting for streamed components
+                </span>
+              )}
+          </div>
+        )
+        : null}
+      {previewQrPlaceholder
+        ? (
+          <div className='previewQrSection'>
+            <div className='previewQrContent'>
+              <div className='previewQrInfo'>
+                <div className='previewQrTitle'>
+                  {previewQrPlaceholder.title}
+                </div>
+                <div className='previewQrDesc'>
+                  {previewQrPlaceholder.description}
+                </div>
+                <div className='previewQrPlaceholder'>
+                  <span className='previewQrPlaceholderText'>
+                    {previewQrPlaceholder.placeholder}
+                  </span>
+                </div>
+              </div>
+            </div>
+          </div>
+        )
+        : (previewQrCards.length > 0
+          ? (
+            <div className='previewQrSection'>
+              {previewQrCards.map(({ key, item }) => {
+                const copied = key === 'webPreview' ? webCopied : nativeCopied;
+                const copyFailed = key === 'webPreview'
+                  ? webCopyFailed
+                  : nativeCopyFailed;
+                const error = key === 'webPreview' ? webQrError : nativeQrError;
+                const setError = key === 'webPreview'
+                  ? setWebQrError
+                  : setNativeQrError;
+
+                return (
+                  <div
+                    key={key}
+                    className={item.variant === 'alt'
+                      ? 'previewQrContent previewQrContentAlt'
+                      : 'previewQrContent'}
+                  >
+                    <div className='previewQrInfo'>
+                      <div className='previewQrTitle'>{item.title}</div>
+                      <div className='previewQrDesc'>
+                        {error && item.errorDescription
+                          ? item.errorDescription
+                          : item.description}
+                      </div>
+                      <div className='previewQrUrlRow'>
+                        <div
+                          className='previewQrUrlText'
+                          title={item.urlTitle ?? item.url}
+                        >
+                          {item.urlTitle ?? item.url}
+                        </div>
+                        <button
+                          type='button'
+                          className='previewQrCopyBtn'
+                          aria-label={item.copyButtonTitle ?? 'Copy URL'}
+                          title={copied
+                            ? 'Copied'
+                            : (copyFailed
+                              ? 'Copy failed'
+                              : (item.copyButtonTitle ?? 'Copy URL'))}
+                          onClick={() => {
+                            if (item.url) {
+                              handleCopyUrl(key, item.url);
+                            }
+                          }}
+                        >
+                          {copied
+                            ? 'Copied'
+                            : (copyFailed ? 'Failed' : 'Copy')}
+                        </button>
+                      </div>
+                    </div>
+                    {item.url && item.showQrCode !== false
+                      ? (
+                        <QrCode
+                          value={item.url}
+                          size={128}
+                          onErrorChange={setError}
+                        />
+                      )
+                      : null}
+                    {item.url && item.showQrCode === false
+                      ? (
+                        <div className='previewQrUnavailable'>
+                          <span className='previewQrUnavailableLabel'>
+                            QR unavailable
+                          </span>
+                          <span className='previewQrUnavailableSubtext'>
+                            URL too long to encode
+                          </span>
+                        </div>
+                      )
+                      : null}
+                    {!item.url && item.placeholder
+                      ? (
+                        <div className='previewQrPlaceholder'>
+                          <span className='previewQrPlaceholderText'>
+                            {item.placeholder}
+                          </span>
+                        </div>
+                      )
+                      : null}
+                  </div>
+                );
+              })}
+            </div>
+          )
+          : null)}
+    </>
+  );
+
+  const hasExtras = previewSource?.kind === 'a2ui'
+    || !!previewQrPlaceholder
+    || previewQrCards.length > 0;
+
   return (
     <PreviewPanelPreviewModeContext.Provider value={{ mode, setMode }}>
       <PreviewPanelRenderContext.Provider value={renderContext}>
@@ -520,12 +837,46 @@ export function PreviewPanel(props: PreviewPanelProps) {
               : 'previewPanel')}
           style={panelStyle}
         >
+          <CopyToast toast={copyToast} />
           <div className='previewPanelHeader'>
             <span className='previewPanelTitle'>{title}</span>
             {headerAfterTitle}
             <div className='spacer' />
             {showPreviewModeSwitch
               ? <PreviewModeSwitch mode={mode} onChange={setMode} />
+              : null}
+            {hasExtras
+              ? (
+                <button
+                  type='button'
+                  className='previewInfoBtn'
+                  onClick={() => setShareOpen(true)}
+                  title='Open on phone'
+                  aria-label='Open this preview on a phone'
+                >
+                  <svg
+                    viewBox='0 0 24 24'
+                    width='16'
+                    height='16'
+                    fill='none'
+                    stroke='currentColor'
+                    strokeWidth='2'
+                    strokeLinecap='round'
+                    strokeLinejoin='round'
+                    aria-hidden='true'
+                  >
+                    <rect
+                      x='6'
+                      y='2'
+                      width='12'
+                      height='20'
+                      rx='2.5'
+                      ry='2.5'
+                    />
+                    <line x1='12' y1='18' x2='12.01' y2='18' />
+                  </svg>
+                </button>
+              )
               : null}
             <button
               type='button'
@@ -537,7 +888,9 @@ export function PreviewPanel(props: PreviewPanelProps) {
             </button>
           </div>
           {beforeBody}
-          {previewSource && previewSource.kind !== 'placeholder'
+          {showSimulationBar
+              && previewSource
+              && previewSource.kind !== 'placeholder'
             ? (
               <PreviewSimulationBar
                 speed={speed}
@@ -558,133 +911,29 @@ export function PreviewPanel(props: PreviewPanelProps) {
             )
             : null}
           <div className={bodyClass}>{children}</div>
-          {previewSource?.kind === 'a2ui'
+          <div className='previewPanelExtras'>{renderExtras()}</div>
+          {hasExtras
             ? (
-              <div className='liveComponentStack' aria-live='polite'>
-                <span className='liveComponentLabel'>Components</span>
-                {liveComponents.length > 0
-                  ? (
-                    <div className='liveComponentTags'>
-                      {liveComponents.map((name) => (
-                        <span key={name} className='liveComponentTag'>
-                          {name}
-                        </span>
-                      ))}
-                    </div>
-                  )
-                  : (
-                    <span className='liveComponentEmpty'>
-                      Waiting for streamed components
-                    </span>
-                  )}
-              </div>
+              <Drawer.Root
+                open={shareOpen}
+                onOpenChange={setShareOpen}
+              >
+                <Drawer.Portal>
+                  <Drawer.Overlay className='previewShareOverlay' />
+                  <Drawer.Content className='previewShareSheet'>
+                    <div className='previewShareHandle' aria-hidden='true' />
+                    <Drawer.Title className='previewShareTitle'>
+                      Preview info
+                    </Drawer.Title>
+                    <Drawer.Description className='previewShareDescription'>
+                      Components rendered and links to share this preview.
+                    </Drawer.Description>
+                    <div className='previewShareBody'>{renderExtras()}</div>
+                  </Drawer.Content>
+                </Drawer.Portal>
+              </Drawer.Root>
             )
             : null}
-          {previewQrPlaceholder
-            ? (
-              <div className='previewQrSection'>
-                <div className='previewQrContent'>
-                  <div className='previewQrInfo'>
-                    <div className='previewQrTitle'>
-                      {previewQrPlaceholder.title}
-                    </div>
-                    <div className='previewQrDesc'>
-                      {previewQrPlaceholder.description}
-                    </div>
-                    <div className='previewQrPlaceholder'>
-                      <span className='previewQrPlaceholderText'>
-                        {previewQrPlaceholder.placeholder}
-                      </span>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            )
-            : (
-              previewQrCards.length > 0
-                ? (
-                  <div className='previewQrSection'>
-                    {previewQrCards.map(({ key, item }) => {
-                      const copied = key === 'webPreview'
-                        ? webCopied
-                        : nativeCopied;
-                      const copyFailed = key === 'webPreview'
-                        ? webCopyFailed
-                        : nativeCopyFailed;
-                      const error = key === 'webPreview'
-                        ? webQrError
-                        : nativeQrError;
-                      const setError = key === 'webPreview'
-                        ? setWebQrError
-                        : setNativeQrError;
-
-                      return (
-                        <div
-                          key={key}
-                          className={item.variant === 'alt'
-                            ? 'previewQrContent previewQrContentAlt'
-                            : 'previewQrContent'}
-                        >
-                          <div className='previewQrInfo'>
-                            <div className='previewQrTitle'>{item.title}</div>
-                            <div className='previewQrDesc'>
-                              {error && item.errorDescription
-                                ? item.errorDescription
-                                : item.description}
-                            </div>
-                            <div className='previewQrUrlRow'>
-                              <div
-                                className='previewQrUrlText'
-                                title={item.urlTitle ?? item.url}
-                              >
-                                {item.urlTitle ?? item.url}
-                              </div>
-                              <button
-                                type='button'
-                                className='previewQrCopyBtn'
-                                aria-label={item.copyButtonTitle ?? 'Copy URL'}
-                                title={copied
-                                  ? 'Copied'
-                                  : (copyFailed
-                                    ? 'Copy failed'
-                                    : (item.copyButtonTitle ?? 'Copy URL'))}
-                                onClick={() => {
-                                  if (item.url) {
-                                    handleCopyUrl(key, item.url);
-                                  }
-                                }}
-                              >
-                                {copied
-                                  ? 'Copied'
-                                  : (copyFailed ? 'Failed' : 'Copy')}
-                              </button>
-                            </div>
-                          </div>
-                          {item.url && item.showQrCode !== false
-                            ? (
-                              <QrCode
-                                value={item.url}
-                                size={80}
-                                onErrorChange={setError}
-                              />
-                            )
-                            : null}
-                          {!item.url && item.placeholder
-                            ? (
-                              <div className='previewQrPlaceholder'>
-                                <span className='previewQrPlaceholderText'>
-                                  {item.placeholder}
-                                </span>
-                              </div>
-                            )
-                            : null}
-                        </div>
-                      );
-                    })}
-                  </div>
-                )
-                : null
-            )}
           {afterBody}
         </div>
       </PreviewPanelRenderContext.Provider>

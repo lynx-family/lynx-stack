@@ -4,10 +4,9 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "build": "pnpm run build:comp-lib && pnpm run build:reactlynx && rspeedy build",
+    "build": "pnpm run build:comp-lib && rspeedy build",
     "build:comp-lib": "rslib build --config rslib-comp-lib.config.ts",
     "build:comp-lib:dev": "cross-env NODE_ENV=development rslib build --config rslib-comp-lib.config.ts",
-    "build:reactlynx": "pnpm --filter @lynx-js/react-umd build",
     "dev": "rspeedy dev"
   },
   "dependencies": {
@@ -16,7 +15,7 @@
   "devDependencies": {
     "@lynx-js/external-bundle-rsbuild-plugin": "workspace:*",
     "@lynx-js/lynx-bundle-rslib-config": "workspace:*",
-    "@lynx-js/preact-devtools": "^5.0.1",
+    "@lynx-js/preact-devtools": "5.0.1-20260525112551-dfe2d03",
     "@lynx-js/qrcode-rsbuild-plugin": "workspace:*",
     "@lynx-js/react-rsbuild-plugin": "workspace:*",
     "@lynx-js/rspeedy": "workspace:*",

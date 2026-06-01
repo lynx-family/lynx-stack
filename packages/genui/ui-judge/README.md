@@ -5,7 +5,7 @@
 The first public API is `judgePage`. Callers own the Playwright page lifecycle,
 including navigation, viewport, cookies, route mocks, and authentication. The
 judge reads `page.url()` for the returned JSON object and produces a single
-`visual-correctness` score from `0` to `5`.
+score from `0` to `5`.
 
 ```ts
 import { test } from '@playwright/test';
@@ -16,6 +16,7 @@ test('judges generated UI', async ({ page }) => {
   await page.goto('http://localhost:3000/render.html');
 
   const result = await judgePage({
+    dimension: 'usability-interaction',
     page,
     task:
       'The page should render a login form with email, password, and submit.',
@@ -23,6 +24,35 @@ test('judges generated UI', async ({ page }) => {
   });
 });
 ```
+
+`judgeAndroidAgent` judges an Android Lynx screen through a Kitten-Lynx page.
+Callers own the Kitten-Lynx device/app lifecycle, including connection,
+navigation, and teardown. The judge reads `page.url()` for the returned JSON
+object, mirroring `judgePage`.
+
+```ts
+import { Lynx } from '@lynx-js/kitten-lynx-test-infra';
+import { judgeAndroidAgent } from '@lynx-js/ui-judge';
+
+const lynx = await Lynx.connect({ appPackage: 'com.lynx.explorer' });
+const page = await lynx.newPage();
+await page.goto('http://localhost:8080/main.lynx.bundle');
+
+const result = await judgeAndroidAgent({
+  page,
+  task: 'The Lynx app should show a checkout confirmation screen.',
+  steps: ['Dismiss permission dialog if it appears.'],
+});
+```
+
+When `dimension` is omitted, `judgePage` keeps the legacy
+`visual-correctness` prompt. GEQI scoring can pass one of these dimensions:
+
+- `usability-interaction`
+- `visual-aesthetics`
+- `consistency-standards`
+- `architecture-writing`
+- `accessibility-performance`
 
 Midscene reads its model configuration from the standard Midscene environment
 variables, such as `MIDSCENE_MODEL_BASE_URL`, `MIDSCENE_MODEL_API_KEY`,

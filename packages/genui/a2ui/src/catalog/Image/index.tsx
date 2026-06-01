@@ -1,8 +1,6 @@
 // Copyright 2026 The Lynx Authors. All rights reserved.
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
-import { useEffect, useState } from '@lynx-js/react';
-
 import type { GenericComponentProps } from '../../store/types.js';
 
 import '../../../styles/catalog/Image.css';
@@ -12,7 +10,7 @@ import '../../../styles/catalog/Image.css';
  */
 export interface ImageProps extends GenericComponentProps {
   /** Image URL or path binding. */
-  url: string | { path: string };
+  url: string;
   fit?: 'contain' | 'cover' | 'fill' | 'none' | 'scale-down';
   mode?: 'scaleToFill' | 'aspectFit' | 'aspectFill' | 'center';
   variant?:
@@ -25,13 +23,9 @@ export interface ImageProps extends GenericComponentProps {
   weight?: number;
 }
 
-const fallbackImage =
-  'https://lf3-static.bytednsdoc.com/obj/eden-cn/zalzzh-ukj-lapzild-shpjpmmv-eufs/ljhwZthlaukjlkulzlp/built-in-images/logo.png';
-
 export function Image(
   props: ImageProps,
 ): import('@lynx-js/react').ReactNode {
-  const src = props.url;
   const fit = props.fit ?? 'fit';
   const mode = props.mode ?? (() => {
     switch (fit) {
@@ -47,22 +41,17 @@ export function Image(
     }
   })();
 
-  const [hasError, setHasError] = useState(false);
-
-  useEffect(() => {
-    setHasError(false);
-  }, [src]);
-
+  const variant = props.variant ?? 'mediumFeature';
+  const className = `a2ui-image image-variant-${variant} ${
+    typeof props.weight === 'number' ? 'image-weighted' : ''
+  }`;
   return (
     <image
       key={props.id}
-      className={`a2ui-image image-variant-${
-        props.variant ?? 'mediumFeature'
-      } ${typeof props.weight === 'number' ? 'image-weighted' : ''}`}
+      className={className}
       auto-size={true}
-      src={hasError ? fallbackImage : src as string}
+      src={props.url ?? ''}
       mode={mode}
-      binderror={() => setHasError(true)}
     />
   );
 }

@@ -1,0 +1,50 @@
+{
+  "$schema": "https://turbo.build/schema.json",
+  "extends": ["//"],
+  "tasks": {
+    "build": {
+      "inputs": [
+        "index.ts",
+        "package.json",
+        "tsconfig.json",
+        "tsconfig.build.json",
+        "a2ui/src/**",
+        "a2ui/styles/**",
+        "a2ui/package.json",
+        "a2ui/tsconfig.json",
+        "a2ui/tsconfig.build.json",
+        "a2ui-catalog-extractor/src/**",
+        "a2ui-catalog-extractor/bin/**",
+        "a2ui-catalog-extractor/package.json",
+        "a2ui-catalog-extractor/tsconfig.json",
+        "a2ui-catalog-extractor/tsconfig.build.json",
+        "a2ui-prompt/src/**",
+        "a2ui-prompt/package.json",
+        "a2ui-prompt/rslib.config.ts",
+        "a2ui-prompt/tsconfig.json",
+        "a2ui-prompt/tsconfig.build.json",
+        "openui/src/**",
+        "openui/package.json",
+        "openui/tsconfig.json",
+        "openui/tsconfig.build.json"
+      ],
+      "outputs": [
+        "dist/**",
+        "a2ui/dist/**",
+        "a2ui-catalog-extractor/dist/**",
+        "a2ui-prompt/dist/**",
+        "openui/dist/**"
+      ]
+    },
+    "api-extractor": {
+      "dependsOn": [
+        "//#build",
+        "@lynx-js/genui-a2ui#build:api",
+        "@lynx-js/genui-a2ui-catalog-extractor#build:api",
+        "@lynx-js/genui-a2ui-prompt#build:api",
+        "@lynx-js/genui-openui#build:api"
+      ],
+      "cache": false
+    }
+  }
+}

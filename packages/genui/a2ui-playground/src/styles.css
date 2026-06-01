@@ -1,4 +1,4 @@
-@import "@lynx-js/a2ui-reactlynx/styles/theme.css";
+@import "@lynx-js/genui/a2ui/styles/theme.css";
 
 /* ── Geist Design System Tokens ── */
 :root {
@@ -53,6 +53,55 @@ html[data-theme="dark"] {
 
 html[data-theme="light"] {
   color-scheme: light;
+}
+
+/* ── Shared Feedback ── */
+.copyToastViewport {
+  position: fixed;
+  z-index: 10000;
+  top: 18px;
+  left: 50%;
+  transform: translateX(-50%);
+  pointer-events: none;
+}
+
+.copyToast {
+  min-width: 148px;
+  padding: 9px 14px;
+  border: 1px solid var(--geist-border);
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--geist-background) 94%, transparent);
+  box-shadow: var(--geist-shadow-lg);
+  color: var(--geist-foreground);
+  font-size: 13px;
+  font-weight: 600;
+  text-align: center;
+  backdrop-filter: blur(12px);
+  animation: copy-toast-in 160ms ease-out;
+}
+
+.copyToast-success {
+  border-color: color-mix(
+    in srgb,
+    var(--geist-success) 35%,
+    var(--geist-border)
+  );
+}
+
+.copyToast-error {
+  border-color: color-mix(in srgb, var(--geist-error) 45%, var(--geist-border));
+  color: var(--geist-error);
+}
+
+@keyframes copy-toast-in {
+  from {
+    opacity: 0;
+    transform: translateY(-8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
 /* ── Reset & Base ── */
@@ -681,6 +730,48 @@ html[data-theme="dark"] .phoneHomeIndicator {
   flex-direction: column;
   background: var(--geist-surface);
   border-left: 1px solid var(--geist-border);
+  /* Container query host so the panel's own width drives extras visibility,
+     unaffected by viewport-level decisions like the page's sidebar/code split. */
+  container-type: inline-size;
+  container-name: preview-panel;
+}
+
+/* Pass-through wrapper: children participate directly in the panel's
+   flex/grid layout. Hidden on narrow panels so the Drawer takes over. */
+.previewPanelExtras {
+  display: contents;
+}
+
+.previewInfoBtn {
+  display: none;
+  width: 28px;
+  height: 28px;
+  border: none;
+  border-radius: var(--geist-radius-sm);
+  background: transparent;
+  color: var(--geist-secondary);
+  font-size: 18px;
+  line-height: 1;
+  cursor: pointer;
+  align-items: center;
+  justify-content: center;
+  transition: all var(--geist-transition);
+  flex-shrink: 0;
+  padding: 0;
+}
+
+.previewInfoBtn:hover {
+  color: var(--geist-foreground);
+  background: var(--geist-surface);
+}
+
+@container preview-panel (max-width: 660px) {
+  .previewPanelExtras {
+    display: none;
+  }
+  .previewInfoBtn {
+    display: inline-flex;
+  }
 }
 
 .previewPanelFullscreen {
@@ -816,7 +907,7 @@ html[data-theme="dark"] .phoneHomeIndicator {
   font-weight: 500;
   color: var(--geist-foreground);
   white-space: nowrap;
-  animation: tagAppear 300ms ease-out;
+  animation: tag-appear 300ms ease-out;
 }
 
 .liveComponentEmpty {
@@ -825,7 +916,7 @@ html[data-theme="dark"] .phoneHomeIndicator {
   white-space: nowrap;
 }
 
-@keyframes tagAppear {
+@keyframes tag-appear {
   from {
     opacity: 0;
     transform: translateY(4px) scale(0.9);
@@ -952,23 +1043,35 @@ html[data-theme="dark"] .phoneHomeIndicator {
   flex-shrink: 0;
   border-top: 1px solid var(--geist-border);
   background: var(--geist-background);
-  padding: 10px 16px;
+  padding: 12px 16px;
   display: flex;
   flex-direction: column;
-  gap: 8px;
-  max-height: 132px;
-  overflow-y: auto;
+  gap: 10px;
+  container-type: inline-size;
+  container-name: preview-qr;
 }
 
 .previewQrContent {
   display: flex;
-  align-items: center;
-  gap: 10px;
+  align-items: flex-start;
+  gap: 12px;
 }
 
 .previewQrContentAlt {
-  padding-top: 8px;
+  padding-top: 10px;
   border-top: 1px dashed var(--geist-border);
+}
+
+/* When this section is narrow (e.g. example page's 280-340px right column),
+   give the QR a bit less weight so URL + Copy stay readable. */
+@container preview-qr (max-width: 380px) {
+  .previewQrContent {
+    gap: 10px;
+  }
+
+  .previewQrDesc {
+    display: none;
+  }
 }
 
 .previewQrInfo {
@@ -999,13 +1102,14 @@ html[data-theme="dark"] .phoneHomeIndicator {
 
 .previewQrUrlRow {
   margin-top: 6px;
-  display: flex;
+  display: inline-flex;
   align-items: center;
   gap: 8px;
+  max-width: 100%;
 }
 
 .previewQrUrlText {
-  flex: 1;
+  flex: 0 1 auto;
   min-width: 0;
   font-size: 11px;
   font-family: var(--geist-mono);
@@ -1050,13 +1154,118 @@ html[data-theme="dark"] .phoneHomeIndicator {
   color: var(--geist-secondary);
 }
 
+/* Slot the same size as the QR code, shown when a URL exists but is too
+   long to encode (live drafts). Keeps the card structure identical to the
+   QR-present case so the create and example panels visually align. */
+.previewQrUnavailable {
+  flex-shrink: 0;
+  width: 128px;
+  height: 128px;
+  border-radius: var(--geist-radius-md);
+  border: 1px dashed var(--geist-border);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 12px;
+  text-align: center;
+}
+
+.previewQrUnavailableLabel {
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--geist-foreground);
+  letter-spacing: 0.01em;
+}
+
+.previewQrUnavailableSubtext {
+  font-size: 10.5px;
+  color: var(--geist-secondary);
+  line-height: 1.35;
+}
+
+/* ── Mobile share sheet (Vaul) ── */
+.previewShareOverlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.55);
+  /* Must beat .previewPanelFullscreen (z-index: 200); the share sheet is
+     triggered from inside the panel and should appear above it. */
+  z-index: 300;
+}
+
+.previewShareSheet {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  z-index: 310;
+  max-height: 85vh;
+  display: flex;
+  flex-direction: column;
+  background: var(--geist-background);
+  border-top-left-radius: 16px;
+  border-top-right-radius: 16px;
+  border-top: 1px solid var(--geist-border);
+  padding-bottom: env(safe-area-inset-bottom, 0px);
+  overflow: hidden;
+  outline: none;
+}
+
+.previewShareHandle {
+  flex-shrink: 0;
+  width: 36px;
+  height: 4px;
+  border-radius: 999px;
+  background: var(--geist-border);
+  margin: 10px auto 4px;
+}
+
+.previewShareTitle {
+  flex-shrink: 0;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.11em;
+  text-transform: uppercase;
+  color: var(--geist-secondary);
+  padding: 8px 16px 10px;
+  margin: 0;
+}
+
+/* Visually hidden but accessible — Vaul requires Drawer.Description */
+.previewShareDescription {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+  border: 0;
+}
+
+.previewShareBody {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+}
+
 .previewEmpty {
+  width: 100%;
+  height: 100%;
+  padding: 16px;
+  box-sizing: border-box;
   text-align: center;
   color: var(--geist-secondary);
   display: flex;
   flex-direction: column;
   gap: 8px;
   align-items: center;
+  justify-content: center;
 }
 
 .previewEmptyIcon {
@@ -1066,6 +1275,90 @@ html[data-theme="dark"] .phoneHomeIndicator {
 
 .previewEmptySub {
   font-size: 12px;
+}
+
+/* Overlay that sits on top of a still-loading <iframe> so cards never
+   flash a raw white iframe background between mount and first render. */
+.cardPreviewLoading {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  padding: 16px;
+  box-sizing: border-box;
+  background: var(--geist-background);
+  color: var(--geist-secondary);
+  pointer-events: none;
+  /* Fade out smoothly once `data-revealed=true` is applied, so the
+     iframe's first paint dissolves into view instead of cutting in. */
+  opacity: 1;
+  transition: opacity 240ms cubic-bezier(0.22, 0.61, 0.36, 1);
+}
+
+.cardPreviewLoading[data-revealed="true"] {
+  opacity: 0;
+}
+
+.cardPreviewLoadingTitle {
+  font-size: 14px;
+  font-weight: 500;
+  letter-spacing: 0.01em;
+  text-align: center;
+  max-width: 22ch;
+  /* Subtle "still working" pulse — never bouncy or distracting. */
+  animation: card-preview-pulse 1.8s ease-in-out infinite;
+}
+
+.cardPreviewLoadingDots {
+  display: inline-flex;
+  gap: 4px;
+}
+
+.cardPreviewLoadingDots span {
+  width: 4px;
+  height: 4px;
+  border-radius: 50%;
+  background: currentcolor;
+  opacity: 0.35;
+  animation: card-preview-dot 1.2s ease-in-out infinite;
+}
+
+.cardPreviewLoadingDots span:nth-child(2) {
+  animation-delay: 0.15s;
+}
+
+.cardPreviewLoadingDots span:nth-child(3) {
+  animation-delay: 0.3s;
+}
+
+@keyframes card-preview-pulse {
+  0%, 100% {
+    opacity: 0.55;
+  }
+  50% {
+    opacity: 0.85;
+  }
+}
+
+@keyframes card-preview-dot {
+  0%, 100% {
+    transform: translateY(0);
+    opacity: 0.25;
+  }
+  50% {
+    transform: translateY(-2px);
+    opacity: 0.9;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .cardPreviewLoadingTitle,
+  .cardPreviewLoadingDots span {
+    animation: none;
+  }
 }
 /* ── Responsive ── */
 @media (max-width: 980px) {
@@ -1086,10 +1379,6 @@ html[data-theme="dark"] .phoneHomeIndicator {
   .previewPanelBody {
     min-height: 460px;
   }
-
-  .previewQrSection {
-    max-height: 120px;
-  }
 }
 
 @media (max-width: 720px) {
@@ -1098,11 +1387,10 @@ html[data-theme="dark"] .phoneHomeIndicator {
     padding: 0 10px;
   }
 
+  /* Logo alone is enough on mobile — drops the "Lynx GenUI Playground"
+     wordmark that was truncating to "Lynx GenUI Playg…" */
   .brand {
-    max-width: 130px;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
+    display: none;
   }
 
   .brandLogo {
@@ -1126,12 +1414,65 @@ html[data-theme="dark"] .phoneHomeIndicator {
   .phoneWrap {
     padding: 10px;
   }
+}
 
-  .previewQrContent {
-    align-items: flex-start;
-  }
+/* ── Mobile tab bar (per-page Edit/Preview swap) ──
+   Pages that opt in render <MobileTabBar /> as the last child of their
+   flex-column root, so the bar lands at the bottom naturally without
+   position: fixed/sticky overlap quirks. */
+.mobileTabBar {
+  display: none;
+  flex-shrink: 0;
+  background: var(--geist-background);
+  border-top: 1px solid var(--geist-border);
+  padding-bottom: env(safe-area-inset-bottom, 0px);
+}
 
-  .previewQrDesc {
-    display: none;
+.mobileTab {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 2px;
+  padding: 8px 4px 7px;
+  background: transparent;
+  border: none;
+  color: var(--geist-secondary);
+  font-size: 11px;
+  font-weight: 500;
+  cursor: pointer;
+  position: relative;
+  transition: color var(--geist-transition);
+}
+
+.mobileTab:hover {
+  color: var(--geist-foreground);
+}
+
+.mobileTab.active {
+  color: var(--geist-foreground);
+  font-weight: 600;
+}
+
+.mobileTab.active::before {
+  content: "";
+  position: absolute;
+  top: -1px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 32px;
+  height: 2px;
+  background: var(--geist-foreground);
+  border-radius: 0 0 999px 999px;
+}
+
+.mobileTabLabel {
+  letter-spacing: 0.01em;
+}
+
+@media (max-width: 720px) {
+  .mobileTabBar {
+    display: flex;
   }
 }

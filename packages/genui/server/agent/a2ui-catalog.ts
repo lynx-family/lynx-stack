@@ -7,12 +7,15 @@ import type { A2UIExample } from './a2ui-examples';
 import buttonManifest from './catalog/Button/catalog.json';
 import cardManifest from './catalog/Card/catalog.json';
 import checkBoxManifest from './catalog/CheckBox/catalog.json';
+import choicePickerManifest from './catalog/ChoicePicker/catalog.json';
 import columnManifest from './catalog/Column/catalog.json';
+import dateTimeInputManifest from './catalog/DateTimeInput/catalog.json';
 import dividerManifest from './catalog/Divider/catalog.json';
 import iconManifest from './catalog/Icon/catalog.json';
 import imageManifest from './catalog/Image/catalog.json';
 import lineChartManifest from './catalog/LineChart/catalog.json';
 import listManifest from './catalog/List/catalog.json';
+import loadingManifest from './catalog/Loading/catalog.json';
 import modalManifest from './catalog/Modal/catalog.json';
 import radioGroupManifest from './catalog/RadioGroup/catalog.json';
 import rowManifest from './catalog/Row/catalog.json';
@@ -87,12 +90,15 @@ const CATALOG_MANIFESTS = [
   rowManifest,
   columnManifest,
   listManifest,
+  loadingManifest,
   cardManifest,
   tabsManifest,
   modalManifest,
   buttonManifest,
   textFieldManifest,
   checkBoxManifest,
+  choicePickerManifest,
+  dateTimeInputManifest,
   radioGroupManifest,
   sliderManifest,
 ] as const;
@@ -103,12 +109,17 @@ const COMPONENT_SUMMARIES: Record<string, string> = {
   Card:
     'Card container with exactly one child. Wrap multiple elements in a Column/Row/List first.',
   CheckBox: 'Boolean checkbox with a label and optional validation checks.',
+  ChoicePicker:
+    'Single- or multi-select choice picker with checkbox and chip display styles.',
   Column: 'Vertical layout container.',
+  DateTimeInput:
+    'Date and/or time input with a calendar panel. Without outputFormat, date-enabled inputs write YYYY-MM-DD.',
   Divider: 'Horizontal or vertical separator line.',
   Icon: 'Display an icon by name.',
   Image: 'Display an image by URL.',
   LineChart: 'Display one or more numeric line series over shared labels.',
   List: 'Repeating layout container, commonly bound to a data path.',
+  Loading: 'Animated progress indicator for pending content.',
   Modal:
     'Modal dialog with a trigger component and a content component. The trigger opens the modal locally when tapped.',
   RadioGroup: 'Single-choice selector for a list of string options.',

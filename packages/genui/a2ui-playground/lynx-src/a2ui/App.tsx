@@ -6,12 +6,15 @@ import {
   Button,
   Card,
   CheckBox,
+  ChoicePicker,
   Column,
+  DateTimeInput,
   Divider,
   Icon,
   Image,
   LineChart,
   List,
+  Loading,
   Modal,
   PieChart,
   RadioGroup,
@@ -23,7 +26,7 @@ import {
   basicFunctions,
   createMessageStore,
   normalizePayloadToMessages as normalizeProtocolMessages,
-} from '@lynx-js/a2ui-reactlynx';
+} from '@lynx-js/genui/a2ui';
 import type {
   CatalogComponent,
   CatalogInput,
@@ -31,24 +34,8 @@ import type {
   MessageStore,
   ServerToClientMessage,
   UserActionPayload,
-} from '@lynx-js/a2ui-reactlynx';
-import buttonManifest from '@lynx-js/a2ui-reactlynx/catalog/Button/catalog.json';
-import cardManifest from '@lynx-js/a2ui-reactlynx/catalog/Card/catalog.json';
-import checkBoxManifest from '@lynx-js/a2ui-reactlynx/catalog/CheckBox/catalog.json';
-import columnManifest from '@lynx-js/a2ui-reactlynx/catalog/Column/catalog.json';
-import dividerManifest from '@lynx-js/a2ui-reactlynx/catalog/Divider/catalog.json';
-import iconManifest from '@lynx-js/a2ui-reactlynx/catalog/Icon/catalog.json';
-import imageManifest from '@lynx-js/a2ui-reactlynx/catalog/Image/catalog.json';
-import lineChartManifest from '@lynx-js/a2ui-reactlynx/catalog/LineChart/catalog.json';
-import listManifest from '@lynx-js/a2ui-reactlynx/catalog/List/catalog.json';
-import modalManifest from '@lynx-js/a2ui-reactlynx/catalog/Modal/catalog.json';
-import pieChartManifest from '@lynx-js/a2ui-reactlynx/catalog/PieChart/catalog.json';
-import radioGroupManifest from '@lynx-js/a2ui-reactlynx/catalog/RadioGroup/catalog.json';
-import rowManifest from '@lynx-js/a2ui-reactlynx/catalog/Row/catalog.json';
-import sliderManifest from '@lynx-js/a2ui-reactlynx/catalog/Slider/catalog.json';
-import tabsManifest from '@lynx-js/a2ui-reactlynx/catalog/Tabs/catalog.json';
-import textManifest from '@lynx-js/a2ui-reactlynx/catalog/Text/catalog.json';
-import textFieldManifest from '@lynx-js/a2ui-reactlynx/catalog/TextField/catalog.json';
+} from '@lynx-js/genui/a2ui';
+import { catalogManifests } from '@lynx-js/genui/a2ui/catalog';
 import {
   useCallback,
   useEffect,
@@ -64,17 +51,9 @@ import { createMockAgent } from '../../examples/io-mock/mockAgent.js';
 import type { MockAgentProgress } from '../../examples/io-mock/mockAgent.js';
 
 const DEFAULT_STREAM_DELAY_MS = 800;
+const A2UI_SCROLL_VIEW_ID = 'a2ui-scroll-view';
+const A2UI_SCROLL_BOTTOM_OFFSET = 1000000;
 
-// Compose every built-in. There is intentionally no all-in-one aggregate
-// shipped from the package — this list makes the cost of "everything"
-// visible and lets the bundler tree-shake when you only need a few.
-//
-// Function entries are included because the gallery payloads use A2UI
-// basic-catalog calls such as `formatDate` in dynamic props and checks.
-//
-// To include component schemas, pair each component with its `catalog.json`
-// manifest — see
-// `packages/genui/a2ui/src/catalog/README.md`.
 function manifestEntry(
   component: unknown,
   manifest: CatalogManifest,
@@ -83,23 +62,26 @@ function manifestEntry(
 }
 
 const ALL_BUILTINS: readonly CatalogInput[] = [
-  manifestEntry(Text, textManifest),
-  manifestEntry(Image, imageManifest),
-  manifestEntry(Row, rowManifest),
-  manifestEntry(Column, columnManifest),
-  manifestEntry(List, listManifest),
-  manifestEntry(Card, cardManifest),
-  manifestEntry(Modal, modalManifest),
-  manifestEntry(Button, buttonManifest),
-  manifestEntry(Divider, dividerManifest),
-  manifestEntry(Icon, iconManifest),
-  manifestEntry(CheckBox, checkBoxManifest),
-  manifestEntry(LineChart, lineChartManifest),
-  manifestEntry(PieChart, pieChartManifest),
-  manifestEntry(RadioGroup, radioGroupManifest),
-  manifestEntry(Slider, sliderManifest),
-  manifestEntry(TextField, textFieldManifest),
-  manifestEntry(Tabs, tabsManifest),
+  manifestEntry(Text, catalogManifests.Text),
+  manifestEntry(Image, catalogManifests.Image),
+  manifestEntry(Row, catalogManifests.Row),
+  manifestEntry(Column, catalogManifests.Column),
+  manifestEntry(List, catalogManifests.List),
+  manifestEntry(Card, catalogManifests.Card),
+  manifestEntry(Modal, catalogManifests.Modal),
+  manifestEntry(Button, catalogManifests.Button),
+  manifestEntry(Divider, catalogManifests.Divider),
+  manifestEntry(Icon, catalogManifests.Icon),
+  manifestEntry(CheckBox, catalogManifests.CheckBox),
+  manifestEntry(ChoicePicker, catalogManifests.ChoicePicker),
+  manifestEntry(DateTimeInput, catalogManifests.DateTimeInput),
+  manifestEntry(LineChart, catalogManifests.LineChart),
+  manifestEntry(PieChart, catalogManifests.PieChart),
+  manifestEntry(Loading, catalogManifests.Loading),
+  manifestEntry(RadioGroup, catalogManifests.RadioGroup),
+  manifestEntry(Slider, catalogManifests.Slider),
+  manifestEntry(TextField, catalogManifests.TextField),
+  manifestEntry(Tabs, catalogManifests.Tabs),
   ...basicFunctions,
 ];
 
@@ -336,6 +318,8 @@ export function App() {
 
   const storeRef = useRef<MessageStore | null>(null);
   const agentRef = useRef<ReturnType<typeof createMockAgent> | null>(null);
+  const pendingReplayMessagesRef = useRef<unknown[] | null>(null);
+  const pendingLiveMessagesRef = useRef<unknown[] | null>(null);
   const [store, setStore] = useState<MessageStore | null>(null);
   const [error, setError] = useState<string>('');
   const playbackMode = useMemo(
@@ -378,6 +362,22 @@ export function App() {
     () => effectiveData.playbackPaused === true,
     [effectiveData.playbackPaused],
   );
+  const pushLiveMessagesToStore = useCallback(
+    (targetStore: MessageStore, messages: unknown) => {
+      const normalized = normalizeProtocolMessages(messages);
+      for (const msg of normalized) {
+        targetStore.push(msg);
+      }
+    },
+    [],
+  );
+  const replayMessagesToStore = useCallback(
+    (targetStore: MessageStore, messages: unknown) => {
+      targetStore.clear();
+      pushLiveMessagesToStore(targetStore, messages);
+    },
+    [pushLiveMessagesToStore],
+  );
   const postPlaybackSync = useCallback((state: MockAgentProgress) => {
     NativeModules.bridge?.call?.(
       'A2UI_PLAYBACK_SYNC',
@@ -401,11 +401,38 @@ export function App() {
     agent.resume();
   }, []);
 
+  const scrollPreviewToBottom = useCallback(() => {
+    if (playbackPausedRef.current) return;
+    lynx.createSelectorQuery()
+      .select(`#${A2UI_SCROLL_VIEW_ID}`)
+      .invoke({
+        method: 'scrollTo',
+        params: {
+          offset: A2UI_SCROLL_BOTTOM_OFFSET,
+          smooth: true,
+        },
+        fail: () => {
+          // The first content-size event can fire before UI methods are ready.
+        },
+      })
+      .exec();
+  }, []);
+
   useLynxGlobalEventListener(
     'A2UI_PLAYBACK_CONTROL',
     (action: unknown) => {
       const agent = agentRef.current;
       if (!agent) return;
+      // In playback mode the parent ticker is the source of truth — route
+      // both pause and resume through `syncPlaybackAgent` so resume only
+      // unblocks the agent while `currentCount < playbackTargetCount`.
+      // Otherwise (with the new `delayMs: 0`) a stale resume would drain
+      // one extra message past the target before the next progress tick.
+      if (playbackMode) {
+        playbackPausedRef.current = action === 'pause';
+        syncPlaybackAgent();
+        return;
+      }
       if (action === 'pause') {
         agent.pause();
         return;
@@ -439,6 +466,40 @@ export function App() {
       for (const msg of normalized) {
         currentStore.push(msg);
       }
+    },
+  );
+
+  useLynxGlobalEventListener(
+    'A2UI_REPLAY_MESSAGES',
+    (messages: unknown) => {
+      const currentStore = storeRef.current;
+      if (!currentStore) {
+        pendingReplayMessagesRef.current = Array.isArray(messages)
+          ? messages
+          : [messages];
+        return;
+      }
+      // Replays replace the preview buffer, making parent retries idempotent
+      // while the iframe and Lynx store finish booting.
+      replayMessagesToStore(currentStore, messages);
+      agentRef.current?.stop();
+      agentRef.current = null;
+    },
+  );
+
+  useLynxGlobalEventListener(
+    'A2UI_LIVE_MESSAGES',
+    (messages: unknown) => {
+      const currentStore = storeRef.current;
+      if (!currentStore) {
+        pendingLiveMessagesRef.current = Array.isArray(messages)
+          ? messages
+          : [messages];
+        return;
+      }
+      pushLiveMessagesToStore(currentStore, messages);
+      agentRef.current?.stop();
+      agentRef.current = null;
     },
   );
 
@@ -478,7 +539,13 @@ export function App() {
         // `delayMs: 0` makes `agent.start()` push every message into the
         // buffer in a tight loop, effectively a static "final state"
         // paint that matches upstream's `isInstantPreview` mode.
-        delayMs: streamConfig.instant ? 0 : streamDelay,
+        //
+        // In playback mode the parent frame is the single ticker — it sends
+        // `A2UI_PLAYBACK_PROGRESS` to advance the visible chunk count. The
+        // agent should drain instantly up to that target so the preview stays
+        // in lockstep with the chunk list, and the parent's speed slider
+        // becomes the only knob that matters.
+        delayMs: streamConfig.instant || playbackMode ? 0 : streamDelay,
         onProgress: (state) => {
           postPlaybackSync(state);
           syncPlaybackAgent();
@@ -493,9 +560,25 @@ export function App() {
       storeRef.current = next;
       agentRef.current = agent;
       setStore(next);
+      const pendingReplayMessages = pendingReplayMessagesRef.current;
+      if (pendingReplayMessages) {
+        pendingReplayMessagesRef.current = null;
+        replayMessagesToStore(next, pendingReplayMessages);
+        agent.stop();
+        agentRef.current = null;
+      }
+      const pendingLiveMessages = pendingLiveMessagesRef.current;
+      if (pendingLiveMessages) {
+        pendingLiveMessagesRef.current = null;
+        pushLiveMessagesToStore(next, pendingLiveMessages);
+        agent.stop();
+        agentRef.current = null;
+      }
       syncPlaybackAgent();
       // Begin streaming the demo's initial messages into the buffer.
-      void agent.start();
+      if (agentRef.current === agent) {
+        void agent.start();
+      }
     };
 
     run()
@@ -512,7 +595,15 @@ export function App() {
       storeRef.current = null;
       agentRef.current = null;
     };
-  }, [isInstantPreview, postPlaybackSync, streamConfig, streamDelay]);
+  }, [
+    isInstantPreview,
+    playbackMode,
+    postPlaybackSync,
+    pushLiveMessagesToStore,
+    replayMessagesToStore,
+    streamConfig,
+    streamDelay,
+  ]);
 
   return (
     <view
@@ -536,7 +627,9 @@ export function App() {
             {store
               ? (
                 <scroll-view
+                  id={A2UI_SCROLL_VIEW_ID}
                   scroll-y
+                  bindcontentsizechanged={scrollPreviewToBottom}
                   style={{ flex: 1, minHeight: 0 }}
                   className={isPlaybackPaused ? 'a2ui-scrollPaused' : ''}
                 >

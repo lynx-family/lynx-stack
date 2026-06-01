@@ -14,15 +14,15 @@
 }
 
 .text-h1 {
-  font-size: 28px;
+  font-size: 24px;
   font-weight: bold;
   color: var(--a2ui-color-on-surface);
-  line-height: 1.15;
+  line-height: 1.2;
   flex-shrink: 0;
 }
 
 .text-h2 {
-  font-size: 22px;
+  font-size: 20px;
   font-weight: bold;
   color: var(--a2ui-color-on-surface);
   line-height: 1.2;
@@ -30,7 +30,7 @@
 }
 
 .text-h3 {
-  font-size: 18px;
+  font-size: 16px;
   font-weight: bold;
   color: var(--a2ui-color-on-surface);
   line-height: 1.2;
@@ -38,7 +38,7 @@
 }
 
 .text-h4 {
-  font-size: 15px;
+  font-size: 14px;
   font-weight: bold;
   color: var(--a2ui-color-on-surface);
   line-height: 1.2;
@@ -46,7 +46,7 @@
 }
 
 .text-h5 {
-  font-size: 13px;
+  font-size: 12px;
   font-weight: bold;
   color: var(--a2ui-color-on-surface);
   line-height: 1.2;
@@ -54,28 +54,24 @@
 }
 
 .text-caption {
-  font-size: 11px;
+  font-size: 10px;
   color: var(--a2ui-color-text-muted);
   line-height: 1.5;
   flex-shrink: 0;
 }
 
 .text-body {
-  font-size: 15px;
+  font-size: 14px;
   font-weight: normal;
   color: var(--a2ui-color-on-surface);
   line-height: 1.5;
 }
 
-.text-weight-1 {
-  font-weight: 500;
-}
-
-.text-weight-1-5 {
+.text-emphasis-medium {
   font-weight: 600;
 }
 
-.text-weight-2 {
+.text-emphasis-strong {
   font-weight: 700;
 }
 
@@ -83,7 +79,7 @@
 
 .text-price {
   flex-shrink: 0;
-  font-size: 16px;
+  font-size: 15px;
   font-weight: bold;
   color: var(--a2ui-color-primary);
   line-height: 1.5;
@@ -91,7 +87,7 @@
 
 .text-link {
   flex-shrink: 0;
-  font-size: 15px;
+  font-size: 14px;
   font-weight: 600;
   color: var(--a2ui-color-primary-hover);
   text-decoration: underline;
@@ -100,7 +96,7 @@
 
 .text-label {
   flex-shrink: 0;
-  font-size: 11px;
+  font-size: 10px;
   font-weight: bold;
   color: var(--a2ui-color-text-muted);
   letter-spacing: 0.8px;

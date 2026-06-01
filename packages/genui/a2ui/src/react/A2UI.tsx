@@ -258,7 +258,7 @@ function A2UIImpl(props: A2UIProps): import('@lynx-js/react').ReactNode {
     return renderEmpty?.() ?? null;
   }
 
-  const rendererProps: import('./A2UIRenderer.jsx').A2UIRendererProps = {
+  const rendererProps: import('./A2UIRenderer.js').A2UIRendererProps = {
     resource: activeResource,
   };
   if (className !== undefined) rendererProps.className = className;

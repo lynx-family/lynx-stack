@@ -2507,6 +2507,21 @@ test.describe('reactlynx3 tests', () => {
         await diffScreenShot(page, 'text', 'baseline');
       });
 
+      test('basic-element-text-extra-font-family', async ({ page }, {
+        title,
+      }) => {
+        await goto(page, title);
+        await page.evaluate(async () => {
+          await document.fonts.load(
+            '18px "Press Start 2P E2E"',
+            'EXTRA FONT 0123',
+          );
+          await document.fonts.ready;
+        });
+        await wait(100);
+        await diffScreenShot(page, 'text', 'extra-font-family');
+      });
+
       test('basic-element-text-nest-image', async ({ page }, { title }) => {
         await goto(page, title);
         await wait(500); // for image loading

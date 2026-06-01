@@ -1,5 +1,11 @@
 # @lynx-js/react-webpack-plugin
 
+## 0.9.3
+
+### Patch Changes
+
+- Inject the `lynxProcessEvalResult` runtime module only into main-thread chunks. The previous guard checked the chunk name for `:background`, which never matched the actual chunk names (`main__background`, `foo.js-react__background`), so the runtime was duplicated into background and async background chunks. ([#2692](https://github.com/lynx-family/lynx-stack/pull/2692))
+
 ## 0.9.2
 
 ### Patch Changes

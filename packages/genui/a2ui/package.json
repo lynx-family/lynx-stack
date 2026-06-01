@@ -1,5 +1,5 @@
 {
-  "name": "@lynx-js/a2ui-reactlynx",
+  "name": "@lynx-js/genui-a2ui",
   "version": "0.0.0",
   "private": true,
   "license": "Apache-2.0",
@@ -55,6 +55,11 @@
       "default": "./dist/catalog/List/index.js"
     },
     "./catalog/List/catalog.json": "./dist/catalog/List/catalog.json",
+    "./catalog/Loading": {
+      "types": "./dist/catalog/Loading/index.d.ts",
+      "default": "./dist/catalog/Loading/index.js"
+    },
+    "./catalog/Loading/catalog.json": "./dist/catalog/Loading/catalog.json",
     "./catalog/Card": {
       "types": "./dist/catalog/Card/index.d.ts",
       "default": "./dist/catalog/Card/index.js"
@@ -95,6 +100,16 @@
       "default": "./dist/catalog/CheckBox/index.js"
     },
     "./catalog/CheckBox/catalog.json": "./dist/catalog/CheckBox/catalog.json",
+    "./catalog/ChoicePicker": {
+      "types": "./dist/catalog/ChoicePicker/index.d.ts",
+      "default": "./dist/catalog/ChoicePicker/index.js"
+    },
+    "./catalog/ChoicePicker/catalog.json": "./dist/catalog/ChoicePicker/catalog.json",
+    "./catalog/DateTimeInput": {
+      "types": "./dist/catalog/DateTimeInput/index.d.ts",
+      "default": "./dist/catalog/DateTimeInput/index.js"
+    },
+    "./catalog/DateTimeInput/catalog.json": "./dist/catalog/DateTimeInput/catalog.json",
     "./catalog/RadioGroup": {
       "types": "./dist/catalog/RadioGroup/index.d.ts",
       "default": "./dist/catalog/RadioGroup/index.js"
@@ -122,8 +137,10 @@
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",
   "scripts": {
+    "api-extractor": "node ../scripts/run-api-extractor.mjs",
     "build": "tsc --project tsconfig.build.json && npm run build:catalog",
-    "build:catalog": "a2ui-cli generate catalog --catalog-dir src/catalog --out-dir dist/catalog",
+    "build:api": "tsc --project tsconfig.build.json",
+    "build:catalog": "genui a2ui generate catalog --catalog-dir src/catalog --out-dir dist/catalog && node scripts/writeCatalogManifestIndex.js",
     "test": "rstest"
   },
   "dependencies": {
@@ -131,10 +148,11 @@
     "@preact/signals": "^2.5.1"
   },
   "devDependencies": {
-    "@lynx-js/a2ui-cli": "workspace:*",
+    "@lynx-js/genui-cli": "workspace:*",
     "@lynx-js/lynx-ui": "^3.133.0",
     "@lynx-js/react": "workspace:*",
     "@lynx-js/types": "3.7.0",
+    "@microsoft/api-extractor": "catalog:",
     "@rstest/core": "catalog:rstest",
     "@types/react": "^18.3.28"
   },

@@ -63,8 +63,12 @@
           "markdown"
         ]
       },
-      "weight": {
-        "type": "number"
+      "emphasis": {
+        "type": "string",
+        "enum": [
+          "medium",
+          "strong"
+        ]
       }
     },
     "required": [

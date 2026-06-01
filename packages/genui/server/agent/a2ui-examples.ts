@@ -25,6 +25,13 @@ export const BASIC_CATALOG_EXAMPLES: A2UIExample[] = [
       },
       {
         version: 'v0.9',
+        updateDataModel: {
+          surfaceId: 'main',
+          value: { form: { email: '', password: '' } },
+        },
+      },
+      {
+        version: 'v0.9',
         updateComponents: {
           surfaceId: 'main',
           components: [
@@ -67,13 +74,6 @@ export const BASIC_CATALOG_EXAMPLES: A2UIExample[] = [
           ],
         },
       },
-      {
-        version: 'v0.9',
-        updateDataModel: {
-          surfaceId: 'main',
-          value: { form: { email: '', password: '' } },
-        },
-      },
     ],
   },
   {
@@ -85,6 +85,21 @@ export const BASIC_CATALOG_EXAMPLES: A2UIExample[] = [
         createSurface: {
           surfaceId: 'main',
           catalogId: BASIC_CATALOG_ID,
+        },
+      },
+      {
+        version: 'v0.9',
+        updateDataModel: {
+          surfaceId: 'main',
+          path: '/items',
+          value: [
+            { name: 'Canal walk', detail: 'Morning coffee and quiet bridges' },
+            {
+              name: 'Museum loop',
+              detail: 'Design exhibits plus lunch nearby',
+            },
+            { name: 'Sunset hill', detail: 'Short climb with skyline views' },
+          ],
         },
       },
       {
@@ -136,21 +151,6 @@ export const BASIC_CATALOG_EXAMPLES: A2UIExample[] = [
           ],
         },
       },
-      {
-        version: 'v0.9',
-        updateDataModel: {
-          surfaceId: 'main',
-          path: '/items',
-          value: [
-            { name: 'Canal walk', detail: 'Morning coffee and quiet bridges' },
-            {
-              name: 'Museum loop',
-              detail: 'Design exhibits plus lunch nearby',
-            },
-            { name: 'Sunset hill', detail: 'Short climb with skyline views' },
-          ],
-        },
-      },
     ],
   },
   {
@@ -162,6 +162,18 @@ export const BASIC_CATALOG_EXAMPLES: A2UIExample[] = [
         createSurface: {
           surfaceId: 'main',
           catalogId: BASIC_CATALOG_ID,
+        },
+      },
+      {
+        version: 'v0.9',
+        updateDataModel: {
+          surfaceId: 'main',
+          value: {
+            chart: {
+              labels: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri'],
+              series: [{ name: 'Users', values: [120, 148, 132, 171, 190] }],
+            },
+          },
         },
       },
       {
@@ -192,18 +204,6 @@ export const BASIC_CATALOG_EXAMPLES: A2UIExample[] = [
               showLegend: true,
             },
           ],
-        },
-      },
-      {
-        version: 'v0.9',
-        updateDataModel: {
-          surfaceId: 'main',
-          value: {
-            chart: {
-              labels: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri'],
-              series: [{ name: 'Users', values: [120, 148, 132, 171, 190] }],
-            },
-          },
         },
       },
     ],

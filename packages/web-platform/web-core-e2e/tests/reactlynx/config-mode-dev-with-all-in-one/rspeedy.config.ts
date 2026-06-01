@@ -21,10 +21,6 @@ const _default_1: Config = defineConfig({
     },
   },
   mode: 'development',
-  performance: {
-    chunkSplit: {
-      strategy: 'all-in-one',
-    },
-  },
+  splitChunks: false,
 });
 export default _default_1;

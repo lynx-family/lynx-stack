@@ -1,6 +1,6 @@
 # A2UI Prompt
 
-`@lynx-js/a2ui-prompt` provides A2UI system prompt construction utilities for
+`@lynx-js/genui/a2ui-prompt` provides A2UI system prompt construction utilities for
 CLI and backend usage.
 
 The source of truth for the built-in prompt and catalog is
@@ -14,7 +14,7 @@ package.
 Build a prompt with the built-in A2UI basic catalog:
 
 ```ts
-import { buildA2UISystemPrompt } from '@lynx-js/a2ui-prompt';
+import { buildA2UISystemPrompt } from '@lynx-js/genui/a2ui-prompt';
 
 const prompt = buildA2UISystemPrompt();
 ```
@@ -25,7 +25,7 @@ Read generated catalog artifacts and build a prompt for a custom catalog:
 import {
   buildA2UISystemPrompt,
   readA2UICatalogFromDirectory,
-} from '@lynx-js/a2ui-prompt';
+} from '@lynx-js/genui/a2ui-prompt';
 
 const catalog = readA2UICatalogFromDirectory({
   catalogDir: 'dist/catalog',
@@ -37,8 +37,7 @@ const prompt = buildA2UISystemPrompt({ catalog });
 
 `readA2UICatalogFromDirectory` expects generated files such as
 `<Component>/catalog.json` and optional function definitions under `functions/`.
-Use `@lynx-js/a2ui-cli generate catalog` or
-`@lynx-js/a2ui-catalog-extractor` to create those artifacts.
+Use `genui a2ui generate catalog` to create those artifacts.
 
 ## Exports
 

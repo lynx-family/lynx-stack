@@ -54,7 +54,7 @@ export function readA2UICatalogFromDirectory(
   }
   if (componentManifests.length === 0) {
     throw new Error(
-      `[a2ui-prompt] No component catalog files found in ${options.catalogDir}. Expected files like <Component>/catalog.json. Run "a2ui-cli generate catalog" first or pass --catalog-dir to the generated catalog directory.`,
+      `[a2ui-prompt] No component catalog files found in ${options.catalogDir}. Expected files like <Component>/catalog.json. Run "genui a2ui generate catalog" first or pass --catalog-dir to the generated catalog directory.`,
     );
   }
 

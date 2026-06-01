@@ -18,11 +18,13 @@ import type {
   ConversationMeta,
   DataModelSnapshot,
   PersistedMessage,
+  PreviewPayloadUrls,
 } from '../storage/types.js';
 
 export interface ModelChatMessage {
   role: 'user' | 'assistant' | 'system';
   content: string;
+  previewPayloadUrls?: PreviewPayloadUrls;
 }
 
 export interface ConversationContext {
@@ -35,6 +37,7 @@ interface ConversationHotState {
   dataModel: Record<string, unknown>;
   surfaceIds: Set<string>;
   previewMessages: unknown[];
+  previewPayloadUrls: PreviewPayloadUrls | null;
 }
 
 export interface RecordTurnInput {
@@ -42,6 +45,8 @@ export interface RecordTurnInput {
   assistantContent: string;
   a2uiMessages: unknown[];
   previewMessages?: unknown[];
+  previewPayloadUrls?: PreviewPayloadUrls | null;
+  snapshotPreviewPayloadUrls?: PreviewPayloadUrls | null;
 }
 
 export interface UseConversationReturn {
@@ -51,6 +56,7 @@ export interface UseConversationReturn {
   dataModel: Record<string, unknown>;
   surfaceIds: ReadonlySet<string>;
   previewMessages: unknown[];
+  previewPayloadUrls: PreviewPayloadUrls | null;
   isReady: boolean;
   isPersistent: boolean;
   switchTo: (id: string) => Promise<void>;
@@ -71,6 +77,15 @@ function cloneDataModel(
     return JSON.parse(JSON.stringify(value)) as Record<string, unknown>;
   } catch {
     return {};
+  }
+}
+
+function cloneDataValue(value: unknown): unknown {
+  if (value === null || typeof value !== 'object') return value;
+  try {
+    return JSON.parse(JSON.stringify(value)) as unknown;
+  } catch {
+    return value;
   }
 }
 
@@ -102,7 +117,7 @@ function applyDataModel(
       delete model[key];
     }
     if (value && typeof value === 'object' && !Array.isArray(value)) {
-      Object.assign(model, value as Record<string, unknown>);
+      Object.assign(model, cloneDataValue(value) as Record<string, unknown>);
     }
     return;
   }
@@ -123,7 +138,7 @@ function applyDataModel(
   if (value === undefined) {
     delete cursor[last];
   } else {
-    cursor[last] = value;
+    cursor[last] = cloneDataValue(value);
   }
 }
 
@@ -186,6 +201,7 @@ function toPersistedMessages(
     seq: index,
     role: message.role,
     content: message.content,
+    previewPayloadUrls: message.previewPayloadUrls,
     createdAt: now + index,
   }));
 }
@@ -196,6 +212,7 @@ function fromPersistedMessages(
   return messages.map((message) => ({
     role: message.role,
     content: message.content,
+    previewPayloadUrls: message.previewPayloadUrls,
   }));
 }
 
@@ -205,6 +222,7 @@ function createEmptyHotState(): ConversationHotState {
     dataModel: {},
     surfaceIds: new Set(),
     previewMessages: [],
+    previewPayloadUrls: null,
   };
 }
 
@@ -214,6 +232,9 @@ function cloneHotState(state: ConversationHotState): ConversationHotState {
     dataModel: cloneDataModel(state.dataModel),
     surfaceIds: new Set(state.surfaceIds),
     previewMessages: state.previewMessages.slice(),
+    previewPayloadUrls: state.previewPayloadUrls
+      ? { ...state.previewPayloadUrls }
+      : null,
   };
 }
 
@@ -226,6 +247,9 @@ export function useConversation(): UseConversationReturn {
     () => new Set<string>(),
   );
   const [previewMessages, setPreviewMessages] = useState<unknown[]>([]);
+  const [previewPayloadUrls, setPreviewPayloadUrls] = useState<
+    PreviewPayloadUrls | null
+  >(null);
   const [isReady, setIsReady] = useState(false);
   const [isPersistent, setIsPersistent] = useState(true);
 
@@ -233,6 +257,7 @@ export function useConversation(): UseConversationReturn {
   const dataModelRef = useRef<Record<string, unknown>>({});
   const surfaceIdsRef = useRef<Set<string>>(new Set());
   const previewMessagesRef = useRef<unknown[]>([]);
+  const previewPayloadUrlsRef = useRef<PreviewPayloadUrls | null>(null);
   const activeIdRef = useRef<string | null>(null);
   const activationTokenRef = useRef<symbol | null>(null);
   const conversationHotStateMapRef = useRef<Map<string, ConversationHotState>>(
@@ -246,15 +271,18 @@ export function useConversation(): UseConversationReturn {
       nextDataModel: Record<string, unknown>,
       nextSurfaceIds: Set<string>,
       nextPreviewMessages: unknown[],
+      nextPreviewPayloadUrls: PreviewPayloadUrls | null,
     ) => {
       messagesRef.current = nextMessages;
       dataModelRef.current = nextDataModel;
       surfaceIdsRef.current = nextSurfaceIds;
       previewMessagesRef.current = nextPreviewMessages;
+      previewPayloadUrlsRef.current = nextPreviewPayloadUrls;
       setMessages(nextMessages);
       setDataModel(nextDataModel);
       setSurfaceIds(new Set(nextSurfaceIds));
       setPreviewMessages(nextPreviewMessages);
+      setPreviewPayloadUrls(nextPreviewPayloadUrls);
       const id = activeIdRef.current;
       if (!persistentRef.current && id) {
         conversationHotStateMapRef.current.set(id, {
@@ -262,6 +290,9 @@ export function useConversation(): UseConversationReturn {
           dataModel: cloneDataModel(nextDataModel),
           surfaceIds: new Set(nextSurfaceIds),
           previewMessages: nextPreviewMessages.slice(),
+          previewPayloadUrls: nextPreviewPayloadUrls
+            ? { ...nextPreviewPayloadUrls }
+            : null,
         });
       }
     },
@@ -284,6 +315,7 @@ export function useConversation(): UseConversationReturn {
         cloneDataModel(record.snapshot?.dataModel ?? {}),
         new Set(record.snapshot?.surfaceIds ?? []),
         record.snapshot?.previewMessages ?? [],
+        record.snapshot?.previewPayloadUrls ?? null,
       );
       return true;
     },
@@ -327,7 +359,7 @@ export function useConversation(): UseConversationReturn {
         activeIdRef.current = meta.id;
         conversationHotStateMapRef.current.set(meta.id, createEmptyHotState());
         setActiveId(meta.id);
-        syncHotState([], {}, new Set(), []);
+        syncHotState([], {}, new Set(), [], null);
       } finally {
         if (!cancelled) setIsReady(true);
       }
@@ -352,6 +384,7 @@ export function useConversation(): UseConversationReturn {
           hotState.dataModel,
           hotState.surfaceIds,
           hotState.previewMessages,
+          hotState.previewPayloadUrls,
         );
         return;
       }
@@ -374,6 +407,7 @@ export function useConversation(): UseConversationReturn {
         hotState.dataModel,
         hotState.surfaceIds,
         hotState.previewMessages,
+        hotState.previewPayloadUrls,
       );
       return meta.id;
     }
@@ -384,7 +418,7 @@ export function useConversation(): UseConversationReturn {
     activationTokenRef.current = null;
     activeIdRef.current = meta.id;
     setActiveId(meta.id);
-    syncHotState([], {}, new Set(), []);
+    syncHotState([], {}, new Set(), [], null);
     return meta.id;
   }, [syncHotState]);
 
@@ -433,7 +467,11 @@ export function useConversation(): UseConversationReturn {
       const nextMessages = [
         ...messagesRef.current,
         input.userMessage,
-        { role: 'assistant' as const, content: input.assistantContent },
+        {
+          role: 'assistant' as const,
+          content: input.assistantContent,
+          previewPayloadUrls: input.previewPayloadUrls ?? undefined,
+        },
       ];
       const nextDataModel = cloneDataModel(dataModelRef.current);
       const nextSurfaceIds = new Set(surfaceIdsRef.current);
@@ -443,6 +481,9 @@ export function useConversation(): UseConversationReturn {
         input.a2uiMessages,
       );
       const nextPreviewMessages = input.previewMessages ?? input.a2uiMessages;
+      const nextPreviewPayloadUrls = input.snapshotPreviewPayloadUrls
+        ?? input.previewPayloadUrls
+        ?? null;
       const now = Date.now();
 
       const existingMeta = conversations.find((item) => item.id === id)
@@ -462,6 +503,7 @@ export function useConversation(): UseConversationReturn {
         dataModel: nextDataModel,
         surfaceIds: [...nextSurfaceIds],
         previewMessages: nextPreviewMessages,
+        previewPayloadUrls: nextPreviewPayloadUrls ?? undefined,
         updatedAt: now,
       };
 
@@ -470,6 +512,7 @@ export function useConversation(): UseConversationReturn {
         nextDataModel,
         nextSurfaceIds,
         nextPreviewMessages,
+        nextPreviewPayloadUrls,
       );
       setConversations((prev) => {
         const without = prev.filter((item) => item.id !== id);
@@ -495,6 +538,9 @@ export function useConversation(): UseConversationReturn {
             dataModel: cloneDataModel(nextDataModel),
             surfaceIds: new Set(nextSurfaceIds),
             previewMessages: nextPreviewMessages.slice(),
+            previewPayloadUrls: nextPreviewPayloadUrls
+              ? { ...nextPreviewPayloadUrls }
+              : null,
           });
         }
       }
@@ -517,6 +563,7 @@ export function useConversation(): UseConversationReturn {
     dataModel,
     surfaceIds,
     previewMessages,
+    previewPayloadUrls,
     isReady,
     isPersistent,
     switchTo,

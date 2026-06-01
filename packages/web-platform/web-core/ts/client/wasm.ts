@@ -61,7 +61,7 @@ const wasmLoaded = Promise.all([referenceTypes(), simd()]).then(
 ) as Promise<[typeof WasmInstanceType, WebAssembly.Module]>;
 export const [wasmInstance, wasmModule] = await wasmLoaded;
 if (!isWorker) {
-  wasmInstance.initSync({ module: wasmModule! });
+  await wasmInstance.default(wasmModule!);
 }
 
 export type MainThreadWasmContext =

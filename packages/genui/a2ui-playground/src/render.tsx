@@ -1,7 +1,14 @@
 // Copyright 2026 The Lynx Authors. All rights reserved.
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
-import { createElement, useEffect, useMemo, useRef, useState } from 'react';
+import {
+  createElement,
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from 'react';
 import ReactDOM from 'react-dom/client';
 
 import './styles.css';
@@ -11,6 +18,7 @@ import '@lynx-js/web-elements/index.css';
 
 import { decodeBase64Url } from './utils/base64url.js';
 import { DEFAULT_A2UI_DEMO_URL } from './utils/demoUrl.js';
+import { RENDER_INIT_DATA_QUERY_PARAM } from './utils/renderUrl.js';
 
 interface InitData {
   protocol?: '0.9' | 'a2ui' | 'openui';
@@ -58,6 +66,16 @@ interface ActionResponseMessage {
   messages: unknown[];
 }
 
+interface LiveMessagesMessage {
+  type: 'A2UI_LIVE_MESSAGES';
+  messages: unknown[];
+}
+
+interface ReplayMessagesMessage {
+  type: 'A2UI_REPLAY_MESSAGES';
+  messages: unknown[];
+}
+
 interface LynxViewElement extends HTMLElement {
   initData?: InitData;
   globalProps?: unknown;
@@ -83,9 +101,64 @@ function parseJsonParam(raw: string): unknown {
   }
 }
 
+function readString(value: unknown): string | undefined {
+  return typeof value === 'string' ? value : undefined;
+}
+
+function readBoolean(value: unknown): boolean | undefined {
+  return typeof value === 'boolean' ? value : undefined;
+}
+
+function readProtocol(value: unknown): InitData['protocol'] {
+  return value === '0.9' || value === 'a2ui' || value === 'openui'
+    ? value
+    : undefined;
+}
+
+function readTheme(value: unknown): InitData['theme'] {
+  return value === 'dark' ? 'dark' : (value === 'light' ? 'light' : undefined);
+}
+
+function readSpeed(value: unknown): number | undefined {
+  if (typeof value !== 'number' || !Number.isFinite(value) || value < 0) {
+    return undefined;
+  }
+  return value;
+}
+
+function readInitDataParam(raw: string | null): InitData | null {
+  if (!raw) return null;
+
+  const parsed = parseJsonParam(raw);
+  if (!parsed || typeof parsed !== 'object') return null;
+
+  const record = parsed as Record<string, unknown>;
+  const initData: InitData = {};
+
+  initData.protocol = readProtocol(record.protocol);
+  initData.messagesUrl = readString(record.messagesUrl);
+  if ('messages' in record) initData.messages = record.messages;
+  initData.actionMocksUrl = readString(record.actionMocksUrl);
+  if ('actionMocks' in record) initData.actionMocks = record.actionMocks;
+  initData.demoUrl = readString(record.demoUrl);
+  initData.speed = readSpeed(record.speed);
+  initData.instant = readBoolean(record.instant);
+  initData.playbackMode = readBoolean(record.playbackMode);
+  initData.theme = readTheme(record.theme);
+  initData.rawText = readString(record.rawText);
+  initData.rawTextUrl = readString(record.rawTextUrl);
+  initData.playbackPaused = readBoolean(record.playbackPaused);
+  initData.liveAction = readBoolean(record.liveAction);
+
+  return initData;
+}
+
 function parseInitDataFromQuery(): InitData | null {
   const params = new URLSearchParams(window.location.search);
 
+  const baseInitData = readInitDataParam(
+    params.get(RENDER_INIT_DATA_QUERY_PARAM),
+  );
   const protocol = params.get('protocol');
   const messagesUrl = params.get('messagesUrl');
   const demoUrl = params.get('demoUrl');
@@ -101,37 +174,35 @@ function parseInitDataFromQuery(): InitData | null {
   const rawTextUrl = params.get('rawTextUrl');
 
   if (
-    !protocol && !messagesUrl && !messages && !demoUrl && !demo && !rawText
-    && !rawTextUrl
+    !baseInitData && !protocol && !messagesUrl && !messages && !demoUrl
+    && !demo && !rawText && !rawTextUrl
   ) {
     return null;
   }
 
-  const protocolValue = protocol === '0.9' || protocol === 'a2ui'
-      || protocol === 'openui'
-    ? protocol
-    : undefined;
+  const protocolValue = readProtocol(protocol);
 
   const speedRaw = params.get('speed');
   const speedVal = speedRaw === null ? undefined : Number(speedRaw);
 
   const initData: InitData = {
-    protocol: protocolValue,
-    messagesUrl: messagesUrl ?? undefined,
-    actionMocksUrl: actionMocksUrl ?? undefined,
-    demoUrl: demoUrl ?? undefined,
-    messages: [], // Default to an empty array
+    ...baseInitData,
+    protocol: protocolValue ?? baseInitData?.protocol,
+    messagesUrl: messagesUrl ?? baseInitData?.messagesUrl,
+    actionMocksUrl: actionMocksUrl ?? baseInitData?.actionMocksUrl,
+    demoUrl: demoUrl ?? baseInitData?.demoUrl,
+    messages: baseInitData?.messages ?? [], // Default to an empty array
     speed: speedVal !== undefined && Number.isFinite(speedVal) && speedVal >= 0
       ? speedVal
-      : undefined,
-    instant: instant === '1' ? true : undefined,
-    playbackMode: playbackMode === '1' ? true : undefined,
-    theme: theme === 'dark'
-      ? 'dark'
-      : (theme === 'light' ? 'light' : undefined),
-    rawText: rawText ?? undefined,
-    rawTextUrl: rawTextUrl ?? undefined,
-    liveAction: params.get('liveAction') === '1' ? true : undefined,
+      : baseInitData?.speed,
+    instant: instant === '1' ? true : baseInitData?.instant,
+    playbackMode: playbackMode === '1' ? true : baseInitData?.playbackMode,
+    theme: readTheme(theme) ?? baseInitData?.theme,
+    rawText: rawText ?? baseInitData?.rawText,
+    rawTextUrl: rawTextUrl ?? baseInitData?.rawTextUrl,
+    liveAction: params.get('liveAction') === '1'
+      ? true
+      : baseInitData?.liveAction,
   };
 
   if (messages) {
@@ -223,6 +294,66 @@ function Render() {
   const [playbackMode, setPlaybackMode] = useState(false);
   const lynxViewRef = useRef<LynxViewElement | null>(null);
   const lastPlaybackPausedRef = useRef<boolean | null>(null);
+  const pendingReplayMessagesRef = useRef<unknown[] | null>(null);
+  const pendingLiveMessagesRef = useRef<unknown[] | null>(null);
+  const pendingActionResponsesRef = useRef<unknown[][]>([]);
+  const pendingFlushTimerRef = useRef<number | null>(null);
+  const pendingFlushAttemptsRef = useRef(0);
+
+  const postRenderReady = useCallback(() => {
+    if (!window.parent || window.parent === window) return;
+    window.parent.postMessage({ type: 'A2UI_RENDER_READY' }, '*');
+  }, []);
+
+  const hasPendingA2UIEvents = useCallback(() => {
+    return pendingReplayMessagesRef.current !== null
+      || pendingLiveMessagesRef.current !== null
+      || pendingActionResponsesRef.current.length > 0;
+  }, []);
+
+  const flushPendingA2UIEvents = useCallback(() => {
+    const lynxView = lynxViewRef.current;
+    if (!lynxView || typeof lynxView.sendGlobalEvent !== 'function') {
+      return false;
+    }
+
+    const replayMessages = pendingReplayMessagesRef.current;
+    if (replayMessages) {
+      pendingReplayMessagesRef.current = null;
+      lynxView.sendGlobalEvent('A2UI_REPLAY_MESSAGES', [replayMessages]);
+    }
+
+    const liveMessages = pendingLiveMessagesRef.current;
+    if (liveMessages) {
+      pendingLiveMessagesRef.current = null;
+      lynxView.sendGlobalEvent('A2UI_LIVE_MESSAGES', [liveMessages]);
+    }
+
+    const actionResponses = pendingActionResponsesRef.current.splice(0);
+    for (const messages of actionResponses) {
+      lynxView.sendGlobalEvent('A2UI_ACTION_RESPONSE', [messages]);
+    }
+
+    return true;
+  }, []);
+
+  const schedulePendingA2UIFlush = useCallback(() => {
+    if (pendingFlushTimerRef.current !== null) return;
+
+    pendingFlushTimerRef.current = window.setTimeout(() => {
+      pendingFlushTimerRef.current = null;
+      const flushed = flushPendingA2UIEvents();
+      if (flushed || !hasPendingA2UIEvents()) {
+        pendingFlushAttemptsRef.current = 0;
+        return;
+      }
+
+      pendingFlushAttemptsRef.current += 1;
+      if (pendingFlushAttemptsRef.current < 200) {
+        schedulePendingA2UIFlush();
+      }
+    }, 50);
+  }, [flushPendingA2UIEvents, hasPendingA2UIEvents]);
 
   // Known demo: fetch the static JSON in the browser context (where fetch works)
   // and pass the resolved messages as initData, avoiding fetch in Lynx's worker thread.
@@ -310,10 +441,39 @@ function Render() {
         && typeof e.data === 'object'
         && (e.data as ActionResponseMessage).type === 'A2UI_ACTION_RESPONSE'
       ) {
-        const lynxView = lynxViewRef.current;
-        lynxView?.sendGlobalEvent?.('A2UI_ACTION_RESPONSE', [
+        pendingActionResponsesRef.current.push(
           (e.data as ActionResponseMessage).messages,
-        ]);
+        );
+        pendingFlushAttemptsRef.current = 0;
+        if (!flushPendingA2UIEvents()) {
+          schedulePendingA2UIFlush();
+        }
+        return;
+      }
+      if (
+        e.data
+        && typeof e.data === 'object'
+        && (e.data as ReplayMessagesMessage).type === 'A2UI_REPLAY_MESSAGES'
+      ) {
+        pendingReplayMessagesRef.current = (e.data as ReplayMessagesMessage)
+          .messages;
+        pendingFlushAttemptsRef.current = 0;
+        if (!flushPendingA2UIEvents()) {
+          schedulePendingA2UIFlush();
+        }
+        return;
+      }
+      if (
+        e.data
+        && typeof e.data === 'object'
+        && (e.data as LiveMessagesMessage).type === 'A2UI_LIVE_MESSAGES'
+      ) {
+        pendingLiveMessagesRef.current = (e.data as LiveMessagesMessage)
+          .messages;
+        pendingFlushAttemptsRef.current = 0;
+        if (!flushPendingA2UIEvents()) {
+          schedulePendingA2UIFlush();
+        }
         return;
       }
       if (!isInitLynxViewMessage(e.data)) {
@@ -327,8 +487,9 @@ function Render() {
     };
 
     window.addEventListener('message', handleMessage);
+    postRenderReady();
     return () => window.removeEventListener('message', handleMessage);
-  }, []);
+  }, [flushPendingA2UIEvents, postRenderReady, schedulePendingA2UIFlush]);
 
   useEffect(() => {
     const lynxView = lynxViewRef.current;
@@ -346,7 +507,9 @@ function Render() {
     if (typeof lynxView.reload === 'function') {
       lynxView.reload();
     }
-  }, [globalProps, initData]);
+    schedulePendingA2UIFlush();
+    postRenderReady();
+  }, [globalProps, initData, postRenderReady, schedulePendingA2UIFlush]);
 
   useEffect(() => {
     const lynxView = lynxViewRef.current;
@@ -373,7 +536,24 @@ function Render() {
         playbackPaused ? 'pause' : 'resume',
       ]);
     }
-  }, [globalProps, initData, playbackMode, playbackPaused]);
+    schedulePendingA2UIFlush();
+    postRenderReady();
+  }, [
+    globalProps,
+    initData,
+    playbackMode,
+    playbackPaused,
+    postRenderReady,
+    schedulePendingA2UIFlush,
+  ]);
+
+  useEffect(() => {
+    return () => {
+      if (pendingFlushTimerRef.current !== null) {
+        window.clearTimeout(pendingFlushTimerRef.current);
+      }
+    };
+  }, []);
 
   return createElement('lynx-view', {
     ref: lynxViewRef,

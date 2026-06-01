@@ -1,0 +1,157 @@
+@import "../theme.css";
+
+.choice-picker {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  width: 100%;
+  min-width: 0;
+}
+
+.choice-picker-label {
+  min-width: 0;
+  color: var(--a2ui-color-text-muted);
+  font-size: 13px;
+  font-weight: 600;
+  line-height: 1.5;
+}
+
+.choice-picker-filter {
+  display: flex;
+  align-items: center;
+  min-height: 38px;
+  padding: 8px 12px;
+  border: 1px solid var(--a2ui-color-border);
+  border-radius: 10px;
+  background-color: var(--a2ui-color-input);
+  color: var(--a2ui-color-on-input);
+  font-size: 14px;
+  line-height: 1.4;
+}
+
+.choice-picker-options {
+  display: flex;
+  min-width: 0;
+}
+
+.choice-picker-checkbox .choice-picker-options {
+  flex-direction: column;
+  gap: 12px;
+}
+
+.choice-picker-chips .choice-picker-options {
+  flex-direction: row;
+  flex-wrap: wrap;
+  gap: 10px;
+  align-items: center;
+}
+
+.choice-picker-option {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: 12px;
+  min-width: 0;
+  color: var(--a2ui-color-on-background);
+}
+
+.choice-picker-option.ui-disabled {
+  opacity: 0.55;
+}
+
+.choice-picker-option-text {
+  min-width: 0;
+  color: inherit;
+  font-size: 15px;
+  font-weight: 500;
+  line-height: 1.5;
+}
+
+.choice-picker-radio-indicator,
+.choice-picker-checkbox-indicator {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 22px;
+  height: 22px;
+  flex-shrink: 0;
+  border: 1.5px solid var(--a2ui-color-border);
+  background-color: var(--a2ui-color-surface);
+  box-shadow: 0 1px 0 rgba(255, 255, 255, 0.45) inset;
+}
+
+.choice-picker-radio-indicator {
+  border-radius: 50%;
+}
+
+.choice-picker-checkbox-indicator {
+  border-radius: 6px;
+}
+
+.choice-picker-radio-indicator.ui-checked,
+.choice-picker-checkbox-indicator.ui-checked {
+  border-color: var(--a2ui-color-primary);
+  background-color: var(--a2ui-color-primary);
+}
+
+.choice-picker-radio-dot {
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  background-color: var(--a2ui-color-on-primary);
+}
+
+.choice-picker-checkmark {
+  color: var(--a2ui-color-on-primary);
+  font-size: 13px;
+  font-weight: 700;
+  line-height: 1;
+}
+
+.choice-picker-chip {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 74px;
+  min-height: 42px;
+  padding: 8px 20px;
+  border: 1px solid var(--a2ui-color-border-strong);
+  border-radius: 999px;
+  background-color: var(--a2ui-color-surface);
+  color: var(--a2ui-color-on-surface);
+  box-shadow:
+    0 10px 22px rgba(0, 0, 0, 0.04),
+    0 1px 0 rgba(255, 255, 255, 0.42) inset;
+}
+
+.choice-picker-chip.ui-active {
+  background-color: var(--a2ui-color-surface-muted);
+}
+
+.choice-picker-chip.ui-checked {
+  border-color: var(--a2ui-color-primary);
+  background-color: var(--a2ui-color-primary);
+  color: var(--a2ui-color-on-primary);
+  box-shadow:
+    0 12px 26px rgba(0, 85, 217, 0.18),
+    0 1px 0 rgba(255, 255, 255, 0.24) inset;
+}
+
+.choice-picker-chip-text {
+  color: inherit;
+  font-size: 15px;
+  font-weight: 700;
+  line-height: 1.4;
+}
+
+.choice-picker-invalid .choice-picker-radio-indicator,
+.choice-picker-invalid .choice-picker-checkbox-indicator,
+.choice-picker-invalid .choice-picker-chip {
+  border-color: var(--a2ui-color-input-error);
+}
+
+.choice-picker-error {
+  color: var(--a2ui-color-input-error);
+  font-size: 11px;
+  line-height: 1.5;
+}

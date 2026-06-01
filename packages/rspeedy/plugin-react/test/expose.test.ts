@@ -4,6 +4,7 @@
 import { mkdtemp } from 'node:fs/promises'
 import { tmpdir } from 'node:os'
 import path from 'node:path'
+import { fileURLToPath } from 'node:url'
 
 import type { RsbuildPlugin, Rspack } from '@rsbuild/core'
 import { describe, expect, test } from 'vitest'
@@ -27,7 +28,9 @@ describe('Expose', () => {
       rspeedyConfig: {
         source: {
           entry: {
-            main: new URL('./fixtures/basic.tsx', import.meta.url).pathname,
+            main: fileURLToPath(
+              new URL('./fixtures/basic.tsx', import.meta.url),
+            ),
           },
         },
         output: {

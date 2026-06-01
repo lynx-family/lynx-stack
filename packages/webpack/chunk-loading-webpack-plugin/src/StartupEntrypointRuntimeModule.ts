@@ -24,7 +24,10 @@ export function createStartupEntrypointRuntimeModule(
     asyncChunkLoading: boolean;
 
     constructor(asyncChunkLoading: boolean) {
-      super('Lynx startup entrypoint', RuntimeModule.STAGE_ATTACH);
+      super(
+        'webpack/runtime/lynx startup entrypoint',
+        RuntimeModule.STAGE_ATTACH,
+      );
       this.asyncChunkLoading = asyncChunkLoading;
     }
 

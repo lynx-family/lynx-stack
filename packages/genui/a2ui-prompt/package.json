@@ -1,6 +1,7 @@
 {
-  "name": "@lynx-js/a2ui-prompt",
+  "name": "@lynx-js/genui-a2ui-prompt",
   "version": "0.0.0",
+  "private": true,
   "description": "A2UI prompt and catalog rendering utilities for CLI prompt generation.",
   "repository": {
     "type": "git",
@@ -21,9 +22,12 @@
     "README.md"
   ],
   "scripts": {
-    "build": "rslib build"
+    "api-extractor": "node ../scripts/run-api-extractor.mjs",
+    "build": "rslib build",
+    "build:api": "rslib build"
   },
   "devDependencies": {
+    "@microsoft/api-extractor": "catalog:",
     "@types/node": "^24.10.13"
   },
   "engines": {

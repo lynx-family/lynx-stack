@@ -1,5 +1,11 @@
 # @lynx-js/testing-environment
 
+## 0.2.1
+
+### Patch Changes
+
+- Report error when `__RemoveElement` called on wrong parent and child. ([#2664](https://github.com/lynx-family/lynx-stack/pull/2664))
+
 ## 0.2.0
 
 ### Minor Changes

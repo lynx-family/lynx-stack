@@ -20,6 +20,18 @@ export interface A2UIChatBody {
   validate?: boolean;
 }
 
+export interface A2UIActionRequest {
+  name: string;
+  context?: Record<string, unknown>;
+}
+
+export interface ValidatedAction {
+  ok: true;
+  action: A2UIActionRequest;
+  kind: 'event' | 'functionCall';
+  name: string;
+}
+
 function parsePositiveInt(
   raw: string | undefined,
   fallback: number,
@@ -65,7 +77,7 @@ export function pickChatOptions(body: {
   const allowOverride = clientOverridesAllowed();
   return {
     resourceId: body.resourceId,
-    model: body.model,
+    model: allowOverride ? body.model : undefined,
     apiKey: allowOverride ? body.apiKey : undefined,
     baseURL: allowOverride ? body.baseURL : undefined,
     catalog: body.catalog,
@@ -80,6 +92,106 @@ export function errorMessage(
   return { message: String(err) };
 }
 
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return value !== null && typeof value === 'object' && !Array.isArray(value);
+}
+
+export function validateAction(value: unknown):
+  | ValidatedAction
+  | { ok: false; status: number; error: string }
+{
+  if (!isRecord(value)) {
+    return {
+      ok: false,
+      status: 400,
+      error: 'action.name is required',
+    };
+  }
+
+  if (typeof value.name === 'string' && value.name.length > 0) {
+    const action: A2UIActionRequest = { name: value.name };
+    if ('context' in value) {
+      if (!isRecord(value.context)) {
+        return {
+          ok: false,
+          status: 400,
+          error: 'action.context must be an object',
+        };
+      }
+      action.context = value.context;
+    }
+    return {
+      ok: true,
+      action,
+      kind: 'event',
+      name: value.name,
+    };
+  }
+
+  const hasEvent = 'event' in value;
+  const hasFunctionCall = 'functionCall' in value;
+
+  if (hasEvent && hasFunctionCall) {
+    return {
+      ok: false,
+      status: 400,
+      error: 'exactly one of action.event or action.functionCall is required',
+    };
+  }
+
+  if (hasEvent && isRecord(value.event)) {
+    const name = value.event.name;
+    if (typeof name === 'string' && name.length > 0) {
+      const action: A2UIActionRequest = { name };
+      if ('context' in value.event) {
+        if (!isRecord(value.event.context)) {
+          return {
+            ok: false,
+            status: 400,
+            error: 'action.event.context must be an object',
+          };
+        }
+        action.context = value.event.context;
+      }
+      return {
+        ok: true,
+        action,
+        kind: 'event',
+        name,
+      };
+    }
+  }
+
+  if (hasFunctionCall && isRecord(value.functionCall)) {
+    const call = value.functionCall.call;
+    if (typeof call === 'string' && call.length > 0) {
+      const action: A2UIActionRequest = { name: call };
+      if ('args' in value.functionCall) {
+        if (!isRecord(value.functionCall.args)) {
+          return {
+            ok: false,
+            status: 400,
+            error: 'action.functionCall.args must be an object',
+          };
+        }
+        action.context = value.functionCall.args;
+      }
+      return {
+        ok: true,
+        action,
+        kind: 'functionCall',
+        name: call,
+      };
+    }
+  }
+
+  return {
+    ok: false,
+    status: 400,
+    error: 'action.name is required',
+  };
+}
+
 export interface ValidatedMessages {
   ok: true;
   messages: ChatMessage[];
@@ -89,6 +201,14 @@ export interface InvalidMessages {
   ok: false;
   status: number;
   error: string;
+}
+
+export interface JsonBodyMetrics {
+  declaredByteLength?: number;
+  rawByteLength?: number;
+  readMs?: number;
+  parseMs?: number;
+  totalMs: number;
 }
 
 export function validateMessages(
@@ -235,40 +355,94 @@ export function validateConversation(
 export async function readJsonBodyWithLimit<T>(
   req: Request,
 ): Promise<
-  | { ok: true; body: T }
-  | { ok: false; status: number; error: string }
+  | { ok: true; body: T; metrics: JsonBodyMetrics }
+  | { ok: false; status: number; error: string; metrics: JsonBodyMetrics }
 > {
+  const startedAt = performance.now();
   const declaredLength = req.headers.get('content-length');
-  if (declaredLength) {
-    const n = Number(declaredLength);
-    if (Number.isFinite(n) && n > MAX_BODY_BYTES) {
-      return {
-        ok: false,
-        status: 413,
-        error: `request body exceeds ${MAX_BODY_BYTES} bytes`,
-      };
-    }
-  }
-
-  let raw: string;
-  try {
-    raw = await req.text();
-  } catch {
-    return { ok: false, status: 400, error: 'failed to read request body' };
-  }
-
-  const rawByteLength = Buffer.byteLength(raw, 'utf8');
-  if (rawByteLength > MAX_BODY_BYTES) {
+  const declaredByteLength = declaredLength
+    ? Number(declaredLength)
+    : undefined;
+  if (
+    declaredLength
+    && declaredByteLength !== undefined
+    && Number.isFinite(declaredByteLength)
+    && declaredByteLength > MAX_BODY_BYTES
+  ) {
     return {
       ok: false,
       status: 413,
       error: `request body exceeds ${MAX_BODY_BYTES} bytes`,
+      metrics: {
+        declaredByteLength,
+        totalMs: performance.now() - startedAt,
+      },
     };
   }
 
+  let raw: string;
+  const readStartedAt = performance.now();
   try {
-    return { ok: true, body: JSON.parse(raw) as T };
+    raw = await req.text();
   } catch {
-    return { ok: false, status: 400, error: 'invalid JSON body' };
+    const now = performance.now();
+    return {
+      ok: false,
+      status: 400,
+      error: 'failed to read request body',
+      metrics: {
+        declaredByteLength,
+        readMs: now - readStartedAt,
+        totalMs: now - startedAt,
+      },
+    };
+  }
+  const readEndedAt = performance.now();
+
+  const rawByteLength = Buffer.byteLength(raw, 'utf8');
+  if (rawByteLength > MAX_BODY_BYTES) {
+    const now = performance.now();
+    return {
+      ok: false,
+      status: 413,
+      error: `request body exceeds ${MAX_BODY_BYTES} bytes`,
+      metrics: {
+        declaredByteLength,
+        rawByteLength,
+        readMs: readEndedAt - readStartedAt,
+        totalMs: now - startedAt,
+      },
+    };
+  }
+
+  const parseStartedAt = performance.now();
+  try {
+    const body = JSON.parse(raw) as T;
+    const now = performance.now();
+    return {
+      ok: true,
+      body,
+      metrics: {
+        declaredByteLength,
+        rawByteLength,
+        readMs: readEndedAt - readStartedAt,
+        parseMs: now - parseStartedAt,
+        totalMs: now - startedAt,
+      },
+    };
+  } catch {
+    const now = performance.now();
+    return {
+      ok: false,
+      status: 400,
+      error: 'invalid JSON body',
+      metrics: {
+        declaredByteLength,
+        rawByteLength,
+        readMs: readEndedAt - readStartedAt,
+        parseMs: now - parseStartedAt,
+        totalMs: now - startedAt,
+      },
+    };
   }
 }

@@ -5,6 +5,49 @@
 import type { Rspack } from '@rsbuild/core'
 
 /**
+ * The context passed to the {@link Filename.bundle} function.
+ *
+ * @public
+ */
+export interface BundleFilenameContext {
+  /**
+   * Whether the filename is being resolved for a lazy bundle (async chunk)
+   * instead of the main bundle of an entry.
+   *
+   * This allows you to control the main bundle and the lazy bundles with a
+   * single function, without needing a dedicated `lazyBundle` field.
+   */
+  lazyBundle: boolean
+
+  /**
+   * The name of the entry.
+   *
+   * It is `undefined` for lazy bundles, since a lazy bundle name is resolved
+   * per async chunk (use the `[name]` placeholder in the returned string
+   * instead).
+   */
+  entryName?: string | undefined
+
+  /**
+   * The environment (platform) name, e.g. `'lynx'` or `'web'`.
+   */
+  platform: string
+}
+
+/**
+ * The name of the bundle files.
+ *
+ * It can be a string with placeholders (`[name]`, `[contenthash]`,
+ * `[platform]`), or a function that returns a string based on the
+ * {@link BundleFilenameContext}.
+ *
+ * @public
+ */
+export type BundleFilename =
+  | string
+  | ((context: BundleFilenameContext) => string)
+
+/**
  * {@inheritdoc Output.filename}
  *
  * @public
@@ -54,8 +97,33 @@ export interface Filename {
    *   },
    * })
    * ```
+   *
+   * @example
+   *
+   * - Using a function to control the main bundle and the lazy bundles
+   *   separately (e.g. emit lazy bundles into another directory with a git
+   *   commit hash appended):
+   *
+   * ```js
+   * import { execSync } from 'node:child_process'
+   *
+   * import { defineConfig } from '@lynx-js/rspeedy'
+   *
+   * const gitHash = execSync('git rev-parse --short HEAD').toString().trim()
+   *
+   * export default defineConfig({
+   *   output: {
+   *     filename: {
+   *       bundle: ({ lazyBundle, platform }) =>
+   *         lazyBundle
+   *           ? `my-lazy-bundles/[name].[fullhash]-${gitHash}.bundle`
+   *           : `[name].${platform}.bundle`,
+   *     },
+   *   },
+   * })
+   * ```
    */
-  bundle?: string | undefined
+  bundle?: BundleFilename | undefined
 
   /**
    * The name of the template files.

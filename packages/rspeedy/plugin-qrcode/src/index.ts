@@ -144,13 +144,21 @@ export function pluginQRCode(
         })
       }
 
-      api.onAfterStartProdServer(async ({ environments, port }) => {
-        await main(getEntries(environments), port)
+      let unregisterPreviewShortcuts: (() => void) | undefined
+
+      api.onExit(() => {
+        unregisterPreviewShortcuts?.()
+        unregisterPreviewShortcuts = undefined
+      })
+
+      api.onAfterStartPreviewServer(async ({ environments, port }) => {
+        unregisterPreviewShortcuts?.()
+        unregisterPreviewShortcuts = await main(getEntries(environments), port)
       })
 
       let printedQRCode = false
 
-      api.onDevCompileDone(async ({ stats, environments }) => {
+      api.onAfterDevCompile(async ({ stats, environments }) => {
         if (!api.context.devServer) {
           return
         }
@@ -165,7 +173,13 @@ export function pluginQRCode(
 
         printedQRCode = true
 
-        await main(getEntries(environments), api.context.devServer.port)
+        const unregister = await main(
+          getEntries(environments),
+          api.context.devServer.port,
+        )
+        if (unregister) {
+          api.onCloseDevServer(unregister)
+        }
       })
 
       function getEntries(
@@ -179,7 +193,7 @@ export function pluginQRCode(
       async function main(
         entries: RsbuildEntry | undefined,
         port: number,
-      ) {
+      ): Promise<(() => void) | undefined> {
         if (!entries) {
           // No entry points, skip print QRCode
           return
@@ -199,7 +213,7 @@ export function pluginQRCode(
             schema: effectiveSchema,
           },
         )
-        api.onCloseDevServer(unregister)
+        return unregister
       }
     },
   }

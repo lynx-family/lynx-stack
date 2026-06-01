@@ -7,14 +7,15 @@ const enableBundleAnalysis = !!process.env['RSPEEDY_BUNDLE_ANALYSIS'];
 export default defineConfig({
   plugins: [
     pluginReactLynx(),
-    pluginQRCode(),
+    pluginQRCode({
+      fullscreen: true,
+    }),
   ],
   environments: {
     web: {},
-    lynx: {
-      performance: {
-        profile: enableBundleAnalysis,
-      },
-    },
+    lynx: {},
+  },
+  performance: {
+    profile: enableBundleAnalysis,
   },
 });

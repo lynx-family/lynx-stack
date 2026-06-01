@@ -11,11 +11,17 @@ export interface ConversationMeta {
   previewText: string;
 }
 
+export interface PreviewPayloadUrls {
+  messagesUrl: string;
+  actionMocksUrl?: string;
+}
+
 export interface PersistedMessage {
   conversationId: string;
   seq: number;
   role: 'user' | 'assistant' | 'system';
   content: string;
+  previewPayloadUrls?: PreviewPayloadUrls;
   createdAt: number;
 }
 
@@ -24,6 +30,7 @@ export interface DataModelSnapshot {
   dataModel: Record<string, unknown>;
   surfaceIds: string[];
   previewMessages?: unknown[];
+  previewPayloadUrls?: PreviewPayloadUrls;
   updatedAt: number;
 }
 

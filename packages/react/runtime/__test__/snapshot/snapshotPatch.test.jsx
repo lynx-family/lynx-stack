@@ -182,7 +182,7 @@ describe('insertBefore', () => {
     `);
   });
 
-  it('sets bundle-url when ensuring a child from a different entry', async function() {
+  it('sets lazy-bundle-url when ensuring a child from a different entry', async function() {
     const lazyEntryName = 'https://example.com/lazy/template.js';
     const lazySnapshot = createSnapshot(
       'cross-entry-child-for-bundle-url',
@@ -200,11 +200,11 @@ describe('insertBefore', () => {
     parent.insertBefore(child);
     parent.ensureElements();
 
-    expect(parent.__element_root.props['bundle-url']).toBeUndefined();
-    expect(child.__element_root.props['bundle-url']).toBe(lazyEntryName);
+    expect(parent.__element_root.props['lazy-bundle-url']).toBeUndefined();
+    expect(child.__element_root.props['lazy-bundle-url']).toBe(lazyEntryName);
   });
 
-  it('does not set bundle-url when ensuring a child from the same entry', async function() {
+  it('does not set lazy-bundle-url when ensuring a child from the same entry', async function() {
     const lazyEntryName = 'https://example.com/lazy/template.js';
     const parentSnapshot = createSnapshot(
       'same-entry-parent-for-bundle-url',
@@ -237,7 +237,7 @@ describe('insertBefore', () => {
     parent.insertBefore(child);
     parent.ensureElements();
 
-    expect(child.__element_root.props['bundle-url']).toBeUndefined();
+    expect(child.__element_root.props['lazy-bundle-url']).toBeUndefined();
   });
 
   it('insert in the middle', async function() {

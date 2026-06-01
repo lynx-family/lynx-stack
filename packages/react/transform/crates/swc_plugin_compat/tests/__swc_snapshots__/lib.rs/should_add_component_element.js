@@ -9,6 +9,7 @@ import * as ReactLynx from "@lynx-js/react/internal";
 /*#__PURE__*/ ReactLynx.wrapWithLynxComponent((__c, __spread)=><view {...__spread}>{__c}</view>, <Component {...props} key="222"/>);
 /*#__PURE__*/ ReactLynx.wrapWithLynxComponent((__c, __spread)=><view {...__spread}>{__c}</view>, <Component {...props} key="222" id="!!!" className="!!!!"/>);
 <Component {...props} key="222" id="!!!" className="!!!!"/>;
+<Component {...props} key="222" id="!!!" className="!!!!"/>;
 /*#__PURE__*/ ReactLynx.wrapWithLynxComponent((__c, __spread)=><view {...__spread}>{__c}</view>, <Component {...props} key="222" id="!!!" className="!!!!" someProps={p}/>);
 /*#__PURE__*/ ReactLynx.wrapWithLynxComponent((__c, __spread)=><view {...__spread}>{__c}</view>, <Component {...props} key="222" id="!!!" className="!!!!" style={s}/>);
 <Component/>;

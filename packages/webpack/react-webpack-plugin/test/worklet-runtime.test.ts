@@ -66,7 +66,7 @@ function countOccurrences(source: string, needle: string): number {
 
 function extractRegisteredWorkletIds(source: string): string[] {
   const matches = source.matchAll(
-    /registerWorkletInternal\(\\"main-thread\\",\s*\\"([^\\"]+)\\"/g,
+    /registerWorkletInternal\((?:\\"|")main-thread(?:\\"|"),\s*(?:\\"|")([^\\"]+)(?:\\"|")/g,
   );
 
   return Array.from(matches, match => match[1]);

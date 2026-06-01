@@ -10,6 +10,25 @@ interface ImagePathRef {
   fallbackQuery: string;
 }
 
+interface ImageDataPatch extends Record<string, unknown> {
+  surfaceId: string;
+  path: string;
+  value: string;
+}
+
+type A2UIUpdateComponentsMessage = Extract<
+  A2UIMessage,
+  { updateComponents: unknown }
+>;
+type A2UIComponent = A2UIUpdateComponentsMessage['updateComponents'][
+  'components'
+][number];
+
+interface PendingImageLoadingResult {
+  messages: A2UIMessage[];
+  replacementCount: number;
+}
+
 interface PexelsPhoto {
   src?: {
     large2x?: string;
@@ -63,28 +82,81 @@ const imageCache = new LruCache<string, Promise<string>>(
   IMAGE_CACHE_MAX_ENTRIES,
 );
 
+export function isLoadableImageSource(value: unknown): value is string {
+  if (typeof value !== 'string') return false;
+  const src = value.trim();
+  if (!src) return false;
+  if (/^(?:https?:|data:image\/|blob:|file:)/iu.test(src)) return true;
+  if (/^(?:\/|\.\/|\.\.\/)/u.test(src)) return true;
+  return /\.(?:avif|gif|jpe?g|png|svg|webp)(?:[?#].*)?$/iu.test(src);
+}
+
+export function replacePendingA2UIImagesWithLoading(
+  messages: A2UIMessage[],
+): PendingImageLoadingResult {
+  const cloned = cloneMessages(messages);
+  let replacementCount = 0;
+
+  for (const message of cloned) {
+    if (!('updateComponents' in message) || !message.updateComponents) {
+      continue;
+    }
+    const { components } = message.updateComponents;
+    for (let i = 0; i < components.length; i++) {
+      const component = components[i];
+      if (component.component !== 'Image') continue;
+      const record = component as Record<string, unknown>;
+      if (isLoadableImageSource(record.url)) continue;
+      if (isRecord(record.url) && typeof record.url.path === 'string') continue;
+
+      components[i] = {
+        id: component.id,
+        component: 'Loading',
+        variant: 'block',
+      };
+      replacementCount++;
+    }
+  }
+
+  return { messages: cloned, replacementCount };
+}
+
 export async function resolveA2UIImageUrls(
   messages: A2UIMessage[],
 ): Promise<A2UIMessage[]> {
   const cloned = cloneMessages(messages);
   const imagePathRefs: ImagePathRef[] = [];
+  const appendedMessages: A2UIMessage[] = [];
 
-  const staticResolutions: Promise<void>[] = [];
+  const staticResolutions: Promise<A2UIMessage>[] = [];
   for (const message of cloned) {
     if (!('updateComponents' in message) || !message.updateComponents) {
       continue;
     }
     const { surfaceId, components } = message.updateComponents;
-    for (const component of components) {
+    for (let i = 0; i < components.length; i++) {
+      const component = components[i];
+      if (!component) continue;
       if (component.component !== 'Image') continue;
       const record = component as Record<string, unknown>;
       const url = record.url;
       const fallbackQuery = queryFromComponent(component.id);
-      if (typeof url === 'string') {
+      if (typeof url === 'string' && !isLoadableImageSource(url)) {
+        const originalComponent = { ...component };
+        components[i] = createLoadingComponent(component.id) as A2UIComponent;
         staticResolutions.push(
-          resolveImageUrl(url, fallbackQuery).then((resolved) => {
-            record.url = resolved;
-          }),
+          resolveImageUrl(url, fallbackQuery).then((resolved) => ({
+            version: 'v0.9',
+            updateComponents: {
+              surfaceId,
+              components: [
+                {
+                  ...originalComponent,
+                  url: resolved,
+                },
+              ],
+            },
+          })),
         );
       } else if (isRecord(url) && typeof url.path === 'string') {
         imagePathRefs.push({
@@ -96,9 +168,10 @@ export async function resolveA2UIImageUrls(
     }
   }
 
-  await Promise.all(staticResolutions);
+  appendedMessages.push(...await Promise.all(staticResolutions));
 
-  const dataResolutions: Promise<void>[] = [];
+  const dataResolutions: Promise<ImageDataPatch>[] = [];
+  const pendingImagePathsBySurface = new Map<string, Set<string>>();
   for (const message of cloned) {
     if (!('updateDataModel' in message) || !message.updateDataModel) {
       continue;
@@ -117,30 +190,117 @@ export async function resolveA2UIImageUrls(
     const resolvedPaths = new Set<string>();
     for (const ref of refs) {
       const relativePath = relativeJsonPointer(updatePath, ref.path);
-      resolvedPaths.add(normalizePointer(relativePath));
+      resolvedPaths.add(normalizePointer(ref.path));
       const current = getAtPointer(dataModel.value, relativePath);
+      if (isLoadableImageSource(current)) continue;
+      markPendingImagePath(
+        pendingImagePathsBySurface,
+        dataModel.surfaceId,
+        ref.path,
+      );
       const query = typeof current === 'string' ? current : ref.fallbackQuery;
       dataResolutions.push(
-        resolveImageUrl(query, ref.fallbackQuery).then((resolved) => {
-          dataModel.value = setAtPointer(
-            dataModel.value,
-            relativePath,
-            resolved,
-          );
-        }),
+        resolveImageUrl(query, ref.fallbackQuery).then((resolved) => ({
+          surfaceId: dataModel.surfaceId,
+          path: normalizePointer(ref.path),
+          value: resolved,
+        })),
       );
     }
     addImageLikeDataResolutions(
       dataModel.value,
-      dataModel.value,
-      '/',
+      updatePath,
+      dataModel.surfaceId,
       resolvedPaths,
       dataResolutions,
     );
   }
 
-  await Promise.all(dataResolutions);
-  return cloned;
+  const pendingImageRestores = replacePendingPathImagesWithLoading(
+    cloned,
+    pendingImagePathsBySurface,
+  );
+
+  const dataPatches = dedupeImageDataPatches(
+    await Promise.all(
+      dataResolutions,
+    ),
+  );
+  appendedMessages.push(...dataPatches.map((patch) => ({
+    version: 'v0.9' as const,
+    updateDataModel: patch,
+  })));
+  appendedMessages.push(...pendingImageRestores);
+
+  return [...cloned, ...appendedMessages];
+}
+
+function createLoadingComponent(id: string): Record<string, unknown> {
+  return {
+    id,
+    component: 'Loading',
+    variant: 'block',
+  };
+}
+
+function markPendingImagePath(
+  pendingImagePathsBySurface: Map<string, Set<string>>,
+  surfaceId: string,
+  path: string,
+): void {
+  const paths = pendingImagePathsBySurface.get(surfaceId) ?? new Set<string>();
+  paths.add(normalizePointer(path));
+  pendingImagePathsBySurface.set(surfaceId, paths);
+}
+
+function hasPendingImagePath(
+  pendingImagePathsBySurface: Map<string, Set<string>>,
+  surfaceId: string,
+  path: string,
+): boolean {
+  return pendingImagePathsBySurface.get(surfaceId)?.has(normalizePointer(path))
+    ?? false;
+}
+
+function replacePendingPathImagesWithLoading(
+  messages: A2UIMessage[],
+  pendingImagePathsBySurface: Map<string, Set<string>>,
+): A2UIMessage[] {
+  const restores: A2UIMessage[] = [];
+
+  for (const message of messages) {
+    if (!('updateComponents' in message) || !message.updateComponents) {
+      continue;
+    }
+    const { surfaceId, components } = message.updateComponents;
+    for (let i = 0; i < components.length; i++) {
+      const component = components[i];
+      if (!component || component.component !== 'Image') continue;
+      const url = (component as Record<string, unknown>).url;
+      if (!isRecord(url) || typeof url.path !== 'string') continue;
+      if (
+        !hasPendingImagePath(
+          pendingImagePathsBySurface,
+          surfaceId,
+          url.path,
+        )
+      ) {
+        continue;
+      }
+
+      const originalComponent = { ...component };
+      components[i] = createLoadingComponent(component.id) as A2UIComponent;
+      restores.push({
+        version: 'v0.9',
+        updateComponents: {
+          surfaceId,
+          components: [originalComponent],
+        },
+      });
+    }
+  }
+
+  return restores;
 }
 
 async function resolveImageUrl(
@@ -153,7 +313,9 @@ async function resolveImageUrl(
   if (!cached) {
     cached = resolvePexelsImage(query).then(
       (url) => url ?? picsumUrl(query),
-      () => picsumUrl(query),
+      () => fallbackImageUrl(query),
+    ).catch(
+      () => fallbackImageUrl(query),
     );
     imageCache.set(cacheKey, cached);
   }
@@ -198,6 +360,21 @@ function picsumUrl(query: string): string {
   }/1024/768`;
 }
 
+function fallbackImageUrl(query: string): string {
+  const label = escapeSvgText(cleanupQuery(query) || 'image unavailable');
+  const svg =
+    `<svg xmlns="http://www.w3.org/2000/svg" width="1024" height="768" viewBox="0 0 1024 768"><rect width="1024" height="768" fill="#f2f4f7"/><rect x="88" y="88" width="848" height="592" rx="32" fill="#ffffff" stroke="#d0d5dd" stroke-width="8"/><path d="M224 536l176-176 120 120 88-88 192 192H224z" fill="#d0d5dd"/><circle cx="704" cy="264" r="72" fill="#e4e7ec"/><text x="512" y="650" text-anchor="middle" font-family="Arial, sans-serif" font-size="42" fill="#667085">${label}</text></svg>`;
+  return `data:image/svg+xml,${encodeURIComponent(svg)}`;
+}
+
+function escapeSvgText(value: string): string {
+  return value
+    .replace(/&/gu, '&amp;')
+    .replace(/</gu, '&lt;')
+    .replace(/>/gu, '&gt;')
+    .replace(/"/gu, '&quot;');
+}
+
 function normalizeImageQuery(raw: string, fallback: string): string {
   const trimmed = raw.trim();
   if (!trimmed) return fallback;
@@ -231,18 +408,18 @@ function queryFromComponent(id: string): string {
 }
 
 function addImageLikeDataResolutions(
-  root: unknown,
   value: unknown,
   path: string,
+  surfaceId: string,
   resolvedPaths: Set<string>,
-  resolutions: Promise<void>[],
+  resolutions: Promise<ImageDataPatch>[],
 ): void {
   if (Array.isArray(value)) {
     value.forEach((item, index) =>
       addImageLikeDataResolutions(
-        root,
         item,
         appendPointer(path, String(index)),
+        surfaceId,
         resolvedPaths,
         resolutions,
       )
@@ -259,22 +436,25 @@ function addImageLikeDataResolutions(
       typeof child === 'string'
       && isImageLikeKey(key)
       && !resolvedPaths.has(normalizedChildPath)
+      && !isLoadableImageSource(child)
     ) {
       resolvedPaths.add(normalizedChildPath);
       resolutions.push(
         resolveImageUrl(child, cleanupQuery(key) || 'image').then(
-          (resolved) => {
-            setAtPointer(root, childPath, resolved);
-          },
+          (resolved) => ({
+            surfaceId,
+            path: normalizePointer(childPath),
+            value: resolved,
+          }),
         ),
       );
       continue;
     }
 
     addImageLikeDataResolutions(
-      root,
       child,
       childPath,
+      surfaceId,
       resolvedPaths,
       resolutions,
     );
@@ -284,6 +464,18 @@ function addImageLikeDataResolutions(
 function isImageLikeKey(key: string): boolean {
   return /(?:^|[-_])(?:image|photo|picture|avatar|cover|poster|artwork|thumbnail)(?:$|[-_])/iu
     .test(key);
+}
+
+function dedupeImageDataPatches(patches: ImageDataPatch[]): ImageDataPatch[] {
+  const seen = new Set<string>();
+  const deduped: ImageDataPatch[] = [];
+  for (const patch of patches) {
+    const key = `${patch.surfaceId}\0${patch.path}\0${patch.value}`;
+    if (seen.has(key)) continue;
+    seen.add(key);
+    deduped.push(patch);
+  }
+  return deduped;
 }
 
 function appendPointer(path: string, segment: string): string {
@@ -355,27 +547,4 @@ function getAtPointer(value: unknown, path: string): unknown {
     cursor = (cursor as Record<string, unknown>)[part];
   }
   return cursor;
-}
-
-function setAtPointer(
-  value: unknown,
-  path: string,
-  nextValue: unknown,
-): unknown {
-  if (path === '/' || path === '') return nextValue;
-  if (!isRecord(value) && !Array.isArray(value)) return value;
-
-  let cursor = value as Record<string, unknown>;
-  const parts = pointerParts(path);
-  for (let i = 0; i < parts.length - 1; i++) {
-    const part = parts[i];
-    if (!part) return value;
-    const child = cursor[part];
-    if (!isRecord(child) && !Array.isArray(child)) return value;
-    cursor = child as Record<string, unknown>;
-  }
-
-  const last = parts[parts.length - 1];
-  if (last) cursor[last] = nextValue;
-  return value;
 }

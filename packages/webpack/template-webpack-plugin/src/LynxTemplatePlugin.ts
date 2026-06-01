@@ -24,7 +24,6 @@ import { cssChunksToMap } from '@lynx-js/css-serializer';
 import { RuntimeGlobals } from '@lynx-js/webpack-runtime-globals';
 
 import { createLynxAsyncChunksRuntimeModule } from './LynxAsyncChunksRuntimeModule.js';
-import { LynxDebugMetadataPlugin } from './LynxDebugMetadataPlugin.js';
 
 export type OriginManifest = Record<string, {
   content: string;
@@ -469,39 +468,23 @@ export class LynxTemplatePlugin {
       compiler,
       Object.assign({}, LynxTemplatePlugin.defaultOptions, this.options),
     );
-    new LynxDebugMetadataPlugin({
-      LynxTemplatePlugin,
-    }).apply(compiler);
   }
-}
-
-interface Hash {
-  /**
-   * Update hash {@link https://nodejs.org/api/crypto.html#crypto_hash_update_data_inputencoding}
-   */
-  update(data: string | Buffer, inputEncoding?: string): Hash;
-
-  /**
-   * Calculates the digest {@link https://nodejs.org/api/crypto.html#crypto_hash_digest_encoding}
-   */
-  digest(encoding?: string): string | Buffer;
 }
 
 class LynxTemplatePluginImpl {
   name = 'LynxTemplatePlugin';
 
   static #taskQueue: Array<() => Promise<void>> | null = null;
-  protected hash: Hash;
+
+  // Static so it spans the one-instance-per-entry plugins, whose serial
+  // same-stage taps would otherwise feed the encode pool one template at a time.
+  static #templateQueues: WeakMap<Compilation, Promise<void>[]> = new WeakMap();
 
   constructor(
     compiler: Compiler,
     options: Required<LynxTemplatePluginOptions>,
   ) {
     this.#options = options;
-
-    const { createHash } = compiler.webpack.util;
-
-    this.hash = createHash(compiler.options.output.hashFunction ?? 'xxhash64');
 
     // entryName to fileName conversion function
     const userOptionFilename = this.#options.filename;
@@ -520,20 +503,24 @@ class LynxTemplatePluginImpl {
       ),
     );
 
-    outputFileNames.forEach((outputFileName) => {
-      // convert absolute filename into relative so that webpack can
-      // generate it at correct location
-      let filename = outputFileName;
-      if (path.resolve(filename) === path.normalize(filename)) {
-        filename = path.relative(
-          /** Once initialized the path is always a string */
-          compiler.options.output.path!,
-          filename,
-        );
+    // convert absolute filenames into relative ones so that webpack can
+    // generate them at the correct location
+    const filenames = [...outputFileNames].map((outputFileName) => {
+      if (path.resolve(outputFileName) === path.normalize(outputFileName)) {
+        /** Once initialized the path is always a string */
+        return path.relative(compiler.options.output.path!, outputFileName);
       }
+      return outputFileName;
+    });
 
-      compiler.hooks.thisCompilation.tap(this.name, (compilation) => {
-        compilation.hooks.processAssets.tapPromise(
+    compiler.hooks.thisCompilation.tap(this.name, (compilation) => {
+      const templateQueue = LynxTemplatePluginImpl.#templateQueue(
+        compilation,
+        compiler,
+      );
+
+      for (const filename of filenames) {
+        compilation.hooks.processAssets.tap(
           {
             name: this.name,
             stage:
@@ -541,18 +528,17 @@ class LynxTemplatePluginImpl {
                * Generate the html after minification and dev tooling is done
                * and source-map is generated
                */
-              compiler.webpack.Compilation
-                .PROCESS_ASSETS_STAGE_OPTIMIZE_HASH,
+              compiler.webpack.Compilation.PROCESS_ASSETS_STAGE_OPTIMIZE_HASH,
           },
+          // Don't await here — the coordinator awaits the whole queue, so
+          // sibling entries' encodes reach the pool concurrently.
           () => {
-            return this.#generateTemplate(
-              compiler,
-              compilation,
-              filename,
+            templateQueue.push(
+              this.#generateTemplate(compiler, compilation, filename),
             );
           },
         );
-      });
+      }
     });
 
     compiler.hooks.thisCompilation.tap(this.name, compilation => {
@@ -617,6 +603,37 @@ class LynxTemplatePluginImpl {
         }
       });
     }
+  }
+
+  // Returns the compilation's template-build queue, lazily creating it and
+  // registering the coordinator tap (one stage later) that awaits the queue.
+  static #templateQueue(
+    compilation: Compilation,
+    compiler: Compiler,
+  ): Promise<void>[] {
+    const existing = LynxTemplatePluginImpl.#templateQueues.get(compilation);
+    if (existing) {
+      return existing;
+    }
+
+    const queue: Promise<void>[] = [];
+    LynxTemplatePluginImpl.#templateQueues.set(compilation, queue);
+    compilation.hooks.processAssets.tapPromise({
+      name: 'LynxTemplatePlugin:await-templates',
+      stage: compiler.webpack.Compilation.PROCESS_ASSETS_STAGE_OPTIMIZE_HASH
+        + 1,
+    }, async () => {
+      // allSettled (not all): every encode was started eagerly, so wait for all
+      // of them to finish before the phase unwinds — otherwise a single
+      // rejection would let webpack move on while siblings still emit assets.
+      const results = await Promise.allSettled(queue.splice(0));
+      for (const result of results) {
+        if (result.status === 'rejected') {
+          compilation.errors.push(result.reason as WebpackError);
+        }
+      }
+    });
+    return queue;
   }
 
   async #generateTemplate(
@@ -789,23 +806,7 @@ class LynxTemplatePluginImpl {
       enableCSSSelector,
     );
 
-    let templateDebugUrl = '';
     const intermediatePosix = intermediate.replace(/\\/g, '/');
-    const debugInfoPath = path.posix.format({
-      dir: intermediatePosix,
-      base: 'debug-info.json',
-    });
-    // TODO: Support publicPath function
-    if (
-      typeof compiler.options.output.publicPath === 'string'
-      && compiler.options.output.publicPath !== 'auto'
-      && compiler.options.output.publicPath !== '/'
-    ) {
-      templateDebugUrl = new URL(
-        debugInfoPath,
-        compiler.options.output.publicPath,
-      ).toString();
-    }
 
     const encodeRawData: EncodeRawData = {
       compilerOptions: {
@@ -813,7 +814,8 @@ class LynxTemplatePluginImpl {
         useLepusNG: true,
         enableReuseContext: true,
         bundleModuleMode: 'ReturnByFunction',
-        templateDebugUrl,
+        // Will be filled later in `@lynx-js/debug-metadata-rsbuild-plugin`
+        templateDebugUrl: '',
 
         debugInfoOutside,
         defaultDisplayLinear,
@@ -838,6 +840,8 @@ class LynxTemplatePluginImpl {
           enableCSSInheritance,
           enableNewGesture,
           removeDescendantSelectorScope,
+          // Will be filled later in `@lynx-js/debug-metadata-rsbuild-plugin`
+          debugMetadataUrl: '',
         },
       },
       css: {
@@ -931,7 +935,13 @@ class LynxTemplatePluginImpl {
       const filename = compilation.getPath(filenameTemplate, {
         // @ts-expect-error we have a mock chunk here to make contenthash works in webpack
         chunk: {},
-        contentHash: this.hash.update(buffer).digest('hex').toString(),
+        // Fresh hash per buffer: builds run concurrently, so a shared instance
+        // hash would interleave updates across entries.
+        contentHash: compiler.webpack.util
+          .createHash(compiler.options.output.hashFunction ?? 'xxhash64')
+          .update(buffer)
+          .digest('hex')
+          .toString(),
       });
 
       const { template } = await hooks.beforeEmit.promise({
@@ -947,10 +957,6 @@ class LynxTemplatePluginImpl {
       });
 
       compilation.emitAsset(filename, new RawSource(template, false));
-
-      if (isDebug() || isDev) {
-        compilation.emitAsset(debugInfoPath, new RawSource(debugInfo));
-      }
 
       await hooks.afterEmit.promise({ outputName: filename });
     } catch (error) {

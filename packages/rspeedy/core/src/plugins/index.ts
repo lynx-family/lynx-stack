@@ -34,6 +34,10 @@ export async function applyDefaultPlugins(
       pluginChunkLoading()
     ),
 
+    import('@lynx-js/debug-metadata-rsbuild-plugin').then(
+      ({ pluginLynxDebugMetadata }) => pluginLynxDebugMetadata(),
+    ),
+
     import('./dev.plugin.js').then(({ pluginDev }) =>
       pluginDev(config.dev, config.server)
     ),
@@ -58,6 +62,10 @@ export async function applyDefaultPlugins(
 
     import('./sourcemap.plugin.js').then(({ pluginSourcemap }) =>
       pluginSourcemap()
+    ),
+
+    import('./statsJson.plugin.js').then(({ pluginStatsJson }) =>
+      pluginStatsJson(config)
     ),
 
     import('./swc.plugin.js').then(({ pluginSwc }) => pluginSwc()),
