@@ -27,7 +27,8 @@
   ],
   "scripts": {
     "api-extractor": "node ../scripts/run-api-extractor.mjs",
-    "build": "tsc -p tsconfig.build.json && cp src/core/renderer.css dist/core/renderer.css"
+    "build": "tsc -p tsconfig.build.json && cp src/core/renderer.css dist/core/renderer.css",
+    "build:api": "tsc -p tsconfig.build.json"
   },
   "dependencies": {
     "@openuidev/lang-core": "^0.2.4",

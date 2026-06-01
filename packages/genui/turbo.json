@@ -39,10 +39,10 @@
     "api-extractor": {
       "dependsOn": [
         "//#build",
-        "@lynx-js/genui-a2ui#build",
-        "@lynx-js/genui-a2ui-catalog-extractor#build",
-        "@lynx-js/genui-a2ui-prompt#build",
-        "@lynx-js/genui-openui#build"
+        "@lynx-js/genui-a2ui#build:api",
+        "@lynx-js/genui-a2ui-catalog-extractor#build:api",
+        "@lynx-js/genui-a2ui-prompt#build:api",
+        "@lynx-js/genui-openui#build:api"
       ],
       "cache": false
     }

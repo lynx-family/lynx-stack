@@ -16,6 +16,19 @@
         "dist/**"
       ]
     },
+    "build:api": {
+      "dependsOn": [],
+      "inputs": [
+        "src/**",
+        "styles/**",
+        "tsconfig.json",
+        "tsconfig.build.json",
+        "package.json"
+      ],
+      "outputs": [
+        "dist/**"
+      ]
+    },
     "api-extractor": {
       "dependsOn": [
         "//#build",

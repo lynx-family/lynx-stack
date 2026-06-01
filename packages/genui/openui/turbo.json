@@ -15,6 +15,18 @@
       "outputs": [
         "dist/**"
       ]
+    },
+    "build:api": {
+      "dependsOn": [],
+      "inputs": [
+        "src/**",
+        "tsconfig.json",
+        "tsconfig.build.json",
+        "package.json"
+      ],
+      "outputs": [
+        "dist/**"
+      ]
     }
   }
 }
