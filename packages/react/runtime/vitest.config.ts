@@ -88,7 +88,7 @@ export default defineConfig({
       { find: '@lynx-js/react/lepus', replacement: path.resolve(__dirname, './lepus/index.js') },
       {
         find: '@lynx-js/react/legacy-react-runtime',
-        replacement: path.resolve(__dirname, './src/snapshot/legacy-react-runtime/index.ts'),
+        replacement: path.resolve(__dirname, './src/core/compat/legacy-react-runtime.ts'),
       },
       { find: '@lynx-js/react', replacement: path.resolve(__dirname, './src/index.ts') },
     ],

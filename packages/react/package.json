@@ -112,9 +112,9 @@
       "default": "./runtime/lib/worklet-runtime/bindings/index.js"
     },
     "./legacy-react-runtime": {
-      "types": "./runtime/lib/snapshot/legacy-react-runtime/index.d.ts",
+      "types": "./runtime/lib/core/compat/legacy-react-runtime.d.ts",
       "lazy": "./runtime/lazy/legacy-react-runtime.js",
-      "default": "./runtime/lib/snapshot/legacy-react-runtime/index.js"
+      "default": "./runtime/lib/core/compat/legacy-react-runtime.js"
     },
     "./testing-library": {
       "types": "./testing-library/types/index.d.ts",
@@ -202,7 +202,7 @@
         "./runtime/lib/worklet-runtime/bindings/index.d.ts"
       ],
       "legacy-react-runtime": [
-        "./runtime/lib/snapshot/legacy-react-runtime/index.d.ts"
+        "./runtime/lib/core/compat/legacy-react-runtime.d.ts"
       ]
     }
   },
