@@ -85,7 +85,7 @@ SSE、WebSocket，或一个 in-process mock。renderer 不关心 messages 是怎
 
 | 部分              | 运行位置                 | 负责人    | 职责                                                                                                                       |
 | ----------------- | ------------------------ | --------- | -------------------------------------------------------------------------------------------------------------------------- |
-| Agent 服务        | Server                   | 你的应用  | 把 prompt 和 client action 转成经过校验的 A2UI message 数组。用与 client 可渲染能力一致的 catalog contract 提示模型。      |
+| Agent 服务        | Server                   | 你的应用  | 把 prompt 和 client action 转成经过校验的 A2UI message 数组。使用与 client 可渲染能力一致的 catalog contract 提示模型。    |
 | Transport adapter | Client shell             | 你的应用  | 通过 REST/SSE/WebSocket 把 prompt/action 发给 Agent，再把返回的 messages 写入 `MessageStore`。                             |
 | `MessageStore`    | Client                   | 这个包    | 按到达顺序保存原始 A2UI messages 并通知订阅者。它不解析也不解释协议语义。                                                  |
 | `<A2UI>`          | Client                   | 这个包    | 每次 mount 拥有一个 `MessageProcessor`，消费新 messages，渲染 active surface，并通过 `onAction` 转发 generated UI action。 |
