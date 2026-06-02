@@ -285,9 +285,10 @@ function isExtractedCatalogManifest(
   value: unknown,
 ): value is ExtractedCatalogManifest {
   if (!isRecord(value)) return false;
-  const catalogId = value.catalogId;
-  const components = value.components;
-  const functions = value.functions;
+  const manifest = value as Partial<ExtractedCatalogManifest>;
+  const catalogId = manifest.catalogId;
+  const components = manifest.components;
+  const functions = manifest.functions;
   return (catalogId === undefined || typeof catalogId === 'string')
     && (components === undefined || isRecord(components))
     && (functions === undefined || isFunctionSpecs(functions));
@@ -299,10 +300,11 @@ function isFunctionSpecs(value: unknown): value is A2UIFunctionSpec[] {
 
 function isFunctionSpec(value: unknown): value is A2UIFunctionSpec {
   if (!isRecord(value)) return false;
-  const name = value.name;
-  const parameters = value.parameters;
-  const returnType = value.returnType;
-  const description = value.description;
+  const spec = value as Partial<A2UIFunctionSpec>;
+  const name = spec.name;
+  const parameters = spec.parameters;
+  const returnType = spec.returnType;
+  const description = spec.description;
   return typeof name === 'string'
     && isRecord(parameters)
     && typeof returnType === 'string'
