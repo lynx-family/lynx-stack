@@ -1,8 +1,8 @@
 // Copyright 2024 The Lynx Authors. All rights reserved.
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
-import { markTiming, setPipeline } from './performance.js';
 import { applyUpdatePageData } from '../../core/lynx-page-data.js';
+import { markTiming, setPipeline } from '../../core/performance.js';
 import { __root, setRoot } from '../../root.js';
 import { LifecycleConstant } from '../lifecycle/constant.js';
 import { isJSReady, jsReady, jsReadyEventIdSwap, resetJSReady } from '../lifecycle/event/jsReady.js';

@@ -19,6 +19,9 @@ export function injectGlobals() {
   globalThis.__USE_ELEMENT_TEMPLATE__ = false;
   globalThis.__FIRST_SCREEN_SYNC_TIMING__ = 'immediately';
   globalThis.globDynamicComponentEntry = '__Card__';
+  globalThis.SystemInfo = {
+    lynxSdkVersion: '4.0',
+  };
   globalThis.lynxCoreInject = {};
   globalThis.lynxCoreInject.tt = {};
 

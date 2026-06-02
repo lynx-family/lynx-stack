@@ -10,12 +10,12 @@ import {
   takeRemovedSubtreesForPostDispatchTeardown,
 } from './commit-context.js';
 import type { BackgroundElementTemplateInstance } from './instance.js';
+import { globalPipelineOptions, markTiming, markTimingLegacy, setPipeline } from '../../core/performance.js';
 import { getReloadVersion } from '../../core/reload-version.js';
 import { COMMIT } from '../../shared/render-constants.js';
 import { hook, isEmptyObject } from '../../utils.js';
 import { formatElementTemplateUpdateCommands } from '../debug/alog.js';
 import { profileEnd, profileStart } from '../debug/profile.js';
-import { globalPipelineOptions, markTiming, markTimingLegacy, setPipeline } from '../lynx/performance.js';
 import { clearPendingRefs, flushPendingRefs, hasPendingRefs } from '../prop-adapters/ref.js';
 import { ElementTemplateLifecycleConstant } from '../protocol/lifecycle-constant.js';
 

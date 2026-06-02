@@ -7,12 +7,7 @@ import {
   resetElementTemplateCommitState,
 } from '../../../../src/element-template/background/commit-hook.js';
 import { globalCommitContext } from '../../../../src/element-template/background/commit-context.js';
-import {
-  beginPipeline,
-  markTimingLegacy,
-  PipelineOrigins,
-  setPipeline,
-} from '../../../../src/element-template/lynx/performance.js';
+import { beginPipeline, markTimingLegacy, PipelineOrigins, setPipeline } from '../../../../src/core/performance.js';
 import { ElementTemplateUpdateOps } from '../../../../src/element-template/protocol/opcodes.js';
 import { ElementTemplateLifecycleConstant } from '../../../../src/element-template/protocol/lifecycle-constant.js';
 import { ElementTemplateEnvManager } from '../../test-utils/debug/envManager.js';

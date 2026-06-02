@@ -2,15 +2,16 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { options } from 'preact';
 
 import { globalCommitContext } from '../../../src/element-template/background/commit-context.js';
+import { initTimingAPI } from '../../../src/element-template/lynx/performance.js';
 import {
   beginPipeline,
-  initTimingAPI,
   markTiming,
   markTimingLegacy,
   PerformanceTimingFlags,
   PipelineOrigins,
+  resetTimingState,
   setPipeline,
-} from '../../../src/element-template/lynx/performance.js';
+} from '../../../src/core/performance.js';
 import { ElementTemplateUpdateOps } from '../../../src/element-template/protocol/opcodes.js';
 import { RENDER_COMPONENT } from '../../../src/shared/render-constants.js';
 import { ElementTemplateEnvManager } from '../test-utils/debug/envManager.js';
@@ -48,7 +49,7 @@ beforeEach(() => {
 });
 
 afterEach(() => {
-  setPipeline(undefined);
+  resetTimingState();
   globalCommitContext.ops = [];
   globalThis.lynx = originalLynx as typeof lynx;
 });
@@ -114,6 +115,21 @@ describe('ElementTemplate performance timing (current api)', () => {
     expect(nativeMarkTiming.mock.calls).toEqual([
       ['flag', 'updateSetStateTrigger'],
       ['flag', 'updateDiffVdomStart'],
+    ]);
+  });
+
+  it('initTimingAPI reuses installed hooks and replaces backend state', () => {
+    initTimingAPI();
+    markTimingLegacy('updateSetStateTrigger', 'stale-flag');
+
+    initTimingAPI();
+    nativeMarkTiming.mockClear();
+    globalCommitContext.ops = createRawTextOps(1, 'payload');
+    options[RENDER_COMPONENT]?.({} as unknown as object, null);
+
+    expect(nativeMarkTiming).not.toHaveBeenCalled();
+    expect(globalThis.lynx.performance._markTiming.mock.calls).toEqual([
+      ['pipelineID', 'diffVdomStart'],
     ]);
   });
 });

@@ -13,10 +13,10 @@ import {
 } from './commit-hook.js';
 import { hydrateIntoContext } from './hydrate.js';
 import { BackgroundElementTemplateInstance } from './instance.js';
+import { PerformanceTimingFlags, PipelineOrigins, beginPipeline, markTiming } from '../../core/performance.js';
 import { getReloadVersion } from '../../core/reload-version.js';
 import { formatElementTemplateUpdateCommands, printElementTemplateTreeToString } from '../debug/alog.js';
 import { profileEnd, profileStart } from '../debug/profile.js';
-import { PerformanceTimingFlags, PipelineOrigins, beginPipeline, markTiming } from '../lynx/performance.js';
 import { clearPendingEvents, flushPendingEvents } from '../prop-adapters/event.js';
 import { clearDelayedRefUiOps, clearPendingRefs, flushDelayedRefUiOps } from '../prop-adapters/ref.js';
 import { ElementTemplateLifecycleConstant } from '../protocol/lifecycle-constant.js';
@@ -52,8 +52,8 @@ export function installElementTemplateHydrationListener(): void {
       profileStart('ReactLynx::hydrate');
     }
     beginPipeline(true, PipelineOrigins.reactLynxHydrate, PerformanceTimingFlags.reactLynxHydrate);
-    markTiming('hydrateParsePayloadStart');
-    markTiming('hydrateParsePayloadEnd');
+    markTiming('hydrateParseSnapshotStart');
+    markTiming('hydrateParseSnapshotEnd');
     markTiming('diffVdomStart');
 
     const root = __root as BackgroundElementTemplateInstance;

@@ -8,7 +8,7 @@ import { afterEach, beforeAll, beforeEach, describe, expect, it, vi } from 'vite
 
 import { replaceCommitHook } from '../../../src/snapshot/lifecycle/patch/commit';
 import { injectUpdateMainThread } from '../../../src/snapshot/lifecycle/patch/updateMainThread';
-import '../../../src/snapshot/lynx/component';
+import { installComponentCompat } from '../../../src/core/component';
 import { initTimingAPI } from '../../../src/snapshot/lynx/performance';
 import { __root } from '../../../src/root';
 import { setupPage } from '../../../src/snapshot';
@@ -16,6 +16,7 @@ import { globalEnvManager } from '../utils/envManager';
 import { elementTree, waitSchedule } from '../utils/nativeMethod';
 
 beforeAll(() => {
+  installComponentCompat();
   setupPage(__CreatePage('0', 0));
   injectUpdateMainThread();
   replaceCommitHook();
@@ -34,6 +35,16 @@ afterEach(() => {
 });
 
 describe('setState timing api', () => {
+  it('does not stack timing hooks on repeated init', () => {
+    const renderHook = options.__r;
+    const rootHook = options.__;
+
+    initTimingAPI();
+
+    expect(options.__r).toBe(renderHook);
+    expect(options.__).toBe(rootHook);
+  });
+
   it('basic', async function() {
     let mtCallbacks = [];
     lynx.getNativeApp().callLepusMethod.mockImplementation((name, data, cb) => {

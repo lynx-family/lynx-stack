@@ -32,14 +32,16 @@ import {
   useState,
 } from '@lynx-js/react/hooks';
 
+import { installComponentCompat } from '../core/component.js';
 import { createGlobalProps } from '../core/globalProps.js';
 import type { GlobalProps } from '../core/globalProps.js';
 import { useLynxGlobalEventListener } from '../core/hooks/useLynxGlobalEventListener.js';
 import { factory, withInitDataInState } from '../core/initData.js';
 import type { InitData } from '../lynx-api.js';
 import './native/index.js';
-// import './lynx/component.js';
 // import { Suspense } from './lynx/suspense.js';
+
+installComponentCompat();
 
 export { Component, createContext } from 'preact';
 export { PureComponent } from 'preact/compat';
