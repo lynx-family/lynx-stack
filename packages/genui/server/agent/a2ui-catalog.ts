@@ -207,7 +207,10 @@ export function createA2UICatalogFromManifests(options: {
   version?: string;
 }): A2UICatalog {
   const components: Record<string, JsonSchema> = options.components
-    ?? Object.assign({}, ...(options.componentManifests ?? []));
+    ?? (options.componentManifests ?? []).reduce<Record<string, JsonSchema>>(
+      (merged, manifest) => ({ ...merged, ...manifest }),
+      {},
+    );
 
   return {
     id: options.catalogId,
@@ -282,24 +285,24 @@ function isExtractedCatalogManifest(
   value: unknown,
 ): value is ExtractedCatalogManifest {
   if (!isRecord(value)) return false;
-  const catalogId = value['catalogId'];
-  const components = value['components'];
-  const functions = value['functions'];
+  const catalogId = value.catalogId;
+  const components = value.components;
+  const functions = value.functions;
   return (catalogId === undefined || typeof catalogId === 'string')
     && (components === undefined || isRecord(components))
     && (functions === undefined || isFunctionSpecs(functions));
 }
 
 function isFunctionSpecs(value: unknown): value is A2UIFunctionSpec[] {
-  return Array.isArray(value) && value.every(isFunctionSpec);
+  return Array.isArray(value) && value.every(item => isFunctionSpec(item));
 }
 
 function isFunctionSpec(value: unknown): value is A2UIFunctionSpec {
   if (!isRecord(value)) return false;
-  const name = value['name'];
-  const parameters = value['parameters'];
-  const returnType = value['returnType'];
-  const description = value['description'];
+  const name = value.name;
+  const parameters = value.parameters;
+  const returnType = value.returnType;
+  const description = value.description;
   return typeof name === 'string'
     && isRecord(parameters)
     && typeof returnType === 'string'
