@@ -9,6 +9,8 @@ import type { Page } from '@playwright/test';
 
 import { judgePage } from '../src/index.js';
 import type { UiJudgeDimension, UiJudgeResult } from '../src/index.js';
+import { PLAYGROUND_DEMO_CASES } from './helpers/playground-demo-cases.js';
+import type { PlaygroundDemoCase } from './helpers/playground-demo-cases.js';
 import {
   startPlaygroundPreviewServer,
 } from './helpers/playground-preview-server.js';
@@ -16,13 +18,6 @@ import type { PlaygroundPreviewServer } from './helpers/playground-preview-serve
 
 function hasMidsceneModelConfig(): boolean {
   return Boolean(process.env['MIDSCENE_MODEL_NAME']);
-}
-
-interface PlaygroundDemoCase {
-  demoId: string;
-  expectedText: string;
-  readyText: string;
-  task: string;
 }
 
 interface GeqiDimensionCase {
@@ -59,64 +54,6 @@ const GEQI_DIMENSION_CASES: GeqiDimensionCase[] = [
   },
 ];
 
-const PLAYGROUND_DEMO_CASES: PlaygroundDemoCase[] = [
-  {
-    demoId: 'recs',
-    readyText: 'Recommendations: Date-Night Dining Ideas',
-    expectedText: 'Sea Breeze Kitchen',
-    task:
-      'The A2UI playground preview should show date-night dining recommendations for Moonlight Terrace, Pinewood Bistro, and Sea Breeze Kitchen.',
-  },
-  {
-    demoId: 'cast-grid',
-    readyText: 'AI generated answer',
-    expectedText: 'Zhou Ning',
-    task:
-      'The A2UI playground preview should show a cast grid for the short film Night Notes, including Lin Xia and Zhou Ning cast cards.',
-  },
-  {
-    demoId: 'citywalk-list',
-    readyText: 'AI Answer: Weekend Citywalk Coffee Picks',
-    expectedText: 'Late Sun Roastery',
-    task:
-      'The A2UI playground preview should show weekend citywalk coffee picks with Rooftop Brew Room, Corner Canvas Lab, and Late Sun Roastery.',
-  },
-  {
-    demoId: 'fridge-search',
-    readyText: 'Refrigerators',
-    expectedText: 'Midea 550L Frost-Free French-Door Fridge',
-    task:
-      'The A2UI playground preview should show refrigerator search results with Siemens, Hualing, Haier, and Midea product cards.',
-  },
-  {
-    demoId: 'trip-planner',
-    readyText: 'Trip Planner: Kyoto in 48 Hours',
-    expectedText: 'Monkey Park Viewpoint',
-    task:
-      'The A2UI playground preview should show a Kyoto 48-hour trip planner with Day 1 and Day 2 itinerary sections, including Monkey Park Viewpoint.',
-  },
-  {
-    demoId: 'weather-current',
-    readyText: 'Austin, TX',
-    expectedText: 'Clear skies with light breeze',
-    task:
-      'The A2UI playground preview should show the current weather for Austin, TX, including clear skies with light breeze.',
-  },
-  {
-    demoId: 'product-card',
-    readyText: 'Wireless Headphones Pro',
-    expectedText: 'Add to Cart',
-    task:
-      'The A2UI playground preview should show a Wireless Headphones Pro product card with a visible Add to Cart action.',
-  },
-  {
-    demoId: 'workout-plan',
-    readyText: 'Weekly Workout Plan',
-    expectedText: 'Friday',
-    task:
-      'The A2UI playground preview should show a weekly workout plan with five days from Monday Ramp-Up through Friday Conditioning.',
-  },
-];
 const UI_JUDGE_RESULT_FILE_ENV = 'UI_JUDGE_RESULT_FILE';
 const judgedResultsByDemo = new Map<string, JudgedPlaygroundResult>();
 

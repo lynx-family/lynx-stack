@@ -25,6 +25,26 @@ test('judges generated UI', async ({ page }) => {
 });
 ```
 
+`judgeAndroidAgent` judges an Android Lynx screen through a Kitten-Lynx page.
+Callers own the Kitten-Lynx device/app lifecycle, including connection,
+navigation, and teardown. The judge reads `page.url()` for the returned JSON
+object, mirroring `judgePage`.
+
+```ts
+import { Lynx } from '@lynx-js/kitten-lynx-test-infra';
+import { judgeAndroidAgent } from '@lynx-js/ui-judge';
+
+const lynx = await Lynx.connect({ appPackage: 'com.lynx.explorer' });
+const page = await lynx.newPage();
+await page.goto('http://localhost:8080/main.lynx.bundle');
+
+const result = await judgeAndroidAgent({
+  page,
+  task: 'The Lynx app should show a checkout confirmation screen.',
+  steps: ['Dismiss permission dialog if it appears.'],
+});
+```
+
 When `dimension` is omitted, `judgePage` keeps the legacy
 `visual-correctness` prompt. GEQI scoring can pass one of these dimensions:
 

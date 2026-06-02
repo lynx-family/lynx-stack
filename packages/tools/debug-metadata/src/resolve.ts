@@ -132,9 +132,9 @@ FIELDS.set('artifact', {
 
 FIELDS.set('artifacts', { resolve: (m) => m.artifacts });
 FIELDS.set('ui-source-map', { resolve: (m) => m.uiSourceMap });
-FIELDS.set('meta', { resolve: (m) => m.meta });
-FIELDS.set('git', { resolve: (m) => m.meta.git });
-FIELDS.set('rspeedy', { resolve: (m) => m.meta.rspeedy });
+FIELDS.set('buildInfo', { resolve: (m) => m.buildInfo });
+FIELDS.set('git', { resolve: (m) => m.buildInfo.git });
+FIELDS.set('rspeedy', { resolve: (m) => m.buildInfo.rspeedy });
 
 /**
  * Result of {@link resolveField}.

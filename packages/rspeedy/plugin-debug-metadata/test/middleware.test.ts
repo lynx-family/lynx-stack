@@ -30,7 +30,7 @@ const VALID_METADATA: DebugMetadataAsset = {
     },
   ],
   uiSourceMap: { version: 1, sources: [], mappings: [], uiMaps: [] },
-  meta: { rspeedy: { entryFiles: [], bundlePath: 'main/template.js' } },
+  buildInfo: { rspeedy: { entryFiles: [], bundlePath: 'main/template.js' } },
 }
 
 /**
@@ -245,7 +245,7 @@ describe('createDebugMetadataMiddleware', () => {
     expect(res?.headers['cache-control']).toBe('no-store')
   })
 
-  test('200 returns the whole `meta` block for ?field=meta', async () => {
+  test('200 returns the whole `buildInfo` block for ?field=buildInfo', async () => {
     const mw = createDebugMetadataMiddleware({
       compilerHandle: fakeCompiler({
         '/out/.rspeedy/main/debug-metadata.json': JSON.stringify(
@@ -255,10 +255,10 @@ describe('createDebugMetadataMiddleware', () => {
     })
     const res = await runRequest(
       mw,
-      '/.rspeedy/main/debug-metadata.json?field=meta',
+      '/.rspeedy/main/debug-metadata.json?field=buildInfo',
     )
     expect(res?.status).toBe(200)
-    expect(res?.body).toEqual(VALID_METADATA.meta)
+    expect(res?.body).toEqual(VALID_METADATA.buildInfo)
   })
 
   test('strips a path-prefix publicPath before reading outputFileSystem', async () => {
@@ -274,10 +274,10 @@ describe('createDebugMetadataMiddleware', () => {
     })
     const res = await runRequest(
       mw,
-      '/assets/.rspeedy/main/debug-metadata.json?field=meta',
+      '/assets/.rspeedy/main/debug-metadata.json?field=buildInfo',
     )
     expect(res?.status).toBe(200)
-    expect(res?.body).toEqual(VALID_METADATA.meta)
+    expect(res?.body).toEqual(VALID_METADATA.buildInfo)
   })
 
   test('strips a relative publicPath that has no leading slash (e.g. assets/)', async () => {
@@ -293,10 +293,10 @@ describe('createDebugMetadataMiddleware', () => {
     })
     const res = await runRequest(
       mw,
-      '/assets/.rspeedy/main/debug-metadata.json?field=meta',
+      '/assets/.rspeedy/main/debug-metadata.json?field=buildInfo',
     )
     expect(res?.status).toBe(200)
-    expect(res?.body).toEqual(VALID_METADATA.meta)
+    expect(res?.body).toEqual(VALID_METADATA.buildInfo)
   })
 
   test('does NOT strip a prefix that only matches a partial segment (e.g. /assets vs /assets2)', async () => {
@@ -313,10 +313,10 @@ describe('createDebugMetadataMiddleware', () => {
     // publicPathPrefix = '/assets' — must NOT strip from '/assets2/...'
     const res = await runRequest(
       mw,
-      '/assets2/.rspeedy/main/debug-metadata.json?field=meta',
+      '/assets2/.rspeedy/main/debug-metadata.json?field=buildInfo',
     )
     expect(res?.status).toBe(200)
-    expect(res?.body).toEqual(VALID_METADATA.meta)
+    expect(res?.body).toEqual(VALID_METADATA.buildInfo)
   })
 
   test('strips a function publicPath that returns a static prefix', async () => {
@@ -332,10 +332,10 @@ describe('createDebugMetadataMiddleware', () => {
     })
     const res = await runRequest(
       mw,
-      '/build/.rspeedy/main/debug-metadata.json?field=meta',
+      '/build/.rspeedy/main/debug-metadata.json?field=buildInfo',
     )
     expect(res?.status).toBe(200)
-    expect(res?.body).toEqual(VALID_METADATA.meta)
+    expect(res?.body).toEqual(VALID_METADATA.buildInfo)
   })
 
   test('does not crash on a function publicPath that throws — best-effort, treat as no prefix', async () => {
@@ -353,10 +353,10 @@ describe('createDebugMetadataMiddleware', () => {
     })
     const res = await runRequest(
       mw,
-      '/.rspeedy/main/debug-metadata.json?field=meta',
+      '/.rspeedy/main/debug-metadata.json?field=buildInfo',
     )
     expect(res?.status).toBe(200)
-    expect(res?.body).toEqual(VALID_METADATA.meta)
+    expect(res?.body).toEqual(VALID_METADATA.buildInfo)
   })
 
   test('strips the path part of a full-URL publicPath', async () => {
@@ -372,10 +372,10 @@ describe('createDebugMetadataMiddleware', () => {
     })
     const res = await runRequest(
       mw,
-      '/static/.rspeedy/main/debug-metadata.json?field=meta',
+      '/static/.rspeedy/main/debug-metadata.json?field=buildInfo',
     )
     expect(res?.status).toBe(200)
-    expect(res?.body).toEqual(VALID_METADATA.meta)
+    expect(res?.body).toEqual(VALID_METADATA.buildInfo)
   })
 
   test('strips the path part of a protocol-relative publicPath', async () => {
@@ -391,10 +391,10 @@ describe('createDebugMetadataMiddleware', () => {
     })
     const res = await runRequest(
       mw,
-      '/static/.rspeedy/main/debug-metadata.json?field=meta',
+      '/static/.rspeedy/main/debug-metadata.json?field=buildInfo',
     )
     expect(res?.status).toBe(200)
-    expect(res?.body).toEqual(VALID_METADATA.meta)
+    expect(res?.body).toEqual(VALID_METADATA.buildInfo)
   })
 
   test('returns 404 metadata_not_found when no compiler is attached yet', async () => {
@@ -461,9 +461,9 @@ describe('createDebugMetadataMiddleware', () => {
     })
     const res = await runRequest(
       mw,
-      '/.rspeedy/main/debug-metadata.json?field=meta',
+      '/.rspeedy/main/debug-metadata.json?field=buildInfo',
     )
     expect(res?.status).toBe(200)
-    expect(res?.body).toEqual(VALID_METADATA.meta)
+    expect(res?.body).toEqual(VALID_METADATA.buildInfo)
   })
 })

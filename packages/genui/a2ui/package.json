@@ -139,6 +139,7 @@
   "scripts": {
     "api-extractor": "node ../scripts/run-api-extractor.mjs",
     "build": "tsc --project tsconfig.build.json && npm run build:catalog",
+    "build:api": "tsc --project tsconfig.build.json",
     "build:catalog": "genui a2ui generate catalog --catalog-dir src/catalog --out-dir dist/catalog && node scripts/writeCatalogManifestIndex.js",
     "test": "rstest"
   },

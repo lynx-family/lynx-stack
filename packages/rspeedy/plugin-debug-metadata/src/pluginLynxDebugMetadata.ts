@@ -68,7 +68,7 @@ interface LynxTemplatePluginExposure {
  * GET .../debug-metadata.json?field=artifact&filename=…
  * GET .../debug-metadata.json?field=artifacts
  * GET .../debug-metadata.json?field=ui-source-map
- * GET .../debug-metadata.json?field=meta
+ * GET .../debug-metadata.json?field=buildInfo
  * GET .../debug-metadata.json?field=git
  * GET .../debug-metadata.json?field=rspeedy
  *

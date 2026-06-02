@@ -215,8 +215,8 @@ export async function remapUiTree(
               + 'points to a debug-metadata.json emitted by the Lynx build.',
           );
         }
-        const meta = metadata['meta'];
-        const git: unknown = isRecord(meta) ? meta['git'] : undefined;
+        const buildInfo = metadata['buildInfo'];
+        const git: unknown = isRecord(buildInfo) ? buildInfo['git'] : undefined;
         const remoteUrl: unknown = isRecord(git) ? git['remoteUrl'] : undefined;
         return {
           lookup: buildUiSourceMapLookup(metadata['uiSourceMap']),

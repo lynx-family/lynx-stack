@@ -6,6 +6,7 @@ import type { PlaywrightTestConfig } from '@playwright/test';
 
 const config: PlaywrightTestConfig = defineConfig({
   testDir: './tests',
+  testIgnore: '**/*.vitest.spec.ts',
   timeout: 180_000,
   fullyParallel: false,
   workers: 1,

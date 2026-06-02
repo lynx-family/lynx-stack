@@ -30,6 +30,8 @@ For catalog navigation, keep `components` and `catalog` as route aliases that re
 
 When a GenUI package builds a CLI or other generated artifact that another workspace package executes during its own build, declare that package's `dist/**` (or equivalent generated directory) as Turbo `build.outputs`. Without explicit outputs, cache hits can skip restoring the built CLI and leave downstream workspace bins pointing at missing files.
 
+When `packages/genui/a2ui` generates its catalog, ensure `packages/genui/a2ui-catalog-extractor` has been built first. The `genui a2ui generate catalog` command delegates through `@lynx-js/genui-cli`, which imports `../a2ui-catalog-extractor/dist/cli.js`; clean CI runs will fail if that dist CLI is not produced before A2UI's build or API extractor script.
+
 When implementing A2UI v0.9 functions in `packages/genui/a2ui`, keep function resolution scoped to the active catalog first, with the global `FunctionRegistry` only as an escape hatch. Dynamic component props, checks, and function-call actions should all go through the same `resolveDynamicValue` / `executeFunctionCall` path so data bindings, nested function calls, zod argument coercion from `@a2ui/web_core`, and `formatString` data-context interpolation stay consistent.
 
 When verifying `packages/genui/a2ui-playground`, remember that `pnpm -F @lynx-js/genui-a2ui build` first runs `tsc --project tsconfig.build.json` and then regenerates catalog JSON through `build:catalog`. The playground consumes `@lynx-js/genui/a2ui` through package exports under `dist/**`, so you normally do not need a separate `tsc` step unless you intentionally skipped the package `build` step.
@@ -38,6 +40,8 @@ When streaming A2UI server responses, emit a root `Loading` component immediatel
 When verifying `packages/genui/a2ui-playground`, remember that `pnpm -F @lynx-js/a2ui-reactlynx build` regenerates catalog JSON only. The playground consumes `@lynx-js/a2ui-reactlynx` through package exports under `dist/**`, so run `pnpm -F @lynx-js/a2ui-reactlynx exec tsc -p tsconfig.build.json` before rebuilding the playground if runtime TypeScript changed.
 
 For known A2UI playground examples, keep the web preview URL on `?demo=<id>` instead of swapping it to the payload-store `messagesUrl`. `render.html` intentionally fetches known demo JSON in the browser shell and passes resolved messages into Lynx, avoiding fetch differences in the Lynx worker runtime; use payload-store URLs for custom edited JSON.
+
+When restoring A2UI playground Create previews after a page refresh, boot the render iframe separately from restored message delivery. Send restored messages through an idempotent replay event that `render.html` can queue until `<lynx-view>.sendGlobalEvent` and the Lynx `MessageStore` are both available; do not rely on a single eager `postMessage` during iframe startup.
 
 For interactive A2UI playground component examples, bind mutable props through `{ path: ... }` and provide matching example data so the component preview emits an initial `updateDataModel` before `updateComponents`. Literal values render the initial state but cannot be changed by `setValue`, which only writes back to data-bound props.
 

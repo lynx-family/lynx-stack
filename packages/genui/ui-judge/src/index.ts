@@ -1,6 +1,16 @@
 // Copyright 2026 The Lynx Authors. All rights reserved.
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
+import { setTimeout as sleep } from 'node:timers/promises';
+
+import type { DeviceAction, Size } from '@midscene/core';
+import { Agent as MidsceneAgent } from '@midscene/core/agent';
+import {
+  defineActionSwipe,
+  defineActionTap,
+  normalizeMobileSwipeParam,
+} from '@midscene/core/device';
+import type { AbstractInterface } from '@midscene/core/device';
 import { PlaywrightAgent } from '@midscene/web/playwright';
 import type { Page } from '@playwright/test';
 
@@ -19,9 +29,43 @@ export type UiJudgeDimension =
 
 export type UiJudgeScore = 0 | 1 | 2 | 3 | 4 | 5;
 
+interface MidsceneJudgeAgent {
+  aiAct(
+    step: string,
+    options?: { abortSignal?: AbortSignal },
+  ): Promise<unknown>;
+  aiNumber(
+    prompt: string,
+    options?: MidsceneJudgeQueryOptions,
+  ): Promise<number>;
+}
+
+interface MidsceneJudgeQueryOptions {
+  domIncluded?: boolean | 'visible-only';
+  screenshotIncluded?: boolean;
+}
+
 export interface JudgePageOptions {
   dimension?: UiJudgeDimension;
   page: Page;
+  reference?: string;
+  steps?: string[];
+  task: string;
+  timeoutMs?: number;
+}
+
+export interface KittenLynxJudgePage {
+  screenshot(options?: {
+    format?: 'jpeg' | 'png' | 'webp';
+    path?: string;
+    quality?: number;
+  }): Promise<Buffer>;
+  url(): string;
+}
+
+export interface JudgeAndroidAgentOptions {
+  dimension?: UiJudgeDimension;
+  page: KittenLynxJudgePage;
   reference?: string;
   steps?: string[];
   task: string;
@@ -40,20 +84,27 @@ export interface UiJudgeResult {
   url: string;
 }
 
-interface NormalizedJudgePageOptions {
+interface NormalizedJudgeOptions {
   dimension: UiJudgeDimension;
-  page: Page;
   reference?: string;
   steps: string[];
   task: string;
   timeoutMs: number;
 }
 
+interface NormalizedJudgePageOptions extends NormalizedJudgeOptions {
+  page: Page;
+}
+
+interface NormalizedJudgeAndroidAgentOptions extends NormalizedJudgeOptions {
+  page: KittenLynxJudgePage;
+}
+
 export async function judgePage(
   options: JudgePageOptions,
 ): Promise<UiJudgeResult> {
   try {
-    const normalized = normalizeOptions(options);
+    const normalized = normalizeJudgePageOptions(options);
     const score = await judgePageUnsafe(normalized);
     return {
       dimension: normalized.dimension,
@@ -72,6 +123,29 @@ export async function judgePage(
   }
 }
 
+export async function judgeAndroidAgent(
+  options: JudgeAndroidAgentOptions,
+): Promise<UiJudgeResult> {
+  try {
+    const normalized = normalizeJudgeAndroidAgentOptions(options);
+    const score = await judgeAndroidAgentUnsafe(normalized);
+    return {
+      dimension: normalized.dimension,
+      score,
+      steps: normalized.steps,
+      url: normalized.page.url(),
+    };
+  } catch (error) {
+    return {
+      dimension: getResultDimension(options?.dimension),
+      error: { message: toErrorMessage(error) },
+      score: 0,
+      steps: normalizeSteps(options?.steps),
+      url: getKittenLynxPageUrl(options?.page),
+    };
+  }
+}
+
 async function judgePageUnsafe(
   options: NormalizedJudgePageOptions,
 ): Promise<UiJudgeScore> {
@@ -83,26 +157,12 @@ async function judgePageUnsafe(
   });
 
   try {
-    for (const step of options.steps) {
-      const abortController = new AbortController();
-      await withAbortableTimeout(
-        agent.aiAct(step, { abortSignal: abortController.signal }),
-        options.timeoutMs,
-        abortController,
-        `Timed out while running Midscene step: ${step}`,
-      );
-    }
-
-    const rawScore = await withTimeout(
-      agent.aiNumber(buildJudgePrompt(options), {
+    return await judgeWithAgentUnsafe(agent, options, {
+      scoreOptions: {
         domIncluded: 'visible-only',
         screenshotIncluded: true,
-      }),
-      options.timeoutMs,
-      'Timed out while asking Midscene for a numeric score.',
-    );
-
-    return normalizeScore(rawScore);
+      },
+    });
   } finally {
     await agent.destroy().catch(() => {
       // Keep the original action or scoring error visible.
@@ -110,24 +170,102 @@ async function judgePageUnsafe(
   }
 }
 
-function normalizeOptions(
+async function judgeAndroidAgentUnsafe(
+  options: NormalizedJudgeAndroidAgentOptions,
+): Promise<UiJudgeScore> {
+  const agent = new MidsceneAgent(
+    new KittenLynxMidscenePage(options.page) as AbstractInterface,
+    {
+      autoPrintReportMsg: false,
+      generateReport: false,
+    },
+  );
+
+  try {
+    return await judgeWithAgentUnsafe(agent, options, {
+      scoreOptions: {
+        screenshotIncluded: true,
+      },
+    });
+  } finally {
+    await agent.destroy().catch(() => {
+      // Keep the original action or scoring error visible.
+    });
+  }
+}
+
+async function judgeWithAgentUnsafe(
+  agent: MidsceneJudgeAgent,
+  options: NormalizedJudgeOptions,
+  settings: { scoreOptions: MidsceneJudgeQueryOptions },
+): Promise<UiJudgeScore> {
+  for (const step of options.steps) {
+    const abortController = new AbortController();
+    await withAbortableTimeout(
+      agent.aiAct(step, { abortSignal: abortController.signal }),
+      options.timeoutMs,
+      abortController,
+      `Timed out while running Midscene step: ${step}`,
+    );
+  }
+
+  const rawScore = await withTimeout(
+    agent.aiNumber(buildJudgePrompt(options), settings.scoreOptions),
+    options.timeoutMs,
+    'Timed out while asking Midscene for a numeric score.',
+  );
+
+  return normalizeScore(rawScore);
+}
+
+function normalizeJudgePageOptions(
   options: JudgePageOptions,
 ): NormalizedJudgePageOptions {
   if (!options?.page) {
     throw new Error('judgePage requires a Playwright page.');
   }
 
-  const task = typeof options.task === 'string' ? options.task.trim() : '';
-  if (!task) {
-    throw new Error('judgePage requires a non-empty task.');
+  return {
+    ...normalizeJudgeBaseOptions(options, 'judgePage'),
+    page: options.page,
+  };
+}
+
+function normalizeJudgeAndroidAgentOptions(
+  options: JudgeAndroidAgentOptions,
+): NormalizedJudgeAndroidAgentOptions {
+  if (!isKittenLynxPage(options?.page)) {
+    throw new Error('judgeAndroidAgent requires a Kitten-Lynx page.');
   }
 
-  const normalized: NormalizedJudgePageOptions = {
-    dimension: normalizeDimension(options.dimension),
+  const normalized: NormalizedJudgeAndroidAgentOptions = {
+    ...normalizeJudgeBaseOptions(options, 'judgeAndroidAgent'),
     page: options.page,
+  };
+
+  return normalized;
+}
+
+function normalizeJudgeBaseOptions(
+  options: {
+    dimension?: UiJudgeDimension;
+    reference?: string;
+    steps?: string[];
+    task: string;
+    timeoutMs?: number;
+  },
+  apiName: string,
+): NormalizedJudgeOptions {
+  const task = typeof options.task === 'string' ? options.task.trim() : '';
+  if (!task) {
+    throw new Error(`${apiName} requires a non-empty task.`);
+  }
+
+  const normalized: NormalizedJudgeOptions = {
+    dimension: normalizeDimension(options.dimension, apiName),
     steps: normalizeSteps(options.steps),
     task,
-    timeoutMs: normalizeTimeout(options.timeoutMs),
+    timeoutMs: normalizeTimeout(options.timeoutMs, apiName),
   };
 
   const reference = options.reference?.trim();
@@ -140,12 +278,13 @@ function normalizeOptions(
 
 function normalizeDimension(
   dimension: UiJudgeDimension | undefined,
+  apiName = 'judgePage',
 ): UiJudgeDimension {
   if (dimension === undefined) return DEFAULT_DIMENSION;
   if (isKnownDimension(dimension)) return dimension;
 
   throw new Error(
-    `judgePage dimension must be one of: ${getDimensionNames().join(', ')}.`,
+    `${apiName} dimension must be one of: ${getDimensionNames().join(', ')}.`,
   );
 }
 
@@ -173,12 +312,229 @@ function normalizeSteps(steps: string[] | undefined): string[] {
     .filter((step) => step.length > 0);
 }
 
-function normalizeTimeout(timeoutMs: number | undefined): number {
+function normalizeTimeout(
+  timeoutMs: number | undefined,
+  apiName = 'judgePage',
+): number {
   if (timeoutMs === undefined) return DEFAULT_TIMEOUT_MS;
   if (!Number.isFinite(timeoutMs) || timeoutMs <= 0) {
-    throw new Error('judgePage timeoutMs must be a positive finite number.');
+    throw new Error(`${apiName} timeoutMs must be a positive finite number.`);
   }
   return timeoutMs;
+}
+
+interface KittenLynxChannel {
+  send(method: string, params: Record<string, unknown>): Promise<unknown>;
+}
+
+type KittenLynxViewWithChannel = KittenLynxJudgePage & {
+  _channel?: KittenLynxChannel;
+};
+
+type TouchEventType = 'mousePressed' | 'mouseMoved' | 'mouseReleased';
+
+interface TouchPoint {
+  x: number;
+  y: number;
+}
+
+interface ScreenshotSnapshot {
+  base64: string;
+  size: Size;
+}
+
+class KittenLynxMidscenePage {
+  interfaceType = 'lynx-android';
+  private screenshotSnapshot: Promise<ScreenshotSnapshot> | undefined;
+
+  constructor(private readonly page: KittenLynxJudgePage) {}
+
+  actionSpace(): DeviceAction[] {
+    return [
+      defineActionTap(async ({ locate }) => {
+        await this.tapAt({
+          x: locate.center[0],
+          y: locate.center[1],
+        });
+      }),
+      defineActionSwipe(async (param) => {
+        const swipe = normalizeMobileSwipeParam(param, await this.size());
+        for (let index = 0; index < swipe.repeatCount; index++) {
+          await this.swipe(swipe.startPoint, swipe.endPoint, swipe.duration);
+        }
+      }),
+    ];
+  }
+
+  async screenshotBase64(): Promise<string> {
+    const screenshot = await this.captureScreenshot();
+    return screenshot.base64;
+  }
+
+  async size(): Promise<Size> {
+    const screenshot = await this.captureScreenshot();
+    return screenshot.size;
+  }
+
+  url(): string {
+    return this.page.url();
+  }
+
+  describe(): string {
+    return this.page.url();
+  }
+
+  beforeInvokeAction(): Promise<void> {
+    this.screenshotSnapshot = undefined;
+    return Promise.resolve();
+  }
+
+  afterInvokeAction(): Promise<void> {
+    this.screenshotSnapshot = undefined;
+    return Promise.resolve();
+  }
+
+  destroy(): Promise<void> {
+    this.screenshotSnapshot = undefined;
+    return Promise.resolve();
+  }
+
+  private async captureScreenshot(): Promise<ScreenshotSnapshot> {
+    this.screenshotSnapshot ??= this.page.screenshot().then(
+      (buffer: Buffer) => {
+        const format = getImageFormat(buffer);
+        return {
+          base64: `data:image/${format};base64,${buffer.toString('base64')}`,
+          size: getImageSize(buffer, format),
+        };
+      },
+    ).catch((error: unknown) => {
+      this.screenshotSnapshot = undefined;
+      throw error;
+    });
+
+    return await this.screenshotSnapshot;
+  }
+
+  private async tapAt(point: TouchPoint): Promise<void> {
+    await this.touch('mousePressed', point);
+    await sleep(50);
+    await this.touch('mouseReleased', point);
+  }
+
+  private async swipe(
+    startPoint: TouchPoint,
+    endPoint: TouchPoint,
+    duration: number,
+  ): Promise<void> {
+    await this.touch('mousePressed', startPoint);
+    await sleep(Math.max(0, Math.min(duration, 1000)) / 2);
+    await this.touch('mouseMoved', endPoint);
+    await sleep(Math.max(0, Math.min(duration, 1000)) / 2);
+    await this.touch('mouseReleased', endPoint);
+  }
+
+  private async touch(type: TouchEventType, point: TouchPoint): Promise<void> {
+    await this.getChannel().send('Input.emulateTouchFromMouseEvent', {
+      button: 'left',
+      type,
+      x: point.x,
+      y: point.y,
+    });
+  }
+
+  private getChannel(): KittenLynxChannel {
+    const channel = (this.page as KittenLynxViewWithChannel)._channel;
+    if (!channel) {
+      throw new Error(
+        'Kitten-Lynx page is not attached yet. Call page.goto() before judgeAndroidAgent().',
+      );
+    }
+
+    return channel;
+  }
+}
+
+function isKittenLynxPage(page: unknown): page is KittenLynxJudgePage {
+  return typeof page === 'object'
+    && page !== null
+    && 'screenshot' in page
+    && 'url' in page
+    && typeof page.screenshot === 'function'
+    && typeof page.url === 'function';
+}
+
+function getKittenLynxPageUrl(page: KittenLynxJudgePage | undefined): string {
+  try {
+    return isKittenLynxPage(page) ? page.url() : '';
+  } catch {
+    return '';
+  }
+}
+
+function getImageFormat(buffer: Buffer): 'jpeg' | 'png' {
+  if (
+    buffer.length >= 8
+    && buffer[0] === 0x89
+    && buffer[1] === 0x50
+    && buffer[2] === 0x4e
+    && buffer[3] === 0x47
+  ) {
+    return 'png';
+  }
+
+  if (buffer.length >= 2 && buffer[0] === 0xff && buffer[1] === 0xd8) {
+    return 'jpeg';
+  }
+
+  throw new Error('Unsupported Kitten-Lynx screenshot format.');
+}
+
+function getImageSize(buffer: Buffer, format: 'jpeg' | 'png'): Size {
+  if (format === 'png') {
+    return {
+      height: buffer.readUInt32BE(20),
+      width: buffer.readUInt32BE(16),
+    };
+  }
+
+  let offset = 2;
+  while (offset < buffer.length) {
+    if (buffer[offset] !== 0xff) {
+      break;
+    }
+
+    if (offset + 4 >= buffer.length) {
+      break;
+    }
+
+    const marker = buffer[offset + 1];
+    if (marker === undefined) {
+      break;
+    }
+
+    const length = buffer.readUInt16BE(offset + 2);
+    const isStartOfFrame = marker >= 0xc0
+      && marker <= 0xcf
+      && marker !== 0xc4
+      && marker !== 0xc8
+      && marker !== 0xcc;
+
+    if (isStartOfFrame) {
+      if (offset + 8 >= buffer.length) {
+        break;
+      }
+
+      return {
+        height: buffer.readUInt16BE(offset + 5),
+        width: buffer.readUInt16BE(offset + 7),
+      };
+    }
+
+    offset += 2 + length;
+  }
+
+  throw new Error('Unable to read Kitten-Lynx screenshot dimensions.');
 }
 
 interface JudgeDimensionPromptDefinition {
@@ -256,7 +612,7 @@ const JUDGE_DIMENSION_PROMPTS: Record<
 };
 
 function buildJudgePrompt(
-  options: NormalizedJudgePageOptions,
+  options: NormalizedJudgeOptions,
 ): string {
   const dimensionPrompt = JUDGE_DIMENSION_PROMPTS[options.dimension];
   const reference = options.reference

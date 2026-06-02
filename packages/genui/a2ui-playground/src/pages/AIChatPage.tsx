@@ -324,6 +324,23 @@ function safeStringifyPayload(value: unknown): string {
   }
 }
 
+function getGeneratedCharacterCount(value: unknown): number {
+  return safeStringifyPayload(value).length;
+}
+
+function formatCharacterCount(count: number): string {
+  return `${count.toLocaleString()} char${count === 1 ? '' : 's'}`;
+}
+
+function createRenderedPreviewContent(
+  messageCount: number,
+  characterCount: number,
+): string {
+  return `✅ Rendered ${messageCount} A2UI message${
+    messageCount === 1 ? '' : 's'
+  } (${formatCharacterCount(characterCount)}) to Lynx Preview`;
+}
+
 function payloadToChunks(value: unknown): unknown[] {
   if (Array.isArray(value)) return value;
   if (typeof value !== 'string') return [value];
@@ -812,6 +829,16 @@ function buildChatMessagesFromHistory(
           continue;
         }
       }
+      const generatedMessages = normalizeA2UIMessages(message.content);
+      if (generatedMessages.length > 0) {
+        next.push({
+          role: 'ai',
+          content: createRenderedPreviewContent(
+            generatedMessages.length,
+            getGeneratedCharacterCount(message.content),
+          ),
+        });
+      }
       next.push({
         role: 'json',
         content: 'Generated Output',
@@ -876,8 +903,12 @@ export function AIChatPage(
   const actionAbortRef = useRef<AbortController | null>(null);
   const hydratedActiveIdRef = useRef<string | null>(null);
   const latestPreviewMessagesRef = useRef<unknown[]>([]);
+  const generatedCharacterCountRef = useRef(0);
   const latestPreviewPayloadUrlsRef = useRef<PreviewPayloadUrls | null>(null);
   const renderUrlRef = useRef('');
+  const bootstrappedRenderUrlRef = useRef<string | null>(null);
+  const bootstrappedMessagesRef = useRef<unknown[] | null>(null);
+  const bootstrappedReplayTimersRef = useRef<number[]>([]);
   const {
     containerRef: pageRef,
     handleResizeStart: handlePanelResizeStart,
@@ -1020,6 +1051,62 @@ export function AIChatPage(
       actionMocksUrl: previewPayloadUrls?.actionMocksUrl,
     };
   }, [previewMessages, previewPayloadUrls, protocol, theme]);
+  const previewInfoHint = previewMessages
+    ? undefined
+    : (isGenerating
+      ? 'Generation is in progress. Web Preview and Native Preview links will appear once A2UI data arrives.'
+      : 'No A2UI data has been received yet. Send a message to generate Web Preview and Native Preview links.');
+
+  const clearBootstrappedPreview = useCallback(() => {
+    bootstrappedRenderUrlRef.current = null;
+    bootstrappedMessagesRef.current = null;
+    for (const timer of bootstrappedReplayTimersRef.current) {
+      window.clearTimeout(timer);
+    }
+    bootstrappedReplayTimersRef.current = [];
+  }, []);
+
+  const postLiveMessagesToPreview = useCallback((messages: unknown[]) => {
+    const targetOrigin = targetOriginForFrame(renderUrlRef.current);
+    previewFrameRef.current?.contentWindow?.postMessage(
+      { type: 'A2UI_LIVE_MESSAGES', messages },
+      targetOrigin,
+    );
+  }, []);
+
+  const postReplayMessagesToPreview = useCallback((messages: unknown[]) => {
+    const targetOrigin = targetOriginForFrame(renderUrlRef.current);
+    previewFrameRef.current?.contentWindow?.postMessage(
+      { type: 'A2UI_REPLAY_MESSAGES', messages },
+      targetOrigin,
+    );
+  }, []);
+
+  const postBootstrappedMessages = useCallback(() => {
+    const currentUrl = renderUrlRef.current;
+    if (bootstrappedRenderUrlRef.current !== currentUrl) return;
+    const messages = bootstrappedMessagesRef.current;
+    if (!messages || messages.length === 0) return;
+    // The first render URL only boots the Lynx runtime. Replay restored
+    // messages after iframe startup so render.html can queue them until
+    // sendGlobalEvent and the Lynx MessageStore are both ready.
+    for (const timer of bootstrappedReplayTimersRef.current) {
+      window.clearTimeout(timer);
+    }
+    bootstrappedReplayTimersRef.current = [];
+    postReplayMessagesToPreview(messages);
+    for (const delay of [100, 300, 800]) {
+      const timer = window.setTimeout(() => {
+        bootstrappedReplayTimersRef.current = bootstrappedReplayTimersRef
+          .current.filter((item) => item !== timer);
+        if (bootstrappedRenderUrlRef.current !== renderUrlRef.current) return;
+        const latestMessages = bootstrappedMessagesRef.current;
+        if (!latestMessages || latestMessages.length === 0) return;
+        postReplayMessagesToPreview(latestMessages);
+      }, delay);
+      bootstrappedReplayTimersRef.current.push(timer);
+    }
+  }, [postReplayMessagesToPreview]);
 
   const publishPreviewMessages = useCallback(
     (nextMessages: unknown[]) => {
@@ -1038,19 +1125,32 @@ export function AIChatPage(
 
       setRenderUrl((current) => {
         if (current) {
-          const targetOrigin = targetOriginForFrame(current);
-          previewFrameRef.current?.contentWindow?.postMessage(
-            { type: 'A2UI_LIVE_MESSAGES', messages: nextMessages },
-            targetOrigin,
-          );
+          renderUrlRef.current = current;
+          if (bootstrappedRenderUrlRef.current === current) {
+            bootstrappedMessagesRef.current = nextMessages;
+            postBootstrappedMessages();
+            return current;
+          }
+          clearBootstrappedPreview();
+          postLiveMessagesToPreview(nextMessages);
           return current;
         }
 
         const nextRenderUrl = buildRenderUrl(initData, baseUrl);
+        renderUrlRef.current = nextRenderUrl;
+        bootstrappedRenderUrlRef.current = nextRenderUrl;
+        bootstrappedMessagesRef.current = nextMessages;
         return nextRenderUrl;
       });
     },
-    [baseUrl, protocol, theme],
+    [
+      baseUrl,
+      clearBootstrappedPreview,
+      postBootstrappedMessages,
+      postLiveMessagesToPreview,
+      protocol,
+      theme,
+    ],
   );
 
   const publishStreamingPreviewMessages = useCallback(
@@ -1075,23 +1175,40 @@ export function AIChatPage(
 
       setRenderUrl((current) => {
         if (current) {
-          const targetOrigin = targetOriginForFrame(current);
-          previewFrameRef.current?.contentWindow?.postMessage(
-            { type: 'A2UI_LIVE_MESSAGES', messages: deltaMessages },
-            targetOrigin,
-          );
+          renderUrlRef.current = current;
+          if (bootstrappedRenderUrlRef.current === current) {
+            bootstrappedMessagesRef.current = accumulatedMessages;
+            postBootstrappedMessages();
+            return current;
+          }
+          postLiveMessagesToPreview(deltaMessages);
           return current;
         }
 
-        return buildRenderUrl(initData, baseUrl);
+        const nextRenderUrl = buildRenderUrl(initData, baseUrl);
+        renderUrlRef.current = nextRenderUrl;
+        bootstrappedRenderUrlRef.current = nextRenderUrl;
+        bootstrappedMessagesRef.current = accumulatedMessages;
+        return nextRenderUrl;
       });
     },
-    [baseUrl, protocol, theme, updatePreviewPayloadUrls],
+    [
+      baseUrl,
+      postBootstrappedMessages,
+      postLiveMessagesToPreview,
+      protocol,
+      theme,
+      updatePreviewPayloadUrls,
+    ],
   );
 
   const handlePreviewLoad = useCallback(() => {
+    if (bootstrappedRenderUrlRef.current === renderUrlRef.current) {
+      postBootstrappedMessages();
+      return;
+    }
     publishPreviewMessages(latestPreviewMessagesRef.current);
-  }, [publishPreviewMessages]);
+  }, [postBootstrappedMessages, publishPreviewMessages]);
 
   useEffect(() => {
     if (!isReady || isGenerating) return;
@@ -1120,10 +1237,13 @@ export function AIChatPage(
       latestPreviewMessagesRef.current = [];
       setPreviewMessages(null);
       updatePreviewPayloadUrls(null);
+      clearBootstrappedPreview();
+      renderUrlRef.current = '';
       setRenderUrl('');
     }
   }, [
     activeId,
+    clearBootstrappedPreview,
     isReady,
     isGenerating,
     persistedMessages,
@@ -1162,6 +1282,7 @@ export function AIChatPage(
     setPreviewMessages(null);
     updatePreviewPayloadUrls(null);
     latestPreviewMessagesRef.current = [];
+    generatedCharacterCountRef.current = 0;
     setTokenUsage({
       promptTokens: 0,
       completionTokens: 0,
@@ -1193,18 +1314,32 @@ export function AIChatPage(
 
         const finalMessages = await readA2UIResponse(
           response,
-          () => {
+          (generatedText) => {
+            const characterCount = getGeneratedCharacterCount(generatedText);
+            generatedCharacterCountRef.current = characterCount;
             setMessages((prev) => {
               const next = prev.slice();
+              const messageCount = latestPreviewMessagesRef.current.length;
               next[next.length - 1] = {
                 role: 'ai',
-                content: 'Streaming A2UI messages...',
+                content: messageCount > 0
+                  ? `${
+                    createRenderedPreviewContent(
+                      messageCount,
+                      characterCount,
+                    )
+                  }...`
+                  : `Streaming A2UI messages (${
+                    formatCharacterCount(characterCount)
+                  })...`,
               };
               return next;
             });
           },
           (nextMessages, meta) => {
             if (controller.signal.aborted) return;
+            const characterCount = getGeneratedCharacterCount(nextMessages);
+            generatedCharacterCountRef.current = characterCount;
             if (meta.final) {
               publishPreviewMessages(nextMessages);
               return;
@@ -1214,10 +1349,12 @@ export function AIChatPage(
               const next = prev.slice();
               next[next.length - 1] = {
                 role: 'ai',
-                content:
-                  `Streaming ${latestPreviewMessagesRef.current.length} A2UI message${
-                    latestPreviewMessagesRef.current.length === 1 ? '' : 's'
-                  }...`,
+                content: `${
+                  createRenderedPreviewContent(
+                    latestPreviewMessagesRef.current.length,
+                    characterCount,
+                  )
+                }...`,
               };
               return next;
             });
@@ -1232,7 +1369,8 @@ export function AIChatPage(
           },
           {
             parseDeltaMessages: false,
-            publishText: false,
+            publishText: true,
+            publishPartialMessages: true,
             onPreviewPayload: updatePreviewPayloadUrls,
           },
         );
@@ -1250,11 +1388,14 @@ export function AIChatPage(
         });
         setMessages((prev) => {
           const next = prev.slice();
+          const characterCount = getGeneratedCharacterCount(finalMessages);
+          generatedCharacterCountRef.current = characterCount;
           next[next.length - 1] = {
             role: 'ai',
-            content: `✅ Rendered ${finalMessages.length} A2UI message${
-              finalMessages.length === 1 ? '' : 's'
-            } to Lynx Preview`,
+            content: createRenderedPreviewContent(
+              finalMessages.length,
+              characterCount,
+            ),
           };
           next.push({
             role: 'json',
@@ -1299,6 +1440,10 @@ export function AIChatPage(
       if (!e.data || typeof e.data !== 'object') return;
       const msg = e.data as Record<string, unknown>;
       if (msg.type === 'A2UI_RENDER_READY') {
+        if (bootstrappedRenderUrlRef.current === renderUrlRef.current) {
+          postBootstrappedMessages();
+          return;
+        }
         publishPreviewMessages(latestPreviewMessagesRef.current);
         return;
       }
@@ -1552,6 +1697,7 @@ export function AIChatPage(
     };
   }, [
     buildConversationContext,
+    postBootstrappedMessages,
     publishPreviewMessages,
     recordTurn,
     updatePreviewPayloadUrls,
@@ -1964,6 +2110,7 @@ export function AIChatPage(
           showPreviewModeSwitch
           showSimulationBar={false}
           previewSource={previewSource}
+          previewInfoHint={previewInfoHint}
         >
           <PreviewViewport
             src={renderUrl}
