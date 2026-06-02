@@ -1051,10 +1051,39 @@ html[data-theme="dark"] .phoneHomeIndicator {
   container-name: preview-qr;
 }
 
+.previewQrSectionEmpty {
+  min-height: 148px;
+  justify-content: center;
+}
+
+.previewQrEmptyState {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 16px;
+  border: 1px dashed var(--geist-border);
+  border-radius: var(--geist-radius-md);
+  background: var(--geist-surface);
+}
+
+.previewQrEmptyTitle {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--geist-foreground);
+}
+
+.previewQrEmptyDesc {
+  max-width: 560px;
+  font-size: 11px;
+  line-height: 1.45;
+  color: var(--geist-secondary);
+}
+
 .previewQrContent {
   display: flex;
   align-items: flex-start;
   gap: 12px;
+  min-height: 128px;
 }
 
 .previewQrContentAlt {
