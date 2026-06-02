@@ -16,12 +16,21 @@ export interface PreviewPayloadUrls {
   actionMocksUrl?: string;
 }
 
+export interface PreviewPerformanceMetrics {
+  fcpMs?: number;
+  fmpMs?: number;
+  ttiMs?: number;
+  agentOutputMs?: number;
+  renderMs?: number;
+}
+
 export interface PersistedMessage {
   conversationId: string;
   seq: number;
   role: 'user' | 'assistant' | 'system';
   content: string;
   previewPayloadUrls?: PreviewPayloadUrls;
+  previewMetrics?: PreviewPerformanceMetrics;
   createdAt: number;
 }
 
