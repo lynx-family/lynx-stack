@@ -36,11 +36,6 @@ export const A2UI: MemoExoticComponent<typeof A2UIImpl>;
 // @public (undocumented)
 export const A2UI_PROTOCOL_VERSION = "v0.9";
 
-// Warning: (ae-missing-release-tag) "A2UI_SYSTEM_PROMPT" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
-//
-// @public (undocumented)
-export const A2UI_SYSTEM_PROMPT: string;
-
 // Warning: (ae-missing-release-tag) "A2UIClientEventMessage" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
 //
 // @public (undocumented)
@@ -197,11 +192,6 @@ export interface ActionProps {
     surfaceId: string;
 }
 
-// Warning: (ae-missing-release-tag) "BASIC_CATALOG" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
-//
-// @public (undocumented)
-export const BASIC_CATALOG: A2UIPromptCatalog;
-
 // Warning: (ae-missing-release-tag) "BASIC_CATALOG_EXAMPLES" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
 //
 // @public (undocumented)
@@ -210,7 +200,7 @@ export const BASIC_CATALOG_EXAMPLES: A2UIExample[];
 // Warning: (ae-missing-release-tag) "BASIC_CATALOG_ID" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
 //
 // @public (undocumented)
-export const BASIC_CATALOG_ID = "https://a2ui.org/specification/v0_9/basic_catalog.json";
+export const BASIC_CATALOG_ID = "https://unpkg.com/@lynx-js/genui/a2ui/dist/catalog/catalog.json";
 
 // Warning: (tsdoc-escape-greater-than) The ">" character should be escaped using a backslash to avoid confusion with an HTML tag
 // Warning: (tsdoc-escape-right-brace) The "}" character should be escaped using a backslash to avoid confusion with a TSDoc inline tag
@@ -225,7 +215,12 @@ export const basicFunctions: readonly CatalogFunctionEntry[];
 // Warning: (ae-missing-release-tag) "buildA2UISystemPrompt" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
 //
 // @public (undocumented)
-export function buildA2UISystemPrompt(opts?: BuildSystemPromptOptions): string;
+export function buildA2UISystemPrompt(opts: BuildSystemPromptOptions): string;
+
+// Warning: (ae-missing-release-tag) "buildA2UISystemPromptAsync" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
+//
+// @public (undocumented)
+export function buildA2UISystemPromptAsync(opts?: BuildSystemPromptOptions): Promise<string>;
 
 // Warning: (ae-missing-release-tag) "BuildSystemPromptOptions" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
 //
@@ -306,13 +301,19 @@ export function createA2UICatalog(options: {
 // @public (undocumented)
 export function createA2UICatalogFromManifests(options: {
     catalogId: string;
-    componentManifests: Record<string, A2UIPromptJsonSchema>[];
+    componentManifests?: Record<string, A2UIPromptJsonSchema>[];
+    components?: Record<string, A2UIPromptJsonSchema>;
     examples?: A2UIExample[];
     extraRules?: string[];
     functions?: A2UIFunctionSpec[];
     label?: string;
     version?: string;
 }): A2UIPromptCatalog;
+
+// Warning: (ae-missing-release-tag) "loadBasicCatalog" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
+//
+// @public (undocumented)
+export function loadBasicCatalog(): Promise<A2UIPromptCatalog>;
 
 // Warning: (ae-missing-release-tag) "createFallbackMessagesFromPlainText" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
 //
@@ -999,6 +1000,14 @@ export interface UserActionPayload {
 // @public (undocumented)
 export function useResolvedProps(properties: Record<string, unknown>, surface: Surface | undefined, dataContextPath?: string, processor?: MessageProcessor, functions?: readonly CatalogFunctionEntry[]): readonly [Record<string, unknown>, (key: string, value: unknown) => void];
 
+// Warning: (ae-missing-release-tag) "writeA2UICatalog" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
+//
+// @public (undocumented)
+export function writeA2UICatalog(catalog: ExtractedA2UICatalog, options: {
+    cwd?: string;
+    outDir: string;
+}): void;
+
 // Warning: (ae-missing-release-tag) "writeCatalogArtifacts" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
 //
 // @public
@@ -1029,6 +1038,8 @@ export function writeCatalogFunctions(functions: CatalogFunction[], options: {
 //
 // @public (undocumented)
 export interface WriteComponentCatalogOptions extends ExtractCatalogOptions {
+    // (undocumented)
+    catalogId?: string;
     // (undocumented)
     outDir: string;
 }

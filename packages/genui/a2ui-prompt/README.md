@@ -14,9 +14,9 @@ package.
 Build a prompt with the built-in A2UI basic catalog:
 
 ```ts
-import { buildA2UISystemPrompt } from '@lynx-js/genui/a2ui-prompt';
+import { buildA2UISystemPromptAsync } from '@lynx-js/genui/a2ui-prompt';
 
-const prompt = buildA2UISystemPrompt();
+const prompt = await buildA2UISystemPromptAsync();
 ```
 
 Read generated catalog artifacts and build a prompt for a custom catalog:
@@ -42,11 +42,11 @@ Use `genui a2ui generate catalog` to create those artifacts.
 ## Exports
 
 - `buildA2UISystemPrompt`
-- `A2UI_SYSTEM_PROMPT`
-- `BASIC_CATALOG`
 - `BASIC_CATALOG_ID`
 - `renderCatalogReference`
 - `createA2UICatalogFromManifests`
+- `loadBasicCatalog`
+- `buildA2UISystemPromptAsync`
 - `readA2UICatalogFromDirectory`
 
 ## Local Development

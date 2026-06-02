@@ -3,7 +3,7 @@
 // LICENSE file in the root directory of this source tree.
 
 import type { A2UICatalog } from '../../../../agent/a2ui-catalog';
-import { BASIC_CATALOG } from '../../../../agent/a2ui-catalog';
+import { loadBasicCatalog } from '../../../../agent/a2ui-catalog';
 import {
   A2UIProtocolMessageStreamParser,
   splitA2UIProtocolMessages,
@@ -197,6 +197,8 @@ export async function POST(req: Request) {
       log(event, details);
     },
   };
+  const catalog = opts.catalog ?? await loadBasicCatalog();
+  const optsWithCatalog = { ...opts, catalog };
 
   log('request.accepted', {
     surfaceId: body.surfaceId,
@@ -215,7 +217,7 @@ export async function POST(req: Request) {
     userContentLength: userContent.length,
     model: opts.model,
     hasBaseURL: Boolean(opts.baseURL),
-    catalogId: opts.catalog?.id ?? BASIC_CATALOG.id,
+    catalogId: catalog.id,
     maxRepairAttempts: opts.maxRepairAttempts,
   });
 
@@ -250,7 +252,7 @@ export async function POST(req: Request) {
         log('agent.connect.started');
         const { textStream, finalize } = await service.streamAsAsyncIterable(
           [userMessage],
-          opts,
+          optsWithCatalog,
           validatedConversation.conversation,
         );
         log('agent.connect.completed', {
@@ -330,7 +332,7 @@ export async function POST(req: Request) {
         };
         const v = validateA2UIOutput(
           finalText ?? '',
-          opts.catalog ?? BASIC_CATALOG,
+          catalog,
           validationOptions,
         );
         let resolvedMessages = v.ok
@@ -357,7 +359,7 @@ export async function POST(req: Request) {
             });
             const repaired = await service.generateValidated(
               [userMessage],
-              opts,
+              optsWithCatalog,
               validatedConversation.conversation,
               validationOptions,
             );

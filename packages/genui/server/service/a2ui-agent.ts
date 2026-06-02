@@ -6,8 +6,8 @@ import { createHash } from 'node:crypto';
 
 import { createA2UIAgent } from '../agent/a2ui-agent';
 import type { A2UIAgent } from '../agent/a2ui-agent';
-import { BASIC_CATALOG } from '../agent/a2ui-catalog';
 import type { A2UICatalog } from '../agent/a2ui-catalog';
+import { loadBasicCatalog } from '../agent/a2ui-catalog';
 import {
   formatErrorsForModel,
   validateA2UIOutput,
@@ -103,11 +103,12 @@ function sumContentChars(messages: ChatMessage[]): number {
 export default class A2UIAgentService {
   private agentCache = new Map<string, Promise<A2UIAgent>>();
 
-  private getAgent(opts: ChatOptions): Promise<A2UIAgent> {
+  private async getAgent(opts: ChatOptions): Promise<A2UIAgent> {
     const startedAt = performance.now();
+    const catalog = opts.catalog ?? await loadBasicCatalog();
     const cacheKey = `${opts.baseURL ?? 'default'}:${opts.model ?? 'default'}:${
       hashApiKey(opts.apiKey)
-    }:${opts.catalog?.id ?? 'basic'}`;
+    }:${catalog.id}`;
     let cached = this.agentCache.get(cacheKey);
     if (cached) {
       opts.onPerformanceEvent?.('agent.cache.hit', {
@@ -117,14 +118,12 @@ export default class A2UIAgentService {
       return cached;
     }
 
-    cached = Promise.resolve(
-      createA2UIAgent(pickDefined({
-        apiKey: opts.apiKey,
-        baseURL: opts.baseURL,
-        model: opts.model,
-        catalog: opts.catalog,
-      })).agent,
-    );
+    cached = createA2UIAgent(pickDefined({
+      apiKey: opts.apiKey,
+      baseURL: opts.baseURL,
+      model: opts.model,
+      catalog,
+    })).then(({ agent }) => agent);
     this.agentCache.set(cacheKey, cached);
     opts.onPerformanceEvent?.('agent.cache.miss', {
       durationMs: performance.now() - startedAt,
@@ -274,7 +273,7 @@ export default class A2UIAgentService {
     conversation?: ConversationContext,
     validationOptions?: ValidationOptions,
   ): Promise<A2UIResponse> {
-    const catalog = opts.catalog ?? BASIC_CATALOG;
+    const catalog = opts.catalog ?? await loadBasicCatalog();
     const maxAttempts = Math.max(1, opts.maxRepairAttempts ?? 2) + 1;
     const agent = await this.getAgent({ ...opts, catalog });
 

@@ -1,0 +1,2026 @@
+{
+  "catalogId": "https://unpkg.com/@lynx-js/genui/a2ui/dist/catalog/catalog.json",
+  "components": {
+    "Button": {
+      "properties": {
+        "child": {
+          "type": "string"
+        },
+        "variant": {
+          "type": "string",
+          "enum": [
+            "primary",
+            "borderless"
+          ]
+        },
+        "isValid": {
+          "type": "boolean"
+        },
+        "action": {
+          "oneOf": [
+            {
+              "type": "object",
+              "properties": {
+                "event": {
+                  "type": "object",
+                  "properties": {
+                    "name": {
+                      "type": "string"
+                    },
+                    "context": {
+                      "type": "object",
+                      "additionalProperties": true,
+                      "description": "Context is a JSON object map in v0.9."
+                    }
+                  },
+                  "required": [
+                    "name"
+                  ],
+                  "additionalProperties": false
+                }
+              },
+              "required": [
+                "event"
+              ],
+              "additionalProperties": false
+            },
+            {
+              "type": "object",
+              "properties": {
+                "functionCall": {
+                  "type": "object",
+                  "properties": {
+                    "call": {
+                      "type": "string"
+                    },
+                    "args": {
+                      "type": "object",
+                      "additionalProperties": true
+                    },
+                    "returnType": {
+                      "type": "string",
+                      "enum": [
+                        "string",
+                        "number",
+                        "boolean",
+                        "object",
+                        "array",
+                        "any",
+                        "void"
+                      ]
+                    }
+                  },
+                  "required": [
+                    "call",
+                    "args"
+                  ],
+                  "additionalProperties": false
+                }
+              },
+              "required": [
+                "functionCall"
+              ],
+              "additionalProperties": false
+            }
+          ],
+          "description": "v0.9 actions should use the `event` wrapper for server-dispatched clicks."
+        },
+        "checks": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "condition": {
+                "oneOf": [
+                  {
+                    "type": "boolean"
+                  },
+                  {
+                    "type": "object",
+                    "properties": {
+                      "path": {
+                        "type": "string"
+                      }
+                    },
+                    "required": [
+                      "path"
+                    ],
+                    "additionalProperties": false
+                  },
+                  {
+                    "type": "object",
+                    "properties": {
+                      "call": {
+                        "type": "string"
+                      },
+                      "args": {
+                        "type": "object",
+                        "additionalProperties": true
+                      },
+                      "returnType": {
+                        "type": "string",
+                        "enum": [
+                          "string",
+                          "number",
+                          "boolean",
+                          "object",
+                          "array",
+                          "any",
+                          "void"
+                        ]
+                      }
+                    },
+                    "required": [
+                      "call",
+                      "args"
+                    ],
+                    "additionalProperties": false
+                  }
+                ]
+              },
+              "message": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "condition",
+              "message"
+            ],
+            "additionalProperties": false
+          }
+        }
+      },
+      "required": [
+        "child",
+        "action"
+      ]
+    },
+    "Card": {
+      "properties": {
+        "child": {
+          "type": "string"
+        },
+        "variant": {
+          "type": "string",
+          "enum": [
+            "elevated",
+            "outlined",
+            "filled",
+            "ghost"
+          ]
+        },
+        "weight": {
+          "type": "number"
+        }
+      },
+      "required": [
+        "child"
+      ]
+    },
+    "CheckBox": {
+      "properties": {
+        "label": {
+          "oneOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "object",
+              "properties": {
+                "path": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "path"
+              ],
+              "additionalProperties": false
+            },
+            {
+              "type": "object",
+              "properties": {
+                "call": {
+                  "type": "string"
+                },
+                "args": {
+                  "type": "object",
+                  "additionalProperties": true
+                },
+                "returnType": {
+                  "type": "string",
+                  "enum": [
+                    "string",
+                    "number",
+                    "boolean",
+                    "object",
+                    "array",
+                    "any",
+                    "void"
+                  ]
+                }
+              },
+              "required": [
+                "call",
+                "args"
+              ],
+              "additionalProperties": false
+            }
+          ]
+        },
+        "value": {
+          "oneOf": [
+            {
+              "type": "boolean"
+            },
+            {
+              "type": "object",
+              "properties": {
+                "path": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "path"
+              ],
+              "additionalProperties": false
+            },
+            {
+              "type": "object",
+              "properties": {
+                "call": {
+                  "type": "string"
+                },
+                "args": {
+                  "type": "object",
+                  "additionalProperties": true
+                },
+                "returnType": {
+                  "type": "string",
+                  "enum": [
+                    "string",
+                    "number",
+                    "boolean",
+                    "object",
+                    "array",
+                    "any",
+                    "void"
+                  ]
+                }
+              },
+              "required": [
+                "call",
+                "args"
+              ],
+              "additionalProperties": false
+            }
+          ]
+        },
+        "checks": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "condition": {
+                "oneOf": [
+                  {
+                    "type": "boolean"
+                  },
+                  {
+                    "type": "object",
+                    "properties": {
+                      "path": {
+                        "type": "string"
+                      }
+                    },
+                    "required": [
+                      "path"
+                    ],
+                    "additionalProperties": false
+                  },
+                  {
+                    "type": "object",
+                    "properties": {
+                      "call": {
+                        "type": "string"
+                      },
+                      "args": {
+                        "type": "object",
+                        "additionalProperties": true
+                      },
+                      "returnType": {
+                        "type": "string",
+                        "enum": [
+                          "string",
+                          "number",
+                          "boolean",
+                          "object",
+                          "array",
+                          "any",
+                          "void"
+                        ]
+                      }
+                    },
+                    "required": [
+                      "call",
+                      "args"
+                    ],
+                    "additionalProperties": false
+                  }
+                ]
+              },
+              "message": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "condition",
+              "message"
+            ],
+            "additionalProperties": false
+          }
+        }
+      },
+      "required": [
+        "label",
+        "value"
+      ]
+    },
+    "ChoicePicker": {
+      "properties": {
+        "label": {
+          "oneOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "object",
+              "properties": {
+                "path": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "path"
+              ],
+              "additionalProperties": false
+            },
+            {
+              "type": "object",
+              "properties": {
+                "call": {
+                  "type": "string"
+                },
+                "args": {
+                  "type": "object",
+                  "additionalProperties": true
+                },
+                "returnType": {
+                  "type": "string",
+                  "enum": [
+                    "string",
+                    "number",
+                    "boolean",
+                    "object",
+                    "array",
+                    "any",
+                    "void"
+                  ]
+                }
+              },
+              "required": [
+                "call",
+                "args"
+              ],
+              "additionalProperties": false
+            }
+          ],
+          "description": "The label for the group of options."
+        },
+        "variant": {
+          "type": "string",
+          "enum": [
+            "multipleSelection",
+            "mutuallyExclusive"
+          ],
+          "description": "A hint for how the choice picker should be displayed and behave."
+        },
+        "options": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "label": {
+                "oneOf": [
+                  {
+                    "type": "string"
+                  },
+                  {
+                    "type": "object",
+                    "properties": {
+                      "path": {
+                        "type": "string"
+                      }
+                    },
+                    "required": [
+                      "path"
+                    ],
+                    "additionalProperties": false
+                  },
+                  {
+                    "type": "object",
+                    "properties": {
+                      "call": {
+                        "type": "string"
+                      },
+                      "args": {
+                        "type": "object",
+                        "additionalProperties": true
+                      },
+                      "returnType": {
+                        "type": "string",
+                        "enum": [
+                          "string",
+                          "number",
+                          "boolean",
+                          "object",
+                          "array",
+                          "any",
+                          "void"
+                        ]
+                      }
+                    },
+                    "required": [
+                      "call",
+                      "args"
+                    ],
+                    "additionalProperties": false
+                  }
+                ],
+                "description": "The text to display for this option."
+              },
+              "value": {
+                "type": "string",
+                "description": "The stable value associated with this option."
+              }
+            },
+            "required": [
+              "label",
+              "value"
+            ],
+            "additionalProperties": false
+          },
+          "description": "The list of available options to choose from."
+        },
+        "value": {
+          "oneOf": [
+            {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            },
+            {
+              "type": "object",
+              "properties": {
+                "path": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "path"
+              ],
+              "additionalProperties": false
+            },
+            {
+              "type": "object",
+              "properties": {
+                "call": {
+                  "type": "string"
+                },
+                "args": {
+                  "type": "object",
+                  "additionalProperties": true
+                },
+                "returnType": {
+                  "type": "string",
+                  "enum": [
+                    "string",
+                    "number",
+                    "boolean",
+                    "object",
+                    "array",
+                    "any",
+                    "void"
+                  ]
+                }
+              },
+              "required": [
+                "call",
+                "args"
+              ],
+              "additionalProperties": false
+            }
+          ],
+          "description": "The list of currently selected values."
+        },
+        "displayStyle": {
+          "type": "string",
+          "enum": [
+            "checkbox",
+            "chips"
+          ],
+          "description": "The display style of the component."
+        },
+        "filterable": {
+          "type": "boolean",
+          "description": "If true, displays a search input to filter the options."
+        },
+        "checks": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "condition": {
+                "oneOf": [
+                  {
+                    "type": "boolean"
+                  },
+                  {
+                    "type": "object",
+                    "properties": {
+                      "path": {
+                        "type": "string"
+                      }
+                    },
+                    "required": [
+                      "path"
+                    ],
+                    "additionalProperties": false
+                  },
+                  {
+                    "type": "object",
+                    "properties": {
+                      "call": {
+                        "type": "string"
+                      },
+                      "args": {
+                        "type": "object",
+                        "additionalProperties": true
+                      },
+                      "returnType": {
+                        "type": "string",
+                        "enum": [
+                          "string",
+                          "number",
+                          "boolean",
+                          "object",
+                          "array",
+                          "any",
+                          "void"
+                        ]
+                      }
+                    },
+                    "required": [
+                      "call",
+                      "args"
+                    ],
+                    "additionalProperties": false
+                  }
+                ],
+                "description": "The condition that indicates whether the check passes."
+              },
+              "message": {
+                "type": "string",
+                "description": "The error message to display if the check fails."
+              }
+            },
+            "required": [
+              "condition",
+              "message"
+            ],
+            "additionalProperties": false
+          },
+          "description": "A list of checks to perform."
+        }
+      },
+      "required": [
+        "options",
+        "value"
+      ]
+    },
+    "Column": {
+      "properties": {
+        "children": {
+          "oneOf": [
+            {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            },
+            {
+              "type": "object",
+              "properties": {
+                "componentId": {
+                  "type": "string"
+                },
+                "path": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "componentId",
+                "path"
+              ],
+              "additionalProperties": false
+            }
+          ],
+          "description": "Static child IDs array or template object."
+        },
+        "align": {
+          "type": "string",
+          "enum": [
+            "start",
+            "center",
+            "end",
+            "stretch"
+          ]
+        },
+        "justify": {
+          "type": "string",
+          "enum": [
+            "start",
+            "center",
+            "end",
+            "stretch",
+            "spaceBetween",
+            "spaceAround",
+            "spaceEvenly"
+          ]
+        }
+      },
+      "required": [
+        "children"
+      ]
+    },
+    "DateTimeInput": {
+      "properties": {
+        "value": {
+          "oneOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "object",
+              "properties": {
+                "path": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "path"
+              ],
+              "additionalProperties": false
+            }
+          ],
+          "description": "The current date/time value. Typically bound to a data path."
+        },
+        "label": {
+          "oneOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "object",
+              "properties": {
+                "path": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "path"
+              ],
+              "additionalProperties": false
+            },
+            {
+              "type": "object",
+              "properties": {
+                "call": {
+                  "type": "string"
+                },
+                "args": {
+                  "type": "object",
+                  "additionalProperties": true
+                },
+                "returnType": {
+                  "type": "string",
+                  "enum": [
+                    "string",
+                    "number",
+                    "boolean",
+                    "object",
+                    "array",
+                    "any",
+                    "void"
+                  ]
+                }
+              },
+              "required": [
+                "call",
+                "args"
+              ],
+              "additionalProperties": false
+            }
+          ],
+          "description": "The text label for the input field."
+        },
+        "enableDate": {
+          "type": "boolean",
+          "description": "Whether to show the date picker."
+        },
+        "enableTime": {
+          "type": "boolean",
+          "description": "Whether to show the time picker."
+        },
+        "outputFormat": {
+          "type": "string",
+          "description": "Format string for the output value. Supports YYYY, MM, DD, HH, and mm."
+        },
+        "min": {
+          "type": "string",
+          "description": "Minimum allowed date/time value."
+        },
+        "max": {
+          "type": "string",
+          "description": "Maximum allowed date/time value."
+        },
+        "checks": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "condition": {
+                "oneOf": [
+                  {
+                    "type": "boolean"
+                  },
+                  {
+                    "type": "object",
+                    "properties": {
+                      "path": {
+                        "type": "string"
+                      }
+                    },
+                    "required": [
+                      "path"
+                    ],
+                    "additionalProperties": false
+                  },
+                  {
+                    "type": "object",
+                    "properties": {
+                      "call": {
+                        "type": "string"
+                      },
+                      "args": {
+                        "type": "object",
+                        "additionalProperties": true
+                      },
+                      "returnType": {
+                        "type": "string",
+                        "enum": [
+                          "string",
+                          "number",
+                          "boolean",
+                          "object",
+                          "array",
+                          "any",
+                          "void"
+                        ]
+                      }
+                    },
+                    "required": [
+                      "call",
+                      "args"
+                    ],
+                    "additionalProperties": false
+                  }
+                ],
+                "description": "The condition that indicates whether the check passes."
+              },
+              "message": {
+                "type": "string",
+                "description": "The error message to display if the check fails."
+              }
+            },
+            "required": [
+              "condition",
+              "message"
+            ],
+            "additionalProperties": false
+          },
+          "description": "A list of checks to perform."
+        }
+      },
+      "required": [
+        "value"
+      ]
+    },
+    "Divider": {
+      "properties": {
+        "axis": {
+          "type": "string",
+          "enum": [
+            "horizontal",
+            "vertical"
+          ]
+        }
+      },
+      "required": []
+    },
+    "Icon": {
+      "properties": {
+        "name": {
+          "oneOf": [
+            {
+              "type": "string",
+              "enum": [
+                "account_circle"
+              ]
+            },
+            {
+              "type": "string",
+              "enum": [
+                "add"
+              ]
+            },
+            {
+              "type": "string",
+              "enum": [
+                "arrow_back"
+              ]
+            },
+            {
+              "type": "string",
+              "enum": [
+                "arrow_forward"
+              ]
+            },
+            {
+              "type": "string",
+              "enum": [
+                "camera"
+              ]
+            },
+            {
+              "type": "string",
+              "enum": [
+                "check"
+              ]
+            },
+            {
+              "type": "string",
+              "enum": [
+                "close"
+              ]
+            },
+            {
+              "type": "string",
+              "enum": [
+                "delete"
+              ]
+            },
+            {
+              "type": "string",
+              "enum": [
+                "edit"
+              ]
+            },
+            {
+              "type": "string",
+              "enum": [
+                "error"
+              ]
+            },
+            {
+              "type": "string",
+              "enum": [
+                "favorite"
+              ]
+            },
+            {
+              "type": "string",
+              "enum": [
+                "help"
+              ]
+            },
+            {
+              "type": "string",
+              "enum": [
+                "home"
+              ]
+            },
+            {
+              "type": "string",
+              "enum": [
+                "info"
+              ]
+            },
+            {
+              "type": "string",
+              "enum": [
+                "location_on"
+              ]
+            },
+            {
+              "type": "string",
+              "enum": [
+                "lock"
+              ]
+            },
+            {
+              "type": "string",
+              "enum": [
+                "mail"
+              ]
+            },
+            {
+              "type": "string",
+              "enum": [
+                "menu"
+              ]
+            },
+            {
+              "type": "string",
+              "enum": [
+                "more_vert"
+              ]
+            },
+            {
+              "type": "string",
+              "enum": [
+                "pause"
+              ]
+            },
+            {
+              "type": "string",
+              "enum": [
+                "person"
+              ]
+            },
+            {
+              "type": "string",
+              "enum": [
+                "play_arrow"
+              ]
+            },
+            {
+              "type": "string",
+              "enum": [
+                "refresh"
+              ]
+            },
+            {
+              "type": "string",
+              "enum": [
+                "search"
+              ]
+            },
+            {
+              "type": "string",
+              "enum": [
+                "send"
+              ]
+            },
+            {
+              "type": "string",
+              "enum": [
+                "settings"
+              ]
+            },
+            {
+              "type": "string",
+              "enum": [
+                "share"
+              ]
+            },
+            {
+              "type": "string",
+              "enum": [
+                "star"
+              ]
+            },
+            {
+              "type": "string",
+              "enum": [
+                "warning"
+              ]
+            },
+            {
+              "type": "object",
+              "properties": {
+                "path": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "path"
+              ],
+              "additionalProperties": false
+            }
+          ],
+          "description": "Google Material icon ligature name, e.g. \"info\", \"account_circle\", \"arrow_back\"."
+        },
+        "size": {
+          "type": "string",
+          "enum": [
+            "sm",
+            "md",
+            "lg"
+          ]
+        },
+        "color": {
+          "type": "string",
+          "enum": [
+            "primary",
+            "muted",
+            "inherit"
+          ]
+        }
+      },
+      "required": [
+        "name"
+      ]
+    },
+    "Image": {
+      "properties": {
+        "url": {
+          "type": "string",
+          "description": "Image URL or path binding."
+        },
+        "fit": {
+          "type": "string",
+          "enum": [
+            "contain",
+            "cover",
+            "fill",
+            "none",
+            "scale-down"
+          ]
+        },
+        "mode": {
+          "type": "string",
+          "enum": [
+            "center",
+            "scaleToFill",
+            "aspectFit",
+            "aspectFill"
+          ]
+        },
+        "variant": {
+          "type": "string",
+          "enum": [
+            "icon",
+            "avatar",
+            "smallFeature",
+            "mediumFeature",
+            "largeFeature",
+            "header"
+          ]
+        },
+        "weight": {
+          "type": "number"
+        }
+      },
+      "required": [
+        "url"
+      ]
+    },
+    "LineChart": {
+      "properties": {
+        "labels": {
+          "oneOf": [
+            {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            },
+            {
+              "type": "object",
+              "properties": {
+                "path": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "path"
+              ],
+              "additionalProperties": false
+            }
+          ],
+          "description": "Category labels shown along the x axis."
+        },
+        "series": {
+          "oneOf": [
+            {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "properties": {
+                  "name": {
+                    "type": "string"
+                  },
+                  "values": {
+                    "type": "array",
+                    "items": {
+                      "type": "number"
+                    }
+                  },
+                  "color": {
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "name",
+                  "values"
+                ],
+                "additionalProperties": false
+              }
+            },
+            {
+              "type": "object",
+              "properties": {
+                "path": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "path"
+              ],
+              "additionalProperties": false
+            }
+          ],
+          "description": "One or more line series to render over the shared labels."
+        },
+        "variant": {
+          "type": "string",
+          "enum": [
+            "linear",
+            "natural",
+            "step"
+          ]
+        },
+        "xLabel": {
+          "type": "string"
+        },
+        "yLabel": {
+          "type": "string"
+        },
+        "showGrid": {
+          "type": "boolean"
+        },
+        "showLegend": {
+          "type": "boolean"
+        },
+        "height": {
+          "type": "number"
+        }
+      },
+      "required": [
+        "labels",
+        "series"
+      ]
+    },
+    "List": {
+      "properties": {
+        "children": {
+          "oneOf": [
+            {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            },
+            {
+              "type": "object",
+              "properties": {
+                "componentId": {
+                  "type": "string"
+                },
+                "path": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "componentId",
+                "path"
+              ],
+              "additionalProperties": false
+            }
+          ],
+          "description": "Static child IDs array or template object."
+        },
+        "direction": {
+          "type": "string",
+          "enum": [
+            "horizontal",
+            "vertical"
+          ]
+        },
+        "align": {
+          "type": "string",
+          "enum": [
+            "start",
+            "center",
+            "end",
+            "stretch"
+          ]
+        }
+      },
+      "required": [
+        "children"
+      ]
+    },
+    "Loading": {
+      "properties": {
+        "variant": {
+          "type": "string",
+          "enum": [
+            "inline",
+            "block"
+          ],
+          "description": "Visual density for the skeleton placeholder."
+        }
+      },
+      "required": []
+    },
+    "Modal": {
+      "properties": {
+        "trigger": {
+          "type": "string",
+          "description": "The ID of the component that opens the modal when interacted with."
+        },
+        "content": {
+          "type": "string",
+          "description": "The ID of the component to display inside the modal."
+        }
+      },
+      "required": [
+        "trigger",
+        "content"
+      ]
+    },
+    "PieChart": {
+      "properties": {
+        "data": {
+          "oneOf": [
+            {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "properties": {
+                  "name": {
+                    "type": "string"
+                  },
+                  "value": {
+                    "type": "number"
+                  },
+                  "color": {
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "name",
+                  "value"
+                ],
+                "additionalProperties": false
+              }
+            },
+            {
+              "type": "object",
+              "properties": {
+                "path": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "path"
+              ],
+              "additionalProperties": false
+            }
+          ],
+          "description": "Pie slices to render."
+        },
+        "variant": {
+          "type": "string",
+          "enum": [
+            "pie",
+            "donut"
+          ],
+          "description": "Render the chart as a flat pie or a donut."
+        },
+        "title": {
+          "type": "string",
+          "description": "Optional title shown above the chart."
+        },
+        "subtitle": {
+          "type": "string",
+          "description": "Optional subtitle shown under the title."
+        },
+        "showLegend": {
+          "type": "boolean",
+          "description": "Show the legend below the chart."
+        },
+        "showPercentages": {
+          "type": "boolean",
+          "description": "Show percentage values in the legend."
+        },
+        "height": {
+          "type": "number",
+          "description": "Chart height in pixels."
+        },
+        "paddingAngle": {
+          "type": "number",
+          "description": "Padding angle between slices, in degrees."
+        },
+        "colors": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "Custom color palette for the slices."
+        }
+      },
+      "required": [
+        "data"
+      ]
+    },
+    "RadioGroup": {
+      "properties": {
+        "items": {
+          "oneOf": [
+            {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            },
+            {
+              "type": "object",
+              "properties": {
+                "path": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "path"
+              ],
+              "additionalProperties": false
+            },
+            {
+              "type": "object",
+              "properties": {
+                "call": {
+                  "type": "string"
+                },
+                "args": {
+                  "type": "object",
+                  "additionalProperties": true
+                },
+                "returnType": {
+                  "type": "string",
+                  "enum": [
+                    "string",
+                    "number",
+                    "boolean",
+                    "object",
+                    "array",
+                    "any",
+                    "void"
+                  ]
+                }
+              },
+              "required": [
+                "call",
+                "args"
+              ],
+              "additionalProperties": false
+            }
+          ],
+          "description": "The list of string options to display."
+        },
+        "value": {
+          "oneOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "object",
+              "properties": {
+                "path": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "path"
+              ],
+              "additionalProperties": false
+            },
+            {
+              "type": "object",
+              "properties": {
+                "call": {
+                  "type": "string"
+                },
+                "args": {
+                  "type": "object",
+                  "additionalProperties": true
+                },
+                "returnType": {
+                  "type": "string",
+                  "enum": [
+                    "string",
+                    "number",
+                    "boolean",
+                    "object",
+                    "array",
+                    "any",
+                    "void"
+                  ]
+                }
+              },
+              "required": [
+                "call",
+                "args"
+              ],
+              "additionalProperties": false
+            }
+          ],
+          "description": "The currently selected value."
+        },
+        "usageHint": {
+          "type": "string",
+          "enum": [
+            "default",
+            "card",
+            "row"
+          ],
+          "description": "A hint for the visual style of the radio group."
+        },
+        "checks": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "condition": {
+                "oneOf": [
+                  {
+                    "type": "boolean"
+                  },
+                  {
+                    "type": "object",
+                    "properties": {
+                      "path": {
+                        "type": "string"
+                      }
+                    },
+                    "required": [
+                      "path"
+                    ],
+                    "additionalProperties": false
+                  },
+                  {
+                    "type": "object",
+                    "properties": {
+                      "call": {
+                        "type": "string"
+                      },
+                      "args": {
+                        "type": "object",
+                        "additionalProperties": true
+                      },
+                      "returnType": {
+                        "type": "string",
+                        "enum": [
+                          "string",
+                          "number",
+                          "boolean",
+                          "object",
+                          "array",
+                          "any",
+                          "void"
+                        ]
+                      }
+                    },
+                    "required": [
+                      "call",
+                      "args"
+                    ],
+                    "additionalProperties": false
+                  }
+                ]
+              },
+              "message": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "condition",
+              "message"
+            ],
+            "additionalProperties": false
+          }
+        }
+      },
+      "required": [
+        "items",
+        "value"
+      ]
+    },
+    "Row": {
+      "properties": {
+        "children": {
+          "oneOf": [
+            {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            },
+            {
+              "type": "object",
+              "properties": {
+                "componentId": {
+                  "type": "string"
+                },
+                "path": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "componentId",
+                "path"
+              ],
+              "additionalProperties": false
+            }
+          ],
+          "description": "Static child IDs array or template object."
+        },
+        "justify": {
+          "type": "string",
+          "enum": [
+            "start",
+            "center",
+            "end",
+            "stretch",
+            "spaceBetween",
+            "spaceAround",
+            "spaceEvenly"
+          ]
+        },
+        "align": {
+          "type": "string",
+          "enum": [
+            "start",
+            "center",
+            "end",
+            "stretch"
+          ]
+        }
+      },
+      "required": [
+        "children"
+      ]
+    },
+    "Slider": {
+      "properties": {
+        "label": {
+          "oneOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "object",
+              "properties": {
+                "path": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "path"
+              ],
+              "additionalProperties": false
+            },
+            {
+              "type": "object",
+              "properties": {
+                "call": {
+                  "type": "string"
+                },
+                "args": {
+                  "type": "object",
+                  "additionalProperties": true
+                },
+                "returnType": {
+                  "type": "string",
+                  "enum": [
+                    "string",
+                    "number",
+                    "boolean",
+                    "object",
+                    "array",
+                    "any",
+                    "void"
+                  ]
+                }
+              },
+              "required": [
+                "call",
+                "args"
+              ],
+              "additionalProperties": false
+            }
+          ],
+          "description": "The label for the slider."
+        },
+        "min": {
+          "type": "number",
+          "description": "The minimum value of the slider."
+        },
+        "max": {
+          "type": "number",
+          "description": "The maximum value of the slider."
+        },
+        "value": {
+          "oneOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "object",
+              "properties": {
+                "path": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "path"
+              ],
+              "additionalProperties": false
+            },
+            {
+              "type": "object",
+              "properties": {
+                "call": {
+                  "type": "string"
+                },
+                "args": {
+                  "type": "object",
+                  "additionalProperties": true
+                },
+                "returnType": {
+                  "type": "string",
+                  "enum": [
+                    "string",
+                    "number",
+                    "boolean",
+                    "object",
+                    "array",
+                    "any",
+                    "void"
+                  ]
+                }
+              },
+              "required": [
+                "call",
+                "args"
+              ],
+              "additionalProperties": false
+            }
+          ],
+          "description": "The current value of the slider."
+        },
+        "checks": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "condition": {
+                "oneOf": [
+                  {
+                    "type": "boolean"
+                  },
+                  {
+                    "type": "object",
+                    "properties": {
+                      "path": {
+                        "type": "string"
+                      }
+                    },
+                    "required": [
+                      "path"
+                    ],
+                    "additionalProperties": false
+                  },
+                  {
+                    "type": "object",
+                    "properties": {
+                      "call": {
+                        "type": "string"
+                      },
+                      "args": {
+                        "type": "object",
+                        "additionalProperties": true
+                      },
+                      "returnType": {
+                        "type": "string",
+                        "enum": [
+                          "string",
+                          "number",
+                          "boolean",
+                          "object",
+                          "array",
+                          "any",
+                          "void"
+                        ]
+                      }
+                    },
+                    "required": [
+                      "call",
+                      "args"
+                    ],
+                    "additionalProperties": false
+                  }
+                ],
+                "description": "The condition that indicates whether the check passes."
+              },
+              "message": {
+                "type": "string",
+                "description": "The error message to display if the check fails."
+              }
+            },
+            "required": [
+              "condition",
+              "message"
+            ],
+            "additionalProperties": false
+          },
+          "description": "A list of checks to perform."
+        }
+      },
+      "required": [
+        "max",
+        "value"
+      ]
+    },
+    "Tabs": {
+      "properties": {
+        "tabs": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "title": {
+                "type": "string"
+              },
+              "child": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "title",
+              "child"
+            ],
+            "additionalProperties": false
+          }
+        }
+      },
+      "required": [
+        "tabs"
+      ]
+    },
+    "Text": {
+      "properties": {
+        "text": {
+          "oneOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "object",
+              "properties": {
+                "path": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "path"
+              ],
+              "additionalProperties": false
+            },
+            {
+              "type": "object",
+              "properties": {
+                "call": {
+                  "type": "string"
+                },
+                "args": {
+                  "type": "object",
+                  "additionalProperties": true
+                },
+                "returnType": {
+                  "type": "string",
+                  "enum": [
+                    "string",
+                    "number",
+                    "boolean",
+                    "object",
+                    "array",
+                    "any",
+                    "void"
+                  ]
+                }
+              },
+              "required": [
+                "call",
+                "args"
+              ],
+              "additionalProperties": false
+            }
+          ],
+          "description": "Literal text, path binding, or function call."
+        },
+        "variant": {
+          "type": "string",
+          "enum": [
+            "h1",
+            "h2",
+            "h3",
+            "h4",
+            "h5",
+            "caption",
+            "body",
+            "markdown"
+          ]
+        },
+        "emphasis": {
+          "type": "string",
+          "enum": [
+            "medium",
+            "strong"
+          ]
+        }
+      },
+      "required": [
+        "text"
+      ]
+    },
+    "TextField": {
+      "properties": {
+        "label": {
+          "oneOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "object",
+              "properties": {
+                "path": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "path"
+              ],
+              "additionalProperties": false
+            }
+          ],
+          "description": "The text label for the input field."
+        },
+        "value": {
+          "oneOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "object",
+              "properties": {
+                "path": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "path"
+              ],
+              "additionalProperties": false
+            }
+          ],
+          "description": "The value of the text field."
+        },
+        "variant": {
+          "type": "string",
+          "enum": [
+            "number",
+            "longText",
+            "shortText",
+            "obscured"
+          ],
+          "description": "The type of input field to display."
+        },
+        "validationRegexp": {
+          "type": "string",
+          "description": "A regular expression used for client-side validation of the input."
+        },
+        "checks": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "condition": {
+                "oneOf": [
+                  {
+                    "type": "boolean"
+                  },
+                  {
+                    "type": "object",
+                    "properties": {
+                      "path": {
+                        "type": "string"
+                      }
+                    },
+                    "required": [
+                      "path"
+                    ],
+                    "additionalProperties": false
+                  },
+                  {
+                    "type": "object",
+                    "properties": {
+                      "call": {
+                        "type": "string"
+                      },
+                      "args": {
+                        "type": "object",
+                        "additionalProperties": {
+                          "oneOf": [
+                            {
+                              "type": "string"
+                            },
+                            {
+                              "type": "number"
+                            },
+                            {
+                              "type": "boolean"
+                            },
+                            {
+                              "type": "object",
+                              "properties": {
+                                "path": {
+                                  "type": "string"
+                                }
+                              },
+                              "required": [
+                                "path"
+                              ],
+                              "additionalProperties": false
+                            }
+                          ]
+                        }
+                      },
+                      "returnType": {
+                        "type": "string",
+                        "enum": [
+                          "boolean"
+                        ]
+                      }
+                    },
+                    "required": [
+                      "call"
+                    ],
+                    "additionalProperties": false
+                  }
+                ],
+                "description": "The condition that indicates whether the check passes."
+              },
+              "message": {
+                "type": "string",
+                "description": "The error message to display if the check fails."
+              }
+            },
+            "required": [
+              "condition",
+              "message"
+            ],
+            "additionalProperties": false
+          },
+          "description": "A list of checks to perform."
+        }
+      },
+      "required": [
+        "label"
+      ]
+    }
+  },
+  "functions": []
+}

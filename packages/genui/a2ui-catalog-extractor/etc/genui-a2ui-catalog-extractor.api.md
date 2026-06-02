@@ -293,6 +293,14 @@ export interface TypeDocType {
     value?: bigint | boolean | number | string | null;
 }
 
+// Warning: (ae-missing-release-tag) "writeA2UICatalog" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
+//
+// @public (undocumented)
+export function writeA2UICatalog(catalog: A2UICatalog, options: {
+    cwd?: string;
+    outDir: string;
+}): void;
+
 // Warning: (ae-missing-release-tag) "writeCatalogArtifacts" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
 //
 // @public
@@ -323,6 +331,8 @@ export function writeCatalogFunctions(functions: CatalogFunction[], options: {
 //
 // @public (undocumented)
 export interface WriteComponentCatalogOptions extends ExtractCatalogOptions {
+    // (undocumented)
+    catalogId?: string;
     // (undocumented)
     outDir: string;
 }

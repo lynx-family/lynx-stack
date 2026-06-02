@@ -3,7 +3,7 @@
 // LICENSE file in the root directory of this source tree.
 
 import type { A2UICatalog } from './a2ui-catalog';
-import { BASIC_CATALOG, renderCatalogReference } from './a2ui-catalog';
+import { loadBasicCatalog, renderCatalogReference } from './a2ui-catalog';
 
 export const A2UI_PROTOCOL_VERSION = 'v0.9';
 
@@ -178,9 +178,15 @@ export interface BuildSystemPromptOptions {
 }
 
 export function buildA2UISystemPrompt(
-  opts: BuildSystemPromptOptions = {},
+  opts: BuildSystemPromptOptions,
 ): string {
-  const catalog = opts.catalog ?? BASIC_CATALOG;
+  const { catalog } = opts;
+  if (!catalog) {
+    throw new Error(
+      '[a2ui-prompt] buildA2UISystemPrompt requires a catalog. '
+        + 'Use buildA2UISystemPromptAsync() to load the basic catalog.',
+    );
+  }
   const parts = [
     'You are an A2UI (Agent-to-UI) generation agent. Translate the user\'s',
     'natural-language request into a stream of A2UI v0.9 JSON messages that a',
@@ -201,4 +207,9 @@ export function buildA2UISystemPrompt(
   return parts.join('\n');
 }
 
-export const A2UI_SYSTEM_PROMPT: string = buildA2UISystemPrompt();
+export async function buildA2UISystemPromptAsync(
+  opts: BuildSystemPromptOptions = {},
+): Promise<string> {
+  const catalog = opts.catalog ?? await loadBasicCatalog();
+  return buildA2UISystemPrompt({ ...opts, catalog });
+}

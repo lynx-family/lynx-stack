@@ -2,14 +2,13 @@
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
 
+import { BASIC_CATALOG_ID } from './a2ui-catalog-id';
+
 export interface A2UIExample {
   name: string;
   user: string;
   messages: unknown[];
 }
-
-const BASIC_CATALOG_ID =
-  'https://a2ui.org/specification/v0_9/basic_catalog.json';
 
 export const BASIC_CATALOG_EXAMPLES: A2UIExample[] = [
   {

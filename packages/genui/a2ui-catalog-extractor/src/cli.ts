@@ -8,9 +8,11 @@ import * as path from 'node:path';
 import { pathToFileURL } from 'node:url';
 
 import {
+  createA2UICatalog,
   extractCatalogComponentsFromTypeDocJson,
   extractCatalogFunctionsFromTypeDocJson,
   findCatalogSourceFiles,
+  writeA2UICatalog,
   writeCatalogArtifacts,
   writeCatalogComponents,
   writeCatalogFunctions,
@@ -18,6 +20,7 @@ import {
 import type { TypeDocProject } from './index.js';
 
 interface CliOptions {
+  catalogId?: string;
   catalogDirs: string[];
   help: boolean;
   outDir: string;
@@ -35,6 +38,7 @@ Options:
                        Read an existing TypeDoc JSON project instead of
                        running TypeDoc conversion.
   --out-dir <dir>      Output directory for component catalog.json files.
+  --catalog-id <id>    Catalog ID written to the full catalog.json file.
   --version            Print the package version.
   --help               Print this help message.
 
@@ -68,6 +72,9 @@ export function parseCliArgs(args: string[]): CliOptions {
         break;
       case '--out-dir':
         options.outDir = readValue(args, ++index, arg);
+        break;
+      case '--catalog-id':
+        options.catalogId = readValue(args, ++index, arg);
         break;
       case '--help':
       case '-h':
@@ -123,6 +130,17 @@ export async function runCli(
       cwd,
       outDir: options.outDir,
     });
+    writeA2UICatalog(
+      createA2UICatalog({
+        catalogId: options.catalogId ?? 'catalog.json',
+        components,
+        functions,
+      }),
+      {
+        cwd,
+        outDir: options.outDir,
+      },
+    );
     printGeneratedComponents(components);
     printGeneratedFunctions(functions);
     return 0;
@@ -153,6 +171,7 @@ export async function runCli(
     cwd,
     outDir: options.outDir,
     sourceFiles: uniqueSourceFiles,
+    ...(options.catalogId ? { catalogId: options.catalogId } : {}),
   });
 
   printGeneratedComponents(components);

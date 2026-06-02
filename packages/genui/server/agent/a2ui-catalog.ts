@@ -2,27 +2,12 @@
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
 
+import { BASIC_CATALOG_ID } from './a2ui-catalog-id';
 import { BASIC_CATALOG_EXAMPLES } from './a2ui-examples';
 import type { A2UIExample } from './a2ui-examples';
-import buttonManifest from './catalog/Button/catalog.json';
-import cardManifest from './catalog/Card/catalog.json';
-import checkBoxManifest from './catalog/CheckBox/catalog.json';
-import choicePickerManifest from './catalog/ChoicePicker/catalog.json';
-import columnManifest from './catalog/Column/catalog.json';
-import dateTimeInputManifest from './catalog/DateTimeInput/catalog.json';
-import dividerManifest from './catalog/Divider/catalog.json';
-import iconManifest from './catalog/Icon/catalog.json';
-import imageManifest from './catalog/Image/catalog.json';
-import lineChartManifest from './catalog/LineChart/catalog.json';
-import listManifest from './catalog/List/catalog.json';
-import loadingManifest from './catalog/Loading/catalog.json';
-import modalManifest from './catalog/Modal/catalog.json';
-import radioGroupManifest from './catalog/RadioGroup/catalog.json';
-import rowManifest from './catalog/Row/catalog.json';
-import sliderManifest from './catalog/Slider/catalog.json';
-import tabsManifest from './catalog/Tabs/catalog.json';
-import textManifest from './catalog/Text/catalog.json';
-import textFieldManifest from './catalog/TextField/catalog.json';
+import fallbackCatalogManifest from './catalog/catalog.json';
+
+export { BASIC_CATALOG_ID } from './a2ui-catalog-id';
 
 export interface A2UIComponentProp {
   name: string;
@@ -65,9 +50,6 @@ export interface A2UIFunctionSpec {
     | 'void';
 }
 
-export const BASIC_CATALOG_ID =
-  'https://a2ui.org/specification/v0_9/basic_catalog.json';
-
 export interface JsonSchema {
   type?: string;
   enum?: unknown;
@@ -79,29 +61,13 @@ export interface JsonSchema {
   additionalProperties?: unknown;
 }
 
-interface CatalogManifest extends Record<string, JsonSchema> {}
+interface ExtractedCatalogManifest {
+  catalogId?: string;
+  components?: Record<string, JsonSchema>;
+  functions?: A2UIFunctionSpec[];
+}
 
-const CATALOG_MANIFESTS = [
-  textManifest,
-  imageManifest,
-  iconManifest,
-  dividerManifest,
-  lineChartManifest,
-  rowManifest,
-  columnManifest,
-  listManifest,
-  loadingManifest,
-  cardManifest,
-  tabsManifest,
-  modalManifest,
-  buttonManifest,
-  textFieldManifest,
-  checkBoxManifest,
-  choicePickerManifest,
-  dateTimeInputManifest,
-  radioGroupManifest,
-  sliderManifest,
-] as const;
+let pendingBasicCatalog: Promise<A2UICatalog> | undefined;
 
 const COMPONENT_SUMMARIES: Record<string, string> = {
   Button:
@@ -198,10 +164,10 @@ function inferEnums(schema: JsonSchema | undefined): string[] | undefined {
   return nested.length > 0 ? [...new Set(nested)] : undefined;
 }
 
-function componentFromManifest(
-  manifest: CatalogManifest,
+function componentFromSchemaEntry(
+  name: string,
+  schema: JsonSchema,
 ): A2UIComponentSpec | null {
-  const [name, schema] = Object.entries(manifest)[0] ?? [];
   if (!name || !schema) return null;
 
   const properties = isRecord(schema.properties) ? schema.properties : {};
@@ -231,19 +197,23 @@ function componentFromManifest(
 
 export function createA2UICatalogFromManifests(options: {
   catalogId: string;
-  componentManifests: Record<string, JsonSchema>[];
+  componentManifests?: Record<string, JsonSchema>[];
+  components?: Record<string, JsonSchema>;
   examples?: A2UIExample[];
   extraRules?: string[];
   functions?: A2UIFunctionSpec[];
   label?: string;
   version?: string;
 }): A2UICatalog {
+  const components: Record<string, JsonSchema> = options.components
+    ?? Object.assign({}, ...(options.componentManifests ?? []));
+
   return {
     id: options.catalogId,
     label: options.label ?? `A2UI catalog (${options.catalogId})`,
     ...(options.version ? { version: options.version } : {}),
-    components: options.componentManifests
-      .map((manifest) => componentFromManifest(manifest as CatalogManifest))
+    components: Object.entries(components)
+      .map(([name, schema]) => componentFromSchemaEntry(name, schema))
       .filter((component): component is A2UIComponentSpec =>
         component !== null
       ),
@@ -253,19 +223,67 @@ export function createA2UICatalogFromManifests(options: {
   };
 }
 
-export const BASIC_CATALOG: A2UICatalog = {
-  id: BASIC_CATALOG_ID,
-  label: 'Lynx A2UI basic catalog (v0.9)',
-  version: 'v0.9',
-  components: CATALOG_MANIFESTS
-    .map((manifest) => componentFromManifest(manifest as CatalogManifest))
-    .filter((component): component is A2UIComponentSpec => component !== null),
-  extraRules: [
-    'Use only components listed in this catalog; unsupported examples such as Video, AudioPlayer, DatePicker, or Checkbox are not available unless they appear here.',
-    'The implemented checkbox component is named "CheckBox" with a capital B.',
-  ],
-  examples: BASIC_CATALOG_EXAMPLES,
-};
+function createA2UICatalogFromExtractedManifest(
+  manifest: ExtractedCatalogManifest,
+): A2UICatalog {
+  return createA2UICatalogFromManifests({
+    catalogId: manifest.catalogId ?? BASIC_CATALOG_ID,
+    components: manifest.components ?? {},
+    ...(manifest.functions ? { functions: manifest.functions } : {}),
+    label: 'Lynx A2UI basic catalog (v0.9)',
+    version: 'v0.9',
+    extraRules: [
+      'Use only components listed in this catalog; unsupported examples such as Video, AudioPlayer, DatePicker, or Checkbox are not available unless they appear here.',
+      'The implemented checkbox component is named "CheckBox" with a capital B.',
+    ],
+    examples: BASIC_CATALOG_EXAMPLES,
+  });
+}
+
+export async function loadBasicCatalog(): Promise<A2UICatalog> {
+  pendingBasicCatalog ??= fetchBasicCatalog().finally(() => {
+    pendingBasicCatalog = undefined;
+  });
+  return pendingBasicCatalog;
+}
+
+async function fetchBasicCatalog(): Promise<A2UICatalog> {
+  try {
+    const response = await fetch(BASIC_CATALOG_ID, { cache: 'no-store' });
+    if (!response.ok) {
+      throw new Error(`${response.status} ${response.statusText}`);
+    }
+
+    const manifest = await response.json() as unknown;
+    if (!isExtractedCatalogManifest(manifest)) {
+      throw new Error('invalid catalog payload');
+    }
+    return createA2UICatalogFromExtractedManifest(manifest);
+  } catch (error) {
+    console.warn(
+      `[a2ui-catalog] Failed to fetch catalog ${BASIC_CATALOG_ID}; `
+        + 'using local fallback catalog.',
+      error,
+    );
+  }
+
+  return createA2UICatalogFromExtractedManifest(
+    {
+      ...(fallbackCatalogManifest as unknown as ExtractedCatalogManifest),
+      catalogId: BASIC_CATALOG_ID,
+    },
+  );
+}
+
+function isExtractedCatalogManifest(
+  value: unknown,
+): value is ExtractedCatalogManifest {
+  if (!isRecord(value)) return false;
+  const catalogId = value['catalogId'];
+  const components = value['components'];
+  return (catalogId === undefined || typeof catalogId === 'string')
+    && (components === undefined || isRecord(components));
+}
 
 export function renderCatalogReference(catalog: A2UICatalog): string {
   const lines: string[] = [];

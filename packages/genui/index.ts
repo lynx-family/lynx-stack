@@ -59,12 +59,12 @@ export {
 export * from '@lynx-js/genui/openui';
 export {
   A2UI_PROTOCOL_VERSION,
-  A2UI_SYSTEM_PROMPT,
-  BASIC_CATALOG,
   BASIC_CATALOG_EXAMPLES,
   BASIC_CATALOG_ID,
   buildA2UISystemPrompt,
+  buildA2UISystemPromptAsync,
   createA2UICatalogFromManifests,
+  loadBasicCatalog,
   readA2UICatalogFromDirectory,
   renderCatalogReference,
 } from '@lynx-js/genui/a2ui-prompt';

@@ -9,11 +9,6 @@
 // @public (undocumented)
 export const A2UI_PROTOCOL_VERSION = "v0.9";
 
-// Warning: (ae-missing-release-tag) "A2UI_SYSTEM_PROMPT" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
-//
-// @public (undocumented)
-export const A2UI_SYSTEM_PROMPT: string;
-
 // Warning: (ae-missing-release-tag) "A2UICatalog" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
 //
 // @public (undocumented)
@@ -94,11 +89,6 @@ export interface A2UIFunctionSpec {
     returnType: 'string' | 'number' | 'boolean' | 'array' | 'object' | 'any' | 'void';
 }
 
-// Warning: (ae-missing-release-tag) "BASIC_CATALOG" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
-//
-// @public (undocumented)
-export const BASIC_CATALOG: A2UICatalog;
-
 // Warning: (ae-missing-release-tag) "BASIC_CATALOG_EXAMPLES" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
 //
 // @public (undocumented)
@@ -107,12 +97,17 @@ export const BASIC_CATALOG_EXAMPLES: A2UIExample[];
 // Warning: (ae-missing-release-tag) "BASIC_CATALOG_ID" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
 //
 // @public (undocumented)
-export const BASIC_CATALOG_ID = "https://a2ui.org/specification/v0_9/basic_catalog.json";
+export const BASIC_CATALOG_ID = "https://unpkg.com/@lynx-js/genui/a2ui/dist/catalog/catalog.json";
 
 // Warning: (ae-missing-release-tag) "buildA2UISystemPrompt" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
 //
 // @public (undocumented)
-export function buildA2UISystemPrompt(opts?: BuildSystemPromptOptions): string;
+export function buildA2UISystemPrompt(opts: BuildSystemPromptOptions): string;
+
+// Warning: (ae-missing-release-tag) "buildA2UISystemPromptAsync" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
+//
+// @public (undocumented)
+export function buildA2UISystemPromptAsync(opts?: BuildSystemPromptOptions): Promise<string>;
 
 // Warning: (ae-missing-release-tag) "BuildSystemPromptOptions" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
 //
@@ -129,13 +124,19 @@ export interface BuildSystemPromptOptions {
 // @public (undocumented)
 export function createA2UICatalogFromManifests(options: {
     catalogId: string;
-    componentManifests: Record<string, JsonSchema>[];
+    componentManifests?: Record<string, JsonSchema>[];
+    components?: Record<string, JsonSchema>;
     examples?: A2UIExample[];
     extraRules?: string[];
     functions?: A2UIFunctionSpec[];
     label?: string;
     version?: string;
 }): A2UICatalog;
+
+// Warning: (ae-missing-release-tag) "loadBasicCatalog" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
+//
+// @public (undocumented)
+export function loadBasicCatalog(): Promise<A2UICatalog>;
 
 // Warning: (ae-missing-release-tag) "JsonSchema" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
 //
