@@ -21,6 +21,7 @@ import { hydrationMap } from './snapshotInstanceHydrationMap.js';
 import { transformSpread } from './spread.js';
 import type { SerializedSnapshotInstance } from './types.js';
 import { isCompiledSnapshot, traverseSnapshotInstance } from './utils.js';
+import { globalPipelineOptions } from '../../core/performance.js';
 import { profileEnd, profileStart } from '../../shared/profile.js';
 import { isDirectOrDeepEqual } from '../../utils.js';
 import { clearSnapshotVNodeSource, getSnapshotVNodeSource, moveSnapshotVNodeSource } from '../debug/vnodeSource.js';
@@ -34,7 +35,6 @@ import {
   takeGlobalSnapshotPatch,
 } from '../lifecycle/patch/snapshotPatch.js';
 import type { SnapshotPatch } from '../lifecycle/patch/snapshotPatch.js';
-import { globalPipelineOptions } from '../lynx/performance.js';
 import { clearPendingPortalInsertBefore } from '../lynx/portalsPending.js';
 import { diffArrayAction, diffArrayLepus } from '../renderToOpcodes/hydrate.js';
 import { onPostWorkletCtx } from '../worklet/ctx.js';

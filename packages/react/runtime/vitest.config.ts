@@ -139,7 +139,6 @@ export default defineConfig({
         'src/snapshot/debug/profileHooks.ts',
         'src/snapshot/debug/utils.ts',
         'src/snapshot/lynx/calledByNative.ts',
-        'src/snapshot/lynx/component.ts',
         'src/snapshot/lynx/dynamic-js.ts',
         'src/snapshot/lynx/env.ts',
         'src/snapshot/lynx/tt.ts',

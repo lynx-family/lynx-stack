@@ -10,7 +10,7 @@ import { setupBackgroundDocument, setupDocument } from '../../../src/document.js
 import { deinitGlobalSnapshotPatch } from '../../../src/snapshot/lifecycle/patch/snapshotPatch.js';
 import { shouldDelayUiOps } from '../../../src/snapshot/lifecycle/ref/delay.js';
 import { clearListGlobal } from '../../../src/snapshot/list/list.js';
-import { globalPipelineOptions, setPipeline } from '../../../src/snapshot/lynx/performance.js';
+import { globalPipelineOptions, setPipeline } from '../../../src/core/performance.js';
 import { __root, setRoot } from '../../../src/root.js';
 import { SnapshotInstance, snapshotInstanceManager } from '../../../src/snapshot/snapshot/snapshot.js';
 import { hydrationMap } from '../../../src/snapshot/snapshot/snapshotInstanceHydrationMap.js';

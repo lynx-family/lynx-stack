@@ -9,7 +9,7 @@ import {
 } from '../../../../src/element-template/background/hydration-listener.js';
 import { BackgroundElementTemplateInstance } from '../../../../src/element-template/background/instance.js';
 import { backgroundElementTemplateInstanceManager } from '../../../../src/element-template/background/manager.js';
-import { PerformanceTimingFlags, PipelineOrigins } from '../../../../src/element-template/lynx/performance.js';
+import { PerformanceTimingFlags, PipelineOrigins } from '../../../../src/core/performance.js';
 import {
   clearEventState,
   publishEvent,
@@ -749,8 +749,8 @@ describe('ElementTemplate hydration listener', () => {
     expect(bindCalls[0]).toEqual(['pipelineID', PerformanceTimingFlags.reactLynxHydrate]);
 
     expect(performance._markTiming.mock.calls).toEqual([
-      ['pipelineID', 'hydrateParsePayloadStart'],
-      ['pipelineID', 'hydrateParsePayloadEnd'],
+      ['pipelineID', 'hydrateParseSnapshotStart'],
+      ['pipelineID', 'hydrateParseSnapshotEnd'],
       ['pipelineID', 'diffVdomStart'],
       ['pipelineID', 'diffVdomEnd'],
     ]);

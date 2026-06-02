@@ -9,7 +9,7 @@ import { afterEach, beforeAll, beforeEach, describe, expect, it, vi } from 'vite
 
 import { replaceCommitHook } from '../../../src/snapshot/lifecycle/patch/commit';
 import { injectUpdateMainThread } from '../../../src/snapshot/lifecycle/patch/updateMainThread';
-import '../../../src/snapshot/lynx/component';
+import { installComponentCompat } from '../../../src/core/component';
 import { __root } from '../../../src/root';
 import {
   setupPage,
@@ -24,6 +24,7 @@ import { prettyFormatSnapshotPatch } from '../../../src/snapshot/debug/formatPat
 import { createSuspender } from '../createSuspender';
 
 beforeAll(() => {
+  installComponentCompat();
   setupPage(__CreatePage('0', 0));
   injectUpdateMainThread();
   replaceCommitHook();

@@ -2,15 +2,15 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { options } from 'preact';
 
 import { globalCommitContext } from '../../../src/element-template/background/commit-context.js';
+import { initTimingAPI } from '../../../src/element-template/lynx/performance.js';
 import {
   beginPipeline,
-  initTimingAPI,
   markTiming,
   markTimingLegacy,
   PerformanceTimingFlags,
   PipelineOrigins,
   setPipeline,
-} from '../../../src/element-template/lynx/performance.js';
+} from '../../../src/core/performance.js';
 import { ElementTemplateUpdateOps } from '../../../src/element-template/protocol/opcodes.js';
 import { RENDER_COMPONENT } from '../../../src/shared/render-constants.js';
 import { ElementTemplateEnvManager } from '../test-utils/debug/envManager.js';

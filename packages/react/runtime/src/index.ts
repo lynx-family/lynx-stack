@@ -3,7 +3,6 @@
 // LICENSE file in the root directory of this source tree.
 
 import './lynx.js';
-import './snapshot/lynx/component.js';
 import {
   Children,
   Component,
@@ -19,6 +18,7 @@ import {
   useSyncExternalStore,
 } from 'preact/compat';
 
+import { installComponentCompat } from './core/component.js';
 import {
   useCallback,
   useContext,
@@ -34,6 +34,8 @@ import {
 import { createElement } from './snapshot/lynx/element.js';
 import { createPortal } from './snapshot/lynx/portals.js';
 import { Suspense } from './snapshot/lynx/suspense.js';
+
+installComponentCompat();
 
 export { Component, createContext } from 'preact';
 export { PureComponent } from 'preact/compat';

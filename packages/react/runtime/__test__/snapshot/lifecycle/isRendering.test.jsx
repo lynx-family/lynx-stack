@@ -8,7 +8,7 @@ import { afterEach, beforeAll, beforeEach, describe, expect, it, vi } from 'vite
 import { replaceCommitHook } from '../../../src/snapshot/lifecycle/patch/commit';
 import { injectUpdateMainThread } from '../../../src/snapshot/lifecycle/patch/updateMainThread';
 import { root } from '../../../src/lynx-api';
-import '../../../src/snapshot/lynx/component';
+import { installComponentCompat } from '../../../src/core/component';
 import { __root } from '../../../src/root';
 import { setupPage } from '../../../src/snapshot';
 import { globalEnvManager } from '../utils/envManager';
@@ -16,6 +16,7 @@ import { elementTree, waitSchedule } from '../utils/nativeMethod';
 import { isRendering } from '../../../src/snapshot/lifecycle/isRendering';
 
 beforeAll(() => {
+  installComponentCompat();
   setupPage(__CreatePage('0', 0));
   injectUpdateMainThread();
   replaceCommitHook();

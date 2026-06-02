@@ -3,10 +3,10 @@
 // LICENSE file in the root directory of this source tree.
 import { process, render } from 'preact';
 
-import { PerformanceTimingFlags, PipelineOrigins, beginPipeline, markTiming } from './performance.js';
 import { runWithForce } from './runWithForce.js';
 import { updateGlobalProps as updateGlobalPropsCore } from '../../core/globalProps.js';
 import { updateCardData } from '../../core/lynx-update-data.js';
+import { PerformanceTimingFlags, PipelineOrigins, beginPipeline, markTiming } from '../../core/performance.js';
 import { __root } from '../../root.js';
 import { profileEnd, profileStart } from '../../shared/profile.js';
 import { CHILDREN } from '../../shared/render-constants.js';

@@ -4,7 +4,7 @@ import {
   installElementTemplatePatchListener,
   resetElementTemplatePatchListener,
 } from '../../../../src/element-template/native/patch-listener.js';
-import { setPipeline } from '../../../../src/element-template/lynx/performance.js';
+import { setPipeline } from '../../../../src/core/performance.js';
 import { ElementTemplateUpdateOps } from '../../../../src/element-template/protocol/opcodes.js';
 import { ElementTemplateLifecycleConstant } from '../../../../src/element-template/protocol/lifecycle-constant.js';
 import { getReloadVersion, increaseReloadVersion } from '../../../../src/core/reload-version.js';
