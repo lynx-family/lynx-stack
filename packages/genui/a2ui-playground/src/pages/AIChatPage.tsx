@@ -1079,12 +1079,16 @@ export function AIChatPage(
           {
             key: 'agent-output',
             label: 'Agent',
+            description:
+              'Time from sending the request until the final A2UI output is received.',
             title: 'Agent output duration',
             value: createMetricValues.agentOutputMs,
           },
           {
             key: 'render',
             label: 'Render',
+            description:
+              'Time from delivering A2UI messages to the preview runtime until the next painted frame.',
             title: 'Preview render duration after A2UI messages are delivered',
             value: createMetricValues.renderMs,
           },

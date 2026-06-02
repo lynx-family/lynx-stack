@@ -110,6 +110,7 @@ interface PreviewMetricMessage {
 export interface PreviewPanelMetricItem {
   key: string;
   label: string;
+  description?: string;
   title?: string;
   value?: number;
 }
@@ -117,11 +118,30 @@ export interface PreviewPanelMetricItem {
 const PREVIEW_METRIC_ITEMS: Array<{
   key: PreviewMetricName;
   label: string;
+  description: string;
   title: string;
 }> = [
-  { key: 'fcp', label: 'FCP', title: 'First Contentful Paint' },
-  { key: 'fmp', label: 'FMP', title: 'First Meaningful Paint' },
-  { key: 'tti', label: 'TTI', title: 'Time to Interactive' },
+  {
+    key: 'fcp',
+    label: 'FCP',
+    title: 'First Contentful Paint',
+    description:
+      'Time from preview load until the first visible content is painted.',
+  },
+  {
+    key: 'fmp',
+    label: 'FMP',
+    title: 'First Meaningful Paint',
+    description:
+      'Time until the first meaningful A2UI content is delivered and painted.',
+  },
+  {
+    key: 'tti',
+    label: 'TTI',
+    title: 'Time to Interactive',
+    description:
+      'Time until the preview finishes initial rendering and is idle enough for actions.',
+  },
 ];
 
 interface PreviewPanelProps {
@@ -933,47 +953,52 @@ export function PreviewPanel(props: PreviewPanelProps) {
   const renderPreviewMetrics = () => {
     if (!hasPreviewMetrics) return null;
 
+    const renderMetricItem = (item: PreviewPanelMetricItem) => {
+      const value = item.value;
+      const description = item.description ?? item.title;
+      return (
+        <span
+          key={item.key}
+          className='previewMetricItem'
+          title={description ?? item.title}
+          tabIndex={description ? 0 : undefined}
+          aria-label={description
+            ? `${item.label}: ${description}`
+            : item.label}
+        >
+          <span className='previewMetricName'>{item.label}</span>
+          <span
+            className={value === undefined
+              ? 'previewMetricValue previewMetricValuePending'
+              : 'previewMetricValue'}
+          >
+            {formatMetricValue(value)}
+          </span>
+          {description
+            ? (
+              <span className='previewMetricTooltip' role='tooltip'>
+                <span className='previewMetricTooltipTitle'>{item.title}</span>
+                <span>{description}</span>
+              </span>
+            )
+            : null}
+        </span>
+      );
+    };
+
     return (
       <div className='previewMetricStack' aria-live='polite'>
         <span className='previewMetricLabel'>Metrics</span>
         <div className='previewMetricList'>
           {(hasPreviewMetricSource ? PREVIEW_METRIC_ITEMS : []).map(
             (item) => {
-              const value = previewMetrics[item.key];
-              return (
-                <span
-                  key={item.key}
-                  className='previewMetricItem'
-                  title={item.title}
-                >
-                  <span className='previewMetricName'>{item.label}</span>
-                  <span
-                    className={value === undefined
-                      ? 'previewMetricValue previewMetricValuePending'
-                      : 'previewMetricValue'}
-                  >
-                    {formatMetricValue(value)}
-                  </span>
-                </span>
-              );
+              return renderMetricItem({
+                ...item,
+                value: previewMetrics[item.key],
+              });
             },
           )}
-          {extraMetrics.map((item) => (
-            <span
-              key={item.key}
-              className='previewMetricItem'
-              title={item.title}
-            >
-              <span className='previewMetricName'>{item.label}</span>
-              <span
-                className={item.value === undefined
-                  ? 'previewMetricValue previewMetricValuePending'
-                  : 'previewMetricValue'}
-              >
-                {formatMetricValue(item.value)}
-              </span>
-            </span>
-          ))}
+          {extraMetrics.map((item) => renderMetricItem(item))}
         </div>
       </div>
     );

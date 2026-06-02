@@ -585,7 +585,7 @@ html[data-theme="dark"] .detailBackButton:hover {
 .examplesPreviewPanel {
   display: grid;
   grid-template-columns: minmax(360px, 1fr) minmax(280px, 340px);
-  grid-template-rows: auto auto auto minmax(0, 1fr);
+  grid-template-rows: auto auto auto auto minmax(0, 1fr);
   overflow: hidden;
 }
 
@@ -596,13 +596,18 @@ html[data-theme="dark"] .detailBackButton:hover {
 
 .examplesPreviewPanel .previewPanelBody {
   grid-column: 1;
-  grid-row: 2 / 5;
+  grid-row: 2 / 6;
   border-right: 1px solid var(--geist-border);
+}
+
+.examplesPreviewPanel .previewMetricStack {
+  grid-column: 2;
+  grid-row: 2;
 }
 
 .examplesPreviewPanel .simulationBar {
   grid-column: 2;
-  grid-row: 2;
+  grid-row: 3;
   align-items: flex-start;
   flex-wrap: wrap;
   padding: 10px 16px;
@@ -611,7 +616,7 @@ html[data-theme="dark"] .detailBackButton:hover {
 
 .examplesPreviewPanel .liveComponentStack {
   grid-column: 2;
-  grid-row: 3;
+  grid-row: 4;
   align-items: stretch;
   flex-direction: column;
   flex-wrap: wrap;
@@ -630,7 +635,7 @@ html[data-theme="dark"] .detailBackButton:hover {
 
 .examplesPreviewPanel .previewQrSection {
   grid-column: 2;
-  grid-row: 4;
+  grid-row: 5;
   min-height: 0;
   overflow: auto;
   border-top: none;
@@ -650,6 +655,7 @@ html[data-theme="dark"] .detailBackButton:hover {
 
   .examplesPreviewPanel .previewPanelHeader,
   .examplesPreviewPanel .previewPanelBody,
+  .examplesPreviewPanel .previewMetricStack,
   .examplesPreviewPanel .simulationBar,
   .examplesPreviewPanel .liveComponentStack,
   .examplesPreviewPanel .previewQrSection {
