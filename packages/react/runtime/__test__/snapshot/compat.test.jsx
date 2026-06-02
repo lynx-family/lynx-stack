@@ -2,7 +2,7 @@ import { afterEach, beforeAll, beforeEach, describe, expect, it, vi } from 'vite
 
 import { elementTree } from './utils/nativeMethod';
 import { setupPage, snapshotInstanceManager, backgroundSnapshotInstanceManager } from '../../src/snapshot';
-import { ComponentFromReactRuntime, wrapWithLynxComponent } from '../../src/snapshot/compat/lynxComponent';
+import { ComponentFromReactRuntime, wrapWithLynxComponent } from '../../src/core/compat/lynxComponent';
 import { setupDocument } from '../../src/document';
 import { Fragment, render } from 'preact';
 import { globalEnvManager } from './utils/envManager';

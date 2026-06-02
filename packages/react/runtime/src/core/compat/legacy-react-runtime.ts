@@ -4,11 +4,8 @@
 import { createContext, createRef } from 'preact';
 import { lazy } from 'preact/compat';
 
-import { useCallback, useEffect, useMemo, useReducer, useRef, useState } from '../../core/hooks/react.js';
-import {
-  ComponentFromReactRuntime as Component,
-  ComponentFromReactRuntime as PureComponent,
-} from '../compat/lynxComponent.js';
+import { ComponentFromReactRuntime as Component, ComponentFromReactRuntime as PureComponent } from './lynxComponent.js';
+import { useCallback, useEffect, useMemo, useReducer, useRef, useState } from '../hooks/react.js';
 
 /* v8 ignore next 3 */
 function __runInJS<T>(value: T): T | undefined | null {
@@ -16,11 +13,11 @@ function __runInJS<T>(value: T): T | undefined | null {
 }
 
 // should mirror @lynx-js/react-runtime's exports
-export { ComponentFromReactRuntime as Component } from '../compat/lynxComponent.js';
-export { ComponentFromReactRuntime as PureComponent } from '../compat/lynxComponent.js';
+export { ComponentFromReactRuntime as Component } from './lynxComponent.js';
+export { ComponentFromReactRuntime as PureComponent } from './lynxComponent.js';
 export { createContext } from 'preact';
 export { lazy } from 'preact/compat';
-export { useState, useReducer, useEffect, useMemo, useCallback /*, useInstance */ } from '../../core/hooks/react.js';
+export { useState, useReducer, useEffect, useMemo, useCallback /*, useInstance */ } from '../hooks/react.js';
 export { __runInJS, createRef, useRef };
 
 /**

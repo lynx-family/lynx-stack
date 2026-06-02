@@ -24,7 +24,7 @@ import {
 } from '../../../../src/element-template/background/commit-context.js';
 import { ElementTemplateUpdateOps } from '../../../../src/element-template/protocol/opcodes.js';
 import { ElementTemplateLifecycleConstant } from '../../../../src/element-template/protocol/lifecycle-constant.js';
-import { PipelineOrigins } from '../../../../src/element-template/lynx/performance.js';
+import { PipelineOrigins } from '../../../../src/core/performance.js';
 import {
   InitDataConsumer,
   InitDataProvider,

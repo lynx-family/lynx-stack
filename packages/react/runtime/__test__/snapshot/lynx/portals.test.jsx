@@ -18,7 +18,7 @@ import {
 } from '../../../src/snapshot/lifecycle/patch/snapshotPatch';
 import { snapshotPatchApply } from '../../../src/snapshot/lifecycle/patch/snapshotPatchApply';
 import { injectUpdateMainThread } from '../../../src/snapshot/lifecycle/patch/updateMainThread';
-import '../../../src/snapshot/lynx/component';
+import { installComponentCompat } from '../../../src/core/component';
 import { serializeNodesRef } from '../../../src/snapshot/lynx/nodesRef';
 import { clearPendingPortalInsertBefore } from '../../../src/snapshot/lynx/portalsPending';
 import { globalEnvManager } from '../utils/envManager';
@@ -27,6 +27,7 @@ import { backgroundSnapshotInstanceManager } from '../../../src/snapshot';
 import { globalBackgroundSnapshotInstancesToRemove } from '../../../src/snapshot/lifecycle/patch/globalState';
 
 beforeAll(() => {
+  installComponentCompat();
   setupPage(__CreatePage('0', 0));
   injectUpdateMainThread();
   replaceCommitHook();

@@ -2,9 +2,9 @@
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
 
+import { markTiming, setPipeline } from '../../core/performance.js';
 import { getReloadVersion } from '../../core/reload-version.js';
 import { formatElementTemplateUpdateCommands } from '../debug/alog.js';
-import { markTiming, setPipeline } from '../lynx/performance.js';
 import { ElementTemplateLifecycleConstant } from '../protocol/lifecycle-constant.js';
 import type { ElementTemplateUpdateCommitContext } from '../protocol/types.js';
 import { __page } from '../runtime/page/page.js';

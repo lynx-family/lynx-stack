@@ -1,0 +1,186 @@
+// Copyright 2026 The Lynx Authors. All rights reserved.
+// Licensed under the Apache License Version 2.0 that can be found in the
+// LICENSE file in the root directory of this source tree.
+import { options } from 'preact';
+
+import { RENDER_COMPONENT, ROOT } from '../shared/render-constants.js';
+import { hook, isSdkVersionGt } from '../utils.js';
+
+const PerformanceTimingKeys = [
+  'updateSetStateTrigger',
+  'updateDiffVdomStart',
+  'updateDiffVdomEnd',
+  // updateSetStateTrigger, updateDiffVdomStart and updateDiffVdomEnd is deprecated
+  'diffVdomStart',
+  'diffVdomEnd',
+  'packChangesStart',
+  'packChangesEnd',
+  'parseChangesStart',
+  'parseChangesEnd',
+  'patchChangesStart',
+  'patchChangesEnd',
+  'hydrateParseSnapshotStart',
+  'hydrateParseSnapshotEnd',
+  'mtsRenderStart',
+  'mtsRenderEnd',
+] as const;
+
+const PerformanceTimingFlags = {
+  reactLynxHydrate: 'react_lynx_hydrate',
+} as const;
+
+const PipelineOrigins = {
+  reactLynxHydrate: 'reactLynxHydrate',
+  updateTriggeredByBts: 'updateTriggeredByBts',
+} as const;
+
+type PerformanceTimingKey = typeof PerformanceTimingKeys[number];
+type PipelineOrigin = typeof PipelineOrigins[keyof typeof PipelineOrigins];
+
+/**
+ * @deprecated used by old timing api(setState timing flag)
+ */
+const PerfSpecificKey = '__lynx_timing_flag';
+
+let timingFlag: string | undefined;
+let shouldMarkDiffVdomStart = false;
+let shouldMarkDiffVdomEnd = false;
+
+let globalPipelineOptions: PipelineOptions | undefined;
+let activeTimingAPIOptions: TimingAPIOptions | undefined;
+let didInstallTimingAPIHooks = false;
+
+interface TimingAPIOptions {
+  shouldStartUpdatePipeline: () => boolean;
+  beginPipeline?: typeof beginPipeline;
+}
+
+/**
+ * @deprecated used by old timing api(setState timing flag)
+ */
+function markTimingLegacy(key: PerformanceTimingKey, timingFlag_?: string): void {
+  switch (key) {
+    case 'updateSetStateTrigger': {
+      shouldMarkDiffVdomStart = true;
+      shouldMarkDiffVdomEnd = true;
+      timingFlag = timingFlag_;
+      break;
+    }
+    case 'updateDiffVdomStart': {
+      if (!shouldMarkDiffVdomStart) {
+        return;
+      }
+      shouldMarkDiffVdomStart = false;
+      break;
+    }
+    case 'updateDiffVdomEnd': {
+      if (!shouldMarkDiffVdomEnd) {
+        return;
+      }
+      shouldMarkDiffVdomEnd = false;
+      break;
+    }
+  }
+  lynx.getNativeApp().markTiming?.(timingFlag!, key);
+}
+
+function beginPipeline(
+  needTimestamps: boolean,
+  pipelineOrigin: PipelineOrigin,
+  timingFlag?: string,
+): void {
+  globalPipelineOptions = lynx.performance?._generatePipelineOptions?.();
+  if (globalPipelineOptions) {
+    globalPipelineOptions.needTimestamps = needTimestamps;
+    globalPipelineOptions.pipelineOrigin = pipelineOrigin;
+    globalPipelineOptions.dsl = 'reactLynx';
+    switch (pipelineOrigin) {
+      case PipelineOrigins.reactLynxHydrate:
+        globalPipelineOptions.stage = 'hydrate';
+        break;
+      case PipelineOrigins.updateTriggeredByBts:
+        globalPipelineOptions.stage = 'update';
+        break;
+    }
+
+    if (isSdkVersionGt(3, 0)) {
+      lynx.performance?._onPipelineStart?.(globalPipelineOptions.pipelineID, globalPipelineOptions);
+    } else {
+      lynx.performance?._onPipelineStart?.(globalPipelineOptions.pipelineID);
+    }
+    if (timingFlag) {
+      lynx.performance?._bindPipelineIdWithTimingFlag?.(globalPipelineOptions.pipelineID, timingFlag);
+    }
+  }
+}
+
+function setPipeline(pipeline: PipelineOptions | undefined): void {
+  globalPipelineOptions = pipeline;
+}
+
+function resetTimingState(): void {
+  timingFlag = undefined;
+  shouldMarkDiffVdomStart = false;
+  shouldMarkDiffVdomEnd = false;
+  globalPipelineOptions = undefined;
+}
+
+function markTiming(timestampKey: PerformanceTimingKey, force?: boolean): void {
+  if (globalPipelineOptions && (force || globalPipelineOptions.needTimestamps)) {
+    lynx.performance?._markTiming?.(globalPipelineOptions.pipelineID, timestampKey);
+  }
+}
+
+function initTimingAPI(timingAPIOptions: TimingAPIOptions): void {
+  activeTimingAPIOptions = timingAPIOptions;
+  resetTimingState();
+
+  if (didInstallTimingAPIHooks) {
+    return;
+  }
+  didInstallTimingAPIHooks = true;
+
+  const helper = () => {
+    const timingAPIOptions = activeTimingAPIOptions;
+    /* v8 ignore start */
+    if (!timingAPIOptions) {
+      return;
+    }
+    /* v8 ignore stop */
+
+    const startPipeline = timingAPIOptions.beginPipeline ?? beginPipeline;
+    if (__JS__ && timingAPIOptions.shouldStartUpdatePipeline()) {
+      if (!globalPipelineOptions) {
+        startPipeline(false, PipelineOrigins.updateTriggeredByBts);
+        markTiming('diffVdomStart', true);
+      }
+      if (shouldMarkDiffVdomStart) {
+        markTimingLegacy('updateDiffVdomStart');
+      }
+    }
+  };
+
+  const onHook = <T extends unknown[]>(old: ((...args: T) => void) | undefined, ...args: T) => {
+    helper();
+    /* v8 ignore start */
+    if (old) old(...args);
+    /* v8 ignore stop */
+  };
+
+  hook(options, RENDER_COMPONENT, onHook);
+  hook(options, ROOT, onHook);
+}
+
+export {
+  PerformanceTimingFlags,
+  PipelineOrigins,
+  PerfSpecificKey,
+  markTimingLegacy,
+  initTimingAPI,
+  beginPipeline,
+  markTiming,
+  setPipeline,
+  resetTimingState,
+  globalPipelineOptions,
+};
+export type { PerformanceTimingKey, PipelineOrigin };

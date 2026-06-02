@@ -88,7 +88,7 @@ export default defineConfig({
       { find: '@lynx-js/react/lepus', replacement: path.resolve(__dirname, './lepus/index.js') },
       {
         find: '@lynx-js/react/legacy-react-runtime',
-        replacement: path.resolve(__dirname, './src/snapshot/legacy-react-runtime/index.ts'),
+        replacement: path.resolve(__dirname, './src/core/compat/legacy-react-runtime.ts'),
       },
       { find: '@lynx-js/react', replacement: path.resolve(__dirname, './src/index.ts') },
     ],
@@ -139,7 +139,6 @@ export default defineConfig({
         'src/snapshot/debug/profileHooks.ts',
         'src/snapshot/debug/utils.ts',
         'src/snapshot/lynx/calledByNative.ts',
-        'src/snapshot/lynx/component.ts',
         'src/snapshot/lynx/dynamic-js.ts',
         'src/snapshot/lynx/env.ts',
         'src/snapshot/lynx/tt.ts',

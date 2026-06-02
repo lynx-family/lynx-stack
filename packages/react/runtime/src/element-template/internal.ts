@@ -36,7 +36,7 @@ export type { Options } from 'preact';
 
 export { withInitDataInState } from '../core/initData.js';
 
-// export { wrapWithLynxComponent } from '../compat/lynxComponent.js';
+export { wrapWithLynxComponent } from '../core/compat/lynxComponent.js';
 
 /**
  * @internal a polyfill for <component is=? />

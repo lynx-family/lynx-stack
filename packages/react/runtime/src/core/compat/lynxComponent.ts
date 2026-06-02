@@ -4,28 +4,40 @@
 import { Component } from 'preact';
 import type { ReactNode } from 'react';
 
+interface CompatComponentVNode {
+  type: unknown;
+  props: Record<string, unknown>;
+}
+
 export function wrapWithLynxComponent(
-  jsxSnapshot: (c: ReactNode, spread?: Record<string, any>) => ReactNode,
-  jsxComponent: any,
+  jsxSnapshot: (c: ReactNode, spread?: Record<string, unknown>) => ReactNode,
+  jsxComponent: ReactNode,
 ): ReactNode {
-  const C = jsxComponent.type;
+  const componentVNode = jsxComponent as CompatComponentVNode;
+  const C = componentVNode.type;
   if (
-    typeof C === 'function' && (C === ComponentFromReactRuntime || C.prototype instanceof ComponentFromReactRuntime)
+    typeof C === 'function'
+    && (C === ComponentFromReactRuntime
+      || (C as { prototype?: unknown }).prototype instanceof ComponentFromReactRuntime)
   ) {
     if (jsxSnapshot.length === 1) {
       return jsxSnapshot(jsxComponent);
     } else {
       // spread
-      if (!jsxComponent.props.removeComponentElement) {
-        return jsxSnapshot(jsxComponent, takeComponentAttributes(jsxComponent));
+      if (!componentVNode.props['removeComponentElement']) {
+        return jsxSnapshot(jsxComponent, takeComponentAttributes(componentVNode));
       }
     }
   }
   return jsxComponent;
 }
 
-// @ts-expect-error
-export class ComponentFromReactRuntime extends Component {}
+export class ComponentFromReactRuntime extends Component {
+  /* v8 ignore next 3 -- marker component, never rendered directly. */
+  render(): null {
+    return null;
+  }
+}
 
 const __COMPONENT_ATTRIBUTES__ = /* @__PURE__ */ new Set([
   'name',
@@ -55,8 +67,8 @@ const __COMPONENT_ATTRIBUTES__ = /* @__PURE__ */ new Set([
   'enable-new-animator',
 ]);
 
-function takeComponentAttributes(jsxComponent: any): Record<string, any> {
-  const attributes: Record<string, any> = {};
+function takeComponentAttributes(jsxComponent: CompatComponentVNode): Record<string, unknown> {
+  const attributes: Record<string, unknown> = {};
   Object.keys(jsxComponent.props).forEach((k) => {
     // let re1 = Regex::new(r"^(global-bind|bind|catch|capture-bind|capture-catch)([A-Za-z]+)$").unwrap();
     // let re2 = Regex::new(r"^data-([A-Za-z]+)$").unwrap();
