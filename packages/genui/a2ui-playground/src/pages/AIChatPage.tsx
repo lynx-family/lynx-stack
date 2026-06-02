@@ -259,6 +259,17 @@ function canForwardApiKeyToEndpoint(raw: string): boolean {
   }
 }
 
+function withPreviewSession(url: string, session: string | null): string {
+  if (!session) return url;
+  try {
+    const next = new URL(url);
+    next.searchParams.set('previewSession', session);
+    return next.toString();
+  } catch {
+    return url;
+  }
+}
+
 function filterProviderRequestOptionsForEndpoint(
   options: ProviderRequestOptions,
   endpoint: string,
@@ -1109,7 +1120,10 @@ export function AIChatPage(
   }, [postReplayMessagesToPreview]);
 
   const publishPreviewMessages = useCallback(
-    (nextMessages: unknown[]) => {
+    (
+      nextMessages: unknown[],
+      options?: { resetPreview?: boolean; session?: string | null },
+    ) => {
       if (nextMessages.length === 0) return;
       latestPreviewMessagesRef.current = nextMessages;
       setPreviewMessages(nextMessages);
@@ -1124,7 +1138,7 @@ export function AIChatPage(
       };
 
       setRenderUrl((current) => {
-        if (current) {
+        if (current && !options?.resetPreview) {
           renderUrlRef.current = current;
           if (bootstrappedRenderUrlRef.current === current) {
             bootstrappedMessagesRef.current = nextMessages;
@@ -1136,7 +1150,14 @@ export function AIChatPage(
           return current;
         }
 
-        const nextRenderUrl = buildRenderUrl(initData, baseUrl);
+        if (current) {
+          clearBootstrappedPreview();
+        }
+
+        const nextRenderUrl = withPreviewSession(
+          buildRenderUrl(initData, baseUrl),
+          options?.session ?? null,
+        );
         renderUrlRef.current = nextRenderUrl;
         bootstrappedRenderUrlRef.current = nextRenderUrl;
         bootstrappedMessagesRef.current = nextMessages;
@@ -1232,7 +1253,10 @@ export function AIChatPage(
     });
     updatePreviewPayloadUrls(persistedPreviewPayloadUrls);
     if (replayMessages.length > 0) {
-      publishPreviewMessages(replayMessages);
+      publishPreviewMessages(replayMessages, {
+        resetPreview: true,
+        session: activeId,
+      });
     } else {
       latestPreviewMessagesRef.current = [];
       setPreviewMessages(null);
