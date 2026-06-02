@@ -14,6 +14,10 @@ import type { MobilePaneTab } from '../components/MobileTabBar.js';
 import { PageHeader } from '../components/PageHeader.js';
 import { PanelResizeHandle } from '../components/PanelResizeHandle.js';
 import { PreviewPanel } from '../components/PreviewPanel.js';
+import type {
+  PreviewMetricName,
+  PreviewPanelMetricItem,
+} from '../components/PreviewPanel.js';
 import { PreviewViewport } from '../components/PreviewViewport.js';
 import type { StaticDemo } from '../demos.js';
 import { useConversation } from '../hooks/useConversation.js';
@@ -58,6 +62,11 @@ interface TokenUsage {
   promptTokens: number;
   completionTokens: number;
   totalTokens: number;
+}
+
+interface CreateMetricValues {
+  agentOutputMs?: number;
+  renderMs?: number;
 }
 
 interface A2UIResponseMessageMeta {
@@ -894,6 +903,9 @@ export function AIChatPage(
     completionTokens: 0,
     totalTokens: 0,
   });
+  const [createMetricValues, setCreateMetricValues] = useState<
+    CreateMetricValues
+  >({});
   const { showCopyToast, toast: copyToast } = useCopyToast();
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const chatMessagesRef = useRef<HTMLDivElement>(null);
@@ -1056,6 +1068,44 @@ export function AIChatPage(
     : (isGenerating
       ? 'Generation is in progress. Web Preview and Native Preview links will appear once A2UI data arrives.'
       : 'No A2UI data has been received yet. Send a message to generate Web Preview and Native Preview links.');
+  const showCreateMetrics = isGenerating
+    || previewMessages !== null
+    || createMetricValues.agentOutputMs !== undefined
+    || createMetricValues.renderMs !== undefined;
+  const createMetrics = useMemo<PreviewPanelMetricItem[]>(
+    () =>
+      showCreateMetrics
+        ? [
+          {
+            key: 'agent-output',
+            label: 'Agent',
+            title: 'Agent output duration',
+            value: createMetricValues.agentOutputMs,
+          },
+          {
+            key: 'render',
+            label: 'Render',
+            title: 'Preview render duration after A2UI messages are delivered',
+            value: createMetricValues.renderMs,
+          },
+        ]
+        : [],
+    [
+      createMetricValues.agentOutputMs,
+      createMetricValues.renderMs,
+      showCreateMetrics,
+    ],
+  );
+  const handlePreviewMetric = useCallback((
+    metric: PreviewMetricName,
+    value: number,
+  ) => {
+    if (metric !== 'render') return;
+    setCreateMetricValues((prev) => ({
+      ...prev,
+      renderMs: value,
+    }));
+  }, []);
 
   const clearBootstrappedPreview = useCallback(() => {
     bootstrappedRenderUrlRef.current = null;
@@ -1269,6 +1319,7 @@ export function AIChatPage(
     abortRef.current?.abort();
     const controller = new AbortController();
     abortRef.current = controller;
+    const agentOutputStart = performance.now();
 
     const userMessage: ModelChatMessage = { role: 'user', content: text };
     const requestConversation = buildConversationContext();
@@ -1287,6 +1338,10 @@ export function AIChatPage(
       promptTokens: 0,
       completionTokens: 0,
       totalTokens: 0,
+    });
+    setCreateMetricValues({
+      agentOutputMs: undefined,
+      renderMs: undefined,
     });
     setIsGenerating(true);
 
@@ -1379,6 +1434,12 @@ export function AIChatPage(
           throw new Error('A2UI agent did not return valid messages');
         }
 
+        const agentOutputMs = performance.now() - agentOutputStart;
+        setCreateMetricValues((prev) => ({
+          ...prev,
+          agentOutputMs,
+          renderMs: undefined,
+        }));
         await recordTurn({
           userMessage,
           assistantContent: JSON.stringify(finalMessages),
@@ -1475,9 +1536,14 @@ export function AIChatPage(
       const controller = new AbortController();
       actionAbortRef.current = controller;
       const signal = controller.signal;
+      const agentOutputStart = performance.now();
 
       let pendingIndex = -1;
       let streamingIndex = -1;
+      setCreateMetricValues({
+        agentOutputMs: undefined,
+        renderMs: undefined,
+      });
       setMessages((prev) => {
         const next: ChatMessage[] = [
           ...prev,
@@ -1617,6 +1683,12 @@ export function AIChatPage(
             throw new Error('Agent returned no A2UI messages');
           }
 
+          const agentOutputMs = performance.now() - agentOutputStart;
+          setCreateMetricValues((prev) => ({
+            ...prev,
+            agentOutputMs,
+            renderMs: undefined,
+          }));
           const count = responseMessages.length;
           const replayMessages = [
             ...latestPreviewMessagesRef.current,
@@ -1724,6 +1796,10 @@ export function AIChatPage(
 
       abortRef.current?.abort();
       actionAbortRef.current?.abort();
+      setCreateMetricValues({
+        agentOutputMs: undefined,
+        renderMs: undefined,
+      });
 
       // Synthetic user message keeps follow-up prompts in context (e.g.
       // "change the price to $99" sees what's on screen) while clearly
@@ -1776,6 +1852,7 @@ export function AIChatPage(
   );
 
   const handleCreateConversation = useCallback(() => {
+    setCreateMetricValues({});
     void createNew();
   }, [createNew]);
 
@@ -1783,6 +1860,7 @@ export function AIChatPage(
     if (isGenerating) return;
     abortRef.current?.abort();
     actionAbortRef.current?.abort();
+    setCreateMetricValues({});
     void switchTo(id);
   }, [isGenerating, switchTo]);
 
@@ -2111,6 +2189,8 @@ export function AIChatPage(
           showSimulationBar={false}
           previewSource={previewSource}
           previewInfoHint={previewInfoHint}
+          extraMetrics={createMetrics}
+          onPreviewMetric={handlePreviewMetric}
         >
           <PreviewViewport
             src={renderUrl}

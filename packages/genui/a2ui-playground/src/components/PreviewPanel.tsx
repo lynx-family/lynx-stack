@@ -96,7 +96,7 @@ export type PreviewPanelSource =
   | OpenUIPreviewSource
   | PlaceholderPreviewSource;
 
-type PreviewMetricName = 'fcp' | 'fmp' | 'tti';
+export type PreviewMetricName = 'fcp' | 'fmp' | 'tti' | 'render';
 
 type PreviewMetrics = Partial<Record<PreviewMetricName, number>>;
 
@@ -105,6 +105,13 @@ interface PreviewMetricMessage {
   metricId: string;
   metric: PreviewMetricName;
   value: number;
+}
+
+export interface PreviewPanelMetricItem {
+  key: string;
+  label: string;
+  title?: string;
+  value?: number;
 }
 
 const PREVIEW_METRIC_ITEMS: Array<{
@@ -135,6 +142,8 @@ interface PreviewPanelProps {
   bodyClassName?: string;
   children: ReactNode;
   afterBody?: ReactNode;
+  extraMetrics?: PreviewPanelMetricItem[];
+  onPreviewMetric?: (metric: PreviewMetricName, value: number) => void;
   previewInfoHint?: ReactNode;
 }
 
@@ -228,7 +237,10 @@ function shouldUseClientPayloadStore(): boolean {
 }
 
 function isPreviewMetricName(value: unknown): value is PreviewMetricName {
-  return value === 'fcp' || value === 'fmp' || value === 'tti';
+  return value === 'fcp'
+    || value === 'fmp'
+    || value === 'tti'
+    || value === 'render';
 }
 
 function isPreviewMetricMessage(
@@ -254,13 +266,15 @@ export function PreviewPanel(props: PreviewPanelProps) {
     bodyClassName,
     children,
     className,
+    extraMetrics = [],
     headerAfterTitle,
+    onPreviewMetric,
+    onSpeedChange,
     previewSource,
     previewInfoHint,
     showPreviewModeSwitch = false,
     showSimulationBar = true,
     speed: speedProp,
-    onSpeedChange,
     style,
     title,
   } = props;
@@ -356,6 +370,7 @@ export function PreviewPanel(props: PreviewPanelProps) {
       if (event.data.metricId !== metricId) return;
 
       const { metric, value } = event.data;
+      onPreviewMetric?.(metric, value);
       setPreviewMetrics((current) => {
         if (current[metric] === value) {
           return current;
@@ -369,7 +384,7 @@ export function PreviewPanel(props: PreviewPanelProps) {
 
     window.addEventListener('message', handleMessage);
     return () => window.removeEventListener('message', handleMessage);
-  }, [metricFrameSrc, metricId]);
+  }, [metricFrameSrc, metricId, onPreviewMetric]);
 
   useEffect(() => {
     setWebCopied(false);
@@ -911,8 +926,9 @@ export function PreviewPanel(props: PreviewPanelProps) {
     );
   };
 
-  const hasPreviewMetrics = previewSource !== undefined
+  const hasPreviewMetricSource = previewSource !== undefined
     && previewSource.kind !== 'placeholder';
+  const hasPreviewMetrics = hasPreviewMetricSource || extraMetrics.length > 0;
 
   const renderPreviewMetrics = () => {
     if (!hasPreviewMetrics) return null;
@@ -921,25 +937,43 @@ export function PreviewPanel(props: PreviewPanelProps) {
       <div className='previewMetricStack' aria-live='polite'>
         <span className='previewMetricLabel'>Metrics</span>
         <div className='previewMetricList'>
-          {PREVIEW_METRIC_ITEMS.map((item) => {
-            const value = previewMetrics[item.key];
-            return (
-              <span
-                key={item.key}
-                className='previewMetricItem'
-                title={item.title}
-              >
-                <span className='previewMetricName'>{item.label}</span>
+          {(hasPreviewMetricSource ? PREVIEW_METRIC_ITEMS : []).map(
+            (item) => {
+              const value = previewMetrics[item.key];
+              return (
                 <span
-                  className={value === undefined
-                    ? 'previewMetricValue previewMetricValuePending'
-                    : 'previewMetricValue'}
+                  key={item.key}
+                  className='previewMetricItem'
+                  title={item.title}
                 >
-                  {formatMetricValue(value)}
+                  <span className='previewMetricName'>{item.label}</span>
+                  <span
+                    className={value === undefined
+                      ? 'previewMetricValue previewMetricValuePending'
+                      : 'previewMetricValue'}
+                  >
+                    {formatMetricValue(value)}
+                  </span>
                 </span>
+              );
+            },
+          )}
+          {extraMetrics.map((item) => (
+            <span
+              key={item.key}
+              className='previewMetricItem'
+              title={item.title}
+            >
+              <span className='previewMetricName'>{item.label}</span>
+              <span
+                className={item.value === undefined
+                  ? 'previewMetricValue previewMetricValuePending'
+                  : 'previewMetricValue'}
+              >
+                {formatMetricValue(item.value)}
               </span>
-            );
-          })}
+            </span>
+          ))}
         </div>
       </div>
     );
@@ -975,7 +1009,6 @@ export function PreviewPanel(props: PreviewPanelProps) {
       {renderPreviewQrExtras()}
     </>
   );
-
   const hasExtras = previewSource?.kind === 'a2ui'
     || !!previewQrPlaceholder
     || previewQrCards.length > 0

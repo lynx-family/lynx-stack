@@ -74,7 +74,7 @@ interface LiveMessagesMessage {
   messages: unknown[];
 }
 
-type PreviewMetricName = 'fcp' | 'fmp' | 'tti';
+type PreviewMetricName = 'fcp' | 'fmp' | 'tti' | 'render';
 
 interface PreviewMetricMessage {
   type: 'A2UI_PREVIEW_METRIC';
@@ -332,6 +332,9 @@ function Render() {
   const pendingReplayMessagesRef = useRef<unknown[] | null>(null);
   const pendingLiveMessagesRef = useRef<unknown[] | null>(null);
   const pendingActionResponsesRef = useRef<unknown[][]>([]);
+  const pendingReplayMetricStartRef = useRef<number | null>(null);
+  const pendingLiveMetricStartRef = useRef<number | null>(null);
+  const pendingActionMetricStartsRef = useRef<number[]>([]);
   const pendingFlushTimerRef = useRef<number | null>(null);
   const pendingFlushAttemptsRef = useRef(0);
   const previewMetricId = useMemo(() => readPreviewMetricId(), []);
@@ -342,12 +345,15 @@ function Render() {
   const postPreviewMetric = useCallback((
     metric: PreviewMetricName,
     value: number,
+    options: { repeatable?: boolean } = {},
   ) => {
     if (!previewMetricId) return;
     if (!window.parent || window.parent === window) return;
-    if (reportedMetricsRef.current.has(metric)) return;
+    if (!options.repeatable && reportedMetricsRef.current.has(metric)) return;
 
-    reportedMetricsRef.current.add(metric);
+    if (!options.repeatable) {
+      reportedMetricsRef.current.add(metric);
+    }
     const message: PreviewMetricMessage = {
       type: 'A2UI_PREVIEW_METRIC',
       metricId: previewMetricId,
@@ -386,6 +392,19 @@ function Render() {
     window.requestAnimationFrame(() => {
       window.requestAnimationFrame(() => {
         postPreviewMetric('fcp', performance.now());
+      });
+    });
+  }, [postPreviewMetric, previewMetricId]);
+
+  const scheduleRenderMetric = useCallback((startTime: number) => {
+    if (!previewMetricId) return;
+    window.requestAnimationFrame(() => {
+      window.requestAnimationFrame(() => {
+        postPreviewMetric(
+          'render',
+          performance.now() - startTime,
+          { repeatable: true },
+        );
       });
     });
   }, [postPreviewMetric, previewMetricId]);
@@ -450,23 +469,40 @@ function Render() {
 
     const replayMessages = pendingReplayMessagesRef.current;
     if (replayMessages) {
+      const metricStart = pendingReplayMetricStartRef.current
+        ?? performance.now();
       pendingReplayMessagesRef.current = null;
+      pendingReplayMetricStartRef.current = null;
       lynxView.sendGlobalEvent('A2UI_REPLAY_MESSAGES', [replayMessages]);
+      scheduleFmpMetric();
+      scheduleTtiMetric();
+      scheduleRenderMetric(metricStart);
     }
 
     const liveMessages = pendingLiveMessagesRef.current;
     if (liveMessages) {
+      const metricStart = pendingLiveMetricStartRef.current
+        ?? performance.now();
       pendingLiveMessagesRef.current = null;
+      pendingLiveMetricStartRef.current = null;
       lynxView.sendGlobalEvent('A2UI_LIVE_MESSAGES', [liveMessages]);
+      scheduleFmpMetric();
+      scheduleTtiMetric();
+      scheduleRenderMetric(metricStart);
     }
 
     const actionResponses = pendingActionResponsesRef.current.splice(0);
-    for (const messages of actionResponses) {
+    const actionMetricStarts = pendingActionMetricStartsRef.current.splice(0);
+    for (const [index, messages] of actionResponses.entries()) {
+      const metricStart = actionMetricStarts[index] ?? performance.now();
       lynxView.sendGlobalEvent('A2UI_ACTION_RESPONSE', [messages]);
+      scheduleFmpMetric();
+      scheduleTtiMetric();
+      scheduleRenderMetric(metricStart);
     }
 
     return true;
-  }, []);
+  }, [scheduleFmpMetric, scheduleRenderMetric, scheduleTtiMetric]);
 
   const schedulePendingA2UIFlush = useCallback(() => {
     if (pendingFlushTimerRef.current !== null) return;
@@ -594,6 +630,7 @@ function Render() {
         && typeof e.data === 'object'
         && (e.data as ActionResponseMessage).type === 'A2UI_ACTION_RESPONSE'
       ) {
+        pendingActionMetricStartsRef.current.push(performance.now());
         pendingActionResponsesRef.current.push(
           (e.data as ActionResponseMessage).messages,
         );
@@ -608,6 +645,7 @@ function Render() {
         && typeof e.data === 'object'
         && (e.data as ReplayMessagesMessage).type === 'A2UI_REPLAY_MESSAGES'
       ) {
+        pendingReplayMetricStartRef.current = performance.now();
         pendingReplayMessagesRef.current = (e.data as ReplayMessagesMessage)
           .messages;
         pendingFlushAttemptsRef.current = 0;
@@ -621,6 +659,7 @@ function Render() {
         && typeof e.data === 'object'
         && (e.data as LiveMessagesMessage).type === 'A2UI_LIVE_MESSAGES'
       ) {
+        pendingLiveMetricStartRef.current = performance.now();
         pendingLiveMessagesRef.current = (e.data as LiveMessagesMessage)
           .messages;
         pendingFlushAttemptsRef.current = 0;
