@@ -177,10 +177,17 @@ export interface BuildSystemPromptOptions {
   appendix?: string;
 }
 
+export function buildA2UISystemPrompt(opts: BuildSystemPromptOptions): string;
 export function buildA2UISystemPrompt(
-  opts: BuildSystemPromptOptions | undefined,
+  opts?: BuildSystemPromptOptions,
 ): string {
-  const { catalog } = opts ?? {};
+  if (!opts) {
+    throw new Error(
+      '[a2ui-prompt] buildA2UISystemPrompt requires a catalog. '
+        + 'Use buildA2UISystemPromptAsync() to load the basic catalog.',
+    );
+  }
+  const { catalog } = opts;
   if (!catalog) {
     throw new Error(
       '[a2ui-prompt] buildA2UISystemPrompt requires a catalog. '
@@ -201,7 +208,7 @@ export function buildA2UISystemPrompt(
     '',
     renderCatalogExamples(catalog),
   ];
-  if (opts?.appendix) {
+  if (opts.appendix) {
     parts.push('', opts.appendix);
   }
   return parts.join('\n');

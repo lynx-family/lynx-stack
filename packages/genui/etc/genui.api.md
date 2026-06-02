@@ -310,11 +310,6 @@ export function createA2UICatalogFromManifests(options: {
     version?: string;
 }): A2UIPromptCatalog;
 
-// Warning: (ae-missing-release-tag) "loadBasicCatalog" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
-//
-// @public (undocumented)
-export function loadBasicCatalog(): Promise<A2UIPromptCatalog>;
-
 // Warning: (ae-missing-release-tag) "createFallbackMessagesFromPlainText" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
 //
 // @public
@@ -593,6 +588,11 @@ export type Library = Library_2<ComponentRenderer<any>>;
 export type LibraryDefinition = LibraryDefinition_2<ComponentRenderer<any>>;
 
 export { LibraryJSONSchema }
+
+// Warning: (ae-missing-release-tag) "loadBasicCatalog" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
+//
+// @public (undocumented)
+export function loadBasicCatalog(): Promise<A2UIPromptCatalog>;
 
 // Warning: (ae-missing-release-tag) "MessageProcessor" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
 //
@@ -999,14 +999,6 @@ export interface UserActionPayload {
 //
 // @public (undocumented)
 export function useResolvedProps(properties: Record<string, unknown>, surface: Surface | undefined, dataContextPath?: string, processor?: MessageProcessor, functions?: readonly CatalogFunctionEntry[]): readonly [Record<string, unknown>, (key: string, value: unknown) => void];
-
-// Warning: (ae-missing-release-tag) "writeA2UICatalog" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
-//
-// @public (undocumented)
-export function writeA2UICatalog(catalog: ExtractedA2UICatalog, options: {
-    cwd?: string;
-    outDir: string;
-}): void;
 
 // Warning: (ae-missing-release-tag) "writeCatalogArtifacts" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
 //

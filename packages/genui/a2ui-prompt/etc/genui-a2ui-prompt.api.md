@@ -133,11 +133,6 @@ export function createA2UICatalogFromManifests(options: {
     version?: string;
 }): A2UICatalog;
 
-// Warning: (ae-missing-release-tag) "loadBasicCatalog" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
-//
-// @public (undocumented)
-export function loadBasicCatalog(): Promise<A2UICatalog>;
-
 // Warning: (ae-missing-release-tag) "JsonSchema" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
 //
 // @public (undocumented)
@@ -159,6 +154,11 @@ export interface JsonSchema {
     // (undocumented)
     type?: string;
 }
+
+// Warning: (ae-missing-release-tag) "loadBasicCatalog" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
+//
+// @public (undocumented)
+export function loadBasicCatalog(): Promise<A2UICatalog>;
 
 // Warning: (ae-missing-release-tag) "ReadA2UICatalogDirectoryOptions" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
 //
