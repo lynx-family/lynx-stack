@@ -388,9 +388,22 @@ export function createA2UICatalog(options: {
   return {
     catalogId: options.catalogId,
     components: catalogComponents,
-    ...(options.functions ? { functions: options.functions } : {}),
+    ...(options.functions
+      ? { functions: normalizeFunctionDefinitions(options.functions) }
+      : {}),
     ...(options.theme ? { theme: options.theme } : {}),
   };
+}
+
+function normalizeFunctionDefinitions(
+  functions: FunctionDefinition[],
+): FunctionDefinition[] {
+  return functions.map(({ description, name, parameters, returnType }) => ({
+    ...(description ? { description } : {}),
+    name,
+    parameters,
+    returnType,
+  }));
 }
 
 export function writeA2UICatalog(

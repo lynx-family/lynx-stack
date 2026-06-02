@@ -197,7 +197,14 @@ export async function POST(req: Request) {
       log(event, details);
     },
   };
-  const catalog = opts.catalog ?? await loadBasicCatalog();
+  let catalog: A2UICatalog;
+  try {
+    catalog = opts.catalog ?? await loadBasicCatalog();
+  } catch (err: unknown) {
+    const error = errorMessage(err);
+    log('catalog.load.failed', error);
+    return jsonWithCors(req, { ok: false, error }, { status: 502 });
+  }
   const optsWithCatalog = { ...opts, catalog };
 
   log('request.accepted', {

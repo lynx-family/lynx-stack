@@ -1,5 +1,5 @@
 ---
-applyTo: "packages/genui/a2ui*/**"
+applyTo: "packages/genui/a2ui*/**,packages/genui/server/agent/**"
 ---
 
 When maintaining A2UI component catalogs, keep the catalog-facing contract in a TypeScript interface marked with `@a2uiCatalog <ComponentName>`. The extractor consumes TypeDoc reflection data and does not parse TS/TSX source itself, so inline the JSON-schema-facing property shape instead of relying on aliases or external interfaces.

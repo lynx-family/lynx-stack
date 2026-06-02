@@ -178,9 +178,9 @@ export interface BuildSystemPromptOptions {
 }
 
 export function buildA2UISystemPrompt(
-  opts: BuildSystemPromptOptions,
+  opts: BuildSystemPromptOptions | undefined,
 ): string {
-  const { catalog } = opts;
+  const { catalog } = opts ?? {};
   if (!catalog) {
     throw new Error(
       '[a2ui-prompt] buildA2UISystemPrompt requires a catalog. '
@@ -201,7 +201,7 @@ export function buildA2UISystemPrompt(
     '',
     renderCatalogExamples(catalog),
   ];
-  if (opts.appendix) {
+  if (opts?.appendix) {
     parts.push('', opts.appendix);
   }
   return parts.join('\n');

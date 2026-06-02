@@ -223,7 +223,7 @@ describe('extractCatalogComponents', () => {
       'https://cdn.example.com/a2ui/catalog.json',
     ], fixtureDir)).resolves.toBe(0);
 
-    expect(readFullCatalogJson(outDir).catalogId).toBe(
+    expect(readFullCatalogJson(outDir)['catalogId']).toBe(
       'https://cdn.example.com/a2ui/catalog.json',
     );
   });

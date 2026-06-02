@@ -68,6 +68,7 @@ interface ExtractedCatalogManifest {
 }
 
 let pendingBasicCatalog: Promise<A2UICatalog> | undefined;
+let cachedBasicCatalog: A2UICatalog | undefined;
 
 const COMPONENT_SUMMARIES: Record<string, string> = {
   Button:
@@ -241,10 +242,12 @@ function createA2UICatalogFromExtractedManifest(
 }
 
 export async function loadBasicCatalog(): Promise<A2UICatalog> {
+  if (cachedBasicCatalog) return cachedBasicCatalog;
   pendingBasicCatalog ??= fetchBasicCatalog().finally(() => {
     pendingBasicCatalog = undefined;
   });
-  return pendingBasicCatalog;
+  cachedBasicCatalog = await pendingBasicCatalog;
+  return cachedBasicCatalog;
 }
 
 async function fetchBasicCatalog(): Promise<A2UICatalog> {
@@ -281,8 +284,26 @@ function isExtractedCatalogManifest(
   if (!isRecord(value)) return false;
   const catalogId = value['catalogId'];
   const components = value['components'];
+  const functions = value['functions'];
   return (catalogId === undefined || typeof catalogId === 'string')
-    && (components === undefined || isRecord(components));
+    && (components === undefined || isRecord(components))
+    && (functions === undefined || isFunctionSpecs(functions));
+}
+
+function isFunctionSpecs(value: unknown): value is A2UIFunctionSpec[] {
+  return Array.isArray(value) && value.every(isFunctionSpec);
+}
+
+function isFunctionSpec(value: unknown): value is A2UIFunctionSpec {
+  if (!isRecord(value)) return false;
+  const name = value['name'];
+  const parameters = value['parameters'];
+  const returnType = value['returnType'];
+  const description = value['description'];
+  return typeof name === 'string'
+    && isRecord(parameters)
+    && typeof returnType === 'string'
+    && (description === undefined || typeof description === 'string');
 }
 
 export function renderCatalogReference(catalog: A2UICatalog): string {
