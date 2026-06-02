@@ -35,6 +35,16 @@ afterEach(() => {
 });
 
 describe('setState timing api', () => {
+  it('does not stack timing hooks on repeated init', () => {
+    const renderHook = options.__r;
+    const rootHook = options.__;
+
+    initTimingAPI();
+
+    expect(options.__r).toBe(renderHook);
+    expect(options.__).toBe(rootHook);
+  });
+
   it('basic', async function() {
     let mtCallbacks = [];
     lynx.getNativeApp().callLepusMethod.mockImplementation((name, data, cb) => {

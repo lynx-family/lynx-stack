@@ -47,6 +47,8 @@ let shouldMarkDiffVdomStart = false;
 let shouldMarkDiffVdomEnd = false;
 
 let globalPipelineOptions: PipelineOptions | undefined;
+let activeTimingAPIOptions: TimingAPIOptions | undefined;
+let didInstallTimingAPIHooks = false;
 
 interface TimingAPIOptions {
   shouldStartUpdatePipeline: () => boolean;
@@ -116,6 +118,13 @@ function setPipeline(pipeline: PipelineOptions | undefined): void {
   globalPipelineOptions = pipeline;
 }
 
+function resetTimingState(): void {
+  timingFlag = undefined;
+  shouldMarkDiffVdomStart = false;
+  shouldMarkDiffVdomEnd = false;
+  globalPipelineOptions = undefined;
+}
+
 function markTiming(timestampKey: PerformanceTimingKey, force?: boolean): void {
   if (globalPipelineOptions && (force || globalPipelineOptions.needTimestamps)) {
     lynx.performance?._markTiming?.(globalPipelineOptions.pipelineID, timestampKey);
@@ -123,9 +132,23 @@ function markTiming(timestampKey: PerformanceTimingKey, force?: boolean): void {
 }
 
 function initTimingAPI(timingAPIOptions: TimingAPIOptions): void {
-  const startPipeline = timingAPIOptions.beginPipeline ?? beginPipeline;
+  activeTimingAPIOptions = timingAPIOptions;
+  resetTimingState();
+
+  if (didInstallTimingAPIHooks) {
+    return;
+  }
+  didInstallTimingAPIHooks = true;
 
   const helper = () => {
+    const timingAPIOptions = activeTimingAPIOptions;
+    /* v8 ignore start */
+    if (!timingAPIOptions) {
+      return;
+    }
+    /* v8 ignore stop */
+
+    const startPipeline = timingAPIOptions.beginPipeline ?? beginPipeline;
     if (__JS__ && timingAPIOptions.shouldStartUpdatePipeline()) {
       if (!globalPipelineOptions) {
         startPipeline(false, PipelineOrigins.updateTriggeredByBts);
@@ -157,6 +180,7 @@ export {
   beginPipeline,
   markTiming,
   setPipeline,
+  resetTimingState,
   globalPipelineOptions,
 };
 export type { PerformanceTimingKey, PipelineOrigin };

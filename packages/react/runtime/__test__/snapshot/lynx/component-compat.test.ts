@@ -7,7 +7,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { globalCommitContext } from '../../../src/core/commit-context';
 import { installComponentCompat } from '../../../src/core/component';
-import { markTimingLegacy, PerfSpecificKey } from '../../../src/core/performance';
+import { markTimingLegacy, PerfSpecificKey, resetTimingState } from '../../../src/core/performance';
 import { NEXT_STATE } from '../../../src/shared/render-constants';
 
 describe('installComponentCompat', () => {
@@ -39,6 +39,7 @@ describe('installComponentCompat', () => {
     lynx.reportError = vi.fn();
     lynx.getNativeApp().markTiming = vi.fn();
     globalCommitContext.flushOptions = {};
+    resetTimingState();
   });
 
   afterEach(() => {
@@ -56,6 +57,7 @@ describe('installComponentCompat', () => {
       delete (Component.prototype as any).__reactLynxOriginalSetState;
     }
     globalCommitContext.flushOptions = {};
+    resetTimingState();
   });
 
   it('does not install on non-js threads', () => {
@@ -178,9 +180,6 @@ describe('installComponentCompat', () => {
   });
 
   it('ignores legacy diff timing before a setState timing trigger', () => {
-    markTimingLegacy('updateDiffVdomStart');
-    (lynx.getNativeApp().markTiming as ReturnType<typeof vi.fn>).mockClear();
-
     markTimingLegacy('updateDiffVdomStart');
 
     expect(lynx.getNativeApp().markTiming).not.toHaveBeenCalled();
