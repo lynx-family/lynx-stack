@@ -868,6 +868,65 @@ html[data-theme="dark"] .phoneHomeIndicator {
   justify-content: stretch;
 }
 
+/* ── Preview Metrics ── */
+.previewMetricStack {
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 16px;
+  border-bottom: 1px solid var(--geist-border);
+  background: var(--geist-background);
+  font-size: 12px;
+  min-height: 38px;
+  overflow-x: auto;
+}
+
+.previewMetricLabel {
+  font-weight: 600;
+  color: var(--geist-secondary);
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  flex-shrink: 0;
+}
+
+.previewMetricList {
+  display: flex;
+  gap: 6px;
+  min-width: 0;
+}
+
+.previewMetricItem {
+  min-width: 70px;
+  display: inline-flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 6px;
+  padding: 2px 8px;
+  border: 1px solid var(--geist-border);
+  border-radius: 4px;
+  background: var(--geist-surface);
+  white-space: nowrap;
+}
+
+.previewMetricName {
+  color: var(--geist-secondary);
+  font-size: 10px;
+  font-weight: 700;
+}
+
+.previewMetricValue {
+  color: var(--geist-foreground);
+  font-family: var(--geist-mono);
+  font-size: 11px;
+  font-weight: 600;
+}
+
+.previewMetricValuePending {
+  color: var(--geist-secondary);
+}
+
 /* ── Live Component Stack ── */
 .liveComponentStack {
   flex-shrink: 0;

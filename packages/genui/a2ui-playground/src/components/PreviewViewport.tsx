@@ -1,14 +1,16 @@
 // Copyright 2026 The Lynx Authors. All rights reserved.
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
-import { useContext, useEffect, useRef, useState } from 'react';
+import { useContext, useEffect, useMemo, useRef, useState } from 'react';
 import type { ReactNode, Ref } from 'react';
 
 import {
+  PreviewPanelMetricsContext,
   PreviewPanelPreviewModeContext,
   PreviewPanelRenderContext,
 } from './PreviewPanel.js';
 import type { PreviewMode } from './PreviewPanel.js';
+import { RENDER_METRIC_ID_QUERY_PARAM } from '../utils/renderUrl.js';
 
 interface PreviewViewportProps {
   src?: string;
@@ -51,6 +53,19 @@ function PhoneShell(props: { children: ReactNode }) {
   );
 }
 
+function withPreviewMetricId(src: string, metricId: string): string {
+  if (!src || !metricId) return src;
+
+  try {
+    const url = new URL(src, window.location.href);
+    if (!url.pathname.endsWith('/render.html')) return src;
+    url.searchParams.set(RENDER_METRIC_ID_QUERY_PARAM, metricId);
+    return url.toString();
+  } catch {
+    return src;
+  }
+}
+
 export function PreviewViewport(props: PreviewViewportProps) {
   const {
     emptyIcon = '▶',
@@ -68,8 +83,21 @@ export function PreviewViewport(props: PreviewViewportProps) {
   const pendingSrcRef = useRef<string | null>(null);
   const previewModeContext = useContext(PreviewPanelPreviewModeContext);
   const previewRenderContext = useContext(PreviewPanelRenderContext);
+  const previewMetricsContext = useContext(PreviewPanelMetricsContext);
   const mode: PreviewMode = displayMode ?? previewModeContext?.mode ?? 'phone';
-  const resolvedSrc = src ?? previewRenderContext?.renderUrl ?? '';
+  const rawResolvedSrc = src ?? previewRenderContext?.renderUrl ?? '';
+  const resolvedSrc = useMemo(
+    () =>
+      withPreviewMetricId(
+        rawResolvedSrc,
+        previewMetricsContext?.metricId ?? '',
+      ),
+    [previewMetricsContext?.metricId, rawResolvedSrc],
+  );
+
+  useEffect(() => {
+    previewMetricsContext?.onFrameSrcChange(resolvedSrc);
+  }, [previewMetricsContext, resolvedSrc]);
 
   useEffect(() => {
     pendingSrcRef.current = pendingSrc;

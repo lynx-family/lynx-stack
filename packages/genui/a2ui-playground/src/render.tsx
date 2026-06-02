@@ -18,7 +18,10 @@ import '@lynx-js/web-elements/index.css';
 
 import { decodeBase64Url } from './utils/base64url.js';
 import { DEFAULT_A2UI_DEMO_URL } from './utils/demoUrl.js';
-import { RENDER_INIT_DATA_QUERY_PARAM } from './utils/renderUrl.js';
+import {
+  RENDER_INIT_DATA_QUERY_PARAM,
+  RENDER_METRIC_ID_QUERY_PARAM,
+} from './utils/renderUrl.js';
 
 interface InitData {
   protocol?: '0.9' | 'a2ui' | 'openui';
@@ -71,10 +74,27 @@ interface LiveMessagesMessage {
   messages: unknown[];
 }
 
+type PreviewMetricName = 'fcp' | 'fmp' | 'tti';
+
+interface PreviewMetricMessage {
+  type: 'A2UI_PREVIEW_METRIC';
+  metricId: string;
+  metric: PreviewMetricName;
+  value: number;
+}
+
+interface PaintTimingEntryLike {
+  name: string;
+  startTime: number;
+}
+
 interface ReplayMessagesMessage {
   type: 'A2UI_REPLAY_MESSAGES';
   messages: unknown[];
 }
+
+const TTI_IDLE_WINDOW_MS = 500;
+const TTI_READY_FALLBACK_MS = 1200;
 
 interface LynxViewElement extends HTMLElement {
   initData?: InitData;
@@ -235,6 +255,21 @@ function parseGlobalPropsFromQuery(): Record<string, unknown> | null {
   return null;
 }
 
+function readPreviewMetricId(): string {
+  return new URLSearchParams(window.location.search).get(
+    RENDER_METRIC_ID_QUERY_PARAM,
+  ) ?? '';
+}
+
+function readFiniteNumber(value: unknown): number | null {
+  if (typeof value === 'number' && Number.isFinite(value)) return value;
+  if (typeof value === 'string') {
+    const parsed = Number(value);
+    if (Number.isFinite(parsed)) return parsed;
+  }
+  return null;
+}
+
 function buildGlobalPropsFromInitData(
   initData: InitData | null,
 ): Record<string, unknown> | null {
@@ -299,11 +334,107 @@ function Render() {
   const pendingActionResponsesRef = useRef<unknown[][]>([]);
   const pendingFlushTimerRef = useRef<number | null>(null);
   const pendingFlushAttemptsRef = useRef(0);
+  const previewMetricId = useMemo(() => readPreviewMetricId(), []);
+  const initDataRef = useRef<InitData | null>(initData);
+  const reportedMetricsRef = useRef<Set<PreviewMetricName>>(new Set());
+  const ttiTimerRef = useRef<number | null>(null);
+
+  const postPreviewMetric = useCallback((
+    metric: PreviewMetricName,
+    value: number,
+  ) => {
+    if (!previewMetricId) return;
+    if (!window.parent || window.parent === window) return;
+    if (reportedMetricsRef.current.has(metric)) return;
+
+    reportedMetricsRef.current.add(metric);
+    const message: PreviewMetricMessage = {
+      type: 'A2UI_PREVIEW_METRIC',
+      metricId: previewMetricId,
+      metric,
+      value: Math.max(0, Math.round(value)),
+    };
+    window.parent.postMessage(message, '*');
+  }, [previewMetricId]);
+
+  const clearTtiTimer = useCallback(() => {
+    if (ttiTimerRef.current === null) return;
+    window.clearTimeout(ttiTimerRef.current);
+    ttiTimerRef.current = null;
+  }, []);
+
+  const scheduleTtiMetric = useCallback((delayMs = TTI_IDLE_WINDOW_MS) => {
+    if (!previewMetricId || reportedMetricsRef.current.has('tti')) return;
+    clearTtiTimer();
+    ttiTimerRef.current = window.setTimeout(() => {
+      ttiTimerRef.current = null;
+      postPreviewMetric('tti', performance.now());
+    }, delayMs);
+  }, [clearTtiTimer, postPreviewMetric, previewMetricId]);
+
+  const scheduleFmpMetric = useCallback(() => {
+    if (!previewMetricId || reportedMetricsRef.current.has('fmp')) return;
+    window.requestAnimationFrame(() => {
+      window.requestAnimationFrame(() => {
+        postPreviewMetric('fmp', performance.now());
+      });
+    });
+  }, [postPreviewMetric, previewMetricId]);
+
+  const scheduleFcpFallbackMetric = useCallback(() => {
+    if (!previewMetricId || reportedMetricsRef.current.has('fcp')) return;
+    window.requestAnimationFrame(() => {
+      window.requestAnimationFrame(() => {
+        postPreviewMetric('fcp', performance.now());
+      });
+    });
+  }, [postPreviewMetric, previewMetricId]);
 
   const postRenderReady = useCallback(() => {
     if (!window.parent || window.parent === window) return;
     window.parent.postMessage({ type: 'A2UI_RENDER_READY' }, '*');
-  }, []);
+    scheduleFcpFallbackMetric();
+    if (initDataRef.current?.protocol !== 'a2ui') {
+      scheduleFmpMetric();
+      scheduleTtiMetric(TTI_READY_FALLBACK_MS);
+    }
+  }, [scheduleFcpFallbackMetric, scheduleFmpMetric, scheduleTtiMetric]);
+
+  useEffect(() => {
+    initDataRef.current = initData;
+  }, [initData]);
+
+  useEffect(() => {
+    if (!previewMetricId) return;
+
+    const reportPaintEntries = (entries: readonly PaintTimingEntryLike[]) => {
+      for (const entry of entries) {
+        if (entry.name === 'first-contentful-paint') {
+          postPreviewMetric('fcp', entry.startTime);
+          return;
+        }
+      }
+    };
+
+    // eslint-disable-next-line n/no-unsupported-features/node-builtins
+    reportPaintEntries(performance.getEntriesByType('paint'));
+
+    // eslint-disable-next-line n/no-unsupported-features/node-builtins
+    let observer: PerformanceObserver | null = null;
+    try {
+      // eslint-disable-next-line n/no-unsupported-features/node-builtins
+      observer = new PerformanceObserver((list) => {
+        reportPaintEntries(list.getEntries());
+      });
+      observer.observe({ type: 'paint', buffered: true });
+    } catch {
+      observer = null;
+    }
+
+    return () => {
+      observer?.disconnect();
+    };
+  }, [postPreviewMetric, previewMetricId]);
 
   const hasPendingA2UIEvents = useCallback(() => {
     return pendingReplayMessagesRef.current !== null
@@ -385,6 +516,28 @@ function Render() {
     lynxView.onNativeModulesCall = (name, data, moduleName) => {
       if (moduleName !== 'bridge') return;
       if (name === 'A2UI_PLAYBACK_SYNC') {
+        if (data && typeof data === 'object') {
+          const payload = data as Record<string, unknown>;
+          const status = payload.status;
+          const deliveredCount = readFiniteNumber(payload.deliveredCount);
+          const totalCount = readFiniteNumber(payload.totalCount);
+          const hasDeliveredContent = deliveredCount !== null
+            && deliveredCount > 0;
+          const isDone = status === 'done'
+            || (deliveredCount !== null
+              && totalCount !== null
+              && totalCount > 0
+              && deliveredCount >= totalCount);
+
+          if (hasDeliveredContent || isDone) {
+            scheduleFmpMetric();
+          }
+          if (isDone) {
+            scheduleTtiMetric();
+          } else if (status === 'streaming' || status === 'paused') {
+            clearTtiTimer();
+          }
+        }
         if (window.parent && window.parent !== window) {
           window.parent.postMessage(
             {
@@ -411,7 +564,7 @@ function Render() {
       if (lynxView.onNativeModulesCall === undefined) return;
       lynxView.onNativeModulesCall = undefined;
     };
-  }, []);
+  }, [clearTtiTimer, scheduleFmpMetric, scheduleTtiMetric]);
 
   useEffect(() => {
     const handleMessage = (e: MessageEvent<unknown>) => {
@@ -551,6 +704,9 @@ function Render() {
     return () => {
       if (pendingFlushTimerRef.current !== null) {
         window.clearTimeout(pendingFlushTimerRef.current);
+      }
+      if (ttiTimerRef.current !== null) {
+        window.clearTimeout(ttiTimerRef.current);
       }
     };
   }, []);
