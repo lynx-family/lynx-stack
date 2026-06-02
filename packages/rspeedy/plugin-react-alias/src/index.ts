@@ -153,7 +153,7 @@ export function pluginReactAlias(options: Options): RsbuildPlugin {
                   .set('react/jsx-dev-runtime', jsxDevRuntime.background)
                   .set('@lynx-js/react/jsx-runtime', jsxRuntime.background)
                   .set('@lynx-js/react/jsx-dev-runtime', jsxDevRuntime.background)
-                  .set('@lynx-js/react/lepus$', reactLepus.background)
+                  .set('@lynx-js/react/lepus$', elementTemplateEntry ?? reactLepus.background)
                   .set('preact/hooks', reactHooks.preact)
                   .set('@lynx-js/react/hooks', reactHooks.background)
                 .end()

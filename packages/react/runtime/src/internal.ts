@@ -60,7 +60,7 @@ export { loadDynamicJS, __dynamicImport } from './snapshot/lynx/dynamic-js.js';
 
 export { withInitDataInState } from './core/initData.js';
 
-export { wrapWithLynxComponent } from './snapshot/compat/lynxComponent.js';
+export { wrapWithLynxComponent } from './core/compat/lynxComponent.js';
 
 /**
  * @internal a polyfill for <component is=? />

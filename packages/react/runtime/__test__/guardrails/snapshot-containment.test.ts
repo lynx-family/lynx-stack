@@ -22,7 +22,6 @@ const legacySourceDirs = [
   'compat',
   'debug',
   'gesture',
-  'legacy-react-runtime',
   'lifecycle',
   'list',
   'lynx',
@@ -131,6 +130,12 @@ describe('snapshot containment guardrails', () => {
     expect(fs.existsSync(path.join(srcRoot, 'core', 'hooks'))).toBe(true);
   });
 
+  test('keeps legacy-react-runtime entry implementation in core compat', () => {
+    expect(fs.existsSync(path.join(srcRoot, 'snapshot', 'legacy-react-runtime'))).toBe(false);
+    expect(fs.existsSync(path.join(srcRoot, 'element-template', 'legacy-react-runtime'))).toBe(false);
+    expect(fs.existsSync(path.join(srcRoot, 'core', 'compat', 'legacy-react-runtime.ts'))).toBe(true);
+  });
+
   test('prevents transform output from referencing untracked old runtime source paths', () => {
     const oldPackageSourcePattern = new RegExp(
       String.raw`@lynx-js/react/src/(?:${legacySourceDirPattern})(?:/|['"])`,
@@ -151,13 +156,21 @@ describe('snapshot containment guardrails', () => {
     const packageJson = JSON.parse(
       fs.readFileSync(path.join(reactRoot, 'package.json'), 'utf8'),
     );
+    expect(packageJson.exports['./element-template/legacy-react-runtime']).toBeUndefined();
+    expect(packageJson.exports['./legacy-react-runtime']).toEqual({
+      types: './runtime/lib/core/compat/legacy-react-runtime.d.ts',
+      lazy: './runtime/lazy/legacy-react-runtime.js',
+      default: './runtime/lib/core/compat/legacy-react-runtime.js',
+    });
+
     const typesVersions = JSON.stringify(packageJson.typesVersions ?? {});
 
     expect(typesVersions).not.toContain('./runtime/lib/hooks/');
     expect(typesVersions).not.toContain('./runtime/lib/legacy-react-runtime/');
+    expect(typesVersions).not.toContain('element-template/legacy-react-runtime');
+    expect(typesVersions).not.toContain('./runtime/lib/snapshot/legacy-react-runtime/');
+    expect(typesVersions).not.toContain('./runtime/lib/element-template/legacy-react-runtime/');
     expect(typesVersions).toContain('./runtime/lib/core/hooks/react.d.ts');
-    expect(typesVersions).toContain(
-      './runtime/lib/snapshot/legacy-react-runtime/index.d.ts',
-    );
+    expect(typesVersions).toContain('./runtime/lib/core/compat/legacy-react-runtime.d.ts');
   });
 });

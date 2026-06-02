@@ -122,4 +122,58 @@ describe('testing loader', () => {
     expect(result.code).toContain('const _et_');
     expect(result.code).not.toContain('const __snapshot_');
   });
+
+  it('targets the shared legacy runtime for compat output in element-template mode', async () => {
+    const jsxContent = `
+      import { Component } from '@lynx-js/react-runtime';
+      export class App extends Component {
+        render() {
+          return null;
+        }
+      }
+    `;
+
+    const result = await runTestingLoader(jsxContent, {
+      compat: {},
+      engineVersion: '3.2',
+      experimental_useElementTemplate: true,
+    });
+
+    expect(result.code).toContain(
+      '@lynx-js/react/legacy-react-runtime',
+    );
+    expect(result.code).not.toContain(
+      '@lynx-js/react/element-template/legacy-react-runtime',
+    );
+  });
+
+  it('targets public internal helpers for compat component wrappers in element-template mode', async () => {
+    const jsxContent = `
+      import { Component } from '@lynx-js/react-runtime';
+      class CompatChild extends Component {
+        render() {
+          return <text />;
+        }
+      }
+      export function App() {
+        return <CompatChild id="child-id" className="child-class" />;
+      }
+    `;
+
+    const result = await runTestingLoader(jsxContent, {
+      compat: {
+        addComponentElement: true,
+      },
+      engineVersion: '3.2',
+      experimental_useElementTemplate: true,
+    });
+
+    expect(result.code).toContain(
+      '@lynx-js/react/internal',
+    );
+    expect(result.code).toContain('wrapWithLynxComponent');
+    expect(result.code).not.toContain(
+      '@lynx-js/react/element-template/internal',
+    );
+  });
 });

@@ -178,6 +178,71 @@ describe('React - alias', () => {
     )
   })
 
+  test('element-template aliases transformed legacy runtime and background lepus entry to ET runtime', async () => {
+    vi.stubEnv('NODE_ENV', 'development')
+    const { pluginReactAlias } = await import('../src/index.js')
+
+    const rsbuild = await createRsbuild({
+      rsbuildConfig: {
+        plugins: [
+          pluginReactAlias({
+            LAYERS,
+            elementTemplate: true,
+          }),
+        ],
+      },
+      cwd: path.dirname(fileURLToPath(import.meta.url)),
+    })
+
+    const [config] = await rsbuild.initConfigs()
+
+    if (!config?.resolve?.alias) {
+      expect.fail('should have config.resolve.alias')
+    }
+
+    expect(config.resolve.alias).toHaveProperty(
+      '@lynx-js/react$',
+      expect.stringContaining(
+        '/packages/react/runtime/lib/element-template/index.js'.replaceAll(
+          '/',
+          path.sep,
+        ),
+      ),
+    )
+    expect(config.resolve.alias).toHaveProperty(
+      '@lynx-js/react/legacy-react-runtime$',
+      expect.stringContaining(
+        '/packages/react/runtime/lib/core/compat/legacy-react-runtime.js'
+          .replaceAll('/', path.sep),
+      ),
+    )
+
+    if (!config.module?.rules) {
+      expect.fail('should have config.module.rules')
+    }
+
+    const backgroundRule = config.module.rules.find((rule) => {
+      if (!rule || typeof rule !== 'object') {
+        return false
+      }
+      return rule.issuerLayer === LAYERS.BACKGROUND && !!rule.resolve?.alias
+    }) as RuleSetRule
+
+    if (!backgroundRule || !backgroundRule.resolve?.alias) {
+      expect.fail('should have background alias rule')
+    }
+
+    expect(backgroundRule.resolve.alias).toHaveProperty(
+      '@lynx-js/react/lepus$',
+      expect.stringContaining(
+        '/packages/react/runtime/lib/element-template/index.js'.replaceAll(
+          '/',
+          path.sep,
+        ),
+      ),
+    )
+  })
+
   test('layered lepus hooks alias for main thread', async () => {
     vi.stubEnv('NODE_ENV', 'development')
     const { pluginReactAlias } = await import('../src/index.js')
