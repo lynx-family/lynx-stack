@@ -1,9 +1,9 @@
 # 概览与架构
 
 这篇文档解释 `@lynx-js/genui/a2ui` 是什么、它背后的心智模型，以及一条
-server message 如何在 client 上变成渲染出来的 UI。建议在读完
-[quick start](../README_zh.md) 之后阅读，这样你能理解 stack 各部分的职责
-边界，以及这个包为什么设计成现在这样。
+server message 如何在 client 上变成渲染出来的 UI。它以一个可运行的
+[quick start](#quick-start) 开场，然后逐步讲解架构，帮你理解 stack 各部分的
+职责边界，以及这个包为什么设计成现在这样。
 
 ## 这个包是什么
 
@@ -19,6 +19,63 @@ ReactLynx 组件。
 
 你的应用负责传输层，并把 messages 写入 renderer。当你已经有、或准备构建一个
 返回 A2UI messages 的 Agent 服务时，使用这个包。
+
+## Quick start
+
+在 ReactLynx 应用里安装这个包，然后用 `<A2UI>` 渲染一个 `MessageStore`。你的
+传输层把 Agent 的 messages 写入 store；renderer 把它们变成 UI，并通过
+`onAction` 把用户 action 交还给你。
+
+```sh
+pnpm add @lynx-js/genui @lynx-js/react
+```
+
+```tsx
+import {
+  A2UI,
+  basicFunctions,
+  Button,
+  createMessageStore,
+  normalizePayloadToMessages,
+  Text,
+} from '@lynx-js/genui/a2ui';
+
+// 1. 一个 buffer，你的传输层把原始 protocol messages 写进它。
+const store = createMessageStore();
+
+// 2. 允许 generated UI 使用的 component 和 function。
+const catalogs = [Text, Button, ...basicFunctions];
+
+// 3. 发送 prompt，并把 Agent 的回复推进 store。
+async function sendPrompt(input: string) {
+  const res = await fetch('/a2ui/chat', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ messages: [{ role: 'user', content: input }] }),
+  });
+  store.push(normalizePayloadToMessages(await res.json()));
+}
+
+// 4. 渲染。onAction 把用户点击回传给 Agent。
+<A2UI
+  messageStore={store}
+  catalogs={catalogs}
+  onAction={(action) => {
+    void fetch('/a2ui/action', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(action),
+    })
+      .then((res) => res.json())
+      .then((payload) => store.push(normalizePayloadToMessages(payload)));
+  }}
+/>;
+```
+
+这就是 client 的全部循环：**把 messages 推进来、渲染、把 actions 抛出去。**
+传输层可以是 REST、SSE、WebSocket，或一个 in-process mock——renderer 并不关心。
+本页接下来会讲清楚在 `store.push(...)` 和渲染出的 surface 之间到底发生了什么。
+安装细节和可选的 theme tokens 见 [README](../README_zh.md)。
 
 ## 心智模型
 

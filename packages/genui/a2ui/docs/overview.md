@@ -1,10 +1,10 @@
 # Overview and architecture
 
 This page explains what `@lynx-js/genui/a2ui` is, the mental model behind
-it, and how a server message becomes a rendered UI on the client. Read it
-after the [quick start](../README.md) when you want to understand which
-part of the stack owns each responsibility — and why the package is shaped
-the way it is.
+it, and how a server message becomes a rendered UI on the client. It
+opens with a runnable [quick start](#quick-start), then works through
+the architecture so you understand which part of the stack owns each
+responsibility — and why the package is shaped the way it is.
 
 ## What this package is
 
@@ -21,6 +21,64 @@ It is deliberately a renderer and nothing more. The package does **not**:
 Your app owns the transport layer and pushes messages into the renderer.
 Use this package when you already have, or plan to build, an Agent service
 that returns A2UI messages.
+
+## Quick start
+
+Install the package in a ReactLynx app, then render a `MessageStore` with
+`<A2UI>`. Your transport writes the Agent's messages into the store; the
+renderer turns them into UI and hands user actions back through `onAction`.
+
+```sh
+pnpm add @lynx-js/genui @lynx-js/react
+```
+
+```tsx
+import {
+  A2UI,
+  basicFunctions,
+  Button,
+  createMessageStore,
+  normalizePayloadToMessages,
+  Text,
+} from '@lynx-js/genui/a2ui';
+
+// 1. A buffer your transport writes raw protocol messages into.
+const store = createMessageStore();
+
+// 2. The components and functions generated UI is allowed to use.
+const catalogs = [Text, Button, ...basicFunctions];
+
+// 3. Send a prompt and push the Agent's reply into the store.
+async function sendPrompt(input: string) {
+  const res = await fetch('/a2ui/chat', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ messages: [{ role: 'user', content: input }] }),
+  });
+  store.push(normalizePayloadToMessages(await res.json()));
+}
+
+// 4. Render. onAction round-trips user taps back to the Agent.
+<A2UI
+  messageStore={store}
+  catalogs={catalogs}
+  onAction={(action) => {
+    void fetch('/a2ui/action', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(action),
+    })
+      .then((res) => res.json())
+      .then((payload) => store.push(normalizePayloadToMessages(payload)));
+  }}
+/>;
+```
+
+That is the entire client loop: **push messages in, render, send actions
+out.** The transport can be REST, SSE, WebSocket, or an in-process mock —
+the renderer does not care. The rest of this page explains what happens
+between `store.push(...)` and the rendered surface. For install details and
+optional theme tokens, see the [README](../README.md).
 
 ## The mental model
 
