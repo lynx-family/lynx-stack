@@ -78,12 +78,12 @@ async function sendPrompt(input: string) {
 
 ## 你需要负责什么
 
-| 部分                   | 负责人    | 作用                                                                                                    |
-| ---------------------- | --------- | ------------------------------------------------------------------------------------------------------- |
-| `@lynx-js/genui/a2ui`  | 这个包    | ReactLynx renderer、`MessageStore`、Catalog API、内置组件、协议辅助能力，以及 client function entries。 |
-| `genui a2ui`           | GenUI CLI | 构建期命令，用来生成自定义 catalog artifacts 和 A2UI system prompts。                                   |
-| 你的 Agent 服务        | 你的应用  | 接收用户 prompt/action，带着 A2UI prompt 和 catalog 调用模型，校验输出，然后返回 messages。             |
-| 你的 transport adapter | 你的应用  | 调用 Agent 服务，处理 REST 或流式响应，把 messages 写入 `MessageStore`，并转发 generated UI actions。   |
+| 部分                      | 负责人    | 作用                                                                                                    |
+| ------------------------- | --------- | ------------------------------------------------------------------------------------------------------- |
+| `@lynx-js/genui/a2ui`     | 这个包    | ReactLynx renderer、`MessageStore`、Catalog API、内置组件、协议辅助能力，以及 client function entries。 |
+| `npx @lynx-js/genui a2ui` | GenUI CLI | 构建期命令，用来生成自定义 catalog artifacts 和 A2UI system prompts。                                   |
+| 你的 Agent 服务           | 你的应用  | 接收用户 prompt/action，带着 A2UI prompt 和 catalog 调用模型，校验输出，然后返回 messages。             |
+| 你的 transport adapter    | 你的应用  | 调用 Agent 服务，处理 REST 或流式响应，把 messages 写入 `MessageStore`，并转发 generated UI actions。   |
 
 ## 首次接入要知道
 
@@ -99,4 +99,5 @@ async function sendPrompt(input: string) {
 
 - [概览与架构](./docs/overview_zh.md)
 - [Catalogs、内置组件与自定义组件](./docs/catalog-guide_zh.md)
+- [System Prompts](./docs/system-prompts_zh.md)
 - [打开 A2UI Playground](https://lynxjs.org/a2ui)
