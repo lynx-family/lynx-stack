@@ -144,6 +144,32 @@ describe('Plugins - SWC', () => {
     )
   })
 
+  test('user can opt out of transform-block-scoping via env.exclude', async () => {
+    const rsbuild = await createStubRspeedy({
+      mode: 'production',
+      tools: {
+        swc: {
+          env: {
+            exclude: ['transform-block-scoping'],
+          },
+        },
+      },
+    })
+
+    const config = await rsbuild.unwrapConfig()
+    const loaderOptions = getLoaderOptions<Rspack.SwcLoaderOptions>(
+      config,
+      'builtin:swc-loader',
+    )
+
+    // SWC's `env.exclude` wins over `include`, so forwarding the user's
+    // exclude opts out of the let/const → var lowering.
+    expect(loaderOptions?.env?.exclude).toEqual(['transform-block-scoping'])
+    expect(loaderOptions?.env?.include).toContain(
+      'transform-async-to-generator',
+    )
+  })
+
   test('user-configured env.include is merged onto the baseline', async () => {
     const rsbuild = await createStubRspeedy({
       mode: 'production',
