@@ -45,6 +45,22 @@ describe('Plugins - Output', () => {
     expect(config.output?.environment?.const).toBe(false)
   })
 
+  test('user can opt out of const/let lowering', async () => {
+    const rsbuild = await createStubRspeedy({
+      tools: {
+        rspack: {
+          output: { environment: { const: true } },
+        },
+      },
+    })
+
+    const config = await rsbuild.unwrapConfig({
+      action: 'build',
+    })
+
+    expect(config.output?.environment?.const).toBe(true)
+  })
+
   test('output.filename', async () => {
     const rsbuild = await createStubRspeedy({
       output: {
