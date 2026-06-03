@@ -1030,6 +1030,8 @@ export function writeCatalogFunctions(functions: CatalogFunction[], options: {
 // @public (undocumented)
 export interface WriteComponentCatalogOptions extends ExtractCatalogOptions {
     // (undocumented)
+    catalogId?: string;
+    // (undocumented)
     outDir: string;
 }
 

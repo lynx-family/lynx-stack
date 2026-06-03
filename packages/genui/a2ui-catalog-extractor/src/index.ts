@@ -39,6 +39,7 @@ export interface ExtractCatalogFromTypeDocOptions {
 }
 
 export interface WriteComponentCatalogOptions extends ExtractCatalogOptions {
+  catalogId?: string;
   outDir: string;
 }
 
@@ -328,6 +329,14 @@ export async function writeCatalogArtifacts(
   );
   writeCatalogComponents(components, options);
   writeCatalogFunctions(functions, options);
+  writeA2UICatalog(
+    createA2UICatalog({
+      catalogId: options.catalogId ?? 'catalog.json',
+      components,
+      functions,
+    }),
+    options,
+  );
   return { components, functions };
 }
 
@@ -379,9 +388,35 @@ export function createA2UICatalog(options: {
   return {
     catalogId: options.catalogId,
     components: catalogComponents,
-    ...(options.functions ? { functions: options.functions } : {}),
+    ...(options.functions
+      ? { functions: normalizeFunctionDefinitions(options.functions) }
+      : {}),
     ...(options.theme ? { theme: options.theme } : {}),
   };
+}
+
+function normalizeFunctionDefinitions(
+  functions: FunctionDefinition[],
+): FunctionDefinition[] {
+  return functions.map(({ description, name, parameters, returnType }) => ({
+    ...(description ? { description } : {}),
+    name,
+    parameters,
+    returnType,
+  }));
+}
+
+export function writeA2UICatalog(
+  catalog: A2UICatalog,
+  options: { cwd?: string; outDir: string },
+): void {
+  const cwd = options.cwd ? path.resolve(options.cwd) : process.cwd();
+  const outDir = path.resolve(cwd, options.outDir);
+  fs.mkdirSync(outDir, { recursive: true });
+  fs.writeFileSync(
+    path.join(outDir, 'catalog.json'),
+    `${JSON.stringify(catalog, null, 2)}\n`,
+  );
 }
 
 async function createTypeDocProject(

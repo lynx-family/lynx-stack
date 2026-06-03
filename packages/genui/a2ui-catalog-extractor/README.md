@@ -406,11 +406,16 @@ genui a2ui generate catalog [options]
 | `--source <path>`       | Source file or directory to scan. Repeatable.                                | None           |
 | `--typedoc-json <file>` | Read an existing TypeDoc JSON project instead of running TypeDoc conversion. | None           |
 | `--out-dir <dir>`       | Directory where component catalog files are written.                         | `dist/catalog` |
+| `--catalog-id <id>`     | Catalog ID written to the full catalog file.                                 | `catalog.json` |
 | `--version`, `-v`       | Print the package version.                                                   | None           |
 | `--help`, `-h`          | Print usage.                                                                 | None           |
 
 `--source` and `--catalog-dir` can be used together. The extractor merges
 all inputs, removes duplicates, sorts them, and then runs TypeDoc.
+
+The extractor writes both per-component files such as
+`dist/catalog/QuickStartCard/catalog.json` and a full catalog file at
+`dist/catalog/catalog.json`.
 
 The scanner accepts `.ts`, `.tsx`, `.js`, `.jsx`, `.mts`, and `.cts`
 files. It ignores `.d.ts`, `node_modules`, `dist`, and `.turbo`.
