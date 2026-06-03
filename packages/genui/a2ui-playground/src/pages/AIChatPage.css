@@ -664,8 +664,9 @@
 .chatMessageStatus {
   align-self: stretch;
   display: flex;
-  align-items: center;
-  gap: 8px;
+  align-items: flex-start;
+  flex-direction: column;
+  gap: 6px;
   max-width: 100%;
   padding: 6px 10px;
   border: none;
@@ -698,6 +699,105 @@
   color: var(--geist-foreground);
   font-family: var(--geist-mono);
   font-size: 11px;
+}
+
+.chatMessageMetrics {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  padding-left: 22px;
+}
+
+.chatMessageMetricItem {
+  position: relative;
+  display: inline-flex;
+  align-items: baseline;
+  gap: 4px;
+  min-height: 22px;
+  padding: 2px 6px;
+  border: 1px solid var(--geist-border);
+  border-radius: 4px;
+  background: var(--geist-background);
+  color: var(--geist-secondary);
+  cursor: help;
+  outline: none;
+  white-space: nowrap;
+}
+
+.chatMessageMetricItem:focus-visible {
+  border-color: var(--geist-border-hover);
+  box-shadow: 0 0 0 2px
+    color-mix(in srgb, var(--geist-foreground) 12%, transparent);
+}
+
+.chatMessageMetricName {
+  color: var(--geist-secondary);
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.chatMessageMetricValue {
+  color: var(--geist-foreground);
+  font-size: 11px;
+  font-weight: 700;
+}
+
+.chatMessageMetricTooltip {
+  position: absolute;
+  z-index: 30;
+  bottom: calc(100% + 8px);
+  left: 50%;
+  width: max-content;
+  max-width: 240px;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  padding: 8px 10px;
+  border: 1px solid var(--geist-border);
+  border-radius: 6px;
+  background: color-mix(in srgb, var(--geist-background) 96%, transparent);
+  box-shadow: var(--geist-shadow-md);
+  color: var(--geist-foreground);
+  font-family: var(--geist-font);
+  font-size: 11px;
+  line-height: 1.35;
+  opacity: 0;
+  pointer-events: none;
+  text-align: left;
+  transform: translate(-50%, 4px);
+  transition:
+    opacity var(--geist-transition),
+    transform var(--geist-transition),
+    visibility var(--geist-transition);
+  visibility: hidden;
+  white-space: normal;
+}
+
+.chatMessageMetricTooltip::after {
+  content: "";
+  position: absolute;
+  top: 100%;
+  left: 50%;
+  width: 8px;
+  height: 8px;
+  border-right: 1px solid var(--geist-border);
+  border-bottom: 1px solid var(--geist-border);
+  background: color-mix(in srgb, var(--geist-background) 96%, transparent);
+  transform: translate(-50%, -4px) rotate(45deg);
+}
+
+.chatMessageMetricItem:hover .chatMessageMetricTooltip,
+.chatMessageMetricItem:focus-visible .chatMessageMetricTooltip {
+  opacity: 1;
+  transform: translate(-50%, 0);
+  visibility: visible;
+}
+
+.chatMessageMetricTooltipTitle {
+  color: var(--geist-foreground);
+  font-weight: 700;
 }
 
 .chatMessageStatus-info {

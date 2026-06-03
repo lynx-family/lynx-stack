@@ -19,12 +19,14 @@ import type {
   DataModelSnapshot,
   PersistedMessage,
   PreviewPayloadUrls,
+  PreviewPerformanceMetrics,
 } from '../storage/types.js';
 
 export interface ModelChatMessage {
   role: 'user' | 'assistant' | 'system';
   content: string;
   previewPayloadUrls?: PreviewPayloadUrls;
+  previewMetrics?: PreviewPerformanceMetrics;
 }
 
 export interface ConversationContext {
@@ -47,6 +49,7 @@ export interface RecordTurnInput {
   previewMessages?: unknown[];
   previewPayloadUrls?: PreviewPayloadUrls | null;
   snapshotPreviewPayloadUrls?: PreviewPayloadUrls | null;
+  previewMetrics?: PreviewPerformanceMetrics | null;
 }
 
 export interface UseConversationReturn {
@@ -64,6 +67,9 @@ export interface UseConversationReturn {
   remove: (id: string) => Promise<void>;
   rename: (id: string, title: string) => Promise<void>;
   recordTurn: (input: RecordTurnInput) => Promise<void>;
+  updateLastAssistantPreviewMetrics: (
+    metrics: PreviewPerformanceMetrics,
+  ) => Promise<void>;
   buildConversationContext: () => ConversationContext;
 }
 
@@ -87,6 +93,21 @@ function cloneDataValue(value: unknown): unknown {
   } catch {
     return value;
   }
+}
+
+function clonePreviewPerformanceMetrics(
+  value: PreviewPerformanceMetrics | null | undefined,
+): PreviewPerformanceMetrics | undefined {
+  if (!value) return undefined;
+  const next: PreviewPerformanceMetrics = {};
+  if (typeof value.fcpMs === 'number') next.fcpMs = value.fcpMs;
+  if (typeof value.fmpMs === 'number') next.fmpMs = value.fmpMs;
+  if (typeof value.ttiMs === 'number') next.ttiMs = value.ttiMs;
+  if (typeof value.agentOutputMs === 'number') {
+    next.agentOutputMs = value.agentOutputMs;
+  }
+  if (typeof value.renderMs === 'number') next.renderMs = value.renderMs;
+  return Object.keys(next).length > 0 ? next : undefined;
 }
 
 function truncateConversationHistory(
@@ -202,6 +223,7 @@ function toPersistedMessages(
     role: message.role,
     content: message.content,
     previewPayloadUrls: message.previewPayloadUrls,
+    previewMetrics: clonePreviewPerformanceMetrics(message.previewMetrics),
     createdAt: now + index,
   }));
 }
@@ -213,6 +235,7 @@ function fromPersistedMessages(
     role: message.role,
     content: message.content,
     previewPayloadUrls: message.previewPayloadUrls,
+    previewMetrics: clonePreviewPerformanceMetrics(message.previewMetrics),
   }));
 }
 
@@ -259,11 +282,16 @@ export function useConversation(): UseConversationReturn {
   const previewMessagesRef = useRef<unknown[]>([]);
   const previewPayloadUrlsRef = useRef<PreviewPayloadUrls | null>(null);
   const activeIdRef = useRef<string | null>(null);
+  const conversationsRef = useRef<ConversationMeta[]>([]);
   const activationTokenRef = useRef<symbol | null>(null);
   const conversationHotStateMapRef = useRef<Map<string, ConversationHotState>>(
     new Map(),
   );
   const persistentRef = useRef(true);
+
+  useEffect(() => {
+    conversationsRef.current = conversations;
+  }, [conversations]);
 
   const syncHotState = useCallback(
     (
@@ -471,6 +499,7 @@ export function useConversation(): UseConversationReturn {
           role: 'assistant' as const,
           content: input.assistantContent,
           previewPayloadUrls: input.previewPayloadUrls ?? undefined,
+          previewMetrics: clonePreviewPerformanceMetrics(input.previewMetrics),
         },
       ];
       const nextDataModel = cloneDataModel(dataModelRef.current);
@@ -486,8 +515,9 @@ export function useConversation(): UseConversationReturn {
         ?? null;
       const now = Date.now();
 
-      const existingMeta = conversations.find((item) => item.id === id)
-        ?? createConversationMeta();
+      const existingMeta =
+        conversationsRef.current.find((item) => item.id === id)
+          ?? createConversationMeta();
       const nextMeta: ConversationMeta = {
         ...existingMeta,
         id,
@@ -514,10 +544,12 @@ export function useConversation(): UseConversationReturn {
         nextPreviewMessages,
         nextPreviewPayloadUrls,
       );
-      setConversations((prev) => {
-        const without = prev.filter((item) => item.id !== id);
-        return [nextMeta, ...without].sort((a, b) => b.updatedAt - a.updatedAt);
-      });
+      const nextConversations = [
+        nextMeta,
+        ...conversationsRef.current.filter((item) => item.id !== id),
+      ].sort((a, b) => b.updatedAt - a.updatedAt);
+      conversationsRef.current = nextConversations;
+      setConversations(nextConversations);
 
       if (persistentRef.current) {
         try {
@@ -545,7 +577,83 @@ export function useConversation(): UseConversationReturn {
         }
       }
     },
-    [conversations, createNew, syncHotState],
+    [createNew, syncHotState],
+  );
+
+  const updateLastAssistantPreviewMetrics = useCallback(
+    async (metrics: PreviewPerformanceMetrics) => {
+      const id = activeIdRef.current;
+      if (!id) return;
+
+      const nextPreviewMetrics = clonePreviewPerformanceMetrics(metrics);
+      if (!nextPreviewMetrics) return;
+
+      const currentMessages = messagesRef.current;
+      const assistantIndex = (() => {
+        for (let i = currentMessages.length - 1; i >= 0; i--) {
+          if (currentMessages[i]?.role === 'assistant') return i;
+        }
+        return -1;
+      })();
+      if (assistantIndex < 0) return;
+
+      const nextMessages = currentMessages.slice();
+      nextMessages[assistantIndex] = {
+        ...nextMessages[assistantIndex],
+        previewMetrics: nextPreviewMetrics,
+      };
+      const nextDataModel = cloneDataModel(dataModelRef.current);
+      const nextSurfaceIds = new Set(surfaceIdsRef.current);
+      const nextPreviewMessages = previewMessagesRef.current.slice();
+      const nextPreviewPayloadUrls = previewPayloadUrlsRef.current;
+
+      syncHotState(
+        nextMessages,
+        nextDataModel,
+        nextSurfaceIds,
+        nextPreviewMessages,
+        nextPreviewPayloadUrls,
+      );
+
+      const existingMeta = conversationsRef.current.find((item) =>
+        item.id === id
+      );
+      if (!persistentRef.current || !existingMeta) return;
+
+      const snapshot: DataModelSnapshot = {
+        conversationId: id,
+        dataModel: nextDataModel,
+        surfaceIds: [...nextSurfaceIds],
+        previewMessages: nextPreviewMessages,
+        previewPayloadUrls: nextPreviewPayloadUrls ?? undefined,
+        updatedAt: existingMeta.updatedAt,
+      };
+
+      try {
+        await saveConversationMessages(
+          existingMeta,
+          toPersistedMessages(id, nextMessages),
+          snapshot,
+        );
+      } catch (err) {
+        console.warn(
+          '[a2ui] Failed to persist preview metrics; continuing in memory',
+          err,
+        );
+        persistentRef.current = false;
+        setIsPersistent(false);
+        conversationHotStateMapRef.current.set(id, {
+          messages: nextMessages.slice(),
+          dataModel: cloneDataModel(nextDataModel),
+          surfaceIds: new Set(nextSurfaceIds),
+          previewMessages: nextPreviewMessages.slice(),
+          previewPayloadUrls: nextPreviewPayloadUrls
+            ? { ...nextPreviewPayloadUrls }
+            : null,
+        });
+      }
+    },
+    [syncHotState],
   );
 
   const buildConversationContext = useCallback(
@@ -571,6 +679,7 @@ export function useConversation(): UseConversationReturn {
     remove,
     rename,
     recordTurn,
+    updateLastAssistantPreviewMetrics,
     buildConversationContext,
   };
 }

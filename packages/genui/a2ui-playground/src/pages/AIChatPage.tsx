@@ -14,21 +14,28 @@ import type { MobilePaneTab } from '../components/MobileTabBar.js';
 import { PageHeader } from '../components/PageHeader.js';
 import { PanelResizeHandle } from '../components/PanelResizeHandle.js';
 import { PreviewPanel } from '../components/PreviewPanel.js';
+import type {
+  PreviewMetricName,
+  PreviewPanelMetricItem,
+} from '../components/PreviewPanel.js';
 import { PreviewViewport } from '../components/PreviewViewport.js';
 import type { StaticDemo } from '../demos.js';
 import { useConversation } from '../hooks/useConversation.js';
 import type { ModelChatMessage } from '../hooks/useConversation.js';
 import { useResizablePanels } from '../hooks/useResizablePanels.js';
+import type { PreviewPerformanceMetrics } from '../storage/types.js';
 import { copyToClipboard } from '../utils/clipboard.js';
 import { DEFAULT_A2UI_DEMO_URL } from '../utils/demoUrl.js';
 import type { Protocol } from '../utils/protocol.js';
 import { buildRenderUrl } from '../utils/renderUrl.js';
 
 interface ChatMessage {
+  id?: string;
   role: 'user' | 'ai' | 'action' | 'json' | 'status';
   content: string | React.ReactNode;
   payload?: unknown;
   tone?: 'info' | 'pending' | 'success' | 'error';
+  metrics?: PreviewPerformanceMetrics;
 }
 
 interface SseEvent {
@@ -59,6 +66,8 @@ interface TokenUsage {
   completionTokens: number;
   totalTokens: number;
 }
+
+type CreateMetricValues = PreviewPerformanceMetrics;
 
 interface A2UIResponseMessageMeta {
   final: boolean;
@@ -123,6 +132,101 @@ function formatTokenCount(value: number): string {
   if (value < 10_000) return `${(value / 1000).toFixed(2)}k`;
   if (value < 1_000_000) return `${(value / 1000).toFixed(1)}k`;
   return `${(value / 1_000_000).toFixed(2)}M`;
+}
+
+function formatMetricValue(value: number | undefined): string {
+  return typeof value === 'number' ? `${Math.round(value)}ms` : '...';
+}
+
+type CreateMetricValueKey = keyof PreviewPerformanceMetrics;
+
+interface CreateMetricDefinition {
+  key: CreateMetricValueKey;
+  label: string;
+  description: string;
+  title: string;
+}
+
+const CREATE_PREVIEW_METRIC_DEFINITIONS: CreateMetricDefinition[] = [
+  {
+    key: 'fcpMs',
+    label: 'FCP',
+    title: 'First Contentful Paint',
+    description:
+      'Time from preview load until the first visible content is painted.',
+  },
+  {
+    key: 'fmpMs',
+    label: 'FMP',
+    title: 'First Meaningful Paint',
+    description:
+      'Time until the first meaningful A2UI content is delivered and painted.',
+  },
+  {
+    key: 'ttiMs',
+    label: 'TTI',
+    title: 'Time to Interactive',
+    description:
+      'Time until the preview finishes initial rendering and is idle enough for actions.',
+  },
+  {
+    key: 'agentOutputMs',
+    label: 'Agent',
+    title: 'Agent output duration',
+    description:
+      'Time from sending the request until the final A2UI output is received.',
+  },
+  {
+    key: 'renderMs',
+    label: 'Render',
+    title: 'Preview render duration',
+    description:
+      'Time from delivering A2UI messages to the preview runtime until the next painted frame.',
+  },
+];
+
+const CREATE_PREVIEW_EXTRA_METRIC_KEYS = new Set<CreateMetricValueKey>([
+  'agentOutputMs',
+  'renderMs',
+]);
+
+function hasCreateMetrics(
+  metrics: PreviewPerformanceMetrics | null | undefined,
+): boolean {
+  if (!metrics) return false;
+  return CREATE_PREVIEW_METRIC_DEFINITIONS.some((item) =>
+    typeof metrics[item.key] === 'number'
+  );
+}
+
+function mergeCreateMetrics(
+  current: PreviewPerformanceMetrics,
+  patch: PreviewPerformanceMetrics,
+): PreviewPerformanceMetrics {
+  const next: PreviewPerformanceMetrics = { ...current };
+  for (const item of CREATE_PREVIEW_METRIC_DEFINITIONS) {
+    const value = patch[item.key];
+    if (typeof value === 'number' && Number.isFinite(value)) {
+      next[item.key] = value;
+    }
+  }
+  return next;
+}
+
+function previewMetricToCreateMetrics(
+  metric: PreviewMetricName,
+  value: number,
+): PreviewPerformanceMetrics {
+  if (metric === 'fcp') return { fcpMs: value };
+  if (metric === 'fmp') return { fmpMs: value };
+  if (metric === 'tti') return { ttiMs: value };
+  return { renderMs: value };
+}
+
+function createChatMessageId(prefix: string): string {
+  return `${prefix}-${Date.now().toString(36)}-${
+    Math.random().toString(36).slice(2)
+  }`;
 }
 
 interface BrowserResponse {
@@ -767,10 +871,15 @@ function createActionForwardingStatus(actionName: string): ChatMessage {
   };
 }
 
-function createAgentRespondedStatus(count: number): ChatMessage {
+function createAgentRespondedStatus(
+  count: number,
+  options: { id?: string; metrics?: PreviewPerformanceMetrics } = {},
+): ChatMessage {
   return {
+    id: options.id,
     role: 'status',
     tone: 'success',
+    metrics: options.metrics,
     content: (
       <>
         <span className='chatMessageStatusIcon' aria-hidden='true'>
@@ -780,6 +889,26 @@ function createAgentRespondedStatus(count: number): ChatMessage {
           Agent responded with {count} A2UI{' '}
           {count === 1 ? 'message' : 'messages'}.
         </span>
+      </>
+    ),
+  };
+}
+
+function createPreviewMetricsStatus(
+  metrics: PreviewPerformanceMetrics,
+  id?: string,
+): ChatMessage {
+  return {
+    id,
+    role: 'status',
+    tone: 'info',
+    metrics,
+    content: (
+      <>
+        <span className='chatMessageStatusIcon' aria-hidden='true'>
+          ⏱
+        </span>
+        <span>Preview metrics captured for this response.</span>
       </>
     ),
   };
@@ -798,6 +927,40 @@ function createPreviewReadyStatus(): ChatMessage {
       </>
     ),
   };
+}
+
+function renderChatStatusMetrics(
+  metrics: PreviewPerformanceMetrics | undefined,
+) {
+  if (!hasCreateMetrics(metrics)) return null;
+  return (
+    <div className='chatMessageMetrics' aria-label='Metrics'>
+      {CREATE_PREVIEW_METRIC_DEFINITIONS.map((item) => {
+        const value = metrics?.[item.key];
+        if (typeof value !== 'number') return null;
+        return (
+          <span
+            key={item.key}
+            className='chatMessageMetricItem'
+            title={item.description}
+            tabIndex={0}
+            aria-label={`${item.label}: ${item.description}`}
+          >
+            <span className='chatMessageMetricName'>{item.label}</span>
+            <span className='chatMessageMetricValue'>
+              {formatMetricValue(value)}
+            </span>
+            <span className='chatMessageMetricTooltip' role='tooltip'>
+              <span className='chatMessageMetricTooltipTitle'>
+                {item.title}
+              </span>
+              <span>{item.description}</span>
+            </span>
+          </span>
+        );
+      })}
+    </div>
+  );
 }
 
 function buildChatMessagesFromHistory(
@@ -827,7 +990,9 @@ function buildChatMessagesFromHistory(
       if (previousWasAction) {
         const actionMessages = normalizeA2UIMessages(message.content);
         if (actionMessages.length > 0) {
-          next.push(createAgentRespondedStatus(actionMessages.length));
+          next.push(createAgentRespondedStatus(actionMessages.length, {
+            metrics: message.previewMetrics,
+          }));
           next.push({
             role: 'action',
             content: `✅ Applied ${actionMessages.length} ${
@@ -849,6 +1014,9 @@ function buildChatMessagesFromHistory(
             getGeneratedCharacterCount(message.content),
           ),
         });
+        if (hasCreateMetrics(message.previewMetrics)) {
+          next.push(createPreviewMetricsStatus(message.previewMetrics));
+        }
       }
       next.push({
         role: 'json',
@@ -859,6 +1027,16 @@ function buildChatMessagesFromHistory(
     }
   }
   return next;
+}
+
+function getLastPreviewMetricsFromHistory(
+  history: ModelChatMessage[],
+): PreviewPerformanceMetrics {
+  for (let i = history.length - 1; i >= 0; i--) {
+    const metrics = history[i]?.previewMetrics;
+    if (hasCreateMetrics(metrics)) return metrics;
+  }
+  return {};
 }
 
 export function AIChatPage(
@@ -880,6 +1058,7 @@ export function AIChatPage(
     remove,
     rename,
     switchTo,
+    updateLastAssistantPreviewMetrics,
   } = conversation;
   const [messages, setMessages] = useState<ChatMessage[]>([WELCOME_MESSAGE]);
   const [inputValue, setInputValue] = useState<string>('');
@@ -905,6 +1084,9 @@ export function AIChatPage(
     completionTokens: 0,
     totalTokens: 0,
   });
+  const [createMetricValues, setCreateMetricValues] = useState<
+    CreateMetricValues
+  >({});
   const { showCopyToast, toast: copyToast } = useCopyToast();
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const chatMessagesRef = useRef<HTMLDivElement>(null);
@@ -917,6 +1099,9 @@ export function AIChatPage(
   const generatedCharacterCountRef = useRef(0);
   const latestPreviewPayloadUrlsRef = useRef<PreviewPayloadUrls | null>(null);
   const renderUrlRef = useRef('');
+  const activeCreateMetricValuesRef = useRef<CreateMetricValues>({});
+  const activeMetricStatusMessageIdRef = useRef<string | null>(null);
+  const activeMetricPersistenceReadyRef = useRef(false);
   const bootstrappedRenderUrlRef = useRef<string | null>(null);
   const bootstrappedMessagesRef = useRef<unknown[] | null>(null);
   const bootstrappedReplayTimersRef = useRef<number[]>([]);
@@ -1067,6 +1252,60 @@ export function AIChatPage(
     : (isGenerating
       ? 'Generation is in progress. Web Preview and Native Preview links will appear once A2UI data arrives.'
       : 'No A2UI data has been received yet. Send a message to generate Web Preview and Native Preview links.');
+  const resetCreateMetrics = useCallback(() => {
+    activeCreateMetricValuesRef.current = {};
+    activeMetricStatusMessageIdRef.current = null;
+    activeMetricPersistenceReadyRef.current = false;
+    setCreateMetricValues({});
+  }, []);
+  const updateCreateMetrics = useCallback((
+    patch: PreviewPerformanceMetrics,
+  ) => {
+    const nextMetrics = mergeCreateMetrics(
+      activeCreateMetricValuesRef.current,
+      patch,
+    );
+    activeCreateMetricValuesRef.current = nextMetrics;
+    setCreateMetricValues(nextMetrics);
+    const statusMessageId = activeMetricStatusMessageIdRef.current;
+    if (statusMessageId) {
+      setMessages((prev) =>
+        prev.map((message) =>
+          message.id === statusMessageId
+            ? { ...message, metrics: nextMetrics }
+            : message
+        )
+      );
+      if (activeMetricPersistenceReadyRef.current) {
+        void updateLastAssistantPreviewMetrics(nextMetrics);
+      }
+    }
+    return nextMetrics;
+  }, [updateLastAssistantPreviewMetrics]);
+  const showCreateMetrics = isGenerating
+    || previewMessages !== null
+    || hasCreateMetrics(createMetricValues);
+  const createMetrics = useMemo<PreviewPanelMetricItem[]>(
+    () =>
+      showCreateMetrics
+        ? CREATE_PREVIEW_METRIC_DEFINITIONS
+          .filter((item) => CREATE_PREVIEW_EXTRA_METRIC_KEYS.has(item.key))
+          .map((item) => ({
+            key: item.key,
+            label: item.label,
+            description: item.description,
+            title: item.title,
+            value: createMetricValues[item.key],
+          }))
+        : [],
+    [createMetricValues, showCreateMetrics],
+  );
+  const handlePreviewMetric = useCallback((
+    metric: PreviewMetricName,
+    value: number,
+  ) => {
+    updateCreateMetrics(previewMetricToCreateMetrics(metric, value));
+  }, [updateCreateMetrics]);
 
   const clearBootstrappedPreview = useCallback(() => {
     bootstrappedRenderUrlRef.current = null;
@@ -1245,6 +1484,13 @@ export function AIChatPage(
     }
 
     hydratedActiveIdRef.current = activeId;
+    activeMetricStatusMessageIdRef.current = null;
+    activeMetricPersistenceReadyRef.current = false;
+    const restoredMetrics = getLastPreviewMetricsFromHistory(
+      persistedMessages,
+    );
+    activeCreateMetricValuesRef.current = restoredMetrics;
+    setCreateMetricValues(restoredMetrics);
     setMessages(buildChatMessagesFromHistory(persistedMessages));
     setTokenUsage({
       promptTokens: 0,
@@ -1293,6 +1539,7 @@ export function AIChatPage(
     abortRef.current?.abort();
     const controller = new AbortController();
     abortRef.current = controller;
+    const agentOutputStart = performance.now();
 
     const userMessage: ModelChatMessage = { role: 'user', content: text };
     const requestConversation = buildConversationContext();
@@ -1312,6 +1559,7 @@ export function AIChatPage(
       completionTokens: 0,
       totalTokens: 0,
     });
+    resetCreateMetrics();
     setIsGenerating(true);
 
     void (async () => {
@@ -1403,13 +1651,22 @@ export function AIChatPage(
           throw new Error('A2UI agent did not return valid messages');
         }
 
+        const agentOutputMs = performance.now() - agentOutputStart;
+        const metrics = updateCreateMetrics({ agentOutputMs });
+        const metricStatusMessageId = createChatMessageId('metrics');
+        activeMetricStatusMessageIdRef.current = metricStatusMessageId;
         await recordTurn({
           userMessage,
           assistantContent: JSON.stringify(finalMessages),
           a2uiMessages: finalMessages,
           previewMessages: finalMessages,
           previewPayloadUrls: latestPreviewPayloadUrlsRef.current,
+          previewMetrics: metrics,
         });
+        activeMetricPersistenceReadyRef.current = true;
+        void updateLastAssistantPreviewMetrics(
+          activeCreateMetricValuesRef.current,
+        );
         setMessages((prev) => {
           const next = prev.slice();
           const characterCount = getGeneratedCharacterCount(finalMessages);
@@ -1421,6 +1678,10 @@ export function AIChatPage(
               characterCount,
             ),
           };
+          next.push(createPreviewMetricsStatus(
+            activeCreateMetricValuesRef.current,
+            metricStatusMessageId,
+          ));
           next.push({
             role: 'json',
             content: 'Generated Output',
@@ -1453,6 +1714,9 @@ export function AIChatPage(
     publishStreamingPreviewMessages,
     providerRequestOptions,
     recordTurn,
+    resetCreateMetrics,
+    updateCreateMetrics,
+    updateLastAssistantPreviewMetrics,
     updatePreviewPayloadUrls,
   ]);
 
@@ -1499,9 +1763,13 @@ export function AIChatPage(
       const controller = new AbortController();
       actionAbortRef.current = controller;
       const signal = controller.signal;
+      const agentOutputStart = performance.now();
 
       let pendingIndex = -1;
       let streamingIndex = -1;
+      resetCreateMetrics();
+      const metricStatusMessageId = createChatMessageId('action-metrics');
+      activeMetricStatusMessageIdRef.current = metricStatusMessageId;
       setMessages((prev) => {
         const next: ChatMessage[] = [
           ...prev,
@@ -1512,6 +1780,7 @@ export function AIChatPage(
             payload: action,
           },
           {
+            id: metricStatusMessageId,
             role: 'status' as const,
             tone: 'pending',
             content: (
@@ -1573,6 +1842,8 @@ export function AIChatPage(
                   return next;
                 }
                 next[pendingIndex] = {
+                  ...next[pendingIndex],
+                  id: metricStatusMessageId,
                   role: 'status' as const,
                   tone: 'pending',
                   content: (
@@ -1641,6 +1912,8 @@ export function AIChatPage(
             throw new Error('Agent returned no A2UI messages');
           }
 
+          const agentOutputMs = performance.now() - agentOutputStart;
+          const metrics = updateCreateMetrics({ agentOutputMs });
           const count = responseMessages.length;
           const replayMessages = [
             ...latestPreviewMessagesRef.current,
@@ -1656,11 +1929,19 @@ export function AIChatPage(
             previewMessages: replayMessages,
             previewPayloadUrls: responsePreviewPayloadUrls,
             snapshotPreviewPayloadUrls: null,
+            previewMetrics: metrics,
           });
+          activeMetricPersistenceReadyRef.current = true;
+          void updateLastAssistantPreviewMetrics(
+            activeCreateMetricValuesRef.current,
+          );
           setMessages((prev) => {
             const next = prev.slice();
             if (pendingIndex >= 0 && pendingIndex < next.length) {
-              next[pendingIndex] = createAgentRespondedStatus(count);
+              next[pendingIndex] = createAgentRespondedStatus(count, {
+                id: metricStatusMessageId,
+                metrics: activeCreateMetricValuesRef.current,
+              });
             }
             const finalCard: ChatMessage = {
               role: 'action' as const,
@@ -1724,6 +2005,9 @@ export function AIChatPage(
     postBootstrappedMessages,
     publishPreviewMessages,
     recordTurn,
+    resetCreateMetrics,
+    updateCreateMetrics,
+    updateLastAssistantPreviewMetrics,
     updatePreviewPayloadUrls,
   ]);
 
@@ -1748,6 +2032,7 @@ export function AIChatPage(
 
       abortRef.current?.abort();
       actionAbortRef.current?.abort();
+      resetCreateMetrics();
 
       // Synthetic user message keeps follow-up prompts in context (e.g.
       // "change the price to $99" sees what's on screen) while clearly
@@ -1796,19 +2081,21 @@ export function AIChatPage(
         previewMessages: messages,
       });
     },
-    [isGenerating, publishPreviewMessages, recordTurn],
+    [isGenerating, publishPreviewMessages, recordTurn, resetCreateMetrics],
   );
 
   const handleCreateConversation = useCallback(() => {
+    resetCreateMetrics();
     void createNew();
-  }, [createNew]);
+  }, [createNew, resetCreateMetrics]);
 
   const handleSwitchConversation = useCallback((id: string) => {
     if (isGenerating) return;
     abortRef.current?.abort();
     actionAbortRef.current?.abort();
+    resetCreateMetrics();
     void switchTo(id);
-  }, [isGenerating, switchTo]);
+  }, [isGenerating, resetCreateMetrics, switchTo]);
 
   const handleRenameConversation = useCallback((id: string, title: string) => {
     void rename(id, title);
@@ -1958,6 +2245,9 @@ export function AIChatPage(
                         singleBlock={isActionRequest}
                       />
                     )
+                    : null}
+                  {msg.role === 'status'
+                    ? renderChatStatusMetrics(msg.metrics)
                     : null}
                 </div>
               );
@@ -2135,6 +2425,8 @@ export function AIChatPage(
           showSimulationBar={false}
           previewSource={previewSource}
           previewInfoHint={previewInfoHint}
+          extraMetrics={createMetrics}
+          onPreviewMetric={handlePreviewMetric}
         >
           <PreviewViewport
             src={renderUrl}

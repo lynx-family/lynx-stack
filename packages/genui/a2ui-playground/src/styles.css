@@ -868,6 +868,131 @@ html[data-theme="dark"] .phoneHomeIndicator {
   justify-content: stretch;
 }
 
+/* ── Preview Metrics ── */
+.previewMetricStack {
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px;
+  padding: 6px 16px;
+  border-bottom: 1px solid var(--geist-border);
+  background: var(--geist-background);
+  font-size: 12px;
+  min-height: 38px;
+  overflow: visible;
+}
+
+.previewMetricLabel {
+  font-weight: 600;
+  color: var(--geist-secondary);
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  flex-shrink: 0;
+}
+
+.previewMetricList {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  min-width: 0;
+}
+
+.previewMetricItem {
+  position: relative;
+  min-width: 70px;
+  display: inline-flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 6px;
+  padding: 2px 8px;
+  border: 1px solid var(--geist-border);
+  border-radius: 4px;
+  background: var(--geist-surface);
+  white-space: nowrap;
+  cursor: help;
+  outline: none;
+}
+
+.previewMetricItem:focus-visible {
+  border-color: var(--geist-border-hover);
+  box-shadow: 0 0 0 2px
+    color-mix(in srgb, var(--geist-foreground) 12%, transparent);
+}
+
+.previewMetricName {
+  color: var(--geist-secondary);
+  font-size: 10px;
+  font-weight: 700;
+}
+
+.previewMetricValue {
+  color: var(--geist-foreground);
+  font-family: var(--geist-mono);
+  font-size: 11px;
+  font-weight: 600;
+}
+
+.previewMetricValuePending {
+  color: var(--geist-secondary);
+}
+
+.previewMetricTooltip {
+  position: absolute;
+  z-index: 30;
+  bottom: calc(100% + 8px);
+  left: 50%;
+  width: max-content;
+  max-width: 240px;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  padding: 8px 10px;
+  border: 1px solid var(--geist-border);
+  border-radius: 6px;
+  background: color-mix(in srgb, var(--geist-background) 96%, transparent);
+  box-shadow: var(--geist-shadow-md);
+  color: var(--geist-foreground);
+  font-size: 11px;
+  line-height: 1.35;
+  opacity: 0;
+  pointer-events: none;
+  text-align: left;
+  transform: translate(-50%, 4px);
+  transition:
+    opacity var(--geist-transition),
+    transform var(--geist-transition),
+    visibility var(--geist-transition);
+  visibility: hidden;
+  white-space: normal;
+}
+
+.previewMetricTooltip::after {
+  content: "";
+  position: absolute;
+  top: 100%;
+  left: 50%;
+  width: 8px;
+  height: 8px;
+  border-right: 1px solid var(--geist-border);
+  border-bottom: 1px solid var(--geist-border);
+  background: color-mix(in srgb, var(--geist-background) 96%, transparent);
+  transform: translate(-50%, -4px) rotate(45deg);
+}
+
+.previewMetricItem:hover .previewMetricTooltip,
+.previewMetricItem:focus-visible .previewMetricTooltip {
+  opacity: 1;
+  transform: translate(-50%, 0);
+  visibility: visible;
+}
+
+.previewMetricTooltipTitle {
+  color: var(--geist-foreground);
+  font-weight: 700;
+}
+
 /* ── Live Component Stack ── */
 .liveComponentStack {
   flex-shrink: 0;

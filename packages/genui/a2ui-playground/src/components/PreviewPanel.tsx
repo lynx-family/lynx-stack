@@ -3,6 +3,7 @@
 // LICENSE file in the root directory of this source tree.
 import {
   createContext,
+  useCallback,
   useEffect,
   useId,
   useMemo,
@@ -40,6 +41,15 @@ export interface PreviewPanelRenderContextValue {
 
 export const PreviewPanelRenderContext = createContext<
   PreviewPanelRenderContextValue | null
+>(null);
+
+export interface PreviewPanelMetricsContextValue {
+  metricId: string;
+  onFrameSrcChange: (src: string) => void;
+}
+
+export const PreviewPanelMetricsContext = createContext<
+  PreviewPanelMetricsContextValue | null
 >(null);
 
 export interface PreviewQrItem {
@@ -86,6 +96,54 @@ export type PreviewPanelSource =
   | OpenUIPreviewSource
   | PlaceholderPreviewSource;
 
+export type PreviewMetricName = 'fcp' | 'fmp' | 'tti' | 'render';
+
+type PreviewMetrics = Partial<Record<PreviewMetricName, number>>;
+
+interface PreviewMetricMessage {
+  type: 'A2UI_PREVIEW_METRIC';
+  metricId: string;
+  metric: PreviewMetricName;
+  value: number;
+}
+
+export interface PreviewPanelMetricItem {
+  key: string;
+  label: string;
+  description?: string;
+  title?: string;
+  value?: number;
+}
+
+const PREVIEW_METRIC_ITEMS: Array<{
+  key: PreviewMetricName;
+  label: string;
+  description: string;
+  title: string;
+}> = [
+  {
+    key: 'fcp',
+    label: 'FCP',
+    title: 'First Contentful Paint',
+    description:
+      'Time from preview load until the first visible content is painted.',
+  },
+  {
+    key: 'fmp',
+    label: 'FMP',
+    title: 'First Meaningful Paint',
+    description:
+      'Time until the first meaningful A2UI content is delivered and painted.',
+  },
+  {
+    key: 'tti',
+    label: 'TTI',
+    title: 'Time to Interactive',
+    description:
+      'Time until the preview finishes initial rendering and is idle enough for actions.',
+  },
+];
+
 interface PreviewPanelProps {
   className?: string;
   style?: CSSProperties;
@@ -104,6 +162,8 @@ interface PreviewPanelProps {
   bodyClassName?: string;
   children: ReactNode;
   afterBody?: ReactNode;
+  extraMetrics?: PreviewPanelMetricItem[];
+  onPreviewMetric?: (metric: PreviewMetricName, value: number) => void;
   previewInfoHint?: ReactNode;
 }
 
@@ -196,6 +256,29 @@ function shouldUseClientPayloadStore(): boolean {
   return __A2UI_PLAYGROUND_CLIENT_PAYLOAD_STORE__;
 }
 
+function isPreviewMetricName(value: unknown): value is PreviewMetricName {
+  return value === 'fcp'
+    || value === 'fmp'
+    || value === 'tti'
+    || value === 'render';
+}
+
+function isPreviewMetricMessage(
+  data: unknown,
+): data is PreviewMetricMessage {
+  if (!data || typeof data !== 'object') return false;
+  const payload = data as Partial<PreviewMetricMessage>;
+  return payload.type === 'A2UI_PREVIEW_METRIC'
+    && typeof payload.metricId === 'string'
+    && isPreviewMetricName(payload.metric)
+    && typeof payload.value === 'number'
+    && Number.isFinite(payload.value);
+}
+
+function formatMetricValue(value: number | undefined): string {
+  return typeof value === 'number' ? `${Math.round(value)}ms` : '...';
+}
+
 export function PreviewPanel(props: PreviewPanelProps) {
   const {
     afterBody,
@@ -203,13 +286,15 @@ export function PreviewPanel(props: PreviewPanelProps) {
     bodyClassName,
     children,
     className,
+    extraMetrics = [],
     headerAfterTitle,
+    onPreviewMetric,
+    onSpeedChange,
     previewSource,
     previewInfoHint,
     showPreviewModeSwitch = false,
     showSimulationBar = true,
     speed: speedProp,
-    onSpeedChange,
     style,
     title,
   } = props;
@@ -235,6 +320,20 @@ export function PreviewPanel(props: PreviewPanelProps) {
   const liveTimersRef = useRef<ReturnType<typeof setTimeout>[]>([]);
   const buildSeqRef = useRef(0);
   const speedInputId = useId();
+  const rawMetricId = useId();
+  const metricId = useMemo(
+    () => rawMetricId.replace(/[^\w-]/g, ''),
+    [rawMetricId],
+  );
+  const [previewMetrics, setPreviewMetrics] = useState<PreviewMetrics>({});
+  const [metricFrameSrc, setMetricFrameSrc] = useState('');
+  const metricFrameSrcRef = useRef('');
+  const handleMetricFrameSrcChange = useCallback((src: string) => {
+    if (metricFrameSrcRef.current === src) return;
+    metricFrameSrcRef.current = src;
+    setMetricFrameSrc(src);
+    setPreviewMetrics({});
+  }, []);
 
   const rspeedyDevUrl = useRspeedyDevUrl();
   const baseUrl = useMemo(() => window.location.href.replace(/#.*$/, ''), []);
@@ -257,6 +356,10 @@ export function PreviewPanel(props: PreviewPanelProps) {
     () => ({ renderUrl }),
     [renderUrl],
   );
+  const metricsContext = useMemo<PreviewPanelMetricsContextValue>(
+    () => ({ metricId, onFrameSrcChange: handleMetricFrameSrcChange }),
+    [handleMetricFrameSrcChange, metricId],
+  );
   const bodyClass = bodyClassName
     ?? (mode === 'full' || isFullscreen
       ? 'previewPanelBody previewPanelBodyFull'
@@ -270,6 +373,38 @@ export function PreviewPanel(props: PreviewPanelProps) {
       height: '100vh',
     }
     : style;
+
+  useEffect(() => {
+    let expectedOrigin = '';
+    if (metricFrameSrc) {
+      try {
+        expectedOrigin = new URL(metricFrameSrc, window.location.href).origin;
+      } catch {
+        expectedOrigin = '';
+      }
+    }
+
+    const handleMessage = (event: MessageEvent<unknown>) => {
+      if (expectedOrigin && event.origin !== expectedOrigin) return;
+      if (!isPreviewMetricMessage(event.data)) return;
+      if (event.data.metricId !== metricId) return;
+
+      const { metric, value } = event.data;
+      onPreviewMetric?.(metric, value);
+      setPreviewMetrics((current) => {
+        if (current[metric] === value) {
+          return current;
+        }
+        return {
+          ...current,
+          [metric]: value,
+        };
+      });
+    };
+
+    window.addEventListener('message', handleMessage);
+    return () => window.removeEventListener('message', handleMessage);
+  }, [metricFrameSrc, metricId, onPreviewMetric]);
 
   useEffect(() => {
     setWebCopied(false);
@@ -811,6 +946,64 @@ export function PreviewPanel(props: PreviewPanelProps) {
     );
   };
 
+  const hasPreviewMetricSource = previewSource !== undefined
+    && previewSource.kind !== 'placeholder';
+  const hasPreviewMetrics = hasPreviewMetricSource || extraMetrics.length > 0;
+
+  const renderPreviewMetrics = () => {
+    if (!hasPreviewMetrics) return null;
+
+    const renderMetricItem = (item: PreviewPanelMetricItem) => {
+      const value = item.value;
+      const description = item.description ?? item.title;
+      return (
+        <span
+          key={item.key}
+          className='previewMetricItem'
+          title={description ?? item.title}
+          tabIndex={description ? 0 : undefined}
+          aria-label={description
+            ? `${item.label}: ${description}`
+            : item.label}
+        >
+          <span className='previewMetricName'>{item.label}</span>
+          <span
+            className={value === undefined
+              ? 'previewMetricValue previewMetricValuePending'
+              : 'previewMetricValue'}
+          >
+            {formatMetricValue(value)}
+          </span>
+          {description
+            ? (
+              <span className='previewMetricTooltip' role='tooltip'>
+                <span className='previewMetricTooltipTitle'>{item.title}</span>
+                <span>{description}</span>
+              </span>
+            )
+            : null}
+        </span>
+      );
+    };
+
+    return (
+      <div className='previewMetricStack' aria-live='polite'>
+        <span className='previewMetricLabel'>Metrics</span>
+        <div className='previewMetricList'>
+          {(hasPreviewMetricSource ? PREVIEW_METRIC_ITEMS : []).map(
+            (item) => {
+              return renderMetricItem({
+                ...item,
+                value: previewMetrics[item.key],
+              });
+            },
+          )}
+          {extraMetrics.map((item) => renderMetricItem(item))}
+        </div>
+      </div>
+    );
+  };
+
   // Rendered both inline (when the panel is wide enough) and inside the
   // bottom sheet (when the panel is narrow). The function closes over all
   // local state so both instances stay in sync without prop plumbing.
@@ -841,7 +1034,6 @@ export function PreviewPanel(props: PreviewPanelProps) {
       {renderPreviewQrExtras()}
     </>
   );
-
   const hasExtras = previewSource?.kind === 'a2ui'
     || !!previewQrPlaceholder
     || previewQrCards.length > 0
@@ -849,115 +1041,118 @@ export function PreviewPanel(props: PreviewPanelProps) {
 
   return (
     <PreviewPanelPreviewModeContext.Provider value={{ mode, setMode }}>
-      <PreviewPanelRenderContext.Provider value={renderContext}>
-        <div
-          className={className
-            ? `${className}${isFullscreen ? ' previewPanelFullscreen' : ''}`
-            : (isFullscreen
-              ? 'previewPanel previewPanelFullscreen'
-              : 'previewPanel')}
-          style={panelStyle}
-        >
-          <CopyToast toast={copyToast} />
-          <div className='previewPanelHeader'>
-            <span className='previewPanelTitle'>{title}</span>
-            {headerAfterTitle}
-            <div className='spacer' />
-            {showPreviewModeSwitch
-              ? <PreviewModeSwitch mode={mode} onChange={setMode} />
-              : null}
-            {hasExtras
-              ? (
-                <button
-                  type='button'
-                  className='previewInfoBtn'
-                  onClick={() => setShareOpen(true)}
-                  title='Open on phone'
-                  aria-label='Open this preview on a phone'
-                >
-                  <svg
-                    viewBox='0 0 24 24'
-                    width='16'
-                    height='16'
-                    fill='none'
-                    stroke='currentColor'
-                    strokeWidth='2'
-                    strokeLinecap='round'
-                    strokeLinejoin='round'
-                    aria-hidden='true'
+      <PreviewPanelMetricsContext.Provider value={metricsContext}>
+        <PreviewPanelRenderContext.Provider value={renderContext}>
+          <div
+            className={className
+              ? `${className}${isFullscreen ? ' previewPanelFullscreen' : ''}`
+              : (isFullscreen
+                ? 'previewPanel previewPanelFullscreen'
+                : 'previewPanel')}
+            style={panelStyle}
+          >
+            <CopyToast toast={copyToast} />
+            <div className='previewPanelHeader'>
+              <span className='previewPanelTitle'>{title}</span>
+              {headerAfterTitle}
+              <div className='spacer' />
+              {showPreviewModeSwitch
+                ? <PreviewModeSwitch mode={mode} onChange={setMode} />
+                : null}
+              {hasExtras
+                ? (
+                  <button
+                    type='button'
+                    className='previewInfoBtn'
+                    onClick={() => setShareOpen(true)}
+                    title='Open on phone'
+                    aria-label='Open this preview on a phone'
                   >
-                    <rect
-                      x='6'
-                      y='2'
-                      width='12'
-                      height='20'
-                      rx='2.5'
-                      ry='2.5'
-                    />
-                    <line x1='12' y1='18' x2='12.01' y2='18' />
-                  </svg>
-                </button>
+                    <svg
+                      viewBox='0 0 24 24'
+                      width='16'
+                      height='16'
+                      fill='none'
+                      stroke='currentColor'
+                      strokeWidth='2'
+                      strokeLinecap='round'
+                      strokeLinejoin='round'
+                      aria-hidden='true'
+                    >
+                      <rect
+                        x='6'
+                        y='2'
+                        width='12'
+                        height='20'
+                        rx='2.5'
+                        ry='2.5'
+                      />
+                      <line x1='12' y1='18' x2='12.01' y2='18' />
+                    </svg>
+                  </button>
+                )
+                : null}
+              <button
+                type='button'
+                className='previewExpandBtn'
+                onClick={() => setIsFullscreen((v) => !v)}
+                title={isFullscreen ? 'Exit fullscreen' : 'Expand preview'}
+              >
+                {isFullscreen ? '\u2715' : '\u2922'}
+              </button>
+            </div>
+            {beforeBody}
+            {renderPreviewMetrics()}
+            {showSimulationBar
+                && previewSource
+                && previewSource.kind !== 'placeholder'
+              ? (
+                <PreviewSimulationBar
+                  speed={speed}
+                  speedInputId={speedInputId}
+                  onSpeedChange={setSpeed}
+                  label='Simulated'
+                  infoTooltip={previewSource.kind === 'a2ui'
+                    ? (
+                      <div>
+                        Pre-recorded messages replayed at simulated speed. No AI
+                        model is running.
+                      </div>
+                    )
+                    : undefined}
+                  infoTooltipOpen={simulationInfoOpen}
+                  onToggleInfoTooltip={() => setSimulationInfoOpen((v) => !v)}
+                />
               )
               : null}
-            <button
-              type='button'
-              className='previewExpandBtn'
-              onClick={() => setIsFullscreen((v) => !v)}
-              title={isFullscreen ? 'Exit fullscreen' : 'Expand preview'}
-            >
-              {isFullscreen ? '\u2715' : '\u2922'}
-            </button>
+            <div className={bodyClass}>{children}</div>
+            <div className='previewPanelExtras'>{renderExtras()}</div>
+            {hasExtras
+              ? (
+                <Drawer.Root
+                  open={shareOpen}
+                  onOpenChange={setShareOpen}
+                >
+                  <Drawer.Portal>
+                    <Drawer.Overlay className='previewShareOverlay' />
+                    <Drawer.Content className='previewShareSheet'>
+                      <div className='previewShareHandle' aria-hidden='true' />
+                      <Drawer.Title className='previewShareTitle'>
+                        Preview info
+                      </Drawer.Title>
+                      <Drawer.Description className='previewShareDescription'>
+                        Components rendered and links to share this preview.
+                      </Drawer.Description>
+                      <div className='previewShareBody'>{renderExtras()}</div>
+                    </Drawer.Content>
+                  </Drawer.Portal>
+                </Drawer.Root>
+              )
+              : null}
+            {afterBody}
           </div>
-          {beforeBody}
-          {showSimulationBar
-              && previewSource
-              && previewSource.kind !== 'placeholder'
-            ? (
-              <PreviewSimulationBar
-                speed={speed}
-                speedInputId={speedInputId}
-                onSpeedChange={setSpeed}
-                label='Simulated'
-                infoTooltip={previewSource.kind === 'a2ui'
-                  ? (
-                    <div>
-                      Pre-recorded messages replayed at simulated speed. No AI
-                      model is running.
-                    </div>
-                  )
-                  : undefined}
-                infoTooltipOpen={simulationInfoOpen}
-                onToggleInfoTooltip={() => setSimulationInfoOpen((v) => !v)}
-              />
-            )
-            : null}
-          <div className={bodyClass}>{children}</div>
-          <div className='previewPanelExtras'>{renderExtras()}</div>
-          {hasExtras
-            ? (
-              <Drawer.Root
-                open={shareOpen}
-                onOpenChange={setShareOpen}
-              >
-                <Drawer.Portal>
-                  <Drawer.Overlay className='previewShareOverlay' />
-                  <Drawer.Content className='previewShareSheet'>
-                    <div className='previewShareHandle' aria-hidden='true' />
-                    <Drawer.Title className='previewShareTitle'>
-                      Preview info
-                    </Drawer.Title>
-                    <Drawer.Description className='previewShareDescription'>
-                      Components rendered and links to share this preview.
-                    </Drawer.Description>
-                    <div className='previewShareBody'>{renderExtras()}</div>
-                  </Drawer.Content>
-                </Drawer.Portal>
-              </Drawer.Root>
-            )
-            : null}
-          {afterBody}
-        </div>
-      </PreviewPanelRenderContext.Provider>
+        </PreviewPanelRenderContext.Provider>
+      </PreviewPanelMetricsContext.Provider>
     </PreviewPanelPreviewModeContext.Provider>
   );
 }

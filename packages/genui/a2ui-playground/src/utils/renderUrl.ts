@@ -5,6 +5,7 @@ import { encodeBase64Url } from './base64url.js';
 import type { Protocol } from './protocol.js';
 
 export const RENDER_INIT_DATA_QUERY_PARAM = 'initData';
+export const RENDER_METRIC_ID_QUERY_PARAM = 'previewMetricId';
 
 export interface RenderInit {
   protocol: Protocol;
