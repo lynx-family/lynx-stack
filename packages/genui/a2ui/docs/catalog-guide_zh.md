@@ -326,7 +326,7 @@ MyChart.displayName = 'MyChart';
 2. 运行公开 CLI 输出 JSON：
 
    ```bash
-   genui a2ui generate catalog --catalog-dir src/catalog --out-dir dist/catalog
+   npx @lynx-js/genui a2ui generate catalog --catalog-dir src/catalog --out-dir dist/catalog
    ```
 
 3. 把生成的 JSON 与组件配对：
@@ -338,7 +338,7 @@ MyChart.displayName = 'MyChart';
    const catalog = defineCatalog([[MyChart, myChartManifest]]);
    ```
 
-`genui a2ui generate catalog` 是面向用户的命令；
+`npx @lynx-js/genui a2ui generate catalog` 是面向用户的命令；
 `@lynx-js/genui/a2ui-catalog-extractor` 是它背后由 TypeDoc 驱动的引擎。两条约束
 能让抽取顺利进行：组件文件夹名必须与导出的 function 名一致
 （`src/catalog/MyChart/index.tsx` 导出 `function MyChart`），并且框架级 props
@@ -369,4 +369,5 @@ MyChart.displayName = 'MyChart';
 
 - [概览与架构](./overview_zh.md)——一条 message 如何变成 UI、职责划分，以及
   export 映射。
+- [System Prompts](./system-prompts_zh.md)——生成让 Agent 与你的 catalog 配套的模型指令。
 - [打开 A2UI playground](https://lynxjs.org/a2ui)——在线体验。

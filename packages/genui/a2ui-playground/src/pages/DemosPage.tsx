@@ -19,6 +19,7 @@ import { DYNAMIC_PRESETS, STATIC_DEMOS } from '../demos.js';
 import { useResizablePanels } from '../hooks/useResizablePanels.js';
 import { DEFAULT_A2UI_DEMO_URL } from '../utils/demoUrl.js';
 import type { Protocol } from '../utils/protocol.js';
+import { publishA2UIPayload } from '../utils/publishPayload.js';
 
 interface Scenario {
   id: string;
@@ -36,17 +37,10 @@ interface PreviewInput {
   demoId?: string;
 }
 
-interface PublishedPayload {
-  messagesUrl: string;
-  actionMocksUrl?: string;
-}
-
 type PlayState = 'idle' | 'playing' | 'paused' | 'done';
 type PlaybackProgressStatus = 'idle' | 'streaming' | 'paused' | 'done';
 
 const jsonExtensions = [json()];
-const ONLINE_A2UI_SERVER_ORIGIN = 'https://genui-server.vercel.app';
-const LOCAL_A2UI_SERVER_PORT = '3060';
 
 declare const __A2UI_PLAYGROUND_CLIENT_PAYLOAD_STORE__: boolean;
 
@@ -61,57 +55,6 @@ function formatChunk(msg: unknown): string {
 function findScenarioById(id?: string): Scenario | undefined {
   if (!id) return undefined;
   return ALL_SCENARIOS.find((s) => s.id === id);
-}
-
-function isDevHost(hostname: string): boolean {
-  return (
-    hostname === 'localhost'
-    || hostname === '127.0.0.1'
-    || hostname === '0.0.0.0'
-    || hostname.startsWith('10.')
-    || hostname.startsWith('192.168.')
-    || /^172\.(?:1[6-9]|2\d|3[01])\./u.test(hostname)
-  );
-}
-
-function getA2UIPayloadEndpoint(): string {
-  if (
-    window.location.protocol === 'http:' && isDevHost(window.location.hostname)
-  ) {
-    return `http://${window.location.hostname}:${LOCAL_A2UI_SERVER_PORT}/a2ui/payload`;
-  }
-  return `${ONLINE_A2UI_SERVER_ORIGIN}/a2ui/payload`;
-}
-
-async function publishA2UIPayloadForPreview(
-  messages: unknown,
-  actionMocks?: Record<string, unknown>,
-): Promise<PublishedPayload> {
-  const res = await window.fetch(getA2UIPayloadEndpoint(), {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ messages, actionMocks }),
-  });
-  const payload = await res.json().catch(() => ({})) as {
-    preview?: {
-      messagesUrl?: unknown;
-      actionMocksUrl?: unknown;
-    };
-    error?: unknown;
-  };
-  if (!res.ok || typeof payload.preview?.messagesUrl !== 'string') {
-    throw new Error(
-      typeof payload.error === 'string'
-        ? payload.error
-        : 'Failed to publish A2UI messages',
-    );
-  }
-  return {
-    messagesUrl: payload.preview.messagesUrl,
-    actionMocksUrl: typeof payload.preview.actionMocksUrl === 'string'
-      ? payload.preview.actionMocksUrl
-      : undefined,
-  };
 }
 
 const ALL_SCENARIOS: Scenario[] = [
@@ -344,7 +287,7 @@ export function DemosPage(props: {
     if (committed) {
       if (!committed.isKnownDemo && !__A2UI_PLAYGROUND_CLIENT_PAYLOAD_STORE__) {
         setIsPublishingPayload(true);
-        void publishA2UIPayloadForPreview(
+        void publishA2UIPayload(
           committed.parsed,
           currentScenario?.actionMocks,
         ).then((preview) => {

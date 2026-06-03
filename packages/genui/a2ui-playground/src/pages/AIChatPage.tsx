@@ -25,10 +25,12 @@ import type { StaticDemo } from '../demos.js';
 import { useConversation } from '../hooks/useConversation.js';
 import type { ModelChatMessage } from '../hooks/useConversation.js';
 import { useResizablePanels } from '../hooks/useResizablePanels.js';
+import { loadConversation } from '../storage/conversationRepo.js';
 import type { PreviewPerformanceMetrics } from '../storage/types.js';
 import { copyToClipboard } from '../utils/clipboard.js';
 import { DEFAULT_A2UI_DEMO_URL } from '../utils/demoUrl.js';
 import type { Protocol } from '../utils/protocol.js';
+import { isDevHost, publishA2UIPayload } from '../utils/publishPayload.js';
 import { buildRenderUrl } from '../utils/renderUrl.js';
 
 interface ChatMessage {
@@ -289,17 +291,6 @@ function compactProviderLabel(settings: ProviderSettings): string {
   const preset = PROVIDER_PRESETS.find((item) => item.id === settings.preset);
   return preset?.model ?? 'Server default';
 }
-function isDevHost(hostname: string): boolean {
-  return (
-    hostname === 'localhost'
-    || hostname === '127.0.0.1'
-    || hostname === '0.0.0.0'
-    || hostname.startsWith('10.')
-    || hostname.startsWith('192.168.')
-    || /^172\.(?:1[6-9]|2\d|3[01])\./u.test(hostname)
-  );
-}
-
 function isTrustedOnlineEndpoint(endpoint: URL): boolean {
   return endpoint.origin === ONLINE_A2UI_SERVER_ORIGIN;
 }
@@ -2049,6 +2040,9 @@ export function AIChatPage(
 
       setInputValue('');
       publishPreviewMessages(messages);
+      // Loaded example is local-only (unpublished): drop any stale durable URL
+      // from a previous turn so Share republishes this preview instead.
+      updatePreviewPayloadUrls(null);
 
       setMessages([
         WELCOME_MESSAGE,
@@ -2083,7 +2077,13 @@ export function AIChatPage(
         previewMessages: messages,
       });
     },
-    [isGenerating, publishPreviewMessages, recordTurn, resetCreateMetrics],
+    [
+      isGenerating,
+      publishPreviewMessages,
+      recordTurn,
+      resetCreateMetrics,
+      updatePreviewPayloadUrls,
+    ],
   );
 
   const handleCreateConversation = useCallback(() => {
@@ -2098,6 +2098,86 @@ export function AIChatPage(
     resetCreateMetrics();
     void switchTo(id);
   }, [isGenerating, resetCreateMetrics, switchTo]);
+
+  const shareConversation = useCallback(
+    async (id: string) => {
+      try {
+        let urls: PreviewPayloadUrls | null = null;
+        let fallbackMessages: unknown[] | null = null;
+
+        // Active conversation: the freshest URLs/messages live in refs.
+        if (id === activeId) {
+          urls = latestPreviewPayloadUrlsRef.current;
+          fallbackMessages = latestPreviewMessagesRef.current;
+        }
+
+        // Otherwise (or if the active one hasn't published yet) read the
+        // durable Supabase URLs persisted on the conversation snapshot.
+        if (!urls?.messagesUrl) {
+          const record = await loadConversation(id);
+          const snapshot = record?.snapshot;
+          const fromSnapshot = snapshot?.previewPayloadUrls;
+          let fromMessage: PreviewPayloadUrls | undefined;
+          if (record) {
+            for (let i = record.messages.length - 1; i >= 0; i--) {
+              const message = record.messages[i];
+              if (message?.previewPayloadUrls?.messagesUrl) {
+                fromMessage = message.previewPayloadUrls;
+                break;
+              }
+            }
+          }
+          urls = (fromSnapshot?.messagesUrl ? fromSnapshot : fromMessage)
+            ?? urls;
+          if (
+            !urls?.messagesUrl
+            && (!fallbackMessages || fallbackMessages.length === 0)
+          ) {
+            const previewMessages = snapshot?.previewMessages;
+            if (Array.isArray(previewMessages) && previewMessages.length > 0) {
+              fallbackMessages = previewMessages;
+            } else if (record && record.messages.length > 0) {
+              // Older snapshots: rebuild A2UI preview from assistant history.
+              const rebuilt = buildPreviewMessagesFromHistory(record.messages);
+              if (rebuilt.length > 0) fallbackMessages = rebuilt;
+            }
+          }
+        }
+
+        // No durable URL yet: publish the raw A2UI messages to Supabase.
+        if (
+          !urls?.messagesUrl && fallbackMessages && fallbackMessages.length > 0
+        ) {
+          urls = await publishA2UIPayload(fallbackMessages);
+        }
+
+        if (!urls?.messagesUrl) {
+          showCopyToast(false);
+          return;
+        }
+
+        const link = buildRenderUrl(
+          {
+            protocol,
+            demoUrl: DEFAULT_A2UI_DEMO_URL,
+            messages: [],
+            messagesUrl: urls.messagesUrl,
+            actionMocksUrl: urls.actionMocksUrl,
+            theme,
+          },
+          baseUrl,
+        );
+        showCopyToast(await copyToClipboard(link));
+      } catch {
+        showCopyToast(false);
+      }
+    },
+    [activeId, baseUrl, protocol, showCopyToast, theme],
+  );
+
+  const handleShareConversation = useCallback((id: string) => {
+    void shareConversation(id);
+  }, [shareConversation]);
 
   const handleRenameConversation = useCallback((id: string, title: string) => {
     void rename(id, title);
@@ -2151,6 +2231,7 @@ export function AIChatPage(
           isPersistent={isPersistent}
           onCreate={handleCreateConversation}
           onSwitch={handleSwitchConversation}
+          onShare={handleShareConversation}
           onRename={handleRenameConversation}
           onRemove={handleRemoveConversation}
         />
