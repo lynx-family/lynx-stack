@@ -153,9 +153,11 @@ export function applyLoaders(
               ...swcLoaderOptions,
               jsc,
               env: {
+                ...swcLoaderOptions.env,
                 targets: MAIN_THREAD_ENV_TARGETS,
-                // Lower `let`/`const` to `var` (QuickJS parses `var` faster),
-                // on top of the fixed es2019 baseline.
+                // Lower `let`/`const` to `var`; QuickJS parses `var` faster.
+                // Spreading `swcLoaderOptions.env` carries `exclude` through,
+                // so the background opt-out also applies here.
                 include: ['transform-block-scoping', ...MAIN_THREAD_ENV_INCLUDE],
               },
             } satisfies Rspack.SwcLoaderOptions,

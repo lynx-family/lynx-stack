@@ -386,6 +386,56 @@ describe('SWC configuration', () => {
     )
   })
 
+  test('layers - user env.exclude opts both layers out of transform-block-scoping', async () => {
+    const { pluginReactLynx } = await import('../src/pluginReactLynx.js')
+    const rsbuild = await createRspeedy({
+      rspeedyConfig: {
+        tools: {
+          swc: {
+            env: {
+              exclude: ['transform-block-scoping'],
+            },
+          },
+        },
+        plugins: [
+          pluginStubRspeedyAPI(),
+          pluginReactLynx(),
+        ],
+      },
+    })
+
+    const [config] = await rsbuild.initConfigs()
+
+    const swcRule = config.module.rules.find(
+      (rule): rule is Rspack.RuleSetRule => {
+        return rule && rule !== '...'
+          && (rule.test as RegExp | undefined)?.toString()
+            === SCRIPT_REGEXP.toString()
+      },
+    )
+    assert(swcRule)
+
+    // SWC's `env.exclude` wins over `include`, so forwarding the user's
+    // exclude opts out of the let/const → var lowering on both layers.
+    const backgroundRule = getLayerRule(swcRule, LAYERS.BACKGROUND)
+    assert(backgroundRule)
+    const backgroundLoaderOptions = getLoaderOptions<Rspack.SwcLoaderOptions>({
+      module: { rules: [backgroundRule] },
+    }, 'builtin:swc-loader')
+    expect(backgroundLoaderOptions?.env?.exclude).toEqual([
+      'transform-block-scoping',
+    ])
+
+    const mainThreadRule = getLayerRule(swcRule, LAYERS.MAIN_THREAD)
+    assert(mainThreadRule)
+    const mainThreadLoaderOptions = getLoaderOptions<Rspack.SwcLoaderOptions>({
+      module: { rules: [mainThreadRule] },
+    }, 'builtin:swc-loader')
+    expect(mainThreadLoaderOptions?.env?.exclude).toEqual([
+      'transform-block-scoping',
+    ])
+  })
+
   test('`include` defaults to all js file if not configured by user', async () => {
     const { pluginReactLynx } = await import('../src/pluginReactLynx.js')
     const rsbuild = await createRspeedy({
