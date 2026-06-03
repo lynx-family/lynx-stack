@@ -727,11 +727,64 @@ html[data-theme="dark"] .phoneHomeIndicator {
   border-left: 1px solid var(--geist-border);
 }
 
-/* Pass-through wrapper: extras children participate directly in the panel's
-   flex column (border-top dividers, live-stack scroller, QR section). The
-   inline-vs-drawer split is decided in JS via useMediaQuery, not here. */
+/* Resizable extras pane below the phone preview. Height is set inline from
+   React when a QR section is present; otherwise the pane sizes to content. */
 .previewPanelExtras {
-  display: contents;
+  display: flex;
+  flex-direction: column;
+  flex-shrink: 0;
+  overflow-y: auto;
+}
+
+/* The resizer's bottom border is now the divider between the body and the
+   pane; drop the legacy border-top on whichever section sits at the top so
+   the line doesn't double up. */
+.previewPanelExtras > .liveComponentStack:first-child,
+.previewPanelExtras > .previewQrSection:first-child {
+  border-top: none;
+}
+
+/* Horizontal drag handle — visual language borrows from .panelResizeHandle
+   so it reads as the same affordance as the chat/preview split. */
+.previewPanelExtrasResizer {
+  position: relative;
+  flex-shrink: 0;
+  height: 8px;
+  background: var(--geist-background);
+  border-top: 1px solid var(--geist-border);
+  border-bottom: 1px solid var(--geist-border);
+  cursor: ns-resize;
+  touch-action: none;
+  transition: background var(--geist-transition);
+}
+
+.previewPanelExtrasResizer::before {
+  content: "";
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 48px;
+  height: 2px;
+  border-radius: 999px;
+  background: var(--geist-border-hover);
+  opacity: 0.35;
+  transform: translate(-50%, -50%);
+  transition:
+    opacity var(--geist-transition),
+    width var(--geist-transition),
+    background var(--geist-transition);
+}
+
+.previewPanelExtrasResizer:hover,
+.previewPanelExtrasResizer.active {
+  background: var(--geist-surface);
+}
+
+.previewPanelExtrasResizer:hover::before,
+.previewPanelExtrasResizer.active::before {
+  width: 64px;
+  opacity: 0.9;
+  background: var(--geist-foreground);
 }
 
 /* Each direct extras child slides up and fades in when it mounts — the
