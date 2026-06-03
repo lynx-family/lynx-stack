@@ -29,6 +29,7 @@ exports[`template > templateCases/defaults/config > templateCases/defaults/confi
   enableNewIntersectionObserver: true,
   lepusStrict: true,
   removeDescendantSelectorScope: false,
+  syncXElementRegistry: true,
   useNewSwiper: true,
 }
 `;
