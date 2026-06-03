@@ -60,6 +60,12 @@ export default defineConfig({
       '009-eval-bench': [
         './cases/009-eval-bench/index.tsx',
       ],
+      '010-transform-exponentiation-operator': [
+        './cases/010-transform-exponentiation-operator/index.tsx',
+      ],
+      '011-transform-async-to-generator': [
+        './cases/011-transform-async-to-generator/index.tsx',
+      ],
     },
   },
   plugins: [
