@@ -10,8 +10,8 @@ export type {
   StreamParser,
 } from '@openuidev/lang-core';
 
-export { createOpenUiLibrary } from './createLibrary.js';
-export type { CreateOpenUiLibraryOptions } from './createLibrary.js';
+export { createOpenUiLibrary } from './createLibrary.jsx';
+export type { CreateOpenUiLibraryOptions } from './createLibrary.jsx';
 export type {
   ComponentGroup,
   ComponentRenderer,
@@ -19,6 +19,6 @@ export type {
   DefinedComponent,
   Library,
   LibraryDefinition,
-} from './library.js';
-export { defineComponent } from './library.js';
-export { OpenUiRenderer } from './renderer.js';
+} from './library.jsx';
+export { defineComponent } from './library.jsx';
+export { OpenUiRenderer } from './renderer.jsx';

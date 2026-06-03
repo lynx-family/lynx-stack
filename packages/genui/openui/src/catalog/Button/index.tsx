@@ -11,10 +11,10 @@ import {
   useFormName,
   useIsStreaming,
   useTriggerAction,
-} from '../../core/context.js';
+} from '../../core/context.jsx';
 import { useFormValidation } from '../../core/hooks/index.js';
-import { defineComponent } from '../../core/library.js';
-import { actionPropSchema } from '../Action/index.js';
+import { defineComponent } from '../../core/library.jsx';
+import { actionPropSchema } from '../Action/index.jsx';
 import { asArray } from '../utils.js';
 
 const CONTINUE_CONVERSATION_ACTION = String(
