@@ -834,6 +834,7 @@ class LynxTemplatePluginImpl {
           useNewSwiper: true,
           enableNewIntersectionObserver: true,
           enableNativeList: true,
+          syncXElementRegistry: true,
           enableA11y,
           enableAccessibilityElement,
           customCSSInheritanceList,
