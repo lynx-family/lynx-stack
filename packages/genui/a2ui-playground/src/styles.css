@@ -232,6 +232,21 @@ a {
   flex: 1;
 }
 
+/* Bordered chip badge that sits next to a section title — small structural
+   tag indicating the kind of content. Used for "Playback [LLM stream]",
+   "A2UI Messages [JSON]", etc. Visible at every viewport. */
+.sectionBadge {
+  display: inline-flex;
+  align-items: center;
+  font-size: 10px;
+  font-weight: 500;
+  padding: 1px 6px;
+  border-radius: 4px;
+  background: var(--geist-surface);
+  border: 1px solid var(--geist-border);
+  color: var(--geist-secondary);
+}
+
 /* themeToggle: replaced by <Button variant="ghost" size="sm" iconOnly>. */
 
 /* ── Tab Navigation ── */

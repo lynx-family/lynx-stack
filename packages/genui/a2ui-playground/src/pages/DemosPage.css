@@ -423,15 +423,7 @@
   gap: 8px;
 }
 
-.codePanelBadge {
-  font-size: 10px;
-  font-weight: 500;
-  padding: 1px 6px;
-  border-radius: 4px;
-  background: var(--geist-surface);
-  border: 1px solid var(--geist-border);
-  color: var(--geist-secondary);
-}
+/* JSON badge: see shared .sectionBadge in styles.css. */
 
 .toolbarActions {
   display: flex;
@@ -691,28 +683,7 @@
   color: var(--geist-foreground);
 }
 
-/* Inline meta sits flush against the title, separated by a hairline dot
-   instead of a chunky chip — keeps the header visually quiet at idle. */
-.playbackSectionMeta {
-  display: inline-flex;
-  align-items: center;
-  font-size: 10px;
-  font-weight: 600;
-  letter-spacing: 0.06em;
-  text-transform: uppercase;
-  color: color-mix(in srgb, var(--geist-secondary) 85%, transparent);
-  margin-left: -4px; /* tighten against the title to read as one unit */
-}
-
-.playbackSectionMeta::before {
-  content: "";
-  display: inline-block;
-  width: 3px;
-  height: 3px;
-  border-radius: 999px;
-  background: color-mix(in srgb, var(--geist-secondary) 55%, transparent);
-  margin: 0 8px 1px 0;
-}
+/* LLM stream badge: see shared .sectionBadge in styles.css. */
 
 .playbackIdleHint {
   display: inline-flex;
@@ -1113,8 +1084,5 @@
   .codePanelTitle {
     white-space: nowrap;
     font-size: 12px;
-  }
-  .codePanelBadge {
-    display: none;
   }
 }

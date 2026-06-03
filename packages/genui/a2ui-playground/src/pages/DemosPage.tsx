@@ -680,7 +680,7 @@ export function DemosPage(props: {
           >
             <header className='playbackSectionHeader'>
               <span className='playbackSectionTitle'>Playback</span>
-              <span className='playbackSectionMeta'>LLM stream</span>
+              <span className='sectionBadge'>LLM stream</span>
               {isPlaybackActive
                 ? (
                   <span
@@ -800,7 +800,7 @@ export function DemosPage(props: {
             <div className='codePanelToolbar'>
               <div className='codePanelTitle'>
                 A2UI Messages
-                <span className='codePanelBadge'>JSON</span>
+                <span className='sectionBadge'>JSON</span>
               </div>
               <div className='spacer' />
               <div className='toolbarActions'>
