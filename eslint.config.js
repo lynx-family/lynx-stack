@@ -62,6 +62,7 @@ export default tseslint.config(
 
       // Ignored packages
       'packages/**/vitest.config.ts',
+      'packages/genui/cli/templates/**',
       'packages/react/runtime/compat/**',
       'packages/rspeedy/create-rspeedy/template-*/**',
       'packages/i18n/**/tests/fixtures/**',

@@ -10,6 +10,13 @@
   },
   "license": "Apache-2.0",
   "type": "module",
+  "exports": {
+    ".": {
+      "types": "./dist/cli.d.ts",
+      "default": "./dist/cli.js"
+    },
+    "./package.json": "./package.json"
+  },
   "bin": {
     "a2ui-cli": "./bin/cli.js",
     "genui": "./bin/cli.js",
@@ -17,11 +24,26 @@
   },
   "files": [
     "bin",
+    "dist",
+    "templates",
     "README.md"
   ],
+  "scripts": {
+    "build": "tsc --project tsconfig.build.json",
+    "test": "rstest"
+  },
   "dependencies": {
     "@lynx-js/genui-a2ui-catalog-extractor": "workspace:*",
     "@lynx-js/genui-a2ui-prompt": "workspace:*"
+  },
+  "devDependencies": {
+    "@lynx-js/qrcode-rsbuild-plugin": "workspace:^",
+    "@lynx-js/react": "workspace:^",
+    "@lynx-js/react-rsbuild-plugin": "workspace:^",
+    "@lynx-js/rspeedy": "workspace:^",
+    "@rstest/core": "catalog:rstest",
+    "@types/node": "^24.10.13",
+    "typescript": "^5.9.3"
   },
   "engines": {
     "node": ">=22"
