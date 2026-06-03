@@ -164,8 +164,8 @@ describe('serializeCatalog', () => {
 
 describe('user composes their own all-builtins catalog', () => {
   // Snapshot of the recipe documented in
-  // packages/genui/a2ui/src/catalog/README.md. If you change this list,
-  // update the README too.
+  // packages/genui/a2ui/docs/catalog-guide.md. If you change this list,
+  // update that guide too.
   test('paste-able recipe builds the expected manifest', () => {
     const all = defineCatalog([
       [Text, TEXT_MANIFEST],

@@ -84,7 +84,7 @@ export type {
 //   <A2UI catalogs={[Text, Button]} ... />
 //
 // There is intentionally no all-in-one aggregate — see
-// `packages/genui/a2ui/src/catalog/README.md`.
+// `packages/genui/a2ui/docs/catalog-guide.md`.
 export {
   Button,
   Card,
