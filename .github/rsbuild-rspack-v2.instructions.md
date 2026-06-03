@@ -12,3 +12,4 @@ Rsbuild v2 no longer supports webpack at all, so Rsbuild plugins under `packages
 When upgrading Rsbuild dev middleware wiring, replace deprecated `dev.setupMiddlewares` with `server.setup`, and register middleware through `server.middlewares.use(...)`, guarding on `action === 'dev'` when the middleware should not run for preview.
 When upgrading Rsbuild plugin hooks, replace `onAfterStartProdServer` / `onBeforeStartProdServer` with `onAfterStartPreviewServer` / `onBeforeStartPreviewServer`.
 When modifying the built-in JS rule through `modifyBundlerChain`, migrate loader changes from `CHAIN_ID.RULE.JS` to `CHAIN_ID.RULE.JS` + `CHAIN_ID.ONE_OF.JS_MAIN`, because Rsbuild v2 places the default SWC pipeline under the `JS_MAIN` oneOf branch.
+When publishing packages or generated templates that depend on Rspeedy/Rsbuild v2 or current Rslib at runtime, keep `engines.node` aligned with their minimum runtime range: `^20.19.0 || >=22.12.0`.
