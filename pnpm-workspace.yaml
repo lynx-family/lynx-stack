@@ -30,9 +30,13 @@ packages:
 
 # From `@pnpm/plugin-better-defaults`
 enablePrePostScripts: false
+engineStrict: true
+hoistWorkspacePackages: true
 ignorePatchFailures: false
 optimisticRepeatInstall: true
+publicHoistPattern: []
 resolutionMode: "lowest-direct"
+strictPeerDependencies: true
 
 # Match Renovate's npm minimum release age; pnpm also guards lockfile maintenance.
 minimumReleaseAge: 4320
@@ -48,6 +52,10 @@ minimumReleaseAgeExclude:
 # `pnpm dedupe --check`. Run non-strict so the age check is enforced when `time`
 # is available and skipped (with a warning) when it is not.
 minimumReleaseAgeStrict: false
+
+peerDependencyRules:
+  allowedVersions:
+    "rsbuild-plugin-tailwindcss>tailwindcss": "^3 || ^4"
 
 # Default catalogs
 catalog:
