@@ -8,6 +8,8 @@ import type { CSSProperties, PointerEvent as ReactPointerEvent } from 'react';
 
 import './DemosPage.css';
 
+import { Button } from '../components/Button.js';
+import { ChevronLeft, Pause, Play, RotateCcw, X } from '../components/Icon.js';
 import { MobileTabBar } from '../components/MobileTabBar.js';
 import type { MobilePaneTab } from '../components/MobileTabBar.js';
 import { PanelResizeHandle } from '../components/PanelResizeHandle.js';
@@ -592,35 +594,38 @@ export function DemosPage(props: {
 
   const playbackPrimaryButton = isPlaying
     ? (
-      <button
-        type='button'
-        className='toolbarBtn'
+      <Button
+        variant='primary'
+        size='sm'
+        iconBefore={Pause}
         onClick={handlePause}
         title='Pause playback'
       >
-        ⏸ Pause
-      </button>
+        Pause
+      </Button>
     )
     : (isPaused
       ? (
-        <button
-          type='button'
-          className='toolbarBtn primary'
+        <Button
+          variant='primary'
+          size='sm'
+          iconBefore={Play}
           onClick={handleResume}
           title='Resume playback'
         >
-          ▶ Resume
-        </button>
+          Resume
+        </Button>
       )
       : (
-        <button
-          type='button'
-          className='toolbarBtn primary'
+        <Button
+          variant='primary'
+          size='sm'
+          iconBefore={Play}
           onClick={handlePlay}
           title='Start playback'
         >
-          ▶ Play
-        </button>
+          Play
+        </Button>
       ));
 
   return (
@@ -631,15 +636,16 @@ export function DemosPage(props: {
     >
       <aside className='sidebar'>
         <div className='sidebarTopNav'>
-          <button
-            type='button'
-            className='detailBackButton'
+          <Button
+            variant='secondary'
+            size='md'
+            responsiveIconOnly
+            iconBefore={ChevronLeft}
             onClick={handleBackToExamples}
             aria-label='Back to Examples'
           >
-            <span className='detailBackIcon'>←</span>
-            <span className='detailBackLabel'>Back to Examples</span>
-          </button>
+            Back to Examples
+          </Button>
         </div>
         <div className='sidebarSection'>
           <div className='sidebarHeading'>Scenarios</div>
@@ -674,7 +680,7 @@ export function DemosPage(props: {
           >
             <header className='playbackSectionHeader'>
               <span className='playbackSectionTitle'>Playback</span>
-              <span className='playbackSectionBadge'>LLM stream</span>
+              <span className='sectionBadge'>LLM stream</span>
               {isPlaybackActive
                 ? (
                   <span
@@ -688,21 +694,23 @@ export function DemosPage(props: {
                 )
                 : (
                   <span className='playbackIdleHint'>
-                    Press ▶ to replay this LLM payload chunk by chunk
+                    <Play size={11} strokeWidth={2.25} aria-hidden='true' />
+                    Replay payload chunk by chunk
                   </span>
                 )}
               <div className='spacer' />
               <div className='playbackHeaderControls'>
                 {isPlaybackActive
                   ? (
-                    <button
-                      type='button'
-                      className='toolbarBtn'
+                    <Button
+                      variant='ghost'
+                      size='sm'
+                      iconOnly
+                      iconBefore={RotateCcw}
                       onClick={handleRestart}
                       title='Restart playback'
-                    >
-                      ↻
-                    </button>
+                      aria-label='Restart playback'
+                    />
                   )
                   : null}
                 {playbackPrimaryButton}
@@ -792,34 +800,37 @@ export function DemosPage(props: {
             <div className='codePanelToolbar'>
               <div className='codePanelTitle'>
                 A2UI Messages
-                <span className='codePanelBadge'>JSON</span>
+                <span className='sectionBadge'>JSON</span>
               </div>
               <div className='spacer' />
               <div className='toolbarActions'>
-                <button
-                  type='button'
-                  className='toolbarBtn'
+                <Button
+                  variant='ghost'
+                  size='sm'
+                  iconBefore={RotateCcw}
                   onClick={handleFillExample}
-                  title='Reset'
+                  title='Reset to example'
                 >
-                  ↻ Reset
-                </button>
-                <button
-                  type='button'
-                  className='toolbarBtn'
+                  Reset
+                </Button>
+                <Button
+                  variant='ghost'
+                  size='sm'
+                  iconBefore={X}
                   onClick={handleClear}
-                  title='Clear'
+                  title='Clear editor'
                 >
-                  ✕ Clear
-                </button>
-                <button
-                  type='button'
-                  className='toolbarBtn primary'
+                  Clear
+                </Button>
+                <Button
+                  variant='primary'
+                  size='sm'
+                  iconBefore={Play}
                   onClick={handleRender}
                   disabled={isPublishingPayload}
                 >
-                  {isPublishingPayload ? 'Publishing...' : '▶ Render'}
-                </button>
+                  {isPublishingPayload ? 'Publishing...' : 'Render'}
+                </Button>
               </div>
             </div>
             <CodeMirror

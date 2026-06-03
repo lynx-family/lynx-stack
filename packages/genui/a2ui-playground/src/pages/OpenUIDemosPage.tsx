@@ -5,6 +5,8 @@ import { useCallback, useEffect, useMemo, useState } from 'react';
 
 import './DemosPage.css';
 
+import { Button } from '../components/Button.js';
+import { Play } from '../components/Icon.js';
 import { PanelResizeHandle } from '../components/PanelResizeHandle.js';
 import { PreviewPanel } from '../components/PreviewPanel.js';
 import { PreviewViewport } from '../components/PreviewViewport.js';
@@ -144,13 +146,14 @@ export function OpenUIDemosPage(_props: { protocol: Protocol }) {
             </button>
           </div>
           <div className='toolbarActions'>
-            <button
-              type='button'
-              className='toolbarBtn primary'
+            <Button
+              variant='primary'
+              size='sm'
+              iconBefore={Play}
               onClick={handleRender}
             >
-              ▶ Render
-            </button>
+              Render
+            </Button>
           </div>
         </div>
         <div className='codeEditor' style={{ flex: 1, overflow: 'auto' }}>

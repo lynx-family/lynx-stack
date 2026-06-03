@@ -5,9 +5,11 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
 import './AIChatPage.css';
 
+import { Button } from '../components/Button.js';
 import { ConfirmDialog } from '../components/ConfirmDialog.js';
 import { ConversationListPanel } from '../components/ConversationListPanel.js';
 import { CopyToast, useCopyToast } from '../components/CopyToast.js';
+import { Send, Sparkles, Zap } from '../components/Icon.js';
 import { InstantExamplesStrip } from '../components/InstantExamplesStrip.js';
 import { MobileTabBar } from '../components/MobileTabBar.js';
 import type { MobilePaneTab } from '../components/MobileTabBar.js';
@@ -921,7 +923,7 @@ function createPreviewReadyStatus(): ChatMessage {
     content: (
       <>
         <span className='chatMessageStatusIcon' aria-hidden='true'>
-          ✨
+          <Sparkles size={13} strokeWidth={2} />
         </span>
         <span>UI updated. Ready for the next action.</span>
       </>
@@ -2056,7 +2058,7 @@ export function AIChatPage(
           content: (
             <>
               <span className='chatMessageStatusIcon' aria-hidden='true'>
-                ⚡
+                <Zap size={13} strokeWidth={2} />
               </span>
               <span>
                 Loaded offline example{' '}
@@ -2396,15 +2398,15 @@ export function AIChatPage(
                     ))}
                   </select>
                 </div>
-                <button
-                  className='chatSendBtn'
-                  type='button'
+                <Button
+                  variant='primary'
+                  size='lg'
+                  iconBefore={Send}
                   disabled={isGenerating || inputValue.trim().length === 0}
                   onClick={handleSend}
                 >
-                  <span className='chatSendIcon' aria-hidden='true'>↖</span>
                   {isGenerating ? 'Generating' : 'Send'}
-                </button>
+                </Button>
               </div>
             </div>
           </div>
@@ -2433,7 +2435,7 @@ export function AIChatPage(
             iframeRef={previewFrameRef}
             onLoad={handlePreviewLoad}
             retainPreviousFrame
-            emptyIcon='💬'
+            emptyIcon={<Sparkles size={28} strokeWidth={1.5} />}
             emptyTitle='Send a message to generate UI'
             emptySubTitle='Generated components will be previewed here'
           />

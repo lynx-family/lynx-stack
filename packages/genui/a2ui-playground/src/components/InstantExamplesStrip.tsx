@@ -4,6 +4,7 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import type { KeyboardEvent } from 'react';
 
+import { ArrowRight, ICON_SIZE, Zap } from './Icon.js';
 import { PreviewViewport } from './PreviewViewport.js';
 import { EXTENDED_STATIC_DEMOS, OFFICIAL_STATIC_DEMOS } from '../demos.js';
 import type { StaticDemo } from '../demos.js';
@@ -148,13 +149,13 @@ export function InstantExamplesStrip(props: InstantExamplesStripProps) {
       <div className='instantExamplesHeader'>
         <span className='instantExamplesLabel'>
           <span className='instantExamplesLabelIcon' aria-hidden='true'>
-            ⚡
+            <Zap size={ICON_SIZE.md} strokeWidth={2.25} />
           </span>
           Pick an instant example
           <span className='instantExamplesLabelHint'>· no API call</span>
         </span>
         <a className='instantExamplesAllLink' href={onBrowseAllHref}>
-          See all →
+          See all <ArrowRight size={ICON_SIZE.sm} strokeWidth={2} />
         </a>
       </div>
       <div className='instantExamplesRail'>

@@ -3,6 +3,8 @@
 // LICENSE file in the root directory of this source tree.
 import { useRef, useState } from 'react';
 
+import { Button } from './Button.js';
+import { MessageSquarePlus, Pencil, Trash2 } from './Icon.js';
 import type { ConversationMeta } from '../storage/types.js';
 
 interface ConversationListPanelProps {
@@ -65,15 +67,18 @@ export function ConversationListPanel(props: ConversationListPanelProps) {
   return (
     <aside className='conversationPanel'>
       <div className='conversationPanelHeader'>
-        <button
-          type='button'
-          className='conversationNewButton'
+        <Button
+          variant='secondary'
+          size='lg'
+          fullWidth
+          responsiveIconOnly
+          iconBefore={MessageSquarePlus}
           disabled={disabled}
+          aria-label='New Chat'
           onClick={onCreate}
         >
-          <span className='conversationNewButtonIcon'>💬</span>
-          <span className='conversationNewButtonLabel'>+ New Chat</span>
-        </button>
+          New Chat
+        </Button>
       </div>
 
       <div className='conversationList'>
@@ -137,24 +142,26 @@ export function ConversationListPanel(props: ConversationListPanelProps) {
                   </button>
                 )}
               <div className='conversationListItemActions'>
-                <button
-                  type='button'
-                  className='conversationIconButton'
+                <Button
+                  variant='ghost'
+                  size='sm'
+                  iconOnly
+                  iconBefore={Pencil}
                   disabled={disabled || editing}
                   title='Rename'
+                  aria-label='Rename conversation'
                   onClick={() => beginEdit(conversation)}
-                >
-                  Edit
-                </button>
-                <button
-                  type='button'
-                  className='conversationIconButton conversationIconButtonDanger'
+                />
+                <Button
+                  variant='danger'
+                  size='sm'
+                  iconOnly
+                  iconBefore={Trash2}
                   disabled={disabled || conversations.length <= 1}
                   title='Delete'
+                  aria-label='Delete conversation'
                   onClick={() => onRemove(conversation.id)}
-                >
-                  Del
-                </button>
+                />
               </div>
             </div>
           );

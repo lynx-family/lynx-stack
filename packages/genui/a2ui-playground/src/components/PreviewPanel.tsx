@@ -13,7 +13,9 @@ import {
 import type { CSSProperties, ReactNode } from 'react';
 import { Drawer } from 'vaul';
 
+import { Button } from './Button.js';
 import { CopyToast, useCopyToast } from './CopyToast.js';
+import { Maximize2, Minimize2, Smartphone } from './Icon.js';
 import { PreviewSimulationBar } from './PreviewSimulationBar.js';
 import { QrCode } from './QrCode.js';
 import { componentsByMessage } from '../demos.js';
@@ -1061,45 +1063,28 @@ export function PreviewPanel(props: PreviewPanelProps) {
                 : null}
               {hasExtras
                 ? (
-                  <button
-                    type='button'
+                  <Button
+                    variant='ghost'
+                    size='sm'
+                    iconOnly
+                    iconBefore={Smartphone}
                     className='previewInfoBtn'
                     onClick={() => setShareOpen(true)}
                     title='Open on phone'
                     aria-label='Open this preview on a phone'
-                  >
-                    <svg
-                      viewBox='0 0 24 24'
-                      width='16'
-                      height='16'
-                      fill='none'
-                      stroke='currentColor'
-                      strokeWidth='2'
-                      strokeLinecap='round'
-                      strokeLinejoin='round'
-                      aria-hidden='true'
-                    >
-                      <rect
-                        x='6'
-                        y='2'
-                        width='12'
-                        height='20'
-                        rx='2.5'
-                        ry='2.5'
-                      />
-                      <line x1='12' y1='18' x2='12.01' y2='18' />
-                    </svg>
-                  </button>
+                  />
                 )
                 : null}
-              <button
-                type='button'
+              <Button
+                variant='ghost'
+                size='sm'
+                iconOnly
+                iconBefore={isFullscreen ? Minimize2 : Maximize2}
                 className='previewExpandBtn'
                 onClick={() => setIsFullscreen((v) => !v)}
                 title={isFullscreen ? 'Exit fullscreen' : 'Expand preview'}
-              >
-                {isFullscreen ? '\u2715' : '\u2922'}
-              </button>
+                aria-label={isFullscreen ? 'Exit fullscreen' : 'Expand preview'}
+              />
             </div>
             {beforeBody}
             {renderPreviewMetrics()}

@@ -135,69 +135,7 @@
   background: color-mix(in srgb, var(--geist-background) 62%, transparent);
 }
 
-.conversationNewButton {
-  width: 100%;
-  height: 44px;
-  margin: 0;
-  padding: 0 16px;
-  border: 1px solid var(--geist-border);
-  border-radius: 12px;
-  background: linear-gradient(
-    180deg,
-    var(--geist-background),
-    color-mix(in srgb, var(--geist-surface) 70%, var(--geist-background))
-  );
-  color: var(--geist-foreground);
-  font-size: 13px;
-  font-weight: 650;
-  line-height: 1;
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 8px;
-  transition:
-    background var(--geist-transition),
-    border-color var(--geist-transition),
-    color var(--geist-transition),
-    box-shadow var(--geist-transition),
-    transform var(--geist-transition);
-  box-shadow: 0 6px 18px
-    color-mix(in srgb, var(--geist-foreground) 5%, transparent);
-}
-
-.conversationNewButton:disabled {
-  opacity: 0.5;
-  cursor: not-allowed;
-}
-
-.conversationNewButton:hover {
-  border-color: color-mix(
-    in srgb,
-    var(--geist-foreground) 28%,
-    var(--geist-border)
-  );
-  background: color-mix(
-    in srgb,
-    var(--geist-background) 82%,
-    var(--geist-surface)
-  );
-  box-shadow: 0 10px 26px
-    color-mix(in srgb, var(--geist-foreground) 9%, transparent);
-}
-
-.conversationNewButtonIcon {
-  font-size: 16px;
-  line-height: 1;
-}
-
-.conversationNewButtonLabel {
-  line-height: 1;
-}
-
-.conversationNewButton:active {
-  transform: scale(0.96);
-}
+/* conversationNewButton: replaced by <Button variant="secondary" size="lg" fullWidth>. */
 
 .conversationRecentRow {
   display: flex;
@@ -357,45 +295,8 @@
   transform: translateX(0);
 }
 
-.conversationIconButton {
-  height: 26px;
-  padding: 0 7px;
-  border: 1px solid var(--geist-border);
-  border-radius: 999px;
-  background: color-mix(
-    in srgb,
-    var(--geist-surface) 76%,
-    var(--geist-background)
-  );
-  color: var(--geist-secondary);
-  font-size: 10px;
-  font-weight: 600;
-  cursor: pointer;
-  transition:
-    background var(--geist-transition),
-    border-color var(--geist-transition),
-    color var(--geist-transition);
-}
-
-.conversationIconButton:hover {
-  color: var(--geist-foreground);
-  border-color: var(--geist-border-hover);
-  background: var(--geist-background);
-}
-
-.conversationIconButtonDanger:hover {
-  border-color: color-mix(
-    in srgb,
-    var(--geist-error, #c0392b) 55%,
-    var(--geist-border)
-  );
-  color: var(--geist-error, #c0392b);
-}
-
-.conversationIconButton:disabled {
-  opacity: 0.35;
-  cursor: not-allowed;
-}
+/* conversationIconButton / conversationIconButtonDanger: replaced by
+   <Button variant="ghost"|"danger" size="sm" iconOnly>. */
 
 .conversationRenameInput {
   width: 100%;
@@ -686,8 +587,9 @@
 }
 
 .chatMessageStatusIcon {
-  font-size: 14px;
-  line-height: 1;
+  display: inline-flex;
+  align-items: center;
+  color: color-mix(in srgb, var(--geist-foreground) 70%, transparent);
   flex-shrink: 0;
 }
 
@@ -1110,8 +1012,9 @@
 }
 
 .instantExamplesLabelIcon {
-  font-size: 11px;
-  line-height: 1;
+  display: inline-flex;
+  align-items: center;
+  color: color-mix(in srgb, var(--geist-foreground) 75%, transparent);
 }
 
 .instantExamplesLabelHint {
@@ -1120,6 +1023,9 @@
 }
 
 .instantExamplesAllLink {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
   color: var(--geist-secondary);
   font-size: 11px;
   font-weight: 600;
@@ -1129,6 +1035,14 @@
 
 .instantExamplesAllLink:hover {
   color: var(--geist-foreground);
+}
+
+.instantExamplesAllLink svg {
+  transition: transform var(--geist-transition);
+}
+
+.instantExamplesAllLink:hover svg {
+  transform: translateX(2px);
 }
 
 .instantExamplesRail {
@@ -1400,50 +1314,8 @@
   color: var(--geist-foreground);
 }
 
-.chatSendBtn {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  gap: 8px;
-  min-width: 104px;
-  height: 42px;
-  padding: 0 18px;
-  border: none;
-  border-radius: 999px;
-  background: var(--geist-accent);
-  color: var(--geist-accent-foreground);
-  font-size: 14px;
-  font-weight: 650;
-  cursor: pointer;
-  transition:
-    opacity var(--geist-transition),
-    transform var(--geist-transition),
-    box-shadow var(--geist-transition);
-  flex-shrink: 0;
-  box-shadow: 0 8px 18px
-    color-mix(in srgb, var(--geist-foreground) 16%, transparent);
-}
-
-.chatSendBtn:hover {
-  opacity: 0.85;
-  box-shadow: 0 10px 24px
-    color-mix(in srgb, var(--geist-foreground) 20%, transparent);
-}
-
-.chatSendBtn:active {
-  transform: scale(0.97);
-}
-
-.chatSendBtn:disabled {
-  opacity: 0.45;
-  cursor: not-allowed;
-  box-shadow: none;
-}
-
-.chatSendIcon {
-  font-size: 15px;
-  line-height: 1;
-}
+/* chatSendBtn / chatSendIcon: replaced by <Button variant="primary" size="lg"
+   iconBefore={Send}>. */
 
 @media (max-width: 980px) {
   .chatPageBody {
@@ -1648,5 +1520,74 @@
      badge lives here too, only relevant for power users on desktop.) */
   .chatHeader {
     display: none;
+  }
+
+  /* ── Compact the suggestion + composer block ──────────────────────
+     On a 390px phone the default sizing left almost no room for chat
+     bubbles. Shrink each surface so the scrollable message area becomes
+     the dominant pane. */
+
+  .chatInputArea {
+    padding: 8px 14px 10px;
+    gap: 8px;
+  }
+
+  /* Instant examples: same horizontal rail, but each tile is smaller
+     so two fit side-by-side without a 220px preview eating the screen. */
+  .instantTile {
+    width: 180px;
+    gap: 6px;
+    padding: 4px;
+    margin: -4px;
+  }
+  .instantTileScreen {
+    height: 150px;
+  }
+  .instantTileTitle {
+    font-size: 11.5px;
+  }
+  .instantExamples {
+    gap: 4px;
+  }
+  .instantExamplesHeader,
+  .promptSuggestionsHeader {
+    padding: 0 2px;
+  }
+
+  /* Prompt suggestion chips: tighter so the rail reads as a 1-line strip. */
+  .chatSuggestionChip {
+    height: 26px;
+    padding: 0 10px;
+    font-size: 11.5px;
+  }
+  .promptSuggestions {
+    gap: 4px;
+  }
+  .promptSuggestionsRail {
+    padding: 2px 14px 4px;
+    margin: 0 -14px;
+  }
+
+  /* Composer: drop ~50px of vertical height. Textarea becomes a single
+     visible line that expands as the user types. */
+  .chatComposer {
+    min-height: 0;
+    padding: 10px 12px;
+    gap: 8px;
+    border-radius: 12px;
+  }
+  .chatInput {
+    min-height: 38px;
+    max-height: 140px;
+    font-size: 14px;
+    line-height: 1.45;
+  }
+
+  /* Mobile Send: a bit smaller so it doesn't dominate the footer. */
+  .chatComposerFooter .btn-lg {
+    height: 36px;
+    padding: 0 14px;
+    font-size: 13px;
+    min-width: 0;
   }
 }
