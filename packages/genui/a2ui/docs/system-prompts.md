@@ -184,4 +184,4 @@ Use programmatic generation when:
 - The backend already loads generated catalog artifacts.
 - You need to compose custom `A2UICatalog` objects in code.
 
-For custom renderer catalogs and manifest generation, see [Catalogs and manifests](./catalog-guide.md) and [Custom components](./custom-components.md).
+For custom renderer catalogs and manifest generation, see [Catalogs and manifests](./catalog-guide.md).
