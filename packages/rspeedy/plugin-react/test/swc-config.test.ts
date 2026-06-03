@@ -69,6 +69,7 @@ describe('SWC configuration', () => {
           "detectSyntax": "auto",
           "env": {
             "include": [
+              "transform-block-scoping",
               "transform-nullish-coalescing-operator",
               "transform-optional-chaining",
               "transform-export-namespace-from",
@@ -275,6 +276,10 @@ describe('SWC configuration', () => {
     expect(mainThreadLoaderOptions?.env?.include).not.toContain(
       'transform-async-to-generator',
     )
+    // `let`/`const` are lowered to `var` on the main thread too.
+    expect(mainThreadLoaderOptions?.env?.include).toContain(
+      'transform-block-scoping',
+    )
   })
 
   test('user-configured jsc.target is rejected', async () => {
@@ -307,7 +312,10 @@ describe('SWC configuration', () => {
         tools: {
           swc: {
             env: {
-              include: ['transform-block-scoping'],
+              // An extra transform that is in neither layer's baseline, so its
+              // routing is observable (`transform-block-scoping` would not work
+              // here — it is a default on both layers).
+              include: ['transform-arrow-functions'],
             },
           },
         },
@@ -348,7 +356,7 @@ describe('SWC configuration', () => {
       },
     }, 'builtin:swc-loader')
     expect(backgroundLoaderOptions?.env?.include).toContain(
-      'transform-block-scoping',
+      'transform-arrow-functions',
     )
 
     const mainThreadRule = getLayerRule(swcRule, LAYERS.MAIN_THREAD)
@@ -371,11 +379,61 @@ describe('SWC configuration', () => {
       },
     }, 'builtin:swc-loader')
     expect(mainThreadLoaderOptions?.env?.include).not.toContain(
-      'transform-block-scoping',
+      'transform-arrow-functions',
     )
     expect(mainThreadLoaderOptions?.env?.include).toContain(
       'transform-optional-chaining',
     )
+  })
+
+  test('layers - user env.exclude opts both layers out of transform-block-scoping', async () => {
+    const { pluginReactLynx } = await import('../src/pluginReactLynx.js')
+    const rsbuild = await createRspeedy({
+      rspeedyConfig: {
+        tools: {
+          swc: {
+            env: {
+              exclude: ['transform-block-scoping'],
+            },
+          },
+        },
+        plugins: [
+          pluginStubRspeedyAPI(),
+          pluginReactLynx(),
+        ],
+      },
+    })
+
+    const [config] = await rsbuild.initConfigs()
+
+    const swcRule = config.module.rules.find(
+      (rule): rule is Rspack.RuleSetRule => {
+        return rule && rule !== '...'
+          && (rule.test as RegExp | undefined)?.toString()
+            === SCRIPT_REGEXP.toString()
+      },
+    )
+    assert(swcRule)
+
+    // SWC's `env.exclude` wins over `include`, so forwarding the user's
+    // exclude opts out of the let/const → var lowering on both layers.
+    const backgroundRule = getLayerRule(swcRule, LAYERS.BACKGROUND)
+    assert(backgroundRule)
+    const backgroundLoaderOptions = getLoaderOptions<Rspack.SwcLoaderOptions>({
+      module: { rules: [backgroundRule] },
+    }, 'builtin:swc-loader')
+    expect(backgroundLoaderOptions?.env?.exclude).toEqual([
+      'transform-block-scoping',
+    ])
+
+    const mainThreadRule = getLayerRule(swcRule, LAYERS.MAIN_THREAD)
+    assert(mainThreadRule)
+    const mainThreadLoaderOptions = getLoaderOptions<Rspack.SwcLoaderOptions>({
+      module: { rules: [mainThreadRule] },
+    }, 'builtin:swc-loader')
+    expect(mainThreadLoaderOptions?.env?.exclude).toEqual([
+      'transform-block-scoping',
+    ])
   })
 
   test('`include` defaults to all js file if not configured by user', async () => {

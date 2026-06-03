@@ -28,8 +28,17 @@ export function pluginOutput(options?: Output): RsbuildPlugin {
     name: 'lynx:rsbuild:output',
     setup(api) {
       api.modifyRsbuildConfig((config, { mergeRsbuildConfig }) => {
+        // Default bundler-generated runtime / wrapper code to `var` (QuickJS
+        // parses it faster than `const`/`let`); the SWC `transform-block-scoping`
+        // pass handles user source separately. Placed first so user-provided
+        // `tools.rspack.output.environment.const` can opt out.
+        const lowerToVar: RsbuildConfig = {
+          tools: { rspack: { output: { environment: { const: false } } } },
+        }
+
         if (!options) {
           return mergeRsbuildConfig(
+            lowerToVar,
             {
               output: {
                 filename: {
@@ -41,7 +50,7 @@ export function pluginOutput(options?: Output): RsbuildPlugin {
           )
         }
 
-        return mergeRsbuildConfig(config, {
+        return mergeRsbuildConfig(lowerToVar, config, {
           output: {
             distPath: Object.assign(
               {},
