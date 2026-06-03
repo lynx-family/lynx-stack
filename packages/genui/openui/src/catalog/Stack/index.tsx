@@ -3,7 +3,7 @@
 // LICENSE file in the root directory of this source tree.
 import { z } from 'zod/v4';
 
-import { defineComponent } from '../../core/library.js';
+import { defineComponent } from '../../core/library.jsx';
 import { GAP_CLASS, asArray } from '../utils.js';
 
 function getAlignClass(align: 'start' | 'center' | 'end' | 'stretch'): string {

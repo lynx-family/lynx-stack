@@ -1,3 +1,5 @@
+@import "@lynx-js/genui/openui/styles/renderer.css";
+
 page {
   padding: 10px;
   box-sizing: border-box;
