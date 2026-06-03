@@ -33,8 +33,8 @@ import {
 } from '@lynx-js/react';
 
 import type { LegacyActionConfig } from '../../catalog/Action/index.jsx';
-import type { OpenUIContextValue } from '../context.js';
-import type { Library } from '../library.js';
+import type { OpenUIContextValue } from '../context.jsx';
+import type { Library } from '../library.jsx';
 
 /** Unwrap { value, componentType } wrapper from form field entries. Returns raw value. */
 function unwrapFieldValue(v: unknown): unknown {

@@ -346,7 +346,7 @@ and pair it the same way you would a built-in.
 2. Run the public CLI to emit the JSON:
 
    ```bash
-   genui a2ui generate catalog --catalog-dir src/catalog --out-dir dist/catalog
+   npx @lynx-js/genui a2ui generate catalog --catalog-dir src/catalog --out-dir dist/catalog
    ```
 
 3. Pair the generated JSON with the component:
@@ -358,7 +358,7 @@ and pair it the same way you would a built-in.
    const catalog = defineCatalog([[MyChart, myChartManifest]]);
    ```
 
-`genui a2ui generate catalog` is the user-facing command;
+`npx @lynx-js/genui a2ui generate catalog` is the user-facing command;
 `@lynx-js/genui/a2ui-catalog-extractor` is the TypeDoc-powered engine behind
 it. Two constraints to keep extraction happy: the component folder name must
 match the exported function name (`src/catalog/MyChart/index.tsx` exports
@@ -396,4 +396,6 @@ All of these are exported from `@lynx-js/genui/a2ui` (and from the
 
 - [Overview and architecture](./overview.md) — how a message becomes UI, the
   responsibility split, and the export map.
+- [System prompts](./system-prompts.md) — generate the model instructions
+  that pair an Agent with your catalog.
 - [Open the A2UI playground](https://lynxjs.org/a2ui) — try it live.

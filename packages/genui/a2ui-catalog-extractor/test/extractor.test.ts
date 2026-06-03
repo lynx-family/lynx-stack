@@ -13,7 +13,7 @@ import {
   createA2UICatalog,
   extractCatalogComponents,
   findCatalogSourceFiles,
-  writeComponentCatalogs,
+  writeCatalogArtifacts,
 } from '../src/index.js';
 import type { TypeDocProject } from '../src/index.js';
 
@@ -80,7 +80,7 @@ describe('extractCatalogComponents', () => {
     const outDir = createTempDir();
     const expectedCatalogs = readExpectedCatalogs();
 
-    const components = await writeComponentCatalogs({
+    const { components } = await writeCatalogArtifacts({
       cwd: fixtureDir,
       outDir,
       sourceFiles: findCatalogSourceFiles(catalogFixtureDir),
@@ -98,6 +98,15 @@ describe('extractCatalogComponents', () => {
         expectedCatalogs[componentName],
       );
     }
+    expect(readFullCatalogJson(outDir)).toEqual({
+      catalogId: 'catalog.json',
+      components: {
+        DemoCard: expectedCatalogs['DemoCard']!['DemoCard'],
+        DemoText: expectedCatalogs['DemoText']!['DemoText'],
+        QuickStartCard: expectedCatalogs['QuickStartCard']!['QuickStartCard'],
+      },
+      functions: [],
+    });
   });
 
   test('creates a full catalog from TSX-extracted components', async () => {
@@ -184,6 +193,39 @@ describe('extractCatalogComponents', () => {
         description: 'CLI badge fixture.',
       },
     });
+    expect(readFullCatalogJson(path.join(cwd, 'catalog-out'))).toEqual({
+      catalogId: 'catalog.json',
+      components: {
+        CliBadge: {
+          properties: {
+            label: {
+              type: 'string',
+              description: 'Badge label.',
+            },
+          },
+          required: ['label'],
+          description: 'CLI badge fixture.',
+        },
+      },
+      functions: [],
+    });
+  });
+
+  test('writes the configured catalog ID to the full catalog file', async () => {
+    const outDir = createTempDir();
+
+    await expect(runCli([
+      '--catalog-dir',
+      catalogFixtureDir,
+      '--out-dir',
+      outDir,
+      '--catalog-id',
+      'https://cdn.example.com/a2ui/catalog.json',
+    ], fixtureDir)).resolves.toBe(0);
+
+    expect(readFullCatalogJson(outDir)['catalogId']).toBe(
+      'https://cdn.example.com/a2ui/catalog.json',
+    );
   });
 
   test('throws for ambiguous intrinsic catalog property types in TSX fixtures', async () => {
@@ -230,6 +272,12 @@ function readCatalogJson(
       path.join(rootDir, componentName, 'catalog.json'),
       'utf8',
     ),
+  ) as Record<string, unknown>;
+}
+
+function readFullCatalogJson(rootDir: string): Record<string, unknown> {
+  return JSON.parse(
+    fs.readFileSync(path.join(rootDir, 'catalog.json'), 'utf8'),
   ) as Record<string, unknown>;
 }
 

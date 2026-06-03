@@ -147,15 +147,15 @@ The package draws a hard line between what it provides and what your
 application provides. Keeping that line crisp is the reason the runtime
 stays transport-agnostic and the catalog stays explicit.
 
-| Piece             | Runs in                  | Owner            | Responsibility                                                                                                                                |
-| ----------------- | ------------------------ | ---------------- | --------------------------------------------------------------------------------------------------------------------------------------------- |
-| Agent service     | Server                   | Your application | Turns prompts and client actions into validated A2UI message arrays. Prompts the model with the same catalog contract the client renders.     |
-| Transport adapter | Client shell             | Your application | Sends prompts/actions to the Agent over REST/SSE/WebSocket, then writes the returned messages into a `MessageStore`.                          |
-| `MessageStore`    | Client                   | This package     | Stores raw A2UI messages in arrival order and notifies subscribers. It does not parse or interpret the protocol.                              |
-| `<A2UI>`          | Client                   | This package     | Owns a `MessageProcessor` per mount, consumes new messages, renders the active surface, and forwards generated UI actions through `onAction`. |
-| Catalog API       | Client + Agent handshake | This package     | Maps protocol component/function names to local implementations and optional JSON schemas. Compose it with `defineCatalog` and friends.       |
-| Built-ins         | Client                   | This package     | A2UI v0.9 basic-catalog component renderers, per-component JSON-Schema manifests, and client-side basic-catalog function implementations.     |
-| `genui a2ui`      | Build / setup time       | GenUI CLI        | Generates custom catalog artifacts and A2UI system prompts. Not required when both Agent and renderer use the built-in basic catalog.         |
+| Piece                     | Runs in                  | Owner            | Responsibility                                                                                                                                |
+| ------------------------- | ------------------------ | ---------------- | --------------------------------------------------------------------------------------------------------------------------------------------- |
+| Agent service             | Server                   | Your application | Turns prompts and client actions into validated A2UI message arrays. Prompts the model with the same catalog contract the client renders.     |
+| Transport adapter         | Client shell             | Your application | Sends prompts/actions to the Agent over REST/SSE/WebSocket, then writes the returned messages into a `MessageStore`.                          |
+| `MessageStore`            | Client                   | This package     | Stores raw A2UI messages in arrival order and notifies subscribers. It does not parse or interpret the protocol.                              |
+| `<A2UI>`                  | Client                   | This package     | Owns a `MessageProcessor` per mount, consumes new messages, renders the active surface, and forwards generated UI actions through `onAction`. |
+| Catalog API               | Client + Agent handshake | This package     | Maps protocol component/function names to local implementations and optional JSON schemas. Compose it with `defineCatalog` and friends.       |
+| Built-ins                 | Client                   | This package     | A2UI v0.9 basic-catalog component renderers, per-component JSON-Schema manifests, and client-side basic-catalog function implementations.     |
+| `npx @lynx-js/genui a2ui` | Build / setup time       | GenUI CLI        | Generates custom catalog artifacts and A2UI system prompts. Not required when both Agent and renderer use the built-in basic catalog.         |
 
 A useful way to remember it: **the server decides, the client renders, and
 the catalog is the contract they agree on.** The catalog is the one piece
@@ -307,4 +307,6 @@ Lifecycle notes that save debugging time:
 
 - [Catalogs, built-ins, and custom components](./catalog-guide.md) — compose
   the contract, add manifests, and register your own components.
+- [System prompts](./system-prompts.md) — generate the model instructions
+  that pair an Agent with your catalog.
 - [Open the A2UI playground](https://lynxjs.org/a2ui) — try it live.

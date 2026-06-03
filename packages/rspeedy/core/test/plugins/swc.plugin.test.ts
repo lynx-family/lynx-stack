@@ -25,6 +25,7 @@ describe('Plugins - SWC', () => {
           "detectSyntax": "auto",
           "env": {
             "include": [
+              "transform-block-scoping",
               "transform-exponentiation-operator",
               "transform-async-to-generator",
               "transform-async-generator-functions",
@@ -87,6 +88,7 @@ describe('Plugins - SWC', () => {
           "detectSyntax": "auto",
           "env": {
             "include": [
+              "transform-block-scoping",
               "transform-nullish-coalescing-operator",
               "transform-optional-chaining",
               "transform-export-namespace-from",
@@ -139,6 +141,32 @@ describe('Plugins - SWC', () => {
     // clear error rather than silently dropped.
     await expect(rsbuild.unwrapConfig()).rejects.toThrowError(
       /Rspeedy manages the SWC compilation target via `env`/,
+    )
+  })
+
+  test('user can opt out of transform-block-scoping via env.exclude', async () => {
+    const rsbuild = await createStubRspeedy({
+      mode: 'production',
+      tools: {
+        swc: {
+          env: {
+            exclude: ['transform-block-scoping'],
+          },
+        },
+      },
+    })
+
+    const config = await rsbuild.unwrapConfig()
+    const loaderOptions = getLoaderOptions<Rspack.SwcLoaderOptions>(
+      config,
+      'builtin:swc-loader',
+    )
+
+    // SWC's `env.exclude` wins over `include`, so forwarding the user's
+    // exclude opts out of the let/const → var lowering.
+    expect(loaderOptions?.env?.exclude).toEqual(['transform-block-scoping'])
+    expect(loaderOptions?.env?.include).toContain(
+      'transform-async-to-generator',
     )
   })
 
@@ -204,6 +232,7 @@ describe('Plugins - SWC', () => {
           "detectSyntax": "auto",
           "env": {
             "include": [
+              "transform-block-scoping",
               "transform-nullish-coalescing-operator",
               "transform-optional-chaining",
               "transform-export-namespace-from",

@@ -33,6 +33,34 @@ describe('Plugins - Output', () => {
     expect(config.output).toMatchSnapshot()
   })
 
+  test('lowers const/let to var via output.environment', async () => {
+    const rsbuild = await createStubRspeedy({})
+
+    const config = await rsbuild.unwrapConfig({
+      action: 'build',
+    })
+
+    // Bundler-generated runtime/wrapper code uses `var` (QuickJS parses it
+    // faster); SWC `transform-block-scoping` handles user source separately.
+    expect(config.output?.environment?.const).toBe(false)
+  })
+
+  test('user can opt out of const/let lowering', async () => {
+    const rsbuild = await createStubRspeedy({
+      tools: {
+        rspack: {
+          output: { environment: { const: true } },
+        },
+      },
+    })
+
+    const config = await rsbuild.unwrapConfig({
+      action: 'build',
+    })
+
+    expect(config.output?.environment?.const).toBe(true)
+  })
+
   test('output.filename', async () => {
     const rsbuild = await createStubRspeedy({
       output: {

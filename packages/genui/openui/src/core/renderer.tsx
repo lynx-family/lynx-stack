@@ -20,8 +20,8 @@ import {
   useState,
 } from '@lynx-js/react';
 
-import { OpenUIContext } from './context.js';
-import type { Library, RenderOutput } from './library.js';
+import { OpenUIContext } from './context.jsx';
+import type { Library, RenderOutput } from './library.jsx';
 import { keyFrom } from './utils.js';
 import type { LegacyActionConfig } from '../catalog/Action/index.jsx';
 

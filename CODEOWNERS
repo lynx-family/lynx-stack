@@ -8,5 +8,5 @@ packages/lynx/create-lynx-library/** @jianliang00
 packages/rspeedy/plugin-react/** @upupming
 packages/react/** @hzy @HuJean @Yradex
 packages/react/transform/** @gaoachao
-packages/genui/a2ui/** @pupiltong @Sherry-hue @HuJean @gaoachao @fzx2666-fz
+packages/genui/** @pupiltong @Sherry-hue @gaoachao @HuJean
 benchmark/react/** @hzy @HuJean

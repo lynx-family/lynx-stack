@@ -8,6 +8,9 @@ exports[`Plugins - Output > defaults - Production 1`] = `
   "chunkLoading": "lynx",
   "devtoolFallbackModuleFilenameTemplate": "[relative-resource-path]?[hash]",
   "devtoolModuleFilenameTemplate": "[relative-resource-path]",
+  "environment": {
+    "const": false,
+  },
   "filename": "static/js/[name].[contenthash:10].js",
   "path": "<ROOT>/dist",
   "publicPath": "/",
@@ -23,6 +26,9 @@ exports[`Plugins - Output > defaults 1`] = `
   "chunkLoading": "lynx",
   "devtoolFallbackModuleFilenameTemplate": "[relative-resource-path]?[hash]",
   "devtoolModuleFilenameTemplate": "[relative-resource-path]",
+  "environment": {
+    "const": false,
+  },
   "filename": "static/js/[name].js",
   "path": "<ROOT>/dist",
   "publicPath": "/",
@@ -38,6 +44,9 @@ exports[`Plugins - Output > output.filename 1`] = `
   "chunkLoading": "lynx",
   "devtoolFallbackModuleFilenameTemplate": "[relative-resource-path]?[hash]",
   "devtoolModuleFilenameTemplate": "[relative-resource-path]",
+  "environment": {
+    "const": false,
+  },
   "filename": "static/js/[name].js",
   "path": "<ROOT>/dist",
   "publicPath": "/",
@@ -53,6 +62,9 @@ exports[`Plugins - Output > output.filename.js 1`] = `
   "chunkLoading": "lynx",
   "devtoolFallbackModuleFilenameTemplate": "[relative-resource-path]?[hash]",
   "devtoolModuleFilenameTemplate": "[relative-resource-path]",
+  "environment": {
+    "const": false,
+  },
   "filename": "static/js/[name].js",
   "path": "<ROOT>/dist",
   "publicPath": "/",
