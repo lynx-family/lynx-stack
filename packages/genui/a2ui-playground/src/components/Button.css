@@ -98,6 +98,37 @@
   width: 100%;
 }
 
+/* Labels are always wrapped in a span so `responsiveIconOnly` can collapse
+   them at narrow widths without affecting icon-bearing siblings. */
+.btnLabel {
+  display: inline-flex;
+  align-items: center;
+}
+
+@media (max-width: 720px) {
+  .btn-responsiveIconOnly .btnLabel {
+    display: none;
+  }
+  .btn-responsiveIconOnly {
+    gap: 0;
+    padding: 0;
+    flex-shrink: 0;
+  }
+  /* Compound selectors win over `.btn-fullWidth { width: 100% }`. */
+  .btn-responsiveIconOnly.btn-sm,
+  .btn-fullWidth.btn-responsiveIconOnly.btn-sm {
+    width: 28px;
+  }
+  .btn-responsiveIconOnly.btn-md,
+  .btn-fullWidth.btn-responsiveIconOnly.btn-md {
+    width: 34px;
+  }
+  .btn-responsiveIconOnly.btn-lg,
+  .btn-fullWidth.btn-responsiveIconOnly.btn-lg {
+    width: 42px;
+  }
+}
+
 /* ── Variants ── */
 
 /* Primary: solid Geist accent. Use sparingly — one per surface. */

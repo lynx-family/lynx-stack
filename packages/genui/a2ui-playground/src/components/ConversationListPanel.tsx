@@ -71,8 +71,10 @@ export function ConversationListPanel(props: ConversationListPanelProps) {
           variant='secondary'
           size='lg'
           fullWidth
+          responsiveIconOnly
           iconBefore={MessageSquarePlus}
           disabled={disabled}
+          aria-label='New Chat'
           onClick={onCreate}
         >
           New Chat

@@ -18,6 +18,8 @@ interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
   iconAfter?: React.ComponentType<{ size?: number; strokeWidth?: number }>;
   /** Render as icon-only (square aspect, no label). */
   iconOnly?: boolean;
+  /** Collapse to icon-only at narrow widths (≤720px). Requires iconBefore. */
+  responsiveIconOnly?: boolean;
   /** Make the button stretch to its container's width. */
   fullWidth?: boolean;
   children?: ReactNode;
@@ -35,6 +37,7 @@ export const Button = forwardRef<HTMLButtonElement, ButtonProps>(
       iconBefore: IconBefore,
       iconAfter: IconAfter,
       iconOnly = false,
+      responsiveIconOnly = false,
       fullWidth = false,
       className,
       children,
@@ -54,6 +57,7 @@ export const Button = forwardRef<HTMLButtonElement, ButtonProps>(
           `btn-${variant}`,
           `btn-${size}`,
           iconOnly && 'btn-iconOnly',
+          responsiveIconOnly && 'btn-responsiveIconOnly',
           fullWidth && 'btn-fullWidth',
           className,
         )}
@@ -62,7 +66,7 @@ export const Button = forwardRef<HTMLButtonElement, ButtonProps>(
         {IconBefore
           ? <IconBefore size={iconSize} strokeWidth={2} />
           : null}
-        {iconOnly ? null : children}
+        {iconOnly ? null : <span className='btnLabel'>{children}</span>}
         {IconAfter ? <IconAfter size={iconSize} strokeWidth={2} /> : null}
       </button>
     );

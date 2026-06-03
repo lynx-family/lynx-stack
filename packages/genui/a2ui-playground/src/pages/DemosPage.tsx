@@ -639,6 +639,7 @@ export function DemosPage(props: {
           <Button
             variant='secondary'
             size='md'
+            responsiveIconOnly
             iconBefore={ChevronLeft}
             onClick={handleBackToExamples}
             aria-label='Back to Examples'
@@ -679,7 +680,7 @@ export function DemosPage(props: {
           >
             <header className='playbackSectionHeader'>
               <span className='playbackSectionTitle'>Playback</span>
-              <span className='playbackSectionBadge'>LLM stream</span>
+              <span className='playbackSectionMeta'>LLM stream</span>
               {isPlaybackActive
                 ? (
                   <span
@@ -693,7 +694,8 @@ export function DemosPage(props: {
                 )
                 : (
                   <span className='playbackIdleHint'>
-                    Press ▶ to replay this LLM payload chunk by chunk
+                    <Play size={11} strokeWidth={2.25} aria-hidden='true' />
+                    Replay payload chunk by chunk
                   </span>
                 )}
               <div className='spacer' />
