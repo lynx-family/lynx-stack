@@ -725,30 +725,40 @@ html[data-theme="dark"] .phoneHomeIndicator {
   flex-direction: column;
   background: var(--geist-surface);
   border-left: 1px solid var(--geist-border);
-  /* Container query host so the panel's own width drives extras visibility,
-     unaffected by viewport-level decisions like the page's sidebar/code split. */
-  container-type: inline-size;
-  container-name: preview-panel;
 }
 
-/* Pass-through wrapper: children participate directly in the panel's
-   flex/grid layout. Hidden on narrow panels so the Drawer takes over. */
+/* Pass-through wrapper: extras children participate directly in the panel's
+   flex column (border-top dividers, live-stack scroller, QR section). The
+   inline-vs-drawer split is decided in JS via useMediaQuery, not here. */
 .previewPanelExtras {
   display: contents;
 }
 
-/* previewInfoBtn is a Button (variant=ghost, iconOnly) — only hidden at
-   container widths where the inline extras section is visible. */
-.btn.previewInfoBtn {
-  display: none;
+/* Each direct extras child slides up and fades in when it mounts — the
+   "content arrives in the panel" beat. Staggered so the live-component
+   stack leads and the QR section follows. */
+.previewPanelExtras > * {
+  animation: preview-extras-enter 360ms cubic-bezier(0.22, 1, 0.36, 1) both;
 }
 
-@container preview-panel (max-width: 660px) {
-  .previewPanelExtras {
-    display: none;
+.previewPanelExtras > * + * {
+  animation-delay: 70ms;
+}
+
+@keyframes preview-extras-enter {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
   }
-  .btn.previewInfoBtn {
-    display: inline-flex;
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .previewPanelExtras > * {
+    animation: none;
   }
 }
 

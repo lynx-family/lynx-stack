@@ -19,6 +19,7 @@ import { Maximize2, Minimize2, Smartphone } from './Icon.js';
 import { PreviewSimulationBar } from './PreviewSimulationBar.js';
 import { QrCode } from './QrCode.js';
 import { componentsByMessage } from '../demos.js';
+import { useMediaQuery } from '../hooks/useMediaQuery.js';
 import { copyToClipboard } from '../utils/clipboard.js';
 import { DEFAULT_A2UI_DEMO_URL } from '../utils/demoUrl.js';
 import type { Protocol } from '../utils/protocol.js';
@@ -303,6 +304,10 @@ export function PreviewPanel(props: PreviewPanelProps) {
   const [mode, setMode] = useState<PreviewMode>('phone');
   const [isFullscreen, setIsFullscreen] = useState(false);
   const [shareOpen, setShareOpen] = useState(false);
+  // Mobile threshold matches the rest of the app (MobileTabBar, .brand hide,
+  // compact padding). Above this the panel has room to render extras inline;
+  // below it the Vaul bottom sheet takes over for a one-handed UX.
+  const isCompactViewport = useMediaQuery('(max-width: 720px)');
   const [internalSpeed, setInternalSpeed] = useState(1);
   // If the parent supplies a speed, it owns it; otherwise we keep our own.
   const speed = speedProp ?? internalSpeed;
@@ -1061,7 +1066,7 @@ export function PreviewPanel(props: PreviewPanelProps) {
               {showPreviewModeSwitch
                 ? <PreviewModeSwitch mode={mode} onChange={setMode} />
                 : null}
-              {hasExtras
+              {hasExtras && isCompactViewport
                 ? (
                   <Button
                     variant='ghost'
@@ -1111,8 +1116,16 @@ export function PreviewPanel(props: PreviewPanelProps) {
               )
               : null}
             <div className={bodyClass}>{children}</div>
-            <div className='previewPanelExtras'>{renderExtras()}</div>
-            {hasExtras
+            {
+              /* Inline (desktop) and bottom sheet (mobile) share the same
+                `renderExtras()` closure, but only one is mounted at a time —
+                this keeps QrCode's async toDataURL from running twice and
+                lets the tag-appear animations play in just one place. */
+            }
+            {hasExtras && !isCompactViewport
+              ? <div className='previewPanelExtras'>{renderExtras()}</div>
+              : null}
+            {hasExtras && isCompactViewport
               ? (
                 <Drawer.Root
                   open={shareOpen}
