@@ -12,6 +12,12 @@ const lockPath = join(genuiRoot, '.api-extractor.lock');
 const lockTimeoutMs = 10 * 60 * 1000;
 const entryPointTimeoutMs = 5 * 1000;
 const retryDelayMs = 500;
+// The genui root's `index.ts` imports from `@lynx-js/genui/<subpackage>`, so
+// tsc needs each subpackage's emitted `.d.ts` on disk before it runs. Turbo
+// schedules `<subpackage>#build:api` first, but cache restoration on the CI
+// runner has been observed to land the `.js` before the `.d.ts`. Wait so the
+// follow-up `tsc` does not flake with TS7016.
+const subpackageDtsTimeoutMs = 30 * 1000;
 
 const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
 
@@ -127,9 +133,39 @@ const ensureMainEntryPoint = async () => {
   );
 };
 
+const collectSubpackageDtsTargets = async () => {
+  const rootPkgPath = join(genuiRoot, 'package.json');
+  const rootPkg = JSON.parse(await readFile(rootPkgPath, 'utf8'));
+  const targets = new Set();
+  for (const [key, value] of Object.entries(rootPkg.exports ?? {})) {
+    if (key === '.' || key === './package.json') continue;
+    const types = typeof value === 'string' ? null : value?.types;
+    if (typeof types !== 'string' || !types.endsWith('.d.ts')) continue;
+    // Only subpackage paths (`./<sub>/dist/...`) need waiting; in-tree assets
+    // (e.g. `./a2ui/styles/theme.css`) are filtered out by the `.d.ts` check.
+    targets.add(join(genuiRoot, types));
+  }
+  return [...targets];
+};
+
+const waitForSubpackageDts = async () => {
+  if (process.cwd() !== genuiRoot) return;
+  const targets = await collectSubpackageDtsTargets();
+  const start = Date.now();
+  for (const abs of targets) {
+    while (!existsSync(abs)) {
+      if (Date.now() - start > subpackageDtsTimeoutMs) {
+        throw new Error(`Timed out waiting for ${abs}`);
+      }
+      await sleep(retryDelayMs);
+    }
+  }
+};
+
 await acquireLock();
 
 try {
+  await waitForSubpackageDts();
   run('pnpm', ['run', 'build']);
   await ensureMainEntryPoint();
   run('api-extractor', ['run', '--verbose']);
