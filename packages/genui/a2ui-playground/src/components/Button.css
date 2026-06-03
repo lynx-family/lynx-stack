@@ -1,0 +1,206 @@
+/*
+ * Unified button primitive.
+ *
+ * The playground previously had ~6 ad-hoc button styles (toolbarBtn,
+ * chatSendBtn, detailBackButton, conversationNewButton, conversationIconButton,
+ * previewExpandBtn). This file collapses them into one system:
+ *
+ *   variant: primary | secondary | ghost | danger
+ *   size:    sm | md | lg
+ *
+ * All buttons are pill-shaped, share the same transition curve, and pair with
+ * Lucide icons sized to match the label baseline.
+ */
+
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  border-radius: 999px;
+  border: 1px solid transparent;
+  font-family: var(--geist-font);
+  font-weight: 600;
+  line-height: 1;
+  letter-spacing: 0.005em;
+  white-space: nowrap;
+  cursor: pointer;
+  user-select: none;
+  -webkit-tap-highlight-color: transparent;
+  transition:
+    background var(--geist-transition),
+    border-color var(--geist-transition),
+    color var(--geist-transition),
+    box-shadow var(--geist-transition),
+    transform var(--geist-transition),
+    opacity var(--geist-transition);
+}
+
+.btn:focus-visible {
+  outline: 2px solid
+    color-mix(
+      in srgb,
+      var(--geist-foreground) 35%,
+      transparent
+    );
+  outline-offset: 2px;
+}
+
+.btn:active {
+  transform: scale(0.97);
+}
+
+.btn:disabled {
+  cursor: not-allowed;
+  opacity: 0.45;
+  transform: none;
+}
+
+/* ── Sizes ── */
+
+.btn-sm {
+  height: 28px;
+  padding: 0 12px;
+  font-size: 12px;
+  gap: 5px;
+}
+
+.btn-md {
+  height: 34px;
+  padding: 0 14px;
+  font-size: 13px;
+  gap: 6px;
+}
+
+.btn-lg {
+  height: 42px;
+  padding: 0 18px;
+  font-size: 14px;
+  gap: 8px;
+}
+
+.btn-iconOnly.btn-sm {
+  width: 28px;
+  padding: 0;
+}
+
+.btn-iconOnly.btn-md {
+  width: 34px;
+  padding: 0;
+}
+
+.btn-iconOnly.btn-lg {
+  width: 42px;
+  padding: 0;
+}
+
+.btn-fullWidth {
+  width: 100%;
+}
+
+/* ── Variants ── */
+
+/* Primary: solid Geist accent. Use sparingly — one per surface. */
+.btn-primary {
+  background: var(--geist-accent);
+  border-color: var(--geist-accent);
+  color: var(--geist-accent-foreground);
+  box-shadow: 0 8px 18px
+    color-mix(in srgb, var(--geist-foreground) 14%, transparent);
+}
+
+.btn-primary:hover:not(:disabled) {
+  opacity: 0.88;
+  box-shadow: 0 10px 22px
+    color-mix(in srgb, var(--geist-foreground) 18%, transparent);
+}
+
+.btn-primary:disabled {
+  box-shadow: none;
+}
+
+/* Secondary: bordered, surface-tinted. The workhorse for navigation. */
+.btn-secondary {
+  background: color-mix(
+    in srgb,
+    var(--geist-background) 82%,
+    var(--geist-surface)
+  );
+  border-color: var(--geist-border);
+  color: var(--geist-foreground);
+  box-shadow: var(--geist-shadow-sm);
+}
+
+.btn-secondary:hover:not(:disabled) {
+  background: var(--geist-background);
+  border-color: var(--geist-border-hover);
+  box-shadow: var(--geist-shadow-md);
+  transform: translateY(-1px);
+}
+
+html[data-theme="dark"] .btn-secondary {
+  background: color-mix(
+    in srgb,
+    var(--geist-background) 72%,
+    var(--geist-surface)
+  );
+}
+
+html[data-theme="dark"] .btn-secondary:hover:not(:disabled) {
+  background: color-mix(
+    in srgb,
+    var(--geist-background) 60%,
+    var(--geist-surface)
+  );
+}
+
+/* Ghost: low-emphasis, used for toolbar actions and icon-only triggers. */
+.btn-ghost {
+  background: transparent;
+  border-color: transparent;
+  color: var(--geist-secondary);
+  box-shadow: none;
+}
+
+.btn-ghost:hover:not(:disabled) {
+  background: color-mix(
+    in srgb,
+    var(--geist-surface) 84%,
+    var(--geist-background)
+  );
+  color: var(--geist-foreground);
+}
+
+/* Danger: secondary-shaped, reveals red on hover. */
+.btn-danger {
+  background: transparent;
+  border-color: transparent;
+  color: var(--geist-secondary);
+}
+
+.btn-danger:hover:not(:disabled) {
+  background: color-mix(
+    in srgb,
+    var(--geist-error) 8%,
+    transparent
+  );
+  border-color: color-mix(
+    in srgb,
+    var(--geist-error) 38%,
+    var(--geist-border)
+  );
+  color: var(--geist-error);
+}
+
+/* ── Icon alignment ── */
+
+.btn svg {
+  flex-shrink: 0;
+  /* Lucide strokes look heaviest at their baseline weight; nudging stroke
+     down to 1.8 on the larger sizes keeps icons from outweighing the label. */
+  stroke-width: 2;
+}
+
+.btn-lg svg {
+  stroke-width: 1.9;
+}

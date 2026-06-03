@@ -232,27 +232,7 @@ a {
   flex: 1;
 }
 
-.themeToggle {
-  width: 28px;
-  height: 28px;
-  border: none;
-  border-radius: var(--geist-radius-sm);
-  background: transparent;
-  color: var(--geist-secondary);
-  font-size: 15px;
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  transition: all var(--geist-transition);
-  flex-shrink: 0;
-  padding: 0;
-}
-
-.themeToggle:hover {
-  color: var(--geist-foreground);
-  background: var(--geist-surface);
-}
+/* themeToggle: replaced by <Button variant="ghost" size="sm" iconOnly>. */
 
 /* ── Tab Navigation ── */
 .tabNav {
@@ -742,34 +722,17 @@ html[data-theme="dark"] .phoneHomeIndicator {
   display: contents;
 }
 
-.previewInfoBtn {
+/* previewInfoBtn is a Button (variant=ghost, iconOnly) — only hidden at
+   container widths where the inline extras section is visible. */
+.btn.previewInfoBtn {
   display: none;
-  width: 28px;
-  height: 28px;
-  border: none;
-  border-radius: var(--geist-radius-sm);
-  background: transparent;
-  color: var(--geist-secondary);
-  font-size: 18px;
-  line-height: 1;
-  cursor: pointer;
-  align-items: center;
-  justify-content: center;
-  transition: all var(--geist-transition);
-  flex-shrink: 0;
-  padding: 0;
-}
-
-.previewInfoBtn:hover {
-  color: var(--geist-foreground);
-  background: var(--geist-surface);
 }
 
 @container preview-panel (max-width: 660px) {
   .previewPanelExtras {
     display: none;
   }
-  .previewInfoBtn {
+  .btn.previewInfoBtn {
     display: inline-flex;
   }
 }
@@ -783,27 +746,8 @@ html[data-theme="dark"] .phoneHomeIndicator {
   background: var(--geist-background);
 }
 
-.previewExpandBtn {
-  width: 28px;
-  height: 28px;
-  border: none;
-  border-radius: var(--geist-radius-sm);
-  background: transparent;
-  color: var(--geist-secondary);
-  font-size: 16px;
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  transition: all var(--geist-transition);
-  flex-shrink: 0;
-  padding: 0;
-}
-
-.previewExpandBtn:hover {
-  color: var(--geist-foreground);
-  background: var(--geist-surface);
-}
+/* previewExpandBtn is a Button (variant=ghost, iconOnly) — no extra styling
+   needed beyond the Button primitive. Class kept for selector targeting. */
 
 .previewPanelHeader {
   display: flex;

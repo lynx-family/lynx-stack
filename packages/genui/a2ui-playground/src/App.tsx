@@ -9,6 +9,8 @@ import {
   useState,
 } from 'react';
 
+import { Button } from './components/Button.js';
+import { Moon, Sun } from './components/Icon.js';
 import { AIChatPage } from './pages/AIChatPage.js';
 import { ComponentsPage } from './pages/ComponentsPage.js';
 import { DemosListPage } from './pages/DemosListPage.js';
@@ -227,15 +229,16 @@ export function App() {
 
         {protocolVersionControl}
 
-        <button
-          type='button'
+        <Button
+          variant='ghost'
+          size='sm'
+          iconOnly
+          iconBefore={theme === 'dark' ? Sun : Moon}
           className='themeToggle'
           onClick={() => setTheme((t) => (t === 'dark' ? 'light' : 'dark'))}
           aria-label={`Switch to ${theme === 'dark' ? 'light' : 'dark'} mode`}
           title={`Switch to ${theme === 'dark' ? 'light' : 'dark'} mode`}
-        >
-          {theme === 'dark' ? '\u2600' : '\u263E'}
-        </button>
+        />
       </div>
 
       <div className='appBody'>
