@@ -595,7 +595,7 @@ export function DemosPage(props: {
   const playbackPrimaryButton = isPlaying
     ? (
       <Button
-        variant='ghost'
+        variant='primary'
         size='sm'
         iconBefore={Pause}
         onClick={handlePause}
