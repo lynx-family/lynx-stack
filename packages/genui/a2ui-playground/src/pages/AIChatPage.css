@@ -1521,4 +1521,73 @@
   .chatHeader {
     display: none;
   }
+
+  /* ── Compact the suggestion + composer block ──────────────────────
+     On a 390px phone the default sizing left almost no room for chat
+     bubbles. Shrink each surface so the scrollable message area becomes
+     the dominant pane. */
+
+  .chatInputArea {
+    padding: 8px 14px 10px;
+    gap: 8px;
+  }
+
+  /* Instant examples: same horizontal rail, but each tile is smaller
+     so two fit side-by-side without a 220px preview eating the screen. */
+  .instantTile {
+    width: 180px;
+    gap: 6px;
+    padding: 4px;
+    margin: -4px;
+  }
+  .instantTileScreen {
+    height: 150px;
+  }
+  .instantTileTitle {
+    font-size: 11.5px;
+  }
+  .instantExamples {
+    gap: 4px;
+  }
+  .instantExamplesHeader,
+  .promptSuggestionsHeader {
+    padding: 0 2px;
+  }
+
+  /* Prompt suggestion chips: tighter so the rail reads as a 1-line strip. */
+  .chatSuggestionChip {
+    height: 26px;
+    padding: 0 10px;
+    font-size: 11.5px;
+  }
+  .promptSuggestions {
+    gap: 4px;
+  }
+  .promptSuggestionsRail {
+    padding: 2px 14px 4px;
+    margin: 0 -14px;
+  }
+
+  /* Composer: drop ~50px of vertical height. Textarea becomes a single
+     visible line that expands as the user types. */
+  .chatComposer {
+    min-height: 0;
+    padding: 10px 12px;
+    gap: 8px;
+    border-radius: 12px;
+  }
+  .chatInput {
+    min-height: 38px;
+    max-height: 140px;
+    font-size: 14px;
+    line-height: 1.45;
+  }
+
+  /* Mobile Send: a bit smaller so it doesn't dominate the footer. */
+  .chatComposerFooter .btn-lg {
+    height: 36px;
+    padding: 0 14px;
+    font-size: 13px;
+    min-width: 0;
+  }
 }
