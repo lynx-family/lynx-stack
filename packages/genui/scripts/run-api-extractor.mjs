@@ -42,17 +42,23 @@ const acquireLock = async () => {
         throw error;
       }
 
+      // The holder is between `open(wx)` and `writeFile`, so the lock file
+      // briefly exists with empty contents. We must never delete it on a
+      // read/parse failure — that lets the holder and us both "acquire" the
+      // lock. Only clear when we can prove the holder is dead.
+      let staleHolder = false;
       try {
         const current = JSON.parse(await readFile(lockPath, 'utf8'));
         if (typeof current.pid === 'number' && !isProcessAlive(current.pid)) {
-          await rm(lockPath, { force: true });
-          continue;
+          staleHolder = true;
         }
       } catch {
+        // Empty or unparseable — assume the holder is mid-write and wait.
+      }
+      if (staleHolder) {
         await rm(lockPath, { force: true });
         continue;
       }
-
       await sleep(retryDelayMs);
     }
   }
