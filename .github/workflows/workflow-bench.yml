@@ -41,6 +41,11 @@ jobs:
           node-version: "24"
           package-manager-cache: false
       - uses: astral-sh/setup-uv@d0cc045d04ccac9d8b7881df0226f9e82c39688e # v6
+      - name: Setup Rust
+        uses: ./.github/actions/rustup
+        with:
+          key: bench
+          save-if: ${{ github.ref_name == 'main' }}
       - name: TurboCache
         uses: lynx-infra/cache@5c6160a6a4c7fca80a2f3057bb9dfc9513fcb732
         with:
