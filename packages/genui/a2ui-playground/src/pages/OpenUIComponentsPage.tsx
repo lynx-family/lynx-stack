@@ -8,7 +8,15 @@ import {
   OPENUI_COMPONENT_CATALOG,
 } from '../catalog/openui.js';
 import type { OpenUIComponentDoc } from '../catalog/openui.js';
+import { PageHeader } from '../components/PageHeader.js';
 import type { Protocol } from '../utils/protocol.js';
+
+import './ComponentsPage.css';
+
+function getOpenUICategoryLabel(categoryId: string): string {
+  return OPENUI_CATEGORIES.find((cat) => cat.id === categoryId)?.label
+    ?? categoryId;
+}
 
 // ─── Components ─────────────────────────────────────────────────────────────
 
@@ -19,7 +27,7 @@ function ComponentDetail(props: {
   const { comp, protocol } = props;
 
   return (
-    <div className='compContent'>
+    <div className='compContent openuiCompContent openuiCompDetailContent'>
       <div className='compBreadcrumb'>
         <a
           className='compBreadcrumbLink'
@@ -31,56 +39,56 @@ function ComponentDetail(props: {
         <span className='compBreadcrumbCurrent'>{comp.name}</span>
       </div>
 
-      <h2 className='compName'>{comp.name}</h2>
-      <p className='compDesc'>{comp.description}</p>
-      <div className='compCategoryBadge'>{comp.category}</div>
+      <div className='openuiCompIntro'>
+        <div className='compCategoryBadge'>
+          {getOpenUICategoryLabel(comp.category)}
+        </div>
+        <h2 className='compName'>{comp.name}</h2>
+        <p className='compDesc'>{comp.description}</p>
+      </div>
 
       {comp.props.length > 0
         ? (
-          <>
-            <h3 className='compSubheading'>Props</h3>
-            <table className='compTable'>
-              <thead>
-                <tr>
-                  <th className='compTableHeader'>Name</th>
-                  <th className='compTableHeader'>Type</th>
-                  <th className='compTableHeader'>Description</th>
-                  <th className='compTableHeader'>Default</th>
-                </tr>
-              </thead>
-              <tbody>
-                {comp.props.map((prop) => (
-                  <tr key={prop.name}>
-                    <td className='compTableCell'>{prop.name}</td>
-                    <td className='compTableCell'>{prop.type}</td>
-                    <td className='compTableCell'>{prop.description}</td>
-                    <td className='compTableCell'>{prop.default ?? '—'}</td>
+          <section className='compPropsSection compUsageSection openuiCompSection'>
+            <div className='compSectionHeader'>
+              <h3 className='compSubheading'>Props</h3>
+              <div className='compPlaygroundSideHint'>
+                {comp.props.length} fields
+              </div>
+            </div>
+            <div className='compPropsTableWrap openuiCompPropsTableWrap'>
+              <table className='compTable compPropsTable'>
+                <thead>
+                  <tr>
+                    <th className='compTableHeader'>Name</th>
+                    <th className='compTableHeader'>Type</th>
+                    <th className='compTableHeader'>Description</th>
+                    <th className='compTableHeader'>Default</th>
                   </tr>
-                ))}
-              </tbody>
-            </table>
-          </>
+                </thead>
+                <tbody>
+                  {comp.props.map((prop) => (
+                    <tr key={prop.name}>
+                      <td className='compTableCell'>{prop.name}</td>
+                      <td className='compTableCell'>{prop.type}</td>
+                      <td className='compTableCell'>{prop.description}</td>
+                      <td className='compTableCell'>{prop.default ?? '—'}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </section>
         )
         : null}
 
-      <h3 className='compSubheading'>Usage (OpenUI DSL)</h3>
-      <pre
-        style={{
-          margin: 0,
-          padding: 16,
-          fontSize: 13,
-          lineHeight: 1.6,
-          fontFamily: 'var(--geist-mono)',
-          color: 'var(--geist-code-fg)',
-          background: 'var(--geist-code-bg)',
-          borderRadius: 8,
-          overflow: 'auto',
-          whiteSpace: 'pre-wrap',
-          wordBreak: 'break-word',
-        }}
-      >
-        {comp.usage}
-      </pre>
+      <section className='compUsageSection openuiCompSection'>
+        <div className='compSectionHeader compUsageSectionHeader'>
+          <h3 className='compSubheading'>Usage</h3>
+          <div className='compPlaygroundSideHint'>OpenUI DSL</div>
+        </div>
+        <pre className='compCodeBlock openuiCompDslBlock'>{comp.usage}</pre>
+      </section>
     </div>
   );
 }
@@ -89,7 +97,7 @@ function ComponentGrid(props: { protocol: Protocol }) {
   const { protocol } = props;
 
   return (
-    <div className='compContent'>
+    <div className='compContent openuiCompContent'>
       <h2 className='compName'>OpenUI Components</h2>
       <p className='compDesc'>
         Browse all supported OpenUI components by category.
@@ -102,12 +110,17 @@ function ComponentGrid(props: { protocol: Protocol }) {
         if (items.length === 0) return null;
         return (
           <div key={cat.id} className='compCategorySection'>
-            <h3 className='compCategoryTitle'>{cat.label}</h3>
+            <div className='openuiCompCategoryHeader'>
+              <h3 className='compCategoryTitle'>{cat.label}</h3>
+              <span className='openuiCompCategoryCount'>
+                {items.length} {items.length === 1 ? 'item' : 'items'}
+              </span>
+            </div>
             <div className='compGrid'>
               {items.map((comp) => (
                 <a
                   key={comp.name}
-                  className='compGridCard'
+                  className='compGridCard openuiCompGridCard'
                   href={`#/${protocol.name}/components/${comp.name}`}
                 >
                   <div className='compGridCardName'>{comp.name}</div>
@@ -149,39 +162,61 @@ export function OpenUIComponentsPage(
   }, []);
 
   return (
-    <div className='compPage'>
-      <div className='compSidebar'>
-        <a
-          className={'compSidebarAll' + (componentName ? '' : ' active')}
-          href={`#/${protocol.name}/components`}
-        >
-          All Components
-        </a>
+    <div className='compPage openuiCompPage'>
+      <div className='compCatalogPage openuiCompCatalogPage'>
+        <PageHeader
+          className='compCatalogContent openuiCompHeader'
+          title='OpenUI Components'
+          description='Browse the OpenUI DSL component catalog, prop contracts, and usage snippets.'
+          topContent={
+            <>
+              <span className='chip'>
+                {OPENUI_COMPONENT_CATALOG.length} components
+              </span>
+              <span className='chip'>
+                {OPENUI_CATEGORIES.length} categories
+              </span>
+            </>
+          }
+        />
 
-        {OPENUI_CATEGORIES.map((cat) => {
-          const items = groupedByCategory.get(cat.id);
-          if (!items) return null;
-          return (
-            <div key={cat.id} className='compSidebarGroup'>
-              <div className='compSidebarGroupLabel'>{cat.label}</div>
-              {items.map((comp) => (
-                <a
-                  key={comp.name}
-                  className={'compSidebarItem'
-                    + (componentName === comp.name ? ' active' : '')}
-                  href={`#/${protocol.name}/components/${comp.name}`}
-                >
-                  {comp.name}
-                </a>
-              ))}
-            </div>
-          );
-        })}
+        <div className='compCatalogSplit openuiCompSplit'>
+          <div className='compSidebar compCatalogSidebar openuiCompSidebar'>
+            <a
+              className={'compSidebarAll' + (componentName ? '' : ' active')}
+              href={`#/${protocol.name}/components`}
+            >
+              All Components
+            </a>
+
+            {OPENUI_CATEGORIES.map((cat) => {
+              const items = groupedByCategory.get(cat.id);
+              if (!items) return null;
+              return (
+                <div key={cat.id} className='compSidebarGroup'>
+                  <div className='compSidebarGroupLabel'>{cat.label}</div>
+                  {items.map((comp) => (
+                    <a
+                      key={comp.name}
+                      className={'compSidebarItem'
+                        + (componentName === comp.name ? ' active' : '')}
+                      href={`#/${protocol.name}/components/${comp.name}`}
+                    >
+                      {comp.name}
+                    </a>
+                  ))}
+                </div>
+              );
+            })}
+          </div>
+
+          <div className='compCatalogDetail openuiCompDetail'>
+            {selectedComp
+              ? <ComponentDetail comp={selectedComp} protocol={protocol} />
+              : <ComponentGrid protocol={protocol} />}
+          </div>
+        </div>
       </div>
-
-      {selectedComp
-        ? <ComponentDetail comp={selectedComp} protocol={protocol} />
-        : <ComponentGrid protocol={protocol} />}
     </div>
   );
 }
