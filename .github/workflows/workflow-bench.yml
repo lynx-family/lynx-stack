@@ -49,13 +49,22 @@ jobs:
           # an empty cargo bin path into $GITHUB_PATH. Install rustup
           # inline with an explicit HOME and pin /root/.cargo/bin on PATH.
           export HOME=/root
-          if ! command -v cargo > /dev/null 2>&1; then
+          if ! command -v /root/.cargo/bin/cargo > /dev/null 2>&1; then
             curl --proto '=https' --tlsv1.2 --retry 10 --retry-connrefused -fsSL https://sh.rustup.rs \
-              | sh -s -- --default-toolchain stable --profile minimal -y
+              | sh -s -- --default-toolchain none -y
           fi
           echo "/root/.cargo/bin" >> "$GITHUB_PATH"
+          export PATH="/root/.cargo/bin:$PATH"
+          # Pre-install the toolchain pinned by rust-toolchain.toml plus
+          # the wasm targets web-core needs. Doing it once here keeps the
+          # parallel cargo invocations from `pnpm turbo build` from racing
+          # on /root/.rustup/downloads while each tries to sync the channel
+          # just-in-time.
+          toolchain="$(grep -E '^\s*channel\s*=' rust-toolchain.toml | head -n1 | sed -E 's/.*=\s*"([^"]+)".*/\1/')"
+          rustup toolchain install "$toolchain" --profile default
+          rustup target add --toolchain "$toolchain" wasm32-unknown-unknown wasm32-wasip1
       - name: TurboCache
-        uses: lynx-infra/cache@5c6160a6a4c7fca80a2f3057bb9dfc9513fcb732
+        uses: lynx-infra/cache@16f8a4148d80ad9d97fb26891e6215e6a6f502c3
         with:
           path: .turbo
           # The build job runs on lynx-ubuntu-24.04-xlarge which writes to a
