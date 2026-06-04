@@ -13,7 +13,7 @@ export const validateConfig: (
 >(({ path, expected, value }) => {
   if (expected === 'undefined') {
     const errorMessage =
-      `Unknown property: \`${path}\` in the configuration of pluginReactLynx`
+      `Unknown property: \`${path}\` in the configuration of pluginReactLynx. Check https://github.com/lynx-family/lynx/blob/develop/core/template_bundle/template_codec/binary_decoder/lynx_config.yml for all available properties, if it is available but not supported by pluginReactLynx, you should use \`pluginLynxConfig\` (the Lynx Config rsbuild plugin) instead`
 
     // Unknown properties
     return new Error(errorMessage)
