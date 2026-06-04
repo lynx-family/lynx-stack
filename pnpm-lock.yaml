@@ -786,6 +786,28 @@ importers:
       '@lynx-js/genui-a2ui-prompt':
         specifier: workspace:*
         version: link:../a2ui-prompt
+    devDependencies:
+      '@lynx-js/qrcode-rsbuild-plugin':
+        specifier: workspace:^
+        version: link:../../rspeedy/plugin-qrcode
+      '@lynx-js/react':
+        specifier: workspace:*
+        version: link:../../react
+      '@lynx-js/react-rsbuild-plugin':
+        specifier: workspace:^
+        version: link:../../rspeedy/plugin-react
+      '@lynx-js/rspeedy':
+        specifier: workspace:^
+        version: link:../../rspeedy/core
+      '@rstest/core':
+        specifier: catalog:rstest
+        version: 0.8.1(jsdom@27.4.0)
+      '@types/node':
+        specifier: ^24.10.13
+        version: 24.10.13
+      typescript:
+        specifier: ^5.9.3
+        version: 5.9.3
 
   packages/genui/openui:
     dependencies:

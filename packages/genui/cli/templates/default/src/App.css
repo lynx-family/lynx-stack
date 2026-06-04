@@ -1,0 +1,88 @@
+.page {
+  width: 100%;
+  min-height: 100vh;
+  padding: 10px 12px 16px;
+  display: flex;
+  flex-direction: column;
+  background: linear-gradient(135deg, #0f0c29 0%, #302b63 50%, #24243e 100%);
+  box-sizing: border-box;
+}
+
+.Background {
+  position: fixed;
+  top: -50%;
+  left: -50%;
+  width: 200%;
+  height: 200%;
+  background:
+    radial-gradient(
+      circle at 30% 20%,
+      rgba(120, 80, 200, 0.3) 0%,
+      transparent 50%
+    ),
+    radial-gradient(
+    circle at 70% 80%,
+    rgba(80, 120, 200, 0.3) 0%,
+    transparent 50%
+  ),
+    radial-gradient(
+    circle at 50% 50%,
+    rgba(200, 80, 120, 0.2) 0%,
+    transparent 70%
+  );
+  pointer-events: none;
+}
+
+.A2UIApp {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  position: relative;
+  z-index: 10;
+}
+
+.AppContent {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 40px 20px;
+}
+
+.WelcomeScreen {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 20px;
+}
+
+.Title {
+  font-size: 42px;
+  font-weight: 800;
+  color: #a5b4fc;
+  margin-bottom: 8px;
+}
+
+.Subtitle {
+  font-size: 16px;
+  font-weight: 400;
+  color: rgba(255, 255, 255, 0.6);
+  letter-spacing: 2px;
+}
+
+.StartButton {
+  margin-top: 40px;
+  padding: 18px 56px;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  border-radius: 50px;
+  box-shadow: 0 8px 32px rgba(102, 126, 234, 0.4);
+}
+
+.ButtonText {
+  color: #fff;
+  font-size: 18px;
+  font-weight: 600;
+  letter-spacing: 1px;
+}
