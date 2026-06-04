@@ -34,7 +34,7 @@ describe('create-lynx-library', () => {
     );
   });
 
-  it('creates a mixed Native Autolink library', () => {
+  it('creates a mixed Lynx native library', () => {
     const dir = createTempDir('mixed');
     const files = createLynxLibrary({
       dir,
@@ -89,36 +89,36 @@ describe('create-lynx-library', () => {
     );
     expect(
       read(dir, 'android/src/main/java/com/example/button/ButtonModule.java'),
-    ).toContain('@LynxAutolinkNativeModule(name = "ButtonModule")');
+    ).toContain('@LynxNativeModule(name = "ButtonModule")');
     expect(
       read(dir, 'android/src/main/java/com/example/button/ButtonModule.java'),
-    ).toContain('import com.lynx.jsbridge.LynxAutolinkNativeModule;');
+    ).toContain('import com.lynx.jsbridge.LynxNativeModule;');
     expect(
       read(dir, 'android/src/main/java/com/example/button/ButtonModule.java'),
     ).toContain('import com.lynx.jsbridge.LynxMethod;');
     expect(
       read(dir, 'android/src/main/java/com/example/button/ButtonElement.java'),
-    ).toContain('@LynxAutolinkElement(name = "x-button")');
+    ).toContain('@LynxElement(name = "x-button")');
     expect(
       read(dir, 'android/src/main/java/com/example/button/ButtonElement.java'),
-    ).toContain('import com.lynx.tasm.behavior.LynxAutolinkElement;');
+    ).toContain('import com.lynx.tasm.behavior.LynxElement;');
     expect(
       read(dir, 'android/src/main/java/com/example/button/ButtonService.java'),
-    ).toContain('@LynxAutolinkService');
+    ).toContain('@LynxService');
     expect(
       read(dir, 'android/src/main/java/com/example/button/ButtonService.java'),
-    ).toContain('import com.lynx.tasm.service.LynxAutolinkService;');
+    ).toContain('import com.lynx.tasm.service.IServiceProvider;');
     expect(read(dir, 'ios/src/ButtonModule.h')).toContain(
-      '@LynxAutolinkNativeModule("ButtonModule")',
+      '@LynxNativeModuleRegister("ButtonModule")',
     );
     expect(read(dir, 'ios/src/ButtonModule.m')).toContain(
       '+ (NSDictionary<NSString *, NSString *> *)methodLookup',
     );
-    expect(read(dir, 'ios/src/ButtonElement.h')).toContain(
-      '@LynxAutolinkUI("x-button")',
+    expect(read(dir, 'ios/src/ButtonElement.m')).toContain(
+      '@LynxUIRegister("x-button")',
     );
     expect(read(dir, 'ios/src/ButtonService.m')).toContain(
-      '@LynxAutolinkService(ButtonService, ButtonServiceProtocol)',
+      '@LynxServiceRegister(ButtonService, ButtonServiceProtocol)',
     );
     expect(read(dir, 'ios/src/ButtonService.h')).toContain(
       '@protocol ButtonServiceProtocol <LynxServiceProtocol>',
@@ -156,7 +156,7 @@ describe('create-lynx-library', () => {
     expect(read(dir, 'ios/build.podspec')).not.toContain('LynxServiceAPI');
   });
 
-  it('creates Element and Service projects with Autolink markers', () => {
+  it('creates Element and Service projects with Lynx markers', () => {
     const dir = createTempDir('view');
     const files = createLynxLibrary({
       dir,
@@ -177,12 +177,12 @@ describe('create-lynx-library', () => {
       'Add native module declarations',
     );
     expect(read(dir, 'src/index.ts')).toContain(
-      'Native Autolink package entry',
+      'Lynx native library package entry',
     );
     expect(read(dir, 'android/src/main/java/com/example/view/ViewElement.java'))
-      .toContain('@LynxAutolinkElement(name = "x-view")');
+      .toContain('@LynxElement(name = "x-view")');
     expect(read(dir, 'ios/src/ViewService.m')).toContain(
-      '@LynxAutolinkService(ViewService, ViewServiceProtocol)',
+      '@LynxServiceRegister(ViewService, ViewServiceProtocol)',
     );
     expect(read(dir, 'example/src/App.tsx')).not.toContain('import {');
   });

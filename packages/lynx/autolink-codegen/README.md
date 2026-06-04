@@ -1,6 +1,6 @@
 # @lynx-js/autolink-codegen
 
-Native Autolink code generator for Lynx libraries.
+Lynx native library code generator.
 
 It scans `types/**/*.d.ts` for native module declarations annotated with
 `/** @lynxmodule */`, reads `lynx.lib.json`, and generates:
@@ -26,5 +26,5 @@ can use:
 }
 ```
 
-The first version intentionally supports only Native Autolink. Web Autolink and
-Web spec generation are outside this package.
+The first version intentionally supports only Lynx native libraries. Web spec
+generation is outside this package.

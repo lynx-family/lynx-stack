@@ -545,7 +545,7 @@ function parseParams(
 
     if (optional) {
       throw new Error(
-        `Optional parameter "${moduleName}.${methodName}.${name}" is not supported by Native Autolink codegen v1`,
+        `Optional parameter "${moduleName}.${methodName}.${name}" is not supported by Lynx native library codegen v1`,
       );
     }
 
@@ -557,7 +557,7 @@ function parseParams(
 
     if (type.name === 'void') {
       throw new Error(
-        `Unsupported parameter type "void" for ${moduleName}.${methodName}.${name} in ${filename}. Native Autolink codegen v1 only supports void as a return type.`,
+        `Unsupported parameter type "void" for ${moduleName}.${methodName}.${name} in ${filename}. Lynx native library codegen v1 only supports void as a return type.`,
       );
     }
 
@@ -610,7 +610,7 @@ function assertNoSymlinkTraversal(root: string, target: string): void {
 }
 
 /**
- * Parses a supported Native Autolink type, including nullable unions.
+ * Parses a supported Lynx native type, including nullable unions.
  */
 function parseType(
   source: string,
@@ -655,7 +655,7 @@ function unsupportedType(
   context: string,
 ): Error {
   return new Error(
-    `Unsupported type "${source}" for ${context} in ${filename}. Native Autolink codegen v1 supports void, string, number, boolean, and unions with null.`,
+    `Unsupported type "${source}" for ${context} in ${filename}. Lynx native library codegen v1 supports void, string, number, boolean, and unions with null.`,
   );
 }
 
@@ -704,14 +704,14 @@ function walkFiles(dir: string): string[] {
 }
 
 /**
- * Reads and normalizes the Native Autolink library manifest.
+ * Reads and normalizes the Lynx native library manifest.
  */
 function readManifest(root: string): LynxLibJson {
   const manifestPath = path.join(root, 'lynx.lib.json');
 
   if (!fs.existsSync(manifestPath)) {
     throw new Error(
-      `Missing lynx.lib.json in ${root}. Native Autolink codegen must run from a library package root.`,
+      `Missing lynx.lib.json in ${root}. Lynx native library codegen must run from a library package root.`,
     );
   }
 

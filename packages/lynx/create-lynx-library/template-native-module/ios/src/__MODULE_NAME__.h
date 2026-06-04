@@ -4,7 +4,7 @@
 
 NS_ASSUME_NONNULL_BEGIN
 
-@LynxAutolinkNativeModule("__MODULE_NAME__")
+@LynxNativeModuleRegister("__MODULE_NAME__")
 @interface __MODULE_NAME__ : NSObject <__MODULE_NAME__Spec>
 
 @end
