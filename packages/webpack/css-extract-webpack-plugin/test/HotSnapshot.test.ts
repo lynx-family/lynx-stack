@@ -12,4 +12,8 @@ const __dirname = path.dirname(fileURLToPath(import.meta.url));
 hotSnapshotCases({
   name: 'hot-snapshot',
   casePath: path.join(__dirname, 'hotCases'),
+}, {
+  // Store the decoded, pretty-printed `*.css.hot-update.json` manifest instead
+  // of the raw base64 blob, so page-config changes diff line-by-line.
+  decodeHotUpdateManifest: true,
 });

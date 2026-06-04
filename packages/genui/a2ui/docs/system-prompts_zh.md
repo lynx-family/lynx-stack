@@ -184,4 +184,4 @@ export async function POST(req: Request) {
 - 后端本来就会加载生成后的 catalog 产物。
 - 需要在代码里组合自定义 `A2UICatalog`。
 
-自定义 renderer catalog 和 manifest 生成流程可继续阅读 [Catalogs and manifests](./catalogs_zh.md) 和 [Custom components](./custom-components_zh.md)。
+自定义 renderer catalog 和 manifest 生成流程可继续阅读 [Catalogs and manifests](./catalog-guide_zh.md)。

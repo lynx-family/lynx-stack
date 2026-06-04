@@ -14,7 +14,13 @@
 ### pages/main.LAST_HASH.hot-update.json
 
 ```json
-{"c":["pages/main"],"r":[],"m":[]}
+{
+  "c": [
+    "pages/main"
+  ],
+  "r": [],
+  "m": []
+}
 ```
 
 
@@ -22,7 +28,109 @@
 ### pages/main/pages/main.LAST_HASH.css.hot-update.json
 
 ```json
-{"content":"eyJjb21waWxlck9wdGlvbnMiOnsiZW5hYmxlRmliZXJBcmNoIjp0cnVlLCJ1c2VMZXB1c05HIjp0cnVlLCJlbmFibGVSZXVzZUNvbnRleHQiOnRydWUsImJ1bmRsZU1vZHVsZU1vZGUiOiJSZXR1cm5CeUZ1bmN0aW9uIiwiZGVidWdJbmZvT3V0c2lkZSI6dHJ1ZSwiZGVmYXVsdERpc3BsYXlMaW5lYXIiOnRydWUsImVuYWJsZUNTU0ludmFsaWRhdGlvbiI6ZmFsc2UsImVuYWJsZUNTU1NlbGVjdG9yIjp0cnVlLCJlbmFibGVMZXB1c0RlYnVnIjp0cnVlLCJlbmFibGVSZW1vdmVDU1NTY29wZSI6ZmFsc2UsInRhcmdldFNka1ZlcnNpb24iOiIzLjIiLCJkZWZhdWx0T3ZlcmZsb3dWaXNpYmxlIjp0cnVlfSwic291cmNlQ29udGVudCI6eyJkc2wiOiJyZWFjdF9ub2RpZmYiLCJhcHBUeXBlIjoiY2FyZCIsImNvbmZpZyI6eyJsZXB1c1N0cmljdCI6dHJ1ZSwidXNlTmV3U3dpcGVyIjp0cnVlLCJlbmFibGVOZXdJbnRlcnNlY3Rpb25PYnNlcnZlciI6dHJ1ZSwiZW5hYmxlTmF0aXZlTGlzdCI6dHJ1ZSwic3luY1hFbGVtZW50UmVnaXN0cnkiOnRydWUsImVuYWJsZUExMXkiOnRydWUsImVuYWJsZUFjY2Vzc2liaWxpdHlFbGVtZW50IjpmYWxzZSwiZW5hYmxlQ1NTSW5oZXJpdGFuY2UiOmZhbHNlLCJlbmFibGVOZXdHZXN0dXJlIjpmYWxzZSwicmVtb3ZlRGVzY2VuZGFudFNlbGVjdG9yU2NvcGUiOmZhbHNlLCJkZWJ1Z01ldGFkYXRhVXJsIjoiIn19LCJjc3MiOnsiY3NzTWFwIjp7IjAiOlt7InR5cGUiOiJTdHlsZVJ1bGUiLCJzdHlsZSI6WXsibmFtZSI6ImNvbG9yIiwidmFsdWUiOiJcImJsdWVcIiIsImtleUxvYyI6eyJsaW5lIjoyLCJjb2x1bW4iOjh9LCJ2YWxMb2MiOnsibGluZSI6MiwiYXsdW1uIjoxN319XSwic2VsZWN0b3JUZXh0Ijp7InZhbHVlIjoiLmxTQ1pjR280VlM0ODRqOEIiLCJsb2MiOnsibGluZSI6MSwiYXsdW1uIjoxOH19LCJ2YXJpYWJsZXMiOnt9fSx7InR5cGUiOiJTdHlsZVJ1bGUiLCJzdHlsZSI6WXsibmFtZSI6ImJhY2tncm91bmQtYXsb3IiLCJ2YWx1ZSI6ImJsYWNrIiwia2V5TG9jIjp7ImxpbmUiOjExLCJjb2x1bW4iOjE5fSwidmFsTG9jIjp7ImxpbmUiOjExLCJjb2x1bW4iOjI3fX1dLCJzZWxlY3RvclRleHQiOnsidmFsdWUiOiIuRWFBR2JDODdMQTBOQ0lJUiIsImxvYyI6eyJsaW5lIjoxMCwiYXsdW1uIjoxOH19LCJ2YXJpYWJsZXMiOnt9fV19LCJjc3NTb3VyY2UiOnsiMCI6Ii9jc3NJZC8wLmNzcyJ9LCJjb250ZW50TWFwIjp7fXXsImxlcHVzQ29kZSI6eyJsZXB1c0NodW5rIjp7fXXsIm1hbmlmZXN0Ijp7fSwiY3VzdG9tU2VjdGlvbnMiOnt9fQ==","deps":{"0":[]}}
+{
+  "content": {
+    "compilerOptions": {
+      "enableFiberArch": true,
+      "useLepusNG": true,
+      "enableReuseContext": true,
+      "bundleModuleMode": "ReturnByFunction",
+      "debugInfoOutside": true,
+      "defaultDisplayLinear": true,
+      "enableCSSInvalidation": false,
+      "enableCSSSelector": true,
+      "enableLepusDebug": true,
+      "enableRemoveCSSScope": false,
+      "targetSdkVersion": "3.2",
+      "defaultOverflowVisible": true
+    },
+    "sourceContent": {
+      "dsl": "react_nodiff",
+      "appType": "card",
+      "config": {
+        "lepusStrict": true,
+        "useNewSwiper": true,
+        "enableNewIntersectionObserver": true,
+        "enableNativeList": true,
+        "syncXElementRegistry": true,
+        "enableA11y": true,
+        "enableAccessibilityElement": false,
+        "enableCSSInheritance": false,
+        "enableNewGesture": false,
+        "removeDescendantSelectorScope": false,
+        "debugMetadataUrl": ""
+      }
+    },
+    "css": {
+      "cssMap": {
+        "0": [
+          {
+            "type": "StyleRule",
+            "style": [
+              {
+                "name": "color",
+                "value": "\"blue\"",
+                "keyLoc": {
+                  "line": 2,
+                  "column": 8
+                },
+                "valLoc": {
+                  "line": 2,
+                  "column": 17
+                }
+              }
+            ],
+            "selectorText": {
+              "value": ".lSCZcGo4VS484j8B",
+              "loc": {
+                "line": 1,
+                "column": 18
+              }
+            },
+            "variables": {}
+          },
+          {
+            "type": "StyleRule",
+            "style": [
+              {
+                "name": "background-color",
+                "value": "black",
+                "keyLoc": {
+                  "line": 11,
+                  "column": 19
+                },
+                "valLoc": {
+                  "line": 11,
+                  "column": 27
+                }
+              }
+            ],
+            "selectorText": {
+              "value": ".EaAGbC87LA0NCIIR",
+              "loc": {
+                "line": 10,
+                "column": 18
+              }
+            },
+            "variables": {}
+          }
+        ]
+      },
+      "cssSource": {
+        "0": "/cssId/0.css"
+      },
+      "contentMap": {}
+    },
+    "lepusCode": {
+      "lepusChunk": {}
+    },
+    "manifest": {},
+    "customSections": {}
+  },
+  "deps": {
+    "0": []
+  }
+}
 ```
 
 
