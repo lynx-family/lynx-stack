@@ -66,7 +66,7 @@ const LIBRARY_FEATURE_LABELS: Record<LibraryFeature, string> = {
 };
 const LIBRARY_FEATURE_HINTS: Record<LibraryFeature, string> = {
   'native-module': 'JS bridge APIs implemented by native code',
-  element: 'native UI element registered through Autolink',
+  element: 'native UI element registered through Lynx',
   service: 'native service implementation registered globally',
 };
 
@@ -178,7 +178,7 @@ Options:
 
 Library features:
   native-module                JS bridge APIs implemented by native code.
-  element                      Native UI element registered through Autolink.
+  element                      Native UI element registered through Lynx.
   service                      Native service implementation registered globally.
 
 Examples:

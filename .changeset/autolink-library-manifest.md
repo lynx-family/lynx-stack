@@ -3,4 +3,4 @@
 "create-lynx-library": minor
 ---
 
-Rename the Native Autolink scaffold flow to libraries and switch codegen manifests to `lynx.lib.json`.
+Rename the native scaffold flow to libraries and switch codegen manifests to `lynx.lib.json`.

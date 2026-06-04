@@ -1,6 +1,6 @@
 # create-lynx-library
 
-Create Native Autolink Lynx libraries.
+Create Lynx native libraries.
 
 ```bash
 npm create lynx-library
