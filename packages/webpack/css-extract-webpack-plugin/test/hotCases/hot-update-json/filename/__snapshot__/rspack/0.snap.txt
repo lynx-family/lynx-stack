@@ -12,7 +12,109 @@
 ### main/main.css.hot-update.json
 
 ```json
-{"content":"eyJjb21waWxlck9wdGlvbnMiOnsiZW5hYmxlRmliZXJBcmNoIjp0cnVlLCJ1c2VMZXB1c05HIjp0cnVlLCJlbmFibGVSZXVzZUNvbnRleHQiOnRydWUsImJ1bmRsZU1vZHVsZU1vZGUiOiJSZXR1cm5CeUZ1bmN0aW9uIiwiZGVidWdJbmZvT3V0c2lkZSI6dHJ1ZSwiZGVmYXVsdERpc3BsYXlMaW5lYXIiOnRydWUsImVuYWJsZUNTU0ludmFsaWRhdGlvbiI6ZmFsc2UsImVuYWJsZUNTU1NlbGVjdG9yIjp0cnVlLCJlbmFibGVMZXB1c0RlYnVnIjp0cnVlLCJlbmFibGVSZW1vdmVDU1NTY29wZSI6ZmFsc2UsInRhcmdldFNka1ZlcnNpb24iOiIzLjIiLCJkZWZhdWx0T3ZlcmZsb3dWaXNpYmxlIjp0cnVlfSwic291cmNlQ29udGVudCI6eyJkc2wiOiJyZWFjdF9ub2RpZmYiLCJhcHBUeXBlIjoiY2FyZCIsImNvbmZpZyI6eyJsZXB1c1N0cmljdCI6dHJ1ZSwidXNlTmV3U3dpcGVyIjp0cnVlLCJlbmFibGVOZXdJbnRlcnNlY3Rpb25PYnNlcnZlciI6dHJ1ZSwiZW5hYmxlTmF0aXZlTGlzdCI6dHJ1ZSwic3luY1hFbGVtZW50UmVnaXN0cnkiOnRydWUsImVuYWJsZUExMXkiOnRydWUsImVuYWJsZUFjY2Vzc2liaWxpdHlFbGVtZW50IjpmYWxzZSwiZW5hYmxlQ1NTSW5oZXJpdGFuY2UiOmZhbHNlLCJlbmFibGVOZXdHZXN0dXJlIjpmYWxzZSwicmVtb3ZlRGVzY2VuZGFudFNlbGVjdG9yU2NvcGUiOmZhbHNlLCJkZWJ1Z01ldGFkYXRhVXJsIjoiIn19LCJjc3MiOnsiY3NzTWFwIjp7IjAiOlt7InR5cGUiOiJTdHlsZVJ1bGUiLCJzdHlsZSI6WXsibmFtZSI6ImNvbG9yIiwidmFsdWUiOiJcInJlZFwiIiwia2V5TG9jIjp7ImxpbmUiOjcsImNvbHVtbiI6OHXsInZhbExvYyI6eyJsaW5lIjo3LCJjb2x1bW4iOjE2fX1dLCJzZWxlY3RvclRleHQiOnsidmFsdWUiOiIuTV9JeV9SeThadzBBeUVZWCIsImxvYyI6eyJsaW5lIjo2LCJjb2x1bW4iOjE4fXXsInZhcmlhYmxlcyI6e319LHsidHlwZSI6IlN0eWxlUnVsZSIsInN0eWxlIjpbeyJuYW1lIjoiYmFja2dyb3VuZC1jb2xvciIsInZhbHVlIjoiYmxhYXsiLCJrZXlMb2MiOnsibGluZSI6MTYsImNvbHVtbiI6MTl9LCJ2YWxMb2MiOnsibGluZSI6MTYsImNvbHVtbiI6Mjd9fVXsInNlbGVjdG9yVGV4dCI6eyJ2YWx1ZSI6Ii5qY2FuSF9BRGp0QXB2UkNLIiwibG9jIjp7ImxpbmUiOjE1LCJjb2x1bW4iOjE4fXXsInZhcmlhYmxlcyI6e319XXXsImNzc1NvdXJjZSI6eyIwIjoiL2Nzc0lkLzAuY3NzInXsImNvbnRlbnRNYXAiOnt9fSwibGVwdXNDb2RlIjp7ImxlcHVzQ2h1bmsiOnt9fSwibWFuaWZlc3QiOnt9LCJjdXN0b21TZWN0aW9ucyI6e319","deps":{"0":[]}}
+{
+  "content": {
+    "compilerOptions": {
+      "enableFiberArch": true,
+      "useLepusNG": true,
+      "enableReuseContext": true,
+      "bundleModuleMode": "ReturnByFunction",
+      "debugInfoOutside": true,
+      "defaultDisplayLinear": true,
+      "enableCSSInvalidation": false,
+      "enableCSSSelector": true,
+      "enableLepusDebug": true,
+      "enableRemoveCSSScope": false,
+      "targetSdkVersion": "3.2",
+      "defaultOverflowVisible": true
+    },
+    "sourceContent": {
+      "dsl": "react_nodiff",
+      "appType": "card",
+      "config": {
+        "lepusStrict": true,
+        "useNewSwiper": true,
+        "enableNewIntersectionObserver": true,
+        "enableNativeList": true,
+        "syncXElementRegistry": true,
+        "enableA11y": true,
+        "enableAccessibilityElement": false,
+        "enableCSSInheritance": false,
+        "enableNewGesture": false,
+        "removeDescendantSelectorScope": false,
+        "debugMetadataUrl": ""
+      }
+    },
+    "css": {
+      "cssMap": {
+        "0": [
+          {
+            "type": "StyleRule",
+            "style": [
+              {
+                "name": "color",
+                "value": "\"red\"",
+                "keyLoc": {
+                  "line": 7,
+                  "column": 8
+                },
+                "valLoc": {
+                  "line": 7,
+                  "column": 16
+                }
+              }
+            ],
+            "selectorText": {
+              "value": ".M_Iy_Ry8Zw0AyEYX",
+              "loc": {
+                "line": 6,
+                "column": 18
+              }
+            },
+            "variables": {}
+          },
+          {
+            "type": "StyleRule",
+            "style": [
+              {
+                "name": "background-color",
+                "value": "black",
+                "keyLoc": {
+                  "line": 16,
+                  "column": 19
+                },
+                "valLoc": {
+                  "line": 16,
+                  "column": 27
+                }
+              }
+            ],
+            "selectorText": {
+              "value": ".jcanH_ADjtApvRCK",
+              "loc": {
+                "line": 15,
+                "column": 18
+              }
+            },
+            "variables": {}
+          }
+        ]
+      },
+      "cssSource": {
+        "0": "/cssId/0.css"
+      },
+      "contentMap": {}
+    },
+    "lepusCode": {
+      "lepusChunk": {}
+    },
+    "manifest": {},
+    "customSections": {}
+  },
+  "deps": {
+    "0": []
+  }
+}
 ```
 
 
