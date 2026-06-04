@@ -1,3 +1,9 @@
+---
+applyTo:
+  - "packages/lynx/autolink-codegen/**"
+  - "packages/lynx/create-lynx-library/**"
+---
+
 # Lynx Library Instructions
 
 Use the current Lynx library package names and marker names when creating or
