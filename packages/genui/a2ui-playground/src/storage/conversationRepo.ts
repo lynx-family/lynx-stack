@@ -2,6 +2,7 @@
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
 import { getDB } from './db.js';
+import type { SharedConversationDoc } from './sharedConversation.js';
 import type {
   ConversationMeta,
   DataModelSnapshot,
@@ -129,6 +130,55 @@ export async function saveConversationMessages(
   }
   await tx.objectStore('snapshots').put(snapshot);
   await tx.done;
+}
+
+function previewTextFromSharedMessages(
+  messages: SharedConversationDoc['messages'],
+): string {
+  for (let i = messages.length - 1; i >= 0; i--) {
+    const message = messages[i];
+    if (message?.role === 'user') {
+      const compact = message.content.replace(/\s+/gu, ' ').trim();
+      return compact.length > 80 ? `${compact.slice(0, 80)}...` : compact;
+    }
+  }
+  return '';
+}
+
+/**
+ * Write a shared conversation document into a brand-new local conversation
+ * (fresh id, re-sequenced messages) and return its meta. The snapshot's
+ * `previewMessages` is left empty on purpose — the chat page rebuilds the
+ * preview from the assistant message history when the conversation activates.
+ */
+export async function importConversation(
+  doc: SharedConversationDoc,
+): Promise<ConversationMeta> {
+  const now = Date.now();
+  const meta: ConversationMeta = {
+    ...createConversationMeta(doc.title || 'Shared conversation'),
+    messageCount: doc.messages.length,
+    previewText: previewTextFromSharedMessages(doc.messages),
+  };
+  const messages: PersistedMessage[] = doc.messages.map((message, index) => ({
+    conversationId: meta.id,
+    seq: index,
+    role: message.role,
+    content: message.content,
+    previewPayloadUrls: message.previewPayloadUrls,
+    previewMetrics: message.previewMetrics,
+    createdAt: now + index,
+  }));
+  const snapshot: DataModelSnapshot = {
+    conversationId: meta.id,
+    dataModel: doc.snapshot?.dataModel ?? {},
+    surfaceIds: doc.snapshot?.surfaceIds ?? [],
+    previewMessages: [],
+    previewPayloadUrls: doc.snapshot?.previewPayloadUrls,
+    updatedAt: now,
+  };
+  await saveConversationMessages(meta, messages, snapshot);
+  return meta;
 }
 
 export async function renameConversation(
