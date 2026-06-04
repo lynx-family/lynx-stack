@@ -86,6 +86,19 @@ export function serializeConversation(
   };
 }
 
+function isSharedConversationMessage(
+  value: unknown,
+): value is SharedConversationMessage {
+  if (!value || typeof value !== 'object') return false;
+  const message = value as Partial<SharedConversationMessage>;
+  return (
+    (message.role === 'user'
+      || message.role === 'assistant'
+      || message.role === 'system')
+    && typeof message.content === 'string'
+  );
+}
+
 export function isSharedConversationDoc(
   value: unknown,
 ): value is SharedConversationDoc {
@@ -95,5 +108,6 @@ export function isSharedConversationDoc(
     doc.kind === SHARED_CONVERSATION_KIND
     && doc.v === 1
     && Array.isArray(doc.messages)
+    && doc.messages.every((message) => isSharedConversationMessage(message))
   );
 }

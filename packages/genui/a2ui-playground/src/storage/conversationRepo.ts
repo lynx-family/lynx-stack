@@ -132,7 +132,7 @@ export async function saveConversationMessages(
   await tx.done;
 }
 
-function previewTextFromSharedMessages(
+export function previewTextFromSharedMessages(
   messages: SharedConversationDoc['messages'],
 ): string {
   for (let i = messages.length - 1; i >= 0; i--) {

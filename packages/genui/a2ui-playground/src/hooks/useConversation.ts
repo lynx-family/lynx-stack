@@ -11,6 +11,7 @@ import {
   importConversation,
   listConversations,
   loadConversation,
+  previewTextFromSharedMessages,
   renameConversation,
   saveConversationMessages,
   setActiveConversationId,
@@ -460,6 +461,7 @@ export function useConversation(): UseConversationReturn {
         const meta: ConversationMeta = {
           ...createConversationMeta(doc.title || 'Shared conversation'),
           messageCount: doc.messages.length,
+          previewText: previewTextFromSharedMessages(doc.messages),
         };
         const hotState: ConversationHotState = {
           messages: doc.messages.map((message) => ({

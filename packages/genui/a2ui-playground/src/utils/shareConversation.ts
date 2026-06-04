@@ -47,9 +47,11 @@ export function readImportConversationParam(): string | null {
 /** Remove the import param from the URL so a reload does not re-import. */
 export function clearImportConversationParam(): void {
   if (!readImportConversationParam()) return;
+  const url = new URL(window.location.href);
+  url.searchParams.delete(IMPORT_CONVERSATION_PARAM);
   window.history.replaceState(
     null,
     '',
-    window.location.pathname + window.location.hash,
+    `${url.pathname}${url.search}${url.hash}`,
   );
 }
