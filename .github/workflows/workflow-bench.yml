@@ -14,7 +14,13 @@ jobs:
     # Error: Event merge_group is not supported by CodSpeed
     # Error: unknown variant `merge_group`, expected one of `push`, `pull_request`, `workflow_dispatch`, `schedule`, `local` at line 1 column 13
     if: github.event_name != 'merge_group'
-    runs-on: lynx-ubuntu-24.04-xlarge
+    runs-on: physical-exclusive
+    env:
+      ACCESS_KEY: ${{ secrets.ACCESS_KEY }}
+      SECRET_KEY: ${{ secrets.SECRET_KEY }}
+      ENDPOINT: ${{ secrets.ENDPOINT }}
+      BUCKET_NAME: ${{ secrets.BUCKET_NAME }}
+      REGION: ${{ secrets.REGION }}
     steps:
       - uses: actions/checkout@93cb6efe18208431cddfb8368fd83d5badbf9bfd # v5
         with:
@@ -42,10 +48,14 @@ jobs:
       - name: Prepare CodSpeed
         run: |
           curl -fsSL https://github.com/CodSpeedHQ/codspeed/releases/download/v4.10.6/codspeed-runner-installer.sh | bash -s -- --quiet
-      - name: Run benchmark
+      - name: Run benchmark (simulation)
         run: |
           . "$HOME/.cargo/env"
           codspeed run --mode simulation -- pnpm -r run --workspace-concurrency=1 bench
+      - name: Run benchmark (walltime)
+        run: |
+          . "$HOME/.cargo/env"
+          codspeed run --mode walltime -- pnpm -r run --workspace-concurrency=1 bench
       - name: React benchmark - Run perfetto
         run: |
           pnpm -r run --workspace-concurrency=1 perfetto
