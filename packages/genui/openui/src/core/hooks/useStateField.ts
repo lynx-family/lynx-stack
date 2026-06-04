@@ -4,7 +4,7 @@
 import { resolveStateField } from '@openuidev/lang-core';
 import type { InferStateFieldValue, StateField } from '@openuidev/lang-core';
 
-import { useFormName, useOpenUI } from '../context.js';
+import { useFormName, useOpenUI } from '../context.jsx';
 
 export function useStateField<T = unknown>(
   name: string,

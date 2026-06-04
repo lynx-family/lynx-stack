@@ -8,7 +8,7 @@
     "moduleResolution": "node16",
     "erasableSyntaxOnly": true,
 
-    // Node.js 18+
+    // Match Rspeedy and Rsbuild v2 runtime requirements.
     "lib": ["es2023"],
     "target": "es2022",
 

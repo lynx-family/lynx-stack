@@ -5,7 +5,7 @@
 
 ## Asset Files
 - Bundle: rspack-bundle.js
-- Manifest: main.LAST_HASH.css.hot-update.json, size: 1706
+- Manifest: main.LAST_HASH.css.hot-update.json, size: 1742
 - Manifest: main.LAST_HASH.hot-update.json, size: 28
 - Update: main.LAST_HASH.hot-update.js, size: 1303
 
@@ -14,7 +14,109 @@
 ### main.LAST_HASH.css.hot-update.json
 
 ```json
-{"content":"eyJjb21waWxlck9wdGlvbnMiOnsiZW5hYmxlRmliZXJBcmNoIjp0cnVlLCJ1c2VMZXB1c05HIjp0cnVlLCJlbmFibGVSZXVzZUNvbnRleHQiOnRydWUsImJ1bmRsZU1vZHVsZU1vZGUiOiJSZXR1cm5CeUZ1bmN0aW9uIiwiZGVidWdJbmZvT3V0c2lkZSI6dHJ1ZSwiZGVmYXVsdERpc3BsYXlMaW5lYXIiOnRydWUsImVuYWJsZUNTU0ludmFsaWRhdGlvbiI6ZmFsc2UsImVuYWJsZUNTU1NlbGVjdG9yIjp0cnVlLCJlbmFibGVMZXB1c0RlYnVnIjp0cnVlLCJlbmFibGVSZW1vdmVDU1NTY29wZSI6ZmFsc2UsInRhcmdldFNka1ZlcnNpb24iOiIzLjIiLCJkZWZhdWx0T3ZlcmZsb3dWaXNpYmxlIjp0cnVlfSwic291cmNlQ29udGVudCI6eyJkc2wiOiJyZWFjdF9ub2RpZmYiLCJhcHBUeXBlIjoiY2FyZCIsImNvbmZpZyI6eyJsZXB1c1N0cmljdCI6dHJ1ZSwidXNlTmV3U3dpcGVyIjp0cnVlLCJlbmFibGVOZXdJbnRlcnNlY3Rpb25PYnNlcnZlciI6dHJ1ZSwiZW5hYmxlTmF0aXZlTGlzdCI6dHJ1ZSwiZW5hYmxlQTExeSI6dHJ1ZSwiZW5hYmxlQWNjZXNzaWJpbGl0eUVsZW1lbnQiOmZhbHNlLCJlbmFibGVDU1NJbmhlcml0YW5jZSI6ZmFsc2UsImVuYWJsZU5ld0dlc3R1cmUiOmZhbHNlLCJyZW1vdmVEZXNjZW5kYW50U2VsZWN0b3JTY29wZSI6ZmFsc2UsImRlYnVnTWV0YWRhdGFVcmwiOiIifXXsImNzcyI6eyJjc3NNYXAiOnsiMCI6WXsidHlwZSI6IlN0eWxlUnVsZSIsInN0eWxlIjpbeyJuYW1lIjoiYXsb3IiLCJ2YWx1ZSI6IlwiYmx1ZVwiIiwia2V5TG9jIjp7ImxpbmUiOjIsImNvbHVtbiI6OHXsInZhbExvYyI6eyJsaW5lIjoyLCJjb2x1bW4iOjE3fX1dLCJzZWxlY3RvclRleHQiOnsidmFsdWUiOiIuY2VZdFhiT04xWlVhQml6UiIsImxvYyI6eyJsaW5lIjoxLCJjb2x1bW4iOjE4fXXsInZhcmlhYmxlcyI6e319LHsidHlwZSI6IlN0eWxlUnVsZSIsInN0eWxlIjpbeyJuYW1lIjoiYmFja2dyb3VuZC1jb2xvciIsInZhbHVlIjoiYmxhYXsiLCJrZXlMb2MiOnsibGluZSI6MTEsImNvbHVtbiI6MTl9LCJ2YWxMb2MiOnsibGluZSI6MTEsImNvbHVtbiI6Mjd9fVXsInNlbGVjdG9yVGV4dCI6eyJ2YWx1ZSI6Ii5uby1jaGFuZ2UiLCJsb2MiOnsibGluZSI6MTAsImNvbHVtbiI6MTF9fSwidmFyaWFibGVzIjp7fX1dfSwiY3NzU291cmNlIjp7IjAiOiIvY3NzSWQvMC5jc3MifSwiY29udGVudE1hcCI6e319LCJsZXB1c0NvZGUiOnsibGVwdXNDaHVuayI6e319LCJtYW5pZmVzdCI6eXsImN1c3RvbVNlY3Rpb25zIjp7fX0=","deps":{"0":[]}}
+{
+  "content": {
+    "compilerOptions": {
+      "enableFiberArch": true,
+      "useLepusNG": true,
+      "enableReuseContext": true,
+      "bundleModuleMode": "ReturnByFunction",
+      "debugInfoOutside": true,
+      "defaultDisplayLinear": true,
+      "enableCSSInvalidation": false,
+      "enableCSSSelector": true,
+      "enableLepusDebug": true,
+      "enableRemoveCSSScope": false,
+      "targetSdkVersion": "3.2",
+      "defaultOverflowVisible": true
+    },
+    "sourceContent": {
+      "dsl": "react_nodiff",
+      "appType": "card",
+      "config": {
+        "lepusStrict": true,
+        "useNewSwiper": true,
+        "enableNewIntersectionObserver": true,
+        "enableNativeList": true,
+        "syncXElementRegistry": true,
+        "enableA11y": true,
+        "enableAccessibilityElement": false,
+        "enableCSSInheritance": false,
+        "enableNewGesture": false,
+        "removeDescendantSelectorScope": false,
+        "debugMetadataUrl": ""
+      }
+    },
+    "css": {
+      "cssMap": {
+        "0": [
+          {
+            "type": "StyleRule",
+            "style": [
+              {
+                "name": "color",
+                "value": "\"blue\"",
+                "keyLoc": {
+                  "line": 2,
+                  "column": 8
+                },
+                "valLoc": {
+                  "line": 2,
+                  "column": 17
+                }
+              }
+            ],
+            "selectorText": {
+              "value": ".ceYtXbON1ZUaBizR",
+              "loc": {
+                "line": 1,
+                "column": 18
+              }
+            },
+            "variables": {}
+          },
+          {
+            "type": "StyleRule",
+            "style": [
+              {
+                "name": "background-color",
+                "value": "black",
+                "keyLoc": {
+                  "line": 11,
+                  "column": 19
+                },
+                "valLoc": {
+                  "line": 11,
+                  "column": 27
+                }
+              }
+            ],
+            "selectorText": {
+              "value": ".no-change",
+              "loc": {
+                "line": 10,
+                "column": 11
+              }
+            },
+            "variables": {}
+          }
+        ]
+      },
+      "cssSource": {
+        "0": "/cssId/0.css"
+      },
+      "contentMap": {}
+    },
+    "lepusCode": {
+      "lepusChunk": {}
+    },
+    "manifest": {},
+    "customSections": {}
+  },
+  "deps": {
+    "0": []
+  }
+}
 ```
 
 
@@ -22,7 +124,13 @@
 ### main.LAST_HASH.hot-update.json
 
 ```json
-{"c":["main"],"r":[],"m":[]}
+{
+  "c": [
+    "main"
+  ],
+  "r": [],
+  "m": []
+}
 ```
 
 

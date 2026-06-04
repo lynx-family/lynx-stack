@@ -65,6 +65,16 @@ export function createGenUIGuideReadmeDocs(options: {
     replacements: A2UI_ZH_LINK_REPLACEMENTS,
     sourceFile: path.join(a2uiPackageRoot, 'docs/catalog-guide_zh.md'),
   });
+  syncDoc({
+    outFile: path.join(enGuideRoot, 'a2ui/system-prompts.md'),
+    replacements: A2UI_EN_LINK_REPLACEMENTS,
+    sourceFile: path.join(a2uiPackageRoot, 'docs/system-prompts.md'),
+  });
+  syncDoc({
+    outFile: path.join(zhGuideRoot, 'a2ui/system-prompts.md'),
+    replacements: A2UI_ZH_LINK_REPLACEMENTS,
+    sourceFile: path.join(a2uiPackageRoot, 'docs/system-prompts_zh.md'),
+  });
 
   removeGeneratedDoc(
     path.join(
@@ -115,6 +125,10 @@ export const A2UI_EN_NAV_ITEMS = [
     link: '/guide/genui/a2ui/catalog-guide',
   },
   {
+    text: 'System Prompts',
+    link: '/guide/genui/a2ui/system-prompts',
+  },
+  {
     text: 'Playground',
     link: '/a2ui',
   },
@@ -132,6 +146,10 @@ export const A2UI_ZH_NAV_ITEMS = [
   {
     text: 'Catalogs 与组件',
     link: '/zh/guide/genui/a2ui/catalog-guide',
+  },
+  {
+    text: 'System Prompts',
+    link: '/zh/guide/genui/a2ui/system-prompts',
   },
   {
     text: 'Playground',
@@ -152,8 +170,10 @@ const A2UI_ZH_SIDEBAR_ITEMS = A2UI_ZH_NAV_ITEMS.map(item => ({
 const A2UI_EN_LINK_REPLACEMENTS = [
   ['./docs/overview.md', '/guide/genui/a2ui/overview'],
   ['./docs/catalog-guide.md', '/guide/genui/a2ui/catalog-guide'],
+  ['./docs/system-prompts.md', '/guide/genui/a2ui/system-prompts'],
   ['./overview.md', '/guide/genui/a2ui/overview'],
   ['./catalog-guide.md', '/guide/genui/a2ui/catalog-guide'],
+  ['./system-prompts.md', '/guide/genui/a2ui/system-prompts'],
   [
     '../../a2ui-catalog-extractor/README.md',
     'https://github.com/lynx-family/lynx-stack/tree/main/packages/genui/a2ui-catalog-extractor#readme',
@@ -164,8 +184,10 @@ const A2UI_EN_LINK_REPLACEMENTS = [
 const A2UI_ZH_LINK_REPLACEMENTS = [
   ['./docs/overview_zh.md', '/zh/guide/genui/a2ui/overview'],
   ['./docs/catalog-guide_zh.md', '/zh/guide/genui/a2ui/catalog-guide'],
+  ['./docs/system-prompts_zh.md', '/zh/guide/genui/a2ui/system-prompts'],
   ['./overview_zh.md', '/zh/guide/genui/a2ui/overview'],
   ['./catalog-guide_zh.md', '/zh/guide/genui/a2ui/catalog-guide'],
+  ['./system-prompts_zh.md', '/zh/guide/genui/a2ui/system-prompts'],
   [
     '../../a2ui-catalog-extractor/readme.zh_cn.md',
     'https://github.com/lynx-family/lynx-stack/blob/main/packages/genui/a2ui-catalog-extractor/readme.zh_cn.md',

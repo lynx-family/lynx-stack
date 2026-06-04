@@ -24,7 +24,9 @@
       ]
     },
     "build:api": {
-      "dependsOn": [],
+      "dependsOn": [
+        "build"
+      ],
       "inputs": [
         "src/**",
         "../server/agent/a2ui-catalog.ts",

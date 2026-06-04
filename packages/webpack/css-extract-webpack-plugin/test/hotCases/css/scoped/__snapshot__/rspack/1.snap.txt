@@ -5,7 +5,7 @@
 
 ## Asset Files
 - Bundle: rspack-bundle.js
-- Manifest: main.LAST_HASH.css.hot-update.json, size: 1570
+- Manifest: main.LAST_HASH.css.hot-update.json, size: 1606
 - Manifest: main.LAST_HASH.hot-update.json, size: 28
 - Update: main.LAST_HASH.hot-update.js, size: 1098
 
@@ -14,7 +14,101 @@
 ### main.LAST_HASH.css.hot-update.json
 
 ```json
-{"content":"eyJjb21waWxlck9wdGlvbnMiOnsiZW5hYmxlRmliZXJBcmNoIjp0cnVlLCJ1c2VMZXB1c05HIjp0cnVlLCJlbmFibGVSZXVzZUNvbnRleHQiOnRydWUsImJ1bmRsZU1vZHVsZU1vZGUiOiJSZXR1cm5CeUZ1bmN0aW9uIiwiZGVidWdJbmZvT3V0c2lkZSI6dHJ1ZSwiZGVmYXVsdERpc3BsYXlMaW5lYXIiOnRydWUsImVuYWJsZUNTU0ludmFsaWRhdGlvbiI6ZmFsc2UsImVuYWJsZUNTU1NlbGVjdG9yIjp0cnVlLCJlbmFibGVMZXB1c0RlYnVnIjp0cnVlLCJlbmFibGVSZW1vdmVDU1NTY29wZSI6ZmFsc2UsInRhcmdldFNka1ZlcnNpb24iOiIzLjIiLCJkZWZhdWx0T3ZlcmZsb3dWaXNpYmxlIjp0cnVlfSwic291cmNlQ29udGVudCI6eyJkc2wiOiJyZWFjdF9ub2RpZmYiLCJhcHBUeXBlIjoiY2FyZCIsImNvbmZpZyI6eyJsZXB1c1N0cmljdCI6dHJ1ZSwidXNlTmV3U3dpcGVyIjp0cnVlLCJlbmFibGVOZXdJbnRlcnNlY3Rpb25PYnNlcnZlciI6dHJ1ZSwiZW5hYmxlTmF0aXZlTGlzdCI6dHJ1ZSwiZW5hYmxlQTExeSI6dHJ1ZSwiZW5hYmxlQWNjZXNzaWJpbGl0eUVsZW1lbnQiOmZhbHNlLCJlbmFibGVDU1NJbmhlcml0YW5jZSI6ZmFsc2UsImVuYWJsZU5ld0dlc3R1cmUiOmZhbHNlLCJyZW1vdmVEZXNjZW5kYW50U2VsZWN0b3JTY29wZSI6ZmFsc2UsImRlYnVnTWV0YWRhdGFVcmwiOiIifXXsImNzcyI6eyJjc3NNYXAiOnsiMSI6WXsidHlwZSI6IlN0eWxlUnVsZSIsInN0eWxlIjpbeyJuYW1lIjoiYXsb3IiLCJ2YWx1ZSI6IlwiYmx1ZVwiIiwia2V5TG9jIjp7ImxpbmUiOjMsImNvbHVtbiI6OHXsInZhbExvYyI6eyJsaW5lIjozLCJjb2x1bW4iOjE3fX1dLCJzZWxlY3RvclRleHQiOnsidmFsdWUiOiIuZm9vIiwibG9jIjp7ImxpbmUiOjIsImNvbHVtbiI6NX19LCJ2YXJpYWJsZXMiOnt9fVXsIjEwMCI6WXsidHlwZSI6IkltcG9ydFJ1bGUiLCJvcmlnaW4iOiIwIiwiaHJlZiI6IjAifSx7InR5cGUiOiJJbXBvcnRSdWxlIiwib3JpZ2luIjoiMSIsImhyZWYiOiIxIn1dfSwiY3NzU291cmNlIjp7IjEiOiIvY3NzSWQvMS5jc3MiLCIxMDAiOiIvY3NzSWQvMTAwLmNzcyJ9LCJjb250ZW50TWFwIjp7fXXsImxlcHVzQ29kZSI6eyJsZXB1c0NodW5rIjp7fXXsIm1hbmlmZXN0Ijp7fSwiY3VzdG9tU2VjdGlvbnMiOnt9fQ==","deps":{"1":[],"100":["0","1"]}}
+{
+  "content": {
+    "compilerOptions": {
+      "enableFiberArch": true,
+      "useLepusNG": true,
+      "enableReuseContext": true,
+      "bundleModuleMode": "ReturnByFunction",
+      "debugInfoOutside": true,
+      "defaultDisplayLinear": true,
+      "enableCSSInvalidation": false,
+      "enableCSSSelector": true,
+      "enableLepusDebug": true,
+      "enableRemoveCSSScope": false,
+      "targetSdkVersion": "3.2",
+      "defaultOverflowVisible": true
+    },
+    "sourceContent": {
+      "dsl": "react_nodiff",
+      "appType": "card",
+      "config": {
+        "lepusStrict": true,
+        "useNewSwiper": true,
+        "enableNewIntersectionObserver": true,
+        "enableNativeList": true,
+        "syncXElementRegistry": true,
+        "enableA11y": true,
+        "enableAccessibilityElement": false,
+        "enableCSSInheritance": false,
+        "enableNewGesture": false,
+        "removeDescendantSelectorScope": false,
+        "debugMetadataUrl": ""
+      }
+    },
+    "css": {
+      "cssMap": {
+        "1": [
+          {
+            "type": "StyleRule",
+            "style": [
+              {
+                "name": "color",
+                "value": "\"blue\"",
+                "keyLoc": {
+                  "line": 3,
+                  "column": 8
+                },
+                "valLoc": {
+                  "line": 3,
+                  "column": 17
+                }
+              }
+            ],
+            "selectorText": {
+              "value": ".foo",
+              "loc": {
+                "line": 2,
+                "column": 5
+              }
+            },
+            "variables": {}
+          }
+        ],
+        "100": [
+          {
+            "type": "ImportRule",
+            "origin": "0",
+            "href": "0"
+          },
+          {
+            "type": "ImportRule",
+            "origin": "1",
+            "href": "1"
+          }
+        ]
+      },
+      "cssSource": {
+        "1": "/cssId/1.css",
+        "100": "/cssId/100.css"
+      },
+      "contentMap": {}
+    },
+    "lepusCode": {
+      "lepusChunk": {}
+    },
+    "manifest": {},
+    "customSections": {}
+  },
+  "deps": {
+    "1": [],
+    "100": [
+      "0",
+      "1"
+    ]
+  }
+}
 ```
 
 
@@ -22,7 +116,13 @@
 ### main.LAST_HASH.hot-update.json
 
 ```json
-{"c":["main"],"r":[],"m":[]}
+{
+  "c": [
+    "main"
+  ],
+  "r": [],
+  "m": []
+}
 ```
 
 

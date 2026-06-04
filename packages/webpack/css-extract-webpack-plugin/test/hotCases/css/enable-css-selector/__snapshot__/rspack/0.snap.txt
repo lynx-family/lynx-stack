@@ -5,14 +5,91 @@
 
 ## Asset Files
 - Bundle: rspack-bundle.js
-- Manifest: main.css.hot-update.json, size: 1386
+- Manifest: main.css.hot-update.json, size: 1422
 
 ## Manifest
 
 ### main.css.hot-update.json
 
 ```json
-{"content":"eyJjb21waWxlck9wdGlvbnMiOnsiZW5hYmxlRmliZXJBcmNoIjp0cnVlLCJ1c2VMZXB1c05HIjp0cnVlLCJlbmFibGVSZXVzZUNvbnRleHQiOnRydWUsImJ1bmRsZU1vZHVsZU1vZGUiOiJSZXR1cm5CeUZ1bmN0aW9uIiwiZGVidWdJbmZvT3V0c2lkZSI6dHJ1ZSwiZGVmYXVsdERpc3BsYXlMaW5lYXIiOnRydWUsImVuYWJsZUNTU0ludmFsaWRhdGlvbiI6ZmFsc2UsImVuYWJsZUNTU1NlbGVjdG9yIjp0cnVlLCJlbmFibGVMZXB1c0RlYnVnIjp0cnVlLCJlbmFibGVSZW1vdmVDU1NTY29wZSI6dHJ1ZSwidGFyZ2V0U2RrVmVyc2lvbiI6IjMuMiIsImRlZmF1bHRPdmVyZmxvd1Zpc2libGUiOnRydWV9LCJzb3VyY2VDb250ZW50Ijp7ImRzbCI6InJlYWN0X25vZGlmZiIsImFwcFR5cGUiOiJjYXJkIiwiY29uZmlnIjp7ImxlcHVzU3RyaWN0Ijp0cnVlLCJ1c2VOZXdTd2lwZXIiOnRydWUsImVuYWJsZU5ld0ludGVyc2VjdGlvbk9ic2VydmVyIjp0cnVlLCJlbmFibGVOYXRpdmVMaXN0Ijp0cnVlLCJlbmFibGVBMTF5Ijp0cnVlLCJlbmFibGVBY2Nlc3NpYmlsaXR5RWxlbWVudCI6ZmFsc2UsImVuYWJsZUNTU0luaGVyaXRhbmNlIjpmYWxzZSwiZW5hYmxlTmV3R2VzdHVyZSI6ZmFsc2UsInJlbW92ZURlc2NlbmRhbnRTZWxlY3RvclNjb3BlIjpmYWxzZSwiZGVidWdNZXRhZGF0YVVybCI6IiJ9fSwiY3NzIjp7ImNzc01hcCI6eyIwIjpbeyJ0eXBlIjoiU3R5bGVSdWxlIiwic3R5bGUiOlt7Im5hbWUiOiJjb2xvciIsInZhbHVlIjoiXCJyZWRcIiIsImtleUxvYyI6eyJsaW5lIjo3LCJjb2x1bW4iOjh9LCJ2YWxMb2MiOnsibGluZSI6NywiYXsdW1uIjoxNn19XSwic2VsZWN0b3JUZXh0Ijp7InZhbHVlIjoiLmZvbyIsImxvYyI6eyJsaW5lIjo2LCJjb2x1bW4iOjV9fSwidmFyaWFibGVzIjp7fX1dfSwiY3NzU291cmNlIjp7IjAiOiIvY3NzSWQvMC5jc3MifSwiY29udGVudE1hcCI6e319LCJsZXB1c0NvZGUiOnsibGVwdXNDaHVuayI6e319LCJtYW5pZmVzdCI6eXsImN1c3RvbVNlY3Rpb25zIjp7fX0=","deps":{"0":[]}}
+{
+  "content": {
+    "compilerOptions": {
+      "enableFiberArch": true,
+      "useLepusNG": true,
+      "enableReuseContext": true,
+      "bundleModuleMode": "ReturnByFunction",
+      "debugInfoOutside": true,
+      "defaultDisplayLinear": true,
+      "enableCSSInvalidation": false,
+      "enableCSSSelector": true,
+      "enableLepusDebug": true,
+      "enableRemoveCSSScope": true,
+      "targetSdkVersion": "3.2",
+      "defaultOverflowVisible": true
+    },
+    "sourceContent": {
+      "dsl": "react_nodiff",
+      "appType": "card",
+      "config": {
+        "lepusStrict": true,
+        "useNewSwiper": true,
+        "enableNewIntersectionObserver": true,
+        "enableNativeList": true,
+        "syncXElementRegistry": true,
+        "enableA11y": true,
+        "enableAccessibilityElement": false,
+        "enableCSSInheritance": false,
+        "enableNewGesture": false,
+        "removeDescendantSelectorScope": false,
+        "debugMetadataUrl": ""
+      }
+    },
+    "css": {
+      "cssMap": {
+        "0": [
+          {
+            "type": "StyleRule",
+            "style": [
+              {
+                "name": "color",
+                "value": "\"red\"",
+                "keyLoc": {
+                  "line": 7,
+                  "column": 8
+                },
+                "valLoc": {
+                  "line": 7,
+                  "column": 16
+                }
+              }
+            ],
+            "selectorText": {
+              "value": ".foo",
+              "loc": {
+                "line": 6,
+                "column": 5
+              }
+            },
+            "variables": {}
+          }
+        ]
+      },
+      "cssSource": {
+        "0": "/cssId/0.css"
+      },
+      "contentMap": {}
+    },
+    "lepusCode": {
+      "lepusChunk": {}
+    },
+    "manifest": {},
+    "customSections": {}
+  },
+  "deps": {
+    "0": []
+  }
+}
 ```
 
 

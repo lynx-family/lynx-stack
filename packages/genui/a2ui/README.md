@@ -86,12 +86,12 @@ generated UI actions through `onAction`.
 
 ## What You Own
 
-| Part                   | Owner            | Role                                                                                                                     |
-| ---------------------- | ---------------- | ------------------------------------------------------------------------------------------------------------------------ |
-| `@lynx-js/genui/a2ui`  | This package     | ReactLynx renderer, `MessageStore`, catalog APIs, built-in components, protocol helpers, and client function entries.    |
-| `genui a2ui`           | GenUI CLI        | Build-time commands for generating custom catalog artifacts and A2UI system prompts.                                     |
-| Your Agent service     | Your application | Receives user prompts/actions, calls a model with the A2UI prompt and catalog, validates output, and returns messages.   |
-| Your transport adapter | Your application | Calls the Agent service, handles REST or streaming responses, writes messages into `MessageStore`, and forwards actions. |
+| Part                      | Owner            | Role                                                                                                                     |
+| ------------------------- | ---------------- | ------------------------------------------------------------------------------------------------------------------------ |
+| `@lynx-js/genui/a2ui`     | This package     | ReactLynx renderer, `MessageStore`, catalog APIs, built-in components, protocol helpers, and client function entries.    |
+| `npx @lynx-js/genui a2ui` | GenUI CLI        | Build-time commands for generating custom catalog artifacts and A2UI system prompts.                                     |
+| Your Agent service        | Your application | Receives user prompts/actions, calls a model with the A2UI prompt and catalog, validates output, and returns messages.   |
+| Your transport adapter    | Your application | Calls the Agent service, handles REST or streaming responses, writes messages into `MessageStore`, and forwards actions. |
 
 ## First Things To Know
 
@@ -109,4 +109,5 @@ generated UI actions through `onAction`.
 
 - [Overview and architecture](./docs/overview.md)
 - [Catalogs, built-ins, and custom components](./docs/catalog-guide.md)
+- [System prompts](./docs/system-prompts.md)
 - [Open the A2UI playground](https://lynxjs.org/a2ui)

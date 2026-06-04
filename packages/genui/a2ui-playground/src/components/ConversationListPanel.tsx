@@ -4,7 +4,7 @@
 import { useRef, useState } from 'react';
 
 import { Button } from './Button.js';
-import { MessageSquarePlus, Pencil, Trash2 } from './Icon.js';
+import { MessageSquarePlus, Pencil, Share2, Trash2 } from './Icon.js';
 import type { ConversationMeta } from '../storage/types.js';
 
 interface ConversationListPanelProps {
@@ -14,6 +14,7 @@ interface ConversationListPanelProps {
   isPersistent: boolean;
   onCreate: () => void;
   onSwitch: (id: string) => void;
+  onShare: (id: string) => void;
   onRename: (id: string, title: string) => void;
   onRemove: (id: string) => void;
 }
@@ -35,6 +36,7 @@ export function ConversationListPanel(props: ConversationListPanelProps) {
     onCreate,
     onRemove,
     onRename,
+    onShare,
     onSwitch,
   } = props;
   const [editingId, setEditingId] = useState<string | null>(null);
@@ -142,6 +144,16 @@ export function ConversationListPanel(props: ConversationListPanelProps) {
                   </button>
                 )}
               <div className='conversationListItemActions'>
+                <Button
+                  variant='ghost'
+                  size='sm'
+                  iconOnly
+                  iconBefore={Share2}
+                  disabled={disabled || editing}
+                  title='Copy share link'
+                  aria-label='Share conversation'
+                  onClick={() => onShare(conversation.id)}
+                />
                 <Button
                   variant='ghost'
                   size='sm'

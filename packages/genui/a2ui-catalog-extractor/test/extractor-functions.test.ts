@@ -83,6 +83,15 @@ describe('extractCatalogFunctions', () => {
     expect(readFunctionJson(outDir, 'formatString')).toEqual(
       readExpectedFunctionJson('formatString'),
     );
+    const fullCatalog = readFullCatalogJson(outDir);
+    const fullCatalogFunctions = fullCatalog['functions'];
+    expect(Array.isArray(fullCatalogFunctions)).toBe(true);
+    const fullCatalogFunctionList = fullCatalogFunctions as unknown[];
+    expect([...fullCatalogFunctionList].sort(compareByName)).toEqual([
+      readExpectedFunctionJson('formatString')['formatString'],
+      readExpectedFunctionJson('required')['required'],
+    ]);
+    expect(JSON.stringify(fullCatalog)).not.toContain('filePath');
   });
 
   test('rejects async return types', async () => {
@@ -118,4 +127,21 @@ function readFunctionJson(
       'utf8',
     ),
   ) as Record<string, unknown>;
+}
+
+function readFullCatalogJson(rootDir: string): Record<string, unknown> {
+  return JSON.parse(
+    fs.readFileSync(path.join(rootDir, 'catalog.json'), 'utf8'),
+  ) as Record<string, unknown>;
+}
+
+function compareByName(a: unknown, b: unknown): number {
+  return getName(a).localeCompare(getName(b));
+}
+
+function getName(value: unknown): string {
+  return typeof value === 'object' && value !== null && 'name' in value
+      && typeof value.name === 'string'
+    ? value.name
+    : '';
 }

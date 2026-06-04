@@ -33,12 +33,13 @@ export function pluginSwc(): RsbuildPlugin {
                 )
               }
 
-              // Merge any user `env.include` on top of Rspeedy's baseline.
-              // `targets` stays owned by Rspeedy; other `env` fields from the
-              // bundler default (e.g. `mode`) are dropped, as before.
               config.env = {
+                ...config.env,
                 targets: ES_ENV_TARGETS,
                 include: [
+                  // Lower `let`/`const` to `var`; QuickJS parses `var` faster.
+                  // Listing it in `env.exclude` opts out (exclude > include).
+                  'transform-block-scoping',
                   ...getESVersionEnvInclude(getESVersionTarget(isProd)),
                   ...(config.env?.include ?? []),
                 ],

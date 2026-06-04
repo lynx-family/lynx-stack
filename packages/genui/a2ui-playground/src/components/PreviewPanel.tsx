@@ -10,7 +10,11 @@ import {
   useRef,
   useState,
 } from 'react';
-import type { CSSProperties, ReactNode } from 'react';
+import type {
+  CSSProperties,
+  ReactNode,
+  PointerEvent as ReactPointerEvent,
+} from 'react';
 import { Drawer } from 'vaul';
 
 import { Button } from './Button.js';
@@ -19,6 +23,7 @@ import { Maximize2, Minimize2, Smartphone } from './Icon.js';
 import { PreviewSimulationBar } from './PreviewSimulationBar.js';
 import { QrCode } from './QrCode.js';
 import { componentsByMessage } from '../demos.js';
+import { useMediaQuery } from '../hooks/useMediaQuery.js';
 import { copyToClipboard } from '../utils/clipboard.js';
 import { DEFAULT_A2UI_DEMO_URL } from '../utils/demoUrl.js';
 import type { Protocol } from '../utils/protocol.js';
@@ -281,6 +286,25 @@ function formatMetricValue(value: number | undefined): string {
   return typeof value === 'number' ? `${Math.round(value)}ms` : '...';
 }
 
+// Vertical split between the phone preview body (top, flex:1) and the
+// extras pane (bottom, COMPONENTS + QR cards). The pane has an explicit
+// height that the user can drag; the body absorbs whatever is left.
+const EXTRAS_HEIGHT_DEFAULT = 280;
+const EXTRAS_HEIGHT_MIN = 80;
+const EXTRAS_BODY_MIN = 200;
+const EXTRAS_HEIGHT_STORAGE_KEY = 'a2ui-playground:preview-extras-height';
+
+function readStoredExtrasHeight(): number {
+  if (typeof window === 'undefined') return EXTRAS_HEIGHT_DEFAULT;
+  const raw = window.localStorage.getItem(EXTRAS_HEIGHT_STORAGE_KEY);
+  const parsed = raw ? Number.parseInt(raw, 10) : Number.NaN;
+  return Number.isFinite(parsed) ? parsed : EXTRAS_HEIGHT_DEFAULT;
+}
+
+function clamp(value: number, min: number, max: number): number {
+  return Math.min(Math.max(value, min), Math.max(min, max));
+}
+
 export function PreviewPanel(props: PreviewPanelProps) {
   const {
     afterBody,
@@ -303,6 +327,17 @@ export function PreviewPanel(props: PreviewPanelProps) {
   const [mode, setMode] = useState<PreviewMode>('phone');
   const [isFullscreen, setIsFullscreen] = useState(false);
   const [shareOpen, setShareOpen] = useState(false);
+  // Mobile threshold matches the rest of the app (MobileTabBar, .brand hide,
+  // compact padding). Above this the panel has room to render extras inline;
+  // below it the Vaul bottom sheet takes over for a one-handed UX.
+  const isCompactViewport = useMediaQuery('(max-width: 720px)');
+  const panelRef = useRef<HTMLDivElement>(null);
+  const [extrasHeight, setExtrasHeight] = useState<number>(
+    readStoredExtrasHeight,
+  );
+  const extrasHeightRef = useRef(extrasHeight);
+  extrasHeightRef.current = extrasHeight;
+  const [isResizingExtras, setIsResizingExtras] = useState(false);
   const [internalSpeed, setInternalSpeed] = useState(1);
   // If the parent supplies a speed, it owns it; otherwise we keep our own.
   const speed = speedProp ?? internalSpeed;
@@ -336,6 +371,66 @@ export function PreviewPanel(props: PreviewPanelProps) {
     setMetricFrameSrc(src);
     setPreviewMetrics({});
   }, []);
+
+  // Vertical drag on the resizer above the extras pane. Reads the current
+  // height from a ref so the handler stays stable across renders, then
+  // persists the final value once the user releases.
+  const handleExtrasResizeStart = useCallback(
+    (event: ReactPointerEvent<HTMLDivElement>) => {
+      if (!panelRef.current) return;
+      event.preventDefault();
+
+      const startY = event.clientY;
+      const startHeight = extrasHeightRef.current;
+      const panelHeight = panelRef.current.getBoundingClientRect().height;
+      // Cap to the smaller of (room left for the body) and (natural content
+      // height + a little breathing room). Without the content cap the user
+      // can drag into wasted empty space below the QR cards.
+      const extrasEl = panelRef.current.querySelector<HTMLDivElement>(
+        '.previewPanelExtras',
+      );
+      const contentNatural = extrasEl
+        ? extrasEl.scrollHeight + 12
+        : Number.POSITIVE_INFINITY;
+      const maxHeight = Math.max(
+        EXTRAS_HEIGHT_MIN,
+        Math.min(panelHeight - EXTRAS_BODY_MIN, contentNatural),
+      );
+
+      setIsResizingExtras(true);
+      document.body.dataset.panelResize = 'vertical';
+
+      const handleMove = (moveEvent: PointerEvent) => {
+        const next = clamp(
+          startHeight - (moveEvent.clientY - startY),
+          EXTRAS_HEIGHT_MIN,
+          maxHeight,
+        );
+        setExtrasHeight(next);
+      };
+
+      const handleEnd = () => {
+        setIsResizingExtras(false);
+        delete document.body.dataset.panelResize;
+        window.removeEventListener('pointermove', handleMove);
+        window.removeEventListener('pointerup', handleEnd);
+        window.removeEventListener('pointercancel', handleEnd);
+        try {
+          window.localStorage.setItem(
+            EXTRAS_HEIGHT_STORAGE_KEY,
+            String(extrasHeightRef.current),
+          );
+        } catch {
+          // ignore quota / disabled storage
+        }
+      };
+
+      window.addEventListener('pointermove', handleMove);
+      window.addEventListener('pointerup', handleEnd);
+      window.addEventListener('pointercancel', handleEnd);
+    },
+    [],
+  );
 
   const rspeedyDevUrl = useRspeedyDevUrl();
   const baseUrl = useMemo(() => window.location.href.replace(/#.*$/, ''), []);
@@ -1006,46 +1101,41 @@ export function PreviewPanel(props: PreviewPanelProps) {
     );
   };
 
-  // Rendered both inline (when the panel is wide enough) and inside the
-  // bottom sheet (when the panel is narrow). The function closes over all
-  // local state so both instances stay in sync without prop plumbing.
-  const renderExtras = () => (
-    <>
-      {previewSource?.kind === 'a2ui'
-        ? (
-          <div className='liveComponentStack' aria-live='polite'>
-            <span className='liveComponentLabel'>Components</span>
-            {liveComponents.length > 0
-              ? (
-                <div className='liveComponentTags'>
-                  {liveComponents.map((name) => (
-                    <span key={name} className='liveComponentTag'>
-                      {name}
-                    </span>
-                  ))}
-                </div>
-              )
-              : (
-                <span className='liveComponentEmpty'>
-                  Waiting for streamed components
+  // Computed once and reused in both the inline pane and the bottom sheet —
+  // only one is mounted at a time (decided by `isCompactViewport`), so React
+  // never instantiates QrCode twice or replays the tag-appear animation.
+  const liveComponentsBlock = previewSource?.kind === 'a2ui'
+    ? (
+      <div className='liveComponentStack' aria-live='polite'>
+        <span className='liveComponentLabel'>Components</span>
+        {liveComponents.length > 0
+          ? (
+            <div className='liveComponentTags'>
+              {liveComponents.map((name) => (
+                <span key={name} className='liveComponentTag'>
+                  {name}
                 </span>
-              )}
-          </div>
-        )
-        : null}
-      {renderPreviewQrExtras()}
-    </>
-  );
-  const hasExtras = previewSource?.kind === 'a2ui'
-    || !!previewQrPlaceholder
-    || previewQrCards.length > 0
-    || !!previewInfoHint;
+              ))}
+            </div>
+          )
+          : (
+            <span className='liveComponentEmpty'>
+              Waiting for streamed components
+            </span>
+          )}
+      </div>
+    )
+    : null;
+  const qrSectionBlock = renderPreviewQrExtras();
+  const hasQrSection = !!qrSectionBlock;
+  const hasExtras = !!liveComponentsBlock || hasQrSection || !!previewInfoHint;
 
   return (
     <PreviewPanelPreviewModeContext.Provider value={{ mode, setMode }}>
       <PreviewPanelMetricsContext.Provider value={metricsContext}>
         <PreviewPanelRenderContext.Provider value={renderContext}>
           <div
+            ref={panelRef}
             className={className
               ? `${className}${isFullscreen ? ' previewPanelFullscreen' : ''}`
               : (isFullscreen
@@ -1061,7 +1151,7 @@ export function PreviewPanel(props: PreviewPanelProps) {
               {showPreviewModeSwitch
                 ? <PreviewModeSwitch mode={mode} onChange={setMode} />
                 : null}
-              {hasExtras
+              {hasExtras && isCompactViewport
                 ? (
                   <Button
                     variant='ghost'
@@ -1111,8 +1201,42 @@ export function PreviewPanel(props: PreviewPanelProps) {
               )
               : null}
             <div className={bodyClass}>{children}</div>
-            <div className='previewPanelExtras'>{renderExtras()}</div>
-            {hasExtras
+            {
+              /* Inline (desktop) and bottom sheet (mobile) render the same
+                live-components + QR blocks, but only one path is mounted at
+                a time so QrCode's async toDataURL runs once and tag-appear
+                doesn't replay. Inline gets a draggable resizer above the
+                pane; the drawer scrolls naturally on mobile. */
+            }
+            {hasExtras && !isCompactViewport
+              ? (
+                <>
+                  {hasQrSection
+                    ? (
+                      <div
+                        className={isResizingExtras
+                          ? 'previewPanelExtrasResizer active'
+                          : 'previewPanelExtrasResizer'}
+                        role='separator'
+                        aria-orientation='horizontal'
+                        aria-label='Resize preview and QR panes'
+                        onPointerDown={handleExtrasResizeStart}
+                      />
+                    )
+                    : null}
+                  <div
+                    className='previewPanelExtras'
+                    style={hasQrSection
+                      ? { height: `${extrasHeight}px` }
+                      : undefined}
+                  >
+                    {liveComponentsBlock}
+                    {qrSectionBlock}
+                  </div>
+                </>
+              )
+              : null}
+            {hasExtras && isCompactViewport
               ? (
                 <Drawer.Root
                   open={shareOpen}
@@ -1128,7 +1252,10 @@ export function PreviewPanel(props: PreviewPanelProps) {
                       <Drawer.Description className='previewShareDescription'>
                         Components rendered and links to share this preview.
                       </Drawer.Description>
-                      <div className='previewShareBody'>{renderExtras()}</div>
+                      <div className='previewShareBody'>
+                        {liveComponentsBlock}
+                        {qrSectionBlock}
+                      </div>
                     </Drawer.Content>
                   </Drawer.Portal>
                 </Drawer.Root>

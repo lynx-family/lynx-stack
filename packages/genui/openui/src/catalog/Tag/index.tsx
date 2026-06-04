@@ -3,7 +3,7 @@
 // LICENSE file in the root directory of this source tree.
 import { z } from 'zod/v4';
 
-import { defineComponent } from '../../core/library.js';
+import { defineComponent } from '../../core/library.jsx';
 
 export const Tag = defineComponent({
   name: 'Tag',
