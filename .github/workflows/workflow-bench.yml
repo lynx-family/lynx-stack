@@ -42,10 +42,18 @@ jobs:
           package-manager-cache: false
       - uses: astral-sh/setup-uv@d0cc045d04ccac9d8b7881df0226f9e82c39688e # v6
       - name: Setup Rust
-        uses: ./.github/actions/rustup
-        with:
-          key: bench
-          save-if: ${{ github.ref_name == 'main' }}
+        shell: bash
+        run: |
+          # The physical-exclusive runner doesn't propagate $HOME between
+          # steps, so the reusable ./.github/actions/rustup action writes
+          # an empty cargo bin path into $GITHUB_PATH. Install rustup
+          # inline with an explicit HOME and pin /root/.cargo/bin on PATH.
+          export HOME=/root
+          if ! command -v cargo > /dev/null 2>&1; then
+            curl --proto '=https' --tlsv1.2 --retry 10 --retry-connrefused -fsSL https://sh.rustup.rs \
+              | sh -s -- --default-toolchain stable --profile minimal -y
+          fi
+          echo "/root/.cargo/bin" >> "$GITHUB_PATH"
       - name: TurboCache
         uses: lynx-infra/cache@5c6160a6a4c7fca80a2f3057bb9dfc9513fcb732
         with:
@@ -67,10 +75,12 @@ jobs:
           curl -fsSL https://github.com/CodSpeedHQ/codspeed/releases/download/v4.10.6/codspeed-runner-installer.sh | bash -s -- --quiet
       - name: Run benchmark (simulation)
         run: |
+          export HOME=/root
           . "$HOME/.cargo/env"
           codspeed run --mode simulation -- pnpm -r run --workspace-concurrency=1 bench
       - name: Run benchmark (walltime)
         run: |
+          export HOME=/root
           . "$HOME/.cargo/env"
           codspeed run --mode walltime -- pnpm -r run --workspace-concurrency=1 bench
       - name: React benchmark - Run perfetto
