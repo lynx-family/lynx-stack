@@ -53,7 +53,7 @@ const acquireLock = async () => {
           staleHolder = true;
         }
       } catch {
-        // Empty or unparseable — assume the holder is mid-write and wait.
+        // Empty or unparsable — assume the holder is mid-write and wait.
       }
       if (staleHolder) {
         await rm(lockPath, { force: true });
