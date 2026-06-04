@@ -2,15 +2,24 @@
 
 import { add } from './lib-common.js';
 
+// Captured at module-eval time: `onLoaded` clears `setupList` (and `cachedActions`)
+// once startup settles to release the closures over `tt`/`globalThis`, so the
+// registered setups can only be observed before load completes.
+const setupNames = __webpack_require__['lynx_ce']['setupList'].map(
+  (item) => item.name,
+);
+
 it('should append new setup list item', () => {
   expect(add(1, 2)).toBe(3);
   expect(__webpack_require__['lynx_ce']).toBeTruthy();
-  expect(__webpack_require__['lynx_ce']['setupList'].length).toBe(4);
-  expect(
-    __webpack_require__['lynx_ce']['setupList'].map((item) => item.name),
-  ).toEqual(['ttMethod', 'performanceEvent', 'globalThis', 'customCacheEvent']);
+  expect(setupNames).toEqual([
+    'ttMethod',
+    'performanceEvent',
+    'globalThis',
+    'customCacheEvent',
+  ]);
   expect(__webpack_require__['lynx_ce']['loaded']).toBe(true);
-  expect(__webpack_require__['lynx_ce']['cachedActions'].length).toBe(
-    0,
-  );
+  // Released on load to avoid retaining mock closures (memory-leak fix).
+  expect(__webpack_require__['lynx_ce']['setupList'].length).toBe(0);
+  expect(__webpack_require__['lynx_ce']['cachedActions'].length).toBe(0);
 });

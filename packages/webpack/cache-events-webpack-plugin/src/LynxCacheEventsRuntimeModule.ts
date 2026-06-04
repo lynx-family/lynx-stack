@@ -34,7 +34,9 @@ const onLoaded = () => {
     for (const cleanup of cleanupList) {
       cleanup()
     }
+    cleanupList.length = 0;
     ${LynxRuntimeGlobals.lynxCacheEvents}.cachedActions = [];
+    ${LynxRuntimeGlobals.lynxCacheEventsSetupList} = [];
   }
 var next = ${RuntimeGlobals.startup};
 ${RuntimeGlobals.startup} = () => {

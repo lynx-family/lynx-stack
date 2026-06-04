@@ -83,6 +83,12 @@ ${LynxRuntimeGlobals.lynxCacheEventsSetupList} = ${
               tt[action.data.type](...action.data.args);
             }
           });
+          // uninstall mocks so the closures over tt can be released
+          methodsToMock.forEach(methodName => {
+            if (tt[methodName] === methodsToMockFn[methodName]) {
+              tt[methodName] = methodsToOldFn[methodName];
+            }
+          });
         }
       },
     }`,
@@ -167,6 +173,12 @@ ${LynxRuntimeGlobals.lynxCacheEventsSetupList} = ${
           ${LynxRuntimeGlobals.lynxCacheEvents}.cachedActions.forEach(action => {
             if (action.type === 'globalThisMethod') {
               g[action.data.type](...action.data.args);
+            }
+          });
+          // uninstall mocks so the closures over globalThis can be released
+          methodsToMock.forEach(methodName => {
+            if (g[methodName] === methodsToMockFn[methodName]) {
+              g[methodName] = methodsToOldFn[methodName];
             }
           });
         }
