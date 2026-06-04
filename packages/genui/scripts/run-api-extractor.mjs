@@ -3,7 +3,7 @@
 // LICENSE file in the root directory of this source tree.
 import { spawnSync } from 'node:child_process';
 import { existsSync } from 'node:fs';
-import { open, readFile, rm } from 'node:fs/promises';
+import { link, readFile, rm, writeFile } from 'node:fs/promises';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
@@ -25,45 +25,57 @@ const isProcessAlive = (pid) => {
 };
 
 const acquireLock = async () => {
-  const start = Date.now();
+  // Stage the fully-written lock in a per-process temp file, then publish it
+  // with `link()`: linking is atomic and fails with `EEXIST` when the lock
+  // already exists, so the lock file always has complete contents the moment
+  // it appears. There is no empty/partial window for another process to
+  // observe, which means an unparsable lock can only be a corrupt file.
+  const tmpPath = `${lockPath}.${process.pid}`;
+  await writeFile(
+    tmpPath,
+    JSON.stringify({
+      cwd: process.cwd(),
+      pid: process.pid,
+      startedAt: new Date().toISOString(),
+    }),
+  );
 
-  while (Date.now() - start < lockTimeoutMs) {
-    try {
-      const file = await open(lockPath, 'wx');
-      await file.writeFile(JSON.stringify({
-        cwd: process.cwd(),
-        pid: process.pid,
-        startedAt: new Date().toISOString(),
-      }));
-      await file.close();
-      return;
-    } catch (error) {
-      if (error?.code !== 'EEXIST') {
-        throw error;
-      }
+  try {
+    const start = Date.now();
 
-      // The holder is between `open(wx)` and `writeFile`, so the lock file
-      // briefly exists with empty contents. We must never delete it on a
-      // read/parse failure — that lets the holder and us both "acquire" the
-      // lock. Only clear when we can prove the holder is dead.
-      let staleHolder = false;
+    while (Date.now() - start < lockTimeoutMs) {
       try {
-        const current = JSON.parse(await readFile(lockPath, 'utf8'));
-        if (typeof current.pid === 'number' && !isProcessAlive(current.pid)) {
+        await link(tmpPath, lockPath);
+        return;
+      } catch (error) {
+        if (error?.code !== 'EEXIST') {
+          throw error;
+        }
+
+        // Someone else holds the lock. Reap it only when we can prove the
+        // holder is gone: a dead pid, or a corrupt (unparsable) lock that no
+        // healthy holder could have produced.
+        let staleHolder = false;
+        try {
+          const current = JSON.parse(await readFile(lockPath, 'utf8'));
+          if (typeof current.pid === 'number' && !isProcessAlive(current.pid)) {
+            staleHolder = true;
+          }
+        } catch {
           staleHolder = true;
         }
-      } catch {
-        // Empty or unparsable — assume the holder is mid-write and wait.
+        if (staleHolder) {
+          await rm(lockPath, { force: true });
+          continue;
+        }
+        await sleep(retryDelayMs);
       }
-      if (staleHolder) {
-        await rm(lockPath, { force: true });
-        continue;
-      }
-      await sleep(retryDelayMs);
     }
-  }
 
-  throw new Error(`Timed out waiting for ${lockPath}`);
+    throw new Error(`Timed out waiting for ${lockPath}`);
+  } finally {
+    await rm(tmpPath, { force: true });
+  }
 };
 
 const run = (command, args) => {
