@@ -89,6 +89,7 @@ function parseHash(hash: string): Route {
 }
 
 type Theme = 'light' | 'dark';
+const THEME_STORAGE_KEY = 'a2ui-playground-theme';
 
 function getSystemTheme(): Theme {
   try {
@@ -100,11 +101,24 @@ function getSystemTheme(): Theme {
   }
 }
 
+function getInitialTheme(): Theme {
+  try {
+    const storedTheme = window.localStorage.getItem(THEME_STORAGE_KEY);
+    if (storedTheme === 'light' || storedTheme === 'dark') {
+      return storedTheme;
+    }
+  } catch {
+    // Ignore localStorage errors and fall back to the system theme.
+  }
+
+  return getSystemTheme();
+}
+
 export function App() {
   const [route, setRoute] = useState<Route>(() =>
     parseHash(window.location.hash)
   );
-  const [theme, setTheme] = useState<Theme>(getSystemTheme);
+  const [theme, setTheme] = useState<Theme>(getInitialTheme);
 
   const protocol = route.protocol;
   const tabs = protocol.name === 'openui' ? OPENUI_TABS : A2UI_TABS;
@@ -112,6 +126,14 @@ export function App() {
   useLayoutEffect(() => {
     document.documentElement.setAttribute('data-theme', theme);
     document.documentElement.style.colorScheme = theme;
+  }, [theme]);
+
+  useEffect(() => {
+    try {
+      window.localStorage.setItem(THEME_STORAGE_KEY, theme);
+    } catch {
+      // Ignore localStorage errors.
+    }
   }, [theme]);
 
   useEffect(() => {

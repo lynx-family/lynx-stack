@@ -33,6 +33,13 @@
       "outputs": [
         "dist/**"
       ]
+    },
+    "api-extractor": {
+      "dependsOn": [
+        "//#build",
+        "build"
+      ],
+      "cache": false
     }
   }
 }

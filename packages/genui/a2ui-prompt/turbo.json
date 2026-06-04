@@ -23,22 +23,12 @@
         "dist/**"
       ]
     },
-    "build:api": {
-      "dependsOn": [],
-      "inputs": [
-        "src/**",
-        "../server/agent/a2ui-catalog.ts",
-        "../server/agent/a2ui-examples.ts",
-        "../server/agent/a2ui-prompt.ts",
-        "../server/agent/catalog/**/*.json",
-        "package.json",
-        "rslib.config.ts",
-        "tsconfig.build.json",
-        "tsconfig.json"
+    "api-extractor": {
+      "dependsOn": [
+        "//#build",
+        "build"
       ],
-      "outputs": [
-        "dist/**"
-      ]
+      "cache": false
     }
   }
 }

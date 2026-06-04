@@ -3,62 +3,13 @@
 // LICENSE file in the root directory of this source tree.
 import { spawnSync } from 'node:child_process';
 import { existsSync } from 'node:fs';
-import { open, readFile, rm } from 'node:fs/promises';
-import { dirname, join } from 'node:path';
-import { fileURLToPath } from 'node:url';
+import { readFile } from 'node:fs/promises';
+import { join } from 'node:path';
 
-const genuiRoot = dirname(dirname(fileURLToPath(import.meta.url)));
-const lockPath = join(genuiRoot, '.api-extractor.lock');
-const lockTimeoutMs = 10 * 60 * 1000;
 const entryPointTimeoutMs = 5 * 1000;
 const retryDelayMs = 500;
 
 const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
-
-const isProcessAlive = (pid) => {
-  try {
-    process.kill(pid, 0);
-    return true;
-  } catch {
-    return false;
-  }
-};
-
-const acquireLock = async () => {
-  const start = Date.now();
-
-  while (Date.now() - start < lockTimeoutMs) {
-    try {
-      const file = await open(lockPath, 'wx');
-      await file.writeFile(JSON.stringify({
-        cwd: process.cwd(),
-        pid: process.pid,
-        startedAt: new Date().toISOString(),
-      }));
-      await file.close();
-      return;
-    } catch (error) {
-      if (error?.code !== 'EEXIST') {
-        throw error;
-      }
-
-      try {
-        const current = JSON.parse(await readFile(lockPath, 'utf8'));
-        if (typeof current.pid === 'number' && !isProcessAlive(current.pid)) {
-          await rm(lockPath, { force: true });
-          continue;
-        }
-      } catch {
-        await rm(lockPath, { force: true });
-        continue;
-      }
-
-      await sleep(retryDelayMs);
-    }
-  }
-
-  throw new Error(`Timed out waiting for ${lockPath}`);
-};
 
 const run = (command, args) => {
   const result = spawnSync(command, args, {
@@ -127,14 +78,14 @@ const ensureMainEntryPoint = async () => {
   );
 };
 
-await acquireLock();
-
-try {
-  run('pnpm', ['run', 'build']);
-  await ensureMainEntryPoint();
-  run('api-extractor', ['run', '--verbose']);
-} finally {
-  if (existsSync(lockPath)) {
-    await rm(lockPath, { force: true });
-  }
-}
+// No lock is needed: turbo's task graph builds each package before its
+// `api-extractor` task (which depends on `build`) and before every consumer
+// build, so api-extractor only ever reads a finished `dist/`. Do NOT build
+// here — a rebuild would re-clean and rewrite `dist/` while turbo-scheduled
+// consumer builds (e.g. `genui-cli#build`) read the same `dist/`, transiently
+// removing the `.d.ts` and breaking their `tsc` (TS2307/TS7016).
+// `ensureMainEntryPoint` stays only as a last-resort build if the entry point
+// is somehow missing. Concurrent api-extractor runs across packages touch only
+// their own per-package outputs, so they need no mutual exclusion.
+await ensureMainEntryPoint();
+run('api-extractor', ['run', '--verbose']);
