@@ -84,7 +84,7 @@ void create({
       value: 'vitest-rltl',
       label: 'Vitest',
       order: 'pre',
-      when: (templateName) =>
+      when: ({ templateName }) =>
         templateName === 'react-js' || templateName === 'react-ts',
       action: ({ distFolder, addAgentsMdSearchDirs }) => {
         const from = path.resolve(__dirname, '..', 'template-react-vitest-rltl')
@@ -100,7 +100,7 @@ void create({
       value: 'rstest-rltl',
       label: 'Rstest',
       order: 'pre',
-      when: (templateName) =>
+      when: ({ templateName }) =>
         templateName === 'react-js' || templateName === 'react-ts',
       action: ({ distFolder, addAgentsMdSearchDirs }) => {
         const from = path.resolve(__dirname, '..', 'template-react-rstest-rltl')
