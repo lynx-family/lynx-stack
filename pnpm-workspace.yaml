@@ -55,6 +55,30 @@ minimumReleaseAgeStrict: false
 
 peerDependencyRules:
   allowedVersions:
+    "@lynx-js/lynx-ui>@types/react": "^19.2.0"
+    "@lynx-js/lynx-ui-button>@types/react": "^19.2.0"
+    "@lynx-js/lynx-ui-checkbox>@types/react": "^19.2.0"
+    "@lynx-js/lynx-ui-common>@types/react": "^19.2.0"
+    "@lynx-js/lynx-ui-dialog>@types/react": "^19.2.0"
+    "@lynx-js/lynx-ui-draggable>@types/react": "^19.2.0"
+    "@lynx-js/lynx-ui-feed-list>@types/react": "^19.2.0"
+    "@lynx-js/lynx-ui-form>@types/react": "^19.2.0"
+    "@lynx-js/lynx-ui-input>@types/react": "^19.2.0"
+    "@lynx-js/lynx-ui-lazy-component>@types/react": "^19.2.0"
+    "@lynx-js/lynx-ui-list>@types/react": "^19.2.0"
+    "@lynx-js/lynx-ui-overlay>@types/react": "^19.2.0"
+    "@lynx-js/lynx-ui-popover>@types/react": "^19.2.0"
+    "@lynx-js/lynx-ui-presence>@types/react": "^19.2.0"
+    "@lynx-js/lynx-ui-radio-group>@types/react": "^19.2.0"
+    "@lynx-js/lynx-ui-scroll-view>@types/react": "^19.2.0"
+    "@lynx-js/lynx-ui-sheet>@types/react": "^19.2.0"
+    "@lynx-js/lynx-ui-slider>@types/react": "^19.2.0"
+    "@lynx-js/lynx-ui-sortable>@types/react": "^19.2.0"
+    "@lynx-js/lynx-ui-swipe-action>@types/react": "^19.2.0"
+    "@lynx-js/lynx-ui-swiper>@types/react": "^19.2.0"
+    "@lynx-js/lynx-ui-switch>@types/react": "^19.2.0"
+    "@standard-community/standard-json>quansync": "^0.2.10 || ^0.2.11"
+    "@types/react-dom>@types/react": "^18 || ^19.2.0"
     "rsbuild-plugin-tailwindcss>tailwindcss": "^3 || ^4"
 
 # Default catalogs
