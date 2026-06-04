@@ -23,8 +23,7 @@
   ],
   "scripts": {
     "api-extractor": "node ../scripts/run-api-extractor.mjs",
-    "build": "rslib build",
-    "build:api": "rslib build"
+    "build": "rslib build"
   },
   "devDependencies": {
     "@microsoft/api-extractor": "catalog:",
