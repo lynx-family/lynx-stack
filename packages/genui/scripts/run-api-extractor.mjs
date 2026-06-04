@@ -148,7 +148,12 @@ const ensureMainEntryPoint = async () => {
 await acquireLock();
 
 try {
-  run('pnpm', ['run', 'build']);
+  // Do NOT build here. Turbo's task graph already builds this package (the
+  // `api-extractor` task depends on `build`), and rebuilding in-script would
+  // re-clean and rewrite `dist/` while turbo-scheduled consumer builds (e.g.
+  // `genui-cli#build`) read the same `dist/`, transiently removing the
+  // `.d.ts` and breaking their `tsc` with TS2307/TS7016. `ensureMainEntryPoint`
+  // stays only as a last-resort build if the entry point is somehow missing.
   await ensureMainEntryPoint();
   run('api-extractor', ['run', '--verbose']);
 } finally {
