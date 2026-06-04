@@ -1,7 +1,7 @@
 {
   "name": "@lynx-js/autolink-codegen",
   "version": "0.1.0",
-  "description": "Native Autolink code generator for Lynx libraries",
+  "description": "Lynx library code generator",
   "keywords": [
     "Lynx",
     "Autolink",

@@ -117,9 +117,9 @@ describe('create-lynx-library CLI', () => {
       '"name": "@example/cli-library"',
     );
     expect(read(dir, 'android/src/main/java/com/example/cli/CliModule.java'))
-      .toContain('@LynxAutolinkNativeModule(name = "CliModule")');
+      .toContain('@LynxNativeModule(name = "CliModule")');
     expect(read(dir, 'ios/src/CliElement.h')).toContain(
-      '@LynxAutolinkUI("x-cli")',
+      '@LynxUIRegister("x-cli")',
     );
   });
 
@@ -147,21 +147,21 @@ describe('create-lynx-library CLI', () => {
         'android/src/main/java/com/example/all/AllLibraryModule.java',
       ),
     )
-      .toContain('@LynxAutolinkNativeModule(name = "AllLibraryModule")');
+      .toContain('@LynxNativeModule(name = "AllLibraryModule")');
     expect(
       read(
         dir,
         'android/src/main/java/com/example/all/AllLibraryElement.java',
       ),
     )
-      .toContain('@LynxAutolinkElement(name = "x-all-library")');
+      .toContain('@LynxElement(name = "x-all-library")');
     expect(
       read(
         dir,
         'android/src/main/java/com/example/all/AllLibraryService.java',
       ),
     )
-      .toContain('@LynxAutolinkService');
+      .toContain('@LynxService');
   });
 
   it('fails in non-interactive mode when required options are missing', async () => {
