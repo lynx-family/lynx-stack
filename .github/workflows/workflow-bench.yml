@@ -1,6 +1,17 @@
 name: Benchmark
 on:
   workflow_call:
+    secrets:
+      ACCESS_KEY:
+        required: false
+      SECRET_KEY:
+        required: false
+      ENDPOINT:
+        required: false
+      BUCKET_NAME:
+        required: false
+      REGION:
+        required: false
 
 env:
   CI: 1
