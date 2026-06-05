@@ -1,6 +1,7 @@
 // Copyright 2026 The Lynx Authors. All rights reserved.
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
+import type { ActionPlan } from '@openuidev/lang-core';
 import { BuiltinActionType } from '@openuidev/lang-core';
 import { z } from 'zod/v4';
 
@@ -32,9 +33,11 @@ export const CheckBox = defineComponent({
     const onChange = (next: boolean) => {
       setChecked(next);
       if (!props.action) return;
-      const legacyAction = ('steps' in props.action)
-        ? undefined
-        : props.action;
+      if ('steps' in props.action) {
+        void triggerAction(props.label, undefined, props.action as ActionPlan);
+        return;
+      }
+      const legacyAction = props.action;
       const actionType = legacyAction?.type ?? CONTINUE_CONVERSATION_ACTION;
       const actionParams = actionType === OPEN_URL_ACTION
         ? { url: legacyAction?.url }

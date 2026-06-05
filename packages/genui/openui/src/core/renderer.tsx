@@ -9,7 +9,7 @@ import type {
   ParseResult,
   Store,
 } from '@openuidev/lang-core';
-import { BuiltinActionType } from '@openuidev/lang-core';
+import { ACTION_STEPS, BuiltinActionType } from '@openuidev/lang-core';
 
 import {
   Fragment,
@@ -210,6 +210,29 @@ export function OpenUiRenderer(props: {
     ) => {
       const currentState = formStateRef.current;
       const handler = onActionRef.current;
+
+      // ActionPlan path (v0.5) — sequential steps
+      if (action && 'steps' in action) {
+        for (const step of action.steps) {
+          switch (step.type) {
+            case ACTION_STEPS.ToAssistant:
+              handler?.({
+                type: BuiltinActionType.ContinueConversation,
+                params: step.context ? { context: step.context } : {},
+                humanFriendlyMessage: step.message,
+              });
+              break;
+            case ACTION_STEPS.OpenUrl:
+              handler?.({
+                type: BuiltinActionType.OpenUrl,
+                params: { url: step.url },
+                humanFriendlyMessage: '',
+              });
+              break;
+          }
+        }
+        return;
+      }
 
       const legacyAction: LegacyActionConfig | undefined =
         action && !('steps' in action)

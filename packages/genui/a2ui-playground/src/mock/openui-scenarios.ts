@@ -1573,12 +1573,14 @@ actionRow = Stack([Buttons([Button("Reset", Action([@ToAssistant("Reset audio se
     id: 'pizza-order',
     title: 'Pizza Order',
     raw:
-      `root = Card([title, sizeGroup, crustGroup, addressField, notesField, tipRow, actionRow], "card", "column", false, "l", "stretch", "start")
+      `root = Card([title, sizeGroup, crustGroup, addressField, apartmentField, accessCodeField, notesField, tipRow, actionRow], "card", "column", false, "l", "stretch", "start")
 
 title = TextContent("🍕  Order Pizza", "large-heavy")
 sizeGroup = RadioGroup(["Small", "Medium", "Large", "X-Large"], "Medium", "default", Action([@ToAssistant("Size")]))
 crustGroup = RadioGroup(["Thin", "Regular", "Thick"], "Regular", "default", Action([@ToAssistant("Crust")]))
 addressField = TextField("Delivery Address", "123 Main St", "shortText", "", Action([@ToAssistant("Address")]))
+	apartmentField = TextField("Apartment Number", "12", "number", "^[0-9]+$", Action([@ToAssistant("Apartment number")]))
+	accessCodeField = TextField("Building Access Code", "2468", "obscured", "^[0-9]{4,6}$", Action([@ToAssistant("Access code")]))
 notesField = TextField("Special Instructions", "Extra cheese please", "longText", "", Action([@ToAssistant("Notes")]))
 tipRow = Slider("Tip %", 0, 30, 15, 1, Action([@ToAssistant("Tip")]))
 actionRow = Stack([Buttons([Button("Cancel", Action([@ToAssistant("Cancel order")]), "secondary", "normal", "medium"), Button("Place Order", Action([@ToAssistant("Place order")]), "primary", "normal", "medium")])], "row", false, "m", "stretch", "start")`,
@@ -1669,6 +1671,56 @@ actionRow = Stack([Buttons([Button("Cancel", Action([@ToAssistant("Cancel order"
                 partial: false,
                 hasDynamicProps: true,
                 statementId: 'addressField',
+              },
+              {
+                type: 'element',
+                typeName: 'TextField',
+                props: {
+                  label: 'Apartment Number',
+                  value: '12',
+                  variant: 'number',
+                  validationRegexp: '^[0-9]+$',
+                  action: {
+                    k: 'Comp',
+                    name: 'Action',
+                    args: [{
+                      k: 'Arr',
+                      els: [{
+                        k: 'Comp',
+                        name: 'ToAssistant',
+                        args: [{ k: 'Str', v: 'Apartment number' }],
+                      }],
+                    }],
+                  },
+                },
+                partial: false,
+                hasDynamicProps: true,
+                statementId: 'apartmentField',
+              },
+              {
+                type: 'element',
+                typeName: 'TextField',
+                props: {
+                  label: 'Building Access Code',
+                  value: '2468',
+                  variant: 'obscured',
+                  validationRegexp: '^[0-9]{4,6}$',
+                  action: {
+                    k: 'Comp',
+                    name: 'Action',
+                    args: [{
+                      k: 'Arr',
+                      els: [{
+                        k: 'Comp',
+                        name: 'ToAssistant',
+                        args: [{ k: 'Str', v: 'Access code' }],
+                      }],
+                    }],
+                  },
+                },
+                partial: false,
+                hasDynamicProps: true,
+                statementId: 'accessCodeField',
               },
               {
                 type: 'element',
@@ -1811,7 +1863,7 @@ actionRow = Stack([Buttons([Button("Cancel", Action([@ToAssistant("Cancel order"
           incomplete: false,
           unresolved: [],
           orphaned: [],
-          statementCount: 8,
+          statementCount: 10,
           errors: [],
         },
         stateDeclarations: {},

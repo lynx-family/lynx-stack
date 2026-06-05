@@ -2,6 +2,7 @@
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
 
+import type { ActionPlan } from '@openuidev/lang-core';
 import { BuiltinActionType } from '@openuidev/lang-core';
 import { z } from 'zod/v4';
 
@@ -50,7 +51,11 @@ function ButtonRenderer({ props }: { props: ButtonProps }) {
   }
 
   const onTap = () => {
-    const legacyAction = action && !('steps' in action) ? action : undefined;
+    if ('steps' in action) {
+      void triggerAction(label, formName, action as ActionPlan);
+      return;
+    }
+    const legacyAction = action;
     const actionType = legacyAction?.type ?? CONTINUE_CONVERSATION_ACTION;
 
     if (
