@@ -10,8 +10,11 @@ import { beforeEach, describe, expect, test, vi } from 'vitest'
 import {
   TEST_ONLY_hasNativeTSSupport as hasNativeTSSupport,
   loadConfig,
+  TEST_ONLY_resolveValidate as resolveValidate,
 } from '../../src/config/loadConfig.js'
 import type { Config, ConfigParams } from '../../src/index.js'
+
+const validateForTest = (input: unknown): Config => input as Config
 
 describe('Config - loadConfig', () => {
   test('load with default lynx.config.ts', async () => {
@@ -385,6 +388,24 @@ describe('Config - loadConfig', () => {
     )
 
     process.argv = argv
+  })
+})
+
+describe('resolveValidate', () => {
+  test('uses named validate export', () => {
+    expect(resolveValidate({ validate: validateForTest })).toBe(validateForTest)
+  })
+
+  test('uses default namespace validate export', () => {
+    expect(resolveValidate({ default: { validate: validateForTest } })).toBe(
+      validateForTest,
+    )
+  })
+
+  test('throws when validate export is missing', () => {
+    expect(() => resolveValidate({})).toThrow(
+      'Expected ./validate.js to export a validate function',
+    )
   })
 })
 
