@@ -47,19 +47,9 @@ minimumReleaseAgeExclude:
   - "@lynx-js/*"
   # typia-rspack-plugin uses trusted publish + staged publish
   - "typia-rspack-plugin"
-  - "@rsbuild/core@2.0.11"
-  - "@rspack/binding-darwin-arm64@2.0.6"
-  - "@rspack/binding-darwin-x64@2.0.6"
-  - "@rspack/binding-linux-arm64-gnu@2.0.6"
-  - "@rspack/binding-linux-arm64-musl@2.0.6"
-  - "@rspack/binding-linux-x64-gnu@2.0.6"
-  - "@rspack/binding-linux-x64-musl@2.0.6"
-  - "@rspack/binding-wasm32-wasi@2.0.6"
-  - "@rspack/binding-win32-arm64-msvc@2.0.6"
-  - "@rspack/binding-win32-ia32-msvc@2.0.6"
-  - "@rspack/binding-win32-x64-msvc@2.0.6"
-  - "@rspack/binding@2.0.6"
-  - "@rspack/core@2.0.6"
+  # First-party Rspack/Rsbuild toolchain — trusted, upgraded deliberately.
+  - "@rspack/*"
+  - "@rsbuild/*"
 # npm's abbreviated metadata omits the `time` field, so a strict check hard-fails
 # (`ERR_PNPM_MISSING_TIME`) on packages it cannot date — e.g. during
 # `pnpm dedupe --check`. Run non-strict so the age check is enforced when `time`

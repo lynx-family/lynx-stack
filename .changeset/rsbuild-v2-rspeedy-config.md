@@ -39,3 +39,5 @@ export default defineConfig({
 +  },
 });
 ```
+
+The bundled Rspack/Rsbuild toolchain is updated to `@rspack/core` 2.0.6, `@rspack/cli` 2.0.6, `@rspack/dev-server` 2.0.3, and `@rsbuild/core` 2.0.11.
