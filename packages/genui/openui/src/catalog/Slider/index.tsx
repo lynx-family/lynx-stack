@@ -11,9 +11,15 @@ import {
   SliderThumb,
   SliderTrack,
 } from '@lynx-js/lynx-ui';
-import { useState } from '@lynx-js/react';
+import { useEffect, useRef, useState } from '@lynx-js/react';
 
-import { useTriggerAction } from '../../core/context.jsx';
+import {
+  useFormName,
+  useGetFieldValue,
+  useSetDefaultValue,
+  useSetFieldValue,
+  useTriggerAction,
+} from '../../core/context.jsx';
 import { defineComponent } from '../../core/library.jsx';
 import { actionPropSchema } from '../Action/index.jsx';
 
@@ -28,10 +34,11 @@ const DEFAULT_MAX = 100;
 const sliderPropsSchema = z.object({
   label: z.string().optional(),
   min: z.number().optional(),
-  max: z.number(),
+  max: z.number().optional(),
   value: z.number().optional(),
   step: z.number().optional(),
   action: actionPropSchema.optional(),
+  name: z.string().optional(),
 });
 
 type SliderProps = z.infer<typeof sliderPropsSchema>;
@@ -73,6 +80,9 @@ function fromRatio(
 
 function SliderRenderer({ props }: { props: SliderProps }) {
   const triggerAction = useTriggerAction();
+  const formName = useFormName();
+  const getFieldValue = useGetFieldValue();
+  const setFieldValue = useSetFieldValue();
   const min = toFiniteNumber(props.min, DEFAULT_MIN);
   const max = toFiniteNumber(props.max, DEFAULT_MAX);
   const step = props.step && props.step > 0 ? props.step : undefined;
@@ -81,13 +91,41 @@ function SliderRenderer({ props }: { props: SliderProps }) {
     : { min: DEFAULT_MIN, max: DEFAULT_MAX };
   const initial = toFiniteNumber(props.value, range.min);
   const [value, setValue] = useState<number>(initial);
+  const dirtyRef = useRef(false);
+  const existingValue: unknown = props.name
+    ? getFieldValue(formName, props.name)
+    : undefined;
+
+  useSetDefaultValue({
+    ...(formName ? { formName } : {}),
+    componentType: 'Slider',
+    name: props.name ?? '',
+    existingValue,
+    defaultValue: props.name && props.value !== undefined
+      ? initial
+      : undefined,
+  });
+
+  useEffect(() => {
+    if (!dirtyRef.current) {
+      const next = toFiniteNumber(props.value, range.min);
+      setValue(next);
+      if (props.name && props.value !== undefined) {
+        setFieldValue(formName, 'Slider', props.name, next, false);
+      }
+    }
+  }, [formName, props.name, props.value, range.min, setFieldValue]);
 
   const onValueChange = (nextRatio: number) => {
     const next = fromRatio(nextRatio, range.min, range.max, step);
+    dirtyRef.current = true;
     setValue(next);
+    if (props.name) {
+      setFieldValue(formName, 'Slider', props.name, next, true);
+    }
     if (!props.action) return;
     if ('steps' in props.action) {
-      void triggerAction(String(next), undefined, props.action as ActionPlan);
+      void triggerAction(String(next), formName, props.action as ActionPlan);
       return;
     }
     const legacyAction = props.action;
@@ -98,7 +136,7 @@ function SliderRenderer({ props }: { props: SliderProps }) {
         ...(legacyAction?.params ?? {}),
         ...(legacyAction?.context ? { context: legacyAction.context } : {}),
       };
-    void triggerAction(String(next), undefined, {
+    void triggerAction(String(next), formName, {
       type: actionType,
       params: actionParams,
     });

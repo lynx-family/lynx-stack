@@ -1576,13 +1576,13 @@ actionRow = Stack([Buttons([Button("Reset", Action([@ToAssistant("Reset audio se
       `root = Card([title, sizeGroup, crustGroup, addressField, apartmentField, accessCodeField, notesField, tipRow, actionRow], "card", "column", false, "l", "stretch", "start")
 
 title = TextContent("🍕  Order Pizza", "large-heavy")
-sizeGroup = RadioGroup(["Small", "Medium", "Large", "X-Large"], "Medium", "default", Action([@ToAssistant("Size")]))
-crustGroup = RadioGroup(["Thin", "Regular", "Thick"], "Regular", "default", Action([@ToAssistant("Crust")]))
-addressField = TextField("Delivery Address", "123 Main St", "shortText", "", Action([@ToAssistant("Address")]))
-	apartmentField = TextField("Apartment Number", "12", "number", "^[0-9]+$", Action([@ToAssistant("Apartment number")]))
-	accessCodeField = TextField("Building Access Code", "2468", "obscured", "^[0-9]{4,6}$", Action([@ToAssistant("Access code")]))
-notesField = TextField("Special Instructions", "Extra cheese please", "longText", "", Action([@ToAssistant("Notes")]))
-tipRow = Slider("Tip %", 0, 30, 15, 1, Action([@ToAssistant("Tip")]))
+sizeGroup = RadioGroup(["Small", "Medium", "Large", "X-Large"], "Medium", "default", Action([@ToAssistant("Size")]), "pizza_size")
+crustGroup = RadioGroup(["Thin", "Regular", "Thick"], "Regular", "default", Action([@ToAssistant("Crust")]), "pizza_crust")
+addressField = TextField("Delivery Address", "123 Main St", "shortText", "", Action([@ToAssistant("Address")]), "delivery_address")
+	apartmentField = TextField("Apartment Number", "12", "number", "^[0-9]+$", Action([@ToAssistant("Apartment number")]), "apartment_number")
+	accessCodeField = TextField("Building Access Code", "2468", "obscured", "^[0-9]{4,6}$", Action([@ToAssistant("Access code")]), "building_access_code")
+notesField = TextField("Special Instructions", "Extra cheese please", "longText", "", Action([@ToAssistant("Notes")]), "special_instructions")
+tipRow = Slider("Tip %", 0, 30, 15, 1, Action([@ToAssistant("Tip")]), "tip_percent")
 actionRow = Stack([Buttons([Button("Cancel", Action([@ToAssistant("Cancel order")]), "secondary", "normal", "medium"), Button("Place Order", Action([@ToAssistant("Place order")]), "primary", "normal", "medium")])], "row", false, "m", "stretch", "start")`,
     parsed: JSON.stringify(
       {
@@ -1604,6 +1604,7 @@ actionRow = Stack([Buttons([Button("Cancel", Action([@ToAssistant("Cancel order"
                 typeName: 'RadioGroup',
                 props: {
                   items: ['Small', 'Medium', 'Large', 'X-Large'],
+                  name: 'pizza_size',
                   value: 'Medium',
                   usageHint: 'default',
                   action: {
@@ -1628,6 +1629,7 @@ actionRow = Stack([Buttons([Button("Cancel", Action([@ToAssistant("Cancel order"
                 typeName: 'RadioGroup',
                 props: {
                   items: ['Thin', 'Regular', 'Thick'],
+                  name: 'pizza_crust',
                   value: 'Regular',
                   usageHint: 'default',
                   action: {
@@ -1652,6 +1654,7 @@ actionRow = Stack([Buttons([Button("Cancel", Action([@ToAssistant("Cancel order"
                 typeName: 'TextField',
                 props: {
                   label: 'Delivery Address',
+                  name: 'delivery_address',
                   value: '123 Main St',
                   variant: 'shortText',
                   validationRegexp: '',
@@ -1677,6 +1680,7 @@ actionRow = Stack([Buttons([Button("Cancel", Action([@ToAssistant("Cancel order"
                 typeName: 'TextField',
                 props: {
                   label: 'Apartment Number',
+                  name: 'apartment_number',
                   value: '12',
                   variant: 'number',
                   validationRegexp: '^[0-9]+$',
@@ -1702,6 +1706,7 @@ actionRow = Stack([Buttons([Button("Cancel", Action([@ToAssistant("Cancel order"
                 typeName: 'TextField',
                 props: {
                   label: 'Building Access Code',
+                  name: 'building_access_code',
                   value: '2468',
                   variant: 'obscured',
                   validationRegexp: '^[0-9]{4,6}$',
@@ -1727,6 +1732,7 @@ actionRow = Stack([Buttons([Button("Cancel", Action([@ToAssistant("Cancel order"
                 typeName: 'TextField',
                 props: {
                   label: 'Special Instructions',
+                  name: 'special_instructions',
                   value: 'Extra cheese please',
                   variant: 'longText',
                   validationRegexp: '',
@@ -1752,6 +1758,7 @@ actionRow = Stack([Buttons([Button("Cancel", Action([@ToAssistant("Cancel order"
                 typeName: 'Slider',
                 props: {
                   label: 'Tip %',
+                  name: 'tip_percent',
                   min: 0,
                   max: 30,
                   value: 15,

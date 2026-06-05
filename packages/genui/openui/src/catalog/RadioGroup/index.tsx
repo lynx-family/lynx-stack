@@ -6,9 +6,15 @@ import { BuiltinActionType } from '@openuidev/lang-core';
 import { z } from 'zod/v4';
 
 import { Radio, RadioGroupRoot, RadioIndicator } from '@lynx-js/lynx-ui';
-import { useState } from '@lynx-js/react';
+import { useEffect, useRef, useState } from '@lynx-js/react';
 
-import { useTriggerAction } from '../../core/context.jsx';
+import {
+  useFormName,
+  useGetFieldValue,
+  useSetDefaultValue,
+  useSetFieldValue,
+  useTriggerAction,
+} from '../../core/context.jsx';
 import { defineComponent } from '../../core/library.jsx';
 import { actionPropSchema } from '../Action/index.jsx';
 
@@ -31,20 +37,50 @@ const radioGroupPropsSchema = z.object({
   value: z.string().optional(),
   usageHint: z.enum(['default', 'card', 'row']).optional(),
   action: actionPropSchema.optional(),
+  name: z.string().optional(),
 });
 
 type RadioGroupProps = z.infer<typeof radioGroupPropsSchema>;
 
 function RadioGroupRenderer({ props }: { props: RadioGroupProps }) {
   const triggerAction = useTriggerAction();
+  const formName = useFormName();
+  const getFieldValue = useGetFieldValue();
+  const setFieldValue = useSetFieldValue();
   const usageHint = props.usageHint ?? 'default';
   const [selected, setSelected] = useState<string>(props.value ?? '');
+  const dirtyRef = useRef(false);
+  const existingValue: unknown = props.name
+    ? getFieldValue(formName, props.name)
+    : undefined;
+
+  useSetDefaultValue({
+    ...(formName ? { formName } : {}),
+    componentType: 'RadioGroup',
+    name: props.name ?? '',
+    existingValue,
+    defaultValue: props.name ? props.value : undefined,
+  });
+
+  useEffect(() => {
+    if (!dirtyRef.current) {
+      const next = props.value ?? '';
+      setSelected(next);
+      if (props.name && props.value !== undefined) {
+        setFieldValue(formName, 'RadioGroup', props.name, next, false);
+      }
+    }
+  }, [formName, props.name, props.value, setFieldValue]);
 
   const onValueChange = (next: string) => {
+    dirtyRef.current = true;
     setSelected(next);
+    if (props.name) {
+      setFieldValue(formName, 'RadioGroup', props.name, next, true);
+    }
     if (!props.action) return;
     if ('steps' in props.action) {
-      void triggerAction(next, undefined, props.action as ActionPlan);
+      void triggerAction(next, formName, props.action as ActionPlan);
       return;
     }
     const legacyAction = props.action;
@@ -55,7 +91,7 @@ function RadioGroupRenderer({ props }: { props: RadioGroupProps }) {
         ...(legacyAction?.params ?? {}),
         ...(legacyAction?.context ? { context: legacyAction.context } : {}),
       };
-    void triggerAction(next, undefined, {
+    void triggerAction(next, formName, {
       type: actionType,
       params: actionParams,
     });

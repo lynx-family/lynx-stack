@@ -241,6 +241,23 @@ export function OpenUiRenderer(props: {
                 ...(formName ? { formName } : {}),
               });
               break;
+            case ACTION_STEPS.Run:
+            case ACTION_STEPS.Set:
+            case ACTION_STEPS.Reset:
+              // OpenUiRenderer does not own the query manager, store, or
+              // evaluation context needed to execute these steps. Report them
+              // explicitly so generated plans do not fail silently here.
+              console.warn(
+                `[OpenUiRenderer] Unsupported ActionPlan step: ${step.type}`,
+                step,
+              );
+              break;
+            default:
+              console.warn(
+                '[OpenUiRenderer] Unknown ActionPlan step:',
+                step,
+              );
+              break;
           }
         }
         return;

@@ -6,9 +6,15 @@ import { BuiltinActionType } from '@openuidev/lang-core';
 import { z } from 'zod/v4';
 
 import { Checkbox, CheckboxIndicator } from '@lynx-js/lynx-ui';
-import { useState } from '@lynx-js/react';
+import { useEffect, useRef, useState } from '@lynx-js/react';
 
-import { useTriggerAction } from '../../core/context.jsx';
+import {
+  useFormName,
+  useGetFieldValue,
+  useSetDefaultValue,
+  useSetFieldValue,
+  useTriggerAction,
+} from '../../core/context.jsx';
 import { defineComponent } from '../../core/library.jsx';
 import { actionPropSchema } from '../Action/index.jsx';
 
@@ -23,18 +29,50 @@ export const CheckBox = defineComponent({
     label: z.string(),
     value: z.boolean().optional(),
     action: actionPropSchema.optional(),
+    name: z.string().optional(),
   }),
   description:
     'Toggleable checkbox. Visual state updates locally on tap; the action fires for the LLM to persist the change.',
   component: ({ props }) => {
     const triggerAction = useTriggerAction();
+    const formName = useFormName();
+    const getFieldValue = useGetFieldValue();
+    const setFieldValue = useSetFieldValue();
     const [checked, setChecked] = useState<boolean>(props.value === true);
+    const dirtyRef = useRef(false);
+    const existingValue: unknown = props.name
+      ? getFieldValue(formName, props.name)
+      : undefined;
+
+    useSetDefaultValue({
+      ...(formName ? { formName } : {}),
+      componentType: 'CheckBox',
+      name: props.name ?? '',
+      existingValue,
+      defaultValue: props.name && props.value !== undefined
+        ? props.value === true
+        : undefined,
+    });
+
+    useEffect(() => {
+      if (!dirtyRef.current) {
+        const next = props.value === true;
+        setChecked(next);
+        if (props.name && props.value !== undefined) {
+          setFieldValue(formName, 'CheckBox', props.name, next, false);
+        }
+      }
+    }, [formName, props.name, props.value, setFieldValue]);
 
     const onChange = (next: boolean) => {
+      dirtyRef.current = true;
       setChecked(next);
+      if (props.name) {
+        setFieldValue(formName, 'CheckBox', props.name, next, true);
+      }
       if (!props.action) return;
       if ('steps' in props.action) {
-        void triggerAction(props.label, undefined, props.action as ActionPlan);
+        void triggerAction(props.label, formName, props.action as ActionPlan);
         return;
       }
       const legacyAction = props.action;
@@ -45,7 +83,7 @@ export const CheckBox = defineComponent({
           ...(legacyAction?.params ?? {}),
           ...(legacyAction?.context ? { context: legacyAction.context } : {}),
         };
-      void triggerAction(props.label, undefined, {
+      void triggerAction(props.label, formName, {
         type: actionType,
         params: actionParams,
       });

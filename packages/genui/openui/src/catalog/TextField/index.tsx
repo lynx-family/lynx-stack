@@ -6,9 +6,15 @@ import { BuiltinActionType } from '@openuidev/lang-core';
 import { z } from 'zod/v4';
 
 import { Input, TextArea } from '@lynx-js/lynx-ui';
-import { useState } from '@lynx-js/react';
+import { useEffect, useRef, useState } from '@lynx-js/react';
 
-import { useTriggerAction } from '../../core/context.jsx';
+import {
+  useFormName,
+  useGetFieldValue,
+  useSetDefaultValue,
+  useSetFieldValue,
+  useTriggerAction,
+} from '../../core/context.jsx';
 import { defineComponent } from '../../core/library.jsx';
 import { actionPropSchema } from '../Action/index.jsx';
 
@@ -30,6 +36,7 @@ const textFieldPropsSchema = z.object({
   variant: z.enum(TEXT_FIELD_VARIANTS).optional(),
   validationRegexp: z.string().optional(),
   action: actionPropSchema.optional(),
+  name: z.string().optional(),
 });
 
 type TextFieldProps = z.infer<typeof textFieldPropsSchema>;
@@ -67,16 +74,47 @@ function isValueValid(value: string, regexp: string | undefined): boolean {
 
 function TextFieldRenderer({ props }: { props: TextFieldProps }) {
   const triggerAction = useTriggerAction();
+  const formName = useFormName();
+  const getFieldValue = useGetFieldValue();
+  const setFieldValue = useSetFieldValue();
   const variant = normalizeVariant(props.variant);
   const [draft, setDraft] = useState<string>(normalizeValue(props.value));
+  const dirtyRef = useRef(false);
   const invalid = !isValueValid(draft, props.validationRegexp);
   const showInvalid = invalid && draft.length > 0;
+  const existingValue: unknown = props.name
+    ? getFieldValue(formName, props.name)
+    : undefined;
+
+  useSetDefaultValue({
+    ...(formName ? { formName } : {}),
+    componentType: 'TextField',
+    name: props.name ?? '',
+    existingValue,
+    defaultValue: props.name && props.value !== undefined
+      ? normalizeValue(props.value)
+      : undefined,
+  });
+
+  useEffect(() => {
+    if (!dirtyRef.current) {
+      const next = normalizeValue(props.value);
+      setDraft(next);
+      if (props.name && props.value !== undefined) {
+        setFieldValue(formName, 'TextField', props.name, next, false);
+      }
+    }
+  }, [formName, props.name, props.value, setFieldValue]);
 
   const onInput = (next: string) => {
+    dirtyRef.current = true;
     setDraft(next);
+    if (props.name) {
+      setFieldValue(formName, 'TextField', props.name, next, false);
+    }
     if (!props.action) return;
     if ('steps' in props.action) {
-      void triggerAction(next, undefined, props.action as ActionPlan);
+      void triggerAction(next, formName, props.action as ActionPlan);
       return;
     }
     const legacyAction = props.action;
@@ -87,7 +125,7 @@ function TextFieldRenderer({ props }: { props: TextFieldProps }) {
         ...(legacyAction?.params ?? {}),
         ...(legacyAction?.context ? { context: legacyAction.context } : {}),
       };
-    void triggerAction(next, undefined, {
+    void triggerAction(next, formName, {
       type: actionType,
       params: actionParams,
     });
