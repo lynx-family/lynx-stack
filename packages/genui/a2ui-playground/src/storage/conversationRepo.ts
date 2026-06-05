@@ -132,6 +132,27 @@ export async function saveConversationMessages(
   await tx.done;
 }
 
+/**
+ * Persist the durable URL of the published share document on the conversation
+ * snapshot, paired with the `meta.updatedAt` it was generated for. Touches only
+ * the snapshot's share field (not `meta.updatedAt`), so it does not invalidate
+ * itself; a later turn rewrites the snapshot and drops it.
+ */
+export async function saveConversationSharePayload(
+  conversationId: string,
+  url: string,
+  updatedAt: number,
+): Promise<void> {
+  const db = await getDB();
+  const tx = db.transaction('snapshots', 'readwrite');
+  const store = tx.objectStore('snapshots');
+  const snapshot = await store.get(conversationId);
+  if (snapshot) {
+    await store.put({ ...snapshot, sharePayload: { url, updatedAt } });
+  }
+  await tx.done;
+}
+
 export function previewTextFromSharedMessages(
   messages: SharedConversationDoc['messages'],
 ): string {
