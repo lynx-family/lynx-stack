@@ -78,7 +78,7 @@ export const BASIC_CATALOG_EXAMPLES: A2UIExample[] = [
   },
   {
     name: 'dynamic-list',
-    user: 'Show three trip ideas as a compact list.',
+    user: 'Show three trip ideas as a compact vertical group.',
     messages: [
       {
         version: 'v0.9',
@@ -110,7 +110,7 @@ export const BASIC_CATALOG_EXAMPLES: A2UIExample[] = [
             {
               id: 'root',
               component: 'Column',
-              children: ['title', 'trip-list'],
+              children: ['title', 'trip-items'],
             },
             {
               id: 'title',
@@ -119,9 +119,8 @@ export const BASIC_CATALOG_EXAMPLES: A2UIExample[] = [
               variant: 'h2',
             },
             {
-              id: 'trip-list',
-              component: 'List',
-              direction: 'vertical',
+              id: 'trip-items',
+              component: 'Column',
               children: { path: '/items', componentId: 'trip-row' },
             },
             {
@@ -139,13 +138,13 @@ export const BASIC_CATALOG_EXAMPLES: A2UIExample[] = [
             {
               id: 'trip-name',
               component: 'Text',
-              text: { path: '/items/*/name' },
+              text: { path: 'name' },
               variant: 'h3',
             },
             {
               id: 'trip-detail',
               component: 'Text',
-              text: { path: '/items/*/detail' },
+              text: { path: 'detail' },
               variant: 'body',
             },
           ],

@@ -69,16 +69,37 @@ and exactly ONE of the following keys:
     }
 - The component with id "root" is the entry point of the tree.
 - Layout containers (Row / Column / List) take "children": ["id1", "id2", ...].
-  To repeat from the data model, use "children":
+  To repeat from the data model, any of these containers can use "children":
     { "path": "/items", "componentId": "itemRow" }
+  Prefer Column for ordinary vertical repeated content and Row for ordinary
+  horizontal repeated content. Use List only when the repeated content should
+  be scrollable.
 - Card uses "child": "id".  Modal uses "trigger" + "content".  Tabs uses an
   array of {title, child}.
 
 ## Data binding
 - Static text:  "text": "Hello"
 - Bound text:   "text": { "path": "/user/name" }
-- Bound list children:
+- Bound repeating children:
     "children": { "path": "/items", "componentId": "itemRow" }
+- Inside the template component tree for a bound repeating container, bind item
+  fields with relative paths that match the object fields in each data-model
+  item. Example
+  data model:
+    { "items": [{ "item": "Alpha" }, { "item": "Beta" }] }
+  paired with:
+    "children": { "path": "/items", "componentId": "itemRow" }
+    "text": { "path": "item" }
+  If each array item is { "name": "Alpha" }, use { "path": "name" } instead.
+  For repeated text values, still use object items such as
+    { "items": [{ "label": "Alpha" }, { "label": "Beta" }] }
+  and bind with { "path": "label" }. Do NOT use primitive arrays like
+  { "items": ["Alpha", "Beta"] } with { "path": "." }; this renderer does not
+  resolve "." as the current item.
+  Template collection data MUST be an array of objects. If the source values
+  are plain strings, wrap them as objects before binding.
+  Do NOT use wildcard paths like "/items/*/item"; collection scope makes the
+  current item the base path automatically.
 - Use updateDataModel messages to populate values at those paths.
 - DynamicString/DynamicNumber/DynamicBoolean props accept either a literal value
   or { "path": "/json/pointer" }. If you bind a prop to a path, create the
@@ -115,6 +136,15 @@ function buildHardRules(catalogId: string): string {
    updateComponents message that contains components reading those paths. After
    createSurface, either send a literal root/skeleton updateComponents first, or
    send updateDataModel first when the first visible components use bindings.
+   In template children, use relative paths from the current item, for example
+   { "path": "item" }, never absolute wildcard paths like "/items/*/item".
+   Do not use { "path": "." }; for repeated primitive text values, model the
+   data as objects such as [{ "label": "Alpha" }] and bind "label".
+   Any data-model array used by template children MUST contain objects; never
+   bind template children to an array of strings/numbers/booleans.
+   Do not use List merely because data is repeated. Prefer Column/Row
+   template children for non-scrollable repeated content; reserve List for
+   scrollable collections.
 7. For a fresh non-action response, the first updateComponents message MUST
    contain exactly one component with id "root".
 8. Use property-based component discriminators: "component": "Text", not

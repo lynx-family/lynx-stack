@@ -318,6 +318,7 @@ export function validateA2UIOutput(
   const componentsBySurface = new Map<string, Map<string, A2UIComponent>>();
   const allPaths: { surfaceId: string; path: string }[] = [];
   const providedPaths: { surfaceId: string; path: string }[] = [];
+  const templatePaths: { surfaceId: string; path: string }[] = [];
 
   for (
     const [surfaceId, dataModel] of Object.entries(
@@ -366,7 +367,28 @@ export function validateA2UIOutput(
         const componentPaths: string[] = [];
         collectPaths(comp, componentPaths);
         for (const path of componentPaths) {
+          if (isCurrentItemPath(path)) {
+            errors.push(
+              `Path "${path}" in component "${comp.id}" is not supported; use object array items and bind a relative field path like "label" inside template children.`,
+            );
+            continue;
+          }
+          if (hasWildcardSegment(path)) {
+            errors.push(
+              `Path "${path}" in component "${comp.id}" uses "*", but A2UI collection item bindings must use relative paths like "item" inside template children.`,
+            );
+            continue;
+          }
           allPaths.push({ surfaceId: sId, path });
+        }
+        for (const path of collectTemplatePaths(comp)) {
+          if (!path.startsWith('/')) {
+            errors.push(
+              `Template collection path "${path}" in component "${comp.id}" on surface "${sId}" must be absolute and start with "/".`,
+            );
+            continue;
+          }
+          templatePaths.push({ surfaceId: sId, path });
         }
       }
       componentsBySurface.set(sId, bucket);
@@ -432,8 +454,11 @@ export function validateA2UIOutput(
   for (const referenced of allPaths) {
     const providedSet = providedBySurface.get(referenced.surfaceId)
       ?? new Set<string>();
+    const surfaceTemplatePaths = templatePaths
+      .filter((template) => template.surfaceId === referenced.surfaceId)
+      .map((template) => template.path);
     const hasMatch = [...providedSet].some((provided) =>
-      isPathCovered(referenced.path, provided)
+      isPathReferenceCovered(referenced.path, provided, surfaceTemplatePaths)
     );
     if (!hasMatch) {
       errors.push(
@@ -447,6 +472,23 @@ export function validateA2UIOutput(
     messages: errors.length === 0 ? messages : [],
     errors,
   };
+}
+
+function isPathReferenceCovered(
+  referencedPath: string,
+  providedPath: string,
+  templatePaths: string[],
+): boolean {
+  if (referencedPath.startsWith('/')) {
+    return isPathCovered(referencedPath, providedPath);
+  }
+
+  for (const templatePath of templatePaths) {
+    const scopedPath = joinPath(templatePath, '*', referencedPath);
+    if (isPathCovered(scopedPath, providedPath)) return true;
+  }
+
+  return isPathCovered(referencedPath, providedPath);
 }
 
 function isPathCovered(referencedPath: string, providedPath: string): boolean {
@@ -482,6 +524,19 @@ function normalizePathSegments(path: string): string[] {
   return path.split('/').filter(Boolean);
 }
 
+function hasWildcardSegment(path: string): boolean {
+  return normalizePathSegments(path).includes('*');
+}
+
+function isCurrentItemPath(path: string): boolean {
+  return path === '.';
+}
+
+function joinPath(...parts: string[]): string {
+  const segments = parts.flatMap((part) => normalizePathSegments(part));
+  return `/${segments.join('/')}`;
+}
+
 function collectPaths(node: unknown, acc: string[]): void {
   if (!isRecord(node) && !Array.isArray(node)) return;
   if (Array.isArray(node)) {
@@ -494,6 +549,22 @@ function collectPaths(node: unknown, acc: string[]): void {
     return;
   }
   for (const value of Object.values(record)) collectPaths(value, acc);
+}
+
+function collectTemplatePaths(comp: A2UIComponent): string[] {
+  const children = comp.children;
+  if (!isRecord(children)) return [];
+
+  const paths: string[] = [];
+  const directPath = children.path;
+  if (typeof directPath === 'string') paths.push(directPath);
+
+  const template = children.template;
+  if (isRecord(template) && typeof template.path === 'string') {
+    paths.push(template.path);
+  }
+
+  return paths;
 }
 
 function collectChildRefs(comp: A2UIComponent): string[] {
