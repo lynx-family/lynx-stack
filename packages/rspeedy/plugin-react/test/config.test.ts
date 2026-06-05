@@ -2987,6 +2987,9 @@ describe('Config', () => {
         ).flatMap(rule => getLoaderBranches(rule)),
       ).toMatchInlineSnapshot(`
         [
+          [
+            "<ROOT>/node_modules/<PNPM_INNER>/@rsbuild/core/dist/workerLoader.mjs",
+          ],
           [],
           [
             "builtin:swc-loader",
