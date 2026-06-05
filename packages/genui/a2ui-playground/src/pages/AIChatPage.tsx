@@ -25,7 +25,10 @@ import type { StaticDemo } from '../demos.js';
 import { useConversation } from '../hooks/useConversation.js';
 import type { ModelChatMessage } from '../hooks/useConversation.js';
 import { useResizablePanels } from '../hooks/useResizablePanels.js';
-import { loadConversation } from '../storage/conversationRepo.js';
+import {
+  loadConversation,
+  saveConversationSharePayload,
+} from '../storage/conversationRepo.js';
 import {
   isSharedConversationDoc,
   serializeConversation,
@@ -2154,8 +2157,25 @@ export function AIChatPage(
           showCopyToast(false);
           return;
         }
-        const doc = serializeConversation(record, protocol.name);
-        const conversationUrl = await publishConversation(doc);
+        // Reuse the link already published for this conversation while it is
+        // unchanged, so repeated shares — including after a page reload — copy
+        // the same link instead of uploading a fresh copy (and minting a new
+        // URL) each time. `meta.updatedAt` bumps on every turn or rename, and a
+        // new turn rewrites the snapshot and drops the cached payload.
+        const cached = record.snapshot?.sharePayload;
+        let conversationUrl: string | undefined;
+        if (cached && cached.updatedAt === record.meta.updatedAt) {
+          conversationUrl = cached.url;
+        }
+        if (!conversationUrl) {
+          const doc = serializeConversation(record, protocol.name);
+          conversationUrl = await publishConversation(doc);
+          await saveConversationSharePayload(
+            id,
+            conversationUrl,
+            record.meta.updatedAt,
+          );
+        }
         const link = buildConversationShareUrl(
           conversationUrl,
           baseUrl,
