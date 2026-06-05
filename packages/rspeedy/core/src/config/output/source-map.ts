@@ -12,7 +12,7 @@ export interface SourceMap {
   /**
    * How the source map should be generated. Setting it to `false` will disable the source map.
    *
-   * @defaultValue When `output.sourceMap` is an object and `js` is unset, it defaults to `'cheap-module-source-map'` in development and `false` in production.
+   * @defaultValue When `output.sourceMap` is an object and `js` is unset, it defaults to `'cheap-module-source-map'` in development. In production, it defaults to `'source-map'` for Lynx environments and `false` otherwise.
    *
    * @remarks
    *
@@ -78,7 +78,7 @@ export interface SourceMap {
    *
    * @remarks
    *
-   * Defaults to `true`.
+   * Defaults to `true`. In Lynx builds, all `.map` assets are removed before emit.
    *
    * @example
    *

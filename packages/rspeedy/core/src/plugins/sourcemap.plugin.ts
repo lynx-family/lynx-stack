@@ -6,6 +6,7 @@ import type { RsbuildPlugin, Rspack, RspackChain } from '@rsbuild/core'
 import invariant from 'tiny-invariant'
 import type { UndefinedOnPartialDeep } from 'type-fest'
 
+import { isLynx } from '../utils/is-lynx.js'
 import { EvalSourceMapDevToolPlugin } from '../webpack/EvalSourceMapDevToolPlugin.js'
 import { SourceMapDevToolPlugin } from '../webpack/SourceMapDevToolPlugin.js'
 
@@ -21,7 +22,9 @@ export function pluginSourcemap(): RsbuildPlugin {
 
         if (publicPath === false) {
           // `dev.assetPrefix === false`
-          // We do not modify the devtool option
+          // We do not modify the devtool option and keep the default
+          // sibling `.map` files reachable from their `sourceMappingURL`
+          // trailer.
           return
         }
 
@@ -40,6 +43,10 @@ export function pluginSourcemap(): RsbuildPlugin {
           ),
         )
 
+        if (isLynx(environment)) {
+          applyDropSourceMapAssets(chain)
+        }
+
         function getDevtoolFromSourceMap(): Rspack.DevTool {
           const DEFAULT_DEV_DEVTOOL = 'cheap-module-source-map'
 
@@ -53,18 +60,47 @@ export function pluginSourcemap(): RsbuildPlugin {
             }
             case 'undefined':
             case 'object': {
-              const isLynx = environment.name === 'lynx'
-                || environment.name.startsWith('lynx-')
               return output?.sourceMap?.js
                 ?? (isDev
                   ? DEFAULT_DEV_DEVTOOL
-                  : (isLynx ? 'source-map' : false))
+                  : (isLynx(environment) ? 'source-map' : false))
             }
           }
         }
       })
     },
   }
+}
+
+function applyDropSourceMapAssets(chain: RspackChain): void {
+  chain
+    .plugin('lynx:sourcemap-drop')
+    .use(
+      class DropSourceMapAssetsPlugin {
+        apply(compiler: Rspack.Compiler): void {
+          const { Compilation } = compiler.webpack
+          compiler.hooks.compilation.tap(
+            'LynxDropSourceMapAssetsPlugin',
+            (compilation) => {
+              compilation.hooks.processAssets.tap(
+                {
+                  name: 'LynxDropSourceMapAssetsPlugin',
+                  stage: Compilation.PROCESS_ASSETS_STAGE_REPORT + 1,
+                },
+                () => {
+                  for (const name of Object.keys(compilation.assets)) {
+                    if (name.endsWith('.map')) {
+                      compilation.deleteAsset(name)
+                    }
+                  }
+                },
+              )
+            },
+          )
+        }
+      },
+      [],
+    )
 }
 
 function applySourceMapPlugin(
