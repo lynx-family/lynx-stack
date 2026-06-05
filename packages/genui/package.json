@@ -83,7 +83,9 @@
     "a2ui/docs/*.md",
     "a2ui/src/catalog/*.md",
     "cli/bin",
+    "cli/dist",
     "cli/README.md",
+    "cli/templates",
     "a2ui-prompt/dist",
     "a2ui-prompt/README.md",
     "a2ui-catalog-extractor/bin",
@@ -111,6 +113,10 @@
     "@lynx-js/genui-a2ui-prompt": "workspace:*",
     "@lynx-js/genui-cli": "workspace:*",
     "@lynx-js/genui-openui": "workspace:*",
+    "@lynx-js/qrcode-rsbuild-plugin": "workspace:^",
+    "@lynx-js/react": "workspace:^",
+    "@lynx-js/react-rsbuild-plugin": "workspace:^",
+    "@lynx-js/rspeedy": "workspace:^",
     "@microsoft/api-extractor": "catalog:"
   },
   "peerDependencies": {
