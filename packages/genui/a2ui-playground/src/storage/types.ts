@@ -41,6 +41,13 @@ export interface DataModelSnapshot {
   previewMessages?: unknown[];
   previewPayloadUrls?: PreviewPayloadUrls;
   updatedAt: number;
+  /**
+   * Durable URL of the most recently published "share whole conversation"
+   * document, paired with the `meta.updatedAt` it was generated for. Lets
+   * repeated shares (including after a page reload) reuse the same link until
+   * the conversation changes.
+   */
+  sharePayload?: { url: string; updatedAt: number };
 }
 
 export interface MetaRecord {
