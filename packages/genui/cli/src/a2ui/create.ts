@@ -27,6 +27,15 @@ interface ParsedCreateArgs {
   projectName?: string;
 }
 
+interface PackageManifest {
+  name?: string;
+  version?: string;
+  dependencies?: Record<string, string>;
+  devDependencies?: Record<string, string>;
+  optionalDependencies?: Record<string, string>;
+  peerDependencies?: Record<string, string>;
+}
+
 export function runA2UICreateCli(
   args: string[],
   cwd: string,
@@ -71,10 +80,10 @@ export function runA2UICreateCli(
   const pkgJsonPath = path.join(targetDir, 'package.json');
   if (fs.existsSync(pkgJsonPath)) {
     const require = createRequire(import.meta.url);
-    const cliPkg = require('../../package.json') as {
-      devDependencies?: Record<string, string>;
-    };
-    const versionMap = resolveVersionMap(cliPkg.devDependencies ?? {}, require);
+    const versionMap = resolveVersionMap(
+      [loadPackageManifest(require, '../../../package.json')],
+      require,
+    );
     let content = fs.readFileSync(pkgJsonPath, 'utf-8');
     content = content.replaceAll('{{projectName}}', pkgName);
     content = replaceWorkspaceVersions(content, versionMap, require);
@@ -180,28 +189,56 @@ function resolvePackageVersion(
 }
 
 /**
- * Resolve workspace:^ / workspace:* values in devDependencies to real versions.
- * In published packages, pnpm already resolves these. In dev mode, we read
- * each package's actual version from its package.json.
+ * Resolve workspace:^ / workspace:* values to real versions.
+ * The CLI is also shipped inside @lynx-js/genui, where cli/package.json is a
+ * nested workspace manifest that pnpm does not rewrite on publish. Use the
+ * parent package manifest as the generated app's dependency version source.
  */
 function resolveVersionMap(
-  devDeps: Record<string, string>,
+  manifests: PackageManifest[],
   requireFn: (id: string) => unknown,
 ): Record<string, string> {
   const resolved: Record<string, string> = {};
-  for (const [name, version] of Object.entries(devDeps)) {
-    if (version.startsWith('workspace:')) {
-      // Dev mode: resolve from the package's own package.json
-      try {
-        const pkg = requireFn(`${name}/package.json`) as { version: string };
-        const prefix = version === 'workspace:*' ? '' : '^';
-        resolved[name] = `${prefix}${pkg.version}`;
-      } catch {
-        // Package not resolvable, skip
+  for (const manifest of manifests) {
+    if (manifest.name && manifest.version && !resolved[manifest.name]) {
+      resolved[manifest.name] = `^${manifest.version}`;
+    }
+
+    for (const deps of getManifestDependencyFields(manifest)) {
+      for (const [name, version] of Object.entries(deps)) {
+        if (resolved[name]) continue;
+        if (version.startsWith('workspace:')) {
+          const resolvedVersion = resolvePackageVersion(name, requireFn);
+          if (resolvedVersion) {
+            resolved[name] = resolvedVersion;
+          }
+        } else if (!version.startsWith('catalog:')) {
+          resolved[name] = version;
+        }
       }
-    } else if (!version.startsWith('catalog:')) {
-      resolved[name] = version;
     }
   }
   return resolved;
+}
+
+function loadPackageManifest(
+  requireFn: (id: string) => unknown,
+  id: string,
+): PackageManifest {
+  try {
+    return requireFn(id) as PackageManifest;
+  } catch {
+    return {};
+  }
+}
+
+function getManifestDependencyFields(
+  manifest: PackageManifest,
+): Record<string, string>[] {
+  return [
+    manifest.dependencies,
+    manifest.devDependencies,
+    manifest.optionalDependencies,
+    manifest.peerDependencies,
+  ].filter((deps): deps is Record<string, string> => deps !== undefined);
 }

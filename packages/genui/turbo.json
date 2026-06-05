@@ -23,6 +23,12 @@
         "a2ui-prompt/rslib.config.ts",
         "a2ui-prompt/tsconfig.json",
         "a2ui-prompt/tsconfig.build.json",
+        "cli/bin/**",
+        "cli/src/**",
+        "cli/templates/**",
+        "cli/package.json",
+        "cli/tsconfig.json",
+        "cli/tsconfig.build.json",
         "openui/src/**",
         "openui/package.json",
         "openui/tsconfig.json",
@@ -33,6 +39,7 @@
         "a2ui/dist/**",
         "a2ui-catalog-extractor/dist/**",
         "a2ui-prompt/dist/**",
+        "cli/dist/**",
         "openui/dist/**"
       ]
     },
