@@ -39,7 +39,7 @@ describe('Validation', () => {
   test('unknown properties', () => {
     expect(() => validateConfig({ foo: 0 }))
       .toThrowErrorMatchingInlineSnapshot(
-        `[Error: Unknown property: \`$input.foo\` in the configuration of pluginReactLynx. Check https://github.com/lynx-family/lynx/blob/develop/core/template_bundle/template_codec/binary_decoder/lynx_config.yml for all available properties, if it is available but not supported by pluginReactLynx, you should use \`pluginLynxConfig\` (the Lynx Config rsbuild plugin) instead]`,
+        `[Error: Unknown property: \`$input.foo\` in the configuration of pluginReactLynx. If you are trying to set a Lynx config, use \`pluginLynxConfig\` (the Lynx Config rsbuild plugin) instead.]`,
       )
   })
 
@@ -90,7 +90,7 @@ describe('Validation', () => {
 
     expect(() => validateConfig({ defineDCEs: {} }))
       .toThrowErrorMatchingInlineSnapshot(
-        `[Error: Unknown property: \`$input.defineDCEs\` in the configuration of pluginReactLynx. Check https://github.com/lynx-family/lynx/blob/develop/core/template_bundle/template_codec/binary_decoder/lynx_config.yml for all available properties, if it is available but not supported by pluginReactLynx, you should use \`pluginLynxConfig\` (the Lynx Config rsbuild plugin) instead]`,
+        `[Error: Unknown property: \`$input.defineDCEs\` in the configuration of pluginReactLynx. If you are trying to set a Lynx config, use \`pluginLynxConfig\` (the Lynx Config rsbuild plugin) instead.]`,
       )
 
     expect(() =>
@@ -128,7 +128,7 @@ describe('Validation', () => {
 
     expect(() => validateConfig({ jsxes: 1 }))
       .toThrowErrorMatchingInlineSnapshot(
-        `[Error: Unknown property: \`$input.jsxes\` in the configuration of pluginReactLynx. Check https://github.com/lynx-family/lynx/blob/develop/core/template_bundle/template_codec/binary_decoder/lynx_config.yml for all available properties, if it is available but not supported by pluginReactLynx, you should use \`pluginLynxConfig\` (the Lynx Config rsbuild plugin) instead]`,
+        `[Error: Unknown property: \`$input.jsxes\` in the configuration of pluginReactLynx. If you are trying to set a Lynx config, use \`pluginLynxConfig\` (the Lynx Config rsbuild plugin) instead.]`,
       )
   })
 
