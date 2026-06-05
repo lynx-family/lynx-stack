@@ -87,11 +87,7 @@ function SliderRenderer({ props }: { props: SliderProps }) {
     setValue(next);
     if (!props.action) return;
     if ('steps' in props.action) {
-      void triggerAction(
-        String(Math.round(next)),
-        undefined,
-        props.action as ActionPlan,
-      );
+      void triggerAction(String(next), undefined, props.action as ActionPlan);
       return;
     }
     const legacyAction = props.action;
@@ -102,7 +98,7 @@ function SliderRenderer({ props }: { props: SliderProps }) {
         ...(legacyAction?.params ?? {}),
         ...(legacyAction?.context ? { context: legacyAction.context } : {}),
       };
-    void triggerAction(String(Math.round(next)), undefined, {
+    void triggerAction(String(next), undefined, {
       type: actionType,
       params: actionParams,
     });

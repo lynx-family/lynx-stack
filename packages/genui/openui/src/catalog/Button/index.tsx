@@ -3,7 +3,7 @@
 // LICENSE file in the root directory of this source tree.
 
 import type { ActionPlan } from '@openuidev/lang-core';
-import { BuiltinActionType } from '@openuidev/lang-core';
+import { ACTION_STEPS, BuiltinActionType } from '@openuidev/lang-core';
 import { z } from 'zod/v4';
 
 import type { ReactNode } from '@lynx-js/react';
@@ -52,6 +52,14 @@ function ButtonRenderer({ props }: { props: ButtonProps }) {
 
   const onTap = () => {
     if ('steps' in action) {
+      if (
+        formValidation
+        && variant === 'primary'
+        && action.steps.some((step) => step.type === ACTION_STEPS.ToAssistant)
+      ) {
+        const valid = formValidation.validateForm();
+        if (!valid) return;
+      }
       void triggerAction(label, formName, action as ActionPlan);
       return;
     }

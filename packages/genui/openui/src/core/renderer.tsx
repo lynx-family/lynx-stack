@@ -213,6 +213,14 @@ export function OpenUiRenderer(props: {
 
       // ActionPlan path (v0.5) — sequential steps
       if (action && 'steps' in action) {
+        let relevantState: Record<string, unknown> | undefined;
+        const formValue = formName ? currentState[formName] : undefined;
+        if (formName && formValue !== undefined) {
+          relevantState = { [formName]: formValue };
+        } else if (Object.keys(currentState).length > 0) {
+          relevantState = currentState;
+        }
+
         for (const step of action.steps) {
           switch (step.type) {
             case ACTION_STEPS.ToAssistant:
@@ -220,6 +228,8 @@ export function OpenUiRenderer(props: {
                 type: BuiltinActionType.ContinueConversation,
                 params: step.context ? { context: step.context } : {},
                 humanFriendlyMessage: step.message,
+                ...(relevantState ? { formState: relevantState } : {}),
+                ...(formName ? { formName } : {}),
               });
               break;
             case ACTION_STEPS.OpenUrl:
@@ -227,6 +237,8 @@ export function OpenUiRenderer(props: {
                 type: BuiltinActionType.OpenUrl,
                 params: { url: step.url },
                 humanFriendlyMessage: '',
+                ...(relevantState ? { formState: relevantState } : {}),
+                ...(formName ? { formName } : {}),
               });
               break;
           }
