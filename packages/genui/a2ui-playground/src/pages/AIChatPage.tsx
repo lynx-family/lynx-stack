@@ -26,12 +26,22 @@ import { useConversation } from '../hooks/useConversation.js';
 import type { ModelChatMessage } from '../hooks/useConversation.js';
 import { useResizablePanels } from '../hooks/useResizablePanels.js';
 import { loadConversation } from '../storage/conversationRepo.js';
+import {
+  isSharedConversationDoc,
+  serializeConversation,
+} from '../storage/sharedConversation.js';
 import type { PreviewPerformanceMetrics } from '../storage/types.js';
 import { copyToClipboard } from '../utils/clipboard.js';
 import { DEFAULT_A2UI_DEMO_URL } from '../utils/demoUrl.js';
 import type { Protocol } from '../utils/protocol.js';
-import { isDevHost, publishA2UIPayload } from '../utils/publishPayload.js';
+import { isDevHost } from '../utils/publishPayload.js';
 import { buildRenderUrl } from '../utils/renderUrl.js';
+import {
+  buildConversationShareUrl,
+  clearImportConversationParam,
+  publishConversation,
+  readImportConversationParam,
+} from '../utils/shareConversation.js';
 
 interface ChatMessage {
   id?: string;
@@ -1042,6 +1052,7 @@ export function AIChatPage(
     buildConversationContext,
     conversations,
     createNew,
+    importShared,
     isPersistent,
     isReady,
     messages: persistedMessages,
@@ -1088,6 +1099,7 @@ export function AIChatPage(
   const abortRef = useRef<AbortController | null>(null);
   const actionAbortRef = useRef<AbortController | null>(null);
   const hydratedActiveIdRef = useRef<string | null>(null);
+  const importHandledRef = useRef(false);
   const latestPreviewMessagesRef = useRef<unknown[]>([]);
   const generatedCharacterCountRef = useRef(0);
   const latestPreviewPayloadUrlsRef = useRef<PreviewPayloadUrls | null>(null);
@@ -1516,6 +1528,38 @@ export function AIChatPage(
     renderUrl,
     updatePreviewPayloadUrls,
   ]);
+
+  // Import-on-open: when the page is loaded with a shared-conversation link,
+  // fetch the document once, rehydrate it into a new local conversation, then
+  // strip the param so a reload does not re-import.
+  useEffect(() => {
+    if (!isReady || importHandledRef.current) return;
+    const importUrl = readImportConversationParam();
+    if (!importUrl) {
+      importHandledRef.current = true;
+      return;
+    }
+    importHandledRef.current = true;
+    void (async () => {
+      try {
+        const response = await window.fetch(importUrl);
+        if (!response.ok) {
+          throw new Error(
+            `Failed to load shared conversation: ${response.status}`,
+          );
+        }
+        const doc = (await response.json()) as unknown;
+        if (!isSharedConversationDoc(doc)) {
+          throw new Error('Invalid shared conversation document');
+        }
+        await importShared(doc);
+      } catch (err) {
+        console.warn('[a2ui] Failed to import shared conversation', err);
+      } finally {
+        clearImportConversationParam();
+      }
+    })();
+  }, [isReady, importShared]);
 
   useEffect(() => {
     return () => {
@@ -2102,77 +2146,27 @@ export function AIChatPage(
   const shareConversation = useCallback(
     async (id: string) => {
       try {
-        let urls: PreviewPayloadUrls | null = null;
-        let fallbackMessages: unknown[] | null = null;
-
-        // Active conversation: the freshest URLs/messages live in refs.
-        if (id === activeId) {
-          urls = latestPreviewPayloadUrlsRef.current;
-          fallbackMessages = latestPreviewMessagesRef.current;
-        }
-
-        // Otherwise (or if the active one hasn't published yet) read the
-        // durable Supabase URLs persisted on the conversation snapshot.
-        if (!urls?.messagesUrl) {
-          const record = await loadConversation(id);
-          const snapshot = record?.snapshot;
-          const fromSnapshot = snapshot?.previewPayloadUrls;
-          let fromMessage: PreviewPayloadUrls | undefined;
-          if (record) {
-            for (let i = record.messages.length - 1; i >= 0; i--) {
-              const message = record.messages[i];
-              if (message?.previewPayloadUrls?.messagesUrl) {
-                fromMessage = message.previewPayloadUrls;
-                break;
-              }
-            }
-          }
-          urls = (fromSnapshot?.messagesUrl ? fromSnapshot : fromMessage)
-            ?? urls;
-          if (
-            !urls?.messagesUrl
-            && (!fallbackMessages || fallbackMessages.length === 0)
-          ) {
-            const previewMessages = snapshot?.previewMessages;
-            if (Array.isArray(previewMessages) && previewMessages.length > 0) {
-              fallbackMessages = previewMessages;
-            } else if (record && record.messages.length > 0) {
-              // Older snapshots: rebuild A2UI preview from assistant history.
-              const rebuilt = buildPreviewMessagesFromHistory(record.messages);
-              if (rebuilt.length > 0) fallbackMessages = rebuilt;
-            }
-          }
-        }
-
-        // No durable URL yet: publish the raw A2UI messages to Supabase.
-        if (
-          !urls?.messagesUrl && fallbackMessages && fallbackMessages.length > 0
-        ) {
-          urls = await publishA2UIPayload(fallbackMessages);
-        }
-
-        if (!urls?.messagesUrl) {
+        // Share the whole conversation: serialize the persisted record,
+        // upload it, and build a link that imports it into the recipient's
+        // playground (transcript + data model), not just the final UI.
+        const record = await loadConversation(id);
+        if (!record || record.messages.length === 0) {
           showCopyToast(false);
           return;
         }
-
-        const link = buildRenderUrl(
-          {
-            protocol,
-            demoUrl: DEFAULT_A2UI_DEMO_URL,
-            messages: [],
-            messagesUrl: urls.messagesUrl,
-            actionMocksUrl: urls.actionMocksUrl,
-            theme,
-          },
+        const doc = serializeConversation(record, protocol.name);
+        const conversationUrl = await publishConversation(doc);
+        const link = buildConversationShareUrl(
+          conversationUrl,
           baseUrl,
+          protocol.name,
         );
         showCopyToast(await copyToClipboard(link));
       } catch {
         showCopyToast(false);
       }
     },
-    [activeId, baseUrl, protocol, showCopyToast, theme],
+    [baseUrl, protocol, showCopyToast],
   );
 
   const handleShareConversation = useCallback((id: string) => {

@@ -150,7 +150,7 @@ export function ConversationListPanel(props: ConversationListPanelProps) {
                   iconOnly
                   iconBefore={Share2}
                   disabled={disabled || editing}
-                  title='Copy share link'
+                  title='Copy conversation link'
                   aria-label='Share conversation'
                   onClick={() => onShare(conversation.id)}
                 />

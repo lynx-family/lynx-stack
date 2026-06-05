@@ -8,12 +8,15 @@ import {
   createConversationMeta,
   deleteConversation,
   getActiveConversationId,
+  importConversation,
   listConversations,
   loadConversation,
+  previewTextFromSharedMessages,
   renameConversation,
   saveConversationMessages,
   setActiveConversationId,
 } from '../storage/conversationRepo.js';
+import type { SharedConversationDoc } from '../storage/sharedConversation.js';
 import type {
   ConversationMeta,
   DataModelSnapshot,
@@ -64,6 +67,7 @@ export interface UseConversationReturn {
   isPersistent: boolean;
   switchTo: (id: string) => Promise<void>;
   createNew: () => Promise<string>;
+  importShared: (doc: SharedConversationDoc) => Promise<string>;
   remove: (id: string) => Promise<void>;
   rename: (id: string, title: string) => Promise<void>;
   recordTurn: (input: RecordTurnInput) => Promise<void>;
@@ -450,6 +454,56 @@ export function useConversation(): UseConversationReturn {
     return meta.id;
   }, [syncHotState]);
 
+  const importShared = useCallback(
+    async (doc: SharedConversationDoc): Promise<string> => {
+      // In-memory fallback (IndexedDB unavailable): build hot state directly.
+      if (!persistentRef.current) {
+        const meta: ConversationMeta = {
+          ...createConversationMeta(doc.title || 'Shared conversation'),
+          messageCount: doc.messages.length,
+          previewText: previewTextFromSharedMessages(doc.messages),
+        };
+        const hotState: ConversationHotState = {
+          messages: doc.messages.map((message) => ({
+            role: message.role,
+            content: message.content,
+            previewPayloadUrls: message.previewPayloadUrls,
+            previewMetrics: clonePreviewPerformanceMetrics(
+              message.previewMetrics,
+            ),
+          })),
+          dataModel: cloneDataModel(doc.snapshot?.dataModel ?? {}),
+          surfaceIds: new Set(doc.snapshot?.surfaceIds ?? []),
+          previewMessages: [],
+          previewPayloadUrls: doc.snapshot?.previewPayloadUrls ?? null,
+        };
+        conversationHotStateMapRef.current.set(
+          meta.id,
+          cloneHotState(hotState),
+        );
+        setConversations((prev) => [meta, ...prev]);
+        activationTokenRef.current = Symbol(meta.id);
+        activeIdRef.current = meta.id;
+        setActiveId(meta.id);
+        syncHotState(
+          hotState.messages,
+          hotState.dataModel,
+          hotState.surfaceIds,
+          hotState.previewMessages,
+          hotState.previewPayloadUrls,
+        );
+        return meta.id;
+      }
+
+      const meta = await importConversation(doc);
+      await setActiveConversationId(meta.id);
+      await refreshConversations();
+      await activateRecord(meta.id);
+      return meta.id;
+    },
+    [activateRecord, refreshConversations, syncHotState],
+  );
+
   const remove = useCallback(
     async (id: string) => {
       if (persistentRef.current) {
@@ -676,6 +730,7 @@ export function useConversation(): UseConversationReturn {
     isPersistent,
     switchTo,
     createNew,
+    importShared,
     remove,
     rename,
     recordTurn,
