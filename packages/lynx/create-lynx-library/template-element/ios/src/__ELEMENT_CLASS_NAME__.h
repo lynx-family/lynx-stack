@@ -3,7 +3,7 @@
 
 NS_ASSUME_NONNULL_BEGIN
 
-@LynxAutolinkUI("__ELEMENT_NAME__")
+@LynxUIRegister("__ELEMENT_NAME__")
 @interface __ELEMENT_CLASS_NAME__ : LynxUI<UILabel *>
 
 @end

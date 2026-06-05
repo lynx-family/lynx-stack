@@ -62,7 +62,7 @@ const PACKAGE_JSON_DEPENDENCY_FIELDS = [
 ] as const satisfies ReadonlyArray<keyof PackageJson>;
 
 /**
- * Creates a Native Autolink library scaffold on disk.
+ * Creates a Lynx library scaffold on disk.
  */
 export function createLynxLibrary(
   options: CreateLynxLibraryOptions,
@@ -403,7 +403,7 @@ function resolveInside(targetDir: string, filePath: string): string {
  */
 function sourceIndex(context: TemplateContext): string {
   if (!context.features.has('native-module')) {
-    return `// Native Autolink package entry.
+    return `// Lynx library package entry.
 `;
   }
 
