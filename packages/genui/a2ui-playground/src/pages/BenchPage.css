@@ -1,0 +1,804 @@
+/* ═══════════════════════════════════════════
+   Bench Page
+   ═══════════════════════════════════════════ */
+
+.benchPage {
+  display: flex;
+  flex: 1;
+  min-width: 0;
+  min-height: 0;
+  flex-direction: column;
+  overflow: hidden;
+  background: linear-gradient(
+    180deg,
+    color-mix(in srgb, var(--geist-surface) 58%, var(--geist-background)),
+    var(--geist-background) 280px
+  );
+}
+
+.benchHeader {
+  background: color-mix(
+    in srgb,
+    var(--geist-background) 92%,
+    var(--geist-surface)
+  );
+}
+
+.benchBody {
+  flex: 1;
+  min-width: 0;
+  min-height: 0;
+  display: grid;
+  grid-template-columns: 300px minmax(560px, 1fr) minmax(360px, 420px);
+  overflow: hidden;
+}
+
+.benchRail,
+.benchReportPane {
+  min-height: 0;
+  overflow: auto;
+  border-right: 1px solid var(--geist-border);
+  background: color-mix(
+    in srgb,
+    var(--geist-background) 84%,
+    var(--geist-surface)
+  );
+}
+
+.benchRail {
+  padding: 14px;
+}
+
+.benchReportPane {
+  border-right: 0;
+  border-left: 1px solid var(--geist-border);
+  padding: 16px;
+}
+
+.benchMain {
+  min-width: 0;
+  min-height: 0;
+  overflow: auto;
+  padding: 18px;
+}
+
+.benchSection,
+.benchGroupsSection,
+.benchMatrixSection,
+.benchOverviewBand {
+  border: 1px solid var(--geist-border);
+  border-radius: var(--geist-radius-md);
+  background: var(--geist-background);
+  box-shadow: var(--geist-shadow-sm);
+}
+
+.benchSection {
+  padding: 14px;
+  margin-bottom: 14px;
+}
+
+.benchSectionHeader,
+.benchReportHeader,
+.benchGroupsHeader {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+  min-width: 0;
+  margin-bottom: 12px;
+}
+
+.benchReportHeader {
+  align-items: center;
+}
+
+.benchSectionTitle {
+  margin: 0;
+  color: var(--geist-foreground);
+  font-size: 13px;
+  font-weight: 750;
+  letter-spacing: 0.08em;
+  line-height: 1.25;
+  text-transform: uppercase;
+}
+
+.benchSectionSub {
+  margin: 4px 0 0;
+  color: var(--geist-secondary);
+  font-size: 12px;
+  line-height: 1.35;
+}
+
+.benchStatusPill {
+  display: inline-flex;
+  align-items: center;
+  height: 24px;
+  padding: 0 9px;
+  border: 1px solid var(--geist-border);
+  border-radius: 999px;
+  background: var(--geist-surface);
+  color: var(--geist-secondary);
+  font-size: 11px;
+  font-weight: 650;
+  white-space: nowrap;
+}
+
+.benchField {
+  display: flex;
+  min-width: 0;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.benchField + .benchField {
+  margin-top: 10px;
+}
+
+.benchFieldLabel {
+  color: var(--geist-secondary);
+  font-size: 10px;
+  font-weight: 750;
+  letter-spacing: 0.09em;
+  line-height: 1.2;
+  text-transform: uppercase;
+}
+
+.benchInput,
+.benchSelect,
+.benchTextarea,
+.benchInlineInput,
+.benchGroupName {
+  width: 100%;
+  min-width: 0;
+  border: 1px solid var(--geist-border);
+  border-radius: var(--geist-radius-sm);
+  background: color-mix(
+    in srgb,
+    var(--geist-background) 88%,
+    var(--geist-surface)
+  );
+  color: var(--geist-foreground);
+  font-family: var(--geist-font);
+  font-size: 13px;
+  transition:
+    background var(--geist-transition),
+    border-color var(--geist-transition),
+    box-shadow var(--geist-transition);
+}
+
+.benchInput,
+.benchSelect,
+.benchInlineInput {
+  height: 34px;
+  padding: 0 10px;
+}
+
+.benchTextarea {
+  min-height: 78px;
+  padding: 9px 10px;
+  line-height: 1.5;
+  resize: vertical;
+}
+
+.benchInput:focus,
+.benchSelect:focus,
+.benchTextarea:focus,
+.benchInlineInput:focus,
+.benchGroupName:focus {
+  outline: none;
+  border-color: color-mix(
+    in srgb,
+    var(--geist-foreground) 58%,
+    var(--geist-border)
+  );
+  box-shadow: 0 0 0 3px
+    color-mix(in srgb, var(--geist-foreground) 8%, transparent);
+}
+
+.benchSelect {
+  cursor: pointer;
+}
+
+.benchRunnerGrid,
+.benchGroupFields,
+.benchScenarioMetaRow {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.benchRunnerGrid .benchField + .benchField,
+.benchGroupFields .benchField + .benchField {
+  margin-top: 0;
+}
+
+.benchToggle {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  min-height: 28px;
+  margin-top: 8px;
+  color: var(--geist-foreground);
+  font-size: 13px;
+  font-weight: 550;
+}
+
+.benchToggle input {
+  width: 15px;
+  height: 15px;
+  accent-color: var(--geist-foreground);
+}
+
+.benchRunActions {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 8px;
+  margin-top: 14px;
+}
+
+.benchProgressTrack {
+  height: 6px;
+  margin-top: 12px;
+  overflow: hidden;
+  border-radius: 999px;
+  background: color-mix(
+    in srgb,
+    var(--geist-border) 72%,
+    var(--geist-surface)
+  );
+}
+
+.benchProgressBar {
+  height: 100%;
+  border-radius: inherit;
+  background: linear-gradient(
+    90deg,
+    var(--geist-foreground),
+    color-mix(in srgb, var(--geist-foreground) 58%, var(--geist-secondary))
+  );
+  transition: width 160ms ease;
+}
+
+.benchRunMeta {
+  margin-top: 7px;
+  color: var(--geist-secondary);
+  font-size: 11px;
+  font-weight: 600;
+  text-align: right;
+}
+
+.benchScenarioList {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.benchScenarioItem {
+  padding: 11px;
+  border: 1px solid var(--geist-border);
+  border-radius: var(--geist-radius-md);
+  background: var(--geist-surface);
+}
+
+.benchScenarioTop {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 8px;
+  align-items: center;
+  margin-bottom: 8px;
+}
+
+.benchScenarioName {
+  font-weight: 700;
+}
+
+.benchScenarioPrompt {
+  min-height: 92px;
+  margin-bottom: 8px;
+  background: var(--geist-background);
+}
+
+.benchOverviewBand {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  align-items: end;
+  gap: 20px;
+  padding: 20px;
+  margin-bottom: 16px;
+  background:
+    radial-gradient(
+      circle at 92% 8%,
+      color-mix(in srgb, var(--geist-foreground) 7%, transparent),
+      transparent 34%
+    ),
+    var(--geist-background);
+}
+
+.benchEyebrow {
+  margin-bottom: 9px;
+  color: var(--geist-secondary);
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0.17em;
+  text-transform: uppercase;
+}
+
+.benchOverviewTitle {
+  max-width: 720px;
+  margin: 0;
+  color: var(--geist-foreground);
+  font-size: 26px;
+  font-weight: 780;
+  letter-spacing: 0;
+  line-height: 1.12;
+}
+
+.benchMetricStrip {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(92px, 1fr));
+  gap: 8px;
+}
+
+.benchMetric,
+.benchInsight {
+  border: 1px solid var(--geist-border);
+  border-radius: var(--geist-radius-md);
+  background: color-mix(
+    in srgb,
+    var(--geist-background) 82%,
+    var(--geist-surface)
+  );
+}
+
+.benchMetric {
+  min-width: 96px;
+  padding: 12px;
+}
+
+.benchMetricLabel,
+.benchInsight span {
+  display: block;
+  color: var(--geist-secondary);
+  font-size: 10px;
+  font-weight: 750;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.benchMetric strong {
+  display: block;
+  margin-top: 5px;
+  color: var(--geist-foreground);
+  font-size: 18px;
+  font-weight: 780;
+  font-variant-numeric: tabular-nums;
+}
+
+.benchGroupsSection,
+.benchMatrixSection {
+  padding: 16px;
+  margin-bottom: 16px;
+}
+
+.benchHeaderActions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 8px;
+}
+
+.benchGroupGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 12px;
+}
+
+.benchGroupCard {
+  display: flex;
+  min-width: 0;
+  flex-direction: column;
+  gap: 11px;
+  padding: 13px;
+  border: 1px solid var(--geist-border);
+  border-radius: var(--geist-radius-md);
+  background: color-mix(
+    in srgb,
+    var(--geist-background) 90%,
+    var(--geist-surface)
+  );
+  transition:
+    opacity var(--geist-transition),
+    border-color var(--geist-transition),
+    box-shadow var(--geist-transition);
+}
+
+.benchGroupCard:hover {
+  border-color: var(--geist-border-hover);
+  box-shadow: var(--geist-shadow-md);
+}
+
+.benchGroupCard[data-disabled="true"] {
+  opacity: 0.54;
+}
+
+.benchGroupTop {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 8px;
+}
+
+.benchSwitch {
+  position: relative;
+  width: 34px;
+  height: 20px;
+}
+
+.benchSwitch input {
+  position: absolute;
+  inset: 0;
+  opacity: 0;
+}
+
+.benchSwitch span {
+  position: absolute;
+  inset: 0;
+  border: 1px solid var(--geist-border);
+  border-radius: 999px;
+  background: var(--geist-surface);
+  transition:
+    background var(--geist-transition),
+    border-color var(--geist-transition);
+}
+
+.benchSwitch span::after {
+  content: "";
+  position: absolute;
+  top: 2px;
+  left: 2px;
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  background: var(--geist-secondary);
+  transition:
+    background var(--geist-transition),
+    transform var(--geist-transition);
+}
+
+.benchSwitch input:checked + span {
+  border-color: var(--geist-foreground);
+  background: var(--geist-foreground);
+}
+
+.benchSwitch input:checked + span::after {
+  background: var(--geist-accent-foreground);
+  transform: translateX(14px);
+}
+
+.benchRoleControl {
+  display: inline-flex;
+  width: fit-content;
+  max-width: 100%;
+  padding: 2px;
+  border: 1px solid var(--geist-border);
+  border-radius: 999px;
+  background: var(--geist-surface);
+}
+
+.benchRoleButton {
+  height: 24px;
+  padding: 0 9px;
+  border: 0;
+  border-radius: 999px;
+  background: transparent;
+  color: var(--geist-secondary);
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: capitalize;
+  cursor: pointer;
+}
+
+.benchRoleButton.active {
+  background: var(--geist-background);
+  color: var(--geist-foreground);
+  box-shadow: var(--geist-shadow-sm);
+}
+
+.benchGroupName {
+  height: 38px;
+  padding: 0 10px;
+  border-color: transparent;
+  background: transparent;
+  font-size: 18px;
+  font-weight: 760;
+  letter-spacing: 0;
+}
+
+.benchMatrix {
+  display: grid;
+  grid-template-columns: minmax(160px, 0.8fr) repeat(3, minmax(160px, 1fr));
+  min-width: 760px;
+  overflow: hidden;
+  border: 1px solid var(--geist-border);
+  border-radius: var(--geist-radius-md);
+}
+
+.benchMatrixHeaderCell,
+.benchMatrixGroupCell,
+.benchMatrixCell {
+  min-width: 0;
+  border-right: 1px solid var(--geist-border);
+  border-bottom: 1px solid var(--geist-border);
+}
+
+.benchMatrixHeaderCell {
+  padding: 10px 12px;
+  background: var(--geist-surface);
+  color: var(--geist-secondary);
+  font-size: 11px;
+  font-weight: 750;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.benchMatrixGroupCell {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 12px;
+  color: var(--geist-foreground);
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.benchMatrixCell {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: 12px;
+  background: color-mix(
+    in srgb,
+    var(--geist-background) 90%,
+    var(--geist-surface)
+  );
+}
+
+.benchMatrixCell span {
+  color: var(--geist-foreground);
+  font-size: 13px;
+  font-weight: 650;
+}
+
+.benchMatrixCell small {
+  color: var(--geist-secondary);
+  font-size: 11px;
+}
+
+.benchRoleDot {
+  width: 8px;
+  height: 8px;
+  flex: 0 0 auto;
+  border-radius: 50%;
+  background: var(--geist-secondary);
+}
+
+.benchRoleDot.control {
+  background: #0070f3;
+}
+
+.benchRoleDot.experiment {
+  background: #f5a623;
+}
+
+.benchInsightGrid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 10px;
+  margin-bottom: 14px;
+}
+
+.benchInsight {
+  padding: 13px;
+}
+
+.benchInsight strong {
+  display: block;
+  margin-top: 7px;
+  overflow: hidden;
+  color: var(--geist-foreground);
+  font-size: 16px;
+  font-weight: 760;
+  line-height: 1.2;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.benchInsight small {
+  display: block;
+  margin-top: 4px;
+  color: var(--geist-secondary);
+  font-size: 12px;
+  font-variant-numeric: tabular-nums;
+}
+
+.benchReportTableWrap {
+  overflow: auto;
+  border: 1px solid var(--geist-border);
+  border-radius: var(--geist-radius-md);
+  background: var(--geist-background);
+}
+
+.benchReportTable {
+  width: 100%;
+  min-width: 720px;
+  border-collapse: collapse;
+}
+
+.benchReportTable th,
+.benchReportTable td {
+  padding: 10px 11px;
+  border-bottom: 1px solid var(--geist-border);
+  color: var(--geist-foreground);
+  font-size: 12px;
+  text-align: left;
+  vertical-align: top;
+  white-space: nowrap;
+}
+
+.benchReportTable th {
+  background: var(--geist-surface);
+  color: var(--geist-secondary);
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.benchReportTable tr:last-child td {
+  border-bottom: 0;
+}
+
+.benchReportTable strong {
+  display: block;
+  font-size: 12px;
+  font-variant-numeric: tabular-nums;
+}
+
+.benchReportTable small {
+  display: block;
+  margin-top: 2px;
+  color: var(--geist-secondary);
+  font-size: 10px;
+  font-variant-numeric: tabular-nums;
+}
+
+.benchTableGroup {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  max-width: 180px;
+}
+
+.benchTableGroup span:last-child {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.benchReportNotes {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 12px;
+  color: var(--geist-secondary);
+  font-size: 12px;
+  line-height: 1.45;
+}
+
+.benchDocLink {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  color: var(--geist-foreground);
+  font-weight: 650;
+}
+
+.benchEmptyReport {
+  min-height: 360px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  border: 1px dashed var(--geist-border);
+  border-radius: var(--geist-radius-md);
+  color: var(--geist-secondary);
+  text-align: center;
+}
+
+.benchEmptyReport strong {
+  color: var(--geist-foreground);
+  font-size: 15px;
+}
+
+.benchEmptyReport span {
+  font-size: 12px;
+}
+
+@media (max-width: 1240px) {
+  .benchBody {
+    grid-template-columns: 290px minmax(520px, 1fr);
+  }
+
+  .benchReportPane {
+    grid-column: 1 / -1;
+    min-height: 360px;
+    border-top: 1px solid var(--geist-border);
+    border-left: 0;
+  }
+
+  .benchInsightGrid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
+
+@media (min-width: 1500px) {
+  .benchOverviewBand {
+    grid-template-columns: minmax(0, 1fr) auto;
+  }
+}
+
+@media (max-width: 980px) {
+  .benchBody {
+    display: block;
+    overflow: auto;
+  }
+
+  .benchRail,
+  .benchMain,
+  .benchReportPane {
+    overflow: visible;
+  }
+
+  .benchRail,
+  .benchReportPane {
+    border-right: 0;
+  }
+
+  .benchMain {
+    padding: 14px;
+  }
+
+  .benchOverviewBand {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 720px) {
+  .benchRail,
+  .benchMain,
+  .benchReportPane {
+    padding: 12px;
+  }
+
+  .benchOverviewTitle {
+    font-size: 21px;
+  }
+
+  .benchMetricStrip,
+  .benchInsightGrid,
+  .benchRunnerGrid,
+  .benchGroupFields,
+  .benchScenarioMetaRow {
+    grid-template-columns: 1fr;
+  }
+
+  .benchHeaderActions {
+    width: 100%;
+    justify-content: stretch;
+  }
+
+  .benchHeaderActions .btn {
+    flex: 1;
+  }
+}
