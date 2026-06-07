@@ -1,14 +1,7 @@
 // Copyright 2026 The Lynx Authors. All rights reserved.
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
-import {
-  Fragment,
-  useCallback,
-  useEffect,
-  useMemo,
-  useRef,
-  useState,
-} from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
 import './BenchPage.css';
 
@@ -21,6 +14,7 @@ import {
   RotateCcw,
   Sparkles,
   Trash2,
+  X,
   Zap,
 } from '../components/Icon.js';
 import { PageHeader } from '../components/PageHeader.js';
@@ -411,6 +405,7 @@ export function BenchPage() {
   const [settings, setSettings] = useState<BenchSettings>(DEFAULT_SETTINGS);
   const [status, setStatus] = useState<BenchStatus>('idle');
   const [progress, setProgress] = useState(0);
+  const [configOpen, setConfigOpen] = useState(false);
   const [report, setReport] = useState<BenchReport | null>(() =>
     buildReport(
       DEFAULT_GROUPS,
@@ -427,6 +422,10 @@ export function BenchPage() {
     [groups],
   );
   const runCount = activeGroups.length * scenarios.length * settings.repeats;
+  const activeScenarioTypes = useMemo(
+    () => [...new Set(scenarios.map((scenario) => scenario.type))],
+    [scenarios],
+  );
 
   const clearRunTimer = useCallback(() => {
     if (runTimerRef.current !== null) {
@@ -436,6 +435,15 @@ export function BenchPage() {
   }, []);
 
   useEffect(() => clearRunTimer, [clearRunTimer]);
+
+  useEffect(() => {
+    if (!configOpen) return;
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') setConfigOpen(false);
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [configOpen]);
 
   const updateGroup = useCallback(
     (id: string, patch: Partial<BenchGroup>) => {
@@ -590,262 +598,19 @@ export function BenchPage() {
             <span className='chip'>{activeGroups.length} groups</span>
             <span className='chip'>{scenarios.length} scenarios</span>
             <span className='chip'>{runCount} runs</span>
+            <Button
+              variant='secondary'
+              size='sm'
+              iconBefore={Zap}
+              onClick={() => setConfigOpen(true)}
+            >
+              Configure
+            </Button>
           </>
         }
       />
 
       <div className='benchBody'>
-        <section className='benchRail' aria-label='Bench configuration'>
-          <div className='benchSection benchEnvSection'>
-            <div className='benchSectionHeader'>
-              <div>
-                <h3 className='benchSectionTitle'>Provider</h3>
-                <p className='benchSectionSub'>OpenAI-compatible runtime</p>
-              </div>
-              <span className='benchStatusPill'>
-                {env.apiKey.trim() ? 'Key set' : 'No key'}
-              </span>
-            </div>
-            <label className='benchField'>
-              <span className='benchFieldLabel'>OPENAI_API_KEY</span>
-              <input
-                className='benchInput'
-                type='password'
-                value={env.apiKey}
-                placeholder='sk-...'
-                onChange={(event) =>
-                  setEnv((current) => ({
-                    ...current,
-                    apiKey: event.target.value,
-                  }))}
-              />
-            </label>
-            <label className='benchField'>
-              <span className='benchFieldLabel'>OPENAI_BASE_URL</span>
-              <input
-                className='benchInput'
-                type='text'
-                value={env.baseURL}
-                onChange={(event) =>
-                  setEnv((current) => ({
-                    ...current,
-                    baseURL: event.target.value,
-                  }))}
-              />
-            </label>
-            <label className='benchField'>
-              <span className='benchFieldLabel'>OPENAI_MODEL</span>
-              <input
-                className='benchInput'
-                type='text'
-                value={env.model}
-                onChange={(event) =>
-                  setEnv((current) => ({
-                    ...current,
-                    model: event.target.value,
-                  }))}
-              />
-            </label>
-          </div>
-
-          <div className='benchSection'>
-            <div className='benchSectionHeader'>
-              <div>
-                <h3 className='benchSectionTitle'>Runner</h3>
-                <p className='benchSectionSub'>Local report prototype</p>
-              </div>
-              <Zap size={15} strokeWidth={2} />
-            </div>
-            <div className='benchRunnerGrid'>
-              <label className='benchField'>
-                <span className='benchFieldLabel'>Repeats</span>
-                <input
-                  className='benchInput'
-                  type='number'
-                  min={1}
-                  max={10}
-                  value={settings.repeats}
-                  onChange={(event) =>
-                    setSettings((current) => ({
-                      ...current,
-                      repeats: clampNumber(
-                        Number(event.target.value),
-                        1,
-                        10,
-                      ),
-                    }))}
-                />
-              </label>
-              <label className='benchField'>
-                <span className='benchFieldLabel'>Parallel</span>
-                <input
-                  className='benchInput'
-                  type='number'
-                  min={1}
-                  max={8}
-                  value={settings.parallelism}
-                  onChange={(event) =>
-                    setSettings((current) => ({
-                      ...current,
-                      parallelism: clampNumber(
-                        Number(event.target.value),
-                        1,
-                        8,
-                      ),
-                    }))}
-                />
-              </label>
-            </div>
-            <label className='benchToggle'>
-              <input
-                type='checkbox'
-                checked={settings.repairEnabled}
-                onChange={(event) =>
-                  setSettings((current) => ({
-                    ...current,
-                    repairEnabled: event.target.checked,
-                  }))}
-              />
-              <span>Repair attempts</span>
-            </label>
-            <label className='benchToggle'>
-              <input
-                type='checkbox'
-                checked={settings.judgeEnabled}
-                onChange={(event) =>
-                  setSettings((current) => ({
-                    ...current,
-                    judgeEnabled: event.target.checked,
-                  }))}
-              />
-              <span>ui-judge score</span>
-            </label>
-            <label className='benchToggle'>
-              <input
-                type='checkbox'
-                checked={settings.collectLiveRenderMetrics}
-                onChange={(event) =>
-                  setSettings((current) => ({
-                    ...current,
-                    collectLiveRenderMetrics: event.target.checked,
-                  }))}
-              />
-              <span>Live render metrics</span>
-            </label>
-            <div className='benchRunActions'>
-              <Button
-                variant='primary'
-                size='lg'
-                fullWidth
-                iconBefore={Play}
-                disabled={status === 'running' || runCount === 0}
-                onClick={startBench}
-              >
-                {status === 'running' ? 'Running' : 'Run Bench'}
-              </Button>
-              <Button
-                variant='secondary'
-                size='lg'
-                iconOnly
-                iconBefore={RotateCcw}
-                aria-label='Reset bench'
-                title='Reset bench'
-                onClick={resetBench}
-              />
-            </div>
-            <div className='benchProgressTrack' aria-hidden='true'>
-              <div
-                className='benchProgressBar'
-                style={{ width: `${status === 'running' ? progress : 100}%` }}
-              />
-            </div>
-            <div className='benchRunMeta'>
-              {status === 'running'
-                ? `${Math.round(progress)}% complete`
-                : `${runCount} planned runs`}
-            </div>
-          </div>
-
-          <div className='benchSection'>
-            <div className='benchSectionHeader'>
-              <div>
-                <h3 className='benchSectionTitle'>Scenarios</h3>
-                <p className='benchSectionSub'>Prompt suite</p>
-              </div>
-              <Button
-                variant='ghost'
-                size='sm'
-                iconOnly
-                iconBefore={MessageSquarePlus}
-                aria-label='Add scenario'
-                title='Add scenario'
-                onClick={addScenario}
-              />
-            </div>
-            <div className='benchScenarioList'>
-              {scenarios.map((scenario) => (
-                <div className='benchScenarioItem' key={scenario.id}>
-                  <div className='benchScenarioTop'>
-                    <input
-                      className='benchInlineInput benchScenarioName'
-                      value={scenario.name}
-                      aria-label='Scenario name'
-                      onChange={(event) =>
-                        updateScenario(
-                          scenario.id,
-                          { name: event.target.value },
-                        )}
-                    />
-                    <Button
-                      variant='danger'
-                      size='sm'
-                      iconOnly
-                      iconBefore={Trash2}
-                      aria-label={`Remove ${scenario.name}`}
-                      title={`Remove ${scenario.name}`}
-                      disabled={scenarios.length <= 1}
-                      onClick={() =>
-                        removeScenario(scenario.id)}
-                    />
-                  </div>
-                  <textarea
-                    className='benchTextarea benchScenarioPrompt'
-                    value={scenario.prompt}
-                    aria-label={`${scenario.name} prompt`}
-                    onChange={(event) =>
-                      updateScenario(
-                        scenario.id,
-                        { prompt: event.target.value },
-                      )}
-                  />
-                  <div className='benchScenarioMetaRow'>
-                    <input
-                      className='benchInlineInput'
-                      value={scenario.type}
-                      aria-label={`${scenario.name} type`}
-                      onChange={(event) =>
-                        updateScenario(
-                          scenario.id,
-                          { type: event.target.value },
-                        )}
-                    />
-                    <input
-                      className='benchInlineInput'
-                      value={scenario.action}
-                      aria-label={`${scenario.name} action`}
-                      onChange={(event) =>
-                        updateScenario(
-                          scenario.id,
-                          { action: event.target.value },
-                        )}
-                    />
-                  </div>
-                </div>
-              ))}
-            </div>
-          </div>
-        </section>
-
         <main className='benchMain' aria-label='Bench workspace'>
           <section className='benchOverviewBand'>
             <div className='benchOverviewCopy'>
@@ -886,6 +651,71 @@ export function BenchPage() {
                     }/5`
                     : 'n/a'}
                 </strong>
+              </div>
+            </div>
+            <div className='benchRunPanel'>
+              <div className='benchRunActions'>
+                <Button
+                  variant='primary'
+                  size='lg'
+                  iconBefore={Play}
+                  disabled={status === 'running' || runCount === 0}
+                  onClick={startBench}
+                >
+                  {status === 'running' ? 'Running' : 'Run Bench'}
+                </Button>
+                <Button
+                  variant='secondary'
+                  size='lg'
+                  iconBefore={Zap}
+                  onClick={() => setConfigOpen(true)}
+                >
+                  Configure
+                </Button>
+                <Button
+                  variant='secondary'
+                  size='lg'
+                  iconOnly
+                  iconBefore={RotateCcw}
+                  aria-label='Reset bench'
+                  title='Reset bench'
+                  onClick={resetBench}
+                />
+              </div>
+              <div className='benchProgressTrack' aria-hidden='true'>
+                <div
+                  className='benchProgressBar'
+                  style={{
+                    width: `${status === 'running' ? progress : 100}%`,
+                  }}
+                />
+              </div>
+              <div className='benchRunMeta'>
+                {status === 'running'
+                  ? `${Math.round(progress)}% complete`
+                  : `${runCount} planned runs`}
+              </div>
+            </div>
+            <div className='benchPlanSummary'>
+              <div className='benchPlanItem'>
+                <span>Provider</span>
+                <strong>{env.model || 'Model default'}</strong>
+                <small>{env.apiKey.trim() ? 'Key set' : 'No key'}</small>
+              </div>
+              <div className='benchPlanItem'>
+                <span>Runner</span>
+                <strong>
+                  {settings.repeats}x / {settings.parallelism} parallel
+                </strong>
+                <small>
+                  {settings.judgeEnabled ? 'judge on' : 'judge off'} ·{' '}
+                  {settings.repairEnabled ? 'repair on' : 'repair off'}
+                </small>
+              </div>
+              <div className='benchPlanItem'>
+                <span>Scenarios</span>
+                <strong>{scenarios.length} prompts</strong>
+                <small>{activeScenarioTypes.join(' / ')}</small>
               </div>
             </div>
           </section>
@@ -972,117 +802,110 @@ export function BenchPage() {
                         groupPatch('name', event.target.value),
                       )}
                   />
-                  <div className='benchGroupFields'>
-                    <label className='benchField'>
-                      <span className='benchFieldLabel'>Variable</span>
-                      <select
-                        className='benchSelect'
-                        value={group.variable}
-                        onChange={(event) =>
-                          updateGroup(
-                            group.id,
-                            groupPatch(
-                              'variable',
-                              event.target.value as BenchVariable,
-                            ),
-                          )}
-                      >
-                        <option value='model'>Model</option>
-                        <option value='prompt'>Prompt</option>
-                        <option value='catalog'>Catalog</option>
-                        <option value='custom'>Custom</option>
-                      </select>
-                    </label>
-                    <label className='benchField'>
-                      <span className='benchFieldLabel'>Catalog</span>
-                      <select
-                        className='benchSelect'
-                        value={group.catalog}
-                        onChange={(event) =>
-                          updateGroup(
-                            group.id,
-                            groupPatch('catalog', event.target.value),
-                          )}
-                      >
-                        {CATALOG_OPTIONS.map((catalog) => (
-                          <option key={catalog} value={catalog}>
-                            {catalog}
-                          </option>
-                        ))}
-                      </select>
-                    </label>
+                  <div className='benchGroupSummary'>
+                    <span>{group.variable}</span>
+                    <span>{group.catalog}</span>
+                    <span>{group.model || env.model}</span>
                   </div>
-                  <label className='benchField'>
-                    <span className='benchFieldLabel'>Model override</span>
-                    <input
-                      className='benchInput'
-                      type='text'
-                      value={group.model}
-                      placeholder={env.model}
-                      onChange={(event) =>
-                        updateGroup(
-                          group.id,
-                          groupPatch('model', event.target.value),
-                        )}
-                    />
-                  </label>
-                  <label className='benchField'>
-                    <span className='benchFieldLabel'>Extra instruction</span>
-                    <textarea
-                      className='benchTextarea'
-                      value={group.extraInstruction}
-                      placeholder='Additional system instruction for this group'
-                      onChange={(event) =>
-                        updateGroup(
-                          group.id,
-                          groupPatch('extraInstruction', event.target.value),
-                        )}
-                    />
-                  </label>
+                  <details className='benchGroupDetails'>
+                    <summary>Configure</summary>
+                    <div className='benchGroupFields'>
+                      <label className='benchField'>
+                        <span className='benchFieldLabel'>Variable</span>
+                        <select
+                          className='benchSelect'
+                          value={group.variable}
+                          onChange={(event) =>
+                            updateGroup(
+                              group.id,
+                              groupPatch(
+                                'variable',
+                                event.target.value as BenchVariable,
+                              ),
+                            )}
+                        >
+                          <option value='model'>Model</option>
+                          <option value='prompt'>Prompt</option>
+                          <option value='catalog'>Catalog</option>
+                          <option value='custom'>Custom</option>
+                        </select>
+                      </label>
+                      <label className='benchField'>
+                        <span className='benchFieldLabel'>Catalog</span>
+                        <select
+                          className='benchSelect'
+                          value={group.catalog}
+                          onChange={(event) =>
+                            updateGroup(
+                              group.id,
+                              groupPatch('catalog', event.target.value),
+                            )}
+                        >
+                          {CATALOG_OPTIONS.map((catalog) => (
+                            <option key={catalog} value={catalog}>
+                              {catalog}
+                            </option>
+                          ))}
+                        </select>
+                      </label>
+                    </div>
+                    <label className='benchField'>
+                      <span className='benchFieldLabel'>Model override</span>
+                      <input
+                        className='benchInput'
+                        type='text'
+                        value={group.model}
+                        placeholder={env.model}
+                        onChange={(event) =>
+                          updateGroup(
+                            group.id,
+                            groupPatch('model', event.target.value),
+                          )}
+                      />
+                    </label>
+                    <label className='benchField'>
+                      <span className='benchFieldLabel'>Extra instruction</span>
+                      <textarea
+                        className='benchTextarea'
+                        value={group.extraInstruction}
+                        placeholder='Additional system instruction for this group'
+                        onChange={(event) =>
+                          updateGroup(
+                            group.id,
+                            groupPatch('extraInstruction', event.target.value),
+                          )}
+                      />
+                    </label>
+                  </details>
                 </article>
               ))}
             </div>
           </section>
 
-          <section className='benchMatrixSection'>
+          <section className='benchPlanSection'>
             <div className='benchSectionHeader'>
               <div>
-                <h3 className='benchSectionTitle'>Run Matrix</h3>
+                <h3 className='benchSectionTitle'>Plan</h3>
                 <p className='benchSectionSub'>
-                  {activeGroups.length} x {scenarios.length} x{' '}
-                  {settings.repeats}
+                  {activeGroups.length} groups · {scenarios.length} scenarios ·
+                  {' '}
+                  {settings.repeats} repeats
                 </p>
               </div>
+              <Button
+                variant='ghost'
+                size='sm'
+                iconBefore={Zap}
+                onClick={() => setConfigOpen(true)}
+              >
+                Edit
+              </Button>
             </div>
-            <div
-              className='benchMatrix'
-              style={{
-                gridTemplateColumns:
-                  `minmax(160px, 0.8fr) repeat(${scenarios.length}, minmax(160px, 1fr))`,
-              }}
-            >
-              <div className='benchMatrixHeaderCell'>Group</div>
+            <div className='benchScenarioChips'>
               {scenarios.map((scenario) => (
-                <div className='benchMatrixHeaderCell' key={scenario.id}>
+                <span className='benchScenarioChip' key={scenario.id}>
                   {scenario.name}
-                </div>
-              ))}
-              {activeGroups.map((group) => (
-                <Fragment key={group.id}>
-                  <div className='benchMatrixGroupCell'>
-                    <span className={`benchRoleDot ${group.role}`} />
-                    {group.name}
-                  </div>
-                  {scenarios.map((scenario) => (
-                    <div
-                      className='benchMatrixCell'
-                      key={`${group.id}-${scenario.id}`}
-                    >
-                      <span>{settings.repeats} runs</span>
-                      <small>{scenario.action}</small>
-                    </div>
-                  ))}
-                </Fragment>
+                </span>
               ))}
             </div>
           </section>
@@ -1226,6 +1049,287 @@ export function BenchPage() {
             )}
         </aside>
       </div>
+
+      {configOpen
+        ? (
+          <div
+            className='benchConfigOverlay'
+            role='presentation'
+            onMouseDown={(event) => {
+              if (event.target === event.currentTarget) setConfigOpen(false);
+            }}
+          >
+            <section
+              className='benchConfigDialog'
+              role='dialog'
+              aria-modal='true'
+              aria-labelledby='bench-config-title'
+            >
+              <header className='benchConfigHeader'>
+                <div>
+                  <h2 id='bench-config-title' className='benchConfigTitle'>
+                    Bench configuration
+                  </h2>
+                  <p className='benchConfigSub'>
+                    Provider, runner, and scenario inputs.
+                  </p>
+                </div>
+                <Button
+                  variant='ghost'
+                  size='md'
+                  iconOnly
+                  iconBefore={X}
+                  aria-label='Close bench configuration'
+                  title='Close bench configuration'
+                  onClick={() => setConfigOpen(false)}
+                />
+              </header>
+
+              <div className='benchConfigBody'>
+                <div className='benchConfigColumn'>
+                  <section className='benchConfigSection'>
+                    <div className='benchSectionHeader'>
+                      <div>
+                        <h3 className='benchSectionTitle'>Provider</h3>
+                        <p className='benchSectionSub'>
+                          OpenAI-compatible runtime
+                        </p>
+                      </div>
+                      <span className='benchStatusPill'>
+                        {env.apiKey.trim() ? 'Key set' : 'No key'}
+                      </span>
+                    </div>
+                    <label className='benchField'>
+                      <span className='benchFieldLabel'>OPENAI_API_KEY</span>
+                      <input
+                        className='benchInput'
+                        type='password'
+                        value={env.apiKey}
+                        placeholder='sk-...'
+                        onChange={(event) =>
+                          setEnv((current) => ({
+                            ...current,
+                            apiKey: event.target.value,
+                          }))}
+                      />
+                    </label>
+                    <label className='benchField'>
+                      <span className='benchFieldLabel'>OPENAI_BASE_URL</span>
+                      <input
+                        className='benchInput'
+                        type='text'
+                        value={env.baseURL}
+                        onChange={(event) =>
+                          setEnv((current) => ({
+                            ...current,
+                            baseURL: event.target.value,
+                          }))}
+                      />
+                    </label>
+                    <label className='benchField'>
+                      <span className='benchFieldLabel'>OPENAI_MODEL</span>
+                      <input
+                        className='benchInput'
+                        type='text'
+                        value={env.model}
+                        onChange={(event) =>
+                          setEnv((current) => ({
+                            ...current,
+                            model: event.target.value,
+                          }))}
+                      />
+                    </label>
+                  </section>
+
+                  <section className='benchConfigSection'>
+                    <div className='benchSectionHeader'>
+                      <div>
+                        <h3 className='benchSectionTitle'>Runner</h3>
+                        <p className='benchSectionSub'>
+                          Repeats, parallelism, and checks
+                        </p>
+                      </div>
+                      <Zap size={15} strokeWidth={2} />
+                    </div>
+                    <div className='benchRunnerGrid'>
+                      <label className='benchField'>
+                        <span className='benchFieldLabel'>Repeats</span>
+                        <input
+                          className='benchInput'
+                          type='number'
+                          min={1}
+                          max={10}
+                          value={settings.repeats}
+                          onChange={(event) =>
+                            setSettings((current) => ({
+                              ...current,
+                              repeats: clampNumber(
+                                Number(event.target.value),
+                                1,
+                                10,
+                              ),
+                            }))}
+                        />
+                      </label>
+                      <label className='benchField'>
+                        <span className='benchFieldLabel'>Parallel</span>
+                        <input
+                          className='benchInput'
+                          type='number'
+                          min={1}
+                          max={8}
+                          value={settings.parallelism}
+                          onChange={(event) =>
+                            setSettings((current) => ({
+                              ...current,
+                              parallelism: clampNumber(
+                                Number(event.target.value),
+                                1,
+                                8,
+                              ),
+                            }))}
+                        />
+                      </label>
+                    </div>
+                    <label className='benchToggle'>
+                      <input
+                        type='checkbox'
+                        checked={settings.repairEnabled}
+                        onChange={(event) =>
+                          setSettings((current) => ({
+                            ...current,
+                            repairEnabled: event.target.checked,
+                          }))}
+                      />
+                      <span>Repair attempts</span>
+                    </label>
+                    <label className='benchToggle'>
+                      <input
+                        type='checkbox'
+                        checked={settings.judgeEnabled}
+                        onChange={(event) =>
+                          setSettings((current) => ({
+                            ...current,
+                            judgeEnabled: event.target.checked,
+                          }))}
+                      />
+                      <span>ui-judge score</span>
+                    </label>
+                    <label className='benchToggle'>
+                      <input
+                        type='checkbox'
+                        checked={settings.collectLiveRenderMetrics}
+                        onChange={(event) =>
+                          setSettings((current) => ({
+                            ...current,
+                            collectLiveRenderMetrics: event.target.checked,
+                          }))}
+                      />
+                      <span>Live render metrics</span>
+                    </label>
+                  </section>
+                </div>
+
+                <section className='benchConfigSection benchConfigScenarios'>
+                  <div className='benchSectionHeader'>
+                    <div>
+                      <h3 className='benchSectionTitle'>Scenarios</h3>
+                      <p className='benchSectionSub'>Prompt suite</p>
+                    </div>
+                    <Button
+                      variant='secondary'
+                      size='sm'
+                      iconBefore={MessageSquarePlus}
+                      onClick={addScenario}
+                    >
+                      Add
+                    </Button>
+                  </div>
+                  <div className='benchScenarioList'>
+                    {scenarios.map((scenario) => (
+                      <div className='benchScenarioItem' key={scenario.id}>
+                        <div className='benchScenarioTop'>
+                          <input
+                            className='benchInlineInput benchScenarioName'
+                            value={scenario.name}
+                            aria-label='Scenario name'
+                            onChange={(event) =>
+                              updateScenario(
+                                scenario.id,
+                                { name: event.target.value },
+                              )}
+                          />
+                          <Button
+                            variant='danger'
+                            size='sm'
+                            iconOnly
+                            iconBefore={Trash2}
+                            aria-label={`Remove ${scenario.name}`}
+                            title={`Remove ${scenario.name}`}
+                            disabled={scenarios.length <= 1}
+                            onClick={() =>
+                              removeScenario(scenario.id)}
+                          />
+                        </div>
+                        <textarea
+                          className='benchTextarea benchScenarioPrompt'
+                          value={scenario.prompt}
+                          aria-label={`${scenario.name} prompt`}
+                          onChange={(event) =>
+                            updateScenario(
+                              scenario.id,
+                              { prompt: event.target.value },
+                            )}
+                        />
+                        <div className='benchScenarioMetaRow'>
+                          <input
+                            className='benchInlineInput'
+                            value={scenario.type}
+                            aria-label={`${scenario.name} type`}
+                            onChange={(event) =>
+                              updateScenario(
+                                scenario.id,
+                                { type: event.target.value },
+                              )}
+                          />
+                          <input
+                            className='benchInlineInput'
+                            value={scenario.action}
+                            aria-label={`${scenario.name} action`}
+                            onChange={(event) =>
+                              updateScenario(
+                                scenario.id,
+                                { action: event.target.value },
+                              )}
+                          />
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </section>
+              </div>
+
+              <footer className='benchConfigFooter'>
+                <Button
+                  variant='secondary'
+                  size='md'
+                  iconBefore={RotateCcw}
+                  onClick={resetBench}
+                >
+                  Reset
+                </Button>
+                <Button
+                  variant='primary'
+                  size='md'
+                  onClick={() => setConfigOpen(false)}
+                >
+                  Done
+                </Button>
+              </footer>
+            </section>
+          </div>
+        )
+        : null}
     </div>
   );
 }
