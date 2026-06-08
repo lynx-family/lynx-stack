@@ -2,18 +2,7 @@
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
 
-import { INTERNAL_FEATURES } from 'tailwindcss/lib/lib/setupContextUtils.js';
-import _createUtilityPlugin from 'tailwindcss/lib/util/createUtilityPlugin.js';
-import {
-  formatBoxShadowValue,
-  parseBoxShadowValue,
-} from 'tailwindcss/lib/util/parseBoxShadowValue.js';
-import type { ShadowPart } from 'tailwindcss/lib/util/parseBoxShadowValue.js';
-import _transformThemeValue from 'tailwindcss/lib/util/transformThemeValue.js';
-import type {
-  ThemeKey,
-  ValueTransformer,
-} from 'tailwindcss/lib/util/transformThemeValue.js';
+import { createRequire } from 'node:module';
 
 import type {
   Bound,
@@ -30,6 +19,73 @@ import type {
   PluginAPI,
   PluginCreator,
 } from './types/tailwind-types.js';
+
+/* ──────────────── types for tailwindcss internals ─────────── */
+
+export interface ShadowPart {
+  raw: string;
+  keyword?: string;
+  x?: string;
+  y?: string;
+  blur?: string;
+  spread?: string;
+  color?: string;
+  unknown?: string[];
+  valid: boolean;
+}
+
+type FontKeys = 'fontSize' | 'fontFamily' | 'outline';
+type TransformKeys =
+  | 'boxShadow'
+  | 'transitionProperty'
+  | 'transitionDuration'
+  | 'transitionDelay'
+  | 'transitionTimingFunction'
+  | 'backgroundImage'
+  | 'backgroundSize'
+  | 'backgroundColor'
+  | 'cursor'
+  | 'animation'
+  | 'gridTemplateColumns'
+  | 'gridTemplateRows'
+  | 'objectPosition'
+  | string & {};
+
+export type ThemeKey = FontKeys | TransformKeys;
+
+export type ValueTransformer<T = unknown> = (
+  value: T,
+  opts?: Record<string, unknown>,
+) => string | number | string[] | undefined;
+
+// Use createRequire to load tailwindcss CJS internals.
+// tailwindcss's CJS output uses swc's _export() helper pattern which
+// Node.js cjs-module-lexer cannot statically analyze, making ESM named
+// imports fail at runtime. createRequire bypasses this entirely by using
+// Node.js's CJS loader directly, working in both ESM and CJS output.
+const require = createRequire(import.meta.url);
+
+const _setupContextUtils = require(
+  'tailwindcss/lib/lib/setupContextUtils.js',
+) as { INTERNAL_FEATURES: symbol };
+const _createUtilityPlugin = require(
+  'tailwindcss/lib/util/createUtilityPlugin.js',
+) as { default: (themeKey: string, v?: unknown, o?: unknown) => PluginCreator };
+const _parseBoxShadowValue = require(
+  'tailwindcss/lib/util/parseBoxShadowValue.js',
+) as {
+  parseBoxShadowValue: (input: string) => ShadowPart[];
+  formatBoxShadowValue: (shadows: ShadowPart[]) => string;
+};
+const _transformThemeValue = require(
+  'tailwindcss/lib/util/transformThemeValue.js',
+) as { default: (key: ThemeKey) => ValueTransformer };
+
+const INTERNAL_FEATURES = _setupContextUtils.INTERNAL_FEATURES;
+const parseBoxShadowValue: (input: string) => ShadowPart[] =
+  _parseBoxShadowValue.parseBoxShadowValue;
+const formatBoxShadowValue: (shadows: ShadowPart[]) => string =
+  _parseBoxShadowValue.formatBoxShadowValue;
 
 /* ───────────────────────── createPlugin / autoBind ───────────────────────── */
 
@@ -115,7 +171,11 @@ function createUtilityPlugin(
   utilityVariations?: UtilityVariations,
   options?: UtilityPluginOptions,
 ): PluginCreator {
-  return _createUtilityPlugin(themeKey, utilityVariations as unknown, options);
+  return _createUtilityPlugin.default(
+    themeKey,
+    utilityVariations as unknown,
+    options,
+  );
 }
 
 export { createUtilityPlugin, createPlugin, autoBind, isPluginWithOptions };
@@ -124,9 +184,8 @@ export type { Plugin, PluginWithOptions };
 /* ──────────────── typed exports for transform/shadow utils ─────────── */
 
 export const transformThemeValue: (key: ThemeKey) => ValueTransformer =
-  _transformThemeValue;
+  _transformThemeValue.default;
 export { parseBoxShadowValue, formatBoxShadowValue };
-export type { ShadowPart };
 
 /* ──────────────── for handling variants that do not respect the project prefix ─────────── */
 /**
