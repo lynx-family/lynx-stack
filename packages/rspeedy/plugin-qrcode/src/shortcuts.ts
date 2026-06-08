@@ -115,7 +115,7 @@ async function loop(
         ...Object.values(options.customShortcuts ?? {}),
         { value: 'q', label: 'Quit' },
       ],
-      initialValue: 'q' as string,
+      initialValue: 'q',
     })
 
     if (

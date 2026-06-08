@@ -195,7 +195,7 @@ function resolveRuntimeOptions(
 
   const listChildren = options.listChildren;
   if (!Array.isArray(listChildren)) {
-    return { hasError: false, value: options as RuntimeOptions };
+    return { hasError: false, value: options };
   }
 
   const resolvedListChildren: ElementRef[] = [];
@@ -234,7 +234,7 @@ function resolveRuntimeOptions(
     value: ({
       ...options,
       listChildren: resolvedListChildren,
-    }) as RuntimeOptions,
+    }),
   };
 }
 

@@ -17,7 +17,6 @@ import type {
   ITestEnv,
   ITestProcessor,
   ITestRunner,
-  TCompiler,
   TCompilerFactory,
   TCompilerOptions,
   TCompilerStatsCompilation,
@@ -94,7 +93,7 @@ export function createRstestEnv(): ITestEnv {
     afterEach,
     expect,
     rstest: mockApi,
-  } as ITestEnv;
+  };
 }
 
 interface TRunnerOutput {
@@ -140,7 +139,7 @@ export function createRunner(
       [ECompilerType.Webpack]: options =>
         (require('webpack') as TCompilerFactory<ECompilerType>)(
           options,
-        ) as TCompiler<ECompilerType>,
+        ),
     },
     runnerFactory,
     testConfig,

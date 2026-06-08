@@ -176,9 +176,7 @@ export async function resolveA2UIImageUrls(
     if (!('updateDataModel' in message) || !message.updateDataModel) {
       continue;
     }
-    const dataModel = message.updateDataModel as
-      & typeof message.updateDataModel
-      & { value?: unknown };
+    const dataModel = message.updateDataModel;
     if (!('value' in dataModel)) continue;
 
     const updatePath = dataModel.path ?? '/';

@@ -1,7 +1,7 @@
 // Copyright 2024 The Lynx Authors. All rights reserved.
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
-import type { RunWorkletCtxData, Worklet } from '@lynx-js/react/worklet-runtime/bindings';
+import type { Worklet } from '@lynx-js/react/worklet-runtime/bindings';
 import { WorkletEvents } from '@lynx-js/react/worklet-runtime/bindings';
 
 import { isRendering } from '../../lifecycle/isRendering.js';
@@ -44,7 +44,7 @@ export function runOnMainThread<R, Fn extends (...args: any[]) => R>(fn: Fn): (.
         worklet: fn as any as Worklet,
         params,
         resolveId,
-      } as RunWorkletCtxData;
+      };
       if (__globalSnapshotPatch === undefined || isRendering.value) {
         // before hydration or is rendering
         delayedRunOnMainThreadData.push(data);

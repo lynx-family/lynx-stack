@@ -24,7 +24,7 @@ export function sendCtxNotFoundEventToBackground(id: number): void {
     type: ctxNotFoundType,
     data: {
       id,
-    } as CtxNotFoundData,
+    },
   });
 }
 

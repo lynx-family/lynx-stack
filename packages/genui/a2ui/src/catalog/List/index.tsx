@@ -38,7 +38,7 @@ export function List(
   const isDynamic = children && !Array.isArray(children)
     && typeof children === 'object';
   const template = isDynamic
-    ? (children as { path: string; componentId: string })
+    ? children
     : undefined;
 
   const [listData, , fullPath] = useDataBinding<Record<string, unknown>[]>(

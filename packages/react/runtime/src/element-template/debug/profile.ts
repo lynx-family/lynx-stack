@@ -78,7 +78,7 @@ export function initProfileHook(): void {
             profileMark('ReactLynx::setState', {
               flowId: this[sFlowID] ??= profileFlowId(),
               args: buildSetStateProfileMarkArgs(
-                this.state as Record<string, unknown>,
+                this.state,
                 this[NEXT_STATE] as Record<string, unknown>,
               ),
             });

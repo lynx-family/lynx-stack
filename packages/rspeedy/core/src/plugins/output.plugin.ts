@@ -56,7 +56,7 @@ export function pluginOutput(options?: Output): RsbuildPlugin {
               {},
               defaultDistPathOptions,
               options.distPath,
-            ) as Required<Required<RsbuildConfig>['output']>['distPath'],
+            ),
             filename: Object.assign(
               {},
               defaultFilenameOptions,

@@ -56,7 +56,7 @@ export function setupVNodeSourceHook(): void {
   hookInstalled = true;
   const oldDiffed = options[DIFFED];
   options[DIFFED] = (vnode) => {
-    captureVNodeSource(vnode as PatchedVNode);
+    captureVNodeSource(vnode);
     oldDiffed?.(vnode);
   };
 }

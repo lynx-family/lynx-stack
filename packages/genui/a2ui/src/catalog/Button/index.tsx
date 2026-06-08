@@ -81,7 +81,7 @@ export function Button(
 
   const handleClick = () => {
     if (enabled && action) {
-      void sendAction?.(action as Record<string, unknown>);
+      void sendAction?.(action);
     }
   };
 

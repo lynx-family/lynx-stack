@@ -95,7 +95,7 @@ function readFunctionDefinitions(catalogDir: string): A2UIFunctionSpec[] {
         name,
         ...(typeof description === 'string' ? { description } : {}),
         parameters: isRecord(parameters)
-          ? parameters as JsonSchema
+          ? parameters
           : { type: 'object', properties: {}, additionalProperties: false },
         returnType: isReturnType(returnType) ? returnType : 'any',
       });
@@ -128,7 +128,7 @@ function readCatalogManifest(filePath: string): Record<string, JsonSchema> {
       `[a2ui-prompt] Expected JSON schema object for ${componentName} in ${filePath}.`,
     );
   }
-  return { [componentName]: schema as JsonSchema };
+  return { [componentName]: schema };
 }
 
 function isRecord(value: unknown): value is Record<string, unknown> {

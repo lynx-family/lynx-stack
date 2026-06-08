@@ -157,7 +157,7 @@ describe('collectLazyBundleEntryResources', () => {
     const cg = { origins: [] as unknown[] }
     const otherCg = { origins: [] as unknown[] }
     const importer = { blocks: [otherBlock, targetBlock] }
-    ;(cg as { origins: unknown[] }).origins = [{ module: importer }]
+    cg.origins = [{ module: importer }]
     const compilation = {
       compiler: { webpack: fakeWebpack },
       namedChunkGroups: new Map([['name', cg]]),

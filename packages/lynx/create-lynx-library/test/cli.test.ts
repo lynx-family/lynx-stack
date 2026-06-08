@@ -263,7 +263,7 @@ describe('create-lynx-library CLI', () => {
     const resolvedCliPath = path.resolve(cliPath);
 
     vi.spyOn(fs, 'realpathSync').mockImplementation(
-      ((filePath) => {
+      (filePath) => {
         const resolvedPath = path.resolve(String(filePath));
 
         if (resolvedPath === path.resolve(binPath)) {
@@ -271,7 +271,7 @@ describe('create-lynx-library CLI', () => {
         }
 
         return resolvedPath;
-      }) as typeof fs.realpathSync,
+      },
     );
 
     expect(isCliEntrypoint(binPath, pathToFileURL(resolvedCliPath).href))

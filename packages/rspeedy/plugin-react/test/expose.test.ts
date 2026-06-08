@@ -49,28 +49,30 @@ describe('Expose', () => {
               >(Symbol.for('LynxTemplatePlugin'))
               api.modifyBundlerChain(chain => {
                 const PLUGIN_NAME = 'pluginThatUsesTemplateHooks'
-                chain.plugin(PLUGIN_NAME).use({
-                  apply(compiler) {
-                    compiler.hooks.compilation.tap(
-                      PLUGIN_NAME,
-                      compilation => {
-                        const templateHooks = expose!.LynxTemplatePlugin
-                          .getLynxTemplatePluginHooks(
-                            compilation as unknown as Parameters<
-                              LynxTemplatePlugin['getLynxTemplatePluginHooks']
-                            >[0],
-                          )
-                        templateHooks.beforeEncode.tap(PLUGIN_NAME, args => {
-                          beforeEncodeArgs = args
-                          return args
-                        })
-                      },
-                    )
-                  },
-                } as Rspack.RspackPluginInstance)
+                chain.plugin(PLUGIN_NAME).use(
+                  {
+                    apply(compiler) {
+                      compiler.hooks.compilation.tap(
+                        PLUGIN_NAME,
+                        compilation => {
+                          const templateHooks = expose!.LynxTemplatePlugin
+                            .getLynxTemplatePluginHooks(
+                              compilation as unknown as Parameters<
+                                LynxTemplatePlugin['getLynxTemplatePluginHooks']
+                              >[0],
+                            )
+                          templateHooks.beforeEncode.tap(PLUGIN_NAME, args => {
+                            beforeEncodeArgs = args
+                            return args
+                          })
+                        },
+                      )
+                    },
+                  } satisfies Rspack.RspackPluginInstance,
+                )
               })
             },
-          } as RsbuildPlugin,
+          } satisfies RsbuildPlugin,
         ],
       },
     })

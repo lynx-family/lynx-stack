@@ -187,7 +187,7 @@ export function extractCatalogComponentsFromTypeDocProject(
   const cwd = options.cwd ? path.resolve(options.cwd) : process.cwd();
   const components: CatalogComponent[] = [];
 
-  for (const reflection of walkReflections(project as TypeDocProject)) {
+  for (const reflection of walkReflections(project)) {
     if (!isInterfaceReflection(reflection)) {
       continue;
     }
@@ -232,7 +232,7 @@ export function extractCatalogFunctionsFromTypeDocProject(
   const cwd = options.cwd ? path.resolve(options.cwd) : process.cwd();
   const functions: CatalogFunction[] = [];
 
-  for (const reflection of walkReflections(project as TypeDocProject)) {
+  for (const reflection of walkReflections(project)) {
     const parsedDoc = parseComment(reflection.comment);
     let docWithSignature = parsedDoc;
     let signature = pickFunctionSignature(reflection);

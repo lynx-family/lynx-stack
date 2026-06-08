@@ -107,9 +107,9 @@ export function initElementPAPICallAlog(globalWithIndex: Record<string, unknown>
           || fiberElementPAPIName === '__CreateRawText'
           || fiberElementPAPIName === '__CreateList'
         ) {
-          fiberElementMap.set(result as FiberElement, {
-            tag: originalFiberElementPAPIs['__GetTag']!(result as FiberElement) as string,
-            uniqueId: originalFiberElementPAPIs['__GetElementUniqueID']!(result as FiberElement) as number,
+          fiberElementMap.set(result, {
+            tag: originalFiberElementPAPIs['__GetTag']!(result) as string,
+            uniqueId: originalFiberElementPAPIs['__GetElementUniqueID']!(result) as number,
           });
         }
 

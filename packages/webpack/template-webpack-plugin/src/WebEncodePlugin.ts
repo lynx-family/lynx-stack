@@ -91,10 +91,10 @@ export class WebEncodePlugin {
             styleInfo: (encodeOptions['css'] as {
               cssMap: Record<string, LynxStyleNode[]>;
             }).cssMap,
-            manifest: encodeOptions.manifest as Record<string, string>,
-            cardType: encodeOptions['cardType'] as string,
-            appType: encodeOptions['appType'] as string,
-            pageConfig: encodeOptions['pageConfig'] as Record<string, unknown>,
+            manifest: encodeOptions.manifest,
+            cardType: encodeOptions['cardType'],
+            appType: encodeOptions['appType'],
+            pageConfig: encodeOptions['pageConfig'],
             lepusCode: {
               // flatten the lepusCode to a single object
               ...encodeOptions.lepusCode.lepusChunk,

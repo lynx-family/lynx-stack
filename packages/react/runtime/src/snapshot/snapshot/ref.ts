@@ -82,7 +82,7 @@ function transformRef(ref: unknown): Ref | null | undefined {
   if ('__ref' in validRef) {
     return validRef as Ref;
   }
-  return Object.defineProperty(validRef, '__ref', { value: 1 }) as Ref;
+  return Object.defineProperty(validRef, '__ref', { value: 1 });
 }
 
 function applyQueuedRefs(): void {

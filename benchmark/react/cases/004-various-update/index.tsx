@@ -116,26 +116,26 @@ function F() {
   const [stopBenchmark, setStopBenchmark] = useState(false);
   const [values, setValues] = useState(
     [
-      'some-exposure-id' as string,
-      'some-dataset' as string,
+      'some-exposure-id',
+      'some-dataset',
       () => {},
       () => {
         'main thread';
       },
-      'width: 100rpx; height: 100rpx; background-color: #FACE00;' as string,
+      'width: 100rpx; height: 100rpx; background-color: #FACE00;',
       {
         width: '100rpx',
         height: '100rpx',
         backgroundColor: '#FACE00',
-      } as CSSProperties,
-      'some-css-class' as string,
-      'some-id' as string,
+      },
+      'some-css-class',
+      'some-id',
       (_e: NodesRef) => {},
-      'some_lynx_timing_flag' as string,
+      'some_lynx_timing_flag',
       (_e: MainThread.Element) => {
         'main thread';
       },
-      'some-item-key' as string,
+      'some-item-key',
     ] as const,
   );
 

@@ -22,7 +22,7 @@ export const makeSyncThen = function<T>(result: T): Promise<T>['then'] {
         // if (onR) {
         //   return Promise.resolve(onR(e));
         // }
-        return Promise.reject(e as Error);
+        return Promise.reject(e instanceof Error ? e : new Error(String(e)));
       }
 
       if (ret && typeof (ret as PromiseLike<TR1>).then === 'function' /* `thenable` object */) {
@@ -48,7 +48,7 @@ export const makeSyncThen = function<T>(result: T): Promise<T>['then'] {
       const then = makeSyncThen(ret as TR1);
       p.then = then as Promise<Awaited<TR1>>['then'];
 
-      return p as Promise<TR1 | TR2>;
+      return p;
     }
 
     return this as Promise<TR1 | TR2>;

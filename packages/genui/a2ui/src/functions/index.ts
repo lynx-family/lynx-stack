@@ -11,7 +11,6 @@ import { BASIC_FUNCTIONS } from '@a2ui/web_core/v0_9/basic_catalog';
 
 import { defineFunction } from '../catalog/defineCatalog.js';
 import type {
-  CatalogFunctionDefinition,
   CatalogFunctionEntry,
   FunctionManifest,
 } from '../catalog/defineCatalog.js';
@@ -78,10 +77,9 @@ function createBasicFunctionManifests(): Map<string, FunctionManifest> {
   })['v0.9'].inlineCatalogs?.[0];
   const definitions = inlineCatalog?.functions ?? [];
   return new Map(definitions.map(definition => {
-    const typedDefinition = definition as CatalogFunctionDefinition;
     return [
-      typedDefinition.name,
-      { [typedDefinition.name]: typedDefinition },
+      definition.name,
+      { [definition.name]: definition },
     ];
   }));
 }

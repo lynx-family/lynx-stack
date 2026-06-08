@@ -3,5 +3,8 @@
  */
 {
   "extends": "../../../api-extractor.json",
+  "compiler": {
+    "tsconfigFilePath": "<projectFolder>/tsconfig.json",
+  },
   "mainEntryPointFilePath": "<projectFolder>/dist/index.d.ts",
 }

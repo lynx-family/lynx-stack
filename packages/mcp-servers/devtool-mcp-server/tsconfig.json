@@ -3,6 +3,7 @@
   "extends": "../../../tsconfig.json",
   "compilerOptions": {
     "allowImportingTsExtensions": true,
+    "rootDir": "./src",
 
     "lib": ["ES2024.Promise", "ES2022"],
     "module": "nodenext",

@@ -471,7 +471,7 @@ export class A2UIProtocolMessageStreamParser {
     );
     const seen = this.seenComponentsBySurface.get(surfaceId)
       ?? new Map<string, ComponentRecord>();
-    seen.set(renderable.id, renderable as ComponentRecord);
+    seen.set(renderable.id, renderable);
     this.seenComponentsBySurface.set(surfaceId, seen);
 
     const components = buildReachableComponentSnapshot(seen, {

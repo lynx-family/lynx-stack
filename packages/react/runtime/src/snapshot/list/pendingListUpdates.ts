@@ -34,7 +34,7 @@ export const __pendingListUpdates = {
   },
   runWithoutUpdates(cb: () => void): void {
     const old = this.values;
-    this.values = null as unknown as Record<number, ListUpdateInfo>;
+    this.values = null;
     try {
       cb();
     } finally {

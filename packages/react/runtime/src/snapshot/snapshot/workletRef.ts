@@ -38,7 +38,7 @@ export function workletUnRef(value: Worklet | WorkletRefImpl<Element>): void {
     update(value as WorkletRefImpl<Element>, null);
   } else if ('_wkltId' in value) {
     if (typeof value._unmount == 'function') {
-      (value._unmount as () => void)();
+      (value._unmount)();
     } else {
       runWorkletCtx(value, [null]);
     }
@@ -70,7 +70,7 @@ export function updateWorkletRef(
     // do nothing
   } else if (value._wvid) {
     const element = snapshot.__elements[elementIndex]! as Element;
-    addToRefQueue(value as Worklet, element);
+    addToRefQueue(value, element);
   } else if ((value as Worklet)._wkltId) {
     const element = snapshot.__elements[elementIndex]! as Element;
     onWorkletCtxUpdate(
@@ -79,7 +79,7 @@ export function updateWorkletRef(
       isMainThreadHydrating,
       element,
     );
-    addToRefQueue(value as Worklet, element);
+    addToRefQueue(value, element);
     /* v8 ignore next 3 */
   } else if (value._type === '__LEPUS__' || (value as Worklet)._lepusWorkletHash) {
     // for pre-0.99 compatibility

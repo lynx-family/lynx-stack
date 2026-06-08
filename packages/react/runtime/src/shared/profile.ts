@@ -11,21 +11,21 @@ export const isProfiling: boolean = /* @__PURE__ */ Boolean(
   lynx.performance?.isProfileRecording?.(),
 );
 
-export const profileStart = /* @__PURE__ */ ((() => {
+export const profileStart: typeof lynx.performance.profileStart = /* @__PURE__ */ (() => {
   let p;
   if (!(p = lynx.performance) || typeof p.profileStart !== 'function') {
     return noop;
   }
   return p.profileStart.bind(p);
-})()) as typeof lynx.performance.profileStart;
+})();
 
-export const profileEnd = /* @__PURE__ */ ((() => {
+export const profileEnd: typeof lynx.performance.profileEnd = /* @__PURE__ */ (() => {
   let p;
   if (!(p = lynx.performance) || typeof p.profileEnd !== 'function') {
     return noop;
   }
   return p.profileEnd.bind(p);
-})()) as typeof lynx.performance.profileEnd;
+})();
 
 export const profileFlowId: typeof lynx.performance.profileFlowId = /* @__PURE__ */ (() => {
   let p;

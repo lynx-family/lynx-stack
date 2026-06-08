@@ -105,7 +105,7 @@ function createFallbackGlobalProps<Data>(
   return {
     Provider: () => FallbackProvider,
     Consumer: () => FallbackConsumer as Consumer<Data>,
-    use: () => useFallbackGlobalProps as () => Data,
+    use: () => useFallbackGlobalProps,
     useChanged: () => useChanged,
   };
 }
