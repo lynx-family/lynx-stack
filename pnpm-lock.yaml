@@ -1571,6 +1571,9 @@ importers:
       '@lynx-js/config-rsbuild-plugin':
         specifier: workspace:*
         version: link:../plugin-config
+      '@lynx-js/debug-metadata':
+        specifier: workspace:*
+        version: link:../../tools/debug-metadata
       '@lynx-js/react':
         specifier: workspace:*
         version: link:../../react

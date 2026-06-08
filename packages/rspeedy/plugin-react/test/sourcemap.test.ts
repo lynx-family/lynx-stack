@@ -13,6 +13,8 @@ import { SourceMapConsumer } from 'source-map'
 import type { NullableMappedPosition, RawSourceMap } from 'source-map'
 import { afterAll, afterEach, describe, expect, test, vi } from 'vitest'
 
+import { findSourceMap } from '@lynx-js/debug-metadata'
+import type { DebugMetadataAsset } from '@lynx-js/debug-metadata'
 import type { Output } from '@lynx-js/rspeedy'
 
 import { createStubRspeedy as createRspeedy } from './createRspeedy.js'
@@ -153,17 +155,44 @@ describe('Sourcemap', () => {
     ])
   })
 
-  test('js sourcemaps are emitted by default', async () => {
+  test('.map assets are dropped before emit', async () => {
     const tmp = await buildSourcemapFixture(undefined)
     const sourceMapFiles = await getSourceMapFiles(tmp)
 
-    expect(sourceMapFiles).toEqual([
-      '.rspeedy/main/background.js.map',
-      '.rspeedy/main/main-thread.js.map',
-      '.rspeedy/main/main.css.map',
-      'static/js/async/lazy-bundle-comp.jsx-react__background.js.map',
-      'static/js/async/lazy-bundle-comp.jsx-react__main-thread.js.map',
+    expect(sourceMapFiles).toEqual([])
+
+    const debugMetadataJson = await Promise.all([
+      readFile(
+        path.join(tmp, '.rspeedy/main/debug-metadata.json'),
+        'utf-8',
+      ),
+      readFile(
+        path.join(
+          tmp,
+          '.rspeedy/async/lazy-bundle-comp.jsx/debug-metadata.json',
+        ),
+        'utf-8',
+      ),
     ])
+    const metadata = debugMetadataJson.map(json =>
+      JSON.parse(json) as DebugMetadataAsset
+    )
+    const mapPathsInMetadata = metadata
+      .flatMap(meta => meta.artifacts)
+      .flatMap(a => a.debugSources)
+      .filter(d => d.kind === 'source-map')
+      .map(d => path.posix.normalize(d.path))
+      .sort()
+
+    expect(mapPathsInMetadata).toMatchInlineSnapshot(`
+      [
+        ".rspeedy/main/background.js.map",
+        ".rspeedy/main/main-thread.js.map",
+        ".rspeedy/main/main.css.map",
+        "static/js/async/lazy-bundle-comp.jsx-react__background.js.map",
+        "static/js/async/lazy-bundle-comp.jsx-react__main-thread.js.map",
+      ]
+    `)
   }, 25_000)
 
   test(
@@ -213,30 +242,46 @@ describe('Sourcemap', () => {
     async () => {
       const tmp = await buildSourcemapFixture({ css: true })
 
-      // find all `*.map` files inside tmp
-      const sourceMapFiles = await getSourceMapFiles(tmp)
+      const [mainMetadataJson, asyncMetadataJson] = await Promise.all([
+        readFile(
+          path.join(tmp, '.rspeedy/main/debug-metadata.json'),
+          'utf-8',
+        ),
+        readFile(
+          path.join(
+            tmp,
+            '.rspeedy/async/lazy-bundle-comp.jsx/debug-metadata.json',
+          ),
+          'utf-8',
+        ),
+      ])
+      const debugMetadata = JSON.parse(mainMetadataJson) as DebugMetadataAsset
+      const asyncMetadata = JSON.parse(asyncMetadataJson) as DebugMetadataAsset
+      const sourceMapFiles = [debugMetadata, asyncMetadata]
+        .flatMap(meta => meta.artifacts)
+        .flatMap(a => a.debugSources)
+        .filter(d => d.kind === 'source-map')
+        .map(d => path.posix.normalize(d.path))
+        .sort()
 
       expect(sourceMapFiles).toMatchInlineSnapshot(`
-      [
-        ".rspeedy/main/background.js.map",
-        ".rspeedy/main/main-thread.js.map",
-        ".rspeedy/main/main.css.map",
-        "static/js/async/lazy-bundle-comp.jsx-react__background.js.map",
-        "static/js/async/lazy-bundle-comp.jsx-react__main-thread.js.map",
-      ]
-    `)
+        [
+          ".rspeedy/main/background.js.map",
+          ".rspeedy/main/main-thread.js.map",
+          ".rspeedy/main/main.css.map",
+          "static/js/async/lazy-bundle-comp.jsx-react__background.js.map",
+          "static/js/async/lazy-bundle-comp.jsx-react__main-thread.js.map",
+        ]
+      `)
       expect(sourceMapFiles).toContain('.rspeedy/main/main.css.map')
 
       const cssSource = await readFile(
         path.join(tmp, '.rspeedy/main/main.css'),
         'utf-8',
       )
-      const cssSourceMap = JSON.parse(
-        await readFile(
-          path.join(tmp, '.rspeedy/main/main.css.map'),
-          'utf-8',
-        ),
-      ) as RawSourceMap
+      const cssSourceMap = findSourceMap(debugMetadata, {
+        filename: 'main.css.map',
+      })!.map as RawSourceMap
       const cssConsumer = await new SourceMapConsumer(cssSourceMap)
       const cssLine = cssSource
         .split('\n')
@@ -256,12 +301,9 @@ describe('Sourcemap', () => {
         path.join(tmp, '.rspeedy/main/background.js'),
         'utf-8',
       )
-      const backgroundSourceMap = JSON.parse(
-        await readFile(
-          path.join(tmp, '.rspeedy/main/background.js.map'),
-          'utf-8',
-        ),
-      ) as RawSourceMap
+      const backgroundSourceMap = findSourceMap(debugMetadata, {
+        filename: 'background.js.map',
+      })!.map as RawSourceMap
 
       const consumer = await new SourceMapConsumer(backgroundSourceMap)
       const functionName2Source: Record<string, NullableMappedPosition> = {}
