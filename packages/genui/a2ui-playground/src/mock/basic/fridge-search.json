@@ -29,9 +29,8 @@
         },
         {
           "id": "statusBarText",
-          "component": "Text",
-          "variant": "body",
-          "text": "Searching..."
+          "component": "Loading",
+          "variant": "inline"
         },
         {
           "id": "productList",
@@ -101,7 +100,7 @@
             "product-1-store"
           ]
         },
-        { "id": "product-1-title", "component": "Text", "variant": "body", "text": "Loading..." },
+        { "id": "product-1-title", "component": "Loading", "variant": "inline" },
         { "id": "product-1-price", "component": "Text", "variant": "body", "text": "" },
         { "id": "product-1-promo", "component": "Text", "variant": "caption", "text": "" },
         { "id": "product-1-store", "component": "Text", "variant": "caption", "text": "" },
@@ -186,7 +185,7 @@
             "product-2-store"
           ]
         },
-        { "id": "product-2-title", "component": "Text", "variant": "body", "text": "Loading..." },
+        { "id": "product-2-title", "component": "Loading", "variant": "inline" },
         { "id": "product-2-price", "component": "Text", "variant": "body", "text": "" },
         { "id": "product-2-promo", "component": "Text", "variant": "caption", "text": "" },
         { "id": "product-2-store", "component": "Text", "variant": "caption", "text": "" },
@@ -271,7 +270,7 @@
             "product-3-store"
           ]
         },
-        { "id": "product-3-title", "component": "Text", "variant": "body", "text": "Loading..." },
+        { "id": "product-3-title", "component": "Loading", "variant": "inline" },
         { "id": "product-3-price", "component": "Text", "variant": "body", "text": "" },
         { "id": "product-3-promo", "component": "Text", "variant": "caption", "text": "" },
         { "id": "product-3-store", "component": "Text", "variant": "caption", "text": "" },
@@ -356,7 +355,7 @@
             "product-4-store"
           ]
         },
-        { "id": "product-4-title", "component": "Text", "variant": "body", "text": "Loading..." },
+        { "id": "product-4-title", "component": "Loading", "variant": "inline" },
         { "id": "product-4-price", "component": "Text", "variant": "body", "text": "" },
         { "id": "product-4-promo", "component": "Text", "variant": "caption", "text": "" },
         { "id": "product-4-store", "component": "Text", "variant": "caption", "text": "" },

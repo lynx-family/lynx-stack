@@ -620,7 +620,12 @@ export function App() {
             {!isInstantPreview && store === null && error === ''
               ? (
                 <view className='a2ui-loadingOverlay'>
-                  <text className='a2ui-loadingText'>loading ...</text>
+                  <text className='a2ui-loadingTitle'>loading ...</text>
+                  <view className='a2ui-loadingDots'>
+                    <view className='a2ui-loadingDot' />
+                    <view className='a2ui-loadingDot a2ui-loadingDotDelay1' />
+                    <view className='a2ui-loadingDot a2ui-loadingDotDelay2' />
+                  </view>
                 </view>
               )
               : null}

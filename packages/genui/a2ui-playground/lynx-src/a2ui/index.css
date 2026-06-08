@@ -38,26 +38,81 @@
 
 .a2ui-loadingOverlay {
   position: absolute;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  left: 0;
   display: flex;
+  flex-direction: column;
   align-items: center;
+  justify-content: center;
+  gap: 12px;
+  padding: 16px;
+  box-sizing: border-box;
+  background-color: var(--canvas);
+  color: var(--content-muted);
+  z-index: 10;
+}
+
+.a2ui-loadingTitle {
+  color: var(--content-muted);
+  font-size: 14px;
+  font-weight: 500;
+  line-height: 1.35;
+  text-align: center;
+  max-width: 220px;
+  animation-name: a2ui-loading-pulse;
+  animation-duration: 1.8s;
+  animation-timing-function: ease-in-out;
+  animation-iteration-count: infinite;
+}
+
+.a2ui-loadingDots {
   display: flex;
+  flex-direction: row;
+  gap: 4px;
+  align-items: center;
   justify-content: center;
 }
 
-.a2ui-loadingText {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  min-width: 120px;
-  min-height: 44px;
-  padding: 0 18px;
-  border: 1px solid var(--line);
-  border-radius: 999px;
-  background: var(--neutral-film);
-  color: var(--content-muted);
-  font-size: 14px;
-  font-weight: 600;
-  line-height: 1.4;
+.a2ui-loadingDot {
+  width: 4px;
+  height: 4px;
+  border-radius: 50%;
+  background-color: var(--content-muted);
+  opacity: 0.35;
+  animation-name: a2ui-loading-dot;
+  animation-duration: 1.2s;
+  animation-timing-function: ease-in-out;
+  animation-iteration-count: infinite;
+}
+
+.a2ui-loadingDotDelay1 {
+  animation-delay: 0.15s;
+}
+
+.a2ui-loadingDotDelay2 {
+  animation-delay: 0.3s;
+}
+
+@keyframes a2ui-loading-pulse {
+  0%, 100% {
+    opacity: 0.55;
+  }
+  50% {
+    opacity: 0.85;
+  }
+}
+
+@keyframes a2ui-loading-dot {
+  0%, 100% {
+    transform: translateY(0);
+    opacity: 0.25;
+  }
+  50% {
+    transform: translateY(-2px);
+    opacity: 0.9;
+  }
 }
 
 /* Override A2UI tokens with Luna tokens for the playground preview. */

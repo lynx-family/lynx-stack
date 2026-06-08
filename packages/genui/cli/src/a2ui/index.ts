@@ -106,7 +106,7 @@ export async function runA2UICli(
       return 0;
     }
     const { runCli: runCatalogExtractorCli } = await import(
-      '@lynx-js/genui-a2ui-catalog-extractor/cli'
+      '../../../a2ui-catalog-extractor/dist/cli.js'
     );
     return await runCatalogExtractorCli(targetArgs, cwd);
   }
@@ -137,7 +137,7 @@ async function runGeneratePromptCli(
     BASIC_CATALOG_ID,
     buildA2UISystemPrompt,
     readA2UICatalogFromDirectory,
-  } = await import('@lynx-js/genui-a2ui-prompt');
+  } = await import('../../../a2ui-prompt/dist/index.js');
   const catalog = options.catalogDir
     ? readA2UICatalogFromDirectory({
       catalogDir: options.catalogDir,

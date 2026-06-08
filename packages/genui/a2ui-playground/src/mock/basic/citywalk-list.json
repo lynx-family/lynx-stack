@@ -22,9 +22,8 @@
         },
         {
           "id": "answer",
-          "component": "Text",
-          "variant": "body",
-          "text": "Generating..."
+          "component": "Loading",
+          "variant": "block"
         },
         {
           "id": "divider",

@@ -1,0 +1,7 @@
+# Local environment files (do not commit secrets)
+.env
+.env.local
+.env.*.local
+
+# Local UI judge result outputs
+ui-judge-results.json

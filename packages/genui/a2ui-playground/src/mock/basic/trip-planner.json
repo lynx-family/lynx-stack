@@ -24,9 +24,8 @@
         },
         {
           "id": "summary",
-          "component": "Text",
-          "variant": "body",
-          "text": "Drafting a two-day route..."
+          "component": "Loading",
+          "variant": "block"
         },
         {
           "id": "divider",
@@ -82,7 +81,7 @@
           "children": ["day1-title", "day1-weather"]
         },
         { "id": "day1-title", "component": "Text", "variant": "h4", "text": "Day 1 · East Kyoto" },
-        { "id": "day1-weather", "component": "Text", "variant": "caption", "text": "Preparing..." },
+        { "id": "day1-weather", "component": "Loading", "variant": "inline" },
         {
           "id": "day1-cover",
           "component": "Image",
@@ -132,7 +131,7 @@
           "children": ["d1-stop1-title", "d1-stop1-desc"]
         },
         { "id": "d1-stop1-title", "component": "Text", "variant": "h5", "text": "Kiyomizu-dera" },
-        { "id": "d1-stop1-desc", "component": "Text", "variant": "caption", "text": "Fetching notes..." }
+        { "id": "d1-stop1-desc", "component": "Loading", "variant": "inline" }
       ]
     }
   },

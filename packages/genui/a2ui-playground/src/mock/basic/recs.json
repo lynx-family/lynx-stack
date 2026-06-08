@@ -22,9 +22,8 @@
         },
         {
           "id": "answer",
-          "component": "Text",
-          "variant": "body",
-          "text": "Generating..."
+          "component": "Loading",
+          "variant": "block"
         },
         {
           "id": "divider",
@@ -83,9 +82,8 @@
         },
         {
           "id": "recCard-1-text",
-          "component": "Text",
-          "variant": "body",
-          "text": "1. Moonlight Terrace\nFilling in details..."
+          "component": "Loading",
+          "variant": "block"
         }
       ]
     }
@@ -131,9 +129,8 @@
         },
         {
           "id": "recCard-2-text",
-          "component": "Text",
-          "variant": "body",
-          "text": "2. Pinewood Bistro\nFilling in details..."
+          "component": "Loading",
+          "variant": "block"
         }
       ]
     }
@@ -179,9 +176,8 @@
         },
         {
           "id": "recCard-3-text",
-          "component": "Text",
-          "variant": "body",
-          "text": "3. Sea Breeze Kitchen\nFilling in details..."
+          "component": "Loading",
+          "variant": "block"
         }
       ]
     }
