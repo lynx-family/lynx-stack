@@ -28,7 +28,6 @@ function isLocalDevOrigin(origin: string): boolean {
         || hostname === '0.0.0.0'
         || hostname.startsWith('10.')
         || hostname.startsWith('192.168.')
-        || /^100\.(?:6[4-9]|[78]\d|9\d|1[01]\d|12[0-7])\./u.test(hostname)
         || /^172\.(?:1[6-9]|2\d|3[01])\./u.test(hostname)
       )
     );
