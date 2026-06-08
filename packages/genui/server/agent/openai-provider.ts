@@ -42,112 +42,10 @@ interface OpenAIEnv {
   OPENAI_MODEL?: string | undefined;
 }
 
-function isExactChatCompletionEndpoint(baseURL: string): boolean {
-  try {
-    const url = new URL(baseURL);
-    return url.hostname === 'aidp.bytedance.net'
-      && /\/api\/modelhub\/online\/v\d+\/crawl\/?$/u.test(url.pathname);
-  } catch {
-    return false;
-  }
-}
-
-function getRequestUrl(input: Parameters<typeof fetch>[0]): string | null {
-  if (typeof input === 'string') return input;
-  if (input instanceof URL) return input.toString();
-  if (input instanceof Request) return input.url;
-  return null;
-}
-
-function maybeRewriteExactChatURL(
-  input: Parameters<typeof fetch>[0],
-  baseURL: string,
-): Parameters<typeof fetch>[0] {
-  if (!isExactChatCompletionEndpoint(baseURL)) return input;
-  const raw = getRequestUrl(input);
-  if (!raw) return input;
-
-  try {
-    const requestUrl = new URL(raw);
-    const exactUrl = new URL(baseURL);
-    const basePath = exactUrl.pathname.replace(/\/$/u, '');
-    const expectedPath = `${basePath}/chat/completions`;
-    if (
-      requestUrl.origin !== exactUrl.origin
-      || requestUrl.pathname !== expectedPath
-    ) {
-      return input;
-    }
-    requestUrl.pathname = exactUrl.pathname;
-    requestUrl.search = exactUrl.search;
-    if (typeof input === 'string') return requestUrl.toString();
-    if (input instanceof URL) return requestUrl;
-    if (input instanceof Request) {
-      return new Request(requestUrl, input);
-    }
-  } catch {
-    return input;
-  }
-
-  return input;
-}
-
-async function normalizeExactChatResponse(
-  response: Response,
-  baseURL: string,
-): Promise<Response> {
-  if (!isExactChatCompletionEndpoint(baseURL)) return response;
-  const contentType = response.headers.get('content-type') ?? '';
-  if (!contentType.includes('application/json')) return response;
-
-  const text = await response.text();
-  try {
-    const parsed = JSON.parse(text) as unknown;
-    if (parsed && typeof parsed === 'object') {
-      const record = parsed as {
-        choices?: Record<string, unknown>[];
-        created?: unknown;
-        id?: unknown;
-      };
-      if (typeof record.id !== 'string') {
-        record.id = `chatcmpl-${Date.now().toString(36)}`;
-      }
-      if (typeof record.created !== 'number') {
-        record.created = Math.floor(Date.now() / 1000);
-      }
-      if (Array.isArray(record.choices)) {
-        record.choices = record.choices.map((choice, index) => ({
-          index,
-          ...choice,
-        }));
-      }
-      const headers = new Headers(response.headers);
-      headers.delete('content-length');
-      headers.set('content-type', 'application/json; charset=utf-8');
-      return new Response(JSON.stringify(record), {
-        status: response.status,
-        statusText: response.statusText,
-        headers,
-      });
-    }
-  } catch {
-    // Preserve the original body text for the SDK to report.
-  }
-
-  return new Response(text, {
-    status: response.status,
-    statusText: response.statusText,
-    headers: response.headers,
-  });
-}
-
-function createCompatFetch(baseURL: string): typeof fetch {
+function createCompatFetch(): typeof fetch {
   return async (input, init) => {
-    const nextInput = maybeRewriteExactChatURL(input, baseURL);
-    let response: Response;
     if (!init || !init.body || typeof init.body !== 'string') {
-      response = await fetch(nextInput, init);
-      return normalizeExactChatResponse(response, baseURL);
+      return fetch(input, init);
     }
     let body = init.body;
     try {
@@ -166,8 +64,7 @@ function createCompatFetch(baseURL: string): typeof fetch {
     } catch {
       // body is not JSON, leave as-is
     }
-    response = await fetch(nextInput, { ...init, body });
-    return normalizeExactChatResponse(response, baseURL);
+    return fetch(input, { ...init, body });
   };
 }
 
@@ -193,7 +90,7 @@ export function createLLMProvider(
   const providerSettings = {
     apiKey,
     baseURL,
-    ...(isOfficial ? {} : { fetch: createCompatFetch(baseURL) }),
+    ...(isOfficial ? {} : { fetch: createCompatFetch() }),
   };
   const provider = createOpenAI(providerSettings);
   const buildModel = (id: string) =>
