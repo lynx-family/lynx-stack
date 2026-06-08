@@ -1,10 +1,12 @@
 use std::collections::HashMap;
 
+use serde::ser::{Serialize, SerializeMap, SerializeSeq, Serializer};
 use serde_json::Value;
 use sha2::{Digest, Sha256};
 
 const TEMPLATE_ID_PREFIX: &str = "_et_";
 const TEMPLATE_ID_HASH_HEX_LEN: usize = 12;
+const TEMPLATE_ID_HASH_BYTES: usize = TEMPLATE_ID_HASH_HEX_LEN / 2;
 
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub(super) struct TemplateIdentity {
@@ -18,21 +20,17 @@ pub(super) struct TemplateIdentityCollisionGuard {
 }
 
 pub(super) fn canonical_template_content(value: &Value) -> String {
-  serde_json::to_string(&canonical_template_value(value))
+  serde_json::to_string(&CanonicalTemplateValue(value))
     .expect("Template Definition canonical content must serialize")
 }
 
 pub(super) fn template_identity_from_compiled_template(value: &Value) -> TemplateIdentity {
   let canonical_content = canonical_template_content(value);
   let hash = Sha256::digest(canonical_content.as_bytes());
-  let hash_hex = hex::encode(hash);
+  let hash_hex = hash_hex_prefix(&hash);
 
   TemplateIdentity {
-    template_id: format!(
-      "{}{}",
-      TEMPLATE_ID_PREFIX,
-      &hash_hex[..TEMPLATE_ID_HASH_HEX_LEN]
-    ),
+    template_id: format!("{}{}", TEMPLATE_ID_PREFIX, hash_hex),
     canonical_content,
   }
 }
@@ -58,22 +56,48 @@ impl TemplateIdentityCollisionGuard {
   }
 }
 
-fn canonical_template_value(value: &Value) -> Value {
-  match value {
-    Value::Array(items) => Value::Array(items.iter().map(canonical_template_value).collect()),
-    Value::Object(map) => {
-      let mut entries = map.iter().collect::<Vec<_>>();
-      entries.sort_by(|(left_key, _), (right_key, _)| left_key.cmp(right_key));
+struct CanonicalTemplateValue<'a>(&'a Value);
 
-      let mut canonical = serde_json::Map::new();
-      for (key, value) in entries {
-        canonical.insert(key.clone(), canonical_template_value(value));
+impl Serialize for CanonicalTemplateValue<'_> {
+  fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
+  where
+    S: Serializer,
+  {
+    match self.0 {
+      Value::Null => serializer.serialize_unit(),
+      Value::Bool(value) => serializer.serialize_bool(*value),
+      Value::Number(value) => value.serialize(serializer),
+      Value::String(value) => serializer.serialize_str(value),
+      Value::Array(items) => {
+        let mut seq = serializer.serialize_seq(Some(items.len()))?;
+        for item in items {
+          seq.serialize_element(&CanonicalTemplateValue(item))?;
+        }
+        seq.end()
       }
-
-      Value::Object(canonical)
+      Value::Object(map) => {
+        let mut entries = map.iter().collect::<Vec<_>>();
+        entries.sort_by(|(left_key, _), (right_key, _)| left_key.cmp(right_key));
+        let mut canonical = serializer.serialize_map(Some(entries.len()))?;
+        for (key, value) in entries {
+          canonical.serialize_entry(key, &CanonicalTemplateValue(value))?;
+        }
+        canonical.end()
+      }
     }
-    _ => value.clone(),
   }
+}
+
+fn hash_hex_prefix(hash: &[u8]) -> String {
+  const HEX: &[u8; 16] = b"0123456789abcdef";
+  let mut out = String::with_capacity(TEMPLATE_ID_HASH_HEX_LEN);
+
+  for byte in &hash[..TEMPLATE_ID_HASH_BYTES] {
+    out.push(HEX[(byte >> 4) as usize] as char);
+    out.push(HEX[(byte & 0x0f) as usize] as char);
+  }
+
+  out
 }
 
 #[cfg(test)]
