@@ -45,7 +45,7 @@ export async function judgeWithAgentUnsafe(
   return normalizeScore(parseScore(rawScore));
 }
 
-async function runAiActWithTimeout(
+function runAiActWithTimeout(
   agent: MidsceneJudgeAgent,
   prompt: string,
   timeoutMs: number,
@@ -78,15 +78,17 @@ function parseScore(value: unknown): number {
 
   if (value && typeof value === 'object') {
     const record = value as Record<string, unknown>;
-    for (const key of [
-      'score',
-      'value',
-      'number',
-      'result',
-      'answer',
-      'output',
-      'content',
-    ]) {
+    for (
+      const key of [
+        'score',
+        'value',
+        'number',
+        'result',
+        'answer',
+        'output',
+        'content',
+      ]
+    ) {
       if (key in record) {
         const score = tryParseScore(record[key]);
         if (score !== undefined) return score;
@@ -95,7 +97,7 @@ function parseScore(value: unknown): number {
   }
 
   throw new Error(
-    `Midscene returned an unparseable score: ${formatValue(value)}.`,
+    `Midscene returned an unparsable score: ${formatValue(value)}.`,
   );
 }
 
@@ -136,7 +138,7 @@ function parseScoreText(value: string): number {
   }
 
   throw new Error(
-    `Midscene returned an unparseable score: ${formatValue(value)}.`,
+    `Midscene returned an unparsable score: ${formatValue(value)}.`,
   );
 }
 
