@@ -10,7 +10,7 @@ When adding Android support to `@lynx-js/ui-judge`, keep the public call shape c
 
 Keep Android-specific `@lynx-js/ui-judge` tests on Vitest rather than Playwright. Use a dedicated `test:android` script and let Playwright tests stay under `test:playwright`, so the Android emulator CI job can run UI Judge's Kitten-Lynx coverage without pulling in browser fixtures.
 
-Midscene scoring in this package should use `aiNumber()` and return a JSON-serializable integer score from 0 to 5. Prompt text must cooperate with Midscene's `aiNumber()` parser by asking for the requested `Number` field, not a bare JSON number. Do not reintroduce letter grades or `GRADE:` output in prompts.
+Midscene scoring in this package should use `aiAct()` and parse the final returned score into an integer from 0 to 5. For scoring-only prompts, make it clear that the current UI state is enough, no actions should be emitted, and the agent should complete immediately with exactly one concrete `SCORE: 0` through `SCORE: 5` line. Avoid placeholder text such as angle-bracketed score variables, because model-backed CI may copy the placeholder verbatim. Do not reintroduce letter grades or `GRADE:` output in prompts.
 
 GEQI model-backed scoring should run each playground demo across the five weighted dimensions: usability-interaction (30), visual-aesthetics (25), consistency-standards (15), architecture-writing (15), and accessibility-performance (15). Keep the original visual-correctness judge as its own test and result score. Attach GEQI scores under each example result's `dimensions` array with `dimensionLabel` and `weight`, so the PR comment can summarize the weighted 100-point GEQI score while rendering one table row per example.
 

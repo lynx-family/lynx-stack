@@ -6,6 +6,11 @@ import { buildJudgePrompt } from './prompt.js';
 
 const MIN_SCORE = 0;
 const MAX_SCORE = 5;
+const SCORE_ACT_OPTIONS: Omit<MidsceneJudgeActOptions, 'abortSignal'> = {
+  cacheable: false,
+  deepLocate: false,
+  deepThink: false,
+};
 
 export interface MidsceneJudgeAgent {
   aiAct(
@@ -40,6 +45,7 @@ export async function judgeWithAgentUnsafe(
     buildJudgePrompt(options),
     options.timeoutMs,
     'Timed out while asking Midscene for a score.',
+    SCORE_ACT_OPTIONS,
   );
 
   return normalizeScore(parseScore(rawScore));
@@ -50,10 +56,14 @@ function runAiActWithTimeout(
   prompt: string,
   timeoutMs: number,
   message: string,
+  actOptions?: Omit<MidsceneJudgeActOptions, 'abortSignal'>,
 ): Promise<unknown> {
   const abortController = new AbortController();
   return withAbortableTimeout(
-    agent.aiAct(prompt, { abortSignal: abortController.signal }),
+    agent.aiAct(prompt, {
+      ...actOptions,
+      abortSignal: abortController.signal,
+    }),
     timeoutMs,
     abortController,
     message,

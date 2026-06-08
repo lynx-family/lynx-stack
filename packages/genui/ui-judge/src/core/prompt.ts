@@ -24,8 +24,16 @@ Task:
 ${options.task}
 ${reference}
 Do not click, type, scroll, navigate, or otherwise mutate the UI while scoring.
-Use Midscene aiAct's final return value to output exactly SCORE: <integer>,
-where <integer> is one of 0, 1, 2, 3, 4, or 5.
+The current UI state is enough to complete this scoring task. Do not output any action.
+Use Midscene aiAct's complete response to output exactly one of these six strings:
+SCORE: 0
+SCORE: 1
+SCORE: 2
+SCORE: 3
+SCORE: 4
+SCORE: 5
+If Midscene wraps the answer in XML, put only the chosen SCORE line inside the complete tag.
+Do not return placeholder text instead of a digit.
 Do not return "GRADE:", letters, Markdown, prose, or explanation.
 
 Use this 1-5 Likert scale for the requested dimension:
@@ -51,5 +59,5 @@ Grading notes:
 5. Valid optional properties, such as accessibility hints or default values, should not be penalized when they make sense in context.
 6. Do not award a high score when required components are missing or substantive behavior is wrong for this dimension.
 
-Think through the criteria internally, then return only SCORE: <integer>.`;
+Think through the criteria internally, then complete with one chosen SCORE line.`;
 }
