@@ -30,6 +30,30 @@
         },
         {
           "id": "chart",
+          "component": "Loading",
+          "variant": "block"
+        }
+      ]
+    }
+  },
+  {
+    "updateDataModel": {
+      "surfaceId": "default",
+      "value": {
+        "weather": {
+          "dates": ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"],
+          "temperatures": [12, 14, 16, 18, 20, 22, 19],
+          "precipitations": [6, 7, 8, 10, 11, 13, 12]
+        }
+      }
+    }
+  },
+  {
+    "updateComponents": {
+      "surfaceId": "default",
+      "components": [
+        {
+          "id": "chart",
           "component": "LineChart",
           "labels": {
             "path": "/weather/dates"
@@ -55,18 +79,6 @@
           "yLabel": "Temperature"
         }
       ]
-    }
-  },
-  {
-    "updateDataModel": {
-      "surfaceId": "default",
-      "value": {
-        "weather": {
-          "dates": ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"],
-          "temperatures": [12, 14, 16, 18, 20, 22, 19],
-          "precipitations": [6, 7, 8, 10, 11, 13, 12]
-        }
-      }
     }
   }
 ]

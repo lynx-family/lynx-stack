@@ -24,9 +24,8 @@
         },
         {
           "id": "subheader",
-          "component": "Text",
-          "variant": "body",
-          "text": "Generating your plan..."
+          "component": "Loading",
+          "variant": "block"
         },
         {
           "id": "progressRow",
