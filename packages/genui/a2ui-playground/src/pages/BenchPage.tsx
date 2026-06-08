@@ -324,6 +324,7 @@ function isDevHost(hostname: string): boolean {
     || hostname === '0.0.0.0'
     || hostname.startsWith('10.')
     || hostname.startsWith('192.168.')
+    || /^100\.(?:6[4-9]|[78]\d|9\d|1[01]\d|12[0-7])\./u.test(hostname)
     || /^172\.(?:1[6-9]|2\d|3[01])\./u.test(hostname)
   );
 }
@@ -1062,14 +1063,6 @@ export function BenchPage() {
             <span className='chip'>{activeGroups.length} groups</span>
             <span className='chip'>{scenarios.length} scenarios</span>
             <span className='chip'>{pluralize(runCount, 'run')}</span>
-            <Button
-              variant='secondary'
-              size='sm'
-              iconBefore={Zap}
-              onClick={() => setConfigOpen(true)}
-            >
-              Configure
-            </Button>
           </>
         }
       />
