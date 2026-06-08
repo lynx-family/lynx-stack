@@ -1,12 +1,14 @@
 // Copyright 2025 The Lynx Authors. All rights reserved.
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
+import { createRequire } from 'node:module';
 import { describe, expect, it, vi } from 'vitest';
 
 import {
   autoBind,
   createPlugin,
   createUtilityPlugin,
+  TW_NO_PREFIX,
   transformThemeValue,
 } from '../helpers.js';
 import type { RuntimePluginAPI } from './utils/mock-api.js';
@@ -137,5 +139,32 @@ describe('autoBind', () => {
   it('`this`-independent methods can be destructured without losing context', () => {
     const { echo } = bound;
     expect(echo('test')).toBe('test');
+  });
+});
+
+describe('TW_NO_PREFIX', () => {
+  it('should be an object with a symbol key from setupContextUtils.INTERNAL_FEATURES', () => {
+    // TW_NO_PREFIX must have exactly one symbol key whose value is { respectPrefix: false }
+    const symKeys = Object.getOwnPropertySymbols(TW_NO_PREFIX);
+    expect(symKeys).toHaveLength(1);
+
+    const value = (TW_NO_PREFIX as Record<symbol, unknown>)[symKeys[0]!];
+    expect(value).toEqual({ respectPrefix: false });
+  });
+
+  it('symbol key matches tailwindcss INTERNAL_FEATURES', () => {
+    // Verify the symbol is the same one exported by tailwindcss
+    const require = createRequire(import.meta.url);
+    const mod = require('tailwindcss/lib/lib/setupContextUtils.js') as Record<
+      string,
+      unknown
+    >;
+    const INTERNAL_FEATURES = mod['INTERNAL_FEATURES'] as symbol;
+
+    expect(INTERNAL_FEATURES).toBeDefined();
+    expect(typeof INTERNAL_FEATURES).toBe('symbol');
+
+    const symKeys = Object.getOwnPropertySymbols(TW_NO_PREFIX);
+    expect(symKeys[0]).toBe(INTERNAL_FEATURES);
   });
 });
