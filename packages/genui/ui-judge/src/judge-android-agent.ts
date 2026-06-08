@@ -9,9 +9,9 @@ import { toErrorMessage } from './core/errors.js';
 import { normalizeJudgeBaseOptions, normalizeSteps } from './core/options.js';
 import { judgeWithAgentUnsafe } from './core/scoring.js';
 import {
+  KittenLynxMidscenePage,
   getKittenLynxPageUrl,
   isKittenLynxPage,
-  KittenLynxMidscenePage,
 } from './platforms/kitten-lynx-midscene-page.js';
 import type {
   JudgeAndroidAgentOptions,
