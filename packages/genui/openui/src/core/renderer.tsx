@@ -9,7 +9,7 @@ import type {
   ParseResult,
   Store,
 } from '@openuidev/lang-core';
-import { BuiltinActionType } from '@openuidev/lang-core';
+import { ACTION_STEPS, BuiltinActionType } from '@openuidev/lang-core';
 
 import {
   Fragment,
@@ -210,6 +210,58 @@ export function OpenUiRenderer(props: {
     ) => {
       const currentState = formStateRef.current;
       const handler = onActionRef.current;
+
+      // ActionPlan path (v0.5) — sequential steps
+      if (action && 'steps' in action) {
+        let relevantState: Record<string, unknown> | undefined;
+        const formValue = formName ? currentState[formName] : undefined;
+        if (formName && formValue !== undefined) {
+          relevantState = { [formName]: formValue };
+        } else if (Object.keys(currentState).length > 0) {
+          relevantState = currentState;
+        }
+
+        for (const step of action.steps) {
+          switch (step.type) {
+            case ACTION_STEPS.ToAssistant:
+              handler?.({
+                type: BuiltinActionType.ContinueConversation,
+                params: step.context ? { context: step.context } : {},
+                humanFriendlyMessage: step.message,
+                ...(relevantState ? { formState: relevantState } : {}),
+                ...(formName ? { formName } : {}),
+              });
+              break;
+            case ACTION_STEPS.OpenUrl:
+              handler?.({
+                type: BuiltinActionType.OpenUrl,
+                params: { url: step.url },
+                humanFriendlyMessage: '',
+                ...(relevantState ? { formState: relevantState } : {}),
+                ...(formName ? { formName } : {}),
+              });
+              break;
+            case ACTION_STEPS.Run:
+            case ACTION_STEPS.Set:
+            case ACTION_STEPS.Reset:
+              // OpenUiRenderer does not own the query manager, store, or
+              // evaluation context needed to execute these steps. Report them
+              // explicitly so generated plans do not fail silently here.
+              console.warn(
+                `[OpenUiRenderer] Unsupported ActionPlan step: ${step.type}`,
+                step,
+              );
+              break;
+            default:
+              console.warn(
+                '[OpenUiRenderer] Unknown ActionPlan step:',
+                step,
+              );
+              break;
+          }
+        }
+        return;
+      }
 
       const legacyAction: LegacyActionConfig | undefined =
         action && !('steps' in action)

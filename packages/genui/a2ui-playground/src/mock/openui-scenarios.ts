@@ -860,4 +860,1025 @@ largeHeavyWord = TextContent("🚀 Hello large-heavy", "large-heavy")`,
       2,
     ),
   },
+  {
+    id: 'settings-panel',
+    title: 'Settings Panel',
+    raw:
+      `root = Card([header, hint, list, action], "card", "column", false, "l", "stretch", "start")
+
+header = Stack([avatar, titleRow], "row", false, "m", "center", "start")
+avatar = Image("https://placehold.co/600x400", "cover", "avatar")
+titleRow = Stack([title, verified], "column", false, "xs", "start", "start")
+title = TextContent("Preferences", "large-heavy")
+verified = Stack([checkIcon, verifiedText], "row", false, "xs", "center", "start")
+checkIcon = Icon("check", "sm", "primary")
+verifiedText = TextContent("All settings saved", "small")
+hint = TextContent("Try clicking on checkmark to toggle", "small")
+
+list = Stack([item1, sep, item2, sep, item3, sep, skeleton], "column", false, "s", "stretch", "start")
+item1 = Stack([icon1, label1, toggle1], "row", false, "m", "center", "space-between")
+icon1 = Icon("mail", "md", "muted")
+label1 = TextContent("Email updates", "default")
+toggle1 = CheckBox("Email updates", true, Action([@ToAssistant("Toggle email")]))
+sep = Separator()
+item2 = Stack([icon2, label2, toggle2], "row", false, "m", "center", "space-between")
+icon2 = Icon("star", "md", "muted")
+label2 = TextContent("Newsletter", "default")
+toggle2 = CheckBox("Newsletter", false, Action([@ToAssistant("Toggle newsletter")]))
+item3 = Stack([icon3, label3, toggle3], "row", false, "m", "center", "space-between")
+icon3 = Icon("settings", "md", "muted")
+label3 = TextContent("Beta features", "default")
+toggle3 = CheckBox("Beta features", true, Action([@ToAssistant("Toggle beta")]))
+skeleton = Loading("block")
+
+action = Buttons([Button("Save", Action([@ToAssistant("Saved")]), "primary")])`,
+    parsed: JSON.stringify(
+      {
+        root: {
+          type: 'element',
+          typeName: 'Card',
+          props: {
+            children: [
+              {
+                type: 'element',
+                typeName: 'Stack',
+                props: {
+                  children: [
+                    {
+                      type: 'element',
+                      typeName: 'Image',
+                      props: {
+                        url: 'https://placehold.co/600x400',
+                        fit: 'cover',
+                        variant: 'avatar',
+                      },
+                      partial: false,
+                      hasDynamicProps: false,
+                      statementId: 'avatar',
+                    },
+                    {
+                      type: 'element',
+                      typeName: 'Stack',
+                      props: {
+                        children: [
+                          {
+                            type: 'element',
+                            typeName: 'TextContent',
+                            props: { text: 'Preferences', size: 'large-heavy' },
+                            partial: false,
+                            hasDynamicProps: false,
+                            statementId: 'title',
+                          },
+                          {
+                            type: 'element',
+                            typeName: 'Stack',
+                            props: {
+                              children: [
+                                {
+                                  type: 'element',
+                                  typeName: 'Icon',
+                                  props: {
+                                    name: 'check',
+                                    size: 'sm',
+                                    color: 'primary',
+                                  },
+                                  partial: false,
+                                  hasDynamicProps: false,
+                                  statementId: 'checkIcon',
+                                },
+                                {
+                                  type: 'element',
+                                  typeName: 'TextContent',
+                                  props: {
+                                    text: 'All settings saved',
+                                    size: 'small',
+                                  },
+                                  partial: false,
+                                  hasDynamicProps: false,
+                                  statementId: 'verifiedText',
+                                },
+                              ],
+                              direction: 'row',
+                              wrap: false,
+                              gap: 'xs',
+                              align: 'center',
+                              justify: 'start',
+                            },
+                            partial: false,
+                            hasDynamicProps: false,
+                            statementId: 'verified',
+                          },
+                        ],
+                        direction: 'column',
+                        wrap: false,
+                        gap: 'xs',
+                        align: 'start',
+                        justify: 'start',
+                      },
+                      partial: false,
+                      hasDynamicProps: false,
+                      statementId: 'titleRow',
+                    },
+                  ],
+                  direction: 'row',
+                  wrap: false,
+                  gap: 'm',
+                  align: 'center',
+                  justify: 'start',
+                },
+                partial: false,
+                hasDynamicProps: false,
+                statementId: 'header',
+              },
+              {
+                type: 'element',
+                typeName: 'Stack',
+                props: {
+                  children: [
+                    {
+                      type: 'element',
+                      typeName: 'Stack',
+                      props: {
+                        children: [
+                          {
+                            type: 'element',
+                            typeName: 'Icon',
+                            props: { name: 'mail', size: 'md', color: 'muted' },
+                            partial: false,
+                            hasDynamicProps: false,
+                            statementId: 'icon1',
+                          },
+                          {
+                            type: 'element',
+                            typeName: 'TextContent',
+                            props: { text: 'Email updates', size: 'default' },
+                            partial: false,
+                            hasDynamicProps: false,
+                            statementId: 'label1',
+                          },
+                          {
+                            type: 'element',
+                            typeName: 'CheckBox',
+                            props: {
+                              label: 'Email updates',
+                              value: true,
+                              action: {
+                                k: 'Comp',
+                                name: 'Action',
+                                args: [
+                                  {
+                                    k: 'Arr',
+                                    els: [
+                                      {
+                                        k: 'Comp',
+                                        name: 'ToAssistant',
+                                        args: [{ k: 'Str', v: 'Toggle email' }],
+                                      },
+                                    ],
+                                  },
+                                ],
+                              },
+                            },
+                            partial: false,
+                            hasDynamicProps: true,
+                            statementId: 'toggle1',
+                          },
+                        ],
+                        direction: 'row',
+                        wrap: false,
+                        gap: 'm',
+                        align: 'center',
+                        justify: 'space-between',
+                      },
+                      partial: false,
+                      hasDynamicProps: false,
+                      statementId: 'item1',
+                    },
+                    {
+                      type: 'element',
+                      typeName: 'Separator',
+                      props: {},
+                      partial: false,
+                      hasDynamicProps: false,
+                      statementId: 'sep',
+                    },
+                    {
+                      type: 'element',
+                      typeName: 'Stack',
+                      props: {
+                        children: [
+                          {
+                            type: 'element',
+                            typeName: 'Icon',
+                            props: { name: 'star', size: 'md', color: 'muted' },
+                            partial: false,
+                            hasDynamicProps: false,
+                            statementId: 'icon2',
+                          },
+                          {
+                            type: 'element',
+                            typeName: 'TextContent',
+                            props: { text: 'Newsletter', size: 'default' },
+                            partial: false,
+                            hasDynamicProps: false,
+                            statementId: 'label2',
+                          },
+                          {
+                            type: 'element',
+                            typeName: 'CheckBox',
+                            props: {
+                              label: 'Newsletter',
+                              value: false,
+                              action: {
+                                k: 'Comp',
+                                name: 'Action',
+                                args: [
+                                  {
+                                    k: 'Arr',
+                                    els: [
+                                      {
+                                        k: 'Comp',
+                                        name: 'ToAssistant',
+                                        args: [{
+                                          k: 'Str',
+                                          v: 'Toggle newsletter',
+                                        }],
+                                      },
+                                    ],
+                                  },
+                                ],
+                              },
+                            },
+                            partial: false,
+                            hasDynamicProps: true,
+                            statementId: 'toggle2',
+                          },
+                        ],
+                        direction: 'row',
+                        wrap: false,
+                        gap: 'm',
+                        align: 'center',
+                        justify: 'space-between',
+                      },
+                      partial: false,
+                      hasDynamicProps: false,
+                      statementId: 'item2',
+                    },
+                    {
+                      type: 'element',
+                      typeName: 'Separator',
+                      props: {},
+                      partial: false,
+                      hasDynamicProps: false,
+                    },
+                    {
+                      type: 'element',
+                      typeName: 'Stack',
+                      props: {
+                        children: [
+                          {
+                            type: 'element',
+                            typeName: 'Icon',
+                            props: {
+                              name: 'settings',
+                              size: 'md',
+                              color: 'muted',
+                            },
+                            partial: false,
+                            hasDynamicProps: false,
+                            statementId: 'icon3',
+                          },
+                          {
+                            type: 'element',
+                            typeName: 'TextContent',
+                            props: { text: 'Beta features', size: 'default' },
+                            partial: false,
+                            hasDynamicProps: false,
+                            statementId: 'label3',
+                          },
+                          {
+                            type: 'element',
+                            typeName: 'CheckBox',
+                            props: {
+                              label: 'Beta features',
+                              value: true,
+                              action: {
+                                k: 'Comp',
+                                name: 'Action',
+                                args: [
+                                  {
+                                    k: 'Arr',
+                                    els: [
+                                      {
+                                        k: 'Comp',
+                                        name: 'ToAssistant',
+                                        args: [{ k: 'Str', v: 'Toggle beta' }],
+                                      },
+                                    ],
+                                  },
+                                ],
+                              },
+                            },
+                            partial: false,
+                            hasDynamicProps: true,
+                            statementId: 'toggle3',
+                          },
+                        ],
+                        direction: 'row',
+                        wrap: false,
+                        gap: 'm',
+                        align: 'center',
+                        justify: 'space-between',
+                      },
+                      partial: false,
+                      hasDynamicProps: false,
+                      statementId: 'item3',
+                    },
+                    {
+                      type: 'element',
+                      typeName: 'Separator',
+                      props: {},
+                      partial: false,
+                      hasDynamicProps: false,
+                    },
+                    {
+                      type: 'element',
+                      typeName: 'Loading',
+                      props: { variant: 'block' },
+                      partial: false,
+                      hasDynamicProps: false,
+                      statementId: 'skeleton',
+                    },
+                  ],
+                  direction: 'column',
+                  wrap: false,
+                  gap: 's',
+                  align: 'stretch',
+                  justify: 'start',
+                },
+                partial: false,
+                hasDynamicProps: false,
+                statementId: 'list',
+              },
+              {
+                type: 'element',
+                typeName: 'Buttons',
+                props: {
+                  buttons: [
+                    {
+                      type: 'element',
+                      typeName: 'Button',
+                      props: {
+                        label: 'Save',
+                        action: {
+                          k: 'Comp',
+                          name: 'Action',
+                          args: [
+                            {
+                              k: 'Arr',
+                              els: [
+                                {
+                                  k: 'Comp',
+                                  name: 'ToAssistant',
+                                  args: [{ k: 'Str', v: 'Saved' }],
+                                },
+                              ],
+                            },
+                          ],
+                        },
+                        variant: 'primary',
+                      },
+                      partial: false,
+                      hasDynamicProps: true,
+                    },
+                  ],
+                },
+                partial: false,
+                hasDynamicProps: true,
+                statementId: 'action',
+              },
+            ],
+            variant: 'card',
+            direction: 'column',
+            wrap: false,
+            gap: 'l',
+            align: 'stretch',
+            justify: 'start',
+          },
+          partial: false,
+          hasDynamicProps: true,
+          statementId: 'root',
+        },
+        meta: {
+          incomplete: false,
+          unresolved: [],
+          orphaned: [],
+          statementCount: 25,
+          errors: [],
+        },
+        stateDeclarations: {},
+        queryStatements: [],
+        mutationStatements: [],
+      },
+      null,
+      2,
+    ),
+  },
+  {
+    id: 'sound-settings',
+    title: 'Sound Settings',
+    raw:
+      `root = Card([title, hint, master, sep, bass, mid, treble, balance, actionRow], "card", "column", false, "l", "stretch", "start")
+
+title = TextContent("🔊  Sound Settings", "large-heavy")
+hint = TextContent("Drag each slider to fine-tune your audio", "small")
+master = Slider("Master Volume", 0, 100, 70, 1, Action([@ToAssistant("Master volume")]))
+sep = Separator()
+bass = Slider("Bass", 0, 100, 50, 5, Action([@ToAssistant("Bass")]))
+mid = Slider("Mid", 0, 100, 50, 5, Action([@ToAssistant("Mid")]))
+treble = Slider("Treble", 0, 100, 50, 5, Action([@ToAssistant("Treble")]))
+balance = Slider("Balance", 0, 100, 50, 5, Action([@ToAssistant("Balance")]))
+actionRow = Stack([Buttons([Button("Reset", Action([@ToAssistant("Reset audio settings")]), "secondary", "normal", "medium"), Button("Save", Action([@ToAssistant("Save audio settings")]), "primary", "normal", "medium")])], "row", false, "m", "stretch", "start")`,
+    parsed: JSON.stringify(
+      {
+        root: {
+          type: 'element',
+          typeName: 'Card',
+          props: {
+            children: [
+              {
+                type: 'element',
+                typeName: 'TextContent',
+                props: { text: '🔊  Sound Settings', size: 'large-heavy' },
+                partial: false,
+                hasDynamicProps: false,
+                statementId: 'title',
+              },
+              {
+                type: 'element',
+                typeName: 'TextContent',
+                props: {
+                  text: 'Drag each slider to fine-tune your audio',
+                  size: 'small',
+                },
+                partial: false,
+                hasDynamicProps: false,
+                statementId: 'hint',
+              },
+              {
+                type: 'element',
+                typeName: 'Slider',
+                props: {
+                  label: 'Master Volume',
+                  min: 0,
+                  max: 100,
+                  value: 70,
+                  step: 1,
+                  action: {
+                    k: 'Comp',
+                    name: 'Action',
+                    args: [{
+                      k: 'Arr',
+                      els: [{
+                        k: 'Comp',
+                        name: 'ToAssistant',
+                        args: [{ k: 'Str', v: 'Master volume' }],
+                      }],
+                    }],
+                  },
+                },
+                partial: false,
+                hasDynamicProps: true,
+                statementId: 'master',
+              },
+              {
+                type: 'element',
+                typeName: 'Separator',
+                props: {},
+                partial: false,
+                hasDynamicProps: false,
+              },
+              {
+                type: 'element',
+                typeName: 'Slider',
+                props: {
+                  label: 'Bass',
+                  min: 0,
+                  max: 100,
+                  value: 50,
+                  step: 5,
+                  action: {
+                    k: 'Comp',
+                    name: 'Action',
+                    args: [{
+                      k: 'Arr',
+                      els: [{
+                        k: 'Comp',
+                        name: 'ToAssistant',
+                        args: [{ k: 'Str', v: 'Bass' }],
+                      }],
+                    }],
+                  },
+                },
+                partial: false,
+                hasDynamicProps: true,
+                statementId: 'bass',
+              },
+              {
+                type: 'element',
+                typeName: 'Slider',
+                props: {
+                  label: 'Mid',
+                  min: 0,
+                  max: 100,
+                  value: 50,
+                  step: 5,
+                  action: {
+                    k: 'Comp',
+                    name: 'Action',
+                    args: [{
+                      k: 'Arr',
+                      els: [{
+                        k: 'Comp',
+                        name: 'ToAssistant',
+                        args: [{ k: 'Str', v: 'Mid' }],
+                      }],
+                    }],
+                  },
+                },
+                partial: false,
+                hasDynamicProps: true,
+                statementId: 'mid',
+              },
+              {
+                type: 'element',
+                typeName: 'Slider',
+                props: {
+                  label: 'Treble',
+                  min: 0,
+                  max: 100,
+                  value: 50,
+                  step: 5,
+                  action: {
+                    k: 'Comp',
+                    name: 'Action',
+                    args: [{
+                      k: 'Arr',
+                      els: [{
+                        k: 'Comp',
+                        name: 'ToAssistant',
+                        args: [{ k: 'Str', v: 'Treble' }],
+                      }],
+                    }],
+                  },
+                },
+                partial: false,
+                hasDynamicProps: true,
+                statementId: 'treble',
+              },
+              {
+                type: 'element',
+                typeName: 'Slider',
+                props: {
+                  label: 'Balance',
+                  min: 0,
+                  max: 100,
+                  value: 50,
+                  step: 5,
+                  action: {
+                    k: 'Comp',
+                    name: 'Action',
+                    args: [{
+                      k: 'Arr',
+                      els: [{
+                        k: 'Comp',
+                        name: 'ToAssistant',
+                        args: [{ k: 'Str', v: 'Balance' }],
+                      }],
+                    }],
+                  },
+                },
+                partial: false,
+                hasDynamicProps: true,
+                statementId: 'balance',
+              },
+              {
+                type: 'element',
+                typeName: 'Stack',
+                props: {
+                  children: [
+                    {
+                      type: 'element',
+                      typeName: 'Buttons',
+                      props: {
+                        buttons: [
+                          {
+                            type: 'element',
+                            typeName: 'Button',
+                            props: {
+                              label: 'Reset',
+                              action: {
+                                k: 'Comp',
+                                name: 'Action',
+                                args: [{
+                                  k: 'Arr',
+                                  els: [{
+                                    k: 'Comp',
+                                    name: 'ToAssistant',
+                                    args: [{
+                                      k: 'Str',
+                                      v: 'Reset audio settings',
+                                    }],
+                                  }],
+                                }],
+                              },
+                              variant: 'secondary',
+                              type: 'normal',
+                              size: 'medium',
+                            },
+                            partial: false,
+                            hasDynamicProps: true,
+                          },
+                          {
+                            type: 'element',
+                            typeName: 'Button',
+                            props: {
+                              label: 'Save',
+                              action: {
+                                k: 'Comp',
+                                name: 'Action',
+                                args: [{
+                                  k: 'Arr',
+                                  els: [{
+                                    k: 'Comp',
+                                    name: 'ToAssistant',
+                                    args: [{
+                                      k: 'Str',
+                                      v: 'Save audio settings',
+                                    }],
+                                  }],
+                                }],
+                              },
+                              variant: 'primary',
+                              type: 'normal',
+                              size: 'medium',
+                            },
+                            partial: false,
+                            hasDynamicProps: true,
+                          },
+                        ],
+                      },
+                      partial: false,
+                      hasDynamicProps: true,
+                    },
+                  ],
+                  direction: 'row',
+                  wrap: false,
+                  gap: 'm',
+                  align: 'stretch',
+                  justify: 'start',
+                },
+                partial: false,
+                hasDynamicProps: true,
+                statementId: 'actionRow',
+              },
+            ],
+            variant: 'card',
+            direction: 'column',
+            wrap: false,
+            gap: 'l',
+            align: 'stretch',
+            justify: 'start',
+          },
+          partial: false,
+          hasDynamicProps: true,
+          statementId: 'root',
+        },
+        meta: {
+          incomplete: false,
+          unresolved: [],
+          orphaned: [],
+          statementCount: 10,
+          errors: [],
+        },
+        stateDeclarations: {},
+        queryStatements: [],
+        mutationStatements: [],
+      },
+      null,
+      2,
+    ),
+  },
+  {
+    id: 'pizza-order',
+    title: 'Pizza Order',
+    raw:
+      `root = Card([title, sizeGroup, crustGroup, addressField, apartmentField, accessCodeField, notesField, tipRow, actionRow], "card", "column", false, "l", "stretch", "start")
+
+title = TextContent("🍕  Order Pizza", "large-heavy")
+sizeGroup = RadioGroup(["Small", "Medium", "Large", "X-Large"], "Medium", "default", Action([@ToAssistant("Size")]), "pizza_size")
+crustGroup = RadioGroup(["Thin", "Regular", "Thick"], "Regular", "default", Action([@ToAssistant("Crust")]), "pizza_crust")
+addressField = TextField("Delivery Address", "123 Main St", "shortText", "", Action([@ToAssistant("Address")]), "delivery_address")
+	apartmentField = TextField("Apartment Number", "12", "number", "^[0-9]+$", Action([@ToAssistant("Apartment number")]), "apartment_number")
+	accessCodeField = TextField("Building Access Code", "2468", "obscured", "^[0-9]{4,6}$", Action([@ToAssistant("Access code")]), "building_access_code")
+notesField = TextField("Special Instructions", "Extra cheese please", "longText", "", Action([@ToAssistant("Notes")]), "special_instructions")
+tipRow = Slider("Tip %", 0, 30, 15, 1, Action([@ToAssistant("Tip")]), "tip_percent")
+actionRow = Stack([Buttons([Button("Cancel", Action([@ToAssistant("Cancel order")]), "secondary", "normal", "medium"), Button("Place Order", Action([@ToAssistant("Place order")]), "primary", "normal", "medium")])], "row", false, "m", "stretch", "start")`,
+    parsed: JSON.stringify(
+      {
+        root: {
+          type: 'element',
+          typeName: 'Card',
+          props: {
+            children: [
+              {
+                type: 'element',
+                typeName: 'TextContent',
+                props: { text: '🍕  Order Pizza', size: 'large-heavy' },
+                partial: false,
+                hasDynamicProps: false,
+                statementId: 'title',
+              },
+              {
+                type: 'element',
+                typeName: 'RadioGroup',
+                props: {
+                  items: ['Small', 'Medium', 'Large', 'X-Large'],
+                  name: 'pizza_size',
+                  value: 'Medium',
+                  usageHint: 'default',
+                  action: {
+                    k: 'Comp',
+                    name: 'Action',
+                    args: [{
+                      k: 'Arr',
+                      els: [{
+                        k: 'Comp',
+                        name: 'ToAssistant',
+                        args: [{ k: 'Str', v: 'Size' }],
+                      }],
+                    }],
+                  },
+                },
+                partial: false,
+                hasDynamicProps: true,
+                statementId: 'sizeGroup',
+              },
+              {
+                type: 'element',
+                typeName: 'RadioGroup',
+                props: {
+                  items: ['Thin', 'Regular', 'Thick'],
+                  name: 'pizza_crust',
+                  value: 'Regular',
+                  usageHint: 'default',
+                  action: {
+                    k: 'Comp',
+                    name: 'Action',
+                    args: [{
+                      k: 'Arr',
+                      els: [{
+                        k: 'Comp',
+                        name: 'ToAssistant',
+                        args: [{ k: 'Str', v: 'Crust' }],
+                      }],
+                    }],
+                  },
+                },
+                partial: false,
+                hasDynamicProps: true,
+                statementId: 'crustGroup',
+              },
+              {
+                type: 'element',
+                typeName: 'TextField',
+                props: {
+                  label: 'Delivery Address',
+                  name: 'delivery_address',
+                  value: '123 Main St',
+                  variant: 'shortText',
+                  validationRegexp: '',
+                  action: {
+                    k: 'Comp',
+                    name: 'Action',
+                    args: [{
+                      k: 'Arr',
+                      els: [{
+                        k: 'Comp',
+                        name: 'ToAssistant',
+                        args: [{ k: 'Str', v: 'Address' }],
+                      }],
+                    }],
+                  },
+                },
+                partial: false,
+                hasDynamicProps: true,
+                statementId: 'addressField',
+              },
+              {
+                type: 'element',
+                typeName: 'TextField',
+                props: {
+                  label: 'Apartment Number',
+                  name: 'apartment_number',
+                  value: '12',
+                  variant: 'number',
+                  validationRegexp: '^[0-9]+$',
+                  action: {
+                    k: 'Comp',
+                    name: 'Action',
+                    args: [{
+                      k: 'Arr',
+                      els: [{
+                        k: 'Comp',
+                        name: 'ToAssistant',
+                        args: [{ k: 'Str', v: 'Apartment number' }],
+                      }],
+                    }],
+                  },
+                },
+                partial: false,
+                hasDynamicProps: true,
+                statementId: 'apartmentField',
+              },
+              {
+                type: 'element',
+                typeName: 'TextField',
+                props: {
+                  label: 'Building Access Code',
+                  name: 'building_access_code',
+                  value: '2468',
+                  variant: 'obscured',
+                  validationRegexp: '^[0-9]{4,6}$',
+                  action: {
+                    k: 'Comp',
+                    name: 'Action',
+                    args: [{
+                      k: 'Arr',
+                      els: [{
+                        k: 'Comp',
+                        name: 'ToAssistant',
+                        args: [{ k: 'Str', v: 'Access code' }],
+                      }],
+                    }],
+                  },
+                },
+                partial: false,
+                hasDynamicProps: true,
+                statementId: 'accessCodeField',
+              },
+              {
+                type: 'element',
+                typeName: 'TextField',
+                props: {
+                  label: 'Special Instructions',
+                  name: 'special_instructions',
+                  value: 'Extra cheese please',
+                  variant: 'longText',
+                  validationRegexp: '',
+                  action: {
+                    k: 'Comp',
+                    name: 'Action',
+                    args: [{
+                      k: 'Arr',
+                      els: [{
+                        k: 'Comp',
+                        name: 'ToAssistant',
+                        args: [{ k: 'Str', v: 'Notes' }],
+                      }],
+                    }],
+                  },
+                },
+                partial: false,
+                hasDynamicProps: true,
+                statementId: 'notesField',
+              },
+              {
+                type: 'element',
+                typeName: 'Slider',
+                props: {
+                  label: 'Tip %',
+                  name: 'tip_percent',
+                  min: 0,
+                  max: 30,
+                  value: 15,
+                  step: 1,
+                  action: {
+                    k: 'Comp',
+                    name: 'Action',
+                    args: [{
+                      k: 'Arr',
+                      els: [{
+                        k: 'Comp',
+                        name: 'ToAssistant',
+                        args: [{ k: 'Str', v: 'Tip' }],
+                      }],
+                    }],
+                  },
+                },
+                partial: false,
+                hasDynamicProps: true,
+                statementId: 'tipRow',
+              },
+              {
+                type: 'element',
+                typeName: 'Stack',
+                props: {
+                  children: [
+                    {
+                      type: 'element',
+                      typeName: 'Buttons',
+                      props: {
+                        buttons: [
+                          {
+                            type: 'element',
+                            typeName: 'Button',
+                            props: {
+                              label: 'Cancel',
+                              action: {
+                                k: 'Comp',
+                                name: 'Action',
+                                args: [{
+                                  k: 'Arr',
+                                  els: [{
+                                    k: 'Comp',
+                                    name: 'ToAssistant',
+                                    args: [{ k: 'Str', v: 'Cancel order' }],
+                                  }],
+                                }],
+                              },
+                              variant: 'secondary',
+                              type: 'normal',
+                              size: 'medium',
+                            },
+                            partial: false,
+                            hasDynamicProps: true,
+                          },
+                          {
+                            type: 'element',
+                            typeName: 'Button',
+                            props: {
+                              label: 'Place Order',
+                              action: {
+                                k: 'Comp',
+                                name: 'Action',
+                                args: [{
+                                  k: 'Arr',
+                                  els: [{
+                                    k: 'Comp',
+                                    name: 'ToAssistant',
+                                    args: [{ k: 'Str', v: 'Place order' }],
+                                  }],
+                                }],
+                              },
+                              variant: 'primary',
+                              type: 'normal',
+                              size: 'medium',
+                            },
+                            partial: false,
+                            hasDynamicProps: true,
+                          },
+                        ],
+                      },
+                      partial: false,
+                      hasDynamicProps: true,
+                    },
+                  ],
+                  direction: 'row',
+                  wrap: false,
+                  gap: 'm',
+                  align: 'stretch',
+                  justify: 'start',
+                },
+                partial: false,
+                hasDynamicProps: true,
+                statementId: 'actionRow',
+              },
+            ],
+            variant: 'card',
+            direction: 'column',
+            wrap: false,
+            gap: 'l',
+            align: 'stretch',
+            justify: 'start',
+          },
+          partial: false,
+          hasDynamicProps: true,
+          statementId: 'root',
+        },
+        meta: {
+          incomplete: false,
+          unresolved: [],
+          orphaned: [],
+          statementCount: 10,
+          errors: [],
+        },
+        stateDeclarations: {},
+        queryStatements: [],
+        mutationStatements: [],
+      },
+      null,
+      2,
+    ),
+  },
 ];

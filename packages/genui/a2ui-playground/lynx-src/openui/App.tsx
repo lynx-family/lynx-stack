@@ -120,7 +120,7 @@ export function App() {
 
       {parseResult?.root
         ? (
-          <scroll-view scroll-y style={{ height: '100%' }}>
+          <scroll-view scroll-y style={{ height: '100%', width: '100%' }}>
             <OpenUiRenderer
               result={parseResult}
               library={openUiLibrary}

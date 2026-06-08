@@ -23,6 +23,13 @@ const DEFAULT_COMPONENTS: DefinedComponent<any>[] = [
   c.Button,
   c.Buttons,
   c.Tag,
+  c.Image,
+  c.Icon,
+  c.Loading,
+  c.CheckBox,
+  c.RadioGroup,
+  c.Slider,
+  c.TextField,
 ];
 
 const DEFAULT_COMPONENT_GROUPS: ComponentGroup[] = [
@@ -32,7 +39,11 @@ const DEFAULT_COMPONENT_GROUPS: ComponentGroup[] = [
     components: ['Card', 'CardHeader', 'TextContent', 'Separator'],
   },
   { name: 'Buttons', components: ['Button', 'Buttons'] },
-  { name: 'Data Display', components: ['Tag'] },
+  { name: 'Data Display', components: ['Tag', 'Image', 'Icon', 'Loading'] },
+  {
+    name: 'Inputs',
+    components: ['CheckBox', 'RadioGroup', 'Slider', 'TextField'],
+  },
 ];
 
 export function createOpenUiLibrary(
