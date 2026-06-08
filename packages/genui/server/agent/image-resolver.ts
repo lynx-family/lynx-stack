@@ -29,6 +29,29 @@ interface PendingImageLoadingResult {
   replacementCount: number;
 }
 
+interface ImageResolutionPlan {
+  messages: A2UIMessage[];
+  staticResolutions: Promise<A2UIMessage>[];
+  dataResolutions: Promise<ImageDataPatch>[];
+  pendingImageRestores: A2UIMessage[];
+}
+
+type ImageResolutionResult =
+  | {
+    kind: 'static';
+    index: number;
+    message: A2UIMessage;
+  }
+  | {
+    kind: 'data';
+    index: number;
+    patch: ImageDataPatch;
+  };
+
+interface PendingImageResolution {
+  promise: Promise<ImageResolutionResult>;
+}
+
 interface PexelsPhoto {
   src?: {
     large2x?: string;
@@ -124,9 +147,92 @@ export function replacePendingA2UIImagesWithLoading(
 export async function resolveA2UIImageUrls(
   messages: A2UIMessage[],
 ): Promise<A2UIMessage[]> {
+  const plan = createImageResolutionPlan(messages);
+  const appendedMessages: A2UIMessage[] = [];
+  appendedMessages.push(...await Promise.all(plan.staticResolutions));
+  const dataPatches = dedupeImageDataPatches(
+    await Promise.all(plan.dataResolutions),
+  );
+  appendedMessages.push(
+    ...dataPatches.map((patch) => createImageDataPatchMessage(patch)),
+  );
+  appendedMessages.push(...plan.pendingImageRestores);
+
+  return [...plan.messages, ...appendedMessages];
+}
+
+export async function resolveA2UIImageUrlsIncrementally(
+  messages: A2UIMessage[],
+  onResolvedMessages: (messages: A2UIMessage[]) => void | Promise<void>,
+): Promise<A2UIMessage[]> {
+  const plan = createImageResolutionPlan(messages);
+  const staticMessages: A2UIMessage[] = [];
+  const dataPatches: ImageDataPatch[] = [];
+  const yieldedDataPatches = new Set<string>();
+
+  const pending: PendingImageResolution[] = [];
+  pending.push(
+    ...plan.staticResolutions.map((promise, index) => ({
+      promise: promise.then((message) => ({
+        kind: 'static' as const,
+        index,
+        message,
+      })),
+    })),
+  );
+  pending.push(
+    ...plan.dataResolutions.map((promise, index) => ({
+      promise: promise.then((patch) => ({
+        kind: 'data' as const,
+        index,
+        patch,
+      })),
+    })),
+  );
+
+  while (pending.length > 0) {
+    const next = await Promise.race(
+      pending.map(({ promise }, index) =>
+        promise.then((result) => ({ result, index }))
+      ),
+    );
+    pending.splice(next.index, 1);
+
+    if (next.result.kind === 'static') {
+      staticMessages[next.result.index] = next.result.message;
+      await onResolvedMessages([next.result.message]);
+      continue;
+    }
+
+    dataPatches[next.result.index] = next.result.patch;
+    const key = imageDataPatchKey(next.result.patch);
+    if (yieldedDataPatches.has(key)) continue;
+    yieldedDataPatches.add(key);
+    await onResolvedMessages([createImageDataPatchMessage(next.result.patch)]);
+  }
+
+  const finalDataPatches = dedupeImageDataPatches(
+    dataPatches.filter((patch): patch is ImageDataPatch => Boolean(patch)),
+  );
+  if (plan.pendingImageRestores.length > 0 && finalDataPatches.length > 0) {
+    await onResolvedMessages(plan.pendingImageRestores);
+  }
+
+  return [
+    ...plan.messages,
+    ...staticMessages.filter((message): message is A2UIMessage =>
+      Boolean(message)
+    ),
+    ...finalDataPatches.map((patch) => createImageDataPatchMessage(patch)),
+    ...plan.pendingImageRestores,
+  ];
+}
+
+function createImageResolutionPlan(
+  messages: A2UIMessage[],
+): ImageResolutionPlan {
   const cloned = cloneMessages(messages);
   const imagePathRefs: ImagePathRef[] = [];
-  const appendedMessages: A2UIMessage[] = [];
 
   const staticResolutions: Promise<A2UIMessage>[] = [];
   for (const message of cloned) {
@@ -167,8 +273,6 @@ export async function resolveA2UIImageUrls(
       }
     }
   }
-
-  appendedMessages.push(...await Promise.all(staticResolutions));
 
   const dataResolutions: Promise<ImageDataPatch>[] = [];
   const pendingImagePathsBySurface = new Map<string, Set<string>>();
@@ -221,18 +325,23 @@ export async function resolveA2UIImageUrls(
     pendingImagePathsBySurface,
   );
 
-  const dataPatches = dedupeImageDataPatches(
-    await Promise.all(
-      dataResolutions,
-    ),
-  );
-  appendedMessages.push(...dataPatches.map((patch) => ({
+  return {
+    messages: cloned,
+    staticResolutions,
+    dataResolutions,
+    pendingImageRestores,
+  };
+}
+
+function createImageDataPatchMessage(patch: ImageDataPatch): A2UIMessage {
+  return {
     version: 'v0.9' as const,
     updateDataModel: patch,
-  })));
-  appendedMessages.push(...pendingImageRestores);
+  };
+}
 
-  return [...cloned, ...appendedMessages];
+function imageDataPatchKey(patch: ImageDataPatch): string {
+  return `${patch.surfaceId}\0${patch.path}\0${patch.value}`;
 }
 
 function createLoadingComponent(id: string): Record<string, unknown> {
