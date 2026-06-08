@@ -14,6 +14,7 @@ import { Button } from '../components/Button.js';
 import {
   ArrowUpRight,
   Copy,
+  History,
   MessageSquarePlus,
   Play,
   RotateCcw,
@@ -27,7 +28,7 @@ import { copyToClipboard } from '../utils/clipboard.js';
 
 type BenchRole = 'control' | 'experiment';
 type BenchVariable = 'model' | 'prompt' | 'catalog' | 'custom';
-type BenchStatus = 'idle' | 'running' | 'complete';
+type BenchStatus = 'idle' | 'running' | 'complete' | 'failed' | 'cancelled';
 
 interface BenchEnv {
   apiKey: string;
@@ -70,6 +71,11 @@ interface BenchResult {
   role: BenchRole;
   scenarioId: string;
   scenarioName: string;
+  repeatIndex?: number;
+  status?: 'complete' | 'failed';
+  ok?: boolean;
+  model?: string;
+  catalog?: string;
   tokens: number;
   agentMs: number;
   fmpMs: number;
@@ -77,12 +83,19 @@ interface BenchResult {
   renderMs: number;
   attempts: number;
   judgeScore: number;
+  messageCount?: number;
+  outputChars?: number;
+  errors?: string[];
+  error?: string;
 }
 
 interface BenchGroupSummary {
   groupId: string;
   groupName: string;
   role: BenchRole;
+  runCount?: number;
+  failedRuns?: number;
+  successRate?: number;
   avgTokens: number;
   avgAgentMs: number;
   avgFmpMs: number;
@@ -94,17 +107,81 @@ interface BenchGroupSummary {
 
 interface BenchReport {
   id: string;
+  jobId?: string;
   createdAt: string;
+  completedAt?: string;
+  status?: BenchStatus;
   settings: BenchSettings;
   env: {
     apiKeyConfigured: boolean;
     baseURL: string;
     model: string;
+    clientOverrideAccepted?: boolean;
   };
+  capabilities?: {
+    agent: 'enabled';
+    renderMetrics: 'disabled' | 'skipped';
+    judge: 'disabled' | 'skipped';
+  };
+  warnings?: string[];
   groups: BenchGroup[];
   scenarios: BenchScenario[];
   results: BenchResult[];
   summaries: BenchGroupSummary[];
+  summary?: {
+    totalRuns: number;
+    completedRuns: number;
+    failedRuns: number;
+    successRate: number;
+    avgTokens: number;
+    avgAgentMs: number;
+    avgAttempts: number;
+  };
+}
+
+interface BenchJobCreated {
+  ok?: boolean;
+  jobId?: string;
+  eventsUrl?: string;
+  reportUrl?: string;
+  error?: string;
+  warnings?: string[];
+}
+
+interface BenchJobSnapshot {
+  ok?: boolean;
+  status?: BenchStatus;
+  progress?: {
+    completedRuns?: number;
+    totalRuns?: number;
+    current?: {
+      groupId: string;
+      scenarioId: string;
+      repeatIndex: number;
+      phase: string;
+    };
+  };
+  error?: string;
+  warnings?: string[];
+}
+
+interface BenchHistoryConfig {
+  env: {
+    apiKeyConfigured: boolean;
+    baseURL: string;
+    model: string;
+  };
+  settings: BenchSettings;
+  groups: BenchGroup[];
+  scenarios: BenchScenario[];
+}
+
+interface BenchHistoryEntry {
+  id: string;
+  title: string;
+  savedAt: string;
+  report: BenchReport;
+  config: BenchHistoryConfig;
 }
 
 const CATALOG_OPTIONS = [
@@ -134,6 +211,10 @@ const MAIN_PANE_MIN_WIDTH = 620;
 const RESIZE_HANDLE_WIDTH = 10;
 const REPORT_PANE_RESIZE_BREAKPOINT = 1240;
 const REPORT_PANE_WIDTH_STORAGE_KEY = 'a2ui-bench-report-width';
+const BENCH_HISTORY_STORAGE_KEY = 'a2ui-bench-history';
+const BENCH_HISTORY_LIMIT = 20;
+const ONLINE_A2UI_SERVER_ORIGIN = 'https://genui-server.vercel.app';
+const LOCAL_A2UI_SERVER_PORT = '3060';
 
 const DEFAULT_GROUPS: BenchGroup[] = [
   {
@@ -236,6 +317,93 @@ function getInitialReportPaneWidth(): number {
   }
 }
 
+function isDevHost(hostname: string): boolean {
+  return (
+    hostname === 'localhost'
+    || hostname === '127.0.0.1'
+    || hostname === '0.0.0.0'
+    || hostname.startsWith('10.')
+    || hostname.startsWith('192.168.')
+    || /^172\.(?:1[6-9]|2\d|3[01])\./u.test(hostname)
+  );
+}
+
+function isTrustedOnlineEndpoint(endpoint: URL): boolean {
+  return endpoint.origin === ONLINE_A2UI_SERVER_ORIGIN;
+}
+
+function resolveTrustedA2UIEndpoint(raw: string): string | null {
+  try {
+    const endpoint = new URL(raw, window.location.origin);
+    if (endpoint.origin === window.location.origin) return endpoint.toString();
+    if (isTrustedOnlineEndpoint(endpoint)) return endpoint.toString();
+    const isTrustedDevEndpoint = endpoint.protocol === 'http:'
+      && endpoint.port === LOCAL_A2UI_SERVER_PORT
+      && isDevHost(endpoint.hostname);
+    return isTrustedDevEndpoint ? endpoint.toString() : null;
+  } catch {
+    return null;
+  }
+}
+
+function toBenchJobsEndpoint(endpoint: string): string {
+  try {
+    const url = new URL(endpoint, window.location.origin);
+    url.pathname = '/a2ui/bench/jobs';
+    url.search = '';
+    return url.toString();
+  } catch {
+    return endpoint;
+  }
+}
+
+function getA2UIBenchJobsEndpoint(): string {
+  const params = new URLSearchParams(window.location.search);
+  const fromBenchQuery = params.get('a2uiBenchEndpoint');
+  if (fromBenchQuery) {
+    const trustedEndpoint = resolveTrustedA2UIEndpoint(fromBenchQuery);
+    if (trustedEndpoint) return toBenchJobsEndpoint(trustedEndpoint);
+  }
+
+  const fromChatQuery = params.get('a2uiEndpoint');
+  if (fromChatQuery) {
+    const trustedEndpoint = resolveTrustedA2UIEndpoint(fromChatQuery);
+    if (trustedEndpoint) return toBenchJobsEndpoint(trustedEndpoint);
+  }
+
+  if (
+    window.location.protocol === 'http:' && isDevHost(window.location.hostname)
+  ) {
+    return `http://${window.location.hostname}:${LOCAL_A2UI_SERVER_PORT}/a2ui/bench/jobs`;
+  }
+  return `${ONLINE_A2UI_SERVER_ORIGIN}/a2ui/bench/jobs`;
+}
+
+function canForwardApiKeyToEndpoint(raw: string): boolean {
+  try {
+    const endpoint = new URL(raw, window.location.origin);
+    return endpoint.protocol === 'http:'
+      && endpoint.port === LOCAL_A2UI_SERVER_PORT
+      && isDevHost(endpoint.hostname);
+  } catch {
+    return false;
+  }
+}
+
+function filterProviderForEndpoint(
+  env: BenchEnv,
+  endpoint: string,
+): Partial<BenchEnv> {
+  const apiKey = env.apiKey.trim();
+  const baseURL = env.baseURL.trim();
+  const model = env.model.trim();
+  return {
+    ...(apiKey && canForwardApiKeyToEndpoint(endpoint) ? { apiKey } : {}),
+    ...(baseURL ? { baseURL } : {}),
+    ...(model ? { model } : {}),
+  };
+}
+
 function formatMs(value: number): string {
   if (value >= 1000) return `${(value / 1000).toFixed(1)}s`;
   return `${Math.round(value)}ms`;
@@ -245,126 +413,118 @@ function formatNumber(value: number): string {
   return Math.round(value).toLocaleString();
 }
 
-function hashNoise(...parts: string[]): number {
-  const source = parts.join('|');
-  let hash = 0;
-  for (let i = 0; i < source.length; i++) {
-    hash = (hash * 31 + source.charCodeAt(i)) % 9973;
-  }
-  return (hash % 101) / 100;
+function pluralize(count: number, singular: string, plural = `${singular}s`) {
+  return `${count} ${count === 1 ? singular : plural}`;
 }
 
-function modelProfile(model: string): {
-  token: number;
-  latency: number;
-  quality: number;
-} {
-  const normalized = model.toLowerCase();
-  if (normalized.includes('deepseek')) {
-    return { token: 1.08, latency: 0.72, quality: 3.0 };
-  }
-  if (normalized.includes('doubao')) {
-    return { token: 1.0, latency: 0.88, quality: 2.35 };
-  }
-  if (normalized.includes('gemini')) {
-    return { token: 1.12, latency: 1.04, quality: 3.05 };
-  }
-  if (normalized.includes('gpt')) {
-    return { token: 0.92, latency: 1.0, quality: 3.1 };
-  }
-  return { token: 1.0, latency: 1.0, quality: 2.75 };
+function cloneBenchGroups(groups: BenchGroup[]): BenchGroup[] {
+  return groups.map((group) => ({ ...group }));
 }
 
-function catalogProfile(catalog: string): {
-  token: number;
-  render: number;
-  quality: number;
-} {
-  if (catalog === 'Minimal Catalog') {
-    return { token: 0.66, render: 0.86, quality: -0.28 };
-  }
-  if (catalog === 'Core Catalog') {
-    return { token: 0.78, render: 0.92, quality: -0.08 };
-  }
-  return { token: 1.0, render: 1.0, quality: 0.04 };
+function cloneBenchScenarios(scenarios: BenchScenario[]): BenchScenario[] {
+  return scenarios.map((scenario) => ({ ...scenario }));
 }
 
-function promptProfile(instruction: string): {
-  token: number;
-  latency: number;
-  quality: number;
-} {
-  const normalized = instruction.toLowerCase();
-  if (
-    normalized.includes('short')
-    || normalized.includes('token')
-    || normalized.includes('concise')
-    || normalized.includes('fewer')
-  ) {
-    return { token: 0.76, latency: 0.82, quality: -0.06 };
-  }
-  if (
-    normalized.includes('visual')
-    || normalized.includes('polish')
-    || normalized.includes('hierarchy')
-  ) {
-    return { token: 1.14, latency: 1.06, quality: 0.18 };
-  }
-  return { token: 1.0, latency: 1.0, quality: 0 };
+function cloneBenchSettings(settings: BenchSettings): BenchSettings {
+  return { ...settings };
 }
 
-function createResult(
-  group: BenchGroup,
-  scenario: BenchScenario,
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return typeof value === 'object' && value !== null;
+}
+
+function isBenchHistoryEntry(value: unknown): value is BenchHistoryEntry {
+  if (!isRecord(value)) return false;
+  if (typeof value.id !== 'string') return false;
+  if (typeof value.title !== 'string') return false;
+  if (typeof value.savedAt !== 'string') return false;
+  if (!isRecord(value.report) || !isRecord(value.config)) return false;
+  return Array.isArray(value.report.summaries)
+    && Array.isArray(value.report.results)
+    && isRecord(value.config.env)
+    && isRecord(value.config.settings)
+    && Array.isArray(value.config.groups)
+    && Array.isArray(value.config.scenarios);
+}
+
+function readBenchHistory(): BenchHistoryEntry[] {
+  if (typeof window === 'undefined') return [];
+  try {
+    const raw = window.localStorage.getItem(BENCH_HISTORY_STORAGE_KEY);
+    if (!raw) return [];
+    const parsed = JSON.parse(raw) as unknown;
+    if (!Array.isArray(parsed)) return [];
+    return parsed.filter((entry) => isBenchHistoryEntry(entry)).slice(
+      0,
+      BENCH_HISTORY_LIMIT,
+    );
+  } catch {
+    return [];
+  }
+}
+
+function persistBenchHistory(entries: BenchHistoryEntry[]): void {
+  try {
+    window.localStorage.setItem(
+      BENCH_HISTORY_STORAGE_KEY,
+      JSON.stringify(entries.slice(0, BENCH_HISTORY_LIMIT)),
+    );
+  } catch {
+    // History is a convenience layer; quota/private-mode failures should not
+    // block a benchmark run.
+  }
+}
+
+function createBenchHistoryEntry(
+  report: BenchReport,
   env: BenchEnv,
+  groups: BenchGroup[],
+  scenarios: BenchScenario[],
   settings: BenchSettings,
-  repeat: number,
-): BenchResult {
-  const model = group.model.trim() || env.model;
-  const modelFx = modelProfile(model);
-  const catalogFx = catalogProfile(group.catalog);
-  const promptFx = promptProfile(group.extraInstruction);
-  const noise = hashNoise(group.id, scenario.id, String(repeat));
-  const variance = 0.94 + noise * 0.12;
-  const qualityVariance = (noise - 0.5) * 0.28;
-  const baseTokens = 8400 * scenario.complexity;
-  const baseAgentMs = 14200 * scenario.complexity;
-  const baseFmpMs = 620 * scenario.complexity;
-  const baseTtiMs = 920 * scenario.complexity;
-  const baseRenderMs = 240 * scenario.complexity;
-  const judgeScore = Math.max(
-    0,
-    Math.min(
-      5,
-      modelFx.quality + catalogFx.quality + promptFx.quality
-        + qualityVariance,
-    ),
-  );
-  const repairAttempt = settings.repairEnabled && judgeScore < 2.65 ? 1 : 0;
-  const attempts = 1 + repairAttempt;
-  const repairMultiplier = attempts > 1 ? 1.18 : 1;
-
+): BenchHistoryEntry {
+  const totalRuns = report.summary?.totalRuns ?? report.results.length;
   return {
-    id: `${group.id}-${scenario.id}-${repeat}`,
-    groupId: group.id,
-    groupName: group.name,
-    role: group.role,
-    scenarioId: scenario.id,
-    scenarioName: scenario.name,
-    tokens: Math.round(
-      baseTokens * modelFx.token * catalogFx.token * promptFx.token
-        * variance * repairMultiplier,
-    ),
-    agentMs: Math.round(
-      baseAgentMs * modelFx.latency * promptFx.latency * variance
-        * repairMultiplier,
-    ),
-    fmpMs: Math.round(baseFmpMs * catalogFx.render * variance),
-    ttiMs: Math.round(baseTtiMs * catalogFx.render * variance),
-    renderMs: Math.round(baseRenderMs * catalogFx.render * variance),
-    attempts,
-    judgeScore: settings.judgeEnabled ? Number(judgeScore.toFixed(1)) : 0,
+    id: createId('bench-history'),
+    title: `${report.env.model || env.model} · ${pluralize(totalRuns, 'run')}`,
+    savedAt: new Date().toISOString(),
+    report,
+    config: {
+      env: {
+        apiKeyConfigured: Boolean(env.apiKey.trim())
+          || report.env.apiKeyConfigured,
+        baseURL: env.baseURL || report.env.baseURL,
+        model: env.model || report.env.model,
+      },
+      settings: cloneBenchSettings(settings),
+      groups: cloneBenchGroups(groups),
+      scenarios: cloneBenchScenarios(scenarios),
+    },
   };
+}
+
+function upsertBenchHistoryEntry(
+  entries: BenchHistoryEntry[],
+  entry: BenchHistoryEntry,
+): BenchHistoryEntry[] {
+  const next = entries.filter((item) => {
+    const sameJob = Boolean(entry.report.jobId)
+      && item.report.jobId === entry.report.jobId;
+    return !sameJob && item.report.id !== entry.report.id;
+  });
+  return [entry, ...next].slice(0, BENCH_HISTORY_LIMIT);
+}
+
+function getErrorMessage(error: unknown): string {
+  if (error instanceof Error) return error.message;
+  return String(error);
+}
+
+function readEventData<T>(event: MessageEvent<string>): T | null {
+  try {
+    return JSON.parse(event.data) as T;
+  } catch {
+    return null;
+  }
 }
 
 function average(values: number[]): number {
@@ -372,60 +532,58 @@ function average(values: number[]): number {
   return values.reduce((sum, value) => sum + value, 0) / values.length;
 }
 
-function summarizeGroup(
-  group: BenchGroup,
-  results: BenchResult[],
-): BenchGroupSummary {
-  const groupResults = results.filter((item) => item.groupId === group.id);
-  return {
-    groupId: group.id,
-    groupName: group.name,
-    role: group.role,
-    avgTokens: average(groupResults.map((item) => item.tokens)),
-    avgAgentMs: average(groupResults.map((item) => item.agentMs)),
-    avgFmpMs: average(groupResults.map((item) => item.fmpMs)),
-    avgTtiMs: average(groupResults.map((item) => item.ttiMs)),
-    avgRenderMs: average(groupResults.map((item) => item.renderMs)),
-    avgJudgeScore: average(groupResults.map((item) => item.judgeScore)),
-    avgAttempts: average(groupResults.map((item) => item.attempts)),
-  };
-}
-
-function buildReport(
-  groups: BenchGroup[],
-  scenarios: BenchScenario[],
-  env: BenchEnv,
-  settings: BenchSettings,
-): BenchReport {
-  const results = groups.flatMap((group) =>
-    scenarios.flatMap((scenario) =>
-      Array.from(
-        { length: settings.repeats },
-        (_, index) => createResult(group, scenario, env, settings, index + 1),
-      )
-    )
-  );
-  return {
-    id: createId('bench-report'),
-    createdAt: new Date().toISOString(),
-    settings,
-    env: {
-      apiKeyConfigured: env.apiKey.trim().length > 0,
-      baseURL: env.baseURL,
-      model: env.model,
-    },
-    groups,
-    scenarios,
-    results,
-    summaries: groups.map((group) => summarizeGroup(group, results)),
-  };
-}
-
 function deltaText(value: number, baseline: number, suffix = ''): string {
   if (baseline === 0) return 'n/a';
   const delta = ((value - baseline) / baseline) * 100;
   const sign = delta > 0 ? '+' : '';
   return `${sign}${delta.toFixed(1)}%${suffix}`;
+}
+
+function getRunButtonText(status: BenchStatus): string {
+  if (status === 'running') return 'Running';
+  if (status === 'failed') return 'Retry Bench';
+  return 'Run Bench';
+}
+
+function getProgressWidth(
+  status: BenchStatus,
+  progress: number,
+  report: BenchReport | null,
+): number {
+  if (status === 'idle' && !report) return 0;
+  if (status === 'running') return progress;
+  return progress > 0 ? progress : 100;
+}
+
+function getRunMetaText(
+  status: BenchStatus,
+  progress: number,
+  runMessage: string,
+  runCount: number,
+): string {
+  if (status === 'running') {
+    return `${Math.round(progress)}% · ${runMessage}`;
+  }
+  if (status === 'idle') return `${pluralize(runCount, 'planned run')}`;
+  return runMessage;
+}
+
+function formatReportJudgeMetric(report: BenchReport | null): string {
+  if (report?.capabilities?.judge === 'skipped') return 'skipped';
+  if (!report || report.summaries.length === 0) return 'n/a';
+  return `${
+    average(report.summaries.map((item) => item.avgJudgeScore)).toFixed(1)
+  }/5`;
+}
+
+function formatSummaryJudgeMetric(
+  report: BenchReport,
+  settings: BenchSettings,
+  summary: BenchGroupSummary,
+): string {
+  if (report.capabilities?.judge === 'skipped') return 'skipped';
+  if (!settings.judgeEnabled) return 'off';
+  return `${summary.avgJudgeScore.toFixed(1)}/5`;
 }
 
 function groupPatch<K extends keyof BenchGroup>(
@@ -444,22 +602,22 @@ export function BenchPage() {
   const [settings, setSettings] = useState<BenchSettings>(DEFAULT_SETTINGS);
   const [status, setStatus] = useState<BenchStatus>('idle');
   const [progress, setProgress] = useState(0);
+  const [runMessage, setRunMessage] = useState('Ready');
   const [configOpen, setConfigOpen] = useState(false);
+  const [historyOpen, setHistoryOpen] = useState(false);
   const [reportPaneWidth, setReportPaneWidth] = useState(
     getInitialReportPaneWidth,
   );
   const [isResizingReport, setIsResizingReport] = useState(false);
-  const [report, setReport] = useState<BenchReport | null>(() =>
-    buildReport(
-      DEFAULT_GROUPS,
-      DEFAULT_SCENARIOS,
-      DEFAULT_ENV,
-      DEFAULT_SETTINGS,
-    )
+  const [report, setReport] = useState<BenchReport | null>(null);
+  const [historyItems, setHistoryItems] = useState<BenchHistoryEntry[]>(
+    readBenchHistory,
   );
   const [copyState, setCopyState] = useState<'idle' | 'copied'>('idle');
   const benchBodyRef = useRef<HTMLDivElement | null>(null);
-  const runTimerRef = useRef<number | null>(null);
+  // eslint-disable-next-line n/no-unsupported-features/node-builtins
+  const eventSourceRef = useRef<EventSource | null>(null);
+  const benchAbortRef = useRef<AbortController | null>(null);
 
   const activeGroups = useMemo(
     () => groups.filter((group) => group.enabled),
@@ -471,23 +629,25 @@ export function BenchPage() {
     [scenarios],
   );
 
-  const clearRunTimer = useCallback(() => {
-    if (runTimerRef.current !== null) {
-      window.clearInterval(runTimerRef.current);
-      runTimerRef.current = null;
-    }
+  const clearActiveJobConnection = useCallback(() => {
+    eventSourceRef.current?.close();
+    eventSourceRef.current = null;
+    benchAbortRef.current?.abort();
+    benchAbortRef.current = null;
   }, []);
 
-  useEffect(() => clearRunTimer, [clearRunTimer]);
+  useEffect(() => clearActiveJobConnection, [clearActiveJobConnection]);
 
   useEffect(() => {
-    if (!configOpen) return;
+    if (!configOpen && !historyOpen) return;
     const handleKeyDown = (event: KeyboardEvent) => {
-      if (event.key === 'Escape') setConfigOpen(false);
+      if (event.key !== 'Escape') return;
+      setConfigOpen(false);
+      setHistoryOpen(false);
     };
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [configOpen]);
+  }, [configOpen, historyOpen]);
 
   useEffect(() => {
     try {
@@ -579,45 +739,190 @@ export function BenchPage() {
   }, []);
 
   const resetBench = useCallback(() => {
-    clearRunTimer();
+    clearActiveJobConnection();
     setEnv(DEFAULT_ENV);
     setGroups(DEFAULT_GROUPS);
     setScenarios(DEFAULT_SCENARIOS);
     setSettings(DEFAULT_SETTINGS);
     setStatus('idle');
     setProgress(0);
-    setReport(
-      buildReport(
-        DEFAULT_GROUPS,
-        DEFAULT_SCENARIOS,
-        DEFAULT_ENV,
-        DEFAULT_SETTINGS,
-      ),
-    );
-  }, [clearRunTimer]);
+    setRunMessage('Ready');
+    setReport(null);
+  }, [clearActiveJobConnection]);
 
   const startBench = useCallback(() => {
     if (runCount === 0) return;
-    clearRunTimer();
+    clearActiveJobConnection();
     setStatus('running');
     setProgress(0);
+    setRunMessage('Creating bench job...');
+    setReport(null);
 
-    const startedAt = window.performance.now();
-    const durationMs = Math.max(1800, Math.min(5600, runCount * 220));
+    const controller = new AbortController();
+    benchAbortRef.current = controller;
 
-    runTimerRef.current = window.setInterval(() => {
-      const elapsed = window.performance.now() - startedAt;
-      const nextProgress = Math.min(100, (elapsed / durationMs) * 100);
-      setProgress(nextProgress);
-      if (nextProgress >= 100) {
-        clearRunTimer();
-        setReport(buildReport(activeGroups, scenarios, env, settings));
-        setStatus('complete');
+    void (async () => {
+      try {
+        const jobsEndpoint = getA2UIBenchJobsEndpoint();
+        const response = await window.fetch(jobsEndpoint, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            provider: filterProviderForEndpoint(env, jobsEndpoint),
+            settings: {
+              repeats: settings.repeats,
+              parallelism: settings.parallelism,
+              maxRepairAttempts: settings.repairEnabled ? 2 : 0,
+              repairEnabled: settings.repairEnabled,
+              judgeEnabled: settings.judgeEnabled,
+              renderMetricsEnabled: settings.collectLiveRenderMetrics,
+            },
+            groups: activeGroups,
+            scenarios,
+          }),
+          signal: controller.signal,
+        });
+
+        const payload = await response.json().catch(
+          () => ({}),
+        ) as BenchJobCreated;
+        if (!response.ok || payload.ok === false || !payload.jobId) {
+          throw new Error(
+            payload.error ?? `Bench request failed: ${response.status}`,
+          );
+        }
+
+        setRunMessage(
+          payload.warnings && payload.warnings.length > 0
+            ? payload.warnings[0]
+            : `Job ${payload.jobId.slice(0, 8)} queued`,
+        );
+
+        const eventsUrl = new URL(
+          payload.eventsUrl ?? `/a2ui/bench/jobs/${payload.jobId}/events`,
+          jobsEndpoint,
+        ).toString();
+        // eslint-disable-next-line n/no-unsupported-features/node-builtins
+        const source = new EventSource(eventsUrl);
+        eventSourceRef.current = source;
+
+        const updateProgress = (
+          progressPayload: BenchJobSnapshot['progress'],
+        ) => {
+          const completed = progressPayload?.completedRuns ?? 0;
+          const total = progressPayload?.totalRuns ?? runCount;
+          setProgress(total > 0 ? Math.min(100, (completed / total) * 100) : 0);
+        };
+
+        const describeRun = (value: unknown): string => {
+          if (!value || typeof value !== 'object') return 'Running bench...';
+          const record = value as Record<string, unknown>;
+          const groupId = typeof record.groupId === 'string'
+            ? record.groupId
+            : undefined;
+          const scenarioId = typeof record.scenarioId === 'string'
+            ? record.scenarioId
+            : undefined;
+          const repeatIndex = typeof record.repeatIndex === 'number'
+            ? record.repeatIndex
+            : undefined;
+          const phase = typeof record.phase === 'string'
+            ? record.phase
+            : 'agent';
+          const groupName = activeGroups.find((group) => group.id === groupId)
+            ?.name ?? 'Group';
+          const scenarioName = scenarios.find((scenario) =>
+            scenario.id === scenarioId
+          )?.name ?? 'Scenario';
+          return `${groupName} · ${scenarioName} · #${
+            repeatIndex ?? 1
+          } · ${phase}`;
+        };
+
+        source.addEventListener('job', (event) => {
+          const snapshot = readEventData<BenchJobSnapshot>(
+            event as MessageEvent<string>,
+          );
+          if (!snapshot) return;
+          updateProgress(snapshot.progress);
+          if (snapshot.status === 'failed') {
+            setStatus('failed');
+            setRunMessage(snapshot.error ?? 'Bench job failed');
+          } else if (snapshot.status === 'cancelled') {
+            setStatus('cancelled');
+            setRunMessage('Bench job cancelled');
+          } else if (snapshot.status === 'complete') {
+            setProgress(100);
+          }
+        });
+
+        const handleRunProgress = (event: Event) => {
+          const data = readEventData<Record<string, unknown>>(
+            event as MessageEvent<string>,
+          );
+          if (!data) return;
+          setRunMessage(describeRun(data));
+          const progressPayload = data.progress as BenchJobSnapshot['progress'];
+          updateProgress(progressPayload);
+        };
+        source.addEventListener('run-start', handleRunProgress);
+        source.addEventListener('run-phase', handleRunProgress);
+        source.addEventListener('run-complete', handleRunProgress);
+        source.addEventListener('run-error', handleRunProgress);
+
+        source.addEventListener('report', (event) => {
+          const nextReport = readEventData<BenchReport>(
+            event as MessageEvent<string>,
+          );
+          if (!nextReport) return;
+          setReport(nextReport);
+          setHistoryItems((current) => {
+            const entry = createBenchHistoryEntry(
+              nextReport,
+              env,
+              activeGroups,
+              scenarios,
+              settings,
+            );
+            const next = upsertBenchHistoryEntry(current, entry);
+            persistBenchHistory(next);
+            return next;
+          });
+          setStatus(nextReport.status ?? 'complete');
+          setProgress(100);
+          setRunMessage(
+            nextReport.summary && nextReport.summary.failedRuns > 0
+              ? `Complete with ${
+                pluralize(nextReport.summary.failedRuns, 'failed run')
+              }`
+              : 'Bench complete',
+          );
+          source.close();
+          if (eventSourceRef.current === source) eventSourceRef.current = null;
+        });
+
+        source.addEventListener('error', (event) => {
+          const data = readEventData<{ message?: string; error?: string }>(
+            event as MessageEvent<string>,
+          );
+          setStatus('failed');
+          setRunMessage(data?.message ?? data?.error ?? 'Bench stream failed');
+          source.close();
+          if (eventSourceRef.current === source) eventSourceRef.current = null;
+        });
+      } catch (error) {
+        if (controller.signal.aborted) return;
+        setStatus('failed');
+        setRunMessage(getErrorMessage(error));
+      } finally {
+        if (benchAbortRef.current === controller) {
+          benchAbortRef.current = null;
+        }
       }
-    }, 120);
+    })();
   }, [
     activeGroups,
-    clearRunTimer,
+    clearActiveJobConnection,
     env,
     runCount,
     scenarios,
@@ -631,6 +936,42 @@ export function BenchPage() {
     setCopyState('copied');
     window.setTimeout(() => setCopyState('idle'), 1200);
   }, [report]);
+
+  const restoreHistoryEntry = useCallback((entry: BenchHistoryEntry) => {
+    clearActiveJobConnection();
+    setEnv((current) => ({
+      apiKey: current.apiKey,
+      baseURL: entry.config.env.baseURL,
+      model: entry.config.env.model,
+    }));
+    setGroups(cloneBenchGroups(entry.config.groups));
+    setScenarios(cloneBenchScenarios(entry.config.scenarios));
+    setSettings(cloneBenchSettings(entry.config.settings));
+    setReport(entry.report);
+    setStatus(entry.report.status ?? 'complete');
+    setProgress(100);
+    setRunMessage(
+      entry.report.summary && entry.report.summary.failedRuns > 0
+        ? `Loaded history · ${
+          pluralize(entry.report.summary.failedRuns, 'failed run')
+        }`
+        : 'Loaded history',
+    );
+    setHistoryOpen(false);
+  }, [clearActiveJobConnection]);
+
+  const deleteHistoryEntry = useCallback((id: string) => {
+    setHistoryItems((current) => {
+      const next = current.filter((entry) => entry.id !== id);
+      persistBenchHistory(next);
+      return next;
+    });
+  }, []);
+
+  const clearHistory = useCallback(() => {
+    setHistoryItems([]);
+    persistBenchHistory([]);
+  }, []);
 
   const setWidthFromPointer = useCallback((clientX: number) => {
     const body = benchBodyRef.current;
@@ -720,7 +1061,7 @@ export function BenchPage() {
           <>
             <span className='chip'>{activeGroups.length} groups</span>
             <span className='chip'>{scenarios.length} scenarios</span>
-            <span className='chip'>{runCount} runs</span>
+            <span className='chip'>{pluralize(runCount, 'run')}</span>
             <Button
               variant='secondary'
               size='sm'
@@ -770,15 +1111,7 @@ export function BenchPage() {
               </div>
               <div className='benchMetric'>
                 <span className='benchMetricLabel'>Judge</span>
-                <strong>
-                  {report && report.summaries.length > 0
-                    ? `${
-                      average(
-                        report.summaries.map((item) => item.avgJudgeScore),
-                      ).toFixed(1)
-                    }/5`
-                    : 'n/a'}
-                </strong>
+                <strong>{formatReportJudgeMetric(report)}</strong>
               </div>
             </div>
             <div className='benchRunPanel'>
@@ -790,7 +1123,7 @@ export function BenchPage() {
                   disabled={status === 'running' || runCount === 0}
                   onClick={startBench}
                 >
-                  {status === 'running' ? 'Running' : 'Run Bench'}
+                  {getRunButtonText(status)}
                 </Button>
                 <Button
                   variant='secondary'
@@ -814,14 +1147,15 @@ export function BenchPage() {
                 <div
                   className='benchProgressBar'
                   style={{
-                    width: `${status === 'running' ? progress : 100}%`,
+                    width: `${getProgressWidth(status, progress, report)}%`,
                   }}
                 />
               </div>
-              <div className='benchRunMeta'>
-                {status === 'running'
-                  ? `${Math.round(progress)}% complete`
-                  : `${runCount} planned runs`}
+              <div
+                className='benchRunMeta'
+                data-tone={status === 'failed' ? 'error' : status}
+              >
+                {getRunMetaText(status, progress, runMessage, runCount)}
               </div>
             </div>
             <div className='benchPlanSummary'>
@@ -1015,9 +1349,9 @@ export function BenchPage() {
               <div>
                 <h3 className='benchSectionTitle'>Plan</h3>
                 <p className='benchSectionSub'>
-                  {activeGroups.length} groups · {scenarios.length} scenarios ·
-                  {' '}
-                  {settings.repeats} repeats
+                  {pluralize(activeGroups.length, 'group')} ·{' '}
+                  {pluralize(scenarios.length, 'scenario')} ·{' '}
+                  {pluralize(settings.repeats, 'repeat')}
                 </p>
               </div>
               <Button
@@ -1064,15 +1398,25 @@ export function BenchPage() {
                   : 'No report'}
               </p>
             </div>
-            <Button
-              variant='secondary'
-              size='sm'
-              iconBefore={Copy}
-              disabled={!report}
-              onClick={() => void copyReport()}
-            >
-              {copyState === 'copied' ? 'Copied' : 'JSON'}
-            </Button>
+            <div className='benchReportActions'>
+              <Button
+                variant='secondary'
+                size='sm'
+                iconBefore={History}
+                onClick={() => setHistoryOpen(true)}
+              >
+                History
+              </Button>
+              <Button
+                variant='secondary'
+                size='sm'
+                iconBefore={Copy}
+                disabled={!report}
+                onClick={() => void copyReport()}
+              >
+                {copyState === 'copied' ? 'Copied' : 'JSON'}
+              </Button>
+            </div>
           </div>
 
           {report && baseline
@@ -1156,9 +1500,11 @@ export function BenchPage() {
                           <td>{formatMs(summary.avgRenderMs)}</td>
                           <td>{summary.avgAttempts.toFixed(1)}x</td>
                           <td>
-                            {settings.judgeEnabled
-                              ? `${summary.avgJudgeScore.toFixed(1)}/5`
-                              : 'off'}
+                            {formatSummaryJudgeMetric(
+                              report,
+                              settings,
+                              summary,
+                            )}
                           </td>
                         </tr>
                       ))}
@@ -1177,10 +1523,19 @@ export function BenchPage() {
                     <ArrowUpRight size={13} strokeWidth={2} />
                   </a>
                   <span>
-                    Metrics mirror Agent, FMP, TTI, Render, Tokens, Attempts,
-                    and ui-judge dimensions.
+                    Agent, Tokens, Attempts, and validation are measured by the
+                    server. Render and judge are marked when unavailable.
                   </span>
                 </div>
+                {report.warnings && report.warnings.length > 0
+                  ? (
+                    <div className='benchReportWarnings'>
+                      {report.warnings.map((warning) => (
+                        <span key={warning}>{warning}</span>
+                      ))}
+                    </div>
+                  )
+                  : null}
               </>
             )
             : (
@@ -1192,6 +1547,209 @@ export function BenchPage() {
             )}
         </aside>
       </div>
+
+      {historyOpen
+        ? (
+          <div
+            className='benchConfigOverlay'
+            role='presentation'
+            onMouseDown={(event) => {
+              if (event.target === event.currentTarget) setHistoryOpen(false);
+            }}
+          >
+            <section
+              className='benchConfigDialog benchHistoryDialog'
+              role='dialog'
+              aria-modal='true'
+              aria-labelledby='bench-history-title'
+            >
+              <header className='benchConfigHeader'>
+                <div>
+                  <h2 id='bench-history-title' className='benchConfigTitle'>
+                    Bench history
+                  </h2>
+                  <p className='benchConfigSub'>
+                    {historyItems.length > 0
+                      ? `${pluralize(historyItems.length, 'saved run')}`
+                      : 'No saved runs yet'}
+                  </p>
+                </div>
+                <Button
+                  variant='secondary'
+                  size='sm'
+                  iconOnly
+                  iconBefore={X}
+                  aria-label='Close bench history'
+                  title='Close bench history'
+                  onClick={() => setHistoryOpen(false)}
+                />
+              </header>
+
+              <div className='benchHistoryBody'>
+                {historyItems.length > 0
+                  ? (
+                    <div className='benchHistoryList'>
+                      {historyItems.map((entry) => {
+                        const summary = entry.report.summary;
+                        const failedRuns = summary?.failedRuns ?? 0;
+                        const totalRuns = summary?.totalRuns
+                          ?? entry.report.results.length;
+                        return (
+                          <article className='benchHistoryCard' key={entry.id}>
+                            <div className='benchHistoryCardHeader'>
+                              <div>
+                                <h3>{entry.title}</h3>
+                                <p>
+                                  {new Date(entry.savedAt).toLocaleString()}
+                                </p>
+                              </div>
+                              <span
+                                className='benchHistoryStatus'
+                                data-tone={failedRuns > 0 ? 'warn' : 'ok'}
+                              >
+                                {failedRuns > 0
+                                  ? pluralize(failedRuns, 'failed run')
+                                  : 'passed'}
+                              </span>
+                            </div>
+
+                            <div className='benchHistoryStats'>
+                              <div>
+                                <span>Runs</span>
+                                <strong>{formatNumber(totalRuns)}</strong>
+                              </div>
+                              <div>
+                                <span>Success</span>
+                                <strong>
+                                  {summary
+                                    ? `${
+                                      Math.round(summary.successRate * 100)
+                                    }%`
+                                    : 'n/a'}
+                                </strong>
+                              </div>
+                              <div>
+                                <span>Agent</span>
+                                <strong>
+                                  {summary
+                                    ? formatMs(summary.avgAgentMs)
+                                    : 'n/a'}
+                                </strong>
+                              </div>
+                              <div>
+                                <span>Tokens</span>
+                                <strong>
+                                  {summary
+                                    ? formatNumber(summary.avgTokens)
+                                    : 'n/a'}
+                                </strong>
+                              </div>
+                            </div>
+
+                            <div className='benchHistoryConfig'>
+                              <span>{entry.config.env.model}</span>
+                              <span>
+                                {entry.config.env.apiKeyConfigured
+                                  ? 'key was set'
+                                  : 'no key'}
+                              </span>
+                              <span>
+                                {pluralize(
+                                  entry.config.settings.repeats,
+                                  'repeat',
+                                )} / {entry.config.settings.parallelism}{' '}
+                                parallel
+                              </span>
+                              <span>
+                                {pluralize(entry.config.groups.length, 'group')}
+                                {' · '}
+                                {pluralize(
+                                  entry.config.scenarios.length,
+                                  'scenario',
+                                )}
+                              </span>
+                            </div>
+
+                            <details className='benchHistoryDetails'>
+                              <summary>Configuration snapshot</summary>
+                              <div className='benchHistorySnapshot'>
+                                <div>
+                                  <span>Base URL</span>
+                                  <strong>{entry.config.env.baseURL}</strong>
+                                </div>
+                                <div>
+                                  <span>Groups</span>
+                                  <strong>
+                                    {entry.config.groups.map((group) =>
+                                      `${group.name} (${group.model})`
+                                    ).join(', ')}
+                                  </strong>
+                                </div>
+                                <div>
+                                  <span>Scenarios</span>
+                                  <strong>
+                                    {entry.config.scenarios.map((scenario) =>
+                                      scenario.name
+                                    ).join(', ')}
+                                  </strong>
+                                </div>
+                              </div>
+                            </details>
+
+                            <div className='benchHistoryActions'>
+                              <Button
+                                variant='primary'
+                                size='sm'
+                                iconBefore={RotateCcw}
+                                onClick={() => restoreHistoryEntry(entry)}
+                              >
+                                Restore
+                              </Button>
+                              <Button
+                                variant='secondary'
+                                size='sm'
+                                iconBefore={Trash2}
+                                onClick={() => deleteHistoryEntry(entry.id)}
+                              >
+                                Delete
+                              </Button>
+                            </div>
+                          </article>
+                        );
+                      })}
+                    </div>
+                  )
+                  : (
+                    <div className='benchEmptyReport benchHistoryEmpty'>
+                      <History size={28} strokeWidth={1.8} />
+                      <strong>No history yet</strong>
+                      <span>Completed bench runs will be saved here.</span>
+                    </div>
+                  )}
+              </div>
+
+              <footer className='benchConfigFooter'>
+                <Button
+                  variant='secondary'
+                  size='sm'
+                  iconBefore={Trash2}
+                  disabled={historyItems.length === 0}
+                  onClick={clearHistory}
+                >
+                  Clear history
+                </Button>
+                <Button
+                  variant='primary'
+                  size='sm'
+                  onClick={() => setHistoryOpen(false)}
+                >
+                  Done
+                </Button>
+              </footer>
+            </section>
+          </div>
+        )
+        : null}
 
       {configOpen
         ? (
