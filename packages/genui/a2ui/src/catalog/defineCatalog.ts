@@ -32,10 +32,6 @@ export type CatalogManifest = Record<string, CatalogSchema>;
 export type CatalogComponent = ComponentType<GenericComponentProps>;
 
 /**
- * A function-definition manifest as emitted by the extractor under
- * `dist/catalog/functions/<name>.json`.
- */
-/**
  * The structured function definition that flows from the extractor (or the
  * upstream basic-catalog manifests) into the catalog and out to the agent
  * during the handshake. Aliased onto the store's `FunctionDefinition` so

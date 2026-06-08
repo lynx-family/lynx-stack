@@ -35,8 +35,9 @@ const catalog = readA2UICatalogFromDirectory({
 const prompt = buildA2UISystemPrompt({ catalog });
 ```
 
-`readA2UICatalogFromDirectory` expects generated files such as
-`<Component>/catalog.json` and optional function definitions under `functions/`.
+`readA2UICatalogFromDirectory` prefers the full catalog file, such as
+`dist/catalog.json`, and falls back to generated component files such as
+`catalog/<Component>/catalog.json`.
 Use `genui a2ui generate catalog` to create those artifacts.
 
 ## Exports

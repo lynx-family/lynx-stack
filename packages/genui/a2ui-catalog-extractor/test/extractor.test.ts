@@ -94,9 +94,10 @@ describe('extractCatalogComponents', () => {
     ]);
 
     for (const componentName of Object.keys(expectedCatalogs)) {
-      expect(readCatalogJson(outDir, componentName)).toEqual(
-        expectedCatalogs[componentName],
-      );
+      expect(readCatalogJson(path.join(outDir, 'catalog'), componentName))
+        .toEqual(
+          expectedCatalogs[componentName],
+        );
     }
     expect(readFullCatalogJson(outDir)).toEqual({
       catalogId: 'catalog.json',
@@ -105,7 +106,7 @@ describe('extractCatalogComponents', () => {
         DemoText: expectedCatalogs['DemoText']!['DemoText'],
         QuickStartCard: expectedCatalogs['QuickStartCard']!['QuickStartCard'],
       },
-      functions: [],
+      functions: {},
     });
   });
 
@@ -145,21 +146,30 @@ describe('extractCatalogComponents', () => {
         DemoText: expectedCatalogs['DemoText']!['DemoText'],
         QuickStartCard: expectedCatalogs['QuickStartCard']!['QuickStartCard'],
       },
-      functions: [
-        {
+      functions: {
+        formatDisplayValue: {
+          type: 'object',
           description: 'Format a raw value for display.',
-          name: 'formatDisplayValue',
-          parameters: {
-            type: 'object',
-            properties: {
-              value: { type: 'string' },
+          properties: {
+            call: {
+              const: 'formatDisplayValue',
             },
-            required: ['value'],
-            additionalProperties: false,
+            args: {
+              type: 'object',
+              properties: {
+                value: { type: 'string' },
+              },
+              required: ['value'],
+              additionalProperties: false,
+            },
+            returnType: {
+              const: 'string',
+            },
           },
-          returnType: 'string',
+          required: ['call', 'args'],
+          unevaluatedProperties: false,
         },
-      ],
+      },
       theme: {
         accentColor: { type: 'string' },
       },
@@ -181,18 +191,21 @@ describe('extractCatalogComponents', () => {
       'catalog-out',
     ], cwd)).resolves.toBe(0);
 
-    expect(readCatalogJson(path.join(cwd, 'catalog-out'), 'CliBadge')).toEqual({
-      CliBadge: {
-        properties: {
-          label: {
-            type: 'string',
-            description: 'Badge label.',
+    expect(
+      readCatalogJson(path.join(cwd, 'catalog-out', 'catalog'), 'CliBadge'),
+    )
+      .toEqual({
+        CliBadge: {
+          properties: {
+            label: {
+              type: 'string',
+              description: 'Badge label.',
+            },
           },
+          required: ['label'],
+          description: 'CLI badge fixture.',
         },
-        required: ['label'],
-        description: 'CLI badge fixture.',
-      },
-    });
+      });
     expect(readFullCatalogJson(path.join(cwd, 'catalog-out'))).toEqual({
       catalogId: 'catalog.json',
       components: {
@@ -207,7 +220,7 @@ describe('extractCatalogComponents', () => {
           description: 'CLI badge fixture.',
         },
       },
-      functions: [],
+      functions: {},
     });
   });
 

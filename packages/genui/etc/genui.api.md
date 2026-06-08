@@ -149,6 +149,8 @@ export interface A2UIPromptJsonSchema {
     // (undocumented)
     additionalProperties?: unknown;
     // (undocumented)
+    const?: unknown;
+    // (undocumented)
     description?: string;
     // (undocumented)
     enum?: unknown;
@@ -162,6 +164,8 @@ export interface A2UIPromptJsonSchema {
     required?: string[];
     // (undocumented)
     type?: string;
+    // (undocumented)
+    unevaluatedProperties?: unknown;
 }
 
 // Warning: (ae-missing-release-tag) "A2UIProps" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
@@ -431,7 +435,7 @@ export interface ExtractedA2UICatalog {
     // (undocumented)
     components?: Record<string, ExtractedJsonSchema>;
     // (undocumented)
-    functions?: FunctionDefinition[];
+    functions?: Record<string, ExtractedJsonSchema>;
     // (undocumented)
     theme?: Record<string, ExtractedJsonSchema>;
 }
@@ -459,6 +463,8 @@ export interface ExtractedJsonSchema {
     // (undocumented)
     additionalProperties?: boolean | ExtractedJsonSchema;
     // (undocumented)
+    const?: unknown;
+    // (undocumented)
     default?: unknown;
     // (undocumented)
     deprecated?: boolean;
@@ -476,6 +482,8 @@ export interface ExtractedJsonSchema {
     required?: string[];
     // (undocumented)
     type?: string;
+    // (undocumented)
+    unevaluatedProperties?: boolean | ExtractedJsonSchema;
 }
 
 // Warning: (ae-missing-release-tag) "findCatalogSourceFiles" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)

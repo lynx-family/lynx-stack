@@ -38,19 +38,19 @@ For custom components, first generate catalog artifacts:
 npx @lynx-js/genui a2ui generate catalog \
   --catalog-dir src/catalog \
   --source src/functions \
-  --out-dir dist/catalog
+  --out-dir dist
 ```
 
 Then generate the prompt from those artifacts:
 
 ```bash
 npx @lynx-js/genui a2ui generate prompt \
-  --catalog-dir dist/catalog \
+  --catalog-dir dist \
   --catalog-id https://example.com/catalogs/custom/v1/catalog.json \
   --out dist/a2ui-system-prompt.txt
 ```
 
-`--catalog-dir` must point at generated files such as `<Component>/catalog.json`. If the catalog also has generated function files under `functions/*.json`, they are included in the prompt as callable function signatures.
+`--catalog-dir` must point at the generated catalog root. The prompt generator prefers a full catalog file such as `dist/catalog.json`, and falls back to component files such as `catalog/<Component>/catalog.json`.
 
 The package exposes the same commands through the `genui` binary after installation, so project scripts may use `genui a2ui ...` when `@lynx-js/genui` is already installed locally. Existing A2UI-only scripts may also use the `a2ui-cli` compatibility alias.
 

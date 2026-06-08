@@ -144,6 +144,8 @@ export interface JsonSchema {
     // (undocumented)
     additionalProperties?: unknown;
     // (undocumented)
+    const?: unknown;
+    // (undocumented)
     description?: string;
     // (undocumented)
     enum?: unknown;
@@ -157,6 +159,8 @@ export interface JsonSchema {
     required?: string[];
     // (undocumented)
     type?: string;
+    // (undocumented)
+    unevaluatedProperties?: unknown;
 }
 
 // Warning: (ae-missing-release-tag) "ReadA2UICatalogDirectoryOptions" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
