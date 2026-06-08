@@ -25,17 +25,22 @@
 }
 
 .benchBody {
+  --bench-report-width: 440px;
+
   flex: 1;
   min-width: 0;
   min-height: 0;
   display: grid;
-  grid-template-columns: minmax(620px, 1fr) minmax(360px, 440px);
+  grid-template-columns:
+    minmax(620px, 1fr) 10px
+    minmax(360px, var(--bench-report-width));
   overflow: hidden;
 }
 
 .benchReportPane {
   min-height: 0;
   overflow: auto;
+  padding: 16px;
   background: color-mix(
     in srgb,
     var(--geist-background) 84%,
@@ -43,9 +48,72 @@
   );
 }
 
-.benchReportPane {
+.benchResizeHandle {
+  display: flex;
+  min-width: 0;
+  min-height: 0;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  border: 0;
+  border-right: 1px solid var(--geist-border);
   border-left: 1px solid var(--geist-border);
-  padding: 16px;
+  background: color-mix(
+    in srgb,
+    var(--geist-background) 78%,
+    var(--geist-surface)
+  );
+  cursor: col-resize;
+  touch-action: none;
+  transition:
+    background var(--geist-transition),
+    border-color var(--geist-transition);
+}
+
+.benchResizeHandle span {
+  width: 2px;
+  height: 34px;
+  border-radius: 999px;
+  background: color-mix(
+    in srgb,
+    var(--geist-secondary) 48%,
+    transparent
+  );
+  transition:
+    background var(--geist-transition),
+    height var(--geist-transition);
+}
+
+.benchResizeHandle:hover,
+.benchResizeHandle:focus-visible,
+.benchBody[data-report-resizing="true"] .benchResizeHandle {
+  border-color: color-mix(
+    in srgb,
+    var(--geist-foreground) 28%,
+    var(--geist-border)
+  );
+  background: color-mix(
+    in srgb,
+    var(--geist-foreground) 5%,
+    var(--geist-surface)
+  );
+}
+
+.benchResizeHandle:hover span,
+.benchResizeHandle:focus-visible span,
+.benchBody[data-report-resizing="true"] .benchResizeHandle span {
+  height: 52px;
+  background: color-mix(
+    in srgb,
+    var(--geist-foreground) 42%,
+    var(--geist-secondary)
+  );
+}
+
+.benchResizeHandle:focus-visible {
+  outline: 2px solid
+    color-mix(in srgb, var(--geist-foreground) 22%, transparent);
+  outline-offset: -2px;
 }
 
 .benchMain {
@@ -912,6 +980,10 @@
 @media (max-width: 1240px) {
   .benchBody {
     grid-template-columns: minmax(0, 1fr);
+  }
+
+  .benchResizeHandle {
+    display: none;
   }
 
   .benchReportPane {

@@ -2,6 +2,11 @@
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import type {
+  CSSProperties,
+  KeyboardEvent as ReactKeyboardEvent,
+  PointerEvent as ReactPointerEvent,
+} from 'react';
 
 import './BenchPage.css';
 
@@ -122,6 +127,14 @@ const DEFAULT_SETTINGS: BenchSettings = {
   collectLiveRenderMetrics: true,
 };
 
+const REPORT_PANE_DEFAULT_WIDTH = 440;
+const REPORT_PANE_MIN_WIDTH = 360;
+const REPORT_PANE_MAX_WIDTH = 640;
+const MAIN_PANE_MIN_WIDTH = 620;
+const RESIZE_HANDLE_WIDTH = 10;
+const REPORT_PANE_RESIZE_BREAKPOINT = 1240;
+const REPORT_PANE_WIDTH_STORAGE_KEY = 'a2ui-bench-report-width';
+
 const DEFAULT_GROUPS: BenchGroup[] = [
   {
     id: 'control-default',
@@ -195,6 +208,32 @@ function createId(prefix: string): string {
 function clampNumber(value: number, min: number, max: number): number {
   if (!Number.isFinite(value)) return min;
   return Math.max(min, Math.min(max, Math.round(value)));
+}
+
+function clampReportPaneWidth(
+  value: number,
+  containerWidth?: number,
+): number {
+  const maxByContainer = containerWidth
+    ? containerWidth - MAIN_PANE_MIN_WIDTH - RESIZE_HANDLE_WIDTH
+    : REPORT_PANE_MAX_WIDTH;
+  const max = Math.min(
+    REPORT_PANE_MAX_WIDTH,
+    Math.max(REPORT_PANE_MIN_WIDTH, maxByContainer),
+  );
+  return clampNumber(value, REPORT_PANE_MIN_WIDTH, max);
+}
+
+function getInitialReportPaneWidth(): number {
+  if (typeof window === 'undefined') return REPORT_PANE_DEFAULT_WIDTH;
+  try {
+    const stored = Number(
+      window.localStorage.getItem(REPORT_PANE_WIDTH_STORAGE_KEY),
+    );
+    return clampReportPaneWidth(stored || REPORT_PANE_DEFAULT_WIDTH);
+  } catch {
+    return REPORT_PANE_DEFAULT_WIDTH;
+  }
 }
 
 function formatMs(value: number): string {
@@ -406,6 +445,10 @@ export function BenchPage() {
   const [status, setStatus] = useState<BenchStatus>('idle');
   const [progress, setProgress] = useState(0);
   const [configOpen, setConfigOpen] = useState(false);
+  const [reportPaneWidth, setReportPaneWidth] = useState(
+    getInitialReportPaneWidth,
+  );
+  const [isResizingReport, setIsResizingReport] = useState(false);
   const [report, setReport] = useState<BenchReport | null>(() =>
     buildReport(
       DEFAULT_GROUPS,
@@ -415,6 +458,7 @@ export function BenchPage() {
     )
   );
   const [copyState, setCopyState] = useState<'idle' | 'copied'>('idle');
+  const benchBodyRef = useRef<HTMLDivElement | null>(null);
   const runTimerRef = useRef<number | null>(null);
 
   const activeGroups = useMemo(
@@ -444,6 +488,33 @@ export function BenchPage() {
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [configOpen]);
+
+  useEffect(() => {
+    try {
+      window.localStorage.setItem(
+        REPORT_PANE_WIDTH_STORAGE_KEY,
+        String(reportPaneWidth),
+      );
+    } catch {
+      // Ignore storage failures; resizing should remain a local UI affordance.
+    }
+  }, [reportPaneWidth]);
+
+  useEffect(() => {
+    const clampToBody = () => {
+      const containerWidth = benchBodyRef.current?.getBoundingClientRect()
+        .width;
+      if (!containerWidth) return;
+      if (containerWidth <= REPORT_PANE_RESIZE_BREAKPOINT) return;
+      setReportPaneWidth((current) =>
+        clampReportPaneWidth(current, containerWidth)
+      );
+    };
+
+    clampToBody();
+    window.addEventListener('resize', clampToBody);
+    return () => window.removeEventListener('resize', clampToBody);
+  }, []);
 
   const updateGroup = useCallback(
     (id: string, patch: Partial<BenchGroup>) => {
@@ -561,6 +632,58 @@ export function BenchPage() {
     window.setTimeout(() => setCopyState('idle'), 1200);
   }, [report]);
 
+  const setWidthFromPointer = useCallback((clientX: number) => {
+    const body = benchBodyRef.current;
+    if (!body) return;
+    const rect = body.getBoundingClientRect();
+    const nextWidth = rect.right - clientX - RESIZE_HANDLE_WIDTH / 2;
+    setReportPaneWidth(clampReportPaneWidth(nextWidth, rect.width));
+  }, []);
+
+  const startReportResize = useCallback((
+    event: ReactPointerEvent<HTMLDivElement>,
+  ) => {
+    event.preventDefault();
+    event.currentTarget.focus();
+    setWidthFromPointer(event.clientX);
+    setIsResizingReport(true);
+
+    const handlePointerMove = (moveEvent: PointerEvent) => {
+      moveEvent.preventDefault();
+      setWidthFromPointer(moveEvent.clientX);
+    };
+    const stopResize = () => {
+      setIsResizingReport(false);
+      document.body.style.cursor = '';
+      document.body.style.userSelect = '';
+      window.removeEventListener('pointermove', handlePointerMove);
+      window.removeEventListener('pointerup', stopResize);
+      window.removeEventListener('pointercancel', stopResize);
+    };
+
+    document.body.style.cursor = 'col-resize';
+    document.body.style.userSelect = 'none';
+    window.addEventListener('pointermove', handlePointerMove);
+    window.addEventListener('pointerup', stopResize);
+    window.addEventListener('pointercancel', stopResize);
+  }, [setWidthFromPointer]);
+
+  const nudgeReportWidth = useCallback((
+    event: ReactKeyboardEvent<HTMLDivElement>,
+  ) => {
+    if (event.key !== 'ArrowLeft' && event.key !== 'ArrowRight') return;
+    event.preventDefault();
+    const containerWidth = benchBodyRef.current?.getBoundingClientRect().width;
+    const direction = event.key === 'ArrowLeft' ? 1 : -1;
+    setReportPaneWidth((current) =>
+      clampReportPaneWidth(current + direction * 24, containerWidth)
+    );
+  }, []);
+
+  const benchBodyStyle = {
+    '--bench-report-width': `${reportPaneWidth}px`,
+  } as CSSProperties;
+
   const baseline = useMemo(() => {
     if (!report) return null;
     return report.summaries.find((item) => item.role === 'control')
@@ -610,7 +733,12 @@ export function BenchPage() {
         }
       />
 
-      <div className='benchBody'>
+      <div
+        className='benchBody'
+        data-report-resizing={isResizingReport}
+        ref={benchBodyRef}
+        style={benchBodyStyle}
+      >
         <main className='benchMain' aria-label='Bench workspace'>
           <section className='benchOverviewBand'>
             <div className='benchOverviewCopy'>
@@ -910,6 +1038,21 @@ export function BenchPage() {
             </div>
           </section>
         </main>
+
+        <div
+          className='benchResizeHandle'
+          role='separator'
+          aria-label='Resize report panel'
+          aria-orientation='vertical'
+          aria-valuemin={REPORT_PANE_MIN_WIDTH}
+          aria-valuemax={REPORT_PANE_MAX_WIDTH}
+          aria-valuenow={reportPaneWidth}
+          tabIndex={0}
+          onKeyDown={nudgeReportWidth}
+          onPointerDown={startReportResize}
+        >
+          <span aria-hidden='true' />
+        </div>
 
         <aside className='benchReportPane' aria-label='Bench report'>
           <div className='benchReportHeader'>
