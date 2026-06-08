@@ -111,19 +111,22 @@ const COMPONENT_SUMMARIES: Record<string, string> = {
   CheckBox: 'Boolean checkbox with a label and optional validation checks.',
   ChoicePicker:
     'Single- or multi-select choice picker with checkbox and chip display styles.',
-  Column: 'Vertical layout container.',
+  Column:
+    'Vertical layout container. Preferred for ordinary non-scrollable repeated content using template children.',
   DateTimeInput:
     'Date and/or time input with a calendar panel. Without outputFormat, date-enabled inputs write YYYY-MM-DD.',
   Divider: 'Horizontal or vertical separator line.',
   Icon: 'Display an icon by name.',
   Image: 'Display an image by URL.',
   LineChart: 'Display one or more numeric line series over shared labels.',
-  List: 'Repeating layout container, commonly bound to a data path.',
+  List:
+    'Scrollable repeating layout container. Use when repeated content needs scrolling; otherwise prefer Column or Row template children.',
   Loading: 'Animated progress indicator for pending content.',
   Modal:
     'Modal dialog with a trigger component and a content component. The trigger opens the modal locally when tapped.',
   RadioGroup: 'Single-choice selector for a list of string options.',
-  Row: 'Horizontal layout container.',
+  Row:
+    'Horizontal layout container. Preferred for ordinary non-scrollable repeated content using template children.',
   Slider: 'Numeric slider with an optional label and validation checks.',
   Tabs: 'Tabbed container; each tab references a child component id.',
   Text:
