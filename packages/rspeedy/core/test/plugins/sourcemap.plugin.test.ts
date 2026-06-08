@@ -17,6 +17,14 @@ beforeEach(() => {
   vi.resetAllMocks()
 })
 
+const hasDropPlugin = (plugins: unknown[] | undefined) =>
+  !!plugins?.some(
+    p =>
+      typeof p === 'object' && p !== null
+      && (p as { constructor?: { name?: string } }).constructor?.name
+        === 'DropSourceMapAssetsPlugin',
+  )
+
 describe('sourcemap.plugin', () => {
   describe('production', () => {
     test('defaults', async () => {
@@ -659,6 +667,31 @@ describe('sourcemap.plugin', () => {
           noSources: false,
         }),
       )
+    })
+  })
+
+  describe('drop .map assets', () => {
+    test('production build drops .map assets', async () => {
+      vi.stubEnv('NODE_ENV', 'production')
+      const rspeedy = await createStubRspeedy({})
+      const config = await rspeedy.unwrapConfig({ action: 'build' })
+      expect(hasDropPlugin(config.plugins)).toBe(true)
+    })
+
+    test('dev build drops .map assets', async () => {
+      vi.stubEnv('NODE_ENV', 'development')
+      const rspeedy = await createStubRspeedy({})
+      const config = await rspeedy.unwrapConfig()
+      expect(hasDropPlugin(config.plugins)).toBe(true)
+    })
+
+    test('does not drop .map assets when dev.assetPrefix is false', async () => {
+      vi.stubEnv('NODE_ENV', 'development')
+      const rspeedy = await createStubRspeedy({
+        dev: { assetPrefix: false },
+      })
+      const config = await rspeedy.unwrapConfig()
+      expect(hasDropPlugin(config.plugins)).toBe(false)
     })
   })
 })

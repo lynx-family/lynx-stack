@@ -83,7 +83,7 @@ export interface Config {
    *
    * - Enable HMR and register the {@link https://rspack.rs/plugins/webpack/hot-module-replacement-plugin | HotModuleReplacementPlugin}.
    *
-   * - Generate JavaScript source maps, but do not generate CSS source maps. See {@link Output.sourceMap} for details.
+   * - Generate JavaScript and CSS source maps. In Lynx environments, all `.map` assets are removed before emit. See {@link Output.sourceMap} for details.
    *
    * - The `process.env.NODE_ENV` in the source code will be replaced with `'development'`.
    *
@@ -103,7 +103,7 @@ export interface Config {
    *
    * - Generated CSS Modules classnames will be shorter, see {@link CssModules.localIdentName}.
    *
-   * - Do not generate JavaScript and CSS source maps, see {@link Output.sourceMap}.
+   * - Generate JavaScript and CSS source maps. In Lynx environments, all `.map` assets are removed before emit. See {@link Output.sourceMap}.
    *
    * - The `process.env.NODE_ENV` in the source code will be replaced with `'production'`.
    *

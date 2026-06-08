@@ -605,9 +605,6 @@ importers:
       '@lynx-js/lynx-ui':
         specifier: ^3.133.0
         version: 3.133.0(@lynx-js/react@packages+react)(@lynx-js/types@3.7.0)(@types/react@19.2.14)(react-dom@19.2.4(react@19.2.5))(react@19.2.5)
-      '@lynx-js/react':
-        specifier: workspace:*
-        version: link:../react
       '@openuidev/lang-core':
         specifier: ^0.2.4
         version: 0.2.4(@modelcontextprotocol/sdk@1.25.2(hono@4.12.12)(zod@3.25.76))(zod@3.25.76)
@@ -636,6 +633,18 @@ importers:
       '@lynx-js/genui-openui':
         specifier: workspace:*
         version: link:openui
+      '@lynx-js/qrcode-rsbuild-plugin':
+        specifier: workspace:^
+        version: link:../rspeedy/plugin-qrcode
+      '@lynx-js/react':
+        specifier: workspace:*
+        version: link:../react
+      '@lynx-js/react-rsbuild-plugin':
+        specifier: workspace:^
+        version: link:../rspeedy/plugin-react
+      '@lynx-js/rspeedy':
+        specifier: workspace:^
+        version: link:../rspeedy/core
       '@microsoft/api-extractor':
         specifier: 'catalog:'
         version: 7.58.2(@types/node@24.10.13)
@@ -787,18 +796,6 @@ importers:
         specifier: workspace:*
         version: link:../a2ui-prompt
     devDependencies:
-      '@lynx-js/qrcode-rsbuild-plugin':
-        specifier: workspace:^
-        version: link:../../rspeedy/plugin-qrcode
-      '@lynx-js/react':
-        specifier: workspace:*
-        version: link:../../react
-      '@lynx-js/react-rsbuild-plugin':
-        specifier: workspace:^
-        version: link:../../rspeedy/plugin-react
-      '@lynx-js/rspeedy':
-        specifier: workspace:^
-        version: link:../../rspeedy/core
       '@rstest/core':
         specifier: catalog:rstest
         version: 0.8.1(jsdom@27.4.0)
@@ -1577,6 +1574,9 @@ importers:
       '@lynx-js/config-rsbuild-plugin':
         specifier: workspace:*
         version: link:../plugin-config
+      '@lynx-js/debug-metadata':
+        specifier: workspace:*
+        version: link:../../tools/debug-metadata
       '@lynx-js/react':
         specifier: workspace:*
         version: link:../../react

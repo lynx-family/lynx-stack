@@ -49,6 +49,7 @@
   },
   "devDependencies": {
     "@lynx-js/config-rsbuild-plugin": "workspace:*",
+    "@lynx-js/debug-metadata": "workspace:*",
     "@lynx-js/react": "workspace:*",
     "@lynx-js/react-transform": "workspace:*",
     "@lynx-js/rspeedy": "workspace:*",

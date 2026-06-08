@@ -20,6 +20,12 @@ a compatibility alias for existing A2UI-only scripts.
 
 ## A2UI Commands
 
+Create a new A2UI project:
+
+```bash
+genui a2ui create my-a2ui-app
+```
+
 Generate a system prompt with the built-in A2UI basic catalog:
 
 ```bash
@@ -48,6 +54,26 @@ genui a2ui generate prompt \
 `--catalog-dir` only when generating a prompt for custom generated catalog
 artifacts. When `--catalog-dir` is provided, the directory must contain files
 like `<Component>/catalog.json`.
+
+### `genui a2ui create`
+
+Creates a new ReactLynx A2UI project from the bundled template.
+
+```bash
+genui a2ui create my-a2ui-app
+cd my-a2ui-app
+pnpm install
+pnpm run dev
+```
+
+Useful options:
+
+- `[project-name]`: target directory name. Defaults to `my-a2ui-app`.
+- `--template <name>`: template to use. Defaults to `default`.
+
+The target directory must be empty. The generated `package.json` replaces the
+template workspace dependency placeholders with installable package versions
+resolved from the parent `@lynx-js/genui` package metadata.
 
 ### `genui a2ui generate catalog`
 
