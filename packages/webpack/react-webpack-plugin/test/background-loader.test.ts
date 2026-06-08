@@ -82,6 +82,6 @@ describe('background loader', () => {
     expect(result.code).not.toContain('"@lynx-js/react/internal"');
 
     // eg. const _et_e5e2854282ab = "_et_e5e2854282ab";
-    expect(result.code).toMatch(/_et_[a-f0-9]{12}/);
+    expect(result.code).toMatch(/_et_[a-f0-9]{12}(?![a-f0-9])/);
   });
 });
