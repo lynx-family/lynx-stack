@@ -36,6 +36,18 @@ interface ImageResolutionPlan {
   pendingImageRestores: A2UIMessage[];
 }
 
+type ImageResolutionResult =
+  | {
+    kind: 'static';
+    index: number;
+    message: A2UIMessage;
+  }
+  | {
+    kind: 'data';
+    index: number;
+    patch: ImageDataPatch;
+  };
+
 interface PexelsPhoto {
   src?: {
     large2x?: string;
@@ -137,7 +149,9 @@ export async function resolveA2UIImageUrls(
   const dataPatches = dedupeImageDataPatches(
     await Promise.all(plan.dataResolutions),
   );
-  appendedMessages.push(...dataPatches.map(createImageDataPatchMessage));
+  appendedMessages.push(
+    ...dataPatches.map((patch) => createImageDataPatchMessage(patch)),
+  );
   appendedMessages.push(...plan.pendingImageRestores);
 
   return [...plan.messages, ...appendedMessages];
@@ -152,14 +166,17 @@ export async function resolveA2UIImageUrlsIncrementally(
   const dataPatches: ImageDataPatch[] = [];
   const yieldedDataPatches = new Set<string>();
 
-  const pending = [
+  const pending: Promise<ImageResolutionResult>[] = [];
+  pending.push(
     ...plan.staticResolutions.map((promise, index) =>
       promise.then((message) => ({ kind: 'static' as const, index, message }))
     ),
+  );
+  pending.push(
     ...plan.dataResolutions.map((promise, index) =>
       promise.then((patch) => ({ kind: 'data' as const, index, patch }))
     ),
-  ];
+  );
 
   while (pending.length > 0) {
     const next = await Promise.race(
@@ -194,7 +211,7 @@ export async function resolveA2UIImageUrlsIncrementally(
     ...staticMessages.filter((message): message is A2UIMessage =>
       Boolean(message)
     ),
-    ...finalDataPatches.map(createImageDataPatchMessage),
+    ...finalDataPatches.map((patch) => createImageDataPatchMessage(patch)),
     ...plan.pendingImageRestores,
   ];
 }

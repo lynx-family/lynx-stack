@@ -241,7 +241,7 @@ export async function POST(req: Request) {
 
         const resolvedMessages = await resolveA2UIImageUrlsIncrementally(
           messages,
-          async (imageMessages) => {
+          (imageMessages) => {
             const splitMessages = splitA2UIProtocolMessages(imageMessages);
             if (splitMessages.length === 0) return;
             enqueue('message', { messages: splitMessages });
