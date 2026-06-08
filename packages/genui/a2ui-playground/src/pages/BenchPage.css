@@ -1097,6 +1097,10 @@
     var(--geist-shadow-lg);
 }
 
+.benchRunNoticeDialog {
+  width: min(460px, 100%);
+}
+
 .benchConfigHeader,
 .benchConfigFooter {
   display: flex;
@@ -1112,6 +1116,35 @@
   justify-content: flex-end;
   border-top: 1px solid var(--geist-border);
   border-bottom: 0;
+}
+
+.benchRunNoticeHeader {
+  align-items: flex-start;
+}
+
+.benchRunNoticeLead {
+  min-width: 0;
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+}
+
+.benchRunNoticeIcon {
+  display: inline-flex;
+  width: 34px;
+  height: 34px;
+  flex: 0 0 auto;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid
+    color-mix(in srgb, var(--geist-warning, #b7791f) 48%, transparent);
+  border-radius: 50%;
+  background: color-mix(
+    in srgb,
+    var(--geist-warning, #b7791f) 13%,
+    transparent
+  );
+  color: var(--geist-warning, #b7791f);
 }
 
 .benchConfigTitle {
@@ -1137,6 +1170,74 @@
   grid-template-columns: minmax(280px, 0.85fr) minmax(380px, 1.15fr);
   gap: 18px;
   padding: 18px;
+}
+
+.benchRunNoticeBody {
+  padding: 18px;
+}
+
+.benchRunNoticeList {
+  display: grid;
+  gap: 9px;
+  margin: 0;
+  padding-left: 18px;
+  color: var(--geist-secondary);
+  font-size: 13px;
+  line-height: 1.45;
+}
+
+.benchRunNoticeList li::marker {
+  color: var(--geist-warning, #b7791f);
+}
+
+.benchRunNoticeText,
+.benchRunNoticeError {
+  margin: 0;
+  color: var(--geist-secondary);
+  font-size: 13px;
+  line-height: 1.5;
+}
+
+.benchRunNoticeError {
+  margin-top: 10px;
+  color: var(--geist-error);
+}
+
+.benchRunHealthCard {
+  display: grid;
+  gap: 8px;
+  margin-top: 14px;
+  padding: 12px;
+  border: 1px solid var(--geist-border);
+  border-radius: var(--geist-radius-sm);
+  background: var(--geist-surface);
+}
+
+.benchRunHealthCard div {
+  min-width: 0;
+  display: grid;
+  grid-template-columns: 72px minmax(0, 1fr);
+  gap: 10px;
+  align-items: baseline;
+}
+
+.benchRunHealthCard span {
+  color: var(--geist-secondary);
+  font-size: 11px;
+  font-weight: 720;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.benchRunHealthCard strong {
+  min-width: 0;
+  overflow: hidden;
+  color: var(--geist-foreground);
+  font-size: 12px;
+  font-weight: 730;
+  line-height: 1.35;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .benchConfigColumn {

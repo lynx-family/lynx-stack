@@ -139,6 +139,15 @@ interface BenchReport {
   };
 }
 
+interface BenchHealth {
+  ok: boolean;
+  provider?: string;
+  hasKey?: boolean;
+  baseURL?: string;
+  model?: string;
+  api?: 'chat' | 'responses';
+}
+
 interface BenchJobCreated {
   ok?: boolean;
   jobId?: string;
@@ -379,6 +388,18 @@ function getA2UIBenchJobsEndpoint(): string {
   return `${ONLINE_A2UI_SERVER_ORIGIN}/a2ui/bench/jobs`;
 }
 
+function getA2UIBenchHealthEndpoint(): string {
+  const jobsEndpoint = getA2UIBenchJobsEndpoint();
+  try {
+    const url = new URL(jobsEndpoint, window.location.origin);
+    url.pathname = '/a2ui/health';
+    url.search = '';
+    return url.toString();
+  } catch {
+    return `${ONLINE_A2UI_SERVER_ORIGIN}/a2ui/health`;
+  }
+}
+
 function canForwardApiKeyToEndpoint(raw: string): boolean {
   try {
     const endpoint = new URL(raw, window.location.origin);
@@ -402,6 +423,40 @@ function filterProviderForEndpoint(
     ...(baseURL ? { baseURL } : {}),
     ...(model ? { model } : {}),
   };
+}
+
+function isProviderConfigured(env: BenchEnv): boolean {
+  const apiKey = env.apiKey.trim();
+  const baseURL = env.baseURL.trim();
+  const model = env.model.trim();
+  return Boolean(apiKey)
+    || (baseURL.length > 0 && baseURL !== DEFAULT_ENV.baseURL)
+    || (model.length > 0 && model !== DEFAULT_ENV.model);
+}
+
+function getProviderPlanLabel(
+  env: BenchEnv,
+  providerConfigured: boolean,
+): string {
+  if (!providerConfigured) return 'Server default';
+  return env.model || 'Model override';
+}
+
+function getProviderPlanMeta(
+  env: BenchEnv,
+  providerConfigured: boolean,
+): string {
+  if (!providerConfigured) return 'From /a2ui/health';
+  return env.apiKey.trim() ? 'Key set' : 'No key';
+}
+
+function getBenchHealthKeyLabel(
+  health: BenchHealth | null,
+  healthError: string | null,
+): string {
+  if (health) return health.hasKey ? 'Configured' : 'Missing';
+  if (healthError) return 'Unknown';
+  return 'Checking...';
 }
 
 function formatMs(value: number): string {
@@ -593,6 +648,24 @@ function groupPatch<K extends keyof BenchGroup>(
   return { [key]: value } as Pick<BenchGroup, K>;
 }
 
+function getBenchRunBlockers(
+  activeGroupCount: number,
+  scenarioCount: number,
+  repeats: number,
+): string[] {
+  const issues: string[] = [];
+  if (activeGroupCount === 0) {
+    issues.push('Enable at least one control or experiment group.');
+  }
+  if (scenarioCount === 0) {
+    issues.push('Add at least one scenario.');
+  }
+  if (repeats < 1) {
+    issues.push('Set repeats to at least 1.');
+  }
+  return issues;
+}
+
 export function BenchPage() {
   const [env, setEnv] = useState<BenchEnv>(DEFAULT_ENV);
   const [groups, setGroups] = useState<BenchGroup[]>(DEFAULT_GROUPS);
@@ -604,6 +677,9 @@ export function BenchPage() {
   const [progress, setProgress] = useState(0);
   const [runMessage, setRunMessage] = useState('Ready');
   const [configOpen, setConfigOpen] = useState(false);
+  const [benchRunNoticeOpen, setBenchRunNoticeOpen] = useState(false);
+  const [benchHealth, setBenchHealth] = useState<BenchHealth | null>(null);
+  const [benchHealthError, setBenchHealthError] = useState<string | null>(null);
   const [historyOpen, setHistoryOpen] = useState(false);
   const [reportPaneWidth, setReportPaneWidth] = useState(
     getInitialReportPaneWidth,
@@ -628,6 +704,16 @@ export function BenchPage() {
     () => [...new Set(scenarios.map((scenario) => scenario.type))],
     [scenarios],
   );
+  const providerConfigured = useMemo(() => isProviderConfigured(env), [env]);
+  const benchRunBlockers = useMemo(
+    () =>
+      getBenchRunBlockers(
+        activeGroups.length,
+        scenarios.length,
+        settings.repeats,
+      ),
+    [activeGroups.length, scenarios.length, settings.repeats],
+  );
 
   const clearActiveJobConnection = useCallback(() => {
     eventSourceRef.current?.close();
@@ -639,15 +725,16 @@ export function BenchPage() {
   useEffect(() => clearActiveJobConnection, [clearActiveJobConnection]);
 
   useEffect(() => {
-    if (!configOpen && !historyOpen) return;
+    if (!benchRunNoticeOpen && !configOpen && !historyOpen) return;
     const handleKeyDown = (event: KeyboardEvent) => {
       if (event.key !== 'Escape') return;
+      setBenchRunNoticeOpen(false);
       setConfigOpen(false);
       setHistoryOpen(false);
     };
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [configOpen, historyOpen]);
+  }, [benchRunNoticeOpen, configOpen, historyOpen]);
 
   useEffect(() => {
     try {
@@ -748,10 +835,39 @@ export function BenchPage() {
     setProgress(0);
     setRunMessage('Ready');
     setReport(null);
+    setBenchHealth(null);
+    setBenchHealthError(null);
+    setBenchRunNoticeOpen(false);
   }, [clearActiveJobConnection]);
 
-  const startBench = useCallback(() => {
-    if (runCount === 0) return;
+  const loadBenchHealth = useCallback(() => {
+    setBenchHealth(null);
+    setBenchHealthError(null);
+    void (async () => {
+      try {
+        const response = await window.fetch(getA2UIBenchHealthEndpoint());
+        if (!response.ok) {
+          throw new Error(`Health check failed: ${response.status}`);
+        }
+        setBenchHealth(await response.json() as BenchHealth);
+      } catch (error) {
+        setBenchHealthError(getErrorMessage(error));
+      }
+    })();
+  }, []);
+
+  const startBench = useCallback((confirmedServerDefaults = false) => {
+    if (benchRunBlockers.length > 0 || runCount === 0) {
+      setBenchRunNoticeOpen(true);
+      setRunMessage('Configuration required');
+      return;
+    }
+    if (!providerConfigured && !confirmedServerDefaults) {
+      setBenchRunNoticeOpen(true);
+      setRunMessage('Confirm server defaults');
+      loadBenchHealth();
+      return;
+    }
     clearActiveJobConnection();
     setStatus('running');
     setProgress(0);
@@ -768,7 +884,9 @@ export function BenchPage() {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
-            provider: filterProviderForEndpoint(env, jobsEndpoint),
+            provider: providerConfigured
+              ? filterProviderForEndpoint(env, jobsEndpoint)
+              : {},
             settings: {
               repeats: settings.repeats,
               parallelism: settings.parallelism,
@@ -922,8 +1040,11 @@ export function BenchPage() {
     })();
   }, [
     activeGroups,
+    benchRunBlockers.length,
     clearActiveJobConnection,
     env,
+    loadBenchHealth,
+    providerConfigured,
     runCount,
     scenarios,
     settings,
@@ -1112,8 +1233,8 @@ export function BenchPage() {
                   variant='primary'
                   size='lg'
                   iconBefore={Play}
-                  disabled={status === 'running' || runCount === 0}
-                  onClick={startBench}
+                  disabled={status === 'running'}
+                  onClick={() => startBench()}
                 >
                   {getRunButtonText(status)}
                 </Button>
@@ -1153,8 +1274,8 @@ export function BenchPage() {
             <div className='benchPlanSummary'>
               <div className='benchPlanItem'>
                 <span>Provider</span>
-                <strong>{env.model || 'Model default'}</strong>
-                <small>{env.apiKey.trim() ? 'Key set' : 'No key'}</small>
+                <strong>{getProviderPlanLabel(env, providerConfigured)}</strong>
+                <small>{getProviderPlanMeta(env, providerConfigured)}</small>
               </div>
               <div className='benchPlanItem'>
                 <span>Runner</span>
@@ -1737,6 +1858,149 @@ export function BenchPage() {
                 >
                   Done
                 </Button>
+              </footer>
+            </section>
+          </div>
+        )
+        : null}
+
+      {benchRunNoticeOpen
+        ? (
+          <div
+            className='benchConfigOverlay'
+            role='presentation'
+            onMouseDown={(event) => {
+              if (event.target === event.currentTarget) {
+                setBenchRunNoticeOpen(false);
+              }
+            }}
+          >
+            <section
+              className='benchConfigDialog benchRunNoticeDialog'
+              role='alertdialog'
+              aria-modal='true'
+              aria-labelledby='bench-run-notice-title'
+              aria-describedby='bench-run-notice-desc'
+            >
+              <header className='benchConfigHeader benchRunNoticeHeader'>
+                <div className='benchRunNoticeLead'>
+                  <span className='benchRunNoticeIcon' aria-hidden='true'>
+                    <Zap size={17} strokeWidth={2} />
+                  </span>
+                  <div>
+                    <h2
+                      id='bench-run-notice-title'
+                      className='benchConfigTitle'
+                    >
+                      {benchRunBlockers.length > 0
+                        ? 'Bench needs configuration'
+                        : 'Run with server defaults?'}
+                    </h2>
+                    <p id='bench-run-notice-desc' className='benchConfigSub'>
+                      {benchRunBlockers.length > 0
+                        ? 'Complete the required setup before starting a run.'
+                        : 'No custom provider configuration was detected.'}
+                    </p>
+                  </div>
+                </div>
+                <Button
+                  variant='ghost'
+                  size='md'
+                  iconOnly
+                  iconBefore={X}
+                  aria-label='Close bench notice'
+                  title='Close bench notice'
+                  onClick={() => setBenchRunNoticeOpen(false)}
+                />
+              </header>
+
+              <div className='benchRunNoticeBody'>
+                {benchRunBlockers.length > 0
+                  ? (
+                    <ul className='benchRunNoticeList'>
+                      {benchRunBlockers.map((issue) => (
+                        <li key={issue}>{issue}</li>
+                      ))}
+                    </ul>
+                  )
+                  : (
+                    <>
+                      <p className='benchRunNoticeText'>
+                        This bench will not send OPENAI_API_KEY,
+                        OPENAI_BASE_URL, or OPENAI_MODEL from the browser. The
+                        server will use its `/a2ui/health` defaults.
+                      </p>
+                      <div className='benchRunHealthCard'>
+                        <div>
+                          <span>API key</span>
+                          <strong>
+                            {getBenchHealthKeyLabel(
+                              benchHealth,
+                              benchHealthError,
+                            )}
+                          </strong>
+                        </div>
+                        <div>
+                          <span>Model</span>
+                          <strong>
+                            {benchHealth?.model ?? 'Server default'}
+                          </strong>
+                        </div>
+                        <div>
+                          <span>Base URL</span>
+                          <strong>
+                            {benchHealth?.baseURL ?? 'Server default'}
+                          </strong>
+                        </div>
+                      </div>
+                      {benchHealthError
+                        ? (
+                          <p className='benchRunNoticeError'>
+                            {benchHealthError}
+                          </p>
+                        )
+                        : null}
+                    </>
+                  )}
+              </div>
+
+              <footer className='benchConfigFooter'>
+                <Button
+                  variant='secondary'
+                  size='md'
+                  onClick={() => setBenchRunNoticeOpen(false)}
+                >
+                  Close
+                </Button>
+                <Button
+                  variant={benchRunBlockers.length > 0
+                    ? 'primary'
+                    : 'secondary'}
+                  size='md'
+                  iconBefore={Zap}
+                  onClick={() => {
+                    setBenchRunNoticeOpen(false);
+                    setConfigOpen(true);
+                  }}
+                >
+                  Configure
+                </Button>
+                {benchRunBlockers.length === 0
+                  ? (
+                    <Button
+                      variant='primary'
+                      size='md'
+                      iconBefore={Play}
+                      disabled={benchHealth?.hasKey === false}
+                      onClick={() => {
+                        setBenchRunNoticeOpen(false);
+                        startBench(true);
+                      }}
+                    >
+                      Run with defaults
+                    </Button>
+                  )
+                  : null}
               </footer>
             </section>
           </div>
