@@ -10,41 +10,146 @@ const MAX_SCORE = 5;
 export interface MidsceneJudgeAgent {
   aiAct(
     step: string,
-    options?: { abortSignal?: AbortSignal },
+    options?: MidsceneJudgeActOptions,
   ): Promise<unknown>;
-  aiNumber(
-    prompt: string,
-    options?: MidsceneJudgeQueryOptions,
-  ): Promise<number>;
 }
 
-export interface MidsceneJudgeQueryOptions {
-  domIncluded?: boolean | 'visible-only';
-  screenshotIncluded?: boolean;
+export interface MidsceneJudgeActOptions {
+  abortSignal?: AbortSignal;
+  cacheable?: boolean;
+  deepLocate?: boolean;
+  deepThink?: 'unset' | boolean;
+  fileChooserAccept?: string | string[];
 }
 
 export async function judgeWithAgentUnsafe(
   agent: MidsceneJudgeAgent,
   options: NormalizedJudgeOptions,
-  settings: { scoreOptions: MidsceneJudgeQueryOptions },
 ): Promise<UiJudgeScore> {
   for (const step of options.steps) {
-    const abortController = new AbortController();
-    await withAbortableTimeout(
-      agent.aiAct(step, { abortSignal: abortController.signal }),
+    await runAiActWithTimeout(
+      agent,
+      step,
       options.timeoutMs,
-      abortController,
       `Timed out while running Midscene step: ${step}`,
     );
   }
 
-  const rawScore = await withTimeout(
-    agent.aiNumber(buildJudgePrompt(options), settings.scoreOptions),
+  const rawScore = await runAiActWithTimeout(
+    agent,
+    buildJudgePrompt(options),
     options.timeoutMs,
-    'Timed out while asking Midscene for a numeric score.',
+    'Timed out while asking Midscene for a score.',
   );
 
-  return normalizeScore(rawScore);
+  return normalizeScore(parseScore(rawScore));
+}
+
+async function runAiActWithTimeout(
+  agent: MidsceneJudgeAgent,
+  prompt: string,
+  timeoutMs: number,
+  message: string,
+): Promise<unknown> {
+  const abortController = new AbortController();
+  return withAbortableTimeout(
+    agent.aiAct(prompt, { abortSignal: abortController.signal }),
+    timeoutMs,
+    abortController,
+    message,
+  );
+}
+
+function parseScore(value: unknown): number {
+  if (typeof value === 'number') {
+    return value;
+  }
+
+  if (typeof value === 'string') {
+    return parseScoreText(value);
+  }
+
+  if (Array.isArray(value)) {
+    for (const item of value) {
+      const score = tryParseScore(item);
+      if (score !== undefined) return score;
+    }
+  }
+
+  if (value && typeof value === 'object') {
+    const record = value as Record<string, unknown>;
+    for (const key of [
+      'score',
+      'value',
+      'number',
+      'result',
+      'answer',
+      'output',
+      'content',
+    ]) {
+      if (key in record) {
+        const score = tryParseScore(record[key]);
+        if (score !== undefined) return score;
+      }
+    }
+  }
+
+  throw new Error(
+    `Midscene returned an unparseable score: ${formatValue(value)}.`,
+  );
+}
+
+function tryParseScore(value: unknown): number | undefined {
+  try {
+    return parseScore(value);
+  } catch {
+    return undefined;
+  }
+}
+
+function parseScoreText(value: string): number {
+  const trimmed = value.trim();
+  const parsedJson = tryParseJson(trimmed);
+  if (parsedJson !== undefined) {
+    const score = tryParseScore(parsedJson);
+    if (score !== undefined) return score;
+  }
+
+  const explicitScore = /\bSCORE\s*[:=]\s*([0-5])\b/i.exec(trimmed);
+  if (explicitScore) {
+    return Number(explicitScore[1]);
+  }
+
+  const scoreOutOfFive = /\b([0-5])\s*\/\s*5\b/.exec(trimmed);
+  if (scoreOutOfFive) {
+    return Number(scoreOutOfFive[1]);
+  }
+
+  if (/^[0-5]$/.test(trimmed)) {
+    return Number(trimmed);
+  }
+
+  const scoreTokens = trimmed.match(/\b[0-5]\b/g) ?? [];
+  const uniqueScores = new Set(scoreTokens);
+  if (uniqueScores.size === 1) {
+    return Number(scoreTokens[0]);
+  }
+
+  throw new Error(
+    `Midscene returned an unparseable score: ${formatValue(value)}.`,
+  );
+}
+
+function tryParseJson(value: string): unknown {
+  if (!value.startsWith('{') && !value.startsWith('[')) {
+    return undefined;
+  }
+
+  try {
+    return JSON.parse(value);
+  } catch {
+    return undefined;
+  }
 }
 
 function normalizeScore(value: number): UiJudgeScore {
@@ -78,19 +183,11 @@ async function withAbortableTimeout<T>(
   }
 }
 
-async function withTimeout<T>(
-  promise: Promise<T>,
-  timeoutMs: number,
-  message: string,
-): Promise<T> {
-  let timeoutId: NodeJS.Timeout | undefined;
-  const timeoutPromise = new Promise<never>((_, reject) => {
-    timeoutId = setTimeout(() => reject(new Error(message)), timeoutMs);
-  });
-
+function formatValue(value: unknown): string {
+  if (typeof value === 'string') return value;
   try {
-    return await Promise.race([promise, timeoutPromise]);
-  } finally {
-    if (timeoutId) clearTimeout(timeoutId);
+    return JSON.stringify(value);
+  } catch {
+    return String(value);
   }
 }

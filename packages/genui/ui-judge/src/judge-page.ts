@@ -49,12 +49,7 @@ async function judgePageUnsafe(
   });
 
   try {
-    return await judgeWithAgentUnsafe(agent, options, {
-      scoreOptions: {
-        domIncluded: 'visible-only',
-        screenshotIncluded: true,
-      },
-    });
+    return await judgeWithAgentUnsafe(agent, options);
   } finally {
     await agent.destroy().catch(() => {
       // Keep the original action or scoring error visible.

@@ -23,8 +23,9 @@ ${dimensionPrompt.focus}
 Task:
 ${options.task}
 ${reference}
-Set Midscene's requested Number result to exactly one integer from 0 to 5.
-Do not return a bare JSON number; the structured result must use the Number field.
+Do not click, type, scroll, navigate, or otherwise mutate the UI while scoring.
+Use Midscene aiAct's final return value to output exactly SCORE: <integer>,
+where <integer> is one of 0, 1, 2, 3, 4, or 5.
 Do not return "GRADE:", letters, Markdown, prose, or explanation.
 
 Use this 1-5 Likert scale for the requested dimension:
@@ -50,5 +51,5 @@ Grading notes:
 5. Valid optional properties, such as accessibility hints or default values, should not be penalized when they make sense in context.
 6. Do not award a high score when required components are missing or substantive behavior is wrong for this dimension.
 
-Think through the criteria internally, then return only the structured Number result.`;
+Think through the criteria internally, then return only SCORE: <integer>.`;
 }
