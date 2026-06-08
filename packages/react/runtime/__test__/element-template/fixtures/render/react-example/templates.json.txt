@@ -1,6 +1,6 @@
 [
   {
-    "templateId": "_et_7a8c6_test_2",
+    "templateId": "_et_b89c02b1874f",
     "compiledTemplate": {
       "kind": "element",
       "type": "image",
@@ -21,7 +21,7 @@
     "sourceFile": "index.tsx"
   },
   {
-    "templateId": "_et_7a8c6_test_3",
+    "templateId": "_et_a51110b9901e",
     "compiledTemplate": {
       "kind": "element",
       "type": "image",
@@ -42,7 +42,7 @@
     "sourceFile": "index.tsx"
   },
   {
-    "templateId": "_et_7a8c6_test_1",
+    "templateId": "_et_3a121f15a890",
     "compiledTemplate": {
       "kind": "element",
       "type": "view",

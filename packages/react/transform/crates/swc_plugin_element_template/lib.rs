@@ -1,6 +1,6 @@
 use once_cell::sync::Lazy;
 use serde::Deserialize;
-use std::{cell::RefCell, rc::Rc};
+use std::{cell::RefCell, collections::HashMap, rc::Rc};
 use swc_core::{
   common::{
     comments::{CommentKind, Comments},
@@ -23,12 +23,16 @@ mod extractor;
 mod lowering;
 mod template_attribute;
 mod template_definition;
+mod template_identity;
 mod template_slot;
 
 pub use self::asset::ElementTemplateAsset;
 use self::attr_name::AttrName;
 use self::extractor::{DynamicAttributePart, ElementTemplateExtractor, ExtractedTemplateParts};
 use self::lowering::LoweredRuntimeJsx;
+use self::template_identity::{
+  template_identity_from_compiled_template, TemplateIdentityCollisionGuard,
+};
 use self::template_slot::ET_SLOT_PLACEHOLDER_TAG;
 
 pub type ElementTemplateTransformerConfig = JSXTransformerConfig;
@@ -39,7 +43,7 @@ type RuntimeIdInitializer = Box<dyn FnOnce() -> Expr>;
 pub mod napi;
 
 use swc_plugins_shared::{
-  jsx_helpers::jsx_name, target::TransformTarget, transform_mode::TransformMode, utils::calc_hash,
+  jsx_helpers::jsx_name, target::TransformTarget, transform_mode::TransformMode,
 };
 
 pub fn i32_to_expr(i: &i32) -> Expr {
@@ -131,12 +135,13 @@ where
 {
   // react_transformer: Box<dyn Fold>,
   cfg: JSXTransformerConfig,
-  filename_hash: String,
   pub content_hash: String,
   runtime_id: Lazy<Expr, RuntimeIdInitializer>,
   internal_runtime_id: Lazy<Expr, RuntimeIdInitializer>,
   pub element_templates: Option<Rc<RefCell<Vec<ElementTemplateAsset>>>>,
-  template_counter: u32,
+  template_idents_by_canonical_content: HashMap<String, Ident>,
+  attr_plan_signatures_by_canonical_content: HashMap<String, String>,
+  template_identity_collision_guard: TemplateIdentityCollisionGuard,
   current_template_defs: Vec<ModuleItem>,
   comments: Option<C>,
 }
@@ -167,7 +172,6 @@ where
     element_templates: Option<Rc<RefCell<Vec<ElementTemplateAsset>>>>,
   ) -> Self {
     JSXTransformer {
-      filename_hash: calc_hash(&cfg.filename.clone()),
       content_hash: "test".into(),
       runtime_id: match mode {
         TransformMode::Development => {
@@ -189,7 +193,9 @@ where
       },
       element_templates,
       cfg,
-      template_counter: 0,
+      template_idents_by_canonical_content: HashMap::new(),
+      attr_plan_signatures_by_canonical_content: HashMap::new(),
+      template_identity_collision_guard: TemplateIdentityCollisionGuard::default(),
       current_template_defs: vec![],
       comments,
     }
@@ -267,17 +273,6 @@ where
       }
     }
 
-    self.template_counter += 1;
-    let template_uid = format!(
-      "{}_{}_{}_{}",
-      "_et", self.filename_hash, self.content_hash, self.template_counter
-    );
-    let template_ident = Ident::new(
-      template_uid.clone().into(),
-      DUMMY_SP,
-      SyntaxContext::default().apply_mark(Mark::fresh(Mark::root())),
-    );
-
     let target = self.cfg.target;
     let runtime_id = self.runtime_id.clone();
     let ExtractedTemplateParts {
@@ -318,6 +313,18 @@ where
         _ => None,
       })
       .collect::<Vec<_>>();
+    let attr_plan_signature = attr_plan_slots
+      .iter()
+      .map(|(slot_index, adapter)| {
+        let adapter = match adapter {
+          AttrPlanAdapter::Event => "event",
+          AttrPlanAdapter::Ref => "ref",
+          AttrPlanAdapter::Spread => "spread",
+        };
+        format!("{slot_index}:{adapter}")
+      })
+      .collect::<Vec<_>>()
+      .join("|");
 
     let LoweredRuntimeJsx {
       attrs: rendered_attrs,
@@ -329,60 +336,6 @@ where
       dynamic_attrs,
       dynamic_children,
     );
-
-    let mut entry_template_uid = quote!("$template_uid" as Expr, template_uid: Expr = Expr::Lit(Lit::Str(template_uid.clone().into())));
-    if matches!(self.cfg.is_dynamic_component, Some(true)) {
-      entry_template_uid = quote!("`${globDynamicComponentEntry}:${$template_uid}`" as Expr, template_uid: Expr = Expr::Lit(Lit::Str(template_uid.clone().into())));
-    }
-
-    let entry_template_uid_def = ModuleItem::Stmt(quote!(
-        r#"const $template_ident = $entry_template_uid"#
-            as Stmt,
-        template_ident = template_ident.clone(),
-        entry_template_uid: Expr = entry_template_uid.clone(),
-    ));
-    self.current_template_defs.push(entry_template_uid_def);
-    if !attr_plan_slots.is_empty() {
-      let internal_runtime_id = self.internal_runtime_id.clone();
-      let mut attr_plan_elements = Vec::with_capacity(attr_plan_slots.len() * 2);
-      for (slot_index, adapter) in attr_plan_slots {
-        attr_plan_elements.push(Some(ExprOrSpread {
-          spread: None,
-          expr: Box::new(i32_to_expr(&slot_index)),
-        }));
-        let adapter_expr = match adapter {
-          AttrPlanAdapter::Event => quote!(
-            "$internal_runtime_id.adaptEventAttrSlot" as Expr,
-            internal_runtime_id: Expr = internal_runtime_id.clone(),
-          ),
-          AttrPlanAdapter::Ref => quote!(
-            "$internal_runtime_id.adaptRefAttrSlot" as Expr,
-            internal_runtime_id: Expr = internal_runtime_id.clone(),
-          ),
-          AttrPlanAdapter::Spread => quote!(
-            "$internal_runtime_id.adaptSpreadAttrSlot" as Expr,
-            internal_runtime_id: Expr = internal_runtime_id.clone(),
-          ),
-        };
-        attr_plan_elements.push(Some(ExprOrSpread {
-          spread: None,
-          expr: Box::new(adapter_expr),
-        }));
-      }
-
-      let attr_plan_expr = Expr::Array(ArrayLit {
-        span: DUMMY_SP,
-        elems: attr_plan_elements,
-      });
-      let attr_plan_def = ModuleItem::Stmt(quote!(
-          r#"$internal_runtime_id.__etAttrPlanMap[$template_ident] = $attr_plan_expr"#
-              as Stmt,
-          internal_runtime_id: Expr = internal_runtime_id.clone(),
-          template_ident: Expr = Expr::Ident(template_ident.clone()),
-          attr_plan_expr: Expr = attr_plan_expr,
-      ));
-      self.current_template_defs.push(attr_plan_def);
-    }
 
     let mut dynamic_attr_slot_cursor: usize = 0;
     let mut element_slot_index: i32 = 0;
@@ -400,16 +353,114 @@ where
       "Template Definition must consume every ET attr slot produced by extractor"
     );
     let compiled_template = self.element_template_to_json(&template_expr);
+    let template_identity = template_identity_from_compiled_template(&compiled_template);
+    self
+      .template_identity_collision_guard
+      .register(&template_identity);
 
-    // TODO(element-template): reintroduce cssId/entryName metadata once the
-    // runtime/native contract grows a dedicated replacement channel.
+    if let Some(existing_signature) = self
+      .attr_plan_signatures_by_canonical_content
+      .get(&template_identity.canonical_content)
+    {
+      assert_eq!(
+        existing_signature, &attr_plan_signature,
+        "Interned ET Template Definition must keep one attr-plan shape for {}",
+        template_identity.template_id
+      );
+    } else {
+      self.attr_plan_signatures_by_canonical_content.insert(
+        template_identity.canonical_content.clone(),
+        attr_plan_signature,
+      );
+    }
 
-    if let Some(element_templates) = &self.element_templates {
-      element_templates.borrow_mut().push(ElementTemplateAsset {
-        template_id: template_uid.clone(),
-        compiled_template,
-        source_file: self.cfg.filename.clone(),
-      });
+    let mut is_new_template = false;
+    let template_ident = match self
+      .template_idents_by_canonical_content
+      .get(&template_identity.canonical_content)
+    {
+      Some(template_ident) => template_ident.clone(),
+      None => {
+        is_new_template = true;
+        let template_ident = Ident::new(
+          template_identity.template_id.clone().into(),
+          DUMMY_SP,
+          SyntaxContext::default().apply_mark(Mark::fresh(Mark::root())),
+        );
+        self.template_idents_by_canonical_content.insert(
+          template_identity.canonical_content.clone(),
+          template_ident.clone(),
+        );
+        template_ident
+      }
+    };
+    let template_uid = template_identity.template_id.clone();
+
+    let mut entry_template_uid = quote!("$template_uid" as Expr, template_uid: Expr = Expr::Lit(Lit::Str(template_uid.clone().into())));
+    if matches!(self.cfg.is_dynamic_component, Some(true)) {
+      entry_template_uid = quote!("`${globDynamicComponentEntry}:${$template_uid}`" as Expr, template_uid: Expr = Expr::Lit(Lit::Str(template_uid.clone().into())));
+    }
+
+    if is_new_template {
+      let entry_template_uid_def = ModuleItem::Stmt(quote!(
+          r#"const $template_ident = $entry_template_uid"#
+              as Stmt,
+          template_ident = template_ident.clone(),
+          entry_template_uid: Expr = entry_template_uid.clone(),
+      ));
+      self.current_template_defs.push(entry_template_uid_def);
+      if !attr_plan_slots.is_empty() {
+        let internal_runtime_id = self.internal_runtime_id.clone();
+        let mut attr_plan_elements = Vec::with_capacity(attr_plan_slots.len() * 2);
+        for (slot_index, adapter) in attr_plan_slots {
+          attr_plan_elements.push(Some(ExprOrSpread {
+            spread: None,
+            expr: Box::new(i32_to_expr(&slot_index)),
+          }));
+          let adapter_expr = match adapter {
+            AttrPlanAdapter::Event => quote!(
+              "$internal_runtime_id.adaptEventAttrSlot" as Expr,
+              internal_runtime_id: Expr = internal_runtime_id.clone(),
+            ),
+            AttrPlanAdapter::Ref => quote!(
+              "$internal_runtime_id.adaptRefAttrSlot" as Expr,
+              internal_runtime_id: Expr = internal_runtime_id.clone(),
+            ),
+            AttrPlanAdapter::Spread => quote!(
+              "$internal_runtime_id.adaptSpreadAttrSlot" as Expr,
+              internal_runtime_id: Expr = internal_runtime_id.clone(),
+            ),
+          };
+          attr_plan_elements.push(Some(ExprOrSpread {
+            spread: None,
+            expr: Box::new(adapter_expr),
+          }));
+        }
+
+        let attr_plan_expr = Expr::Array(ArrayLit {
+          span: DUMMY_SP,
+          elems: attr_plan_elements,
+        });
+        let attr_plan_def = ModuleItem::Stmt(quote!(
+            r#"$internal_runtime_id.__etAttrPlanMap[$template_ident] = $attr_plan_expr"#
+                as Stmt,
+            internal_runtime_id: Expr = internal_runtime_id.clone(),
+            template_ident: Expr = Expr::Ident(template_ident.clone()),
+            attr_plan_expr: Expr = attr_plan_expr,
+        ));
+        self.current_template_defs.push(attr_plan_def);
+      }
+
+      // TODO(element-template): reintroduce cssId/entryName metadata once the
+      // runtime/native contract grows a dedicated replacement channel.
+
+      if let Some(element_templates) = &self.element_templates {
+        element_templates.borrow_mut().push(ElementTemplateAsset {
+          template_id: template_uid.clone(),
+          compiled_template,
+          source_file: self.cfg.filename.clone(),
+        });
+      }
     }
 
     let rendered_children_is_empty = rendered_children.is_empty();

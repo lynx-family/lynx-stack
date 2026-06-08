@@ -3,10 +3,10 @@ source: packages/react/transform/crates/swc_plugin_element_template/tests/elemen
 expression: "serde_json::json!({\n    \"code\": code, \"templates\": template_snapshot_json(&templates),\n})"
 ---
 {
-  "code": "import * as ReactLynx from \"@lynx-js/react\";\nconst _et_da39a_test_1 = \"_et_da39a_test_1\";\n<_et_da39a_test_1/>;\n",
+  "code": "import * as ReactLynx from \"@lynx-js/react\";\nconst _et_3fb8e0b93073 = \"_et_3fb8e0b93073\";\n<_et_3fb8e0b93073/>;\n",
   "templates": [
     {
-      "template_id": "_et_da39a_test_1",
+      "template_id": "_et_3fb8e0b93073",
       "template": {
         "kind": "element",
         "type": "view",

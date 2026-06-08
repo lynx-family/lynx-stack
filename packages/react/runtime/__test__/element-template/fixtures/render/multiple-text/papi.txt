@@ -49,7 +49,7 @@
   ],
   [
     "__CreateElementTemplate",
-    "_et_7a8c6_test_2",
+    "_et_dd10eca65d68",
     null,
     null,
     [
@@ -78,7 +78,7 @@
   ],
   [
     "__CreateElementTemplate",
-    "_et_7a8c6_test_2",
+    "_et_dd10eca65d68",
     null,
     null,
     [
@@ -107,7 +107,7 @@
   ],
   [
     "__CreateElementTemplate",
-    "_et_7a8c6_test_2",
+    "_et_dd10eca65d68",
     null,
     null,
     [
@@ -166,7 +166,7 @@
   ],
   [
     "__CreateElementTemplate",
-    "_et_7a8c6_test_3",
+    "_et_dd10eca65d68",
     null,
     null,
     [
@@ -195,7 +195,7 @@
   ],
   [
     "__CreateElementTemplate",
-    "_et_7a8c6_test_3",
+    "_et_dd10eca65d68",
     null,
     null,
     [
@@ -224,7 +224,7 @@
   ],
   [
     "__CreateElementTemplate",
-    "_et_7a8c6_test_3",
+    "_et_dd10eca65d68",
     null,
     null,
     [
@@ -243,7 +243,7 @@
   ],
   [
     "__CreateElementTemplate",
-    "_et_7a8c6_test_1",
+    "_et_6306a5a2decc",
     null,
     null,
     [
@@ -295,7 +295,7 @@
               ]
             }
           ],
-          "templateId": "_et_7a8c6_test_2"
+          "templateId": "_et_dd10eca65d68"
         },
         {
           "tag": "text",
@@ -318,7 +318,7 @@
               ]
             }
           ],
-          "templateId": "_et_7a8c6_test_2"
+          "templateId": "_et_dd10eca65d68"
         },
         {
           "tag": "text",
@@ -341,7 +341,7 @@
               ]
             }
           ],
-          "templateId": "_et_7a8c6_test_2"
+          "templateId": "_et_dd10eca65d68"
         }
       ],
       [
@@ -392,7 +392,7 @@
               ]
             }
           ],
-          "templateId": "_et_7a8c6_test_3"
+          "templateId": "_et_dd10eca65d68"
         },
         {
           "tag": "text",
@@ -415,7 +415,7 @@
               ]
             }
           ],
-          "templateId": "_et_7a8c6_test_3"
+          "templateId": "_et_dd10eca65d68"
         },
         {
           "tag": "text",
@@ -438,7 +438,7 @@
               ]
             }
           ],
-          "templateId": "_et_7a8c6_test_3"
+          "templateId": "_et_dd10eca65d68"
         }
       ]
     ],
@@ -448,7 +448,7 @@
     "__InsertNodeToElementTemplate",
     "<page />",
     0,
-    "<_et_7a8c6_test_1 />",
+    "<_et_6306a5a2decc />",
     null
   ]
 ]

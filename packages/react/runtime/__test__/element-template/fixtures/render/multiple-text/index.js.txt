@@ -1,8 +1,7 @@
 import { jsx as _jsx } from "@lynx-js/react/jsx-runtime";
 import { Component } from '@lynx-js/react';
-const _et_7a8c6_test_2 = "_et_7a8c6_test_2";
-const _et_7a8c6_test_3 = "_et_7a8c6_test_3";
-const _et_7a8c6_test_1 = "_et_7a8c6_test_1";
+const _et_dd10eca65d68 = "_et_dd10eca65d68";
+const _et_6306a5a2decc = "_et_6306a5a2decc";
 export class App extends Component {
     render() {
         const items = [
@@ -10,13 +9,13 @@ export class App extends Component {
             'B',
             'C'
         ];
-        return /*#__PURE__*/ _jsx(_et_7a8c6_test_1, {
+        return /*#__PURE__*/ _jsx(_et_6306a5a2decc, {
             $0: items,
-            $1: items.map((item)=>/*#__PURE__*/ _jsx(_et_7a8c6_test_2, {
+            $1: items.map((item)=>/*#__PURE__*/ _jsx(_et_dd10eca65d68, {
                     $0: item
                 })),
             $2: items,
-            $3: items.map((item)=>/*#__PURE__*/ _jsx(_et_7a8c6_test_3, {
+            $3: items.map((item)=>/*#__PURE__*/ _jsx(_et_dd10eca65d68, {
                     $0: item
                 }))
         });

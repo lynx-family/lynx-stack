@@ -3240,6 +3240,7 @@ dependencies = [
  "serde",
  "serde_json",
  "sha-1",
+ "sha2",
  "swc_core",
  "swc_plugins_shared",
 ]

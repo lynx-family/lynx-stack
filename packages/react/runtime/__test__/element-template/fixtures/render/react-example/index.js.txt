@@ -4,10 +4,10 @@ import { useCallback, useEffect, useState } from '@lynx-js/react';
 const arrow = './assets/arrow.png';
 const lynxLogo = './assets/lynx-logo.png';
 const reactLynxLogo = './assets/react-logo.png';
-const _et_7a8c6_test_2 = "_et_7a8c6_test_2";
-const _et_7a8c6_test_3 = "_et_7a8c6_test_3";
-const _et_7a8c6_test_1 = "_et_7a8c6_test_1";
-ReactLynxInternal.__etAttrPlanMap[_et_7a8c6_test_1] = [
+const _et_b89c02b1874f = "_et_b89c02b1874f";
+const _et_a51110b9901e = "_et_a51110b9901e";
+const _et_3a121f15a890 = "_et_3a121f15a890";
+ReactLynxInternal.__etAttrPlanMap[_et_3a121f15a890] = [
     0,
     ReactLynxInternal.adaptEventAttrSlot
 ];
@@ -20,16 +20,16 @@ export function App() {
         'background-only';
         setAlterLogo((prevAlterLogo)=>!prevAlterLogo);
     }, []);
-    return /*#__PURE__*/ _jsx(_et_7a8c6_test_1, {
+    return /*#__PURE__*/ _jsx(_et_3a121f15a890, {
         attributeSlots: [
             1,
             arrow
         ],
-        $0: alterLogo ? /*#__PURE__*/ _jsx(_et_7a8c6_test_2, {
+        $0: alterLogo ? /*#__PURE__*/ _jsx(_et_b89c02b1874f, {
             attributeSlots: [
                 reactLynxLogo
             ]
-        }) : /*#__PURE__*/ _jsx(_et_7a8c6_test_3, {
+        }) : /*#__PURE__*/ _jsx(_et_a51110b9901e, {
             attributeSlots: [
                 lynxLogo
             ]

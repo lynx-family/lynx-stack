@@ -39,7 +39,7 @@
   ],
   [
     "__CreateElementTemplate",
-    "_et_7a8c6_test_1",
+    "_et_14b97eb313a1",
     null,
     null,
     [
@@ -80,7 +80,7 @@
     "__InsertNodeToElementTemplate",
     "<page />",
     0,
-    "<_et_7a8c6_test_1 />",
+    "<_et_14b97eb313a1 />",
     null
   ]
 ]

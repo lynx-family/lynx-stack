@@ -3,10 +3,10 @@ source: packages/react/transform/crates/swc_plugin_element_template/tests/elemen
 expression: "serde_json::json!({\n    \"code\": code, \"templates\": template_snapshot_json(&templates),\n})"
 ---
 {
-  "code": "import * as ReactLynx from \"@lynx-js/react\";\nconst _et_da39a_test_2 = \"_et_da39a_test_2\";\nconst _et_da39a_test_1 = \"_et_da39a_test_1\";\n<_et_da39a_test_1 $0={<Component id={1}>\n        <_et_da39a_test_2/>\n      </Component>}/>;\n",
+  "code": "import * as ReactLynx from \"@lynx-js/react\";\nconst _et_b2f62f2ab913 = \"_et_b2f62f2ab913\";\nconst _et_d7c09654e316 = \"_et_d7c09654e316\";\n<_et_d7c09654e316 $0={<Component id={1}>\n        <_et_b2f62f2ab913/>\n      </Component>}/>;\n",
   "templates": [
     {
-      "template_id": "_et_da39a_test_2",
+      "template_id": "_et_b2f62f2ab913",
       "template": {
         "kind": "element",
         "type": "text",
@@ -21,7 +21,7 @@ expression: "serde_json::json!({\n    \"code\": code, \"templates\": template_sn
       }
     },
     {
-      "template_id": "_et_da39a_test_1",
+      "template_id": "_et_d7c09654e316",
       "template": {
         "kind": "element",
         "type": "view",

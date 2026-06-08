@@ -1,22 +1,6 @@
 [
   {
-    "templateId": "_et_7a8c6_test_1",
-    "compiledTemplate": {
-      "kind": "element",
-      "type": "view",
-      "attributesArray": [],
-      "children": [
-        {
-          "kind": "elementSlot",
-          "type": "slot",
-          "elementSlotIndex": 0
-        }
-      ]
-    },
-    "sourceFile": "index.tsx"
-  },
-  {
-    "templateId": "_et_7a8c6_test_2",
+    "templateId": "_et_d7c09654e316",
     "compiledTemplate": {
       "kind": "element",
       "type": "view",

@@ -1,14 +1,14 @@
 import { jsx as _jsx } from "@lynx-js/react/jsx-runtime";
-const _et_7a8c6_test_2 = "_et_7a8c6_test_2";
-const _et_7a8c6_test_1 = "_et_7a8c6_test_1";
+const _et_602071c91d92 = "_et_602071c91d92";
+const _et_d7c09654e316 = "_et_d7c09654e316";
 export function App() {
     const items = [
         'A',
         'B',
         'C'
     ];
-    return /*#__PURE__*/ _jsx(_et_7a8c6_test_1, {
-        $0: items.map((item)=>/*#__PURE__*/ _jsx(_et_7a8c6_test_2, {
+    return /*#__PURE__*/ _jsx(_et_d7c09654e316, {
+        $0: items.map((item)=>/*#__PURE__*/ _jsx(_et_602071c91d92, {
                 attributeSlots: [
                     item
                 ],

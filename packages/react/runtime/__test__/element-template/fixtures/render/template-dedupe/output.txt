@@ -1,0 +1,12 @@
+<view>
+  <view>
+    <text>
+      <raw-text text="Alpha" />
+    </text>
+  </view>
+  <view>
+    <text>
+      <raw-text text="Beta" />
+    </text>
+  </view>
+</view>

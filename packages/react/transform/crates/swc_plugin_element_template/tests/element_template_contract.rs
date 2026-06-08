@@ -128,6 +128,34 @@ fn without_whitespace(value: &str) -> String {
   value.chars().filter(|ch| !ch.is_whitespace()).collect()
 }
 
+fn assert_attr_plan_assignment(code: &str, expected_entries: &str, message: &str) {
+  let marker = "ReactLynxInternal.__etAttrPlanMap[_et_";
+  let start = code
+    .find(marker)
+    .unwrap_or_else(|| panic!("{message}, got: {code}"));
+  let assignment = &code[start..];
+  let end = assignment
+    .find(';')
+    .unwrap_or_else(|| panic!("{message}, got: {code}"));
+  let assignment = &assignment[..=end];
+  let hash_end = assignment[marker.len()..]
+    .find(']')
+    .unwrap_or_else(|| panic!("{message}, got: {code}"));
+  let hash = &assignment[marker.len()..marker.len() + hash_end];
+
+  assert_eq!(hash.len(), 12, "{message}, got: {code}");
+  assert!(
+    hash
+      .chars()
+      .all(|ch| ch.is_ascii_hexdigit() && !ch.is_ascii_uppercase()),
+    "{message}, got: {code}"
+  );
+  assert!(
+    assignment.ends_with(&format!("]=[{expected_entries}];")),
+    "{message}, got: {code}"
+  );
+}
+
 #[test]
 fn should_emit_direct_event_attr_plan_for_js_target() {
   let (code, _) = first_user_template_json_with_code(
@@ -141,11 +169,10 @@ fn should_emit_direct_event_attr_plan_for_js_target() {
   );
   let code = without_whitespace(&code);
 
-  assert!(
-    code.contains(
-      "ReactLynxInternal.__etAttrPlanMap[_et_da39a_test_1]=[0,ReactLynxInternal.adaptEventAttrSlot,1,ReactLynxInternal.adaptEventAttrSlot];"
-    ),
-    "direct event slots should register a sparse ET attr plan, got: {code}"
+  assert_attr_plan_assignment(
+    &code,
+    "0,ReactLynxInternal.adaptEventAttrSlot,1,ReactLynxInternal.adaptEventAttrSlot",
+    "direct event slots should register a sparse ET attr plan",
   );
   assert!(
     code.contains("attributeSlots={[handleTap,handleTouch]}"),
@@ -170,11 +197,10 @@ fn should_emit_direct_event_attr_plan_for_lepus_target() {
   );
   let code = without_whitespace(&code);
 
-  assert!(
-    code.contains(
-      "ReactLynxInternal.__etAttrPlanMap[_et_da39a_test_1]=[0,ReactLynxInternal.adaptEventAttrSlot,1,ReactLynxInternal.adaptEventAttrSlot];"
-    ),
-    "direct event slots should register a sparse ET attr plan, got: {code}"
+  assert_attr_plan_assignment(
+    &code,
+    "0,ReactLynxInternal.adaptEventAttrSlot,1,ReactLynxInternal.adaptEventAttrSlot",
+    "direct event slots should register a sparse ET attr plan",
   );
   assert!(
     code.contains("attributeSlots={[1,1]}"),
@@ -195,11 +221,10 @@ fn should_emit_spread_attr_plan_with_ref_adapter() {
   );
   let code = without_whitespace(&code);
 
-  assert!(
-    code.contains(
-      "ReactLynxInternal.__etAttrPlanMap[_et_da39a_test_1]=[1,ReactLynxInternal.adaptRefAttrSlot,2,ReactLynxInternal.adaptSpreadAttrSlot];"
-    ),
-    "ref and spread slots should register ET attr adapters, got: {code}"
+  assert_attr_plan_assignment(
+    &code,
+    "1,ReactLynxInternal.adaptRefAttrSlot,2,ReactLynxInternal.adaptSpreadAttrSlot",
+    "ref and spread slots should register ET attr adapters",
   );
   assert!(
     !code.contains("adaptEventAttrSlot"),
@@ -430,11 +455,10 @@ fn should_keep_slot_descriptor_order_for_dynamic_attr_spread_event_and_ref() {
     element_template_config(),
   );
   let code = without_whitespace(&code);
-  assert!(
-    code.contains(
-      "ReactLynxInternal.__etAttrPlanMap[_et_da39a_test_1]=[1,ReactLynxInternal.adaptSpreadAttrSlot,2,ReactLynxInternal.adaptEventAttrSlot,3,ReactLynxInternal.adaptRefAttrSlot];"
-    ),
-    "spread, direct event, and ref adapters should keep their descriptor slot order, got: {code}"
+  assert_attr_plan_assignment(
+    &code,
+    "1,ReactLynxInternal.adaptSpreadAttrSlot,2,ReactLynxInternal.adaptEventAttrSlot,3,ReactLynxInternal.adaptRefAttrSlot",
+    "spread, direct event, and ref adapters should keep their descriptor slot order",
   );
 
   let attrs = template["attributesArray"]
