@@ -88,21 +88,17 @@ component details.
 
 ## OpenUI
 
-OpenUI renders parsed OpenUI DSL through a configurable component library.
+OpenUI renders OpenUI Lang v0.5 responses through a configurable component
+library.
 
 ```tsx
-import {
-  OpenUiRenderer,
-  createOpenUiLibrary,
-  createStreamingParser,
-} from '@lynx-js/genui/openui';
+import { OpenUiRenderer, createOpenUiLibrary } from '@lynx-js/genui/openui';
 
 const library = createOpenUiLibrary();
-const parser = createStreamingParser(library.toJSONSchema());
-const result = parser.push('root = Stack([TextContent("Hello")])');
+const response = 'root = Stack([TextContent("Hello")])';
 
 export function OpenUIScreen() {
-  return <OpenUiRenderer result={result} library={library} />;
+  return <OpenUiRenderer response={response} library={library} />;
 }
 ```
 

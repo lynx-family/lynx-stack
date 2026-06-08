@@ -19,7 +19,7 @@ import { DemosPage } from './pages/DemosPage.js';
 import { OpenUIComponentsPage } from './pages/OpenUIComponentsPage.js';
 import { OpenUIDemosPage } from './pages/OpenUIDemosPage.js';
 import type { Protocol, ProtocolName } from './utils/protocol.js';
-import { DEFAULT_PROTOCOL, getProtocol } from './utils/protocol.js';
+import { DEFAULT_PROTOCOL, PROTOCOLS, getProtocol } from './utils/protocol.js';
 
 const LYNX_LIGHT_LOGO =
   'https://lf-lynx.tiktok-cdns.com/obj/lynx-artifacts-oss-sg/lynx-website/assets/lynx-dark-logo.svg';
@@ -267,8 +267,8 @@ export function App() {
         value={protocol.name}
         onChange={(e) => handleProtocolSelect(e.target.value as ProtocolName)}
       >
-        <option value='a2ui'>A2UI v0.9</option>
-        <option value='openui'>OpenUI v0.1</option>
+        <option value='a2ui'>A2UI v{PROTOCOLS.a2ui.version}</option>
+        <option value='openui'>OpenUI v{PROTOCOLS.openui.version}</option>
       </select>
     </div>
   );

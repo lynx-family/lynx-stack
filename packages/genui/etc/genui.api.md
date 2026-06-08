@@ -5,24 +5,58 @@
 ```ts
 
 import type { $ZodObject } from 'zod/v4/core';
+import { ACTION_STEPS } from '@openuidev/lang-core';
 import { ActionEvent } from '@openuidev/lang-core';
+import { ActionPlan } from '@openuidev/lang-core';
+import { ActionStep } from '@openuidev/lang-core';
+import { BuiltinActionType } from '@openuidev/lang-core';
+import { builtInValidators } from '@openuidev/lang-core';
 import { ComponentGroup } from '@openuidev/lang-core';
+import { ComponentPromptSpec } from '@openuidev/lang-core';
 import type { ComponentRenderProps as ComponentRenderProps_2 } from '@openuidev/lang-core';
 import type { ComponentType } from '@lynx-js/react';
+import { Context } from 'react';
 import { createParser } from '@openuidev/lang-core';
 import { createStreamingParser } from '@openuidev/lang-core';
 import type { DefinedComponent as DefinedComponent_2 } from '@openuidev/lang-core';
+import { ElementNode } from '@openuidev/lang-core';
+import { EvaluationContext } from '@openuidev/lang-core';
+import { extractToolResult } from '@openuidev/lang-core';
+import { generatePrompt } from '@openuidev/lang-core';
+import type { InferStateFieldValue } from '@openuidev/lang-core';
+import { isReactiveAssign } from '@openuidev/lang-core';
+import { isReactiveSchema } from '@openuidev/lang-core';
 import { JSX as JSX_2 } from '@lynx-js/react';
 import type { Library as Library_2 } from '@openuidev/lang-core';
 import type { LibraryDefinition as LibraryDefinition_2 } from '@openuidev/lang-core';
 import { LibraryJSONSchema } from '@openuidev/lang-core';
+import { McpClientLike } from '@openuidev/lang-core';
 import { MemoExoticComponent } from 'react';
+import { mergeStatements } from '@openuidev/lang-core';
+import { OpenUIError } from '@openuidev/lang-core';
+import { ParsedRule } from '@openuidev/lang-core';
 import { ParseResult } from '@openuidev/lang-core';
+import { parseRules } from '@openuidev/lang-core';
+import { parseStructuredRules } from '@openuidev/lang-core';
 import type { ProjectReflection } from 'typedoc';
+import { PromptOptions } from '@openuidev/lang-core';
+import { PromptSpec } from '@openuidev/lang-core';
+import type { default as React_2 } from 'react';
+import { ReactiveAssign } from '@openuidev/lang-core';
 import { ReactNode } from '@lynx-js/react';
 import type { Signal } from '@preact/signals';
+import { StateField } from '@openuidev/lang-core';
+import type { Store } from '@openuidev/lang-core';
 import { StreamParser } from '@openuidev/lang-core';
+import { SubComponentOf } from '@openuidev/lang-core';
+import { tagSchemaId } from '@openuidev/lang-core';
+import { ToolDescriptor } from '@openuidev/lang-core';
+import { ToolNotFoundError } from '@openuidev/lang-core';
+import { ToolProvider } from '@openuidev/lang-core';
+import { ToolSpec } from '@openuidev/lang-core';
 import type * as v0_9 from '@a2ui/web_core/v0_9';
+import { validate } from '@openuidev/lang-core';
+import { ValidatorFn } from '@openuidev/lang-core';
 import type { z } from 'zod/v4';
 
 // Warning: (ae-forgotten-export) The symbol "A2UIImpl" needs to be exported by the entry point index.d.ts
@@ -183,7 +217,11 @@ export interface A2UIProps {
     }) => ReactNode;
 }
 
+export { ACTION_STEPS }
+
 export { ActionEvent }
+
+export { ActionPlan }
 
 // Warning: (ae-missing-release-tag) "ActionProps" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
 //
@@ -196,6 +234,8 @@ export interface ActionProps {
     // (undocumented)
     surfaceId: string;
 }
+
+export { ActionStep }
 
 // Warning: (ae-missing-release-tag) "BASIC_CATALOG" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
 //
@@ -237,6 +277,10 @@ export interface BuildSystemPromptOptions {
     catalog?: A2UIPromptCatalog;
 }
 
+export { BuiltinActionType }
+
+export { builtInValidators }
+
 // Warning: (ae-missing-release-tag) "CatalogArtifacts" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
 //
 // @public (undocumented)
@@ -277,6 +321,8 @@ export type ComponentInstance = v0_9.AnyComponent & {
         path: string;
     };
 };
+
+export { ComponentPromptSpec }
 
 // Warning: (ae-missing-release-tag) "ComponentRenderer" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
 //
@@ -366,6 +412,10 @@ export function defineComponent<T extends $ZodObject>(config: {
 //
 // @public (undocumented)
 export type DefinedComponent<T extends $ZodObject = $ZodObject> = DefinedComponent_2<T, ComponentRenderer<z.infer<T>>>;
+
+export { ElementNode }
+
+export { EvaluationContext }
 
 // Warning: (ae-missing-release-tag) "executeFunctionCall" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
 //
@@ -478,10 +528,42 @@ export interface ExtractedJsonSchema {
     type?: string;
 }
 
+export { extractToolResult }
+
 // Warning: (ae-missing-release-tag) "findCatalogSourceFiles" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
 //
 // @public (undocumented)
 export function findCatalogSourceFiles(inputPath: string): string[];
+
+// Warning: (ae-missing-release-tag) "FormNameContext" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
+//
+// @public (undocumented)
+export const FormNameContext: Context<string | undefined>;
+
+// Warning: (ae-missing-release-tag) "FormValidationContext" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
+//
+// @public (undocumented)
+export const FormValidationContext: Context<FormValidationContextValue | null>;
+
+// Warning: (ae-missing-release-tag) "FormValidationContextValue" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
+//
+// @public (undocumented)
+export interface FormValidationContextValue {
+    // (undocumented)
+    clearFieldError: (name: string) => void;
+    // (undocumented)
+    errors: Record<string, string | undefined>;
+    // (undocumented)
+    getFieldError: (name: string) => string | undefined;
+    // (undocumented)
+    registerField: (name: string, rules: ParsedRule[], getValue: () => unknown) => void;
+    // (undocumented)
+    unregisterField: (name: string) => void;
+    // (undocumented)
+    validateField: (name: string, value: unknown, rules: ParsedRule[]) => boolean;
+    // (undocumented)
+    validateForm: () => boolean;
+}
 
 // Warning: (ae-missing-release-tag) "FunctionCallContext" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
 //
@@ -553,6 +635,8 @@ export class FunctionRegistry {
 // @public (undocumented)
 export const functionRegistry: FunctionRegistry;
 
+export { generatePrompt }
+
 // Warning: (ae-missing-release-tag) "GenericComponentProps" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
 //
 // @public (undocumented)
@@ -581,6 +665,10 @@ export function isDataBinding(value: unknown): value is v0_9.DataBinding;
 // @public (undocumented)
 export function isFunctionCall(value: unknown): value is v0_9.FunctionCall;
 
+export { isReactiveAssign }
+
+export { isReactiveSchema }
+
 // Warning: (ae-missing-release-tag) "Library" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
 //
 // @public (undocumented)
@@ -592,6 +680,10 @@ export type Library = Library_2<ComponentRenderer<any>>;
 export type LibraryDefinition = LibraryDefinition_2<ComponentRenderer<any>>;
 
 export { LibraryJSONSchema }
+
+export { McpClientLike }
+
+export { mergeStatements }
 
 // Warning: (ae-missing-release-tag) "MessageProcessor" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
 //
@@ -645,17 +737,86 @@ export const NodeRenderer: typeof NodeRendererImpl;
 // @public
 export function normalizePayloadToMessages(payload: unknown): ServerToClientMessage[];
 
+// Warning: (ae-missing-release-tag) "OpenUIContextValue" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
+//
+// @public (undocumented)
+export interface OpenUIContextValue {
+    evaluationContext: EvaluationContext;
+    getFieldValue: (formName: string | undefined, name: string) => any;
+    isQueryLoading: boolean;
+    isStreaming: boolean;
+    library: Library_2;
+    renderNode: (value: unknown) => ReactNode;
+    reportError?: (error: OpenUIError) => void;
+    setFieldValue: (formName: string | undefined, componentType: string | undefined, name: string, value: unknown, shouldTriggerSaveCallback?: boolean) => void;
+    store: Store;
+    triggerAction: (userMessage: string, formName?: string, action?: ActionPlan | {
+        type?: string;
+        params?: Record<string, any>;
+        url?: string;
+        context?: string;
+    }) => void | Promise<void>;
+}
+
+export { OpenUIError }
+
 // Warning: (ae-missing-release-tag) "OpenUiRenderer" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
 //
 // @public (undocumented)
-export function OpenUiRenderer(props: {
+export function OpenUiRenderer(props: OpenUiRendererProps): JSX_2.Element;
+
+// Warning: (ae-missing-release-tag) "OpenUiRendererParsedProps" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
+//
+// @public (undocumented)
+export interface OpenUiRendererParsedProps {
+    // (undocumented)
+    isStreaming?: boolean;
+    // (undocumented)
+    library: Library;
+    // (undocumented)
+    onAction?: (event: ActionEvent) => void;
     result: ParseResult | null;
+}
+
+// Warning: (ae-missing-release-tag) "OpenUiRendererProps" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
+//
+// @public (undocumented)
+export type OpenUiRendererProps = OpenUiRendererRuntimeProps | OpenUiRendererParsedProps;
+
+// Warning: (ae-missing-release-tag) "OpenUiRendererRuntimeProps" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
+//
+// @public (undocumented)
+export interface OpenUiRendererRuntimeProps {
+    initialState?: Record<string, unknown>;
+    isStreaming?: boolean;
     library: Library;
     onAction?: (event: ActionEvent) => void;
-    isStreaming?: boolean;
-}): JSX_2.Element | null;
+    onError?: (errors: OpenUIError[]) => void;
+    onParseResult?: (result: ParseResult | null) => void;
+    onStateUpdate?: (state: Record<string, unknown>) => void;
+    queryLoader?: ReactNode;
+    response: string | null;
+    toolProvider?: ToolProviderInput;
+}
+
+// Warning: (ae-missing-release-tag) "OpenUIState" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
+//
+// @public (undocumented)
+export interface OpenUIState {
+    // (undocumented)
+    contextValue: OpenUIContextValue;
+    isQueryLoading: boolean;
+    parseResult: ParseResult | null;
+    result: ParseResult | null;
+}
+
+export { ParsedRule }
 
 export { ParseResult }
+
+export { parseRules }
+
+export { parseStructuredRules }
 
 // Warning: (ae-missing-release-tag) "prepareMessagesForProcessing" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
 //
@@ -664,6 +825,10 @@ export function prepareMessagesForProcessing(rawMessages: ServerToClientMessage[
     messages: ServerToClientMessage[];
     hasComponentUpdate: boolean;
 };
+
+export { PromptOptions }
+
+export { PromptSpec }
 
 // Warning: (ae-missing-release-tag) "Resource" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
 //
@@ -693,6 +858,13 @@ export interface RawResource<T = unknown> {
     // (undocumented)
     readonly value: T | undefined;
 }
+
+// Warning: (ae-missing-release-tag) "reactive" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
+//
+// @public
+export function reactive<T extends z.ZodType>(schema: T): z.ZodType<StateField<z.infer<T>>>;
+
+export { ReactiveAssign }
 
 // Warning: (ae-missing-release-tag) "ReadA2UICatalogDirectoryOptions" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
 //
@@ -791,7 +963,11 @@ export class SignalStore {
     }[]): void;
 }
 
+export { StateField }
+
 export { StreamParser }
+
+export { SubComponentOf }
 
 // Warning: (ae-missing-release-tag) "Surface" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
 //
@@ -818,6 +994,21 @@ export interface Surface {
 //
 // @public (undocumented)
 export type SurfaceId = string;
+
+export { tagSchemaId }
+
+export { ToolDescriptor }
+
+export { ToolNotFoundError }
+
+export { ToolProvider }
+
+// Warning: (ae-missing-release-tag) "ToolProviderInput" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
+//
+// @public (undocumented)
+export type ToolProviderInput = Record<string, (args: Record<string, unknown>) => unknown> | McpClientLike | null;
+
+export { ToolSpec }
 
 // Warning: (ae-missing-release-tag) "TypeDocComment" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
 //
@@ -973,10 +1164,65 @@ export function useChecks(options: {
     firstFailureMessage: string | undefined;
 };
 
+// Warning: (ae-missing-release-tag) "useCreateFormValidation" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
+//
+// @public (undocumented)
+export function useCreateFormValidation(): FormValidationContextValue;
+
 // Warning: (ae-missing-release-tag) "useDataBinding" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
 //
 // @public (undocumented)
 export function useDataBinding<T = unknown>(dynamicValue: unknown, surface: Surface | undefined, dataContextPath?: string, fallbackValue?: T): [T | undefined, (newValue: T) => void, string | undefined];
+
+// Warning: (ae-missing-release-tag) "useFormValidation" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
+//
+// @public (undocumented)
+export function useFormValidation(): FormValidationContextValue | null;
+
+// Warning: (ae-missing-release-tag) "useGetFieldValue" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
+//
+// @public
+export function useGetFieldValue(): (formName: string | undefined, name: string) => any;
+
+// Warning: (ae-missing-release-tag) "useIsQueryLoading" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
+//
+// @public
+export function useIsQueryLoading(): boolean;
+
+// Warning: (ae-missing-release-tag) "useIsStreaming" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
+//
+// @public
+export function useIsStreaming(): boolean;
+
+// Warning: (ae-missing-release-tag) "useOpenUI" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
+//
+// @public
+export function useOpenUI(): OpenUIContextValue;
+
+// Warning: (ae-missing-release-tag) "useOpenUIState" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
+//
+// @public
+export function useOpenUIState(input: UseOpenUIStateOptions, renderDeep: (value: unknown) => React_2.ReactNode): OpenUIState;
+
+// Warning: (ae-missing-release-tag) "UseOpenUIStateOptions" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
+//
+// @public (undocumented)
+export interface UseOpenUIStateOptions {
+    // (undocumented)
+    initialState?: Record<string, unknown>;
+    // (undocumented)
+    isStreaming: boolean;
+    // (undocumented)
+    library: Library;
+    // (undocumented)
+    onAction?: (event: ActionEvent) => void;
+    onError?: (errors: OpenUIError[]) => void;
+    // (undocumented)
+    onStateUpdate?: (state: Record<string, unknown>) => void;
+    // (undocumented)
+    response: string | null;
+    toolProvider?: ToolProvider | null;
+}
 
 // Warning: (ae-missing-release-tag) "UserActionPayload" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
 //
@@ -994,10 +1240,51 @@ export interface UserActionPayload {
     timestamp: string;
 }
 
+// Warning: (ae-missing-release-tag) "useRenderNode" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
+//
+// @public
+export function useRenderNode(): (value: unknown) => ReactNode;
+
 // Warning: (ae-missing-release-tag) "useResolvedProps" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
 //
 // @public (undocumented)
 export function useResolvedProps(properties: Record<string, unknown>, surface: Surface | undefined, dataContextPath?: string, processor?: MessageProcessor, functions?: readonly CatalogFunctionEntry[]): readonly [Record<string, unknown>, (key: string, value: unknown) => void];
+
+// Warning: (ae-missing-release-tag) "useSetDefaultValue" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
+//
+// @public
+export function useSetDefaultValue(input: {
+    formName?: string;
+    componentType?: string;
+    name: string;
+    existingValue: unknown;
+    defaultValue: unknown;
+    shouldTriggerSaveCallback?: boolean;
+}): void;
+
+// Warning: (ae-missing-release-tag) "useSetFieldValue" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
+//
+// @public
+export function useSetFieldValue(): (formName: string | undefined, componentType: string | undefined, name: string, value: unknown, shouldTriggerSaveCallback?: boolean) => void;
+
+// Warning: (ae-missing-release-tag) "useStateField" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
+//
+// @public (undocumented)
+export function useStateField<T = unknown>(name: string, value?: T): StateField<InferStateFieldValue<T>>;
+
+// Warning: (ae-missing-release-tag) "useTriggerAction" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
+//
+// @public
+export function useTriggerAction(): (userMessage: string, formName?: string, action?: ActionPlan | {
+    type?: string;
+    params?: Record<string, any>;
+    url?: string;
+    context?: string;
+}) => void | Promise<void>;
+
+export { validate }
+
+export { ValidatorFn }
 
 // Warning: (ae-missing-release-tag) "writeCatalogArtifacts" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
 //
