@@ -48,6 +48,10 @@ type ImageResolutionResult =
     patch: ImageDataPatch;
   };
 
+interface PendingImageResolution {
+  promise: Promise<ImageResolutionResult>;
+}
+
 interface PexelsPhoto {
   src?: {
     large2x?: string;
@@ -166,21 +170,29 @@ export async function resolveA2UIImageUrlsIncrementally(
   const dataPatches: ImageDataPatch[] = [];
   const yieldedDataPatches = new Set<string>();
 
-  const pending: Promise<ImageResolutionResult>[] = [];
+  const pending: PendingImageResolution[] = [];
   pending.push(
-    ...plan.staticResolutions.map((promise, index) =>
-      promise.then((message) => ({ kind: 'static' as const, index, message }))
-    ),
+    ...plan.staticResolutions.map((promise, index) => ({
+      promise: promise.then((message) => ({
+        kind: 'static' as const,
+        index,
+        message,
+      })),
+    })),
   );
   pending.push(
-    ...plan.dataResolutions.map((promise, index) =>
-      promise.then((patch) => ({ kind: 'data' as const, index, patch }))
-    ),
+    ...plan.dataResolutions.map((promise, index) => ({
+      promise: promise.then((patch) => ({
+        kind: 'data' as const,
+        index,
+        patch,
+      })),
+    })),
   );
 
   while (pending.length > 0) {
     const next = await Promise.race(
-      pending.map((promise, index) =>
+      pending.map(({ promise }, index) =>
         promise.then((result) => ({ result, index }))
       ),
     );
