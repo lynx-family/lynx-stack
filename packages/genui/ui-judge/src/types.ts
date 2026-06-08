@@ -65,6 +65,7 @@ export interface NormalizedJudgePageOptions extends NormalizedJudgeOptions {
 }
 
 export interface NormalizedJudgeAndroidAgentOptions
-  extends NormalizedJudgeOptions {
+  extends NormalizedJudgeOptions
+{
   page: KittenLynxJudgePage;
 }

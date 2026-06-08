@@ -6,10 +6,7 @@ import type { AbstractInterface } from '@midscene/core/device';
 
 import { getResultDimension } from './core/dimensions.js';
 import { toErrorMessage } from './core/errors.js';
-import {
-  normalizeJudgeBaseOptions,
-  normalizeSteps,
-} from './core/options.js';
+import { normalizeJudgeBaseOptions, normalizeSteps } from './core/options.js';
 import { judgeWithAgentUnsafe } from './core/scoring.js';
 import {
   getKittenLynxPageUrl,

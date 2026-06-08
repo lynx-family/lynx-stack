@@ -6,10 +6,7 @@ import type { Page } from '@playwright/test';
 
 import { getResultDimension } from './core/dimensions.js';
 import { toErrorMessage } from './core/errors.js';
-import {
-  normalizeJudgePageOptions,
-  normalizeSteps,
-} from './core/options.js';
+import { normalizeJudgePageOptions, normalizeSteps } from './core/options.js';
 import { judgeWithAgentUnsafe } from './core/scoring.js';
 import type {
   JudgePageOptions,
