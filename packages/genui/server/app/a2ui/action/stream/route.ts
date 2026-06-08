@@ -14,7 +14,7 @@ import {
 } from '../../../../agent/a2ui-validator';
 import {
   replacePendingA2UIImagesWithLoading,
-  resolveA2UIImageUrls,
+  resolveA2UIImageUrlsIncrementally,
 } from '../../../../agent/image-resolver';
 import { getA2UIAgentService } from '../../../../service/a2ui-agent';
 import type { ChatMessage } from '../../../../service/a2ui-agent';
@@ -225,7 +225,7 @@ export async function POST(req: Request) {
         controller.enqueue(encodeSSE(event, data));
       };
       const resolveMessagesForStreaming = async (
-        messages: Parameters<typeof resolveA2UIImageUrls>[0],
+        messages: Parameters<typeof resolveA2UIImageUrlsIncrementally>[0],
       ) => {
         const pendingImages = replacePendingA2UIImagesWithLoading(messages);
         if (pendingImages.replacementCount > 0) {
@@ -239,10 +239,18 @@ export async function POST(req: Request) {
           });
         }
 
-        const resolvedMessages = splitA2UIProtocolMessages(
-          await resolveA2UIImageUrls(messages),
+        const resolvedMessages = await resolveA2UIImageUrlsIncrementally(
+          messages,
+          async (imageMessages) => {
+            const splitMessages = splitA2UIProtocolMessages(imageMessages);
+            if (splitMessages.length === 0) return;
+            enqueue('message', { messages: splitMessages });
+            log('images.resolved.enqueued', {
+              messageCount: splitMessages.length,
+            });
+          },
         );
-        return resolvedMessages;
+        return splitA2UIProtocolMessages(resolvedMessages);
       };
 
       try {
