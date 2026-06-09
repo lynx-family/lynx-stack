@@ -223,7 +223,7 @@ describe('rewriteSourceMappingURLToAbsolute', () => {
 
 describe('rewriteSourceMappingURL', () => {
   const CUSTOM_URL =
-    'https://gateway.example/raw?tos_key=abc123&field=source-map&path=foo.js.map'
+    'https://gateway.example/raw?metadata_key=abc123&field=source-map&path=foo.js.map'
 
   test('substitutes the caller URL verbatim into a `//#` directive', () => {
     const before = wrap('//# sourceMappingURL=foo.js.map')
