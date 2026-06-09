@@ -119,11 +119,34 @@ function getInitialTheme(): Theme {
   return getSystemTheme();
 }
 
+function readUrlFlag(name: string): string | null {
+  try {
+    const params = new URLSearchParams(window.location.search);
+    return params.get(name);
+  } catch {
+    return null;
+  }
+}
+
+function isEmbedded(): boolean {
+  const value = readUrlFlag('embed');
+  return value === '1' || value === 'true';
+}
+
+function getForcedTheme(): Theme | null {
+  const value = readUrlFlag('theme');
+  return value === 'light' || value === 'dark' ? value : null;
+}
+
 export function App() {
   const [route, setRoute] = useState<Route>(() =>
     parseHash(window.location.hash)
   );
-  const [theme, setTheme] = useState<Theme>(getInitialTheme);
+  const [theme, setTheme] = useState<Theme>(() => {
+    return getForcedTheme() ?? getInitialTheme();
+  });
+  const embedded = useMemo(() => isEmbedded(), []);
+  const forcedTheme = useMemo(() => getForcedTheme(), []);
 
   const protocol = route.protocol;
   const tabs = protocol.name === 'openui' ? OPENUI_TABS : A2UI_TABS;
@@ -134,12 +157,13 @@ export function App() {
   }, [theme]);
 
   useEffect(() => {
+    if (forcedTheme) return;
     try {
       window.localStorage.setItem(THEME_STORAGE_KEY, theme);
     } catch {
       // Ignore localStorage errors.
     }
-  }, [theme]);
+  }, [theme, forcedTheme]);
 
   useEffect(() => {
     const onHashChange = () => {
@@ -163,6 +187,20 @@ export function App() {
   }, [route.tab]);
 
   const page = useMemo(() => {
+    if (embedded) {
+      // Embedded mode (e.g. iframe on the Lynx website) only exposes the
+      // component catalog: the All Components grid and per-component preview.
+      return (
+        <ComponentsPage
+          key='components-embedded'
+          protocol={protocol}
+          componentName={route.componentName}
+          theme={theme}
+          embedded
+        />
+      );
+    }
+
     if (protocol.name === 'openui') {
       switch (route.tab) {
         case 'components':
@@ -212,7 +250,14 @@ export function App() {
       default:
         return <AIChatPage key='create' protocol={protocol} theme={theme} />;
     }
-  }, [protocol, route.tab, route.componentName, route.demoId, theme]);
+  }, [
+    embedded,
+    protocol,
+    route.tab,
+    route.componentName,
+    route.demoId,
+    theme,
+  ]);
 
   const protocolVersionControl = (
     <div className='protocolControl'>
@@ -229,47 +274,49 @@ export function App() {
   );
 
   return (
-    <div className='appShell'>
-      <div className='topBar'>
-        <div className='brandGroup'>
-          <img
-            className='brandLogo'
-            src={theme === 'dark' ? LYNX_DARK_LOGO : LYNX_LIGHT_LOGO}
-            alt='Lynx'
+    <div className={embedded ? 'appShell appShellEmbedded' : 'appShell'}>
+      {embedded ? null : (
+        <div className='topBar'>
+          <div className='brandGroup'>
+            <img
+              className='brandLogo'
+              src={theme === 'dark' ? LYNX_DARK_LOGO : LYNX_LIGHT_LOGO}
+              alt='Lynx'
+            />
+            <span className='brand'>Lynx GenUI Playground</span>
+          </div>
+
+          <nav className='tabNav'>
+            {tabs.map((t) => (
+              <button
+                key={t.id}
+                type='button'
+                className={route.tab === t.id
+                  ? 'tabNavItem active'
+                  : 'tabNavItem'}
+                onClick={() => handleTabClick(t.id)}
+              >
+                {t.label}
+              </button>
+            ))}
+          </nav>
+
+          <div className='spacer' />
+
+          {protocolVersionControl}
+
+          <Button
+            variant='ghost'
+            size='sm'
+            iconOnly
+            iconBefore={theme === 'dark' ? Sun : Moon}
+            className='themeToggle'
+            onClick={() => setTheme((t) => (t === 'dark' ? 'light' : 'dark'))}
+            aria-label={`Switch to ${theme === 'dark' ? 'light' : 'dark'} mode`}
+            title={`Switch to ${theme === 'dark' ? 'light' : 'dark'} mode`}
           />
-          <span className='brand'>Lynx GenUI Playground</span>
         </div>
-
-        <nav className='tabNav'>
-          {tabs.map((t) => (
-            <button
-              key={t.id}
-              type='button'
-              className={route.tab === t.id
-                ? 'tabNavItem active'
-                : 'tabNavItem'}
-              onClick={() => handleTabClick(t.id)}
-            >
-              {t.label}
-            </button>
-          ))}
-        </nav>
-
-        <div className='spacer' />
-
-        {protocolVersionControl}
-
-        <Button
-          variant='ghost'
-          size='sm'
-          iconOnly
-          iconBefore={theme === 'dark' ? Sun : Moon}
-          className='themeToggle'
-          onClick={() => setTheme((t) => (t === 'dark' ? 'light' : 'dark'))}
-          aria-label={`Switch to ${theme === 'dark' ? 'light' : 'dark'} mode`}
-          title={`Switch to ${theme === 'dark' ? 'light' : 'dark'} mode`}
-        />
-      </div>
+      )}
 
       <div className='appBody'>
         {page}
