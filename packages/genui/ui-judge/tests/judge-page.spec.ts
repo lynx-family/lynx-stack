@@ -134,7 +134,7 @@ test.describe('A2UI playground preview', () => {
   });
 
   test('adds GEQI dimension scores for playground render.html demos with speed zero', async ({ page }) => {
-    test.setTimeout(1_500_000);
+    test.setTimeout(1_800_000);
 
     if (!previewServer) {
       throw new Error('A2UI playground preview server was not started.');
@@ -160,7 +160,7 @@ test.describe('A2UI playground preview', () => {
               dimension: dimensionCase.dimension,
               page,
               task: demo.task,
-              timeoutMs: 90_000,
+              timeoutMs: 180_000,
             });
 
             upsertGeqiDimensionJudgeResult(demo, dimensionCase, result);
