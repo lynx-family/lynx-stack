@@ -20,6 +20,8 @@ import type {
   SerializedElementTemplate,
 } from '../protocol/types.js';
 
+const MAIN_BUNDLE_URL_SENTINEL = '__Card__';
+
 export function hydrate(
   serialized: SerializedElementTemplate,
   instance: BackgroundElementTemplateInstance,
@@ -69,7 +71,9 @@ function hydrateMatchingChildrenAndDiffSlot(
 
   for (let i = 0; i < serializedChildren.length; i += 1) {
     const node = serializedChildren[i]!;
-    const identityKey = elementTemplateIdentityKey(node.templateKey, node.bundleUrl);
+    const identityKey = node.bundleUrl === MAIN_BUNDLE_URL_SENTINEL
+      ? node.templateKey
+      : elementTemplateIdentityKey(node.templateKey, node.bundleUrl);
     (serializedByIdentityKey[identityKey] ??= []).push([node, i]);
   }
 
@@ -116,7 +120,7 @@ function hydrateInstance(
   instance: BackgroundElementTemplateInstance,
 ): boolean {
   const nativeTemplate = parseElementTemplateType(instance.type);
-  const serializedBundleUrl = serialized.bundleUrl ?? null;
+  const serializedBundleUrl = normalizeSerializedBundleUrl(serialized.bundleUrl);
   if (
     serialized.templateKey !== nativeTemplate.templateKey
     || serializedBundleUrl !== nativeTemplate.bundleUrl
@@ -161,6 +165,10 @@ function hydrateInstance(
     }
   }
   return true;
+}
+
+function normalizeSerializedBundleUrl(bundleUrl: string | undefined): string | null {
+  return bundleUrl === undefined || bundleUrl === MAIN_BUNDLE_URL_SENTINEL ? null : bundleUrl;
 }
 
 function hydrateElementSlot(

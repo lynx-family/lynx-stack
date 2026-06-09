@@ -45,6 +45,7 @@ function createHydrationChild(
   templateKey: string,
   options: {
     attributeSlots?: unknown[] | null;
+    bundleUrl?: string;
     elementSlots?: SerializedElementTemplate[][] | null;
   } = {},
 ): SerializedElementTemplate {
@@ -609,6 +610,25 @@ describe('hydrate', () => {
     expect(backgroundElementTemplateInstanceManager.get(-11)).toBe(entryA);
     expect(backgroundElementTemplateInstanceManager.get(-12)).toBe(entryB);
     expect(globalCommitContext.nonPayload.removedSubtreesAwaitingTeardown).toEqual([]);
+  });
+
+  it('ignores native main-bundle sentinel urls during hydrate', () => {
+    const root = new BackgroundElementTemplateInstance('_et_root');
+    const child = new BackgroundElementTemplateInstance('_et_child');
+    root.appendChild(child);
+
+    const stream = hydrate(
+      createHydrationTemplate(root.instanceId, '_et_root', {
+        bundleUrl: '__Card__',
+        elementSlots: [[createHydrationChild(-2, '_et_child', { bundleUrl: '__Card__' })]],
+      }),
+      root,
+    );
+
+    expect(stream).toEqual([]);
+    expect((globalThis as { __LYNX_REPORT_ERROR_CALLS?: Error[] }).__LYNX_REPORT_ERROR_CALLS).toEqual([]);
+    expect(backgroundElementTemplateInstanceManager.get(root.instanceId)).toBe(root);
+    expect(backgroundElementTemplateInstanceManager.get(-2)).toBe(child);
   });
 
   it('keeps hydrated handles for later background attribute updates', () => {
