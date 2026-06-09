@@ -30,6 +30,7 @@ export interface ChatOptions {
   apiKey?: string | undefined;
   baseURL?: string | undefined;
   model?: string | undefined;
+  api?: 'chat' | 'responses' | undefined;
   catalog?: A2UICatalog | undefined;
   maxRepairAttempts?: number | undefined;
   onPerformanceEvent?: (
@@ -107,7 +108,7 @@ export default class A2UIAgentService {
     const startedAt = performance.now();
     const cacheKey = `${opts.baseURL ?? 'default'}:${opts.model ?? 'default'}:${
       hashApiKey(opts.apiKey)
-    }:${opts.catalog?.id ?? 'basic'}`;
+    }:${opts.api ?? 'default'}:${opts.catalog?.id ?? 'basic'}`;
     let cached = this.agentCache.get(cacheKey);
     if (cached) {
       opts.onPerformanceEvent?.('agent.cache.hit', {
@@ -122,6 +123,7 @@ export default class A2UIAgentService {
         apiKey: opts.apiKey,
         baseURL: opts.baseURL,
         model: opts.model,
+        api: opts.api,
         catalog: opts.catalog,
       })).agent,
     );

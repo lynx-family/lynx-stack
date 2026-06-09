@@ -12,6 +12,7 @@ import {
 import { Button } from './components/Button.js';
 import { Moon, Sun } from './components/Icon.js';
 import { AIChatPage } from './pages/AIChatPage.js';
+import { BenchPage } from './pages/BenchPage.js';
 import { ComponentsPage } from './pages/ComponentsPage.js';
 import { DemosListPage } from './pages/DemosListPage.js';
 import { DemosPage } from './pages/DemosPage.js';
@@ -25,7 +26,7 @@ const LYNX_LIGHT_LOGO =
 const LYNX_DARK_LOGO =
   'https://lf-lynx.tiktok-cdns.com/obj/lynx-artifacts-oss-sg/lynx-website/assets/lynx-light-logo.svg';
 
-type Tab = 'create' | 'examples' | 'components' | 'catalog';
+type Tab = 'create' | 'examples' | 'components' | 'catalog' | 'bench';
 
 interface TabDef {
   id: Tab;
@@ -36,6 +37,7 @@ const A2UI_TABS: TabDef[] = [
   { id: 'create', label: 'Create' },
   { id: 'examples', label: 'Examples' },
   { id: 'catalog', label: 'Catalog' },
+  { id: 'bench', label: 'Bench' },
 ];
 
 const OPENUI_TABS: TabDef[] = [
@@ -78,6 +80,9 @@ function parseHash(hash: string): Route {
   }
   if (rest[0] === 'chat' || rest[0] === 'create') {
     return { protocol, tab: 'create' };
+  }
+  if (rest[0] === 'bench' && protocol.name === 'a2ui') {
+    return { protocol, tab: 'bench' };
   }
   // Back-compat: the standalone Playback tab is gone; route it to Examples.
   if (rest[0] === 'playback') {
@@ -149,8 +154,9 @@ export function App() {
   }, [protocol.name]);
 
   const handleProtocolSelect = useCallback((name: ProtocolName) => {
-    // When switching to openui and current tab is create, fallback to examples.
-    const tab = name === 'openui' && route.tab === 'create'
+    // When switching to openui and current tab is A2UI-only, fallback to examples.
+    const tab = name === 'openui'
+        && (route.tab === 'create' || route.tab === 'bench')
       ? 'examples'
       : route.tab;
     window.location.hash = `#/${name}/${tab}`;
@@ -174,6 +180,8 @@ export function App() {
     }
 
     switch (route.tab) {
+      case 'bench':
+        return <BenchPage key='bench' />;
       case 'examples':
         return route.demoId
           ? (

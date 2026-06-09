@@ -42,29 +42,31 @@ interface OpenAIEnv {
   OPENAI_MODEL?: string | undefined;
 }
 
-const compatFetch: typeof fetch = async (input, init) => {
-  if (!init || !init.body || typeof init.body !== 'string') {
-    return fetch(input, init);
-  }
-  let body = init.body;
-  try {
-    const parsed = JSON.parse(body) as CompatRequestBody;
-    if (Array.isArray(parsed.messages)) {
-      let touched = false;
-      parsed.messages = parsed.messages.map((m) => {
-        if (m && m.role === 'developer') {
-          touched = true;
-          return { ...m, role: 'system' };
-        }
-        return m;
-      });
-      if (touched) body = JSON.stringify(parsed);
+function createCompatFetch(): typeof fetch {
+  return async (input, init) => {
+    if (!init || !init.body || typeof init.body !== 'string') {
+      return fetch(input, init);
     }
-  } catch {
-    // body is not JSON, leave as-is
-  }
-  return fetch(input, { ...init, body });
-};
+    let body = init.body;
+    try {
+      const parsed = JSON.parse(body) as CompatRequestBody;
+      if (Array.isArray(parsed.messages)) {
+        let touched = false;
+        parsed.messages = parsed.messages.map((m) => {
+          if (m && m.role === 'developer') {
+            touched = true;
+            return { ...m, role: 'system' };
+          }
+          return m;
+        });
+        if (touched) body = JSON.stringify(parsed);
+      }
+    } catch {
+      // body is not JSON, leave as-is
+    }
+    return fetch(input, { ...init, body });
+  };
+}
 
 export function createLLMProvider(
   opts: OpenAIProviderOptions = {},
@@ -88,7 +90,7 @@ export function createLLMProvider(
   const providerSettings = {
     apiKey,
     baseURL,
-    ...(isOfficial ? {} : { fetch: compatFetch }),
+    ...(isOfficial ? {} : { fetch: createCompatFetch() }),
   };
   const provider = createOpenAI(providerSettings);
   const buildModel = (id: string) =>
