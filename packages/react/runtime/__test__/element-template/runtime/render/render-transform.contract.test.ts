@@ -21,6 +21,7 @@ interface CompileOptions {
 
 interface RenderResult {
   rootRef: ElementRef;
+  userTemplateIds: string[];
 }
 
 function findUserTemplateCreateLog(): unknown[] | undefined {
@@ -113,6 +114,9 @@ async function compileAndRender(
 
     return {
       rootRef: rootRefs[0]!,
+      userTemplateIds: (result.elementTemplates ?? [])
+        .map(template => template.templateId)
+        .filter(templateId => templateId !== '_et_builtin_raw_text'),
     };
   } finally {
     fs.rmSync(tempDir, { recursive: true, force: true });
@@ -136,7 +140,7 @@ describe('render transform contract', () => {
   });
 
   it('does not pass legacy css-id metadata through ET create', async () => {
-    const { rootRef } = await compileAndRender(`
+    const { rootRef, userTemplateIds } = await compileAndRender(`
       /**
        * @jsxCSSId 100
        */
@@ -159,9 +163,12 @@ describe('render transform contract', () => {
     expect(elementTemplateRegistry.get(-1)).toMatchObject({
       attributes: { id: 'main' },
     });
+    expect(userTemplateIds).toEqual([
+      expect.stringMatching(/^_et_[0-9a-f]{12}$/),
+    ]);
     expect(findUserTemplateCreateLog()).toEqual([
       '__CreateElementTemplate',
-      '_et_7079c_test_1',
+      expect.stringMatching(/^_et_[0-9a-f]{12}$/),
       null,
       null,
       null,
@@ -172,7 +179,7 @@ describe('render transform contract', () => {
   it('does not pass legacy entry-name metadata through ET create for dynamic component output', async () => {
     vi.stubGlobal('globDynamicComponentEntry', 'lazy-entry');
 
-    const { rootRef } = await compileAndRender(
+    const { rootRef, userTemplateIds } = await compileAndRender(
       `
       export function App() {
         return (
@@ -197,9 +204,13 @@ describe('render transform contract', () => {
     expect(elementTemplateRegistry.get(-1)).toMatchObject({
       attributes: { id: 'lazy' },
     });
+    expect(userTemplateIds).toEqual([
+      expect.stringMatching(/^_et_[0-9a-f]{12}$/),
+    ]);
+    expect(userTemplateIds[0]).not.toContain(':');
     expect(findUserTemplateCreateLog()).toEqual([
       '__CreateElementTemplate',
-      'lazy-entry:_et_7079c_test_1',
+      expect.stringMatching(/^lazy-entry:_et_[0-9a-f]{12}$/),
       null,
       null,
       null,

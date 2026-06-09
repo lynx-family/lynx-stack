@@ -4,6 +4,31 @@ use swc_plugins_shared::target::TransformTarget;
 use swc_plugins_shared::transform_mode::TransformMode;
 
 const BUILTIN_RAW_TEXT_TEMPLATE_ID: &str = "_et_builtin_raw_text";
+const CONTENT_ADDRESSED_TEMPLATE_ID_LEN: usize = "_et_".len() + 12;
+
+fn user_templates(templates: &[ElementTemplateAsset]) -> Vec<&ElementTemplateAsset> {
+  templates
+    .iter()
+    .filter(|template| template.template_id != BUILTIN_RAW_TEXT_TEMPLATE_ID)
+    .collect()
+}
+
+fn assert_content_addressed_template_id(template_id: &str) {
+  let hash = template_id
+    .strip_prefix("_et_")
+    .unwrap_or_else(|| panic!("expected ET template id prefix, got {template_id}"));
+  assert_eq!(
+    template_id.len(),
+    CONTENT_ADDRESSED_TEMPLATE_ID_LEN,
+    "expected _et_<12hex> template id, got {template_id}"
+  );
+  assert!(
+    hash
+      .chars()
+      .all(|ch| ch.is_ascii_hexdigit() && !ch.is_ascii_uppercase()),
+    "expected lowercase hex content-addressed template id, got {template_id}"
+  );
+}
 
 fn assert_has_single_builtin_raw_text_template(templates: &[ElementTemplateAsset]) {
   let builtin_count = templates
@@ -680,6 +705,115 @@ fn should_collect_element_templates_for_dynamic_component_in_element_template_mo
   for template in templates {
     assert!(template.template_id.starts_with("_et_"));
     assert!(!template.template_id.contains(':'));
+  }
+}
+
+#[test]
+fn should_reuse_same_content_template_id_and_asset_in_one_module() {
+  let (code, templates) = transform_to_code_and_templates(
+    r#"
+      const first = (
+        <view class="card">
+          <text>Hello</text>
+        </view>
+      );
+      const second = (
+        <view class="card">
+          <text>Hello</text>
+        </view>
+      );
+    "#,
+    element_template_config(),
+  );
+
+  let user_templates = user_templates(&templates);
+  assert_eq!(
+    user_templates.len(),
+    1,
+    "same compiled Template Definition should emit one user asset: {templates:#?}"
+  );
+  let template_id = &user_templates[0].template_id;
+  assert_content_addressed_template_id(template_id);
+  assert_eq!(
+    code.matches(&format!("const {template_id} =")).count(),
+    1,
+    "same content should emit one template id const:\n{code}"
+  );
+  assert_eq!(
+    code.matches(&format!("<{template_id}")).count(),
+    2,
+    "both JSX usages should reference the reused template id exactly once each:\n{code}"
+  );
+}
+
+#[test]
+fn should_keep_different_compiled_templates_on_distinct_ids() {
+  let (_, templates) = transform_to_code_and_templates(
+    r#"
+      const first = <view class="primary" />;
+      const second = <view class="secondary" />;
+    "#,
+    element_template_config(),
+  );
+
+  let user_templates = user_templates(&templates);
+  assert_eq!(user_templates.len(), 2, "{templates:#?}");
+  assert_ne!(
+    user_templates[0].template_id, user_templates[1].template_id,
+    "different compiled Template Definitions must not share one id"
+  );
+  for template in user_templates {
+    assert_content_addressed_template_id(&template.template_id);
+  }
+}
+
+#[test]
+fn should_emit_one_attr_plan_for_interned_event_ref_and_spread_template() {
+  let (code, templates) = transform_to_code_and_templates(
+    r#"
+      const first = <view bindtap={onTap} ref={firstRef} {...firstProps} />;
+      const second = <view bindtap={onPress} ref={secondRef} {...secondProps} />;
+    "#,
+    element_template_config_for_target(TransformTarget::JS),
+  );
+
+  let user_templates = user_templates(&templates);
+  assert_eq!(
+    user_templates.len(),
+    1,
+    "same event/ref/spread Template Definition should intern to one asset: {templates:#?}"
+  );
+  assert_content_addressed_template_id(&user_templates[0].template_id);
+  assert_eq!(
+    code.matches("__etAttrPlanMap[").count(),
+    1,
+    "interned template should emit one attr-plan assignment:\n{code}"
+  );
+  assert!(code.contains("adaptEventAttrSlot"), "{code}");
+  assert!(code.contains("adaptRefAttrSlot"), "{code}");
+  assert!(code.contains("adaptSpreadAttrSlot"), "{code}");
+  assert_attribute_slots_match_template(&code, &templates);
+}
+
+#[test]
+fn should_keep_dynamic_component_asset_id_content_addressed_without_entry_prefix() {
+  let (code, templates) = transform_to_code_and_templates(
+    r#"
+      <view class="container">
+        <text>Hello</text>
+      </view>
+    "#,
+    dynamic_component_element_template_config(),
+  );
+
+  assert!(code.contains("globDynamicComponentEntry"), "{code}");
+  for template in user_templates(&templates) {
+    assert_content_addressed_template_id(&template.template_id);
+    assert!(
+      !template.template_id.contains(':'),
+      "asset id must not include dynamic entry prefix: {}",
+      template.template_id
+    );
   }
 }
 

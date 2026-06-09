@@ -47,6 +47,86 @@ export function collectElementTemplatesFromModule(
   return elementTemplates;
 }
 
+function isPlainRecord(value: unknown): value is Record<string, unknown> {
+  return typeof value === 'object' && value !== null && !Array.isArray(value);
+}
+
+function areCompiledTemplateValuesEqual(
+  left: unknown,
+  right: unknown,
+): boolean {
+  if (Object.is(left, right)) {
+    return true;
+  }
+
+  if (Array.isArray(left) || Array.isArray(right)) {
+    if (
+      !Array.isArray(left)
+      || !Array.isArray(right)
+      || left.length !== right.length
+    ) {
+      return false;
+    }
+
+    return left.every((value, index) =>
+      areCompiledTemplateValuesEqual(value, right[index])
+    );
+  }
+
+  if (isPlainRecord(left) || isPlainRecord(right)) {
+    if (!isPlainRecord(left) || !isPlainRecord(right)) {
+      return false;
+    }
+
+    const leftKeys = Object.keys(left).sort();
+    const rightKeys = Object.keys(right).sort();
+
+    if (leftKeys.length !== rightKeys.length) {
+      return false;
+    }
+
+    return leftKeys.every((key, index) =>
+      key === rightKeys[index]
+      && areCompiledTemplateValuesEqual(left[key], right[key])
+    );
+  }
+
+  return false;
+}
+
+export function mergeElementTemplate(
+  elementTemplates: Record<string, Record<string, unknown>>,
+  templateId: string,
+  compiledTemplate: Record<string, unknown>,
+): void {
+  const existingTemplate = elementTemplates[templateId];
+  if (!existingTemplate) {
+    elementTemplates[templateId] = compiledTemplate;
+    return;
+  }
+
+  if (areCompiledTemplateValuesEqual(existingTemplate, compiledTemplate)) {
+    return;
+  }
+
+  throw new Error(
+    `Element Template id collision for ${templateId}: same template id has different compiledTemplate content.`,
+  );
+}
+
+export function mergeElementTemplatesFromModule(
+  elementTemplates: Record<string, Record<string, unknown>>,
+  module: ModuleWithElementTemplateBuildInfo,
+): void {
+  for (
+    const { templateId, compiledTemplate } of collectElementTemplatesFromModule(
+      module,
+    )
+  ) {
+    mergeElementTemplate(elementTemplates, templateId, compiledTemplate);
+  }
+}
+
 /**
  * The options for ReactWebpackPlugin
  *
@@ -423,14 +503,10 @@ class ReactWebpackPlugin {
               {};
 
             for (const module of compilation.modules) {
-              for (
-                const { templateId, compiledTemplate }
-                  of collectElementTemplatesFromModule(
-                    module as ModuleWithElementTemplateBuildInfo,
-                  )
-              ) {
-                elementTemplates[templateId] = compiledTemplate;
-              }
+              mergeElementTemplatesFromModule(
+                elementTemplates,
+                module as ModuleWithElementTemplateBuildInfo,
+              );
             }
 
             args.encodeData.elementTemplate = elementTemplates;

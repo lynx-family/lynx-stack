@@ -15,7 +15,7 @@ Object {
       "elementSlots": Array [],
       "handleId": 4,
       "op": "createTemplate",
-      "templateKey": "_et_45693_test_3",
+      "templateKey": "_et_1bc6c6c85df4",
     },
     Object {
       "childId": 4,

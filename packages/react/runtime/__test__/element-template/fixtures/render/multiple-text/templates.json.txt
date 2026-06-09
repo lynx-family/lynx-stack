@@ -1,6 +1,6 @@
 [
   {
-    "templateId": "_et_7a8c6_test_2",
+    "templateId": "_et_dd10eca65d68",
     "compiledTemplate": {
       "kind": "element",
       "type": "text",
@@ -16,23 +16,7 @@
     "sourceFile": "index.tsx"
   },
   {
-    "templateId": "_et_7a8c6_test_3",
-    "compiledTemplate": {
-      "kind": "element",
-      "type": "text",
-      "attributesArray": [],
-      "children": [
-        {
-          "kind": "elementSlot",
-          "type": "slot",
-          "elementSlotIndex": 0
-        }
-      ]
-    },
-    "sourceFile": "index.tsx"
-  },
-  {
-    "templateId": "_et_7a8c6_test_1",
+    "templateId": "_et_6306a5a2decc",
     "compiledTemplate": {
       "kind": "element",
       "type": "view",

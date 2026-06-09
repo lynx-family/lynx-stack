@@ -1,16 +1,10 @@
 [
   {
-    "templateId": "_et_602071c91d92",
+    "templateId": "_et_eed499fe6178",
     "compiledTemplate": {
       "kind": "element",
       "type": "view",
-      "attributesArray": [
-        {
-          "kind": "slot",
-          "key": "id",
-          "attrSlotIndex": 0
-        }
-      ],
+      "attributesArray": [],
       "children": [
         {
           "kind": "element",

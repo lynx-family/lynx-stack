@@ -9,7 +9,7 @@
   ],
   [
     "__CreateElementTemplate",
-    "_et_7a8c6_test_2",
+    "_et_1d658c77caa0",
     null,
     null,
     null,
@@ -17,7 +17,7 @@
   ],
   [
     "__CreateElementTemplate",
-    "_et_7a8c6_test_4",
+    "_et_d7c09654e316",
     null,
     null,
     [
@@ -28,7 +28,7 @@
             "text": "Slot Content 1"
           },
           "children": [],
-          "templateId": "_et_7a8c6_test_2"
+          "templateId": "_et_1d658c77caa0"
         }
       ]
     ],
@@ -36,7 +36,7 @@
   ],
   [
     "__CreateElementTemplate",
-    "_et_7a8c6_test_3",
+    "_et_f4df0f2dba8f",
     null,
     null,
     null,
@@ -44,7 +44,7 @@
   ],
   [
     "__CreateElementTemplate",
-    "_et_7a8c6_test_4",
+    "_et_d7c09654e316",
     null,
     null,
     [
@@ -55,7 +55,7 @@
             "text": "Slot Content 2"
           },
           "children": [],
-          "templateId": "_et_7a8c6_test_3"
+          "templateId": "_et_f4df0f2dba8f"
         }
       ]
     ],
@@ -63,7 +63,7 @@
   ],
   [
     "__CreateElementTemplate",
-    "_et_7a8c6_test_1",
+    "_et_d7c09654e316",
     null,
     null,
     [
@@ -84,12 +84,12 @@
                     "text": "Slot Content 1"
                   },
                   "children": [],
-                  "templateId": "_et_7a8c6_test_2"
+                  "templateId": "_et_1d658c77caa0"
                 }
               ]
             }
           ],
-          "templateId": "_et_7a8c6_test_4"
+          "templateId": "_et_d7c09654e316"
         },
         {
           "tag": "view",
@@ -107,12 +107,12 @@
                     "text": "Slot Content 2"
                   },
                   "children": [],
-                  "templateId": "_et_7a8c6_test_3"
+                  "templateId": "_et_f4df0f2dba8f"
                 }
               ]
             }
           ],
-          "templateId": "_et_7a8c6_test_4"
+          "templateId": "_et_d7c09654e316"
         }
       ]
     ],
@@ -122,7 +122,7 @@
     "__InsertNodeToElementTemplate",
     "<page />",
     0,
-    "<_et_7a8c6_test_1 />",
+    "<_et_d7c09654e316 />",
     null
   ]
 ]

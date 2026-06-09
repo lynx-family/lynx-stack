@@ -9,7 +9,7 @@ Array [
   ],
   Array [
     "__CreateElementTemplate",
-    "_et_a94a8_test_1",
+    "_et_15e70a95ba02",
     null,
     null,
     null,
@@ -19,7 +19,7 @@ Array [
     "__InsertNodeToElementTemplate",
     "<page />",
     0,
-    "<_et_a94a8_test_1 />",
+    "<_et_15e70a95ba02 />",
     null,
   ],
 ]

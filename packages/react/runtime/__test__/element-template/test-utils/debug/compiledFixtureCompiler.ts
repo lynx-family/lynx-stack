@@ -35,8 +35,8 @@ export async function compileFixtureSource(
   const result = (await transformReactLynx(code, {
     mode: 'test',
     pluginName: 'test-plugin',
-    // Template ids are derived from the filename, so keep a stable
-    // fixture-relative path across thread-specific targets.
+    // Keep fixture-relative paths stable for source metadata. Template ids are
+    // content-addressed from the compiled Template Definition.
     filename,
     sourcemap: false,
     cssScope: false,

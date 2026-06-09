@@ -5,6 +5,8 @@ import { describe, expect, it } from 'vitest';
 
 import {
   collectElementTemplatesFromModule,
+  mergeElementTemplate,
+  mergeElementTemplatesFromModule,
 } from '../src/ReactWebpackPlugin.js';
 import type { ModuleWithElementTemplateBuildInfo } from '../src/ReactWebpackPlugin.js';
 
@@ -59,5 +61,149 @@ describe('collectElementTemplatesFromModule', () => {
         compiledTemplate: { type: 'image' },
       },
     ]);
+  });
+});
+
+describe('mergeElementTemplate', () => {
+  it('keeps one entry for duplicate same-id same-content templates', () => {
+    const elementTemplates: Record<string, Record<string, unknown>> = {};
+    const compiledTemplate = {
+      kind: 'element',
+      type: 'view',
+      attributesArray: [
+        {
+          kind: 'static',
+          key: 'class',
+          value: 'card',
+        },
+      ],
+      children: [],
+    };
+
+    mergeElementTemplate(elementTemplates, '_et_same', compiledTemplate);
+    mergeElementTemplate(elementTemplates, '_et_same', {
+      children: [],
+      attributesArray: [
+        {
+          value: 'card',
+          key: 'class',
+          kind: 'static',
+        },
+      ],
+      type: 'view',
+      kind: 'element',
+    });
+
+    expect(elementTemplates).toEqual({
+      _et_same: compiledTemplate,
+    });
+  });
+
+  it('throws when duplicate same-id templates have different content', () => {
+    const elementTemplates: Record<string, Record<string, unknown>> = {};
+
+    mergeElementTemplate(elementTemplates, '_et_collision', {
+      kind: 'element',
+      type: 'view',
+      attributesArray: [],
+      children: [],
+    });
+
+    expect(() =>
+      mergeElementTemplate(elementTemplates, '_et_collision', {
+        kind: 'element',
+        type: 'text',
+        attributesArray: [],
+        children: [],
+      })
+    ).toThrowError(
+      'Element Template id collision for _et_collision: same template id has different compiledTemplate content.',
+    );
+  });
+});
+
+describe('mergeElementTemplatesFromModule', () => {
+  it('merges duplicate same-id same-content templates collected from nested module buildInfo', () => {
+    const elementTemplates: Record<string, Record<string, unknown>> = {};
+    const compiledTemplate = {
+      kind: 'element',
+      type: 'view',
+      attributesArray: [],
+      children: [],
+    };
+    const module = {
+      buildInfo: {
+        'lynx:element-templates': [
+          {
+            templateId: '_et_same',
+            compiledTemplate,
+          },
+        ],
+      },
+      modules: [
+        {
+          buildInfo: {
+            'lynx:element-templates': [
+              {
+                templateId: '_et_same',
+                compiledTemplate: {
+                  children: [],
+                  attributesArray: [],
+                  type: 'view',
+                  kind: 'element',
+                },
+              },
+            ],
+          },
+        },
+      ],
+    } satisfies ModuleWithElementTemplateBuildInfo;
+
+    mergeElementTemplatesFromModule(elementTemplates, module);
+
+    expect(elementTemplates).toEqual({
+      _et_same: compiledTemplate,
+    });
+  });
+
+  it('throws when collected nested module buildInfo has same-id different-content templates', () => {
+    const elementTemplates: Record<string, Record<string, unknown>> = {};
+    const module = {
+      buildInfo: {
+        'lynx:element-templates': [
+          {
+            templateId: '_et_collision',
+            compiledTemplate: {
+              kind: 'element',
+              type: 'view',
+              attributesArray: [],
+              children: [],
+            },
+          },
+        ],
+      },
+      modules: [
+        {
+          buildInfo: {
+            'lynx:element-templates': [
+              {
+                templateId: '_et_collision',
+                compiledTemplate: {
+                  kind: 'element',
+                  type: 'text',
+                  attributesArray: [],
+                  children: [],
+                },
+              },
+            ],
+          },
+        },
+      ],
+    } satisfies ModuleWithElementTemplateBuildInfo;
+
+    expect(() => mergeElementTemplatesFromModule(elementTemplates, module))
+      .toThrowError(
+        'Element Template id collision for _et_collision: same template id has different compiledTemplate content.',
+      );
   });
 });

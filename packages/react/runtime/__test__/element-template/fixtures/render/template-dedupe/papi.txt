@@ -12,24 +12,22 @@
     "_et_builtin_raw_text",
     null,
     [
-      "A"
+      "Alpha"
     ],
     [],
     -1
   ],
   [
     "__CreateElementTemplate",
-    "_et_602071c91d92",
+    "_et_eed499fe6178",
     null,
-    [
-      "A"
-    ],
+    null,
     [
       [
         {
           "tag": "raw-text",
           "attributes": {
-            "text": "A"
+            "text": "Alpha"
           },
           "children": [],
           "templateId": "_et_builtin_raw_text"
@@ -43,24 +41,22 @@
     "_et_builtin_raw_text",
     null,
     [
-      "B"
+      "Beta"
     ],
     [],
     -3
   ],
   [
     "__CreateElementTemplate",
-    "_et_602071c91d92",
+    "_et_eed499fe6178",
     null,
-    [
-      "B"
-    ],
+    null,
     [
       [
         {
           "tag": "raw-text",
           "attributes": {
-            "text": "B"
+            "text": "Beta"
           },
           "children": [],
           "templateId": "_et_builtin_raw_text"
@@ -71,37 +67,6 @@
   ],
   [
     "__CreateElementTemplate",
-    "_et_builtin_raw_text",
-    null,
-    [
-      "C"
-    ],
-    [],
-    -5
-  ],
-  [
-    "__CreateElementTemplate",
-    "_et_602071c91d92",
-    null,
-    [
-      "C"
-    ],
-    [
-      [
-        {
-          "tag": "raw-text",
-          "attributes": {
-            "text": "C"
-          },
-          "children": [],
-          "templateId": "_et_builtin_raw_text"
-        }
-      ]
-    ],
-    -6
-  ],
-  [
-    "__CreateElementTemplate",
     "_et_d7c09654e316",
     null,
     null,
@@ -109,9 +74,7 @@
       [
         {
           "tag": "view",
-          "attributes": {
-            "id": "A"
-          },
+          "attributes": {},
           "children": [
             {
               "tag": "text",
@@ -126,7 +89,7 @@
                     {
                       "tag": "raw-text",
                       "attributes": {
-                        "text": "A"
+                        "text": "Alpha"
                       },
                       "children": [],
                       "templateId": "_et_builtin_raw_text"
@@ -136,13 +99,11 @@
               ]
             }
           ],
-          "templateId": "_et_602071c91d92"
+          "templateId": "_et_eed499fe6178"
         },
         {
           "tag": "view",
-          "attributes": {
-            "id": "B"
-          },
+          "attributes": {},
           "children": [
             {
               "tag": "text",
@@ -157,7 +118,7 @@
                     {
                       "tag": "raw-text",
                       "attributes": {
-                        "text": "B"
+                        "text": "Beta"
                       },
                       "children": [],
                       "templateId": "_et_builtin_raw_text"
@@ -167,42 +128,11 @@
               ]
             }
           ],
-          "templateId": "_et_602071c91d92"
-        },
-        {
-          "tag": "view",
-          "attributes": {
-            "id": "C"
-          },
-          "children": [
-            {
-              "tag": "text",
-              "attributes": {},
-              "children": [
-                {
-                  "tag": "slot",
-                  "attributes": {
-                    "slot-id": 0
-                  },
-                  "children": [
-                    {
-                      "tag": "raw-text",
-                      "attributes": {
-                        "text": "C"
-                      },
-                      "children": [],
-                      "templateId": "_et_builtin_raw_text"
-                    }
-                  ]
-                }
-              ]
-            }
-          ],
-          "templateId": "_et_602071c91d92"
+          "templateId": "_et_eed499fe6178"
         }
       ]
     ],
-    -7
+    -5
   ],
   [
     "__InsertNodeToElementTemplate",

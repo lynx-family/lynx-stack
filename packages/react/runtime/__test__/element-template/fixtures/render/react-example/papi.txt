@@ -9,7 +9,7 @@
   ],
   [
     "__CreateElementTemplate",
-    "_et_7a8c6_test_3",
+    "_et_a51110b9901e",
     null,
     [
       "./assets/lynx-logo.png"
@@ -29,7 +29,7 @@
   ],
   [
     "__CreateElementTemplate",
-    "_et_7a8c6_test_1",
+    "_et_3a121f15a890",
     null,
     [
       "-3:0:",
@@ -44,7 +44,7 @@
             "class": "Logo--lynx"
           },
           "children": [],
-          "templateId": "_et_7a8c6_test_3"
+          "templateId": "_et_a51110b9901e"
         }
       ],
       [
@@ -64,7 +64,7 @@
     "__InsertNodeToElementTemplate",
     "<page />",
     0,
-    "<_et_7a8c6_test_1 />",
+    "<_et_3a121f15a890 />",
     null
   ]
 ]

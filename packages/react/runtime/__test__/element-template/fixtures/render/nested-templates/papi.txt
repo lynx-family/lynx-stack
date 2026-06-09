@@ -19,7 +19,7 @@
   ],
   [
     "__CreateElementTemplate",
-    "_et_7a8c6_test_1",
+    "_et_d7c09654e316",
     null,
     null,
     [
@@ -38,7 +38,7 @@
   ],
   [
     "__CreateElementTemplate",
-    "_et_7a8c6_test_2",
+    "_et_d7c09654e316",
     null,
     null,
     [
@@ -64,7 +64,7 @@
               ]
             }
           ],
-          "templateId": "_et_7a8c6_test_1"
+          "templateId": "_et_d7c09654e316"
         }
       ]
     ],
@@ -74,7 +74,7 @@
     "__InsertNodeToElementTemplate",
     "<page />",
     0,
-    "<_et_7a8c6_test_2 />",
+    "<_et_d7c09654e316 />",
     null
   ]
 ]

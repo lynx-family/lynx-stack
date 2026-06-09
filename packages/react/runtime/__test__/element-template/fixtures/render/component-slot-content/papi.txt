@@ -9,7 +9,7 @@
   ],
   [
     "__CreateElementTemplate",
-    "_et_7a8c6_test_3",
+    "_et_d33ba201dffe",
     null,
     null,
     null,
@@ -17,7 +17,7 @@
   ],
   [
     "__CreateElementTemplate",
-    "_et_7a8c6_test_1",
+    "_et_04020ede3da7",
     null,
     null,
     [
@@ -28,7 +28,7 @@
             "text": "child"
           },
           "children": [],
-          "templateId": "_et_7a8c6_test_3"
+          "templateId": "_et_d33ba201dffe"
         }
       ]
     ],
@@ -36,7 +36,7 @@
   ],
   [
     "__CreateElementTemplate",
-    "_et_7a8c6_test_2",
+    "_et_d7c09654e316",
     null,
     null,
     [
@@ -64,12 +64,12 @@
                     "text": "child"
                   },
                   "children": [],
-                  "templateId": "_et_7a8c6_test_3"
+                  "templateId": "_et_d33ba201dffe"
                 }
               ]
             }
           ],
-          "templateId": "_et_7a8c6_test_1"
+          "templateId": "_et_04020ede3da7"
         }
       ]
     ],
@@ -79,7 +79,7 @@
     "__InsertNodeToElementTemplate",
     "<page />",
     0,
-    "<_et_7a8c6_test_2 />",
+    "<_et_d7c09654e316 />",
     null
   ]
 ]

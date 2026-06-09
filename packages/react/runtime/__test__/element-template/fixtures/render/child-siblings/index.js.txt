@@ -1,22 +1,21 @@
 import { jsx as _jsx } from "@lynx-js/react/jsx-runtime";
-const _et_7a8c6_test_2 = "_et_7a8c6_test_2";
-const _et_7a8c6_test_3 = "_et_7a8c6_test_3";
-const _et_7a8c6_test_1 = "_et_7a8c6_test_1";
+const _et_1d658c77caa0 = "_et_1d658c77caa0";
+const _et_f4df0f2dba8f = "_et_f4df0f2dba8f";
+const _et_d7c09654e316 = "_et_d7c09654e316";
 export function App() {
-    return /*#__PURE__*/ _jsx(_et_7a8c6_test_1, {
+    return /*#__PURE__*/ _jsx(_et_d7c09654e316, {
         $0: [
             /*#__PURE__*/ _jsx(Sub, {
-                children: /*#__PURE__*/ _jsx(_et_7a8c6_test_2, {})
+                children: /*#__PURE__*/ _jsx(_et_1d658c77caa0, {})
             }),
             /*#__PURE__*/ _jsx(Sub, {
-                children: /*#__PURE__*/ _jsx(_et_7a8c6_test_3, {})
+                children: /*#__PURE__*/ _jsx(_et_f4df0f2dba8f, {})
             })
         ]
     });
 }
-const _et_7a8c6_test_4 = "_et_7a8c6_test_4";
 function Sub(props) {
-    return /*#__PURE__*/ _jsx(_et_7a8c6_test_4, {
+    return /*#__PURE__*/ _jsx(_et_d7c09654e316, {
         $0: props.children
     });
 }

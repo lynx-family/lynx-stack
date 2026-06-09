@@ -1,6 +1,6 @@
 [
   {
-    "templateId": "_et_7a8c6_test_2",
+    "templateId": "_et_1d658c77caa0",
     "compiledTemplate": {
       "kind": "element",
       "type": "text",
@@ -16,7 +16,7 @@
     "sourceFile": "index.tsx"
   },
   {
-    "templateId": "_et_7a8c6_test_3",
+    "templateId": "_et_f4df0f2dba8f",
     "compiledTemplate": {
       "kind": "element",
       "type": "text",
@@ -32,23 +32,7 @@
     "sourceFile": "index.tsx"
   },
   {
-    "templateId": "_et_7a8c6_test_1",
-    "compiledTemplate": {
-      "kind": "element",
-      "type": "view",
-      "attributesArray": [],
-      "children": [
-        {
-          "kind": "elementSlot",
-          "type": "slot",
-          "elementSlotIndex": 0
-        }
-      ]
-    },
-    "sourceFile": "index.tsx"
-  },
-  {
-    "templateId": "_et_7a8c6_test_4",
+    "templateId": "_et_d7c09654e316",
     "compiledTemplate": {
       "kind": "element",
       "type": "view",
