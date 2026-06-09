@@ -11,8 +11,11 @@
   "dependencies": {
     "@ai-sdk/openai": "^3.0.63",
     "@aws-sdk/client-s3": "^3.1053.0",
+    "@lynx-js/ui-judge": "workspace:*",
     "@mastra/core": "1.13.2",
+    "@sparticuz/chromium": "^149.0.0",
     "next": "16.2.6",
+    "playwright-core": "^1.58.2",
     "react": "19.2.4",
     "react-dom": "19.2.4",
     "zod": "^3.25.76"

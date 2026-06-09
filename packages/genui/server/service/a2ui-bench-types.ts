@@ -32,6 +32,10 @@ export interface BenchProviderConfig {
   api?: 'chat' | 'responses';
 }
 
+export interface BenchPlaygroundConfig {
+  baseUrl?: string;
+}
+
 export interface BenchSettings {
   repeats: number;
   parallelism: number;
@@ -66,6 +70,7 @@ export interface BenchScenarioRequest {
 
 export interface BenchJobRequest {
   provider: BenchProviderConfig;
+  playground?: BenchPlaygroundConfig;
   settings: BenchSettings;
   groups: BenchGroupRequest[];
   scenarios: BenchScenarioRequest[];
@@ -152,8 +157,8 @@ export interface BenchReport {
   };
   capabilities: {
     agent: 'enabled';
-    renderMetrics: 'disabled' | 'skipped';
-    judge: 'disabled' | 'skipped';
+    renderMetrics: 'disabled' | 'enabled';
+    judge: 'disabled' | 'enabled';
   };
   warnings: string[];
   groups: BenchGroupRequest[];
