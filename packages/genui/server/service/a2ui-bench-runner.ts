@@ -5,6 +5,7 @@
 import { getA2UIAgentService } from './a2ui-agent';
 import type { ChatMessage } from './a2ui-agent';
 import { resolveBenchCatalog } from './a2ui-bench-catalog';
+import { runBenchPreview } from './a2ui-bench-preview';
 import { getBenchJobStore } from './a2ui-bench-store';
 import type {
   BenchCatalogLabel,
@@ -184,6 +185,15 @@ async function runOne(
     emitRunPhase(jobId, item, 'validate');
     const agentMs = performance.now() - startedAt;
     const outputChars = result.text.length;
+    const preview = result.ok
+      ? await runBenchPreviewForItem(jobId, request, item, result.messages)
+      : {
+        errors: [],
+        fmpMs: 0,
+        judgeScore: 0,
+        renderMs: 0,
+        ttiMs: 0,
+      };
     return {
       id: runId,
       groupId: item.group.id,
@@ -198,14 +208,14 @@ async function runOne(
       catalog: catalogLabel,
       tokens: parseTotalTokens(result.usage),
       agentMs: Math.round(agentMs),
-      fmpMs: 0,
-      ttiMs: 0,
-      renderMs: 0,
+      fmpMs: preview.fmpMs,
+      ttiMs: preview.ttiMs,
+      renderMs: preview.renderMs,
       attempts: result.attempts,
-      judgeScore: 0,
+      judgeScore: preview.judgeScore,
       messageCount: result.messages.length,
       outputChars,
-      errors: result.errors,
+      errors: [...result.errors, ...preview.errors],
       finishReason: result.finishReason,
       usage: result.usage,
       messages: result.messages,
@@ -239,6 +249,51 @@ async function runOne(
       error: message,
     };
   }
+}
+
+async function runBenchPreviewForItem(
+  jobId: string,
+  request: BenchJobRequest,
+  item: BenchRunItem,
+  messages: BenchRunResult['messages'],
+) {
+  if (!messages || messages.length === 0) {
+    return {
+      errors: [],
+      fmpMs: 0,
+      judgeScore: 0,
+      renderMs: 0,
+      ttiMs: 0,
+    };
+  }
+
+  if (
+    !request.settings.renderMetricsEnabled && !request.settings.judgeEnabled
+  ) {
+    return {
+      errors: [],
+      fmpMs: 0,
+      judgeScore: 0,
+      renderMs: 0,
+      ttiMs: 0,
+    };
+  }
+
+  emitRunPhase(
+    jobId,
+    item,
+    request.settings.renderMetricsEnabled ? 'render' : 'judge',
+  );
+  const preview = await runBenchPreview({
+    messages,
+    request,
+    runId: `${item.group.id}-${item.scenario.id}-${item.repeatIndex}`,
+    scenario: item.scenario,
+  });
+  if (request.settings.judgeEnabled) {
+    emitRunPhase(jobId, item, 'judge');
+  }
+  return preview;
 }
 
 function summarizeGroup(
@@ -321,9 +376,9 @@ function buildReport(
     capabilities: {
       agent: 'enabled',
       renderMetrics: request.settings.renderMetricsEnabled
-        ? 'skipped'
+        ? 'enabled'
         : 'disabled',
-      judge: request.settings.judgeEnabled ? 'skipped' : 'disabled',
+      judge: request.settings.judgeEnabled ? 'enabled' : 'disabled',
     },
     warnings,
     groups: request.groups,

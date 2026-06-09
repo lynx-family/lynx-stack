@@ -175,6 +175,14 @@ function normalizeScenarios(value: unknown): BenchScenarioRequest[] {
     .filter((item): item is BenchScenarioRequest => item !== null);
 }
 
+function normalizePlayground(
+  value: unknown,
+): BenchJobRequest['playground'] {
+  if (!isRecord(value)) return undefined;
+  const baseUrl = readOptionalString(value.baseUrl, 500);
+  return baseUrl ? { baseUrl } : undefined;
+}
+
 export function normalizeBenchJobRequest(
   value: unknown,
   options: { clientOverrideAccepted: boolean },
@@ -246,10 +254,13 @@ export function normalizeBenchJobRequest(
     );
   }
 
+  const playground = normalizePlayground(value.playground);
+
   return {
     ok: true,
     request: {
       provider,
+      ...(playground ? { playground } : {}),
       settings,
       groups,
       scenarios,

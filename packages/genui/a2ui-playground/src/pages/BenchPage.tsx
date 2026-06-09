@@ -120,8 +120,8 @@ interface BenchReport {
   };
   capabilities?: {
     agent: 'enabled';
-    renderMetrics: 'disabled' | 'skipped';
-    judge: 'disabled' | 'skipped';
+    renderMetrics: 'disabled' | 'enabled';
+    judge: 'disabled' | 'enabled';
   };
   warnings?: string[];
   groups: BenchGroup[];
@@ -400,6 +400,20 @@ function getA2UIBenchHealthEndpoint(): string {
   }
 }
 
+function getA2UIPlaygroundBaseUrl(): string {
+  const url = new URL(window.location.href);
+  url.hash = '';
+  url.search = '';
+  if (!url.pathname.endsWith('/')) {
+    const parts = url.pathname.split('/');
+    const last = parts[parts.length - 1] ?? '';
+    url.pathname = last.includes('.')
+      ? url.pathname.replace(/[^/]*$/u, '')
+      : `${url.pathname}/`;
+  }
+  return url.toString();
+}
+
 function canForwardApiKeyToEndpoint(raw: string): boolean {
   try {
     const endpoint = new URL(raw, window.location.origin);
@@ -624,7 +638,7 @@ function getRunMetaText(
 }
 
 function formatReportJudgeMetric(report: BenchReport | null): string {
-  if (report?.capabilities?.judge === 'skipped') return 'skipped';
+  if (report?.capabilities?.judge === 'disabled') return 'off';
   if (!report || report.summaries.length === 0) return 'n/a';
   return `${
     average(report.summaries.map((item) => item.avgJudgeScore)).toFixed(1)
@@ -636,8 +650,9 @@ function formatSummaryJudgeMetric(
   settings: BenchSettings,
   summary: BenchGroupSummary,
 ): string {
-  if (report.capabilities?.judge === 'skipped') return 'skipped';
-  if (!settings.judgeEnabled) return 'off';
+  if (!settings.judgeEnabled || report.capabilities?.judge === 'disabled') {
+    return 'off';
+  }
   return `${summary.avgJudgeScore.toFixed(1)}/5`;
 }
 
@@ -884,6 +899,9 @@ export function BenchPage() {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
+            playground: {
+              baseUrl: getA2UIPlaygroundBaseUrl(),
+            },
             provider: providerConfigured
               ? filterProviderForEndpoint(env, jobsEndpoint)
               : {},
