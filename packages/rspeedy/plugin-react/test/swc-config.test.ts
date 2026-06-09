@@ -57,7 +57,8 @@ describe('SWC configuration', () => {
       },
     })
 
-    const [config] = await rsbuild.initConfigs()
+    const configs = await rsbuild.initConfigs()
+    const config = configs[0]!
 
     expect(getLoaderOptions(config, 'builtin:swc-loader'))
       .toMatchInlineSnapshot(`
@@ -133,7 +134,8 @@ describe('SWC configuration', () => {
       },
     })
 
-    const [config] = await rsbuild.initConfigs()
+    const configs = await rsbuild.initConfigs()
+    const config = configs[0]!
 
     assert(config)
 
@@ -158,11 +160,12 @@ describe('SWC configuration', () => {
       },
     })
 
-    const [config] = await rsbuild.initConfigs()
+    const configs = await rsbuild.initConfigs()
+    const config = configs[0]!
 
-    const swcRule = config.module.rules.find(
+    const swcRule = config.module?.rules?.find(
       (rule): rule is Rspack.RuleSetRule => {
-        return rule && rule !== '...'
+        return !!rule && rule !== '...'
           && (rule.test as RegExp | undefined)?.toString()
             === SCRIPT_REGEXP.toString()
       },
@@ -241,11 +244,12 @@ describe('SWC configuration', () => {
       },
     })
 
-    const [config] = await rsbuild.initConfigs()
+    const configs = await rsbuild.initConfigs()
+    const config = configs[0]!
 
-    const swcRule = config.module.rules.find(
+    const swcRule = config.module?.rules?.find(
       (rule): rule is Rspack.RuleSetRule => {
-        return rule && rule !== '...'
+        return !!rule && rule !== '...'
           && (rule.test as RegExp | undefined)?.toString()
             === SCRIPT_REGEXP.toString()
       },
@@ -326,11 +330,12 @@ describe('SWC configuration', () => {
       },
     })
 
-    const [config] = await rsbuild.initConfigs()
+    const configs = await rsbuild.initConfigs()
+    const config = configs[0]!
 
-    const swcRule = config.module.rules.find(
+    const swcRule = config.module?.rules?.find(
       (rule): rule is Rspack.RuleSetRule => {
-        return rule && rule !== '...'
+        return !!rule && rule !== '...'
           && (rule.test as RegExp | undefined)?.toString()
             === SCRIPT_REGEXP.toString()
       },
@@ -404,11 +409,12 @@ describe('SWC configuration', () => {
       },
     })
 
-    const [config] = await rsbuild.initConfigs()
+    const configs = await rsbuild.initConfigs()
+    const config = configs[0]!
 
-    const swcRule = config.module.rules.find(
+    const swcRule = config.module?.rules?.find(
       (rule): rule is Rspack.RuleSetRule => {
-        return rule && rule !== '...'
+        return !!rule && rule !== '...'
           && (rule.test as RegExp | undefined)?.toString()
             === SCRIPT_REGEXP.toString()
       },
@@ -450,11 +456,12 @@ describe('SWC configuration', () => {
       },
     })
 
-    const [config] = await rsbuild.initConfigs()
+    const configs = await rsbuild.initConfigs()
+    const config = configs[0]!
 
-    const swcRule = config.module.rules.find(
+    const swcRule = config.module?.rules?.find(
       (rule): rule is Rspack.RuleSetRule => {
-        return rule && rule !== '...'
+        return !!rule && rule !== '...'
           && (rule.test as RegExp | undefined)?.toString()
             === SCRIPT_REGEXP.toString()
       },

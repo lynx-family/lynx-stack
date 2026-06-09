@@ -3,7 +3,7 @@ import './index.css'
 
 const LazyComponent = lazy(() => import('./LazyComponent.js'))
 
-export function App() {
+export function App(): JSX.Element {
   return (
     <view className='Suspense'>
       <Suspense fallback={<text>Loading...</text>}>

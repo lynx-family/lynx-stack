@@ -23,6 +23,10 @@ const config: UserWorkspaceConfig = defineProject({
   test: {
     name: 'rspeedy/react',
     setupFiles: ['@lynx-js/vitest-setup/setup.ts'],
+    // These tests build fixtures through `createRspeedy().build()`, which now runs
+    // the default type checker on each build — enough extra work to exceed the
+    // default 5s timeout on slower machines.
+    testTimeout: 30_000,
   },
 })
 

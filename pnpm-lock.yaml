@@ -811,8 +811,6 @@ importers:
 
   packages/genui/dist: {}
 
-  packages/genui/etc: {}
-
   packages/genui/openui:
     dependencies:
       '@openuidev/lang-core':
@@ -837,8 +835,6 @@ importers:
       '@types/react':
         specifier: ^18.3.28
         version: 18.3.31
-
-  packages/genui/scripts: {}
 
   packages/genui/server:
     dependencies:
@@ -928,6 +924,9 @@ importers:
       '@lynx-js/types':
         specifier: 3.7.0
         version: 3.7.0
+      '@rsbuild/plugin-type-check':
+        specifier: 1.3.6
+        version: 1.3.6(@rsbuild/core@2.0.6(core-js@3.48.0))(@rspack/core@2.0.3(@swc/helpers@0.5.21))(tslib@2.8.1)(typescript@5.9.3)
       i18next:
         specifier: 26.0.6
         version: 26.0.6(typescript@5.9.3)
@@ -945,8 +944,6 @@ importers:
       zx:
         specifier: ^8.8.5
         version: 8.8.5
-
-  packages/lynx/create-lynx-extension: {}
 
   packages/lynx/create-lynx-library:
     dependencies:
@@ -1740,8 +1737,6 @@ importers:
         specifier: ^3.4.19
         version: 3.4.19
 
-  packages/testing-library/examples: {}
-
   packages/testing-library/examples/basic:
     dependencies:
       '@lynx-js/react':
@@ -2122,8 +2117,6 @@ importers:
       rsbuild-plugin-publint:
         specifier: 0.3.4
         version: 0.3.4(@rsbuild/core@2.0.6(core-js@3.48.0))
-
-  packages/web-platform/web-tests: {}
 
   packages/web-platform/web-worker-rpc: {}
 
