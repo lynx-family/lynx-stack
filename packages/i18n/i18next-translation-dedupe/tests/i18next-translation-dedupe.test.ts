@@ -7,7 +7,6 @@ import { tmpdir } from 'node:os';
 import path, { dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
-import { pluginTypeCheck } from '@rsbuild/plugin-type-check';
 import { pluginI18nextExtractor } from 'rsbuild-plugin-i18next-extractor';
 import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
 
@@ -29,6 +28,10 @@ const pluginReactRoot = path.resolve(testDir, '../../../rspeedy/plugin-react');
 
 beforeEach(() => {
   vi.stubEnv('DEBUG', 'rspeedy');
+  // `cwd` is the plugin-react package, so the default type checker would
+  // type-check plugin-react's own test tree instead of this fixture. This is a
+  // build-output integration test, so disable type checking for it.
+  vi.stubEnv('RSPEEDY_TYPE_CHECK', 'false');
 });
 
 afterEach(() => {
@@ -67,10 +70,6 @@ describe('i18next translation dedupe integration', () => {
           },
         },
         plugins: [
-          // `cwd` is the plugin-react package, so the default type checker would
-          // type-check plugin-react's own test tree instead of this fixture. This
-          // is a build-output integration test, so disable type checking here.
-          pluginTypeCheck({ enable: false }),
           pluginReactLynx(),
           pluginI18nextExtractor({
             localesDir: './src/locales',

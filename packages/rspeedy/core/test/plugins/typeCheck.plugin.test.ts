@@ -5,7 +5,7 @@ import {
   PLUGIN_TYPE_CHECK_NAME,
   pluginTypeCheck,
 } from '@rsbuild/plugin-type-check'
-import { describe, expect, test } from 'vitest'
+import { afterEach, describe, expect, test, vi } from 'vitest'
 
 import { createStubRspeedy } from '../createStubRspeedy.js'
 
@@ -18,6 +18,10 @@ function countTypeCheckers(config: { plugins?: unknown[] }): number {
 }
 
 describe('typeCheck.plugin', () => {
+  afterEach(() => {
+    vi.unstubAllEnvs()
+  })
+
   test('apply type-check by default', async () => {
     const rsbuild = await createStubRspeedy({})
 
@@ -34,6 +38,16 @@ describe('typeCheck.plugin', () => {
       plugins: [pluginTypeCheck({ enable: false })],
     })
 
+    const config = await rsbuild.unwrapConfig()
+    expect(countTypeCheckers(config)).toBe(0)
+  })
+
+  test('should not apply type-check when RSPEEDY_TYPE_CHECK is false', async () => {
+    vi.stubEnv('RSPEEDY_TYPE_CHECK', 'false')
+
+    const rsbuild = await createStubRspeedy({})
+
+    expect(rsbuild.isPluginExists(PLUGIN_TYPE_CHECK_NAME)).toBe(false)
     const config = await rsbuild.unwrapConfig()
     expect(countTypeCheckers(config)).toBe(0)
   })

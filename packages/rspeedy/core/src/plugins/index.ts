@@ -94,11 +94,27 @@ export async function applyDefaultPlugins(
     rsbuildInstance.addPlugins([pluginCssMinimizer()])
   }
 
-  // If no `@rsbuild/plugin-type-check` is applied, apply it
+  // Apply `@rsbuild/plugin-type-check` by default, unless the user already added
+  // their own type-check plugin or opted out with `RSPEEDY_TYPE_CHECK=false`.
   const { pluginTypeCheck, PLUGIN_TYPE_CHECK_NAME } = await import(
     '@rsbuild/plugin-type-check'
   )
-  if (!rsbuildInstance.isPluginExists(PLUGIN_TYPE_CHECK_NAME)) {
-    rsbuildInstance.addPlugins([pluginTypeCheck()])
+  if (
+    process.env['RSPEEDY_TYPE_CHECK'] !== 'false'
+    && !rsbuildInstance.isPluginExists(PLUGIN_TYPE_CHECK_NAME)
+  ) {
+    const typeCheck = pluginTypeCheck()
+    rsbuildInstance.addPlugins([
+      {
+        name: PLUGIN_TYPE_CHECK_NAME,
+        setup(api) {
+          // Only type-check on `build` — skip `dev` to keep the dev loop fast.
+          if (api.context.action === 'dev') {
+            return
+          }
+          return typeCheck.setup(api)
+        },
+      },
+    ])
   }
 }
