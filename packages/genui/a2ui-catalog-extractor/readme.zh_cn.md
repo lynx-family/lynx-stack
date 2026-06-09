@@ -66,7 +66,7 @@ genui a2ui --help
 ```json
 {
   "scripts": {
-    "build:catalog": "genui a2ui generate catalog --catalog-dir src/catalog --out-dir dist/catalog"
+    "build:catalog": "genui a2ui generate catalog --catalog-dir src/catalog --out-dir dist"
   }
 }
 ```
@@ -127,13 +127,15 @@ export interface QuickStartCardProps {
 运行：
 
 ```bash
-genui a2ui generate catalog --catalog-dir src/catalog --out-dir dist/catalog
+genui a2ui generate catalog --catalog-dir src/catalog --out-dir dist
 ```
 
 extractor 会扫描 catalog 目录，找到带 `@a2uiCatalog` 的 interface，并为每个
 组件写出一个文件：
 
 ```text
+dist/
+  catalog.json
 dist/catalog/
   QuickStartCard/
     catalog.json
@@ -395,7 +397,7 @@ genui a2ui generate catalog [options]
 | `--catalog-dir <dir>`   | 要扫描的源码目录。可重复。                                     | `src/catalog`  |
 | `--source <path>`       | 要扫描的源码文件或目录。可重复。                               | 无             |
 | `--typedoc-json <file>` | 读取已有 TypeDoc JSON project，不重新运行 TypeDoc conversion。 | 无             |
-| `--out-dir <dir>`       | 写出组件 catalog 文件的目录。                                  | `dist/catalog` |
+| `--out-dir <dir>`       | 写出 catalog artifacts 的根目录。                              | `dist`         |
 | `--catalog-id <id>`     | 写入全集 catalog 文件的 catalog ID。                           | `catalog.json` |
 | `--version`, `-v`       | 打印包版本。                                                   | 无             |
 | `--help`, `-h`          | 打印用法。                                                     | 无             |
@@ -404,7 +406,7 @@ genui a2ui generate catalog [options]
 排序，然后运行 TypeDoc。
 
 extractor 会同时写出 `dist/catalog/QuickStartCard/catalog.json` 这类单组件文件，
-以及 `dist/catalog/catalog.json` 全集 catalog 文件。
+以及 `dist/catalog.json` 全集 catalog 文件。
 
 扫描器接受 `.ts`、`.tsx`、`.js`、`.jsx`、`.mts` 和 `.cts` 文件。它会忽略
 `.d.ts`、`node_modules`、`dist` 和 `.turbo`。
@@ -428,7 +430,7 @@ const components = await extractCatalogComponents({
 
 await writeComponentCatalogs({
   sourceFiles: ['src/catalog/QuickStartCard.tsx'],
-  outDir: 'dist/catalog',
+  outDir: 'dist',
 });
 ```
 
@@ -438,7 +440,7 @@ await writeComponentCatalogs({
 await writeComponentCatalogs({
   cwd: process.cwd(),
   sourceFiles: ['src/catalog/QuickStartCard.tsx'],
-  outDir: 'dist/catalog',
+  outDir: 'dist',
 });
 ```
 
@@ -470,14 +472,14 @@ const projectJson = JSON.parse(
 const components = extractCatalogComponentsFromTypeDocJson(projectJson);
 
 writeCatalogComponents(components, {
-  outDir: 'dist/catalog',
+  outDir: 'dist',
 });
 ```
 
 等价的 CLI 命令是：
 
 ```bash
-genui a2ui generate catalog --typedoc-json typedoc.json --out-dir dist/catalog
+genui a2ui generate catalog --typedoc-json typedoc.json --out-dir dist
 ```
 
 ### 创建完整 A2UI catalog 对象

@@ -38,19 +38,19 @@ npx @lynx-js/genui a2ui generate prompt \
 npx @lynx-js/genui a2ui generate catalog \
   --catalog-dir src/catalog \
   --source src/functions \
-  --out-dir dist/catalog
+  --out-dir dist
 ```
 
 然后基于这些产物生成 prompt：
 
 ```bash
 npx @lynx-js/genui a2ui generate prompt \
-  --catalog-dir dist/catalog \
+  --catalog-dir dist \
   --catalog-id https://example.com/catalogs/custom/v1/catalog.json \
   --out dist/a2ui-system-prompt.txt
 ```
 
-`--catalog-dir` 必须指向生成后的 catalog 目录，例如包含 `<Component>/catalog.json` 的目录。如果目录下还有 `functions/*.json` 函数定义文件，它们也会作为可调用函数签名写入 prompt。
+`--catalog-dir` 必须指向生成后的 catalog 根目录。prompt 生成器会优先读取完整 catalog 文件，例如 `dist/catalog.json`；如果不存在，再回退到 `catalog/<Component>/catalog.json`。
 
 安装 `@lynx-js/genui` 后，包内也会暴露同样的 `genui` 命令。因此项目脚本里可以使用 `genui a2ui ...`。已有的 A2UI-only 脚本也可以继续使用 `a2ui-cli` 兼容别名。
 

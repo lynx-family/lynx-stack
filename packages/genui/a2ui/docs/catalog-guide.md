@@ -346,7 +346,7 @@ and pair it the same way you would a built-in.
 2. Run the public CLI to emit the JSON:
 
    ```bash
-   npx @lynx-js/genui a2ui generate catalog --catalog-dir src/catalog --out-dir dist/catalog
+   npx @lynx-js/genui a2ui generate catalog --catalog-dir src/catalog --out-dir dist
    ```
 
 3. Pair the generated JSON with the component:

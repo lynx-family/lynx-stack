@@ -21,7 +21,8 @@
       "types": "./dist/catalog/index.d.ts",
       "default": "./dist/catalog/index.js"
     },
-    "./catalog/catalog.json": "./dist/catalog/catalog.json",
+    "./catalog.json": "./dist/catalog.json",
+    "./catalog/catalog.json": "./dist/catalog.json",
     "./catalog/utils/chart": {
       "types": "./dist/catalog/utils/chart.d.ts",
       "default": "./dist/catalog/utils/chart.js"
@@ -141,7 +142,7 @@
     "api-extractor": "node ../scripts/run-api-extractor.mjs",
     "build": "tsc --project tsconfig.build.json && npm run build:catalog",
     "build:api": "tsc --project tsconfig.build.json",
-    "build:catalog": "genui a2ui generate catalog --catalog-dir src/catalog --out-dir dist/catalog --catalog-id https://unpkg.com/@lynx-js/genui/a2ui/dist/catalog/catalog.json && node scripts/writeCatalogManifestIndex.js",
+    "build:catalog": "genui a2ui generate catalog --catalog-dir src/catalog --out-dir dist --catalog-id https://unpkg.com/@lynx-js/genui/a2ui/dist/catalog.json && node scripts/writeBasicFunctionCatalogs.js dist && node scripts/writeCatalogManifestIndex.js",
     "test": "rstest"
   },
   "dependencies": {

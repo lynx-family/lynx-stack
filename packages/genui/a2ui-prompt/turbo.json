@@ -13,7 +13,7 @@
         "../server/agent/a2ui-catalog.ts",
         "../server/agent/a2ui-examples.ts",
         "../server/agent/a2ui-prompt.ts",
-        "../server/agent/catalog/**/*.json",
+        "../server/agent/catalog.json",
         "package.json",
         "rslib.config.ts",
         "tsconfig.build.json",

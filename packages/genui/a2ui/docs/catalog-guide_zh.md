@@ -326,7 +326,7 @@ MyChart.displayName = 'MyChart';
 2. 运行公开 CLI 输出 JSON：
 
    ```bash
-   npx @lynx-js/genui a2ui generate catalog --catalog-dir src/catalog --out-dir dist/catalog
+   npx @lynx-js/genui a2ui generate catalog --catalog-dir src/catalog --out-dir dist
    ```
 
 3. 把生成的 JSON 与组件配对：
