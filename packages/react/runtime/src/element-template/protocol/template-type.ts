@@ -25,5 +25,5 @@ export function elementTemplateIdentityKey(
   templateKey: string,
   bundleUrl: string | null | undefined,
 ): string {
-  return bundleUrl ? `${bundleUrl}:${templateKey}` : templateKey;
+  return bundleUrl == null ? templateKey : `${bundleUrl}:${templateKey}`;
 }

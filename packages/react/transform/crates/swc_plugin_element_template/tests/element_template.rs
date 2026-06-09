@@ -874,8 +874,28 @@ fn should_report_invalid_jsx_css_id_as_diagnostic() {
   assert!(
     diagnostics
       .iter()
-      .any(|message| message == "@jsxCSSId must be numeric, got `abc`"),
+      .any(|message| message == "@jsxCSSId must be a finite number, got `abc`"),
     "expected invalid @jsxCSSId diagnostic, got: {diagnostics:?}"
+  );
+}
+
+#[test]
+fn should_report_non_finite_jsx_css_id_as_diagnostic() {
+  let (_, _, diagnostics) = transform_to_code_templates_and_diagnostics(
+    r#"
+      /**
+       * @jsxCSSId NaN
+       */
+      <view>Invalid Css Id</view>
+    "#,
+    element_template_config(),
+  );
+
+  assert!(
+    diagnostics
+      .iter()
+      .any(|message| message == "@jsxCSSId must be a finite number, got `NaN`"),
+    "expected non-finite @jsxCSSId diagnostic, got: {diagnostics:?}"
   );
 }
 

@@ -204,6 +204,8 @@ async function runCompiledRenderFixture(options: {
 
     let outputCode = result.code ?? '';
     outputCode = outputCode.replace(/from ["']react\/jsx-runtime["']/g, 'from "@lynx-js/react/jsx-runtime"');
+    // The transform keeps `/*@jsxCSSId 1*/ import "x.css?cssId=1";` in
+    // compiled output; strip it only for dynamic import execution.
     const importableCode = outputCode.replace(
       /\/\*@jsxCSSId \d+\*\/ import ["'][^"']+\.(?:css|scss|sass|less)\?cssId=\d+["'];\n?/g,
       '',

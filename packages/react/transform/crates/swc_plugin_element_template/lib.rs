@@ -228,13 +228,16 @@ where
               continue;
             }
             match value.parse::<f64>() {
-              Ok(css_id) => {
+              Ok(css_id) if css_id.is_finite() => {
                 self.css_id_value = Some(css_id);
               }
-              Err(_) => {
+              Ok(_) | Err(_) => {
                 HANDLER.with(|handler| {
                   handler
-                    .struct_span_err(span, &format!("@jsxCSSId must be numeric, got `{value}`"))
+                    .struct_span_err(
+                      span,
+                      &format!("@jsxCSSId must be a finite number, got `{value}`"),
+                    )
                     .emit()
                 });
               }

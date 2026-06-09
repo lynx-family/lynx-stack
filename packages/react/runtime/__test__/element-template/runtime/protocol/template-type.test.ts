@@ -28,4 +28,13 @@ describe('element template type protocol', () => {
       'https://example.com/main.lynx.bundle:_et_a',
     );
   });
+
+  it('keeps an empty bundle url distinct from a page-local template', () => {
+    expect(parseElementTemplateType(':_et_a')).toEqual({
+      templateKey: '_et_a',
+      bundleUrl: '',
+    });
+    expect(elementTemplateIdentityKey('_et_a', '')).toBe(':_et_a');
+    expect(elementTemplateIdentityKey('_et_a', null)).toBe('_et_a');
+  });
 });

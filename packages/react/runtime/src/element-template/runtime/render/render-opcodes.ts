@@ -48,12 +48,6 @@ export function renderOpcodesIntoElementTemplate(
         const elementSlots = elementSlotsStack[stackTop];
         stackTop -= 1;
 
-        if (type === null) {
-          // Balanced opcodes never close the synthetic root frame.
-          /* v8 ignore start -- the synthetic root frame cannot be popped by balanced opcodes. */
-          throw new Error('Instruction mismatch: Popped root frame at __OpEnd');
-          /* v8 ignore end */
-        }
         const concreteType = type!;
         const nativeTemplate = parseElementTemplateType(concreteType);
 
