@@ -9,7 +9,6 @@ import './native/index.js';
 
 // import { factory as factory2 } from '../compat/componentIs.js';
 // import { useMemo } from '../core/hooks/react.js';
-// import { loadLazyBundle } from '../lynx/lazy-bundle.js';
 import { __root } from './runtime/page/root-instance.js';
 
 /**
@@ -47,7 +46,7 @@ export { wrapWithLynxComponent } from '../core/compat/lynxComponent.js';
 //   loadLazyBundle,
 // );
 
-// export { loadLazyBundle } from '../lynx/lazy-bundle.js';
+export { loadLazyBundle } from '../core/lynx/lazy-bundle.js';
 
 // TODO: enable when worklet/runtime integration is implemented for ElementTemplate entry.
 // export { transformToWorklet } from '../worklet/call/transformToWorklet.js';

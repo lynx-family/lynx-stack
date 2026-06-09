@@ -7,6 +7,7 @@ import {
   Component,
   Fragment,
   PureComponent,
+  Suspense,
   cloneElement,
   createContext,
   createElement,
@@ -39,7 +40,6 @@ import { useLynxGlobalEventListener } from '../core/hooks/useLynxGlobalEventList
 import { factory, withInitDataInState } from '../core/initData.js';
 import type { InitData } from '../lynx-api.js';
 import './native/index.js';
-// import { Suspense } from './lynx/suspense.js';
 
 installComponentCompat();
 
@@ -73,7 +73,7 @@ export default {
   PureComponent,
   memo,
   forwardRef,
-  // Suspense,
+  Suspense,
   lazy,
   createElement,
 };
@@ -85,7 +85,7 @@ export {
   isValidElement,
   memo,
   forwardRef,
-  // Suspense,
+  Suspense,
   lazy,
   createElement,
   cloneElement,
