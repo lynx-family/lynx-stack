@@ -2,7 +2,8 @@
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
 
-import type { RsbuildInstance, RsbuildPlugin } from '@rsbuild/core'
+import { logger } from '@rsbuild/core'
+import type { RsbuildInstance, RsbuildPlugin, Rspack } from '@rsbuild/core'
 
 import type { Config } from '../config/index.js'
 import { debug, isDebug } from '../debug.js'
@@ -112,6 +113,32 @@ export async function applyDefaultPlugins(
           if (api.context.action === 'dev') {
             return
           }
+          // On type errors, hint that the check can be bypassed.
+          let hintShown = false
+          api.onAfterCreateCompiler(({ compiler }) => {
+            const compilers = 'compilers' in compiler
+              ? compiler.compilers
+              : [compiler]
+            for (const c of compilers) {
+              c.hooks.done.tap(
+                'rspeedy:type-check-hint',
+                (stats: Rspack.Stats) => {
+                  if (hintShown) {
+                    return
+                  }
+                  const { errors } = stats.toJson({ errors: true, all: false })
+                  if (
+                    errors?.some((error) => /\bTS\d+\b/.test(error.message))
+                  ) {
+                    hintShown = true
+                    logger.warn(
+                      'Found type errors. Set `RSPEEDY_TYPE_CHECK=false` to bypass type checking.',
+                    )
+                  }
+                },
+              )
+            }
+          })
           return typeCheck.setup(api)
         },
       },
