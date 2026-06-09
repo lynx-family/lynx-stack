@@ -55,6 +55,8 @@ const GEQI_DIMENSION_CASES: GeqiDimensionCase[] = [
 ];
 
 const UI_JUDGE_RESULT_FILE_ENV = 'UI_JUDGE_RESULT_FILE';
+const UI_JUDGE_GEQI_SMOKE_ENV = 'UI_JUDGE_GEQI_SMOKE';
+const GEQI_SMOKE_DEMO_ID = 'product-card';
 const judgedResultsByDemo = new Map<string, JudgedPlaygroundResult>();
 
 test.describe('A2UI playground preview', () => {
@@ -143,7 +145,7 @@ test.describe('A2UI playground preview', () => {
     const server = previewServer;
     await page.setViewportSize({ width: 390, height: 844 });
 
-    for (const demo of PLAYGROUND_DEMO_CASES) {
+    for (const demo of getGeqiPlaygroundDemoCases()) {
       await test.step(`score GEQI dimensions for ${demo.demoId}`, async () => {
         const previewUrl = server.createDemoPreviewUrl({
           demoId: demo.demoId,
@@ -180,6 +182,20 @@ test.describe('A2UI playground preview', () => {
     }
   });
 });
+
+function getGeqiPlaygroundDemoCases(): PlaygroundDemoCase[] {
+  if (process.env[UI_JUDGE_GEQI_SMOKE_ENV] !== '1') {
+    return PLAYGROUND_DEMO_CASES;
+  }
+
+  const smokeDemo = PLAYGROUND_DEMO_CASES.find((demo) =>
+    demo.demoId === GEQI_SMOKE_DEMO_ID
+  );
+  if (!smokeDemo) {
+    throw new Error(`Missing GEQI smoke demo case: ${GEQI_SMOKE_DEMO_ID}`);
+  }
+  return [smokeDemo];
+}
 
 test('returns a JSON error when input validation fails', async ({ page }) => {
   await page.setContent('<main><h1>Order Confirmed</h1></main>');
