@@ -5,13 +5,12 @@
 .compPage {
   display: flex;
   flex: 1;
-  overflow: hidden;
+  min-height: 0;
 }
 
 .compCatalogPage {
   flex: 1;
   min-width: 0;
-  overflow: auto;
   display: flex;
   flex-direction: column;
 }
@@ -686,7 +685,7 @@
   flex-wrap: wrap;
   align-items: center;
   gap: 8px;
-  margin: 0 0 18px;
+  margin: 16px 0 20px;
   color: var(--geist-secondary);
   font-size: 12px;
   line-height: 1.4;
@@ -1028,5 +1027,31 @@
     .compPropsTable
     .compTableCell:nth-child(4)::before {
     content: "Default";
+  }
+}
+
+/* ═══════════════════════════════════════════
+   Responsive sidebar / breadcrumb
+   - Wide viewports (>1100px): show the left
+     sidebar, hide the in-detail breadcrumb.
+   - Narrow viewports (<=1100px): hide the
+     sidebar and surface a breadcrumb at the
+     top of the detail pane so users can
+     navigate back to All Components.
+   This applies to both the default page and
+   the embedded mode.
+   ═══════════════════════════════════════════ */
+
+.compResponsiveBreadcrumb {
+  display: none;
+}
+
+@media (max-width: 1100px) {
+  .compResponsiveSidebar {
+    display: none;
+  }
+
+  .compResponsiveBreadcrumb {
+    display: flex;
   }
 }
