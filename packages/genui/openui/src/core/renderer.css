@@ -5,6 +5,42 @@
     format("truetype");
 }
 
+/* ===== Renderer ===== */
+.OpenUIRenderer {
+  width: 100%;
+  position: relative;
+}
+
+.OpenUIRendererContent {
+  width: 100%;
+  opacity: 1;
+}
+
+.OpenUIRendererContentLoading {
+  opacity: 0.72;
+}
+
+.OpenUIQueryLoader {
+  position: absolute;
+  top: 8rpx;
+  right: 8rpx;
+  width: 18rpx;
+  height: 18rpx;
+  border-radius: 999rpx;
+  background-color: rgba(59, 130, 246, 0.16);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1;
+}
+
+.OpenUIQueryLoaderDot {
+  width: 8rpx;
+  height: 8rpx;
+  border-radius: 999rpx;
+  background-color: rgba(59, 130, 246, 0.72);
+}
+
 /* ===== Stack ===== */
 .OpenUIStack {
   width: 100%;

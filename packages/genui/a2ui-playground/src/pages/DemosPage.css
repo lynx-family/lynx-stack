@@ -308,6 +308,7 @@
 }
 
 .scenarioItem {
+  position: relative;
   display: flex;
   flex-direction: column;
   gap: 2px;
@@ -323,6 +324,10 @@
     border-color var(--geist-transition),
     color var(--geist-transition);
   width: 100%;
+}
+
+.scenarioItem.hasBadge {
+  padding-right: 56px;
 }
 
 .scenarioItem:hover {
@@ -346,6 +351,20 @@
   font-size: 14px;
   font-weight: 500;
   color: var(--geist-foreground);
+}
+
+.scenarioBadge {
+  position: absolute;
+  top: 6px;
+  right: 8px;
+  padding: 1px 5px;
+  border: 1px solid var(--geist-border);
+  border-radius: 4px;
+  background: var(--geist-background);
+  color: var(--geist-secondary);
+  font-size: 10px;
+  font-weight: 600;
+  line-height: 1.2;
 }
 
 .scenarioTags {
@@ -1059,12 +1078,21 @@
     border-radius: 999px;
     border-color: var(--geist-border);
   }
+  .scenarioItem.hasBadge {
+    padding-right: 12px;
+  }
   .scenarioItem .scenarioDesc {
     display: none;
   }
   .scenarioItem .scenarioName {
     white-space: nowrap;
     font-size: 12px;
+  }
+  .scenarioBadge {
+    position: static;
+    flex: 0 0 auto;
+    margin-left: 4px;
+    font-size: 9px;
   }
 
   /* Tighter toolbar so title + Reset/Clear/Render all stay on one row

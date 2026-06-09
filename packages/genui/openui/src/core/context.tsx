@@ -24,18 +24,26 @@ export interface OpenUIContextValue {
   /**
    * Trigger an action. Accepts either:
    * - ActionPlan (v0.5): runs steps sequentially (Run, Set, ToAssistant, OpenUrl)
-   * - Legacy action config (v0.1): { type?: string, params?: Record<string, any> }
+   * - Legacy action config (v0.1): object with optional type and params.
    * - Nothing: fires ContinueConversation with the label
    */
   triggerAction: (
     userMessage: string,
     formName?: string,
     // biome-ignore lint/suspicious/noExplicitAny: form values are dynamically typed
-    action?: ActionPlan | { type?: string; params?: Record<string, any> },
+    action?: ActionPlan | {
+      type?: string;
+      params?: Record<string, any>;
+      url?: string;
+      context?: string;
+    },
   ) => void | Promise<void>;
 
   /** Whether the LLM is currently streaming content. */
   isStreaming: boolean;
+
+  /** Whether any Query is currently fetching data. */
+  isQueryLoading: boolean;
 
   /** Get a field value. Top-level for $bindings, nested under formName for form fields. */
   // biome-ignore lint/suspicious/noExplicitAny: form values are dynamically typed
@@ -44,11 +52,11 @@ export interface OpenUIContextValue {
   /**
    * Set a form field value.
    *
-   * @param formName  The form's name prop
-   * @param componentType  The component type (e.g. "Input", "Select") — optional
-   * @param name  The field's name prop
-   * @param value  The new value
-   * @param shouldTriggerSaveCallback  When true, persists state via onStateUpdate.
+   * @param formName - The form's name prop.
+   * @param componentType - The component type (e.g. "Input", "Select").
+   * @param name - The field's name prop.
+   * @param value - The new value.
+   * @param shouldTriggerSaveCallback - When true, persists state via onStateUpdate.
    *   Text inputs should pass `false` on change and `true` on blur.
    *   Discrete inputs (Select, RadioGroup, etc.) should always pass `true`.
    */
@@ -111,6 +119,13 @@ export function useIsStreaming() {
 }
 
 /**
+ * Whether any Query is currently fetching data.
+ */
+export function useIsQueryLoading() {
+  return useOpenUI().isQueryLoading;
+}
+
+/**
  * Get a form field value from the form state context.
  *
  * @example
@@ -158,7 +173,7 @@ export function useFormName(): string | undefined {
  * `defaultChecked` prop. It is a no-op during streaming so that LLM
  * prop changes don't fight with partial state.
  *
- * @param shouldTriggerSaveCallback — defaults to `false` (only local state, no message persistence)
+ * @param shouldTriggerSaveCallback - Defaults to `false` (only local state, no message persistence).
  */
 export function useSetDefaultValue({
   formName,

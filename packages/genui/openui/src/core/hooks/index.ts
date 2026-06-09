@@ -3,6 +3,7 @@
 // LICENSE file in the root directory of this source tree.
 export { useOpenUIState } from './useOpenUIState.js';
 export type { OpenUIState, UseOpenUIStateOptions } from './useOpenUIState.js';
+export { useStateField } from './useStateField.js';
 
 export {
   FormValidationContext,

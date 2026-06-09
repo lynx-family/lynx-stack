@@ -1,13 +1,113 @@
 // Copyright 2026 The Lynx Authors. All rights reserved.
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
+import { createParser } from '@openuidev/lang-core';
+import type { LibraryJSONSchema } from '@openuidev/lang-core';
 
 export interface OpenUIScenario {
   id: string;
   title: string;
+  badge?: string;
   raw: string;
   parsed: string;
 }
+
+const OPENUI_SCENARIO_SCHEMA: LibraryJSONSchema = {
+  $defs: {
+    Stack: {
+      properties: {
+        children: {},
+        direction: {},
+        wrap: {},
+        gap: {},
+        align: {},
+        justify: {},
+      },
+      required: ['children'],
+    },
+    Card: {
+      properties: {
+        children: {},
+        variant: {},
+        direction: {},
+        wrap: {},
+        gap: {},
+        align: {},
+        justify: {},
+      },
+      required: ['children'],
+    },
+    CardHeader: {
+      properties: { title: {}, subtitle: {} },
+      required: ['title'],
+    },
+    TextContent: {
+      properties: { text: {}, size: {} },
+      required: ['text'],
+    },
+    Separator: {
+      properties: { orientation: {}, decorative: {} },
+    },
+    Button: {
+      properties: {
+        label: {},
+        action: {},
+        variant: {},
+        type: {},
+        size: {},
+      },
+      required: ['label'],
+    },
+    Buttons: {
+      properties: { buttons: {} },
+      required: ['buttons'],
+    },
+    Tag: {
+      properties: { text: {} },
+      required: ['text'],
+    },
+  },
+};
+
+const openUiScenarioParser = createParser(OPENUI_SCENARIO_SCHEMA, 'Stack');
+
+function parseScenario(raw: string): string {
+  return JSON.stringify(openUiScenarioParser.parse(raw), null, 2);
+}
+
+const V05_QUERY_WEATHER_RAW = `$city = "Seattle"
+weather = Query("get_weather", { city: $city }, { city: "Loading", temp: "--", condition: "Loading", high: "--", low: "--", humidity: "--", wind: "--", updated: "waiting", alerts: [] })
+root = Stack([hero, metrics, alerts, actions], "column", false, "m", "stretch", "start")
+hero = Card([CardHeader("Live Weather Query", "Query() hydrates this card from a mock tool"), cityLine, tempLine, updatedLine], "card", "column", false, "s", "start", "start")
+cityLine = TextContent(weather.city + " · " + weather.condition, "large-heavy")
+tempLine = TextContent(weather.temp + "°F", "large-heavy")
+updatedLine = TextContent("Updated: " + weather.updated, "small")
+metrics = Stack([highCard, lowCard, humidityCard, windCard], "row", true, "s", "stretch", "start")
+highCard = Card([TextContent("High", "small"), TextContent(weather.high + "°", "large-heavy")], "sunk", "column", false, "xs", "center", "center")
+lowCard = Card([TextContent("Low", "small"), TextContent(weather.low + "°", "large-heavy")], "sunk", "column", false, "xs", "center", "center")
+humidityCard = Card([TextContent("Humidity", "small"), TextContent(weather.humidity, "large-heavy")], "sunk", "column", false, "xs", "center", "center")
+windCard = Card([TextContent("Wind", "small"), TextContent(weather.wind, "large-heavy")], "sunk", "column", false, "xs", "center", "center")
+alerts = Card([CardHeader("Alerts", "Uses @Count() over query data"), TextContent("Active alerts: " + @Count(weather.alerts), "default"), TextContent(@Count(weather.alerts) == 0 ? "No advisories right now." : weather.alerts[0], "small")], "clear", "column", false, "s", "start", "start")
+actions = Buttons([Button("Refresh Query", Action([@Run(weather), @ToAssistant("Refresh weather for " + $city)]), "primary"), Button("Use San Francisco", Action([@Set($city, "San Francisco"), @Run(weather)]), "secondary"), Button("Reset City", Action([@Reset($city), @Run(weather)]), "tertiary")])`;
+
+const V05_MUTATION_ACTION_RAW = `$status = "Draft"
+queue = Query("get_release_queue", {}, { count: 0, next: "Loading release queue", owner: "GenUI" })
+saveResult = Mutation("save_release_note", { title: queue.next, status: $status })
+root = Stack([overview, queueCard, actionCard], "column", false, "m", "stretch", "start")
+overview = Card([CardHeader("Release Note Mutation", "Mutation() + multi-step ActionPlan"), TextContent("Status: " + $status, "large-heavy"), TextContent("Owner: " + queue.owner, "small")], "card", "column", false, "s", "start", "start")
+queueCard = Card([CardHeader("Queue Snapshot", "Loaded with Query()"), TextContent("Next item: " + queue.next), TextContent("Open items: " + queue.count, "small")], "sunk", "column", false, "s", "start", "start")
+actionCard = Card([CardHeader("Actions", "@Set, @Run, @Reset, and @ToAssistant in one plan"), Buttons([Button("Mark Ready", Action([@Set($status, "Ready to ship")]), "secondary"), Button("Save Note", Action([@Set($status, "Saving..."), @Run(saveResult), @Set($status, "Saved"), @ToAssistant("Saved release note: " + queue.next)]), "primary"), Button("Reset", Action([@Reset($status)]), "tertiary")])], "card", "column", false, "m", "stretch", "start")`;
+
+const V05_STATEFUL_PICKER_RAW = `$plan = "Pro"
+$billing = "Monthly"
+root = Stack([summaryCard, planCards, billingCard, actionRow], "column", false, "m", "stretch", "start")
+summaryCard = Card([CardHeader("Stateful Plan Picker", "Local $variables drive computed text"), TextContent("Selected: " + $plan + " · " + $billing, "large-heavy"), TextContent($billing == "Annual" ? "Annual billing includes two months free." : "Switch to annual for savings.", "small")], "card", "column", false, "s", "start", "start")
+planCards = Stack([freeCard, proCard, teamCard], "row", true, "s", "stretch", "start")
+freeCard = Card([Tag($plan == "Free" ? "Selected" : "Option"), TextContent("Free", "large-heavy"), TextContent("For experiments", "small"), Button("Choose Free", Action([@Set($plan, "Free")]), "secondary")], "sunk", "column", false, "s", "start", "start")
+proCard = Card([Tag($plan == "Pro" ? "Selected" : "Option"), TextContent("Pro", "large-heavy"), TextContent("For shipped apps", "small"), Button("Choose Pro", Action([@Set($plan, "Pro")]), "primary")], "sunk", "column", false, "s", "start", "start")
+teamCard = Card([Tag($plan == "Team" ? "Selected" : "Option"), TextContent("Team", "large-heavy"), TextContent("For collaboration", "small"), Button("Choose Team", Action([@Set($plan, "Team")]), "secondary")], "sunk", "column", false, "s", "start", "start")
+billingCard = Card([CardHeader("Billing", "@Set changes $billing without a server"), Buttons([Button("Monthly", Action([@Set($billing, "Monthly")]), $billing == "Monthly" ? "primary" : "secondary"), Button("Annual", Action([@Set($billing, "Annual")]), $billing == "Annual" ? "primary" : "secondary")])], "clear", "column", false, "s", "stretch", "start")
+actionRow = Buttons([Button("Reset Picker", Action([@Reset($plan, $billing)]), "tertiary"), Button("Open v0.5 Spec", Action([@OpenUrl("https://www.openui.com/docs/openui-lang/specification-v05")]), "secondary")])`;
 
 export const OPENUI_SCENARIOS: OpenUIScenario[] = [
   {
@@ -621,6 +721,27 @@ entBtn = Buttons([Button("Contact Sales", Action([@ToAssistant("Contact sales fo
       null,
       2,
     ),
+  },
+  {
+    id: 'v05-query-weather',
+    title: 'Query Weather',
+    badge: 'v0.5',
+    raw: V05_QUERY_WEATHER_RAW,
+    parsed: parseScenario(V05_QUERY_WEATHER_RAW),
+  },
+  {
+    id: 'v05-mutation-action',
+    title: 'Mutation Action',
+    badge: 'v0.5',
+    raw: V05_MUTATION_ACTION_RAW,
+    parsed: parseScenario(V05_MUTATION_ACTION_RAW),
+  },
+  {
+    id: 'v05-stateful-picker',
+    title: 'Stateful Picker',
+    badge: 'v0.5',
+    raw: V05_STATEFUL_PICKER_RAW,
+    parsed: parseScenario(V05_STATEFUL_PICKER_RAW),
   },
   {
     id: 'recipe-card',

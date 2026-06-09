@@ -9,7 +9,9 @@ This package includes:
 - `createOpenUiLibrary`: factory that builds an OpenUI `Library` instance
   with built-in components, fully customizable via options.
 - `defineComponent`: define custom components with Zod-validated props.
-- `OpenUiRenderer`: ReactLynx component that renders a parsed OpenUI tree.
+- `OpenUiRenderer`: ReactLynx component that parses and renders OpenUI Lang
+  v0.5 responses, including `$variables`, `Query()`, `Mutation()`, and
+  `Action([@...])` steps.
 - `createParser` / `createStreamingParser`: parse OpenUI DSL text
   (functional notation) into a renderable AST.
 - `catalog/*`: built-in component renderers (Stack, Card, CardHeader,
@@ -34,48 +36,28 @@ pnpm add @lynx-js/genui
 
 ## Quick Start
 
-1. Create a library and get its JSON Schema.
-2. Create a streaming parser from the schema.
-3. Feed OpenUI DSL text (chunks or full) into the parser.
-4. Render the parse result with `<OpenUiRenderer>`.
+1. Create a library.
+2. Pass raw OpenUI Lang text to `<OpenUiRenderer response={...}>`.
+3. Handle actions from `@ToAssistant()` / `@OpenUrl()` with `onAction`.
 
 ```tsx
-import {
-  createOpenUiLibrary,
-  createStreamingParser,
-  OpenUiRenderer,
-} from '@lynx-js/genui/openui';
-import type { ParseResult } from '@lynx-js/genui/openui';
-import { useEffect, useMemo, useState } from '@lynx-js/react';
+import { createOpenUiLibrary, OpenUiRenderer } from '@lynx-js/genui/openui';
+import { useMemo } from '@lynx-js/react';
 
-const library = createOpenUiLibrary();
-const schema = library.toJSONSchema();
-
-export function App() {
-  const [result, setResult] = useState<ParseResult | null>(null);
-
-  useEffect(() => {
-    const parser = createStreamingParser(schema);
-
-    // OpenUI DSL uses functional notation:
-    const rawText = `
+const rawText = `
 root = Stack([header, card], "column", "l", "center")
 header = TextContent("Hello OpenUI", "large-heavy")
 card = Card([content, btn], "card")
 content = TextContent("Welcome to OpenUI")
 btn = Buttons([Button("Get Started", Action([@ToAssistant("clicked")]), "primary")])
-    `.trim();
+`.trim();
 
-    // Feed the entire text (or stream it chunk by chunk)
-    const parsed = parser.push(rawText);
-    setResult(parsed);
-  }, []);
-
-  if (!result?.root) return null;
+export function App() {
+  const library = useMemo(() => createOpenUiLibrary(), []);
 
   return (
     <OpenUiRenderer
-      result={result}
+      response={rawText}
       library={library}
       onAction={(event) => {
         console.log('Action:', event.humanFriendlyMessage);
@@ -91,28 +73,21 @@ For real-time streaming scenarios (e.g., LLM output), feed chunks
 incrementally:
 
 ```tsx
-import {
-  createOpenUiLibrary,
-  createStreamingParser,
-  OpenUiRenderer,
-} from '@lynx-js/genui/openui';
-import type { ParseResult } from '@lynx-js/genui/openui';
-import { useEffect, useMemo, useRef, useState } from '@lynx-js/react';
+import { createOpenUiLibrary, OpenUiRenderer } from '@lynx-js/genui/openui';
+import { useEffect, useMemo, useState } from '@lynx-js/react';
 
 const CHUNK_SIZE = 8;
 const STREAM_DELAY_MS = 30;
 
 export function StreamingApp({ rawText }: { rawText: string }) {
   const library = useMemo(() => createOpenUiLibrary(), []);
-  const [result, setResult] = useState<ParseResult | null>(null);
+  const [response, setResponse] = useState('');
   const [isStreaming, setIsStreaming] = useState(false);
 
   useEffect(() => {
     let cancelled = false;
     setIsStreaming(true);
-
-    const schema = library.toJSONSchema();
-    const parser = createStreamingParser(schema);
+    setResponse('');
     let offset = 0;
 
     const tick = () => {
@@ -122,7 +97,7 @@ export function StreamingApp({ rawText }: { rawText: string }) {
       }
       const chunk = rawText.slice(offset, offset + CHUNK_SIZE);
       offset += CHUNK_SIZE;
-      setResult(parser.push(chunk));
+      setResponse((prev) => prev + chunk);
       setTimeout(tick, STREAM_DELAY_MS);
     };
 
@@ -132,17 +107,46 @@ export function StreamingApp({ rawText }: { rawText: string }) {
     };
   }, [library, rawText]);
 
-  if (!result?.root) return null;
-
   return (
     <OpenUiRenderer
-      result={result}
+      response={response}
       library={library}
       isStreaming={isStreaming}
     />
   );
 }
 ```
+
+## v0.5 Runtime
+
+Use the `response` renderer entry point for v0.5 features:
+
+```tsx
+const ui = `
+$title = ""
+data = Query("list_items", { search: $title }, { rows: [] })
+save = Mutation("save_item", { title: $title })
+root = Stack([
+  TextContent("Rows: " + @Count(data.rows)),
+  Button("Save", Action([@Run(save), @Run(data), @Reset($title)]))
+])
+`.trim();
+
+<OpenUiRenderer
+  response={ui}
+  library={library}
+  toolProvider={{
+    list_items: async (args) => ({ rows: [] }),
+    save_item: async (args) => ({ ok: true }),
+  }}
+  onStateUpdate={(state) => persist(state)}
+  initialState={{ $title: 'Draft' }}
+/>;
+```
+
+`OpenUiRenderer` still accepts `result={parseResult}` for legacy/static
+callers, but `Query()`, `Mutation()`, `$variables`, and runtime expression
+evaluation require the raw `response` path.
 
 ## Customizing the Library
 
