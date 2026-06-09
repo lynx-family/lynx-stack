@@ -28,6 +28,10 @@ export function getImageSize(
   format: SupportedImageFormat,
 ): Size {
   if (format === 'png') {
+    if (buffer.length < 24) {
+      throw new Error('PNG buffer is too short to read dimensions.');
+    }
+
     return {
       height: buffer.readUInt32BE(20),
       width: buffer.readUInt32BE(16),
@@ -44,11 +48,7 @@ export function getImageSize(
       break;
     }
 
-    const marker = buffer[offset + 1];
-    if (marker === undefined) {
-      break;
-    }
-
+    const marker = buffer.readUInt8(offset + 1);
     const length = buffer.readUInt16BE(offset + 2);
     const isStartOfFrame = marker >= 0xc0
       && marker <= 0xcf
@@ -56,18 +56,19 @@ export function getImageSize(
       && marker !== 0xc8
       && marker !== 0xcc;
 
-    if (isStartOfFrame) {
-      if (offset + 8 >= buffer.length) {
-        break;
-      }
-
-      return {
-        height: buffer.readUInt16BE(offset + 5),
-        width: buffer.readUInt16BE(offset + 7),
-      };
+    if (!isStartOfFrame) {
+      offset += 2 + length;
+      continue;
     }
 
-    offset += 2 + length;
+    if (offset + 8 >= buffer.length) {
+      break;
+    }
+
+    return {
+      height: buffer.readUInt16BE(offset + 5),
+      width: buffer.readUInt16BE(offset + 7),
+    };
   }
 
   throw new Error('Unable to read Kitten-Lynx screenshot dimensions.');

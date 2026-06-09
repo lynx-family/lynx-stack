@@ -2,7 +2,6 @@
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
 import { Agent as MidsceneAgent } from '@midscene/core/agent';
-import type { AbstractInterface } from '@midscene/core/device';
 
 import { getResultDimension } from './core/dimensions.js';
 import { toErrorMessage } from './core/errors.js';
@@ -60,7 +59,7 @@ async function judgeAndroidAgentUnsafe(
   options: NormalizedJudgeAndroidAgentOptions,
 ): Promise<UiJudgeScore> {
   const agent = new MidsceneAgent(
-    new KittenLynxMidscenePage(options.page) as AbstractInterface,
+    new KittenLynxMidscenePage(options.page),
     {
       autoPrintReportMsg: false,
       generateReport: false,

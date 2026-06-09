@@ -5,6 +5,7 @@ import { setTimeout as sleep } from 'node:timers/promises';
 
 import type { DeviceAction, Size } from '@midscene/core';
 import {
+  AbstractInterface,
   defineActionSwipe,
   defineActionTap,
   normalizeMobileSwipeParam,
@@ -33,11 +34,27 @@ interface ScreenshotSnapshot {
   size: Size;
 }
 
-export class KittenLynxMidscenePage {
+export class KittenLynxMidscenePage extends AbstractInterface {
   interfaceType = 'lynx-android';
+  declare cacheFeatureForPoint: NonNullable<
+    AbstractInterface['cacheFeatureForPoint']
+  >;
+  declare evaluateJavaScript: NonNullable<
+    AbstractInterface['evaluateJavaScript']
+  >;
+  declare getElementsNodeTree: NonNullable<
+    AbstractInterface['getElementsNodeTree']
+  >;
+  declare rectMatchesCacheFeature: NonNullable<
+    AbstractInterface['rectMatchesCacheFeature']
+  >;
+  url = (): string => this.page.url();
+
   private screenshotSnapshot: Promise<ScreenshotSnapshot> | undefined;
 
-  constructor(private readonly page: KittenLynxJudgePage) {}
+  constructor(private readonly page: KittenLynxJudgePage) {
+    super();
+  }
 
   actionSpace(): DeviceAction[] {
     return [
@@ -66,10 +83,6 @@ export class KittenLynxMidscenePage {
     return screenshot.size;
   }
 
-  url(): string {
-    return this.page.url();
-  }
-
   describe(): string {
     return this.page.url();
   }
@@ -90,7 +103,7 @@ export class KittenLynxMidscenePage {
   }
 
   private async captureScreenshot(): Promise<ScreenshotSnapshot> {
-    this.screenshotSnapshot ??= this.page.screenshot().then(
+    this.screenshotSnapshot ??= this.page.screenshot({ format: 'png' }).then(
       (buffer: Buffer) => {
         const format = getImageFormat(buffer);
         return {
@@ -117,10 +130,13 @@ export class KittenLynxMidscenePage {
     endPoint: TouchPoint,
     duration: number,
   ): Promise<void> {
+    const clampedDuration = Math.max(0, Math.min(duration, 1000));
+    const phaseDuration = clampedDuration / 2;
+
     await this.touch('mousePressed', startPoint);
-    await sleep(Math.max(0, Math.min(duration, 1000)) / 2);
+    await sleep(phaseDuration);
     await this.touch('mouseMoved', endPoint);
-    await sleep(Math.max(0, Math.min(duration, 1000)) / 2);
+    await sleep(phaseDuration);
     await this.touch('mouseReleased', endPoint);
   }
 
