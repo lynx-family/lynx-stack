@@ -25,7 +25,7 @@ ${options.task}
 ${reference}
 Do not click, type, scroll, navigate, or otherwise mutate the UI while scoring.
 The current UI state is enough to complete this scoring task. Do not output any action.
-Use Midscene aiAct's complete response to output exactly one of these six strings:
+Use Midscene aiAsk's complete response to output exactly one of these six strings:
 SCORE: 0
 SCORE: 1
 SCORE: 2

@@ -6,16 +6,19 @@ import { buildJudgePrompt } from './prompt.js';
 
 const MIN_SCORE = 0;
 const MAX_SCORE = 5;
-const SCORE_ACT_OPTIONS: Omit<MidsceneJudgeActOptions, 'abortSignal'> = {
-  cacheable: false,
-  deepLocate: false,
-  deepThink: false,
+const SCORE_ASK_OPTIONS: Omit<MidsceneJudgeAskOptions, 'abortSignal'> = {
+  domIncluded: false,
+  screenshotIncluded: true,
 };
 
 export interface MidsceneJudgeAgent {
   aiAct(
     step: string,
     options?: MidsceneJudgeActOptions,
+  ): Promise<unknown>;
+  aiAsk(
+    prompt: string,
+    options?: MidsceneJudgeAskOptions,
   ): Promise<unknown>;
 }
 
@@ -25,6 +28,13 @@ export interface MidsceneJudgeActOptions {
   deepLocate?: boolean;
   deepThink?: 'unset' | boolean;
   fileChooserAccept?: string | string[];
+}
+
+export interface MidsceneJudgeAskOptions {
+  abortSignal?: AbortSignal;
+  domIncluded?: boolean | 'visible-only';
+  screenshotIncluded?: boolean;
+  [key: string]: unknown;
 }
 
 export async function judgeWithAgentUnsafe(
@@ -40,12 +50,12 @@ export async function judgeWithAgentUnsafe(
     );
   }
 
-  const rawScore = await runAiActWithTimeout(
+  const rawScore = await runAiAskWithTimeout(
     agent,
     buildJudgePrompt(options),
     options.timeoutMs,
     'Timed out while asking Midscene for a score.',
-    SCORE_ACT_OPTIONS,
+    SCORE_ASK_OPTIONS,
   );
 
   return normalizeScore(parseScore(rawScore));
@@ -62,6 +72,25 @@ function runAiActWithTimeout(
   return withAbortableTimeout(
     agent.aiAct(prompt, {
       ...actOptions,
+      abortSignal: abortController.signal,
+    }),
+    timeoutMs,
+    abortController,
+    message,
+  );
+}
+
+function runAiAskWithTimeout(
+  agent: MidsceneJudgeAgent,
+  prompt: string,
+  timeoutMs: number,
+  message: string,
+  askOptions?: Omit<MidsceneJudgeAskOptions, 'abortSignal'>,
+): Promise<unknown> {
+  const abortController = new AbortController();
+  return withAbortableTimeout(
+    agent.aiAsk(prompt, {
+      ...askOptions,
       abortSignal: abortController.signal,
     }),
     timeoutMs,

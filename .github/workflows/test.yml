@@ -101,7 +101,6 @@ jobs:
           exit 0
         fi
         ulimit -Sn 655350
-        export UI_JUDGE_GEQI_SMOKE=1
         pnpm --filter @lynx-js/ui-judge run test:playwright
 
   ui-judge-comment:
