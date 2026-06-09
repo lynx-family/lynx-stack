@@ -463,7 +463,7 @@ export function PreviewPanel(props: PreviewPanelProps) {
       : 'previewPanelBody');
   const panelStyle = isFullscreen
     ? {
-      position: 'fixed',
+      position: 'fixed' as const,
       inset: 0,
       zIndex: 200,
       width: '100vw',

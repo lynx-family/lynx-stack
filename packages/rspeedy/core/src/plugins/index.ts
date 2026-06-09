@@ -93,4 +93,12 @@ export async function applyDefaultPlugins(
   if (!rsbuildInstance.isPluginExists(PLUGIN_CSS_MINIMIZER_NAME)) {
     rsbuildInstance.addPlugins([pluginCssMinimizer()])
   }
+
+  // If no `@rsbuild/plugin-type-check` is applied, apply it
+  const { pluginTypeCheck, PLUGIN_TYPE_CHECK_NAME } = await import(
+    '@rsbuild/plugin-type-check'
+  )
+  if (!rsbuildInstance.isPluginExists(PLUGIN_TYPE_CHECK_NAME)) {
+    rsbuildInstance.addPlugins([pluginTypeCheck()])
+  }
 }

@@ -209,7 +209,7 @@ const CREATE_PREVIEW_EXTRA_METRIC_KEYS = new Set<CreateMetricValueKey>([
 
 function hasCreateMetrics(
   metrics: PreviewPerformanceMetrics | null | undefined,
-): boolean {
+): metrics is PreviewPerformanceMetrics {
   if (!metrics) return false;
   return CREATE_PREVIEW_METRIC_DEFINITIONS.some((item) =>
     typeof metrics[item.key] === 'number'

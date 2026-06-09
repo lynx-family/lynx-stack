@@ -3,7 +3,7 @@
 // LICENSE file in the root directory of this source tree.
 import { catalogManifests } from '@lynx-js/genui/a2ui/catalog';
 
-import type { ProtocolName } from './utils/protocol.js';
+import type { ProtocolName } from '../utils/protocol.js';
 
 export interface ComponentProp {
   name: string;

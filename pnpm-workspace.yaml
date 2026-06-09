@@ -129,6 +129,15 @@ packageExtensions:
   "@rspack/test-tools@*":
     dependencies:
       wast-loader: ^1.14.1
+  # vaul omits the `@types/react` peer, so its .d.mts falls back to the ambient v18
+  # (from @lynx-js/lynx-ui-*) and mis-extracts v19 @radix-ui props (Drawer.Portal
+  # loses `children`). Declare the peer so it follows the consumer's v19.
+  "vaul@*":
+    peerDependencies:
+      "@types/react": "*"
+    peerDependenciesMeta:
+      "@types/react":
+        optional: true
 
 patchedDependencies:
   "@napi-rs/cli@2.18.4": "patches/@napi-rs__cli@2.18.4.patch"

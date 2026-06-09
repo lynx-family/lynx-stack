@@ -30,7 +30,6 @@ export const playwrightConfigCommon: Parameters<typeof defineConfig>[0] = {
   testMatch: '**/tests/*',
   /* Run tests in files in parallel */
   fullyParallel: true,
-  workers: undefined,
   /* Fail the build on CI if you accidentally left test.only in the source code. */
   forbidOnly: !!isCI,
   /* Retry on CI only */
@@ -38,7 +37,7 @@ export const playwrightConfigCommon: Parameters<typeof defineConfig>[0] = {
   // maxFailures: 16,
   /* Reporter to use. See https://playwright.dev/docs/test-reporters */
   reporter: 'html',
-  maxFailures: isCI ? 16 : undefined,
+  ...(isCI ? { maxFailures: 16 } : {}),
   /* Shared settings for all the projects below. See https://playwright.dev/docs/api/class-testoptions. */
   use: {
     /* Base URL to use in actions like `await page.goto('/')`. */
