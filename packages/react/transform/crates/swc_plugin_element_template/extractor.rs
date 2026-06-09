@@ -2,7 +2,7 @@ use once_cell::sync::Lazy;
 use std::collections::HashSet;
 
 use swc_core::{
-  common::{util::take::Take, DUMMY_SP},
+  common::{errors::HANDLER, util::take::Take, Spanned, DUMMY_SP},
   ecma::{
     ast::{JSXExpr, *},
     utils::is_literal,
@@ -90,13 +90,14 @@ where
   pub(super) key: Option<JSXAttrValue>,
   attr_slot_counter: i32,
   element_slot_counter: i32,
+  has_css_id_value: bool,
 }
 
 impl<'a, V> ElementTemplateExtractor<'a, V>
 where
   V: VisitMut,
 {
-  pub(super) fn new(dynamic_part_visitor: &'a mut V) -> Self {
+  pub(super) fn new(dynamic_part_visitor: &'a mut V, has_css_id_value: bool) -> Self {
     Self {
       parent_element: false,
       dynamic_attrs: vec![],
@@ -106,6 +107,7 @@ where
       key: None,
       attr_slot_counter: 0,
       element_slot_counter: 0,
+      has_css_id_value,
     }
   }
 
@@ -410,6 +412,17 @@ where
                 if !self.parent_element {
                   self.key = value.take();
                 }
+                false
+              }
+              "css-id" if !self.parent_element && self.has_css_id_value => {
+                HANDLER.with(|handler| {
+                  handler
+                    .struct_span_warn(
+                      name.span(),
+                      "css-id is overridden by Element Template CSS scope metadata",
+                    )
+                    .emit()
+                });
                 false
               }
               _ => true,

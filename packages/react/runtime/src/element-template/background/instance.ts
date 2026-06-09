@@ -8,6 +8,7 @@ import { isElementTemplateHydrated } from './commit-hook.js';
 import { backgroundElementTemplateInstanceManager } from './manager.js';
 import { isDirectOrDeepEqual } from '../../utils.js';
 import { ElementTemplateUpdateOps } from '../protocol/opcodes.js';
+import { parseElementTemplateType } from '../protocol/template-type.js';
 import type { ElementTemplateUpdateCommandStream, SerializableValue } from '../protocol/types.js';
 
 function pushOp(...items: ElementTemplateUpdateCommandStream): void {
@@ -109,12 +110,13 @@ export class BackgroundElementTemplateInstance {
       (serializedSlots[child.__slotIndex] ??= []).push(child.instanceId);
       child = child.nextSibling;
     }
+    const nativeTemplate = parseElementTemplateType(this.type);
 
     pushOp(
       ElementTemplateUpdateOps.createTemplate,
       this.instanceId,
-      this.type,
-      null,
+      nativeTemplate.templateKey,
+      nativeTemplate.bundleUrl,
       this.attributeSlots,
       serializedSlots,
     );

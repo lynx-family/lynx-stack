@@ -20,6 +20,7 @@ function createHydrationTemplate(
   templateKey: string,
   options: {
     attributeSlots?: unknown[] | null;
+    bundleUrl?: string;
     elementSlots?: SerializedElementTemplate[][] | null;
   } = {},
 ): SerializedElementTemplate {
@@ -29,6 +30,9 @@ function createHydrationTemplate(
   };
   if ('attributeSlots' in options) {
     serialized.attributeSlots = options.attributeSlots as SerializedElementTemplate['attributeSlots'];
+  }
+  if (options.bundleUrl !== undefined) {
+    serialized.bundleUrl = options.bundleUrl;
   }
   if ('elementSlots' in options) {
     serialized.elementSlots = options.elementSlots as SerializedElementTemplate['elementSlots'];
@@ -568,6 +572,43 @@ describe('hydrate', () => {
     ]);
     expect(root.elementSlots[0]).toEqual([slot0Item]);
     expect(root.elementSlots[1]).toEqual([slot1Item]);
+  });
+
+  it('matches same local template ids by bundleUrl during hydrate', () => {
+    const root = new BackgroundElementTemplateInstance('root');
+
+    const entryB = new BackgroundElementTemplateInstance('entry-b:_et_same', ['B']);
+    const entryA = new BackgroundElementTemplateInstance('entry-a:_et_same', ['A']);
+    root.appendChild(entryB);
+    root.appendChild(entryA);
+
+    const stream = hydrate(
+      createHydrationTemplate(root.instanceId, 'root', {
+        elementSlots: [[
+          createHydrationChild(-11, '_et_same', {
+            attributeSlots: ['A'],
+            bundleUrl: 'entry-a',
+          }),
+          createHydrationChild(-12, '_et_same', {
+            attributeSlots: ['B'],
+            bundleUrl: 'entry-b',
+          }),
+        ]],
+      }),
+      root,
+    );
+
+    expect(stream).toEqual([
+      ElementTemplateUpdateOps.insertNode,
+      root.instanceId,
+      0,
+      entryA.instanceId,
+      0,
+    ]);
+    expect(root.elementSlots[0]).toEqual([entryB, entryA]);
+    expect(backgroundElementTemplateInstanceManager.get(-11)).toBe(entryA);
+    expect(backgroundElementTemplateInstanceManager.get(-12)).toBe(entryB);
+    expect(globalCommitContext.nonPayload.removedSubtreesAwaitingTeardown).toEqual([]);
   });
 
   it('keeps hydrated handles for later background attribute updates', () => {

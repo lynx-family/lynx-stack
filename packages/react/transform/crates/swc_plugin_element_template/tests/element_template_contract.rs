@@ -233,7 +233,7 @@ fn should_emit_spread_attr_plan_with_ref_adapter() {
 }
 
 #[test]
-fn should_not_inject_root_css_scope_attrs_for_element_template() {
+fn should_inject_root_css_scope_attr_for_element_template() {
   let (code, template) = first_user_template_json_with_code(
     r#"
       /**
@@ -253,11 +253,15 @@ fn should_not_inject_root_css_scope_attrs_for_element_template() {
   let attrs = template["attributesArray"]
     .as_array()
     .expect("attributesArray");
+  let css_id_attr = attrs
+    .iter()
+    .find(|attr| attr["key"] == "css-id")
+    .expect("root element should carry framework css-id attr");
+  assert_eq!(css_id_attr["kind"], "static");
+  assert_eq!(css_id_attr["value"].as_f64(), Some(100.0));
   assert!(
-    attrs
-      .iter()
-      .all(|attr| attr["key"] != "css-id" && attr["key"] != "entry-name"),
-    "root element should no longer carry css scope attrs once metadata moves to options",
+    attrs.iter().all(|attr| attr["key"] != "entry-name"),
+    "root element should not carry entry-name attrs",
   );
 
   let children = template["children"].as_array().expect("children array");
@@ -270,6 +274,87 @@ fn should_not_inject_root_css_scope_attrs_for_element_template() {
       .all(|attr| attr["key"] != "css-id" && attr["key"] != "entry-name"),
     "nested static elements should not receive css scope attrs",
   );
+}
+
+#[test]
+fn should_inject_css_scope_attr_for_each_user_template_root() {
+  let templates = transform_to_templates(
+    r#"
+      /**
+       * @jsxCSSId 100
+       */
+      const first = <view />;
+      const second = <image />;
+    "#,
+    element_template_config(),
+  );
+
+  let user_templates = templates
+    .into_iter()
+    .filter(|template| template.template_id != BUILTIN_RAW_TEXT_TEMPLATE_ID)
+    .map(|template| {
+      serde_json::to_value(template.compiled_template).expect("compiled template to json")
+    })
+    .collect::<Vec<_>>();
+  assert_eq!(
+    user_templates.len(),
+    2,
+    "should collect both user template roots"
+  );
+
+  for template in user_templates {
+    let attrs = template["attributesArray"]
+      .as_array()
+      .expect("attributesArray");
+    assert!(
+      attrs.iter().any(|attr| {
+        attr["key"] == "css-id" && attr["kind"] == "static" && attr["value"].as_f64() == Some(100.0)
+      }),
+      "user template root should carry framework css-id attr: {template:?}",
+    );
+  }
+}
+
+#[test]
+fn should_not_inject_css_scope_attrs_without_jsx_css_id() {
+  let template = first_user_template_json(
+    r#"
+      <view>
+        <text>Hello</text>
+      </view>
+    "#,
+  );
+
+  let attrs = template["attributesArray"]
+    .as_array()
+    .expect("attributesArray");
+  assert!(
+    attrs
+      .iter()
+      .all(|attr| attr["key"] != "css-id" && attr["key"] != "entry-name"),
+    "root element should not carry css scope attrs without @jsxCSSId",
+  );
+}
+
+#[test]
+fn should_append_framework_css_id_after_spread_attrs() {
+  let template = first_user_template_json(
+    r#"
+      /**
+       * @jsxCSSId 100
+       */
+      <view {...props} />
+    "#,
+  );
+
+  let attrs = template["attributesArray"]
+    .as_array()
+    .expect("attributesArray");
+  assert_eq!(attrs[0]["kind"], "spread");
+  let last_attr = attrs.last().expect("root should have attrs");
+  assert_eq!(last_attr["key"], "css-id");
+  assert_eq!(last_attr["kind"], "static");
+  assert_eq!(last_attr["value"].as_f64(), Some(100.0));
 }
 
 #[test]
@@ -344,7 +429,7 @@ fn should_preserve_text_children_when_text_attr_may_come_from_spread() {
 }
 
 #[test]
-fn should_not_inject_root_entry_name_attr_for_dynamic_component_element_template() {
+fn should_inject_css_id_without_entry_name_attr_for_dynamic_component_element_template() {
   let (code, template) = first_user_template_json_with_code(
     r#"
       /**
@@ -365,10 +450,14 @@ fn should_not_inject_root_entry_name_attr_for_dynamic_component_element_template
     .as_array()
     .expect("attributesArray");
   assert!(
-    attrs
-      .iter()
-      .all(|attr| attr["key"] != "entry-name" && attr["key"] != "css-id"),
-    "dynamic component root should no longer encode css scope metadata in attrs",
+    attrs.iter().any(|attr| {
+      attr["key"] == "css-id" && attr["kind"] == "static" && attr["value"].as_f64() == Some(100.0)
+    }),
+    "dynamic component root should carry framework css-id attr",
+  );
+  assert!(
+    attrs.iter().all(|attr| attr["key"] != "entry-name"),
+    "dynamic component root should not encode entry metadata in attrs",
   );
 }
 

@@ -102,6 +102,13 @@ export function installMockNativePapi(
       writable: true,
       configurable: true,
     });
+    if (typeof bundleUrl === 'string') {
+      Object.defineProperty(element, '__bundleUrl', {
+        value: bundleUrl,
+        writable: true,
+        configurable: true,
+      });
+    }
     if (typeof handleId === 'number') {
       Object.defineProperty(element, '__handleId', {
         value: handleId,

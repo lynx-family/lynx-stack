@@ -144,6 +144,7 @@ where
   template_identity_collision_guard: TemplateIdentityCollisionGuard,
   current_template_defs: Vec<ModuleItem>,
   comments: Option<C>,
+  css_id_value: Option<f64>,
 }
 
 impl<C> JSXTransformer<C>
@@ -198,10 +199,11 @@ where
       template_identity_collision_guard: TemplateIdentityCollisionGuard::default(),
       current_template_defs: vec![],
       comments,
+      css_id_value: None,
     }
   }
 
-  fn validate_directives(&self, span: Span) {
+  fn parse_directives(&mut self, span: Span) {
     self.comments.with_leading(span.lo, |comments| {
       for cmt in comments {
         if cmt.kind != CommentKind::Block {
@@ -218,21 +220,23 @@ where
           }
 
           let mut words = line.split_whitespace();
-          loop {
-            let pragma = words.next();
-            if pragma.is_none() {
-              break;
+          while let Some(pragma) = words.next() {
+            let Some(value) = words.next() else {
+              continue;
+            };
+            if pragma != "@jsxCSSId" {
+              continue;
             }
-            let val = words.next();
-            if let Some("@jsxCSSId") = pragma {
-              if let Some(css_id) = val {
-                if css_id.parse::<f64>().is_err() {
-                  HANDLER.with(|handler| {
-                    handler
-                      .struct_span_err(span, &format!("@jsxCSSId must be numeric, got `{css_id}`"))
-                      .emit()
-                  });
-                }
+            match value.parse::<f64>() {
+              Ok(css_id) => {
+                self.css_id_value = Some(css_id);
+              }
+              Err(_) => {
+                HANDLER.with(|handler| {
+                  handler
+                    .struct_span_err(span, &format!("@jsxCSSId must be numeric, got `{value}`"))
+                    .emit()
+                });
               }
             }
           }
@@ -281,7 +285,8 @@ where
       dynamic_attr_slots,
       dynamic_children,
     } = {
-      let mut extractor = ElementTemplateExtractor::new(self);
+      let has_css_id_value = self.css_id_value.is_some();
+      let mut extractor = ElementTemplateExtractor::new(self, has_css_id_value);
 
       node.visit_mut_with(&mut extractor);
       extractor.into_extracted_template_parts()
@@ -451,9 +456,6 @@ where
         self.current_template_defs.push(attr_plan_def);
       }
 
-      // TODO(element-template): reintroduce cssId/entryName metadata once the
-      // runtime/native contract grows a dedicated replacement channel.
-
       if let Some(element_templates) = &self.element_templates {
         element_templates.borrow_mut().push(ElementTemplateAsset {
           template_id: template_uid.clone(),
@@ -498,10 +500,10 @@ where
   }
 
   fn visit_mut_module(&mut self, n: &mut Module) {
-    self.validate_directives(n.span);
+    self.parse_directives(n.span);
     for item in &n.body {
       let span = item.span();
-      self.validate_directives(span);
+      self.parse_directives(span);
     }
 
     n.visit_mut_children_with(self);

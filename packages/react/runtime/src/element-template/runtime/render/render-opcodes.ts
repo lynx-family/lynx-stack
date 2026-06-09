@@ -3,6 +3,7 @@
 // LICENSE file in the root directory of this source tree.
 
 import { __OpAttr, __OpBegin, __OpEnd, __OpSlot, __OpText } from './render-to-opcodes.js';
+import { parseElementTemplateType } from '../../protocol/template-type.js';
 import type { SerializableValue } from '../../protocol/types.js';
 import { __etAttrPlanMap } from '../template/attr-slot-plan.js';
 import type { EtAttrAdapter } from '../template/attr-slot-plan.js';
@@ -14,35 +15,11 @@ export interface MainThreadCreateResult {
   rootRefs: ElementRef[];
 }
 
-function appendChildToParent(
-  parentTemplateKey: string | null | undefined,
-  parentActiveElementSlot: ElementRef[] | undefined,
-  rootRefs: ElementRef[],
-  elementRef: ElementRef,
-): void {
-  /* v8 ignore start -- stackTop is always rooted with `null`, never `undefined`. */
-  if (parentTemplateKey === undefined) {
-    return;
-  }
-  /* v8 ignore end */
-
-  if (parentTemplateKey === null) {
-    rootRefs.push(elementRef);
-    return;
-  }
-
-  if (!parentActiveElementSlot) {
-    throw new Error(`Template '${parentTemplateKey}' received a child outside of any element slot.`);
-  }
-
-  parentActiveElementSlot.push(elementRef);
-}
-
 export function renderOpcodesIntoElementTemplate(
   opcodes: unknown[],
 ): MainThreadCreateResult {
   const rootRefs: ElementRef[] = [];
-  const templateKeyStack: Array<string | null> = [null];
+  const typeStack: Array<string | null> = [null];
   const attributeSlotsStack: Array<SerializableValue[] | undefined> = [undefined];
   const elementSlotsStack: Array<Array<Array<ElementRef>> | undefined> = [undefined];
   const activeElementSlotStack: Array<ElementRef[] | undefined> = [undefined];
@@ -54,7 +31,7 @@ export function renderOpcodesIntoElementTemplate(
       case __OpBegin: {
         const vnode = opcodes[i + 1] as { type: string };
         stackTop += 1;
-        templateKeyStack[stackTop] = vnode.type;
+        typeStack[stackTop] = vnode.type;
         attributeSlotsStack[stackTop] = undefined;
         elementSlotsStack[stackTop] = undefined;
         activeElementSlotStack[stackTop] = undefined;
@@ -66,44 +43,28 @@ export function renderOpcodesIntoElementTemplate(
           throw new Error('Instruction mismatch: Popped root frame at __OpEnd');
         }
 
-        const templateKey = templateKeyStack[stackTop];
+        const type = typeStack[stackTop];
         const attributeSlots = attributeSlotsStack[stackTop];
         const elementSlots = elementSlotsStack[stackTop];
         stackTop -= 1;
 
-        // If templateKey is null, it means we popped the root frame?
-        // But __OpEnd should pair with __OpBegin.
-        // The Root frame is manually pushed and has no __OpBegin.
-        // So we should never pop the Root frame via __OpEnd unless there's an extra End.
-        if (templateKey === null) {
-          // This should effectively not happen if opcodes are balanced?
-          // Actually, if we are at root, and opcode has __OpEnd, it implies we are closing a component.
-          // The structure is: Root -> [Begin ... End] -> Root.
-          // Wait, if opcodes list ends, loop finishes.
-          // __OpEnd corresponds to a component.
-          // So if we pop, we must get a valid component frame.
+        if (type === null) {
+          // Balanced opcodes never close the synthetic root frame.
           /* v8 ignore start -- the synthetic root frame cannot be popped by balanced opcodes. */
           throw new Error('Instruction mismatch: Popped root frame at __OpEnd');
           /* v8 ignore end */
         }
-        const concreteTemplateKey = templateKey!;
+        const concreteType = type!;
+        const nativeTemplate = parseElementTemplateType(concreteType);
 
-        const parentTemplateKey = templateKeyStack[stackTop];
+        const parentType = stackTop === 0 ? null : typeStack[stackTop]!;
         const parentActiveElementSlot = activeElementSlotStack[stackTop];
 
-        const attrPlan = __etAttrPlanMap[concreteTemplateKey];
+        const attrPlan = __etAttrPlanMap[concreteType];
         const handleId = reserveElementTemplateId();
-        let elementRef: ElementRef;
-        if (attrPlan === undefined) {
-          elementRef = createElementTemplateWithReservedHandle(
-            handleId,
-            concreteTemplateKey,
-            null,
-            attributeSlots ?? null,
-            elementSlots ?? null,
-          );
-        } else {
-          const preparedAttributeSlots = attributeSlots?.slice() ?? [];
+        let preparedAttributeSlots = attributeSlots ?? null;
+        if (attrPlan !== undefined) {
+          preparedAttributeSlots = attributeSlots?.slice() ?? [];
           for (let planIndex = 0; planIndex < attrPlan.length; planIndex += 2) {
             const attrSlotIndex = attrPlan[planIndex] as number;
             const adapter = attrPlan[planIndex + 1] as EtAttrAdapter;
@@ -113,15 +74,21 @@ export function renderOpcodesIntoElementTemplate(
               preparedAttributeSlots[attrSlotIndex],
             );
           }
-          elementRef = createElementTemplateWithReservedHandle(
-            handleId,
-            concreteTemplateKey,
-            null,
-            preparedAttributeSlots,
-            elementSlots ?? null,
-          );
         }
-        appendChildToParent(parentTemplateKey, parentActiveElementSlot, rootRefs, elementRef);
+        const elementRef = createElementTemplateWithReservedHandle(
+          handleId,
+          nativeTemplate.templateKey,
+          nativeTemplate.bundleUrl,
+          preparedAttributeSlots,
+          elementSlots ?? null,
+        );
+        if (parentType === null) {
+          rootRefs.push(elementRef);
+        } else if (parentActiveElementSlot) {
+          parentActiveElementSlot.push(elementRef);
+        } else {
+          throw new Error(`Template '${parentType}' received a child outside of any element slot.`);
+        }
 
         i += 1;
         break;
@@ -153,13 +120,13 @@ export function renderOpcodesIntoElementTemplate(
           [String(text)],
           [],
         );
-        const parentTemplateKey = templateKeyStack[stackTop];
-        if (parentTemplateKey === null) {
+        const parentType = stackTop === 0 ? null : typeStack[stackTop]!;
+        if (parentType === null) {
           rootRefs.push(textRef);
         } else {
           const activeElementSlot = activeElementSlotStack[stackTop];
           if (!activeElementSlot) {
-            throw new Error(`Template '${parentTemplateKey}' received a text child outside of any element slot.`);
+            throw new Error(`Template '${parentType}' received a text child outside of any element slot.`);
           }
           activeElementSlot.push(textRef);
         }
@@ -167,9 +134,6 @@ export function renderOpcodesIntoElementTemplate(
         break;
       }
       default:
-        // Unknown opcode, maybe skip? or throw?
-        // renderToString loop increments manually.
-        // If we hit here, something is desync.
         throw new Error(`Unknown opcode: ${opcode as string | number}`);
     }
   }

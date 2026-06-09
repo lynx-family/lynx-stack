@@ -761,6 +761,26 @@ describe('ElementTemplate patch stream (apply)', () => {
     expect(createTemplateMock.mock.calls[0]?.[2]).toEqual([null, 'x']);
   });
 
+  it('passes bundleUrl from createTemplate patch to native create', () => {
+    envManager.switchToMainThread();
+    const createTemplateMock = globalThis.__CreateElementTemplate as unknown as {
+      mockClear: () => void;
+      mock: { calls: unknown[][] };
+    };
+    createTemplateMock.mockClear();
+
+    applyElementTemplateUpdateCommands([
+      ElementTemplateUpdateOps.createTemplate,
+      9,
+      '_et_builtin_raw_text',
+      'dynamic-entry',
+      ['x'],
+      [],
+    ]);
+
+    expect(createTemplateMock.mock.calls[0]?.[1]).toBe('dynamic-entry');
+  });
+
   it('drops unresolved element slot children without reporting in prod mode', () => {
     envManager.switchToMainThread();
     const originalDev = globalThis.__DEV__;

@@ -13,6 +13,7 @@ import { backgroundElementTemplateInstanceManager } from './manager.js';
 import { isDirectOrDeepEqual } from '../../utils.js';
 import { hydrationMap } from '../hydration-map.js';
 import { ElementTemplateUpdateOps } from '../protocol/opcodes.js';
+import { elementTemplateIdentityKey, parseElementTemplateType } from '../protocol/template-type.js';
 import type {
   ElementTemplateUpdateCommandStream,
   SerializableValue,
@@ -63,22 +64,24 @@ function hydrateMatchingChildrenAndDiffSlot(
     removals: [],
     moves: {},
   };
-  const serializedByTemplateKey: Record<string, [SerializedElementTemplate, number][]> = {};
-  const serializedCursorByTemplateKey: Record<string, number> = {};
+  const serializedByIdentityKey: Record<string, [SerializedElementTemplate, number][]> = {};
+  const serializedCursorByIdentityKey: Record<string, number> = {};
 
   for (let i = 0; i < serializedChildren.length; i += 1) {
     const node = serializedChildren[i]!;
-    (serializedByTemplateKey[node.templateKey] ??= []).push([node, i]);
+    const identityKey = elementTemplateIdentityKey(node.templateKey, node.bundleUrl);
+    (serializedByIdentityKey[identityKey] ??= []).push([node, i]);
   }
 
   for (let i = 0; i < backgroundChildren.length; i += 1) {
     const backgroundChild = backgroundChildren[i]!;
-    const serializedCandidates = serializedByTemplateKey[backgroundChild.type];
-    const candidateCursor = serializedCursorByTemplateKey[backgroundChild.type] ?? 0;
+    const identityKey = backgroundChild.type;
+    const serializedCandidates = serializedByIdentityKey[identityKey];
+    const candidateCursor = serializedCursorByIdentityKey[identityKey] ?? 0;
     const matchedSerialized = serializedCandidates?.[candidateCursor];
 
     if (matchedSerialized) {
-      serializedCursorByTemplateKey[backgroundChild.type] = candidateCursor + 1;
+      serializedCursorByIdentityKey[identityKey] = candidateCursor + 1;
       const oldIndex = matchedSerialized[1];
       if (!hydrateInstance(matchedSerialized[0], backgroundChild)) {
         return null;
@@ -96,9 +99,9 @@ function hydrateMatchingChildrenAndDiffSlot(
     }
   }
 
-  for (const key in serializedByTemplateKey) {
-    const candidates = serializedByTemplateKey[key]!;
-    const candidateCursor = serializedCursorByTemplateKey[key] ?? 0;
+  for (const key in serializedByIdentityKey) {
+    const candidates = serializedByIdentityKey[key]!;
+    const candidateCursor = serializedCursorByIdentityKey[key] ?? 0;
     for (let i = candidateCursor; i < candidates.length; i += 1) {
       result.removals.push(candidates[i]![1]);
       result.hasChanges = true;
@@ -112,11 +115,18 @@ function hydrateInstance(
   serialized: SerializedElementTemplate,
   instance: BackgroundElementTemplateInstance,
 ): boolean {
-  if (serialized.templateKey !== instance.type) {
+  const nativeTemplate = parseElementTemplateType(instance.type);
+  const serializedBundleUrl = serialized.bundleUrl ?? null;
+  if (
+    serialized.templateKey !== nativeTemplate.templateKey
+    || serializedBundleUrl !== nativeTemplate.bundleUrl
+  ) {
     if (__DEV__) {
       lynx.reportError(
         new Error(
-          `ElementTemplate hydrate key mismatch: main='${serialized.templateKey}' background='${instance.type}'.`,
+          `ElementTemplate hydrate key mismatch: main='${
+            elementTemplateIdentityKey(serialized.templateKey, serializedBundleUrl)
+          }' background='${instance.type}'.`,
         ),
       );
     }

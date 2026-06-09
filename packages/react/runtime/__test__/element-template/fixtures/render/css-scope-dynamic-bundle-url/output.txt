@@ -1,0 +1,3 @@
+<view css-id="1501958" id="scoped">
+  <text text="Scoped Dynamic" />
+</view>

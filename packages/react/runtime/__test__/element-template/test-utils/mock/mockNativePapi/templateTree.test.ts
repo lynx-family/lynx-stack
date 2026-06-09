@@ -99,6 +99,31 @@ describe('mock native template tree spread slots', () => {
     });
   });
 
+  it('serializes compiled node bundleUrl when native create stored one', () => {
+    const root = {
+      templateId: '_et_test',
+      attributes: {},
+      children: [],
+      __handleId: 1,
+      __compiledTemplate: {
+        kind: 'element',
+        type: 'view',
+        attributesArray: [],
+        children: [],
+      },
+      __attributeSlots: null,
+      __bundleUrl: 'dynamic-entry',
+    } satisfies CompiledTemplateNode;
+
+    expect(serializeTemplateInstance(root)).toEqual({
+      templateKey: '_et_test',
+      bundleUrl: 'dynamic-entry',
+      attributeSlots: [],
+      elementSlots: [],
+      uid: 1,
+    });
+  });
+
   it('moves typed children between element slots instead of duplicating them', () => {
     const child = { tag: 'view' };
     const root = {
