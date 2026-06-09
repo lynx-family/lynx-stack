@@ -113,7 +113,10 @@ export async function applyDefaultPlugins(
           if (api.context.action === 'dev') {
             return
           }
-          // On type errors, hint that the check can be bypassed.
+          // On type errors, hint that the built-in type checker can be turned
+          // off. Detected by the TypeScript diagnostic code (`TS1234:`) in the
+          // build errors — `ts-checker-rspack-plugin` does not expose its issue
+          // hook from its public entry.
           let hintShown = false
           api.onAfterCreateCompiler(({ compiler }) => {
             const compilers = 'compilers' in compiler
@@ -128,11 +131,11 @@ export async function applyDefaultPlugins(
                   }
                   const { errors } = stats.toJson({ errors: true, all: false })
                   if (
-                    errors?.some((error) => /\bTS\d+\b/.test(error.message))
+                    errors?.some((error) => /\bTS\d+:/.test(error.message))
                   ) {
                     hintShown = true
                     logger.warn(
-                      'Found type errors. Set `RSPEEDY_TYPE_CHECK=false` to bypass type checking.',
+                      'Found type errors. Set `RSPEEDY_TYPE_CHECK=false` to disable the built-in type checker.',
                     )
                   }
                 },
