@@ -83,6 +83,7 @@ jobs:
       MIDSCENE_OPENAI_INIT_CONFIG_JSON: ${{ secrets.MIDSCENE_OPENAI_INIT_CONFIG_JSON }}
     with:
       runs-on: lynx-custom-container
+      timeout-minutes: 45
       is-web: true
       upload-codecov: false
       artifact-name: ui-judge-results

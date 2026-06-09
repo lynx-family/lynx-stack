@@ -20,6 +20,10 @@ on:
       runs-on:
         required: true
         type: string
+      timeout-minutes:
+        required: false
+        type: number
+        default: 30
       run:
         required: true
         type: string
@@ -65,7 +69,7 @@ env:
   TURBO_TELEMETRY_DISABLED: 1
 jobs:
   check:
-    timeout-minutes: 30
+    timeout-minutes: ${{ inputs.timeout-minutes }}
     runs-on: ${{ inputs.runs-on }}
     permissions: {}
     container:
