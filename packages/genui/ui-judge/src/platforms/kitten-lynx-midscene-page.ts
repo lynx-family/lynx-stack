@@ -5,7 +5,6 @@ import { setTimeout as sleep } from 'node:timers/promises';
 
 import type { DeviceAction, Size } from '@midscene/core';
 import {
-  AbstractInterface,
   defineActionSwipe,
   defineActionTap,
   normalizeMobileSwipeParam,
@@ -34,27 +33,12 @@ interface ScreenshotSnapshot {
   size: Size;
 }
 
-export class KittenLynxMidscenePage extends AbstractInterface {
+export class KittenLynxMidscenePage {
   interfaceType = 'lynx-android';
-  declare cacheFeatureForPoint: NonNullable<
-    AbstractInterface['cacheFeatureForPoint']
-  >;
-  declare evaluateJavaScript: NonNullable<
-    AbstractInterface['evaluateJavaScript']
-  >;
-  declare getElementsNodeTree: NonNullable<
-    AbstractInterface['getElementsNodeTree']
-  >;
-  declare rectMatchesCacheFeature: NonNullable<
-    AbstractInterface['rectMatchesCacheFeature']
-  >;
-  url = (): string => this.page.url();
 
   private screenshotSnapshot: Promise<ScreenshotSnapshot> | undefined;
 
-  constructor(private readonly page: KittenLynxJudgePage) {
-    super();
-  }
+  constructor(private readonly page: KittenLynxJudgePage) {}
 
   actionSpace(): DeviceAction[] {
     return [
@@ -81,6 +65,10 @@ export class KittenLynxMidscenePage extends AbstractInterface {
   async size(): Promise<Size> {
     const screenshot = await this.captureScreenshot();
     return screenshot.size;
+  }
+
+  url(): string {
+    return this.page.url();
   }
 
   describe(): string {
