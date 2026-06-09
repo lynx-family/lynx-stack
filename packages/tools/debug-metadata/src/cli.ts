@@ -44,8 +44,8 @@ function resolveRef(ref: string, baseFile: string): string {
 
 /**
  * Parse a single `--header` value of the form "name: value". The first ":"
- * separates name from value (so values may contain ":"). The header name is
- * trimmed and lowercased; the value is trimmed but otherwise preserved.
+ * separates name from value (so values may contain ":"). The header name and
+ * value are both trimmed; casing is otherwise preserved.
  *
  * @internal
  */
