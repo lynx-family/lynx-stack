@@ -10,7 +10,7 @@ Keep the UI Judge Playwright job dependent on the repository `build` job, matchi
 
 Use the upstream build job's restored turbo cache in UI Judge CI. Do not call package scripts directly with `pnpm --filter <package> build`, and do not pass `--force`; use Turbo commands so dependency ordering and cached outputs remain consistent.
 
-Do not add changed-file gating or GitHub API calls for UI Judge CI. If the model-backed Playwright run needs more than the reusable workflow's default timeout, use the reusable workflow `timeout-minutes` input to give only UI Judge a bounded larger budget while leaving other callers on the default. If Midscene secrets are unavailable, the UI Judge test command should write a clear skipped result and exit successfully; fork pull requests should skip the comment steps rather than requiring write permissions.
+Do not add changed-file gating, GitHub API calls, or extra reusable workflow inputs for UI Judge CI. If Midscene secrets are unavailable, the UI Judge test command should write a clear skipped result and exit successfully; fork pull requests should skip the comment steps rather than requiring write permissions.
 
 Raise the soft open-file limit before running UI Judge Playwright tests in the Playwright container. The A2UI playground dev server uses rsbuild/chokidar watchers, so mirror the web-elements Playwright pattern with `ulimit -Sn 655350` before invoking `pnpm --filter @lynx-js/ui-judge test`.
 
