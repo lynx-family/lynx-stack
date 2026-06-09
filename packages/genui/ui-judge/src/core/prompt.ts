@@ -25,18 +25,10 @@ ${options.task}
 ${reference}
 Do not click, type, scroll, navigate, or otherwise mutate the UI while scoring.
 The current UI state is enough to complete this scoring task. Do not output any action.
-Use Midscene aiAsk's complete response to output exactly one of these six strings:
-SCORE: 0
-SCORE: 1
-SCORE: 2
-SCORE: 3
-SCORE: 4
-SCORE: 5
-If Midscene wraps the answer in XML, put only the chosen SCORE line inside the complete tag.
-Do not return placeholder text instead of a digit.
-Do not return "GRADE:", letters, Markdown, prose, or explanation.
+Use Midscene aiNumber to set the Number field to exactly one integer from 0 through 5.
+Do not set the Number field to "SCORE:", "GRADE:", letters, Markdown, prose, or explanation.
 
-Use this 1-5 Likert scale for the requested dimension:
+Use this 0-5 scale for the requested dimension:
 5 = Excellent benchmark: exceptional craft, thoughtful details, and an "aha moment" that exceeds expectations.
 4 = Strong professional quality: smooth, comfortable, and aligned with industry best practices.
 3 = Acceptable baseline: the core task works with no fatal issue, but the experience is ordinary or under-polished.
@@ -59,5 +51,5 @@ Grading notes:
 5. Valid optional properties, such as accessibility hints or default values, should not be penalized when they make sense in context.
 6. Do not award a high score when required components are missing or substantive behavior is wrong for this dimension.
 
-Think through the criteria internally, then complete with one chosen SCORE line.`;
+Think through the criteria internally, then set the numeric result to only the chosen integer.`;
 }
