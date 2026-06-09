@@ -809,6 +809,10 @@ importers:
         specifier: ^5.9.3
         version: 5.9.3
 
+  packages/genui/dist: {}
+
+  packages/genui/etc: {}
+
   packages/genui/openui:
     dependencies:
       '@openuidev/lang-core':
@@ -833,6 +837,8 @@ importers:
       '@types/react':
         specifier: ^18.3.28
         version: 18.3.31
+
+  packages/genui/scripts: {}
 
   packages/genui/server:
     dependencies:
@@ -939,6 +945,8 @@ importers:
       zx:
         specifier: ^8.8.5
         version: 8.8.5
+
+  packages/lynx/create-lynx-extension: {}
 
   packages/lynx/create-lynx-library:
     dependencies:
@@ -1408,8 +1416,8 @@ importers:
         specifier: workspace:^
         version: link:../core
       '@rsbuild/plugin-type-check':
-        specifier: 1.3.4
-        version: 1.3.4(@rsbuild/core@2.0.6(core-js@3.48.0))(@rspack/core@2.0.3(@swc/helpers@0.5.21))(tslib@2.8.1)(typescript@5.9.3)
+        specifier: 1.3.6
+        version: 1.3.6(@rsbuild/core@2.0.6(core-js@3.48.0))(@rspack/core@2.0.3(@swc/helpers@0.5.21))(tslib@2.8.1)(typescript@5.9.3)
       '@rstest/core':
         specifier: catalog:rstest
         version: 0.8.1(jsdom@27.4.0)
@@ -1731,6 +1739,8 @@ importers:
       tailwindcss:
         specifier: ^3.4.19
         version: 3.4.19
+
+  packages/testing-library/examples: {}
 
   packages/testing-library/examples/basic:
     dependencies:
@@ -2112,6 +2122,8 @@ importers:
       rsbuild-plugin-publint:
         specifier: 0.3.4
         version: 0.3.4(@rsbuild/core@2.0.6(core-js@3.48.0))
+
+  packages/web-platform/web-tests: {}
 
   packages/web-platform/web-worker-rpc: {}
 
@@ -2515,8 +2527,8 @@ importers:
         specifier: 1.5.2
         version: 1.5.2(@rsbuild/core@2.0.0-beta.3(core-js@3.48.0))
       '@rsbuild/plugin-type-check':
-        specifier: 1.3.4
-        version: 1.3.4(@rsbuild/core@2.0.0-beta.3(core-js@3.48.0))(@rspack/core@2.0.3(@swc/helpers@0.5.21))(tslib@2.8.1)(typescript@5.9.3)
+        specifier: 1.3.6
+        version: 1.3.6(@rsbuild/core@2.0.0-beta.3(core-js@3.48.0))(@rspack/core@2.0.3(@swc/helpers@0.5.21))(tslib@2.8.1)(typescript@5.9.3)
       '@rsbuild/plugin-typed-css-modules':
         specifier: 1.2.2
         version: 1.2.2(@rsbuild/core@2.0.0-beta.3(core-js@3.48.0))
@@ -5341,14 +5353,6 @@ packages:
 
   '@rsbuild/plugin-source-build@1.0.5':
     resolution: {integrity: sha512-/UJxTutjIU2+oD+qC3eCo0ZzGwQw2LWha8m4z1ILR0VFlqgFLk6ipgmpGgWgo20JtefETMOb04yqmuezDQ/Sww==}
-    peerDependencies:
-      '@rsbuild/core': ^1.0.0 || ^2.0.0-0
-    peerDependenciesMeta:
-      '@rsbuild/core':
-        optional: true
-
-  '@rsbuild/plugin-type-check@1.3.4':
-    resolution: {integrity: sha512-ibOlMRVKeDfBBSd09YVzJjAUhX1KnTVbK0NK/rPBai3/DAovhUsmkxKDIsE+3HN93iGBSBiqOCIOrYFO2Z21Fw==}
     peerDependencies:
       '@rsbuild/core': ^1.0.0 || ^2.0.0-0
     peerDependenciesMeta:
@@ -11877,15 +11881,6 @@ packages:
     resolution: {integrity: sha512-1D9ytD3K9QGGWJWFslEeQFvIwiOlj8rS3s+WA45DAHxqtvnyc+vzg2C8OLjoOyQKMgLrzndEcR5TNWsVC4daLQ==}
     engines: {node: '>=18.0.0'}
 
-  ts-checker-rspack-plugin@1.3.0:
-    resolution: {integrity: sha512-89oK/BtApjdid1j9CGjPGiYry+EZBhsnTAM481/8ipgr/y2IOgCbW1HPnan+fs5FnzlpUgf9dWGNZ4Ayw3Bd8A==}
-    peerDependencies:
-      '@rspack/core': 2.0.3
-      typescript: '>=3.8.0'
-    peerDependenciesMeta:
-      '@rspack/core':
-        optional: true
-
   ts-checker-rspack-plugin@1.3.2:
     resolution: {integrity: sha512-aIrtWI258ZHUxFgZCX0EHgYI6ofNJKgh1O67/O7AhoS51x3G7LF0HyvF5ip73s5IUOyVkVPyYyo0VUqE7SnK8Q==}
     peerDependencies:
@@ -15990,27 +15985,14 @@ snapshots:
     optionalDependencies:
       '@rsbuild/core': 2.0.6(core-js@3.48.0)
 
-  '@rsbuild/plugin-type-check@1.3.4(@rsbuild/core@2.0.0-beta.3(core-js@3.48.0))(@rspack/core@2.0.3(@swc/helpers@0.5.21))(tslib@2.8.1)(typescript@5.9.3)':
+  '@rsbuild/plugin-type-check@1.3.6(@rsbuild/core@2.0.0-beta.3(core-js@3.48.0))(@rspack/core@2.0.3(@swc/helpers@0.5.21))(tslib@2.8.1)(typescript@5.9.3)':
     dependencies:
       deepmerge: 4.3.1
       json5: 2.2.3
       reduce-configs: 1.1.2
-      ts-checker-rspack-plugin: 1.3.0(@rspack/core@2.0.3(@swc/helpers@0.5.21))(tslib@2.8.1)(typescript@5.9.3)
+      ts-checker-rspack-plugin: 1.3.2(@rspack/core@2.0.3(@swc/helpers@0.5.21))(tslib@2.8.1)(typescript@5.9.3)
     optionalDependencies:
       '@rsbuild/core': 2.0.0-beta.3(core-js@3.48.0)
-    transitivePeerDependencies:
-      - '@rspack/core'
-      - tslib
-      - typescript
-
-  '@rsbuild/plugin-type-check@1.3.4(@rsbuild/core@2.0.6(core-js@3.48.0))(@rspack/core@2.0.3(@swc/helpers@0.5.21))(tslib@2.8.1)(typescript@5.9.3)':
-    dependencies:
-      deepmerge: 4.3.1
-      json5: 2.2.3
-      reduce-configs: 1.1.2
-      ts-checker-rspack-plugin: 1.3.0(@rspack/core@2.0.3(@swc/helpers@0.5.21))(tslib@2.8.1)(typescript@5.9.3)
-    optionalDependencies:
-      '@rsbuild/core': 2.0.6(core-js@3.48.0)
     transitivePeerDependencies:
       - '@rspack/core'
       - tslib
@@ -23747,18 +23729,6 @@ snapshots:
   ts-blank-space@0.7.0:
     dependencies:
       typescript: 5.9.3
-
-  ts-checker-rspack-plugin@1.3.0(@rspack/core@2.0.3(@swc/helpers@0.5.21))(tslib@2.8.1)(typescript@5.9.3):
-    dependencies:
-      '@rspack/lite-tapable': 1.1.0
-      chokidar: 3.6.0
-      memfs: 4.56.10(tslib@2.8.1)
-      picocolors: 1.1.1
-      typescript: 5.9.3
-    optionalDependencies:
-      '@rspack/core': 2.0.3(@swc/helpers@0.5.21)
-    transitivePeerDependencies:
-      - tslib
 
   ts-checker-rspack-plugin@1.3.2(@rspack/core@2.0.3(@swc/helpers@0.5.21))(tslib@2.8.1)(typescript@5.9.3):
     dependencies:
