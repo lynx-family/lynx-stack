@@ -219,6 +219,9 @@ async function runOne(
       finishReason: result.finishReason,
       usage: result.usage,
       messages: result.messages,
+      ...(preview.screenshotDataUrl
+        ? { screenshotDataUrl: preview.screenshotDataUrl }
+        : {}),
       text: result.text,
     };
   } catch (error) {

@@ -9,6 +9,8 @@ import { corsHeaders, corsPreflight } from '../../../../cors';
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
 
+const HEARTBEAT_INTERVAL_MS = 15_000;
+
 interface RouteContext {
   params: Promise<{ jobId: string }> | { jobId: string };
 }
@@ -27,6 +29,10 @@ function encodeSseEvent(event: BenchJobEvent): Uint8Array {
   return new TextEncoder().encode(
     `id: ${event.id}\nevent: ${event.event}\ndata: ${payload}\n\n`,
   );
+}
+
+function encodeSseComment(comment: string): Uint8Array {
+  return new TextEncoder().encode(`: ${comment}\n\n`);
 }
 
 function isTerminalEvent(event: BenchJobEvent): boolean {
@@ -48,7 +54,6 @@ export async function GET(req: Request, context: RouteContext) {
       }\n\n`,
     );
     return new Response(body, {
-      status: 404,
       headers: corsHeaders(req, {
         'Content-Type': 'text/event-stream; charset=utf-8',
         'Cache-Control': 'no-cache, no-transform',
@@ -59,38 +64,67 @@ export async function GET(req: Request, context: RouteContext) {
   }
 
   let unsubscribe = noop;
+  let cleanup = noop;
   const stream = new ReadableStream<Uint8Array>({
     start(controller) {
+      let closed = false;
+      let heartbeat: ReturnType<typeof setInterval> | undefined;
+      cleanup = () => {
+        if (heartbeat) {
+          clearInterval(heartbeat);
+          heartbeat = undefined;
+        }
+        unsubscribe();
+        unsubscribe = noop;
+      };
+      const enqueue = (chunk: Uint8Array): boolean => {
+        if (closed) return false;
+        try {
+          controller.enqueue(chunk);
+          return true;
+        } catch {
+          closed = true;
+          cleanup();
+          return false;
+        }
+      };
+      const close = () => {
+        if (closed) return;
+        closed = true;
+        cleanup();
+        controller.close();
+      };
+      heartbeat = setInterval(() => {
+        enqueue(encodeSseComment('ping'));
+      }, HEARTBEAT_INTERVAL_MS);
       const subscription = store.subscribe(jobId, (event) => {
-        controller.enqueue(encodeSseEvent(event));
+        if (!enqueue(encodeSseEvent(event))) return;
         if (isTerminalEvent(event)) {
-          unsubscribe();
-          controller.close();
+          close();
         }
       });
       if (!subscription) {
-        controller.enqueue(
-          new TextEncoder().encode(
-            `event: error\ndata: ${
-              JSON.stringify({ message: 'bench job not found' })
-            }\n\n`,
-          ),
+        enqueue(
+          encodeSseEvent({
+            id: 0,
+            event: 'error',
+            data: { message: 'bench job not found' },
+          }),
         );
-        controller.close();
+        close();
         return;
       }
       unsubscribe = subscription.unsubscribe;
       for (const event of subscription.events) {
-        controller.enqueue(encodeSseEvent(event));
+        if (!enqueue(encodeSseEvent(event))) return;
         if (isTerminalEvent(event)) {
-          unsubscribe();
-          controller.close();
+          close();
           return;
         }
       }
     },
     cancel() {
-      unsubscribe();
+      cleanup();
     },
   });
 

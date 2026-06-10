@@ -113,6 +113,7 @@ export interface BenchRunResult {
   finishReason?: unknown;
   usage?: unknown;
   messages?: A2UIMessage[];
+  screenshotDataUrl?: string;
   text?: string;
 }
 
