@@ -109,7 +109,9 @@ export async function applyDefaultPlugins(
       {
         name: PLUGIN_TYPE_CHECK_NAME,
         setup(api) {
-          // Only type-check on `build` — skip `dev` to keep the dev loop fast.
+          // Skip the type checker during `dev` to keep the dev loop fast. Other
+          // commands (`build`, `preview`, `inspect`) only actually type-check
+          // when they compile, i.e. during `build`.
           if (api.context.action === 'dev') {
             return
           }
