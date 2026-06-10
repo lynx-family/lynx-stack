@@ -7,6 +7,7 @@ import {
   backgroundSnapshotInstanceManager,
 } from '../../../src/snapshot/snapshot/backgroundSnapshot.js';
 import { setupBackgroundDocument, setupDocument } from '../../../src/document.js';
+import { resetFirstScreenSyncState } from '../../../src/snapshot/lifecycle/event/firstScreenSync.js';
 import { deinitGlobalSnapshotPatch } from '../../../src/snapshot/lifecycle/patch/snapshotPatch.js';
 import { shouldDelayUiOps } from '../../../src/snapshot/lifecycle/ref/delay.js';
 import { clearListGlobal } from '../../../src/snapshot/list/list.js';
@@ -80,6 +81,9 @@ export class EnvManager {
     clearListGlobal();
     deinitGlobalSnapshotPatch();
     clearWorkletRefLastIdForTesting();
+    // `renderPage` no longer resets the first-screen state (it is initialized once
+    // at module load), so reset it here for test isolation across tests.
+    resetFirstScreenSyncState();
     getJSModule('GlobalEventEmitter')?.clear();
     this.switchToBackground();
     this.switchToMainThread();

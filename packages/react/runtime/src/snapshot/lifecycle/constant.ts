@@ -5,7 +5,9 @@ export const LifecycleConstant = {
   firstScreen: 'rLynxFirstScreen',
   updateFromRoot: 'updateFromRoot',
   globalEventFromLepus: 'globalEventFromLepus',
-  jsReady: 'rLynxJSReady',
+  // Signals the main thread to sync the first screen, sent by the background thread
+  // (automatically in `jsReady` mode, or via `markFirstScreenSyncReady()` in `manual`).
+  firstScreenSyncReady: 'rLynxFirstScreenSyncReady',
   patchUpdate: 'rLynxChange',
   publishEvent: 'rLynxPublishEvent',
   updateMTRefInitValue: 'rLynxChangeRefInitValue',

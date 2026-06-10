@@ -119,7 +119,7 @@
   },
   "peerDependencies": {
     "@lynx-js/lynx-ui": "^3.133.0",
-    "@lynx-js/react": "^0.121.0"
+    "@lynx-js/react": "^0.121.0 || ^0.122.0"
   },
   "peerDependenciesMeta": {
     "@lynx-js/lynx-ui": {

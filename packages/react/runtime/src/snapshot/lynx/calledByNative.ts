@@ -8,7 +8,10 @@ import { LifecycleConstant } from '../lifecycle/constant.js';
 import {
   firstScreenEventIdSwap,
   isFirstScreenSynced,
+  onFirstScreenSyncReady,
+  onFirstScreenTreeReady,
   resetFirstScreenSyncState,
+  resetFirstScreenTreeReady,
   syncFirstScreen,
 } from '../lifecycle/event/firstScreenSync.js';
 import { reloadMainThread } from '../lifecycle/reload.js';
@@ -88,13 +91,11 @@ function injectCalledByNative(): void {
 
   Object.assign(globalThis, calledByNative);
   Object.assign(globalThis, {
-    [LifecycleConstant.jsReady]: syncFirstScreen,
+    [LifecycleConstant.firstScreenSyncReady]: onFirstScreenSyncReady,
   });
 }
 
 function renderPage(data: Record<string, unknown> | undefined): void {
-  resetFirstScreenSyncState();
-
   lynx.__initData = data ?? {};
 
   setupPage(__CreatePage('0', 0));
@@ -109,6 +110,10 @@ function renderPage(data: Record<string, unknown> | undefined): void {
 
   if (__FIRST_SCREEN_SYNC_TIMING__ === 'immediately') {
     syncFirstScreen();
+  } else {
+    // `jsReady` / `manual`: the tree is ready, but the sync waits for the
+    // `rLynxFirstScreenSyncReady` signal.
+    onFirstScreenTreeReady();
   }
 }
 
@@ -122,6 +127,12 @@ function updatePage(data: Record<string, unknown> | undefined, options?: UpdateP
 
   const flushOptions = options ?? {};
   if (!isFirstScreenSynced) {
+    if (__FIRST_SCREEN_SYNC_TIMING__ === 'manual') {
+      // a `markFirstScreenSyncReady` call during the re-render below must not
+      // sync the half-rendered tree; it is deferred to `onFirstScreenTreeReady`
+      resetFirstScreenTreeReady();
+    }
+
     const oldRoot = __root;
     setRoot(new SnapshotInstance('root'));
     __root.__jsx = oldRoot.__jsx;
@@ -143,6 +154,11 @@ function updatePage(data: Record<string, unknown> | undefined, options?: UpdateP
       __pendingListUpdates.flush();
       applyRefQueue();
     }
+
+    if (__FIRST_SCREEN_SYNC_TIMING__ === 'manual') {
+      onFirstScreenTreeReady();
+    }
+
     flushOptions.triggerDataUpdated = true;
     markTiming('updateDiffVdomEnd');
   }

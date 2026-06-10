@@ -1126,11 +1126,11 @@ describe('event when firstScreenSyncTiming is jsReady', () => {
 
       expect(lynx.getNativeApp().callLepusMethod).toHaveBeenCalledTimes(1);
       expect(lynx.getNativeApp().callLepusMethod.mock.calls[0]).toMatchInlineSnapshot(`
-          [
-            "rLynxJSReady",
-            {},
-          ]
-        `);
+        [
+          "rLynxFirstScreenSyncReady",
+          {},
+        ]
+      `);
       globalEnvManager.switchToMainThread();
       const rLynxJSReady = lynx.getNativeApp().callLepusMethod.mock.calls[0];
       globalThis[rLynxJSReady[0]](rLynxJSReady[1]);

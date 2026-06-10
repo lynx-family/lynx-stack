@@ -13,6 +13,7 @@ import { factory, withInitDataInState } from './core/initData.js';
 import { __root } from './root.js';
 import { profileEnd, profileStart } from './shared/profile.js';
 import { LifecycleConstant } from './snapshot/lifecycle/constant.js';
+import { onFirstScreenSyncReady } from './snapshot/lifecycle/event/firstScreenSync.js';
 import { flushDelayedLifecycleEvents } from './snapshot/lynx/tt.js';
 
 /**
@@ -98,12 +99,15 @@ export const root: Root = {
       if (typeof __PROFILE__ !== 'undefined' && __PROFILE__) {
         profileEnd();
       }
-      if (__FIRST_SCREEN_SYNC_TIMING__ === 'immediately') {
-        // This is for cases where `root.render()` is called asynchronously,
-        // `firstScreen` message might have been reached.
-        flushDelayedLifecycleEvents();
+      if (__FIRST_SCREEN_SYNC_TIMING__ === 'jsReady') {
+        // `jsReady` is a special case of the `manual` first-screen sync: the
+        // framework marks ready automatically once the background is ready.
+        lynx.getNativeApp().callLepusMethod(LifecycleConstant.firstScreenSyncReady, {});
       } else {
-        lynx.getNativeApp().callLepusMethod(LifecycleConstant.jsReady, {});
+        // `immediately` or `manual`: the first screen is synced without waiting
+        // for the background, so the `firstScreen` message might have been
+        // reached when `root.render()` is called asynchronously.
+        flushDelayedLifecycleEvents();
       }
     }
   },
@@ -112,6 +116,36 @@ export const root: Root = {
     lynx.registerDataProcessors(dataProcessorDefinition);
   },
 };
+
+/**
+ * Mark the first screen as ready to sync when `firstScreenSyncTiming` is `'manual'`.
+ *
+ * The main thread holds the UI control until this is called, so the handover timing to
+ * the background thread (for hydration) is fully controlled by the user. It can be called
+ * from both threads (a background-thread call is forwarded to the main thread), is a no-op
+ * unless `firstScreenSyncTiming` is `'manual'`, and has no further effect once called.
+ *
+ * @example
+ *
+ * ```ts
+ * import { markFirstScreenSyncReady } from "@lynx-js/react"
+ *
+ * markFirstScreenSyncReady();
+ * ```
+ *
+ * @public
+ */
+export function markFirstScreenSyncReady(): void {
+  if (__FIRST_SCREEN_SYNC_TIMING__ !== 'manual') {
+    return;
+  }
+  if (typeof __BACKGROUND__ !== 'undefined' && __BACKGROUND__) {
+    // The sync happens on the main thread, forward the mark to it.
+    lynx.getNativeApp().callLepusMethod(LifecycleConstant.firstScreenSyncReady, {});
+    return;
+  }
+  onFirstScreenSyncReady();
+}
 
 const _InitData = /* @__PURE__ */ factory<InitData>(
   {
