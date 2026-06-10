@@ -23,10 +23,13 @@ const config: UserWorkspaceConfig = defineProject({
   test: {
     name: 'rspeedy/react',
     setupFiles: ['@lynx-js/vitest-setup/setup.ts'],
-    // These tests build fixtures through `createRspeedy().build()`, which now runs
-    // the default type checker on each build — enough extra work to exceed the
-    // default 5s timeout on slower machines.
-    testTimeout: 30_000,
+    // These tests build fixtures through `createRspeedy().build()` to assert
+    // bundling behavior — they don't type-check (and some fixtures intentionally
+    // fail to build). Skip the default type checker to avoid the per-build
+    // overhead (and timeouts) it would otherwise add.
+    env: {
+      RSPEEDY_TYPE_CHECK: 'false',
+    },
   },
 })
 
