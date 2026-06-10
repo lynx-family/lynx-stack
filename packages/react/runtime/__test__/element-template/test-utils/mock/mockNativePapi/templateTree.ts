@@ -19,6 +19,7 @@ export interface CompiledTemplateNode {
   __typedElementType?: string;
   __attributeSlots?: unknown[] | null;
   __elementSlots?: unknown[][] | null;
+  __bundleUrl?: string;
   __options?: Record<string, unknown>;
 }
 
@@ -575,8 +576,10 @@ function serializeTemplateNode(
   }
 
   const templateId = root['templateId'];
+  const bundleUrl = root['__bundleUrl'];
   return {
     templateKey: templateId === '_et_builtin_raw_text' ? '_et_builtin_raw_text' : String(templateId),
+    ...(typeof bundleUrl === 'string' ? { bundleUrl } : {}),
     attributeSlots: templateId === '_et_builtin_raw_text'
       ? [String((isRecord(root['attributes']) ? root['attributes']?.['text'] : '') ?? '')]
       : normalizeAttributeSlots(root['__attributeSlots']),

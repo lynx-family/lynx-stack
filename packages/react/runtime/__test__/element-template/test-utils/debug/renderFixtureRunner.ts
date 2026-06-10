@@ -23,6 +23,7 @@ import { serializeToJSX } from './serializer.js';
 
 declare global {
   var __USE_ELEMENT_TEMPLATE__: boolean | undefined;
+  var globDynamicComponentEntry: string | undefined;
 }
 
 interface RootNode {
@@ -33,6 +34,12 @@ interface RootNode {
 interface TransformResult {
   code?: string;
   elementTemplates?: unknown[];
+}
+
+interface CompiledRenderFixtureConfig {
+  cssScope: false | 'all';
+  isDynamicComponent: boolean;
+  dynamicComponentEntry?: string;
 }
 
 interface RegisteredTemplateFixture {
@@ -129,6 +136,8 @@ async function runCompiledRenderFixture(options: {
   const expectedPath = path.join(fixtureDir, 'output.txt');
   const papiPath = path.join(fixtureDir, 'papi.txt');
   const tempImportPath = path.join(tempDir, 'temp_actual.js');
+  const fixtureConfig = readCompiledRenderFixtureConfig(fixtureDir, fixtureName);
+  const previousGlobDynamicComponentEntry = globalThis.globDynamicComponentEntry;
 
   if (!fs.existsSync(sourcePath)) {
     throw new Error(`Source file missing for fixture "${fixtureName}"`);
@@ -164,6 +173,9 @@ async function runCompiledRenderFixture(options: {
   const nativeLog = installed.nativeLog as unknown[];
   const cleanup = installed.cleanup;
   const root = __CreateTypedElementTemplate('page', null, null, '0', null) as unknown as RootNode;
+  if (fixtureConfig.dynamicComponentEntry !== undefined) {
+    globalThis.globDynamicComponentEntry = fixtureConfig.dynamicComponentEntry;
+  }
 
   try {
     const code = fs.readFileSync(sourcePath, 'utf8');
@@ -173,12 +185,13 @@ async function runCompiledRenderFixture(options: {
       pluginName: 'test-plugin',
       filename: 'index.tsx',
       sourcemap: false,
-      cssScope: false,
+      cssScope: fixtureConfig.cssScope === 'all' ? { mode: 'all', filename: 'index.tsx' } : false,
       elementTemplate: {
         preserveJsx: false,
         runtimePkg: '@lynx-js/react/element-template/internal',
         filename: 'index.tsx',
         target: 'LEPUS',
+        isDynamicComponent: fixtureConfig.isDynamicComponent,
       },
       shake: false,
       compat: true,
@@ -191,6 +204,12 @@ async function runCompiledRenderFixture(options: {
 
     let outputCode = result.code ?? '';
     outputCode = outputCode.replace(/from ["']react\/jsx-runtime["']/g, 'from "@lynx-js/react/jsx-runtime"');
+    // The transform keeps `/*@jsxCSSId 1*/ import "x.css?cssId=1";` in
+    // compiled output; strip it only for dynamic import execution.
+    const importableCode = outputCode.replace(
+      /\/\*@jsxCSSId \d+\*\/ import ["'][^"']+\.(?:css|scss|sass|less)\?cssId=\d+["'];\n?/g,
+      '',
+    );
 
     const outputTemplates = result.elementTemplates ? JSON.stringify(result.elementTemplates, null, 2) : '';
 
@@ -220,15 +239,14 @@ async function runCompiledRenderFixture(options: {
     }
 
     if (update && outputTemplates) {
-      registerBuiltinRawTextTemplate();
-      registerTemplates(JSON.parse(outputTemplates) as RegisteredTemplateFixture[]);
+      registerCompiledRenderTemplates(outputTemplates);
     } else if (fs.existsSync(templatesPath)) {
-      registerBuiltinRawTextTemplate();
-      const templates = JSON.parse(fs.readFileSync(templatesPath, 'utf8')) as RegisteredTemplateFixture[];
-      registerTemplates(templates);
+      registerCompiledRenderTemplates(
+        fs.readFileSync(templatesPath, 'utf8'),
+      );
     }
 
-    fs.writeFileSync(tempImportPath, outputCode);
+    fs.writeFileSync(tempImportPath, importableCode);
     try {
       const module = (await import(`${pathToFileURL(tempImportPath).href}?t=${Date.now()}`)) as { App: unknown };
       const vnode = { type: module.App, props: {}, key: null, ref: null };
@@ -264,7 +282,54 @@ async function runCompiledRenderFixture(options: {
     clearEtAttrPlanMap();
     cleanup();
     globalThis.__USE_ELEMENT_TEMPLATE__ = undefined;
+    if (previousGlobDynamicComponentEntry === undefined) {
+      delete globalThis.globDynamicComponentEntry;
+    } else {
+      globalThis.globDynamicComponentEntry = previousGlobDynamicComponentEntry;
+    }
   }
+}
+
+function readCompiledRenderFixtureConfig(
+  fixtureDir: string,
+  fixtureName: string,
+): CompiledRenderFixtureConfig {
+  const configPath = path.join(fixtureDir, 'fixture.config.json');
+  if (!fs.existsSync(configPath)) {
+    return {
+      cssScope: false,
+      isDynamicComponent: false,
+    };
+  }
+
+  const rawConfig = JSON.parse(fs.readFileSync(configPath, 'utf8')) as Record<string, unknown>;
+  const cssScope = rawConfig['cssScope'] ?? false;
+  if (cssScope !== false && cssScope !== 'all') {
+    throw new Error(`Unsupported cssScope for fixture "${fixtureName}": ${String(cssScope)}`);
+  }
+
+  const isDynamicComponent = rawConfig['isDynamicComponent'] === true;
+  const dynamicComponentEntry = rawConfig['dynamicComponentEntry'];
+  if (dynamicComponentEntry !== undefined && typeof dynamicComponentEntry !== 'string') {
+    throw new Error(`dynamicComponentEntry must be a string for fixture "${fixtureName}".`);
+  }
+  if (isDynamicComponent && dynamicComponentEntry === undefined) {
+    throw new Error(`Dynamic component fixture "${fixtureName}" must set dynamicComponentEntry.`);
+  }
+
+  return {
+    cssScope,
+    isDynamicComponent,
+    dynamicComponentEntry,
+  };
+}
+
+function registerCompiledRenderTemplates(
+  serializedTemplates: string,
+): void {
+  registerBuiltinRawTextTemplate();
+  const templates = JSON.parse(serializedTemplates) as RegisteredTemplateFixture[];
+  registerTemplates(templates);
 }
 
 function normalizeCaseFixtureResult(result: unknown): CaseFixtureResult {

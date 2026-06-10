@@ -17,11 +17,13 @@ import { installMockNativePapi, lastMock } from '../../test-utils/mock/mockNativ
 
 interface CompileOptions {
   isDynamicComponent?: boolean;
+  cssScopeAll?: boolean;
 }
 
 interface RenderResult {
   rootRef: ElementRef;
   userTemplateIds: string[];
+  code: string;
 }
 
 function findUserTemplateCreateLog(): unknown[] | undefined {
@@ -32,28 +34,12 @@ function findUserTemplateCreateLog(): unknown[] | undefined {
   ) as unknown[];
 }
 
-function registerCompiledTemplates(
-  result: TransformNodiffOutput,
-  entryName: string | undefined,
-): void {
+function registerCompiledTemplates(result: TransformNodiffOutput): void {
   const templates = result.elementTemplates ?? [];
 
   clearTemplates();
   registerBuiltinRawTextTemplate();
   registerTemplates(templates);
-
-  if (!entryName) {
-    return;
-  }
-
-  registerTemplates(
-    templates
-      .filter(template => template.templateId !== '_et_builtin_raw_text')
-      .map(template => ({
-        ...template,
-        templateId: `${entryName}:${template.templateId}`,
-      })),
-  );
 }
 
 async function compileAndRender(
@@ -70,16 +56,12 @@ async function compileAndRender(
     globalThis.__MAIN_THREAD__ = true;
     globalThis.__BACKGROUND__ = false;
 
-    const entryName = options.isDynamicComponent
-      ? String(globalThis.globDynamicComponentEntry)
-      : undefined;
-
     const result = await transformReactLynx(source, {
       mode: 'test',
       pluginName: 'runtime-transform-contract',
       filename: 'source.tsx',
       sourcemap: false,
-      cssScope: false,
+      cssScope: options.cssScopeAll ? { mode: 'all', filename: 'source.tsx' } : false,
       elementTemplate: {
         preserveJsx: false,
         runtimePkg: '@lynx-js/react/element-template/internal',
@@ -96,10 +78,15 @@ async function compileAndRender(
       refresh: false,
     }) as TransformNodiffOutput;
 
-    let outputCode = result.code;
+    const transformedCode = result.code;
+    let outputCode = transformedCode;
     outputCode = outputCode.replace(/from ["']react\/jsx-runtime["']/g, 'from "@lynx-js/react/jsx-runtime"');
+    outputCode = outputCode.replace(
+      /\/\*@jsxCSSId \d+\*\/ import ["'][^"']+\.(?:css|scss|sass|less)\?cssId=\d+["'];\n?/g,
+      '',
+    );
 
-    registerCompiledTemplates(result, entryName);
+    registerCompiledTemplates(result);
 
     fs.writeFileSync(tempImportPath, outputCode);
     const module = (await import(`${pathToFileURL(tempImportPath).href}?t=${Date.now()}`)) as {
@@ -117,6 +104,7 @@ async function compileAndRender(
       userTemplateIds: (result.elementTemplates ?? [])
         .map(template => template.templateId)
         .filter(templateId => templateId !== '_et_builtin_raw_text'),
+      code: transformedCode,
     };
   } finally {
     fs.rmSync(tempDir, { recursive: true, force: true });
@@ -139,11 +127,11 @@ describe('render transform contract', () => {
     resetTemplateId();
   });
 
-  it('does not pass legacy css-id metadata through ET create', async () => {
-    const { rootRef, userTemplateIds } = await compileAndRender(`
-      /**
-       * @jsxCSSId 100
-       */
+  it('passes scoped css-id through ET template root attrs', async () => {
+    const { code, rootRef, userTemplateIds } = await compileAndRender(
+      `
+      import './style.css';
+
       export function App() {
         return (
           <view id="main">
@@ -151,17 +139,22 @@ describe('render transform contract', () => {
           </view>
         );
       }
-    `);
+    `,
+      { cssScopeAll: true },
+    );
+
+    expect(code).toContain('style.css?cssId=1460700');
 
     expect(rootRef).toMatchObject({
       tag: 'view',
       attributes: {
         id: 'main',
+        'css-id': 1460700,
       },
       __handleId: -1,
     });
     expect(elementTemplateRegistry.get(-1)).toMatchObject({
-      attributes: { id: 'main' },
+      attributes: { id: 'main', 'css-id': 1460700 },
     });
     expect(userTemplateIds).toEqual([
       expect.stringMatching(/^_et_[0-9a-f]{12}$/),
@@ -176,7 +169,7 @@ describe('render transform contract', () => {
     ]);
   });
 
-  it('does not pass legacy entry-name metadata through ET create for dynamic component output', async () => {
+  it('passes dynamic component entry through ET bundleUrl create parameter', async () => {
     vi.stubGlobal('globDynamicComponentEntry', 'lazy-entry');
 
     const { rootRef, userTemplateIds } = await compileAndRender(
@@ -210,8 +203,8 @@ describe('render transform contract', () => {
     expect(userTemplateIds[0]).not.toContain(':');
     expect(findUserTemplateCreateLog()).toEqual([
       '__CreateElementTemplate',
-      expect.stringMatching(/^lazy-entry:_et_[0-9a-f]{12}$/),
-      null,
+      expect.stringMatching(/^_et_[0-9a-f]{12}$/),
+      'lazy-entry',
       null,
       null,
       -1,

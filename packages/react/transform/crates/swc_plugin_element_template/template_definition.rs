@@ -182,6 +182,7 @@ where
           dynamic_attr_slots,
           dynamic_attr_slot_cursor,
           element_slot_index,
+          false,
         )),
         JSXElementChild::JSXFragment(frag) => {
           out.extend(self.element_template_from_jsx_children(
@@ -222,6 +223,7 @@ where
       dynamic_attr_slots,
       dynamic_attr_slot_cursor,
       element_slot_index,
+      true,
     )
   }
 
@@ -231,6 +233,7 @@ where
     dynamic_attr_slots: &[TemplateAttributeSlot],
     dynamic_attr_slot_cursor: &mut usize,
     element_slot_index: &mut i32,
+    is_template_root: bool,
   ) -> Expr {
     if is_slot_placeholder(n) {
       let idx =
@@ -367,6 +370,19 @@ where
         element_slot_index,
       )
     };
+
+    if is_template_root {
+      if let Some(css_id) = self.css_id_value {
+        attribute_descriptors.push(self.element_template_static_attribute_descriptor(
+          "css-id",
+          Expr::Lit(Lit::Num(Number {
+            span: DUMMY_SP,
+            value: css_id,
+            raw: None,
+          })),
+        ));
+      }
+    }
 
     let final_tag = tag_value.to_string_lossy().to_string();
     self.element_template_element_node(&final_tag, attribute_descriptors, children)

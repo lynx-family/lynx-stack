@@ -1,0 +1,25 @@
+Array [
+  Array [
+    "__CreateTypedElementTemplate",
+    "page",
+    null,
+    null,
+    "0",
+    null,
+  ],
+  Array [
+    "__CreateElementTemplate",
+    "_et_foo",
+    "dynamic-entry",
+    null,
+    null,
+    -1,
+  ],
+  Array [
+    "__InsertNodeToElementTemplate",
+    "<page />",
+    0,
+    "<_et_foo />",
+    null,
+  ],
+]

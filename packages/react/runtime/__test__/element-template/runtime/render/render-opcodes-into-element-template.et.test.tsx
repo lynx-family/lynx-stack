@@ -128,6 +128,26 @@ describe('renderOpcodesIntoElementTemplate', () => {
     expect(addEvent).not.toHaveBeenCalled();
   });
 
+  it('prepares attr plan slots when the opcode omits attributeSlots', () => {
+    const rootRef = { kind: 'root-ref' };
+    createElementTemplate.mockReturnValue(rootRef);
+    __etAttrPlanMap._et_event = [0, adaptEventAttrSlot];
+
+    renderOpcodesIntoElementTemplate([
+      __OpBegin,
+      { type: '_et_event' },
+      __OpEnd,
+    ]);
+
+    expect(createElementTemplate).toHaveBeenCalledWith(
+      '_et_event',
+      null,
+      [null],
+      null,
+      -1,
+    );
+  });
+
   it('prepares direct ref values before native create', () => {
     const rootRef = { kind: 'root-ref' };
     const ref = vi.fn();

@@ -1,0 +1,52 @@
+[
+  {
+    "templateId": "_et_eb7af03baae1",
+    "compiledTemplate": {
+      "kind": "element",
+      "type": "view",
+      "attributesArray": [
+        {
+          "kind": "static",
+          "key": "id",
+          "value": "scoped"
+        },
+        {
+          "kind": "static",
+          "key": "css-id",
+          "value": 1501958
+        }
+      ],
+      "children": [
+        {
+          "kind": "element",
+          "type": "text",
+          "attributesArray": [
+            {
+              "kind": "static",
+              "key": "text",
+              "value": "Scoped Dynamic"
+            }
+          ],
+          "children": []
+        }
+      ]
+    },
+    "sourceFile": "index.tsx"
+  },
+  {
+    "templateId": "_et_builtin_raw_text",
+    "compiledTemplate": {
+      "kind": "element",
+      "type": "raw-text",
+      "attributesArray": [
+        {
+          "kind": "slot",
+          "key": "text",
+          "attrSlotIndex": 0
+        }
+      ],
+      "children": []
+    },
+    "sourceFile": "<builtin>"
+  }
+]

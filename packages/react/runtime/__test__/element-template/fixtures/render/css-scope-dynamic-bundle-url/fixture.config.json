@@ -1,0 +1,5 @@
+{
+  "cssScope": "all",
+  "isDynamicComponent": true,
+  "dynamicComponentEntry": "lazy-entry"
+}

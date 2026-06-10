@@ -42,6 +42,23 @@ fn assert_has_single_builtin_raw_text_template(templates: &[ElementTemplateAsset
   );
 }
 
+fn assert_single_framework_css_id_attr(
+  template: &serde_json::Value,
+  expected_css_id: f64,
+  message: &str,
+) {
+  let attrs = template["attributesArray"]
+    .as_array()
+    .expect("attributesArray");
+  let css_id_attrs = attrs
+    .iter()
+    .filter(|attr| attr["key"] == "css-id")
+    .collect::<Vec<_>>();
+  assert_eq!(css_id_attrs.len(), 1, "{message}");
+  assert_eq!(css_id_attrs[0]["kind"], "static");
+  assert_eq!(css_id_attrs[0]["value"].as_f64(), Some(expected_css_id));
+}
+
 fn template_snapshot_json(templates: &[ElementTemplateAsset]) -> Vec<serde_json::Value> {
   templates
     .iter()
@@ -701,6 +718,8 @@ fn should_collect_element_templates_for_dynamic_component_in_element_template_mo
   assert_has_single_builtin_raw_text_template(&templates);
   assert!(!code.contains("__elementTemplateMap"));
   assert!(code.contains("globDynamicComponentEntry"));
+  assert!(!code.contains("templateKey"));
+  assert!(!code.contains("bundleUrl"));
 
   for template in templates {
     assert!(template.template_id.starts_with("_et_"));
@@ -855,7 +874,93 @@ fn should_report_invalid_jsx_css_id_as_diagnostic() {
   assert!(
     diagnostics
       .iter()
-      .any(|message| message == "@jsxCSSId must be numeric, got `abc`"),
+      .any(|message| message == "@jsxCSSId must be a finite number, got `abc`"),
     "expected invalid @jsxCSSId diagnostic, got: {diagnostics:?}"
+  );
+}
+
+#[test]
+fn should_report_non_finite_jsx_css_id_as_diagnostic() {
+  let (_, _, diagnostics) = transform_to_code_templates_and_diagnostics(
+    r#"
+      /**
+       * @jsxCSSId NaN
+       */
+      <view>Invalid Css Id</view>
+    "#,
+    element_template_config(),
+  );
+
+  assert!(
+    diagnostics
+      .iter()
+      .any(|message| message == "@jsxCSSId must be a finite number, got `NaN`"),
+    "expected non-finite @jsxCSSId diagnostic, got: {diagnostics:?}"
+  );
+}
+
+#[test]
+fn should_warn_and_override_direct_user_css_id_attr() {
+  let (_, templates, diagnostics) = transform_to_code_templates_and_diagnostics(
+    r#"
+      /**
+       * @jsxCSSId 100
+       */
+      <view css-id="user-css-id" />
+    "#,
+    element_template_config(),
+  );
+
+  assert!(
+    diagnostics
+      .iter()
+      .any(|message| { message.contains("css-id") && message.contains("overridden") }),
+    "expected direct css-id override diagnostic, got: {diagnostics:?}"
+  );
+
+  let template = templates
+    .iter()
+    .find(|template| template.template_id != BUILTIN_RAW_TEXT_TEMPLATE_ID)
+    .expect("should collect a user template");
+  let template = serde_json::to_value(&template.compiled_template).expect("compiled template json");
+  assert_single_framework_css_id_attr(
+    &template,
+    100.0,
+    "direct user css-id should be replaced by the framework css-id",
+  );
+}
+
+#[test]
+fn should_warn_and_override_dynamic_user_css_id_attr_without_reserving_slot() {
+  let (code, templates, diagnostics) = transform_to_code_templates_and_diagnostics(
+    r#"
+      /**
+       * @jsxCSSId 100
+       */
+      <view css-id={userCssId} />
+    "#,
+    element_template_config(),
+  );
+
+  assert!(
+    diagnostics
+      .iter()
+      .any(|message| { message.contains("css-id") && message.contains("overridden") }),
+    "expected direct css-id override diagnostic, got: {diagnostics:?}"
+  );
+  assert!(
+    !code.contains("attributeSlots"),
+    "overridden dynamic css-id should not reserve an ET attribute slot, got: {code}"
+  );
+
+  let template = templates
+    .iter()
+    .find(|template| template.template_id != BUILTIN_RAW_TEXT_TEMPLATE_ID)
+    .expect("should collect a user template");
+  let template = serde_json::to_value(&template.compiled_template).expect("compiled template json");
+  assert_single_framework_css_id_attr(
+    &template,
+    100.0,
+    "dynamic user css-id should be replaced by the framework css-id",
   );
 }

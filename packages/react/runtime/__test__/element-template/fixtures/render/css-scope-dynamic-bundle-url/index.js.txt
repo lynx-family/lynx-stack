@@ -1,0 +1,6 @@
+import { jsx as _jsx } from "@lynx-js/react/jsx-runtime";
+/*@jsxCSSId 1501958*/ import "./style.css?cssId=1501958";
+const _et_eb7af03baae1 = `${globDynamicComponentEntry}:${"_et_eb7af03baae1"}`;
+export function App() {
+    return /*#__PURE__*/ _jsx(_et_eb7af03baae1, {});
+}

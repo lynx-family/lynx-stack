@@ -1,0 +1,25 @@
+[
+  [
+    "__CreateTypedElementTemplate",
+    "page",
+    null,
+    null,
+    "0",
+    null
+  ],
+  [
+    "__CreateElementTemplate",
+    "_et_eb7af03baae1",
+    "lazy-entry",
+    null,
+    null,
+    -1
+  ],
+  [
+    "__InsertNodeToElementTemplate",
+    "<page />",
+    0,
+    "<_et_eb7af03baae1 />",
+    null
+  ]
+]
