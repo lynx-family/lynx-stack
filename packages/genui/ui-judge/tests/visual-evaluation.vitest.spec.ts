@@ -422,7 +422,8 @@ async function createPatternPng(
     for (let x = 0; x < width; x++) {
       const index = (y * width + x) * 4;
       const isDark = (Math.floor(x / 8) + Math.floor(y / 8)) % 2 === 0;
-      const value = (isDark !== options.invert) ? 32 : 224;
+      const isInverted = options.invert === true;
+      const value = isDark === isInverted ? 224 : 32;
       data[index] = value;
       data[index + 1] = value;
       data[index + 2] = value;

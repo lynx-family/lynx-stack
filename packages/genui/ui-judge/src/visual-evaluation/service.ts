@@ -4,8 +4,8 @@
 import { readFile } from 'node:fs/promises';
 
 import { alignImages } from './align-images.js';
-import { compareImages } from './compare-images.js';
 import { defaultCapture } from './capture.js';
+import { compareImages } from './compare-images.js';
 import {
   createVisualEvaluationError,
   rethrowAsVisualEvaluationError,
@@ -122,7 +122,9 @@ export async function runVisualEvaluation(
   }
 }
 
-async function normalizeCapturedImage(deviceImageBase64: string): Promise<Buffer> {
+async function normalizeCapturedImage(
+  deviceImageBase64: string,
+): Promise<Buffer> {
   const buffer = decodeBase64Image(
     deviceImageBase64,
     'CAPTURE_EMPTY_RESULT',
@@ -147,17 +149,23 @@ async function runAlignment(
 }> {
   let alignResult: AlignResult | null;
   try {
-    alignResult = await alignImages(workspace.referencePath, workspace.devicePath, {
-      ...request.alignOptions,
-      outputAlignedDevicePath: workspace.alignedDevicePath,
-      outputAlignedReferencePath: workspace.alignedReferencePath,
-    });
+    alignResult = await alignImages(
+      workspace.referencePath,
+      workspace.devicePath,
+      {
+        ...request.alignOptions,
+        outputAlignedDevicePath: workspace.alignedDevicePath,
+        outputAlignedReferencePath: workspace.alignedReferencePath,
+      },
+    );
   } catch (error) {
     rethrowAsVisualEvaluationError(error, 500, 'IMAGE_ALIGNMENT_ERROR');
   }
 
   if (!alignResult) {
-    warnings.push('Image alignment confidence too low; compared original images.');
+    warnings.push(
+      'Image alignment confidence too low; compared original images.',
+    );
     return {
       devicePath: workspace.devicePath,
       referencePath: workspace.referencePath,

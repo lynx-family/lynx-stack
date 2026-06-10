@@ -4,6 +4,13 @@
 import sharp from 'sharp';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
+import {
+  VISUAL_EVALUATION_SYSTEM_PROMPT,
+  VISUAL_EVALUATION_USER_PROMPT,
+  evaluateImagesWithMidscene,
+  runVisualEvaluation,
+} from '../src/index.js';
+
 const midsceneMock = vi.hoisted(() => ({
   aiString: vi.fn<(...args: unknown[]) => Promise<string>>(),
   constructorOptions: [] as unknown[],
@@ -24,13 +31,6 @@ vi.mock('@midscene/core/agent', () => {
 
   return { Agent };
 });
-
-import {
-  VISUAL_EVALUATION_SYSTEM_PROMPT,
-  VISUAL_EVALUATION_USER_PROMPT,
-  evaluateImagesWithMidscene,
-  runVisualEvaluation,
-} from '../src/index.js';
 
 describe('evaluateImagesWithMidscene', () => {
   beforeEach(() => {
@@ -146,16 +146,11 @@ describe('evaluateImagesWithMidscene', () => {
     expect(prompt.prompt).toBe(
       `${VISUAL_EVALUATION_SYSTEM_PROMPT}\n\n${VISUAL_EVALUATION_USER_PROMPT}`,
     );
-    expect(prompt.images).toEqual([
-      {
-        name: 'reference_image',
-        url: expect.stringMatching(/^data:image\/png;base64,/),
-      },
-      {
-        name: 'rendered_image',
-        url: expect.stringMatching(/^data:image\/png;base64,/),
-      },
-    ]);
+    expect(prompt.images).toHaveLength(2);
+    expect(prompt.images[0]?.name).toBe('reference_image');
+    expect(prompt.images[0]?.url).toMatch(/^data:image\/png;base64,/);
+    expect(prompt.images[1]?.name).toBe('rendered_image');
+    expect(prompt.images[1]?.url).toMatch(/^data:image\/png;base64,/);
   });
 });
 

@@ -55,7 +55,9 @@ export async function alignImages(
     1,
     Math.min(
       targetWidth,
-      Math.round(options.downsampleWidth ?? DEFAULT_ALIGN_OPTIONS.downsampleWidth),
+      Math.round(
+        options.downsampleWidth ?? DEFAULT_ALIGN_OPTIONS.downsampleWidth,
+      ),
     ),
   );
 
@@ -95,7 +97,8 @@ export async function alignImages(
 
   if (
     !bestCandidate
-    || bestCandidate.score < (options.minScore ?? DEFAULT_ALIGN_OPTIONS.minScore)
+    || bestCandidate.score
+      < (options.minScore ?? DEFAULT_ALIGN_OPTIONS.minScore)
   ) {
     return null;
   }
@@ -168,7 +171,10 @@ async function resizeToWidth(
   };
 }
 
-async function toGrayImage(buffer: Buffer, width: number): Promise<RawGrayImage> {
+async function toGrayImage(
+  buffer: Buffer,
+  width: number,
+): Promise<RawGrayImage> {
   const { data, info } = await sharp(buffer)
     .resize({ width })
     .greyscale()

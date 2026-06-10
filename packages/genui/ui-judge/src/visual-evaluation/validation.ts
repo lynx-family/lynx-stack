@@ -24,7 +24,10 @@ export function validateVisualEvaluationRequest(
     body['referenceImage'],
     'referenceImage',
   );
-  const templateUrl = normalizeRequiredString(body['templateUrl'], 'templateUrl');
+  const templateUrl = normalizeRequiredString(
+    body['templateUrl'],
+    'templateUrl',
+  );
 
   const request: VisualEvaluationRequest = {
     referenceImage,
@@ -135,7 +138,9 @@ function validateAlignOptions(value: unknown): VisualEvaluationAlignOptions {
   return alignOptions;
 }
 
-function validateCompareOptions(value: unknown): VisualEvaluationCompareOptions {
+function validateCompareOptions(
+  value: unknown,
+): VisualEvaluationCompareOptions {
   const options = normalizeOptionsObject(value, 'compareOptions');
   const compareOptions: VisualEvaluationCompareOptions = {};
 

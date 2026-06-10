@@ -30,7 +30,10 @@ export async function compareImages(
     sharp(referencePath).metadata(),
     sharp(devicePath).metadata(),
   ]);
-  const width = Math.min(referenceMetadata.width ?? 0, deviceMetadata.width ?? 0);
+  const width = Math.min(
+    referenceMetadata.width ?? 0,
+    deviceMetadata.width ?? 0,
+  );
   const height = Math.min(
     referenceMetadata.height ?? 0,
     deviceMetadata.height ?? 0,

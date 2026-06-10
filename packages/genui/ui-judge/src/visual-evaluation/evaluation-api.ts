@@ -9,6 +9,8 @@ import sharp from 'sharp';
 import { createVisualEvaluationError } from './errors.js';
 import type { EvaluationResult } from './types.js';
 
+type EvaluationIssue = NonNullable<EvaluationResult['issues']>[number];
+
 export const VISUAL_EVALUATION_SYSTEM_PROMPT =
   `You are a strict visual quality evaluator for UI implementation fidelity.
 
@@ -197,7 +199,7 @@ export function normalizeEvaluationResult(raw: unknown): EvaluationResult {
 
   const result: EvaluationResult = {
     ...candidate,
-    issues: Array.isArray(candidate['issues']) ? candidate['issues'] : [],
+    issues: normalizeEvaluationIssues(candidate['issues']),
     reason: typeof candidate['reason'] === 'string'
       ? candidate['reason']
       : '',
@@ -209,6 +211,29 @@ export function normalizeEvaluationResult(raw: unknown): EvaluationResult {
   }
 
   return result;
+}
+
+function normalizeEvaluationIssues(value: unknown): EvaluationIssue[] {
+  if (!Array.isArray(value)) {
+    return [];
+  }
+
+  return value.filter((issue) => isEvaluationIssue(issue));
+}
+
+function isEvaluationIssue(value: unknown): value is EvaluationIssue {
+  if (typeof value !== 'object' || value === null || Array.isArray(value)) {
+    return false;
+  }
+
+  const issue = value as Record<string, unknown>;
+  return typeof issue['category'] === 'string'
+    && typeof issue['description'] === 'string'
+    && (
+      issue['severity'] === 'low'
+      || issue['severity'] === 'medium'
+      || issue['severity'] === 'high'
+    );
 }
 
 async function getDataUrlImageSize(dataUrl: string): Promise<Size> {

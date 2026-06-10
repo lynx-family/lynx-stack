@@ -25,7 +25,7 @@ export function decodeBase64Image(
     throw createVisualEvaluationError(400, code, message);
   }
 
-  if (!/^[\d+/=A-Za-z]+$/.test(rawBase64) || !/^.+={0,2}$/.test(rawBase64)) {
+  if (!/^[\da-z+/]+={0,2}$/i.test(rawBase64)) {
     throw createVisualEvaluationError(400, code, message);
   }
 

@@ -9,10 +9,7 @@ import {
   toVisualEvaluationErrorResponse,
 } from './errors.js';
 import { runVisualEvaluation } from './service.js';
-import type {
-  RunVisualEvaluationOptions,
-  VisualEvaluationErrorResponse,
-} from './types.js';
+import type { RunVisualEvaluationOptions } from './types.js';
 
 const DEFAULT_ENDPOINT_PATH = '/visual-evaluation';
 const DEFAULT_MAX_BODY_BYTES = 20 * 1024 * 1024;
@@ -129,7 +126,7 @@ async function readBody(
 function writeJson(
   res: ServerResponse,
   status: number,
-  body: VisualEvaluationErrorResponse | unknown,
+  body: unknown,
 ): void {
   const payload = `${JSON.stringify(body)}\n`;
   res.statusCode = status;
