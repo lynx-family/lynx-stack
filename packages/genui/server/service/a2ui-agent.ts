@@ -44,6 +44,7 @@ export interface A2UIResponse {
   text: string;
   messages: A2UIMessage[];
   errors: string[];
+  warnings: string[];
   attempts: number;
   usage?: unknown;
   finishReason?: unknown;
@@ -311,6 +312,7 @@ export default class A2UIAgentService {
           text,
           messages,
           errors: [],
+          warnings: validation.warnings,
           attempts: attempt,
           usage: lastUsage,
           finishReason: lastFinishReason,
@@ -332,6 +334,7 @@ export default class A2UIAgentService {
       text: lastText,
       messages: [],
       errors: lastErrors,
+      warnings: [],
       attempts: maxAttempts,
       usage: lastUsage,
       finishReason: lastFinishReason,

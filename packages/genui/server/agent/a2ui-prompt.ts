@@ -91,13 +91,14 @@ and exactly ONE of the following keys:
     "children": { "path": "/items", "componentId": "itemRow" }
     "text": { "path": "item" }
   If each array item is { "name": "Alpha" }, use { "path": "name" } instead.
-  For repeated text values, still use object items such as
+  Templated children require each list item to be an object with named fields.
+  A2UI data bindings are JSON Pointer paths to named data fields, not current
+  item references. Always use this object-item shape:
     { "items": [{ "label": "Alpha" }, { "label": "Beta" }] }
-  and bind with { "path": "label" }. Do NOT use primitive arrays like
-  { "items": ["Alpha", "Beta"] } with { "path": "." }; this renderer does not
-  resolve "." as the current item.
-  Template collection data MUST be an array of objects. If the source values
-  are plain strings, wrap them as objects before binding.
+    "children": { "path": "/items", "componentId": "itemRow" }
+    "text": { "path": "label" }
+  If the source values are strings, numbers, booleans, or other primitive
+  values, wrap each value in an object field before using it in a template.
   Do NOT use wildcard paths like "/items/*/item"; collection scope makes the
   current item the base path automatically.
 - Use updateDataModel messages to populate values at those paths.
@@ -138,10 +139,11 @@ function buildHardRules(catalogId: string): string {
    send updateDataModel first when the first visible components use bindings.
    In template children, use relative paths from the current item, for example
    { "path": "item" }, never absolute wildcard paths like "/items/*/item".
-   Do not use { "path": "." }; for repeated primitive text values, model the
-   data as objects such as [{ "label": "Alpha" }] and bind "label".
-   Any data-model array used by template children MUST contain objects; never
-   bind template children to an array of strings/numbers/booleans.
+   Never use { "path": "." }; A2UI cannot resolve "." as the current item.
+   Any data-model array used by template children MUST contain objects with
+   named fields. Never bind template children to an array of strings, numbers,
+   booleans, or other primitive values. Wrap primitive values as objects, e.g.
+   [{ "label": "Alpha" }], then bind { "path": "label" }.
    Do not use List merely because data is repeated. Prefer Column/Row
    template children for non-scrollable repeated content; reserve List for
    scrollable collections.
