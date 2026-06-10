@@ -27,7 +27,7 @@ import { useMediaQuery } from '../hooks/useMediaQuery.js';
 import { copyToClipboard } from '../utils/clipboard.js';
 import { DEFAULT_A2UI_DEMO_URL } from '../utils/demoUrl.js';
 import type { Protocol } from '../utils/protocol.js';
-import { buildRenderUrl } from '../utils/renderUrl.js';
+import { buildOpenUIRenderUrl, buildRenderUrl } from '../utils/renderUrl.js';
 
 declare const __A2UI_PLAYGROUND_CLIENT_PAYLOAD_STORE__: boolean;
 
@@ -91,6 +91,7 @@ interface A2UIPreviewSource {
 interface OpenUIPreviewSource {
   kind: 'openui';
   rawText: string;
+  playbackMode?: boolean;
 }
 
 interface PlaceholderPreviewSource {
@@ -234,21 +235,6 @@ function useRspeedyDevUrl(): string {
     };
   }, []);
   return url;
-}
-
-function buildOpenUIRenderUrl(
-  rawText: string,
-  baseUrl: string,
-  speed: number,
-): string {
-  const url = new URL('render.html', baseUrl);
-  url.searchParams.set('protocol', 'openui');
-  url.searchParams.set('demoUrl', './openui.web.js');
-  url.searchParams.set('rawText', rawText);
-  if (speed !== 1) {
-    url.searchParams.set('speed', String(speed));
-  }
-  return url.toString();
 }
 
 function absoluteUrl(url: string, origin: string): string {
@@ -750,12 +736,15 @@ export function PreviewPanel(props: PreviewPanelProps) {
       return;
     }
 
-    const url = buildOpenUIRenderUrl(previewSource.rawText, baseUrl, speed);
-    const shareUrl = buildOpenUIRenderUrl(
-      previewSource.rawText,
-      shareBaseUrl,
+    const url = buildOpenUIRenderUrl({
+      rawText: previewSource.rawText,
       speed,
-    );
+      playbackMode: previewSource.playbackMode,
+    }, baseUrl);
+    const shareUrl = buildOpenUIRenderUrl({
+      rawText: previewSource.rawText,
+      speed,
+    }, shareBaseUrl);
     setRenderUrl(url);
     setRenderShareUrl(shareUrl);
 
@@ -796,23 +785,15 @@ export function PreviewPanel(props: PreviewPanelProps) {
           }
           setLynxDevUrl(u.toString());
 
-          const r = new URL('render.html', baseUrl);
-          r.searchParams.set('protocol', 'openui');
-          r.searchParams.set('demoUrl', './openui.web.js');
-          r.searchParams.set('rawTextUrl', rawTextUrlAbs);
-          if (speed !== 1) {
-            r.searchParams.set('speed', String(speed));
-          }
-          setRenderUrl(r.toString());
-
-          const s = new URL('render.html', shareBaseUrl);
-          s.searchParams.set('protocol', 'openui');
-          s.searchParams.set('demoUrl', './openui.web.js');
-          s.searchParams.set('rawTextUrl', rawTextUrlAbs);
-          if (speed !== 1) {
-            s.searchParams.set('speed', String(speed));
-          }
-          setRenderShareUrl(s.toString());
+          setRenderUrl(buildOpenUIRenderUrl({
+            rawTextUrl: rawTextUrlAbs,
+            speed,
+            playbackMode: previewSource.playbackMode,
+          }, baseUrl));
+          setRenderShareUrl(buildOpenUIRenderUrl({
+            rawTextUrl: rawTextUrlAbs,
+            speed,
+          }, shareBaseUrl));
         }
       } catch {
         // Keep the inline URLs above if shortening is unavailable.

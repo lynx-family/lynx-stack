@@ -71,7 +71,7 @@ const OPENUI_SCENARIO_SCHEMA: LibraryJSONSchema = {
 
 const openUiScenarioParser = createParser(OPENUI_SCENARIO_SCHEMA, 'Stack');
 
-function parseScenario(raw: string): string {
+export function parseOpenUIScenarioRaw(raw: string): string {
   return JSON.stringify(openUiScenarioParser.parse(raw), null, 2);
 }
 
@@ -727,21 +727,21 @@ entBtn = Buttons([Button("Contact Sales", Action([@ToAssistant("Contact sales fo
     title: 'Query Weather',
     badge: 'v0.5',
     raw: V05_QUERY_WEATHER_RAW,
-    parsed: parseScenario(V05_QUERY_WEATHER_RAW),
+    parsed: parseOpenUIScenarioRaw(V05_QUERY_WEATHER_RAW),
   },
   {
     id: 'v05-mutation-action',
     title: 'Mutation Action',
     badge: 'v0.5',
     raw: V05_MUTATION_ACTION_RAW,
-    parsed: parseScenario(V05_MUTATION_ACTION_RAW),
+    parsed: parseOpenUIScenarioRaw(V05_MUTATION_ACTION_RAW),
   },
   {
     id: 'v05-stateful-picker',
     title: 'Stateful Picker',
     badge: 'v0.5',
     raw: V05_STATEFUL_PICKER_RAW,
-    parsed: parseScenario(V05_STATEFUL_PICKER_RAW),
+    parsed: parseOpenUIScenarioRaw(V05_STATEFUL_PICKER_RAW),
   },
   {
     id: 'recipe-card',
