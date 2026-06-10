@@ -296,6 +296,9 @@ export function validateA2UIOutput(
   });
   const knownComponents = new Set(catalog.components.map((c) => c.name));
   const componentSpecs = new Map(catalog.components.map((c) => [c.name, c]));
+  const knownFunctions = new Set(
+    (catalog.functions ?? []).map((fn) => fn.name),
+  );
 
   // structural checks ----------------------------------------------------
   const firstMessage = messages[0];
@@ -344,6 +347,16 @@ export function validateA2UIOutput(
         ?? new Map<string, A2UIComponent>();
       for (const rawComponent of msg.updateComponents.components) {
         const comp = rawComponent as A2UIComponent;
+        for (const fn of collectFunctionCalls(comp, `component.${comp.id}`)) {
+          if (!knownFunctions.has(fn.name)) {
+            const allowed = knownFunctions.size > 0
+              ? [...knownFunctions].join(', ')
+              : '<none>';
+            errors.push(
+              `Unknown function "${fn.name}" at ${fn.path}. Allowed functions: ${allowed}.`,
+            );
+          }
+        }
         if (knownComponents.has(comp.component)) {
           validateComponentAgainstCatalog(
             comp,
@@ -549,6 +562,29 @@ function collectPaths(node: unknown, acc: string[]): void {
     return;
   }
   for (const value of Object.values(record)) collectPaths(value, acc);
+}
+
+function collectFunctionCalls(
+  node: unknown,
+  path = '<root>',
+): { name: string; path: string }[] {
+  if (!isRecord(node) && !Array.isArray(node)) return [];
+  if (Array.isArray(node)) {
+    return node.flatMap((item, index) =>
+      collectFunctionCalls(item, `${path}.${index}`)
+    );
+  }
+
+  const record = node;
+  const calls: { name: string; path: string }[] = [];
+  if (typeof record.call === 'string' && isRecord(record.args)) {
+    calls.push({ name: record.call, path });
+  }
+
+  for (const [key, value] of Object.entries(record)) {
+    calls.push(...collectFunctionCalls(value, `${path}.${key}`));
+  }
+  return calls;
 }
 
 function collectTemplatePaths(comp: A2UIComponent): string[] {

@@ -185,6 +185,9 @@ function buildHardRules(catalogId: string): string {
 23. For Image.url, provide a short English image search query such as
     "fresh pasta on a table" or "city skyline at night". Do NOT invent photo
     CDN URLs. The server resolves Image.url values through its image provider.
+24. Function calls are allowed only when the "call" name exactly matches a
+    function listed under "Available functions" in the active catalog. Do NOT
+    invent function names.
 `;
 }
 

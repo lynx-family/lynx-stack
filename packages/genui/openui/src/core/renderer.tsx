@@ -6,10 +6,19 @@ import type {
   ActionPlan,
   ElementNode,
   EvaluationContext,
+  McpClientLike,
+  OpenUIError,
   ParseResult,
   Store,
+  ToolProvider,
 } from '@openuidev/lang-core';
-import { ACTION_STEPS, BuiltinActionType } from '@openuidev/lang-core';
+import {
+  ACTION_STEPS,
+  BuiltinActionType,
+  ToolNotFoundError,
+  createStore,
+  extractToolResult,
+} from '@openuidev/lang-core';
 
 import {
   Fragment,
@@ -19,13 +28,55 @@ import {
   useRef,
   useState,
 } from '@lynx-js/react';
+import type { ReactNode } from '@lynx-js/react';
 
-import { OpenUIContext } from './context.jsx';
-import type { Library, RenderOutput } from './library.jsx';
+import { OpenUIContext, useOpenUI, useRenderNode } from './context.jsx';
+import { useOpenUIState } from './hooks/useOpenUIState.js';
+import type { ComponentRenderer, Library, RenderOutput } from './library.jsx';
 import { keyFrom } from './utils.js';
 import type { LegacyActionConfig } from '../catalog/Action/index.jsx';
 
 export type { Library, RenderOutput };
+
+export type ToolProviderInput =
+  | Record<string, (args: Record<string, unknown>) => unknown>
+  | McpClientLike
+  | null;
+
+export interface OpenUiRendererRuntimeProps {
+  /** Raw openui-lang response text. This enables v0.5 runtime features. */
+  response: string | null;
+  /** Component library from createOpenUiLibrary(). */
+  library: Library;
+  /** Whether the LLM is still streaming; disables interactions while true. */
+  isStreaming?: boolean;
+  /** Callback when a component triggers a host action. */
+  onAction?: (event: ActionEvent) => void;
+  /** Called whenever $variables or form state changes. */
+  onStateUpdate?: (state: Record<string, unknown>) => void;
+  /** Initial persisted state. $-prefixed keys hydrate reactive bindings. */
+  initialState?: Record<string, unknown>;
+  /** Called whenever the raw parse result changes. */
+  onParseResult?: (result: ParseResult | null) => void;
+  /** Tool provider for Query()/Mutation(): function map or MCP client. */
+  toolProvider?: ToolProviderInput;
+  /** Custom loading node shown while Query() calls are in flight. */
+  queryLoader?: ReactNode;
+  /** Structured parser/runtime/query errors for correction loops. */
+  onError?: (errors: OpenUIError[]) => void;
+}
+
+export interface OpenUiRendererParsedProps {
+  /** Pre-parsed result. Kept for v0.1/static-render compatibility. */
+  result: ParseResult | null;
+  library: Library;
+  onAction?: (event: ActionEvent) => void;
+  isStreaming?: boolean;
+}
+
+export type OpenUiRendererProps =
+  | OpenUiRendererRuntimeProps
+  | OpenUiRendererParsedProps;
 
 interface FieldEntry {
   value: unknown;
@@ -85,11 +136,7 @@ function getFieldEntry(
   return formValue[name];
 }
 
-function renderValue(
-  value: unknown,
-  library: Library,
-  onAction?: (event: ActionEvent) => void,
-): RenderOutput {
+function renderDeep(value: unknown): ReactNode {
   if (value === null || value === undefined) return null;
 
   if (
@@ -102,63 +149,168 @@ function renderValue(
   if (Array.isArray(value)) {
     return value.map((v, i) => (
       <Fragment key={keyFrom(v, i)}>
-        {renderValue(v, library, onAction)}
+        {renderDeep(v)}
       </Fragment>
     ));
   }
 
   if (isElementNode(value)) {
     const stableKey = value.statementId ?? keyFrom(value);
-    return (
-      <RenderNode
-        key={stableKey}
-        stableKey={stableKey}
-        node={value}
-        library={library}
-        {...(onAction ? { onAction } : {})}
-      />
-    );
+    return <RenderNode key={stableKey} node={value} />;
   }
 
   return null;
 }
 
-function RenderNode(
-  props: {
-    key?: string;
-    stableKey?: string;
-    node: ElementNode;
-    library: Library;
-    onAction?: (event: ActionEvent) => void;
-  },
-) {
-  const { stableKey, node, library, onAction } = props;
-  const Comp = library.components[node.typeName]?.component;
+function RenderNode({ node }: { node: ElementNode }) {
+  const { library, reportError } = useOpenUI();
+  const Comp = library.components[node.typeName]?.component as
+    | ComponentRenderer<any>
+    | undefined;
 
   if (!Comp) return null;
 
-  const renderNode = (value: unknown) => renderValue(value, library, onAction);
+  try {
+    return <RenderNodeInner el={node} Comp={Comp} />;
+  } catch (error) {
+    reportError?.({
+      source: 'runtime',
+      code: 'render-error',
+      component: node.typeName,
+      message: `Component ${node.typeName} render failed: ${
+        error instanceof Error ? error.message : String(error)
+      }`,
+    });
+    return null;
+  }
+}
 
+function RenderNodeInner(
+  { el, Comp }: {
+    el: ElementNode;
+    Comp: ComponentRenderer<any>;
+  },
+) {
+  const renderNode = useRenderNode();
   return (
     <Comp
-      key={stableKey}
-      props={node.props}
+      props={el.props}
       renderNode={renderNode}
-      {...(onAction ? { onAction } : {})}
+      {...(el.statementId ? { statementId: el.statementId } : {})}
     />
   );
 }
 
-export function OpenUiRenderer(props: {
-  result: ParseResult | null;
-  library: Library;
-  onAction?: (event: ActionEvent) => void;
-  isStreaming?: boolean;
-}) {
-  const { result, library, onAction, isStreaming = false } = props;
+function DefaultQueryLoader() {
+  return (
+    <view className='OpenUIQueryLoader'>
+      <view className='OpenUIQueryLoaderDot' />
+    </view>
+  );
+}
+
+function RuntimeOpenUiRenderer(
+  {
+    response,
+    library,
+    isStreaming = false,
+    onAction,
+    onStateUpdate,
+    initialState,
+    onParseResult,
+    toolProvider,
+    queryLoader,
+    onError,
+  }: OpenUiRendererRuntimeProps,
+) {
+  const onParseResultRef = useRef(onParseResult);
+  onParseResultRef.current = onParseResult;
+
+  const toolProviderInputRef = useRef(toolProvider);
+  toolProviderInputRef.current = toolProvider;
+
+  const stableToolProvider = useRef<ToolProvider>({
+    async callTool(
+      toolName: string,
+      args: Record<string, unknown>,
+    ): Promise<unknown> {
+      const current = toolProviderInputRef.current ?? null;
+      if (current === null) {
+        throw new Error('[openui] toolProvider is null');
+      }
+
+      if (typeof (current as McpClientLike).callTool === 'function') {
+        const result = await (current as McpClientLike).callTool({
+          name: toolName,
+          arguments: args,
+        });
+        return extractToolResult(result);
+      }
+
+      const map = current as Record<
+        string,
+        (a: Record<string, unknown>) => unknown
+      >;
+      const fn = map[toolName];
+      if (!fn) throw new ToolNotFoundError(toolName, Object.keys(map));
+      return await fn(args);
+    },
+  });
+  const resolvedToolProvider =
+    toolProvider !== null && toolProvider !== undefined
+      ? stableToolProvider.current
+      : null;
+
+  const stateOptions = {
+    response,
+    library,
+    isStreaming,
+    toolProvider: resolvedToolProvider,
+    ...(onAction ? { onAction } : {}),
+    ...(onStateUpdate ? { onStateUpdate } : {}),
+    ...(initialState ? { initialState } : {}),
+    ...(onError ? { onError } : {}),
+  };
+
+  const { result, parseResult, contextValue, isQueryLoading } = useOpenUIState(
+    stateOptions,
+    renderDeep,
+  );
+
+  useEffect(() => {
+    onParseResultRef.current?.(parseResult);
+  }, [parseResult]);
+
+  if (!result?.root) return null;
+
+  return (
+    <OpenUIContext.Provider value={contextValue}>
+      <view className='OpenUIRenderer'>
+        {isQueryLoading ? (queryLoader ?? <DefaultQueryLoader />) : null}
+        <view
+          className={isQueryLoading
+            ? 'OpenUIRendererContent OpenUIRendererContentLoading'
+            : 'OpenUIRendererContent'}
+        >
+          <RenderNode node={result.root} />
+        </view>
+      </view>
+    </OpenUIContext.Provider>
+  );
+}
+
+function ParsedOpenUiRenderer(
+  {
+    result,
+    library,
+    onAction,
+    isStreaming = false,
+  }: OpenUiRendererParsedProps,
+) {
   const [formState, setFormState] = useState<FormState>({});
   const formStateRef = useRef(formState);
   const onActionRef = useRef(onAction);
+  const store = useMemo<Store>(() => createStore(), []);
 
   useEffect(() => {
     formStateRef.current = formState;
@@ -167,6 +319,10 @@ export function OpenUiRenderer(props: {
   useEffect(() => {
     onActionRef.current = onAction;
   }, [onAction]);
+
+  useEffect(() => {
+    return () => store.dispose();
+  }, [store]);
 
   const getFieldValue = useCallback(
     (formName: string | undefined, name: string) => {
@@ -194,12 +350,13 @@ export function OpenUiRenderer(props: {
         };
       } else {
         newState[name] = createFieldEntry(value, componentType);
+        store.set(name, value);
       }
 
       setFormState(newState);
       formStateRef.current = newState;
     },
-    [formStateRef, setFormState],
+    [formStateRef, setFormState, store],
   );
 
   const triggerAction = useCallback(
@@ -269,7 +426,9 @@ export function OpenUiRenderer(props: {
           : undefined;
       const actionType = legacyAction?.type
         ?? BuiltinActionType.ContinueConversation;
-      const actionParams = legacyAction?.params ?? {};
+      const actionParams = { ...(legacyAction?.params ?? {}) };
+      if (legacyAction?.url) actionParams['url'] = legacyAction.url;
+      if (legacyAction?.context) actionParams['context'] = legacyAction.context;
 
       let relevantState: Record<string, unknown> | undefined;
       const formValue = formName ? currentState[formName] : undefined;
@@ -290,28 +449,34 @@ export function OpenUiRenderer(props: {
     [formStateRef, onActionRef],
   );
 
-  const renderNode = useCallback(
-    (value: unknown) => renderValue(value, library, onAction),
-    [library, onAction],
+  const evaluationContext = useMemo<EvaluationContext>(
+    () => ({
+      getState: (name: string) => getFieldValue(undefined, name),
+      resolveRef: () => undefined,
+    }),
+    [getFieldValue],
   );
+
   const contextValue = useMemo(
     () => ({
       library,
-      renderNode,
+      renderNode: renderDeep,
       triggerAction,
       isStreaming,
+      isQueryLoading: false,
       getFieldValue,
       setFieldValue,
-      store: {} as Store,
-      evaluationContext: {} as EvaluationContext,
+      store,
+      evaluationContext,
     }),
     [
       library,
-      renderNode,
       triggerAction,
       isStreaming,
       getFieldValue,
       setFieldValue,
+      store,
+      evaluationContext,
     ],
   );
 
@@ -319,11 +484,14 @@ export function OpenUiRenderer(props: {
 
   return (
     <OpenUIContext.Provider value={contextValue}>
-      <RenderNode
-        node={result.root}
-        library={library}
-        {...(onAction ? { onAction } : {})}
-      />
+      <RenderNode node={result.root} />
     </OpenUIContext.Provider>
   );
+}
+
+export function OpenUiRenderer(props: OpenUiRendererProps) {
+  if ('response' in props) {
+    return <RuntimeOpenUiRenderer {...props} />;
+  }
+  return <ParsedOpenUiRenderer {...props} />;
 }

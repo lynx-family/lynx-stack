@@ -4,7 +4,15 @@
 
 /** @type {import('next').NextConfig} */
 const nextConfig = {
-  serverExternalPackages: ['@mastra/core'],
+  serverExternalPackages: [
+    '@mastra/core',
+    '@lynx-js/ui-judge',
+    '@midscene/core',
+    '@midscene/shared',
+    '@midscene/web',
+    '@sparticuz/chromium',
+    'playwright-core',
+  ],
 };
 
 export default nextConfig;

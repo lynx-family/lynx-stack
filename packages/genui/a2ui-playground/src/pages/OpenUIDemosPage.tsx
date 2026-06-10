@@ -107,12 +107,17 @@ export function OpenUIDemosPage(_props: { protocol: Protocol }) {
               <button
                 key={s.id}
                 type='button'
-                className={s.id === scenarioId
-                  ? 'scenarioItem active'
-                  : 'scenarioItem'}
+                className={[
+                  'scenarioItem',
+                  s.id === scenarioId ? 'active' : '',
+                  s.badge ? 'hasBadge' : '',
+                ].filter(Boolean).join(' ')}
                 onClick={() => handleSelectScenario(s.id)}
               >
                 <span className='scenarioName'>{s.title}</span>
+                {s.badge
+                  ? <span className='scenarioBadge'>{s.badge}</span>
+                  : null}
               </button>
             ))}
           </div>

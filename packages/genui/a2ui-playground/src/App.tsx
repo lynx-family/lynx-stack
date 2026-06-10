@@ -12,20 +12,21 @@ import {
 import { Button } from './components/Button.js';
 import { Moon, Sun } from './components/Icon.js';
 import { AIChatPage } from './pages/AIChatPage.js';
+import { BenchPage } from './pages/BenchPage.js';
 import { ComponentsPage } from './pages/ComponentsPage.js';
 import { DemosListPage } from './pages/DemosListPage.js';
 import { DemosPage } from './pages/DemosPage.js';
 import { OpenUIComponentsPage } from './pages/OpenUIComponentsPage.js';
 import { OpenUIDemosPage } from './pages/OpenUIDemosPage.js';
 import type { Protocol, ProtocolName } from './utils/protocol.js';
-import { DEFAULT_PROTOCOL, getProtocol } from './utils/protocol.js';
+import { DEFAULT_PROTOCOL, PROTOCOLS, getProtocol } from './utils/protocol.js';
 
 const LYNX_LIGHT_LOGO =
   'https://lf-lynx.tiktok-cdns.com/obj/lynx-artifacts-oss-sg/lynx-website/assets/lynx-dark-logo.svg';
 const LYNX_DARK_LOGO =
   'https://lf-lynx.tiktok-cdns.com/obj/lynx-artifacts-oss-sg/lynx-website/assets/lynx-light-logo.svg';
 
-type Tab = 'create' | 'examples' | 'components' | 'catalog';
+type Tab = 'create' | 'examples' | 'components' | 'catalog' | 'bench';
 
 interface TabDef {
   id: Tab;
@@ -36,6 +37,7 @@ const A2UI_TABS: TabDef[] = [
   { id: 'create', label: 'Create' },
   { id: 'examples', label: 'Examples' },
   { id: 'catalog', label: 'Catalog' },
+  { id: 'bench', label: 'Bench' },
 ];
 
 const OPENUI_TABS: TabDef[] = [
@@ -79,6 +81,9 @@ function parseHash(hash: string): Route {
   if (rest[0] === 'chat' || rest[0] === 'create') {
     return { protocol, tab: 'create' };
   }
+  if (rest[0] === 'bench' && protocol.name === 'a2ui') {
+    return { protocol, tab: 'bench' };
+  }
   // Back-compat: the standalone Playback tab is gone; route it to Examples.
   if (rest[0] === 'playback') {
     return { protocol, tab: 'examples' };
@@ -114,11 +119,34 @@ function getInitialTheme(): Theme {
   return getSystemTheme();
 }
 
+function readUrlFlag(name: string): string | null {
+  try {
+    const params = new URLSearchParams(window.location.search);
+    return params.get(name);
+  } catch {
+    return null;
+  }
+}
+
+function isEmbedded(): boolean {
+  const value = readUrlFlag('embed');
+  return value === '1' || value === 'true';
+}
+
+function getForcedTheme(): Theme | null {
+  const value = readUrlFlag('theme');
+  return value === 'light' || value === 'dark' ? value : null;
+}
+
 export function App() {
   const [route, setRoute] = useState<Route>(() =>
     parseHash(window.location.hash)
   );
-  const [theme, setTheme] = useState<Theme>(getInitialTheme);
+  const [theme, setTheme] = useState<Theme>(() => {
+    return getForcedTheme() ?? getInitialTheme();
+  });
+  const embedded = useMemo(() => isEmbedded(), []);
+  const forcedTheme = useMemo(() => getForcedTheme(), []);
 
   const protocol = route.protocol;
   const tabs = protocol.name === 'openui' ? OPENUI_TABS : A2UI_TABS;
@@ -129,12 +157,13 @@ export function App() {
   }, [theme]);
 
   useEffect(() => {
+    if (forcedTheme) return;
     try {
       window.localStorage.setItem(THEME_STORAGE_KEY, theme);
     } catch {
       // Ignore localStorage errors.
     }
-  }, [theme]);
+  }, [theme, forcedTheme]);
 
   useEffect(() => {
     const onHashChange = () => {
@@ -149,14 +178,29 @@ export function App() {
   }, [protocol.name]);
 
   const handleProtocolSelect = useCallback((name: ProtocolName) => {
-    // When switching to openui and current tab is create, fallback to examples.
-    const tab = name === 'openui' && route.tab === 'create'
+    // When switching to openui and current tab is A2UI-only, fallback to examples.
+    const tab = name === 'openui'
+        && (route.tab === 'create' || route.tab === 'bench')
       ? 'examples'
       : route.tab;
     window.location.hash = `#/${name}/${tab}`;
   }, [route.tab]);
 
   const page = useMemo(() => {
+    if (embedded) {
+      // Embedded mode (e.g. iframe on the Lynx website) only exposes the
+      // component catalog: the All Components grid and per-component preview.
+      return (
+        <ComponentsPage
+          key='components-embedded'
+          protocol={protocol}
+          componentName={route.componentName}
+          theme={theme}
+          embedded
+        />
+      );
+    }
+
     if (protocol.name === 'openui') {
       switch (route.tab) {
         case 'components':
@@ -174,6 +218,8 @@ export function App() {
     }
 
     switch (route.tab) {
+      case 'bench':
+        return <BenchPage key='bench' />;
       case 'examples':
         return route.demoId
           ? (
@@ -204,7 +250,14 @@ export function App() {
       default:
         return <AIChatPage key='create' protocol={protocol} theme={theme} />;
     }
-  }, [protocol, route.tab, route.componentName, route.demoId, theme]);
+  }, [
+    embedded,
+    protocol,
+    route.tab,
+    route.componentName,
+    route.demoId,
+    theme,
+  ]);
 
   const protocolVersionControl = (
     <div className='protocolControl'>
@@ -214,54 +267,56 @@ export function App() {
         value={protocol.name}
         onChange={(e) => handleProtocolSelect(e.target.value as ProtocolName)}
       >
-        <option value='a2ui'>A2UI v0.9</option>
-        <option value='openui'>OpenUI v0.1</option>
+        <option value='a2ui'>A2UI v{PROTOCOLS.a2ui.version}</option>
+        <option value='openui'>OpenUI v{PROTOCOLS.openui.version}</option>
       </select>
     </div>
   );
 
   return (
-    <div className='appShell'>
-      <div className='topBar'>
-        <div className='brandGroup'>
-          <img
-            className='brandLogo'
-            src={theme === 'dark' ? LYNX_DARK_LOGO : LYNX_LIGHT_LOGO}
-            alt='Lynx'
+    <div className={embedded ? 'appShell appShellEmbedded' : 'appShell'}>
+      {embedded ? null : (
+        <div className='topBar'>
+          <div className='brandGroup'>
+            <img
+              className='brandLogo'
+              src={theme === 'dark' ? LYNX_DARK_LOGO : LYNX_LIGHT_LOGO}
+              alt='Lynx'
+            />
+            <span className='brand'>Lynx GenUI Playground</span>
+          </div>
+
+          <nav className='tabNav'>
+            {tabs.map((t) => (
+              <button
+                key={t.id}
+                type='button'
+                className={route.tab === t.id
+                  ? 'tabNavItem active'
+                  : 'tabNavItem'}
+                onClick={() => handleTabClick(t.id)}
+              >
+                {t.label}
+              </button>
+            ))}
+          </nav>
+
+          <div className='spacer' />
+
+          {protocolVersionControl}
+
+          <Button
+            variant='ghost'
+            size='sm'
+            iconOnly
+            iconBefore={theme === 'dark' ? Sun : Moon}
+            className='themeToggle'
+            onClick={() => setTheme((t) => (t === 'dark' ? 'light' : 'dark'))}
+            aria-label={`Switch to ${theme === 'dark' ? 'light' : 'dark'} mode`}
+            title={`Switch to ${theme === 'dark' ? 'light' : 'dark'} mode`}
           />
-          <span className='brand'>Lynx GenUI Playground</span>
         </div>
-
-        <nav className='tabNav'>
-          {tabs.map((t) => (
-            <button
-              key={t.id}
-              type='button'
-              className={route.tab === t.id
-                ? 'tabNavItem active'
-                : 'tabNavItem'}
-              onClick={() => handleTabClick(t.id)}
-            >
-              {t.label}
-            </button>
-          ))}
-        </nav>
-
-        <div className='spacer' />
-
-        {protocolVersionControl}
-
-        <Button
-          variant='ghost'
-          size='sm'
-          iconOnly
-          iconBefore={theme === 'dark' ? Sun : Moon}
-          className='themeToggle'
-          onClick={() => setTheme((t) => (t === 'dark' ? 'light' : 'dark'))}
-          aria-label={`Switch to ${theme === 'dark' ? 'light' : 'dark'} mode`}
-          title={`Switch to ${theme === 'dark' ? 'light' : 'dark'} mode`}
-        />
-      </div>
+      )}
 
       <div className='appBody'>
         {page}

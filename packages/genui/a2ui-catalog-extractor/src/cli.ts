@@ -15,7 +15,6 @@ import {
   writeA2UICatalog,
   writeCatalogArtifacts,
   writeCatalogComponents,
-  writeCatalogFunctions,
 } from './index.js';
 import type { TypeDocProject } from './index.js';
 
@@ -37,21 +36,21 @@ Options:
   --typedoc-json <file>
                        Read an existing TypeDoc JSON project instead of
                        running TypeDoc conversion.
-  --out-dir <dir>      Output directory for component catalog.json files.
+  --out-dir <dir>      Output root directory for catalog artifacts.
   --catalog-id <id>    Catalog ID written to the full catalog.json file.
   --version            Print the package version.
   --help               Print this help message.
 
 Defaults:
   --catalog-dir src/catalog
-  --out-dir dist/catalog
+  --out-dir dist
 `;
 
 export function parseCliArgs(args: string[]): CliOptions {
   const options: CliOptions = {
     catalogDirs: [],
     help: false,
-    outDir: 'dist/catalog',
+    outDir: 'dist',
     sourceInputs: [],
     version: false,
   };
@@ -123,10 +122,6 @@ export async function runCli(
     });
 
     writeCatalogComponents(components, {
-      cwd,
-      outDir: options.outDir,
-    });
-    writeCatalogFunctions(functions, {
       cwd,
       outDir: options.outDir,
     });
@@ -204,7 +199,7 @@ function printGeneratedComponents(components: { name: string }[]): void {
 
 function printGeneratedFunctions(functions: { name: string }[]): void {
   if (functions.length === 0) return;
-  console.info(`Generated ${functions.length} A2UI function definition files.`);
+  console.info(`Generated ${functions.length} A2UI function definitions.`);
   for (const fn of functions) {
     console.info(`Generated function definition for ${fn.name}`);
   }

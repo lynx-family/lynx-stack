@@ -15,7 +15,7 @@ Use this skill when a task involves authoring, updating, debugging, or generatin
 4. Generate component catalog files with:
 
 ```bash
-a2ui-catalog-extractor --catalog-dir src/catalog --out-dir dist/catalog
+a2ui-catalog-extractor --catalog-dir src/catalog --out-dir dist
 ```
 
 ## Supported Type Shapes

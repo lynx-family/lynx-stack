@@ -15,6 +15,7 @@ export interface A2UIChatBody {
   model?: string;
   apiKey?: string;
   baseURL?: string;
+  api?: 'chat' | 'responses';
   catalog?: A2UICatalog;
   maxRepairAttempts?: number;
   validate?: boolean;
@@ -42,7 +43,7 @@ function parsePositiveInt(
   return n;
 }
 
-function clientOverridesAllowed(): boolean {
+export function clientOverridesAllowed(): boolean {
   return process.env.A2UI_ALLOW_CLIENT_OVERRIDE === '1';
 }
 
@@ -71,6 +72,7 @@ export function pickChatOptions(body: {
   model?: string;
   apiKey?: string;
   baseURL?: string;
+  api?: 'chat' | 'responses';
   catalog?: A2UICatalog;
   maxRepairAttempts?: number;
 }): ChatOptions {
@@ -80,6 +82,7 @@ export function pickChatOptions(body: {
     model: allowOverride ? body.model : undefined,
     apiKey: allowOverride ? body.apiKey : undefined,
     baseURL: allowOverride ? body.baseURL : undefined,
+    api: allowOverride ? body.api : undefined,
     catalog: body.catalog,
     maxRepairAttempts: body.maxRepairAttempts,
   };

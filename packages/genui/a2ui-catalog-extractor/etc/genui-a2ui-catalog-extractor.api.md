@@ -15,7 +15,7 @@ export interface A2UICatalog {
     // (undocumented)
     components?: Record<string, JsonSchema>;
     // (undocumented)
-    functions?: FunctionDefinition[];
+    functions?: Record<string, JsonSchema>;
     // (undocumented)
     theme?: Record<string, JsonSchema>;
 }
@@ -140,6 +140,8 @@ export interface JsonSchema {
     // (undocumented)
     additionalProperties?: boolean | JsonSchema;
     // (undocumented)
+    const?: unknown;
+    // (undocumented)
     default?: unknown;
     // (undocumented)
     deprecated?: boolean;
@@ -157,6 +159,8 @@ export interface JsonSchema {
     required?: string[];
     // (undocumented)
     type?: string;
+    // (undocumented)
+    unevaluatedProperties?: boolean | JsonSchema;
 }
 
 // Warning: (ae-missing-release-tag) "TypeDocComment" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)

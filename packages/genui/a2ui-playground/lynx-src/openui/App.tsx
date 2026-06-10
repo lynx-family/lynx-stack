@@ -1,18 +1,13 @@
 // Copyright 2026 The Lynx Authors. All rights reserved.
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
-import {
-  OpenUiRenderer,
-  createOpenUiLibrary,
-  createStreamingParser,
-} from '@lynx-js/genui/openui';
-import type { ActionEvent, ParseResult } from '@lynx-js/genui/openui';
+import { OpenUiRenderer, createOpenUiLibrary } from '@lynx-js/genui/openui';
+import type { ActionEvent } from '@lynx-js/genui/openui';
 import {
   useCallback,
   useEffect,
   useGlobalProps,
   useMemo,
-  useRef,
   useState,
 } from '@lynx-js/react';
 
@@ -24,6 +19,51 @@ const DEFAULT_STREAM_DELAY_MS = 30;
 export function App() {
   const globalProps = useGlobalProps() as Record<string, unknown> | null;
   const openUiLibrary = useMemo(() => createOpenUiLibrary(), []);
+  const openUiToolProvider = useMemo<
+    Record<string, (args: Record<string, unknown>) => unknown>
+  >(() => ({
+    get_weather(args) {
+      const city = typeof args.city === 'string' ? args.city : 'Seattle';
+      if (city === 'San Francisco') {
+        return {
+          city,
+          temp: 64,
+          condition: 'Fog clearing',
+          high: 68,
+          low: 55,
+          humidity: '72%',
+          wind: '11 mph',
+          updated: 'mocked just now',
+          alerts: ['Marine layer expected this evening.'],
+        };
+      }
+      return {
+        city: 'Seattle',
+        temp: 71,
+        condition: 'Partly cloudy',
+        high: 76,
+        low: 58,
+        humidity: '61%',
+        wind: '8 mph',
+        updated: 'mocked just now',
+        alerts: [],
+      };
+    },
+    get_release_queue() {
+      return {
+        count: 3,
+        next: 'Ship OpenUI v0.5 playground cases',
+        owner: 'GenUI',
+      };
+    },
+    save_release_note(args) {
+      return {
+        ok: true,
+        id: 'release-note-openui-v05',
+        saved: args,
+      };
+    },
+  }), []);
 
   // Read rawText from globalProps; fall back to hardcoded mock data.
   const rawText = useMemo(() => {
@@ -44,24 +84,17 @@ export function App() {
     return DEFAULT_STREAM_DELAY_MS / speed;
   }, [globalProps]);
 
-  const [parseResult, setParseResult] = useState<ParseResult | null>(null);
+  const [response, setResponse] = useState<string>('');
   const [isStreaming, setIsStreaming] = useState(false);
   const [error, setError] = useState<string>('');
   const [loading, setLoading] = useState<boolean>(false);
-  const streamParserRef = useRef<
-    ReturnType<typeof createStreamingParser> | null
-  >(null);
 
   useEffect(() => {
     let cancelled = false;
     setLoading(true);
     setIsStreaming(true);
     setError('');
-    setParseResult(null);
-
-    const schema = openUiLibrary.toJSONSchema();
-    const streamParser = createStreamingParser(schema);
-    streamParserRef.current = streamParser;
+    setResponse('');
 
     let offset = 0;
 
@@ -75,8 +108,7 @@ export function App() {
       try {
         const chunk = rawText.slice(offset, offset + DEFAULT_CHUNK_SIZE);
         offset += DEFAULT_CHUNK_SIZE;
-        const result = streamParser.push(chunk);
-        setParseResult(result);
+        setResponse((prev) => prev + chunk);
         setLoading(false);
       } catch (e) {
         setError(String(e));
@@ -92,7 +124,6 @@ export function App() {
 
     return () => {
       cancelled = true;
-      streamParserRef.current = null;
     };
   }, [openUiLibrary, rawText, streamDelay]);
 
@@ -118,12 +149,13 @@ export function App() {
         )
         : null}
 
-      {parseResult?.root
+      {response
         ? (
           <scroll-view scroll-y style={{ height: '100%', width: '100%' }}>
             <OpenUiRenderer
-              result={parseResult}
+              response={response}
               library={openUiLibrary}
+              toolProvider={openUiToolProvider}
               onAction={onOpenUiAction}
               isStreaming={isStreaming}
             />

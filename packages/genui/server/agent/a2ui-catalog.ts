@@ -4,25 +4,7 @@
 
 import { BASIC_CATALOG_EXAMPLES } from './a2ui-examples';
 import type { A2UIExample } from './a2ui-examples';
-import buttonManifest from './catalog/Button/catalog.json';
-import cardManifest from './catalog/Card/catalog.json';
-import checkBoxManifest from './catalog/CheckBox/catalog.json';
-import choicePickerManifest from './catalog/ChoicePicker/catalog.json';
-import columnManifest from './catalog/Column/catalog.json';
-import dateTimeInputManifest from './catalog/DateTimeInput/catalog.json';
-import dividerManifest from './catalog/Divider/catalog.json';
-import iconManifest from './catalog/Icon/catalog.json';
-import imageManifest from './catalog/Image/catalog.json';
-import lineChartManifest from './catalog/LineChart/catalog.json';
-import listManifest from './catalog/List/catalog.json';
-import loadingManifest from './catalog/Loading/catalog.json';
-import modalManifest from './catalog/Modal/catalog.json';
-import radioGroupManifest from './catalog/RadioGroup/catalog.json';
-import rowManifest from './catalog/Row/catalog.json';
-import sliderManifest from './catalog/Slider/catalog.json';
-import tabsManifest from './catalog/Tabs/catalog.json';
-import textManifest from './catalog/Text/catalog.json';
-import textFieldManifest from './catalog/TextField/catalog.json';
+import generatedCatalog from './catalog.json';
 
 export interface A2UIComponentProp {
   name: string;
@@ -69,6 +51,7 @@ export const BASIC_CATALOG_ID =
   'https://a2ui.org/specification/v0_9/basic_catalog.json';
 
 export interface JsonSchema {
+  const?: unknown;
   type?: string;
   enum?: unknown;
   oneOf?: JsonSchema[];
@@ -77,31 +60,10 @@ export interface JsonSchema {
   required?: string[];
   description?: string;
   additionalProperties?: unknown;
+  unevaluatedProperties?: unknown;
 }
 
 interface CatalogManifest extends Record<string, JsonSchema> {}
-
-const CATALOG_MANIFESTS = [
-  textManifest,
-  imageManifest,
-  iconManifest,
-  dividerManifest,
-  lineChartManifest,
-  rowManifest,
-  columnManifest,
-  listManifest,
-  loadingManifest,
-  cardManifest,
-  tabsManifest,
-  modalManifest,
-  buttonManifest,
-  textFieldManifest,
-  checkBoxManifest,
-  choicePickerManifest,
-  dateTimeInputManifest,
-  radioGroupManifest,
-  sliderManifest,
-] as const;
 
 const COMPONENT_SUMMARIES: Record<string, string> = {
   Button:
@@ -124,6 +86,7 @@ const COMPONENT_SUMMARIES: Record<string, string> = {
   Loading: 'Animated progress indicator for pending content.',
   Modal:
     'Modal dialog with a trigger component and a content component. The trigger opens the modal locally when tapped.',
+  PieChart: 'Display numeric slices as a pie or donut chart.',
   RadioGroup: 'Single-choice selector for a list of string options.',
   Row:
     'Horizontal layout container. Preferred for ordinary non-scrollable repeated content using template children.',
@@ -232,6 +195,99 @@ function componentFromManifest(
   };
 }
 
+function functionsFromGeneratedCatalog(catalog: unknown): A2UIFunctionSpec[] {
+  if (!isRecord(catalog)) {
+    return [];
+  }
+  const { functions } = catalog as { functions?: unknown };
+  if (Array.isArray(functions)) {
+    return functions.filter(
+      (fn): fn is A2UIFunctionSpec => {
+        if (!isRecord(fn)) {
+          return false;
+        }
+        const candidate = fn as {
+          name?: unknown;
+          parameters?: unknown;
+          returnType?: unknown;
+        };
+        return typeof candidate.name === 'string'
+          && isRecord(candidate.parameters)
+          && isFunctionReturnType(candidate.returnType);
+      },
+    );
+  }
+  if (!isRecord(functions)) {
+    return [];
+  }
+  return Object.entries(functions)
+    .map(([name, schema]) => functionSpecFromSchema(name, schema))
+    .filter((fn): fn is A2UIFunctionSpec => fn !== null);
+}
+
+function functionSpecFromSchema(
+  name: string,
+  schema: unknown,
+): A2UIFunctionSpec | null {
+  if (!isRecord(schema)) {
+    return null;
+  }
+  const schemaRecord = schema as {
+    description?: unknown;
+    properties?: unknown;
+  };
+  if (!isRecord(schemaRecord.properties)) {
+    return null;
+  }
+  const properties = schemaRecord.properties as {
+    args?: unknown;
+    returnType?: unknown;
+  };
+  const args = properties.args;
+  const returnType = properties.returnType;
+  if (!isRecord(args) || !isRecord(returnType)) {
+    return null;
+  }
+  const returnTypeValue = (returnType as { const?: unknown }).const;
+  if (!isFunctionReturnType(returnTypeValue)) {
+    return null;
+  }
+  const description = schemaRecord.description;
+  return {
+    name,
+    ...(typeof description === 'string' ? { description } : {}),
+    parameters: args as JsonSchema,
+    returnType: returnTypeValue,
+  };
+}
+
+function isFunctionReturnType(
+  value: unknown,
+): value is A2UIFunctionSpec['returnType'] {
+  return value === 'string'
+    || value === 'number'
+    || value === 'boolean'
+    || value === 'array'
+    || value === 'object'
+    || value === 'any'
+    || value === 'void';
+}
+
+function componentManifestsFromGeneratedCatalog(
+  catalog: unknown,
+): CatalogManifest[] {
+  if (!isRecord(catalog)) {
+    return [];
+  }
+  const { components } = catalog as { components?: unknown };
+  if (!isRecord(components)) {
+    return [];
+  }
+  return Object.entries(components)
+    .filter((entry): entry is [string, JsonSchema] => isRecord(entry[1]))
+    .map(([name, schema]) => ({ [name]: schema }));
+}
+
 export function createA2UICatalogFromManifests(options: {
   catalogId: string;
   componentManifests: Record<string, JsonSchema>[];
@@ -246,7 +302,7 @@ export function createA2UICatalogFromManifests(options: {
     label: options.label ?? `A2UI catalog (${options.catalogId})`,
     ...(options.version ? { version: options.version } : {}),
     components: options.componentManifests
-      .map((manifest) => componentFromManifest(manifest as CatalogManifest))
+      .map((manifest) => componentFromManifest(manifest))
       .filter((component): component is A2UIComponentSpec =>
         component !== null
       ),
@@ -260,13 +316,14 @@ export const BASIC_CATALOG: A2UICatalog = {
   id: BASIC_CATALOG_ID,
   label: 'Lynx A2UI basic catalog (v0.9)',
   version: 'v0.9',
-  components: CATALOG_MANIFESTS
-    .map((manifest) => componentFromManifest(manifest as CatalogManifest))
+  components: componentManifestsFromGeneratedCatalog(generatedCatalog)
+    .map((manifest) => componentFromManifest(manifest))
     .filter((component): component is A2UIComponentSpec => component !== null),
   extraRules: [
     'Use only components listed in this catalog; unsupported examples such as Video, AudioPlayer, DatePicker, or Checkbox are not available unless they appear here.',
     'The implemented checkbox component is named "CheckBox" with a capital B.',
   ],
+  functions: functionsFromGeneratedCatalog(generatedCatalog),
   examples: BASIC_CATALOG_EXAMPLES,
 };
 

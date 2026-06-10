@@ -69,7 +69,7 @@ Then add a script to your package:
 ```json
 {
   "scripts": {
-    "build:catalog": "genui a2ui generate catalog --catalog-dir src/catalog --out-dir dist/catalog"
+    "build:catalog": "genui a2ui generate catalog --catalog-dir src/catalog --out-dir dist"
   }
 }
 ```
@@ -132,13 +132,15 @@ extractor that this interface should become a catalog component named
 Run:
 
 ```bash
-genui a2ui generate catalog --catalog-dir src/catalog --out-dir dist/catalog
+genui a2ui generate catalog --catalog-dir src/catalog --out-dir dist
 ```
 
 The extractor scans the catalog directory, finds interfaces marked with
 `@a2uiCatalog`, and writes one file per component:
 
 ```text
+dist/
+  catalog.json
 dist/catalog/
   QuickStartCard/
     catalog.json
@@ -405,7 +407,7 @@ genui a2ui generate catalog [options]
 | `--catalog-dir <dir>`   | Directory to scan for source files. Repeatable.                              | `src/catalog`  |
 | `--source <path>`       | Source file or directory to scan. Repeatable.                                | None           |
 | `--typedoc-json <file>` | Read an existing TypeDoc JSON project instead of running TypeDoc conversion. | None           |
-| `--out-dir <dir>`       | Directory where component catalog files are written.                         | `dist/catalog` |
+| `--out-dir <dir>`       | Root directory where catalog artifacts are written.                          | `dist`         |
 | `--catalog-id <id>`     | Catalog ID written to the full catalog file.                                 | `catalog.json` |
 | `--version`, `-v`       | Print the package version.                                                   | None           |
 | `--help`, `-h`          | Print usage.                                                                 | None           |
@@ -415,7 +417,7 @@ all inputs, removes duplicates, sorts them, and then runs TypeDoc.
 
 The extractor writes both per-component files such as
 `dist/catalog/QuickStartCard/catalog.json` and a full catalog file at
-`dist/catalog/catalog.json`.
+`dist/catalog.json`.
 
 The scanner accepts `.ts`, `.tsx`, `.js`, `.jsx`, `.mts`, and `.cts`
 files. It ignores `.d.ts`, `node_modules`, `dist`, and `.turbo`.
@@ -442,7 +444,7 @@ const components = await extractCatalogComponents({
 
 await writeComponentCatalogs({
   sourceFiles: ['src/catalog/QuickStartCard.tsx'],
-  outDir: 'dist/catalog',
+  outDir: 'dist',
 });
 ```
 
@@ -453,7 +455,7 @@ directory:
 await writeComponentCatalogs({
   cwd: process.cwd(),
   sourceFiles: ['src/catalog/QuickStartCard.tsx'],
-  outDir: 'dist/catalog',
+  outDir: 'dist',
 });
 ```
 
@@ -485,14 +487,14 @@ const projectJson = JSON.parse(
 const components = extractCatalogComponentsFromTypeDocJson(projectJson);
 
 writeCatalogComponents(components, {
-  outDir: 'dist/catalog',
+  outDir: 'dist',
 });
 ```
 
 The equivalent CLI command is:
 
 ```bash
-genui a2ui generate catalog --typedoc-json typedoc.json --out-dir dist/catalog
+genui a2ui generate catalog --typedoc-json typedoc.json --out-dir dist
 ```
 
 ### Create a full A2UI catalog object

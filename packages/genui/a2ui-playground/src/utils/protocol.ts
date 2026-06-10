@@ -11,7 +11,7 @@ export interface Protocol {
 
 export const PROTOCOLS: Record<ProtocolName, Protocol> = {
   a2ui: { name: 'a2ui', version: '0.9' },
-  openui: { name: 'openui', version: '0.1' },
+  openui: { name: 'openui', version: '0.5' },
 };
 
 export const DEFAULT_PROTOCOL: Protocol = PROTOCOLS.a2ui;

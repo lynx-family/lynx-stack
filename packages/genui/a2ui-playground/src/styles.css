@@ -163,7 +163,16 @@ a {
 .appBody {
   flex: 1;
   display: flex;
-  overflow: hidden;
+  overflow: auto;
+}
+
+/* Embedded mode (e.g. iframe inside the Lynx website docs):
+   the host frame controls the visible height, so let our content
+   grow naturally and scroll within the iframe. */
+.appShellEmbedded {
+  height: auto;
+  min-height: 100vh;
+  overflow: visible;
 }
 
 /* ── Top Bar ── */

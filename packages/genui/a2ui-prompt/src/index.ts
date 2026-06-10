@@ -42,67 +42,141 @@ export function readA2UICatalogFromDirectory(
     );
   }
 
+  const fullCatalog = readFullCatalog(catalogDir);
+  if (fullCatalog) {
+    const componentManifests = componentManifestsFromFullCatalog(fullCatalog);
+    if (componentManifests.length === 0) {
+      throw new Error(
+        `[a2ui-prompt] Full catalog for ${options.catalogId} did not contain any valid component schemas.`,
+      );
+    }
+    return createA2UICatalogFromManifests({
+      catalogId: options.catalogId,
+      componentManifests,
+      functions: functionDefinitionsFromFullCatalog(fullCatalog),
+      ...(options.label ? { label: options.label } : {}),
+      ...(options.version ? { version: options.version } : {}),
+    });
+  }
+
   const componentManifests: Record<string, JsonSchema>[] = [];
-  for (const entry of fs.readdirSync(catalogDir, { withFileTypes: true })) {
+  const componentCatalogDir = resolveComponentCatalogDir(catalogDir);
+  for (
+    const entry of fs.readdirSync(componentCatalogDir, { withFileTypes: true })
+  ) {
     if (!entry.isDirectory() || entry.name === 'functions') {
       continue;
     }
-    const catalogJsonPath = path.join(catalogDir, entry.name, 'catalog.json');
+    const catalogJsonPath = path.join(
+      componentCatalogDir,
+      entry.name,
+      'catalog.json',
+    );
     if (fs.existsSync(catalogJsonPath)) {
       componentManifests.push(readCatalogManifest(catalogJsonPath));
     }
   }
   if (componentManifests.length === 0) {
     throw new Error(
-      `[a2ui-prompt] No component catalog files found in ${options.catalogDir}. Expected files like <Component>/catalog.json. Run "genui a2ui generate catalog" first or pass --catalog-dir to the generated catalog directory.`,
+      `[a2ui-prompt] No component catalog files found in ${options.catalogDir}. Expected a full catalog.json or files like catalog/<Component>/catalog.json. Run "genui a2ui generate catalog" first or pass --catalog-dir to the generated catalog directory.`,
     );
   }
 
   return createA2UICatalogFromManifests({
     catalogId: options.catalogId,
     componentManifests,
-    functions: readFunctionDefinitions(catalogDir),
     ...(options.label ? { label: options.label } : {}),
     ...(options.version ? { version: options.version } : {}),
   });
 }
 
-function readFunctionDefinitions(catalogDir: string): A2UIFunctionSpec[] {
-  const functionsDir = path.join(catalogDir, 'functions');
-  if (!fs.existsSync(functionsDir)) {
-    return [];
-  }
-  if (!fs.statSync(functionsDir).isDirectory()) {
-    throw new Error(
-      `[a2ui-prompt] Expected functions directory at ${functionsDir}.`,
-    );
-  }
-
-  const functions: A2UIFunctionSpec[] = [];
-  for (const entry of fs.readdirSync(functionsDir, { withFileTypes: true })) {
-    if (!entry.isFile() || !entry.name.endsWith('.json')) {
+function readFullCatalog(catalogDir: string): Record<string, unknown> | null {
+  const candidates = [
+    path.join(catalogDir, 'catalog.json'),
+    path.join(path.dirname(catalogDir), 'catalog.json'),
+  ];
+  for (const candidate of candidates) {
+    if (!fs.existsSync(candidate)) {
       continue;
     }
-    const functionRecord = readJsonObject(path.join(functionsDir, entry.name));
-    for (const [name, value] of Object.entries(functionRecord)) {
-      if (!isRecord(value)) {
-        continue;
-      }
-      const description = value['description'];
-      const parameters = value['parameters'];
-      const returnType = value['returnType'];
-      functions.push({
-        name,
-        ...(typeof description === 'string' ? { description } : {}),
-        parameters: isRecord(parameters)
-          ? parameters as JsonSchema
-          : { type: 'object', properties: {}, additionalProperties: false },
-        returnType: isReturnType(returnType) ? returnType : 'any',
-      });
+    const catalog = readJsonObject(candidate);
+    if (isRecord(catalog['components'])) {
+      return catalog;
     }
   }
+  return null;
+}
 
-  return functions.sort((left, right) => left.name.localeCompare(right.name));
+function resolveComponentCatalogDir(catalogDir: string): string {
+  const nestedCatalogDir = path.join(catalogDir, 'catalog');
+  if (
+    fs.existsSync(nestedCatalogDir)
+    && fs.statSync(nestedCatalogDir).isDirectory()
+  ) {
+    return nestedCatalogDir;
+  }
+  return catalogDir;
+}
+
+function componentManifestsFromFullCatalog(
+  catalog: Record<string, unknown>,
+): Record<string, JsonSchema>[] {
+  const components = catalog['components'];
+  if (!isRecord(components)) {
+    return [];
+  }
+  return Object.entries(components)
+    .filter((entry): entry is [string, JsonSchema] => isRecord(entry[1]))
+    .map(([name, schema]) => ({ [name]: schema }));
+}
+
+function functionDefinitionsFromFullCatalog(
+  catalog: Record<string, unknown>,
+): A2UIFunctionSpec[] {
+  const functions = catalog['functions'];
+  if (isRecord(functions)) {
+    return Object.entries(functions)
+      .map(([name, schema]) => functionSpecFromSchema(name, schema))
+      .filter((fn): fn is A2UIFunctionSpec => fn !== null)
+      .sort((left, right) => left.name.localeCompare(right.name));
+  }
+  if (!Array.isArray(functions)) {
+    return [];
+  }
+  return functions
+    .filter((fn): fn is A2UIFunctionSpec =>
+      isRecord(fn)
+      && typeof fn['name'] === 'string'
+      && isRecord(fn['parameters'])
+      && isReturnType(fn['returnType'])
+    )
+    .sort((left, right) => left.name.localeCompare(right.name));
+}
+
+function functionSpecFromSchema(
+  name: string,
+  schema: unknown,
+): A2UIFunctionSpec | null {
+  if (!isRecord(schema) || !isRecord(schema['properties'])) {
+    return null;
+  }
+  const properties = schema['properties'];
+  const args = properties['args'];
+  const returnType = properties['returnType'];
+  if (!isRecord(args) || !isRecord(returnType)) {
+    return null;
+  }
+  const returnTypeValue = returnType['const'];
+  if (!isReturnType(returnTypeValue)) {
+    return null;
+  }
+  const description = schema['description'];
+  return {
+    name,
+    ...(typeof description === 'string' ? { description } : {}),
+    parameters: args as JsonSchema,
+    returnType: returnTypeValue,
+  };
 }
 
 function readJsonObject(filePath: string): Record<string, unknown> {

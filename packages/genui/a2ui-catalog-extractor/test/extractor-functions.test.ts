@@ -53,7 +53,7 @@ describe('extractCatalogFunctions', () => {
     });
   });
 
-  test('writeCatalogArtifacts emits both component and function files', async () => {
+  test('writeCatalogArtifacts emits component files and function schemas', async () => {
     const outDir = createTempDir();
     const sourceFiles = [
       ...findCatalogSourceFiles(catalogFixtureDir),
@@ -77,20 +77,18 @@ describe('extractCatalogFunctions', () => {
       'required',
     ]);
 
-    expect(readFunctionJson(outDir, 'required')).toEqual(
-      readExpectedFunctionJson('required'),
-    );
-    expect(readFunctionJson(outDir, 'formatString')).toEqual(
-      readExpectedFunctionJson('formatString'),
-    );
     const fullCatalog = readFullCatalogJson(outDir);
     const fullCatalogFunctions = fullCatalog['functions'];
-    expect(Array.isArray(fullCatalogFunctions)).toBe(true);
-    const fullCatalogFunctionList = fullCatalogFunctions as unknown[];
-    expect([...fullCatalogFunctionList].sort(compareByName)).toEqual([
-      readExpectedFunctionJson('formatString')['formatString'],
-      readExpectedFunctionJson('required')['required'],
-    ]);
+    expect(fullCatalogFunctions).toEqual({
+      formatString: createFunctionSchema(
+        'formatString',
+        readExpectedFunctionJson('formatString')['formatString']!,
+      ),
+      required: createFunctionSchema(
+        'required',
+        readExpectedFunctionJson('required')['required']!,
+      ),
+    });
     expect(JSON.stringify(fullCatalog)).not.toContain('filePath');
   });
 
@@ -117,31 +115,27 @@ function readExpectedFunctionJson(
   ) as Record<string, Record<string, unknown>>;
 }
 
-function readFunctionJson(
-  rootDir: string,
-  name: string,
-): Record<string, unknown> {
-  return JSON.parse(
-    fs.readFileSync(
-      path.join(rootDir, 'functions', `${name}.json`),
-      'utf8',
-    ),
-  ) as Record<string, unknown>;
-}
-
 function readFullCatalogJson(rootDir: string): Record<string, unknown> {
   return JSON.parse(
     fs.readFileSync(path.join(rootDir, 'catalog.json'), 'utf8'),
   ) as Record<string, unknown>;
 }
 
-function compareByName(a: unknown, b: unknown): number {
-  return getName(a).localeCompare(getName(b));
-}
-
-function getName(value: unknown): string {
-  return typeof value === 'object' && value !== null && 'name' in value
-      && typeof value.name === 'string'
-    ? value.name
-    : '';
+function createFunctionSchema(
+  name: string,
+  definition: Record<string, unknown>,
+): Record<string, unknown> {
+  return {
+    type: 'object',
+    ...(definition['description']
+      ? { description: definition['description'] }
+      : {}),
+    properties: {
+      call: { const: name },
+      args: definition['parameters'],
+      returnType: { const: definition['returnType'] },
+    },
+    required: ['call', 'args'],
+    unevaluatedProperties: false,
+  };
 }

@@ -10,6 +10,7 @@ import type { ProjectReflection, TypeDocOptions } from 'typedoc';
 export interface JsonSchema {
   $ref?: string;
   additionalProperties?: boolean | JsonSchema;
+  const?: unknown;
   default?: unknown;
   deprecated?: boolean;
   description?: string;
@@ -19,6 +20,7 @@ export interface JsonSchema {
   properties?: Record<string, JsonSchema>;
   required?: string[];
   type?: string;
+  unevaluatedProperties?: boolean | JsonSchema;
 }
 
 export interface CatalogComponent {
@@ -46,7 +48,7 @@ export interface WriteComponentCatalogOptions extends ExtractCatalogOptions {
 export interface A2UICatalog {
   catalogId: string;
   components?: Record<string, JsonSchema>;
-  functions?: FunctionDefinition[];
+  functions?: Record<string, JsonSchema>;
   theme?: Record<string, JsonSchema>;
 }
 
@@ -284,10 +286,10 @@ export function writeCatalogComponents(
   options: { cwd?: string; outDir: string },
 ): void {
   const cwd = options.cwd ? path.resolve(options.cwd) : process.cwd();
-  const outDir = path.resolve(cwd, options.outDir);
+  const catalogDir = getComponentCatalogDir(path.resolve(cwd, options.outDir));
 
   for (const component of components) {
-    const componentOutDir = path.join(outDir, component.name);
+    const componentOutDir = path.join(catalogDir, component.name);
     fs.mkdirSync(componentOutDir, { recursive: true });
     fs.writeFileSync(
       path.join(componentOutDir, 'catalog.json'),
@@ -310,7 +312,7 @@ export interface CatalogArtifacts {
 }
 
 /**
- * Bootstrap TypeDoc once and emit both component and function catalog files.
+ * Bootstrap TypeDoc once and emit component manifests plus the full catalog.
  * Preferred entry point for the CLI — running the conversion twice doubles
  * cold-start latency on large catalogs.
  */
@@ -328,7 +330,6 @@ export async function writeCatalogArtifacts(
     cwdOptions,
   );
   writeCatalogComponents(components, options);
-  writeCatalogFunctions(functions, options);
   writeA2UICatalog(
     createA2UICatalog({
       catalogId: options.catalogId ?? 'catalog.json',
@@ -352,7 +353,7 @@ export function writeCatalogFunctions(
   if (functions.length === 0) return;
   const cwd = options.cwd ? path.resolve(options.cwd) : process.cwd();
   const functionsDir = path.join(
-    path.resolve(cwd, options.outDir),
+    getComponentCatalogDir(path.resolve(cwd, options.outDir)),
     'functions',
   );
 
@@ -389,21 +390,54 @@ export function createA2UICatalog(options: {
     catalogId: options.catalogId,
     components: catalogComponents,
     ...(options.functions
-      ? { functions: normalizeFunctionDefinitions(options.functions) }
+      ? { functions: createFunctionSchemas(options.functions) }
       : {}),
     ...(options.theme ? { theme: options.theme } : {}),
   };
 }
 
-function normalizeFunctionDefinitions(
+function createFunctionSchemas(
   functions: FunctionDefinition[],
-): FunctionDefinition[] {
-  return functions.map(({ description, name, parameters, returnType }) => ({
-    ...(description ? { description } : {}),
-    name,
-    parameters,
-    returnType,
-  }));
+): Record<string, JsonSchema> {
+  const seenNames = new Set<string>();
+  const duplicateNames = new Set<string>();
+  for (const fn of functions) {
+    if (seenNames.has(fn.name)) {
+      duplicateNames.add(fn.name);
+    }
+    seenNames.add(fn.name);
+  }
+  if (duplicateNames.size > 0) {
+    throw new Error(
+      `[a2ui-catalog-extractor] Duplicate A2UI function name(s): ${
+        [...duplicateNames].join(', ')
+      }. Function names must be unique in a catalog.`,
+    );
+  }
+
+  return Object.fromEntries(
+    functions.map(({ description, name, parameters, returnType }) => [
+      name,
+      {
+        type: 'object',
+        ...(description ? { description } : {}),
+        properties: {
+          call: { const: name } as JsonSchema,
+          args: stripSchemaDialect(parameters),
+          returnType: { const: returnType } as JsonSchema,
+        },
+        required: ['call', 'args'],
+        unevaluatedProperties: false,
+      } as JsonSchema,
+    ]),
+  );
+}
+
+function stripSchemaDialect(schema: JsonSchema): JsonSchema {
+  const { $schema: _schema, ...rest } = schema as JsonSchema & {
+    $schema?: unknown;
+  };
+  return rest;
 }
 
 export function writeA2UICatalog(
@@ -417,6 +451,10 @@ export function writeA2UICatalog(
     path.join(outDir, 'catalog.json'),
     `${JSON.stringify(catalog, null, 2)}\n`,
   );
+}
+
+function getComponentCatalogDir(outDir: string): string {
+  return path.join(outDir, 'catalog');
 }
 
 async function createTypeDocProject(
