@@ -54,6 +54,8 @@
     "@lynx-js/vitest-setup": "workspace:*",
     "@microsoft/api-extractor": "catalog:",
     "@rspack/core": "catalog:rspack",
+    "@rspack/test-tools": "catalog:rspack",
+    "@rstest/core": "catalog:rstest",
     "css-loader": "^7.1.4",
     "sass-loader": "^16.0.7",
     "webpack": "^5.105.2"

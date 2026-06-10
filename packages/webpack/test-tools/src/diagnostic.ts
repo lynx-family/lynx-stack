@@ -3,153 +3,147 @@
 // LICENSE file in the root directory of this source tree.
 import path from 'node:path';
 
-import {
-  DiagnosticProcessor,
-  ECompilerType,
-  describeByWalk,
-  getSimpleProcessorRunner,
-} from '@rspack/test-tools';
+import type { RspackOptions, Stats } from '@rspack/core';
+import { BasicCaseCreator, describeByWalk } from '@rspack/test-tools';
 import type {
   ITestContext,
   ITestEnv,
-  TCompilerOptions,
+  ITestProcessor,
 } from '@rspack/test-tools';
-import fs from 'fs-extra';
-import { createSnapshotSerializer } from 'path-serializer';
-import { rimrafSync } from 'rimraf';
+import { normalizePlaceholder } from '@rspack/test-tools/helper/expect/placeholder';
 
-import { createRstestEnv, getOptions } from './suite.js';
+import { getOptions } from './suite.js';
 import type { ITestSuite } from './suite.js';
 
-const describe = (globalThis as unknown as {
-  describe: typeof import('@rstest/core').describe;
-}).describe;
-const expect = (globalThis as unknown as {
-  expect: typeof import('@rstest/core').expect;
-}).expect;
-const it = (globalThis as unknown as {
-  it: typeof import('@rstest/core').it;
-}).it;
+const TARGET = 'node' as const;
 
-class RspeedyDiagnosticProcessor<Compiler extends ECompilerType>
-  extends DiagnosticProcessor<Compiler>
-{
-  override async check(_: ITestEnv, context: ITestContext): Promise<void> {
-    const compiler = this.getCompiler(context);
-    const stats = compiler.getStats();
-    if (!stats) {
-      throw new Error('Stats should exists');
-    }
-
-    expect(stats.hasErrors() || stats.hasWarnings()).toBe(true);
-
-    let jsonStats = stats.toString({
-      all: false,
-      errors: true,
-      warnings: true,
-    });
-
-    if (typeof this._diagnosticOptions.format === 'function') {
-      jsonStats = this._diagnosticOptions.format(jsonStats);
-    }
-
-    await expect(jsonStats).toMatchFileSnapshot(path.resolve(
-      context.getSource(this._diagnosticOptions.snapshot),
-    ));
-  }
+function lynxDefaultOptions(
+  context: ITestContext,
+  cwd: string,
+): RspackOptions {
+  return {
+    context: cwd,
+    entry: context.getSource(),
+    mode: 'none',
+    target: TARGET,
+    output: {
+      publicPath: '/',
+      path: context.getDist(),
+      filename: 'bundle.js',
+    },
+    resolve: {
+      extensions: ['.jsx', '.tsx', '.js', '.ts', '.json'],
+      extensionAlias: {
+        '.js': ['.ts', '.js'],
+        '.jsx': ['.tsx', '.jsx'],
+        '.mjs': ['.mts', '.mjs'],
+      },
+    },
+  };
 }
 
-const serializer = createSnapshotSerializer({
-  features: {
-    addDoubleQuotes: false,
-    escapeDoubleQuotes: false,
-  },
-  afterSerialize(val) {
-    return val.replaceAll(/\d+:\d+/g, '<LINE:COLUMN>');
-  },
-});
+function createDiagnosticProcessor(
+  name: string,
+  src: string,
+  cwd: string,
+): ITestProcessor {
+  return {
+    config: async (context) => {
+      const compiler = context.getCompiler();
+      const defaultOptions = lynxDefaultOptions(context, cwd);
+      const caseOptions = await getOptions<RspackOptions>(
+        path.join(src, 'rspack.config.js'),
+      );
+      const options = Object.assign(
+        defaultOptions,
+        caseOptions,
+      );
+      options.target = TARGET;
+      compiler.setOptions(options);
+    },
+    compiler: (context) => {
+      context.getCompiler().createCompiler();
+    },
+    build: async (context) => {
+      await context.getCompiler().build();
+    },
+    run: () => {
+      // Diagnostic cases never execute the bundle; only the build is inspected.
+    },
+    check: async (env: ITestEnv, context) => {
+      const stats = context.getCompiler().getStats() as Stats | null;
+      if (!stats) {
+        throw new Error(`Stats should exist for ${name}`);
+      }
+      // `ITestEnv['expect']` is the unresolved `Expect` type from
+      // `@rspack/test-tools`, so it lands as `error`-typed; narrow it to a
+      // minimal callable to keep the assertion type-safe.
+      const expect = env.expect as (
+        value: unknown,
+      ) => { toBe(v: unknown): void };
+      expect(stats.hasErrors() || stats.hasWarnings()).toBe(true);
 
-function createCase(name: string, src: string, dist: string, cwd: string) {
-  describe(name, () => {
-    const runner = getSimpleProcessorRunner(src, dist, {
-      env: createRstestEnv,
-    });
+      let output = stats.toString({
+        all: false,
+        errors: true,
+        warnings: true,
+      })
+        .replaceAll('│', '')
+        .split(/\r?\n/)
+        .map((s) => s.trim())
+        // Drop stack-trace frames (`at …`): they reference environment-dependent
+        // paths (`<ROOT>` resolves to the package cwd locally but the monorepo
+        // root in CI; plus @rspack/core internals and `node:internal`) that carry
+        // no diagnostic value and make the snapshot non-portable.
+        .filter((s) => !s.startsWith('at '))
+        .join('\n');
+      // Normalize remaining paths/pnpm-inner/`file://` with the same
+      // `normalizePlaceholder` the `toMatchFileSnapshotSync` matcher applies, then
+      // collapse line:column.
+      output = normalizePlaceholder(output).replaceAll(
+        /\d+:\d+/g,
+        '<LINE:COLUMN>',
+      );
 
-    async function createOptions<T extends ECompilerType>(
-      configFile: string,
-    ): Promise<TCompilerOptions<T>> {
-      const defaultOptions: TCompilerOptions<T> = {
-        context: cwd,
-        entry: src,
-        mode: 'none',
-        output: {
-          publicPath: '/',
-          path: dist,
-        },
-        resolve: {
-          extensions: ['.jsx', '.tsx', '.js', '.ts', '.json'],
-          extensionAlias: {
-            '.js': ['.ts', '.js'],
-            '.jsx': ['.tsx', '.jsx'],
-            '.mjs': ['.mts', '.mjs'],
-          },
-        },
-      };
-      const caseOptions = await getOptions<TCompilerOptions<T>>(configFile);
-      return Object.assign(defaultOptions, caseOptions);
-    }
+      // `toMatchFileSnapshotSync` is registered by
+      // `@rspack/test-tools/setup-expect`.
+      (env.expect as (value: unknown) => {
+        toMatchFileSnapshotSync: (path: string) => void;
+      })(output).toMatchFileSnapshotSync(
+        context.getSource(`expected/rspack.txt`),
+      );
+    },
+  };
+}
 
-    for (const compilerType of [ECompilerType.Rspack, ECompilerType.Webpack]) {
-      const caseName = `${name} - ${compilerType}`;
-      const caseConfigFile = path.join(src, `${compilerType}.config.js`);
+const creators = new Map<string, BasicCaseCreator>();
 
-      // eslint-disable-next-line @typescript-eslint/no-misused-promises
-      describe.runIf(fs.existsSync(caseConfigFile))(caseName, async () => {
-        const caseOptions = await createOptions<ECompilerType>(caseConfigFile);
-        it('should have error or warning', async () => {
-          await runner(
-            caseName,
-            new RspeedyDiagnosticProcessor<ECompilerType>({
-              snapshotErrors: './raw-error.err',
-              snapshotWarning: './raw-warning.err',
-              defaultOptions: () => caseOptions,
-              overrideOptions: (_, options) => {
-                options.output ??= {};
-                options.output.filename = `${compilerType}.bundle.js`;
-                if (compilerType === ECompilerType.Webpack) {
-                  options.output.pathinfo = 'verbose';
-                  options.target = 'node';
-                }
-              },
-              name: caseName,
-              snapshot: `./expected/${compilerType}.txt`,
-              compilerType,
-              format: (output: string) => {
-                if (compilerType === ECompilerType.Rspack) {
-                  output = output
-                    .replaceAll('│', '')
-                    .split(/\r?\n/)
-                    .map((s: string) => s.trim())
-                    .join('\n');
-                }
-                return serializer.serialize(output);
-              },
-            }),
-          );
-        }, 30000);
-      });
-    }
-  });
+function getCreator(cwd: string): BasicCaseCreator {
+  const key = cwd;
+  if (!creators.has(key)) {
+    creators.set(
+      key,
+      new BasicCaseCreator({
+        clean: true,
+        describe: false,
+        target: TARGET,
+        steps: ({ name, src }) => [
+          createDiagnosticProcessor(name, src, cwd),
+        ],
+        concurrent: true,
+      }),
+    );
+  }
+  return creators.get(key)!;
 }
 
 export function diagnosticCases(suite: ITestSuite): void {
   const distPath = path.resolve(suite.casePath, '../dist/diagnostic');
-  rimrafSync(distPath);
+  const creator = getCreator(suite.casePath);
   describeByWalk(suite.name, (name, src, dist) => {
-    createCase(name, src, dist, suite.casePath);
+    creator.create(name, src, dist);
   }, {
     source: suite.casePath,
     dist: distPath,
-    describe,
   });
 }

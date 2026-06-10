@@ -7,6 +7,9 @@ const config: UserWorkspaceConfig = defineProject({
   test: {
     name: 'rspeedy/config',
     globals: true,
+    setupFiles: [
+      'test/helper/setup-rspack-test-tools.ts',
+    ],
     env: {
       DEBUG: 'rspeedy',
     },

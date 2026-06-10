@@ -6,6 +6,7 @@ const config: UserWorkspaceConfig = defineProject({
     name: 'webpack/react',
     globals: true,
     setupFiles: [
+      'test/setup-rspack-test-tools.ts',
       '@lynx-js/vitest-setup/setup.ts',
       'test/setup-env.js',
     ],

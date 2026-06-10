@@ -65,7 +65,7 @@
               }
             ],
             "selectorText": {
-              "value": ".M_Iy_Ry8Zw0AyEYX",
+              "value": ".y15ZckZDo0WcjHUH",
               "loc": {
                 "line": 6,
                 "column": 18
@@ -90,7 +90,7 @@
               }
             ],
             "selectorText": {
-              "value": ".jcanH_ADjtApvRCK",
+              "value": ".GF_gzxoJPgi5NQ3M",
               "loc": {
                 "line": 15,
                 "column": 18

@@ -10,7 +10,10 @@ export default defineProject({
     name: 'webpack/css-extract',
     globals: true,
     globalSetup: ['test/helper/setup-loader.js', 'test/helper/setup-dist.js'],
-    setupFiles: ['@lynx-js/vitest-setup/setup.ts'],
+    setupFiles: [
+      'test/helper/setup-rspack-test-tools.ts',
+      '@lynx-js/vitest-setup/setup.ts',
+    ],
   },
   server: {
     watch: {

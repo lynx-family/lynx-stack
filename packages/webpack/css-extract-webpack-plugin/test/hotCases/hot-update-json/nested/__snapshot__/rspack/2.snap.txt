@@ -81,7 +81,7 @@
               }
             ],
             "selectorText": {
-              "value": ".vjkHK8g9gLy91ctD",
+              "value": ".LUc_pzUoODgcC8Aw",
               "loc": {
                 "line": 1,
                 "column": 18
@@ -106,7 +106,7 @@
               }
             ],
             "selectorText": {
-              "value": ".EaAGbC87LA0NCIIR",
+              "value": ".JLyEveK8KnU4Hqxs",
               "loc": {
                 "line": 10,
                 "column": 18
@@ -156,12 +156,12 @@ __webpack_require__.d(__webpack_exports__, {
   bar: () => (_1)
 });
 // extracted by mini-css-extract-plugin
-var _1 = "vjkHK8g9gLy91ctD";
+var _1 = "LUc_pzUoODgcC8Aw";
 
 
   if (true) {
     (function() {
-      var localsJsonString = "{\"bar\":\"vjkHK8g9gLy91ctD\"}";
+      var localsJsonString = "{\"bar\":\"LUc_pzUoODgcC8Aw\"}";
       var cssReload = __webpack_require__("../../../../runtime/hotModuleReplacement.cjs")(module.id, {}, "");
       // only invalidate when locals change
       if (

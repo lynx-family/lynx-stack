@@ -1,128 +1,329 @@
 // Copyright 2024 The Lynx Authors. All rights reserved.
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
-import { createRequire } from 'node:module';
 import path from 'node:path';
 
+import type { RspackOptions, Stats, StatsCompilation } from '@rspack/core';
 import {
-  ECompilerType,
-  HotRunnerFactory,
-  HotSnapshotProcessor,
+  BasicCaseCreator,
   describeByWalk,
+  escapeSep,
+  normalizePlaceholder,
 } from '@rspack/test-tools';
-import type {
-  ITestContext,
-  ITestEnv,
-  TCompilerOptions,
-  TCompilerStatsCompilation,
-} from '@rspack/test-tools';
+import type { ITestContext, ITestEnv } from '@rspack/test-tools';
 import fs from 'fs-extra';
 import { rimrafSync } from 'rimraf';
 
-import { createHotOptions } from './hot.js';
-import type { IRspeedyHotProcessorOptions } from './hot.js';
-import { createRunner, getOptions } from './suite.js';
-import type { ITestSuite, TImportedBundler } from './suite.js';
+import {
+  createBaseHotProcessor,
+  createHotRunner,
+  loadCaseTestConfig,
+} from './hot.js';
+import type { ITestSuite } from './suite.js';
 
-const describe = (globalThis as unknown as {
-  describe: typeof import('@rstest/core').describe;
-}).describe;
-const test = (globalThis as unknown as {
-  test: typeof import('@rstest/core').test;
-}).test;
+const TARGET = 'node' as const;
 
-export interface IRspeedyHotSnapshotProcessorOptions<T extends ECompilerType>
-  extends IRspeedyHotProcessorOptions<T>
-{
-  snapshot: string;
-  /**
-   * Decode the base64 `content` of `*.hot-update.json` manifests into plain,
-   * pretty-printed JSON in the snapshot. Opt-in, so existing suites are
-   * unaffected.
-   *
-   * @defaultValue `false`
-   */
-  decodeHotUpdateManifest?: boolean;
-}
+// ---------------------------------------------------------------------------
+// Step-snapshot matching vendored from `@rspack/test-tools@2.0.6`
+// `dist/case/hot-step.js` (`matchStepSnapshot` + the run/check overrides that
+// register `hotUpdateStepChecker`). The hot lifecycle + runner are shared from
+// `./hot.js`; this module only adds the snapshotting on top via the processor
+// hooks (`onStep` / `onInitial`).
+// ---------------------------------------------------------------------------
 
-class RspeedyHotSnapshotProcessor<T extends ECompilerType>
-  extends HotSnapshotProcessor<T>
-{
-  readonly #decodeHotUpdateManifest: boolean;
-
-  constructor(options: IRspeedyHotSnapshotProcessorOptions<T>) {
-    super({
-      ...createHotOptions(options),
-      name: options.name,
-      compilerType: options.compilerType,
-      target: 'node',
-      snapshot: options.snapshot,
-      getModuleHandler: (file) => {
-        const require = createRequire(import.meta.url);
-        // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-argument
-        return Object.keys(require(file).modules) || [];
-      },
-    });
-    this.#decodeHotUpdateManifest = options.decodeHotUpdateManifest ?? false;
-  }
-
-  // A `*.css.hot-update.json` manifest carries the re-encoded template in a
-  // base64 `content` field. Snapshotting it verbatim turns every page-config
-  // change into a giant opaque one-line diff (and the hash normalization below
-  // even corrupts the base64). When opted in, decode `content` into plain JSON
-  // before normalization (via the `snapshotContent` hook), then pretty-print the
-  // manifest blocks so the snapshot is readable and diffs line-by-line.
-  protected override matchStepSnapshot(
-    env: ITestEnv,
-    context: ITestContext,
-    step: number,
-    stats: TCompilerStatsCompilation<T>,
-    runtime?: Parameters<HotSnapshotProcessor<T>['matchStepSnapshot']>[4],
-  ): void {
-    if (!this.#decodeHotUpdateManifest) {
-      super.matchStepSnapshot(env, context, step, stats, runtime);
-      return;
-    }
-
-    const testConfig = context.getTestConfig();
-    // `snapshotContent` is a plain function property, not a bound method.
-    // eslint-disable-next-line @typescript-eslint/unbound-method
-    const previous = testConfig.snapshotContent;
-    testConfig.snapshotContent = (content: string) =>
-      decodeManifestContent(previous ? previous(content) : content);
-
-    // The base implementation re-serializes the manifest with a compact
-    // `JSON.stringify`, so pretty-print the rendered snapshot string (the only
-    // seam exposed is `env.expect`). `jest.Expect` is untyped here, hence casts.
-    const wrappedEnv: ITestEnv = {
-      ...env,
-      /* eslint-disable @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-return */
-      expect: ((received: unknown) =>
-        env.expect(
-          typeof received === 'string'
-            ? prettyPrintJsonBlocks(received)
-            : received,
-        )) as ITestEnv['expect'],
-      /* eslint-enable @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-return */
-    };
-
-    try {
-      super.matchStepSnapshot(wrappedEnv, context, step, stats, runtime);
-    } finally {
-      if (previous) {
-        testConfig.snapshotContent = previous;
-      } else {
-        delete testConfig.snapshotContent;
-      }
-    }
-  }
+interface IStepState {
+  entries: Record<string, string | string[]>;
+  hashes: string[];
 }
 
 /**
- * Decode the base64 `content` of a `*.hot-update.json` manifest into plain JSON
- * so the snapshot is human-readable. Runs through the official `snapshotContent`
- * hook (before hash normalization), so it sees the pristine base64. Non-manifest
- * assets (e.g. a `hot-update.js` bundle) are passed through untouched.
+ * Shape of `runtime.javascript` in the rspack HMR step stats (untyped `any` in
+ * upstream's vendored `matchStepSnapshot`). Typed here so the snapshot glue can
+ * sort/render its arrays without `no-unsafe-*`.
+ */
+interface IHmrJavascriptRuntime {
+  outdatedModules: string[];
+  updatedModules: string[];
+  updatedRuntime: string[];
+  acceptedModules: string[];
+  disposedModules: string[];
+  outdatedDependencies: Record<string, string[]>;
+}
+
+function collectRuntimeEntries(
+  state: IStepState,
+  stats: Stats,
+  skipExisting: boolean,
+): void {
+  const chunks = Array.from(stats.compilation.chunks);
+  for (const entry of chunks.filter((i) => i.hasRuntime())) {
+    if (skipExisting && state.entries[entry.id!]) continue;
+    if (entry.runtime) {
+      state.entries[entry.id!] = typeof entry.runtime === 'string'
+        ? [entry.runtime]
+        : Array.from(entry.runtime);
+    }
+  }
+}
+
+/** Vendored verbatim from `hot-step.js` `matchStepSnapshot`. */
+function matchStepSnapshot(
+  state: IStepState,
+  name: string,
+  temp: string,
+  updatePlugin: { getModifiedFiles: () => string[] },
+  snapshotContent: ((content: string) => string) | undefined,
+  prettyPrint: boolean,
+  env: ITestEnv,
+  context: ITestContext,
+  step: number,
+  // No longer used since the snapshot path/title are fixed to `rspack`, but kept
+  // positionally to match the vendored `matchStepSnapshot` call sites.
+  _options: RspackOptions,
+  stats: StatsCompilation,
+  runtime?: Record<string, unknown>,
+): void {
+  const { entries, hashes } = state;
+  const lastHash = hashes[hashes.length - 1];
+  // Write to the existing `__snapshot__/rspack/` location (and title) the legacy
+  // 1.5.6 harness used, so the migration is a small modify-diff over the
+  // committed snapshots instead of a new `__snapshots__/<target>/` tree that
+  // orphans the old files.
+  const snapshotPath = context.getSource(
+    `__snapshot__/rspack/${step}.snap.txt`,
+  );
+  const title = `Case ${path.basename(name)} - rspack: Step ${step}`;
+  const hotUpdateFile: Array<
+    { name: string; content: string; modules: string[]; runtime: string[] }
+  > = [];
+  const hotUpdateManifest: Array<{ name: string; content: string }> = [];
+  const changedFiles = step === 0 ? [] : updatePlugin.getModifiedFiles().map((
+    i,
+  ) => escapeSep(path.relative(temp, i)));
+  changedFiles.sort();
+
+  const resultHashes: Record<string, string> = {
+    // Keep `||` (vendored verbatim from `hot-step.js`): a missing/empty last
+    // hash must map to the `LAST_HASH` placeholder key.
+    // eslint-disable-next-line @typescript-eslint/prefer-nullish-coalescing
+    [lastHash || 'LAST_HASH']: 'LAST_HASH',
+    [stats.hash!]: 'CURRENT_HASH',
+  };
+  const runtimes: Record<string, string> = {};
+  for (const [id, runtimeValue] of Object.entries(entries)) {
+    if (typeof runtimeValue === 'string') {
+      if (runtimeValue !== id) runtimes[runtimeValue] = `[runtime of ${id}]`;
+    } else if (Array.isArray(runtimeValue)) {
+      for (const r of runtimeValue) {
+        if (r !== id) runtimes[r] = `[runtime of ${id}]`;
+      }
+    }
+  }
+
+  const replaceContent = (rawStr: string) => {
+    let str = rawStr;
+    if (snapshotContent) str = snapshotContent(str);
+    return normalizePlaceholder(
+      Object.entries(resultHashes).reduce(
+        (s, [raw, replacement]) => s.split(raw).join(replacement),
+        str,
+      )
+        .replace(/\/\/ \d+\s+(?=var cssReload)/, '')
+        .replaceAll(
+          /var data = ".*"/g,
+          (match) => decodeURIComponent(match).replaceAll(/\\/g, '/'),
+        ),
+    );
+  };
+  const replaceFileName = (str: string) =>
+    Object.entries({ ...resultHashes, ...runtimes }).reduce(
+      (s, [raw, replacement]) => s.split(raw).join(replacement),
+      str,
+    );
+
+  const assets = (stats.assets ?? []).slice().sort((a, b) =>
+    a.name.localeCompare(b.name)
+  );
+  const fileList = assets.map((i) => {
+    const fileName = i.name;
+    const renderName = replaceFileName(fileName);
+    const content = replaceContent(
+      fs.readFileSync(context.getDist(fileName), 'utf-8'),
+    );
+    if (fileName.endsWith('hot-update.js')) {
+      // The emitted `*.hot-update.js` is a CJS module exposing a `modules` map;
+      // load it via `require` (it must be the runtime-evaluated file, not an
+      // ESM import) and read its keys.
+      // eslint-disable-next-line @typescript-eslint/no-require-imports
+      const hotUpdate = require(context.getDist(fileName)) as {
+        modules: Record<string, unknown>;
+      };
+      const modules = Object.keys(hotUpdate.modules);
+      const runtimeMods: string[] = [];
+      for (
+        const m of content.matchAll(/\/\/ (webpack\/runtime\/[\w-]+)\s*\n/g)
+      ) {
+        runtimeMods.push(m[1]!);
+      }
+      modules.sort();
+      runtimeMods.sort();
+      hotUpdateFile.push({
+        name: renderName,
+        content,
+        modules,
+        runtime: runtimeMods,
+      });
+      return `- Update: ${renderName}, size: ${content.length}`;
+    }
+    if (fileName.endsWith('hot-update.json')) {
+      const manifest = JSON.parse(content) as {
+        c?: string[];
+        r?: string[];
+        m?: string[];
+      };
+      manifest.c?.sort();
+      manifest.r?.sort();
+      manifest.m?.sort();
+      hotUpdateManifest.push({
+        name: renderName,
+        content: JSON.stringify(manifest),
+      });
+      return `- Manifest: ${renderName}, size: ${i.size}`;
+    }
+    if (fileName.endsWith('.js')) return `- Bundle: ${renderName}`;
+    return undefined;
+  }).filter(Boolean) as string[];
+  fileList.sort();
+  hotUpdateManifest.sort((a, b) => (a.name > b.name ? 1 : -1));
+  hotUpdateFile.sort((a, b) => (a.name > b.name ? 1 : -1));
+
+  if (runtime?.['javascript']) {
+    const js = runtime['javascript'] as IHmrJavascriptRuntime;
+    js.outdatedModules.sort();
+    js.updatedModules.sort();
+    js.updatedRuntime.sort();
+    js.acceptedModules.sort();
+    js.disposedModules.sort();
+    for (const value of Object.values(js.outdatedDependencies)) {
+      value.sort();
+    }
+  }
+
+  const js = runtime?.['javascript'] as IHmrJavascriptRuntime | undefined;
+  const content = `
+# ${title}
+
+## Changed Files
+${changedFiles.map((i) => `- ${i}`).join('\n')}
+
+## Asset Files
+${fileList.join('\n')}
+
+## Manifest
+${
+    hotUpdateManifest.map((i) => `
+### ${i.name}
+
+\`\`\`json
+${i.content}
+\`\`\`
+`).join('\n\n')
+  }
+
+## Update
+
+${
+    hotUpdateFile.map((i) => `
+### ${i.name}
+
+#### Changed Modules
+${i.modules.map((m) => `- ${m}`).join('\n')}
+
+#### Changed Runtime Modules
+${i.runtime.map((m) => `- ${m}`).join('\n')}
+
+#### Changed Content
+\`\`\`js
+${i.content}
+\`\`\`
+`).join('\n\n')
+  }
+
+
+${
+    runtime
+      ? `
+## Runtime
+### Status
+
+\`\`\`txt
+${(runtime['statusPath'] as string[]).join(' => ')}
+\`\`\`
+
+${
+        js
+          ? `
+
+### JavaScript
+
+#### Outdated
+
+Outdated Modules:
+${js.outdatedModules.map((i) => `- ${i}`).join('\n')}
+
+
+Outdated Dependencies:
+\`\`\`json
+${JSON.stringify(js.outdatedDependencies, null, 2)}
+\`\`\`
+
+#### Updated
+
+Updated Modules:
+${js.updatedModules.map((i) => `- ${i}`).join('\n')}
+
+Updated Runtime:
+${js.updatedRuntime.map((i) => `- \`${i}\``).join('\n')}
+
+
+#### Callback
+
+Accepted Callback:
+${js.acceptedModules.map((i) => `- ${i}`).join('\n')}
+
+Disposed Callback:
+${js.disposedModules.map((i) => `- ${i}`).join('\n')}
+`
+          : ''
+      }
+
+`
+      : ''
+  }
+
+				`.replaceAll(
+    /%3A(\d+)%2F/g,
+    (match, capture: string) => match.replace(capture, 'PORT'),
+  ).trim();
+  // The decoded manifest (via `snapshotContent`) is re-serialized compactly with
+  // `JSON.stringify`; pretty-print the rendered `json` blocks so it diffs
+  // line-by-line.
+  const finalContent = prettyPrint ? prettyPrintJsonBlocks(content) : content;
+  // `toMatchFileSnapshotSync` is registered by `@rspack/test-tools/setup-expect`.
+  (env.expect as (value: unknown) => {
+    toMatchFileSnapshotSync: (path: string) => void;
+  })(finalContent).toMatchFileSnapshotSync(snapshotPath);
+}
+
+// ---------------------------------------------------------------------------
+// Decode helpers: decode the base64 `content` of a `*.hot-update.json`
+// manifest into pretty-printed JSON so the snapshot is human-readable.
+// ---------------------------------------------------------------------------
+
+/**
+ * Decode the base64 `content` of a `*.hot-update.json` manifest into plain JSON.
+ * Runs through the `snapshotContent` hook (before hash normalization), so it
+ * sees the pristine base64. Non-manifest assets are passed through untouched.
  */
 function decodeManifestContent(content: string): string {
   let manifest: { content?: unknown };
@@ -160,51 +361,6 @@ function prettyPrintJsonBlocks(snapshot: string): string {
   );
 }
 
-function createCase(
-  name: string,
-  src: string,
-  dist: string,
-  cwd: string,
-  decodeHotUpdateManifest: boolean,
-) {
-  describe(name, () => {
-    for (const compilerType of [ECompilerType.Rspack]) {
-      const caseName = `${name} - ${compilerType}`;
-      const caseConfigFile = path.join(src, `${compilerType}.config.js`);
-      const compilerDist = path.join(dist, compilerType);
-      const runner = createRunner(src, compilerDist, HotRunnerFactory);
-
-      // eslint-disable-next-line @typescript-eslint/no-misused-promises
-      describe(caseName, async () => {
-        if (!fs.existsSync(caseConfigFile)) {
-          test.skip(caseName);
-          return;
-        }
-        const bundler = await import(
-          compilerType === ECompilerType.Rspack ? '@rspack/core' : 'webpack'
-        ) as TImportedBundler;
-        const caseOptions = await getOptions<TCompilerOptions<ECompilerType>>(
-          caseConfigFile,
-        );
-        runner(
-          caseName,
-          new RspeedyHotSnapshotProcessor<ECompilerType>({
-            bundler,
-            caseOptions,
-            src,
-            dist: compilerDist,
-            cwd,
-            name: caseName,
-            compilerType,
-            snapshot: `__snapshot__/${compilerType}`,
-            decodeHotUpdateManifest,
-          }),
-        );
-      });
-    }
-  });
-}
-
 export interface IHotSnapshotCasesOptions {
   /**
    * Decode the base64 `content` of `*.hot-update.json` manifests into plain,
@@ -216,23 +372,128 @@ export interface IHotSnapshotCasesOptions {
   decodeHotUpdateManifest?: boolean;
 }
 
+/**
+ * Build a hot-step processor: the shared hot lifecycle (`./hot.js`) plus the
+ * `matchStepSnapshot` hooks. `snapshotContent`, when decoding manifests, decodes
+ * the base64 `content` inline (before hash normalization) and pretty-prints the
+ * rendered `json` blocks.
+ */
+function createHotSnapshotProcessor(
+  name: string,
+  src: string,
+  temp: string,
+  decodeHotUpdateManifest: boolean,
+) {
+  const state: IStepState = { entries: {}, hashes: [] };
+  const snapshotContent = decodeHotUpdateManifest
+    ? (content: string) => decodeManifestContent(content)
+    : undefined;
+
+  const processor = createBaseHotProcessor(name, src, temp, {
+    onStep: (env, context, updateIndex, stats, runtime) => {
+      collectRuntimeEntries(state, stats, true);
+      matchStepSnapshot(
+        state,
+        name,
+        temp,
+        processor.updatePlugin,
+        snapshotContent,
+        decodeHotUpdateManifest,
+        env,
+        context,
+        updateIndex,
+        context.getCompiler().getOptions(),
+        stats.toJson({ assets: true, chunks: true }),
+        runtime,
+      );
+      state.hashes.push(stats.hash!);
+    },
+    onInitial: (env, context, stats) => {
+      if (!stats || !stats.hash) return;
+      collectRuntimeEntries(state, stats, false);
+      let matchFailed: unknown = null;
+      try {
+        matchStepSnapshot(
+          state,
+          name,
+          temp,
+          processor.updatePlugin,
+          snapshotContent,
+          decodeHotUpdateManifest,
+          env,
+          context,
+          0,
+          context.getCompiler().getOptions(),
+          stats.toJson({ assets: true, chunks: true }),
+        );
+      } catch (e) {
+        matchFailed = e;
+      }
+      state.hashes.push(stats.hash);
+      if (matchFailed) throw matchFailed;
+    },
+  });
+
+  return processor;
+}
+
+const creators = new Map<string, BasicCaseCreator>();
+
+function getCreator(decodeHotUpdateManifest: boolean): BasicCaseCreator {
+  const key = String(decodeHotUpdateManifest);
+  if (!creators.has(key)) {
+    creators.set(
+      key,
+      new BasicCaseCreator({
+        clean: true,
+        describe: false,
+        target: TARGET,
+        steps: ({ name, src, dist, temp }) => [
+          createHotSnapshotProcessor(
+            name,
+            src,
+            temp ?? path.resolve(dist, 'temp'),
+            decodeHotUpdateManifest,
+          ),
+        ],
+        runner: {
+          key: (_context, name) => name,
+          runner: createHotRunner,
+        },
+        // The lynx fixtures drive HMR through debounced/`setTimeout`-deferred
+        // callbacks. Running cases concurrently interleaves their leaked timers
+        // (a case's CSS-reload timer firing in another case's `require` context),
+        // so serialize to one case at a time.
+        concurrent: 1,
+      }),
+    );
+  }
+  return creators.get(key)!;
+}
+
 export function hotSnapshotCases(
   suite: ITestSuite,
   options: IHotSnapshotCasesOptions = {},
 ): void {
+  const decode = options.decodeHotUpdateManifest ?? false;
   const distPath = path.resolve(suite.casePath, '../js/hot-snapshot');
   rimrafSync(distPath);
+  const creator = getCreator(decode);
+  // The HotUpdatePlugin copies `src` into `temp`, rewrites `options.context` to
+  // `temp`, and compiles there. The fixtures import a shared helper *outside*
+  // the case dir (`import '../../../helper/stubLynx.js'`), so the temp must sit
+  // at the same directory depth as the source (`<testDir>/hotCases/<case>`),
+  // i.e. `<testDir>/.hot-snapshot-temp/<case>`, so `../../../helper` resolves to
+  // `<testDir>/helper` exactly as it did from the source.
+  const testDir = path.dirname(suite.casePath);
   describeByWalk(suite.name, (name, src, dist) => {
-    createCase(
-      name,
-      src,
-      dist,
-      suite.casePath,
-      options.decodeHotUpdateManifest ?? false,
-    );
+    const relativeCase = path.relative(suite.casePath, src);
+    const temp = path.join(testDir, '.hot-snapshot-temp', relativeCase);
+    creator.create(name, src, dist, temp, {
+      testConfig: loadCaseTestConfig(src),
+    });
   }, {
     source: suite.casePath,
     dist: distPath,
-    describe,
   });
 }

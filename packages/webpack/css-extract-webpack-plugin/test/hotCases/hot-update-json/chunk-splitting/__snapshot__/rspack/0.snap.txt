@@ -14,10 +14,10 @@
 - Bundle: main3/template.js
 - Bundle: main4.js
 - Bundle: main4/template.js
-- Manifest: index.css.hot-update.json, size: 1750
-- Manifest: main2.css.hot-update.json, size: 1750
-- Manifest: main3.css.hot-update.json, size: 1750
-- Manifest: main4.css.hot-update.json, size: 1750
+- Manifest: index.css.hot-update.json, size: 2354
+- Manifest: main2.css.hot-update.json, size: 2354
+- Manifest: main3.css.hot-update.json, size: 2354
+- Manifest: main4.css.hot-update.json, size: 2354
 
 ## Manifest
 
@@ -77,9 +77,59 @@
               }
             ],
             "selectorText": {
-              "value": ".ntM3JQSfHsPV0rWI",
+              "value": ".dJcfehYKEBi0o5Mu",
               "loc": {
                 "line": 6,
+                "column": 18
+              }
+            },
+            "variables": {}
+          },
+          {
+            "type": "StyleRule",
+            "style": [
+              {
+                "name": "color",
+                "value": "\"blue\"",
+                "keyLoc": {
+                  "line": 11,
+                  "column": 8
+                },
+                "valLoc": {
+                  "line": 11,
+                  "column": 17
+                }
+              }
+            ],
+            "selectorText": {
+              "value": "--- .dJcfehYKEBi0o5Mu",
+              "loc": {
+                "line": 10,
+                "column": 18
+              }
+            },
+            "variables": {}
+          },
+          {
+            "type": "StyleRule",
+            "style": [
+              {
+                "name": "color",
+                "value": "\"blue\"",
+                "keyLoc": {
+                  "line": 15,
+                  "column": 8
+                },
+                "valLoc": {
+                  "line": 15,
+                  "column": 17
+                }
+              }
+            ],
+            "selectorText": {
+              "value": "--- .jBPAxvkRBAAuu8Wj",
+              "loc": {
+                "line": 14,
                 "column": 18
               }
             },
@@ -92,19 +142,19 @@
                 "name": "background-color",
                 "value": "black",
                 "keyLoc": {
-                  "line": 15,
+                  "line": 23,
                   "column": 19
                 },
                 "valLoc": {
-                  "line": 15,
+                  "line": 23,
                   "column": 27
                 }
               }
             ],
             "selectorText": {
-              "value": ".XAYuuaq2rEIWiXM6",
+              "value": ".EaAGbC87LA0NCIIR",
               "loc": {
-                "line": 14,
+                "line": 22,
                 "column": 18
               }
             },
@@ -187,9 +237,59 @@
               }
             ],
             "selectorText": {
-              "value": ".ntM3JQSfHsPV0rWI",
+              "value": ".dJcfehYKEBi0o5Mu",
               "loc": {
                 "line": 6,
+                "column": 18
+              }
+            },
+            "variables": {}
+          },
+          {
+            "type": "StyleRule",
+            "style": [
+              {
+                "name": "color",
+                "value": "\"blue\"",
+                "keyLoc": {
+                  "line": 11,
+                  "column": 8
+                },
+                "valLoc": {
+                  "line": 11,
+                  "column": 17
+                }
+              }
+            ],
+            "selectorText": {
+              "value": "--- .dJcfehYKEBi0o5Mu",
+              "loc": {
+                "line": 10,
+                "column": 18
+              }
+            },
+            "variables": {}
+          },
+          {
+            "type": "StyleRule",
+            "style": [
+              {
+                "name": "color",
+                "value": "\"blue\"",
+                "keyLoc": {
+                  "line": 15,
+                  "column": 8
+                },
+                "valLoc": {
+                  "line": 15,
+                  "column": 17
+                }
+              }
+            ],
+            "selectorText": {
+              "value": "--- .jBPAxvkRBAAuu8Wj",
+              "loc": {
+                "line": 14,
                 "column": 18
               }
             },
@@ -202,19 +302,19 @@
                 "name": "background-color",
                 "value": "black",
                 "keyLoc": {
-                  "line": 15,
+                  "line": 23,
                   "column": 19
                 },
                 "valLoc": {
-                  "line": 15,
+                  "line": 23,
                   "column": 27
                 }
               }
             ],
             "selectorText": {
-              "value": ".XAYuuaq2rEIWiXM6",
+              "value": ".EaAGbC87LA0NCIIR",
               "loc": {
-                "line": 14,
+                "line": 22,
                 "column": 18
               }
             },
@@ -297,9 +397,59 @@
               }
             ],
             "selectorText": {
-              "value": ".ntM3JQSfHsPV0rWI",
+              "value": ".dJcfehYKEBi0o5Mu",
               "loc": {
                 "line": 6,
+                "column": 18
+              }
+            },
+            "variables": {}
+          },
+          {
+            "type": "StyleRule",
+            "style": [
+              {
+                "name": "color",
+                "value": "\"blue\"",
+                "keyLoc": {
+                  "line": 11,
+                  "column": 8
+                },
+                "valLoc": {
+                  "line": 11,
+                  "column": 17
+                }
+              }
+            ],
+            "selectorText": {
+              "value": "--- .dJcfehYKEBi0o5Mu",
+              "loc": {
+                "line": 10,
+                "column": 18
+              }
+            },
+            "variables": {}
+          },
+          {
+            "type": "StyleRule",
+            "style": [
+              {
+                "name": "color",
+                "value": "\"blue\"",
+                "keyLoc": {
+                  "line": 15,
+                  "column": 8
+                },
+                "valLoc": {
+                  "line": 15,
+                  "column": 17
+                }
+              }
+            ],
+            "selectorText": {
+              "value": "--- .jBPAxvkRBAAuu8Wj",
+              "loc": {
+                "line": 14,
                 "column": 18
               }
             },
@@ -312,19 +462,19 @@
                 "name": "background-color",
                 "value": "black",
                 "keyLoc": {
-                  "line": 15,
+                  "line": 23,
                   "column": 19
                 },
                 "valLoc": {
-                  "line": 15,
+                  "line": 23,
                   "column": 27
                 }
               }
             ],
             "selectorText": {
-              "value": ".XAYuuaq2rEIWiXM6",
+              "value": ".EaAGbC87LA0NCIIR",
               "loc": {
-                "line": 14,
+                "line": 22,
                 "column": 18
               }
             },
@@ -407,9 +557,59 @@
               }
             ],
             "selectorText": {
-              "value": ".ntM3JQSfHsPV0rWI",
+              "value": ".dJcfehYKEBi0o5Mu",
               "loc": {
                 "line": 6,
+                "column": 18
+              }
+            },
+            "variables": {}
+          },
+          {
+            "type": "StyleRule",
+            "style": [
+              {
+                "name": "color",
+                "value": "\"blue\"",
+                "keyLoc": {
+                  "line": 11,
+                  "column": 8
+                },
+                "valLoc": {
+                  "line": 11,
+                  "column": 17
+                }
+              }
+            ],
+            "selectorText": {
+              "value": "--- .dJcfehYKEBi0o5Mu",
+              "loc": {
+                "line": 10,
+                "column": 18
+              }
+            },
+            "variables": {}
+          },
+          {
+            "type": "StyleRule",
+            "style": [
+              {
+                "name": "color",
+                "value": "\"blue\"",
+                "keyLoc": {
+                  "line": 15,
+                  "column": 8
+                },
+                "valLoc": {
+                  "line": 15,
+                  "column": 17
+                }
+              }
+            ],
+            "selectorText": {
+              "value": "--- .jBPAxvkRBAAuu8Wj",
+              "loc": {
+                "line": 14,
                 "column": 18
               }
             },
@@ -422,19 +622,19 @@
                 "name": "background-color",
                 "value": "black",
                 "keyLoc": {
-                  "line": 15,
+                  "line": 23,
                   "column": 19
                 },
                 "valLoc": {
-                  "line": 15,
+                  "line": 23,
                   "column": 27
                 }
               }
             ],
             "selectorText": {
-              "value": ".XAYuuaq2rEIWiXM6",
+              "value": ".EaAGbC87LA0NCIIR",
               "loc": {
-                "line": 14,
+                "line": 22,
                 "column": 18
               }
             },

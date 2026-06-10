@@ -7,7 +7,7 @@
 - Bundle: rspack-bundle.js
 - Manifest: main.LAST_HASH.css.hot-update.json, size: 1918
 - Manifest: main.LAST_HASH.hot-update.json, size: 28
-- Update: main.LAST_HASH.hot-update.js, size: 1098
+- Update: main.LAST_HASH.hot-update.js, size: 1093
 
 ## Manifest
 
@@ -157,7 +157,7 @@
 ### main.LAST_HASH.hot-update.js
 
 #### Changed Modules
-- ./css/scoped/file.css?cssId=100
+- ./file.css?cssId=100
 
 #### Changed Runtime Modules
 - webpack/runtime/get_full_hash
@@ -167,14 +167,14 @@
 "use strict";
 exports.ids = ["main"];
 exports.modules = {
-"./css/scoped/file.css?cssId=100"(module, __webpack_exports__, __webpack_require__) {
+"./file.css?cssId=100"(module, __webpack_exports__, __webpack_require__) {
 __webpack_require__.r(__webpack_exports__);
 // extracted by mini-css-extract-plugin
 
   if (true) {
     (function() {
       var localsJsonString = undefined;
-      var cssReload = __webpack_require__("../../runtime/hotModuleReplacement.cjs")(module.id, {}, "100");
+      var cssReload = __webpack_require__("../../../../runtime/hotModuleReplacement.cjs")(module.id, {}, "100");
       // only invalidate when locals change
       if (
         module.hot.data &&
@@ -229,7 +229,7 @@ check => prepare => dispose => apply => idle
 #### Outdated
 
 Outdated Modules:
-- ./css/scoped/file.css?cssId=100
+- ./file.css?cssId=100
 
 
 Outdated Dependencies:
@@ -240,7 +240,7 @@ Outdated Dependencies:
 #### Updated
 
 Updated Modules:
-- ./css/scoped/file.css?cssId=100
+- ./file.css?cssId=100
 
 Updated Runtime:
 - `__webpack_require__.cssHotUpdateList`
@@ -253,4 +253,4 @@ Accepted Callback:
 
 
 Disposed Callback:
-- ./css/scoped/file.css?cssId=100
+- ./file.css?cssId=100
