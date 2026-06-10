@@ -25,6 +25,61 @@ test('judges generated UI', async ({ page }) => {
 });
 ```
 
+`runVisualEvaluation` compares one prepared reference image with a rendered Lynx
+page URL. The `referenceImage` field accepts plain base64, a
+`data:image/...;base64,...` URL, or an `http://` / `https://` image URL.
+
+```ts
+import { runVisualEvaluation } from '@lynx-js/ui-judge';
+
+const result = await runVisualEvaluation({
+  referenceImage: 'data:image/png;base64,...',
+  templateUrl: 'http://localhost:3000/render.html',
+  capture: {
+    waitTimeMs: 500,
+  },
+});
+
+console.log(result.score, result.reason);
+console.log(result.artifacts.diffImageBase64);
+```
+
+The visual evaluation result follows this shape:
+
+```ts
+interface VisualEvaluationResponse {
+  ok: true;
+  score?: number;
+  reason?: string;
+  artifacts: {
+    referenceImageBase64: string;
+    deviceImageBase64: string;
+    alignedReferenceImageBase64: string;
+    alignedDeviceImageBase64: string;
+    diffImageBase64: string;
+  };
+  metrics: {
+    alignResult: AlignResult | null;
+    compareResult: CompareResult;
+    evaluationResult: EvaluationResult;
+  };
+  warnings?: string[];
+}
+```
+
+For service-style usage, mount the reusable Node handler at
+`POST /visual-evaluation`:
+
+```ts
+import { createVisualEvaluationServer } from '@lynx-js/ui-judge';
+
+const server = createVisualEvaluationServer();
+server.listen(3001);
+```
+
+Tests and custom runtimes can inject `capture` and `evaluate` functions into
+`runVisualEvaluation` or `createVisualEvaluationServer`.
+
 `judgeAndroidAgent` judges an Android Lynx screen through a Kitten-Lynx page.
 Callers own the Kitten-Lynx device/app lifecycle, including connection,
 navigation, and teardown. The judge reads `page.url()` for the returned JSON

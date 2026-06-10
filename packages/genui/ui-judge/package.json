@@ -29,7 +29,8 @@
     "@lynx-js/genui": "workspace:*",
     "@midscene/core": "^1.8.0",
     "@midscene/web": "^1.8.0",
-    "@playwright/test": "^1.58.2"
+    "@playwright/test": "^1.58.2",
+    "sharp": "^0.34.5"
   },
   "devDependencies": {
     "@lynx-js/genui-a2ui": "workspace:*",
