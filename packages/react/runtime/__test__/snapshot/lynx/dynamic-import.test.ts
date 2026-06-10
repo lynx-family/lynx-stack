@@ -58,6 +58,21 @@ describe('dynamic import helpers', () => {
     expect(requireModuleAsync).toHaveBeenCalledWith('plain-dynamic', expect.any(Function));
   });
 
+  test('rejects plain dynamic JS when requireModuleAsync fails', async () => {
+    const error = new Error('load failed');
+    const requireModuleAsync = vi.fn((_url, callback) => {
+      callback(error);
+    });
+    lynx.requireModuleAsync = requireModuleAsync;
+
+    const { loadDynamicJS } = await import(
+      '../../../src/core/lynx/dynamic-import.js'
+    );
+
+    await expect(loadDynamicJS('failed-entry')).rejects.toBe(error);
+    expect(requireModuleAsync).toHaveBeenCalledWith('failed-entry', expect.any(Function));
+  });
+
   test('loads component dynamic imports through loadLazyBundle', async () => {
     const QueryComponent = vi.fn((source, callback) => {
       callback({ code: 0, detail: { schema: source } });

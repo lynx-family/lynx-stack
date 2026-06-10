@@ -111,6 +111,7 @@ export default defineConfig({
         'debug',
         'jsx-runtime',
         'jsx-dev-runtime',
+        'lazy/element-template-import.js',
         'lepus/jsx-dev-runtime',
         'lepus/index.d.ts',
         'vitest.config.ts',
