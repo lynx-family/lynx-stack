@@ -6,7 +6,10 @@ import { fileURLToPath } from 'node:url';
 
 import { describe, expect, it } from '@rstest/core';
 
-import { getBackgroundTransformOptions } from '../src/loaders/options.js';
+import {
+  getBackgroundTransformOptions,
+  getMainThreadTransformOptions,
+} from '../src/loaders/options.js';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
@@ -41,5 +44,35 @@ describe('loader options', () => {
       runtimePkg: '@lynx-js/react/element-template',
       target: 'JS',
     });
+  });
+
+  it('keeps ET dynamic import output on the aliasable internal runtime package', () => {
+    const context = createLoaderContext({
+      experimental_useElementTemplate: true,
+    });
+
+    const mainThreadOptions = getMainThreadTransformOptions.call(
+      context,
+      undefined,
+    );
+    const backgroundOptions = getBackgroundTransformOptions.call(
+      context,
+      undefined,
+    );
+
+    expect(mainThreadOptions.dynamicImport).toMatchObject({
+      layer: 'react__main-thread',
+      runtimePkg: '@lynx-js/react/internal',
+    });
+    expect(backgroundOptions.dynamicImport).toMatchObject({
+      layer: 'react__background',
+      runtimePkg: '@lynx-js/react/internal',
+    });
+    expect(mainThreadOptions.dynamicImport?.runtimePkg).not.toBe(
+      '@lynx-js/react/element-template/internal',
+    );
+    expect(backgroundOptions.dynamicImport?.runtimePkg).not.toBe(
+      '@lynx-js/react/element-template/internal',
+    );
   });
 });

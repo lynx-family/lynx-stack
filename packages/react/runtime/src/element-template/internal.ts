@@ -31,7 +31,7 @@ export {
 } from 'preact';
 export type { Options } from 'preact';
 
-// export { loadDynamicJS, __dynamicImport } from '../lynx/dynamic-js.js';
+export { loadDynamicJS, __dynamicImport } from '../core/lynx/dynamic-import.js';
 
 export { withInitDataInState } from '../core/initData.js';
 

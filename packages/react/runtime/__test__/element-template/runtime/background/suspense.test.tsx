@@ -13,6 +13,7 @@ import { root, Suspense, lazy } from '../../../../src/element-template/index.js'
 import { loadLazyBundle } from '../../../../src/core/lynx/lazy-bundle.js';
 import { ElementTemplateLifecycleConstant } from '../../../../src/element-template/protocol/lifecycle-constant.js';
 import { ElementTemplateUpdateOps } from '../../../../src/element-template/protocol/opcodes.js';
+import { jsx as jsxRuntime } from '../../../../jsx-runtime/index.js';
 import type {
   ElementTemplateUpdateCommandStream,
   ElementTemplateUpdateCommitContext,
@@ -637,6 +638,71 @@ describe('ElementTemplate Suspense background lifecycle', () => {
           attributeSlots: ['B'],
         }),
       ]));
+      envManager.switchToBackground();
+    } finally {
+      if (originalQueryComponent) {
+        lynxWithQuery.QueryComponent = originalQueryComponent;
+      } else {
+        delete lynxWithQuery.QueryComponent;
+      }
+      if (originalGetDynamicComponentExports) {
+        ttWithDynamic.getDynamicComponentExports = originalGetDynamicComponentExports;
+      } else {
+        delete ttWithDynamic.getDynamicComponentExports;
+      }
+    }
+  });
+
+  it('renders lazy dynamic bundle components created by the standalone background JSX runtime', async () => {
+    const lynxWithQuery = lynx as typeof lynx & {
+      QueryComponent?: (source: string, callback: QueryComponentCallback) => void;
+    };
+    const ttWithDynamic = lynxCoreInject.tt as typeof lynxCoreInject.tt & {
+      getDynamicComponentExports?: (schema: string) => { default: ComponentType<Record<string, never>> } | undefined;
+    };
+    const originalQueryComponent = lynxWithQuery.QueryComponent;
+    const originalGetDynamicComponentExports = ttWithDynamic.getDynamicComponentExports;
+    let queryCallback: QueryComponentCallback | undefined;
+    lynxWithQuery.QueryComponent = vi.fn((_source: string, callback: QueryComponentCallback) => {
+      queryCallback = callback;
+    });
+    ttWithDynamic.getDynamicComponentExports = vi.fn((schema: string) => ({
+      default: () =>
+        jsxRuntime(`${schema}:_et_same`, {
+          attributeSlots: ['loaded'],
+        }) as unknown as JSX.Element,
+    }));
+
+    try {
+      const DynamicEntry = lazy(() => loadLazyBundle('entry-a')) as ComponentType<Record<string, never>>;
+
+      root.render(
+        <view>
+          <Suspense fallback={<Marker value='loading' />}>
+            <DynamicEntry />
+          </Suspense>
+        </view>,
+      );
+      await flushSuspenseRenders(scheduledRenders);
+
+      const host = getRenderedHost();
+      expect(collectMarkerValues(host)).toEqual(['loading']);
+      markRenderedTreeHydrated();
+      updateEvents = [];
+
+      queryCallback?.({ code: 0, detail: { schema: 'entry-a' } });
+      await flushSuspenseRenders(scheduledRenders);
+
+      expect(collectMarkerValues(host)).toEqual([]);
+      expect(getSlotChildren(host).map(child => child.type)).toEqual(['entry-a:_et_same']);
+      envManager.switchToMainThread();
+      const creates = parseUpdateOps(updateEvents.flatMap(event => event.ops))
+        .filter((op): op is ParsedCreateTemplateOp => op.op === 'createTemplate');
+      expect(creates).toContainEqual(expect.objectContaining({
+        templateKey: '_et_same',
+        bundleUrl: 'entry-a',
+        attributeSlots: ['loaded'],
+      }));
       envManager.switchToBackground();
     } finally {
       if (originalQueryComponent) {
