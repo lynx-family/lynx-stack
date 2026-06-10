@@ -38,6 +38,10 @@ export default {
             if (!args.encodeData.elementTemplate) {
               throw new Error('elementTemplate should exist');
             }
+            expect(
+              args.encodeData.sourceContent.config.enableUnifyFixedBehavior,
+            )
+              .toBe(true);
             const userTemplateIds = Object.keys(args.encodeData.elementTemplate)
               .filter(id => id !== '_et_builtin_raw_text');
             expect(userTemplateIds).toHaveLength(1);
