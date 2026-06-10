@@ -88,7 +88,7 @@ function onLifecycleEventImpl(type: LifecycleConstant, data: unknown): void {
       } catch (e) {
         processErr = e;
       }
-      const { root: lepusSide, jsReadyEventIdSwap } = data as FirstScreenData;
+      const { root: lepusSide, firstScreenEventIdSwap } = data as FirstScreenData;
       if (typeof __PROFILE__ !== 'undefined' && __PROFILE__) {
         profileStart('ReactLynx::hydrate');
       }
@@ -140,7 +140,7 @@ function onLifecycleEventImpl(type: LifecycleConstant, data: unknown): void {
           const [handlerName, data] = args;
           // eslint-disable-next-line prefer-const
           let [idStr, ...rest] = handlerName.split(':');
-          while (jsReadyEventIdSwap[idStr!]) idStr = jsReadyEventIdSwap[idStr!]?.toString();
+          while (firstScreenEventIdSwap[idStr!]) idStr = firstScreenEventIdSwap[idStr!]?.toString();
           try {
             publishEvent([idStr, ...rest].join(':'), data);
           } catch (e) {

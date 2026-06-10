@@ -15,7 +15,7 @@ export type LifecycleConstant = (typeof LifecycleConstant)[keyof typeof Lifecycl
 
 export interface FirstScreenData {
   root: string;
-  jsReadyEventIdSwap: Record<string | number, number>;
+  firstScreenEventIdSwap: Record<string | number, number>;
 }
 
 export const NativeUpdateDataType = {

@@ -5,11 +5,11 @@ import { __root } from '../../../root.js';
 import { profileEnd, profileStart } from '../../../shared/profile.js';
 import { LifecycleConstant } from '../../lifecycle/constant.js';
 
-let isJSReady: boolean;
-let jsReadyEventIdSwap: Record<string | number, number>;
+let isFirstScreenSynced: boolean;
+let firstScreenEventIdSwap: Record<string | number, number>;
 
-function jsReady(): void {
-  isJSReady = true;
+function syncFirstScreen(): void {
+  isFirstScreenSynced = true;
 
   if (typeof __PROFILE__ !== 'undefined' && __PROFILE__) {
     profileStart('ReactLynx::serializeRoot');
@@ -25,25 +25,31 @@ function jsReady(): void {
     LifecycleConstant.firstScreen, /* FIRST_SCREEN */
     {
       root,
-      jsReadyEventIdSwap,
+      firstScreenEventIdSwap,
     },
   ]);
   if (typeof __PROFILE__ !== 'undefined' && __PROFILE__) {
     profileEnd();
   }
-  jsReadyEventIdSwap = {};
+  firstScreenEventIdSwap = {};
 }
 
-function clearJSReadyEventIdSwap(): void {
-  jsReadyEventIdSwap = {};
+function clearFirstScreenEventIdSwap(): void {
+  firstScreenEventIdSwap = {};
 }
 
-function resetJSReady(): void {
-  isJSReady = false;
-  jsReadyEventIdSwap = {};
+function resetFirstScreenSyncState(): void {
+  isFirstScreenSynced = false;
+  firstScreenEventIdSwap = {};
 }
 
 /**
  * @internal
  */
-export { jsReady, isJSReady, jsReadyEventIdSwap, clearJSReadyEventIdSwap, resetJSReady };
+export {
+  syncFirstScreen,
+  isFirstScreenSynced,
+  firstScreenEventIdSwap,
+  clearFirstScreenEventIdSwap,
+  resetFirstScreenSyncState,
+};
