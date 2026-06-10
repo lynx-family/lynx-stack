@@ -1,6 +1,6 @@
 [
   {
-    "templateId": "_et_eb7af03baae1",
+    "templateId": "_et_517e4a08d202",
     "compiledTemplate": {
       "kind": "element",
       "type": "view",
@@ -25,6 +25,11 @@
               "kind": "static",
               "key": "text",
               "value": "Scoped Dynamic"
+            },
+            {
+              "kind": "static",
+              "key": "css-id",
+              "value": 1501958
             }
           ],
           "children": []

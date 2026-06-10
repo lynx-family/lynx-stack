@@ -59,6 +59,25 @@ fn assert_single_framework_css_id_attr(
   assert_eq!(css_id_attrs[0]["value"].as_f64(), Some(expected_css_id));
 }
 
+fn assert_css_id_override_diagnostic(diagnostics: &[String], message: &str) {
+  assert!(
+    diagnostics
+      .iter()
+      .any(|diagnostic| { diagnostic.contains("css-id") && diagnostic.contains("overridden") }),
+    "{message}, got: {diagnostics:?}"
+  );
+}
+
+fn first_user_template_json_from_templates(
+  templates: &[ElementTemplateAsset],
+) -> serde_json::Value {
+  let template = templates
+    .iter()
+    .find(|template| template.template_id != BUILTIN_RAW_TEXT_TEMPLATE_ID)
+    .expect("should collect a user template");
+  serde_json::to_value(&template.compiled_template).expect("compiled template json")
+}
+
 fn template_snapshot_json(templates: &[ElementTemplateAsset]) -> Vec<serde_json::Value> {
   templates
     .iter()
@@ -911,22 +930,40 @@ fn should_warn_and_override_direct_user_css_id_attr() {
     element_template_config(),
   );
 
-  assert!(
-    diagnostics
-      .iter()
-      .any(|message| { message.contains("css-id") && message.contains("overridden") }),
-    "expected direct css-id override diagnostic, got: {diagnostics:?}"
-  );
+  assert_css_id_override_diagnostic(&diagnostics, "expected direct css-id override diagnostic");
 
-  let template = templates
-    .iter()
-    .find(|template| template.template_id != BUILTIN_RAW_TEXT_TEMPLATE_ID)
-    .expect("should collect a user template");
-  let template = serde_json::to_value(&template.compiled_template).expect("compiled template json");
+  let template = first_user_template_json_from_templates(&templates);
   assert_single_framework_css_id_attr(
     &template,
     100.0,
     "direct user css-id should be replaced by the framework css-id",
+  );
+}
+
+#[test]
+fn should_warn_and_override_nested_direct_user_css_id_attr() {
+  let (_, templates, diagnostics) = transform_to_code_templates_and_diagnostics(
+    r#"
+      /**
+       * @jsxCSSId 100
+       */
+      <view>
+        <text css-id="user-css-id" />
+      </view>
+    "#,
+    element_template_config(),
+  );
+
+  assert_css_id_override_diagnostic(
+    &diagnostics,
+    "expected nested direct css-id override diagnostic",
+  );
+
+  let template = first_user_template_json_from_templates(&templates);
+  assert_single_framework_css_id_attr(
+    &template["children"][0],
+    100.0,
+    "nested direct user css-id should be replaced by the framework css-id",
   );
 }
 
@@ -942,25 +979,47 @@ fn should_warn_and_override_dynamic_user_css_id_attr_without_reserving_slot() {
     element_template_config(),
   );
 
-  assert!(
-    diagnostics
-      .iter()
-      .any(|message| { message.contains("css-id") && message.contains("overridden") }),
-    "expected direct css-id override diagnostic, got: {diagnostics:?}"
-  );
+  assert_css_id_override_diagnostic(&diagnostics, "expected direct css-id override diagnostic");
   assert!(
     !code.contains("attributeSlots"),
     "overridden dynamic css-id should not reserve an ET attribute slot, got: {code}"
   );
 
-  let template = templates
-    .iter()
-    .find(|template| template.template_id != BUILTIN_RAW_TEXT_TEMPLATE_ID)
-    .expect("should collect a user template");
-  let template = serde_json::to_value(&template.compiled_template).expect("compiled template json");
+  let template = first_user_template_json_from_templates(&templates);
   assert_single_framework_css_id_attr(
     &template,
     100.0,
     "dynamic user css-id should be replaced by the framework css-id",
+  );
+}
+
+#[test]
+fn should_warn_and_override_nested_dynamic_user_css_id_attr_without_reserving_slot() {
+  let (code, templates, diagnostics) = transform_to_code_templates_and_diagnostics(
+    r#"
+      /**
+       * @jsxCSSId 100
+       */
+      <view>
+        <text css-id={userCssId} />
+      </view>
+    "#,
+    element_template_config(),
+  );
+
+  assert_css_id_override_diagnostic(
+    &diagnostics,
+    "expected nested dynamic css-id override diagnostic",
+  );
+  assert!(
+    !code.contains("attributeSlots"),
+    "overridden nested dynamic css-id should not reserve an ET attribute slot, got: {code}"
+  );
+
+  let template = first_user_template_json_from_templates(&templates);
+  assert_single_framework_css_id_attr(
+    &template["children"][0],
+    100.0,
+    "nested dynamic user css-id should be replaced by the framework css-id",
   );
 }
