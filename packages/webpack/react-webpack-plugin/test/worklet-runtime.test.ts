@@ -7,7 +7,7 @@ import { pathToFileURL } from 'node:url';
 
 import { rspack } from '@rspack/core';
 import type { RspackOptions, Stats } from '@rspack/core';
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it } from '@rstest/core';
 
 interface WorkletRuntimeCase {
   caseName: string;

@@ -1,4 +1,4 @@
-import { ReactWebpackPlugin } from '../../../../src'
+import { ReactWebpackPlugin } from '@lynx-js/react-webpack-plugin'
 
 /** @type {import('webpack').Configuration} */
 export default {

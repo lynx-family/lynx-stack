@@ -7,5 +7,5 @@ ERROR in × Module build failed (from <PNPM_INNER>/sass-loader/dist/cjs.js):
 <TEST_ROOT>/diagnostic/error/sass/index.scss <LINE:COLUMN>  root stylesheet
 
 ERROR in ./error/sass/index.scss
-× Module build failed (from ../../src/rspack-loader.js):
+× Module build failed (from ../../lib/rspack-loader.js):
 ╰─▶   × Error: Module build failed (from <PNPM_INNER>/sass-loader/dist/cjs.js):

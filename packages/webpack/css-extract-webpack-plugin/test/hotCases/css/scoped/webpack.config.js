@@ -5,7 +5,7 @@
 */
 import { DefinePlugin } from 'webpack'
 import { plugins } from '../../../../test/plugins.js'
-import { CssExtractWebpackPlugin } from '../../../../src'
+import { CssExtractWebpackPlugin } from '@lynx-js/css-extract-webpack-plugin'
 import path from 'node:path'
 
 /** @type {import('webpack').Configuration} */
@@ -30,7 +30,7 @@ export default {
   plugins: [
     ...plugins,
     new DefinePlugin({
-      HMR_RUNTIME_LEPUS: JSON.stringify(path.resolve(__dirname, "../../../../runtime/hotModuleReplacement.lepus.cjs"))
+      HMR_RUNTIME_LEPUS: JSON.stringify(path.resolve(import.meta.dirname, "../../../../runtime/hotModuleReplacement.lepus.cjs"))
     }),
     new CssExtractWebpackPlugin({
       enableRemoveCSSScope: false,

@@ -5,20 +5,18 @@
 */
 import rspack from '@rspack/core'
 import { mockLynxEncodePlugin, plugins } from '../../../../test/plugins.js'
-import { CssExtractRspackPlugin } from '../../../../src/index'
+import { CssExtractRspackPlugin } from '@lynx-js/css-extract-webpack-plugin'
 import path from 'node:path'
-import { fileURLToPath } from 'node:url'
 import { LynxTemplatePlugin } from '@lynx-js/template-webpack-plugin'
 
-const __dirname = path.dirname(fileURLToPath(import.meta.url))
 
 /** @type {import('webpack').Configuration} */
 export default {
   entry: {
-    index: path.resolve(__dirname, './index.js'),
-    main2: path.resolve(__dirname, './entry2.js'),
-    main3: path.resolve(__dirname, './entry3.js'),
-    main4: path.resolve(__dirname, './entry4.js'),
+    index: path.resolve(import.meta.dirname, './index.js'),
+    main2: path.resolve(import.meta.dirname, './entry2.js'),
+    main3: path.resolve(import.meta.dirname, './entry3.js'),
+    main4: path.resolve(import.meta.dirname, './entry4.js'),
   },
   output: {
     publicPath: 'http://localhost:3000/',
@@ -82,7 +80,7 @@ export default {
     new rspack.DefinePlugin({
       HMR_RUNTIME_LEPUS: JSON.stringify(
         path.resolve(
-          __dirname,
+          import.meta.dirname,
           '../../../../runtime/hotModuleReplacement.lepus.cjs',
         ),
       ),

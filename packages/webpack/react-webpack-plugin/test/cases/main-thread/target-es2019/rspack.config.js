@@ -1,11 +1,11 @@
-import { LAYERS } from '../../../../src';
+import { LAYERS } from '@lynx-js/react-webpack-plugin';
 import { createConfig } from '../../../create-react-config.js';
 
 const defaultConfig = createConfig({}, {}, { jsc: { target: 'es2019' } });
 
 /** @type {import('@rspack/core').Configuration} */
 export default {
-  context: __dirname,
+  context: import.meta.dirname,
   ...defaultConfig,
   module: {
     rules: [

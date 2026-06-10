@@ -4,7 +4,7 @@
 // LICENSE file in the root directory of this source tree.
 */
 import rspack from '@rspack/core'
-import { CssExtractRspackPlugin } from '../../../../src'
+import { CssExtractRspackPlugin } from '@lynx-js/css-extract-webpack-plugin'
 import { getPlugins } from '../../../../test/plugins.js'
 import path from 'node:path'
 
@@ -43,7 +43,7 @@ export default {
     new rspack.DefinePlugin({
       HMR_RUNTIME_LEPUS: JSON.stringify(
         path.resolve(
-          __dirname,
+          import.meta.dirname,
           '../../../../runtime/hotModuleReplacement.lepus.cjs',
         ),
       ),

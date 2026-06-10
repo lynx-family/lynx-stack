@@ -4,7 +4,7 @@
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it } from '@rstest/core';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
@@ -46,7 +46,10 @@ function runBackgroundLoader(
             map?: string,
           ) => {
             if (err) reject(err);
-            else resolve({ code: code!, map });
+            // `exactOptionalPropertyTypes`: only set `map` when defined.
+            else {resolve(
+                map === undefined ? { code: code! } : { code: code!, map },
+              );}
           },
         };
 

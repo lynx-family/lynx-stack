@@ -114,6 +114,28 @@ export class RspeedyNormalRunner extends NodeRunner {
   }
 }
 
+/**
+ * Wrap a case's `moduleScope` so fixtures written against vitest's `vi` global
+ * (e.g. `vi.fn()`, `vi.stubGlobal()`) keep working under rstest, where no `vi`
+ * exists: alias the API-compatible `rstest` mock API into the module scope.
+ * Keeps the fixture sources unchanged across the vitest → rstest migration.
+ */
+export function withViModuleScope(
+  testConfig: TTestConfig,
+): TTestConfig {
+  const oldModuleScope = testConfig.moduleScope;
+  return {
+    ...testConfig,
+    moduleScope: (ms, stats) => {
+      if (typeof oldModuleScope === 'function') {
+        ms = oldModuleScope(ms, stats);
+      }
+      (ms as unknown as Record<string, unknown>)['vi'] = mockApi;
+      return ms;
+    },
+  };
+}
+
 /** Runner creator that drives `RspeedyNormalRunner` (the default for normal cases). */
 export const rspeedyRunnerCreator: TTestRunnerCreator = {
   key: (_context: ITestContext, name: string, _file: string) => name,
@@ -122,7 +144,7 @@ export const rspeedyRunnerCreator: TTestRunnerCreator = {
       env,
       name,
       runInNewContext: false,
-      testConfig: context.getTestConfig(),
+      testConfig: withViModuleScope(context.getTestConfig()),
       source: context.getSource(),
       dist: context.getDist(),
       compilerOptions: context.getCompiler().getOptions(),
@@ -150,6 +172,11 @@ export function createRunner(
     }
     // @ts-expect-error Mock the console.alog method
     ms.console.alog = () => void 0;
+    // Fixtures written against vitest's `vi` global (e.g. `vi.fn()`,
+    // `vi.stubGlobal()`): under rstest there is no `vi`, so alias the
+    // API-compatible `rstest` mock API into the module scope. Keeps the
+    // fixture sources unchanged across the vitest → rstest migration.
+    (ms as unknown as Record<string, unknown>)['vi'] = mockApi;
     return ms;
   };
 

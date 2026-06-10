@@ -1,6 +1,6 @@
 import { CssExtractWebpackPlugin } from '@lynx-js/css-extract-webpack-plugin';
 
-import { ReactWebpackPlugin } from '../../../../src';
+import { ReactWebpackPlugin } from '@lynx-js/react-webpack-plugin';
 
 /** @type {import('@rspack/core').Configuration} */
 export default {

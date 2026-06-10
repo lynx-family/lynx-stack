@@ -2,6 +2,6 @@ import { createConfig } from '../../../create-react-config.js';
 
 /** @type {import('@rspack/core').Configuration} */
 export default {
-  context: __dirname,
+  context: import.meta.dirname,
   ...createConfig(undefined, { globalPropsMode: 'event' }),
 };

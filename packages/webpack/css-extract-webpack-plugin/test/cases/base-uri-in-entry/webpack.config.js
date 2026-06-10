@@ -1,9 +1,9 @@
-import { CssExtractWebpackPlugin } from '../../../src';
+import { CssExtractWebpackPlugin } from '@lynx-js/css-extract-webpack-plugin';
 
 /**
  * @type {import('webpack').Configuration}
  */
-module.exports = {
+export default {
   mode: 'production',
   devtool: false,
   entry: {

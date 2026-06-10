@@ -19,6 +19,6 @@ config.plugins.push({
 /** @type {import('@rspack/core').Configuration} */
 export default {
   ...config,
-  context: __dirname,
+  context: import.meta.dirname,
   mode: 'production',
 };

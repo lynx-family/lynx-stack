@@ -4,7 +4,7 @@
 // LICENSE file in the root directory of this source tree.
 */
 import { DefinePlugin } from 'webpack'
-import { CssExtractWebpackPlugin } from '../../../../src'
+import { CssExtractWebpackPlugin } from '@lynx-js/css-extract-webpack-plugin'
 import { getPlugins } from '../../../../test/plugins.js'
 import path from 'node:path'
 
@@ -35,7 +35,7 @@ export default {
       }
     }),
     new DefinePlugin({
-      HMR_RUNTIME_LEPUS: JSON.stringify(path.resolve(__dirname, "../../../../runtime/hotModuleReplacement.lepus.cjs"))
+      HMR_RUNTIME_LEPUS: JSON.stringify(path.resolve(import.meta.dirname, "../../../../runtime/hotModuleReplacement.lepus.cjs"))
     }),
     new CssExtractWebpackPlugin(),
   ],

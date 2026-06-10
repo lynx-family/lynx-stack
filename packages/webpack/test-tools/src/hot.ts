@@ -20,6 +20,7 @@ import type {
   TTestConfig,
 } from '@rspack/test-tools';
 import { HotUpdatePlugin } from '@rspack/test-tools/helper/hot-update/plugin';
+import fs from 'fs-extra';
 
 import { getOptions } from './suite.js';
 import type { ITestSuite } from './suite.js';
@@ -284,6 +285,14 @@ export function createBaseHotProcessor(
     before: async (context) => {
       await updatePlugin.initialize();
       context.setValue('hotUpdatePlugin', updatePlugin);
+      // The emitted `*.hot-update.js` files are CommonJS, but every package
+      // here is `"type": "module"` — mark the output dir as CommonJS so the
+      // HMR runtime's `require` of an update chunk doesn't fail with
+      // "exports is not defined in ES module scope" (only reproduces on a
+      // clean checkout; a stale `test/js/package.json` used to mask it).
+      await fs.outputJson(path.join(context.getDist(), 'package.json'), {
+        type: 'commonjs',
+      });
     },
 
     config: async (context) => {
@@ -352,10 +361,16 @@ export function createBaseHotProcessor(
       const updateIndex = updatePlugin.getUpdateIndex();
       const totalUpdates = updatePlugin.getTotalUpdates();
       if (updateIndex + 1 !== totalUpdates) {
+        const trace =
+          (updatePlugin as unknown as { __nextTrace?: string[] }).__nextTrace;
         throw new Error(
           `Should run all hot steps (${
             updateIndex + 1
-          } / ${totalUpdates}): ${name}`,
+          } / ${totalUpdates}): ${name}${
+            trace !== undefined && trace.length > 0
+              ? `\nNEXT trace:\n  ${trace.join('\n  ')}`
+              : ''
+          }`,
         );
       }
     },
@@ -382,6 +397,11 @@ export function createHotRunner(
   const source = context.getSource();
   const dist = context.getDist();
   const updatePlugin = context.getValue<HotUpdatePlugin>('hotUpdatePlugin')!;
+  // Diagnostic breadcrumb shared with the processor's step check (keyed on the
+  // shared plugin instance): when a case fails "Should run all hot steps", the
+  // trace shows exactly where the NEXT chain stalled.
+  const trace = ((updatePlugin as unknown as { __nextTrace?: string[] })
+    .__nextTrace ??= []);
 
   const nextHMR = async (
     m: {
@@ -390,6 +410,7 @@ export function createHotRunner(
     },
     options?: unknown,
   ) => {
+    trace.push(`NEXT_HMR rebuild (index ${updatePlugin.getUpdateIndex() + 1})`);
     await updatePlugin.goNext();
     const stats = await compiler.build();
     if (!stats) throw new Error('Should generate stats during build');
@@ -430,6 +451,11 @@ export function createHotRunner(
     // which must be replaced by `true`; `??` would preserve the `false`.
     // eslint-disable-next-line @typescript-eslint/prefer-nullish-coalescing
     const updatedModules = await m.hot.check(options || true);
+    trace.push(
+      `applied index ${updatePlugin.getUpdateIndex()} (errors=${hasErrors}, updated=${
+        updatedModules ? 'yes' : 'none'
+      })`,
+    );
     if (!updatedModules) throw new Error('No update available');
     return jsonStats;
   };
@@ -457,7 +483,10 @@ export function createHotRunner(
         // lynx fixtures use the vitest `vi` global (`vi.fn()`,
         // `vi.stubGlobal`). The runner executes modules in a `new Function`
         // scope where outer globals are not visible, so surface it explicitly.
-        moduleScope['vi'] ??= (globalThis as { vi?: unknown }).vi;
+        // Under rstest there is no `vi` global — fall back to the
+        // API-compatible `rstest` mock API so fixtures stay unchanged.
+        moduleScope['vi'] ??= (globalThis as { vi?: unknown }).vi
+          ?? (globalThis as { rstest?: unknown }).rstest;
         // lynx fixtures call `NEXT(update(done, true, cb))`; `update` returns an
         // `(err, stats) => {}` callback that does `import.meta.webpackHot.check`.
         // NEXT_HMR rebuilds + runs the step hook, then its `m.hot.check` invokes
@@ -482,6 +511,7 @@ export function createHotRunner(
             },
           };
           return nextHMR(hotModule).catch((err: Error) => {
+            trace.push(`NEXT rejected: ${err.message}`);
             // `callback` may be absent if a leaked/deferred timer fires `NEXT`
             // after the case already drained; swallow rather than leak an
             // unhandled rejection.

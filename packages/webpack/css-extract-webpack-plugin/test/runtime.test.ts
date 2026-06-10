@@ -1,60 +1,62 @@
 // Copyright 2024 The Lynx Authors. All rights reserved.
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
-import { beforeEach, describe, expect, test, vi } from 'vitest';
+import { beforeEach, describe, expect, rstest, test } from '@rstest/core';
 
 import { createStubLynx } from './helper/stubLynx.js';
 import update from '../runtime/hotModuleReplacement.cjs';
 
 describe('HMR Runtime', () => {
-  const replaceStyleSheetByIdWithBase64 = vi.fn();
+  const replaceStyleSheetByIdWithBase64 = rstest.fn();
 
   const lynx = createStubLynx(
-    vi,
+    rstest,
     (content: string) => ({ content, deps: [] }),
     replaceStyleSheetByIdWithBase64,
   );
 
-  vi.stubGlobal('lynx', lynx);
+  rstest.stubGlobal('lynx', lynx);
 
   lynx.__chunk_entries__ = {
     'chunkName': 'entry',
     'asyncChunkName': 'asyncEntry',
   };
 
-  beforeEach(() => {
-    vi.clearAllMocks();
+  // rstest types `beforeEach` (and `clearAllMocks`) as promise-returning;
+  // nothing to await here (registration/reset are effectively synchronous).
+  void beforeEach(() => {
+    void rstest.clearAllMocks();
   });
 
   test('cssFileName not provided', () => {
-    vi.stubGlobal('__webpack_require__', {});
-    vi.useFakeTimers();
+    rstest.stubGlobal('__webpack_require__', {});
+    rstest.useFakeTimers();
 
     const cssReload = update('', null, 10);
 
     cssReload();
 
     // debounce
-    expect(vi.getTimerCount()).toBe(1);
+    expect(rstest.getTimerCount()).toBe(1);
 
-    expect(() => vi.runAllTimers()).toThrowErrorMatchingInlineSnapshot(
+    expect(() => rstest.runAllTimers()).toThrowErrorMatchingInlineSnapshot(
       `[Error: cssHotUpdateList is not found]`,
     );
   });
 
   test('cssFileName', () => {
-    vi.stubGlobal('__webpack_require__', {
+    rstest.stubGlobal('__webpack_require__', {
       p: '/',
       cssHotUpdateList: [['chunkName', 'foo.css']],
     });
-    vi.useFakeTimers();
+    rstest.useFakeTimers();
 
     const cssReload = update('', null, 10);
 
     cssReload();
 
     // debounce
-    vi.runAllTimers();
+    rstest.runAllTimers();
 
     expect(lynx.requireModuleAsync).toBeCalled();
 
@@ -66,23 +68,23 @@ describe('HMR Runtime', () => {
 
   test('update', async () => {
     await import('../runtime/hotModuleReplacement.lepus.cjs');
-    vi.stubGlobal('__webpack_require__', {
+    rstest.stubGlobal('__webpack_require__', {
       p: '/',
       cssHotUpdateList: [['chunkName', 'foo.css']],
     });
-    const __FlushElementTree = vi.fn();
-    vi.stubGlobal('__FlushElementTree', __FlushElementTree);
-    vi.useFakeTimers();
+    const __FlushElementTree = rstest.fn();
+    rstest.stubGlobal('__FlushElementTree', __FlushElementTree);
+    rstest.useFakeTimers();
 
     const cssReload = update('', null, 10);
 
     cssReload();
 
     // debounce
-    vi.runAllTimers();
+    rstest.runAllTimers();
 
     // requireModuleAsync
-    await vi.runAllTimersAsync();
+    await rstest.runAllTimersAsync();
 
     expect(replaceStyleSheetByIdWithBase64).toBeCalled();
     expect(replaceStyleSheetByIdWithBase64).toBeCalledWith(
@@ -96,23 +98,23 @@ describe('HMR Runtime', () => {
 
   test('update without cssId', async () => {
     await import('../runtime/hotModuleReplacement.lepus.cjs');
-    vi.stubGlobal('__webpack_require__', {
+    rstest.stubGlobal('__webpack_require__', {
       p: '/',
       cssHotUpdateList: [['chunkName', 'bar.css']],
     });
-    const __FlushElementTree = vi.fn();
-    vi.stubGlobal('__FlushElementTree', __FlushElementTree);
-    vi.useFakeTimers();
+    const __FlushElementTree = rstest.fn();
+    rstest.stubGlobal('__FlushElementTree', __FlushElementTree);
+    rstest.useFakeTimers();
 
     const cssReload = update('', null);
 
     cssReload();
 
     // debounce
-    vi.runAllTimers();
+    rstest.runAllTimers();
 
     // requireModuleAsync
-    await vi.runAllTimersAsync();
+    await rstest.runAllTimersAsync();
 
     expect(replaceStyleSheetByIdWithBase64).toBeCalled();
     expect(replaceStyleSheetByIdWithBase64).toBeCalledWith(
@@ -126,23 +128,23 @@ describe('HMR Runtime', () => {
 
   test('update with publicPath', async () => {
     await import('../runtime/hotModuleReplacement.lepus.cjs');
-    vi.stubGlobal('__webpack_require__', {
+    rstest.stubGlobal('__webpack_require__', {
       p: 'https://example.com/',
       cssHotUpdateList: [['chunkName', 'bar.css']],
     });
-    const __FlushElementTree = vi.fn();
-    vi.stubGlobal('__FlushElementTree', __FlushElementTree);
-    vi.useFakeTimers();
+    const __FlushElementTree = rstest.fn();
+    rstest.stubGlobal('__FlushElementTree', __FlushElementTree);
+    rstest.useFakeTimers();
 
     const cssReload = update('', null);
 
     cssReload();
 
     // debounce
-    vi.runAllTimers();
+    rstest.runAllTimers();
 
     // requireModuleAsync
-    await vi.runAllTimersAsync();
+    await rstest.runAllTimersAsync();
 
     expect(replaceStyleSheetByIdWithBase64).toBeCalled();
     expect(replaceStyleSheetByIdWithBase64).toBeCalledWith(
@@ -156,26 +158,26 @@ describe('HMR Runtime', () => {
 
   test('update lazy bundle', async () => {
     await import('../runtime/hotModuleReplacement.lepus.cjs');
-    vi.stubGlobal('__webpack_require__', {
+    rstest.stubGlobal('__webpack_require__', {
       p: '/',
       cssHotUpdateList: [['asyncChunkName', 'async.bar.css'], [
         'chunkName',
         'foo.css',
       ]],
     });
-    const __FlushElementTree = vi.fn();
-    vi.stubGlobal('__FlushElementTree', __FlushElementTree);
-    vi.useFakeTimers();
+    const __FlushElementTree = rstest.fn();
+    rstest.stubGlobal('__FlushElementTree', __FlushElementTree);
+    rstest.useFakeTimers();
 
     const cssReload = update('', null);
 
     cssReload();
 
     // debounce
-    vi.runAllTimers();
+    rstest.runAllTimers();
 
     // requireModuleAsync
-    await vi.runAllTimersAsync();
+    await rstest.runAllTimersAsync();
 
     expect(replaceStyleSheetByIdWithBase64).toBeCalledTimes(2);
 

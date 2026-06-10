@@ -4,7 +4,7 @@ import {
 } from '@lynx-js/template-webpack-plugin'
 import { compilerOptionsKeys, configKeys } from '@lynx-js/type-config'
 
-import { LynxConfigWebpackPlugin } from '../../../../src/LynxConfigWebpackPlugin'
+import { LynxConfigWebpackPlugin } from '../../../../lib/LynxConfigWebpackPlugin.js'
 
 export default {
   plugins: [

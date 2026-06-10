@@ -3,7 +3,7 @@
 // LICENSE file in the root directory of this source tree.
 import path from 'node:path';
 
-import { describe } from 'vitest';
+import { describe } from '@rstest/core';
 
 import { diagnosticCases } from '@lynx-js/test-tools';
 

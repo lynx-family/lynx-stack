@@ -1,50 +1,12 @@
 // Copyright 2026 The Lynx Authors. All rights reserved.
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
-import { createRequire } from 'node:module';
-import path from 'node:path';
-import { fileURLToPath } from 'node:url';
-
 import { defineConfig } from '@rstest/core';
 
-const require = createRequire(import.meta.url);
-const __dirname = path.dirname(fileURLToPath(import.meta.url));
-const testDir = path.join(__dirname, 'test');
-const rspackTestTools = path.dirname(
-  require.resolve('@rspack/test-tools/package.json'),
-);
-const rspackCore = path.dirname(require.resolve('@rspack/core/package.json'));
+import { lynxRstestConfig } from '@lynx-js/test-tools/lib/rstest-config.js';
 
-const config: Parameters<typeof defineConfig>[0] = {
+export default defineConfig(lynxRstestConfig({
   name: 'template-webpack-plugin',
-  globals: true,
-  include: ['test/**/*.{test,spec}.{js,ts}'],
-  // Load `@rspack/*` natively instead of bundling them: `@rspack/test-tools`'s
-  // `compiler.js` does a CJS `require('@rspack/core')`, and routing it through
-  // rstest's module runner trips Node's "Cannot require() ES Module ... not yet
-  // fully loaded". (Scoped to `@rspack/*` so the package's own relative `../src`
-  // is still transformed by rstest.)
-  output: {
-    externals: [/^@rspack\//],
-  },
-  setupFiles: [
-    require.resolve('@rspack/test-tools/setup-env'),
-    require.resolve('@rspack/test-tools/setup-expect'),
-  ],
-  env: {
-    DEBUG: 'rspeedy',
-    RSPACK_HOT_TEST: 'true',
-    // `@rspack/test-tools` reads these from the env (under RSTEST) to normalize
-    // absolute paths into placeholders in snapshots.
-    __TEST_PATH__: testDir,
-    __TEST_FIXTURES_PATH__: path.join(testDir, 'fixtures'),
-    __TEST_DIST_PATH__: path.join(testDir, 'js'),
-    __ROOT_PATH__: __dirname,
-    __RSPACK_PATH__: rspackCore,
-    __RSPACK_TEST_TOOLS_PATH__: rspackTestTools,
-  },
-};
-
-const rstestConfig: ReturnType<typeof defineConfig> = defineConfig(config);
-
-export default rstestConfig;
+  url: import.meta.url,
+  setupExpect: true,
+}));

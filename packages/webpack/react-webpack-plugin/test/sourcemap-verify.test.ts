@@ -5,7 +5,7 @@ import path from 'node:path';
 
 import { rspack } from '@rspack/core';
 import type { Compilation, Compiler, RspackOptions } from '@rspack/core';
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it } from '@rstest/core';
 
 import {
   LynxEncodePlugin,

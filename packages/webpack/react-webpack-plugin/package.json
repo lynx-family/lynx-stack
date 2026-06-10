@@ -34,7 +34,7 @@
   ],
   "scripts": {
     "api-extractor": "api-extractor run --verbose",
-    "test": "pnpm -w run test --project webpack/react"
+    "test": "rstest"
   },
   "dependencies": {
     "@lynx-js/debug-metadata": "workspace:^",
@@ -46,9 +46,11 @@
     "@lynx-js/react": "workspace:*",
     "@lynx-js/template-webpack-plugin": "workspace:*",
     "@lynx-js/test-tools": "workspace:*",
-    "@lynx-js/vitest-setup": "workspace:*",
     "@microsoft/api-extractor": "catalog:",
     "@rspack/core": "catalog:rspack",
+    "@rspack/lite-tapable": "1.1.0",
+    "@rspack/test-tools": "catalog:rspack",
+    "@rstest/core": "catalog:rstest",
     "css-loader": "^7.1.4",
     "swc-loader": "^0.2.7",
     "webpack": "^5.105.2"

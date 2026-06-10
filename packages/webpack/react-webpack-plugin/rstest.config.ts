@@ -6,10 +6,10 @@ import { defineConfig } from '@rstest/core';
 import { lynxRstestConfig } from '@lynx-js/test-tools/lib/rstest-config.js';
 
 export default defineConfig(lynxRstestConfig({
-  name: 'externals-loading-webpack-plugin',
+  name: 'webpack/react',
   url: import.meta.url,
-  setupExpect: true,
   fixtures: 'cases',
   dist: 'dist',
-  setupFiles: ['./test/helpers/setup-env.js'],
+  exclude: ['test/cases/**', 'test/dist/**'],
+  setupFiles: ['./test/setup-env.js'],
 }));
