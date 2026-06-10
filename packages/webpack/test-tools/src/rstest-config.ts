@@ -32,7 +32,7 @@ export interface LynxRstestConfigOptions {
   /** Appended after the default setup files. */
   setupFiles?: string[];
   /** Appended after the default externals. */
-  externals?: (string | RegExp)[];
+  externals?: (string | RegExp | Record<string, string>)[];
   env?: Record<string, string>;
 }
 
@@ -58,7 +58,7 @@ export function lynxRstestConfig(options: LynxRstestConfigOptions): {
   testTimeout: number;
   include: string[];
   exclude: string[];
-  output: { externals: (string | RegExp)[] };
+  output: { externals: (string | RegExp | Record<string, string>)[] };
   setupFiles: string[];
   env: Record<string, string>;
 } {
@@ -87,6 +87,9 @@ export function lynxRstestConfig(options: LynxRstestConfigOptions): {
       DEBUG: 'rspeedy',
       // Keep rspack's stats output colorless on CI — otherwise ANSI escapes
       // leak into snapshots as `<CLR=…>` markers (same as rspack's own suite).
+      // `FORCE_COLOR=0` too: CI runners set `FORCE_COLOR`, which Node gives
+      // precedence over `NO_COLOR`.
+      FORCE_COLOR: '0',
       NO_COLOR: '1',
       RSPACK_HOT_TEST: 'true',
       __TEST_PATH__: testDir,

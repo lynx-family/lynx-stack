@@ -1,9 +1,14 @@
 // Copyright 2026 The Lynx Authors. All rights reserved.
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
+import path from 'node:path';
+import { fileURLToPath } from 'node:url';
+
 import { defineConfig } from '@rstest/core';
 
 import { lynxRstestConfig } from '@lynx-js/test-tools/lib/rstest-config.js';
+
+const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
 export default defineConfig({
   ...lynxRstestConfig({
@@ -23,7 +28,13 @@ export default defineConfig({
       // The HMR runtime references `__webpack_require__`, which is a reserved
       // identifier inside rspack-bundled code (it would be rewritten to the
       // bundler's own require, breaking `rstest.stubGlobal`); load it natively.
-      /runtime\/hotModuleReplacement\.cjs$/,
+      // Mapped to an absolute path: the relative request is otherwise resolved
+      // against rstest's output dir at runtime.
+      {
+        '../runtime/hotModuleReplacement.cjs': `node-commonjs ${
+          path.join(__dirname, 'runtime/hotModuleReplacement.cjs')
+        }`,
+      },
     ],
   }),
   globalSetup: ['./test/helper/setup-loader.js', './test/helper/setup-dist.js'],

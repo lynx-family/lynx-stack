@@ -5,13 +5,14 @@ import path from 'node:path'
 import { fileURLToPath } from 'node:url'
 
 import { defineConfig } from '@rstest/core'
+import type { RstestConfig } from '@rstest/core'
 import { TypiaRspackPlugin } from 'typia-rspack-plugin'
 
 import { lynxRstestConfig } from '@lynx-js/test-tools/lib/rstest-config.js'
 
 // Explicitly typed: the package compiles with `--isolatedDeclarations`, which
 // cannot infer default-export types.
-const config: ReturnType<typeof defineConfig> = defineConfig({
+const config: RstestConfig = defineConfig({
   ...lynxRstestConfig({
     name: 'rspeedy/config',
     url: import.meta.url,
@@ -19,10 +20,15 @@ const config: ReturnType<typeof defineConfig> = defineConfig({
     dist: 'dist',
   }),
   // `src/validate.ts` uses the `typia.createValidateEquals<T>()` macro, which
-  // must be expanded at build time (same plugin the `rslib` build uses).
-  // Scoped to this package's `src`: the default include would also run the
-  // transformer over other workspace packages' compiled `lib` output (e.g.
-  // `@lynx-js/rspeedy`'s), which crashes the TypeScript checker.
+  // must be expanded at build time (same plugin the `rslib` build uses, where
+  // `@lynx-js/rspeedy` is auto-externalized so its `lib` never enters the
+  // bundle). Under rstest the workspace deps ARE bundled, so scope the
+  // transformer to this package's `src`: the default include would also run it
+  // over other workspace packages' already-expanded `lib` output (e.g.
+  // `@lynx-js/rspeedy`'s `lib/config/validate.js`), and the loader's
+  // single-file `ts.createProgram` cannot resolve those files' imports —
+  // the unresolved symbols crash the TypeScript checker
+  // ("Cannot read properties of undefined (reading 'flags')").
   tools: {
     rspack: {
       plugins: [

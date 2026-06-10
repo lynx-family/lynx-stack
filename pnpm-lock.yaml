@@ -29,11 +29,11 @@ catalogs:
       version: 2.0.6
   rstest:
     '@rstest/core':
-      specifier: 0.8.1
-      version: 0.8.1
+      specifier: 0.10.3
+      version: 0.10.3
     '@rstest/coverage-istanbul':
-      specifier: 0.2.0
-      version: 0.2.0
+      specifier: 0.10.3
+      version: 0.10.3
 
 overrides:
   '@lynx-js/react': workspace:*
@@ -81,10 +81,10 @@ importers:
         version: 2.0.6(@swc/helpers@0.5.23)
       '@rstest/core':
         specifier: catalog:rstest
-        version: 0.8.1(jsdom@27.4.0)
+        version: 0.10.3(core-js@3.48.0)(jsdom@27.4.0)
       '@rstest/coverage-istanbul':
         specifier: catalog:rstest
-        version: 0.2.0(@rstest/core@0.8.1(jsdom@27.4.0))
+        version: 0.10.3(@rstest/core@0.10.3(core-js@3.48.0)(jsdom@27.4.0))
       '@svitejs/changesets-changelog-github-compact':
         specifier: ^1.2.0
         version: 1.2.0
@@ -675,7 +675,7 @@ importers:
         version: 7.58.2(@types/node@24.10.13)
       '@rstest/core':
         specifier: catalog:rstest
-        version: 0.8.1(jsdom@27.4.0)
+        version: 0.10.3(core-js@3.48.0)(jsdom@27.4.0)
       '@types/react':
         specifier: ^18.3.28
         version: 18.3.28
@@ -691,7 +691,7 @@ importers:
         version: 7.58.2(@types/node@24.10.13)
       '@rstest/core':
         specifier: catalog:rstest
-        version: 0.8.1(jsdom@27.4.0)
+        version: 0.10.3(core-js@3.48.0)(jsdom@27.4.0)
       '@types/node':
         specifier: ^24.10.13
         version: 24.10.13
@@ -767,7 +767,7 @@ importers:
         version: 2.0.0(@rsbuild/core@2.0.11(core-js@3.48.0))(@rspack/core@2.0.6(@swc/helpers@0.5.23))
       '@rstest/core':
         specifier: catalog:rstest
-        version: 0.8.1(jsdom@27.4.0)
+        version: 0.10.3(core-js@3.48.0)(jsdom@27.4.0)
       '@types/qrcode':
         specifier: ^1.5.5
         version: 1.5.5
@@ -801,7 +801,7 @@ importers:
     devDependencies:
       '@rstest/core':
         specifier: catalog:rstest
-        version: 0.8.1(jsdom@27.4.0)
+        version: 0.10.3(core-js@3.48.0)(jsdom@27.4.0)
       '@types/node':
         specifier: ^24.10.13
         version: 24.10.13
@@ -1174,7 +1174,7 @@ importers:
         version: 2.0.11(core-js@3.48.0)
       '@rstest/adapter-rsbuild':
         specifier: ^0.2.3
-        version: 0.2.3(@rsbuild/core@2.0.11(core-js@3.48.0))(@rstest/core@0.8.1(jsdom@27.4.0))
+        version: 0.2.3(@rsbuild/core@2.0.11(core-js@3.48.0))(@rstest/core@0.10.3(core-js@3.48.0)(jsdom@27.4.0))
       '@testing-library/dom':
         specifier: ^10.4.1
         version: 10.4.1
@@ -1418,7 +1418,7 @@ importers:
         version: 1.3.4(@rsbuild/core@2.0.11(core-js@3.48.0))(@rspack/core@2.0.6(@swc/helpers@0.5.23))(tslib@2.8.1)(typescript@5.9.3)
       '@rstest/core':
         specifier: catalog:rstest
-        version: 0.8.1(jsdom@27.4.0)
+        version: 0.10.3(core-js@3.48.0)(jsdom@27.4.0)
 
   packages/rspeedy/lynx-bundle-rslib-config:
     dependencies:
@@ -1477,7 +1477,7 @@ importers:
         version: 2.0.6(@rspack/core@2.0.6(@swc/helpers@0.5.23))(lightningcss@1.31.1)(tslib@2.8.1)(webpack@5.105.2(lightningcss@1.31.1))
       '@rstest/core':
         specifier: catalog:rstest
-        version: 0.8.1(jsdom@27.4.0)
+        version: 0.10.3(core-js@3.48.0)(jsdom@27.4.0)
       '@types/object.pick':
         specifier: ^1.3.4
         version: 1.3.4
@@ -2144,7 +2144,7 @@ importers:
         version: 2.0.6(@rspack/core@2.0.6(@swc/helpers@0.5.23))(lightningcss@1.31.1)(tslib@2.8.1)(webpack@5.105.2(lightningcss@1.31.1))
       '@rstest/core':
         specifier: catalog:rstest
-        version: 0.8.1(jsdom@27.4.0)
+        version: 0.10.3(core-js@3.48.0)(jsdom@27.4.0)
       webpack:
         specifier: ^5.105.2
         version: 5.105.2(lightningcss@1.31.1)
@@ -2169,7 +2169,7 @@ importers:
         version: 2.0.6(@rspack/core@2.0.6(@swc/helpers@0.5.23))(lightningcss@1.31.1)(postcss@8.5.14)(tslib@2.8.1)(webpack@5.105.2(lightningcss@1.31.1)(postcss@8.5.14))
       '@rstest/core':
         specifier: catalog:rstest
-        version: 0.8.1(jsdom@27.4.0)
+        version: 0.10.3(core-js@3.48.0)(jsdom@27.4.0)
       css-loader:
         specifier: ^7.1.4
         version: 7.1.4(@rspack/core@2.0.6(@swc/helpers@0.5.23))(webpack@5.105.2(lightningcss@1.31.1)(postcss@8.5.14))
@@ -2206,7 +2206,7 @@ importers:
         version: 2.0.6(@rspack/core@2.0.6(@swc/helpers@0.5.23))(lightningcss@1.31.1)(tslib@2.8.1)(webpack@5.105.2(lightningcss@1.31.1))
       '@rstest/core':
         specifier: catalog:rstest
-        version: 0.8.1(jsdom@27.4.0)
+        version: 0.10.3(core-js@3.48.0)(jsdom@27.4.0)
       css-loader:
         specifier: ^7.1.4
         version: 7.1.4(@rspack/core@2.0.6(@swc/helpers@0.5.23))(webpack@5.105.2(lightningcss@1.31.1))
@@ -2230,7 +2230,7 @@ importers:
         version: 2.0.6(@rspack/core@2.0.6(@swc/helpers@0.5.23))(lightningcss@1.31.1)(tslib@2.8.1)(webpack@5.105.2(lightningcss@1.31.1))
       '@rstest/core':
         specifier: catalog:rstest
-        version: 0.8.1(jsdom@27.4.0)
+        version: 0.10.3(core-js@3.48.0)(jsdom@27.4.0)
       bar:
         specifier: ./test/helpers/external-bundle-mock/bar
         version: link:test/helpers/external-bundle-mock/bar
@@ -2269,7 +2269,7 @@ importers:
         version: 2.0.6(@rspack/core@2.0.6(@swc/helpers@0.5.23))(@swc/core@1.15.30(@swc/helpers@0.5.23))(lightningcss@1.31.1)(tslib@2.8.1)(webpack@5.105.2(@swc/core@1.15.30(@swc/helpers@0.5.23))(lightningcss@1.31.1))
       '@rstest/core':
         specifier: catalog:rstest
-        version: 0.8.1(jsdom@27.4.0)
+        version: 0.10.3(core-js@3.48.0)(jsdom@27.4.0)
       swc-loader:
         specifier: ^0.2.7
         version: 0.2.7(@swc/core@1.15.30(@swc/helpers@0.5.23))(webpack@5.105.2(@swc/core@1.15.30(@swc/helpers@0.5.23))(lightningcss@1.31.1))
@@ -2315,7 +2315,7 @@ importers:
         version: 2.0.6(@rspack/core@2.0.6(@swc/helpers@0.5.23))(@swc/core@1.15.30(@swc/helpers@0.5.23))(lightningcss@1.31.1)(tslib@2.8.1)(webpack@5.105.2(@swc/core@1.15.30(@swc/helpers@0.5.23))(lightningcss@1.31.1))
       '@rstest/core':
         specifier: catalog:rstest
-        version: 0.8.1(jsdom@27.4.0)
+        version: 0.10.3(core-js@3.48.0)(jsdom@27.4.0)
       css-loader:
         specifier: ^7.1.4
         version: 7.1.4(@rspack/core@2.0.6(@swc/helpers@0.5.23))(webpack@5.105.2(@swc/core@1.15.30(@swc/helpers@0.5.23))(lightningcss@1.31.1))
@@ -2343,7 +2343,7 @@ importers:
         version: 2.0.6(@rspack/core@2.0.6(@swc/helpers@0.5.23))(lightningcss@1.31.1)(tslib@2.8.1)(webpack@5.105.2(lightningcss@1.31.1))
       '@rstest/core':
         specifier: catalog:rstest
-        version: 0.8.1(jsdom@27.4.0)
+        version: 0.10.3(core-js@3.48.0)(jsdom@27.4.0)
       webpack:
         specifier: ^5.105.2
         version: 5.105.2(lightningcss@1.31.1)
@@ -2389,7 +2389,7 @@ importers:
         version: 2.0.6(@rspack/core@2.0.6(@swc/helpers@0.5.23))(lightningcss@1.31.1)(tslib@2.8.1)(webpack@5.105.2(lightningcss@1.31.1))
       '@rstest/core':
         specifier: catalog:rstest
-        version: 0.8.1(jsdom@27.4.0)
+        version: 0.10.3(core-js@3.48.0)(jsdom@27.4.0)
       '@types/css-tree':
         specifier: ^2.3.11
         version: 2.3.11
@@ -2413,7 +2413,7 @@ importers:
         version: 2.0.6(@rspack/core@2.0.6(@swc/helpers@0.5.23))(lightningcss@1.31.1)(tslib@2.8.1)(webpack@5.105.2(lightningcss@1.31.1))
       '@rstest/core':
         specifier: catalog:rstest
-        version: 0.8.1(jsdom@27.4.0)
+        version: 0.10.3(core-js@3.48.0)(jsdom@27.4.0)
       '@types/fs-extra':
         specifier: 11.0.4
         version: 11.0.4
@@ -2458,7 +2458,7 @@ importers:
         version: 2.0.6(@swc/helpers@0.5.23)
       '@rstest/core':
         specifier: catalog:rstest
-        version: 0.8.1(jsdom@27.4.0)
+        version: 0.10.3(core-js@3.48.0)(jsdom@27.4.0)
 
   website:
     dependencies:
@@ -5135,11 +5135,6 @@ packages:
     cpu: [x64]
     os: [win32]
 
-  '@rsbuild/core@1.7.2':
-    resolution: {integrity: sha512-VAFO6cM+cyg2ntxNW6g3tB2Jc5J5mpLjLluvm7VtW2uceNzyUlVv41o66Yp1t1ikxd3ljtqegViXem62JqzveA==}
-    engines: {node: '>=18.12.0'}
-    hasBin: true
-
   '@rsbuild/core@2.0.0-beta.3':
     resolution: {integrity: sha512-dfH+Pt2GuF3rWOWGsf5XOhn3Zarvr4DoHwoI1arAsCGvpzoeud3DNGmWPy13tngj0r/YvQRcPTRBCRV4RP5CMw==}
     engines: {node: ^20.19.0 || >=22.12.0}
@@ -5467,12 +5462,12 @@ packages:
       '@rsbuild/core': '*'
       '@rstest/core': '>=0.7.7'
 
-  '@rstest/core@0.8.1':
-    resolution: {integrity: sha512-7d/2fm2V91pVx/rRtZ2gl6Zh4hVMivtDl4RgHFhBOrxi//UwhKISeF5gS/CSwpCgfOf10TzJRXqdI17ueUBNMQ==}
-    engines: {node: '>=18.12.0'}
+  '@rstest/core@0.10.3':
+    resolution: {integrity: sha512-UiJ1td7KszgAfPVroNKnQQ60S0EeyHdPZArng08ffMMCmwo/6aeLmjk4s+W/ojR5iredelM9Z0Yc01vN3kSaeA==}
+    engines: {node: ^20.19.0 || >=22.12.0}
     hasBin: true
     peerDependencies:
-      happy-dom: '*'
+      happy-dom: ^20.8.3
       jsdom: '*'
     peerDependenciesMeta:
       happy-dom:
@@ -5480,10 +5475,10 @@ packages:
       jsdom:
         optional: true
 
-  '@rstest/coverage-istanbul@0.2.0':
-    resolution: {integrity: sha512-ghFY2XkjL2PFarLaG+BxFTJYbVXtAtcqW5rjOqheiOYV6PqlOHFf/s+fLkKeOTc1oVoL3A/9vjMBc8fOgjAF/A==}
+  '@rstest/coverage-istanbul@0.10.3':
+    resolution: {integrity: sha512-CpnPZzHn8t5fmJobdsslK7oCJ5Si4mLA+5TCBjWGEy8C5t8ueIQX4NZVatM/zj30hv/1r7GCVRQqh2MRpPeSVA==}
     peerDependencies:
-      '@rstest/core': ~0.8.0
+      '@rstest/core': ^0.10.3
 
   '@rtsao/scc@1.1.0':
     resolution: {integrity: sha512-zt6OdqaDoOnJ1ZYsCYGt9YmWzDXl4vQdKTyJev62gFhRGKdx7mcT54V9KIjg+d2wi9EXsPvAPKe7i7WjfVWB8g==}
@@ -7195,9 +7190,6 @@ packages:
 
   core-js-compat@3.45.0:
     resolution: {integrity: sha512-gRoVMBawZg0OnxaVv3zpqLLxaHmsubEGyTnqdpI/CEBvX4JadI1dMSHxagThprYRtSVbuQxvi6iUatdPxohHpA==}
-
-  core-js@3.47.0:
-    resolution: {integrity: sha512-c3Q2VVkGAUyupsjRnaNX6u8Dq2vAdzm9iuPj5FW0fRxzlxgq9Q39MDq10IvmQSpLgHQNyQzQmOo6bgGHmH3NNg==}
 
   core-js@3.48.0:
     resolution: {integrity: sha512-zpEHTy1fjTMZCKLHUZoVeylt9XrzaIN2rbPXEt0k+q7JE5CkCZdo6bNq55bn24a69CH7ErAVLKijxJja4fw+UQ==}
@@ -15443,16 +15435,6 @@ snapshots:
   '@rollup/rollup-win32-x64-msvc@4.34.9':
     optional: true
 
-  '@rsbuild/core@1.7.2':
-    dependencies:
-      '@rspack/core': 2.0.6(@swc/helpers@0.5.23)
-      '@rspack/lite-tapable': 1.1.0
-      '@swc/helpers': 0.5.23
-      core-js: 3.47.0
-      jiti: 2.6.1
-    transitivePeerDependencies:
-      - '@module-federation/runtime-tools'
-
   '@rsbuild/core@2.0.0-beta.3(core-js@3.48.0)':
     dependencies:
       '@rspack/core': 2.0.6(@swc/helpers@0.5.23)
@@ -16148,24 +16130,24 @@ snapshots:
       - react
       - react-dom
 
-  '@rstest/adapter-rsbuild@0.2.3(@rsbuild/core@2.0.11(core-js@3.48.0))(@rstest/core@0.8.1(jsdom@27.4.0))':
+  '@rstest/adapter-rsbuild@0.2.3(@rsbuild/core@2.0.11(core-js@3.48.0))(@rstest/core@0.10.3(core-js@3.48.0)(jsdom@27.4.0))':
     dependencies:
       '@rsbuild/core': 2.0.11(core-js@3.48.0)
-      '@rstest/core': 0.8.1(jsdom@27.4.0)
+      '@rstest/core': 0.10.3(core-js@3.48.0)(jsdom@27.4.0)
 
-  '@rstest/core@0.8.1(jsdom@27.4.0)':
+  '@rstest/core@0.10.3(core-js@3.48.0)(jsdom@27.4.0)':
     dependencies:
-      '@rsbuild/core': 1.7.2
+      '@rsbuild/core': 2.0.11(core-js@3.48.0)
       '@types/chai': 5.2.3
-      tinypool: 1.1.1
     optionalDependencies:
       jsdom: 27.4.0
     transitivePeerDependencies:
       - '@module-federation/runtime-tools'
+      - core-js
 
-  '@rstest/coverage-istanbul@0.2.0(@rstest/core@0.8.1(jsdom@27.4.0))':
+  '@rstest/coverage-istanbul@0.10.3(@rstest/core@0.10.3(core-js@3.48.0)(jsdom@27.4.0))':
     dependencies:
-      '@rstest/core': 0.8.1(jsdom@27.4.0)
+      '@rstest/core': 0.10.3(core-js@3.48.0)(jsdom@27.4.0)
       istanbul-lib-coverage: 3.2.2
       istanbul-lib-report: 3.0.1
       istanbul-lib-source-maps: 5.0.6
@@ -17909,8 +17891,6 @@ snapshots:
   core-js-compat@3.45.0:
     dependencies:
       browserslist: 4.28.1
-
-  core-js@3.47.0: {}
 
   core-js@3.48.0: {}
 
