@@ -861,6 +861,340 @@
   white-space: nowrap;
 }
 
+.benchScreenshotSection {
+  margin-top: 14px;
+  padding: 12px;
+  border: 1px solid var(--geist-border);
+  border-radius: var(--geist-radius-md);
+  background: var(--geist-background);
+}
+
+.benchScreenshotSection .benchSectionHeader {
+  align-items: center;
+}
+
+.benchScreenshotSummaryGrid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 8px;
+}
+
+.benchScreenshotSummaryGrid div {
+  min-width: 0;
+  padding: 10px;
+  border: 1px solid color-mix(in srgb, var(--geist-border) 76%, transparent);
+  border-radius: var(--geist-radius-sm);
+  background: var(--geist-surface);
+}
+
+.benchScreenshotSummaryGrid span {
+  display: block;
+  color: var(--geist-secondary);
+  font-size: 10px;
+  font-weight: 780;
+  letter-spacing: 0.08em;
+  line-height: 1.2;
+  text-transform: uppercase;
+}
+
+.benchScreenshotSummaryGrid strong {
+  display: block;
+  margin-top: 5px;
+  color: var(--geist-foreground);
+  font-size: 13px;
+  font-weight: 760;
+  line-height: 1.25;
+}
+
+.benchConfigDialog.benchScreenshotDialog {
+  position: relative;
+  width: min(var(--bench-screenshot-dialog-width, 1040px), calc(100vw - 48px));
+  max-width: calc(100vw - 48px);
+}
+
+.benchScreenshotBody {
+  min-height: 0;
+  overflow: auto;
+  display: grid;
+  gap: 16px;
+  padding: 18px;
+}
+
+.benchScreenshotMatrixWrap {
+  overflow: auto;
+  border: 1px solid var(--geist-border);
+  border-radius: var(--geist-radius-md);
+  background: var(--geist-background);
+}
+
+.benchScreenshotMatrix {
+  display: grid;
+  grid-template-columns:
+    minmax(150px, 0.7fr)
+    repeat(
+    var(--bench-screenshot-scenario-count, 1),
+    minmax(220px, 1fr)
+  );
+  min-width: 100%;
+}
+
+.benchScreenshotMatrixRow {
+  display: contents;
+}
+
+.benchScreenshotMatrixCorner,
+.benchScreenshotScenarioHeader,
+.benchScreenshotGroupHeader,
+.benchScreenshotMatrixCell {
+  min-width: 0;
+  border-right: 1px solid var(--geist-border);
+  border-bottom: 1px solid var(--geist-border);
+}
+
+.benchScreenshotMatrixCorner,
+.benchScreenshotScenarioHeader {
+  position: sticky;
+  top: 0;
+  z-index: 2;
+  background: var(--geist-surface);
+}
+
+.benchScreenshotMatrixCorner {
+  left: 0;
+  z-index: 3;
+  padding: 12px;
+  color: var(--geist-secondary);
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  line-height: 1.2;
+  text-transform: uppercase;
+}
+
+.benchScreenshotScenarioHeader {
+  display: grid;
+  gap: 4px;
+  padding: 11px 12px;
+}
+
+.benchScreenshotScenarioHeader strong,
+.benchScreenshotGroupHeader strong {
+  overflow: hidden;
+  color: var(--geist-foreground);
+  font-size: 12px;
+  font-weight: 760;
+  line-height: 1.25;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.benchScreenshotScenarioHeader span,
+.benchScreenshotGroupHeader span {
+  overflow: hidden;
+  color: var(--geist-secondary);
+  font-size: 11px;
+  line-height: 1.3;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.benchScreenshotGroupHeader {
+  position: sticky;
+  left: 0;
+  z-index: 1;
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  padding: 12px;
+  background: var(--geist-background);
+}
+
+.benchScreenshotGroupHeader div {
+  min-width: 0;
+  display: grid;
+  gap: 4px;
+}
+
+.benchScreenshotMatrixCell {
+  display: grid;
+  align-content: start;
+  gap: 10px;
+  padding: 10px;
+  background: color-mix(
+    in srgb,
+    var(--geist-background) 92%,
+    var(--geist-surface)
+  );
+}
+
+.benchScreenshotSlot {
+  display: grid;
+  gap: 9px;
+  min-width: 0;
+  margin: 0;
+  padding: 9px;
+  border: 1px solid var(--geist-border);
+  border-radius: var(--geist-radius-sm);
+  background: var(--geist-background);
+}
+
+.benchScreenshotSlot[data-state="failed"] {
+  border-color: color-mix(
+    in srgb,
+    var(--geist-error) 34%,
+    var(--geist-border)
+  );
+}
+
+.benchScreenshotImageFrame,
+.benchScreenshotPlaceholder {
+  overflow: hidden;
+  min-height: 220px;
+  height: clamp(220px, 25vw, 360px);
+  border: 1px solid var(--geist-border);
+  border-radius: var(--geist-radius-sm);
+  background: var(--geist-surface);
+}
+
+.benchScreenshotImageFrame img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+}
+
+.benchScreenshotSlotHeader,
+.benchScreenshotSlotMeta {
+  display: flex;
+  min-width: 0;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.benchScreenshotSlotHeader strong {
+  color: var(--geist-foreground);
+  font-size: 12px;
+  font-weight: 760;
+  line-height: 1.2;
+}
+
+.benchScreenshotPlaceholder {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+  padding: 14px;
+  text-align: center;
+}
+
+.benchScreenshotSlot[data-state="failed"] .benchScreenshotPlaceholder {
+  border-color: color-mix(
+    in srgb,
+    var(--geist-error) 36%,
+    var(--geist-border)
+  );
+  background: color-mix(
+    in srgb,
+    var(--geist-error) 6%,
+    var(--geist-surface)
+  );
+}
+
+.benchScreenshotPlaceholder strong {
+  color: var(--geist-foreground);
+  font-size: 14px;
+  font-weight: 760;
+  line-height: 1.25;
+}
+
+.benchScreenshotPlaceholder span {
+  display: -webkit-box;
+  overflow: hidden;
+  color: var(--geist-secondary);
+  font-size: 12px;
+  line-height: 1.4;
+  overflow-wrap: anywhere;
+  white-space: normal;
+  word-break: break-word;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 6;
+}
+
+.benchScreenshotSlotMeta span {
+  overflow: hidden;
+  color: var(--geist-secondary);
+  font-size: 11px;
+  line-height: 1.3;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.benchScreenshotState {
+  flex: 0 0 auto;
+  padding: 2px 6px;
+  border: 1px solid var(--geist-border);
+  border-radius: 999px;
+  background: var(--geist-surface);
+  color: var(--geist-secondary);
+  font-size: 10px;
+  font-weight: 720;
+  line-height: 1.2;
+}
+
+.benchScreenshotState[data-state="captured"] {
+  border-color: color-mix(
+    in srgb,
+    var(--geist-success, #0070f3) 28%,
+    var(--geist-border)
+  );
+  color: color-mix(
+    in srgb,
+    var(--geist-success, #0070f3) 74%,
+    var(--geist-foreground)
+  );
+}
+
+.benchScreenshotState[data-state="failed"] {
+  border-color: color-mix(
+    in srgb,
+    var(--geist-error) 32%,
+    var(--geist-border)
+  );
+  color: color-mix(
+    in srgb,
+    var(--geist-error) 78%,
+    var(--geist-foreground)
+  );
+}
+
+.benchScreenshotResizeHandle {
+  position: absolute;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 4;
+  display: flex;
+  width: 12px;
+  cursor: ew-resize;
+  justify-content: center;
+  outline: none;
+}
+
+.benchScreenshotResizeHandle span {
+  width: 2px;
+  margin: 14px 0;
+  border-radius: 999px;
+  background: transparent;
+}
+
+.benchScreenshotDialog[data-resizing="true"] .benchScreenshotResizeHandle span,
+.benchScreenshotResizeHandle:focus-visible span,
+.benchScreenshotResizeHandle:hover span {
+  background: var(--geist-border);
+}
+
 .benchReportNotes {
   display: flex;
   flex-wrap: wrap;
@@ -1064,6 +1398,8 @@
 }
 
 .benchHistorySnapshot strong {
+  overflow-wrap: anywhere;
+  text-overflow: clip;
   white-space: normal;
 }
 
@@ -1364,6 +1700,7 @@
   .benchHistoryStats,
   .benchPlanSummary,
   .benchRunnerGrid,
+  .benchScreenshotSummaryGrid,
   .benchGroupFields,
   .benchScenarioMetaRow {
     grid-template-columns: 1fr;
@@ -1375,6 +1712,15 @@
 
   .benchConfigDialog {
     max-height: calc(100vh - 20px);
+  }
+
+  .benchConfigDialog.benchScreenshotDialog {
+    width: calc(100vw - 20px);
+    max-width: calc(100vw - 20px);
+  }
+
+  .benchScreenshotResizeHandle {
+    display: none;
   }
 
   .benchHeaderActions {

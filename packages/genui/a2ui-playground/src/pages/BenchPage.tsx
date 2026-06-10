@@ -15,6 +15,7 @@ import {
   ArrowUpRight,
   Copy,
   History,
+  Maximize2,
   MessageSquarePlus,
   Play,
   RotateCcw,
@@ -29,6 +30,7 @@ import { copyToClipboard } from '../utils/clipboard.js';
 type BenchRole = 'control' | 'experiment';
 type BenchVariable = 'model' | 'prompt' | 'catalog' | 'custom';
 type BenchStatus = 'idle' | 'running' | 'complete' | 'failed' | 'cancelled';
+type BenchScreenshotState = 'captured' | 'failed' | 'missing';
 
 interface BenchEnv {
   apiKey: string;
@@ -87,6 +89,7 @@ interface BenchResult {
   outputChars?: number;
   errors?: string[];
   error?: string;
+  screenshotDataUrl?: string;
 }
 
 interface BenchGroupSummary {
@@ -193,6 +196,40 @@ interface BenchHistoryEntry {
   config: BenchHistoryConfig;
 }
 
+interface BenchScreenshotSlot {
+  key: string;
+  repeatIndex: number;
+  result: BenchResult | null;
+  state: BenchScreenshotState;
+}
+
+interface BenchScreenshotMatrixCell {
+  key: string;
+  group: BenchGroup;
+  scenario: BenchScenario;
+  slots: BenchScreenshotSlot[];
+}
+
+interface BenchScreenshotMatrixRow {
+  key: string;
+  group: BenchGroup;
+  cells: BenchScreenshotMatrixCell[];
+}
+
+interface BenchScreenshotMatrix {
+  rows: BenchScreenshotMatrixRow[];
+  scenarios: BenchScenario[];
+  repeatCount: number;
+  total: number;
+  captured: number;
+  failed: number;
+  missing: number;
+}
+
+type BenchReportSettingsPayload = Partial<BenchSettings> & {
+  renderMetricsEnabled?: boolean;
+};
+
 const CATALOG_OPTIONS = [
   'Full Catalog',
   'Core Catalog',
@@ -220,6 +257,12 @@ const MAIN_PANE_MIN_WIDTH = 620;
 const RESIZE_HANDLE_WIDTH = 10;
 const REPORT_PANE_RESIZE_BREAKPOINT = 1240;
 const REPORT_PANE_WIDTH_STORAGE_KEY = 'a2ui-bench-report-width';
+const SCREENSHOT_DIALOG_DEFAULT_WIDTH = 1040;
+const SCREENSHOT_DIALOG_MIN_WIDTH = 720;
+const SCREENSHOT_DIALOG_MAX_WIDTH = 1440;
+const SCREENSHOT_DIALOG_WIDTH_STORAGE_KEY =
+  'a2ui-bench-screenshot-dialog-width';
+const EVENT_SOURCE_CLOSED_READY_STATE = 2;
 const BENCH_HISTORY_STORAGE_KEY = 'a2ui-bench-history';
 const BENCH_HISTORY_LIMIT = 20;
 const ONLINE_A2UI_SERVER_ORIGIN = 'https://genui-server.vercel.app';
@@ -314,6 +357,18 @@ function clampReportPaneWidth(
   return clampNumber(value, REPORT_PANE_MIN_WIDTH, max);
 }
 
+function clampScreenshotDialogWidth(value: number): number {
+  const viewportMax = typeof window === 'undefined'
+    ? SCREENSHOT_DIALOG_MAX_WIDTH
+    : Math.max(320, window.innerWidth - 48);
+  const max = Math.max(
+    Math.min(SCREENSHOT_DIALOG_MIN_WIDTH, viewportMax),
+    Math.min(SCREENSHOT_DIALOG_MAX_WIDTH, viewportMax),
+  );
+  const min = Math.min(SCREENSHOT_DIALOG_MIN_WIDTH, max);
+  return clampNumber(value, min, max);
+}
+
 function getInitialReportPaneWidth(): number {
   if (typeof window === 'undefined') return REPORT_PANE_DEFAULT_WIDTH;
   try {
@@ -323,6 +378,20 @@ function getInitialReportPaneWidth(): number {
     return clampReportPaneWidth(stored || REPORT_PANE_DEFAULT_WIDTH);
   } catch {
     return REPORT_PANE_DEFAULT_WIDTH;
+  }
+}
+
+function getInitialScreenshotDialogWidth(): number {
+  if (typeof window === 'undefined') return SCREENSHOT_DIALOG_DEFAULT_WIDTH;
+  try {
+    const stored = Number(
+      window.localStorage.getItem(SCREENSHOT_DIALOG_WIDTH_STORAGE_KEY),
+    );
+    return clampScreenshotDialogWidth(
+      stored || SCREENSHOT_DIALOG_DEFAULT_WIDTH,
+    );
+  } catch {
+    return clampScreenshotDialogWidth(SCREENSHOT_DIALOG_DEFAULT_WIDTH);
   }
 }
 
@@ -398,6 +467,40 @@ function getA2UIBenchHealthEndpoint(): string {
   } catch {
     return `${ONLINE_A2UI_SERVER_ORIGIN}/a2ui/health`;
   }
+}
+
+function getA2UIBenchReportEndpoint(jobId: string): string {
+  const jobsEndpoint = getA2UIBenchJobsEndpoint();
+  try {
+    const url = new URL(jobsEndpoint, window.location.origin);
+    url.pathname = `/a2ui/bench/jobs/${encodeURIComponent(jobId)}/report`;
+    url.search = '';
+    return url.toString();
+  } catch {
+    return `${ONLINE_A2UI_SERVER_ORIGIN}/a2ui/bench/jobs/${
+      encodeURIComponent(jobId)
+    }/report`;
+  }
+}
+
+function getA2UIBenchJobIdFromUrl(): string | null {
+  const params = new URLSearchParams(window.location.search);
+  const fromSearch = params.get('a2uiBenchJobId') ?? params.get('benchJobId');
+  if (fromSearch) return fromSearch;
+
+  const hashQueryIndex = window.location.hash.indexOf('?');
+  if (hashQueryIndex === -1) return null;
+  const hashParams = new URLSearchParams(
+    window.location.hash.slice(hashQueryIndex + 1),
+  );
+  return hashParams.get('a2uiBenchJobId') ?? hashParams.get('benchJobId');
+}
+
+function getA2UIBenchRecoveryUrl(jobId: string): string {
+  const url = new URL(window.location.href);
+  url.searchParams.set('a2uiBenchJobId', jobId);
+  url.hash = '#/a2ui/bench';
+  return url.toString();
 }
 
 function getA2UIPlaygroundBaseUrl(): string {
@@ -498,6 +601,92 @@ function cloneBenchSettings(settings: BenchSettings): BenchSettings {
   return { ...settings };
 }
 
+function readFiniteNumber(value: unknown, fallback: number): number {
+  return typeof value === 'number' && Number.isFinite(value)
+    ? value
+    : fallback;
+}
+
+function readBoolean(value: unknown, fallback: boolean): boolean {
+  return typeof value === 'boolean' ? value : fallback;
+}
+
+function isBenchRole(value: unknown): value is BenchRole {
+  return value === 'control' || value === 'experiment';
+}
+
+function isBenchVariable(value: unknown): value is BenchVariable {
+  return value === 'model'
+    || value === 'prompt'
+    || value === 'catalog'
+    || value === 'custom';
+}
+
+function createBenchSettingsFromReport(report: BenchReport): BenchSettings {
+  const reportSettings = (report.settings ?? {}) as BenchReportSettingsPayload;
+  return {
+    repeats: readFiniteNumber(reportSettings.repeats, DEFAULT_SETTINGS.repeats),
+    parallelism: readFiniteNumber(
+      reportSettings.parallelism,
+      DEFAULT_SETTINGS.parallelism,
+    ),
+    repairEnabled: readBoolean(
+      reportSettings.repairEnabled,
+      DEFAULT_SETTINGS.repairEnabled,
+    ),
+    judgeEnabled: readBoolean(
+      reportSettings.judgeEnabled,
+      DEFAULT_SETTINGS.judgeEnabled,
+    ),
+    collectLiveRenderMetrics: readBoolean(
+      reportSettings.collectLiveRenderMetrics,
+      readBoolean(
+        reportSettings.renderMetricsEnabled,
+        DEFAULT_SETTINGS.collectLiveRenderMetrics,
+      ),
+    ),
+  };
+}
+
+function createBenchGroupsFromReport(report: BenchReport): BenchGroup[] {
+  const fallbackModel = report.env?.model ?? DEFAULT_ENV.model;
+  const reportGroups = Array.isArray(report.groups) ? report.groups : [];
+  const groups = reportGroups.map((group, index) => {
+    const item = group as Partial<BenchGroup>;
+    return {
+      id: item.id ?? createId(`history-group-${index + 1}`),
+      role: isBenchRole(item.role) ? item.role : 'experiment',
+      name: item.name ?? `Group ${index + 1}`,
+      variable: isBenchVariable(item.variable) ? item.variable : 'custom',
+      model: item.model ?? fallbackModel,
+      catalog: item.catalog ?? 'Full Catalog',
+      extraInstruction: item.extraInstruction ?? '',
+      enabled: readBoolean(item.enabled, true),
+    };
+  });
+  return groups.length > 0 ? groups : cloneBenchGroups(DEFAULT_GROUPS);
+}
+
+function createBenchScenariosFromReport(report: BenchReport): BenchScenario[] {
+  const reportScenarios = Array.isArray(report.scenarios)
+    ? report.scenarios
+    : [];
+  const scenarios = reportScenarios.map((scenario, index) => {
+    const item = scenario as Partial<BenchScenario>;
+    return {
+      id: item.id ?? createId(`history-scenario-${index + 1}`),
+      name: item.name ?? `Scenario ${index + 1}`,
+      prompt: item.prompt ?? '',
+      type: item.type ?? 'Custom',
+      complexity: readFiniteNumber(item.complexity, 1),
+      action: item.action ?? '',
+    };
+  });
+  return scenarios.length > 0
+    ? scenarios
+    : cloneBenchScenarios(DEFAULT_SCENARIOS);
+}
+
 function isRecord(value: unknown): value is Record<string, unknown> {
   return typeof value === 'object' && value !== null;
 }
@@ -571,6 +760,22 @@ function createBenchHistoryEntry(
   };
 }
 
+function createBenchHistoryEntryFromReport(
+  report: BenchReport,
+): BenchHistoryEntry {
+  return createBenchHistoryEntry(
+    report,
+    {
+      apiKey: '',
+      baseURL: report.env?.baseURL || DEFAULT_ENV.baseURL,
+      model: report.env?.model || DEFAULT_ENV.model,
+    },
+    createBenchGroupsFromReport(report),
+    createBenchScenariosFromReport(report),
+    createBenchSettingsFromReport(report),
+  );
+}
+
 function upsertBenchHistoryEntry(
   entries: BenchHistoryEntry[],
   entry: BenchHistoryEntry,
@@ -588,7 +793,8 @@ function getErrorMessage(error: unknown): string {
   return String(error);
 }
 
-function readEventData<T>(event: MessageEvent<string>): T | null {
+function readEventData<T>(event: MessageEvent<unknown>): T | null {
+  if (typeof event.data !== 'string') return null;
   try {
     return JSON.parse(event.data) as T;
   } catch {
@@ -656,6 +862,177 @@ function formatSummaryJudgeMetric(
   return `${summary.avgJudgeScore.toFixed(1)}/5`;
 }
 
+function formatRunJudgeMetric(
+  report: BenchReport,
+  settings: BenchSettings,
+  result: BenchResult,
+): string {
+  if (!settings.judgeEnabled || report.capabilities?.judge === 'disabled') {
+    return 'off';
+  }
+  return `${result.judgeScore.toFixed(1)}/5`;
+}
+
+function isBenchRunFailed(result: BenchResult): boolean {
+  return result.status === 'failed' || result.ok === false;
+}
+
+function getScreenshotState(
+  result: BenchResult,
+): BenchScreenshotState {
+  if (result.screenshotDataUrl) return 'captured';
+  if (isBenchRunFailed(result)) return 'failed';
+  return 'missing';
+}
+
+function getScreenshotStateLabelFromState(
+  state: BenchScreenshotState,
+): string {
+  if (state === 'captured') return 'Captured';
+  if (state === 'failed') return 'Failed';
+  return 'No capture';
+}
+
+function getScreenshotPlaceholderText(result: BenchResult | null): string {
+  if (!result) {
+    return 'No bench result was reported for this slot.';
+  }
+  if (isBenchRunFailed(result)) {
+    return result.error
+      ?? result.errors?.[0]
+      ?? 'Run failed before a screenshot was captured.';
+  }
+  return result.errors?.find((error) =>
+    error.toLowerCase().includes('screenshot')
+  ) ?? 'No screenshot was captured for this run.';
+}
+
+function createBenchGroupsForMatrix(report: BenchReport): BenchGroup[] {
+  const reportGroups = Array.isArray(report.groups) ? report.groups : [];
+  if (reportGroups.length > 0) return createBenchGroupsFromReport(report);
+
+  const seen = new Set<string>();
+  const groupsFromResults = report.results.flatMap((result) => {
+    if (seen.has(result.groupId)) return [];
+    seen.add(result.groupId);
+    return [{
+      id: result.groupId,
+      role: result.role,
+      name: result.groupName,
+      variable: 'custom' as BenchVariable,
+      model: result.model ?? report.env?.model ?? DEFAULT_ENV.model,
+      catalog: result.catalog ?? 'Full Catalog',
+      extraInstruction: '',
+      enabled: true,
+    }];
+  });
+  return groupsFromResults.length > 0
+    ? groupsFromResults
+    : cloneBenchGroups(DEFAULT_GROUPS);
+}
+
+function createBenchScenariosForMatrix(report: BenchReport): BenchScenario[] {
+  const reportScenarios = Array.isArray(report.scenarios)
+    ? report.scenarios
+    : [];
+  if (reportScenarios.length > 0) return createBenchScenariosFromReport(report);
+
+  const seen = new Set<string>();
+  const scenariosFromResults = report.results.flatMap((result) => {
+    if (seen.has(result.scenarioId)) return [];
+    seen.add(result.scenarioId);
+    return [{
+      id: result.scenarioId,
+      name: result.scenarioName,
+      prompt: '',
+      type: 'Custom',
+      complexity: 1,
+      action: '',
+    }];
+  });
+  return scenariosFromResults.length > 0
+    ? scenariosFromResults
+    : cloneBenchScenarios(DEFAULT_SCENARIOS);
+}
+
+function createBenchScreenshotMatrix(
+  report: BenchReport | null,
+): BenchScreenshotMatrix {
+  if (!report) {
+    return {
+      rows: [],
+      scenarios: [],
+      repeatCount: 1,
+      total: 0,
+      captured: 0,
+      failed: 0,
+      missing: 0,
+    };
+  }
+
+  const matrixGroups = createBenchGroupsForMatrix(report);
+  const matrixScenarios = createBenchScenariosForMatrix(report);
+  const repeatCount = Math.max(
+    1,
+    createBenchSettingsFromReport(report).repeats,
+  );
+  const resultsByCell = new Map<string, BenchResult[]>();
+  for (const result of report.results) {
+    const key = `${result.groupId}:${result.scenarioId}`;
+    const results = resultsByCell.get(key) ?? [];
+    results.push(result);
+    resultsByCell.set(key, results);
+  }
+
+  let captured = 0;
+  let failed = 0;
+  let missing = 0;
+  const rows = matrixGroups.map((group) => {
+    const cells = matrixScenarios.map((scenario) => {
+      const results = [
+        ...(resultsByCell.get(`${group.id}:${scenario.id}`) ?? []),
+      ].sort((a, b) => (a.repeatIndex ?? 1) - (b.repeatIndex ?? 1));
+      const slots = Array.from({ length: repeatCount }, (_, index) => {
+        const repeatIndex = index + 1;
+        const result = results.find((item) =>
+          (item.repeatIndex ?? 1) === repeatIndex
+        ) ?? null;
+        const state = result ? getScreenshotState(result) : 'missing';
+        if (state === 'captured') captured += 1;
+        else if (state === 'failed') failed += 1;
+        else missing += 1;
+        return {
+          key: result?.id ?? `${group.id}:${scenario.id}:${repeatIndex}`,
+          repeatIndex,
+          result,
+          state,
+        };
+      });
+      return {
+        key: `${group.id}:${scenario.id}`,
+        group,
+        scenario,
+        slots,
+      };
+    });
+    return {
+      key: group.id,
+      group,
+      cells,
+    };
+  });
+
+  return {
+    rows,
+    scenarios: matrixScenarios,
+    repeatCount,
+    total: matrixGroups.length * matrixScenarios.length * repeatCount,
+    captured,
+    failed,
+    missing,
+  };
+}
+
 function groupPatch<K extends keyof BenchGroup>(
   key: K,
   value: BenchGroup[K],
@@ -696,16 +1073,25 @@ export function BenchPage() {
   const [benchHealth, setBenchHealth] = useState<BenchHealth | null>(null);
   const [benchHealthError, setBenchHealthError] = useState<string | null>(null);
   const [historyOpen, setHistoryOpen] = useState(false);
+  const [screenshotsOpen, setScreenshotsOpen] = useState(false);
   const [reportPaneWidth, setReportPaneWidth] = useState(
     getInitialReportPaneWidth,
   );
+  const [screenshotDialogWidth, setScreenshotDialogWidth] = useState(
+    getInitialScreenshotDialogWidth,
+  );
   const [isResizingReport, setIsResizingReport] = useState(false);
+  const [isResizingScreenshotDialog, setIsResizingScreenshotDialog] = useState(
+    false,
+  );
   const [report, setReport] = useState<BenchReport | null>(null);
   const [historyItems, setHistoryItems] = useState<BenchHistoryEntry[]>(
     readBenchHistory,
   );
   const [copyState, setCopyState] = useState<'idle' | 'copied'>('idle');
+  const [historyCopyId, setHistoryCopyId] = useState<string | null>(null);
   const benchBodyRef = useRef<HTMLDivElement | null>(null);
+  const screenshotDialogRef = useRef<HTMLElement | null>(null);
   // eslint-disable-next-line n/no-unsupported-features/node-builtins
   const eventSourceRef = useRef<EventSource | null>(null);
   const benchAbortRef = useRef<AbortController | null>(null);
@@ -740,16 +1126,21 @@ export function BenchPage() {
   useEffect(() => clearActiveJobConnection, [clearActiveJobConnection]);
 
   useEffect(() => {
-    if (!benchRunNoticeOpen && !configOpen && !historyOpen) return;
+    if (
+      !benchRunNoticeOpen && !configOpen && !historyOpen && !screenshotsOpen
+    ) {
+      return;
+    }
     const handleKeyDown = (event: KeyboardEvent) => {
       if (event.key !== 'Escape') return;
       setBenchRunNoticeOpen(false);
       setConfigOpen(false);
       setHistoryOpen(false);
+      setScreenshotsOpen(false);
     };
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [benchRunNoticeOpen, configOpen, historyOpen]);
+  }, [benchRunNoticeOpen, configOpen, historyOpen, screenshotsOpen]);
 
   useEffect(() => {
     try {
@@ -761,6 +1152,17 @@ export function BenchPage() {
       // Ignore storage failures; resizing should remain a local UI affordance.
     }
   }, [reportPaneWidth]);
+
+  useEffect(() => {
+    try {
+      window.localStorage.setItem(
+        SCREENSHOT_DIALOG_WIDTH_STORAGE_KEY,
+        String(screenshotDialogWidth),
+      );
+    } catch {
+      // Ignore storage failures; dialog resizing is still useful per session.
+    }
+  }, [screenshotDialogWidth]);
 
   useEffect(() => {
     const clampToBody = () => {
@@ -776,6 +1178,77 @@ export function BenchPage() {
     clampToBody();
     window.addEventListener('resize', clampToBody);
     return () => window.removeEventListener('resize', clampToBody);
+  }, []);
+
+  useEffect(() => {
+    const clampToViewport = () => {
+      setScreenshotDialogWidth((current) =>
+        clampScreenshotDialogWidth(current)
+      );
+    };
+
+    clampToViewport();
+    window.addEventListener('resize', clampToViewport);
+    return () => window.removeEventListener('resize', clampToViewport);
+  }, []);
+
+  useEffect(() => {
+    const jobId = getA2UIBenchJobIdFromUrl();
+    if (!jobId) return;
+
+    let cancelled = false;
+    setStatus('running');
+    setProgress(0);
+    setRunMessage(`Loading report ${jobId.slice(0, 8)}...`);
+
+    void (async () => {
+      try {
+        const response = await window.fetch(getA2UIBenchReportEndpoint(jobId));
+        const payload = await response.json().catch(() => ({})) as
+          | BenchReport
+          | { error?: string };
+        if (!response.ok || !('results' in payload)) {
+          throw new Error(
+            'error' in payload && payload.error
+              ? payload.error
+              : `Bench report load failed: ${response.status}`,
+          );
+        }
+        if (cancelled) return;
+        const historyEntry = createBenchHistoryEntryFromReport(payload);
+        setReport(payload);
+        setEnv((current) => ({
+          apiKey: current.apiKey,
+          baseURL: historyEntry.config.env.baseURL,
+          model: historyEntry.config.env.model,
+        }));
+        setGroups(cloneBenchGroups(historyEntry.config.groups));
+        setScenarios(cloneBenchScenarios(historyEntry.config.scenarios));
+        setSettings(cloneBenchSettings(historyEntry.config.settings));
+        setHistoryItems((current) => {
+          const next = upsertBenchHistoryEntry(current, historyEntry);
+          persistBenchHistory(next);
+          return next;
+        });
+        setStatus(payload.status ?? 'complete');
+        setProgress(100);
+        setRunMessage(
+          payload.summary && payload.summary.failedRuns > 0
+            ? `Loaded report with ${
+              pluralize(payload.summary.failedRuns, 'failed run')
+            }`
+            : 'Loaded report',
+        );
+      } catch (error) {
+        if (cancelled) return;
+        setStatus('failed');
+        setRunMessage(getErrorMessage(error));
+      }
+    })();
+
+    return () => {
+      cancelled = true;
+    };
   }, []);
 
   const updateGroup = useCallback(
@@ -853,6 +1326,7 @@ export function BenchPage() {
     setBenchHealth(null);
     setBenchHealthError(null);
     setBenchRunNoticeOpen(false);
+    setScreenshotsOpen(false);
   }, [clearActiveJobConnection]);
 
   const loadBenchHealth = useCallback(() => {
@@ -888,6 +1362,7 @@ export function BenchPage() {
     setProgress(0);
     setRunMessage('Creating bench job...');
     setReport(null);
+    setScreenshotsOpen(false);
 
     const controller = new AbortController();
     benchAbortRef.current = controller;
@@ -977,7 +1452,7 @@ export function BenchPage() {
 
         source.addEventListener('job', (event) => {
           const snapshot = readEventData<BenchJobSnapshot>(
-            event as MessageEvent<string>,
+            event as MessageEvent<unknown>,
           );
           if (!snapshot) return;
           updateProgress(snapshot.progress);
@@ -994,7 +1469,7 @@ export function BenchPage() {
 
         const handleRunProgress = (event: Event) => {
           const data = readEventData<Record<string, unknown>>(
-            event as MessageEvent<string>,
+            event as MessageEvent<unknown>,
           );
           if (!data) return;
           setRunMessage(describeRun(data));
@@ -1008,7 +1483,7 @@ export function BenchPage() {
 
         source.addEventListener('report', (event) => {
           const nextReport = readEventData<BenchReport>(
-            event as MessageEvent<string>,
+            event as MessageEvent<unknown>,
           );
           if (!nextReport) return;
           setReport(nextReport);
@@ -1038,11 +1513,19 @@ export function BenchPage() {
         });
 
         source.addEventListener('error', (event) => {
-          const data = readEventData<{ message?: string; error?: string }>(
-            event as MessageEvent<string>,
-          );
+          const data = event instanceof MessageEvent
+            ? readEventData<{ message?: string; error?: string }>(event)
+            : null;
+          const message = data?.message ?? data?.error;
+          if (
+            !message
+            && source.readyState !== EVENT_SOURCE_CLOSED_READY_STATE
+          ) {
+            setRunMessage('Reconnecting bench stream...');
+            return;
+          }
           setStatus('failed');
-          setRunMessage(data?.message ?? data?.error ?? 'Bench stream failed');
+          setRunMessage(message ?? 'Bench stream disconnected');
           source.close();
           if (eventSourceRef.current === source) eventSourceRef.current = null;
         });
@@ -1075,6 +1558,20 @@ export function BenchPage() {
     setCopyState('copied');
     window.setTimeout(() => setCopyState('idle'), 1200);
   }, [report]);
+
+  const copyHistoryRecoveryUrl = useCallback(
+    async (entry: BenchHistoryEntry) => {
+      const jobId = entry.report.jobId;
+      if (!jobId) return;
+      const copied = await copyToClipboard(getA2UIBenchRecoveryUrl(jobId));
+      if (!copied) return;
+      setHistoryCopyId(entry.id);
+      window.setTimeout(() => {
+        setHistoryCopyId((current) => current === entry.id ? null : current);
+      }, 1200);
+    },
+    [],
+  );
 
   const restoreHistoryEntry = useCallback((entry: BenchHistoryEntry) => {
     clearActiveJobConnection();
@@ -1160,8 +1657,56 @@ export function BenchPage() {
     );
   }, []);
 
+  const startScreenshotDialogResize = useCallback((
+    event: ReactPointerEvent<HTMLDivElement>,
+  ) => {
+    event.preventDefault();
+    event.currentTarget.focus();
+    const rect = screenshotDialogRef.current?.getBoundingClientRect();
+    if (!rect) return;
+    const startX = event.clientX;
+    const startWidth = rect.width;
+    setIsResizingScreenshotDialog(true);
+
+    const handlePointerMove = (moveEvent: PointerEvent) => {
+      moveEvent.preventDefault();
+      setScreenshotDialogWidth(
+        clampScreenshotDialogWidth(startWidth + moveEvent.clientX - startX),
+      );
+    };
+    const stopResize = () => {
+      setIsResizingScreenshotDialog(false);
+      document.body.style.cursor = '';
+      document.body.style.userSelect = '';
+      window.removeEventListener('pointermove', handlePointerMove);
+      window.removeEventListener('pointerup', stopResize);
+      window.removeEventListener('pointercancel', stopResize);
+    };
+
+    document.body.style.cursor = 'ew-resize';
+    document.body.style.userSelect = 'none';
+    window.addEventListener('pointermove', handlePointerMove);
+    window.addEventListener('pointerup', stopResize);
+    window.addEventListener('pointercancel', stopResize);
+  }, []);
+
+  const nudgeScreenshotDialogWidth = useCallback((
+    event: ReactKeyboardEvent<HTMLDivElement>,
+  ) => {
+    if (event.key !== 'ArrowLeft' && event.key !== 'ArrowRight') return;
+    event.preventDefault();
+    const direction = event.key === 'ArrowRight' ? 1 : -1;
+    setScreenshotDialogWidth((current) =>
+      clampScreenshotDialogWidth(current + direction * 32)
+    );
+  }, []);
+
   const benchBodyStyle = {
     '--bench-report-width': `${reportPaneWidth}px`,
+  } as CSSProperties;
+
+  const screenshotDialogStyle = {
+    '--bench-screenshot-dialog-width': `${screenshotDialogWidth}px`,
   } as CSSProperties;
 
   const baseline = useMemo(() => {
@@ -1189,6 +1734,16 @@ export function BenchPage() {
       (a, b) => b.avgJudgeScore - a.avgJudgeScore,
     )[0] ?? null;
   }, [report]);
+  const screenshotMatrix = useMemo(
+    () => createBenchScreenshotMatrix(report),
+    [report],
+  );
+  const screenshotMatrixStyle = {
+    '--bench-screenshot-scenario-count': Math.max(
+      1,
+      screenshotMatrix.scenarios.length,
+    ),
+  } as CSSProperties;
 
   return (
     <div className='benchPage'>
@@ -1643,6 +2198,46 @@ export function BenchPage() {
                   </table>
                 </div>
 
+                <section className='benchScreenshotSection'>
+                  <div className='benchSectionHeader'>
+                    <div>
+                      <h3 className='benchSectionTitle'>Screenshots</h3>
+                      <p className='benchSectionSub'>
+                        Complete run matrix with failed slots preserved
+                      </p>
+                    </div>
+                    <Button
+                      variant='secondary'
+                      size='sm'
+                      iconBefore={Maximize2}
+                      disabled={screenshotMatrix.total === 0}
+                      onClick={() => setScreenshotsOpen(true)}
+                    >
+                      Open
+                    </Button>
+                  </div>
+                  <div className='benchScreenshotSummaryGrid'>
+                    <div>
+                      <span>Runs</span>
+                      <strong>{formatNumber(screenshotMatrix.total)}</strong>
+                    </div>
+                    <div>
+                      <span>Captured</span>
+                      <strong>
+                        {formatNumber(screenshotMatrix.captured)}
+                      </strong>
+                    </div>
+                    <div>
+                      <span>Failed</span>
+                      <strong>{formatNumber(screenshotMatrix.failed)}</strong>
+                    </div>
+                    <div>
+                      <span>Missing</span>
+                      <strong>{formatNumber(screenshotMatrix.missing)}</strong>
+                    </div>
+                  </div>
+                </section>
+
                 <div className='benchReportNotes'>
                   <a
                     href='https://lynxjs.org/zh/react/genui/a2ui.html'
@@ -1678,6 +2273,206 @@ export function BenchPage() {
             )}
         </aside>
       </div>
+
+      {screenshotsOpen && report
+        ? (
+          <div
+            className='benchConfigOverlay'
+            role='presentation'
+            onMouseDown={(event) => {
+              if (event.target === event.currentTarget) {
+                setScreenshotsOpen(false);
+              }
+            }}
+          >
+            <section
+              ref={screenshotDialogRef}
+              className='benchConfigDialog benchScreenshotDialog'
+              data-resizing={isResizingScreenshotDialog}
+              role='dialog'
+              aria-modal='true'
+              aria-labelledby='bench-screenshots-title'
+              style={screenshotDialogStyle}
+            >
+              <header className='benchConfigHeader'>
+                <div>
+                  <h2
+                    id='bench-screenshots-title'
+                    className='benchConfigTitle'
+                  >
+                    Screenshots
+                  </h2>
+                  <p className='benchConfigSub'>
+                    {pluralize(screenshotMatrix.rows.length, 'group')} ×{' '}
+                    {pluralize(screenshotMatrix.scenarios.length, 'scenario')}
+                    {' · '}
+                    {pluralize(screenshotMatrix.repeatCount, 'repeat')}
+                  </p>
+                </div>
+                <Button
+                  variant='secondary'
+                  size='sm'
+                  iconOnly
+                  iconBefore={X}
+                  aria-label='Close screenshots'
+                  title='Close screenshots'
+                  onClick={() => setScreenshotsOpen(false)}
+                />
+              </header>
+
+              <div className='benchScreenshotBody'>
+                <div className='benchScreenshotSummaryGrid'>
+                  <div>
+                    <span>Runs</span>
+                    <strong>{formatNumber(screenshotMatrix.total)}</strong>
+                  </div>
+                  <div>
+                    <span>Captured</span>
+                    <strong>{formatNumber(screenshotMatrix.captured)}</strong>
+                  </div>
+                  <div>
+                    <span>Failed</span>
+                    <strong>{formatNumber(screenshotMatrix.failed)}</strong>
+                  </div>
+                  <div>
+                    <span>Missing</span>
+                    <strong>{formatNumber(screenshotMatrix.missing)}</strong>
+                  </div>
+                </div>
+
+                <div className='benchScreenshotMatrixWrap'>
+                  <div
+                    className='benchScreenshotMatrix'
+                    style={screenshotMatrixStyle}
+                  >
+                    <div className='benchScreenshotMatrixCorner'>Group</div>
+                    {screenshotMatrix.scenarios.map((scenario) => (
+                      <div
+                        className='benchScreenshotScenarioHeader'
+                        key={scenario.id}
+                      >
+                        <strong>{scenario.name}</strong>
+                        <span>{scenario.type}</span>
+                      </div>
+                    ))}
+                    {screenshotMatrix.rows.map((row) => (
+                      <div className='benchScreenshotMatrixRow' key={row.key}>
+                        <div className='benchScreenshotGroupHeader'>
+                          <span
+                            className={`benchRoleDot ${row.group.role}`}
+                            aria-hidden='true'
+                          />
+                          <div>
+                            <strong>{row.group.name}</strong>
+                            <span>
+                              {row.group.variable}
+                              {' · '}
+                              {row.group.catalog}
+                            </span>
+                          </div>
+                        </div>
+                        {row.cells.map((cell) => (
+                          <div
+                            className='benchScreenshotMatrixCell'
+                            key={cell.key}
+                          >
+                            {cell.slots.map((slot) => {
+                              const item = slot.result;
+                              return (
+                                <article
+                                  className='benchScreenshotSlot'
+                                  data-state={slot.state}
+                                  key={slot.key}
+                                >
+                                  <div className='benchScreenshotSlotHeader'>
+                                    <strong>#{slot.repeatIndex}</strong>
+                                    <span
+                                      className='benchScreenshotState'
+                                      data-state={slot.state}
+                                    >
+                                      {getScreenshotStateLabelFromState(
+                                        slot.state,
+                                      )}
+                                    </span>
+                                  </div>
+                                  {item?.screenshotDataUrl
+                                    ? (
+                                      <div className='benchScreenshotImageFrame'>
+                                        <img
+                                          alt={`${cell.group.name} ${cell.scenario.name} #${slot.repeatIndex}`}
+                                          src={item.screenshotDataUrl}
+                                        />
+                                      </div>
+                                    )
+                                    : (
+                                      <div className='benchScreenshotPlaceholder'>
+                                        <strong>
+                                          {getScreenshotStateLabelFromState(
+                                            slot.state,
+                                          )}
+                                        </strong>
+                                        <span>
+                                          {getScreenshotPlaceholderText(item)}
+                                        </span>
+                                      </div>
+                                    )}
+                                  <div className='benchScreenshotSlotMeta'>
+                                    {item
+                                      ? (
+                                        <>
+                                          <span>
+                                            Judge {formatRunJudgeMetric(
+                                              report,
+                                              settings,
+                                              item,
+                                            )}
+                                          </span>
+                                          <span>{formatMs(item.agentMs)}</span>
+                                          <span>
+                                            {formatNumber(item.tokens)} tokens
+                                          </span>
+                                        </>
+                                      )
+                                      : <span>No result</span>}
+                                  </div>
+                                </article>
+                              );
+                            })}
+                          </div>
+                        ))}
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              </div>
+
+              <footer className='benchConfigFooter'>
+                <Button
+                  variant='primary'
+                  size='sm'
+                  onClick={() => setScreenshotsOpen(false)}
+                >
+                  Done
+                </Button>
+              </footer>
+              <div
+                className='benchScreenshotResizeHandle'
+                role='separator'
+                aria-label='Resize screenshots dialog'
+                aria-orientation='vertical'
+                aria-valuemin={SCREENSHOT_DIALOG_MIN_WIDTH}
+                aria-valuemax={SCREENSHOT_DIALOG_MAX_WIDTH}
+                aria-valuenow={screenshotDialogWidth}
+                tabIndex={0}
+                onKeyDown={nudgeScreenshotDialogWidth}
+                onPointerDown={startScreenshotDialogResize}
+              >
+                <span aria-hidden='true' />
+              </div>
+            </section>
+          </div>
+        )
+        : null}
 
       {historyOpen
         ? (
@@ -1725,6 +2520,10 @@ export function BenchPage() {
                         const failedRuns = summary?.failedRuns ?? 0;
                         const totalRuns = summary?.totalRuns
                           ?? entry.report.results.length;
+                        const jobId = entry.report.jobId;
+                        const recoveryUrl = jobId
+                          ? getA2UIBenchRecoveryUrl(jobId)
+                          : null;
                         return (
                           <article className='benchHistoryCard' key={entry.id}>
                             <div className='benchHistoryCardHeader'>
@@ -1799,6 +2598,9 @@ export function BenchPage() {
                                   'scenario',
                                 )}
                               </span>
+                              {jobId
+                                ? <span>job {jobId.slice(0, 8)}</span>
+                                : null}
                             </div>
 
                             <details className='benchHistoryDetails'>
@@ -1808,6 +2610,22 @@ export function BenchPage() {
                                   <span>Base URL</span>
                                   <strong>{entry.config.env.baseURL}</strong>
                                 </div>
+                                {jobId
+                                  ? (
+                                    <div>
+                                      <span>a2uiBenchJobId</span>
+                                      <strong>{jobId}</strong>
+                                    </div>
+                                  )
+                                  : null}
+                                {recoveryUrl
+                                  ? (
+                                    <div>
+                                      <span>Recovery URL</span>
+                                      <strong>{recoveryUrl}</strong>
+                                    </div>
+                                  )
+                                  : null}
                                 <div>
                                   <span>Groups</span>
                                   <strong>
@@ -1835,6 +2653,18 @@ export function BenchPage() {
                                 onClick={() => restoreHistoryEntry(entry)}
                               >
                                 Restore
+                              </Button>
+                              <Button
+                                variant='secondary'
+                                size='sm'
+                                iconBefore={Copy}
+                                disabled={!jobId}
+                                onClick={() =>
+                                  void copyHistoryRecoveryUrl(entry)}
+                              >
+                                {historyCopyId === entry.id
+                                  ? 'Copied'
+                                  : 'Copy URL'}
                               </Button>
                               <Button
                                 variant='secondary'

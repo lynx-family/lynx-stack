@@ -21,6 +21,7 @@ interface BenchPreviewResult {
   fmpMs: number;
   judgeScore: number;
   renderMs: number;
+  screenshotDataUrl?: string;
   ttiMs: number;
 }
 
@@ -562,6 +563,17 @@ async function runJudge(
   }
 }
 
+async function capturePreviewScreenshot(
+  page: Awaited<ReturnType<Browser['newPage']>>,
+): Promise<string> {
+  const bytes = await page.screenshot({
+    fullPage: false,
+    quality: 76,
+    type: 'jpeg',
+  });
+  return `data:image/jpeg;base64,${bytes.toString('base64')}`;
+}
+
 export async function runBenchPreview(
   options: BenchPreviewOptions,
 ): Promise<BenchPreviewResult> {
@@ -583,6 +595,12 @@ export async function runBenchPreview(
   try {
     const rendered = await renderMessagesInPreview(options);
     page = rendered.page;
+    let screenshotDataUrl: string | undefined;
+    try {
+      screenshotDataUrl = await capturePreviewScreenshot(page);
+    } catch (error) {
+      errors.push(`preview screenshot failed: ${toErrorMessage(error)}`);
+    }
 
     let judgeScore = 0;
     if (options.request.settings.judgeEnabled) {
@@ -598,6 +616,7 @@ export async function runBenchPreview(
       fmpMs: readMetric(rendered.metrics.fmp),
       judgeScore,
       renderMs: readMetric(rendered.metrics.render),
+      ...(screenshotDataUrl ? { screenshotDataUrl } : {}),
       ttiMs: readMetric(rendered.metrics.tti),
     };
   } catch (error) {
