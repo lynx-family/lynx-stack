@@ -1,6 +1,7 @@
 // Copyright 2024 The Lynx Authors. All rights reserved.
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
+import { createRequire } from 'node:module';
 import path from 'node:path';
 
 import type { RspackOptions, Stats, StatsCompilation } from '@rspack/core';
@@ -22,6 +23,7 @@ import {
 import type { ITestSuite } from './suite.js';
 
 const TARGET = 'node' as const;
+const require = createRequire(import.meta.url);
 
 // ---------------------------------------------------------------------------
 // Step-snapshot matching vendored from `@rspack/test-tools@2.0.6`
@@ -154,7 +156,6 @@ function matchStepSnapshot(
       // The emitted `*.hot-update.js` is a CJS module exposing a `modules` map;
       // load it via `require` (it must be the runtime-evaluated file, not an
       // ESM import) and read its keys.
-      // eslint-disable-next-line @typescript-eslint/no-require-imports
       const hotUpdate = require(context.getDist(fileName)) as {
         modules: Record<string, unknown>;
       };
