@@ -72,7 +72,7 @@ describe('stats plugin', () => {
       const statsJson = JSON.parse(
         await readFile(path.join(root, 'dist/stats.json'), 'utf-8'),
       ) as StatsJson
-      const compilations = statsJson.children?.length
+      const compilations = (statsJson.children?.length ?? 0) > 0
         ? statsJson.children
         : [statsJson]
 

@@ -6,8 +6,8 @@ import path from 'node:path'
 
 import type { RsbuildPlugin } from '@rsbuild/core'
 
-import type { Config } from '../config/index.js'
 import { BUNDLE_STATS_JSON_OPTIONS } from './statsJsonOptions.js'
+import type { Config } from '../config/index.js'
 
 export function pluginStatsJson(config: Config): RsbuildPlugin {
   return {
