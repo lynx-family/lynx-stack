@@ -4,7 +4,7 @@
 import fs from 'node:fs/promises';
 import path from 'node:path';
 
-import { checkSourceMap } from '@lynx-js/test-tools/lib/helper/checkSourceMap.js';
+import { checkSourceMap } from '@lynx-js/test-tools/helper/checkSourceMap.js';
 
 import './a.jsx';
 

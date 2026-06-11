@@ -8,7 +8,7 @@ import { defineConfig } from '@rstest/core'
 import type { RstestConfig } from '@rstest/core'
 import { TypiaRspackPlugin } from 'typia-rspack-plugin'
 
-import { lynxRstestConfig } from '@lynx-js/test-tools/lib/rstest-config.js'
+import { lynxRstestConfig } from '@lynx-js/test-tools/rstest-config'
 
 // Explicitly typed: the package compiles with `--isolatedDeclarations`, which
 // cannot infer default-export types.

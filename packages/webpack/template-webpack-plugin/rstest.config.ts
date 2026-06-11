@@ -3,7 +3,7 @@
 // LICENSE file in the root directory of this source tree.
 import { defineConfig } from '@rstest/core';
 
-import { lynxRstestConfig } from '@lynx-js/test-tools/lib/rstest-config.js';
+import { lynxRstestConfig } from '@lynx-js/test-tools/rstest-config';
 
 export default defineConfig(lynxRstestConfig({
   name: 'template-webpack-plugin',

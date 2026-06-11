@@ -80,7 +80,7 @@ export function lynxRstestConfig(options: LynxRstestConfigOptions): {
       require.resolve('@rspack/test-tools/setup-env'),
       options.setupExpect
         ? require.resolve('@rspack/test-tools/setup-expect')
-        : require.resolve('@lynx-js/test-tools/lib/setup-file-snapshot.js'),
+        : require.resolve('@lynx-js/test-tools/setup-file-snapshot'),
       ...options.setupFiles ?? [],
     ],
     env: {
