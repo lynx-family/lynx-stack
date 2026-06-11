@@ -3,7 +3,10 @@
 // LICENSE file in the root directory of this source tree.
 
 import type { A2UIMessage } from './a2ui-validator';
-import { isLoadableImageSource } from './image-resolver';
+import {
+  isLoadableImageSource,
+  isResolvableStaticA2UIImage,
+} from './image-resolver';
 
 type A2UIUpdateComponentsMessage = Extract<
   A2UIMessage,
@@ -13,6 +16,13 @@ type A2UIComponent = A2UIUpdateComponentsMessage['updateComponents'][
   'components'
 ][number];
 type ComponentRecord = A2UIComponent & Record<string, unknown>;
+
+interface A2UIProtocolMessageStreamParserOptions {
+  onStaticImageComponent?: (
+    surfaceId: string,
+    component: ComponentRecord,
+  ) => void;
+}
 
 const ROOT_COMPONENT_ID = 'root';
 
@@ -333,6 +343,10 @@ function buildReachableComponentSnapshot(
 }
 
 export class A2UIProtocolMessageStreamParser {
+  public constructor(
+    private readonly options: A2UIProtocolMessageStreamParserOptions = {},
+  ) {}
+
   private buffer = '';
   private cursor = 0;
   private depth = 0;
@@ -465,6 +479,12 @@ export class A2UIProtocolMessageStreamParser {
       this.buffer.slice(0, start),
     );
     if (!surfaceId) return;
+    if (isResolvableStaticA2UIImage(parsed as ComponentRecord)) {
+      this.options.onStaticImageComponent?.(
+        surfaceId,
+        parsed as ComponentRecord,
+      );
+    }
     const renderable = toStreamRenderableComponent(
       parsed,
       this.pendingImagePathsBySurface.get(surfaceId),

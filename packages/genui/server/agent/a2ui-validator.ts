@@ -6,6 +6,7 @@ import { z } from 'zod';
 
 import type {
   A2UICatalog,
+  A2UIComponentProp,
   A2UIComponentSpec,
   JsonSchema,
 } from './a2ui-catalog';
@@ -98,6 +99,7 @@ export interface ValidationResult {
   ok: boolean;
   messages: A2UIMessage[];
   errors: string[];
+  warnings: string[];
 }
 
 export interface ValidationOptions {
@@ -267,6 +269,7 @@ export function validateA2UIOutput(
       errors: [
         'Response was not valid JSON. Output MUST be a raw JSON array of A2UI messages – no prose, no code fences.',
       ],
+      warnings: [],
     };
   }
   const arr = A2UIMessageArray.safeParse(parsed);
@@ -278,7 +281,7 @@ export function validateA2UIOutput(
         }: ${issue.message}`,
       );
     }
-    return { ok: false, messages: [], errors };
+    return { ok: false, messages: [], errors, warnings: [] };
   }
 
   const messages = arr.data.map((message) => {
@@ -299,6 +302,7 @@ export function validateA2UIOutput(
   const knownFunctions = new Set(
     (catalog.functions ?? []).map((fn) => fn.name),
   );
+  const warnings: string[] = [];
 
   // structural checks ----------------------------------------------------
   const firstMessage = messages[0];
@@ -362,6 +366,7 @@ export function validateA2UIOutput(
             comp,
             componentSpecs.get(comp.component)!,
             errors,
+            warnings,
           );
           validateRendererSemantics(comp, errors);
         } else {
@@ -484,6 +489,7 @@ export function validateA2UIOutput(
     ok: errors.length === 0,
     messages: errors.length === 0 ? messages : [],
     errors,
+    warnings,
   };
 }
 
@@ -679,6 +685,7 @@ function validateComponentAgainstCatalog(
   comp: A2UIComponent,
   spec: A2UIComponentSpec,
   errors: string[],
+  warnings: string[],
 ): void {
   const allowed = new Set([
     'id',
@@ -704,14 +711,63 @@ function validateComponentAgainstCatalog(
       continue;
     }
     if (!hasValue || !prop.schema) continue;
-    const value = (comp as Record<string, unknown>)[prop.name];
+    const compRecord = comp as Record<string, unknown>;
+    const value = compRecord[prop.name];
+    if (
+      sanitizeInvalidStringEnumProp(
+        compRecord,
+        spec,
+        prop,
+        value,
+        warnings,
+      )
+    ) {
+      continue;
+    }
     const propErrors = validateValueAgainstSchema(
-      value,
+      compRecord[prop.name],
       prop.schema,
       `${comp.id}.${prop.name}`,
     );
     errors.push(...propErrors);
   }
+}
+
+function sanitizeInvalidStringEnumProp(
+  comp: Record<string, unknown>,
+  spec: A2UIComponentSpec,
+  prop: A2UIComponentProp,
+  value: unknown,
+  warnings: string[],
+): boolean {
+  if (typeof value !== 'string') return false;
+  if (!prop.schema) return false;
+  const enumValues = collectStringEnumValues(prop.schema);
+  if (enumValues.length === 0 || enumValues.includes(value)) return false;
+
+  const path = `${String(comp.id)}.${prop.name}`;
+  if (!prop.required) {
+    delete comp[prop.name];
+    warnings.push(
+      `Prop ${path} received unsupported value ${
+        JSON.stringify(value)
+      }; omitted it so ${spec.name} can use its default. Allowed values: ${
+        enumValues.join(', ')
+      }.`,
+    );
+    return true;
+  }
+
+  const fallback = enumValues[0];
+  comp[prop.name] = fallback;
+  warnings.push(
+    `Prop ${path} received unsupported value ${
+      JSON.stringify(value)
+    }; replaced with ${JSON.stringify(fallback)}. Allowed values: ${
+      enumValues.join(', ')
+    }.`,
+  );
+  return true;
 }
 
 function validateRendererSemantics(
@@ -743,6 +799,14 @@ function validateValueAgainstSchema(
       validateValueAgainstSchema(value, branch, path)
     );
     if (branchErrors.some((branch) => branch.length === 0)) return [];
+    const enumValues = collectStringEnumValues(schema);
+    if (enumValues.length > 0) {
+      return [
+        `Prop ${path} must be one of ${enumValues.join(', ')}; received ${
+          JSON.stringify(value)
+        }.`,
+      ];
+    }
     return [
       `Prop ${path} does not match any allowed shape: ${
         branchErrors.map((branch) => branch[0]).filter(Boolean).join(' | ')
@@ -803,6 +867,20 @@ function validateValueAgainstSchema(
     default:
       return errors;
   }
+}
+
+function collectStringEnumValues(schema: JsonSchema): string[] {
+  const values: string[] = [];
+  const visit = (candidate: JsonSchema) => {
+    if (Array.isArray(candidate.enum)) {
+      for (const value of candidate.enum) {
+        if (typeof value === 'string') values.push(value);
+      }
+    }
+    for (const branch of candidate.oneOf ?? []) visit(branch);
+  };
+  visit(schema);
+  return [...new Set(values)];
 }
 
 function validateObjectAgainstSchema(
