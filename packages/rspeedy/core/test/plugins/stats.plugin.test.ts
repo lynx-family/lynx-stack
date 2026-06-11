@@ -72,9 +72,8 @@ describe('stats plugin', () => {
       const statsJson = JSON.parse(
         await readFile(path.join(root, 'dist/stats.json'), 'utf-8'),
       ) as StatsJson
-      const compilations = (statsJson.children?.length ?? 0) > 0
-        ? statsJson.children
-        : [statsJson]
+      const children = statsJson.children ?? []
+      const compilations = children.length > 0 ? children : [statsJson]
 
       expect(compilations.length).toBeGreaterThan(0)
       for (const compilation of compilations) {
