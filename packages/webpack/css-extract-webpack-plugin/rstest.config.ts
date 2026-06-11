@@ -5,12 +5,14 @@ import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 import { defineConfig } from '@rstest/core';
+import type { RstestConfig } from '@rstest/core';
 
 import { lynxRstestConfig } from '@lynx-js/test-tools/rstest-config';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
-export default defineConfig({
+// Explicitly typed: `--isolatedDeclarations` cannot infer default exports.
+const config: RstestConfig = defineConfig({
   ...lynxRstestConfig({
     name: 'webpack/css-extract',
     url: import.meta.url,
@@ -37,3 +39,5 @@ export default defineConfig({
   }),
   globalSetup: ['./test/helper/setup-loader.js', './test/helper/setup-dist.js'],
 });
+
+export default config;
