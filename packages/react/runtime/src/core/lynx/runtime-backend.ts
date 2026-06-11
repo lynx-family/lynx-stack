@@ -9,7 +9,7 @@ export type RuntimeBackend =
   | typeof RUNTIME_BACKEND_SNAPSHOT
   | typeof RUNTIME_BACKEND_ELEMENT_TEMPLATE;
 
-export const sRuntimeBackend = Symbol.for('__REACT_LYNX_RUNTIME_BACKEND__');
+export const sRuntimeBackend: symbol = Symbol.for('__REACT_LYNX_RUNTIME_BACKEND__');
 
 export function registerRuntimeBackend(backend: RuntimeBackend): void {
   const target = (__LEPUS__ ? globalThis : lynx) as typeof globalThis & Record<symbol, unknown>;
