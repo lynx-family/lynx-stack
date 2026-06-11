@@ -1472,9 +1472,6 @@ importers:
       '@rspack/core':
         specifier: 2.0.6
         version: 2.0.6(@swc/helpers@0.5.23)
-      '@rspack/test-tools':
-        specifier: catalog:rspack
-        version: 2.0.6(@rspack/core@2.0.6(@swc/helpers@0.5.23))(lightningcss@1.31.1)(tslib@2.8.1)(webpack@5.105.2(lightningcss@1.31.1))
       '@rstest/core':
         specifier: catalog:rstest
         version: 0.10.3(core-js@3.48.0)(jsdom@27.4.0)
@@ -2139,9 +2136,6 @@ importers:
       '@rspack/core':
         specifier: 2.0.6
         version: 2.0.6(@swc/helpers@0.5.23)
-      '@rspack/test-tools':
-        specifier: catalog:rspack
-        version: 2.0.6(@rspack/core@2.0.6(@swc/helpers@0.5.23))(lightningcss@1.31.1)(tslib@2.8.1)(webpack@5.105.2(lightningcss@1.31.1))
       '@rstest/core':
         specifier: catalog:rstest
         version: 0.10.3(core-js@3.48.0)(jsdom@27.4.0)
@@ -2161,9 +2155,6 @@ importers:
       '@rspack/core':
         specifier: 2.0.6
         version: 2.0.6(@swc/helpers@0.5.23)
-      '@rspack/test-tools':
-        specifier: catalog:rspack
-        version: 2.0.6(@rspack/core@2.0.6(@swc/helpers@0.5.23))(lightningcss@1.31.1)(postcss@8.5.14)(tslib@2.8.1)(webpack@5.105.2(lightningcss@1.31.1)(postcss@8.5.14))
       '@rstest/core':
         specifier: catalog:rstest
         version: 0.10.3(core-js@3.48.0)(jsdom@27.4.0)
@@ -2195,9 +2186,6 @@ importers:
       '@rspack/core':
         specifier: 2.0.6
         version: 2.0.6(@swc/helpers@0.5.23)
-      '@rspack/test-tools':
-        specifier: catalog:rspack
-        version: 2.0.6(@rspack/core@2.0.6(@swc/helpers@0.5.23))(lightningcss@1.31.1)(tslib@2.8.1)(webpack@5.105.2(lightningcss@1.31.1))
       '@rstest/core':
         specifier: catalog:rstest
         version: 0.10.3(core-js@3.48.0)(jsdom@27.4.0)
@@ -2216,9 +2204,6 @@ importers:
       '@rspack/core':
         specifier: 2.0.6
         version: 2.0.6(@swc/helpers@0.5.23)
-      '@rspack/test-tools':
-        specifier: catalog:rspack
-        version: 2.0.6(@rspack/core@2.0.6(@swc/helpers@0.5.23))(lightningcss@1.31.1)(tslib@2.8.1)(webpack@5.105.2(lightningcss@1.31.1))
       '@rstest/core':
         specifier: catalog:rstest
         version: 0.10.3(core-js@3.48.0)(jsdom@27.4.0)
@@ -2255,9 +2240,6 @@ importers:
       '@rspack/lite-tapable':
         specifier: 1.1.0
         version: 1.1.0
-      '@rspack/test-tools':
-        specifier: catalog:rspack
-        version: 2.0.6(@rspack/core@2.0.6(@swc/helpers@0.5.23))(@swc/core@1.15.30(@swc/helpers@0.5.23))(lightningcss@1.31.1)(tslib@2.8.1)(webpack@5.105.2(@swc/core@1.15.30(@swc/helpers@0.5.23))(lightningcss@1.31.1))
       '@rstest/core':
         specifier: catalog:rstest
         version: 0.10.3(core-js@3.48.0)(jsdom@27.4.0)
@@ -2298,9 +2280,6 @@ importers:
       '@rspack/lite-tapable':
         specifier: 1.1.0
         version: 1.1.0
-      '@rspack/test-tools':
-        specifier: catalog:rspack
-        version: 2.0.6(@rspack/core@2.0.6(@swc/helpers@0.5.23))(@swc/core@1.15.30(@swc/helpers@0.5.23))(lightningcss@1.31.1)(tslib@2.8.1)(webpack@5.105.2(@swc/core@1.15.30(@swc/helpers@0.5.23))(lightningcss@1.31.1))
       '@rstest/core':
         specifier: catalog:rstest
         version: 0.10.3(core-js@3.48.0)(jsdom@27.4.0)
@@ -2326,9 +2305,6 @@ importers:
       '@rspack/core':
         specifier: 2.0.6
         version: 2.0.6(@swc/helpers@0.5.23)
-      '@rspack/test-tools':
-        specifier: catalog:rspack
-        version: 2.0.6(@rspack/core@2.0.6(@swc/helpers@0.5.23))(lightningcss@1.31.1)(tslib@2.8.1)(webpack@5.105.2(lightningcss@1.31.1))
       '@rstest/core':
         specifier: catalog:rstest
         version: 0.10.3(core-js@3.48.0)(jsdom@27.4.0)
@@ -2372,9 +2348,6 @@ importers:
       '@rspack/core':
         specifier: 2.0.6
         version: 2.0.6(@swc/helpers@0.5.23)
-      '@rspack/test-tools':
-        specifier: catalog:rspack
-        version: 2.0.6(@rspack/core@2.0.6(@swc/helpers@0.5.23))(lightningcss@1.31.1)(tslib@2.8.1)(webpack@5.105.2(lightningcss@1.31.1))
       '@rstest/core':
         specifier: catalog:rstest
         version: 0.10.3(core-js@3.48.0)(jsdom@27.4.0)
@@ -15905,94 +15878,6 @@ snapshots:
     transitivePeerDependencies:
       - '@emnapi/core'
       - '@emnapi/runtime'
-
-  '@rspack/test-tools@2.0.6(@rspack/core@2.0.6(@swc/helpers@0.5.23))(@swc/core@1.15.30(@swc/helpers@0.5.23))(lightningcss@1.31.1)(tslib@2.8.1)(webpack@5.105.2(@swc/core@1.15.30(@swc/helpers@0.5.23))(lightningcss@1.31.1))':
-    dependencies:
-      '@babel/generator': 7.29.7
-      '@babel/parser': 7.29.7
-      '@babel/traverse': 7.29.7
-      '@babel/types': 7.29.7
-      '@rspack/core': 2.0.6(@swc/helpers@0.5.23)
-      chalk: 4.1.2
-      cross-env: 10.1.0
-      filenamify: 4.3.0
-      fs-extra: 11.3.5
-      iconv-lite: 0.7.2
-      javascript-stringify: 2.1.0
-      jest-diff: 30.4.1
-      jsdom: 26.1.0
-      memfs: 4.57.3(tslib@2.8.1)
-      path-serializer: 0.6.0
-      pretty-format: 30.3.0
-      rimraf: 5.0.10
-      rspack-merge: 0.1.1
-      source-map: 0.7.6
-      terser-webpack-plugin: 5.6.0(@swc/core@1.15.30(@swc/helpers@0.5.23))(lightningcss@1.31.1)(webpack@5.105.2(@swc/core@1.15.30(@swc/helpers@0.5.23))(lightningcss@1.31.1))
-      wast-loader: 1.14.1
-      webpack-sources: 3.3.4
-    transitivePeerDependencies:
-      - '@minify-html/node'
-      - '@swc/core'
-      - '@swc/css'
-      - '@swc/html'
-      - bufferutil
-      - canvas
-      - clean-css
-      - cssnano
-      - csso
-      - esbuild
-      - html-minifier-terser
-      - lightningcss
-      - postcss
-      - supports-color
-      - tslib
-      - uglify-js
-      - utf-8-validate
-      - webpack
-
-  '@rspack/test-tools@2.0.6(@rspack/core@2.0.6(@swc/helpers@0.5.23))(lightningcss@1.31.1)(postcss@8.5.14)(tslib@2.8.1)(webpack@5.105.2(lightningcss@1.31.1)(postcss@8.5.14))':
-    dependencies:
-      '@babel/generator': 7.29.7
-      '@babel/parser': 7.29.7
-      '@babel/traverse': 7.29.7
-      '@babel/types': 7.29.7
-      '@rspack/core': 2.0.6(@swc/helpers@0.5.23)
-      chalk: 4.1.2
-      cross-env: 10.1.0
-      filenamify: 4.3.0
-      fs-extra: 11.3.5
-      iconv-lite: 0.7.2
-      javascript-stringify: 2.1.0
-      jest-diff: 30.4.1
-      jsdom: 26.1.0
-      memfs: 4.57.3(tslib@2.8.1)
-      path-serializer: 0.6.0
-      pretty-format: 30.3.0
-      rimraf: 5.0.10
-      rspack-merge: 0.1.1
-      source-map: 0.7.6
-      terser-webpack-plugin: 5.6.0(lightningcss@1.31.1)(postcss@8.5.14)(webpack@5.105.2(lightningcss@1.31.1)(postcss@8.5.14))
-      wast-loader: 1.14.1
-      webpack-sources: 3.3.4
-    transitivePeerDependencies:
-      - '@minify-html/node'
-      - '@swc/core'
-      - '@swc/css'
-      - '@swc/html'
-      - bufferutil
-      - canvas
-      - clean-css
-      - cssnano
-      - csso
-      - esbuild
-      - html-minifier-terser
-      - lightningcss
-      - postcss
-      - supports-color
-      - tslib
-      - uglify-js
-      - utf-8-validate
-      - webpack
 
   '@rspack/test-tools@2.0.6(@rspack/core@2.0.6(@swc/helpers@0.5.23))(lightningcss@1.31.1)(tslib@2.8.1)(webpack@5.105.2(lightningcss@1.31.1))':
     dependencies:

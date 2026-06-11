@@ -58,7 +58,17 @@ export function lynxRstestConfig(options: LynxRstestConfigOptions): {
   testTimeout: number;
   include: string[];
   exclude: string[];
-  output: { externals: (string | RegExp | Record<string, string>)[] };
+  output: {
+    externals: (
+      | string
+      | RegExp
+      | Record<string, string>
+      | ((
+        data: { request?: string },
+        callback: (err?: Error, result?: string) => void,
+      ) => void)
+    )[];
+  };
   setupFiles: string[];
   env: Record<string, string>;
 } {
@@ -74,7 +84,29 @@ export function lynxRstestConfig(options: LynxRstestConfigOptions): {
     include: options.include ?? ['test/**/*.{test,spec}.{js,ts}'],
     exclude: ['**/node_modules/**', ...options.exclude ?? []],
     output: {
-      externals: [/^@rspack\//, ...options.externals ?? []],
+      externals: [
+        // Load `@rspack/*` natively, resolved from THIS package (the only one
+        // declaring them) — consumers depend solely on `@lynx-js/test-tools`.
+        // Requests the wrapper itself cannot resolve (e.g.
+        // `@rspack/lite-tapable`) fall through and stay bundled.
+        (
+          { request }: { request?: string },
+          callback: (err?: Error, result?: string) => void,
+        ) => {
+          if (request?.startsWith('@rspack/')) {
+            try {
+              return callback(
+                undefined,
+                `node-commonjs ${require.resolve(request)}`,
+              );
+            } catch {
+              // Not a wrapper dependency — let rstest bundle it.
+            }
+          }
+          callback();
+        },
+        ...options.externals ?? [],
+      ],
     },
     setupFiles: [
       require.resolve('@rspack/test-tools/setup-env'),

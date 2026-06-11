@@ -42,7 +42,6 @@
     "@lynx-js/chunk-loading-webpack-plugin": "workspace:*",
     "@lynx-js/test-tools": "workspace:*",
     "@rspack/core": "catalog:rspack",
-    "@rspack/test-tools": "catalog:rspack",
     "@rstest/core": "catalog:rstest"
   },
   "engines": {
