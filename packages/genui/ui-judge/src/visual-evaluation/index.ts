@@ -7,18 +7,16 @@ export {
   evaluateImagesWithMidscene,
   normalizeEvaluationResult,
 } from './evaluation-api.js';
-export {
-  createVisualEvaluationServer,
-  handleVisualEvaluationRequest,
-} from './http.js';
 export { runVisualEvaluation } from './service.js';
-export type { VisualEvaluationHttpOptions } from './http.js';
 export type {
   AlignResult,
   CaptureFn,
   CaptureOptions,
   CompareResult,
   EvaluateFn,
+  EvaluationIssue,
+  EvaluationIssueCategory,
+  EvaluationIssueSeverity,
   EvaluationResult,
   RunVisualEvaluationOptions,
   VisualEvaluationAlignOptions,

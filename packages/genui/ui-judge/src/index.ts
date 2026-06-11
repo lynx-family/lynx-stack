@@ -6,9 +6,7 @@ export { judgePage } from './judge-page.js';
 export {
   VISUAL_EVALUATION_SYSTEM_PROMPT,
   VISUAL_EVALUATION_USER_PROMPT,
-  createVisualEvaluationServer,
   evaluateImagesWithMidscene,
-  handleVisualEvaluationRequest,
   normalizeEvaluationResult,
   runVisualEvaluation,
 } from './visual-evaluation/index.js';
@@ -27,6 +25,9 @@ export type {
   CaptureOptions,
   CompareResult,
   EvaluateFn,
+  EvaluationIssue,
+  EvaluationIssueCategory,
+  EvaluationIssueSeverity,
   EvaluationResult,
   RunVisualEvaluationOptions,
   VisualEvaluationAlignOptions,
@@ -35,7 +36,6 @@ export type {
   VisualEvaluationCompareOptions,
   VisualEvaluationErrorCode,
   VisualEvaluationErrorResponse,
-  VisualEvaluationHttpOptions,
   VisualEvaluationMetrics,
   VisualEvaluationRequest,
   VisualEvaluationResponse,

@@ -26,17 +26,17 @@ export async function compareImages(
   devicePath: string,
   options: CompareImagesOptions,
 ): Promise<CompareResult> {
-  const [referenceMetadata, deviceMetadata] = await Promise.all([
+  const [referenceImageMetadata, deviceImageMetadata] = await Promise.all([
     sharp(referencePath).metadata(),
     sharp(devicePath).metadata(),
   ]);
   const width = Math.min(
-    referenceMetadata.width ?? 0,
-    deviceMetadata.width ?? 0,
+    referenceImageMetadata.width ?? 0,
+    deviceImageMetadata.width ?? 0,
   );
   const height = Math.min(
-    referenceMetadata.height ?? 0,
-    deviceMetadata.height ?? 0,
+    referenceImageMetadata.height ?? 0,
+    deviceImageMetadata.height ?? 0,
   );
 
   if (width <= 0 || height <= 0) {
@@ -55,6 +55,7 @@ export async function compareImages(
   const threshold = options.threshold ?? DEFAULT_COMPARE_OPTIONS.threshold;
   const pixelTolerance = options.pixelTolerance
     ?? DEFAULT_COMPARE_OPTIONS.pixelTolerance;
+  const pixelToleranceSquared = pixelTolerance * pixelTolerance;
   const blockColumns = Math.ceil(width / blockSize);
   const blockRows = Math.ceil(height / blockSize);
   const blockStats = Array.from(
@@ -66,7 +67,7 @@ export async function compareImages(
   for (let y = 0; y < height; y++) {
     for (let x = 0; x < width; x++) {
       const index = (y * width + x) * 4;
-      const distance = getNormalizedRgbaDistance(
+      const distanceSquared = getNormalizedRgbaDistanceSquared(
         reference.data,
         device.data,
         index,
@@ -77,7 +78,7 @@ export async function compareImages(
       if (!block) continue;
 
       block.pixels++;
-      if (distance > pixelTolerance) {
+      if (distanceSquared > pixelToleranceSquared) {
         block.differentPixels++;
         diffData[index] = 255;
         diffData[index + 1] = 0;
@@ -153,7 +154,7 @@ async function toRawRgbaImage(
   };
 }
 
-function getNormalizedRgbaDistance(
+function getNormalizedRgbaDistanceSquared(
   reference: Buffer,
   device: Buffer,
   index: number,
@@ -165,5 +166,5 @@ function getNormalizedRgbaDistance(
     sumSquares += delta * delta;
   }
 
-  return Math.sqrt(sumSquares) / Math.sqrt(4 * 255 * 255);
+  return sumSquares / (4 * 255 * 255);
 }

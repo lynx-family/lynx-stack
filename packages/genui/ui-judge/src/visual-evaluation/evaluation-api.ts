@@ -13,6 +13,17 @@ import type { EvaluationResult } from './types.js';
 
 type EvaluationIssue = NonNullable<EvaluationResult['issues']>[number];
 
+const ALLOWED_ISSUE_CATEGORIES = new Set([
+  'layout',
+  'spacing',
+  'typography',
+  'color',
+  'asset',
+  'state',
+  'completeness',
+  'other',
+]);
+
 export const VISUAL_EVALUATION_SYSTEM_PROMPT =
   `You are a strict visual quality evaluator for UI implementation fidelity.
 
@@ -184,15 +195,26 @@ export function normalizeEvaluationResult(raw: unknown): EvaluationResult {
   const result: EvaluationResult = {
     ...candidate,
     issues: normalizeEvaluationIssues(candidate['issues']),
-    reason: typeof candidate['reason'] === 'string'
-      ? candidate['reason']
-      : '',
     score: Math.max(0, Math.min(1, score)),
   };
 
-  if (typeof candidate['summary'] === 'string') {
-    result.summary = candidate['summary'];
+  if (typeof candidate['reason'] !== 'string') {
+    throw createVisualEvaluationError(
+      502,
+      'EVALUATION_API_ERROR',
+      'Evaluation result is missing required "reason" string.',
+    );
   }
+  if (typeof candidate['summary'] !== 'string') {
+    throw createVisualEvaluationError(
+      502,
+      'EVALUATION_API_ERROR',
+      'Evaluation result is missing required "summary" string.',
+    );
+  }
+
+  result.reason = candidate['reason'];
+  result.summary = candidate['summary'];
 
   return result;
 }
@@ -245,6 +267,7 @@ function isEvaluationIssue(value: unknown): value is EvaluationIssue {
 
   const issue = value as Record<string, unknown>;
   return typeof issue['category'] === 'string'
+    && ALLOWED_ISSUE_CATEGORIES.has(issue['category'])
     && typeof issue['description'] === 'string'
     && (
       issue['severity'] === 'low'
@@ -257,8 +280,15 @@ async function getDataUrlImageSize(dataUrl: string): Promise<Size> {
   const commaIndex = dataUrl.indexOf(',');
   const base64 = commaIndex === -1 ? dataUrl : dataUrl.slice(commaIndex + 1);
   const metadata = await sharp(Buffer.from(base64, 'base64')).metadata();
+  if (!metadata.width || !metadata.height) {
+    throw createVisualEvaluationError(
+      502,
+      'EVALUATION_API_ERROR',
+      'Unable to extract image dimensions for visual evaluation.',
+    );
+  }
   return {
-    height: metadata.height ?? 1,
-    width: metadata.width ?? 1,
+    height: metadata.height,
+    width: metadata.width,
   };
 }

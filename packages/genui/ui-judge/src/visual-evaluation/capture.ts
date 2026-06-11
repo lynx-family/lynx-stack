@@ -13,10 +13,11 @@ const DEFAULT_NAVIGATION_TIMEOUT_MS = 30_000;
 export const defaultCapture: CaptureFn = async (
   options: CaptureOptions,
 ): Promise<string | undefined> => {
-  const maxRetry = Math.max(
-    1,
-    Math.ceil(options.maxRetry ?? DEFAULT_MAX_RETRY),
-  );
+  const requestedRetry = options.maxRetry ?? DEFAULT_MAX_RETRY;
+  const normalizedRetry = Number.isFinite(requestedRetry)
+    ? Math.ceil(requestedRetry)
+    : DEFAULT_MAX_RETRY;
+  const maxRetry = Math.max(1, normalizedRetry);
   let latestError: unknown;
 
   for (let attempt = 1; attempt <= maxRetry; attempt++) {

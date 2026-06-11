@@ -4,10 +4,7 @@
 
 ```ts
 
-import type { IncomingMessage } from 'node:http';
 import type { Page } from '@playwright/test';
-import type { Server } from 'node:http';
-import type { ServerResponse } from 'node:http';
 
 // Warning: (ae-missing-release-tag) "AlignResult" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
 //
@@ -77,11 +74,6 @@ export interface CompareResult {
     width: number;
 }
 
-// Warning: (ae-missing-release-tag) "createVisualEvaluationServer" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
-//
-// @public (undocumented)
-export function createVisualEvaluationServer(options?: VisualEvaluationHttpOptions): Server;
-
 // Warning: (ae-missing-release-tag) "EvaluateFn" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
 //
 // @public (undocumented)
@@ -92,6 +84,28 @@ export type EvaluateFn = (image1DataUrl: string, image2DataUrl: string) => Promi
 // @public (undocumented)
 export function evaluateImagesWithMidscene(referenceImageDataUrl: string, renderedImageDataUrl: string): Promise<EvaluationResult>;
 
+// Warning: (ae-missing-release-tag) "EvaluationIssue" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
+//
+// @public (undocumented)
+export interface EvaluationIssue {
+    // (undocumented)
+    category: EvaluationIssueCategory;
+    // (undocumented)
+    description: string;
+    // (undocumented)
+    severity: EvaluationIssueSeverity;
+}
+
+// Warning: (ae-missing-release-tag) "EvaluationIssueCategory" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
+//
+// @public (undocumented)
+export type EvaluationIssueCategory = 'asset' | 'color' | 'completeness' | 'layout' | 'other' | 'spacing' | 'state' | 'typography';
+
+// Warning: (ae-missing-release-tag) "EvaluationIssueSeverity" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
+//
+// @public (undocumented)
+export type EvaluationIssueSeverity = 'high' | 'low' | 'medium';
+
 // Warning: (ae-missing-release-tag) "EvaluationResult" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
 //
 // @public (undocumented)
@@ -99,11 +113,7 @@ export interface EvaluationResult {
     // (undocumented)
     [key: string]: unknown;
     // (undocumented)
-    issues?: Array<{
-        category: string;
-        description: string;
-        severity: 'high' | 'low' | 'medium';
-    }>;
+    issues?: EvaluationIssue[];
     // (undocumented)
     reason?: string;
     // (undocumented)
@@ -111,11 +121,6 @@ export interface EvaluationResult {
     // (undocumented)
     summary?: string;
 }
-
-// Warning: (ae-missing-release-tag) "handleVisualEvaluationRequest" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
-//
-// @public (undocumented)
-export function handleVisualEvaluationRequest(req: IncomingMessage, res: ServerResponse, options?: VisualEvaluationHttpOptions): Promise<void>;
 
 // Warning: (ae-missing-release-tag) "judgeAndroidAgent" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
 //
@@ -306,7 +311,7 @@ export interface VisualEvaluationCompareOptions {
 // Warning: (ae-missing-release-tag) "VisualEvaluationErrorCode" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
 //
 // @public (undocumented)
-export type VisualEvaluationErrorCode = 'CAPTURE_EMPTY_RESULT' | 'CAPTURE_UPSTREAM_ERROR' | 'EVALUATION_API_ERROR' | 'IMAGE_ALIGNMENT_ERROR' | 'IMAGE_COMPARE_ERROR' | 'INVALID_JSON' | 'INVALID_REQUEST' | 'METHOD_NOT_ALLOWED' | 'NOT_FOUND' | 'REFERENCE_IMAGE_FETCH_FAILED' | 'REFERENCE_IMAGE_INVALID' | 'REQUEST_TOO_LARGE' | 'VISUAL_EVALUATION_ERROR';
+export type VisualEvaluationErrorCode = 'CAPTURE_EMPTY_RESULT' | 'CAPTURE_UPSTREAM_ERROR' | 'EVALUATION_API_ERROR' | 'IMAGE_ALIGNMENT_ERROR' | 'IMAGE_COMPARE_ERROR' | 'INVALID_REQUEST' | 'REFERENCE_IMAGE_FETCH_FAILED' | 'REFERENCE_IMAGE_INVALID' | 'VISUAL_EVALUATION_ERROR';
 
 // Warning: (ae-missing-release-tag) "VisualEvaluationErrorResponse" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
 //
@@ -320,16 +325,6 @@ export interface VisualEvaluationErrorResponse {
     ok: false;
     // (undocumented)
     status: number;
-}
-
-// Warning: (ae-missing-release-tag) "VisualEvaluationHttpOptions" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
-//
-// @public (undocumented)
-export interface VisualEvaluationHttpOptions extends RunVisualEvaluationOptions {
-    // (undocumented)
-    endpointPath?: string;
-    // (undocumented)
-    maxBodyBytes?: number;
 }
 
 // Warning: (ae-missing-release-tag) "VisualEvaluationMetrics" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)

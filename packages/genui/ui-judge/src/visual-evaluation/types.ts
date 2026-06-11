@@ -85,16 +85,30 @@ export interface CompareResult {
 }
 
 export interface EvaluationResult {
-  issues?: Array<{
-    category: string;
-    description: string;
-    severity: 'high' | 'low' | 'medium';
-  }>;
+  issues?: EvaluationIssue[];
   reason?: string;
   score?: number;
   summary?: string;
   [key: string]: unknown;
 }
+
+export interface EvaluationIssue {
+  category: EvaluationIssueCategory;
+  description: string;
+  severity: EvaluationIssueSeverity;
+}
+
+export type EvaluationIssueCategory =
+  | 'asset'
+  | 'color'
+  | 'completeness'
+  | 'layout'
+  | 'other'
+  | 'spacing'
+  | 'state'
+  | 'typography';
+
+export type EvaluationIssueSeverity = 'high' | 'low' | 'medium';
 
 export interface CaptureOptions {
   maxRetry?: number;
@@ -119,13 +133,9 @@ export type VisualEvaluationErrorCode =
   | 'EVALUATION_API_ERROR'
   | 'IMAGE_ALIGNMENT_ERROR'
   | 'IMAGE_COMPARE_ERROR'
-  | 'INVALID_JSON'
   | 'INVALID_REQUEST'
-  | 'METHOD_NOT_ALLOWED'
-  | 'NOT_FOUND'
   | 'REFERENCE_IMAGE_FETCH_FAILED'
   | 'REFERENCE_IMAGE_INVALID'
-  | 'REQUEST_TOO_LARGE'
   | 'VISUAL_EVALUATION_ERROR';
 
 export interface VisualEvaluationErrorResponse {

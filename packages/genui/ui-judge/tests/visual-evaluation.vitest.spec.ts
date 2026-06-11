@@ -1,16 +1,13 @@
 // Copyright 2026 The Lynx Authors. All rights reserved.
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
-import { once } from 'node:events';
-import type { AddressInfo } from 'node:net';
-
 import sharp from 'sharp';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
 import {
   VISUAL_EVALUATION_SYSTEM_PROMPT,
   VISUAL_EVALUATION_USER_PROMPT,
-  createVisualEvaluationServer,
+  normalizeEvaluationResult,
   runVisualEvaluation,
 } from '../src/index.js';
 import type {
@@ -104,9 +101,12 @@ describe('runVisualEvaluation', () => {
     );
 
     expect(result.score).toBe(0.9);
-    expect(fetchMock).toHaveBeenCalledWith(
+    const fetchCall = fetchMock.mock.calls[0];
+    expect(fetchCall?.[0]).toEqual(
       new URL('http://example.com/reference.png'),
     );
+    expect(fetchCall?.[1]?.redirect).toBe('error');
+    expect(fetchCall?.[1]?.signal).toBeInstanceOf(AbortSignal);
   });
 
   it('fetches an HTTPS reference image', async () => {
@@ -128,9 +128,12 @@ describe('runVisualEvaluation', () => {
     );
 
     expect(result.score).toBe(0.9);
-    expect(fetchMock).toHaveBeenCalledWith(
+    const fetchCall = fetchMock.mock.calls[0];
+    expect(fetchCall?.[0]).toEqual(
       new URL('https://example.com/reference.png'),
     );
+    expect(fetchCall?.[1]?.redirect).toBe('error');
+    expect(fetchCall?.[1]?.signal).toBeInstanceOf(AbortSignal);
   });
 
   it('rejects invalid request bodies', async () => {
@@ -162,6 +165,55 @@ describe('runVisualEvaluation', () => {
       runVisualEvaluation(
         {
           referenceImage: 'https://example.com/missing.png',
+          templateUrl: 'http://localhost/render.html',
+        },
+        { fetch: fetchMock },
+      ),
+    ).rejects.toMatchObject({
+      code: 'REFERENCE_IMAGE_FETCH_FAILED',
+      status: 502,
+    });
+  });
+
+  it('rejects oversized reference image responses', async () => {
+    const fetchMock = vi.fn<typeof fetch>().mockResolvedValue(
+      new Response('', {
+        headers: {
+          'Content-Length': String(11 * 1024 * 1024),
+          'Content-Type': 'image/png',
+        },
+        status: 200,
+      }),
+    );
+
+    await expect(
+      runVisualEvaluation(
+        {
+          referenceImage: 'https://example.com/large.png',
+          templateUrl: 'http://localhost/render.html',
+        },
+        { fetch: fetchMock },
+      ),
+    ).rejects.toMatchObject({
+      code: 'REFERENCE_IMAGE_FETCH_FAILED',
+      status: 502,
+    });
+  });
+
+  it('rejects non-image reference image responses', async () => {
+    const fetchMock = vi.fn<typeof fetch>().mockResolvedValue(
+      new Response('{}', {
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        status: 200,
+      }),
+    );
+
+    await expect(
+      runVisualEvaluation(
+        {
+          referenceImage: 'https://example.com/reference.json',
           templateUrl: 'http://localhost/render.html',
         },
         { fetch: fetchMock },
@@ -209,6 +261,59 @@ describe('runVisualEvaluation', () => {
     ).rejects.toMatchObject({
       code: 'CAPTURE_EMPTY_RESULT',
       status: 502,
+    });
+  });
+
+  it('maps malformed capture image data as an upstream capture failure', async () => {
+    const reference = await createPatternPng();
+    await expect(
+      runVisualEvaluation(
+        {
+          referenceImage: reference.toString('base64'),
+          templateUrl: 'http://localhost/render.html',
+        },
+        {
+          capture: () => Promise.resolve('not-base64'),
+          evaluate: createEvaluate({ reason: 'unused', score: 0 }),
+        },
+      ),
+    ).rejects.toMatchObject({
+      code: 'CAPTURE_EMPTY_RESULT',
+      status: 502,
+    });
+  });
+
+  it.each([
+    {
+      field: 'capture.maxRetry',
+      request: {
+        capture: { maxRetry: 1.5 },
+        referenceImage: 'abc',
+        templateUrl: 'http://localhost/render.html',
+      },
+    },
+    {
+      field: 'capture.waitTimeMs',
+      request: {
+        capture: { waitTimeMs: 1.5 },
+        referenceImage: 'abc',
+        templateUrl: 'http://localhost/render.html',
+      },
+    },
+    {
+      field: 'compareOptions.blockSize',
+      request: {
+        compareOptions: { blockSize: 1.5 },
+        referenceImage: 'abc',
+        templateUrl: 'http://localhost/render.html',
+      },
+    },
+  ])('rejects non-integer $field', async ({ request }) => {
+    await expect(
+      runVisualEvaluation(request as VisualEvaluationRequest),
+    ).rejects.toMatchObject({
+      code: 'INVALID_REQUEST',
+      status: 400,
     });
   });
 
@@ -285,6 +390,51 @@ describe('runVisualEvaluation', () => {
     });
   });
 
+  it('requires reason and summary when normalizing evaluation results', () => {
+    expect(() =>
+      normalizeEvaluationResult({
+        issues: [],
+        score: 0.5,
+        summary: 'Missing reason.',
+      })
+    ).toThrowError(/reason/);
+    expect(() =>
+      normalizeEvaluationResult({
+        issues: [],
+        reason: 'Missing summary.',
+        score: 0.5,
+      })
+    ).toThrowError(/summary/);
+  });
+
+  it('filters evaluation issues to the prompt category contract', () => {
+    const result = normalizeEvaluationResult({
+      issues: [
+        {
+          category: 'layout',
+          description: 'Main card is shifted.',
+          severity: 'medium',
+        },
+        {
+          category: 'unknown',
+          description: 'Unknown categories should not leak through.',
+          severity: 'high',
+        },
+      ],
+      reason: 'The render mostly matches.',
+      score: 0.75,
+      summary: 'Only contract-compliant issues are returned.',
+    });
+
+    expect(result.issues).toEqual([
+      {
+        category: 'layout',
+        description: 'Main card is shifted.',
+        severity: 'medium',
+      },
+    ]);
+  });
+
   it('exports the scoring prompts verbatim', () => {
     expect(VISUAL_EVALUATION_SYSTEM_PROMPT).toBe(
       `You are a strict visual quality evaluator for UI implementation fidelity.
@@ -358,57 +508,18 @@ Rules for the JSON:
   });
 });
 
-describe('visual evaluation HTTP server', () => {
-  it('returns INVALID_JSON for malformed JSON', async () => {
-    await withVisualEvaluationServer({}, async (baseUrl) => {
-      const response = await fetch(`${baseUrl}/visual-evaluation`, {
-        body: '{"templateUrl":',
-        method: 'POST',
-      });
-      await expect(response.json()).resolves.toMatchObject({
-        code: 'INVALID_JSON',
-        ok: false,
-        status: 400,
-      });
-      expect(response.status).toBe(400);
-    });
-  });
-
-  it('handles POST /visual-evaluation', async () => {
-    const reference = await createPatternPng();
-    await withVisualEvaluationServer(
-      {
-        capture: createCapture(reference),
-        evaluate: createEvaluate({ reason: 'server ok', score: 0.88 }),
-      },
-      async (baseUrl) => {
-        const response = await fetch(`${baseUrl}/visual-evaluation`, {
-          body: JSON.stringify({
-            referenceImage: reference.toString('base64'),
-            templateUrl: 'http://localhost/render.html',
-          }),
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          method: 'POST',
-        });
-        await expect(response.json()).resolves.toMatchObject({
-          ok: true,
-          reason: 'server ok',
-          score: 0.88,
-        });
-        expect(response.status).toBe(200);
-      },
-    );
-  });
-});
-
 function createCapture(image: Buffer): CaptureFn {
   return vi.fn<CaptureFn>().mockResolvedValue(image.toString('base64'));
 }
 
 function createEvaluate(result: Record<string, unknown>): EvaluateFn {
-  return vi.fn<EvaluateFn>().mockResolvedValue(result);
+  return vi.fn<EvaluateFn>().mockResolvedValue({
+    issues: [],
+    reason: 'ok',
+    score: 1,
+    summary: 'The render matches.',
+    ...result,
+  });
 }
 
 async function createPatternPng(
@@ -438,27 +549,4 @@ async function createPatternPng(
       width,
     },
   }).png().toBuffer();
-}
-
-async function withVisualEvaluationServer(
-  options: Parameters<typeof createVisualEvaluationServer>[0],
-  test: (baseUrl: string) => Promise<void>,
-): Promise<void> {
-  const server = createVisualEvaluationServer(options);
-  server.listen(0, '127.0.0.1');
-  await once(server, 'listening');
-  const address = server.address() as AddressInfo;
-  try {
-    await test(`http://127.0.0.1:${address.port}`);
-  } finally {
-    await new Promise<void>((resolve, reject) => {
-      server.close((error) => {
-        if (error) {
-          reject(error);
-          return;
-        }
-        resolve();
-      });
-    });
-  }
 }

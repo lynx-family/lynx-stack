@@ -61,7 +61,7 @@ function validateCaptureOptions(
   const capture: VisualEvaluationCaptureRequestOptions = {};
 
   if (options['maxRetry'] !== undefined) {
-    capture.maxRetry = normalizeFiniteNumber(
+    capture.maxRetry = normalizeFiniteInteger(
       options['maxRetry'],
       'capture.maxRetry',
       (number) => number > 0,
@@ -70,7 +70,7 @@ function validateCaptureOptions(
   }
 
   if (options['waitTimeMs'] !== undefined) {
-    capture.waitTimeMs = normalizeFiniteNumber(
+    capture.waitTimeMs = normalizeFiniteInteger(
       options['waitTimeMs'],
       'capture.waitTimeMs',
       (number) => number >= 0,
@@ -150,6 +150,12 @@ function validateCompareOptions(
     'blockSize',
     'compareOptions.blockSize',
   );
+  if (
+    compareOptions.blockSize !== undefined
+    && !Number.isInteger(compareOptions.blockSize)
+  ) {
+    throw invalidRequest('compareOptions.blockSize must be an integer.');
+  }
   setNonNegativeNumberOption(
     compareOptions,
     options,
@@ -266,6 +272,25 @@ function normalizeFiniteNumber(
   }
 
   return value;
+}
+
+function normalizeFiniteInteger(
+  value: unknown,
+  fieldName: string,
+  validate: (number: number) => boolean,
+  expected: string,
+): number {
+  const normalized = normalizeFiniteNumber(
+    value,
+    fieldName,
+    validate,
+    expected,
+  );
+  if (!Number.isInteger(normalized)) {
+    throw invalidRequest(`${fieldName} must be an integer.`);
+  }
+
+  return normalized;
 }
 
 function isRecord(value: unknown): value is Record<string, unknown> {

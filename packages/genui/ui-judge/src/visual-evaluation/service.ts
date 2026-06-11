@@ -8,6 +8,7 @@ import { defaultCapture } from './capture.js';
 import { compareImages } from './compare-images.js';
 import {
   createVisualEvaluationError,
+  getErrorMessage,
   rethrowAsVisualEvaluationError,
 } from './errors.js';
 import {
@@ -125,11 +126,20 @@ export async function runVisualEvaluation(
 async function normalizeCapturedImage(
   deviceImageBase64: string,
 ): Promise<Buffer> {
-  const buffer = decodeBase64Image(
-    deviceImageBase64,
-    'CAPTURE_EMPTY_RESULT',
-    'Capture returned malformed image data.',
-  );
+  let buffer: Buffer;
+  try {
+    buffer = decodeBase64Image(
+      deviceImageBase64,
+      'CAPTURE_EMPTY_RESULT',
+      'Capture returned malformed image data.',
+    );
+  } catch (error) {
+    throw createVisualEvaluationError(
+      502,
+      'CAPTURE_EMPTY_RESULT',
+      getErrorMessage(error),
+    );
+  }
   return await normalizeImageToPngBuffer(
     buffer,
     502,

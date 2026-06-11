@@ -67,18 +67,15 @@ interface VisualEvaluationResponse {
 }
 ```
 
-For service-style usage, mount the reusable Node handler at
-`POST /visual-evaluation`:
-
-```ts
-import { createVisualEvaluationServer } from '@lynx-js/ui-judge';
-
-const server = createVisualEvaluationServer();
-server.listen(3001);
-```
-
 Tests and custom runtimes can inject `capture` and `evaluate` functions into
-`runVisualEvaluation` or `createVisualEvaluationServer`.
+`runVisualEvaluation`.
+
+`@lynx-js/ui-judge` intentionally exposes only a programming API for visual
+evaluation. It does not create an HTTP endpoint or perform caller
+authentication. If an implementation wires user-controlled requests into
+`runVisualEvaluation`, that implementation must enforce its own trust boundary,
+such as authentication, URL allowlists, and private-network filtering for
+`referenceImage` and `templateUrl`.
 
 `judgeAndroidAgent` judges an Android Lynx screen through a Kitten-Lynx page.
 Callers own the Kitten-Lynx device/app lifecycle, including connection,
