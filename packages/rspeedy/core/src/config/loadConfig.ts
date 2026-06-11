@@ -145,13 +145,12 @@ export async function loadConfig(
   }
 
   try {
-    const [exports, validateModule] = await Promise.all([
+    const [exports, { validate }] = await Promise.all([
       import(
         /* webpackIgnore: true */ `${specifier}?t=${Date.now()}`
       ) as Promise<{ default: ConfigExport } | ConfigExport>,
-      import('./validate.js') as Promise<ValidateModule>,
+      import('./validate.js'),
     ])
-    const validate = resolveValidate(validateModule)
 
     const configExport = 'default' in exports ? exports.default : exports
 
@@ -202,32 +201,6 @@ function hasNativeTSSupport(): boolean {
     || NODE_OPTIONS.includes('--experimental-strip-types')
 }
 
-type Validate = (input: unknown, configPath?: string) => Config
-
-interface ValidateModule {
-  default?: unknown
-  validate?: unknown
-}
-
-function resolveValidate(module: ValidateModule): Validate {
-  if (typeof module.validate === 'function') {
-    return module.validate as Validate
-  }
-
-  if (
-    module.default
-    && typeof module.default === 'object'
-    && 'validate' in module.default
-    && typeof module.default.validate === 'function'
-  ) {
-    return module.default.validate as Validate
-  }
-
-  throw new TypeError(
-    'Expected ./validate.js to export a validate function',
-  )
-}
-
 function isJavaScriptPath(configPath: string): boolean {
   const ext = extname(configPath)
   return ['.js', '.mjs', '.cjs'].includes(ext)
@@ -243,8 +216,4 @@ function isDeno(): boolean {
 
 export function TEST_ONLY_hasNativeTSSupport(): boolean {
   return hasNativeTSSupport()
-}
-
-export function TEST_ONLY_resolveValidate(module: ValidateModule): Validate {
-  return resolveValidate(module)
 }

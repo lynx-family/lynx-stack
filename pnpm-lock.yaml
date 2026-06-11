@@ -1343,9 +1343,6 @@ importers:
       '@rsdoctor/core':
         specifier: ~1.5.6
         version: 1.5.6(@emnapi/core@1.10.0)(@emnapi/runtime@1.10.0)(@rsbuild/core@2.0.11(core-js@3.48.0))(@rspack/core@2.0.6(@swc/helpers@0.5.23))(webpack@5.105.2(@swc/core@1.15.30(@swc/helpers@0.5.23))(lightningcss@1.31.1)(postcss@8.5.14))
-      '@rspack/core':
-        specifier: 2.0.6
-        version: 2.0.6(@swc/helpers@0.5.23)
       '@swc/core':
         specifier: ^1.15.30
         version: 1.15.30(@swc/helpers@0.5.23)
