@@ -8,6 +8,7 @@ const config: Config = {
   theme: {
     extend: {
       colors: {
+        'lynx-primary': 'var(--lynx-primary)',
         base: {
           DEFAULT: 'var(--color-base-1)',
           1: 'var(--color-base-1)',

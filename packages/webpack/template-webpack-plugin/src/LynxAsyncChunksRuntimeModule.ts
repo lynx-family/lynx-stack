@@ -35,8 +35,8 @@ ${RuntimeGlobals.lynxAsyncChunkIds} = {${
             const filename = this.getChunkName(c.name!);
 
             // Modified from https://github.com/webpack/webpack/blob/11449f02175f055a4540d76aa4478958c4cb297e/lib/runtime/GetChunkFilenameRuntimeModule.js#L154-L157
-            // `hashWithLength` is honored at runtime but missing from rspack's
-            // `PathData` type.
+            // Rspack currently ignores `hashWithLength` (also missing from its
+            // `PathData` type, hence the cast); kept for when it gains support.
             const pathData = {
               hash: `" + ${webpack.RuntimeGlobals.getFullHash}() + "`,
               hashWithLength: (length: number) =>

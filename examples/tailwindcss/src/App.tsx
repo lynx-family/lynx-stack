@@ -12,7 +12,7 @@ export function App() {
 
   return (
     <page>
-      <view className='w-full h-full bg-primary'>
+      <view className='text-2xl font-bold text-lynx-primary bg-lynx-primary'>
         <view
           className='absolute inset-10 top-24 bg-secondary flex flex-col justify-center items-center shadow-lg'
           bindtap={() => setReset(prev => !prev)}

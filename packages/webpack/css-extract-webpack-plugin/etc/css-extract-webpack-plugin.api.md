@@ -12,14 +12,14 @@ import { LynxTemplatePlugin } from '@lynx-js/template-webpack-plugin';
 export class CssExtractRspackPlugin {
     constructor(options?: CssExtractRspackPluginOptions | undefined);
     apply(compiler: Compiler): void;
-    static defaultOptions: Readonly<CssExtractRspackPluginOptions>;
+    static defaultOptions: Readonly<CssExtractRspackPluginOptions & Pick<Required<CssExtractRspackPluginOptions>, 'cssPlugins'>>;
     static loader: string;
 }
 
 // @public
 export interface CssExtractRspackPluginOptions extends CssExtractRspackPluginOptions_2 {
     chunkFilename?: string;
-    cssPlugins: Parameters<typeof LynxTemplatePlugin.convertCSSChunksToMap>[1];
+    cssPlugins?: Parameters<typeof LynxTemplatePlugin.convertCSSChunksToMap>[1];
     filename?: string;
 }
 
