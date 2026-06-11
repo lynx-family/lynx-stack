@@ -402,4 +402,25 @@ export interface Output {
    * @defaultValue When this option is unset in Lynx builds, JavaScript source maps use `'cheap-module-source-map'` in development and `'source-map'` in production; CSS source maps are also generated. All `.map` assets are removed before emit.
    */
   sourceMap?: boolean | SourceMap | undefined
+
+  /**
+   * Whether to disable TypeScript type checking.
+   *
+   * Rspeedy type-checks your project against its `tsconfig.json` during `build`
+   * by default. Set this to `true` to turn the type checker off.
+   *
+   * @defaultValue `false`
+   *
+   * @example
+   *
+   * ```js
+   * import { defineConfig } from '@lynx-js/rspeedy'
+   * export default defineConfig({
+   *   output: {
+   *     disableTsChecker: true,
+   *   },
+   * })
+   * ```
+   */
+  disableTsChecker?: boolean | undefined
 }

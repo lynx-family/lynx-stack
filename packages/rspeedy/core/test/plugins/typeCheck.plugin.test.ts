@@ -42,6 +42,16 @@ describe('typeCheck.plugin', () => {
     expect(countTypeCheckers(config)).toBe(0)
   })
 
+  test('should not apply type-check when output.disableTsChecker is true', async () => {
+    const rsbuild = await createStubRspeedy({
+      output: { disableTsChecker: true },
+    })
+
+    expect(rsbuild.isPluginExists(PLUGIN_TYPE_CHECK_NAME)).toBe(false)
+    const config = await rsbuild.unwrapConfig()
+    expect(countTypeCheckers(config)).toBe(0)
+  })
+
   test('should not apply type-check when RSPEEDY_TYPE_CHECK is false', async () => {
     vi.stubEnv('RSPEEDY_TYPE_CHECK', 'false')
 

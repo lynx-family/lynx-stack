@@ -95,13 +95,15 @@ export async function applyDefaultPlugins(
     rsbuildInstance.addPlugins([pluginCssMinimizer()])
   }
 
-  // Apply `@rsbuild/plugin-type-check` by default, unless the user already added
-  // their own type-check plugin or opted out with `RSPEEDY_TYPE_CHECK=false`.
+  // Apply `@rsbuild/plugin-type-check` by default, unless the user opted out with
+  // `output.disableTsChecker` or already added their own type-check plugin.
+  // (`RSPEEDY_TYPE_CHECK=false` is an internal escape hatch for our own tests.)
   const { pluginTypeCheck, PLUGIN_TYPE_CHECK_NAME } = await import(
     '@rsbuild/plugin-type-check'
   )
   if (
-    process.env['RSPEEDY_TYPE_CHECK'] !== 'false'
+    config.output?.disableTsChecker !== true
+    && process.env['RSPEEDY_TYPE_CHECK'] !== 'false'
     && !rsbuildInstance.isPluginExists(PLUGIN_TYPE_CHECK_NAME)
   ) {
     const typeCheck = pluginTypeCheck()
@@ -115,10 +117,11 @@ export async function applyDefaultPlugins(
           if (api.context.action === 'dev') {
             return
           }
-          // On type errors, hint that the built-in type checker can be turned
-          // off. Detected by the TypeScript diagnostic code (`TS1234:`) in the
-          // build errors — `ts-checker-rspack-plugin` does not expose its issue
-          // hook from its public entry.
+          // On type errors, hint that the type checker can be turned off. In
+          // `build`, ts-checker reports issues via `compilation.errors` (its
+          // `logger` is the watch path) and rspack normalizes them, dropping the
+          // `IssueRspackError` marker — so match the TypeScript diagnostic code
+          // (`TS1234:`) in the serialized error text.
           let hintShown = false
           api.onAfterCreateCompiler(({ compiler }) => {
             const compilers = 'compilers' in compiler
@@ -132,12 +135,10 @@ export async function applyDefaultPlugins(
                     return
                   }
                   const { errors } = stats.toJson({ errors: true, all: false })
-                  if (
-                    errors?.some((error) => /\bTS\d+:/.test(error.message))
-                  ) {
+                  if (errors?.some((error) => /\bTS\d+:/.test(error.message))) {
                     hintShown = true
                     logger.warn(
-                      'Found type errors. Set `RSPEEDY_TYPE_CHECK=false` to disable the built-in type checker.',
+                      'Found type errors. Fix them, or set `output.disableTsChecker: true` to skip type checking.',
                     )
                   }
                 },

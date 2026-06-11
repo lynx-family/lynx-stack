@@ -265,6 +265,7 @@ export interface Output {
     copy?: Rspack.CopyRspackPluginOptions | Rspack.CopyRspackPluginOptions['patterns'] | undefined;
     cssModules?: CssModules | undefined;
     dataUriLimit?: number | DataUriLimit | undefined;
+    disableTsChecker?: boolean | undefined;
     distPath?: DistPath | undefined;
     filename?: string | Filename | undefined;
     filenameHash?: boolean | string | undefined;
