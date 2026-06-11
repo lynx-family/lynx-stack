@@ -3,8 +3,9 @@
 // LICENSE file in the root directory of this source tree.
 import vm from 'node:vm';
 
+import { rspack } from '@rspack/core';
+import type { Compilation } from '@rspack/core';
 import { describe, expect, it, rstest } from '@rstest/core';
-import webpack from 'webpack';
 
 import { createLynxCacheEventsSetupListRuntimeModule } from '../src/LynxCacheEventsSetupListRuntimeModule.js';
 
@@ -60,15 +61,15 @@ function createRuntimeSandbox(options: {
   sandbox: RuntimeSandbox;
 } {
   const SetupListRuntimeModule = createLynxCacheEventsSetupListRuntimeModule(
-    webpack,
+    rspack,
   );
   const module = new SetupListRuntimeModule((setupList) => setupList);
 
   module.compilation = {
     compiler: {
-      webpack,
+      webpack: rspack,
     },
-  } as webpack.Compilation;
+  } as Compilation;
 
   const generatedCode = module.generate();
   if (generatedCode === null) {

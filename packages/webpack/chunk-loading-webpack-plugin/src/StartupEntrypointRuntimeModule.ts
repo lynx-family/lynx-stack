@@ -2,7 +2,7 @@
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
 
-import type { RuntimeModule } from 'webpack';
+import type { RuntimeModule } from '@rspack/core';
 
 type StartupEntrypointRuntimeModule = new(
   asyncChunkLoading: boolean,
@@ -17,7 +17,7 @@ const runtimeTemplateReturningFunction = (returnValue: string, args = '') => {
 };
 
 export function createStartupEntrypointRuntimeModule(
-  webpack: typeof import('webpack'),
+  webpack: typeof import('@rspack/core').rspack,
 ): StartupEntrypointRuntimeModule {
   const { RuntimeGlobals, RuntimeModule } = webpack;
   return class StartupEntrypointRuntimeModule extends RuntimeModule {

@@ -4,8 +4,8 @@
 
 import { createRequire } from 'node:module';
 
+import type { Compiler } from '@rspack/core';
 import MiniCssExtractPlugin from 'mini-css-extract-plugin';
-import type { Compiler } from 'webpack';
 
 const require = createRequire(import.meta.url);
 
@@ -126,6 +126,8 @@ class CssExtractWebpackPluginImpl {
       linkType: options.linkType,
       runtime: options.runtime,
       experimentalUseImportModule: options.experimentalUseImportModule,
-    }).apply(compiler);
+    }).apply(
+      compiler as unknown as Parameters<MiniCssExtractPlugin['apply']>[0],
+    );
   }
 }

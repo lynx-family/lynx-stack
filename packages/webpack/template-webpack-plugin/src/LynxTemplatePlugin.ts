@@ -4,20 +4,19 @@
 
 import path from 'node:path';
 
-import {
-  AsyncSeriesBailHook,
-  AsyncSeriesWaterfallHook,
-  SyncWaterfallHook,
-} from '@rspack/lite-tapable';
-import groupBy from 'object.groupby';
 import type {
   Asset,
   Chunk,
   ChunkGroup,
   Compilation,
   Compiler,
-  WebpackError,
-} from 'webpack';
+} from '@rspack/core';
+import {
+  AsyncSeriesBailHook,
+  AsyncSeriesWaterfallHook,
+  SyncWaterfallHook,
+} from '@rspack/lite-tapable';
+import groupBy from 'object.groupby';
 
 import type * as CSS from '@lynx-js/css-serializer';
 import { cssChunksToMap } from '@lynx-js/css-serializer';
@@ -629,7 +628,7 @@ class LynxTemplatePluginImpl {
       const results = await Promise.allSettled(queue.splice(0));
       for (const result of results) {
         if (result.status === 'rejected') {
-          compilation.errors.push(result.reason as WebpackError);
+          compilation.errors.push(result.reason as Error);
         }
       }
     });
@@ -934,7 +933,6 @@ class LynxTemplatePluginImpl {
       });
 
       const filename = compilation.getPath(filenameTemplate, {
-        // @ts-expect-error we have a mock chunk here to make contenthash works in webpack
         chunk: {},
         // Fresh hash per buffer: builds run concurrently, so a shared instance
         // hash would interleave updates across entries.
@@ -968,7 +966,7 @@ class LynxTemplatePluginImpl {
           new compiler.webpack.WebpackError(error.error_msg as string),
         );
       } else {
-        compilation.errors.push(error as WebpackError);
+        compilation.errors.push(error as Error);
       }
     }
   }

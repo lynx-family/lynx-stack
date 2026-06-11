@@ -1,7 +1,0 @@
-WARNING in ./compat/this-selector-query/index.jsx
-Module Warning (from ../../lib/loaders/background.js):
-BROKEN: createSelectorQuery on component instance is broken and MUST be migrated in ReactLynx 3.0, please use ref or lynx.createSelectorQuery instead.
-
-WARNING in ./compat/this-selector-query/index.jsx
-Module Warning (from ../../lib/loaders/background.js):
-BROKEN: getElementById on component instance is broken and MUST be migrated in ReactLynx 3.0, please use ref or lynx.getElementById instead.

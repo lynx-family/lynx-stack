@@ -1,7 +1,0 @@
-WARNING in ./compat/lynx-key/index.jsx
-Module Warning (from ../../lib/loaders/background.js):
-DEPRECATED: lynx-key is changed to key
-
-WARNING in ./compat/lynx-key/index.jsx
-Module Warning (from ../../lib/loaders/background.js):
-DEPRECATED: old runtime package "@lynx-js/react-runtime" is changed to "@lynx-js/react"

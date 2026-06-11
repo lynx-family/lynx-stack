@@ -69,15 +69,6 @@ export interface ITestSuite {
    * ```
    */
   casePath: string;
-  /**
-   * Enable build cache
-   *
-   * @defaultValue `false`
-   *
-   * @remarks
-   * webpack-only
-   */
-  cache?: boolean;
 
   afterExecute?: TAfterExecuteFn | undefined;
 

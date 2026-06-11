@@ -4,7 +4,7 @@
 
 import { pathToFileURL } from 'node:url';
 
-import type { LoaderContext } from 'webpack';
+import type { LoaderContext } from '@rspack/core';
 
 interface NativeModulesLoaderOptions {
   nativeModulesPath: string;

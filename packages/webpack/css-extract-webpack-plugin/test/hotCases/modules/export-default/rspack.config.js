@@ -8,7 +8,7 @@ import { plugins } from '../../../../test/plugins.js'
 import { CssExtractRspackPlugin } from '@lynx-js/css-extract-webpack-plugin'
 import path from 'node:path'
 
-/** @type {import('webpack').Configuration} */
+/** @type {import('@rspack/core').Configuration} */
 export default {
   output: {
     publicPath: 'http://localhost:3000/',

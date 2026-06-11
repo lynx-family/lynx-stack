@@ -35,7 +35,7 @@ import path from 'node:path';
 
 import { createSnapshotSerializer } from 'path-serializer';
 import { beforeAll, expect } from 'vitest';
-import type { Configuration, RuleSetRule } from 'webpack';
+import type { Configuration, RuleSetRule } from '@rspack/core';
 
 declare global {
   var printLogger: boolean;
@@ -105,9 +105,6 @@ expect.extend({
         && rule.use?.some(u => {
           if (typeof u === 'string') {
             return check(u);
-          }
-          if (u === false) {
-            return false;
           }
           return u && 'loader' in u && check(u.loader);
         });

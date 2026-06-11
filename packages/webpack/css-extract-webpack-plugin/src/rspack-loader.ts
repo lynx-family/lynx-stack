@@ -35,7 +35,6 @@ export async function pitch(
     // We make an temporary try-catch here.
     // See: https://github.com/web-infra-dev/rspack/issues/8536
     const resultSource = await load.call(
-      // @ts-expect-error webpack & rspack loaderContext
       this,
       request,
       addDependencies.bind(this),

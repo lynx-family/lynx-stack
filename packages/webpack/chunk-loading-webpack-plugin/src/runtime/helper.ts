@@ -3,14 +3,14 @@
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
 */
-import type { Chunk, Compilation, Module } from 'webpack';
+import type { Chunk, Compilation, Module } from '@rspack/core';
 
 import { RuntimeGlobals as LynxRuntimeGlobals } from '@lynx-js/webpack-runtime-globals';
 
 export const MODULE_TYPE = 'css/mini-extract';
 
 export function generateFromTemplate(
-  webpack: typeof import('webpack'),
+  webpack: typeof import('@rspack/core').rspack,
   runtime: () => void,
 ): string {
   const { Template, RuntimeGlobals: WebpackRuntimeGlobals } = webpack;

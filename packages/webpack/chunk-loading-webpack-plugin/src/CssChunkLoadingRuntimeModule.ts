@@ -1,7 +1,7 @@
 // Copyright 2024 The Lynx Authors. All rights reserved.
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
-import type { RuntimeModule } from 'webpack';
+import type { RuntimeModule } from '@rspack/core';
 
 import { CssRuntimeModule } from './runtime/CssRuntimeModule.js';
 import { getCssChunkObject } from './runtime/helper.js';
@@ -11,7 +11,7 @@ type CssChunkLoadingRuntimeModule = new(
 ) => RuntimeModule;
 
 export function createCssChunkLoadingRuntimeModule(
-  webpack: typeof import('webpack'),
+  webpack: typeof import('@rspack/core').rspack,
 ): CssChunkLoadingRuntimeModule {
   const { RuntimeModule, RuntimeGlobals, Template } = webpack;
 

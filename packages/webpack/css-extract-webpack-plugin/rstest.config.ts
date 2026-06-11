@@ -19,8 +19,6 @@ export default defineConfig({
     // must not be collected as test suites.
     include: ['test/*.test.{js,ts}'],
     externals: [
-      // The standalone webpack-case suite runs real webpack.
-      'webpack',
       // Self-reference resolves to the built `lib` via plain Node, so the test
       // files and the natively-imported case `webpack.config.js` files share
       // the SAME plugin module instances (`instanceof` checks hold).

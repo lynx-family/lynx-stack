@@ -1,3 +1,0 @@
-WARNING in ./compat/react-runtime/index.jsx
-Module Warning (from ../../lib/loaders/background.js):
-DEPRECATED: lynx-key is changed to key

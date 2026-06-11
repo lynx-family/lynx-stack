@@ -56,8 +56,7 @@
     "@rspack/test-tools": "catalog:rspack",
     "@rstest/core": "catalog:rstest",
     "css-loader": "^7.1.4",
-    "sass-loader": "^16.0.7",
-    "webpack": "^5.105.2"
+    "sass-loader": "^16.0.7"
   },
   "peerDependencies": {
     "@lynx-js/template-webpack-plugin": "^0.11.0 || ^0.12.0"

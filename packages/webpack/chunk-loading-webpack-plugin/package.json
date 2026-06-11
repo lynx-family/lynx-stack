@@ -46,8 +46,7 @@
     "@rspack/test-tools": "catalog:rspack",
     "@rstest/core": "catalog:rstest",
     "css-loader": "^7.1.4",
-    "mini-css-extract-plugin": "^2.10.0",
-    "webpack": "^5.105.2"
+    "mini-css-extract-plugin": "^2.10.0"
   },
   "engines": {
     "node": ">=18"

@@ -163,7 +163,6 @@ class CssExtractRspackPluginImpl {
         this.isHMREnabled(compiler)
       ) {
         const hooks = LynxTemplatePlugin.getLynxTemplatePluginHooks(
-          // @ts-expect-error Rspack to Webpack Compilation
           compilation,
         );
 

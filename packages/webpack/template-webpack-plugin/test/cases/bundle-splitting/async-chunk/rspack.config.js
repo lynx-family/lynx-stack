@@ -1,3 +1,14 @@
-import config from './webpack.config.js';
+import { LynxEncodePlugin, LynxTemplatePlugin } from '../../../../lib/index.js';
 
-export default config;
+/** @type {import('@rspack/core').Configuration} */
+export default {
+  devtool: false,
+  mode: 'development',
+  plugins: [
+    new LynxEncodePlugin(),
+    new LynxTemplatePlugin({
+      ...LynxTemplatePlugin.defaultOptions,
+      intermediate: '.rspeedy/main',
+    }),
+  ],
+};

@@ -8,7 +8,7 @@ import { CssExtractRspackPlugin } from '@lynx-js/css-extract-webpack-plugin'
 import { plugins } from '../../../../test/plugins.js'
 import path from 'node:path'
 
-/** @type {import('webpack').Configuration} */
+/** @type {import('@rspack/core').Configuration} */
 export default {
   context: import.meta.dirname,
   entry: {

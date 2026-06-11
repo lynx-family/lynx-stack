@@ -5,8 +5,8 @@ import { createRequire } from 'node:module';
 import { availableParallelism } from 'node:os';
 import { pathToFileURL } from 'node:url';
 
+import type { Chunk, Compiler } from '@rspack/core';
 import Tinypool from 'tinypool';
-import type { Chunk, Compiler } from 'webpack';
 
 import type { EncodeResult } from '@lynx-js/tasm';
 
@@ -290,9 +290,15 @@ export class LynxEncodePluginImpl {
         });
         if (resolvedDiagnostics.length > 0) {
           resolvedDiagnostics.forEach((diagnostic) => {
+            // rspack types `WebpackError` instances as plain `Error`; the
+            // diagnostics fields are runtime-supported.
             const webpackWarning = new compiler.webpack.WebpackError(
               diagnostic.message,
-            );
+            ) as Error & {
+              hideStack?: boolean;
+              file?: string;
+              loc?: { start: { line: number; column: number } };
+            };
             webpackWarning.hideStack = true;
 
             if (
@@ -399,7 +405,7 @@ export class LynxEncodePluginImpl {
    * use for `'lynx:main-thread'`.
    */
   #markTasmSections(
-    compilation: import('webpack').Compilation,
+    compilation: import('@rspack/core').Compilation,
     encodeData: {
       lepusCode: {
         root: { name: string } | undefined;

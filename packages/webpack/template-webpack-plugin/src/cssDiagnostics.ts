@@ -8,7 +8,7 @@ import { fileURLToPath } from 'node:url';
 
 import { TraceMap, originalPositionFor } from '@jridgewell/trace-mapping';
 import type { SourceMapInput } from '@jridgewell/trace-mapping';
-import type { Asset } from 'webpack';
+import type { Asset } from '@rspack/core';
 
 import type * as CSS from '@lynx-js/css-serializer';
 

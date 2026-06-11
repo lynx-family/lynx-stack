@@ -1,7 +1,7 @@
 // Copyright 2025 The Lynx Authors. All rights reserved.
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
-import type { Asset, Compilation, Compiler } from 'webpack'
+import type { Asset, Compilation, Compiler } from '@rspack/core'
 
 import { cssChunksToMap } from '@lynx-js/css-serializer'
 import type { LynxStyleNode } from '@lynx-js/css-serializer'
@@ -120,7 +120,7 @@ export class ExternalBundleWebpackPlugin {
     }
   }
 
-  async #encode(assets: Readonly<Asset>[]) {
+  async #encode(assets: readonly Asset[]) {
     const customSections = assets
       .reduce<
         Record<string, {
@@ -130,7 +130,7 @@ export class ExternalBundleWebpackPlugin {
         }>
       >(
         (prev, cur) => {
-          switch (cur.info['assetType']) {
+          switch (cur.info.assetType) {
             case 'javascript':
               return ({
                 ...prev,

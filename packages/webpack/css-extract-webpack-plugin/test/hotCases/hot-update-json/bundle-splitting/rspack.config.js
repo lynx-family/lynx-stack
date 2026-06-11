@@ -10,7 +10,7 @@ import path from 'node:path'
 import { LynxTemplatePlugin } from '@lynx-js/template-webpack-plugin'
 
 
-/** @type {import('webpack').Configuration} */
+/** @type {import('@rspack/core').Configuration} */
 export default {
   entry: {
     entry: path.resolve(import.meta.dirname, './entry.js')

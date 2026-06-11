@@ -2,7 +2,7 @@ import { createConfig, createEntries } from '../../../create-react-config.js';
 
 const defaultConfig = createConfig(undefined, { mainThreadChunks: [] });
 
-/** @type {import('webpack').Configuration} */
+/** @type {import('@rspack/core').Configuration} */
 export default {
   ...defaultConfig,
   entry: {

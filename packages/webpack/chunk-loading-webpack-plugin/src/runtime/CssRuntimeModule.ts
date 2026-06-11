@@ -18,7 +18,9 @@ export class CssRuntimeModule {
    * @internal
    * @returns CSS load style runtime code
    */
-  static generateLoadStyleRuntime(webpack: typeof import('webpack')): string {
+  static generateLoadStyleRuntime(
+    webpack: typeof import('@rspack/core').rspack,
+  ): string {
     return generateFromTemplate(webpack, loadStyleRuntime);
   }
 
@@ -28,7 +30,7 @@ export class CssRuntimeModule {
    * @returns CSS load style runtime code
    */
   static generateChunkLoadingRuntime(
-    webpack: typeof import('webpack'),
+    webpack: typeof import('@rspack/core').rspack,
     chunkMap: Object,
     installedCssChunks: readonly (string | number)[],
   ): string {
@@ -47,7 +49,7 @@ export class CssRuntimeModule {
    * @returns CSS hmr load chunk runtime code
    */
   static generateHMRLoadChunkRuntime(
-    webpack: typeof import('webpack'),
+    webpack: typeof import('@rspack/core').rspack,
   ): string {
     return generateFromTemplate(webpack, hmrLoadChunkRuntime);
   }

@@ -46,8 +46,8 @@
     "@lynx-js/vitest-setup": "workspace:*",
     "@microsoft/api-extractor": "catalog:",
     "@rslib/core": "0.21.5",
-    "vitest": "^3.2.4",
-    "webpack": "^5.105.2"
+    "@rspack/core": "catalog:rspack",
+    "vitest": "^3.2.4"
   },
   "engines": {
     "node": "^20.19.0 || >=22.12.0"

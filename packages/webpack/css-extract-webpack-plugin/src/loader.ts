@@ -5,8 +5,8 @@
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
+import type { LoaderContext, Module } from '@rspack/core';
 import MiniCssExtractPlugin from 'mini-css-extract-plugin';
-import type { LoaderContext } from 'webpack';
 
 import { extractPathFromIdentifier, stringifyRequest } from './util.js';
 
@@ -348,7 +348,7 @@ export async function pitch(
   const addDependencies = (
     dependencies: Dep[] | [null, Exports | undefined][],
   ) => {
-    const { webpack } = this._compiler!;
+    const { webpack } = this._compiler;
     if (!Array.isArray(dependencies) && dependencies !== null) {
       throw new Error(
         `Exported value was not extracted as an array: ${
@@ -367,18 +367,23 @@ export async function pitch(
       }
 
       const CssDependency = MiniCssExtractPlugin.getCssDependency(
-        webpack,
+        // The webpack-flavored loader path; rspack namespace is structurally
+        // compatible at runtime.
+        webpack as unknown as Parameters<
+          typeof MiniCssExtractPlugin.getCssDependency
+        >[0],
       );
 
       const count = identifierCountMap.get(dependency.identifier) ?? 0;
 
-      this._module!.addDependency(
-        new CssDependency(
-          dependency,
-          dependency.context,
-          count,
-        ),
-      );
+      (this._module as Module & { addDependency(d: unknown): void })
+        .addDependency(
+          new CssDependency(
+            dependency,
+            dependency.context,
+            count,
+          ),
+        );
       identifierCountMap.set(
         dependency.identifier,
         count + 1,
