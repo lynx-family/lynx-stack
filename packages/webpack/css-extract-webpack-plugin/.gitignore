@@ -1,5 +1,0 @@
-# Temporary copies made by the hot-snapshot harness (HotUpdatePlugin copies each
-# case here before compiling). Kept at the same directory depth as the source
-# cases so `../../../helper` still resolves, hence directly under `test/`.
-/test/.hot-snapshot-temp/
-/test/.hot-temp/
