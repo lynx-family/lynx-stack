@@ -5,12 +5,12 @@
 
 ## Asset Files
 - Bundle: rspack-bundle.js
-- Manifest: main.92332685b4092c07.hot-update.json, size: 28
-- Update: main.92332685b4092c07.hot-update.js, size: 3283
+- Manifest: main.62bf02c4f0f7ac9e.hot-update.json, size: 28
+- Update: main.62bf02c4f0f7ac9e.hot-update.js, size: 3522
 
 ## Manifest
 
-### main.92332685b4092c07.hot-update.json
+### main.62bf02c4f0f7ac9e.hot-update.json
 
 ```json
 {"c":["main"],"r":[],"m":[]}
@@ -20,7 +20,7 @@
 ## Update
 
 
-### main.92332685b4092c07.hot-update.js
+### main.62bf02c4f0f7ac9e.hot-update.js
 
 #### Changed Modules
 - ./app.jsx
@@ -34,18 +34,22 @@ var globDynamicComponentEntry;
 "use strict";
 exports.ids = ["main"];
 exports.modules = {
-"./app.jsx"(module, __webpack_exports__, __webpack_require__) {
+"./app.jsx"
+/*!*****************!*\
+  !*** ./app.jsx ***!
+  \*****************/
+(module, __webpack_exports__, __webpack_require__) {
 __webpack_require__.r(__webpack_exports__);
 __webpack_require__.d(__webpack_exports__, {
   App: () => (App)
 });
-/* import */ var _lynx_js_react_jsx_dev_runtime__rspack_import_0 = __webpack_require__("../../../../../../react/runtime/jsx-dev-runtime/index.js");
+/* import */ var _lynx_js_react_jsx_dev_runtime__rspack_import_0 = __webpack_require__(/*! @lynx-js/react/jsx-dev-runtime */ "../../../../../../react/runtime/jsx-dev-runtime/index.js");
 /* module decorator */ module = __webpack_require__.hmd(module);
-/* provided dependency */ var __prefresh_utils__ = __webpack_require__("../../../../runtime/refresh.cjs");
+/* provided dependency */ var __prefresh_utils__ = __webpack_require__(/*! ../../../../runtime/refresh.cjs */ "../../../../runtime/refresh.cjs");
 
 const __snapshot_b0c31_b7a87_1 = "__snapshot_b0c31_b7a87_1";
-(__webpack_require__("../../../../../../react/runtime/lib/internal.js")/* .snapshotCreatorMap */.snapshotCreatorMap)[__snapshot_b0c31_b7a87_1] = (__snapshot_b0c31_b7a87_1)=>(__webpack_require__("../../../../../../react/runtime/lib/internal.js")/* .createSnapshot */.createSnapshot)(__snapshot_b0c31_b7a87_1, function() {
-        const pageId = (__webpack_require__("../../../../../../react/runtime/lib/internal.js")/* .__pageId */.__pageId);
+(__webpack_require__(/*! @lynx-js/react/internal */ "../../../../../../react/runtime/lib/internal.js")/* .snapshotCreatorMap */.snapshotCreatorMap)[__snapshot_b0c31_b7a87_1] = (__snapshot_b0c31_b7a87_1)=>(__webpack_require__(/*! @lynx-js/react/internal */ "../../../../../../react/runtime/lib/internal.js")/* .createSnapshot */.createSnapshot)(__snapshot_b0c31_b7a87_1, function() {
+        const pageId = (__webpack_require__(/*! @lynx-js/react/internal */ "../../../../../../react/runtime/lib/internal.js")/* .__pageId */.__pageId);
         const el = __CreateView(pageId);
         const el1 = __CreateText(pageId);
         __AppendElement(el, el1);

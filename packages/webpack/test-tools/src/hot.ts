@@ -101,6 +101,8 @@ export function hotDefaultOptions(context: ITestContext): RspackOptions {
     devtool: false,
     output: {
       path: context.getDist(),
+      // Readable module comments in the snapshots (legacy harness default).
+      pathinfo: true,
       // The lynx convention (matching the committed snapshots and the
       // `bundlePath` in `test.config.cjs`) names the entry bundle
       // `rspack-bundle.js`, not the upstream `bundle.js`.
