@@ -1,4 +1,4 @@
-import { CssExtractWebpackPlugin } from '@lynx-js/css-extract-webpack-plugin';
+import { CssExtractRspackPlugin } from '@lynx-js/css-extract-webpack-plugin';
 
 /**
  * @type {import('webpack').Configuration}
@@ -30,7 +30,7 @@ export default {
         test: /\.css$/i,
         use: [
           {
-            loader: CssExtractWebpackPlugin.loader,
+            loader: CssExtractRspackPlugin.loader,
           },
           'css-loader',
         ],
@@ -44,5 +44,5 @@ export default {
       },
     ],
   },
-  plugins: [new CssExtractWebpackPlugin({ experimentalUseImportModule: true })],
+  plugins: [new CssExtractRspackPlugin({ experimentalUseImportModule: true })],
 };

@@ -1,4 +1,4 @@
-import { CssExtractWebpackPlugin } from '@lynx-js/css-extract-webpack-plugin';
+import { CssExtractRspackPlugin } from '@lynx-js/css-extract-webpack-plugin';
 
 /** @type {import('webpack').Configuration} */
 export default {
@@ -14,7 +14,7 @@ export default {
         test: /\.css$/,
         use: [
           {
-            loader: CssExtractWebpackPlugin.loader,
+            loader: CssExtractRspackPlugin.loader,
           },
           'css-loader',
         ],
@@ -25,7 +25,7 @@ export default {
     function(compiler) {
       new compiler.webpack.HotModuleReplacementPlugin().apply(compiler);
     },
-    new CssExtractWebpackPlugin({
+    new CssExtractRspackPlugin({
       filename: '[name].css',
     }),
   ],

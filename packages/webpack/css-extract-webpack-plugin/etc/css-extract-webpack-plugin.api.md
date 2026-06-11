@@ -4,16 +4,14 @@
 
 ```ts
 
-import type { Compiler } from 'webpack';
-import type { Compiler as Compiler_2 } from '@rspack/core';
+import type { Compiler } from '@rspack/core';
 import type { CssExtractRspackPluginOptions as CssExtractRspackPluginOptions_2 } from '@rspack/core';
 import { LynxTemplatePlugin } from '@lynx-js/template-webpack-plugin';
-import MiniCssExtractPlugin from 'mini-css-extract-plugin';
 
 // @public
 export class CssExtractRspackPlugin {
     constructor(options?: CssExtractRspackPluginOptions | undefined);
-    apply(compiler: Compiler_2): void;
+    apply(compiler: Compiler): void;
     static defaultOptions: Readonly<CssExtractRspackPluginOptions>;
     static loader: string;
 }
@@ -23,18 +21,6 @@ export interface CssExtractRspackPluginOptions extends CssExtractRspackPluginOpt
     chunkFilename?: string;
     cssPlugins: Parameters<typeof LynxTemplatePlugin.convertCSSChunksToMap>[1];
     filename?: string;
-}
-
-// @public
-export class CssExtractWebpackPlugin {
-    constructor(options?: CssExtractWebpackPluginOptions | undefined);
-    apply(compiler: Compiler): void;
-    static defaultOptions: Readonly<Required<CssExtractWebpackPluginOptions>>;
-    static loader: string;
-}
-
-// @public
-export interface CssExtractWebpackPluginOptions extends MiniCssExtractPlugin.PluginOptions {
 }
 
 // @public

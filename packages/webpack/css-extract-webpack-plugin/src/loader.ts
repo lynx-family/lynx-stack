@@ -5,8 +5,7 @@
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
-import type { LoaderContext, Module } from '@rspack/core';
-import MiniCssExtractPlugin from 'mini-css-extract-plugin';
+import type { LoaderContext } from '@rspack/core';
 
 import { extractPathFromIdentifier, stringifyRequest } from './util.js';
 
@@ -291,7 +290,7 @@ ${content}
     return '';
   })();
 
-  let resultSource = `// extracted by ${MiniCssExtractPlugin.pluginName}`;
+  let resultSource = `// extracted by mini-css-extract-plugin`;
 
   // only attempt hot reloading if the css is actually used for something other than hash values
   resultSource += this.hot && emit
@@ -318,98 +317,6 @@ export function offsetSourceMapLines<T extends DependencySourceMap>(
     ...sourceMap,
     mappings: `${';'.repeat(lineOffset)}${sourceMap.mappings}`,
   };
-}
-
-export async function pitch(
-  this: LoaderContext<LoaderOptions>,
-  request: string,
-): Promise<string | undefined> {
-  if (
-    this._compiler?.options?.experiments?.css
-    && this._module
-    && (this._module.type === 'css'
-      || this._module.type === 'css/auto'
-      || this._module.type === 'css/global'
-      || this._module.type === 'css/module')
-  ) {
-    this.emitWarning(
-      new Error(
-        'You can\'t use `experiments.css` (`experiments.futureDefaults` enable built-in CSS support by default) and `@lynx-js/css-extract-webpack-plugin` together, please set `experiments.css` to `false` or set `{ type: "javascript/auto" }` for rules with `@lynx-js/css-extract-webpack-plugin` in your webpack config (now `@lynx-js/css-extract-webpack-plugin` does nothing).',
-      ),
-    );
-
-    return;
-  }
-
-  /** TODO: schema */
-  const options = this.getOptions();
-  const emit = options.emit ?? true;
-
-  const addDependencies = (
-    dependencies: Dep[] | [null, Exports | undefined][],
-  ) => {
-    const { webpack } = this._compiler;
-    if (!Array.isArray(dependencies) && dependencies !== null) {
-      throw new Error(
-        `Exported value was not extracted as an array: ${
-          JSON.stringify(
-            dependencies,
-          )
-        }`,
-      );
-    }
-
-    const identifierCountMap = new Map<string, number>();
-
-    for (const dependency of dependencies) {
-      if (!('identifier' in dependency) || !emit) {
-        continue;
-      }
-
-      const CssDependency = MiniCssExtractPlugin.getCssDependency(
-        // The webpack-flavored loader path; rspack namespace is structurally
-        // compatible at runtime.
-        webpack as unknown as Parameters<
-          typeof MiniCssExtractPlugin.getCssDependency
-        >[0],
-      );
-
-      const count = identifierCountMap.get(dependency.identifier) ?? 0;
-
-      (this._module as Module & { addDependency(d: unknown): void })
-        .addDependency(
-          new CssDependency(
-            dependency,
-            dependency.context,
-            count,
-          ),
-        );
-      identifierCountMap.set(
-        dependency.identifier,
-        count + 1,
-      );
-    }
-  };
-
-  return await load.call(this, request, addDependencies);
-}
-
-export default function loader(
-  this: LoaderContext<LoaderOptions>,
-  content: string,
-): string | undefined {
-  if (
-    this._compiler?.options?.experiments?.css
-    && this._module
-    && (this._module.type === 'css'
-      || this._module.type === 'css/auto'
-      || this._module.type === 'css/global'
-      || this._module.type === 'css/module')
-  ) {
-    return content;
-  }
-
-  return;
 }
 
 function hotLoader(

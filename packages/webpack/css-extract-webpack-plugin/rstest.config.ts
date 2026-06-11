@@ -21,10 +21,6 @@ const config: RstestConfig = defineConfig({
     // must not be collected as test suites.
     include: ['test/*.test.{js,ts}'],
     externals: [
-      // Self-reference resolves to the built `lib` via plain Node, so the test
-      // files and the natively-imported case `webpack.config.js` files share
-      // the SAME plugin module instances (`instanceof` checks hold).
-      '@lynx-js/css-extract-webpack-plugin',
       // The HMR runtime references `__webpack_require__`, which is a reserved
       // identifier inside rspack-bundled code (it would be rewritten to the
       // bundler's own require, breaking `rstest.stubGlobal`); load it natively.

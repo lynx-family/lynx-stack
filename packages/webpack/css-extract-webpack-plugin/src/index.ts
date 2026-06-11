@@ -8,8 +8,6 @@
  * This plugin extracts CSS into separate files. It creates a CSS file per JS file which contains CSS and CSSId.
  */
 
-export { CssExtractWebpackPlugin } from './CssExtractWebpackPlugin.js';
-export type { CssExtractWebpackPluginOptions } from './CssExtractWebpackPlugin.js';
 export type { LoaderOptions } from './loader.js';
 export type { LoaderOptions as CssExtractRspackLoaderOptions } from './loader.js';
 
