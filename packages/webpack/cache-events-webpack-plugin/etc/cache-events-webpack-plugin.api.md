@@ -4,7 +4,7 @@
 
 ```ts
 
-import type { Compiler } from 'webpack';
+import type { Compiler } from '@rspack/core';
 
 // @public
 export class LynxCacheEventsPlugin {

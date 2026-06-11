@@ -4,8 +4,8 @@
 
 ```ts
 
-import type { BannerPlugin } from 'webpack';
-import type { Compiler } from 'webpack';
+import type { BannerPluginArgument } from '@rspack/core';
+import type { Compiler } from '@rspack/core';
 
 // @public
 export class RuntimeWrapperWebpackPlugin {
@@ -20,7 +20,9 @@ export interface RuntimeWrapperWebpackPluginOptions {
     experimental_isLazyBundle?: boolean;
     injectVars?: ((vars: string[]) => string[]) | string[];
     targetSdkVersion: string;
-    test: BannerPlugin['options']['test'];
+    test: Extract<BannerPluginArgument, {
+        banner: unknown;
+    }>['test'];
 }
 
 ```
