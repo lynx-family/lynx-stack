@@ -92,6 +92,26 @@ function createLazy(
   return { LazyComponent, deferred };
 }
 
+function createSuspender(): {
+  Suspender: ComponentType<{ children?: ComponentChildren }>;
+  deferred: Deferred<void>;
+} {
+  const deferred = createDeferred<void>();
+  let resolved = false;
+  void deferred.promise.then(() => {
+    resolved = true;
+  });
+
+  const Suspender = (({ children }: { children?: ComponentChildren }) => {
+    if (!resolved) {
+      throw deferred.promise;
+    }
+    return children ?? null;
+  }) as ComponentType<{ children?: ComponentChildren }>;
+
+  return { Suspender, deferred };
+}
+
 function getBackgroundRoot(): BackgroundElementTemplateInstance {
   return __root as BackgroundElementTemplateInstance;
 }
@@ -414,6 +434,51 @@ describe('ElementTemplate Suspense background lifecycle', () => {
     }
   });
 
+  it('keeps host subtrees intact when a nested child suspends', async () => {
+    const { Suspender, deferred } = createSuspender();
+
+    root.render(
+      <view>
+        <Suspense fallback={<Marker value='loading' />}>
+          <view>
+            <Suspender>
+              <Marker value='inside' />
+            </Suspender>
+          </view>
+        </Suspense>
+        <Marker value='after' />
+      </view>,
+    );
+    await flushSuspenseRenders(scheduledRenders);
+
+    const host = getRenderedHost();
+    const after = getMarkerElementByValue(host, 'after');
+    expect(collectMarkerValues(host)).toEqual(['loading', 'after']);
+    assertNoWrapperChildren(host);
+    markRenderedTreeHydrated();
+    updateEvents = [];
+
+    deferred.resolve();
+    await flushSuspenseRenders(scheduledRenders);
+
+    expect(collectMarkerValues(host)).toEqual(['inside', 'after']);
+    assertNoWrapperChildren(host);
+    const nestedHost = getSlotChildren(host)[0];
+    expect(nestedHost.type).not.toBe(MARKER_TYPE);
+    expect(getSlotChildren(nestedHost).map(child => child.type)).toEqual([MARKER_TYPE]);
+    expect(getSlotChildren(host)[1]).toBe(after);
+
+    envManager.switchToMainThread();
+    const ops = parseUpdateOps(updateEvents.at(-1)?.ops ?? []);
+    expect(ops).toContainEqual(expect.objectContaining({
+      op: 'insertNode',
+      targetId: host.instanceId,
+      childId: nestedHost.instanceId,
+      referenceId: after.instanceId,
+    }));
+    envManager.switchToBackground();
+  });
+
   it('resolves parallel Suspense boundaries independently', async () => {
     const first = createLazy('FirstLazy');
     const second = createLazy('SecondLazy');
@@ -498,6 +563,29 @@ describe('ElementTemplate Suspense background lifecycle', () => {
     envManager.switchToBackground();
   });
 
+  it('renders resolved Suspense content without showing fallback when the suspender already resolved', async () => {
+    const { Suspender, deferred } = createSuspender();
+
+    deferred.resolve();
+    await Promise.resolve();
+
+    root.render(
+      <view>
+        <Suspense fallback={<Marker value='loading' />}>
+          <Suspender>
+            <Marker value='ready' />
+          </Suspender>
+        </Suspense>
+      </view>,
+    );
+    await flushSuspenseRenders(scheduledRenders);
+
+    const host = getRenderedHost();
+    expect(collectMarkerValues(host)).toEqual(['ready']);
+    expect(findMarkerElementByValue(host, 'loading')).toBeNull();
+    assertNoWrapperChildren(host);
+  });
+
   it('routes lazy rejects to ErrorBoundary without an ET-specific error channel', async () => {
     const { LazyComponent, deferred } = createLazy('RejectingLazy');
 
@@ -529,6 +617,112 @@ describe('ElementTemplate Suspense background lifecycle', () => {
       childId: fallback.instanceId,
     }));
     expect(ops.filter(op => op.op === 'insertNode')).toHaveLength(1);
+    envManager.switchToBackground();
+  });
+
+  it('updates resolved Suspense children without returning to fallback', async () => {
+    const { Suspender, deferred } = createSuspender();
+
+    function App({ value }: { value: string }): JSX.Element {
+      return (
+        <view>
+          <Suspense fallback={<Marker value='loading' />}>
+            <Suspender>
+              <Marker value={value} />
+            </Suspender>
+          </Suspense>
+        </view>
+      );
+    }
+
+    root.render(<App value='foo' />);
+    await flushSuspenseRenders(scheduledRenders);
+    const host = getRenderedHost();
+    expect(collectMarkerValues(host)).toEqual(['loading']);
+    markRenderedTreeHydrated();
+
+    deferred.resolve();
+    await flushSuspenseRenders(scheduledRenders);
+    expect(collectMarkerValues(host)).toEqual(['foo']);
+    updateEvents = [];
+
+    root.render(<App value='bar' />);
+    await flushSuspenseRenders(scheduledRenders);
+
+    expect(collectMarkerValues(host)).toEqual(['bar']);
+    expect(findMarkerElementByValue(host, 'loading')).toBeNull();
+    envManager.switchToMainThread();
+    const ops = parseUpdateOps(updateEvents.flatMap(event => event.ops));
+    expect(ops).toContainEqual(expect.objectContaining({
+      op: 'setAttribute',
+      attrSlotIndex: 0,
+      value: 'bar',
+    }));
+    expect(ops).not.toContainEqual(expect.objectContaining({
+      op: 'createTemplate',
+      attributeSlots: ['loading'],
+    }));
+    envManager.switchToBackground();
+  });
+
+  it('can unmount and remount resolved Suspense content', async () => {
+    const { Suspender, deferred } = createSuspender();
+
+    function App({ show }: { show: boolean }): JSX.Element {
+      return (
+        <view>
+          {show
+            ? (
+              <Suspense fallback={<Marker value='loading' />}>
+                <Suspender>
+                  <Marker value='loaded' />
+                </Suspender>
+              </Suspense>
+            )
+            : <Marker value='gone' />}
+        </view>
+      );
+    }
+
+    root.render(<App show />);
+    await flushSuspenseRenders(scheduledRenders);
+    const host = getRenderedHost();
+    expect(collectMarkerValues(host)).toEqual(['loading']);
+    markRenderedTreeHydrated();
+
+    deferred.resolve();
+    await flushSuspenseRenders(scheduledRenders);
+    expect(collectMarkerValues(host)).toEqual(['loaded']);
+    const firstLoaded = getMarkerElementByValue(host, 'loaded');
+    updateEvents = [];
+
+    root.render(<App show={false} />);
+    await flushSuspenseRenders(scheduledRenders);
+
+    expect(collectMarkerValues(host)).toEqual(['gone']);
+    envManager.switchToMainThread();
+    let ops = parseUpdateOps(updateEvents.flatMap(event => event.ops));
+    expect(ops).toContainEqual(expect.objectContaining({
+      op: 'removeNode',
+      childId: firstLoaded.instanceId,
+    }));
+    envManager.switchToBackground();
+    updateEvents = [];
+
+    root.render(<App show />);
+    await flushSuspenseRenders(scheduledRenders);
+
+    expect(collectMarkerValues(host)).toEqual(['loaded']);
+    expect(findMarkerElementByValue(host, 'gone')).toBeNull();
+    expect(findMarkerElementByValue(host, 'loading')).toBeNull();
+    assertNoWrapperChildren(host);
+    envManager.switchToMainThread();
+    ops = parseUpdateOps(updateEvents.flatMap(event => event.ops));
+    expect(ops).toContainEqual(expect.objectContaining({
+      op: 'insertNode',
+      targetId: host.instanceId,
+      childId: getMarkerElementByValue(host, 'loaded').instanceId,
+    }));
     envManager.switchToBackground();
   });
 
