@@ -3,7 +3,7 @@
 // LICENSE file in the root directory of this source tree.
 import { describe, expect, test } from '@rstest/core';
 
-import { offsetSourceMapLines } from '../src/loader.js';
+import { offsetSourceMapLines } from '../src/rspack-loader.js';
 
 describe('loader', () => {
   test('offsets generated source map lines when cssId wraps CSS content', () => {

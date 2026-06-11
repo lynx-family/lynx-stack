@@ -10,16 +10,6 @@ const __dirname = path.dirname(__filename);
 
 export default async function setup() {
   await fs.promises.copyFile(
-    path.join(__dirname, '..', '..', 'lib', 'loader.js'),
-    path.join(__dirname, '..', '..', 'src', 'loader.js'),
-  );
-
-  await fs.promises.copyFile(
-    path.join(__dirname, '..', '..', 'lib', 'loader.js.map'),
-    path.join(__dirname, '..', '..', 'src', 'loader.js.map'),
-  );
-
-  await fs.promises.copyFile(
     path.join(__dirname, '..', '..', 'lib', 'rspack-loader.js'),
     path.join(__dirname, '..', '..', 'src', 'rspack-loader.js'),
   );
@@ -40,13 +30,6 @@ export default async function setup() {
   );
 
   return async () => {
-    await fs.promises.unlink(
-      path.join(__dirname, '..', '..', 'src', 'loader.js'),
-    );
-    await fs.promises.unlink(
-      path.join(__dirname, '..', '..', 'src', 'loader.js.map'),
-    );
-
     await fs.promises.unlink(
       path.join(__dirname, '..', '..', 'src', 'rspack-loader.js'),
     );
