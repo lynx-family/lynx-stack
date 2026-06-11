@@ -7,7 +7,9 @@ import {
   useCallback,
   useEffect,
   useGlobalProps,
+  useLynxGlobalEventListener,
   useMemo,
+  useRef,
   useState,
 } from '@lynx-js/react';
 
@@ -15,6 +17,15 @@ import { OPENUI_SCENARIOS } from './mockData.js';
 
 const DEFAULT_CHUNK_SIZE = 8;
 const DEFAULT_STREAM_DELAY_MS = 30;
+const OPENUI_PLAYBACK_CHUNK_SIZE = 240;
+
+function chunkOpenUIResponse(rawText: string): string[] {
+  const chunks: string[] = [];
+  for (let i = 0; i < rawText.length; i += OPENUI_PLAYBACK_CHUNK_SIZE) {
+    chunks.push(rawText.slice(i, i + OPENUI_PLAYBACK_CHUNK_SIZE));
+  }
+  return chunks;
+}
 
 export function App() {
   const globalProps = useGlobalProps() as Record<string, unknown> | null;
@@ -74,6 +85,16 @@ export function App() {
     return OPENUI_SCENARIOS[0].raw;
   }, [globalProps]);
 
+  const instant = useMemo(() => {
+    const value = globalProps?.instant;
+    return value === true || value === '1' || value === 1;
+  }, [globalProps]);
+
+  const playbackMode = useMemo(() => {
+    const value = globalProps?.playbackMode;
+    return value === true || value === '1' || value === 1;
+  }, [globalProps]);
+
   // Speed multiplier from globalProps (e.g. ?speed=2)
   const streamDelay = useMemo(() => {
     const raw = globalProps?.speed;
@@ -88,6 +109,35 @@ export function App() {
   const [isStreaming, setIsStreaming] = useState(false);
   const [error, setError] = useState<string>('');
   const [loading, setLoading] = useState<boolean>(false);
+  const [playbackTargetCount, setPlaybackTargetCount] = useState(0);
+  const playbackPausedRef = useRef(false);
+  const playbackChunks = useMemo(() => chunkOpenUIResponse(rawText), [rawText]);
+
+  useEffect(() => {
+    setPlaybackTargetCount(0);
+    playbackPausedRef.current = false;
+  }, [playbackMode, rawText]);
+
+  useLynxGlobalEventListener(
+    'A2UI_PLAYBACK_CONTROL',
+    (action: unknown) => {
+      playbackPausedRef.current = action === 'pause';
+    },
+  );
+
+  useLynxGlobalEventListener(
+    'A2UI_PLAYBACK_PROGRESS',
+    (payload: unknown) => {
+      if (!playbackMode) return;
+      if (!payload || typeof payload !== 'object') return;
+      const next = (payload as { deliveredCount?: unknown }).deliveredCount;
+      const nextCount = typeof next === 'number'
+        ? next
+        : (typeof next === 'string' ? Number(next) : Number.NaN);
+      if (!Number.isFinite(nextCount) || nextCount < 0) return;
+      setPlaybackTargetCount(Math.floor(nextCount));
+    },
+  );
 
   useEffect(() => {
     let cancelled = false;
@@ -95,6 +145,25 @@ export function App() {
     setIsStreaming(true);
     setError('');
     setResponse('');
+
+    if (instant) {
+      setResponse(rawText);
+      setIsStreaming(false);
+      setLoading(false);
+      return () => {
+        cancelled = true;
+      };
+    }
+
+    if (playbackMode) {
+      const next = playbackChunks.slice(0, playbackTargetCount).join('');
+      setResponse(next);
+      setIsStreaming(playbackTargetCount < playbackChunks.length);
+      setLoading(false);
+      return () => {
+        cancelled = true;
+      };
+    }
 
     let offset = 0;
 
@@ -125,7 +194,15 @@ export function App() {
     return () => {
       cancelled = true;
     };
-  }, [openUiLibrary, rawText, streamDelay]);
+  }, [
+    instant,
+    openUiLibrary,
+    playbackChunks,
+    playbackMode,
+    playbackTargetCount,
+    rawText,
+    streamDelay,
+  ]);
 
   const onOpenUiAction = useCallback((_event: ActionEvent) => {
     // noop for now

@@ -32,6 +32,14 @@ export interface RenderInit {
   playbackMode?: boolean;
 }
 
+export interface OpenUIRenderInit {
+  rawText?: string;
+  rawTextUrl?: string;
+  speed?: number;
+  instant?: boolean;
+  playbackMode?: boolean;
+}
+
 function buildRenderInitData(init: RenderInit): Record<string, unknown> {
   const initData: Record<string, unknown> = {
     protocol: init.protocol.name,
@@ -109,6 +117,35 @@ export function buildRenderUrl(init: RenderInit, baseUrl: string): string {
 
   if (init.liveAction) {
     url.searchParams.set('liveAction', '1');
+  }
+
+  if (init.playbackMode) {
+    url.searchParams.set('playbackMode', '1');
+  }
+
+  return url.toString();
+}
+
+export function buildOpenUIRenderUrl(
+  init: OpenUIRenderInit,
+  baseUrl: string,
+): string {
+  const url = new URL('render.html', baseUrl);
+  url.searchParams.set('protocol', 'openui');
+  url.searchParams.set('demoUrl', './openui.web.js');
+
+  if (init.rawTextUrl) {
+    url.searchParams.set('rawTextUrl', init.rawTextUrl);
+  } else if (init.rawText !== undefined) {
+    url.searchParams.set('rawText', init.rawText);
+  }
+
+  if (init.speed !== undefined && init.speed !== 1) {
+    url.searchParams.set('speed', String(init.speed));
+  }
+
+  if (init.instant) {
+    url.searchParams.set('instant', '1');
   }
 
   if (init.playbackMode) {

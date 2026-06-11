@@ -546,6 +546,32 @@ function Render() {
   }, []);
 
   useEffect(() => {
+    const rawTextUrl = initData?.rawTextUrl;
+    if (!rawTextUrl) return;
+
+    let cancelled = false;
+    void (async () => {
+      try {
+        const res = await window.fetch(rawTextUrl);
+        if (!res.ok || cancelled) return;
+        const rawText = await res.text();
+        if (!cancelled) {
+          setInitData((prev) =>
+            prev && prev.rawTextUrl === rawTextUrl
+              ? { ...prev, rawText }
+              : prev
+          );
+        }
+      } catch {
+        // ignore; the Lynx app will keep its fallback scenario
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [initData?.rawTextUrl]);
+
+  useEffect(() => {
     const lynxView = lynxViewRef.current;
     if (!lynxView) return;
 

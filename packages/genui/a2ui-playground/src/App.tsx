@@ -17,6 +17,7 @@ import { ComponentsPage } from './pages/ComponentsPage.js';
 import { DemosListPage } from './pages/DemosListPage.js';
 import { DemosPage } from './pages/DemosPage.js';
 import { OpenUIComponentsPage } from './pages/OpenUIComponentsPage.js';
+import { OpenUIDemosListPage } from './pages/OpenUIDemosListPage.js';
 import { OpenUIDemosPage } from './pages/OpenUIDemosPage.js';
 import type { Protocol, ProtocolName } from './utils/protocol.js';
 import { DEFAULT_PROTOCOL, PROTOCOLS, getProtocol } from './utils/protocol.js';
@@ -213,7 +214,20 @@ export function App() {
             />
           );
         default:
-          return <OpenUIDemosPage key='openui-examples' protocol={protocol} />;
+          return route.demoId
+            ? (
+              <OpenUIDemosPage
+                key='openui-examples-detail'
+                protocol={protocol}
+                demoId={route.demoId}
+              />
+            )
+            : (
+              <OpenUIDemosListPage
+                key='openui-examples-index'
+                protocol={protocol}
+              />
+            );
       }
     }
 

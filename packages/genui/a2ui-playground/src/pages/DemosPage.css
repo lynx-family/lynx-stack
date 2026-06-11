@@ -137,6 +137,10 @@
   box-shadow: none;
 }
 
+.exampleCardPreviewWindow iframe {
+  pointer-events: none;
+}
+
 .exampleCardPreviewFrame {
   width: 100%;
   height: 100%;
@@ -452,6 +456,41 @@
 
 /* toolbarBtn / toolbarBtn.primary: replaced by <Button variant="ghost"|"primary"
    size="sm" ...>. */
+
+.openuiCodeToolbar {
+  align-items: center;
+  gap: 8px;
+  padding: 8px 10px;
+  min-width: 0;
+}
+
+.openuiCodeTitle {
+  min-width: 0;
+  flex-shrink: 1;
+}
+
+.openuiCodeTitleText {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.openuiCodeViewSwitch {
+  width: 118px;
+  margin-left: 4px;
+}
+
+.openuiCodeViewSwitch .previewModeBtn {
+  flex: 1;
+  min-width: 0;
+  text-align: center;
+}
+
+.openuiToolbarActions {
+  flex-shrink: 0;
+  gap: 2px;
+}
 
 .codeEditor {
   flex: 1;
@@ -1112,5 +1151,19 @@
   .codePanelTitle {
     white-space: nowrap;
     font-size: 12px;
+  }
+
+  .openuiCodeToolbar {
+    gap: 6px;
+    padding: 6px 8px;
+  }
+
+  .openuiCodeViewSwitch .previewModeBtn {
+    padding: 2px 8px;
+    font-size: 11px;
+  }
+
+  .openuiCodeTitleText {
+    display: none;
   }
 }
