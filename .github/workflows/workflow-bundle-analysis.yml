@@ -39,7 +39,7 @@ jobs:
           node-version: "24"
           package-manager-cache: false
       - name: TurboCache
-        uses: lynx-infra/cache@5c6160a6a4c7fca80a2f3057bb9dfc9513fcb732
+        uses: lynx-infra/cache@16f8a4148d80ad9d97fb26891e6215e6a6f502c3
         with:
           path: .turbo
           # We have to be strict here to make sure getting the cache of build-all

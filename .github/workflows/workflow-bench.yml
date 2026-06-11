@@ -1,6 +1,17 @@
 name: Benchmark
 on:
   workflow_call:
+    secrets:
+      ACCESS_KEY:
+        required: false
+      SECRET_KEY:
+        required: false
+      ENDPOINT:
+        required: false
+      BUCKET_NAME:
+        required: false
+      REGION:
+        required: false
 
 env:
   CI: 1
@@ -8,13 +19,19 @@ env:
 jobs:
   nodejs-benchmark:
     permissions: {}
-    timeout-minutes: 30
+    timeout-minutes: 45
     # CodSpeed does not support merge_group event.
     #
     # Error: Event merge_group is not supported by CodSpeed
     # Error: unknown variant `merge_group`, expected one of `push`, `pull_request`, `workflow_dispatch`, `schedule`, `local` at line 1 column 13
     if: github.event_name != 'merge_group'
-    runs-on: lynx-ubuntu-24.04-xlarge
+    runs-on: physical-exclusive
+    env:
+      ACCESS_KEY: ${{ secrets.ACCESS_KEY }}
+      SECRET_KEY: ${{ secrets.SECRET_KEY }}
+      ENDPOINT: ${{ secrets.ENDPOINT }}
+      BUCKET_NAME: ${{ secrets.BUCKET_NAME }}
+      REGION: ${{ secrets.REGION }}
     steps:
       - uses: actions/checkout@93cb6efe18208431cddfb8368fd83d5badbf9bfd # v5
         with:
@@ -24,13 +41,36 @@ jobs:
           node-version: "24"
           package-manager-cache: false
       - uses: astral-sh/setup-uv@d0cc045d04ccac9d8b7881df0226f9e82c39688e # v6
+      - name: Setup Rust
+        shell: bash
+        run: |
+          # The physical-exclusive runner doesn't propagate $HOME between
+          # steps, so the reusable ./.github/actions/rustup action writes
+          # an empty cargo bin path into $GITHUB_PATH. Install rustup
+          # inline with an explicit HOME and pin /root/.cargo/bin on PATH.
+          export HOME=/root
+          if ! command -v /root/.cargo/bin/cargo > /dev/null 2>&1; then
+            curl --proto '=https' --tlsv1.2 --retry 10 --retry-connrefused -fsSL https://sh.rustup.rs \
+              | sh -s -- --default-toolchain none -y
+          fi
+          echo "/root/.cargo/bin" >> "$GITHUB_PATH"
+          export PATH="/root/.cargo/bin:$PATH"
+          # Pre-install the toolchain pinned by rust-toolchain.toml plus
+          # the wasm targets web-core needs. Doing it once here keeps the
+          # parallel cargo invocations from `pnpm turbo build` from racing
+          # on /root/.rustup/downloads while each tries to sync the channel
+          # just-in-time.
+          toolchain="$(grep -E '^\s*channel\s*=' rust-toolchain.toml | head -n1 | sed -E 's/.*=\s*"([^"]+)".*/\1/')"
+          rustup toolchain install "$toolchain" --profile default
+          rustup target add --toolchain "$toolchain" wasm32-unknown-unknown wasm32-wasip1
       - name: TurboCache
-        uses: lynx-infra/cache@5c6160a6a4c7fca80a2f3057bb9dfc9513fcb732
+        uses: lynx-infra/cache@16f8a4148d80ad9d97fb26891e6215e6a6f502c3
         with:
           path: .turbo
-          # We have to be strict here to make sure getting the cache of build-all
+          # The build job runs on lynx-ubuntu-24.04-xlarge which writes to a
+          # different OSS bucket than this physical-exclusive runner, so we
+          # tolerate cache misses and let `pnpm turbo build` rebuild locally.
           key: turbo-v4-${{ runner.os }}-${{ hashFiles('**/packages/**/src/**/*.rs') }}-${{ github.sha }}
-          fail-on-cache-miss: true
       - name: Install
         run: |
           npm install -g corepack@latest
@@ -42,10 +82,16 @@ jobs:
       - name: Prepare CodSpeed
         run: |
           curl -fsSL https://github.com/CodSpeedHQ/codspeed/releases/download/v4.10.6/codspeed-runner-installer.sh | bash -s -- --quiet
-      - name: Run benchmark
+      - name: Run benchmark (simulation)
         run: |
+          export HOME=/root
           . "$HOME/.cargo/env"
           codspeed run --mode simulation -- pnpm -r run --workspace-concurrency=1 bench
+      - name: Run benchmark (walltime)
+        run: |
+          export HOME=/root
+          . "$HOME/.cargo/env"
+          codspeed run --mode walltime -- pnpm -r run --workspace-concurrency=1 bench
       - name: React benchmark - Run perfetto
         run: |
           pnpm -r run --workspace-concurrency=1 perfetto

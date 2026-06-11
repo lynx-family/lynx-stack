@@ -51,7 +51,7 @@ runs:
     - name: Restore rustup cache
       id: restore
       if: ${{ inputs.save-if == 'true' }}
-      uses: lynx-infra/cache/restore@5c6160a6a4c7fca80a2f3057bb9dfc9513fcb732
+      uses: lynx-infra/cache/restore@16f8a4148d80ad9d97fb26891e6215e6a6f502c3
       with:
         path: ~/.rustup/toolchains
         key: rustup-cache-v3-${{ runner.os }}-${{ steps.get-toolchain.outputs.toolchain }}
@@ -69,7 +69,7 @@ runs:
           -c clippy \
           -c rustfmt
     - name: Save rustup cache
-      uses: lynx-infra/cache/save@5c6160a6a4c7fca80a2f3057bb9dfc9513fcb732
+      uses: lynx-infra/cache/save@16f8a4148d80ad9d97fb26891e6215e6a6f502c3
       if: ${{ inputs.save-if == 'true' && steps.restore.outputs.cache-hit != 'true' }}
       with:
         path: ~/.rustup/toolchains

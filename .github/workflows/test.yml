@@ -22,6 +22,12 @@ jobs:
   benchmark:
     needs: build
     uses: ./.github/workflows/workflow-bench.yml
+    secrets:
+      ACCESS_KEY: ${{ secrets.ACCESS_KEY }}
+      SECRET_KEY: ${{ secrets.SECRET_KEY }}
+      ENDPOINT: ${{ secrets.ENDPOINT }}
+      BUCKET_NAME: ${{ secrets.BUCKET_NAME }}
+      REGION: ${{ secrets.REGION }}
   build:
     uses: ./.github/workflows/workflow-build.yml
     secrets:
