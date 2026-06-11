@@ -1,8 +1,10 @@
 // Copyright 2026 The Lynx Authors. All rights reserved.
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
-import type { DeviceAction, Size, TUserPrompt } from '@midscene/core';
+import type { DeviceAction, Size } from '@midscene/core';
 import { Agent as MidsceneAgent } from '@midscene/core/agent';
+import { callAIWithStringResponse } from '@midscene/core/ai-model';
+import type { ChatCompletionMessageParam } from '@midscene/core/ai-model';
 import type { AbstractInterface } from '@midscene/core/device';
 import sharp from 'sharp';
 
@@ -81,14 +83,11 @@ Rules for the JSON:
 - Do not invent hidden or non-visible differences.`;
 
 interface MidsceneVisualEvaluationAgent {
-  aiString(
-    prompt: TUserPrompt,
-    options?: {
-      domIncluded?: boolean | 'visible-only';
-      screenshotIncluded?: boolean;
-      [key: string]: unknown;
-    },
-  ): Promise<string>;
+  modelConfigManager: {
+    getModelConfig(
+      intent: 'insight',
+    ): Parameters<typeof callAIWithStringResponse>[1];
+  };
   destroy(): Promise<void>;
 }
 
@@ -134,30 +133,15 @@ export async function evaluateImagesWithMidscene(
     autoPrintReportMsg: false,
     generateReport: false,
   }) as MidsceneVisualEvaluationAgent;
-  const prompt: TUserPrompt = {
-    images: [
-      {
-        name: 'reference_image',
-        url: referenceImageDataUrl,
-      },
-      {
-        name: 'rendered_image',
-        url: renderedImageDataUrl,
-      },
-    ],
-    prompt:
-      `${VISUAL_EVALUATION_SYSTEM_PROMPT}\n\n${VISUAL_EVALUATION_USER_PROMPT}`,
-  };
+  const messages = buildVisualEvaluationMessages(
+    referenceImageDataUrl,
+    renderedImageDataUrl,
+  );
 
   try {
-    const result = await agent.aiString(
-      prompt,
-      {
-        domIncluded: false,
-        screenshotIncluded: false,
-      },
-    );
-    return normalizeEvaluationResult(result);
+    const modelConfig = agent.modelConfigManager.getModelConfig('insight');
+    const { content } = await callAIWithStringResponse(messages, modelConfig);
+    return normalizeEvaluationResult(content);
   } finally {
     await agent.destroy().catch(() => {
       // Keep the original evaluation error visible.
@@ -211,6 +195,39 @@ export function normalizeEvaluationResult(raw: unknown): EvaluationResult {
   }
 
   return result;
+}
+
+function buildVisualEvaluationMessages(
+  referenceImageDataUrl: string,
+  renderedImageDataUrl: string,
+): ChatCompletionMessageParam[] {
+  return [
+    {
+      content: VISUAL_EVALUATION_SYSTEM_PROMPT,
+      role: 'system',
+    },
+    {
+      content: [
+        {
+          text: VISUAL_EVALUATION_USER_PROMPT,
+          type: 'text',
+        },
+        {
+          image_url: {
+            url: referenceImageDataUrl,
+          },
+          type: 'image_url',
+        },
+        {
+          image_url: {
+            url: renderedImageDataUrl,
+          },
+          type: 'image_url',
+        },
+      ],
+      role: 'user',
+    },
+  ];
 }
 
 function normalizeEvaluationIssues(value: unknown): EvaluationIssue[] {

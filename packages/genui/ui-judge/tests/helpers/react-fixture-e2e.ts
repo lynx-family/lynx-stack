@@ -2,9 +2,10 @@
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
 import { spawn } from 'node:child_process';
-import { createServer } from 'node:http';
 import { once } from 'node:events';
 import { readFile } from 'node:fs/promises';
+import { createServer } from 'node:http';
+import type { IncomingMessage, ServerResponse } from 'node:http';
 import type { AddressInfo } from 'node:net';
 import { dirname, relative, resolve, sep } from 'node:path';
 import { setTimeout as sleep } from 'node:timers/promises';
@@ -69,33 +70,8 @@ export async function captureReactFixtureScreenshot(
 }
 
 export async function startReactFixtureServer(): Promise<FixtureServer> {
-  const server = createServer(async (request, response) => {
-    try {
-      const requestUrl = new URL(request.url ?? '/', 'http://127.0.0.1');
-      const pathname = decodeURIComponent(requestUrl.pathname);
-      const requestedFile = pathname === '/'
-        ? REACT_BUNDLE_NAME
-        : pathname.replace(/^\/+/, '');
-      const filePath = resolve(REACT_FIXTURE_DIR, requestedFile);
-      const relativePath = relative(REACT_FIXTURE_DIR, filePath);
-      if (
-        relativePath.startsWith('..')
-        || relativePath === ''
-        || relativePath.split(sep).includes('..')
-      ) {
-        response.writeHead(403).end();
-        return;
-      }
-
-      const body = await readFile(filePath);
-      response.writeHead(200, {
-        'Content-Length': String(body.length),
-        'Content-Type': getFixtureContentType(filePath),
-      });
-      response.end(body);
-    } catch {
-      response.writeHead(404).end();
-    }
+  const server = createServer((request, response) => {
+    void handleFixtureRequest(request, response);
   });
   server.listen(0, '127.0.0.1');
   await once(server, 'listening');
@@ -158,9 +134,12 @@ export async function removeReversedAdbPort(port: number): Promise<void> {
 }
 
 export function getAndroidDeviceId(): string | undefined {
-  return process.env['KITTEN_LYNX_DEVICE_ID']
-    ?? process.env['ANDROID_SERIAL']
-    ?? undefined;
+  return [
+    process.env['KITTEN_LYNX_DEVICE_ID'],
+    process.env['ANDROID_SERIAL'],
+  ].map((value) => value?.trim()).find((value): value is string =>
+    Boolean(value)
+  );
 }
 
 export async function withTimeout<T>(
@@ -211,6 +190,38 @@ async function waitForReactFixtureContent(
   throw new Error(
     `Timed out waiting for React fixture content.${details}`,
   );
+}
+
+async function handleFixtureRequest(
+  request: IncomingMessage,
+  response: ServerResponse,
+): Promise<void> {
+  try {
+    const requestUrl = new URL(request.url ?? '/', 'http://127.0.0.1');
+    const pathname = decodeURIComponent(requestUrl.pathname);
+    const requestedFile = pathname === '/'
+      ? REACT_BUNDLE_NAME
+      : pathname.replace(/^\/+/, '');
+    const filePath = resolve(REACT_FIXTURE_DIR, requestedFile);
+    const relativePath = relative(REACT_FIXTURE_DIR, filePath);
+    if (
+      relativePath.startsWith('..')
+      || relativePath === ''
+      || relativePath.split(sep).includes('..')
+    ) {
+      response.writeHead(403).end();
+      return;
+    }
+
+    const body = await readFile(filePath);
+    response.writeHead(200, {
+      'Content-Length': String(body.length),
+      'Content-Type': getFixtureContentType(filePath),
+    });
+    response.end(body);
+  } catch {
+    response.writeHead(404).end();
+  }
 }
 
 async function waitForReactFixtureScreenshot(
@@ -283,10 +294,22 @@ async function runCommand(
   child.stderr.on('data', (chunk) => stderr.append(chunk));
 
   const exitState = await new Promise<
-    { code: number | null; signal: NodeJS.Signals | null }
+    { code: number | null; error?: Error; signal: NodeJS.Signals | null }
   >((resolveExit) => {
+    child.once(
+      'error',
+      (error) => resolveExit({ code: null, error, signal: null }),
+    );
     child.once('exit', (code, signal) => resolveExit({ code, signal }));
   });
+
+  if (exitState.error) {
+    throw new Error(
+      `Command failed to start: ${command} ${
+        args.join(' ')
+      }. ${exitState.error.message}`,
+    );
+  }
 
   if (exitState.code === 0) {
     return { stdout: stdout.toString() };

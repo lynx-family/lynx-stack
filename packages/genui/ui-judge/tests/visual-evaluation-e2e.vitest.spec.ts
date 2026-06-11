@@ -11,10 +11,10 @@ import type {
 } from '../../../testing-library/kitten-lynx/src/index.js';
 import { runVisualEvaluation } from '../src/index.js';
 import {
-  captureReactFixtureScreenshot,
-  getAndroidDeviceId,
   REACT_BUNDLE_NAME,
   REACT_REFERENCE_SNAPSHOT_PATH,
+  captureReactFixtureScreenshot,
+  getAndroidDeviceId,
   removeReversedAdbPort,
   reverseAdbPort,
   startReactFixtureServer,

@@ -1,6 +1,8 @@
 // Copyright 2026 The Lynx Authors. All rights reserved.
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
+import { callAIWithStringResponse } from '@midscene/core/ai-model';
+import type { ChatCompletionMessageParam } from '@midscene/core/ai-model';
 import sharp from 'sharp';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
@@ -12,16 +14,37 @@ import {
 } from '../src/index.js';
 
 const midsceneMock = vi.hoisted(() => ({
-  aiString: vi.fn<(...args: unknown[]) => Promise<string>>(),
+  callAIWithStringResponse: vi.fn<
+    (...args: unknown[]) => Promise<{ content: string }>
+  >(),
   constructorOptions: [] as unknown[],
   destroy: vi.fn<() => Promise<void>>(),
   pages: [] as unknown[],
 }));
 
+interface ImageMessagePart {
+  image_url: {
+    url: string;
+  };
+  type: 'image_url';
+}
+
+vi.mock('@midscene/core/ai-model', async (importOriginal) => {
+  const actual = await importOriginal<
+    typeof import('@midscene/core/ai-model')
+  >();
+  return {
+    ...actual,
+    callAIWithStringResponse: midsceneMock.callAIWithStringResponse,
+  };
+});
+
 vi.mock('@midscene/core/agent', () => {
   class Agent {
-    aiString = midsceneMock.aiString;
     destroy = midsceneMock.destroy;
+    modelConfigManager = {
+      getModelConfig: vi.fn(() => ({ modelName: 'mock-model' })),
+    };
 
     constructor(page: unknown, options: unknown) {
       midsceneMock.pages.push(page);
@@ -34,14 +57,16 @@ vi.mock('@midscene/core/agent', () => {
 
 describe('evaluateImagesWithMidscene', () => {
   beforeEach(() => {
-    midsceneMock.aiString.mockReset();
-    midsceneMock.aiString.mockResolvedValue(JSON.stringify({
-      extra: 'preserved',
-      issues: [],
-      reason: 'midscene ok',
-      score: 0.73,
-      summary: 'The rendered image is close to the reference.',
-    }));
+    midsceneMock.callAIWithStringResponse.mockReset();
+    midsceneMock.callAIWithStringResponse.mockResolvedValue({
+      content: JSON.stringify({
+        extra: 'preserved',
+        issues: [],
+        reason: 'midscene ok',
+        score: 0.73,
+        summary: 'The rendered image is close to the reference.',
+      }),
+    });
     midsceneMock.destroy.mockReset();
     midsceneMock.destroy.mockResolvedValue(undefined);
     midsceneMock.constructorOptions.length = 0;
@@ -81,33 +106,49 @@ describe('evaluateImagesWithMidscene', () => {
     await expect(page.screenshotBase64()).resolves.toBe(renderedImageDataUrl);
     await expect(page.size()).resolves.toEqual({ height: 8, width: 8 });
 
-    expect(midsceneMock.aiString).toHaveBeenCalledTimes(1);
-    const [prompt, options] = midsceneMock.aiString.mock.calls[0] as [
+    expect(callAIWithStringResponse).toBe(
+      midsceneMock.callAIWithStringResponse,
+    );
+    expect(midsceneMock.callAIWithStringResponse).toHaveBeenCalledTimes(1);
+    const [messages, modelConfig] = midsceneMock.callAIWithStringResponse.mock
+      .calls[0] as [
+        ChatCompletionMessageParam[],
+        unknown,
+      ];
+    expect(modelConfig).toEqual({ modelName: 'mock-model' });
+    expect(messages).toEqual([
       {
-        images: Array<{ name: string; url: string }>;
-        prompt: string;
+        content: VISUAL_EVALUATION_SYSTEM_PROMPT,
+        role: 'system',
       },
-      unknown,
-    ];
-    expect(typeof prompt).toBe('object');
-    expect(prompt).toEqual({
-      images: [
-        {
-          name: 'reference_image',
-          url: referenceImageDataUrl,
-        },
-        {
-          name: 'rendered_image',
-          url: renderedImageDataUrl,
-        },
-      ],
-      prompt:
-        `${VISUAL_EVALUATION_SYSTEM_PROMPT}\n\n${VISUAL_EVALUATION_USER_PROMPT}`,
-    });
-    expect(options).toEqual({
-      domIncluded: false,
-      screenshotIncluded: false,
-    });
+      {
+        content: [
+          {
+            text: VISUAL_EVALUATION_USER_PROMPT,
+            type: 'text',
+          },
+          {
+            image_url: {
+              url: referenceImageDataUrl,
+            },
+            type: 'image_url',
+          },
+          {
+            image_url: {
+              url: renderedImageDataUrl,
+            },
+            type: 'image_url',
+          },
+        ],
+        role: 'user',
+      },
+    ]);
+    expect(
+      JSON.stringify(messages),
+    ).toContain(referenceImageDataUrl);
+    expect(
+      JSON.stringify(messages),
+    ).toContain(renderedImageDataUrl);
     expect(midsceneMock.destroy).toHaveBeenCalledTimes(1);
   });
 
@@ -136,23 +177,44 @@ describe('evaluateImagesWithMidscene', () => {
       targetPageUrl: 'http://localhost/template.html',
     });
 
-    expect(midsceneMock.aiString).toHaveBeenCalledTimes(1);
-    const [prompt] = midsceneMock.aiString.mock.calls[0] as [
-      {
-        images: Array<{ name: string; url: string }>;
-        prompt: string;
-      },
+    expect(midsceneMock.callAIWithStringResponse).toHaveBeenCalledTimes(1);
+    const [messages] = midsceneMock.callAIWithStringResponse.mock.calls[0] as [
+      ChatCompletionMessageParam[],
     ];
-    expect(prompt.prompt).toBe(
-      `${VISUAL_EVALUATION_SYSTEM_PROMPT}\n\n${VISUAL_EVALUATION_USER_PROMPT}`,
+    expect(messages[0]).toMatchObject({
+      content: VISUAL_EVALUATION_SYSTEM_PROMPT,
+      role: 'system',
+    });
+    const userContent = messages[1]?.content;
+    expect(Array.isArray(userContent)).toBe(true);
+    const imageParts = Array.isArray(userContent)
+      ? userContent.filter((part) => isImageMessagePart(part))
+      : [];
+    expect(imageParts).toHaveLength(2);
+    expect(imageParts[0]?.type).toBe('image_url');
+    expect(imageParts[0]?.image_url.url).toMatch(
+      /^data:image\/png;base64,/,
     );
-    expect(prompt.images).toHaveLength(2);
-    expect(prompt.images[0]?.name).toBe('reference_image');
-    expect(prompt.images[0]?.url).toMatch(/^data:image\/png;base64,/);
-    expect(prompt.images[1]?.name).toBe('rendered_image');
-    expect(prompt.images[1]?.url).toMatch(/^data:image\/png;base64,/);
+    expect(imageParts[1]?.type).toBe('image_url');
+    expect(imageParts[1]?.image_url.url).toMatch(
+      /^data:image\/png;base64,/,
+    );
   });
 });
+
+function isImageMessagePart(value: unknown): value is ImageMessagePart {
+  if (typeof value !== 'object' || value === null || Array.isArray(value)) {
+    return false;
+  }
+
+  const candidate = value as Record<string, unknown>;
+  const imageUrl = candidate['image_url'];
+  return candidate['type'] === 'image_url'
+    && typeof imageUrl === 'object'
+    && imageUrl !== null
+    && !Array.isArray(imageUrl)
+    && typeof (imageUrl as Record<string, unknown>)['url'] === 'string';
+}
 
 async function createDataUrl(options: { blue: number }): Promise<string> {
   const buffer = await createPngBuffer({
