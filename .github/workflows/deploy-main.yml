@@ -103,7 +103,9 @@ jobs:
       runs-on: lynx-custom-container
       is-web: true
       run: |
-        ulimit -Sn 655350
+        echo "open files limit before: soft=$(ulimit -Sn), hard=$(ulimit -Hn)"
+        ulimit -Sn "$(ulimit -Hn)"
+        echo "open files limit after: soft=$(ulimit -Sn), hard=$(ulimit -Hn)"
         export NODE_OPTIONS="--max-old-space-size=32768"
         export PLAYWRIGHT_JUNIT_OUTPUT_NAME=test-report.junit.xml
         pnpm --filter @lynx-js/web-elements run test --reporter='github,dot,junit,html'
@@ -118,7 +120,9 @@ jobs:
       runs-on: lynx-custom-container
       is-web: true
       run: |
-        ulimit -Sn 655350
+        echo "open files limit before: soft=$(ulimit -Sn), hard=$(ulimit -Hn)"
+        ulimit -Sn "$(ulimit -Hn)"
+        echo "open files limit after: soft=$(ulimit -Sn), hard=$(ulimit -Hn)"
         export NODE_OPTIONS="--max-old-space-size=32768"
         export PLAYWRIGHT_JUNIT_OUTPUT_NAME=test-report.junit.xml
         pnpm --filter @lynx-js/web-core-e2e run test --reporter='github,dot,junit,html'

@@ -509,6 +509,8 @@ class ReactWebpackPlugin {
               );
             }
 
+            args.encodeData.sourceContent.config['enableUnifyFixedBehavior'] =
+              true;
             args.encodeData.elementTemplate = elementTemplates;
             return args;
           },
