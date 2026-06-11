@@ -6,6 +6,8 @@ import { pluginAreTheTypesWrong } from 'rsbuild-plugin-arethetypeswrong'
 import { pluginPublint } from 'rsbuild-plugin-publint'
 import { TypiaRspackPlugin } from 'typia-rspack-plugin'
 
+import { BUNDLE_STATS_JSON_OPTIONS } from './src/plugins/statsJsonOptions.js'
+
 export default defineConfig({
   lib: [
     {
@@ -122,7 +124,7 @@ function pluginStatsJson(): rsbuild.RsbuildPlugin {
         mkdirSync(api.context.distPath, { recursive: true })
         writeFileSync(
           path.join(api.context.distPath, 'stats.json'),
-          JSON.stringify(stats.toJson({}), null, 2),
+          JSON.stringify(stats.toJson(BUNDLE_STATS_JSON_OPTIONS), null, 2),
         )
       })
     },
