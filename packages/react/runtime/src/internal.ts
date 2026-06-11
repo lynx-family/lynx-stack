@@ -5,6 +5,7 @@
 import { Suspense, createElement, lazy } from 'preact/compat';
 import type { FC } from 'react';
 
+import './runtime-backend-marker.js';
 import './lynx.js';
 
 import { useMemo } from './core/hooks/react.js';

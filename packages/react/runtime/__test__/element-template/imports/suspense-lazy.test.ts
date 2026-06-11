@@ -55,7 +55,9 @@ const sExportsJSXDevRuntime = Symbol.for('__REACT_LYNX_EXPORTS__(@lynx-js/react/
 const sExportsLegacyReactRuntime = Symbol.for(
   '__REACT_LYNX_EXPORTS__(@lynx-js/react/legacy-react-runtime)',
 );
+const sRuntimeBackend = Symbol.for('__REACT_LYNX_RUNTIME_BACKEND__');
 const lazyTargetSymbols = [
+  sRuntimeBackend,
   sExportsReact,
   sExportsReactCompat,
   sExportsReactLepus,
@@ -234,6 +236,7 @@ describe('element-template Suspense and lazy imports', () => {
     ]);
 
     const target = lynx as typeof lynx & Record<symbol, unknown>;
+    expect(target[sRuntimeBackend]).toBe('Element Template');
     expect(target[sExportsReact]).toBe(elementTemplateRoot);
     expect(target[sExportsReactCompat]).toBe(reactCompat);
     expect(target[sExportsReactLepus]).toBe(elementTemplateRoot);

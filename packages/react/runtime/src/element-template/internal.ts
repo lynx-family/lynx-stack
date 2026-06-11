@@ -5,6 +5,7 @@
 // import { Suspense, createElement, lazy } from 'preact/compat';
 // import type { FC } from 'react';
 
+import './runtime-backend-marker.js';
 import './native/index.js';
 
 // import { factory as factory2 } from '../compat/componentIs.js';

@@ -77,6 +77,14 @@ export default defineConfig({
         replacement: path.resolve(__dirname, './src/worklet-runtime/bindings/index.ts'),
       },
       { find: '@lynx-js/react/runtime-components', replacement: path.resolve(__dirname, '../components/src/index.ts') },
+      {
+        find: /^@lynx-js\/react\/element-template\/internal$/,
+        replacement: path.resolve(__dirname, './src/element-template/internal.ts'),
+      },
+      {
+        find: /^@lynx-js\/react\/element-template$/,
+        replacement: path.resolve(__dirname, './src/element-template/index.ts'),
+      },
       { find: '@lynx-js/react/internal', replacement: path.resolve(__dirname, './src/internal.ts') },
       { find: '@lynx-js/react/jsx-dev-runtime', replacement: path.resolve(__dirname, './jsx-dev-runtime/index.js') },
       { find: '@lynx-js/react/jsx-runtime', replacement: path.resolve(__dirname, './jsx-runtime/index.js') },
