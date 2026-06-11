@@ -1367,6 +1367,58 @@ describe('should reuse dom', () => {
     }
   });
 
+  it('keyed host replacement updates content without crashing during snapshot patch apply', () => {
+    // https://github.com/lynx-family/lynx-stack/issues/2435
+    vi.spyOn(lynxTestingEnv.backgroundThread.lynxCoreInject.tt, 'OnLifecycleEvent');
+    vi.spyOn(lynx.getNativeApp(), 'callLepusMethod');
+
+    const App = () => {
+      const [tab, setTab] = useState('a');
+
+      return (
+        <view>
+          <text
+            data-testid='toggle'
+            bindtap={() => setTab(prev => prev === 'a' ? 'b' : 'a')}
+          >
+            toggle tab: {tab}
+          </text>
+
+          <view key={tab}>
+            {tab === 'a'
+              ? (
+                <view>
+                  <text>A content</text>
+                </view>
+              )
+              : (
+                <view>
+                  <text>B content</text>
+                </view>
+              )}
+          </view>
+        </view>
+      );
+    };
+
+    const { getByTestId, queryByText } = render(<App />);
+
+    expect(queryByText('A content')).toBeInTheDocument();
+    expect(queryByText('B content')).not.toBeInTheDocument();
+
+    expect(() => fireEvent.tap(getByTestId('toggle'))).not.toThrow();
+
+    expect(queryByText('A content')).not.toBeInTheDocument();
+    expect(queryByText('B content')).toBeInTheDocument();
+    expect(getByTestId('toggle')).toHaveTextContent('toggle tab: b');
+
+    expect(() => fireEvent.tap(getByTestId('toggle'))).not.toThrow();
+
+    expect(queryByText('A content')).toBeInTheDocument();
+    expect(queryByText('B content')).not.toBeInTheDocument();
+    expect(getByTestId('toggle')).toHaveTextContent('toggle tab: a');
+  });
+
   it('slot 1 component hooks state must be preserved when slot 0 type changes', () => {
     vi.spyOn(lynxTestingEnv.backgroundThread.lynxCoreInject.tt, 'OnLifecycleEvent');
     vi.spyOn(lynx.getNativeApp(), 'callLepusMethod');

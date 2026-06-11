@@ -970,3 +970,46 @@ describe('list - deferred <list-item/> should render as normal', () => {
     expect(JSON.parse(callLepusMethodCalls[0][1]['data']).patchList[0].snapshotPatch.length).toBe(0);
   });
 });
+
+test('should replace a keyed list in a dynamic slot without corrupting the slot index', async () => {
+  // https://github.com/lynx-family/lynx-stack/issues/2273
+  let setListKey;
+  const Comp = () => {
+    const [listKey, _setListKey] = useState('before');
+    setListKey = _setListKey;
+
+    return (
+      <view>
+        <text>header</text>
+        <list key={listKey} custom-list-name='list-container'>
+          <list-item item-key='bottom' estimated-height-px={20}>
+            <text>{listKey}</text>
+          </list-item>
+        </list>
+        <text>footer</text>
+      </view>
+    );
+  };
+
+  const { container } = render(<Comp />);
+  const initialList = container.querySelector('list');
+
+  expect(initialList).not.toBeNull();
+  expect(() => {
+    act(() => {
+      setListKey('after');
+    });
+  }).not.toThrow();
+
+  const nextList = container.querySelector('list');
+  expect(nextList).not.toBe(initialList);
+
+  const uid = elementTree.enterListItemAtIndex(nextList, 0);
+  await uid;
+
+  expect(container.querySelectorAll('view > wrapper > list')).toHaveLength(1);
+  expect(nextList.getAttribute('custom-list-name')).toBe('list-container');
+  expect(nextList.querySelector('list-item').getAttribute('item-key')).toBe('bottom');
+  expect(nextList.querySelector('list-item').getAttribute('estimated-height-px')).toBe('20');
+  expect(container.textContent).toBe('headerafterfooter');
+});
