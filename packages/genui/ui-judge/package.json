@@ -23,7 +23,8 @@
     "build": "rslib build",
     "test": "pnpm run test:playwright",
     "test:android": "vitest run --config vitest.config.ts",
-    "test:playwright": "playwright test"
+    "test:playwright": "playwright test",
+    "update:react-fixture-snapshot": "vitest run --config vitest.snapshot.config.ts"
   },
   "dependencies": {
     "@lynx-js/genui": "workspace:*",
