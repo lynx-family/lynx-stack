@@ -5,7 +5,7 @@ import path from 'node:path';
 
 import type { LoaderContext } from '@rspack/core';
 
-import type { LoaderOptions } from './loader.js';
+import type { LoaderOptions } from './rspack-loader.js';
 
 export function isAbsolutePath(str: string): boolean {
   return path.posix.isAbsolute(str) || path.win32.isAbsolute(str);

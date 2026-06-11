@@ -8,8 +8,8 @@
  * This plugin extracts CSS into separate files. It creates a CSS file per JS file which contains CSS and CSSId.
  */
 
-export type { LoaderOptions } from './loader.js';
-export type { LoaderOptions as CssExtractRspackLoaderOptions } from './loader.js';
+export type { LoaderOptions } from './rspack-loader.js';
+export type { LoaderOptions as CssExtractRspackLoaderOptions } from './rspack-loader.js';
 
 export { CssExtractRspackPlugin } from './CssExtractRspackPlugin.js';
 export type { CssExtractRspackPluginOptions } from './CssExtractRspackPlugin.js';
