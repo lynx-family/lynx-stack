@@ -9,6 +9,7 @@ import type { RspackOptions, Stats } from '@rspack/core';
 import { BasicCaseCreator, describeByWalk } from '@rspack/test-tools';
 import type { ITestContext, ITestProcessor } from '@rspack/test-tools';
 
+import { preactDedupeAlias } from './hot.js';
 import { getOptions, rspeedyRunnerCreator } from './suite.js';
 import type { ITestSuite, TAfterExecuteFn, TBeforeExecuteFn } from './suite.js';
 
@@ -33,6 +34,7 @@ function lynxDefaultOptions(
       filename: 'rspack.bundle.js',
     },
     resolve: {
+      alias: preactDedupeAlias(),
       extensions: ['.jsx', '.tsx', '.js', '.ts', '.json'],
       extensionAlias: {
         '.js': ['.ts', '.js'],
@@ -52,6 +54,7 @@ function lynxDefaultOptions(
  */
 interface LynxCaseConfig {
   beforeExecute?: () => void | Promise<void>;
+  bundlePath?: string[];
 }
 
 function readLynxCaseConfig(src: string): LynxCaseConfig {
@@ -61,15 +64,20 @@ function readLynxCaseConfig(src: string): LynxCaseConfig {
   return require(file) as LynxCaseConfig;
 }
 
-/** Vendored `findBundle` for a single-entry node case. */
-function findBundle(context: ITestContext): string | undefined {
+/** Vendored `findBundle` for node cases. */
+function findBundles(
+  context: ITestContext,
+  caseConfig: LynxCaseConfig,
+): string[] {
+  if (Array.isArray(caseConfig.bundlePath)) return caseConfig.bundlePath;
   const stats = context.getCompiler().getStats() as Stats | null;
-  if (!stats) return undefined;
+  if (!stats) return [];
   const info = stats.toJson({ all: false, entrypoints: true });
   const assets = (info.entrypoints?.['main']?.assets ?? []).filter((s) =>
     s.name.endsWith('.js')
   );
-  return assets[assets.length - 1]?.name;
+  const last = assets[assets.length - 1]?.name;
+  return last ? [last] : [];
 }
 
 /**
@@ -156,12 +164,12 @@ function createNormalProcessor(
       if (typeof caseConfig.beforeExecute === 'function') {
         await caseConfig.beforeExecute();
       }
-      const bundle = findBundle(context);
-      if (!bundle) return;
-      const runner = context.getRunner(bundle, withScopedAssertions(env));
-      const mod = runner.run(bundle);
       const result = context.getValue<unknown[]>('modules') ?? [];
-      result.push(mod);
+      const scopedEnv = withScopedAssertions(env);
+      for (const bundle of findBundles(context, caseConfig)) {
+        const runner = context.getRunner(bundle, scopedEnv);
+        result.push(runner.run(bundle));
+      }
       context.setValue('modules', result);
       const modules = await Promise.all(result);
       if (typeof hooks.afterExecute === 'function') {

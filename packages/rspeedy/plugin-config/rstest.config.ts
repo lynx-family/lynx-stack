@@ -19,16 +19,10 @@ const config: RstestConfig = defineConfig({
     fixtures: 'cases',
     dist: 'dist',
   }),
-  // `src/validate.ts` uses the `typia.createValidateEquals<T>()` macro, which
-  // must be expanded at build time (same plugin the `rslib` build uses, where
-  // `@lynx-js/rspeedy` is auto-externalized so its `lib` never enters the
-  // bundle). Under rstest the workspace deps ARE bundled, so scope the
-  // transformer to this package's `src`: the default include would also run it
-  // over other workspace packages' already-expanded `lib` output (e.g.
-  // `@lynx-js/rspeedy`'s `lib/config/validate.js`), and the loader's
-  // single-file `ts.createProgram` cannot resolve those files' imports —
-  // the unresolved symbols crash the TypeScript checker
-  // ("Cannot read properties of undefined (reading 'flags')").
+  // Expand `src`'s typia macros (rslib does this too, but auto-externals the
+  // workspace deps). `include` is required: without it typia also processes
+  // `rspeedy/core/lib/config/validate.js`, fails to resolve symbols there and
+  // crashes.
   tools: {
     rspack: {
       plugins: [

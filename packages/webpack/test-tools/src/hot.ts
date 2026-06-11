@@ -47,7 +47,7 @@ const TARGET = 'node' as const;
 // ---------------------------------------------------------------------------
 
 /**
- * Dedupe `preact` for hot bundles that pull in `@lynx-js/react`.
+ * Dedupe `preact` for bundles that pull in `@lynx-js/react`.
  *
  * `@lynx-js/react` renders with `@lynx-js/internal-preact`, but some of its
  * entry points (and the prefresh runtime) import bare `preact` / `preact/*`,
@@ -55,14 +55,14 @@ const TARGET = 'node' as const;
  * whose hooks dispatcher is installed on a different `options` object, breaking
  * `useRef`/`useMemo` (`Cannot read properties of undefined (reading '__H')`).
  * The production `@lynx-js/rspeedy` build solves this with a `resolve.alias`
- * (see `plugin-react-alias`); the hot harness has no such plugin, so vendor the
- * minimal alias here, resolving each preact entry *relative to `@lynx-js/react`*
- * so it lands on that package's `@lynx-js/internal-preact`.
+ * (see `plugin-react-alias`); the test harness has no such plugin, so vendor
+ * the minimal alias here, resolving each preact entry *relative to
+ * `@lynx-js/react`* so it lands on that package's `@lynx-js/internal-preact`.
  *
  * Returns `{}` when `@lynx-js/react` is not installed (e.g. the css-extract /
  * template hot suites), so those suites are unaffected.
  */
-function preactDedupeAlias(): Record<string, string> {
+export function preactDedupeAlias(): Record<string, string> {
   const require = createRequire(import.meta.url);
   let reactPkg: string;
   try {

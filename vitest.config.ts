@@ -82,6 +82,7 @@ export default defineConfig({
       'packages/web-platform/*/vitest.config.ts',
       'packages/lynx/*/vitest.config.ts',
       'packages/motion/vitest.config.ts',
+      'packages/webpack/webpack-dev-transport/vitest.config.ts',
     ],
   },
 });

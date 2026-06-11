@@ -4,6 +4,7 @@ lib
 www
 playwright-report
 test-results
+test-report.junit.xml
 trace.zip
 midscene_run
 .turbo

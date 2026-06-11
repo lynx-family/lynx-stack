@@ -138,7 +138,8 @@ export function withViModuleScope(
 
 /** Runner creator that drives `RspeedyNormalRunner` (the default for normal cases). */
 export const rspeedyRunnerCreator: TTestRunnerCreator = {
-  key: (_context: ITestContext, name: string, _file: string) => name,
+  key: (_context: ITestContext, name: string, file: string) =>
+    file.includes(':') ? `${name}:${file}` : name,
   runner: (context: ITestContext, name: string, _file: string, env: ITestEnv) =>
     new RspeedyNormalRunner({
       env,
