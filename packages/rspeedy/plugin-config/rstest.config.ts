@@ -16,8 +16,6 @@ const config: RstestConfig = defineConfig({
   ...lynxRstestConfig({
     name: 'rspeedy/config',
     url: import.meta.url,
-    fixtures: 'cases',
-    dist: 'dist',
   }),
   // Expand `src`'s typia macros (rslib does this too, but auto-externals the
   // workspace deps). `include` is required: without it typia also processes
