@@ -78,19 +78,19 @@ describe('Rspack TestCases', () => {
           outputDirectory,
           directory,
         );
-        const { default: webpackConfig } = await import(path.resolve(
+        const { default: rspackConfig } = await import(path.resolve(
           directoryForCase,
-          'webpack.config.js',
+          'rspack.config.js',
         )) as { default: Configuration };
 
-        webpackConfig.experiments ??= {};
-        webpackConfig.experiments.css = false;
+        rspackConfig.experiments ??= {};
+        rspackConfig.experiments.css = false;
 
-        const { context } = webpackConfig;
+        const { context } = rspackConfig;
 
         for (
           const config of ([] as Configuration[]).concat(
-            webpackConfig,
+            rspackConfig,
           )
         ) {
           Object.assign(
@@ -114,7 +114,7 @@ describe('Rspack TestCases', () => {
         }
 
         const stats = await new Promise<Stats>((resolve, reject) => {
-          rspack.rspack(webpackConfig, (error, stats) => {
+          rspack.rspack(rspackConfig, (error, stats) => {
             if (error) {
               reject(error);
 
