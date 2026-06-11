@@ -74,6 +74,17 @@ where
     }))
   }
 
+  fn element_template_css_id_attribute_descriptor(&self, css_id: f64) -> Expr {
+    self.element_template_static_attribute_descriptor(
+      "css-id",
+      Expr::Lit(Lit::Num(Number {
+        span: DUMMY_SP,
+        value: css_id,
+        raw: None,
+      })),
+    )
+  }
+
   fn element_template_array_expr(&self, items: Vec<Expr>) -> Expr {
     Expr::Array(ArrayLit {
       span: DUMMY_SP,
@@ -168,21 +179,21 @@ where
             continue;
           }
 
-          out.push(self.element_template_element_node(
-            "raw-text",
-            vec![self.element_template_static_attribute_descriptor(
-              "text",
-              self.element_template_string_expr(s.as_ref()),
-            )],
-            vec![],
-          ));
+          let mut attributes = vec![self.element_template_static_attribute_descriptor(
+            "text",
+            self.element_template_string_expr(s.as_ref()),
+          )];
+          if let Some(css_id) = self.css_id_value {
+            attributes.push(self.element_template_css_id_attribute_descriptor(css_id));
+          }
+
+          out.push(self.element_template_element_node("raw-text", attributes, vec![]));
         }
-        JSXElementChild::JSXElement(el) => out.push(self.element_template_from_jsx_element_impl(
+        JSXElementChild::JSXElement(el) => out.push(self.element_template_from_jsx_element(
           el,
           dynamic_attr_slots,
           dynamic_attr_slot_cursor,
           element_slot_index,
-          false,
         )),
         JSXElementChild::JSXFragment(frag) => {
           out.extend(self.element_template_from_jsx_children(
@@ -217,23 +228,6 @@ where
     dynamic_attr_slots: &[TemplateAttributeSlot],
     dynamic_attr_slot_cursor: &mut usize,
     element_slot_index: &mut i32,
-  ) -> Expr {
-    self.element_template_from_jsx_element_impl(
-      n,
-      dynamic_attr_slots,
-      dynamic_attr_slot_cursor,
-      element_slot_index,
-      true,
-    )
-  }
-
-  fn element_template_from_jsx_element_impl(
-    &self,
-    n: &JSXElement,
-    dynamic_attr_slots: &[TemplateAttributeSlot],
-    dynamic_attr_slot_cursor: &mut usize,
-    element_slot_index: &mut i32,
-    is_template_root: bool,
   ) -> Expr {
     if is_slot_placeholder(n) {
       let idx =
@@ -371,17 +365,8 @@ where
       )
     };
 
-    if is_template_root {
-      if let Some(css_id) = self.css_id_value {
-        attribute_descriptors.push(self.element_template_static_attribute_descriptor(
-          "css-id",
-          Expr::Lit(Lit::Num(Number {
-            span: DUMMY_SP,
-            value: css_id,
-            raw: None,
-          })),
-        ));
-      }
+    if let Some(css_id) = self.css_id_value {
+      attribute_descriptors.push(self.element_template_css_id_attribute_descriptor(css_id));
     }
 
     let final_tag = tag_value.to_string_lossy().to_string();

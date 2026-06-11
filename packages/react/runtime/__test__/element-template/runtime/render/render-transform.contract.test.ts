@@ -127,7 +127,7 @@ describe('render transform contract', () => {
     resetTemplateId();
   });
 
-  it('passes scoped css-id through ET template root attrs', async () => {
+  it('passes scoped css-id through ET template subtree attrs', async () => {
     const { code, rootRef, userTemplateIds } = await compileAndRender(
       `
       import './style.css';
@@ -135,7 +135,7 @@ describe('render transform contract', () => {
       export function App() {
         return (
           <view id="main">
-            <text>Hello</text>
+            <text className="message">Hello</text>
           </view>
         );
       }
@@ -145,17 +145,29 @@ describe('render transform contract', () => {
 
     expect(code).toContain('style.css?cssId=1460700');
 
-    expect(rootRef).toMatchObject({
+    const expectedScopedTree = {
       tag: 'view',
       attributes: {
         id: 'main',
         'css-id': 1460700,
       },
+      children: [
+        {
+          tag: 'text',
+          attributes: {
+            class: 'message',
+            text: 'Hello',
+            'css-id': 1460700,
+          },
+        },
+      ],
+    };
+
+    expect(rootRef).toMatchObject({
+      ...expectedScopedTree,
       __handleId: -1,
     });
-    expect(elementTemplateRegistry.get(-1)).toMatchObject({
-      attributes: { id: 'main', 'css-id': 1460700 },
-    });
+    expect(elementTemplateRegistry.get(-1)).toMatchObject(expectedScopedTree);
     expect(userTemplateIds).toEqual([
       expect.stringMatching(/^_et_[0-9a-f]{12}$/),
     ]);

@@ -15,6 +15,7 @@ import {
 import {
   replacePendingA2UIImagesWithLoading,
   resolveA2UIImageUrlsIncrementally,
+  resolveStaticA2UIImageComponent,
 } from '../../../../agent/image-resolver';
 import { getA2UIAgentService } from '../../../../service/a2ui-agent';
 import type { ChatMessage } from '../../../../service/a2ui-agent';
@@ -242,15 +243,14 @@ export async function POST(req: Request) {
         const resolvedMessages = await resolveA2UIImageUrlsIncrementally(
           messages,
           (imageMessages) => {
-            const splitMessages = splitA2UIProtocolMessages(imageMessages);
-            if (splitMessages.length === 0) return;
-            enqueue('message', { messages: splitMessages });
+            if (imageMessages.length === 0) return;
+            enqueue('message', { messages: imageMessages });
             log('images.resolved.enqueued', {
-              messageCount: splitMessages.length,
+              messageCount: imageMessages.length,
             });
           },
         );
-        return splitA2UIProtocolMessages(resolvedMessages);
+        return resolvedMessages;
       };
 
       try {
@@ -264,7 +264,33 @@ export async function POST(req: Request) {
         log('agent.connect.completed', {
           durationMs: performance.now() - connectStartedAt,
         });
-        const protocolParser = new A2UIProtocolMessageStreamParser();
+        const streamingImageResolutions: Promise<void>[] = [];
+        const streamingImageKeys = new Set<string>();
+        const protocolParser = new A2UIProtocolMessageStreamParser({
+          onStaticImageComponent: (surfaceId, component) => {
+            if (typeof component.url !== 'string') return;
+            const key = `${surfaceId}\0${component.id}\0${component.url}`;
+            if (streamingImageKeys.has(key)) return;
+            streamingImageKeys.add(key);
+            const resolution = resolveStaticA2UIImageComponent(
+              surfaceId,
+              component,
+            ).then((message) => {
+              if (!message) return;
+              enqueue('message', { messages: [message] });
+              log('images.resolved.enqueued', {
+                messageCount: 1,
+                streaming: true,
+              });
+            }).catch((err: unknown) => {
+              log('images.resolved.error', {
+                streaming: true,
+                error: errorMessage(err).message,
+              });
+            });
+            streamingImageResolutions.push(resolution);
+          },
+        });
         const streamedMessages: unknown[] = [];
         let streamedText = '';
         let chunkCount = 0;
@@ -303,6 +329,8 @@ export async function POST(req: Request) {
           streamedMessageCount: streamedMessages.length,
         });
 
+        await Promise.allSettled(streamingImageResolutions);
+
         let { text: finalText, usage, finishReason } = await finalize();
         finalText ??= streamedText;
         log('upstream.finalized', {
@@ -320,12 +348,17 @@ export async function POST(req: Request) {
           }
           | undefined;
 
-        let validation: { ok: boolean; errors: string[]; messages: unknown[] } =
-          {
-            ok: false,
-            errors: ['no text produced'],
-            messages: [],
-          };
+        let validation: {
+          ok: boolean;
+          errors: string[];
+          warnings: string[];
+          messages: unknown[];
+        } = {
+          ok: false,
+          errors: ['no text produced'],
+          warnings: [],
+          messages: [],
+        };
         const validationOptions = {
           requireCreateSurface: false,
           existingSurfaceIds: body.surfaceId ? [body.surfaceId] : [],
@@ -348,6 +381,8 @@ export async function POST(req: Request) {
           ok: v.ok,
           errorCount: v.errors.length,
           errors: v.errors,
+          warningCount: v.warnings.length,
+          warnings: v.warnings,
           invalidData: v.ok
             ? undefined
             : getA2UIValidationDebugData(finalText ?? '', v.errors),
@@ -356,6 +391,7 @@ export async function POST(req: Request) {
         validation = {
           ok: v.ok,
           errors: v.errors,
+          warnings: v.warnings,
           messages: resolvedMessages,
         };
         if (!v.ok) {
@@ -381,6 +417,8 @@ export async function POST(req: Request) {
               attempts: repaired.attempts,
               errorCount: repaired.errors.length,
               errors: repaired.errors,
+              warningCount: repaired.warnings.length,
+              warnings: repaired.warnings,
               textLength: repaired.text.length,
               messageCount: repaired.messages.length,
             });
@@ -394,12 +432,14 @@ export async function POST(req: Request) {
               validation = {
                 ok: true,
                 errors: [],
+                warnings: repaired.warnings,
                 messages: resolvedMessages,
               };
             } else {
               validation = {
                 ok: false,
                 errors: repaired.errors,
+                warnings: repaired.warnings,
                 messages: [],
               };
             }
@@ -415,6 +455,7 @@ export async function POST(req: Request) {
             validation = {
               ok: false,
               errors: [repairError],
+              warnings: [],
               messages: [],
             };
             enqueue('repair', repair);

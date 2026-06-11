@@ -414,7 +414,7 @@ where
                 }
                 false
               }
-              "css-id" if !self.parent_element && self.has_css_id_value => {
+              "css-id" if self.has_css_id_value => {
                 HANDLER.with(|handler| {
                   handler
                     .struct_span_warn(

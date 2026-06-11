@@ -128,6 +128,35 @@ fn without_whitespace(value: &str) -> String {
   value.chars().filter(|ch| !ch.is_whitespace()).collect()
 }
 
+fn assert_single_framework_css_id_attr(template: &Value, expected_css_id: f64, message: &str) {
+  let attrs = template["attributesArray"]
+    .as_array()
+    .expect("attributesArray");
+  let css_id_attrs = attrs
+    .iter()
+    .filter(|attr| attr["key"] == "css-id")
+    .collect::<Vec<_>>();
+  assert_eq!(css_id_attrs.len(), 1, "{message}");
+  assert_eq!(css_id_attrs[0]["kind"], "static");
+  assert_eq!(css_id_attrs[0]["value"].as_f64(), Some(expected_css_id));
+  assert!(
+    attrs.iter().all(|attr| attr["key"] != "entry-name"),
+    "{message}: element should not carry entry-name attrs",
+  );
+}
+
+fn assert_no_css_scope_attrs(template: &Value, message: &str) {
+  let attrs = template["attributesArray"]
+    .as_array()
+    .expect("attributesArray");
+  assert!(
+    attrs
+      .iter()
+      .all(|attr| attr["key"] != "css-id" && attr["key"] != "entry-name"),
+    "{message}",
+  );
+}
+
 fn assert_attr_plan_assignment(code: &str, expected_entries: &str, message: &str) {
   let marker = "ReactLynxInternal.__etAttrPlanMap[_et_";
   let start = code
@@ -233,14 +262,15 @@ fn should_emit_spread_attr_plan_with_ref_adapter() {
 }
 
 #[test]
-fn should_inject_root_css_scope_attr_for_element_template() {
+fn should_inject_css_scope_attr_for_element_template_subtree() {
   let (code, template) = first_user_template_json_with_code(
     r#"
       /**
        * @jsxCSSId 100
        */
-      <view>
-        <text>Hello</text>
+      <view className="task-login-card">
+        <text className="task-login-card-btn">Hello</text>
+        <text text="Explicit Text Attribute">Child Text</text>
       </view>
     "#,
     element_template_config(),
@@ -250,29 +280,32 @@ fn should_inject_root_css_scope_attr_for_element_template() {
     "element template lowering should not emit legacy cssId create metadata, got: {code}"
   );
 
-  let attrs = template["attributesArray"]
-    .as_array()
-    .expect("attributesArray");
-  let css_id_attr = attrs
-    .iter()
-    .find(|attr| attr["key"] == "css-id")
-    .expect("root element should carry framework css-id attr");
-  assert_eq!(css_id_attr["kind"], "static");
-  assert_eq!(css_id_attr["value"].as_f64(), Some(100.0));
-  assert!(
-    attrs.iter().all(|attr| attr["key"] != "entry-name"),
-    "root element should not carry entry-name attrs",
+  assert_single_framework_css_id_attr(
+    &template,
+    100.0,
+    "root element should carry framework css-id attr",
   );
 
   let children = template["children"].as_array().expect("children array");
-  let first_child_attrs = children[0]["attributesArray"]
+  assert_single_framework_css_id_attr(
+    &children[0],
+    100.0,
+    "nested text element should carry framework css-id attr",
+  );
+  assert_single_framework_css_id_attr(
+    &children[1],
+    100.0,
+    "nested text element with explicit text attr should carry framework css-id attr",
+  );
+
+  let raw_text = &children[1]["children"]
     .as_array()
-    .expect("child attributesArray");
-  assert!(
-    first_child_attrs
-      .iter()
-      .all(|attr| attr["key"] != "css-id" && attr["key"] != "entry-name"),
-    "nested static elements should not receive css scope attrs",
+    .expect("explicit text child array")[0];
+  assert_eq!(raw_text["type"], "raw-text");
+  assert_single_framework_css_id_attr(
+    raw_text,
+    100.0,
+    "inline raw-text child should carry framework css-id attr",
   );
 }
 
@@ -325,14 +358,14 @@ fn should_not_inject_css_scope_attrs_without_jsx_css_id() {
     "#,
   );
 
-  let attrs = template["attributesArray"]
-    .as_array()
-    .expect("attributesArray");
-  assert!(
-    attrs
-      .iter()
-      .all(|attr| attr["key"] != "css-id" && attr["key"] != "entry-name"),
+  assert_no_css_scope_attrs(
+    &template,
     "root element should not carry css scope attrs without @jsxCSSId",
+  );
+  let child = &template["children"].as_array().expect("children array")[0];
+  assert_no_css_scope_attrs(
+    child,
+    "nested static elements should not carry css scope attrs without @jsxCSSId",
   );
 }
 
@@ -343,7 +376,9 @@ fn should_append_framework_css_id_after_spread_attrs() {
       /**
        * @jsxCSSId 100
        */
-      <view {...props} />
+      <view {...props}>
+        <text {...childProps} />
+      </view>
     "#,
   );
 
@@ -355,6 +390,16 @@ fn should_append_framework_css_id_after_spread_attrs() {
   assert_eq!(last_attr["key"], "css-id");
   assert_eq!(last_attr["kind"], "static");
   assert_eq!(last_attr["value"].as_f64(), Some(100.0));
+
+  let child = &template["children"].as_array().expect("children array")[0];
+  let child_attrs = child["attributesArray"]
+    .as_array()
+    .expect("child attributesArray");
+  assert_eq!(child_attrs[0]["kind"], "spread");
+  let child_last_attr = child_attrs.last().expect("child should have attrs");
+  assert_eq!(child_last_attr["key"], "css-id");
+  assert_eq!(child_last_attr["kind"], "static");
+  assert_eq!(child_last_attr["value"].as_f64(), Some(100.0));
 }
 
 #[test]

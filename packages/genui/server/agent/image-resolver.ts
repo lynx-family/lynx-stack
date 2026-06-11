@@ -24,6 +24,8 @@ type A2UIComponent = A2UIUpdateComponentsMessage['updateComponents'][
   'components'
 ][number];
 
+type A2UIComponentRecord = A2UIComponent & Record<string, unknown>;
+
 interface PendingImageLoadingResult {
   messages: A2UIMessage[];
   replacementCount: number;
@@ -31,9 +33,15 @@ interface PendingImageLoadingResult {
 
 interface ImageResolutionPlan {
   messages: A2UIMessage[];
-  staticResolutions: Promise<A2UIMessage>[];
+  staticResolutions: StaticImageResolution[];
   dataResolutions: Promise<ImageDataPatch>[];
   pendingImageRestores: A2UIMessage[];
+}
+
+interface StaticImageResolution {
+  surfaceId: string;
+  componentId: string;
+  promise: Promise<A2UIMessage>;
 }
 
 type ImageResolutionResult =
@@ -114,6 +122,37 @@ export function isLoadableImageSource(value: unknown): value is string {
   return /\.(?:avif|gif|jpe?g|png|svg|webp)(?:[?#].*)?$/iu.test(src);
 }
 
+export function isResolvableStaticA2UIImage(
+  component: A2UIComponentRecord,
+): boolean {
+  if (component.component !== 'Image') return false;
+  return typeof component.url === 'string'
+    && !isLoadableImageSource(component.url);
+}
+
+export async function resolveStaticA2UIImageComponent(
+  surfaceId: string,
+  component: A2UIComponentRecord,
+): Promise<A2UIMessage | undefined> {
+  if (!isResolvableStaticA2UIImage(component)) return undefined;
+  const resolved = await resolveImageUrl(
+    component.url as string,
+    queryFromComponent(component.id),
+  );
+  return {
+    version: 'v0.9',
+    updateComponents: {
+      surfaceId,
+      components: [
+        {
+          ...component,
+          url: resolved,
+        },
+      ],
+    },
+  };
+}
+
 export function replacePendingA2UIImagesWithLoading(
   messages: A2UIMessage[],
 ): PendingImageLoadingResult {
@@ -148,17 +187,26 @@ export async function resolveA2UIImageUrls(
   messages: A2UIMessage[],
 ): Promise<A2UIMessage[]> {
   const plan = createImageResolutionPlan(messages);
-  const appendedMessages: A2UIMessage[] = [];
-  appendedMessages.push(...await Promise.all(plan.staticResolutions));
+  const staticMessages = await Promise.all(
+    plan.staticResolutions.map((resolution) => resolution.promise),
+  );
   const dataPatches = dedupeImageDataPatches(
     await Promise.all(plan.dataResolutions),
   );
+  const appendedMessages: A2UIMessage[] = [];
   appendedMessages.push(
     ...dataPatches.map((patch) => createImageDataPatchMessage(patch)),
   );
   appendedMessages.push(...plan.pendingImageRestores);
 
-  return [...plan.messages, ...appendedMessages];
+  return [
+    ...insertStaticImageMessages(
+      plan.messages,
+      plan.staticResolutions,
+      staticMessages,
+    ),
+    ...appendedMessages,
+  ];
 }
 
 export async function resolveA2UIImageUrlsIncrementally(
@@ -172,8 +220,8 @@ export async function resolveA2UIImageUrlsIncrementally(
 
   const pending: PendingImageResolution[] = [];
   pending.push(
-    ...plan.staticResolutions.map((promise, index) => ({
-      promise: promise.then((message) => ({
+    ...plan.staticResolutions.map((resolution, index) => ({
+      promise: resolution.promise.then((message) => ({
         kind: 'static' as const,
         index,
         message,
@@ -219,9 +267,10 @@ export async function resolveA2UIImageUrlsIncrementally(
   }
 
   return [
-    ...plan.messages,
-    ...staticMessages.filter((message): message is A2UIMessage =>
-      Boolean(message)
+    ...insertStaticImageMessages(
+      plan.messages,
+      plan.staticResolutions,
+      staticMessages,
     ),
     ...finalDataPatches.map((patch) => createImageDataPatchMessage(patch)),
     ...plan.pendingImageRestores,
@@ -234,7 +283,7 @@ function createImageResolutionPlan(
   const cloned = cloneMessages(messages);
   const imagePathRefs: ImagePathRef[] = [];
 
-  const staticResolutions: Promise<A2UIMessage>[] = [];
+  const staticResolutions: StaticImageResolution[] = [];
   for (const message of cloned) {
     if (!('updateComponents' in message) || !message.updateComponents) {
       continue;
@@ -250,8 +299,10 @@ function createImageResolutionPlan(
       if (typeof url === 'string' && !isLoadableImageSource(url)) {
         const originalComponent = { ...component };
         components[i] = createLoadingComponent(component.id) as A2UIComponent;
-        staticResolutions.push(
-          resolveImageUrl(url, fallbackQuery).then((resolved) => ({
+        staticResolutions.push({
+          surfaceId,
+          componentId: component.id,
+          promise: resolveImageUrl(url, fallbackQuery).then((resolved) => ({
             version: 'v0.9',
             updateComponents: {
               surfaceId,
@@ -263,7 +314,7 @@ function createImageResolutionPlan(
               ],
             },
           })),
-        );
+        });
       } else if (isRecord(url) && typeof url.path === 'string') {
         imagePathRefs.push({
           surfaceId,
@@ -338,6 +389,60 @@ function createImageDataPatchMessage(patch: ImageDataPatch): A2UIMessage {
     version: 'v0.9' as const,
     updateDataModel: patch,
   };
+}
+
+function insertStaticImageMessages(
+  messages: A2UIMessage[],
+  resolutions: StaticImageResolution[],
+  resolvedMessages: Array<A2UIMessage | undefined>,
+): A2UIMessage[] {
+  const pendingByFirstComponentRef = new Map<number, A2UIMessage[]>();
+  const appendMessages: A2UIMessage[] = [];
+
+  for (let index = 0; index < resolvedMessages.length; index++) {
+    const resolved = resolvedMessages[index];
+    if (!resolved) continue;
+
+    const resolution = resolutions[index];
+    const insertAfter = resolution
+      ? findFirstComponentMessageIndex(
+        messages,
+        resolution.surfaceId,
+        resolution.componentId,
+      )
+      : -1;
+    if (insertAfter === -1) {
+      appendMessages.push(resolved);
+      continue;
+    }
+
+    const bucket = pendingByFirstComponentRef.get(insertAfter) ?? [];
+    bucket.push(resolved);
+    pendingByFirstComponentRef.set(insertAfter, bucket);
+  }
+
+  const next: A2UIMessage[] = [];
+  messages.forEach((message, index) => {
+    next.push(message);
+    const pending = pendingByFirstComponentRef.get(index);
+    if (pending) next.push(...pending);
+  });
+  next.push(...appendMessages);
+  return next;
+}
+
+function findFirstComponentMessageIndex(
+  messages: A2UIMessage[],
+  surfaceId: string,
+  componentId: string,
+): number {
+  return messages.findIndex((message) =>
+    'updateComponents' in message
+    && message.updateComponents?.surfaceId === surfaceId
+    && message.updateComponents.components.some((component) =>
+      component.id === componentId
+    )
+  );
 }
 
 function imageDataPatchKey(patch: ImageDataPatch): string {
