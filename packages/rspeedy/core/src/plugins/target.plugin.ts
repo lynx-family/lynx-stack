@@ -11,15 +11,15 @@ export function pluginTarget(): RsbuildPlugin {
   return {
     name: 'lynx:rsbuild:target',
     setup(api) {
-      api.modifyBundlerChain((options, { environment, isProd }) => {
+      api.modifyBundlerChain((options, { environment }) => {
         if (isWeb(environment)) {
           options.target([
-            getESVersionTarget(isProd),
+            getESVersionTarget(),
             // Add `target: 'web'` to make Rsbuild inject HMR related code.
             'web',
           ])
         } else {
-          options.target([getESVersionTarget(isProd)])
+          options.target([getESVersionTarget()])
         }
       })
     },

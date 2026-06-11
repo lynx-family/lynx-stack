@@ -1,8 +1,8 @@
 // Copyright 2024 The Lynx Authors. All rights reserved.
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
-export function getESVersionTarget(isProd: boolean): 'es2015' | 'es2019' {
-  return isProd ? 'es2015' : 'es2019'
+export function getESVersionTarget(): 'es2017' {
+  return 'es2017'
 }
 
 // Transforms newer than ES2019 (i.e. ES2020+) — exactly what an
@@ -22,14 +22,10 @@ const ES2019_INCLUDE = [
   'transform-private-property-in-object',
 ]
 
-// Transforms newer than ES2015 (i.e. ES2016+) — exactly what an
-// `jsc.target: 'es2015'` lowers: ES2016~ES2019, plus everything in
+// Transforms newer than ES2017 (i.e. ES2018+) — exactly what an
+// `jsc.target: 'es2017'` lowers: ES2018~ES2019, plus everything in
 // {@link ES2019_INCLUDE}.
-const ES2015_INCLUDE = [
-  // ES2016
-  'transform-exponentiation-operator',
-  // ES2017
-  'transform-async-to-generator',
+const ES2017_INCLUDE = [
   // ES2018
   'transform-async-generator-functions',
   'transform-dotall-regex',
@@ -51,10 +47,8 @@ const ES2015_INCLUDE = [
  * Pair it with a high `env.targets` (so `env` auto-includes nothing and the
  * returned list is the canonical transform set).
  */
-export function getESVersionEnvInclude(
-  target: 'es2015' | 'es2019',
-): string[] {
-  return target === 'es2015' ? [...ES2015_INCLUDE] : [...ES2019_INCLUDE]
+export function getESVersionEnvInclude(): string[] {
+  return [...ES2017_INCLUDE]
 }
 
 // A high baseline so SWC `env` auto-includes nothing; the `include` list

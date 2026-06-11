@@ -9,7 +9,7 @@ import {
   getESVersionEnvInclude,
 } from '../../src/utils/getESVersionTarget.js'
 
-// Syntax spanning ES2016 through ES2025+ (the regex `v` flag, regex modifiers
+// Syntax spanning ES2018 through ES2025+ (the regex `v` flag, regex modifiers
 // and duplicate named capture groups are the newest entries). The guard below
 // compiles this with `jsc.target` (SWC's canonical lowering for an ES version)
 // and with our `env` config, then asserts byte-identical output.
@@ -38,18 +38,18 @@ const MODERN_SYNTAX = [
   'const dupNamed = /(?<a>x)|(?<a>y)/;',
 ].join('\n')
 
-function viaTarget(target: 'es2015' | 'es2019'): string {
+function viaTarget(): string {
   return transformSync(MODERN_SYNTAX, {
     isModule: true,
-    jsc: { parser: { syntax: 'ecmascript' }, target },
+    jsc: { parser: { syntax: 'ecmascript' }, target: 'es2017' },
   }).code
 }
 
-function viaEnv(target: 'es2015' | 'es2019'): string {
+function viaEnv(): string {
   return transformSync(MODERN_SYNTAX, {
     isModule: true,
     jsc: { parser: { syntax: 'ecmascript' } },
-    env: { targets: ES_ENV_TARGETS, include: getESVersionEnvInclude(target) },
+    env: { targets: ES_ENV_TARGETS, include: getESVersionEnvInclude() },
   }).code
 }
 
@@ -57,10 +57,7 @@ describe('getESVersionEnvInclude', () => {
   // Uses `@swc/core` as a stand-in for rspack's builtin SWC: the
   // `env.include` <-> `jsc.target` equivalence is a preset-env property
   // shared by both.
-  test.each(['es2015', 'es2019'] as const)(
-    'env.include reproduces `jsc.target: %s` exactly',
-    (target) => {
-      expect(viaEnv(target)).toBe(viaTarget(target))
-    },
-  )
+  test('env.include reproduces `jsc.target: es2017` exactly', () => {
+    expect(viaEnv()).toBe(viaTarget())
+  })
 })
