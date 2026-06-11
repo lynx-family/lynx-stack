@@ -1,0 +1,6 @@
+{
+  "$schema": "https://openapi.vercel.sh/vercel.json",
+  "framework": "nextjs",
+  "installCommand": "cd ../../.. && corepack enable && pnpm install --frozen-lockfile",
+  "buildCommand": "cd ../../.. && CI=1 pnpm -C packages/genui/ui-judge build && CI=1 pnpm -C packages/genui/server build"
+}
