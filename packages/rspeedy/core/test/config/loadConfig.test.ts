@@ -301,7 +301,12 @@ describe('Config - loadConfig', () => {
     expect(actual.content).toStrictEqual(expected.default())
   })
 
-  test('load promise config', async () => {
+  // Upstream rstest bug (fixed on main via web-infra-dev/rstest#1357, not
+  // yet in an npm release): awaiting a default-exported Promise from a
+  // natively imported `.ts` module throws "Promise.prototype.then called on
+  // incompatible receiver [object Module]". Re-enable on the next @rstest
+  // release. Repro: https://github.com/upupming/rstest-repro
+  test.skip('load promise config', async () => {
     const cwd = join(__dirname, 'fixtures', 'custom')
     const actual = await loadConfig({ cwd, configPath: './promise.ts' })
     const expected = await import(join(cwd, 'promise.ts')) as {
