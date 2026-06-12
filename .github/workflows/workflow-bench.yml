@@ -91,10 +91,10 @@ jobs:
         run: |
           export HOME=/root
           . "$HOME/.cargo/env"
-          # Use samply instead of the default perf profiler: perf setup needs a
-          # kernel-matched linux-tools apt package that isn't installable here,
-          # whereas samply profiles via perf_event_open without it.
-          export CODSPEED_WALLTIME_PROFILER=samply
+          # Default (perf) profiler so CodSpeed can build execution profiles /
+          # flamegraphs. This needs a kernel-matched linux-tools package; the
+          # bare-metal physical-exclusive runner is the supported environment
+          # for it (samply, used as a fallback elsewhere, only yields timings).
           codspeed run --mode walltime -- pnpm -r run --workspace-concurrency=1 bench
       - name: React benchmark - Run perfetto
         run: |
