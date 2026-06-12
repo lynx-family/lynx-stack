@@ -33,7 +33,7 @@ const config: RstestConfig = defineConfig({
       },
     ],
   }),
-  globalSetup: ['./test/helper/setup-loader.js', './test/helper/setup-dist.js'],
+  globalSetup: ['./test/helper/setup-dist.js'],
 });
 
 export default config;
