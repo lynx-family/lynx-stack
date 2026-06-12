@@ -81,7 +81,7 @@ jobs:
           pnpm turbo build
       - name: Prepare CodSpeed
         run: |
-          curl -fsSL https://github.com/CodSpeedHQ/codspeed/releases/download/v4.10.6/codspeed-runner-installer.sh | bash -s -- --quiet
+          curl -fsSL https://github.com/CodSpeedHQ/codspeed/releases/download/v4.17.5/codspeed-runner-installer.sh | bash -s -- --quiet
       - name: Run benchmark (simulation)
         run: |
           export HOME=/root
@@ -91,6 +91,10 @@ jobs:
         run: |
           export HOME=/root
           . "$HOME/.cargo/env"
+          # Use samply instead of the default perf profiler: perf setup needs a
+          # kernel-matched linux-tools apt package that isn't installable here,
+          # whereas samply profiles via perf_event_open without it.
+          export CODSPEED_WALLTIME_PROFILER=samply
           codspeed run --mode walltime -- pnpm -r run --workspace-concurrency=1 bench
       - name: React benchmark - Run perfetto
         run: |
