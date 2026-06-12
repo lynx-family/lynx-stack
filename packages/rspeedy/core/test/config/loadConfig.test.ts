@@ -62,11 +62,11 @@ describe('Config - loadConfig', () => {
     expect(actual.content).toStrictEqual(expected.default)
   })
 
-  // rstest's worker registers its own TS loader hooks, which force `.ts`
-  // configs to ESM and skip Node's CommonJS-syntax detection — these
-  // config flavors load fine under plain Node (production) but cannot be
-  // exercised here. (vitest masked this by loading configs through vite.)
-  test.skip('load with custom relative commonjs typescript config', async () => {
+  // This config flavor only ever loaded because vitest routed it through
+  // vite's lenient transform; plain Node (i.e. the production CLI) rejects
+  // it the same way rstest does. Re-evaluate the intended support before
+  // re-enabling.
+  test('load with custom relative commonjs typescript config', async () => {
     const cwd = join(__dirname, 'fixtures', 'custom')
     const actual = await loadConfig({
       cwd,
@@ -177,10 +177,10 @@ describe('Config - loadConfig', () => {
     `)
   })
 
-  // rstest's worker registers its own TS loader hooks, which force `.ts`
-  // configs to ESM and skip Node's CommonJS-syntax detection — these
-  // config flavors load fine under plain Node (production) but cannot be
-  // exercised here. (vitest masked this by loading configs through vite.)
+  // This config flavor only ever loaded because vitest routed it through
+  // vite's lenient transform; plain Node (i.e. the production CLI) rejects
+  // it the same way rstest does. Re-evaluate the intended support before
+  // re-enabling.
   test.skip('load with "type": "commonjs" in package.json and export default', async () => {
     const cwd = join(__dirname, 'fixtures', 'cjs')
 
@@ -196,10 +196,10 @@ describe('Config - loadConfig', () => {
     }))
   })
 
-  // rstest's worker registers its own TS loader hooks, which force `.ts`
-  // configs to ESM and skip Node's CommonJS-syntax detection — these
-  // config flavors load fine under plain Node (production) but cannot be
-  // exercised here. (vitest masked this by loading configs through vite.)
+  // This config flavor only ever loaded because vitest routed it through
+  // vite's lenient transform; plain Node (i.e. the production CLI) rejects
+  // it the same way rstest does. Re-evaluate the intended support before
+  // re-enabling.
   test.skip('load with "type": "commonjs" in package.json and esm pkg', async () => {
     const cwd = join(__dirname, 'fixtures', 'cjs')
 
@@ -215,10 +215,10 @@ describe('Config - loadConfig', () => {
     }))
   })
 
-  // rstest's worker registers its own TS loader hooks, which force `.ts`
-  // configs to ESM and skip Node's CommonJS-syntax detection — these
-  // config flavors load fine under plain Node (production) but cannot be
-  // exercised here. (vitest masked this by loading configs through vite.)
+  // This config flavor only ever loaded because vitest routed it through
+  // vite's lenient transform; plain Node (i.e. the production CLI) rejects
+  // it the same way rstest does. Re-evaluate the intended support before
+  // re-enabling.
   test.skip('load config with enum', async () => {
     const cwd = join(__dirname, 'fixtures', 'custom')
 
@@ -238,10 +238,10 @@ describe('Config - loadConfig', () => {
     }))
   })
 
-  // rstest's worker registers its own TS loader hooks, which force `.ts`
-  // configs to ESM and skip Node's CommonJS-syntax detection — these
-  // config flavors load fine under plain Node (production) but cannot be
-  // exercised here. (vitest masked this by loading configs through vite.)
+  // This config flavor only ever loaded because vitest routed it through
+  // vite's lenient transform; plain Node (i.e. the production CLI) rejects
+  // it the same way rstest does. Re-evaluate the intended support before
+  // re-enabling.
   test.skip('load config with const enum', async () => {
     const cwd = join(__dirname, 'fixtures', 'custom')
 
@@ -340,10 +340,10 @@ describe('Config - loadConfig', () => {
     expect(actual.content).toStrictEqual(expected.default())
   })
 
-  // rstest's worker registers its own TS loader hooks, which force `.ts`
-  // configs to ESM and skip Node's CommonJS-syntax detection — these
-  // config flavors load fine under plain Node (production) but cannot be
-  // exercised here. (vitest masked this by loading configs through vite.)
+  // rstest bug: awaiting a default-exported Promise from a natively
+  // imported `.ts` module throws "Promise.prototype.then called on
+  // incompatible receiver [object Module]". Loads fine under plain Node.
+  // Repro: https://github.com/upupming/rstest-repro
   test.skip('load promise config', async () => {
     const cwd = join(__dirname, 'fixtures', 'custom')
     const actual = await loadConfig({ cwd, configPath: './promise.ts' })
