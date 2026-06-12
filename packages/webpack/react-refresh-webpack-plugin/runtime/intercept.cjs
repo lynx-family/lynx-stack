@@ -12,8 +12,8 @@ __webpack_require__.i.push(function(options) {
     //
     // Maybe it is better to run chunk loading on main thread.
     options.id = options.id.replace(
-      `($BACKGROUND_LAYER$)`, // This is replaced by ReactRefreshWebpackPlugin
-      '($MAIN_THREAD_LAYER$)', // This is replaced by ReactRefreshWebpackPlugin
+      `($BACKGROUND_LAYER$)`, // This is replaced by ReactRefreshRspackPlugin
+      '($MAIN_THREAD_LAYER$)', // This is replaced by ReactRefreshRspackPlugin
     );
     const factory = __webpack_modules__[options.id];
     if (factory) {
