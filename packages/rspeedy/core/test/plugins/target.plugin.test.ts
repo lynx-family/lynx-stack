@@ -6,27 +6,27 @@ import { describe, expect, rstest, test } from '@rstest/core'
 import { createStubRspeedy } from '../createStubRspeedy.js'
 
 describe('target.plugin', () => {
-  test('the target should be es2015 in production', async () => {
+  test('the target should be es2017 in production', async () => {
     rstest.stubEnv('NODE_ENV', 'production')
     const rspeedy = await createStubRspeedy({})
     const config = await rspeedy.unwrapConfig()
 
-    expect(config.target).toEqual(['es2015'])
+    expect(config.target).toEqual(['es2017'])
   })
 
-  test('the target should be es2019 in development', async () => {
+  test('the target should be es2017 in development', async () => {
     rstest.stubEnv('NODE_ENV', 'development')
     const rspeedy = await createStubRspeedy({})
     const config = await rspeedy.unwrapConfig()
 
-    expect(config.target).toEqual(['es2019'])
+    expect(config.target).toEqual(['es2017'])
   })
 
-  test('should be es2019', async () => {
+  test('should be es2017', async () => {
     const rspeedy = await createStubRspeedy({})
     const config = await rspeedy.unwrapConfig()
 
-    expect(config.target).toEqual(['es2019'])
+    expect(config.target).toEqual(['es2017'])
   })
 
   test('Web', async () => {
@@ -38,7 +38,7 @@ describe('target.plugin', () => {
 
     const config = await rspeedy.unwrapConfig()
 
-    expect(config.target).toEqual(['es2019', 'web'])
+    expect(config.target).toEqual(['es2017', 'web'])
   })
 
   test('multiple environments', async () => {
@@ -51,7 +51,7 @@ describe('target.plugin', () => {
 
     const [webConfig, lynxConfig] = await rspeedy.initConfigs()
 
-    expect(webConfig?.target).toEqual(['es2019', 'web'])
-    expect(lynxConfig?.target).toEqual(['es2019'])
+    expect(webConfig?.target).toEqual(['es2017', 'web'])
+    expect(lynxConfig?.target).toEqual(['es2017'])
   })
 })

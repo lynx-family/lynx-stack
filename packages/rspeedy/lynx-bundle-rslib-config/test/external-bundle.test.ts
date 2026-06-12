@@ -8,14 +8,7 @@ import { fileURLToPath } from 'node:url'
 
 import { createRslib } from '@rslib/core'
 import type { RslibConfig } from '@rslib/core'
-import {
-  afterAll,
-  beforeAll,
-  describe,
-  expect,
-  it,
-  rstest as vi,
-} from '@rstest/core'
+import { afterAll, beforeAll, describe, expect, it, rstest } from '@rstest/core'
 
 import { LAYERS, pluginReactLynx } from '@lynx-js/react-rsbuild-plugin'
 
@@ -349,23 +342,23 @@ describe('debug mode artifacts', () => {
   }
 
   it('does not emit template intermediates when DEBUG is unset', async () => {
-    vi.stubEnv('DEBUG', undefined)
+    rstest.stubEnv('DEBUG', undefined)
 
     await buildBundle()
     expect(getFiles()).not.toContain('tasm.json')
 
-    vi.unstubAllEnvs()
+    rstest.unstubAllEnvs()
   })
 
   it('emits template intermediates when DEBUG is set', async () => {
-    vi.stubEnv('DEBUG', 'rspeedy')
+    rstest.stubEnv('DEBUG', 'rspeedy')
 
     await buildBundle()
     expect(getFiles()).toEqual(
       expect.arrayContaining(['tasm.json']),
     )
 
-    vi.unstubAllEnvs()
+    rstest.unstubAllEnvs()
   })
 })
 
@@ -656,7 +649,7 @@ describe('pluginReactLynx', () => {
   let decodedResult!: Awaited<ReturnType<typeof decodeTemplate>>
 
   void beforeAll(async () => {
-    vi.stubEnv('DEBUG', 'rspeedy')
+    rstest.stubEnv('DEBUG', 'rspeedy')
 
     const rslibConfig = defineExternalBundleRslibConfig({
       source: {
@@ -683,7 +676,7 @@ describe('pluginReactLynx', () => {
   })
 
   void afterAll(() => {
-    vi.unstubAllEnvs()
+    rstest.unstubAllEnvs()
   })
 
   it('should handle alias', async () => {

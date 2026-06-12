@@ -13,6 +13,19 @@ import { pluginStubRspeedyAPI } from './stub-rspeedy-api.plugin.js'
 // The Default JS RegExp of Rsbuild
 const SCRIPT_REGEXP = /\.(?:js|jsx|mjs|cjs|ts|tsx|mts|cts)$/
 
+const MAIN_THREAD_ES2019_ENV_INCLUDE = [
+  'transform-block-scoping',
+  'transform-nullish-coalescing-operator',
+  'transform-optional-chaining',
+  'transform-export-namespace-from',
+  'transform-logical-assignment-operators',
+  'transform-numeric-separator',
+  'transform-class-properties',
+  'transform-class-static-block',
+  'transform-private-methods',
+  'transform-private-property-in-object',
+]
+
 function isRspackRule(rule: unknown): rule is Rspack.RuleSetRule {
   return !!rule && typeof rule === 'object'
 }
@@ -70,6 +83,13 @@ describe('SWC configuration', () => {
           "env": {
             "include": [
               "transform-block-scoping",
+              "transform-async-generator-functions",
+              "transform-dotall-regex",
+              "transform-named-capturing-groups-regex",
+              "transform-object-rest-spread",
+              "transform-unicode-property-regex",
+              "transform-json-strings",
+              "transform-optional-catch-binding",
               "transform-nullish-coalescing-operator",
               "transform-optional-chaining",
               "transform-export-namespace-from",
@@ -270,15 +290,11 @@ describe('SWC configuration', () => {
     }, 'builtin:swc-loader')
     // Main thread is es2019-equivalent, expressed via `env` (no `jsc.target`).
     expect(mainThreadLoaderOptions?.jsc?.target).toBeUndefined()
-    expect(mainThreadLoaderOptions?.env?.include).toContain(
-      'transform-optional-chaining',
-    )
-    expect(mainThreadLoaderOptions?.env?.include).not.toContain(
-      'transform-async-to-generator',
-    )
-    // `let`/`const` are lowered to `var` on the main thread too.
-    expect(mainThreadLoaderOptions?.env?.include).toContain(
-      'transform-block-scoping',
+    expect(mainThreadLoaderOptions?.env?.targets).toEqual({ chrome: '120' })
+    // Keep this exact: the normal Rspeedy/DSL target may change, but the
+    // ReactLynx main-thread product must stay on the es2019 baseline.
+    expect(mainThreadLoaderOptions?.env?.include).toEqual(
+      MAIN_THREAD_ES2019_ENV_INCLUDE,
     )
   })
 
@@ -381,8 +397,8 @@ describe('SWC configuration', () => {
     expect(mainThreadLoaderOptions?.env?.include).not.toContain(
       'transform-arrow-functions',
     )
-    expect(mainThreadLoaderOptions?.env?.include).toContain(
-      'transform-optional-chaining',
+    expect(mainThreadLoaderOptions?.env?.include).toEqual(
+      MAIN_THREAD_ES2019_ENV_INCLUDE,
     )
   })
 

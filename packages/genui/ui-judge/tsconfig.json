@@ -11,11 +11,13 @@
     "types": ["node"],
   },
   "include": [
+    "scripts",
     "src",
     "tests",
     "playwright.config.ts",
     "rslib.config.ts",
     "vitest.config.ts",
+    "vitest.snapshot.config.ts",
   ],
   "references": [],
 }

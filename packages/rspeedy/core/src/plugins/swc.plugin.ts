@@ -7,7 +7,6 @@ import type { RsbuildPlugin } from '@rsbuild/core'
 import {
   ES_ENV_TARGETS,
   getESVersionEnvInclude,
-  getESVersionTarget,
 } from '../utils/getESVersionTarget.js'
 
 export function pluginSwc(): RsbuildPlugin {
@@ -15,7 +14,6 @@ export function pluginSwc(): RsbuildPlugin {
     name: 'lynx:rsbuild:swc',
     setup(api) {
       api.modifyRsbuildConfig((config, { mergeRsbuildConfig }) => {
-        const isProd = config.mode === 'production'
         return mergeRsbuildConfig(config, {
           tools: {
             swc(config) {
@@ -40,7 +38,7 @@ export function pluginSwc(): RsbuildPlugin {
                   // Lower `let`/`const` to `var`; QuickJS parses `var` faster.
                   // Listing it in `env.exclude` opts out (exclude > include).
                   'transform-block-scoping',
-                  ...getESVersionEnvInclude(getESVersionTarget(isProd)),
+                  ...getESVersionEnvInclude(),
                   ...(config.env?.include ?? []),
                 ],
               }
