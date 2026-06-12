@@ -25,6 +25,58 @@ test('judges generated UI', async ({ page }) => {
 });
 ```
 
+`runVisualEvaluation` compares one prepared reference image with a rendered Lynx
+page URL. The `referenceImage` field accepts plain base64, a
+`data:image/...;base64,...` URL, or an `http://` / `https://` image URL.
+
+```ts
+import { runVisualEvaluation } from '@lynx-js/ui-judge';
+
+const result = await runVisualEvaluation({
+  referenceImage: 'data:image/png;base64,...',
+  templateUrl: 'http://localhost:3000/render.html',
+  capture: {
+    waitTimeMs: 500,
+  },
+});
+
+console.log(result.score, result.reason);
+console.log(result.artifacts.diffImageBase64);
+```
+
+The visual evaluation result follows this shape:
+
+```ts
+interface VisualEvaluationResponse {
+  ok: true;
+  score?: number;
+  reason?: string;
+  artifacts: {
+    referenceImageBase64: string;
+    deviceImageBase64: string;
+    alignedReferenceImageBase64: string;
+    alignedDeviceImageBase64: string;
+    diffImageBase64: string;
+  };
+  metrics: {
+    alignResult: AlignResult | null;
+    compareResult: CompareResult;
+    evaluationResult: EvaluationResult;
+  };
+  warnings?: string[];
+}
+```
+
+Tests and custom runtimes can inject `capture` and `evaluate` functions into
+`runVisualEvaluation`.
+
+`@lynx-js/ui-judge` intentionally exposes only a programming API for visual
+evaluation. It does not create an HTTP endpoint or perform caller
+authentication. If an implementation wires user-controlled requests into
+`runVisualEvaluation`, that implementation must enforce its own trust boundary,
+such as authentication, URL allowlists, and private-network filtering for
+`referenceImage` and `templateUrl`.
+
 `judgeAndroidAgent` judges an Android Lynx screen through a Kitten-Lynx page.
 Callers own the Kitten-Lynx device/app lifecycle, including connection,
 navigation, and teardown. The judge reads `page.url()` for the returned JSON

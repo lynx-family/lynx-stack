@@ -894,6 +894,9 @@ importers:
       '@playwright/test':
         specifier: ^1.58.2
         version: 1.58.2
+      sharp:
+        specifier: ^0.34.5
+        version: 0.34.5
     devDependencies:
       '@lynx-js/genui-a2ui':
         specifier: workspace:*

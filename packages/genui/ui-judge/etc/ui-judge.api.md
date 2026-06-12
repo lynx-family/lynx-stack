@@ -6,6 +6,122 @@
 
 import type { Page } from '@playwright/test';
 
+// Warning: (ae-missing-release-tag) "AlignResult" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
+//
+// @public (undocumented)
+export interface AlignResult {
+    // (undocumented)
+    crop: {
+        h: number;
+        w: number;
+        x: number;
+        y: number;
+    };
+    // (undocumented)
+    dx: number;
+    // (undocumented)
+    dy: number;
+    // (undocumented)
+    resizedHeight1: number;
+    // (undocumented)
+    resizedHeight2: number;
+    // (undocumented)
+    resizedWidth: number;
+    // (undocumented)
+    score: number;
+}
+
+// Warning: (ae-missing-release-tag) "CaptureFn" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
+//
+// @public (undocumented)
+export type CaptureFn = (options: CaptureOptions) => Promise<string | undefined>;
+
+// Warning: (ae-missing-release-tag) "CaptureOptions" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
+//
+// @public (undocumented)
+export interface CaptureOptions {
+    // (undocumented)
+    maxRetry?: number;
+    // (undocumented)
+    silent?: boolean;
+    // (undocumented)
+    targetPageUrl: string;
+    // (undocumented)
+    traceId?: string;
+    // (undocumented)
+    waitTimeMs?: number;
+}
+
+// Warning: (ae-missing-release-tag) "CompareResult" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
+//
+// @public (undocumented)
+export interface CompareResult {
+    // (undocumented)
+    diffBlocksData: Array<{
+        diffRatio: number;
+        x: number;
+        y: number;
+    }>;
+    // (undocumented)
+    differentBlocks: number;
+    // (undocumented)
+    height: number;
+    // (undocumented)
+    similarity: number;
+    // (undocumented)
+    totalBlocks: number;
+    // (undocumented)
+    width: number;
+}
+
+// Warning: (ae-missing-release-tag) "EvaluateFn" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
+//
+// @public (undocumented)
+export type EvaluateFn = (image1DataUrl: string, image2DataUrl: string) => Promise<EvaluationResult | string | Record<string, unknown>>;
+
+// Warning: (ae-missing-release-tag) "evaluateImagesWithMidscene" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
+//
+// @public (undocumented)
+export function evaluateImagesWithMidscene(referenceImageDataUrl: string, renderedImageDataUrl: string): Promise<EvaluationResult>;
+
+// Warning: (ae-missing-release-tag) "EvaluationIssue" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
+//
+// @public (undocumented)
+export interface EvaluationIssue {
+    // (undocumented)
+    category: EvaluationIssueCategory;
+    // (undocumented)
+    description: string;
+    // (undocumented)
+    severity: EvaluationIssueSeverity;
+}
+
+// Warning: (ae-missing-release-tag) "EvaluationIssueCategory" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
+//
+// @public (undocumented)
+export type EvaluationIssueCategory = 'asset' | 'color' | 'completeness' | 'layout' | 'other' | 'spacing' | 'state' | 'typography';
+
+// Warning: (ae-missing-release-tag) "EvaluationIssueSeverity" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
+//
+// @public (undocumented)
+export type EvaluationIssueSeverity = 'high' | 'low' | 'medium';
+
+// Warning: (ae-missing-release-tag) "EvaluationResult" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
+//
+// @public (undocumented)
+export interface EvaluationResult {
+    // (undocumented)
+    [key: string]: unknown;
+    // (undocumented)
+    issues?: EvaluationIssue[];
+    // (undocumented)
+    reason?: string;
+    // (undocumented)
+    score?: number;
+    // (undocumented)
+    summary?: string;
+}
+
 // Warning: (ae-missing-release-tag) "judgeAndroidAgent" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
 //
 // @public (undocumented)
@@ -66,6 +182,28 @@ export interface KittenLynxJudgePage {
     url(): string;
 }
 
+// Warning: (ae-missing-release-tag) "normalizeEvaluationResult" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
+//
+// @public (undocumented)
+export function normalizeEvaluationResult(raw: unknown): EvaluationResult;
+
+// Warning: (ae-missing-release-tag) "runVisualEvaluation" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
+//
+// @public (undocumented)
+export function runVisualEvaluation(body: VisualEvaluationRequest, options?: RunVisualEvaluationOptions): Promise<VisualEvaluationResponse>;
+
+// Warning: (ae-missing-release-tag) "RunVisualEvaluationOptions" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
+//
+// @public (undocumented)
+export interface RunVisualEvaluationOptions {
+    // (undocumented)
+    capture?: CaptureFn;
+    // (undocumented)
+    evaluate?: EvaluateFn;
+    // (undocumented)
+    fetch?: typeof fetch;
+}
+
 // Warning: (ae-missing-release-tag) "UiJudgeDimension" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
 //
 // @public (undocumented)
@@ -99,6 +237,143 @@ export interface UiJudgeResult {
 //
 // @public (undocumented)
 export type UiJudgeScore = 0 | 1 | 2 | 3 | 4 | 5;
+
+// Warning: (ae-missing-release-tag) "VISUAL_EVALUATION_SYSTEM_PROMPT" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
+//
+// @public (undocumented)
+export const VISUAL_EVALUATION_SYSTEM_PROMPT = "You are a strict visual quality evaluator for UI implementation fidelity.\n\nYou compare two UI screenshots:\n1. reference_image: the target visual baseline\n2. rendered_image: the implementation screenshot\n\nYour job is to judge how closely rendered_image matches reference_image.\nEvaluate only visual fidelity. Do not judge code quality, implementation method, accessibility, or product semantics unless they visibly affect the screenshot.\n\nReturn valid JSON only. Do not wrap the JSON in markdown. Do not include comments.";
+
+// Warning: (ae-missing-release-tag) "VISUAL_EVALUATION_USER_PROMPT" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
+//
+// @public (undocumented)
+export const VISUAL_EVALUATION_USER_PROMPT = "Compare reference_image and rendered_image for UI visual fidelity.\n\nScoring:\n- Return \"score\" as a number from 0 to 1.\n- 1.00 means visually indistinguishable except for negligible anti-aliasing or compression noise.\n- 0.90-0.99 means excellent match with only tiny spacing, antialiasing, or color differences.\n- 0.75-0.89 means good match but visible differences exist in spacing, typography, color, sizing, or minor missing details.\n- 0.50-0.74 means partial match: overall structure is recognizable, but several important visual differences are present.\n- 0.25-0.49 means weak match: major layout, content, styling, or hierarchy differences.\n- 0.00-0.24 means unrelated or mostly incorrect rendering.\n\nEvaluate these dimensions:\n1. Layout and hierarchy: positions, alignment, grouping, size relationships, and overall structure.\n2. Spacing and geometry: margins, padding, gaps, border radii, widths, heights, and crop/overflow behavior.\n3. Typography: text content visibility, font size, weight, line height, truncation, alignment, and color.\n4. Color and visual style: backgrounds, fills, strokes, opacity, shadows, gradients, and contrast.\n5. Assets and icons: image presence, aspect ratio, crop, icon shape, and visual placement.\n6. State fidelity: selected states, disabled states, active tabs, badges, overlays, and other visible UI states.\n7. Completeness: missing, extra, duplicated, or incorrectly ordered visible elements.\n\nIgnore:\n- Tiny anti-aliasing differences.\n- Minor compression artifacts.\n- Subpixel differences that do not change perceived layout.\n- Device screenshot noise that does not affect UI content.\n\nDo not ignore:\n- Missing text or incorrect text.\n- Incorrect hierarchy or reordered sections.\n- Noticeably wrong color, font size, weight, spacing, border radius, or image crop.\n- Extra visible UI elements not present in the reference.\n- Missing visible UI elements from the reference.\n\nReturn JSON with this exact shape:\n{\n  \"score\": number,\n  \"reason\": string,\n  \"summary\": string,\n  \"issues\": [\n    {\n      \"category\": \"layout\" | \"spacing\" | \"typography\" | \"color\" | \"asset\" | \"state\" | \"completeness\" | \"other\",\n      \"severity\": \"low\" | \"medium\" | \"high\",\n      \"description\": string\n    }\n  ]\n}\n\nRules for the JSON:\n- \"score\" must be between 0 and 1.\n- \"reason\" must be one concise sentence explaining the score.\n- \"summary\" must be a short paragraph summarizing the overall visual match.\n- \"issues\" must list the most important visible differences, ordered by severity.\n- If the images are nearly identical, use an empty \"issues\" array.\n- Mention approximate regions such as \"top bar\", \"main card\", \"bottom section\", or \"right icon\" when describing issues.\n- Do not invent hidden or non-visible differences.";
+
+// Warning: (ae-missing-release-tag) "VisualEvaluationAlignOptions" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
+//
+// @public (undocumented)
+export interface VisualEvaluationAlignOptions {
+    // (undocumented)
+    downsampleWidth?: number;
+    // (undocumented)
+    maxDx?: number;
+    // (undocumented)
+    maxDyRatio?: number;
+    // (undocumented)
+    minScore?: number;
+    // (undocumented)
+    targetWidth?: number;
+    // (undocumented)
+    topSkipRatio?: number;
+    // (undocumented)
+    windowHeightRatio?: number;
+}
+
+// Warning: (ae-missing-release-tag) "VisualEvaluationArtifacts" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
+//
+// @public (undocumented)
+export interface VisualEvaluationArtifacts {
+    // (undocumented)
+    alignedDeviceImageBase64: string;
+    // (undocumented)
+    alignedReferenceImageBase64: string;
+    // (undocumented)
+    deviceImageBase64: string;
+    // (undocumented)
+    diffImageBase64: string;
+    // (undocumented)
+    referenceImageBase64: string;
+}
+
+// Warning: (ae-missing-release-tag) "VisualEvaluationCaptureRequestOptions" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
+//
+// @public (undocumented)
+export interface VisualEvaluationCaptureRequestOptions {
+    // (undocumented)
+    maxRetry?: number;
+    // (undocumented)
+    silent?: boolean;
+    // (undocumented)
+    waitTimeMs?: number;
+}
+
+// Warning: (ae-missing-release-tag) "VisualEvaluationCompareOptions" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
+//
+// @public (undocumented)
+export interface VisualEvaluationCompareOptions {
+    // (undocumented)
+    blockSize?: number;
+    // (undocumented)
+    pixelTolerance?: number;
+    // (undocumented)
+    threshold?: number;
+}
+
+// Warning: (ae-missing-release-tag) "VisualEvaluationErrorCode" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
+//
+// @public (undocumented)
+export type VisualEvaluationErrorCode = 'CAPTURE_EMPTY_RESULT' | 'CAPTURE_UPSTREAM_ERROR' | 'EVALUATION_API_ERROR' | 'IMAGE_ALIGNMENT_ERROR' | 'IMAGE_COMPARE_ERROR' | 'INVALID_REQUEST' | 'REFERENCE_IMAGE_FETCH_FAILED' | 'REFERENCE_IMAGE_INVALID' | 'VISUAL_EVALUATION_ERROR';
+
+// Warning: (ae-missing-release-tag) "VisualEvaluationErrorResponse" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
+//
+// @public (undocumented)
+export interface VisualEvaluationErrorResponse {
+    // (undocumented)
+    code: VisualEvaluationErrorCode;
+    // (undocumented)
+    message: string;
+    // (undocumented)
+    ok: false;
+    // (undocumented)
+    status: number;
+}
+
+// Warning: (ae-missing-release-tag) "VisualEvaluationMetrics" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
+//
+// @public (undocumented)
+export interface VisualEvaluationMetrics {
+    // (undocumented)
+    alignResult: AlignResult | null;
+    // (undocumented)
+    compareResult: CompareResult;
+    // (undocumented)
+    evaluationResult: EvaluationResult;
+}
+
+// Warning: (ae-missing-release-tag) "VisualEvaluationRequest" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
+//
+// @public (undocumented)
+export interface VisualEvaluationRequest {
+    // (undocumented)
+    alignOptions?: VisualEvaluationAlignOptions;
+    // (undocumented)
+    capture?: VisualEvaluationCaptureRequestOptions;
+    // (undocumented)
+    compareOptions?: VisualEvaluationCompareOptions;
+    // (undocumented)
+    referenceImage: string;
+    // (undocumented)
+    templateUrl: string;
+    // (undocumented)
+    traceId?: string;
+}
+
+// Warning: (ae-missing-release-tag) "VisualEvaluationResponse" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
+//
+// @public (undocumented)
+export interface VisualEvaluationResponse {
+    // (undocumented)
+    artifacts: VisualEvaluationArtifacts;
+    // (undocumented)
+    metrics: VisualEvaluationMetrics;
+    // (undocumented)
+    ok: true;
+    // (undocumented)
+    reason?: string;
+    // (undocumented)
+    score?: number;
+    // (undocumented)
+    warnings?: string[];
+}
 
 // (No @packageDocumentation comment for this package)
 

@@ -23,13 +23,15 @@
     "build": "rslib build",
     "test": "pnpm run test:playwright",
     "test:android": "vitest run --config vitest.config.ts",
-    "test:playwright": "playwright test"
+    "test:playwright": "playwright test",
+    "update:react-fixture-snapshot": "vitest run --config vitest.snapshot.config.ts"
   },
   "dependencies": {
     "@lynx-js/genui": "workspace:*",
     "@midscene/core": "^1.8.0",
     "@midscene/web": "^1.8.0",
-    "@playwright/test": "^1.58.2"
+    "@playwright/test": "^1.58.2",
+    "sharp": "^0.34.5"
   },
   "devDependencies": {
     "@lynx-js/genui-a2ui": "workspace:*",
