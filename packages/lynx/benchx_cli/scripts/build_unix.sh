@@ -13,7 +13,7 @@ if [ ! -f "package.json" ] || ! grep -q '"name": "benchx_cli"' package.json; the
   exit 1
 fi
 
-LOCKED_VERSION="benchx_cli-202606121540"
+LOCKED_VERSION="benchx_cli-202606120920"
 
 # Check if binary is up to date
 if [ -f "./dist/bin/benchx_cli" ] && [ -f "./dist/bin/benchx_cli.version" ]; then
