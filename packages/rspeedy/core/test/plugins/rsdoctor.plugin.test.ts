@@ -4,11 +4,11 @@
 
 import type { Rspack } from '@rsbuild/core'
 import type { RsdoctorRspackPlugin } from '@rsdoctor/rspack-plugin'
-import { describe, expect, test, vi } from 'vitest'
+import { describe, expect, rstest, test } from '@rstest/core'
 
 describe('Plugins - Rsdoctor', () => {
   test('defaults', async () => {
-    vi.stubEnv('RSDOCTOR', 'true')
+    rstest.stubEnv('RSDOCTOR', 'true')
 
     const { createStubRspeedy } = await import('../createStubRspeedy.js')
 
@@ -38,7 +38,7 @@ describe('Plugins - Rsdoctor', () => {
   })
 
   test('experiments.enableNativePlugin: false', async () => {
-    vi.stubEnv('RSDOCTOR', 'true')
+    rstest.stubEnv('RSDOCTOR', 'true')
 
     const { createStubRspeedy } = await import('../createStubRspeedy.js')
 
@@ -67,7 +67,7 @@ describe('Plugins - Rsdoctor', () => {
   })
 
   test('linter.rules.ecma-version-check', async () => {
-    vi.stubEnv('RSDOCTOR', 'true')
+    rstest.stubEnv('RSDOCTOR', 'true')
 
     const { createStubRspeedy } = await import('../createStubRspeedy.js')
 
@@ -105,7 +105,7 @@ describe('Plugins - Rsdoctor', () => {
   })
 
   test('linter.rules.cross-chunks-package', async () => {
-    vi.stubEnv('RSDOCTOR', 'true')
+    rstest.stubEnv('RSDOCTOR', 'true')
 
     const { createStubRspeedy } = await import('../createStubRspeedy.js')
 
@@ -147,7 +147,7 @@ describe('Plugins - Rsdoctor', () => {
   })
 
   test('supports.banner', async () => {
-    vi.stubEnv('RSDOCTOR', 'true')
+    rstest.stubEnv('RSDOCTOR', 'true')
 
     const { createStubRspeedy } = await import('../createStubRspeedy.js')
 

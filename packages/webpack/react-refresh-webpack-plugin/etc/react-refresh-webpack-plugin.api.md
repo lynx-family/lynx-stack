@@ -17,15 +17,4 @@ export class ReactRefreshRspackPlugin {
 export interface ReactRefreshRspackPluginOptions {
 }
 
-// @public
-export class ReactRefreshWebpackPlugin {
-    constructor(options?: ReactRefreshWebpackPluginOptions | undefined);
-    apply(compiler: Compiler): void;
-    static loader: string;
-}
-
-// @public
-export interface ReactRefreshWebpackPluginOptions {
-}
-
 ```

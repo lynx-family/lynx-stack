@@ -11,7 +11,7 @@ export default {
   plugins: [
     new ChunkLoadingWebpackPlugin(),
     compiler => {
-      new compiler.webpack.HotModuleReplacementPlugin().apply(compiler);
+      new compiler.rspack.HotModuleReplacementPlugin().apply(compiler);
     },
   ],
 };

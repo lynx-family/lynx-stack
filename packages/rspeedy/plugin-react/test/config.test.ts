@@ -9,7 +9,7 @@ import path from 'node:path'
 import { fileURLToPath } from 'node:url'
 
 import type { RsbuildInstance, Rspack } from '@rsbuild/core'
-import { afterAll, describe, expect, test, vi } from 'vitest'
+import { afterAll, describe, expect, rstest, test } from '@rstest/core'
 
 import type { ReactWebpackPlugin } from '@lynx-js/react-webpack-plugin'
 import type {
@@ -22,7 +22,7 @@ import { pluginStubRspeedyAPI } from './stub-rspeedy-api.plugin.js'
 
 const tempDirs: string[] = []
 
-afterAll(async () => {
+void afterAll(async () => {
   await Promise.all(tempDirs.map(async (dir) => {
     await rm(dir, { recursive: true, force: true })
   }))
@@ -53,7 +53,7 @@ async function createRspeedyWithTempDistRoot(
 
 describe('Config', () => {
   test('alias with development', async () => {
-    vi.stubEnv('NODE_ENV', 'development')
+    rstest.stubEnv('NODE_ENV', 'development')
     const { pluginReactLynx } = await import('../src/pluginReactLynx.js')
 
     const rsbuild = await createRspeedy({
@@ -182,7 +182,7 @@ describe('Config', () => {
   })
 
   test('alias with production', async () => {
-    vi.stubEnv('NODE_ENV', 'production')
+    rstest.stubEnv('NODE_ENV', 'production')
     const { pluginReactLynx } = await import('../src/pluginReactLynx.js')
 
     const rsbuild = await createRspeedy({
@@ -291,7 +291,7 @@ describe('Config', () => {
   })
 
   test('extensionAlias with tsConfig', async () => {
-    vi.stubEnv('NODE_ENV', 'production')
+    rstest.stubEnv('NODE_ENV', 'production')
     const { pluginReactLynx } = await import('../src/pluginReactLynx.js')
 
     const rsbuild = await createRspeedy({
@@ -316,7 +316,7 @@ describe('Config', () => {
   })
 
   test('extensionAlias without tsConfig', async () => {
-    vi.stubEnv('NODE_ENV', 'production')
+    rstest.stubEnv('NODE_ENV', 'production')
     const { pluginReactLynx } = await import('../src/pluginReactLynx.js')
 
     const rsbuild = await createRspeedy({
@@ -734,9 +734,9 @@ describe('Config', () => {
       expect(typeof inlineScripts).toBe('function')
       // eslint-disable-next-line @typescript-eslint/no-base-to-string
       expect(inlineScripts?.toString()).toMatchInlineSnapshot(`
-        "({ name, size }) => {
-                      return name.includes("background") && size > 1e3;
-                    }"
+        "({ name, size })=>{
+                                    return name.includes('background') && size > 1000;
+                                }"
       `)
 
       const ReactWebpackPlugin = config?.plugins?.find((
@@ -951,16 +951,16 @@ describe('Config', () => {
       expect(typeof inlineScripts).toBe('function')
       // eslint-disable-next-line @typescript-eslint/no-base-to-string
       expect(inlineScripts?.toString()).toMatchInlineSnapshot(`
-        "({ name, size }) => {
-                      return name.includes("background") && size > 1e3;
-                    }"
+        "({ name, size })=>{
+                                    return name.includes('background') && size > 1000;
+                                }"
       `)
     })
   })
 
   describe('Output Filename', () => {
     test('Defaults in production', async () => {
-      vi.stubEnv('NODE_ENV', 'production')
+      rstest.stubEnv('NODE_ENV', 'production')
       const { pluginReactLynx } = await import('../src/pluginReactLynx.js')
 
       const rsbuild = await createRspeedyWithTempDistRoot({
@@ -1003,7 +1003,7 @@ describe('Config', () => {
     })
 
     test('Multiple entries', async () => {
-      vi.stubEnv('NODE_ENV', 'production')
+      rstest.stubEnv('NODE_ENV', 'production')
       const { pluginReactLynx } = await import('../src/pluginReactLynx.js')
 
       const rsbuild = await createRspeedyWithTempDistRoot({
@@ -1061,7 +1061,7 @@ describe('Config', () => {
     })
 
     test('Nested entries', async () => {
-      vi.stubEnv('NODE_ENV', 'production')
+      rstest.stubEnv('NODE_ENV', 'production')
       const { pluginReactLynx } = await import('../src/pluginReactLynx.js')
 
       const rsbuild = await createRspeedy({
@@ -1119,7 +1119,7 @@ describe('Config', () => {
     })
 
     test('with output.filename.js: "[name].js"', async () => {
-      vi.stubEnv('NODE_ENV', 'production')
+      rstest.stubEnv('NODE_ENV', 'production')
       const { pluginReactLynx } = await import('../src/pluginReactLynx.js')
 
       const rsbuild = await createRspeedy({
@@ -1197,7 +1197,7 @@ describe('Config', () => {
     })
 
     test('with output.filename.js: "[name]/[name].js"', async () => {
-      vi.stubEnv('NODE_ENV', 'production')
+      rstest.stubEnv('NODE_ENV', 'production')
       const { pluginReactLynx } = await import('../src/pluginReactLynx.js')
 
       const rsbuild = await createRspeedy({
@@ -1245,7 +1245,7 @@ describe('Config', () => {
     })
 
     test('with output.filename.js and output.filenameHash', async () => {
-      vi.stubEnv('NODE_ENV', 'production')
+      rstest.stubEnv('NODE_ENV', 'production')
       const { pluginReactLynx } = await import('../src/pluginReactLynx.js')
 
       const rsbuild = await createRspeedy({
@@ -1324,7 +1324,7 @@ describe('Config', () => {
     })
 
     test('with output.filenameHash: false', async () => {
-      vi.stubEnv('NODE_ENV', 'production')
+      rstest.stubEnv('NODE_ENV', 'production')
       const { pluginReactLynx } = await import('../src/pluginReactLynx.js')
 
       const rsbuild = await createRspeedy({
@@ -1370,7 +1370,7 @@ describe('Config', () => {
     })
 
     test('with environment["lynx"].output.filenameHash: false', async () => {
-      vi.stubEnv('NODE_ENV', 'production')
+      rstest.stubEnv('NODE_ENV', 'production')
       const { pluginReactLynx } = await import('../src/pluginReactLynx.js')
 
       const rsbuild = await createRspeedy({
@@ -1417,7 +1417,7 @@ describe('Config', () => {
     })
 
     test('with output.filenameHash: "contenthash"', async () => {
-      vi.stubEnv('NODE_ENV', 'production')
+      rstest.stubEnv('NODE_ENV', 'production')
       const { pluginReactLynx } = await import('../src/pluginReactLynx.js')
 
       const rsbuild = await createRspeedy({
@@ -1463,7 +1463,7 @@ describe('Config', () => {
     })
 
     test('with output.filenameHash: ""', async () => {
-      vi.stubEnv('NODE_ENV', 'production')
+      rstest.stubEnv('NODE_ENV', 'production')
       const { pluginReactLynx } = await import('../src/pluginReactLynx.js')
 
       const rsbuild = await createRspeedy({
@@ -1509,7 +1509,7 @@ describe('Config', () => {
     })
 
     test('Defaults in development', async () => {
-      vi.stubEnv('NODE_ENV', 'development')
+      rstest.stubEnv('NODE_ENV', 'development')
       const { pluginReactLynx } = await import('../src/pluginReactLynx.js')
 
       const rsbuild = await createRspeedy({
@@ -1556,7 +1556,7 @@ describe('Config', () => {
     })
 
     test('with output.filenameHash: "contenthash" in development', async () => {
-      vi.stubEnv('NODE_ENV', 'development')
+      rstest.stubEnv('NODE_ENV', 'development')
       const { pluginReactLynx } = await import('../src/pluginReactLynx.js')
 
       const rsbuild = await createRspeedy({
@@ -2166,7 +2166,7 @@ describe('Config', () => {
       const { pluginReactLynx } = await import('../src/pluginReactLynx.js')
 
       // Production build with typical macro definitions
-      vi.stubEnv('NODE_ENV', 'production')
+      rstest.stubEnv('NODE_ENV', 'production')
 
       const entryName = 'defineDCE'
       const rsbuild = await createRspeedyWithTempDistRoot({
@@ -2231,7 +2231,7 @@ describe('Config', () => {
     test('minify should remove thread-specific pure funcs from built outputs', async () => {
       const { pluginReactLynx } = await import('../src/pluginReactLynx.js')
 
-      vi.stubEnv('NODE_ENV', 'production')
+      rstest.stubEnv('NODE_ENV', 'production')
 
       const entryName = 'pure-funcs'
       const rsbuild = await createRspeedyWithTempDistRoot({
@@ -2443,7 +2443,7 @@ describe('Config', () => {
   })
   ;['development', 'production'].forEach(mode => {
     test(`lazyBundle on ${mode} mode`, async () => {
-      vi.stubEnv('NODE_ENV', mode)
+      rstest.stubEnv('NODE_ENV', mode)
 
       const { pluginReactLynx } = await import('../src/pluginReactLynx.js')
 
@@ -2503,13 +2503,13 @@ describe('Config', () => {
         `)
       }
 
-      vi.unstubAllEnvs()
+      rstest.unstubAllEnvs()
     })
   })
 
   describe('Profile', () => {
     test('default', async () => {
-      vi.stubEnv('DEBUG', '')
+      rstest.stubEnv('DEBUG', '')
 
       const { pluginReactLynx } = await import('../src/pluginReactLynx.js')
 
@@ -2535,7 +2535,7 @@ describe('Config', () => {
     })
 
     test('with mode=development', async () => {
-      vi.stubEnv('DEBUG', '')
+      rstest.stubEnv('DEBUG', '')
 
       const { pluginReactLynx } = await import('../src/pluginReactLynx.js')
 
@@ -2560,11 +2560,11 @@ describe('Config', () => {
       // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
       expect(ReactLynxWebpackPlugin?.options.profile).toBe(undefined)
 
-      vi.unstubAllEnvs()
+      rstest.unstubAllEnvs()
     })
 
     test('with DEBUG', async () => {
-      vi.stubEnv('DEBUG', 'rspeedy')
+      rstest.stubEnv('DEBUG', 'rspeedy')
 
       const { pluginReactLynx } = await import('../src/pluginReactLynx.js')
 
@@ -2590,7 +2590,7 @@ describe('Config', () => {
     })
 
     test('with performance.profile: true', async () => {
-      vi.stubEnv('DEBUG', '')
+      rstest.stubEnv('DEBUG', '')
 
       const { pluginReactLynx } = await import('../src/pluginReactLynx.js')
 
@@ -2619,7 +2619,7 @@ describe('Config', () => {
     })
 
     test('with performance.profile: false', async () => {
-      vi.stubEnv('DEBUG', '')
+      rstest.stubEnv('DEBUG', '')
 
       const { pluginReactLynx } = await import('../src/pluginReactLynx.js')
 
@@ -2648,7 +2648,7 @@ describe('Config', () => {
     })
 
     test('with environments.lynx.performance.profile: true', async () => {
-      vi.stubEnv('DEBUG', 'rspeedy')
+      rstest.stubEnv('DEBUG', 'rspeedy')
 
       const { pluginReactLynx } = await import('../src/pluginReactLynx.js')
 
@@ -2676,7 +2676,7 @@ describe('Config', () => {
     })
 
     test('with environments.lynx.performance.profile: false', async () => {
-      vi.stubEnv('DEBUG', 'rspeedy')
+      rstest.stubEnv('DEBUG', 'rspeedy')
 
       const { pluginReactLynx } = await import('../src/pluginReactLynx.js')
 
@@ -2914,6 +2914,7 @@ describe('Config', () => {
     })
   })
 
+  // eslint-disable-next-line @typescript-eslint/no-misused-promises -- rstest types describe callbacks as sync, but the runner awaits async factories
   describe('callerName: rstest', async () => {
     const { pluginReactLynx } = await import('../src/pluginReactLynx.js')
 

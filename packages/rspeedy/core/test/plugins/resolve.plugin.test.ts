@@ -1,7 +1,7 @@
 // Copyright 2024 The Lynx Authors. All rights reserved.
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
-import { describe, expect, test } from 'vitest'
+import { describe, expect, test } from '@rstest/core'
 
 import { createStubRspeedy } from '../createStubRspeedy.js'
 
@@ -55,7 +55,7 @@ describe('Plugins - Resolve', () => {
           "index",
         ],
         "tsConfig": {
-          "configFile": "<ROOT>/tsconfig.json",
+          "configFile": "<ROOT>/packages/rspeedy/core/tsconfig.json",
           "references": "auto",
         },
       }

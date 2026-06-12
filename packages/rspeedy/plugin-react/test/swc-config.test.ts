@@ -2,7 +2,7 @@
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
 import type { Rspack } from '@rsbuild/core'
-import { assert, describe, expect, test, vi } from 'vitest'
+import { assert, describe, expect, rstest, test } from '@rstest/core'
 
 import { LAYERS, ReactWebpackPlugin } from '@lynx-js/react-webpack-plugin'
 
@@ -46,7 +46,7 @@ function getJsMainRule(swcRule: Rspack.RuleSetRule) {
 
 describe('SWC configuration', () => {
   test('defaults', async () => {
-    vi.stubEnv('NODE_ENV', 'development')
+    rstest.stubEnv('NODE_ENV', 'development')
     const { pluginReactLynx } = await import('../src/pluginReactLynx.js')
     const rsbuild = await createRspeedy({
       rspeedyConfig: {
@@ -147,7 +147,7 @@ describe('SWC configuration', () => {
   })
 
   test('layers', async () => {
-    vi.stubEnv('NODE_ENV', 'development')
+    rstest.stubEnv('NODE_ENV', 'development')
     const { pluginReactLynx } = await import('../src/pluginReactLynx.js')
     const rsbuild = await createRspeedy({
       rspeedyConfig: {

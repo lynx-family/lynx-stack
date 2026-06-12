@@ -4,22 +4,27 @@
 import { dirname, join } from 'node:path'
 import { fileURLToPath } from 'node:url'
 
+import * as core from '@rsbuild/core'
+import { beforeEach, describe, expect, rstest, test } from '@rstest/core'
 import { Command } from 'commander'
-import { beforeEach, describe, expect, test, vi } from 'vitest'
+import { gracefulExit } from 'exit-hook'
 
 import { build } from '../../src/cli/build.js'
 
-vi.mock(import('@rsbuild/core'), async (original) => {
-  const core = await original()
+rstest.mock('@rsbuild/core', () => {
+  const core = rstest.requireActual<typeof import('@rsbuild/core')>(
+    '@rsbuild/core',
+  )
   return {
     ...core,
-    createRsbuild: vi.fn(),
+    createRsbuild: rstest.fn(),
     logger: {
       ...core.logger,
-      error: vi.fn(),
+      error: rstest.fn(),
     },
   }
 })
+rstest.mock('exit-hook', { mock: true })
 
 describe('CLI - build', () => {
   const fixturesRoot = join(
@@ -27,16 +32,12 @@ describe('CLI - build', () => {
     'fixtures',
   )
 
-  beforeEach(() => {
-    vi.restoreAllMocks()
+  void beforeEach(() => {
+    rstest.restoreAllMocks()
   })
 
   test('config not found', async () => {
-    vi.mock('exit-hook')
-    vi.useFakeTimers()
-
-    const { gracefulExit } = await import('exit-hook')
-    const core = await import('@rsbuild/core')
+    rstest.useFakeTimers()
 
     const program = new Command('test')
     await build.call(
@@ -53,19 +54,15 @@ describe('CLI - build', () => {
         ),
       }),
     )
-    await vi.runAllTimersAsync()
-    expect(vi.mocked(gracefulExit)).toBeCalledWith(1)
+    await rstest.runAllTimersAsync()
+    expect(rstest.mocked(gracefulExit)).toBeCalledWith(1)
 
     // createRsbuild should not be called
     expect(core.createRsbuild).not.toBeCalled()
   })
 
   test('custom config not found', async () => {
-    vi.mock('exit-hook')
-    vi.useFakeTimers()
-
-    const { gracefulExit } = await import('exit-hook')
-    const core = await import('@rsbuild/core')
+    rstest.useFakeTimers()
 
     const program = new Command('test')
     await build.call(
@@ -88,19 +85,15 @@ describe('CLI - build', () => {
         message: expect.stringContaining('non-exist-config.ts'),
       }),
     )
-    await vi.runAllTimersAsync()
-    expect(vi.mocked(gracefulExit)).toBeCalledWith(1)
+    await rstest.runAllTimersAsync()
+    expect(rstest.mocked(gracefulExit)).toBeCalledWith(1)
 
     // createRsbuild should not be called
     expect(core.createRsbuild).not.toBeCalled()
   })
 
   test('invalid config', async () => {
-    vi.mock('exit-hook')
-    vi.useFakeTimers()
-
-    const { gracefulExit } = await import('exit-hook')
-    const core = await import('@rsbuild/core')
+    rstest.useFakeTimers()
 
     const program = new Command('test')
     await build.call(
@@ -117,31 +110,27 @@ describe('CLI - build', () => {
         ),
       }),
     )
-    await vi.runAllTimersAsync()
-    expect(vi.mocked(gracefulExit)).toBeCalledWith(1)
+    await rstest.runAllTimersAsync()
+    expect(rstest.mocked(gracefulExit)).toBeCalledWith(1)
 
     // createRsbuild should not be called
     expect(core.createRsbuild).not.toBeCalled()
   })
 
   test('createRsbuild', async () => {
-    vi.mock('exit-hook')
-    vi.useFakeTimers()
+    rstest.useFakeTimers()
 
-    const core = await import('@rsbuild/core')
-    const { gracefulExit } = await import('exit-hook')
-
-    vi.mocked(core.createRsbuild).mockImplementation(() =>
+    rstest.mocked(core.createRsbuild).mockImplementation(() =>
       // @ts-expect-error mock
       Promise.resolve({
-        isPluginExists: vi.fn(),
-        addPlugins: vi.fn(),
-        build: vi.fn(() =>
+        isPluginExists: rstest.fn(),
+        addPlugins: rstest.fn(),
+        build: rstest.fn(() =>
           Promise.resolve({
-            close: vi.fn(),
+            close: rstest.fn(),
           })
         ),
-        inspectConfig: vi.fn(),
+        inspectConfig: rstest.fn(),
       })
     )
 
@@ -153,26 +142,26 @@ describe('CLI - build', () => {
     )
 
     expect(core.createRsbuild).toBeCalledTimes(1)
-    await vi.runAllTimersAsync()
-    expect(vi.mocked(gracefulExit)).toBeCalledWith(0)
+    await rstest.runAllTimersAsync()
+    expect(rstest.mocked(gracefulExit)).toBeCalledWith(0)
   })
 
   test('exit on RSDOCTOR="true" and CI!="false"', async () => {
-    vi.stubEnv('CI', '1')
-    vi.stubEnv('RSDOCTOR', 'true')
-    vi.mock('exit-hook')
-    vi.useFakeTimers()
+    rstest.stubEnv('CI', '1')
+    rstest.stubEnv('RSDOCTOR', 'true')
+    rstest.useFakeTimers()
 
-    const core = await import('@rsbuild/core')
-    core.createRsbuild = vi.fn().mockReturnValueOnce({
-      build() {
-        return Promise.resolve()
-      },
-      addPlugins() {
-        return Promise.resolve()
-      },
-    })
-    const { gracefulExit } = await import('exit-hook')
+    rstest.mocked(core.createRsbuild).mockReset().mockReturnValueOnce(
+      // Minimal fake of the resolved RsbuildInstance.
+      {
+        build() {
+          return Promise.resolve()
+        },
+        addPlugins() {
+          return Promise.resolve()
+        },
+      } as never,
+    )
 
     const program = new Command('test')
     await build.call(
@@ -182,26 +171,26 @@ describe('CLI - build', () => {
     )
 
     expect(core.createRsbuild).toBeCalledTimes(1)
-    await vi.runAllTimersAsync()
-    expect(vi.mocked(gracefulExit)).toBeCalledTimes(1)
+    await rstest.runAllTimersAsync()
+    expect(rstest.mocked(gracefulExit)).toBeCalledTimes(1)
   })
 
   test('no exit on RSDOCTOR="true" and CI="false"', async () => {
-    vi.stubEnv('CI', 'false')
-    vi.stubEnv('RSDOCTOR', 'true')
-    vi.mock('exit-hook')
-    vi.useFakeTimers()
+    rstest.stubEnv('CI', 'false')
+    rstest.stubEnv('RSDOCTOR', 'true')
+    rstest.useFakeTimers()
 
-    const core = await import('@rsbuild/core')
-    core.createRsbuild = vi.fn().mockReturnValueOnce({
-      build() {
-        return Promise.resolve()
-      },
-      addPlugins() {
-        return Promise.resolve()
-      },
-    })
-    const { gracefulExit } = await import('exit-hook')
+    rstest.mocked(core.createRsbuild).mockReset().mockReturnValueOnce(
+      // Minimal fake of the resolved RsbuildInstance.
+      {
+        build() {
+          return Promise.resolve()
+        },
+        addPlugins() {
+          return Promise.resolve()
+        },
+      } as never,
+    )
 
     const program = new Command('test')
     await build.call(
@@ -211,26 +200,23 @@ describe('CLI - build', () => {
     )
 
     expect(core.createRsbuild).toBeCalledTimes(1)
-    await vi.runAllTimersAsync()
-    expect(vi.mocked(gracefulExit)).not.toBeCalled()
+    await rstest.runAllTimersAsync()
+    expect(rstest.mocked(gracefulExit)).not.toBeCalled()
   })
 
   test('no exit on RSDOCTOR="true", CI="false" and build failed', async () => {
-    vi.stubEnv('CI', 'false')
-    vi.stubEnv('RSDOCTOR', 'true')
-    vi.mock('exit-hook')
-    vi.useFakeTimers()
+    rstest.stubEnv('CI', 'false')
+    rstest.stubEnv('RSDOCTOR', 'true')
+    rstest.useFakeTimers()
 
-    const core = await import('@rsbuild/core')
-    core.createRsbuild = vi.fn().mockReturnValueOnce({
+    rstest.mocked(core.createRsbuild).mockReset().mockReturnValueOnce({
       build() {
         return Promise.reject(new Error('Mocked Build Error'))
       },
       addPlugins() {
         return Promise.resolve()
       },
-    })
-    const { gracefulExit } = await import('exit-hook')
+    } as never)
 
     const program = new Command('test')
     await build.call(
@@ -240,26 +226,23 @@ describe('CLI - build', () => {
     )
 
     expect(core.createRsbuild).toBeCalledTimes(1)
-    await vi.runAllTimersAsync()
-    expect(vi.mocked(gracefulExit)).not.toBeCalled()
+    await rstest.runAllTimersAsync()
+    expect(rstest.mocked(gracefulExit)).not.toBeCalled()
   })
 
   test('exit on RSDOCTOR="true", CI!="false" and build failed', async () => {
-    vi.stubEnv('CI', 'true')
-    vi.stubEnv('RSDOCTOR', 'true')
-    vi.mock('exit-hook')
-    vi.useFakeTimers()
+    rstest.stubEnv('CI', 'true')
+    rstest.stubEnv('RSDOCTOR', 'true')
+    rstest.useFakeTimers()
 
-    const core = await import('@rsbuild/core')
-    core.createRsbuild = vi.fn().mockReturnValueOnce({
+    rstest.mocked(core.createRsbuild).mockReset().mockReturnValueOnce({
       build() {
         return Promise.reject(new Error('Mocked Build Error'))
       },
       addPlugins() {
         return Promise.resolve()
       },
-    })
-    const { gracefulExit } = await import('exit-hook')
+    } as never)
 
     const program = new Command('test')
     await build.call(
@@ -269,35 +252,32 @@ describe('CLI - build', () => {
     )
 
     expect(core.createRsbuild).toBeCalledTimes(1)
-    await vi.runAllTimersAsync()
-    expect(vi.mocked(gracefulExit)).toBeCalled()
-    expect(vi.mocked(gracefulExit)).toBeCalledWith(1)
+    await rstest.runAllTimersAsync()
+    expect(rstest.mocked(gracefulExit)).toBeCalled()
+    expect(rstest.mocked(gracefulExit)).toBeCalledWith(1)
   })
 
   describe('watch mode', () => {
     test('with watch=true, process should not exit', async () => {
-      vi.mock('exit-hook')
-      vi.useFakeTimers()
+      rstest.useFakeTimers()
 
-      const core = await import('@rsbuild/core')
-      const closeMock = vi.fn().mockResolvedValue(undefined)
+      const closeMock = rstest.fn().mockResolvedValue(undefined)
 
-      vi.mocked(core.createRsbuild).mockImplementation(() =>
+      rstest.mocked(core.createRsbuild).mockImplementation(() =>
         // @ts-expect-error mock
         Promise.resolve({
-          isPluginExists: vi.fn(),
-          addPlugins: vi.fn(),
-          build: vi.fn(() =>
+          isPluginExists: rstest.fn(),
+          addPlugins: rstest.fn(),
+          build: rstest.fn(() =>
             Promise.resolve({
               close: closeMock,
             })
           ),
-          inspectConfig: vi.fn(),
+          inspectConfig: rstest.fn(),
         })
       )
 
-      const { gracefulExit } = await import('exit-hook')
-      const processOnSpy = vi.spyOn(process, 'on')
+      const processOnSpy = rstest.spyOn(process, 'on')
 
       const program = new Command('test')
       await build.call(
@@ -307,8 +287,8 @@ describe('CLI - build', () => {
       )
 
       expect(closeMock).not.toHaveBeenCalled()
-      await vi.runAllTimersAsync()
-      expect(vi.mocked(gracefulExit)).not.toBeCalled()
+      await rstest.runAllTimersAsync()
+      expect(rstest.mocked(gracefulExit)).not.toBeCalled()
 
       // Simulate SIGINT
       const sigintHandler = processOnSpy.mock.calls.find(call =>
@@ -323,28 +303,25 @@ describe('CLI - build', () => {
     })
 
     test('with watch=false, process should exit and close should be called', async () => {
-      vi.mock('exit-hook')
-      vi.useFakeTimers()
+      rstest.useFakeTimers()
 
-      const core = await import('@rsbuild/core')
-      const closeMock = vi.fn().mockResolvedValue(undefined)
+      const closeMock = rstest.fn().mockResolvedValue(undefined)
 
-      vi.mocked(core.createRsbuild).mockImplementation(() =>
+      rstest.mocked(core.createRsbuild).mockImplementation(() =>
         // @ts-expect-error mock
         Promise.resolve({
-          isPluginExists: vi.fn(),
-          addPlugins: vi.fn(),
-          build: vi.fn(() =>
+          isPluginExists: rstest.fn(),
+          addPlugins: rstest.fn(),
+          build: rstest.fn(() =>
             Promise.resolve({
               close: closeMock,
             })
           ),
-          inspectConfig: vi.fn(),
+          inspectConfig: rstest.fn(),
         })
       )
 
-      const { gracefulExit } = await import('exit-hook')
-      const processOnSpy = vi.spyOn(process, 'on')
+      const processOnSpy = rstest.spyOn(process, 'on')
 
       const program = new Command('test')
       await build.call(
@@ -354,25 +331,24 @@ describe('CLI - build', () => {
       )
 
       expect(closeMock).toHaveBeenCalledTimes(1)
-      await vi.runAllTimersAsync()
-      expect(vi.mocked(gracefulExit)).toBeCalledWith(0)
+      await rstest.runAllTimersAsync()
+      expect(rstest.mocked(gracefulExit)).toBeCalledWith(0)
       processOnSpy.mockRestore()
     })
   })
 
   describe('mode', () => {
     test('with NODE_ENV="production"', async () => {
-      vi.stubEnv('NODE_ENV', 'production')
+      rstest.stubEnv('NODE_ENV', 'production')
 
-      const core = await import('@rsbuild/core')
-      core.createRsbuild = vi.fn().mockReturnValueOnce({
+      rstest.mocked(core.createRsbuild).mockReset().mockReturnValueOnce({
         build() {
           return Promise.reject(new Error('Mocked Build Error'))
         },
         addPlugins() {
           return Promise.resolve()
         },
-      })
+      } as never)
 
       const program = new Command('test')
       await build.call(
@@ -390,17 +366,16 @@ describe('CLI - build', () => {
     })
 
     test('with --mode development', async () => {
-      vi.stubEnv('NODE_ENV', 'production')
+      rstest.stubEnv('NODE_ENV', 'production')
 
-      const core = await import('@rsbuild/core')
-      core.createRsbuild = vi.fn().mockReturnValueOnce({
+      rstest.mocked(core.createRsbuild).mockReset().mockReturnValueOnce({
         build() {
           return Promise.reject(new Error('Mocked Build Error'))
         },
         addPlugins() {
           return Promise.resolve()
         },
-      })
+      } as never)
 
       const program = new Command('test')
       await build.call(
@@ -420,17 +395,16 @@ describe('CLI - build', () => {
     })
 
     test('with --mode none', async () => {
-      vi.stubEnv('NODE_ENV', 'production')
+      rstest.stubEnv('NODE_ENV', 'production')
 
-      const core = await import('@rsbuild/core')
-      core.createRsbuild = vi.fn().mockReturnValueOnce({
+      rstest.mocked(core.createRsbuild).mockReset().mockReturnValueOnce({
         build() {
           return Promise.reject(new Error('Mocked Build Error'))
         },
         addPlugins() {
           return Promise.resolve()
         },
-      })
+      } as never)
 
       const program = new Command('test')
       await build.call(
@@ -450,17 +424,16 @@ describe('CLI - build', () => {
     })
 
     test('with --mode foo', async () => {
-      vi.stubEnv('NODE_ENV', 'production')
+      rstest.stubEnv('NODE_ENV', 'production')
 
-      const core = await import('@rsbuild/core')
-      core.createRsbuild = vi.fn().mockReturnValueOnce({
+      rstest.mocked(core.createRsbuild).mockReset().mockReturnValueOnce({
         build() {
           return Promise.reject(new Error('Mocked Build Error'))
         },
         addPlugins() {
           return Promise.resolve()
         },
-      })
+      } as never)
 
       const program = new Command('test')
       await build.call(

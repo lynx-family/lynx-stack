@@ -3,38 +3,31 @@
 // LICENSE file in the root directory of this source tree.
 import path from 'node:path'
 import { fileURLToPath } from 'node:url'
-import type { URL } from 'node:url'
 
 import { createRsbuild } from '@rsbuild/core'
-import { describe, expect, test, vi } from 'vitest'
+import { describe, expect, rstest, test } from '@rstest/core'
 
 import { LAYERS } from '@lynx-js/react-webpack-plugin'
 
-vi.mock('node:module', async (importOriginal) => {
-  const original = await importOriginal()
-  const { createRequire: originalCreateRequire } =
-    original as typeof import('node:module')
+// `node:module` is a Node builtin (kept external by rstest), so its
+// `createRequire` cannot be intercepted by `rstest.mock`; mock the `semver`
+// comparison the plugin feeds the resolved version into instead.
+rstest.mock('semver/functions/gte.js', () => {
+  const original = rstest.requireActual<
+    | ((version: string, range: string) => boolean)
+    | { default: (version: string, range: string) => boolean }
+  >('semver/functions/gte.js')
+  const gte = 'default' in original ? original.default : original
   return {
-    ...original as object,
-    createRequire: vi.fn().mockImplementation((path: string | URL) => {
-      const originalRequire = originalCreateRequire(path)
-      const mockedRequire = (id: string) => {
-        if (/[\\/](?:packages[\\/])?react[\\/]*package\.json$/.test(id)) {
-          return { version: '0.112.0' }
-        } else {
-          // eslint-disable-next-line
-          return originalRequire(id)
-        }
-      }
-      mockedRequire.resolve = originalRequire.resolve
-      return mockedRequire
-    }),
+    default: rstest.fn((_version: string, range: string) =>
+      gte('0.112.0', range)
+    ),
   }
 })
 
 describe('@lynx-js/react/compat - alias', () => {
   test('alias with @lynx-js/react >= 0.112.0', async () => {
-    vi.stubEnv('NODE_ENV', 'production')
+    rstest.stubEnv('NODE_ENV', 'production')
 
     const { pluginReactAlias } = await import('../../src/index.js')
 

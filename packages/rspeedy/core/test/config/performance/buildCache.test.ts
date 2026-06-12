@@ -4,7 +4,7 @@
 import path from 'node:path'
 import { fileURLToPath } from 'node:url'
 
-import { describe, expect, test } from 'vitest'
+import { describe, expect, test } from '@rstest/core'
 
 import { createRspeedy } from '../../../src/create-rspeedy.js'
 import { createStubRspeedy } from '../../createStubRspeedy.js'

@@ -5,44 +5,44 @@ import { dirname, join } from 'node:path'
 import { fileURLToPath } from 'node:url'
 
 import type { RsbuildPlugin } from '@rsbuild/core'
+import * as core from '@rsbuild/core'
+import { beforeEach, describe, expect, rstest, test } from '@rstest/core'
+import chokidar from 'chokidar'
 import { Command } from 'commander'
-import { beforeEach, describe, expect, test, vi } from 'vitest'
+import { EventEmitter } from 'eventemitter3'
+import { gracefulExit } from 'exit-hook'
 
 import { dev } from '../../src/cli/dev.js'
 
-vi.mock('exit-hook')
-vi.mock(import('@rsbuild/core'), async (original) => {
-  const core = await original()
+rstest.mock('exit-hook', { mock: true })
+rstest.mock('@rsbuild/core', () => {
+  const core = rstest.requireActual<typeof import('@rsbuild/core')>(
+    '@rsbuild/core',
+  )
   return {
     ...core,
-    createRsbuild: vi.fn(),
+    createRsbuild: rstest.fn(),
     logger: {
       ...core.logger,
-      error: vi.fn(),
+      error: rstest.fn(),
     },
   }
 })
 
-vi.mock('chokidar', async () => {
-  const { EventEmitter } = await import('eventemitter3')
-
-  const emitter = new EventEmitter()
-
-  // @ts-expect-error mock
-  emitter.close = function() {
-    emitter.removeAllListeners()
-    return Promise.resolve()
-  }
-
-  return {
-    default: {
-      emitter,
-      watch: vi.fn(() => {
-        return emitter
-      }),
-    },
-  }
-})
+// `src/cli/watch.ts` loads chokidar via a dynamic import, which rstest
+// resolves natively (outside the bundle graph) — module mocking can't reach
+// it. Spy on the shared CJS exports object instead.
+const emitter = new EventEmitter()
+// @ts-expect-error mock
+emitter.close = function() {
+  emitter.removeAllListeners()
+  return Promise.resolve()
+}
+function spyOnChokidarWatch() {
+  return rstest.spyOn(chokidar, 'watch').mockImplementation(() =>
+    emitter as never
+  )
+}
 
 describe('CLI - dev', () => {
   const fixturesRoot = join(
@@ -50,14 +50,12 @@ describe('CLI - dev', () => {
     'fixtures',
   )
 
-  beforeEach(() => {
-    vi.restoreAllMocks()
+  void beforeEach(() => {
+    rstest.restoreAllMocks()
+    spyOnChokidarWatch()
   })
 
   test('config not found', async () => {
-    const core = await import('@rsbuild/core')
-    const { gracefulExit } = await import('exit-hook')
-
     const program = new Command('test')
     await dev.call(
       program,
@@ -80,9 +78,6 @@ describe('CLI - dev', () => {
   })
 
   test('custom config not found', async () => {
-    const core = await import('@rsbuild/core')
-    const { gracefulExit } = await import('exit-hook')
-
     const program = new Command('test')
     await dev.call(
       program,
@@ -111,9 +106,6 @@ describe('CLI - dev', () => {
   })
 
   test('invalid config', async () => {
-    const core = await import('@rsbuild/core')
-    const { gracefulExit } = await import('exit-hook')
-
     const program = new Command('test')
     await dev.call(
       program,
@@ -136,24 +128,21 @@ describe('CLI - dev', () => {
   })
 
   test('createRsbuild', async () => {
-    const core = await import('@rsbuild/core')
-    const { gracefulExit } = await import('exit-hook')
-
-    const close = vi.fn(() => {
+    const close = rstest.fn(() => {
       return Promise.resolve()
     })
 
-    vi.mocked(core.createRsbuild).mockImplementationOnce(() =>
+    rstest.mocked(core.createRsbuild).mockImplementationOnce(() =>
       Promise.resolve({
-        isPluginExists: vi.fn(),
-        addPlugins: vi.fn(),
+        isPluginExists: rstest.fn(),
+        addPlugins: rstest.fn(),
         // @ts-expect-error mock
-        createDevServer: vi.fn(() =>
+        createDevServer: rstest.fn(() =>
           Promise.resolve({
             listen: () => ({ server: { close } }),
           })
         ),
-        inspectConfig: vi.fn(),
+        inspectConfig: rstest.fn(),
       })
     )
 
@@ -172,27 +161,25 @@ describe('CLI - dev', () => {
 
   test('gracefully shutdown', async () => {
     await import('../../src/cli/exit.js')
-    const core = await import('@rsbuild/core')
-    const { gracefulExit } = await import('exit-hook')
 
-    const close = vi.fn(() => {
+    const close = rstest.fn(() => {
       return Promise.resolve()
     })
 
-    vi.mocked(core.createRsbuild).mockImplementation(() =>
+    rstest.mocked(core.createRsbuild).mockImplementation(() =>
       Promise.resolve({
-        addPlugins: vi.fn(),
+        addPlugins: rstest.fn(),
         // @ts-expect-error mock
-        createDevServer: vi.fn(() =>
+        createDevServer: rstest.fn(() =>
           Promise.resolve({
             listen: () => ({ server: { close } }),
           })
         ),
-        inspectConfig: vi.fn(),
+        inspectConfig: rstest.fn(),
       })
     )
 
-    const exit = vi
+    const exit = rstest
       .spyOn(process, 'exit')
       // @ts-expect-error mocked exit
       .mockImplementation(() => {
@@ -208,32 +195,31 @@ describe('CLI - dev', () => {
     expect(core.createRsbuild).toBeCalledTimes(1)
     process.emit('SIGINT')
     expect(exit).not.toBeCalled()
-    expect(vi.mocked(gracefulExit)).toBeCalled()
-    expect(vi.mocked(gracefulExit)).toBeCalledWith(130)
+    expect(rstest.mocked(gracefulExit)).toBeCalled()
+    expect(rstest.mocked(gracefulExit)).toBeCalledWith(130)
   })
 
   test('force shutdown', async () => {
     await import('../../src/cli/exit.js')
-    const core = await import('@rsbuild/core')
 
-    const close = vi.fn(() => {
+    const close = rstest.fn(() => {
       return Promise.resolve()
     })
 
-    vi.mocked(core.createRsbuild).mockImplementation(() =>
+    rstest.mocked(core.createRsbuild).mockImplementation(() =>
       Promise.resolve({
-        addPlugins: vi.fn(),
+        addPlugins: rstest.fn(),
         // @ts-expect-error mock
-        createDevServer: vi.fn(() =>
+        createDevServer: rstest.fn(() =>
           Promise.resolve({
             listen: () => ({ server: { close } }),
           })
         ),
-        inspectConfig: vi.fn(),
+        inspectConfig: rstest.fn(),
       })
     )
 
-    const exit = vi
+    const exit = rstest
       .spyOn(process, 'exit')
       // @ts-expect-error mocked exit
       .mockImplementation(() => {
@@ -254,25 +240,22 @@ describe('CLI - dev', () => {
   })
 
   test('dev.watchFiles(array) with `type: "reload-server"`', async () => {
-    const core = await import('@rsbuild/core')
-    const chokidar = await import('chokidar')
+    rstest.mocked(chokidar.watch).mockClear()
 
-    vi.mocked(chokidar.default.watch).mockClear()
-
-    const close = vi.fn(() => {
+    const close = rstest.fn(() => {
       return Promise.resolve()
     })
 
-    vi.mocked(core.createRsbuild).mockImplementation(() =>
+    rstest.mocked(core.createRsbuild).mockImplementation(() =>
       Promise.resolve({
         // @ts-expect-error mock
-        createDevServer: vi.fn(() =>
+        createDevServer: rstest.fn(() =>
           Promise.resolve({
             listen: () => ({ server: { close } }),
           })
         ),
-        addPlugins: vi.fn(),
-        inspectConfig: vi.fn(),
+        addPlugins: rstest.fn(),
+        inspectConfig: rstest.fn(),
       })
     )
 
@@ -286,7 +269,7 @@ describe('CLI - dev', () => {
     )
 
     expect(core.createRsbuild).toBeCalledTimes(1)
-    expect(chokidar.default.watch).toBeCalledWith(
+    expect(chokidar.watch).toBeCalledWith(
       [
         'lynx.config.js',
         'foo.js',
@@ -301,25 +284,22 @@ describe('CLI - dev', () => {
   })
 
   test('dev.watchFiles(object) with `type: "reload-server"`', async () => {
-    const core = await import('@rsbuild/core')
-    const chokidar = await import('chokidar')
+    rstest.mocked(chokidar.watch).mockClear()
 
-    vi.mocked(chokidar.default.watch).mockClear()
-
-    const close = vi.fn(() => {
+    const close = rstest.fn(() => {
       return Promise.resolve()
     })
 
-    vi.mocked(core.createRsbuild).mockImplementation(() =>
+    rstest.mocked(core.createRsbuild).mockImplementation(() =>
       Promise.resolve({
         // @ts-expect-error mock
-        createDevServer: vi.fn(() =>
+        createDevServer: rstest.fn(() =>
           Promise.resolve({
             listen: () => ({ server: { close } }),
           })
         ),
-        addPlugins: vi.fn(),
-        inspectConfig: vi.fn(),
+        addPlugins: rstest.fn(),
+        inspectConfig: rstest.fn(),
       })
     )
 
@@ -333,7 +313,7 @@ describe('CLI - dev', () => {
     )
 
     expect(core.createRsbuild).toBeCalledTimes(1)
-    expect(chokidar.default.watch).toBeCalledWith(
+    expect(chokidar.watch).toBeCalledWith(
       [
         'object.js',
         'bar.js',
@@ -347,32 +327,29 @@ describe('CLI - dev', () => {
   })
 
   test('dev with --mode=production', async () => {
-    const core = await import('@rsbuild/core')
-    const chokidar = await import('chokidar')
+    rstest.mocked(chokidar.watch).mockClear()
 
-    vi.mocked(chokidar.default.watch).mockClear()
-
-    const close = vi.fn(() => {
+    const close = rstest.fn(() => {
       return Promise.resolve()
     })
 
     const plugins: string[] = []
 
-    vi.mocked(core.createRsbuild).mockImplementation(() =>
+    rstest.mocked(core.createRsbuild).mockImplementation(() =>
       Promise.resolve({
         // @ts-expect-error mock
-        createDevServer: vi.fn(() =>
+        createDevServer: rstest.fn(() =>
           Promise.resolve({
             listen: () => ({ server: { close } }),
           })
         ),
-        addPlugins: vi.fn().mockImplementation((p: RsbuildPlugin[]) => {
+        addPlugins: rstest.fn().mockImplementation((p: RsbuildPlugin[]) => {
           plugins.push(...p.filter(p => Boolean(p)).map(p => p.name))
         }),
-        isPluginExists: vi.fn().mockImplementation((name: string) =>
+        isPluginExists: rstest.fn().mockImplementation((name: string) =>
           plugins.includes(name)
         ),
-        inspectConfig: vi.fn(),
+        inspectConfig: rstest.fn(),
       })
     )
 
@@ -391,17 +368,14 @@ describe('CLI - dev', () => {
 
   // TODO: re-enable this flaky test
   test.skip('restart devServer when lynx.config.ts changes', async () => {
-    const core = await import('@rsbuild/core')
-    const chokidar = await import('chokidar')
-
-    const close = vi.fn(() => {
+    const close = rstest.fn(() => {
       return Promise.resolve()
     })
 
-    vi.mocked(core.createRsbuild).mockImplementation(() =>
+    rstest.mocked(core.createRsbuild).mockImplementation(() =>
       Promise.resolve({
         // @ts-expect-error mock
-        createDevServer: vi.fn(() =>
+        createDevServer: rstest.fn(() =>
           Promise.resolve({
             listen: () => ({ server: { close } }),
           })
@@ -418,11 +392,6 @@ describe('CLI - dev', () => {
 
     expect(core.createRsbuild).toBeCalledTimes(1)
 
-    // @ts-expect-error mocked emitter
-    const { emitter } = chokidar.default as {
-      emitter: import('eventemitter3').EventEmitter
-    }
-
     await Promise.resolve()
 
     emitter.emit('change', 'lynx.config.ts')
@@ -434,6 +403,8 @@ describe('CLI - dev', () => {
 
     await new Promise<void>(resolve => setTimeout(resolve, 1000))
 
-    expect(vi.mocked(core.createRsbuild).mock.calls.length).toBeGreaterThan(1)
+    expect(rstest.mocked(core.createRsbuild).mock.calls.length).toBeGreaterThan(
+      1,
+    )
   })
 })

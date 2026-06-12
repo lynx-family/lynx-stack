@@ -5,16 +5,15 @@ import type { AddressInfo } from 'node:net'
 import path from 'node:path'
 
 import type { RsbuildPlugin } from '@rsbuild/core'
-import { beforeEach, describe, expect, test, vi } from 'vitest'
+import { beforeEach, describe, expect, rstest, test } from '@rstest/core'
 
 import { createStubRspeedy } from '../createStubRspeedy.js'
 
-vi.mock('../../src/webpack/EvalDevToolModulePlugin.ts')
-vi.mock('../../src/webpack/EvalSourceMapDevToolPlugin.ts')
-vi.mock('../../src/webpack/SourceMapDevToolPlugin.ts')
+rstest.mock('../../src/webpack/EvalSourceMapDevToolPlugin.ts', { mock: true })
+rstest.mock('../../src/webpack/SourceMapDevToolPlugin.ts', { mock: true })
 
-beforeEach(() => {
-  vi.resetAllMocks()
+void beforeEach(() => {
+  rstest.resetAllMocks()
 })
 
 const hasDropPlugin = (plugins: unknown[] | undefined) =>
@@ -28,7 +27,7 @@ const hasDropPlugin = (plugins: unknown[] | undefined) =>
 describe('sourcemap.plugin', () => {
   describe('production', () => {
     test('defaults', async () => {
-      vi.stubEnv('NODE_ENV', 'production')
+      rstest.stubEnv('NODE_ENV', 'production')
       const { SourceMapDevToolPlugin } = await import(
         '../../src/webpack/SourceMapDevToolPlugin.js'
       )
@@ -48,7 +47,7 @@ describe('sourcemap.plugin', () => {
     })
 
     test('with output.assetPrefix', async () => {
-      vi.stubEnv('NODE_ENV', 'production')
+      rstest.stubEnv('NODE_ENV', 'production')
       const { SourceMapDevToolPlugin } = await import(
         '../../src/webpack/SourceMapDevToolPlugin.js'
       )
@@ -73,7 +72,7 @@ describe('sourcemap.plugin', () => {
     })
 
     test('with output.assetPrefix with output.sourceMap.js: "source-map"', async () => {
-      vi.stubEnv('NODE_ENV', 'production')
+      rstest.stubEnv('NODE_ENV', 'production')
       const { SourceMapDevToolPlugin } = await import(
         '../../src/webpack/SourceMapDevToolPlugin.js'
       )
@@ -105,7 +104,7 @@ describe('sourcemap.plugin', () => {
     })
 
     test('with output.assetPrefix with output.sourceMap.js: "source-map-debugids"', async () => {
-      vi.stubEnv('NODE_ENV', 'production')
+      rstest.stubEnv('NODE_ENV', 'production')
       const { SourceMapDevToolPlugin } = await import(
         '../../src/webpack/SourceMapDevToolPlugin.js'
       )
@@ -137,7 +136,7 @@ describe('sourcemap.plugin', () => {
     })
 
     test('with output.sourceMap.js: "cheap-module-source-map"', async () => {
-      vi.stubEnv('NODE_ENV', 'production')
+      rstest.stubEnv('NODE_ENV', 'production')
       const { SourceMapDevToolPlugin } = await import(
         '../../src/webpack/SourceMapDevToolPlugin.js'
       )
@@ -169,7 +168,7 @@ describe('sourcemap.plugin', () => {
     })
 
     test('with output.sourceMap.js: "hidden-source-map"', async () => {
-      vi.stubEnv('NODE_ENV', 'production')
+      rstest.stubEnv('NODE_ENV', 'production')
       const { SourceMapDevToolPlugin } = await import(
         '../../src/webpack/SourceMapDevToolPlugin.js'
       )
@@ -202,7 +201,7 @@ describe('sourcemap.plugin', () => {
     })
 
     test('with output.sourceMap: false', async () => {
-      vi.stubEnv('NODE_ENV', 'production')
+      rstest.stubEnv('NODE_ENV', 'production')
       const { SourceMapDevToolPlugin } = await import(
         '../../src/webpack/SourceMapDevToolPlugin.js'
       )
@@ -219,7 +218,7 @@ describe('sourcemap.plugin', () => {
     })
 
     test('with output.sourceMap: true', async () => {
-      vi.stubEnv('NODE_ENV', 'production')
+      rstest.stubEnv('NODE_ENV', 'production')
       const { SourceMapDevToolPlugin } = await import(
         '../../src/webpack/SourceMapDevToolPlugin.js'
       )
@@ -249,7 +248,7 @@ describe('sourcemap.plugin', () => {
     })
 
     test('with output.sourceMap.js: false', async () => {
-      vi.stubEnv('NODE_ENV', 'production')
+      rstest.stubEnv('NODE_ENV', 'production')
       const { SourceMapDevToolPlugin } = await import(
         '../../src/webpack/SourceMapDevToolPlugin.js'
       )
@@ -268,7 +267,7 @@ describe('sourcemap.plugin', () => {
     })
 
     test('with output.sourceMap.js modified by plugin', async () => {
-      vi.stubEnv('NODE_ENV', 'production')
+      rstest.stubEnv('NODE_ENV', 'production')
       const { SourceMapDevToolPlugin } = await import(
         '../../src/webpack/SourceMapDevToolPlugin.js'
       )
@@ -314,7 +313,7 @@ describe('sourcemap.plugin', () => {
 
   describe('development', () => {
     test('defaults', async () => {
-      vi.stubEnv('NODE_ENV', 'development')
+      rstest.stubEnv('NODE_ENV', 'development')
       const { SourceMapDevToolPlugin } = await import(
         '../../src/webpack/SourceMapDevToolPlugin.js'
       )
@@ -336,7 +335,7 @@ describe('sourcemap.plugin', () => {
     })
 
     test('with server.port', async () => {
-      vi.stubEnv('NODE_ENV', 'development')
+      rstest.stubEnv('NODE_ENV', 'development')
       const { SourceMapDevToolPlugin } = await import(
         '../../src/webpack/SourceMapDevToolPlugin.js'
       )
@@ -363,7 +362,7 @@ describe('sourcemap.plugin', () => {
     })
 
     test('with output.sourceMap.js: "eval-cheap-module-source-map"', async () => {
-      vi.stubEnv('NODE_ENV', 'development')
+      rstest.stubEnv('NODE_ENV', 'development')
       const { SourceMapDevToolPlugin } = await import(
         '../../src/webpack/SourceMapDevToolPlugin.js'
       )
@@ -393,7 +392,7 @@ describe('sourcemap.plugin', () => {
     })
 
     test('with output.sourceMap.js: "source-map-debugids"', async () => {
-      vi.stubEnv('NODE_ENV', 'development')
+      rstest.stubEnv('NODE_ENV', 'development')
       const { SourceMapDevToolPlugin } = await import(
         '../../src/webpack/SourceMapDevToolPlugin.js'
       )
@@ -425,7 +424,7 @@ describe('sourcemap.plugin', () => {
     })
 
     test('with output.sourceMap.js: "eval"', async () => {
-      vi.stubEnv('NODE_ENV', 'development')
+      rstest.stubEnv('NODE_ENV', 'development')
       const { SourceMapDevToolPlugin } = await import(
         '../../src/webpack/SourceMapDevToolPlugin.js'
       )
@@ -448,7 +447,7 @@ describe('sourcemap.plugin', () => {
     })
 
     test('with output.sourceMap.js: false', async () => {
-      vi.stubEnv('NODE_ENV', 'development')
+      rstest.stubEnv('NODE_ENV', 'development')
       const { SourceMapDevToolPlugin } = await import(
         '../../src/webpack/SourceMapDevToolPlugin.js'
       )
@@ -470,7 +469,7 @@ describe('sourcemap.plugin', () => {
     })
 
     test('with dev.assetPrefix', async () => {
-      vi.stubEnv('NODE_ENV', 'development')
+      rstest.stubEnv('NODE_ENV', 'development')
       const { SourceMapDevToolPlugin } = await import(
         '../../src/webpack/SourceMapDevToolPlugin.js'
       )
@@ -496,7 +495,7 @@ describe('sourcemap.plugin', () => {
     })
 
     test('with dev.assetPrefix contains "<port>"', async () => {
-      vi.stubEnv('NODE_ENV', 'development')
+      rstest.stubEnv('NODE_ENV', 'development')
       const { SourceMapDevToolPlugin } = await import(
         '../../src/webpack/SourceMapDevToolPlugin.js'
       )
@@ -525,7 +524,7 @@ describe('sourcemap.plugin', () => {
     })
 
     test('with dev.assetPrefix contains "<port>" and port being occupied', async () => {
-      vi.stubEnv('NODE_ENV', 'development')
+      rstest.stubEnv('NODE_ENV', 'development')
       const net = await import('node:net')
 
       // We get a port that is occupied by the server we just created
@@ -580,7 +579,7 @@ describe('sourcemap.plugin', () => {
     })
 
     test('with dev.assetPrefix: false', async () => {
-      vi.stubEnv('NODE_ENV', 'development')
+      rstest.stubEnv('NODE_ENV', 'development')
       const { SourceMapDevToolPlugin } = await import(
         '../../src/webpack/SourceMapDevToolPlugin.js'
       )
@@ -597,7 +596,7 @@ describe('sourcemap.plugin', () => {
     })
 
     test('with dev.assetPrefix: false and output.sourceMap.js: false', async () => {
-      vi.stubEnv('NODE_ENV', 'development')
+      rstest.stubEnv('NODE_ENV', 'development')
       const { SourceMapDevToolPlugin } = await import(
         '../../src/webpack/SourceMapDevToolPlugin.js'
       )
@@ -619,7 +618,7 @@ describe('sourcemap.plugin', () => {
     })
 
     test('with dev.assetPrefix: false and output.sourceMap.js: "eval-source-map"', async () => {
-      vi.stubEnv('NODE_ENV', 'development')
+      rstest.stubEnv('NODE_ENV', 'development')
       const { SourceMapDevToolPlugin } = await import(
         '../../src/webpack/SourceMapDevToolPlugin.js'
       )
@@ -642,7 +641,7 @@ describe('sourcemap.plugin', () => {
 
     // TODO: this can not pass for now.
     test.skip('with tools.rspack.output.sourceMapFilename', async () => {
-      vi.stubEnv('NODE_ENV', 'development')
+      rstest.stubEnv('NODE_ENV', 'development')
       const { SourceMapDevToolPlugin } = await import(
         '../../src/webpack/SourceMapDevToolPlugin.js'
       )
@@ -672,21 +671,21 @@ describe('sourcemap.plugin', () => {
 
   describe('drop .map assets', () => {
     test('production build drops .map assets', async () => {
-      vi.stubEnv('NODE_ENV', 'production')
+      rstest.stubEnv('NODE_ENV', 'production')
       const rspeedy = await createStubRspeedy({})
       const config = await rspeedy.unwrapConfig({ action: 'build' })
       expect(hasDropPlugin(config.plugins)).toBe(true)
     })
 
     test('dev build drops .map assets', async () => {
-      vi.stubEnv('NODE_ENV', 'development')
+      rstest.stubEnv('NODE_ENV', 'development')
       const rspeedy = await createStubRspeedy({})
       const config = await rspeedy.unwrapConfig()
       expect(hasDropPlugin(config.plugins)).toBe(true)
     })
 
     test('does not drop .map assets when dev.assetPrefix is false', async () => {
-      vi.stubEnv('NODE_ENV', 'development')
+      rstest.stubEnv('NODE_ENV', 'development')
       const rspeedy = await createStubRspeedy({
         dev: { assetPrefix: false },
       })

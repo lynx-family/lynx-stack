@@ -16,8 +16,8 @@ export default {
      * @param {import('@rspack/core').Compiler} compiler
      */
     compiler => {
-      new compiler.webpack.HotModuleReplacementPlugin().apply(compiler);
-      const { RuntimeModule } = compiler.webpack;
+      new compiler.rspack.HotModuleReplacementPlugin().apply(compiler);
+      const { RuntimeModule } = compiler.rspack;
 
       compiler.hooks.compilation.tap('test', compilation => {
         compilation.hooks.runtimeRequirementInTree.for(

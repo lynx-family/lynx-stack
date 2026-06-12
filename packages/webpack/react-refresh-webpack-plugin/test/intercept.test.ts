@@ -4,85 +4,8 @@
 import { describe, expect, it } from '@rstest/core';
 
 import { ReactRefreshRspackPlugin } from '../src/ReactRefreshRspackPlugin.js';
-import { ReactRefreshWebpackPlugin } from '../src/ReactRefreshWebpackPlugin.js';
 
 describe('ReactRefresh plugins', () => {
-  it('ReactRefreshWebpackPlugin intercept code generation in dev', () => {
-    const plugin = new ReactRefreshWebpackPlugin();
-    let generateResult = '';
-
-    const mockCompiler = {
-      options: { mode: 'development' },
-      context: '/test',
-      webpack: {
-        EntryPlugin: class {
-          apply() {
-            /* noop */
-          }
-        },
-        ProvidePlugin: class {
-          apply() {
-            /* noop */
-          }
-        },
-        RuntimeGlobals: {
-          interceptModuleExecution: 'interceptModuleExecution',
-        },
-        RuntimeModule: class {
-          name: string;
-          stage: number;
-          constructor(name: string, stage: number) {
-            this.name = name;
-            this.stage = stage;
-          }
-        },
-      },
-      hooks: {
-        compilation: {
-          tap: (_name: string, cb: (compilation: unknown) => void) => {
-            const compilation = {
-              compiler: mockCompiler,
-              mainTemplate: {
-                hooks: {
-                  localVars: {
-                    tap: () => {
-                      /* noop */
-                    },
-                  },
-                },
-              },
-              hooks: {
-                additionalTreeRuntimeRequirements: {
-                  tap: (
-                    _name: string,
-                    reqCb: (chunk: string, requirements: Set<string>) => void,
-                  ) => {
-                    const requirements = new Set<string>();
-                    reqCb('chunk', requirements);
-                  },
-                },
-              },
-              addRuntimeModule: (
-                _chunk: unknown,
-                module: { generate: () => string },
-              ) => {
-                generateResult = module.generate();
-              },
-            };
-            cb(compilation);
-          },
-        },
-      },
-    };
-
-    // @ts-expect-error test mock
-    plugin.apply(mockCompiler);
-    expect(generateResult).toContain('__webpack_modules__');
-    expect(generateResult).toContain(
-      'globalThis[Symbol.for(\'__LYNX_WEBPACK_MODULES__\')] = __webpack_modules__;',
-    );
-  });
-
   it('ReactRefreshRspackPlugin intercept code generation in dev', () => {
     const plugin = new ReactRefreshRspackPlugin();
     let generateResult = '';

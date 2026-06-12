@@ -3,41 +3,41 @@
 // LICENSE file in the root directory of this source tree.
 import path from 'node:path'
 
+import { beforeEach, describe, expect, rstest, test } from '@rstest/core'
+import type { Mocked } from '@rstest/core'
 import { Command } from 'commander'
-import { beforeEach, describe, expect, test, vi } from 'vitest'
-import type { MockedFunction } from 'vitest'
 
 import type { BuildOptions } from '../../src/cli/build.js'
 
-vi.mock('../../src/cli/build.js', () => ({
-  build: vi.fn().mockResolvedValue(undefined),
+rstest.mock('../../src/cli/build.js', () => ({
+  build: rstest.fn().mockResolvedValue(undefined),
 }))
-vi.mock('../../src/cli/dev.js', () => ({
-  dev: vi.fn().mockResolvedValue(undefined),
+rstest.mock('../../src/cli/dev.js', () => ({
+  dev: rstest.fn().mockResolvedValue(undefined),
 }))
-vi.mock('../../src/cli/inspect.js', () => ({
-  inspect: vi.fn().mockResolvedValue(undefined),
+rstest.mock('../../src/cli/inspect.js', () => ({
+  inspect: rstest.fn().mockResolvedValue(undefined),
 }))
-vi.mock('../../src/cli/preview.js', () => ({
-  preview: vi.fn().mockResolvedValue(undefined),
+rstest.mock('../../src/cli/preview.js', () => ({
+  preview: rstest.fn().mockResolvedValue(undefined),
 }))
 
 describe('CLI - root option', () => {
   let program: Command
   let apply: (program: Command) => Command
-  let mockedBuild: MockedFunction<
+  let mockedBuild: Mocked<
     (this: Command, root: string, buildOptions: BuildOptions) => Promise<void>
   >
 
-  beforeEach(async () => {
-    vi.clearAllMocks()
+  void beforeEach(async () => {
+    rstest.clearAllMocks()
 
     program = new Command('test')
     const commandsModule = await import('../../src/cli/commands.js')
     apply = commandsModule.apply
     program.exitOverride()
     const buildModule = await import('../../src/cli/build.js')
-    mockedBuild = vi.mocked(buildModule.build)
+    mockedBuild = rstest.mocked(buildModule.build)
   })
 
   test('accepts short flag -r for root', async () => {
@@ -59,8 +59,8 @@ describe('CLI - root option', () => {
   })
 
   test('requires a value', async () => {
-    const writeSpy = vi.spyOn(process.stderr, 'write').mockImplementation(() =>
-      false
+    const writeSpy = rstest.spyOn(process.stderr, 'write').mockImplementation(
+      () => false,
     )
 
     await expect(
@@ -152,7 +152,7 @@ describe('CLI - root option', () => {
   test.each(['build', 'dev', 'inspect', 'preview'])(
     '%s command accepts --root option',
     async (command) => {
-      const writeSpy = vi.spyOn(process.stderr, 'write').mockImplementation(
+      const writeSpy = rstest.spyOn(process.stderr, 'write').mockImplementation(
         () => false,
       )
       await expect(

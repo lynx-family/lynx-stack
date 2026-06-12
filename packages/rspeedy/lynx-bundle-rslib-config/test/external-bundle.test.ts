@@ -8,7 +8,14 @@ import { fileURLToPath } from 'node:url'
 
 import { createRslib } from '@rslib/core'
 import type { RslibConfig } from '@rslib/core'
-import { afterAll, beforeAll, describe, expect, it, vi } from 'vitest'
+import {
+  afterAll,
+  beforeAll,
+  describe,
+  expect,
+  it,
+  rstest as vi,
+} from '@rstest/core'
 
 import { LAYERS, pluginReactLynx } from '@lynx-js/react-rsbuild-plugin'
 
@@ -648,7 +655,7 @@ describe('pluginReactLynx', () => {
   let rslib!: Awaited<ReturnType<typeof createRslib>>
   let decodedResult!: Awaited<ReturnType<typeof decodeTemplate>>
 
-  beforeAll(async () => {
+  void beforeAll(async () => {
     vi.stubEnv('DEBUG', 'rspeedy')
 
     const rslibConfig = defineExternalBundleRslibConfig({
@@ -675,7 +682,7 @@ describe('pluginReactLynx', () => {
     )
   })
 
-  afterAll(() => {
+  void afterAll(() => {
     vi.unstubAllEnvs()
   })
 

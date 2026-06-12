@@ -1,4 +1,4 @@
-// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+// Rstest Snapshot v1
 
 exports[`Plugins - Output > defaults - Production 1`] = `
 {
@@ -12,7 +12,7 @@ exports[`Plugins - Output > defaults - Production 1`] = `
     "const": false,
   },
   "filename": "static/js/[name].[contenthash:10].js",
-  "path": "<ROOT>/dist",
+  "path": "<ROOT>/packages/rspeedy/core/dist",
   "publicPath": "/",
   "webassemblyModuleFilename": "static/wasm/[contenthash:10].module.wasm",
 }
@@ -30,7 +30,7 @@ exports[`Plugins - Output > defaults 1`] = `
     "const": false,
   },
   "filename": "static/js/[name].js",
-  "path": "<ROOT>/dist",
+  "path": "<ROOT>/packages/rspeedy/core/dist",
   "publicPath": "/",
   "webassemblyModuleFilename": "static/wasm/[contenthash:10].module.wasm",
 }
@@ -48,7 +48,7 @@ exports[`Plugins - Output > output.filename 1`] = `
     "const": false,
   },
   "filename": "static/js/[name].js",
-  "path": "<ROOT>/dist",
+  "path": "<ROOT>/packages/rspeedy/core/dist",
   "publicPath": "/",
   "webassemblyModuleFilename": "static/wasm/[contenthash:10].module.wasm",
 }
@@ -66,7 +66,7 @@ exports[`Plugins - Output > output.filename.js 1`] = `
     "const": false,
   },
   "filename": "static/js/[name].js",
-  "path": "<ROOT>/dist",
+  "path": "<ROOT>/packages/rspeedy/core/dist",
   "publicPath": "/",
   "webassemblyModuleFilename": "static/wasm/[contenthash:10].module.wasm",
 }

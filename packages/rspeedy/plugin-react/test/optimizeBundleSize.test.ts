@@ -7,7 +7,7 @@ import { tmpdir } from 'node:os'
 import path from 'node:path'
 import { fileURLToPath } from 'node:url'
 
-import { afterAll, describe, expect, test, vi } from 'vitest'
+import { afterAll, describe, expect, rstest, test } from '@rstest/core'
 
 import type { RspeedyInstance } from '@lynx-js/rspeedy'
 
@@ -19,7 +19,7 @@ const pureFuncsBasicEntry = fileURLToPath(
   new URL('./fixtures/pure-funcs/basic.js', import.meta.url),
 )
 
-afterAll(async () => {
+void afterAll(async () => {
   await Promise.all(tempDirs.map(async (dir) => {
     await rm(dir, { recursive: true, force: true })
   }))
@@ -80,7 +80,7 @@ async function getCode(rsbuild: RspeedyInstance, entryName: string) {
 describe('optimizeBundleSize', () => {
   test('basic usage', async () => {
     const { pluginReactLynx } = await import('../src/pluginReactLynx.js')
-    vi.stubEnv('NODE_ENV', 'production')
+    rstest.stubEnv('NODE_ENV', 'production')
     const entryName = 'optimizeBundleSize-0'
     const rsbuild = await createIsolatedRspeedy({
       rspeedyConfig: {
@@ -122,7 +122,7 @@ describe('optimizeBundleSize', () => {
 
   test('optimize background code', async () => {
     const { pluginReactLynx } = await import('../src/pluginReactLynx.js')
-    vi.stubEnv('NODE_ENV', 'production')
+    rstest.stubEnv('NODE_ENV', 'production')
 
     const entryName = 'optimizeBundleSize-1'
     const rsbuild = await createIsolatedRspeedy({
@@ -174,7 +174,7 @@ describe('optimizeBundleSize', () => {
 
   test('optimize main-thread code', async () => {
     const { pluginReactLynx } = await import('../src/pluginReactLynx.js')
-    vi.stubEnv('NODE_ENV', 'production')
+    rstest.stubEnv('NODE_ENV', 'production')
     const entryName = 'optimizeBundleSize-2'
     const rsbuild = await createIsolatedRspeedy({
       rspeedyConfig: {
@@ -223,7 +223,7 @@ describe('optimizeBundleSize', () => {
 
   test('merge backgroundOptions and mainThreadOptions', async () => {
     const { pluginReactLynx } = await import('../src/pluginReactLynx.js')
-    vi.stubEnv('NODE_ENV', 'production')
+    rstest.stubEnv('NODE_ENV', 'production')
 
     const entryName = 'optimizeBundleSize-3'
     const rsbuild = await createIsolatedRspeedy({

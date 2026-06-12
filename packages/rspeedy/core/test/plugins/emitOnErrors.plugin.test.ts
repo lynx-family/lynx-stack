@@ -1,13 +1,13 @@
 // Copyright 2025 The Lynx Authors. All rights reserved.
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
-import { describe, expect, test, vi } from 'vitest'
+import { describe, expect, rstest, test } from '@rstest/core'
 
 import { createStubRspeedy } from '../createStubRspeedy.js'
 
 describe('Plugins - emitOnErrors', () => {
   test('no DEBUG', async () => {
-    vi.stubEnv('DEBUG', '')
+    rstest.stubEnv('DEBUG', '')
     const rspeedy = await createStubRspeedy({})
 
     const config = await rspeedy.unwrapConfig()
@@ -16,7 +16,7 @@ describe('Plugins - emitOnErrors', () => {
   })
 
   test('DEBUG=rspeedy', async () => {
-    vi.stubEnv('DEBUG', 'rspeedy')
+    rstest.stubEnv('DEBUG', 'rspeedy')
     const rspeedy = await createStubRspeedy({})
 
     const config = await rspeedy.unwrapConfig()
@@ -25,7 +25,7 @@ describe('Plugins - emitOnErrors', () => {
   })
 
   test('DEBUG=rspeedy,rsbuild', async () => {
-    vi.stubEnv('DEBUG', 'rspeedy,rsbuild')
+    rstest.stubEnv('DEBUG', 'rspeedy,rsbuild')
     const rspeedy = await createStubRspeedy({})
 
     const config = await rspeedy.unwrapConfig()
@@ -34,7 +34,7 @@ describe('Plugins - emitOnErrors', () => {
   })
 
   test('DEBUG=*', async () => {
-    vi.stubEnv('DEBUG', '*')
+    rstest.stubEnv('DEBUG', '*')
     const rspeedy = await createStubRspeedy({})
 
     const config = await rspeedy.unwrapConfig()
@@ -43,7 +43,7 @@ describe('Plugins - emitOnErrors', () => {
   })
 
   test('DEBUG=foo,bar', async () => {
-    vi.stubEnv('DEBUG', 'foo,bar')
+    rstest.stubEnv('DEBUG', 'foo,bar')
     const rspeedy = await createStubRspeedy({})
 
     const config = await rspeedy.unwrapConfig()

@@ -2,7 +2,7 @@
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
 import type { Rspack } from '@rsbuild/core'
-import { describe, expect, test } from 'vitest'
+import { describe, expect, test } from '@rstest/core'
 
 import { validate } from '../../src/config/validate.js'
 import type {
@@ -2774,7 +2774,7 @@ describe('Config Validation', () => {
             plugins: [
               new class TestPlugin {
                 apply(compiler: Rspack.Compiler): void {
-                  new compiler.webpack.DefinePlugin({
+                  new compiler.rspack.DefinePlugin({
                     foo: 'bar',
                   }).apply(compiler)
                 }
@@ -2797,7 +2797,7 @@ describe('Config Validation', () => {
           rspack: {
             plugins: [
               (compiler: Rspack.Compiler) =>
-                new compiler.webpack.BannerPlugin({
+                new compiler.rspack.BannerPlugin({
                   banner: 'foo',
                 }).apply(compiler),
             ],

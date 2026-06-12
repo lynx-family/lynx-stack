@@ -4,16 +4,16 @@
 
 import { createRequire } from 'node:module'
 
+import { describe, expect, rstest, test } from '@rstest/core'
 import { Command } from 'commander'
-import { describe, expect, test, vi } from 'vitest'
 
 const require = createRequire(import.meta.url)
 
 describe('CLI - help', () => {
   test('help message', async () => {
     // Optional. Suppress normal output to keep test output clean.
-    const writeSpy = vi.spyOn(process.stdout, 'write').mockImplementation(() =>
-      false
+    const writeSpy = rstest.spyOn(process.stdout, 'write').mockImplementation(
+      () => false,
     )
     const program = new Command().configureHelp({
       helpWidth: 80,
@@ -44,8 +44,8 @@ describe('CLI - help', () => {
 
   test('`help` command', async () => {
     // Optional. Suppress normal output to keep test output clean.
-    const writeSpy = vi.spyOn(process.stdout, 'write').mockImplementation(() =>
-      false
+    const writeSpy = rstest.spyOn(process.stdout, 'write').mockImplementation(
+      () => false,
     )
 
     const program = new Command('test')
@@ -63,8 +63,8 @@ describe('CLI - help', () => {
 
   test('option `--help`', async () => {
     // Optional. Suppress normal output to keep test output clean.
-    const writeSpy = vi.spyOn(process.stdout, 'write').mockImplementation(() =>
-      false
+    const writeSpy = rstest.spyOn(process.stdout, 'write').mockImplementation(
+      () => false,
     )
 
     const program = new Command('test')
@@ -82,8 +82,8 @@ describe('CLI - help', () => {
 
   test('options `--version`', async () => {
     // Optional. Suppress normal output to keep test output clean.
-    const writeSpy = vi.spyOn(process.stdout, 'write').mockImplementation(() =>
-      false
+    const writeSpy = rstest.spyOn(process.stdout, 'write').mockImplementation(
+      () => false,
     )
 
     const pkg = require(
@@ -105,8 +105,8 @@ describe('CLI - help', () => {
 
   test('options `-V`', async () => {
     // Optional. Suppress normal output to keep test output clean.
-    const writeSpy = vi.spyOn(process.stdout, 'write').mockImplementation(() =>
-      false
+    const writeSpy = rstest.spyOn(process.stdout, 'write').mockImplementation(
+      () => false,
     )
 
     const pkg = require(

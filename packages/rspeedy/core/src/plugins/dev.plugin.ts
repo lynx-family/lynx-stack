@@ -266,9 +266,12 @@ export async function findIp(
   family: 'v4' | 'v6',
   isInternal = false,
 ): Promise<string> {
+  // Use the `default` export (the live CJS exports object) instead of the
+  // namespace: builtin namespaces snapshot named exports, which breaks
+  // `spyOn(os, 'networkInterfaces')` in tests.
   const [
     { default: ipaddr },
-    os,
+    { default: os },
   ] = await Promise.all([
     import('ipaddr.js'),
     import('node:os'),

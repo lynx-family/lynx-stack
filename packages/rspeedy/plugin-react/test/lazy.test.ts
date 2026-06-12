@@ -7,7 +7,7 @@ import path from 'node:path'
 import { fileURLToPath } from 'node:url'
 
 import type { RsbuildPlugin, Rspack } from '@rsbuild/core'
-import { describe, expect, test, vi } from 'vitest'
+import { describe, expect, rstest, test } from '@rstest/core'
 
 import { LynxTemplatePlugin } from '@lynx-js/template-webpack-plugin'
 
@@ -75,7 +75,7 @@ describe('Lazy', () => {
   })
   ;['development', 'production'].forEach(mode => {
     test(`exports should have the component exported on ${mode} mode`, async () => {
-      vi.stubEnv('NODE_ENV', mode)
+      rstest.stubEnv('NODE_ENV', mode)
 
       const { pluginReactLynx } = await import('../src/pluginReactLynx.js')
       let backgroundJSContent = ''
@@ -179,12 +179,12 @@ describe('Lazy', () => {
       // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
       expect(exports['default'].name).toBe('LazyBundleComp')
 
-      vi.unstubAllEnvs()
+      rstest.unstubAllEnvs()
     })
   })
 
   test('lazy bundle beforeEncode entryNames', async () => {
-    vi.stubEnv('NODE_ENV', 'development')
+    rstest.stubEnv('NODE_ENV', 'development')
     const { pluginReactLynx } = await import('../src/pluginReactLynx.js')
 
     const entryNamesOfBeforeEncode: string[][] = []
@@ -313,12 +313,12 @@ describe('Lazy', () => {
         `"[["./LazyComponent.js-react__background",".rspeedy/async/./LazyComponent.js-react__background/./LazyComponent.js-react__background.css.hot-update.json"],["main",".rspeedy/main/main.css.hot-update.json"]]"`,
       )
     } finally {
-      vi.unstubAllEnvs()
+      rstest.unstubAllEnvs()
     }
   })
 
   test('lazy bundle app-service.js should not load hot-update.js', async () => {
-    vi.stubEnv('NODE_ENV', 'development')
+    rstest.stubEnv('NODE_ENV', 'development')
     const { pluginReactLynx } = await import('../src/pluginReactLynx.js')
 
     let appServiceJSContent = ''
@@ -442,7 +442,7 @@ describe('Lazy', () => {
       if (tmpContent !== undefined) {
         await fs.writeFile(lazyComponentUrl, tmpContent)
       }
-      vi.unstubAllEnvs()
+      rstest.unstubAllEnvs()
     }
   })
 
@@ -454,7 +454,7 @@ describe('Lazy', () => {
   // would externalize the background. A lazy bundle's background must always be
   // inlined and required synchronously regardless of `inlineScripts`.
   test('inlines lazy bundle background when inlineScripts is disabled', async () => {
-    vi.stubEnv('NODE_ENV', 'development')
+    rstest.stubEnv('NODE_ENV', 'development')
     const { pluginReactLynx } = await import('../src/pluginReactLynx.js')
 
     let appServiceJSContent = ''
@@ -594,7 +594,7 @@ describe('Lazy', () => {
     } finally {
       // @ts-expect-error injected runtime global
       delete globalThis.globDynamicComponentEntry
-      vi.unstubAllEnvs()
+      rstest.unstubAllEnvs()
     }
   })
 })
