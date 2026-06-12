@@ -26,8 +26,6 @@ describe('Plugins - SWC', () => {
           "env": {
             "include": [
               "transform-block-scoping",
-              "transform-exponentiation-operator",
-              "transform-async-to-generator",
               "transform-async-generator-functions",
               "transform-dotall-regex",
               "transform-named-capturing-groups-regex",
@@ -89,6 +87,13 @@ describe('Plugins - SWC', () => {
           "env": {
             "include": [
               "transform-block-scoping",
+              "transform-async-generator-functions",
+              "transform-dotall-regex",
+              "transform-named-capturing-groups-regex",
+              "transform-object-rest-spread",
+              "transform-unicode-property-regex",
+              "transform-json-strings",
+              "transform-optional-catch-binding",
               "transform-nullish-coalescing-operator",
               "transform-optional-chaining",
               "transform-export-namespace-from",
@@ -166,7 +171,7 @@ describe('Plugins - SWC', () => {
     // exclude opts out of the let/const → var lowering.
     expect(loaderOptions?.env?.exclude).toEqual(['transform-block-scoping'])
     expect(loaderOptions?.env?.include).toContain(
-      'transform-async-to-generator',
+      'transform-async-generator-functions',
     )
   })
 
@@ -191,9 +196,9 @@ describe('Plugins - SWC', () => {
 
     // The user's transform is honored ...
     expect(loaderOptions?.env?.include).toContain('transform-block-scoping')
-    // ... on top of Rspeedy's baseline (es2015-equivalent in production) ...
+    // ... on top of Rspeedy's ES2017-equivalent baseline ...
     expect(loaderOptions?.env?.include).toContain(
-      'transform-async-to-generator',
+      'transform-async-generator-functions',
     )
     // ... and Rspeedy still owns `targets`.
     expect(loaderOptions?.env?.targets).toEqual({ chrome: '120' })
@@ -233,6 +238,13 @@ describe('Plugins - SWC', () => {
           "env": {
             "include": [
               "transform-block-scoping",
+              "transform-async-generator-functions",
+              "transform-dotall-regex",
+              "transform-named-capturing-groups-regex",
+              "transform-object-rest-spread",
+              "transform-unicode-property-regex",
+              "transform-json-strings",
+              "transform-optional-catch-binding",
               "transform-nullish-coalescing-operator",
               "transform-optional-chaining",
               "transform-export-namespace-from",
