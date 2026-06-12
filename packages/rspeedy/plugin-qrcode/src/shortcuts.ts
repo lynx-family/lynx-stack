@@ -93,7 +93,7 @@ async function loop(
   devUrls: Record<string, string>,
 ) {
   const [
-    { autocomplete, select, selectKey, isCancel, cancel },
+    { autocomplete, select, selectKey, isCancel, cancel, log },
     { default: showQRCode },
   ] = await Promise.all([
     import('@clack/prompts'),
@@ -172,7 +172,23 @@ async function loop(
       currentSchema = selection
       value = getCurrentUrl()
     } else if (name === 'i') {
+      // When the dev server is bound to a specific address, other
+      // addresses are not reachable, so there is nothing to switch to.
+      const boundHost = options.api.getNormalizedConfig().server?.host
+      if (
+        boundHost !== undefined && boundHost !== '0.0.0.0'
+        && boundHost !== '::'
+      ) {
+        log.warn(
+          `The dev server is bound to ${boundHost} (server.host), other addresses are not reachable.`,
+        )
+        continue
+      }
       const hosts = await getAvailableHosts()
+      if (hosts.length === 0) {
+        log.warn('No non-internal IPv4 addresses found.')
+        continue
+      }
       const selection = await selectFn(hosts.length)({
         message: 'Select host',
         options: hosts.map(({ address, interfaceName }) => ({

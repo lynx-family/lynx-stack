@@ -8,20 +8,11 @@ import { registerConsoleShortcuts } from '../src/shortcuts.js'
 
 vi.mock('@clack/prompts')
 
+const networkInterfacesMock = vi.hoisted(() => vi.fn())
+
 vi.mock('node:os', async (importOriginal) => ({
   ...await importOriginal<typeof import('node:os')>(),
-  networkInterfaces: () => ({
-    lo0: [
-      { address: '127.0.0.1', family: 'IPv4', internal: true },
-    ],
-    en0: [
-      { address: '10.0.0.1', family: 'IPv4', internal: false },
-      { address: 'fe80::1', family: 'IPv6', internal: false },
-    ],
-    en1: [
-      { address: '192.168.1.2', family: 'IPv4', internal: false },
-    ],
-  }),
+  networkInterfaces: networkInterfacesMock,
 }))
 
 describe('PluginQRCode - CLI Shortcuts', () => {
@@ -35,6 +26,19 @@ describe('PluginQRCode - CLI Shortcuts', () => {
   } as unknown as RsbuildPluginAPI
 
   beforeEach(() => {
+    networkInterfacesMock.mockReturnValue({
+      lo0: [
+        { address: '127.0.0.1', family: 'IPv4', internal: true },
+      ],
+      en0: [
+        { address: '10.0.0.1', family: 'IPv4', internal: false },
+        { address: 'fe80::1', family: 'IPv6', internal: false },
+      ],
+      en1: [
+        { address: '192.168.1.2', family: 'IPv4', internal: false },
+      ],
+    })
+
     Object.defineProperty(process.stdin, 'isTTY', {
       value: true,
       configurable: true,
@@ -224,6 +228,92 @@ describe('PluginQRCode - CLI Shortcuts', () => {
     expect(onPrint).toHaveBeenLastCalledWith(
       'https://10.0.0.1/foo.lynx.bundle',
     )
+    unregister()
+  })
+
+  test('switch host with no available hosts', async () => {
+    vi.stubEnv('NODE_ENV', 'development')
+    vi.clearAllMocks()
+    networkInterfacesMock.mockReturnValue({
+      lo0: [
+        { address: '127.0.0.1', family: 'IPv4', internal: true },
+      ],
+    })
+    const onPrint = vi.fn()
+
+    const { selectKey, select, isCancel, log } = await import('@clack/prompts')
+    let i = 0
+    vi.mocked(selectKey).mockImplementation(() => {
+      i++
+      if (i === 1) {
+        return Promise.resolve('i')
+      } else if (i === 2) {
+        return new Promise(vi.fn())
+      }
+      expect.fail('should not call selectKey 3 times')
+    })
+    vi.mocked(isCancel).mockReturnValue(false)
+
+    const unregister = await registerConsoleShortcuts({
+      api: mockedRsbuildAPI,
+      entries: ['foo'],
+      schema: i => i,
+      port: 3000,
+      onPrint,
+    })
+
+    await expect.poll(() => selectKey).toBeCalledTimes(2)
+
+    expect(select).not.toBeCalled()
+    expect(log.warn).toBeCalledWith('No non-internal IPv4 addresses found.')
+    // Only the initial print, no re-print after the aborted switch
+    expect(onPrint).toBeCalledTimes(1)
+    unregister()
+  })
+
+  test('switch host is unavailable when server.host is bound', async () => {
+    vi.stubEnv('NODE_ENV', 'development')
+    vi.clearAllMocks()
+    const onPrint = vi.fn()
+
+    const boundRsbuildAPI = {
+      getNormalizedConfig: vi.fn().mockReturnValue({
+        dev: { assetPrefix: 'https://example.com/' },
+        server: { host: '127.0.0.1' },
+      }),
+      useExposed: vi.fn().mockReturnValue({
+        config: { filename: '[name].[platform].bundle' },
+      }),
+    } as unknown as RsbuildPluginAPI
+
+    const { selectKey, select, isCancel, log } = await import('@clack/prompts')
+    let i = 0
+    vi.mocked(selectKey).mockImplementation(() => {
+      i++
+      if (i === 1) {
+        return Promise.resolve('i')
+      } else if (i === 2) {
+        return new Promise(vi.fn())
+      }
+      expect.fail('should not call selectKey 3 times')
+    })
+    vi.mocked(isCancel).mockReturnValue(false)
+
+    const unregister = await registerConsoleShortcuts({
+      api: boundRsbuildAPI,
+      entries: ['foo'],
+      schema: i => i,
+      port: 3000,
+      onPrint,
+    })
+
+    await expect.poll(() => selectKey).toBeCalledTimes(2)
+
+    expect(select).not.toBeCalled()
+    expect(log.warn).toBeCalledWith(
+      'The dev server is bound to 127.0.0.1 (server.host), other addresses are not reachable.',
+    )
+    expect(onPrint).toBeCalledTimes(1)
     unregister()
   })
 })
