@@ -187,9 +187,9 @@ impl VisitMut for DirectiveDCEVisitor {
       if should_eliminate {
         arrow.eliminate();
       }
-
-      arrow.visit_mut_children_with(self);
     }
+
+    arrow.visit_mut_children_with(self);
   }
 
   fn visit_mut_fn_expr(&mut self, n: &mut FnExpr) {
@@ -204,6 +204,25 @@ impl VisitMut for DirectiveDCEVisitor {
     }
 
     n.visit_mut_children_with(self);
+  }
+
+  fn visit_mut_prop(&mut self, n: &mut Prop) {
+    match n {
+      Prop::Method(MethodProp { function, .. }) => match &function.body {
+        None => {}
+        Some(stmt) => {
+          let (should_eliminate, _) = self.should_eliminate(stmt);
+          if should_eliminate {
+            function.eliminate();
+          }
+
+          n.visit_mut_children_with(self);
+        }
+      },
+      _ => {
+        n.visit_mut_children_with(self);
+      }
+    }
   }
 }
 
@@ -396,6 +415,74 @@ mod tests {
       export default function useExposure(exposureArgs) {
         'background-only';
         console.log('useExposure');
+      }
+    "#
+  );
+
+  test!(
+    module,
+    Syntax::Es(EsSyntax {
+      jsx: true,
+      ..Default::default()
+    }),
+    |_| visit_mut_pass(DirectiveDCEVisitor::new(DirectiveDCEVisitorConfig {
+      target: TransformTarget::LEPUS,
+    })),
+    should_eliminate_transpiled_async_arrow_with_background_only_generator,
+    r#"
+      export const openUrl = (a) => __awaiter(void 0, void 0, void 0, function* () {
+        'background only';
+        return open({ a });
+      });
+    "#
+  );
+
+  test!(
+    module,
+    Syntax::Es(EsSyntax {
+      jsx: true,
+      ..Default::default()
+    }),
+    |_| visit_mut_pass(DirectiveDCEVisitor::new(DirectiveDCEVisitorConfig {
+      target: TransformTarget::LEPUS,
+    })),
+    should_eliminate_async_arrow_with_background_only_directive,
+    r#"
+      export const openUrl = async () => {
+        'background only';
+        return open({ a });
+      };
+    "#
+  );
+
+  test!(
+    module,
+    Syntax::Es(EsSyntax {
+      jsx: true,
+      ..Default::default()
+    }),
+    |_| visit_mut_pass(DirectiveDCEVisitor::new(DirectiveDCEVisitorConfig {
+      target: TransformTarget::LEPUS,
+    })),
+    should_eliminate_background_only_generator_forms,
+    r#"
+      function* gen(a) {
+        'background only';
+        yield a;
+      }
+
+      const obj = {
+        *gen(a) {
+          'background only';
+          yield a;
+        },
+      };
+
+      class Ad {
+        *gen(a) {
+          'background only';
+          yield a;
+        }
       }
     "#
   );
