@@ -9,7 +9,7 @@ import { hook } from './hook.js';
 function withCodspeed(bench: Bench) {
   hook(bench, 'add', function(this: Bench, old, name, fn, fnOpts) {
     return old!.call(this, name, () => {
-      Codspeed.startBenchmark();
+      Codspeed.startBenchmark(name);
       fn();
       Codspeed.stopBenchmark();
       Codspeed.setExecutedBenchmark(name);

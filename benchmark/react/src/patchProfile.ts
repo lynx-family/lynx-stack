@@ -38,7 +38,13 @@ if (typeof Codspeed !== 'undefined') {
           }`,
         );
       } else {
-        Codspeed.startBenchmark();
+        Codspeed.startBenchmark(
+          `${PREFIX}::${__webpack_chunkname__}-${
+            name
+              .replace(/^ReactLynx::/, '')
+              .replace(/::/g, '__')
+          }`,
+        );
       }
     }
   });
