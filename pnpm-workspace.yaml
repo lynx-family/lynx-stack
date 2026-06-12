@@ -106,10 +106,10 @@ catalogs:
 
   # Rspack monorepo packages
   rspack:
-    "@rspack/cli": "2.0.6"
-    "@rspack/core": "2.0.6"
+    "@rspack/cli": "2.0.8"
+    "@rspack/core": "2.0.8"
     "@rspack/dev-server": "2.0.3"
-    "@rspack/test-tools": "2.0.6"
+    "@rspack/test-tools": "2.0.8"
 
   # Rstest monorepo packages
   rstest:
