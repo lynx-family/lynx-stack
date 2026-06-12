@@ -62,11 +62,7 @@ describe('Config - loadConfig', () => {
     expect(actual.content).toStrictEqual(expected.default)
   })
 
-  // This config flavor only ever loaded because vitest routed it through
-  // vite's lenient transform; plain Node (i.e. the production CLI) rejects
-  // it the same way rstest does. Re-evaluate the intended support before
-  // re-enabling.
-  test.skip('load with custom relative commonjs typescript config', async () => {
+  test('load with custom relative commonjs typescript config', async () => {
     const cwd = join(__dirname, 'fixtures', 'custom')
     const actual = await loadConfig({
       cwd,
@@ -177,10 +173,10 @@ describe('Config - loadConfig', () => {
     `)
   })
 
-  // This config flavor only ever loaded because vitest routed it through
-  // vite's lenient transform; plain Node (i.e. the production CLI) rejects
-  // it the same way rstest does. Re-evaluate the intended support before
-  // re-enabling.
+  // Fails identically under plain Node (not an rstest issue): with native
+  // TS support (Node >= 22.10) `loadConfig` disables its own load hook, and
+  // Node's strip-only mode rejects this config flavor. Previously green only
+  // because vitest loaded configs through vite's lenient transform.
   test.skip('load with "type": "commonjs" in package.json and export default', async () => {
     const cwd = join(__dirname, 'fixtures', 'cjs')
 
@@ -196,10 +192,10 @@ describe('Config - loadConfig', () => {
     }))
   })
 
-  // This config flavor only ever loaded because vitest routed it through
-  // vite's lenient transform; plain Node (i.e. the production CLI) rejects
-  // it the same way rstest does. Re-evaluate the intended support before
-  // re-enabling.
+  // Fails identically under plain Node (not an rstest issue): with native
+  // TS support (Node >= 22.10) `loadConfig` disables its own load hook, and
+  // Node's strip-only mode rejects this config flavor. Previously green only
+  // because vitest loaded configs through vite's lenient transform.
   test.skip('load with "type": "commonjs" in package.json and esm pkg', async () => {
     const cwd = join(__dirname, 'fixtures', 'cjs')
 
@@ -215,10 +211,10 @@ describe('Config - loadConfig', () => {
     }))
   })
 
-  // This config flavor only ever loaded because vitest routed it through
-  // vite's lenient transform; plain Node (i.e. the production CLI) rejects
-  // it the same way rstest does. Re-evaluate the intended support before
-  // re-enabling.
+  // Fails identically under plain Node (not an rstest issue): with native
+  // TS support (Node >= 22.10) `loadConfig` disables its own load hook, and
+  // Node's strip-only mode rejects this config flavor. Previously green only
+  // because vitest loaded configs through vite's lenient transform.
   test.skip('load config with enum', async () => {
     const cwd = join(__dirname, 'fixtures', 'custom')
 
@@ -238,10 +234,10 @@ describe('Config - loadConfig', () => {
     }))
   })
 
-  // This config flavor only ever loaded because vitest routed it through
-  // vite's lenient transform; plain Node (i.e. the production CLI) rejects
-  // it the same way rstest does. Re-evaluate the intended support before
-  // re-enabling.
+  // Fails identically under plain Node (not an rstest issue): with native
+  // TS support (Node >= 22.10) `loadConfig` disables its own load hook, and
+  // Node's strip-only mode rejects this config flavor. Previously green only
+  // because vitest loaded configs through vite's lenient transform.
   test.skip('load config with const enum', async () => {
     const cwd = join(__dirname, 'fixtures', 'custom')
 
@@ -340,11 +336,7 @@ describe('Config - loadConfig', () => {
     expect(actual.content).toStrictEqual(expected.default())
   })
 
-  // rstest bug: awaiting a default-exported Promise from a natively
-  // imported `.ts` module throws "Promise.prototype.then called on
-  // incompatible receiver [object Module]". Loads fine under plain Node.
-  // Repro: https://github.com/upupming/rstest-repro
-  test.skip('load promise config', async () => {
+  test('load promise config', async () => {
     const cwd = join(__dirname, 'fixtures', 'custom')
     const actual = await loadConfig({ cwd, configPath: './promise.ts' })
     const expected = await import(join(cwd, 'promise.ts')) as {
