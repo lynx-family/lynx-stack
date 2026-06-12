@@ -20,6 +20,14 @@ export interface EntryDescription {
    */
   import?: string | string[] | undefined
 
+  /**
+   * The entry that the current entry depends on. With the `dependOn` option you
+   * can share the modules from one entry chunk to another.
+   *
+   * @see https://rspack.rs/config/entry#entrydescriptiondependon
+   */
+  dependOn?: string | string[] | undefined
+
   // TODO(doc): inherit from `output.publicPath`.
   /**
    * This is an important option when using on-demand-loading or loading external resources like images, files, etc. If an incorrect value is specified you'll receive 404 errors while loading these resources.

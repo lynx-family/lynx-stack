@@ -18,7 +18,8 @@ describe('hot update', () => {
       },
     })
 
-    const [config] = await rsbuild.initConfigs()
+    const configs = await rsbuild.initConfigs()
+    const config = configs[0]!
     expect(config.entry).toMatchInlineSnapshot(`
       {
         "main": {
@@ -56,7 +57,8 @@ describe('hot update', () => {
       },
     })
 
-    const [config] = await rsbuild.initConfigs()
+    const configs = await rsbuild.initConfigs()
+    const config = configs[0]!
     expect(config.entry).toMatchInlineSnapshot(`
       {
         "main": {
@@ -94,7 +96,8 @@ describe('hot update', () => {
       },
     })
 
-    const [config] = await rsbuild.initConfigs()
+    const configs = await rsbuild.initConfigs()
+    const config = configs[0]!
     expect(config.entry).toMatchInlineSnapshot(`
       {
         "main": {
@@ -130,7 +133,8 @@ describe('hot update', () => {
       },
     })
 
-    const [config] = await rsbuild.initConfigs()
+    const configs = await rsbuild.initConfigs()
+    const config = configs[0]!
     expect(config.entry).toMatchInlineSnapshot(`
       {
         "main": {

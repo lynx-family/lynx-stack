@@ -301,6 +301,8 @@ export default tseslint.config(
             'vitest.config.ts',
             'rstest.config.ts',
             'packages/genui/index.ts',
+            // Standalone reference mock, not part of any build's tsconfig.
+            'packages/genui/a2ui-playground/examples/io-mock/mockAgent.ts',
           ],
           defaultProject: './tsconfig.json',
         },

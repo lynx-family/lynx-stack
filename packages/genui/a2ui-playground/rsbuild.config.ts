@@ -8,6 +8,7 @@ import { networkInterfaces } from 'node:os';
 import { defineConfig } from '@rsbuild/core';
 import type { RsbuildPlugin } from '@rsbuild/core';
 import { pluginReact } from '@rsbuild/plugin-react';
+import { pluginTypeCheck } from '@rsbuild/plugin-type-check';
 
 const PORT = Number(process.env.PORT ?? 3000);
 const CLIENT_PAYLOAD_STORE_ENABLED = process.env.NODE_ENV !== 'production'
@@ -166,7 +167,10 @@ function buildRspeedyBundleUrl(port: number): string {
 }
 
 export default defineConfig({
-  plugins: [pluginReact(), a2uiPayloadPlugin],
+  // This build bundles the web `src` (entry `src/entry.tsx`); type-check it with
+  // the default root tsconfig (which includes `src`). The lynx.config build owns
+  // type-checking of `lynx-src`.
+  plugins: [pluginReact(), pluginTypeCheck(), a2uiPayloadPlugin],
   source: {
     define: {
       __A2UI_PLAYGROUND_CLIENT_PAYLOAD_STORE__: JSON.stringify(

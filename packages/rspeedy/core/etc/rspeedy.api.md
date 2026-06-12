@@ -131,7 +131,7 @@ export interface CssExtractRspackPluginOptions {
 // @public
 export interface CssLoader {
     importLoaders?: 0 | 1 | 2 | undefined;
-    modules?: boolean | CssLoaderModules | undefined;
+    modules?: boolean | 'local' | 'global' | 'pure' | 'icss' | CssLoaderModules | undefined;
 }
 
 // @public
@@ -199,6 +199,7 @@ export type Entry = string | string[] | Record<string, string | string[] | Entry
 
 // @public
 export interface EntryDescription {
+    dependOn?: string | string[] | undefined;
     import?: string | string[] | undefined;
     publicPath?: string | undefined;
 }
@@ -264,6 +265,7 @@ export interface Output {
     copy?: Rspack.CopyRspackPluginOptions | Rspack.CopyRspackPluginOptions['patterns'] | undefined;
     cssModules?: CssModules | undefined;
     dataUriLimit?: number | DataUriLimit | undefined;
+    disableTsChecker?: boolean | undefined;
     distPath?: DistPath | undefined;
     filename?: string | Filename | undefined;
     filenameHash?: boolean | string | undefined;

@@ -30,6 +30,9 @@ export default defineConfig({
     }),
   ],
   source: {
+    // This build bundles `lynx-src`, so type-check it (not the web `src`, which
+    // the rsbuild build owns). Without this it defaults to the root tsconfig.
+    tsconfigPath: './lynx-src/tsconfig.json',
     define: {
       'process.env.NODE_ENV': JSON.stringify(LYNX_NODE_ENV),
       'process.env[\'NODE_ENV\']': JSON.stringify(LYNX_NODE_ENV),

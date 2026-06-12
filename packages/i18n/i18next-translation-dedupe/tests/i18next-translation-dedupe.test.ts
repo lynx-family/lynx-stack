@@ -28,6 +28,10 @@ const pluginReactRoot = path.resolve(testDir, '../../../rspeedy/plugin-react');
 
 beforeEach(() => {
   vi.stubEnv('DEBUG', 'rspeedy');
+  // `cwd` is the plugin-react package, so the default type checker would
+  // type-check plugin-react's own test tree instead of this fixture. This is a
+  // build-output integration test, so disable type checking for it.
+  vi.stubEnv('RSPEEDY_TYPE_CHECK', 'false');
 });
 
 afterEach(() => {
