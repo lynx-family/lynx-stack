@@ -5463,7 +5463,7 @@ packages:
       '@rstest/core': '>=0.7.7'
 
   '@rstest/core@https://pkg.pr.new/web-infra-dev/rstest/@rstest/core@1c6016a45bcad879db511027bd9e6132ed4b4fac':
-    resolution: {integrity: sha512-vYF6IBkqVxbusI+XR7FyriTMDzS606OKwvkDbayl/ng3LdQAWHQveJZNePe/ZqNki3Bs7AhTROBQXR8inwPzow==, tarball: https://pkg.pr.new/web-infra-dev/rstest/@rstest/core@1c6016a45bcad879db511027bd9e6132ed4b4fac}
+    resolution: {tarball: https://pkg.pr.new/web-infra-dev/rstest/@rstest/core@1c6016a45bcad879db511027bd9e6132ed4b4fac}
     version: 0.10.4
     engines: {node: ^20.19.0 || >=22.12.0}
     hasBin: true
@@ -5477,7 +5477,7 @@ packages:
         optional: true
 
   '@rstest/coverage-istanbul@https://pkg.pr.new/web-infra-dev/rstest/@rstest/coverage-istanbul@1c6016a45bcad879db511027bd9e6132ed4b4fac':
-    resolution: {integrity: sha512-2qG0I+78qhmeGPJVBM/YTiOvkbF3rvkY+Cy6601uhdwQX7SxpHbZk+mWT08k2p8DZmSBs9B1/SNlq+4nMrN1uQ==, tarball: https://pkg.pr.new/web-infra-dev/rstest/@rstest/coverage-istanbul@1c6016a45bcad879db511027bd9e6132ed4b4fac}
+    resolution: {tarball: https://pkg.pr.new/web-infra-dev/rstest/@rstest/coverage-istanbul@1c6016a45bcad879db511027bd9e6132ed4b4fac}
     version: 0.10.4
     peerDependencies:
       '@rstest/core': ^0.10.4
