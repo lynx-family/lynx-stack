@@ -2,7 +2,7 @@
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
 
-import type { RuntimeModule } from 'webpack';
+import type { RuntimeModule } from '@rspack/core';
 
 import { RuntimeGlobals } from '@lynx-js/webpack-runtime-globals';
 
@@ -11,7 +11,7 @@ type LynxAsyncChunksRuntimeModule = new(
 ) => RuntimeModule;
 
 export function createLynxAsyncChunksRuntimeModule(
-  webpack: typeof import('webpack'),
+  webpack: typeof import('@rspack/core').rspack,
 ): LynxAsyncChunksRuntimeModule {
   return class LynxAsyncChunksRuntimeModule extends webpack.RuntimeModule {
     constructor(
@@ -35,13 +35,15 @@ ${RuntimeGlobals.lynxAsyncChunkIds} = {${
             const filename = this.getChunkName(c.name!);
 
             // Modified from https://github.com/webpack/webpack/blob/11449f02175f055a4540d76aa4478958c4cb297e/lib/runtime/GetChunkFilenameRuntimeModule.js#L154-L157
-            const chunkPath = compilation.getPath(filename, {
+            // Rspack currently ignores `hashWithLength` (also missing from its
+            // `PathData` type, hence the cast); kept for when it gains support.
+            const pathData = {
               hash: `" + ${webpack.RuntimeGlobals.getFullHash}() + "`,
-              // Rspack does not support `hashWithLength` for now.
-              hashWithLength: length =>
+              hashWithLength: (length: number) =>
                 `" + ${webpack.RuntimeGlobals.getFullHash}().slice(0, ${length}) + "`,
               // TODO: support [contenthash]
-            });
+            } as Parameters<typeof compilation.getPath>[1];
+            const chunkPath = compilation.getPath(filename, pathData);
 
             return [c.id, chunkPath];
           })

@@ -24,7 +24,7 @@ interface CssExtractRspackPluginOptions
   /**
    * plugins passed to parser
    */
-  cssPlugins: Parameters<typeof LynxTemplatePlugin.convertCSSChunksToMap>[1];
+  cssPlugins?: Parameters<typeof LynxTemplatePlugin.convertCSSChunksToMap>[1];
 
   /**
    * The name of non-initial CSS chunk files
@@ -99,8 +99,11 @@ class CssExtractRspackPlugin {
    *
    * @public
    */
-  static defaultOptions: Readonly<CssExtractRspackPluginOptions> = Object
-    .freeze<CssExtractRspackPluginOptions>({
+  static defaultOptions: Readonly<
+    & CssExtractRspackPluginOptions
+    & Pick<Required<CssExtractRspackPluginOptions>, 'cssPlugins'>
+  > = Object
+    .freeze({
       filename: '[name].css',
       cssPlugins: [
         CSS.Plugins.removeFunctionWhiteSpace(),
@@ -163,7 +166,6 @@ class CssExtractRspackPluginImpl {
         this.isHMREnabled(compiler)
       ) {
         const hooks = LynxTemplatePlugin.getLynxTemplatePluginHooks(
-          // @ts-expect-error Rspack to Webpack Compilation
           compilation,
         );
 
@@ -180,7 +182,8 @@ class CssExtractRspackPluginImpl {
             }
             const css = LynxTemplatePlugin.convertCSSChunksToMap(
               content,
-              options.cssPlugins,
+              options.cssPlugins
+                ?? CssExtractRspackPlugin.defaultOptions.cssPlugins,
               Boolean(
                 args.finalEncodeOptions.compilerOptions['enableCSSSelector'],
               ),

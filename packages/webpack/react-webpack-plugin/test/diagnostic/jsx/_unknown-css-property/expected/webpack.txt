@@ -1,7 +1,0 @@
-WARNING in ./jsx/unknown-css-property/index.jsx
-Module Warning (from ../../src/loader.js):
-[33m▲ [43;33m[[43;30mWARNING[43;33m][0m [1mUnknown css property, fallbak to SetInlineStyle[0m [1m[35m[plugin react:webpack][0m
-
-    jsx/unknown-css-property/index.jsx:2:24:
-[37m      2 │   return <view style={{ [32m'unknown-non-exist-property'[37m: 'foo' }}></view>
-        ╵                         [32m~~~~~~~~~~~~~~~~~~~~~~~~~~~~[0m

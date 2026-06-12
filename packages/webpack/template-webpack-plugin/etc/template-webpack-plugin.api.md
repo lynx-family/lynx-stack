@@ -4,11 +4,11 @@
 
 ```ts
 
-import type { Asset } from 'webpack';
+import type { Asset } from '@rspack/core';
 import { AsyncSeriesBailHook } from '@rspack/lite-tapable';
 import { AsyncSeriesWaterfallHook } from '@rspack/lite-tapable';
-import type { Compilation } from 'webpack';
-import type { Compiler } from 'webpack';
+import type { Compilation } from '@rspack/core';
+import type { Compiler } from '@rspack/core';
 import * as CSS from '@lynx-js/css-serializer';
 import { cssChunksToMap } from '@lynx-js/css-serializer';
 import { Plugins } from '@lynx-js/css-serializer';

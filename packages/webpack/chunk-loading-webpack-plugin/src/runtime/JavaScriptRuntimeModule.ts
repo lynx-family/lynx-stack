@@ -23,7 +23,7 @@ export class JavaScriptRuntimeModule {
    * @returns JavaScript install chunk runtime code
    */
   static generateInstallChunkRuntime(
-    webpack: typeof import('webpack'),
+    webpack: typeof import('@rspack/core').rspack,
     withOnload: boolean,
   ): string {
     return generateFromTemplate(webpack, installChunkRuntime)
@@ -34,7 +34,9 @@ export class JavaScriptRuntimeModule {
    * @internal
    * @returns JavaScript chunk onload runtime code
    */
-  static generateChunkOnloadRuntime(webpack: typeof import('webpack')): string {
+  static generateChunkOnloadRuntime(
+    webpack: typeof import('@rspack/core').rspack,
+  ): string {
     return generateFromTemplate(webpack, chunkOnloadRuntime);
   }
 
@@ -44,7 +46,7 @@ export class JavaScriptRuntimeModule {
    * @returns JavaScript chunk loading Runtime Code
    */
   static generateChunkLoadingRuntime(
-    webpack: typeof import('webpack'),
+    webpack: typeof import('@rspack/core').rspack,
     matcher: string,
   ): string {
     return generateFromTemplate(webpack, chunkLoadingRuntime)
@@ -55,7 +57,9 @@ export class JavaScriptRuntimeModule {
    * @internal
    * @returns JavaScript HMR runtime code
    */
-  static generateHMRRuntime(webpack: typeof import('webpack')): string {
+  static generateHMRRuntime(
+    webpack: typeof import('@rspack/core').rspack,
+  ): string {
     const { Template } = webpack;
     return Template.asString([
       '',
@@ -75,7 +79,9 @@ export class JavaScriptRuntimeModule {
    * @internal
    * @returns The HMR manifest runtime code(`RuntimeGlobals.hmrDownloadManifest`, aka `__webpack_require__.hmrM`)
    */
-  static generateHMRManifestRuntime(webpack: typeof import('webpack')): string {
+  static generateHMRManifestRuntime(
+    webpack: typeof import('@rspack/core').rspack,
+  ): string {
     const { Template } = webpack;
     return Template.asString([
       '',

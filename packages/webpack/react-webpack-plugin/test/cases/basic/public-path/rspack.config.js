@@ -4,7 +4,7 @@ const defaultConfig = createConfig();
 
 /** @type {import('@rspack/core').Configuration} */
 export default {
-  context: __dirname,
+  context: import.meta.dirname,
   ...defaultConfig,
   output: {
     ...defaultConfig.output,

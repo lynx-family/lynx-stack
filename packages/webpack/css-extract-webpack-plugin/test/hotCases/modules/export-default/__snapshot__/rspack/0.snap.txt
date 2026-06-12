@@ -65,7 +65,7 @@
               }
             ],
             "selectorText": {
-              "value": ".psuT1jY18xgT8yqa",
+              "value": ".JtaeGzt5uYCwW2Wb",
               "loc": {
                 "line": 6,
                 "column": 18

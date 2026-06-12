@@ -3,8 +3,9 @@
 // LICENSE file in the root directory of this source tree.
 import path from 'node:path';
 
-import type { LoaderOptions } from 'mini-css-extract-plugin';
-import type { LoaderContext } from 'webpack';
+import type { LoaderContext } from '@rspack/core';
+
+import type { LoaderOptions } from './rspack-loader.js';
 
 export function isAbsolutePath(str: string): boolean {
   return path.posix.isAbsolute(str) || path.win32.isAbsolute(str);
@@ -26,7 +27,7 @@ export function stringifyRequest(
   ) {
     return JSON.stringify(
       loaderContext.utils.contextify(
-        loaderContext.context || loaderContext.rootContext,
+        loaderContext.context ?? loaderContext.rootContext,
         request,
       ),
     );

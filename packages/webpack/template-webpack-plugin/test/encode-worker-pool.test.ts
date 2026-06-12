@@ -3,15 +3,16 @@
 // LICENSE file in the root directory of this source tree.
 import { dirname } from 'node:path';
 
+import { rspack } from '@rspack/core';
+import type { Configuration, Stats } from '@rspack/core';
 import { describe, expect, test } from '@rstest/core';
-import webpack from 'webpack';
 
 import { LynxEncodePlugin, LynxTemplatePlugin } from '../src/index.js';
 
 const context = dirname(new URL(import.meta.url).pathname);
 
-function runWebpack(config: webpack.Configuration): Promise<webpack.Stats> {
-  const compiler = webpack(config);
+function runWebpack(config: Configuration): Promise<Stats> {
+  const compiler = rspack(config);
   return new Promise((resolve, reject) => {
     compiler.run((err, stats) => {
       if (err) return reject(err);
@@ -46,7 +47,7 @@ describe('LynxEncodePlugin shared worker pool', () => {
       ],
     });
 
-    expect(stats.compilation.errors).toEqual([]);
+    expect([...stats.compilation.errors]).toEqual([]);
 
     // Two entries → two encode tasks went through the pool.
     expect(LynxEncodePlugin.encodePool.completed - completedBefore).toBe(2);
@@ -57,9 +58,8 @@ describe('LynxEncodePlugin shared worker pool', () => {
       2,
     );
 
-    const { assets } = stats.toJson({ all: false, assets: true });
-    expect(assets?.find(i => i.name === 'a.js')).not.toBeUndefined();
-    expect(assets?.find(i => i.name === 'b.js')).not.toBeUndefined();
+    expect(stats.compilation.getAsset('a.js')).not.toBeUndefined();
+    expect(stats.compilation.getAsset('b.js')).not.toBeUndefined();
   });
 
   test('subsequent compile reuses warm workers (no respawn)', async () => {

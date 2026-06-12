@@ -4,11 +4,11 @@
 // LICENSE file in the root directory of this source tree.
 */
 import rspack from '@rspack/core'
-import { CssExtractRspackPlugin } from '../../../../src/index'
+import { CssExtractRspackPlugin } from '@lynx-js/css-extract-webpack-plugin'
 import { plugins } from '../../../../test/plugins.js'
 import path from 'node:path'
 
-/** @type {import('webpack').Configuration} */
+/** @type {import('@rspack/core').Configuration} */
 export default {
   output: {
     publicPath: 'http://localhost:3000/',
@@ -48,7 +48,7 @@ export default {
     new rspack.DefinePlugin({
       HMR_RUNTIME_LEPUS: JSON.stringify(
         path.resolve(
-          __dirname,
+          import.meta.dirname,
           '../../../../runtime/hotModuleReplacement.lepus.cjs',
         ),
       ),

@@ -15,7 +15,7 @@ it('should have chunkName', async () => {
   const LAYER = __LEPUS__ ? 'react__main-thread' : 'react__background';
 
   expect(content).toContain(
-    `__webpack_require__.e(/*! import() | ./foo.js-${LAYER} */ "./foo.js-${LAYER}")`,
+    `__webpack_require__.e(/* import() | ./foo.js-${LAYER} */ "./foo.js-${LAYER}")`,
   );
 });
 

@@ -4,8 +4,8 @@
 
 ```ts
 
-import type { BannerPlugin } from 'webpack';
-import type { Compiler } from 'webpack';
+import type { BannerPluginArgument } from '@rspack/core';
+import type { Compiler } from '@rspack/core';
 import type { LibConfig } from '@rslib/core';
 import type { RslibConfig } from '@rslib/core';
 
@@ -74,7 +74,9 @@ export class MainThreadRuntimeWrapperWebpackPlugin {
 
 // @public
 export interface MainThreadRuntimeWrapperWebpackPluginOptions {
-    test: BannerPlugin['options']['test'];
+    test: Extract<BannerPluginArgument, {
+        banner: unknown;
+    }>['test'];
 }
 
 // @public

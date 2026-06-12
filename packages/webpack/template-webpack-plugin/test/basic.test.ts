@@ -6,14 +6,26 @@ import { dirname, join } from 'node:path';
 
 import { TraceMap, generatedPositionFor } from '@jridgewell/trace-mapping';
 import type { SourceMapInput } from '@jridgewell/trace-mapping';
+import { rspack } from '@rspack/core';
+import type {
+  Asset,
+  Compilation,
+  Compiler,
+  Configuration,
+  Stats,
+} from '@rspack/core';
 import { SyncHook } from '@rspack/lite-tapable';
 import { describe, expect, test } from '@rstest/core';
-import webpack from 'webpack';
-import type { Asset, WebpackError } from 'webpack';
 
-import { CssExtractWebpackPlugin } from '../../css-extract-webpack-plugin/lib/index.js';
+import { CssExtractRspackPlugin } from '../../css-extract-webpack-plugin/lib/index.js';
 import { LynxEncodePlugin, LynxTemplatePlugin } from '../src/index.js';
 import { getRequireModuleAsyncCachePolyfill } from '../src/polyfill/requireModuleAsync.js';
+
+// rspack types error/warning items as plain `Error`; diagnostics carry these.
+type DiagnosticError = Error & {
+  file?: string;
+  loc?: { start: { line: number; column: number } };
+};
 
 describe('LynxTemplatePlugin', () => {
   test('build with custom lepus', async () => {
@@ -26,7 +38,7 @@ describe('LynxTemplatePlugin', () => {
       },
       entry: './fixtures/basic.tsx',
       plugins: [
-        function() {
+        function(this: Compiler) {
           this.hooks.thisCompilation.tap('test', (compilation) => {
             compilation.emitAsset(
               'main.lepus',
@@ -50,12 +62,11 @@ globalThis.renderPage = function() {
       ],
     });
 
-    expect(stats.compilation.errors).toEqual([]);
-    expect(stats.compilation.children.flatMap(i => i.errors)).toEqual([]);
+    expect([...stats.compilation.errors]).toEqual([]);
+    expect(stats.compilation.children.flatMap(i => [...i.errors])).toEqual([]);
 
-    const { assets } = stats.toJson({ all: false, assets: true });
-    expect(assets?.find(i => i.name === 'main.js')).not.toBeUndefined();
-    expect(assets?.find(i => i.name === 'main.lepus')).not.toBeUndefined();
+    expect(stats.compilation.getAsset('main.js')).not.toBeUndefined();
+    expect(stats.compilation.getAsset('main.lepus')).not.toBeUndefined();
   });
 
   test('emits css diagnostics during beforeEmit with current css chunk source maps', async () => {
@@ -68,8 +79,8 @@ globalThis.renderPage = function() {
       hooks: {
         thisCompilation: new SyncHook(['compilation']),
       },
-      webpack,
-    } as unknown as webpack.Compiler;
+      webpack: rspack,
+    } as unknown as Compiler;
     const compilation = {
       warnings: [],
       errors: [],
@@ -81,7 +92,7 @@ globalThis.renderPage = function() {
         },
       },
       deleteAsset: () => void 0,
-    } as unknown as webpack.Compilation;
+    } as unknown as Compilation;
     const compilationParams = {} as Parameters<
       typeof compiler.hooks.thisCompilation.call
     >[1];
@@ -133,10 +144,10 @@ globalThis.renderPage = function() {
     expect(compilation.warnings[0]?.message).toBe(
       'Unsupported property "unknown-prop" was removed during template encode.',
     );
-    expect((compilation.warnings[0] as WebpackError)?.file).toBe(
+    expect((compilation.warnings[0] as DiagnosticError)?.file).toBe(
       `${context}/basic.test.ts`,
     );
-    expect((compilation.warnings[0] as WebpackError)?.loc).toEqual({
+    expect((compilation.warnings[0] as DiagnosticError)?.loc).toEqual({
       start: {
         line: 2,
         column: 3,
@@ -171,7 +182,7 @@ globalThis.renderPage = function() {
           {
             test: /\.css$/,
             use: [
-              CssExtractWebpackPlugin.loader,
+              CssExtractRspackPlugin.loader,
               {
                 loader: 'css-loader',
                 options: {
@@ -183,15 +194,15 @@ globalThis.renderPage = function() {
         ],
       },
       plugins: [
-        new CssExtractWebpackPlugin({
+        new CssExtractRspackPlugin({
           filename: '[name]/[name].css',
         }),
         new LynxEncodePlugin(),
       ],
     });
 
-    expect(stats.compilation.errors).toEqual([]);
-    expect(stats.compilation.warnings).toEqual([]);
+    expect([...stats.compilation.errors]).toEqual([]);
+    expect([...stats.compilation.warnings]).toEqual([]);
 
     const hooks = LynxTemplatePlugin.getLynxTemplatePluginHooks(
       stats.compilation,
@@ -284,33 +295,22 @@ globalThis.renderPage = function() {
       entryNames: ['b'],
     });
 
-    expect(
-      stats.compilation.warnings.map((warning) => ({
-        message: warning.message,
-        file: (warning as WebpackError).file,
-      })),
-    ).toEqual([
-      {
-        message:
-          'Unsupported property "unknown-a" was removed during template encode.',
-        file: `${context}/a.css`,
-      },
-      {
-        message:
-          'Unsupported property "unknown-b" was removed during template encode.',
-        file: `${context}/b.css`,
-      },
-    ]);
-    expect(stats.compilation.warnings.map((warning) => warning.message))
-      .toEqual([
-        'Unsupported property "unknown-a" was removed during template encode.',
-        'Unsupported property "unknown-b" was removed during template encode.',
-      ]);
+    // `toContain`: rspack prefixes warning messages with its `⚠` formatting.
+    const warnings = [...stats.compilation.warnings];
+    expect(warnings).toHaveLength(2);
+    expect(warnings[0]!.message).toContain(
+      'Unsupported property "unknown-a" was removed during template encode.',
+    );
+    expect((warnings[0] as DiagnosticError).file).toBe(`${context}/a.css`);
+    expect(warnings[1]!.message).toContain(
+      'Unsupported property "unknown-b" was removed during template encode.',
+    );
+    expect((warnings[1] as DiagnosticError).file).toBe(`${context}/b.css`);
   });
 });
 
-function runWebpack(config: webpack.Configuration): Promise<webpack.Stats> {
-  const compiler = webpack(config);
+function runWebpack(config: Configuration): Promise<Stats> {
+  const compiler = rspack(config);
 
   return new Promise((resolve, reject) => {
     compiler.run((err, stats) => {

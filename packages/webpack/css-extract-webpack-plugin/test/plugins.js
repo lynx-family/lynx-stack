@@ -6,7 +6,7 @@ import { LynxTemplatePlugin } from '@lynx-js/template-webpack-plugin';
 /**
  * Use `JSON.stringify` to mock the encode of `@lynx-js/tasm` to help better testing.
  *
- * @returns {import('webpack').WebpackPluginInstance}
+ * @returns {import('@rspack/core').WebpackPluginInstance}
  */
 export const mockLynxEncodePlugin = () => {
   return {
@@ -39,7 +39,7 @@ export const mockLynxEncodePlugin = () => {
  * @param {{
  *  lynxTemplatePluginOptions?: Partial<LynxTemplatePlugin['options']>
  * }} options
- * @returns {import('webpack').WebpackPluginInstance[]}
+ * @returns {import('@rspack/core').WebpackPluginInstance[]}
  */
 export function getPlugins({
   lynxTemplatePluginOptions,
@@ -54,7 +54,7 @@ export function getPlugins({
 }
 
 /**
- * @type {import('webpack').WebpackPluginInstance[]}
+ * @type {import('@rspack/core').WebpackPluginInstance[]}
  */
 export const plugins = [
   mockLynxEncodePlugin(),

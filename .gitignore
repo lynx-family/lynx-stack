@@ -4,10 +4,15 @@ lib
 www
 playwright-report
 test-results
+test-report.junit.xml
 trace.zip
 midscene_run
 .turbo
 **/test/js
+# Hot-case temp copies made by @lynx-js/test-tools (kept under test/ so
+# ../../../helper imports still resolve from the copies)
+**/test/.hot-temp/
+**/test/.hot-snapshot-temp/
 .swc
 
 # api-extractor

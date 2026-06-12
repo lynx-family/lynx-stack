@@ -17,9 +17,9 @@
   "main": "index.ts",
   "types": "index.ts",
   "devDependencies": {
+    "@rspack/core": "catalog:rspack",
     "path-serializer": "^0.5.1",
-    "vitest": "^3.2.4",
-    "webpack": "^5.105.2"
+    "vitest": "^3.2.4"
   },
   "engines": {
     "node": ">=18"

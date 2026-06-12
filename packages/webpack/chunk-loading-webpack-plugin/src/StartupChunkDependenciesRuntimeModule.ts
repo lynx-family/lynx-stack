@@ -2,7 +2,7 @@
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
 
-import type { RuntimeModule } from 'webpack';
+import type { RuntimeModule } from '@rspack/core';
 
 type StartupChunkDependenciesRuntimeModule = new(
   asyncChunkLoading: boolean,
@@ -13,7 +13,7 @@ const runtimeTemplateBasicFunction = (args: string, body: string[]) => {
 };
 
 export function createStartupChunkDependenciesRuntimeModule(
-  webpack: typeof import('webpack'),
+  webpack: typeof import('@rspack/core').rspack,
 ): StartupChunkDependenciesRuntimeModule {
   const { RuntimeGlobals, RuntimeModule, Template } = webpack;
   return class StartupChunkDependenciesRuntimeModule extends RuntimeModule {

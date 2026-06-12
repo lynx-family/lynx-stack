@@ -1,3 +1,8 @@
-import config from './webpack.config.js';
+import { RuntimeWrapperWebpackPlugin } from '../../../../lib/index.js';
 
-export default config;
+/** @type {import('@rspack/core').Configuration} */
+export default {
+  plugins: [
+    new RuntimeWrapperWebpackPlugin(),
+  ],
+};

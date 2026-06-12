@@ -9,7 +9,7 @@
 - Bundle: entry.js
 - Manifest: async/common.css.hot-update.json, size: 1132
 - Manifest: async/lazy.css.hot-update.json, size: 1438
-- Manifest: entry.css.hot-update.json, size: 1422
+- Manifest: entry.css.hot-update.json, size: 1702
 
 ## Manifest
 
@@ -210,6 +210,31 @@
               "value": ".entry",
               "loc": {
                 "line": 1,
+                "column": 7
+              }
+            },
+            "variables": {}
+          },
+          {
+            "type": "StyleRule",
+            "style": [
+              {
+                "name": "color",
+                "value": "\"blue\"",
+                "keyLoc": {
+                  "line": 6,
+                  "column": 8
+                },
+                "valLoc": {
+                  "line": 6,
+                  "column": 17
+                }
+              }
+            ],
+            "selectorText": {
+              "value": "--- .entry",
+              "loc": {
+                "line": 5,
                 "column": 7
               }
             },

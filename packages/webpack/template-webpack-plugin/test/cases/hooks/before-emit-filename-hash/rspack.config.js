@@ -1,3 +1,34 @@
-import config from './webpack.config.js';
+import { expect } from '@rstest/core';
 
-export default config;
+import { LynxEncodePlugin, LynxTemplatePlugin } from '../../../../lib/index.js';
+
+/** @type {import('@rspack/core').Configuration} */
+export default {
+  target: 'node',
+  plugins: [
+    new LynxTemplatePlugin({
+      filename: '[name].template.[contenthash:8].js',
+    }),
+    new LynxEncodePlugin(),
+    (compiler) => {
+      compiler.hooks.thisCompilation.tap('test', compilation => {
+        const hooks = LynxTemplatePlugin.getLynxTemplatePluginHooks(
+          compilation,
+        );
+
+        hooks.beforeEmit.tap(
+          'test',
+          ({ debugInfo, mainThreadAssets, outputName, template }) => {
+            expect(outputName).toMatch(/main\.template\.[0-9a-fA-F]{8}\.js/);
+
+            return {
+              template,
+              mainThreadAssets,
+              debugInfo,
+            };
+          },
+        );
+      });
+    },
+  ],
+};

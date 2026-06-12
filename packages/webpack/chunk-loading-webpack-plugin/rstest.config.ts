@@ -1,19 +1,18 @@
 // Copyright 2026 The Lynx Authors. All rights reserved.
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
-import { createRequire } from 'node:module';
-
 import { defineConfig } from '@rstest/core';
+import type { RstestConfig } from '@rstest/core';
 
-const require = createRequire(import.meta.url);
+import { lynxRstestConfig } from '@lynx-js/test-tools/rstest-config';
 
-export default defineConfig({
+// Explicitly typed: `--isolatedDeclarations` cannot infer default exports.
+const config: RstestConfig = defineConfig(lynxRstestConfig({
   name: 'chunk-loading-webpack-plugin',
-  globals: true,
-  include: ['test/**/*.test.ts'],
-  setupFiles: [
-    require.resolve('@rspack/test-tools/setup-env'),
-    require.resolve('@rspack/test-tools/setup-expect'),
-  ],
-  unstubGlobals: true,
-});
+  url: import.meta.url,
+  setupExpect: true,
+  fixtures: 'cases',
+  dist: 'dist',
+}));
+
+export default config;

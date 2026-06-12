@@ -14,16 +14,15 @@
 - Bundle: main3/template.js
 - Bundle: main4.js
 - Bundle: main4/template.js
-- Manifest: index.LAST_HASH.css.hot-update.json, size: 1750
-- Manifest: index.LAST_HASH.hot-update.json, size: 42
-- Manifest: main2.LAST_HASH.css.hot-update.json, size: 1750
-- Manifest: main2.LAST_HASH.hot-update.json, size: 42
-- Manifest: main3.LAST_HASH.css.hot-update.json, size: 1750
-- Manifest: main3.LAST_HASH.hot-update.json, size: 42
-- Manifest: main4.LAST_HASH.css.hot-update.json, size: 1750
-- Manifest: main4.LAST_HASH.hot-update.json, size: 42
+- Manifest: index.LAST_HASH.css.hot-update.json, size: 2354
+- Manifest: index.LAST_HASH.hot-update.json, size: 29
+- Manifest: main2.LAST_HASH.css.hot-update.json, size: 2354
+- Manifest: main2.LAST_HASH.hot-update.json, size: 29
+- Manifest: main3.LAST_HASH.css.hot-update.json, size: 2354
+- Manifest: main3.LAST_HASH.hot-update.json, size: 29
+- Manifest: main4.LAST_HASH.css.hot-update.json, size: 2354
+- Manifest: main4.LAST_HASH.hot-update.json, size: 29
 - Update: index.LAST_HASH.hot-update.js, size: 358
-- Update: lib-common.LAST_HASH.hot-update.js, size: 951
 - Update: main2.LAST_HASH.hot-update.js, size: 358
 - Update: main3.LAST_HASH.hot-update.js, size: 358
 - Update: main4.LAST_HASH.hot-update.js, size: 358
@@ -74,21 +73,71 @@
             "style": [
               {
                 "name": "color",
-                "value": "\"blue\"",
+                "value": "\"red\"",
                 "keyLoc": {
-                  "line": 2,
+                  "line": 7,
                   "column": 8
                 },
                 "valLoc": {
-                  "line": 2,
+                  "line": 7,
+                  "column": 16
+                }
+              }
+            ],
+            "selectorText": {
+              "value": ".dJcfehYKEBi0o5Mu",
+              "loc": {
+                "line": 6,
+                "column": 18
+              }
+            },
+            "variables": {}
+          },
+          {
+            "type": "StyleRule",
+            "style": [
+              {
+                "name": "color",
+                "value": "\"blue\"",
+                "keyLoc": {
+                  "line": 11,
+                  "column": 8
+                },
+                "valLoc": {
+                  "line": 11,
                   "column": 17
                 }
               }
             ],
             "selectorText": {
-              "value": ".DEn2ZgMd3XgVgZeL",
+              "value": "--- .dJcfehYKEBi0o5Mu",
               "loc": {
-                "line": 1,
+                "line": 10,
+                "column": 18
+              }
+            },
+            "variables": {}
+          },
+          {
+            "type": "StyleRule",
+            "style": [
+              {
+                "name": "color",
+                "value": "\"blue\"",
+                "keyLoc": {
+                  "line": 15,
+                  "column": 8
+                },
+                "valLoc": {
+                  "line": 15,
+                  "column": 17
+                }
+              }
+            ],
+            "selectorText": {
+              "value": "--- .jBPAxvkRBAAuu8Wj",
+              "loc": {
+                "line": 14,
                 "column": 18
               }
             },
@@ -101,19 +150,19 @@
                 "name": "background-color",
                 "value": "black",
                 "keyLoc": {
-                  "line": 10,
+                  "line": 23,
                   "column": 19
                 },
                 "valLoc": {
-                  "line": 10,
+                  "line": 23,
                   "column": 27
                 }
               }
             ],
             "selectorText": {
-              "value": ".XAYuuaq2rEIWiXM6",
+              "value": ".EaAGbC87LA0NCIIR",
               "loc": {
-                "line": 9,
+                "line": 22,
                 "column": 18
               }
             },
@@ -145,8 +194,7 @@
 ```json
 {
   "c": [
-    "index",
-    "lib-common"
+    "index"
   ],
   "r": [],
   "m": []
@@ -199,21 +247,71 @@
             "style": [
               {
                 "name": "color",
-                "value": "\"blue\"",
+                "value": "\"red\"",
                 "keyLoc": {
-                  "line": 2,
+                  "line": 7,
                   "column": 8
                 },
                 "valLoc": {
-                  "line": 2,
+                  "line": 7,
+                  "column": 16
+                }
+              }
+            ],
+            "selectorText": {
+              "value": ".dJcfehYKEBi0o5Mu",
+              "loc": {
+                "line": 6,
+                "column": 18
+              }
+            },
+            "variables": {}
+          },
+          {
+            "type": "StyleRule",
+            "style": [
+              {
+                "name": "color",
+                "value": "\"blue\"",
+                "keyLoc": {
+                  "line": 11,
+                  "column": 8
+                },
+                "valLoc": {
+                  "line": 11,
                   "column": 17
                 }
               }
             ],
             "selectorText": {
-              "value": ".DEn2ZgMd3XgVgZeL",
+              "value": "--- .dJcfehYKEBi0o5Mu",
               "loc": {
-                "line": 1,
+                "line": 10,
+                "column": 18
+              }
+            },
+            "variables": {}
+          },
+          {
+            "type": "StyleRule",
+            "style": [
+              {
+                "name": "color",
+                "value": "\"blue\"",
+                "keyLoc": {
+                  "line": 15,
+                  "column": 8
+                },
+                "valLoc": {
+                  "line": 15,
+                  "column": 17
+                }
+              }
+            ],
+            "selectorText": {
+              "value": "--- .jBPAxvkRBAAuu8Wj",
+              "loc": {
+                "line": 14,
                 "column": 18
               }
             },
@@ -226,19 +324,19 @@
                 "name": "background-color",
                 "value": "black",
                 "keyLoc": {
-                  "line": 10,
+                  "line": 23,
                   "column": 19
                 },
                 "valLoc": {
-                  "line": 10,
+                  "line": 23,
                   "column": 27
                 }
               }
             ],
             "selectorText": {
-              "value": ".XAYuuaq2rEIWiXM6",
+              "value": ".EaAGbC87LA0NCIIR",
               "loc": {
-                "line": 9,
+                "line": 22,
                 "column": 18
               }
             },
@@ -270,7 +368,6 @@
 ```json
 {
   "c": [
-    "lib-common",
     "main2"
   ],
   "r": [],
@@ -324,21 +421,71 @@
             "style": [
               {
                 "name": "color",
-                "value": "\"blue\"",
+                "value": "\"red\"",
                 "keyLoc": {
-                  "line": 2,
+                  "line": 7,
                   "column": 8
                 },
                 "valLoc": {
-                  "line": 2,
+                  "line": 7,
+                  "column": 16
+                }
+              }
+            ],
+            "selectorText": {
+              "value": ".dJcfehYKEBi0o5Mu",
+              "loc": {
+                "line": 6,
+                "column": 18
+              }
+            },
+            "variables": {}
+          },
+          {
+            "type": "StyleRule",
+            "style": [
+              {
+                "name": "color",
+                "value": "\"blue\"",
+                "keyLoc": {
+                  "line": 11,
+                  "column": 8
+                },
+                "valLoc": {
+                  "line": 11,
                   "column": 17
                 }
               }
             ],
             "selectorText": {
-              "value": ".DEn2ZgMd3XgVgZeL",
+              "value": "--- .dJcfehYKEBi0o5Mu",
               "loc": {
-                "line": 1,
+                "line": 10,
+                "column": 18
+              }
+            },
+            "variables": {}
+          },
+          {
+            "type": "StyleRule",
+            "style": [
+              {
+                "name": "color",
+                "value": "\"blue\"",
+                "keyLoc": {
+                  "line": 15,
+                  "column": 8
+                },
+                "valLoc": {
+                  "line": 15,
+                  "column": 17
+                }
+              }
+            ],
+            "selectorText": {
+              "value": "--- .jBPAxvkRBAAuu8Wj",
+              "loc": {
+                "line": 14,
                 "column": 18
               }
             },
@@ -351,19 +498,19 @@
                 "name": "background-color",
                 "value": "black",
                 "keyLoc": {
-                  "line": 10,
+                  "line": 23,
                   "column": 19
                 },
                 "valLoc": {
-                  "line": 10,
+                  "line": 23,
                   "column": 27
                 }
               }
             ],
             "selectorText": {
-              "value": ".XAYuuaq2rEIWiXM6",
+              "value": ".EaAGbC87LA0NCIIR",
               "loc": {
-                "line": 9,
+                "line": 22,
                 "column": 18
               }
             },
@@ -395,7 +542,6 @@
 ```json
 {
   "c": [
-    "lib-common",
     "main3"
   ],
   "r": [],
@@ -449,21 +595,71 @@
             "style": [
               {
                 "name": "color",
-                "value": "\"blue\"",
+                "value": "\"red\"",
                 "keyLoc": {
-                  "line": 2,
+                  "line": 7,
                   "column": 8
                 },
                 "valLoc": {
-                  "line": 2,
+                  "line": 7,
+                  "column": 16
+                }
+              }
+            ],
+            "selectorText": {
+              "value": ".dJcfehYKEBi0o5Mu",
+              "loc": {
+                "line": 6,
+                "column": 18
+              }
+            },
+            "variables": {}
+          },
+          {
+            "type": "StyleRule",
+            "style": [
+              {
+                "name": "color",
+                "value": "\"blue\"",
+                "keyLoc": {
+                  "line": 11,
+                  "column": 8
+                },
+                "valLoc": {
+                  "line": 11,
                   "column": 17
                 }
               }
             ],
             "selectorText": {
-              "value": ".DEn2ZgMd3XgVgZeL",
+              "value": "--- .dJcfehYKEBi0o5Mu",
               "loc": {
-                "line": 1,
+                "line": 10,
+                "column": 18
+              }
+            },
+            "variables": {}
+          },
+          {
+            "type": "StyleRule",
+            "style": [
+              {
+                "name": "color",
+                "value": "\"blue\"",
+                "keyLoc": {
+                  "line": 15,
+                  "column": 8
+                },
+                "valLoc": {
+                  "line": 15,
+                  "column": 17
+                }
+              }
+            ],
+            "selectorText": {
+              "value": "--- .jBPAxvkRBAAuu8Wj",
+              "loc": {
+                "line": 14,
                 "column": 18
               }
             },
@@ -476,19 +672,19 @@
                 "name": "background-color",
                 "value": "black",
                 "keyLoc": {
-                  "line": 10,
+                  "line": 23,
                   "column": 19
                 },
                 "valLoc": {
-                  "line": 10,
+                  "line": 23,
                   "column": 27
                 }
               }
             ],
             "selectorText": {
-              "value": ".XAYuuaq2rEIWiXM6",
+              "value": ".EaAGbC87LA0NCIIR",
               "loc": {
-                "line": 9,
+                "line": 22,
                 "column": 18
               }
             },
@@ -520,7 +716,6 @@
 ```json
 {
   "c": [
-    "lib-common",
     "main4"
   ],
   "r": [],
@@ -559,57 +754,6 @@ __webpack_require__.cssHotUpdateList = [["index","index.LAST_HASH.css.hot-update
 
 }
 ;
-;
-```
-
-
-
-### lib-common.LAST_HASH.hot-update.js
-
-#### Changed Modules
-- ./hot-update-json/chunk-splitting/lib-common.module.css
-
-#### Changed Runtime Modules
-
-
-#### Changed Content
-```js
-"use strict";
-exports.ids = ["lib-common"];
-exports.modules = {
-"./hot-update-json/chunk-splitting/lib-common.module.css"(module, __webpack_exports__, __webpack_require__) {
-__webpack_require__.r(__webpack_exports__);
-__webpack_require__.d(__webpack_exports__, {
-  bar: () => (_1)
-});
-// extracted by mini-css-extract-plugin
-var _1 = "DEn2ZgMd3XgVgZeL";
-
-
-  if (true) {
-    (function() {
-      var localsJsonString = "{\"bar\":\"DEn2ZgMd3XgVgZeL\"}";
-      var cssReload = __webpack_require__("../../runtime/hotModuleReplacement.cjs")(module.id, {}, "");
-      // only invalidate when locals change
-      if (
-        module.hot.data &&
-        module.hot.data.value &&
-        module.hot.data.value !== localsJsonString
-      ) {
-        module.hot.invalidate();
-      } else {
-        module.hot.accept();
-      }
-      module.hot.dispose(function(data) {
-        data.value = localsJsonString;
-        cssReload();
-      });
-    })();
-  }
-
-},
-
-};
 ;
 ```
 
@@ -726,7 +870,7 @@ check => prepare => dispose => apply => idle
 #### Outdated
 
 Outdated Modules:
-- ./hot-update-json/chunk-splitting/lib-common.module.css
+
 
 
 Outdated Dependencies:
@@ -737,7 +881,7 @@ Outdated Dependencies:
 #### Updated
 
 Updated Modules:
-- ./hot-update-json/chunk-splitting/lib-common.module.css
+
 
 Updated Runtime:
 - `__webpack_require__.cssHotUpdateList`
@@ -750,4 +894,3 @@ Accepted Callback:
 
 
 Disposed Callback:
-- ./hot-update-json/chunk-splitting/lib-common.module.css

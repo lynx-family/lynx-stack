@@ -42,21 +42,17 @@
   ],
   "scripts": {
     "api-extractor": "api-extractor run --verbose",
-    "test": "pnpm -w run test --project webpack/css-extract"
-  },
-  "dependencies": {
-    "mini-css-extract-plugin": "^2.10.0"
+    "test": "rstest"
   },
   "devDependencies": {
     "@lynx-js/css-serializer": "workspace:*",
     "@lynx-js/template-webpack-plugin": "workspace:*",
     "@lynx-js/test-tools": "workspace:*",
-    "@lynx-js/vitest-setup": "workspace:*",
     "@microsoft/api-extractor": "catalog:",
     "@rspack/core": "catalog:rspack",
+    "@rstest/core": "catalog:rstest",
     "css-loader": "^7.1.4",
-    "sass-loader": "^16.0.7",
-    "webpack": "^5.105.2"
+    "sass-loader": "^16.0.7"
   },
   "peerDependencies": {
     "@lynx-js/template-webpack-plugin": "^0.11.0 || ^0.12.0"

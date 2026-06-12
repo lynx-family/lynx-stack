@@ -6,7 +6,7 @@ import { createRequire } from 'node:module';
 
 import { rspack } from '@rspack/core';
 
-import { LAYERS, ReactWebpackPlugin } from '../src/index.ts';
+import { LAYERS, ReactWebpackPlugin } from '@lynx-js/react-webpack-plugin';
 
 /**
  * @param {string=} name - The name

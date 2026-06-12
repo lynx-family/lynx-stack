@@ -1,3 +1,28 @@
-import config from './webpack.config.js';
+import { expect } from '@rstest/core';
 
-export default config;
+import { LynxEncodePlugin, LynxTemplatePlugin } from '../../../../lib/index.js';
+
+/** @type {import('@rspack/core').Configuration} */
+export default {
+  target: 'node',
+  plugins: [
+    new LynxTemplatePlugin({ filename: 'main.tasm' }),
+    new LynxEncodePlugin(),
+    (compiler) => {
+      compiler.hooks.thisCompilation.tap('test', compilation => {
+        const hooks = LynxTemplatePlugin.getLynxTemplatePluginHooks(
+          compilation,
+        );
+
+        hooks.afterEmit.tap(
+          'test',
+          ({ outputName }) => {
+            expect(outputName).toStrictEqual(
+              expect.stringContaining('main.tasm'),
+            );
+          },
+        );
+      });
+    },
+  ],
+};

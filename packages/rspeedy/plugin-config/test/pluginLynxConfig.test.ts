@@ -3,13 +3,13 @@
 // LICENSE file in the root directory of this source tree.
 
 /* eslint-disable no-irregular-whitespace */
-import { describe, expect, test, vi } from 'vitest'
+import { describe, expect, rstest, test } from '@rstest/core'
 
 import { createRspeedy } from '@lynx-js/rspeedy'
 import type { RsbuildPluginAPI } from '@lynx-js/rspeedy'
 import { compilerOptionsKeys, configKeys } from '@lynx-js/type-config'
 
-vi.mock('../src/LynxConfigWebpackPlugin.js')
+rstest.mock('../src/LynxConfigWebpackPlugin.js', { mock: true })
 describe('pluginLynxConfig', () => {
   test('should throw error when no LynxTemplatePlugin exposed', async () => {
     const { pluginLynxConfig } = await import('../src/pluginLynxConfig.js')
@@ -42,7 +42,7 @@ describe('pluginLynxConfig', () => {
           pluginLynxConfig({}),
           {
             name: 'lynx:react',
-            setup: vi.fn(),
+            setup: rstest.fn(),
           },
         ],
       },
@@ -72,7 +72,7 @@ describe('pluginLynxConfig', () => {
           }),
           {
             name: 'lynx:vue',
-            setup: vi.fn(),
+            setup: rstest.fn(),
           },
         ],
       },
@@ -95,7 +95,7 @@ describe('pluginLynxConfig', () => {
     )
     const { pluginLynxConfig } = await import('../src/pluginLynxConfig.js')
 
-    const LynxTemplatePlugin = vi.fn()
+    const LynxTemplatePlugin = rstest.fn()
 
     const rspeedy = await createRspeedy({
       rspeedyConfig: {

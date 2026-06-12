@@ -1,13 +1,13 @@
-import { expect } from 'vitest';
+import { expect } from '@rstest/core';
 
 import { createConfig } from '../../../create-react-config.js';
-import { ReactWebpackPlugin } from '../../../../src';
+import { ReactWebpackPlugin } from '@lynx-js/react-webpack-plugin';
 
 const defaultConfig = createConfig();
 
 /** @type {import('@rspack/core').Configuration} */
 export default {
-  context: __dirname,
+  context: import.meta.dirname,
   ...defaultConfig,
   optimization: {
     ...defaultConfig.optimization,

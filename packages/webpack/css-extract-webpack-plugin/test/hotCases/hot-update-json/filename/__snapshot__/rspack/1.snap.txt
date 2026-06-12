@@ -7,7 +7,7 @@
 - Bundle: rspack-bundle.js
 - Manifest: main.LAST_HASH.hot-update.json, size: 28
 - Manifest: main/main.LAST_HASH.css.hot-update.json, size: 1754
-- Update: main.LAST_HASH.hot-update.js, size: 1231
+- Update: main.LAST_HASH.hot-update.js, size: 1212
 
 ## Manifest
 
@@ -81,7 +81,7 @@
               }
             ],
             "selectorText": {
-              "value": ".M_Iy_Ry8Zw0AyEYX",
+              "value": ".y15ZckZDo0WcjHUH",
               "loc": {
                 "line": 1,
                 "column": 18
@@ -106,7 +106,7 @@
               }
             ],
             "selectorText": {
-              "value": ".jcanH_ADjtApvRCK",
+              "value": ".GF_gzxoJPgi5NQ3M",
               "loc": {
                 "line": 10,
                 "column": 18
@@ -140,7 +140,7 @@
 ### main.LAST_HASH.hot-update.js
 
 #### Changed Modules
-- ./hot-update-json/filename/file.module.css
+- ./file.module.css
 
 #### Changed Runtime Modules
 - webpack/runtime/get_full_hash
@@ -150,19 +150,19 @@
 "use strict";
 exports.ids = ["main"];
 exports.modules = {
-"./hot-update-json/filename/file.module.css"(module, __webpack_exports__, __webpack_require__) {
+"./file.module.css"(module, __webpack_exports__, __webpack_require__) {
 __webpack_require__.r(__webpack_exports__);
 __webpack_require__.d(__webpack_exports__, {
   foo: () => (_1)
 });
 // extracted by mini-css-extract-plugin
-var _1 = "M_Iy_Ry8Zw0AyEYX";
+var _1 = "y15ZckZDo0WcjHUH";
 
 
   if (true) {
     (function() {
-      var localsJsonString = "{\"foo\":\"M_Iy_Ry8Zw0AyEYX\"}";
-      var cssReload = __webpack_require__("../../runtime/hotModuleReplacement.cjs")(module.id, {}, "");
+      var localsJsonString = "{\"foo\":\"y15ZckZDo0WcjHUH\"}";
+      var cssReload = __webpack_require__("../../../../runtime/hotModuleReplacement.cjs")(module.id, {}, "");
       // only invalidate when locals change
       if (
         module.hot.data &&

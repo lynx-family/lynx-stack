@@ -80,7 +80,7 @@ export class ChunkLoadingWebpackPlugin {
       this.options,
     );
     new ChunkLoadingWebpackPluginImpl(
-      compiler as unknown as import('webpack').Compiler,
+      compiler as unknown as import('@rspack/core').Compiler,
       options,
     );
   }

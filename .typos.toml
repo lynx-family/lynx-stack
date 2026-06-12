@@ -18,6 +18,9 @@ extend-ignore-re = [
 ]
 
 [default.extend-words]
+# `cachable` is the option name on `@rspack/test-tools`' NodeRunner (their
+# spelling); the vendored hot runner must pass it verbatim.
+cachable = "cachable"
 childs = "childs"
 styl = "styl"
 aci = "aci"

@@ -1,4 +1,4 @@
-import { expect } from 'vitest';
+import { expect } from '@rstest/core';
 
 import {
   LynxEncodePlugin,
@@ -18,7 +18,7 @@ const defaultConfig = createConfig(
 
 /** @type {import('@rspack/core').Configuration} */
 export default {
-  context: __dirname,
+  context: import.meta.dirname,
   ...defaultConfig,
   plugins: [
     ...(defaultConfig.plugins ?? []),

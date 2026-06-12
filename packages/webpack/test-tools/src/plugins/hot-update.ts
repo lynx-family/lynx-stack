@@ -3,7 +3,8 @@
 // LICENSE file in the root directory of this source tree.
 
 import type { Compiler } from '@rspack/core';
-import type { TUpdateOptions } from '@rspack/test-tools';
+
+import type { TUpdateOptions } from '../suite.js';
 
 export class TestHotUpdatePlugin {
   constructor(private updateOptions: TUpdateOptions) {}

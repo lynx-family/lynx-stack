@@ -2,7 +2,7 @@
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
 
-import type { BannerPlugin, Compiler } from 'webpack';
+import type { BannerPluginArgument, Compiler } from '@rspack/core';
 
 import { RuntimeGlobals } from '@lynx-js/webpack-runtime-globals';
 
@@ -23,7 +23,7 @@ interface RuntimeWrapperWebpackPluginOptions {
    *
    * @public
    */
-  test: BannerPlugin['options']['test'];
+  test: Extract<BannerPluginArgument, { banner: unknown }>['test'];
   /**
    * There are two types of banners: script(for app-service) and bundle(for js-render). You can decide to use which banner by the filename.
    *

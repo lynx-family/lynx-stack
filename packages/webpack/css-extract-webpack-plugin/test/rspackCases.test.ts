@@ -9,7 +9,7 @@ import fs from 'node:fs';
 import path from 'node:path';
 
 import type { Configuration, Stats } from '@rspack/core';
-import { describe, expect, test, vi } from 'vitest';
+import { describe, expect, test } from '@rstest/core';
 
 function clearDirectory(dirPath: string) {
   let files: string[];
@@ -62,16 +62,6 @@ describe('Rspack TestCases', () => {
   const outputDirectory = path.resolve(__dirname, 'js/rspack-case');
   const tests = fs.readdirSync(casesDirectory);
 
-  vi.mock('../src/CssExtractWebpackPlugin.js', async () => {
-    const { CssExtractRspackPlugin } = await import(
-      '../src/CssExtractRspackPlugin.js'
-    );
-
-    return {
-      CssExtractWebpackPlugin: CssExtractRspackPlugin,
-    };
-  });
-
   clearDirectory(outputDirectory);
 
   for (const directory of tests) {
@@ -88,19 +78,19 @@ describe('Rspack TestCases', () => {
           outputDirectory,
           directory,
         );
-        const { default: webpackConfig } = await import(path.resolve(
+        const { default: rspackConfig } = await import(path.resolve(
           directoryForCase,
-          'webpack.config.js',
+          'rspack.config.js',
         )) as { default: Configuration };
 
-        webpackConfig.experiments ??= {};
-        webpackConfig.experiments.css = false;
+        rspackConfig.experiments ??= {};
+        rspackConfig.experiments.css = false;
 
-        const { context } = webpackConfig;
+        const { context } = rspackConfig;
 
         for (
           const config of ([] as Configuration[]).concat(
-            webpackConfig,
+            rspackConfig,
           )
         ) {
           Object.assign(
@@ -124,7 +114,7 @@ describe('Rspack TestCases', () => {
         }
 
         const stats = await new Promise<Stats>((resolve, reject) => {
-          rspack.rspack(webpackConfig, (error, stats) => {
+          rspack.rspack(rspackConfig, (error, stats) => {
             if (error) {
               reject(error);
 

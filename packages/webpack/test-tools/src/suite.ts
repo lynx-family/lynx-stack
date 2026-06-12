@@ -5,25 +5,14 @@ import { existsSync } from 'node:fs';
 import { createRequire } from 'node:module';
 import path from 'node:path';
 
-import {
-  BasicRunnerFactory,
-  ECompilerType,
-  NodeRunner,
-  TestContext,
-} from '@rspack/test-tools';
+import { NodeRunner, TestContext } from '@rspack/test-tools';
 import type {
   IGlobalContext,
   ITestContext,
   ITestEnv,
   ITestProcessor,
-  ITestRunner,
-  TCompiler,
-  TCompilerFactory,
-  TCompilerOptions,
-  TCompilerStatsCompilation,
-  TRunnerFactory,
   TTestConfig,
-  TUpdateOptions,
+  TTestRunnerCreator,
 } from '@rspack/test-tools';
 
 declare global {
@@ -37,17 +26,27 @@ type RstestRuntime = typeof import('@rstest/core');
 const runtime = globalThis as unknown as {
   afterEach: RstestRuntime['afterEach'];
   beforeEach: RstestRuntime['beforeEach'];
+  // `ITestEnv['expect']` is `Expect`, a type `@rspack/test-tools` references but
+  // does not export, so it resolves to `error` and makes every `expect(...)`
+  // call "unsafe". Use rstest's concrete `expect` type, which is what actually
+  // backs the global at runtime.
   expect: RstestRuntime['expect'];
   it: RstestRuntime['it'];
   rstest?: RstestRuntime['rstest'];
-  vi?: unknown;
 };
 
 const afterEach = runtime.afterEach;
 const beforeEach = runtime.beforeEach;
 const expect = runtime.expect;
 const it = runtime.it;
-const mockApi = runtime.rstest ?? runtime.vi;
+const mockApi = runtime.rstest;
+
+/** HMR step bookkeeping shared between the hot-update loader, plugin and runner. */
+export interface TUpdateOptions {
+  updateIndex: number;
+  totalUpdates: number;
+  changedFiles: string[];
+}
 
 export type TBeforeExecuteFn = () => Promise<void> | void;
 export type TAfterExecuteFn = (modules: TRunnerOutput[]) => Promise<void>;
@@ -70,15 +69,6 @@ export interface ITestSuite {
    * ```
    */
   casePath: string;
-  /**
-   * Enable build cache
-   *
-   * @defaultValue `false`
-   *
-   * @remarks
-   * webpack-only
-   */
-  cache?: boolean;
 
   afterExecute?: TAfterExecuteFn | undefined;
 
@@ -102,13 +92,61 @@ interface TRunnerOutput {
   context: IGlobalContext;
 }
 
+/** A NodeRunner that returns `{ exports, context }` like the legacy Rspeedy runner. */
+export class RspeedyNormalRunner extends NodeRunner {
+  override async run(
+    file: string,
+  ): Promise<{ exports: unknown; context: typeof globalThis }> {
+    const res = await super.run(file);
+    return {
+      exports: res,
+      context: global,
+    };
+  }
+}
+
+/**
+ * Wrap a case's `moduleScope` so fixtures written against vitest's `vi` global
+ * (e.g. `vi.fn()`, `vi.stubGlobal()`) keep working under rstest, where no `vi`
+ * exists: alias the API-compatible `rstest` mock API into the module scope.
+ * Keeps the fixture sources unchanged across the vitest → rstest migration.
+ */
+export function withViModuleScope(
+  testConfig: TTestConfig,
+): TTestConfig {
+  const oldModuleScope = testConfig.moduleScope;
+  return {
+    ...testConfig,
+    moduleScope: (ms, stats) => {
+      if (typeof oldModuleScope === 'function') {
+        ms = oldModuleScope(ms, stats);
+      }
+      (ms as unknown as Record<string, unknown>)['vi'] = mockApi;
+      return ms;
+    },
+  };
+}
+
+/** Runner creator that drives `RspeedyNormalRunner` (the default for normal cases). */
+export const rspeedyRunnerCreator: TTestRunnerCreator = {
+  key: (_context: ITestContext, name: string, file: string) =>
+    file.includes(':') ? `${name}:${file}` : name,
+  runner: (context: ITestContext, name: string, _file: string, env: ITestEnv) =>
+    new RspeedyNormalRunner({
+      env,
+      name,
+      runInNewContext: false,
+      testConfig: withViModuleScope(context.getTestConfig()),
+      source: context.getSource(),
+      dist: context.getDist(),
+      compilerOptions: context.getCompiler().getOptions(),
+    }),
+};
+
 export function createRunner(
   src: string,
   dist: string,
-  runnerFactory: new(
-    name: string,
-    context: ITestContext,
-  ) => TRunnerFactory<ECompilerType>,
+  runnerCreator: TTestRunnerCreator,
   options: {
     afterExecute?: TAfterExecuteFn | undefined;
     beforeExecute?: TBeforeExecuteFn | undefined;
@@ -116,8 +154,8 @@ export function createRunner(
 ): (name: string, processor: ITestProcessor) => void {
   const require = createRequire(import.meta.url);
   const testConfigFile = path.join(src, 'test.config.cjs');
-  const testConfig = existsSync(testConfigFile)
-    ? require(testConfigFile) as TTestConfig<ECompilerType>
+  const testConfig: TTestConfig = existsSync(testConfigFile)
+    ? require(testConfigFile) as TTestConfig
     : {};
   const oldModuleScope = testConfig.moduleScope;
   testConfig.moduleScope = (ms, stats) => {
@@ -126,26 +164,22 @@ export function createRunner(
     }
     // @ts-expect-error Mock the console.alog method
     ms.console.alog = () => void 0;
+    // Fixtures written against vitest's `vi` global (e.g. `vi.fn()`,
+    // `vi.stubGlobal()`): under rstest there is no `vi`, so alias the
+    // API-compatible `rstest` mock API into the module scope. Keeps the
+    // fixture sources unchanged across the vitest → rstest migration.
+    (ms as unknown as Record<string, unknown>)['vi'] = mockApi;
     return ms;
   };
 
-  const context = new TestContext({
-    src,
-    dist,
-    compilerFactories: {
-      [ECompilerType.Rspack]: options =>
-        (require('@rspack/core') as TCompilerFactory<ECompilerType>)(
-          options,
-        ),
-      [ECompilerType.Webpack]: options =>
-        (require('webpack') as TCompilerFactory<ECompilerType>)(
-          options,
-        ) as TCompiler<ECompilerType>,
-    },
-    runnerFactory,
-    testConfig,
-  });
-  const runner = function run(name: string, processor: ITestProcessor) {
+  return function run(name: string, processor: ITestProcessor) {
+    const context = new TestContext({
+      name,
+      src,
+      dist,
+      runnerCreator,
+      testConfig,
+    });
     it(`should run before`, async () => {
       await processor.beforeAll?.(context);
       await processor.before?.(context);
@@ -159,7 +193,7 @@ export function createRunner(
     const beforeTasks: (() => Promise<void> | void)[] = [];
     const afterTasks: (() => Promise<void> | void)[] = [];
     it(`${name} should run sync`, async () => {
-      context.setValue(name, 'documentType', 'fake');
+      context.setValue('documentType', 'fake');
       if (typeof options.beforeExecute === 'function') {
         await options.beforeExecute();
       }
@@ -182,7 +216,7 @@ export function createRunner(
       }, context);
       if (typeof options.afterExecute === 'function') {
         const modules = await Promise.all(
-          context.getValue<Promise<TRunnerOutput>[]>(name, 'modules')!,
+          context.getValue<Promise<TRunnerOutput>[]>('modules')!,
         );
         await options.afterExecute(modules);
       }
@@ -210,43 +244,6 @@ export function createRunner(
       await processor.afterAll?.(context);
     });
   };
-
-  return runner;
-}
-
-export class RspeedyNormalRunner<
-  T extends ECompilerType = ECompilerType.Rspack,
-> extends NodeRunner<T> {
-  override async run<T>(
-    file: string,
-  ): Promise<{ exports: T; context: typeof globalThis }> {
-    const res = await super.run(file) as T;
-    return {
-      exports: res,
-      context: global,
-    };
-  }
-}
-
-export class RspeedyNormalRunnerFactory<
-  T extends ECompilerType,
-> extends BasicRunnerFactory<T> {
-  override createRunner(
-    _: string,
-    __: TCompilerStatsCompilation<T>,
-    compilerOptions: TCompilerOptions<T>,
-    env: ITestEnv,
-  ): ITestRunner {
-    return new RspeedyNormalRunner({
-      env,
-      name: this.name,
-      runInNewContext: false,
-      testConfig: this.context.getTestConfig(),
-      source: this.context.getSource(),
-      dist: this.context.getDist(),
-      compilerOptions: compilerOptions,
-    });
-  }
 }
 
 export async function getOptions<T>(path: string): Promise<T> {
@@ -255,9 +252,4 @@ export async function getOptions<T>(path: string): Promise<T> {
     & T;
 
   return options.default ?? options;
-}
-
-export interface TImportedBundler {
-  HotModuleReplacementPlugin: new() => unknown;
-  LoaderOptionsPlugin: new(update: TUpdateOptions) => unknown;
 }

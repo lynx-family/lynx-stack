@@ -6,7 +6,7 @@ import { createRequire } from 'node:module';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
-import type { Compilation, Compiler } from 'webpack';
+import type { Compilation, Compiler } from '@rspack/core';
 
 import { LAYERS } from '@lynx-js/react-webpack-plugin';
 
@@ -149,7 +149,16 @@ export class ReactRefreshWebpackPlugin {
           }
         }
 
-        compilation.mainTemplate.hooks.localVars.tap(PLUGIN_NAME, source => {
+        // rspack keeps a deprecated `mainTemplate` proxy at runtime; absent in types.
+        (compilation as typeof compilation & {
+          mainTemplate: {
+            hooks: {
+              localVars: {
+                tap(name: string, fn: (source: string) => string): void;
+              };
+            };
+          };
+        }).mainTemplate.hooks.localVars.tap(PLUGIN_NAME, (source: string) => {
           return `
             ${source}
             // noop fns to prevent runtime errors during initialization

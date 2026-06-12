@@ -2,16 +2,18 @@
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
 
-import type { Chunk, ChunkGraph, RuntimeModule } from 'webpack';
+import type { Chunk, Compilation, RuntimeModule } from '@rspack/core';
 
 import { JavaScriptRuntimeModule } from './runtime/JavaScriptRuntimeModule.js';
+
+type ChunkGraph = Compilation['chunkGraph'];
 
 type ChunkLoadingRuntimeModule = new(
   runtimeRequirements: ReadonlySet<string>,
 ) => RuntimeModule;
 
 export function createChunkLoadingRuntimeModule(
-  webpack: typeof import('webpack'),
+  webpack: typeof import('@rspack/core').rspack,
 ): ChunkLoadingRuntimeModule {
   const { RuntimeGlobals, RuntimeModule, Template } = webpack;
   return class ChunkLoadingRuntimeModule extends RuntimeModule {
@@ -19,7 +21,7 @@ export function createChunkLoadingRuntimeModule(
       super('webpack/runtime/lynx chunk loading', RuntimeModule.STAGE_ATTACH);
     }
 
-    override generate(): string | null {
+    override generate(): string {
       const initialChunkIds = this.#getInitialChunkIds(
         this.chunk!,
         this.chunkGraph!,

@@ -2,7 +2,7 @@ import fs from 'node:fs';
 
 import { LynxEncodePlugin, LynxTemplatePlugin } from '../../../../lib/index.js';
 
-/** @type {import('webpack').Configuration} */
+/** @type {import('@rspack/core').Configuration} */
 export default {
   mode: 'production',
   target: 'node',

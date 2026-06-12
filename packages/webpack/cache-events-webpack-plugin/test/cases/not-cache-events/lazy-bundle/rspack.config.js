@@ -2,7 +2,7 @@ import { ChunkLoadingWebpackPlugin } from '@lynx-js/chunk-loading-webpack-plugin
 
 import { LynxCacheEventsPlugin } from '../../../../lib/index.js';
 
-/** @type {import('webpack').Configuration} */
+/** @type {import('@rspack/core').Configuration} */
 export default {
   target: 'node',
   output: {
