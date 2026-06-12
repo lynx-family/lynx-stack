@@ -22,6 +22,7 @@ export default {
     ],
   },
   plugins: [
+    /** @param {import('@rspack/core').Compiler} compiler */
     function(compiler) {
       new compiler.webpack.HotModuleReplacementPlugin().apply(compiler);
     },
