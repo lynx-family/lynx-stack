@@ -95,6 +95,10 @@ jobs:
           # flamegraphs. This needs a kernel-matched linux-tools package; the
           # bare-metal physical-exclusive runner is the supported environment
           # for it (samply, used as a fallback elsewhere, only yields timings).
+          # Frame-pointer unwinding (the benchx_cli build is -O0, so frame
+          # pointers are present): the default dwarf unwinding path fails to
+          # resolve native frames for the QuickJS-driven benchmarks.
+          export CODSPEED_PERF_UNWINDING_MODE=fp
           codspeed run --mode walltime -- pnpm -r run --workspace-concurrency=1 bench
       - name: React benchmark - Run perfetto
         run: |
