@@ -145,7 +145,6 @@ function createNormalProcessor(
         defaultOptions as Record<string, unknown>,
         caseOptions as Record<string, unknown>,
       ) as RspackOptions;
-      options.target = TARGET;
       compiler.setOptions(options);
     },
     compiler: (context) => {
