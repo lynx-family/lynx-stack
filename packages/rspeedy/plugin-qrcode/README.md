@@ -80,6 +80,14 @@ export default defineConfig({
 })
 ```
 
+## Shortcuts
+
+While the dev server is running, the following keys are available in the terminal:
+
+- `r`: Switch between entries.
+- `a`: Switch between schemas.
+- `i`: Switch the dev server host shown in the QR code between the available network interfaces (useful when the default IP is not reachable from your device).
+
 ## Documentation
 
 Visit [Lynx Website](https://lynxjs.org/api/rspeedy/qrcode-rsbuild-plugin.pluginqrcode.html) to view the full documentation.

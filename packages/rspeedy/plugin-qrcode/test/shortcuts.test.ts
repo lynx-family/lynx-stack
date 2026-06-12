@@ -8,6 +8,22 @@ import { registerConsoleShortcuts } from '../src/shortcuts.js'
 
 vi.mock('@clack/prompts')
 
+vi.mock('node:os', async (importOriginal) => ({
+  ...await importOriginal<typeof import('node:os')>(),
+  networkInterfaces: () => ({
+    lo0: [
+      { address: '127.0.0.1', family: 'IPv4', internal: true },
+    ],
+    en0: [
+      { address: '10.0.0.1', family: 'IPv4', internal: false },
+      { address: 'fe80::1', family: 'IPv6', internal: false },
+    ],
+    en1: [
+      { address: '192.168.1.2', family: 'IPv4', internal: false },
+    ],
+  }),
+}))
+
 describe('PluginQRCode - CLI Shortcuts', () => {
   const mockedRsbuildAPI = {
     getNormalizedConfig: vi.fn().mockReturnValue({
@@ -164,6 +180,50 @@ describe('PluginQRCode - CLI Shortcuts', () => {
     expect(onPrint).toBeCalledTimes(2)
 
     expect(onOpen).toBeCalledTimes(1)
+    unregister()
+  })
+
+  test('switch host', async () => {
+    vi.stubEnv('NODE_ENV', 'development')
+    vi.clearAllMocks()
+    const onPrint = vi.fn()
+
+    const { selectKey, select, isCancel } = await import('@clack/prompts')
+    let i = 0
+    vi.mocked(selectKey).mockImplementation(() => {
+      i++
+      if (i === 1) {
+        return Promise.resolve('i')
+      } else if (i === 2) {
+        return new Promise(vi.fn())
+      }
+      expect.fail('should not call selectKey 3 times')
+    })
+    vi.mocked(select).mockResolvedValue('10.0.0.1')
+    vi.mocked(isCancel).mockReturnValue(false)
+
+    const unregister = await registerConsoleShortcuts({
+      api: mockedRsbuildAPI,
+      entries: ['foo'],
+      schema: i => i,
+      port: 3000,
+      onPrint,
+    })
+
+    expect(onPrint).toBeCalledWith('https://example.com/foo.lynx.bundle')
+    await expect.poll(() => selectKey).toBeCalledTimes(2)
+
+    expect(select).toBeCalledWith(expect.objectContaining({
+      message: 'Select host',
+      options: [
+        expect.objectContaining({ value: '10.0.0.1' }),
+        expect.objectContaining({ value: '192.168.1.2' }),
+      ],
+    }))
+    expect(onPrint).toBeCalledTimes(2)
+    expect(onPrint).toHaveBeenLastCalledWith(
+      'https://10.0.0.1/foo.lynx.bundle',
+    )
     unregister()
   })
 })

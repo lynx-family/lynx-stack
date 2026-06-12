@@ -104,6 +104,7 @@ async function loop(
 
   let currentEntry = options.entries[0]!
   let currentSchema = Object.keys(devUrls)[0]!
+  let currentHost: string | undefined
 
   while (!isCancel(value)) {
     const name = await selectKey({
@@ -111,6 +112,7 @@ async function loop(
       options: [
         { value: 'r', label: 'Switch entries' },
         { value: 'a', label: 'Switch schema' },
+        { value: 'i', label: 'Switch host' },
         { value: 'h', label: 'Help' },
         ...Object.values(options.customShortcuts ?? {}),
         { value: 'q', label: 'Quit' },
@@ -137,6 +139,7 @@ async function loop(
             entry,
             options.schema,
             options.port,
+            currentHost,
           )[currentSchema]!,
         })),
         initialValue: currentEntry,
@@ -152,6 +155,7 @@ async function loop(
         currentEntry,
         options.schema,
         options.port,
+        currentHost,
       )
       const selection = await selectFn(Object.keys(devUrls).length)({
         message: 'Select schema',
@@ -166,6 +170,28 @@ async function loop(
         break
       }
       currentSchema = selection
+      value = getCurrentUrl()
+    } else if (name === 'i') {
+      const hosts = await getAvailableHosts()
+      const selection = await selectFn(hosts.length)({
+        message: 'Select host',
+        options: hosts.map(({ address, interfaceName }) => ({
+          value: address,
+          label: address,
+          hint: `${interfaceName} — ${generateDevUrls(
+            options.api,
+            currentEntry,
+            options.schema,
+            options.port,
+            address,
+          )[currentSchema]!}`,
+        })),
+        initialValue: currentHost ?? hosts[0]?.address,
+      })
+      if (isCancel(selection)) {
+        break
+      }
+      currentHost = selection
       value = getCurrentUrl()
     } else if (options.customShortcuts?.[name]) {
       await options.customShortcuts[name].action?.()
@@ -189,7 +215,27 @@ async function loop(
       currentEntry,
       options.schema,
       options.port,
+      currentHost,
     )[currentSchema]!
+  }
+
+  async function getAvailableHosts(): Promise<
+    { address: string, interfaceName: string }[]
+  > {
+    const { networkInterfaces } = await import('node:os')
+    const hosts: { address: string, interfaceName: string }[] = []
+    for (
+      const [interfaceName, networks] of Object.entries(networkInterfaces())
+    ) {
+      for (const network of networks ?? []) {
+        // Skip loopback addresses: the QR code is scanned by another device,
+        // which cannot reach the loopback interface of this machine.
+        if (network.family === 'IPv4' && !network.internal) {
+          hosts.push({ address: network.address, interfaceName })
+        }
+      }
+    }
+    return hosts
   }
 
   function exit(code?: number) {
