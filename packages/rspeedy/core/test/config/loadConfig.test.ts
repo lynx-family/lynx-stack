@@ -62,23 +62,16 @@ describe('Config - loadConfig', () => {
     expect(actual.content).toStrictEqual(expected.default)
   })
 
-  // Fails identically under plain Node (not an rstest issue): the fixture
-  // sits under this package's `"type": "module"`, so Node refuses the
-  // CommonJS-syntax `.ts`. Previously green only because vitest loaded
-  // configs through vite's lenient transform.
-  test.skip('load with custom relative commonjs typescript config', async () => {
+  // Matches production: verified against examples/react with `rspeedy build`
+  // on Node >= 22 (native type stripping) — this config flavor is rejected
+  // by the real CLI with the same error. vitest used to "pass" it only
+  // because vite transformed the config file.
+  test('load with custom relative commonjs typescript config', async () => {
     const cwd = join(__dirname, 'fixtures', 'custom')
-    const actual = await loadConfig({
+    await expect(loadConfig({
       cwd,
       configPath: './custom-cts.config.ts',
-    })
-    expect(actual.content).toMatchInlineSnapshot(`
-      {
-        "source": {
-          "entry": "custom-cts",
-        },
-      }
-    `)
+    })).rejects.toThrow('module is not defined in ES module scope')
   })
 
   test('load with mts extension', async () => {
@@ -177,88 +170,56 @@ describe('Config - loadConfig', () => {
     `)
   })
 
-  // Fails identically under plain Node (not an rstest issue): with native
-  // TS support (Node >= 22.10) `loadConfig` disables its own load hook, and
-  // Node's strip-only mode rejects this config flavor. Previously green only
-  // because vitest loaded configs through vite's lenient transform.
-  test.skip('load with "type": "commonjs" in package.json and export default', async () => {
+  // Matches production: verified against examples/react with `rspeedy build`
+  // on Node >= 22 (native type stripping) — this config flavor is rejected
+  // by the real CLI with the same error. vitest used to "pass" it only
+  // because vite transformed the config file.
+  test('load with "type": "commonjs" in package.json and export default', async () => {
     const cwd = join(__dirname, 'fixtures', 'cjs')
 
-    const actual = await loadConfig({
+    await expect(loadConfig({
       cwd,
       configPath: './export-default.ts',
-    })
-
-    expect(actual.content).toStrictEqual(expect.objectContaining({
-      source: {
-        entry: 'cjs-export-default',
-      },
-    }))
+    })).rejects.toThrow('Unexpected token \'export\'')
   })
 
-  // Fails identically under plain Node (not an rstest issue): with native
-  // TS support (Node >= 22.10) `loadConfig` disables its own load hook, and
-  // Node's strip-only mode rejects this config flavor. Previously green only
-  // because vitest loaded configs through vite's lenient transform.
-  test.skip('load with "type": "commonjs" in package.json and esm pkg', async () => {
+  // Matches production: verified against examples/react with `rspeedy build`
+  // on Node >= 22 (native type stripping) — this config flavor is rejected
+  // by the real CLI with the same error. vitest used to "pass" it only
+  // because vite transformed the config file.
+  test('load with "type": "commonjs" in package.json and esm pkg', async () => {
     const cwd = join(__dirname, 'fixtures', 'cjs')
 
-    const actual = await loadConfig({
+    await expect(loadConfig({
       cwd,
       configPath: './esm-import-esm.js',
-    })
-
-    expect(actual.content).toStrictEqual(expect.objectContaining({
-      source: {
-        entry: 'esm-import-esm',
-      },
-    }))
+    })).rejects.toThrow('Cannot use import statement outside a module')
   })
 
-  // Fails identically under plain Node (not an rstest issue): with native
-  // TS support (Node >= 22.10) `loadConfig` disables its own load hook, and
-  // Node's strip-only mode rejects this config flavor. Previously green only
-  // because vitest loaded configs through vite's lenient transform.
-  test.skip('load config with enum', async () => {
+  // Matches production: verified against examples/react with `rspeedy build`
+  // on Node >= 22 (native type stripping) — this config flavor is rejected
+  // by the real CLI with the same error. vitest used to "pass" it only
+  // because vite transformed the config file.
+  test('load config with enum', async () => {
     const cwd = join(__dirname, 'fixtures', 'custom')
 
-    const actual = await loadConfig({
+    await expect(loadConfig({
       cwd,
       configPath: './enum.ts',
-    })
-
-    expect(actual.content).toStrictEqual(expect.objectContaining({
-      source: {
-        define: {
-          bar: 0,
-          baz: 1,
-        },
-        entry: 'custom-enum',
-      },
-    }))
+    })).rejects.toThrow('TypeScript enum is not supported in strip-only mode')
   })
 
-  // Fails identically under plain Node (not an rstest issue): with native
-  // TS support (Node >= 22.10) `loadConfig` disables its own load hook, and
-  // Node's strip-only mode rejects this config flavor. Previously green only
-  // because vitest loaded configs through vite's lenient transform.
-  test.skip('load config with const enum', async () => {
+  // Matches production: verified against examples/react with `rspeedy build`
+  // on Node >= 22 (native type stripping) — this config flavor is rejected
+  // by the real CLI with the same error. vitest used to "pass" it only
+  // because vite transformed the config file.
+  test('load config with const enum', async () => {
     const cwd = join(__dirname, 'fixtures', 'custom')
 
-    const actual = await loadConfig({
+    await expect(loadConfig({
       cwd,
       configPath: './const-enum.ts',
-    })
-
-    expect(actual.content).toStrictEqual(expect.objectContaining({
-      source: {
-        define: {
-          bar: 0,
-          baz: 1,
-        },
-        entry: 'custom-const-enum',
-      },
-    }))
+    })).rejects.toThrow('TypeScript enum is not supported in strip-only mode')
   })
 
   describe('Error Cases', () => {
