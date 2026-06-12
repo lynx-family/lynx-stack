@@ -95,9 +95,6 @@ jobs:
           # flamegraphs. This needs a kernel-matched linux-tools package; the
           # bare-metal physical-exclusive runner is the supported environment
           # for it (samply, used as a fallback elsewhere, only yields timings).
-          # CODSPEED_LOG=debug surfaces the runner's perf symbol-harvest logs so
-          # we can see why native execution profiles fail to resolve symbols.
-          export CODSPEED_LOG=debug
           codspeed run --mode walltime -- pnpm -r run --workspace-concurrency=1 bench
       - name: React benchmark - Run perfetto
         run: |
