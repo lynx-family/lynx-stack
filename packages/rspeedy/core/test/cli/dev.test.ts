@@ -52,6 +52,8 @@ describe('CLI - dev', () => {
 
   void beforeEach(() => {
     rstest.restoreAllMocks()
+    rstest.useRealTimers()
+    rstest.unstubAllEnvs()
     spyOnChokidarWatch()
   })
 

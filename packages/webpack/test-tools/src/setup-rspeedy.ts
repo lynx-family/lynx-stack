@@ -98,6 +98,13 @@ expect.extend({
         return check(rule.use);
       }
 
+      if (
+        rule.use && typeof rule.use === 'object' && !Array.isArray(rule.use)
+        && typeof rule.use.loader === 'string'
+      ) {
+        return check(rule.use.loader);
+      }
+
       if (typeof rule.loader === 'string') {
         return check(rule.loader);
       }

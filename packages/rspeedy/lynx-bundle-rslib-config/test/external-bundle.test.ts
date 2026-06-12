@@ -343,22 +343,24 @@ describe('debug mode artifacts', () => {
 
   it('does not emit template intermediates when DEBUG is unset', async () => {
     rstest.stubEnv('DEBUG', undefined)
-
-    await buildBundle()
-    expect(getFiles()).not.toContain('tasm.json')
-
-    rstest.unstubAllEnvs()
+    try {
+      await buildBundle()
+      expect(getFiles()).not.toContain('tasm.json')
+    } finally {
+      rstest.unstubAllEnvs()
+    }
   })
 
   it('emits template intermediates when DEBUG is set', async () => {
     rstest.stubEnv('DEBUG', 'rspeedy')
-
-    await buildBundle()
-    expect(getFiles()).toEqual(
-      expect.arrayContaining(['tasm.json']),
-    )
-
-    rstest.unstubAllEnvs()
+    try {
+      await buildBundle()
+      expect(getFiles()).toEqual(
+        expect.arrayContaining(['tasm.json']),
+      )
+    } finally {
+      rstest.unstubAllEnvs()
+    }
   })
 })
 

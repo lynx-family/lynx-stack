@@ -34,6 +34,8 @@ describe('CLI - build', () => {
 
   void beforeEach(() => {
     rstest.restoreAllMocks()
+    rstest.useRealTimers()
+    rstest.unstubAllEnvs()
   })
 
   test('config not found', async () => {

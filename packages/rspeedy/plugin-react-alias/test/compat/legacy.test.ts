@@ -1,6 +1,7 @@
 // Copyright 2025 The Lynx Authors. All rights reserved.
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
+import { createRequire } from 'node:module'
 import path from 'node:path'
 import { fileURLToPath } from 'node:url'
 
@@ -45,5 +46,19 @@ describe('@lynx-js/react/compat - alias', () => {
     expect(config?.resolve?.alias ?? {}).not.toHaveProperty(
       '@lynx-js/react/compat$',
     )
+
+    // The mock substitutes the version fed into the comparison, so assert
+    // the plugin still resolved and forwarded the REAL installed version —
+    // this keeps the resolve-version-then-compare flow covered.
+    const require = createRequire(import.meta.url)
+    const reactLynxPkg = require.resolve('@lynx-js/react/package.json', {
+      paths: [path.dirname(fileURLToPath(import.meta.url))],
+    })
+    const { version: realVersion } = require(reactLynxPkg) as {
+      version: string
+    }
+    const gteModule = await import('semver/functions/gte.js')
+    const gteMock = rstest.mocked(gteModule.default)
+    expect(gteMock).toHaveBeenCalledWith(realVersion, '0.111.9999')
   })
 })

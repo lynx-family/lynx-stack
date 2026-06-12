@@ -4,12 +4,16 @@
 
 import { createRequire } from 'node:module'
 
-import { describe, expect, rstest, test } from '@rstest/core'
+import { afterEach, describe, expect, rstest, test } from '@rstest/core'
 import { Command } from 'commander'
 
 const require = createRequire(import.meta.url)
 
 describe('CLI - help', () => {
+  void afterEach(() => {
+    rstest.restoreAllMocks()
+  })
+
   test('help message', async () => {
     // Optional. Suppress normal output to keep test output clean.
     const writeSpy = rstest.spyOn(process.stdout, 'write').mockImplementation(

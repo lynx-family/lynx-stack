@@ -35,6 +35,8 @@ describe('CLI - preview', () => {
   )
   void beforeEach(() => {
     rstest.resetAllMocks()
+    rstest.useRealTimers()
+    rstest.unstubAllEnvs()
   })
 
   test('preview', async () => {
