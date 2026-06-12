@@ -6,10 +6,7 @@ import path from 'node:path'
 
 import type { RsbuildPlugin } from '@rsbuild/core'
 
-import {
-  BUNDLE_STATS_JSON_OPTIONS,
-  getBundleStatsJson,
-} from './statsJsonOptions.js'
+import { BUNDLE_STATS_JSON_OPTIONS } from './statsJsonOptions.js'
 import type { Config } from '../config/index.js'
 
 export function pluginStatsJson(config: Config): RsbuildPlugin {
@@ -26,13 +23,10 @@ export function pluginStatsJson(config: Config): RsbuildPlugin {
         }
 
         const statsPath = path.join(api.context.distPath, 'stats.json')
-        const statsJson = getBundleStatsJson(
-          stats.toJson(BUNDLE_STATS_JSON_OPTIONS),
-        )
         await mkdir(path.dirname(statsPath), { recursive: true })
         await writeFile(
           statsPath,
-          JSON.stringify(statsJson, null, 2),
+          JSON.stringify(stats.toJson(BUNDLE_STATS_JSON_OPTIONS), null, 2),
         )
       })
     },

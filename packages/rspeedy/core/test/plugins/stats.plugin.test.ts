@@ -7,7 +7,6 @@ import path from 'node:path'
 
 import { describe, expect, test, vi } from 'vitest'
 
-import { getBundleStatsJson } from '../../src/plugins/statsJsonOptions.js'
 import { createStubRspeedy } from '../createStubRspeedy.js'
 
 interface StatsJson {
@@ -50,7 +49,7 @@ describe('stats plugin', () => {
     expect(config.performance?.profile).toBe(false)
   })
 
-  test('emits RelativeCI-compatible stats.json when performance.profile is enabled', async () => {
+  test('emits complete stats.json when performance.profile is enabled', async () => {
     const root = await mkdtemp(path.join(tmpdir(), 'rspeedy-stats-json-'))
 
     try {
@@ -79,80 +78,26 @@ describe('stats plugin', () => {
         await readFile(path.join(root, 'dist/stats.json'), 'utf-8'),
       ) as StatsJson
 
-      expect(statsJson.children).toBeUndefined()
-      expect(statsJson.name).toBe('lynx')
-      expect(statsJson.assets).toEqual(expect.any(Array))
-      expect(statsJson.chunks).toEqual(expect.any(Array))
-      expect(statsJson.modules).toEqual(expect.any(Array))
-      expect(statsJson.entrypoints).toEqual(expect.any(Object))
-      expect(statsJson.namedChunkGroups).toEqual(expect.any(Object))
+      expect(statsJson.children?.map(child => child.name)).toEqual([
+        'web',
+        'lynx',
+      ])
+      expect(statsJson.children?.[0]?.assets).toEqual(expect.any(Array))
+      expect(statsJson.children?.[0]?.chunks).toEqual(expect.any(Array))
+      expect(statsJson.children?.[0]?.modules).toEqual(expect.any(Array))
+      expect(statsJson.children?.[0]?.entrypoints).toEqual(expect.any(Object))
+      expect(statsJson.children?.[0]?.namedChunkGroups).toEqual(
+        expect.any(Object),
+      )
+      expect(statsJson.children?.[1]?.assets).toEqual(expect.any(Array))
+      expect(statsJson.children?.[1]?.chunks).toEqual(expect.any(Array))
+      expect(statsJson.children?.[1]?.modules).toEqual(expect.any(Array))
+      expect(statsJson.children?.[1]?.entrypoints).toEqual(expect.any(Object))
+      expect(statsJson.children?.[1]?.namedChunkGroups).toEqual(
+        expect.any(Object),
+      )
     } finally {
       await rm(root, { recursive: true, force: true })
     }
-  })
-
-  test('selects the lynx child from multi-compiler stats output', () => {
-    const webStats = {
-      name: 'web',
-      assets: ['web.js'],
-      chunks: ['web'],
-      modules: ['web-module'],
-      entrypoints: { main: {} },
-      namedChunkGroups: { main: {} },
-    }
-    const lynxStats = {
-      name: 'lynx',
-      assets: ['main.lynx.bundle'],
-      chunks: ['lynx'],
-      modules: ['lynx-module'],
-      entrypoints: { main: {} },
-      namedChunkGroups: { main: {} },
-    }
-
-    expect(getBundleStatsJson({
-      children: [webStats, lynxStats],
-    })).toBe(lynxStats)
-  })
-
-  test('selects the first child when multi-compiler stats has no lynx child', () => {
-    const esmStats = {
-      name: 'esm0',
-      assets: ['index.js'],
-      chunks: ['index'],
-      modules: ['module'],
-      entrypoints: { index: {} },
-      namedChunkGroups: { index: {} },
-    }
-    const cjsStats = {
-      name: 'cjs',
-      assets: ['index.cjs'],
-      chunks: ['index'],
-      modules: ['module'],
-      entrypoints: { index: {} },
-      namedChunkGroups: { index: {} },
-    }
-
-    expect(getBundleStatsJson({
-      children: [esmStats, cjsStats],
-    })).toBe(esmStats)
-  })
-
-  test('omits an empty children array from the emitted stats object', () => {
-    expect(getBundleStatsJson({
-      name: 'lynx',
-      assets: [],
-      chunks: [],
-      modules: [],
-      entrypoints: {},
-      namedChunkGroups: {},
-      children: [],
-    })).toEqual({
-      name: 'lynx',
-      assets: [],
-      chunks: [],
-      modules: [],
-      entrypoints: {},
-      namedChunkGroups: {},
-    })
   })
 })
