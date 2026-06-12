@@ -1,4 +1,5 @@
 ---
+"@lynx-js/config-rsbuild-plugin": minor
 "@lynx-js/css-extract-webpack-plugin": minor
 "@lynx-js/template-webpack-plugin": minor
 "@lynx-js/react-refresh-webpack-plugin": minor

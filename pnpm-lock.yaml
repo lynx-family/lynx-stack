@@ -2088,12 +2088,12 @@ importers:
       '@rsbuild/core':
         specifier: catalog:rsbuild
         version: 2.0.11(core-js@3.48.0)
+      '@rspack/core':
+        specifier: 2.0.6
+        version: 2.0.6(@swc/helpers@0.5.23)
       '@types/loader-utils':
         specifier: ^2.0.6
         version: 2.0.6
-      '@types/webpack':
-        specifier: ^5.28.5
-        version: 5.28.5(lightningcss@1.31.1)
       typescript:
         specifier: ^5.9.3
         version: 5.9.3
@@ -6082,9 +6082,6 @@ packages:
 
   '@types/webpack@4.41.40':
     resolution: {integrity: sha512-u6kMFSBM9HcoTpUXnL6mt2HSzftqb3JgYV6oxIgL2dl6sX6aCa5k6SOkzv5DuZjBTPUE/dJltKtwwuqrkZHpfw==}
-
-  '@types/webpack@5.28.5':
-    resolution: {integrity: sha512-wR87cgvxj3p6D0Crt1r5avwqffqPXUkNlnQ1mjU93G7gCuFjufZR4I6j8cz5g1F1tTYpfOOFvly+cmIQwL9wvw==}
 
   '@types/ws@8.18.1':
     resolution: {integrity: sha512-ThVF6DCVhA8kUGy+aazFQ4kXQ7E1Ty7A3ypFOe0IcJV8O/M511G99AW24irKrW56Wt44yG9+ij8FaqoBGkuBXg==}
@@ -16655,26 +16652,6 @@ snapshots:
       '@types/webpack-sources': 3.2.3
       anymatch: 3.1.3
       source-map: 0.6.1
-
-  '@types/webpack@5.28.5(lightningcss@1.31.1)':
-    dependencies:
-      '@types/node': 24.10.13
-      tapable: 2.3.0
-      webpack: 5.105.2(lightningcss@1.31.1)
-    transitivePeerDependencies:
-      - '@minify-html/node'
-      - '@swc/core'
-      - '@swc/css'
-      - '@swc/html'
-      - clean-css
-      - cssnano
-      - csso
-      - esbuild
-      - html-minifier-terser
-      - lightningcss
-      - postcss
-      - uglify-js
-      - webpack-cli
 
   '@types/ws@8.18.1':
     dependencies:
