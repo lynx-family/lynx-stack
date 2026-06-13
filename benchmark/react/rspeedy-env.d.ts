@@ -5,7 +5,7 @@
 /// <reference types="@lynx-js/rspeedy/client" />
 
 declare const Codspeed: {
-  startBenchmark(name: string): void;
+  startBenchmark(): void;
   stopBenchmark(): void;
   setExecutedBenchmark(name: string): void;
   zeroStats(): void;

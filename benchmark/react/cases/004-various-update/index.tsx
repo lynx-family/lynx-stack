@@ -75,9 +75,7 @@ if (typeof Codspeed !== 'undefined' && __MAIN_THREAD__) {
         return old!.call(this, key, value);
       }
 
-      Codspeed.startBenchmark(
-        `${__REPO_FILEPATH__}::${__webpack_chunkname__}-setAttribute__${name}`,
-      );
+      Codspeed.startBenchmark();
       const ret = old!.call(this, key, value);
       Codspeed.stopBenchmark();
       Codspeed.setExecutedBenchmark(
@@ -100,9 +98,7 @@ if (typeof Codspeed !== 'undefined' && __BACKGROUND__) {
       ) {
         // we only care about the update that stops the benchmark
 
-        Codspeed.startBenchmark(
-          `${__REPO_FILEPATH__}::${__webpack_chunkname__}-setAttribute__BatchedValues`,
-        );
+        Codspeed.startBenchmark();
         const ret = old!.call(this, key, value);
         Codspeed.stopBenchmark();
         Codspeed.setExecutedBenchmark(

@@ -19,11 +19,7 @@ if (typeof Codspeed !== 'undefined' && __MAIN_THREAD__) {
       enableReuseNotification,
     ) => {
       const ids = __GetChildren(list).map(e => __GetElementUniqueID(e));
-      // reuse/create is only known after the call, so gate profiling on one
-      // coarse key; the executed uri below still records each variant.
-      Codspeed.startBenchmark(
-        `${PREFIX}::${__webpack_chunkname__}-componentAtIndex`,
-      );
+      Codspeed.startBenchmark();
       const sign = componentAtIndex(
         list,
         listID,
