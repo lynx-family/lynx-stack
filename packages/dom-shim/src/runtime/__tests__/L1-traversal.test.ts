@@ -319,3 +319,96 @@ describe('US-402 L1 traversal', () => {
     expect(wrapPapi(tree.text1)).toBeInstanceOf(L1ReadOnlyText);
   });
 });
+
+/**
+ * US-403 — previousSibling (O(n)) and previousElementSibling on a 5-sibling
+ * tree with mixed element + text children.
+ *
+ *   parent (uid=100, view)
+ *   ├── a (uid=101, view) — element
+ *   ├── b (uid=102, raw-text) — text
+ *   ├── c (uid=103, view) — element
+ *   ├── d (uid=104, view) — element
+ *   └── e (uid=105, raw-text) — text
+ */
+describe('US-403 previousSibling and previousElementSibling', () => {
+  let parent: MockNode;
+  let a: MockNode;
+  let b: MockNode;
+  let c: MockNode;
+  let d: MockNode;
+  let e: MockNode;
+
+  beforeAll(() => {
+    a = { tag: 'view', uid: 101, parent: undefined, children: [] };
+    b = { tag: 'raw-text', uid: 102, parent: undefined, children: [] };
+    c = { tag: 'view', uid: 103, parent: undefined, children: [] };
+    d = { tag: 'view', uid: 104, parent: undefined, children: [] };
+    e = { tag: 'raw-text', uid: 105, parent: undefined, children: [] };
+    parent = {
+      tag: 'view',
+      uid: 100,
+      parent: undefined,
+      children: [a, b, c, d, e],
+    };
+    a.parent = parent;
+    b.parent = parent;
+    c.parent = parent;
+    d.parent = parent;
+    e.parent = parent;
+    // The earlier tree's __XXX globals are still installed but they look up
+    // via __GetParent / __GetChildren which only depend on the MockNode
+    // shape — they continue to work for this new tree without rebinding.
+  });
+
+  it('previousSibling: first child returns null', () => {
+    expect(wrapPapi(a).previousSibling).toBeNull();
+  });
+
+  it('previousSibling: text after element returns the element', () => {
+    expect(wrapPapi(b).previousSibling?.isSameNode(wrapPapi(a))).toBe(true);
+  });
+
+  it('previousSibling: element after text returns the text', () => {
+    const prev = wrapPapi(c).previousSibling;
+    expect(prev).toBeInstanceOf(L1ReadOnlyText);
+    expect(prev?.isSameNode(wrapPapi(b))).toBe(true);
+  });
+
+  it('previousSibling: element after element', () => {
+    expect(wrapPapi(d).previousSibling?.isSameNode(wrapPapi(c))).toBe(true);
+  });
+
+  it('previousSibling: text after element (last sibling)', () => {
+    expect(wrapPapi(e).previousSibling?.isSameNode(wrapPapi(d))).toBe(true);
+  });
+
+  it('previousSibling: parentless node returns null', () => {
+    const detached: MockNode = {
+      tag: 'view',
+      uid: 999,
+      parent: undefined,
+      children: [],
+    };
+    expect(wrapPapi(detached).previousSibling).toBeNull();
+  });
+
+  it('previousElementSibling: skips text nodes', () => {
+    const cEl = wrapPapi(c);
+    expect(cEl).toBeInstanceOf(L1ReadOnlyElement);
+    // c's previous DOM sibling is text b; previousElementSibling skips to a.
+    const prevEl = (cEl as L1ReadOnlyElement).previousElementSibling;
+    expect(prevEl).not.toBeNull();
+    expect(prevEl?.isSameNode(wrapPapi(a))).toBe(true);
+  });
+
+  it('previousElementSibling: returns null for first element', () => {
+    const aEl = wrapPapi(a) as L1ReadOnlyElement;
+    expect(aEl.previousElementSibling).toBeNull();
+  });
+
+  it('previousElementSibling: adjacent element returns it directly', () => {
+    const dEl = wrapPapi(d) as L1ReadOnlyElement;
+    expect(dEl.previousElementSibling?.isSameNode(wrapPapi(c))).toBe(true);
+  });
+});

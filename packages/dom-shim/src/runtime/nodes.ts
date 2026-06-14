@@ -81,6 +81,28 @@ export abstract class L1ReadOnlyNode {
   }
 
   /**
+   * **O(n) in sibling count.** Lynx PAPI has no `__PrevElement`; the Shim
+   * walks `__GetChildren(parent)` and finds self via `__ElementIsEqual`.
+   * See Shim_Design.md §3.2 + §4.2.1.
+   *
+   * Returns `null` when this node is the first child, when it has no
+   * parent, or when self cannot be located in the parent's child list.
+   */
+  get previousSibling(): L1ReadOnlyNode | null {
+    const parent = __GetParent(this.papi);
+    if (!parent) return null;
+    const siblings = __GetChildren(parent);
+    for (let i = 0; i < siblings.length; i++) {
+      const sib = siblings[i];
+      if (sib !== undefined && __ElementIsEqual(sib, this.papi)) {
+        const prev = i > 0 ? siblings[i - 1] : undefined;
+        return prev === undefined ? null : wrapPapi(prev);
+      }
+    }
+    return null;
+  }
+
+  /**
    * Snapshot. Spec says `NodeList` is live, but PAPI gives us a one-shot
    * array via `__GetChildren`. The returned array is frozen so callers can
    * neither mutate it nor mistake it for live. See Shim_Design.md §4.2.1.
@@ -191,6 +213,33 @@ export class L1ReadOnlyElement extends L1ReadOnlyNode {
     // we ship the Lynx tag uppercased as a placeholder so spec-shaped
     // assertions can reason about it.
     return __GetTag(this.papi).toUpperCase();
+  }
+
+  /**
+   * **O(n) in sibling count** — walks parent's children to find self and
+   * the preceding element, skipping non-element siblings (raw text nodes).
+   * See Shim_Design.md §4.2.2 + §4.2.1.
+   */
+  get previousElementSibling(): L1ReadOnlyElement | null {
+    const parent = __GetParent(this.papi);
+    if (!parent) return null;
+    const siblings = __GetChildren(parent);
+    let selfIdx = -1;
+    for (let i = 0; i < siblings.length; i++) {
+      const sib = siblings[i];
+      if (sib !== undefined && __ElementIsEqual(sib, this.papi)) {
+        selfIdx = i;
+        break;
+      }
+    }
+    if (selfIdx <= 0) return null;
+    for (let j = selfIdx - 1; j >= 0; j--) {
+      const candidate = siblings[j];
+      if (candidate === undefined) continue;
+      const wrapped = wrapPapi(candidate);
+      if (wrapped instanceof L1ReadOnlyElement) return wrapped;
+    }
+    return null;
   }
 
   // TODO US-404..US-409: id, classList, attributes, dataset, selectors,
