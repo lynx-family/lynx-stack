@@ -3,11 +3,13 @@
 // LICENSE file in the root directory of this source tree.
 
 import { ReadOnlyNamedNodeMap, coerceAttributeValue } from './attributes.ts';
+import { getElementCache } from './cache.ts';
 import { ReadOnlyDOMTokenList } from './classlist.ts';
 import { makeReadOnlyDataset } from './dataset.ts';
-import { getBoundingClientRect } from './geometry.ts';
+import { getBoundingClientRect, invalidateGeometry } from './geometry.ts';
 import type { DOMRectReadOnly } from './geometry.ts';
 import type { ElementRef } from './papi-types.ts';
+import { scheduleFlush } from './scheduler.ts';
 
 /** DOM `Node.ELEMENT_NODE`. */
 export const NODE_TYPE_ELEMENT = 1;
@@ -302,6 +304,13 @@ export class L1ReadOnlyElement extends L1ReadOnlyNode {
    * other value to its string form. See Shim_Design.md §4.2.3.
    */
   getAttribute(name: string): string | null {
+    // Cache-aware: L2 setAttribute / removeAttribute are write-through, so
+    // their state is authoritative over PAPI read-back. See Shim_Design.md
+    // §5.2.3 and `shim:L2/attribute-removal-jsside-only`.
+    const cache = getElementCache(this.papi);
+    if (cache.removedAttrs.has(name)) return null;
+    const cached = cache.attrs.get(name);
+    if (cached !== undefined) return cached;
     const v = __GetAttributeByName(this.papi, name);
     return v === undefined || v === null ? null : coerceAttributeValue(v);
   }
@@ -490,7 +499,63 @@ export class L1ReadOnlyElement extends L1ReadOnlyNode {
  * factory will return the highest available tier per element (default = L3b
  * once that class lands; see US-475 for opt-in narrowing).
  */
+/**
+ * L2 writable element. See Shim_Design.md §5.1.
+ *
+ * Inherits L1's read surface. Adds atomic mutations whose immediate
+ * read-back via inherited L1 getters is consistent within the same JS
+ * frame. Every mutation calls `scheduleFlush()`.
+ *
+ * US-413 ships attribute mutation. US-414..US-426 fill the rest.
+ *
+ * Located here (rather than in safe-write.ts) so `wrapPapi` can dispatch
+ * to it without an ESLint-rejected import cycle.
+ */
+export class L2SafeWritableElement extends L1ReadOnlyElement {
+  /** Spec coercion + write-through cache. See Shim_Design.md §5.2.3. */
+  setAttribute(name: string, value: string): void {
+    const coerced = coerceAttributeValue(value);
+    __SetAttribute(this.papi, name, coerced);
+    const cache = getElementCache(this.papi);
+    cache.attrs.set(name, coerced);
+    cache.removedAttrs.delete(name);
+    invalidateGeometry(this.papi);
+    scheduleFlush();
+  }
+
+  /**
+   * Spec: attribute appears absent. Lynx PAPI has no __RemoveAttribute; we
+   * sentinel via `__SetAttribute(name, undefined)` + cache `removedAttrs`.
+   * See `shim:L2/attribute-removal-jsside-only`.
+   */
+  removeAttribute(name: string): void {
+    __SetAttribute(this.papi, name, undefined);
+    const cache = getElementCache(this.papi);
+    cache.attrs.delete(name);
+    cache.removedAttrs.add(name);
+    invalidateGeometry(this.papi);
+    scheduleFlush();
+  }
+
+  /** Spec toggleAttribute with optional force. Returns post-state. */
+  toggleAttribute(name: string, force?: boolean): boolean {
+    const present = this.getAttribute(name) !== null;
+    const shouldHave = force ?? !present;
+    if (shouldHave && !present) {
+      this.setAttribute(name, '');
+      return true;
+    }
+    if (!shouldHave && present) {
+      this.removeAttribute(name);
+      return false;
+    }
+    return shouldHave;
+  }
+}
+
 export function wrapPapi(ref: ElementRef): L1ReadOnlyNode {
   if (__GetTag(ref) === RAW_TEXT_TAG) return new L1ReadOnlyText(ref);
-  return new L1ReadOnlyElement(ref);
+  // Highest-tier currently available is L2. As later tiers ship, this
+  // dispatch ratchets up to L3a / L3b. See Shim_Design.md §2.
+  return new L2SafeWritableElement(ref);
 }

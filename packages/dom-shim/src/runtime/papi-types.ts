@@ -42,4 +42,9 @@ declare global {
     callback: (res: { code: number; data: unknown }) => void,
   ): ElementRef[];
   function __FlushElementTree(element?: ElementRef, options?: unknown): void;
+  function __SetAttribute(
+    current: ElementRef,
+    attrName: string,
+    value: unknown,
+  ): void;
 }

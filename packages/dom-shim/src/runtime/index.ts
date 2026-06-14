@@ -17,12 +17,19 @@ export {
   L1ReadOnlyElement,
   L1ReadOnlyNode,
   L1ReadOnlyText,
+  L2SafeWritableElement,
   NODE_TYPE_ELEMENT,
   NODE_TYPE_TEXT,
   getTextValue,
   recordTextValue,
   wrapPapi,
 } from './nodes.ts';
+export {
+  flush,
+  isAutoFlushEnabled,
+  scheduleFlush,
+  setAutoFlush,
+} from './scheduler.ts';
 export { document } from './document.ts';
 export { GEOMETRY_STALE_CODE, invalidateGeometry } from './geometry.ts';
 export type { DOMRectReadOnly } from './geometry.ts';

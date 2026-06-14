@@ -24,6 +24,13 @@ import type { ElementRef } from './papi-types.ts';
  */
 export interface ElementCache {
   attrs: Map<string, string>;
+  /**
+   * Attributes that were removed via L2 `removeAttribute`. Spec-equivalent
+   * presence absence test: `getAttribute(x)` returns null when `x` is in
+   * this set, even if the engine still has a `__SetAttribute(x, undefined)`
+   * remnant in its slot. See `shim:L2/attribute-removal-jsside-only`.
+   */
+  removedAttrs: Set<string>;
   classes: string[] | null;
   styles: Map<string, string>;
   dataset: Map<string, string>;
@@ -37,6 +44,7 @@ const cacheStore = new WeakMap<ElementRef, ElementCache>();
 function createCache(): ElementCache {
   return {
     attrs: new Map<string, string>(),
+    removedAttrs: new Set<string>(),
     classes: null,
     styles: new Map<string, string>(),
     dataset: new Map<string, string>(),
@@ -61,6 +69,7 @@ export function invalidate(ref: ElementRef, key: CacheKey): void {
   switch (key) {
     case 'attrs':
       c.attrs.clear();
+      c.removedAttrs.clear();
       break;
     case 'classes':
       c.classes = null;
