@@ -4,6 +4,7 @@
 
 import type { Route, RouteId } from '../types.ts';
 import { ROUTE_A } from './route-a-papi.ts';
+import { ROUTE_B } from './route-b-shim.ts';
 import { ALL_STUBS } from './stubs.ts';
 
 /**
@@ -11,11 +12,11 @@ import { ALL_STUBS } from './stubs.ts';
  *
  * Real implementations land per story and replace the stub here:
  *   - A: route-a-papi (raw Element PAPI direct output)   — US-105 ✅
- *   - B: route-b-shim (DOM Shim mock runner)             — US-106 ⏳
+ *   - B: route-b-shim (DOM Shim mock runner)             — US-106 ✅
  *   - C: route-c-a2ui (A2UI JSON DSL)                    — US-107 ⏳
  */
 export const ROUTES: Record<RouteId, Route> = {
   A: ROUTE_A,
-  B: ALL_STUBS.B,
+  B: ROUTE_B,
   C: ALL_STUBS.C,
 };
