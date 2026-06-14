@@ -4,7 +4,7 @@
 
 import { Parser } from 'htmlparser2';
 
-import { createMockPAPI } from './mock-papi.ts';
+import { ALLOWED_LYNX_TAGS, createMockPAPI } from './mock-papi.ts';
 import type { MockElement, MockPAPIInstance } from './mock-papi.ts';
 
 /**
@@ -93,6 +93,14 @@ export function createMockShim(): MockShimInstance {
 
   function createMock(tag: string): MockElement {
     const lower = tag.toLowerCase();
+    // Surface unknown tags with a DOM-style error so LLM repair rounds see
+    // a familiar message; without this, the mock-papi throw bubbles up as
+    // a bare "Unknown Lynx tag" which is less actionable from the shim path.
+    if (!TAG_MAP[lower] && !ALLOWED_LYNX_TAGS.has(lower)) {
+      throw new Error(
+        `Failed to execute 'createElement' on 'Document': '${tag}' is not a valid Lynx tag name.`,
+      );
+    }
     const factory = TAG_MAP[lower]
       ?? (() =>
         (papi.globals['__CreateElement'] as (

@@ -11,7 +11,10 @@ Completion promise: PHASE_1_5_DONE
   Code complete: puppeteer dep added, rasterize.ts created, harness wired to rasterize HTML → PNG before scoring, browser shutdown hook in place.
   Verified: dry-run smoke clean; manual rasterizePreview() smoke against /tmp/test-preview.html produced a 7,922-byte PNG using system Chrome (no Chromium download).
   BLOCKED on AC final bullet: re-running hard n=10 spot check requires OPENAI_API_KEY in env (also needed for US-153 re-run, US-154 verify, US-155 sweep). Both keys are NOT present in current session env — the boot prompt's "already in session env from a prior turn" assumption did not hold.
-- US-153: TODO — tighten mock PAPI / mock Shim to reject unknown tags
+- US-153: PARTIAL (code) — tighten mock PAPI / mock Shim to reject unknown tags
+  Code complete: ALLOWED_LYNX_TAGS exported from mock-papi; __CreateElement throws on unknown tag; mock-shim createMock wraps that as a DOM-style "Failed to execute 'createElement' on 'Document'" error; route-c-schema.json tag enum expanded to match.
+  Verified manual smoke: __CreateElement('view') ok, __CreateElement('div') throws "Unknown Lynx tag: div"; document.createElement('view') ok, document.createElement('div') throws the DOM-style error. Typecheck + dry-run + schema-validate + lint all clean.
+  BLOCKED on AC final bullet: re-running hard n=10 → SPOT_CHECK_HARD_N10_V3.{md,json} requires API keys (same blocker as US-152).
 - US-154: TODO — multi-model support + cost estimator
 - US-155: TODO — n=50 full sweep + decision document (HARD STOP gate before sweep)
 

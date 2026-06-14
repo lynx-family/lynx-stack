@@ -18,7 +18,23 @@
       "properties": {
         "tag": {
           "type": "string",
-          "enum": ["page", "view", "text", "image", "scroll-view", "list", "input", "button"]
+          "enum": [
+            "page",
+            "view",
+            "text",
+            "image",
+            "scroll-view",
+            "list",
+            "raw-text",
+            "wrapper",
+            "none",
+            "if",
+            "for",
+            "block",
+            "input",
+            "button",
+            "svg"
+          ]
         },
         "id": { "type": "string" },
         "class": { "type": "string" },

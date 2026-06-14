@@ -24,6 +24,29 @@
  */
 export type MockTagName = string;
 
+/**
+ * Whitelist of tag names the mock PAPI accepts in `__CreateElement(tag)`.
+ * Anything else throws so Route A/B see the same strictness Route C's JSON
+ * schema enum enforces. Extend conservatively as the real Lynx engine grows.
+ */
+export const ALLOWED_LYNX_TAGS: ReadonlySet<string> = new Set([
+  'page',
+  'view',
+  'text',
+  'image',
+  'scroll-view',
+  'list',
+  'raw-text',
+  'wrapper',
+  'none',
+  'if',
+  'for',
+  'block',
+  'input',
+  'button',
+  'svg',
+]);
+
 export interface MockElement {
   uid: number;
   tag: MockTagName;
@@ -152,6 +175,9 @@ export function createMockPAPI(): MockPAPIInstance {
       _info?: unknown,
     ): MockElement {
       record('__CreateElement', [tag, _comParentUniID, _info]);
+      if (!ALLOWED_LYNX_TAGS.has(tag)) {
+        throw new Error(`Unknown Lynx tag: ${tag}`);
+      }
       counters.creates++;
       return newElement(tag);
     },
