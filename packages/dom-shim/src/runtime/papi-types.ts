@@ -77,4 +77,5 @@ declare global {
     ele: ElementRef,
     options: Record<string, unknown>,
   ): ElementRef;
+  function __CreateWrapperElement(parentComponentUniId: number): ElementRef;
 }

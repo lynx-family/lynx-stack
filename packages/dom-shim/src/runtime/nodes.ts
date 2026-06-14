@@ -605,8 +605,24 @@ export class L2SafeWritableElement extends L1ReadOnlyElement {
   /**
    * Spec appendChild — removes the child from its current parent first.
    * Returns the appended child. See Shim_Design.md §5.2.6.
+   *
+   * When `child` is a `ShimDocumentFragment` (US-424 / OQ-S.5), the
+   * fragment is flattened: all its children move to `this` and the
+   * fragment becomes empty, matching DOM spec semantics. JS-side flatten
+   * runs unconditionally regardless of whether Lynx's wrapper element
+   * auto-flattens, so the contract is portable.
    */
   appendChild<T extends L1ReadOnlyNode>(child: T): T {
+    if (child instanceof ShimDocumentFragment) {
+      const fragChildren = [...__GetChildren(child.papi)];
+      for (const c of fragChildren) {
+        __RemoveElement(child.papi, c);
+        __AppendElement(this.papi, c);
+      }
+      invalidateGeometrySubtree(this.papi);
+      scheduleFlush();
+      return child;
+    }
     detachFromParent(child);
     __AppendElement(this.papi, child.papi);
     invalidateGeometrySubtree(this.papi);
@@ -816,6 +832,34 @@ function invalidateGeometrySubtree(papi: ElementRef): void {
   } catch {
     // PAPI may not expose __GetChildren in some contexts; ignore.
   }
+}
+
+/**
+ * Spec DocumentFragment. See Shim_Design.md §9.1 + OQ-S.5.
+ *
+ * Maps to `__CreateWrapperElement(parentComponentUniId)`. Treated as a
+ * regular L2 container for child-management methods; the spec "flatten
+ * on append" semantic is enforced by the receiving parent's appendChild
+ * (above), which detects ShimDocumentFragment and moves its children
+ * one-by-one.
+ */
+export class ShimDocumentFragment extends L2SafeWritableElement {
+  // The class body is intentionally empty — all behavior is inherited.
+  // The instanceof brand alone differentiates fragments from regular
+  // elements at the appendChild dispatch site.
+}
+
+/**
+ * Build a fresh DocumentFragment. `parentComponentUniId` defaults to 0
+ * because most usages don't carry component context (e.g. tests, ad-hoc
+ * builders). Real callers from `document.createDocumentFragment` (US-425)
+ * will pass the page's component id.
+ */
+export function createDocumentFragment(
+  parentComponentUniId = 0,
+): ShimDocumentFragment {
+  const ref = __CreateWrapperElement(parentComponentUniId);
+  return new ShimDocumentFragment(ref);
 }
 
 export function wrapPapi(ref: ElementRef): L1ReadOnlyNode {
