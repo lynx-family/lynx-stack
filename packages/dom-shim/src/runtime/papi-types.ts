@@ -47,4 +47,7 @@ declare global {
     attrName: string,
     value: unknown,
   ): void;
+  function __SetID(node: ElementRef, id: string | null): void;
+  function __SetClasses(node: ElementRef, className: string | undefined): void;
+  function __AddClass(current: ElementRef, className: string): void;
 }

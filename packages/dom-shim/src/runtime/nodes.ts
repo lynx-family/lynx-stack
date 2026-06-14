@@ -291,6 +291,10 @@ export class L1ReadOnlyElement extends L1ReadOnlyNode {
   }
 
   get className(): string {
+    // Cache-aware so L2 className setter (US-414) and classList mutators
+    // (US-415) are immediately observable here.
+    const cache = getElementCache(this.papi);
+    if (cache.classes !== null) return cache.classes.join(' ');
     return __GetClasses(this.papi).join(' ');
   }
 
@@ -512,6 +516,40 @@ export class L1ReadOnlyElement extends L1ReadOnlyNode {
  * to it without an ESLint-rejected import cycle.
  */
 export class L2SafeWritableElement extends L1ReadOnlyElement {
+  /**
+   * Spec id setter. See Shim_Design.md §5.2.1. PAPI exposes __SetID with a
+   * direct read-back via __GetID; no JS-side cache needed here.
+   */
+  override set id(value: string) {
+    __SetID(this.papi, value);
+    scheduleFlush();
+  }
+
+  override get id(): string {
+    // Re-state the L1 getter so TypeScript accepts the setter pair on the
+    // subclass without ambiguity.
+    return __GetID(this.papi) ?? '';
+  }
+
+  /**
+   * Spec className setter. Splits on whitespace, stores in cache so the
+   * L1 className/classList getters observe the just-written value within
+   * the same JS frame. See Shim_Design.md §5.2.1.
+   */
+  override set className(value: string) {
+    const tokens = value.split(/\s+/).filter(Boolean);
+    __SetClasses(this.papi, value);
+    const cache = getElementCache(this.papi);
+    cache.classes = tokens;
+    scheduleFlush();
+  }
+
+  override get className(): string {
+    const cache = getElementCache(this.papi);
+    if (cache.classes !== null) return cache.classes.join(' ');
+    return __GetClasses(this.papi).join(' ');
+  }
+
   /** Spec coercion + write-through cache. See Shim_Design.md §5.2.3. */
   setAttribute(name: string, value: string): void {
     const coerced = coerceAttributeValue(value);
