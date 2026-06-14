@@ -112,6 +112,14 @@
           "type": "string",
           "pattern": "^P\\d{3}$"
         },
+        "prompt_category": {
+          "type": "string",
+          "enum": ["interactive", "form", "layout", "list", "media", "navigation", "data-display"]
+        },
+        "prompt_complexity": {
+          "type": "string",
+          "enum": ["trivial", "simple", "moderate", "complex"]
+        },
         "route": {
           "type": "string",
           "enum": ["A", "B", "C"]

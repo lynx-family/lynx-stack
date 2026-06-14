@@ -14,7 +14,9 @@ Completion promise: PHASE_1_SMOKE_DONE
 - US-106: DONE — implement Route B DOM Shim mock runner
 - US-107: DONE — implement Route C A2UI JSON runner
 - US-108: DONE — implement visual similarity scoring
-- US-109: TODO — generate Phase 1 comparison report + smoke test (acceptance gate)
+- US-109: DONE (infra) — generate Phase 1 comparison report + smoke test
+        Dry-run smoke gate passes; live smoke run BLOCKED on ANTHROPIC_API_KEY.
+        See packages/dom-shim/SMOKE_TEST_README.md.
 
 ## Notes for next iteration
 
@@ -125,6 +127,32 @@ US-109 (report + smoke gate): Render report.md + report.json. Run with
 If ANTHROPIC_API_KEY is unset in env, the real smoke run cannot execute. Per PRD
 section 11 instruction 11, that counts as a blocker requiring human judgment —
 report it and do NOT emit the promise tag.
+
+## CURRENT STATE — Ralph future iterations read this first
+
+All Phase 1 user stories (US-101..109) are CODE COMPLETE and committed. The
+dry-run smoke gate passes end-to-end. The live (non-dry-run) smoke run is the
+only remaining step, and it requires ANTHROPIC_API_KEY in the environment.
+
+**If ANTHROPIC_API_KEY is still unset when you start an iteration:**
+- Do NOT write more code. Everything is already implemented.
+- Do NOT run pnpm install or any benchmark.
+- Just check env, report the blocker in one short paragraph, and end the turn
+  without emitting PHASE_1_SMOKE_DONE. The human-in-the-loop has to either
+  (a) set ANTHROPIC_API_KEY and rerun, or (b) interrupt the loop.
+- The loop will hit max-iterations 50 eventually and stop on its own.
+
+**If ANTHROPIC_API_KEY IS set when you start an iteration:**
+1. Run: pnpm -F @lynx-js/dom-shim benchmark --routes A,B,C --prompts P001,P002 --rounds 1
+   (no --dry-run, real LLM calls; small smoke, 6 records, ~30-90 seconds)
+2. Copy the generated report.md to packages/dom-shim/SMOKE_TEST_LIVE.md and the
+   report.json to packages/dom-shim/SMOKE_TEST_LIVE.json.
+3. Update packages/dom-shim/SMOKE_TEST_README.md noting the live run completed.
+4. Commit with message "feat(dom-shim): US-109 — live smoke test passes".
+5. Output PHASE_1_SMOKE_DONE inside a promise tag.
+
+DO NOT run the full 50-prompt sweep under any circumstances. The gate is the
+2-prompt smoke only.
 
 ### Iteration 1 — US-101 set up workspace package skeleton
 - Files: packages/dom-shim/{package.json,tsconfig.json,README.md,src/index.ts,benchmarks/.gitkeep}

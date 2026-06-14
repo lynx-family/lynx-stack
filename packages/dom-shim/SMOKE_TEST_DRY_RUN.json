@@ -1,0 +1,155 @@
+{
+  "schema_version": "1.0.0",
+  "run_id": "run-2026-06-14T05-10-02-264Z",
+  "started_at": "2026-06-14T05:10:02.264Z",
+  "finished_at": "2026-06-14T05:10:02.274Z",
+  "model_id": "claude-opus-4-7",
+  "rounds": 1,
+  "concurrency": 4,
+  "summary": {
+    "A": {
+      "parse_ok_rate": 1,
+      "render_ok_rate": 1,
+      "convergence_rate": 1,
+      "visual_score_mean": null,
+      "sample_size": 2
+    },
+    "B": {
+      "parse_ok_rate": 1,
+      "render_ok_rate": 1,
+      "convergence_rate": 1,
+      "visual_score_mean": null,
+      "sample_size": 2
+    },
+    "C": {
+      "parse_ok_rate": 1,
+      "render_ok_rate": 1,
+      "convergence_rate": 1,
+      "visual_score_mean": null,
+      "sample_size": 2
+    }
+  },
+  "per_category": {
+    "interactive": {
+      "A": {
+        "parse_ok_rate": 1,
+        "render_ok_rate": 1,
+        "convergence_rate": 1,
+        "visual_score_mean": null,
+        "sample_size": 2
+      },
+      "B": {
+        "parse_ok_rate": 1,
+        "render_ok_rate": 1,
+        "convergence_rate": 1,
+        "visual_score_mean": null,
+        "sample_size": 2
+      },
+      "C": {
+        "parse_ok_rate": 1,
+        "render_ok_rate": 1,
+        "convergence_rate": 1,
+        "visual_score_mean": null,
+        "sample_size": 2
+      }
+    }
+  },
+  "records": [
+    {
+      "prompt_id": "P001",
+      "prompt_category": "interactive",
+      "prompt_complexity": "trivial",
+      "route": "A",
+      "round": 1,
+      "generated_code": "// dry-run stub for route A — P001 round 1",
+      "parse_ok": true,
+      "render_ok": true,
+      "screenshot_path": null,
+      "error_log": "",
+      "visual_score": null,
+      "visual_rationale": null,
+      "timestamp": "2026-06-14T05:10:02.266Z",
+      "model_id": "claude-opus-4-7"
+    },
+    {
+      "prompt_id": "P001",
+      "prompt_category": "interactive",
+      "prompt_complexity": "trivial",
+      "route": "B",
+      "round": 1,
+      "generated_code": "<!-- dry-run stub for route B — P001 round 1 -->",
+      "parse_ok": true,
+      "render_ok": true,
+      "screenshot_path": null,
+      "error_log": "",
+      "visual_score": null,
+      "visual_rationale": null,
+      "timestamp": "2026-06-14T05:10:02.267Z",
+      "model_id": "claude-opus-4-7"
+    },
+    {
+      "prompt_id": "P001",
+      "prompt_category": "interactive",
+      "prompt_complexity": "trivial",
+      "route": "C",
+      "round": 1,
+      "generated_code": "{\"tag\":\"page\",\"children\":[{\"tag\":\"text\",\"children\":[{\"text\":\"dry-run stub for route C — P001 round 1\"}]}]}",
+      "parse_ok": true,
+      "render_ok": true,
+      "screenshot_path": null,
+      "error_log": "",
+      "visual_score": null,
+      "visual_rationale": null,
+      "timestamp": "2026-06-14T05:10:02.267Z",
+      "model_id": "claude-opus-4-7"
+    },
+    {
+      "prompt_id": "P002",
+      "prompt_category": "interactive",
+      "prompt_complexity": "trivial",
+      "route": "A",
+      "round": 1,
+      "generated_code": "// dry-run stub for route A — P002 round 1",
+      "parse_ok": true,
+      "render_ok": true,
+      "screenshot_path": null,
+      "error_log": "",
+      "visual_score": null,
+      "visual_rationale": null,
+      "timestamp": "2026-06-14T05:10:02.267Z",
+      "model_id": "claude-opus-4-7"
+    },
+    {
+      "prompt_id": "P002",
+      "prompt_category": "interactive",
+      "prompt_complexity": "trivial",
+      "route": "B",
+      "round": 1,
+      "generated_code": "<!-- dry-run stub for route B — P002 round 1 -->",
+      "parse_ok": true,
+      "render_ok": true,
+      "screenshot_path": null,
+      "error_log": "",
+      "visual_score": null,
+      "visual_rationale": null,
+      "timestamp": "2026-06-14T05:10:02.268Z",
+      "model_id": "claude-opus-4-7"
+    },
+    {
+      "prompt_id": "P002",
+      "prompt_category": "interactive",
+      "prompt_complexity": "trivial",
+      "route": "C",
+      "round": 1,
+      "generated_code": "{\"tag\":\"page\",\"children\":[{\"tag\":\"text\",\"children\":[{\"text\":\"dry-run stub for route C — P002 round 1\"}]}]}",
+      "parse_ok": true,
+      "render_ok": true,
+      "screenshot_path": null,
+      "error_log": "",
+      "visual_score": null,
+      "visual_rationale": null,
+      "timestamp": "2026-06-14T05:10:02.268Z",
+      "model_id": "claude-opus-4-7"
+    }
+  ]
+}

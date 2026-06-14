@@ -114,6 +114,8 @@ export async function runBenchmark(
       }
       const rec: BenchmarkRecord = {
         prompt_id: prompt.id,
+        prompt_category: prompt.category,
+        prompt_complexity: prompt.complexity,
         route: route.id,
         round,
         generated_code: result.generated_code,
@@ -318,6 +320,65 @@ function renderReportMarkdown(report: BenchmarkReport): string {
     lines.push('');
   }
 
+  // Per-prompt detail.
+  lines.push('## Per-prompt detail');
+  lines.push('');
+  lines.push(
+    '| Prompt | Category | Complexity | A render | B render | C render |',
+  );
+  lines.push(
+    '| ------ | -------- | ---------- | -------- | -------- | -------- |',
+  );
+  const promptIds = [...new Set(report.records.map(r => r.prompt_id))].sort();
+  for (const pid of promptIds) {
+    const aRecs = report.records.filter(r =>
+      r.prompt_id === pid && r.route === 'A'
+    );
+    const bRecs = report.records.filter(r =>
+      r.prompt_id === pid && r.route === 'B'
+    );
+    const cRecs = report.records.filter(r =>
+      r.prompt_id === pid && r.route === 'C'
+    );
+    const first = report.records.find(r => r.prompt_id === pid);
+    const cat = first?.prompt_category ?? '?';
+    const cpx = first?.prompt_complexity ?? '?';
+    lines.push(
+      `| ${pid} | ${cat} | ${cpx} | ${renderCellOf(aRecs)} | ${
+        renderCellOf(bRecs)
+      } | ${renderCellOf(cRecs)} |`,
+    );
+  }
+  lines.push('');
+
+  // Failure analysis: top 5 errors per route.
+  lines.push('## Failure analysis (top error patterns per route)');
+  lines.push('');
+  for (const routeId of ['A', 'B', 'C'] as const) {
+    const failures = report.records
+      .filter(r => r.route === routeId && !r.render_ok && r.error_log)
+      .map(r => firstLine(r.error_log));
+    if (failures.length === 0) {
+      lines.push(`### Route ${routeId} — no failures (or all dry-run).`);
+      lines.push('');
+      continue;
+    }
+    const counts = new Map<string, number>();
+    for (const e of failures) {
+      const key = bucketError(e);
+      counts.set(key, (counts.get(key) ?? 0) + 1);
+    }
+    const top = [...counts.entries()].sort((a, b) => b[1] - a[1]).slice(0, 5);
+    lines.push(`### Route ${routeId}`);
+    lines.push('');
+    lines.push('| Count | Pattern |');
+    lines.push('| ----- | ------- |');
+    for (const [pat, n] of top) {
+      lines.push(`| ${n} | ${escapePipes(pat)} |`);
+    }
+    lines.push('');
+  }
+
   // Recommendation: trigger if one route's render_ok_rate exceeds others by >= 20pp
   const renderOkByRoute = Object.entries(report.summary)
     .filter((e): e is [string, RouteMetrics] => e[1] !== undefined)
@@ -338,7 +399,48 @@ function renderReportMarkdown(report: BenchmarkReport): string {
     }
   }
 
+  // Caveats / blockers section.
+  const hasVisualScores = report.records.some(r =>
+    r.visual_score !== null && r.visual_score !== undefined
+  );
+  if (!hasVisualScores) {
+    lines.push('## Caveats');
+    lines.push('');
+    lines.push(
+      '- **Visual scoring not measured.** All `visual_score` values are null. '
+        + 'This is expected when running with `--dry-run` (no real LLM calls) or '
+        + 'when `ANTHROPIC_API_KEY` is unset. M1/M2/M3 metrics are still '
+        + 'meaningful; M4 is absent from the aggregate.',
+    );
+    lines.push('');
+  }
+
   return lines.join('\n');
+}
+
+function renderCellOf(recs: BenchmarkRecord[]): string {
+  if (recs.length === 0) return '—';
+  const passing = recs.find(r => r.render_ok);
+  if (passing) return `✅ (r${passing.round})`;
+  return `❌ (${recs.length}r)`;
+}
+
+function firstLine(s: string): string {
+  const i = s.indexOf('\n');
+  return (i >= 0 ? s.slice(0, i) : s).trim();
+}
+
+function bucketError(s: string): string {
+  // Collapse line numbers, hex ids, and timestamps to make similar errors
+  // bucket together.
+  return s
+    .replace(/\b\d{2,}\b/g, '<N>')
+    .replace(/0x[0-9a-f]+/gi, '<HEX>')
+    .slice(0, 120);
+}
+
+function escapePipes(s: string): string {
+  return s.replace(/\|/g, '\\|');
 }
 
 function fmt(n: number): string {

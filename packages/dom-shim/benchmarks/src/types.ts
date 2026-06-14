@@ -31,6 +31,8 @@ export interface CorpusEntry {
 /** Per-(prompt, route, round) record. Streamed as JSONL during the run. */
 export interface BenchmarkRecord {
   prompt_id: string;
+  prompt_category?: CorpusCategory;
+  prompt_complexity?: CorpusComplexity;
   route: RouteId;
   round: number;
   generated_code: string;
