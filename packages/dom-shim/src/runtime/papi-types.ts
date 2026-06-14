@@ -20,4 +20,7 @@ declare global {
   function __GetPageElement(): ElementRef;
   function __GetID(node: ElementRef): string;
   function __GetClasses(node: ElementRef): string[];
+  function __GetAttributeByName(node: ElementRef, name: string): unknown;
+  function __GetAttributeNames(node: ElementRef): string[];
+  function __GetAttributes(node: ElementRef): Record<string, unknown>;
 }

@@ -2,6 +2,7 @@
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
 
+import { ReadOnlyNamedNodeMap, coerceAttributeValue } from './attributes.ts';
 import { ReadOnlyDOMTokenList } from './classlist.ts';
 import type { ElementRef } from './papi-types.ts';
 
@@ -256,6 +257,32 @@ export class L1ReadOnlyElement extends L1ReadOnlyNode {
 
   get classList(): ReadOnlyDOMTokenList {
     return new ReadOnlyDOMTokenList(this.papi);
+  }
+
+  /**
+   * Spec: returns string or null. PAPI returns `unknown` (any) per the
+   * Lynx type-element-api d.ts; coerce undefined/null to null and any
+   * other value to its string form. See Shim_Design.md §4.2.3.
+   */
+  getAttribute(name: string): string | null {
+    const v = __GetAttributeByName(this.papi, name);
+    return v === undefined || v === null ? null : coerceAttributeValue(v);
+  }
+
+  getAttributeNames(): string[] {
+    return __GetAttributeNames(this.papi);
+  }
+
+  hasAttribute(name: string): boolean {
+    return this.getAttribute(name) !== null;
+  }
+
+  hasAttributes(): boolean {
+    return __GetAttributeNames(this.papi).length > 0;
+  }
+
+  get attributes(): ReadOnlyNamedNodeMap {
+    return new ReadOnlyNamedNodeMap(this.papi);
   }
 
   /**
