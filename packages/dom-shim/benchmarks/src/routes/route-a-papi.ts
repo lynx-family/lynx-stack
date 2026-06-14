@@ -27,7 +27,7 @@ function loadPapiReference(): string {
   return cachedPapiReference;
 }
 
-function buildSystemPrompt(): string {
+export function buildSystemPrompt(): string {
   return `You are generating Lynx UI code that calls the low-level Element PAPI directly.
 
 Output a single TypeScript code block (triple-backtick fenced \`\`\`typescript ... \`\`\`)

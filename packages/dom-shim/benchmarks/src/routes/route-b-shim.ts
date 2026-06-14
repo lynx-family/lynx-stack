@@ -10,7 +10,7 @@ import { callLLM, extractCodeBlock } from '../llm/anthropic-client.ts';
 import { createMockShim } from '../mocks/mock-shim.ts';
 import type { Route, RouteContext, RouteRoundResult } from '../types.ts';
 
-const SYSTEM_PROMPT =
+export const SYSTEM_PROMPT =
   `You are generating Lynx UI code through a Web-like DOM Shim layer.
 
 Output a single HTML+JS code block (triple-backtick fenced \`\`\`html ... \`\`\`).

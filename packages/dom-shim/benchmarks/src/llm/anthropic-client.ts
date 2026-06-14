@@ -218,3 +218,15 @@ export function extractCodeBlock(text: string): string {
   if (fence?.[1]) return fence[1].trim();
   return text.trim();
 }
+
+/**
+ * Cheap input-token estimator using the canonical `chars / 4` heuristic. Good
+ * enough for budget gates; we deliberately avoid pulling tiktoken (not already
+ * in this monorepo) just to refine the estimate by a few percent.
+ *
+ * Both system and user are summed because every API call counts them as
+ * input tokens.
+ */
+export function estimateInputTokens(system: string, user: string): number {
+  return Math.ceil((system.length + user.length) / 4);
+}

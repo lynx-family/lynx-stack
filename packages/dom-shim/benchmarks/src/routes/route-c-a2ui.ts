@@ -49,7 +49,8 @@ interface TextNode {
 }
 type Node = ElementNode | TextNode;
 
-const SYSTEM_PROMPT = `You are generating Lynx UI as an A2UI-style JSON tree.
+export const SYSTEM_PROMPT =
+  `You are generating Lynx UI as an A2UI-style JSON tree.
 
 Output a single JSON code block (triple-backtick fenced \`\`\`json ... \`\`\`).
 

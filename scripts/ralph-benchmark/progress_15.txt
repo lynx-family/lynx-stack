@@ -15,7 +15,19 @@ Completion promise: PHASE_1_5_DONE
   Code complete: ALLOWED_LYNX_TAGS exported from mock-papi; __CreateElement throws on unknown tag; mock-shim createMock wraps that as a DOM-style "Failed to execute 'createElement' on 'Document'" error; route-c-schema.json tag enum expanded to match.
   Verified manual smoke: __CreateElement('view') ok, __CreateElement('div') throws "Unknown Lynx tag: div"; document.createElement('view') ok, document.createElement('div') throws the DOM-style error. Typecheck + dry-run + schema-validate + lint all clean.
   BLOCKED on AC final bullet: re-running hard n=10 → SPOT_CHECK_HARD_N10_V3.{md,json} requires API keys (same blocker as US-152).
-- US-154: TODO — multi-model support + cost estimator
+- US-154: DONE — multi-model support + cost estimator
+  Added estimateInputTokens(system, user) (chars/4 heuristic) to anthropic-client.ts.
+  Exported buildSystemPrompt() from route-a-papi and SYSTEM_PROMPT consts from route-b and route-c so the CLI can size each route's prompt without firing an LLM call.
+  cli.ts: --models gpt-4o,claude-opus-4-7 (multi-model; overrides --model); --estimate-only walks corpus + routes and prints `Estimated cost for <model>: $mid (range $lo..$hi)` per model and a totals line, exit 0 without any LLM call. Multi-model run writes report.{md,json} under out_dir/<model_id>/ + a cross_model_summary.md side-by-side table.
+  Verified:
+    * pnpm typecheck — clean
+    * eslint + biome on changed files — clean (after --fix reordered imports + dropped a redundant cast)
+    * dry-run smoke — exit 0
+    * `--estimate-only --all --routes A,B,C --rounds 3 --models gpt-4o,claude-opus-4-7` prints:
+        Estimated cost for gpt-4o: $6.34 (range $3.64..$9.04)
+        Estimated cost for claude-opus-4-7: $44.14 (range $23.89..$64.39)
+        Estimated cost: $50.49 (range $27.54..$73.44)
+      Inside PRD §5.2's $20..$60 envelope.
 - US-155: TODO — n=50 full sweep + decision document (HARD STOP gate before sweep)
 
 ## Notes for next iteration
