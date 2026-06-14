@@ -7,7 +7,7 @@ Completion promise: PHASE_1_SMOKE_DONE
 ## Story Status
 
 - US-101: DONE — set up workspace package skeleton
-- US-102: TODO — curate 50-prompt corpus
+- US-102: DONE — curate 50-prompt corpus
 - US-103: TODO — define scoring rubric and result schema
 - US-104: TODO — build benchmark harness CLI
 - US-105: TODO — implement Route A raw PAPI runner
@@ -25,6 +25,12 @@ Phase 1 is mock-only — no real Lynx engine integration, no real device tests.
 Do NOT run the full 50-prompt sweep. Stop at US-109 smoke test gate.
 
 ## Completed iterations log
+
+### Iteration 2 — US-102 curate 50-prompt corpus
+- Files: packages/dom-shim/benchmarks/corpus/prompts.json (50 entries), packages/dom-shim/benchmarks/scripts/validate-corpus.ts
+- Distribution: category 8/7/8/7/5/7/8 (interactive/form/layout/list/media/navigation/data-display), complexity 15/19/11/5 (trivial/simple/moderate/complex)
+- Verification: pnpm -F @lynx-js/dom-shim test:corpus-validate exits 0; typecheck exits 0
+- Notes: validator enforces both shape (id format /^P\d{3}$/, unique IDs, non-empty capabilities, prompt >= 20 chars) and distribution windows.
 
 ### Iteration 1 — US-101 set up workspace package skeleton
 - Files: packages/dom-shim/{package.json,tsconfig.json,README.md,src/index.ts,benchmarks/.gitkeep}

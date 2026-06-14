@@ -12,6 +12,7 @@
   "type": "module",
   "scripts": {
     "benchmark": "node --experimental-strip-types benchmarks/cli.ts",
+    "test:corpus-validate": "node --experimental-strip-types benchmarks/scripts/validate-corpus.ts",
     "typecheck": "tsc --noEmit"
   }
 }
