@@ -3,6 +3,8 @@
   "compilerOptions": {
     "rootDir": ".",
     "noEmit": true,
+    "allowImportingTsExtensions": true,
+    "exactOptionalPropertyTypes": false,
   },
   "include": [
     "benchmarks/**/*.ts",

@@ -8,8 +8,8 @@ Completion promise: PHASE_1_SMOKE_DONE
 
 - US-101: DONE — set up workspace package skeleton
 - US-102: DONE — curate 50-prompt corpus
-- US-103: TODO — define scoring rubric and result schema
-- US-104: TODO — build benchmark harness CLI
+- US-103: DONE — define scoring rubric and result schema
+- US-104: DONE — build benchmark harness CLI (stub routes)
 - US-105: TODO — implement Route A raw PAPI runner
 - US-106: TODO — implement Route B DOM Shim mock runner
 - US-107: TODO — implement Route C A2UI JSON runner
@@ -26,18 +26,45 @@ Always prepend: `export PATH="/Users/bytedance/.nvm/versions/node/v22.19.0/bin:$
 before any pnpm/node/tsc/eslint/biome command. Without this, every `pnpm install`
 and `pnpm -F` invocation fails with ERR_PNPM_UNSUPPORTED_ENGINE.
 
-**Lint contract (learned the hard way in iteration 2):**
+**Lint contract (learned the hard way in iterations 2 and 3):**
 - ESLint disallows `process.exit()` — use `throw new Error()` and let it propagate
 - Biome disallows `console.log` — use `console.info` instead
 - TypeScript `--strictest` + `verbatimModuleSyntax` + `isolatedDeclarations` are on
 - Pre-commit hook runs eslint+biome+dprint in lint-staged; auto-fix only catches some
 - After Write/Edit, dprint may reformat (trailing commas, blank lines after MD headers).
   System reminders surface the post-format file content — trust them.
+- ESLint `n/file-extension-in-import: ['error', 'always']` rewrites `.ts` to `.js` on
+  --fix, which breaks Node's --experimental-strip-types resolver. Worked around with
+  a per-package override at packages/dom-shim/**/*.ts in eslint.config.js.
+- Biome `useAwait`: async functions must use `await`. If a Route stub returns sync,
+  drop the `async` keyword and use `Promise.resolve`/`Promise.reject` explicitly.
+- ESLint `n/no-unsupported-features/node-builtins`: parseArgs (added in Node 20)
+  requires the package to declare `engines.node` of at least ^22. Add to package.json.
+- tsconfig: must set `allowImportingTsExtensions: true` and
+  `exactOptionalPropertyTypes: false` to be permissive enough for Phase 1 mock code.
 
 Phase 1 is mock-only — no real Lynx engine integration, no real device tests.
 Do NOT run the full 50-prompt sweep. Stop at US-109 smoke test gate.
 
 ## Completed iterations log
+
+### Iteration 3 — US-103 rubric+schema, US-104 harness CLI (stubs)
+- US-103 files: benchmarks/RUBRIC.md, benchmarks/schema/result.schema.json,
+  benchmarks/scripts/validate-schema.ts (1 positive + 6 negative cases with ajv)
+- US-104 files: benchmarks/src/types.ts (Route, RouteContext, BenchmarkRecord,
+  BenchmarkReport), benchmarks/src/harness.ts (runBenchmark with concurrency loop,
+  per-cell sequential rounds with error-feedback, JSONL streaming via fs.appendFile,
+  per-route + per-category aggregation, report.json + report.md emission,
+  ≥20pp recommendation rule), benchmarks/src/utils/retry.ts (exponential backoff
+  3x retry on transient errors), benchmarks/src/routes/stubs.ts (A/B/C stubs that
+  throw outside dry-run), benchmarks/cli.ts (parseArgs-based flag parser with
+  --routes/--prompts/--all/--rounds/--model/--out/--concurrency/--dry-run flags)
+- Added benchmarks/.gitignore (reports/, cache/)
+- Added eslint.config.js override (n/file-extension-in-import: off for dom-shim)
+- Added engines.node and ajv deps to package.json
+- Verification: pnpm -F @lynx-js/dom-shim benchmark --dry-run --routes A,B,C
+  --prompts P001,P002 --rounds 1 runs end-to-end, generates 6 records, writes
+  report.json + report.md; typecheck, eslint, biome, schema-validate all pass.
 
 ### Iteration 2 — US-102 curate 50-prompt corpus
 - Files: packages/dom-shim/benchmarks/corpus/prompts.json (50 entries), packages/dom-shim/benchmarks/scripts/validate-corpus.ts

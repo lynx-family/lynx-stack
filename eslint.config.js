@@ -379,6 +379,16 @@ export default tseslint.config(
       },
     },
   },
+  // Phase 1 DOM Shim benchmark runs via Node 22's --experimental-strip-types,
+  // which requires literal .ts imports (n/file-extension-in-import's "always"
+  // default appends .js, breaking the resolver). Package is private/experimental
+  // and lives under packages/dom-shim only.
+  {
+    files: ['packages/dom-shim/**/*.ts'],
+    rules: {
+      'n/file-extension-in-import': 'off',
+    },
+  },
   // CommonJS-related
   {
     files: ['**/*.cjs'],
