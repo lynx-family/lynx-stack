@@ -89,7 +89,12 @@
             { "type": "null" }
           ]
         },
-        "sample_size": { "type": "integer", "minimum": 0 }
+        "sample_size": { "type": "integer", "minimum": 0 },
+        "total_input_tokens": { "type": "integer", "minimum": 0 },
+        "total_output_tokens": { "type": "integer", "minimum": 0 },
+        "estimated_cost_usd": { "type": "number", "minimum": 0 },
+        "mean_tokens_per_prompt": { "type": "number", "minimum": 0 },
+        "pricing_missing": { "type": "boolean" }
       }
     },
     "Record": {

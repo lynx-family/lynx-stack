@@ -54,6 +54,16 @@ export interface RouteMetrics {
   convergence_rate: number;
   visual_score_mean?: number | null;
   sample_size?: number;
+  /** Sum of input tokens across all records for this route. */
+  total_input_tokens?: number;
+  /** Sum of output tokens across all records for this route. */
+  total_output_tokens?: number;
+  /** Sum of estimated USD cost across all records for this route. */
+  estimated_cost_usd?: number;
+  /** (total_input_tokens + total_output_tokens) / sample_size. */
+  mean_tokens_per_prompt?: number;
+  /** True if the run's model_id is not in MODEL_PRICING — cost is 0 placeholder. */
+  pricing_missing?: boolean;
 }
 
 /** Final benchmark report. Schema-validated by result.schema.json. */

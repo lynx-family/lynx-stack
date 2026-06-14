@@ -17,6 +17,7 @@ import type {
   RouteId,
   RouteMetrics,
 } from './types.ts';
+import { estimateUsdCost, hasPricing } from './utils/pricing.ts';
 import { retryWithBackoff } from './utils/retry.ts';
 
 const SCHEMA_VERSION = '1.0.0';
@@ -185,7 +186,12 @@ interface AggregateInput {
 function aggregate(input: AggregateInput): BenchmarkReport {
   const summary: Partial<Record<RouteId, RouteMetrics>> = {};
   for (const r of input.routes) {
-    summary[r] = computeMetrics(input.prompts, input.records, r);
+    summary[r] = computeMetrics(
+      input.prompts,
+      input.records,
+      r,
+      input.model_id,
+    );
   }
 
   const per_category: Partial<
@@ -196,7 +202,12 @@ function aggregate(input: AggregateInput): BenchmarkReport {
     const promptsInCat = input.prompts.filter(p => p.category === cat);
     const inner: Partial<Record<RouteId, RouteMetrics>> = {};
     for (const r of input.routes) {
-      inner[r] = computeMetrics(promptsInCat, input.records, r);
+      inner[r] = computeMetrics(
+        promptsInCat,
+        input.records,
+        r,
+        input.model_id,
+      );
     }
     per_category[cat] = inner;
   }
@@ -219,6 +230,7 @@ function computeMetrics(
   prompts: CorpusEntry[],
   records: BenchmarkRecord[],
   route: RouteId,
+  modelId: string,
 ): RouteMetrics {
   const n = prompts.length;
   if (n === 0) {
@@ -228,6 +240,10 @@ function computeMetrics(
       convergence_rate: 0,
       visual_score_mean: null,
       sample_size: 0,
+      total_input_tokens: 0,
+      total_output_tokens: 0,
+      estimated_cost_usd: 0,
+      mean_tokens_per_prompt: 0,
     };
   }
 
@@ -236,6 +252,8 @@ function computeMetrics(
   let converged = 0;
   let visualSum = 0;
   let visualCount = 0;
+  let totalInputTokens = 0;
+  let totalOutputTokens = 0;
 
   for (const p of prompts) {
     const cellRecords = records
@@ -251,7 +269,21 @@ function computeMetrics(
       visualSum += last.visual_score;
       visualCount++;
     }
+    // Sum token usage across all rounds for this cell.
+    for (const rec of cellRecords) {
+      if (rec.tokens_used) {
+        totalInputTokens += rec.tokens_used.input;
+        totalOutputTokens += rec.tokens_used.output;
+      }
+    }
   }
+
+  const estimatedCostUsd = estimateUsdCost(
+    modelId,
+    totalInputTokens,
+    totalOutputTokens,
+  );
+  const pricingMissing = !hasPricing(modelId);
 
   return {
     parse_ok_rate: parseOkOneShot / n,
@@ -259,6 +291,11 @@ function computeMetrics(
     convergence_rate: converged / n,
     visual_score_mean: visualCount > 0 ? visualSum / visualCount : null,
     sample_size: n,
+    total_input_tokens: totalInputTokens,
+    total_output_tokens: totalOutputTokens,
+    estimated_cost_usd: estimatedCostUsd,
+    mean_tokens_per_prompt: (totalInputTokens + totalOutputTokens) / n,
+    ...(pricingMissing ? { pricing_missing: true } : {}),
   };
 }
 
@@ -276,10 +313,10 @@ function renderReportMarkdown(report: BenchmarkReport): string {
   lines.push('## Summary');
   lines.push('');
   lines.push(
-    '| Route | parse_ok | render_ok | convergence | visual_score (mean) | n |',
+    '| Route | parse_ok | render_ok | convergence | visual_score (mean) | tokens (in/out) | cost (USD) | n |',
   );
   lines.push(
-    '| ----- | -------- | --------- | ----------- | ------------------- | - |',
+    '| ----- | -------- | --------- | ----------- | ------------------- | --------------- | ---------- | - |',
   );
   for (const [routeId, m] of Object.entries(report.summary)) {
     if (!m) continue;
@@ -290,7 +327,18 @@ function renderReportMarkdown(report: BenchmarkReport): string {
         m.visual_score_mean === null || m.visual_score_mean === undefined
           ? 'n/a'
           : fmt(m.visual_score_mean)
-      } | ${m.sample_size ?? 0} |`,
+      } | ${m.total_input_tokens ?? 0} / ${m.total_output_tokens ?? 0} | ${
+        fmtUsd(m.estimated_cost_usd ?? 0)
+      }${m.pricing_missing ? ' *' : ''} | ${m.sample_size ?? 0} |`,
+    );
+  }
+  // Surface missing-pricing footnote if any route's model has no listed price.
+  if (
+    Object.values(report.summary).some(m => m?.pricing_missing)
+  ) {
+    lines.push('');
+    lines.push(
+      `_\\* cost column shows \`$0.00\` because model \`${report.model_id}\` is not in pricing table; see \`benchmarks/src/utils/pricing.ts\`._`,
     );
   }
   lines.push('');
@@ -300,10 +348,10 @@ function renderReportMarkdown(report: BenchmarkReport): string {
     lines.push(`### ${cat}`);
     lines.push('');
     lines.push(
-      '| Route | parse_ok | render_ok | convergence | visual_score (mean) |',
+      '| Route | parse_ok | render_ok | convergence | visual_score (mean) | tokens (in/out) | cost (USD) |',
     );
     lines.push(
-      '| ----- | -------- | --------- | ----------- | ------------------- |',
+      '| ----- | -------- | --------- | ----------- | ------------------- | --------------- | ---------- |',
     );
     for (const [routeId, m] of Object.entries(byRoute ?? {})) {
       if (!m) continue;
@@ -314,6 +362,8 @@ function renderReportMarkdown(report: BenchmarkReport): string {
           m.visual_score_mean === null || m.visual_score_mean === undefined
             ? 'n/a'
             : fmt(m.visual_score_mean)
+        } | ${m.total_input_tokens ?? 0} / ${m.total_output_tokens ?? 0} | ${
+          fmtUsd(m.estimated_cost_usd ?? 0)
         } |`,
       );
     }
@@ -324,10 +374,10 @@ function renderReportMarkdown(report: BenchmarkReport): string {
   lines.push('## Per-prompt detail');
   lines.push('');
   lines.push(
-    '| Prompt | Category | Complexity | A render | B render | C render |',
+    '| Prompt | Category | Complexity | A render | B render | C render | cost (USD) |',
   );
   lines.push(
-    '| ------ | -------- | ---------- | -------- | -------- | -------- |',
+    '| ------ | -------- | ---------- | -------- | -------- | -------- | ---------- |',
   );
   const promptIds = [...new Set(report.records.map(r => r.prompt_id))].sort();
   for (const pid of promptIds) {
@@ -343,10 +393,11 @@ function renderReportMarkdown(report: BenchmarkReport): string {
     const first = report.records.find(r => r.prompt_id === pid);
     const cat = first?.prompt_category ?? '?';
     const cpx = first?.prompt_complexity ?? '?';
+    const promptCost = computePromptCost(report.records, pid, report.model_id);
     lines.push(
       `| ${pid} | ${cat} | ${cpx} | ${renderCellOf(aRecs)} | ${
         renderCellOf(bRecs)
-      } | ${renderCellOf(cRecs)} |`,
+      } | ${renderCellOf(cRecs)} | ${fmtUsd(promptCost)} |`,
     );
   }
   lines.push('');
@@ -445,6 +496,29 @@ function escapePipes(s: string): string {
 
 function fmt(n: number): string {
   return n.toFixed(3);
+}
+
+function fmtUsd(n: number): string {
+  if (n === 0) return '$0.00';
+  if (n < 0.01) return `$${n.toFixed(4)}`;
+  return `$${n.toFixed(2)}`;
+}
+
+function computePromptCost(
+  records: BenchmarkRecord[],
+  promptId: string,
+  modelId: string,
+): number {
+  let inputTokens = 0;
+  let outputTokens = 0;
+  for (const r of records) {
+    if (r.prompt_id !== promptId) continue;
+    if (r.tokens_used) {
+      inputTokens += r.tokens_used.input;
+      outputTokens += r.tokens_used.output;
+    }
+  }
+  return estimateUsdCost(modelId, inputTokens, outputTokens);
 }
 
 // Streaming JSONL writer kept as an alternative to fs.appendFile, exported for
