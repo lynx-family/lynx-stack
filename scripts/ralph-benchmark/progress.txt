@@ -10,7 +10,7 @@ Completion promise: PHASE_1_SMOKE_DONE
 - US-102: DONE — curate 50-prompt corpus
 - US-103: DONE — define scoring rubric and result schema
 - US-104: DONE — build benchmark harness CLI (stub routes)
-- US-105: TODO — implement Route A raw PAPI runner
+- US-105: DONE — implement Route A raw PAPI runner
 - US-106: TODO — implement Route B DOM Shim mock runner
 - US-107: TODO — implement Route C A2UI JSON runner
 - US-108: TODO — implement visual similarity scoring
@@ -47,6 +47,39 @@ Phase 1 is mock-only — no real Lynx engine integration, no real device tests.
 Do NOT run the full 50-prompt sweep. Stop at US-109 smoke test gate.
 
 ## Completed iterations log
+
+### Iteration 4 — US-105 Route A raw PAPI runner
+- Files: benchmarks/src/mocks/mock-papi.ts (~30 PAPI fns with call counters,
+  element-tree builder, toPreviewHTML() for screenshot pipeline),
+  benchmarks/src/llm/anthropic-client.ts (Anthropic SDK wrapper with
+  ANTHROPIC_API_KEY check + extractCodeBlock helper),
+  benchmarks/src/routes/route-a-papi.ts (system prompt embeds the full
+  element-papi-reference.d.ts.txt copied from
+  @lynx-js/type-element-api@0.0.8, parseTypeScript via ts.createSourceFile
+  for parse_ok, vm.runInNewContext sandbox for runtime with __ROUTE_ERROR__
+  capture, render_ok = creates>=1 && appends>=1 && flushes>=1),
+  benchmarks/src/routes/registry.ts (ROUTES = {A: real, B: stub, C: stub})
+- benchmarks/src/routes/element-papi-reference.d.ts.txt (476 lines, copied
+  from npm @lynx-js/type-element-api@0.0.8/types/element-api.d.ts)
+- package.json: added @anthropic-ai/sdk, typescript devDeps
+- cli.ts: imports ROUTES from registry instead of ALL_STUBS
+- Lint gotchas this iteration:
+  * `MockTagName: 'page' | ... | string` collapses — biome's
+    no-redundant-type-constituents fires. Fix: drop literals, just use `string`.
+  * `unicorn/no-array-callback-reference`: never `.map(fn)`, always
+    `.map(x => fn(x))`.
+  * `unicorn/no-nested-ternary`: hoist nested ternaries into lookup objects
+    (e.g. HTML_ESCAPES table).
+  * Biome `useAwait` again on Route A runner — handled via early return for
+    dry_run + Promise chain for real path.
+  * `@typescript-eslint/no-base-to-string` on `String(unknownObj)`: must
+    explicitly check `instanceof Error` or property-narrow before String().
+  * Biome doesn't recognize biome-ignore-start/-end pair syntax. For empty
+    function bodies, use IIFE with named `noop = () => { void 0; }`.
+- Verification: pnpm -F @lynx-js/dom-shim benchmark --dry-run --routes A,B,C
+  --prompts P001,P002 --rounds 1 exits 0 with 6 records; real run without
+  ANTHROPIC_API_KEY throws "ANTHROPIC_API_KEY is not set..." clearly;
+  typecheck + eslint + biome all clean.
 
 ### Iteration 3 — US-103 rubric+schema, US-104 harness CLI (stubs)
 - US-103 files: benchmarks/RUBRIC.md, benchmarks/schema/result.schema.json,

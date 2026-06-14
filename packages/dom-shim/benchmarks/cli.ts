@@ -8,7 +8,7 @@ import { fileURLToPath } from 'node:url';
 import { parseArgs } from 'node:util';
 
 import { runBenchmark } from './src/harness.ts';
-import { ALL_STUBS } from './src/routes/stubs.ts';
+import { ROUTES } from './src/routes/registry.ts';
 import type { CorpusEntry, RouteId } from './src/types.ts';
 
 const __filename = fileURLToPath(import.meta.url);
@@ -170,7 +170,7 @@ async function main(): Promise<void> {
   console.info(`   model=${flags.model} concurrency=${flags.concurrency}`);
   console.info(`   out=${flags.out}`);
 
-  const report = await runBenchmark(ALL_STUBS, {
+  const report = await runBenchmark(ROUTES, {
     routes: flags.routes,
     prompts: flags.prompts,
     rounds: flags.rounds,
