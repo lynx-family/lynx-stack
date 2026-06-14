@@ -718,6 +718,17 @@ export class L2SafeWritableElement extends L1ReadOnlyElement {
     scheduleFlush();
   }
 
+  /**
+   * Spec cloneNode — `deep=true` clones descendants. PAPI exposes
+   * `__CloneElement(papi, { deep })`. The returned ref is fresh, so its
+   * write-through cache (per US-412) starts empty. See Shim_Design.md
+   * §5.2.7.
+   */
+  cloneNode(deep?: boolean): L1ReadOnlyNode {
+    const cloned = __CloneElement(this.papi, { deep: deep ?? false });
+    return wrapPapi(cloned);
+  }
+
   /** Spec ChildNode.remove — no-op if detached. */
   remove(): void {
     const parent = this.parentNode;

@@ -73,4 +73,8 @@ declare global {
     oldElement: ElementRef,
   ): void;
   function __CreateRawText(text: string, info?: unknown): ElementRef;
+  function __CloneElement(
+    ele: ElementRef,
+    options: Record<string, unknown>,
+  ): ElementRef;
 }
