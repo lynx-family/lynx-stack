@@ -2,7 +2,7 @@
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
 
-import { ensureClasses, invalidate } from './cache.ts';
+import { ensureClasses, getElementCache, invalidate } from './cache.ts';
 import type { ElementRef } from './papi-types.ts';
 import { scheduleFlush } from './scheduler.ts';
 
@@ -25,6 +25,11 @@ export class ReadOnlyDOMTokenList implements Iterable<string> {
   }
 
   protected snapshot(): string[] {
+    // Consult the write-through cache first so an L1 narrowed view of an
+    // L2-mutated element still observes the latest writes per US-419 (the
+    // tier-narrowing invariant). Falls back to PAPI on cold cache.
+    const cache = getElementCache(this.papi);
+    if (cache.classes !== null) return cache.classes;
     return __GetClasses(this.papi);
   }
 

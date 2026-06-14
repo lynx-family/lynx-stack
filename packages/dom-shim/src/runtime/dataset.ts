@@ -25,20 +25,38 @@ export function makeReadOnlyDataset(
   const handler: ProxyHandler<Record<string, string>> = {
     get(_target, key): string | undefined {
       if (typeof key !== 'string') return undefined;
+      // US-419: consult cache so L1 narrowed views observe L2 mutations.
+      const cached = getElementCache(papi).dataset.get(key);
+      if (cached !== undefined) return cached;
       const v = __GetDataByKey(papi, key);
       if (v === undefined || v === null) return undefined;
       return coerceAttributeValue(v);
     },
     has(_target, key): boolean {
       if (typeof key !== 'string') return false;
+      if (getElementCache(papi).dataset.has(key)) return true;
       const v = __GetDataByKey(papi, key);
       return v !== undefined && v !== null;
     },
     ownKeys(_target): string[] {
-      return Object.keys(__GetDataset(papi));
+      const cache = getElementCache(papi);
+      const all = new Set<string>([
+        ...Object.keys(__GetDataset(papi)),
+        ...cache.dataset.keys(),
+      ]);
+      return [...all];
     },
     getOwnPropertyDescriptor(_target, key): PropertyDescriptor | undefined {
       if (typeof key !== 'string') return undefined;
+      const cached = getElementCache(papi).dataset.get(key);
+      if (cached !== undefined) {
+        return {
+          configurable: true,
+          enumerable: true,
+          writable: false,
+          value: cached,
+        };
+      }
       const v = __GetDataByKey(papi, key);
       if (v === undefined || v === null) return undefined;
       return {
