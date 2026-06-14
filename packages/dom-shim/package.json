@@ -10,9 +10,15 @@
   },
   "license": "Apache-2.0",
   "type": "module",
+  "exports": {
+    ".": "./src/index.ts",
+    "./runtime": "./src/runtime/index.ts",
+    "./tiers": "./src/runtime/tiers.ts"
+  },
   "scripts": {
     "benchmark": "node --experimental-strip-types benchmarks/cli.ts",
     "test:corpus-validate": "node --experimental-strip-types benchmarks/scripts/validate-corpus.ts",
+    "test:runtime": "vitest run src/runtime",
     "test:schema-validate": "node --experimental-strip-types benchmarks/scripts/validate-schema.ts",
     "typecheck": "tsc --noEmit"
   },
@@ -23,7 +29,8 @@
     "htmlparser2": "^9.1.0",
     "openai": "^4.74.0",
     "puppeteer": "^23.11.1",
-    "typescript": "5.9.3"
+    "typescript": "5.9.3",
+    "vitest": "^3.2.4"
   },
   "engines": {
     "node": "^22 || ^24"
