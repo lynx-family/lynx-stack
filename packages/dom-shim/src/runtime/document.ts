@@ -3,8 +3,8 @@
 // LICENSE file in the root directory of this source tree.
 
 import {
-  L1ReadOnlyElement,
   L1ReadOnlyText,
+  L2SafeWritableElement,
   createDocumentFragment as _createDocumentFragment,
   recordTextValue,
   wrapPapi,
@@ -133,16 +133,16 @@ export function _resetDocumentForTesting(): void {
 }
 
 export interface ShimDocument {
-  readonly documentElement: L1ReadOnlyElement;
-  readonly body: L1ReadOnlyElement;
-  createElement(tag: string): L1ReadOnlyElement;
+  readonly documentElement: L2SafeWritableElement;
+  readonly body: L2SafeWritableElement;
+  createElement(tag: string): L2SafeWritableElement;
   createTextNode(data: string): L1ReadOnlyText;
   createDocumentFragment(): ShimDocumentFragment;
-  querySelector(selector: string): L1ReadOnlyElement | null;
-  querySelectorAll(selector: string): readonly L1ReadOnlyElement[];
-  getElementById(id: string): L1ReadOnlyElement | null;
-  getElementsByClassName(name: string): readonly L1ReadOnlyElement[];
-  getElementsByTagName(tag: string): readonly L1ReadOnlyElement[];
+  querySelector(selector: string): L2SafeWritableElement | null;
+  querySelectorAll(selector: string): readonly L2SafeWritableElement[];
+  getElementById(id: string): L2SafeWritableElement | null;
+  getElementsByClassName(name: string): readonly L2SafeWritableElement[];
+  getElementsByTagName(tag: string): readonly L2SafeWritableElement[];
 }
 
 /**
@@ -150,17 +150,17 @@ export interface ShimDocument {
  */
 export const document: ShimDocument = Object.freeze({
   /** Page-root wrapped as an Element. */
-  get documentElement(): L1ReadOnlyElement {
-    return wrapPapi(__GetPageElement()) as L1ReadOnlyElement;
+  get documentElement(): L2SafeWritableElement {
+    return wrapPapi(__GetPageElement()) as L2SafeWritableElement;
   },
 
   /** See OQ-S.7 resolution in resolveBody(). */
-  get body(): L1ReadOnlyElement {
-    return wrapPapi(resolveBody()) as L1ReadOnlyElement;
+  get body(): L2SafeWritableElement {
+    return wrapPapi(resolveBody()) as L2SafeWritableElement;
   },
 
-  createElement(tag: string): L1ReadOnlyElement {
-    return wrapPapi(buildElement(tag)) as L1ReadOnlyElement;
+  createElement(tag: string): L2SafeWritableElement {
+    return wrapPapi(buildElement(tag)) as L2SafeWritableElement;
   },
 
   createTextNode(data: string): L1ReadOnlyText {
@@ -173,38 +173,36 @@ export const document: ShimDocument = Object.freeze({
     return _createDocumentFragment(pageComponentId());
   },
 
-  querySelector(selector: string): L1ReadOnlyElement | null {
+  querySelector(selector: string): L2SafeWritableElement | null {
     const ref = __QuerySelector(__GetPageElement(), selector, {
       onlyCurrentComponent: false,
     });
     if (ref === undefined || ref === null) return null;
     const wrapped = wrapPapi(ref);
-    return wrapped instanceof L1ReadOnlyElement ? wrapped : null;
+    return wrapped instanceof L2SafeWritableElement ? wrapped : null;
   },
 
-  querySelectorAll(selector: string): readonly L1ReadOnlyElement[] {
+  querySelectorAll(selector: string): readonly L2SafeWritableElement[] {
     const refs = __QuerySelectorAll(__GetPageElement(), selector, {
       onlyCurrentComponent: false,
     });
-    const out: L1ReadOnlyElement[] = [];
+    const out: L2SafeWritableElement[] = [];
     for (const r of refs) {
       const w = wrapPapi(r);
-      if (w instanceof L1ReadOnlyElement) out.push(w);
+      if (w instanceof L2SafeWritableElement) out.push(w);
     }
     return Object.freeze(out);
   },
 
-  getElementById(id: string): L1ReadOnlyElement | null {
-    // Spec id selector via querySelector; spec requires escaping but the
-    // common case of a simple identifier is what we support today.
+  getElementById(id: string): L2SafeWritableElement | null {
     return this.querySelector(`#${id}`);
   },
 
-  getElementsByClassName(name: string): readonly L1ReadOnlyElement[] {
+  getElementsByClassName(name: string): readonly L2SafeWritableElement[] {
     return this.querySelectorAll(`.${name}`);
   },
 
-  getElementsByTagName(tag: string): readonly L1ReadOnlyElement[] {
+  getElementsByTagName(tag: string): readonly L2SafeWritableElement[] {
     return this.querySelectorAll(tag.toLowerCase());
   },
 });
