@@ -18,6 +18,7 @@ export {
   L1ReadOnlyNode,
   L1ReadOnlyText,
   L2SafeWritableElement,
+  L3aEventfulElement,
   NODE_TYPE_ELEMENT,
   NODE_TYPE_TEXT,
   ShimDocumentFragment,
@@ -26,6 +27,16 @@ export {
   recordTextValue,
   wrapPapi,
 } from './nodes.ts';
+export {
+  EVENT_PHASE_AT_TARGET,
+  EVENT_PHASE_BUBBLING,
+  EVENT_PHASE_CAPTURING,
+  EVENT_PHASE_NONE,
+  ShimEvent,
+  ShimKeyboardEvent,
+  ShimMouseEvent,
+  fireEvent,
+} from './events.ts';
 export {
   flush,
   isAutoFlushEnabled,

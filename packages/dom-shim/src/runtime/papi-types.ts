@@ -99,4 +99,10 @@ declare global {
     comParentUniID: number,
     info?: unknown,
   ): ElementRef;
+  function __AddEvent(
+    node: ElementRef,
+    type: string,
+    name: string,
+    func: string | object | undefined,
+  ): void;
 }

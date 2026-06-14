@@ -6,6 +6,12 @@ import { ReadOnlyNamedNodeMap, coerceAttributeValue } from './attributes.ts';
 import { getElementCache } from './cache.ts';
 import { L2DOMTokenList, ReadOnlyDOMTokenList } from './classlist.ts';
 import { makeReadOnlyDataset, makeWritableDataset } from './dataset.ts';
+import { addListener, removeListener } from './events.ts';
+import type {
+  ShimAddEventListenerOptions,
+  ShimEventListener,
+  ShimEventListenerOptions,
+} from './events.ts';
 import { getBoundingClientRect, invalidateGeometry } from './geometry.ts';
 import type { DOMRectReadOnly } from './geometry.ts';
 import type { ElementRef } from './papi-types.ts';
@@ -835,6 +841,42 @@ function invalidateGeometrySubtree(papi: ElementRef): void {
 }
 
 /**
+ * L3a EventfulElement. See Shim_Design.md §6.
+ *
+ * Inherits all L2 surface and adds `addEventListener` /
+ * `removeEventListener` via the multiplex trampoline in events.ts.
+ * `dispatchEvent` throws L4 (US-435).
+ *
+ * Lives in nodes.ts (rather than a dedicated module) because wrapPapi
+ * dispatches to it and the import cycle that would arise from
+ * splitting the file is rejected by ESLint import/no-cycle.
+ */
+export class L3aEventfulElement extends L2SafeWritableElement {
+  addEventListener(
+    type: string,
+    listener: ShimEventListener,
+    options: ShimAddEventListenerOptions | boolean = {},
+  ): void {
+    addListener(this.papi, type, listener, options);
+  }
+
+  removeEventListener(
+    type: string,
+    listener: ShimEventListener,
+    options: ShimEventListenerOptions | boolean = {},
+  ): void {
+    removeListener(this.papi, type, listener, options);
+  }
+
+  /** US-435 L4 throw. Spec dispatchEvent on synthetic events. */
+  dispatchEvent(_event: unknown): boolean {
+    throw new Error(
+      'L4/synthetic-dispatch: dispatchEvent on synthetic events is unsupported. Trigger the event via the engine or use the Shim trampoline directly.',
+    );
+  }
+}
+
+/**
  * Spec DocumentFragment. See Shim_Design.md §9.1 + OQ-S.5.
  *
  * Maps to `__CreateWrapperElement(parentComponentUniId)`. Treated as a
@@ -864,7 +906,7 @@ export function createDocumentFragment(
 
 export function wrapPapi(ref: ElementRef): L1ReadOnlyNode {
   if (__GetTag(ref) === RAW_TEXT_TAG) return new L1ReadOnlyText(ref);
-  // Highest-tier currently available is L2. As later tiers ship, this
-  // dispatch ratchets up to L3a / L3b. See Shim_Design.md §2.
-  return new L2SafeWritableElement(ref);
+  // Highest tier currently available is L3a. Once L3b ships (US-441+),
+  // dispatch ratchets up. See Shim_Design.md §2.
+  return new L3aEventfulElement(ref);
 }
