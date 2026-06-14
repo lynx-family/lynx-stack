@@ -111,3 +111,48 @@ export function camelToKebab(name: string): string {
   if (name.startsWith('--')) return name;
   return name.replace(camelRe, (_, c: string) => `-${c.toLowerCase()}`);
 }
+
+/**
+ * Style proxy that exposes camelCase property accessors. See Shim_Design.md
+ * §5.2.5.
+ *
+ * `el.style.backgroundColor = 'red'` routes to `setProperty('backgroundColor',
+ * 'red')` which kebab-normalizes. Reads symmetrically route to
+ * `getPropertyValue`. Class methods (`setProperty`, `removeProperty`, ...)
+ * are preserved by passing through to the underlying class instance.
+ */
+export type L2CSSStyleProxy = L2CSSStyleDeclaration & Record<string, string>;
+
+const RESERVED_KEYS = new Set([
+  'setProperty',
+  'getPropertyValue',
+  'getPropertyPriority',
+  'removeProperty',
+  'length',
+  'item',
+  'cssText',
+  'refresh',
+  'constructor',
+  'papi',
+]);
+
+export function createWritableStyle(papi: ElementRef): L2CSSStyleProxy {
+  const decl = new L2CSSStyleDeclaration(papi);
+  return new Proxy(decl, {
+    get(target, prop): unknown {
+      if (
+        typeof prop === 'symbol' || RESERVED_KEYS.has(prop) || prop in target
+      ) {
+        return Reflect.get(target, prop);
+      }
+      return target.getPropertyValue(prop);
+    },
+    set(target, prop, value): boolean {
+      if (typeof prop === 'symbol' || RESERVED_KEYS.has(prop)) {
+        return Reflect.set(target, prop, value);
+      }
+      target.setProperty(prop, String(value));
+      return true;
+    },
+  }) as L2CSSStyleProxy;
+}
