@@ -72,4 +72,5 @@ declare global {
     newElement: ElementRef,
     oldElement: ElementRef,
   ): void;
+  function __CreateRawText(text: string, info?: unknown): ElementRef;
 }

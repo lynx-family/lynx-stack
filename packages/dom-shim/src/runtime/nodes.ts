@@ -647,6 +647,87 @@ export class L2SafeWritableElement extends L1ReadOnlyElement {
     return child;
   }
 
+  /**
+   * Spec ParentNode.append — accepts string OR node; strings become raw-text
+   * nodes via `__CreateRawText`. See Shim_Design.md §5.1.
+   */
+  append(...nodes: (L1ReadOnlyNode | string)[]): void {
+    for (const n of nodes) {
+      const ref = nodeOrStringToRef(n);
+      __AppendElement(this.papi, ref);
+    }
+    invalidateGeometrySubtree(this.papi);
+    scheduleFlush();
+  }
+
+  /** Spec ParentNode.prepend — inserts before existing children, in order. */
+  prepend(...nodes: (L1ReadOnlyNode | string)[]): void {
+    const first = __FirstElement(this.papi);
+    for (const n of nodes) {
+      const ref = nodeOrStringToRef(n);
+      if (first) {
+        __InsertElementBefore(this.papi, ref, first);
+      } else {
+        __AppendElement(this.papi, ref);
+      }
+    }
+    invalidateGeometrySubtree(this.papi);
+    scheduleFlush();
+  }
+
+  /** Spec ChildNode.before — inserts in parent before `this`. */
+  before(...nodes: (L1ReadOnlyNode | string)[]): void {
+    const parent = this.parentNode;
+    if (parent === null) return;
+    for (const n of nodes) {
+      const ref = nodeOrStringToRef(n);
+      __InsertElementBefore(parent.papi, ref, this.papi);
+    }
+    invalidateGeometrySubtree(parent.papi);
+    scheduleFlush();
+  }
+
+  /** Spec ChildNode.after — inserts in parent after `this`. */
+  after(...nodes: (L1ReadOnlyNode | string)[]): void {
+    const parent = this.parentNode;
+    if (parent === null) return;
+    const next = __NextElement(this.papi);
+    for (const n of nodes) {
+      const ref = nodeOrStringToRef(n);
+      if (next) {
+        __InsertElementBefore(parent.papi, ref, next);
+      } else {
+        __AppendElement(parent.papi, ref);
+      }
+    }
+    invalidateGeometrySubtree(parent.papi);
+    scheduleFlush();
+  }
+
+  /** Spec ChildNode.replaceWith — inserts replacements before self then removes self. */
+  replaceWith(...nodes: (L1ReadOnlyNode | string)[]): void {
+    const parent = this.parentNode;
+    if (parent === null) return;
+    for (const n of nodes) {
+      const ref = nodeOrStringToRef(n);
+      __InsertElementBefore(parent.papi, ref, this.papi);
+    }
+    __RemoveElement(parent.papi, this.papi);
+    invalidateGeometrySubtree(parent.papi);
+    invalidateGeometrySubtree(this.papi);
+    scheduleFlush();
+  }
+
+  /** Spec ChildNode.remove — no-op if detached. */
+  remove(): void {
+    const parent = this.parentNode;
+    if (parent === null) return;
+    __RemoveElement(parent.papi, this.papi);
+    invalidateGeometrySubtree(parent.papi);
+    invalidateGeometrySubtree(this.papi);
+    scheduleFlush();
+  }
+
   /** Spec replaceChild — throws NotFoundError when oldChild.parentNode !== this. */
   replaceChild<O extends L1ReadOnlyNode, N extends L1ReadOnlyNode>(
     newChild: N,
@@ -693,6 +774,21 @@ function detachFromParent(node: L1ReadOnlyNode): void {
   const parent = node.parentNode;
   if (parent === null) return;
   __RemoveElement(parent.papi, node.papi);
+}
+
+/**
+ * Resolve an `(L1ReadOnlyNode | string)` argument to a PAPI ElementRef.
+ * Strings become fresh raw-text nodes via `__CreateRawText`; the text value
+ * is registered with the side table so `L1ReadOnlyText.nodeValue` reads it.
+ */
+function nodeOrStringToRef(arg: L1ReadOnlyNode | string): ElementRef {
+  if (typeof arg === 'string') {
+    const ref = __CreateRawText(arg);
+    recordTextValue(ref, arg);
+    return ref;
+  }
+  detachFromParent(arg);
+  return arg.papi;
 }
 
 /**
