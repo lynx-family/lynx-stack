@@ -9,6 +9,8 @@ import type { GenericComponentProps, Surface } from '../../store/types.js';
 import '../../../styles/catalog/Tabs.css';
 
 /**
+ * Props for the built-in Tabs catalog component.
+ *
  * @a2uiCatalog Tabs
  */
 export interface TabsProps extends GenericComponentProps {
@@ -54,6 +56,9 @@ function TabsContent(props: {
   return <NodeRenderer component={child} surface={props.surface} />;
 }
 
+/**
+ * Render a tabbed container whose tabs reference child component ids.
+ */
 export function Tabs(props: TabsProps): import('@lynx-js/react').ReactNode {
   const { surface, tabs } = props;
   const [selectedIndex, setSelectedIndex] = useState(0);

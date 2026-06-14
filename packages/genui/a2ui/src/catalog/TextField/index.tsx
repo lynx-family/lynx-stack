@@ -15,6 +15,8 @@ import type { GenericComponentProps } from '../../store/types.js';
 import '../../../styles/catalog/TextField.css';
 
 /**
+ * Props for the built-in TextField catalog component.
+ *
  * @a2uiCatalog TextField
  */
 export interface TextFieldProps extends GenericComponentProps {
@@ -42,6 +44,9 @@ export interface TextFieldProps extends GenericComponentProps {
   }>;
 }
 
+/**
+ * Render a single-line or multi-line text input bound to the data model.
+ */
 export function TextField(
   props: TextFieldProps,
 ): import('@lynx-js/react').ReactNode {

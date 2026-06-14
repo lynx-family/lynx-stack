@@ -6,6 +6,9 @@ import type { InferStateFieldValue, StateField } from '@openuidev/lang-core';
 
 import { useFormName, useOpenUI } from '../context.jsx';
 
+/**
+ * Resolve a named OpenUI state field against form state and reactive bindings.
+ */
 export function useStateField<T = unknown>(
   name: string,
   value?: T,

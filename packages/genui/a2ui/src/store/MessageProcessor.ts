@@ -13,6 +13,9 @@ import type {
 } from './types.js';
 import { isObject } from './utils.js';
 
+/**
+ * Event envelope emitted by `MessageProcessor.dispatch`.
+ */
 export interface A2UIEvent {
   message: Record<string, unknown>;
   resolve: (response: unknown) => void;
@@ -32,6 +35,10 @@ function isMeaningfulResponse(value: unknown): boolean {
   return true;
 }
 
+/**
+ * Stateful A2UI protocol processor that turns raw v0.9 messages into
+ * renderable surfaces, resources, data-model signals, and user-action events.
+ */
 export class MessageProcessor {
   surfaces: Map<string, Surface>;
   private eventListeners: Set<(event: A2UIEvent) => void> = new Set();

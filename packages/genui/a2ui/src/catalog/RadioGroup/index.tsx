@@ -19,6 +19,8 @@ const HitSlop = {
 };
 
 /**
+ * Props for the built-in RadioGroup catalog component.
+ *
  * @a2uiCatalog RadioGroup
  */
 export interface RadioGroupComponentProps extends GenericComponentProps {
@@ -67,6 +69,9 @@ export interface RadioGroupComponentProps extends GenericComponentProps {
   }>;
 }
 
+/**
+ * Render a single-choice radio group bound to the surface data model.
+ */
 export function RadioGroup(
   props: RadioGroupComponentProps,
 ): import('@lynx-js/react').ReactNode {

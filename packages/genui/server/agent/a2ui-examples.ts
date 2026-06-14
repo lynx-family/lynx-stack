@@ -2,6 +2,10 @@
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
 
+/**
+ * Validated user request and message sequence included as an in-context A2UI
+ * example.
+ */
 export interface A2UIExample {
   name: string;
   user: string;

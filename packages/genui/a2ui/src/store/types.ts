@@ -24,6 +24,9 @@ export type ComponentInstance = v0_9.AnyComponent & {
   };
 };
 
+/**
+ * In-memory state for a single protocol surface.
+ */
 export interface Surface {
   surfaceId: SurfaceId;
   catalogId?: string;
@@ -36,6 +39,9 @@ export interface Surface {
   store: SignalStore;
 }
 
+/**
+ * Payload carried by renderer resources when a surface or component changes.
+ */
 export interface ResourceInfo {
   /**
    * Internal event type emitted by the processor.
@@ -55,6 +61,10 @@ export type ServerToClientMessage = v0_9.A2uiMessage & {
   messageId?: string;
 };
 
+/**
+ * Normalized user action forwarded from rendered catalog components to the
+ * host application.
+ */
 export interface UserActionPayload {
   name: string;
   surfaceId: string;
@@ -74,6 +84,9 @@ export type A2UIClientEventMessage =
     sessionId?: string;
   };
 
+/**
+ * Common runtime props passed to every catalog component by the renderer.
+ */
 export interface GenericComponentProps {
   id?: string;
   surface: Surface;

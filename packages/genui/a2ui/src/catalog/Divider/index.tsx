@@ -6,12 +6,17 @@ import type { GenericComponentProps } from '../../store/types.js';
 import '../../../styles/catalog/Divider.css';
 
 /**
+ * Props for the built-in Divider catalog component.
+ *
  * @a2uiCatalog Divider
  */
 export interface DividerProps extends GenericComponentProps {
   axis?: 'horizontal' | 'vertical';
 }
 
+/**
+ * Render a horizontal or vertical visual separator.
+ */
 export function Divider(
   props: DividerProps,
 ): import('@lynx-js/react').ReactNode {

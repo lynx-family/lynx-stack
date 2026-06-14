@@ -49,6 +49,9 @@ export interface FunctionDefinition {
     | 'void';
 }
 
+/**
+ * Registered client-side function and its optional handshake definition.
+ */
 export interface FunctionEntry {
   name: string;
   /** Optional function definition announced to the agent as part of the handshake. */
@@ -56,6 +59,10 @@ export interface FunctionEntry {
   impl: FunctionImpl;
 }
 
+/**
+ * Lookup table that routes protocol `FunctionCall.call` names to local
+ * JavaScript implementations.
+ */
 export class FunctionRegistry {
   private readonly entries = new Map<string, FunctionEntry>();
 

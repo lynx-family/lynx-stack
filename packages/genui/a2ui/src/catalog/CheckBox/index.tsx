@@ -8,6 +8,8 @@ import type { GenericComponentProps } from '../../store/types.js';
 import '../../../styles/catalog/CheckBox.css';
 
 /**
+ * Props for the built-in CheckBox catalog component.
+ *
  * @a2uiCatalog CheckBox
  */
 export interface CheckBoxProps extends GenericComponentProps {
@@ -52,6 +54,9 @@ export interface CheckBoxProps extends GenericComponentProps {
   }>;
 }
 
+/**
+ * Render a boolean checkbox bound to the surface data model.
+ */
 export function CheckBox(
   props: CheckBoxProps,
 ): import('@lynx-js/react').ReactNode {

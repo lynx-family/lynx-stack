@@ -5,6 +5,8 @@ import type { GenericComponentProps } from '../../store/types.js';
 import '../../../styles/catalog/Text.css';
 
 /**
+ * Props for the built-in Text catalog component.
+ *
  * @a2uiCatalog Text
  */
 export interface TextProps extends GenericComponentProps {
@@ -25,6 +27,9 @@ export interface TextProps extends GenericComponentProps {
   emphasis?: 'medium' | 'strong';
 }
 
+/**
+ * Render styled text from a literal value, data binding, or function call.
+ */
 export function Text(
   props: TextProps,
 ): import('@lynx-js/react').ReactNode {

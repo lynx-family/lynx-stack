@@ -15,6 +15,9 @@ import { createResolvedSignal } from './signalResolution.js';
 import { setInStore } from './SignalStore.js';
 import type { CatalogFunctionEntry } from '../catalog/defineCatalog.js';
 
+/**
+ * Options controlling how function calls are resolved against a catalog.
+ */
 export interface ResolveFunctionOptions {
   functions?: readonly CatalogFunctionEntry[] | undefined;
   registry?: FunctionRegistry | undefined;
@@ -73,6 +76,10 @@ function createFunctionContext(
   };
 }
 
+/**
+ * Resolve every argument in a protocol function call before invoking the
+ * registered implementation.
+ */
 export function resolveFunctionArguments(
   processor: MessageProcessor,
   args: Record<string, unknown> | undefined,

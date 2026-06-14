@@ -6,6 +6,9 @@ import type { Signal } from '@preact/signals';
 
 import type { MessageProcessor } from './MessageProcessor.js';
 
+/**
+ * Path-keyed store of Preact signals backing a surface's data model.
+ */
 export class SignalStore {
   private signals = new Map<string, Signal<unknown>>();
 
@@ -34,6 +37,12 @@ export class SignalStore {
   }
 }
 
+/**
+ * Resolve a data path for a surface and write the value into that surface's
+ * signal store.
+ *
+ * @internal
+ */
 export function setInStore(
   processor: MessageProcessor,
   path: string,

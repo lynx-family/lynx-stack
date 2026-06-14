@@ -10,12 +10,19 @@ import { resolveDynamicValue } from '../store/resolveDynamic.js';
 import { executeFunctionCall } from '../store/resolveFunctionCall.js';
 import type { UserActionPayload } from '../store/types.js';
 
+/**
+ * Identifies the component and surface that emitted an A2UI action.
+ */
 export interface ActionProps {
   id: string;
   surfaceId: string;
   dataContext?: string | undefined;
 }
 
+/**
+ * Create a `sendAction` callback that resolves dynamic action payload values
+ * and dispatches user events or function calls through the current processor.
+ */
 export function useAction(
   props: ActionProps,
 ): { sendAction: (action: v0_9.Action) => Promise<unknown> } {

@@ -24,6 +24,10 @@ const emptySnapshot = {
 const returnEmptySnapshot = () => emptySnapshot;
 const warnedTags = new Set<string>();
 
+/**
+ * Details passed to unsupported-content renderers when the protocol stream
+ * references syntax or catalog entries the renderer cannot handle.
+ */
 export interface UnsupportedInfo {
   id: string;
   tag: string;
@@ -119,6 +123,12 @@ function buildNodeRecursive(
   );
 }
 
+/**
+ * Props for the internal resource renderer used by catalog components to
+ * render child component ids.
+ *
+ * @internal
+ */
 export interface A2UIRendererProps {
   resource: Resource;
   /** Optional class name applied to the top-level surface view. */

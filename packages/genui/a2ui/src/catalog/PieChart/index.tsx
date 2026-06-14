@@ -11,6 +11,9 @@ import {
 
 import '../../../styles/catalog/PieChart.css';
 
+/**
+ * A single numeric slice rendered by the PieChart component.
+ */
 export interface PieChartSlice {
   name: string;
   value: number;
@@ -27,6 +30,8 @@ const DEFAULT_OUTER_RADIUS = 84;
 const DEFAULT_DONUT_INNER_RADIUS = 52;
 
 /**
+ * Props for the built-in PieChart catalog component.
+ *
  * @a2uiCatalog PieChart
  */
 export interface PieChartProps extends GenericComponentProps {
@@ -197,6 +202,9 @@ function buildSvgMarkup(
   `;
 }
 
+/**
+ * Render numeric slices as a pie or donut chart.
+ */
 export function PieChart(
   props: PieChartProps,
 ): import('@lynx-js/react').ReactNode {

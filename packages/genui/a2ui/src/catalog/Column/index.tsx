@@ -36,6 +36,8 @@ const buildChild = (
 };
 
 /**
+ * Props for the built-in Column catalog component.
+ *
  * @a2uiCatalog Column
  */
 export interface ColumnProps extends GenericComponentProps {
@@ -52,6 +54,9 @@ export interface ColumnProps extends GenericComponentProps {
     | 'spaceEvenly';
 }
 
+/**
+ * Render child component ids in vertical order.
+ */
 export function Column(
   props: ColumnProps,
 ): import('@lynx-js/react').ReactNode {

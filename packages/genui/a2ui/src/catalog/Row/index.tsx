@@ -7,6 +7,8 @@ import type { GenericComponentProps } from '../../store/types.js';
 import '../../../styles/catalog/Row.css';
 
 /**
+ * Props for the built-in Row catalog component.
+ *
  * @a2uiCatalog Row
  */
 export interface RowProps extends GenericComponentProps {
@@ -23,6 +25,9 @@ export interface RowProps extends GenericComponentProps {
   align?: 'start' | 'center' | 'end' | 'stretch';
 }
 
+/**
+ * Render child component ids in horizontal order.
+ */
 export function Row(props: RowProps): import('@lynx-js/react').ReactNode {
   const children = props.children;
   const surface = props.surface;

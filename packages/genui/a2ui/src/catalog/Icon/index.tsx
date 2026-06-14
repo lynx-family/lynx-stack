@@ -10,6 +10,8 @@ function toMaterialName(name: string): string {
 }
 
 /**
+ * Props for the built-in Icon catalog component.
+ *
  * @a2uiCatalog Icon
  */
 export interface IconProps extends GenericComponentProps {
@@ -49,6 +51,9 @@ export interface IconProps extends GenericComponentProps {
   color?: 'primary' | 'muted' | 'inherit';
 }
 
+/**
+ * Render a named icon from the catalog's supported icon set.
+ */
 export function Icon(
   props: IconProps,
 ): import('@lynx-js/react').ReactNode {

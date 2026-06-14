@@ -6,6 +6,9 @@ import { BASIC_CATALOG_EXAMPLES } from './a2ui-examples';
 import type { A2UIExample } from './a2ui-examples';
 import generatedCatalog from './catalog.json';
 
+/**
+ * Prompt-facing description of a single A2UI component prop.
+ */
 export interface A2UIComponentProp {
   name: string;
   type: string;
@@ -15,6 +18,9 @@ export interface A2UIComponentProp {
   schema?: JsonSchema;
 }
 
+/**
+ * Prompt-facing component specification derived from a catalog manifest.
+ */
 export interface A2UIComponentSpec {
   name: string;
   summary: string;
@@ -23,6 +29,10 @@ export interface A2UIComponentSpec {
   containerShape?: 'children' | 'child' | 'tabs' | 'trigger-content' | 'none';
 }
 
+/**
+ * Prompt-ready A2UI catalog including components, rules, examples, and
+ * optional client functions.
+ */
 export interface A2UICatalog {
   id: string;
   label: string;
@@ -33,6 +43,9 @@ export interface A2UICatalog {
   functions?: A2UIFunctionSpec[];
 }
 
+/**
+ * Prompt-facing schema for a client-side function the agent may call.
+ */
 export interface A2UIFunctionSpec {
   description?: string;
   name: string;
@@ -50,6 +63,9 @@ export interface A2UIFunctionSpec {
 export const BASIC_CATALOG_ID =
   'https://a2ui.org/specification/v0_9/basic_catalog.json';
 
+/**
+ * JSON Schema subset used in prompt-facing catalog descriptions.
+ */
 export interface JsonSchema {
   const?: unknown;
   type?: string;
@@ -288,6 +304,9 @@ function componentManifestsFromGeneratedCatalog(
     .map(([name, schema]) => ({ [name]: schema }));
 }
 
+/**
+ * Convert generated component manifests into a prompt-ready A2UI catalog.
+ */
 export function createA2UICatalogFromManifests(options: {
   catalogId: string;
   componentManifests: Record<string, JsonSchema>[];
@@ -327,6 +346,9 @@ export const BASIC_CATALOG: A2UICatalog = {
   examples: BASIC_CATALOG_EXAMPLES,
 };
 
+/**
+ * Render an A2UI catalog into the Markdown reference embedded in prompts.
+ */
 export function renderCatalogReference(catalog: A2UICatalog): string {
   const lines: string[] = [];
   lines.push(

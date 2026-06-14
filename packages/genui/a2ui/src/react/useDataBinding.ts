@@ -43,6 +43,9 @@ function subscribeToSignal<T>(
     });
 }
 
+/**
+ * Subscribe to a data-model binding and return the current value at that path.
+ */
 export function useDataBinding<T = unknown>(
   dynamicValue: unknown,
   surface: Surface | undefined,
@@ -114,6 +117,12 @@ export function useDataBinding<T = unknown>(
   return [currentValue, setValue, path];
 }
 
+/**
+ * Split component props into values the renderer can resolve and values that
+ * still contain unsupported dynamic syntax.
+ *
+ * @internal
+ */
 export function splitUnsupportedProps(
   properties: Record<string, unknown> | undefined,
 ): {
@@ -142,6 +151,11 @@ export function splitUnsupportedProps(
   };
 }
 
+/**
+ * Resolve data bindings and function calls inside a component prop object.
+ *
+ * @internal
+ */
 export function resolveProperties(
   properties: Record<string, unknown>,
   surface: Surface | undefined,
@@ -203,6 +217,10 @@ function shallowEqual(
   return true;
 }
 
+/**
+ * Resolve a component's dynamic props and keep the result in sync with
+ * signal-backed data model changes.
+ */
 export function useResolvedProps(
   properties: Record<string, unknown>,
   surface: Surface | undefined,

@@ -15,6 +15,10 @@ export interface ResourceSnapshot<T = unknown> {
   error: unknown;
 }
 
+/**
+ * Observable async resource used by the renderer to publish surface and
+ * component updates.
+ */
 export interface Resource<T = unknown> {
   id: string;
   readonly completed: boolean;
@@ -48,6 +52,10 @@ export interface Resource<T = unknown> {
   promise: Promise<T>;
 }
 
+/**
+ * Create a pending resource that can later complete, fail, and notify
+ * subscribers of every state transition.
+ */
 export function createResource<T = unknown>(id: string): Resource<T> {
   let resolve!: (value: T) => void;
   let reject!: (err: unknown) => void;

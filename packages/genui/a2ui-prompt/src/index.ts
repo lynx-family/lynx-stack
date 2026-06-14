@@ -18,6 +18,9 @@ export * from '../../server/agent/a2ui-catalog.js';
 export * from '../../server/agent/a2ui-examples.js';
 export * from '../../server/agent/a2ui-prompt.js';
 
+/**
+ * Options for loading generated A2UI catalog artifacts from a directory.
+ */
 export interface ReadA2UICatalogDirectoryOptions {
   catalogDir: string;
   catalogId: string;
@@ -26,6 +29,10 @@ export interface ReadA2UICatalogDirectoryOptions {
   version?: string;
 }
 
+/**
+ * Read generated component and function manifests and convert them into a
+ * prompt-ready A2UI catalog.
+ */
 export function readA2UICatalogFromDirectory(
   options: ReadA2UICatalogDirectoryOptions,
 ): A2UICatalog {

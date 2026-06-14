@@ -32,6 +32,9 @@ import type {
 // import diff.
 void v0_9;
 
+/**
+ * Props for the all-in-one A2UI ReactLynx renderer.
+ */
 export interface A2UIProps {
   /**
    * The raw-message buffer the developer pushes protocol messages into.
