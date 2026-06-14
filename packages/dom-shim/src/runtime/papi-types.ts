@@ -50,4 +50,9 @@ declare global {
   function __SetID(node: ElementRef, id: string | null): void;
   function __SetClasses(node: ElementRef, className: string | undefined): void;
   function __AddClass(current: ElementRef, className: string): void;
+  function __AddDataset(node: ElementRef, key: string, value: unknown): void;
+  function __SetDataset(
+    node: ElementRef,
+    value: Record<string, unknown> | undefined,
+  ): void;
 }

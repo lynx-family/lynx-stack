@@ -4,8 +4,7 @@
 
 import { beforeAll, describe, expect, it } from 'vitest';
 
-import { wrapPapi } from '../nodes.ts';
-import type { L1ReadOnlyElement } from '../nodes.ts';
+import { L1ReadOnlyElement, wrapPapi } from '../nodes.ts';
 
 interface MockEl extends Record<string, unknown> {
   tag: string;
@@ -67,16 +66,19 @@ describe('US-406 L1 dataset read', () => {
     expect('nope' in e.dataset).toBe(false);
   });
 
-  it('writes throw', () => {
-    const e = wrapPapi(el({ foo: 'bar' })) as L1ReadOnlyElement;
+  // The L1 readonly dataset proxy still throws on writes — this test
+  // bypasses wrapPapi (which returns L2 now) to construct L1ReadOnlyElement
+  // directly.
+  it('L1 readonly dataset writes throw', () => {
+    const e = new L1ReadOnlyElement(el({ foo: 'bar' }));
     const ds = e.dataset as Record<string, string>;
     expect(() => {
       ds['x'] = 'y';
     }).toThrow(/readonly/i);
   });
 
-  it('deletes throw', () => {
-    const e = wrapPapi(el({ foo: 'bar' })) as L1ReadOnlyElement;
+  it('L1 readonly dataset deletes throw', () => {
+    const e = new L1ReadOnlyElement(el({ foo: 'bar' }));
     const ds = e.dataset as Record<string, string>;
     expect(() => {
       delete ds['foo'];

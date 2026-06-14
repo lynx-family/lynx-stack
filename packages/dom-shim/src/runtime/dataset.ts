@@ -3,7 +3,9 @@
 // LICENSE file in the root directory of this source tree.
 
 import { coerceAttributeValue } from './attributes.ts';
+import { getElementCache } from './cache.ts';
 import type { ElementRef } from './papi-types.ts';
+import { scheduleFlush } from './scheduler.ts';
 
 /**
  * Build a readonly proxy over the PAPI dataset. See Shim_Design.md §4.2.3.
@@ -55,6 +57,87 @@ export function makeReadOnlyDataset(
       throw new Error(
         'dataset is readonly on L1 view; same as set. US-474 refinement pending.',
       );
+    },
+  };
+  return new Proxy({} as Record<string, string>, handler);
+}
+
+/**
+ * L2 writable dataset proxy. See Shim_Design.md §5.2.4.
+ *
+ * Assignment routes through `__AddDataset(papi, key, value)` (PAPI accepts
+ * a single key-value). Deletion clears the cache entry and re-pushes the
+ * whole dataset via `__SetDataset` since there is no per-key remove
+ * primitive — O(n) on delete.
+ *
+ * The cache mirrors writes so subsequent reads return the just-written
+ * value within the same JS frame.
+ */
+export function makeWritableDataset(
+  papi: ElementRef,
+): Record<string, string> {
+  const handler: ProxyHandler<Record<string, string>> = {
+    get(_target, key): string | undefined {
+      if (typeof key !== 'string') return undefined;
+      const cache = getElementCache(papi);
+      const cached = cache.dataset.get(key);
+      if (cached !== undefined) return cached;
+      const v = __GetDataByKey(papi, key);
+      if (v === undefined || v === null) return undefined;
+      return coerceAttributeValue(v);
+    },
+    set(_target, key, value): boolean {
+      if (typeof key !== 'string') return false;
+      const coerced = coerceAttributeValue(value);
+      __AddDataset(papi, key, coerced);
+      getElementCache(papi).dataset.set(key, coerced);
+      scheduleFlush();
+      return true;
+    },
+    deleteProperty(_target, key): boolean {
+      if (typeof key !== 'string') return false;
+      const cache = getElementCache(papi);
+      cache.dataset.delete(key);
+      // Rebuild dataset from cache + non-cached PAPI keys.
+      const full: Record<string, unknown> = {};
+      const merged: Record<string, unknown> = __GetDataset(papi);
+      for (const [k, v] of Object.entries(merged)) {
+        if (k !== key) full[k] = v;
+      }
+      // Layer cached writes back on top of the rebuilt PAPI snapshot.
+      for (const [k, v] of cache.dataset.entries()) full[k] = v;
+      __SetDataset(papi, full);
+      scheduleFlush();
+      return true;
+    },
+    has(_target, key): boolean {
+      if (typeof key !== 'string') return false;
+      const cache = getElementCache(papi);
+      if (cache.dataset.has(key)) return true;
+      const v = __GetDataByKey(papi, key);
+      return v !== undefined && v !== null;
+    },
+    ownKeys(_target): string[] {
+      const cache = getElementCache(papi);
+      const papiKeys = Object.keys(__GetDataset(papi));
+      const all = new Set<string>([...papiKeys, ...cache.dataset.keys()]);
+      return [...all];
+    },
+    getOwnPropertyDescriptor(_target, key): PropertyDescriptor | undefined {
+      if (typeof key !== 'string') return undefined;
+      const cache = getElementCache(papi);
+      let value: string | undefined = cache.dataset.get(key);
+      if (value === undefined) {
+        const v = __GetDataByKey(papi, key);
+        if (v === undefined || v === null) return undefined;
+        value = coerceAttributeValue(v);
+      }
+      return {
+        configurable: true,
+        enumerable: true,
+        writable: true,
+        value,
+      };
     },
   };
   return new Proxy({} as Record<string, string>, handler);

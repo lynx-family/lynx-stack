@@ -5,7 +5,7 @@
 import { ReadOnlyNamedNodeMap, coerceAttributeValue } from './attributes.ts';
 import { getElementCache } from './cache.ts';
 import { L2DOMTokenList, ReadOnlyDOMTokenList } from './classlist.ts';
-import { makeReadOnlyDataset } from './dataset.ts';
+import { makeReadOnlyDataset, makeWritableDataset } from './dataset.ts';
 import { getBoundingClientRect, invalidateGeometry } from './geometry.ts';
 import type { DOMRectReadOnly } from './geometry.ts';
 import type { ElementRef } from './papi-types.ts';
@@ -553,6 +553,11 @@ export class L2SafeWritableElement extends L1ReadOnlyElement {
   /** Spec classList with add/remove/toggle/replace. See Shim_Design.md §5.2.2. */
   override get classList(): L2DOMTokenList {
     return new L2DOMTokenList(this.papi);
+  }
+
+  /** Spec DOMStringMap with writable assignment + delete. See Shim_Design.md §5.2.4. */
+  override get dataset(): Record<string, string> {
+    return makeWritableDataset(this.papi);
   }
 
   /** Spec coercion + write-through cache. See Shim_Design.md §5.2.3. */
