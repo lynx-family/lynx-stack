@@ -18,4 +18,6 @@ declare global {
   function __GetElementUniqueID(node: ElementRef): number;
   function __ElementIsEqual(left: ElementRef, right: ElementRef): boolean;
   function __GetPageElement(): ElementRef;
+  function __GetID(node: ElementRef): string;
+  function __GetClasses(node: ElementRef): string[];
 }

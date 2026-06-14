@@ -114,9 +114,10 @@ describe('US-402 L1 traversal', () => {
       expect(div.nodeType).toBe(NODE_TYPE_ELEMENT);
     });
 
-    it('L1ReadOnlyElement.nodeName is Lynx-tag uppercased (placeholder pending US-404)', () => {
+    it('L1ReadOnlyElement.nodeName maps Lynx tag → HTML tagName (US-404)', () => {
       const div = new L1ReadOnlyElement(tree.div1);
-      expect(div.nodeName).toBe('VIEW');
+      // tree.div1.tag === 'view', mapped to 'DIV' by US-404.
+      expect(div.nodeName).toBe('DIV');
     });
 
     it('L1ReadOnlyElement.nodeValue is null', () => {

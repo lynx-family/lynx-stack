@@ -2,6 +2,7 @@
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
 
+import { ReadOnlyDOMTokenList } from './classlist.ts';
 import type { ElementRef } from './papi-types.ts';
 
 /** DOM `Node.ELEMENT_NODE`. */
@@ -22,6 +23,23 @@ export const DOCUMENT_POSITION_CONTAINED_BY = 0x10;
  * Shim_Design.md §4.2.2.
  */
 const RAW_TEXT_TAG = 'raw-text';
+
+/**
+ * Minimal Lynx → HTML reverse tag map. US-404 ships only the most common
+ * tags so `tagName` returns spec-shaped strings ('DIV', 'SPAN', ...); the
+ * full SPEC/TAG_MAP.json from US-473 (=US-441) will replace this constant.
+ *
+ * Unknown Lynx tags fall back to their own uppercase form so callers see a
+ * stable, debuggable tagName instead of throwing.
+ */
+const LYNX_TO_HTML_MIN: Readonly<Record<string, string>> = Object.freeze({
+  view: 'div',
+  text: 'span',
+  image: 'img',
+  input: 'input',
+  page: 'html',
+  'scroll-view': 'div',
+});
 
 /**
  * Base node class. See Shim_Design.md §2 and §4.1.
@@ -209,10 +227,35 @@ export class L1ReadOnlyElement extends L1ReadOnlyNode {
   readonly nodeValue: string | null = null;
 
   get nodeName(): string {
-    // TODO US-404 / US-473: map Lynx tag → HTML tag via tag-map. For US-402
-    // we ship the Lynx tag uppercased as a placeholder so spec-shaped
-    // assertions can reason about it.
-    return __GetTag(this.papi).toUpperCase();
+    return this.tagName;
+  }
+
+  /**
+   * Spec: uppercase tag name. We map Lynx tags through the minimal table
+   * above and fall back to the Lynx tag's own uppercase. US-473 swaps in
+   * the full SPEC/TAG_MAP.json.
+   */
+  get tagName(): string {
+    const lynxTag = __GetTag(this.papi);
+    return (LYNX_TO_HTML_MIN[lynxTag] ?? lynxTag).toUpperCase();
+  }
+
+  get localName(): string {
+    return this.tagName.toLowerCase();
+  }
+
+  get id(): string {
+    // Spec: returns empty string when no id is set. PAPI also returns ''
+    // in that case based on the .d.ts; cope with undefined defensively.
+    return __GetID(this.papi) ?? '';
+  }
+
+  get className(): string {
+    return __GetClasses(this.papi).join(' ');
+  }
+
+  get classList(): ReadOnlyDOMTokenList {
+    return new ReadOnlyDOMTokenList(this.papi);
   }
 
   /**
