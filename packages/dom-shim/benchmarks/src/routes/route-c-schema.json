@@ -1,0 +1,52 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://lynxjs.org/schemas/dom-shim/benchmarks/route-c.schema.json",
+  "title": "Route C A2UI-style JSON DSL",
+  "description": "Schema for the JSON IR emitted by Route C. A simplified subset modeled after A2UI: tree of nodes with tag, props, children. No event handler bodies; only handler names as strings.",
+  "$ref": "#/$defs/Node",
+  "$defs": {
+    "Node": {
+      "oneOf": [
+        { "$ref": "#/$defs/ElementNode" },
+        { "$ref": "#/$defs/TextNode" }
+      ]
+    },
+    "ElementNode": {
+      "type": "object",
+      "required": ["tag"],
+      "additionalProperties": false,
+      "properties": {
+        "tag": {
+          "type": "string",
+          "enum": ["page", "view", "text", "image", "scroll-view", "list", "input", "button"]
+        },
+        "id": { "type": "string" },
+        "class": { "type": "string" },
+        "style": {
+          "type": "object",
+          "additionalProperties": { "type": ["string", "number"] }
+        },
+        "attrs": {
+          "type": "object",
+          "additionalProperties": { "type": ["string", "number", "boolean", "null"] }
+        },
+        "events": {
+          "type": "object",
+          "additionalProperties": { "type": "string" }
+        },
+        "children": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/Node" }
+        }
+      }
+    },
+    "TextNode": {
+      "type": "object",
+      "required": ["text"],
+      "additionalProperties": false,
+      "properties": {
+        "text": { "type": "string" }
+      }
+    }
+  }
+}
