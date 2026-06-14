@@ -35,4 +35,10 @@ declare global {
     cssSelector: string,
     params: { onlyCurrentComponent?: boolean },
   ): ElementRef[];
+  function __InvokeUIMethod(
+    e: ElementRef,
+    method: string,
+    params: Record<string, unknown>,
+    callback: (res: { code: number; data: unknown }) => void,
+  ): ElementRef[];
 }

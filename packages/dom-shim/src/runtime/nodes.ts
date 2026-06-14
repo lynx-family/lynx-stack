@@ -5,6 +5,8 @@
 import { ReadOnlyNamedNodeMap, coerceAttributeValue } from './attributes.ts';
 import { ReadOnlyDOMTokenList } from './classlist.ts';
 import { makeReadOnlyDataset } from './dataset.ts';
+import { getBoundingClientRect } from './geometry.ts';
+import type { DOMRectReadOnly } from './geometry.ts';
 import type { ElementRef } from './papi-types.ts';
 
 /** DOM `Node.ELEMENT_NODE`. */
@@ -351,6 +353,14 @@ export class L1ReadOnlyElement extends L1ReadOnlyNode {
       cur = cur.parentElement;
     }
     return null;
+  }
+
+  /**
+   * Geometry. See Shim_Design.md §4.2.5 + geometry.ts header for the OQ-S.4
+   * resolution (async-cached, zero-rect on first miss, console.warn once).
+   */
+  getBoundingClientRect(): DOMRectReadOnly {
+    return getBoundingClientRect(this.papi);
   }
 
   /**
