@@ -6,6 +6,7 @@ import { createWriteStream } from 'node:fs';
 import { appendFile, mkdir, writeFile } from 'node:fs/promises';
 import { resolve as resolvePath } from 'node:path';
 
+import { scoreVisualSimilarity } from './scoring/visual.ts';
 import type {
   BenchmarkRecord,
   BenchmarkReport,
@@ -85,6 +86,32 @@ export async function runBenchmark(
           }),
         { maxAttempts: 3 },
       );
+      let visualScore = result.visual_score;
+      let visualRationale = result.visual_rationale;
+      // If the route succeeded and produced a preview file, score it now.
+      // Without ANTHROPIC_API_KEY the scorer is a soft no-op.
+      if (
+        !opts.dry_run
+        && result.render_ok
+        && result.screenshot_path
+        && visualScore === null
+      ) {
+        const vs = await scoreVisualSimilarity({
+          screenshotPath: result.screenshot_path,
+          promptText: prompt.prompt,
+          promptId: prompt.id,
+          modelId: opts.model_id,
+          cachePath: resolvePath(
+            opts.out_dir,
+            '..',
+            '..',
+            'cache',
+            'visual-scores.json',
+          ),
+        });
+        visualScore = vs.score;
+        visualRationale = vs.rationale;
+      }
       const rec: BenchmarkRecord = {
         prompt_id: prompt.id,
         route: route.id,
@@ -94,8 +121,8 @@ export async function runBenchmark(
         render_ok: result.render_ok,
         screenshot_path: result.screenshot_path,
         error_log: result.error_log,
-        visual_score: result.visual_score,
-        visual_rationale: result.visual_rationale,
+        visual_score: visualScore,
+        visual_rationale: visualRationale,
         timestamp: now().toISOString(),
         model_id: opts.model_id,
         ...(result.tokens_used ? { tokens_used: result.tokens_used } : {}),

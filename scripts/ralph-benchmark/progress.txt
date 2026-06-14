@@ -13,7 +13,7 @@ Completion promise: PHASE_1_SMOKE_DONE
 - US-105: DONE — implement Route A raw PAPI runner
 - US-106: DONE — implement Route B DOM Shim mock runner
 - US-107: DONE — implement Route C A2UI JSON runner
-- US-108: TODO — implement visual similarity scoring
+- US-108: DONE — implement visual similarity scoring
 - US-109: TODO — generate Phase 1 comparison report + smoke test (acceptance gate)
 
 ## Notes for next iteration
