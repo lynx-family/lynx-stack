@@ -21,6 +21,7 @@
     "ajv": "^8.17.1",
     "ajv-formats": "^3.0.1",
     "htmlparser2": "^9.1.0",
+    "openai": "^4.74.0",
     "typescript": "5.9.3"
   },
   "engines": {

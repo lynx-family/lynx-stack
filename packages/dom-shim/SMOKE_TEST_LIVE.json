@@ -1,0 +1,179 @@
+{
+  "schema_version": "1.0.0",
+  "run_id": "run-2026-06-14T07-37-14-249Z",
+  "started_at": "2026-06-14T07:37:14.249Z",
+  "finished_at": "2026-06-14T07:37:19.794Z",
+  "model_id": "gpt-4o",
+  "rounds": 1,
+  "concurrency": 4,
+  "summary": {
+    "A": {
+      "parse_ok_rate": 1,
+      "render_ok_rate": 0,
+      "convergence_rate": 0,
+      "visual_score_mean": null,
+      "sample_size": 2
+    },
+    "B": {
+      "parse_ok_rate": 1,
+      "render_ok_rate": 0.5,
+      "convergence_rate": 0.5,
+      "visual_score_mean": null,
+      "sample_size": 2
+    },
+    "C": {
+      "parse_ok_rate": 1,
+      "render_ok_rate": 1,
+      "convergence_rate": 1,
+      "visual_score_mean": null,
+      "sample_size": 2
+    }
+  },
+  "per_category": {
+    "interactive": {
+      "A": {
+        "parse_ok_rate": 1,
+        "render_ok_rate": 0,
+        "convergence_rate": 0,
+        "visual_score_mean": null,
+        "sample_size": 2
+      },
+      "B": {
+        "parse_ok_rate": 1,
+        "render_ok_rate": 0.5,
+        "convergence_rate": 0.5,
+        "visual_score_mean": null,
+        "sample_size": 2
+      },
+      "C": {
+        "parse_ok_rate": 1,
+        "render_ok_rate": 1,
+        "convergence_rate": 1,
+        "visual_score_mean": null,
+        "sample_size": 2
+      }
+    }
+  },
+  "records": [
+    {
+      "prompt_id": "P001",
+      "prompt_category": "interactive",
+      "prompt_complexity": "trivial",
+      "route": "B",
+      "round": 1,
+      "generated_code": "<script>\n  const counterView = document.createElement('view');\n  counterView.style.display = 'flex';\n  counterView.style.alignItems = 'center';\n\n  const decrementButton = document.createElement('button');\n  decrementButton.textContent = '-1';\n  decrementButton.style.margin = '0 10px';\n  counterView.appendChild(decrementButton);\n\n  const counterText = document.createElement('text');\n  counterText.textContent = '0';\n  counterView.appendChild(counterText);\n\n  const incrementButton = document.createElement('button');\n  incrementButton.textContent = '+1';\n  incrementButton.style.margin = '0 10px';\n  counterView.appendChild(incrementButton);\n\n  let count = 0;\n\n  decrementButton.addEventListener('click', () => {\n    count--;\n    counterText.textContent = count.toString();\n  });\n\n  incrementButton.addEventListener('click', () => {\n    count++;\n    counterText.textContent = count.toString();\n  });\n\n  document.body.appendChild(counterView);\n\n  __flush__();\n</script>",
+      "parse_ok": true,
+      "render_ok": true,
+      "screenshot_path": "/Users/bytedance/github/lynx-stack/.worktrees/lynx-dom-shim-benchmark/packages/dom-shim/benchmarks/reports/run-2026-06-14T07-37-14-247Z/previews/P001-B-r1.html",
+      "error_log": "",
+      "visual_score": null,
+      "visual_rationale": "preview is HTML, not an image — wire puppeteer in a future US to enable M4",
+      "timestamp": "2026-06-14T07:37:17.224Z",
+      "model_id": "gpt-4o",
+      "tokens_used": {
+        "input": 433,
+        "output": 223
+      }
+    },
+    {
+      "prompt_id": "P001",
+      "prompt_category": "interactive",
+      "prompt_complexity": "trivial",
+      "route": "C",
+      "round": 1,
+      "generated_code": "{\n  \"tag\": \"page\",\n  \"children\": [\n    {\n      \"tag\": \"view\",\n      \"id\": \"counter-component\",\n      \"style\": {\n        \"alignItems\": \"center\",\n        \"justifyContent\": \"center\",\n        \"padding\": \"20px\"\n      },\n      \"children\": [\n        {\n          \"tag\": \"text\",\n          \"id\": \"counter-display\",\n          \"style\": {\n            \"fontSize\": \"24px\",\n            \"marginBottom\": \"10px\"\n          },\n          \"children\": [\n            {\n              \"text\": \"0\"\n            }\n          ]\n        },\n        {\n          \"tag\": \"button\",\n          \"id\": \"increment-button\",\n          \"style\": {\n            \"margin\": \"5px\",\n            \"padding\": \"10px\"\n          },\n          \"attrs\": {\n            \"label\": \"+1\"\n          },\n          \"events\": {\n            \"click\": \"incrementCounter\"\n          }\n        },\n        {\n          \"tag\": \"button\",\n          \"id\": \"decrement-button\",\n          \"style\": {\n            \"margin\": \"5px\",\n            \"padding\": \"10px\"\n          },\n          \"attrs\": {\n            \"label\": \"-1\"\n          },\n          \"events\": {\n            \"click\": \"decrementCounter\"\n          }\n        }\n      ]\n    }\n  ]\n}",
+      "parse_ok": true,
+      "render_ok": true,
+      "screenshot_path": "/Users/bytedance/github/lynx-stack/.worktrees/lynx-dom-shim-benchmark/packages/dom-shim/benchmarks/reports/run-2026-06-14T07-37-14-247Z/previews/P001-C-r1.html",
+      "error_log": "",
+      "visual_score": null,
+      "visual_rationale": "preview is HTML, not an image — wire puppeteer in a future US to enable M4",
+      "timestamp": "2026-06-14T07:37:17.557Z",
+      "model_id": "gpt-4o",
+      "tokens_used": {
+        "input": 354,
+        "output": 283
+      }
+    },
+    {
+      "prompt_id": "P002",
+      "prompt_category": "interactive",
+      "prompt_complexity": "trivial",
+      "route": "A",
+      "round": 1,
+      "generated_code": "export function render(rootPageRef: any): void {\n  const toggleSwitch = __CreateView(0);\n  __SetAttribute(toggleSwitch, \"role\", \"switch\");\n  __SetClasses(toggleSwitch, \"toggle-off\");\n\n  __AddEvent(toggleSwitch, \"click\", \"toggleClick\", () => {\n    const classes = __GetClasses(toggleSwitch);\n    if (classes.includes(\"toggle-off\")) {\n      __SetClasses(toggleSwitch, \"toggle-on\");\n    } else {\n      __SetClasses(toggleSwitch, \"toggle-off\");\n    }\n  });\n\n  const toggleLabel = __CreateText(0);\n  const toggleText = __CreateRawText(\"Off\");\n  __AppendElement(toggleLabel, toggleText);\n  __AppendElement(toggleSwitch, toggleLabel);\n\n  __AppendElement(rootPageRef, toggleSwitch);\n  __FlushElementTree(rootPageRef);\n}",
+      "parse_ok": true,
+      "render_ok": false,
+      "screenshot_path": null,
+      "error_log": "Unexpected token ':'",
+      "visual_score": null,
+      "visual_rationale": null,
+      "timestamp": "2026-06-14T07:37:17.563Z",
+      "model_id": "gpt-4o",
+      "tokens_used": {
+        "input": 3769,
+        "output": 181
+      }
+    },
+    {
+      "prompt_id": "P001",
+      "prompt_category": "interactive",
+      "prompt_complexity": "trivial",
+      "route": "A",
+      "round": 1,
+      "generated_code": "export function render(rootPageRef: any): void {\n  let counterValue = 0;\n\n  const component = __CreateComponent(0, 'counterComponent', 1, 'CounterComponent', 'Counter', '/path/to/counter');\n  \n  const container = __CreateView(component);\n  __AppendElement(rootPageRef, container);\n  \n  const counterText = __CreateText(component);\n  __AppendElement(container, counterText);\n  \n  function updateCounterText() {\n    const rawText = __CreateRawText(`${counterValue}`);\n    __RemoveElement(counterText, __FirstElement(counterText));\n    __AppendElement(counterText, rawText);\n  }\n  \n  updateCounterText();\n  \n  const incrementButton = __CreateView(component);\n  __AppendElement(container, incrementButton);\n  const incrementText = __CreateText(component);\n  __AppendElement(incrementButton, incrementText);\n  const incrementRawText = __CreateRawText('+1');\n  __AppendElement(incrementText, incrementRawText);\n\n  const decrementButton = __CreateView(component);\n  __AppendElement(container, decrementButton);\n  const decrementText = __CreateText(component);\n  __AppendElement(decrementButton, decrementText);\n  const decrementRawText = __CreateRawText('-1');\n  __AppendElement(decrementText, decrementRawText);\n\n  __AddEvent(incrementButton, 'click', 'incrementClick', () => {\n    counterValue++;\n    updateCounterText();\n  });\n\n  __AddEvent(decrementButton, 'click', 'decrementClick', () => {\n    counterValue--;\n    updateCounterText();\n  });\n\n  __FlushElementTree(rootPageRef);\n}",
+      "parse_ok": true,
+      "render_ok": false,
+      "screenshot_path": null,
+      "error_log": "Unexpected token ':'",
+      "visual_score": null,
+      "visual_rationale": null,
+      "timestamp": "2026-06-14T07:37:18.962Z",
+      "model_id": "gpt-4o",
+      "tokens_used": {
+        "input": 3780,
+        "output": 345
+      }
+    },
+    {
+      "prompt_id": "P002",
+      "prompt_category": "interactive",
+      "prompt_complexity": "trivial",
+      "route": "C",
+      "round": 1,
+      "generated_code": "{\n  \"tag\": \"page\",\n  \"children\": [\n    {\n      \"tag\": \"button\",\n      \"id\": \"toggle-switch\",\n      \"class\": \"off\",\n      \"style\": {\n        \"width\": \"60px\",\n        \"height\": \"30px\",\n        \"backgroundColor\": \"grey\",\n        \"borderRadius\": \"15px\",\n        \"position\": \"relative\"\n      },\n      \"events\": {\n        \"click\": \"toggleSwitch\"\n      },\n      \"children\": [\n        {\n          \"tag\": \"view\",\n          \"id\": \"toggle-knob\",\n          \"class\": \"knob\",\n          \"style\": {\n            \"width\": \"28px\",\n            \"height\": \"28px\",\n            \"backgroundColor\": \"white\",\n            \"borderRadius\": \"50%\",\n            \"position\": \"absolute\",\n            \"top\": \"1px\",\n            \"left\": \"1px\",\n            \"transition\": \"left 0.3s\"\n          }\n        }\n      ]\n    }\n  ]\n}",
+      "parse_ok": true,
+      "render_ok": true,
+      "screenshot_path": "/Users/bytedance/github/lynx-stack/.worktrees/lynx-dom-shim-benchmark/packages/dom-shim/benchmarks/reports/run-2026-06-14T07-37-14-247Z/previews/P002-C-r1.html",
+      "error_log": "",
+      "visual_score": null,
+      "visual_rationale": "preview is HTML, not an image — wire puppeteer in a future US to enable M4",
+      "timestamp": "2026-06-14T07:37:19.252Z",
+      "model_id": "gpt-4o",
+      "tokens_used": {
+        "input": 343,
+        "output": 217
+      }
+    },
+    {
+      "prompt_id": "P002",
+      "prompt_category": "interactive",
+      "prompt_complexity": "trivial",
+      "route": "B",
+      "round": 1,
+      "generated_code": "<script>\ndocument.addEventListener('DOMContentLoaded', function() {\n  const switchContainer = document.createElement('view');\n  switchContainer.style.width = '60px';\n  switchContainer.style.height = '30px';\n  switchContainer.style.borderRadius = '15px';\n  switchContainer.style.border = '2px solid #ccc';\n  switchContainer.style.display = 'flex';\n  switchContainer.style.alignItems = 'center';\n  switchContainer.style.cursor = 'pointer';\n  switchContainer.style.backgroundColor = '#ccc';\n\n  const toggleCircle = document.createElement('view');\n  toggleCircle.style.width = '26px';\n  toggleCircle.style.height = '26px';\n  toggleCircle.style.borderRadius = '50%';\n  toggleCircle.style.backgroundColor = '#fff';\n  toggleCircle.style.marginLeft = '2px';\n  toggleCircle.style.transition = 'margin-left 0.2s';\n\n  switchContainer.appendChild(toggleCircle);\n\n  switchContainer.addEventListener('click', function() {\n    toggleCircle.classList.toggle('active');\n\n    if (toggleCircle.classList.contains('active')) {\n      toggleCircle.style.marginLeft = '32px';\n      switchContainer.style.backgroundColor = '#4caf50';\n    } else {\n      toggleCircle.style.marginLeft = '2px';\n      switchContainer.style.backgroundColor = '#ccc';\n    }\n  });\n\n  document.body.appendChild(switchContainer);\n  __flush__();\n});\n</script>",
+      "parse_ok": true,
+      "render_ok": false,
+      "screenshot_path": null,
+      "error_log": "runtime ran without throwing but counters were creates=2 appends=1 flushes=0 — make sure to call __flush__() at the end and to actually create and append elements via document.createElement + appendChild.",
+      "visual_score": null,
+      "visual_rationale": null,
+      "timestamp": "2026-06-14T07:37:19.792Z",
+      "model_id": "gpt-4o",
+      "tokens_used": {
+        "input": 422,
+        "output": 299
+      }
+    }
+  ]
+}

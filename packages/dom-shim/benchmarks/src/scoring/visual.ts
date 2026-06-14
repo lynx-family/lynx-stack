@@ -6,7 +6,7 @@ import { createHash } from 'node:crypto';
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { dirname, resolve as resolvePath } from 'node:path';
 
-import Anthropic from '@anthropic-ai/sdk';
+import { callLLMVision, currentProvider } from '../llm/anthropic-client.ts';
 
 /**
  * Visual similarity scorer for Phase 1 benchmark (PRD US-108 + RUBRIC.md M4).
@@ -53,13 +53,13 @@ Consider:
   - visual quality and polish
 Return JSON: {"score": <0..5 integer>, "rationale": "<one short sentence>"}.`;
 
-let client: Anthropic | null = null;
-function getClient(): Anthropic | null {
-  if (client) return client;
-  const apiKey = process.env['ANTHROPIC_API_KEY'];
-  if (!apiKey) return null;
-  client = new Anthropic({ apiKey });
-  return client;
+function providerAvailable(): boolean {
+  try {
+    currentProvider();
+    return true;
+  } catch {
+    return false;
+  }
 }
 
 function loadCache(cachePath: string): Cache {
@@ -128,11 +128,18 @@ export async function scoreVisualSimilarity(
       rationale: `screenshot not found at ${opts.screenshotPath}`,
     };
   }
-  const c = getClient();
-  if (!c) {
+  if (!/\.(?:png|jpe?g|gif|webp)$/i.test(opts.screenshotPath)) {
     return {
       score: null,
-      rationale: 'no ANTHROPIC_API_KEY — visual scoring skipped',
+      rationale:
+        'preview is HTML, not an image — wire puppeteer in a future US to enable M4',
+    };
+  }
+  if (!providerAvailable()) {
+    return {
+      score: null,
+      rationale:
+        'no OPENAI_API_KEY or ANTHROPIC_API_KEY — visual scoring skipped',
     };
   }
 
@@ -144,42 +151,20 @@ export async function scoreVisualSimilarity(
     return { score: cached.score, rationale: cached.rationale };
   }
 
-  const resp = await c.messages.create({
-    model: opts.modelId,
-    max_tokens: 256,
+  const resp = await callLLMVision({
     system: VISION_SYSTEM_PROMPT,
-    messages: [
-      {
-        role: 'user',
-        content: [
-          {
-            type: 'image',
-            source: {
-              type: 'base64',
-              media_type: detectMimeType(opts.screenshotPath),
-              data: bytes.toString('base64'),
-            },
-          },
-          {
-            type: 'text',
-            text: `Prompt: ${opts.promptText}`,
-          },
-        ],
-      },
-    ],
+    promptText: opts.promptText,
+    imageBase64: bytes.toString('base64'),
+    imageMimeType: detectMimeType(opts.screenshotPath),
+    model: opts.modelId,
   });
 
-  let replyText = '';
-  for (const block of resp.content) {
-    if (block.type === 'text') replyText += block.text;
-  }
-
-  const parsed = parseScoreReply(replyText);
+  const parsed = parseScoreReply(resp.text);
   if (!parsed) {
     return {
       score: null,
       rationale: `vision response did not parse as {score, rationale}: ${
-        replyText.slice(0, 200)
+        resp.text.slice(0, 200)
       }`,
     };
   }
