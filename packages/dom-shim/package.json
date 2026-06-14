@@ -1,0 +1,17 @@
+{
+  "name": "@lynx-js/dom-shim",
+  "version": "0.0.0",
+  "private": true,
+  "description": "[EXPERIMENTAL] Phase 1 benchmark for LLM-output validation: compares raw Element PAPI / DOM Shim / A2UI routes. See PRD.md at worktree root.",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/lynx-family/lynx-stack.git",
+    "directory": "packages/dom-shim"
+  },
+  "license": "Apache-2.0",
+  "type": "module",
+  "scripts": {
+    "benchmark": "node --experimental-strip-types benchmarks/cli.ts",
+    "typecheck": "tsc --noEmit"
+  }
+}

@@ -2,6 +2,7 @@ packages:
   - benchmark/react
   - examples/*
   - packages/background-only
+  - packages/dom-shim
   - packages/genui
   - packages/genui/*
   - packages/i18n/*

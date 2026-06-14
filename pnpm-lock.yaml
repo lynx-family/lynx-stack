@@ -597,6 +597,8 @@ importers:
 
   packages/background-only: {}
 
+  packages/dom-shim: {}
+
   packages/genui:
     dependencies:
       '@a2ui/web_core':
