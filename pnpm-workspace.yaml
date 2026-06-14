@@ -147,5 +147,7 @@ allowBuilds:
   core-js: false
   dprint: true
   esbuild: true
+  # System Chrome is used via PUPPETEER_EXECUTABLE_PATH; skip the Chromium download.
+  puppeteer: false
   sharp: true
   unrs-resolver: false

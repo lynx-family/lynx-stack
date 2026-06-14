@@ -6,6 +6,7 @@ import { createWriteStream } from 'node:fs';
 import { appendFile, mkdir, writeFile } from 'node:fs/promises';
 import { resolve as resolvePath } from 'node:path';
 
+import { closeBrowser, rasterizePreview } from './scoring/rasterize.ts';
 import { scoreVisualSimilarity } from './scoring/visual.ts';
 import type {
   BenchmarkRecord,
@@ -89,16 +90,37 @@ export async function runBenchmark(
       );
       let visualScore = result.visual_score;
       let visualRationale = result.visual_rationale;
+      let screenshotPath = result.screenshot_path;
+      let extraErrorLog = '';
+      // If the route succeeded and produced an HTML preview, rasterize it to
+      // PNG before the visual scorer runs. The scorer requires a PNG/JPEG
+      // path, so M4 was silently skipped in Phase 1.
+      if (
+        !opts.dry_run
+        && result.render_ok
+        && screenshotPath
+        && screenshotPath.endsWith('.html')
+      ) {
+        const pngPath = screenshotPath.replace(/\.html$/, '.png');
+        try {
+          await rasterizePreview(screenshotPath, pngPath);
+          screenshotPath = pngPath;
+        } catch (err: unknown) {
+          const msg = err instanceof Error ? err.message : String(err);
+          extraErrorLog = `rasterize failed: ${msg}`;
+          screenshotPath = null;
+        }
+      }
       // If the route succeeded and produced a preview file, score it now.
       // Without ANTHROPIC_API_KEY the scorer is a soft no-op.
       if (
         !opts.dry_run
         && result.render_ok
-        && result.screenshot_path
+        && screenshotPath
         && visualScore === null
       ) {
         const vs = await scoreVisualSimilarity({
-          screenshotPath: result.screenshot_path,
+          screenshotPath,
           promptText: prompt.prompt,
           promptId: prompt.id,
           modelId: opts.model_id,
@@ -113,6 +135,11 @@ export async function runBenchmark(
         visualScore = vs.score;
         visualRationale = vs.rationale;
       }
+      const mergedErrorLog = extraErrorLog
+        ? (result.error_log
+          ? `${result.error_log}\n${extraErrorLog}`
+          : extraErrorLog)
+        : result.error_log;
       const rec: BenchmarkRecord = {
         prompt_id: prompt.id,
         prompt_category: prompt.category,
@@ -122,8 +149,8 @@ export async function runBenchmark(
         generated_code: result.generated_code,
         parse_ok: result.parse_ok,
         render_ok: result.render_ok,
-        screenshot_path: result.screenshot_path,
-        error_log: result.error_log,
+        screenshot_path: screenshotPath,
+        error_log: mergedErrorLog,
         visual_score: visualScore,
         visual_rationale: visualRationale,
         timestamp: now().toISOString(),
@@ -143,7 +170,12 @@ export async function runBenchmark(
     }
   }
 
-  await Promise.all(Array.from({ length: concurrency }, worker));
+  try {
+    await Promise.all(Array.from({ length: concurrency }, worker));
+  } finally {
+    // Release the puppeteer Chromium process if it was launched. Best-effort.
+    await closeBrowser();
+  }
 
   const finishedAt = now();
   const report = aggregate({

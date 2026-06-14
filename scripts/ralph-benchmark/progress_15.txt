@@ -7,7 +7,10 @@ Completion promise: PHASE_1_5_DONE
 ## Story Status
 
 - US-151: DONE — aggregate token cost into report
-- US-152: TODO — wire puppeteer to enable M4 visual scoring
+- US-152: PARTIAL (code) — wire puppeteer to enable M4 visual scoring
+  Code complete: puppeteer dep added, rasterize.ts created, harness wired to rasterize HTML → PNG before scoring, browser shutdown hook in place.
+  Verified: dry-run smoke clean; manual rasterizePreview() smoke against /tmp/test-preview.html produced a 7,922-byte PNG using system Chrome (no Chromium download).
+  BLOCKED on AC final bullet: re-running hard n=10 spot check requires OPENAI_API_KEY in env (also needed for US-153 re-run, US-154 verify, US-155 sweep). Both keys are NOT present in current session env — the boot prompt's "already in session env from a prior turn" assumption did not hold.
 - US-153: TODO — tighten mock PAPI / mock Shim to reject unknown tags
 - US-154: TODO — multi-model support + cost estimator
 - US-155: TODO — n=50 full sweep + decision document (HARD STOP gate before sweep)
@@ -51,3 +54,30 @@ Always prepend before any pnpm/node/tsc command:
     Sensible — A is much higher than B/C because it embeds the 476-line .d.ts per system prompt
 - Lint gotchas this iteration: biome useOptionalChain on `m && m.pricing_missing` → `m?.pricing_missing`
 - Commit pending
+
+### Iteration 1 (cont.) — US-152 code wiring + puppeteer install plumbing
+- Added puppeteer ^23.11.1 to packages/dom-shim devDependencies
+- pnpm 11 requires build-script approval; set `puppeteer: false` under `allowBuilds:` in pnpm-workspace.yaml (replaces the auto-generated placeholder). Chromium download is skipped intentionally because we use system Chrome.
+- Created benchmarks/src/scoring/rasterize.ts: lazy puppeteer browser singleton. resolveExecutablePath() honors PUPPETEER_EXECUTABLE_PATH then falls back to /Applications/Google Chrome.app/Contents/MacOS/Google Chrome on darwin. Default viewport 800×1200 per RUBRIC.md M4. process.on('exit') hook + explicit closeBrowser() called from harness finally block.
+- harness.ts: when route returns render_ok=true and screenshot_path ends with .html, rasterize to .png, point screenshot_path at the PNG; on failure append `rasterize failed: <msg>` to error_log and set screenshot_path=null. visual scorer then fires with a real PNG.
+- Verification:
+  * pnpm install — exit 0 (with `puppeteer: false` in allowBuilds, no more ERR_PNPM_IGNORED_BUILDS)
+  * pnpm typecheck — clean
+  * eslint + biome on changed files — clean
+  * dry-run smoke (--routes A,B,C --prompts P001,P002 --rounds 1) — exit 0
+  * Manual rasterizePreview smoke against a 2-paragraph HTML wrote a 7,922-byte PNG using system Chrome (no network)
+- BLOCKER (surfaced to user this iteration): paid n=10 re-run cannot proceed without OPENAI_API_KEY in env. Same blocker also covers US-153 paid re-run, US-154 verify, and US-155 sweep. Loop will park here until keys are exported.
+
+## Notes for next iteration
+
+If OPENAI_API_KEY is now exported when the next iteration starts:
+1. Re-run hard n=10 with puppeteer enabled:
+   `pnpm -F @lynx-js/dom-shim benchmark --routes A,B,C --prompts P007,P014,P015,P023,P029,P030,P034,P041,P048,P049 --rounds 3 --model gpt-4o --out packages/dom-shim/benchmarks/reports/spot-check-v2`
+2. Copy report.{md,json} to packages/dom-shim/SPOT_CHECK_HARD_N10_V2.{md,json}
+3. Verify visual_score is numeric for each render_ok=true record (the AC for US-152)
+4. Commit `feat(dom-shim): US-152 — wire puppeteer rasterization for M4 visual scoring`
+5. Proceed to US-153.
+
+If keys still absent:
+- Do not write more code.
+- Print a one-paragraph blocker reminder and end the iteration without emitting the promise.
