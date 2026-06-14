@@ -10,6 +10,7 @@ import { getBoundingClientRect, invalidateGeometry } from './geometry.ts';
 import type { DOMRectReadOnly } from './geometry.ts';
 import type { ElementRef } from './papi-types.ts';
 import { scheduleFlush } from './scheduler.ts';
+import { L2CSSStyleDeclaration } from './style.ts';
 
 /** DOM `Node.ELEMENT_NODE`. */
 export const NODE_TYPE_ELEMENT = 1;
@@ -558,6 +559,15 @@ export class L2SafeWritableElement extends L1ReadOnlyElement {
   /** Spec DOMStringMap with writable assignment + delete. See Shim_Design.md §5.2.4. */
   override get dataset(): Record<string, string> {
     return makeWritableDataset(this.papi);
+  }
+
+  /**
+   * Spec CSSStyleDeclaration — setProperty/getPropertyValue/removeProperty,
+   * cssText getter only (cssText setter is L3b in US-447).
+   * See Shim_Design.md §5.2.5.
+   */
+  get style(): L2CSSStyleDeclaration {
+    return new L2CSSStyleDeclaration(this.papi);
   }
 
   /** Spec coercion + write-through cache. See Shim_Design.md §5.2.3. */

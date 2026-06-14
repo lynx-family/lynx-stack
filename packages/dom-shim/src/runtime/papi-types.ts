@@ -55,4 +55,10 @@ declare global {
     node: ElementRef,
     value: Record<string, unknown> | undefined,
   ): void;
+  function __AddInlineStyle(
+    e: ElementRef,
+    key: number | string,
+    value: unknown,
+  ): void;
+  function __SetInlineStyles(node: ElementRef, value: unknown): void;
 }
