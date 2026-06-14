@@ -28,7 +28,18 @@ Completion promise: PHASE_1_5_DONE
         Estimated cost for claude-opus-4-7: $44.14 (range $23.89..$64.39)
         Estimated cost: $50.49 (range $27.54..$73.44)
       Inside PRD §5.2's $20..$60 envelope.
-- US-155: TODO — n=50 full sweep + decision document (HARD STOP gate before sweep)
+- US-155: GATE WAITING — pre-flight done; sweep blocked on (a) API keys, (b) US-152/US-153 paid reruns, (c) human go.
+  Pre-flight evidence:
+    * Commits on branch: 67d89617 (US-151) · 65a1be2c (US-152 wip) · 4986e777 (US-153 wip) · 27910fc9 (US-154)
+    * Dry-run smoke: exit 0
+    * Cost estimate (n=50 × 3 routes × 3 rounds × 2 models):
+        gpt-4o:           $6.34 (range $3.64..$9.04)
+        claude-opus-4-7: $44.14 (range $23.89..$64.39)
+        Total:           $50.49 (range $27.54..$73.44)
+  Outstanding before sweep:
+    * OPENAI_API_KEY + ANTHROPIC_API_KEY not in session env
+    * SPOT_CHECK_HARD_N10_V2.{md,json} (US-152 final AC) not yet produced
+    * SPOT_CHECK_HARD_N10_V3.{md,json} (US-153 final AC) not yet produced
 
 ## Notes for next iteration
 
