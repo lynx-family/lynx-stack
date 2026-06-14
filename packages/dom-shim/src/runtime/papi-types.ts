@@ -78,4 +78,25 @@ declare global {
     options: Record<string, unknown>,
   ): ElementRef;
   function __CreateWrapperElement(parentComponentUniId: number): ElementRef;
+  function __CreateView(
+    parentComponentUniId: number,
+    info?: unknown,
+  ): ElementRef;
+  function __CreateText(
+    parentComponentUniId: number,
+    info?: unknown,
+  ): ElementRef;
+  function __CreateImage(
+    parentComponentUniId: number,
+    info?: unknown,
+  ): ElementRef;
+  function __CreateScrollView(
+    parentComponentUniId: number,
+    info?: unknown,
+  ): ElementRef;
+  function __CreateElement(
+    tag: string,
+    comParentUniID: number,
+    info?: unknown,
+  ): ElementRef;
 }

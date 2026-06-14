@@ -20,6 +20,8 @@ export {
   L2SafeWritableElement,
   NODE_TYPE_ELEMENT,
   NODE_TYPE_TEXT,
+  ShimDocumentFragment,
+  createDocumentFragment,
   getTextValue,
   recordTextValue,
   wrapPapi,
@@ -30,7 +32,7 @@ export {
   scheduleFlush,
   setAutoFlush,
 } from './scheduler.ts';
-export { document } from './document.ts';
+export { document, setBody } from './document.ts';
 export { GEOMETRY_STALE_CODE, invalidateGeometry } from './geometry.ts';
 export type { DOMRectReadOnly } from './geometry.ts';
 export type { ElementRef } from './papi-types.ts';
