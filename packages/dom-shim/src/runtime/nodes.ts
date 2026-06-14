@@ -46,6 +46,34 @@ const LYNX_TO_HTML_MIN: Readonly<Record<string, string>> = Object.freeze({
 });
 
 /**
+ * Raw text content side table. See Shim_Design.md §4.2.2 + §3.2 (PAPI gap:
+ * no `__GetRawText`).
+ *
+ * Lynx's `__CreateRawText(text, info?)` takes text but exposes no read-back
+ * primitive. We register the text in this side table at element-creation
+ * time so `nodeValue` can return it later. US-425 wires
+ * `document.createTextNode` to call `recordTextValue`. Until then, refs
+ * coming in via `__FirstElement` traversal that were created outside the
+ * Shim have an empty `nodeValue`.
+ *
+ * US-412's write-through cache may absorb this map.
+ */
+const textValues = new WeakMap<ElementRef, string>();
+
+/**
+ * Record the value of a raw-text node. Called by `document.createTextNode`
+ * (US-425) and `Element.textContent = ...` (US-446).
+ */
+export function recordTextValue(papi: ElementRef, value: string): void {
+  textValues.set(papi, value);
+}
+
+/** Read the recorded raw-text value, or empty string when unknown. */
+export function getTextValue(papi: ElementRef): string {
+  return textValues.get(papi) ?? '';
+}
+
+/**
  * Base node class. See Shim_Design.md §2 and §4.1.
  *
  * US-402: traversal + identity surface implemented here. US-403 adds the O(n)
@@ -214,9 +242,15 @@ export abstract class L1ReadOnlyNode {
 export class L1ReadOnlyText extends L1ReadOnlyNode {
   readonly nodeType: number = NODE_TYPE_TEXT;
   readonly nodeName: string = '#text';
-  // TODO US-410: cache-aware read of the raw text payload. Placeholder for
-  // US-402 so the getter signature is stable.
-  readonly nodeValue: string | null = '';
+
+  /**
+   * Reads from the raw-text side table. Returns empty string when the ref
+   * came from a context that did not register the value (e.g. traversal
+   * lands on an engine-created text node). See Shim_Design.md §4.2.2.
+   */
+  get nodeValue(): string | null {
+    return getTextValue(this.papi);
+  }
 }
 
 /**
