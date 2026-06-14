@@ -1,0 +1,172 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://lynxjs.org/schemas/dom-shim/benchmarks/result.schema.json",
+  "title": "Phase 1 Benchmark Result",
+  "description": "Schema for both per-record JSONL streaming output and the aggregate report.json. See RUBRIC.md for metric definitions.",
+  "type": "object",
+  "required": [
+    "schema_version",
+    "run_id",
+    "started_at",
+    "finished_at",
+    "model_id",
+    "rounds",
+    "concurrency",
+    "summary",
+    "per_category",
+    "records"
+  ],
+  "additionalProperties": false,
+  "properties": {
+    "schema_version": {
+      "type": "string",
+      "pattern": "^\\d+\\.\\d+\\.\\d+$"
+    },
+    "run_id": {
+      "type": "string",
+      "minLength": 1
+    },
+    "started_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "finished_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "model_id": {
+      "type": "string",
+      "minLength": 1
+    },
+    "rounds": {
+      "type": "integer",
+      "minimum": 1,
+      "maximum": 10
+    },
+    "concurrency": {
+      "type": "integer",
+      "minimum": 1,
+      "maximum": 64
+    },
+    "summary": {
+      "type": "object",
+      "patternProperties": {
+        "^[A-Z]$": { "$ref": "#/$defs/RouteMetrics" }
+      },
+      "additionalProperties": false,
+      "minProperties": 1
+    },
+    "per_category": {
+      "type": "object",
+      "patternProperties": {
+        "^[a-z-]+$": {
+          "type": "object",
+          "patternProperties": {
+            "^[A-Z]$": { "$ref": "#/$defs/RouteMetrics" }
+          },
+          "additionalProperties": false
+        }
+      },
+      "additionalProperties": false
+    },
+    "records": {
+      "type": "array",
+      "items": { "$ref": "#/$defs/Record" }
+    }
+  },
+  "$defs": {
+    "RouteMetrics": {
+      "type": "object",
+      "required": ["parse_ok_rate", "render_ok_rate", "convergence_rate"],
+      "additionalProperties": false,
+      "properties": {
+        "parse_ok_rate": { "type": "number", "minimum": 0, "maximum": 1 },
+        "render_ok_rate": { "type": "number", "minimum": 0, "maximum": 1 },
+        "convergence_rate": { "type": "number", "minimum": 0, "maximum": 1 },
+        "visual_score_mean": {
+          "oneOf": [
+            { "type": "number", "minimum": 0, "maximum": 1 },
+            { "type": "null" }
+          ]
+        },
+        "sample_size": { "type": "integer", "minimum": 0 }
+      }
+    },
+    "Record": {
+      "type": "object",
+      "required": [
+        "prompt_id",
+        "route",
+        "round",
+        "generated_code",
+        "parse_ok",
+        "render_ok",
+        "error_log",
+        "visual_score",
+        "timestamp",
+        "model_id"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "prompt_id": {
+          "type": "string",
+          "pattern": "^P\\d{3}$"
+        },
+        "route": {
+          "type": "string",
+          "enum": ["A", "B", "C"]
+        },
+        "round": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 10
+        },
+        "generated_code": {
+          "type": "string"
+        },
+        "parse_ok": {
+          "type": "boolean"
+        },
+        "render_ok": {
+          "type": "boolean"
+        },
+        "screenshot_path": {
+          "oneOf": [
+            { "type": "string", "minLength": 1 },
+            { "type": "null" }
+          ]
+        },
+        "error_log": {
+          "type": "string"
+        },
+        "visual_score": {
+          "oneOf": [
+            { "type": "number", "minimum": 0, "maximum": 1 },
+            { "type": "null" }
+          ]
+        },
+        "visual_rationale": {
+          "oneOf": [
+            { "type": "string" },
+            { "type": "null" }
+          ]
+        },
+        "timestamp": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "model_id": {
+          "type": "string"
+        },
+        "tokens_used": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "input": { "type": "integer", "minimum": 0 },
+            "output": { "type": "integer", "minimum": 0 }
+          }
+        }
+      }
+    }
+  }
+}

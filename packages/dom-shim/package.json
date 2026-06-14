@@ -13,6 +13,11 @@
   "scripts": {
     "benchmark": "node --experimental-strip-types benchmarks/cli.ts",
     "test:corpus-validate": "node --experimental-strip-types benchmarks/scripts/validate-corpus.ts",
+    "test:schema-validate": "node --experimental-strip-types benchmarks/scripts/validate-schema.ts",
     "typecheck": "tsc --noEmit"
+  },
+  "devDependencies": {
+    "ajv": "^8.17.1",
+    "ajv-formats": "^3.0.1"
   }
 }
