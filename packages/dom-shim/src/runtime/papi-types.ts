@@ -25,4 +25,14 @@ declare global {
   function __GetAttributes(node: ElementRef): Record<string, unknown>;
   function __GetDataset(node: ElementRef): Record<string, unknown>;
   function __GetDataByKey(node: ElementRef, key: string): unknown;
+  function __QuerySelector(
+    root: ElementRef,
+    cssSelector: string,
+    params: { onlyCurrentComponent?: boolean },
+  ): ElementRef | undefined;
+  function __QuerySelectorAll(
+    root: ElementRef,
+    cssSelector: string,
+    params: { onlyCurrentComponent?: boolean },
+  ): ElementRef[];
 }

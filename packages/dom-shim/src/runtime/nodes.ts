@@ -296,6 +296,64 @@ export class L1ReadOnlyElement extends L1ReadOnlyNode {
   }
 
   /**
+   * Selector engine bridges. See Shim_Design.md §4.2.4. Delegates to PAPI's
+   * `__QuerySelector` / `__QuerySelectorAll`. Default `onlyCurrentComponent`
+   * is false so the engine searches the whole subtree.
+   */
+  querySelector(selector: string): L1ReadOnlyElement | null {
+    const r = __QuerySelector(this.papi, selector, {
+      onlyCurrentComponent: false,
+    });
+    if (r === undefined || r === null) return null;
+    const w = wrapPapi(r);
+    return w instanceof L1ReadOnlyElement ? w : null;
+  }
+
+  querySelectorAll(selector: string): readonly L1ReadOnlyElement[] {
+    const refs = __QuerySelectorAll(this.papi, selector, {
+      onlyCurrentComponent: false,
+    });
+    const out: L1ReadOnlyElement[] = [];
+    for (const r of refs) {
+      const w = wrapPapi(r);
+      if (w instanceof L1ReadOnlyElement) out.push(w);
+    }
+    return Object.freeze(out);
+  }
+
+  /**
+   * **O(n) in tree size** — Lynx PAPI has no native `matches` primitive, so
+   * we query the parent's subtree for the selector and check whether `this`
+   * is in the result set. See Shim_Design.md §4.2.4.
+   *
+   * Divergence: for fully detached elements (no parent, not the page root)
+   * the result is engine-dependent — most selector engines do not include
+   * the root they're queried from. Caller should treat detached `matches`
+   * as best-effort.
+   */
+  matches(selector: string): boolean {
+    const parent = __GetParent(this.papi);
+    const root = parent ?? this.papi;
+    const all = __QuerySelectorAll(root, selector, {
+      onlyCurrentComponent: false,
+    });
+    return all.some((r) => __ElementIsEqual(r, this.papi));
+  }
+
+  /**
+   * **O(depth × subtree)** — walks parents calling `matches`. Spec returns
+   * `this` if `this` itself matches, then walks up.
+   */
+  closest(selector: string): L1ReadOnlyElement | null {
+    let cur: L1ReadOnlyElement | null = this;
+    while (cur !== null) {
+      if (cur.matches(selector)) return cur;
+      cur = cur.parentElement;
+    }
+    return null;
+  }
+
+  /**
    * Element children only — filters out raw-text siblings. Returns a frozen
    * snapshot. See Shim_Design.md §4.2.2.
    */
