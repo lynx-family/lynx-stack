@@ -90,7 +90,13 @@ export function getTextValue(papi: ElementRef): string {
  * layout documented in Shim_Implementation_PRD.md §8.1.
  */
 export abstract class L1ReadOnlyNode {
-  protected readonly papi: ElementRef;
+  /**
+   * Underlying PAPI ref. Public so Shim-internal helpers
+   * (`detachFromParent`, `invalidateGeometrySubtree`, etc.) can reach it.
+   * Callers outside the Shim should not depend on this — use the spec
+   * surface (`appendChild`, `removeChild`, etc.) instead.
+   */
+  readonly papi: ElementRef;
 
   constructor(papi: ElementRef) {
     this.papi = papi;
@@ -596,6 +602,71 @@ export class L2SafeWritableElement extends L1ReadOnlyElement {
     scheduleFlush();
   }
 
+  /**
+   * Spec appendChild — removes the child from its current parent first.
+   * Returns the appended child. See Shim_Design.md §5.2.6.
+   */
+  appendChild<T extends L1ReadOnlyNode>(child: T): T {
+    detachFromParent(child);
+    __AppendElement(this.papi, child.papi);
+    invalidateGeometrySubtree(this.papi);
+    invalidateGeometrySubtree(child.papi);
+    scheduleFlush();
+    return child;
+  }
+
+  /** Spec insertBefore — refNode === null behaves as appendChild. */
+  insertBefore<T extends L1ReadOnlyNode>(
+    newNode: T,
+    refNode: L1ReadOnlyNode | null,
+  ): T {
+    if (refNode === null) return this.appendChild(newNode);
+    detachFromParent(newNode);
+    __InsertElementBefore(this.papi, newNode.papi, refNode.papi);
+    invalidateGeometrySubtree(this.papi);
+    invalidateGeometrySubtree(newNode.papi);
+    scheduleFlush();
+    return newNode;
+  }
+
+  /**
+   * Spec removeChild — throws NotFoundError when child.parentNode !== this.
+   * US-474 will refine the error to DOMShimInvariantError.
+   */
+  removeChild<T extends L1ReadOnlyNode>(child: T): T {
+    const parent = child.parentNode;
+    if (parent === null || !__ElementIsEqual(parent.papi, this.papi)) {
+      throw new Error(
+        'NotFoundError: removeChild target is not a child of this node.',
+      );
+    }
+    __RemoveElement(this.papi, child.papi);
+    invalidateGeometrySubtree(this.papi);
+    invalidateGeometrySubtree(child.papi);
+    scheduleFlush();
+    return child;
+  }
+
+  /** Spec replaceChild — throws NotFoundError when oldChild.parentNode !== this. */
+  replaceChild<O extends L1ReadOnlyNode, N extends L1ReadOnlyNode>(
+    newChild: N,
+    oldChild: O,
+  ): O {
+    const parent = oldChild.parentNode;
+    if (parent === null || !__ElementIsEqual(parent.papi, this.papi)) {
+      throw new Error(
+        'NotFoundError: replaceChild target is not a child of this node.',
+      );
+    }
+    detachFromParent(newChild);
+    __ReplaceElement(newChild.papi, oldChild.papi);
+    invalidateGeometrySubtree(this.papi);
+    invalidateGeometrySubtree(newChild.papi);
+    invalidateGeometrySubtree(oldChild.papi);
+    scheduleFlush();
+    return oldChild;
+  }
+
   /** Spec toggleAttribute with optional force. Returns post-state. */
   toggleAttribute(name: string, force?: boolean): boolean {
     const present = this.getAttribute(name) !== null;
@@ -609,6 +680,34 @@ export class L2SafeWritableElement extends L1ReadOnlyElement {
       return false;
     }
     return shouldHave;
+  }
+}
+
+/**
+ * If `node` has a current parent, detach it via `__RemoveElement` so a
+ * subsequent append/insert moves rather than aliases the child. Implements
+ * the spec rule that any tree-mutation method first removes the node from
+ * its current location.
+ */
+function detachFromParent(node: L1ReadOnlyNode): void {
+  const parent = node.parentNode;
+  if (parent === null) return;
+  __RemoveElement(parent.papi, node.papi);
+}
+
+/**
+ * Recursively drop the cached `getBoundingClientRect` rect for `papi` and
+ * all its descendants. Called by tree-mutation methods so a moved subtree
+ * re-measures on next access.
+ */
+function invalidateGeometrySubtree(papi: ElementRef): void {
+  invalidateGeometry(papi);
+  try {
+    for (const c of __GetChildren(papi)) {
+      invalidateGeometrySubtree(c);
+    }
+  } catch {
+    // PAPI may not expose __GetChildren in some contexts; ignore.
   }
 }
 

@@ -61,4 +61,15 @@ declare global {
     value: unknown,
   ): void;
   function __SetInlineStyles(node: ElementRef, value: unknown): void;
+  function __AppendElement(parent: ElementRef, current: ElementRef): ElementRef;
+  function __RemoveElement(parent: ElementRef, current: ElementRef): ElementRef;
+  function __InsertElementBefore(
+    parent: ElementRef,
+    current: ElementRef,
+    marker?: ElementRef,
+  ): ElementRef;
+  function __ReplaceElement(
+    newElement: ElementRef,
+    oldElement: ElementRef,
+  ): void;
 }
