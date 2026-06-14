@@ -89,11 +89,34 @@ function runInMockPAPI(
   source: string,
   papi: ReturnType<typeof createMockPAPI>,
 ): { ok: boolean; error: string } {
-  // The LLM emits `export function render(...)` syntax. We rewrite to a plain
-  // function declaration so vm can execute it without ESM machinery.
-  const rewritten = source.replace(/\bexport\s+function\s+/g, 'function ');
+  // The LLM emits TypeScript (typed params, return types, possibly enums).
+  // vm.runInNewContext executes pure JS, so transpile types out first.
+  //
+  // We strip `export` BEFORE transpile so the transpiler treats the file as a
+  // plain script (no module emit machinery). `module: None` alone doesn't stop
+  // ts from inserting `exports.X = ...` lines when it sees an `export` keyword
+  // in source; those would crash in vm where `exports` is undefined.
+  const stripped = source.replace(/\bexport\s+/g, '');
+  let transpiled: string;
+  try {
+    const out = ts.transpileModule(stripped, {
+      compilerOptions: {
+        target: ts.ScriptTarget.ES2022,
+        module: ts.ModuleKind.None,
+        removeComments: false,
+        isolatedModules: false,
+      },
+      reportDiagnostics: false,
+    });
+    transpiled = out.outputText;
+  } catch (err) {
+    return {
+      ok: false,
+      error: `ts.transpileModule failed: ${(err as Error).message}`,
+    };
+  }
   const wrapped =
-    `${rewritten}\n\ntry { render(__CreatePage('mock', 0)); } catch (e) { __ROUTE_ERROR__ = e; }`;
+    `${transpiled}\n\ntry { render(__CreatePage('mock', 0)); } catch (e) { __ROUTE_ERROR__ = e; }`;
   const context: Record<string, unknown> = {
     ...papi.globals,
     __ROUTE_ERROR__: undefined,

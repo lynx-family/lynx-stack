@@ -40,6 +40,25 @@ CONSTRAINTS:
     the code block, OR as a bare JavaScript program (no <script> tag). Both
     are accepted.
 
+EXAMPLE — a minimal valid response for "show a centered title 'Hello'":
+
+\`\`\`html
+<script>
+  const root = document.createElement('view');
+  root.style.display = 'flex';
+  root.style.justifyContent = 'center';
+  const t = document.createElement('text');
+  t.textContent = 'Hello';
+  root.appendChild(t);
+  document.body.appendChild(root);
+  __flush__();
+</script>
+\`\`\`
+
+Note the final \`__flush__();\` — this is REQUIRED on every run. Skipping it
+means the engine never commits the element tree and your run will be marked
+as a render failure. Always include it.
+
 If a previous attempt failed, you'll receive the previous code and its
 error. Read the error, fix the issue, and emit only the corrected code
 block. Do not explain.`;
