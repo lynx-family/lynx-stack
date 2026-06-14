@@ -21,6 +21,19 @@ Completion promise: PHASE_1_SMOKE_DONE
 Always use absolute paths in Bash calls (cwd does not persist).
 Worktree: /Users/bytedance/github/lynx-stack/.worktrees/lynx-dom-shim-benchmark/
 
+**Environment quirk:** Local default node is v23.8 which the repo rejects (`engines: ^22 || ^24`).
+Always prepend: `export PATH="/Users/bytedance/.nvm/versions/node/v22.19.0/bin:$PATH"`
+before any pnpm/node/tsc/eslint/biome command. Without this, every `pnpm install`
+and `pnpm -F` invocation fails with ERR_PNPM_UNSUPPORTED_ENGINE.
+
+**Lint contract (learned the hard way in iteration 2):**
+- ESLint disallows `process.exit()` — use `throw new Error()` and let it propagate
+- Biome disallows `console.log` — use `console.info` instead
+- TypeScript `--strictest` + `verbatimModuleSyntax` + `isolatedDeclarations` are on
+- Pre-commit hook runs eslint+biome+dprint in lint-staged; auto-fix only catches some
+- After Write/Edit, dprint may reformat (trailing commas, blank lines after MD headers).
+  System reminders surface the post-format file content — trust them.
+
 Phase 1 is mock-only — no real Lynx engine integration, no real device tests.
 Do NOT run the full 50-prompt sweep. Stop at US-109 smoke test gate.
 
@@ -29,8 +42,29 @@ Do NOT run the full 50-prompt sweep. Stop at US-109 smoke test gate.
 ### Iteration 2 — US-102 curate 50-prompt corpus
 - Files: packages/dom-shim/benchmarks/corpus/prompts.json (50 entries), packages/dom-shim/benchmarks/scripts/validate-corpus.ts
 - Distribution: category 8/7/8/7/5/7/8 (interactive/form/layout/list/media/navigation/data-display), complexity 15/19/11/5 (trivial/simple/moderate/complex)
-- Verification: pnpm -F @lynx-js/dom-shim test:corpus-validate exits 0; typecheck exits 0
-- Notes: validator enforces both shape (id format /^P\d{3}$/, unique IDs, non-empty capabilities, prompt >= 20 chars) and distribution windows.
+- Verification: pnpm -F @lynx-js/dom-shim test:corpus-validate exits 0; typecheck exits 0; eslint exits 0; biome lint exits 0
+- Notes: validator enforces both shape (id format /^P\d{3}$/, unique IDs, non-empty capabilities, prompt >= 20 chars) and distribution windows. Lint contract documented in "Notes for next iteration" above.
+
+### Next up — US-103 through US-109
+
+US-103 (rubric+schema, ~30 min): Pure documentation file + result.schema.json. Fast.
+US-104 (harness CLI, ~1-2h): Significant code. Define types, CLI parser, JSONL writer,
+  retry logic, dry-run mode. Don't call real API in dry-run.
+US-105 (route A): Embed @lynx-js/type-element-api@0.0.8 d.ts (476 lines) as string in
+  system prompt. Mock PAPI shared with B in benchmarks/src/mocks/mock-papi.ts.
+US-106 (route B): Mock DOM Shim ~300 LOC over mock PAPI. htmlparser2 for innerHTML.
+US-107 (route C): A2UI-style JSON schema, walk into mock PAPI calls.
+US-108 (visual scorer): @anthropic-ai/sdk with Claude Opus 4.7 vision. Cache by
+  (screenshot_hash, prompt_id). If ANTHROPIC_API_KEY env unset, skip live scoring;
+  return {score: null, rationale: "no API key"} and note in report.
+US-109 (report + smoke gate): Render report.md + report.json. Run with
+  --prompts P001,P002 --routes A,B,C --rounds 1 --dry-run first (no API key needed);
+  then real smoke run if ANTHROPIC_API_KEY set. Commit report artifacts under
+  benchmarks/reports/smoke-<timestamp>/. Only then emit PHASE_1_SMOKE_DONE in promise tag.
+
+If ANTHROPIC_API_KEY is unset in env, the real smoke run cannot execute. Per PRD
+section 11 instruction 11, that counts as a blocker requiring human judgment —
+report it and do NOT emit the promise tag.
 
 ### Iteration 1 — US-101 set up workspace package skeleton
 - Files: packages/dom-shim/{package.json,tsconfig.json,README.md,src/index.ts,benchmarks/.gitkeep}
