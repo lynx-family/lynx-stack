@@ -8,8 +8,18 @@
  * the story decomposition.
  */
 
-export { L1ReadOnlyNode, L1ReadOnlyText } from './nodes.ts';
-export { L1ReadOnlyElement } from './elements.ts';
-export { wrapPapi } from './wrap.ts';
+export {
+  DOCUMENT_POSITION_CONTAINED_BY,
+  DOCUMENT_POSITION_CONTAINS,
+  DOCUMENT_POSITION_DISCONNECTED,
+  DOCUMENT_POSITION_FOLLOWING,
+  DOCUMENT_POSITION_PRECEDING,
+  L1ReadOnlyElement,
+  L1ReadOnlyNode,
+  L1ReadOnlyText,
+  NODE_TYPE_ELEMENT,
+  NODE_TYPE_TEXT,
+  wrapPapi,
+} from './nodes.ts';
 export { document } from './document.ts';
 export type { ElementRef } from './papi-types.ts';
