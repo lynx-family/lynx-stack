@@ -4,6 +4,7 @@
 
 import { ReadOnlyNamedNodeMap, coerceAttributeValue } from './attributes.ts';
 import { ReadOnlyDOMTokenList } from './classlist.ts';
+import { makeReadOnlyDataset } from './dataset.ts';
 import type { ElementRef } from './papi-types.ts';
 
 /** DOM `Node.ELEMENT_NODE`. */
@@ -283,6 +284,15 @@ export class L1ReadOnlyElement extends L1ReadOnlyNode {
 
   get attributes(): ReadOnlyNamedNodeMap {
     return new ReadOnlyNamedNodeMap(this.papi);
+  }
+
+  /**
+   * Spec DOMStringMap exposed as a Proxy that reads via `__GetDataByKey` on
+   * each access. Writes throw. See Shim_Design.md §4.2.3. The L2 writable
+   * variant lands in US-416.
+   */
+  get dataset(): Readonly<Record<string, string>> {
+    return makeReadOnlyDataset(this.papi);
   }
 
   /**

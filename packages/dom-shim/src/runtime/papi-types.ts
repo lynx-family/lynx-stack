@@ -23,4 +23,6 @@ declare global {
   function __GetAttributeByName(node: ElementRef, name: string): unknown;
   function __GetAttributeNames(node: ElementRef): string[];
   function __GetAttributes(node: ElementRef): Record<string, unknown>;
+  function __GetDataset(node: ElementRef): Record<string, unknown>;
+  function __GetDataByKey(node: ElementRef, key: string): unknown;
 }
