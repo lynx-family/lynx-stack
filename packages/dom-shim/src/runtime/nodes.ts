@@ -296,6 +296,60 @@ export class L1ReadOnlyElement extends L1ReadOnlyNode {
   }
 
   /**
+   * Element children only — filters out raw-text siblings. Returns a frozen
+   * snapshot. See Shim_Design.md §4.2.2.
+   */
+  get children(): readonly L1ReadOnlyElement[] {
+    const out: L1ReadOnlyElement[] = [];
+    for (const ref of __GetChildren(this.papi)) {
+      const w = wrapPapi(ref);
+      if (w instanceof L1ReadOnlyElement) out.push(w);
+    }
+    return Object.freeze(out);
+  }
+
+  get firstElementChild(): L1ReadOnlyElement | null {
+    for (const ref of __GetChildren(this.papi)) {
+      const w = wrapPapi(ref);
+      if (w instanceof L1ReadOnlyElement) return w;
+    }
+    return null;
+  }
+
+  get lastElementChild(): L1ReadOnlyElement | null {
+    const c = __GetChildren(this.papi);
+    for (let i = c.length - 1; i >= 0; i--) {
+      const ref = c[i];
+      if (ref === undefined) continue;
+      const w = wrapPapi(ref);
+      if (w instanceof L1ReadOnlyElement) return w;
+    }
+    return null;
+  }
+
+  /**
+   * Walk forward via `__NextElement`, skipping raw-text siblings until an
+   * element is found. See Shim_Design.md §4.2.2.
+   */
+  get nextElementSibling(): L1ReadOnlyElement | null {
+    let cur: ElementRef | undefined = __NextElement(this.papi);
+    while (cur !== undefined) {
+      const w = wrapPapi(cur);
+      if (w instanceof L1ReadOnlyElement) return w;
+      cur = __NextElement(cur);
+    }
+    return null;
+  }
+
+  get childElementCount(): number {
+    let count = 0;
+    for (const ref of __GetChildren(this.papi)) {
+      if (wrapPapi(ref) instanceof L1ReadOnlyElement) count++;
+    }
+    return count;
+  }
+
+  /**
    * **O(n) in sibling count** — walks parent's children to find self and
    * the preceding element, skipping non-element siblings (raw text nodes).
    * See Shim_Design.md §4.2.2 + §4.2.1.
