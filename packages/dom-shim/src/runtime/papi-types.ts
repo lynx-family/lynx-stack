@@ -41,4 +41,5 @@ declare global {
     params: Record<string, unknown>,
     callback: (res: { code: number; data: unknown }) => void,
   ): ElementRef[];
+  function __FlushElementTree(element?: ElementRef, options?: unknown): void;
 }
