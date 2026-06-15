@@ -18,7 +18,7 @@ export interface CompiledTemplateNode {
   __compiledTemplate?: CompiledElementNode;
   __typedElementType?: string;
   __attributeSlots?: unknown[] | null;
-  __elementSlots?: unknown[][] | null;
+  __elementSlots?: Array<unknown[] | null | undefined> | null;
   __bundleUrl?: string;
   __options?: Record<string, unknown>;
 }
@@ -87,7 +87,7 @@ function applyCompiledAttributes(
 function instantiateCompiledTemplateChild(
   child: CompiledTemplateChild,
   attributeSlots: unknown[] | null | undefined,
-  elementSlots: unknown[][] | null | undefined,
+  elementSlots: Array<unknown[] | null | undefined> | null | undefined,
 ): unknown {
   if (isCompiledElementSlotNode(child)) {
     return {
@@ -103,7 +103,7 @@ function instantiateCompiledTemplateChild(
 export function instantiateCompiledTemplateNode(
   node: CompiledElementNode,
   attributeSlots: unknown[] | null | undefined,
-  elementSlots: unknown[][] | null | undefined,
+  elementSlots: Array<unknown[] | null | undefined> | null | undefined,
 ): CompiledTemplateNode {
   const instantiatedChildren: unknown[] = [];
   for (const child of node.children ?? []) {
@@ -123,7 +123,7 @@ export function instantiateCompiledTemplateNode(
 export function instantiateCompiledTemplate(
   template: unknown,
   attributeSlots: unknown[] | null | undefined,
-  elementSlots: unknown[][] | null | undefined,
+  elementSlots: Array<unknown[] | null | undefined> | null | undefined,
 ): CompiledTemplateNode {
   if (!isCompiledElementNode(template)) {
     throw new Error('ElementTemplate: __CreateElementTemplate expects the new compiled template schema.');
@@ -180,7 +180,10 @@ function rebuildTemplateInstance(root: CompiledTemplateNode): void {
   assignTemplateInstance(root, next);
 }
 
-function detachNodeFromElementSlots(elementSlots: unknown[][], node: unknown): void {
+function detachNodeFromElementSlots(
+  elementSlots: Array<unknown[] | null | undefined>,
+  node: unknown,
+): void {
   for (let slotIndex = 0; slotIndex < elementSlots.length; slotIndex += 1) {
     const children = elementSlots[slotIndex];
     if (!children) {
@@ -197,7 +200,7 @@ function detachNodeFromElementSlots(elementSlots: unknown[][], node: unknown): v
 }
 
 function insertNodeIntoElementSlot(
-  elementSlots: unknown[][],
+  elementSlots: Array<unknown[] | null | undefined>,
   elementSlotIndex: number,
   node: unknown,
   referenceNode?: unknown,
@@ -217,7 +220,7 @@ function insertNodeIntoElementSlot(
 }
 
 function removeNodeFromElementSlot(
-  elementSlots: unknown[][],
+  elementSlots: Array<unknown[] | null | undefined>,
   elementSlotIndex: number,
   node: unknown,
 ): void {
@@ -231,7 +234,7 @@ function removeNodeFromElementSlot(
 
 function commitTypedElementSlots(
   root: CompiledTemplateNode,
-  elementSlots: unknown[][],
+  elementSlots: Array<unknown[] | null | undefined>,
 ): void {
   root.__elementSlots = elementSlots;
   root.children = elementSlots[0] ?? [];
@@ -319,7 +322,7 @@ type SerializedRuntimeOptionValueForMock =
 
 interface SerializedEtNodeBaseForMock {
   attributeSlots?: SerializableValueForMock[] | null;
-  elementSlots?: SerializedEtNodeForMock[][] | null;
+  elementSlots?: Array<SerializedEtNodeForMock[] | null | undefined> | null;
   uid: number | string;
   options?: Record<string, SerializedRuntimeOptionValueForMock> | null;
 }
@@ -494,15 +497,21 @@ function normalizeAttributeSlots(
 }
 
 function serializeElementSlotsFromSlots(
-  elementSlots: unknown[][] | null | undefined,
-): SerializedEtNodeForMock[][] {
-  const serializedSlots: SerializedEtNodeForMock[][] = [];
+  elementSlots: Array<unknown[] | null | undefined> | null | undefined,
+): Array<SerializedEtNodeForMock[] | null | undefined> {
+  const serializedSlots: Array<SerializedEtNodeForMock[] | null | undefined> = [];
   if (!isUnknownArray(elementSlots)) {
     return serializedSlots;
   }
 
   for (let slotId = 0; slotId < elementSlots.length; slotId += 1) {
     const slotChildren = elementSlots[slotId];
+    if (slotChildren == null) {
+      if (slotId in elementSlots) {
+        serializedSlots[slotId] = slotChildren;
+      }
+      continue;
+    }
     if (!isUnknownArray(slotChildren)) {
       continue;
     }

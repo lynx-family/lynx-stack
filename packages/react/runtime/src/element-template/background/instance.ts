@@ -9,7 +9,11 @@ import { backgroundElementTemplateInstanceManager } from './manager.js';
 import { isDirectOrDeepEqual } from '../../utils.js';
 import { ElementTemplateUpdateOps } from '../protocol/opcodes.js';
 import { parseElementTemplateType } from '../protocol/template-type.js';
-import type { ElementTemplateUpdateCommandStream, SerializableValue } from '../protocol/types.js';
+import type {
+  ElementTemplateHandleSlotsCommand,
+  ElementTemplateUpdateCommandStream,
+  SerializableValue,
+} from '../protocol/types.js';
 
 function pushOp(...items: ElementTemplateUpdateCommandStream): void {
   globalCommitContext.ops.push(...items);
@@ -104,7 +108,7 @@ export class BackgroundElementTemplateInstance {
     // Walk the linked-list children once to build the slot-indexed handle list
     // for the createTemplate op. Going via `this.elementSlots` would allocate
     // the full `Instance[][]` intermediate just to throw it away here.
-    const serializedSlots: number[][] = [];
+    const serializedSlots: ElementTemplateHandleSlotsCommand = [];
     let child = this.firstChild;
     while (child) {
       (serializedSlots[child.__slotIndex] ??= []).push(child.instanceId);

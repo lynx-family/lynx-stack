@@ -30,6 +30,12 @@ export type RuntimeTypedElementAttributes = Record<string, RuntimeAttributeSlotV
 
 export type TypedElementAttributesCommand = Record<string, SerializableValue>;
 
+export type RuntimeElementSlots = Array<ElementRef[] | null | undefined>;
+
+export type ElementTemplateHandleSlotsCommand = Array<number[] | null | undefined>;
+
+export type SerializedEtNodeSlots = Array<SerializedEtNode[] | null | undefined>;
+
 export interface ElementTemplateHandleRefCommandValue {
   __etHandleRef: number;
   [key: string]: SerializableValue;
@@ -51,7 +57,7 @@ export type SerializedRuntimeOptions = Record<string, SerializedRuntimeOptionVal
 
 export interface SerializedEtNodeBase {
   attributeSlots?: SerializableValue[] | null;
-  elementSlots?: SerializedEtNode[][] | null;
+  elementSlots?: SerializedEtNodeSlots | null;
   uid: number | string;
   options?: SerializedRuntimeOptions | null;
 }
@@ -78,7 +84,7 @@ export interface SerializedElementTemplate {
   templateKey: string;
   bundleUrl?: string;
   attributeSlots?: SerializableValue[] | null;
-  elementSlots?: SerializedElementTemplate[][] | null;
+  elementSlots?: Array<SerializedElementTemplate[] | null | undefined> | null;
   uid: number | string;
   options?: SerializedRuntimeOptions | null;
 }
@@ -89,7 +95,7 @@ export type CreateTemplateCommand = [
   templateKey: string,
   bundleUrl: string | null | undefined,
   attributeSlots: SerializableValue[] | null | undefined,
-  elementSlots: number[][] | null | undefined,
+  elementSlots: ElementTemplateHandleSlotsCommand | null | undefined,
 ];
 
 export type SetAttributeCommand = [
@@ -120,7 +126,7 @@ export type CreateTypedElementCommand = [
   handleId: number,
   type: string,
   attributes: TypedElementAttributesCommand | null | undefined,
-  elementSlots: number[][] | null | undefined,
+  elementSlots: ElementTemplateHandleSlotsCommand | null | undefined,
   options: RuntimeOptionsCommand | null | undefined,
 ];
 

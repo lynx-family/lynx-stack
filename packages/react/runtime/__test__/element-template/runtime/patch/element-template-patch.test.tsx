@@ -14,6 +14,7 @@ import {
 import { ElementTemplateLifecycleConstant } from '../../../../src/element-template/protocol/lifecycle-constant.js';
 import { ElementTemplateUpdateOps } from '../../../../src/element-template/protocol/opcodes.js';
 import type {
+  ElementTemplateHandleSlotsCommand,
   ElementTemplateUpdateCommandStream,
   SerializedElementTemplate,
 } from '../../../../src/element-template/protocol/types.js';
@@ -344,6 +345,56 @@ describe('ElementTemplate patch stream (apply)', () => {
     resetReportedErrors();
   });
 
+  it('creates templates with nullable and sparse element slots', () => {
+    envManager.switchToMainThread();
+    elementTemplateRegistry.clear();
+    registerTemplates([
+      {
+        templateId: '_et_sparse_slot_parent',
+        compiledTemplate: {
+          kind: 'element',
+          type: 'view',
+          attributesArray: [],
+          children: [
+            { kind: 'elementSlot', type: 'slot', elementSlotIndex: 0 },
+            { kind: 'elementSlot', type: 'slot', elementSlotIndex: 1 },
+            { kind: 'elementSlot', type: 'slot', elementSlotIndex: 2 },
+          ],
+        },
+      },
+    ]);
+
+    const elementSlots: ElementTemplateHandleSlotsCommand = [];
+    elementSlots[1] = [31];
+    elementSlots[2] = null;
+
+    const createTemplateMock = globalThis.__CreateElementTemplate as unknown as {
+      mockClear: () => void;
+      mock: { calls: unknown[][] };
+    };
+    createTemplateMock.mockClear();
+
+    applyElementTemplateUpdateCommands([
+      ...createRawTextOps(31, 'child'),
+      ElementTemplateUpdateOps.createTemplate,
+      32,
+      '_et_sparse_slot_parent',
+      null,
+      [],
+      elementSlots,
+    ]);
+
+    const parentCall = createTemplateMock.mock.calls.find((call) => call[0] === '_et_sparse_slot_parent');
+    expect(parentCall).toBeDefined();
+    const childRef = elementTemplateRegistry.get(31);
+    const resolvedSlots = parentCall![3] as Array<ElementRef[] | null | undefined>;
+    expect(0 in resolvedSlots).toBe(false);
+    expect(resolvedSlots[1]).toEqual([childRef]);
+    expect(2 in resolvedSlots).toBe(false);
+    expect(elementTemplateRegistry.has(32)).toBe(true);
+    expect((globalThis.lynx as unknown as LynxWithReportErrorMock).reportError.mock.calls).toHaveLength(0);
+  });
+
   it('reports missing patch target', () => {
     const jsx = <view />;
     root.render(jsx);
@@ -373,7 +424,7 @@ describe('ElementTemplate patch stream (apply)', () => {
       21,
       'list',
       { id: 'typed-list' },
-      [[11]],
+      [[11], null],
       {
         listChildren: [{ __etHandleRef: 12 }],
         estimatedHeight: 80,
@@ -383,7 +434,9 @@ describe('ElementTemplate patch stream (apply)', () => {
     expect(mockCreateTypedElementTemplate.mock.calls).toHaveLength(1);
     expect(mockCreateTypedElementTemplate.mock.calls[0]?.[0]).toBe('list');
     expect(mockCreateTypedElementTemplate.mock.calls[0]?.[1]).toEqual({ id: 'typed-list' });
-    expect(mockCreateTypedElementTemplate.mock.calls[0]?.[2]).toEqual([[slotChildRef]]);
+    const elementSlots = mockCreateTypedElementTemplate.mock.calls[0]?.[2] as Array<ElementRef[] | null | undefined>;
+    expect(elementSlots[0]).toEqual([slotChildRef]);
+    expect(1 in elementSlots).toBe(false);
     expect(mockCreateTypedElementTemplate.mock.calls[0]?.[3]).toBe(21);
     expect(mockCreateTypedElementTemplate.mock.calls[0]?.[4]).toEqual({
       listChildren: [optionChildRef],
@@ -450,6 +503,29 @@ describe('ElementTemplate patch stream (apply)', () => {
     expect(mockCreateTypedElementTemplate.mock.calls).toHaveLength(0);
     const reportError = (globalThis.lynx as unknown as LynxWithReportErrorMock).reportError;
     expect(String(reportError.mock.calls[0]?.[0]?.message ?? '')).toContain('invalid handleId 0');
+    resetReportedErrors();
+  });
+
+  it('reports invalid typed create elementSlots', () => {
+    envManager.switchToMainThread();
+    elementTemplateRegistry.clear();
+    mockCreateTypedElementTemplate.mockClear();
+
+    applyElementTemplateUpdateCommands([
+      ElementTemplateUpdateOps.createTypedElement,
+      28,
+      'list',
+      null,
+      'bad-slots' as unknown as ElementTemplateUpdateCommandStream[number],
+      null,
+    ]);
+
+    expect(mockCreateTypedElementTemplate.mock.calls).toHaveLength(0);
+    expect(elementTemplateRegistry.has(28)).toBe(false);
+    const reportError = (globalThis.lynx as unknown as LynxWithReportErrorMock).reportError;
+    expect(String(reportError.mock.calls[0]?.[0]?.message ?? '')).toContain(
+      'elementSlots must be an array, null, or undefined',
+    );
     resetReportedErrors();
   });
 
