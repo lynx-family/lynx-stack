@@ -21,7 +21,8 @@
     "test:corpus-validate": "node --experimental-strip-types benchmarks/scripts/validate-corpus.ts",
     "test:runtime": "vitest run src/runtime",
     "test:schema-validate": "node --experimental-strip-types benchmarks/scripts/validate-schema.ts",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "wpt-update-baseline": "WPT_UPDATE_BASELINE=1 vitest run src/runtime/__tests__/wpt-baseline.test.ts"
   },
   "dependencies": {
     "htmlparser2": "^9.1.0"
