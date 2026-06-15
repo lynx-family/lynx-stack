@@ -9,17 +9,27 @@ import {
 // @ts-ignore
 export * from '../../binary/encode/encode.js';
 
-function restoreCSSVarValue(decl: CSS.Declaration): string {
-  return decl.value.replaceAll(/\{\{(--[^}]+)\}\}/g, (_, varName: string) => {
-    const isCSSVarDecl = 'type' in decl && decl.type === 'css_var';
-
-    if (!isCSSVarDecl) {
-      return `var(${varName})`;
-    }
-
-    const fallback = decl.defaultValueMap?.[varName];
-    return fallback ? `var(${varName}, ${fallback})` : `var(${varName})`;
+function restoreCSSVarPlaceholders(
+  value: string,
+  defaultValueMap?: Record<string, string>,
+): string {
+  return value.replaceAll(/\{\{(--[^}]+)\}\}/g, (_, varName: string) => {
+    const fallback = defaultValueMap?.[varName];
+    return fallback
+      ? `var(${varName}, ${
+        restoreCSSVarPlaceholders(fallback, defaultValueMap)
+      })`
+      : `var(${varName})`;
   });
+}
+
+function restoreCSSVarValue(decl: CSS.Declaration): string {
+  const isCSSVarDecl = 'type' in decl && decl.type === 'css_var';
+
+  return restoreCSSVarPlaceholders(
+    decl.value,
+    isCSSVarDecl ? decl.defaultValueMap : undefined,
+  );
 }
 
 export function encodeCSS(
