@@ -26,10 +26,10 @@ describe('CLI - root option', () => {
   let program: Command
   let apply: (program: Command) => Command
   let mockedBuild: Mocked<
-    (this: Command, root: string, buildOptions: BuildOptions) => Promise<void>
+    (this: Command, cwd: string, buildOptions: BuildOptions) => Promise<void>
   >
 
-  void beforeEach(async () => {
+  beforeEach(async () => {
     rstest.clearAllMocks()
 
     program = new Command('test')

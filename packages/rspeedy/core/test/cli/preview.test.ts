@@ -6,10 +6,8 @@ import { tmpdir } from 'node:os'
 import path from 'node:path'
 import { fileURLToPath } from 'node:url'
 
-import * as core from '@rsbuild/core'
 import { beforeEach, describe, expect, rstest, test } from '@rstest/core'
 import { Command } from 'commander'
-import { gracefulExit } from 'exit-hook'
 
 import { preview } from '../../src/cli/preview.js'
 
@@ -26,27 +24,26 @@ rstest.mock('@rsbuild/core', () => {
     },
   }
 })
-rstest.mock('exit-hook', { mock: true })
 
 describe('CLI - preview', () => {
   const fixturesRoot = path.join(
     path.dirname(fileURLToPath(import.meta.url)),
     'fixtures',
   )
-  void beforeEach(() => {
+  beforeEach(() => {
     rstest.resetAllMocks()
-    rstest.useRealTimers()
-    rstest.unstubAllEnvs()
   })
 
   test('preview', async () => {
+    const { createRsbuild } = await import('@rsbuild/core')
+
     const distPath = await mkdtemp(path.join(tmpdir(), 'rspeedy-test'))
 
     const mockedPreview = rstest.fn(() => {
       return { urls: [] }
     })
 
-    rstest.mocked(core.createRsbuild).mockImplementation(() =>
+    rstest.mocked(createRsbuild).mockImplementation(() =>
       // @ts-expect-error mock
       Promise.resolve({
         isPluginExists: rstest.fn(),
@@ -67,11 +64,16 @@ describe('CLI - preview', () => {
       {},
     )
 
-    expect(core.createRsbuild).toBeCalled()
+    expect(createRsbuild).toBeCalled()
     expect(mockedPreview).toBeCalled()
   })
 
   test('preview with loadConfig error', async () => {
+    rstest.mock('exit-hook', { mock: true })
+
+    const { gracefulExit } = await import('exit-hook')
+    const { createRsbuild } = await import('@rsbuild/core')
+
     const program = new Command('test')
 
     await preview.call(
@@ -80,7 +82,7 @@ describe('CLI - preview', () => {
       {},
     )
 
-    expect(core.createRsbuild).not.toBeCalled()
+    expect(createRsbuild).not.toBeCalled()
 
     expect(gracefulExit).toBeCalled()
     expect(gracefulExit).toBeCalledTimes(1)
@@ -88,13 +90,18 @@ describe('CLI - preview', () => {
   })
 
   test('preview with dist not found', async () => {
+    rstest.mock('exit-hook', { mock: true })
+
+    const { gracefulExit } = await import('exit-hook')
+    const { createRsbuild } = await import('@rsbuild/core')
+
     const distPath = 'non-exist-path'
 
     const mockedPreview = rstest.fn(() => {
       return { urls: [] }
     })
 
-    rstest.mocked(core.createRsbuild).mockImplementation(() =>
+    rstest.mocked(createRsbuild).mockImplementation(() =>
       // @ts-expect-error mock
       Promise.resolve({
         addPlugins: rstest.fn(),
@@ -113,7 +120,7 @@ describe('CLI - preview', () => {
       {},
     )
 
-    expect(core.createRsbuild).toBeCalled()
+    expect(createRsbuild).toBeCalled()
     expect(mockedPreview).not.toBeCalled()
 
     expect(gracefulExit).toBeCalled()

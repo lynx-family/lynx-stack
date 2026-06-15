@@ -1,38 +1,17 @@
 // Copyright 2024 The Lynx Authors. All rights reserved.
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
-import * as core from '@rsbuild/core'
 import { beforeEach, describe, expect, rstest, test } from '@rstest/core'
 import { Command } from 'commander'
-import { gracefulExit } from 'exit-hook'
 
 import { apply } from '../../src/cli/commands.js'
 import { main } from '../../src/cli/main.js'
 
-// Automocking all of `@rsbuild/core` (`{ mock: true }`) deep-walks the whole
-// module and blows the worker heap; stub only what the CLI touches.
-rstest.mock('@rsbuild/core', () => {
-  const actual = rstest.requireActual<typeof import('@rsbuild/core')>(
-    '@rsbuild/core',
-  )
-  return {
-    ...actual,
-    createRsbuild: rstest.fn(),
-    logger: {
-      ...actual.logger,
-      info: rstest.fn(),
-      warn: rstest.fn(),
-      error: rstest.fn(),
-    },
-  }
-})
-rstest.mock('exit-hook', { mock: true })
-
 describe('CLI - main', () => {
   describe('NODE_ENV', () => {
-    void beforeEach(() => {
-      rstest.mocked(core.createRsbuild).mockClear()
-      rstest.mocked(gracefulExit).mockClear()
+    rstest.mock('@rsbuild/core', { mock: true })
+    rstest.mock('exit-hook', { mock: true })
+    beforeEach(() => {
       const NODE_ENV = process.env['NODE_ENV']
       delete process.env['NODE_ENV']
       return () => {

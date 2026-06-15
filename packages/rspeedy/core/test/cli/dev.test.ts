@@ -5,12 +5,8 @@ import { dirname, join } from 'node:path'
 import { fileURLToPath } from 'node:url'
 
 import type { RsbuildPlugin } from '@rsbuild/core'
-import * as core from '@rsbuild/core'
 import { beforeEach, describe, expect, rstest, test } from '@rstest/core'
-import chokidar from 'chokidar'
 import { Command } from 'commander'
-import { EventEmitter } from 'eventemitter3'
-import { gracefulExit } from 'exit-hook'
 
 import { dev } from '../../src/cli/dev.js'
 
@@ -29,20 +25,28 @@ rstest.mock('@rsbuild/core', () => {
   }
 })
 
-// `src/cli/watch.ts` loads chokidar via a dynamic import, which rstest
-// resolves natively (outside the bundle graph) — module mocking can't reach
-// it. Spy on the shared CJS exports object instead.
-const emitter = new EventEmitter()
-// @ts-expect-error mock
-emitter.close = function() {
-  emitter.removeAllListeners()
-  return Promise.resolve()
-}
-function spyOnChokidarWatch() {
-  return rstest.spyOn(chokidar, 'watch').mockImplementation(() =>
-    emitter as never
+rstest.mock('chokidar', () => {
+  const { EventEmitter } = rstest.requireActual<typeof import('eventemitter3')>(
+    'eventemitter3',
   )
-}
+
+  const emitter = new EventEmitter()
+
+  // @ts-expect-error mock
+  emitter.close = function() {
+    emitter.removeAllListeners()
+    return Promise.resolve()
+  }
+
+  return {
+    default: {
+      emitter,
+      watch: rstest.fn(() => {
+        return emitter
+      }),
+    },
+  }
+})
 
 describe('CLI - dev', () => {
   const fixturesRoot = join(
@@ -50,14 +54,14 @@ describe('CLI - dev', () => {
     'fixtures',
   )
 
-  void beforeEach(() => {
+  beforeEach(() => {
     rstest.restoreAllMocks()
-    rstest.useRealTimers()
-    rstest.unstubAllEnvs()
-    spyOnChokidarWatch()
   })
 
   test('config not found', async () => {
+    const core = await import('@rsbuild/core')
+    const { gracefulExit } = await import('exit-hook')
+
     const program = new Command('test')
     await dev.call(
       program,
@@ -80,6 +84,9 @@ describe('CLI - dev', () => {
   })
 
   test('custom config not found', async () => {
+    const core = await import('@rsbuild/core')
+    const { gracefulExit } = await import('exit-hook')
+
     const program = new Command('test')
     await dev.call(
       program,
@@ -108,6 +115,9 @@ describe('CLI - dev', () => {
   })
 
   test('invalid config', async () => {
+    const core = await import('@rsbuild/core')
+    const { gracefulExit } = await import('exit-hook')
+
     const program = new Command('test')
     await dev.call(
       program,
@@ -130,6 +140,9 @@ describe('CLI - dev', () => {
   })
 
   test('createRsbuild', async () => {
+    const core = await import('@rsbuild/core')
+    const { gracefulExit } = await import('exit-hook')
+
     const close = rstest.fn(() => {
       return Promise.resolve()
     })
@@ -163,6 +176,8 @@ describe('CLI - dev', () => {
 
   test('gracefully shutdown', async () => {
     await import('../../src/cli/exit.js')
+    const core = await import('@rsbuild/core')
+    const { gracefulExit } = await import('exit-hook')
 
     const close = rstest.fn(() => {
       return Promise.resolve()
@@ -203,6 +218,7 @@ describe('CLI - dev', () => {
 
   test('force shutdown', async () => {
     await import('../../src/cli/exit.js')
+    const core = await import('@rsbuild/core')
 
     const close = rstest.fn(() => {
       return Promise.resolve()
@@ -242,7 +258,10 @@ describe('CLI - dev', () => {
   })
 
   test('dev.watchFiles(array) with `type: "reload-server"`', async () => {
-    rstest.mocked(chokidar.watch).mockClear()
+    const core = await import('@rsbuild/core')
+    const chokidar = await import('chokidar')
+
+    rstest.mocked(chokidar.default.watch).mockClear()
 
     const close = rstest.fn(() => {
       return Promise.resolve()
@@ -271,7 +290,7 @@ describe('CLI - dev', () => {
     )
 
     expect(core.createRsbuild).toBeCalledTimes(1)
-    expect(chokidar.watch).toBeCalledWith(
+    expect(chokidar.default.watch).toBeCalledWith(
       [
         'lynx.config.js',
         'foo.js',
@@ -286,7 +305,10 @@ describe('CLI - dev', () => {
   })
 
   test('dev.watchFiles(object) with `type: "reload-server"`', async () => {
-    rstest.mocked(chokidar.watch).mockClear()
+    const core = await import('@rsbuild/core')
+    const chokidar = await import('chokidar')
+
+    rstest.mocked(chokidar.default.watch).mockClear()
 
     const close = rstest.fn(() => {
       return Promise.resolve()
@@ -315,7 +337,7 @@ describe('CLI - dev', () => {
     )
 
     expect(core.createRsbuild).toBeCalledTimes(1)
-    expect(chokidar.watch).toBeCalledWith(
+    expect(chokidar.default.watch).toBeCalledWith(
       [
         'object.js',
         'bar.js',
@@ -329,7 +351,10 @@ describe('CLI - dev', () => {
   })
 
   test('dev with --mode=production', async () => {
-    rstest.mocked(chokidar.watch).mockClear()
+    const core = await import('@rsbuild/core')
+    const chokidar = await import('chokidar')
+
+    rstest.mocked(chokidar.default.watch).mockClear()
 
     const close = rstest.fn(() => {
       return Promise.resolve()
@@ -370,6 +395,9 @@ describe('CLI - dev', () => {
 
   // TODO: re-enable this flaky test
   test.skip('restart devServer when lynx.config.ts changes', async () => {
+    const core = await import('@rsbuild/core')
+    const chokidar = await import('chokidar')
+
     const close = rstest.fn(() => {
       return Promise.resolve()
     })
@@ -393,6 +421,11 @@ describe('CLI - dev', () => {
     )
 
     expect(core.createRsbuild).toBeCalledTimes(1)
+
+    // @ts-expect-error mocked emitter
+    const { emitter } = chokidar.default as {
+      emitter: import('eventemitter3').EventEmitter
+    }
 
     await Promise.resolve()
 

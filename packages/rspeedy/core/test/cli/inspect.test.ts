@@ -32,7 +32,7 @@ rstest.mock('../../src/create-rspeedy.js', () => {
 })
 
 describe('CLI - Inspect', () => {
-  void beforeEach(async () => {
+  beforeEach(async () => {
     const { createRspeedy } = await import('../../src/create-rspeedy.js')
 
     rstest.mocked(createRspeedy).mockClear()

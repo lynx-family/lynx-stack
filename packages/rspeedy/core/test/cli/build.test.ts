@@ -4,10 +4,8 @@
 import { dirname, join } from 'node:path'
 import { fileURLToPath } from 'node:url'
 
-import * as core from '@rsbuild/core'
 import { beforeEach, describe, expect, rstest, test } from '@rstest/core'
 import { Command } from 'commander'
-import { gracefulExit } from 'exit-hook'
 
 import { build } from '../../src/cli/build.js'
 
@@ -24,7 +22,6 @@ rstest.mock('@rsbuild/core', () => {
     },
   }
 })
-rstest.mock('exit-hook', { mock: true })
 
 describe('CLI - build', () => {
   const fixturesRoot = join(
@@ -32,14 +29,16 @@ describe('CLI - build', () => {
     'fixtures',
   )
 
-  void beforeEach(() => {
+  beforeEach(() => {
     rstest.restoreAllMocks()
-    rstest.useRealTimers()
-    rstest.unstubAllEnvs()
   })
 
   test('config not found', async () => {
+    rstest.mock('exit-hook', { mock: true })
     rstest.useFakeTimers()
+
+    const { gracefulExit } = await import('exit-hook')
+    const core = await import('@rsbuild/core')
 
     const program = new Command('test')
     await build.call(
@@ -64,7 +63,11 @@ describe('CLI - build', () => {
   })
 
   test('custom config not found', async () => {
+    rstest.mock('exit-hook', { mock: true })
     rstest.useFakeTimers()
+
+    const { gracefulExit } = await import('exit-hook')
+    const core = await import('@rsbuild/core')
 
     const program = new Command('test')
     await build.call(
@@ -95,7 +98,11 @@ describe('CLI - build', () => {
   })
 
   test('invalid config', async () => {
+    rstest.mock('exit-hook', { mock: true })
     rstest.useFakeTimers()
+
+    const { gracefulExit } = await import('exit-hook')
+    const core = await import('@rsbuild/core')
 
     const program = new Command('test')
     await build.call(
@@ -120,7 +127,11 @@ describe('CLI - build', () => {
   })
 
   test('createRsbuild', async () => {
+    rstest.mock('exit-hook', { mock: true })
     rstest.useFakeTimers()
+
+    const core = await import('@rsbuild/core')
+    const { gracefulExit } = await import('exit-hook')
 
     rstest.mocked(core.createRsbuild).mockImplementation(() =>
       // @ts-expect-error mock
@@ -151,19 +162,19 @@ describe('CLI - build', () => {
   test('exit on RSDOCTOR="true" and CI!="false"', async () => {
     rstest.stubEnv('CI', '1')
     rstest.stubEnv('RSDOCTOR', 'true')
+    rstest.mock('exit-hook', { mock: true })
     rstest.useFakeTimers()
 
-    rstest.mocked(core.createRsbuild).mockReset().mockReturnValueOnce(
-      // Minimal fake of the resolved RsbuildInstance.
-      {
-        build() {
-          return Promise.resolve()
-        },
-        addPlugins() {
-          return Promise.resolve()
-        },
-      } as never,
-    )
+    const core = await import('@rsbuild/core')
+    rstest.mocked(core.createRsbuild).mockReset().mockReturnValueOnce({
+      build() {
+        return Promise.resolve()
+      },
+      addPlugins() {
+        return Promise.resolve()
+      },
+    } as never)
+    const { gracefulExit } = await import('exit-hook')
 
     const program = new Command('test')
     await build.call(
@@ -180,19 +191,19 @@ describe('CLI - build', () => {
   test('no exit on RSDOCTOR="true" and CI="false"', async () => {
     rstest.stubEnv('CI', 'false')
     rstest.stubEnv('RSDOCTOR', 'true')
+    rstest.mock('exit-hook', { mock: true })
     rstest.useFakeTimers()
 
-    rstest.mocked(core.createRsbuild).mockReset().mockReturnValueOnce(
-      // Minimal fake of the resolved RsbuildInstance.
-      {
-        build() {
-          return Promise.resolve()
-        },
-        addPlugins() {
-          return Promise.resolve()
-        },
-      } as never,
-    )
+    const core = await import('@rsbuild/core')
+    rstest.mocked(core.createRsbuild).mockReset().mockReturnValueOnce({
+      build() {
+        return Promise.resolve()
+      },
+      addPlugins() {
+        return Promise.resolve()
+      },
+    } as never)
+    const { gracefulExit } = await import('exit-hook')
 
     const program = new Command('test')
     await build.call(
@@ -209,8 +220,10 @@ describe('CLI - build', () => {
   test('no exit on RSDOCTOR="true", CI="false" and build failed', async () => {
     rstest.stubEnv('CI', 'false')
     rstest.stubEnv('RSDOCTOR', 'true')
+    rstest.mock('exit-hook', { mock: true })
     rstest.useFakeTimers()
 
+    const core = await import('@rsbuild/core')
     rstest.mocked(core.createRsbuild).mockReset().mockReturnValueOnce({
       build() {
         return Promise.reject(new Error('Mocked Build Error'))
@@ -219,6 +232,7 @@ describe('CLI - build', () => {
         return Promise.resolve()
       },
     } as never)
+    const { gracefulExit } = await import('exit-hook')
 
     const program = new Command('test')
     await build.call(
@@ -235,8 +249,10 @@ describe('CLI - build', () => {
   test('exit on RSDOCTOR="true", CI!="false" and build failed', async () => {
     rstest.stubEnv('CI', 'true')
     rstest.stubEnv('RSDOCTOR', 'true')
+    rstest.mock('exit-hook', { mock: true })
     rstest.useFakeTimers()
 
+    const core = await import('@rsbuild/core')
     rstest.mocked(core.createRsbuild).mockReset().mockReturnValueOnce({
       build() {
         return Promise.reject(new Error('Mocked Build Error'))
@@ -245,6 +261,7 @@ describe('CLI - build', () => {
         return Promise.resolve()
       },
     } as never)
+    const { gracefulExit } = await import('exit-hook')
 
     const program = new Command('test')
     await build.call(
@@ -261,8 +278,10 @@ describe('CLI - build', () => {
 
   describe('watch mode', () => {
     test('with watch=true, process should not exit', async () => {
+      rstest.mock('exit-hook', { mock: true })
       rstest.useFakeTimers()
 
+      const core = await import('@rsbuild/core')
       const closeMock = rstest.fn().mockResolvedValue(undefined)
 
       rstest.mocked(core.createRsbuild).mockImplementation(() =>
@@ -279,6 +298,7 @@ describe('CLI - build', () => {
         })
       )
 
+      const { gracefulExit } = await import('exit-hook')
       const processOnSpy = rstest.spyOn(process, 'on')
 
       const program = new Command('test')
@@ -305,8 +325,10 @@ describe('CLI - build', () => {
     })
 
     test('with watch=false, process should exit and close should be called', async () => {
+      rstest.mock('exit-hook', { mock: true })
       rstest.useFakeTimers()
 
+      const core = await import('@rsbuild/core')
       const closeMock = rstest.fn().mockResolvedValue(undefined)
 
       rstest.mocked(core.createRsbuild).mockImplementation(() =>
@@ -323,6 +345,7 @@ describe('CLI - build', () => {
         })
       )
 
+      const { gracefulExit } = await import('exit-hook')
       const processOnSpy = rstest.spyOn(process, 'on')
 
       const program = new Command('test')
@@ -343,6 +366,7 @@ describe('CLI - build', () => {
     test('with NODE_ENV="production"', async () => {
       rstest.stubEnv('NODE_ENV', 'production')
 
+      const core = await import('@rsbuild/core')
       rstest.mocked(core.createRsbuild).mockReset().mockReturnValueOnce({
         build() {
           return Promise.reject(new Error('Mocked Build Error'))
@@ -370,6 +394,7 @@ describe('CLI - build', () => {
     test('with --mode development', async () => {
       rstest.stubEnv('NODE_ENV', 'production')
 
+      const core = await import('@rsbuild/core')
       rstest.mocked(core.createRsbuild).mockReset().mockReturnValueOnce({
         build() {
           return Promise.reject(new Error('Mocked Build Error'))
@@ -399,6 +424,7 @@ describe('CLI - build', () => {
     test('with --mode none', async () => {
       rstest.stubEnv('NODE_ENV', 'production')
 
+      const core = await import('@rsbuild/core')
       rstest.mocked(core.createRsbuild).mockReset().mockReturnValueOnce({
         build() {
           return Promise.reject(new Error('Mocked Build Error'))
@@ -428,6 +454,7 @@ describe('CLI - build', () => {
     test('with --mode foo', async () => {
       rstest.stubEnv('NODE_ENV', 'production')
 
+      const core = await import('@rsbuild/core')
       rstest.mocked(core.createRsbuild).mockReset().mockReturnValueOnce({
         build() {
           return Promise.reject(new Error('Mocked Build Error'))
