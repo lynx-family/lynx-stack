@@ -14,6 +14,44 @@ import { LynxTemplatePlugin } from '@lynx-js/template-webpack-plugin'
 import { createStubRspeedy as createRspeedy } from './createRspeedy.js'
 import { pluginStubRspeedyAPI } from './stub-rspeedy-api.plugin.js'
 
+// Workaround for an upstream `@rstest/coverage-istanbul` bug: it injects the
+// coverage SWC plugin by `push`-ing onto a shallow-copied (hence shared)
+// `jsc.experimental.plugins` array, so under `--coverage` the instrumentation
+// can leak into the nested `rsbuild.build()` calls below. The emitted bundle
+// then carries istanbul `cov_*` counters whose declarations are not part of the
+// eval'd slice, so `eval()` throws `cov_* is not defined`. Stub any leaked
+// counter with a coercion-safe no-op (so `cov_*().s[0]++` etc. don't throw)
+// while evaluating, then restore. Drop once the upstream fix (clone before
+// mutate) is released.
+function withLeakedCoverageCountersStubbed<T>(
+  code: string,
+  run: () => T,
+): T {
+  type CoverageCounterSink = () => CoverageCounterSink
+  const sink: CoverageCounterSink = new Proxy(
+    function sinkTarget() {/* unreachable: the `apply` trap handles calls */},
+    {
+      get: (_target, prop) => (prop === Symbol.toPrimitive ? () => 0 : sink),
+      apply: () => sink,
+      set: () => true,
+    },
+  ) as unknown as CoverageCounterSink
+  const added: string[] = []
+  for (const name of new Set(code.match(/\bcov_\d+\b/g) ?? [])) {
+    if (!(name in globalThis)) {
+      ;(globalThis as Record<string, unknown>)[name] = () => sink
+      added.push(name)
+    }
+  }
+  try {
+    return run()
+  } finally {
+    for (const name of added) {
+      delete (globalThis as Record<string, unknown>)[name]
+    }
+  }
+}
+
 describe('Lazy', () => {
   test('alias for react', async () => {
     const { pluginReactLynx } = await import('../src/pluginReactLynx.js')
@@ -171,7 +209,9 @@ describe('Lazy', () => {
           )
         },
       }
-      eval(backgroundJSContent)
+      withLeakedCoverageCountersStubbed(backgroundJSContent, () => {
+        eval(backgroundJSContent)
+      })
 
       expect(exports).toHaveProperty(
         'default',
@@ -584,9 +624,13 @@ describe('Lazy', () => {
         },
       }
 
-      const { init } = eval(appServiceJSContent) as {
-        init: (arg: { tt: typeof tt }) => unknown
-      }
+      const { init } = withLeakedCoverageCountersStubbed(
+        appServiceJSContent,
+        () =>
+          eval(appServiceJSContent) as {
+            init: (arg: { tt: typeof tt }) => unknown
+          },
+      )
       const result = init({ tt })
 
       expect(requireModuleAsyncWasCalled).toBe(false)
