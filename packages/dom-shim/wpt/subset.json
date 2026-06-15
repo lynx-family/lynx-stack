@@ -1,0 +1,149 @@
+{
+  "schemaVersion": "1",
+  "source": "web-platform-tests/wpt",
+  "commitSha": "pinned-at-baseline-update",
+  "totalTests": 86,
+  "gateThreshold": 0.7,
+  "directories": [
+    {
+      "path": "dom/nodes/read",
+      "expectedPassRate": 0.9,
+      "tests": [
+        "Node-tagName",
+        "Node-nodeName",
+        "Node-nodeType",
+        "Node-nodeValue",
+        "Node-parentNode",
+        "Node-childNodes",
+        "Node-firstChild",
+        "Node-lastChild",
+        "Node-nextSibling",
+        "Node-previousSibling",
+        "Node-hasChildNodes",
+        "Node-isEqualNode",
+        "Node-isSameNode",
+        "Node-isConnected",
+        "Node-contains",
+        "Node-getRootNode",
+        "Node-compareDocumentPosition",
+        "Element-tagName",
+        "Element-localName",
+        "Element-id",
+        "Element-children",
+        "Element-firstElementChild",
+        "Element-lastElementChild",
+        "Element-childElementCount",
+        "Element-nextElementSibling",
+        "Element-previousElementSibling"
+      ]
+    },
+    {
+      "path": "dom/nodes/write",
+      "expectedPassRate": 0.7,
+      "tests": [
+        "Element-setAttribute",
+        "Element-removeAttribute",
+        "Element-toggleAttribute",
+        "Element-classList",
+        "Element-className",
+        "Element-appendChild",
+        "Element-removeChild",
+        "Element-insertBefore",
+        "Element-replaceChild",
+        "Element-cloneNode",
+        "ChildNode-remove",
+        "ChildNode-replaceWith",
+        "ChildNode-before",
+        "ChildNode-after",
+        "ParentNode-append",
+        "ParentNode-prepend"
+      ]
+    },
+    {
+      "path": "dom/events",
+      "expectedPassRate": 0.5,
+      "tests": [
+        "EventTarget-addEventListener",
+        "EventTarget-removeEventListener",
+        "Event-dispatchEvent",
+        "Event-preventDefault",
+        "Event-stopPropagation",
+        "Event-stopImmediatePropagation",
+        "Event-capture-bubble",
+        "Event-target-currentTarget",
+        "Event-once-option",
+        "Event-signal-option"
+      ]
+    },
+    {
+      "path": "dom/lists",
+      "expectedPassRate": 0.7,
+      "tests": [
+        "DOMTokenList-add",
+        "DOMTokenList-remove",
+        "DOMTokenList-toggle",
+        "DOMTokenList-replace",
+        "DOMTokenList-contains",
+        "DOMTokenList-iteration",
+        "DOMTokenList-length-item"
+      ]
+    },
+    {
+      "path": "dom/abort",
+      "expectedPassRate": 0.8,
+      "tests": [
+        "abort-signal-addEventListener",
+        "abort-signal-once-listener"
+      ]
+    },
+    {
+      "path": "html/dom/innerhtml",
+      "expectedPassRate": 0.3,
+      "tests": [
+        "Element-innerHTML-basic",
+        "Element-innerHTML-getter",
+        "Element-innerHTML-script-skip",
+        "Element-outerHTML",
+        "Element-insertAdjacentHTML",
+        "Element-insertAdjacentText"
+      ]
+    },
+    {
+      "path": "html/dom/global-attributes",
+      "expectedPassRate": 0.6,
+      "tests": [
+        "dataset",
+        "data-attribute-roundtrip",
+        "class-attribute",
+        "id-attribute",
+        "style-attribute"
+      ]
+    },
+    {
+      "path": "css/cssom",
+      "expectedPassRate": 0.7,
+      "tests": [
+        "cssom-setProperty",
+        "cssom-getPropertyValue",
+        "cssom-removeProperty",
+        "cssom-cssText",
+        "cssom-cssText-set",
+        "cssom-camelCase-accessor",
+        "cssom-css-custom-property"
+      ]
+    },
+    {
+      "path": "selectors",
+      "expectedPassRate": 0.4,
+      "tests": [
+        "querySelector-id",
+        "querySelector-class",
+        "querySelector-tag",
+        "querySelector-compound",
+        "querySelectorAll-multiple",
+        "matches-basic",
+        "closest-walks-ancestors"
+      ]
+    }
+  ]
+}
