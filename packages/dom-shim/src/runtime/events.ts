@@ -46,6 +46,11 @@ export class ShimEvent {
   _propagationStopped = false;
   /** True once `stopImmediatePropagation()` was called. */
   _immediatePropagationStopped = false;
+  /**
+   * True while the trampoline is inside a `passive: true` listener.
+   * `preventDefault` is a silent no-op in that window per spec.
+   */
+  _passiveListener = false;
   /** True once dispatched at least once — synthetic events flag this. */
   readonly isTrusted: boolean = false;
 
@@ -58,6 +63,8 @@ export class ShimEvent {
   }
 
   preventDefault(): void {
+    // Spec: a passive listener cannot call preventDefault — silent no-op.
+    if (this._passiveListener) return;
     if (this.cancelable) this.defaultPrevented = true;
   }
 
@@ -279,28 +286,25 @@ function makeTrampoline(papi: ElementRef, type: string) {
   };
 }
 
-/**
- * Build a spec-shaped event from a Lynx native payload. Used by the
- * trampoline. Exposed for tests that need to drive the dispatch without
- * involving __AddEvent.
- */
-export function fireEvent(
+function invokeListeners(
+  event: ShimEvent,
   papi: ElementRef,
   type: string,
-  payload: unknown = {},
-): ShimEvent {
+  phase: number,
+  filter: 'capture' | 'bubble' | 'both',
+): void {
   const set = getHandlerSet(papi, type, false);
-  const event = buildEvent(type, payload);
-  if (!set || set.size === 0) return event;
+  if (!set || set.size === 0) return;
+  event.eventPhase = phase;
   for (const record of [...set]) {
+    if (filter === 'capture' && !record.capture) continue;
+    if (filter === 'bubble' && record.capture) continue;
     if (event._immediatePropagationStopped) break;
-    event.currentTarget = null;
+    event._passiveListener = record.passive;
     try {
       const r = record.fn(event);
-      // Listener may return a Promise; ignore per spec.
       void r;
     } catch (e) {
-      // Listener errors must not abort dispatch.
       console.warn(
         JSON.stringify({
           code: 'shim:L3a/listener-threw',
@@ -309,9 +313,67 @@ export function fireEvent(
           message: String(e),
         }),
       );
+    } finally {
+      event._passiveListener = false;
     }
     if (record.once) set.delete(record);
   }
+}
+
+/**
+ * Build a spec-shaped event from a Lynx native payload and dispatch
+ * through the capture → target → bubble phases. See Shim_Design.md §6.2
+ * (`shim:L3a/capture-synthetic`).
+ *
+ * The ancestor chain is built via `__GetParent` starting at the target.
+ * Capture-phase fires top-down on ancestors (excluding target); target
+ * phase fires all listeners on the target in registration order;
+ * bubble-phase fires bottom-up on ancestors (only non-capture
+ * listeners), and only if `event.bubbles` is true.
+ *
+ * Exposed for tests that drive dispatch without involving __AddEvent.
+ */
+export function fireEvent(
+  papi: ElementRef,
+  type: string,
+  payload: unknown = {},
+): ShimEvent {
+  const event = buildEvent(type, payload);
+
+  // Build ancestor chain (target first, root last).
+  const chain: ElementRef[] = [];
+  let cur: ElementRef | undefined = papi;
+  while (cur !== undefined) {
+    chain.push(cur);
+    try {
+      const next = __GetParent(cur);
+      if (!next) break;
+      cur = next;
+    } catch {
+      break;
+    }
+  }
+
+  // Capture phase: root → target's parent.
+  for (let i = chain.length - 1; i >= 1; i--) {
+    if (event._propagationStopped) break;
+    invokeListeners(event, chain[i]!, type, EVENT_PHASE_CAPTURING, 'capture');
+  }
+
+  // Target phase: fire all listeners on target in registration order.
+  if (!event._propagationStopped) {
+    invokeListeners(event, papi, type, EVENT_PHASE_AT_TARGET, 'both');
+  }
+
+  // Bubble phase: target's parent → root.
+  if (event.bubbles) {
+    for (let i = 1; i < chain.length; i++) {
+      if (event._propagationStopped) break;
+      invokeListeners(event, chain[i]!, type, EVENT_PHASE_BUBBLING, 'bubble');
+    }
+  }
+
+  event.eventPhase = EVENT_PHASE_NONE;
   return event;
 }
 
