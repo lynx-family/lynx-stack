@@ -9,7 +9,7 @@ import { Command } from 'commander'
 
 import { build } from '../../src/cli/build.js'
 
-rstest.mock('@rsbuild/core', () => {
+rstest.mock(import('@rsbuild/core'), () => {
   const core = rstest.requireActual<typeof import('@rsbuild/core')>(
     '@rsbuild/core',
   )

@@ -11,7 +11,7 @@ import { Command } from 'commander'
 import { dev } from '../../src/cli/dev.js'
 
 rstest.mock('exit-hook', { mock: true })
-rstest.mock('@rsbuild/core', () => {
+rstest.mock(import('@rsbuild/core'), () => {
   const core = rstest.requireActual<typeof import('@rsbuild/core')>(
     '@rsbuild/core',
   )
