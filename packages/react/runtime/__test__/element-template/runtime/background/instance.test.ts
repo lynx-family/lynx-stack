@@ -489,6 +489,91 @@ describe('BackgroundElementTemplateInstance', () => {
         anchor.instanceId,
       ]);
     });
+
+    it('recreates a detached materialized subtree before reattaching it', () => {
+      const parent = new BackgroundElementTemplateInstance('view');
+      const child = new BackgroundElementTemplateInstance('view');
+      const grandchild = createTextNode('inside');
+      child.appendChild(grandchild);
+      parent.appendChild(child);
+
+      markElementTemplateHydrated();
+      parent.markMaterializedByHydration();
+      child.markMaterializedByHydration();
+      grandchild.markMaterializedByHydration();
+      globalCommitContext.ops = [];
+
+      parent.removeChild(child);
+      expect(globalCommitContext.ops).toEqual([
+        ElementTemplateUpdateOps.removeNode,
+        parent.instanceId,
+        0,
+        child.instanceId,
+        [child.instanceId, grandchild.instanceId],
+      ]);
+
+      globalCommitContext.ops = [];
+      parent.appendChild(child);
+
+      expect(globalCommitContext.ops).toEqual([
+        ElementTemplateUpdateOps.createTemplate,
+        grandchild.instanceId,
+        BUILTIN_RAW_TEXT_TEMPLATE_KEY,
+        null,
+        ['inside'],
+        [],
+        ElementTemplateUpdateOps.createTemplate,
+        child.instanceId,
+        'view',
+        null,
+        [],
+        [[grandchild.instanceId]],
+        ElementTemplateUpdateOps.insertNode,
+        parent.instanceId,
+        0,
+        child.instanceId,
+        0,
+      ]);
+    });
+
+    it('recreates detached hydrated subtrees with native negative handles', () => {
+      const parent = new BackgroundElementTemplateInstance('view');
+      const child = new BackgroundElementTemplateInstance('view');
+      const grandchild = createTextNode('inside');
+      child.appendChild(grandchild);
+      parent.appendChild(child);
+      backgroundElementTemplateInstanceManager.updateId(child.instanceId, -2);
+      backgroundElementTemplateInstanceManager.updateId(grandchild.instanceId, -3);
+
+      markElementTemplateHydrated();
+      parent.markMaterializedByHydration();
+      child.markMaterializedByHydration();
+      grandchild.markMaterializedByHydration();
+
+      parent.removeChild(child);
+      globalCommitContext.ops = [];
+      parent.appendChild(child);
+
+      expect(globalCommitContext.ops).toEqual([
+        ElementTemplateUpdateOps.createTemplate,
+        -3,
+        BUILTIN_RAW_TEXT_TEMPLATE_KEY,
+        null,
+        ['inside'],
+        [],
+        ElementTemplateUpdateOps.createTemplate,
+        -2,
+        'view',
+        null,
+        [],
+        [[-3]],
+        ElementTemplateUpdateOps.insertNode,
+        parent.instanceId,
+        0,
+        -2,
+        0,
+      ]);
+    });
   });
 
   describe('removeChild', () => {
