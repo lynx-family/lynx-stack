@@ -13,7 +13,8 @@
   "exports": {
     ".": "./src/index.ts",
     "./runtime": "./src/runtime/index.ts",
-    "./tiers": "./src/runtime/tiers.ts"
+    "./tiers": "./src/runtime/tiers.ts",
+    "./tiers/strict": "./src/runtime/tiers-strict.ts"
   },
   "scripts": {
     "benchmark": "node --experimental-strip-types benchmarks/cli.ts",

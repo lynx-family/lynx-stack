@@ -44,6 +44,11 @@ export {
   setAutoFlush,
 } from './scheduler.ts';
 export { document, setBody } from './document.ts';
+export {
+  DOMShimDivergenceWarning,
+  DOMShimInvariantError,
+  DOMShimUnsupportedError,
+} from './errors.ts';
 export { GEOMETRY_STALE_CODE, invalidateGeometry } from './geometry.ts';
 export type { DOMRectReadOnly } from './geometry.ts';
 export type { ElementRef } from './papi-types.ts';
