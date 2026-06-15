@@ -97,6 +97,11 @@ export function App() {
       if (!disposed) {
         setDynamicStatus(`dynamic:${minus}/${add}/${dynamicAdd}`);
       }
+    }).catch((error: unknown) => {
+      console.warn('dynamic import failed', error);
+      if (!disposed) {
+        setDynamicStatus('dynamic:error');
+      }
     });
 
     const firstScreenTimer = setTimeout(() => {

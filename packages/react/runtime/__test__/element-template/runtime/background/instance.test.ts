@@ -490,6 +490,23 @@ describe('BackgroundElementTemplateInstance', () => {
       ]);
     });
 
+    it('does not emit create for a root-handle child inserted after hydration', () => {
+      const parent = new BackgroundElementTemplateInstance('view');
+      parent.emitCreate();
+      markElementTemplateHydrated();
+
+      const child = new BackgroundElementTemplateInstance('root');
+      backgroundElementTemplateInstanceManager.values.delete(child.instanceId);
+      child.instanceId = 0;
+      globalCommitContext.ops = [];
+
+      parent.appendChild(child);
+
+      expect(globalCommitContext.ops).toHaveLength(5);
+      expect(globalCommitContext.ops[0]).toBe(ElementTemplateUpdateOps.insertNode);
+      expect(backgroundElementTemplateInstanceManager.get(0)).toBeUndefined();
+    });
+
     it('recreates a detached materialized subtree before reattaching it', () => {
       const parent = new BackgroundElementTemplateInstance('view');
       const child = new BackgroundElementTemplateInstance('view');
@@ -950,6 +967,18 @@ describe('BackgroundElementTemplateInstance', () => {
     expect(reportErrorSpy).toHaveBeenCalledTimes(1);
 
     lynxObj.reportError = oldReportError;
+  });
+
+  it('does not register the root handle when hydration marks it materialized', () => {
+    const instance = new BackgroundElementTemplateInstance('root');
+    const originalId = instance.instanceId;
+    backgroundElementTemplateInstanceManager.values.delete(originalId);
+    instance.instanceId = 0;
+
+    instance.markMaterializedByHydration();
+
+    expect(backgroundElementTemplateInstanceManager.get(0)).toBeUndefined();
+    expect(backgroundElementTemplateInstanceManager.get(originalId)).toBeUndefined();
   });
 
   it('normalizes undefined attributeSlots before emitting create', () => {
