@@ -7,6 +7,9 @@ import * as path from 'node:path';
 import { Application, OptionDefaults, ReflectionKind } from 'typedoc';
 import type { ProjectReflection, TypeDocOptions } from 'typedoc';
 
+/**
+ * JSON Schema subset emitted for A2UI component props and function arguments.
+ */
 export interface JsonSchema {
   $ref?: string;
   additionalProperties?: boolean | JsonSchema;
@@ -23,6 +26,9 @@ export interface JsonSchema {
   unevaluatedProperties?: boolean | JsonSchema;
 }
 
+/**
+ * Component schema discovered from an interface annotated with `@a2uiCatalog`.
+ */
 export interface CatalogComponent {
   filePath: string;
   interfaceName: string;
@@ -30,21 +36,34 @@ export interface CatalogComponent {
   schema: JsonSchema;
 }
 
+/**
+ * Source and compiler inputs used when extracting catalog metadata.
+ */
 export interface ExtractCatalogOptions {
   cwd?: string;
   sourceFiles: string[];
   tsconfig?: string;
 }
 
+/**
+ * Options used when extracting catalog metadata from an existing TypeDoc
+ * project reflection.
+ */
 export interface ExtractCatalogFromTypeDocOptions {
   cwd?: string;
 }
 
+/**
+ * Options for writing extracted catalog artifacts to disk.
+ */
 export interface WriteComponentCatalogOptions extends ExtractCatalogOptions {
   catalogId?: string;
   outDir: string;
 }
 
+/**
+ * Full catalog manifest consumed by A2UI agents and renderers.
+ */
 export interface A2UICatalog {
   catalogId: string;
   components?: Record<string, JsonSchema>;
@@ -52,6 +71,9 @@ export interface A2UICatalog {
   theme?: Record<string, JsonSchema>;
 }
 
+/**
+ * Serializable definition for a client-side function exposed to an agent.
+ */
 export interface FunctionDefinition {
   description?: string;
   name: string;
@@ -79,10 +101,16 @@ interface ParsedDoc {
   description?: string;
 }
 
+/**
+ * Minimal TypeDoc project shape accepted by the extractor.
+ */
 export interface TypeDocProject {
   children?: TypeDocReflection[];
 }
 
+/**
+ * Minimal TypeDoc reflection shape used while walking declarations.
+ */
 export interface TypeDocReflection {
   children?: TypeDocReflection[];
   comment?: TypeDocComment;
@@ -99,6 +127,9 @@ export interface TypeDocReflection {
   type?: TypeDocType;
 }
 
+/**
+ * Minimal TypeDoc function or method signature shape used by the extractor.
+ */
 export interface TypeDocSignature {
   comment?: TypeDocComment;
   kind?: number;
@@ -108,6 +139,9 @@ export interface TypeDocSignature {
   type?: TypeDocType;
 }
 
+/**
+ * Source location metadata supplied by TypeDoc.
+ */
 export interface TypeDocSource {
   character?: number;
   fileName?: string;
@@ -115,17 +149,26 @@ export interface TypeDocSource {
   line?: number;
 }
 
+/**
+ * TypeDoc comment shape used to read summary text and custom tags.
+ */
 export interface TypeDocComment {
   blockTags?: TypeDocCommentTag[];
   modifierTags?: Iterable<string> | Record<string, boolean>;
   summary?: TypeDocCommentDisplayPart[];
 }
 
+/**
+ * Custom or standard block tag parsed from a TypeDoc comment.
+ */
 export interface TypeDocCommentTag {
   content?: TypeDocCommentDisplayPart[];
   tag: string;
 }
 
+/**
+ * Text, code, or link fragment inside a TypeDoc comment.
+ */
 export interface TypeDocCommentDisplayPart {
   code?: string;
   content?: TypeDocCommentDisplayPart[];
@@ -135,6 +178,9 @@ export interface TypeDocCommentDisplayPart {
   text?: string;
 }
 
+/**
+ * Minimal TypeDoc type node shape used for schema conversion.
+ */
 export interface TypeDocType {
   declaration?: TypeDocReflection;
   elementType?: TypeDocType;
@@ -156,6 +202,9 @@ const supportedSourceExtensions = new Set([
   '.tsx',
 ]);
 
+/**
+ * Find supported source files under a file or directory path.
+ */
 export function findCatalogSourceFiles(inputPath: string): string[] {
   const absoluteInputPath = path.resolve(inputPath);
   if (!fs.existsSync(absoluteInputPath)) {
@@ -172,6 +221,9 @@ export function findCatalogSourceFiles(inputPath: string): string[] {
   return files.sort((left, right) => left.localeCompare(right));
 }
 
+/**
+ * Run TypeDoc over source files and extract A2UI component schemas.
+ */
 export async function extractCatalogComponents(
   options: ExtractCatalogOptions,
 ): Promise<CatalogComponent[]> {
@@ -182,6 +234,9 @@ export async function extractCatalogComponents(
   );
 }
 
+/**
+ * Extract A2UI component schemas from an already converted TypeDoc project.
+ */
 export function extractCatalogComponentsFromTypeDocProject(
   project: ProjectReflection | TypeDocProject,
   options: ExtractCatalogFromTypeDocOptions = {},
@@ -210,6 +265,9 @@ export function extractCatalogComponentsFromTypeDocProject(
   return components;
 }
 
+/**
+ * Extract A2UI component schemas from a serialized TypeDoc JSON project.
+ */
 export function extractCatalogComponentsFromTypeDocJson(
   project: TypeDocProject,
   options: ExtractCatalogFromTypeDocOptions = {},
@@ -217,6 +275,9 @@ export function extractCatalogComponentsFromTypeDocJson(
   return extractCatalogComponentsFromTypeDocProject(project, options);
 }
 
+/**
+ * Run TypeDoc over source files and extract A2UI function definitions.
+ */
 export async function extractCatalogFunctions(
   options: ExtractCatalogOptions,
 ): Promise<CatalogFunction[]> {
@@ -227,6 +288,9 @@ export async function extractCatalogFunctions(
   );
 }
 
+/**
+ * Extract A2UI function definitions from an already converted TypeDoc project.
+ */
 export function extractCatalogFunctionsFromTypeDocProject(
   project: ProjectReflection | TypeDocProject,
   options: ExtractCatalogFromTypeDocOptions = {},
@@ -266,6 +330,9 @@ export function extractCatalogFunctionsFromTypeDocProject(
   return functions;
 }
 
+/**
+ * Extract A2UI function definitions from a serialized TypeDoc JSON project.
+ */
 export function extractCatalogFunctionsFromTypeDocJson(
   project: TypeDocProject,
   options: ExtractCatalogFromTypeDocOptions = {},
@@ -273,6 +340,9 @@ export function extractCatalogFunctionsFromTypeDocJson(
   return extractCatalogFunctionsFromTypeDocProject(project, options);
 }
 
+/**
+ * Extract component schemas and write one `catalog.json` per component.
+ */
 export async function writeComponentCatalogs(
   options: WriteComponentCatalogOptions,
 ): Promise<CatalogComponent[]> {
@@ -281,6 +351,9 @@ export async function writeComponentCatalogs(
   return components;
 }
 
+/**
+ * Write component schema artifacts that were already extracted.
+ */
 export function writeCatalogComponents(
   components: CatalogComponent[],
   options: { cwd?: string; outDir: string },
@@ -298,6 +371,9 @@ export function writeCatalogComponents(
   }
 }
 
+/**
+ * Extract A2UI function definitions and write one JSON artifact per function.
+ */
 export async function writeCatalogFunctionDefinitions(
   options: WriteComponentCatalogOptions,
 ): Promise<CatalogFunction[]> {
@@ -306,6 +382,9 @@ export async function writeCatalogFunctionDefinitions(
   return functions;
 }
 
+/**
+ * Component and function artifacts produced by a single extraction pass.
+ */
 export interface CatalogArtifacts {
   components: CatalogComponent[];
   functions: CatalogFunction[];
@@ -346,6 +425,9 @@ export async function writeCatalogArtifacts(
 // (b) survive A2UI 0.9's wire format (`FunctionCall.call` is a bare name).
 const FUNCTION_NAME_RE = /^[a-z_$][\w$]*$/i;
 
+/**
+ * Write function definition artifacts that were already extracted.
+ */
 export function writeCatalogFunctions(
   functions: CatalogFunction[],
   options: { cwd?: string; outDir: string },
@@ -374,6 +456,9 @@ export function writeCatalogFunctions(
   }
 }
 
+/**
+ * Build a full A2UI catalog manifest from component and function artifacts.
+ */
 export function createA2UICatalog(options: {
   catalogId: string;
   components: CatalogComponent[] | Record<string, JsonSchema>;
@@ -440,6 +525,9 @@ function stripSchemaDialect(schema: JsonSchema): JsonSchema {
   return rest;
 }
 
+/**
+ * Write a full A2UI catalog manifest as `catalog.json`.
+ */
 export function writeA2UICatalog(
   catalog: A2UICatalog,
   options: { cwd?: string; outDir: string },

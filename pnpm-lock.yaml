@@ -314,7 +314,7 @@ importers:
         version: 3.7.0
       '@rsbuild/plugin-babel':
         specifier: 1.1.2
-        version: 1.1.2(@rsbuild/core@2.0.12(core-js@3.48.0))
+        version: 1.1.2(@rsbuild/core@2.0.14(core-js@3.48.0))
       '@types/react':
         specifier: ^18.3.28
         version: 18.3.28
@@ -569,7 +569,7 @@ importers:
         version: 18.3.28
       rsbuild-plugin-tailwindcss:
         specifier: 0.2.4
-        version: 0.2.4(@rsbuild/core@2.0.12(core-js@3.48.0))(tailwindcss@3.4.19)
+        version: 0.2.4(@rsbuild/core@2.0.14(core-js@3.48.0))(tailwindcss@3.4.19)
       tailwindcss:
         specifier: ^3.4.19
         version: 3.4.19
@@ -645,9 +645,6 @@ importers:
       '@lynx-js/rspeedy':
         specifier: workspace:^
         version: link:../rspeedy/core
-      '@microsoft/api-extractor':
-        specifier: 'catalog:'
-        version: 7.58.2(@types/node@24.10.13)
 
   packages/genui/a2ui:
     dependencies:
@@ -670,9 +667,6 @@ importers:
       '@lynx-js/types':
         specifier: 3.7.0
         version: 3.7.0
-      '@microsoft/api-extractor':
-        specifier: 'catalog:'
-        version: 7.58.2(@types/node@24.10.13)
       '@rstest/core':
         specifier: catalog:rstest
         version: https://codeload.github.com/upupming/rstest-repro/tar.gz/e8db05f6f3a4cb788dfc1979202d748df53a1223(core-js@3.48.0)(jsdom@27.4.0)
@@ -686,9 +680,6 @@ importers:
         specifier: ^0.28.19
         version: 0.28.19(typescript@5.9.3)
     devDependencies:
-      '@microsoft/api-extractor':
-        specifier: 'catalog:'
-        version: 7.58.2(@types/node@24.10.13)
       '@rstest/core':
         specifier: catalog:rstest
         version: https://codeload.github.com/upupming/rstest-repro/tar.gz/e8db05f6f3a4cb788dfc1979202d748df53a1223(core-js@3.48.0)(jsdom@27.4.0)
@@ -783,9 +774,6 @@ importers:
 
   packages/genui/a2ui-prompt:
     devDependencies:
-      '@microsoft/api-extractor':
-        specifier: 'catalog:'
-        version: 7.58.2(@types/node@24.10.13)
       '@types/node':
         specifier: ^24.10.13
         version: 24.10.13
@@ -827,9 +815,6 @@ importers:
       '@lynx-js/types':
         specifier: 3.7.0
         version: 3.7.0
-      '@microsoft/api-extractor':
-        specifier: 'catalog:'
-        version: 7.58.2(@types/node@24.10.13)
       '@types/react':
         specifier: ^18.3.28
         version: 18.3.28
@@ -907,9 +892,6 @@ importers:
       '@lynx-js/kitten-lynx-test-infra':
         specifier: workspace:*
         version: link:../../testing-library/kitten-lynx
-      '@microsoft/api-extractor':
-        specifier: 'catalog:'
-        version: 7.58.2(@types/node@24.10.13)
       '@types/node':
         specifier: ^24.10.13
         version: 24.10.13
@@ -975,7 +957,7 @@ importers:
         version: 6.9.1
       rsbuild-plugin-publint:
         specifier: 0.3.4
-        version: 0.3.4(@rsbuild/core@2.0.12(core-js@3.48.0))
+        version: 0.3.4(@rsbuild/core@2.0.14(core-js@3.48.0))
 
   packages/mcp-servers/devtool-connector:
     devDependencies:
@@ -1002,7 +984,7 @@ importers:
         version: 4.4.3
       rsbuild-plugin-publint:
         specifier: 0.3.4
-        version: 0.3.4(@rsbuild/core@2.0.12(core-js@3.48.0))
+        version: 0.3.4(@rsbuild/core@2.0.14(core-js@3.48.0))
       typescript:
         specifier: ^5.9.3
         version: 5.9.3
@@ -1033,7 +1015,7 @@ importers:
         version: 4.4.3
       rsbuild-plugin-publint:
         specifier: 0.3.4
-        version: 0.3.4(@rsbuild/core@2.0.12(core-js@3.48.0))
+        version: 0.3.4(@rsbuild/core@2.0.14(core-js@3.48.0))
       zod:
         specifier: ^3.25.76
         version: 3.25.76
@@ -1092,7 +1074,7 @@ importers:
         version: 3.7.0
       rsbuild-plugin-publint:
         specifier: 0.3.4
-        version: 0.3.4(@rsbuild/core@2.0.12(core-js@3.48.0))
+        version: 0.3.4(@rsbuild/core@2.0.14(core-js@3.48.0))
 
   packages/react:
     dependencies:
@@ -1415,7 +1397,7 @@ importers:
         version: link:../core
       '@rsbuild/plugin-type-check':
         specifier: 1.3.4
-        version: 1.3.4(@rsbuild/core@2.0.12(core-js@3.48.0))(@rspack/core@2.0.8(@swc/helpers@0.5.23))(tslib@2.8.1)(typescript@5.9.3)
+        version: 1.3.4(@rsbuild/core@2.0.14(core-js@3.48.0))(@rspack/core@2.0.8(@swc/helpers@0.5.23))(tslib@2.8.1)(typescript@5.9.3)
       '@rstest/core':
         specifier: catalog:rstest
         version: https://codeload.github.com/upupming/rstest-repro/tar.gz/e8db05f6f3a4cb788dfc1979202d748df53a1223(core-js@3.48.0)(jsdom@27.4.0)
@@ -1696,10 +1678,10 @@ importers:
         version: link:../../web-platform/web-elements
       '@rsbuild/plugin-less':
         specifier: 1.6.3
-        version: 1.6.3(@rsbuild/core@2.0.12(core-js@3.48.0))(@rspack/core@2.0.8(@swc/helpers@0.5.23))(webpack@5.105.2(lightningcss@1.31.1))
+        version: 1.6.3(@rsbuild/core@2.0.14(core-js@3.48.0))(@rspack/core@2.0.8(@swc/helpers@0.5.23))(webpack@5.105.2(lightningcss@1.31.1))
       '@rsbuild/plugin-sass':
         specifier: 1.5.2
-        version: 1.5.2(@rsbuild/core@2.0.12(core-js@3.48.0))
+        version: 1.5.2(@rsbuild/core@2.0.14(core-js@3.48.0))
       commander:
         specifier: ^13.1.0
         version: 13.1.0
@@ -1714,7 +1696,7 @@ importers:
         version: 1.1.1
       rsbuild-plugin-tailwindcss:
         specifier: 0.2.4
-        version: 0.2.4(@rsbuild/core@2.0.12(core-js@3.48.0))(tailwindcss@4.2.1)
+        version: 0.2.4(@rsbuild/core@2.0.14(core-js@3.48.0))(tailwindcss@4.2.1)
       rslog:
         specifier: ^1.3.2
         version: 1.3.2
@@ -1808,7 +1790,7 @@ importers:
         version: 3.7.0
       '@rsbuild/plugin-babel':
         specifier: 1.1.2
-        version: 1.1.2(@rsbuild/core@2.0.12(core-js@3.48.0))
+        version: 1.1.2(@rsbuild/core@2.0.14(core-js@3.48.0))
       '@testing-library/jest-dom':
         specifier: ^6.9.1
         version: 6.9.1
@@ -1860,7 +1842,7 @@ importers:
         version: 0.4.4
       rsbuild-plugin-publint:
         specifier: 0.3.4
-        version: 0.3.4(@rsbuild/core@2.0.12(core-js@3.48.0))
+        version: 0.3.4(@rsbuild/core@2.0.14(core-js@3.48.0))
       typescript:
         specifier: ^5.9.3
         version: 5.9.3
@@ -1878,7 +1860,7 @@ importers:
         version: 21.1.7
       rsbuild-plugin-publint:
         specifier: 0.3.4
-        version: 0.3.4(@rsbuild/core@2.0.12(core-js@3.48.0))
+        version: 0.3.4(@rsbuild/core@2.0.14(core-js@3.48.0))
 
   packages/tools/canary-release:
     dependencies:
@@ -2155,9 +2137,6 @@ importers:
       css-loader:
         specifier: ^7.1.4
         version: 7.1.4(@rspack/core@2.0.8(@swc/helpers@0.5.23))(webpack@5.105.2(lightningcss@1.31.1)(postcss@8.5.14))
-      mini-css-extract-plugin:
-        specifier: ^2.10.0
-        version: 2.10.0(webpack@5.105.2(lightningcss@1.31.1)(postcss@8.5.14))
 
   packages/webpack/css-extract-webpack-plugin:
     devDependencies:
@@ -5096,8 +5075,8 @@ packages:
       core-js:
         optional: true
 
-  '@rsbuild/core@2.0.12':
-    resolution: {integrity: sha512-6f0M9TO4pAeM/VAshg9PajYK4IbfUB21Xun2kT0q3/SbBQ607KzkQZ6fmReuKUKCLbo26tGnbgg5P77eDDcfaA==}
+  '@rsbuild/core@2.0.14':
+    resolution: {integrity: sha512-SSPer6vM+v82CV6JXIOzyyT++A1ECgsVvvUuveD5rfGxX/W58vWGnB+zWcYbMfYOjTntD+9ve6QGGh6kBjPx6A==}
     engines: {node: ^20.19.0 || >=22.12.0}
     hasBin: true
     peerDependencies:
@@ -9533,12 +9512,6 @@ packages:
   min-indent@1.0.1:
     resolution: {integrity: sha512-I9jwMn07Sy/IwOj3zVkVik2JTvgpaykDZEigL6Rx6N9LbMywwUSMtxET+7lVoDLLd3O3IXwJwvuuns8UB/HeAg==}
     engines: {node: '>=4'}
-
-  mini-css-extract-plugin@2.10.0:
-    resolution: {integrity: sha512-540P2c5dYnJlyJxTaSloliZexv8rji6rY8FhQN+WF/82iHQfA23j/xtJx97L+mXOML27EqksSek/g4eK7jaL3g==}
-    engines: {node: '>= 12.13.0'}
-    peerDependencies:
-      webpack: ^5.0.0
 
   minimatch@10.2.3:
     resolution: {integrity: sha512-Rwi3pnapEqirPSbWbrZaa6N3nmqq4Xer/2XooiOKyV3q12ML06f7MOuc5DVH8ONZIFhwIYQ3yzPH4nt7iWHaTg==}
@@ -15397,7 +15370,7 @@ snapshots:
     transitivePeerDependencies:
       - '@module-federation/runtime-tools'
 
-  '@rsbuild/core@2.0.12(core-js@3.48.0)':
+  '@rsbuild/core@2.0.14(core-js@3.48.0)':
     dependencies:
       '@rspack/core': 2.0.8(@swc/helpers@0.5.23)
       '@swc/helpers': 0.5.23
@@ -15406,7 +15379,7 @@ snapshots:
     transitivePeerDependencies:
       - '@module-federation/runtime-tools'
 
-  '@rsbuild/plugin-babel@1.1.2(@rsbuild/core@2.0.12(core-js@3.48.0))':
+  '@rsbuild/plugin-babel@1.1.2(@rsbuild/core@2.0.14(core-js@3.48.0))':
     dependencies:
       '@babel/core': 7.29.0
       '@babel/plugin-proposal-decorators': 7.29.0(@babel/core@7.29.0)
@@ -15415,7 +15388,7 @@ snapshots:
       '@types/babel__core': 7.20.5
       reduce-configs: 1.1.2
     optionalDependencies:
-      '@rsbuild/core': 2.0.12(core-js@3.48.0)
+      '@rsbuild/core': 2.0.14(core-js@3.48.0)
     transitivePeerDependencies:
       - supports-color
 
@@ -15451,14 +15424,14 @@ snapshots:
     optionalDependencies:
       '@rsbuild/core': 2.0.11(core-js@3.48.0)
 
-  '@rsbuild/plugin-less@1.6.3(@rsbuild/core@2.0.12(core-js@3.48.0))(@rspack/core@2.0.8(@swc/helpers@0.5.23))(webpack@5.105.2(lightningcss@1.31.1))':
+  '@rsbuild/plugin-less@1.6.3(@rsbuild/core@2.0.14(core-js@3.48.0))(@rspack/core@2.0.8(@swc/helpers@0.5.23))(webpack@5.105.2(lightningcss@1.31.1))':
     dependencies:
       deepmerge: 4.3.1
       less: 4.6.4
       less-loader: 12.3.2(@rspack/core@2.0.8(@swc/helpers@0.5.23))(less@4.6.4)(webpack@5.105.2(lightningcss@1.31.1))
       reduce-configs: 1.1.2
     optionalDependencies:
-      '@rsbuild/core': 2.0.12(core-js@3.48.0)
+      '@rsbuild/core': 2.0.14(core-js@3.48.0)
     transitivePeerDependencies:
       - '@rspack/core'
       - webpack
@@ -15500,7 +15473,7 @@ snapshots:
     optionalDependencies:
       '@rsbuild/core': 2.0.11(core-js@3.48.0)
 
-  '@rsbuild/plugin-sass@1.5.2(@rsbuild/core@2.0.12(core-js@3.48.0))':
+  '@rsbuild/plugin-sass@1.5.2(@rsbuild/core@2.0.14(core-js@3.48.0))':
     dependencies:
       deepmerge: 4.3.1
       loader-utils: 2.0.4
@@ -15508,7 +15481,7 @@ snapshots:
       reduce-configs: 1.1.2
       sass-embedded: 1.99.0
     optionalDependencies:
-      '@rsbuild/core': 2.0.12(core-js@3.48.0)
+      '@rsbuild/core': 2.0.14(core-js@3.48.0)
 
   '@rsbuild/plugin-source-build@1.0.5(@rsbuild/core@2.0.11(core-js@3.48.0))':
     dependencies:
@@ -15531,14 +15504,14 @@ snapshots:
       - tslib
       - typescript
 
-  '@rsbuild/plugin-type-check@1.3.4(@rsbuild/core@2.0.12(core-js@3.48.0))(@rspack/core@2.0.8(@swc/helpers@0.5.23))(tslib@2.8.1)(typescript@5.9.3)':
+  '@rsbuild/plugin-type-check@1.3.4(@rsbuild/core@2.0.14(core-js@3.48.0))(@rspack/core@2.0.8(@swc/helpers@0.5.23))(tslib@2.8.1)(typescript@5.9.3)':
     dependencies:
       deepmerge: 4.3.1
       json5: 2.2.3
       reduce-configs: 1.1.2
       ts-checker-rspack-plugin: 1.3.0(@rspack/core@2.0.8(@swc/helpers@0.5.23))(tslib@2.8.1)(typescript@5.9.3)
     optionalDependencies:
-      '@rsbuild/core': 2.0.12(core-js@3.48.0)
+      '@rsbuild/core': 2.0.14(core-js@3.48.0)
     transitivePeerDependencies:
       - '@rspack/core'
       - tslib
@@ -15758,8 +15731,8 @@ snapshots:
 
   '@rslib/core@0.21.5(@microsoft/api-extractor@7.58.2(@types/node@24.10.13))(@typescript/native-preview@7.0.0-dev.20260212.1)(core-js@3.48.0)(typescript@5.9.3)':
     dependencies:
-      '@rsbuild/core': 2.0.12(core-js@3.48.0)
-      rsbuild-plugin-dts: 0.21.5(@microsoft/api-extractor@7.58.2(@types/node@24.10.13))(@rsbuild/core@2.0.12(core-js@3.48.0))(@typescript/native-preview@7.0.0-dev.20260212.1)(typescript@5.9.3)
+      '@rsbuild/core': 2.0.14(core-js@3.48.0)
+      rsbuild-plugin-dts: 0.21.5(@microsoft/api-extractor@7.58.2(@types/node@24.10.13))(@rsbuild/core@2.0.14(core-js@3.48.0))(@typescript/native-preview@7.0.0-dev.20260212.1)(typescript@5.9.3)
     optionalDependencies:
       '@microsoft/api-extractor': 7.58.2(@types/node@24.10.13)
       typescript: 5.9.3
@@ -16011,7 +15984,7 @@ snapshots:
 
   '@rstest/core@https://codeload.github.com/upupming/rstest-repro/tar.gz/e8db05f6f3a4cb788dfc1979202d748df53a1223(core-js@3.48.0)(jsdom@27.4.0)':
     dependencies:
-      '@rsbuild/core': 2.0.12(core-js@3.48.0)
+      '@rsbuild/core': 2.0.14(core-js@3.48.0)
       '@types/chai': 5.2.3
     optionalDependencies:
       jsdom: 27.4.0
@@ -20775,12 +20748,6 @@ snapshots:
 
   min-indent@1.0.1: {}
 
-  mini-css-extract-plugin@2.10.0(webpack@5.105.2(lightningcss@1.31.1)(postcss@8.5.14)):
-    dependencies:
-      schema-utils: 4.3.3
-      tapable: 2.3.0
-      webpack: 5.105.2(lightningcss@1.31.1)(postcss@8.5.14)
-
   minimatch@10.2.3:
     dependencies:
       brace-expansion: 5.0.5
@@ -22004,10 +21971,10 @@ snapshots:
     optionalDependencies:
       '@rsbuild/core': 2.0.11(core-js@3.48.0)
 
-  rsbuild-plugin-dts@0.21.5(@microsoft/api-extractor@7.58.2(@types/node@24.10.13))(@rsbuild/core@2.0.12(core-js@3.48.0))(@typescript/native-preview@7.0.0-dev.20260212.1)(typescript@5.9.3):
+  rsbuild-plugin-dts@0.21.5(@microsoft/api-extractor@7.58.2(@types/node@24.10.13))(@rsbuild/core@2.0.14(core-js@3.48.0))(@typescript/native-preview@7.0.0-dev.20260212.1)(typescript@5.9.3):
     dependencies:
       '@ast-grep/napi': 0.37.0
-      '@rsbuild/core': 2.0.12(core-js@3.48.0)
+      '@rsbuild/core': 2.0.14(core-js@3.48.0)
     optionalDependencies:
       '@microsoft/api-extractor': 7.58.2(@types/node@24.10.13)
       '@typescript/native-preview': 7.0.0-dev.20260212.1
@@ -22029,24 +21996,24 @@ snapshots:
     optionalDependencies:
       '@rsbuild/core': 2.0.11(core-js@3.48.0)
 
-  rsbuild-plugin-publint@0.3.4(@rsbuild/core@2.0.12(core-js@3.48.0)):
+  rsbuild-plugin-publint@0.3.4(@rsbuild/core@2.0.14(core-js@3.48.0)):
     dependencies:
       picocolors: 1.1.1
       publint: 0.3.17
     optionalDependencies:
-      '@rsbuild/core': 2.0.12(core-js@3.48.0)
+      '@rsbuild/core': 2.0.14(core-js@3.48.0)
 
-  rsbuild-plugin-tailwindcss@0.2.4(@rsbuild/core@2.0.12(core-js@3.48.0))(tailwindcss@3.4.19):
+  rsbuild-plugin-tailwindcss@0.2.4(@rsbuild/core@2.0.14(core-js@3.48.0))(tailwindcss@3.4.19):
     dependencies:
       tailwindcss: 3.4.19
     optionalDependencies:
-      '@rsbuild/core': 2.0.12(core-js@3.48.0)
+      '@rsbuild/core': 2.0.14(core-js@3.48.0)
 
-  rsbuild-plugin-tailwindcss@0.2.4(@rsbuild/core@2.0.12(core-js@3.48.0))(tailwindcss@4.2.1):
+  rsbuild-plugin-tailwindcss@0.2.4(@rsbuild/core@2.0.14(core-js@3.48.0))(tailwindcss@4.2.1):
     dependencies:
       tailwindcss: 4.2.1
     optionalDependencies:
-      '@rsbuild/core': 2.0.12(core-js@3.48.0)
+      '@rsbuild/core': 2.0.14(core-js@3.48.0)
 
   rslog@1.3.2: {}
 
@@ -22856,6 +22823,7 @@ snapshots:
     optionalDependencies:
       lightningcss: 1.31.1
       postcss: 8.5.14
+    optional: true
 
   terser-webpack-plugin@5.6.0(lightningcss@1.31.1)(webpack@5.105.2(lightningcss@1.31.1)):
     dependencies:
@@ -23618,6 +23586,7 @@ snapshots:
       - lightningcss
       - postcss
       - uglify-js
+    optional: true
 
   whatwg-encoding@2.0.0:
     dependencies:

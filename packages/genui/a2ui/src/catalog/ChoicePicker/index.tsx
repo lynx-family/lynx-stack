@@ -36,6 +36,8 @@ const HitSlop = {
 };
 
 /**
+ * Props for the built-in ChoicePicker catalog component.
+ *
  * @a2uiCatalog ChoicePicker
  */
 export interface ChoicePickerProps extends GenericComponentProps {
@@ -109,6 +111,9 @@ export interface ChoicePickerProps extends GenericComponentProps {
   }>;
 }
 
+/**
+ * Render a single- or multi-select choice picker.
+ */
 export function ChoicePicker(
   props: ChoicePickerProps,
 ): import('@lynx-js/react').ReactNode {

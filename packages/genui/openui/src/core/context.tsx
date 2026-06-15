@@ -12,6 +12,9 @@ import type {
 import type { ReactNode } from '@lynx-js/react';
 import { createContext, useContext, useEffect } from '@lynx-js/react';
 
+/**
+ * Runtime context shared by OpenUI renderers, hooks, actions, and form fields.
+ */
 export interface OpenUIContextValue {
   /** The active component library (schema + renderers). */
   library: Library;
@@ -81,7 +84,8 @@ export interface OpenUIContextValue {
 export const OpenUIContext = createContext<OpenUIContextValue | null>(null);
 
 /**
- * Access the full OpenUI context. Throws if used outside a <Renderer />.
+ * Access the full OpenUI context. Throws if used outside an
+ * `OpenUiRenderer` tree.
  */
 export function useOpenUI(): OpenUIContextValue {
   const ctx = useContext(OpenUIContext);

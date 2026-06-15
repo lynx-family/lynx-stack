@@ -13,6 +13,9 @@ import '../../../styles/catalog/LineChart.css';
 
 type ChartVariant = 'linear' | 'natural' | 'step';
 
+/**
+ * A named numeric series rendered by the LineChart component.
+ */
 export interface LineChartSeries {
   name: string;
   values: number[];
@@ -20,6 +23,8 @@ export interface LineChartSeries {
 }
 
 /**
+ * Props for the built-in LineChart catalog component.
+ *
  * @a2uiCatalog LineChart
  */
 export interface LineChartProps extends GenericComponentProps {
@@ -234,6 +239,9 @@ function buildSvgMarkup(
   `;
 }
 
+/**
+ * Render one or more numeric line series over shared labels.
+ */
 export function LineChart(
   props: LineChartProps,
 ): import('@lynx-js/react').ReactNode {

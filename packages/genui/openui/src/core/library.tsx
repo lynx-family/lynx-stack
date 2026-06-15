@@ -28,6 +28,9 @@ export type {
 
 // ─── React-specific types ───────────────────────────────────────────────────
 
+/**
+ * Props passed to an OpenUI ReactLynx component renderer.
+ */
 export interface ComponentRenderProps<P = Record<string, unknown>>
   extends CoreRenderProps<P, ReactNode>
 {
@@ -50,6 +53,9 @@ export type LibraryDefinition = CoreLibraryDefinition<ComponentRenderer<any>>;
 
 // ─── defineComponent (React) ────────────────────────────────────────────────
 
+/**
+ * Define a ReactLynx component renderer and its OpenUI schema metadata.
+ */
 export function defineComponent<T extends $ZodObject>(config: {
   name: string;
   props: T;
@@ -61,6 +67,11 @@ export function defineComponent<T extends $ZodObject>(config: {
 
 // ─── createLibrary (React) ──────────────────────────────────────────────────
 
+/**
+ * Create a typed OpenUI library from ReactLynx component definitions.
+ *
+ * @internal
+ */
 export function createLibrary(input: LibraryDefinition): Library {
   return coreCreateLibrary<ComponentRenderer<any>>(input) as Library;
 }

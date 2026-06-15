@@ -115,6 +115,10 @@ export interface ResolvedCatalogEntry {
   schema?: CatalogSchema;
 }
 
+/**
+ * Runtime catalog consumed by the renderer and serialized for the agent
+ * handshake.
+ */
 export interface Catalog {
   readonly components: readonly ResolvedCatalogEntry[];
   readonly functions: readonly CatalogFunctionEntry[];

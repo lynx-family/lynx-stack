@@ -10,6 +10,8 @@ import type { GenericComponentProps } from '../../store/types.js';
 import '../../../styles/catalog/List.css';
 
 /**
+ * Props for the built-in List catalog component.
+ *
  * @a2uiCatalog List
  */
 export interface ListProps extends GenericComponentProps {
@@ -19,6 +21,9 @@ export interface ListProps extends GenericComponentProps {
   align?: 'start' | 'center' | 'end' | 'stretch';
 }
 
+/**
+ * Render child component ids inside a scrollable list container.
+ */
 export function List(
   props: ListProps,
 ): import('@lynx-js/react').ReactNode {

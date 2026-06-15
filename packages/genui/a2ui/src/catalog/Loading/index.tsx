@@ -6,6 +6,8 @@ import type { GenericComponentProps } from '../../store/types.js';
 import '../../../styles/catalog/Loading.css';
 
 /**
+ * Props for the built-in Loading catalog component.
+ *
  * @a2uiCatalog Loading
  */
 export interface LoadingProps extends GenericComponentProps {
@@ -13,6 +15,9 @@ export interface LoadingProps extends GenericComponentProps {
   variant?: 'inline' | 'block';
 }
 
+/**
+ * Render a lightweight loading indicator.
+ */
 export function Loading(
   props: LoadingProps,
 ): import('@lynx-js/react').ReactNode {

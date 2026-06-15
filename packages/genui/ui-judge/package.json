@@ -19,7 +19,6 @@
     "README.md"
   ],
   "scripts": {
-    "api-extractor": "node ../scripts/run-api-extractor.mjs",
     "build": "rslib build",
     "test": "pnpm run test:playwright",
     "test:android": "vitest run --config vitest.config.ts",
@@ -37,7 +36,6 @@
     "@lynx-js/genui-a2ui": "workspace:*",
     "@lynx-js/genui-a2ui-catalog-extractor": "workspace:*",
     "@lynx-js/kitten-lynx-test-infra": "workspace:*",
-    "@microsoft/api-extractor": "catalog:",
     "@types/node": "^24.10.13",
     "vitest": "^3.2.4"
   },

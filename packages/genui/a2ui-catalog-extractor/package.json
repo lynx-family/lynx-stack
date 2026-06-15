@@ -32,7 +32,6 @@
     "README.md"
   ],
   "scripts": {
-    "api-extractor": "node ../scripts/run-api-extractor.mjs",
     "build": "tsc --project tsconfig.build.json",
     "build:api": "tsc --project tsconfig.build.json",
     "test": "rstest"
@@ -41,7 +40,6 @@
     "typedoc": "^0.28.19"
   },
   "devDependencies": {
-    "@microsoft/api-extractor": "catalog:",
     "@rstest/core": "catalog:rstest",
     "@types/node": "^24.10.13"
   },

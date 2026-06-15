@@ -79,6 +79,9 @@ function evaluateRecord(
     : {};
 }
 
+/**
+ * Inputs used to parse OpenUI text and build renderer state.
+ */
 export interface UseOpenUIStateOptions {
   response: string | null;
   library: Library;
@@ -92,6 +95,9 @@ export interface UseOpenUIStateOptions {
   onError?: (errors: OpenUIError[]) => void;
 }
 
+/**
+ * Derived OpenUI renderer state returned by `useOpenUIState`.
+ */
 export interface OpenUIState {
   /** Evaluated result (props resolved to concrete values). Used by Renderer. */
   result: ParseResult | null;

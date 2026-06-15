@@ -207,11 +207,17 @@ function renderCatalogExamples(catalog: A2UICatalog): string {
   return lines.join('\n');
 }
 
+/**
+ * Options used to customize the generated A2UI system prompt.
+ */
 export interface BuildSystemPromptOptions {
   catalog?: A2UICatalog;
   appendix?: string;
 }
 
+/**
+ * Build the full A2UI system prompt for the supplied catalog.
+ */
 export function buildA2UISystemPrompt(
   opts: BuildSystemPromptOptions = {},
 ): string {

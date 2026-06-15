@@ -21,9 +21,6 @@ export default {
     chunkFormat: 'module',
     chunkLoading: 'import',
   },
-  experiments: {
-    outputModule: true,
-  },
   module: {
     rules: [
       {
@@ -44,5 +41,5 @@ export default {
       },
     ],
   },
-  plugins: [new CssExtractRspackPlugin({ experimentalUseImportModule: true })],
+  plugins: [new CssExtractRspackPlugin()],
 };

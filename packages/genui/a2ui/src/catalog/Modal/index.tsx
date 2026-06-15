@@ -18,6 +18,8 @@ import type {
 import '../../../styles/catalog/Modal.css';
 
 /**
+ * Props for the built-in Modal catalog component.
+ *
  * @a2uiCatalog Modal
  */
 export interface ModalProps extends GenericComponentProps {
@@ -36,6 +38,9 @@ function childWithContext(
     : child;
 }
 
+/**
+ * Render a trigger component and a locally opened modal content component.
+ */
 export function Modal(
   props: ModalProps,
 ): import('@lynx-js/react').ReactNode {

@@ -9,6 +9,11 @@ import type {
 } from './resolveFunctionCall.js';
 import { isDataBinding, isFunctionCall, isObject } from './utils.js';
 
+/**
+ * Resolve an A2UI data-binding path against an optional component data context.
+ *
+ * @internal
+ */
 export function resolveBindingPath(
   path: string,
   dataContextPath?: string,
@@ -18,6 +23,11 @@ export function resolveBindingPath(
   return dataContextPath ? `${dataContextPath}/${path}` : `/${path}`;
 }
 
+/**
+ * Read a nested value from an object using a resolved JSON-pointer-style path.
+ *
+ * @internal
+ */
 export function resolveDeepValue(
   value: unknown,
   previousResolved: unknown,
@@ -83,6 +93,11 @@ export type ResolveDynamicValueOptions = ResolveFunctionOptions & {
   resolveFunctionCall?: ExecuteFunctionCall;
 };
 
+/**
+ * Build the default function-call resolver used while resolving dynamic values.
+ *
+ * @internal
+ */
 export function createResolveFunctionCall(
   options: ResolveDynamicValueOptions,
 ): ExecuteFunctionCall | undefined {
@@ -121,6 +136,10 @@ function resolveSignal(
   }
 }
 
+/**
+ * Resolve literals, data bindings, and function calls into concrete runtime
+ * values for component props or action payloads.
+ */
 export function resolveDynamicValue(
   processor: MessageProcessor,
   value: unknown,

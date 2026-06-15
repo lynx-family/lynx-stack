@@ -5,7 +5,7 @@
 /**
  * @packageDocumentation
  *
- * A plugin to integrate {@link https://github.com/preactjs/prefresh | prefresh} with ReactLynx.
+ * A rspack plugin to integrate {@link https://github.com/preactjs/prefresh | prefresh} with ReactLynx.
  */
 
 export { ReactRefreshRspackPlugin } from './ReactRefreshRspackPlugin.js';

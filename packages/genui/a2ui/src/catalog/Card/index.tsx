@@ -7,6 +7,8 @@ import type { GenericComponentProps } from '../../store/types.js';
 import '../../../styles/catalog/Card.css';
 
 /**
+ * Props for the built-in Card catalog component.
+ *
  * @a2uiCatalog Card
  */
 export interface CardProps extends GenericComponentProps {
@@ -15,6 +17,9 @@ export interface CardProps extends GenericComponentProps {
   weight?: number;
 }
 
+/**
+ * Render a single-child card container.
+ */
 export function Card(props: CardProps): import('@lynx-js/react').ReactNode {
   const { child: childId, surface, dataContextPath } = props;
   const childComponent = surface.components.get(childId);
