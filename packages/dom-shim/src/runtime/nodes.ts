@@ -18,6 +18,7 @@ import type { ElementRef } from './papi-types.ts';
 import { scheduleFlush } from './scheduler.ts';
 import { createWritableStyle } from './style.ts';
 import type { L2CSSStyleProxy } from './style.ts';
+import { lynxToHtml } from './tag-map.ts';
 
 /** DOM `Node.ELEMENT_NODE`. */
 export const NODE_TYPE_ELEMENT = 1;
@@ -38,22 +39,8 @@ export const DOCUMENT_POSITION_CONTAINED_BY = 0x10;
  */
 const RAW_TEXT_TAG = 'raw-text';
 
-/**
- * Minimal Lynx → HTML reverse tag map. US-404 ships only the most common
- * tags so `tagName` returns spec-shaped strings ('DIV', 'SPAN', ...); the
- * full SPEC/TAG_MAP.json from US-473 (=US-441) will replace this constant.
- *
- * Unknown Lynx tags fall back to their own uppercase form so callers see a
- * stable, debuggable tagName instead of throwing.
- */
-const LYNX_TO_HTML_MIN: Readonly<Record<string, string>> = Object.freeze({
-  view: 'div',
-  text: 'span',
-  image: 'img',
-  input: 'input',
-  page: 'html',
-  'scroll-view': 'div',
-});
+// Lynx → HTML reverse tag map lives in `tag-map.ts` (US-441) as the
+// definitive source. `tagName` uses `lynxToHtml(__GetTag(papi))`.
 
 /**
  * Raw text content side table. See Shim_Design.md §4.2.2 + §3.2 (PAPI gap:
@@ -285,13 +272,11 @@ export class L1ReadOnlyElement extends L1ReadOnlyNode {
   }
 
   /**
-   * Spec: uppercase tag name. We map Lynx tags through the minimal table
-   * above and fall back to the Lynx tag's own uppercase. US-473 swaps in
-   * the full SPEC/TAG_MAP.json.
+   * Spec: uppercase tag name. Lynx tag → HTML tag via `lynxToHtml`
+   * (US-441 / SPEC/TAG_MAP.json), then uppercased.
    */
   get tagName(): string {
-    const lynxTag = __GetTag(this.papi);
-    return (LYNX_TO_HTML_MIN[lynxTag] ?? lynxTag).toUpperCase();
+    return lynxToHtml(__GetTag(this.papi)).toUpperCase();
   }
 
   get localName(): string {

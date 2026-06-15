@@ -11,49 +11,16 @@ import {
 } from './nodes.ts';
 import type { ShimDocumentFragment } from './nodes.ts';
 import type { ElementRef } from './papi-types.ts';
+import { htmlToLynx } from './tag-map.ts';
 
 /**
  * Document stand-in. See Shim_Design.md §9.
  *
- * Minimal HTML→Lynx tag map (US-425). US-441 supersedes with the full
- * SPEC/TAG_MAP.json. Unmapped tags fall back to __CreateView per OQ-S.2
- * (permissive default), with `data-shim-tag="X"` preserving the original
- * HTML tag for diagnostics.
+ * Tag mapping delegates to `tag-map.ts` (US-441) which loads the
+ * versioned table from SPEC/TAG_MAP.json. Unmapped tags fall back to
+ * __CreateView per OQ-S.2 (permissive default), with `data-shim-tag="X"`
+ * preserving the original HTML tag for diagnostics.
  */
-
-interface ShimElementInfo {
-  lynxFactory:
-    | 'view'
-    | 'text'
-    | 'image'
-    | 'scrollView'
-    | 'element';
-  /** When lynxFactory === 'element', pass this through as the PAPI tag. */
-  rawTag?: string;
-}
-
-const TAG_MAP: Readonly<Record<string, ShimElementInfo>> = Object.freeze({
-  div: { lynxFactory: 'view' },
-  span: { lynxFactory: 'text' },
-  p: { lynxFactory: 'view' },
-  h1: { lynxFactory: 'text' },
-  h2: { lynxFactory: 'text' },
-  h3: { lynxFactory: 'text' },
-  h4: { lynxFactory: 'text' },
-  h5: { lynxFactory: 'text' },
-  h6: { lynxFactory: 'text' },
-  a: { lynxFactory: 'text' },
-  button: { lynxFactory: 'view' },
-  img: { lynxFactory: 'image' },
-  input: { lynxFactory: 'element', rawTag: 'input' },
-  ul: { lynxFactory: 'view' },
-  ol: { lynxFactory: 'view' },
-  li: { lynxFactory: 'view' },
-  view: { lynxFactory: 'view' },
-  text: { lynxFactory: 'text' },
-  image: { lynxFactory: 'image' },
-  'scroll-view': { lynxFactory: 'scrollView' },
-});
 
 let bodyOverride: ElementRef | null = null;
 let bodyChoiceLogged = false;
@@ -100,30 +67,57 @@ function pageComponentId(): number {
   }
 }
 
-function buildElement(htmlTag: string): ElementRef {
-  const lower = htmlTag.toLowerCase();
-  const info = TAG_MAP[lower];
+function buildElement(htmlTag: string): ElementRef | null {
+  const outcome = htmlToLynx(htmlTag);
   const compId = pageComponentId();
-  if (info === undefined) {
-    // OQ-S.2 permissive: unmapped HTML tag → view + data-shim-tag="X".
+
+  if (outcome.kind === 'skipped') {
+    if (outcome.divergence) {
+      console.warn(
+        JSON.stringify({
+          code: outcome.divergence,
+          tier: 3,
+          surface: 'document.createElement',
+          message: `<${htmlTag}> is skipped (not created).`,
+        }),
+      );
+    }
+    return null;
+  }
+
+  if (outcome.kind === 'fallback') {
+    // OQ-S.2 permissive: unmapped → view + data-shim-tag="X".
     const ref = __CreateView(compId);
-    __SetAttribute(ref, 'data-shim-tag', lower);
+    __SetAttribute(ref, 'data-shim-tag', outcome.rawTag);
     return ref;
   }
-  switch (info.lynxFactory) {
+
+  const { factory, rawTag, defaultClasses } = outcome.result;
+  let ref: ElementRef;
+  switch (factory) {
     case 'view':
-      return __CreateView(compId);
+      ref = __CreateView(compId);
+      break;
     case 'text':
-      return __CreateText(compId);
+      ref = __CreateText(compId);
+      break;
     case 'image':
-      return __CreateImage(compId);
+      ref = __CreateImage(compId);
+      break;
     case 'scrollView':
-      return __CreateScrollView(compId);
+      ref = __CreateScrollView(compId);
+      break;
     case 'element':
-      return __CreateElement(info.rawTag ?? lower, compId);
+      ref = __CreateElement(rawTag ?? htmlTag.toLowerCase(), compId);
+      break;
     default:
-      return __CreateView(compId);
+      ref = __CreateView(compId);
   }
+
+  if (defaultClasses && defaultClasses.length > 0) {
+    __SetAttribute(ref, 'class', defaultClasses.join(' '));
+  }
+  return ref;
 }
 
 /** Test-only: reset module-level state between tests. */
@@ -160,7 +154,16 @@ export const document: ShimDocument = Object.freeze({
   },
 
   createElement(tag: string): L3aEventfulElement {
-    return wrapPapi(buildElement(tag)) as L3aEventfulElement;
+    let ref = buildElement(tag);
+    if (ref === null) {
+      // Skipped tag — return an inert view stamped with data-shim-skipped
+      // so callers can detect the divergence. The corresponding divergence
+      // code was already console.warn'd by buildElement.
+      ref = __CreateView(pageComponentId());
+      __SetAttribute(ref, 'data-shim-tag', tag.toLowerCase());
+      __SetAttribute(ref, 'data-shim-skipped', 'true');
+    }
+    return wrapPapi(ref) as L3aEventfulElement;
   },
 
   createTextNode(data: string): L1ReadOnlyText {
