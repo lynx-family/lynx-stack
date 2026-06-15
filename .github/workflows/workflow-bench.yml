@@ -69,7 +69,7 @@ jobs:
         # provide them (deploy-main's benchmark job, fork pull requests where
         # GitHub withholds secrets) leave these empty; skip the cache then and
         # let `pnpm turbo build` rebuild locally instead of hard-failing.
-        if: ${{ env.ACCESS_KEY != '' }}
+        if: ${{ env.ACCESS_KEY != '' && env.SECRET_KEY != '' && env.ENDPOINT != '' && env.BUCKET_NAME != '' && env.REGION != '' }}
         uses: lynx-infra/cache@5c6160a6a4c7fca80a2f3057bb9dfc9513fcb732
         with:
           path: .turbo
