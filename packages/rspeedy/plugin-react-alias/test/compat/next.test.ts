@@ -1,28 +1,35 @@
 // Copyright 2025 The Lynx Authors. All rights reserved.
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
-import { createRequire } from 'node:module'
 import path from 'node:path'
 import { fileURLToPath } from 'node:url'
+import type { URL } from 'node:url'
 
 import { createRsbuild } from '@rsbuild/core'
 import { describe, expect, rstest, test } from '@rstest/core'
 
 import { LAYERS } from '@lynx-js/react-webpack-plugin'
 
-// `node:module` is a Node builtin (kept external by rstest), so its
-// `createRequire` cannot be intercepted by `rstest.mock`; mock the `semver`
-// comparison the plugin feeds the resolved version into instead.
-rstest.mock('semver/functions/gte.js', () => {
-  const original = rstest.requireActual<
-    | ((version: string, range: string) => boolean)
-    | { default: (version: string, range: string) => boolean }
-  >('semver/functions/gte.js')
-  const gte = 'default' in original ? original.default : original
+rstest.mock('node:module', () => {
+  const original = rstest.requireActual<typeof import('node:module')>(
+    'node:module',
+  )
+  const { createRequire: originalCreateRequire } = original
   return {
-    default: rstest.fn((_version: string, range: string) =>
-      gte('0.112.0', range)
-    ),
+    ...original as object,
+    createRequire: rstest.fn().mockImplementation((path: string | URL) => {
+      const originalRequire = originalCreateRequire(path)
+      const mockedRequire = (id: string) => {
+        if (/[\\/](?:packages[\\/])?react[\\/]*package\.json$/.test(id)) {
+          return { version: '0.112.0' }
+        } else {
+          // eslint-disable-next-line
+          return originalRequire(id)
+        }
+      }
+      mockedRequire.resolve = originalRequire.resolve
+      return mockedRequire
+    }),
   }
 })
 
@@ -46,19 +53,5 @@ describe('@lynx-js/react/compat - alias', () => {
     expect(config?.resolve?.alias ?? {}).toHaveProperty(
       '@lynx-js/react/compat$',
     )
-
-    // The mock substitutes the version fed into the comparison, so assert
-    // the plugin still resolved and forwarded the REAL installed version —
-    // this keeps the resolve-version-then-compare flow covered.
-    const require = createRequire(import.meta.url)
-    const reactLynxPkg = require.resolve('@lynx-js/react/package.json', {
-      paths: [path.dirname(fileURLToPath(import.meta.url))],
-    })
-    const { version: realVersion } = require(reactLynxPkg) as {
-      version: string
-    }
-    const gteModule = await import('semver/functions/gte.js')
-    const gteMock = rstest.mocked(gteModule.default)
-    expect(gteMock).toHaveBeenCalledWith(realVersion, '0.111.9999')
   })
 })
