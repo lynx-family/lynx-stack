@@ -114,8 +114,8 @@ catalogs:
 
   # Rstest monorepo packages
   rstest:
-    "@rstest/coverage-istanbul": "https://codeload.github.com/upupming/rstest-repro/tar.gz/162d728bd86d45bd0eff3d44a867920c966544b6"
-    "@rstest/core": "https://codeload.github.com/upupming/rstest-repro/tar.gz/e8db05f6f3a4cb788dfc1979202d748df53a1223"
+    "@rstest/coverage-istanbul": "0.10.5"
+    "@rstest/core": "0.10.5"
 
 overrides:
   # Published @lynx-js/lynx-ui-* (pulled in by packages/genui/a2ui) peer-depend on
