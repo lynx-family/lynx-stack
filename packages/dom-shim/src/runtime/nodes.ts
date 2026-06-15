@@ -241,6 +241,15 @@ export abstract class L1ReadOnlyNode {
     return __ElementIsEqual(this.papi, other.papi);
   }
 
+  /**
+   * Spec textContent getter — concatenation of all descendant text nodes.
+   * For elements, walks the subtree. For raw-text, returns the recorded
+   * text value. See Shim_Design.md §4.2.2.
+   */
+  get textContent(): string {
+    return collectTextContent(this.papi);
+  }
+
   isSameNode(other: L1ReadOnlyNode | null): boolean {
     if (other === null) return false;
     return __ElementIsEqual(this.papi, other.papi);
@@ -989,10 +998,51 @@ export class L3bUnsafeWritableElement extends L3aEventfulElement {
   ): void {
     this.insertAdjacentHTML(position, escapeForInsert(text));
   }
+
+  /**
+   * Spec textContent setter — clears existing children and creates a
+   * single raw-text child. See Shim_Design.md §7.3
+   * `shim:L3b/text-emulated`.
+   */
+  override set textContent(value: string) {
+    const existing = [...__GetChildren(this.papi)];
+    for (const c of existing) __RemoveElement(this.papi, c);
+    if (value !== '') {
+      const ref = __CreateRawText(value);
+      recordTextValue(ref, value);
+      __AppendElement(this.papi, ref);
+    }
+    invalidateGeometrySubtree(this.papi);
+    scheduleFlush();
+  }
+
+  /** Preserve the inherited getter alongside the new setter. */
+  override get textContent(): string {
+    return super.textContent;
+  }
 }
 
 function escapeForInsert(s: string): string {
   return s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+}
+
+/**
+ * Concatenate textContent for `papi` and its descendants. Used by the
+ * inherited `textContent` getter on every node.
+ */
+function collectTextContent(papi: ElementRef): string {
+  if (__GetTag(papi) === RAW_TEXT_TAG) {
+    return getTextValue(papi);
+  }
+  const parts: string[] = [];
+  try {
+    for (const child of __GetChildren(papi)) {
+      parts.push(collectTextContent(child));
+    }
+  } catch {
+    // PAPI not installed in this context — bail.
+  }
+  return parts.join('');
 }
 
 /**
