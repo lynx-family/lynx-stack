@@ -62,10 +62,7 @@ describe('Config - loadConfig', () => {
     expect(actual.content).toStrictEqual(expected.default)
   })
 
-  // Matches production: verified against examples/react with `rspeedy build`
-  // on Node >= 22 (native type stripping) — this config flavor is rejected
-  // by the real CLI with the same error. vitest used to "pass" it only
-  // because vite transformed the config file.
+  // Asserts the real CLI error; see PR description.
   test('load with custom relative commonjs typescript config', async () => {
     const cwd = join(__dirname, 'fixtures', 'custom')
     await expect(loadConfig({
@@ -170,10 +167,7 @@ describe('Config - loadConfig', () => {
     `)
   })
 
-  // Matches production: verified against examples/react with `rspeedy build`
-  // on Node >= 22 (native type stripping) — this config flavor is rejected
-  // by the real CLI with the same error. vitest used to "pass" it only
-  // because vite transformed the config file.
+  // Asserts the real CLI error; see PR description.
   test('load with "type": "commonjs" in package.json and export default', async () => {
     const cwd = join(__dirname, 'fixtures', 'cjs')
 
@@ -183,10 +177,7 @@ describe('Config - loadConfig', () => {
     })).rejects.toThrow('Unexpected token \'export\'')
   })
 
-  // Matches production: verified against examples/react with `rspeedy build`
-  // on Node >= 22 (native type stripping) — this config flavor is rejected
-  // by the real CLI with the same error. vitest used to "pass" it only
-  // because vite transformed the config file.
+  // Asserts the real CLI error; see PR description.
   test('load with "type": "commonjs" in package.json and esm pkg', async () => {
     const cwd = join(__dirname, 'fixtures', 'cjs')
 
@@ -196,10 +187,7 @@ describe('Config - loadConfig', () => {
     })).rejects.toThrow('Cannot use import statement outside a module')
   })
 
-  // Matches production: verified against examples/react with `rspeedy build`
-  // on Node >= 22 (native type stripping) — this config flavor is rejected
-  // by the real CLI with the same error. vitest used to "pass" it only
-  // because vite transformed the config file.
+  // Asserts the real CLI error; see PR description.
   test('load config with enum', async () => {
     const cwd = join(__dirname, 'fixtures', 'custom')
 
@@ -209,10 +197,7 @@ describe('Config - loadConfig', () => {
     })).rejects.toThrow('TypeScript enum is not supported in strip-only mode')
   })
 
-  // Matches production: verified against examples/react with `rspeedy build`
-  // on Node >= 22 (native type stripping) — this config flavor is rejected
-  // by the real CLI with the same error. vitest used to "pass" it only
-  // because vite transformed the config file.
+  // Asserts the real CLI error; see PR description.
   test('load config with const enum', async () => {
     const cwd = join(__dirname, 'fixtures', 'custom')
 
