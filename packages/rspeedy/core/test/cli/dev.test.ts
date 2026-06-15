@@ -25,10 +25,8 @@ rstest.mock('@rsbuild/core', () => {
   }
 })
 
-rstest.mock('chokidar', () => {
-  const { EventEmitter } = rstest.requireActual<typeof import('eventemitter3')>(
-    'eventemitter3',
-  )
+rstest.mock('chokidar', async () => {
+  const { EventEmitter } = await import('eventemitter3')
 
   const emitter = new EventEmitter()
 
