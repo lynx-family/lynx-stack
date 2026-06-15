@@ -217,6 +217,42 @@ describe('encodeCSS', () => {
     );
   });
 
+  test('should preserve fallback values in css var for background-color', () => {
+    const css = `
+      .foo {
+        background-color: var(--missing-bg-color, green);
+      }
+    `;
+    const cssMap = {
+      '1': CSS.parse(css).root,
+    };
+    const buffer = encodeCSS(cssMap);
+    const decodedString = get_style_content(
+      decode_style_info(buffer, undefined, true),
+    );
+    expect(decodedString).toContain(
+      'background-color:var(--missing-bg-color, green);',
+    );
+  });
+
+  test('should preserve nested fallback values in css var for background-color', () => {
+    const css = `
+      .foo {
+        background-color: var(--missing-bg-color, var(--missing-bg-color-2, green));
+      }
+    `;
+    const cssMap = {
+      '1': CSS.parse(css).root,
+    };
+    const buffer = encodeCSS(cssMap);
+    const decodedString = get_style_content(
+      decode_style_info(buffer, undefined, true),
+    );
+    expect(decodedString).toContain(
+      'background-color:var(--missing-bg-color, var(--missing-bg-color-2,green));',
+    );
+  });
+
   test('should handle ::placeholder selector', () => {
     const css = `
       input::placeholder {
