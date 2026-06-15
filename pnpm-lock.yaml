@@ -645,9 +645,6 @@ importers:
       '@lynx-js/rspeedy':
         specifier: workspace:^
         version: link:../rspeedy/core
-      '@microsoft/api-extractor':
-        specifier: 'catalog:'
-        version: 7.58.2(@types/node@24.10.13)
 
   packages/genui/a2ui:
     dependencies:
@@ -670,9 +667,6 @@ importers:
       '@lynx-js/types':
         specifier: 3.7.0
         version: 3.7.0
-      '@microsoft/api-extractor':
-        specifier: 'catalog:'
-        version: 7.58.2(@types/node@24.10.13)
       '@rstest/core':
         specifier: catalog:rstest
         version: 0.10.3(core-js@3.48.0)(jsdom@27.4.0)
@@ -686,9 +680,6 @@ importers:
         specifier: ^0.28.19
         version: 0.28.19(typescript@5.9.3)
     devDependencies:
-      '@microsoft/api-extractor':
-        specifier: 'catalog:'
-        version: 7.58.2(@types/node@24.10.13)
       '@rstest/core':
         specifier: catalog:rstest
         version: 0.10.3(core-js@3.48.0)(jsdom@27.4.0)
@@ -783,9 +774,6 @@ importers:
 
   packages/genui/a2ui-prompt:
     devDependencies:
-      '@microsoft/api-extractor':
-        specifier: 'catalog:'
-        version: 7.58.2(@types/node@24.10.13)
       '@types/node':
         specifier: ^24.10.13
         version: 24.10.13
@@ -827,9 +815,6 @@ importers:
       '@lynx-js/types':
         specifier: 3.7.0
         version: 3.7.0
-      '@microsoft/api-extractor':
-        specifier: 'catalog:'
-        version: 7.58.2(@types/node@24.10.13)
       '@types/react':
         specifier: ^18.3.28
         version: 18.3.28
@@ -907,9 +892,6 @@ importers:
       '@lynx-js/kitten-lynx-test-infra':
         specifier: workspace:*
         version: link:../../testing-library/kitten-lynx
-      '@microsoft/api-extractor':
-        specifier: 'catalog:'
-        version: 7.58.2(@types/node@24.10.13)
       '@types/node':
         specifier: ^24.10.13
         version: 24.10.13

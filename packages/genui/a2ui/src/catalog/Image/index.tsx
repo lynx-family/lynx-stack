@@ -6,6 +6,8 @@ import type { GenericComponentProps } from '../../store/types.js';
 import '../../../styles/catalog/Image.css';
 
 /**
+ * Props for the built-in Image catalog component.
+ *
  * @a2uiCatalog Image
  */
 export interface ImageProps extends GenericComponentProps {
@@ -23,6 +25,9 @@ export interface ImageProps extends GenericComponentProps {
   weight?: number;
 }
 
+/**
+ * Render an image URL with catalog-defined sizing and fit variants.
+ */
 export function Image(
   props: ImageProps,
 ): import('@lynx-js/react').ReactNode {

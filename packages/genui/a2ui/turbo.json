@@ -28,14 +28,6 @@
       "outputs": [
         "dist/**"
       ]
-    },
-    "api-extractor": {
-      "dependsOn": [
-        "//#build",
-        "@lynx-js/genui-a2ui-catalog-extractor#build",
-        "@lynx-js/genui-cli#build"
-      ],
-      "cache": false
     }
   }
 }

@@ -9,6 +9,8 @@ import type { GenericComponentProps } from '../../store/types.js';
 import '../../../styles/catalog/Button.css';
 
 /**
+ * Props for the built-in Button catalog component.
+ *
  * @a2uiCatalog Button
  */
 export interface ButtonProps extends GenericComponentProps {
@@ -53,6 +55,9 @@ export interface ButtonProps extends GenericComponentProps {
   }>;
 }
 
+/**
+ * Render an interactive button that dispatches an A2UI event or function call.
+ */
 export function Button(
   props: ButtonProps,
 ): import('@lynx-js/react').ReactNode {

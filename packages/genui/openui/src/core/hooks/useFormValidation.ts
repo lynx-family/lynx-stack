@@ -13,6 +13,9 @@ import {
   useState,
 } from '@lynx-js/react';
 
+/**
+ * Validation state and helpers for OpenUI form fields.
+ */
 export interface FormValidationContextValue {
   errors: Record<string, string | undefined>;
   getFieldError: (name: string) => string | undefined;
@@ -31,6 +34,9 @@ export const FormValidationContext = createContext<
   FormValidationContextValue | null
 >(null);
 
+/**
+ * Read the nearest OpenUI form validation context, if one exists.
+ */
 export function useFormValidation(): FormValidationContextValue | null {
   return useContext(FormValidationContext);
 }
@@ -40,6 +46,9 @@ interface FieldRegistration {
   getValue: () => unknown;
 }
 
+/**
+ * Create form validation state and callbacks for an OpenUI form boundary.
+ */
 export function useCreateFormValidation(): FormValidationContextValue {
   const [errors, setErrors] = useState<Record<string, string | undefined>>({});
   const errorsRef = useRef(errors);

@@ -35,6 +35,9 @@ export interface MessageStore {
   clear(): void;
 }
 
+/**
+ * Options used when creating a raw A2UI message buffer.
+ */
 export interface MessageStoreOptions {
   /**
    * Optional initial buffer contents. Useful when rehydrating a previous
@@ -43,6 +46,9 @@ export interface MessageStoreOptions {
   initialMessages?: readonly ServerToClientMessage[];
 }
 
+/**
+ * Create an append-only raw-message buffer suitable for `useSyncExternalStore`.
+ */
 export function createMessageStore(
   options: MessageStoreOptions = {},
 ): MessageStore {

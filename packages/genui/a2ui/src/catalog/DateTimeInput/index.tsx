@@ -66,6 +66,8 @@ function getPartsKey(parts: ReturnType<typeof normalizeDateTimeInputValue>) {
 }
 
 /**
+ * Props for the built-in DateTimeInput catalog component.
+ *
  * @a2uiCatalog DateTimeInput
  */
 export interface DateTimeInputProps extends GenericComponentProps {
@@ -114,6 +116,9 @@ export interface DateTimeInputProps extends GenericComponentProps {
   }>;
 }
 
+/**
+ * Render a local date and/or time picker backed by the surface data model.
+ */
 export function DateTimeInput(
   props: DateTimeInputProps,
 ): import('@lynx-js/react').ReactNode {

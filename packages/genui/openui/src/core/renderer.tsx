@@ -43,6 +43,10 @@ export type ToolProviderInput =
   | McpClientLike
   | null;
 
+/**
+ * Props for rendering raw OpenUI response text with parsing, runtime state,
+ * actions, and query execution.
+ */
 export interface OpenUiRendererRuntimeProps {
   /** Raw openui-lang response text. This enables v0.5 runtime features. */
   response: string | null;
@@ -66,6 +70,9 @@ export interface OpenUiRendererRuntimeProps {
   onError?: (errors: OpenUIError[]) => void;
 }
 
+/**
+ * Props for rendering an already parsed OpenUI result.
+ */
 export interface OpenUiRendererParsedProps {
   /** Pre-parsed result. Kept for v0.1/static-render compatibility. */
   result: ParseResult | null;
@@ -489,6 +496,9 @@ function ParsedOpenUiRenderer(
   );
 }
 
+/**
+ * Render OpenUI language output using a ReactLynx component library.
+ */
 export function OpenUiRenderer(props: OpenUiRendererProps) {
   if ('response' in props) {
     return <RuntimeOpenUiRenderer {...props} />;

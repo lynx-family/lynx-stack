@@ -24,6 +24,8 @@ import type { GenericComponentProps } from '../../store/types.js';
 import '../../../styles/catalog/Slider.css';
 
 /**
+ * Props for the built-in Slider catalog component.
+ *
  * @a2uiCatalog Slider
  */
 export interface SliderProps extends GenericComponentProps {
@@ -77,6 +79,9 @@ export interface SliderProps extends GenericComponentProps {
   }>;
 }
 
+/**
+ * Render a numeric slider bound to the surface data model.
+ */
 export function Slider(
   props: SliderProps,
 ): import('@lynx-js/react').ReactNode {

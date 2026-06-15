@@ -5,6 +5,9 @@ import { createLibrary } from './library.jsx';
 import type { ComponentGroup, DefinedComponent, Library } from './library.jsx';
 import * as c from '../catalog/index.js';
 
+/**
+ * Options for creating the default ReactLynx OpenUI component library.
+ */
 export interface CreateOpenUiLibraryOptions {
   /** Override the root component name. Defaults to `'Stack'`. */
   root?: string;
@@ -46,6 +49,10 @@ const DEFAULT_COMPONENT_GROUPS: ComponentGroup[] = [
   },
 ];
 
+/**
+ * Create a ReactLynx OpenUI library with the built-in components plus any
+ * caller-provided extensions.
+ */
 export function createOpenUiLibrary(
   options?: CreateOpenUiLibraryOptions,
 ): Library {
