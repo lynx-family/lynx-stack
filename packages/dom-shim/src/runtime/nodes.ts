@@ -19,6 +19,11 @@ import { scheduleFlush } from './scheduler.ts';
 import { createWritableStyle } from './style.ts';
 import type { L2CSSStyleProxy } from './style.ts';
 import { lynxToHtml } from './tag-map.ts';
+import {
+  _setTextValueReader,
+  buildL3bInnerHTML,
+  serializeL3bInnerHTML,
+} from './unsafe-write.ts';
 
 /** DOM `Node.ELEMENT_NODE`. */
 export const NODE_TYPE_ELEMENT = 1;
@@ -69,6 +74,10 @@ export function recordTextValue(papi: ElementRef, value: string): void {
 export function getTextValue(papi: ElementRef): string {
   return textValues.get(papi) ?? '';
 }
+
+// Wire the text-value reader so the L3b serializer can recover raw-text
+// content without an ESLint import/no-cycle violation.
+_setTextValueReader(getTextValue);
 
 /**
  * Base node class. See Shim_Design.md §2 and §4.1.
@@ -862,6 +871,36 @@ export class L3aEventfulElement extends L2SafeWritableElement {
 }
 
 /**
+ * L3b UnsafeWritableElement. See Shim_Design.md §7.
+ *
+ * Inherits L3a's event surface and adds the lossy bulk-write APIs:
+ * innerHTML setter / getter, etc. Each carries documented divergences
+ * (shim:L3b/*); see SPEC/DIAGNOSTICS.md (US-449) for the catalog.
+ */
+export class L3bUnsafeWritableElement extends L3aEventfulElement {
+  /**
+   * Parse `html` via htmlparser2, walk the AST, build a Shim-mediated
+   * PAPI subtree under `this`. Existing children are cleared first.
+   * See Shim_Design.md §7.2.
+   *
+   * Divergences:
+   * - shim:L3b/script-skipped — <script> tags are not executed.
+   * - shim:L3b/css-style-tag-dropped — <style> tag content discarded.
+   * - shim:L3b/inline-event-attrs-ignored — on* attrs are silently dropped.
+   */
+  set innerHTML(html: string) {
+    buildL3bInnerHTML(this.papi, html);
+    invalidateGeometrySubtree(this.papi);
+    scheduleFlush();
+  }
+
+  /** Canonical serialization. See Shim_Design.md §7.3. */
+  get innerHTML(): string {
+    return serializeL3bInnerHTML(this.papi);
+  }
+}
+
+/**
  * Spec DocumentFragment. See Shim_Design.md §9.1 + OQ-S.5.
  *
  * Maps to `__CreateWrapperElement(parentComponentUniId)`. Treated as a
@@ -891,7 +930,6 @@ export function createDocumentFragment(
 
 export function wrapPapi(ref: ElementRef): L1ReadOnlyNode {
   if (__GetTag(ref) === RAW_TEXT_TAG) return new L1ReadOnlyText(ref);
-  // Highest tier currently available is L3a. Once L3b ships (US-441+),
-  // dispatch ratchets up. See Shim_Design.md §2.
-  return new L3aEventfulElement(ref);
+  // L3b is the highest tier. See Shim_Design.md §2.
+  return new L3bUnsafeWritableElement(ref);
 }
