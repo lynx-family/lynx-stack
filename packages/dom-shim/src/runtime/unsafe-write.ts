@@ -187,6 +187,31 @@ export function serializeL3bInnerHTML(papi: ElementRef): string {
   return parts.join('');
 }
 
+/** outerHTML serializer — wraps innerHTML in self's tag + attrs. */
+export function serializeL3bOuterHTML(papi: ElementRef): string {
+  return serializeNode(papi);
+}
+
+/**
+ * Build refs from `html` and return them. Used by insertAdjacentHTML and
+ * outerHTML setter.
+ */
+export function buildRefsFromHtml(html: string): ElementRef[] {
+  if (html === '') return [];
+  const doc = parseDocument(html, {
+    recognizeSelfClosing: true,
+    lowerCaseTags: true,
+    lowerCaseAttributeNames: true,
+  });
+  const compId = pageComponentId();
+  const out: ElementRef[] = [];
+  for (const node of doc.children as unknown as AstNode[]) {
+    const ref = buildFromAst(node, compId);
+    if (ref !== null) out.push(ref);
+  }
+  return out;
+}
+
 const VOID_ELEMENTS = new Set([
   'area',
   'base',

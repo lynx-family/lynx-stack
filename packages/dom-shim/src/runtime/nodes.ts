@@ -23,7 +23,9 @@ import {
   _setTextValueReader,
   _setTextValueWriter,
   buildL3bInnerHTML,
+  buildRefsFromHtml,
   serializeL3bInnerHTML,
+  serializeL3bOuterHTML,
 } from './unsafe-write.ts';
 
 /** DOM `Node.ELEMENT_NODE`. */
@@ -901,6 +903,96 @@ export class L3bUnsafeWritableElement extends L3aEventfulElement {
   get innerHTML(): string {
     return serializeL3bInnerHTML(this.papi);
   }
+
+  /** Wraps innerHTML in self's tag + attrs. */
+  get outerHTML(): string {
+    return serializeL3bOuterHTML(this.papi);
+  }
+
+  /** Parses html and replaces self in parent. No-op on detached nodes. */
+  set outerHTML(html: string) {
+    const parent = __GetParent(this.papi);
+    if (!parent) return;
+    const newRefs = buildRefsFromHtml(html);
+    for (const ref of newRefs) {
+      __InsertElementBefore(parent, ref, this.papi);
+    }
+    __RemoveElement(parent, this.papi);
+    invalidateGeometrySubtree(parent);
+    scheduleFlush();
+  }
+
+  /**
+   * Spec insertAdjacentHTML at `position`:
+   * - `beforebegin`: before this, in parent.
+   * - `afterbegin`: as the first child of this.
+   * - `beforeend`: as the last child of this.
+   * - `afterend`: after this, in parent.
+   */
+  insertAdjacentHTML(
+    position: 'beforebegin' | 'afterbegin' | 'beforeend' | 'afterend',
+    html: string,
+  ): void {
+    const newRefs = buildRefsFromHtml(html);
+    if (newRefs.length === 0) return;
+    switch (position) {
+      case 'beforebegin': {
+        const parent = __GetParent(this.papi);
+        if (!parent) return;
+        for (const ref of newRefs) {
+          __InsertElementBefore(parent, ref, this.papi);
+        }
+        invalidateGeometrySubtree(parent);
+        break;
+      }
+      case 'afterbegin': {
+        const first = __FirstElement(this.papi);
+        if (first) {
+          for (const ref of newRefs) {
+            __InsertElementBefore(this.papi, ref, first);
+          }
+        } else {
+          for (const ref of newRefs) __AppendElement(this.papi, ref);
+        }
+        invalidateGeometrySubtree(this.papi);
+        break;
+      }
+      case 'beforeend': {
+        for (const ref of newRefs) __AppendElement(this.papi, ref);
+        invalidateGeometrySubtree(this.papi);
+        break;
+      }
+      case 'afterend': {
+        const parent = __GetParent(this.papi);
+        if (!parent) return;
+        const next = __NextElement(this.papi);
+        if (next) {
+          for (const ref of newRefs) {
+            __InsertElementBefore(parent, ref, next);
+          }
+        } else {
+          for (const ref of newRefs) __AppendElement(parent, ref);
+        }
+        invalidateGeometrySubtree(parent);
+        break;
+      }
+      default:
+        break;
+    }
+    scheduleFlush();
+  }
+
+  /** Spec shortcut — text wrapped in a single raw-text node. */
+  insertAdjacentText(
+    position: 'beforebegin' | 'afterbegin' | 'beforeend' | 'afterend',
+    text: string,
+  ): void {
+    this.insertAdjacentHTML(position, escapeForInsert(text));
+  }
+}
+
+function escapeForInsert(s: string): string {
+  return s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
 }
 
 /**
