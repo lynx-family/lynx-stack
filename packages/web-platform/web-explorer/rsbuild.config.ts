@@ -4,6 +4,14 @@ import { RsdoctorRspackPlugin } from '@rsdoctor/rspack-plugin';
 import { writeFileSync } from 'node:fs';
 import path from 'path';
 
+const BUNDLE_STATS_JSON_OPTIONS = {
+  assets: true,
+  chunks: true,
+  modules: true,
+  entrypoints: true,
+  chunkGroups: true,
+} as const;
+
 const statsJsonPlugin = {
   name: 'web-explorer:stats-json',
   setup(api: RsbuildPluginAPI) {
@@ -17,7 +25,7 @@ const statsJsonPlugin = {
       }
       writeFileSync(
         path.join(api.context.distPath, 'stats.json'),
-        JSON.stringify(stats.toJson({}), null, 2),
+        JSON.stringify(stats.toJson(BUNDLE_STATS_JSON_OPTIONS), null, 2),
       );
     });
   },

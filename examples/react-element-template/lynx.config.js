@@ -2,7 +2,7 @@ import { pluginQRCode } from '@lynx-js/qrcode-rsbuild-plugin';
 import { pluginReactLynx } from '@lynx-js/react-rsbuild-plugin';
 import { defineConfig } from '@lynx-js/rspeedy';
 
-const enableBundleAnalysis = !!process.env['RSPEEDY_BUNDLE_ANALYSIS'];
+import { pluginLynxBundleAnalysisStats } from '../bundle-analysis-stats.plugin.js';
 
 export default defineConfig({
   plugins: [
@@ -15,12 +15,10 @@ export default defineConfig({
         return `${url}?fullscreen=true`;
       },
     }),
+    pluginLynxBundleAnalysisStats(),
   ],
   environments: {
     web: {},
     lynx: {},
-  },
-  performance: {
-    profile: enableBundleAnalysis,
   },
 });
