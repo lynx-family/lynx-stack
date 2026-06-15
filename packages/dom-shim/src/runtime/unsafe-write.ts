@@ -133,7 +133,9 @@ function buildFromAst(node: AstNode, compId: number): ElementRef | null {
   if (node.type === 'text') {
     const text = node.data ?? '';
     if (text === '') return null;
-    return __CreateRawText(text);
+    const ref = __CreateRawText(text);
+    recordTextValueLocal(ref, text);
+    return ref;
   }
   if (node.type === 'tag' || node.type === 'script' || node.type === 'style') {
     const tag = (node.name ?? '').toLowerCase();
@@ -244,11 +246,13 @@ function escapeText(s: string): string {
 }
 
 /**
- * Read raw-text via the side table maintained by nodes.ts. We forward via a
- * lazy hook to avoid an ESLint import/no-cycle between unsafe-write.ts
- * and nodes.ts.
+ * Read and write raw-text via the side table maintained by nodes.ts. We
+ * forward through lazy hooks to avoid an ESLint import/no-cycle between
+ * unsafe-write.ts and nodes.ts.
  */
 let _getRecordedTextValue: (papi: ElementRef) => string = () => '';
+let _recordTextValue: (papi: ElementRef, value: string) => void = () =>
+  undefined;
 
 export function _setTextValueReader(
   fn: (papi: ElementRef) => string,
@@ -256,6 +260,16 @@ export function _setTextValueReader(
   _getRecordedTextValue = fn;
 }
 
+export function _setTextValueWriter(
+  fn: (papi: ElementRef, value: string) => void,
+): void {
+  _recordTextValue = fn;
+}
+
 function getRecordedTextValue(papi: ElementRef): string {
   return _getRecordedTextValue(papi);
+}
+
+function recordTextValueLocal(papi: ElementRef, value: string): void {
+  _recordTextValue(papi, value);
 }

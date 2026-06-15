@@ -21,6 +21,7 @@ import type { L2CSSStyleProxy } from './style.ts';
 import { lynxToHtml } from './tag-map.ts';
 import {
   _setTextValueReader,
+  _setTextValueWriter,
   buildL3bInnerHTML,
   serializeL3bInnerHTML,
 } from './unsafe-write.ts';
@@ -75,9 +76,11 @@ export function getTextValue(papi: ElementRef): string {
   return textValues.get(papi) ?? '';
 }
 
-// Wire the text-value reader so the L3b serializer can recover raw-text
-// content without an ESLint import/no-cycle violation.
+// Wire the text-value reader/writer so the L3b serializer + innerHTML
+// pipeline can use the side table without an ESLint import/no-cycle
+// violation.
 _setTextValueReader(getTextValue);
+_setTextValueWriter(recordTextValue);
 
 /**
  * Base node class. See Shim_Design.md §2 and §4.1.
