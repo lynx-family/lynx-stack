@@ -62,7 +62,6 @@ describe('Config - loadConfig', () => {
     expect(actual.content).toStrictEqual(expected.default)
   })
 
-  // The real CLI rejects this config flavor; vitest only loaded it via vite's transform.
   test('load with custom relative commonjs typescript config', async () => {
     const cwd = join(__dirname, 'fixtures', 'custom')
     await expect(loadConfig({
@@ -167,7 +166,6 @@ describe('Config - loadConfig', () => {
     `)
   })
 
-  // The real CLI rejects this config flavor; vitest only loaded it via vite's transform.
   test('load with "type": "commonjs" in package.json and export default', async () => {
     const cwd = join(__dirname, 'fixtures', 'cjs')
 
@@ -177,7 +175,6 @@ describe('Config - loadConfig', () => {
     })).rejects.toThrow('Unexpected token \'export\'')
   })
 
-  // The real CLI rejects this config flavor; vitest only loaded it via vite's transform.
   test('load with "type": "commonjs" in package.json and esm pkg', async () => {
     const cwd = join(__dirname, 'fixtures', 'cjs')
 
@@ -187,7 +184,6 @@ describe('Config - loadConfig', () => {
     })).rejects.toThrow('Cannot use import statement outside a module')
   })
 
-  // The real CLI rejects this config flavor; vitest only loaded it via vite's transform.
   test('load config with enum', async () => {
     const cwd = join(__dirname, 'fixtures', 'custom')
 
@@ -197,7 +193,6 @@ describe('Config - loadConfig', () => {
     })).rejects.toThrow('TypeScript enum is not supported in strip-only mode')
   })
 
-  // The real CLI rejects this config flavor; vitest only loaded it via vite's transform.
   test('load config with const enum', async () => {
     const cwd = join(__dirname, 'fixtures', 'custom')
 
