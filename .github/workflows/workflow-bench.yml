@@ -64,6 +64,12 @@ jobs:
           rustup toolchain install "$toolchain" --profile default
           rustup target add --toolchain "$toolchain" wasm32-unknown-unknown wasm32-wasip1
       - name: TurboCache
+        # The physical-exclusive runner has no baked-in OSS credentials, so the
+        # cache action needs them forwarded as secrets. Callers that can't
+        # provide them (deploy-main's benchmark job, fork pull requests where
+        # GitHub withholds secrets) leave these empty; skip the cache then and
+        # let `pnpm turbo build` rebuild locally instead of hard-failing.
+        if: ${{ env.ACCESS_KEY != '' }}
         uses: lynx-infra/cache@5c6160a6a4c7fca80a2f3057bb9dfc9513fcb732
         with:
           path: .turbo
