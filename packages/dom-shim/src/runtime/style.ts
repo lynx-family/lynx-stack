@@ -78,8 +78,8 @@ export class L2CSSStyleDeclaration {
   }
 
   /**
-   * Joined cache as canonical `prop: value;` string. cssText setter is L3b
-   * (US-447) because it parses bulk declarations.
+   * Joined cache as canonical `prop: value;` string. The setter parses
+   * bulk declarations (US-447 — L3b path).
    */
   get cssText(): string {
     const entries: string[] = [];
@@ -88,6 +88,41 @@ export class L2CSSStyleDeclaration {
       entries.push(`${k}: ${v}`);
     }
     return entries.join('; ');
+  }
+
+  /**
+   * Bulk replace via `'prop: value; prop2: value2;'` string. See
+   * Shim_Design.md §7.3 `shim:L3b/cssText-reorder`: declarations are
+   * parsed and re-applied; the order is the parser's, not the input's.
+   */
+  set cssText(value: string) {
+    const cache = getElementCache(this.papi);
+    cache.styles.clear();
+    cache.stylePriorities.clear();
+    const parsed: Record<string, string> = {};
+    // Strip /* ... */ comments first.
+    const stripped = value.replace(/\/\*[\s\S]*?\*\//g, '');
+    for (const decl of stripped.split(';')) {
+      const colon = decl.indexOf(':');
+      if (colon < 0) continue;
+      const rawK = decl.slice(0, colon).trim();
+      let v = decl.slice(colon + 1).trim();
+      if (rawK === '' || v === '') continue;
+      // Honor `!important` per OQ-S.3 cache-only.
+      const importantMatch = /!\s*important\s*$/.exec(v);
+      let priority: string | undefined;
+      if (importantMatch) {
+        priority = 'important';
+        v = v.slice(0, importantMatch.index).trim();
+      }
+      const kebab = normalizeCSSKey(rawK);
+      parsed[kebab] = v;
+      cache.styles.set(kebab, v);
+      if (priority) cache.stylePriorities.set(kebab, priority);
+    }
+    __SetInlineStyles(this.papi, parsed);
+    invalidateGeometry(this.papi);
+    scheduleFlush();
   }
 
   [Symbol.iterator](): IterableIterator<string> {
@@ -110,6 +145,23 @@ const camelRe = /([A-Z])/g;
 export function camelToKebab(name: string): string {
   if (name.startsWith('--')) return name;
   return name.replace(camelRe, (_, c: string) => `-${c.toLowerCase()}`);
+}
+
+/**
+ * Normalize a CSS property name from either camelCase or
+ * already-kebab/UPPER form into canonical lower-kebab.
+ *
+ * - `backgroundColor` → `background-color` (camelCase path).
+ * - `BACKGROUND-COLOR` → `background-color` (uppercased kebab).
+ * - `background-color` → `background-color` (already canonical).
+ * - `--my-var` → `--my-var` (custom property preserved).
+ */
+export function normalizeCSSKey(name: string): string {
+  if (name.startsWith('--')) return name;
+  if (name.includes('-') || name === name.toLowerCase()) {
+    return name.toLowerCase();
+  }
+  return camelToKebab(name);
 }
 
 /**
