@@ -3,7 +3,6 @@
 // LICENSE file in the root directory of this source tree.
 import { isIP, isIPv4 } from 'node:net'
 import type { AddressInfo } from 'node:net'
-import os from 'node:os'
 import path from 'node:path'
 
 import {
@@ -18,9 +17,11 @@ import {
 import { createStubRspeedy } from '../createStubRspeedy.js'
 
 describe('Plugins - Dev', () => {
-  void beforeEach(async () => {
+  beforeEach(async () => {
     rstest.stubEnv('NODE_ENV', 'development')
     rstest.mock('../../src/webpack/ProvidePlugin.js', { mock: true })
+
+    const { default: os } = await import('node:os')
 
     rstest.spyOn(os, 'networkInterfaces').mockReturnValue({
       eth0: [

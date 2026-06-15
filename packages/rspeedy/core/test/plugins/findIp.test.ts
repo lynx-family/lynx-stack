@@ -2,16 +2,12 @@
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
 
-import os from 'node:os'
-
-import { afterEach, describe, expect, rstest, test } from '@rstest/core'
+import { describe, expect, rstest, test } from '@rstest/core'
 
 describe('findIp', () => {
-  void afterEach(() => {
-    rstest.restoreAllMocks()
-  })
-
   test('v4', async () => {
+    const { default: os } = await import('node:os')
+
     rstest.spyOn(os, 'networkInterfaces').mockReturnValue({
       eth0: [
         {
@@ -32,6 +28,8 @@ describe('findIp', () => {
   })
 
   test('v6', async () => {
+    const { default: os } = await import('node:os')
+
     rstest.spyOn(os, 'networkInterfaces').mockReturnValue({
       eth0: [
         {
@@ -53,6 +51,8 @@ describe('findIp', () => {
   })
 
   test('multiple ips (should use the first ip)', async () => {
+    const { default: os } = await import('node:os')
+
     rstest.spyOn(os, 'networkInterfaces').mockReturnValue({
       eth0: [
         {
@@ -81,6 +81,8 @@ describe('findIp', () => {
   })
 
   test('multiple ips (should ignore internal ips)', async () => {
+    const { default: os } = await import('node:os')
+
     rstest.spyOn(os, 'networkInterfaces').mockReturnValue({
       eth0: [
         {
@@ -109,6 +111,8 @@ describe('findIp', () => {
   })
 
   test('multiple ips (should prefer physical interfaces over tunnels)', async () => {
+    const { default: os } = await import('node:os')
+
     rstest.spyOn(os, 'networkInterfaces').mockReturnValue({
       utun8: [
         {
@@ -139,6 +143,8 @@ describe('findIp', () => {
   })
 
   test('multiple ips (should prefer routable addresses over link-local)', async () => {
+    const { default: os } = await import('node:os')
+
     rstest.spyOn(os, 'networkInterfaces').mockReturnValue({
       en19: [
         {
@@ -169,6 +175,8 @@ describe('findIp', () => {
   })
 
   test('multiple ips (should fall back to tunnel interfaces when needed)', async () => {
+    const { default: os } = await import('node:os')
+
     rstest.spyOn(os, 'networkInterfaces').mockReturnValue({
       utun8: [
         {
@@ -189,6 +197,8 @@ describe('findIp', () => {
   })
 
   test('no v4 ips', async () => {
+    const { default: os } = await import('node:os')
+
     rstest.spyOn(os, 'networkInterfaces').mockReturnValue({
       eth0: [
         {
@@ -211,6 +221,8 @@ describe('findIp', () => {
   })
 
   test('no ips', async () => {
+    const { default: os } = await import('node:os')
+
     rstest.spyOn(os, 'networkInterfaces').mockReturnValue({})
 
     const { findIp } = await import('../../src/plugins/dev.plugin.js')
@@ -221,6 +233,8 @@ describe('findIp', () => {
   })
 
   test('invalid network interfaces', async () => {
+    const { default: os } = await import('node:os')
+
     rstest.spyOn(os, 'networkInterfaces').mockReturnValue({
       // @ts-expect-error mocked invalid network interfaces
       eth0: null,
@@ -234,6 +248,8 @@ describe('findIp', () => {
   })
 
   test('invalid ip address', async () => {
+    const { default: os } = await import('node:os')
+
     rstest.spyOn(os, 'networkInterfaces').mockReturnValue({
       eth0: [
         {
