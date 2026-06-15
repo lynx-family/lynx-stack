@@ -4,6 +4,7 @@
 
 import type {
   RuntimeAttributeSlotValue,
+  RuntimeElementSlots,
   RuntimeOptions,
   RuntimeTypedElementAttributes,
   SerializableValue,
@@ -21,7 +22,7 @@ declare global {
     templateKey: string,
     bundleUrl: string | null | undefined,
     attributeSlots: SerializableValue[] | null | undefined,
-    elementSlots: ElementRef[][] | null | undefined,
+    elementSlots: RuntimeElementSlots | null | undefined,
     uid: number | string,
     options?: RuntimeOptions | null,
   ): ElementRef;
@@ -29,7 +30,7 @@ declare global {
   function __CreateTypedElementTemplate(
     type: string,
     attributes: RuntimeTypedElementAttributes | null | undefined,
-    elementSlots: ElementRef[][] | null | undefined,
+    elementSlots: RuntimeElementSlots | null | undefined,
     uid: number | string,
     options?: RuntimeOptions | null,
   ): ElementRef;

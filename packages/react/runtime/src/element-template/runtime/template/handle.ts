@@ -3,7 +3,7 @@
 // LICENSE file in the root directory of this source tree.
 
 import { deleteElementTemplateNativeRef, setElementTemplateNativeRef } from './registry.js';
-import type { SerializableValue } from '../../protocol/types.js';
+import type { RuntimeElementSlots, SerializableValue } from '../../protocol/types.js';
 
 // Main-thread IFR allocates ids as consecutive negative integers.
 let nextId = -1;
@@ -18,7 +18,7 @@ export function createElementTemplateWithReservedHandle(
   templateKey: string,
   bundleUrl: string | null | undefined,
   attributeSlots: SerializableValue[] | null | undefined,
-  elementSlots: ElementRef[][] | null | undefined,
+  elementSlots: RuntimeElementSlots | null | undefined,
 ): ElementRef {
   const nativeRef = __CreateElementTemplate(
     templateKey,

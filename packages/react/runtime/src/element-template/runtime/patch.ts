@@ -6,7 +6,9 @@ import { elementTemplateRegistry } from './template/registry.js';
 import { ElementTemplateUpdateOps } from '../protocol/opcodes.js';
 import type { ElementTemplateUpdateOp } from '../protocol/opcodes.js';
 import type {
+  ElementTemplateHandleSlotsCommand,
   ElementTemplateUpdateCommandStream,
+  RuntimeElementSlots,
   RuntimeOptions,
   RuntimeOptionsCommand,
   SerializableValue,
@@ -28,7 +30,7 @@ export function applyElementTemplateUpdateCommands(
         const templateKey = stream[i++] as string;
         const bundleUrl = stream[i++] as string | null | undefined;
         const attributeSlots = stream[i++] as SerializableValue[] | null | undefined;
-        const elementSlots = stream[i++] as number[][] | null | undefined;
+        const elementSlots = stream[i++] as ElementTemplateHandleSlotsCommand | null | undefined;
 
         if (__DEV__) {
           const createError = validateCreateTemplatePayload(
@@ -77,7 +79,7 @@ export function applyElementTemplateUpdateCommands(
         const handleId = stream[i++] as number;
         const type = stream[i++] as string;
         const attributes = stream[i++] as TypedElementAttributesCommand | null | undefined;
-        const elementSlots = stream[i++] as number[][] | null | undefined;
+        const elementSlots = stream[i++] as ElementTemplateHandleSlotsCommand | null | undefined;
         const options = stream[i++] as RuntimeOptionsCommand | null | undefined;
 
         if (__DEV__) {
@@ -153,36 +155,47 @@ export function applyElementTemplateUpdateCommands(
 }
 
 function resolveElementSlots(
-  elementSlots: number[][] | null | undefined,
-): { hasError: boolean; value: ElementRef[][] | null } {
-  if (!Array.isArray(elementSlots)) {
+  elementSlots: ElementTemplateHandleSlotsCommand | null | undefined,
+): { hasError: boolean; value: RuntimeElementSlots | null } {
+  if (elementSlots == null) {
     return { hasError: false, value: null };
+  }
+  if (__DEV__ && !Array.isArray(elementSlots)) {
+    lynx.reportError(new Error('ElementTemplate create elementSlots must be an array, null, or undefined.'));
+    return { hasError: true, value: null };
   }
 
   let hasError = false;
-  const value = elementSlots.map((children, slotIndex) => {
-    if (!Array.isArray(children)) {
-      if (__DEV__) {
-        lynx.reportError(
-          new Error(`ElementTemplate create slot ${slotIndex} must be an array of child handles.`),
-        );
-        hasError = true;
-      }
-      return [];
+  const value: RuntimeElementSlots = [];
+  for (let slotIndex = 0; slotIndex < elementSlots.length; slotIndex += 1) {
+    const children = elementSlots[slotIndex];
+    if (children == null) {
+      continue;
+    }
+    if (__DEV__ && !Array.isArray(children)) {
+      lynx.reportError(
+        new Error(`ElementTemplate create slot ${slotIndex} must be an array of child handles, null, or undefined.`),
+      );
+      hasError = true;
+      continue;
     }
 
-    return children
-      .map((childId) => {
-        const childRef = __DEV__
-          ? resolveHandle(childId, 'child')
-          : (elementTemplateRegistry.get(childId) ?? null);
-        if (__DEV__ && childRef === null) {
+    const resolvedChildren: ElementRef[] = [];
+    for (let childIndex = 0; childIndex < children.length; childIndex += 1) {
+      const childId = children[childIndex]!;
+      const childRef = __DEV__
+        ? resolveHandle(childId, 'child')
+        : (elementTemplateRegistry.get(childId) ?? null);
+      if (childRef === null) {
+        if (__DEV__) {
           hasError = true;
         }
-        return childRef;
-      })
-      .filter((childRef): childRef is ElementRef => childRef !== null);
-  });
+        continue;
+      }
+      resolvedChildren.push(childRef);
+    }
+    value[slotIndex] = resolvedChildren;
+  }
   return { hasError, value };
 }
 
@@ -264,7 +277,7 @@ function validateCreateHandleId(handleId: number): Error | null {
 function validateCreateTemplatePayload(
   handleId: number,
   attributeSlots: SerializableValue[] | null | undefined,
-  elementSlots: number[][] | null | undefined,
+  elementSlots: ElementTemplateHandleSlotsCommand | null | undefined,
 ): Error | null {
   const handleError = validateCreateHandleId(handleId);
   if (handleError) {
