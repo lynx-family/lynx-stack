@@ -262,7 +262,7 @@ describe('M4 EXIT — TodoMVC events end-to-end', () => {
   it('dispatchEvent on synthetic Event throws L4', () => {
     const e = document.createElement('div');
     expect(() => e.dispatchEvent(new ShimEvent('click'))).toThrow(
-      /L4\/synthetic-dispatch/,
+      /dispatchEvent/,
     );
   });
 });

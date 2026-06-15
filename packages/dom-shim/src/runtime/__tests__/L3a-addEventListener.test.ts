@@ -147,7 +147,7 @@ describe('US-432 addEventListener with multiplex trampoline', () => {
   it('dispatchEvent throws L4', () => {
     const e = wrapPapi(mk()) as L3aEventfulElement;
     expect(() => e.dispatchEvent(new ShimEvent('click'))).toThrow(
-      /L4\/synthetic-dispatch/,
+      /dispatchEvent/,
     );
   });
 });

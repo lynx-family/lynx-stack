@@ -49,6 +49,26 @@ export {
   DOMShimInvariantError,
   DOMShimUnsupportedError,
 } from './errors.ts';
+export {
+  CSSStyleSheet,
+  IntersectionObserver,
+  MutationObserver,
+  Range,
+  ResizeObserver,
+  XMLHttpRequest,
+  alert,
+  confirm,
+  cookie,
+  customElements,
+  getComputedStyle,
+  getSelection,
+  history,
+  localStorage,
+  location,
+  open,
+  prompt,
+  sessionStorage,
+} from './l4.ts';
 export { GEOMETRY_STALE_CODE, invalidateGeometry } from './geometry.ts';
 export type { DOMRectReadOnly } from './geometry.ts';
 export type { ElementRef } from './papi-types.ts';

@@ -6,6 +6,8 @@ import { ReadOnlyNamedNodeMap, coerceAttributeValue } from './attributes.ts';
 import { getElementCache } from './cache.ts';
 import { L2DOMTokenList, ReadOnlyDOMTokenList } from './classlist.ts';
 import { makeReadOnlyDataset, makeWritableDataset } from './dataset.ts';
+import { warnOnce } from './diagnostics.ts';
+import { DOMShimUnsupportedError } from './errors.ts';
 import { addListener, removeListener } from './events.ts';
 import type {
   ShimAddEventListenerOptions,
@@ -878,9 +880,12 @@ export class L3aEventfulElement extends L2SafeWritableElement {
 
   /** US-435 L4 throw. Spec dispatchEvent on synthetic events. */
   dispatchEvent(_event: unknown): boolean {
-    throw new Error(
-      'L4/synthetic-dispatch: dispatchEvent on synthetic events is unsupported. Trigger the event via the engine or use the Shim trampoline directly.',
-    );
+    throw new DOMShimUnsupportedError({
+      code: 'L4/synthetic-dispatch',
+      surface: 'EventTarget.dispatchEvent',
+      message:
+        'dispatchEvent on synthetic events is unsupported. Trigger the event via the engine or use the Shim trampoline directly.',
+    });
   }
 }
 
@@ -997,6 +1002,64 @@ export class L3bUnsafeWritableElement extends L3aEventfulElement {
     text: string,
   ): void {
     this.insertAdjacentHTML(position, escapeForInsert(text));
+  }
+
+  /**
+   * Spec innerText getter is layout-aware; we can't compute it without
+   * the engine. See Shim_Design.md §8.2 `L4/innerText-layout`. Setter
+   * is also L4.
+   */
+  get innerText(): never {
+    throw new DOMShimUnsupportedError({
+      code: 'L4/innerText-layout',
+      surface: 'Element.innerText',
+      message:
+        'innerText (layout-aware) is unsupported. Use textContent for a layout-agnostic alternative.',
+    });
+  }
+
+  /** Spec requestFullscreen → L4 throw. */
+  requestFullscreen(): never {
+    throw new DOMShimUnsupportedError({
+      code: 'L4/fullscreen',
+      surface: 'Element.requestFullscreen',
+      message: 'Fullscreen API is unsupported.',
+    });
+  }
+
+  /** Spec requestPointerLock → L4 throw. */
+  requestPointerLock(): never {
+    throw new DOMShimUnsupportedError({
+      code: 'L4/pointer-lock',
+      surface: 'Element.requestPointerLock',
+      message: 'PointerLock API is unsupported.',
+    });
+  }
+
+  /**
+   * Spec attachShadow → L4 throw. See Shim_Design.md §8.2.
+   */
+  attachShadow(_init?: unknown): never {
+    throw new DOMShimUnsupportedError({
+      code: 'L4/shadow-dom',
+      surface: 'Element.attachShadow',
+      message: 'Shadow DOM is unsupported.',
+      suggestion: 'Use a class-prefix scoping convention instead.',
+    });
+  }
+
+  /**
+   * Spec shadowRoot getter — returns null (no element ever has a shadow
+   * root in the Shim) and warns once.
+   */
+  get shadowRoot(): null {
+    warnOnce({
+      code: 'L4/shadow-dom',
+      tier: 4,
+      surface: 'Element.shadowRoot',
+      message: 'shadowRoot always returns null; Shadow DOM is unsupported.',
+    }, this.papi);
+    return null;
   }
 
   /**
