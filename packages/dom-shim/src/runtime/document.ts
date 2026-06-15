@@ -4,7 +4,7 @@
 
 import {
   L1ReadOnlyText,
-  L2SafeWritableElement,
+  L3aEventfulElement,
   createDocumentFragment as _createDocumentFragment,
   recordTextValue,
   wrapPapi,
@@ -133,16 +133,16 @@ export function _resetDocumentForTesting(): void {
 }
 
 export interface ShimDocument {
-  readonly documentElement: L2SafeWritableElement;
-  readonly body: L2SafeWritableElement;
-  createElement(tag: string): L2SafeWritableElement;
+  readonly documentElement: L3aEventfulElement;
+  readonly body: L3aEventfulElement;
+  createElement(tag: string): L3aEventfulElement;
   createTextNode(data: string): L1ReadOnlyText;
   createDocumentFragment(): ShimDocumentFragment;
-  querySelector(selector: string): L2SafeWritableElement | null;
-  querySelectorAll(selector: string): readonly L2SafeWritableElement[];
-  getElementById(id: string): L2SafeWritableElement | null;
-  getElementsByClassName(name: string): readonly L2SafeWritableElement[];
-  getElementsByTagName(tag: string): readonly L2SafeWritableElement[];
+  querySelector(selector: string): L3aEventfulElement | null;
+  querySelectorAll(selector: string): readonly L3aEventfulElement[];
+  getElementById(id: string): L3aEventfulElement | null;
+  getElementsByClassName(name: string): readonly L3aEventfulElement[];
+  getElementsByTagName(tag: string): readonly L3aEventfulElement[];
 }
 
 /**
@@ -150,17 +150,17 @@ export interface ShimDocument {
  */
 export const document: ShimDocument = Object.freeze({
   /** Page-root wrapped as an Element. */
-  get documentElement(): L2SafeWritableElement {
-    return wrapPapi(__GetPageElement()) as L2SafeWritableElement;
+  get documentElement(): L3aEventfulElement {
+    return wrapPapi(__GetPageElement()) as L3aEventfulElement;
   },
 
   /** See OQ-S.7 resolution in resolveBody(). */
-  get body(): L2SafeWritableElement {
-    return wrapPapi(resolveBody()) as L2SafeWritableElement;
+  get body(): L3aEventfulElement {
+    return wrapPapi(resolveBody()) as L3aEventfulElement;
   },
 
-  createElement(tag: string): L2SafeWritableElement {
-    return wrapPapi(buildElement(tag)) as L2SafeWritableElement;
+  createElement(tag: string): L3aEventfulElement {
+    return wrapPapi(buildElement(tag)) as L3aEventfulElement;
   },
 
   createTextNode(data: string): L1ReadOnlyText {
@@ -173,36 +173,36 @@ export const document: ShimDocument = Object.freeze({
     return _createDocumentFragment(pageComponentId());
   },
 
-  querySelector(selector: string): L2SafeWritableElement | null {
+  querySelector(selector: string): L3aEventfulElement | null {
     const ref = __QuerySelector(__GetPageElement(), selector, {
       onlyCurrentComponent: false,
     });
     if (ref === undefined || ref === null) return null;
     const wrapped = wrapPapi(ref);
-    return wrapped instanceof L2SafeWritableElement ? wrapped : null;
+    return wrapped instanceof L3aEventfulElement ? wrapped : null;
   },
 
-  querySelectorAll(selector: string): readonly L2SafeWritableElement[] {
+  querySelectorAll(selector: string): readonly L3aEventfulElement[] {
     const refs = __QuerySelectorAll(__GetPageElement(), selector, {
       onlyCurrentComponent: false,
     });
-    const out: L2SafeWritableElement[] = [];
+    const out: L3aEventfulElement[] = [];
     for (const r of refs) {
       const w = wrapPapi(r);
-      if (w instanceof L2SafeWritableElement) out.push(w);
+      if (w instanceof L3aEventfulElement) out.push(w);
     }
     return Object.freeze(out);
   },
 
-  getElementById(id: string): L2SafeWritableElement | null {
+  getElementById(id: string): L3aEventfulElement | null {
     return this.querySelector(`#${id}`);
   },
 
-  getElementsByClassName(name: string): readonly L2SafeWritableElement[] {
+  getElementsByClassName(name: string): readonly L3aEventfulElement[] {
     return this.querySelectorAll(`.${name}`);
   },
 
-  getElementsByTagName(tag: string): readonly L2SafeWritableElement[] {
+  getElementsByTagName(tag: string): readonly L3aEventfulElement[] {
     return this.querySelectorAll(tag.toLowerCase());
   },
 });
