@@ -1,6 +1,6 @@
 import { CssExtractRspackPlugin } from '@lynx-js/css-extract-webpack-plugin';
 
-/** @type {import('webpack').Configuration} */
+/** @type {import('@rspack/core').Configuration} */
 export default {
   entry: './index.css',
   mode: 'development',
@@ -27,6 +27,7 @@ export default {
     ],
   },
   plugins: [
+    /** @param {import('@rspack/core').Compiler} compiler */
     function(compiler) {
       new compiler.webpack.HotModuleReplacementPlugin().apply(compiler);
     },

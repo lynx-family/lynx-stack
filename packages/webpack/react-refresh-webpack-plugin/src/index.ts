@@ -5,16 +5,8 @@
 /**
  * @packageDocumentation
  *
- * A webpack plugin to integrate {@link https://github.com/preactjs/prefresh | prefresh} with ReactLynx.
- *
- * @remarks
- * Please use {@link ReactRefreshWebpackPlugin} for `'webpack'`.
- *
- * And use {@link ReactRefreshRspackPlugin} for `'rspack'`.
+ * A rspack plugin to integrate {@link https://github.com/preactjs/prefresh | prefresh} with ReactLynx.
  */
-
-export { ReactRefreshWebpackPlugin } from './ReactRefreshWebpackPlugin.js';
-export type { ReactRefreshWebpackPluginOptions } from './ReactRefreshWebpackPlugin.js';
 
 export { ReactRefreshRspackPlugin } from './ReactRefreshRspackPlugin.js';
 export type { ReactRefreshRspackPluginOptions } from './ReactRefreshRspackPlugin.js';

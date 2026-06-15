@@ -1,7 +1,7 @@
 import { CssExtractRspackPlugin } from '@lynx-js/css-extract-webpack-plugin';
 
 /**
- * @type {import('webpack').Configuration}
+ * @type {import('@rspack/core').Configuration}
  */
 export default {
   mode: 'production',
@@ -20,9 +20,6 @@ export default {
     assetModuleFilename: 'asset/[name][ext]',
     chunkFormat: 'module',
     chunkLoading: 'import',
-  },
-  experiments: {
-    outputModule: true,
   },
   module: {
     rules: [
@@ -44,5 +41,5 @@ export default {
       },
     ],
   },
-  plugins: [new CssExtractRspackPlugin({ experimentalUseImportModule: true })],
+  plugins: [new CssExtractRspackPlugin()],
 };
