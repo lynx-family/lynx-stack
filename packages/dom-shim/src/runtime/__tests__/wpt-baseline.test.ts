@@ -16,6 +16,75 @@ import { _resetSchedulerForTesting } from '../scheduler.ts';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const BASELINE_PATH = resolve(__dirname, '../../../wpt/baseline.json');
+const DASHBOARD_PATH = resolve(
+  __dirname,
+  '../../../wpt/dashboard-data.json',
+);
+
+interface RunResultLike {
+  overallPassRate: number;
+  passed: number;
+  failed: number;
+  errored: number;
+  skipped: number;
+  totalTests: number;
+  gateThreshold: number;
+  directories: Array<{
+    path: string;
+    passed: number;
+    failed: number;
+    errored: number;
+    skipped: number;
+    passRate: number;
+    tests: Array<{
+      directory: string;
+      name: string;
+      status: string;
+      message?: string;
+      diagnostics: string[];
+    }>;
+  }>;
+}
+
+function deriveDashboard(result: RunResultLike): Record<string, unknown> {
+  return {
+    schemaVersion: '1',
+    generatedAt: new Date().toISOString(),
+    overall: {
+      totalTests: result.totalTests,
+      passed: result.passed,
+      failed: result.failed,
+      errored: result.errored,
+      skipped: result.skipped,
+      passRate: result.overallPassRate,
+      gateThreshold: result.gateThreshold,
+      gateMet: result.overallPassRate >= result.gateThreshold,
+    },
+    directories: result.directories.map((d) => {
+      const failureReasons = new Map<string, number>();
+      for (const t of d.tests) {
+        if (t.status === 'fail' || t.status === 'error') {
+          const reason = (t.message ?? '<no message>').split('\n')[0]!;
+          failureReasons.set(reason, (failureReasons.get(reason) ?? 0) + 1);
+        }
+      }
+      const top5 = [...failureReasons.entries()]
+        .sort((a, b) => b[1] - a[1])
+        .slice(0, 5)
+        .map(([reason, count]) => ({ reason, count }));
+      return {
+        path: d.path,
+        totalTests: d.tests.length,
+        passed: d.passed,
+        failed: d.failed,
+        errored: d.errored,
+        skipped: d.skipped,
+        passRate: d.passRate,
+        topFailureReasons: top5,
+      };
+    }),
+  };
+}
 
 const SUBSET = {
   schemaVersion: '1',
@@ -180,11 +249,18 @@ describe('US-463 WPT baseline generation (in-test)', () => {
 
     // When WPT_UPDATE_BASELINE=1, write the result to wpt/baseline.json so
     // CI can pin the current known-good state. Default mode just runs the
-    // assertions above.
+    // assertions above. Also writes the derived dashboard-data.json
+    // (US-466) so the dashboard site can render without re-running the
+    // suite.
     if (process.env['WPT_UPDATE_BASELINE'] === '1') {
       writeFileSync(
         BASELINE_PATH,
         `${JSON.stringify(result, null, 2)}\n`,
+        'utf8',
+      );
+      writeFileSync(
+        DASHBOARD_PATH,
+        `${JSON.stringify(deriveDashboard(result), null, 2)}\n`,
         'utf8',
       );
     }

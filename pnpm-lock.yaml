@@ -598,6 +598,10 @@ importers:
   packages/background-only: {}
 
   packages/dom-shim:
+    dependencies:
+      htmlparser2:
+        specifier: ^9.1.0
+        version: 9.1.0
     devDependencies:
       '@anthropic-ai/sdk':
         specifier: ^0.30.1
@@ -608,9 +612,6 @@ importers:
       ajv-formats:
         specifier: ^3.0.1
         version: 3.0.1(ajv@8.18.0)
-      htmlparser2:
-        specifier: ^9.1.0
-        version: 9.1.0
       openai:
         specifier: ^4.74.0
         version: 4.104.0(ws@8.20.0)(zod@3.25.76)

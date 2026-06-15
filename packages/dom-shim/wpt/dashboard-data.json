@@ -1,0 +1,106 @@
+{
+  "schemaVersion": "1",
+  "generatedAt": "2026-06-15T01:58:32.323Z",
+  "overall": {
+    "totalTests": 86,
+    "passed": 86,
+    "failed": 0,
+    "errored": 0,
+    "skipped": 0,
+    "passRate": 1,
+    "gateThreshold": 0.7,
+    "gateMet": true
+  },
+  "directories": [
+    {
+      "path": "dom/nodes/read",
+      "totalTests": 26,
+      "passed": 26,
+      "failed": 0,
+      "errored": 0,
+      "skipped": 0,
+      "passRate": 1,
+      "topFailureReasons": []
+    },
+    {
+      "path": "dom/nodes/write",
+      "totalTests": 16,
+      "passed": 16,
+      "failed": 0,
+      "errored": 0,
+      "skipped": 0,
+      "passRate": 1,
+      "topFailureReasons": []
+    },
+    {
+      "path": "dom/events",
+      "totalTests": 10,
+      "passed": 10,
+      "failed": 0,
+      "errored": 0,
+      "skipped": 0,
+      "passRate": 1,
+      "topFailureReasons": []
+    },
+    {
+      "path": "dom/lists",
+      "totalTests": 7,
+      "passed": 7,
+      "failed": 0,
+      "errored": 0,
+      "skipped": 0,
+      "passRate": 1,
+      "topFailureReasons": []
+    },
+    {
+      "path": "dom/abort",
+      "totalTests": 2,
+      "passed": 2,
+      "failed": 0,
+      "errored": 0,
+      "skipped": 0,
+      "passRate": 1,
+      "topFailureReasons": []
+    },
+    {
+      "path": "html/dom/innerhtml",
+      "totalTests": 6,
+      "passed": 6,
+      "failed": 0,
+      "errored": 0,
+      "skipped": 0,
+      "passRate": 1,
+      "topFailureReasons": []
+    },
+    {
+      "path": "html/dom/global-attributes",
+      "totalTests": 5,
+      "passed": 5,
+      "failed": 0,
+      "errored": 0,
+      "skipped": 0,
+      "passRate": 1,
+      "topFailureReasons": []
+    },
+    {
+      "path": "css/cssom",
+      "totalTests": 7,
+      "passed": 7,
+      "failed": 0,
+      "errored": 0,
+      "skipped": 0,
+      "passRate": 1,
+      "topFailureReasons": []
+    },
+    {
+      "path": "selectors",
+      "totalTests": 7,
+      "passed": 7,
+      "failed": 0,
+      "errored": 0,
+      "skipped": 0,
+      "passRate": 1,
+      "topFailureReasons": []
+    }
+  ]
+}
