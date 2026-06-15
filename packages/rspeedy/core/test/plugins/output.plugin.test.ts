@@ -8,7 +8,7 @@ import { createStubRspeedy } from '../createStubRspeedy.js'
 import { getLoaderOptions } from '../getLoaderOptions.js'
 
 describe('Plugins - Output', () => {
-  void beforeEach(() => {
+  beforeEach(() => {
     rstest.unstubAllEnvs()
   })
 

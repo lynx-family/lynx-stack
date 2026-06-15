@@ -650,7 +650,7 @@ describe('pluginReactLynx', () => {
   let rslib!: Awaited<ReturnType<typeof createRslib>>
   let decodedResult!: Awaited<ReturnType<typeof decodeTemplate>>
 
-  void beforeAll(async () => {
+  beforeAll(async () => {
     rstest.stubEnv('DEBUG', 'rspeedy')
 
     const rslibConfig = defineExternalBundleRslibConfig({
@@ -677,7 +677,7 @@ describe('pluginReactLynx', () => {
     )
   })
 
-  void afterAll(() => {
+  afterAll(() => {
     rstest.unstubAllEnvs()
   })
 

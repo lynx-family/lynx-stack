@@ -33,12 +33,12 @@ const functionNames = [
 ]
 const tempDirs: string[] = []
 
-void afterAll(async () => {
+afterAll(async () => {
   await Promise.all(tempDirs.map(async (dir) => {
     await rm(dir, { recursive: true, force: true })
   }))
 })
-void afterEach(() => {
+afterEach(() => {
   rstest.unstubAllEnvs()
 })
 async function buildSourcemapFixture(

@@ -19,7 +19,7 @@ const pureFuncsBasicEntry = fileURLToPath(
   new URL('./fixtures/pure-funcs/basic.js', import.meta.url),
 )
 
-void afterAll(async () => {
+afterAll(async () => {
   await Promise.all(tempDirs.map(async (dir) => {
     await rm(dir, { recursive: true, force: true })
   }))

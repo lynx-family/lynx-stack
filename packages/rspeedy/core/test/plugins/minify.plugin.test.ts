@@ -12,7 +12,7 @@ import type { Output } from '../../src/index.js'
 import { createStubRspeedy } from '../createStubRspeedy.js'
 
 describe('Plugins - Minify', () => {
-  void beforeEach(() => {
+  beforeEach(() => {
     rstest.restoreAllMocks()
     rstest.stubEnv('NODE_ENV', 'production')
     return () => {

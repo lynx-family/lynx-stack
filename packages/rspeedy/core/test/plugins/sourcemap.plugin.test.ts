@@ -12,7 +12,7 @@ import { createStubRspeedy } from '../createStubRspeedy.js'
 rstest.mock('../../src/webpack/EvalSourceMapDevToolPlugin.ts', { mock: true })
 rstest.mock('../../src/webpack/SourceMapDevToolPlugin.ts', { mock: true })
 
-void beforeEach(() => {
+beforeEach(() => {
   rstest.resetAllMocks()
 })
 

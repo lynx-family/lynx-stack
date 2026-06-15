@@ -358,7 +358,7 @@ describe('hasNativeTSSupport', () => {
     features: {},
   }
 
-  void beforeEach(() => {
+  beforeEach(() => {
     process.env = {}
     process.features = {}
     rstest.stubGlobal('process', process)
