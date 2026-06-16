@@ -34,6 +34,8 @@ When a GenUI package builds a CLI or other generated artifact that another works
 
 When `packages/genui/a2ui` generates its catalog, ensure `packages/genui/a2ui-catalog-extractor` has been built first. The `genui a2ui generate catalog` command delegates through `@lynx-js/genui-cli`, which imports `../a2ui-catalog-extractor/dist/cli.js`; clean CI runs will fail if that dist CLI is not produced before A2UI's build or API extractor script.
 
+Keep `packages/genui/a2ui-catalog-extractor/src/index.ts` as a narrow public facade. Put CLI-only artifact writers, TypeDoc JSON helpers, and other extractor internals in non-exported source modules, and have `src/cli.ts` import those internals directly instead of importing from `src/index.ts`.
+
 When implementing A2UI v0.9 functions in `packages/genui/a2ui`, keep function resolution scoped to the active catalog first, with the global `FunctionRegistry` only as an escape hatch. Dynamic component props, checks, and function-call actions should all go through the same `resolveDynamicValue` / `executeFunctionCall` path so data bindings, nested function calls, zod argument coercion from `@a2ui/web_core`, and `formatString` data-context interpolation stay consistent.
 
 When verifying `packages/genui/a2ui-playground`, remember that `pnpm -F @lynx-js/genui-a2ui build` first runs `tsc --project tsconfig.build.json` and then regenerates catalog JSON through `build:catalog`. The playground consumes `@lynx-js/genui/a2ui` through package exports under `dist/**`, so you normally do not need a separate `tsc` step unless you intentionally skipped the package `build` step.

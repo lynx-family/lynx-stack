@@ -13,9 +13,9 @@ import {
   createA2UICatalog,
   extractCatalogComponents,
   findCatalogSourceFiles,
-  writeCatalogArtifacts,
 } from '../src/index.js';
-import type { TypeDocProject } from '../src/index.js';
+import { writeCatalogArtifacts } from '../src/core.js';
+import type { TypeDocProject } from '../src/core.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const packageDir = path.resolve(path.dirname(__filename), '..');

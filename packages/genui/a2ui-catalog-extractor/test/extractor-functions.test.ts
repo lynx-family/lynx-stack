@@ -11,8 +11,8 @@ import { afterAll, describe, expect, test } from '@rstest/core';
 import {
   extractCatalogFunctions,
   findCatalogSourceFiles,
-  writeCatalogArtifacts,
 } from '../src/index.js';
+import { writeCatalogArtifacts } from '../src/core.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const packageDir = path.resolve(path.dirname(__filename), '..');
