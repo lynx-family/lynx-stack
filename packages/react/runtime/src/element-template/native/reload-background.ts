@@ -13,38 +13,7 @@ import { installElementTemplateHydrationListener } from '../background/hydration
 import { BackgroundElementTemplateInstance } from '../background/instance.js';
 import { profileEnd, profileStart } from '../debug/profile.js';
 import { resetEventStateForRuntime } from '../prop-adapters/event.js';
-import { destroyAllElementTemplateListStates } from '../runtime/list/list.js';
-import { __page } from '../runtime/page/page.js';
 import { __root, setRoot } from '../runtime/page/root-instance.js';
-import { removeMainThreadRootRefs, renderMainThread } from '../runtime/render/render-main-thread.js';
-import { resetTemplateId } from '../runtime/template/handle.js';
-import { elementTemplateRegistry } from '../runtime/template/registry.js';
-
-export function reloadMainThread(data: unknown, options: UpdatePageOption): void {
-  if (typeof __PROFILE__ !== 'undefined' && __PROFILE__) {
-    profileStart('ReactLynx::reloadMainThread');
-  }
-
-  try {
-    increaseReloadVersion();
-    applyUpdatePageData(data, options);
-
-    destroyAllElementTemplateListStates();
-    elementTemplateRegistry.clear();
-    resetTemplateId();
-
-    const oldRoot = __root;
-    removeMainThreadRootRefs();
-    setRoot({ __jsx: oldRoot.__jsx });
-    renderMainThread();
-
-    __FlushElementTree(__page, options);
-  } finally {
-    if (typeof __PROFILE__ !== 'undefined' && __PROFILE__) {
-      profileEnd();
-    }
-  }
-}
 
 export function reloadBackground(updateData: unknown): void {
   if (typeof __PROFILE__ !== 'undefined' && __PROFILE__) {

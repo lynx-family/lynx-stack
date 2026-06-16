@@ -6,7 +6,8 @@ import { destroyElementTemplateBackgroundRuntime } from '../../../src/element-te
 import { installElementTemplateHydrationListener } from '../../../src/element-template/background/hydration-listener.js';
 import { BackgroundElementTemplateInstance } from '../../../src/element-template/background/instance.js';
 import { profileEnd, profileStart } from '../../../src/element-template/debug/profile.js';
-import { reloadBackground, reloadMainThread } from '../../../src/element-template/native/reload.js';
+import { reloadBackground } from '../../../src/element-template/native/reload-background.js';
+import { reloadMainThread } from '../../../src/element-template/native/reload-main-thread.js';
 import { resetEventStateForRuntime } from '../../../src/element-template/prop-adapters/event.js';
 import { destroyAllElementTemplateListStates } from '../../../src/element-template/runtime/list/list.js';
 import { setupPage } from '../../../src/element-template/runtime/page/page.js';
