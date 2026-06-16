@@ -68,17 +68,11 @@ export function createBackgroundLynx(
       return fetchExternalBundle(url);
     },
     loadScript(sectionPath: string, options: { bundleName: string }) {
-      if (!nativeApp.tt) {
-        throw new Error(
-          `lynx.loadScript: card is not ready while loading section "${sectionPath}".`,
-        );
-      }
       // `fetchBundle` registered the bundle's raw sections with the worker as
-      // bts chunks (updateBTSChunk -> templateCache), so reuse the shared chunk
-      // loader to fetch + wrap + run the section to its exports.
-      return nativeApp.loadScript(sectionPath, options.bundleName).init({
-        tt: nativeApp.tt,
-      });
+      // bts chunks (updateBTSChunk -> templateCache); hand the section's init
+      // object to lynx-core (>= 0.1.4), which runs `_$executeInit` and caches
+      // the resulting exports.
+      return nativeApp.loadScript(sectionPath, options.bundleName);
     },
   };
 }

@@ -35,7 +35,6 @@ import type {
 } from '../../types/index.js';
 import { LynxCrossThreadContext } from '../LynxCrossThreadContext.js';
 import { type LynxViewInstance } from './LynxViewInstance.js';
-import { templateManager } from './TemplateManager.js';
 import { registerInvokeUIMethodHandler } from './crossThreadHandlers/registerInvokeUIMethodHandler.js';
 import { registerNativePropsHandler } from './crossThreadHandlers/registerSetNativePropsHandler.js';
 import { registerGetPathInfoHandler } from './crossThreadHandlers/registerGetPathInfoHandler.js';
@@ -243,23 +242,12 @@ export class BackgroundThread implements AsyncDisposable {
     this.#rpc.registerHandler(
       fetchExternalBundleEndpoint,
       (url: string) => {
-        return this.#lynxViewInstance.loadExternalBundle(url).then((res) => {
-          if (res.code !== 0) {
-            return res;
-          }
-          // Deliver the bundle's raw JS sections to the worker the same way the
-          // card's own bts chunks are delivered (updateBTSChunk ->
-          // templateCache), so the worker loads them through the shared
-          // `lynx.loadScript` (readScript) path.
-          const sources = templateManager.getExternalSectionSources(url);
-          const sectionUrls: Record<string, string> = {};
-          for (const [sectionPath, source] of Object.entries(sources)) {
-            sectionUrls[`/${sectionPath}`] = URL.createObjectURL(
-              new Blob([source], { type: 'text/javascript' }),
-            );
-          }
-          return this.updateBTSChunk(url, sectionUrls).then(() => res);
-        });
+        // `loadExternalBundle` decodes the bundle through the shared decode
+        // worker; its `Manifest` section registers the bts chunks with the
+        // worker (updateBTSChunk -> templateCache) and its `LepusCode` section
+        // registers the mts chunks under `lepusCodeUrls`, so `lynx.loadScript`
+        // can load either realm afterwards.
+        return this.#lynxViewInstance.loadExternalBundle(url);
       },
     );
     registerReloadHandler(this.#rpc, this.#lynxViewInstance);

@@ -23,13 +23,17 @@ interface ExternalBundleEncodeOptions {
  * `@lynx-js/web-core`) via `@lynx-js/web-core/encode`, instead of the native
  * TASM format produced by `@lynx-js/tasm`.
  *
- * Differences from the native encoder, both required by the web platform:
- * - JS sections are kept as **raw source** (the `JsBytecode` marker is ignored).
- *   The web runtime wraps each section when `lynx.loadScript` evaluates it, so
- *   the build must not wrap or bytecode-compile it here.
- * - `*:CSS` sections are folded into the StyleInfo section (keyed by a numeric
- *   css id) so the web style engine applies them, rather than being kept as
- *   custom sections.
+ * Differences from the native encoder, all required by the web platform:
+ * - Sections are routed to the bundle slot whose chunk format they match,
+ *   instead of all going into custom sections, keyed by the `encoding` tag
+ *   `ExternalBundleWebpackPlugin` sets from each chunk's layer: the main-thread
+ *   chunk (`JsBytecode`) goes into `lepusCode`, every other JS chunk into
+ *   `manifest`, and `CSS` chunks into the StyleInfo section. The web runtime
+ *   then loads each through the same path the card uses for its own
+ *   lepus/manifest chunks.
+ * - JS is kept as **raw source** — the `JsBytecode` tag only selects the slot;
+ *   the chunk is not bytecode-compiled. The web runtime wraps each section when
+ *   `lynx.loadScript` evaluates it, so the build must not wrap it here.
  *
  * @public
  */
@@ -40,17 +44,31 @@ export function getWebEncodeMode(): (
     const { compilerOptions, sourceContent, customSections } =
       opts as ExternalBundleEncodeOptions
 
-    const webCustomSections: TasmJSONInfo['customSections'] = {}
     const styleInfo: TasmJSONInfo['styleInfo'] = {}
+    const lepusCode: TasmJSONInfo['lepusCode'] = {}
+    const manifest: TasmJSONInfo['manifest'] = {}
     let cssId = 0
 
     for (const [name, section] of Object.entries(customSections)) {
-      if (section.encoding === 'CSS' && name.endsWith(':CSS')) {
+      // Route each section by the `encoding` tag `ExternalBundleWebpackPlugin`
+      // sets from the chunk's layer, not by guessing from the section name (a
+      // user-declared `layer: 'main-thread'` entry has no `__main-thread`
+      // suffix).
+      if (section.encoding === 'CSS') {
         const { ruleList } = section.content as { ruleList: LynxStyleNode[] }
         // `encodeCSS` requires numeric css-id keys.
         styleInfo[String(cssId++)] = ruleList ?? []
+      } else if (section.encoding === 'JsBytecode') {
+        // The main-thread (mts) chunk — its layer is MAIN_THREAD, tagged
+        // `JsBytecode` from `mainThreadChunks` — has a card lepus chunk's shape,
+        // so it rides `lepusCode`; the web runtime loads it in the mts realm via
+        // `lepusCodeUrls`, keyed by the `lynx.loadScript` section path.
+        lepusCode[name] = section.content as string
       } else {
-        webCustomSections[name] = { content: section.content as string }
+        // Every other JS section is a background (bts) chunk; it rides
+        // `manifest`, keyed `/<sectionPath>` so `readScript` finds it, matching
+        // the card's `/app-service.js` convention.
+        manifest[`/${name}`] = section.content as string
       }
     }
 
@@ -58,12 +76,12 @@ export function getWebEncodeMode(): (
     return {
       buffer: Buffer.from(encode({
         styleInfo,
-        manifest: {},
-        lepusCode: {},
+        manifest,
+        lepusCode,
         cardType: 'react',
         appType: sourceContent.appType,
         pageConfig: compilerOptions,
-        customSections: webCustomSections,
+        customSections: {},
         elementTemplates: {},
       })),
     }

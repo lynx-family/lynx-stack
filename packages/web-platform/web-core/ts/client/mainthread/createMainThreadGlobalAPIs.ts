@@ -49,38 +49,18 @@ function createMainThreadLynx(
       return lynxViewInstance.loadExternalBundle(url);
     },
     loadScript(sectionPath: string, options: { bundleName: string }) {
-      const source = templateManager.getExternalSectionSource(
-        options.bundleName,
-        sectionPath,
-      );
-      if (source === undefined) {
+      // An external bundle's mts chunk rides the `lepusCode` section: the decode
+      // worker already wrapped it (with a `module`/`exports` env) into a blob
+      // url registered under `lepusCodeUrls`. Evaluate it in the mts iframe
+      // realm; `loadScriptSync` returns its `module.exports`.
+      const blobUrl = lynxViewInstance.lepusCodeUrls.get(options.bundleName)
+        ?.[sectionPath];
+      if (blobUrl === undefined) {
         throw new Error(
-          `lynx.loadScript: section "${sectionPath}" not found or not executable on web in bundle ${options.bundleName}`,
+          `lynx.loadScript: section "${sectionPath}" not found in bundle ${options.bundleName}`,
         );
       }
-      // Evaluate the section in the mts iframe realm. loadScriptSync resets the
-      // iframe-global `module` then returns `module.exports`, so the wrapper
-      // assigns that global `module` (the IIFE arg) while keeping the section's
-      // own top-level declarations scoped to the IIFE.
-      const blobUrl = URL.createObjectURL(
-        new Blob(
-          [
-            ';(function(module, exports){\n',
-            source,
-            '\n})(module, (module.exports = {}));\n//# sourceURL=',
-            options.bundleName,
-            '/',
-            sectionPath,
-            '\n',
-          ],
-          { type: 'text/javascript; charset=utf-8' },
-        ),
-      );
-      try {
-        return lynxViewInstance.mtsRealm!.loadScriptSync(blobUrl);
-      } finally {
-        URL.revokeObjectURL(blobUrl);
-      }
+      return lynxViewInstance.mtsRealm!.loadScriptSync(blobUrl);
     },
   };
 }
