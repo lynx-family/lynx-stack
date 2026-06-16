@@ -5,12 +5,12 @@ import type { Compiler } from '@rspack/core';
 
 export class TestEnvPlugin {
   apply(compiler: Compiler): void {
-    new compiler.webpack.DefinePlugin({
+    new compiler.rspack.DefinePlugin({
       __DEV__: 'true',
       __PROFILE__: 'false',
     }).apply(compiler);
 
-    new compiler.webpack.BannerPlugin({
+    new compiler.rspack.BannerPlugin({
       banner: `var globDynamicComponentEntry;`,
       raw: true,
       test: /\.js$/,

@@ -9,7 +9,11 @@ import { backgroundElementTemplateInstanceManager } from './manager.js';
 import { isDirectOrDeepEqual } from '../../utils.js';
 import { ElementTemplateUpdateOps } from '../protocol/opcodes.js';
 import { parseElementTemplateType } from '../protocol/template-type.js';
-import type { ElementTemplateUpdateCommandStream, SerializableValue } from '../protocol/types.js';
+import type {
+  ElementTemplateHandleSlotsCommand,
+  ElementTemplateUpdateCommandStream,
+  SerializableValue,
+} from '../protocol/types.js';
 
 function pushOp(...items: ElementTemplateUpdateCommandStream): void {
   globalCommitContext.ops.push(...items);
@@ -100,11 +104,12 @@ export class BackgroundElementTemplateInstance {
       lynx.reportError(new Error('ElementTemplate patch has illegal handleId 0.'));
       return;
     }
+    this.restoreManagerRegistration();
 
     // Walk the linked-list children once to build the slot-indexed handle list
     // for the createTemplate op. Going via `this.elementSlots` would allocate
     // the full `Instance[][]` intermediate just to throw it away here.
-    const serializedSlots: number[][] = [];
+    const serializedSlots: ElementTemplateHandleSlotsCommand = [];
     let child = this.firstChild;
     while (child) {
       (serializedSlots[child.__slotIndex] ??= []).push(child.instanceId);
@@ -124,7 +129,52 @@ export class BackgroundElementTemplateInstance {
   }
 
   private needsMainThreadCreate(): boolean {
-    return this.instanceId > 0 && !this.isMaterializedOnMainThread;
+    return this.instanceId !== 0 && !this.isMaterializedOnMainThread;
+  }
+
+  private markSubtreeDetachedFromMainThread(): void {
+    if (this.instanceId !== 0) {
+      this.isMaterializedOnMainThread = false;
+    }
+    let child = this.firstChild;
+    while (child) {
+      child.markSubtreeDetachedFromMainThread();
+      child = child.nextSibling;
+    }
+  }
+
+  releaseDetachedSubtreeFromManager(): void {
+    if (this.parent !== null || this.isMaterializedOnMainThread) {
+      return;
+    }
+    this.releaseSubtreeFromManager();
+  }
+
+  private restoreManagerRegistration(): void {
+    if (this.instanceId === 0) {
+      return;
+    }
+    const instances = backgroundElementTemplateInstanceManager.values;
+    const existing = instances.get(this.instanceId);
+    if (existing === this) {
+      return;
+    }
+    if (existing) {
+      throw new Error(`ElementTemplate handleId ${this.instanceId} is already bound.`);
+    }
+    instances.set(this.instanceId, this);
+  }
+
+  private releaseSubtreeFromManager(): void {
+    const instances = backgroundElementTemplateInstanceManager.values;
+    if (instances.get(this.instanceId) === this) {
+      instances.delete(this.instanceId);
+    }
+    let child = this.firstChild;
+    while (child) {
+      child.releaseSubtreeFromManager();
+      child = child.nextSibling;
+    }
   }
 
   emitMainThreadCreateIfNeeded(): void {
@@ -235,8 +285,9 @@ export class BackgroundElementTemplateInstance {
         child.instanceId,
         collectElementTemplateSubtreeHandleIds(child),
       );
-      // The removed JS object graph may outlive the detach until GC, so keep
-      // it pending and tear it down on the Snapshot-aligned delayed boundary.
+      child.markSubtreeDetachedFromMainThread();
+      // The removed JS object graph may outlive the detach until GC, so only
+      // release manager refs on the Snapshot-aligned delayed boundary.
       markRemovedSubtreeForPostDispatchTeardown(child);
       child.queueRefCleanupForSubtree();
     } else {
@@ -305,6 +356,7 @@ export class BackgroundElementTemplateInstance {
     // Hydration binds this object to a template that already exists on the main
     // thread; future updates must treat it as materialized without emitting create.
     this.isMaterializedOnMainThread = true;
+    this.restoreManagerRegistration();
   }
 
   prepareAttributeSlotsForNative(options?: { queueRefEffects?: boolean }): void {
@@ -423,7 +475,7 @@ function collectElementTemplateSubtreeHandleIdsImpl(
 function emitMainThreadCreateRecursive(instance: BackgroundElementTemplateInstance): void {
   if (
     !isElementTemplateHydrated()
-    || instance.instanceId < 0
+    || instance.instanceId === 0
   ) {
     return;
   }

@@ -9,9 +9,16 @@ import path from 'node:path'
 import { fileURLToPath } from 'node:url'
 
 import type { RsbuildPlugin } from '@rsbuild/core'
+import {
+  afterAll,
+  afterEach,
+  describe,
+  expect,
+  rstest,
+  test,
+} from '@rstest/core'
 import { SourceMapConsumer } from 'source-map'
 import type { NullableMappedPosition, RawSourceMap } from 'source-map'
-import { afterAll, afterEach, describe, expect, test, vi } from 'vitest'
 
 import { findSourceMap } from '@lynx-js/debug-metadata'
 import type { DebugMetadataAsset } from '@lynx-js/debug-metadata'
@@ -32,7 +39,7 @@ afterAll(async () => {
   }))
 })
 afterEach(() => {
-  vi.unstubAllEnvs()
+  rstest.unstubAllEnvs()
 })
 async function buildSourcemapFixture(
   sourceMap: Output['sourceMap'] = undefined,
@@ -40,7 +47,7 @@ async function buildSourcemapFixture(
   const tmp = await mkdtemp(path.join(tmpdir(), 'rspeedy-react-test'))
   tempDirs.push(tmp)
 
-  vi.stubEnv('DEBUG', 'rspeedy')
+  rstest.stubEnv('DEBUG', 'rspeedy')
 
   const { pluginReactLynx } = await import('../src/index.js')
 

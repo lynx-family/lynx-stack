@@ -56,7 +56,7 @@ export default {
         encodeHooks.afterEmit.tap('test', ({ outputName }) => {
           compilation.updateAsset(
             outputName,
-            new compiler.webpack.sources.RawSource(appService),
+            new compiler.rspack.sources.RawSource(appService),
           );
         });
 
@@ -79,7 +79,7 @@ export default {
       });
 
       compiler.hooks.thisCompilation.tap('test', (compilation) => {
-        const { Compilation } = compiler.webpack;
+        const { Compilation } = compiler.rspack;
 
         // Should have `assets` in `PROCESS_ASSETS_STAGE_REPORT` stage
         // E.g.: upload source-map to sentry.

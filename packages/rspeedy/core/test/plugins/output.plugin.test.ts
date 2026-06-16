@@ -2,14 +2,14 @@
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
 import type { Rspack } from '@rsbuild/core'
-import { beforeEach, describe, expect, test, vi } from 'vitest'
+import { beforeEach, describe, expect, rstest, test } from '@rstest/core'
 
 import { createStubRspeedy } from '../createStubRspeedy.js'
 import { getLoaderOptions } from '../getLoaderOptions.js'
 
 describe('Plugins - Output', () => {
   beforeEach(() => {
-    vi.unstubAllEnvs()
+    rstest.unstubAllEnvs()
   })
 
   test('defaults', async () => {
@@ -23,7 +23,7 @@ describe('Plugins - Output', () => {
   })
 
   test('defaults - Production', async () => {
-    vi.stubEnv('NODE_ENV', 'production')
+    rstest.stubEnv('NODE_ENV', 'production')
     const rsbuild = await createStubRspeedy({})
 
     const config = await rsbuild.unwrapConfig({
@@ -90,7 +90,7 @@ describe('Plugins - Output', () => {
   })
 
   test('output.assetPrefix', async () => {
-    vi.stubEnv('NODE_ENV', 'production')
+    rstest.stubEnv('NODE_ENV', 'production')
     const rsbuild = await createStubRspeedy({
       output: {
         assetPrefix: 'https://foo.example.com/',
@@ -103,11 +103,11 @@ describe('Plugins - Output', () => {
 
     expect(config.output?.publicPath).toBe('https://foo.example.com/')
 
-    vi.unstubAllEnvs()
+    rstest.unstubAllEnvs()
   })
 
   test('output.assetPrefix in development', async () => {
-    vi.stubEnv('NODE_ENV', 'development')
+    rstest.stubEnv('NODE_ENV', 'development')
     const rsbuild = await createStubRspeedy({
       output: {
         assetPrefix: 'https://foo.example.com/',
@@ -119,7 +119,7 @@ describe('Plugins - Output', () => {
     // This should be `dev.assetPrefix`, which defaults to be `http://<local-ip>:<port>/`
     expect(config.output?.publicPath).not.toContain('foo.example.com')
 
-    vi.unstubAllEnvs()
+    rstest.unstubAllEnvs()
   })
 
   test('output.dataUriLimit', async () => {
@@ -501,7 +501,7 @@ describe('Plugins - Output', () => {
     })
 
     test('output.cssModules.localIdentName in development', async () => {
-      vi.stubEnv('NODE_ENV', 'development')
+      rstest.stubEnv('NODE_ENV', 'development')
       const rsbuild = await createStubRspeedy({
         output: {},
       })
@@ -526,7 +526,7 @@ describe('Plugins - Output', () => {
     })
 
     test('output.cssModules.localIdentName in production', async () => {
-      vi.stubEnv('NODE_ENV', 'production')
+      rstest.stubEnv('NODE_ENV', 'production')
       const rsbuild = await createStubRspeedy({
         output: {},
       })
@@ -613,7 +613,9 @@ describe('Plugins - Output', () => {
 
       const config = await rsbuild.unwrapConfig()
 
-      expect(config.output?.path).toMatchInlineSnapshot(`"<ROOT>/dist"`)
+      expect(config.output?.path).toMatchInlineSnapshot(
+        `"<ROOT>/packages/rspeedy/core/dist"`,
+      )
       expect(config.output?.filename).toMatchInlineSnapshot(
         `"static/js/[name].js"`,
       )
@@ -643,7 +645,9 @@ describe('Plugins - Output', () => {
 
       const config = await rsbuild.unwrapConfig()
 
-      expect(config.output?.path).toMatchInlineSnapshot(`"<ROOT>/foo"`)
+      expect(config.output?.path).toMatchInlineSnapshot(
+        `"<ROOT>/packages/rspeedy/core/foo"`,
+      )
     })
 
     test('absolute root', async () => {

@@ -10,7 +10,7 @@ export default {
     (compiler) => {
       compiler.hooks.thisCompilation.tap('test', compilation => {
         compilation.hooks.runtimeRequirementInTree.for(
-          compiler.webpack.RuntimeGlobals.ensureChunkHandlers,
+          compiler.rspack.RuntimeGlobals.ensureChunkHandlers,
         ).tap('test', (_, set) => {
           set.add(RuntimeGlobals.lynxAsyncChunkIds);
         });

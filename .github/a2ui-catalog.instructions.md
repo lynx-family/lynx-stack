@@ -38,7 +38,10 @@ Keep `packages/genui/a2ui-catalog-extractor/src/index.ts` as a narrow public fac
 
 When implementing A2UI v0.9 functions in `packages/genui/a2ui`, keep function resolution scoped to the active catalog first, with the global `FunctionRegistry` only as an escape hatch. Dynamic component props, checks, and function-call actions should all go through the same `resolveDynamicValue` / `executeFunctionCall` path so data bindings, nested function calls, zod argument coercion from `@a2ui/web_core`, and `formatString` data-context interpolation stay consistent.
 
+When maintaining the A2UI `LazyComponent` catalog component, load ReactLynx standalone lazy bundle URLs with dynamic import attributes such as `import(url, { with: { type: 'component' } })` and avoid importing `loadLazyBundle` from `@lynx-js/react/internal`.
+
 When verifying `packages/genui/a2ui-playground`, remember that `pnpm -F @lynx-js/genui-a2ui build` first runs `tsc --project tsconfig.build.json` and then regenerates catalog JSON through `build:catalog`. The playground consumes `@lynx-js/genui/a2ui` through package exports under `dist/**`, so you normally do not need a separate `tsc` step unless you intentionally skipped the package `build` step.
+
 When streaming A2UI server responses, emit a root `Loading` component immediately after `createSurface` so the new surface has visible content before the model streams real components. Do not send `Image` components with unresolved search-query `url` strings directly to the renderer. Emit a same-id `Loading` component while `packages/genui/server/agent/image-resolver.ts` resolves the query to a loadable image URL, then emit an `updateComponents` message with the resolved `Image` so parent component references stay stable.
 
 When verifying `packages/genui/a2ui-playground`, remember that `pnpm -F @lynx-js/a2ui-reactlynx build` regenerates catalog JSON only. The playground consumes `@lynx-js/a2ui-reactlynx` through package exports under `dist/**`, so run `pnpm -F @lynx-js/a2ui-reactlynx exec tsc -p tsconfig.build.json` before rebuilding the playground if runtime TypeScript changed.

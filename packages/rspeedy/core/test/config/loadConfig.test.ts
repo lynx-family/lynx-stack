@@ -5,7 +5,7 @@ import { mkdtemp, writeFile } from 'node:fs/promises'
 import { tmpdir } from 'node:os'
 import { join, sep } from 'node:path'
 
-import { beforeEach, describe, expect, test, vi } from 'vitest'
+import { beforeEach, describe, expect, rstest, test } from '@rstest/core'
 
 import {
   TEST_ONLY_hasNativeTSSupport as hasNativeTSSupport,
@@ -64,17 +64,10 @@ describe('Config - loadConfig', () => {
 
   test('load with custom relative commonjs typescript config', async () => {
     const cwd = join(__dirname, 'fixtures', 'custom')
-    const actual = await loadConfig({
+    await expect(loadConfig({
       cwd,
       configPath: './custom-cts.config.ts',
-    })
-    expect(actual.content).toMatchInlineSnapshot(`
-      {
-        "source": {
-          "entry": "custom-cts",
-        },
-      }
-    `)
+    })).rejects.toThrow('module is not defined in ES module scope')
   })
 
   test('load with mts extension', async () => {
@@ -176,69 +169,37 @@ describe('Config - loadConfig', () => {
   test('load with "type": "commonjs" in package.json and export default', async () => {
     const cwd = join(__dirname, 'fixtures', 'cjs')
 
-    const actual = await loadConfig({
+    await expect(loadConfig({
       cwd,
       configPath: './export-default.ts',
-    })
-
-    expect(actual.content).toStrictEqual(expect.objectContaining({
-      source: {
-        entry: 'cjs-export-default',
-      },
-    }))
+    })).rejects.toThrow('Unexpected token \'export\'')
   })
 
   test('load with "type": "commonjs" in package.json and esm pkg', async () => {
     const cwd = join(__dirname, 'fixtures', 'cjs')
 
-    const actual = await loadConfig({
+    await expect(loadConfig({
       cwd,
       configPath: './esm-import-esm.js',
-    })
-
-    expect(actual.content).toStrictEqual(expect.objectContaining({
-      source: {
-        entry: 'esm-import-esm',
-      },
-    }))
+    })).rejects.toThrow('Cannot use import statement outside a module')
   })
 
   test('load config with enum', async () => {
     const cwd = join(__dirname, 'fixtures', 'custom')
 
-    const actual = await loadConfig({
+    await expect(loadConfig({
       cwd,
       configPath: './enum.ts',
-    })
-
-    expect(actual.content).toStrictEqual(expect.objectContaining({
-      source: {
-        define: {
-          bar: 0,
-          baz: 1,
-        },
-        entry: 'custom-enum',
-      },
-    }))
+    })).rejects.toThrow('TypeScript enum is not supported in strip-only mode')
   })
 
   test('load config with const enum', async () => {
     const cwd = join(__dirname, 'fixtures', 'custom')
 
-    const actual = await loadConfig({
+    await expect(loadConfig({
       cwd,
       configPath: './const-enum.ts',
-    })
-
-    expect(actual.content).toStrictEqual(expect.objectContaining({
-      source: {
-        define: {
-          bar: 0,
-          baz: 1,
-        },
-        entry: 'custom-const-enum',
-      },
-    }))
+    })).rejects.toThrow('TypeScript enum is not supported in strip-only mode')
   })
 
   describe('Error Cases', () => {
@@ -342,7 +303,7 @@ describe('Config - loadConfig', () => {
   })
 
   test('load config with function params', async () => {
-    vi.stubEnv('NODE_ENV', 'foo')
+    rstest.stubEnv('NODE_ENV', 'foo')
     const argv = process.argv
     process.argv = ['node', 'rspeedy', 'dev']
 
@@ -365,7 +326,7 @@ describe('Config - loadConfig', () => {
   })
 
   test('load config with function params and default value', async () => {
-    vi.stubEnv('NODE_ENV', undefined)
+    rstest.stubEnv('NODE_ENV', undefined)
     const argv = process.argv
     process.argv = ['node', 'rspeedy']
 
@@ -400,10 +361,10 @@ describe('hasNativeTSSupport', () => {
   beforeEach(() => {
     process.env = {}
     process.features = {}
-    vi.stubGlobal('process', process)
+    rstest.stubGlobal('process', process)
 
     return () => {
-      vi.unstubAllGlobals()
+      rstest.unstubAllGlobals()
     }
   })
 

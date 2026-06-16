@@ -5,13 +5,13 @@ import { mkdtemp } from 'node:fs/promises'
 import { tmpdir } from 'node:os'
 import path from 'node:path'
 
-import { describe, expect, test, vi } from 'vitest'
+import { describe, expect, rstest, test } from '@rstest/core'
 
 import { LAYERS } from '@lynx-js/react-webpack-plugin'
 
 import { createStubRspeedy as createRspeedy } from './createRspeedy.js'
 
-vi
+rstest
   .stubEnv('USE_RSPACK', 'true')
   .stubEnv('NODE_ENV', 'production')
 

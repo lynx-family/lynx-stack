@@ -6,19 +6,21 @@ import { tmpdir } from 'node:os'
 import path from 'node:path'
 import { fileURLToPath } from 'node:url'
 
+import { beforeEach, describe, expect, rstest, test } from '@rstest/core'
 import { Command } from 'commander'
-import { beforeEach, describe, expect, test, vi } from 'vitest'
 
 import { preview } from '../../src/cli/preview.js'
 
-vi.mock(import('@rsbuild/core'), async (original) => {
-  const core = await original()
+rstest.mock(import('@rsbuild/core'), () => {
+  const core = rstest.requireActual<typeof import('@rsbuild/core')>(
+    '@rsbuild/core',
+  )
   return {
     ...core,
-    createRsbuild: vi.fn(),
+    createRsbuild: rstest.fn(),
     logger: {
       ...core.logger,
-      error: vi.fn(),
+      error: rstest.fn(),
     },
   }
 })
@@ -29,7 +31,7 @@ describe('CLI - preview', () => {
     'fixtures',
   )
   beforeEach(() => {
-    vi.resetAllMocks()
+    rstest.resetAllMocks()
   })
 
   test('preview', async () => {
@@ -37,20 +39,20 @@ describe('CLI - preview', () => {
 
     const distPath = await mkdtemp(path.join(tmpdir(), 'rspeedy-test'))
 
-    const mockedPreview = vi.fn(() => {
+    const mockedPreview = rstest.fn(() => {
       return { urls: [] }
     })
 
-    vi.mocked(createRsbuild).mockImplementation(() =>
+    rstest.mocked(createRsbuild).mockImplementation(() =>
       // @ts-expect-error mock
       Promise.resolve({
-        isPluginExists: vi.fn(),
-        addPlugins: vi.fn(),
-        build: vi.fn(),
-        initConfigs: vi.fn(),
+        isPluginExists: rstest.fn(),
+        addPlugins: rstest.fn(),
+        build: rstest.fn(),
+        initConfigs: rstest.fn(),
         context: { distPath },
         preview: mockedPreview,
-        inspectConfig: vi.fn(),
+        inspectConfig: rstest.fn(),
       })
     )
 
@@ -67,7 +69,7 @@ describe('CLI - preview', () => {
   })
 
   test('preview with loadConfig error', async () => {
-    vi.mock('exit-hook')
+    rstest.mock('exit-hook', { mock: true })
 
     const { gracefulExit } = await import('exit-hook')
     const { createRsbuild } = await import('@rsbuild/core')
@@ -88,23 +90,23 @@ describe('CLI - preview', () => {
   })
 
   test('preview with dist not found', async () => {
-    vi.mock('exit-hook')
+    rstest.mock('exit-hook', { mock: true })
 
     const { gracefulExit } = await import('exit-hook')
     const { createRsbuild } = await import('@rsbuild/core')
 
     const distPath = 'non-exist-path'
 
-    const mockedPreview = vi.fn(() => {
+    const mockedPreview = rstest.fn(() => {
       return { urls: [] }
     })
 
-    vi.mocked(createRsbuild).mockImplementation(() =>
+    rstest.mocked(createRsbuild).mockImplementation(() =>
       // @ts-expect-error mock
       Promise.resolve({
-        addPlugins: vi.fn(),
-        build: vi.fn(),
-        initConfigs: vi.fn(),
+        addPlugins: rstest.fn(),
+        build: rstest.fn(),
+        initConfigs: rstest.fn(),
         context: { distPath },
         preview: mockedPreview,
       })

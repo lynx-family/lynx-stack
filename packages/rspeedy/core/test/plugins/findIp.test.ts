@@ -2,15 +2,13 @@
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
 
-import { describe, expect, test, vi } from 'vitest'
-
-vi.mock('node:os')
+import { describe, expect, rstest, test } from '@rstest/core'
 
 describe('findIp', () => {
   test('v4', async () => {
     const { default: os } = await import('node:os')
 
-    vi.mocked(os.networkInterfaces).mockReturnValue({
+    rstest.spyOn(os, 'networkInterfaces').mockReturnValue({
       eth0: [
         {
           address: '192.168.1.1',
@@ -32,7 +30,7 @@ describe('findIp', () => {
   test('v6', async () => {
     const { default: os } = await import('node:os')
 
-    vi.mocked(os.networkInterfaces).mockReturnValue({
+    rstest.spyOn(os, 'networkInterfaces').mockReturnValue({
       eth0: [
         {
           address: 'fd00::1',
@@ -55,7 +53,7 @@ describe('findIp', () => {
   test('multiple ips (should use the first ip)', async () => {
     const { default: os } = await import('node:os')
 
-    vi.mocked(os.networkInterfaces).mockReturnValue({
+    rstest.spyOn(os, 'networkInterfaces').mockReturnValue({
       eth0: [
         {
           address: '192.168.1.1',
@@ -85,7 +83,7 @@ describe('findIp', () => {
   test('multiple ips (should ignore internal ips)', async () => {
     const { default: os } = await import('node:os')
 
-    vi.mocked(os.networkInterfaces).mockReturnValue({
+    rstest.spyOn(os, 'networkInterfaces').mockReturnValue({
       eth0: [
         {
           address: '192.168.2.1',
@@ -115,7 +113,7 @@ describe('findIp', () => {
   test('multiple ips (should prefer physical interfaces over tunnels)', async () => {
     const { default: os } = await import('node:os')
 
-    vi.mocked(os.networkInterfaces).mockReturnValue({
+    rstest.spyOn(os, 'networkInterfaces').mockReturnValue({
       utun8: [
         {
           address: '172.31.252.23',
@@ -147,7 +145,7 @@ describe('findIp', () => {
   test('multiple ips (should prefer routable addresses over link-local)', async () => {
     const { default: os } = await import('node:os')
 
-    vi.mocked(os.networkInterfaces).mockReturnValue({
+    rstest.spyOn(os, 'networkInterfaces').mockReturnValue({
       en19: [
         {
           address: '169.254.91.23',
@@ -179,7 +177,7 @@ describe('findIp', () => {
   test('multiple ips (should fall back to tunnel interfaces when needed)', async () => {
     const { default: os } = await import('node:os')
 
-    vi.mocked(os.networkInterfaces).mockReturnValue({
+    rstest.spyOn(os, 'networkInterfaces').mockReturnValue({
       utun8: [
         {
           address: '172.31.252.23',
@@ -201,7 +199,7 @@ describe('findIp', () => {
   test('no v4 ips', async () => {
     const { default: os } = await import('node:os')
 
-    vi.mocked(os.networkInterfaces).mockReturnValue({
+    rstest.spyOn(os, 'networkInterfaces').mockReturnValue({
       eth0: [
         {
           address: 'fd00::1',
@@ -225,7 +223,7 @@ describe('findIp', () => {
   test('no ips', async () => {
     const { default: os } = await import('node:os')
 
-    vi.mocked(os.networkInterfaces).mockReturnValue({})
+    rstest.spyOn(os, 'networkInterfaces').mockReturnValue({})
 
     const { findIp } = await import('../../src/plugins/dev.plugin.js')
 
@@ -237,7 +235,7 @@ describe('findIp', () => {
   test('invalid network interfaces', async () => {
     const { default: os } = await import('node:os')
 
-    vi.mocked(os.networkInterfaces).mockReturnValue({
+    rstest.spyOn(os, 'networkInterfaces').mockReturnValue({
       // @ts-expect-error mocked invalid network interfaces
       eth0: null,
     })
@@ -252,7 +250,7 @@ describe('findIp', () => {
   test('invalid ip address', async () => {
     const { default: os } = await import('node:os')
 
-    vi.mocked(os.networkInterfaces).mockReturnValue({
+    rstest.spyOn(os, 'networkInterfaces').mockReturnValue({
       eth0: [
         {
           // @ts-expect-error invalid ip address

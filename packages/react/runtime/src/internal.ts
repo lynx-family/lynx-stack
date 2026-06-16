@@ -5,12 +5,13 @@
 import { Suspense, createElement, lazy } from 'preact/compat';
 import type { FC } from 'react';
 
+import './runtime-backend-marker.js';
 import './lynx.js';
 
 import { useMemo } from './core/hooks/react.js';
+import { loadLazyBundle } from './core/lynx/lazy-bundle.js';
 import { __root } from './root.js';
 import { factory as factory2 } from './snapshot/compat/componentIs.js';
-import { loadLazyBundle } from './snapshot/lynx/lazy-bundle.js';
 import { BackgroundSnapshotInstance } from './snapshot/snapshot/backgroundSnapshot.js';
 import { __page, __pageId, createSnapshot, snapshotManager } from './snapshot/snapshot/definition.js';
 import { DynamicPartType } from './snapshot/snapshot/dynamicPartType.js';
@@ -56,7 +57,7 @@ export {
 } from 'preact';
 export type { Options } from 'preact';
 
-export { loadDynamicJS, __dynamicImport } from './snapshot/lynx/dynamic-js.js';
+export { loadDynamicJS, __dynamicImport } from './core/lynx/dynamic-import.js';
 
 export { withInitDataInState } from './core/initData.js';
 
@@ -71,7 +72,7 @@ export const __ComponentIsPolyfill: FC<{ is: string }> = /* @__PURE__ */ factory
   loadLazyBundle,
 );
 
-export { loadLazyBundle } from './snapshot/lynx/lazy-bundle.js';
+export { loadLazyBundle } from './core/lynx/lazy-bundle.js';
 
 export { transformToWorklet } from './snapshot/worklet/call/transformToWorklet.js';
 export { registerWorkletOnBackground } from './snapshot/worklet/hmr.js';

@@ -4,7 +4,7 @@
 import type { IncomingMessage } from 'node:http'
 
 import type { RsbuildPlugin } from '@rsbuild/core'
-import { describe, expect, test } from 'vitest'
+import { describe, expect, test } from '@rstest/core'
 
 import { toRsbuildConfig } from '../../src/config/rsbuild/index.js'
 import type { Config } from '../../src/index.js'

@@ -1,7 +1,8 @@
 // Copyright 2024 The Lynx Authors. All rights reserved.
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
-import { assertType, describe, expectTypeOf, test } from 'vitest'
+import { describe, test } from '@rstest/core'
+import { expectTypeOf } from 'expect-type'
 
 import type {
   ConfigExport,
@@ -9,6 +10,7 @@ import type {
 } from '../../src/config/defineConfig.js'
 import type { Config } from '../../src/config/index.js'
 import { defineConfig } from '../../src/index.js'
+import { assertType } from '../assertType.js'
 
 const configFn = () => ({} as Config)
 const configAsyncFn = async () => ({} as Config)

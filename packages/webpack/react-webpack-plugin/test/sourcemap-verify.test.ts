@@ -72,7 +72,7 @@ async function captureAssets(
               {
                 name: 'TestPlugin',
                 // Hook in after wrapper injection, before final cleanup.
-                stage: compiler.webpack.Compilation
+                stage: compiler.rspack.Compilation
                   .PROCESS_ASSETS_STAGE_DEV_TOOLING,
               },
               (assets) => {

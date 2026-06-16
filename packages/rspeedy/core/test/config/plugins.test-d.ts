@@ -6,9 +6,11 @@ import type {
   RsbuildPluginAPI,
   RsbuildPlugins,
 } from '@rsbuild/core'
-import { assertType, describe, expectTypeOf, test } from 'vitest'
+import { describe, test } from '@rstest/core'
+import { expectTypeOf } from 'expect-type'
 
 import type { Config } from '../../src/index.js'
+import { assertType } from '../assertType.js'
 
 describe('Config - Plugins', () => {
   test('custom plugins', () => {

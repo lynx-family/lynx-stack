@@ -27,6 +27,10 @@
       "types": "./lib/setup-file-snapshot.d.ts",
       "default": "./lib/setup-file-snapshot.js"
     },
+    "./setup-rspeedy": {
+      "types": "./lib/setup-rspeedy.d.ts",
+      "default": "./lib/setup-rspeedy.js"
+    },
     "./helper/*": "./lib/helper/*",
     "./update.js": "./update.js",
     "./package.json": "./package.json"

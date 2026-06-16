@@ -16,6 +16,7 @@ import '@lynx-js/web-core/client';
 import '@lynx-js/web-elements/all';
 import '@lynx-js/web-elements/index.css';
 
+import lazyComponentDemo from './mock/basic/lazy-component.js';
 import { decodeBase64Url } from './utils/base64url.js';
 import { DEFAULT_A2UI_DEMO_URL } from './utils/demoUrl.js';
 import {
@@ -522,11 +523,19 @@ function Render() {
     }, 50);
   }, [flushPendingA2UIEvents, hasPendingA2UIEvents]);
 
-  // Known demo: fetch the static JSON in the browser context (where fetch works)
-  // and pass the resolved messages as initData, avoiding fetch in Lynx's worker thread.
+  // Known demo: resolve messages in the browser context and pass them as
+  // initData, avoiding fetch in Lynx's worker thread.
   useEffect(() => {
     const demo = new URLSearchParams(window.location.search).get('demo');
     if (!demo) return;
+
+    if (demo === 'lazy-component') {
+      setInitData((prev) =>
+        prev ? { ...prev, messages: lazyComponentDemo } : prev
+      );
+      return;
+    }
+
     let cancelled = false;
     void (async () => {
       try {

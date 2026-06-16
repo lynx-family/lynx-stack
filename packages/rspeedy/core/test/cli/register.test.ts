@@ -5,7 +5,7 @@ import { exec } from 'node:child_process'
 import path from 'node:path'
 import { pathToFileURL } from 'node:url'
 
-import { describe, expect, test } from 'vitest'
+import { describe, expect, test } from '@rstest/core'
 
 describe('register - hooks', () => {
   const registerPath = pathToFileURL(

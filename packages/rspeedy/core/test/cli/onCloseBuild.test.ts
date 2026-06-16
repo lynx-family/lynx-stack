@@ -4,13 +4,13 @@
 
 import { join } from 'node:path'
 
+import { describe, expect, rstest, test } from '@rstest/core'
 import { Command } from 'commander'
-import { describe, expect, test, vi } from 'vitest'
 
 describe('onCloseBuild', () => {
   test('should call onCloseBuild hook when build is finished', async () => {
-    vi.stubEnv('CI', 'true')
-    vi.mock('../../src/cli/exit.js')
+    rstest.stubEnv('CI', 'true')
+    rstest.mock('../../src/cli/exit.js', { mock: true })
     const { exit } = await import('../../src/cli/exit.js')
     const { build } = await import('../../src/cli/build.js')
     const program = new Command('test')

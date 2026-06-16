@@ -15,7 +15,7 @@ export default {
         const hooks = LynxTemplatePlugin.getLynxTemplatePluginHooks(
           compilation,
         );
-        const { RawSource } = compiler.webpack.sources;
+        const { RawSource } = compiler.rspack.sources;
 
         hooks.beforeEncode.tap(
           'test',

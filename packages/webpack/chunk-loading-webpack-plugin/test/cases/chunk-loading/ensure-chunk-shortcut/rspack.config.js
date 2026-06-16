@@ -16,7 +16,7 @@ export default {
      * @param {import('@rspack/core').Compiler} compiler
      */
     compiler => {
-      const { RuntimeModule } = compiler.webpack;
+      const { RuntimeModule } = compiler.rspack;
 
       compiler.hooks.compilation.tap('test', compilation => {
         compilation.hooks.runtimeRequirementInTree.for(

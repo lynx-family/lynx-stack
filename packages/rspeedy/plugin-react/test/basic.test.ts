@@ -7,19 +7,20 @@ import { tmpdir } from 'node:os'
 import path, { dirname } from 'node:path'
 import { fileURLToPath } from 'node:url'
 
-import { describe, expect, test, vi } from 'vitest'
+import type { Rspack } from '@rsbuild/core'
+import { describe, expect, rstest, test } from '@rstest/core'
 
 import { createStubRspeedy as createRspeedy } from './createRspeedy.js'
 import { pluginStubRspeedyAPI } from './stub-rspeedy-api.plugin.js'
 
-vi
+rstest
   .stubEnv('USE_RSPACK', 'true')
   .stubEnv('NODE_ENV', 'development')
 
 describe('ReactLynx rsbuild', () => {
   test('basic usage', async () => {
     // TODO(react-refresh): support refresh
-    vi.stubEnv('NODE_ENV', 'production')
+    rstest.stubEnv('NODE_ENV', 'production')
     const { pluginReactLynx } = await import('../src/index.js')
 
     const tmp = await mkdtemp(path.join(tmpdir(), 'rspeedy-react-test-basic-'))
@@ -62,7 +63,7 @@ describe('ReactLynx rsbuild', () => {
   })
 
   test('basic usage with Element Template enabled', async () => {
-    vi.stubEnv('NODE_ENV', 'production')
+    rstest.stubEnv('NODE_ENV', 'production')
     const { pluginReactLynx } = await import('../src/index.js')
 
     const tmp = await mkdtemp(
@@ -111,9 +112,99 @@ describe('ReactLynx rsbuild', () => {
     expect(1).toBe(1)
   })
 
+  test('Element Template dynamic import build resolves the ET lazy import entry', async () => {
+    rstest.stubEnv('NODE_ENV', 'production')
+    const { pluginReactLynx } = await import('../src/index.js')
+
+    const tmp = await mkdtemp(
+      path.join(tmpdir(), 'rspeedy-react-test-et-dynamic-import-'),
+    )
+    const resolvedResources = new Set<string>()
+
+    const collectResolvedResources: Rspack.RspackPluginInstance = {
+      name: 'collectResolvedResources',
+      apply(compiler) {
+        compiler.hooks.compilation.tap(
+          'collectResolvedResources',
+          (compilation) => {
+            compilation.hooks.finishModules.tap(
+              'collectResolvedResources',
+              (modules) => {
+                for (const module of modules) {
+                  const resource = (module as {
+                    resource?: string
+                    nameForCondition?: () => string | null | undefined
+                  }).resource
+                    ?? (module as {
+                      nameForCondition?: () => string | null | undefined
+                    }).nameForCondition?.()
+                  if (resource) {
+                    resolvedResources.add(resource.replaceAll(path.sep, '/'))
+                  }
+                }
+              },
+            )
+          },
+        )
+      },
+    }
+
+    const rsbuild = await createRspeedy({
+      rspeedyConfig: {
+        source: {
+          entry: {
+            main: fileURLToPath(
+              new URL(
+                './fixtures/element-template-dynamic-import.tsx',
+                import.meta.url,
+              ),
+            ),
+          },
+        },
+        output: {
+          distPath: { root: tmp },
+        },
+        tools: {
+          rspack: {
+            context: dirname(fileURLToPath(import.meta.url)),
+            resolve: {
+              extensionAlias: {
+                '.js': ['.ts', '.js'],
+                '.jsx': ['.tsx', '.jsx'],
+              },
+            },
+            plugins: [collectResolvedResources],
+          },
+        },
+        plugins: [
+          pluginReactLynx({
+            experimental_useElementTemplate: true,
+          }),
+          pluginStubRspeedyAPI(),
+        ],
+      },
+    })
+
+    await rsbuild.build()
+
+    const resolved = [...resolvedResources]
+    expect(
+      resolved.some(resource =>
+        resource.endsWith(
+          '/packages/react/runtime/lazy/element-template-import.js',
+        )
+      ),
+    ).toBe(true)
+    expect(
+      resolved.some(resource =>
+        resource.endsWith('/packages/react/runtime/lazy/import.js')
+      ),
+    ).toBe(false)
+  })
+
   test('special var name', async () => {
     const { pluginReactLynx } = await import('../src/index.js')
-    vi.stubEnv('NODE_ENV', 'production')
+    rstest.stubEnv('NODE_ENV', 'production')
 
     const tmp = await mkdtemp(path.join(tmpdir(), 'rspeedy-react-test'))
 
@@ -148,12 +239,12 @@ describe('ReactLynx rsbuild', () => {
     const backgroundJSPath = path.resolve(tmp, '.rspeedy/main/background.js')
     expect(existsSync(backgroundJSPath)).toBe(true)
 
-    const define = vi.fn()
+    const define = rstest.fn()
 
     Object.assign(globalThis, {
       tt: {
         define,
-        require: vi.fn(),
+        require: rstest.fn(),
       },
     })
     await expect(import(backgroundJSPath)).resolves.not.toThrow()

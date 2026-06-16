@@ -37,8 +37,7 @@ export default {
         compilation.hooks.processAssets.tap(
           {
             name: 'page-config-test',
-            stage:
-              compiler.webpack.Compilation.PROCESS_ASSETS_STAGE_PRE_PROCESS,
+            stage: compiler.rspack.Compilation.PROCESS_ASSETS_STAGE_PRE_PROCESS,
           },
           () => {
             const hooks = LynxTemplatePlugin.getLynxTemplatePluginHooks(

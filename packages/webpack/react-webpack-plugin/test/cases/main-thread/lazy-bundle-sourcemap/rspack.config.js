@@ -42,7 +42,7 @@ export default {
             compilation.hooks.processAssets.tap(
               {
                 name: 'CaptureUiSourceMapPlugin',
-                stage: compiler.webpack.Compilation.PROCESS_ASSETS_STAGE_REPORT,
+                stage: compiler.rspack.Compilation.PROCESS_ASSETS_STAGE_REPORT,
               },
               () => {
                 compilation.getAssets()

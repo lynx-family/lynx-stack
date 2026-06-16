@@ -2,7 +2,7 @@
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
 import type { RsbuildPluginAPI, Rspack } from '@rsbuild/core'
-import { describe, expect, test } from 'vitest'
+import { describe, expect, test } from '@rstest/core'
 
 import { createStubRspeedy } from '../createStubRspeedy.js'
 import { getLoaderOptions } from '../getLoaderOptions.js'
@@ -50,7 +50,7 @@ describe('Plugins - SWC', () => {
           "isModule": "unknown",
           "jsc": {
             "experimental": {
-              "cacheRoot": "<ROOT>/node_modules/.cache/.swc",
+              "cacheRoot": "<ROOT>/packages/rspeedy/core/node_modules/.cache/.swc",
               "keepImportAttributes": true,
             },
             "externalHelpers": true,
@@ -111,7 +111,7 @@ describe('Plugins - SWC', () => {
           "isModule": "unknown",
           "jsc": {
             "experimental": {
-              "cacheRoot": "<ROOT>/node_modules/.cache/.swc",
+              "cacheRoot": "<ROOT>/packages/rspeedy/core/node_modules/.cache/.swc",
               "keepImportAttributes": true,
             },
             "externalHelpers": true,
@@ -262,7 +262,7 @@ describe('Plugins - SWC', () => {
           "isModule": "unknown",
           "jsc": {
             "experimental": {
-              "cacheRoot": "<ROOT>/node_modules/.cache/.swc",
+              "cacheRoot": "<ROOT>/packages/rspeedy/core/node_modules/.cache/.swc",
               "keepImportAttributes": true,
             },
             "externalHelpers": true,

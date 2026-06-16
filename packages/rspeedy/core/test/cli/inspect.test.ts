@@ -6,26 +6,26 @@ import { mkdtemp } from 'node:fs/promises'
 import { tmpdir } from 'node:os'
 import path from 'node:path'
 
+import { beforeEach, describe, expect, rstest, test } from '@rstest/core'
 import { Command } from 'commander'
-import { beforeEach, describe, expect, test, vi } from 'vitest'
 
 import type { Config, CreateRspeedyOptions } from '../../src/index.js'
 
-vi.mock('../../src/cli/exit.js')
-vi.mock('../../src/config/loadConfig.js')
-vi.mock('../../src/create-rspeedy.js', async (original) => {
-  const rsbuildCore = await original<
+rstest.mock('../../src/cli/exit.js', { mock: true })
+rstest.mock('../../src/config/loadConfig.js', { mock: true })
+rstest.mock('../../src/create-rspeedy.js', () => {
+  const rsbuildCore = rstest.requireActual<
     typeof import('../../src/create-rspeedy.js')
-  >()
+  >('../../src/create-rspeedy.js')
 
   return {
     ...rsbuildCore,
-    createRspeedy: vi.fn(async (options: CreateRspeedyOptions) => {
+    createRspeedy: rstest.fn(async (options: CreateRspeedyOptions) => {
       const rsbuild = await rsbuildCore.createRspeedy(options)
 
       return {
         ...rsbuild,
-        inspectConfig: vi.fn(rsbuild.inspectConfig.bind(rsbuild)),
+        inspectConfig: rstest.fn(rsbuild.inspectConfig.bind(rsbuild)),
       }
     }),
   }
@@ -35,17 +35,17 @@ describe('CLI - Inspect', () => {
   beforeEach(async () => {
     const { createRspeedy } = await import('../../src/create-rspeedy.js')
 
-    vi.mocked(createRspeedy).mockClear()
-    vi.unstubAllEnvs()
+    rstest.mocked(createRspeedy).mockClear()
+    rstest.unstubAllEnvs()
   })
 
   test('inspect with default options', async () => {
     const { loadConfig } = await import('../../src/config/loadConfig.js')
 
-    await vi.mocked(loadConfig).withImplementation(
+    await rstest.mocked(loadConfig).withImplementation(
       () => Promise.resolve({ content: {}, configPath: '' }),
       async () => {
-        vi.stubEnv('NODE_ENV', 'development')
+        rstest.stubEnv('NODE_ENV', 'development')
 
         const { createRspeedy } = await import('../../src/create-rspeedy.js')
         const { inspect } = await import('../../src/cli/inspect.js')
@@ -65,7 +65,7 @@ describe('CLI - Inspect', () => {
         expect(createRspeedy).toBeCalledTimes(1)
 
         const [rsbuild] = await Promise.all(
-          vi.mocked(createRspeedy).mock.results
+          rstest.mocked(createRspeedy).mock.results
             .filter(i => i.type === 'return')
             .map(i => i.value),
         )
@@ -97,7 +97,7 @@ describe('CLI - Inspect', () => {
         expect(rsbuild!.inspectConfig).toBeCalledTimes(1)
 
         const [inspectResult] = await Promise.all(
-          vi.mocked(rsbuild!.inspectConfig).mock.results
+          rstest.mocked(rsbuild!.inspectConfig).mock.results
             .filter(i => i.type === 'return')
             .map(i => i.value),
         )
@@ -117,10 +117,10 @@ describe('CLI - Inspect', () => {
   test('inspect with env: production', async () => {
     const { loadConfig } = await import('../../src/config/loadConfig.js')
 
-    await vi.mocked(loadConfig).withImplementation(
+    await rstest.mocked(loadConfig).withImplementation(
       () => Promise.resolve({ content: {}, configPath: '' }),
       async () => {
-        vi.stubEnv('NODE_ENV', 'production')
+        rstest.stubEnv('NODE_ENV', 'production')
 
         const { createRspeedy } = await import('../../src/create-rspeedy.js')
         const { inspect } = await import('../../src/cli/inspect.js')
@@ -140,7 +140,7 @@ describe('CLI - Inspect', () => {
         expect(createRspeedy).toBeCalledTimes(1)
 
         const [rsbuild] = await Promise.all(
-          vi.mocked(createRspeedy).mock.results
+          rstest.mocked(createRspeedy).mock.results
             .filter(i => i.type === 'return')
             .map(i => i.value),
         )
@@ -176,7 +176,7 @@ describe('CLI - Inspect', () => {
         expect(rsbuild!.inspectConfig).toBeCalledTimes(1)
 
         const [inspectResult] = await Promise.all(
-          vi.mocked(rsbuild!.inspectConfig).mock.results
+          rstest.mocked(rsbuild!.inspectConfig).mock.results
             .filter(i => i.type === 'return')
             .map(i => i.value),
         )
@@ -196,10 +196,10 @@ describe('CLI - Inspect', () => {
   test('inspect with env: development', async () => {
     const { loadConfig } = await import('../../src/config/loadConfig.js')
 
-    await vi.mocked(loadConfig).withImplementation(
+    await rstest.mocked(loadConfig).withImplementation(
       () => Promise.resolve({ content: {}, configPath: '' }),
       async () => {
-        vi.stubEnv('NODE_ENV', 'development')
+        rstest.stubEnv('NODE_ENV', 'development')
         const { createRspeedy } = await import('../../src/create-rspeedy.js')
         const { inspect } = await import('../../src/cli/inspect.js')
 
@@ -218,7 +218,7 @@ describe('CLI - Inspect', () => {
         expect(createRspeedy).toBeCalledTimes(1)
 
         const [rsbuild] = await Promise.all(
-          vi.mocked(createRspeedy).mock.results
+          rstest.mocked(createRspeedy).mock.results
             .filter(i => i.type === 'return')
             .map(i => i.value),
         )
@@ -254,7 +254,7 @@ describe('CLI - Inspect', () => {
         expect(rsbuild!.inspectConfig).toBeCalledTimes(1)
 
         const [inspectResult] = await Promise.all(
-          vi.mocked(rsbuild!.inspectConfig).mock.results
+          rstest.mocked(rsbuild!.inspectConfig).mock.results
             .filter(i => i.type === 'return')
             .map(i => i.value),
         )
@@ -274,10 +274,10 @@ describe('CLI - Inspect', () => {
   test('inspect with verbose', async () => {
     const { loadConfig } = await import('../../src/config/loadConfig.js')
 
-    await vi.mocked(loadConfig).withImplementation(
+    await rstest.mocked(loadConfig).withImplementation(
       () => Promise.resolve({ content: {}, configPath: '' }),
       async () => {
-        vi.stubEnv('NODE_ENV', 'development')
+        rstest.stubEnv('NODE_ENV', 'development')
         const { createRspeedy } = await import('../../src/create-rspeedy.js')
         const { inspect } = await import('../../src/cli/inspect.js')
 
@@ -296,7 +296,7 @@ describe('CLI - Inspect', () => {
         expect(createRspeedy).toBeCalledTimes(1)
 
         const [rsbuild] = await Promise.all(
-          vi.mocked(createRspeedy).mock.results
+          rstest.mocked(createRspeedy).mock.results
             .filter(i => i.type === 'return')
             .map(i => i.value),
         )
@@ -328,7 +328,7 @@ describe('CLI - Inspect', () => {
         expect(rsbuild!.inspectConfig).toBeCalledTimes(1)
 
         const [inspectResult] = await Promise.all(
-          vi.mocked(rsbuild!.inspectConfig).mock.results
+          rstest.mocked(rsbuild!.inspectConfig).mock.results
             .filter(i => i.type === 'return')
             .map(i => i.value),
         )
@@ -348,7 +348,7 @@ describe('CLI - Inspect', () => {
   test('inspect rspeedy config', async () => {
     const { loadConfig } = await import('../../src/config/loadConfig.js')
 
-    await vi.mocked(loadConfig).withImplementation(
+    await rstest.mocked(loadConfig).withImplementation(
       () =>
         Promise.resolve(
           {
@@ -386,7 +386,7 @@ describe('CLI - Inspect', () => {
   test('parse', async () => {
     const { loadConfig } = await import('../../src/config/loadConfig.js')
 
-    await vi.mocked(loadConfig).withImplementation(
+    await rstest.mocked(loadConfig).withImplementation(
       () =>
         Promise.resolve(
           {
@@ -395,7 +395,7 @@ describe('CLI - Inspect', () => {
           },
         ),
       async () => {
-        vi.stubEnv('NODE_ENV', 'development')
+        rstest.stubEnv('NODE_ENV', 'development')
         const { createRspeedy } = await import('../../src/create-rspeedy.js')
 
         const { apply } = await import('../../src/cli/commands.js')
@@ -421,7 +421,7 @@ describe('CLI - Inspect', () => {
         expect(createRspeedy).toBeCalledTimes(1)
 
         const [rsbuild] = await Promise.all(
-          vi.mocked(createRspeedy).mock.results
+          rstest.mocked(createRspeedy).mock.results
             .filter(i => i.type === 'return')
             .map(i => i.value),
         )
@@ -430,7 +430,7 @@ describe('CLI - Inspect', () => {
         expect(rsbuild!.inspectConfig).toBeCalledTimes(1)
 
         const [inspectResult] = await Promise.all(
-          vi.mocked(rsbuild!.inspectConfig).mock.results
+          rstest.mocked(rsbuild!.inspectConfig).mock.results
             .filter(i => i.type === 'return')
             .map(i => i.value),
         )

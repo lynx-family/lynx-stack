@@ -77,7 +77,7 @@ export function installMockNativePapi(
     templateKey: string,
     bundleUrl: string | null | undefined,
     attributeSlots: unknown[] | null | undefined,
-    elementSlots: unknown[][] | null | undefined,
+    elementSlots: Array<unknown[] | null | undefined> | null | undefined,
     handleId: unknown,
   ) => {
     nativeLog.push(['__CreateElementTemplate', templateKey, bundleUrl, attributeSlots, elementSlots, handleId]);
@@ -122,7 +122,7 @@ export function installMockNativePapi(
   const mockCreateTypedElementTemplate = vi.fn().mockImplementation((
     type: string,
     attributes: unknown,
-    elementSlots: unknown[][] | null | undefined,
+    elementSlots: Array<unknown[] | null | undefined> | null | undefined,
     handleId: unknown,
     options: unknown,
   ) => {

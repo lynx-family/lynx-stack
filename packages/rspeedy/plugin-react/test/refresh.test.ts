@@ -1,12 +1,12 @@
 // Copyright 2024 The Lynx Authors. All rights reserved.
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
-import { describe, expect, test, vi } from 'vitest'
+import { describe, expect, rstest, test } from '@rstest/core'
 
 import { createStubRspeedy as createRspeedy } from './createRspeedy.js'
 import { pluginStubRspeedyAPI } from './stub-rspeedy-api.plugin.js'
 
-vi
+rstest
   .stubEnv('NODE_ENV', 'development')
 
 describe('pluginReactLynx with react-refresh', () => {

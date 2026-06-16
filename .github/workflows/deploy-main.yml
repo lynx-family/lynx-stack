@@ -69,6 +69,12 @@ jobs:
     needs: build-all
     uses: ./.github/workflows/workflow-bench.yml
     permissions: {}
+    secrets:
+      ACCESS_KEY: ${{ secrets.ACCESS_KEY }}
+      SECRET_KEY: ${{ secrets.SECRET_KEY }}
+      ENDPOINT: ${{ secrets.ENDPOINT }}
+      BUCKET_NAME: ${{ secrets.BUCKET_NAME }}
+      REGION: ${{ secrets.REGION }}
   bundle-analysis:
     permissions: {}
     needs: build-all

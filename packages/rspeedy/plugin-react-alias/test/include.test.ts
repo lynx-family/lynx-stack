@@ -6,7 +6,7 @@ import { fileURLToPath } from 'node:url'
 
 import { createRsbuild } from '@rsbuild/core'
 import type { Rspack } from '@rsbuild/core'
-import { describe, expect, it } from 'vitest'
+import { describe, expect, it } from '@rstest/core'
 
 import { LAYERS } from '@lynx-js/react-webpack-plugin'
 

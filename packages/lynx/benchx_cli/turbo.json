@@ -6,7 +6,7 @@
       "env": ["ECOSYSTEM_CI"],
       "passThroughEnv": ["ECOSYSTEM_CI"],
       "dependsOn": [],
-      "inputs": ["scripts/build.sh"],
+      "inputs": ["scripts/build.mjs", "scripts/build_unix.sh"],
       "outputs": ["dist/**"]
     }
   }

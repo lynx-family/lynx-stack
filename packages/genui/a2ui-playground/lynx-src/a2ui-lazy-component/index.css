@@ -1,0 +1,138 @@
+.lazy-card {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  border-radius: 12px;
+  background-color: #ffffff;
+  border: 1px solid #d5e0ea;
+  overflow: hidden;
+}
+
+.lazy-card-hero {
+  display: flex;
+  flex-direction: column;
+  padding: 14px;
+  background-color: #0f172a;
+}
+
+.lazy-card-hero-stack {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+}
+
+.lazy-card-accent {
+  width: 34px;
+  height: 5px;
+  border-radius: 3px;
+  margin-bottom: 8px;
+}
+
+.lazy-card-heading {
+  display: flex;
+  flex-direction: column;
+}
+
+.lazy-card-eyebrow {
+  color: #cbd5e1;
+  font-size: 10px;
+  line-height: 14px;
+  font-weight: 700;
+}
+
+.lazy-card-title {
+  margin-top: 3px;
+  color: #ffffff;
+  font-size: 19px;
+  line-height: 24px;
+  font-weight: 700;
+}
+
+.lazy-card-subtitle {
+  margin-top: 8px;
+  color: #dbeafe;
+  font-size: 12px;
+  line-height: 17px;
+}
+
+.lazy-card-body {
+  display: flex;
+  flex-direction: column;
+  padding: 12px;
+  background-color: #f8fafc;
+}
+
+.lazy-card-primary {
+  display: flex;
+  flex-direction: column;
+  padding: 12px;
+  border-radius: 10px;
+  background-color: #ffffff;
+  border: 1px solid #e2e8f0;
+}
+
+.lazy-card-label {
+  color: #64748b;
+  font-size: 10px;
+  line-height: 14px;
+  font-weight: 700;
+}
+
+.lazy-card-primary-stack {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  margin-top: 6px;
+}
+
+.lazy-card-primary-value {
+  color: #0f172a;
+  font-size: 28px;
+  line-height: 34px;
+  font-weight: 700;
+}
+
+.lazy-card-pill {
+  align-self: flex-start;
+  margin-top: 6px;
+  padding: 4px 7px;
+  border-radius: 999px;
+  background-color: #ecfeff;
+}
+
+.lazy-card-pill-text {
+  font-size: 10px;
+  line-height: 12px;
+  font-weight: 700;
+}
+
+.lazy-card-metrics {
+  display: flex;
+  flex-direction: column;
+  margin-top: 10px;
+}
+
+.lazy-card-metric {
+  display: flex;
+  flex-direction: column;
+  min-height: 72px;
+  padding: 9px;
+  border-radius: 8px;
+  background-color: #ffffff;
+  border: 1px solid #e2e8f0;
+}
+
+.lazy-card-metric-value {
+  margin-top: 3px;
+  color: #0f172a;
+  font-size: 15px;
+  line-height: 19px;
+  font-weight: 700;
+}
+
+.lazy-card-delta {
+  margin-top: 2px;
+  font-size: 10px;
+  line-height: 14px;
+  font-weight: 700;
+}
