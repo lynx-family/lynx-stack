@@ -62,13 +62,13 @@ export {
   createOpenUiPromptLibrary,
   OPENUI_SYSTEM_PROMPT,
   openUiPromptActionPropSchema,
-} from '@lynx-js/genui/openui-prompt';
+} from '@lynx-js/genui/openui/prompt';
 export type {
   BuildOpenUiSystemPromptOptions,
   CreateOpenUiPromptLibraryOptions,
   OpenUiPromptComponent,
   OpenUiPromptLibrary,
-} from '@lynx-js/genui/openui-prompt';
+} from '@lynx-js/genui/openui/prompt';
 export {
   A2UI_PROTOCOL_VERSION,
   A2UI_SYSTEM_PROMPT,
