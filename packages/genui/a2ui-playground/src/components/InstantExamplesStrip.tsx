@@ -6,7 +6,11 @@ import type { KeyboardEvent } from 'react';
 
 import { ArrowRight, ICON_SIZE, Zap } from './Icon.js';
 import { PreviewViewport } from './PreviewViewport.js';
-import { EXTENDED_STATIC_DEMOS, OFFICIAL_STATIC_DEMOS } from '../demos.js';
+import {
+  EXTENDED_STATIC_DEMOS,
+  OFFICIAL_STATIC_DEMOS,
+  STATIC_DEMO_JSON_IDS,
+} from '../demos.js';
 import type { StaticDemo } from '../demos.js';
 import { DEFAULT_A2UI_DEMO_URL } from '../utils/demoUrl.js';
 import type { Protocol } from '../utils/protocol.js';
@@ -19,10 +23,6 @@ interface InstantExamplesStripProps {
   onSelectExample: (demo: StaticDemo) => void;
   onBrowseAllHref: string;
 }
-
-const STATIC_DEMO_IDS = new Set(
-  [...OFFICIAL_STATIC_DEMOS, ...EXTENDED_STATIC_DEMOS].map((d) => d.id),
-);
 
 const FEATURED_EXAMPLES: StaticDemo[] = (() => {
   const featured = [...EXTENDED_STATIC_DEMOS];
@@ -124,7 +124,9 @@ export function InstantExamplesStrip(props: InstantExamplesStripProps) {
               demoUrl: DEFAULT_A2UI_DEMO_URL,
               messages: demo.messages,
               theme,
-              demoId: STATIC_DEMO_IDS.has(demo.id) ? demo.id : undefined,
+              demoId: STATIC_DEMO_JSON_IDS.has(demo.id)
+                ? demo.id
+                : undefined,
               instant: true,
             },
             baseUrl,

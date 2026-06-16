@@ -15,7 +15,11 @@ import type { MobilePaneTab } from '../components/MobileTabBar.js';
 import { PanelResizeHandle } from '../components/PanelResizeHandle.js';
 import { PreviewPanel } from '../components/PreviewPanel.js';
 import { PreviewViewport } from '../components/PreviewViewport.js';
-import { DYNAMIC_PRESETS, STATIC_DEMOS } from '../demos.js';
+import {
+  DYNAMIC_PRESETS,
+  STATIC_DEMOS,
+  STATIC_DEMO_JSON_IDS,
+} from '../demos.js';
 import { useResizablePanels } from '../hooks/useResizablePanels.js';
 import { DEFAULT_A2UI_DEMO_URL } from '../utils/demoUrl.js';
 import type { Protocol } from '../utils/protocol.js';
@@ -55,6 +59,12 @@ function formatChunk(msg: unknown): string {
 function findScenarioById(id?: string): Scenario | undefined {
   if (!id) return undefined;
   return ALL_SCENARIOS.find((s) => s.id === id);
+}
+
+function getStaticJsonDemoId(scenario?: Scenario): string | undefined {
+  return scenario && STATIC_DEMO_JSON_IDS.has(scenario.id)
+    ? scenario.id
+    : undefined;
 }
 
 const ALL_SCENARIOS: Scenario[] = [
@@ -99,7 +109,7 @@ export function DemosPage(props: {
       ? {
         messages: initialScenario.messages,
         actionMocks: initialScenario.actionMocks,
-        demoId: initialScenario.id,
+        demoId: getStaticJsonDemoId(initialScenario),
       }
       : null
   );
@@ -200,7 +210,7 @@ export function DemosPage(props: {
     setPreviewInput({
       messages: nextScenario.messages,
       actionMocks: nextScenario.actionMocks,
-      demoId: nextScenario.id,
+      demoId: getStaticJsonDemoId(nextScenario),
     });
     // Reset playback inline (without taking the stable resetPlayback in deps)
     // so the chunk stream below the editor stays aligned with the new scenario.
@@ -219,7 +229,7 @@ export function DemosPage(props: {
     setPreviewInput({
       messages: currentScenario.messages,
       actionMocks: currentScenario.actionMocks,
-      demoId: currentScenario.id,
+      demoId: getStaticJsonDemoId(currentScenario),
     });
   }, [currentScenario]);
 
@@ -251,7 +261,7 @@ export function DemosPage(props: {
         setPreviewInput({
           messages: scenario.messages,
           actionMocks: scenario.actionMocks,
-          demoId: scenario.id,
+          demoId: getStaticJsonDemoId(scenario),
         });
       }
     },
@@ -277,7 +287,7 @@ export function DemosPage(props: {
     setPreviewInput({
       messages: parsed,
       actionMocks: currentScenario?.actionMocks,
-      demoId: isKnownDemo ? currentScenario?.id : undefined,
+      demoId: isKnownDemo ? getStaticJsonDemoId(currentScenario) : undefined,
     });
     return { parsed, isKnownDemo };
   }, [currentScenario, customJson, jsonEdited]);
@@ -320,7 +330,7 @@ export function DemosPage(props: {
       setPreviewInput({
         messages: currentScenario.messages,
         actionMocks: currentScenario.actionMocks,
-        demoId: currentScenario.id,
+        demoId: getStaticJsonDemoId(currentScenario),
       });
     }
   }, [currentScenario]);
