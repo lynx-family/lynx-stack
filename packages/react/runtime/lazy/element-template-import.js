@@ -1,16 +1,15 @@
-// Copyright 2024 The Lynx Authors. All rights reserved.
+// Copyright 2026 The Lynx Authors. All rights reserved.
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
-import * as ReactAPIs from '@lynx-js/react';
+import * as ReactAPIs from '@lynx-js/react/element-template';
 import * as ReactCompatAPIS from '@lynx-js/react/compat';
-import * as ReactInternal from '@lynx-js/react/internal';
+import * as ReactInternal from '@lynx-js/react/element-template/internal';
 import * as ReactJSXDevRuntime from '@lynx-js/react/jsx-dev-runtime';
 import * as ReactJSXRuntime from '@lynx-js/react/jsx-runtime';
 import * as ReactLegacyReactRuntime from '@lynx-js/react/legacy-react-runtime';
-import * as ReactLepusAPIs from '@lynx-js/react/lepus';
 
 import {
-  RUNTIME_BACKEND_SNAPSHOT,
+  RUNTIME_BACKEND_ELEMENT_TEMPLATE,
   registerLazyRuntimeBackend,
   sExportsJSXDevRuntime,
   sExportsJSXRuntime,
@@ -22,7 +21,7 @@ import {
   target,
 } from './target.js';
 
-registerLazyRuntimeBackend(RUNTIME_BACKEND_SNAPSHOT);
+registerLazyRuntimeBackend(RUNTIME_BACKEND_ELEMENT_TEMPLATE);
 
 Object.defineProperty(target, sExportsReact, {
   value: ReactAPIs,
@@ -31,15 +30,15 @@ Object.defineProperty(target, sExportsReact, {
   configurable: true,
 });
 
-Object.defineProperty(target, sExportsReactCompat, {
-  value: ReactCompatAPIS,
+Object.defineProperty(target, sExportsReactLepus, {
+  value: ReactAPIs,
   enumerable: false,
   writable: false,
   configurable: true,
 });
 
-Object.defineProperty(target, sExportsReactLepus, {
-  value: ReactLepusAPIs,
+Object.defineProperty(target, sExportsReactCompat, {
+  value: ReactCompatAPIS,
   enumerable: false,
   writable: false,
   configurable: true,

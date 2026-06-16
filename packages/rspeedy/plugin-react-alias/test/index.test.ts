@@ -216,6 +216,13 @@ describe('React - alias', () => {
           .replaceAll('/', path.sep),
       ),
     )
+    expect(config.resolve.alias).toHaveProperty(
+      '@lynx-js/react/experimental/lazy/import$',
+      expect.stringContaining(
+        '/packages/react/runtime/lazy/element-template-import.js'
+          .replaceAll('/', path.sep),
+      ),
+    )
 
     if (!config.module?.rules) {
       expect.fail('should have config.module.rules')

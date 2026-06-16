@@ -45,7 +45,7 @@ export function scheduleElementTemplateRemovedSubtreeCleanup(
   const timer = setTimeout(() => {
     scheduledRemovedSubtreeCleanupTimers.delete(timer);
     for (const root of removedSubtreesAwaitingTeardown) {
-      root.tearDown();
+      root.releaseDetachedSubtreeFromManager();
     }
   }, 10000);
   scheduledRemovedSubtreeCleanupTimers.add(timer);

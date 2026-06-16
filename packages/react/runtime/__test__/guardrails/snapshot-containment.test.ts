@@ -112,6 +112,28 @@ describe('snapshot containment guardrails', () => {
     expect(offenders).toEqual([]);
   });
 
+  test('keeps the ET lazy import entry on ET-owned root/internal and background JSX runtime exports', () => {
+    const entry = path.join(runtimeRoot, 'lazy', 'element-template-import.js');
+
+    expect(fs.existsSync(entry)).toBe(true);
+
+    const code = fs.readFileSync(entry, 'utf8');
+
+    expect(code).toContain('@lynx-js/react/element-template');
+    expect(code).toContain('@lynx-js/react/compat');
+    expect(code).toContain('@lynx-js/react/element-template/internal');
+    expect(code).toContain('@lynx-js/react/jsx-runtime');
+    expect(code).toContain('@lynx-js/react/jsx-dev-runtime');
+    expect(code).toContain('@lynx-js/react/legacy-react-runtime');
+    expect(code).not.toContain('@lynx-js/react/element-template/jsx-runtime');
+    expect(code).not.toContain('@lynx-js/react/element-template/jsx-dev-runtime');
+    expect(code).not.toContain('@lynx-js/react/internal');
+    expect(code).not.toContain('@lynx-js/react/lepus');
+    expect(code).not.toMatch(
+      /snapshot\/|SnapshotInstance|snapshotCreatorMap|__ComponentIsPolyfill|__DynamicPart|lazy-bundle-url/,
+    );
+  });
+
   test('prevents core and shared modules from depending on runtime backends', () => {
     const backendImportPattern =
       /(?:from\s+|import\s*\(\s*)['"](?:\.\/|\.\.\/)+(?:snapshot|element-template)(?:\/|['"])/;

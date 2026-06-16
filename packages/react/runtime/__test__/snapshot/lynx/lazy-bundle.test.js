@@ -20,7 +20,7 @@ describe('loadLazyBundle', () => {
     });
 
     test('should have lynx.loadLazyBundle', async () => {
-      const { loadLazyBundle } = await import('../../../src/snapshot/lynx/lazy-bundle');
+      const { loadLazyBundle } = await import('../../../src/core/lynx/lazy-bundle');
 
       expect(lynx.loadLazyBundle).toBe(loadLazyBundle);
     });
@@ -30,7 +30,7 @@ describe('loadLazyBundle', () => {
       __QueryComponent.mockReturnValueOnce({ evalResult: { data: 'foo' } });
       vi.stubGlobal('__QueryComponent', __QueryComponent);
 
-      const { loadLazyBundle } = await import('../../../src/snapshot/lynx/lazy-bundle');
+      const { loadLazyBundle } = await import('../../../src/core/lynx/lazy-bundle');
 
       const promise = loadLazyBundle('foo');
 
@@ -59,7 +59,7 @@ describe('loadLazyBundle', () => {
       __QueryComponent.mockReturnValueOnce({ evalResult: { data: 'foo' } });
       vi.stubGlobal('__QueryComponent', __QueryComponent);
 
-      const { loadLazyBundle } = await import('../../../src/snapshot/lynx/lazy-bundle');
+      const { loadLazyBundle } = await import('../../../src/core/lynx/lazy-bundle');
 
       const promise = loadLazyBundle('foo');
 
@@ -87,7 +87,7 @@ describe('loadLazyBundle', () => {
       __QueryComponent.mockReturnValueOnce({ evalResult: { data: 'foo' } });
       vi.stubGlobal('__QueryComponent', __QueryComponent);
 
-      const { loadLazyBundle } = await import('../../../src/snapshot/lynx/lazy-bundle');
+      const { loadLazyBundle } = await import('../../../src/core/lynx/lazy-bundle');
 
       const promise = loadLazyBundle('foo');
 
@@ -108,7 +108,7 @@ describe('loadLazyBundle', () => {
       __QueryComponent.mockReturnValueOnce({ evalResult: { data: 'foo' } });
       vi.stubGlobal('__QueryComponent', __QueryComponent);
 
-      const { loadLazyBundle } = await import('../../../src/snapshot/lynx/lazy-bundle');
+      const { loadLazyBundle } = await import('../../../src/core/lynx/lazy-bundle');
 
       const promise = loadLazyBundle('foo');
 
@@ -151,7 +151,7 @@ describe('loadLazyBundle', () => {
       __QueryComponent.mockReturnValueOnce({ evalResult: { data: 'foo' } });
       vi.stubGlobal('__QueryComponent', __QueryComponent);
 
-      const { loadLazyBundle } = await import('../../../src/snapshot/lynx/lazy-bundle');
+      const { loadLazyBundle } = await import('../../../src/core/lynx/lazy-bundle');
 
       const promise = loadLazyBundle('foo');
 
@@ -177,7 +177,7 @@ describe('loadLazyBundle', () => {
       __QueryComponent.mockReturnValueOnce(undefined);
       vi.stubGlobal('__QueryComponent', __QueryComponent);
 
-      const { loadLazyBundle } = await import('../../../src/snapshot/lynx/lazy-bundle');
+      const { loadLazyBundle } = await import('../../../src/core/lynx/lazy-bundle');
 
       const promise = loadLazyBundle('foo');
 
@@ -222,7 +222,7 @@ describe('loadLazyBundle', () => {
         callback({ code: 0, detail: { schema: source } });
       });
 
-      const { loadLazyBundle } = await import('../../../src/snapshot/lynx/lazy-bundle');
+      const { loadLazyBundle } = await import('../../../src/core/lynx/lazy-bundle');
 
       const promise = loadLazyBundle('foo');
 
@@ -243,7 +243,7 @@ describe('loadLazyBundle', () => {
         callback({ code: 1, detail: { errMsg: 'error', schema: source } });
       });
 
-      const { loadLazyBundle } = await import('../../../src/snapshot/lynx/lazy-bundle');
+      const { loadLazyBundle } = await import('../../../src/core/lynx/lazy-bundle');
 
       const promise = loadLazyBundle('foo');
 
@@ -276,7 +276,7 @@ describe('loadLazyBundle', () => {
         callback({ code: 0, detail: { schema: source } });
       });
 
-      const { loadLazyBundle } = await import('../../../src/snapshot/lynx/lazy-bundle');
+      const { loadLazyBundle } = await import('../../../src/core/lynx/lazy-bundle');
 
       const promise = loadLazyBundle('foo');
 
@@ -311,7 +311,7 @@ describe('loadLazyBundle', () => {
         callback({ code: 0, detail: { schema: source } });
       });
 
-      const { loadLazyBundle } = await import('../../../src/snapshot/lynx/lazy-bundle');
+      const { loadLazyBundle } = await import('../../../src/core/lynx/lazy-bundle');
 
       const promise = loadLazyBundle('foo');
 
@@ -346,7 +346,7 @@ describe('loadLazyBundle', () => {
         callback({ code: 0, detail: { schema: source } });
       });
 
-      const { loadLazyBundle } = await import('../../../src/snapshot/lynx/lazy-bundle');
+      const { loadLazyBundle } = await import('../../../src/core/lynx/lazy-bundle');
 
       const promise = loadLazyBundle('foo');
 
@@ -387,7 +387,7 @@ describe('loadLazyBundle', () => {
         callback({ code: 0, detail: { schema: source } });
       });
 
-      const { loadLazyBundle } = await import('../../../src/snapshot/lynx/lazy-bundle');
+      const { loadLazyBundle } = await import('../../../src/core/lynx/lazy-bundle');
 
       const promise = loadLazyBundle('foo');
 
@@ -415,7 +415,7 @@ describe('loadLazyBundle', () => {
         });
       });
 
-      const { loadLazyBundle } = await import('../../../src/snapshot/lynx/lazy-bundle');
+      const { loadLazyBundle } = await import('../../../src/core/lynx/lazy-bundle');
 
       const promise = loadLazyBundle('foo');
 
@@ -451,7 +451,7 @@ describe('loadLazyBundle', () => {
         });
       });
 
-      const { loadLazyBundle } = await import('../../../src/snapshot/lynx/lazy-bundle');
+      const { loadLazyBundle } = await import('../../../src/core/lynx/lazy-bundle');
 
       const promise = loadLazyBundle('foo');
 
@@ -492,7 +492,7 @@ describe('loadLazyBundle', () => {
         });
       });
 
-      const { loadLazyBundle } = await import('../../../src/snapshot/lynx/lazy-bundle');
+      const { loadLazyBundle } = await import('../../../src/core/lynx/lazy-bundle');
 
       const promise = loadLazyBundle('foo');
 
@@ -536,7 +536,7 @@ describe('loadLazyBundle', () => {
         callback({ code: 0, detail: { schema: source } });
       });
       vi.stubGlobal('lynx', { getNativeLynx: () => ({ QueryComponent }) });
-      const { loadLazyBundle } = await import('../../../src/snapshot/lynx/lazy-bundle');
+      const { loadLazyBundle } = await import('../../../src/core/lynx/lazy-bundle');
 
       const promise = loadLazyBundle('foo');
 
@@ -560,7 +560,7 @@ describe('loadLazyBundle', () => {
       .stubGlobal('__MAIN_THREAD__', false)
       .stubGlobal('__LEPUS__', false);
 
-    const { loadLazyBundle } = await import('../../../src/snapshot/lynx/lazy-bundle');
+    const { loadLazyBundle } = await import('../../../src/core/lynx/lazy-bundle');
 
     expect(() => loadLazyBundle()).toThrowErrorMatchingInlineSnapshot(`[Error: unreachable]`);
   });

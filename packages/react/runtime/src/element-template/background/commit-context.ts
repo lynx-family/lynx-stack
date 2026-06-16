@@ -11,7 +11,7 @@ import type { ElementTemplateUpdateCommitContext } from '../protocol/types.js';
 interface ElementTemplateCommitNonPayloadState {
   // Background-only JS objects must not be included in the cross-thread update
   // payload. They ride alongside the payload until the dispatch boundary
-  // schedules delayed teardown.
+  // schedules delayed cleanup.
   removedSubtreesAwaitingTeardown: BackgroundElementTemplateInstance[];
 }
 
