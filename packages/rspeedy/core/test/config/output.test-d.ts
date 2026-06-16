@@ -2,9 +2,10 @@
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
 import type { Rspack } from '@rsbuild/core'
-import { assertType, describe, test } from 'vitest'
+import { describe, test } from '@rstest/core'
 
 import type { Config } from '../../src/index.js'
+import { assertType } from '../assertType.js'
 
 describe('Config - Output', () => {
   type Output = Config['output']

@@ -1,16 +1,16 @@
 // Copyright 2024 The Lynx Authors. All rights reserved.
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
+import { beforeEach, describe, expect, rstest, test } from '@rstest/core'
 import { Command } from 'commander'
-import { beforeEach, describe, expect, test, vi } from 'vitest'
 
 import { apply } from '../../src/cli/commands.js'
 import { main } from '../../src/cli/main.js'
 
 describe('CLI - main', () => {
   describe('NODE_ENV', () => {
-    vi.mock('@rsbuild/core')
-    vi.mock('exit-hook')
+    rstest.mock('@rsbuild/core', { mock: true })
+    rstest.mock('exit-hook', { mock: true })
     beforeEach(() => {
       const NODE_ENV = process.env['NODE_ENV']
       delete process.env['NODE_ENV']
@@ -20,7 +20,7 @@ describe('CLI - main', () => {
     })
 
     test('`rspeedy build` with NODE_ENV: test', async () => {
-      vi.stubEnv('NODE_ENV', 'test')
+      rstest.stubEnv('NODE_ENV', 'test')
 
       await main(['node', 'rspeedy', 'build'])
 
@@ -45,7 +45,7 @@ describe('CLI - main', () => {
     })
 
     test('`rspeedy` with NODE_ENV: test', async () => {
-      vi.stubEnv('NODE_ENV', 'test')
+      rstest.stubEnv('NODE_ENV', 'test')
 
       await main(['node', 'rspeedy'])
 

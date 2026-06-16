@@ -3,9 +3,10 @@
 // LICENSE file in the root directory of this source tree.
 import path from 'node:path'
 
-import { assertType, describe, test } from 'vitest'
+import { describe, test } from '@rstest/core'
 
 import type { Source } from '../../../src/index.js'
+import { assertType } from '../../assertType.js'
 
 describe('Config - source.tsconfigPath', () => {
   test('tsconfigPath with string', () => {

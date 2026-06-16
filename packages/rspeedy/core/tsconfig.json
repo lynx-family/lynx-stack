@@ -11,7 +11,7 @@
     "test",
     "client.d.ts",
     "package.json",
-    "vitest.config.ts",
+    "rstest.config.ts",
   ],
   "exclude": [
     "test/cli/fixtures",

@@ -7,13 +7,13 @@ import { fileURLToPath } from 'node:url'
 import { createRsbuild } from '@rsbuild/core'
 import type { RsbuildPlugin } from '@rsbuild/core'
 import type { RuleSetRule } from '@rspack/core'
-import { describe, expect, test, vi } from 'vitest'
+import { describe, expect, rstest, test } from '@rstest/core'
 
 import { LAYERS } from '@lynx-js/react-webpack-plugin'
 
 describe('React - alias', () => {
   test('alias with development', async () => {
-    vi.stubEnv('NODE_ENV', 'development')
+    rstest.stubEnv('NODE_ENV', 'development')
     const { pluginReactAlias } = await import('../src/index.js')
 
     const rsbuild = await createRsbuild({
@@ -123,7 +123,7 @@ describe('React - alias', () => {
   })
 
   test('alias with production', async () => {
-    vi.stubEnv('NODE_ENV', 'production')
+    rstest.stubEnv('NODE_ENV', 'production')
     const { pluginReactAlias } = await import('../src/index.js')
 
     const rsbuild = await createRsbuild({
@@ -179,7 +179,7 @@ describe('React - alias', () => {
   })
 
   test('element-template aliases transformed legacy runtime and background lepus entry to ET runtime', async () => {
-    vi.stubEnv('NODE_ENV', 'development')
+    rstest.stubEnv('NODE_ENV', 'development')
     const { pluginReactAlias } = await import('../src/index.js')
 
     const rsbuild = await createRsbuild({
@@ -244,7 +244,7 @@ describe('React - alias', () => {
   })
 
   test('layered lepus hooks alias for main thread', async () => {
-    vi.stubEnv('NODE_ENV', 'development')
+    rstest.stubEnv('NODE_ENV', 'development')
     const { pluginReactAlias } = await import('../src/index.js')
 
     const rsbuild = await createRsbuild({
@@ -304,7 +304,7 @@ describe('React - alias', () => {
   })
 
   test('layered hooks alias for background', async () => {
-    vi.stubEnv('NODE_ENV', 'development')
+    rstest.stubEnv('NODE_ENV', 'development')
     const { pluginReactAlias } = await import('../src/index.js')
 
     const rsbuild = await createRsbuild({
@@ -355,10 +355,10 @@ describe('React - alias', () => {
   })
 
   test.skip('alias once', async () => {
-    vi.stubEnv('NODE_ENV', 'production')
+    rstest.stubEnv('NODE_ENV', 'production')
     const { pluginReactAlias } = await import('../src/index.js')
 
-    const layerGetter = vi.fn()
+    const layerGetter = rstest.fn()
 
     const LAYERS = {
       get MAIN_THREAD() {
@@ -406,7 +406,7 @@ describe('React - alias', () => {
 
   describe('with environments', () => {
     test('alias with multiple environments', async () => {
-      vi.stubEnv('NODE_ENV', 'development')
+      rstest.stubEnv('NODE_ENV', 'development')
       const { pluginReactAlias } = await import('../src/index.js')
 
       const rsbuild = await createRsbuild({
@@ -458,7 +458,7 @@ describe('React - alias', () => {
     })
 
     test('alias with plugins + environments', async () => {
-      vi.stubEnv('NODE_ENV', 'development')
+      rstest.stubEnv('NODE_ENV', 'development')
       const { pluginReactAlias } = await import('../src/index.js')
 
       const rsbuild = await createRsbuild({

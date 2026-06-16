@@ -4,7 +4,8 @@
 
 /// <reference types="../../client.d.ts" />
 
-import { describe, expectTypeOf, test } from 'vitest'
+import { describe, test } from '@rstest/core'
+import { expectTypeOf } from 'expect-type'
 
 describe('Client - env type check', () => {
   describe('import.meta.webpackHot', () => {

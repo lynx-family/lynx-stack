@@ -6,7 +6,6 @@
     /** packages-start */
     { "path": "./css-serializer/tsconfig.json" },
     { "path": "./debug-metadata/tsconfig.build.json" },
-    { "path": "./vitest-setup/tsconfig.json" },
     /** packages-end */
   ],
   "include": [],

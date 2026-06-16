@@ -50,6 +50,7 @@ minimumReleaseAgeExclude:
   # First-party Rspack/Rsbuild toolchain — trusted, upgraded deliberately.
   - "@rspack/*"
   - "@rsbuild/*"
+  - "@rstest/*"
 # npm's abbreviated metadata omits the `time` field, so a strict check hard-fails
 # (`ERR_PNPM_MISSING_TIME`) on packages it cannot date — e.g. during
 # `pnpm dedupe --check`. Run non-strict so the age check is enforced when `time`
@@ -106,15 +107,15 @@ catalogs:
 
   # Rspack monorepo packages
   rspack:
-    "@rspack/cli": "2.0.6"
-    "@rspack/core": "2.0.6"
+    "@rspack/cli": "2.0.8"
+    "@rspack/core": "2.0.8"
     "@rspack/dev-server": "2.0.3"
-    "@rspack/test-tools": "2.0.6"
+    "@rspack/test-tools": "2.0.8"
 
   # Rstest monorepo packages
   rstest:
-    "@rstest/coverage-istanbul": "0.10.3"
-    "@rstest/core": "0.10.3"
+    "@rstest/coverage-istanbul": "0.10.5"
+    "@rstest/core": "0.10.5"
 
 overrides:
   # Published @lynx-js/lynx-ui-* (pulled in by packages/genui/a2ui) peer-depend on

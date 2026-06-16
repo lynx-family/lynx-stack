@@ -6,17 +6,18 @@ import { fileURLToPath } from 'node:url'
 import type { URL } from 'node:url'
 
 import { createRsbuild } from '@rsbuild/core'
-import { describe, expect, test, vi } from 'vitest'
+import { describe, expect, rstest, test } from '@rstest/core'
 
 import { LAYERS } from '@lynx-js/react-webpack-plugin'
 
-vi.mock('node:module', async (importOriginal) => {
-  const original = await importOriginal()
-  const { createRequire: originalCreateRequire } =
-    original as typeof import('node:module')
+rstest.mock('node:module', () => {
+  const original = rstest.requireActual<typeof import('node:module')>(
+    'node:module',
+  )
+  const { createRequire: originalCreateRequire } = original
   return {
     ...original as object,
-    createRequire: vi.fn().mockImplementation((path: string | URL) => {
+    createRequire: rstest.fn().mockImplementation((path: string | URL) => {
       const originalRequire = originalCreateRequire(path)
       const mockedRequire = (id: string) => {
         if (/[\\/](?:packages[\\/])?react[\\/]*package\.json$/.test(id)) {
@@ -34,7 +35,7 @@ vi.mock('node:module', async (importOriginal) => {
 
 describe('@lynx-js/react/compat - alias', () => {
   test('alias with @lynx-js/react < 0.112.0', async () => {
-    vi.stubEnv('NODE_ENV', 'production')
+    rstest.stubEnv('NODE_ENV', 'production')
 
     const { pluginReactAlias } = await import('../../src/index.js')
 

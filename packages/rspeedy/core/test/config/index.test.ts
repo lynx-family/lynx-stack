@@ -1,7 +1,7 @@
 // Copyright 2024 The Lynx Authors. All rights reserved.
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
-import { describe, expect, test } from 'vitest'
+import { describe, expect, test } from '@rstest/core'
 
 import * as dev from '../../src/config/dev/index.js'
 import * as config from '../../src/config/index.js'
@@ -28,7 +28,11 @@ describe('Config Declaration', () => {
       source,
     ]
     modules.forEach(module => {
-      expect(Object.getOwnPropertyNames(module)).toHaveLength(0)
+      expect(
+        Object.getOwnPropertyNames(module)
+          // rstest's bundler tags every ES module with `__esModule`.
+          .filter(name => name !== '__esModule'),
+      ).toHaveLength(0)
     })
   })
 })

@@ -5,25 +5,27 @@ import { dirname, join } from 'node:path'
 import { fileURLToPath } from 'node:url'
 
 import type { RsbuildPlugin } from '@rsbuild/core'
+import { beforeEach, describe, expect, rstest, test } from '@rstest/core'
 import { Command } from 'commander'
-import { beforeEach, describe, expect, test, vi } from 'vitest'
 
 import { dev } from '../../src/cli/dev.js'
 
-vi.mock('exit-hook')
-vi.mock(import('@rsbuild/core'), async (original) => {
-  const core = await original()
+rstest.mock('exit-hook', { mock: true })
+rstest.mock(import('@rsbuild/core'), () => {
+  const core = rstest.requireActual<typeof import('@rsbuild/core')>(
+    '@rsbuild/core',
+  )
   return {
     ...core,
-    createRsbuild: vi.fn(),
+    createRsbuild: rstest.fn(),
     logger: {
       ...core.logger,
-      error: vi.fn(),
+      error: rstest.fn(),
     },
   }
 })
 
-vi.mock('chokidar', async () => {
+rstest.mock('chokidar', async () => {
   const { EventEmitter } = await import('eventemitter3')
 
   const emitter = new EventEmitter()
@@ -37,7 +39,7 @@ vi.mock('chokidar', async () => {
   return {
     default: {
       emitter,
-      watch: vi.fn(() => {
+      watch: rstest.fn(() => {
         return emitter
       }),
     },
@@ -51,7 +53,7 @@ describe('CLI - dev', () => {
   )
 
   beforeEach(() => {
-    vi.restoreAllMocks()
+    rstest.restoreAllMocks()
   })
 
   test('config not found', async () => {
@@ -139,21 +141,21 @@ describe('CLI - dev', () => {
     const core = await import('@rsbuild/core')
     const { gracefulExit } = await import('exit-hook')
 
-    const close = vi.fn(() => {
+    const close = rstest.fn(() => {
       return Promise.resolve()
     })
 
-    vi.mocked(core.createRsbuild).mockImplementationOnce(() =>
+    rstest.mocked(core.createRsbuild).mockImplementationOnce(() =>
       Promise.resolve({
-        isPluginExists: vi.fn(),
-        addPlugins: vi.fn(),
+        isPluginExists: rstest.fn(),
+        addPlugins: rstest.fn(),
         // @ts-expect-error mock
-        createDevServer: vi.fn(() =>
+        createDevServer: rstest.fn(() =>
           Promise.resolve({
             listen: () => ({ server: { close } }),
           })
         ),
-        inspectConfig: vi.fn(),
+        inspectConfig: rstest.fn(),
       })
     )
 
@@ -175,24 +177,24 @@ describe('CLI - dev', () => {
     const core = await import('@rsbuild/core')
     const { gracefulExit } = await import('exit-hook')
 
-    const close = vi.fn(() => {
+    const close = rstest.fn(() => {
       return Promise.resolve()
     })
 
-    vi.mocked(core.createRsbuild).mockImplementation(() =>
+    rstest.mocked(core.createRsbuild).mockImplementation(() =>
       Promise.resolve({
-        addPlugins: vi.fn(),
+        addPlugins: rstest.fn(),
         // @ts-expect-error mock
-        createDevServer: vi.fn(() =>
+        createDevServer: rstest.fn(() =>
           Promise.resolve({
             listen: () => ({ server: { close } }),
           })
         ),
-        inspectConfig: vi.fn(),
+        inspectConfig: rstest.fn(),
       })
     )
 
-    const exit = vi
+    const exit = rstest
       .spyOn(process, 'exit')
       // @ts-expect-error mocked exit
       .mockImplementation(() => {
@@ -208,32 +210,32 @@ describe('CLI - dev', () => {
     expect(core.createRsbuild).toBeCalledTimes(1)
     process.emit('SIGINT')
     expect(exit).not.toBeCalled()
-    expect(vi.mocked(gracefulExit)).toBeCalled()
-    expect(vi.mocked(gracefulExit)).toBeCalledWith(130)
+    expect(rstest.mocked(gracefulExit)).toBeCalled()
+    expect(rstest.mocked(gracefulExit)).toBeCalledWith(130)
   })
 
   test('force shutdown', async () => {
     await import('../../src/cli/exit.js')
     const core = await import('@rsbuild/core')
 
-    const close = vi.fn(() => {
+    const close = rstest.fn(() => {
       return Promise.resolve()
     })
 
-    vi.mocked(core.createRsbuild).mockImplementation(() =>
+    rstest.mocked(core.createRsbuild).mockImplementation(() =>
       Promise.resolve({
-        addPlugins: vi.fn(),
+        addPlugins: rstest.fn(),
         // @ts-expect-error mock
-        createDevServer: vi.fn(() =>
+        createDevServer: rstest.fn(() =>
           Promise.resolve({
             listen: () => ({ server: { close } }),
           })
         ),
-        inspectConfig: vi.fn(),
+        inspectConfig: rstest.fn(),
       })
     )
 
-    const exit = vi
+    const exit = rstest
       .spyOn(process, 'exit')
       // @ts-expect-error mocked exit
       .mockImplementation(() => {
@@ -257,22 +259,22 @@ describe('CLI - dev', () => {
     const core = await import('@rsbuild/core')
     const chokidar = await import('chokidar')
 
-    vi.mocked(chokidar.default.watch).mockClear()
+    rstest.mocked(chokidar.default.watch).mockClear()
 
-    const close = vi.fn(() => {
+    const close = rstest.fn(() => {
       return Promise.resolve()
     })
 
-    vi.mocked(core.createRsbuild).mockImplementation(() =>
+    rstest.mocked(core.createRsbuild).mockImplementation(() =>
       Promise.resolve({
         // @ts-expect-error mock
-        createDevServer: vi.fn(() =>
+        createDevServer: rstest.fn(() =>
           Promise.resolve({
             listen: () => ({ server: { close } }),
           })
         ),
-        addPlugins: vi.fn(),
-        inspectConfig: vi.fn(),
+        addPlugins: rstest.fn(),
+        inspectConfig: rstest.fn(),
       })
     )
 
@@ -304,22 +306,22 @@ describe('CLI - dev', () => {
     const core = await import('@rsbuild/core')
     const chokidar = await import('chokidar')
 
-    vi.mocked(chokidar.default.watch).mockClear()
+    rstest.mocked(chokidar.default.watch).mockClear()
 
-    const close = vi.fn(() => {
+    const close = rstest.fn(() => {
       return Promise.resolve()
     })
 
-    vi.mocked(core.createRsbuild).mockImplementation(() =>
+    rstest.mocked(core.createRsbuild).mockImplementation(() =>
       Promise.resolve({
         // @ts-expect-error mock
-        createDevServer: vi.fn(() =>
+        createDevServer: rstest.fn(() =>
           Promise.resolve({
             listen: () => ({ server: { close } }),
           })
         ),
-        addPlugins: vi.fn(),
-        inspectConfig: vi.fn(),
+        addPlugins: rstest.fn(),
+        inspectConfig: rstest.fn(),
       })
     )
 
@@ -350,29 +352,29 @@ describe('CLI - dev', () => {
     const core = await import('@rsbuild/core')
     const chokidar = await import('chokidar')
 
-    vi.mocked(chokidar.default.watch).mockClear()
+    rstest.mocked(chokidar.default.watch).mockClear()
 
-    const close = vi.fn(() => {
+    const close = rstest.fn(() => {
       return Promise.resolve()
     })
 
     const plugins: string[] = []
 
-    vi.mocked(core.createRsbuild).mockImplementation(() =>
+    rstest.mocked(core.createRsbuild).mockImplementation(() =>
       Promise.resolve({
         // @ts-expect-error mock
-        createDevServer: vi.fn(() =>
+        createDevServer: rstest.fn(() =>
           Promise.resolve({
             listen: () => ({ server: { close } }),
           })
         ),
-        addPlugins: vi.fn().mockImplementation((p: RsbuildPlugin[]) => {
+        addPlugins: rstest.fn().mockImplementation((p: RsbuildPlugin[]) => {
           plugins.push(...p.filter(p => Boolean(p)).map(p => p.name))
         }),
-        isPluginExists: vi.fn().mockImplementation((name: string) =>
+        isPluginExists: rstest.fn().mockImplementation((name: string) =>
           plugins.includes(name)
         ),
-        inspectConfig: vi.fn(),
+        inspectConfig: rstest.fn(),
       })
     )
 
@@ -394,14 +396,14 @@ describe('CLI - dev', () => {
     const core = await import('@rsbuild/core')
     const chokidar = await import('chokidar')
 
-    const close = vi.fn(() => {
+    const close = rstest.fn(() => {
       return Promise.resolve()
     })
 
-    vi.mocked(core.createRsbuild).mockImplementation(() =>
+    rstest.mocked(core.createRsbuild).mockImplementation(() =>
       Promise.resolve({
         // @ts-expect-error mock
-        createDevServer: vi.fn(() =>
+        createDevServer: rstest.fn(() =>
           Promise.resolve({
             listen: () => ({ server: { close } }),
           })
@@ -434,6 +436,8 @@ describe('CLI - dev', () => {
 
     await new Promise<void>(resolve => setTimeout(resolve, 1000))
 
-    expect(vi.mocked(core.createRsbuild).mock.calls.length).toBeGreaterThan(1)
+    expect(rstest.mocked(core.createRsbuild).mock.calls.length).toBeGreaterThan(
+      1,
+    )
   })
 })

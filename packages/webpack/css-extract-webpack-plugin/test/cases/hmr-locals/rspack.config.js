@@ -29,7 +29,7 @@ export default {
   plugins: [
     /** @param {import('@rspack/core').Compiler} compiler */
     function(compiler) {
-      new compiler.webpack.HotModuleReplacementPlugin().apply(compiler);
+      new compiler.rspack.HotModuleReplacementPlugin().apply(compiler);
     },
     new CssExtractRspackPlugin({
       filename: '[name].css',

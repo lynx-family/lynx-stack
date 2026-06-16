@@ -6,7 +6,7 @@ import { tmpdir } from 'node:os'
 import path from 'node:path'
 import { fileURLToPath } from 'node:url'
 
-import { describe, expect, test, vi } from 'vitest'
+import { describe, expect, rstest, test } from '@rstest/core'
 
 import { WebEncodePlugin } from '@lynx-js/template-webpack-plugin'
 import type { LynxTemplatePlugin } from '@lynx-js/template-webpack-plugin'
@@ -260,7 +260,7 @@ describe('Web', () => {
   })
 
   test('plugins with multiple environments', async () => {
-    vi.stubEnv('NODE_ENV', 'development')
+    rstest.stubEnv('NODE_ENV', 'development')
     const { pluginReactLynx } = await import('../src/index.js')
 
     const rsbuild = await createRspeedy({
@@ -309,7 +309,7 @@ describe('Web', () => {
 
   // TODO: stack overflow, should be fixed in the later PRs
   test.skip('alias with plugins + environments', async () => {
-    vi.stubEnv('NODE_ENV', 'development')
+    rstest.stubEnv('NODE_ENV', 'development')
     const { pluginReactLynx } = await import('../src/index.js')
 
     const rsbuild = await createRspeedy({

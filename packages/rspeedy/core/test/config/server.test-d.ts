@@ -4,9 +4,10 @@
 import type { IncomingMessage, ServerResponse } from 'node:http'
 
 import type { ProxyOptions } from '@rsbuild/core'
-import { assertType, describe, test } from 'vitest'
+import { describe, test } from '@rstest/core'
 
 import type { Server } from '../../src/index.js'
+import { assertType } from '../assertType.js'
 
 describe('Config - Server', () => {
   test('server.base', () => {

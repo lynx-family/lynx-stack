@@ -13,7 +13,7 @@ import { tmpdir } from 'node:os'
 import path from 'node:path'
 import { fileURLToPath } from 'node:url'
 
-import { describe, expect, test, vi } from 'vitest'
+import { describe, expect, rstest, test } from '@rstest/core'
 
 import { createStubRspeedy } from '../createStubRspeedy.js'
 
@@ -27,7 +27,7 @@ const PNG_FIXTURE = fileURLToPath(
 
 describe('Plugins - Optimization', () => {
   test('concatenateModules production', async () => {
-    vi.stubEnv('NODE_ENV', 'production')
+    rstest.stubEnv('NODE_ENV', 'production')
     const rspeedy = await createStubRspeedy({})
 
     const config = await rspeedy.unwrapConfig()
@@ -37,7 +37,7 @@ describe('Plugins - Optimization', () => {
   })
 
   test('concatenateModules development', async () => {
-    vi.stubEnv('NODE_ENV', 'development')
+    rstest.stubEnv('NODE_ENV', 'development')
     const rspeedy = await createStubRspeedy({})
 
     const config = await rspeedy.unwrapConfig()
@@ -47,7 +47,7 @@ describe('Plugins - Optimization', () => {
   })
 
   test('realContentHash', async () => {
-    vi.stubEnv('NODE_ENV', 'production')
+    rstest.stubEnv('NODE_ENV', 'production')
     const rspeedy = await createStubRspeedy({})
 
     const config = await rspeedy.unwrapConfig()
@@ -80,7 +80,7 @@ describe('Plugins - Optimization', () => {
   })
 
   test('overrideStrict should not parse png as JavaScript without ReactLynx plugin', async () => {
-    vi.stubEnv('NODE_ENV', 'production')
+    rstest.stubEnv('NODE_ENV', 'production')
 
     const root = await mkdtemp(path.join(tmpdir(), 'rspeedy-png-asset-'))
     try {
@@ -104,7 +104,7 @@ describe('Plugins - Optimization', () => {
   })
 
   test('avoidEntryIife production', async () => {
-    vi.stubEnv('NODE_ENV', 'production')
+    rstest.stubEnv('NODE_ENV', 'production')
     const rspeedy = await createStubRspeedy({})
 
     const config = await rspeedy.unwrapConfig()
@@ -113,7 +113,7 @@ describe('Plugins - Optimization', () => {
   })
 
   test('avoidEntryIife development', async () => {
-    vi.stubEnv('NODE_ENV', 'development')
+    rstest.stubEnv('NODE_ENV', 'development')
     const rspeedy = await createStubRspeedy({})
 
     const config = await rspeedy.unwrapConfig()

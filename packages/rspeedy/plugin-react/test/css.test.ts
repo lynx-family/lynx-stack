@@ -1,7 +1,6 @@
 // Copyright 2024 The Lynx Authors. All rights reserved.
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
-/// <reference types="@lynx-js/vitest-setup/expect.d.ts" />
 
 import * as path from 'node:path'
 import { fileURLToPath } from 'node:url'
@@ -12,7 +11,7 @@ import type {
   PostCSSLoaderOptions,
   Rspack,
 } from '@rsbuild/core'
-import { describe, expect, test, vi } from 'vitest'
+import { describe, expect, rstest, test } from '@rstest/core'
 
 import { CssExtractRspackPlugin } from '@lynx-js/css-extract-webpack-plugin'
 import { LAYERS } from '@lynx-js/react-webpack-plugin'
@@ -631,7 +630,7 @@ describe('Plugins - CSS', () => {
 
   describe('minification', () => {
     test('default', async () => {
-      vi.stubEnv('NODE_ENV', 'production')
+      rstest.stubEnv('NODE_ENV', 'production')
       const rspeedy = await createRspeedy({
         rspeedyConfig: {
           plugins: [pluginReactLynx(), pluginStubRspeedyAPI()],
@@ -649,7 +648,7 @@ describe('Plugins - CSS', () => {
     })
 
     test('with enableRemoveCSSScope: false', async () => {
-      vi.stubEnv('NODE_ENV', 'production')
+      rstest.stubEnv('NODE_ENV', 'production')
       const rspeedy = await createRspeedy({
         rspeedyConfig: {
           plugins: [
@@ -672,7 +671,7 @@ describe('Plugins - CSS', () => {
     })
 
     test('with enableRemoveCSSScope: true', async () => {
-      vi.stubEnv('NODE_ENV', 'production')
+      rstest.stubEnv('NODE_ENV', 'production')
       const rspeedy = await createRspeedy({
         rspeedyConfig: {
           plugins: [

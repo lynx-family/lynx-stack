@@ -4,6 +4,10 @@
 // LICENSE file in the root directory of this source tree.
 */
 // @ts-nocheck
+// The function below is stringified into build output via
+// `Template.getFunctionContent` - instrumentation would inject undefined
+// `cov_*` references into the generated bundle.
+/* istanbul ignore file */
 
 export default function() {
   var loadStylesheet = function(chunkId) {

@@ -4,7 +4,7 @@
 
 import path from 'node:path'
 
-import { describe, expect, test } from 'vitest'
+import { describe, expect, test } from '@rstest/core'
 
 import { createStubRspeedy } from '../../createStubRspeedy.js'
 

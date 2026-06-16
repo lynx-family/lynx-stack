@@ -1,22 +1,23 @@
 // Copyright 2024 The Lynx Authors. All rights reserved.
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
-/* eslint-disable vitest/expect-expect */
 
 import {
   CssMinimizerWebpackPlugin,
   pluginCssMinimizer,
 } from '@rsbuild/plugin-css-minimizer'
-import { beforeEach, describe, expect, test, vi } from 'vitest'
+import { beforeEach, describe, expect, rstest, test } from '@rstest/core'
 
 import type { Output } from '../../src/index.js'
 import { createStubRspeedy } from '../createStubRspeedy.js'
 
 describe('Plugins - Minify', () => {
   beforeEach(() => {
-    vi.restoreAllMocks()
-    vi.stubEnv('NODE_ENV', 'production')
-    return () => vi.unstubAllEnvs()
+    rstest.restoreAllMocks()
+    rstest.stubEnv('NODE_ENV', 'production')
+    return () => {
+      rstest.unstubAllEnvs()
+    }
   })
 
   test('defaults', async () => {

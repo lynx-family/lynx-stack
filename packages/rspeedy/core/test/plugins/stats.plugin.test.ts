@@ -5,7 +5,7 @@ import { mkdir, mkdtemp, readFile, rm, writeFile } from 'node:fs/promises'
 import { tmpdir } from 'node:os'
 import path from 'node:path'
 
-import { describe, expect, test, vi } from 'vitest'
+import { describe, expect, rstest, test } from '@rstest/core'
 
 import { createStubRspeedy } from '../createStubRspeedy.js'
 
@@ -21,7 +21,7 @@ interface StatsJson {
 
 describe('stats plugin', () => {
   test('no DEBUG', async () => {
-    vi.stubEnv('DEBUG', '')
+    rstest.stubEnv('DEBUG', '')
     const rspeedy = await createStubRspeedy({})
 
     const config = rspeedy.getRspeedyConfig()
@@ -30,7 +30,7 @@ describe('stats plugin', () => {
   })
 
   test('DEBUG', async () => {
-    vi.stubEnv('DEBUG', 'rspeedy')
+    rstest.stubEnv('DEBUG', 'rspeedy')
     const rspeedy = await createStubRspeedy({})
 
     const config = rspeedy.getRspeedyConfig()
@@ -39,7 +39,7 @@ describe('stats plugin', () => {
   })
 
   test('override performance.profile', async () => {
-    vi.stubEnv('DEBUG', 'rspeedy')
+    rstest.stubEnv('DEBUG', 'rspeedy')
     const rspeedy = await createStubRspeedy({
       performance: { profile: false },
     })

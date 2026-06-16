@@ -5,20 +5,25 @@ import { isIP, isIPv4 } from 'node:net'
 import type { AddressInfo } from 'node:net'
 import path from 'node:path'
 
-import { assert, beforeEach, describe, expect, test, vi } from 'vitest'
+import {
+  assert,
+  beforeEach,
+  describe,
+  expect,
+  rstest,
+  test,
+} from '@rstest/core'
 
 import { createStubRspeedy } from '../createStubRspeedy.js'
 
-vi.mock('node:os')
-
 describe('Plugins - Dev', () => {
   beforeEach(async () => {
-    vi.stubEnv('NODE_ENV', 'development')
-    vi.mock('../../src/webpack/ProvidePlugin.js')
+    rstest.stubEnv('NODE_ENV', 'development')
+    rstest.mock('../../src/webpack/ProvidePlugin.js', { mock: true })
 
     const { default: os } = await import('node:os')
 
-    vi.mocked(os.networkInterfaces).mockReturnValue({
+    rstest.spyOn(os, 'networkInterfaces').mockReturnValue({
       eth0: [
         {
           address: '192.168.1.1',
@@ -32,7 +37,7 @@ describe('Plugins - Dev', () => {
     })
 
     return () => {
-      vi.unstubAllEnvs()
+      rstest.unstubAllEnvs()
         .restoreAllMocks()
     }
   })
@@ -65,8 +70,8 @@ describe('Plugins - Dev', () => {
 
     const { ProvidePlugin } = await import('../../src/webpack/ProvidePlugin.js')
 
-    expect(vi.isMockFunction(ProvidePlugin)).toBe(true)
-    expect(vi.mocked(ProvidePlugin)).toBeCalled()
+    expect(rstest.isMockFunction(ProvidePlugin)).toBe(true)
+    expect(rstest.mocked(ProvidePlugin)).toBeCalled()
     expect(ProvidePlugin).toHaveBeenCalledWith({
       WebSocket: [require.resolve('@lynx-js/websocket'), 'default'],
     })
@@ -110,8 +115,8 @@ describe('Plugins - Dev', () => {
 
     const { ProvidePlugin } = await import('../../src/webpack/ProvidePlugin.js')
 
-    expect(vi.isMockFunction(ProvidePlugin)).toBe(true)
-    expect(vi.mocked(ProvidePlugin)).toBeCalled()
+    expect(rstest.isMockFunction(ProvidePlugin)).toBe(true)
+    expect(rstest.mocked(ProvidePlugin)).toBeCalled()
     expect(ProvidePlugin).toBeCalledWith({
       __webpack_dev_server_client__: [
         require.resolve('../../client/hmr/WebSocketClient.js'),
@@ -121,7 +126,7 @@ describe('Plugins - Dev', () => {
   })
 
   test('not inject entry and provide variables in production', async () => {
-    vi.stubEnv('NODE_ENV', 'production')
+    rstest.stubEnv('NODE_ENV', 'production')
     const rsbuild = await createStubRspeedy({})
 
     await rsbuild.unwrapConfig()
@@ -164,7 +169,7 @@ describe('Plugins - Dev', () => {
   })
 
   test('dev.assetPrefix should not take effect in production mode', async () => {
-    vi.stubEnv('NODE_ENV', 'production')
+    rstest.stubEnv('NODE_ENV', 'production')
     const rsbuild = await createStubRspeedy({
       dev: {
         assetPrefix: 'http://example.com:3000/',
@@ -632,11 +637,12 @@ describe('Plugins - Dev', () => {
       },
     })
     const middleware = await import('@lynx-js/web-rsbuild-server-middleware')
-    vi.spyOn(middleware, 'createWebVirtualFilesMiddleware')
+    rstest.spyOn(middleware, 'createWebVirtualFilesMiddleware')
 
     await using server = await rsbuild.usingDevServer()
     await server.waitDevCompileDone()
-    expect(vi.mocked(middleware.createWebVirtualFilesMiddleware)).toBeCalled()
+    expect(rstest.mocked(middleware.createWebVirtualFilesMiddleware))
+      .toBeCalled()
   })
 
   test('dev.assetPrefix with server.printUrls', async () => {

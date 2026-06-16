@@ -57,7 +57,7 @@ export default {
      * @param {import('@rspack/core').Compiler} compiler
      */
     (compiler) => {
-      new compiler.webpack.BannerPlugin({
+      new compiler.rspack.BannerPlugin({
         banner: `var globDynamicComponentEntry;`,
         raw: true,
         test: /\.js$/,

@@ -71,6 +71,11 @@ export function lynxRstestConfig(options: LynxRstestConfigOptions): {
   };
   setupFiles: string[];
   env: Record<string, string>;
+  tools: {
+    rspack: {
+      module: { parser: { javascript: { url: false } } };
+    };
+  };
 } {
   const root = path.dirname(fileURLToPath(options.url));
   const testDir = path.join(root, 'test');
@@ -138,6 +143,14 @@ export function lynxRstestConfig(options: LynxRstestConfigOptions): {
         require.resolve('@rspack/test-tools/package.json'),
       ),
       ...options.env,
+    },
+    // Tests reference fixtures via `new URL('./x', import.meta.url)`; rspack
+    // would otherwise turn those into emitted asset URLs that don't exist on
+    // disk.
+    tools: {
+      rspack: {
+        module: { parser: { javascript: { url: false } } },
+      },
     },
   };
 }

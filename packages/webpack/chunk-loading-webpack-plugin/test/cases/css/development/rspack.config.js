@@ -27,7 +27,7 @@ export default {
   plugins: [
     new ChunkLoadingWebpackPlugin(),
     compiler => {
-      new compiler.webpack.HotModuleReplacementPlugin().apply(compiler);
+      new compiler.rspack.HotModuleReplacementPlugin().apply(compiler);
       new rspack.CssExtractRspackPlugin({
         chunkFilename: '[id].rspack.bundle.css',
       }).apply(compiler);
