@@ -708,8 +708,8 @@ importers:
         specifier: 0.1.0
         version: 0.1.0
       '@lynx-js/lynx-core':
-        specifier: 0.1.3
-        version: 0.1.3
+        specifier: 0.1.4
+        version: 0.1.4
       '@lynx-js/react':
         specifier: workspace:*
         version: link:../../react
@@ -1247,8 +1247,8 @@ importers:
         version: 3.4.0
     devDependencies:
       '@lynx-js/lynx-core':
-        specifier: 0.1.3
-        version: 0.1.3
+        specifier: 0.1.4
+        version: 0.1.4
       '@lynx-js/type-element-api':
         specifier: 0.0.3
         version: 0.0.3
@@ -2070,8 +2070,8 @@ importers:
         specifier: ^1.7.1
         version: 1.10.0
       '@lynx-js/lynx-core':
-        specifier: 0.1.3
-        version: 0.1.3
+        specifier: 0.1.4
+        version: 0.1.4
       '@lynx-js/web-core':
         specifier: workspace:*
         version: link:../web-core
@@ -4183,9 +4183,6 @@ packages:
 
   '@lynx-js/luna-styles@0.1.0':
     resolution: {integrity: sha512-1DVx/mLmsnfdrTF1E9CWhl39/CWmR3nal38nY6QJ6sOImSC77HFDuE4Xr1g0V0hcX/8lAmTzgNwnqPEJE1a6JQ==}
-
-  '@lynx-js/lynx-core@0.1.3':
-    resolution: {integrity: sha512-uWzKKYJUK4Q09ZRZxWSAFINnmZb9piWPbvWF9SkLn+3snBl9u/BJa4ekPRcKWAhBmpbtxWH1x27fxe3Q3p5l3Q==}
 
   '@lynx-js/lynx-core@0.1.4':
     resolution: {integrity: sha512-JxpAoDhpR8dJ6PFR2KOsFQyWt6SKiU+Bp701/miy5exqZHd+SlCd3UCfMtJy3nRlz3gy1O1xsObK7+x+jArdAQ==}
@@ -14009,8 +14006,6 @@ snapshots:
   '@lynx-js/internal-preact@10.29.1-20260519060144-e6da44c': {}
 
   '@lynx-js/luna-styles@0.1.0': {}
-
-  '@lynx-js/lynx-core@0.1.3': {}
 
   '@lynx-js/lynx-core@0.1.4': {}
 
