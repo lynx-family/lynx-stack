@@ -75,7 +75,7 @@ jobs:
             name: Ubuntu
           - label: lynx-windows-2022-large
             name: Windows
-    timeout-minutes: 30
+    timeout-minutes: 45
     needs: get-merge-base
     steps:
       - uses: actions/checkout@93cb6efe18208431cddfb8368fd83d5badbf9bfd # v5
