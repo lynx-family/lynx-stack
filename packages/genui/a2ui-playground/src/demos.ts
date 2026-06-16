@@ -6,6 +6,7 @@ import castGrid from './mock/basic/cast-grid.json';
 import citywalkList from './mock/basic/citywalk-list.json';
 import fridgeSearch from './mock/basic/fridge-search.json';
 import hangzhouWeatherTrend from './mock/basic/hangzhou-weather-trend.json';
+import lazyComponent from './mock/basic/lazy-component.js';
 import pieChartChinaEvShare from './mock/basic/pie-chart-china-ev-share.json';
 import recs from './mock/basic/recs.json';
 import tripPlanner from './mock/basic/trip-planner.json';
@@ -82,6 +83,7 @@ export interface StaticDemo {
   id: string;
   title: string;
   description?: string;
+  hasStaticJson?: boolean;
   tags: string[];
   messages: unknown;
 }
@@ -112,6 +114,15 @@ export const EXTENDED_STATIC_DEMOS: StaticDemo[] = [
       'Three restaurant cards with images. Content updates progressively.',
     tags: tagsFromMessages(recs),
     messages: recs,
+  },
+  {
+    id: 'lazy-component',
+    title: 'Lazy Bundle Component',
+    description:
+      'Loads a catalog component from a lazy bundle URL and passes sourceData into it.',
+    hasStaticJson: false,
+    tags: tagsFromMessages(lazyComponent),
+    messages: lazyComponent,
   },
   {
     id: 'cast-grid',
@@ -169,6 +180,12 @@ export const STATIC_DEMOS: StaticDemo[] = [
   ...OFFICIAL_STATIC_DEMOS,
   ...EXTENDED_STATIC_DEMOS,
 ];
+
+export const STATIC_DEMO_JSON_IDS = new Set(
+  STATIC_DEMOS.filter((demo) => demo.hasStaticJson !== false).map((demo) =>
+    demo.id
+  ),
+);
 
 export const DYNAMIC_PRESETS: DynamicPreset[] = [];
 

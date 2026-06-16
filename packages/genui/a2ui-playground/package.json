@@ -5,9 +5,10 @@
   "type": "module",
   "scripts": {
     "build": "rsbuild build",
-    "build:lynx": "rspeedy build",
+    "build:lynx": "rspeedy build && pnpm run build:lynx:lazy",
+    "build:lynx:lazy": "rspeedy build -c lynx-lazy.config.ts",
     "dev": "pnpm run build:lynx && rsbuild dev",
-    "dev:lynx": "rspeedy dev",
+    "dev:lynx": "pnpm run build:lynx:lazy && rspeedy dev",
     "preview": "rsbuild preview",
     "preview:lynx": "rspeedy preview",
     "test": "rstest"
