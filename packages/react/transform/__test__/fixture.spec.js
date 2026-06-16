@@ -283,15 +283,15 @@ describe('element template', () => {
     expect(result.elementTemplates?.some(template => template.compiledTemplate.type === 'list-item')).toBe(true);
     expect(result.code).toMatchInlineSnapshot(`
       "import { jsx as _jsx } from "react/jsx-runtime";
-      const _et_2d408_test_1 = "_et_2d408_test_1";
-      const _et_2d408_test_2 = "_et_2d408_test_2";
+      const _et_4f796f70cdd7 = "_et_4f796f70cdd7";
+      const _et_b8da8bac988e = "_et_b8da8bac988e";
       /*#__PURE__*/ _jsx("list", {
           attributes: {
               "id": listId,
               "class": "feed"
           },
           $0: [
-              /*#__PURE__*/ _jsx(_et_2d408_test_1, {
+              /*#__PURE__*/ _jsx(_et_4f796f70cdd7, {
                   attributeSlots: [
                       firstKey
                   ],
@@ -300,7 +300,7 @@ describe('element template', () => {
                       "full-span": true
                   }
               }, "a"),
-              /*#__PURE__*/ _jsx(_et_2d408_test_2, {
+              /*#__PURE__*/ _jsx(_et_b8da8bac988e, {
                   attributeSlots: [
                       secondKey
                   ],
