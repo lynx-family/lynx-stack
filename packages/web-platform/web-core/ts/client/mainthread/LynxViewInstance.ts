@@ -183,9 +183,11 @@ export class LynxViewInstance implements AsyncDisposable {
       currentUrl,
       urlMap,
     );
-    if (!isLazy) {
+    // External bundles carry only custom sections (no lepus root chunk), so
+    // there is nothing to execute on the main thread for them.
+    if (!isLazy && urlMap && urlMap['root']) {
       await this.mtsRealm.loadScript(
-        urlMap['root']!,
+        urlMap['root'],
       );
       this.onMTSScriptsExecuted();
     }
@@ -299,6 +301,10 @@ export class LynxViewInstance implements AsyncDisposable {
       this.transformREM,
       {
         enableCSSSelector: this.#pageConfig!['enableCSSSelector'],
+        // An external bundle ships global styles (they apply to the consumer's
+        // elements), so decode its StyleInfo unscoped rather than scoping it to
+        // the bundle url the way a lazy component's styles are scoped.
+        isLazy: 'false',
       },
     ).then(
       () => ({ url, code: 0, errorMsg: '' }),

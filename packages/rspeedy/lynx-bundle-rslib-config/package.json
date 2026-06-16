@@ -38,7 +38,8 @@
   "dependencies": {
     "@lynx-js/css-serializer": "workspace:*",
     "@lynx-js/runtime-wrapper-webpack-plugin": "workspace:*",
-    "@lynx-js/tasm": "0.0.39"
+    "@lynx-js/tasm": "0.0.39",
+    "@lynx-js/web-core": "workspace:*"
   },
   "devDependencies": {
     "@lynx-js/react": "workspace:*",

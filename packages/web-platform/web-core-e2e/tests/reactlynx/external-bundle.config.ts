@@ -15,10 +15,12 @@ const config: Config = mergeRspeedyConfig(commonConfig(), {
     pluginExternalBundle({
       externals: {
         'greeting-lib': {
-          // Served by the e2e dev server from the package `resources/` dir
-          // (rsbuild.config.ts `publicDir: [{ name: '.' }]`).
+          // A real external bundle built by `pnpm build:external-libs`
+          // (external-libs/greeting) as a web binary bundle, served by the e2e
+          // dev server from the package `resources/` dir (rsbuild.config.ts
+          // `publicDir: [{ name: '.' }]`).
           url:
-            `http://localhost:${port}/resources/external-bundle/greeting.lynx.bundle`,
+            `http://localhost:${port}/resources/external-bundle/greeting.web.bundle`,
           libraryName: 'Greeting',
           background: { sectionPath: 'greeting' },
           mainThread: { sectionPath: 'greeting__main-thread' },

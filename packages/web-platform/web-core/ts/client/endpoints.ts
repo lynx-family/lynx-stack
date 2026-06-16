@@ -211,13 +211,13 @@ export const queryComponentEndpoint = createRpcEndpoint<
 
 /**
  * Fetch + decode + cache an external `.lynx.bundle` on the main thread for a
- * background-thread `lynx.fetchBundle` call, returning the response plus the JS
- * sources of its executable custom sections so the bts `lynx.loadScript` can
- * evaluate them synchronously.
+ * background-thread `lynx.fetchBundle` call. The handler also registers the
+ * bundle's raw JS sections with the worker (via {@link updateBTSChunkEndpoint})
+ * so the bts `lynx.loadScript` can load them through the shared chunk loader.
  */
 export const fetchExternalBundleEndpoint = createRpcEndpoint<
   [url: string],
-  ExternalBundleResponse & { sources: Record<string, string> }
+  ExternalBundleResponse
 >('fetchExternalBundle', false, true);
 
 export const updateBTSChunkEndpoint = createRpcEndpoint<

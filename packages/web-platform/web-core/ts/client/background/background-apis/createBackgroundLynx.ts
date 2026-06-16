@@ -28,11 +28,6 @@ export function createBackgroundLynx(
   const fetchExternalBundle = mainThreadRpc.createCall(
     fetchExternalBundleEndpoint,
   );
-  // url -> { sectionPath -> JS source }, populated by fetchBundle so the
-  // synchronous loadScript can evaluate a section without another round-trip.
-  const externalSectionCache = new Map<string, Record<string, string>>();
-  // url -> sectionPath -> evaluated module exports (load each section once).
-  const externalModuleCache = new Map<string, Map<string, unknown>>();
   return {
     __globalProps: globalProps,
     getJSModule(_moduleName: string): any {
@@ -69,43 +64,21 @@ export function createBackgroundLynx(
     reload: () => {
       mainThreadRpc.invoke(reloadEndpoint, []);
     },
-    async fetchBundle(url: string) {
-      const { sources, ...response } = await fetchExternalBundle(url);
-      if (response.code === 0) {
-        externalSectionCache.set(response.url, sources);
-      }
-      return response;
+    fetchBundle(url: string) {
+      return fetchExternalBundle(url);
     },
     loadScript(sectionPath: string, options: { bundleName: string }) {
-      const { bundleName } = options;
-      let modules = externalModuleCache.get(bundleName);
-      if (modules?.has(sectionPath)) {
-        return modules.get(sectionPath);
-      }
-      const source = externalSectionCache.get(bundleName)?.[sectionPath];
-      if (source === undefined) {
+      if (!nativeApp.tt) {
         throw new Error(
-          `lynx.loadScript: section "${sectionPath}" not loaded for bundle ${bundleName}. Call lynx.fetchBundle first.`,
+          `lynx.loadScript: card is not ready while loading section "${sectionPath}".`,
         );
       }
-      const moduleObj: { exports: unknown } = { exports: {} };
-      const fn = new Function(
-        'module',
-        'exports',
-        'lynx',
-        'globalThis',
-        `${source}\n//# sourceURL=${bundleName}/${sectionPath}`,
-      );
-      // Pass the chunk's own `lynx` (the lynx-core wrapper) so a section that
-      // references `lynx` at evaluation time sees the same object the consumer
-      // mounts onto.
-      fn(moduleObj, moduleObj.exports, nativeApp.tt?.lynx, globalThis);
-      if (!modules) {
-        modules = new Map();
-        externalModuleCache.set(bundleName, modules);
-      }
-      modules.set(sectionPath, moduleObj.exports);
-      return moduleObj.exports;
+      // `fetchBundle` registered the bundle's raw sections with the worker as
+      // bts chunks (updateBTSChunk -> templateCache), so reuse the shared chunk
+      // loader to fetch + wrap + run the section to its exports.
+      return nativeApp.loadScript(sectionPath, options.bundleName).init({
+        tt: nativeApp.tt,
+      });
     },
   };
 }

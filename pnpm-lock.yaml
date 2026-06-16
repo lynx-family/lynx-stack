@@ -1431,6 +1431,9 @@ importers:
       '@lynx-js/tasm':
         specifier: 0.0.39
         version: 0.0.39
+      '@lynx-js/web-core':
+        specifier: workspace:*
+        version: link:../../web-platform/web-core
     devDependencies:
       '@lynx-js/react':
         specifier: workspace:*
@@ -1987,6 +1990,9 @@ importers:
       '@lynx-js/external-bundle-rsbuild-plugin':
         specifier: workspace:*
         version: link:../../rspeedy/plugin-external-bundle
+      '@lynx-js/lynx-bundle-rslib-config':
+        specifier: workspace:*
+        version: link:../../rspeedy/lynx-bundle-rslib-config
       '@lynx-js/playwright-fixtures':
         specifier: workspace:*
         version: link:../playwright-fixtures
@@ -2011,6 +2017,9 @@ importers:
       '@rsbuild/core':
         specifier: catalog:rsbuild
         version: 2.0.11(core-js@3.48.0)
+      '@rslib/core':
+        specifier: 0.21.5
+        version: 0.21.5(@microsoft/api-extractor@7.58.2(@types/node@24.10.13))(@typescript/native-preview@7.0.0-dev.20260212.1)(core-js@3.48.0)(typescript@5.9.3)
       nyc:
         specifier: ^17.1.0
         version: 17.1.0

@@ -243,10 +243,23 @@ export class BackgroundThread implements AsyncDisposable {
     this.#rpc.registerHandler(
       fetchExternalBundleEndpoint,
       (url: string) => {
-        return this.#lynxViewInstance.loadExternalBundle(url).then((res) => ({
-          ...res,
-          sources: templateManager.getExternalSectionSources(url),
-        }));
+        return this.#lynxViewInstance.loadExternalBundle(url).then((res) => {
+          if (res.code !== 0) {
+            return res;
+          }
+          // Deliver the bundle's raw JS sections to the worker the same way the
+          // card's own bts chunks are delivered (updateBTSChunk ->
+          // templateCache), so the worker loads them through the shared
+          // `lynx.loadScript` (readScript) path.
+          const sources = templateManager.getExternalSectionSources(url);
+          const sectionUrls: Record<string, string> = {};
+          for (const [sectionPath, source] of Object.entries(sources)) {
+            sectionUrls[`/${sectionPath}`] = URL.createObjectURL(
+              new Blob([source], { type: 'text/javascript' }),
+            );
+          }
+          return this.updateBTSChunk(url, sectionUrls).then(() => res);
+        });
       },
     );
     registerReloadHandler(this.#rpc, this.#lynxViewInstance);

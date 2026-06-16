@@ -331,11 +331,18 @@ async function handleStream(
         break;
       }
       case TemplateSectionLabel.CustomSections: {
+        // Web-encoded custom sections are UTF-16 JSON (see
+        // `webEncoder.encodeAsJSON`); decode them back into the
+        // `{ [sectionPath]: { content } }` object that `getCustomSectionSync`
+        // and `lynx.loadScript` read. (The legacy JSON-bundle path in
+        // `handleJSON` already produces this object shape and is untouched.)
         postMessage(
-          { type: 'section', label, url, data: content.buffer } as MainMessage,
           {
-            transfer: [content.buffer],
-          },
+            type: 'section',
+            label,
+            url,
+            data: decodeJSONMap<{ content?: unknown }>(content),
+          } as MainMessage,
         );
         break;
       }

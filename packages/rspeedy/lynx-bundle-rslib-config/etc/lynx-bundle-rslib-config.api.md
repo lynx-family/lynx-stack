@@ -23,6 +23,7 @@ export function defineExternalBundleRslibConfig(userLibConfig: ExternalBundleLib
 // @public
 export interface EncodeOptions {
     engineVersion?: string;
+    target?: 'web' | 'tasm';
 }
 
 // @public
