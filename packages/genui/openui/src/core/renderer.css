@@ -117,6 +117,18 @@
   justify-content: space-between;
 }
 
+.OpenUIJustifyAround {
+  justify-content: space-around;
+}
+
+.OpenUIJustifyEvenly {
+  justify-content: space-evenly;
+}
+
+.OpenUIJustifyStretch {
+  justify-content: stretch;
+}
+
 /* ===== Card ===== */
 .OpenUICard {
   width: 100%;
@@ -480,6 +492,8 @@
 
 /* ===== CheckBox ===== */
 .OpenUICheckBoxRow {
+  width: 100%;
+  min-width: 0;
   display: flex;
   flex-direction: row;
   align-items: center;
@@ -507,6 +521,24 @@
 .OpenUICheckBoxInput.ui-checked {
   background-color: rgba(59, 130, 246, 1);
   border-color: rgba(59, 130, 246, 1);
+}
+
+.OpenUICheckBoxMark {
+  color: #ffffff;
+  font-size: 24rpx;
+  line-height: 1;
+  font-weight: 800;
+  opacity: 0;
+}
+
+.OpenUICheckBoxInput.ui-checked .OpenUICheckBoxMark {
+  opacity: 1;
+}
+
+.OpenUICheckBoxLabelHitbox {
+  flex: 1;
+  min-width: 0;
+  padding: 4rpx 0;
 }
 
 .dark .OpenUICheckBoxInput {
@@ -795,4 +827,516 @@
 
 .dark .OpenUITextFieldError {
   color: rgba(248, 113, 113, 1);
+}
+
+/* ===== Row / Column / List ===== */
+.OpenUIRow,
+.OpenUIColumn,
+.OpenUIList {
+  width: 100%;
+  min-width: 0;
+  display: flex;
+}
+
+.OpenUIListTemplateHint {
+  color: rgba(0, 0, 0, 0.45);
+  font-size: 22rpx;
+  line-height: 32rpx;
+}
+
+.OpenUIListDivider {
+  flex-shrink: 0;
+  background-color: rgba(0, 0, 0, 0.08);
+}
+
+.OpenUIListDividerHorizontal {
+  width: 100%;
+  height: 1rpx;
+}
+
+.OpenUIListDividerVertical {
+  width: 1rpx;
+  min-height: 36rpx;
+  align-self: stretch;
+}
+
+.dark .OpenUIListTemplateHint {
+  color: rgba(255, 255, 255, 0.45);
+}
+
+.dark .OpenUIListDivider {
+  background-color: rgba(255, 255, 255, 0.12);
+}
+
+/* ===== Text ===== */
+.OpenUIText {
+  color: rgba(0, 0, 0, 0.84);
+  line-height: 1.4;
+}
+
+.OpenUITextH1 {
+  font-size: 40rpx;
+  font-weight: 800;
+}
+
+.OpenUITextH2 {
+  font-size: 36rpx;
+  font-weight: 780;
+}
+
+.OpenUITextH3 {
+  font-size: 32rpx;
+  font-weight: 720;
+}
+
+.OpenUITextH4 {
+  font-size: 30rpx;
+  font-weight: 680;
+}
+
+.OpenUITextH5 {
+  font-size: 28rpx;
+  font-weight: 640;
+}
+
+.OpenUITextCaption {
+  color: rgba(0, 0, 0, 0.5);
+  font-size: 22rpx;
+}
+
+.OpenUITextBody {
+  font-size: 26rpx;
+}
+
+.dark .OpenUIText {
+  color: rgba(255, 255, 255, 0.88);
+}
+
+.dark .OpenUITextCaption {
+  color: rgba(255, 255, 255, 0.58);
+}
+
+/* ===== Divider ===== */
+.OpenUIDivider {
+  flex-shrink: 0;
+  background-color: rgba(0, 0, 0, 0.08);
+}
+
+.OpenUIDividerHorizontal {
+  width: 100%;
+  height: 1rpx;
+}
+
+.OpenUIDividerVertical {
+  width: 1rpx;
+  min-height: 48rpx;
+  align-self: stretch;
+}
+
+.dark .OpenUIDivider {
+  background-color: rgba(255, 255, 255, 0.12);
+}
+
+/* ===== Tabs ===== */
+.OpenUITabs {
+  width: 100%;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 12rpx;
+}
+
+.OpenUITabList {
+  display: flex;
+  flex-direction: row;
+  flex-wrap: wrap;
+  gap: 8rpx;
+  padding-bottom: 4rpx;
+}
+
+.OpenUITabTrigger {
+  padding: 9rpx 14rpx;
+  border-radius: 999rpx;
+  border-width: 1rpx;
+  border-style: solid;
+}
+
+.OpenUITabTriggerActive {
+  background-color: rgba(59, 130, 246, 0.12);
+  border-color: rgba(59, 130, 246, 0.28);
+}
+
+.OpenUITabTriggerInactive {
+  background-color: rgba(0, 0, 0, 0.035);
+  border-color: rgba(0, 0, 0, 0.08);
+}
+
+.OpenUITabTriggerText {
+  color: rgba(0, 0, 0, 0.82);
+  font-size: 24rpx;
+  font-weight: 650;
+}
+
+.OpenUITabBody {
+  width: 100%;
+  min-width: 0;
+}
+
+.dark .OpenUITabTriggerActive {
+  background-color: rgba(96, 165, 250, 0.2);
+  border-color: rgba(96, 165, 250, 0.32);
+}
+
+.dark .OpenUITabTriggerInactive {
+  background-color: rgba(255, 255, 255, 0.06);
+  border-color: rgba(255, 255, 255, 0.12);
+}
+
+.dark .OpenUITabTriggerText {
+  color: rgba(255, 255, 255, 0.88);
+}
+
+/* ===== ChoicePicker ===== */
+.OpenUIChoicePicker {
+  width: 100%;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 10rpx;
+}
+
+.OpenUIChoicePickerLabel {
+  color: rgba(0, 0, 0, 0.58);
+  font-size: 26rpx;
+  font-weight: 650;
+  line-height: 1.5;
+}
+
+.OpenUIChoicePickerHint {
+  color: rgba(0, 0, 0, 0.45);
+  font-size: 22rpx;
+  line-height: 1.4;
+}
+
+.OpenUIChoicePickerOptions {
+  display: flex;
+  flex-direction: row;
+  flex-wrap: wrap;
+  gap: 10rpx;
+}
+
+.OpenUIChoicePicker-list .OpenUIChoicePickerOptions,
+.OpenUIChoicePicker-dropdown .OpenUIChoicePickerOptions {
+  flex-direction: column;
+}
+
+.OpenUIChoiceItem {
+  padding: 10rpx 14rpx;
+  border-radius: 12rpx;
+  border-width: 1rpx;
+  border-style: solid;
+  border-color: rgba(0, 0, 0, 0.1);
+  background-color: rgba(0, 0, 0, 0.035);
+}
+
+.OpenUIChoicePicker-card .OpenUIChoiceItem {
+  border-radius: 16rpx;
+  padding: 14rpx 16rpx;
+}
+
+.OpenUIChoiceItemSelected {
+  border-color: rgba(59, 130, 246, 0.42);
+  background-color: rgba(59, 130, 246, 0.12);
+}
+
+.OpenUIChoiceItemText {
+  color: rgba(0, 0, 0, 0.82);
+  font-size: 24rpx;
+  font-weight: 560;
+}
+
+.dark .OpenUIChoicePickerLabel {
+  color: rgba(255, 255, 255, 0.74);
+}
+
+.dark .OpenUIChoicePickerHint {
+  color: rgba(255, 255, 255, 0.48);
+}
+
+.dark .OpenUIChoiceItem {
+  border-color: rgba(255, 255, 255, 0.12);
+  background-color: rgba(255, 255, 255, 0.06);
+}
+
+.dark .OpenUIChoiceItemSelected {
+  border-color: rgba(96, 165, 250, 0.36);
+  background-color: rgba(96, 165, 250, 0.18);
+}
+
+.dark .OpenUIChoiceItemText {
+  color: rgba(255, 255, 255, 0.88);
+}
+
+/* ===== Modal ===== */
+.OpenUIModal {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 10rpx;
+}
+
+.OpenUIModalTrigger {
+  width: 100%;
+}
+
+.OpenUIModalMask {
+  width: 100%;
+  min-width: 0;
+  padding: 10rpx 0 0;
+  display: flex;
+  align-items: stretch;
+  justify-content: flex-start;
+}
+
+.OpenUIModalContent {
+  width: 100%;
+  min-width: 0;
+  padding: 16rpx;
+  border-radius: 16rpx;
+  border-width: 1rpx;
+  border-style: solid;
+  border-color: rgba(0, 0, 0, 0.08);
+  background-color: #ffffff;
+  display: flex;
+  flex-direction: column;
+  gap: 14rpx;
+}
+
+.OpenUIModalHeader {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12rpx;
+}
+
+.OpenUIModalTitle {
+  min-width: 0;
+  color: rgba(0, 0, 0, 0.88);
+  font-size: 28rpx;
+  font-weight: 700;
+}
+
+.OpenUIModalClose {
+  width: 40rpx;
+  height: 40rpx;
+  border-radius: 999rpx;
+  background-color: rgba(0, 0, 0, 0.05);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.OpenUIModalCloseText {
+  color: rgba(0, 0, 0, 0.72);
+  font-size: 24rpx;
+  font-weight: 700;
+}
+
+.OpenUIModalBody {
+  width: 100%;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 12rpx;
+}
+
+.dark .OpenUIModalMask {
+  background-color: transparent;
+}
+
+.dark .OpenUIModalContent {
+  background-color: #171717;
+  border-color: rgba(255, 255, 255, 0.12);
+}
+
+.dark .OpenUIModalTitle {
+  color: rgba(255, 255, 255, 0.92);
+}
+
+.dark .OpenUIModalClose {
+  background-color: rgba(255, 255, 255, 0.1);
+}
+
+.dark .OpenUIModalCloseText {
+  color: rgba(255, 255, 255, 0.86);
+}
+
+/* ===== DateTimeInput ===== */
+.OpenUIDateTimeInput {
+  width: 100%;
+  min-width: 0;
+  padding: 14rpx 16rpx;
+  border-radius: 14rpx;
+  border-width: 1rpx;
+  border-style: solid;
+  border-color: rgba(0, 0, 0, 0.1);
+  background-color: rgba(0, 0, 0, 0.025);
+  display: flex;
+  flex-direction: column;
+  gap: 6rpx;
+}
+
+.OpenUIDateTimeLabel {
+  color: rgba(0, 0, 0, 0.55);
+  font-size: 24rpx;
+  font-weight: 650;
+}
+
+.OpenUIDateTimeValue {
+  color: rgba(0, 0, 0, 0.88);
+  font-size: 28rpx;
+  font-weight: 650;
+}
+
+.OpenUIDateTimeHint {
+  color: rgba(0, 0, 0, 0.45);
+  font-size: 22rpx;
+  line-height: 1.4;
+}
+
+.dark .OpenUIDateTimeInput {
+  border-color: rgba(255, 255, 255, 0.12);
+  background-color: rgba(255, 255, 255, 0.06);
+}
+
+.dark .OpenUIDateTimeLabel {
+  color: rgba(255, 255, 255, 0.72);
+}
+
+.dark .OpenUIDateTimeValue {
+  color: rgba(255, 255, 255, 0.9);
+}
+
+.dark .OpenUIDateTimeHint {
+  color: rgba(255, 255, 255, 0.48);
+}
+
+/* ===== Media ===== */
+.OpenUIAudio,
+.OpenUIVideo {
+  width: 100%;
+  min-width: 0;
+  border-radius: 16rpx;
+  border-width: 1rpx;
+  border-style: solid;
+  border-color: rgba(0, 0, 0, 0.08);
+  background-color: rgba(0, 0, 0, 0.025);
+}
+
+.OpenUIAudio {
+  padding: 14rpx;
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: 12rpx;
+}
+
+.OpenUIAudioIcon {
+  width: 44rpx;
+  height: 44rpx;
+  border-radius: 999rpx;
+  background-color: rgba(59, 130, 246, 0.12);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.OpenUIAudioIconText {
+  font-family: "Material Icons Round";
+  color: rgba(59, 130, 246, 1);
+  font-size: 28rpx;
+  line-height: 1;
+}
+
+.OpenUIAudioContent,
+.OpenUIVideoMeta {
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 4rpx;
+}
+
+.OpenUIAudioTitle,
+.OpenUIVideoTitle {
+  color: rgba(0, 0, 0, 0.86);
+  font-size: 26rpx;
+  font-weight: 650;
+}
+
+.OpenUIAudioUrl,
+.OpenUIVideoUrl {
+  color: rgba(0, 0, 0, 0.48);
+  font-size: 22rpx;
+  line-height: 1.4;
+}
+
+.OpenUIVideo {
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
+
+.OpenUIVideoPoster {
+  width: 100%;
+  height: 180rpx;
+  background-color: rgba(15, 23, 42, 0.08);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.OpenUIVideoPlay {
+  font-family: "Material Icons Round";
+  color: rgba(15, 23, 42, 0.62);
+  font-size: 56rpx;
+  line-height: 1;
+}
+
+.OpenUIVideoMeta {
+  padding: 14rpx;
+}
+
+.dark .OpenUIAudio,
+.dark .OpenUIVideo {
+  border-color: rgba(255, 255, 255, 0.12);
+  background-color: rgba(255, 255, 255, 0.06);
+}
+
+.dark .OpenUIAudioIcon {
+  background-color: rgba(96, 165, 250, 0.2);
+}
+
+.dark .OpenUIAudioIconText {
+  color: rgba(96, 165, 250, 1);
+}
+
+.dark .OpenUIAudioTitle,
+.dark .OpenUIVideoTitle {
+  color: rgba(255, 255, 255, 0.9);
+}
+
+.dark .OpenUIAudioUrl,
+.dark .OpenUIVideoUrl {
+  color: rgba(255, 255, 255, 0.48);
+}
+
+.dark .OpenUIVideoPoster {
+  background-color: rgba(255, 255, 255, 0.08);
+}
+
+.dark .OpenUIVideoPlay {
+  color: rgba(255, 255, 255, 0.72);
 }
