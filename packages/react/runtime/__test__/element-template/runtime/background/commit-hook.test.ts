@@ -21,6 +21,7 @@ import { backgroundElementTemplateInstanceManager } from '../../../../src/elemen
 import {
   globalCommitContext,
   markRemovedSubtreeForPostDispatchTeardown,
+  takeRemovedSubtreesForPostDispatchTeardown,
 } from '../../../../src/element-template/background/commit-context.js';
 import { ElementTemplateUpdateOps } from '../../../../src/element-template/protocol/opcodes.js';
 import { ElementTemplateLifecycleConstant } from '../../../../src/element-template/protocol/lifecycle-constant.js';
@@ -429,6 +430,110 @@ describe('ElementTemplate commit hook', () => {
       vi.advanceTimersByTime(1);
 
       expect(backgroundElementTemplateInstanceManager.get(root.instanceId)).toBeUndefined();
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+
+  it('keeps a removed subtree that is reattached before delayed cleanup', () => {
+    vi.useFakeTimers();
+    try {
+      const parent = new BackgroundElementTemplateInstance('parent');
+      const root = new BackgroundElementTemplateInstance('root');
+      parent.appendChild(root);
+      markElementTemplateHydrated();
+      parent.markMaterializedByHydration();
+      root.markMaterializedByHydration();
+
+      parent.removeChild(root);
+      scheduleElementTemplateRemovedSubtreeCleanup(takeRemovedSubtreesForPostDispatchTeardown());
+      parent.appendChild(root);
+
+      vi.advanceTimersByTime(10000);
+
+      expect(backgroundElementTemplateInstanceManager.get(root.instanceId)).toBe(root);
+      expect(root.parent).toBe(parent);
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+
+  it('releases detached subtrees without destroying data needed for later reattach', () => {
+    vi.useFakeTimers();
+    try {
+      const parent = new BackgroundElementTemplateInstance('parent');
+      const root = new BackgroundElementTemplateInstance('root');
+      const child = new BackgroundElementTemplateInstance('child', ['value']);
+      root.appendChild(child);
+      parent.appendChild(root);
+      markElementTemplateHydrated();
+      parent.markMaterializedByHydration();
+      root.markMaterializedByHydration();
+      child.markMaterializedByHydration();
+
+      parent.removeChild(root);
+      scheduleElementTemplateRemovedSubtreeCleanup(takeRemovedSubtreesForPostDispatchTeardown());
+      vi.advanceTimersByTime(10000);
+
+      expect(backgroundElementTemplateInstanceManager.get(root.instanceId)).toBeUndefined();
+      expect(backgroundElementTemplateInstanceManager.get(child.instanceId)).toBeUndefined();
+      expect(root.firstChild).toBe(child);
+      expect(child.parent).toBe(root);
+      expect(child.attributeSlots).toEqual(['value']);
+
+      globalCommitContext.ops = [];
+      parent.appendChild(root);
+
+      expect(backgroundElementTemplateInstanceManager.get(root.instanceId)).toBe(root);
+      expect(backgroundElementTemplateInstanceManager.get(child.instanceId)).toBe(child);
+      expect(globalCommitContext.ops).toEqual([
+        ElementTemplateUpdateOps.createTemplate,
+        child.instanceId,
+        'child',
+        null,
+        ['value'],
+        [],
+        ElementTemplateUpdateOps.createTemplate,
+        root.instanceId,
+        'root',
+        null,
+        [],
+        [[child.instanceId]],
+        ElementTemplateUpdateOps.insertNode,
+        parent.instanceId,
+        0,
+        root.instanceId,
+        0,
+      ]);
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+
+  it('does not overwrite a conflicting manager entry when recreating a detached subtree', () => {
+    vi.useFakeTimers();
+    try {
+      const parent = new BackgroundElementTemplateInstance('parent');
+      const root = new BackgroundElementTemplateInstance('root');
+      parent.appendChild(root);
+      markElementTemplateHydrated();
+      parent.markMaterializedByHydration();
+      root.markMaterializedByHydration();
+
+      parent.removeChild(root);
+      scheduleElementTemplateRemovedSubtreeCleanup(takeRemovedSubtreesForPostDispatchTeardown());
+      vi.advanceTimersByTime(10000);
+      expect(backgroundElementTemplateInstanceManager.get(root.instanceId)).toBeUndefined();
+
+      const conflicting = new BackgroundElementTemplateInstance('conflicting');
+      backgroundElementTemplateInstanceManager.updateId(conflicting.instanceId, root.instanceId);
+      globalCommitContext.ops = [];
+
+      expect(() => parent.appendChild(root)).toThrow(
+        `ElementTemplate handleId ${root.instanceId} is already bound.`,
+      );
+      expect(backgroundElementTemplateInstanceManager.get(root.instanceId)).toBe(conflicting);
+      expect(globalCommitContext.ops).toEqual([]);
     } finally {
       vi.useRealTimers();
     }

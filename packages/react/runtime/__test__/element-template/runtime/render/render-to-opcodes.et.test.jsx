@@ -220,6 +220,102 @@ describe('Element Template renderToOpcodes', () => {
     expect(opcodes).toContain('loading');
   });
 
+  it('renders every Fragment fallback child when a child suspends', () => {
+    function AsyncText() {
+      throw Promise.resolve();
+    }
+
+    const opcodes = renderToString(
+      h(
+        Suspense,
+        {
+          fallback: h(
+            Fragment,
+            null,
+            'loading 1',
+            'loading 2',
+          ),
+        },
+        h(AsyncText, null),
+      ),
+    );
+
+    expect(opcodes).toContain('loading 1');
+    expect(opcodes).toContain('loading 2');
+  });
+
+  it('renders resolved outer content with the nearest inner Suspense fallback', () => {
+    function AsyncText() {
+      throw Promise.resolve();
+    }
+
+    function OuterContent() {
+      return h(
+        Fragment,
+        null,
+        'before',
+        h(
+          Suspense,
+          { fallback: 'inner loading' },
+          h(AsyncText, null),
+        ),
+        'after',
+      );
+    }
+
+    const opcodes = renderToString(
+      h(
+        Suspense,
+        { fallback: 'outer loading' },
+        h(OuterContent, null),
+      ),
+    );
+
+    expect(opcodes).toContain('before');
+    expect(opcodes).toContain('inner loading');
+    expect(opcodes).toContain('after');
+    expect(opcodes).not.toContain('outer loading');
+  });
+
+  it('renders already resolved Suspense content without fallback', async () => {
+    let resolved = false;
+    const pending = Promise.resolve();
+    void pending.then(() => {
+      resolved = true;
+    });
+
+    function Suspender() {
+      if (!resolved) {
+        throw pending;
+      }
+      return 'ready';
+    }
+
+    const pendingOpcodes = renderToString(
+      h(
+        Suspense,
+        { fallback: 'loading' },
+        h(Suspender, null),
+      ),
+    );
+
+    expect(pendingOpcodes).toContain('loading');
+    expect(pendingOpcodes).not.toContain('ready');
+
+    await pending;
+
+    const resolvedOpcodes = renderToString(
+      h(
+        Suspense,
+        { fallback: 'loading' },
+        h(Suspender, null),
+      ),
+    );
+
+    expect(resolvedOpcodes).toContain('ready');
+    expect(resolvedOpcodes).not.toContain('loading');
+  });
+
   it('does not re-render function components when main-thread hooks schedule an update during render', () => {
     function DirtyHookComponent() {
       const [count, setCount] = useState(0);

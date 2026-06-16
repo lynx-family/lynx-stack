@@ -87,6 +87,11 @@
       "default": "./dist/catalog/Divider/index.js"
     },
     "./catalog/Divider/catalog.json": "./dist/catalog/Divider/catalog.json",
+    "./catalog/LazyComponent": {
+      "types": "./dist/catalog/LazyComponent/index.d.ts",
+      "default": "./dist/catalog/LazyComponent/index.js"
+    },
+    "./catalog/LazyComponent/catalog.json": "./dist/catalog/LazyComponent/catalog.json",
     "./catalog/TextField": {
       "types": "./dist/catalog/TextField/index.d.ts",
       "default": "./dist/catalog/TextField/index.js"

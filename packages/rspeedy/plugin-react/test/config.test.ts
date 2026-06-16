@@ -2441,6 +2441,32 @@ describe('Config', () => {
     // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
     expect(templatePlugin?.options.targetSdkVersion).toBe('3.4')
   })
+
+  test('element-template lazy bundle wires transformed lazy import to the ET lazy entry', async () => {
+    const { pluginReactLynx } = await import('../src/pluginReactLynx.js')
+
+    const rsbuild = await createRspeedy({
+      rspeedyConfig: {
+        plugins: [
+          pluginReactLynx({
+            experimental_isLazyBundle: true,
+            experimental_useElementTemplate: true,
+          }),
+          pluginStubRspeedyAPI(),
+        ],
+      },
+    })
+
+    const [config] = await rsbuild.initConfigs()
+
+    expect(config?.resolve?.alias).toHaveProperty(
+      '@lynx-js/react/experimental/lazy/import$',
+      expect.stringContaining(
+        '/packages/react/runtime/lazy/element-template-import.js'
+          .replaceAll('/', path.sep),
+      ),
+    )
+  })
   ;['development', 'production'].forEach(mode => {
     test(`lazyBundle on ${mode} mode`, async () => {
       rstest.stubEnv('NODE_ENV', mode)

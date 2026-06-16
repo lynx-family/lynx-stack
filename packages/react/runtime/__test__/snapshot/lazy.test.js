@@ -8,6 +8,41 @@ import * as ReactInternalExports from '../../lazy/internal.js';
 import * as ReactJSXRuntimeExports from '../../lazy/jsx-runtime.js';
 import * as ReactJSXDevRuntimeExports from '../../lazy/jsx-dev-runtime.js';
 import * as ReactLegacyReactRuntimeExports from '../../lazy/legacy-react-runtime.js';
+import {
+  RUNTIME_BACKEND_ELEMENT_TEMPLATE,
+  RUNTIME_BACKEND_SNAPSHOT,
+  registerLazyRuntimeBackend,
+  sRuntimeBackend,
+  target,
+} from '../../lazy/target.js';
+
+function restoreDescriptor(target, symbol, descriptor) {
+  if (descriptor) {
+    Object.defineProperty(target, symbol, descriptor);
+  } else {
+    delete target[symbol];
+  }
+}
+
+async function withRuntimeBackend(backend, callback) {
+  const descriptor = Object.getOwnPropertyDescriptor(target, sRuntimeBackend);
+  if (backend === undefined) {
+    delete target[sRuntimeBackend];
+  } else {
+    Object.defineProperty(target, sRuntimeBackend, {
+      value: backend,
+      enumerable: false,
+      writable: false,
+      configurable: true,
+    });
+  }
+
+  try {
+    return await callback();
+  } finally {
+    restoreDescriptor(target, sRuntimeBackend, descriptor);
+  }
+}
 
 describe('Lazy Exports', () => {
   test('export APIs from "react"', async () => {
@@ -119,5 +154,49 @@ describe('Lazy Exports', () => {
 
     const { target } = await import('../../lazy/target.js');
     expect(target).toBe(globalThis);
+  });
+
+  test('records the Snapshot backend for the standalone lazy import', () => {
+    expect(target[sRuntimeBackend]).toBe(RUNTIME_BACKEND_SNAPSHOT);
+  });
+
+  test('records a lazy backend when no main template marker exists', async () => {
+    await withRuntimeBackend(undefined, () => {
+      registerLazyRuntimeBackend(RUNTIME_BACKEND_SNAPSHOT);
+
+      expect(target[sRuntimeBackend]).toBe(RUNTIME_BACKEND_SNAPSHOT);
+    });
+  });
+
+  test('allows matching lazy backend registration', () => {
+    expect(() => registerLazyRuntimeBackend(RUNTIME_BACKEND_SNAPSHOT)).not.toThrow();
+  });
+
+  test('throws when a lazy bundle backend does not match the main template backend', () => {
+    expect(() => registerLazyRuntimeBackend(RUNTIME_BACKEND_ELEMENT_TEMPLATE)).toThrow(
+      'Snapshot and Element Template templates cannot share lazy bundles.',
+    );
+  });
+
+  test('throws before ET lazy import initializes ET runtime under a Snapshot template', async () => {
+    const originalUpdateCardData = lynxCoreInject.tt.updateCardData;
+
+    await expect(import('../../lazy/element-template-import.js')).rejects.toThrow(
+      'Snapshot and Element Template templates cannot share lazy bundles.',
+    );
+    expect(lynxCoreInject.tt.updateCardData).toBe(originalUpdateCardData);
+  });
+
+  test('throws when an ET runtime marker imports the Snapshot standalone lazy entry', async () => {
+    await withRuntimeBackend(undefined, async () => {
+      vi.resetModules();
+
+      await import('../../src/element-template/runtime-backend-marker.ts');
+      expect(target[sRuntimeBackend]).toBe(RUNTIME_BACKEND_ELEMENT_TEMPLATE);
+
+      await expect(import('../../lazy/import.js')).rejects.toThrow(
+        'Snapshot and Element Template templates cannot share lazy bundles.',
+      );
+    });
   });
 });

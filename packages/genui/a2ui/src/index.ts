@@ -93,6 +93,7 @@ export {
   DateTimeInput,
   Column,
   Divider,
+  LazyComponent,
   Image,
   LineChart,
   PieChart,

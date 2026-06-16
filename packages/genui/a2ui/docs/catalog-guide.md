@@ -59,7 +59,7 @@ Bundlers tree-shake unused components: pulling in `Text` does **not** drag
 
 ## The built-in components
 
-The package ships 20 A2UI v0.9 basic-catalog renderers. Each is an
+The package ships 21 A2UI v0.9 basic-catalog renderers. Each is an
 independent, tree-shakeable export, available from the root or from
 `@lynx-js/genui/a2ui/catalog/<Name>`.
 
@@ -77,11 +77,12 @@ independent, tree-shakeable export, available from the root or from
 
 **Content**
 
-| Component | What it renders                                                |
-| --------- | -------------------------------------------------------------- |
-| `Text`    | A string of text, with a `variant` such as `body` for styling. |
-| `Image`   | An image from a source URL.                                    |
-| `Icon`    | A named icon glyph.                                            |
+| Component       | What it renders                                                |
+| --------------- | -------------------------------------------------------------- |
+| `Text`          | A string of text, with a `variant` such as `body` for styling. |
+| `Image`         | An image from a source URL.                                    |
+| `Icon`          | A named icon glyph.                                            |
+| `LazyComponent` | A ReactLynx lazy bundle loaded from a resource URL.            |
 
 **Input and actions**
 
@@ -199,6 +200,7 @@ import {
   Column,
   DateTimeInput,
   Divider,
+  LazyComponent,
   Icon,
   Image,
   LineChart,
@@ -232,6 +234,9 @@ import dateTimeInputManifest from '@lynx-js/genui/a2ui/catalog/DateTimeInput/cat
   type: 'json',
 };
 import dividerManifest from '@lynx-js/genui/a2ui/catalog/Divider/catalog.json' with {
+  type: 'json',
+};
+import lazyComponentManifest from '@lynx-js/genui/a2ui/catalog/LazyComponent/catalog.json' with {
   type: 'json',
 };
 import iconManifest from '@lynx-js/genui/a2ui/catalog/Icon/catalog.json' with {
@@ -284,6 +289,7 @@ export const allBuiltins = defineCatalog([
   [Modal, modalManifest],
   [Button, buttonManifest],
   [Divider, dividerManifest],
+  [LazyComponent, lazyComponentManifest],
   [LineChart, lineChartManifest],
   [PieChart, pieChartManifest],
   [TextField, textFieldManifest],
