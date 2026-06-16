@@ -42,5 +42,19 @@ export function createServerLynx(
     clearTimeout: clearTimeout,
     setInterval: setInterval,
     clearInterval: clearInterval,
+    fetchBundle(url: string) {
+      // External bundle fetching is not supported during server-side rendering.
+      return Promise.resolve({
+        url,
+        code: -1,
+        errorMsg:
+          'lynx.fetchBundle is not supported during server-side rendering',
+      });
+    },
+    loadScript(_sectionPath: string, _options: { bundleName: string }) {
+      throw new Error(
+        'lynx.loadScript is not supported during server-side rendering',
+      );
+    },
   };
 }

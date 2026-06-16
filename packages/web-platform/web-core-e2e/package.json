@@ -18,6 +18,7 @@
     "test:update": "playwright test --ui --update-snapshots"
   },
   "devDependencies": {
+    "@lynx-js/external-bundle-rsbuild-plugin": "workspace:*",
     "@lynx-js/playwright-fixtures": "workspace:*",
     "@lynx-js/react": "workspace:*",
     "@lynx-js/react-rsbuild-plugin": "workspace:*",

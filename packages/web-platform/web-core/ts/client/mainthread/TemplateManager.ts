@@ -365,6 +365,40 @@ export class TemplateManager {
   public getStyleSheet(url: string): any {
     return this.getBundle(url)?.styleSheet;
   }
+
+  /**
+   * Get the JS source of one custom section of a decoded bundle, used by
+   * `lynx.loadScript` for external bundles. Returns `undefined` when the
+   * section is absent or not plain JS (e.g. a CSS or bytecode section).
+   */
+  public getExternalSectionSource(
+    url: string,
+    sectionPath: string,
+  ): string | undefined {
+    const content = (this.getBundle(url)?.customSections as
+      | Record<string, { content?: unknown }>
+      | undefined)?.[sectionPath]?.content;
+    return typeof content === 'string' ? content : undefined;
+  }
+
+  /**
+   * Get the JS sources of every plain-JS custom section of a decoded bundle,
+   * keyed by section path (shipped to the background thread so its synchronous
+   * `lynx.loadScript` can evaluate a section without a round-trip).
+   */
+  public getExternalSectionSources(url: string): Record<string, string> {
+    const customSections = this.getBundle(url)?.customSections;
+    const sources: Record<string, string> = {};
+    if (customSections && !(customSections instanceof ArrayBuffer)) {
+      for (const [key, value] of Object.entries(customSections)) {
+        const content = (value as { content?: unknown } | undefined)?.content;
+        if (typeof content === 'string') {
+          sources[key] = content;
+        }
+      }
+    }
+    return sources;
+  }
 }
 
 export const templateManager = new TemplateManager();

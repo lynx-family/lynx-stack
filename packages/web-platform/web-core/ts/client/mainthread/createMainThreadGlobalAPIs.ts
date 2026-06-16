@@ -45,6 +45,43 @@ function createMainThreadLynx(
     clearTimeout: clearTimeoutBrowserImpl,
     setInterval: setIntervalBrowserImpl,
     clearInterval: clearIntervalBrowserImpl,
+    fetchBundle(url: string) {
+      return lynxViewInstance.loadExternalBundle(url);
+    },
+    loadScript(sectionPath: string, options: { bundleName: string }) {
+      const source = templateManager.getExternalSectionSource(
+        options.bundleName,
+        sectionPath,
+      );
+      if (source === undefined) {
+        throw new Error(
+          `lynx.loadScript: section "${sectionPath}" not found or not executable on web in bundle ${options.bundleName}`,
+        );
+      }
+      // Evaluate the section in the mts iframe realm. loadScriptSync resets the
+      // iframe-global `module` then returns `module.exports`, so the wrapper
+      // assigns that global `module` (the IIFE arg) while keeping the section's
+      // own top-level declarations scoped to the IIFE.
+      const blobUrl = URL.createObjectURL(
+        new Blob(
+          [
+            ';(function(module, exports){\n',
+            source,
+            '\n})(module, (module.exports = {}));\n//# sourceURL=',
+            options.bundleName,
+            '/',
+            sectionPath,
+            '\n',
+          ],
+          { type: 'text/javascript; charset=utf-8' },
+        ),
+      );
+      try {
+        return lynxViewInstance.mtsRealm!.loadScriptSync(blobUrl);
+      } finally {
+        URL.revokeObjectURL(blobUrl);
+      }
+    },
   };
 }
 

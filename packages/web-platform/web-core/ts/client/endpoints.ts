@@ -9,6 +9,7 @@ import type {
   LynxCrossThreadEvent,
   InvokeCallbackRes,
   ElementAnimationOptions,
+  ExternalBundleResponse,
   UpdateDataOptions,
   TimingEntry,
 } from '../types/index.js';
@@ -207,6 +208,17 @@ export const queryComponentEndpoint = createRpcEndpoint<
   [string],
   { code: number; detail: { schema: string } }
 >('queryComponent', false, true);
+
+/**
+ * Fetch + decode + cache an external `.lynx.bundle` on the main thread for a
+ * background-thread `lynx.fetchBundle` call, returning the response plus the JS
+ * sources of its executable custom sections so the bts `lynx.loadScript` can
+ * evaluate them synchronously.
+ */
+export const fetchExternalBundleEndpoint = createRpcEndpoint<
+  [url: string],
+  ExternalBundleResponse & { sources: Record<string, string> }
+>('fetchExternalBundle', false, true);
 
 export const updateBTSChunkEndpoint = createRpcEndpoint<
   [/** url */ string, Record<string, string>],

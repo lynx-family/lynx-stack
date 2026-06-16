@@ -1984,6 +1984,9 @@ importers:
 
   packages/web-platform/web-core-e2e:
     devDependencies:
+      '@lynx-js/external-bundle-rsbuild-plugin':
+        specifier: workspace:*
+        version: link:../../rspeedy/plugin-external-bundle
       '@lynx-js/playwright-fixtures':
         specifier: workspace:*
         version: link:../playwright-fixtures

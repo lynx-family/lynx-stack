@@ -5,6 +5,7 @@
  */
 import type {
   Cloneable,
+  ExternalBundleResponse,
   InitI18nResources,
   InvokeUIMethodPAPI,
   JSRealm,
@@ -69,6 +70,8 @@ export class LynxViewInstance implements AsyncDisposable {
   readonly webElementsLoadingPromises: Promise<void>[] = [];
 
   #queryComponentCache: Map<string, Promise<unknown>> = new Map();
+  #externalBundleCache: Map<string, Promise<ExternalBundleResponse>> =
+    new Map();
   #pageConfig?: PageConfig;
   #nativeModulesMap: NativeModulesMap;
   #napiModulesMap: NapiModulesMap;
@@ -273,6 +276,39 @@ export class LynxViewInstance implements AsyncDisposable {
         return lepusRootChunkExport;
       });
     this.#queryComponentCache.set(url, promise);
+    return promise;
+  }
+
+  /**
+   * Fetch + decode + cache an external `.lynx.bundle` for `lynx.fetchBundle`.
+   * Reuses the same machinery as {@link queryComponent} — the shared decode
+   * worker, the bundle cache, and `onStyleInfoReady`, which applies the bundle's
+   * pre-processed style section via the wasm style engine — but does not load a
+   * lepus root chunk. Resolves to a response object (never rejects) so the
+   * externals plugin can branch on `code`.
+   */
+  loadExternalBundle(url: string): Promise<ExternalBundleResponse> {
+    if (this.#externalBundleCache.has(url)) {
+      return this.#externalBundleCache.get(url)!;
+    }
+    const promise = templateManager.fetchBundle(
+      url,
+      Promise.resolve(this),
+      this.transformVW,
+      this.transformVH,
+      this.transformREM,
+      {
+        enableCSSSelector: this.#pageConfig!['enableCSSSelector'],
+      },
+    ).then(
+      () => ({ url, code: 0, errorMsg: '' }),
+      (error) => ({
+        url,
+        code: -1,
+        errorMsg: (error as Error)?.message ?? String(error),
+      }),
+    );
+    this.#externalBundleCache.set(url, promise);
     return promise;
   }
 

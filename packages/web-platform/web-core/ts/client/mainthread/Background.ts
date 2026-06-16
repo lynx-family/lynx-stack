@@ -24,6 +24,7 @@ import {
   dispatchLynxViewEventEndpoint,
   updateBTSChunkEndpoint,
   queryComponentEndpoint,
+  fetchExternalBundleEndpoint,
 } from '../endpoints.js';
 import type {
   Cloneable,
@@ -34,6 +35,7 @@ import type {
 } from '../../types/index.js';
 import { LynxCrossThreadContext } from '../LynxCrossThreadContext.js';
 import { type LynxViewInstance } from './LynxViewInstance.js';
+import { templateManager } from './TemplateManager.js';
 import { registerInvokeUIMethodHandler } from './crossThreadHandlers/registerInvokeUIMethodHandler.js';
 import { registerNativePropsHandler } from './crossThreadHandlers/registerSetNativePropsHandler.js';
 import { registerGetPathInfoHandler } from './crossThreadHandlers/registerGetPathInfoHandler.js';
@@ -236,6 +238,15 @@ export class BackgroundThread implements AsyncDisposable {
             },
           };
         });
+      },
+    );
+    this.#rpc.registerHandler(
+      fetchExternalBundleEndpoint,
+      (url: string) => {
+        return this.#lynxViewInstance.loadExternalBundle(url).then((res) => ({
+          ...res,
+          sources: templateManager.getExternalSectionSources(url),
+        }));
       },
     );
     registerReloadHandler(this.#rpc, this.#lynxViewInstance);
