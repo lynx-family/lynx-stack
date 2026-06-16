@@ -2,11 +2,19 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { createElement } from 'preact';
 
 import {
+  installElementTemplateCommitHook,
   markElementTemplateHydrated,
   resetElementTemplateCommitState,
 } from '../../../../../src/element-template/background/commit-hook.js';
-import { BackgroundElementTemplateInstance } from '../../../../../src/element-template/background/instance.js';
+import {
+  BackgroundElementTemplateInstance,
+  BackgroundListElementTemplateInstance,
+} from '../../../../../src/element-template/background/instance.js';
+import { backgroundElementTemplateInstanceManager } from '../../../../../src/element-template/background/manager.js';
+import { formatElementTemplateUpdateCommands } from '../../../../../src/element-template/debug/alog.js';
 import { root } from '../../../../../src/element-template/index.js';
+import { ElementTemplateLifecycleConstant } from '../../../../../src/element-template/protocol/lifecycle-constant.js';
+import type { ElementTemplateUpdateCommitContext } from '../../../../../src/element-template/protocol/types.js';
 import { __root } from '../../../../../src/element-template/runtime/page/root-instance.js';
 import { ElementTemplateEnvManager } from '../../../test-utils/debug/envManager.js';
 
@@ -45,6 +53,41 @@ function App({ items }: { items: readonly string[] }): JSX.Element {
   );
 }
 
+interface ListItemModel {
+  key: string;
+  fullSpan?: boolean;
+}
+
+function ListApp({ items }: { items: readonly ListItemModel[] }): JSX.Element {
+  return createElement(
+    'list',
+    null,
+    items.map(item =>
+      createElement('_et_list_item', {
+        key: item.key,
+        __listItemPlatformInfo: {
+          'item-key': item.key,
+          'full-span': item.fullSpan ?? false,
+        },
+      })
+    ),
+  );
+}
+
+function materializeHydratedSubtree(
+  instance: BackgroundElementTemplateInstance,
+  nextId: { current: number },
+): void {
+  backgroundElementTemplateInstanceManager.updateId(instance.instanceId, nextId.current);
+  nextId.current -= 1;
+  instance.markMaterializedByHydration();
+  let child = instance.firstChild;
+  while (child) {
+    materializeHydratedSubtree(child, nextId);
+    child = child.nextSibling;
+  }
+}
+
 describe('Background Preact render', () => {
   const envManager = new ElementTemplateEnvManager();
 
@@ -79,6 +122,111 @@ describe('Background Preact render', () => {
         `shuffle iteration ${i}: ${JSON.stringify(next)}`,
       ).toEqual(next);
     }
+  });
+
+  it('emits incremental typed list ops for Preact multi-mutation renders', () => {
+    const updateEvents: ElementTemplateUpdateCommitContext[] = [];
+    const onUpdate = (event: { data: unknown }) => {
+      updateEvents.push(event.data as ElementTemplateUpdateCommitContext);
+    };
+    installElementTemplateCommitHook();
+    envManager.switchToMainThread();
+    lynx.getJSContext().addEventListener(ElementTemplateLifecycleConstant.update, onUpdate);
+    envManager.switchToBackground();
+
+    root.render(
+      <ListApp
+        items={[
+          { key: 'a' },
+          { key: 'b' },
+          { key: 'c' },
+        ]}
+      />,
+    );
+    const list = (__root as BackgroundElementTemplateInstance).firstChild;
+    if (!(list instanceof BackgroundListElementTemplateInstance)) {
+      throw new Error('Missing typed list root.');
+    }
+    materializeHydratedSubtree(__root as BackgroundElementTemplateInstance, { current: -9 });
+    const listId = list.instanceId;
+    const aId = list.firstChild!.instanceId;
+    const bId = list.firstChild!.nextSibling!.instanceId;
+    const cId = list.lastChild!.instanceId;
+    markElementTemplateHydrated();
+    updateEvents.length = 0;
+
+    try {
+      root.render(
+        <ListApp
+          items={[
+            { key: 'd', fullSpan: true },
+            { key: 'c', fullSpan: true },
+            { key: 'a', fullSpan: true },
+          ]}
+        />,
+      );
+      envManager.switchToMainThread();
+    } finally {
+      envManager.switchToMainThread();
+      lynx.getJSContext().removeEventListener(ElementTemplateLifecycleConstant.update, onUpdate);
+      envManager.switchToBackground();
+    }
+
+    const ops = updateEvents.at(-1)?.ops ?? [];
+    const formatted = formatElementTemplateUpdateCommands(ops);
+    expect(formatted).toEqual([
+      { op: 'removeTypedListItem', targetId: listId, itemId: bId, removedSubtreeHandleIds: [bId] },
+      {
+        op: 'createTemplate',
+        handleId: expect.any(Number),
+        templateKey: '_et_list_item',
+        bundleUrl: null,
+        attributeSlots: [],
+        elementSlots: [],
+      },
+      {
+        op: 'insertTypedListItem',
+        targetId: listId,
+        item: {
+          __etHandleRef: expect.any(Number),
+          type: '_et_list_item',
+          platformInfo: { 'item-key': 'd', 'full-span': true },
+        },
+        beforeId: aId,
+      },
+      {
+        op: 'updateTypedListItem',
+        targetId: listId,
+        item: {
+          __etHandleRef: cId,
+          type: '_et_list_item',
+          platformInfo: { 'item-key': 'c', 'full-span': true },
+        },
+      },
+      {
+        op: 'updateTypedListItem',
+        targetId: listId,
+        item: {
+          __etHandleRef: aId,
+          type: '_et_list_item',
+          platformInfo: { 'item-key': 'a', 'full-span': true },
+        },
+      },
+      { op: 'removeTypedListItem', targetId: listId, itemId: aId, removedSubtreeHandleIds: [] },
+      {
+        op: 'insertTypedListItem',
+        targetId: listId,
+        item: {
+          __etHandleRef: aId,
+          type: '_et_list_item',
+          platformInfo: { 'item-key': 'a', 'full-span': true },
+        },
+        beforeId: 0,
+      },
+    ]);
+    expect(
+      (formatted[2] as { item: { __etHandleRef: number } }).item.__etHandleRef,
+    ).toBe((formatted[1] as { handleId: number }).handleId);
   });
 
   // The Lynx Preact fork's `findMatchingIndex` requires

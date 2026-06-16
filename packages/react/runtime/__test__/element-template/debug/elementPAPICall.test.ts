@@ -35,6 +35,7 @@ describe('ElementTemplate PAPI alog wrapper', () => {
       __SetAttributeOfElementTemplate: vi.fn(),
       __InsertNodeToElementTemplate: vi.fn(() => childRef),
       __RemoveNodeFromElementTemplate: vi.fn(() => null),
+      __FlushElementTree: vi.fn(),
       __SerializeElementTemplate: vi.fn(() => Symbol.for('serialized')),
     } satisfies Record<string, unknown>;
 
@@ -80,6 +81,7 @@ describe('ElementTemplate PAPI alog wrapper', () => {
       1,
       childRef,
     )).toBeNull();
+    (target.__FlushElementTree as (...args: unknown[]) => unknown)(typedRef, { triggerLayout: true });
     expect((target.__SerializeElementTemplate as (...args: unknown[]) => unknown)(templateRef)).toBe(
       Symbol.for('serialized'),
     );
@@ -98,9 +100,10 @@ describe('ElementTemplate PAPI alog wrapper', () => {
       '__InsertNodeToElementTemplate(_et_card#17, 1, {"id":2}, undefined) => {"id":2}',
     );
     expect(logs).toContain('__RemoveNodeFromElementTemplate(_et_card#17, 1, {"id":2})');
+    expect(logs).toContain('__FlushElementTree(page#0, {"triggerLayout":true})');
     expect(logs).toContain('__SerializeElementTemplate(_et_card#17) => Symbol(serialized)');
-    expect(globalThis.lynx.performance.profileStart).toHaveBeenCalledTimes(6);
-    expect(globalThis.lynx.performance.profileEnd).toHaveBeenCalledTimes(6);
+    expect(globalThis.lynx.performance.profileStart).toHaveBeenCalledTimes(7);
+    expect(globalThis.lynx.performance.profileEnd).toHaveBeenCalledTimes(7);
   });
 
   it('skips missing APIs and keeps logging optional', () => {

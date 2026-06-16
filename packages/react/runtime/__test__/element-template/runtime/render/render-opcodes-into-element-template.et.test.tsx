@@ -5,6 +5,10 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { renderOpcodesIntoElementTemplate } from '../../../../src/element-template/runtime/render/render-opcodes.js';
+import {
+  destroyAllElementTemplateListStates,
+  flushInitialElementTemplateListUpdates,
+} from '../../../../src/element-template/runtime/list/list.js';
 import { resetTemplateId } from '../../../../src/element-template/runtime/template/handle.js';
 import { elementTemplateRegistry } from '../../../../src/element-template/runtime/template/registry.js';
 import {
@@ -24,14 +28,34 @@ import {
 
 describe('renderOpcodesIntoElementTemplate', () => {
   const createElementTemplate = vi.fn();
+  const createTypedElementTemplate = vi.fn();
+  const getElementUniqueID = vi.fn();
+  const insertNodeToElementTemplate = vi.fn();
+  const removeNodeFromElementTemplate = vi.fn();
+  const flushElementTree = vi.fn();
   const addEvent = vi.fn();
+  const onLifecycleEvent = vi.fn();
 
   beforeEach(() => {
     createElementTemplate.mockReset();
+    createTypedElementTemplate.mockReset();
+    getElementUniqueID.mockReset();
+    insertNodeToElementTemplate.mockReset();
+    removeNodeFromElementTemplate.mockReset();
+    flushElementTree.mockReset();
     addEvent.mockReset();
+    onLifecycleEvent.mockReset();
+    getElementUniqueID.mockImplementation((node: { __mockNativeId?: number }) => node.__mockNativeId);
     vi.stubGlobal('__CreateElementTemplate', createElementTemplate);
+    vi.stubGlobal('__CreateTypedElementTemplate', createTypedElementTemplate);
+    vi.stubGlobal('__GetElementUniqueID', getElementUniqueID);
+    vi.stubGlobal('__InsertNodeToElementTemplate', insertNodeToElementTemplate);
+    vi.stubGlobal('__RemoveNodeFromElementTemplate', removeNodeFromElementTemplate);
+    vi.stubGlobal('__FlushElementTree', flushElementTree);
     vi.stubGlobal('__AddEvent', addEvent);
+    vi.stubGlobal('__OnLifecycleEvent', onLifecycleEvent);
     elementTemplateRegistry.clear();
+    destroyAllElementTemplateListStates();
     clearEtAttrPlanMap();
     resetTemplateId();
   });
@@ -64,6 +88,282 @@ describe('renderOpcodesIntoElementTemplate', () => {
     expect(elementTemplateRegistry.get(-1)).toBe(rootTextRef);
   });
 
+  it('creates exact list through typed native create with slot-0 refs as listChildren', () => {
+    const itemRef = { kind: 'item-ref' };
+    const listRef = { kind: 'list-ref' };
+    const attributes = { id: 'typed-list' };
+    createElementTemplate.mockReturnValueOnce(itemRef);
+    createTypedElementTemplate.mockReturnValueOnce(listRef);
+
+    const result = renderOpcodesIntoElementTemplate([
+      __OpBegin,
+      { type: 'list' },
+      __OpAttr,
+      'typedAttributes',
+      attributes,
+      __OpSlot,
+      0,
+      __OpBegin,
+      { type: '_et_item', props: { __listItemPlatformInfo: { 'item-key': 'a' } } },
+      __OpEnd,
+      __OpEnd,
+    ]);
+
+    expect(result.rootRefs).toEqual([listRef]);
+    expect(createElementTemplate).toHaveBeenCalledWith(
+      '_et_item',
+      null,
+      null,
+      null,
+      -1,
+    );
+    expect(createElementTemplate.mock.invocationCallOrder[0]).toBeLessThan(
+      createTypedElementTemplate.mock.invocationCallOrder[0]!,
+    );
+    const typedCreateCall = createTypedElementTemplate.mock.calls[0]!;
+    expect(typedCreateCall[0]).toBe('list');
+    expect(typedCreateCall[1]).toEqual({
+      id: 'typed-list',
+      'component-at-index': expect.any(Function),
+      'component-at-indexes': expect.any(Function),
+      'enqueue-component': expect.any(Function),
+    });
+    expect(typedCreateCall[2]).toBe(null);
+    expect(typedCreateCall[3]).toBe(-2);
+    expect(typedCreateCall[4]).toEqual({ listChildren: [itemRef] });
+    expect(flushInitialElementTemplateListUpdates()).toEqual([{
+      uid: -2,
+      attributes: {
+        id: 'typed-list',
+        'component-at-index': expect.any(Function),
+        'component-at-indexes': expect.any(Function),
+        'enqueue-component': expect.any(Function),
+        'update-list-info': {
+          insertAction: [{ position: 0, type: '_et_item', 'item-key': 'a' }],
+          removeAction: [],
+          updateAction: [],
+        },
+      },
+    }]);
+    expect(elementTemplateRegistry.get(-1)).toBe(itemRef);
+    expect(elementTemplateRegistry.get(-2)).toBe(listRef);
+  });
+
+  it('creates empty exact lists without logical children or typed attributes', () => {
+    const listRef = { kind: 'list-ref' };
+    createTypedElementTemplate.mockReturnValueOnce(listRef);
+
+    const result = renderOpcodesIntoElementTemplate([
+      __OpBegin,
+      { type: 'list' },
+      __OpEnd,
+    ]);
+
+    expect(result.rootRefs).toEqual([listRef]);
+    expect(createTypedElementTemplate).toHaveBeenCalledWith(
+      'list',
+      {
+        'component-at-index': expect.any(Function),
+        'component-at-indexes': expect.any(Function),
+        'enqueue-component': expect.any(Function),
+      },
+      null,
+      -1,
+      { listChildren: [] },
+    );
+    expect(flushInitialElementTemplateListUpdates()).toEqual([{
+      uid: -1,
+      attributes: {
+        'component-at-index': expect.any(Function),
+        'component-at-indexes': expect.any(Function),
+        'enqueue-component': expect.any(Function),
+        'update-list-info': {
+          insertAction: [],
+          removeAction: [],
+          updateAction: [],
+        },
+      },
+    }]);
+  });
+
+  it('installs Snapshot-aligned callbacks for first-screen typed list items', () => {
+    const itemARef = { kind: 'item-a-ref', __mockNativeId: 101 };
+    const itemBRef = { kind: 'item-b-ref', __mockNativeId: 102 };
+    const listRef = { kind: 'list-ref', __mockNativeId: 200 };
+    createElementTemplate
+      .mockReturnValueOnce(itemARef)
+      .mockReturnValueOnce(itemBRef);
+    createTypedElementTemplate.mockReturnValueOnce(listRef);
+
+    renderOpcodesIntoElementTemplate([
+      __OpBegin,
+      { type: 'list' },
+      __OpAttr,
+      'typedAttributes',
+      {},
+      __OpSlot,
+      0,
+      __OpBegin,
+      { type: '_et_item_a', props: { __listItemPlatformInfo: { 'item-key': 'a' } } },
+      __OpEnd,
+      __OpBegin,
+      { type: '_et_item_b', props: { __listItemPlatformInfo: { 'item-key': 'b' } } },
+      __OpEnd,
+      __OpEnd,
+    ]);
+
+    const attrs = createTypedElementTemplate.mock.calls[0]![1] as Record<string, (...args: unknown[]) => unknown>;
+    const componentAtIndex = attrs['component-at-index']!;
+    const componentAtIndexes = attrs['component-at-indexes']!;
+    const enqueueComponent = attrs['enqueue-component']!;
+    const materializedListRef = { kind: 'materialized-list-ref', __mockNativeId: 300 };
+
+    expect(componentAtIndex(materializedListRef, 9, 1, 72, true)).toBe(102);
+    expect(insertNodeToElementTemplate).toHaveBeenLastCalledWith(
+      listRef,
+      0,
+      itemBRef,
+      null,
+    );
+    expect(flushElementTree).toHaveBeenLastCalledWith(itemBRef, {
+      triggerLayout: true,
+      operationID: 72,
+      elementID: 102,
+      listID: 9,
+    });
+
+    expect(componentAtIndex(materializedListRef, 9, 0, 71, true)).toBe(101);
+    expect(insertNodeToElementTemplate).toHaveBeenLastCalledWith(
+      listRef,
+      0,
+      itemARef,
+      itemBRef,
+    );
+    expect(flushElementTree).toHaveBeenLastCalledWith(itemARef, {
+      triggerLayout: true,
+      operationID: 71,
+      elementID: 101,
+      listID: 9,
+    });
+
+    insertNodeToElementTemplate.mockClear();
+    flushElementTree.mockClear();
+    expect(() => componentAtIndex(materializedListRef, 9, 99, 73, true)).toThrow(
+      'Element Template typed list item at index 99 was not found.',
+    );
+    expect(insertNodeToElementTemplate).not.toHaveBeenCalled();
+    expect(flushElementTree).not.toHaveBeenCalled();
+
+    expect(() => componentAtIndexes(materializedListRef, 9, [99], [84], false, true)).toThrow(
+      'Element Template typed list item at index 99 was not found.',
+    );
+    expect(insertNodeToElementTemplate).not.toHaveBeenCalled();
+    expect(flushElementTree).not.toHaveBeenCalled();
+
+    enqueueComponent(materializedListRef, 9, 102);
+    expect(removeNodeFromElementTemplate).toHaveBeenLastCalledWith(listRef, 0, itemBRef);
+    expect(elementTemplateRegistry.get(-1)).toBe(itemARef);
+    expect(elementTemplateRegistry.get(-2)).toBe(itemBRef);
+
+    flushElementTree.mockClear();
+    componentAtIndexes(materializedListRef, 9, [0, 1], [81, 82], true, false);
+    expect(flushElementTree).toHaveBeenCalledWith(listRef, {
+      triggerLayout: true,
+      operationIDs: [81, 82],
+      elementIDs: [101, 102],
+      listID: 9,
+    });
+    expect(flushElementTree.mock.calls[0]![1]).not.toHaveProperty('listReuseNotification');
+
+    enqueueComponent(materializedListRef, 9, 102);
+    flushElementTree.mockClear();
+    componentAtIndexes(materializedListRef, 9, [1], [83], true, true);
+    expect(flushElementTree.mock.calls).toEqual([
+      [itemBRef, { asyncFlush: true }],
+      [listRef, {
+        triggerLayout: true,
+        operationIDs: [83],
+        elementIDs: [102],
+        listID: 9,
+      }],
+    ]);
+  });
+
+  it('rejects non-list-item roots in typed list logical children', () => {
+    expect(() =>
+      renderOpcodesIntoElementTemplate([
+        __OpBegin,
+        { type: 'list' },
+        __OpSlot,
+        0,
+        __OpBegin,
+        { type: '_et_view', props: {} },
+        __OpEnd,
+        __OpEnd,
+      ])
+    ).toThrow('Element Template typed list received a non-list-item root in logical slot $0.');
+    expect(createElementTemplate).not.toHaveBeenCalled();
+    expect(createTypedElementTemplate).not.toHaveBeenCalled();
+  });
+
+  it('rejects text roots in typed list logical children', () => {
+    expect(() =>
+      renderOpcodesIntoElementTemplate([
+        __OpBegin,
+        { type: 'list' },
+        __OpSlot,
+        0,
+        __OpText,
+        'row',
+        __OpEnd,
+      ])
+    ).toThrow('Element Template typed list received text logical child.');
+    expect(createElementTemplate).not.toHaveBeenCalled();
+    expect(createTypedElementTemplate).not.toHaveBeenCalled();
+  });
+
+  it('rejects non-zero typed list logical slot opcodes in development', () => {
+    expect(() =>
+      renderOpcodesIntoElementTemplate([
+        __OpBegin,
+        { type: 'list' },
+        __OpSlot,
+        1,
+        __OpBegin,
+        { type: '_et_item', props: { __listItemPlatformInfo: { 'item-key': 'a' } } },
+        __OpEnd,
+        __OpEnd,
+      ])
+    ).toThrow('Element Template typed list only supports logical slot $0.');
+    expect(createElementTemplate).not.toHaveBeenCalled();
+    expect(createTypedElementTemplate).not.toHaveBeenCalled();
+  });
+
+  it('rejects deferred list item markers instead of entering Snapshot deferred flow', () => {
+    expect(() =>
+      renderOpcodesIntoElementTemplate([
+        __OpBegin,
+        { type: 'list' },
+        __OpSlot,
+        0,
+        __OpBegin,
+        {
+          type: '_et_item',
+          props: {
+            __listItemPlatformInfo: { 'item-key': 'late' },
+            isReady: 0,
+          },
+        },
+        __OpEnd,
+        __OpEnd,
+      ])
+    ).toThrow('Element Template typed list does not support deferred list items.');
+    expect(createElementTemplate).not.toHaveBeenCalled();
+    expect(createTypedElementTemplate).not.toHaveBeenCalled();
+    expect(flushElementTree).not.toHaveBeenCalled();
+    expect(onLifecycleEvent).not.toHaveBeenCalled();
+  });
+
   it('prepares direct event slots before native create', () => {
     const rootRef = { kind: 'root-ref' };
     const handleTap = vi.fn();
@@ -93,6 +393,26 @@ describe('renderOpcodesIntoElementTemplate', () => {
       -1,
     );
     expect(addEvent).not.toHaveBeenCalled();
+  });
+
+  it('prepares attr plans when a template has no dynamic attribute slots', () => {
+    const rootRef = { kind: 'root-ref' };
+    createElementTemplate.mockReturnValue(rootRef);
+    __etAttrPlanMap._et_event = [0, adaptEventAttrSlot];
+
+    renderOpcodesIntoElementTemplate([
+      __OpBegin,
+      { type: '_et_event' },
+      __OpEnd,
+    ]);
+
+    expect(createElementTemplate).toHaveBeenCalledWith(
+      '_et_event',
+      null,
+      [null],
+      null,
+      -1,
+    );
   });
 
   it('prepares empty direct event values as null before native create', () => {

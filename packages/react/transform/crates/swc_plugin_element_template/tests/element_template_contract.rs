@@ -578,6 +578,53 @@ fn should_not_consume_hidden_et_slots_for_list_item_platform_attrs() {
     code.contains("attributeSlots={[itemKey]}"),
     "legacy list platform info must not consume ET attribute slots, got: {code}"
   );
+  assert!(
+    code.contains("__listItemPlatformInfo={{\"item-key\":itemKey,\"recyclable\":true}}"),
+    "list item platform info should be available as an ET runtime-only carrier, got: {code}"
+  );
+}
+
+#[test]
+fn should_lower_exact_list_as_typed_runtime_host() {
+  let (templates, code) = transform_fixture(
+    r#"
+      <list id={listId} className="feed">
+        <list-item key="a" item-key={firstKey} full-span />
+        <list-item key="b" item-key={secondKey} recyclable />
+      </list>
+    "#,
+    element_template_config(),
+  );
+
+  let user_templates: Vec<_> = templates
+    .into_iter()
+    .filter(|template| template.template_id != BUILTIN_RAW_TEXT_TEMPLATE_ID)
+    .map(|template| serde_json::to_value(template.compiled_template).expect("compiled template"))
+    .collect();
+
+  assert!(
+    user_templates
+      .iter()
+      .all(|template| template["type"] != "list"),
+    "exact list must stay as a typed runtime host instead of a compiled template: {user_templates:?}"
+  );
+  assert!(
+    user_templates
+      .iter()
+      .any(|template| template["type"] == "list-item"),
+    "non-defer list items should remain ordinary compiled ET roots: {user_templates:?}"
+  );
+
+  let code = without_whitespace(&code);
+  assert!(
+    code.contains("<listattributes={{\"id\":listId,\"class\":\"feed\"}}$0={["),
+    "ET list output should expose exact list, attributes, and $0 logical children, got: {code}"
+  );
+  assert!(
+    code.contains("__listItemPlatformInfo={{\"item-key\":firstKey,\"full-span\":true}}")
+      && code.contains("__listItemPlatformInfo={{\"item-key\":secondKey,\"recyclable\":true}}"),
+    "list item roots should carry platform info beside compiled ET roots, got: {code}"
+  );
 }
 
 #[test]

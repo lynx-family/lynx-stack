@@ -2,6 +2,8 @@
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
 
+import { __page } from '../page/page.js';
+
 // Registry for mapping element-template handle IDs to native refs.
 //
 // Main-thread IFR allocates IDs as consecutive negative integers: -1, -2, -3...
@@ -27,6 +29,10 @@ export function getElementTemplateNativeRef(id: number): ElementRef | undefined 
   return otherRefs.get(id);
 }
 
+export function getElementTemplateTargetNativeRef(id: number): ElementRef | undefined {
+  return id === 0 ? __page : getElementTemplateNativeRef(id);
+}
+
 export function hasElementTemplateNativeRef(id: number): boolean {
   return getElementTemplateNativeRef(id) != null;
 }
@@ -49,6 +55,7 @@ export function clearElementTemplateNativeRefRegistry(): void {
 export interface ElementTemplateRegistryFacade {
   set: (id: number, nativeRef: ElementRef) => void;
   get: (id: number) => ElementRef | undefined;
+  getTarget: (id: number) => ElementRef | undefined;
   has: (id: number) => boolean;
   delete: (id: number) => void;
   clear: () => void;
@@ -57,6 +64,7 @@ export interface ElementTemplateRegistryFacade {
 export const elementTemplateRegistry: ElementTemplateRegistryFacade = {
   set: setElementTemplateNativeRef,
   get: getElementTemplateNativeRef,
+  getTarget: getElementTemplateTargetNativeRef,
   has: hasElementTemplateNativeRef,
   delete: deleteElementTemplateNativeRef,
   clear: clearElementTemplateNativeRefRegistry,

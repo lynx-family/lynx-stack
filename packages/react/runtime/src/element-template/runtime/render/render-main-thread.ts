@@ -12,8 +12,10 @@ import { getReloadVersion } from '../../../core/reload-version.js';
 import { profileEnd, profileStart } from '../../debug/profile.js';
 import { ElementTemplateLifecycleConstant } from '../../protocol/lifecycle-constant.js';
 import type { ElementTemplateHydrateCommitContext, SerializedEtNode } from '../../protocol/types.js';
+import { flushInitialElementTemplateListUpdates } from '../list/list.js';
 import { insertRootIntoPage, removeRootFromPage } from '../page/page.js';
 import { __root } from '../page/root-instance.js';
+import { getElementTemplateNativeRef } from '../template/registry.js';
 
 // ET reload reuses the native page, so the main-thread render path owns the
 // root refs it appended and can remove only those roots before rebuilding.
@@ -49,6 +51,7 @@ function renderMainThread(): void {
     for (const rootRef of rootRefs) {
       insertRootIntoPage(rootRef);
     }
+    flushInitialListUpdates();
     mainThreadRootRefs = rootRefs;
   } finally {
     profileEnd();
@@ -71,6 +74,17 @@ function renderMainThread(): void {
     });
   } finally {
     profileEnd();
+  }
+}
+
+function flushInitialListUpdates(): void {
+  const results = flushInitialElementTemplateListUpdates();
+  for (let index = 0; index < results.length; index += 1) {
+    const result = results[index]!;
+    const listRef = getElementTemplateNativeRef(result.uid);
+    if (listRef) {
+      __SetAttributeOfElementTemplate(listRef, 0, result.attributes, null);
+    }
   }
 }
 

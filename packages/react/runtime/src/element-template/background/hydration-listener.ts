@@ -11,8 +11,8 @@ import {
   resetElementTemplateCommitState,
   scheduleElementTemplateRemovedSubtreeCleanup,
 } from './commit-hook.js';
-import { hydrateIntoContext } from './hydrate.js';
-import { BackgroundElementTemplateInstance } from './instance.js';
+import { hydrateRootChildrenIntoContext } from './hydrate.js';
+import type { BackgroundElementTemplateInstance } from './instance.js';
 import { PerformanceTimingFlags, PipelineOrigins, beginPipeline, markTiming } from '../../core/performance.js';
 import { getReloadVersion } from '../../core/reload-version.js';
 import { formatElementTemplateUpdateCommands, printElementTemplateTreeToString } from '../debug/alog.js';
@@ -20,11 +20,7 @@ import { profileEnd, profileStart } from '../debug/profile.js';
 import { clearPendingEvents, flushPendingEvents } from '../prop-adapters/event.js';
 import { clearDelayedRefUiOps, clearPendingRefs, flushDelayedRefUiOps } from '../prop-adapters/ref.js';
 import { ElementTemplateLifecycleConstant } from '../protocol/lifecycle-constant.js';
-import type {
-  ElementTemplateHydrateCommitContext,
-  SerializedElementTemplate,
-  SerializedEtNode,
-} from '../protocol/types.js';
+import type { ElementTemplateHydrateCommitContext, SerializedEtNode } from '../protocol/types.js';
 import { __root } from '../runtime/page/root-instance.js';
 
 let listener:
@@ -48,6 +44,8 @@ export function installElementTemplateHydrationListener(): void {
       instances = payload.instances;
     }
 
+    const root = __root as BackgroundElementTemplateInstance;
+
     if (__PROFILE__) {
       profileStart('ReactLynx::hydrate');
     }
@@ -55,8 +53,6 @@ export function installElementTemplateHydrationListener(): void {
     markTiming('hydrateParseSnapshotStart');
     markTiming('hydrateParseSnapshotEnd');
     markTiming('diffVdomStart');
-
-    const root = __root as BackgroundElementTemplateInstance;
 
     resetGlobalCommitContext();
     if (typeof __ALOG__ !== 'undefined' && __ALOG__) {
@@ -70,27 +66,7 @@ export function installElementTemplateHydrationListener(): void {
       );
     }
 
-    let after = root.firstChild;
-    let didHydrateMatchedInstances = true;
-    for (const before of instances) {
-      if (!after) {
-        break;
-      }
-      if (!('templateKey' in before)) {
-        if (__DEV__) {
-          lynx.reportError(
-            new Error(`ElementTemplate hydrate does not support serialized typed root '${before.type}'.`),
-          );
-        }
-        didHydrateMatchedInstances = false;
-        break;
-      }
-      if (!hydrateIntoContext(before as SerializedElementTemplate, after)) {
-        didHydrateMatchedInstances = false;
-        break;
-      }
-      after = after.nextSibling;
-    }
+    const didHydrateMatchedInstances = hydrateRootChildrenIntoContext(instances, root);
     if (typeof __ALOG__ !== 'undefined' && __ALOG__) {
       console.alog?.(
         '[ReactLynxDebug] BackgroundElementTemplate tree after hydration:\n'

@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
+import { setupPage } from '../../../../src/element-template/runtime/page/page.js';
 import { elementTemplateRegistry } from '../../../../src/element-template/runtime/template/registry.js';
 
 describe('elementTemplateRegistry (nativeRef)', () => {
@@ -49,5 +50,16 @@ describe('elementTemplateRegistry (nativeRef)', () => {
     elementTemplateRegistry.clear();
     expect(elementTemplateRegistry.get(1)).toBeUndefined();
     expect(elementTemplateRegistry.has(1)).toBe(false);
+  });
+
+  it('resolves page only through target lookup', () => {
+    elementTemplateRegistry.clear();
+
+    const pageRef = { ref: 'page' } as unknown as ElementRef;
+    setupPage(pageRef);
+
+    expect(elementTemplateRegistry.get(0)).toBeUndefined();
+    expect(elementTemplateRegistry.has(0)).toBe(false);
+    expect(elementTemplateRegistry.getTarget(0)).toBe(pageRef);
   });
 });

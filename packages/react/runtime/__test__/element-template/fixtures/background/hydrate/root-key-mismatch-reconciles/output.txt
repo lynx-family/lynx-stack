@@ -1,0 +1,23 @@
+Object {
+  "afterInstanceId": 1,
+  "stream": Array [
+    4,
+    0,
+    0,
+    -1,
+    Array [
+      -1,
+    ],
+    1,
+    1,
+    "after",
+    null,
+    Array [],
+    Array [],
+    3,
+    0,
+    0,
+    1,
+    0,
+  ],
+}

@@ -1,6 +1,12 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
 import { installOnMtsDestruction, onMtsDestruction } from '../../../src/element-template/native/mts-destroy.js';
+import {
+  composeElementTemplateListAttributes,
+  createElementTemplateListState,
+  registerElementTemplateListItem,
+  registerElementTemplateListState,
+} from '../../../src/element-template/runtime/list/list.js';
 import { elementTemplateRegistry } from '../../../src/element-template/runtime/template/registry.js';
 
 type LynxWithNative = typeof globalThis & {
@@ -17,6 +23,7 @@ describe('mts-destroy', () => {
     elementTemplateRegistry.clear();
     vi.doUnmock('../../../src/element-template/native/patch-listener.js');
     vi.doUnmock('../../../src/element-template/runtime/template/registry.js');
+    vi.unstubAllGlobals();
   });
 
   it('registers and unregisters destruction listener when native exists', () => {
@@ -79,6 +86,36 @@ describe('mts-destroy', () => {
     onMtsDestruction();
 
     expect(elementTemplateRegistry.get(-1)).toBeUndefined();
+  });
+
+  it('marks list callbacks destroyed on main-thread runtime destruction', () => {
+    const listRef = { __isNativeRef: true, id: 'list', __mockNativeId: 100 } as unknown as ElementRef;
+    const itemRef = { __isNativeRef: true, id: 'item', __mockNativeId: 101 } as unknown as ElementRef;
+    const insertNode = vi.fn();
+    const removeNode = vi.fn();
+    const flush = vi.fn();
+    vi.stubGlobal('__InsertNodeToElementTemplate', insertNode);
+    vi.stubGlobal('__RemoveNodeFromElementTemplate', removeNode);
+    vi.stubGlobal('__FlushElementTree', flush);
+    elementTemplateRegistry.set(100, listRef);
+    elementTemplateRegistry.set(101, itemRef);
+    registerElementTemplateListItem(101, itemRef, {
+      templateKey: '_et_item',
+      platformInfo: { 'item-key': 'a' },
+    });
+    const state = createElementTemplateListState([101]);
+    registerElementTemplateListState(100, state, false, listRef);
+    const attrs = composeElementTemplateListAttributes(null, state);
+    const componentAtIndex = attrs['component-at-index'] as ComponentAtIndexCallback;
+    const enqueueComponent = attrs['enqueue-component'] as EnqueueComponentCallback;
+
+    onMtsDestruction();
+
+    expect(componentAtIndex(listRef, 7, 0, 91, false)).toBe(-1);
+    enqueueComponent(listRef, 7, 101);
+    expect(insertNode).not.toHaveBeenCalled();
+    expect(removeNode).not.toHaveBeenCalled();
+    expect(flush).not.toHaveBeenCalled();
   });
 
   it('clears registry and removes native listener even when patch listener reset throws', async () => {

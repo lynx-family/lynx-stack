@@ -13,6 +13,7 @@ import { installElementTemplateHydrationListener } from '../background/hydration
 import { BackgroundElementTemplateInstance } from '../background/instance.js';
 import { profileEnd, profileStart } from '../debug/profile.js';
 import { resetEventStateForRuntime } from '../prop-adapters/event.js';
+import { destroyAllElementTemplateListStates } from '../runtime/list/list.js';
 import { __page } from '../runtime/page/page.js';
 import { __root, setRoot } from '../runtime/page/root-instance.js';
 import { removeMainThreadRootRefs, renderMainThread } from '../runtime/render/render-main-thread.js';
@@ -28,6 +29,7 @@ export function reloadMainThread(data: unknown, options: UpdatePageOption): void
     increaseReloadVersion();
     applyUpdatePageData(data, options);
 
+    destroyAllElementTemplateListStates();
     elementTemplateRegistry.clear();
     resetTemplateId();
 

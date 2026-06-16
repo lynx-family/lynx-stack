@@ -1,7 +1,6 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { resetElementTemplateCommitState } from '../../../../src/element-template/background/commit-hook.js';
-import { hydrate } from '../../../../src/element-template/background/hydrate.js';
 import { BackgroundElementTemplateInstance } from '../../../../src/element-template/background/instance.js';
 import { backgroundElementTemplateInstanceManager } from '../../../../src/element-template/background/manager.js';
 import { clearEventState, getEventHandlerForEventValue } from '../../../../src/element-template/prop-adapters/event.js';
@@ -14,6 +13,7 @@ import {
   adaptSpreadAttrSlot,
   clearEtAttrPlanMap,
 } from '../../../../src/element-template/runtime/template/attr-slot-plan.js';
+import { hydrateBackground as hydrate } from '../../test-utils/debug/hydrate.js';
 
 function createHydrationTemplate(
   handleId: number,
