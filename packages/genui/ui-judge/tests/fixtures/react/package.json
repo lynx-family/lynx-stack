@@ -1,0 +1,19 @@
+{
+  "name": "@lynx-js/ui-judge-react-fixture",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "build": "rspeedy build",
+    "dev": "rspeedy dev"
+  },
+  "dependencies": {
+    "@lynx-js/react": "workspace:*"
+  },
+  "devDependencies": {
+    "@lynx-js/react-rsbuild-plugin": "workspace:*",
+    "@lynx-js/rspeedy": "workspace:*",
+    "@lynx-js/types": "3.7.0",
+    "@types/react": "^18.3.28"
+  }
+}

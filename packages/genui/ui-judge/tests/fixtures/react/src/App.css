@@ -1,0 +1,179 @@
+:root {
+  background-color: #000;
+  --color-text: #fff;
+}
+
+.Background {
+  position: fixed;
+  background: radial-gradient(
+    71.43% 62.3% at 46.43% 36.43%,
+    rgba(18, 229, 229, 0) 15%,
+    rgba(239, 155, 255, 0.3) 56.35%,
+    #ff6448 100%
+  );
+  box-shadow: 0px 12.93px 28.74px 0px #ffd28db2 inset;
+  border-radius: 50%;
+  width: 200vw;
+  height: 200vw;
+  top: -60vw;
+  left: -14.27vw;
+  transform: rotate(15.25deg);
+}
+
+.App {
+  position: relative;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+}
+
+text {
+  color: var(--color-text);
+}
+
+.Banner {
+  flex: 5;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  z-index: 100;
+}
+
+.Logo {
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 8px;
+}
+
+.LogoMark {
+  width: 100px;
+  height: 100px;
+}
+
+.LogoMark--react {
+  position: relative;
+  align-items: center;
+  justify-content: center;
+  animation: Logo--spin infinite 20s linear;
+}
+
+.LogoMark--lynx {
+  position: relative;
+  align-items: center;
+  justify-content: center;
+  background-color: #ffffff;
+  border-radius: 26px;
+  box-shadow: 0px 12px 24px 0px rgba(11, 15, 28, 0.24);
+  animation: Logo--shake infinite 0.5s ease;
+}
+
+.ReactOrbit {
+  position: absolute;
+  width: 92px;
+  height: 34px;
+  border: 4px solid #61dafb;
+  border-radius: 50%;
+}
+
+.ReactOrbit--two {
+  transform: rotate(60deg);
+}
+
+.ReactOrbit--three {
+  transform: rotate(120deg);
+}
+
+.ReactCore {
+  width: 18px;
+  height: 18px;
+  background-color: #61dafb;
+  border-radius: 50%;
+}
+
+.LynxEar {
+  position: absolute;
+  top: -12px;
+  width: 34px;
+  height: 34px;
+  background-color: #ffffff;
+  border-radius: 8px;
+  transform: rotate(45deg);
+}
+
+.LynxEar--left {
+  left: 13px;
+}
+
+.LynxEar--right {
+  right: 13px;
+}
+
+.LynxFace {
+  color: #ff6448;
+  font-size: 52px;
+  font-weight: 800;
+}
+
+@keyframes Logo--spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@keyframes Logo--shake {
+  0% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(0.9);
+  }
+  100% {
+    transform: scale(1);
+  }
+}
+
+.Content {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+}
+
+.Arrow {
+  width: 24px;
+  height: 24px;
+  border-bottom: 4px solid rgba(255, 255, 255, 0.85);
+  border-right: 4px solid rgba(255, 255, 255, 0.85);
+  transform: rotate(45deg);
+}
+
+.Title {
+  font-size: 36px;
+  font-weight: 700;
+}
+
+.Subtitle {
+  font-style: italic;
+  font-size: 22px;
+  font-weight: 600;
+  margin-bottom: 8px;
+}
+
+.Description {
+  font-size: 20px;
+  color: rgba(255, 255, 255, 0.85);
+  margin: 15rpx;
+}
+
+.Hint {
+  font-size: 12px;
+  margin: 5px;
+  color: rgba(255, 255, 255, 0.65);
+}
