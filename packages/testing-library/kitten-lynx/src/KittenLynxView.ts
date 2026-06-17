@@ -5,6 +5,8 @@ import { ElementNode } from './ElementNode.js';
 import { setTimeout } from 'node:timers/promises';
 
 const idToKittenLynxView: Record<string, WeakRef<KittenLynxView>> = {};
+const DOCUMENT_READY_TIMEOUT_MS = 10_000;
+const DOCUMENT_READY_POLL_INTERVAL_MS = 250;
 
 /**
  * Represents a Lynx page instance, similar to Puppeteer's `Page`.
@@ -296,12 +298,30 @@ export class KittenLynxView {
     );
 
     await channel.send('DOM.enable' as any, {});
-    const response = await channel.send('DOM.getDocument', {
-      depth: -1,
-    });
-    const root = response.root.children[0]!;
+    const root = await this.#waitForDocumentRoot(channel);
     this._channel = channel;
     this._root = ElementNode.fromId(root.nodeId, this);
+  }
+
+  async #waitForDocumentRoot(
+    channel: CDPChannel,
+  ): Promise<NodeInfoInGetDocument> {
+    const deadline = Date.now() + DOCUMENT_READY_TIMEOUT_MS;
+
+    while (Date.now() < deadline) {
+      const response = await channel.send('DOM.getDocument', {
+        depth: -1,
+      });
+      const root = response.root?.children?.[0];
+      if (root) {
+        return root;
+      }
+      await setTimeout(DOCUMENT_READY_POLL_INTERVAL_MS);
+    }
+
+    throw new Error(
+      'Timed out waiting for Lynx document root after attaching to target.',
+    );
   }
 
   #contentToStringImpl(buffer: string[], node: NodeInfoInGetDocument) {
@@ -316,7 +336,7 @@ export class KittenLynxView {
       buffer.push(' ', key, '="', value, '"');
     }
     buffer.push('>');
-    for (const child of node.children) {
+    for (const child of node.children ?? []) {
       this.#contentToStringImpl(buffer, child);
     }
     buffer.push('</', tagName, '>');
