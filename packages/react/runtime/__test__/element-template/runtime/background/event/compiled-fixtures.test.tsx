@@ -251,6 +251,7 @@ function installRealWorkletRuntime(): {
 describe('Compiled direct event background updates', () => {
   const envManager = new ElementTemplateEnvManager();
   let updateEvents: ElementTemplateUpdateCommitContext[] = [];
+  let originalLynxSdkVersion: string | undefined;
   const onUpdate = (event: { data: unknown }) => {
     updateEvents.push(JSON.parse(event.data as string) as ElementTemplateUpdateCommitContext);
   };
@@ -380,6 +381,7 @@ describe('Compiled direct event background updates', () => {
 
   beforeEach(() => {
     vi.clearAllMocks();
+    originalLynxSdkVersion = SystemInfo.lynxSdkVersion;
     resetElementTemplateCommitState();
     clearEtAttrPlanMap();
     clearEventState();
@@ -404,6 +406,7 @@ describe('Compiled direct event background updates', () => {
     resetElementTemplateHydrationListener();
     envManager.setUseElementTemplate(false);
     clearMainThreadDynamicAttrState();
+    SystemInfo.lynxSdkVersion = originalLynxSdkVersion;
     delete globalThis.lynxWorkletImpl;
     // @ts-expect-error - tests that install the real runtime restore this global.
     delete globalThis.registerWorklet;
@@ -612,7 +615,9 @@ describe('Compiled direct event background updates', () => {
 
     const host = renderDirectEventOnBackground(backgroundModule, firstHandler);
     hydrateDirectEventFromMainThread(mainModule, firstHandler);
+    envManager.switchToMainThread();
     updateEvents = [];
+    envManager.switchToBackground();
 
     renderDirectEventOnBackground(backgroundModule, secondHandler);
 

@@ -68,9 +68,11 @@ interface TTMock {
 
 describe('ElementTemplate hydration listener', () => {
   const envManager = new ElementTemplateEnvManager();
+  let originalLynxSdkVersion: string | undefined;
 
   beforeEach(() => {
     vi.clearAllMocks();
+    originalLynxSdkVersion = SystemInfo.lynxSdkVersion;
     clearEtAttrPlanMap();
     clearEventState();
     clearRefState();
@@ -84,6 +86,7 @@ describe('ElementTemplate hydration listener', () => {
     clearRefState();
     takeDelayedRunOnMainThreadData();
     resetFunctionCallReturnListener();
+    SystemInfo.lynxSdkVersion = originalLynxSdkVersion;
   });
 
   it('hydrates instances sent from main thread', () => {
