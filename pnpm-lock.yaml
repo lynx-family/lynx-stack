@@ -849,6 +849,9 @@ importers:
       '@aws-sdk/client-s3':
         specifier: ^3.1053.0
         version: 3.1053.0
+      '@lynx-js/genui-openui':
+        specifier: workspace:*
+        version: link:../openui
       '@lynx-js/ui-judge':
         specifier: workspace:*
         version: link:../ui-judge

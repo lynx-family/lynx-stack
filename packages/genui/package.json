@@ -1,6 +1,6 @@
 {
   "name": "@lynx-js/genui",
-  "version": "0.0.3",
+  "version": "0.0.4",
   "description": "Generative UI for Lynx.",
   "repository": {
     "type": "git",
@@ -63,6 +63,10 @@
     "./openui/catalog": {
       "types": "./openui/dist/catalog/index.d.ts",
       "default": "./openui/dist/catalog/index.js"
+    },
+    "./openui/prompt": {
+      "types": "./openui/dist/openui-prompt/index.d.ts",
+      "default": "./openui/dist/openui-prompt/index.js"
     },
     "./openui/styles/renderer.css": "./openui/dist/core/renderer.css"
   },

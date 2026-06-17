@@ -1,5 +1,11 @@
 # @lynx-js/web-elements
 
+## 0.12.4
+
+### Patch Changes
+
+- Preserve custom element false-attribute filtering metadata when applying the component decorator. ([#2603](https://github.com/lynx-family/lynx-stack/pull/2603))
+
 ## 0.12.3
 
 ### Patch Changes

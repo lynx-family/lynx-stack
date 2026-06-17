@@ -1,5 +1,17 @@
 # @lynx-js/react-refresh-webpack-plugin
 
+## 0.4.0
+
+### Minor Changes
+
+- **BREAKING CHANGE** ([#2803](https://github.com/lynx-family/lynx-stack/pull/2803))
+
+  Drop webpack support — the plugins now target Rspack only. All public types come from `@rspack/core` instead of `webpack` (e.g. `Compiler`, `Compilation`, `LoaderContext`), and the `webpack` dependency is removed.
+
+- **BREAKING CHANGE** ([#2838](https://github.com/lynx-family/lynx-stack/pull/2838))
+
+  Remove `ReactRefreshWebpackPlugin` / `ReactRefreshWebpackPluginOptions`. Use `ReactRefreshRspackPlugin` instead.
+
 ## 0.3.6
 
 ### Patch Changes
