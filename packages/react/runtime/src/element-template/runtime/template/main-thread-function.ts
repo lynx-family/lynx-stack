@@ -6,20 +6,25 @@ import {
   createRunOnMainThread,
   takeDelayedRunOnMainThreadData,
 } from '../../../core/thread-function-call/main-thread.js';
-import type { RunOnMainThread } from '../../../core/thread-function-call/main-thread.js';
 import { resetFunctionCallReturnListener } from '../../../core/thread-function-call/return-value.js';
 import { isElementTemplateHydrated } from '../../background/commit-hook.js';
 import { isElementTemplateRendering } from '../../background/render-scope.js';
+
+const runOnMainThreadImpl = createRunOnMainThread({
+  shouldDispatchRunOnMainThreadDirectly() {
+    return isElementTemplateHydrated() && !isElementTemplateRendering();
+  },
+});
 
 /**
  * `runOnMainThread` allows triggering main-thread functions on the main thread asynchronously.
  * @public
  */
-export const runOnMainThread: RunOnMainThread = createRunOnMainThread({
-  shouldDispatchRunOnMainThreadDirectly() {
-    return isElementTemplateHydrated() && !isElementTemplateRendering();
-  },
-});
+export function runOnMainThread<R, Fn extends (...args: any[]) => R>(
+  fn: Fn,
+): (...args: Parameters<Fn>) => Promise<R> {
+  return runOnMainThreadImpl(fn);
+}
 
 export function resetElementTemplateMainThreadFunctionRuntime(): void {
   takeDelayedRunOnMainThreadData();

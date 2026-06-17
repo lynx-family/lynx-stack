@@ -3,9 +3,14 @@
 // LICENSE file in the root directory of this source tree.
 
 import { createRunOnMainThread } from '../../../core/thread-function-call/main-thread.js';
-import type { RunOnMainThread } from '../../../core/thread-function-call/main-thread.js';
 import { isRendering } from '../../lifecycle/isRendering.js';
 import { __globalSnapshotPatch } from '../../lifecycle/patch/snapshotPatch.js';
+
+const runOnMainThreadImpl = createRunOnMainThread({
+  shouldDispatchRunOnMainThreadDirectly() {
+    return __globalSnapshotPatch !== undefined && !isRendering.value;
+  },
+});
 
 /**
  * `runOnMainThread` allows triggering main thread functions on the main thread asynchronously.
@@ -25,8 +30,8 @@ import { __globalSnapshotPatch } from '../../lifecycle/patch/snapshotPatch.js';
  * ```
  * @public
  */
-export const runOnMainThread: RunOnMainThread = createRunOnMainThread({
-  shouldDispatchRunOnMainThreadDirectly() {
-    return __globalSnapshotPatch !== undefined && !isRendering.value;
-  },
-});
+export function runOnMainThread<R, Fn extends (...args: any[]) => R>(
+  fn: Fn,
+): (...args: Parameters<Fn>) => Promise<R> {
+  return runOnMainThreadImpl(fn);
+}
