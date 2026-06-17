@@ -1,5 +1,38 @@
 # @lynx-js/template-webpack-plugin
 
+## 0.12.0
+
+### Minor Changes
+
+- Add unified `debug-metadata.json` per Lynx entry. ([#2642](https://github.com/lynx-family/lynx-stack/pull/2642))
+
+  - New `@lynx-js/debug-metadata` schema package (zero-dep).
+  - New `@lynx-js/debug-metadata-rsbuild-plugin` emits the file and serves `?field=…` queries in dev.
+  - JS `//# sourceMappingURL=` and tasm `templateDebugUrl` repointed at the new endpoint.
+  - `debug-info.json` no longer written to disk.
+  - Auto-registered by Rspeedy — zero user config.
+
+- **BREAKING CHANGE** ([#2803](https://github.com/lynx-family/lynx-stack/pull/2803))
+
+  Drop webpack support — the plugins now target Rspack only. All public types come from `@rspack/core` instead of `webpack` (e.g. `Compiler`, `Compilation`, `LoaderContext`), and the `webpack` dependency is removed.
+
+- Enable `syncXElementRegistry` in the generated page config by default. ([#2784](https://github.com/lynx-family/lynx-stack/pull/2784))
+
+  This lets the runtime sync the XElement registry during page setup, so the open-source `<input>` / `<textarea>` map to the new XElement implementation (`x-input-ng` / `x-textarea-ng`) instead of the deprecated legacy elements.
+
+### Patch Changes
+
+- Encode entry templates concurrently on the shared worker pool, speeding up multi-page builds. ([#2757](https://github.com/lynx-family/lynx-stack/pull/2757))
+
+- Always inline a lazy bundle's background (bts) chunk. ([#2715](https://github.com/lynx-family/lynx-stack/pull/2715))
+
+  A lazy bundle (`appType: "DynamicComponent"`) runs its background synchronously when the bundle is required, so its bts must be inlined into `app-service.js`. Previously a non-matching `inlineScripts` matcher could externalize it via `lynx.requireModuleAsync`, leaving the module unavailable at `installChunk` time and breaking the bundle. The bts of a lazy bundle is now always inlined regardless of `inlineScripts`; the option still applies to card templates.
+
+- Prefix Lynx runtime module names with `webpack/runtime/` (e.g. `Lynx async chunks` → `webpack/runtime/lynx async chunks`), matching the path-structured naming of the bundler's built-in runtime modules. The previous bare names had no path segment, so when they appear as a source-map `sources` entry under a `file://` module-filename template they collapsed into an invalid URL authority (the space-containing name became the host) and broke `SourceMapConsumer` parsing. ([#2642](https://github.com/lynx-family/lynx-stack/pull/2642))
+
+- Updated dependencies [[`5891d0f`](https://github.com/lynx-family/lynx-stack/commit/5891d0fdffc0002770fc5ca4476c537d182239e8), [`7b135f4`](https://github.com/lynx-family/lynx-stack/commit/7b135f403b063c9d26b922c6a6366856de241adf), [`7b4616b`](https://github.com/lynx-family/lynx-stack/commit/7b4616b97716a67f6a0f23a0298acb4e20f4a3f9)]:
+  - @lynx-js/web-core@0.21.1
+
 ## 0.11.2
 
 ### Patch Changes

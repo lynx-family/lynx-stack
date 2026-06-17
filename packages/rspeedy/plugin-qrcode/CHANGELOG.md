@@ -1,5 +1,26 @@
 # @lynx-js/qrcode-rsbuild-plugin
 
+## 0.5.0
+
+### Minor Changes
+
+- Support [Rsbuild v2](https://rsbuild.rs/guide/upgrade/v1-to-v2#plugin-api) and rename `api.onAfterStartProdServer` hook to `api.onAfterStartPreviewServer` and `api.onDevCompileDone` hook to `api.onAfterDevCompile`. ([#2603](https://github.com/lynx-family/lynx-stack/pull/2603))
+
+- Align Rspeedy, the QRCode plugin, and the Lynx bundle Rslib config Node.js engine metadata with Rsbuild v2 and Rslib requirements: Node.js 20.19+ or 22.12+. ([#2789](https://github.com/lynx-family/lynx-stack/pull/2789))
+
+### Patch Changes
+
+- feat(qrcode-rsbuild-plugin): add optional `fullscreen` URL hint + QR schema variant ([#2683](https://github.com/lynx-family/lynx-stack/pull/2683))
+
+  Opt in via `fullscreen: true` (default `false`, preserving prior behavior). When enabled, the plugin:
+
+  - Appends an `∟ Fullscreen` URL line under each Lynx bundle URL printed by the dev server (with `?fullscreen=true`).
+  - Appends a `fullscreen` entry to the QR schema rotation — the QR still opens on the user's default schema; press `a` in the dev console to switch to `fullscreen`.
+
+  Both open the bundle in LynxExplorer with the in-app navigation chrome stripped.
+
+- Support the `output.filename.bundle` function form. ([#2701](https://github.com/lynx-family/lynx-stack/pull/2701))
+
 ## 0.4.7
 
 ### Patch Changes

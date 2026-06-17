@@ -1,5 +1,17 @@
 # @lynx-js/chunk-loading-webpack-plugin
 
+## 0.4.0
+
+### Minor Changes
+
+- **BREAKING CHANGE** ([#2803](https://github.com/lynx-family/lynx-stack/pull/2803))
+
+  Drop webpack support — the plugins now target Rspack only. All public types come from `@rspack/core` instead of `webpack` (e.g. `Compiler`, `Compilation`, `LoaderContext`), and the `webpack` dependency is removed.
+
+### Patch Changes
+
+- Prefix Lynx runtime module names with `webpack/runtime/` (e.g. `Lynx async chunks` → `webpack/runtime/lynx async chunks`), matching the path-structured naming of the bundler's built-in runtime modules. The previous bare names had no path segment, so when they appear as a source-map `sources` entry under a `file://` module-filename template they collapsed into an invalid URL authority (the space-containing name became the host) and broke `SourceMapConsumer` parsing. ([#2642](https://github.com/lynx-family/lynx-stack/pull/2642))
+
 ## 0.3.4
 
 ### Patch Changes
