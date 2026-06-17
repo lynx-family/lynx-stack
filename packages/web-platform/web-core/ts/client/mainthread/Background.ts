@@ -24,6 +24,7 @@ import {
   dispatchLynxViewEventEndpoint,
   updateBTSChunkEndpoint,
   queryComponentEndpoint,
+  fetchExternalBundleEndpoint,
 } from '../endpoints.js';
 import type {
   Cloneable,
@@ -236,6 +237,17 @@ export class BackgroundThread implements AsyncDisposable {
             },
           };
         });
+      },
+    );
+    this.#rpc.registerHandler(
+      fetchExternalBundleEndpoint,
+      (url: string) => {
+        // `loadExternalBundle` decodes the bundle through the shared decode
+        // worker; its `Manifest` section registers the bts chunks with the
+        // worker (updateBTSChunk -> templateCache) and its `LepusCode` section
+        // registers the mts chunks under `lepusCodeUrls`, so `lynx.loadScript`
+        // can load either realm afterwards.
+        return this.#lynxViewInstance.loadExternalBundle(url);
       },
     );
     registerReloadHandler(this.#rpc, this.#lynxViewInstance);

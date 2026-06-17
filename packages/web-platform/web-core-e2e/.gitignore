@@ -1,0 +1,2 @@
+# Built external bundle (produced by `pnpm build:external-libs`)
+resources/external-bundle/

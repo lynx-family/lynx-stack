@@ -22,6 +22,19 @@ export interface EncodeOptions {
    * @defaultValue '3.5'
    */
   engineVersion?: string
+
+  /**
+   * The output format of the encoded bundle.
+   *
+   * - `'tasm'`: the native TASM bundle via `@lynx-js/tasm`.
+   * - `'web'`: a web binary bundle via `@lynx-js/web-core/encode`, decodable by
+   *   the web platform. Sections are emitted as raw JS (the web runtime wraps
+   *   them at `lynx.loadScript` time), and CSS is folded into the StyleInfo
+   *   section.
+   *
+   * @defaultValue 'tasm'
+   */
+  target?: 'web' | 'tasm'
 }
 
 const DEFAULT_EXTERNAL_BUNDLE_MINIFY_CONFIG = {
@@ -454,6 +467,7 @@ export function defineExternalBundleRslibConfig(
     plugins: [
       externalBundleRsbuildPlugin({
         engineVersion: encodeOptions.engineVersion,
+        target: encodeOptions.target,
       }),
     ],
   }
@@ -474,8 +488,10 @@ interface ExposedLayers {
  */
 const externalBundleRsbuildPlugin = ({
   engineVersion,
+  target,
 }: {
   engineVersion: string | undefined
+  target: 'web' | 'tasm' | undefined
 }): rsbuild.RsbuildPlugin => ({
   name: 'lynx:external-bundle',
   // ensure dsl plugin has exposed LAYERS
@@ -568,21 +584,36 @@ const externalBundleRsbuildPlugin = ({
             }
           }
         })
-        // add external bundle wrapper
-        // dprint-ignore
-        chain
-        .plugin(MainThreadRuntimeWrapperWebpackPlugin.name)
-        .use(MainThreadRuntimeWrapperWebpackPlugin, [{
-          test: mainThreadEntryName.map((name) => new RegExp(`${escapeRegex(name)}\\.js$`)),
-        }])
-        .end()
-        .plugin(BackgroundRuntimeWrapperWebpackPlugin.name)
-        .use(BackgroundRuntimeWrapperWebpackPlugin, [{
-          test: backgroundEntryName.map((name) => new RegExp(`${escapeRegex(name)}\\.js$`)),
-        }])
-        .end()
+        const isWeb = target === 'web'
 
-        const { getEncodeMode } = await import('@lynx-js/tasm')
+        // The native lynx_core module wrapper is added at build time only for
+        // the `tasm` target. For web, the runtime (createChunkLoading) wraps
+        // each section when `lynx.loadScript` evaluates it, so sections are
+        // emitted raw.
+        if (!isWeb) {
+          // add external bundle wrapper
+          // dprint-ignore
+          chain
+          .plugin(MainThreadRuntimeWrapperWebpackPlugin.name)
+          .use(MainThreadRuntimeWrapperWebpackPlugin, [{
+            test: mainThreadEntryName.map((name) => new RegExp(`${escapeRegex(name)}\\.js$`)),
+          }])
+          .end()
+          .plugin(BackgroundRuntimeWrapperWebpackPlugin.name)
+          .use(BackgroundRuntimeWrapperWebpackPlugin, [{
+            test: backgroundEntryName.map((name) => new RegExp(`${escapeRegex(name)}\\.js$`)),
+          }])
+          .end()
+        }
+
+        let encode: (opts: unknown) => Promise<{ buffer: Buffer }>
+        if (isWeb) {
+          const { getWebEncodeMode } = await import('./webpack/webEncode.js')
+          encode = getWebEncodeMode()
+        } else {
+          const { getEncodeMode } = await import('@lynx-js/tasm')
+          encode = getEncodeMode()
+        }
 
         // dprint-ignore
         chain
@@ -591,8 +622,8 @@ const externalBundleRsbuildPlugin = ({
           ExternalBundleWebpackPlugin,
           [
             {
-              bundleFileName: `${libName}.lynx.bundle`,
-              encode: getEncodeMode(),
+              bundleFileName: `${libName}.${isWeb ? 'web' : 'lynx'}.bundle`,
+              encode,
               engineVersion,
               mainThreadChunks,
             },

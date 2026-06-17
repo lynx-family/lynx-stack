@@ -302,11 +302,20 @@ async function handleStream(
       case TemplateSectionLabel.LepusCode: {
         const codeMap = decodeBinaryMap(content);
         const isLazy = config['isLazy'] === 'true';
+        // An external bundle's mts chunk is CommonJS-style (it writes to
+        // `exports`), so give it a `module.exports`/`exports` env. A card's own
+        // lepus chunk is either side-effecting (non-lazy) or an expression
+        // assigned to `module.exports` (lazy component root).
+        const prefix = config['isExternalBundle'] === 'true'
+          ? 'var exports=(module.exports={}); '
+          : isLazy
+          ? 'module.exports='
+          : '';
         const blobMap: Record<string, string> = {};
         for (const [key, code] of Object.entries(codeMap)) {
           const blob = new Blob([
             '//# allFunctionsCalledOnLoad\n(function(){ "use strict"; const navigator=void 0,postMessage=void 0,window=void 0; ',
-            isLazy ? 'module.exports=' : '',
+            prefix,
             code as unknown as BlobPart,
             ' \n })()\n//# sourceURL=',
             url,
