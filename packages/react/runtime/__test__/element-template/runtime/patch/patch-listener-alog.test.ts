@@ -5,8 +5,8 @@ import {
   installElementTemplatePatchListener,
   resetElementTemplatePatchListener,
 } from '../../../../src/element-template/native/patch-listener.js';
-import { ElementTemplateLifecycleConstant } from '../../../../src/element-template/protocol/lifecycle-constant.js';
 import { ElementTemplateUpdateOps } from '../../../../src/element-template/protocol/opcodes.js';
+import { createElementTemplateUpdateEvent } from '../../../../src/element-template/protocol/update-event.js';
 import { ElementTemplateEnvManager } from '../../test-utils/debug/envManager.js';
 import { registerBuiltinRawTextTemplate } from '../../test-utils/debug/registry.js';
 
@@ -41,14 +41,13 @@ describe('ElementTemplate patch listener alog', () => {
     alog.mockClear();
 
     envManager.switchToBackground(() => {
-      lynx.getCoreContext().dispatchEvent({
-        type: ElementTemplateLifecycleConstant.update,
-        data: JSON.stringify({
+      lynx.getCoreContext().dispatchEvent(
+        createElementTemplateUpdateEvent({
           ops: createRawTextOps(1, 'hello'),
           flushOptions: { nativeUpdateDataOrder: 7 },
           flowIds: [101, 202],
         }),
-      });
+      );
     });
     envManager.switchToMainThread();
 
@@ -66,13 +65,12 @@ describe('ElementTemplate patch listener alog', () => {
     const formatSpy = vi.spyOn(elementTemplateAlog, 'formatElementTemplateUpdateCommands');
 
     envManager.switchToBackground(() => {
-      lynx.getCoreContext().dispatchEvent({
-        type: ElementTemplateLifecycleConstant.update,
-        data: JSON.stringify({
+      lynx.getCoreContext().dispatchEvent(
+        createElementTemplateUpdateEvent({
           ops: createRawTextOps(1, 'hello'),
           flushOptions: { nativeUpdateDataOrder: 7 },
         }),
-      });
+      );
     });
     envManager.switchToMainThread();
 

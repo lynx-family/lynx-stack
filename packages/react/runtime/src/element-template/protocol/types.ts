@@ -189,8 +189,8 @@ export interface ElementTemplateFlushOptions {
 export interface ElementTemplateUpdateCommitContext {
   ops: ElementTemplateUpdateCommandStream;
   flushOptions: ElementTemplateFlushOptions;
-  flowIds?: number[];
-  isHydration?: boolean;
-  reloadVersion?: number;
-  delayedRunOnMainThreadData?: RunWorkletCtxData[];
+  flowIds?: number[] | undefined;
+  isHydration?: boolean | undefined;
+  reloadVersion?: number | undefined;
+  delayedRunOnMainThreadData?: RunWorkletCtxData[] | undefined;
 }

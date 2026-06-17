@@ -26,6 +26,7 @@ import {
 } from '../../../../src/element-template/background/commit-context.js';
 import { ElementTemplateUpdateOps } from '../../../../src/element-template/protocol/opcodes.js';
 import { ElementTemplateLifecycleConstant } from '../../../../src/element-template/protocol/lifecycle-constant.js';
+import { parseElementTemplateUpdateEventPayload } from '../../../../src/element-template/protocol/update-event.js';
 import { PipelineOrigins } from '../../../../src/core/performance.js';
 import {
   enqueueDelayedRunOnMainThreadData,
@@ -109,7 +110,7 @@ describe('ElementTemplate commit hook', () => {
   let updateEvents: unknown[] = [];
 
   const onUpdate = (event: { data: unknown }) => {
-    updateEvents.push(JSON.parse(event.data as string));
+    updateEvents.push(parseElementTemplateUpdateEventPayload(event.data));
   };
 
   beforeEach(() => {

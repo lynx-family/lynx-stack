@@ -37,6 +37,7 @@ import type {
   ElementTemplateUpdateCommitContext,
   SerializableValue,
 } from '../../../../../src/element-template/protocol/types.js';
+import { parseElementTemplateUpdateEventPayload } from '../../../../../src/element-template/protocol/update-event.js';
 import { clearEtAttrPlanMap } from '../../../../../src/element-template/runtime/template/attr-slot-plan.js';
 import { __root } from '../../../../../src/element-template/runtime/page/root-instance.js';
 import { lastMock } from '../../../test-utils/mock/mockNativePapi.js';
@@ -253,7 +254,7 @@ describe('Compiled direct event background updates', () => {
   let updateEvents: ElementTemplateUpdateCommitContext[] = [];
   let originalLynxSdkVersion: string | undefined;
   const onUpdate = (event: { data: unknown }) => {
-    updateEvents.push(JSON.parse(event.data as string) as ElementTemplateUpdateCommitContext);
+    updateEvents.push(parseElementTemplateUpdateEventPayload(event.data));
   };
 
   async function loadCompiledDirectEventFixture(): Promise<{

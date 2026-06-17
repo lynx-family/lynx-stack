@@ -14,46 +14,47 @@ import { getReloadVersion } from '../../core/reload-version.js';
 import { formatElementTemplateUpdateCommands } from '../debug/alog.js';
 import { ElementTemplateLifecycleConstant } from '../protocol/lifecycle-constant.js';
 import type { ElementTemplateUpdateCommitContext } from '../protocol/types.js';
+import type { ElementTemplateUpdateEvent } from '../protocol/update-event.js';
 import { __page } from '../runtime/page/page.js';
 import { applyElementTemplateUpdateCommands } from '../runtime/patch.js';
 
 let listener:
-  | ((event: { data: unknown }) => void)
+  | ((event: Pick<ElementTemplateUpdateEvent, 'data'>) => void)
   | undefined;
 
 export function installElementTemplatePatchListener(): void {
   resetElementTemplatePatchListener();
 
-  listener = (event: { data: unknown }) => {
-    const { data } = event;
-    const payload = JSON.parse(data as string) as ElementTemplateUpdateCommitContext;
-    if (typeof payload?.reloadVersion === 'number' && payload.reloadVersion < getReloadVersion()) {
+  listener = (event: Pick<ElementTemplateUpdateEvent, 'data'>) => {
+    const { patchOptions } = event.data;
+    if (
+      typeof patchOptions.reloadVersion === 'number'
+      && patchOptions.reloadVersion < getReloadVersion()
+    ) {
       return;
     }
 
-    const hasOps = Array.isArray(payload?.ops) && payload.ops.length > 0;
-    const flushOptions = payload?.flushOptions ?? {};
-    const pipelineOptions = flushOptions.pipelineOptions;
-    setPipeline(pipelineOptions);
-    const flowIds = Array.isArray(payload?.flowIds) && payload.flowIds.length > 0
-      ? payload.flowIds
-      : undefined;
-    const shouldProfilePatch = hasOps
-      && !!flowIds
+    const { flowIds, pipelineOptions } = patchOptions;
+    const shouldProfilePatch = !!flowIds
       && typeof lynx.performance?.profileStart === 'function'
       && typeof lynx.performance?.profileEnd === 'function';
-
     if (shouldProfilePatch) {
       lynx.performance.profileStart('ReactLynx::patch', {
         flowId: flowIds[0],
         flowIds,
       });
     }
+    setPipeline(pipelineOptions);
+    markTiming('mtsRenderStart');
+    markTiming('parseChangesStart');
 
+    const payload = JSON.parse(event.data.payload) as ElementTemplateUpdateCommitContext;
+    markTiming('parseChangesEnd');
+
+    const hasOps = payload.ops.length > 0;
+    const flushOptions = payload.flushOptions;
     const isHydration = payload.isHydration === true;
-    const delayedRunOnMainThreadData = Array.isArray(payload.delayedRunOnMainThreadData)
-      ? payload.delayedRunOnMainThreadData
-      : undefined;
+    const delayedRunOnMainThreadData = payload.delayedRunOnMainThreadData;
     if (hasOps) {
       if (typeof __ALOG__ !== 'undefined' && __ALOG__) {
         console.alog?.(
@@ -69,9 +70,6 @@ export function installElementTemplatePatchListener(): void {
             ),
         );
       }
-      markTiming('mtsRenderStart');
-      markTiming('parseChangesStart');
-      markTiming('parseChangesEnd');
       markTiming('patchChangesStart');
       try {
         applyElementTemplateUpdateCommands(payload.ops, isHydration);
@@ -82,8 +80,11 @@ export function installElementTemplatePatchListener(): void {
           flushDelayedRunOnBackgroundFunctions();
         }
       }
-    } else if (isHydration) {
-      flushDelayedRunOnBackgroundFunctions();
+    } else {
+      markTiming('mtsRenderEnd');
+      if (isHydration) {
+        flushDelayedRunOnBackgroundFunctions();
+      }
     }
     if (delayedRunOnMainThreadData?.length) {
       setEomShouldFlushElementTree(false);

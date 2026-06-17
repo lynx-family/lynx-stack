@@ -20,6 +20,7 @@ import {
 import { ElementTemplateLifecycleConstant } from '../../../../../src/element-template/protocol/lifecycle-constant.js';
 import { ElementTemplateUpdateOps } from '../../../../../src/element-template/protocol/opcodes.js';
 import type { ElementTemplateUpdateCommitContext } from '../../../../../src/element-template/protocol/types.js';
+import { parseElementTemplateUpdateEventPayload } from '../../../../../src/element-template/protocol/update-event.js';
 import { clearEtAttrPlanMap } from '../../../../../src/element-template/runtime/template/attr-slot-plan.js';
 import { resetElementTemplateMainThreadFunctionRuntime } from '../../../../../src/element-template/runtime/template/main-thread-function.js';
 import {
@@ -85,7 +86,7 @@ describe('Compiled runOnMainThread background fixtures', () => {
   const envManager = new ElementTemplateEnvManager();
   let updateEvents: ElementTemplateUpdateCommitContext[] = [];
   const onUpdate = (event: { data: unknown }) => {
-    updateEvents.push(JSON.parse(event.data as string) as ElementTemplateUpdateCommitContext);
+    updateEvents.push(parseElementTemplateUpdateEventPayload(event.data));
   };
 
   beforeEach(() => {

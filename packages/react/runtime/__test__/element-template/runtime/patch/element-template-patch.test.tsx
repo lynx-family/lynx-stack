@@ -16,8 +16,10 @@ import { ElementTemplateUpdateOps } from '../../../../src/element-template/proto
 import type {
   ElementTemplateHandleSlotsCommand,
   ElementTemplateUpdateCommandStream,
+  ElementTemplateUpdateCommitContext,
   SerializedElementTemplate,
 } from '../../../../src/element-template/protocol/types.js';
+import { createElementTemplateUpdateEvent } from '../../../../src/element-template/protocol/update-event.js';
 import { __page, setupPage } from '../../../../src/element-template/runtime/page/page.js';
 import { __root } from '../../../../src/element-template/runtime/page/root-instance.js';
 import { applyElementTemplateUpdateCommands } from '../../../../src/element-template/runtime/patch.js';
@@ -70,6 +72,10 @@ function createRawTextOps(id: number, text: string) {
     [text],
     [],
   ] as const;
+}
+
+function dispatchElementTemplateUpdate(payload: ElementTemplateUpdateCommitContext): void {
+  lynx.getCoreContext().dispatchEvent(createElementTemplateUpdateEvent(payload));
 }
 
 function resetReportedErrors(): void {
@@ -242,10 +248,7 @@ describe('ElementTemplate patch stream (apply)', () => {
     mockFlushElementTree.mockClear();
 
     envManager.switchToBackground();
-    lynx.getCoreContext().dispatchEvent({
-      type: ElementTemplateLifecycleConstant.update,
-      data: JSON.stringify({ ops: stream, flushOptions: {} }),
-    });
+    dispatchElementTemplateUpdate({ ops: stream, flushOptions: {} });
     envManager.switchToMainThread();
 
     expect(mockSetAttributeOfElementTemplate.mock.calls.length).toBeGreaterThan(0);
@@ -265,12 +268,9 @@ describe('ElementTemplate patch stream (apply)', () => {
     mockFlushElementTree.mockClear();
 
     envManager.switchToBackground();
-    lynx.getCoreContext().dispatchEvent({
-      type: ElementTemplateLifecycleConstant.update,
-      data: JSON.stringify({
-        ops: [ElementTemplateUpdateOps.setAttribute, targetId, 0, { type: 'worklet', value: ctx }],
-        flushOptions: {},
-      }),
+    dispatchElementTemplateUpdate({
+      ops: [ElementTemplateUpdateOps.setAttribute, targetId, 0, { type: 'worklet', value: ctx }],
+      flushOptions: {},
     });
     envManager.switchToMainThread();
 
@@ -299,13 +299,10 @@ describe('ElementTemplate patch stream (apply)', () => {
       mockSetAttributeOfElementTemplate.mockClear();
 
       envManager.switchToBackground();
-      lynx.getCoreContext().dispatchEvent({
-        type: ElementTemplateLifecycleConstant.update,
-        data: JSON.stringify({
-          ops: [ElementTemplateUpdateOps.setAttribute, targetId, 0, { type: 'worklet', value: ctx }],
-          flushOptions: {},
-          isHydration: true,
-        }),
+      dispatchElementTemplateUpdate({
+        ops: [ElementTemplateUpdateOps.setAttribute, targetId, 0, { type: 'worklet', value: ctx }],
+        flushOptions: {},
+        isHydration: true,
       });
       envManager.switchToMainThread();
 
@@ -339,19 +336,16 @@ describe('ElementTemplate patch stream (apply)', () => {
     installElementTemplatePatchListener();
 
     envManager.switchToBackground();
-    lynx.getCoreContext().dispatchEvent({
-      type: ElementTemplateLifecycleConstant.update,
-      data: JSON.stringify({
-        ops: [
-          ElementTemplateUpdateOps.createTemplate,
-          handleId,
-          'view',
-          null,
-          [{ type: 'worklet', value: ctx }],
-          [],
-        ],
-        flushOptions: {},
-      }),
+    dispatchElementTemplateUpdate({
+      ops: [
+        ElementTemplateUpdateOps.createTemplate,
+        handleId,
+        'view',
+        null,
+        [{ type: 'worklet', value: ctx }],
+        [],
+      ],
+      flushOptions: {},
     });
     envManager.switchToMainThread();
 
@@ -383,19 +377,16 @@ describe('ElementTemplate patch stream (apply)', () => {
     installElementTemplatePatchListener();
 
     envManager.switchToBackground();
-    lynx.getCoreContext().dispatchEvent({
-      type: ElementTemplateLifecycleConstant.update,
-      data: JSON.stringify({
-        ops: [
-          ElementTemplateUpdateOps.createTemplate,
-          handleId,
-          'view',
-          'lazy-entry',
-          [{ type: 'worklet', value: ctx }],
-          [],
-        ],
-        flushOptions: {},
-      }),
+    dispatchElementTemplateUpdate({
+      ops: [
+        ElementTemplateUpdateOps.createTemplate,
+        handleId,
+        'view',
+        'lazy-entry',
+        [{ type: 'worklet', value: ctx }],
+        [],
+      ],
+      flushOptions: {},
     });
     envManager.switchToMainThread();
 
@@ -415,12 +406,9 @@ describe('ElementTemplate patch stream (apply)', () => {
     installElementTemplatePatchListener();
 
     envManager.switchToBackground();
-    lynx.getCoreContext().dispatchEvent({
-      type: ElementTemplateLifecycleConstant.update,
-      data: JSON.stringify({
-        ops: [ElementTemplateUpdateOps.setAttribute, targetId, 0, null],
-        flushOptions: {},
-      }),
+    dispatchElementTemplateUpdate({
+      ops: [ElementTemplateUpdateOps.setAttribute, targetId, 0, null],
+      flushOptions: {},
     });
     envManager.switchToMainThread();
 
@@ -438,12 +426,9 @@ describe('ElementTemplate patch stream (apply)', () => {
     installElementTemplatePatchListener();
 
     envManager.switchToBackground();
-    lynx.getCoreContext().dispatchEvent({
-      type: ElementTemplateLifecycleConstant.update,
-      data: JSON.stringify({
-        ops: [ElementTemplateUpdateOps.removeNode, targetId, 0, childId, [childId]],
-        flushOptions: {},
-      }),
+    dispatchElementTemplateUpdate({
+      ops: [ElementTemplateUpdateOps.removeNode, targetId, 0, childId, [childId]],
+      flushOptions: {},
     });
     envManager.switchToMainThread();
 
@@ -468,13 +453,10 @@ describe('ElementTemplate patch stream (apply)', () => {
       installElementTemplatePatchListener();
 
       envManager.switchToBackground();
-      lynx.getCoreContext().dispatchEvent({
-        type: ElementTemplateLifecycleConstant.update,
-        data: JSON.stringify({
-          ops: [ElementTemplateUpdateOps.setAttribute, targetId, 0, { type: 'worklet', value: nextCtx }],
-          flushOptions: {},
-          isHydration: true,
-        }),
+      dispatchElementTemplateUpdate({
+        ops: [ElementTemplateUpdateOps.setAttribute, targetId, 0, { type: 'worklet', value: nextCtx }],
+        flushOptions: {},
+        isHydration: true,
       });
       envManager.switchToMainThread();
 
@@ -516,13 +498,10 @@ describe('ElementTemplate patch stream (apply)', () => {
       });
 
       envManager.switchToBackground();
-      lynx.getCoreContext().dispatchEvent({
-        type: ElementTemplateLifecycleConstant.update,
-        data: JSON.stringify({
-          ops: [ElementTemplateUpdateOps.setAttribute, targetId, 0, { type: 'worklet', value: nextCtx }],
-          flushOptions: {},
-          isHydration: true,
-        }),
+      dispatchElementTemplateUpdate({
+        ops: [ElementTemplateUpdateOps.setAttribute, targetId, 0, { type: 'worklet', value: nextCtx }],
+        flushOptions: {},
+        isHydration: true,
       });
       envManager.switchToMainThread();
 
@@ -577,20 +556,17 @@ describe('ElementTemplate patch stream (apply)', () => {
       });
 
       envManager.switchToBackground();
-      lynx.getCoreContext().dispatchEvent({
-        type: ElementTemplateLifecycleConstant.update,
-        data: JSON.stringify({
-          ops: [ElementTemplateUpdateOps.setAttribute, targetId, 0, { type: 'worklet', value: nextCtx }],
-          flushOptions: {},
-          isHydration: true,
-          delayedRunOnMainThreadData: [
-            {
-              worklet: mainThreadWorklet,
-              params: ['from-hydrate'],
-              resolveId: 7,
-            },
-          ],
-        }),
+      dispatchElementTemplateUpdate({
+        ops: [ElementTemplateUpdateOps.setAttribute, targetId, 0, { type: 'worklet', value: nextCtx }],
+        flushOptions: {},
+        isHydration: true,
+        delayedRunOnMainThreadData: [
+          {
+            worklet: mainThreadWorklet,
+            params: ['from-hydrate'],
+            resolveId: 7,
+          },
+        ],
       });
       envManager.switchToMainThread();
 
@@ -640,19 +616,16 @@ describe('ElementTemplate patch stream (apply)', () => {
       });
 
       envManager.switchToBackground();
-      lynx.getCoreContext().dispatchEvent({
-        type: ElementTemplateLifecycleConstant.update,
-        data: JSON.stringify({
-          ops: [],
-          flushOptions: {},
-          delayedRunOnMainThreadData: [
-            {
-              worklet: { _wkltId: 'throwing-main-thread-function' },
-              params: [],
-              resolveId: 8,
-            },
-          ],
-        }),
+      dispatchElementTemplateUpdate({
+        ops: [],
+        flushOptions: {},
+        delayedRunOnMainThreadData: [
+          {
+            worklet: { _wkltId: 'throwing-main-thread-function' },
+            params: [],
+            resolveId: 8,
+          },
+        ],
       });
       envManager.switchToMainThread();
 
@@ -691,13 +664,10 @@ describe('ElementTemplate patch stream (apply)', () => {
       });
 
       envManager.switchToBackground();
-      lynx.getCoreContext().dispatchEvent({
-        type: ElementTemplateLifecycleConstant.update,
-        data: JSON.stringify({
-          ops: [],
-          flushOptions: {},
-          isHydration: true,
-        }),
+      dispatchElementTemplateUpdate({
+        ops: [],
+        flushOptions: {},
+        isHydration: true,
       });
       envManager.switchToMainThread();
 
@@ -733,12 +703,9 @@ describe('ElementTemplate patch stream (apply)', () => {
       installElementTemplatePatchListener();
 
       envManager.switchToBackground();
-      lynx.getCoreContext().dispatchEvent({
-        type: ElementTemplateLifecycleConstant.update,
-        data: JSON.stringify({
-          ops: [ElementTemplateUpdateOps.setAttribute, targetId, 0, { type: 'worklet', value: nextCtx }],
-          flushOptions: {},
-        }),
+      dispatchElementTemplateUpdate({
+        ops: [ElementTemplateUpdateOps.setAttribute, targetId, 0, { type: 'worklet', value: nextCtx }],
+        flushOptions: {},
       });
       envManager.switchToMainThread();
 
@@ -766,12 +733,9 @@ describe('ElementTemplate patch stream (apply)', () => {
 
     expect(() => {
       envManager.switchToBackground();
-      lynx.getCoreContext().dispatchEvent({
-        type: ElementTemplateLifecycleConstant.update,
-        data: JSON.stringify({
-          ops: [ElementTemplateUpdateOps.setAttribute, targetId, 0, { type: 'worklet', value: ctx }],
-          flushOptions: {},
-        }),
+      dispatchElementTemplateUpdate({
+        ops: [ElementTemplateUpdateOps.setAttribute, targetId, 0, { type: 'worklet', value: ctx }],
+        flushOptions: {},
       });
       envManager.switchToMainThread();
     }).toThrow('flush failed');
@@ -804,13 +768,10 @@ describe('ElementTemplate patch stream (apply)', () => {
 
       expect(() => {
         envManager.switchToBackground();
-        lynx.getCoreContext().dispatchEvent({
-          type: ElementTemplateLifecycleConstant.update,
-          data: JSON.stringify({
-            ops: [ElementTemplateUpdateOps.setAttribute, targetId, 0, { type: 'worklet', value: nextCtx }],
-            flushOptions: {},
-            isHydration: true,
-          }),
+        dispatchElementTemplateUpdate({
+          ops: [ElementTemplateUpdateOps.setAttribute, targetId, 0, { type: 'worklet', value: nextCtx }],
+          flushOptions: {},
+          isHydration: true,
         });
         envManager.switchToMainThread();
       }).toThrow('flush failed');
@@ -843,14 +804,11 @@ describe('ElementTemplate patch stream (apply)', () => {
       installElementTemplatePatchListener();
 
       envManager.switchToBackground();
-      lynx.getCoreContext().dispatchEvent({
-        type: ElementTemplateLifecycleConstant.update,
-        data: JSON.stringify({
-          ops: [ElementTemplateUpdateOps.setAttribute, targetId, 0, { type: 'worklet', value: nextCtx }],
-          flushOptions: {},
-          isHydration: true,
-          reloadVersion: staleReloadVersion,
-        }),
+      dispatchElementTemplateUpdate({
+        ops: [ElementTemplateUpdateOps.setAttribute, targetId, 0, { type: 'worklet', value: nextCtx }],
+        flushOptions: {},
+        isHydration: true,
+        reloadVersion: staleReloadVersion,
       });
       envManager.switchToMainThread();
 
@@ -891,20 +849,17 @@ describe('ElementTemplate patch stream (apply)', () => {
 
       expect(() => {
         envManager.switchToBackground();
-        lynx.getCoreContext().dispatchEvent({
-          type: ElementTemplateLifecycleConstant.update,
-          data: JSON.stringify({
-            ops: [ElementTemplateUpdateOps.setAttribute, targetId, 0, { type: 'worklet', value: ctx }],
-            flushOptions: {},
-            isHydration: true,
-            delayedRunOnMainThreadData: [
-              {
-                worklet: { _wkltId: 'should-not-run' },
-                params: [],
-                resolveId: 11,
-              },
-            ],
-          }),
+        dispatchElementTemplateUpdate({
+          ops: [ElementTemplateUpdateOps.setAttribute, targetId, 0, { type: 'worklet', value: ctx }],
+          flushOptions: {},
+          isHydration: true,
+          delayedRunOnMainThreadData: [
+            {
+              worklet: { _wkltId: 'should-not-run' },
+              params: [],
+              resolveId: 11,
+            },
+          ],
         });
         envManager.switchToMainThread();
       }).toThrow('setAttribute failed');
@@ -942,20 +897,17 @@ describe('ElementTemplate patch stream (apply)', () => {
       mockFlushElementTree.mockClear();
 
       envManager.switchToBackground();
-      lynx.getCoreContext().dispatchEvent({
-        type: ElementTemplateLifecycleConstant.update,
-        data: JSON.stringify({
-          ops: [ElementTemplateUpdateOps.setAttribute, 404, 0, 'missing'],
-          flushOptions: {},
-          isHydration: true,
-          delayedRunOnMainThreadData: [
-            {
-              worklet,
-              params: [],
-              resolveId: 9,
-            },
-          ],
-        }),
+      dispatchElementTemplateUpdate({
+        ops: [ElementTemplateUpdateOps.setAttribute, 404, 0, 'missing'],
+        flushOptions: {},
+        isHydration: true,
+        delayedRunOnMainThreadData: [
+          {
+            worklet,
+            params: [],
+            resolveId: 9,
+          },
+        ],
       });
       envManager.switchToMainThread();
 
@@ -990,20 +942,17 @@ describe('ElementTemplate patch stream (apply)', () => {
       mockFlushElementTree.mockClear();
 
       envManager.switchToBackground();
-      lynx.getCoreContext().dispatchEvent({
-        type: ElementTemplateLifecycleConstant.update,
-        data: JSON.stringify({
-          ops: [],
-          flushOptions: {},
-          reloadVersion: staleReloadVersion,
-          delayedRunOnMainThreadData: [
-            {
-              worklet: { _wkltId: 'stale-main-thread-function' },
-              params: [],
-              resolveId: 10,
-            },
-          ],
-        }),
+      dispatchElementTemplateUpdate({
+        ops: [],
+        flushOptions: {},
+        reloadVersion: staleReloadVersion,
+        delayedRunOnMainThreadData: [
+          {
+            worklet: { _wkltId: 'stale-main-thread-function' },
+            params: [],
+            resolveId: 10,
+          },
+        ],
       });
       envManager.switchToMainThread();
 
@@ -1022,12 +971,9 @@ describe('ElementTemplate patch stream (apply)', () => {
     installElementTemplatePatchListener();
 
     envManager.switchToBackground();
-    lynx.getCoreContext().dispatchEvent({
-      type: ElementTemplateLifecycleConstant.update,
-      data: JSON.stringify({
-        ops: [ElementTemplateUpdateOps.setAttribute, targetId, 0, { type: 'worklet', value: ctx }],
-        flushOptions: {},
-      }),
+    dispatchElementTemplateUpdate({
+      ops: [ElementTemplateUpdateOps.setAttribute, targetId, 0, { type: 'worklet', value: ctx }],
+      flushOptions: {},
     });
     envManager.switchToMainThread();
 
@@ -1058,22 +1004,19 @@ describe('ElementTemplate patch stream (apply)', () => {
       mockFlushElementTree.mockClear();
 
       envManager.switchToBackground();
-      lynx.getCoreContext().dispatchEvent({
-        type: ElementTemplateLifecycleConstant.update,
-        data: JSON.stringify({
-          ops: [
-            ElementTemplateUpdateOps.setAttribute,
-            targetId,
-            0,
-            { type: 'worklet', value: nextCtx },
-            ElementTemplateUpdateOps.setAttribute,
-            missingTargetId,
-            0,
-            'missing',
-          ],
-          flushOptions: {},
-          isHydration: true,
-        }),
+      dispatchElementTemplateUpdate({
+        ops: [
+          ElementTemplateUpdateOps.setAttribute,
+          targetId,
+          0,
+          { type: 'worklet', value: nextCtx },
+          ElementTemplateUpdateOps.setAttribute,
+          missingTargetId,
+          0,
+          'missing',
+        ],
+        flushOptions: {},
+        isHydration: true,
       });
       envManager.switchToMainThread();
 
@@ -1113,23 +1056,20 @@ describe('ElementTemplate patch stream (apply)', () => {
       mockFlushElementTree.mockClear();
 
       envManager.switchToBackground();
-      lynx.getCoreContext().dispatchEvent({
-        type: ElementTemplateLifecycleConstant.update,
-        data: JSON.stringify({
-          ops: [
-            ElementTemplateUpdateOps.removeNode,
-            targetId,
-            0,
-            childId,
-            [childId],
-            ElementTemplateUpdateOps.setAttribute,
-            missingTargetId,
-            0,
-            'missing',
-          ],
-          flushOptions: {},
-          isHydration: true,
-        }),
+      dispatchElementTemplateUpdate({
+        ops: [
+          ElementTemplateUpdateOps.removeNode,
+          targetId,
+          0,
+          childId,
+          [childId],
+          ElementTemplateUpdateOps.setAttribute,
+          missingTargetId,
+          0,
+          'missing',
+        ],
+        flushOptions: {},
+        isHydration: true,
       });
       envManager.switchToMainThread();
 
@@ -1164,13 +1104,10 @@ describe('ElementTemplate patch stream (apply)', () => {
 
     expect(() => {
       envManager.switchToBackground();
-      lynx.getCoreContext().dispatchEvent({
-        type: ElementTemplateLifecycleConstant.update,
-        data: JSON.stringify({
-          ops: [ElementTemplateUpdateOps.removeNode, targetId, 0, childId, [childId]],
-          flushOptions: {},
-          isHydration: true,
-        }),
+      dispatchElementTemplateUpdate({
+        ops: [ElementTemplateUpdateOps.removeNode, targetId, 0, childId, [childId]],
+        flushOptions: {},
+        isHydration: true,
       });
       envManager.switchToMainThread();
     }).toThrow('flush failed');
@@ -1201,10 +1138,7 @@ describe('ElementTemplate patch stream (apply)', () => {
     mockFlushElementTree.mockClear();
 
     envManager.switchToBackground();
-    lynx.getCoreContext().dispatchEvent({
-      type: ElementTemplateLifecycleConstant.update,
-      data: JSON.stringify({ ops: stream, flushOptions: {}, flowIds: [101, 202] }),
-    });
+    dispatchElementTemplateUpdate({ ops: stream, flushOptions: {}, flowIds: [101, 202] });
     envManager.switchToMainThread();
 
     expect(performance.profileStart).toHaveBeenCalledWith('ReactLynx::patch', {
@@ -1225,10 +1159,7 @@ describe('ElementTemplate patch stream (apply)', () => {
     mockFlushElementTree.mockClear();
 
     envManager.switchToBackground();
-    lynx.getCoreContext().dispatchEvent({
-      type: ElementTemplateLifecycleConstant.update,
-      data: JSON.stringify({ ops: [], flushOptions: { triggerDataUpdated: true }, flowIds: [101, 202] }),
-    });
+    dispatchElementTemplateUpdate({ ops: [], flushOptions: { triggerDataUpdated: true }, flowIds: [101, 202] });
     envManager.switchToMainThread();
 
     expect(performance.profileStart).not.toHaveBeenCalled();
@@ -1237,7 +1168,7 @@ describe('ElementTemplate patch stream (apply)', () => {
     expect(mockFlushElementTree.mock.calls[0]?.[1]).toEqual({ triggerDataUpdated: true });
   });
 
-  it('flushes option-only update payloads without ops', () => {
+  it('flushes option-only update payloads with empty ops', () => {
     envManager.switchToMainThread();
     installElementTemplatePatchListener();
     const performance = lynx.performance;
@@ -1246,9 +1177,10 @@ describe('ElementTemplate patch stream (apply)', () => {
     mockFlushElementTree.mockClear();
 
     envManager.switchToBackground();
-    lynx.getCoreContext().dispatchEvent({
-      type: ElementTemplateLifecycleConstant.update,
-      data: JSON.stringify({ flushOptions: { triggerDataUpdated: true }, flowIds: [101, 202] }),
+    dispatchElementTemplateUpdate({
+      ops: [],
+      flushOptions: { triggerDataUpdated: true },
+      flowIds: [101, 202],
     });
     envManager.switchToMainThread();
 
@@ -3101,12 +3033,9 @@ describe('ElementTemplate patch stream (apply)', () => {
     lynx.performance._markTiming.mockClear();
 
     envManager.switchToBackground();
-    lynx.getCoreContext().dispatchEvent({
-      type: ElementTemplateLifecycleConstant.update,
-      data: JSON.stringify({
-        ops: [],
-        flushOptions: { triggerDataUpdated: true },
-      }),
+    dispatchElementTemplateUpdate({
+      ops: [],
+      flushOptions: { triggerDataUpdated: true },
     });
     envManager.switchToMainThread();
 

@@ -23,7 +23,7 @@ import { hook, isEmptyObject } from '../../utils.js';
 import { formatElementTemplateUpdateCommands } from '../debug/alog.js';
 import { profileEnd, profileStart } from '../debug/profile.js';
 import { clearPendingRefs, flushPendingRefs, hasPendingRefs } from '../prop-adapters/ref.js';
-import { ElementTemplateLifecycleConstant } from '../protocol/lifecycle-constant.js';
+import { createElementTemplateUpdateEvent } from '../protocol/update-event.js';
 
 let installed = false;
 let hasHydrated = false;
@@ -115,16 +115,13 @@ function flushElementTemplateCommitChanges(): void {
         );
       }
 
-      lynx.getCoreContext().dispatchEvent({
-        type: ElementTemplateLifecycleConstant.update,
-        data: JSON.stringify({
-          ops: globalCommitContext.ops,
-          flushOptions: globalCommitContext.flushOptions,
-          flowIds: globalCommitContext.flowIds,
-          reloadVersion: getReloadVersion(),
-          delayedRunOnMainThreadData: delayedRunOnMainThreadPayload,
-        }),
-      });
+      lynx.getCoreContext().dispatchEvent(createElementTemplateUpdateEvent({
+        ops: globalCommitContext.ops,
+        flushOptions: globalCommitContext.flushOptions,
+        reloadVersion: getReloadVersion(),
+        flowIds: globalCommitContext.flowIds,
+        delayedRunOnMainThreadData: delayedRunOnMainThreadPayload,
+      }));
       didDispatchUpdatePayload = true;
     }
     // When native ops exist, patch first so a newly attached ref observes the

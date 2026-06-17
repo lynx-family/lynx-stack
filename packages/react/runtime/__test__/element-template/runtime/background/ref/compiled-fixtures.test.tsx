@@ -16,6 +16,7 @@ import { clearRefState } from '../../../../../src/element-template/prop-adapters
 import { ElementTemplateLifecycleConstant } from '../../../../../src/element-template/protocol/lifecycle-constant.js';
 import { ElementTemplateUpdateOps } from '../../../../../src/element-template/protocol/opcodes.js';
 import type { ElementTemplateUpdateCommitContext } from '../../../../../src/element-template/protocol/types.js';
+import { parseElementTemplateUpdateEventPayload } from '../../../../../src/element-template/protocol/update-event.js';
 import { clearEtAttrPlanMap } from '../../../../../src/element-template/runtime/template/attr-slot-plan.js';
 import { __root } from '../../../../../src/element-template/runtime/page/root-instance.js';
 import {
@@ -86,7 +87,7 @@ describe('Compiled ordinary ref background updates', () => {
   const envManager = new ElementTemplateEnvManager();
   let updateEvents: ElementTemplateUpdateCommitContext[] = [];
   const onUpdate = (event: { data: unknown }) => {
-    updateEvents.push(JSON.parse(event.data as string) as ElementTemplateUpdateCommitContext);
+    updateEvents.push(parseElementTemplateUpdateEventPayload(event.data));
   };
 
   function renderOnBackground<TProps extends object>(
@@ -107,6 +108,12 @@ describe('Compiled ordinary ref background updates', () => {
     const host = getRenderedHost();
     renderCompiledFixtureOnMainThread(moduleExports, envManager, props);
     return host;
+  }
+
+  function flushAndClearUpdateEvents(): void {
+    envManager.switchToMainThread();
+    envManager.switchToBackground();
+    updateEvents = [];
   }
 
   beforeEach(() => {
@@ -149,7 +156,7 @@ describe('Compiled ordinary ref background updates', () => {
     expect(oldRef).toHaveBeenCalledTimes(1);
     expect(host.attributeSlots).toEqual([`${host.instanceId}-0`]);
     oldRef.mockClear();
-    updateEvents = [];
+    flushAndClearUpdateEvents();
 
     renderOnBackground(backgroundModule, { hostRef: newRef });
 
@@ -194,7 +201,7 @@ describe('Compiled ordinary ref background updates', () => {
     expect(stableRef).toHaveBeenCalledTimes(1);
     expect(host.attributeSlots).toEqual([preparedSpread]);
     stableRef.mockClear();
-    updateEvents = [];
+    flushAndClearUpdateEvents();
 
     renderOnBackground(backgroundModule, {
       spread: { id: 'cta-next', ref: stableRef },
@@ -269,7 +276,7 @@ describe('Compiled ordinary ref background updates', () => {
     const stableObjectProxy = objectRef.current;
     directRef.mockClear();
     spreadRef.mockClear();
-    updateEvents = [];
+    flushAndClearUpdateEvents();
 
     const nextDirectRef = vi.fn();
     const nextSpreadRef = vi.fn();

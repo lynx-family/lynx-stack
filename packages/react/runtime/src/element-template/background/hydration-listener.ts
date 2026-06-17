@@ -33,6 +33,7 @@ import { clearPendingEvents, flushPendingEvents } from '../prop-adapters/event.j
 import { clearDelayedRefUiOps, clearPendingRefs, flushDelayedRefUiOps } from '../prop-adapters/ref.js';
 import { ElementTemplateLifecycleConstant } from '../protocol/lifecycle-constant.js';
 import type { ElementTemplateHydrateCommitContext, SerializedEtNode } from '../protocol/types.js';
+import { createElementTemplateUpdateEvent } from '../protocol/update-event.js';
 import { __root } from '../runtime/page/root-instance.js';
 import { resetElementTemplateMainThreadFunctionRuntime } from '../runtime/template/main-thread-function.js';
 
@@ -136,17 +137,14 @@ export function installElementTemplateHydrationListener(): void {
         ? takeRemovedSubtreesForPostDispatchTeardown()
         : [];
       try {
-        lynx.getCoreContext().dispatchEvent({
-          type: ElementTemplateLifecycleConstant.update,
-          data: JSON.stringify({
-            ops: globalCommitContext.ops,
-            flushOptions: globalCommitContext.flushOptions,
-            flowIds: globalCommitContext.flowIds,
-            isHydration: true,
-            reloadVersion: getReloadVersion(),
-            delayedRunOnMainThreadData: delayedRunOnMainThreadPayload,
-          }),
-        });
+        lynx.getCoreContext().dispatchEvent(createElementTemplateUpdateEvent({
+          ops: globalCommitContext.ops,
+          flushOptions: globalCommitContext.flushOptions,
+          isHydration: true,
+          reloadVersion: getReloadVersion(),
+          flowIds: globalCommitContext.flowIds,
+          delayedRunOnMainThreadData: delayedRunOnMainThreadPayload,
+        }));
         didDispatchHydrateUpdate = true;
       } finally {
         if (delayedRunOnMainThreadPayload && !didDispatchHydrateUpdate) {

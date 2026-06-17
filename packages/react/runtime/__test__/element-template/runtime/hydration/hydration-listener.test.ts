@@ -27,6 +27,7 @@ import {
 } from '../../../../src/element-template/prop-adapters/ref.js';
 import { ElementTemplateLifecycleConstant } from '../../../../src/element-template/protocol/lifecycle-constant.js';
 import { ElementTemplateUpdateOps } from '../../../../src/element-template/protocol/opcodes.js';
+import { parseElementTemplateUpdateEventPayload } from '../../../../src/element-template/protocol/update-event.js';
 import type {
   SerializedElementTemplate,
   SerializedTypedNode,
@@ -64,6 +65,10 @@ interface LynxMock {
 
 interface TTMock {
   callDestroyLifetimeFun?: () => void;
+}
+
+function parseUpdateEventData(data: unknown): unknown {
+  return parseElementTemplateUpdateEventPayload(data);
 }
 
 describe('ElementTemplate hydration listener', () => {
@@ -137,7 +142,7 @@ describe('ElementTemplate hydration listener', () => {
     });
 
     envManager.switchToBackground();
-    const updatePayload = JSON.parse(dispatchSpy.mock.calls.at(-1)?.[0]?.data as string);
+    const updatePayload = parseUpdateEventData(dispatchSpy.mock.calls.at(-1)?.[0]?.data);
     expect(updatePayload).toEqual({
       ops: [],
       flushOptions: {
@@ -178,7 +183,7 @@ describe('ElementTemplate hydration listener', () => {
     });
 
     envManager.switchToBackground();
-    const updatePayload = JSON.parse(dispatchSpy.mock.calls.at(-1)?.[0]?.data as string);
+    const updatePayload = parseUpdateEventData(dispatchSpy.mock.calls.at(-1)?.[0]?.data);
     expect(updatePayload).toEqual({
       ops: [],
       flushOptions: {
@@ -339,7 +344,7 @@ describe('ElementTemplate hydration listener', () => {
       const updateCall = dispatchSpy.mock.calls.find(([event]) =>
         (event as { type: string }).type === ElementTemplateLifecycleConstant.update
       );
-      const updatePayload = JSON.parse(updateCall?.[0].data as string);
+      const updatePayload = parseUpdateEventData(updateCall?.[0].data);
       expect(reportError).not.toHaveBeenCalled();
       expect(updateCall?.[0]).toMatchObject({ type: ElementTemplateLifecycleConstant.update });
       expect(updatePayload).toMatchObject({
@@ -392,7 +397,7 @@ describe('ElementTemplate hydration listener', () => {
     const updateCall = dispatchSpy.mock.calls.find(([event]) =>
       (event as { type: string }).type === ElementTemplateLifecycleConstant.update
     );
-    const updatePayload = JSON.parse(updateCall?.[0].data as string);
+    const updatePayload = parseUpdateEventData(updateCall?.[0].data);
     expect(updateCall?.[0]).toMatchObject({ type: ElementTemplateLifecycleConstant.update });
     expect(updatePayload).toMatchObject({
       isHydration: true,
@@ -429,7 +434,7 @@ describe('ElementTemplate hydration listener', () => {
     const updateCall = dispatchSpy.mock.calls.find(([event]) =>
       (event as { type: string }).type === ElementTemplateLifecycleConstant.update
     );
-    const updatePayload = JSON.parse(updateCall?.[0].data as string);
+    const updatePayload = parseUpdateEventData(updateCall?.[0].data);
     expect(updateCall?.[0]).toMatchObject({ type: ElementTemplateLifecycleConstant.update });
     expect(updatePayload).toMatchObject({
       isHydration: true,
@@ -471,9 +476,9 @@ describe('ElementTemplate hydration listener', () => {
       envManager.switchToBackground();
       expect(dispatchSpy).toHaveBeenCalledWith({
         type: ElementTemplateLifecycleConstant.update,
-        data: expect.any(String),
+        data: expect.anything(),
       });
-      expect(JSON.parse(dispatchSpy.mock.calls.at(-1)?.[0]?.data as string)).toEqual(
+      expect(parseUpdateEventData(dispatchSpy.mock.calls.at(-1)?.[0]?.data)).toEqual(
         expect.objectContaining({
           isHydration: true,
           reloadVersion: getReloadVersion(),

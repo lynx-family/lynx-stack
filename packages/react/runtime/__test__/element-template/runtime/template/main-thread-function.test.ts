@@ -19,6 +19,7 @@ import { takeDelayedRunOnMainThreadData } from '../../../../src/core/thread-func
 import { resetFunctionCallReturnListener } from '../../../../src/core/thread-function-call/return-value.js';
 import { resetElementTemplateBackgroundFunctionRuntime } from '../../../../src/element-template/runtime/template/main-thread-background-function.js';
 import { ElementTemplateLifecycleConstant } from '../../../../src/element-template/protocol/lifecycle-constant.js';
+import { parseElementTemplateUpdateEventPayload } from '../../../../src/element-template/protocol/update-event.js';
 import { ElementTemplateEnvManager } from '../../test-utils/debug/envManager.js';
 
 describe('ElementTemplate runOnMainThread', () => {
@@ -122,7 +123,7 @@ describe('ElementTemplate runOnMainThread', () => {
     const delayedUpdate = dispatchSpy.mock.calls.find(([event]) =>
       event.type === ElementTemplateLifecycleConstant.update
     )?.[0];
-    expect(JSON.parse(delayedUpdate?.data as string)).toMatchObject({
+    expect(parseElementTemplateUpdateEventPayload(delayedUpdate?.data)).toMatchObject({
       delayedRunOnMainThreadData: [
         {
           worklet,
@@ -171,7 +172,7 @@ describe('ElementTemplate runOnMainThread', () => {
       const delayedUpdate = dispatchSpy.mock.calls.find(([event]) =>
         event.type === ElementTemplateLifecycleConstant.update
       )?.[0];
-      expect(JSON.parse(delayedUpdate?.data as string)).toMatchObject({
+      expect(parseElementTemplateUpdateEventPayload(delayedUpdate?.data)).toMatchObject({
         delayedRunOnMainThreadData: [
           {
             worklet,

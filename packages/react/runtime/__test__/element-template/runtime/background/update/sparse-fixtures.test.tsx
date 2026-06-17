@@ -20,6 +20,7 @@ import type {
   ElementTemplateUpdateCommandStream,
   ElementTemplateUpdateCommitContext,
 } from '../../../../../src/element-template/protocol/types.js';
+import { parseElementTemplateUpdateEventPayload } from '../../../../../src/element-template/protocol/update-event.js';
 import { clearEtAttrPlanMap } from '../../../../../src/element-template/runtime/template/attr-slot-plan.js';
 import { __root } from '../../../../../src/element-template/runtime/page/root-instance.js';
 import {
@@ -66,7 +67,7 @@ describe('Sparse element slot updates', () => {
   const envManager = new ElementTemplateEnvManager();
   let updateEvents: ElementTemplateUpdateCommitContext[] = [];
   const onUpdate = (event: { data: unknown }) => {
-    updateEvents.push(JSON.parse(event.data as string) as ElementTemplateUpdateCommitContext);
+    updateEvents.push(parseElementTemplateUpdateEventPayload(event.data));
   };
 
   function renderOnBackground(
