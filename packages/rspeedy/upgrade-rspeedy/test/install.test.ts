@@ -3,12 +3,12 @@
 // LICENSE file in the root directory of this source tree.
 import path from 'node:path'
 
+import { beforeEach, describe, expect, rstest, test } from '@rstest/core'
 import { fs, vol } from 'memfs'
-import { beforeEach, describe, expect, test, vi } from 'vitest'
 
 import { install } from '../src/install.js'
 
-vi.mock('node:fs')
+rstest.mock('node:fs')
 
 beforeEach(() => {
   vol.reset()

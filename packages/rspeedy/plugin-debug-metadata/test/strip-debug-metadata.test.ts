@@ -3,7 +3,14 @@
 // LICENSE file in the root directory of this source tree.
 
 import type { Rspack } from '@rsbuild/core'
-import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest'
+import {
+  afterEach,
+  beforeEach,
+  describe,
+  expect,
+  rstest,
+  test,
+} from '@rstest/core'
 
 import { stripDebugMetadataFromOutput } from '../src/pluginLynxDebugMetadata.js'
 
@@ -57,12 +64,12 @@ function fakeChild(opts: { mode?: string, assets: string[] }) {
 describe('stripDebugMetadataFromOutput', () => {
   beforeEach(() => {
     // Neutral baseline: not a debug build, not dev.
-    vi.stubEnv('DEBUG', '')
-    vi.stubEnv('NODE_ENV', 'production')
+    rstest.stubEnv('DEBUG', '')
+    rstest.stubEnv('NODE_ENV', 'production')
   })
 
   afterEach(() => {
-    vi.unstubAllEnvs()
+    rstest.unstubAllEnvs()
   })
 
   test('deletes debug-metadata.json from a production build, keeps other assets', () => {
@@ -79,7 +86,7 @@ describe('stripDebugMetadataFromOutput', () => {
   })
 
   test('still deletes under RSDOCTOR=true (the build is production)', () => {
-    vi.stubEnv('RSDOCTOR', 'true')
+    rstest.stubEnv('RSDOCTOR', 'true')
     const child = fakeChild({
       assets: ['.rspeedy/main/debug-metadata.json'],
     })
@@ -117,7 +124,7 @@ describe('stripDebugMetadataFromOutput', () => {
   })
 
   test('keeps the asset when DEBUG=rspeedy', () => {
-    vi.stubEnv('DEBUG', 'rspeedy')
+    rstest.stubEnv('DEBUG', 'rspeedy')
     const child = fakeChild({
       assets: ['.rspeedy/main/debug-metadata.json'],
     })
@@ -137,7 +144,7 @@ describe('stripDebugMetadataFromOutput', () => {
   })
 
   test('keeps the asset when NODE_ENV=development', () => {
-    vi.stubEnv('NODE_ENV', 'development')
+    rstest.stubEnv('NODE_ENV', 'development')
     const child = fakeChild({
       assets: ['.rspeedy/main/debug-metadata.json'],
     })

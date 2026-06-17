@@ -2,10 +2,10 @@
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
 
-import { describe, expect, test, vi } from 'vitest'
+import { describe, expect, rstest, test } from '@rstest/core'
 
-const mockExecFileSync = vi.fn<(...args: unknown[]) => string>()
-vi.mock('node:child_process', () => ({
+const mockExecFileSync = rstest.fn<(...args: unknown[]) => string>()
+rstest.mock('node:child_process', () => ({
   execFileSync: (...args: unknown[]): string => mockExecFileSync(...args),
 }))
 

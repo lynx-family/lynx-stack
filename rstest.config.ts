@@ -19,7 +19,11 @@ export default defineConfig({
     'packages/genui/a2ui/rstest.config.ts',
     'packages/genui/a2ui-catalog-extractor/rstest.config.ts',
     'packages/genui/cli/rstest.config.ts',
+    'packages/i18n/*/rstest.config.ts',
+    'packages/lynx/*/rstest.config.ts',
     'packages/rspeedy/*/rstest.config.ts',
+    'packages/tailwind-preset/rstest.config.ts',
+    'packages/tools/*/rstest.config.ts',
     'packages/webpack/*/rstest.config.ts',
   ],
 });

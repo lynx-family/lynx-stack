@@ -7,7 +7,7 @@ import path from 'node:path';
 import { PassThrough } from 'node:stream';
 import { pathToFileURL } from 'node:url';
 
-import { afterEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, describe, expect, it, rstest } from '@rstest/core';
 
 import type { CliPrompts, CliRuntime } from '../src/cli.js';
 import {
@@ -24,7 +24,7 @@ afterEach(() => {
     fs.rmSync(dir, { force: true, recursive: true });
   }
 
-  vi.restoreAllMocks();
+  rstest.restoreAllMocks();
   process.exitCode = undefined;
 });
 
@@ -172,8 +172,8 @@ describe('create-lynx-library CLI', () => {
 
   it('prompts with project text and library feature multiselect controls', async () => {
     const dir = createTempPath('interactive-library');
-    const textPrompt = vi.fn().mockResolvedValue(dir);
-    const multiselectPrompt = vi.fn().mockResolvedValue([
+    const textPrompt = rstest.fn().mockResolvedValue(dir);
+    const multiselectPrompt = rstest.fn().mockResolvedValue([
       'native-module',
       'element',
       'service',
@@ -227,8 +227,8 @@ describe('create-lynx-library CLI', () => {
     const runtime = createRuntime({
       isTTY: true,
       prompts: {
-        text: vi.fn().mockResolvedValue(dir) as CliPrompts['text'],
-        multiselect: vi.fn().mockResolvedValue([]) as CliPrompts[
+        text: rstest.fn().mockResolvedValue(dir) as CliPrompts['text'],
+        multiselect: rstest.fn().mockResolvedValue([]) as CliPrompts[
           'multiselect'
         ],
       },
@@ -262,7 +262,7 @@ describe('create-lynx-library CLI', () => {
     );
     const resolvedCliPath = path.resolve(cliPath);
 
-    vi.spyOn(fs, 'realpathSync').mockImplementation(
+    rstest.spyOn(fs, 'realpathSync').mockImplementation(
       ((filePath) => {
         const resolvedPath = path.resolve(String(filePath));
 
@@ -290,8 +290,8 @@ function createRuntime(
   return {
     input,
     output,
-    info: vi.fn(),
-    error: vi.fn(),
+    info: rstest.fn(),
+    error: rstest.fn(),
     ...(options.prompts === undefined ? {} : { prompts: options.prompts }),
   };
 }

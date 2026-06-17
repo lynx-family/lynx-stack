@@ -32,7 +32,10 @@
   "scripts": {
     "build": "rslib build",
     "dev": "rslib build --watch",
-    "test": "vitest run"
+    "test": "rstest"
+  },
+  "devDependencies": {
+    "@rstest/core": "catalog:rstest"
   },
   "engines": {
     "node": "^20 || ^22 || ^24"

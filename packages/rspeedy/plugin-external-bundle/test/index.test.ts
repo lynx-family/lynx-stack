@@ -16,7 +16,7 @@ import path from 'node:path'
 import { Writable } from 'node:stream'
 
 import { createRsbuild } from '@rsbuild/core'
-import { describe, expect, test } from 'vitest'
+import { describe, expect, test } from '@rstest/core'
 
 import type { ExternalsLoadingPluginOptions } from '@lynx-js/externals-loading-webpack-plugin'
 import { ExternalsLoadingPlugin } from '@lynx-js/externals-loading-webpack-plugin'

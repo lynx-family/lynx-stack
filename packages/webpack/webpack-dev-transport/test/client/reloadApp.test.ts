@@ -1,7 +1,7 @@
 // Copyright 2024 The Lynx Authors. All rights reserved.
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
-import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { beforeEach, describe, expect, it, rstest } from '@rstest/core';
 
 import reloadApp from '../../client/reloadApp.js';
 
@@ -9,14 +9,14 @@ describe('reloadApp', () => {
   describe('liveReload', () => {
     // New NativeModule that introduced in 3.2
     const LynxDevToolSetModule = {
-      invokeCdp: vi.fn(),
+      invokeCdp: rstest.fn(),
     };
 
     const EmptyModule = {};
 
     // Old NativeModule
     const LynxDevtoolSetModule = {
-      invokeCdp: vi.fn(),
+      invokeCdp: rstest.fn(),
     };
 
     const status = {
@@ -26,15 +26,15 @@ describe('reloadApp', () => {
     };
 
     beforeEach(() => {
-      vi.unstubAllGlobals();
+      rstest.unstubAllGlobals();
       LynxDevToolSetModule.invokeCdp.mockClear();
       LynxDevtoolSetModule.invokeCdp.mockClear();
     });
 
     it('should live reload on legacy Lynx', () => {
-      vi.useFakeTimers();
+      rstest.useFakeTimers();
 
-      vi.stubGlobal('NativeModules', {
+      rstest.stubGlobal('NativeModules', {
         LynxDevtoolSetModule,
       });
 
@@ -42,7 +42,7 @@ describe('reloadApp', () => {
 
       expect(LynxDevtoolSetModule.invokeCdp).not.toBeCalled();
 
-      vi.runAllTimers();
+      rstest.runAllTimers();
 
       expect(LynxDevtoolSetModule.invokeCdp).toHaveBeenCalledWith(
         'Page.reload',
@@ -57,9 +57,9 @@ describe('reloadApp', () => {
     });
 
     it('should live reload on Lynx >= 3.3', () => {
-      vi.useFakeTimers();
+      rstest.useFakeTimers();
 
-      vi.stubGlobal('NativeModules', {
+      rstest.stubGlobal('NativeModules', {
         LynxDevToolSetModule,
       });
 
@@ -67,7 +67,7 @@ describe('reloadApp', () => {
 
       expect(LynxDevToolSetModule.invokeCdp).not.toBeCalled();
 
-      vi.runAllTimers();
+      rstest.runAllTimers();
 
       expect(LynxDevToolSetModule.invokeCdp).toHaveBeenCalledWith(
         JSON.stringify({
@@ -81,9 +81,9 @@ describe('reloadApp', () => {
     });
 
     it('should not throw on Lynx 3.2', () => {
-      vi.useFakeTimers();
+      rstest.useFakeTimers();
 
-      vi.stubGlobal('NativeModules', {
+      rstest.stubGlobal('NativeModules', {
         LynxDevToolSetModule: EmptyModule,
       });
 
@@ -91,15 +91,15 @@ describe('reloadApp', () => {
 
       expect(LynxDevtoolSetModule.invokeCdp).not.toBeCalled();
 
-      vi.runAllTimers();
+      rstest.runAllTimers();
 
       expect(LynxDevtoolSetModule.invokeCdp).not.toBeCalled();
     });
 
     it('should not throw on both modules are empty', () => {
-      vi.useFakeTimers();
+      rstest.useFakeTimers();
 
-      vi.stubGlobal('NativeModules', {
+      rstest.stubGlobal('NativeModules', {
         LynxDevToolSetModule: EmptyModule,
         LynxDevtoolSetModule: EmptyModule,
       });
@@ -109,32 +109,32 @@ describe('reloadApp', () => {
       expect(LynxDevtoolSetModule.invokeCdp).not.toBeCalled();
       expect(LynxDevToolSetModule.invokeCdp).not.toBeCalled();
 
-      vi.runAllTimers();
+      rstest.runAllTimers();
 
       expect(LynxDevtoolSetModule.invokeCdp).not.toBeCalled();
       expect(LynxDevToolSetModule.invokeCdp).not.toBeCalled();
     });
 
     it('should not throw when no modules are present', () => {
-      vi.useFakeTimers();
+      rstest.useFakeTimers();
 
-      vi.stubGlobal('NativeModules', {});
+      rstest.stubGlobal('NativeModules', {});
 
       reloadApp({ liveReload: true, hot: false, progress: false }, status);
 
       expect(LynxDevToolSetModule.invokeCdp).not.toBeCalled();
       expect(LynxDevtoolSetModule.invokeCdp).not.toBeCalled();
 
-      vi.runAllTimers();
+      rstest.runAllTimers();
 
       expect(LynxDevToolSetModule.invokeCdp).not.toBeCalled();
       expect(LynxDevtoolSetModule.invokeCdp).not.toBeCalled();
     });
 
     it('should call new method when both modules are present', () => {
-      vi.useFakeTimers();
+      rstest.useFakeTimers();
 
-      vi.stubGlobal('NativeModules', {
+      rstest.stubGlobal('NativeModules', {
         LynxDevToolSetModule,
         LynxDevtoolSetModule,
       });
@@ -144,7 +144,7 @@ describe('reloadApp', () => {
       expect(LynxDevToolSetModule.invokeCdp).not.toBeCalled();
       expect(LynxDevtoolSetModule.invokeCdp).not.toBeCalled();
 
-      vi.runAllTimers();
+      rstest.runAllTimers();
 
       expect(LynxDevToolSetModule.invokeCdp).toHaveBeenCalledWith(
         JSON.stringify({

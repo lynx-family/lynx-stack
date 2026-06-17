@@ -41,13 +41,15 @@
     "tsdoc-metadata.json"
   ],
   "scripts": {
-    "api-extractor": "api-extractor run --verbose"
+    "api-extractor": "api-extractor run --verbose",
+    "test": "rstest"
   },
   "dependencies": {
     "eventemitter3": "^5.0.4"
   },
   "devDependencies": {
     "@microsoft/api-extractor": "catalog:",
+    "@rstest/core": "catalog:rstest",
     "@types/ws": "^8.18.1",
     "ws": "^8.19.0"
   },

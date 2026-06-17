@@ -2,7 +2,7 @@
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
 
-import { describe, expect, test, vi } from 'vitest';
+import { describe, expect, rstest, test } from '@rstest/core';
 
 import type { DebugMetadataAsset } from '../src/types.js';
 import {
@@ -164,7 +164,7 @@ describe('remapUiTree', () => {
   });
 
   test('loads each distinct debugMetadataUrl only once', async () => {
-    const loader = vi.fn(() => Promise.resolve(load()));
+    const loader = rstest.fn(() => Promise.resolve(load()));
     await remapUiTree(
       {
         nodeIndex: 9000,
@@ -192,7 +192,7 @@ describe('remapUiTree', () => {
   });
 
   test('passes nodes without source mapping through, never loading metadata', async () => {
-    const loader = vi.fn(() => Promise.resolve(load()));
+    const loader = rstest.fn(() => Promise.resolve(load()));
     const output = await remapUiTree(
       {
         // root has no nodeIndex/debugMetadataUrl (e.g. raw text)

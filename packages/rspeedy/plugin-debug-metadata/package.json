@@ -31,7 +31,7 @@
   "scripts": {
     "api-extractor": "api-extractor run --verbose",
     "build": "rslib build",
-    "test": "vitest run"
+    "test": "rstest"
   },
   "dependencies": {
     "@lynx-js/debug-metadata": "workspace:^"
@@ -39,8 +39,8 @@
   "devDependencies": {
     "@lynx-js/template-webpack-plugin": "workspace:*",
     "@microsoft/api-extractor": "catalog:",
-    "@rollup/plugin-typescript": "^12.3.0",
-    "@rsbuild/core": "catalog:rsbuild"
+    "@rsbuild/core": "catalog:rsbuild",
+    "@rstest/core": "catalog:rstest"
   },
   "engines": {
     "node": ">=18"

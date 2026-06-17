@@ -4,27 +4,30 @@
 /* eslint-disable @typescript-eslint/no-unsafe-call */
 /* eslint-disable @typescript-eslint/no-unsafe-member-access */
 /* eslint-disable @typescript-eslint/no-unsafe-assignment */
-/**
- * @vitest-environment jsdom
- */
-
-import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import {
+  afterEach,
+  beforeEach,
+  describe,
+  expect,
+  it,
+  rstest,
+} from '@rstest/core';
 
 describe('reconnect', () => {
   let hash = 0;
   beforeEach(() => {
-    vi.stubGlobal('RSPEEDY_COMPILATION_ID', 'test-compilation-id');
-    vi.resetAllMocks();
-    vi.resetModules();
+    rstest.stubGlobal('RSPEEDY_COMPILATION_ID', 'test-compilation-id');
+    rstest.resetAllMocks();
+    rstest.resetModules();
 
     hash++;
 
-    vi.stubGlobal('__webpack_hash__', String(hash));
-    vi.stubGlobal(
+    rstest.stubGlobal('__webpack_hash__', String(hash));
+    rstest.stubGlobal(
       '__resourceQuery',
       '?hostname=example.com&port=8080&protocol=ws',
     );
-    vi.stubGlobal('__webpack_require__', {
+    rstest.stubGlobal('__webpack_require__', {
       h() {
         return String(hash);
       },
@@ -32,12 +35,12 @@ describe('reconnect', () => {
   });
 
   afterEach(() => {
-    vi.unstubAllGlobals();
+    rstest.unstubAllGlobals();
   });
 
   it('should not reloadApp at start up', async () => {
-    vi.mock('../../client/transport.js');
-    vi.mock('../../client/reloadApp.js');
+    rstest.mock('../../client/transport.js', { mock: true });
+    rstest.mock('../../client/reloadApp.js', { mock: true });
 
     const { default: reloadApp } = await import('../../client/reloadApp.js');
 
@@ -87,8 +90,8 @@ describe('reconnect', () => {
   });
 
   it('should reloadApp when restart dev-server', async () => {
-    vi.mock('../../client/transport.js');
-    vi.mock('../../client/reloadApp.js');
+    rstest.mock('../../client/transport.js', { mock: true });
+    rstest.mock('../../client/reloadApp.js', { mock: true });
 
     const { default: reloadApp } = await import('../../client/reloadApp.js');
 

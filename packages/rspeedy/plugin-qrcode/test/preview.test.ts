@@ -3,24 +3,24 @@
 // LICENSE file in the root directory of this source tree.
 import { createRsbuild, logger } from '@rsbuild/core'
 import type { RsbuildEntry } from '@rsbuild/core'
-import { beforeEach, describe, expect, test, vi } from 'vitest'
+import { beforeEach, describe, expect, rstest, test } from '@rstest/core'
 
 import type { Config, ExposedAPI, RsbuildPlugin } from '@lynx-js/rspeedy'
 
 import { getRandomNumberInRange } from './port.js'
 import { pluginQRCode } from '../src/index.js'
 
-vi.mock('uqr')
-vi.mock('@clack/prompts')
+rstest.mock('uqr', { spy: true })
+rstest.mock('@clack/prompts', { spy: true })
 
-const exit = vi.fn()
+const exit = rstest.fn()
 
 const pluginStubRspeedyAPI = (config: Config = {}): RsbuildPlugin => ({
   name: 'lynx:rsbuild:api',
   setup(api) {
     api.expose<ExposedAPI>(Symbol.for('rspeedy.api'), {
       config,
-      debug: vi.fn(),
+      debug: rstest.fn(),
       exit,
       logger,
       version: '1.0.0',
@@ -37,7 +37,7 @@ const pluginStubEnvEntries = (entries: RsbuildEntry): RsbuildPlugin => ({
 
 describe('Preview', () => {
   beforeEach(() => {
-    vi.restoreAllMocks()
+    rstest.restoreAllMocks()
     Object.defineProperty(process.stdin, 'isTTY', {
       value: true,
       configurable: true,
@@ -60,13 +60,13 @@ describe('Preview', () => {
   })
 
   test('preview with NODE_ENV=development', async () => {
-    vi.stubEnv('NODE_ENV', 'development')
+    rstest.stubEnv('NODE_ENV', 'development')
     const { renderUnicodeCompact } = await import('uqr')
 
     const { selectKey, isCancel } = await import('@clack/prompts')
-    vi.mocked(selectKey).mockResolvedValue('foo')
-    vi.mocked(isCancel).mockReturnValue(true)
-    vi.mocked(renderUnicodeCompact).mockReturnValueOnce('<data>')
+    rstest.mocked(selectKey).mockResolvedValue('foo')
+    rstest.mocked(isCancel).mockReturnValue(true)
+    rstest.mocked(renderUnicodeCompact).mockReturnValueOnce('<data>')
 
     const rsbuild = await createRsbuild({
       rsbuildConfig: {
@@ -99,20 +99,20 @@ describe('Preview', () => {
     )
 
     await server.close()
-    await vi.waitFor(() => {
+    await rstest.waitFor(() => {
       expect(exit).toBeCalledTimes(1)
     })
   })
 
   test('preview with port', async () => {
-    vi.stubEnv('NODE_ENV', 'development')
+    rstest.stubEnv('NODE_ENV', 'development')
     const { renderUnicodeCompact } = await import('uqr')
 
     const { selectKey, isCancel } = await import('@clack/prompts')
-    vi.mocked(selectKey).mockResolvedValue('foo')
-    vi.mocked(isCancel).mockReturnValue(true)
+    rstest.mocked(selectKey).mockResolvedValue('foo')
+    rstest.mocked(isCancel).mockReturnValue(true)
 
-    vi.mocked(renderUnicodeCompact).mockReturnValueOnce('<data>')
+    rstest.mocked(renderUnicodeCompact).mockReturnValueOnce('<data>')
 
     const port = getRandomNumberInRange(3000, 60000)
 
@@ -147,20 +147,20 @@ describe('Preview', () => {
     )
 
     await server.close()
-    await vi.waitFor(() => {
+    await rstest.waitFor(() => {
       expect(exit).toBeCalledTimes(1)
     })
   })
 
   test('preview with custom schema', async () => {
-    vi.stubEnv('NODE_ENV', 'development')
+    rstest.stubEnv('NODE_ENV', 'development')
     const { renderUnicodeCompact } = await import('uqr')
 
     const { selectKey, isCancel } = await import('@clack/prompts')
-    vi.mocked(selectKey).mockResolvedValue('foo')
-    vi.mocked(isCancel).mockReturnValue(true)
+    rstest.mocked(selectKey).mockResolvedValue('foo')
+    rstest.mocked(isCancel).mockReturnValue(true)
 
-    vi.mocked(renderUnicodeCompact).mockReturnValueOnce('<data>')
+    rstest.mocked(renderUnicodeCompact).mockReturnValueOnce('<data>')
 
     const port = getRandomNumberInRange(3000, 60000)
 
@@ -199,20 +199,20 @@ describe('Preview', () => {
     )
 
     await server.close()
-    await vi.waitFor(() => {
+    await rstest.waitFor(() => {
       expect(exit).toBeCalledTimes(1)
     })
   })
 
   test('preview without environment lynx', async () => {
-    vi.stubEnv('NODE_ENV', 'development')
+    rstest.stubEnv('NODE_ENV', 'development')
     const { renderUnicodeCompact } = await import('uqr')
 
     const { selectKey, isCancel } = await import('@clack/prompts')
-    vi.mocked(selectKey).mockResolvedValue('foo')
-    vi.mocked(isCancel).mockReturnValue(true)
+    rstest.mocked(selectKey).mockResolvedValue('foo')
+    rstest.mocked(isCancel).mockReturnValue(true)
 
-    vi.mocked(renderUnicodeCompact).mockReturnValueOnce('<data>')
+    rstest.mocked(renderUnicodeCompact).mockReturnValueOnce('<data>')
 
     const rsbuild = await createRsbuild({
       rsbuildConfig: {
@@ -240,14 +240,14 @@ describe('Preview', () => {
   })
 
   test('preview with exposed custom environment entries', async () => {
-    vi.stubEnv('NODE_ENV', 'development')
+    rstest.stubEnv('NODE_ENV', 'development')
     const { renderUnicodeCompact } = await import('uqr')
 
     const { selectKey, isCancel } = await import('@clack/prompts')
-    vi.mocked(selectKey).mockResolvedValue('foo')
-    vi.mocked(isCancel).mockReturnValue(true)
+    rstest.mocked(selectKey).mockResolvedValue('foo')
+    rstest.mocked(isCancel).mockReturnValue(true)
 
-    vi.mocked(renderUnicodeCompact).mockReturnValueOnce('<data>')
+    rstest.mocked(renderUnicodeCompact).mockReturnValueOnce('<data>')
 
     const rsbuild = await createRsbuild({
       rsbuildConfig: {
@@ -283,20 +283,20 @@ describe('Preview', () => {
     )
 
     await server.close()
-    await vi.waitFor(() => {
+    await rstest.waitFor(() => {
       expect(exit).toBeCalledTimes(1)
     })
   })
 
   test('preview with empty exposed entries', async () => {
-    vi.stubEnv('NODE_ENV', 'development')
+    rstest.stubEnv('NODE_ENV', 'development')
     const { renderUnicodeCompact } = await import('uqr')
 
     const { selectKey, isCancel } = await import('@clack/prompts')
-    vi.mocked(selectKey).mockResolvedValue('foo')
-    vi.mocked(isCancel).mockReturnValue(true)
+    rstest.mocked(selectKey).mockResolvedValue('foo')
+    rstest.mocked(isCancel).mockReturnValue(true)
 
-    vi.mocked(renderUnicodeCompact).mockReturnValueOnce('<data>')
+    rstest.mocked(renderUnicodeCompact).mockReturnValueOnce('<data>')
 
     const rsbuild = await createRsbuild({
       rsbuildConfig: {

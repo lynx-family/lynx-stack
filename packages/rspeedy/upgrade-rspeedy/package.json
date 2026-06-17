@@ -31,7 +31,7 @@
   ],
   "scripts": {
     "build": "rslib build",
-    "test": "vitest"
+    "test": "rstest"
   },
   "devDependencies": {
     "@lynx-js/qrcode-rsbuild-plugin": "workspace:*",
@@ -43,6 +43,7 @@
     "@lynx-js/web-elements": "workspace:*",
     "@rsbuild/plugin-less": "1.6.3",
     "@rsbuild/plugin-sass": "1.5.2",
+    "@rstest/core": "catalog:rstest",
     "commander": "^13.1.0",
     "detect-indent": "^7.0.2",
     "memfs": "^4.56.10",

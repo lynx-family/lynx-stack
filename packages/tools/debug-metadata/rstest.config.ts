@@ -1,11 +1,11 @@
 // Copyright 2026 The Lynx Authors. All rights reserved.
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
-import { defineConfig } from 'vitest/config';
+import { defineConfig } from '@rstest/core';
 
-export default defineConfig({
-  test: {
-    name: 'lynx/autolink-codegen',
-    include: ['test/**/*.test.ts'],
-  },
+const config: ReturnType<typeof defineConfig> = defineConfig({
+  name: 'tools/debug-metadata',
+  globals: true,
 });
+
+export default config;

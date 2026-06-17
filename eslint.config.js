@@ -58,10 +58,12 @@ export default tseslint.config(
       // Configs
       'eslint.config.js',
       'vitest.config.ts',
+      'rstest.config.ts',
       '**/rslib.config.ts',
 
       // Ignored packages
       'packages/**/vitest.config.ts',
+      'packages/**/rstest.config.ts',
       'packages/genui/cli/templates/**',
       'packages/react/runtime/compat/**',
       'packages/rspeedy/create-rspeedy/template-*/**',
