@@ -1,6 +1,9 @@
 import { useCallback, useEffect, useState } from '@lynx-js/react';
 
 import './App.css';
+import arrow from './assets/arrow.png';
+import lynxLogo from './assets/lynx-logo.png';
+import reactLynxLogo from './assets/react-logo.png';
 import { useFlappy } from './useFlappy.js';
 
 export function App() {
@@ -27,27 +30,14 @@ export function App() {
             bindtap={onTap}
           >
             {alterLogo
-              ? (
-                <view className='LogoMark LogoMark--react'>
-                  <view className='ReactOrbit ReactOrbit--one' />
-                  <view className='ReactOrbit ReactOrbit--two' />
-                  <view className='ReactOrbit ReactOrbit--three' />
-                  <view className='ReactCore' />
-                </view>
-              )
-              : (
-                <view className='LogoMark LogoMark--lynx'>
-                  <view className='LynxEar LynxEar--left' />
-                  <view className='LynxEar LynxEar--right' />
-                  <text className='LynxFace'>L</text>
-                </view>
-              )}
+              ? <image src={reactLynxLogo} className='Logo--react' />
+              : <image src={lynxLogo} className='Logo--lynx' />}
           </view>
           <text className='Title'>React</text>
           <text className='Subtitle'>on Lynx</text>
         </view>
         <view className='Content'>
-          <view className='Arrow' />
+          <image src={arrow} className='Arrow' />
           <text className='Description'>Tap the logo and have fun!</text>
           <text className='Hint'>
             Edit<text

@@ -49,73 +49,16 @@ text {
   margin-bottom: 8px;
 }
 
-.LogoMark {
+.Logo--react {
   width: 100px;
   height: 100px;
-}
-
-.LogoMark--react {
-  position: relative;
-  align-items: center;
-  justify-content: center;
   animation: Logo--spin infinite 20s linear;
 }
 
-.LogoMark--lynx {
-  position: relative;
-  align-items: center;
-  justify-content: center;
-  background-color: #ffffff;
-  border-radius: 26px;
-  box-shadow: 0px 12px 24px 0px rgba(11, 15, 28, 0.24);
+.Logo--lynx {
+  width: 100px;
+  height: 100px;
   animation: Logo--shake infinite 0.5s ease;
-}
-
-.ReactOrbit {
-  position: absolute;
-  width: 92px;
-  height: 34px;
-  border: 4px solid #61dafb;
-  border-radius: 50%;
-}
-
-.ReactOrbit--two {
-  transform: rotate(60deg);
-}
-
-.ReactOrbit--three {
-  transform: rotate(120deg);
-}
-
-.ReactCore {
-  width: 18px;
-  height: 18px;
-  background-color: #61dafb;
-  border-radius: 50%;
-}
-
-.LynxEar {
-  position: absolute;
-  top: -12px;
-  width: 34px;
-  height: 34px;
-  background-color: #ffffff;
-  border-radius: 8px;
-  transform: rotate(45deg);
-}
-
-.LynxEar--left {
-  left: 13px;
-}
-
-.LynxEar--right {
-  right: 13px;
-}
-
-.LynxFace {
-  color: #ff6448;
-  font-size: 52px;
-  font-weight: 800;
 }
 
 @keyframes Logo--spin {
@@ -149,9 +92,6 @@ text {
 .Arrow {
   width: 24px;
   height: 24px;
-  border-bottom: 4px solid rgba(255, 255, 255, 0.85);
-  border-right: 4px solid rgba(255, 255, 255, 0.85);
-  transform: rotate(45deg);
 }
 
 .Title {
