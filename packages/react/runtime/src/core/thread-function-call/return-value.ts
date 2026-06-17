@@ -51,17 +51,27 @@ export function resetFunctionCallReturnListener(): void {
 }
 
 export function dropFunctionCallReturnIds(resolveIds: readonly number[]): void {
-  for (const resolveId of resolveIds) {
-    resolveMap!.remove(resolveId);
+  if (!resolveMap) {
+    return;
   }
-  if (resolveMap!.size === 0) {
+  for (const resolveId of resolveIds) {
+    resolveMap.remove(resolveId);
+  }
+  if (resolveMap.size === 0) {
     resetFunctionCallReturnListener();
   }
 }
 
 function onFunctionCallRet(event: RuntimeProxy.Event): void {
   const data = JSON.parse(event.data as string) as RunWorkletCtxRetData;
-  const resolve = resolveMap!.get(data.resolveId)!;
-  resolveMap!.remove(data.resolveId);
+  const map = resolveMap;
+  if (!map) {
+    return;
+  }
+  const resolve = map.get(data.resolveId);
+  if (!resolve) {
+    return;
+  }
+  map.remove(data.resolveId);
   resolve(data.returnValue);
 }

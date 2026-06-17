@@ -140,6 +140,12 @@ describe('thread-function-call main-thread primitives', () => {
     )?.[1] as ((event: RuntimeProxy.Event) => void) | undefined;
 
     dropFunctionCallReturnIds([droppedId]);
+    expect(() =>
+      functionCallRetListener?.({
+        type: WorkletEvents.FunctionCallRet,
+        data: JSON.stringify({ resolveId: droppedId, returnValue: 'dropped' }),
+      })
+    ).not.toThrow();
     functionCallRetListener?.({
       type: WorkletEvents.FunctionCallRet,
       data: JSON.stringify({ resolveId: keptId, returnValue: 'kept' }),
@@ -151,6 +157,10 @@ describe('thread-function-call main-thread primitives', () => {
     const finalId = onFunctionCall(vi.fn());
     dropFunctionCallReturnIds([finalId]);
     expect(coreContext.removeEventListener).toHaveBeenCalledWith(WorkletEvents.FunctionCallRet, expect.any(Function));
+  });
+
+  it('ignores dropped function return ids before listener initialization', () => {
+    expect(() => dropFunctionCallReturnIds([1])).not.toThrow();
   });
 
   it('uses the shared SDK support gate', () => {
