@@ -70,6 +70,7 @@ export default defineConfig({
       'examples/*/vitest.config.ts',
       'packages/react/*/vitest.config.ts',
       'packages/react/*/vitest.**.config.ts',
+      'packages/use-sync-external-store/vitest.config.ts',
       'packages/web-platform/*/vitest.config.ts',
       'packages/lynx/*/vitest.config.ts',
       'packages/motion/vitest.config.ts',

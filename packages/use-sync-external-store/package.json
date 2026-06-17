@@ -41,13 +41,11 @@
     "LICENSE"
   ],
   "scripts": {
-    "test": "rstest",
-    "test:type": "tsc --noEmit"
+    "test": "vitest",
+    "test:type": "vitest --typecheck.only"
   },
   "devDependencies": {
-    "@lynx-js/react": "workspace:*",
-    "@lynx-js/react-rsbuild-plugin": "workspace:*",
-    "@rstest/core": "catalog:rstest"
+    "@lynx-js/react": "workspace:*"
   },
   "peerDependencies": {
     "@lynx-js/react": "*"
