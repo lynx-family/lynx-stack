@@ -9,13 +9,13 @@ import { fileURLToPath } from 'node:url';
 import { afterAll, describe, expect, test } from '@rstest/core';
 
 import { runCli } from '../src/cli.js';
+import { writeCatalogArtifacts } from '../src/core.js';
+import type { TypeDocProject } from '../src/core.js';
 import {
   createA2UICatalog,
   extractCatalogComponents,
   findCatalogSourceFiles,
 } from '../src/index.js';
-import { writeCatalogArtifacts } from '../src/core.js';
-import type { TypeDocProject } from '../src/core.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const packageDir = path.resolve(path.dirname(__filename), '..');

@@ -8,11 +8,11 @@ import { fileURLToPath } from 'node:url';
 
 import { afterAll, describe, expect, test } from '@rstest/core';
 
+import { writeCatalogArtifacts } from '../src/core.js';
 import {
   extractCatalogFunctions,
   findCatalogSourceFiles,
 } from '../src/index.js';
-import { writeCatalogArtifacts } from '../src/core.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const packageDir = path.resolve(path.dirname(__filename), '..');
