@@ -227,6 +227,7 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           pnpm changeset version --snapshot canary
+          node .github/scripts/check-no-leftover-changesets.cjs
           node packages/tools/canary-release/snapshot.js
       - name: publish canary packages
         run: |
