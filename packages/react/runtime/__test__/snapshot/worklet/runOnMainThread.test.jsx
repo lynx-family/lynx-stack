@@ -142,10 +142,20 @@ describe('runOnMainThread', () => {
     const keptPromise = new Promise(resolve => {
       keptResolveId = onFunctionCall(resolve);
     });
+    const functionCallRetListener = lynx.getCoreContext().addEventListener.mock.calls.find(
+      ([type]) => type === WorkletEvents.FunctionCallRet,
+    )?.[1];
 
     dropFunctionCallReturnIds([discardedResolveId]);
 
     globalEnvManager.switchToMainThread();
+    lynx.getJSContext().dispatchEvent({
+      type: WorkletEvents.FunctionCallRet,
+      data: JSON.stringify({
+        resolveId: discardedResolveId,
+        returnValue: 'discarded-value',
+      }),
+    });
     lynx.getJSContext().dispatchEvent({
       type: WorkletEvents.FunctionCallRet,
       data: JSON.stringify({
@@ -165,6 +175,21 @@ describe('runOnMainThread', () => {
       WorkletEvents.FunctionCallRet,
       expect.any(Function),
     );
+    expect(() =>
+      functionCallRetListener({
+        type: WorkletEvents.FunctionCallRet,
+        data: JSON.stringify({
+          resolveId: finalResolveId,
+          returnValue: 'late-value',
+        }),
+      })
+    ).not.toThrow();
+  });
+
+  it('ignores discarded return ids before return listener initialization', () => {
+    globalEnvManager.switchToBackground();
+
+    expect(() => dropFunctionCallReturnIds([1])).not.toThrow();
   });
 
   it('should throw when on the main thread', () => {
