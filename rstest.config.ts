@@ -27,9 +27,11 @@ export default defineConfig({
     // instead (the same pattern as `test-react`).
     'packages/lynx/autolink-codegen/rstest.config.ts',
     'packages/lynx/create-lynx-library/rstest.config.ts',
+    'packages/react/transform/rstest.config.ts',
     'packages/rspeedy/*/rstest.config.ts',
     'packages/tailwind-preset/rstest.config.ts',
     'packages/tools/*/rstest.config.ts',
+    'packages/web-platform/*/rstest.config.ts',
     'packages/webpack/*/rstest.config.ts',
   ],
 });

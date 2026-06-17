@@ -1246,9 +1246,15 @@ importers:
       '@emnapi/runtime':
         specifier: ^1.7.1
         version: 1.10.0
+      '@lynx-js/react-rsbuild-plugin':
+        specifier: workspace:*
+        version: link:../../rspeedy/plugin-react
       '@napi-rs/cli':
         specifier: 2.18.4
         version: 2.18.4(patch_hash=ba947eb1c48b2a85834e99f92cbbae896722ce61fd5ae67507a3be9041959ebd)
+      '@rstest/core':
+        specifier: catalog:rstest
+        version: 0.10.5(core-js@3.48.0)(jsdom@27.4.0)
       esbuild:
         specifier: ^0.27.3
         version: 0.27.3
@@ -2171,15 +2177,15 @@ importers:
       '@rspack/core':
         specifier: 2.0.8
         version: 2.0.8(@swc/helpers@0.5.23)
+      '@rstest/core':
+        specifier: catalog:rstest
+        version: 0.10.5(core-js@3.48.0)(jsdom@27.4.0)
       '@types/loader-utils':
         specifier: ^2.0.6
         version: 2.0.6
       typescript:
         specifier: ^5.9.3
         version: 5.9.3
-      vitest:
-        specifier: ^3.2.4
-        version: 3.2.4(@types/debug@4.1.12)(@types/node@24.10.13)(@vitest/ui@3.2.4)(jsdom@27.4.0)(less@4.6.4)(lightningcss@1.31.1)(sass-embedded@1.99.0)(sass@1.99.0)(terser@5.31.6)
 
   packages/web-platform/web-rsbuild-server-middleware:
     devDependencies:
@@ -2192,6 +2198,9 @@ importers:
       '@rsbuild/core':
         specifier: catalog:rsbuild
         version: 2.0.11(core-js@3.48.0)
+      '@rstest/core':
+        specifier: catalog:rstest
+        version: 0.10.5(core-js@3.48.0)(jsdom@27.4.0)
       rsbuild-plugin-arethetypeswrong:
         specifier: 0.3.1
         version: 0.3.1(@rsbuild/core@2.0.11(core-js@3.48.0))(typescript@5.9.3)
@@ -2199,7 +2208,11 @@ importers:
         specifier: 0.3.4
         version: 0.3.4(@rsbuild/core@2.0.11(core-js@3.48.0))
 
-  packages/web-platform/web-worker-rpc: {}
+  packages/web-platform/web-worker-rpc:
+    devDependencies:
+      '@rstest/core':
+        specifier: catalog:rstest
+        version: 0.10.5(core-js@3.48.0)(jsdom@27.4.0)
 
   packages/webpack/cache-events-webpack-plugin:
     dependencies:

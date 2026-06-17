@@ -3,7 +3,7 @@
 // LICENSE file in the root directory of this source tree.
 
 import { createRsbuild } from '@rsbuild/core';
-import { describe, expect, test, vi } from 'vitest';
+import { describe, expect, test } from '@rstest/core';
 import { pluginWebPlatform } from '../src/index.js';
 
 describe('Config', () => {

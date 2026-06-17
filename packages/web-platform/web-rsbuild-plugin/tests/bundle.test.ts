@@ -1,5 +1,5 @@
 import { createRsbuild } from '@rsbuild/core';
-import { describe, expect, test, vi } from 'vitest';
+import { describe, expect, test } from '@rstest/core';
 import { pluginWebPlatform } from '../dist/index.js';
 import path from 'path';
 import type { Stats, NormalModule } from '@rspack/core';
