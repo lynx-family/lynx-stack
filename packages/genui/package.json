@@ -64,6 +64,10 @@
       "types": "./openui/dist/catalog/index.d.ts",
       "default": "./openui/dist/catalog/index.js"
     },
+    "./openui/prompt": {
+      "types": "./openui/dist/openui-prompt/index.d.ts",
+      "default": "./openui/dist/openui-prompt/index.js"
+    },
     "./openui/styles/renderer.css": "./openui/dist/core/renderer.css"
   },
   "main": "./dist/index.js",

@@ -17,6 +17,10 @@
     "./catalog": {
       "types": "./dist/catalog/index.d.ts",
       "default": "./dist/catalog/index.js"
+    },
+    "./openui-prompt": {
+      "types": "./dist/openui-prompt/index.d.ts",
+      "default": "./dist/openui-prompt/index.js"
     }
   },
   "main": "./dist/core/index.js",
