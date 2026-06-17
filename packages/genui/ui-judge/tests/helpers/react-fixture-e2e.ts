@@ -8,6 +8,7 @@ import {
   mkdir,
   mkdtemp,
   readFile,
+  readdir,
   rm,
   writeFile,
 } from 'node:fs/promises';
@@ -27,10 +28,18 @@ import type {
 
 const HELPER_DIR = dirname(fileURLToPath(import.meta.url));
 const REPO_ROOT = resolve(HELPER_DIR, '../../../../..');
-const UI_JUDGE_TEMP_DIR = resolve(REPO_ROOT, 'packages/genui/ui-judge/temp');
 const KITTEN_LYNX_DIR = resolve(
   REPO_ROOT,
   'packages/testing-library/kitten-lynx',
+);
+const KITTEN_LYNX_TEMP_DIR = resolve(KITTEN_LYNX_DIR, 'temp');
+const REACT_TEMPLATE_COMMON_SRC_DIR = resolve(
+  REPO_ROOT,
+  'packages/rspeedy/create-rspeedy/template-common/src',
+);
+const REACT_TEMPLATE_SRC_DIR = resolve(
+  REPO_ROOT,
+  'packages/rspeedy/create-rspeedy/template-react-ts/src',
 );
 
 export const REACT_FIXTURE_DIR = resolve(HELPER_DIR, '../fixtures/react');
@@ -193,14 +202,16 @@ interface ReactFixtureBuild {
 
 async function prepareReactFixtureBundles(): Promise<ReactFixtureBuild> {
   await mkdir(REACT_FIXTURE_DIR, { recursive: true });
-  await mkdir(UI_JUDGE_TEMP_DIR, { recursive: true });
+  await mkdir(KITTEN_LYNX_TEMP_DIR, { recursive: true });
   await cleanupReactFixtureBundles();
 
-  const buildRoot = await mkdtemp(join(UI_JUDGE_TEMP_DIR, 'react-fixture-'));
+  const buildRoot = await mkdtemp(join(KITTEN_LYNX_TEMP_DIR, 'react-fixture-'));
   const outputDir = resolve(buildRoot, 'dist');
   const configPath = resolve(buildRoot, 'lynx.config.mjs');
+  const sourceDir = resolve(buildRoot, 'src');
 
   try {
+    await prepareReactFixtureSource(sourceDir);
     await writeFile(configPath, createReactFixtureConfig(outputDir));
     await runCommand(
       'pnpm',
@@ -213,7 +224,7 @@ async function prepareReactFixtureBundles(): Promise<ReactFixtureBuild> {
         '--config',
         configPath,
         '--root',
-        KITTEN_LYNX_DIR,
+        buildRoot,
       ],
       { cwd: REPO_ROOT, timeoutMs: REACT_FIXTURE_BUILD_TIMEOUT_MS },
     );
@@ -244,6 +255,36 @@ async function prepareReactFixtureBundles(): Promise<ReactFixtureBuild> {
   }
 }
 
+async function prepareReactFixtureSource(sourceDir: string): Promise<void> {
+  await copyDirectory(REACT_TEMPLATE_COMMON_SRC_DIR, sourceDir);
+  await copyDirectory(REACT_TEMPLATE_SRC_DIR, sourceDir);
+}
+
+async function copyDirectory(
+  sourceDir: string,
+  targetDir: string,
+): Promise<void> {
+  await mkdir(targetDir, { recursive: true });
+  const entries = await readdir(sourceDir, { withFileTypes: true });
+
+  await Promise.all(entries.map(async (entry) => {
+    const sourcePath = resolve(sourceDir, entry.name);
+    const targetPath = resolve(targetDir, entry.name);
+
+    if (entry.isDirectory()) {
+      await copyDirectory(sourcePath, targetPath);
+      return;
+    }
+
+    if (entry.isFile()) {
+      await copyFile(sourcePath, targetPath);
+      return;
+    }
+
+    throw new Error(`Unsupported React fixture template entry: ${sourcePath}`);
+  }));
+}
+
 async function cleanupReactFixtureBundles(): Promise<void> {
   await Promise.all(
     REACT_BUNDLE_NAMES.map((bundleName) =>
@@ -259,7 +300,7 @@ import { defineConfig } from '@lynx-js/rspeedy';
 export default defineConfig({
   source: {
     entry: {
-      main: './test-fixture/cases/react-example/index.tsx',
+      main: './src/index.tsx',
     },
   },
   output: {
@@ -276,6 +317,16 @@ export default defineConfig({
   plugins: [
     pluginReactLynx(),
   ],
+  tools: {
+    rspack: {
+      resolve: {
+        extensionAlias: {
+          '.js': ['.js', '.ts', '.tsx', '.jsx'],
+          '.jsx': ['.jsx', '.tsx'],
+        },
+      },
+    },
+  },
   environments: {
     lynx: {},
     web: {},
