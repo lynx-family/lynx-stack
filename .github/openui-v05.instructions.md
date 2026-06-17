@@ -9,3 +9,5 @@ When changing exported OpenUI runtime APIs, refresh both API reports with `pnpm 
 When adding OpenUI v0.5 cases to `packages/genui/a2ui-playground`, keep raw protocol examples limited to components supported by `packages/genui/openui/src/catalog` unless the same change extends the catalog. Query and Mutation examples need matching mock tools in `packages/genui/a2ui-playground/lynx-src/openui/App.tsx` so `/render.html` previews exercise the runtime path instead of staying on default or unresolved values.
 
 When exposing OpenUI prompt generation for server-side agents, keep prompt-only component libraries headless: mirror the ReactLynx component names and Zod schemas but use null renderers so Node routes can build system prompts without importing ReactLynx or Lynx UI runtime modules.
+
+When adding a built-in component under `packages/genui/openui/src/catalog`, update `src/catalog/index.ts`, the `DEFAULT_COMPONENTS` and `DEFAULT_COMPONENT_GROUPS` arrays in `src/core/createLibrary.tsx`, and `src/core/renderer.css` in the same change. Otherwise the component may be importable but absent from the default OpenUI library or render without its intended Lynx styles.
