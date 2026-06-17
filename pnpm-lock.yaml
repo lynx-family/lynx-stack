@@ -1996,6 +1996,12 @@ importers:
       '@lynx-js/react':
         specifier: workspace:*
         version: link:../react
+      '@lynx-js/react-rsbuild-plugin':
+        specifier: workspace:*
+        version: link:../rspeedy/plugin-react
+      '@rstest/core':
+        specifier: catalog:rstest
+        version: 0.10.5(core-js@3.48.0)(jsdom@27.4.0)
 
   packages/web-platform/playwright-fixtures:
     dependencies:
