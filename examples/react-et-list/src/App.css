@@ -5,10 +5,53 @@
 .Page {
   width: 100vw;
   height: 100vh;
+  background-color: #111318;
+  padding: 18px;
+}
+
+.Shell {
   display: flex;
   flex-direction: column;
-  background-color: #111318;
-  padding: 20px;
+}
+
+.AppTitle {
+  color: #ffffff;
+  font-size: 24px;
+  font-weight: 700;
+  margin-bottom: 12px;
+}
+
+.Tabs {
+  display: flex;
+  flex-direction: row;
+  margin-bottom: 14px;
+}
+
+.Tab {
+  height: 38px;
+  padding-left: 14px;
+  padding-right: 14px;
+  margin-right: 8px;
+  background-color: #242a33;
+  justify-content: center;
+  border-width: 1px;
+  border-color: #3b4655;
+}
+
+.TabActive {
+  background-color: #2f6fed;
+  border-color: #82a9ff;
+}
+
+.TabText {
+  color: #ffffff;
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.Scenario {
+  display: flex;
+  flex-direction: column;
 }
 
 .Header {
@@ -18,8 +61,8 @@
 }
 
 .Title {
-  color: #fff;
-  font-size: 24px;
+  color: #ffffff;
+  font-size: 21px;
   font-weight: 700;
   margin-bottom: 8px;
 }
@@ -46,26 +89,45 @@
 }
 
 .ActionText {
-  color: #fff;
+  color: #ffffff;
   font-size: 13px;
   font-weight: 600;
 }
 
 .Feed {
   width: 100%;
-  height: 620px;
+  height: 570px;
   background-color: #1e232b;
+}
+
+.CompactFeed {
+  height: 430px;
 }
 
 .FeedItem {
   width: 100%;
   height: 96px;
-  background-color: #f4d35e;
   border-width: 3px;
-  border-color: #2b8a3e;
+  border-color: #19202a;
   justify-content: center;
   padding-left: 16px;
   padding-right: 16px;
+}
+
+.FeedItem-warm {
+  background-color: #f4d35e;
+}
+
+.FeedItem-cool {
+  background-color: #8ecae6;
+}
+
+.FeedItem-mint {
+  background-color: #95d5b2;
+}
+
+.FeedItem-rose {
+  background-color: #ffafcc;
 }
 
 .ItemBody {
@@ -75,12 +137,26 @@
 
 .ItemTitle {
   color: #101318;
-  font-size: 22px;
+  font-size: 21px;
   font-weight: 700;
   margin-bottom: 4px;
 }
 
 .ItemMeta {
-  color: #3d424a;
+  color: #303741;
   font-size: 13px;
+}
+
+.EmptyState {
+  width: 100%;
+  height: 220px;
+  background-color: #202732;
+  align-items: center;
+  justify-content: center;
+}
+
+.EmptyText {
+  color: #d4d8df;
+  font-size: 18px;
+  font-weight: 600;
 }
