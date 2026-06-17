@@ -1,0 +1,86 @@
+:root {
+  background-color: #111318;
+}
+
+.Page {
+  width: 100vw;
+  height: 100vh;
+  display: flex;
+  flex-direction: column;
+  background-color: #111318;
+  padding: 20px;
+}
+
+.Header {
+  display: flex;
+  flex-direction: column;
+  margin-bottom: 12px;
+}
+
+.Title {
+  color: #fff;
+  font-size: 24px;
+  font-weight: 700;
+  margin-bottom: 8px;
+}
+
+.Status {
+  color: #d4d8df;
+  font-size: 14px;
+  margin-bottom: 4px;
+}
+
+.Actions {
+  display: flex;
+  flex-direction: row;
+  margin-bottom: 12px;
+}
+
+.Action {
+  height: 40px;
+  padding-left: 12px;
+  padding-right: 12px;
+  margin-right: 8px;
+  background-color: #2f6fed;
+  justify-content: center;
+}
+
+.ActionText {
+  color: #fff;
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.Feed {
+  width: 100%;
+  height: 620px;
+  background-color: #1e232b;
+}
+
+.FeedItem {
+  width: 100%;
+  height: 96px;
+  background-color: #f4d35e;
+  border-width: 3px;
+  border-color: #2b8a3e;
+  justify-content: center;
+  padding-left: 16px;
+  padding-right: 16px;
+}
+
+.ItemBody {
+  display: flex;
+  flex-direction: column;
+}
+
+.ItemTitle {
+  color: #101318;
+  font-size: 22px;
+  font-weight: 700;
+  margin-bottom: 4px;
+}
+
+.ItemMeta {
+  color: #3d424a;
+  font-size: 13px;
+}
