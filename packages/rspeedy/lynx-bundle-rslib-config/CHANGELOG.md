@@ -1,5 +1,20 @@
 # @lynx-js/lynx-bundle-rslib-config
 
+## 0.4.0
+
+### Minor Changes
+
+- **BREAKING CHANGE** ([#2803](https://github.com/lynx-family/lynx-stack/pull/2803))
+
+  Drop webpack support — the plugins now target Rspack only. All public types come from `@rspack/core` instead of `webpack` (e.g. `Compiler`, `Compilation`, `LoaderContext`), and the `webpack` dependency is removed.
+
+- Align Rspeedy, the QRCode plugin, and the Lynx bundle Rslib config Node.js engine metadata with Rsbuild v2 and Rslib requirements: Node.js 20.19+ or 22.12+. ([#2789](https://github.com/lynx-family/lynx-stack/pull/2789))
+
+### Patch Changes
+
+- Updated dependencies [[`e0aa6a3`](https://github.com/lynx-family/lynx-stack/commit/e0aa6a3f4fc8ba848a3a41789b3775a46fea24dc)]:
+  - @lynx-js/runtime-wrapper-webpack-plugin@0.2.0
+
 ## 0.3.3
 
 ### Patch Changes

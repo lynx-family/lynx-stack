@@ -1,5 +1,19 @@
 # create-rspeedy
 
+## 0.15.0
+
+### Minor Changes
+
+- **BREAKING CHANGE** ([#2792](https://github.com/lynx-family/lynx-stack/pull/2792))
+
+  Update `create-rstack` to 2.1.3 and align `create-rspeedy`'s Node.js engine metadata with its runtime requirements: Node.js 20.19+ or 22.12+.
+
+- Align generated Rspeedy project templates with Rsbuild v2's Node.js runtime requirements: Node.js 20.19+ or 22.12+. ([#2789](https://github.com/lynx-family/lynx-stack/pull/2789))
+
+### Patch Changes
+
+- Bump `@lynx-js/preact-devtools` to `5.0.1-20260525112551-dfe2d03` in the React templates. ([#2710](https://github.com/lynx-family/lynx-stack/pull/2710))
+
 ## 0.14.5
 
 ## 0.14.4
