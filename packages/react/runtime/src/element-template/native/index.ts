@@ -9,7 +9,7 @@ import { callDestroyLifetimeFun } from './callDestroyLifetimeFun.js';
 import { injectCalledByNative } from './main-thread-api.js';
 import { installOnMtsDestruction } from './mts-destroy.js';
 import { installElementTemplatePatchListener } from './patch-listener.js';
-import { reloadBackground } from './reload.js';
+import { reloadBackground } from './reload-background.js';
 import { runWithForceRootRender } from '../../core/forceRootRender.js';
 import { updateGlobalProps as updateGlobalPropsCore } from '../../core/globalProps.js';
 import { installMainThreadHooks } from '../../core/hooks/mainThreadImpl.js';

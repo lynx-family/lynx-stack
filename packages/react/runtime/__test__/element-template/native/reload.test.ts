@@ -6,8 +6,10 @@ import { destroyElementTemplateBackgroundRuntime } from '../../../src/element-te
 import { installElementTemplateHydrationListener } from '../../../src/element-template/background/hydration-listener.js';
 import { BackgroundElementTemplateInstance } from '../../../src/element-template/background/instance.js';
 import { profileEnd, profileStart } from '../../../src/element-template/debug/profile.js';
-import { reloadBackground, reloadMainThread } from '../../../src/element-template/native/reload.js';
+import { reloadBackground } from '../../../src/element-template/native/reload-background.js';
+import { reloadMainThread } from '../../../src/element-template/native/reload-main-thread.js';
 import { resetEventStateForRuntime } from '../../../src/element-template/prop-adapters/event.js';
+import { destroyAllElementTemplateListStates } from '../../../src/element-template/runtime/list/list.js';
 import { setupPage } from '../../../src/element-template/runtime/page/page.js';
 import { __root, setRoot } from '../../../src/element-template/runtime/page/root-instance.js';
 import { elementTemplateRegistry } from '../../../src/element-template/runtime/template/registry.js';
@@ -71,6 +73,11 @@ vi.mock('../../../src/element-template/runtime/template/registry.js', () => ({
 
 vi.mock('../../../src/element-template/runtime/template/handle.js', () => ({
   resetTemplateId: vi.fn(),
+}));
+
+vi.mock('../../../src/element-template/runtime/list/list.js', () => ({
+  destroyAllElementTemplateListStates: vi.fn(),
+  flushInitialElementTemplateListUpdates: vi.fn(() => []),
 }));
 
 vi.mock('../../../src/element-template/background/destroy.js', () => ({
@@ -183,6 +190,10 @@ describe('ElementTemplate reloadMainThread', () => {
     expect(increaseReloadVersion).toHaveBeenCalledTimes(1);
     expect(lynx.__initData).toBe(initData);
     expect(lynx.__initData).toEqual({ msg: 'reload', stable: true });
+    expect(destroyAllElementTemplateListStates).toHaveBeenCalledTimes(1);
+    expect(vi.mocked(destroyAllElementTemplateListStates).mock.invocationCallOrder[0]!).toBeLessThan(
+      vi.mocked(elementTemplateRegistry.clear).mock.invocationCallOrder[0]!,
+    );
     expect(elementTemplateRegistry.clear).toHaveBeenCalledTimes(1);
     expect(resetTemplateId).toHaveBeenCalledTimes(1);
     expect(vi.mocked(setupPage)).not.toHaveBeenCalled();

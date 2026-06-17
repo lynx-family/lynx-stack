@@ -41,10 +41,15 @@ export interface ElementTemplateHandleRefCommandValue {
   [key: string]: SerializableValue;
 }
 
-// Phase 1 keeps handle refs list-specific: only `listChildren` is resolved to
-// ElementRef[] by MTS before native create. Generic nested refs are deferred.
+export interface UpdateTypedListItemCommand extends ElementTemplateHandleRefCommandValue {
+  type: string;
+  platformInfo: Record<string, SerializableValue>;
+}
+
+// Typed list create carries logical item records here, and MTS resolves their
+// handle refs before native create.
 export interface RuntimeOptionsCommand extends Record<string, SerializableValue> {
-  listChildren?: ElementTemplateHandleRefCommandValue[];
+  listChildren?: UpdateTypedListItemCommand[];
 }
 
 export type SerializedRuntimeOptionValue =
@@ -65,10 +70,13 @@ export interface SerializedEtNodeBase {
 export interface SerializedCompiledNode extends SerializedEtNodeBase {
   templateKey: string;
   bundleUrl?: string;
+  attributeSlots?: SerializableValue[] | null;
 }
 
 export interface SerializedTypedNode extends SerializedEtNodeBase {
-  type: string;
+  // Native __SerializeElementTemplate returns typed hosts as { tag, attributes }.
+  tag: string;
+  attributes?: TypedElementAttributesCommand | null;
 }
 
 export type SerializedEtNode = SerializedCompiledNode | SerializedTypedNode;
@@ -78,16 +86,9 @@ export interface ElementTemplateHydrateCommitContext {
   reloadVersion?: number;
 }
 
-// Current hydrate/update code is still compiled-node only. Keep this recursive
-// shape narrow while the RFC-level SerializedEtNode already models typed nodes.
-export interface SerializedElementTemplate {
-  templateKey: string;
-  bundleUrl?: string;
-  attributeSlots?: SerializableValue[] | null;
-  elementSlots?: Array<SerializedElementTemplate[] | null | undefined> | null;
-  uid: number | string;
-  options?: SerializedRuntimeOptions | null;
-}
+// Legacy compiled-node alias kept for fixture helpers. Its child slots can now
+// contain typed nodes because hydrate dispatch accepts the RFC-level union.
+export interface SerializedElementTemplate extends SerializedCompiledNode {}
 
 export type CreateTemplateCommand = [
   typeof ElementTemplateUpdateOps.createTemplate,
@@ -130,12 +131,35 @@ export type CreateTypedElementCommand = [
   options: RuntimeOptionsCommand | null | undefined,
 ];
 
+export type InsertTypedListItemCommand = [
+  typeof ElementTemplateUpdateOps.insertTypedListItem,
+  listHandleId: number,
+  item: UpdateTypedListItemCommand,
+  beforeHandleId: number,
+];
+
+export type RemoveTypedListItemCommand = [
+  typeof ElementTemplateUpdateOps.removeTypedListItem,
+  listHandleId: number,
+  itemHandleId: number,
+  removedSubtreeHandleIds: number[],
+];
+
+export type UpdateTypedListItemInfoCommand = [
+  typeof ElementTemplateUpdateOps.updateTypedListItem,
+  listHandleId: number,
+  item: UpdateTypedListItemCommand,
+];
+
 export type ElementTemplateUpdateCommand =
   | CreateTemplateCommand
   | SetAttributeCommand
   | InsertNodeCommand
   | RemoveNodeCommand
-  | CreateTypedElementCommand;
+  | CreateTypedElementCommand
+  | InsertTypedListItemCommand
+  | RemoveTypedListItemCommand
+  | UpdateTypedListItemInfoCommand;
 
 // Commands are transported as a flat stream to match the native update payload.
 // Tuple aliases above define each opcode's shape; this item union preserves the

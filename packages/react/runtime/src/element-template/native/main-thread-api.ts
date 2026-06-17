@@ -2,7 +2,7 @@
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
 
-import { reloadMainThread } from './reload.js';
+import { reloadMainThread } from './reload-main-thread.js';
 import { applyUpdatePageData } from '../../core/lynx-page-data.js';
 import { __page, createElementTemplatePage, setupPage } from '../runtime/page/page.js';
 import { renderMainThread, resetMainThreadRootRefs } from '../runtime/render/render-main-thread.js';

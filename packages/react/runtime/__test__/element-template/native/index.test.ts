@@ -21,7 +21,7 @@ describe('element-template native index wiring', () => {
     vi.doUnmock('../../../src/element-template/native/patch-listener.js');
     vi.doUnmock('../../../src/element-template/native/mts-destroy.js');
     vi.doUnmock('../../../src/element-template/native/callDestroyLifetimeFun.js');
-    vi.doUnmock('../../../src/element-template/native/reload.js');
+    vi.doUnmock('../../../src/element-template/native/reload-background.js');
     vi.doUnmock('../../../src/element-template/prop-adapters/event.js');
     vi.doUnmock('../../../src/element-template/background/document.js');
     vi.doUnmock('../../../src/element-template/background/hydration-listener.js');
@@ -89,7 +89,7 @@ describe('element-template native index wiring', () => {
     vi.doMock('../../../src/element-template/background/instance.js', () => ({
       BackgroundElementTemplateInstance: class BackgroundElementTemplateInstance {},
     }));
-    vi.doMock('../../../src/element-template/native/reload.js', () => ({
+    vi.doMock('../../../src/element-template/native/reload-background.js', () => ({
       reloadBackground,
     }));
 
@@ -181,7 +181,7 @@ describe('element-template native index wiring', () => {
         constructor(public type: string) {}
       },
     }));
-    vi.doMock('../../../src/element-template/native/reload.js', () => ({
+    vi.doMock('../../../src/element-template/native/reload-background.js', () => ({
       reloadBackground,
     }));
 

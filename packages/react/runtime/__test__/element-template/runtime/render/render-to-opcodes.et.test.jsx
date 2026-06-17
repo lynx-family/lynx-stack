@@ -67,6 +67,59 @@ describe('Element Template renderToOpcodes', () => {
     );
   });
 
+  it('emits typed list attributes and logical children through slot 0', () => {
+    const ItemTemplate = '_et_list_item';
+    const attributes = { id: 'feed' };
+    const itemPlatformInfo = { 'item-key': 'a' };
+
+    const opcodes = renderToString(
+      h('list', {
+        attributes,
+        $0: <ItemTemplate __listItemPlatformInfo={itemPlatformInfo} />,
+      }),
+    );
+
+    expect(opcodes[0]).toBe(__OpBegin);
+    expect(opcodes[1]).toMatchObject({ type: 'list' });
+    expect(opcodes[2]).toBe(__OpAttr);
+    expect(opcodes[3]).toBe('typedAttributes');
+    expect(opcodes[4]).toBe(attributes);
+    expect(opcodes[5]).toBe(__OpSlot);
+    expect(opcodes[6]).toBe(0);
+    expect(opcodes[7]).toBe(__OpBegin);
+    expect(opcodes[8]).toMatchObject({
+      type: ItemTemplate,
+      props: {
+        __listItemPlatformInfo: itemPlatformInfo,
+      },
+    });
+    expect(opcodes.at(-1)).toBe(__OpEnd);
+  });
+
+  it('rejects non-zero typed list logical slots in development', () => {
+    const ItemTemplate = '_et_list_item';
+
+    expect(() =>
+      renderToString(
+        h('list', {
+          $1: <ItemTemplate __listItemPlatformInfo={{ 'item-key': 'a' }} />,
+        }),
+      )
+    ).toThrow('Element Template typed list only supports logical slot $0.');
+  });
+
+  it('rejects non-list uncompiled hosts outside development too', () => {
+    const originalDev = globalThis.__DEV__;
+    globalThis.__DEV__ = false;
+    try {
+      expect(() => renderToString(h('view', null))).toThrow(
+        'Element Template main-thread renderer received an uncompiled host vnode: view',
+      );
+    } finally {
+      globalThis.__DEV__ = originalDev;
+    }
+  });
+
   it('throws in development when an invalid vnode reaches the ET render path', () => {
     expect(() => renderToString({ type: null, props: {} })).toThrow(
       'Element Template main-thread renderer received an invalid vnode.',

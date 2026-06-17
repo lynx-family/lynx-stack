@@ -8,6 +8,9 @@ export const ElementTemplateUpdateOps = {
   insertNode: 3,
   removeNode: 4,
   createTypedElement: 5,
+  insertTypedListItem: 6,
+  removeTypedListItem: 7,
+  updateTypedListItem: 8,
 } as const;
 
 export type ElementTemplateUpdateOp = typeof ElementTemplateUpdateOps[keyof typeof ElementTemplateUpdateOps];

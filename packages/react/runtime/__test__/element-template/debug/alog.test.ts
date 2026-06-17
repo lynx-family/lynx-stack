@@ -36,6 +36,17 @@ describe('ElementTemplate alog helpers', () => {
       13,
       0,
       { insertAction: [] },
+      ElementTemplateUpdateOps.insertTypedListItem,
+      13,
+      { __etHandleRef: 12, type: '_et_item', platformInfo: { 'item-key': 'a' } },
+      0,
+      ElementTemplateUpdateOps.removeTypedListItem,
+      13,
+      12,
+      [12],
+      ElementTemplateUpdateOps.updateTypedListItem,
+      13,
+      { __etHandleRef: 12, type: '_et_item', platformInfo: { 'item-key': 'b' } },
       ElementTemplateUpdateOps.insertNode,
       11,
       1,
@@ -74,6 +85,23 @@ describe('ElementTemplate alog helpers', () => {
         targetId: 13,
         attrSlotIndex: 0,
         value: { insertAction: [] },
+      },
+      {
+        op: 'insertTypedListItem',
+        targetId: 13,
+        item: { __etHandleRef: 12, type: '_et_item', platformInfo: { 'item-key': 'a' } },
+        beforeId: 0,
+      },
+      {
+        op: 'removeTypedListItem',
+        targetId: 13,
+        itemId: 12,
+        removedSubtreeHandleIds: [12],
+      },
+      {
+        op: 'updateTypedListItem',
+        targetId: 13,
+        item: { __etHandleRef: 12, type: '_et_item', platformInfo: { 'item-key': 'b' } },
       },
       {
         op: 'insertNode',
@@ -138,6 +166,24 @@ describe('ElementTemplate alog helpers', () => {
     expect(output).toContain(`view#${child.instanceId}`);
     expect(output).toContain(`elementSlots[1]: [${child.instanceId}]`);
     expect(output).not.toMatch(/elementSlots\[0\]/);
+  });
+
+  it('keeps malformed debug tree instances printable', () => {
+    const root = {
+      attributeSlots: null,
+      elementSlots: null,
+    } as unknown as {
+      attributeSlots?: unknown;
+      type?: string;
+      instanceId?: number;
+      elementSlots?: unknown;
+    };
+    root.type = undefined;
+    root.instanceId = undefined;
+
+    expect(printElementTemplateTreeToString(root as BackgroundElementTemplateInstance)).toBe(
+      '<unknown>#<unknown>',
+    );
   });
 
   it('prints an empty marker for missing roots', () => {

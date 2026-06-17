@@ -30,6 +30,7 @@ pub use self::asset::ElementTemplateAsset;
 use self::attr_name::AttrName;
 use self::extractor::{DynamicAttributePart, ElementTemplateExtractor, ExtractedTemplateParts};
 use self::lowering::LoweredRuntimeJsx;
+use self::template_attribute::template_attribute_descriptor_key;
 use self::template_identity::{
   template_identity_from_compiled_template, TemplateIdentityCollisionGuard,
 };
@@ -43,7 +44,9 @@ type RuntimeIdInitializer = Box<dyn FnOnce() -> Expr>;
 pub mod napi;
 
 use swc_plugins_shared::{
-  jsx_helpers::jsx_name, target::TransformTarget, transform_mode::TransformMode,
+  jsx_helpers::{jsx_attr_value, jsx_children_to_expr, jsx_is_list_item, jsx_name},
+  target::TransformTarget,
+  transform_mode::TransformMode,
 };
 
 pub fn i32_to_expr(i: &i32) -> Expr {
@@ -77,6 +80,109 @@ fn require_runtime_id(runtime_pkg: String) -> Lazy<Expr, RuntimeIdInitializer> {
       type_args: None,
     })
   })
+}
+
+fn jsx_expr_attr(name: &str, expr: Expr) -> JSXAttrOrSpread {
+  JSXAttrOrSpread::JSXAttr(JSXAttr {
+    span: DUMMY_SP,
+    name: JSXAttrName::Ident(IdentName::new(name.into(), DUMMY_SP)),
+    value: Some(JSXAttrValue::JSXExprContainer(JSXExprContainer {
+      span: DUMMY_SP,
+      expr: JSXExpr::Expr(Box::new(expr)),
+    })),
+  })
+}
+
+fn jsx_attr_to_template_object_prop(attr: &JSXAttr) -> PropOrSpread {
+  let key = template_attribute_descriptor_key(&attr.name);
+  PropOrSpread::Prop(Box::new(Prop::KeyValue(KeyValueProp {
+    key: PropName::Str(Str {
+      span: attr.span,
+      raw: None,
+      value: key.into(),
+    }),
+    value: jsx_attr_value(attr.value.clone()),
+  })))
+}
+
+fn empty_array_expr() -> Expr {
+  Expr::Array(ArrayLit {
+    span: DUMMY_SP,
+    elems: vec![],
+  })
+}
+
+fn empty_object_expr() -> Expr {
+  Expr::Object(ObjectLit {
+    span: DUMMY_SP,
+    props: vec![],
+  })
+}
+
+fn typed_list_attributes_expr(attrs: Vec<JSXAttrOrSpread>) -> (Vec<JSXAttrOrSpread>, Expr) {
+  let mut passthrough_attrs = vec![];
+  let mut object_props = vec![];
+
+  for attr in attrs {
+    match attr {
+      JSXAttrOrSpread::JSXAttr(attr) if matches!(&attr.name, JSXAttrName::Ident(name) if name.sym.as_ref() == "key") =>
+      {
+        passthrough_attrs.push(JSXAttrOrSpread::JSXAttr(attr));
+      }
+      JSXAttrOrSpread::JSXAttr(attr) => object_props.push(jsx_attr_to_template_object_prop(&attr)),
+      JSXAttrOrSpread::SpreadElement(spread) => object_props.push(PropOrSpread::Spread(spread)),
+      #[cfg(swc_ast_unknown)]
+      _ => panic!("unknown node"),
+    }
+  }
+
+  (
+    passthrough_attrs,
+    Expr::Object(ObjectLit {
+      span: DUMMY_SP,
+      props: object_props,
+    }),
+  )
+}
+
+fn is_list_item_platform_attr_key(key: &str) -> bool {
+  matches!(
+    key,
+    "reuse-identifier"
+      | "full-span"
+      | "item-key"
+      | "sticky-top"
+      | "sticky-bottom"
+      | "estimated-height"
+      | "estimated-height-px"
+      | "estimated-main-axis-size-px"
+      | "recyclable"
+  )
+}
+
+fn list_item_platform_info_expr(attrs: &[JSXAttrOrSpread]) -> Option<Expr> {
+  let mut props = vec![];
+
+  for attr in attrs {
+    match attr {
+      JSXAttrOrSpread::JSXAttr(attr) => {
+        let key = template_attribute_descriptor_key(&attr.name);
+        if is_list_item_platform_attr_key(&key) {
+          props.push(jsx_attr_to_template_object_prop(attr));
+        }
+      }
+      JSXAttrOrSpread::SpreadElement(spread) => {
+        props.push(PropOrSpread::Spread(spread.clone()));
+      }
+      #[cfg(swc_ast_unknown)]
+      _ => panic!("unknown node"),
+    }
+  }
+
+  (!props.is_empty()).then_some(Expr::Object(ObjectLit {
+    span: DUMMY_SP,
+    props,
+  }))
 }
 
 fn internal_runtime_pkg(runtime_pkg: &str) -> String {
@@ -247,6 +353,40 @@ where
       }
     });
   }
+
+  fn lower_typed_list_runtime_jsx(&mut self, node: &mut JSXElement) {
+    node.visit_mut_children_with(self);
+
+    let span = node.span();
+    let opening_span = node.opening.span;
+    let (mut rendered_attrs, attributes) = typed_list_attributes_expr(node.opening.attrs.take());
+    let list_children = if node.children.is_empty() {
+      empty_array_expr()
+    } else {
+      jsx_children_to_expr(node.children.take())
+    };
+
+    rendered_attrs.push(jsx_expr_attr("attributes", attributes));
+    rendered_attrs.push(jsx_expr_attr("$0", list_children));
+
+    let name = JSXElementName::Ident(Ident::new(
+      "list".into(),
+      DUMMY_SP,
+      SyntaxContext::default(),
+    ));
+    *node = JSXElement {
+      span,
+      opening: JSXOpeningElement {
+        name,
+        span: opening_span,
+        attrs: rendered_attrs,
+        self_closing: true,
+        type_args: None,
+      },
+      children: vec![],
+      closing: None,
+    };
+  }
 }
 
 impl<C> VisitMut for JSXTransformer<C>
@@ -261,6 +401,10 @@ where
           let tag_str = tag.as_ref();
           if tag_str == ET_SLOT_PLACEHOLDER_TAG {
             return node.visit_mut_children_with(self);
+          }
+          if tag_str == "list" {
+            self.lower_typed_list_runtime_jsx(node);
+            return;
           }
           if tag_str == "page" || tag_str == "component" {
             HANDLER.with(|handler| {
@@ -279,6 +423,7 @@ where
         return node.visit_mut_children_with(self);
       }
     }
+    let is_list_item = jsx_is_list_item(node);
 
     let target = self.cfg.target;
     let runtime_id = self.runtime_id.clone();
@@ -344,6 +489,12 @@ where
       dynamic_attrs,
       dynamic_children,
     );
+    let mut rendered_attrs = rendered_attrs;
+    if is_list_item {
+      let platform_info =
+        list_item_platform_info_expr(&node.opening.attrs).unwrap_or_else(empty_object_expr);
+      rendered_attrs.push(jsx_expr_attr("__listItemPlatformInfo", platform_info));
+    }
 
     let mut dynamic_attr_slot_cursor: usize = 0;
     let mut element_slot_index: i32 = 0;

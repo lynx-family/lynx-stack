@@ -10,8 +10,11 @@ import {
   resetElementTemplateCommitState,
 } from '../../../../src/element-template/background/commit-hook.js';
 import { destroyElementTemplateBackgroundRuntime } from '../../../../src/element-template/background/destroy.js';
+import { setupBackgroundElementTemplateDocument } from '../../../../src/element-template/background/document.js';
 import {
   BackgroundElementTemplateInstance,
+  BackgroundListElementTemplateInstance,
+  BackgroundTypedElementTemplateInstance,
   BUILTIN_RAW_TEXT_TEMPLATE_KEY,
 } from '../../../../src/element-template/background/instance.js';
 import { backgroundElementTemplateInstanceManager } from '../../../../src/element-template/background/manager.js';
@@ -61,6 +64,309 @@ describe('BackgroundElementTemplateInstance', () => {
     new BackgroundElementTemplateInstance('image', ['logo.png']);
 
     expect(globalCommitContext.ops).toEqual([]);
+  });
+
+  it('creates exact list hosts through the list-specific background instance', () => {
+    const doc = setupBackgroundElementTemplateDocument();
+
+    expect(doc.createElement('list')).toBeInstanceOf(BackgroundListElementTemplateInstance);
+    expect(doc.createElement('list')).toBeInstanceOf(BackgroundTypedElementTemplateInstance);
+    expect(doc.createElement('_et_item')).toBeInstanceOf(BackgroundElementTemplateInstance);
+    expect(doc.createElement('_et_item')).not.toBeInstanceOf(BackgroundTypedElementTemplateInstance);
+  });
+
+  it('emits exact list create as typed holder with logical children in command options', () => {
+    const list = new BackgroundListElementTemplateInstance();
+    const item = new BackgroundElementTemplateInstance('_et_list_item');
+    list.setAttribute('attributes', { id: 'feed' });
+    list.appendChild(item);
+    globalCommitContext.ops = [];
+
+    list.emitCreate();
+
+    expect(globalCommitContext.ops).toEqual([
+      ElementTemplateUpdateOps.createTypedElement,
+      list.instanceId,
+      'list',
+      { id: 'feed' },
+      null,
+      {
+        listChildren: [{
+          __etHandleRef: item.instanceId,
+          type: '_et_list_item',
+          platformInfo: {},
+        }],
+      },
+    ]);
+  });
+
+  it('emits generic typed element create with standard attribute slots and no runtime options', () => {
+    const typed = new BackgroundTypedElementTemplateInstance('x-host');
+    typed.setAttribute('attributeSlots', ['title']);
+    globalCommitContext.ops = [];
+
+    typed.emitCreate();
+
+    expect(globalCommitContext.ops).toEqual([
+      ElementTemplateUpdateOps.createTypedElement,
+      typed.instanceId,
+      'x-host',
+      null,
+      null,
+      null,
+    ]);
+
+    globalCommitContext.ops = [];
+    typed.emitCreate();
+
+    expect(globalCommitContext.ops).toEqual([]);
+  });
+
+  it('reports illegal typed element handle ids on create', () => {
+    const oldReportError = lynx.reportError;
+    const reportError = vi.fn();
+    lynx.reportError = reportError;
+
+    try {
+      const typed = new BackgroundTypedElementTemplateInstance('x-host');
+      typed.instanceId = 0;
+      globalCommitContext.ops = [];
+
+      typed.emitCreate();
+
+      expect(globalCommitContext.ops).toEqual([]);
+      expect(String(reportError.mock.calls[0]?.[0]?.message ?? '')).toContain('illegal handleId 0');
+    } finally {
+      lynx.reportError = oldReportError;
+      (globalThis as { __LYNX_REPORT_ERROR_CALLS?: Error[] }).__LYNX_REPORT_ERROR_CALLS = [];
+    }
+  });
+
+  it('patches hydrated typed attributes through slot 0', () => {
+    const list = new BackgroundListElementTemplateInstance();
+    const oldListId = list.instanceId;
+    backgroundElementTemplateInstanceManager.updateId(oldListId, -10);
+    list.markMaterializedByHydration();
+    markElementTemplateHydrated();
+    globalCommitContext.ops = [];
+
+    list.setAttribute('attributes', { id: 'next' });
+
+    expect(globalCommitContext.ops).toEqual([
+      ElementTemplateUpdateOps.setAttribute,
+      -10,
+      0,
+      { id: 'next' },
+    ]);
+  });
+
+  it('emits logical list insertions as incremental typed list item patches', () => {
+    const list = new BackgroundListElementTemplateInstance();
+    const oldListId = list.instanceId;
+    backgroundElementTemplateInstanceManager.updateId(oldListId, -10);
+    list.markMaterializedByHydration();
+    const first = new BackgroundElementTemplateInstance('_et_item_a');
+    first.setAttribute('__listItemPlatformInfo', { 'item-key': 'a' });
+    list.appendChild(first);
+    const oldFirstId = first.instanceId;
+    backgroundElementTemplateInstanceManager.updateId(oldFirstId, -11);
+    first.markMaterializedByHydration();
+    const second = new BackgroundElementTemplateInstance('_et_item_b');
+    second.setAttribute('__listItemPlatformInfo', { 'item-key': 'b' });
+    markElementTemplateHydrated();
+    globalCommitContext.ops = [];
+
+    list.insertBefore(second, first);
+
+    expect(globalCommitContext.ops).toEqual([
+      ElementTemplateUpdateOps.createTemplate,
+      second.instanceId,
+      '_et_item_b',
+      null,
+      [],
+      [],
+      ElementTemplateUpdateOps.insertTypedListItem,
+      -10,
+      {
+        __etHandleRef: second.instanceId,
+        type: '_et_item_b',
+        platformInfo: { 'item-key': 'b' },
+      },
+      -11,
+    ]);
+  });
+
+  it('emits logical list updates when list item platform info changes', () => {
+    const list = new BackgroundListElementTemplateInstance();
+    const oldListId = list.instanceId;
+    backgroundElementTemplateInstanceManager.updateId(oldListId, -10);
+    list.markMaterializedByHydration();
+    const item = new BackgroundElementTemplateInstance('_et_item_a');
+    item.setAttribute('__listItemPlatformInfo', { 'item-key': 'a' });
+    list.appendChild(item);
+    const oldItemId = item.instanceId;
+    backgroundElementTemplateInstanceManager.updateId(oldItemId, -11);
+    item.markMaterializedByHydration();
+    markElementTemplateHydrated();
+    globalCommitContext.ops = [];
+
+    item.setAttribute('__listItemPlatformInfo', { 'item-key': 'a', 'estimated-height': 42 });
+
+    expect(globalCommitContext.ops).toEqual([
+      ElementTemplateUpdateOps.updateTypedListItem,
+      -10,
+      {
+        __etHandleRef: -11,
+        type: '_et_item_a',
+        platformInfo: { 'item-key': 'a', 'estimated-height': 42 },
+      },
+    ]);
+  });
+
+  it('keeps typed list item remove and update silent before hydration', () => {
+    const list = new BackgroundListElementTemplateInstance();
+    backgroundElementTemplateInstanceManager.updateId(list.instanceId, -10);
+    list.markMaterializedByHydration();
+    const item = new BackgroundElementTemplateInstance('_et_item_a');
+    list.appendChild(item);
+    backgroundElementTemplateInstanceManager.updateId(item.instanceId, -11);
+    item.markMaterializedByHydration();
+    globalCommitContext.ops = [];
+
+    item.setAttribute('__listItemPlatformInfo', { 'item-key': 'a' });
+    list.removeChild(item);
+
+    expect(globalCommitContext.ops).toEqual([]);
+  });
+
+  it('queues lifetime cleanup when logically removing a hydrated list item', () => {
+    const cleanup = vi.fn();
+    const ref = vi.fn(() => cleanup);
+    __etAttrPlanMap._et_item_a = [0, adaptRefAttrSlot];
+    const list = new BackgroundListElementTemplateInstance();
+    backgroundElementTemplateInstanceManager.updateId(list.instanceId, -10);
+    list.markMaterializedByHydration();
+    const item = new BackgroundElementTemplateInstance('_et_item_a');
+    list.appendChild(item);
+    backgroundElementTemplateInstanceManager.updateId(item.instanceId, -11);
+    item.markMaterializedByHydration();
+    markElementTemplateHydrated();
+    item.setAttribute('attributeSlots', [ref]);
+    flushPendingRefs();
+    ref.mockClear();
+    globalCommitContext.ops = [];
+
+    list.removeChild(item);
+    flushPendingRefs();
+
+    expect(globalCommitContext.ops).toEqual([
+      ElementTemplateUpdateOps.removeTypedListItem,
+      -10,
+      -11,
+      [-11],
+    ]);
+    expect(globalCommitContext.nonPayload.removedSubtreesAwaitingTeardown).toEqual([item]);
+    expect(cleanup).toHaveBeenCalledTimes(1);
+    expect(ref).not.toHaveBeenCalled();
+  });
+
+  it('keeps silent list removals out of lifetime cleanup', () => {
+    const list = new BackgroundListElementTemplateInstance();
+    backgroundElementTemplateInstanceManager.updateId(list.instanceId, -10);
+    list.markMaterializedByHydration();
+    const item = new BackgroundElementTemplateInstance('_et_item_a');
+    list.appendChild(item);
+    backgroundElementTemplateInstanceManager.updateId(item.instanceId, -11);
+    item.markMaterializedByHydration();
+    markElementTemplateHydrated();
+    globalCommitContext.ops = [];
+
+    list.removeChild(item, true);
+
+    expect(globalCommitContext.ops).toEqual([]);
+    expect(globalCommitContext.nonPayload.removedSubtreesAwaitingTeardown).toEqual([]);
+  });
+
+  it('emits logical updates for both lists when an item moves across typed lists', () => {
+    const oldList = new BackgroundListElementTemplateInstance();
+    const newList = new BackgroundListElementTemplateInstance();
+    backgroundElementTemplateInstanceManager.updateId(oldList.instanceId, -10);
+    backgroundElementTemplateInstanceManager.updateId(newList.instanceId, -20);
+    oldList.markMaterializedByHydration();
+    newList.markMaterializedByHydration();
+    const item = new BackgroundElementTemplateInstance('_et_item_a');
+    item.setAttribute('__listItemPlatformInfo', { 'item-key': 'a' });
+    oldList.appendChild(item);
+    backgroundElementTemplateInstanceManager.updateId(item.instanceId, -11);
+    item.markMaterializedByHydration();
+    markElementTemplateHydrated();
+    globalCommitContext.ops = [];
+
+    newList.appendChild(item);
+
+    expect(globalCommitContext.ops).toEqual([
+      ElementTemplateUpdateOps.removeTypedListItem,
+      -10,
+      -11,
+      [],
+      ElementTemplateUpdateOps.insertTypedListItem,
+      -20,
+      {
+        __etHandleRef: -11,
+        type: '_et_item_a',
+        platformInfo: { 'item-key': 'a' },
+      },
+      0,
+    ]);
+  });
+
+  it('emits incremental list mutations instead of full children snapshots during one render', () => {
+    const list = new BackgroundListElementTemplateInstance();
+    backgroundElementTemplateInstanceManager.updateId(list.instanceId, -10);
+    list.markMaterializedByHydration();
+    const first = new BackgroundElementTemplateInstance('_et_item_a');
+    const second = new BackgroundElementTemplateInstance('_et_item_b');
+    const third = new BackgroundElementTemplateInstance('_et_item_c');
+    list.appendChild(first);
+    list.appendChild(second);
+    backgroundElementTemplateInstanceManager.updateId(first.instanceId, -11);
+    backgroundElementTemplateInstanceManager.updateId(second.instanceId, -12);
+    first.markMaterializedByHydration();
+    second.markMaterializedByHydration();
+    markElementTemplateHydrated();
+    globalCommitContext.ops = [];
+
+    list.insertBefore(third, second);
+    list.removeChild(first);
+    second.setAttribute('__listItemPlatformInfo', { 'item-key': 'b', 'full-span': true });
+
+    expect(globalCommitContext.ops).toEqual([
+      ElementTemplateUpdateOps.createTemplate,
+      third.instanceId,
+      '_et_item_c',
+      null,
+      [],
+      [],
+      ElementTemplateUpdateOps.insertTypedListItem,
+      -10,
+      {
+        __etHandleRef: third.instanceId,
+        type: '_et_item_c',
+        platformInfo: {},
+      },
+      -12,
+      ElementTemplateUpdateOps.removeTypedListItem,
+      -10,
+      -11,
+      [-11],
+      ElementTemplateUpdateOps.updateTypedListItem,
+      -10,
+      {
+        __etHandleRef: -12,
+        type: '_et_item_b',
+        platformInfo: { 'item-key': 'b', 'full-span': true },
+      },
+    ]);
   });
 
   it('exposes DOM-compatible tree accessors for Preact removal paths', () => {

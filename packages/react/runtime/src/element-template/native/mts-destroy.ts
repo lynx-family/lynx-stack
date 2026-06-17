@@ -3,6 +3,7 @@
 // LICENSE file in the root directory of this source tree.
 
 import { resetElementTemplatePatchListener } from './patch-listener.js';
+import { destroyAllElementTemplateListStates } from '../runtime/list/list.js';
 import { elementTemplateRegistry } from '../runtime/template/registry.js';
 
 export function installOnMtsDestruction(): void {
@@ -32,6 +33,7 @@ export function destroyElementTemplateMainThreadRuntime(): void {
 
   // The registry is the main-thread strong-reference owner for ET refs. Clear it
   // even if listener reset fails so destroy does not leave removed pages retained.
+  destroyAllElementTemplateListStates();
   elementTemplateRegistry.clear();
 
   if (didPatchListenerResetThrow) {
