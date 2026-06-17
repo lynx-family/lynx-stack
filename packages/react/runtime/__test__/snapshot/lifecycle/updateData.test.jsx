@@ -5,6 +5,7 @@
 import { Component, render } from 'preact';
 import { afterEach, beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
 
+import { createProcessData } from '../../../src/core/lynx-data-processors';
 import { replaceCommitHook } from '../../../src/snapshot/lifecycle/patch/commit';
 import { deinitGlobalSnapshotPatch } from '../../../src/snapshot/lifecycle/patch/snapshotPatch';
 import {
@@ -1505,6 +1506,84 @@ describe('firstScreenSyncTiming - manual', () => {
               {
                 "firstScreenEventIdSwap": {},
                 "root": "{"id":-1,"type":"root","children":[{"id":-2,"type":"__snapshot_a94a8_test_17","children":[{"id":-3,"type":null,"values":["init"]}]}]}",
+              },
+            ],
+          ],
+        ]
+      `);
+    }
+  });
+
+  /**
+   * Regression test: `markFirstScreenSyncReady()` called inside `defaultDataProcessor`.
+   *
+   * The native side runs `defaultDataProcessor` (via `globalThis.processData`) as a
+   * separate call BEFORE `updatePage`. After the first `renderPage`, the previous tree
+   * is still latched ready, so a naive implementation would sync that STALE tree the
+   * moment the mark is made, and the following `updatePage` would then skip its
+   * main-thread render entirely — the new data would never render on the main thread
+   * (it would only re-render later on the background thread after hydration).
+   *
+   * The mark made during data processing must be deferred so the new data renders on
+   * the main thread first, and only then syncs.
+   */
+  it('should defer a markFirstScreenSyncReady made inside defaultDataProcessor until the data renders', async function() {
+    function Comp() {
+      const initData = useInitData();
+
+      return <text>{initData.msg}</text>;
+    }
+
+    // first screen renders cache data: the tree is ready but NOT synced (manual mode)
+    {
+      globalThis.__OnLifecycleEvent.mockClear();
+      __root.__jsx = <Comp />;
+      renderPage({ msg: 'cache' });
+      expect(globalThis.__OnLifecycleEvent).not.toBeCalled();
+    }
+
+    // the "二刷": native runs the default data processor, which marks ready inside it.
+    // Although the previous tree is still latched ready, the mark must be deferred —
+    // a re-render of this data is imminent — so NO sync happens here.
+    globalThis.__EXTRACT_STR__ = false;
+    const processData = createProcessData({
+      defaultDataProcessor(rawData) {
+        markFirstScreenSyncReady();
+        return rawData;
+      },
+    });
+    {
+      globalThis.__OnLifecycleEvent.mockClear();
+      const processed = processData({ msg: 'real' });
+      expect(globalThis.__OnLifecycleEvent).not.toBeCalled();
+
+      // native then calls `updatePage` with the processed data: it renders on the
+      // main thread and only THEN syncs the new tree (not the stale cache tree)
+      globalThis.__FlushElementTree.mockClear();
+      updatePage(processed);
+      expect(__root.__element_root).toMatchInlineSnapshot(`
+        <page
+          cssId="default-entry-from-native:0"
+        >
+          <text>
+            <raw-text
+              text="real"
+            />
+          </text>
+        </page>
+      `);
+      expect(globalThis.__OnLifecycleEvent.mock.calls).toMatchInlineSnapshot(`
+        [
+          [
+            [
+              "rLynxFirstScreen",
+              {
+                "firstScreenEventIdSwap": {
+                  "-1": -4,
+                  "-2": -5,
+                  "-3": -6,
+                },
+                "root": "{"id":-4,"type":"root","children":[{"id":-5,"type":"__snapshot_a94a8_test_18","children":[{"id":-6,"type":null,"values":["real"]}]}]}",
               },
             ],
           ],

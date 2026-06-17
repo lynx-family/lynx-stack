@@ -1,6 +1,7 @@
 // Copyright 2025 The Lynx Authors. All rights reserved.
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
+import { isProcessingDefaultData } from '../../../core/lynx-data-processors.js';
 import { __root } from '../../../root.js';
 import { profileEnd, profileStart } from '../../../shared/profile.js';
 import { LifecycleConstant } from '../../lifecycle/constant.js';
@@ -39,12 +40,15 @@ function syncFirstScreen(): void {
   firstScreenEventIdSwap = {};
 }
 
+// ready signal: business/framework allows the handover. Syncs if the tree is ready.
 function onFirstScreenSyncReady(): void {
   if (typeof __PROFILE__ !== 'undefined' && __PROFILE__) {
     profileStart('ReactLynx::onFirstScreenSyncReady');
   }
   isMarkedFirstScreenSyncReady = true;
-  if (isFirstScreenTreeReady && !isFirstScreenSynced) {
+  // A mark made inside `defaultDataProcessor` (a native call before the upcoming render)
+  // is recorded but not synced now; `onFirstScreenTreeReady` honors it once render ends.
+  if (isFirstScreenTreeReady && !isProcessingDefaultData() && !isFirstScreenSynced) {
     syncFirstScreen();
   }
   if (typeof __PROFILE__ !== 'undefined' && __PROFILE__) {
@@ -52,6 +56,7 @@ function onFirstScreenSyncReady(): void {
   }
 }
 
+// tree built (`renderPage` / `updatePage` done). Syncs if the ready signal already came.
 function onFirstScreenTreeReady(): void {
   isFirstScreenTreeReady = true;
   if (isMarkedFirstScreenSyncReady && !isFirstScreenSynced) {
