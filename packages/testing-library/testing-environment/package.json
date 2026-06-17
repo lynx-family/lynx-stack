@@ -60,7 +60,7 @@
     "build": "rslib build",
     "dev": "rslib build --watch",
     "rstest": "rstest",
-    "test": "vitest"
+    "test": "rstest run"
   },
   "devDependencies": {
     "@testing-library/jest-dom": "^6.9.1",

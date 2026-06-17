@@ -13,8 +13,7 @@ export default defineConfig({
         ...config,
         // The vitest runner's `spyOn` is idempotent when a method is already
         // spied; rstest's is not, so a spy re-installed across loop iterations
-        // (e.g. lazy-bundle Suspense map) recurses. Restore spies between tests
-        // to match vitest semantics.
+        // recurses. Restore spies between tests to match vitest semantics.
         restoreMocks: true,
         tools: {
           swc: {
@@ -27,11 +26,9 @@ export default defineConfig({
         },
         plugins: [
           ...(config.plugins || []),
-          // Match the engineVersion used by the vitest `testingLibraryPlugin`
-          // (which passes `engineVersion: ''`) so the element-PAPI transform
-          // output matches the inline snapshots. `pluginReactLynx` otherwise
-          // defaults to `'3.2'`, which produces a different render path.
-          pluginReactLynx({ engineVersion: '' }),
+          // Mirror the vitest `vitestTestingLibraryPlugin({ engineVersion: '3.1' })`
+          // so the engine-3.1 element-PAPI transform output matches the snapshots.
+          pluginReactLynx({ engineVersion: '3.1' }),
         ],
         source: {
           ...config.source,
@@ -50,7 +47,7 @@ export default defineConfig({
             vitest: require.resolve('./vitest-polyfill.cjs'),
           },
         },
-        include: ['src/**/*.test.{js,jsx,ts,tsx}', '!src/__tests__/3.1/**/*.{js,jsx,ts,tsx}'],
+        include: ['src/__tests__/3.1/**/*.test.{js,jsx,ts,tsx}'],
       };
     },
   }),

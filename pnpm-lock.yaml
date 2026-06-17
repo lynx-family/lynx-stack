@@ -1014,9 +1014,15 @@ importers:
       '@lynx-js/react':
         specifier: workspace:*
         version: link:../../react
+      '@lynx-js/react-rsbuild-plugin':
+        specifier: workspace:*
+        version: link:../../rspeedy/plugin-react
       '@lynx-js/types':
         specifier: 3.7.0
         version: 3.7.0
+      '@rstest/core':
+        specifier: catalog:rstest
+        version: 0.10.5(core-js@3.48.0)(jsdom@27.4.0)
       '@testing-library/jest-dom':
         specifier: ^6.9.1
         version: 6.9.1
@@ -1831,6 +1837,9 @@ importers:
         specifier: workspace:*
         version: link:../../../react
     devDependencies:
+      '@lynx-js/react-rsbuild-plugin':
+        specifier: workspace:*
+        version: link:../../../rspeedy/plugin-react
       '@testing-library/jest-dom':
         specifier: ^6.9.1
         version: 6.9.1

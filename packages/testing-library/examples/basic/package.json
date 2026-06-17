@@ -7,8 +7,8 @@
     "build": "rspeedy build",
     "dev": "rspeedy dev",
     "rstest": "rstest",
-    "test": "vitest",
-    "test:type": "vitest --typecheck.only"
+    "test": "rstest run",
+    "test:type": "tsc --noEmit"
   },
   "dependencies": {
     "@lynx-js/react": "workspace:*"

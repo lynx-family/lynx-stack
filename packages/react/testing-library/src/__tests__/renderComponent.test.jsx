@@ -1,4 +1,4 @@
-import { expect } from 'vitest';
+import { expect, vi } from 'vitest';
 import { Component, useState } from '@lynx-js/react';
 
 import { render, act } from '..';

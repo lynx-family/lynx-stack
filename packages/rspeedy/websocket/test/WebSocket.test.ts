@@ -14,11 +14,14 @@ import {
 import { WebSocketServer } from 'ws'
 import type { WebSocket } from 'ws'
 
-import { StubWebSocketModule, stubLynx } from './stubWebSocketModule.js' // `WebSocketImpl` reads `lynx.getJSModule('GlobalEventEmitter')` at module-eval
- // time, and rstest evaluates the `describe.each` `import('../src/index.js')`
+import { StubWebSocketModule, stubLynx } from './stubWebSocketModule.js'
+
+// `WebSocketImpl` reads `lynx.getJSModule('GlobalEventEmitter')` at module-eval
+// time, and rstest evaluates the `describe.each` `import('../src/index.js')`
 // eagerly at collection time — before the `beforeEach` `stubGlobal('lynx')`
 // runs. Install the stub now so the module captures the test's emitter.
-;(globalThis as unknown as { lynx: typeof stubLynx }).lynx = stubLynx
+const globalWithLynx = globalThis as unknown as { lynx: typeof stubLynx }
+globalWithLynx.lynx = stubLynx
 
 describe('WebSocket', () => {
   const server = createServer()

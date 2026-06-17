@@ -20,7 +20,13 @@ export default defineConfig({
     'packages/genui/a2ui-catalog-extractor/rstest.config.ts',
     'packages/genui/cli/rstest.config.ts',
     'packages/i18n/*/rstest.config.ts',
-    'packages/lynx/*/rstest.config.ts',
+    // ReactLynx-DOM suites (gesture-runtime, testing-library family) are NOT
+    // aggregated here: rstest's root `projects` context cannot resolve their
+    // per-package `@lynx-js/react/jsx-runtime` alias (applied by
+    // `pluginReactLynx`). They run per-package via the `test-rstest-pkg` CI job
+    // instead (the same pattern as `test-react`).
+    'packages/lynx/autolink-codegen/rstest.config.ts',
+    'packages/lynx/create-lynx-library/rstest.config.ts',
     'packages/rspeedy/*/rstest.config.ts',
     'packages/tailwind-preset/rstest.config.ts',
     'packages/tools/*/rstest.config.ts',

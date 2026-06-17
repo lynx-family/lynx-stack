@@ -308,12 +308,13 @@ jobs:
       CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
     with:
       runs-on: lynx-ubuntu-24.04-medium
-      run: >
-        pnpm exec rstest run
-        -c rstest.config.ts
-        --coverage
-        --testTimeout=50000
-        --hookTimeout=50000
+      run: |
+        pnpm exec rstest run -c rstest.config.ts --coverage --testTimeout=50000 --hookTimeout=50000
+        # ReactLynx-DOM suites can't be aggregated into rstest.config.ts (the
+        # root `projects` context can't resolve their per-package
+        # `@lynx-js/react/jsx-runtime` alias). Run them per-package, the same way
+        # `test-react` runs the react runtime/transform suites.
+        pnpm --filter @lynx-js/reactlynx-testing-library --filter @lynx-js/gesture-runtime --filter @lynx-js/testing-environment --filter @lynx-js/testing-library-example-basic --filter @lynx-js/testing-library-example-library --filter @lynx-js/testing-library-example-react-compiler run test
   kitten-lynx-android-emulator:
     needs: build
     uses: ./.github/workflows/workflow-test.yml
