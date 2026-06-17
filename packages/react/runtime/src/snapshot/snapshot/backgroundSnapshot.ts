@@ -10,7 +10,7 @@
 
 import type { Worklet } from '@lynx-js/react/worklet-runtime/bindings';
 
-import { createRuntimeSnapshot, snapshotManager } from './definition.js';
+import { createCloneSnapshot, createRuntimeSnapshot, snapshotManager } from './definition.js';
 import type { Snapshot } from './definition.js';
 import { DynamicPartType } from './dynamicPartType.js';
 import { reconstructInstanceTree } from './reconstructInstanceTree.js';
@@ -20,7 +20,7 @@ import { snapshotCreatorMap } from './snapshot.js';
 import { hydrationMap } from './snapshotInstanceHydrationMap.js';
 import { transformSpread } from './spread.js';
 import type { SerializedSnapshotInstance } from './types.js';
-import { isCompiledSnapshot, traverseSnapshotInstance } from './utils.js';
+import { isCloneSnapshot, isCompiledSnapshot, traverseSnapshotInstance } from './utils.js';
 import { globalPipelineOptions } from '../../core/performance.js';
 import { profileEnd, profileStart } from '../../shared/profile.js';
 import { isDirectOrDeepEqual } from '../../utils.js';
@@ -154,6 +154,8 @@ export class BackgroundSnapshotInstance {
     if (!snapshotManager.values.has(type) && type !== 'div') {
       if (snapshotCreatorMap[type]) {
         snapshotCreatorMap[type](type);
+      } else if (isCloneSnapshot(type)) {
+        createCloneSnapshot(type);
       } else if (isCompiledSnapshot(type)) {
         throw new Error('BackgroundSnapshot not found: ' + type);
       } else {

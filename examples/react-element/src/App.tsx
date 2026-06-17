@@ -1,6 +1,7 @@
 import type { ReactNode } from 'react';
 
 import {
+  cloneElement,
   createElement,
   useCallback,
   useEffect,
@@ -18,6 +19,21 @@ function DynamicTag(props: {
 }) {
   const { tag, children, ...rest } = props;
   return createElement(tag, rest, children);
+}
+
+function ClonePanel(props: {
+  bindtap?: () => void;
+  children?: ReactNode;
+  className: string;
+  title: string;
+}) {
+  const tapProps = props.bindtap ? { bindtap: props.bindtap } : {};
+  return (
+    <view className={props.className} {...tapProps}>
+      <text className='CloneTitle'>{props.title}</text>
+      {props.children}
+    </view>
+  );
 }
 
 export function App() {
@@ -41,6 +57,37 @@ export function App() {
     setCount(count + 3);
   }, [count]);
 
+  const onCloneNodeTap = useCallback(() => {
+    'background-only';
+    setCount(count + 4);
+  }, [count]);
+
+  const onCloneComponentTap = useCallback(() => {
+    'background-only';
+    setCount(count + 5);
+  }, [count]);
+
+  const viewElement = (
+    <view className='CloneCard'>
+      <text className='CloneBody'>Original view node: {count}</text>
+    </view>
+  );
+  const clonedViewElement = cloneElement(viewElement, {
+    bindtap: onCloneNodeTap,
+    className: 'CloneCard CloneNode',
+  });
+
+  const componentElement = (
+    <ClonePanel className='CloneCard' title='Original component'>
+      <text className='CloneBody'>Component child: {count}</text>
+    </ClonePanel>
+  );
+  const clonedComponentElement = cloneElement(componentElement, {
+    bindtap: onCloneComponentTap,
+    className: 'CloneCard CloneComponent',
+    title: 'Cloned component',
+  }, <text className='CloneBody'>Replaced component child: {count}</text>);
+
   return (
     <view>
       <view className='App'>
@@ -63,6 +110,16 @@ export function App() {
         >
           <text className='Content'>Dynamic text: {count}</text>
         </DynamicTag>
+        <view className='CloneSection'>
+          <text className='SectionTitle'>viewElement</text>
+          {viewElement}
+          <text className='SectionTitle'>clonedViewElement</text>
+          {clonedViewElement}
+          <text className='SectionTitle'>componentElement</text>
+          {componentElement}
+          <text className='SectionTitle'>clonedComponentElement</text>
+          {clonedComponentElement}
+        </view>
       </view>
     </view>
   );

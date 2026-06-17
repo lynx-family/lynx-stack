@@ -11,14 +11,15 @@
 import type { Worklet, WorkletRefImpl } from '@lynx-js/react/worklet-runtime/bindings';
 
 import { DEFAULT_CSS_ID, DEFAULT_ENTRY_NAME } from './constants.js';
-import { createRuntimeSnapshot, snapshotManager } from './definition.js';
+import { createCloneSnapshot, createRuntimeSnapshot, snapshotManager } from './definition.js';
 import type { Snapshot } from './definition.js';
 import { DynamicPartType, __DynamicPartChildren_0 } from './dynamicPartType.js';
 import { snapshotDestroyList } from './list.js';
 import type { PlatformInfo } from './platformInfo.js';
 import { unref } from './ref.js';
+import { setSnapshotCreatorMap, snapshotCreatorMap } from './snapshotCreatorMap.js';
 import type { SerializedSnapshotInstance } from './types.js';
-import { isCompiledSnapshot, traverseSnapshotInstance } from './utils.js';
+import { isCloneSnapshot, isCompiledSnapshot, traverseSnapshotInstance } from './utils.js';
 import { isDirectOrDeepEqual } from '../../utils.js';
 import { clearSnapshotVNodeSource } from '../debug/vnodeSource.js';
 import { SnapshotOperation, __globalSnapshotPatch } from '../lifecycle/patch/snapshotPatch.js';
@@ -100,30 +101,32 @@ function clearTransientChildPropRefs(owner: SnapshotInstance, removedSnapshots: 
   }
 }
 
-export let snapshotCreatorMap: Record<string, (uniqId: string) => string> = {};
+export { snapshotCreatorMap } from './snapshotCreatorMap.js';
 
 if (__DEV__ && __JS__) {
-  snapshotCreatorMap = new Proxy(snapshotCreatorMap, {
-    set(target, prop: string, value: (uniqId: string) => string) {
-      if (
-        // `__globalSnapshotPatch` does not exist before hydration,
-        // so the snapshot of the first screen will not be sent to the main thread.
-        __globalSnapshotPatch
-        // `prop` will be `https://example.com/main.lynx.bundle:__snapshot_835da_eff1e_1` when loading a standalone lazy bundle after hydration.
-        && !prop.includes(':')
-      ) {
-        __globalSnapshotPatch.push(
-          SnapshotOperation.DEV_ONLY_AddSnapshot,
-          prop,
-          // We use `Function.prototype.toString` to serialize the `() => createSnapshot()` function for main thread.
-          // This allows the updates to be applied to main thread.
-          value.toString(),
-        );
-      }
-      target[prop] = value;
-      return true;
-    },
-  });
+  setSnapshotCreatorMap(
+    new Proxy(snapshotCreatorMap, {
+      set(target, prop: string, value: (uniqId: string) => string) {
+        if (
+          // `__globalSnapshotPatch` does not exist before hydration,
+          // so the snapshot of the first screen will not be sent to the main thread.
+          __globalSnapshotPatch
+          // `prop` will be `https://example.com/main.lynx.bundle:__snapshot_835da_eff1e_1` when loading a standalone lazy bundle after hydration.
+          && !prop.includes(':')
+        ) {
+          __globalSnapshotPatch.push(
+            SnapshotOperation.DEV_ONLY_AddSnapshot,
+            prop,
+            // We use `Function.prototype.toString` to serialize the `() => createSnapshot()` function for main thread.
+            // This allows the updates to be applied to main thread.
+            value.toString(),
+          );
+        }
+        target[prop] = value;
+        return true;
+      },
+    }),
+  );
 }
 
 /**
@@ -154,6 +157,8 @@ export class SnapshotInstance {
     if (!snapshotManager.values.has(type) && type !== 'div') {
       if (snapshotCreatorMap[type]) {
         snapshotCreatorMap[type](type);
+      } else if (isCloneSnapshot(type)) {
+        createCloneSnapshot(type);
       } else if (isCompiledSnapshot(type)) {
         let message = 'Snapshot not found: ' + type;
         if (__DEV__) {

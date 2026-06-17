@@ -1223,4 +1223,130 @@ describe('createElement', () => {
       `);
     }
   });
+
+  it('view with children in props', function() {
+    const App = () => {
+      return createElement('view', {
+        className: 'a',
+        children: <text>Hello</text>,
+      });
+    };
+    __root.__jsx = <App />;
+    renderPage();
+    expect(__root.__firstChild).toMatchInlineSnapshot(`
+      {
+        "children": [
+          {
+            "children": undefined,
+            "extraProps": undefined,
+            "id": -3,
+            "type": "__snapshot_a94a8_test_9",
+            "values": undefined,
+          },
+        ],
+        "extraProps": undefined,
+        "id": -2,
+        "type": "view",
+        "values": [
+          {
+            "className": "a",
+          },
+        ],
+      }
+    `);
+    expect(__root.__element_root).toMatchInlineSnapshot(`
+      <page
+        cssId="default-entry-from-native:0"
+      >
+        <view
+          class="a"
+        >
+          <text>
+            <raw-text
+              text="Hello"
+            />
+          </text>
+        </view>
+      </page>
+    `);
+  });
+
+  it('view with children in props and rest', function() {
+    const App = () => {
+      return createElement('view', {
+        className: 'a',
+        children: <text>Props</text>,
+      }, <text>Rest</text>);
+    };
+    __root.__jsx = <App />;
+    renderPage();
+    expect(__root.__firstChild).toMatchInlineSnapshot(`
+      {
+        "children": [
+          {
+            "children": undefined,
+            "extraProps": undefined,
+            "id": -3,
+            "type": "__snapshot_a94a8_test_11",
+            "values": undefined,
+          },
+        ],
+        "extraProps": undefined,
+        "id": -2,
+        "type": "view",
+        "values": [
+          {
+            "className": "a",
+          },
+        ],
+      }
+    `);
+    expect(__root.__element_root).toMatchInlineSnapshot(`
+      <page
+        cssId="default-entry-from-native:0"
+      >
+        <view
+          class="a"
+        >
+          <text>
+            <raw-text
+              text="Rest"
+            />
+          </text>
+        </view>
+      </page>
+    `);
+  });
+
+  it('component keeps children', function() {
+    function Comp(props) {
+      return (
+        <view className={props.className}>
+          {props.children}
+        </view>
+      );
+    }
+
+    const element = createElement(Comp, { className: 'a' }, <text>Hello</text>);
+    expect(element.type).toBe(Comp);
+    expect(element.props.children).toBeDefined();
+
+    __root.__jsx = element;
+    renderPage();
+    expect(__root.__element_root).toMatchInlineSnapshot(`
+      <page
+        cssId="default-entry-from-native:0"
+      >
+        <view
+          class="a"
+        >
+          <text>
+            <raw-text
+              text="Hello"
+            />
+          </text>
+        </view>
+      </page>
+    `);
+  });
 });

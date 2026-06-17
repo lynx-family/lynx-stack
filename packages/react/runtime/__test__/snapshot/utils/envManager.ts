@@ -15,15 +15,23 @@ import { __root, setRoot } from '../../../src/root.js';
 import { SnapshotInstance, snapshotInstanceManager } from '../../../src/snapshot/snapshot/snapshot.js';
 import { hydrationMap } from '../../../src/snapshot/snapshot/snapshotInstanceHydrationMap.js';
 import { clearWorkletRefLastIdForTesting } from '../../../src/snapshot/worklet/ref/workletRef.js';
+import { snapshotManager } from '../../../src/snapshot/snapshot/definition.js';
 
 export class EnvManager {
   root: typeof __root | undefined;
   pipelineOptions: any;
+  snapshotValues: typeof snapshotManager.values | undefined;
   lifecycleEvents: any[] = [];
   constructor(public target?: any) {
     if (typeof target === 'undefined') {
       this.target = globalThis;
     }
+  }
+
+  private switchSnapshotManagerValues(): void {
+    const snapshotValues = snapshotManager.values;
+    snapshotManager.values = this.snapshotValues ?? new Map(snapshotValues);
+    this.snapshotValues = snapshotValues;
   }
 
   switchToMainThread(): void {
@@ -34,6 +42,7 @@ export class EnvManager {
       const pipelineOptions = globalPipelineOptions;
       setPipeline(this.pipelineOptions);
       this.pipelineOptions = pipelineOptions;
+      this.switchSnapshotManagerValues();
     }
     if (!(__root instanceof SnapshotInstance)) {
       setRoot(new SnapshotInstance('root'));
@@ -53,6 +62,7 @@ export class EnvManager {
       const pipelineOptions = globalPipelineOptions;
       setPipeline(this.pipelineOptions);
       this.pipelineOptions = pipelineOptions;
+      this.switchSnapshotManagerValues();
     }
     if (!(__root instanceof BackgroundSnapshotInstance)) {
       setRoot(new BackgroundSnapshotInstance('root'));
@@ -65,8 +75,12 @@ export class EnvManager {
   }
 
   resetEnv(): void {
+    if (this.target.__BACKGROUND__) {
+      this.switchToMainThread();
+    }
     this.root = undefined;
     this.pipelineOptions = undefined;
+    this.snapshotValues = undefined;
     this.lifecycleEvents = [];
     // @ts-ignore
     setRoot(undefined);
