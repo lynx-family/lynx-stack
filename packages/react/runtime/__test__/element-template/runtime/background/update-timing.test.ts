@@ -34,7 +34,7 @@ describe('ElementTemplate update timing (background commit)', () => {
   let originalLynx: typeof lynx;
 
   const onUpdate = (event: { data: unknown }) => {
-    updateEvents.push(event.data as UpdateEvent);
+    updateEvents.push(JSON.parse(event.data as string) as UpdateEvent);
   };
 
   beforeEach(() => {

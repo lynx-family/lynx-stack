@@ -4,6 +4,7 @@
 
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
+import { getReloadVersion, increaseReloadVersion } from '../../../../src/core/reload-version.js';
 import type { BackgroundElementTemplateInstance } from '../../../../src/element-template/background/instance.js';
 import { root } from '../../../../src/element-template/index.js';
 import {
@@ -27,9 +28,18 @@ import {
   registerElementTemplateListItem,
   registerElementTemplateListState,
 } from '../../../../src/element-template/runtime/list/list.js';
+import {
+  clearMainThreadDynamicAttrState,
+  getMainThreadDynamicAttrState,
+  initializeMainThreadDynamicAttrSlots,
+} from '../../../../src/element-template/runtime/template/main-thread-dynamic-attr-state.js';
+import {
+  __etAttrPlanMap,
+  adaptMTEventAttrSlot,
+  clearEtAttrPlanMap,
+} from '../../../../src/element-template/runtime/template/attr-slot-plan.js';
 import { elementTemplateRegistry } from '../../../../src/element-template/runtime/template/registry.js';
 import { ElementTemplateEnvManager } from '../../test-utils/debug/envManager.js';
-import { hydrateBackground } from '../../test-utils/debug/hydrate.js';
 import { extractSerializedHydrateInstances } from '../../test-utils/debug/hydratePayload.js';
 import { registerBuiltinRawTextTemplate, registerTemplates } from '../../test-utils/debug/registry.js';
 import { lastMock } from '../../test-utils/mock/mockNativePapi.js';
@@ -68,6 +78,35 @@ function resetReportedErrors(): void {
   (globalThis as unknown as { __LYNX_REPORT_ERROR_CALLS: Error[] }).__LYNX_REPORT_ERROR_CALLS = [];
 }
 
+const MT_EVENT_TEMPLATE = '_et_mt_event';
+
+function registerMTEventSlotsForTemplate(templateType: string, ...slotIndexes: number[]): void {
+  __etAttrPlanMap[templateType] = slotIndexes.flatMap(slotIndex => [
+    slotIndex,
+    adaptMTEventAttrSlot,
+  ]);
+}
+
+function registerMTEventSlots(...slotIndexes: number[]): void {
+  registerMTEventSlotsForTemplate(MT_EVENT_TEMPLATE, ...slotIndexes);
+}
+
+function registerMTEventHandle(handleId: number, ...slotIndexes: number[]): void {
+  registerMTEventSlots(...slotIndexes);
+  initializeMainThreadDynamicAttrSlots(handleId, MT_EVENT_TEMPLATE, []);
+}
+
+function seedMTEventState(
+  handleId: number,
+  attrSlotIndex: number,
+  value: Record<string, unknown>,
+): void {
+  registerMTEventHandle(handleId, attrSlotIndex);
+  const attributeSlots: unknown[] = [];
+  attributeSlots[attrSlotIndex] = { type: 'worklet', value };
+  initializeMainThreadDynamicAttrSlots(handleId, MT_EVENT_TEMPLATE, attributeSlots);
+}
+
 describe('ElementTemplate patch stream (apply)', () => {
   const envManager = new ElementTemplateEnvManager();
   let hydrationData: SerializedElementTemplate[] = [];
@@ -90,6 +129,8 @@ describe('ElementTemplate patch stream (apply)', () => {
     mockRemoveNodeFromElementTemplate = lastMock!.mockRemoveNodeFromElementTemplate as unknown as ReportErrorMock;
     mockFlushElementTree = lastMock!.mockFlushElementTree as unknown as ReportErrorMock;
     registerBuiltinRawTextTemplate();
+    clearMainThreadDynamicAttrState();
+    clearEtAttrPlanMap();
 
     hydrationData = [];
     envManager.resetEnv('background');
@@ -203,12 +244,940 @@ describe('ElementTemplate patch stream (apply)', () => {
     envManager.switchToBackground();
     lynx.getCoreContext().dispatchEvent({
       type: ElementTemplateLifecycleConstant.update,
-      data: { ops: stream, flushOptions: {} },
+      data: JSON.stringify({ ops: stream, flushOptions: {} }),
     });
     envManager.switchToMainThread();
 
     expect(mockSetAttributeOfElementTemplate.mock.calls.length).toBeGreaterThan(0);
     expect(mockFlushElementTree.mock.calls.length).toBeGreaterThan(0);
+  });
+
+  it('records main-thread dynamic attr state after setAttribute PAPI succeeds', () => {
+    const targetId = 101;
+    const nativeRef = {};
+    const ctx = { _wkltId: 'tap' };
+    elementTemplateRegistry.set(targetId, nativeRef as ElementRef);
+    registerMTEventHandle(targetId, 0);
+
+    envManager.switchToMainThread();
+    installElementTemplatePatchListener();
+    mockSetAttributeOfElementTemplate.mockClear();
+    mockFlushElementTree.mockClear();
+
+    envManager.switchToBackground();
+    lynx.getCoreContext().dispatchEvent({
+      type: ElementTemplateLifecycleConstant.update,
+      data: JSON.stringify({
+        ops: [ElementTemplateUpdateOps.setAttribute, targetId, 0, { type: 'worklet', value: ctx }],
+        flushOptions: {},
+      }),
+    });
+    envManager.switchToMainThread();
+
+    expect(mockSetAttributeOfElementTemplate).toHaveBeenCalledTimes(1);
+    expect(mockFlushElementTree).toHaveBeenCalledTimes(1);
+    expect(getMainThreadDynamicAttrState(targetId, 0)).toEqual({
+      kind: 'mt-event',
+      nativeHeldValue: ctx,
+    });
+  });
+
+  it('does not record wrapper-shaped values without direct MTEvent attr-plan eligibility', () => {
+    const targetId = 120;
+    const ctx = { _wkltId: 'ordinary-wrapper' };
+    const hydrateCtx = vi.fn();
+    const previousWorkletImpl = globalThis.lynxWorkletImpl;
+    globalThis.lynxWorkletImpl = {
+      ...previousWorkletImpl,
+      _hydrateCtx: hydrateCtx,
+    };
+    elementTemplateRegistry.set(targetId, {} as ElementRef);
+
+    try {
+      envManager.switchToMainThread();
+      installElementTemplatePatchListener();
+      mockSetAttributeOfElementTemplate.mockClear();
+
+      envManager.switchToBackground();
+      lynx.getCoreContext().dispatchEvent({
+        type: ElementTemplateLifecycleConstant.update,
+        data: JSON.stringify({
+          ops: [ElementTemplateUpdateOps.setAttribute, targetId, 0, { type: 'worklet', value: ctx }],
+          flushOptions: {},
+          isHydration: true,
+        }),
+      });
+      envManager.switchToMainThread();
+
+      expect(mockSetAttributeOfElementTemplate).toHaveBeenCalledTimes(1);
+      expect(hydrateCtx).not.toHaveBeenCalled();
+      expect(getMainThreadDynamicAttrState(targetId, 0)).toBeUndefined();
+    } finally {
+      globalThis.lynxWorkletImpl = previousWorkletImpl;
+    }
+  });
+
+  it('records main-thread dynamic attr state after createTemplate PAPI succeeds', () => {
+    const handleId = 107;
+    const ctx = { _wkltId: 'created' };
+    __etAttrPlanMap.view = [0, adaptMTEventAttrSlot];
+    registerTemplates([{
+      templateId: 'view',
+      compiledTemplate: {
+        kind: 'element',
+        type: 'view',
+        attributesArray: [{
+          kind: 'slot',
+          key: 'main-thread:bindtap',
+          attrSlotIndex: 0,
+        }],
+        children: [],
+      },
+    }]);
+
+    envManager.switchToMainThread();
+    installElementTemplatePatchListener();
+
+    envManager.switchToBackground();
+    lynx.getCoreContext().dispatchEvent({
+      type: ElementTemplateLifecycleConstant.update,
+      data: JSON.stringify({
+        ops: [
+          ElementTemplateUpdateOps.createTemplate,
+          handleId,
+          'view',
+          null,
+          [{ type: 'worklet', value: ctx }],
+          [],
+        ],
+        flushOptions: {},
+      }),
+    });
+    envManager.switchToMainThread();
+
+    expect(getMainThreadDynamicAttrState(handleId, 0)).toEqual({
+      kind: 'mt-event',
+      nativeHeldValue: ctx,
+    });
+  });
+
+  it('records dynamic-entry main-thread dynamic attr state after createTemplate PAPI succeeds', () => {
+    const handleId = 108;
+    const ctx = { _wkltId: 'dynamic-created' };
+    registerMTEventSlotsForTemplate('lazy-entry:view', 0);
+    registerTemplates([{
+      templateId: 'view',
+      compiledTemplate: {
+        kind: 'element',
+        type: 'view',
+        attributesArray: [{
+          kind: 'slot',
+          key: 'main-thread:bindtap',
+          attrSlotIndex: 0,
+        }],
+        children: [],
+      },
+    }]);
+
+    envManager.switchToMainThread();
+    installElementTemplatePatchListener();
+
+    envManager.switchToBackground();
+    lynx.getCoreContext().dispatchEvent({
+      type: ElementTemplateLifecycleConstant.update,
+      data: JSON.stringify({
+        ops: [
+          ElementTemplateUpdateOps.createTemplate,
+          handleId,
+          'view',
+          'lazy-entry',
+          [{ type: 'worklet', value: ctx }],
+          [],
+        ],
+        flushOptions: {},
+      }),
+    });
+    envManager.switchToMainThread();
+
+    expect(getMainThreadDynamicAttrState(handleId, 0)).toEqual({
+      kind: 'mt-event',
+      nativeHeldValue: ctx,
+    });
+  });
+
+  it('deletes main-thread dynamic attr state after a slot clear patch succeeds', () => {
+    const targetId = 103;
+    const nativeRef = {};
+    elementTemplateRegistry.set(targetId, nativeRef as ElementRef);
+    seedMTEventState(targetId, 0, { _wkltId: 'old' });
+
+    envManager.switchToMainThread();
+    installElementTemplatePatchListener();
+
+    envManager.switchToBackground();
+    lynx.getCoreContext().dispatchEvent({
+      type: ElementTemplateLifecycleConstant.update,
+      data: JSON.stringify({
+        ops: [ElementTemplateUpdateOps.setAttribute, targetId, 0, null],
+        flushOptions: {},
+      }),
+    });
+    envManager.switchToMainThread();
+
+    expect(getMainThreadDynamicAttrState(targetId, 0)).toBeUndefined();
+  });
+
+  it('deletes main-thread dynamic attr state for a removed subtree after patch succeeds', () => {
+    const targetId = 104;
+    const childId = 105;
+    elementTemplateRegistry.set(targetId, {} as ElementRef);
+    elementTemplateRegistry.set(childId, {} as ElementRef);
+    seedMTEventState(childId, 0, { _wkltId: 'child' });
+
+    envManager.switchToMainThread();
+    installElementTemplatePatchListener();
+
+    envManager.switchToBackground();
+    lynx.getCoreContext().dispatchEvent({
+      type: ElementTemplateLifecycleConstant.update,
+      data: JSON.stringify({
+        ops: [ElementTemplateUpdateOps.removeNode, targetId, 0, childId, [childId]],
+        flushOptions: {},
+      }),
+    });
+    envManager.switchToMainThread();
+
+    expect(getMainThreadDynamicAttrState(childId, 0)).toBeUndefined();
+  });
+
+  it('hydrates MTEvent ctx after hydrate setAttribute PAPI succeeds', () => {
+    const targetId = 109;
+    const oldCtx = { _wkltId: 'tap', count: 1 };
+    const nextCtx = { _wkltId: 'tap', count: 2 };
+    const hydrateCtx = vi.fn();
+    const previousWorkletImpl = globalThis.lynxWorkletImpl;
+    globalThis.lynxWorkletImpl = {
+      ...previousWorkletImpl,
+      _hydrateCtx: hydrateCtx,
+    };
+    elementTemplateRegistry.set(targetId, {} as ElementRef);
+    seedMTEventState(targetId, 0, oldCtx);
+
+    try {
+      envManager.switchToMainThread();
+      installElementTemplatePatchListener();
+
+      envManager.switchToBackground();
+      lynx.getCoreContext().dispatchEvent({
+        type: ElementTemplateLifecycleConstant.update,
+        data: JSON.stringify({
+          ops: [ElementTemplateUpdateOps.setAttribute, targetId, 0, { type: 'worklet', value: nextCtx }],
+          flushOptions: {},
+          isHydration: true,
+        }),
+      });
+      envManager.switchToMainThread();
+
+      expect(hydrateCtx).toHaveBeenCalledWith(nextCtx, oldCtx);
+      expect(getMainThreadDynamicAttrState(targetId, 0)?.nativeHeldValue).toEqual(nextCtx);
+      expect(getMainThreadDynamicAttrState(targetId, 0)?.nativeHeldValue).not.toBe(nextCtx);
+    } finally {
+      globalThis.lynxWorkletImpl = previousWorkletImpl;
+    }
+  });
+
+  it('flushes delayed runOnBackground calls after hydration apply and before native flush', () => {
+    const targetId = 118;
+    const oldCtx = { _wkltId: 'tap', count: 1 };
+    const nextCtx = { _wkltId: 'tap', count: 2 };
+    const callOrder: string[] = [];
+    const hydrateCtx = vi.fn(() => {
+      callOrder.push('hydrate');
+    });
+    const runDelayedBackgroundFunctions = vi.fn(() => {
+      callOrder.push('runOnBackground');
+    });
+    const previousWorkletImpl = globalThis.lynxWorkletImpl;
+    globalThis.lynxWorkletImpl = {
+      ...previousWorkletImpl,
+      _hydrateCtx: hydrateCtx,
+      _runOnBackgroundDelayImpl: {
+        runDelayedBackgroundFunctions,
+      },
+    };
+    elementTemplateRegistry.set(targetId, {} as ElementRef);
+    seedMTEventState(targetId, 0, oldCtx);
+
+    try {
+      envManager.switchToMainThread();
+      installElementTemplatePatchListener();
+      mockFlushElementTree.mockImplementationOnce(() => {
+        callOrder.push('flushElementTree');
+      });
+
+      envManager.switchToBackground();
+      lynx.getCoreContext().dispatchEvent({
+        type: ElementTemplateLifecycleConstant.update,
+        data: JSON.stringify({
+          ops: [ElementTemplateUpdateOps.setAttribute, targetId, 0, { type: 'worklet', value: nextCtx }],
+          flushOptions: {},
+          isHydration: true,
+        }),
+      });
+      envManager.switchToMainThread();
+
+      expect(hydrateCtx).toHaveBeenCalledWith(nextCtx, oldCtx);
+      expect(runDelayedBackgroundFunctions).toHaveBeenCalledTimes(1);
+      expect(callOrder).toEqual([
+        'hydrate',
+        'runOnBackground',
+        'flushElementTree',
+      ]);
+    } finally {
+      globalThis.lynxWorkletImpl = previousWorkletImpl;
+    }
+  });
+
+  it('runs delayed runOnMainThread after hydration apply and delayed runOnBackground before native flush', () => {
+    const targetId = 119;
+    const oldCtx = { _wkltId: 'tap', count: 1 };
+    const nextCtx = { _wkltId: 'tap', count: 2 };
+    const mainThreadWorklet = { _wkltId: 'delayed-main-thread-function' };
+    const callOrder: string[] = [];
+    const hydrateCtx = vi.fn(() => {
+      callOrder.push('hydrate');
+    });
+    const runDelayedBackgroundFunctions = vi.fn(() => {
+      callOrder.push('runOnBackground');
+    });
+    const previousWorkletImpl = globalThis.lynxWorkletImpl;
+    globalThis.lynxWorkletImpl = {
+      ...previousWorkletImpl,
+      _hydrateCtx: hydrateCtx,
+      _runOnBackgroundDelayImpl: {
+        runDelayedBackgroundFunctions,
+      },
+      _eomImpl: {
+        setShouldFlush: vi.fn((value: boolean) => {
+          callOrder.push(`eom:${String(value)}`);
+        }),
+      },
+      _runRunOnMainThreadTask: vi.fn(() => {
+        callOrder.push('runOnMainThread');
+      }),
+    };
+    elementTemplateRegistry.set(targetId, {} as ElementRef);
+    seedMTEventState(targetId, 0, oldCtx);
+
+    try {
+      envManager.switchToMainThread();
+      installElementTemplatePatchListener();
+      mockFlushElementTree.mockImplementationOnce(() => {
+        callOrder.push('flushElementTree');
+      });
+
+      envManager.switchToBackground();
+      lynx.getCoreContext().dispatchEvent({
+        type: ElementTemplateLifecycleConstant.update,
+        data: JSON.stringify({
+          ops: [ElementTemplateUpdateOps.setAttribute, targetId, 0, { type: 'worklet', value: nextCtx }],
+          flushOptions: {},
+          isHydration: true,
+          delayedRunOnMainThreadData: [
+            {
+              worklet: mainThreadWorklet,
+              params: ['from-hydrate'],
+              resolveId: 7,
+            },
+          ],
+        }),
+      });
+      envManager.switchToMainThread();
+
+      expect(hydrateCtx).toHaveBeenCalledWith(nextCtx, oldCtx);
+      expect(runDelayedBackgroundFunctions).toHaveBeenCalledTimes(1);
+      expect(globalThis.lynxWorkletImpl._runRunOnMainThreadTask).toHaveBeenCalledWith(
+        mainThreadWorklet,
+        ['from-hydrate'],
+        7,
+      );
+      expect(callOrder).toEqual([
+        'hydrate',
+        'runOnBackground',
+        'eom:false',
+        'runOnMainThread',
+        'eom:true',
+        'flushElementTree',
+      ]);
+    } finally {
+      globalThis.lynxWorkletImpl = previousWorkletImpl;
+    }
+  });
+
+  it('reports delayed runOnMainThread errors and restores EOM before native flush', () => {
+    const taskError = new Error('main thread task failed');
+    const callOrder: string[] = [];
+    const previousWorkletImpl = globalThis.lynxWorkletImpl;
+    globalThis.lynxWorkletImpl = {
+      ...previousWorkletImpl,
+      _eomImpl: {
+        setShouldFlush: vi.fn((value: boolean) => {
+          callOrder.push(`eom:${String(value)}`);
+        }),
+      },
+      _runRunOnMainThreadTask: vi.fn(() => {
+        callOrder.push('runOnMainThread');
+        throw taskError;
+      }),
+    };
+
+    try {
+      resetReportedErrors();
+      envManager.switchToMainThread();
+      installElementTemplatePatchListener();
+      mockFlushElementTree.mockImplementationOnce(() => {
+        callOrder.push('flushElementTree');
+      });
+
+      envManager.switchToBackground();
+      lynx.getCoreContext().dispatchEvent({
+        type: ElementTemplateLifecycleConstant.update,
+        data: JSON.stringify({
+          ops: [],
+          flushOptions: {},
+          delayedRunOnMainThreadData: [
+            {
+              worklet: { _wkltId: 'throwing-main-thread-function' },
+              params: [],
+              resolveId: 8,
+            },
+          ],
+        }),
+      });
+      envManager.switchToMainThread();
+
+      const reportError = (globalThis.lynx as unknown as LynxWithReportErrorMock).reportError;
+      expect(reportError.mock.calls[0]?.[0]).toBe(taskError);
+      expect(callOrder).toEqual([
+        'eom:false',
+        'runOnMainThread',
+        'eom:true',
+        'flushElementTree',
+      ]);
+    } finally {
+      resetReportedErrors();
+      globalThis.lynxWorkletImpl = previousWorkletImpl;
+    }
+  });
+
+  it('flushes delayed runOnBackground on empty hydration boundaries', () => {
+    const callOrder: string[] = [];
+    const runDelayedBackgroundFunctions = vi.fn(() => {
+      callOrder.push('runOnBackground');
+    });
+    const previousWorkletImpl = globalThis.lynxWorkletImpl;
+    globalThis.lynxWorkletImpl = {
+      ...previousWorkletImpl,
+      _runOnBackgroundDelayImpl: {
+        runDelayedBackgroundFunctions,
+      },
+    };
+
+    try {
+      envManager.switchToMainThread();
+      installElementTemplatePatchListener();
+      mockFlushElementTree.mockImplementationOnce(() => {
+        callOrder.push('flushElementTree');
+      });
+
+      envManager.switchToBackground();
+      lynx.getCoreContext().dispatchEvent({
+        type: ElementTemplateLifecycleConstant.update,
+        data: JSON.stringify({
+          ops: [],
+          flushOptions: {},
+          isHydration: true,
+        }),
+      });
+      envManager.switchToMainThread();
+
+      expect(runDelayedBackgroundFunctions).toHaveBeenCalledTimes(1);
+      expect(callOrder).toEqual([
+        'runOnBackground',
+        'flushElementTree',
+      ]);
+    } finally {
+      globalThis.lynxWorkletImpl = previousWorkletImpl;
+    }
+  });
+
+  it('does not hydrate MTEvent ctx for ordinary update patches', () => {
+    const targetId = 110;
+    const oldCtx = { _wkltId: 'tap', count: 1 };
+    const nextCtx = { _wkltId: 'tap', count: 2 };
+    const hydrateCtx = vi.fn();
+    const runDelayedBackgroundFunctions = vi.fn();
+    const previousWorkletImpl = globalThis.lynxWorkletImpl;
+    globalThis.lynxWorkletImpl = {
+      ...previousWorkletImpl,
+      _hydrateCtx: hydrateCtx,
+      _runOnBackgroundDelayImpl: {
+        runDelayedBackgroundFunctions,
+      },
+    };
+    elementTemplateRegistry.set(targetId, {} as ElementRef);
+    seedMTEventState(targetId, 0, oldCtx);
+
+    try {
+      envManager.switchToMainThread();
+      installElementTemplatePatchListener();
+
+      envManager.switchToBackground();
+      lynx.getCoreContext().dispatchEvent({
+        type: ElementTemplateLifecycleConstant.update,
+        data: JSON.stringify({
+          ops: [ElementTemplateUpdateOps.setAttribute, targetId, 0, { type: 'worklet', value: nextCtx }],
+          flushOptions: {},
+        }),
+      });
+      envManager.switchToMainThread();
+
+      expect(hydrateCtx).not.toHaveBeenCalled();
+      expect(runDelayedBackgroundFunctions).not.toHaveBeenCalled();
+      expect(getMainThreadDynamicAttrState(targetId, 0)?.nativeHeldValue).toEqual(nextCtx);
+      expect(getMainThreadDynamicAttrState(targetId, 0)?.nativeHeldValue).not.toBe(nextCtx);
+    } finally {
+      globalThis.lynxWorkletImpl = previousWorkletImpl;
+    }
+  });
+
+  it('keeps main-thread dynamic attr state when update flush throws after setAttribute succeeds', () => {
+    const targetId = 102;
+    const nativeRef = {};
+    const ctx = { _wkltId: 'tap' };
+    elementTemplateRegistry.set(targetId, nativeRef as ElementRef);
+    registerMTEventHandle(targetId, 0);
+
+    envManager.switchToMainThread();
+    installElementTemplatePatchListener();
+    mockFlushElementTree.mockImplementationOnce(() => {
+      throw new Error('flush failed');
+    });
+
+    expect(() => {
+      envManager.switchToBackground();
+      lynx.getCoreContext().dispatchEvent({
+        type: ElementTemplateLifecycleConstant.update,
+        data: JSON.stringify({
+          ops: [ElementTemplateUpdateOps.setAttribute, targetId, 0, { type: 'worklet', value: ctx }],
+          flushOptions: {},
+        }),
+      });
+      envManager.switchToMainThread();
+    }).toThrow('flush failed');
+
+    expect(getMainThreadDynamicAttrState(targetId, 0)).toEqual({
+      kind: 'mt-event',
+      nativeHeldValue: ctx,
+    });
+  });
+
+  it('hydrates MTEvent ctx when hydrate setAttribute succeeds even if flush throws', () => {
+    const targetId = 111;
+    const oldCtx = { _wkltId: 'tap', count: 1 };
+    const nextCtx = { _wkltId: 'tap', count: 2 };
+    const hydrateCtx = vi.fn();
+    const previousWorkletImpl = globalThis.lynxWorkletImpl;
+    globalThis.lynxWorkletImpl = {
+      ...previousWorkletImpl,
+      _hydrateCtx: hydrateCtx,
+    };
+    elementTemplateRegistry.set(targetId, {} as ElementRef);
+    seedMTEventState(targetId, 0, oldCtx);
+
+    try {
+      envManager.switchToMainThread();
+      installElementTemplatePatchListener();
+      mockFlushElementTree.mockImplementationOnce(() => {
+        throw new Error('flush failed');
+      });
+
+      expect(() => {
+        envManager.switchToBackground();
+        lynx.getCoreContext().dispatchEvent({
+          type: ElementTemplateLifecycleConstant.update,
+          data: JSON.stringify({
+            ops: [ElementTemplateUpdateOps.setAttribute, targetId, 0, { type: 'worklet', value: nextCtx }],
+            flushOptions: {},
+            isHydration: true,
+          }),
+        });
+        envManager.switchToMainThread();
+      }).toThrow('flush failed');
+
+      expect(hydrateCtx).toHaveBeenCalledWith(nextCtx, oldCtx);
+      expect(getMainThreadDynamicAttrState(targetId, 0)?.nativeHeldValue).toEqual(nextCtx);
+      expect(getMainThreadDynamicAttrState(targetId, 0)?.nativeHeldValue).not.toBe(nextCtx);
+    } finally {
+      globalThis.lynxWorkletImpl = previousWorkletImpl;
+    }
+  });
+
+  it('does not hydrate MTEvent ctx for stale hydrate update payloads', () => {
+    const targetId = 112;
+    const oldCtx = { _wkltId: 'tap', count: 1 };
+    const nextCtx = { _wkltId: 'tap', count: 2 };
+    const staleReloadVersion = getReloadVersion();
+    const hydrateCtx = vi.fn();
+    const previousWorkletImpl = globalThis.lynxWorkletImpl;
+    globalThis.lynxWorkletImpl = {
+      ...previousWorkletImpl,
+      _hydrateCtx: hydrateCtx,
+    };
+    elementTemplateRegistry.set(targetId, {} as ElementRef);
+    seedMTEventState(targetId, 0, oldCtx);
+
+    try {
+      increaseReloadVersion();
+      envManager.switchToMainThread();
+      installElementTemplatePatchListener();
+
+      envManager.switchToBackground();
+      lynx.getCoreContext().dispatchEvent({
+        type: ElementTemplateLifecycleConstant.update,
+        data: JSON.stringify({
+          ops: [ElementTemplateUpdateOps.setAttribute, targetId, 0, { type: 'worklet', value: nextCtx }],
+          flushOptions: {},
+          isHydration: true,
+          reloadVersion: staleReloadVersion,
+        }),
+      });
+      envManager.switchToMainThread();
+
+      expect(hydrateCtx).not.toHaveBeenCalled();
+      expect(getMainThreadDynamicAttrState(targetId, 0)?.nativeHeldValue).toBe(oldCtx);
+    } finally {
+      globalThis.lynxWorkletImpl = previousWorkletImpl;
+    }
+  });
+
+  it('flushes hydration runOnBackground replay but aborts delayed main-thread tasks when a native patch op throws', () => {
+    const targetId = 108;
+    const nativeRef = {};
+    const ctx = { _wkltId: 'tap' };
+    const runDelayedBackgroundFunctions = vi.fn();
+    const runRunOnMainThreadTask = vi.fn();
+    const setShouldFlush = vi.fn();
+    const previousWorkletImpl = globalThis.lynxWorkletImpl;
+    globalThis.lynxWorkletImpl = {
+      ...previousWorkletImpl,
+      _runOnBackgroundDelayImpl: {
+        runDelayedBackgroundFunctions,
+      },
+      _eomImpl: {
+        setShouldFlush,
+      },
+      _runRunOnMainThreadTask: runRunOnMainThreadTask,
+    };
+    elementTemplateRegistry.set(targetId, nativeRef as ElementRef);
+    registerMTEventHandle(targetId, 0);
+
+    try {
+      envManager.switchToMainThread();
+      installElementTemplatePatchListener();
+      mockSetAttributeOfElementTemplate.mockImplementationOnce(() => {
+        throw new Error('setAttribute failed');
+      });
+
+      expect(() => {
+        envManager.switchToBackground();
+        lynx.getCoreContext().dispatchEvent({
+          type: ElementTemplateLifecycleConstant.update,
+          data: JSON.stringify({
+            ops: [ElementTemplateUpdateOps.setAttribute, targetId, 0, { type: 'worklet', value: ctx }],
+            flushOptions: {},
+            isHydration: true,
+            delayedRunOnMainThreadData: [
+              {
+                worklet: { _wkltId: 'should-not-run' },
+                params: [],
+                resolveId: 11,
+              },
+            ],
+          }),
+        });
+        envManager.switchToMainThread();
+      }).toThrow('setAttribute failed');
+
+      expect(runDelayedBackgroundFunctions).toHaveBeenCalledTimes(1);
+      expect(setShouldFlush).not.toHaveBeenCalled();
+      expect(runRunOnMainThreadTask).not.toHaveBeenCalled();
+      expect(getMainThreadDynamicAttrState(targetId, 0)).toBeUndefined();
+    } finally {
+      globalThis.lynxWorkletImpl = previousWorkletImpl;
+    }
+  });
+
+  it('continues delayed lifecycle when patch apply reports a missing target', () => {
+    const runDelayedBackgroundFunctions = vi.fn();
+    const runRunOnMainThreadTask = vi.fn();
+    const setShouldFlush = vi.fn();
+    const worklet = { _wkltId: 'missing-target-main-thread-function' };
+    const previousWorkletImpl = globalThis.lynxWorkletImpl;
+    globalThis.lynxWorkletImpl = {
+      ...previousWorkletImpl,
+      _runOnBackgroundDelayImpl: {
+        runDelayedBackgroundFunctions,
+      },
+      _eomImpl: {
+        setShouldFlush,
+      },
+      _runRunOnMainThreadTask: runRunOnMainThreadTask,
+    };
+
+    try {
+      resetReportedErrors();
+      envManager.switchToMainThread();
+      installElementTemplatePatchListener();
+      mockFlushElementTree.mockClear();
+
+      envManager.switchToBackground();
+      lynx.getCoreContext().dispatchEvent({
+        type: ElementTemplateLifecycleConstant.update,
+        data: JSON.stringify({
+          ops: [ElementTemplateUpdateOps.setAttribute, 404, 0, 'missing'],
+          flushOptions: {},
+          isHydration: true,
+          delayedRunOnMainThreadData: [
+            {
+              worklet,
+              params: [],
+              resolveId: 9,
+            },
+          ],
+        }),
+      });
+      envManager.switchToMainThread();
+
+      const reportError = (globalThis.lynx as unknown as LynxWithReportErrorMock).reportError;
+      expect(String(reportError.mock.calls[0]?.[0]?.message ?? '')).toContain('target handle 404 not found');
+      expect(runDelayedBackgroundFunctions).toHaveBeenCalledTimes(1);
+      expect(runRunOnMainThreadTask).toHaveBeenCalledWith(worklet, [], 9);
+      expect(setShouldFlush.mock.calls).toEqual([[false], [true]]);
+      expect(mockFlushElementTree).toHaveBeenCalledTimes(1);
+    } finally {
+      resetReportedErrors();
+      globalThis.lynxWorkletImpl = previousWorkletImpl;
+    }
+  });
+
+  it('does not run delayed main-thread tasks for stale reload payloads', () => {
+    const staleReloadVersion = getReloadVersion();
+    const runRunOnMainThreadTask = vi.fn();
+    const previousWorkletImpl = globalThis.lynxWorkletImpl;
+    globalThis.lynxWorkletImpl = {
+      ...previousWorkletImpl,
+      _eomImpl: {
+        setShouldFlush: vi.fn(),
+      },
+      _runRunOnMainThreadTask: runRunOnMainThreadTask,
+    };
+
+    try {
+      increaseReloadVersion();
+      envManager.switchToMainThread();
+      installElementTemplatePatchListener();
+      mockFlushElementTree.mockClear();
+
+      envManager.switchToBackground();
+      lynx.getCoreContext().dispatchEvent({
+        type: ElementTemplateLifecycleConstant.update,
+        data: JSON.stringify({
+          ops: [],
+          flushOptions: {},
+          reloadVersion: staleReloadVersion,
+          delayedRunOnMainThreadData: [
+            {
+              worklet: { _wkltId: 'stale-main-thread-function' },
+              params: [],
+              resolveId: 10,
+            },
+          ],
+        }),
+      });
+      envManager.switchToMainThread();
+
+      expect(runRunOnMainThreadTask).not.toHaveBeenCalled();
+      expect(mockFlushElementTree).not.toHaveBeenCalled();
+    } finally {
+      globalThis.lynxWorkletImpl = previousWorkletImpl;
+    }
+  });
+
+  it('does not record main-thread dynamic attr state when the patch target is missing', () => {
+    const targetId = 106;
+    const ctx = { _wkltId: 'tap' };
+
+    envManager.switchToMainThread();
+    installElementTemplatePatchListener();
+
+    envManager.switchToBackground();
+    lynx.getCoreContext().dispatchEvent({
+      type: ElementTemplateLifecycleConstant.update,
+      data: JSON.stringify({
+        ops: [ElementTemplateUpdateOps.setAttribute, targetId, 0, { type: 'worklet', value: ctx }],
+        flushOptions: {},
+      }),
+    });
+    envManager.switchToMainThread();
+
+    expect(getMainThreadDynamicAttrState(targetId, 0)).toBeUndefined();
+    const reportError = (globalThis.lynx as unknown as LynxWithReportErrorMock).reportError;
+    expect(String(reportError.mock.calls[0]?.[0]?.message ?? '')).toContain(`target handle ${targetId} not found`);
+    resetReportedErrors();
+  });
+
+  it('hydrates successfully applied MTEvent slot when the same payload has a missing target op', () => {
+    const targetId = 113;
+    const missingTargetId = 114;
+    const oldCtx = { _wkltId: 'tap', count: 1 };
+    const nextCtx = { _wkltId: 'tap', count: 2 };
+    const hydrateCtx = vi.fn();
+    const previousWorkletImpl = globalThis.lynxWorkletImpl;
+    globalThis.lynxWorkletImpl = {
+      ...previousWorkletImpl,
+      _hydrateCtx: hydrateCtx,
+    };
+    elementTemplateRegistry.set(targetId, {} as ElementRef);
+    seedMTEventState(targetId, 0, oldCtx);
+
+    try {
+      envManager.switchToMainThread();
+      installElementTemplatePatchListener();
+      mockSetAttributeOfElementTemplate.mockClear();
+      mockFlushElementTree.mockClear();
+
+      envManager.switchToBackground();
+      lynx.getCoreContext().dispatchEvent({
+        type: ElementTemplateLifecycleConstant.update,
+        data: JSON.stringify({
+          ops: [
+            ElementTemplateUpdateOps.setAttribute,
+            targetId,
+            0,
+            { type: 'worklet', value: nextCtx },
+            ElementTemplateUpdateOps.setAttribute,
+            missingTargetId,
+            0,
+            'missing',
+          ],
+          flushOptions: {},
+          isHydration: true,
+        }),
+      });
+      envManager.switchToMainThread();
+
+      expect(mockSetAttributeOfElementTemplate).toHaveBeenCalledTimes(1);
+      expect(mockFlushElementTree).toHaveBeenCalledTimes(1);
+      expect(hydrateCtx).toHaveBeenCalledWith(nextCtx, oldCtx);
+      expect(getMainThreadDynamicAttrState(targetId, 0)?.nativeHeldValue).toEqual(nextCtx);
+      expect(getMainThreadDynamicAttrState(targetId, 0)?.nativeHeldValue).not.toBe(nextCtx);
+      const reportError = (globalThis.lynx as unknown as LynxWithReportErrorMock).reportError;
+      expect(String(reportError.mock.calls[0]?.[0]?.message ?? '')).toContain(
+        `target handle ${missingTargetId} not found`,
+      );
+      resetReportedErrors();
+    } finally {
+      globalThis.lynxWorkletImpl = previousWorkletImpl;
+    }
+  });
+
+  it('cleans removed MTEvent state when the same payload later has a missing target op', () => {
+    const targetId = 115;
+    const childId = 116;
+    const missingTargetId = 117;
+    const hydrateCtx = vi.fn();
+    const previousWorkletImpl = globalThis.lynxWorkletImpl;
+    globalThis.lynxWorkletImpl = {
+      ...previousWorkletImpl,
+      _hydrateCtx: hydrateCtx,
+    };
+    elementTemplateRegistry.set(targetId, {} as ElementRef);
+    elementTemplateRegistry.set(childId, {} as ElementRef);
+    seedMTEventState(childId, 0, { _wkltId: 'removed' });
+
+    try {
+      envManager.switchToMainThread();
+      installElementTemplatePatchListener();
+      mockRemoveNodeFromElementTemplate.mockClear();
+      mockFlushElementTree.mockClear();
+
+      envManager.switchToBackground();
+      lynx.getCoreContext().dispatchEvent({
+        type: ElementTemplateLifecycleConstant.update,
+        data: JSON.stringify({
+          ops: [
+            ElementTemplateUpdateOps.removeNode,
+            targetId,
+            0,
+            childId,
+            [childId],
+            ElementTemplateUpdateOps.setAttribute,
+            missingTargetId,
+            0,
+            'missing',
+          ],
+          flushOptions: {},
+          isHydration: true,
+        }),
+      });
+      envManager.switchToMainThread();
+
+      expect(mockRemoveNodeFromElementTemplate).toHaveBeenCalledTimes(1);
+      expect(mockFlushElementTree).toHaveBeenCalledTimes(1);
+      expect(hydrateCtx).not.toHaveBeenCalled();
+      expect(elementTemplateRegistry.get(childId)).toBeUndefined();
+      expect(getMainThreadDynamicAttrState(childId, 0)).toBeUndefined();
+      const reportError = (globalThis.lynx as unknown as LynxWithReportErrorMock).reportError;
+      expect(String(reportError.mock.calls[0]?.[0]?.message ?? '')).toContain(
+        `target handle ${missingTargetId} not found`,
+      );
+      resetReportedErrors();
+    } finally {
+      globalThis.lynxWorkletImpl = previousWorkletImpl;
+    }
+  });
+
+  it('cleans removed MTEvent state when flush throws after remove succeeds', () => {
+    const targetId = 118;
+    const childId = 119;
+    elementTemplateRegistry.set(targetId, {} as ElementRef);
+    elementTemplateRegistry.set(childId, {} as ElementRef);
+    seedMTEventState(childId, 0, { _wkltId: 'removed' });
+
+    envManager.switchToMainThread();
+    installElementTemplatePatchListener();
+    mockRemoveNodeFromElementTemplate.mockClear();
+    mockFlushElementTree.mockImplementationOnce(() => {
+      throw new Error('flush failed');
+    });
+
+    expect(() => {
+      envManager.switchToBackground();
+      lynx.getCoreContext().dispatchEvent({
+        type: ElementTemplateLifecycleConstant.update,
+        data: JSON.stringify({
+          ops: [ElementTemplateUpdateOps.removeNode, targetId, 0, childId, [childId]],
+          flushOptions: {},
+          isHydration: true,
+        }),
+      });
+      envManager.switchToMainThread();
+    }).toThrow('flush failed');
+
+    expect(mockRemoveNodeFromElementTemplate).toHaveBeenCalledTimes(1);
+    expect(elementTemplateRegistry.get(childId)).toBeUndefined();
+    expect(getMainThreadDynamicAttrState(childId, 0)).toBeUndefined();
   });
 
   it('profiles patch update flowIds on main thread without passing them to __FlushElementTree', () => {
@@ -234,7 +1203,7 @@ describe('ElementTemplate patch stream (apply)', () => {
     envManager.switchToBackground();
     lynx.getCoreContext().dispatchEvent({
       type: ElementTemplateLifecycleConstant.update,
-      data: { ops: stream, flushOptions: {}, flowIds: [101, 202] },
+      data: JSON.stringify({ ops: stream, flushOptions: {}, flowIds: [101, 202] }),
     });
     envManager.switchToMainThread();
 
@@ -258,7 +1227,7 @@ describe('ElementTemplate patch stream (apply)', () => {
     envManager.switchToBackground();
     lynx.getCoreContext().dispatchEvent({
       type: ElementTemplateLifecycleConstant.update,
-      data: { ops: [], flushOptions: { triggerDataUpdated: true }, flowIds: [101, 202] },
+      data: JSON.stringify({ ops: [], flushOptions: { triggerDataUpdated: true }, flowIds: [101, 202] }),
     });
     envManager.switchToMainThread();
 
@@ -279,7 +1248,7 @@ describe('ElementTemplate patch stream (apply)', () => {
     envManager.switchToBackground();
     lynx.getCoreContext().dispatchEvent({
       type: ElementTemplateLifecycleConstant.update,
-      data: { flushOptions: { triggerDataUpdated: true }, flowIds: [101, 202] },
+      data: JSON.stringify({ flushOptions: { triggerDataUpdated: true }, flowIds: [101, 202] }),
     });
     envManager.switchToMainThread();
 
@@ -2134,10 +3103,10 @@ describe('ElementTemplate patch stream (apply)', () => {
     envManager.switchToBackground();
     lynx.getCoreContext().dispatchEvent({
       type: ElementTemplateLifecycleConstant.update,
-      data: {
+      data: JSON.stringify({
         ops: [],
         flushOptions: { triggerDataUpdated: true },
-      },
+      }),
     });
     envManager.switchToMainThread();
 

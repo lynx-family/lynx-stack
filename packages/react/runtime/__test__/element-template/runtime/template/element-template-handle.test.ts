@@ -8,10 +8,19 @@ import {
   setElementTemplateNativeRef,
 } from '../../../../src/element-template/runtime/template/registry.js';
 import {
+  __etAttrPlanMap,
+  adaptMTEventAttrSlot,
+  clearEtAttrPlanMap,
+} from '../../../../src/element-template/runtime/template/attr-slot-plan.js';
+import {
   createElementTemplateWithReservedHandle,
   destroyElementTemplateId,
   reserveElementTemplateId,
 } from '../../../../src/element-template/runtime/template/handle.js';
+import {
+  clearMainThreadDynamicAttrState,
+  getMainThreadDynamicAttrState,
+} from '../../../../src/element-template/runtime/template/main-thread-dynamic-attr-state.js';
 import { resetTemplateId } from '../../../../src/element-template/runtime/template/handle.js';
 
 describe('ElementTemplateHandle', () => {
@@ -25,6 +34,8 @@ describe('ElementTemplateHandle', () => {
     mockCreateElementTemplate.mockReturnValue(mockCreatedNativeRef);
     vi.stubGlobal('__CreateElementTemplate', mockCreateElementTemplate);
     // vi.stubGlobal('__ReleaseElement', mockReleaseElement);
+    clearMainThreadDynamicAttrState();
+    clearEtAttrPlanMap();
     elementTemplateRegistry.clear();
     resetTemplateId();
   });
@@ -63,6 +74,42 @@ describe('ElementTemplateHandle', () => {
       -1,
     );
     expect(elementTemplateRegistry.get(-1)).toBe(mockCreatedNativeRef);
+  });
+
+  it('records main-thread dynamic attr state after reserved-handle create succeeds', () => {
+    const id = reserveElementTemplateId();
+    const ctx = { _wkltId: 'tap' };
+    __etAttrPlanMap._et_test = [0, adaptMTEventAttrSlot];
+    createElementTemplateWithReservedHandle(
+      id,
+      '_et_test',
+      null,
+      [{ type: 'worklet', value: ctx }],
+      null,
+    );
+
+    expect(getMainThreadDynamicAttrState(-1, 0)).toEqual({
+      kind: 'mt-event',
+      nativeHeldValue: ctx,
+    });
+  });
+
+  it('records dynamic-entry main-thread dynamic attr state with the full template identity', () => {
+    const id = reserveElementTemplateId();
+    const ctx = { _wkltId: 'tap' };
+    __etAttrPlanMap['lazy-entry:_et_test'] = [0, adaptMTEventAttrSlot];
+    createElementTemplateWithReservedHandle(
+      id,
+      '_et_test',
+      'lazy-entry',
+      [{ type: 'worklet', value: ctx }],
+      null,
+    );
+
+    expect(getMainThreadDynamicAttrState(-1, 0)).toEqual({
+      kind: 'mt-event',
+      nativeHeldValue: ctx,
+    });
   });
 
   it('should allocate monotonically decreasing handle ids for template creation', () => {

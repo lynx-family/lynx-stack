@@ -216,7 +216,7 @@ export function runElementTemplateUpdate(options: UpdateRunOptions): UpdateRunRe
   envManager.switchToMainThread();
   installElementTemplatePatchListener();
   const onUpdate = (event: { data: unknown }) => {
-    updateEvents.push(event.data as ElementTemplateUpdateCommitContext);
+    updateEvents.push(JSON.parse(event.data as string) as ElementTemplateUpdateCommitContext);
   };
   lynx.getJSContext().addEventListener(ElementTemplateLifecycleConstant.update, onUpdate);
 
@@ -247,10 +247,10 @@ export function runElementTemplateUpdate(options: UpdateRunOptions): UpdateRunRe
     if (ops.length > 0) {
       lynx.getCoreContext().dispatchEvent({
         type: ElementTemplateLifecycleConstant.update,
-        data: {
+        data: JSON.stringify({
           ops,
           flushOptions: {},
-        },
+        }),
       });
     }
 

@@ -74,7 +74,7 @@ describe('Compiled ET GlobalProps update fixtures', () => {
   let updateEvents: ElementTemplateUpdateCommitContext[] = [];
 
   const onUpdate = (event: { data: unknown }) => {
-    updateEvents.push(event.data as ElementTemplateUpdateCommitContext);
+    updateEvents.push(JSON.parse(event.data as string) as ElementTemplateUpdateCommitContext);
   };
 
   function installGlobalProps(globalProps: Record<string, unknown>): void {

@@ -20,6 +20,8 @@ import type {
   SerializedEtNode,
   SerializedTypedNode,
 } from '../protocol/types.js';
+import { __etAttrPlanMap, adaptMTEventAttrSlot } from '../runtime/template/attr-slot-plan.js';
+import { isMTEventNativeWrapper } from '../runtime/template/main-thread-event-ctx.js';
 
 const MAIN_BUNDLE_URL_SENTINEL = '__Card__';
 const PAGE_ROOT_TARGET_HANDLE_ID = 0;
@@ -145,7 +147,7 @@ function hydrateCompiledInstance(
     return false;
   }
   instance.prepareAttributeSlotsForHydration();
-  hydrateAttributeSlots(handleId, serialized.attributeSlots ?? [], instance.attributeSlots);
+  hydrateAttributeSlots(instance.type, handleId, serialized.attributeSlots ?? [], instance.attributeSlots);
 
   if (serialized.templateKey === BUILTIN_RAW_TEXT_TEMPLATE_KEY) {
     return true;
@@ -217,6 +219,7 @@ function hydrateListInstance(
   }
   instance.prepareAttributeSlotsForHydration();
   hydrateAttributeSlots(
+    serialized.tag,
     handleId,
     [getStableSerializedListAttributes(serialized.attributes)],
     instance.attributeSlots,
@@ -541,6 +544,7 @@ function bindHydrationHandleId(
 }
 
 function hydrateAttributeSlots(
+  templateType: string,
   handleId: number,
   beforeSlots: SerializableValue[],
   afterSlots: SerializableValue[],
@@ -549,7 +553,10 @@ function hydrateAttributeSlots(
   for (let slotIndex = 0; slotIndex < slotCount; slotIndex += 1) {
     const beforeValue = beforeSlots[slotIndex];
     const afterValue = afterSlots[slotIndex];
-    if (isDirectOrDeepEqual(beforeValue, afterValue)) {
+    if (
+      isDirectOrDeepEqual(beforeValue, afterValue)
+      && !shouldForceMTEventHydrateSlot(templateType, slotIndex, afterValue)
+    ) {
       continue;
     }
     if (afterValue === undefined && beforeValue === null) {
@@ -563,4 +570,27 @@ function hydrateAttributeSlots(
       afterValue ?? null,
     );
   }
+}
+
+function shouldForceMTEventHydrateSlot(
+  templateType: string,
+  attrSlotIndex: number,
+  value: SerializableValue | undefined,
+): boolean {
+  if (!isMTEventNativeWrapper(value)) {
+    return false;
+  }
+  const attrPlan = __etAttrPlanMap[templateType];
+  if (!attrPlan) {
+    return false;
+  }
+  for (let planIndex = 0; planIndex < attrPlan.length; planIndex += 2) {
+    if (
+      attrPlan[planIndex] === attrSlotIndex
+      && attrPlan[planIndex + 1] === adaptMTEventAttrSlot
+    ) {
+      return true;
+    }
+  }
+  return false;
 }

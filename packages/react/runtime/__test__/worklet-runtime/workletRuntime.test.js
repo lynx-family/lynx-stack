@@ -145,6 +145,68 @@ describe('Worklet', () => {
     expect(globalThis.lynxWorkletImpl._workletMap['2']).toBeCalled();
   });
 
+  it('does not weakly reference the root worklet ctx', () => {
+    initWorklet();
+
+    const NativeWeakRef = globalThis.WeakRef;
+    const workletCtx = {
+      _wkltId: 'parent',
+      token: 1,
+    };
+    globalThis.WeakRef = vi.fn(function(target) {
+      if (target === workletCtx) {
+        throw new TypeError('WeakRef: target must be an object');
+      }
+      return new NativeWeakRef(target);
+    });
+
+    try {
+      globalThis.registerWorklet('main-thread', 'parent', function() {
+        return this.token;
+      });
+
+      expect(globalThis.runWorklet(workletCtx, [])).toBe(1);
+    } finally {
+      globalThis.WeakRef = NativeWeakRef;
+    }
+  });
+
+  it('skips ctxRef when a nested worklet ctx cannot be weakly referenced', () => {
+    initWorklet();
+
+    const NativeWeakRef = globalThis.WeakRef;
+    const childCtx = {
+      _wkltId: 'child',
+      token: 2,
+    };
+    const parentCtx = {
+      _wkltId: 'parent',
+      child: childCtx,
+    };
+    globalThis.WeakRef = vi.fn(function(target) {
+      if (target === childCtx) {
+        throw new TypeError('WeakRef: target must be an object');
+      }
+      return new NativeWeakRef(target);
+    });
+
+    try {
+      globalThis.registerWorklet('main-thread', 'child', function() {
+        return this.token;
+      });
+      globalThis.registerWorklet('main-thread', 'parent', function() {
+        return this.child;
+      });
+
+      const childWorklet = globalThis.runWorklet(parentCtx, []);
+
+      expect(childWorklet()).toBe(2);
+      expect(childWorklet).not.toHaveProperty('ctxRef');
+    } finally {
+      globalThis.WeakRef = NativeWeakRef;
+    }
+  });
+
   it('should call recursively', async () => {
     initWorklet();
 

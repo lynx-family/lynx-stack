@@ -43,11 +43,11 @@ describe('ElementTemplate patch listener alog', () => {
     envManager.switchToBackground(() => {
       lynx.getCoreContext().dispatchEvent({
         type: ElementTemplateLifecycleConstant.update,
-        data: {
+        data: JSON.stringify({
           ops: createRawTextOps(1, 'hello'),
           flushOptions: { nativeUpdateDataOrder: 7 },
           flowIds: [101, 202],
-        },
+        }),
       });
     });
     envManager.switchToMainThread();
@@ -68,10 +68,10 @@ describe('ElementTemplate patch listener alog', () => {
     envManager.switchToBackground(() => {
       lynx.getCoreContext().dispatchEvent({
         type: ElementTemplateLifecycleConstant.update,
-        data: {
+        data: JSON.stringify({
           ops: createRawTextOps(1, 'hello'),
           flushOptions: { nativeUpdateDataOrder: 7 },
-        },
+        }),
       });
     });
     envManager.switchToMainThread();

@@ -2,6 +2,13 @@
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
 
+import type { ClosureValueType } from '@lynx-js/react/worklet-runtime/bindings';
+import {
+  flushDelayedRunOnBackgroundFunctions,
+  runRunOnMainThreadTask,
+  setEomShouldFlushElementTree,
+} from '@lynx-js/react/worklet-runtime/bindings';
+
 import { markTiming, setPipeline } from '../../core/performance.js';
 import { getReloadVersion } from '../../core/reload-version.js';
 import { formatElementTemplateUpdateCommands } from '../debug/alog.js';
@@ -19,7 +26,7 @@ export function installElementTemplatePatchListener(): void {
 
   listener = (event: { data: unknown }) => {
     const { data } = event;
-    const payload = data as ElementTemplateUpdateCommitContext;
+    const payload = JSON.parse(data as string) as ElementTemplateUpdateCommitContext;
     if (typeof payload?.reloadVersion === 'number' && payload.reloadVersion < getReloadVersion()) {
       return;
     }
@@ -43,6 +50,10 @@ export function installElementTemplatePatchListener(): void {
       });
     }
 
+    const isHydration = payload.isHydration === true;
+    const delayedRunOnMainThreadData = Array.isArray(payload.delayedRunOnMainThreadData)
+      ? payload.delayedRunOnMainThreadData
+      : undefined;
     if (hasOps) {
       if (typeof __ALOG__ !== 'undefined' && __ALOG__) {
         console.alog?.(
@@ -63,10 +74,29 @@ export function installElementTemplatePatchListener(): void {
       markTiming('parseChangesEnd');
       markTiming('patchChangesStart');
       try {
-        applyElementTemplateUpdateCommands(payload.ops);
+        applyElementTemplateUpdateCommands(payload.ops, isHydration);
       } finally {
         markTiming('patchChangesEnd');
         markTiming('mtsRenderEnd');
+        if (isHydration) {
+          flushDelayedRunOnBackgroundFunctions();
+        }
+      }
+    } else if (isHydration) {
+      flushDelayedRunOnBackgroundFunctions();
+    }
+    if (delayedRunOnMainThreadData?.length) {
+      setEomShouldFlushElementTree(false);
+      try {
+        for (const data of delayedRunOnMainThreadData) {
+          try {
+            runRunOnMainThreadTask(data.worklet, data.params as ClosureValueType[], data.resolveId);
+          } catch (error) {
+            lynx.reportError(error as Error);
+          }
+        }
+      } finally {
+        setEomShouldFlushElementTree(true);
       }
     }
 

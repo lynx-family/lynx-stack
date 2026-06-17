@@ -21,14 +21,26 @@ import {
   getEventHandlerForEventValue,
   publishEvent,
 } from '../../../../../src/element-template/prop-adapters/event.js';
+import { isMTEventNativeWrapper } from '../../../../../src/element-template/runtime/template/main-thread-event-ctx.js';
+import {
+  clearMainThreadDynamicAttrState,
+  getMainThreadDynamicAttrState,
+} from '../../../../../src/element-template/runtime/template/main-thread-dynamic-attr-state.js';
+import {
+  installElementTemplatePatchListener,
+  resetElementTemplatePatchListener,
+} from '../../../../../src/element-template/native/patch-listener.js';
 import { ElementTemplateLifecycleConstant } from '../../../../../src/element-template/protocol/lifecycle-constant.js';
 import { ElementTemplateUpdateOps } from '../../../../../src/element-template/protocol/opcodes.js';
 import type {
   ElementTemplateUpdateCommandStream,
   ElementTemplateUpdateCommitContext,
+  SerializableValue,
 } from '../../../../../src/element-template/protocol/types.js';
 import { clearEtAttrPlanMap } from '../../../../../src/element-template/runtime/template/attr-slot-plan.js';
 import { __root } from '../../../../../src/element-template/runtime/page/root-instance.js';
+import { lastMock } from '../../../test-utils/mock/mockNativePapi.js';
+import { compileFixtureSource } from '../../../test-utils/debug/compiledFixtureCompiler.js';
 import {
   loadCompiledFixturePair,
   type CompiledFixtureModuleExports,
@@ -39,6 +51,7 @@ import {
 } from '../../../test-utils/debug/compiledThreadRunner.js';
 import { ElementTemplateEnvManager } from '../../../test-utils/debug/envManager.js';
 import { serializeBackgroundTree } from '../../../test-utils/debug/serializer.js';
+import { initWorklet } from '../../../../../src/worklet-runtime/workletRuntime.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -46,6 +59,14 @@ const DIRECT_EVENT_FIXTURE = path.resolve(__dirname, '../../../fixtures/backgrou
 const CONDITIONAL_DIRECT_EVENT_FIXTURE = path.resolve(
   __dirname,
   '../../../fixtures/background/event/conditional-direct-event/index.tsx',
+);
+const MAIN_THREAD_DIRECT_EVENT_FIXTURE = path.resolve(
+  __dirname,
+  '../../../fixtures/background/event/main-thread-direct-event/index.tsx',
+);
+const MAIN_THREAD_RUN_ON_BACKGROUND_EVENT_FIXTURE = path.resolve(
+  __dirname,
+  '../../../fixtures/background/event/main-thread-run-on-background-event/index.tsx',
 );
 const SPREAD_EVENT_FIXTURE = path.resolve(__dirname, '../../../fixtures/background/event/spread-event/index.tsx');
 const SLOT_ID = 0;
@@ -56,6 +77,14 @@ interface CompiledDirectEventModule extends CompiledFixtureModuleExports {
 
 interface CompiledConditionalDirectEventModule extends CompiledFixtureModuleExports {
   App: (props: { show?: boolean; onTap?: () => void }) => JSX.Element;
+}
+
+interface CompiledMainThreadDirectEventModule extends CompiledFixtureModuleExports {
+  App: (props: { label?: string }) => JSX.Element;
+}
+
+interface CompiledMainThreadRunOnBackgroundEventModule extends CompiledFixtureModuleExports {
+  App: (props: { label?: string; onReport?: (label: string) => string }) => JSX.Element;
 }
 
 interface SpreadFixtureProps {
@@ -112,11 +141,118 @@ function collectRecursiveCreateCommandStream(
   return commands;
 }
 
+function expectMTEventWrapper(value: unknown): { _c?: Record<string, unknown>; _wkltId: string } {
+  expect(isMTEventNativeWrapper(value)).toBe(true);
+  return (value as { type: 'worklet'; value: { _c?: Record<string, unknown>; _wkltId: string } }).value;
+}
+
+function findJsFnHandle(value: unknown): {
+  _execId?: number;
+  _fn?: (...args: unknown[]) => unknown;
+  _isFirstScreen?: boolean;
+  _jsFnId?: number;
+} | undefined {
+  if (value === null || typeof value !== 'object') {
+    return undefined;
+  }
+
+  const record = value as Record<string, unknown>;
+  if ('_fn' in record || '_isFirstScreen' in record || '_jsFnId' in record) {
+    return record as {
+      _execId?: number;
+      _fn?: (...args: unknown[]) => unknown;
+      _isFirstScreen?: boolean;
+      _jsFnId?: number;
+    };
+  }
+
+  for (const key of Object.keys(record)) {
+    const result = findJsFnHandle(record[key]);
+    if (result) {
+      return result;
+    }
+  }
+
+  return undefined;
+}
+
+function findFirstNativeCreateAttrSlots(): unknown[] {
+  const createLog = lastMock!.nativeLog.find((entry) =>
+    Array.isArray(entry)
+    && entry[0] === '__CreateElementTemplate'
+    && entry[1] !== '_et_builtin_raw_text'
+  ) as unknown[] | undefined;
+  const attributeSlots = createLog?.[3];
+  if (!Array.isArray(attributeSlots)) {
+    throw new Error('Missing compiled main-thread create attribute slots.');
+  }
+  return attributeSlots;
+}
+
+function findLastNativeSetAttributeValue(): unknown {
+  const setAttributeLog = lastMock!.nativeLog.findLast((entry) =>
+    Array.isArray(entry)
+    && entry[0] === '__SetAttributeOfElementTemplate'
+  ) as unknown[] | undefined;
+  if (!setAttributeLog) {
+    throw new Error('Missing compiled main-thread setAttribute call.');
+  }
+  return setAttributeLog[3];
+}
+
+function installMockWorkletRuntime(hydrateCtx = vi.fn()): {
+  hydrateCtx: ReturnType<typeof vi.fn>;
+  loadLepusChunk: ReturnType<typeof vi.fn>;
+} {
+  const loadLepusChunk = vi.fn().mockImplementation(() => {
+    globalThis.lynxWorkletImpl = {
+      _workletMap: {},
+      _eventDelayImpl: {
+        clearDelayedWorklets: vi.fn(),
+        runDelayedWorklet: vi.fn(),
+      },
+      _refImpl: {
+        _firstScreenWorkletRefMap: new Map(),
+        _workletRefMap: {},
+        clearFirstScreenWorkletRefMap: vi.fn(),
+        updateWorkletRef: vi.fn(),
+        updateWorkletRefInitValueChanges: vi.fn(),
+      },
+      _runOnBackgroundDelayImpl: {
+        delayRunOnBackground: vi.fn(),
+        runDelayedBackgroundFunctions: vi.fn(),
+      },
+      _hydrateCtx: hydrateCtx,
+      _eomImpl: {
+        setShouldFlush: vi.fn(),
+      },
+      _runRunOnMainThreadTask: vi.fn(),
+    };
+    globalThis.registerWorkletInternal = (_type, id, worklet) => {
+      globalThis.lynxWorkletImpl._workletMap[id] = worklet;
+    };
+    return true;
+  });
+  vi.stubGlobal('__LoadLepusChunk', loadLepusChunk);
+  return { hydrateCtx, loadLepusChunk };
+}
+
+function installRealWorkletRuntime(): {
+  loadLepusChunk: ReturnType<typeof vi.fn>;
+} {
+  const loadLepusChunk = vi.fn().mockImplementation(() => {
+    initWorklet();
+    return true;
+  });
+  vi.stubGlobal('__LoadLepusChunk', loadLepusChunk);
+  return { loadLepusChunk };
+}
+
 describe('Compiled direct event background updates', () => {
   const envManager = new ElementTemplateEnvManager();
   let updateEvents: ElementTemplateUpdateCommitContext[] = [];
   const onUpdate = (event: { data: unknown }) => {
-    updateEvents.push(event.data as ElementTemplateUpdateCommitContext);
+    updateEvents.push(JSON.parse(event.data as string) as ElementTemplateUpdateCommitContext);
   };
 
   async function loadCompiledDirectEventFixture(): Promise<{
@@ -140,6 +276,26 @@ describe('Compiled direct event background updates', () => {
     mainModule: CompiledSpreadEventModule;
   }> {
     return loadCompiledFixturePair<CompiledSpreadEventModule>(SPREAD_EVENT_FIXTURE);
+  }
+
+  async function loadCompiledMainThreadDirectEventFixture(): Promise<{
+    backgroundModule: CompiledMainThreadDirectEventModule;
+    mainModule: CompiledMainThreadDirectEventModule;
+  }> {
+    return loadCompiledFixturePair<CompiledMainThreadDirectEventModule>(
+      MAIN_THREAD_DIRECT_EVENT_FIXTURE,
+      { enableWorkletTransform: true },
+    );
+  }
+
+  async function loadCompiledMainThreadRunOnBackgroundEventFixture(): Promise<{
+    backgroundModule: CompiledMainThreadRunOnBackgroundEventModule;
+    mainModule: CompiledMainThreadRunOnBackgroundEventModule;
+  }> {
+    return loadCompiledFixturePair<CompiledMainThreadRunOnBackgroundEventModule>(
+      MAIN_THREAD_RUN_ON_BACKGROUND_EVENT_FIXTURE,
+      { enableWorkletTransform: true },
+    );
   }
 
   function renderDirectEventOnBackground(
@@ -227,6 +383,7 @@ describe('Compiled direct event background updates', () => {
     resetElementTemplateCommitState();
     clearEtAttrPlanMap();
     clearEventState();
+    clearMainThreadDynamicAttrState();
     updateEvents = [];
     envManager.resetEnv('background');
     envManager.setUseElementTemplate(true);
@@ -234,6 +391,7 @@ describe('Compiled direct event background updates', () => {
     installElementTemplateHydrationListener();
 
     envManager.switchToMainThread();
+    installElementTemplatePatchListener();
     lynx.getJSContext().addEventListener(ElementTemplateLifecycleConstant.update, onUpdate);
     envManager.switchToBackground();
   });
@@ -241,9 +399,210 @@ describe('Compiled direct event background updates', () => {
   afterEach(() => {
     envManager.switchToMainThread();
     lynx.getJSContext().removeEventListener(ElementTemplateLifecycleConstant.update, onUpdate);
+    resetElementTemplatePatchListener();
     envManager.switchToBackground();
     resetElementTemplateHydrationListener();
     envManager.setUseElementTemplate(false);
+    clearMainThreadDynamicAttrState();
+    delete globalThis.lynxWorkletImpl;
+    // @ts-expect-error - tests that install the real runtime restore this global.
+    delete globalThis.registerWorklet;
+    // @ts-expect-error - test cleanup restores the runtime loader global.
+    delete globalThis.registerWorkletInternal;
+    // @ts-expect-error - tests that install the real runtime restore this global.
+    delete globalThis.runWorklet;
+    // @ts-expect-error - test cleanup restores the native loader global.
+    delete globalThis.__LoadLepusChunk;
+    // @ts-expect-error - dynamic component tests install this runtime global.
+    delete globalThis.globDynamicComponentEntry;
+  });
+
+  it('hydrates and updates compiled direct main-thread events through native MTEvent slots', async () => {
+    const mainArtifact = await compileFixtureSource(MAIN_THREAD_DIRECT_EVENT_FIXTURE, {
+      enableWorkletTransform: true,
+      target: 'LEPUS',
+    });
+    expect(mainArtifact.code).toContain('from "@lynx-js/react/internal"');
+    expect(mainArtifact.code).toContain('loadWorkletRuntime');
+    expect(mainArtifact.code).toContain('adaptMTEventAttrSlot');
+    expect(mainArtifact.code).not.toContain('registerWorkletOnBackground');
+    expect(mainArtifact.code).not.toContain('transformToWorklet');
+
+    const hydrateCtx = vi.fn();
+    const { loadLepusChunk } = installMockWorkletRuntime(hydrateCtx);
+
+    const { backgroundModule, mainModule } = await loadCompiledMainThreadDirectEventFixture();
+    expect(loadLepusChunk).toHaveBeenCalledWith('worklet-runtime', {
+      dynamicComponentEntry: '__Card__',
+      chunkType: 0,
+    });
+    expect(Object.keys(globalThis.lynxWorkletImpl._workletMap)).toHaveLength(1);
+
+    const host = renderCompiledFixtureOnBackground(backgroundModule, envManager, { label: 'first' });
+    renderCompiledFixtureOnMainThread(mainModule, envManager, { label: 'first' });
+
+    const firstScreenWrapper = findFirstNativeCreateAttrSlots()[0];
+    const firstScreenCtx = expectMTEventWrapper(firstScreenWrapper);
+    expect(firstScreenCtx._c).toEqual({ label: 'first' });
+    expect(typeof firstScreenWrapper).toBe('object');
+    expect(typeof firstScreenWrapper).not.toBe('function');
+    expect(host.attributeSlots[0]).toEqual(firstScreenWrapper);
+    expect(getMainThreadDynamicAttrState(host.instanceId, 0)).toEqual({
+      kind: 'mt-event',
+      nativeHeldValue: firstScreenCtx,
+    });
+
+    envManager.switchToMainThread();
+    expect(updateEvents.at(-1)?.isHydration).toBe(true);
+    const hydrateWrapper = findLastNativeSetAttributeValue();
+    const hydratedCtx = expectMTEventWrapper(hydrateWrapper);
+    expect(hydratedCtx._c).toEqual({ label: 'first' });
+    expect(hydrateWrapper).not.toBe(firstScreenWrapper);
+    expect(hydrateCtx).toHaveBeenCalledWith(hydratedCtx, firstScreenCtx);
+    expect(getMainThreadDynamicAttrState(host.instanceId, 0)).toEqual({
+      kind: 'mt-event',
+      nativeHeldValue: hydratedCtx as SerializableValue,
+    });
+
+    updateEvents = [];
+    lastMock!.mockSetAttributeOfElementTemplate.mockClear();
+    envManager.switchToBackground();
+    renderCompiledFixtureOnBackground(backgroundModule, envManager, { label: 'second' });
+
+    envManager.switchToMainThread();
+    expect(updateEvents.at(-1)?.isHydration).toBeUndefined();
+    expect(updateEvents.at(-1)?.ops).toEqual([
+      ElementTemplateUpdateOps.setAttribute,
+      host.instanceId,
+      0,
+      expect.objectContaining({
+        type: 'worklet',
+        value: expect.objectContaining({
+          _c: { label: 'second' },
+          _wkltId: hydratedCtx._wkltId,
+        }),
+      }),
+    ]);
+    const updatedWrapper = findLastNativeSetAttributeValue();
+    const updatedCtx = expectMTEventWrapper(updatedWrapper);
+    expect(updatedCtx).not.toBe(hydratedCtx);
+    expect(updatedCtx._c).toEqual({ label: 'second' });
+    expect(hydrateCtx).toHaveBeenCalledTimes(1);
+    expect(getMainThreadDynamicAttrState(host.instanceId, 0)).toEqual({
+      kind: 'mt-event',
+      nativeHeldValue: updatedCtx as SerializableValue,
+    });
+  });
+
+  it('hydrates compiled direct main-thread events with serialized runOnBackground handles', async () => {
+    SystemInfo.lynxSdkVersion = '4.0';
+    const mainArtifact = await compileFixtureSource(MAIN_THREAD_RUN_ON_BACKGROUND_EVENT_FIXTURE, {
+      enableWorkletTransform: true,
+      target: 'LEPUS',
+    });
+    const backgroundArtifact = await compileFixtureSource(MAIN_THREAD_RUN_ON_BACKGROUND_EVENT_FIXTURE, {
+      enableWorkletTransform: true,
+      target: 'JS',
+    });
+    expect(mainArtifact.code).toContain('from "@lynx-js/react/internal"');
+    expect(mainArtifact.code).toContain('loadWorkletRuntime');
+    expect(mainArtifact.code).toContain('runOnBackground');
+    expect(backgroundArtifact.code).toContain('transformToWorklet');
+
+    const { loadLepusChunk } = installRealWorkletRuntime();
+    const { backgroundModule, mainModule } = await loadCompiledMainThreadRunOnBackgroundEventFixture();
+    expect(loadLepusChunk).toHaveBeenCalledWith('worklet-runtime', {
+      dynamicComponentEntry: undefined,
+      chunkType: 0,
+    });
+    const onReport = vi.fn((label: string) => `reported:${label}`);
+    const host = renderCompiledFixtureOnBackground(backgroundModule, envManager, { label: 'first', onReport });
+    renderCompiledFixtureOnMainThread(mainModule, envManager, { label: 'first', onReport });
+
+    const rawCtx = host.getRawAttributeSlot(0) as {
+      _c?: Record<string, unknown>;
+      _execId?: number;
+      _wkltId: string;
+    };
+    const backgroundCtx = expectMTEventWrapper(host.attributeSlots[0]);
+    const firstScreenCtx = expectMTEventWrapper(findFirstNativeCreateAttrSlots()[0]);
+    const backgroundHandle = findJsFnHandle(backgroundCtx);
+    const rawHandle = findJsFnHandle(rawCtx);
+    const firstScreenHandle = findJsFnHandle(firstScreenCtx);
+
+    expect(rawCtx).not.toBe(backgroundCtx);
+    expect(backgroundCtx._c).toEqual(expect.objectContaining({ label: 'first' }));
+    expect(backgroundHandle).toBe(rawHandle);
+    expect(backgroundHandle?._fn).toBe(onReport);
+    expect(rawHandle?._fn).toBe(onReport);
+    expect(firstScreenHandle?._isFirstScreen).toBe(true);
+    expect(backgroundCtx).toHaveProperty('_execId');
+    expect(rawCtx).not.toHaveProperty('_execId');
+    expect(rawHandle).not.toHaveProperty('_execId');
+
+    let delayedResult: Promise<unknown> | undefined;
+    envManager.switchToMainThread(() => {
+      delayedResult = globalThis.runWorklet(firstScreenCtx, []) as Promise<unknown>;
+      expect(onReport).not.toHaveBeenCalled();
+      expect(
+        globalThis.lynxWorkletImpl._runOnBackgroundDelayImpl
+          .delayedBackgroundFunctionArray.length,
+      ).toBe(1);
+    });
+    const hydrateWrapper = findLastNativeSetAttributeValue();
+    const hydratedCtx = expectMTEventWrapper(hydrateWrapper);
+    const hydratedHandle = findJsFnHandle(hydratedCtx);
+
+    expect(hydratedCtx).not.toBe(backgroundCtx);
+    expect(hydratedCtx).toEqual(expect.objectContaining({
+      _c: expect.objectContaining({ label: 'first' }),
+      _execId: backgroundCtx._execId,
+      _wkltId: backgroundCtx._wkltId,
+    }));
+    expect(hydratedHandle?._fn).toBe('[BackgroundFunction]');
+    expect(hydratedHandle?._jsFnId).toBe(backgroundHandle?._jsFnId);
+    expect(hydratedHandle?._execId).toBe(backgroundCtx._execId);
+    expect(
+      globalThis.lynxWorkletImpl._runOnBackgroundDelayImpl
+        .delayedBackgroundFunctionArray.length,
+    ).toBe(0);
+    expect(rawHandle).not.toHaveProperty('_execId');
+
+    envManager.switchToBackground();
+    expect(onReport).toHaveBeenCalledWith('first');
+
+    envManager.switchToMainThread();
+    await expect(delayedResult).resolves.toBe('reported:first');
+  });
+
+  it('records dynamic-entry compiled direct main-thread event state on first-screen create', async () => {
+    globalThis.globDynamicComponentEntry = 'lazy-entry';
+    installMockWorkletRuntime();
+
+    const { backgroundModule, mainModule } = await loadCompiledFixturePair<CompiledMainThreadDirectEventModule>(
+      MAIN_THREAD_DIRECT_EVENT_FIXTURE,
+      {
+        enableWorkletTransform: true,
+        isDynamicComponent: true,
+      },
+    );
+
+    const host = renderCompiledFixtureOnBackground(backgroundModule, envManager, { label: 'dynamic' });
+    renderCompiledFixtureOnMainThread(mainModule, envManager, { label: 'dynamic' });
+
+    const createLog = lastMock!.nativeLog.find((entry) =>
+      Array.isArray(entry)
+      && entry[0] === '__CreateElementTemplate'
+      && entry[1] !== '_et_builtin_raw_text'
+    ) as unknown[] | undefined;
+    expect(createLog?.[1]).toMatch(/^_et_[0-9a-f]{12}$/);
+    expect(createLog?.[2]).toBe('lazy-entry');
+    const firstScreenCtx = expectMTEventWrapper(findFirstNativeCreateAttrSlots()[0]);
+    expect(firstScreenCtx._c).toEqual({ label: 'dynamic' });
+    expect(getMainThreadDynamicAttrState(host.instanceId, 0)).toEqual({
+      kind: 'mt-event',
+      nativeHeldValue: firstScreenCtx as SerializableValue,
+    });
   });
 
   it('uses the latest background handler without dispatching a native patch when only handler identity changes', async () => {

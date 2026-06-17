@@ -54,7 +54,7 @@ describe('Compiled ET InitData updateData fixture', () => {
   let updateEvents: ElementTemplateUpdateCommitContext[] = [];
 
   const onUpdate = (event: { data: unknown }) => {
-    updateEvents.push(event.data as ElementTemplateUpdateCommitContext);
+    updateEvents.push(JSON.parse(event.data as string) as ElementTemplateUpdateCommitContext);
   };
 
   function installInitData(initData: Record<string, unknown>): void {

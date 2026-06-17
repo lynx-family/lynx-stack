@@ -7,6 +7,7 @@ import { afterEach, beforeEach, describe, expect, it, vi, beforeAll } from 'vite
 
 import { WorkletEvents } from '@lynx-js/react/worklet-runtime/bindings';
 
+import { dropFunctionCallReturnIds, onFunctionCall } from '../../../src/core/thread-function-call/return-value';
 import { destroyWorklet } from '../../../src/snapshot/worklet/destroy';
 import { clearConfigCacheForTesting } from '../../../src/snapshot/worklet/functionality';
 import { runOnMainThread } from '../../../src/snapshot/worklet/call/runOnMainThread';
@@ -71,6 +72,7 @@ beforeEach(() => {
 });
 
 afterEach(() => {
+  globalEnvManager.switchToBackground();
   destroyWorklet();
   vi.resetAllMocks();
   MTFQueue.length = 0;
@@ -96,6 +98,25 @@ describe('runOnMainThread', () => {
     `);
   });
 
+  it('registers background function handles in main-thread function ctx when supported', () => {
+    globalThis.SystemInfo.lynxSdkVersion = '2.16';
+    globalEnvManager.switchToBackground();
+    initGlobalSnapshotPatch();
+    const worklet = {
+      _wkltId: '835d:450ef:2',
+      _jsFn: {
+        onDone: {
+          _fn: vi.fn(),
+          _jsFnId: 7,
+        },
+      },
+    };
+
+    runOnMainThread(worklet)();
+
+    expect(worklet._execId).toEqual(expect.any(Number));
+  });
+
   it('should get return value', async () => {
     globalEnvManager.switchToBackground();
     initGlobalSnapshotPatch();
@@ -111,6 +132,39 @@ describe('runOnMainThread', () => {
     });
 
     await expect(promise).resolves.toBe('world');
+  });
+
+  it('drops only discarded return ids without breaking unrelated return listeners', async () => {
+    globalEnvManager.switchToBackground();
+    const discardedResolve = vi.fn();
+    const discardedResolveId = onFunctionCall(discardedResolve);
+    let keptResolveId = 0;
+    const keptPromise = new Promise(resolve => {
+      keptResolveId = onFunctionCall(resolve);
+    });
+
+    dropFunctionCallReturnIds([discardedResolveId]);
+
+    globalEnvManager.switchToMainThread();
+    lynx.getJSContext().dispatchEvent({
+      type: WorkletEvents.FunctionCallRet,
+      data: JSON.stringify({
+        resolveId: keptResolveId,
+        returnValue: 'kept-value',
+      }),
+    });
+
+    expect(discardedResolve).not.toHaveBeenCalled();
+    await expect(keptPromise).resolves.toBe('kept-value');
+    expect(lynx.getCoreContext().removeEventListener).not.toHaveBeenCalled();
+
+    globalEnvManager.switchToBackground();
+    const finalResolveId = onFunctionCall(vi.fn());
+    dropFunctionCallReturnIds([finalResolveId]);
+    expect(lynx.getCoreContext().removeEventListener).toHaveBeenCalledWith(
+      WorkletEvents.FunctionCallRet,
+      expect.any(Function),
+    );
   });
 
   it('should throw when on the main thread', () => {

@@ -1,5 +1,6 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
+import { WorkletEvents } from '@lynx-js/react/worklet-runtime/bindings';
 import { options } from 'preact';
 import { Component, createElement } from 'preact/compat';
 
@@ -27,6 +28,11 @@ import { ElementTemplateUpdateOps } from '../../../../src/element-template/proto
 import { ElementTemplateLifecycleConstant } from '../../../../src/element-template/protocol/lifecycle-constant.js';
 import { PipelineOrigins } from '../../../../src/core/performance.js';
 import {
+  enqueueDelayedRunOnMainThreadData,
+  takeDelayedRunOnMainThreadData,
+} from '../../../../src/core/thread-function-call/main-thread.js';
+import { onFunctionCall } from '../../../../src/core/thread-function-call/return-value.js';
+import {
   InitDataConsumer,
   InitDataProvider,
   root,
@@ -36,6 +42,7 @@ import {
 } from '../../../../src/element-template/index.js';
 import { ElementTemplateEnvManager } from '../../test-utils/debug/envManager.js';
 import { clearRefState, queueRefAttrUpdate } from '../../../../src/element-template/prop-adapters/ref.js';
+import { flushCoreContextEvents } from '../../test-utils/mock/mockNativePapi/context.js';
 
 function createRawTextOps(id: number, text: string) {
   return [
@@ -102,7 +109,7 @@ describe('ElementTemplate commit hook', () => {
   let updateEvents: unknown[] = [];
 
   const onUpdate = (event: { data: unknown }) => {
-    updateEvents.push(event.data);
+    updateEvents.push(JSON.parse(event.data as string));
   };
 
   beforeEach(() => {
@@ -127,6 +134,7 @@ describe('ElementTemplate commit hook', () => {
     resetElementTemplateHydrationListener();
     resetElementTemplateCommitState();
     clearRefState();
+    takeDelayedRunOnMainThreadData();
   });
 
   it('dispatches update after commit when hydrated', () => {
@@ -169,6 +177,66 @@ describe('ElementTemplate commit hook', () => {
     envManager.switchToMainThread();
     expect(updateEvents).toHaveLength(1);
     envManager.switchToBackground();
+  });
+
+  it('dispatches delayed-only runOnMainThread payload after commit when hydrated', () => {
+    const worklet = { _wkltId: 'delayed-commit-main-thread-function' };
+    const delayedData = {
+      worklet,
+      params: ['from-commit'],
+      resolveId: 1,
+    };
+    markElementTemplateHydrated();
+    enqueueDelayedRunOnMainThreadData(delayedData);
+
+    options.__c?.({} as unknown as object, []);
+
+    envManager.switchToMainThread();
+    expect(updateEvents).toEqual([
+      {
+        ops: [],
+        flushOptions: {},
+        flowIds: undefined,
+        reloadVersion: getReloadVersion(),
+        delayedRunOnMainThreadData: [delayedData],
+      },
+    ]);
+    envManager.switchToBackground();
+    expect(takeDelayedRunOnMainThreadData()).toEqual([]);
+  });
+
+  it('drops only the failed delayed runOnMainThread return when update dispatch throws', async () => {
+    markElementTemplateHydrated();
+    const dispatchError = new Error('update dispatch failed');
+    const coreContext = lynx.getCoreContext();
+    const removeEventListener = vi.spyOn(coreContext, 'removeEventListener');
+    vi.spyOn(coreContext, 'dispatchEvent').mockImplementationOnce(() => {
+      throw dispatchError;
+    });
+    const worklet = { _wkltId: 'failed-commit-main-thread-function' };
+    let keptResolveId = 0;
+    const keptPromise = new Promise(resolve => {
+      keptResolveId = onFunctionCall(resolve);
+    });
+
+    enqueueDelayedRunOnMainThreadData({
+      worklet,
+      params: [],
+      resolveId: onFunctionCall(vi.fn()),
+    });
+
+    expect(() => options.__c?.({} as unknown as object, [])).toThrow(dispatchError);
+    expect(takeDelayedRunOnMainThreadData()).toEqual([]);
+    expect(removeEventListener).not.toHaveBeenCalled();
+
+    envManager.switchToMainThread();
+    lynx.getJSContext().dispatchEvent({
+      type: WorkletEvents.FunctionCallRet,
+      data: JSON.stringify({ resolveId: keptResolveId, returnValue: 'kept' }),
+    });
+    flushCoreContextEvents();
+    envManager.switchToBackground();
+    await expect(keptPromise).resolves.toBe('kept');
   });
 
   it('dispatches triggerDataUpdated when useInitData observes a data change', () => {
@@ -363,11 +431,10 @@ describe('ElementTemplate commit hook', () => {
     options.__c?.({} as unknown as object, []);
 
     envManager.switchToMainThread();
-    expect(updateEvents).toHaveLength(1);
+    expect(updateEvents).toHaveLength(2);
     expect(updateEvents[0]).toMatchObject({
-      ops: createRawTextOps(1, 'after'),
+      ops: [],
       flushOptions: {
-        nativeUpdateDataOrder: 2,
         pipelineOptions: {
           pipelineID: 'pipelineID',
           needTimestamps: true,
@@ -376,7 +443,15 @@ describe('ElementTemplate commit hook', () => {
           stage: 'hydrate',
         },
       },
+      isHydration: true,
     });
+    expect(updateEvents[1]).toMatchObject({
+      ops: createRawTextOps(1, 'after'),
+      flushOptions: {
+        nativeUpdateDataOrder: 2,
+      },
+    });
+    expect(updateEvents[1]?.flushOptions.pipelineOptions).toBeUndefined();
     envManager.switchToBackground();
   });
 

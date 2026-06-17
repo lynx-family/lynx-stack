@@ -377,7 +377,7 @@ export class BackgroundElementTemplateInstance {
     this.restoreManagerRegistration();
   }
 
-  prepareAttributeSlotsForNative(options?: { queueRefEffects?: boolean }): void {
+  prepareAttributeSlotsForNative(options?: { publishRefEffects?: boolean }): void {
     if (!this.rawAttributeSlots) {
       return;
     }
@@ -386,16 +386,20 @@ export class BackgroundElementTemplateInstance {
       this.instanceId,
       this.rawAttributeSlots,
       {
-        queueRefEffects: options?.queueRefEffects ?? true,
+        previousPreparedSlots: this.attributeSlots,
+        previousRawSlots: this.rawAttributeSlots,
       },
     );
+    if (options?.publishRefEffects ?? true) {
+      queueRefAttributeSlotUpdates(this.type, this.instanceId, undefined, this.rawAttributeSlots);
+    }
   }
 
   prepareAttributeSlotsForHydration(): void {
     // Hydrate only rebinds the selector marker to the stable handle. The ref was
     // already made visible to user effects on the pre-hydration commit path.
     this.prepareAttributeSlotsForNative({
-      queueRefEffects: false,
+      publishRefEffects: false,
     });
   }
 
@@ -422,10 +426,13 @@ export class BackgroundElementTemplateInstance {
         this.instanceId,
         value,
         {
+          previousPreparedSlots: previousSlots,
           previousRawSlots,
-          queueRefEffects: shouldQueueRefEffects,
         },
       );
+      if (shouldQueueRefEffects) {
+        queueRefAttributeSlotUpdates(this.type, this.instanceId, previousRawSlots, value);
+      }
       this.rawAttributeSlots = nextSlots === value ? undefined : value;
       const maxLength = Math.max(previousSlots.length, nextSlots.length);
       this.attributeSlots = nextSlots;

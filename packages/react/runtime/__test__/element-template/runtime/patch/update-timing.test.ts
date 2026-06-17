@@ -52,7 +52,7 @@ describe('ElementTemplate update timing (main thread patch)', () => {
     envManager.switchToBackground(() => {
       lynx.getCoreContext().dispatchEvent({
         type: ElementTemplateLifecycleConstant.update,
-        data: payload,
+        data: JSON.stringify(payload),
       });
     });
     envManager.switchToMainThread();
@@ -80,7 +80,7 @@ describe('ElementTemplate update timing (main thread patch)', () => {
     envManager.switchToBackground(() => {
       lynx.getCoreContext().dispatchEvent({
         type: ElementTemplateLifecycleConstant.update,
-        data: payload,
+        data: JSON.stringify(payload),
       });
     });
     envManager.switchToMainThread();
@@ -102,7 +102,7 @@ describe('ElementTemplate update timing (main thread patch)', () => {
     envManager.switchToBackground(() => {
       lynx.getCoreContext().dispatchEvent({
         type: ElementTemplateLifecycleConstant.update,
-        data: payload,
+        data: JSON.stringify(payload),
       });
     });
     envManager.switchToMainThread();
@@ -124,7 +124,7 @@ describe('ElementTemplate update timing (main thread patch)', () => {
     envManager.switchToBackground(() => {
       lynx.getCoreContext().dispatchEvent({
         type: ElementTemplateLifecycleConstant.update,
-        data: payload,
+        data: JSON.stringify(payload),
       });
     });
     envManager.switchToMainThread();
@@ -144,7 +144,7 @@ describe('ElementTemplate update timing (main thread patch)', () => {
     envManager.switchToBackground(() => {
       lynx.getCoreContext().dispatchEvent({
         type: ElementTemplateLifecycleConstant.update,
-        data: payload,
+        data: JSON.stringify(payload),
       });
     });
     envManager.switchToMainThread();

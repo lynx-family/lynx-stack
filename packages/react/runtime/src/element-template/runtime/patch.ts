@@ -2,6 +2,9 @@
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
 
+import { hydrateWorkletCtx } from '@lynx-js/react/worklet-runtime/bindings';
+import type { Worklet } from '@lynx-js/react/worklet-runtime/bindings';
+
 import {
   composeElementTemplateListAttributes,
   createElementTemplateListStateFromItems,
@@ -18,6 +21,7 @@ import type { ETListFlushResult, ETListUpdateItem } from './list/list.js';
 import { elementTemplateRegistry } from './template/registry.js';
 import { ElementTemplateUpdateOps } from '../protocol/opcodes.js';
 import type { ElementTemplateUpdateOp } from '../protocol/opcodes.js';
+import { elementTemplateIdentityKey } from '../protocol/template-type.js';
 import type {
   ElementTemplateHandleSlotsCommand,
   ElementTemplateUpdateCommandStream,
@@ -29,11 +33,18 @@ import type {
   TypedElementAttributesCommand,
   UpdateTypedListItemCommand,
 } from '../protocol/types.js';
+import {
+  deleteMainThreadDynamicAttrStateForSubtree,
+  initializeMainThreadDynamicAttrSlots,
+  updateMainThreadDynamicAttrSlot,
+} from './template/main-thread-dynamic-attr-state.js';
+import type { MainThreadDynamicAttrHydrateHandoff } from './template/main-thread-dynamic-attr-state.js';
 
 export type { ElementTemplateUpdateCommandStream } from '../protocol/types.js';
 
 export function applyElementTemplateUpdateCommands(
   stream: ElementTemplateUpdateCommandStream,
+  isHydration = false,
 ): void {
   let i = 0;
   while (i < stream.length) {
@@ -64,16 +75,22 @@ export function applyElementTemplateUpdateCommands(
           continue;
         }
 
+        const nativeAttributeSlots = normalizeAttributeSlots(attributeSlots);
         const nativeRef = __CreateElementTemplate(
           templateKey,
           bundleUrl,
-          normalizeAttributeSlots(attributeSlots),
+          nativeAttributeSlots,
           resolvedElementSlots,
           handleId,
         );
 
         if (nativeRef) {
           elementTemplateRegistry.set(handleId, nativeRef);
+          initializeMainThreadDynamicAttrSlots(
+            handleId,
+            elementTemplateIdentityKey(templateKey, bundleUrl),
+            nativeAttributeSlots,
+          );
         }
         break;
       }
@@ -97,6 +114,15 @@ export function applyElementTemplateUpdateCommands(
           }
         }
         __SetAttributeOfElementTemplate(nativeRef, attrSlotIndex, value, null);
+        const hydrateHandoff = updateMainThreadDynamicAttrSlot(
+          targetId,
+          attrSlotIndex,
+          value,
+          isHydration,
+        );
+        if (isHydration) {
+          hydrateMTEventCtxIfNeeded(hydrateHandoff);
+        }
         break;
       }
 
@@ -287,10 +313,21 @@ function releaseRemovedSubtreeHandles(
   for (const handleId of removedSubtreeHandleIds) {
     const pendingRemovedSubtreeHandleIds = markElementTemplateListDestroyed(handleId);
     elementTemplateRegistry.delete(handleId);
+    deleteMainThreadDynamicAttrStateForSubtree([handleId]);
     if (pendingRemovedSubtreeHandleIds) {
       releaseRemovedSubtreeHandles(pendingRemovedSubtreeHandleIds);
     }
   }
+}
+
+function hydrateMTEventCtxIfNeeded(handoff: MainThreadDynamicAttrHydrateHandoff | undefined): void {
+  if (!handoff) {
+    return;
+  }
+  hydrateWorkletCtx(
+    handoff.nextValue as Worklet,
+    handoff.previousNativeHeldValue as Worklet,
+  );
 }
 
 function resolveElementSlots(

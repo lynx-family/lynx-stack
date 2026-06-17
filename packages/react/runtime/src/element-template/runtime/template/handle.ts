@@ -2,7 +2,12 @@
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
 
+import {
+  deleteMainThreadDynamicAttrStateForSubtree,
+  initializeMainThreadDynamicAttrSlots,
+} from './main-thread-dynamic-attr-state.js';
 import { deleteElementTemplateNativeRef, setElementTemplateNativeRef } from './registry.js';
+import { elementTemplateIdentityKey } from '../../protocol/template-type.js';
 import type {
   RuntimeElementSlots,
   RuntimeOptions,
@@ -32,7 +37,14 @@ export function createElementTemplateWithReservedHandle(
     elementSlots,
     handleId,
   );
-  setElementTemplateNativeRef(handleId, nativeRef);
+  if (nativeRef) {
+    setElementTemplateNativeRef(handleId, nativeRef);
+    initializeMainThreadDynamicAttrSlots(
+      handleId,
+      elementTemplateIdentityKey(templateKey, bundleUrl),
+      attributeSlots,
+    );
+  }
   return nativeRef;
 }
 
@@ -60,4 +72,5 @@ export function resetTemplateId(): void {
 
 export function destroyElementTemplateId(id: number): void {
   deleteElementTemplateNativeRef(id);
+  deleteMainThreadDynamicAttrStateForSubtree([id]);
 }

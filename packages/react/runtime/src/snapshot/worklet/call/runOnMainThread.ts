@@ -1,15 +1,11 @@
 // Copyright 2024 The Lynx Authors. All rights reserved.
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
-import type { RunWorkletCtxData, Worklet } from '@lynx-js/react/worklet-runtime/bindings';
-import { WorkletEvents } from '@lynx-js/react/worklet-runtime/bindings';
 
+import { createRunOnMainThread } from '../../../core/thread-function-call/main-thread.js';
+import type { RunOnMainThread } from '../../../core/thread-function-call/main-thread.js';
 import { isRendering } from '../../lifecycle/isRendering.js';
 import { __globalSnapshotPatch } from '../../lifecycle/patch/snapshotPatch.js';
-import { onPostWorkletCtx } from '../ctx.js';
-import { delayedRunOnMainThreadData } from './delayedRunOnMainThreadData.js';
-import { isMtsEnabled } from '../functionality.js';
-import { onFunctionCall } from './functionCall.js';
 
 /**
  * `runOnMainThread` allows triggering main thread functions on the main thread asynchronously.
@@ -29,31 +25,8 @@ import { onFunctionCall } from './functionCall.js';
  * ```
  * @public
  */
-export function runOnMainThread<R, Fn extends (...args: any[]) => R>(fn: Fn): (...args: Parameters<Fn>) => Promise<R> {
-  if (__LEPUS__) {
-    throw new Error('runOnMainThread can only be used on the background thread.');
-  }
-  if (!isMtsEnabled()) {
-    throw new Error('runOnMainThread requires Lynx sdk version 2.14.');
-  }
-  return async (...params: any[]): Promise<R> => {
-    return new Promise((resolve) => {
-      onPostWorkletCtx(fn as any as Worklet);
-      const resolveId = onFunctionCall(resolve);
-      const data = {
-        worklet: fn as any as Worklet,
-        params,
-        resolveId,
-      } as RunWorkletCtxData;
-      if (__globalSnapshotPatch === undefined || isRendering.value) {
-        // before hydration or is rendering
-        delayedRunOnMainThreadData.push(data);
-        return;
-      }
-      lynx.getCoreContext().dispatchEvent({
-        type: WorkletEvents.runWorkletCtx,
-        data: JSON.stringify(data),
-      });
-    });
-  };
-}
+export const runOnMainThread: RunOnMainThread = createRunOnMainThread({
+  shouldDispatchRunOnMainThreadDirectly() {
+    return __globalSnapshotPatch !== undefined && !isRendering.value;
+  },
+});

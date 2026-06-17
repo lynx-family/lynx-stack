@@ -533,7 +533,7 @@ describe('BackgroundElementTemplateInstance', () => {
 
     it('does not detach refs that never attached on a post-hydration unmaterialized subtree', () => {
       // Regression: post-hydration `setAttribute` runs with
-      // `queueRefEffects=false` on unmaterialized children (attach is deferred
+      // ref publishing disabled on unmaterialized children (attach is deferred
       // to `emitCreate`). If `removeChild` unconditionally queues a cleanup,
       // the ref observes a spurious detach for an attach that never fired.
       const ref = vi.fn();

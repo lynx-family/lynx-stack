@@ -5,11 +5,11 @@
 import { getSpreadRefFromValue, queueRefAttrUpdate } from '../prop-adapters/ref.js';
 import type { SerializableValue } from '../protocol/types.js';
 import { __etAttrPlanMap, adaptRefAttrSlot, adaptSpreadAttrSlot } from '../runtime/template/attr-slot-plan.js';
-import type { EtAttrAdapter } from '../runtime/template/attr-slot-plan.js';
+import type { EtAttrAdapter, EtAttrAdapterContext } from '../runtime/template/attr-slot-plan.js';
 
 export interface PrepareAttributeSlotsOptions {
+  previousPreparedSlots?: readonly unknown[];
   previousRawSlots?: readonly unknown[];
-  queueRefEffects?: boolean;
 }
 
 function normalizeAttributeSlots(rawSlots: readonly unknown[]): SerializableValue[] {
@@ -76,18 +76,19 @@ export function prepareAttributeSlots(
   const preparedSlots = normalizedSlots === rawSlots
     ? rawSlots.slice() as SerializableValue[]
     : normalizedSlots;
-  const shouldQueueRefEffects = options?.queueRefEffects === true;
+  const previousPreparedSlots = options?.previousPreparedSlots;
   const previousRawSlots = options?.previousRawSlots;
+  const adapterContext: EtAttrAdapterContext | undefined = previousPreparedSlots && previousRawSlots
+    ? {
+      previousPreparedSlots,
+      previousRawSlots,
+    }
+    : undefined;
   for (let planIndex = 0; planIndex < attrPlan.length; planIndex += 2) {
     const attrSlotIndex = attrPlan[planIndex] as number;
     const adapter = attrPlan[planIndex + 1] as EtAttrAdapter;
     const rawValue = rawSlots[attrSlotIndex];
-    preparedSlots[attrSlotIndex] = adapter(handleId, attrSlotIndex, rawValue);
-  }
-  if (shouldQueueRefEffects) {
-    // Ref effects compare raw user refs, not prepared marker strings or the
-    // spread wrapper object.
-    queuePlannedRefAttributeSlotUpdates(handleId, attrPlan, previousRawSlots, rawSlots);
+    preparedSlots[attrSlotIndex] = adapter(handleId, attrSlotIndex, rawValue, adapterContext);
   }
 
   return preparedSlots;

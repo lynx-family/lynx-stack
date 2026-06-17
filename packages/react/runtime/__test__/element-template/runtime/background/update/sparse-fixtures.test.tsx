@@ -66,7 +66,7 @@ describe('Sparse element slot updates', () => {
   const envManager = new ElementTemplateEnvManager();
   let updateEvents: ElementTemplateUpdateCommitContext[] = [];
   const onUpdate = (event: { data: unknown }) => {
-    updateEvents.push(event.data as ElementTemplateUpdateCommitContext);
+    updateEvents.push(JSON.parse(event.data as string) as ElementTemplateUpdateCommitContext);
   };
 
   function renderOnBackground(
@@ -129,13 +129,13 @@ describe('Sparse element slot updates', () => {
       value === ElementTemplateUpdateOps.createTemplate
       && Array.isArray(ops[index + 5])
       && (ops[index + 5] as unknown[]).length === 2
-      && !(0 in (ops[index + 5] as unknown[]))
+      && (ops[index + 5] as unknown[])[0] === null
       && (1 in (ops[index + 5] as unknown[]))
     );
     expect(sparseCreateIndex).toBeGreaterThanOrEqual(0);
     const serializedSlots = ops[sparseCreateIndex + 5] as unknown[];
     expect(serializedSlots).toHaveLength(2);
-    expect(0 in serializedSlots).toBe(false);
+    expect(serializedSlots[0]).toBe(null);
     expect(Array.isArray(serializedSlots[1])).toBe(true);
     expect((serializedSlots[1] as unknown[]).length).toBe(1);
     envManager.switchToBackground();

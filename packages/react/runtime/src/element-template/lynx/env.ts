@@ -28,6 +28,8 @@ export function setupLynxEnv(): void {
     lynx.__initData = {
       /* available only in renderPage */
     };
+    (globalThis as typeof globalThis & { SystemInfo?: unknown }).SystemInfo =
+      (lynx as typeof lynx & { SystemInfo?: unknown }).SystemInfo ?? {};
 
     lynx.triggerGlobalEventFromLepus = function(
       eventName: string,

@@ -34,7 +34,7 @@ async function setupGlobalPropsRuntime(mode: 'reactive' | 'event') {
   const emitter = new LynxTestEventEmitter();
   const updateEvents: UpdateEvent[] = [];
   const onUpdate = (event: { data: unknown }) => {
-    updateEvents.push(event.data as UpdateEvent);
+    updateEvents.push(JSON.parse(event.data as string) as UpdateEvent);
   };
 
   resetElementTemplateCommitState();

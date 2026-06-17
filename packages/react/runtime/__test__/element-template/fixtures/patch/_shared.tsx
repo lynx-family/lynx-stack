@@ -127,7 +127,7 @@ export function setupUpdateFixtureContext(): UpdateFixtureContext {
   envManager.switchToMainThread();
   installElementTemplatePatchListener();
   const onUpdate = (event: { data: unknown }) => {
-    updateEvents.push(event.data as ElementTemplateUpdateCommitContext);
+    updateEvents.push(JSON.parse(event.data as string) as ElementTemplateUpdateCommitContext);
   };
   lynx.getJSContext().addEventListener(ElementTemplateLifecycleConstant.update, onUpdate);
   envManager.switchToBackground();
