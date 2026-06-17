@@ -32,6 +32,8 @@ export async function loadCompiledFixtureModule<T extends object = CompiledFixtu
 
 interface LoadCompiledFixturePairOptions {
   backgroundTarget?: CompiledFixtureTarget;
+  enableWorkletTransform?: boolean;
+  isDynamicComponent?: boolean;
   mainTarget?: CompiledFixtureTarget;
   registerMainTemplates?: boolean;
 }
@@ -45,17 +47,27 @@ export async function loadCompiledFixturePair<T extends object = CompiledFixture
 }> {
   const {
     backgroundTarget = 'JS',
+    enableWorkletTransform = false,
+    isDynamicComponent = false,
     mainTarget = 'LEPUS',
     registerMainTemplates = true,
   } = options;
 
-  const mainArtifact = await compileFixtureSource(sourcePath, { target: mainTarget });
+  const mainArtifact = await compileFixtureSource(sourcePath, {
+    enableWorkletTransform,
+    isDynamicComponent,
+    target: mainTarget,
+  });
   if (registerMainTemplates) {
     primeCompiledFixtureTemplates(mainArtifact);
   }
   const mainModule = await loadCompiledFixtureModule<T>(mainArtifact);
 
-  const backgroundArtifact = await compileFixtureSource(sourcePath, { target: backgroundTarget });
+  const backgroundArtifact = await compileFixtureSource(sourcePath, {
+    enableWorkletTransform,
+    isDynamicComponent,
+    target: backgroundTarget,
+  });
   const backgroundModule = await loadCompiledFixtureModule<T>(backgroundArtifact);
 
   return { backgroundModule, mainModule };

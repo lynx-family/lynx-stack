@@ -7,6 +7,16 @@ import {
   registerElementTemplateListItem,
   registerElementTemplateListState,
 } from '../../../src/element-template/runtime/list/list.js';
+import {
+  clearMainThreadDynamicAttrState,
+  getMainThreadDynamicAttrState,
+  initializeMainThreadDynamicAttrSlots,
+} from '../../../src/element-template/runtime/template/main-thread-dynamic-attr-state.js';
+import {
+  __etAttrPlanMap,
+  adaptMTEventAttrSlot,
+  clearEtAttrPlanMap,
+} from '../../../src/element-template/runtime/template/attr-slot-plan.js';
 import { elementTemplateRegistry } from '../../../src/element-template/runtime/template/registry.js';
 
 type LynxWithNative = typeof globalThis & {
@@ -21,6 +31,8 @@ type LynxWithNative = typeof globalThis & {
 describe('mts-destroy', () => {
   afterEach(() => {
     elementTemplateRegistry.clear();
+    clearMainThreadDynamicAttrState();
+    clearEtAttrPlanMap();
     vi.doUnmock('../../../src/element-template/native/patch-listener.js');
     vi.doUnmock('../../../src/element-template/runtime/template/registry.js');
     vi.unstubAllGlobals();
@@ -81,11 +93,38 @@ describe('mts-destroy', () => {
   it('clears the element template registry on destruction', () => {
     const registryRef = {} as ElementRef;
     elementTemplateRegistry.set(-1, registryRef);
+    __etAttrPlanMap._et_destroy = [0, adaptMTEventAttrSlot];
+    initializeMainThreadDynamicAttrSlots(-1, '_et_destroy', [{
+      type: 'worklet',
+      value: { _wkltId: 'tap' },
+    }]);
     expect(elementTemplateRegistry.get(-1)).toBe(registryRef);
+    expect(getMainThreadDynamicAttrState(-1, 0)).toBeDefined();
 
     onMtsDestruction();
 
     expect(elementTemplateRegistry.get(-1)).toBeUndefined();
+    expect(getMainThreadDynamicAttrState(-1, 0)).toBeUndefined();
+  });
+
+  it('clears delayed runOnBackground tasks on destruction', () => {
+    const delayedBackgroundFunctionArray = [{ task: vi.fn() }];
+    globalThis.lynxWorkletImpl = {
+      ...(globalThis.lynxWorkletImpl ?? {}),
+      _runOnBackgroundDelayImpl: {
+        delayedBackgroundFunctionArray,
+        clearDelayedBackgroundFunctions: vi.fn(() => {
+          delayedBackgroundFunctionArray.length = 0;
+        }),
+      },
+    } as typeof globalThis.lynxWorkletImpl;
+
+    onMtsDestruction();
+
+    expect(globalThis.lynxWorkletImpl._runOnBackgroundDelayImpl.clearDelayedBackgroundFunctions).toHaveBeenCalledTimes(
+      1,
+    );
+    expect(delayedBackgroundFunctionArray).toHaveLength(0);
   });
 
   it('marks list callbacks destroyed on main-thread runtime destruction', () => {

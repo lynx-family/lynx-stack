@@ -16,7 +16,12 @@ import type {
   SerializedElementTemplate,
   SerializedTypedNode,
 } from '../../../../src/element-template/protocol/types.js';
-import { clearEtAttrPlanMap } from '../../../../src/element-template/runtime/template/attr-slot-plan.js';
+import {
+  __etAttrPlanMap,
+  adaptEventAttrSlot,
+  adaptMTEventAttrSlot,
+  clearEtAttrPlanMap,
+} from '../../../../src/element-template/runtime/template/attr-slot-plan.js';
 import { hydrateBackground as hydrate } from '../../test-utils/debug/hydrate.js';
 
 function createHydrationTemplate(
@@ -102,6 +107,86 @@ describe('hydrate', () => {
     } finally {
       globalThis.__DEV__ = originalDev;
     }
+  });
+
+  it('forces direct MTEvent hydrate slot updates even when wrappers are deep-equal', () => {
+    __etAttrPlanMap.root = [0, adaptMTEventAttrSlot];
+    const ctx = { _wkltId: 'tap' };
+    const root = new BackgroundElementTemplateInstance('root', [ctx]);
+
+    const stream = hydrate(
+      createHydrationTemplate(root.instanceId, 'root', {
+        attributeSlots: [{ type: 'worklet', value: { _wkltId: 'tap' } }],
+      }),
+      root,
+    );
+
+    expect(stream).toEqual([
+      ElementTemplateUpdateOps.setAttribute,
+      root.instanceId,
+      0,
+      { type: 'worklet', value: ctx },
+    ]);
+  });
+
+  it('keeps deep-equal hydrate wrappers skipped without a direct MTEvent attr plan', () => {
+    const wrapper = { type: 'worklet', value: { _wkltId: 'tap' } };
+    const root = new BackgroundElementTemplateInstance('root', [wrapper]);
+
+    const stream = hydrate(
+      createHydrationTemplate(root.instanceId, 'root', {
+        attributeSlots: [{ type: 'worklet', value: { _wkltId: 'tap' } }],
+      }),
+      root,
+    );
+
+    expect(stream).toEqual([]);
+  });
+
+  it('keeps deep-equal hydrate wrappers skipped when the planned adapter is not MTEvent', () => {
+    __etAttrPlanMap.root = [0, adaptEventAttrSlot];
+    const wrapper = { type: 'worklet', value: { _wkltId: 'tap' } };
+    const root = new BackgroundElementTemplateInstance('root');
+    root.attributeSlots = [wrapper];
+
+    const stream = hydrate(
+      createHydrationTemplate(root.instanceId, 'root', {
+        attributeSlots: [{ type: 'worklet', value: { _wkltId: 'tap' } }],
+      }),
+      root,
+    );
+
+    expect(stream).toEqual([]);
+  });
+
+  it('keeps direct MTEvent hydrate clears on the normal null diff path', () => {
+    __etAttrPlanMap.root = [0, adaptMTEventAttrSlot];
+    const root = new BackgroundElementTemplateInstance('root', [false]);
+
+    const stream = hydrate(
+      createHydrationTemplate(root.instanceId, 'root', {
+        attributeSlots: [{ type: 'worklet', value: { _wkltId: 'tap' } }],
+      }),
+      root,
+    );
+
+    expect(stream).toEqual([
+      ElementTemplateUpdateOps.setAttribute,
+      root.instanceId,
+      0,
+      null,
+    ]);
+  });
+
+  it('keeps ordinary post-hydration direct MTEvent deep-equal updates skipped', () => {
+    __etAttrPlanMap.root = [0, adaptMTEventAttrSlot];
+    const root = new BackgroundElementTemplateInstance('root', [{ _wkltId: 'tap' }]);
+
+    markElementTemplateHydrated();
+    globalCommitContext.ops = [];
+    root.setAttribute('attributeSlots', [{ _wkltId: 'tap' }]);
+
+    expect(globalCommitContext.ops).toEqual([]);
   });
 
   it('patches attribute slots while creating and inserting background-only children', () => {

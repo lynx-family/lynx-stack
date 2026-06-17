@@ -1,7 +1,8 @@
 // Copyright 2024 The Lynx Authors. All rights reserved.
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
-class IndexMap<T> {
+
+export class IndexMap<T> {
   protected lastIndex = 0;
   protected indexMap: Map<number, T> = new Map<number, T>();
 
@@ -18,6 +19,8 @@ class IndexMap<T> {
   public remove(index: number): void {
     this.indexMap.delete(index);
   }
-}
 
-export { IndexMap };
+  public get size(): number {
+    return this.indexMap.size;
+  }
+}

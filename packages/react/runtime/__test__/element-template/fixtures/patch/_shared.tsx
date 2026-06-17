@@ -23,6 +23,7 @@ import type {
   ElementTemplateUpdateCommitContext,
   SerializedElementTemplate,
 } from '../../../../src/element-template/protocol/types.js';
+import { parseElementTemplateUpdateEventPayload } from '../../../../src/element-template/protocol/update-event.js';
 import { root } from '../../../../src/element-template/client/root.js';
 import { __page } from '../../../../src/element-template/runtime/page/page.js';
 import { __root as internalRoot } from '../../../../src/element-template/runtime/page/root-instance.js';
@@ -127,7 +128,7 @@ export function setupUpdateFixtureContext(): UpdateFixtureContext {
   envManager.switchToMainThread();
   installElementTemplatePatchListener();
   const onUpdate = (event: { data: unknown }) => {
-    updateEvents.push(event.data as ElementTemplateUpdateCommitContext);
+    updateEvents.push(parseElementTemplateUpdateEventPayload(event.data));
   };
   lynx.getJSContext().addEventListener(ElementTemplateLifecycleConstant.update, onUpdate);
   envManager.switchToBackground();

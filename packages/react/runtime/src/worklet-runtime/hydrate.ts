@@ -102,7 +102,10 @@ function hydrateDelayRunOnBackgroundTasks(
     }
     for (const index of firstScreenFnObj._delayIndices) {
       const details = lynxWorkletImpl!._runOnBackgroundDelayImpl
-        .delayedBackgroundFunctionArray[index]!;
+        .delayedBackgroundFunctionArray[index];
+      if (!details) {
+        continue;
+      }
       fnObj._execId = execId;
       details.jsFnHandle = fnObj;
     }

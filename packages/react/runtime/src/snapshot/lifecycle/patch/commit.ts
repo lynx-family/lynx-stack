@@ -32,16 +32,16 @@ import type { SnapshotPatch } from './snapshotPatch.js';
 import { takeGlobalFlushOptions } from '../../../core/commit-context.js';
 import { globalPipelineOptions, markTiming, markTimingLegacy, setPipeline } from '../../../core/performance.js';
 import { getReloadVersion } from '../../../core/reload-version.js';
+import {
+  delayedRunOnMainThreadData,
+  takeDelayedRunOnMainThreadData,
+} from '../../../core/thread-function-call/main-thread.js';
 import { profileEnd, profileStart } from '../../../shared/profile.js';
 import { COMMIT } from '../../../shared/render-constants.js';
 import { hook, isEmptyObject } from '../../../utils.js';
 import { LifecycleConstant } from '../../lifecycle/constant.js';
 import { backgroundSnapshotInstanceManager } from '../../snapshot/backgroundSnapshot.js';
 import { applyQueuedRefs } from '../../snapshot/ref.js';
-import {
-  delayedRunOnMainThreadData,
-  takeDelayedRunOnMainThreadData,
-} from '../../worklet/call/delayedRunOnMainThreadData.js';
 import { sendMTRefInitValueToMainThread } from '../../worklet/ref/updateInitValue.js';
 import { isRendering } from '../isRendering.js';
 

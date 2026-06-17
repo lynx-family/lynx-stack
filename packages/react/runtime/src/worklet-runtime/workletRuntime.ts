@@ -178,11 +178,18 @@ const transformWorkletInner = (
     }
     const isWorklet = '_wkltId' in subObj;
     if (isWorklet) {
+      const isRootWorklet = subObj === ctx;
+      const boundCtx = { ...subObj };
       // `subObj` is worklet ctx. Shallow copy it to prevent the transformed worklet from referencing ctx.
       // This would result in the value of `workletCache` referencing its key.
       obj[key] = lynxWorkletImpl._workletMap[(subObj as Worklet)._wkltId]!
-        .bind({ ...subObj });
-      obj[key].ctxRef = new WeakRef(subObj as object);
+        .bind(boundCtx);
+      if (!isRootWorklet) {
+        const ctxRef = createWeakCtxRef(subObj as object);
+        if (ctxRef) {
+          obj[key].ctxRef = ctxRef;
+        }
+      }
       continue;
     }
     const isJsFn = '_jsFnId' in subObj;
@@ -196,5 +203,13 @@ const transformWorkletInner = (
     }
   }
 };
+
+function createWeakCtxRef(ctx: object): WeakRef<object> | undefined {
+  try {
+    return new WeakRef(ctx);
+  } catch {
+    return undefined;
+  }
+}
 
 export { initWorklet };

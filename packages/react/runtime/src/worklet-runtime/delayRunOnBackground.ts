@@ -12,7 +12,8 @@ interface Details {
 
 interface RunOnBackgroundDelayImpl {
   // Elements should keep the order being called by the user.
-  delayedBackgroundFunctionArray: Details[];
+  delayedBackgroundFunctionArray: Array<Details | undefined>;
+  clearDelayedBackgroundFunctions(): void;
   delayRunOnBackground(fnObj: JsFnHandle, fn: (fnId: number, execId: number) => void): void;
   runDelayedBackgroundFunctions(): void;
 }
@@ -22,6 +23,7 @@ let impl: RunOnBackgroundDelayImpl | undefined;
 function initRunOnBackgroundDelay(): RunOnBackgroundDelayImpl {
   return (impl = {
     delayedBackgroundFunctionArray: [],
+    clearDelayedBackgroundFunctions,
     delayRunOnBackground,
     runDelayedBackgroundFunctions,
   });
@@ -33,13 +35,17 @@ function delayRunOnBackground(fnObj: JsFnHandle, task: (fnId: number, execId: nu
   delayIndices.push(impl!.delayedBackgroundFunctionArray.length - 1);
 }
 
+function clearDelayedBackgroundFunctions(): void {
+  impl!.delayedBackgroundFunctionArray.length = 0;
+}
+
 function runDelayedBackgroundFunctions(): void {
   for (const details of impl!.delayedBackgroundFunctionArray) {
-    if (details.jsFnHandle) {
+    if (details?.jsFnHandle) {
       details.task(details.jsFnHandle._jsFnId!, details.jsFnHandle._execId!);
     }
   }
-  impl!.delayedBackgroundFunctionArray.length = 0;
+  clearDelayedBackgroundFunctions();
 }
 
 export { type RunOnBackgroundDelayImpl, initRunOnBackgroundDelay };

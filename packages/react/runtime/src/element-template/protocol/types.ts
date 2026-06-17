@@ -2,6 +2,8 @@
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
 
+import type { RunWorkletCtxData } from '@lynx-js/react/worklet-runtime/bindings';
+
 import { ElementTemplateUpdateOps } from './opcodes.js';
 
 export type SerializableValue =
@@ -187,6 +189,8 @@ export interface ElementTemplateFlushOptions {
 export interface ElementTemplateUpdateCommitContext {
   ops: ElementTemplateUpdateCommandStream;
   flushOptions: ElementTemplateFlushOptions;
-  flowIds?: number[];
-  reloadVersion?: number;
+  flowIds?: number[] | undefined;
+  isHydration?: boolean | undefined;
+  reloadVersion?: number | undefined;
+  delayedRunOnMainThreadData?: RunWorkletCtxData[] | undefined;
 }

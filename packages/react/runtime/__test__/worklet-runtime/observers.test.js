@@ -3,7 +3,8 @@
 // LICENSE file in the root directory of this source tree.
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
-import { onWorkletCtxUpdate, retainWorkletCtx } from '../../src/worklet-runtime/bindings/observers';
+import { hydrateWorkletCtx as hydrateWorkletCtxFromBindings } from '../../src/worklet-runtime/bindings';
+import { hydrateWorkletCtx, onWorkletCtxUpdate, retainWorkletCtx } from '../../src/worklet-runtime/bindings/observers';
 import { initWorklet } from '../../src/worklet-runtime/workletRuntime';
 
 beforeEach(() => {
@@ -65,5 +66,39 @@ describe('MTFObservers', () => {
     );
 
     expect(addRef).not.toHaveBeenCalled();
+  });
+
+  it('exports element-free ctx hydration from the bindings entry', () => {
+    expect(typeof hydrateWorkletCtxFromBindings).toBe('function');
+    expect(hydrateWorkletCtxFromBindings).toBe(hydrateWorkletCtx);
+  });
+
+  it('hydrates worklet ctx without replaying delayed worklet events', () => {
+    const hydrateCtx = vi.fn();
+    const runDelayedWorklet = vi.fn();
+    globalThis.lynxWorkletImpl._hydrateCtx = hydrateCtx;
+    globalThis.lynxWorkletImpl._eventDelayImpl.runDelayedWorklet = runDelayedWorklet;
+    const worklet = { _wkltId: 'ctx1' };
+    const oldWorklet = { _wkltId: 'ctx1' };
+
+    hydrateWorkletCtx(worklet, oldWorklet);
+
+    expect(hydrateCtx).toHaveBeenCalledWith(worklet, oldWorklet);
+    expect(runDelayedWorklet).not.toHaveBeenCalled();
+  });
+
+  it('keeps Snapshot ctx update facade compatible with legacy delayed event replay', () => {
+    const hydrateCtx = vi.fn();
+    const runDelayedWorklet = vi.fn();
+    globalThis.lynxWorkletImpl._hydrateCtx = hydrateCtx;
+    globalThis.lynxWorkletImpl._eventDelayImpl.runDelayedWorklet = runDelayedWorklet;
+    const worklet = { _wkltId: 'ctx1' };
+    const oldWorklet = { _wkltId: 'ctx1' };
+    const element = 'element';
+
+    onWorkletCtxUpdate(worklet, oldWorklet, true, element);
+
+    expect(hydrateCtx).toHaveBeenCalledWith(worklet, oldWorklet);
+    expect(runDelayedWorklet).toHaveBeenCalledWith(worklet, element);
   });
 });

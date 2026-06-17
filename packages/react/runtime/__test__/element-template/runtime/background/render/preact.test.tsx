@@ -15,6 +15,7 @@ import { formatElementTemplateUpdateCommands } from '../../../../../src/element-
 import { root } from '../../../../../src/element-template/index.js';
 import { ElementTemplateLifecycleConstant } from '../../../../../src/element-template/protocol/lifecycle-constant.js';
 import type { ElementTemplateUpdateCommitContext } from '../../../../../src/element-template/protocol/types.js';
+import { parseElementTemplateUpdateEventPayload } from '../../../../../src/element-template/protocol/update-event.js';
 import { __root } from '../../../../../src/element-template/runtime/page/root-instance.js';
 import { ElementTemplateEnvManager } from '../../../test-utils/debug/envManager.js';
 
@@ -127,7 +128,7 @@ describe('Background Preact render', () => {
   it('emits incremental typed list ops for Preact multi-mutation renders', () => {
     const updateEvents: ElementTemplateUpdateCommitContext[] = [];
     const onUpdate = (event: { data: unknown }) => {
-      updateEvents.push(event.data as ElementTemplateUpdateCommitContext);
+      updateEvents.push(parseElementTemplateUpdateEventPayload(event.data));
     };
     installElementTemplateCommitHook();
     envManager.switchToMainThread();

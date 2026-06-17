@@ -96,6 +96,34 @@ function createTransformOptions(options: CompileOptions = {}) {
   } as const;
 }
 
+async function compileMainThreadElementTemplate(source: string): Promise<TransformNodiffOutput> {
+  return await transformReactLynx(source, {
+    mode: 'test',
+    pluginName: 'runtime-transform-contract',
+    filename: 'source.tsx',
+    sourcemap: false,
+    cssScope: false,
+    elementTemplate: {
+      preserveJsx: false,
+      runtimePkg: '@lynx-js/react/element-template',
+      jsxImportSource: '@lynx-js/react/element-template',
+      filename: 'source.tsx',
+      target: 'LEPUS',
+      isDynamicComponent: false,
+    },
+    shake: false,
+    compat: true,
+    directiveDCE: false,
+    defineDCE: false,
+    worklet: {
+      filename: 'source.tsx',
+      runtimePkg: '@lynx-js/react/internal',
+      target: 'LEPUS',
+    },
+    refresh: false,
+  }) as TransformNodiffOutput;
+}
+
 async function compileAndRender(
   source: string,
   options: CompileOptions = {},
@@ -168,6 +196,48 @@ describe('render transform contract', () => {
     elementTemplateRegistry.clear();
     resetElementTemplateCommitState();
     resetTemplateId();
+  });
+
+  it('imports only the worklet runtime loader for direct main-thread events', async () => {
+    const result = await compileMainThreadElementTemplate(`
+      function handleTap() {
+        'main thread';
+      }
+
+      export function App() {
+        return <view main-thread:bindtap={handleTap} />;
+      }
+    `);
+    const code = result.code ?? '';
+
+    expect(code).toContain('from "@lynx-js/react/internal"');
+    expect(code).toContain('loadWorkletRuntime');
+    expect(code).toContain('adaptMTEventAttrSlot');
+    expect(code).not.toContain('adaptEventAttrSlot');
+    expect(code).not.toContain('registerWorkletOnBackground');
+    expect(code).not.toContain('transformToWorklet');
+  });
+
+  it('does not treat non-event main-thread attrs or refs as Track 1 MTEvent support', async () => {
+    const result = await compileMainThreadElementTemplate(`
+      function getId() {
+        'main thread';
+      }
+
+      function handleRef() {
+        'main thread';
+      }
+
+      export function App() {
+        return <view main-thread:id={getId} main-thread:ref={handleRef} />;
+      }
+    `);
+    const code = result.code ?? '';
+
+    expect(code).not.toContain('adaptMTEventAttrSlot');
+    expect(code).not.toContain('adaptRefAttrSlot');
+    expect(code).not.toContain('registerWorkletOnBackground');
+    expect(code).not.toContain('updateWorkletRef');
   });
 
   it('passes scoped css-id through ET template subtree attrs', async () => {

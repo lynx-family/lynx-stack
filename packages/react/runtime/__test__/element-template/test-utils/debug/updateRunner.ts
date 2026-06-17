@@ -13,6 +13,10 @@ import type {
   SerializedEtNode,
 } from '../../../../src/element-template/protocol/types.js';
 import {
+  createElementTemplateUpdateEvent,
+  parseElementTemplateUpdateEventPayload,
+} from '../../../../src/element-template/protocol/update-event.js';
+import {
   installElementTemplatePatchListener,
   resetElementTemplatePatchListener,
 } from '../../../../src/element-template/native/patch-listener.js';
@@ -216,7 +220,7 @@ export function runElementTemplateUpdate(options: UpdateRunOptions): UpdateRunRe
   envManager.switchToMainThread();
   installElementTemplatePatchListener();
   const onUpdate = (event: { data: unknown }) => {
-    updateEvents.push(event.data as ElementTemplateUpdateCommitContext);
+    updateEvents.push(parseElementTemplateUpdateEventPayload(event.data));
   };
   lynx.getJSContext().addEventListener(ElementTemplateLifecycleConstant.update, onUpdate);
 
@@ -245,13 +249,12 @@ export function runElementTemplateUpdate(options: UpdateRunOptions): UpdateRunRe
 
     const ops = hydrateBackground(before, afterBackground);
     if (ops.length > 0) {
-      lynx.getCoreContext().dispatchEvent({
-        type: ElementTemplateLifecycleConstant.update,
-        data: {
+      lynx.getCoreContext().dispatchEvent(
+        createElementTemplateUpdateEvent({
           ops,
           flushOptions: {},
-        },
-      });
+        }),
+      );
     }
 
     envManager.switchToMainThread();

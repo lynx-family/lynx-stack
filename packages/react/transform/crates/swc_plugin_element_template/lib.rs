@@ -443,6 +443,7 @@ where
     #[derive(Clone, Copy)]
     enum AttrPlanAdapter {
       Event,
+      MTEvent,
       Ref,
       Spread,
     }
@@ -455,6 +456,11 @@ where
           slot_index,
           ..
         } => Some((*slot_index, AttrPlanAdapter::Event)),
+        DynamicAttributePart::Attr {
+          attr_name: AttrName::WorkletEvent,
+          slot_index,
+          ..
+        } => Some((*slot_index, AttrPlanAdapter::MTEvent)),
         DynamicAttributePart::Attr {
           attr_name: AttrName::Ref,
           slot_index,
@@ -471,6 +477,7 @@ where
       .map(|(slot_index, adapter)| {
         let adapter = match adapter {
           AttrPlanAdapter::Event => "event",
+          AttrPlanAdapter::MTEvent => "mt-event",
           AttrPlanAdapter::Ref => "ref",
           AttrPlanAdapter::Spread => "spread",
         };
@@ -579,6 +586,10 @@ where
           let adapter_expr = match adapter {
             AttrPlanAdapter::Event => quote!(
               "$internal_runtime_id.adaptEventAttrSlot" as Expr,
+              internal_runtime_id: Expr = internal_runtime_id.clone(),
+            ),
+            AttrPlanAdapter::MTEvent => quote!(
+              "$internal_runtime_id.adaptMTEventAttrSlot" as Expr,
               internal_runtime_id: Expr = internal_runtime_id.clone(),
             ),
             AttrPlanAdapter::Ref => quote!(
