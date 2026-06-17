@@ -3,13 +3,21 @@
 // LICENSE file in the root directory of this source tree.
 import { spawn } from 'node:child_process';
 import { once } from 'node:events';
-import { readFile } from 'node:fs/promises';
+import {
+  copyFile,
+  mkdir,
+  mkdtemp,
+  readFile,
+  rm,
+  writeFile,
+} from 'node:fs/promises';
 import { createServer } from 'node:http';
 import type { IncomingMessage, ServerResponse } from 'node:http';
 import type { AddressInfo } from 'node:net';
-import { dirname, relative, resolve, sep } from 'node:path';
+import { dirname, join, relative, resolve, sep } from 'node:path';
 import { setTimeout as sleep } from 'node:timers/promises';
 import { fileURLToPath } from 'node:url';
+import { inspect } from 'node:util';
 
 import sharp from 'sharp';
 
@@ -18,9 +26,20 @@ import type {
 } from '../../../../testing-library/kitten-lynx/src/index.js';
 
 const HELPER_DIR = dirname(fileURLToPath(import.meta.url));
+const REPO_ROOT = resolve(HELPER_DIR, '../../../../..');
+const UI_JUDGE_TEMP_DIR = resolve(REPO_ROOT, 'packages/genui/ui-judge/temp');
+const KITTEN_LYNX_DIR = resolve(
+  REPO_ROOT,
+  'packages/testing-library/kitten-lynx',
+);
 
 export const REACT_FIXTURE_DIR = resolve(HELPER_DIR, '../fixtures/react');
 export const REACT_BUNDLE_NAME = 'main.lynx.bundle';
+const REACT_WEB_BUNDLE_NAME = 'main.web.bundle';
+const REACT_BUNDLE_NAMES = [
+  REACT_BUNDLE_NAME,
+  REACT_WEB_BUNDLE_NAME,
+] as const;
 export const REACT_REFERENCE_SNAPSHOT_PATH = resolve(
   REACT_FIXTURE_DIR,
   'main.lynx.snapshot.png',
@@ -28,6 +47,7 @@ export const REACT_REFERENCE_SNAPSHOT_PATH = resolve(
 
 const CONTENT_TIMEOUT_MS = 30_000;
 const NAVIGATION_TIMEOUT_MS = 30_000;
+const REACT_FIXTURE_BUILD_TIMEOUT_MS = 120_000;
 const POLL_INTERVAL_MS = 500;
 const LOG_LIMIT = 12_000;
 
@@ -70,6 +90,7 @@ export async function captureReactFixtureScreenshot(
 }
 
 export async function startReactFixtureServer(): Promise<FixtureServer> {
+  const fixtureBuild = await prepareReactFixtureBundles();
   const server = createServer((request, response) => {
     void handleFixtureRequest(request, response);
   });
@@ -85,16 +106,20 @@ export async function startReactFixtureServer(): Promise<FixtureServer> {
       return new URL(pathname, `${baseUrl}/`).toString();
     },
     async dispose() {
-      server.closeAllConnections();
-      await new Promise<void>((resolveClose, rejectClose) => {
-        server.close((error) => {
-          if (error) {
-            rejectClose(error);
-            return;
-          }
-          resolveClose();
+      try {
+        server.closeAllConnections();
+        await new Promise<void>((resolveClose, rejectClose) => {
+          server.close((error) => {
+            if (error) {
+              rejectClose(error);
+              return;
+            }
+            resolveClose();
+          });
         });
-      });
+      } finally {
+        await fixtureBuild.dispose();
+      }
     },
   };
 }
@@ -160,6 +185,103 @@ export async function withTimeout<T>(
       clearTimeout(timeout);
     }
   }
+}
+
+interface ReactFixtureBuild {
+  dispose(): Promise<void>;
+}
+
+async function prepareReactFixtureBundles(): Promise<ReactFixtureBuild> {
+  await mkdir(REACT_FIXTURE_DIR, { recursive: true });
+  await mkdir(UI_JUDGE_TEMP_DIR, { recursive: true });
+  await cleanupReactFixtureBundles();
+
+  const buildRoot = await mkdtemp(join(UI_JUDGE_TEMP_DIR, 'react-fixture-'));
+  const outputDir = resolve(buildRoot, 'dist');
+  const configPath = resolve(buildRoot, 'lynx.config.mjs');
+
+  try {
+    await writeFile(configPath, createReactFixtureConfig(outputDir));
+    await runCommand(
+      'pnpm',
+      [
+        '--filter',
+        '@lynx-js/kitten-lynx-test-infra',
+        'exec',
+        'rspeedy',
+        'build',
+        '--config',
+        configPath,
+        '--root',
+        KITTEN_LYNX_DIR,
+      ],
+      { cwd: REPO_ROOT, timeoutMs: REACT_FIXTURE_BUILD_TIMEOUT_MS },
+    );
+
+    for (const bundleName of REACT_BUNDLE_NAMES) {
+      await copyFile(
+        resolve(outputDir, bundleName),
+        resolve(REACT_FIXTURE_DIR, bundleName),
+      );
+    }
+
+    return {
+      async dispose() {
+        await cleanupReactFixtureBundles();
+        await rm(buildRoot, { force: true, recursive: true });
+      },
+    };
+  } catch (error) {
+    await cleanupReactFixtureBundles().catch(() => {
+      // Preserve the original build error; cleanup is best-effort here.
+    });
+    await rm(buildRoot, { force: true, recursive: true }).catch(() => {
+      // Preserve the original build error; cleanup is best-effort here.
+    });
+    throw new Error(
+      `Failed to build React fixture bundles: ${formatError(error)}`,
+    );
+  }
+}
+
+async function cleanupReactFixtureBundles(): Promise<void> {
+  await Promise.all(
+    REACT_BUNDLE_NAMES.map((bundleName) =>
+      rm(resolve(REACT_FIXTURE_DIR, bundleName), { force: true })
+    ),
+  );
+}
+
+function createReactFixtureConfig(outputDir: string): string {
+  return `import { pluginReactLynx } from '@lynx-js/react-rsbuild-plugin';
+import { defineConfig } from '@lynx-js/rspeedy';
+
+export default defineConfig({
+  source: {
+    entry: {
+      main: './test-fixture/cases/react-example/index.tsx',
+    },
+  },
+  output: {
+    cleanDistPath: true,
+    dataUriLimit: 512000,
+    distPath: {
+      root: ${JSON.stringify(outputDir)},
+    },
+    filename: {
+      bundle: '[name].[platform].bundle',
+    },
+    sourceMap: false,
+  },
+  plugins: [
+    pluginReactLynx(),
+  ],
+  environments: {
+    lynx: {},
+    web: {},
+  },
+});
+`;
 }
 
 async function waitForReactFixtureContent(
@@ -283,15 +405,28 @@ async function listAdbDevices(): Promise<string[]> {
 async function runCommand(
   command: string,
   args: string[],
+  options: { cwd?: string; timeoutMs?: number } = {},
 ): Promise<{ stdout: string }> {
   const child = spawn(command, args, {
+    cwd: options.cwd,
     stdio: ['ignore', 'pipe', 'pipe'],
   });
   const stdout = new BoundedLog();
   const stderr = new BoundedLog();
+  let didTimeout = false;
+  let timeout: ReturnType<typeof setTimeout> | undefined;
+  let forceKillTimeout: ReturnType<typeof setTimeout> | undefined;
 
   child.stdout.on('data', (chunk) => stdout.append(chunk));
   child.stderr.on('data', (chunk) => stderr.append(chunk));
+
+  if (options.timeoutMs !== undefined) {
+    timeout = setTimeout(() => {
+      didTimeout = true;
+      child.kill('SIGTERM');
+      forceKillTimeout = setTimeout(() => child.kill('SIGKILL'), 5000);
+    }, options.timeoutMs);
+  }
 
   const exitState = await new Promise<
     { code: number | null; error?: Error; signal: NodeJS.Signals | null }
@@ -302,12 +437,26 @@ async function runCommand(
     );
     child.once('exit', (code, signal) => resolveExit({ code, signal }));
   });
+  if (timeout) {
+    clearTimeout(timeout);
+  }
+  if (forceKillTimeout) {
+    clearTimeout(forceKillTimeout);
+  }
 
   if (exitState.error) {
     throw new Error(
       `Command failed to start: ${command} ${
         args.join(' ')
       }. ${exitState.error.message}`,
+    );
+  }
+
+  if (didTimeout) {
+    throw new Error(
+      `Command timed out after ${String(options.timeoutMs)}ms: ${command} ${
+        args.join(' ')
+      }.\n\n${formatLogs(stdout, stderr)}`,
     );
   }
 
@@ -324,4 +473,8 @@ async function runCommand(
 
 function formatLogs(stdout: BoundedLog, stderr: BoundedLog): string {
   return `stdout:\n${stdout.toString()}\n\nstderr:\n${stderr.toString()}`;
+}
+
+function formatError(error: unknown): string {
+  return error instanceof Error ? error.message : inspect(error);
 }
