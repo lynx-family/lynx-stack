@@ -1,34 +1,108 @@
-import { Lynx } from '../src/Lynx.js';
-import { describe, it, expect, beforeAll, afterAll } from 'vitest';
+import { createServer, type Server } from 'node:http';
 import path from 'node:path';
+import { readFile } from 'node:fs/promises';
 import { fileURLToPath } from 'node:url';
-import jpeg from 'jpeg-js';
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
-const cwd = path.dirname(__dirname);
 
 import { AdbServerClient, type Adb } from '@yume-chan/adb';
 import { AdbServerNodeTcpConnector } from '@yume-chan/adb-server-node-tcp';
 import { execa } from 'execa';
+import jpeg from 'jpeg-js';
+import { describe, it, expect, beforeAll, afterAll } from 'vitest';
+
+import { Lynx } from '../src/Lynx.js';
 import type { KittenLynxView } from '../src/KittenLynxView.js';
-execa({
-  env: {
-    ...process.env,
-    NODE_ENV: 'development',
-  },
-  cwd,
-  stdio: 'inherit',
-  shell: true,
-  cleanup: true,
-})`pnpm serve`;
-// Using Rspeedy Node API resolving instead of child_process
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+const cwd = path.dirname(__dirname);
+const fixtureDistDir = path.resolve(cwd, 'test-fixture/.generated');
+
+async function buildFixture() {
+  await execa('pnpm', ['run', 'build:fixture'], {
+    env: {
+      ...process.env,
+      NODE_ENV: 'production',
+    },
+    cwd,
+    stdio: 'inherit',
+    cleanup: true,
+  });
+}
+
+async function startFixtureServer(): Promise<Server> {
+  const server = createServer(async (request, response) => {
+    try {
+      const requestUrl = new URL(request.url ?? '/', 'http://127.0.0.1');
+      const filePath = path.resolve(
+        fixtureDistDir,
+        requestUrl.pathname.replace(/^\/+/, ''),
+      );
+      const relativePath = path.relative(fixtureDistDir, filePath);
+      if (
+        relativePath.startsWith('..')
+        || path.isAbsolute(relativePath)
+      ) {
+        response.writeHead(403);
+        response.end('Forbidden');
+        return;
+      }
+
+      const content = await readFile(filePath);
+      response.setHeader('Content-Type', getContentType(filePath));
+      response.end(content);
+    } catch {
+      response.writeHead(404);
+      response.end('Not found');
+    }
+  });
+
+  await new Promise<void>((resolveListen, rejectListen) => {
+    server.once('error', rejectListen);
+    server.listen(3001, '0.0.0.0', () => {
+      server.off('error', rejectListen);
+      resolveListen();
+    });
+  });
+
+  return server;
+}
+
+function getContentType(filePath: string): string {
+  if (filePath.endsWith('.bundle') || filePath.endsWith('.js')) {
+    return 'application/javascript; charset=utf-8';
+  }
+  if (filePath.endsWith('.png')) {
+    return 'image/png';
+  }
+  return 'application/octet-stream';
+}
+
+async function closeFixtureServer(server: Server | undefined) {
+  if (!server) {
+    return;
+  }
+  server.closeAllConnections();
+  await new Promise<void>((resolveClose, rejectClose) => {
+    server.close((error) => {
+      if (error) {
+        rejectClose(error);
+        return;
+      }
+      resolveClose();
+    });
+  });
+}
 
 describe('kitten-lynx testing framework', () => {
   let lynx: Lynx;
   let adb: Adb;
   let page: KittenLynxView;
+  let fixtureServer: Server | undefined;
 
   beforeAll(async () => {
+    await buildFixture();
+    fixtureServer = await startFixtureServer();
+
     // Use ADB port forwarding
     const client = new AdbServerClient(
       new AdbServerNodeTcpConnector({ port: 5037 }),
@@ -53,6 +127,7 @@ describe('kitten-lynx testing framework', () => {
 
   afterAll(async () => {
     await lynx?.close();
+    await closeFixtureServer(fixtureServer);
   });
 
   it('can navigate to a page and read the DOM', async () => {
