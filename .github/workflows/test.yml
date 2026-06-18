@@ -351,12 +351,13 @@ jobs:
         done
         echo "Lynx Explorer is running."
 
-        # 8. Run the tests
-        pnpm --filter @lynx-js/kitten-lynx-test-infra run test --coverage --reporter=github-actions --reporter=dot --reporter=junit --outputFile=test-report.junit.xml --coverage.reporter='json' --coverage.reporter='text' --testTimeout=50000 --no-cache --logHeapUsage --silent
+        # 8. Run the tests (rstest CLI — vitest-only flags like --reporter=dot /
+        # --coverage.reporter / --logHeapUsage are not supported)
+        pnpm --filter @lynx-js/kitten-lynx-test-infra run test --reporter=github-actions --testTimeout=50000
         if [ -z "${MIDSCENE_MODEL_NAME:-}" ] || [ -z "${MIDSCENE_MODEL_API_KEY:-}" ]; then
           echo "Midscene secrets are unavailable; skipping UI Judge Android integration."
         else
-          UI_JUDGE_ANDROID_INTEGRATION=1 pnpm --filter @lynx-js/ui-judge run test:android --coverage --reporter=github-actions --reporter=dot --reporter=junit --outputFile=ui-judge-android-test-report.junit.xml --coverage.reporter='json' --coverage.reporter='text' --testTimeout=50000 --no-cache --logHeapUsage --silent
+          UI_JUDGE_ANDROID_INTEGRATION=1 pnpm --filter @lynx-js/ui-judge run test:android --reporter=github-actions --testTimeout=50000
         fi
 
   test-typos:
