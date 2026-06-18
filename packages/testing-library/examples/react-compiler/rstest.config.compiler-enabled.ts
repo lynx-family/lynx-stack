@@ -1,5 +1,9 @@
+import { createRequire } from 'node:module';
+
 import { defineConfig } from '@rstest/core';
 import { withLynxConfig } from '@lynx-js/react/testing-library/rstest-config';
+
+const require = createRequire(import.meta.url);
 
 export default defineConfig({
   name: 'testing-library/examples/react-compiler-enabled',

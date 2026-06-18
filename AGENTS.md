@@ -158,7 +158,7 @@ export NODE_OPTIONS="--max-old-space-size=32768"
 - `turbo.json` - Monorepo build orchestration
 - `pnpm-workspace.yaml` - Workspace package definitions
 - `tsconfig.json` - TypeScript configuration (strictest mode)
-- `vitest.config.ts` - Test runner configuration
+- `rstest.config.ts` - Test runner configuration
 - `eslint.config.js` - Linting rules (complex, includes React/TS rules)
 - `.dprint.jsonc` - Code formatting configuration
 - `biome.jsonc` - Additional code quality rules
@@ -173,7 +173,7 @@ The CI runs these checks (replicate locally for confidence):
 3. **Changeset validation**: `pnpm changeset status --since=origin/main`
 4. **Linting**: `pnpm eslint .` (allow 5+ minutes)
 5. **TypeScript compilation**: Part of `pnpm turbo build`
-6. **Unit tests**: `pnpm test` (vitest-based, requires build)
+6. **Unit tests**: `pnpm test` (rstest-based, requires build)
 7. **E2E tests**: Web platform tests with Playwright
 8. **Rust tests**: `cargo test --all-targets --all-features` in Rust packages
 9. **Type checking**: `pnpm -r run test:type`

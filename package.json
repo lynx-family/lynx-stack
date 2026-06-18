@@ -9,7 +9,7 @@
   "scripts": {
     "build": "tsc --build",
     "prepare": "husky && ts-patch install",
-    "test": "rstest run -c rstest.config.ts"
+    "test": "rstest run -c rstest.config.ts && pnpm --filter @lynx-js/react-runtime --filter @lynx-js/reactlynx-testing-library --filter @lynx-js/gesture-runtime --filter @lynx-js/use-sync-external-store --filter @lynx-js/motion --filter @lynx-js/testing-environment --filter @lynx-js/testing-library-example-basic --filter @lynx-js/testing-library-example-library --filter @lynx-js/testing-library-example-react-compiler run test"
   },
   "lint-staged": {
     "*.{ts,tsx,js,jsx,cjs,mjs,css,sass,scss,less,html,yml,yaml,rs,toml,md,json}": [

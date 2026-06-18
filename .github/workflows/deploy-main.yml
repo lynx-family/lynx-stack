@@ -88,17 +88,12 @@ jobs:
       CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
     with:
       runs-on: lynx-ubuntu-24.04-medium
-      run: >
-        pnpm run test
-        --testTimeout=50000
-        --hookTimeout=50000
-        --reporter=dot
-        --reporter=junit
-        --outputFile=test-report.junit.xml
-        --coverage
-        --no-cache
-        --logHeapUsage
-        --silent
+      run: |
+        pnpm exec rstest run -c rstest.config.ts --coverage --testTimeout=50000 --hookTimeout=50000
+        # ReactLynx-DOM suites can't aggregate into rstest.config.ts (per-package
+        # `@lynx-js/react/jsx-runtime` alias), so run them per-package — mirrors
+        # the `test-rstest` job in test.yml.
+        pnpm --filter @lynx-js/react-runtime --filter @lynx-js/reactlynx-testing-library --filter @lynx-js/gesture-runtime --filter @lynx-js/use-sync-external-store --filter @lynx-js/motion --filter @lynx-js/testing-environment --filter @lynx-js/testing-library-example-basic --filter @lynx-js/testing-library-example-library --filter @lynx-js/testing-library-example-react-compiler run test
   coverage-web-elements:
     needs: build-all
     uses: ./.github/workflows/workflow-test.yml
