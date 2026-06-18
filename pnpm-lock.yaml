@@ -274,9 +274,6 @@ importers:
       '@lynx-js/types':
         specifier: 3.7.0
         version: 3.7.0
-      '@rstest/core':
-        specifier: catalog:rstest
-        version: 0.10.5(core-js@3.48.0)(jsdom@27.4.0)
       '@types/react':
         specifier: ^18.3.28
         version: 18.3.28
@@ -601,9 +598,6 @@ importers:
       '@lynx-js/types':
         specifier: 3.7.0
         version: 3.7.0
-      '@rstest/core':
-        specifier: catalog:rstest
-        version: 0.10.5(core-js@3.48.0)(jsdom@27.4.0)
       '@types/react':
         specifier: ^18.3.28
         version: 18.3.28
