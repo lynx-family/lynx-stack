@@ -12,12 +12,18 @@ The interactive flow lets you choose one or more library features:
 - Element
 - Service
 
+It also lets you choose one or more Native platforms:
+
+- Android
+- iOS
+
 For non-interactive usage:
 
 ```bash
 npm create lynx-library -- \
   --dir ./lynx-button \
   --features native-module,element,service \
+  --platforms android,ios \
   --package-name @example/lynx-button \
   --android-package com.example.button \
   --module-name ButtonModule \
@@ -26,8 +32,10 @@ npm create lynx-library -- \
 ```
 
 Use `--features all` to generate a package that contains all supported library
-features.
+features. Use `--platforms all` to generate native directories for all supported
+Native platforms. When `--platforms` is omitted in non-interactive usage,
+Android and iOS are both generated.
 
-Generated libraries include `lynx.lib.json`, JS facade sources, Android and
-iOS native examples, an example app skeleton, and a `codegen` script powered by
-the current published version of `@lynx-js/autolink-codegen`.
+Generated libraries include `lynx.lib.json`, JS facade sources, selected Native
+platform examples, an example app skeleton, and a `codegen` script powered by the
+current published version of `@lynx-js/autolink-codegen`.

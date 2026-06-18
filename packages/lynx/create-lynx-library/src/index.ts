@@ -6,10 +6,12 @@ import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 export type LibraryFeature = 'native-module' | 'element' | 'service';
+export type LibraryPlatform = 'android' | 'ios';
 
 export interface CreateLynxLibraryOptions {
   dir: string;
   features: LibraryFeature[];
+  platforms?: LibraryPlatform[];
   packageName?: string;
   androidPackage?: string;
   moduleName?: string;
@@ -34,6 +36,7 @@ interface TemplateContext {
   serviceProtocolName: string;
   dependencyVersions: Record<string, string>;
   features: Set<LibraryFeature>;
+  platforms: Set<LibraryPlatform>;
 }
 
 interface PackageJson {
@@ -47,6 +50,10 @@ export const LIBRARY_FEATURES: readonly LibraryFeature[] = [
   'native-module',
   'element',
   'service',
+] as const;
+export const LIBRARY_PLATFORMS: readonly LibraryPlatform[] = [
+  'android',
+  'ios',
 ] as const;
 
 const PACKAGE_ROOT = path.resolve(
@@ -93,7 +100,19 @@ export function createLynxLibrary(
     }
   }
 
-  const context = createContext(options, features);
+  const platforms = new Set(options.platforms ?? LIBRARY_PLATFORMS);
+
+  if (platforms.size === 0) {
+    throw new Error('At least one Native platform must be selected');
+  }
+
+  for (const platform of platforms) {
+    if (!isLibraryPlatform(platform)) {
+      throw new Error(`Unsupported Native platform: ${String(platform)}`);
+    }
+  }
+
+  const context = createContext(options, features, platforms);
   const files = createFiles(context);
 
   for (const file of files) {
@@ -138,11 +157,46 @@ export function parseLibraryFeatures(source: string): LibraryFeature[] {
 }
 
 /**
+ * Parses a comma-separated Native platform list from CLI input.
+ */
+export function parseLibraryPlatforms(source: string): LibraryPlatform[] {
+  const normalizedSource = source.trim().toLowerCase();
+
+  if (normalizedSource === 'all') {
+    return [...LIBRARY_PLATFORMS];
+  }
+
+  const platforms = normalizedSource.split(',').map((platform) =>
+    platform.trim()
+  )
+    .filter(Boolean);
+
+  if (platforms.length === 0) {
+    return [];
+  }
+
+  return platforms.map((platform) => {
+    if (!isLibraryPlatform(platform)) {
+      throw new Error(
+        `Unsupported Native platform "${platform}". Expected one of: ${
+          LIBRARY_PLATFORMS.join(
+            ', ',
+          )
+        }`,
+      );
+    }
+
+    return platform;
+  });
+}
+
+/**
  * Derives template names and platform identifiers from scaffold options.
  */
 function createContext(
   options: CreateLynxLibraryOptions,
   features: Set<LibraryFeature>,
+  platforms: Set<LibraryPlatform>,
 ): TemplateContext {
   const directoryName = path.basename(path.resolve(options.dir));
   const packageName = options.packageName
@@ -168,6 +222,7 @@ function createContext(
     dependencyVersions: options.dependencyVersions
       ?? readDefaultDependencyVersions(),
     features,
+    platforms,
   };
 }
 
@@ -204,8 +259,13 @@ function createFilesFromTemplateGroup(
   const root = path.join(PACKAGE_ROOT, group);
   const replacements = createTemplateReplacements(context);
 
-  return listTemplateFiles(root).map((absolutePath) => {
+  return listTemplateFiles(root).flatMap((absolutePath) => {
     const relativePath = toPosixPath(path.relative(root, absolutePath));
+
+    if (!shouldCreateTemplateFile(relativePath, context)) {
+      return [];
+    }
+
     const renderedPath = renderTemplate(relativePath, replacements);
     const filePath = stripTemplateFileSuffix(renderedPath);
     const content = renderTemplate(
@@ -213,7 +273,7 @@ function createFilesFromTemplateGroup(
       replacements,
     );
 
-    return {
+    return [{
       path: filePath,
       content: filePath.endsWith('package.json')
         ? replacePackageDependencyVersions(
@@ -222,8 +282,26 @@ function createFilesFromTemplateGroup(
           filePath,
         )
         : content,
-    };
+    }];
   });
+}
+
+/**
+ * Drops native platform directories that the scaffold does not target.
+ */
+function shouldCreateTemplateFile(
+  relativePath: string,
+  context: TemplateContext,
+): boolean {
+  if (relativePath.startsWith('android/')) {
+    return context.platforms.has('android');
+  }
+
+  if (relativePath.startsWith('ios/')) {
+    return context.platforms.has('ios');
+  }
+
+  return true;
 }
 
 /**
@@ -350,6 +428,9 @@ function createTemplateReplacements(
     IOS_SERVICE_API_DEPENDENCY: iosServiceApiDependency(context),
     MODULE_NAME: context.moduleName,
     PACKAGE_NAME: context.packageName,
+    PACKAGE_FILES: packageFiles(context),
+    PLATFORM_DIRECTORY_LIST: platformDirectoryList(context),
+    PLATFORM_MANIFEST_ENTRIES: platformManifestEntries(context),
     PODSPEC_NAME: podspecName(context.packageName),
     SERVICE_NAME: context.serviceName,
     SERVICE_PROTOCOL_NAME: context.serviceProtocolName,
@@ -466,9 +547,63 @@ function exampleElement(context: TemplateContext): string {
  * Adds the service API pod only when the generated iOS service marker needs it.
  */
 function iosServiceApiDependency(context: TemplateContext): string {
-  return context.features.has('service')
+  return context.platforms.has('ios') && context.features.has('service')
     ? `  s.dependency 'LynxServiceAPI'`
     : '';
+}
+
+/**
+ * Generates the package files list for the selected native platforms.
+ */
+function packageFiles(context: TemplateContext): string {
+  const files = [
+    ...(context.platforms.has('android') ? ['android'] : []),
+    'generated',
+    ...(context.platforms.has('ios') ? ['ios'] : []),
+    'src',
+    'types',
+    'lynx.lib.json',
+    'README.md',
+  ];
+
+  return files.map((file) => `    ${JSON.stringify(file)}`).join(',\n');
+}
+
+/**
+ * Generates the platform entries in lynx.lib.json.
+ */
+function platformManifestEntries(context: TemplateContext): string {
+  const entries: string[] = [];
+
+  if (context.platforms.has('android')) {
+    entries.push(`    "android": {
+      "packageName": ${JSON.stringify(context.androidPackage)},
+      "sourceDir": "android"
+    }`);
+  }
+
+  if (context.platforms.has('ios')) {
+    entries.push(`    "ios": {
+      "sourceDir": "ios",
+      "podspecPath": "ios/build.podspec"
+    }`);
+  }
+
+  return entries.join(',\n');
+}
+
+/**
+ * Formats the selected native platform directories for generated README text.
+ */
+function platformDirectoryList(context: TemplateContext): string {
+  const dirs = LIBRARY_PLATFORMS.filter((platform) =>
+    context.platforms.has(platform)
+  )
+    .map((platform) => `\`${platform}/\``);
+
+  return dirs.length === 1
+    ? dirs[0] ?? ''
+    : `${dirs[0] ?? ''} and ${dirs[1] ?? ''}`;
 }
 
 /**
@@ -521,4 +656,11 @@ function podspecName(packageName: string): string {
  */
 function isLibraryFeature(type: string): type is LibraryFeature {
   return (LIBRARY_FEATURES as readonly string[]).includes(type);
+}
+
+/**
+ * Checks whether a string is a supported Native platform.
+ */
+function isLibraryPlatform(type: string): type is LibraryPlatform {
+  return (LIBRARY_PLATFORMS as readonly string[]).includes(type);
 }

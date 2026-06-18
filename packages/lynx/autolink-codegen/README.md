@@ -6,8 +6,12 @@ It scans `types/**/*.d.ts` for native module declarations annotated with
 `/** @lynxmodule */`, reads `lynx.lib.json`, and generates:
 
 - `generated/<ModuleName>.ts`
-- Android `<ModuleName>Spec.java`
-- iOS `<ModuleName>Spec.h` and `<ModuleName>Spec.m`
+- Android `<ModuleName>Spec.java`, when `platforms.android` is declared
+- iOS `<ModuleName>Spec.h` and `<ModuleName>Spec.m`, when `platforms.ios` is
+  declared
+
+`lynx.lib.json` must declare at least one supported Native platform under
+`platforms`.
 
 Run it from a library package:
 
