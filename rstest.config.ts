@@ -21,11 +21,15 @@ export default defineConfig({
     'packages/genui/cli/rstest.config.ts',
     'packages/genui/ui-judge/rstest.config.ts',
     'packages/i18n/*/rstest.config.ts',
-    // ReactLynx-DOM suites (gesture-runtime, testing-library family) are NOT
-    // aggregated here: rstest's root `projects` context cannot resolve their
-    // per-package `@lynx-js/react/jsx-runtime` alias (applied by
-    // `pluginReactLynx`). They run per-package via the `test-rstest-pkg` CI job
-    // instead (the same pattern as `test-react`).
+    // Only node-env packages are aggregated here. The ReactLynx-DOM suites
+    // (gesture-runtime, the testing-library family, react/runtime, motion,
+    // use-sync) are NOT: when rstest loads every project from the repo-root
+    // context it cannot resolve their per-package `@lynx-js/react/*` (`src` +
+    // jsx-runtime) aliases that `withDefaultConfig` sets up. They run
+    // per-package instead, in the `test-rstest` job's second command
+    // (`pnpm --filter … run test`). That is also why `lynx/*` is listed
+    // explicitly below rather than as a glob — a glob would pull in the DOM
+    // package `gesture-runtime` and break the aggregate.
     'packages/lynx/autolink-codegen/rstest.config.ts',
     'packages/lynx/create-lynx-library/rstest.config.ts',
     'packages/react/transform/rstest.config.ts',
