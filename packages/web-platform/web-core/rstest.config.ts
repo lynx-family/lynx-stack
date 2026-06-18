@@ -7,6 +7,9 @@ const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const config: ReturnType<typeof defineConfig> = defineConfig({
   name: 'web-platform/web-core',
   include: ['./tests/*.spec.ts'],
+  // `*.bench.spec.ts` are vitest benchmarks (run via `pnpm run bench` under
+  // codspeed); rstest has no bench API, so keep them out of the test run.
+  exclude: ['**/node_modules/**', './tests/*.bench.spec.ts'],
   // The jsdom environment is instantiated manually in `tests/jsdom.ts`
   // (imported by each spec via `import './jsdom.js'`). That setup file
   // surfaces jsdom globals, mocks `fetch` for wasm loading and provides a

@@ -1,7 +1,14 @@
 import { JSDOM } from 'jsdom';
 import * as fs from 'fs';
 import { fileURLToPath } from 'url';
-import { rstest } from '@rstest/core';
+
+// `jsdom.ts` is shared by the rstest test run AND the vitest benchmark
+// (`pnpm run bench`). Take the runner's mock API from the global — `rstest`
+// under rstest, `vi` under vitest — instead of hard-importing a runner.
+const mockApi: {
+  mockObject: (o: object) => any;
+  fn: () => { mockReturnValue: (v: unknown) => unknown };
+} = (globalThis as any).rstest ?? (globalThis as any).vi;
 
 const { window } = new JSDOM(undefined, { url: 'http://localhost/' });
 const document = window.document;
@@ -107,8 +114,8 @@ Object.assign(globalThis, {
   requestAnimationFrame: (cb: any) => setTimeout(cb, 0),
   Worker: MockWorker,
   location: window.location,
-  CSS: rstest.mockObject({
-    supports: rstest.fn().mockReturnValue(true),
+  CSS: mockApi.mockObject({
+    supports: mockApi.fn().mockReturnValue(true),
   }),
   // jsdom provides these on `window` but does not surface them as globals;
   // production code relies on these being available globally, and the
