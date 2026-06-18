@@ -13,6 +13,9 @@ export default defineConfig({
   },
   output: {
     assetPrefix: 'http://127.0.0.1:3001/',
+    distPath: {
+      root: 'test-fixture/.generated',
+    },
   },
   plugins: [
     pluginReactLynx(),
