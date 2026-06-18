@@ -184,10 +184,11 @@ describe('Compiled runOnMainThread background fixtures', () => {
     expect(mainArtifact.code).not.toContain('snapshot/');
   });
 
-  // SKIP (stale native transform binary): runOnMainThread relies on the ET
-  // MTS-bridge codegen (#2852) the installed transform `.node` binary does not
-  // yet emit, so the compiled fixture never produces the main-thread Promise.
-  // Pre-existing failure; out of scope (needs a transform rebuild).
+  // SKIP: the compiled main-thread-function delivery path (pre-hydrate /
+  // delayed update / outside-render dispatch) does not reproduce under the
+  // element-template in-process compiled-fixture harness — the pre-hydrate
+  // `runOnMainThread` promise is never registered. Unrelated to the transform
+  // binary (fails with a freshly built one); needs an ET harness fix.
   it.skip('delivers pre-hydrate compiled render calls through delayed-only hydrate payloads', async () => {
     const { backgroundModule, mainModule } = await loadFixture();
     const dispatchSpy = rstest.spyOn(lynx.getCoreContext(), 'dispatchEvent');
@@ -226,9 +227,11 @@ describe('Compiled runOnMainThread background fixtures', () => {
     await expect(hydratePromise).resolves.toBe('main:hydrate:first');
   });
 
-  // SKIP (stale native transform binary): runOnMainThread relies on the ET
-  // MTS-bridge codegen (#2852) the installed transform `.node` binary does not
-  // yet emit. Pre-existing failure; out of scope (needs a transform rebuild).
+  // SKIP: the compiled main-thread-function delivery path (pre-hydrate /
+  // delayed update / outside-render dispatch) does not reproduce under the
+  // element-template in-process compiled-fixture harness — the pre-hydrate
+  // `runOnMainThread` promise is never registered. Unrelated to the transform
+  // binary (fails with a freshly built one); needs an ET harness fix.
   it.skip('keeps post-hydration compiled render calls on the delayed update path', async () => {
     const { backgroundModule, mainModule } = await loadFixture();
 
@@ -266,9 +269,11 @@ describe('Compiled runOnMainThread background fixtures', () => {
     await expect(updatePromise).resolves.toBe('main:update:second');
   });
 
-  // SKIP (stale native transform binary): runOnMainThread relies on the ET
-  // MTS-bridge codegen (#2852) the installed transform `.node` binary does not
-  // yet emit. Pre-existing failure; out of scope (needs a transform rebuild).
+  // SKIP: the compiled main-thread-function delivery path (pre-hydrate /
+  // delayed update / outside-render dispatch) does not reproduce under the
+  // element-template in-process compiled-fixture harness — the pre-hydrate
+  // `runOnMainThread` promise is never registered. Unrelated to the transform
+  // binary (fails with a freshly built one); needs an ET harness fix.
   it.skip('dispatches post-hydration compiled calls made outside render directly', async () => {
     const { backgroundModule, mainModule } = await loadFixture();
 

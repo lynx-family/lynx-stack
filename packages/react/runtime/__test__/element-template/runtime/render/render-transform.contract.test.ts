@@ -186,11 +186,7 @@ describe('render transform contract', () => {
     resetTemplateId();
   });
 
-  // SKIP (stale native transform binary): asserts the ET MTS-bridge codegen
-  // (`adaptMTEventAttrSlot`, #2852) which the installed @lynx-js/react-transform
-  // `.node` binary (predates the feature) never emits. Pre-existing failure
-  // unrelated to the test runner; out of scope (needs a transform rebuild).
-  it.skip('imports only the worklet runtime loader for direct main-thread events', async () => {
+  it('imports only the worklet runtime loader for direct main-thread events', async () => {
     const result = await compileMainThreadElementTemplate(`
       function handleTap() {
         'main thread';
@@ -328,11 +324,7 @@ describe('render transform contract', () => {
     ]);
   });
 
-  // SKIP (stale native transform binary): asserts the ET typed-list codegen
-  // (`__listItemPlatformInfo`, #2806) which the installed transform `.node`
-  // binary never emits. Pre-existing failure; out of scope (needs a transform
-  // rebuild).
-  it.skip('creates transformed lists as typed holders with detached list item roots', async () => {
+  it('creates transformed lists as typed holders with detached list item roots', async () => {
     const { rootRef } = await compileAndRender(`
       export function App() {
         return (
@@ -396,11 +388,7 @@ describe('render transform contract', () => {
     });
   });
 
-  // SKIP (stale native transform binary): asserts the ET typed-list codegen
-  // (`__listItemPlatformInfo`, #2806) which the installed transform `.node`
-  // binary never emits. Pre-existing failure; out of scope (needs a transform
-  // rebuild).
-  it.skip('keeps transformed deferred list items outside ET list phase 1 support', async () => {
+  it('keeps transformed deferred list items outside ET list phase 1 support', async () => {
     const source = `
       export function App() {
         return (
@@ -417,10 +405,7 @@ describe('render transform contract', () => {
     expect(result.code).toContain('__listItemPlatformInfo');
   });
 
-  // SKIP (stale native transform binary): exercises the ET typed-list runtime
-  // path (#2806), whose codegen the installed transform `.node` binary does not
-  // emit. Pre-existing failure; out of scope (needs a transform rebuild).
-  it.skip('chains transformed list create, serialize, hydrate, update, and callbacks', async () => {
+  it('chains transformed list create, serialize, hydrate, update, and callbacks', async () => {
     const { rootRef } = await compileAndRender(`
       export function App() {
         return (
