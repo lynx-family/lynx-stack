@@ -224,8 +224,9 @@ function cloneComponentTree(
     rewriteStringField(clonedRecord, field, resolveChild);
   }
 
-  if (Array.isArray(clonedRecord['tabs'])) {
-    clonedRecord['tabs'] = clonedRecord['tabs'].map((tab) => {
+  const tabs = clonedRecord['tabs'];
+  if (Array.isArray(tabs)) {
+    clonedRecord['tabs'] = tabs.map((tab: unknown): unknown => {
       if (!isObject(tab)) return tab;
       const childId = tab['child'];
       if (typeof childId !== 'string') return tab;
@@ -350,7 +351,7 @@ function stripInternalComponentState(
   component: ComponentInstance,
 ): ComponentInstance {
   const out = cloneJson(component) as ComponentInstance & JsonRecord;
-  delete out['__template'];
+  delete out.__template;
   return out;
 }
 
@@ -399,7 +400,9 @@ function createComponentsMessage(
     version: 'v0.9',
     updateComponents: {
       surfaceId,
-      components: components.map(stripInternalComponentState),
+      components: components.map(component =>
+        stripInternalComponentState(component)
+      ),
     },
   } as ServerToClientMessage;
 }

@@ -4,43 +4,111 @@
 import { describe, expect, test } from '@rstest/core';
 
 import { compactA2UIMessagesToSnapshot } from '../src/snapshot/index.js';
-import type {
-  ComponentInstance,
-  ServerToClientMessage,
-} from '../src/store/types.js';
+import type { ServerToClientMessage } from '../src/store/types.js';
 
-function componentMessages(
-  result: ReturnType<typeof compactA2UIMessagesToSnapshot>,
-) {
-  return result.messages.filter((message) =>
-    'updateComponents' in message && message.updateComponents
-  );
+type SnapshotResult = ReturnType<typeof compactA2UIMessagesToSnapshot>;
+type SnapshotComponent = Record<string, unknown> & {
+  id?: string;
+  dataContextPath?: string;
+};
+
+interface ComponentUpdate {
+  components: SnapshotComponent[];
 }
 
-function components(result: ReturnType<typeof compactA2UIMessagesToSnapshot>) {
-  return componentMessages(result).flatMap((message) =>
-    (message.updateComponents?.components ?? []) as ComponentInstance[]
-  );
+interface DataUpdate {
+  path?: string;
+  value?: unknown;
+}
+
+interface DataMessage {
+  updateDataModel: DataUpdate;
+}
+
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return typeof value === 'object' && value !== null;
+}
+
+function getComponentUpdate(
+  message: ServerToClientMessage,
+): ComponentUpdate | null {
+  const updateComponents =
+    (message as { updateComponents?: unknown }).updateComponents;
+  if (!isRecord(updateComponents)) return null;
+
+  const rawComponents = updateComponents['components'];
+  if (!Array.isArray(rawComponents)) return null;
+
+  const components: SnapshotComponent[] = [];
+  for (const rawComponent of rawComponents) {
+    if (isRecord(rawComponent)) components.push(rawComponent);
+  }
+  return { components };
+}
+
+function getDataUpdate(message: ServerToClientMessage): DataUpdate | null {
+  const updateDataModel =
+    (message as { updateDataModel?: unknown }).updateDataModel;
+  if (!isRecord(updateDataModel)) return null;
+
+  const path = updateDataModel['path'];
+  return {
+    ...(typeof path === 'string' ? { path } : {}),
+    value: updateDataModel['value'],
+  };
+}
+
+function componentMessages(
+  result: SnapshotResult,
+): ComponentUpdate[] {
+  const out: ComponentUpdate[] = [];
+  for (const message of result.messages) {
+    const update = getComponentUpdate(message);
+    if (update) out.push(update);
+  }
+  return out;
+}
+
+function components(result: SnapshotResult): SnapshotComponent[] {
+  const out: SnapshotComponent[] = [];
+  for (const update of componentMessages(result)) {
+    out.push(...update.components);
+  }
+  return out;
 }
 
 function componentIds(
-  result: ReturnType<typeof compactA2UIMessagesToSnapshot>,
+  result: SnapshotResult,
 ) {
   return components(result).map(component => component.id);
 }
 
 function dataMessages(
-  result: ReturnType<typeof compactA2UIMessagesToSnapshot>,
-) {
-  return result.messages.filter((message) =>
-    'updateDataModel' in message && message.updateDataModel
-  );
+  result: SnapshotResult,
+): DataMessage[] {
+  const out: DataMessage[] = [];
+  for (const message of result.messages) {
+    const updateDataModel = getDataUpdate(message);
+    if (updateDataModel) out.push({ updateDataModel });
+  }
+  return out;
 }
 
-function dataPaths(result: ReturnType<typeof compactA2UIMessagesToSnapshot>) {
-  return dataMessages(result).map((message) =>
-    message.updateDataModel?.path ?? '/'
-  );
+function dataPaths(result: SnapshotResult): string[] {
+  const out: string[] = [];
+  for (const message of dataMessages(result)) {
+    const { path } = message.updateDataModel;
+    out.push(typeof path === 'string' ? path : '/');
+  }
+  return out;
+}
+
+function dataValues(result: SnapshotResult): unknown[] {
+  const out: unknown[] = [];
+  for (const message of dataMessages(result)) {
+    out.push(message.updateDataModel.value);
+  }
+  return out;
 }
 
 describe('compactA2UIMessagesToSnapshot', () => {
@@ -324,8 +392,7 @@ describe('compactA2UIMessagesToSnapshot', () => {
     ] as ServerToClientMessage[]);
 
     expect(dataPaths(result)).toEqual(['/items/0/name']);
-    expect(dataMessages(result).map(message => message.updateDataModel?.value))
-      .toEqual(['Apple']);
+    expect(dataValues(result)).toEqual(['Apple']);
   });
 
   test('keeps a generated component data context when it is replaced', () => {
