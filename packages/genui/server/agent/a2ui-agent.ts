@@ -4,8 +4,8 @@
 
 import { Agent } from '@mastra/core/agent';
 
-import { BASIC_CATALOG } from './a2ui-catalog';
 import type { A2UICatalog } from './a2ui-catalog';
+import { loadBasicCatalog } from './a2ui-catalog';
 import { buildA2UISystemPrompt } from './a2ui-prompt';
 import { createLLMProvider } from './openai-provider';
 import type { OpenAIProviderOptions } from './openai-provider';
@@ -30,10 +30,10 @@ export interface A2UIAgent {
   ) => unknown;
 }
 
-export function createA2UIAgent(opts: A2UIAgentOptions = {}) {
+export async function createA2UIAgent(opts: A2UIAgentOptions = {}) {
   const { buildModel, model } = createLLMProvider(opts);
 
-  const catalog = opts.catalog ?? BASIC_CATALOG;
+  const catalog = opts.catalog ?? await loadBasicCatalog();
   const promptOptions = {
     catalog,
     ...(opts.systemAppendix === undefined

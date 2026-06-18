@@ -136,6 +136,7 @@ async function runGeneratePromptCli(
     BASIC_CATALOG,
     BASIC_CATALOG_ID,
     buildA2UISystemPrompt,
+    buildA2UISystemPromptAsync,
     readA2UICatalogFromDirectory,
   } = await import('../../../a2ui-prompt/dist/index.js');
   const catalog = options.catalogDir
@@ -152,10 +153,13 @@ async function runGeneratePromptCli(
       `[${programName}] No components or functions found in generated catalog directory: ${options.catalogDir}`,
     );
   }
-  const systemPrompt = buildA2UISystemPrompt({
+  const promptOptions = {
     ...(catalog ? { catalog } : {}),
     ...(options.appendix ? { appendix: options.appendix } : {}),
-  });
+  };
+  const systemPrompt = catalog
+    ? buildA2UISystemPrompt(promptOptions)
+    : await buildA2UISystemPromptAsync(promptOptions);
 
   if (options.out) {
     const outPath = path.resolve(cwd, options.out);
