@@ -1,4 +1,4 @@
-import { beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
+import { beforeAll, beforeEach, describe, expect, it, rstest as vi } from '@rstest/core';
 import { options } from 'preact';
 
 import { root } from '../../../src/element-template/index.js';

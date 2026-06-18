@@ -1,4 +1,4 @@
-import { describe, it, expect } from 'vitest';
+import { describe, it, expect } from '@rstest/core';
 import { prettyFormatSnapshotPatch } from '../../../src/snapshot/debug/formatPatch.js';
 import { SnapshotOperation } from '../../../src/snapshot/lifecycle/patch/snapshotPatch.js';
 

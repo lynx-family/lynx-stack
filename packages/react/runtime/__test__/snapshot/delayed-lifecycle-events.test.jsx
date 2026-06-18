@@ -1,9 +1,9 @@
-import { describe, it, beforeEach, afterEach, vi } from 'vitest';
+import { describe, it, beforeEach, afterEach, rstest as vi } from '@rstest/core';
 import { delayedLifecycleEvents } from '../../src/snapshot/lifecycle/event/delayLifecycleEvents';
 import { flushDelayedLifecycleEvents } from '../../src/snapshot/lynx/tt';
 import { __root } from '../../src/root';
 import { globalEnvManager } from './utils/envManager';
-import { expect } from 'vitest';
+import { expect } from '@rstest/core';
 import { render } from 'preact';
 import { replaceCommitHook } from '../../src/snapshot/lifecycle/patch/commit';
 

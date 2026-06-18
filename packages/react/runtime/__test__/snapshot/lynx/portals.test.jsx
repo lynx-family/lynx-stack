@@ -3,7 +3,7 @@
 // LICENSE file in the root directory of this source tree.
 
 import { render } from 'preact';
-import { afterEach, beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, beforeAll, beforeEach, describe, expect, it, rstest as vi } from '@rstest/core';
 
 import { createContext, createPortal, useContext, useState } from '../../../src/index';
 import { __root } from '../../../src/root';

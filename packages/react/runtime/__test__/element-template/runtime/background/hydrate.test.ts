@@ -1,4 +1,4 @@
-import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { beforeEach, describe, expect, it, rstest as vi } from '@rstest/core';
 
 import { globalCommitContext } from '../../../../src/element-template/background/commit-context.js';
 import {

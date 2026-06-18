@@ -3,7 +3,7 @@
 // LICENSE file in the root directory of this source tree.
 import { options as preactOptions } from 'preact';
 import type { VNode } from 'preact';
-import { afterEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, describe, expect, it, rstest as vi } from '@rstest/core';
 
 import { runWithForceRootRender } from '../../src/core/forceRootRender.js';
 import { COMPONENT, DIFF2, FORCE, ORIGINAL } from '../../src/shared/render-constants.js';

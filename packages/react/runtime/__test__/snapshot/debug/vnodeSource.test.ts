@@ -4,7 +4,7 @@
 // LICENSE file in the root directory of this source tree.
 */
 import { options } from 'preact';
-import { afterAll, afterEach, beforeAll, describe, expect, it, vi } from 'vitest';
+import { afterAll, afterEach, beforeAll, describe, expect, it, rstest as vi } from '@rstest/core';
 
 import {
   clearSnapshotVNodeSource,

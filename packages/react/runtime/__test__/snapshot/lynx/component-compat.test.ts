@@ -3,7 +3,7 @@
 // LICENSE file in the root directory of this source tree.
 
 import { Component } from 'preact';
-import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, rstest as vi } from '@rstest/core';
 
 import { globalCommitContext } from '../../../src/core/commit-context';
 import { installComponentCompat } from '../../../src/core/component';

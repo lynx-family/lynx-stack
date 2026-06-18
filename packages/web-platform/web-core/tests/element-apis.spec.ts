@@ -1,8 +1,8 @@
 import './jsdom.js';
-import { describe, test, expect, beforeEach, beforeAll } from 'vitest';
+import { describe, test, expect, beforeEach, beforeAll } from '@rstest/core';
 import { createElementAPI } from '../ts/client/mainthread/elementAPIs/createElementAPI.js';
 import { WASMJSBinding } from '../ts/client/mainthread/elementAPIs/WASMJSBinding.js';
-import { vi } from 'vitest';
+import { rstest as vi } from '@rstest/core';
 import { cssIdAttribute, lynxEntryNameAttribute } from '../ts/constants.js';
 import {
   createElementAPI as createServerElementAPI,
@@ -24,23 +24,27 @@ describe('Element APIs', () => {
     rootDom = lynxViewDom.attachShadow({ mode: 'open' });
 
     mtsBinding = new WASMJSBinding(
-      vi.mockObject({
+      // NOTE: the binding-shaped object is built as a plain nested object
+      // literal with `vi.fn()` leaves rather than nested `vi.mockObject(...)`.
+      // rstest's `mockObject`, unlike vitest's, drops functions nested inside
+      // non-function child objects, so nesting mockObjects loses the methods.
+      {
         rootDom,
-        backgroundThread: vi.mockObject({
+        backgroundThread: {
           publicComponentEvent: vi.fn(),
           publishEvent: vi.fn(),
           postTimingFlags: vi.fn(),
           markTiming: vi.fn(),
           flushTimingInfo: vi.fn(),
-          jsContext: vi.mockObject({
+          jsContext: {
             dispatchEvent: vi.fn(),
-          }),
-        } as any),
-        exposureServices: vi.mockObject({
+          },
+        },
+        exposureServices: {
           updateExposureStatus: vi.fn(),
-        }) as any,
-        mainThreadGlobalThis: vi.mockObject({}) as any,
-      }),
+        },
+        mainThreadGlobalThis: {},
+      } as any,
     );
     mtsGlobalThis = createElementAPI(
       rootDom,

@@ -4,7 +4,7 @@
 // LICENSE file in the root directory of this source tree.
 */
 import { elementTree, withQueue } from './nativeMethod.js';
-import { vi } from 'vitest';
+import { rstest as vi } from '@rstest/core';
 
 export function __injectElementApi(target?: any) {
   if (typeof target === 'undefined') {

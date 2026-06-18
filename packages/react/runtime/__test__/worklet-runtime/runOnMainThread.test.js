@@ -1,7 +1,7 @@
 // Copyright 2024 The Lynx Authors. All rights reserved.
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
-import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, rstest as vi } from '@rstest/core';
 
 import { runRunOnMainThreadTask } from '../../src/worklet-runtime/runOnMainThread';
 import { initWorklet } from '../../src/worklet-runtime/workletRuntime';

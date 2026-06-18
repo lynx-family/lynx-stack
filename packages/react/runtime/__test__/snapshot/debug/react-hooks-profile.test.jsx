@@ -3,7 +3,10 @@
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
 */
-import { afterEach, beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, beforeAll, beforeEach, describe, expect, it, rstest as vi } from '@rstest/core';
+// `rstest.resetModules()` must be a literal call (module-mock APIs are not
+// aliasable through `vitest`).
+import { rstest } from '@rstest/core';
 
 import { setupDocument } from '../../../src/document';
 import { setupPage, snapshotInstanceManager } from '../../../src/snapshot';
@@ -16,7 +19,7 @@ let currentCreateElement;
 async function importHooksWithProfileRecording(isRecording) {
   const original = lynx.performance.isProfileRecording;
   lynx.performance.isProfileRecording = vi.fn(() => isRecording);
-  vi.resetModules();
+  rstest.resetModules();
   try {
     const [hooks, preact, document, utils] = await Promise.all([
       import('../../../src/core/hooks/react'),

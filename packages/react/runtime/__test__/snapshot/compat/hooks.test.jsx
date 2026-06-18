@@ -1,4 +1,4 @@
-import { describe, expect, it, vi } from 'vitest';
+import { describe, expect, it, rstest as vi } from '@rstest/core';
 import { useTransition, startTransition } from '../../../compat';
 
 describe('useTransition', () => {

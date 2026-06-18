@@ -1,4 +1,4 @@
-import { expect, test, vi } from 'vitest';
+import { expect, test, rstest as vi } from '@rstest/core';
 
 test('preact/debug - Hook can only be invoked from render methods', async () => {
   vi.stubGlobal('__MAIN_THREAD__', false)

@@ -1,8 +1,8 @@
 // Copyright 2025 The Lynx Authors. All rights reserved.
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
-import { describe, expect, it, vi } from 'vitest';
-import type { MockInstance } from 'vitest';
+import { describe, expect, it, rstest as vi } from '@rstest/core';
+import type { MockInstance } from '@rstest/core';
 
 import { uiVariants } from '../../../plugins/lynx-ui/uiVariants.js';
 import { runPlugin } from '../../utils/run-plugin.js';

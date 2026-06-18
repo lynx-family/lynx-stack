@@ -267,27 +267,6 @@ jobs:
         pnpm run build --mode development
         pnpm run lint
         pnpm run test
-  test-react:
-    needs: build
-    uses: ./.github/workflows/workflow-test.yml
-    secrets:
-      CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
-    with:
-      runs-on: lynx-ubuntu-24.04-medium
-      run: >
-        pnpm
-        --filter @lynx-js/react-runtime
-        run test
-        --reporter=github-actions
-        --reporter=dot
-        --reporter=junit
-        --outputFile=test-report.junit.xml
-        --coverage.reporter='json'
-        --coverage.reporter='text'
-        --testTimeout=50000
-        --no-cache
-        --logHeapUsage
-        --silent
   test-rust:
     uses: ./.github/workflows/rust.yml
     secrets:
@@ -311,9 +290,8 @@ jobs:
         pnpm exec rstest run -c rstest.config.ts --coverage --testTimeout=50000 --hookTimeout=50000
         # ReactLynx-DOM suites can't be aggregated into rstest.config.ts (the
         # root `projects` context can't resolve their per-package
-        # `@lynx-js/react/jsx-runtime` alias). Run them per-package, the same way
-        # `test-react` runs the react runtime/transform suites.
-        pnpm --filter @lynx-js/reactlynx-testing-library --filter @lynx-js/gesture-runtime --filter @lynx-js/testing-environment --filter @lynx-js/testing-library-example-basic --filter @lynx-js/testing-library-example-library --filter @lynx-js/testing-library-example-react-compiler run test
+        # `@lynx-js/react/jsx-runtime` alias), so run them per-package.
+        pnpm --filter @lynx-js/react-runtime --filter @lynx-js/reactlynx-testing-library --filter @lynx-js/gesture-runtime --filter @lynx-js/use-sync-external-store --filter @lynx-js/motion --filter @lynx-js/testing-environment --filter @lynx-js/testing-library-example-basic --filter @lynx-js/testing-library-example-library --filter @lynx-js/testing-library-example-react-compiler run test
   kitten-lynx-android-emulator:
     needs: build
     uses: ./.github/workflows/workflow-test.yml
@@ -388,37 +366,6 @@ jobs:
       - uses: crate-ci/typos@57b11c6b7e54c402ccd9cda953f1072ec4f78e33 # v1.43.5
         with:
           files: .
-  test-vitest:
-    needs: build
-    uses: ./.github/workflows/workflow-test.yml
-    strategy:
-      fail-fast: false
-      matrix:
-        runs-on:
-          - name: Ubuntu
-            label: lynx-ubuntu-24.04-medium
-          - name: Windows
-            label: lynx-windows-2022-large
-    name: Vitest (${{ matrix.runs-on.name }})
-    secrets:
-      CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
-    with:
-      runs-on: ${{ matrix.runs-on.label }}
-      run: >
-        pnpm run test
-        --reporter=github-actions
-        --reporter=dot
-        --reporter=junit
-        --outputFile=test-report.junit.xml
-        --expect.poll.timeout=5000
-        --testTimeout=50000
-        --hookTimeout=50000
-        --coverage
-        --coverage.reporter='json'
-        --coverage.reporter='text'
-        --no-cache
-        --logHeapUsage
-        --silent
   website:
     needs: build
     uses: ./.github/workflows/workflow-website.yml
@@ -433,12 +380,10 @@ jobs:
       - playwright-web-elements
       - test-api
       - test-publish
-      - test-react
       - test-rust
       - test-type
       - test-rstest
       - test-typos
-      - test-vitest
       - web-core-e2e
       - website
     if: always()

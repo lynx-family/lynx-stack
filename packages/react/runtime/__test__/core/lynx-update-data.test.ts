@@ -1,4 +1,4 @@
-import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, rstest as vi } from '@rstest/core';
 
 import { NativeUpdateDataType, updateCardData } from '../../src/core/lynx-update-data.js';
 import { LynxTestEventEmitter } from '../test-utils/lynx-event-emitter.js';

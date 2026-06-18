@@ -5,7 +5,7 @@
 import { render, Component } from 'preact';
 import { createElement } from 'preact/compat';
 import { Suspense, lazy, useState } from '../../../src/index';
-import { afterEach, beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, beforeAll, beforeEach, describe, expect, it, rstest as vi } from '@rstest/core';
 
 import { replaceCommitHook } from '../../../src/snapshot/lifecycle/patch/commit';
 import { injectUpdateMainThread } from '../../../src/snapshot/lifecycle/patch/updateMainThread';

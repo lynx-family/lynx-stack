@@ -4,7 +4,7 @@
 import { Component, Fragment, createContext, h, options } from 'preact';
 import { Suspense } from 'preact/compat';
 import { useState } from '@lynx-js/react/lepus/hooks';
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it } from '@rstest/core';
 
 import {
   __OpAttr,

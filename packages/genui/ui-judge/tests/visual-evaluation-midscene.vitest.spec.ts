@@ -3,8 +3,8 @@
 // LICENSE file in the root directory of this source tree.
 import { callAIWithStringResponse } from '@midscene/core/ai-model';
 import type { ChatCompletionMessageParam } from '@midscene/core/ai-model';
+import { beforeEach, describe, expect, it, rstest } from '@rstest/core';
 import sharp from 'sharp';
-import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 import {
   VISUAL_EVALUATION_SYSTEM_PROMPT,
@@ -13,12 +13,12 @@ import {
   runVisualEvaluation,
 } from '../src/index.js';
 
-const midsceneMock = vi.hoisted(() => ({
-  callAIWithStringResponse: vi.fn<
+const midsceneMock = rstest.hoisted(() => ({
+  callAIWithStringResponse: rstest.fn<
     (...args: unknown[]) => Promise<{ content: string }>
   >(),
   constructorOptions: [] as unknown[],
-  destroy: vi.fn<() => Promise<void>>(),
+  destroy: rstest.fn<() => Promise<void>>(),
   pages: [] as unknown[],
 }));
 
@@ -29,21 +29,17 @@ interface ImageMessagePart {
   type: 'image_url';
 }
 
-vi.mock('@midscene/core/ai-model', async (importOriginal) => {
-  const actual = await importOriginal<
-    typeof import('@midscene/core/ai-model')
-  >();
+rstest.mock('@midscene/core/ai-model', () => {
   return {
-    ...actual,
     callAIWithStringResponse: midsceneMock.callAIWithStringResponse,
   };
 });
 
-vi.mock('@midscene/core/agent', () => {
+rstest.mock('@midscene/core/agent', () => {
   class Agent {
     destroy = midsceneMock.destroy;
     modelConfigManager = {
-      getModelConfig: vi.fn(() => ({ modelName: 'mock-model' })),
+      getModelConfig: rstest.fn(() => ({ modelName: 'mock-model' })),
     };
 
     constructor(page: unknown, options: unknown) {
@@ -155,7 +151,9 @@ describe('evaluateImagesWithMidscene', () => {
   it('runs the visual evaluation pipeline into Midscene by default', async () => {
     const referenceImage = await createPngBuffer({ blue: 32 });
     const deviceImage = await createPngBuffer({ blue: 224 });
-    const capture = vi.fn().mockResolvedValue(deviceImage.toString('base64'));
+    const capture = rstest.fn().mockResolvedValue(
+      deviceImage.toString('base64'),
+    );
 
     const result = await runVisualEvaluation(
       {

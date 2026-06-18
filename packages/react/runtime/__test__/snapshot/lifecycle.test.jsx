@@ -1,5 +1,5 @@
 import { Component, options, render } from 'preact';
-import { afterEach, beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, beforeAll, beforeEach, describe, expect, it, rstest as vi } from '@rstest/core';
 
 import { useEffect, useLayoutEffect, useState } from '../../src/index';
 import { globalEnvManager } from './utils/envManager';

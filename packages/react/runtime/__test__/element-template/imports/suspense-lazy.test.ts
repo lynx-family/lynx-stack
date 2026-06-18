@@ -1,5 +1,5 @@
 import type { ComponentType } from 'preact';
-import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, rstest as vi, rstest } from '@rstest/core';
 
 import ElementTemplateRuntime, * as ElementTemplateRoot from '@lynx-js/react/element-template';
 import { Suspense, lazy } from '@lynx-js/react/element-template';
@@ -212,7 +212,7 @@ describe('element-template Suspense and lazy imports', () => {
 
   it('populates standalone lazy target symbols with ET root/internal and lazy ABI exports', async () => {
     clearLazyTargetSymbols();
-    vi.resetModules();
+    rstest.resetModules();
 
     await import('../../../lazy/element-template-import.js');
     const [

@@ -4,7 +4,7 @@
 // LICENSE file in the root directory of this source tree.
 */
 import { render } from 'preact';
-import { afterEach, beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, beforeAll, beforeEach, describe, expect, it, rstest as vi } from '@rstest/core';
 
 import { createCompBG1, createCompBGList, createCompBGSpread } from './workletRefBG';
 import { createCompMT1, createCompMTList, createCompMTSpread } from './workletRefMT';

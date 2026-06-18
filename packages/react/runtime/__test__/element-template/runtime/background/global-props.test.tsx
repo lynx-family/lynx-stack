@@ -1,5 +1,5 @@
 import { createElement } from 'preact';
-import { afterEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, describe, expect, it, rstest as vi, rstest } from '@rstest/core';
 
 import { LynxTestEventEmitter } from '../../../test-utils/lynx-event-emitter.js';
 import { parseElementTemplateUpdateEventPayload } from '../../../../src/element-template/protocol/update-event.js';
@@ -14,7 +14,7 @@ function waitForRender(): Promise<void> {
 }
 
 async function setupGlobalPropsRuntime(mode: 'reactive' | 'event') {
-  vi.resetModules();
+  rstest.resetModules();
   vi.stubGlobal('__GLOBAL_PROPS_MODE__', mode);
 
   const { ElementTemplateEnvManager } = await import('../../test-utils/debug/envManager.js');

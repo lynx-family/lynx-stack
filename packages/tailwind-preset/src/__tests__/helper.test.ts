@@ -2,7 +2,7 @@
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
 import { createRequire } from 'node:module';
-import { describe, expect, it, vi } from 'vitest';
+import { describe, expect, it, rstest as vi } from '@rstest/core';
 
 import {
   autoBind,

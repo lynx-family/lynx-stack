@@ -1,4 +1,4 @@
-import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, rstest as vi } from '@rstest/core';
 
 import { WorkletEvents } from '@lynx-js/react/worklet-runtime/bindings';
 

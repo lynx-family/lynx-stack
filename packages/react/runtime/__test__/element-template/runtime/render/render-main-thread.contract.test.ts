@@ -1,12 +1,10 @@
-import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, rstest as vi, rstest } from '@rstest/core';
 
-vi.mock('../../../../src/element-template/runtime/render/render-to-opcodes.js', async () => {
-  const actual = await vi.importActual('../../../../src/element-template/runtime/render/render-to-opcodes.js');
-  return {
-    ...actual,
-    render: vi.fn(),
-  };
-});
+// Spy-mock the render-to-opcodes module: every export is wrapped in a spy that
+// preserves the original implementation. The test overrides `render` via
+// `mockReturnValue`. (vitest's bare `vi.mock(path, factory)` spread-of-actual
+// does not survive rstest's static hoisting, so use the built-in spy mode.)
+rstest.mock('../../../../src/element-template/runtime/render/render-to-opcodes.js', { spy: true });
 
 import {
   __OpAttr,

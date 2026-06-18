@@ -1,5 +1,6 @@
 import './jsdom.js';
-import { describe, test, expect, vi, beforeEach } from 'vitest';
+import { describe, test, expect, rstest as vi, beforeEach } from '@rstest/core';
+import { rstest } from '@rstest/core';
 import { encode, type TasmJSONInfo } from '../ts/encode/index.js';
 import { MagicHeader0, MagicHeader1 } from '../ts/constants.js';
 import type { LynxViewInstance } from '../ts/client/mainthread/LynxViewInstance.js';
@@ -10,7 +11,7 @@ await import('../ts/client/decodeWorker/decode.worker.js');
 // -------------------------------------
 
 // Mock wasm-feature-detect to ensure we load the standard WASM
-vi.mock('wasm-feature-detect', () => ({
+rstest.mock('wasm-feature-detect', () => ({
   referenceTypes: async () => true,
   simd: async () => true,
 }));

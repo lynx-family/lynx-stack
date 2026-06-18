@@ -2,10 +2,14 @@
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
 
-import { describe, it, expect, vi, afterEach } from 'vitest';
+import { describe, it, expect, rstest as vi, afterEach } from '@rstest/core';
+// Module-mock APIs (resetModules/mock/...) must be called as literal `rstest.*`
+// so rstest's static transform can hoist them; the `vitest` alias does not work
+// for these. The polyfill re-exports `rstest`.
+import { rstest } from '@rstest/core';
 
 afterEach(() => {
-  vi.resetModules();
+  rstest.resetModules();
 });
 
 describe('lynxQueueMicrotask', () => {

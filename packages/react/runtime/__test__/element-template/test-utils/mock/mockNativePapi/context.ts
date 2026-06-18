@@ -1,4 +1,4 @@
-import { afterEach, vi } from 'vitest';
+import { afterEach, rstest as vi } from '@rstest/core';
 
 export interface ContextEvent {
   type: string;

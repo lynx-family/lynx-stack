@@ -7,7 +7,7 @@ import { EventEmitter } from 'node:events';
 
 import { render } from 'preact';
 import { useState } from 'preact/hooks';
-import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
+import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, it, rstest as vi } from '@rstest/core';
 
 import { setupBackgroundDocument } from '../../../src/document';
 import { useLynxGlobalEventListener } from '../../../src/lynx-api';

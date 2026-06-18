@@ -19,6 +19,7 @@ export default defineConfig({
     'packages/genui/a2ui/rstest.config.ts',
     'packages/genui/a2ui-catalog-extractor/rstest.config.ts',
     'packages/genui/cli/rstest.config.ts',
+    'packages/genui/ui-judge/rstest.config.ts',
     'packages/i18n/*/rstest.config.ts',
     // ReactLynx-DOM suites (gesture-runtime, testing-library family) are NOT
     // aggregated here: rstest's root `projects` context cannot resolve their

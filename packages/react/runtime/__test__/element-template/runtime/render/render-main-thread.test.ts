@@ -1,4 +1,4 @@
-import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, rstest as vi, rstest } from '@rstest/core';
 
 import { renderMainThread } from '../../../../src/element-template/runtime/render/render-main-thread.js';
 import { getReloadVersion } from '../../../../src/core/reload-version.js';
@@ -11,12 +11,12 @@ import { setupPage } from '../../../../src/element-template/runtime/page/page.js
 import { setRoot } from '../../../../src/element-template/runtime/page/root-instance.js';
 import { elementTemplateRegistry } from '../../../../src/element-template/runtime/template/registry.js';
 
-vi.mock('../../../../src/element-template/runtime/render/render-to-opcodes.js', () => ({
+rstest.mock('../../../../src/element-template/runtime/render/render-to-opcodes.js', () => ({
   render: vi.fn(),
   registerSlot: vi.fn(),
 }));
 
-vi.mock('../../../../src/element-template/runtime/render/render-opcodes.js', () => ({
+rstest.mock('../../../../src/element-template/runtime/render/render-opcodes.js', () => ({
   renderOpcodesIntoElementTemplate: vi.fn(),
 }));
 

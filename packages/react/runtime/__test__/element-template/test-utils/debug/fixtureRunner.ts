@@ -1,10 +1,11 @@
 import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
-import { pathToFileURL } from 'node:url';
 
 import { format as prettyFormat } from 'pretty-format';
-import { expect, it } from 'vitest';
+import { expect, it } from '@rstest/core';
+
+import { loadCaseModule } from './caseModuleContext.js';
 
 const UPDATE_VALUES = new Set(['1', 'true', 'yes', 'on']);
 
@@ -116,7 +117,7 @@ export function runCaseModuleFixtureTests(options: {
         throw new Error(`Missing case file for fixture "${fixtureName}".`);
       }
 
-      const caseModule = (await import(pathToFileURL(casePath).href)) as CaseFixtureModule;
+      const caseModule = loadCaseModule(casePath) as CaseFixtureModule;
       const reportErrorCount = caseModule.reportErrorCount ?? 0;
       const result = await caseModule.run({ fixtureDir, fixtureName });
       const normalized = normalizeCaseFixtureResult(result);

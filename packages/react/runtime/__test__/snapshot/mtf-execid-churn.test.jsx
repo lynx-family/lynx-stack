@@ -1,5 +1,5 @@
 import { options, render } from 'preact';
-import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
+import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, it, rstest as vi } from '@rstest/core';
 
 import { useState } from '../../src/index';
 import { replaceCommitHook } from '../../src/snapshot/lifecycle/patch/commit';

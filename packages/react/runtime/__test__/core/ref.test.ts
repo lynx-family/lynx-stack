@@ -1,4 +1,4 @@
-import { afterEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, describe, expect, it, rstest as vi } from '@rstest/core';
 
 import { OrdinaryRefEffectQueue, SelectorRefProxy, applyOrdinaryRef, normalizeRefValue } from '../../src/core/ref.js';
 import type { RefProxyForwardedMethods } from '../../src/core/ref.js';

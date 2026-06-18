@@ -1,4 +1,4 @@
-import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, rstest as vi, rstest } from '@rstest/core';
 
 import { ElementTemplateEnvManager } from '../test-utils/debug/envManager.js';
 
@@ -6,13 +6,13 @@ const envManager = new ElementTemplateEnvManager();
 
 describe('initProfileHook installation', () => {
   beforeEach(() => {
-    vi.resetModules();
+    rstest.resetModules();
     vi.clearAllMocks();
     envManager.resetEnv('background');
   });
 
   afterEach(() => {
-    vi.resetModules();
+    rstest.resetModules();
   });
 
   it('can retry installation after profiling apis become available', async () => {

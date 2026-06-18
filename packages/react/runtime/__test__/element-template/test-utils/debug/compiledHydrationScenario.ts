@@ -1,4 +1,4 @@
-import { vi } from 'vitest';
+import { rstest as vi } from '@rstest/core';
 
 import type { BackgroundElementTemplateInstance } from '../../../../src/element-template/background/instance.js';
 import { ElementTemplateLifecycleConstant } from '../../../../src/element-template/protocol/lifecycle-constant.js';

@@ -1,7 +1,7 @@
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
-import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, rstest as vi } from '@rstest/core';
 
 import type { ElementTemplateUpdateCommitContext } from '../../../../../src/element-template/protocol/types.js';
 import type { CompiledFixtureModuleExports } from '../../../test-utils/debug/compiledFixtureModule.js';

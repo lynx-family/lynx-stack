@@ -1,6 +1,6 @@
 /** @jsxImportSource ../../lepus */
 
-import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
+import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, it, rstest as vi } from '@rstest/core';
 
 import { globalEnvManager } from './utils/envManager';
 import { elementTree, options } from './utils/nativeMethod';

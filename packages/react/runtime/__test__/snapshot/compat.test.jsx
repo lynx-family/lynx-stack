@@ -1,4 +1,4 @@
-import { afterEach, beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, beforeAll, beforeEach, describe, expect, it, rstest as vi } from '@rstest/core';
 
 import { elementTree } from './utils/nativeMethod';
 import { setupPage, snapshotInstanceManager, backgroundSnapshotInstanceManager } from '../../src/snapshot';

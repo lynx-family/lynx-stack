@@ -1,4 +1,7 @@
-import { beforeAll, describe, expect, test, vi } from 'vitest';
+import { beforeAll, describe, expect, test, rstest as vi } from '@rstest/core';
+// `rstest.resetModules()` must be a literal call (module-mock APIs are not
+// aliasable through `vitest`).
+import { rstest } from '@rstest/core';
 
 describe('Destroy', () => {
   const addEventListener = vi.fn();
@@ -14,7 +17,7 @@ describe('Destroy', () => {
   });
 
   test('should remove event listener when throw in cleanup', async function() {
-    vi.resetModules();
+    rstest.resetModules();
     await import('../../../src/lynx');
 
     expect(addEventListener).toHaveBeenCalled();

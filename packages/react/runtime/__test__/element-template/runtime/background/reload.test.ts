@@ -1,4 +1,4 @@
-import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, rstest as vi } from '@rstest/core';
 
 import { getReloadVersion } from '../../../../src/core/reload-version.js';
 import { setupBackgroundElementTemplateDocument } from '../../../../src/element-template/background/document.js';

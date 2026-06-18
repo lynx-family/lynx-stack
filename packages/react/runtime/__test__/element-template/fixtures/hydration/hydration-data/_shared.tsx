@@ -1,7 +1,7 @@
 import fs from 'node:fs';
 import path from 'node:path';
 
-import { vi } from 'vitest';
+import { rstest as vi } from '@rstest/core';
 
 import { root } from '../../../../../src/element-template/index.js';
 import { ElementTemplateLifecycleConstant } from '../../../../../src/element-template/protocol/lifecycle-constant.js';

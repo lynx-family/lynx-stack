@@ -4,7 +4,7 @@
 import { spawn } from 'node:child_process';
 import { setTimeout as sleep } from 'node:timers/promises';
 
-import { afterAll, beforeAll, describe, expect, it } from 'vitest';
+import { afterAll, beforeAll, describe, expect, it } from '@rstest/core';
 
 import { Lynx } from '../../../testing-library/kitten-lynx/src/index.js';
 import type {

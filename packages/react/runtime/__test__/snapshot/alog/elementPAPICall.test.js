@@ -1,7 +1,7 @@
-import { describe, it, vi } from 'vitest';
+import { describe, it, rstest as vi } from '@rstest/core';
 import { initElementPAPICallAlog } from '../../../src/snapshot/alog/elementPAPICall';
 import { globalEnvManager } from '../utils/envManager';
-import { expect } from 'vitest';
+import { expect } from '@rstest/core';
 
 describe('ElementPAPICall Alog', () => {
   it('should log ElementPAPICall as ALog', () => {

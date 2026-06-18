@@ -44,7 +44,7 @@
   "scripts": {
     "build": "rslib build",
     "dev": "rslib build --watch",
-    "test": "vitest run"
+    "test": "rstest"
   },
   "dependencies": {
     "framer-motion": "12.34.1",
@@ -53,7 +53,9 @@
   },
   "devDependencies": {
     "@lynx-js/react": "workspace:*",
+    "@lynx-js/react-rsbuild-plugin": "workspace:*",
     "@lynx-js/types": "3.7.0",
+    "@rstest/core": "catalog:rstest",
     "rsbuild-plugin-publint": "0.3.4"
   },
   "peerDependencies": {

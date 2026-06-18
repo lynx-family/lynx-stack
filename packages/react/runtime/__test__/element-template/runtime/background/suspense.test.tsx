@@ -1,6 +1,6 @@
 import { Component, Fragment, createElement, options } from 'preact';
 import type { ComponentChildren, ComponentType } from 'preact';
-import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, rstest as vi } from '@rstest/core';
 
 import {
   installElementTemplateCommitHook,

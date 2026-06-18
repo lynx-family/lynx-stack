@@ -1,4 +1,4 @@
-import { vi } from 'vitest';
+import { rstest as vi } from '@rstest/core';
 
 import { resetElementTemplateHydrationListener } from '../../../../../src/element-template/background/hydration-listener.js';
 import { BackgroundElementTemplateInstance } from '../../../../../src/element-template/background/instance.js';

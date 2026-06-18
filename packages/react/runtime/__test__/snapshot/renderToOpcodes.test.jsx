@@ -2,7 +2,7 @@
 
 import { Component, createContext, Fragment } from 'preact';
 import { useMemo, useState } from 'preact/hooks';
-import { afterEach, beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, beforeAll, beforeEach, describe, expect, it, rstest as vi } from '@rstest/core';
 
 import { elementTree, waitSchedule } from './utils/nativeMethod';
 import { globalEnvManager } from './utils/envManager';
@@ -673,7 +673,7 @@ describe('renderToString', () => {
             <App />
           </view>,
         ),
-    ).toThrowErrorMatchingInlineSnapshot(`[TypeError: (void 0) is not a function]`);
+    ).toThrowErrorMatchingInlineSnapshot(`[TypeError: undefined is not a function]`);
 
     // renderToString will throw on Error without calling `options[DIFFED]`
     vi.mocked(console.profile).mockClear();
@@ -705,7 +705,7 @@ describe('renderToString', () => {
             </ErrorBoundary>
           </view>,
         ),
-    ).toThrowErrorMatchingInlineSnapshot(`[TypeError: (void 0) is not a function]`);
+    ).toThrowErrorMatchingInlineSnapshot(`[TypeError: undefined is not a function]`);
     expect(f).toBeCalledTimes(0);
 
     class ErrorBoundary2 extends Component {
@@ -726,7 +726,7 @@ describe('renderToString', () => {
             </ErrorBoundary2>
           </view>,
         ),
-    ).toThrowErrorMatchingInlineSnapshot(`[TypeError: (void 0) is not a function]`);
+    ).toThrowErrorMatchingInlineSnapshot(`[TypeError: undefined is not a function]`);
     expect(f).toBeCalledTimes(0);
 
     // renderToString will throw on Error without calling `options[DIFFED]`

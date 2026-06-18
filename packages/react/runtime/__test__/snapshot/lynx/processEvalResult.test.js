@@ -1,4 +1,4 @@
-import { describe, expect, test, vi } from 'vitest';
+import { describe, expect, test, rstest as vi } from '@rstest/core';
 import { globalEnvManager } from '../utils/envManager.ts';
 
 describe('processEvalResult', () => {

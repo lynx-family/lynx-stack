@@ -1,5 +1,5 @@
 import { Component, render } from 'preact';
-import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
+import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, it, rstest as vi } from '@rstest/core';
 import { elementTree, waitSchedule } from '../utils/nativeMethod';
 import { setupBackgroundDocument } from '../../../src/document';
 import {

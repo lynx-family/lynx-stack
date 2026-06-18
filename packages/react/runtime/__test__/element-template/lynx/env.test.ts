@@ -1,4 +1,4 @@
-import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, rstest as vi } from '@rstest/core';
 
 import { setupLynxEnv } from '../../../src/element-template/lynx/env.js';
 import { ElementTemplateEnvManager } from '../test-utils/debug/envManager.js';

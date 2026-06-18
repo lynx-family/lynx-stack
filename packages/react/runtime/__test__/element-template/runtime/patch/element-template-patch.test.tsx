@@ -2,7 +2,7 @@
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
 
-import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, rstest as vi } from '@rstest/core';
 
 import { getReloadVersion, increaseReloadVersion } from '../../../../src/core/reload-version.js';
 import type { BackgroundElementTemplateInstance } from '../../../../src/element-template/background/instance.js';

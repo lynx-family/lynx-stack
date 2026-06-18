@@ -1,4 +1,7 @@
-import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, rstest as vi } from '@rstest/core';
+// `rstest.resetModules()` must be a literal call (module-mock APIs are not
+// aliasable through `vitest`).
+import { rstest } from '@rstest/core';
 
 type PerformanceLike = {
   isProfileRecording?: () => boolean;
@@ -16,7 +19,7 @@ describe('shared/profile module', () => {
   let originalProfileFlag: unknown;
 
   beforeEach(() => {
-    vi.resetModules();
+    rstest.resetModules();
     originalLynx = globalThis.lynx as LynxLike;
     // eslint-disable-next-line no-undef
     originalProfileFlag = typeof __PROFILE__ === 'undefined' ? undefined : __PROFILE__;

@@ -3,7 +3,7 @@
 // LICENSE file in the root directory of this source tree.
 import { writeFile } from 'node:fs/promises';
 
-import { afterAll, beforeAll, describe, it } from 'vitest';
+import { afterAll, beforeAll, describe, it } from '@rstest/core';
 
 import { Lynx } from '../../../testing-library/kitten-lynx/src/index.js';
 import type {

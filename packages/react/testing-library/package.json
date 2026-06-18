@@ -19,6 +19,15 @@
     "@rsbuild/core": "catalog:rsbuild",
     "@rstest/adapter-rsbuild": "^0.2.3",
     "@testing-library/dom": "^10.4.1",
-    "@testing-library/jest-dom": "^6.9.1"
+    "@testing-library/jest-dom": "^6.9.1",
+    "vitest": "^3.2.4"
+  },
+  "peerDependencies": {
+    "vitest": "^3.2.4"
+  },
+  "peerDependenciesMeta": {
+    "vitest": {
+      "optional": true
+    }
   }
 }

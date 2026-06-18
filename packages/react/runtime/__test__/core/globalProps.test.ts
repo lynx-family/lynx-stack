@@ -4,7 +4,7 @@
 import { createContext } from 'preact';
 import { createElement } from 'preact/compat';
 import { useState } from 'preact/hooks';
-import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, rstest as vi } from '@rstest/core';
 
 import { createGlobalProps, isGlobalPropsEventMode, updateGlobalProps } from '../../src/core/globalProps.js';
 import type { useLynxGlobalEventListener } from '../../src/core/hooks/useLynxGlobalEventListener.js';

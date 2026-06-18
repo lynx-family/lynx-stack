@@ -1,7 +1,7 @@
 // Copyright 2026 The Lynx Authors. All rights reserved.
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
-import { describe, expect, it, vi } from 'vitest';
+import { describe, expect, it, rstest } from '@rstest/core';
 
 import { getImageSize } from '../src/platforms/image-size.js';
 import {
@@ -61,7 +61,7 @@ describe('getImageSize', () => {
 
 describe('KittenLynxMidscenePage', () => {
   it('requests PNG screenshots before reading dimensions', async () => {
-    const screenshot = vi.fn<KittenLynxJudgePage['screenshot']>()
+    const screenshot = rstest.fn<KittenLynxJudgePage['screenshot']>()
       .mockResolvedValue(createPngBuffer({ height: 16, width: 32 }));
     const page = new KittenLynxMidscenePage({
       screenshot,

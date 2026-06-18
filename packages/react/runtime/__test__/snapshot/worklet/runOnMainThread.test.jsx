@@ -3,7 +3,7 @@
 // LICENSE file in the root directory of this source tree.
 
 import { render } from 'preact';
-import { afterEach, beforeEach, describe, expect, it, vi, beforeAll } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, rstest as vi, beforeAll } from '@rstest/core';
 
 import { WorkletEvents } from '@lynx-js/react/worklet-runtime/bindings';
 

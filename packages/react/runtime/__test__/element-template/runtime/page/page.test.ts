@@ -1,8 +1,8 @@
-import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, rstest as vi, rstest } from '@rstest/core';
 
 describe('ElementTemplate page root helpers', () => {
   beforeEach(() => {
-    vi.resetModules();
+    rstest.resetModules();
     vi.stubGlobal('__CreateTypedElementTemplate', vi.fn());
     vi.stubGlobal('__InsertNodeToElementTemplate', vi.fn());
     vi.stubGlobal('__RemoveNodeFromElementTemplate', vi.fn());

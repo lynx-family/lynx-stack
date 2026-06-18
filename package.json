@@ -9,7 +9,7 @@
   "scripts": {
     "build": "tsc --build",
     "prepare": "husky && ts-patch install",
-    "test": "vitest"
+    "test": "rstest run -c rstest.config.ts"
   },
   "lint-staged": {
     "*.{ts,tsx,js,jsx,cjs,mjs,css,sass,scss,less,html,yml,yaml,rs,toml,md,json}": [
@@ -25,7 +25,6 @@
   "devDependencies": {
     "@biomejs/biome": "^1.9.4",
     "@changesets/cli": "^2.29.8",
-    "@codspeed/vitest-plugin": "^5.2.0",
     "@eslint/js": "^9.39.3",
     "@eslint/markdown": "^7.5.1",
     "@microsoft/api-extractor": "catalog:",
@@ -39,9 +38,7 @@
     "@tsconfig/strictest": "^2.0.8",
     "@types/node": "^24.10.13",
     "@typescript/native-preview": "7.0.0-dev.20260212.1",
-    "@vitest/coverage-v8": "^3.2.4",
     "@vitest/eslint-plugin": "^1.6.9",
-    "@vitest/ui": "^3.2.4",
     "dprint": "^0.51.1",
     "eslint": "^9.39.3",
     "eslint-import-resolver-typescript": "^4.4.4",
@@ -59,8 +56,7 @@
     "ts-patch": "^3.3.0",
     "turbo": "^2.9.3",
     "typescript": "^5.9.3",
-    "typescript-eslint": "^8.56.0",
-    "vitest": "^3.2.4"
+    "typescript-eslint": "^8.56.0"
   },
   "packageManager": "pnpm@11.5.0+sha512.dbfcc4f81cf48597afd4bc391ffdf12c11f1a9fb83a395bfa6b0a2d9cc2fd8ffebafdb1ccbd529632153f793904c2615b7f09fe1a345473fd1c35845172a8eb1",
   "engines": {

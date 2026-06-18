@@ -1,5 +1,5 @@
 import type { ComponentType } from 'preact';
-import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, rstest as vi } from '@rstest/core';
 
 import { loadLazyBundle } from '../../../src/core/lynx/lazy-bundle.js';
 import { ElementTemplateEnvManager } from '../test-utils/debug/envManager.js';

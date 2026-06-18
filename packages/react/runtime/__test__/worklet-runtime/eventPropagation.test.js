@@ -1,7 +1,7 @@
 // Copyright 2025 The Lynx Authors. All rights reserved.
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
-import { afterAll, beforeEach, describe, expect, it, vi } from 'vitest';
+import { afterAll, beforeEach, describe, expect, it, rstest as vi } from '@rstest/core';
 
 import { initApiEnv } from '../../src/worklet-runtime/api/lynxApi';
 import { RunWorkletSource } from '../../src/worklet-runtime/bindings/types';

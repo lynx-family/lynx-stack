@@ -1,4 +1,4 @@
-import { describe, expect, it, vi } from 'vitest';
+import { describe, expect, it, rstest as vi } from '@rstest/core';
 
 import { getEventValue } from '../../../../src/element-template/prop-adapters/event-value.js';
 import { prepareSpreadAttrSlot } from '../../../../src/element-template/prop-adapters/spread.js';

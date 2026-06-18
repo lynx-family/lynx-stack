@@ -4,7 +4,7 @@
  * LICENSE file in the root directory of this source tree.
  */
 import './jsdom.js';
-import { describe, expect, test, vi } from 'vitest';
+import { describe, expect, test, rstest as vi } from '@rstest/core';
 import { I18nManager } from '../ts/client/mainthread/I18n.js';
 import { BackgroundThread } from '../ts/client/mainthread/Background.js';
 import { i18nResourceMissedEventName } from '../ts/constants.js';

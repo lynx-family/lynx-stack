@@ -1,4 +1,4 @@
-import { describe, expect, it, vi } from 'vitest';
+import { describe, expect, it, rstest as vi } from '@rstest/core';
 
 import { root } from '@lynx-js/react/element-template';
 import type { DataProcessorDefinition, DataProcessors, InitData, InitDataRaw } from '@lynx-js/react/element-template';

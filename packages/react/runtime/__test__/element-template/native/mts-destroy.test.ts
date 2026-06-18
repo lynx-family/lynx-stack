@@ -1,4 +1,4 @@
-import { afterEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, describe, expect, it, rstest as vi, rstest } from '@rstest/core';
 
 import { installOnMtsDestruction, onMtsDestruction } from '../../../src/element-template/native/mts-destroy.js';
 import {
@@ -33,8 +33,8 @@ describe('mts-destroy', () => {
     elementTemplateRegistry.clear();
     clearMainThreadDynamicAttrState();
     clearEtAttrPlanMap();
-    vi.doUnmock('../../../src/element-template/native/patch-listener.js');
-    vi.doUnmock('../../../src/element-template/runtime/template/registry.js');
+    rstest.doUnmock('../../../src/element-template/native/patch-listener.js');
+    rstest.doUnmock('../../../src/element-template/runtime/template/registry.js');
     vi.unstubAllGlobals();
   });
 
@@ -158,19 +158,19 @@ describe('mts-destroy', () => {
   });
 
   it('clears registry and removes native listener even when patch listener reset throws', async () => {
-    vi.resetModules();
+    rstest.resetModules();
     const resetError = new Error('patch listener reset failed');
     const clear = vi.fn();
     const removeEventListener = vi.fn();
     const g = globalThis as LynxWithNative;
     const originalGetNative = g.lynx.getNative;
 
-    vi.doMock('../../../src/element-template/native/patch-listener.js', () => ({
+    rstest.doMock('../../../src/element-template/native/patch-listener.js', () => ({
       resetElementTemplatePatchListener: vi.fn(() => {
         throw resetError;
       }),
     }));
-    vi.doMock('../../../src/element-template/runtime/template/registry.js', () => ({
+    rstest.doMock('../../../src/element-template/runtime/template/registry.js', () => ({
       elementTemplateRegistry: {
         clear,
       },

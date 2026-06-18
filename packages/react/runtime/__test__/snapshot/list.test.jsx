@@ -1,5 +1,5 @@
 /** @jsxImportSource ../../lepus */
-import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, rstest as vi } from '@rstest/core';
 
 import { elementTree, nativeMethodQueue } from './utils/nativeMethod';
 import { hydrate } from '../../src/snapshot/renderToOpcodes/hydrate';

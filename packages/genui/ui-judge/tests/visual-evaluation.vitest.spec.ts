@@ -1,8 +1,8 @@
 // Copyright 2026 The Lynx Authors. All rights reserved.
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
+import { afterEach, describe, expect, it, rstest } from '@rstest/core';
 import sharp from 'sharp';
-import { afterEach, describe, expect, it, vi } from 'vitest';
 
 import {
   VISUAL_EVALUATION_SYSTEM_PROMPT,
@@ -18,8 +18,8 @@ import type {
 
 describe('runVisualEvaluation', () => {
   afterEach(() => {
-    vi.restoreAllMocks();
-    vi.unstubAllGlobals();
+    rstest.restoreAllMocks();
+    rstest.unstubAllGlobals();
   });
 
   it('evaluates a plain base64 reference image and returns artifacts', async () => {
@@ -84,7 +84,7 @@ describe('runVisualEvaluation', () => {
 
   it('fetches an HTTP reference image', async () => {
     const reference = await createPatternPng();
-    const fetchMock = vi.fn<typeof fetch>().mockResolvedValue(
+    const fetchMock = rstest.fn<typeof fetch>().mockResolvedValue(
       new Response(reference, { status: 200 }),
     );
 
@@ -111,7 +111,7 @@ describe('runVisualEvaluation', () => {
 
   it('fetches an HTTPS reference image', async () => {
     const reference = await createPatternPng();
-    const fetchMock = vi.fn<typeof fetch>().mockResolvedValue(
+    const fetchMock = rstest.fn<typeof fetch>().mockResolvedValue(
       new Response(reference, { status: 200 }),
     );
 
@@ -157,7 +157,7 @@ describe('runVisualEvaluation', () => {
   });
 
   it('maps reference fetch failures', async () => {
-    const fetchMock = vi.fn<typeof fetch>().mockResolvedValue(
+    const fetchMock = rstest.fn<typeof fetch>().mockResolvedValue(
       new Response('', { status: 404 }),
     );
 
@@ -176,7 +176,7 @@ describe('runVisualEvaluation', () => {
   });
 
   it('rejects oversized reference image responses', async () => {
-    const fetchMock = vi.fn<typeof fetch>().mockResolvedValue(
+    const fetchMock = rstest.fn<typeof fetch>().mockResolvedValue(
       new Response('', {
         headers: {
           'Content-Length': String(11 * 1024 * 1024),
@@ -201,7 +201,7 @@ describe('runVisualEvaluation', () => {
   });
 
   it('rejects non-image reference image responses', async () => {
-    const fetchMock = vi.fn<typeof fetch>().mockResolvedValue(
+    const fetchMock = rstest.fn<typeof fetch>().mockResolvedValue(
       new Response('{}', {
         headers: {
           'Content-Type': 'application/json',
@@ -509,11 +509,11 @@ Rules for the JSON:
 });
 
 function createCapture(image: Buffer): CaptureFn {
-  return vi.fn<CaptureFn>().mockResolvedValue(image.toString('base64'));
+  return rstest.fn<CaptureFn>().mockResolvedValue(image.toString('base64'));
 }
 
 function createEvaluate(result: Record<string, unknown>): EvaluateFn {
-  return vi.fn<EvaluateFn>().mockResolvedValue({
+  return rstest.fn<EvaluateFn>().mockResolvedValue({
     issues: [],
     reason: 'ok',
     score: 1,

@@ -3,7 +3,7 @@
 // LICENSE file in the root directory of this source tree.
 
 import { createElement } from 'preact';
-import { vi } from 'vitest';
+import { rstest as vi } from '@rstest/core';
 
 import { BackgroundElementTemplateInstance } from '../../../../src/element-template/background/instance.js';
 import { hydrateBackground } from '../../test-utils/debug/hydrate.js';

@@ -1,7 +1,15 @@
 // Copyright 2025 The Lynx Authors. All rights reserved.
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
-import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
+import {
+  afterEach,
+  beforeEach,
+  describe,
+  expect,
+  test,
+  rstest as vi,
+} from '@rstest/core';
+import { rstest } from '@rstest/core';
 import { runOnMainThread, useEffect, useMainThreadRef } from '@lynx-js/react';
 import { act, render } from '@lynx-js/react/testing-library';
 import { animate, createMotionValue } from '../src/mini/index.js';
@@ -60,7 +68,7 @@ describe('Polyfill Unit Logic', () => {
   let originalLynx: any;
 
   beforeEach(() => {
-    vi.resetModules();
+    rstest.resetModules();
     originalQueueMicrotask = globalThis.queueMicrotask;
     originalLynx = globalThis.lynx;
   });

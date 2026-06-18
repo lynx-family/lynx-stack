@@ -1,4 +1,4 @@
-import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, rstest as vi, rstest } from '@rstest/core';
 
 import { increaseReloadVersion } from '../../../src/core/reload-version.js';
 import { setupBackgroundElementTemplateDocument } from '../../../src/element-template/background/document.js';
@@ -32,17 +32,17 @@ import { render as mockRender } from '../../../src/element-template/runtime/rend
 import { renderOpcodesIntoElementTemplate as mockRenderOpcodesIntoElementTemplate } from '../../../src/element-template/runtime/render/render-opcodes.js';
 import { render as preactRender } from 'preact';
 
-const mockedState = vi.hoisted(() => ({
+const mockedState = rstest.hoisted(() => ({
   page: undefined as unknown,
   root: {} as { __jsx?: unknown; stale?: boolean },
 }));
 
-vi.mock('../../../src/core/reload-version.js', () => ({
+rstest.mock('../../../src/core/reload-version.js', () => ({
   getReloadVersion: vi.fn(() => 1),
   increaseReloadVersion: vi.fn(),
 }));
 
-vi.mock('../../../src/element-template/runtime/page/page.js', () => ({
+rstest.mock('../../../src/element-template/runtime/page/page.js', () => ({
   get __page() {
     return mockedState.page;
   },
@@ -57,7 +57,7 @@ vi.mock('../../../src/element-template/runtime/page/page.js', () => ({
   }),
 }));
 
-vi.mock('../../../src/element-template/runtime/page/root-instance.js', () => ({
+rstest.mock('../../../src/element-template/runtime/page/root-instance.js', () => ({
   get __root() {
     return mockedState.root;
   },
@@ -66,58 +66,58 @@ vi.mock('../../../src/element-template/runtime/page/root-instance.js', () => ({
   }),
 }));
 
-vi.mock('../../../src/element-template/runtime/render/render-to-opcodes.js', () => ({
+rstest.mock('../../../src/element-template/runtime/render/render-to-opcodes.js', () => ({
   render: vi.fn(),
   registerSlot: vi.fn(),
 }));
 
-vi.mock('../../../src/element-template/runtime/render/render-opcodes.js', () => ({
+rstest.mock('../../../src/element-template/runtime/render/render-opcodes.js', () => ({
   renderOpcodesIntoElementTemplate: vi.fn(),
 }));
 
-vi.mock('../../../src/element-template/runtime/template/registry.js', () => ({
+rstest.mock('../../../src/element-template/runtime/template/registry.js', () => ({
   elementTemplateRegistry: {
     clear: vi.fn(),
   },
 }));
 
-vi.mock('../../../src/element-template/runtime/template/handle.js', () => ({
+rstest.mock('../../../src/element-template/runtime/template/handle.js', () => ({
   resetTemplateId: vi.fn(),
 }));
 
-vi.mock('../../../src/element-template/runtime/list/list.js', () => ({
+rstest.mock('../../../src/element-template/runtime/list/list.js', () => ({
   destroyAllElementTemplateListStates: vi.fn(),
   flushInitialElementTemplateListUpdates: vi.fn(() => []),
 }));
 
-vi.mock('../../../src/element-template/background/destroy.js', () => ({
+rstest.mock('../../../src/element-template/background/destroy.js', () => ({
   destroyElementTemplateBackgroundRuntime: vi.fn(),
 }));
 
-vi.mock('../../../src/element-template/background/document.js', () => ({
+rstest.mock('../../../src/element-template/background/document.js', () => ({
   setupBackgroundElementTemplateDocument: vi.fn(),
 }));
 
-vi.mock('../../../src/element-template/background/hydration-listener.js', () => ({
+rstest.mock('../../../src/element-template/background/hydration-listener.js', () => ({
   installElementTemplateHydrationListener: vi.fn(),
 }));
 
-vi.mock('../../../src/element-template/prop-adapters/event.js', () => ({
+rstest.mock('../../../src/element-template/prop-adapters/event.js', () => ({
   resetEventStateForRuntime: vi.fn(),
 }));
 
-vi.mock('../../../src/element-template/background/instance.js', () => ({
+rstest.mock('../../../src/element-template/background/instance.js', () => ({
   BackgroundElementTemplateInstance: class BackgroundElementTemplateInstance {
     constructor(public type: string) {}
   },
 }));
 
-vi.mock('../../../src/element-template/debug/profile.js', () => ({
+rstest.mock('../../../src/element-template/debug/profile.js', () => ({
   profileEnd: vi.fn(),
   profileStart: vi.fn(),
 }));
 
-vi.mock('preact', () => ({
+rstest.mock('preact', () => ({
   render: vi.fn(),
 }));
 

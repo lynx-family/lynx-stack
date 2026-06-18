@@ -1,4 +1,4 @@
-import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, rstest as vi, rstest } from '@rstest/core';
 
 import { injectCalledByNative } from '../../../src/element-template/native/main-thread-api.js';
 import { reloadMainThread } from '../../../src/element-template/native/reload-main-thread.js';
@@ -8,11 +8,11 @@ import {
   resetMainThreadRootRefs,
 } from '../../../src/element-template/runtime/render/render-main-thread.js';
 
-const mockedPageModuleState = vi.hoisted(() => ({
+const mockedPageModuleState = rstest.hoisted(() => ({
   page: undefined as unknown,
 }));
 
-vi.mock('../../../src/element-template/runtime/page/page.js', () => ({
+rstest.mock('../../../src/element-template/runtime/page/page.js', () => ({
   get __page() {
     return mockedPageModuleState.page;
   },
@@ -22,12 +22,12 @@ vi.mock('../../../src/element-template/runtime/page/page.js', () => ({
   }),
 }));
 
-vi.mock('../../../src/element-template/runtime/render/render-main-thread.js', () => ({
+rstest.mock('../../../src/element-template/runtime/render/render-main-thread.js', () => ({
   renderMainThread: vi.fn(),
   resetMainThreadRootRefs: vi.fn(),
 }));
 
-vi.mock('../../../src/element-template/native/reload-main-thread.js', () => ({
+rstest.mock('../../../src/element-template/native/reload-main-thread.js', () => ({
   reloadMainThread: vi.fn(),
 }));
 

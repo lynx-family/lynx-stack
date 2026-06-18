@@ -1,6 +1,6 @@
 import { cloneElement, Component, render } from 'preact';
 import { Suspense, lazy } from 'preact/compat';
-import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
+import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, it, rstest as vi } from '@rstest/core';
 
 import { setupBackgroundDocument, setupDocument } from '../../src/document';
 import { globalBackgroundSnapshotInstancesToRemove } from '../../src/snapshot/lifecycle/patch/commit';

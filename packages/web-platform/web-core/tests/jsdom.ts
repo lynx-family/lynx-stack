@@ -1,7 +1,7 @@
 import { JSDOM } from 'jsdom';
 import * as fs from 'fs';
 import { fileURLToPath } from 'url';
-import { vi } from 'vitest';
+import { rstest as vi } from '@rstest/core';
 
 const { window } = new JSDOM(undefined, { url: 'http://localhost/' });
 const document = window.document;

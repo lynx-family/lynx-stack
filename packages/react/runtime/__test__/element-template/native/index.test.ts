@@ -1,4 +1,4 @@
-import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, rstest as vi, rstest } from '@rstest/core';
 
 import { ElementTemplateEnvManager } from '../test-utils/debug/envManager.js';
 
@@ -8,7 +8,7 @@ describe('element-template native index wiring', () => {
   const originalNodeEnv = process.env['NODE_ENV'];
 
   beforeEach(() => {
-    vi.resetModules();
+    rstest.resetModules();
     vi.clearAllMocks();
     globalThis.__ALOG_ELEMENT_API__ = undefined;
   });
@@ -16,24 +16,24 @@ describe('element-template native index wiring', () => {
   afterEach(() => {
     process.env['NODE_ENV'] = originalNodeEnv;
     globalThis.__ALOG_ELEMENT_API__ = undefined;
-    vi.resetModules();
-    vi.doUnmock('../../../src/element-template/native/main-thread-api.js');
-    vi.doUnmock('../../../src/element-template/native/patch-listener.js');
-    vi.doUnmock('../../../src/element-template/native/mts-destroy.js');
-    vi.doUnmock('../../../src/element-template/native/callDestroyLifetimeFun.js');
-    vi.doUnmock('../../../src/element-template/native/reload-background.js');
-    vi.doUnmock('../../../src/element-template/prop-adapters/event.js');
-    vi.doUnmock('../../../src/element-template/background/document.js');
-    vi.doUnmock('../../../src/element-template/background/hydration-listener.js');
-    vi.doUnmock('../../../src/element-template/background/commit-hook.js');
-    vi.doUnmock('../../../src/element-template/background/instance.js');
-    vi.doUnmock('../../../src/element-template/debug/elementPAPICall.js');
-    vi.doUnmock('../../../src/element-template/debug/profile.js');
-    vi.doUnmock('../../../src/element-template/lynx/env.js');
-    vi.doUnmock('../../../src/element-template/lynx/performance.js');
-    vi.doUnmock('../../../src/core/lynx-update-data.js');
-    vi.doUnmock('../../../src/core/globalProps.js');
-    vi.doUnmock('../../../src/element-template/runtime/page/root-instance.js');
+    rstest.resetModules();
+    rstest.doUnmock('../../../src/element-template/native/main-thread-api.js');
+    rstest.doUnmock('../../../src/element-template/native/patch-listener.js');
+    rstest.doUnmock('../../../src/element-template/native/mts-destroy.js');
+    rstest.doUnmock('../../../src/element-template/native/callDestroyLifetimeFun.js');
+    rstest.doUnmock('../../../src/element-template/native/reload-background.js');
+    rstest.doUnmock('../../../src/element-template/prop-adapters/event.js');
+    rstest.doUnmock('../../../src/element-template/background/document.js');
+    rstest.doUnmock('../../../src/element-template/background/hydration-listener.js');
+    rstest.doUnmock('../../../src/element-template/background/commit-hook.js');
+    rstest.doUnmock('../../../src/element-template/background/instance.js');
+    rstest.doUnmock('../../../src/element-template/debug/elementPAPICall.js');
+    rstest.doUnmock('../../../src/element-template/debug/profile.js');
+    rstest.doUnmock('../../../src/element-template/lynx/env.js');
+    rstest.doUnmock('../../../src/element-template/lynx/performance.js');
+    rstest.doUnmock('../../../src/core/lynx-update-data.js');
+    rstest.doUnmock('../../../src/core/globalProps.js');
+    rstest.doUnmock('../../../src/element-template/runtime/page/root-instance.js');
   });
 
   it('installs main-thread wiring only on main thread', async () => {
@@ -53,43 +53,43 @@ describe('element-template native index wiring', () => {
     const initTimingAPI = vi.fn();
     const reloadBackground = vi.fn();
 
-    vi.doMock('../../../src/element-template/native/main-thread-api.js', () => ({
+    rstest.doMock('../../../src/element-template/native/main-thread-api.js', () => ({
       injectCalledByNative,
     }));
-    vi.doMock('../../../src/element-template/native/patch-listener.js', () => ({
+    rstest.doMock('../../../src/element-template/native/patch-listener.js', () => ({
       installElementTemplatePatchListener,
     }));
-    vi.doMock('../../../src/element-template/native/mts-destroy.js', () => ({
+    rstest.doMock('../../../src/element-template/native/mts-destroy.js', () => ({
       installOnMtsDestruction,
     }));
-    vi.doMock('../../../src/element-template/debug/elementPAPICall.js', () => ({
+    rstest.doMock('../../../src/element-template/debug/elementPAPICall.js', () => ({
       initElementTemplatePAPICallAlog,
     }));
-    vi.doMock('../../../src/element-template/debug/profile.js', () => ({
+    rstest.doMock('../../../src/element-template/debug/profile.js', () => ({
       initProfileHook,
     }));
-    vi.doMock('../../../src/element-template/lynx/env.js', () => ({
+    rstest.doMock('../../../src/element-template/lynx/env.js', () => ({
       setupLynxEnv,
     }));
-    vi.doMock('../../../src/element-template/background/commit-hook.js', () => ({
+    rstest.doMock('../../../src/element-template/background/commit-hook.js', () => ({
       installElementTemplateCommitHook,
     }));
-    vi.doMock('../../../src/element-template/background/document.js', () => ({
+    rstest.doMock('../../../src/element-template/background/document.js', () => ({
       setupBackgroundElementTemplateDocument,
     }));
-    vi.doMock('../../../src/element-template/background/hydration-listener.js', () => ({
+    rstest.doMock('../../../src/element-template/background/hydration-listener.js', () => ({
       installElementTemplateHydrationListener,
     }));
-    vi.doMock('../../../src/element-template/runtime/page/root-instance.js', () => ({
+    rstest.doMock('../../../src/element-template/runtime/page/root-instance.js', () => ({
       setRoot,
     }));
-    vi.doMock('../../../src/element-template/lynx/performance.js', () => ({
+    rstest.doMock('../../../src/element-template/lynx/performance.js', () => ({
       initTimingAPI,
     }));
-    vi.doMock('../../../src/element-template/background/instance.js', () => ({
+    rstest.doMock('../../../src/element-template/background/instance.js', () => ({
       BackgroundElementTemplateInstance: class BackgroundElementTemplateInstance {},
     }));
-    vi.doMock('../../../src/element-template/native/reload-background.js', () => ({
+    rstest.doMock('../../../src/element-template/native/reload-background.js', () => ({
       reloadBackground,
     }));
 
@@ -132,56 +132,56 @@ describe('element-template native index wiring', () => {
     const updateGlobalProps = vi.fn();
     const reloadBackground = vi.fn();
 
-    vi.doMock('../../../src/element-template/native/main-thread-api.js', () => ({
+    rstest.doMock('../../../src/element-template/native/main-thread-api.js', () => ({
       injectCalledByNative,
     }));
-    vi.doMock('../../../src/element-template/native/patch-listener.js', () => ({
+    rstest.doMock('../../../src/element-template/native/patch-listener.js', () => ({
       installElementTemplatePatchListener,
     }));
-    vi.doMock('../../../src/element-template/native/mts-destroy.js', () => ({
+    rstest.doMock('../../../src/element-template/native/mts-destroy.js', () => ({
       installOnMtsDestruction,
     }));
-    vi.doMock('../../../src/element-template/background/commit-hook.js', () => ({
+    rstest.doMock('../../../src/element-template/background/commit-hook.js', () => ({
       installElementTemplateCommitHook,
     }));
-    vi.doMock('../../../src/element-template/background/document.js', () => ({
+    rstest.doMock('../../../src/element-template/background/document.js', () => ({
       setupBackgroundElementTemplateDocument,
     }));
-    vi.doMock('../../../src/element-template/background/hydration-listener.js', () => ({
+    rstest.doMock('../../../src/element-template/background/hydration-listener.js', () => ({
       installElementTemplateHydrationListener,
     }));
-    vi.doMock('../../../src/element-template/debug/profile.js', () => ({
+    rstest.doMock('../../../src/element-template/debug/profile.js', () => ({
       initProfileHook,
     }));
-    vi.doMock('../../../src/element-template/lynx/env.js', () => ({
+    rstest.doMock('../../../src/element-template/lynx/env.js', () => ({
       setupLynxEnv,
     }));
-    vi.doMock('../../../src/element-template/lynx/performance.js', () => ({
+    rstest.doMock('../../../src/element-template/lynx/performance.js', () => ({
       initTimingAPI,
     }));
-    vi.doMock('../../../src/core/lynx-update-data.js', () => ({
+    rstest.doMock('../../../src/core/lynx-update-data.js', () => ({
       updateCardData,
     }));
-    vi.doMock('../../../src/core/globalProps.js', () => ({
+    rstest.doMock('../../../src/core/globalProps.js', () => ({
       updateGlobalProps,
     }));
-    vi.doMock('../../../src/element-template/runtime/page/root-instance.js', () => ({
+    rstest.doMock('../../../src/element-template/runtime/page/root-instance.js', () => ({
       setRoot,
     }));
-    vi.doMock('../../../src/element-template/native/callDestroyLifetimeFun.js', () => ({
+    rstest.doMock('../../../src/element-template/native/callDestroyLifetimeFun.js', () => ({
       callDestroyLifetimeFun,
     }));
-    vi.doMock('../../../src/element-template/prop-adapters/event.js', () => ({
+    rstest.doMock('../../../src/element-template/prop-adapters/event.js', () => ({
       publishEvent,
       publicComponentEvent,
       resetEventStateForRuntime,
     }));
-    vi.doMock('../../../src/element-template/background/instance.js', () => ({
+    rstest.doMock('../../../src/element-template/background/instance.js', () => ({
       BackgroundElementTemplateInstance: class BackgroundElementTemplateInstance {
         constructor(public type: string) {}
       },
     }));
-    vi.doMock('../../../src/element-template/native/reload-background.js', () => ({
+    rstest.doMock('../../../src/element-template/native/reload-background.js', () => ({
       reloadBackground,
     }));
 

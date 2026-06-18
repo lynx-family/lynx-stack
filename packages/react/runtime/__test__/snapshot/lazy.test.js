@@ -1,6 +1,9 @@
 import '../../lazy/import.js';
 
-import { describe, expect, test, vi } from 'vitest';
+import { describe, expect, test, rstest as vi } from '@rstest/core';
+// `rstest.resetModules()` must be a literal call so rstest's static transform
+// can hoist it; the `vitest` alias does not work for module-mock APIs.
+import { rstest } from '@rstest/core';
 import * as ReactExports from '../../lazy/react.js';
 import * as ReactCompatExports from '../../lazy/compat.js';
 import * as ReactLepusExports from '../../lazy/react-lepus.js';
@@ -137,7 +140,7 @@ describe('Lazy Exports', () => {
   });
 
   test('target background', async () => {
-    vi.resetModules();
+    rstest.resetModules();
 
     const lynx = {};
     vi.stubGlobal('lynx', lynx);
@@ -148,7 +151,7 @@ describe('Lazy Exports', () => {
   });
 
   test('target main-thread', async () => {
-    vi.resetModules();
+    rstest.resetModules();
 
     vi.stubGlobal('__LEPUS__', true);
 
@@ -189,7 +192,7 @@ describe('Lazy Exports', () => {
 
   test('throws when an ET runtime marker imports the Snapshot standalone lazy entry', async () => {
     await withRuntimeBackend(undefined, async () => {
-      vi.resetModules();
+      rstest.resetModules();
 
       await import('../../src/element-template/runtime-backend-marker.ts');
       expect(target[sRuntimeBackend]).toBe(RUNTIME_BACKEND_ELEMENT_TEMPLATE);

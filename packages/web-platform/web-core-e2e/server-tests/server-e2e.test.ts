@@ -1,9 +1,17 @@
-import { test, expect } from 'vitest';
+import { test, expect, rstest } from '@rstest/core';
 import * as path from 'path';
 import * as fs from 'fs';
 import { format } from 'prettier';
-import { executeTemplate } from '@lynx-js/web-core/server';
 import { fileURLToPath } from 'url';
+
+// rspack resolves `in_shadow.css?inline` to the full processed stylesheet,
+// whereas the previous Vitest run left it empty. Stub it back to an empty
+// string so the SSR `<style>` output matches the committed snapshots.
+rstest.mock('../../web-core/css/in_shadow.css?inline', () => ({
+  default: '',
+}));
+
+import { executeTemplate } from '@lynx-js/web-core/server';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 

@@ -16,15 +16,15 @@
   ],
   "scripts": {
     "build": "tsc --build",
-    "test": "pnpm run test:snapshot && pnpm run test:core && pnpm run test:et",
-    "test:core": "vitest run __test__/core",
-    "test:et": "vitest run -c __test__/element-template/vitest.config.ts --coverage",
-    "test:snapshot": "vitest run --coverage __test__/snapshot __test__/worklet-runtime __test__/guardrails"
+    "test": "pnpm run test:main && pnpm run test:et",
+    "test:et": "rstest run -c __test__/element-template/rstest.config.ts",
+    "test:main": "rstest run -c rstest.config.ts"
   },
   "devDependencies": {
     "@lynx-js/react": "workspace:*",
     "@lynx-js/react-transform": "workspace:*",
     "@lynx-js/types": "3.7.0",
+    "@rstest/core": "catalog:rstest",
     "@types/react": "^18.3.28",
     "pretty-format": "^30.2.0"
   },

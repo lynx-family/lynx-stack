@@ -2,7 +2,7 @@
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
 
-import { expect, vi } from 'vitest';
+import { expect, rstest as vi } from '@rstest/core';
 
 export const performance = {
   __functionCallHistory: [],

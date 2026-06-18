@@ -4,7 +4,7 @@
 
 import { useState } from '@lynx-js/react';
 import { act, render } from '@lynx-js/react/testing-library';
-import { beforeEach, describe, expect, test, vi } from 'vitest';
+import { beforeEach, describe, expect, test, rstest as vi } from '@rstest/core';
 
 import { useMainThreadMemoizedFn } from '../src/utils/useMainThreadMemoizedFn.js';
 

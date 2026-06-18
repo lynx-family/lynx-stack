@@ -1,4 +1,4 @@
-import { vi } from 'vitest';
+import { rstest as vi } from '@rstest/core';
 
 import {
   globalCommitContext,

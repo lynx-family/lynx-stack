@@ -1,4 +1,4 @@
-import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, rstest as vi } from '@rstest/core';
 
 import { WorkletEvents, type RunWorkletCtxData } from '../../src/worklet-runtime/bindings/events.js';
 import {
