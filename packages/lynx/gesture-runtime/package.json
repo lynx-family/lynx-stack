@@ -2,6 +2,10 @@
   "name": "@lynx-js/gesture-runtime",
   "version": "2.1.3",
   "description": "Lynx Gesture",
+  "homepage": "https://github.com/lynx-family/lynx-stack/tree/main/packages/lynx/gesture-runtime#readme",
+  "bugs": {
+    "url": "https://github.com/lynx-family/lynx-stack/issues"
+  },
   "repository": {
     "type": "git",
     "url": "https://github.com/lynx-family/lynx-stack.git",

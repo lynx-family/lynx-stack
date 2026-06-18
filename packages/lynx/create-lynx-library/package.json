@@ -7,6 +7,10 @@
     "Autolink",
     "create"
   ],
+  "homepage": "https://github.com/lynx-family/lynx-stack/tree/main/packages/lynx/create-lynx-library#readme",
+  "bugs": {
+    "url": "https://github.com/lynx-family/lynx-stack/issues"
+  },
   "repository": {
     "type": "git",
     "url": "https://github.com/lynx-family/lynx-stack.git",

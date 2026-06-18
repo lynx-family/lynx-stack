@@ -2,6 +2,10 @@
   "name": "@lynx-js/docs-mcp-server",
   "version": "0.2.3",
   "description": "A MCP Server providing Lynx documentation resources for LLMs, with carefully designed prompting.",
+  "homepage": "https://github.com/lynx-family/lynx-stack/tree/main/packages/mcp-servers/docs-mcp-server#readme",
+  "bugs": {
+    "url": "https://github.com/lynx-family/lynx-stack/issues"
+  },
   "repository": {
     "type": "git",
     "url": "git+https://github.com/lynx-family/lynx-stack.git",

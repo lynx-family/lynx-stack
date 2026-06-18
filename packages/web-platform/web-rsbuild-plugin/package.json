@@ -8,6 +8,10 @@
     "Lynx",
     "Web Platform"
   ],
+  "homepage": "https://github.com/lynx-family/lynx-stack/tree/main/packages/web-platform/web-rsbuild-plugin#readme",
+  "bugs": {
+    "url": "https://github.com/lynx-family/lynx-stack/issues"
+  },
   "repository": {
     "type": "git",
     "url": "https://github.com/lynx-family/lynx-stack.git",

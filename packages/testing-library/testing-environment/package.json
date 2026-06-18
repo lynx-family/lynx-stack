@@ -7,6 +7,10 @@
     "ReactLynx",
     "testing"
   ],
+  "homepage": "https://github.com/lynx-family/lynx-stack/tree/main/packages/testing-library/testing-environment#readme",
+  "bugs": {
+    "url": "https://github.com/lynx-family/lynx-stack/issues"
+  },
   "repository": {
     "type": "git",
     "url": "https://github.com/lynx-family/lynx-stack.git",

@@ -2,6 +2,10 @@
   "name": "@lynx-js/react",
   "version": "0.121.2",
   "description": "ReactLynx is a framework for developing Lynx applications with familiar React.",
+  "homepage": "https://github.com/lynx-family/lynx-stack/tree/main/packages/react#readme",
+  "bugs": {
+    "url": "https://github.com/lynx-family/lynx-stack/issues"
+  },
   "repository": {
     "type": "git",
     "url": "https://github.com/lynx-family/lynx-stack.git",
