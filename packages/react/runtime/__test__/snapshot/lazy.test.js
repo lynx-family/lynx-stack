@@ -1,9 +1,8 @@
 import '../../lazy/import.js';
 
-import { describe, expect, test, rstest } from '@rstest/core';
 // `rstest.resetModules()` must be a literal call so rstest's static transform
-// can hoist it; the `vitest` alias does not work for module-mock APIs.
-import { rstest } from '@rstest/core';
+// can hoist it (module-mock APIs cannot be reached through an import alias).
+import { describe, expect, rstest, test } from '@rstest/core';
 import * as ReactExports from '../../lazy/react.js';
 import * as ReactCompatExports from '../../lazy/compat.js';
 import * as ReactLepusExports from '../../lazy/react-lepus.js';

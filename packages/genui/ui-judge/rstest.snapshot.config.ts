@@ -8,7 +8,7 @@ const config: ReturnType<typeof defineConfig> = defineConfig({
   globals: true,
   testEnvironment: 'node',
   hookTimeout: 180_000,
-  include: ['scripts/update-react-fixture-snapshot.vitest.ts'],
+  include: ['scripts/update-react-fixture-snapshot.rstest.ts'],
   testTimeout: 240_000,
 });
 

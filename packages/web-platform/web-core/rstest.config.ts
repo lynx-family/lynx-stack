@@ -11,13 +11,13 @@ const config: ReturnType<typeof defineConfig> = defineConfig({
   // (imported by each spec via `import './jsdom.js'`). That setup file
   // surfaces jsdom globals, mocks `fetch` for wasm loading and provides a
   // MessageChannel-based Worker mock. We therefore run on the `node`
-  // environment and let the setup file provide the DOM globals, matching the
-  // previous vitest behaviour (which used the same manual JSDOM instance).
+  // environment and let the setup file provide the DOM globals via the same
+  // manual JSDOM instance.
   testEnvironment: 'node',
   globals: true,
   resolve: {
     alias: {
-      // Replicates the vitest `transform-debug-wasm` Vite plugin's glue swap:
+      // Replicates the `transform-debug-wasm` glue swap:
       // load the debug wasm-bindgen glue (`client_debug.js`) instead of the
       // optimized `client.js` so the glue's import names match the debug wasm
       // binary that `tests/loaders/debug-wasm-loader.cjs` redirects the runtime
@@ -40,7 +40,7 @@ const config: ReturnType<typeof defineConfig> = defineConfig({
         parser: {
           javascript: { url: false },
         },
-        // Replicates the vitest `transform-debug-wasm` Vite plugin: swap the
+        // Replicates the `transform-debug-wasm` transform: swap the
         // optimized wasm/js binding for the debug build inside `ts/client/wasm.ts`.
         rules: [
           {

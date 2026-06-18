@@ -3,9 +3,8 @@
 // LICENSE file in the root directory of this source tree.
 
 // A minimal rspack loader that runs `transformReactLynxSync` on test and src
-// files, mirroring the `test`-mode options of the vitest
-// `transformReactLynxPlugin` (see
-// `packages/react/testing-library/src/plugins/vitest.ts`).
+// files, mirroring the `test`-mode options of the ReactLynx testing-library
+// transform plugin.
 //
 // It imports `@lynx-js/react/transform` directly instead of
 // `@lynx-js/react-rsbuild-plugin`, so it does NOT pull

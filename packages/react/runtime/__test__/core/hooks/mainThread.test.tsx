@@ -4,7 +4,7 @@
 
 import { beforeEach, afterEach, rstest } from '@rstest/core';
 // `rstest.resetModules()` must be a literal call (module-mock APIs are not
-// aliasable through `vitest`).
+// aliasable).
 import { rstest } from '@rstest/core';
 import { globalEnvManager } from '../../snapshot/utils/envManager';
 import { describe } from '@rstest/core';

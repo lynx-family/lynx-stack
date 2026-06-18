@@ -5,7 +5,7 @@
 // Custom rspack loader that runs `transformReactLynxSync` on `.jsx`/`.tsx`
 // sources. react/runtime tests its OWN `src`, so we cannot use
 // `pluginReactLynx` (which targets the published package). Instead we replicate
-// the old vitest `transformReactLynxPlugin` as an rspack loader, wired through
+// the `transformReactLynxPlugin` behaviour as an rspack loader, wired through
 // `tools.bundlerChain`.
 //
 // The loader supports two modes via the `mode` option:

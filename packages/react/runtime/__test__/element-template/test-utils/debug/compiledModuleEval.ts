@@ -6,7 +6,7 @@
 //
 // The ET fixtures are compiled at runtime by `transformReactLynx`, producing ESM
 // that imports a small, fixed set of `@lynx-js/react/*` runtime entry points and
-// exports `App` (plus optional `mainProps`/`backgroundProps`). The old vitest
+// exports `App` (plus optional `mainProps`/`backgroundProps`). An earlier
 // harness wrote this code to a temp `.js` file and `await import()`ed it. Under
 // rstest that escapes the rspack bundler into Node's native ESM loader, which
 // cannot resolve the bare `@lynx-js/react/*` specifiers (they alias to TypeScript

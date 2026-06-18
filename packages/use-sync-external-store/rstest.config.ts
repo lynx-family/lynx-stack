@@ -34,8 +34,7 @@ const config: RstestConfig = defineConfig({
           alias: {
             ...config.resolve?.alias,
             ...preactSingletonAlias,
-            // Alias `vitest` to `@rstest/core` so test files can keep
-            // `import ... from '@rstest/core'`.
+            // Test files import the runner directly from `@rstest/core`.
           },
         },
         tools: {

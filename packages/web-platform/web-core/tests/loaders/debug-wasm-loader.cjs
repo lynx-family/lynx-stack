@@ -4,7 +4,7 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-// Ported from the vitest `transform-debug-wasm` Vite plugin.
+// Ported from the `transform-debug-wasm` transform.
 // Redirects the runtime `fetch(new URL('client_bg.wasm', import.meta.url))` to
 // the debug wasm binary that works under the test environment. Applied to
 // `ts/client/wasm.ts` only. (The matching glue-JS swap is done via

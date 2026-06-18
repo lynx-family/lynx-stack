@@ -7,7 +7,7 @@
 // 1. Timer-global guard. The worklet runtime's `initApiEnv()` reassigns
 //    `globalThis.{setTimeout,clearTimeout,setInterval,clearInterval,...}` to
 //    `lynx.*`, which in the test mocks are frequently `undefined`. Under the
-//    `node` environment (vitest's old default) leaving these clobbered was
+//    `node` environment leaving these clobbered was
 //    harmless. Under rstest's REQUIRED jsdom environment the jsdom Window owns
 //    those globals and its own async timer machinery + `window.close()`
 //    teardown call them, so an `undefined` clearTimeout/clearInterval crashes
@@ -16,9 +16,9 @@
 //    a real `lynx.*` timer, but an `undefined` mock can no longer break jsdom.
 //
 // 2. pretty-format (used by rstest's snapshot serializer) prints unnamed mock
-//    functions differently than vitest did. The inline snapshots in this suite
-//    expect `[MockFunction spy]` for anonymous mocks, so register a serializer
-//    that reproduces that output.
+//    functions as `[MockFunction rstest.fn()]`. The inline snapshots in this
+//    suite expect `[MockFunction spy]` for anonymous mocks, so register a
+//    serializer that reproduces that output.
 
 import { expect } from '@rstest/core';
 
@@ -63,10 +63,10 @@ function isMockFunction(val: unknown): val is { mock: unknown; getMockName?: () 
 }
 
 // rstest's default mock name is `rstest.fn()`, which pretty-format prints as
-// `[MockFunction rstest.fn()]`. The inline snapshots in this suite were captured
-// under vitest, whose unnamed mocks print as `[MockFunction spy]`. Re-print
-// unnamed mocks as `[MockFunction spy]` so the existing snapshots keep matching.
-const UNNAMED_MOCK_NAMES = new Set(['', 'spy', 'rstest.fn()', 'vi.fn()']);
+// `[MockFunction rstest.fn()]`. The inline snapshots in this suite expect
+// `[MockFunction spy]` for unnamed mocks. Re-print unnamed mocks as
+// `[MockFunction spy]` so the existing snapshots keep matching.
+const UNNAMED_MOCK_NAMES = new Set(['', 'spy', 'rstest.fn()']);
 
 expect.addSnapshotSerializer({
   test(val: unknown) {

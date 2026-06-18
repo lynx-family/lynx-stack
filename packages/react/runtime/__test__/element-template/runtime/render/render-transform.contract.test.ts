@@ -189,7 +189,7 @@ describe('render transform contract', () => {
   // SKIP (stale native transform binary): asserts the ET MTS-bridge codegen
   // (`adaptMTEventAttrSlot`, #2852) which the installed @lynx-js/react-transform
   // `.node` binary (predates the feature) never emits. Pre-existing failure
-  // (fails under vitest too); out of scope (needs a transform rebuild).
+  // unrelated to the test runner; out of scope (needs a transform rebuild).
   it.skip('imports only the worklet runtime loader for direct main-thread events', async () => {
     const result = await compileMainThreadElementTemplate(`
       function handleTap() {

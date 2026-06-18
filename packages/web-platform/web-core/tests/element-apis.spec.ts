@@ -26,8 +26,8 @@ describe('Element APIs', () => {
     mtsBinding = new WASMJSBinding(
       // NOTE: the binding-shaped object is built as a plain nested object
       // literal with `rstest.fn()` leaves rather than nested `rstest.mockObject(...)`.
-      // rstest's `mockObject`, unlike vitest's, drops functions nested inside
-      // non-function child objects, so nesting mockObjects loses the methods.
+      // rstest's `mockObject` drops functions nested inside non-function child
+      // objects, so nesting mockObjects loses the methods.
       {
         rootDom,
         backgroundThread: {

@@ -9,11 +9,10 @@ const config: ReturnType<typeof defineConfig> = defineConfig({
   testEnvironment: 'node',
   // The Android-integration suite (UI_JUDGE_ANDROID_INTEGRATION=1) shares a
   // single emulator / Lynx Explorer instance and ADB port reverses across test
-  // files, so files must run serially. The vitest config used
-  // `fileParallelism: false`; rstest maps that to `pool.maxWorkers: 1`.
+  // files, so files must run serially via `pool.maxWorkers: 1`.
   pool: { type: 'forks', maxWorkers: 1 },
   hookTimeout: 60_000,
-  include: ['tests/**/*.vitest.spec.ts'],
+  include: ['tests/**/*.rstest.spec.ts'],
   testTimeout: 60_000,
 });
 
