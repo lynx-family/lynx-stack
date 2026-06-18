@@ -7,7 +7,7 @@ import {
   describe,
   expect,
   test,
-  rstest as vi,
+  rstest,
 } from '@rstest/core';
 import type { MockInstance } from '@rstest/core';
 
@@ -173,7 +173,7 @@ describe('gestures mt', () => {
   let spySetGesture: MockInstance;
 
   beforeEach(() => {
-    spySetGesture = vi.spyOn(
+    spySetGesture = rstest.spyOn(
       lynxTestingEnv.mainThread.globalThis,
       '__SetGestureDetector',
     );
@@ -296,7 +296,7 @@ describe('test processGesture in MTS', () => {
   let spySetGesture: MockInstance;
 
   beforeEach(() => {
-    spySetGesture = vi.spyOn(
+    spySetGesture = rstest.spyOn(
       lynxTestingEnv.mainThread.globalThis,
       '__SetGestureDetector',
     );

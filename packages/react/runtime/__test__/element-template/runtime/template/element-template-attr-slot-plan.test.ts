@@ -1,4 +1,4 @@
-import { afterEach, describe, expect, it, rstest as vi } from '@rstest/core';
+import { afterEach, describe, expect, it, rstest } from '@rstest/core';
 
 import {
   prepareAttributeSlots,
@@ -131,7 +131,7 @@ describe('ElementTemplate attr slot plan registry', () => {
   });
 
   it('keeps background exec writes off the raw direct main-thread event root ctx', () => {
-    const fn = vi.fn();
+    const fn = rstest.fn();
     const rawClosureObject = { _fn: 'ordinary-field', label: 'shared' };
     const rawJsFnHandle = { _fn: fn, _jsFnId: 1 };
     const rawNestedCtx = {
@@ -190,7 +190,7 @@ describe('ElementTemplate attr slot plan registry', () => {
   });
 
   it('reports invalid direct main-thread event values without mutating them', () => {
-    const reportError = vi.spyOn(lynx, 'reportError');
+    const reportError = rstest.spyOn(lynx, 'reportError');
 
     expect(adaptMTEventAttrSlot(-2, 0, true)).toBeNull();
     expect(adaptMTEventAttrSlot(-2, 0, 'handler')).toBeNull();
@@ -229,8 +229,8 @@ describe('ElementTemplate attr slot plan registry', () => {
   });
 
   it('queues registered ref slot updates from previous and next raw slots', () => {
-    const oldRef = vi.fn();
-    const newRef = vi.fn();
+    const oldRef = rstest.fn();
+    const newRef = rstest.fn();
     __etAttrPlanMap._et_ref = [0, adaptRefAttrSlot];
 
     queueRefAttributeSlotUpdates('_et_ref', -2, [oldRef], [newRef]);
@@ -243,9 +243,9 @@ describe('ElementTemplate attr slot plan registry', () => {
   });
 
   it('queues every ref-bearing attr slot independently', () => {
-    const directRef = vi.fn();
+    const directRef = rstest.fn();
     const objectRef = { current: null };
-    const spreadRef = vi.fn();
+    const spreadRef = rstest.fn();
     __etAttrPlanMap._et_multi_ref = [
       0,
       adaptRefAttrSlot,
@@ -277,8 +277,8 @@ describe('ElementTemplate attr slot plan registry', () => {
   });
 
   it('queues spread ref cleanup without detaching sibling direct refs', () => {
-    const directRef = vi.fn();
-    const spreadRef = vi.fn();
+    const directRef = rstest.fn();
+    const spreadRef = rstest.fn();
     __etAttrPlanMap._et_multi_ref = [
       0,
       adaptRefAttrSlot,

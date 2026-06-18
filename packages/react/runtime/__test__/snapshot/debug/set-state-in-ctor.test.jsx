@@ -1,10 +1,10 @@
-import { expect, test, rstest as vi } from '@rstest/core';
+import { expect, test, rstest } from '@rstest/core';
 
 test('preact/debug - this.setState in constructor', async () => {
-  vi.stubGlobal('__MAIN_THREAD__', false)
+  rstest.stubGlobal('__MAIN_THREAD__', false)
     .stubGlobal('__LEPUS__', false);
 
-  const consoleWarn = vi.spyOn(console, 'warn');
+  const consoleWarn = rstest.spyOn(console, 'warn');
   await import('preact/debug');
   const { root, Component } = await import('../../../src/index');
 

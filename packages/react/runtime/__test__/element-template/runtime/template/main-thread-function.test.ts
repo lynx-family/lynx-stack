@@ -2,7 +2,7 @@
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
 
-import { afterEach, beforeEach, describe, expect, it, rstest as vi } from '@rstest/core';
+import { afterEach, beforeEach, describe, expect, it, rstest } from '@rstest/core';
 
 import { WorkletEvents } from '@lynx-js/react/worklet-runtime/bindings';
 import { options } from 'preact';
@@ -26,7 +26,7 @@ describe('ElementTemplate runOnMainThread', () => {
   const envManager = new ElementTemplateEnvManager();
 
   beforeEach(() => {
-    vi.clearAllMocks();
+    rstest.clearAllMocks();
     envManager.resetEnv('background');
     SystemInfo.lynxSdkVersion = '4.0';
     resetElementTemplateCommitState();
@@ -47,7 +47,7 @@ describe('ElementTemplate runOnMainThread', () => {
   it('dispatches hydrated calls to the main thread and resolves returned values', async () => {
     markElementTemplateHydrated();
     const coreContext = lynx.getCoreContext();
-    const dispatchSpy = vi.spyOn(coreContext, 'dispatchEvent');
+    const dispatchSpy = rstest.spyOn(coreContext, 'dispatchEvent');
     const worklet = { _wkltId: 'direct-main-thread-function' };
 
     const promise = runOnMainThread(worklet as unknown as (value: string) => string)('hello');
@@ -76,7 +76,7 @@ describe('ElementTemplate runOnMainThread', () => {
 
   it('queues calls before hydration without dispatching directly', async () => {
     const coreContext = lynx.getCoreContext();
-    const dispatchSpy = vi.spyOn(coreContext, 'dispatchEvent');
+    const dispatchSpy = rstest.spyOn(coreContext, 'dispatchEvent');
     const worklet = { _wkltId: 'pre-hydrate-main-thread-function' };
 
     const promise = runOnMainThread(worklet as unknown as (value: string) => string)('hello');
@@ -107,7 +107,7 @@ describe('ElementTemplate runOnMainThread', () => {
 
   it('keeps component render calls on the delayed path', () => {
     markElementTemplateHydrated();
-    const dispatchSpy = vi.spyOn(lynx.getCoreContext(), 'dispatchEvent');
+    const dispatchSpy = rstest.spyOn(lynx.getCoreContext(), 'dispatchEvent');
     const worklet = { _wkltId: 'component-render-main-thread-function' };
 
     function App() {
@@ -141,7 +141,7 @@ describe('ElementTemplate runOnMainThread', () => {
     options.debounceRendering = (cb) => {
       scheduledRenders.push(cb);
     };
-    const dispatchSpy = vi.spyOn(lynx.getCoreContext(), 'dispatchEvent');
+    const dispatchSpy = rstest.spyOn(lynx.getCoreContext(), 'dispatchEvent');
     const worklet = { _wkltId: 'state-update-main-thread-function' };
     let rerender: () => void = () => {
       throw new Error('rerender was not initialized');
@@ -188,7 +188,7 @@ describe('ElementTemplate runOnMainThread', () => {
 
   it('dispatches commit effect calls directly after render scope ends', () => {
     markElementTemplateHydrated();
-    const dispatchSpy = vi.spyOn(lynx.getCoreContext(), 'dispatchEvent');
+    const dispatchSpy = rstest.spyOn(lynx.getCoreContext(), 'dispatchEvent');
     const worklet = { _wkltId: 'commit-effect-main-thread-function' };
 
     function App() {
@@ -217,7 +217,7 @@ describe('ElementTemplate runOnMainThread', () => {
       _wkltId: 'with-background-function',
       _jsFn: {
         onDone: {
-          _fn: vi.fn(),
+          _fn: rstest.fn(),
           _jsFnId: 7,
         },
       },
@@ -231,7 +231,7 @@ describe('ElementTemplate runOnMainThread', () => {
   it('clears the return listener when background function runtime resets', () => {
     markElementTemplateHydrated();
     const coreContext = lynx.getCoreContext();
-    const removeEventListener = vi.spyOn(coreContext, 'removeEventListener');
+    const removeEventListener = rstest.spyOn(coreContext, 'removeEventListener');
 
     void runOnMainThread('pending-main-thread-function' as unknown as () => void)();
 
@@ -241,7 +241,7 @@ describe('ElementTemplate runOnMainThread', () => {
   });
 
   it('clears delayed queue and return listener on background destroy', () => {
-    const removeEventListener = vi.spyOn(lynx.getCoreContext(), 'removeEventListener');
+    const removeEventListener = rstest.spyOn(lynx.getCoreContext(), 'removeEventListener');
     const worklet = { _wkltId: 'pending-before-destroy' };
 
     void runOnMainThread(worklet as unknown as () => void)();

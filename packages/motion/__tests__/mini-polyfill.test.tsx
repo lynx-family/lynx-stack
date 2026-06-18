@@ -7,7 +7,7 @@ import {
   describe,
   expect,
   test,
-  rstest as vi,
+  rstest,
 } from '@rstest/core';
 import { rstest } from '@rstest/core';
 import { runOnMainThread, useEffect, useMainThreadRef } from '@lynx-js/react';
@@ -76,11 +76,11 @@ describe('Polyfill Unit Logic', () => {
   afterEach(() => {
     globalThis.queueMicrotask = originalQueueMicrotask;
     (globalThis as any).lynx = originalLynx;
-    vi.restoreAllMocks();
+    rstest.restoreAllMocks();
   });
 
   test('should use existing queueMicrotask if available', async () => {
-    const mockQM = vi.fn();
+    const mockQM = rstest.fn();
     globalThis.queueMicrotask = mockQM;
 
     await import('../src/mini/polyfill.js');
@@ -90,7 +90,7 @@ describe('Polyfill Unit Logic', () => {
 
   test('should use lynx.queueMicrotask if global is missing', async () => {
     delete (globalThis as any).queueMicrotask;
-    const mockQM = vi.fn();
+    const mockQM = rstest.fn();
     (globalThis as any).lynx = { queueMicrotask: mockQM };
 
     await import('../src/mini/polyfill.js');
@@ -107,7 +107,7 @@ describe('Polyfill Unit Logic', () => {
     expect(globalThis.queueMicrotask).toBeDefined();
     expect(globalThis.queueMicrotask).not.toBe(originalQueueMicrotask);
 
-    const fn = vi.fn();
+    const fn = rstest.fn();
     globalThis.queueMicrotask(fn);
 
     expect(fn).not.toHaveBeenCalled();
@@ -122,12 +122,12 @@ describe('Polyfill Unit Logic', () => {
     await import('../src/mini/polyfill.js');
 
     const error = new Error('test error');
-    const fn = vi.fn().mockImplementation(() => {
+    const fn = rstest.fn().mockImplementation(() => {
       throw error;
     });
     // Prevent actual throw from crashing test
     // biome-ignore lint/suspicious/noExplicitAny: mock
-    const setTimeoutSpy = vi
+    const setTimeoutSpy = rstest
       .spyOn(globalThis, 'setTimeout')
       .mockImplementation((cb) => {
         try {

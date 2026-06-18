@@ -1,6 +1,6 @@
 /** @jsxImportSource ../../lepus */
 
-import { afterEach, beforeEach, describe, expect, it, rstest as vi } from '@rstest/core';
+import { afterEach, beforeEach, describe, expect, it, rstest } from '@rstest/core';
 import * as ReactLynx from '../../src/internal';
 import { setupPage, SnapshotInstance, backgroundSnapshotInstanceManager } from '../../src/snapshot';
 import { hydrate } from '../../src/snapshot/renderToOpcodes/hydrate';

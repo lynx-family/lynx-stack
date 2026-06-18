@@ -1,7 +1,7 @@
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
-import { afterEach, beforeEach, describe, expect, it, rstest as vi } from '@rstest/core';
+import { afterEach, beforeEach, describe, expect, it, rstest } from '@rstest/core';
 
 import type { ElementTemplateUpdateCommitContext } from '../../../../../src/element-template/protocol/types.js';
 import type { CompiledFixtureModuleExports } from '../../../test-utils/debug/compiledFixtureModule.js';
@@ -81,7 +81,7 @@ describe('Compiled ET GlobalProps update fixtures', () => {
 
   function installGlobalProps(globalProps: Record<string, unknown>): void {
     const baseLynx = globalThis.lynx;
-    vi.stubGlobal('lynx', {
+    rstest.stubGlobal('lynx', {
       ...baseLynx,
       __globalProps: globalProps,
       getJSModule(moduleName: string) {
@@ -110,7 +110,7 @@ describe('Compiled ET GlobalProps update fixtures', () => {
   }
 
   beforeEach(() => {
-    vi.clearAllMocks();
+    rstest.clearAllMocks();
     originalLynx = globalThis.lynx;
     originalGlobalEventEmitter = globalThis.lynxCoreInject.tt.GlobalEventEmitter;
     emitter = new LynxTestEventEmitter();
@@ -140,7 +140,7 @@ describe('Compiled ET GlobalProps update fixtures', () => {
     envManager.setUseElementTemplate(false);
     globalThis.__GLOBAL_PROPS_MODE__ = 'event';
     globalThis.lynxCoreInject.tt.GlobalEventEmitter = originalGlobalEventEmitter;
-    vi.stubGlobal('lynx', originalLynx);
+    rstest.stubGlobal('lynx', originalLynx);
   });
 
   it('reactive updateGlobalProps force-renders direct globalProps reads into native update ops', async () => {
@@ -167,7 +167,7 @@ describe('Compiled ET GlobalProps update fixtures', () => {
 
   it('event mode emits without updating compiled direct globalProps reads', async () => {
     globalThis.__GLOBAL_PROPS_MODE__ = 'event';
-    const emitted = vi.fn();
+    const emitted = rstest.fn();
     const { backgroundModule, mainModule } = await loadCompiledFixturePair<CompiledGlobalPropsModule>(
       DIRECT_READ_FIXTURE,
     );
@@ -196,7 +196,7 @@ describe('Compiled ET GlobalProps update fixtures', () => {
 
   it('event mode updates compiled GlobalProps hook and provider users through the changed event', async () => {
     globalThis.__GLOBAL_PROPS_MODE__ = 'event';
-    const changed = vi.fn();
+    const changed = rstest.fn();
     const { backgroundModule, mainModule } = await loadCompiledFixturePair<CompiledGlobalPropsModule>(
       EVENT_HOOK_FIXTURE,
     );

@@ -1,4 +1,4 @@
-import { afterEach, rstest as vi } from '@rstest/core';
+import { afterEach, rstest } from '@rstest/core';
 
 export interface ContextEvent {
   type: string;
@@ -288,7 +288,7 @@ export function installThreadContexts(): void {
     ? (currentLynx as Record<string, unknown>)
     : {};
 
-  vi.stubGlobal('lynx', {
+  rstest.stubGlobal('lynx', {
     ...baseLynx,
     getJSContext: () => jsContext,
     getCoreContext: () => coreContext,

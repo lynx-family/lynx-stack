@@ -1,4 +1,4 @@
-import { afterEach, beforeEach, describe, expect, it, rstest as vi, rstest } from '@rstest/core';
+import { afterEach, beforeEach, describe, expect, it, rstest, rstest } from '@rstest/core';
 
 import { ElementTemplateEnvManager } from '../test-utils/debug/envManager.js';
 
@@ -9,7 +9,7 @@ describe('element-template native index wiring', () => {
 
   beforeEach(() => {
     rstest.resetModules();
-    vi.clearAllMocks();
+    rstest.clearAllMocks();
     globalThis.__ALOG_ELEMENT_API__ = undefined;
   });
 
@@ -40,18 +40,18 @@ describe('element-template native index wiring', () => {
     envManager.resetEnv('main');
     globalThis.__ALOG_ELEMENT_API__ = true;
 
-    const injectCalledByNative = vi.fn();
-    const installElementTemplatePatchListener = vi.fn();
-    const installOnMtsDestruction = vi.fn();
-    const initElementTemplatePAPICallAlog = vi.fn();
-    const initProfileHook = vi.fn();
-    const setupLynxEnv = vi.fn();
-    const installElementTemplateCommitHook = vi.fn();
-    const setupBackgroundElementTemplateDocument = vi.fn();
-    const installElementTemplateHydrationListener = vi.fn();
-    const setRoot = vi.fn();
-    const initTimingAPI = vi.fn();
-    const reloadBackground = vi.fn();
+    const injectCalledByNative = rstest.fn();
+    const installElementTemplatePatchListener = rstest.fn();
+    const installOnMtsDestruction = rstest.fn();
+    const initElementTemplatePAPICallAlog = rstest.fn();
+    const initProfileHook = rstest.fn();
+    const setupLynxEnv = rstest.fn();
+    const installElementTemplateCommitHook = rstest.fn();
+    const setupBackgroundElementTemplateDocument = rstest.fn();
+    const installElementTemplateHydrationListener = rstest.fn();
+    const setRoot = rstest.fn();
+    const initTimingAPI = rstest.fn();
+    const reloadBackground = rstest.fn();
 
     rstest.doMock('../../../src/element-template/native/main-thread-api.js', () => ({
       injectCalledByNative,
@@ -112,25 +112,25 @@ describe('element-template native index wiring', () => {
   it('installs background wiring only on background thread', async () => {
     envManager.resetEnv('background');
     process.env['NODE_ENV'] = 'production';
-    globalThis.lynx.performance.isProfileRecording = vi.fn(() => true);
+    globalThis.lynx.performance.isProfileRecording = rstest.fn(() => true);
 
-    const injectCalledByNative = vi.fn();
-    const installElementTemplatePatchListener = vi.fn();
-    const installOnMtsDestruction = vi.fn();
-    const installElementTemplateCommitHook = vi.fn();
-    const setupBackgroundElementTemplateDocument = vi.fn();
-    const installElementTemplateHydrationListener = vi.fn();
-    const initProfileHook = vi.fn();
-    const setupLynxEnv = vi.fn();
-    const initTimingAPI = vi.fn();
-    const setRoot = vi.fn();
-    const callDestroyLifetimeFun = vi.fn();
-    const publishEvent = vi.fn();
-    const publicComponentEvent = vi.fn();
-    const resetEventStateForRuntime = vi.fn();
-    const updateCardData = vi.fn();
-    const updateGlobalProps = vi.fn();
-    const reloadBackground = vi.fn();
+    const injectCalledByNative = rstest.fn();
+    const installElementTemplatePatchListener = rstest.fn();
+    const installOnMtsDestruction = rstest.fn();
+    const installElementTemplateCommitHook = rstest.fn();
+    const setupBackgroundElementTemplateDocument = rstest.fn();
+    const installElementTemplateHydrationListener = rstest.fn();
+    const initProfileHook = rstest.fn();
+    const setupLynxEnv = rstest.fn();
+    const initTimingAPI = rstest.fn();
+    const setRoot = rstest.fn();
+    const callDestroyLifetimeFun = rstest.fn();
+    const publishEvent = rstest.fn();
+    const publicComponentEvent = rstest.fn();
+    const resetEventStateForRuntime = rstest.fn();
+    const updateCardData = rstest.fn();
+    const updateGlobalProps = rstest.fn();
+    const reloadBackground = rstest.fn();
 
     rstest.doMock('../../../src/element-template/native/main-thread-api.js', () => ({
       injectCalledByNative,

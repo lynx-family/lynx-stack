@@ -2,7 +2,7 @@
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
 import { createRequire } from 'node:module';
-import { describe, expect, it, rstest as vi } from '@rstest/core';
+import { describe, expect, it, rstest } from '@rstest/core';
 
 import {
   autoBind,
@@ -42,11 +42,11 @@ describe('createPlugin', () => {
    *  createPlugin                                                      *
    * ------------------------------------------------------------------ */
   it('createPlugin should invoke the provided function with bound API', () => {
-    const mockFn = vi.fn<(api: Bound<PluginAPI>) => void>();
+    const mockFn = rstest.fn<(api: Bound<PluginAPI>) => void>();
     const pluginObj = createPlugin(mockFn);
 
     const api: RuntimePluginAPI = mockPluginAPI({
-      config: vi.fn().mockReturnValue(true),
+      config: rstest.fn().mockReturnValue(true),
     });
 
     pluginObj.handler(api);
@@ -58,8 +58,8 @@ describe('createPlugin', () => {
    * ------------------------------------------------------------------ */
 
   it('createPlugin.withOptions should call the factory and return a plugin that works', () => {
-    const pluginFactory = vi.fn((options?: { foo: number }) => {
-      return vi.fn((api: Bound<PluginAPI>) => {
+    const pluginFactory = rstest.fn((options?: { foo: number }) => {
+      return rstest.fn((api: Bound<PluginAPI>) => {
         expect(options?.foo).toBe(1);
         expect(typeof api.config).toBe('function');
       });
@@ -75,8 +75,10 @@ describe('createPlugin', () => {
   });
 
   it('createPlugin.withOptions passes options to cfgFactory and attaches config', () => {
-    const pluginFactory = vi.fn(() => vi.fn());
-    const cfgFactory = vi.fn((opt?: { env: string }) => ({ env: opt?.env }));
+    const pluginFactory = rstest.fn(() => rstest.fn());
+    const cfgFactory = rstest.fn((opt?: { env: string }) => ({
+      env: opt?.env,
+    }));
 
     const optionsPlugin = createPlugin.withOptions(pluginFactory, cfgFactory);
     const result = optionsPlugin({ env: 'test' });
@@ -88,8 +90,8 @@ describe('createPlugin', () => {
   });
 
   it('createPlugin.withOptions works when no options are passed', () => {
-    const pluginFactory = vi.fn(() => vi.fn());
-    const configFactory = vi.fn(() => ({ foo: 'bar' }));
+    const pluginFactory = rstest.fn(() => rstest.fn());
+    const configFactory = rstest.fn(() => ({ foo: 'bar' }));
 
     const plugin = createPlugin.withOptions(pluginFactory, configFactory);
     const result = plugin(); // no options passed

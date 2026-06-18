@@ -1,4 +1,4 @@
-import { afterEach, beforeEach, describe, expect, it, rstest as vi, rstest } from '@rstest/core';
+import { afterEach, beforeEach, describe, expect, it, rstest, rstest } from '@rstest/core';
 
 import { renderMainThread } from '../../../../src/element-template/runtime/render/render-main-thread.js';
 import { getReloadVersion } from '../../../../src/core/reload-version.js';
@@ -12,12 +12,12 @@ import { setRoot } from '../../../../src/element-template/runtime/page/root-inst
 import { elementTemplateRegistry } from '../../../../src/element-template/runtime/template/registry.js';
 
 rstest.mock('../../../../src/element-template/runtime/render/render-to-opcodes.js', () => ({
-  render: vi.fn(),
-  registerSlot: vi.fn(),
+  render: rstest.fn(),
+  registerSlot: rstest.fn(),
 }));
 
 rstest.mock('../../../../src/element-template/runtime/render/render-opcodes.js', () => ({
-  renderOpcodesIntoElementTemplate: vi.fn(),
+  renderOpcodesIntoElementTemplate: rstest.fn(),
 }));
 
 import { render as mockRender } from '../../../../src/element-template/runtime/render/render-to-opcodes.js';
@@ -29,32 +29,32 @@ describe('renderMainThread', () => {
     setupPage({ type: 'page', children: [] } as unknown as ElementRef);
     globalThis.__MAIN_THREAD__ = true;
     globalThis.__BACKGROUND__ = false;
-    const dispatchEvent = vi.fn();
+    const dispatchEvent = rstest.fn();
     globalThis.lynx = {
       ...(globalThis.lynx ?? {}),
-      reportError: vi.fn(),
-      getJSContext: vi.fn(() => ({
+      reportError: rstest.fn(),
+      getJSContext: rstest.fn(() => ({
         dispatchEvent,
       })),
     } as typeof lynx;
-    vi.stubGlobal('__InsertNodeToElementTemplate', vi.fn());
-    vi.stubGlobal('__SetAttributeOfElementTemplate', vi.fn());
-    vi.stubGlobal('__SerializeElementTemplate', vi.fn());
+    rstest.stubGlobal('__InsertNodeToElementTemplate', rstest.fn());
+    rstest.stubGlobal('__SetAttributeOfElementTemplate', rstest.fn());
+    rstest.stubGlobal('__SerializeElementTemplate', rstest.fn());
     elementTemplateRegistry.clear();
     destroyAllElementTemplateListStates();
-    vi.mocked(mockRenderOpcodesIntoElementTemplate).mockReturnValue({ rootRefs: [] });
+    rstest.mocked(mockRenderOpcodesIntoElementTemplate).mockReturnValue({ rootRefs: [] });
   });
 
   afterEach(() => {
-    vi.clearAllMocks();
+    rstest.clearAllMocks();
     destroyAllElementTemplateListStates();
   });
 
   it('should report error when renderToOpcodes fails', () => {
-    const reportErrorSpy = vi.fn();
+    const reportErrorSpy = rstest.fn();
     (globalThis.lynx as typeof lynx & { reportError?: (error: Error) => void }).reportError = reportErrorSpy;
 
-    vi.mocked(mockRender).mockImplementationOnce(() => {
+    rstest.mocked(mockRender).mockImplementationOnce(() => {
       throw new Error('Render failed');
     });
 
@@ -67,7 +67,7 @@ describe('renderMainThread', () => {
     const opcodes = [0, 'opcode'];
     const rootRefA = { type: 'ref-a' } as unknown as ElementRef;
     const rootRefB = { type: 'ref-b' } as unknown as ElementRef;
-    const dispatchEvent = vi.fn();
+    const dispatchEvent = rstest.fn();
     const serializedA = {
       templateKey: '_et_a',
       attributeSlots: [],
@@ -80,15 +80,15 @@ describe('renderMainThread', () => {
       elementSlots: [],
       uid: -2,
     };
-    vi.mocked(mockRender).mockReturnValue(opcodes);
-    vi.mocked(mockRenderOpcodesIntoElementTemplate).mockReturnValue({
+    rstest.mocked(mockRender).mockReturnValue(opcodes);
+    rstest.mocked(mockRenderOpcodesIntoElementTemplate).mockReturnValue({
       rootRefs: [rootRefA, rootRefB],
     });
     (globalThis.lynx as typeof lynx & { getJSContext?: () => { dispatchEvent: typeof dispatchEvent } })
-      .getJSContext = vi.fn(() => ({
+      .getJSContext = rstest.fn(() => ({
         dispatchEvent,
       }));
-    vi.mocked(__SerializeElementTemplate).mockImplementation((ref: ElementRef) => {
+    rstest.mocked(__SerializeElementTemplate).mockImplementation((ref: ElementRef) => {
       if (ref === rootRefA) {
         return serializedA as unknown as ReturnType<typeof __SerializeElementTemplate>;
       }
@@ -137,11 +137,11 @@ describe('renderMainThread', () => {
       elementSlots: [],
       uid: -1,
     };
-    vi.mocked(mockRender).mockReturnValue([]);
-    vi.mocked(mockRenderOpcodesIntoElementTemplate).mockReturnValue({
+    rstest.mocked(mockRender).mockReturnValue([]);
+    rstest.mocked(mockRenderOpcodesIntoElementTemplate).mockReturnValue({
       rootRefs: [rootRef],
     });
-    vi.mocked(__SerializeElementTemplate).mockReturnValue(
+    rstest.mocked(__SerializeElementTemplate).mockReturnValue(
       serialized as unknown as ReturnType<typeof __SerializeElementTemplate>,
     );
     elementTemplateRegistry.set(-2, listRef);
@@ -170,11 +170,11 @@ describe('renderMainThread', () => {
       },
       null,
     );
-    expect(vi.mocked(__InsertNodeToElementTemplate).mock.invocationCallOrder[0]).toBeLessThan(
-      vi.mocked(__SetAttributeOfElementTemplate).mock.invocationCallOrder[0]!,
+    expect(rstest.mocked(__InsertNodeToElementTemplate).mock.invocationCallOrder[0]).toBeLessThan(
+      rstest.mocked(__SetAttributeOfElementTemplate).mock.invocationCallOrder[0]!,
     );
-    expect(vi.mocked(__SetAttributeOfElementTemplate).mock.invocationCallOrder[0]).toBeLessThan(
-      vi.mocked(__SerializeElementTemplate).mock.invocationCallOrder[0]!,
+    expect(rstest.mocked(__SetAttributeOfElementTemplate).mock.invocationCallOrder[0]).toBeLessThan(
+      rstest.mocked(__SerializeElementTemplate).mock.invocationCallOrder[0]!,
     );
   });
 });

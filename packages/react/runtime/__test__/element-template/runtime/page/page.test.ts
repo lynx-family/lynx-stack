@@ -1,21 +1,21 @@
-import { afterEach, beforeEach, describe, expect, it, rstest as vi, rstest } from '@rstest/core';
+import { afterEach, beforeEach, describe, expect, it, rstest, rstest } from '@rstest/core';
 
 describe('ElementTemplate page root helpers', () => {
   beforeEach(() => {
     rstest.resetModules();
-    vi.stubGlobal('__CreateTypedElementTemplate', vi.fn());
-    vi.stubGlobal('__InsertNodeToElementTemplate', vi.fn());
-    vi.stubGlobal('__RemoveNodeFromElementTemplate', vi.fn());
+    rstest.stubGlobal('__CreateTypedElementTemplate', rstest.fn());
+    rstest.stubGlobal('__InsertNodeToElementTemplate', rstest.fn());
+    rstest.stubGlobal('__RemoveNodeFromElementTemplate', rstest.fn());
   });
 
   afterEach(() => {
-    vi.unstubAllGlobals();
+    rstest.unstubAllGlobals();
   });
 
   it('creates typed page and updates its root slot', async () => {
     const page = { type: 'page' } as unknown as ElementRef;
     const rootRef = { type: 'root' } as unknown as ElementRef;
-    vi.mocked(__CreateTypedElementTemplate).mockReturnValue(page);
+    rstest.mocked(__CreateTypedElementTemplate).mockReturnValue(page);
 
     const {
       createElementTemplatePage,

@@ -4,7 +4,7 @@
 // LICENSE file in the root directory of this source tree.
 */
 import { render } from 'preact';
-import { afterEach, beforeAll, beforeEach, describe, expect, it, rstest as vi } from '@rstest/core';
+import { afterEach, beforeAll, beforeEach, describe, expect, it, rstest } from '@rstest/core';
 
 import { replaceCommitHook } from '../../../src/snapshot/lifecycle/patch/commit';
 import { injectUpdateMainThread } from '../../../src/snapshot/lifecycle/patch/updateMainThread';
@@ -28,15 +28,15 @@ beforeAll(() => {
   replaceCommitHook();
   globalThis.lynxWorkletImpl = {
     _refImpl: {
-      updateWorkletRef: vi.fn(),
-      updateWorkletRefInitValueChanges: vi.fn(),
-      clearFirstScreenWorkletRefMap: vi.fn(),
+      updateWorkletRef: rstest.fn(),
+      updateWorkletRefInitValueChanges: rstest.fn(),
+      clearFirstScreenWorkletRefMap: rstest.fn(),
     },
     _runOnBackgroundDelayImpl: {
-      runDelayedBackgroundFunctions: vi.fn(),
+      runDelayedBackgroundFunctions: rstest.fn(),
     },
     _eventDelayImpl: {
-      clearDelayedWorklets: vi.fn(),
+      clearDelayedWorklets: rstest.fn(),
     },
   };
 });
@@ -49,7 +49,7 @@ beforeEach(() => {
 
 afterEach(() => {
   destroyWorklet();
-  vi.clearAllMocks();
+  rstest.clearAllMocks();
 });
 
 describe('WorkletRef in js', () => {

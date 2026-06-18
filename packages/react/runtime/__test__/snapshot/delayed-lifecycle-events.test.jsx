@@ -1,4 +1,4 @@
-import { describe, it, beforeEach, afterEach, rstest as vi } from '@rstest/core';
+import { describe, it, beforeEach, afterEach, rstest } from '@rstest/core';
 import { delayedLifecycleEvents } from '../../src/snapshot/lifecycle/event/delayLifecycleEvents';
 import { flushDelayedLifecycleEvents } from '../../src/snapshot/lynx/tt';
 import { __root } from '../../src/root';
@@ -12,7 +12,7 @@ beforeEach(() => {
   globalEnvManager.resetEnv();
 });
 afterEach(() => {
-  vi.restoreAllMocks();
+  rstest.restoreAllMocks();
 });
 
 describe('delayedLifecycleEvents', () => {

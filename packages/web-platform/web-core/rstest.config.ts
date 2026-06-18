@@ -14,13 +14,9 @@ const config: ReturnType<typeof defineConfig> = defineConfig({
   // environment and let the setup file provide the DOM globals, matching the
   // previous vitest behaviour (which used the same manual JSDOM instance).
   testEnvironment: 'node',
-  // Expose the test APIs as globals so `vitest-polyfill.cjs` (the `vitest`
-  // alias below) can re-export them as `vi`. Keeps the test files importing
-  // from `'vitest'` unchanged.
   globals: true,
   resolve: {
     alias: {
-      vitest: path.resolve(__dirname, './vitest-polyfill.cjs'),
       // Replicates the vitest `transform-debug-wasm` Vite plugin's glue swap:
       // load the debug wasm-bindgen glue (`client_debug.js`) instead of the
       // optimized `client.js` so the glue's import names match the debug wasm

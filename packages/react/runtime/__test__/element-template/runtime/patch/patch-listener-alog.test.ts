@@ -1,4 +1,4 @@
-import { afterEach, beforeEach, describe, expect, it, rstest as vi } from '@rstest/core';
+import { afterEach, beforeEach, describe, expect, it, rstest } from '@rstest/core';
 
 import * as elementTemplateAlog from '../../../../src/element-template/debug/alog.js';
 import {
@@ -25,7 +25,7 @@ describe('ElementTemplate patch listener alog', () => {
   const envManager = new ElementTemplateEnvManager();
 
   beforeEach(() => {
-    vi.clearAllMocks();
+    rstest.clearAllMocks();
     envManager.resetEnv('main');
     registerBuiltinRawTextTemplate();
     installElementTemplatePatchListener();
@@ -62,7 +62,7 @@ describe('ElementTemplate patch listener alog', () => {
     globalThis.__ALOG__ = false;
     const alog = console.alog as unknown as { mock: { calls: unknown[][] }; mockClear(): void };
     alog.mockClear();
-    const formatSpy = vi.spyOn(elementTemplateAlog, 'formatElementTemplateUpdateCommands');
+    const formatSpy = rstest.spyOn(elementTemplateAlog, 'formatElementTemplateUpdateCommands');
 
     envManager.switchToBackground(() => {
       lynx.getCoreContext().dispatchEvent(

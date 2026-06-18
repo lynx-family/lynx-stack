@@ -1,4 +1,4 @@
-import { afterEach, beforeEach, describe, expect, it, rstest as vi } from '@rstest/core';
+import { afterEach, beforeEach, describe, expect, it, rstest } from '@rstest/core';
 
 import { setupLynxEnv } from '../../../src/element-template/lynx/env.js';
 import { ElementTemplateEnvManager } from '../test-utils/debug/envManager.js';
@@ -6,7 +6,7 @@ import { ElementTemplateEnvManager } from '../test-utils/debug/envManager.js';
 const envManager = new ElementTemplateEnvManager();
 
 type GlobalWithEnv = typeof globalThis & {
-  __OnLifecycleEvent?: ReturnType<typeof vi.fn>;
+  __OnLifecycleEvent?: ReturnType<typeof rstest.fn>;
   NativeModules?: unknown;
   SystemInfo?: unknown;
   processData?: (data: unknown, processorName?: string) => unknown;
@@ -32,7 +32,7 @@ describe('setupLynxEnv', () => {
   let originalReportError: typeof globalThis.lynx.reportError;
 
   beforeEach(() => {
-    vi.clearAllMocks();
+    rstest.clearAllMocks();
     originalOnLifecycleEvent = g.__OnLifecycleEvent;
     originalProcessData = g.processData;
     originalNativeModules = g.NativeModules;
@@ -143,7 +143,7 @@ describe('setupLynxEnv', () => {
 
   it('installs lepus event bridge and processData handlers', () => {
     envManager.resetEnv('main');
-    g.__OnLifecycleEvent = vi.fn();
+    g.__OnLifecycleEvent = rstest.fn();
 
     setupLynxEnv();
 
@@ -155,8 +155,8 @@ describe('setupLynxEnv', () => {
     expect('NativeModules' in g).toBe(true);
     expect(g.NativeModules).toBeUndefined();
 
-    const defaultDataProcessor = vi.fn((data: { value: number }) => ({ doubled: data.value * 2 }));
-    const namedDataProcessor = vi.fn((data: { value: number }) => ({ named: data.value }));
+    const defaultDataProcessor = rstest.fn((data: { value: number }) => ({ doubled: data.value * 2 }));
+    const namedDataProcessor = rstest.fn((data: { value: number }) => ({ named: data.value }));
     globalThis.lynx.registerDataProcessors?.({
       defaultDataProcessor,
       dataProcessors: {
@@ -172,7 +172,7 @@ describe('setupLynxEnv', () => {
 
   it('reports data processor errors and returns an empty object', () => {
     envManager.resetEnv('main');
-    const reportError = vi.fn();
+    const reportError = rstest.fn();
     globalThis.lynx.reportError = reportError;
 
     setupLynxEnv();

@@ -1,4 +1,4 @@
-import { afterEach, beforeEach, describe, expect, it, rstest as vi } from '@rstest/core';
+import { afterEach, beforeEach, describe, expect, it, rstest } from '@rstest/core';
 
 import {
   globalCommitContext,
@@ -22,7 +22,7 @@ describe('callDestroyLifetimeFun', () => {
   const envManager = new ElementTemplateEnvManager();
 
   beforeEach(() => {
-    vi.clearAllMocks();
+    rstest.clearAllMocks();
     resetElementTemplateHydrationListener();
     resetElementTemplateCommitState();
     envManager.resetEnv('background');

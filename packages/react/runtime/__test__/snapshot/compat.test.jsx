@@ -1,4 +1,4 @@
-import { afterEach, beforeAll, beforeEach, describe, expect, it, rstest as vi } from '@rstest/core';
+import { afterEach, beforeAll, beforeEach, describe, expect, it, rstest } from '@rstest/core';
 
 import { elementTree } from './utils/nativeMethod';
 import { setupPage, snapshotInstanceManager, backgroundSnapshotInstanceManager } from '../../src/snapshot';
@@ -94,7 +94,7 @@ describe('addComponentElement', () => {
 
     const jsx = wrapWithLynxComponent(
       snapshotSpread,
-      <C id='1' className='2' style='flex: 3' bindtap={vi.fn()} data-a='1' />,
+      <C id='1' className='2' style='flex: 3' bindtap={rstest.fn()} data-a='1' />,
     );
 
     scratch.ensureElements();
@@ -144,7 +144,7 @@ describe('addComponentElement', () => {
     }
     const jsx = wrapWithLynxComponent(
       snapshotSpread,
-      <C id='1' className='2' style='flex: 3' bindtap={vi.fn()} data-a='1' removeComponentElement={true} />,
+      <C id='1' className='2' style='flex: 3' bindtap={rstest.fn()} data-a='1' removeComponentElement={true} />,
     );
 
     scratch.ensureElements();
@@ -166,7 +166,7 @@ describe('addComponentElement', () => {
     }
     const jsx = wrapWithLynxComponent(
       snapshotSpread,
-      <C id='1' className='2' style='flex: 3' bindtap={vi.fn()} data-a='1' removeComponentElement={false} />,
+      <C id='1' className='2' style='flex: 3' bindtap={rstest.fn()} data-a='1' removeComponentElement={false} />,
     );
 
     scratch.ensureElements();

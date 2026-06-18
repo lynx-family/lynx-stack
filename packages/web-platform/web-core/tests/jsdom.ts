@@ -1,7 +1,7 @@
 import { JSDOM } from 'jsdom';
 import * as fs from 'fs';
 import { fileURLToPath } from 'url';
-import { rstest as vi } from '@rstest/core';
+import { rstest } from '@rstest/core';
 
 const { window } = new JSDOM(undefined, { url: 'http://localhost/' });
 const document = window.document;
@@ -107,8 +107,8 @@ Object.assign(globalThis, {
   requestAnimationFrame: (cb: any) => setTimeout(cb, 0),
   Worker: MockWorker,
   location: window.location,
-  CSS: vi.mockObject({
-    supports: vi.fn().mockReturnValue(true),
+  CSS: rstest.mockObject({
+    supports: rstest.fn().mockReturnValue(true),
   }),
   // jsdom provides these on `window` but does not surface them as globals;
   // production code relies on these being available globally, and the

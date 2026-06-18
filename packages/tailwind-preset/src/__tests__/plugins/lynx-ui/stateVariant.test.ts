@@ -1,7 +1,7 @@
 // Copyright 2025 The Lynx Authors. All rights reserved.
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
-import { describe, expect, it, rstest as vi } from '@rstest/core';
+import { describe, expect, it, rstest } from '@rstest/core';
 import type { MockInstance } from '@rstest/core';
 
 import { uiVariants } from '../../../plugins/lynx-ui/uiVariants.js';
@@ -27,7 +27,7 @@ describe('uiVariants plugin', () => {
   it('registers variants with default prefix ui', () => {
     const plugin = uiVariants({});
     const { api } = runPlugin(plugin);
-    const variants = extractVariants(vi.mocked(api.matchVariant));
+    const variants = extractVariants(rstest.mocked(api.matchVariant));
 
     expect(Object.keys(variants)).toEqual(
       expect.arrayContaining(['ui']),
@@ -43,7 +43,7 @@ describe('uiVariants plugin', () => {
   it('registers group, peer, and parent variants', () => {
     const plugin = uiVariants({ prefixes: ['ui'] });
     const { api } = runPlugin(plugin);
-    const variants = extractVariants(vi.mocked(api.matchVariant));
+    const variants = extractVariants(rstest.mocked(api.matchVariant));
 
     expect(Object.keys(variants)).toEqual(
       expect.arrayContaining(['ui', 'group-ui', 'peer-ui', 'parent-ui']),
@@ -61,7 +61,7 @@ describe('uiVariants plugin', () => {
   it('registers variants from array of known prefixes', () => {
     const plugin = uiVariants({ prefixes: ['ui', 'ui-side'] });
     const { api } = runPlugin(plugin);
-    const variants = extractVariants(vi.mocked(api.matchVariant));
+    const variants = extractVariants(rstest.mocked(api.matchVariant));
 
     expect(Object.keys(variants)).toEqual(
       expect.arrayContaining(
@@ -85,7 +85,7 @@ describe('uiVariants plugin', () => {
   it('ignores unknown prefix when using array syntax', () => {
     const plugin = uiVariants({ prefixes: ['unknown'] });
     const { api } = runPlugin(plugin);
-    const variants = extractVariants(vi.mocked(api.matchVariant));
+    const variants = extractVariants(rstest.mocked(api.matchVariant));
 
     expect(Object.keys(variants)).toEqual(
       expect.arrayContaining(
@@ -122,7 +122,7 @@ describe('uiVariants plugin', () => {
     });
 
     const { api } = runPlugin(plugin);
-    const variants = extractVariants(vi.mocked(api.matchVariant));
+    const variants = extractVariants(rstest.mocked(api.matchVariant));
 
     expect(Object.keys(variants)).toEqual(
       expect.arrayContaining([
@@ -147,7 +147,7 @@ describe('uiVariants plugin', () => {
   it('ignores non-string values', () => {
     const plugin = uiVariants({});
     const { api } = runPlugin(plugin);
-    const variants = extractVariants(vi.mocked(api.matchVariant));
+    const variants = extractVariants(rstest.mocked(api.matchVariant));
 
     const ui = variants['ui'];
     expect(ui?.(123, {})).toBe('');
@@ -159,7 +159,7 @@ describe('uiVariants plugin', () => {
   // self and parent do not support it
   it('supports modifier syntax in group- and peer- variants only', () => {
     const { api } = runPlugin(uiVariants({ prefixes: ['ui'] }));
-    const variants = extractVariants(vi.mocked(api.matchVariant));
+    const variants = extractVariants(rstest.mocked(api.matchVariant));
 
     const group = variants['group-ui'];
     const peer = variants['peer-ui'];
@@ -187,7 +187,7 @@ describe('uiVariants plugin', () => {
     const plugin = uiVariants({ prefixes: ['ui'] });
     const { api } = runPlugin(plugin, { config: { prefix: 'tw-' } });
 
-    const variants = extractVariants(vi.mocked(api.matchVariant));
+    const variants = extractVariants(rstest.mocked(api.matchVariant));
     const self = variants['ui'];
     const group = variants['group-ui'];
     const peer = variants['peer-ui'];
@@ -211,7 +211,7 @@ describe('uiVariants plugin', () => {
     });
 
     const { api } = runPlugin(plugin);
-    const variants = extractVariants(vi.mocked(api.matchVariant));
+    const variants = extractVariants(rstest.mocked(api.matchVariant));
 
     expect(Object.keys(variants)).toEqual(
       expect.arrayContaining(
@@ -237,7 +237,7 @@ describe('uiVariants plugin', () => {
   it('uses default options when options are undefined', () => {
     const plugin = uiVariants();
     const { api } = runPlugin(plugin);
-    const variants = extractVariants(vi.mocked(api.matchVariant));
+    const variants = extractVariants(rstest.mocked(api.matchVariant));
 
     expect(variants).toHaveProperty('ui');
   });
@@ -258,7 +258,7 @@ describe('uiVariants plugin', () => {
     });
 
     const { api } = runPlugin(plugin);
-    const variants = extractVariants(vi.mocked(api.matchVariant));
+    const variants = extractVariants(rstest.mocked(api.matchVariant));
 
     const all = ['test', 'group-test', 'peer-test', 'parent-test'];
 
@@ -283,7 +283,7 @@ describe('uiVariants plugin', () => {
     });
 
     const { api } = runPlugin(plugin);
-    const variants = extractVariants(vi.mocked(api.matchVariant));
+    const variants = extractVariants(rstest.mocked(api.matchVariant));
 
     const z = variants['z'];
     expect(z?.('a', {})).toBe('&.z-alpha');

@@ -4,13 +4,13 @@
 
 import { useState } from '@lynx-js/react';
 import { act, render } from '@lynx-js/react/testing-library';
-import { beforeEach, describe, expect, test, rstest as vi } from '@rstest/core';
+import { beforeEach, describe, expect, test, rstest } from '@rstest/core';
 
 import { useMainThreadMemoizedFn } from '../src/utils/useMainThreadMemoizedFn.js';
 
 describe('useMainThreadMemoizedFn', () => {
   beforeEach(() => {
-    vi.clearAllMocks();
+    rstest.clearAllMocks();
   });
 
   test('should return a stable reference but execute the latest logic on background thread', async () => {

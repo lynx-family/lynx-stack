@@ -1,4 +1,4 @@
-import { rstest as vi } from '@rstest/core';
+import { rstest } from '@rstest/core';
 
 import { renderOpcodesIntoElementTemplate } from '../../../../../src/element-template/runtime/render/render-opcodes.js';
 import { resetTemplateId } from '../../../../../src/element-template/runtime/template/handle.js';
@@ -105,7 +105,7 @@ const templates = [
 ];
 
 function setup(): CaseContext {
-  vi.resetAllMocks();
+  rstest.resetAllMocks();
   elementTemplateRegistry.clear();
   resetTemplateId();
 

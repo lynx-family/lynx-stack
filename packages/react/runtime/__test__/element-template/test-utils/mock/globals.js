@@ -2,7 +2,7 @@
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
 
-import { rstest as vi } from '@rstest/core';
+import { rstest } from '@rstest/core';
 
 import { installPerformanceGlobals } from './performance.js';
 
@@ -29,7 +29,7 @@ export function injectGlobals() {
 
   globalThis.requestAnimationFrame = setTimeout;
   globalThis.cancelAnimationFrame = clearTimeout;
-  globalThis._ReportError = vi.fn();
+  globalThis._ReportError = rstest.fn();
 
-  console.alog = vi.fn();
+  console.alog = rstest.fn();
 }

@@ -1,5 +1,5 @@
 import './jsdom.js';
-import { describe, test, expect, beforeEach, rstest as vi } from '@rstest/core';
+import { describe, test, expect, beforeEach, rstest } from '@rstest/core';
 import { createElementAPI } from '../ts/client/mainthread/elementAPIs/createElementAPI.js';
 import { WASMJSBinding } from '../ts/client/mainthread/elementAPIs/WASMJSBinding.js';
 
@@ -8,34 +8,34 @@ describe('Testing Library Port', () => {
   let rootDom: ShadowRoot;
   let mtsGlobalThis: ReturnType<typeof createElementAPI>;
   let mtsBinding: WASMJSBinding;
-  const mockedBackground = vi.mockObject({
-    publishEvent: vi.fn(),
-    postTimingFlags: vi.fn(),
+  const mockedBackground = rstest.mockObject({
+    publishEvent: rstest.fn(),
+    postTimingFlags: rstest.fn(),
   });
   beforeEach(() => {
-    vi.resetAllMocks();
+    rstest.resetAllMocks();
     lynxViewDom = document.createElement('div') as unknown as HTMLElement;
     rootDom = lynxViewDom.attachShadow({ mode: 'open' });
 
     mtsBinding = new WASMJSBinding(
       // NOTE: the binding-shaped object is built as a plain nested object
-      // literal with `vi.fn()` leaves rather than nested `vi.mockObject(...)`.
+      // literal with `rstest.fn()` leaves rather than nested `rstest.mockObject(...)`.
       // rstest's `mockObject`, unlike vitest's, drops functions nested inside
       // non-function child objects, so nesting mockObjects loses the methods.
       {
         rootDom,
         backgroundThread: {
-          publicComponentEvent: vi.fn(),
-          publishEvent: vi.fn(),
-          postTimingFlags: vi.fn(),
-          markTiming: vi.fn(),
-          flushTimingInfo: vi.fn(),
+          publicComponentEvent: rstest.fn(),
+          publishEvent: rstest.fn(),
+          postTimingFlags: rstest.fn(),
+          markTiming: rstest.fn(),
+          flushTimingInfo: rstest.fn(),
           jsContext: {
-            dispatchEvent: vi.fn(),
+            dispatchEvent: rstest.fn(),
           },
         },
         exposureServices: {
-          updateExposureStatus: vi.fn(),
+          updateExposureStatus: rstest.fn(),
         },
         mainThreadGlobalThis: globalThis as any,
       } as any,
@@ -142,8 +142,8 @@ describe('Testing Library Port', () => {
 
     test('should add event listener', () => {
       // Spy on mtsBinding methods
-      vi.spyOn(mtsBinding, 'addEventListener');
-      vi.spyOn(mtsBinding, 'publishEvent');
+      rstest.spyOn(mtsBinding, 'addEventListener');
+      rstest.spyOn(mtsBinding, 'publishEvent');
 
       const page = mtsGlobalThis.__CreatePage('0', 0);
       const view0 = mtsGlobalThis.__CreateView(0);

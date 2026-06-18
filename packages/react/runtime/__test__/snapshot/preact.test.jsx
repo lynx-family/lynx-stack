@@ -1,6 +1,6 @@
 import { cloneElement, Component, render } from 'preact';
 import { Suspense, lazy } from 'preact/compat';
-import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, it, rstest as vi } from '@rstest/core';
+import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, it, rstest } from '@rstest/core';
 
 import { setupBackgroundDocument, setupDocument } from '../../src/document';
 import { globalBackgroundSnapshotInstancesToRemove } from '../../src/snapshot/lifecycle/patch/commit';
@@ -484,7 +484,7 @@ describe('document - background', () => {
   it('basic - update event', async function() {
     BackgroundSnapshotInstance.prototype.toJSON = backgroundSnapshotInstanceToJSON;
 
-    render(jsx(vi.fn()), scratch);
+    render(jsx(rstest.fn()), scratch);
     expect(scratch).toMatchInlineSnapshot(`
       <root>
         <__snapshot_a94a8_test_17
@@ -494,7 +494,7 @@ describe('document - background', () => {
     `);
 
     initGlobalSnapshotPatch();
-    render(jsx(vi.fn()), scratch);
+    render(jsx(rstest.fn()), scratch);
     expect(scratch).toMatchInlineSnapshot(`
       <root>
         <__snapshot_a94a8_test_17
@@ -511,7 +511,7 @@ describe('document - background', () => {
   it('runWithForce', async function() {
     BackgroundSnapshotInstance.prototype.toJSON = backgroundSnapshotInstanceToJSON;
 
-    let f = vi.fn();
+    let f = rstest.fn();
     const data = {};
     class Pure extends Component {
       shouldComponentUpdate() {

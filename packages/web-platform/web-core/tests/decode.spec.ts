@@ -1,4 +1,4 @@
-import { describe, it, expect, rstest as vi } from '@rstest/core';
+import { describe, it, expect, rstest } from '@rstest/core';
 import { rstest } from '@rstest/core';
 import { decodeTemplate } from '../ts/server/decode.js';
 import {

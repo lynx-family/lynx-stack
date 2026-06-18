@@ -8,7 +8,7 @@ import {
   describe,
   expect,
   test,
-  rstest as vi,
+  rstest,
 } from '@rstest/core';
 import { runOnMainThread, useEffect } from '@lynx-js/react';
 import { act, render } from '@lynx-js/react/testing-library';
@@ -34,7 +34,7 @@ describe('Easings', () => {
   });
 
   afterEach(() => {
-    vi.restoreAllMocks();
+    rstest.restoreAllMocks();
     // Cleanup property
     delete (globalThis as any).runOnRegistered;
   });

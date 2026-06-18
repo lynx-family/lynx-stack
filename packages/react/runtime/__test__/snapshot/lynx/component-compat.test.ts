@@ -3,7 +3,7 @@
 // LICENSE file in the root directory of this source tree.
 
 import { Component } from 'preact';
-import { afterEach, beforeEach, describe, expect, it, rstest as vi } from '@rstest/core';
+import { afterEach, beforeEach, describe, expect, it, rstest } from '@rstest/core';
 
 import { globalCommitContext } from '../../../src/core/commit-context';
 import { installComponentCompat } from '../../../src/core/component';
@@ -36,8 +36,8 @@ describe('installComponentCompat', () => {
 
     globalThis.__JS__ = true;
     globalThis.__DISABLE_CREATE_SELECTOR_QUERY_INCOMPATIBLE_WARNING__ = false;
-    lynx.reportError = vi.fn();
-    lynx.getNativeApp().markTiming = vi.fn();
+    lynx.reportError = rstest.fn();
+    lynx.getNativeApp().markTiming = rstest.fn();
     globalCommitContext.flushOptions = {};
     resetTimingState();
   });
@@ -77,13 +77,13 @@ describe('installComponentCompat', () => {
         LynxUIMethodModule: uiModule,
       },
     };
-    const getNodeRef = vi.fn(function(this: unknown, selector: string, single?: boolean) {
+    const getNodeRef = rstest.fn(function(this: unknown, selector: string, single?: boolean) {
       return { receiver: this, selector, single };
     });
-    const getNodeRefFromRoot = vi.fn(function(this: unknown, selector: string) {
+    const getNodeRefFromRoot = rstest.fn(function(this: unknown, selector: string) {
       return { receiver: this, selector };
     });
-    const GlobalEventEmitter = { addListener: vi.fn() };
+    const GlobalEventEmitter = { addListener: rstest.fn() };
     const module = {};
     const selectorQuery = {};
     const element = {};
@@ -99,11 +99,11 @@ describe('installComponentCompat', () => {
         },
       },
       GlobalEventEmitter,
-      registerModule: vi.fn(),
-      getJSModule: vi.fn(() => GlobalEventEmitter),
+      registerModule: rstest.fn(),
+      getJSModule: rstest.fn(() => GlobalEventEmitter),
     };
-    lynx.getElementById = vi.fn(() => element);
-    lynx.createSelectorQuery = vi.fn(() => selectorQuery);
+    lynx.getElementById = rstest.fn(() => element);
+    lynx.createSelectorQuery = rstest.fn(() => selectorQuery);
 
     installComponentCompat();
 
@@ -134,7 +134,7 @@ describe('installComponentCompat', () => {
     expect(lynxCoreInject.tt.registerModule).toHaveBeenCalledWith('module', module);
     expect(component.getJSModule('GlobalEventEmitter')).toBe(GlobalEventEmitter);
 
-    const listener = vi.fn();
+    const listener = rstest.fn();
     component.addGlobalEventListener('event', listener, component);
     expect(GlobalEventEmitter.addListener).toHaveBeenCalledWith('event', listener, component);
 

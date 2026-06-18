@@ -1,14 +1,14 @@
-import { describe, expect, it, rstest as vi } from '@rstest/core';
+import { describe, expect, it, rstest } from '@rstest/core';
 
 import { getEventValue } from '../../../../src/element-template/prop-adapters/event-value.js';
 import { prepareSpreadAttrSlot } from '../../../../src/element-template/prop-adapters/spread.js';
 
 describe('ElementTemplate spread prop adapter', () => {
   it('normalizes host spread keys and emits ordinary event values', () => {
-    const handleTap = vi.fn();
-    const unsupportedWorkletEvent = vi.fn();
-    const unsupportedFunctionProp = vi.fn();
-    const ref = vi.fn();
+    const handleTap = rstest.fn();
+    const unsupportedWorkletEvent = rstest.fn();
+    const unsupportedFunctionProp = rstest.fn();
+    const ref = rstest.fn();
 
     const prepared = prepareSpreadAttrSlot(
       -1,
@@ -58,7 +58,7 @@ describe('ElementTemplate spread prop adapter', () => {
   });
 
   it('emits ordinary ref markers from spread values', () => {
-    const ref = vi.fn();
+    const ref = rstest.fn();
     const prepared = prepareSpreadAttrSlot(-4, 1, {
       id: 'cta',
       ref,
@@ -83,7 +83,7 @@ describe('ElementTemplate spread prop adapter', () => {
   });
 
   it('ignores inherited spread refs', () => {
-    const spread = Object.create({ ref: vi.fn() }) as Record<string, unknown>;
+    const spread = Object.create({ ref: rstest.fn() }) as Record<string, unknown>;
     spread.id = 'cta';
 
     expect(prepareSpreadAttrSlot(-4, 1, spread)).toEqual({ id: 'cta' });
@@ -96,11 +96,11 @@ describe('ElementTemplate spread prop adapter', () => {
 
   it('ignores non-host spread props', () => {
     const prepared = prepareSpreadAttrSlot(-5, 0, {
-      'worklet:ref': vi.fn(),
-      'main-thread:ref': vi.fn(),
-      'main-thread:bindtap': vi.fn(),
+      'worklet:ref': rstest.fn(),
+      'main-thread:ref': rstest.fn(),
+      'main-thread:bindtap': rstest.fn(),
       'main-thread:gesture': {},
-      onReady: vi.fn(),
+      onReady: rstest.fn(),
       title: 'hello',
     });
 

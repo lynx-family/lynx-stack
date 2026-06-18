@@ -3,7 +3,7 @@
 // LICENSE file in the root directory of this source tree.
 import { options as preactOptions } from 'preact';
 import type { VNode } from 'preact';
-import { afterEach, describe, expect, it, rstest as vi } from '@rstest/core';
+import { afterEach, describe, expect, it, rstest } from '@rstest/core';
 
 import { runWithForceRootRender } from '../../src/core/forceRootRender.js';
 import { COMPONENT, DIFF2, FORCE, ORIGINAL } from '../../src/shared/render-constants.js';
@@ -18,15 +18,15 @@ describe('core/forceRootRender', () => {
     } else {
       mutablePreactOptions[DIFF2] = initialDiff2;
     }
-    vi.restoreAllMocks();
+    rstest.restoreAllMocks();
   });
 
   it('bumps root vnode identity and marks existing components as forced', () => {
-    const oldDiff = vi.fn();
+    const oldDiff = rstest.fn();
     mutablePreactOptions[DIFF2] = oldDiff;
     const component = {};
     const rootVNode = { [ORIGINAL]: 1 } as VNode;
-    const setRootVNode = vi.fn();
+    const setRootVNode = rstest.fn();
 
     runWithForceRootRender({
       getRootVNode: () => rootVNode,
@@ -45,7 +45,7 @@ describe('core/forceRootRender', () => {
   });
 
   it('handles mount-phase vnodes and restores diff hook after render throws', () => {
-    const setRootVNode = vi.fn();
+    const setRootVNode = rstest.fn();
     const error = new Error('render failed');
 
     expect(() =>

@@ -28,7 +28,6 @@ export default defineConfig({
           alias: {
             ...config.resolve?.alias,
             ...preactSingletonAlias,
-            vitest: require.resolve('./vitest-polyfill.cjs'),
           },
         },
         include: ['__tests__/**/*.test.{js,ts,jsx,tsx}'],

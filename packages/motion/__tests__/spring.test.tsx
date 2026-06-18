@@ -8,7 +8,7 @@ import {
   describe,
   expect,
   test,
-  rstest as vi,
+  rstest,
 } from '@rstest/core';
 import { runOnMainThread, useEffect } from '@lynx-js/react';
 import { act, render } from '@lynx-js/react/testing-library';
@@ -30,12 +30,12 @@ describe('Spring', () => {
   });
 
   afterEach(() => {
-    vi.restoreAllMocks();
+    rstest.restoreAllMocks();
     delete (globalThis as any).runOnRegistered;
   });
 
   test('should call registered springHandle', async () => {
-    const mockSpring = vi.fn();
+    const mockSpring = rstest.fn();
     mockRegisteredMap.set('springHandle', mockSpring);
 
     const App = () => {

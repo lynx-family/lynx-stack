@@ -1,4 +1,4 @@
-import { describe, it, expect, rstest as vi, beforeEach } from '@rstest/core';
+import { describe, it, expect, rstest, beforeEach } from '@rstest/core';
 import { rstest } from '@rstest/core';
 import { executeTemplate } from '../ts/server/deploy.js';
 import * as decodeModule from '../ts/server/decode.js';
@@ -22,12 +22,12 @@ rstest.mock('vm', () => ({
 
 describe('executeTemplate', () => {
   beforeEach(() => {
-    vi.clearAllMocks();
+    rstest.clearAllMocks();
   });
 
   it('should pass viewAttributes correctly when called with 7 arguments (legacy call)', () => {
-    const mockDecodeTemplate = vi.mocked(decodeModule.decodeTemplate);
-    const mockCreateElementAPI = vi.mocked(
+    const mockDecodeTemplate = rstest.mocked(decodeModule.decodeTemplate);
+    const mockCreateElementAPI = rstest.mocked(
       createElementAPIModule.createElementAPI,
     );
 

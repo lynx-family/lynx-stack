@@ -1,5 +1,5 @@
 /** @jsxImportSource ../../lepus */
-import { afterEach, beforeEach, describe, expect, it, rstest as vi } from '@rstest/core';
+import { afterEach, beforeEach, describe, expect, it, rstest } from '@rstest/core';
 
 import { elementTree, nativeMethodQueue } from './utils/nativeMethod';
 import { hydrate } from '../../src/snapshot/renderToOpcodes/hydrate';
@@ -1304,7 +1304,7 @@ describe(`list componentAtIndex`, () => {
 
     __pendingListUpdates.flush();
 
-    const fn = vi.fn();
+    const fn = rstest.fn();
     const __original = globalThis.__FlushElementTree;
     globalThis.__FlushElementTree = (_, options = {}) => {
       const { elementID, listReuseNotification: { itemKey } = {} } = options;
@@ -3142,7 +3142,7 @@ describe('list componentAtIndexes', () => {
     b1.insertBefore(d2);
     __pendingListUpdates.flush();
 
-    const fn = vi.fn();
+    const fn = rstest.fn();
     const __original = globalThis.__FlushElementTree;
     globalThis.__FlushElementTree = (_, options = {}) => {
       fn(options);
@@ -3222,7 +3222,7 @@ describe('list componentAtIndexes', () => {
     b1.insertBefore(d2);
     __pendingListUpdates.flush();
 
-    const fn = vi.fn();
+    const fn = rstest.fn();
     const __original = globalThis.__FlushElementTree;
     globalThis.__FlushElementTree = (_, options = {}) => {
       fn(options);
@@ -3294,7 +3294,7 @@ describe('list componentAtIndexes', () => {
       elementTree.triggerEnqueueComponent(listRef, component[2]);
     }
 
-    const fn = vi.fn();
+    const fn = rstest.fn();
     const __original = globalThis.__FlushElementTree;
     globalThis.__FlushElementTree = (_, options = {}) => {
       const { listReuseNotification } = options;
@@ -3389,7 +3389,7 @@ describe('list componentAtIndexes', () => {
       elementTree.triggerEnqueueComponent(listRef, component[2]);
     }
 
-    const fn = vi.fn();
+    const fn = rstest.fn();
     const __original = globalThis.__FlushElementTree;
     globalThis.__FlushElementTree = (_, options = {}) => {
       fn(options);
@@ -3463,8 +3463,8 @@ describe('list componentAtIndexes', () => {
     const recycleMap = gRecycleMap[listID];
 
     {
-      const flushElementTreeSpy = vi.spyOn(globalThis, '__FlushElementTree');
-      const signMapSetSpy = vi.spyOn(signMap, 'set');
+      const flushElementTreeSpy = rstest.spyOn(globalThis, '__FlushElementTree');
+      const signMapSetSpy = rstest.spyOn(signMap, 'set');
 
       const component = [];
       component[0] = elementTree.triggerComponentAtIndex(listRef, 0);
@@ -3482,8 +3482,8 @@ describe('list componentAtIndexes', () => {
     }
 
     // re-spy
-    const flushElementTreeSpy = vi.spyOn(globalThis, '__FlushElementTree');
-    const signMapSetSpy = vi.spyOn(signMap, 'set');
+    const flushElementTreeSpy = rstest.spyOn(globalThis, '__FlushElementTree');
+    const signMapSetSpy = rstest.spyOn(signMap, 'set');
     const recycleSignMap = recycleMap.get(s1);
     expect(Array.from(recycleSignMap.keys()).length).toBe(2);
     // reuse occurs
@@ -3502,11 +3502,11 @@ describe('list-item with "defer" attribute', () => {
   beforeEach(() => {
     globalEnvManager.resetEnv();
     elementTree.clear();
-    vi.useFakeTimers();
+    rstest.useFakeTimers();
   });
 
   it('basic deferred <list-item/>', async () => {
-    const _F1 = vi.fn();
+    const _F1 = rstest.fn();
 
     const jsx = (
       <list id='list' custom-list-name='list-container'>
@@ -3597,7 +3597,7 @@ describe('list-item with "defer" attribute', () => {
   });
 
   it('basic deferred <list-item/> - componentAtIndex continuously should throw', async () => {
-    const _F1 = vi.fn();
+    const _F1 = rstest.fn();
 
     const jsx = (
       <list id='list' custom-list-name='list-container'>
@@ -3619,7 +3619,7 @@ describe('list-item with "defer" attribute', () => {
   });
 
   it('basic deferred <list-item/> - componentAtIndexes', async () => {
-    const _F1 = vi.fn();
+    const _F1 = rstest.fn();
 
     const jsx = (
       <list id='list' custom-list-name='list-container'>
@@ -3640,8 +3640,8 @@ describe('list-item with "defer" attribute', () => {
     __pendingListUpdates.flush();
 
     const listRef = elementTree.getElementById('list');
-    const __FlushElementTree = vi.fn();
-    vi.stubGlobal('__FlushElementTree', __FlushElementTree);
+    const __FlushElementTree = rstest.fn();
+    rstest.stubGlobal('__FlushElementTree', __FlushElementTree);
     elementTree.triggerComponentAtIndexes(listRef, [0, 1, 2], [11, 22, 33], false, true);
 
     // a list-item which is not deferred should trigger two flush
@@ -3798,7 +3798,7 @@ describe('list-item with "defer" attribute', () => {
   });
 
   it('basic deferred <list-item/> - should unmount when reused', async () => {
-    const _F1 = vi.fn();
+    const _F1 = rstest.fn();
 
     const child = __SNAPSHOT__(<text>Hello World</text>);
     const jsx = (
@@ -3994,7 +3994,7 @@ describe('list-item with "defer" attribute', () => {
   });
 
   it('should throw without custom-list-name="list-container"', async () => {
-    const _F1 = vi.fn();
+    const _F1 = rstest.fn();
 
     const jsx = (
       <list id='list'>

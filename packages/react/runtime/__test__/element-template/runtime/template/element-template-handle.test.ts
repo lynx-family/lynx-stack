@@ -2,7 +2,7 @@
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
 
-import { afterEach, beforeEach, describe, expect, it, rstest as vi } from '@rstest/core';
+import { afterEach, beforeEach, describe, expect, it, rstest } from '@rstest/core';
 import {
   elementTemplateRegistry,
   setElementTemplateNativeRef,
@@ -26,14 +26,14 @@ import { resetTemplateId } from '../../../../src/element-template/runtime/templa
 describe('ElementTemplateHandle', () => {
   const mockNativeRef = { __isNativeRef: true };
   const mockCreatedNativeRef = { __isTemplateRef: true };
-  const mockCreateElementTemplate = vi.fn();
-  // const mockReleaseElement = vi.fn();
+  const mockCreateElementTemplate = rstest.fn();
+  // const mockReleaseElement = rstest.fn();
 
   beforeEach(() => {
     mockCreateElementTemplate.mockReset();
     mockCreateElementTemplate.mockReturnValue(mockCreatedNativeRef);
-    vi.stubGlobal('__CreateElementTemplate', mockCreateElementTemplate);
-    // vi.stubGlobal('__ReleaseElement', mockReleaseElement);
+    rstest.stubGlobal('__CreateElementTemplate', mockCreateElementTemplate);
+    // rstest.stubGlobal('__ReleaseElement', mockReleaseElement);
     clearMainThreadDynamicAttrState();
     clearEtAttrPlanMap();
     elementTemplateRegistry.clear();
@@ -41,7 +41,7 @@ describe('ElementTemplateHandle', () => {
   });
 
   afterEach(() => {
-    vi.unstubAllGlobals();
+    rstest.unstubAllGlobals();
   });
 
   it('should reserve and bind a handle separately', () => {

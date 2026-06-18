@@ -7,7 +7,7 @@ import {
   describe,
   expect,
   test,
-  rstest as vi,
+  rstest,
 } from '@rstest/core';
 import type { MockInstance } from '@rstest/core';
 
@@ -27,7 +27,7 @@ describe('gestures mt', () => {
   let _gestureNode: any;
 
   beforeEach(() => {
-    spySetGesture = vi.spyOn(
+    spySetGesture = rstest.spyOn(
       lynxTestingEnv.mainThread.globalThis,
       '__SetGestureDetector',
     ).mockImplementation(function(

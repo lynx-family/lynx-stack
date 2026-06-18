@@ -1,7 +1,7 @@
 // Copyright 2026 The Lynx Authors. All rights reserved.
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
-import { afterEach, beforeEach, describe, expect, test, rstest as vi } from '@rstest/core';
+import { afterEach, beforeEach, describe, expect, test, rstest } from '@rstest/core';
 
 import {
   RUNTIME_BACKEND_ELEMENT_TEMPLATE,
@@ -31,7 +31,7 @@ describe('runtime backend marker', () => {
     originalGlobalDescriptor = Object.getOwnPropertyDescriptor(globalThis, sRuntimeBackend);
     delete (lynx as typeof lynx & Record<symbol, unknown>)[sRuntimeBackend];
     delete (globalThis as typeof globalThis & Record<symbol, unknown>)[sRuntimeBackend];
-    vi.stubGlobal('__LEPUS__', false);
+    rstest.stubGlobal('__LEPUS__', false);
   });
 
   afterEach(() => {
@@ -56,7 +56,7 @@ describe('runtime backend marker', () => {
   });
 
   test('registers the Element Template backend on the main-thread target', () => {
-    vi.stubGlobal('__LEPUS__', true);
+    rstest.stubGlobal('__LEPUS__', true);
 
     registerRuntimeBackend(RUNTIME_BACKEND_ELEMENT_TEMPLATE);
 

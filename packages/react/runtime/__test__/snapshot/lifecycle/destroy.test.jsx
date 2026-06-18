@@ -1,14 +1,14 @@
-import { beforeAll, describe, expect, test, rstest as vi } from '@rstest/core';
+import { beforeAll, describe, expect, test, rstest } from '@rstest/core';
 // `rstest.resetModules()` must be a literal call (module-mock APIs are not
 // aliasable through `vitest`).
 import { rstest } from '@rstest/core';
 
 describe('Destroy', () => {
-  const addEventListener = vi.fn();
-  const removeEventListener = vi.fn();
+  const addEventListener = rstest.fn();
+  const removeEventListener = rstest.fn();
 
   beforeAll(() => {
-    lynx.getCoreContext = vi.fn(() => {
+    lynx.getCoreContext = rstest.fn(() => {
       return {
         addEventListener,
         removeEventListener,
@@ -27,7 +27,7 @@ describe('Destroy', () => {
     const { useEffect } = await import('../../../src/index');
     const { __root } = await import('../../../src/root');
 
-    const callback = vi.fn().mockImplementation(() => {
+    const callback = rstest.fn().mockImplementation(() => {
       throw '???';
     });
 

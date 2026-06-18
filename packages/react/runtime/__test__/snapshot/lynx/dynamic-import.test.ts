@@ -1,7 +1,7 @@
 // Copyright 2026 The Lynx Authors. All rights reserved.
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
-import { afterEach, beforeEach, describe, expect, test, rstest as vi } from '@rstest/core';
+import { afterEach, beforeEach, describe, expect, test, rstest } from '@rstest/core';
 
 /* global lynx, lynxCoreInject, _ReportError */
 
@@ -20,9 +20,9 @@ describe('dynamic import helpers', () => {
   let originalGetDynamicComponentExports;
 
   beforeEach(() => {
-    vi.clearAllMocks();
-    vi.stubGlobal('__LEPUS__', false);
-    vi.stubGlobal('__JS__', true);
+    rstest.clearAllMocks();
+    rstest.stubGlobal('__LEPUS__', false);
+    rstest.stubGlobal('__JS__', true);
     originalQueryComponent = lynx.QueryComponent;
     originalRequireModuleAsync = lynx.requireModuleAsync;
     originalGetDynamicComponentExports = lynxCoreInject.tt.getDynamicComponentExports;
@@ -39,7 +39,7 @@ describe('dynamic import helpers', () => {
   });
 
   test('loads plain dynamic JS through requireModuleAsync', async () => {
-    const requireModuleAsync = vi.fn((url, callback) => {
+    const requireModuleAsync = rstest.fn((url, callback) => {
       callback(null, { data: url });
     });
     lynx.requireModuleAsync = requireModuleAsync;
@@ -60,7 +60,7 @@ describe('dynamic import helpers', () => {
 
   test('rejects plain dynamic JS when requireModuleAsync fails', async () => {
     const error = new Error('load failed');
-    const requireModuleAsync = vi.fn((_url, callback) => {
+    const requireModuleAsync = rstest.fn((_url, callback) => {
       callback(error);
     });
     lynx.requireModuleAsync = requireModuleAsync;
@@ -74,10 +74,10 @@ describe('dynamic import helpers', () => {
   });
 
   test('loads component dynamic imports through loadLazyBundle', async () => {
-    const QueryComponent = vi.fn((source, callback) => {
+    const QueryComponent = rstest.fn((source, callback) => {
       callback({ code: 0, detail: { schema: source } });
     });
-    const getDynamicComponentExports = vi.fn(schema => ({
+    const getDynamicComponentExports = rstest.fn(schema => ({
       default: () => null,
       data: schema,
     }));
@@ -96,7 +96,7 @@ describe('dynamic import helpers', () => {
   });
 
   test('reports leaked plain dynamic imports on the main thread', async () => {
-    vi.stubGlobal('__LEPUS__', true);
+    rstest.stubGlobal('__LEPUS__', true);
 
     const { loadDynamicJS } = await import(
       '../../../src/core/lynx/dynamic-import.js'

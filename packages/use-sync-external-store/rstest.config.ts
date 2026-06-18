@@ -36,7 +36,6 @@ const config: RstestConfig = defineConfig({
             ...preactSingletonAlias,
             // Alias `vitest` to `@rstest/core` so test files can keep
             // `import ... from '@rstest/core'`.
-            vitest: require.resolve('./vitest-polyfill.cjs'),
           },
         },
         tools: {

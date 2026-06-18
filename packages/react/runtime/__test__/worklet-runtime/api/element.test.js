@@ -1,7 +1,7 @@
 // Copyright 2024 The Lynx Authors. All rights reserved.
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
-import { afterEach, beforeEach, describe, expect, it, rstest as vi } from '@rstest/core';
+import { afterEach, beforeEach, describe, expect, it, rstest } from '@rstest/core';
 
 import { AnimationOperation } from '../../../src/worklet-runtime/api/animation/animation';
 import { Element, setShouldFlush } from '../../../src/worklet-runtime/api/element';
@@ -12,24 +12,24 @@ beforeEach(() => {
     lynxSdkVersion: '2.16',
   };
   initWorklet();
-  vi.useFakeTimers();
+  rstest.useFakeTimers();
 
-  globalThis.__SetAttribute = vi.fn();
-  globalThis.__AddInlineStyle = vi.fn();
-  globalThis.__GetAttributeByName = vi.fn();
-  globalThis.__GetAttributeNames = vi.fn();
-  globalThis.__QuerySelector = vi.fn();
-  globalThis.__QuerySelectorAll = vi.fn();
-  globalThis.__GetComputedStyleByKey = vi.fn();
-  globalThis.__InvokeUIMethod = vi.fn();
-  globalThis.__FlushElementTree = vi.fn();
-  globalThis.__ElementAnimate = vi.fn();
+  globalThis.__SetAttribute = rstest.fn();
+  globalThis.__AddInlineStyle = rstest.fn();
+  globalThis.__GetAttributeByName = rstest.fn();
+  globalThis.__GetAttributeNames = rstest.fn();
+  globalThis.__QuerySelector = rstest.fn();
+  globalThis.__QuerySelectorAll = rstest.fn();
+  globalThis.__GetComputedStyleByKey = rstest.fn();
+  globalThis.__InvokeUIMethod = rstest.fn();
+  globalThis.__FlushElementTree = rstest.fn();
+  globalThis.__ElementAnimate = rstest.fn();
 });
 
 afterEach(() => {
   delete globalThis.lynxWorkletImpl;
-  vi.useRealTimers();
-  vi.clearAllMocks();
+  rstest.useRealTimers();
+  rstest.clearAllMocks();
   setShouldFlush(true);
 });
 
@@ -39,7 +39,7 @@ describe('Element', () => {
     element.setAttribute('foo', 'bar');
     expect(globalThis.__SetAttribute).toHaveBeenCalledWith('element-instance', 'foo', 'bar');
     expect(globalThis.__FlushElementTree).not.toHaveBeenCalled();
-    await vi.runAllTimersAsync();
+    await rstest.runAllTimersAsync();
     expect(globalThis.__FlushElementTree).toHaveBeenCalledTimes(1);
   });
 
@@ -48,7 +48,7 @@ describe('Element', () => {
     element.setStyleProperty('color', 'red');
     expect(globalThis.__AddInlineStyle).toHaveBeenCalledWith('element-instance', 'color', 'red');
     expect(globalThis.__FlushElementTree).not.toHaveBeenCalled();
-    await vi.runAllTimersAsync();
+    await rstest.runAllTimersAsync();
     expect(globalThis.__FlushElementTree).toHaveBeenCalledTimes(1);
   });
 
@@ -59,7 +59,7 @@ describe('Element', () => {
     expect(globalThis.__AddInlineStyle).toHaveBeenCalledWith('element-instance', 'color', 'red');
     expect(globalThis.__AddInlineStyle).toHaveBeenCalledWith('element-instance', 'fontSize', '16px');
     expect(globalThis.__FlushElementTree).not.toHaveBeenCalled();
-    await vi.runAllTimersAsync();
+    await rstest.runAllTimersAsync();
     expect(globalThis.__FlushElementTree).toHaveBeenCalledTimes(1);
   });
 
@@ -186,7 +186,7 @@ describe('Element', () => {
     element.setStyleProperty('color', 'blue');
     element.setStyleProperties({ margin: '10px' });
     expect(globalThis.__FlushElementTree).not.toHaveBeenCalled();
-    await vi.runAllTimersAsync();
+    await rstest.runAllTimersAsync();
     expect(globalThis.__FlushElementTree).toHaveBeenCalledTimes(1);
   });
 
@@ -263,12 +263,12 @@ describe('Element', () => {
     const element = new Element('element-instance');
     setShouldFlush(false);
     element.setAttribute('a', '1');
-    await vi.runAllTimersAsync();
+    await rstest.runAllTimersAsync();
     expect(globalThis.__FlushElementTree).not.toHaveBeenCalled();
 
     setShouldFlush(true);
     element.setAttribute('b', '2');
-    await vi.runAllTimersAsync();
+    await rstest.runAllTimersAsync();
     expect(globalThis.__FlushElementTree).toHaveBeenCalledTimes(1);
   });
 });

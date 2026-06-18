@@ -8,7 +8,7 @@ import {
   describe,
   expect,
   test,
-  rstest as vi,
+  rstest,
 } from '@rstest/core';
 import { rstest } from '@rstest/core';
 import { runOnMainThread, useEffect } from '@lynx-js/react';
@@ -29,7 +29,7 @@ import * as elementModule from '../../src/polyfill/element.js';
 // the main thread, leaving e.g. `ElementCompt` undefined → "not a constructor").
 //
 // `{ spy: true }` keeps the REAL module (so non-mocked exports like `mix`,
-// `clamp`, `progress` survive in the shared chunk) and lets `vi.spyOn(...)
+// `clamp`, `progress` survive in the shared chunk) and lets `rstest.spyOn(...)
 // .mockImplementation(...)` patch individual exports in place — and those spied
 // implementations DO reach the main thread. Implementations are installed in
 // `beforeEach` so each test starts from a clean spy.
@@ -39,25 +39,27 @@ rstest.mock('../../src/polyfill/element.js', { spy: true });
 
 describe('Wrapper Animation', () => {
   beforeEach(() => {
-    vi.clearAllMocks();
+    rstest.clearAllMocks();
 
-    vi.spyOn(framerMotionDom, 'animate').mockImplementation(
+    rstest.spyOn(framerMotionDom, 'animate').mockImplementation(
       (...args: any[]) => {
         (globalThis as any).__ANIMATE_ARGS = args;
         return { then: () => {}, play: () => {}, cancel: () => {} } as any;
       },
     );
-    vi.spyOn(framerMotionDom, 'stagger').mockImplementation(
+    rstest.spyOn(framerMotionDom, 'stagger').mockImplementation(
       (...args: any[]) => {
         (globalThis as any).__STAGGER_ARGS = args;
         return ((i: number) => i * 0.1) as any;
       },
     );
-    vi.spyOn(motionDom, 'motionValue').mockImplementation((...args: any[]) => {
-      (globalThis as any).__MOTION_VALUE_ARGS = args;
-      return { set: () => {}, get: () => 0 } as any;
-    });
-    vi.spyOn(elementModule, 'ElementCompt').mockImplementation(
+    rstest.spyOn(motionDom, 'motionValue').mockImplementation(
+      (...args: any[]) => {
+        (globalThis as any).__MOTION_VALUE_ARGS = args;
+        return { set: () => {}, get: () => 0 } as any;
+      },
+    );
+    rstest.spyOn(elementModule, 'ElementCompt').mockImplementation(
       function(this: any, el: any) {
         (globalThis as any).__ELEMENT_COMPT_ARGS = el;
         return this;

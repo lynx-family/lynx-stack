@@ -1,10 +1,10 @@
-import { expect, test, rstest as vi } from '@rstest/core';
+import { expect, test, rstest } from '@rstest/core';
 
 test('preact/debug - Invalid argument passed to hook', async () => {
-  vi.stubGlobal('__MAIN_THREAD__', false)
+  rstest.stubGlobal('__MAIN_THREAD__', false)
     .stubGlobal('__LEPUS__', false);
   let warnLog = [];
-  vi.spyOn(console, 'warn').mockImplementation((...args) => {
+  rstest.spyOn(console, 'warn').mockImplementation((...args) => {
     warnLog.push(args);
   });
 

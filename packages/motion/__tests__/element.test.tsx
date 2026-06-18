@@ -8,7 +8,7 @@ import {
   describe,
   expect,
   test,
-  rstest as vi,
+  rstest,
 } from '@rstest/core';
 
 import { ElementCompt } from '../src/polyfill/element.js';
@@ -18,12 +18,12 @@ import { ElementCompt } from '../src/polyfill/element.js';
 
 describe('ElementCompt (unit tests)', () => {
   let mockElement: any;
-  let mockSetStyleProperty: ReturnType<typeof vi.fn>;
-  let mockSetStyleProperties: ReturnType<typeof vi.fn>;
+  let mockSetStyleProperty: ReturnType<typeof rstest.fn>;
+  let mockSetStyleProperties: ReturnType<typeof rstest.fn>;
 
   beforeEach(() => {
-    mockSetStyleProperty = vi.fn();
-    mockSetStyleProperties = vi.fn();
+    mockSetStyleProperty = rstest.fn();
+    mockSetStyleProperties = rstest.fn();
     mockElement = {
       element: { id: 'test' },
       setStyleProperty: mockSetStyleProperty,
@@ -31,7 +31,7 @@ describe('ElementCompt (unit tests)', () => {
     };
 
     // Mock global __GetComputedStyleByKey
-    (globalThis as any).__GetComputedStyleByKey = vi.fn(
+    (globalThis as any).__GetComputedStyleByKey = rstest.fn(
       (_element: any, prop: string) => {
         const mockStyles: Record<string, string> = {
           width: '100px',
@@ -55,7 +55,7 @@ describe('ElementCompt (unit tests)', () => {
 
   afterEach(() => {
     delete (globalThis as any).__GetComputedStyleByKey;
-    vi.restoreAllMocks();
+    rstest.restoreAllMocks();
   });
 
   test('should create instance with element', () => {

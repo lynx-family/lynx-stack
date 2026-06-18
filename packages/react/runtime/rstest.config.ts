@@ -39,7 +39,6 @@ export default defineConfig({
     dedupe: ['preact'],
     alias: {
       ...preactSingletonAlias,
-      vitest: require.resolve('./vitest-polyfill.cjs'),
       '@lynx-js/react/compat': path.resolve(__dirname, './compat/index.js'),
       '@lynx-js/react/worklet-runtime/bindings': path.resolve(
         __dirname,

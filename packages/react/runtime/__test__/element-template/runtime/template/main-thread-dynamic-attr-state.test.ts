@@ -2,7 +2,7 @@
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
 
-import { afterEach, describe, expect, it, rstest as vi } from '@rstest/core';
+import { afterEach, describe, expect, it, rstest } from '@rstest/core';
 
 import {
   __etAttrPlanMap,
@@ -28,11 +28,11 @@ function registerMTEventSlots(handleId: number, ...slotIndexes: number[]): void 
 }
 
 function installJsFunctionLifecycleManager(): {
-  addRef: ReturnType<typeof vi.fn>;
+  addRef: ReturnType<typeof rstest.fn>;
   restore: () => void;
 } {
   const previousWorkletImpl = globalThis.lynxWorkletImpl;
-  const addRef = vi.fn();
+  const addRef = rstest.fn();
   globalThis.lynxWorkletImpl = {
     ...previousWorkletImpl,
     _jsFunctionLifecycleManager: {

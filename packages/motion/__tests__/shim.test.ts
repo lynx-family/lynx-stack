@@ -8,7 +8,7 @@ import {
   describe,
   expect,
   test,
-  rstest as vi,
+  rstest,
 } from '@rstest/core';
 import { rstest } from '@rstest/core';
 
@@ -60,7 +60,7 @@ describe('Shim', () => {
   });
 
   afterEach(() => {
-    vi.restoreAllMocks();
+    rstest.restoreAllMocks();
     // Restore original globals
     globalThis.document = origDocument;
     globalThis.performance = origPerformance;

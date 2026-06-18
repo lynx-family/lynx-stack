@@ -5,7 +5,7 @@
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
-import { afterEach, beforeEach, describe, expect, it, rstest as vi } from '@rstest/core';
+import { afterEach, beforeEach, describe, expect, it, rstest } from '@rstest/core';
 
 import { WorkletEvents } from '@lynx-js/react/worklet-runtime/bindings';
 
@@ -61,7 +61,7 @@ function getLastUpdate(events: ElementTemplateUpdateCommitContext[]): ElementTem
 }
 
 function findRunWorkletCtxPayload(
-  dispatchSpy: ReturnType<typeof vi.spyOn>,
+  dispatchSpy: ReturnType<typeof rstest.spyOn>,
 ): { params: unknown[]; resolveId: number; worklet: { _wkltId?: string } } {
   const event = dispatchSpy.mock.calls
     .map(([payload]) => payload as { type?: string; data?: unknown })
@@ -76,7 +76,7 @@ function findRunWorkletCtxPayload(
   };
 }
 
-function hasRunWorkletCtxDispatch(dispatchSpy: ReturnType<typeof vi.spyOn>): boolean {
+function hasRunWorkletCtxDispatch(dispatchSpy: ReturnType<typeof rstest.spyOn>): boolean {
   return dispatchSpy.mock.calls.some(([payload]) =>
     (payload as { type?: string }).type === WorkletEvents.runWorkletCtx
   );
@@ -90,7 +90,7 @@ describe('Compiled runOnMainThread background fixtures', () => {
   };
 
   beforeEach(() => {
-    vi.clearAllMocks();
+    rstest.clearAllMocks();
     SystemInfo.lynxSdkVersion = '4.0';
     updateEvents = [];
     resetElementTemplateCommitState();
@@ -100,9 +100,9 @@ describe('Compiled runOnMainThread background fixtures', () => {
     installElementTemplateCommitHook();
     installElementTemplateHydrationListener();
 
-    vi.stubGlobal(
+    rstest.stubGlobal(
       '__LoadLepusChunk',
-      vi.fn().mockImplementation(() => {
+      rstest.fn().mockImplementation(() => {
         initWorklet();
         return true;
       }),
@@ -190,7 +190,7 @@ describe('Compiled runOnMainThread background fixtures', () => {
   // Pre-existing failure; out of scope (needs a transform rebuild).
   it.skip('delivers pre-hydrate compiled render calls through delayed-only hydrate payloads', async () => {
     const { backgroundModule, mainModule } = await loadFixture();
-    const dispatchSpy = vi.spyOn(lynx.getCoreContext(), 'dispatchEvent');
+    const dispatchSpy = rstest.spyOn(lynx.getCoreContext(), 'dispatchEvent');
 
     renderCompiledFixtureOnBackground(backgroundModule, envManager, {
       label: 'first',
@@ -234,7 +234,7 @@ describe('Compiled runOnMainThread background fixtures', () => {
 
     await hydrateFixture(backgroundModule, mainModule);
     updateEvents = [];
-    const dispatchSpy = vi.spyOn(lynx.getCoreContext(), 'dispatchEvent');
+    const dispatchSpy = rstest.spyOn(lynx.getCoreContext(), 'dispatchEvent');
     renderCompiledFixtureOnBackground(backgroundModule, envManager, {
       label: 'second',
       source: 'update',
@@ -273,7 +273,7 @@ describe('Compiled runOnMainThread background fixtures', () => {
     const { backgroundModule, mainModule } = await loadFixture();
 
     await hydrateFixture(backgroundModule, mainModule);
-    const dispatchSpy = vi.spyOn(lynx.getCoreContext(), 'dispatchEvent');
+    const dispatchSpy = rstest.spyOn(lynx.getCoreContext(), 'dispatchEvent');
     const directPromise = backgroundModule.callMainDirect('ready');
     const data = findRunWorkletCtxPayload(dispatchSpy);
     expect(data).toMatchObject({

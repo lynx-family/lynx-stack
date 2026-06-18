@@ -1,4 +1,4 @@
-import { afterEach, beforeEach, describe, expect, it, rstest as vi } from '@rstest/core';
+import { afterEach, beforeEach, describe, expect, it, rstest } from '@rstest/core';
 
 import { processGesture } from '../../../src/snapshot/gesture/processGesture.js';
 
@@ -24,33 +24,33 @@ function createSerializedComposedGesture(gestures: ReturnType<typeof createSeria
 }
 
 describe('processGesture', () => {
-  let setAttribute: ReturnType<typeof vi.fn>;
-  let setGestureDetector: ReturnType<typeof vi.fn>;
-  let removeGestureDetector: ReturnType<typeof vi.fn>;
-  let hydrateCtx: ReturnType<typeof vi.fn>;
+  let setAttribute: ReturnType<typeof rstest.fn>;
+  let setGestureDetector: ReturnType<typeof rstest.fn>;
+  let removeGestureDetector: ReturnType<typeof rstest.fn>;
+  let hydrateCtx: ReturnType<typeof rstest.fn>;
 
   beforeEach(() => {
-    setAttribute = vi.fn();
-    setGestureDetector = vi.fn();
-    removeGestureDetector = vi.fn();
-    hydrateCtx = vi.fn();
+    setAttribute = rstest.fn();
+    setGestureDetector = rstest.fn();
+    removeGestureDetector = rstest.fn();
+    hydrateCtx = rstest.fn();
 
-    vi.stubGlobal('__SetAttribute', setAttribute);
-    vi.stubGlobal('__SetGestureDetector', setGestureDetector);
-    vi.stubGlobal('__RemoveGestureDetector', removeGestureDetector);
-    vi.stubGlobal('lynxWorkletImpl', {
+    rstest.stubGlobal('__SetAttribute', setAttribute);
+    rstest.stubGlobal('__SetGestureDetector', setGestureDetector);
+    rstest.stubGlobal('__RemoveGestureDetector', removeGestureDetector);
+    rstest.stubGlobal('lynxWorkletImpl', {
       _hydrateCtx: hydrateCtx,
       _jsFunctionLifecycleManager: {
-        addRef: vi.fn(),
+        addRef: rstest.fn(),
       },
       _eventDelayImpl: {
-        runDelayedWorklet: vi.fn(),
+        runDelayedWorklet: rstest.fn(),
       },
     });
   });
 
   afterEach(() => {
-    vi.unstubAllGlobals();
+    rstest.unstubAllGlobals();
   });
 
   it('sets detector on mount with expected params', () => {
@@ -238,20 +238,20 @@ describe('processGesture', () => {
     const dom = {} as FiberElement;
     const gesture = createSerializedGesture(1);
 
-    vi.unstubAllGlobals();
-    setAttribute = vi.fn();
-    setGestureDetector = vi.fn();
-    hydrateCtx = vi.fn();
-    vi.stubGlobal('__SetAttribute', setAttribute);
-    vi.stubGlobal('__SetGestureDetector', setGestureDetector);
-    vi.stubGlobal('__RemoveGestureDetector', undefined);
-    vi.stubGlobal('lynxWorkletImpl', {
+    rstest.unstubAllGlobals();
+    setAttribute = rstest.fn();
+    setGestureDetector = rstest.fn();
+    hydrateCtx = rstest.fn();
+    rstest.stubGlobal('__SetAttribute', setAttribute);
+    rstest.stubGlobal('__SetGestureDetector', setGestureDetector);
+    rstest.stubGlobal('__RemoveGestureDetector', undefined);
+    rstest.stubGlobal('lynxWorkletImpl', {
       _hydrateCtx: hydrateCtx,
       _jsFunctionLifecycleManager: {
-        addRef: vi.fn(),
+        addRef: rstest.fn(),
       },
       _eventDelayImpl: {
-        runDelayedWorklet: vi.fn(),
+        runDelayedWorklet: rstest.fn(),
       },
     });
 

@@ -8,7 +8,7 @@ import {
   describe,
   expect,
   test,
-  rstest as vi,
+  rstest,
 } from '@rstest/core';
 
 import { runOnMainThread, useEffect, useMainThreadRef } from '@lynx-js/react';
@@ -23,12 +23,14 @@ describe('motion mini', () => {
 
   beforeEach(() => {
     mockRegisteredMap = new Map<string, CallableFunction>();
-    vi.spyOn(globalThis, 'runOnRegistered', 'get').mockImplementation(function(
-      id: string,
-    ) {
-      const func = mockRegisteredMap.get(id) ?? noopMT;
-      return func;
-    });
+    rstest.spyOn(globalThis, 'runOnRegistered', 'get').mockImplementation(
+      function(
+        id: string,
+      ) {
+        const func = mockRegisteredMap.get(id) ?? noopMT;
+        return func;
+      },
+    );
 
     function mockRegisterCallable(
       func: CallableFunction,
@@ -42,7 +44,7 @@ describe('motion mini', () => {
   });
 
   afterEach(() => {
-    vi.restoreAllMocks();
+    rstest.restoreAllMocks();
   });
 
   test('createMotionValue should work', async () => {

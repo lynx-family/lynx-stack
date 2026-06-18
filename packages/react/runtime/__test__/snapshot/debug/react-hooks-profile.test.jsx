@@ -3,7 +3,7 @@
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
 */
-import { afterEach, beforeAll, beforeEach, describe, expect, it, rstest as vi } from '@rstest/core';
+import { afterEach, beforeAll, beforeEach, describe, expect, it, rstest } from '@rstest/core';
 // `rstest.resetModules()` must be a literal call (module-mock APIs are not
 // aliasable through `vitest`).
 import { rstest } from '@rstest/core';
@@ -18,7 +18,7 @@ let currentCreateElement;
 
 async function importHooksWithProfileRecording(isRecording) {
   const original = lynx.performance.isProfileRecording;
-  lynx.performance.isProfileRecording = vi.fn(() => isRecording);
+  lynx.performance.isProfileRecording = rstest.fn(() => isRecording);
   rstest.resetModules();
   try {
     const [hooks, preact, document, utils] = await Promise.all([
@@ -57,7 +57,7 @@ describe('react hooks profile', () => {
     currentRender = undefined;
     currentCreateElement = undefined;
     elementTree.clear();
-    vi.restoreAllMocks();
+    rstest.restoreAllMocks();
   });
 
   it('should profile useEffect and useLayoutEffect with flowId and cleanup', async () => {
@@ -138,10 +138,10 @@ describe('react hooks profile', () => {
     lynx.performance.profileEnd.mockClear();
 
     try {
-      vi.stubGlobal('Error', ErrorWithoutStack);
+      rstest.stubGlobal('Error', ErrorWithoutStack);
       setValue(v => v + 1);
     } finally {
-      vi.stubGlobal('Error', OriginalError);
+      rstest.stubGlobal('Error', OriginalError);
     }
 
     const setterProfileCalls = lynx.performance.profileStart.mock.calls.filter(
@@ -172,11 +172,11 @@ describe('react hooks profile', () => {
     lynx.performance.profileEnd.mockClear();
 
     try {
-      vi.stubGlobal('Error', ErrorWithoutStack);
+      rstest.stubGlobal('Error', ErrorWithoutStack);
       currentRender(currentCreateElement(App), scratch);
       await Promise.resolve();
     } finally {
-      vi.stubGlobal('Error', OriginalError);
+      rstest.stubGlobal('Error', OriginalError);
     }
 
     const effectRootCall = lynx.performance.profileStart.mock.calls.find(

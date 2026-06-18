@@ -4,7 +4,7 @@
 // LICENSE file in the root directory of this source tree.
 */
 import { render, options, Component } from 'preact';
-import { beforeAll, beforeEach, describe, expect, test, rstest as vi } from '@rstest/core';
+import { beforeAll, beforeEach, describe, expect, test, rstest } from '@rstest/core';
 
 import { setupDocument } from '../../../src/document';
 import { setupPage, snapshotInstanceManager } from '../../../src/snapshot';
@@ -26,7 +26,7 @@ describe('profile', () => {
   });
 
   test('original options hooks should be called', async () => {
-    const noop = vi.fn();
+    const noop = rstest.fn();
 
     const oldDiff = options[DIFF];
     const oldDiff2 = options[DIFF2];

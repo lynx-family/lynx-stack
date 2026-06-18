@@ -1,7 +1,7 @@
-import { expect, test, rstest as vi } from '@rstest/core';
+import { expect, test, rstest } from '@rstest/core';
 
 test('preact/debug - Objects are not valid as a child', async () => {
-  vi.stubGlobal('__MAIN_THREAD__', false)
+  rstest.stubGlobal('__MAIN_THREAD__', false)
     .stubGlobal('__LEPUS__', false);
 
   await import('preact/debug');

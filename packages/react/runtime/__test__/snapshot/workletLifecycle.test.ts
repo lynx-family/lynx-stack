@@ -1,7 +1,7 @@
 // Copyright 2026 The Lynx Authors. All rights reserved.
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
-import { afterEach, beforeEach, describe, expect, it, rstest as vi } from '@rstest/core';
+import { afterEach, beforeEach, describe, expect, it, rstest } from '@rstest/core';
 
 import { updateGesture } from '../../src/snapshot/snapshot/gesture';
 import { updateSpread } from '../../src/snapshot/snapshot/spread';
@@ -17,10 +17,10 @@ function createSnapshot(value: unknown) {
 }
 
 describe('worklet lifecycle without elements', () => {
-  let addRef: ReturnType<typeof vi.fn>;
+  let addRef: ReturnType<typeof rstest.fn>;
 
   beforeEach(() => {
-    addRef = vi.fn();
+    addRef = rstest.fn();
     globalThis.lynxWorkletImpl = {
       _jsFunctionLifecycleManager: {
         addRef,
@@ -29,7 +29,7 @@ describe('worklet lifecycle without elements', () => {
   });
 
   afterEach(() => {
-    vi.restoreAllMocks();
+    rstest.restoreAllMocks();
     delete globalThis.lynxWorkletImpl;
   });
 

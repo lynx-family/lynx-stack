@@ -1,7 +1,7 @@
 import fs from 'node:fs';
 import path from 'node:path';
 
-import { rstest as vi } from '@rstest/core';
+import { rstest } from '@rstest/core';
 
 import { loadCaseModule } from './caseModuleContext.js';
 
@@ -144,7 +144,7 @@ async function runCompiledRenderFixture(options: {
     throw new Error(`Source file missing for fixture "${fixtureName}"`);
   }
 
-  vi.resetAllMocks();
+  rstest.resetAllMocks();
   elementTemplateRegistry.clear();
   clearEtAttrPlanMap();
   resetTemplateId();

@@ -1,7 +1,7 @@
 // Copyright 2025 The Lynx Authors. All rights reserved.
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
-import { describe, expect, it, rstest as vi } from '@rstest/core';
+import { describe, expect, it, rstest } from '@rstest/core';
 
 import { boxShadow } from '../../plugins/lynx/boxShadow.js';
 import { runPlugin } from '../utils/run-plugin.js';
@@ -17,7 +17,7 @@ describe('boxShadow plugin', () => {
       },
     });
 
-    const matchUtilities = vi.mocked(api.matchUtilities);
+    const matchUtilities = rstest.mocked(api.matchUtilities);
     expect(matchUtilities).toHaveBeenCalledTimes(1);
 
     const call = matchUtilities.mock.calls[0];

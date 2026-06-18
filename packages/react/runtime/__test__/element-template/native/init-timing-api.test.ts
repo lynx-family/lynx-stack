@@ -1,4 +1,4 @@
-import { afterEach, describe, expect, it, rstest as vi, rstest } from '@rstest/core';
+import { afterEach, describe, expect, it, rstest, rstest } from '@rstest/core';
 
 import { ElementTemplateEnvManager } from '../test-utils/debug/envManager.js';
 
@@ -17,7 +17,7 @@ describe('ElementTemplate native init', () => {
     process.env['NODE_ENV'] = 'production';
     envManager.resetEnv('background');
 
-    const initTimingAPI = vi.fn();
+    const initTimingAPI = rstest.fn();
     rstest.doMock('../../../src/element-template/lynx/performance.js', () => ({
       initTimingAPI,
     }));

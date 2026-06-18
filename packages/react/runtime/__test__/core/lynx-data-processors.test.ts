@@ -1,4 +1,4 @@
-import { afterEach, beforeEach, describe, expect, it, rstest as vi } from '@rstest/core';
+import { afterEach, beforeEach, describe, expect, it, rstest } from '@rstest/core';
 
 import { createProcessData } from '../../src/core/lynx-data-processors.js';
 
@@ -58,9 +58,9 @@ describe('createProcessData', () => {
   });
 
   it('uses named and default processors and falls back to raw data', () => {
-    const defaultDataProcessor = vi.fn((data: { value: number }) => ({ doubled: data.value * 2 }));
-    const namedDataProcessor = vi.fn((data: { value: number }) => ({ named: data.value }));
-    lynx.reportError = vi.fn();
+    const defaultDataProcessor = rstest.fn((data: { value: number }) => ({ doubled: data.value * 2 }));
+    const namedDataProcessor = rstest.fn((data: { value: number }) => ({ named: data.value }));
+    lynx.reportError = rstest.fn();
     const processData = createProcessData({
       defaultDataProcessor,
       dataProcessors: {
@@ -78,7 +78,7 @@ describe('createProcessData', () => {
 
   it('reports processor errors and returns an empty object', () => {
     const error = new Error('processor failed');
-    lynx.reportError = vi.fn();
+    lynx.reportError = rstest.fn();
     const processData = createProcessData({
       defaultDataProcessor() {
         throw error;

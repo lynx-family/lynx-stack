@@ -4,7 +4,7 @@
 // LICENSE file in the root directory of this source tree.
 */
 import { render } from 'preact';
-import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, it, rstest as vi } from '@rstest/core';
+import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, it, rstest } from '@rstest/core';
 
 import { delayedLifecycleEvents } from '../../src/snapshot/lifecycle/event/delayLifecycleEvents';
 import { takeGlobalSnapshotPatch } from '../../src/snapshot/lifecycle/patch/snapshotPatch';
@@ -28,16 +28,16 @@ beforeEach(() => {
 });
 
 afterEach(() => {
-  vi.restoreAllMocks();
+  rstest.restoreAllMocks();
   elementTree.clear();
 });
 
 describe('eventUpdate', () => {
   it('basic & throw', async function() {
-    const handleTap1 = vi.fn().mockImplementation(() => {
+    const handleTap1 = rstest.fn().mockImplementation(() => {
       throw new Error('error');
     });
-    const handleTap2 = vi.fn();
+    const handleTap2 = rstest.fn();
     function Comp() {
       return (
         <view>
@@ -117,7 +117,7 @@ describe('eventUpdate', () => {
     handleTap2.mockClear();
 
     const reportError = lynx.reportError;
-    lynx.reportError = vi.fn();
+    lynx.reportError = rstest.fn();
     lynxCoreInject.tt.publishEvent('-2:0:', 'data');
     expect(handleTap1).toHaveBeenCalledTimes(1);
     expect(lynx.reportError).toHaveBeenCalledTimes(1);
@@ -204,8 +204,8 @@ describe('eventUpdate', () => {
     }
 
     globalEnvManager.switchToBackground();
-    handleTap1 = vi.fn();
-    handleTap2 = vi.fn();
+    handleTap1 = rstest.fn();
+    handleTap2 = rstest.fn();
     render(<Comp />, __root);
     patch = takeGlobalSnapshotPatch();
     expect(patch).toMatchInlineSnapshot(`
@@ -262,7 +262,7 @@ describe('eventUpdate', () => {
 
   it('insert element', async function() {
     let patch;
-    let handleTap1 = vi.fn();
+    let handleTap1 = rstest.fn();
     let show = false;
     function Comp() {
       return <view>{show ? <text bindtap={handleTap1}>1</text> : null}</view>;
@@ -353,8 +353,8 @@ describe('eventUpdate', () => {
 
   it('update', () => {
     let patch;
-    let handleTap1 = vi.fn();
-    let handleTap2 = vi.fn();
+    let handleTap1 = rstest.fn();
+    let handleTap2 = rstest.fn();
     function Comp() {
       return (
         <view>
@@ -431,8 +431,8 @@ describe('eventUpdate', () => {
     expect(handleTap2).toHaveBeenCalledTimes(1);
     expect(handleTap2).toHaveBeenCalledWith('data2');
 
-    handleTap1 = vi.fn();
-    handleTap2 = vi.fn();
+    handleTap1 = rstest.fn();
+    handleTap2 = rstest.fn();
     render(<Comp />, __root);
     patch = takeGlobalSnapshotPatch();
     expect(patch).toMatchInlineSnapshot(`[]`);
@@ -453,7 +453,7 @@ describe('eventUpdate', () => {
 
   it('update before hydration', () => {
     let patch;
-    let handleTap1 = vi.fn();
+    let handleTap1 = rstest.fn();
     let handleTap2 = undefined;
     function Comp() {
       return (
@@ -497,8 +497,8 @@ describe('eventUpdate', () => {
     // background render
     {
       globalEnvManager.switchToBackground();
-      handleTap1 = vi.fn();
-      handleTap2 = vi.fn();
+      handleTap1 = rstest.fn();
+      handleTap2 = rstest.fn();
       render(<Comp />, __root);
     }
 
@@ -531,8 +531,8 @@ describe('eventUpdate', () => {
 
   it('remove', () => {
     let patch;
-    let handleTap1 = vi.fn();
-    let handleTap2 = vi.fn();
+    let handleTap1 = rstest.fn();
+    let handleTap2 = rstest.fn();
     function Comp() {
       return (
         <view>
@@ -667,9 +667,9 @@ describe('event in spread', () => {
     let patch;
     let spread1 = {};
     let spread2 = {};
-    let handleTap1 = vi.fn();
-    let handleTap2 = vi.fn();
-    let handleTouchStart = vi.fn();
+    let handleTap1 = rstest.fn();
+    let handleTap2 = rstest.fn();
+    let handleTouchStart = rstest.fn();
     function Comp() {
       return (
         <view>
@@ -830,8 +830,8 @@ describe('event in spread', () => {
     expect(handleTouchStart).toHaveBeenCalledTimes(1);
     expect(handleTouchStart).toHaveBeenCalledWith('data');
 
-    spread1 = { bindtap: vi.fn() };
-    spread2 = { bindtap: vi.fn() };
+    spread1 = { bindtap: rstest.fn() };
+    spread2 = { bindtap: rstest.fn() };
     render(<Comp />, __root);
     patch = takeGlobalSnapshotPatch();
     expect(patch).toMatchInlineSnapshot(`[]`);
@@ -890,7 +890,7 @@ describe('event in spread', () => {
   it('insert element', async function() {
     let patch;
     let show = false;
-    let handleTap1 = vi.fn();
+    let handleTap1 = rstest.fn();
     let spread1 = { bindtap: handleTap1 };
     function Comp() {
       return <view>{show ? <text {...spread1}>1</text> : null}</view>;
@@ -994,7 +994,7 @@ describe('event when firstScreenSyncTiming is jsReady', () => {
     // resetup
     injectTt();
 
-    const handleTouchStart = vi.fn();
+    const handleTouchStart = rstest.fn();
 
     function Comp() {
       return (
@@ -1193,7 +1193,7 @@ describe('call `root.render()` async', () => {
     // resetup
     injectTt();
 
-    const handleTouchStart = vi.fn();
+    const handleTouchStart = rstest.fn();
 
     function Comp() {
       return (

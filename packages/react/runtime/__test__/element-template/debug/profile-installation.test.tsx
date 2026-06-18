@@ -1,4 +1,4 @@
-import { afterEach, beforeEach, describe, expect, it, rstest as vi, rstest } from '@rstest/core';
+import { afterEach, beforeEach, describe, expect, it, rstest, rstest } from '@rstest/core';
 
 import { ElementTemplateEnvManager } from '../test-utils/debug/envManager.js';
 
@@ -7,7 +7,7 @@ const envManager = new ElementTemplateEnvManager();
 describe('initProfileHook installation', () => {
   beforeEach(() => {
     rstest.resetModules();
-    vi.clearAllMocks();
+    rstest.clearAllMocks();
     envManager.resetEnv('background');
   });
 

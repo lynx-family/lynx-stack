@@ -1,8 +1,8 @@
-import { afterEach, beforeEach, describe, expect, it, rstest as vi, rstest } from '@rstest/core';
+import { afterEach, beforeEach, describe, expect, it, rstest, rstest } from '@rstest/core';
 
 // Spy-mock the render-to-opcodes module: every export is wrapped in a spy that
 // preserves the original implementation. The test overrides `render` via
-// `mockReturnValue`. (vitest's bare `vi.mock(path, factory)` spread-of-actual
+// `mockReturnValue`. (vitest's bare `rstest.mock(path, factory)` spread-of-actual
 // does not survive rstest's static hoisting, so use the built-in spy mode.)
 rstest.mock('../../../../src/element-template/runtime/render/render-to-opcodes.js', { spy: true });
 
@@ -57,20 +57,20 @@ describe('renderMainThread contract', () => {
   });
 
   afterEach(() => {
-    vi.clearAllMocks();
-    vi.unstubAllGlobals();
+    rstest.clearAllMocks();
+    rstest.unstubAllGlobals();
     clearTemplates();
     elementTemplateRegistry.clear();
     resetTemplateId();
   });
 
   it('creates serializable root refs through the real ET create path', () => {
-    const dispatchEvent = vi.fn();
+    const dispatchEvent = rstest.fn();
     (globalThis.lynx as typeof lynx & {
       getJSContext?: () => { dispatchEvent: typeof dispatchEvent };
-    }).getJSContext = vi.fn(() => ({ dispatchEvent }));
+    }).getJSContext = rstest.fn(() => ({ dispatchEvent }));
 
-    vi.mocked(mockRender).mockReturnValue([
+    rstest.mocked(mockRender).mockReturnValue([
       __OpBegin,
       { type: '_et_contract_root' },
       __OpAttr,

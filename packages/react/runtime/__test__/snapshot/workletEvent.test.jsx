@@ -4,7 +4,7 @@
 // LICENSE file in the root directory of this source tree.
 */
 import { render } from 'preact';
-import { afterEach, beforeAll, beforeEach, describe, expect, it, rstest as vi } from '@rstest/core';
+import { afterEach, beforeAll, beforeEach, describe, expect, it, rstest } from '@rstest/core';
 
 import { Component, useState } from '../../src/index';
 import { replaceCommitHook } from '../../src/snapshot/lifecycle/patch/commit';
@@ -27,7 +27,7 @@ beforeEach(() => {
 });
 
 afterEach(() => {
-  vi.restoreAllMocks();
+  rstest.restoreAllMocks();
   elementTree.clear();
 });
 
@@ -427,7 +427,7 @@ describe('WorkletEvent', () => {
         <view>
           {props.show && (
             <text
-              main-thread:bindtap={vi.fn()}
+              main-thread:bindtap={rstest.fn()}
             >
               1
             </text>
@@ -468,7 +468,7 @@ describe('WorkletEvent', () => {
 
     // update
     {
-      const reportErrorSpy = vi.spyOn(lynx, 'reportError').mockImplementation(() => {});
+      const reportErrorSpy = rstest.spyOn(lynx, 'reportError').mockImplementation(() => {});
       try {
         globalEnvManager.switchToBackground();
         lynx.getNativeApp().callLepusMethod.mockClear();
@@ -526,8 +526,8 @@ describe('WorkletEvent', () => {
 
     it('reports non-object main-thread handler values in dev mode', () => {
       const snapshot = createSnapshot('not-a-worklet');
-      const reportErrorSpy = vi.spyOn(lynx, 'reportError');
-      const addEventSpy = vi.spyOn(globalThis, '__AddEvent');
+      const reportErrorSpy = rstest.spyOn(lynx, 'reportError');
+      const addEventSpy = rstest.spyOn(globalThis, '__AddEvent');
 
       updateWorkletEvent(snapshot, 0, {}, 0, 'main-thread', 'bindEvent', 'tap');
 
@@ -538,7 +538,7 @@ describe('WorkletEvent', () => {
 
     it('formats attribute names without the Event suffix correctly', () => {
       const snapshot = createSnapshot('still-not-a-worklet');
-      const reportErrorSpy = vi.spyOn(lynx, 'reportError');
+      const reportErrorSpy = rstest.spyOn(lynx, 'reportError');
 
       updateWorkletEvent(snapshot, 0, {}, 0, 'background', 'bind', 'tap');
 
@@ -549,7 +549,7 @@ describe('WorkletEvent', () => {
     it('reports unknown elements when the snapshot lacks the target index', () => {
       const snapshot = createSnapshot('not-a-worklet');
       snapshot.__elements = [];
-      const reportErrorSpy = vi.spyOn(lynx, 'reportError');
+      const reportErrorSpy = rstest.spyOn(lynx, 'reportError');
 
       updateWorkletEvent(snapshot, 0, {}, 0, 'main-thread', 'bindEvent', 'tap');
 

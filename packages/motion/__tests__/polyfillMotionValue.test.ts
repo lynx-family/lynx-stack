@@ -8,7 +8,7 @@ import {
   describe,
   expect,
   test,
-  rstest as vi,
+  rstest,
 } from '@rstest/core';
 import { rstest } from '@rstest/core';
 
@@ -18,7 +18,7 @@ describe('Polyfill MotionValue', () => {
   });
 
   afterEach(() => {
-    vi.restoreAllMocks();
+    rstest.restoreAllMocks();
   });
 
   test('should export motionValue from motion-dom', async () => {

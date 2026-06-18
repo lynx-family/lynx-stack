@@ -4,7 +4,7 @@
 // LICENSE file in the root directory of this source tree.
 */
 import { options } from 'preact';
-import { afterAll, afterEach, beforeAll, describe, expect, it, rstest as vi } from '@rstest/core';
+import { afterAll, afterEach, beforeAll, describe, expect, it, rstest } from '@rstest/core';
 
 import {
   clearSnapshotVNodeSource,
@@ -16,11 +16,11 @@ import { DIFFED, DOM } from '../../../src/shared/render-constants';
 
 describe('vnodeSource', () => {
   let originalDiffed: typeof options[typeof DIFFED];
-  let oldDiffedHook: ReturnType<typeof vi.fn>;
+  let oldDiffedHook: ReturnType<typeof rstest.fn>;
 
   beforeAll(() => {
     originalDiffed = options[DIFFED];
-    oldDiffedHook = vi.fn();
+    oldDiffedHook = rstest.fn();
     options[DIFFED] = oldDiffedHook;
     setupVNodeSourceHook();
   });

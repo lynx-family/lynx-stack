@@ -1,13 +1,13 @@
 // Copyright 2025 The Lynx Authors. All rights reserved.
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
-import { describe, expect, it, rstest as vi } from '@rstest/core';
+import { describe, expect, it, rstest } from '@rstest/core';
 
 import { runPlugin } from './utils/run-plugin.js';
 import * as lynxPlugins from '../plugins/lynx/index.js';
 
 it('resolves plugin object with handler', () => {
-  const handler = vi.fn();
+  const handler = rstest.fn();
   const plugin = { handler };
   runPlugin(plugin);
   expect(handler).toHaveBeenCalledWith(expect.any(Object));
@@ -18,12 +18,12 @@ describe('Lynx plugin coverage sanity check', () => {
     it(`${name} registers utilities`, () => {
       const { api } = runPlugin(plugin);
 
-      const matchUtilities = vi.mocked(api.matchUtilities);
-      const addUtilities = vi.mocked(api.addUtilities);
-      const addComponents = vi.mocked(api.addComponents);
-      const addBase = vi.mocked(api.addBase);
-      const matchVariant = vi.mocked(api.matchVariant);
-      const matchComponents = vi.mocked(api.matchComponents);
+      const matchUtilities = rstest.mocked(api.matchUtilities);
+      const addUtilities = rstest.mocked(api.addUtilities);
+      const addComponents = rstest.mocked(api.addComponents);
+      const addBase = rstest.mocked(api.addBase);
+      const matchVariant = rstest.mocked(api.matchVariant);
+      const matchComponents = rstest.mocked(api.matchComponents);
 
       const called = matchUtilities.mock.calls.length > 0
         || addUtilities.mock.calls.length > 0

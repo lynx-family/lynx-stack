@@ -1,4 +1,4 @@
-import { afterEach, beforeEach, describe, expect, it, rstest as vi } from '@rstest/core';
+import { afterEach, beforeEach, describe, expect, it, rstest } from '@rstest/core';
 
 import type { TransformNodiffOutput } from '@lynx-js/react-transform';
 import { transformReactLynx } from '@lynx-js/react-transform';
@@ -177,8 +177,8 @@ describe('render transform contract', () => {
   });
 
   afterEach(() => {
-    vi.clearAllMocks();
-    vi.unstubAllGlobals();
+    rstest.clearAllMocks();
+    rstest.unstubAllGlobals();
     clearTemplates();
     backgroundElementTemplateInstanceManager.clear();
     elementTemplateRegistry.clear();
@@ -287,7 +287,7 @@ describe('render transform contract', () => {
   });
 
   it('passes dynamic component entry through ET bundleUrl create parameter', async () => {
-    vi.stubGlobal('globDynamicComponentEntry', 'lazy-entry');
+    rstest.stubGlobal('globDynamicComponentEntry', 'lazy-entry');
 
     const { rootRef, userTemplateIds } = await compileAndRender(
       `

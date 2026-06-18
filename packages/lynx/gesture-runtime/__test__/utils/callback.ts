@@ -1,7 +1,7 @@
 // Copyright 2025 The Lynx Authors. All rights reserved.
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
-import { rstest as vi } from '@rstest/core';
+import { rstest } from '@rstest/core';
 import type { Mock } from '@rstest/core';
 
 import type {
@@ -20,10 +20,10 @@ interface ProcessesGestureConfig {
 export class MockGestureManager {
   __SetGestureState: Mock<
     (dom: any, id: number, type: SetGestureStateType) => void
-  > = vi.fn((dom: any, id: number, type: SetGestureStateType) => {});
+  > = rstest.fn((dom: any, id: number, type: SetGestureStateType) => {});
   __ConsumeGesture: Mock<
     (dom: any, id: number, params: ConsumeGestureParams) => void
-  > = vi.fn((dom: any, id: number, params: ConsumeGestureParams) => {});
+  > = rstest.fn((dom: any, id: number, params: ConsumeGestureParams) => {});
 }
 
 function getCallback(config: ProcessesGestureConfig, method: string) {

@@ -1,4 +1,4 @@
-import { beforeEach, describe, expect, it, rstest as vi } from '@rstest/core';
+import { beforeEach, describe, expect, it, rstest } from '@rstest/core';
 
 beforeEach(() => {
   lynxTestingEnv.reset();

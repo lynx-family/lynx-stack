@@ -1,4 +1,4 @@
-import { afterEach, beforeEach, describe, expect, it, rstest as vi } from '@rstest/core';
+import { afterEach, beforeEach, describe, expect, it, rstest } from '@rstest/core';
 
 import { NativeUpdateDataType, updateCardData } from '../../src/core/lynx-update-data.js';
 import { LynxTestEventEmitter } from '../test-utils/lynx-event-emitter.js';
@@ -15,8 +15,8 @@ describe('updateCardData', () => {
     originalGetJSModule = lynx.getJSModule;
     emitter = new LynxTestEventEmitter();
     lynx.__initData = {};
-    lynx.reportError = vi.fn();
-    lynx.getJSModule = vi.fn((moduleName: string) => {
+    lynx.reportError = rstest.fn();
+    lynx.getJSModule = rstest.fn((moduleName: string) => {
       if (moduleName === 'GlobalEventEmitter') {
         return emitter;
       }
@@ -32,7 +32,7 @@ describe('updateCardData', () => {
 
   it('COW merges update data and emits the current patch data', () => {
     const previousInitData = { msg: 'init', stable: true };
-    const listener = vi.fn();
+    const listener = rstest.fn();
     lynx.__initData = previousInitData;
     emitter.addListener('onDataChanged', listener);
 
@@ -48,7 +48,7 @@ describe('updateCardData', () => {
   });
 
   it('clears existing initData before RESET updates', () => {
-    const listener = vi.fn();
+    const listener = rstest.fn();
     lynx.__initData = { stale: true, msg: 'init' };
     emitter.addListener('onDataChanged', listener);
 
@@ -62,7 +62,7 @@ describe('updateCardData', () => {
   });
 
   it('keeps Snapshot-compatible loose RESET matching', () => {
-    const listener = vi.fn();
+    const listener = rstest.fn();
     lynx.__initData = { stale: true, msg: 'init' };
     emitter.addListener('onDataChanged', listener);
 
@@ -76,7 +76,7 @@ describe('updateCardData', () => {
   });
 
   it('reports and strips __lynx_timing_flag from the merged data and emitted patch', () => {
-    const listener = vi.fn();
+    const listener = rstest.fn();
     lynx.__initData = { msg: 'init' };
     emitter.addListener('onDataChanged', listener);
 

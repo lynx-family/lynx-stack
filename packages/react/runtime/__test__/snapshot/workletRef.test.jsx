@@ -4,7 +4,7 @@
 // LICENSE file in the root directory of this source tree.
 */
 import { render } from 'preact';
-import { afterEach, beforeAll, beforeEach, describe, expect, it, rstest as vi } from '@rstest/core';
+import { afterEach, beforeAll, beforeEach, describe, expect, it, rstest } from '@rstest/core';
 
 import { createCompBG1, createCompBGList, createCompBGSpread } from './workletRefBG';
 import { createCompMT1, createCompMTList, createCompMTSpread } from './workletRefMT';
@@ -24,20 +24,20 @@ beforeAll(() => {
 
   globalThis.lynxWorkletImpl = {
     _refImpl: {
-      updateWorkletRef: vi.fn(),
-      updateWorkletRefInitValueChanges: vi.fn(),
-      clearFirstScreenWorkletRefMap: vi.fn(),
+      updateWorkletRef: rstest.fn(),
+      updateWorkletRefInitValueChanges: rstest.fn(),
+      clearFirstScreenWorkletRefMap: rstest.fn(),
     },
     _runOnBackgroundDelayImpl: {
-      runDelayedBackgroundFunctions: vi.fn(),
+      runDelayedBackgroundFunctions: rstest.fn(),
     },
     _eventDelayImpl: {
-      runDelayedWorklet: vi.fn(),
-      clearDelayedWorklets: vi.fn(),
+      runDelayedWorklet: rstest.fn(),
+      clearDelayedWorklets: rstest.fn(),
     },
-    _hydrateCtx: vi.fn(),
+    _hydrateCtx: rstest.fn(),
   };
-  globalThis.runWorklet = vi.fn();
+  globalThis.runWorklet = rstest.fn();
 });
 
 beforeEach(() => {
@@ -46,7 +46,7 @@ beforeEach(() => {
 });
 
 afterEach(() => {
-  vi.restoreAllMocks();
+  rstest.restoreAllMocks();
   elementTree.clear();
 });
 
@@ -187,7 +187,7 @@ describe('WorkletRef', () => {
   });
 
   it('update', async function() {
-    const cleanup = vi.fn();
+    const cleanup = rstest.fn();
     // main thread render
     {
       __root.__jsx = [createCompMT1('ref1'), createCompMT1('mts'), createCompMT1('mts')];
@@ -592,7 +592,7 @@ describe('WorkletRef', () => {
 
   it('invalid ref type', async function() {
     const reportError = lynx.reportError;
-    lynx.reportError = vi.fn();
+    lynx.reportError = rstest.fn();
     // main thread render
     {
       __root.__jsx = createCompMT1('number');

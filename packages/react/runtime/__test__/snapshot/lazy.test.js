@@ -1,6 +1,6 @@
 import '../../lazy/import.js';
 
-import { describe, expect, test, rstest as vi } from '@rstest/core';
+import { describe, expect, test, rstest } from '@rstest/core';
 // `rstest.resetModules()` must be a literal call so rstest's static transform
 // can hoist it; the `vitest` alias does not work for module-mock APIs.
 import { rstest } from '@rstest/core';
@@ -143,8 +143,8 @@ describe('Lazy Exports', () => {
     rstest.resetModules();
 
     const lynx = {};
-    vi.stubGlobal('lynx', lynx);
-    vi.stubGlobal('__LEPUS__', false);
+    rstest.stubGlobal('lynx', lynx);
+    rstest.stubGlobal('__LEPUS__', false);
 
     const { target } = await import('../../lazy/target.js');
     expect(target).toBe(lynx);
@@ -153,7 +153,7 @@ describe('Lazy Exports', () => {
   test('target main-thread', async () => {
     rstest.resetModules();
 
-    vi.stubGlobal('__LEPUS__', true);
+    rstest.stubGlobal('__LEPUS__', true);
 
     const { target } = await import('../../lazy/target.js');
     expect(target).toBe(globalThis);

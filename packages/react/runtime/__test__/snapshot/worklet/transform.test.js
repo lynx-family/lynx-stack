@@ -1,7 +1,7 @@
 // Copyright 2024 The Lynx Authors. All rights reserved.
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
-import { afterEach, beforeEach, describe, expect, it, rstest as vi } from '@rstest/core';
+import { afterEach, beforeEach, describe, expect, it, rstest } from '@rstest/core';
 
 import { destroyWorklet } from '../../../src/snapshot/worklet/destroy';
 import { transformToWorklet } from '../../../src/internal';
@@ -17,7 +17,7 @@ afterEach(() => {
 
 describe('WorkletJsFnTransform', () => {
   it('should transform js fn', () => {
-    const fn = vi.fn();
+    const fn = rstest.fn();
     let result = transformToWorklet(fn);
     expect(result._fn).toBe(fn);
     expect(result._jsFnId).toEqual(1);

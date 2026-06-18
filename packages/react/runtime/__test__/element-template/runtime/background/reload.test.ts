@@ -1,4 +1,4 @@
-import { afterEach, beforeEach, describe, expect, it, rstest as vi } from '@rstest/core';
+import { afterEach, beforeEach, describe, expect, it, rstest } from '@rstest/core';
 
 import { getReloadVersion } from '../../../../src/core/reload-version.js';
 import { setupBackgroundElementTemplateDocument } from '../../../../src/element-template/background/document.js';
@@ -27,7 +27,7 @@ describe('ElementTemplate background reload', () => {
   const envManager = new ElementTemplateEnvManager();
 
   beforeEach(() => {
-    vi.clearAllMocks();
+    rstest.clearAllMocks();
     envManager.resetEnv('background');
     resetElementTemplateHydrationListener();
     backgroundElementTemplateInstanceManager.clear();
