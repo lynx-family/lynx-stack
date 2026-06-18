@@ -91,9 +91,14 @@ jobs:
       run: |
         pnpm exec rstest run -c rstest.config.ts --coverage --testTimeout=50000 --hookTimeout=50000
         # ReactLynx-DOM suites can't aggregate into rstest.config.ts (per-package
-        # `@lynx-js/react/jsx-runtime` alias), so run them per-package — mirrors
-        # the `test-rstest` job in test.yml.
-        pnpm --filter @lynx-js/react-runtime --filter @lynx-js/reactlynx-testing-library --filter @lynx-js/gesture-runtime --filter @lynx-js/use-sync-external-store --filter @lynx-js/motion --filter @lynx-js/testing-environment --filter @lynx-js/testing-library-example-basic --filter @lynx-js/testing-library-example-library --filter @lynx-js/testing-library-example-react-compiler run test
+        # `@lynx-js/react/jsx-runtime` alias), so run them per-package WITH coverage
+        # so Codecov still receives their reports — mirrors the `test-rstest` job in
+        # test.yml but with `--coverage` for the deploy coverage upload.
+        # react-runtime runs two suites; give each its own reports directory so the
+        # second run does not overwrite the first's coverage.
+        pnpm --filter @lynx-js/react-runtime run test:main --coverage --coverage.reportsDirectory=coverage/main
+        pnpm --filter @lynx-js/react-runtime run test:et --coverage --coverage.reportsDirectory=coverage/et
+        pnpm --filter @lynx-js/reactlynx-testing-library --filter @lynx-js/gesture-runtime --filter @lynx-js/use-sync-external-store --filter @lynx-js/motion --filter @lynx-js/testing-environment --filter @lynx-js/testing-library-example-basic --filter @lynx-js/testing-library-example-library --filter @lynx-js/testing-library-example-react-compiler run test --coverage
   coverage-web-elements:
     needs: build-all
     uses: ./.github/workflows/workflow-test.yml
