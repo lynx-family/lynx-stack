@@ -2,9 +2,12 @@
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
 
+import { BASIC_CATALOG_ID } from './a2ui-catalog-id';
 import { BASIC_CATALOG_EXAMPLES } from './a2ui-examples';
 import type { A2UIExample } from './a2ui-examples';
 import generatedCatalog from './catalog.json';
+
+export { BASIC_CATALOG_ID } from './a2ui-catalog-id';
 
 /**
  * Prompt-facing description of a single A2UI component prop.
@@ -60,9 +63,6 @@ export interface A2UIFunctionSpec {
     | 'void';
 }
 
-export const BASIC_CATALOG_ID =
-  'https://a2ui.org/specification/v0_9/basic_catalog.json';
-
 /**
  * JSON Schema subset used in prompt-facing catalog descriptions.
  */
@@ -80,6 +80,15 @@ export interface JsonSchema {
 }
 
 interface CatalogManifest extends Record<string, JsonSchema> {}
+
+interface ExtractedCatalogManifest {
+  catalogId?: string;
+  components?: Record<string, JsonSchema>;
+  functions?: unknown;
+}
+
+let pendingBasicCatalog: Promise<A2UICatalog> | undefined;
+let cachedBasicCatalog: A2UICatalog | undefined;
 
 const COMPONENT_SUMMARIES: Record<string, string> = {
   Button:
@@ -345,6 +354,74 @@ export const BASIC_CATALOG: A2UICatalog = {
   functions: functionsFromGeneratedCatalog(generatedCatalog),
   examples: BASIC_CATALOG_EXAMPLES,
 };
+
+export async function loadBasicCatalog(): Promise<A2UICatalog> {
+  if (cachedBasicCatalog) return cachedBasicCatalog;
+  pendingBasicCatalog ??= fetchBasicCatalog().finally(() => {
+    pendingBasicCatalog = undefined;
+  });
+  cachedBasicCatalog = await pendingBasicCatalog;
+  return cachedBasicCatalog;
+}
+
+async function fetchBasicCatalog(): Promise<A2UICatalog> {
+  try {
+    const response = await fetch(BASIC_CATALOG_ID, { cache: 'no-store' });
+    if (!response.ok) {
+      throw new Error(`${response.status} ${response.statusText}`);
+    }
+
+    const manifest = await response.json() as unknown;
+    if (!isExtractedCatalogManifest(manifest)) {
+      throw new Error('invalid catalog payload');
+    }
+    return createA2UICatalogFromExtractedManifest(manifest);
+  } catch (error) {
+    console.warn(
+      `[a2ui-catalog] Failed to fetch catalog ${BASIC_CATALOG_ID}; `
+        + 'using local fallback catalog.',
+      error,
+    );
+  }
+
+  return createA2UICatalogFromExtractedManifest(
+    {
+      ...(generatedCatalog as unknown as ExtractedCatalogManifest),
+      catalogId: BASIC_CATALOG_ID,
+    },
+  );
+}
+
+function createA2UICatalogFromExtractedManifest(
+  manifest: ExtractedCatalogManifest,
+): A2UICatalog {
+  return createA2UICatalogFromManifests({
+    catalogId: manifest.catalogId ?? BASIC_CATALOG_ID,
+    componentManifests: componentManifestsFromGeneratedCatalog(manifest),
+    functions: functionsFromGeneratedCatalog(manifest),
+    label: 'Lynx A2UI basic catalog (v0.9)',
+    version: 'v0.9',
+    extraRules: [
+      'Use only components listed in this catalog; unsupported examples such as Video, AudioPlayer, DatePicker, or Checkbox are not available unless they appear here.',
+      'The implemented checkbox component is named "CheckBox" with a capital B.',
+    ],
+    examples: BASIC_CATALOG_EXAMPLES,
+  });
+}
+
+function isExtractedCatalogManifest(
+  value: unknown,
+): value is ExtractedCatalogManifest {
+  if (!isRecord(value)) return false;
+  const manifest = value as Partial<ExtractedCatalogManifest>;
+  const catalogId = manifest.catalogId;
+  const components = manifest.components;
+  const functions = manifest.functions;
+  return (catalogId === undefined || typeof catalogId === 'string')
+    && (components === undefined || isRecord(components))
+    && (functions === undefined || Array.isArray(functions)
+      || isRecord(functions));
+}
 
 /**
  * Render an A2UI catalog into the Markdown reference embedded in prompts.
