@@ -1,10 +1,9 @@
 ---
-"@lynx-js/react-runtime": minor
-"@lynx-js/react-transform": minor
-"@lynx-js/template-webpack-plugin": minor
-"@lynx-js/react-webpack-plugin": minor
-"@lynx-js/chunk-loading-webpack-plugin": minor
-"@lynx-js/webpack-runtime-globals": minor
+"@lynx-js/react": patch
+"@lynx-js/template-webpack-plugin": patch
+"@lynx-js/react-webpack-plugin": patch
+"@lynx-js/chunk-loading-webpack-plugin": patch
+"@lynx-js/webpack-runtime-globals": patch
 ---
 
 feat(react): load Element Template lazy bundles via `lynx.fetchBundle` (FetchBundle)
