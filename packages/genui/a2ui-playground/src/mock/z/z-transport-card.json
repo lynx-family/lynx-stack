@@ -1,0 +1,159 @@
+[
+  {
+    "version": "v0.9",
+    "createSurface": {
+      "surfaceId": "z-transport-card",
+      "catalogId": "https://a2ui.org/specification/v0_9/basic_catalog.json"
+    }
+  },
+  {
+    "version": "v0.9",
+    "updateComponents": {
+      "surfaceId": "z-transport-card",
+      "components": [
+        {
+          "id": "root",
+          "component": "Button",
+          "child": "transport-card-body",
+          "variant": "borderless",
+          "action": {
+            "event": {
+              "name": "root.tap",
+              "context": {
+                "templatePackage": "z",
+                "templateVersion": "0.0.35"
+              }
+            }
+          }
+        },
+        {
+          "id": "transport-card-body",
+          "component": "Card",
+          "child": "transport-body",
+          "variant": "elevated"
+        },
+        {
+          "id": "transport-body",
+          "component": "Column",
+          "children": [
+            "transport-title",
+            "transport-route",
+            "transport-price-row"
+          ],
+          "align": "stretch"
+        },
+        {
+          "id": "transport-title",
+          "component": "Text",
+          "text": "北京南 - 上海虹桥",
+          "variant": "h3"
+        },
+        {
+          "id": "transport-route",
+          "component": "Row",
+          "children": [
+            "transport-departure",
+            "transport-transfer",
+            "transport-arrival"
+          ],
+          "align": "center",
+          "justify": "spaceBetween"
+        },
+        {
+          "id": "transport-departure",
+          "component": "Column",
+          "children": [
+            "transport-departure-time",
+            "transport-departure-station"
+          ],
+          "align": "start"
+        },
+        {
+          "id": "transport-departure-time",
+          "component": "Text",
+          "text": "08:00",
+          "variant": "h2"
+        },
+        {
+          "id": "transport-departure-station",
+          "component": "Text",
+          "text": "北京南",
+          "variant": "caption"
+        },
+        {
+          "id": "transport-transfer",
+          "component": "Column",
+          "children": [
+            "transport-transfer-top",
+            "transport-transfer-icon",
+            "transport-transfer-bottom"
+          ],
+          "align": "center"
+        },
+        {
+          "id": "transport-transfer-top",
+          "component": "Text",
+          "text": "直达",
+          "variant": "caption"
+        },
+        {
+          "id": "transport-transfer-icon",
+          "component": "Icon",
+          "name": "arrow_forward",
+          "color": "primary",
+          "size": "md"
+        },
+        {
+          "id": "transport-transfer-bottom",
+          "component": "Text",
+          "text": "4小时32分",
+          "variant": "caption"
+        },
+        {
+          "id": "transport-arrival",
+          "component": "Column",
+          "children": [
+            "transport-arrival-time",
+            "transport-arrival-station"
+          ],
+          "align": "end"
+        },
+        {
+          "id": "transport-arrival-time",
+          "component": "Text",
+          "text": "12:32 +1",
+          "variant": "h2"
+        },
+        {
+          "id": "transport-arrival-station",
+          "component": "Text",
+          "text": "上海虹桥",
+          "variant": "caption"
+        },
+        {
+          "id": "transport-price-row",
+          "component": "Row",
+          "children": [
+            "transport-seat",
+            "transport-price"
+          ],
+          "align": "center",
+          "justify": "spaceBetween"
+        },
+        {
+          "id": "transport-seat",
+          "component": "Text",
+          "text": "二等座 · 有票",
+          "variant": "body",
+          "emphasis": "medium"
+        },
+        {
+          "id": "transport-price",
+          "component": "Text",
+          "text": "¥553",
+          "variant": "h2"
+        }
+      ]
+    }
+  }
+]

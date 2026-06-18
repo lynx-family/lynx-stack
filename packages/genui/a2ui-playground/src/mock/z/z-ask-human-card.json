@@ -1,0 +1,213 @@
+[
+  {
+    "version": "v0.9",
+    "createSurface": {
+      "surfaceId": "z-ask-human-card",
+      "catalogId": "https://a2ui.org/specification/v0_9/basic_catalog.json"
+    }
+  },
+  {
+    "version": "v0.9",
+    "updateComponents": {
+      "surfaceId": "z-ask-human-card",
+      "components": [
+        {
+          "id": "root",
+          "component": "Card",
+          "child": "ask-body",
+          "variant": "elevated"
+        },
+        {
+          "id": "ask-body",
+          "component": "Column",
+          "children": [
+            "ask-title",
+            "ask-copy",
+            "ask-options",
+            "ask-skip"
+          ],
+          "align": "stretch"
+        },
+        {
+          "id": "ask-title",
+          "component": "Text",
+          "text": "请选择门店",
+          "variant": "h3"
+        },
+        {
+          "id": "ask-copy",
+          "component": "Text",
+          "text": "为你找到 3 个附近候选项，确认后继续处理任务。",
+          "variant": "caption"
+        },
+        {
+          "id": "ask-options",
+          "component": "Column",
+          "children": [
+            "ask-option-1-action",
+            "ask-option-2-action",
+            "ask-option-3-action"
+          ],
+          "align": "stretch"
+        },
+        {
+          "id": "ask-option-1-action",
+          "component": "Button",
+          "child": "ask-option-1-card",
+          "variant": "borderless",
+          "action": {
+            "event": {
+              "name": "ask-option-1-action.tap",
+              "context": {
+                "templatePackage": "z",
+                "templateVersion": "0.0.35"
+              }
+            }
+          }
+        },
+        {
+          "id": "ask-option-1-card",
+          "component": "Card",
+          "child": "ask-option-1-body",
+          "variant": "outlined"
+        },
+        {
+          "id": "ask-option-1-body",
+          "component": "Row",
+          "children": [
+            "ask-option-1-text",
+            "ask-option-1-icon"
+          ],
+          "align": "center",
+          "justify": "spaceBetween"
+        },
+        {
+          "id": "ask-option-1-text",
+          "component": "Text",
+          "text": "中关村创业大街店 · 0.6km",
+          "variant": "body",
+          "emphasis": "medium"
+        },
+        {
+          "id": "ask-option-1-icon",
+          "component": "Icon",
+          "name": "arrow_forward",
+          "color": "primary",
+          "size": "md"
+        },
+        {
+          "id": "ask-option-2-action",
+          "component": "Button",
+          "child": "ask-option-2-card",
+          "variant": "borderless",
+          "action": {
+            "event": {
+              "name": "ask-option-2-action.tap",
+              "context": {
+                "templatePackage": "z",
+                "templateVersion": "0.0.35"
+              }
+            }
+          }
+        },
+        {
+          "id": "ask-option-2-card",
+          "component": "Card",
+          "child": "ask-option-2-body",
+          "variant": "outlined"
+        },
+        {
+          "id": "ask-option-2-body",
+          "component": "Row",
+          "children": [
+            "ask-option-2-text",
+            "ask-option-2-icon"
+          ],
+          "align": "center",
+          "justify": "spaceBetween"
+        },
+        {
+          "id": "ask-option-2-text",
+          "component": "Text",
+          "text": "北京中关村在握旗舰店 · 1.8km",
+          "variant": "body",
+          "emphasis": "medium"
+        },
+        {
+          "id": "ask-option-2-icon",
+          "component": "Icon",
+          "name": "arrow_forward",
+          "color": "primary",
+          "size": "md"
+        },
+        {
+          "id": "ask-option-3-action",
+          "component": "Button",
+          "child": "ask-option-3-card",
+          "variant": "borderless",
+          "action": {
+            "event": {
+              "name": "ask-option-3-action.tap",
+              "context": {
+                "templatePackage": "z",
+                "templateVersion": "0.0.35"
+              }
+            }
+          }
+        },
+        {
+          "id": "ask-option-3-card",
+          "component": "Card",
+          "child": "ask-option-3-body",
+          "variant": "outlined"
+        },
+        {
+          "id": "ask-option-3-body",
+          "component": "Row",
+          "children": [
+            "ask-option-3-text",
+            "ask-option-3-icon"
+          ],
+          "align": "center",
+          "justify": "spaceBetween"
+        },
+        {
+          "id": "ask-option-3-text",
+          "component": "Text",
+          "text": "中关村城委店 · 3.5km",
+          "variant": "body",
+          "emphasis": "medium"
+        },
+        {
+          "id": "ask-option-3-icon",
+          "component": "Icon",
+          "name": "arrow_forward",
+          "color": "primary",
+          "size": "md"
+        },
+        {
+          "id": "ask-skip-text",
+          "component": "Text",
+          "text": "跳过",
+          "variant": "body",
+          "emphasis": "medium"
+        },
+        {
+          "id": "ask-skip",
+          "component": "Button",
+          "child": "ask-skip-text",
+          "variant": "borderless",
+          "action": {
+            "event": {
+              "name": "ask-skip.tap",
+              "context": {
+                "templatePackage": "z",
+                "templateVersion": "0.0.35"
+              }
+            }
+          }
+        }
+      ]
+    }
+  }
+]

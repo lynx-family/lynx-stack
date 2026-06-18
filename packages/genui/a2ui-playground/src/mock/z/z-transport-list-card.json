@@ -1,0 +1,426 @@
+[
+  {
+    "version": "v0.9",
+    "createSurface": {
+      "surfaceId": "z-transport-list-card",
+      "catalogId": "https://a2ui.org/specification/v0_9/basic_catalog.json"
+    }
+  },
+  {
+    "version": "v0.9",
+    "updateComponents": {
+      "surfaceId": "z-transport-list-card",
+      "components": [
+        {
+          "id": "root",
+          "component": "Card",
+          "child": "transport-list-body",
+          "variant": "elevated"
+        },
+        {
+          "id": "transport-list-body",
+          "component": "Column",
+          "children": [
+            "transport-list-titlebar",
+            "transport-list-items",
+            "transport-list-more"
+          ],
+          "align": "stretch"
+        },
+        {
+          "id": "transport-list-titlebar",
+          "component": "Row",
+          "children": [
+            "transport-list-app",
+            "transport-list-more-action"
+          ],
+          "align": "center",
+          "justify": "spaceBetween"
+        },
+        {
+          "id": "transport-list-app",
+          "component": "Row",
+          "children": [
+            "transport-list-app-mark",
+            "transport-list-app-name"
+          ],
+          "align": "center",
+          "justify": "start"
+        },
+        {
+          "id": "transport-list-app-mark",
+          "component": "Icon",
+          "name": "home",
+          "color": "primary",
+          "size": "md"
+        },
+        {
+          "id": "transport-list-app-name",
+          "component": "Text",
+          "text": "z 应用",
+          "variant": "caption",
+          "emphasis": "medium"
+        },
+        {
+          "id": "transport-list-more",
+          "component": "Row",
+          "children": [
+            "transport-list-more-text",
+            "transport-list-more-icon"
+          ],
+          "align": "center",
+          "justify": "start"
+        },
+        {
+          "id": "transport-list-more-text",
+          "component": "Text",
+          "text": "更多",
+          "variant": "caption"
+        },
+        {
+          "id": "transport-list-more-icon",
+          "component": "Icon",
+          "name": "more_vert",
+          "color": "muted",
+          "size": "md"
+        },
+        {
+          "id": "transport-list-more-action",
+          "component": "Button",
+          "child": "transport-list-more",
+          "variant": "borderless",
+          "action": {
+            "event": {
+              "name": "transport-list-more-action.tap",
+              "context": {
+                "templatePackage": "z",
+                "templateVersion": "0.0.35"
+              }
+            }
+          }
+        },
+        {
+          "id": "transport-list-items",
+          "component": "Column",
+          "children": [
+            "transport-list-item-1-action",
+            "transport-list-item-2-action",
+            "transport-list-item-3-action",
+            "transport-list-item-4-action"
+          ],
+          "align": "stretch"
+        },
+        {
+          "id": "transport-list-item-1-action",
+          "component": "Button",
+          "child": "transport-list-item-1-card",
+          "variant": "borderless",
+          "action": {
+            "event": {
+              "name": "transport-list-item-1-action.tap",
+              "context": {
+                "templatePackage": "z",
+                "templateVersion": "0.0.35"
+              }
+            }
+          }
+        },
+        {
+          "id": "transport-list-item-1-card",
+          "component": "Card",
+          "child": "transport-list-item-1-body",
+          "variant": "outlined"
+        },
+        {
+          "id": "transport-list-item-1-body",
+          "component": "Column",
+          "children": [
+            "transport-list-item-1-title",
+            "transport-list-item-1-times"
+          ],
+          "align": "stretch"
+        },
+        {
+          "id": "transport-list-item-1-title",
+          "component": "Text",
+          "text": "北京南 - 上海虹桥",
+          "variant": "h4"
+        },
+        {
+          "id": "transport-list-item-1-times",
+          "component": "Row",
+          "children": [
+            "transport-list-item-1-depart",
+            "transport-list-item-1-transfer",
+            "transport-list-item-1-arrive",
+            "transport-list-item-1-price"
+          ],
+          "align": "center",
+          "justify": "spaceBetween"
+        },
+        {
+          "id": "transport-list-item-1-depart",
+          "component": "Text",
+          "text": "11:20",
+          "variant": "h3"
+        },
+        {
+          "id": "transport-list-item-1-transfer",
+          "component": "Text",
+          "text": "直达",
+          "variant": "caption"
+        },
+        {
+          "id": "transport-list-item-1-arrive",
+          "component": "Text",
+          "text": "16:00 +1",
+          "variant": "h3"
+        },
+        {
+          "id": "transport-list-item-1-price",
+          "component": "Text",
+          "text": "¥553",
+          "variant": "h3"
+        },
+        {
+          "id": "transport-list-item-2-action",
+          "component": "Button",
+          "child": "transport-list-item-2-card",
+          "variant": "borderless",
+          "action": {
+            "event": {
+              "name": "transport-list-item-2-action.tap",
+              "context": {
+                "templatePackage": "z",
+                "templateVersion": "0.0.35"
+              }
+            }
+          }
+        },
+        {
+          "id": "transport-list-item-2-card",
+          "component": "Card",
+          "child": "transport-list-item-2-body",
+          "variant": "outlined"
+        },
+        {
+          "id": "transport-list-item-2-body",
+          "component": "Column",
+          "children": [
+            "transport-list-item-2-title",
+            "transport-list-item-2-times"
+          ],
+          "align": "stretch"
+        },
+        {
+          "id": "transport-list-item-2-title",
+          "component": "Text",
+          "text": "北京南 - 上海虹桥",
+          "variant": "h4"
+        },
+        {
+          "id": "transport-list-item-2-times",
+          "component": "Row",
+          "children": [
+            "transport-list-item-2-depart",
+            "transport-list-item-2-transfer",
+            "transport-list-item-2-arrive",
+            "transport-list-item-2-price"
+          ],
+          "align": "center",
+          "justify": "spaceBetween"
+        },
+        {
+          "id": "transport-list-item-2-depart",
+          "component": "Text",
+          "text": "13:05",
+          "variant": "h3"
+        },
+        {
+          "id": "transport-list-item-2-transfer",
+          "component": "Text",
+          "text": "换乘 1 次",
+          "variant": "caption"
+        },
+        {
+          "id": "transport-list-item-2-arrive",
+          "component": "Text",
+          "text": "18:10",
+          "variant": "h3"
+        },
+        {
+          "id": "transport-list-item-2-price",
+          "component": "Text",
+          "text": "¥498",
+          "variant": "h3"
+        },
+        {
+          "id": "transport-list-item-3-action",
+          "component": "Button",
+          "child": "transport-list-item-3-card",
+          "variant": "borderless",
+          "action": {
+            "event": {
+              "name": "transport-list-item-3-action.tap",
+              "context": {
+                "templatePackage": "z",
+                "templateVersion": "0.0.35"
+              }
+            }
+          }
+        },
+        {
+          "id": "transport-list-item-3-card",
+          "component": "Card",
+          "child": "transport-list-item-3-body",
+          "variant": "outlined"
+        },
+        {
+          "id": "transport-list-item-3-body",
+          "component": "Column",
+          "children": [
+            "transport-list-item-3-title",
+            "transport-list-item-3-times"
+          ],
+          "align": "stretch"
+        },
+        {
+          "id": "transport-list-item-3-title",
+          "component": "Text",
+          "text": "北京南 - 上海虹桥",
+          "variant": "h4"
+        },
+        {
+          "id": "transport-list-item-3-times",
+          "component": "Row",
+          "children": [
+            "transport-list-item-3-depart",
+            "transport-list-item-3-transfer",
+            "transport-list-item-3-arrive",
+            "transport-list-item-3-price"
+          ],
+          "align": "center",
+          "justify": "spaceBetween"
+        },
+        {
+          "id": "transport-list-item-3-depart",
+          "component": "Text",
+          "text": "15:30",
+          "variant": "h3"
+        },
+        {
+          "id": "transport-list-item-3-transfer",
+          "component": "Text",
+          "text": "商务优选",
+          "variant": "caption"
+        },
+        {
+          "id": "transport-list-item-3-arrive",
+          "component": "Text",
+          "text": "20:05",
+          "variant": "h3"
+        },
+        {
+          "id": "transport-list-item-3-price",
+          "component": "Text",
+          "text": "¥628",
+          "variant": "h3"
+        },
+        {
+          "id": "transport-list-item-4-action",
+          "component": "Button",
+          "child": "transport-list-item-4-card",
+          "variant": "borderless",
+          "action": {
+            "event": {
+              "name": "transport-list-item-4-action.tap",
+              "context": {
+                "templatePackage": "z",
+                "templateVersion": "0.0.35"
+              }
+            }
+          }
+        },
+        {
+          "id": "transport-list-item-4-card",
+          "component": "Card",
+          "child": "transport-list-item-4-body",
+          "variant": "outlined"
+        },
+        {
+          "id": "transport-list-item-4-body",
+          "component": "Column",
+          "children": [
+            "transport-list-item-4-title",
+            "transport-list-item-4-times"
+          ],
+          "align": "stretch"
+        },
+        {
+          "id": "transport-list-item-4-title",
+          "component": "Text",
+          "text": "北京南 - 上海虹桥",
+          "variant": "h4"
+        },
+        {
+          "id": "transport-list-item-4-times",
+          "component": "Row",
+          "children": [
+            "transport-list-item-4-depart",
+            "transport-list-item-4-transfer",
+            "transport-list-item-4-arrive",
+            "transport-list-item-4-price"
+          ],
+          "align": "center",
+          "justify": "spaceBetween"
+        },
+        {
+          "id": "transport-list-item-4-depart",
+          "component": "Text",
+          "text": "19:10",
+          "variant": "h3"
+        },
+        {
+          "id": "transport-list-item-4-transfer",
+          "component": "Text",
+          "text": "夜间班次",
+          "variant": "caption"
+        },
+        {
+          "id": "transport-list-item-4-arrive",
+          "component": "Text",
+          "text": "23:45",
+          "variant": "h3"
+        },
+        {
+          "id": "transport-list-item-4-price",
+          "component": "Text",
+          "text": "¥521",
+          "variant": "h3"
+        },
+        {
+          "id": "transport-list-more-text",
+          "component": "Text",
+          "text": "查看更多",
+          "variant": "body",
+          "emphasis": "medium"
+        },
+        {
+          "id": "transport-list-more",
+          "component": "Button",
+          "child": "transport-list-more-text",
+          "variant": "primary",
+          "action": {
+            "event": {
+              "name": "transport-list-more.tap",
+              "context": {
+                "templatePackage": "z",
+                "templateVersion": "0.0.35"
+              }
+            }
+          }
+        }
+      ]
+    }
+  }
+]

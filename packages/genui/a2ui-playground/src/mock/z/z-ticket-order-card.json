@@ -1,0 +1,446 @@
+[
+  {
+    "version": "v0.9",
+    "createSurface": {
+      "surfaceId": "z-ticket-order-card",
+      "catalogId": "https://a2ui.org/specification/v0_9/basic_catalog.json"
+    }
+  },
+  {
+    "version": "v0.9",
+    "updateComponents": {
+      "surfaceId": "z-ticket-order-card",
+      "components": [
+        {
+          "id": "root",
+          "component": "Card",
+          "child": "ticket-body",
+          "variant": "elevated"
+        },
+        {
+          "id": "ticket-body",
+          "component": "Column",
+          "children": [
+            "ticket-titlebar",
+            "ticket-routes",
+            "ticket-info",
+            "ticket-fees",
+            "ticket-actions"
+          ],
+          "align": "stretch"
+        },
+        {
+          "id": "ticket-titlebar",
+          "component": "Row",
+          "children": [
+            "ticket-app",
+            "ticket-more-action"
+          ],
+          "align": "center",
+          "justify": "spaceBetween"
+        },
+        {
+          "id": "ticket-app",
+          "component": "Row",
+          "children": [
+            "ticket-app-mark",
+            "ticket-app-name"
+          ],
+          "align": "center",
+          "justify": "start"
+        },
+        {
+          "id": "ticket-app-mark",
+          "component": "Icon",
+          "name": "home",
+          "color": "primary",
+          "size": "md"
+        },
+        {
+          "id": "ticket-app-name",
+          "component": "Text",
+          "text": "z 应用",
+          "variant": "caption",
+          "emphasis": "medium"
+        },
+        {
+          "id": "ticket-more",
+          "component": "Row",
+          "children": [
+            "ticket-more-text",
+            "ticket-more-icon"
+          ],
+          "align": "center",
+          "justify": "start"
+        },
+        {
+          "id": "ticket-more-text",
+          "component": "Text",
+          "text": "更多",
+          "variant": "caption"
+        },
+        {
+          "id": "ticket-more-icon",
+          "component": "Icon",
+          "name": "more_vert",
+          "color": "muted",
+          "size": "md"
+        },
+        {
+          "id": "ticket-more-action",
+          "component": "Button",
+          "child": "ticket-more",
+          "variant": "borderless",
+          "action": {
+            "event": {
+              "name": "ticket-more-action.tap",
+              "context": {
+                "templatePackage": "z",
+                "templateVersion": "0.0.35"
+              }
+            }
+          }
+        },
+        {
+          "id": "ticket-routes",
+          "component": "Column",
+          "children": [
+            "ticket-route-1-action",
+            "ticket-route-2-action"
+          ],
+          "align": "stretch"
+        },
+        {
+          "id": "ticket-route-1-action",
+          "component": "Button",
+          "child": "ticket-route-1-card",
+          "variant": "borderless",
+          "action": {
+            "event": {
+              "name": "ticket-route-1-action.tap",
+              "context": {
+                "templatePackage": "z",
+                "templateVersion": "0.0.35"
+              }
+            }
+          }
+        },
+        {
+          "id": "ticket-route-1-card",
+          "component": "Card",
+          "child": "ticket-route-1-body",
+          "variant": "outlined"
+        },
+        {
+          "id": "ticket-route-1-body",
+          "component": "Row",
+          "children": [
+            "ticket-route-1-copy",
+            "ticket-route-1-icon"
+          ],
+          "align": "center",
+          "justify": "spaceBetween"
+        },
+        {
+          "id": "ticket-route-1-copy",
+          "component": "Column",
+          "children": [
+            "ticket-route-1-title",
+            "ticket-route-1-desc"
+          ],
+          "align": "stretch"
+        },
+        {
+          "id": "ticket-route-1-title",
+          "component": "Text",
+          "text": "出发地 - 到达地",
+          "variant": "body",
+          "emphasis": "medium"
+        },
+        {
+          "id": "ticket-route-1-desc",
+          "component": "Text",
+          "text": "6月1日 周六 20:50-23:50 CZ0000 经济舱",
+          "variant": "caption"
+        },
+        {
+          "id": "ticket-route-1-icon",
+          "component": "Icon",
+          "name": "arrow_forward",
+          "color": "muted",
+          "size": "md"
+        },
+        {
+          "id": "ticket-route-2-action",
+          "component": "Button",
+          "child": "ticket-route-2-card",
+          "variant": "borderless",
+          "action": {
+            "event": {
+              "name": "ticket-route-2-action.tap",
+              "context": {
+                "templatePackage": "z",
+                "templateVersion": "0.0.35"
+              }
+            }
+          }
+        },
+        {
+          "id": "ticket-route-2-card",
+          "component": "Card",
+          "child": "ticket-route-2-body",
+          "variant": "outlined"
+        },
+        {
+          "id": "ticket-route-2-body",
+          "component": "Row",
+          "children": [
+            "ticket-route-2-copy",
+            "ticket-route-2-icon"
+          ],
+          "align": "center",
+          "justify": "spaceBetween"
+        },
+        {
+          "id": "ticket-route-2-copy",
+          "component": "Column",
+          "children": [
+            "ticket-route-2-title",
+            "ticket-route-2-desc"
+          ],
+          "align": "stretch"
+        },
+        {
+          "id": "ticket-route-2-title",
+          "component": "Text",
+          "text": "到达地 - 出发地",
+          "variant": "body",
+          "emphasis": "medium"
+        },
+        {
+          "id": "ticket-route-2-desc",
+          "component": "Text",
+          "text": "6月3日 周一 14:50-18:50 CZ0001 经济舱",
+          "variant": "caption"
+        },
+        {
+          "id": "ticket-route-2-icon",
+          "component": "Icon",
+          "name": "arrow_forward",
+          "color": "muted",
+          "size": "md"
+        },
+        {
+          "id": "ticket-info",
+          "component": "Column",
+          "children": [
+            "ticket-info-1",
+            "ticket-info-2"
+          ],
+          "align": "stretch"
+        },
+        {
+          "id": "ticket-info-1",
+          "component": "Row",
+          "children": [
+            "ticket-info-1-label",
+            "ticket-info-1-values"
+          ],
+          "align": "start",
+          "justify": "spaceBetween"
+        },
+        {
+          "id": "ticket-info-1-label",
+          "component": "Text",
+          "text": "乘机人",
+          "variant": "caption"
+        },
+        {
+          "id": "ticket-info-1-values",
+          "component": "Column",
+          "children": [
+            "ticket-info-1-value",
+            "ticket-info-1-extra"
+          ],
+          "align": "end"
+        },
+        {
+          "id": "ticket-info-1-value",
+          "component": "Text",
+          "text": "李雷",
+          "variant": "body",
+          "emphasis": "medium"
+        },
+        {
+          "id": "ticket-info-1-extra",
+          "component": "Text",
+          "text": "身份证尾号 0823",
+          "variant": "caption"
+        },
+        {
+          "id": "ticket-info-2",
+          "component": "Row",
+          "children": [
+            "ticket-info-2-label",
+            "ticket-info-2-values"
+          ],
+          "align": "start",
+          "justify": "spaceBetween"
+        },
+        {
+          "id": "ticket-info-2-label",
+          "component": "Text",
+          "text": "联系电话",
+          "variant": "caption"
+        },
+        {
+          "id": "ticket-info-2-values",
+          "component": "Column",
+          "children": [
+            "ticket-info-2-value"
+          ],
+          "align": "end"
+        },
+        {
+          "id": "ticket-info-2-value",
+          "component": "Text",
+          "text": "138****0000",
+          "variant": "body",
+          "emphasis": "medium"
+        },
+        {
+          "id": "ticket-fees",
+          "component": "Column",
+          "children": [
+            "ticket-fee-1",
+            "ticket-fee-2",
+            "ticket-total"
+          ],
+          "align": "stretch"
+        },
+        {
+          "id": "ticket-fee-1",
+          "component": "Row",
+          "children": [
+            "ticket-fee-1-label",
+            "ticket-fee-1-value"
+          ],
+          "align": "center",
+          "justify": "spaceBetween"
+        },
+        {
+          "id": "ticket-fee-1-label",
+          "component": "Text",
+          "text": "票价",
+          "variant": "caption"
+        },
+        {
+          "id": "ticket-fee-1-value",
+          "component": "Text",
+          "text": "¥1064",
+          "variant": "body",
+          "emphasis": "medium"
+        },
+        {
+          "id": "ticket-fee-2",
+          "component": "Row",
+          "children": [
+            "ticket-fee-2-label",
+            "ticket-fee-2-value"
+          ],
+          "align": "center",
+          "justify": "spaceBetween"
+        },
+        {
+          "id": "ticket-fee-2-label",
+          "component": "Text",
+          "text": "机建燃油",
+          "variant": "caption"
+        },
+        {
+          "id": "ticket-fee-2-value",
+          "component": "Text",
+          "text": "¥440",
+          "variant": "body",
+          "emphasis": "medium"
+        },
+        {
+          "id": "ticket-total",
+          "component": "Row",
+          "children": [
+            "ticket-total-label",
+            "ticket-total-price"
+          ],
+          "align": "center",
+          "justify": "spaceBetween"
+        },
+        {
+          "id": "ticket-total-label",
+          "component": "Text",
+          "text": "合计",
+          "variant": "h4"
+        },
+        {
+          "id": "ticket-total-price",
+          "component": "Text",
+          "text": "¥1504",
+          "variant": "h2"
+        },
+        {
+          "id": "ticket-actions",
+          "component": "Row",
+          "children": [
+            "ticket-secondary",
+            "ticket-primary"
+          ],
+          "align": "center",
+          "justify": "start"
+        },
+        {
+          "id": "ticket-secondary-text",
+          "component": "Text",
+          "text": "返回修改",
+          "variant": "body",
+          "emphasis": "medium"
+        },
+        {
+          "id": "ticket-secondary",
+          "component": "Button",
+          "child": "ticket-secondary-text",
+          "variant": "borderless",
+          "action": {
+            "event": {
+              "name": "ticket-secondary.tap",
+              "context": {
+                "templatePackage": "z",
+                "templateVersion": "0.0.35"
+              }
+            }
+          }
+        },
+        {
+          "id": "ticket-primary-text",
+          "component": "Text",
+          "text": "确认出票",
+          "variant": "body",
+          "emphasis": "medium"
+        },
+        {
+          "id": "ticket-primary",
+          "component": "Button",
+          "child": "ticket-primary-text",
+          "variant": "primary",
+          "action": {
+            "event": {
+              "name": "ticket-primary.tap",
+              "context": {
+                "templatePackage": "z",
+                "templateVersion": "0.0.35"
+              }
+            }
+          }
+        }
+      ]
+    }
+  }
+]
