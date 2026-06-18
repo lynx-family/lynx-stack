@@ -46,7 +46,6 @@
     "@lynx-js/test-tools": "workspace:*",
     "@rsbuild/core": "catalog:rsbuild",
     "@rspack/core": "catalog:rspack",
-    "@rstest/core": "catalog:rstest",
     "@types/object.pick": "^1.3.4",
     "expect-type": "^1.2.1",
     "object.pick": "^1.3.0",

@@ -45,8 +45,7 @@
     "test:type": "tsc --noEmit"
   },
   "devDependencies": {
-    "@lynx-js/react": "workspace:*",
-    "@rstest/core": "catalog:rstest"
+    "@lynx-js/react": "workspace:*"
   },
   "peerDependencies": {
     "@lynx-js/react": "*"

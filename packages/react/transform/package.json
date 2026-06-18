@@ -36,7 +36,6 @@
     "@emnapi/runtime": "^1.7.1",
     "@lynx-js/react-rsbuild-plugin": "workspace:*",
     "@napi-rs/cli": "2.18.4",
-    "@rstest/core": "catalog:rstest",
     "esbuild": "^0.27.3",
     "tiny-glob": "0.2.9"
   }

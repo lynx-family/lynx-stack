@@ -158,7 +158,6 @@
     "@lynx-js/lynx-ui": "^3.133.0",
     "@lynx-js/react": "workspace:*",
     "@lynx-js/types": "3.7.0",
-    "@rstest/core": "catalog:rstest",
     "@types/react": "^18.3.28"
   },
   "peerDependencies": {

@@ -39,8 +39,7 @@
     "@clack/prompts": "1.0.1"
   },
   "devDependencies": {
-    "@lynx-js/autolink-codegen": "workspace:^",
-    "@rstest/core": "catalog:rstest"
+    "@lynx-js/autolink-codegen": "workspace:^"
   },
   "engines": {
     "node": "^20 || ^22 || ^24"

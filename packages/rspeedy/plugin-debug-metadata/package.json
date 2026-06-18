@@ -39,8 +39,7 @@
   "devDependencies": {
     "@lynx-js/template-webpack-plugin": "workspace:*",
     "@microsoft/api-extractor": "catalog:",
-    "@rsbuild/core": "catalog:rsbuild",
-    "@rstest/core": "catalog:rstest"
+    "@rsbuild/core": "catalog:rsbuild"
   },
   "engines": {
     "node": ">=18"

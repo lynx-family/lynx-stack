@@ -39,8 +39,7 @@
     "test": "rstest"
   },
   "devDependencies": {
-    "@microsoft/api-extractor": "catalog:",
-    "@rstest/core": "catalog:rstest"
+    "@microsoft/api-extractor": "catalog:"
   },
   "engines": {
     "node": ">=18"

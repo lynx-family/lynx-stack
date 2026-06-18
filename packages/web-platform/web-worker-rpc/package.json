@@ -31,7 +31,5 @@
   "scripts": {
     "test": "rstest"
   },
-  "devDependencies": {
-    "@rstest/core": "catalog:rstest"
-  }
+  "devDependencies": {}
 }

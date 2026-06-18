@@ -36,7 +36,6 @@
     "test:coverage": "rstest run --coverage"
   },
   "devDependencies": {
-    "@rstest/core": "catalog:rstest",
     "tailwindcss": "^3.4.19"
   },
   "peerDependencies": {

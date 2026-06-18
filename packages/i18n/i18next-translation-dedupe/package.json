@@ -38,7 +38,6 @@
     "@lynx-js/rspeedy": "workspace:*",
     "@lynx-js/template-webpack-plugin": "workspace:*",
     "@lynx-js/types": "3.7.0",
-    "@rstest/core": "catalog:rstest",
     "i18next": "26.0.6",
     "i18next-cli": "1.54.2",
     "rsbuild-plugin-i18next-extractor": "0.2.1"

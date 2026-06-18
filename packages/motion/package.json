@@ -55,7 +55,6 @@
     "@lynx-js/react": "workspace:*",
     "@lynx-js/react-rsbuild-plugin": "workspace:*",
     "@lynx-js/types": "3.7.0",
-    "@rstest/core": "catalog:rstest",
     "rsbuild-plugin-publint": "0.3.4"
   },
   "peerDependencies": {
