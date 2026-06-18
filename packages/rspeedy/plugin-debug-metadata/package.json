@@ -8,6 +8,10 @@
     "debug",
     "sourcemap"
   ],
+  "homepage": "https://github.com/lynx-family/lynx-stack/tree/main/packages/rspeedy/plugin-debug-metadata#readme",
+  "bugs": {
+    "url": "https://github.com/lynx-family/lynx-stack/issues"
+  },
   "repository": {
     "type": "git",
     "url": "https://github.com/lynx-family/lynx-stack.git",
