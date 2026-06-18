@@ -153,6 +153,9 @@ importers:
       typescript-eslint:
         specifier: ^8.56.0
         version: 8.56.0(eslint@9.39.3(jiti@2.6.1))(typescript@5.9.3)
+      vitest:
+        specifier: ^3.2.4
+        version: 3.2.4(@types/debug@4.1.12)(@types/node@24.10.13)(jsdom@27.4.0)(less@4.6.4)(lightningcss@1.31.1)(sass-embedded@1.99.0)(sass@1.99.0)(terser@5.31.6)
 
   benchmark/react:
     dependencies:
@@ -1194,9 +1197,6 @@ importers:
       '@testing-library/jest-dom':
         specifier: ^6.9.1
         version: 6.9.1
-      vitest:
-        specifier: ^3.2.4
-        version: 3.2.4(@types/debug@4.1.12)(@types/node@24.10.13)(jsdom@27.4.0)(less@4.6.4)(lightningcss@1.31.1)(sass-embedded@1.99.0)(sass@1.99.0)(terser@5.31.6)
 
   packages/react/transform:
     devDependencies:
