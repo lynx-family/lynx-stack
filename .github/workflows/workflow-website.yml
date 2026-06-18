@@ -46,21 +46,45 @@ jobs:
           rm -rf website/doc_build/repl
           mkdir -p website/doc_build
           cp -r packages/repl/dist website/doc_build/repl
-      - name: Build A2UI dependencies
+      - name: Build GenUI Playground dependencies
         run: |
           pnpm turbo --filter a2ui-playground^... build
-      - name: Build A2UI Lynx bundle
+      - name: Build GenUI Playground Lynx bundle
         run: |
           pnpm --filter a2ui-playground build:lynx
-      - name: Build A2UI Playground
+      - name: Build GenUI Playground
         run: |
           BASE_PATH='${{ steps.pages.outputs.base_path }}'
-          export ASSET_PREFIX="${BASE_PATH%/}/a2ui/"
+          export ASSET_PREFIX="${BASE_PATH%/}/genui/"
           pnpm --filter a2ui-playground build
-      - name: Copy A2UI Playground into website output
+      - name: Copy GenUI Playground into website output
         run: |
-          rm -rf website/doc_build/a2ui
-          cp -r packages/genui/a2ui-playground/dist website/doc_build/a2ui
+          rm -rf website/doc_build/genui website/doc_build/a2ui
+          cp -r packages/genui/a2ui-playground/dist website/doc_build/genui
+          # Legacy redirect: /a2ui -> /genui (preserves query + hash so the
+          # playground's hash-router deep links keep working). Existing
+          # /a2ui URLs out in the wild (blog posts, docs) won't break.
+          mkdir -p website/doc_build/a2ui
+          cat > website/doc_build/a2ui/index.html <<'HTML'
+          <!doctype html>
+          <html lang="en">
+            <head>
+              <meta charset="utf-8" />
+              <title>Moved to /genui</title>
+              <meta http-equiv="refresh" content="0; url=/genui/" />
+              <link rel="canonical" href="/genui/" />
+              <script>
+                (function () {
+                  var dest = '/genui/' + location.search + location.hash;
+                  location.replace(dest);
+                })();
+              </script>
+            </head>
+            <body>
+              <p>The playground has moved to <a href="/genui/">/genui/</a>.</p>
+            </body>
+          </html>
+          HTML
       - name: Upload artifact
         uses: actions/upload-pages-artifact@7b1f4a764d45c48632c6b24a0339c27f5614fb0b # v4
         with:
