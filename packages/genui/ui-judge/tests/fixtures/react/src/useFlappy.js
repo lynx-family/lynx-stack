@@ -4,7 +4,6 @@
 import { useCallback, useEffect, useRef, useState } from '@lynx-js/react';
 
 import { createFlappy } from './lib/flappy.js';
-import type { FlappyEngine, FlappyOptions } from './lib/flappy.js';
 
 /**
  * React hook for flappy-bird physics.
@@ -12,24 +11,10 @@ import type { FlappyEngine, FlappyOptions } from './lib/flappy.js';
  * Returns `[y, jump]`, a state value and a stable callback.
  * The game loop runs automatically; cleanup happens on unmount.
  * Options are read once on mount and not reactive to later changes.
- *
- * @example
- * ```tsx
- * function Bird() {
- *   const [y, jump] = useFlappy();
- *   return (
- *     <view bindtap={jump} style={{ transform: `translateY(${y}px)` }}>
- *       <text>Tap me!</text>
- *     </view>
- *   );
- * }
- * ```
  */
-export function useFlappy(
-  options?: FlappyOptions,
-): [number, () => void] {
+export function useFlappy(options) {
   const [y, setY] = useState(0);
-  const engineRef = useRef<FlappyEngine | null>(null);
+  const engineRef = useRef(null);
 
   engineRef.current ??= createFlappy((newY) => {
     setY(newY);
@@ -42,7 +27,7 @@ export function useFlappy(
   }, []);
 
   const jump = useCallback(() => {
-    'background-only';
+    'main thread';
     engineRef.current?.jump();
   }, []);
 

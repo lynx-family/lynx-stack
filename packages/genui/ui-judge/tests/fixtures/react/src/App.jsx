@@ -49,7 +49,7 @@ export function App() {
                 color: 'rgba(255, 255, 255, 0.85)',
               }}
             >
-              {' src/App.tsx '}
+              {' src/App.jsx '}
             </text>
             to see updates!
           </text>
