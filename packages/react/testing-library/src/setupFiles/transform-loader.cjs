@@ -1,5 +1,5 @@
-// Copyright 2025 The Lynx Authors. All rights reserved.
-// Licensed under the MIT license that can be found in the
+// Copyright 2026 The Lynx Authors. All rights reserved.
+// Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
 
 // A minimal rspack loader that runs `transformReactLynxSync` on test and src
@@ -8,8 +8,9 @@
 //
 // It imports `@lynx-js/react/transform` directly instead of
 // `@lynx-js/react-rsbuild-plugin`, so it does NOT pull
-// `react-rsbuild-plugin` into use-sync's build graph (avoiding a turbo build
-// cycle, since react-rsbuild-plugin transitively depends on use-sync).
+// `react-rsbuild-plugin` into the consumer's build graph (avoiding a turbo
+// build cycle, since react-rsbuild-plugin transitively depends on
+// use-sync-external-store).
 
 const path = require('node:path');
 
@@ -28,6 +29,8 @@ function normalizeSlashes(file) {
 module.exports = function transformLoader(source) {
   const callback = this.async();
   const sourcePath = this.resourcePath;
+  const options = this.getOptions ? this.getOptions() : {};
+  const engineVersion = options?.engineVersion ?? '';
 
   const relativePath = normalizeSlashes(
     path.relative(this.rootContext, sourcePath),
@@ -46,7 +49,7 @@ module.exports = function transformLoader(source) {
       filename: relativePath,
       target: 'MIXED',
     },
-    engineVersion: '',
+    engineVersion,
     dynamicImport: {
       injectLazyBundle: false,
       layer: 'test',

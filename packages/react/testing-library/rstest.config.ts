@@ -1,7 +1,6 @@
 import { createRequire } from 'node:module';
 
 import { defineConfig } from '@rstest/core';
-import { pluginReactLynx } from '@lynx-js/react-rsbuild-plugin';
 import { withDefaultConfig } from './src/rstest-config.ts';
 
 const require = createRequire(import.meta.url);
@@ -17,6 +16,7 @@ export default defineConfig({
         // to match vitest semantics.
         restoreMocks: true,
         tools: {
+          ...config.tools,
           swc: {
             jsc: {
               transform: {
@@ -25,14 +25,6 @@ export default defineConfig({
             },
           },
         },
-        plugins: [
-          ...(config.plugins || []),
-          // Match the engineVersion used by the vitest `testingLibraryPlugin`
-          // (which passes `engineVersion: ''`) so the element-PAPI transform
-          // output matches the inline snapshots. `pluginReactLynx` otherwise
-          // defaults to `'3.2'`, which produces a different render path.
-          pluginReactLynx({ engineVersion: '' }),
-        ],
         source: {
           ...config.source,
           define: {

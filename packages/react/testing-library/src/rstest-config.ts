@@ -20,6 +20,13 @@ export interface LynxConfigOptions {
 
 export interface RstestConfigOptions {
   /**
+   * The engine version passed to the ReactLynx transform.
+   *
+   * @default `''`
+   */
+  engineVersion?: string;
+
+  /**
    * Customize the generated rstest config.
    */
   modifyRstestConfig?: (config: ExtendConfig) => ExtendConfig | Promise<ExtendConfig>;
@@ -29,11 +36,63 @@ export interface LynxRstestConfigOptions extends LynxConfigOptions, RstestConfig
 
 const require = createRequire(import.meta.url);
 
-function createDefaultRstestConfig(): ExtendConfig {
+// Resolve `preact` (and its sub-paths) to the SINGLE physical copy shipped
+// with `@lynx-js/react`. Without this, the bundler pulls a second copy from
+// `node_modules/.pnpm`, producing two preact `options` singletons: hooks
+// register `_render` on one while the diff path reads the other, so
+// `currentComponent` is undefined and `useState` throws
+// `Cannot read properties of undefined (reading '__H')`.
+function createPreactSingletonAlias(): Record<string, string> {
+  const reactRequire = createRequire(
+    require.resolve('@lynx-js/react/package.json'),
+  );
+  return Object.fromEntries(
+    ['preact', 'preact/hooks', 'preact/compat', 'preact/jsx-runtime'].map(
+      (s) => [`${s}$`, reactRequire.resolve(s).replace(/\.js$/, '.mjs')],
+    ),
+  );
+}
+
+function createBaseRstestConfig(): ExtendConfig {
   return {
     testEnvironment: 'jsdom',
     setupFiles: [require.resolve('./setupFiles/rstest')],
     globals: true,
+  };
+}
+
+function createDefaultRstestConfig(
+  options?: RstestConfigOptions,
+): ExtendConfig {
+  return {
+    ...createBaseRstestConfig(),
+    // Apply the ReactLynx transform via an rspack loader that runs
+    // `transformReactLynxSync` from `@lynx-js/react/transform` directly. We do
+    // NOT use `@lynx-js/react-rsbuild-plugin` here, because it transitively
+    // depends on `use-sync-external-store`, which would create a turbo build
+    // cycle for that package's tests.
+    resolve: {
+      alias: createPreactSingletonAlias(),
+    },
+    tools: {
+      rspack: {
+        module: {
+          rules: [
+            {
+              test: /\.(?:jsx|tsx|ts)$/,
+              use: [
+                {
+                  loader: require.resolve('./setupFiles/transform-loader.cjs'),
+                  options: {
+                    engineVersion: options?.engineVersion ?? '',
+                  },
+                },
+              ],
+            },
+          ],
+        },
+      },
+    },
   };
 }
 
@@ -63,7 +122,7 @@ export function withDefaultConfig(
 ): ExtendConfigFn {
   return async () => {
     return await applyRstestConfigModifier(
-      createDefaultRstestConfig(),
+      createDefaultRstestConfig(options),
       options?.modifyRstestConfig,
     );
   };
@@ -83,7 +142,7 @@ export function withLynxConfig(
     const rstestConfig = toRstestConfig({
       rsbuildConfig: lynxConfig.content as RsbuildConfig,
     });
-    const defaultConfig = createDefaultRstestConfig();
+    const defaultConfig = createBaseRstestConfig();
     const setupFiles = Array.from(
       new Set([
         ...normalizeSetupFiles(rstestConfig.setupFiles),

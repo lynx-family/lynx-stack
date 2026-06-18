@@ -1,13 +1,15 @@
 import { createRequire } from 'node:module';
 
 import { defineConfig } from '@rstest/core';
-import { pluginReactLynx } from '@lynx-js/react-rsbuild-plugin';
 import { withDefaultConfig } from './src/rstest-config.ts';
 
 const require = createRequire(import.meta.url);
 
 export default defineConfig({
   extends: withDefaultConfig({
+    // Mirror the vitest `vitestTestingLibraryPlugin({ engineVersion: '3.1' })`
+    // so the engine-3.1 element-PAPI transform output matches the snapshots.
+    engineVersion: '3.1',
     modifyRstestConfig(config) {
       return {
         ...config,
@@ -16,6 +18,7 @@ export default defineConfig({
         // recurses. Restore spies between tests to match vitest semantics.
         restoreMocks: true,
         tools: {
+          ...config.tools,
           swc: {
             jsc: {
               transform: {
@@ -24,12 +27,6 @@ export default defineConfig({
             },
           },
         },
-        plugins: [
-          ...(config.plugins || []),
-          // Mirror the vitest `vitestTestingLibraryPlugin({ engineVersion: '3.1' })`
-          // so the engine-3.1 element-PAPI transform output matches the snapshots.
-          pluginReactLynx({ engineVersion: '3.1' }),
-        ],
         source: {
           ...config.source,
           define: {
