@@ -286,7 +286,7 @@ async function buildReactFixture(): Promise<void> {
     cwd: REPO_ROOT,
     env: {
       ...process.env,
-      NODE_ENV: process.env['NODE_ENV'] ?? 'production',
+      NODE_ENV: 'production',
     },
   });
 }
