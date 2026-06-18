@@ -26,7 +26,7 @@
     "!dist/*.node"
   ],
   "scripts": {
-    "bench": "vitest bench",
+    "bench": "node __test__/basic.bench.js",
     "build:debug": "napi build --platform --js index.cjs",
     "build:wasm": "node ./scripts/build_wasm.js",
     "test": "rstest",
@@ -35,6 +35,7 @@
   "devDependencies": {
     "@emnapi/core": "^1.7.1",
     "@emnapi/runtime": "^1.7.1",
+    "@lynx-js/codspeed-tinybench": "workspace:*",
     "@lynx-js/react-rsbuild-plugin": "workspace:*",
     "@napi-rs/cli": "2.18.4",
     "esbuild": "^0.27.3",

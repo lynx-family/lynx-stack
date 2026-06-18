@@ -1,7 +1,11 @@
-import { bench, describe } from 'vitest';
-import * as path from 'path';
-import * as fs from 'fs';
+// Copyright 2025 The Lynx Authors. All rights reserved.
+// Licensed under the Apache License Version 2.0 that can be found in the
+// LICENSE file in the root directory of this source tree.
+
+import { Bench, withCodSpeed } from '@lynx-js/codspeed-tinybench';
 import { executeTemplate } from '@lynx-js/web-core/server';
+import * as fs from 'fs';
+import * as path from 'path';
 import { fileURLToPath } from 'url';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
@@ -39,15 +43,17 @@ const cases = {
   ),
 };
 
-describe('server-bench', () => {
-  for (const [testName, rawTemplate] of Object.entries(cases)) {
-    bench(testName, async () => {
-      await executeTemplate(
-        rawTemplate,
-        {}, // initData
-        {}, // globalProps
-        {}, // initI18nResources
-      );
-    });
-  }
-});
+const bench = new Bench();
+
+for (const [testName, rawTemplate] of Object.entries(cases)) {
+  bench.add(`server-bench > ${testName}`, async () => {
+    await executeTemplate(
+      rawTemplate,
+      {}, // initData
+      {}, // globalProps
+      {}, // initI18nResources
+    );
+  });
+}
+
+await withCodSpeed(bench, import.meta.url);

@@ -5,7 +5,7 @@
   "license": "Apache-2.0",
   "type": "module",
   "scripts": {
-    "bench": "vitest bench",
+    "bench": "node bench/server.bench.ts",
     "build": "pnpm dlx premove dist && pnpm run --stream \"/^build:.*/\"",
     "build:csr": "node ./scripts/generate-build-command.js",
     "build:external-libs": "rslib build --config ./external-libs/greeting/rslib.config.ts",
@@ -19,6 +19,7 @@
     "test:update": "playwright test --ui --update-snapshots"
   },
   "devDependencies": {
+    "@lynx-js/codspeed-tinybench": "workspace:*",
     "@lynx-js/external-bundle-rsbuild-plugin": "workspace:*",
     "@lynx-js/lynx-bundle-rslib-config": "workspace:*",
     "@lynx-js/playwright-fixtures": "workspace:*",
