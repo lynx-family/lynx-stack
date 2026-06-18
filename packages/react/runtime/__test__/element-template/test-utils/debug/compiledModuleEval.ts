@@ -77,15 +77,25 @@ function transpileEsmToCjs(code: string): string {
     })
     .join('\n');
 
+  // Re-export a local binding as a LIVE binding. ESM exports are live: a fixture
+  // that does `export let x` and later reassigns `x` (e.g. `App` setting
+  // `lastRenderPromise = runOnMainThread(...)()` during render) must have the new
+  // value observable through the module's exports. A one-time `__exports.x = x`
+  // snapshots the initial (often `undefined`) value, so use a getter that reads
+  // the current local binding — matching what native `import()` gave under vitest.
+  const liveBinding = (exportName: string, localName: string): string =>
+    `Object.defineProperty(__exports, ${JSON.stringify(exportName)}, `
+    + `{ get: () => ${localName}, enumerable: true, configurable: true });`;
+
   // Strip the leading `export ` keyword from declarations IN PLACE (so multi-line
   // function/class/const declarations stay intact) and record the names to
   // re-export at the end of the module.
   body = body.replace(
     /^export\s+(default\s+)?(async\s+)?(function\*?|class|const|let|var)\s+([A-Za-z0-9_$]+)/gm,
     (_match, isDefault, asyncKw = '', kind, name) => {
-      exportAssignments.push(`__exports[${JSON.stringify(name)}] = ${name};`);
+      exportAssignments.push(liveBinding(name, name));
       if (isDefault) {
-        exportAssignments.push(`__exports["default"] = ${name};`);
+        exportAssignments.push(liveBinding('default', name));
       }
       return `${asyncKw}${kind} ${name}`;
     },
@@ -96,9 +106,9 @@ function transpileEsmToCjs(code: string): string {
     for (const part of names.split(',').map((p) => p.trim()).filter(Boolean)) {
       const asMatch = /^([A-Za-z0-9_$]+)\s+as\s+([A-Za-z0-9_$]+)$/.exec(part);
       if (asMatch) {
-        exportAssignments.push(`__exports[${JSON.stringify(asMatch[2])}] = ${asMatch[1]};`);
+        exportAssignments.push(liveBinding(asMatch[2]!, asMatch[1]!));
       } else {
-        exportAssignments.push(`__exports[${JSON.stringify(part)}] = ${part};`);
+        exportAssignments.push(liveBinding(part, part));
       }
     }
     return '';
