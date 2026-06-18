@@ -100,12 +100,12 @@ This package uses a hybrid build system involving `pnpm`, `rsbuild`, and `cargo`
   2. Generates high-performance JS bindings with `wasm-bindgen`.
   3. Optimizes the binary size with `wasm-opt`.
   4. Builds three variants: `client` (browser runtime), `server` (SSR), and `encode` (build tool).
-- **`pnpm test`**: Runs `vitest`. Note: If you modify Rust code, you must run `pnpm build:wasm` first for the changes to take effect in the tests.
+- **`pnpm test`**: Runs `rstest`. Note: If you modify Rust code, you must run `pnpm build:wasm` first for the changes to take effect in the tests.
 
 ### Configuration
 
 - **`rsbuild.config.ts`**: Configures the bundling of the client-side JavaScript, ensuring correct entry points (`ts/client/index.ts`) and output paths.
-- **`vitest.config.ts`**: Configures the test runner, including mappings to load the Wasm binary during tests.
+- **`rstest.config.ts`**: Configures the test runner, including mappings to load the Wasm binary during tests.
 
 ### Testing Strategy
 
@@ -115,9 +115,9 @@ This package uses a hybrid build system involving `pnpm`, `rsbuild`, and `cargo`
 - **Rust Tests**: run `cargo test --all-features` and `cargo test --target wasm32-unknown-unknown --all-features` separately.
 - **Server E2E Tests (`packages/web-platform/web-core-e2e`)**:
   - Located in `packages/web-platform/web-core-e2e`.
-  - Uses `vitest` to run tests against the **built artifacts** (e.g., `dist/api-globalThis.web.bundle`).
+  - Uses `rstest` to run server tests against the **built artifacts** (e.g., `dist/api-globalThis.web.bundle`).
   - Verifies server-side execution of templates using `executeTemplate` and isolated VM contexts.
-  - Run with `pnpm test` inside the `web-core-e2e` directory.
+  - Run with `pnpm test:server` inside the `web-core-e2e` directory. `pnpm test` is reserved for Playwright e2e tests.
 
 ## Guidelines for LLMs
 

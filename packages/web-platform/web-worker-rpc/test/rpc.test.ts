@@ -1,4 +1,4 @@
-import { afterAll, describe, test, expect } from 'vitest';
+import { afterAll, describe, test, expect } from '@rstest/core';
 import { Rpc } from '../src/index.js';
 import {
   addAsync,

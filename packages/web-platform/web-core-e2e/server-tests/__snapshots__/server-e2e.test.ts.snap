@@ -1,4 +1,4 @@
-// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+// Rstest Snapshot v1
 
 exports[`executeTemplate should run lepusCode.root from basic-element-image-src.web.bundle 1`] = `
 "<lynx-view ssr

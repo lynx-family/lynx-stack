@@ -5,7 +5,7 @@
   "license": "Apache-2.0",
   "type": "module",
   "scripts": {
-    "bench": "vitest bench",
+    "bench": "vitest bench --config vitest.bench.config.ts",
     "build": "pnpm dlx premove dist && pnpm run --stream \"/^build:.*/\"",
     "build:csr": "node ./scripts/generate-build-command.js",
     "build:external-libs": "rslib build --config ./external-libs/greeting/rslib.config.ts",
@@ -16,6 +16,7 @@
     "test": "playwright test",
     "test:debug": "playwright test --ui",
     "test:install": "playwright install --with-deps chromium firefox webkit",
+    "test:server": "rstest",
     "test:update": "playwright test --ui --update-snapshots"
   },
   "devDependencies": {
@@ -30,6 +31,7 @@
     "@playwright/test": "^1.58.2",
     "@rsbuild/core": "catalog:rsbuild",
     "@rslib/core": "0.21.5",
+    "@rstest/core": "catalog:rstest",
     "nyc": "^17.1.0",
     "prettier": "^3.8.1",
     "vitest": "^3.2.4"
