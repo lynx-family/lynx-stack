@@ -95,11 +95,13 @@ export class WebEncodePlugin {
             cardType: encodeOptions['cardType'] as string,
             appType: encodeOptions['appType'] as string,
             pageConfig: encodeOptions['pageConfig'] as Record<string, unknown>,
-            lepusCode: {
-              // flatten the lepusCode to a single object
-              ...encodeOptions.lepusCode.lepusChunk,
-              root: encodeOptions.lepusCode.root!,
-            },
+            lepusCode: encodeOptions.lepusCode
+              ? {
+                // flatten the lepusCode to a single object
+                ...encodeOptions.lepusCode.lepusChunk,
+                root: encodeOptions.lepusCode.root!,
+              }
+              : {},
             customSections: encodeOptions.customSections ?? {},
           };
           if (encodeOptions.elementTemplate !== undefined) {

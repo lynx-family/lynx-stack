@@ -47,7 +47,10 @@ export { wrapWithLynxComponent } from '../core/compat/lynxComponent.js';
 //   loadLazyBundle,
 // );
 
-export { loadLazyBundle } from '../core/lynx/lazy-bundle.js';
+// Element Template loads lazy bundles via `lynx.fetchBundle` (FetchBundle),
+// not `lynx.QueryComponent`. This is the ET-only loader; Snapshot keeps the
+// shared `core/lynx/lazy-bundle.js` one via `src/internal.ts`.
+export { loadLazyBundle } from './lynx/lazy-bundle.js';
 
 // TODO(ET MTS): add MTRef hydrate semantics in follow-up tracks.
 export { transformToWorklet } from './runtime/template/main-thread-background-function.js';

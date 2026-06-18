@@ -32,6 +32,7 @@ export default function() {
               const promise = lynx.loadLazyBundle(
                 $RuntimeGlobals_publicPath$
                   + $RuntimeGlobals_lynxAsyncChunkIds$[chunkId],
+                $RuntimeGlobals_lynxAsyncChunkMode$[chunkId],
               ).then((exports) => {
                 installChunk(exports);
                 return exports;
