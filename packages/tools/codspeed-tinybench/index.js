@@ -2,11 +2,13 @@
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
 
+import { spawnSync } from 'node:child_process';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 import {
   getGitDir,
+  getV8Flags,
   InstrumentHooks,
   mongoMeasurement,
   optimizeFunction,
@@ -35,6 +37,25 @@ export async function withCodSpeed(bench, benchFileUrl) {
     await bench.run();
     console.table(bench.table());
     return;
+  }
+
+  // Under a CodSpeed runner, instrumentation needs V8 flags on the node process
+  // (notably `--allow-natives-syntax`, without which `optimizeFunction`'s
+  // `%OptimizeFunctionOnNextCall` is a SyntaxError). Plain `node bench.js` is
+  // launched without them, so re-exec this same file in a child that carries
+  // the flags — mirroring how `@codspeed/vitest-plugin` spawns its workers with
+  // `execArgv: getV8Flags()`.
+  const requiredFlags = getV8Flags();
+  const missingFlags = requiredFlags.filter(
+    (flag) => !process.execArgv.includes(flag),
+  );
+  if (missingFlags.length > 0) {
+    const child = spawnSync(
+      process.execPath,
+      [...requiredFlags, ...process.execArgv, ...process.argv.slice(1)],
+      { stdio: 'inherit' },
+    );
+    process.exit(child.status ?? 1);
   }
 
   const filePath = fileURLToPath(benchFileUrl);
