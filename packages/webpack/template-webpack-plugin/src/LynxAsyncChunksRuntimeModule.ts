@@ -2,7 +2,11 @@
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
 
-import type { Compilation, Module, RuntimeModule } from '@rspack/core';
+import type {
+  AsyncDependenciesBlock,
+  Compilation,
+  RuntimeModule,
+} from '@rspack/core';
 
 import { RuntimeGlobals } from '@lynx-js/webpack-runtime-globals';
 
@@ -11,7 +15,6 @@ type LynxAsyncChunksRuntimeModule = new(
 ) => RuntimeModule;
 
 type ChunkGraph = Compilation['chunkGraph'];
-type AsyncDependenciesBlock = Module['blocks'][number];
 
 const LAZY_BUNDLE_MODE_ATTRIBUTE = 'mode';
 
