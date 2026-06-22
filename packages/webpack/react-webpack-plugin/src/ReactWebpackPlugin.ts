@@ -128,6 +128,44 @@ export function mergeElementTemplatesFromModule(
 }
 
 /**
+ * Collect element templates for a single encoded bundle, scoped to the modules
+ * that belong to it. Iterating every module in the compilation would pull other
+ * bundles' modules — including dynamic components — into the result, duplicating
+ * their templates (e.g. a lazy component's template leaking into the main
+ * bundle). An entrypoint's chunk group contains only its initial chunks, so
+ * async (dynamic component) modules stay out of the main bundle, and each lazy
+ * bundle keeps just its own templates.
+ *
+ * @internal
+ */
+export function collectElementTemplatesForEntries<TChunk>(
+  entryNames: Iterable<string>,
+  getChunkGroup: (name: string) => { chunks: Iterable<TChunk> } | undefined,
+  getChunkModules: (
+    chunk: TChunk,
+  ) => Iterable<ModuleWithElementTemplateBuildInfo>,
+): Record<string, Record<string, unknown>> {
+  const elementTemplates: Record<string, Record<string, unknown>> = {};
+  const visited = new Set<ModuleWithElementTemplateBuildInfo>();
+  for (const entryName of entryNames) {
+    const chunkGroup = getChunkGroup(entryName);
+    if (chunkGroup === undefined) {
+      continue;
+    }
+    for (const chunk of chunkGroup.chunks) {
+      for (const module of getChunkModules(chunk)) {
+        if (visited.has(module)) {
+          continue;
+        }
+        visited.add(module);
+        mergeElementTemplatesFromModule(elementTemplates, module);
+      }
+    }
+  }
+  return elementTemplates;
+}
+
+/**
  * The options for ReactWebpackPlugin
  *
  * @public
@@ -497,15 +535,15 @@ class ReactWebpackPlugin {
         hooks.beforeEncode.tap(
           `${this.constructor.name}.ElementTemplate`,
           (args) => {
-            const elementTemplates: Record<string, Record<string, unknown>> =
-              {};
-
-            for (const module of compilation.modules) {
-              mergeElementTemplatesFromModule(
-                elementTemplates,
-                module as ModuleWithElementTemplateBuildInfo,
-              );
-            }
+            const { chunkGraph } = compilation;
+            const elementTemplates = collectElementTemplatesForEntries(
+              args.entryNames,
+              (name) => compilation.namedChunkGroups.get(name),
+              (chunk) =>
+                chunkGraph.getChunkModules(
+                  chunk,
+                ) as ModuleWithElementTemplateBuildInfo[],
+            );
 
             args.encodeData.sourceContent.config['enableUnifyFixedBehavior'] =
               true;
