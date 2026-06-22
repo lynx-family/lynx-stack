@@ -30,6 +30,5 @@
   ],
   "scripts": {
     "test": "rstest"
-  },
-  "devDependencies": {}
+  }
 }

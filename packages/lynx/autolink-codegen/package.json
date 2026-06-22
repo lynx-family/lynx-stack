@@ -34,7 +34,6 @@
     "dev": "rslib build --watch",
     "test": "rstest"
   },
-  "devDependencies": {},
   "engines": {
     "node": "^20 || ^22 || ^24"
   }
