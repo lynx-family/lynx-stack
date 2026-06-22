@@ -81,6 +81,24 @@ export function factory<Data>(
   };
 }
 
+// dev-only: lets the page-data reset paths report an error when a reset meets this HOC.
+let usesWithInitDataInState = false;
+
+/**
+ * @internal
+ */
+export function hasWithInitDataInStateUsage(): boolean {
+  return usesWithInitDataInState;
+}
+
+/**
+ * @internal
+ */
+export const RESET_WITH_INIT_DATA_IN_STATE_ERROR =
+  'Resetting page data does not clear the state injected by `withInitDataInState`: the HOC merges '
+  + '`lynx.__initData` into the component state and cannot drop keys removed by the reset. '
+  + 'Use `useInitData()` instead, or avoid combining a data reset with `withInitDataInState`.';
+
 /**
  * Higher-Order Component (HOC) that injects `initData` into the state of the given class component.
  *
@@ -119,6 +137,9 @@ export function withInitDataInState<P, S>(App: ComponentClass<P, S>): ComponentC
 
     constructor(props: P) {
       super(props);
+      if (__DEV__) {
+        usesWithInitDataInState = true;
+      }
       this.state = {
         ...this.state,
         ...lynx.__initData,
