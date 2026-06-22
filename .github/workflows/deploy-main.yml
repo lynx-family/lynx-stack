@@ -98,7 +98,13 @@ jobs:
         # second run does not overwrite the first's coverage.
         pnpm --filter @lynx-js/react-runtime run test:main --coverage --coverage.reportsDirectory=coverage/main
         pnpm --filter @lynx-js/react-runtime run test:et --coverage --coverage.reportsDirectory=coverage/et
-        pnpm --filter @lynx-js/reactlynx-testing-library --filter @lynx-js/gesture-runtime --filter @lynx-js/use-sync-external-store --filter @lynx-js/motion --filter @lynx-js/testing-environment --filter @lynx-js/testing-library-example-basic --filter @lynx-js/testing-library-example-library --filter @lynx-js/testing-library-example-react-compiler run test --coverage
+        # reactlynx-testing-library's `test` fans out to two suites
+        # (`test:base && test:3.1`); a forwarded `--coverage` only reaches the
+        # last command, so run each explicitly with its own reports directory
+        # (same overwrite-avoidance reason as react-runtime above).
+        pnpm --filter @lynx-js/reactlynx-testing-library run test:base --coverage --coverage.reportsDirectory=coverage/rltl-base
+        pnpm --filter @lynx-js/reactlynx-testing-library run test:3.1 --coverage --coverage.reportsDirectory=coverage/rltl-3.1
+        pnpm --filter @lynx-js/gesture-runtime --filter @lynx-js/use-sync-external-store --filter @lynx-js/motion --filter @lynx-js/testing-environment --filter @lynx-js/testing-library-example-basic --filter @lynx-js/testing-library-example-library --filter @lynx-js/testing-library-example-react-compiler run test --coverage
   coverage-web-elements:
     needs: build-all
     uses: ./.github/workflows/workflow-test.yml
