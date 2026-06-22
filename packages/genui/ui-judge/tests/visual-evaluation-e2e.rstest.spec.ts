@@ -1,8 +1,6 @@
 // Copyright 2026 The Lynx Authors. All rights reserved.
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
-import { readFile } from 'node:fs/promises';
-
 import { afterAll, beforeAll, describe, expect, it } from '@rstest/core';
 
 import { Lynx } from '../../../testing-library/kitten-lynx/src/index.js';
@@ -12,7 +10,6 @@ import type {
 import { runVisualEvaluation } from '../src/index.js';
 import {
   REACT_BUNDLE_NAME,
-  REACT_REFERENCE_SNAPSHOT_PATH,
   captureReactFixtureScreenshot,
   getAndroidDeviceId,
   removeReversedAdbPort,
@@ -83,7 +80,10 @@ describe.skipIf(!RUN_ANDROID_INTEGRATION)(
         }
 
         const templateUrl = fixtureServer.createUrl(REACT_BUNDLE_NAME);
-        const referenceImage = await readFile(REACT_REFERENCE_SNAPSHOT_PATH);
+        const referenceImage = await captureReactFixtureScreenshot(
+          page,
+          templateUrl,
+        );
         const result = await runVisualEvaluation(
           {
             capture: {

@@ -2,7 +2,7 @@
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
 
-import { BASIC_CATALOG } from '../../../agent/a2ui-catalog';
+import { loadBasicCatalog } from '../../../agent/a2ui-catalog';
 import {
   A2UIProtocolMessageStreamParser,
   splitA2UIProtocolMessages,
@@ -141,6 +141,15 @@ export async function POST(req: Request) {
       log(event, details);
     },
   };
+  let catalog: A2UIChatBody['catalog'];
+  try {
+    catalog = opts.catalog ?? await loadBasicCatalog();
+  } catch (err: unknown) {
+    const error = errorMessage(err);
+    log('catalog.load.failed', error);
+    return jsonWithCors(req, { ok: false, error }, { status: 502 });
+  }
+  const optsWithCatalog = { ...opts, catalog };
   const service = getA2UIAgentService();
 
   log('request.accepted', {
@@ -161,7 +170,7 @@ export async function POST(req: Request) {
       : 0,
     model: opts.model,
     hasBaseURL: Boolean(opts.baseURL),
-    catalogId: opts.catalog?.id ?? BASIC_CATALOG.id,
+    catalogId: catalog.id,
     maxRepairAttempts: opts.maxRepairAttempts,
   });
 
@@ -203,7 +212,7 @@ export async function POST(req: Request) {
         log('agent.connect.started');
         const { textStream, finalize } = await service.streamAsAsyncIterable(
           messages,
-          opts,
+          optsWithCatalog,
           validatedConversation.conversation,
         );
         log('agent.connect.completed', {
@@ -306,7 +315,7 @@ export async function POST(req: Request) {
         };
         const v = validateA2UIOutput(
           finalText ?? '',
-          opts.catalog ?? BASIC_CATALOG,
+          catalog,
         );
         let resolvedMessages = v.ok
           ? await resolveMessagesForStreaming(v.messages)
@@ -335,7 +344,7 @@ export async function POST(req: Request) {
             });
             const repaired = await service.generateValidated(
               messages,
-              opts,
+              optsWithCatalog,
               validatedConversation.conversation,
             );
             repair = {
