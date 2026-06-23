@@ -1,7 +1,7 @@
 import { jsx as _jsx } from "@lynx-js/react/jsx-runtime";
 import { Component } from '@lynx-js/react';
-const _et_dd10eca65d68 = "_et_dd10eca65d68";
-const _et_6306a5a2decc = "_et_6306a5a2decc";
+const _et_dd10eca65d68 = `${globDynamicComponentEntry}:${"_et_dd10eca65d68"}`;
+const _et_6306a5a2decc = `${globDynamicComponentEntry}:${"_et_6306a5a2decc"}`;
 export class App extends Component {
     render() {
         const items = [

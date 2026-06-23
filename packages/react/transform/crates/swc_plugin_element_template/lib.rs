@@ -562,10 +562,10 @@ where
     };
     let template_uid = template_identity.template_id.clone();
 
-    let mut entry_template_uid = quote!("$template_uid" as Expr, template_uid: Expr = Expr::Lit(Lit::Str(template_uid.clone().into())));
-    if matches!(self.cfg.is_dynamic_component, Some(true)) {
-      entry_template_uid = quote!("`${globDynamicComponentEntry}:${$template_uid}`" as Expr, template_uid: Expr = Expr::Lit(Lit::Str(template_uid.clone().into())));
-    }
+    // Always keep the `globDynamicComponentEntry` prefix
+    // since __CreateElementTemplate needs to know the bundle URL of lazy
+    // bundle.
+    let entry_template_uid = quote!("`${globDynamicComponentEntry}:${$template_uid}`" as Expr, template_uid: Expr = Expr::Lit(Lit::Str(template_uid.clone().into())));
 
     if is_new_template {
       let entry_template_uid_def = ModuleItem::Stmt(quote!(

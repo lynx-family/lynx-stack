@@ -22,6 +22,7 @@ import type {
   ElementTemplateUpdateCommandStream,
   ElementTemplateUpdateCommitContext,
 } from '../../../../../src/element-template/protocol/types.js';
+import { parseElementTemplateType } from '../../../../../src/element-template/protocol/template-type.js';
 import { parseElementTemplateUpdateEventPayload } from '../../../../../src/element-template/protocol/update-event.js';
 import { clearEtAttrPlanMap } from '../../../../../src/element-template/runtime/template/attr-slot-plan.js';
 import { __root } from '../../../../../src/element-template/runtime/page/root-instance.js';
@@ -78,11 +79,12 @@ function collectRecursiveCreateCommandStream(
       commands.push(...collectRecursiveCreateCommandStream(child));
     }
   }
+  const nativeTemplate = parseElementTemplateType(instance.type);
   commands.push(
     ElementTemplateUpdateOps.createTemplate,
     instance.instanceId,
-    instance.type,
-    null,
+    nativeTemplate.templateKey,
+    nativeTemplate.bundleUrl,
     instance.attributeSlots,
     instance.elementSlots.map(children => (children ?? []).map(child => child.instanceId)),
   );

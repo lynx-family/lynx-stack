@@ -13,7 +13,7 @@ import { backgroundElementTemplateInstanceManager } from './manager.js';
 import { isDirectOrDeepEqual } from '../../utils.js';
 import { hydrationMap } from '../hydration-map.js';
 import { ElementTemplateUpdateOps } from '../protocol/opcodes.js';
-import { elementTemplateIdentityKey } from '../protocol/template-type.js';
+import { elementTemplateIdentityKey, parseElementTemplateType } from '../protocol/template-type.js';
 import type {
   SerializableValue,
   SerializedCompiledNode,
@@ -83,7 +83,14 @@ function hydrateMatchingChildrenAndDiffSlot(
 
   for (let i = 0; i < backgroundChildren.length; i += 1) {
     const backgroundChild = backgroundChildren[i]!;
-    const backgroundKey = backgroundChild.type;
+    // Normalize the background instance's full `${entry}:${key}` type tag to the
+    // same native identity the serialized side uses (sentinel folded to the main
+    // card), so main-card nodes match regardless of the `__Card__` prefix.
+    const parsedBackgroundType = parseElementTemplateType(backgroundChild.type);
+    const backgroundKey = elementTemplateIdentityKey(
+      parsedBackgroundType.templateKey,
+      parsedBackgroundType.bundleUrl,
+    );
     const serializedCandidates = serializedByNodeKey[backgroundKey];
     const candidateCursor = serializedCursorByNodeKey[backgroundKey] ?? 0;
     const matchedSerialized = serializedCandidates?.[candidateCursor];

@@ -3,7 +3,7 @@ source: packages/react/transform/crates/swc_plugin_element_template/tests/elemen
 expression: "serde_json::json!({\n    \"code\": code, \"templates\": template_snapshot_json(&templates),\n})"
 ---
 {
-  "code": "import * as ReactLynxInternal from \"@lynx-js/react/internal\";\nimport * as ReactLynx from \"@lynx-js/react\";\nconst _et_22fa50e6e3b9 = \"_et_22fa50e6e3b9\";\nReactLynxInternal.__etAttrPlanMap[_et_22fa50e6e3b9] = [\n    0,\n    ReactLynxInternal.adaptEventAttrSlot,\n    1,\n    ReactLynxInternal.adaptEventAttrSlot\n];\n<_et_22fa50e6e3b9 attributeSlots={[\n    handleTap,\n    handleTouch\n]}/>;\n",
+  "code": "import * as ReactLynxInternal from \"@lynx-js/react/internal\";\nimport * as ReactLynx from \"@lynx-js/react\";\nconst _et_22fa50e6e3b9 = `${globDynamicComponentEntry}:${\"_et_22fa50e6e3b9\"}`;\nReactLynxInternal.__etAttrPlanMap[_et_22fa50e6e3b9] = [\n    0,\n    ReactLynxInternal.adaptEventAttrSlot,\n    1,\n    ReactLynxInternal.adaptEventAttrSlot\n];\n<_et_22fa50e6e3b9 attributeSlots={[\n    handleTap,\n    handleTouch\n]}/>;\n",
   "templates": [
     {
       "template_id": "_et_22fa50e6e3b9",
