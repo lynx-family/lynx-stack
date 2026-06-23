@@ -8,33 +8,29 @@ describe('Testing Library Port', () => {
   let rootDom: ShadowRoot;
   let mtsGlobalThis: ReturnType<typeof createElementAPI>;
   let mtsBinding: WASMJSBinding;
-  const mockedBackground = rstest.mockObject({
-    publishEvent: rstest.fn(),
-    postTimingFlags: rstest.fn(),
-  });
   beforeEach(() => {
     rstest.resetAllMocks();
     lynxViewDom = document.createElement('div') as unknown as HTMLElement;
     rootDom = lynxViewDom.attachShadow({ mode: 'open' });
 
     mtsBinding = new WASMJSBinding(
-      rstest.mockObject({
+      {
         rootDom,
-        backgroundThread: rstest.mockObject({
+        backgroundThread: {
           publicComponentEvent: rstest.fn(),
           publishEvent: rstest.fn(),
           postTimingFlags: rstest.fn(),
           markTiming: rstest.fn(),
           flushTimingInfo: rstest.fn(),
-          jsContext: rstest.mockObject({
+          jsContext: {
             dispatchEvent: rstest.fn(),
-          }),
-        } as any),
-        exposureServices: rstest.mockObject({
+          },
+        } as any,
+        exposureServices: {
           updateExposureStatus: rstest.fn(),
-        } as any),
+        } as any,
         mainThreadGlobalThis: globalThis as any,
-      }),
+      },
     );
     mtsGlobalThis = createElementAPI(
       rootDom,

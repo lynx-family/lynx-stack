@@ -14,6 +14,9 @@ const config: RstestConfig = defineConfig({
   name: 'web-worker-rpc',
   include: ['test/**/*.test.ts'],
   testTimeout: 10_000,
+  dev: {
+    writeToDisk: true,
+  },
   tools: {
     rspack: {
       module: {

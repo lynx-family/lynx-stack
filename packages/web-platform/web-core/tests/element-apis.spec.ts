@@ -24,23 +24,23 @@ describe('Element APIs', () => {
     rootDom = lynxViewDom.attachShadow({ mode: 'open' });
 
     mtsBinding = new WASMJSBinding(
-      rstest.mockObject({
+      {
         rootDom,
-        backgroundThread: rstest.mockObject({
+        backgroundThread: {
           publicComponentEvent: rstest.fn(),
           publishEvent: rstest.fn(),
           postTimingFlags: rstest.fn(),
           markTiming: rstest.fn(),
           flushTimingInfo: rstest.fn(),
-          jsContext: rstest.mockObject({
+          jsContext: {
             dispatchEvent: rstest.fn(),
-          }),
-        } as any),
-        exposureServices: rstest.mockObject({
+          },
+        } as any,
+        exposureServices: {
           updateExposureStatus: rstest.fn(),
-        }) as any,
-        mainThreadGlobalThis: rstest.mockObject({}) as any,
-      }),
+        } as any,
+        mainThreadGlobalThis: {} as any,
+      },
     );
     mtsGlobalThis = createElementAPI(
       rootDom,

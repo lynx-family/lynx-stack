@@ -17,14 +17,35 @@ import { Worker } from 'node:worker_threads';
 const worker = new Worker(new URL('./worker.js', import.meta.url));
 const privateChannel = new MessageChannel();
 
-const readyPromise = new Promise<void>((resolve) => {
-  const handler = (ev: MessageEvent) => {
+const readyPromise = new Promise<void>((resolve, reject) => {
+  function cleanup() {
+    privateChannel.port1.removeEventListener('message', handleReady);
+    worker.off('error', handleError);
+    worker.off('exit', handleExit);
+  }
+
+  function handleReady(ev: MessageEvent) {
     if (ev.data.type === 'ready') {
-      privateChannel.port1.removeEventListener('message', handler);
+      cleanup();
       resolve();
     }
-  };
-  privateChannel.port1.addEventListener('message', handler);
+  }
+
+  function handleError(error: Error) {
+    cleanup();
+    reject(error);
+  }
+
+  function handleExit(code: number) {
+    if (code !== 0) {
+      cleanup();
+      reject(new Error(`Worker exited before ready with code ${code}`));
+    }
+  }
+
+  worker.once('error', handleError);
+  worker.once('exit', handleExit);
+  privateChannel.port1.addEventListener('message', handleReady);
 });
 const channel = new MessageChannel();
 const rpc = new Rpc(channel.port1, 'main');
@@ -46,10 +67,12 @@ const testLazyFn = rpc.createCall(testLazy);
 const addAsyncWithTransferFn = rpc.createCall(addAsyncWithTransfer);
 const changeLazyHandlerFn = rpc.createCall(changeLazyHandler);
 describe('rpc tests', () => {
-  afterAll(() => {
-    worker.terminate();
+  afterAll(async () => {
+    privateChannel.port1.close();
+    privateChannel.port2.close();
     channel.port1.close();
     channel.port2.close();
+    await worker.terminate();
   });
 
   test('addAsync', async () => {

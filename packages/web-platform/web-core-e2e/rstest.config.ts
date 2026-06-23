@@ -19,7 +19,7 @@ const config: RstestConfig = defineConfig({
     alias: {
       '@lynx-js/web-core/server': path.resolve(
         root,
-        '../web-core/ts/server/index.ts',
+        '../web-core/ts/server/deploy.ts',
       ),
       '@lynx-js/web-core': path.resolve(
         root,

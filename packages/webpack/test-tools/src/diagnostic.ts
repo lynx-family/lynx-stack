@@ -17,6 +17,39 @@ import type { ITestSuite } from './suite.js';
 
 const TARGET = 'node' as const;
 
+function escapeRegExp(str: string): string {
+  return str.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+}
+
+function toPosixPath(filePath: string): string {
+  return filePath.split(path.sep).join('/');
+}
+
+function normalizeRelativeTestRoot(output: string, cwd: string): string {
+  const testRoot = path.resolve(cwd, '..');
+  const candidates = new Set<string>();
+  const relativeTestRoot = toPosixPath(path.relative(process.cwd(), testRoot));
+  if (relativeTestRoot && !relativeTestRoot.startsWith('..')) {
+    candidates.add(relativeTestRoot);
+  }
+
+  const packageRootIndex = toPosixPath(testRoot).lastIndexOf('/packages/');
+  if (packageRootIndex !== -1) {
+    candidates.add(toPosixPath(testRoot).slice(packageRootIndex + 1));
+  }
+
+  for (const candidate of candidates) {
+    output = output.replaceAll(
+      new RegExp(
+        String.raw`(?:\.\.[/\\])+${escapeRegExp(candidate)}[/\\]`,
+        'g',
+      ),
+      '<TEST_ROOT>/',
+    );
+  }
+  return output;
+}
+
 function lynxDefaultOptions(
   context: ITestContext,
   cwd: string,
@@ -100,7 +133,10 @@ function createDiagnosticProcessor(
       // Normalize remaining paths/pnpm-inner/`file://` with the same
       // `normalizePlaceholder` the `toMatchFileSnapshotSync` matcher applies, then
       // collapse line:column.
-      output = normalizePlaceholder(output).replaceAll(
+      output = normalizeRelativeTestRoot(
+        normalizePlaceholder(output),
+        cwd,
+      ).replaceAll(
         /\d+:\d+/g,
         '<LINE:COLUMN>',
       );
