@@ -23,6 +23,7 @@
     },
     "./catalog.json": "./dist/catalog.json",
     "./catalog/catalog.json": "./dist/catalog.json",
+    "./skill": "./skills/lynx-a2ui/SKILL.md",
     "./catalog/utils/chart": {
       "types": "./dist/catalog/utils/chart.d.ts",
       "default": "./dist/catalog/utils/chart.js"
