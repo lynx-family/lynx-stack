@@ -274,6 +274,29 @@ describe('Config - toRsBuildConfig', () => {
       `)
     })
 
+    test('transform entry description with dependencies', () => {
+      const rsbuildConfig = toRsbuildConfig({
+        source: {
+          entry: {
+            main: {
+              dependOn: ['vendor'],
+              import: './src/index.js',
+            },
+          },
+        },
+      })
+      expect(rsbuildConfig.source?.entry).toMatchInlineSnapshot(`
+        {
+          "main": {
+            "dependOn": [
+              "vendor",
+            ],
+            "import": "./src/index.js",
+          },
+        }
+      `)
+    })
+
     test('transform single entry in entry description format without import', () => {
       const rsbuildConfig = toRsbuildConfig({
         source: {

@@ -160,6 +160,30 @@ describe('Config - Tools', () => {
         importLoaders: 2,
       },
     })
+
+    assertType<Tools>({
+      cssLoader: {
+        modules: 'local',
+      },
+    })
+
+    assertType<Tools>({
+      cssLoader: {
+        modules: 'global',
+      },
+    })
+
+    assertType<Tools>({
+      cssLoader: {
+        modules: 'pure',
+      },
+    })
+
+    assertType<Tools>({
+      cssLoader: {
+        modules: 'icss',
+      },
+    })
   })
 
   test('tools.rsdoctor', () => {

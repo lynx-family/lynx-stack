@@ -305,8 +305,13 @@ describe('Config Validation', () => {
           bar: {
             import: ['src'],
           },
+          qux: {
+            import: ['src'],
+            dependOn: ['foo'],
+          },
           baz: {
             publicPath: 'https://example.com/',
+            dependOn: 'foo',
           },
         },
       ]
@@ -2714,6 +2719,12 @@ describe('Config Validation', () => {
         {
           cssLoader: {
             modules: true,
+          },
+        },
+
+        {
+          cssLoader: {
+            modules: 'local',
           },
         },
 

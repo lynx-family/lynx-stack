@@ -20,6 +20,11 @@ export interface EntryDescription {
    */
   import?: string | string[] | undefined
 
+  /**
+   * The entry points that the current entry depends on. They must be loaded before this entry is loaded.
+   */
+  dependOn?: string | string[] | undefined
+
   // TODO(doc): inherit from `output.publicPath`.
   /**
    * This is an important option when using on-demand-loading or loading external resources like images, files, etc. If an incorrect value is specified you'll receive 404 errors while loading these resources.
