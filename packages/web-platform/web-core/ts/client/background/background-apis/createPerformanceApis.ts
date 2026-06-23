@@ -5,6 +5,83 @@
 import type { NativeApp } from '../../../types/index.js';
 import type { TimingSystem } from './createTimingSystem.js';
 
+type ProfileTraceOption = unknown;
+
+interface ProfileTimingContext {
+  traceName: string;
+  startMarkName: string;
+  option?: ProfileTraceOption;
+}
+
+function getUserTimingPerformance(): Performance | undefined {
+  const browserPerformance = globalThis.performance;
+  if (
+    !browserPerformance
+    || typeof browserPerformance.mark !== 'function'
+    || typeof browserPerformance.measure !== 'function'
+  ) {
+    return undefined;
+  }
+  return browserPerformance;
+}
+
+function markUserTiming(
+  markName: string,
+  option?: ProfileTraceOption,
+): boolean {
+  const browserPerformance = getUserTimingPerformance();
+  if (!browserPerformance) {
+    return false;
+  }
+  try {
+    if (option === undefined) {
+      browserPerformance.mark(markName);
+    } else {
+      try {
+        browserPerformance.mark(markName, { detail: option });
+      } catch {
+        browserPerformance.mark(markName);
+      }
+    }
+    return true;
+  } catch {
+    return false;
+  }
+}
+
+function measureUserTiming(
+  traceName: string,
+  startMarkName: string,
+  endMarkName: string,
+  option?: ProfileTraceOption,
+): void {
+  const browserPerformance = getUserTimingPerformance();
+  if (!browserPerformance) {
+    return;
+  }
+  if (option === undefined) {
+    try {
+      browserPerformance.measure(traceName, startMarkName, endMarkName);
+    } catch {
+      // Do nothing.
+    }
+  } else {
+    try {
+      browserPerformance.measure(traceName, {
+        start: startMarkName,
+        end: endMarkName,
+        detail: option,
+      });
+    } catch {
+      try {
+        browserPerformance.measure(traceName, startMarkName, endMarkName);
+      } catch {
+        // Do nothing.
+      }
+    }
+  }
+}
+
 export function createPerformanceApis(timingSystem: TimingSystem): Pick<
   NativeApp,
   | 'generatePipelineOptions'
@@ -18,6 +95,9 @@ export function createPerformanceApis(timingSystem: TimingSystem): Pick<
   | 'isProfileRecording'
 > {
   let inc = 0;
+  let profileFlowIdInc = 0;
+  let profileMarkInc = 0;
+  const profileTimingStack: ProfileTimingContext[] = [];
   const performanceApis = {
     generatePipelineOptions: () => {
       const newPipelineId = `_pipeline_` + (inc++);
@@ -45,22 +125,53 @@ export function createPerformanceApis(timingSystem: TimingSystem): Pick<
       const timingFlags = timingSystem.pipelineIdToTimingFlags.get(pipelineId)!;
       timingFlags.push(timingFlag);
     },
-    profileStart: () => {
-      console.error('NYI: profileStart. This is an issue of lynx-core.');
+    profileStart: (
+      traceName: string,
+      option?: ProfileTraceOption,
+    ): void => {
+      const id = profileMarkInc++;
+      const startMarkName = `lynx.profile:${id}:start:${traceName}`;
+      if (markUserTiming(startMarkName, option)) {
+        profileTimingStack.push({ traceName, startMarkName, option });
+      }
     },
-    profileEnd: () => {
-      console.error('NYI: profileEnd. This is an issue of lynx-core.');
+    profileEnd: (): void => {
+      const profileTimingContext = profileTimingStack.pop();
+      if (!profileTimingContext) {
+        return;
+      }
+
+      const id = profileMarkInc++;
+      const endMarkName =
+        `lynx.profile:${id}:end:${profileTimingContext.traceName}`;
+      if (!markUserTiming(endMarkName, profileTimingContext.option)) {
+        getUserTimingPerformance()?.clearMarks?.(
+          profileTimingContext.startMarkName,
+        );
+        return;
+      }
+      measureUserTiming(
+        profileTimingContext.traceName,
+        profileTimingContext.startMarkName,
+        endMarkName,
+        profileTimingContext.option,
+      );
+
+      const browserPerformance = getUserTimingPerformance();
+      browserPerformance?.clearMarks?.(profileTimingContext.startMarkName);
+      browserPerformance?.clearMarks?.(endMarkName);
     },
-    profileMark: () => {
-      console.error('NYI: profileMark. This is an issue of lynx-core.');
+    profileMark: (
+      traceName: string,
+      option?: ProfileTraceOption,
+    ): void => {
+      markUserTiming(traceName, option);
     },
-    profileFlowId: () => {
-      console.error('NYI: profileFlowId. This is an issue of lynx-core.');
-      return 0;
+    profileFlowId: (): number => {
+      return ++profileFlowIdInc;
     },
-    isProfileRecording: () => {
-      console.error('NYI: isProfileRecording. This is an issue of lynx-core.');
-      return false;
+    isProfileRecording: (): boolean => {
+      return getUserTimingPerformance() !== undefined;
     },
   };
   return performanceApis;

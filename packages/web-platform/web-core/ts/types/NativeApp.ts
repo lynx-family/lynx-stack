@@ -166,7 +166,7 @@ export interface NativeApp {
   /***
    * Support from Lynx 3.0
    */
-  profileMark: () => void;
+  profileMark: (traceName: string, option?: unknown) => void;
 
   /**
    * Support from Lynx 3.0
