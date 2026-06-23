@@ -30,6 +30,10 @@
       "types": "./a2ui/dist/store/index.d.ts",
       "default": "./a2ui/dist/store/index.js"
     },
+    "./a2ui/snapshot": {
+      "types": "./a2ui/dist/snapshot/index.d.ts",
+      "default": "./a2ui/dist/snapshot/index.js"
+    },
     "./a2ui/catalog": {
       "types": "./a2ui/dist/catalog/index.d.ts",
       "default": "./a2ui/dist/catalog/index.js"
