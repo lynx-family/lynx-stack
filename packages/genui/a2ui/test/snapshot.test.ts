@@ -317,6 +317,57 @@ describe('compactA2UIMessagesToSnapshot', () => {
     expect(dataPaths(result)).toEqual(['/items/0/name', '/items/1/name']);
   });
 
+  test('normalizes root-bound dynamic children data contexts', () => {
+    const result = compactA2UIMessagesToSnapshot([
+      {
+        version: 'v0.9',
+        createSurface: { surfaceId: 's1', catalogId: 'test' },
+      },
+      {
+        version: 'v0.9',
+        updateComponents: {
+          surfaceId: 's1',
+          components: [
+            {
+              id: 'root',
+              component: 'Column',
+              children: { componentId: 'item', path: '/' },
+            },
+            { id: 'item', component: 'Text', text: { path: 'name' } },
+          ],
+        },
+      },
+      {
+        version: 'v0.9',
+        updateDataModel: {
+          surfaceId: 's1',
+          value: [{ name: 'Alpha' }, { name: 'Beta' }],
+        },
+      },
+    ] as ServerToClientMessage[]);
+
+    expect(components(result)).toEqual([
+      {
+        id: 'root',
+        component: 'Column',
+        children: ['item:0', 'item:1'],
+      },
+      {
+        id: 'item:0',
+        component: 'Text',
+        text: { path: 'name' },
+        dataContextPath: '/0',
+      },
+      {
+        id: 'item:1',
+        component: 'Text',
+        text: { path: 'name' },
+        dataContextPath: '/1',
+      },
+    ]);
+    expect(dataPaths(result)).toEqual(['/0/name', '/1/name']);
+  });
+
   test('drops stale dynamic children when the final data is empty', () => {
     const result = compactA2UIMessagesToSnapshot([
       {

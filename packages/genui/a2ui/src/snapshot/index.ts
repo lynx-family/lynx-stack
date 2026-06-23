@@ -79,6 +79,17 @@ function resolveBindingPath(path: string, dataContextPath?: string): string {
   return context ? `${context}/${bindingPath}` : `/${bindingPath}`;
 }
 
+function joinDataContextPath(
+  basePath: string,
+  segment: string | number,
+): string {
+  const normalizedBase = normalizePath(basePath);
+  const base = normalizedBase === '/'
+    ? ''
+    : normalizedBase.replace(/\/+$/, '');
+  return `${base}/${segment}`;
+}
+
 function flattenValue(
   value: unknown,
   basePath: string,
@@ -621,7 +632,7 @@ class A2UISnapshotMachine {
             surface,
             template.componentId,
             `:${index}`,
-            `${template.path}/${index}`,
+            joinDataContextPath(template.path, index),
           );
           if (clonedId) explicitChildren.push(clonedId);
         });
@@ -631,7 +642,7 @@ class A2UISnapshotMachine {
             surface,
             template.componentId,
             `:${key}`,
-            `${template.path}/${key}`,
+            joinDataContextPath(template.path, key),
           );
           if (clonedId) explicitChildren.push(clonedId);
         }
