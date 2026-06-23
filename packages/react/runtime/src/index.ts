@@ -5,7 +5,6 @@
 import './runtime-backend-marker.js';
 import './lynx.js';
 import {
-  Children,
   Component,
   Fragment,
   PureComponent,
@@ -32,9 +31,12 @@ import {
   useRef,
   useState,
 } from './core/hooks/react.js';
+import { Children } from './snapshot/lynx/children.js';
 import { createElement } from './snapshot/lynx/element.js';
 import { createPortal } from './snapshot/lynx/portals.js';
 import { Suspense } from './snapshot/lynx/suspense.js';
+
+export type { ReactLynxChildren } from './snapshot/lynx/children.js';
 
 installComponentCompat();
 

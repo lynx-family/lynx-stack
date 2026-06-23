@@ -672,7 +672,7 @@ importers:
         specifier: 0.9.1
         version: 0.9.1
       '@lynx-js/lynx-ui':
-        specifier: ^3.133.0
+        specifier: '>=3.133.0'
         version: 3.133.0(@lynx-js/react@packages+react)(@lynx-js/types@3.7.0)(@types/react@19.2.14)(react-dom@19.2.4(react@19.2.5))(react@19.2.5)
       '@openuidev/lang-core':
         specifier: ^0.2.5
