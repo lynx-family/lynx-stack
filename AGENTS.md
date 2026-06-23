@@ -59,6 +59,8 @@ pnpm eslint .
 pnpm eslint --fix .
 ```
 
+When editing `Cargo.toml`, especially workspace `members` or shared dependency lists, run `pnpm dprint fmt Cargo.toml`; dprint enforces TOML ordering and will fail CI if entries are left unsorted.
+
 ### 4. Testing
 
 ```bash

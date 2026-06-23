@@ -2,11 +2,11 @@
 resolver = "2"
 
 members = [
+  "packages/genui/ui-judge",
   "packages/react/transform",
   "packages/react/transform/crates/*",
   "packages/react/transform/swc-plugin-reactlynx",
   "packages/react/transform/swc-plugin-reactlynx-compat",
-  "packages/genui/ui-judge",
   "packages/web-platform/web-core",
   "packages/web-platform/web-elements",
 ]
