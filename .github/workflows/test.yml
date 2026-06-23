@@ -319,14 +319,10 @@ jobs:
     uses: ./.github/workflows/workflow-test.yml
     secrets:
       CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
-      MIDSCENE_MODEL_API_KEY: ${{ secrets.MIDSCENE_MODEL_API_KEY }}
-      MIDSCENE_MODEL_BASE_URL: ${{ secrets.MIDSCENE_MODEL_BASE_URL }}
-      MIDSCENE_MODEL_FAMILY: ${{ secrets.MIDSCENE_MODEL_FAMILY }}
-      MIDSCENE_MODEL_NAME: ${{ secrets.MIDSCENE_MODEL_NAME }}
-      MIDSCENE_OPENAI_INIT_CONFIG_JSON: ${{ secrets.MIDSCENE_OPENAI_INIT_CONFIG_JSON }}
-    name: Kitten Lynx Android Emulator Test
+    name: UI Judge Rust Android Emulator Test
     with:
       runs-on: lynx-ubuntu-22.04-physical-medium
+      upload-codecov: false
       run: |
         # 4. Start Emulator
         echo "Starting emulator..."
@@ -373,13 +369,8 @@ jobs:
         done
         echo "Lynx Explorer is running."
 
-        # 8. Run the tests
-        pnpm --filter @lynx-js/kitten-lynx-test-infra run test --coverage --reporter=github-actions --reporter=dot --reporter=junit --outputFile=test-report.junit.xml --coverage.reporter='json' --coverage.reporter='text' --testTimeout=50000 --no-cache --logHeapUsage --silent
-        if [ -z "${MIDSCENE_MODEL_NAME:-}" ] || [ -z "${MIDSCENE_MODEL_API_KEY:-}" ]; then
-          echo "Midscene secrets are unavailable; skipping UI Judge Android integration."
-        else
-          UI_JUDGE_ANDROID_INTEGRATION=1 pnpm --filter @lynx-js/ui-judge run test:android --coverage --reporter=github-actions --reporter=dot --reporter=junit --outputFile=ui-judge-android-test-report.junit.xml --coverage.reporter='json' --coverage.reporter='text' --testTimeout=50000 --no-cache --logHeapUsage --silent
-        fi
+        # 8. Run the Rust Android integration tests
+        cargo test -p ui_judge --test android_e2e -- --ignored --test-threads=1
 
   test-typos:
     runs-on: lynx-ubuntu-24.04-medium
