@@ -2,16 +2,48 @@
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
 
-import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
+import {
+  afterEach,
+  beforeEach,
+  describe,
+  expect,
+  rstest,
+  test,
+} from '@rstest/core';
 import { createPerformanceApis } from '../ts/client/background/background-apis/createPerformanceApis.js';
+import { createMainThreadLynxPerformance } from '../ts/client/mainthread/createMainThreadLynxPerformance.js';
 import type { TimingSystem } from '../ts/client/background/background-apis/createTimingSystem.js';
+
+const originalPerformanceDescriptor = Object.getOwnPropertyDescriptor(
+  globalThis,
+  'performance',
+);
 
 function createTimingSystemMock(): TimingSystem {
   return {
-    markTimingInternal: vi.fn(),
+    markTimingInternal: rstest.fn(),
     pipelineIdToTimingFlags: new Map(),
-    registerGlobalEmitter: vi.fn(),
+    registerGlobalEmitter: rstest.fn(),
   };
+}
+
+function stubGlobalPerformance(performance: unknown): void {
+  Object.defineProperty(globalThis, 'performance', {
+    configurable: true,
+    value: performance,
+  });
+}
+
+function restoreGlobalPerformance(): void {
+  if (originalPerformanceDescriptor) {
+    Object.defineProperty(
+      globalThis,
+      'performance',
+      originalPerformanceDescriptor,
+    );
+  } else {
+    delete (globalThis as { performance?: Performance }).performance;
+  }
 }
 
 function clearUserTimingEntries(): void {
@@ -25,7 +57,7 @@ describe('createPerformanceApis', () => {
   });
 
   afterEach(() => {
-    vi.unstubAllGlobals();
+    restoreGlobalPerformance();
     clearUserTimingEntries();
   });
 
@@ -87,7 +119,7 @@ describe('createPerformanceApis', () => {
   });
 
   test('degrades to no-op profiling when User Timing is unavailable', () => {
-    vi.stubGlobal('performance', {});
+    stubGlobalPerformance({});
     const performanceApis = createPerformanceApis(createTimingSystemMock());
 
     expect(performanceApis.isProfileRecording()).toBe(false);
@@ -97,5 +129,32 @@ describe('createPerformanceApis', () => {
       performanceApis.profileMark('ReactLynx::mark');
       performanceApis.profileEnd();
     }).not.toThrow();
+  });
+});
+
+describe('main-thread lynx.performance', () => {
+  beforeEach(() => {
+    clearUserTimingEntries();
+  });
+
+  afterEach(() => {
+    clearUserTimingEntries();
+  });
+
+  test('exposes profile and timing APIs to lifecycle handlers', () => {
+    const markTiming = rstest.fn();
+    const performanceApis = createMainThreadLynxPerformance(markTiming);
+
+    expect(performanceApis.profileFlowId()).toBe(1);
+    expect(() => {
+      performanceApis.profileStart('ReactLynx::patch');
+      performanceApis.profileEnd();
+    }).not.toThrow();
+
+    performanceApis._markTiming('pipeline-1', 'patchChangesStart');
+    expect(markTiming).toHaveBeenCalledWith(
+      'patchChangesStart',
+      'pipeline-1',
+    );
   });
 });

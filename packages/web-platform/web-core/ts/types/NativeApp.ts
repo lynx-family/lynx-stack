@@ -43,6 +43,24 @@ export type NativeLynx = {
   getCustomSection(key: string): Promise<CloneableObject>;
 };
 
+export type LynxPerformance = {
+  _generatePipelineOptions: () => PerformancePipelineOptions;
+  _onPipelineStart: (
+    pipeline_id: string,
+    options?: PerformancePipelineOptions & Record<string, unknown>,
+  ) => void;
+  _bindPipelineIdWithTimingFlag: (
+    pipeline_id: string,
+    timing_flag: string,
+  ) => void;
+  _markTiming: (pipeline_id: string, timing_key: string) => void;
+  profileStart: (traceName: string, option?: unknown) => void;
+  profileEnd: () => void;
+  profileMark: (traceName: string, option?: unknown) => void;
+  profileFlowId: () => number;
+  isProfileRecording: () => boolean;
+};
+
 export type NativeTTObject = {
   lynx: NativeLynx;
   OnLifecycleEvent: (...args: unknown[]) => void;
