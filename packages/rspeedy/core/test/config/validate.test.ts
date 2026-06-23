@@ -2730,6 +2730,24 @@ describe('Config Validation', () => {
 
         {
           cssLoader: {
+            modules: 'global',
+          },
+        },
+
+        {
+          cssLoader: {
+            modules: 'pure',
+          },
+        },
+
+        {
+          cssLoader: {
+            modules: 'icss',
+          },
+        },
+
+        {
+          cssLoader: {
             modules: {
               auto: true,
             },
