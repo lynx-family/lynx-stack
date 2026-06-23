@@ -26,7 +26,7 @@ const config: RstestConfig = defineConfig({
           {
             resource: path.join(root, 'ts/client/wasm.ts'),
             use: [
-              path.join(root, 'tests/loaders/debug-wasm-loader.cjs'),
+              path.join(root, 'tests/loaders/debug-wasm-loader.mjs'),
             ],
           },
           {
@@ -34,7 +34,7 @@ const config: RstestConfig = defineConfig({
             resourceQuery: /inline/,
             type: 'javascript/auto',
             use: [
-              path.join(root, 'tests/loaders/in-shadow-css-loader.cjs'),
+              path.join(root, 'tests/loaders/in-shadow-css-loader.mjs'),
             ],
           },
         ],
