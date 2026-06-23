@@ -1,4 +1,6 @@
 import { afterAll, describe, test, expect } from '@rstest/core';
+import { MessageChannel, Worker } from 'node:worker_threads';
+
 import { Rpc } from '../src/index.js';
 import {
   addAsync,
@@ -12,7 +14,6 @@ import {
   changeLazyHandler,
   callbackifyEndpoint,
 } from './endpoints';
-import { Worker } from 'node:worker_threads';
 
 const worker = new Worker(new URL('./worker.js', import.meta.url));
 const privateChannel = new MessageChannel();
@@ -37,10 +38,8 @@ const readyPromise = new Promise<void>((resolve, reject) => {
   }
 
   function handleExit(code: number) {
-    if (code !== 0) {
-      cleanup();
-      reject(new Error(`Worker exited before ready with code ${code}`));
-    }
+    cleanup();
+    reject(new Error(`Worker exited before ready with code ${code}`));
   }
 
   worker.once('error', handleError);

@@ -33,9 +33,12 @@ function normalizeRelativeTestRoot(output: string, cwd: string): string {
     candidates.add(relativeTestRoot);
   }
 
-  const packageRootIndex = toPosixPath(testRoot).lastIndexOf('/packages/');
-  if (packageRootIndex !== -1) {
-    candidates.add(toPosixPath(testRoot).slice(packageRootIndex + 1));
+  const absoluteTestRoot = toPosixPath(testRoot);
+  const packageRelativeTestRoot = absoluteTestRoot.match(
+    /(?:^|\/)(packages\/.+)$/,
+  )?.[1];
+  if (packageRelativeTestRoot) {
+    candidates.add(packageRelativeTestRoot);
   }
 
   for (const candidate of candidates) {

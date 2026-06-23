@@ -1,7 +1,11 @@
 import './jsdom.js';
 import { describe, test, expect, beforeEach, rstest } from '@rstest/core';
 import { createElementAPI } from '../ts/client/mainthread/elementAPIs/createElementAPI.js';
-import { WASMJSBinding } from '../ts/client/mainthread/elementAPIs/WASMJSBinding.js';
+import {
+  WASMJSBinding,
+  type WASMJSBindingInjectedHandler,
+} from '../ts/client/mainthread/elementAPIs/WASMJSBinding.js';
+import { createTestLynxViewInstance } from './createTestLynxViewInstance.js';
 
 describe('Testing Library Port', () => {
   let lynxViewDom: HTMLElement;
@@ -14,27 +18,14 @@ describe('Testing Library Port', () => {
     rootDom = lynxViewDom.attachShadow({ mode: 'open' });
 
     mtsBinding = new WASMJSBinding(
-      {
+      createTestLynxViewInstance(
         rootDom,
-        backgroundThread: {
-          publicComponentEvent: rstest.fn(),
-          publishEvent: rstest.fn(),
-          postTimingFlags: rstest.fn(),
-          markTiming: rstest.fn(),
-          flushTimingInfo: rstest.fn(),
-          jsContext: {
-            dispatchEvent: rstest.fn(),
-          },
-        } as any,
-        exposureServices: {
-          updateExposureStatus: rstest.fn(),
-        } as any,
-        mainThreadGlobalThis: globalThis as any,
-      },
+        globalThis as WASMJSBindingInjectedHandler['mainThreadGlobalThis'],
+      ),
     );
     mtsGlobalThis = createElementAPI(
       rootDom,
-      mtsBinding as any,
+      mtsBinding,
       true,
       true,
       true,

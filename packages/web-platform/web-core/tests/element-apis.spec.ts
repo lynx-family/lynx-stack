@@ -1,8 +1,14 @@
 import './jsdom.js';
-import { describe, test, expect, beforeEach, beforeAll } from '@rstest/core';
+import {
+  beforeAll,
+  beforeEach,
+  describe,
+  expect,
+  rstest,
+  test,
+} from '@rstest/core';
 import { createElementAPI } from '../ts/client/mainthread/elementAPIs/createElementAPI.js';
 import { WASMJSBinding } from '../ts/client/mainthread/elementAPIs/WASMJSBinding.js';
-import { rstest } from '@rstest/core';
 import { cssIdAttribute, lynxEntryNameAttribute } from '../ts/constants.js';
 import {
   createElementAPI as createServerElementAPI,
@@ -12,6 +18,7 @@ import { wasmInstance } from '../ts/client/wasm.js';
 import { encodeCSS } from '../ts/encode/encodeCSS.js';
 import { createMainThreadGlobalAPIs } from '../ts/client/mainthread/createMainThreadGlobalAPIs.js';
 import type { LynxViewInstance } from '../ts/client/mainthread/LynxViewInstance.js';
+import { createTestLynxViewInstance } from './createTestLynxViewInstance.js';
 
 describe('Element APIs', () => {
   let lynxViewDom: HTMLElement;
@@ -23,25 +30,7 @@ describe('Element APIs', () => {
     lynxViewDom = document.createElement('div') as unknown as HTMLElement;
     rootDom = lynxViewDom.attachShadow({ mode: 'open' });
 
-    mtsBinding = new WASMJSBinding(
-      {
-        rootDom,
-        backgroundThread: {
-          publicComponentEvent: rstest.fn(),
-          publishEvent: rstest.fn(),
-          postTimingFlags: rstest.fn(),
-          markTiming: rstest.fn(),
-          flushTimingInfo: rstest.fn(),
-          jsContext: {
-            dispatchEvent: rstest.fn(),
-          },
-        } as any,
-        exposureServices: {
-          updateExposureStatus: rstest.fn(),
-        } as any,
-        mainThreadGlobalThis: {} as any,
-      },
-    );
+    mtsBinding = new WASMJSBinding(createTestLynxViewInstance(rootDom));
     mtsGlobalThis = createElementAPI(
       rootDom,
       mtsBinding,
