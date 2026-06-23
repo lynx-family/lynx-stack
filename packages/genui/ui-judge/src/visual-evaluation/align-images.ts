@@ -15,8 +15,8 @@ const DEFAULT_ALIGN_OPTIONS = {
 } satisfies Required<Omit<VisualEvaluationAlignOptions, 'targetWidth'>>;
 
 export interface AlignImagesOptions extends VisualEvaluationAlignOptions {
-  outputAlignedDevicePath: string;
   outputAlignedReferencePath: string;
+  outputAlignedRenderedPath: string;
 }
 
 interface RawGrayImage {
@@ -35,21 +35,21 @@ interface CandidateScore {
 
 export async function alignImages(
   referencePath: string,
-  devicePath: string,
+  renderedPath: string,
   options: AlignImagesOptions,
 ): Promise<AlignResult | null> {
   const referenceMetadata = await sharp(referencePath).metadata();
-  const deviceMetadata = await sharp(devicePath).metadata();
+  const renderedMetadata = await sharp(renderedPath).metadata();
   const referenceWidth = referenceMetadata.width ?? 0;
-  const deviceWidth = deviceMetadata.width ?? 0;
+  const renderedWidth = renderedMetadata.width ?? 0;
 
-  if (referenceWidth <= 0 || deviceWidth <= 0) {
+  if (referenceWidth <= 0 || renderedWidth <= 0) {
     return null;
   }
 
   const targetWidth = Math.max(
     1,
-    Math.round(options.targetWidth ?? Math.min(referenceWidth, deviceWidth)),
+    Math.round(options.targetWidth ?? Math.min(referenceWidth, renderedWidth)),
   );
   const downsampleWidth = Math.max(
     1,
@@ -61,13 +61,13 @@ export async function alignImages(
     ),
   );
 
-  const [resizedReference, resizedDevice] = await Promise.all([
+  const [resizedReference, resizedRendered] = await Promise.all([
     resizeToWidth(referencePath, targetWidth),
-    resizeToWidth(devicePath, targetWidth),
+    resizeToWidth(renderedPath, targetWidth),
   ]);
-  const [downsampledReference, downsampledDevice] = await Promise.all([
+  const [downsampledReference, downsampledRendered] = await Promise.all([
     toGrayImage(resizedReference.buffer, downsampleWidth),
-    toGrayImage(resizedDevice.buffer, downsampleWidth),
+    toGrayImage(resizedRendered.buffer, downsampleWidth),
   ]);
 
   const windowY = selectHighVarianceWindow(
@@ -81,7 +81,7 @@ export async function alignImages(
   );
   const bestCandidate = findBestOffset(
     downsampledReference,
-    downsampledDevice,
+    downsampledRendered,
     windowY,
     windowHeight,
     Math.round(
@@ -110,7 +110,7 @@ export async function alignImages(
     targetWidth,
     resizedReference.height,
     targetWidth,
-    resizedDevice.height,
+    resizedRendered.height,
     dx,
     dy,
   );
@@ -129,15 +129,15 @@ export async function alignImages(
       })
       .png()
       .toFile(options.outputAlignedReferencePath),
-    sharp(resizedDevice.buffer)
+    sharp(resizedRendered.buffer)
       .extract({
         height: crop.height,
-        left: crop.deviceX,
-        top: crop.deviceY,
+        left: crop.renderedX,
+        top: crop.renderedY,
         width: crop.width,
       })
       .png()
-      .toFile(options.outputAlignedDevicePath),
+      .toFile(options.outputAlignedRenderedPath),
   ]);
 
   return {
@@ -150,7 +150,7 @@ export async function alignImages(
     dx,
     dy,
     resizedHeight1: resizedReference.height,
-    resizedHeight2: resizedDevice.height,
+    resizedHeight2: resizedRendered.height,
     resizedWidth: targetWidth,
     score: bestCandidate.score,
   };
@@ -243,7 +243,7 @@ function getWindowVariance(
 
 function findBestOffset(
   reference: RawGrayImage,
-  device: RawGrayImage,
+  rendered: RawGrayImage,
   windowY: number,
   windowHeight: number,
   maxDx: number,
@@ -252,17 +252,17 @@ function findBestOffset(
   let best: CandidateScore | undefined;
 
   for (let dy = -maxDy; dy <= maxDy; dy++) {
-    const deviceY = windowY + dy;
-    if (deviceY < 0 || deviceY + windowHeight > device.height) {
+    const renderedY = windowY + dy;
+    if (renderedY < 0 || renderedY + windowHeight > rendered.height) {
       continue;
     }
 
     for (let dx = -maxDx; dx <= maxDx; dx++) {
       const score = getNormalizedCrossCorrelation(
         reference,
-        device,
+        rendered,
         windowY,
-        deviceY,
+        renderedY,
         windowHeight,
         dx,
       );
@@ -277,25 +277,28 @@ function findBestOffset(
 
 function getNormalizedCrossCorrelation(
   reference: RawGrayImage,
-  device: RawGrayImage,
+  rendered: RawGrayImage,
   referenceY: number,
-  deviceY: number,
+  renderedY: number,
   windowHeight: number,
   dx: number,
 ): number {
   const referenceX = Math.max(0, -dx);
-  const deviceX = Math.max(0, dx);
-  const width = Math.min(reference.width - referenceX, device.width - deviceX);
+  const renderedX = Math.max(0, dx);
+  const width = Math.min(
+    reference.width - referenceX,
+    rendered.width - renderedX,
+  );
   if (width <= 0) return Number.NEGATIVE_INFINITY;
 
   let referenceSum = 0;
-  let deviceSum = 0;
+  let renderedSum = 0;
   let count = 0;
 
   for (let y = 0; y < windowHeight; y++) {
     for (let x = 0; x < width; x++) {
       referenceSum += getGrayPixel(reference, referenceX + x, referenceY + y);
-      deviceSum += getGrayPixel(device, deviceX + x, deviceY + y);
+      renderedSum += getGrayPixel(rendered, renderedX + x, renderedY + y);
       count++;
     }
   }
@@ -303,10 +306,10 @@ function getNormalizedCrossCorrelation(
   if (count === 0) return Number.NEGATIVE_INFINITY;
 
   const referenceMean = referenceSum / count;
-  const deviceMean = deviceSum / count;
+  const renderedMean = renderedSum / count;
   let covariance = 0;
   let referenceVariance = 0;
-  let deviceVariance = 0;
+  let renderedVariance = 0;
 
   for (let y = 0; y < windowHeight; y++) {
     for (let x = 0; x < width; x++) {
@@ -315,45 +318,51 @@ function getNormalizedCrossCorrelation(
         referenceX + x,
         referenceY + y,
       ) - referenceMean;
-      const deviceDelta = getGrayPixel(device, deviceX + x, deviceY + y)
-        - deviceMean;
-      covariance += referenceDelta * deviceDelta;
+      const renderedDelta = getGrayPixel(
+        rendered,
+        renderedX + x,
+        renderedY + y,
+      ) - renderedMean;
+      covariance += referenceDelta * renderedDelta;
       referenceVariance += referenceDelta * referenceDelta;
-      deviceVariance += deviceDelta * deviceDelta;
+      renderedVariance += renderedDelta * renderedDelta;
     }
   }
 
-  const denominator = Math.sqrt(referenceVariance * deviceVariance);
+  const denominator = Math.sqrt(referenceVariance * renderedVariance);
   return denominator === 0 ? 0 : covariance / denominator;
 }
 
 function getOverlapCrop(
   referenceWidth: number,
   referenceHeight: number,
-  deviceWidth: number,
-  deviceHeight: number,
+  renderedWidth: number,
+  renderedHeight: number,
   dx: number,
   dy: number,
 ): {
-  deviceX: number;
-  deviceY: number;
   height: number;
   referenceX: number;
   referenceY: number;
+  renderedX: number;
+  renderedY: number;
   width: number;
 } {
   const referenceX = Math.max(0, -dx);
-  const deviceX = Math.max(0, dx);
+  const renderedX = Math.max(0, dx);
   const referenceY = Math.max(0, -dy);
-  const deviceY = Math.max(0, dy);
+  const renderedY = Math.max(0, dy);
 
   return {
-    deviceX,
-    deviceY,
-    height: Math.min(referenceHeight - referenceY, deviceHeight - deviceY),
+    height: Math.min(
+      referenceHeight - referenceY,
+      renderedHeight - renderedY,
+    ),
     referenceX,
     referenceY,
-    width: Math.min(referenceWidth - referenceX, deviceWidth - deviceX),
+    renderedX,
+    renderedY,
+    width: Math.min(referenceWidth - referenceX, renderedWidth - renderedX),
   };
 }
 

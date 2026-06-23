@@ -181,18 +181,16 @@ impl Page {
     let root_node_id = self
       .root_node_id
       .ok_or_else(|| Error::Protocol("page has no root node; call goto first".into()))?;
-    let result: QuerySelectorResult = self
-      .connector
-      .send_cdp(
-        self.client_port,
-        session_id,
-        "DOM.querySelector",
-        json!({ "nodeId": root_node_id, "selector": selector }),
-      )
-      .await?;
+    let mut result = self.query_selector(session_id, root_node_id, selector).await?;
 
     if result.node_id == -1 {
-      return Ok(None);
+      let refreshed_root_node_id = self.current_root_node_id(session_id).await?;
+      result = self
+        .query_selector(session_id, refreshed_root_node_id, selector)
+        .await?;
+      if result.node_id == -1 {
+        return Ok(None);
+      }
     }
 
     Ok(Some(Element {
@@ -201,6 +199,43 @@ impl Page {
       session_id,
       node_id: result.node_id,
     }))
+  }
+
+  async fn query_selector(
+    &self,
+    session_id: i64,
+    root_node_id: i64,
+    selector: &str,
+  ) -> Result<QuerySelectorResult> {
+    self
+      .connector
+      .send_cdp(
+        self.client_port,
+        session_id,
+        "DOM.querySelector",
+        json!({ "nodeId": root_node_id, "selector": selector }),
+      )
+      .await
+  }
+
+  async fn current_root_node_id(&self, session_id: i64) -> Result<i64> {
+    let document: GetDocumentResult = self
+      .connector
+      .send_cdp(
+        self.client_port,
+        session_id,
+        "DOM.getDocument",
+        json!({ "depth": -1 }),
+      )
+      .await?;
+    Ok(
+      document
+        .root
+        .children
+        .first()
+        .unwrap_or(&document.root)
+        .node_id,
+    )
   }
 
   pub async fn content(&self) -> Result<String> {
@@ -291,9 +326,6 @@ impl Page {
       }
 
       fallback_match = matches.into_iter().max_by_key(|session| session.session_id);
-      if fallback_match.is_some() {
-        return fallback_match;
-      }
     }
 
     fallback_match

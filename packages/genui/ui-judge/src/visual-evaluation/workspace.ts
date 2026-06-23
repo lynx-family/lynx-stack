@@ -6,11 +6,11 @@ import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 
 export interface VisualEvaluationWorkspace {
-  alignedDevicePath: string;
   alignedReferencePath: string;
-  devicePath: string;
+  alignedRenderedPath: string;
   diffPath: string;
   referencePath: string;
+  renderedPath: string;
   root: string;
 }
 
@@ -19,11 +19,11 @@ export async function createVisualEvaluationWorkspace(): Promise<
 > {
   const root = await mkdtemp(join(tmpdir(), 'visual-evaluation-'));
   return {
-    alignedDevicePath: join(root, 'device.aligned.png'),
     alignedReferencePath: join(root, 'reference.aligned.png'),
-    devicePath: join(root, 'device.png'),
+    alignedRenderedPath: join(root, 'rendered.aligned.png'),
     diffPath: join(root, 'diff.png'),
     referencePath: join(root, 'reference.png'),
+    renderedPath: join(root, 'rendered.png'),
     root,
   };
 }
@@ -31,11 +31,11 @@ export async function createVisualEvaluationWorkspace(): Promise<
 export async function writeInputImages(
   workspace: VisualEvaluationWorkspace,
   referenceBuffer: Buffer,
-  deviceBuffer: Buffer,
+  renderedBuffer: Buffer,
 ): Promise<void> {
   await Promise.all([
     writeFile(workspace.referencePath, referenceBuffer),
-    writeFile(workspace.devicePath, deviceBuffer),
+    writeFile(workspace.renderedPath, renderedBuffer),
   ]);
 }
 

@@ -4,7 +4,6 @@
 import { createVisualEvaluationError } from './errors.js';
 import type {
   VisualEvaluationAlignOptions,
-  VisualEvaluationCaptureRequestOptions,
   VisualEvaluationCompareOptions,
   VisualEvaluationRequest,
 } from './types.js';
@@ -24,24 +23,15 @@ export function validateVisualEvaluationRequest(
     body['referenceImage'],
     'referenceImage',
   );
-  const templateUrl = normalizeRequiredString(
-    body['templateUrl'],
-    'templateUrl',
+  const renderedImage = normalizeRequiredString(
+    body['renderedImage'],
+    'renderedImage',
   );
 
   const request: VisualEvaluationRequest = {
     referenceImage,
-    templateUrl,
+    renderedImage,
   };
-
-  const traceId = normalizeOptionalString(body['traceId'], 'traceId');
-  if (traceId !== undefined) {
-    request.traceId = traceId;
-  }
-
-  if (body['capture'] !== undefined) {
-    request.capture = validateCaptureOptions(body['capture']);
-  }
 
   if (body['alignOptions'] !== undefined) {
     request.alignOptions = validateAlignOptions(body['alignOptions']);
@@ -52,40 +42,6 @@ export function validateVisualEvaluationRequest(
   }
 
   return request;
-}
-
-function validateCaptureOptions(
-  value: unknown,
-): VisualEvaluationCaptureRequestOptions {
-  const options = normalizeOptionsObject(value, 'capture');
-  const capture: VisualEvaluationCaptureRequestOptions = {};
-
-  if (options['maxRetry'] !== undefined) {
-    capture.maxRetry = normalizeFiniteInteger(
-      options['maxRetry'],
-      'capture.maxRetry',
-      (number) => number > 0,
-      'greater than 0',
-    );
-  }
-
-  if (options['waitTimeMs'] !== undefined) {
-    capture.waitTimeMs = normalizeFiniteInteger(
-      options['waitTimeMs'],
-      'capture.waitTimeMs',
-      (number) => number >= 0,
-      'greater than or equal to 0',
-    );
-  }
-
-  if (options['silent'] !== undefined) {
-    if (typeof options['silent'] !== 'boolean') {
-      throw invalidRequest('capture.silent must be a boolean.');
-    }
-    capture.silent = options['silent'];
-  }
-
-  return capture;
 }
 
 function validateAlignOptions(value: unknown): VisualEvaluationAlignOptions {
@@ -272,25 +228,6 @@ function normalizeFiniteNumber(
   }
 
   return value;
-}
-
-function normalizeFiniteInteger(
-  value: unknown,
-  fieldName: string,
-  validate: (number: number) => boolean,
-  expected: string,
-): number {
-  const normalized = normalizeFiniteNumber(
-    value,
-    fieldName,
-    validate,
-    expected,
-  );
-  if (!Number.isInteger(normalized)) {
-    throw invalidRequest(`${fieldName} must be an integer.`);
-  }
-
-  return normalized;
 }
 
 function isRecord(value: unknown): value is Record<string, unknown> {

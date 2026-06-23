@@ -2,34 +2,12 @@
 applyTo: "packages/genui/ui-judge/**/*"
 ---
 
-When extending `@lynx-js/ui-judge`, keep the public runtime API small and platform-specific. Playwright callers use `judgePage` and own page setup, navigation, viewport, cookies, route mocks, and authentication. Additional dimensions should remain internal unless they are intentionally added to the package exports.
+Keep `@lynx-js/ui-judge` screenshot-first. The public TypeScript API should compare caller-provided `referenceImage` and `renderedImage` values through `runVisualEvaluation`; do not add webpage navigation, Playwright page ownership, or screenshot capture back into the package API.
 
-Keep `packages/genui/ui-judge/src/index.ts` as a public facade that only re-exports the supported API and public types. Put shared judge orchestration, option normalization, dimensions, and prompt construction under `src/core`, and keep platform-specific adapters such as Playwright and Kitten-Lynx/Android outside `core`, with low-level device or screenshot helpers under `src/platforms`.
+Keep `packages/genui/ui-judge/src/index.ts` as a public facade that only re-exports screenshot visual-evaluation APIs and public types. Do not reintroduce `judgePage`, `judgeAndroidAgent`, Midscene adapter classes, GEQI dimension prompts, or the old `src/core` scoring stack.
 
-When adding Android support to `@lynx-js/ui-judge`, keep the public call shape close to `judgePage`: accept the `KittenLynxView` returned by `@lynx-js/kitten-lynx-test-infra`'s `newPage()` as `page`. Callers should own the Kitten-Lynx connection, navigation, and teardown lifecycle, while UI Judge creates the internal Midscene agent adapter. For Android scoring, pass `screenshotIncluded: true` without web-only DOM requirements, and return `page.url()` through the existing result `url` field.
+Use the agent SDK path for model evaluation. `evaluation-api.ts` should build Mastra/AI SDK-compatible image messages and call an injected or internally-created agent; do not depend on `@midscene/*`.
 
-When a `@lynx-js/ui-judge` platform adapter needs to satisfy Midscene's `AbstractInterface`, keep the adapter as an ordinary class and coerce it to `AbstractInterface` only at the `MidsceneAgent` boundary. Avoid class `declare` fields, declaration merging, or runtime stub methods for unsupported optional capabilities: Playwright's Babel TypeScript pipeline does not handle class `declare` fields here, Biome rejects unsafe declaration merging, and stubs can make Midscene detect capabilities the adapter does not actually support.
+Keep Rust Kitten-Lynx/Android automation under `packages/genui/ui-judge/rust` and the Rust crate metadata under `packages/genui/ui-judge/Cargo.toml`. The TypeScript tests should remain ordinary Vitest screenshot/unit tests and must not require browsers, emulators, or model credentials.
 
-Keep Android-specific `@lynx-js/ui-judge` tests on Vitest rather than Playwright. Use a dedicated `test:android` script and let Playwright tests stay under `test:playwright`, so the Android emulator CI job can run UI Judge's Kitten-Lynx coverage without pulling in browser fixtures.
-
-For fixture-backed `@lynx-js/ui-judge` Android E2E tests, commit source fixtures under `packages/genui/ui-judge/tests/fixtures` and generate Lynx bundle outputs into ignored local directories such as `tests/fixtures/react/.generated` before serving them from the test process. Reach the served output from the emulator with `adb reverse`. Gate the suite with `UI_JUDGE_ANDROID_INTEGRATION` so ordinary Vitest runs do not require an emulator or Midscene credentials. Keep reference snapshot generation in an explicit script such as `pnpm --filter @lynx-js/ui-judge run update:react-fixture-snapshot`, and write those snapshots to ignored generated output, not to tracked fixture files.
-
-When generating UI Judge fixture bundles from Vitest, force the fixture build to use `NODE_ENV=production` rather than inheriting Vitest's `NODE_ENV=test`, so generated outputs mirror the committed example build behavior.
-
-Midscene scoring in this package should use `aiNumber()` for non-mutating score queries and normalize the returned number into an integer from 0 to 5. Keep `aiAct()` only for caller-provided setup steps that intentionally mutate the UI. For scoring-only prompts, make it clear that the current UI state is enough, no actions should be emitted, and the `Number` field should contain exactly one concrete integer from 0 through 5. Avoid placeholder text such as angle-bracketed score variables, because model-backed CI may copy the placeholder verbatim. Do not reintroduce letter grades or `GRADE:` output in prompts.
-
-GEQI model-backed scoring should run each playground demo across the five weighted dimensions: usability-interaction (30), visual-aesthetics (25), consistency-standards (15), architecture-writing (15), and accessibility-performance (15). Keep the original visual-correctness judge as its own test and result score. Attach GEQI scores under each example result's `dimensions` array with `dimensionLabel` and `weight`, so the PR comment can summarize the weighted 100-point GEQI score while rendering one table row per example.
-
-Avoid writing screenshots by default. Playwright and Midscene may capture the page internally, but persistent screenshot artifacts should require an explicit future option.
-
-Midscene currently brings in `sharp`; keep its pnpm build-script policy explicit in `pnpm-workspace.yaml` rather than letting `pnpm install` leave the placeholder value.
-
-Model-backed Playwright tests should use the real Midscene service when `MIDSCENE_MODEL_NAME` is configured, and skip only the model-dependent cases when that environment variable is absent. Keep the playground server startup inside the skipped model-backed test group so non-model validation tests do not bind local ports.
-
-Prefer `page.setContent()` or another non-listening fixture setup for static `@lynx-js/ui-judge` Playwright fixtures. Avoid starting local HTTP servers in package tests unless the behavior under test specifically needs network navigation.
-
-When a `@lynx-js/ui-judge` Playwright test needs real network navigation, use the A2UI playground preview server rather than a package-local scratch HTTP server. Start `pnpm dev` from `packages/genui/a2ui-playground` and navigate Playwright to the playground `render.html` demo route, such as `/render.html?protocol=a2ui&demoUrl=.%2Fa2ui.web.js&theme=light&demo=recs&speed=0`.
-
-The A2UI playground preview server requires generated catalog artifacts from `@lynx-js/a2ui-reactlynx`. If they are missing, fail with a clear prerequisite message that points to `pnpm --filter @lynx-js/a2ui-reactlynx build` instead of silently running broad cross-package builds from Playwright hooks.
-
-The Codex sandbox blocks TCP listeners on loopback addresses such as `127.0.0.1`, `localhost`, `0.0.0.0`, and `::1`, so bind-dependent verification should use an escalated command such as `pnpm --filter @lynx-js/ui-judge test` rather than rewriting the test to avoid the bind.
+For Rust Android e2e fixtures, keep the Lynx bundle fixture available under `packages/genui/ui-judge/tests/fixtures` unless the Rust test is updated to a new fixture path in the same change.

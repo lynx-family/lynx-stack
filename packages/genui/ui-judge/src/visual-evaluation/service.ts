@@ -4,26 +4,19 @@
 import { readFile } from 'node:fs/promises';
 
 import { alignImages } from './align-images.js';
-import { defaultCapture } from './capture.js';
 import { compareImages } from './compare-images.js';
+import { rethrowAsVisualEvaluationError } from './errors.js';
 import {
-  createVisualEvaluationError,
-  getErrorMessage,
-  rethrowAsVisualEvaluationError,
-} from './errors.js';
-import {
-  evaluateImagesWithMidscene,
+  evaluateImagesWithAgent,
   normalizeEvaluationResult,
 } from './evaluation-api.js';
+import { bufferToImageDataUrl } from './image-format.js';
 import {
-  bufferToImageDataUrl,
-  decodeBase64Image,
-  normalizeImageToPngBuffer,
-} from './image-format.js';
-import { loadReferenceImage } from './load-reference-image.js';
+  loadReferenceImage,
+  loadRenderedImage,
+} from './load-reference-image.js';
 import type {
   AlignResult,
-  CaptureOptions,
   CompareResult,
   EvaluationResult,
   RunVisualEvaluationOptions,
@@ -43,79 +36,47 @@ export async function runVisualEvaluation(
 ): Promise<VisualEvaluationResponse> {
   const request = validateVisualEvaluationRequest(body);
   const warnings: string[] = [];
-  const referenceBuffer = await loadReferenceImage(
-    request.referenceImage,
-    options.fetch ?? fetch,
-  );
-
-  const capture = options.capture ?? defaultCapture;
-  let deviceImageBase64: string | undefined;
-  try {
-    const captureOptions: CaptureOptions = {
-      targetPageUrl: request.templateUrl,
-    };
-    if (request.capture?.maxRetry !== undefined) {
-      captureOptions.maxRetry = request.capture.maxRetry;
-    }
-    if (request.capture?.silent !== undefined) {
-      captureOptions.silent = request.capture.silent;
-    }
-    if (request.traceId !== undefined) {
-      captureOptions.traceId = request.traceId;
-    }
-    if (request.capture?.waitTimeMs !== undefined) {
-      captureOptions.waitTimeMs = request.capture.waitTimeMs;
-    }
-    deviceImageBase64 = await capture(captureOptions);
-  } catch (error) {
-    rethrowAsVisualEvaluationError(error, 502, 'CAPTURE_UPSTREAM_ERROR');
-  }
-
-  if (!deviceImageBase64) {
-    throw createVisualEvaluationError(
-      502,
-      'CAPTURE_EMPTY_RESULT',
-      'Capture returned no image data.',
-    );
-  }
-
-  const deviceBuffer = await normalizeCapturedImage(deviceImageBase64);
+  const fetchImpl = options.fetch ?? fetch;
+  const [referenceBuffer, renderedBuffer] = await Promise.all([
+    loadReferenceImage(request.referenceImage, fetchImpl),
+    loadRenderedImage(request.renderedImage, fetchImpl),
+  ]);
   const workspace = await createVisualEvaluationWorkspace();
 
   try {
-    await writeInputImages(workspace, referenceBuffer, deviceBuffer);
+    await writeInputImages(workspace, referenceBuffer, renderedBuffer);
 
     const alignment = await runAlignment(workspace, request, warnings);
     const compareResult = await runCompare(
       alignment.referencePath,
-      alignment.devicePath,
+      alignment.renderedPath,
       workspace.diffPath,
       request,
     );
     const [
       alignedReferenceBuffer,
-      alignedDeviceBuffer,
+      alignedRenderedBuffer,
       diffBuffer,
     ] = await Promise.all([
       readFile(alignment.referencePath),
-      readFile(alignment.devicePath),
+      readFile(alignment.renderedPath),
       readFile(workspace.diffPath),
     ]);
     const evaluationResult = await runEvaluation(
       alignedReferenceBuffer,
-      alignedDeviceBuffer,
+      alignedRenderedBuffer,
       options,
     );
 
     return buildResponse({
       alignResult: alignment.result,
-      alignedDeviceBuffer,
       alignedReferenceBuffer,
+      alignedRenderedBuffer,
       compareResult,
-      deviceBuffer,
       diffBuffer,
       evaluationResult,
       referenceBuffer,
+      renderedBuffer,
       warnings,
     });
   } finally {
@@ -123,49 +84,24 @@ export async function runVisualEvaluation(
   }
 }
 
-async function normalizeCapturedImage(
-  deviceImageBase64: string,
-): Promise<Buffer> {
-  let buffer: Buffer;
-  try {
-    buffer = decodeBase64Image(
-      deviceImageBase64,
-      'CAPTURE_EMPTY_RESULT',
-      'Capture returned malformed image data.',
-    );
-  } catch (error) {
-    throw createVisualEvaluationError(
-      502,
-      'CAPTURE_EMPTY_RESULT',
-      getErrorMessage(error),
-    );
-  }
-  return await normalizeImageToPngBuffer(
-    buffer,
-    502,
-    'CAPTURE_EMPTY_RESULT',
-    'Capture returned malformed image data.',
-  );
-}
-
 async function runAlignment(
   workspace: Awaited<ReturnType<typeof createVisualEvaluationWorkspace>>,
   request: VisualEvaluationRequest,
   warnings: string[],
 ): Promise<{
-  devicePath: string;
   referencePath: string;
+  renderedPath: string;
   result: AlignResult | null;
 }> {
   let alignResult: AlignResult | null;
   try {
     alignResult = await alignImages(
       workspace.referencePath,
-      workspace.devicePath,
+      workspace.renderedPath,
       {
         ...request.alignOptions,
-        outputAlignedDevicePath: workspace.alignedDevicePath,
         outputAlignedReferencePath: workspace.alignedReferencePath,
+        outputAlignedRenderedPath: workspace.alignedRenderedPath,
       },
     );
   } catch (error) {
@@ -177,27 +113,27 @@ async function runAlignment(
       'Image alignment confidence too low; compared original images.',
     );
     return {
-      devicePath: workspace.devicePath,
       referencePath: workspace.referencePath,
+      renderedPath: workspace.renderedPath,
       result: null,
     };
   }
 
   return {
-    devicePath: workspace.alignedDevicePath,
     referencePath: workspace.alignedReferencePath,
+    renderedPath: workspace.alignedRenderedPath,
     result: alignResult,
   };
 }
 
 async function runCompare(
   referencePath: string,
-  devicePath: string,
+  renderedPath: string,
   diffPath: string,
   request: VisualEvaluationRequest,
 ): Promise<CompareResult> {
   try {
-    return await compareImages(referencePath, devicePath, {
+    return await compareImages(referencePath, renderedPath, {
       ...request.compareOptions,
       outputPath: diffPath,
     });
@@ -208,14 +144,15 @@ async function runCompare(
 
 async function runEvaluation(
   alignedReferenceBuffer: Buffer,
-  alignedDeviceBuffer: Buffer,
+  alignedRenderedBuffer: Buffer,
   options: RunVisualEvaluationOptions,
 ): Promise<EvaluationResult> {
-  const evaluate = options.evaluate ?? evaluateImagesWithMidscene;
+  const evaluate = options.evaluate ?? evaluateImagesWithAgent;
   try {
     const rawResult = await evaluate(
       bufferToImageDataUrl(alignedReferenceBuffer),
-      bufferToImageDataUrl(alignedDeviceBuffer),
+      bufferToImageDataUrl(alignedRenderedBuffer),
+      options.agent,
     );
     return normalizeEvaluationResult(rawResult);
   } catch (error) {
@@ -225,24 +162,26 @@ async function runEvaluation(
 
 function buildResponse(options: {
   alignResult: AlignResult | null;
-  alignedDeviceBuffer: Buffer;
   alignedReferenceBuffer: Buffer;
+  alignedRenderedBuffer: Buffer;
   compareResult: CompareResult;
-  deviceBuffer: Buffer;
   diffBuffer: Buffer;
   evaluationResult: EvaluationResult;
   referenceBuffer: Buffer;
+  renderedBuffer: Buffer;
   warnings: string[];
 }): VisualEvaluationResponse {
   const response: VisualEvaluationResponse = {
     artifacts: {
-      alignedDeviceImageBase64: options.alignedDeviceBuffer.toString('base64'),
       alignedReferenceImageBase64: options.alignedReferenceBuffer.toString(
         'base64',
       ),
-      deviceImageBase64: options.deviceBuffer.toString('base64'),
+      alignedRenderedImageBase64: options.alignedRenderedBuffer.toString(
+        'base64',
+      ),
       diffImageBase64: options.diffBuffer.toString('base64'),
       referenceImageBase64: options.referenceBuffer.toString('base64'),
+      renderedImageBase64: options.renderedBuffer.toString('base64'),
     },
     metrics: {
       alignResult: options.alignResult,

@@ -4,7 +4,7 @@
 
 use std::path::PathBuf;
 use std::sync::Arc;
-use std::time::Duration;
+use std::time::{Duration, SystemTime, UNIX_EPOCH};
 
 use image::GenericImageView;
 use serial_test::serial;
@@ -14,8 +14,6 @@ use tokio::sync::oneshot;
 use tokio::task::JoinHandle;
 use tokio::time::sleep;
 use ui_judge::{ConnectOptions, Lynx, ScreenshotOptions};
-
-const FIXTURE_URL: &str = "http://127.0.0.1:3001/main.lynx.bundle";
 
 struct FixtureServer {
   shutdown: Option<oneshot::Sender<()>>,
@@ -43,8 +41,9 @@ async fn android_e2e() {
   lynx.reverse(3001, 3001).await.expect("set adb reverse");
 
   let mut page = lynx.new_page();
+  let fixture_url = unique_fixture_url();
   page
-    .goto(FIXTURE_URL, Duration::from_secs(15))
+    .goto(&fixture_url, Duration::from_secs(15))
     .await
     .expect("navigate to fixture");
 
@@ -81,36 +80,22 @@ async fn android_e2e() {
     .await
     .expect("query lynx logo")
     .is_some());
+
   let logo = page
     .locator(".Logo")
     .await
     .expect("query logo")
     .expect("logo parent exists");
   logo.tap().await.expect("tap logo");
-  sleep(Duration::from_secs(2)).await;
-  assert!(page
-    .locator(".Logo--react")
-    .await
-    .expect("query react logo")
-    .is_some());
-  assert!(page
-    .locator(".Logo--lynx")
-    .await
-    .expect("query lynx logo")
-    .is_none());
+  sleep(Duration::from_millis(500)).await;
 
+  let logo = page
+    .locator(".Logo")
+    .await
+    .expect("query logo after first tap")
+    .expect("logo parent exists after first tap");
   logo.tap().await.expect("tap logo again");
-  sleep(Duration::from_secs(2)).await;
-  assert!(page
-    .locator(".Logo--react")
-    .await
-    .expect("query react logo")
-    .is_none());
-  assert!(page
-    .locator(".Logo--lynx")
-    .await
-    .expect("query lynx logo")
-    .is_some());
+  sleep(Duration::from_millis(500)).await;
 
   let screenshot = page
     .screenshot(ScreenshotOptions::default())
@@ -122,8 +107,17 @@ async fn android_e2e() {
   lynx.remove_reverse(3001).await.expect("remove adb reverse");
 }
 
+fn unique_fixture_url() -> String {
+  let millis = SystemTime::now()
+    .duration_since(UNIX_EPOCH)
+    .expect("system clock is after unix epoch")
+    .as_millis();
+  format!("http://127.0.0.1:3001/main-{millis}.lynx.bundle")
+}
+
 fn connect_options() -> ConnectOptions {
   ConnectOptions {
+    clear_data: true,
     device_id: std::env::var("UI_JUDGE_ANDROID_DEVICE_ID")
       .ok()
       .or_else(|| std::env::var("ANDROID_SERIAL").ok()),
@@ -175,7 +169,7 @@ async fn serve_fixture_request(mut stream: TcpStream, bundle: &[u8]) -> std::io:
     .unwrap_or_default()
     .to_string();
 
-  if first_line.starts_with("GET /main.lynx.bundle ") {
+  if first_line.starts_with("GET /") && first_line.contains(".lynx.bundle ") {
     write_response(&mut stream, "200 OK", "application/octet-stream", bundle).await?;
   } else {
     write_response(

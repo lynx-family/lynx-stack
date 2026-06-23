@@ -16,6 +16,7 @@ const MAX_GROUPS = 8;
 const MAX_SCENARIOS = 20;
 const MAX_REPEATS = 10;
 const MAX_PARALLELISM = 4;
+const MAX_IMAGE_CHARS = 14_000_000;
 const MAX_PROMPT_CHARS = 4_000;
 const MAX_TEXT_FIELD_CHARS = 1_000;
 
@@ -157,6 +158,12 @@ function normalizeScenarios(value: unknown): BenchScenarioRequest[] {
       const name = readString(item.name, `Scenario ${index + 1}`, 160);
       const prompt = readString(item.prompt, '', MAX_PROMPT_CHARS).trim();
       if (!id || !name || !prompt) return null;
+      const judgeTask = readOptionalString(item.judgeTask, MAX_PROMPT_CHARS);
+      const judgeSteps = readStringArray(item.judgeSteps);
+      const referenceImage = readOptionalString(
+        item.referenceImage,
+        MAX_IMAGE_CHARS,
+      );
       return {
         id,
         name,
@@ -164,12 +171,9 @@ function normalizeScenarios(value: unknown): BenchScenarioRequest[] {
         type: readString(item.type, 'Custom', 120),
         complexity: clampInt(item.complexity, 1, 1, 3),
         action: readString(item.action, '', 160),
-        ...(readOptionalString(item.judgeTask, MAX_PROMPT_CHARS)
-          ? { judgeTask: readOptionalString(item.judgeTask, MAX_PROMPT_CHARS) }
-          : {}),
-        ...(readStringArray(item.judgeSteps)
-          ? { judgeSteps: readStringArray(item.judgeSteps) }
-          : {}),
+        ...(judgeTask ? { judgeTask } : {}),
+        ...(judgeSteps ? { judgeSteps } : {}),
+        ...(referenceImage ? { referenceImage } : {}),
       };
     })
     .filter((item): item is BenchScenarioRequest => item !== null);

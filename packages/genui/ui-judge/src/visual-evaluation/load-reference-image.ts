@@ -18,26 +18,64 @@ export async function loadReferenceImage(
   referenceImage: string,
   fetchImpl: typeof fetch = fetch,
 ): Promise<Buffer> {
-  const url = getHttpImageUrl(referenceImage);
+  return await loadImage(referenceImage, fetchImpl, {
+    fetchFailedCode: 'REFERENCE_IMAGE_FETCH_FAILED',
+    fetchFailedPrefix: 'reference image',
+    invalidCode: 'REFERENCE_IMAGE_INVALID',
+    invalidMessage: 'Reference image is empty, malformed, or unreadable.',
+  });
+}
+
+export async function loadRenderedImage(
+  renderedImage: string,
+  fetchImpl: typeof fetch = fetch,
+): Promise<Buffer> {
+  return await loadImage(renderedImage, fetchImpl, {
+    fetchFailedCode: 'RENDERED_IMAGE_FETCH_FAILED',
+    fetchFailedPrefix: 'rendered image',
+    invalidCode: 'RENDERED_IMAGE_INVALID',
+    invalidMessage: 'Rendered image is empty, malformed, or unreadable.',
+  });
+}
+
+async function loadImage(
+  image: string,
+  fetchImpl: typeof fetch,
+  options: {
+    fetchFailedCode:
+      | 'REFERENCE_IMAGE_FETCH_FAILED'
+      | 'RENDERED_IMAGE_FETCH_FAILED';
+    fetchFailedPrefix: string;
+    invalidCode: 'REFERENCE_IMAGE_INVALID' | 'RENDERED_IMAGE_INVALID';
+    invalidMessage: string;
+  },
+): Promise<Buffer> {
+  const url = getHttpImageUrl(image);
   const buffer = url
-    ? await fetchReferenceImage(url, fetchImpl)
+    ? await fetchImage(url, fetchImpl, options)
     : decodeBase64Image(
-      referenceImage,
-      'REFERENCE_IMAGE_INVALID',
-      'Reference image is empty, malformed, or unreadable.',
+      image,
+      options.invalidCode,
+      options.invalidMessage,
     );
 
   return await normalizeImageToPngBuffer(
     buffer,
     400,
-    'REFERENCE_IMAGE_INVALID',
-    'Reference image is empty, malformed, or unreadable.',
+    options.invalidCode,
+    options.invalidMessage,
   );
 }
 
-async function fetchReferenceImage(
+async function fetchImage(
   url: URL,
   fetchImpl: typeof fetch,
+  options: {
+    fetchFailedCode:
+      | 'REFERENCE_IMAGE_FETCH_FAILED'
+      | 'RENDERED_IMAGE_FETCH_FAILED';
+    fetchFailedPrefix: string;
+  },
 ): Promise<Buffer> {
   const controller = new AbortController();
   const timeout = setTimeout(
@@ -50,16 +88,16 @@ async function fetchReferenceImage(
       redirect: 'error',
       signal: controller.signal,
     });
-    validateReferenceImageResponse(response);
-    return await readReferenceImageResponse(response);
+    validateImageResponse(response, options);
+    return await readImageResponse(response, options.fetchFailedCode);
   } catch (error) {
     if (error instanceof VisualEvaluationError) {
       throw error;
     }
     throw createVisualEvaluationError(
       502,
-      'REFERENCE_IMAGE_FETCH_FAILED',
-      `Failed to fetch reference image: ${
+      options.fetchFailedCode,
+      `Failed to fetch ${options.fetchFailedPrefix}: ${
         error instanceof Error ? error.message : String(error)
       }`,
     );
@@ -68,12 +106,20 @@ async function fetchReferenceImage(
   }
 }
 
-function validateReferenceImageResponse(response: Response): void {
+function validateImageResponse(
+  response: Response,
+  options: {
+    fetchFailedCode:
+      | 'REFERENCE_IMAGE_FETCH_FAILED'
+      | 'RENDERED_IMAGE_FETCH_FAILED';
+    fetchFailedPrefix: string;
+  },
+): void {
   if (!response.ok) {
     throw createVisualEvaluationError(
       502,
-      'REFERENCE_IMAGE_FETCH_FAILED',
-      `Failed to fetch reference image: ${response.status}`,
+      options.fetchFailedCode,
+      `Failed to fetch ${options.fetchFailedPrefix}: ${response.status}`,
     );
   }
 
@@ -81,8 +127,10 @@ function validateReferenceImageResponse(response: Response): void {
   if (contentType && !contentType.toLowerCase().startsWith('image/')) {
     throw createVisualEvaluationError(
       502,
-      'REFERENCE_IMAGE_FETCH_FAILED',
-      `Reference image response must be an image, got ${contentType}.`,
+      options.fetchFailedCode,
+      `${
+        capitalize(options.fetchFailedPrefix)
+      } response must be an image, got ${contentType}.`,
     );
   }
 
@@ -95,17 +143,20 @@ function validateReferenceImageResponse(response: Response): void {
     ) {
       throw createVisualEvaluationError(
         502,
-        'REFERENCE_IMAGE_FETCH_FAILED',
-        'Reference image response is too large.',
+        options.fetchFailedCode,
+        `${capitalize(options.fetchFailedPrefix)} response is too large.`,
       );
     }
   }
 }
 
-async function readReferenceImageResponse(response: Response): Promise<Buffer> {
+async function readImageResponse(
+  response: Response,
+  errorCode: 'REFERENCE_IMAGE_FETCH_FAILED' | 'RENDERED_IMAGE_FETCH_FAILED',
+): Promise<Buffer> {
   if (!response.body) {
     const buffer = Buffer.from(await response.arrayBuffer());
-    assertReferenceImageSize(buffer.length);
+    assertImageSize(buffer.length, errorCode);
     return buffer;
   }
 
@@ -119,19 +170,26 @@ async function readReferenceImageResponse(response: Response): Promise<Buffer> {
 
     const chunk = Buffer.from(result.value);
     totalBytes += chunk.length;
-    assertReferenceImageSize(totalBytes);
+    assertImageSize(totalBytes, errorCode);
     chunks.push(chunk);
   }
 
   return Buffer.concat(chunks, totalBytes);
 }
 
-function assertReferenceImageSize(totalBytes: number): void {
+function assertImageSize(
+  totalBytes: number,
+  errorCode: 'REFERENCE_IMAGE_FETCH_FAILED' | 'RENDERED_IMAGE_FETCH_FAILED',
+): void {
   if (totalBytes > MAX_REFERENCE_IMAGE_BYTES) {
     throw createVisualEvaluationError(
       502,
-      'REFERENCE_IMAGE_FETCH_FAILED',
-      'Reference image response is too large.',
+      errorCode,
+      'Image response is too large.',
     );
   }
+}
+
+function capitalize(value: string): string {
+  return value.charAt(0).toUpperCase() + value.slice(1);
 }

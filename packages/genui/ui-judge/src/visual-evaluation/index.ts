@@ -4,14 +4,13 @@
 export {
   VISUAL_EVALUATION_SYSTEM_PROMPT,
   VISUAL_EVALUATION_USER_PROMPT,
-  evaluateImagesWithMidscene,
+  buildVisualEvaluationMessages,
+  evaluateImagesWithAgent,
   normalizeEvaluationResult,
 } from './evaluation-api.js';
 export { runVisualEvaluation } from './service.js';
 export type {
   AlignResult,
-  CaptureFn,
-  CaptureOptions,
   CompareResult,
   EvaluateFn,
   EvaluationIssue,
@@ -19,9 +18,10 @@ export type {
   EvaluationIssueSeverity,
   EvaluationResult,
   RunVisualEvaluationOptions,
+  VisualEvaluationAgent,
+  VisualEvaluationAgentOptions,
   VisualEvaluationAlignOptions,
   VisualEvaluationArtifacts,
-  VisualEvaluationCaptureRequestOptions,
   VisualEvaluationCompareOptions,
   VisualEvaluationErrorCode,
   VisualEvaluationErrorResponse,

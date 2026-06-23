@@ -2,9 +2,3 @@
 .env
 .env.local
 .env.*.local
-
-# Local UI judge result outputs
-ui-judge-results.json
-
-# React fixture build outputs generated from tests/fixtures/react source
-tests/fixtures/react/.generated/

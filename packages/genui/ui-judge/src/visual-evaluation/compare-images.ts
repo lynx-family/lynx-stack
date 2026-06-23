@@ -23,29 +23,29 @@ interface RawRgbaImage {
 
 export async function compareImages(
   referencePath: string,
-  devicePath: string,
+  renderedPath: string,
   options: CompareImagesOptions,
 ): Promise<CompareResult> {
-  const [referenceImageMetadata, deviceImageMetadata] = await Promise.all([
+  const [referenceImageMetadata, renderedImageMetadata] = await Promise.all([
     sharp(referencePath).metadata(),
-    sharp(devicePath).metadata(),
+    sharp(renderedPath).metadata(),
   ]);
   const width = Math.min(
     referenceImageMetadata.width ?? 0,
-    deviceImageMetadata.width ?? 0,
+    renderedImageMetadata.width ?? 0,
   );
   const height = Math.min(
     referenceImageMetadata.height ?? 0,
-    deviceImageMetadata.height ?? 0,
+    renderedImageMetadata.height ?? 0,
   );
 
   if (width <= 0 || height <= 0) {
     throw new Error('Comparison images must have positive dimensions.');
   }
 
-  const [reference, device] = await Promise.all([
+  const [reference, rendered] = await Promise.all([
     toRawRgbaImage(referencePath, width, height),
-    toRawRgbaImage(devicePath, width, height),
+    toRawRgbaImage(renderedPath, width, height),
   ]);
 
   const blockSize = Math.max(
@@ -69,7 +69,7 @@ export async function compareImages(
       const index = (y * width + x) * 4;
       const distanceSquared = getNormalizedRgbaDistanceSquared(
         reference.data,
-        device.data,
+        rendered.data,
         index,
       );
       const blockIndex = Math.floor(y / blockSize) * blockColumns
@@ -87,10 +87,10 @@ export async function compareImages(
         continue;
       }
 
-      diffData[index] = device.data[index] ?? 0;
-      diffData[index + 1] = device.data[index + 1] ?? 0;
-      diffData[index + 2] = device.data[index + 2] ?? 0;
-      diffData[index + 3] = device.data[index + 3] ?? 255;
+      diffData[index] = rendered.data[index] ?? 0;
+      diffData[index + 1] = rendered.data[index + 1] ?? 0;
+      diffData[index + 2] = rendered.data[index + 2] ?? 0;
+      diffData[index + 3] = rendered.data[index + 3] ?? 255;
     }
   }
 
@@ -156,13 +156,13 @@ async function toRawRgbaImage(
 
 function getNormalizedRgbaDistanceSquared(
   reference: Buffer,
-  device: Buffer,
+  rendered: Buffer,
   index: number,
 ): number {
   let sumSquares = 0;
   for (let channel = 0; channel < 4; channel++) {
     const delta = (reference[index + channel] ?? 0)
-      - (device[index + channel] ?? 0);
+      - (rendered[index + channel] ?? 0);
     sumSquares += delta * delta;
   }
 

@@ -1,17 +1,34 @@
 // Copyright 2026 The Lynx Authors. All rights reserved.
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
-import type { DeviceAction, Size } from '@midscene/core';
-import { Agent as MidsceneAgent } from '@midscene/core/agent';
-import { callAIWithStringResponse } from '@midscene/core/ai-model';
-import type { ChatCompletionMessageParam } from '@midscene/core/ai-model';
-import type { AbstractInterface } from '@midscene/core/device';
-import sharp from 'sharp';
+import { createOpenAI } from '@ai-sdk/openai';
+import { Agent } from '@mastra/core/agent';
+import type { AgentConfig } from '@mastra/core/agent';
 
 import { createVisualEvaluationError } from './errors.js';
-import type { EvaluationResult } from './types.js';
+import type {
+  EvaluationResult,
+  VisualEvaluationAgent,
+  VisualEvaluationAgentOptions,
+} from './types.js';
 
 type EvaluationIssue = NonNullable<EvaluationResult['issues']>[number];
+
+export interface VisualEvaluationTextPart {
+  text: string;
+  type: 'text';
+}
+
+export interface VisualEvaluationImagePart {
+  image: string;
+  mimeType: string;
+  type: 'image';
+}
+
+export interface VisualEvaluationMessage {
+  content: Array<VisualEvaluationImagePart | VisualEvaluationTextPart>;
+  role: 'user';
+}
 
 const ALLOWED_ISSUE_CATEGORIES = new Set([
   'layout',
@@ -23,6 +40,9 @@ const ALLOWED_ISSUE_CATEGORIES = new Set([
   'completeness',
   'other',
 ]);
+
+const DEFAULT_BASE_URL = 'https://api.openai.com/v1';
+const DEFAULT_MODEL = 'gpt-4o-mini';
 
 export const VISUAL_EVALUATION_SYSTEM_PROMPT =
   `You are a strict visual quality evaluator for UI implementation fidelity.
@@ -61,7 +81,7 @@ Ignore:
 - Tiny anti-aliasing differences.
 - Minor compression artifacts.
 - Subpixel differences that do not change perceived layout.
-- Device screenshot noise that does not affect UI content.
+- Screenshot capture noise that does not affect UI content.
 
 Do not ignore:
 - Missing text or incorrect text.
@@ -93,71 +113,51 @@ Rules for the JSON:
 - Mention approximate regions such as "top bar", "main card", "bottom section", or "right icon" when describing issues.
 - Do not invent hidden or non-visible differences.`;
 
-interface MidsceneVisualEvaluationAgent {
-  modelConfigManager: {
-    getModelConfig(
-      intent: 'insight',
-    ): Parameters<typeof callAIWithStringResponse>[1];
-  };
-  destroy(): Promise<void>;
+interface OpenAIEnv {
+  OPENAI_API_KEY?: string | undefined;
+  OPENAI_API_STYLE?: 'chat' | 'responses' | undefined;
+  OPENAI_BASE_URL?: string | undefined;
+  OPENAI_MODEL?: string | undefined;
 }
 
-class StaticImageMidscenePage {
-  interfaceType = 'static';
+type CompatRequestBody = {
+  messages?: Array<{ role?: string }>;
+};
 
-  constructor(
-    private readonly screenshotDataUrl: string,
-    private readonly screenshotSize: Size,
-  ) {}
-
-  actionSpace(): DeviceAction[] {
-    return [];
-  }
-
-  screenshotBase64(): Promise<string> {
-    return Promise.resolve(this.screenshotDataUrl);
-  }
-
-  size(): Promise<Size> {
-    return Promise.resolve(this.screenshotSize);
-  }
-
-  describe(): string {
-    return 'visual-evaluation static rendered image';
-  }
-
-  destroy(): Promise<void> {
-    return Promise.resolve();
-  }
-}
-
-export async function evaluateImagesWithMidscene(
+export async function evaluateImagesWithAgent(
   referenceImageDataUrl: string,
   renderedImageDataUrl: string,
+  options: VisualEvaluationAgentOptions = {},
 ): Promise<EvaluationResult> {
-  const screenshotSize = await getDataUrlImageSize(renderedImageDataUrl);
-  const page = new StaticImageMidscenePage(
-    renderedImageDataUrl,
-    screenshotSize,
-  ) as AbstractInterface;
-  const agent = new MidsceneAgent(page, {
-    autoPrintReportMsg: false,
-    generateReport: false,
-  }) as MidsceneVisualEvaluationAgent;
+  const agent = options.agent ?? createVisualEvaluationAgent(options);
   const messages = buildVisualEvaluationMessages(
     referenceImageDataUrl,
     renderedImageDataUrl,
   );
+  const rawResult = await agent.generate(
+    messages,
+    options.resourceId ? { resourceId: options.resourceId } : undefined,
+  );
+  return normalizeEvaluationResult(extractAgentEvaluationPayload(rawResult));
+}
 
-  try {
-    const modelConfig = agent.modelConfigManager.getModelConfig('insight');
-    const { content } = await callAIWithStringResponse(messages, modelConfig);
-    return normalizeEvaluationResult(content);
-  } finally {
-    await agent.destroy().catch(() => {
-      // Keep the original evaluation error visible.
-    });
-  }
+export function buildVisualEvaluationMessages(
+  referenceImageDataUrl: string,
+  renderedImageDataUrl: string,
+): VisualEvaluationMessage[] {
+  return [
+    {
+      content: [
+        {
+          text: VISUAL_EVALUATION_USER_PROMPT,
+          type: 'text',
+        },
+        imagePartFromDataUrl(referenceImageDataUrl),
+        imagePartFromDataUrl(renderedImageDataUrl),
+      ],
+      role: 'user',
+    },
+  ];
 }
 
 export function normalizeEvaluationResult(raw: unknown): EvaluationResult {
@@ -219,37 +219,96 @@ export function normalizeEvaluationResult(raw: unknown): EvaluationResult {
   return result;
 }
 
-function buildVisualEvaluationMessages(
-  referenceImageDataUrl: string,
-  renderedImageDataUrl: string,
-): ChatCompletionMessageParam[] {
-  return [
-    {
-      content: VISUAL_EVALUATION_SYSTEM_PROMPT,
-      role: 'system',
-    },
-    {
-      content: [
-        {
-          text: VISUAL_EVALUATION_USER_PROMPT,
-          type: 'text',
-        },
-        {
-          image_url: {
-            url: referenceImageDataUrl,
-          },
-          type: 'image_url',
-        },
-        {
-          image_url: {
-            url: renderedImageDataUrl,
-          },
-          type: 'image_url',
-        },
-      ],
-      role: 'user',
-    },
-  ];
+function createVisualEvaluationAgent(
+  options: VisualEvaluationAgentOptions,
+): VisualEvaluationAgent {
+  const env = process.env as OpenAIEnv;
+  const apiKey = options.apiKey ?? env.OPENAI_API_KEY;
+  if (!apiKey) {
+    throw new Error(
+      'OpenAI credentials not provided: set OPENAI_API_KEY env var or pass apiKey',
+    );
+  }
+
+  const baseURL = options.baseURL ?? env.OPENAI_BASE_URL ?? DEFAULT_BASE_URL;
+  const model = options.model ?? env.OPENAI_MODEL ?? DEFAULT_MODEL;
+  const isOfficial = isOfficialOpenAIBaseURL(baseURL);
+  const api = options.api
+    ?? env.OPENAI_API_STYLE
+    ?? (isOfficial ? 'responses' : 'chat');
+  const provider = createOpenAI({
+    apiKey,
+    baseURL,
+    ...(isOfficial ? {} : { fetch: createCompatFetch() }),
+  });
+  const buildModel = (id: string): AgentConfig['model'] =>
+    api === 'chat' ? provider.chat(id) : provider(id);
+
+  return new Agent({
+    id: 'visual-evaluation-agent',
+    instructions: VISUAL_EVALUATION_SYSTEM_PROMPT,
+    model: buildModel(model),
+    name: 'VisualEvaluationAgent',
+  }) as unknown as VisualEvaluationAgent;
+}
+
+function imagePartFromDataUrl(dataUrl: string): VisualEvaluationImagePart {
+  const match = /^data:([^;,]+);base64,(.+)$/s.exec(dataUrl);
+  if (!match) {
+    throw createVisualEvaluationError(
+      502,
+      'EVALUATION_API_ERROR',
+      'Evaluation image must be a base64 data URL.',
+    );
+  }
+
+  return {
+    image: match[2]!.replace(/\s+/g, ''),
+    mimeType: match[1]!,
+    type: 'image',
+  };
+}
+
+function extractAgentEvaluationPayload(raw: unknown): unknown {
+  if (typeof raw === 'string') return raw;
+  if (!isRecord(raw)) return raw;
+
+  if (isRecord(raw['object'])) {
+    return raw['object'];
+  }
+  if (typeof raw['text'] === 'string') {
+    return raw['text'];
+  }
+
+  const response = raw['response'];
+  if (isRecord(response)) {
+    const text = extractResponseMessagesText(response['messages']);
+    if (text) return text;
+  }
+
+  return raw;
+}
+
+function extractResponseMessagesText(messages: unknown): string | undefined {
+  if (!Array.isArray(messages)) return undefined;
+  const textParts: string[] = [];
+  for (const message of messages) {
+    if (!isRecord(message)) continue;
+    const content = message['content'];
+    if (typeof content === 'string') {
+      textParts.push(content);
+      continue;
+    }
+    if (!Array.isArray(content)) continue;
+    for (const part of content) {
+      if (typeof part === 'string') {
+        textParts.push(part);
+      } else if (isRecord(part) && typeof part['text'] === 'string') {
+        textParts.push(part['text']);
+      }
+    }
+  }
+  return textParts.length > 0 ? textParts.join('\n') : undefined;
 }
 
 function normalizeEvaluationIssues(value: unknown): EvaluationIssue[] {
@@ -276,19 +335,41 @@ function isEvaluationIssue(value: unknown): value is EvaluationIssue {
     );
 }
 
-async function getDataUrlImageSize(dataUrl: string): Promise<Size> {
-  const commaIndex = dataUrl.indexOf(',');
-  const base64 = commaIndex === -1 ? dataUrl : dataUrl.slice(commaIndex + 1);
-  const metadata = await sharp(Buffer.from(base64, 'base64')).metadata();
-  if (!metadata.width || !metadata.height) {
-    throw createVisualEvaluationError(
-      502,
-      'EVALUATION_API_ERROR',
-      'Unable to extract image dimensions for visual evaluation.',
-    );
-  }
-  return {
-    height: metadata.height,
-    width: metadata.width,
+function createCompatFetch(): typeof fetch {
+  return async (input, init) => {
+    if (!init || !init.body || typeof init.body !== 'string') {
+      return fetch(input, init);
+    }
+    let body = init.body;
+    try {
+      const parsed = JSON.parse(body) as CompatRequestBody;
+      if (Array.isArray(parsed.messages)) {
+        let touched = false;
+        parsed.messages = parsed.messages.map((message) => {
+          if (message && message.role === 'developer') {
+            touched = true;
+            return { ...message, role: 'system' };
+          }
+          return message;
+        });
+        if (touched) body = JSON.stringify(parsed);
+      }
+    } catch {
+      // body is not JSON, leave as-is
+    }
+    return fetch(input, { ...init, body });
   };
+}
+
+function isOfficialOpenAIBaseURL(baseURL: string): boolean {
+  try {
+    const url = new URL(baseURL);
+    return url.hostname.toLowerCase() === 'api.openai.com';
+  } catch {
+    return false;
+  }
+}
+
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return typeof value === 'object' && value !== null && !Array.isArray(value);
 }

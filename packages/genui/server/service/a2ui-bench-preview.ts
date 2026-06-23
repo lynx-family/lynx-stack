@@ -38,28 +38,24 @@ interface JudgeEnv {
   model?: string;
 }
 
+interface ResolvedJudgeEnv {
+  apiKey: string;
+  baseURL?: string;
+  model?: string;
+}
+
 interface JudgeProxy {
   baseUrl: string;
   close: () => Promise<void>;
 }
 
 const DEFAULT_PLAYGROUND_BASE_URL = 'https://lynx-stack.dev/a2ui/';
-const DEFAULT_JUDGE_TIMEOUT_MS = 120_000;
 const PREVIEW_WIDTH = 450;
 const PREVIEW_HEIGHT = 970;
 const IFRAME_WIDTH = 430;
 const IFRAME_HEIGHT = 932;
-const JUDGE_ENV_KEYS = [
-  'MIDSCENE_MODEL_API_KEY',
-  'MIDSCENE_MODEL_BASE_URL',
-  'MIDSCENE_MODEL_NAME',
-  'MIDSCENE_MODEL_TIMEOUT',
-  'OPENAI_API_KEY',
-  'OPENAI_BASE_URL',
-] as const;
 
 let browserPromise: Promise<Browser> | null = null;
-let judgeQueue: Promise<void> = Promise.resolve();
 
 const noop = () => undefined;
 
@@ -178,16 +174,13 @@ function shouldProxyJudgeBaseUrl(raw: string): boolean {
 
 function resolveJudgeEnv(request: BenchJobRequest): JudgeEnv {
   const apiKey = process.env.A2UI_BENCH_JUDGE_API_KEY
-    ?? process.env.MIDSCENE_MODEL_API_KEY
     ?? request.provider.apiKey
     ?? process.env.OPENAI_API_KEY;
   const baseURL = process.env.A2UI_BENCH_JUDGE_BASE_URL
-    ?? process.env.MIDSCENE_MODEL_BASE_URL
     ?? request.provider.baseURL
     ?? process.env.OPENAI_BASE_URL;
   const model = process.env.A2UI_BENCH_JUDGE_MODEL
     ?? process.env.JUDGE_MODEL
-    ?? process.env.MIDSCENE_MODEL_NAME
     ?? request.provider.model
     ?? process.env.OPENAI_MODEL;
   return { apiKey, baseURL, model };
@@ -195,9 +188,7 @@ function resolveJudgeEnv(request: BenchJobRequest): JudgeEnv {
 
 function getMissingJudgeEnv(env: JudgeEnv): string[] {
   const missing: string[] = [];
-  if (!env.apiKey) missing.push('MIDSCENE_MODEL_API_KEY');
-  if (!env.baseURL) missing.push('MIDSCENE_MODEL_BASE_URL');
-  if (!env.model) missing.push('MIDSCENE_MODEL_NAME');
+  if (!env.apiKey) missing.push('A2UI_BENCH_JUDGE_API_KEY or OPENAI_API_KEY');
   return missing;
 }
 
@@ -278,7 +269,7 @@ async function startJudgeModelProxy(
 
 async function resolveJudgeRuntimeEnv(
   env: JudgeEnv,
-): Promise<{ env: Required<JudgeEnv>; proxy?: JudgeProxy }> {
+): Promise<{ env: ResolvedJudgeEnv; proxy?: JudgeProxy }> {
   const missing = getMissingJudgeEnv(env);
   if (missing.length > 0) {
     throw new Error(
@@ -289,21 +280,23 @@ async function resolveJudgeRuntimeEnv(
   }
 
   const { apiKey, baseURL, model } = env;
-  if (!apiKey || !baseURL || !model) {
+  if (!apiKey) {
     throw new Error('ui-judge model config failed normalization.');
   }
 
-  const resolved: Required<JudgeEnv> = {
+  const resolved: ResolvedJudgeEnv = {
     apiKey,
-    baseURL,
-    model,
+    ...(baseURL ? { baseURL } : {}),
+    ...(model ? { model } : {}),
   };
 
-  if (!shouldProxyJudgeBaseUrl(resolved.baseURL)) {
+  if (!resolved.baseURL || !shouldProxyJudgeBaseUrl(resolved.baseURL)) {
     return {
       env: {
         ...resolved,
-        baseURL: normalizeOpenAIBaseUrl(resolved.baseURL),
+        ...(resolved.baseURL
+          ? { baseURL: normalizeOpenAIBaseUrl(resolved.baseURL) }
+          : {}),
       },
     };
   }
@@ -316,47 +309,6 @@ async function resolveJudgeRuntimeEnv(
     },
     proxy,
   };
-}
-
-function setEnvValue(key: string, value: string | undefined): void {
-  if (value === undefined) {
-    delete process.env[key];
-  } else {
-    process.env[key] = value;
-  }
-}
-
-async function withSerializedJudgeEnv<T>(
-  env: Required<JudgeEnv>,
-  fn: () => Promise<T>,
-): Promise<T> {
-  let release: () => void = noop;
-  const previous = judgeQueue.catch(noop);
-  judgeQueue = new Promise<void>((resolve) => {
-    release = resolve;
-  });
-
-  await previous;
-
-  const saved = new Map<string, string | undefined>();
-  for (const key of JUDGE_ENV_KEYS) {
-    saved.set(key, process.env[key]);
-  }
-
-  try {
-    process.env.MIDSCENE_MODEL_API_KEY = env.apiKey;
-    process.env.MIDSCENE_MODEL_BASE_URL = env.baseURL;
-    process.env.MIDSCENE_MODEL_NAME = env.model;
-    process.env.MIDSCENE_MODEL_TIMEOUT ??= String(DEFAULT_JUDGE_TIMEOUT_MS);
-    process.env.OPENAI_API_KEY = env.apiKey;
-    process.env.OPENAI_BASE_URL = env.baseURL;
-    return await fn();
-  } finally {
-    for (const key of JUDGE_ENV_KEYS) {
-      setEnvValue(key, saved.get(key));
-    }
-    release();
-  }
 }
 
 function isServerlessRuntime(): boolean {
@@ -533,31 +485,38 @@ async function renderMessagesInPreview(
 }
 
 async function runJudge(
-  page: Awaited<ReturnType<Browser['newPage']>>,
+  renderedImage: string,
   options: BenchPreviewOptions,
 ): Promise<number> {
-  const { judgePage } = await import('@lynx-js/ui-judge');
+  if (!options.scenario.referenceImage) {
+    throw new Error(
+      'ui-judge is enabled but scenario.referenceImage is missing.',
+    );
+  }
+
+  const { runVisualEvaluation } = await import('@lynx-js/ui-judge');
   const runtime = await resolveJudgeRuntimeEnv(
     resolveJudgeEnv(options.request),
   );
   try {
-    const result = await withSerializedJudgeEnv(runtime.env, () =>
-      judgePage({
-        dimension: 'visual-correctness',
-        page,
-        reference: options.scenario.prompt,
-        steps: options.scenario.judgeSteps,
-        task: options.scenario.judgeTask ?? options.scenario.prompt,
-        timeoutMs: Number(
-          process.env.A2UI_BENCH_JUDGE_TIMEOUT_MS
-            ?? process.env.JUDGE_TIMEOUT_MS
-            ?? DEFAULT_JUDGE_TIMEOUT_MS,
-        ),
-      }));
-    if (result.error) {
-      throw new Error(result.error.message);
-    }
-    return result.score;
+    const result = await runVisualEvaluation(
+      {
+        referenceImage: options.scenario.referenceImage,
+        renderedImage,
+      },
+      {
+        agent: {
+          apiKey: runtime.env.apiKey,
+          ...(runtime.env.baseURL ? { baseURL: runtime.env.baseURL } : {}),
+          ...(runtime.env.model ? { model: runtime.env.model } : {}),
+          ...(options.request.provider.api
+            ? { api: options.request.provider.api }
+            : {}),
+          resourceId: options.runId,
+        },
+      },
+    );
+    return Math.round((result.score ?? 0) * 5);
   } finally {
     await runtime.proxy?.close().catch(noop);
   }
@@ -605,7 +564,10 @@ export async function runBenchPreview(
     let judgeScore = 0;
     if (options.request.settings.judgeEnabled) {
       try {
-        judgeScore = await runJudge(page, options);
+        if (!screenshotDataUrl) {
+          throw new Error('preview screenshot is unavailable.');
+        }
+        judgeScore = await runJudge(screenshotDataUrl, options);
       } catch (error) {
         errors.push(`ui-judge failed: ${toErrorMessage(error)}`);
       }
