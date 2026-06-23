@@ -181,7 +181,9 @@ impl Page {
     let root_node_id = self
       .root_node_id
       .ok_or_else(|| Error::Protocol("page has no root node; call goto first".into()))?;
-    let mut result = self.query_selector(session_id, root_node_id, selector).await?;
+    let mut result = self
+      .query_selector(session_id, root_node_id, selector)
+      .await?;
 
     if result.node_id == -1 {
       let refreshed_root_node_id = self.current_root_node_id(session_id).await?;
