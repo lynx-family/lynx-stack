@@ -419,6 +419,28 @@ importers:
         specifier: ^18.3.28
         version: 18.3.28
 
+  examples/react-et-list:
+    dependencies:
+      '@lynx-js/react':
+        specifier: workspace:*
+        version: link:../../packages/react
+    devDependencies:
+      '@lynx-js/qrcode-rsbuild-plugin':
+        specifier: workspace:*
+        version: link:../../packages/rspeedy/plugin-qrcode
+      '@lynx-js/react-rsbuild-plugin':
+        specifier: workspace:*
+        version: link:../../packages/rspeedy/plugin-react
+      '@lynx-js/rspeedy':
+        specifier: workspace:*
+        version: link:../../packages/rspeedy/core
+      '@lynx-js/types':
+        specifier: 3.7.0
+        version: 3.7.0
+      '@types/react':
+        specifier: ^18.3.28
+        version: 18.3.28
+
   examples/react-et-mtf:
     dependencies:
       '@lynx-js/react':
