@@ -29,6 +29,6 @@
     "README.md"
   ],
   "scripts": {
-    "test": "vitest"
+    "test": "rstest"
   }
 }

@@ -1,4 +1,4 @@
-import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, rstest, rstest } from '@rstest/core';
 
 import { injectCalledByNative } from '../../../src/element-template/native/main-thread-api.js';
 import { reloadMainThread } from '../../../src/element-template/native/reload-main-thread.js';
@@ -8,37 +8,37 @@ import {
   resetMainThreadRootRefs,
 } from '../../../src/element-template/runtime/render/render-main-thread.js';
 
-const mockedPageModuleState = vi.hoisted(() => ({
+const mockedPageModuleState = rstest.hoisted(() => ({
   page: undefined as unknown,
 }));
 
-vi.mock('../../../src/element-template/runtime/page/page.js', () => ({
+rstest.mock('../../../src/element-template/runtime/page/page.js', () => ({
   get __page() {
     return mockedPageModuleState.page;
   },
-  createElementTemplatePage: vi.fn(() => ({ type: 'page', id: '0', children: [] })),
-  setupPage: vi.fn((page: unknown) => {
+  createElementTemplatePage: rstest.fn(() => ({ type: 'page', id: '0', children: [] })),
+  setupPage: rstest.fn((page: unknown) => {
     mockedPageModuleState.page = page;
   }),
 }));
 
-vi.mock('../../../src/element-template/runtime/render/render-main-thread.js', () => ({
-  renderMainThread: vi.fn(),
-  resetMainThreadRootRefs: vi.fn(),
+rstest.mock('../../../src/element-template/runtime/render/render-main-thread.js', () => ({
+  renderMainThread: rstest.fn(),
+  resetMainThreadRootRefs: rstest.fn(),
 }));
 
-vi.mock('../../../src/element-template/native/reload-main-thread.js', () => ({
-  reloadMainThread: vi.fn(),
+rstest.mock('../../../src/element-template/native/reload-main-thread.js', () => ({
+  reloadMainThread: rstest.fn(),
 }));
 
 describe('injectCalledByNative', () => {
   beforeEach(() => {
     mockedPageModuleState.page = undefined;
     globalThis.__FIRST_SCREEN_SYNC_TIMING__ = 'immediately';
-    vi.mocked(createElementTemplatePage).mockReturnValue(
+    rstest.mocked(createElementTemplatePage).mockReturnValue(
       { type: 'page', id: '0', children: [] } as unknown as ElementRef,
     );
-    vi.stubGlobal('__FlushElementTree', vi.fn());
+    rstest.stubGlobal('__FlushElementTree', rstest.fn());
     (globalThis as typeof globalThis & { lynx: typeof lynx & { __initData?: unknown } }).lynx = {
       ...(globalThis.lynx ?? {}),
       __initData: undefined,
@@ -46,8 +46,8 @@ describe('injectCalledByNative', () => {
   });
 
   afterEach(() => {
-    vi.unstubAllGlobals();
-    vi.clearAllMocks();
+    rstest.unstubAllGlobals();
+    rstest.clearAllMocks();
   });
 
   it('should set getPageData returning null', () => {
@@ -69,12 +69,12 @@ describe('injectCalledByNative', () => {
       updateGlobalProps: (data?: Record<string, unknown>, options?: UpdatePageOption) => void;
     };
     const page = { type: 'page', id: '0', children: [] };
-    vi.mocked(createElementTemplatePage).mockReturnValue(page as unknown as ElementRef);
+    rstest.mocked(createElementTemplatePage).mockReturnValue(page as unknown as ElementRef);
     globalThis.lynx.__globalProps = { theme: 'dark' };
 
     globalAny.renderPage({ msg: 'init' });
-    vi.mocked(__FlushElementTree).mockClear();
-    vi.mocked(renderMainThread).mockClear();
+    rstest.mocked(__FlushElementTree).mockClear();
+    rstest.mocked(renderMainThread).mockClear();
     const options = { pipelineOptions: { pipelineID: 'global-props' } };
 
     globalAny.updateGlobalProps({ theme: 'light' }, options);
@@ -82,8 +82,8 @@ describe('injectCalledByNative', () => {
     expect(__FlushElementTree).toHaveBeenCalledWith(page, options);
     expect(globalThis.lynx.__globalProps).toEqual({ theme: 'dark' });
     expect(globalThis.lynx.__initData).toEqual({ msg: 'init' });
-    expect(vi.mocked(renderMainThread)).not.toHaveBeenCalled();
-    expect(vi.mocked(reloadMainThread)).not.toHaveBeenCalled();
+    expect(rstest.mocked(renderMainThread)).not.toHaveBeenCalled();
+    expect(rstest.mocked(reloadMainThread)).not.toHaveBeenCalled();
   });
 
   it('flushes updateGlobalProps without page or options when options are absent', () => {
@@ -92,14 +92,14 @@ describe('injectCalledByNative', () => {
       updateGlobalProps: (data?: Record<string, unknown>, options?: UpdatePageOption) => void;
     };
     globalThis.lynx.__globalProps = { theme: 'dark' };
-    vi.mocked(__FlushElementTree).mockClear();
+    rstest.mocked(__FlushElementTree).mockClear();
 
     globalAny.updateGlobalProps({ theme: 'light' });
 
     expect(__FlushElementTree).toHaveBeenCalledWith();
     expect(globalThis.lynx.__globalProps).toEqual({ theme: 'dark' });
-    expect(vi.mocked(renderMainThread)).not.toHaveBeenCalled();
-    expect(vi.mocked(reloadMainThread)).not.toHaveBeenCalled();
+    expect(rstest.mocked(renderMainThread)).not.toHaveBeenCalled();
+    expect(rstest.mocked(reloadMainThread)).not.toHaveBeenCalled();
   });
 
   it('wires renderPage through initData, setupPage and renderMainThread', () => {
@@ -111,10 +111,10 @@ describe('injectCalledByNative', () => {
     globalAny.renderPage({ answer: 42 });
 
     expect(globalThis.lynx.__initData).toEqual({ answer: 42 });
-    expect(vi.mocked(createElementTemplatePage)).toHaveBeenCalledTimes(1);
-    expect(vi.mocked(setupPage)).toHaveBeenCalledWith({ type: 'page', id: '0', children: [] });
-    expect(vi.mocked(resetMainThreadRootRefs)).toHaveBeenCalledTimes(1);
-    expect(vi.mocked(renderMainThread)).toHaveBeenCalledTimes(1);
+    expect(rstest.mocked(createElementTemplatePage)).toHaveBeenCalledTimes(1);
+    expect(rstest.mocked(setupPage)).toHaveBeenCalledWith({ type: 'page', id: '0', children: [] });
+    expect(rstest.mocked(resetMainThreadRootRefs)).toHaveBeenCalledTimes(1);
+    expect(rstest.mocked(renderMainThread)).toHaveBeenCalledTimes(1);
   });
 
   it('merges updatePage data into initData and flushes the current page', () => {
@@ -124,16 +124,16 @@ describe('injectCalledByNative', () => {
       updatePage: (data?: Record<string, unknown>, options?: UpdatePageOption) => void;
     };
     const page = { type: 'page', id: '0', children: [] };
-    vi.mocked(createElementTemplatePage).mockReturnValue(page as unknown as ElementRef);
+    rstest.mocked(createElementTemplatePage).mockReturnValue(page as unknown as ElementRef);
     globalAny.renderPage({ msg: 'init', stable: true });
-    vi.mocked(renderMainThread).mockClear();
+    rstest.mocked(renderMainThread).mockClear();
 
     const options = { pipelineOptions: { pipelineID: 'pipeline-1' } };
     globalAny.updatePage({ msg: 'update', next: 1 }, options);
 
     expect(globalThis.lynx.__initData).toEqual({ msg: 'update', stable: true, next: 1 });
     expect(__FlushElementTree).toHaveBeenCalledWith(page, options);
-    expect(vi.mocked(renderMainThread)).not.toHaveBeenCalled();
+    expect(rstest.mocked(renderMainThread)).not.toHaveBeenCalled();
     expect(options).not.toHaveProperty('triggerDataUpdated');
   });
 
@@ -144,7 +144,7 @@ describe('injectCalledByNative', () => {
       updatePage: (data?: Record<string, unknown>, options?: UpdatePageOption) => void;
     };
     const page = { type: 'page', id: '0', children: [] };
-    vi.mocked(createElementTemplatePage).mockReturnValue(page as unknown as ElementRef);
+    rstest.mocked(createElementTemplatePage).mockReturnValue(page as unknown as ElementRef);
     globalAny.renderPage({ stale: true, msg: 'init' });
 
     globalAny.updatePage({ msg: 'reset' }, { resetPageData: true });
@@ -160,7 +160,7 @@ describe('injectCalledByNative', () => {
       updatePage: (data?: Record<string, unknown>, options?: UpdatePageOption) => void;
     };
     const page = { type: 'page', id: '0', children: [] };
-    vi.mocked(createElementTemplatePage).mockReturnValue(page as unknown as ElementRef);
+    rstest.mocked(createElementTemplatePage).mockReturnValue(page as unknown as ElementRef);
     globalAny.renderPage({ msg: 'init' });
 
     globalAny.updatePage({});
@@ -178,11 +178,11 @@ describe('injectCalledByNative', () => {
       updatePage: (data?: Record<string, unknown>, options?: UpdatePageOption) => void;
     };
     globalAny.renderPage({ msg: 'init' });
-    vi.mocked(__FlushElementTree).mockClear();
+    rstest.mocked(__FlushElementTree).mockClear();
 
     globalAny.updatePage({ msg: 'reload' }, { reloadTemplate: true });
 
-    expect(vi.mocked(reloadMainThread)).toHaveBeenCalledWith({ msg: 'reload' }, { reloadTemplate: true });
+    expect(rstest.mocked(reloadMainThread)).toHaveBeenCalledWith({ msg: 'reload' }, { reloadTemplate: true });
     expect(globalThis.lynx.__initData).toEqual({ msg: 'init' });
     expect(__FlushElementTree).not.toHaveBeenCalled();
   });
@@ -195,13 +195,13 @@ describe('injectCalledByNative', () => {
     };
     globalAny.renderPage({ msg: 'init' });
     globalThis.__FIRST_SCREEN_SYNC_TIMING__ = 'jsReady';
-    vi.mocked(__FlushElementTree).mockClear();
+    rstest.mocked(__FlushElementTree).mockClear();
 
     globalAny.updatePage({ msg: 'update' });
     globalAny.updatePage({ msg: 'reload' }, { reloadTemplate: true });
 
     expect(globalThis.lynx.__initData).toEqual({ msg: 'init' });
     expect(__FlushElementTree).not.toHaveBeenCalled();
-    expect(vi.mocked(reloadMainThread)).not.toHaveBeenCalled();
+    expect(rstest.mocked(reloadMainThread)).not.toHaveBeenCalled();
   });
 });

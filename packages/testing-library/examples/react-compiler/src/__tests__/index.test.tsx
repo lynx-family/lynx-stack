@@ -3,7 +3,7 @@
 // LICENSE file in the root directory of this source tree.
 
 import '@testing-library/jest-dom';
-import { expect, test, vi } from 'vitest';
+import { expect, test, rstest } from '@rstest/core';
 import { render, getQueriesForElement } from '@lynx-js/react/testing-library';
 // @ts-expect-error preact is aliased to the dep of @lynx-js/react
 import { Component as PreacComponent } from 'preact';
@@ -12,7 +12,7 @@ import { Component } from '@lynx-js/react';
 import { App } from '../App.jsx';
 
 test('App', async () => {
-  const cb = vi.fn();
+  const cb = rstest.fn();
 
   render(
     <App

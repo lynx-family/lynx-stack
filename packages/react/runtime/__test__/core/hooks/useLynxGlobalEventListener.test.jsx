@@ -7,7 +7,7 @@ import { EventEmitter } from 'node:events';
 
 import { render } from 'preact';
 import { useState } from 'preact/hooks';
-import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
+import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, it, rstest } from '@rstest/core';
 
 import { setupBackgroundDocument } from '../../../src/document';
 import { useLynxGlobalEventListener } from '../../../src/lynx-api';
@@ -41,7 +41,7 @@ describe('useLynxGlobalEventListener', () => {
         }
       },
     };
-    vi.stubGlobal('lynx', lynx);
+    rstest.stubGlobal('lynx', lynx);
   });
 
   afterAll(() => {
@@ -61,7 +61,7 @@ describe('useLynxGlobalEventListener', () => {
 
   it('should not leak listeners when rerender and unmount & should capture newest state', async function() {
     let _setD;
-    let fn = vi.fn();
+    let fn = rstest.fn();
     function App() {
       const [d, setD] = useState(0);
       _setD = setD;
@@ -111,10 +111,10 @@ describe('useLynxGlobalEventListener', () => {
 
   it('should not remove & add if eventName & listener is not changed', async function() {
     const fakeEE = {
-      addListener: vi.fn(),
-      removeListener: vi.fn(),
+      addListener: rstest.fn(),
+      removeListener: rstest.fn(),
     };
-    vi.stubGlobal('lynx', {
+    rstest.stubGlobal('lynx', {
       ...globalThis.lynx,
       getJSModule: moduleName => {
         if (moduleName === 'GlobalEventEmitter') {
@@ -124,7 +124,7 @@ describe('useLynxGlobalEventListener', () => {
     });
 
     let _setD;
-    let fn = vi.fn();
+    let fn = rstest.fn();
     function App() {
       const [d, setD] = useState(0);
       _setD = setD;
@@ -156,7 +156,7 @@ describe('useLynxGlobalEventListener', () => {
 
     // should remove & add if listener is changed
     const oldFn = fn;
-    fn = vi.fn();
+    fn = rstest.fn();
     render(<App />, scratch);
     expect(lynx.getJSModule('GlobalEventEmitter').addListener.mock.calls[0][1]).toBe(oldFn);
     expect(lynx.getJSModule('GlobalEventEmitter').addListener.mock.calls[1][1]).toBe(fn);

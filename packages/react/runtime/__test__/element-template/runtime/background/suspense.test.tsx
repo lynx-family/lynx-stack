@@ -1,6 +1,6 @@
 import { Component, Fragment, createElement, options } from 'preact';
 import type { ComponentChildren, ComponentType } from 'preact';
-import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, rstest } from '@rstest/core';
 
 import {
   installElementTemplateCommitHook,
@@ -291,7 +291,7 @@ describe('ElementTemplate Suspense background lifecycle', () => {
       scheduledRenders.push(callback);
     };
 
-    vi.clearAllMocks();
+    rstest.clearAllMocks();
     clearEtAttrPlanMap();
     resetElementTemplateCommitState();
     backgroundElementTemplateInstanceManager.clear();
@@ -387,7 +387,7 @@ describe('ElementTemplate Suspense background lifecycle', () => {
     markRenderedTreeHydrated();
     updateEvents = [];
 
-    vi.useFakeTimers();
+    rstest.useFakeTimers();
     try {
       deferred.resolve({
         default: () => (
@@ -425,13 +425,13 @@ describe('ElementTemplate Suspense background lifecycle', () => {
       envManager.switchToBackground();
 
       expect(backgroundElementTemplateInstanceManager.get(fallbackOne.instanceId)).toBe(fallbackOne);
-      vi.advanceTimersByTime(9999);
+      rstest.advanceTimersByTime(9999);
       expect(backgroundElementTemplateInstanceManager.get(fallbackOne.instanceId)).toBe(fallbackOne);
-      vi.advanceTimersByTime(1);
+      rstest.advanceTimersByTime(1);
       expect(backgroundElementTemplateInstanceManager.get(fallbackOne.instanceId)).toBeUndefined();
       expect(backgroundElementTemplateInstanceManager.get(fallbackTwo.instanceId)).toBeUndefined();
     } finally {
-      vi.useRealTimers();
+      rstest.useRealTimers();
     }
   });
 
@@ -776,10 +776,10 @@ describe('ElementTemplate Suspense background lifecycle', () => {
     const originalQueryComponent = lynxWithQuery.QueryComponent;
     const originalGetDynamicComponentExports = ttWithDynamic.getDynamicComponentExports;
     const queryCallbacks = new Map<string, QueryComponentCallback>();
-    const QueryComponent = vi.fn((source: string, callback: QueryComponentCallback) => {
+    const QueryComponent = rstest.fn((source: string, callback: QueryComponentCallback) => {
       queryCallbacks.set(source, callback);
     });
-    const getDynamicComponentExports = vi.fn((schema: string) => ({
+    const getDynamicComponentExports = rstest.fn((schema: string) => ({
       default: () =>
         createElement(`${schema}:_et_same`, {
           attributeSlots: [schema === 'entry-a' ? 'A' : 'B'],
@@ -858,10 +858,10 @@ describe('ElementTemplate Suspense background lifecycle', () => {
     const originalQueryComponent = lynxWithQuery.QueryComponent;
     const originalGetDynamicComponentExports = ttWithDynamic.getDynamicComponentExports;
     let queryCallback: QueryComponentCallback | undefined;
-    lynxWithQuery.QueryComponent = vi.fn((_source: string, callback: QueryComponentCallback) => {
+    lynxWithQuery.QueryComponent = rstest.fn((_source: string, callback: QueryComponentCallback) => {
       queryCallback = callback;
     });
-    ttWithDynamic.getDynamicComponentExports = vi.fn((schema: string) => ({
+    ttWithDynamic.getDynamicComponentExports = rstest.fn((schema: string) => ({
       default: () =>
         jsxRuntime(`${schema}:_et_same`, {
           attributeSlots: ['loaded'],

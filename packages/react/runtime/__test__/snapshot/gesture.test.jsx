@@ -1,5 +1,5 @@
 import { render } from 'preact';
-import { afterEach, beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, beforeAll, beforeEach, describe, expect, it, rstest } from '@rstest/core';
 
 import { replaceCommitHook } from '../../src/snapshot/lifecycle/patch/commit';
 import { injectUpdateMainThread } from '../../src/snapshot/lifecycle/patch/updateMainThread';
@@ -14,18 +14,18 @@ beforeAll(() => {
   replaceCommitHook();
   globalThis.lynxWorkletImpl = {
     _refImpl: {
-      clearFirstScreenWorkletRefMap: vi.fn(),
+      clearFirstScreenWorkletRefMap: rstest.fn(),
     },
     _runOnBackgroundDelayImpl: {
-      runDelayedBackgroundFunctions: vi.fn(),
+      runDelayedBackgroundFunctions: rstest.fn(),
     },
-    _hydrateCtx: vi.fn(),
+    _hydrateCtx: rstest.fn(),
     _jsFunctionLifecycleManager: {
-      addRef: vi.fn(),
+      addRef: rstest.fn(),
     },
     _eventDelayImpl: {
-      runDelayedWorklet: vi.fn(),
-      clearDelayedWorklets: vi.fn(),
+      runDelayedWorklet: rstest.fn(),
+      clearDelayedWorklets: rstest.fn(),
     },
   };
 });
@@ -35,24 +35,24 @@ beforeEach(() => {
   SystemInfo.lynxSdkVersion = '999.999';
   globalThis.lynxWorkletImpl = {
     _refImpl: {
-      clearFirstScreenWorkletRefMap: vi.fn(),
+      clearFirstScreenWorkletRefMap: rstest.fn(),
     },
     _runOnBackgroundDelayImpl: {
-      runDelayedBackgroundFunctions: vi.fn(),
+      runDelayedBackgroundFunctions: rstest.fn(),
     },
-    _hydrateCtx: vi.fn(),
+    _hydrateCtx: rstest.fn(),
     _jsFunctionLifecycleManager: {
-      addRef: vi.fn(),
+      addRef: rstest.fn(),
     },
     _eventDelayImpl: {
-      runDelayedWorklet: vi.fn(),
-      clearDelayedWorklets: vi.fn(),
+      runDelayedWorklet: rstest.fn(),
+      clearDelayedWorklets: rstest.fn(),
     },
   };
 });
 
 afterEach(() => {
-  vi.restoreAllMocks();
+  rstest.restoreAllMocks();
   elementTree.clear();
 });
 
@@ -673,7 +673,7 @@ describe('Gesture', () => {
 
 describe('Gesture in spread', () => {
   it('normal gesture', async function() {
-    const spySetGesture = vi.spyOn(globalThis, '__SetGestureDetector');
+    const spySetGesture = rstest.spyOn(globalThis, '__SetGestureDetector');
     function Comp() {
       const gesture = {
         id: 1,
@@ -805,8 +805,8 @@ describe('Gesture in spread', () => {
     }
   });
   it('update gesture', async function() {
-    const spySetGesture = vi.spyOn(globalThis, '__SetGestureDetector');
-    const spyRemoveGesture = vi.spyOn(globalThis, '__RemoveGestureDetector');
+    const spySetGesture = rstest.spyOn(globalThis, '__SetGestureDetector');
+    const spyRemoveGesture = rstest.spyOn(globalThis, '__RemoveGestureDetector');
     let _gesture = {
       id: 1,
       type: 0,
@@ -1038,8 +1038,8 @@ describe('Gesture in spread', () => {
     }
   });
   it('remove gesture', async function() {
-    const spySetGesture = vi.spyOn(globalThis, '__SetGestureDetector');
-    const spyRemoveGesture = vi.spyOn(globalThis, '__RemoveGestureDetector');
+    const spySetGesture = rstest.spyOn(globalThis, '__SetGestureDetector');
+    const spyRemoveGesture = rstest.spyOn(globalThis, '__RemoveGestureDetector');
     let _gesture = {
       id: 1,
       type: 0,
@@ -1125,7 +1125,7 @@ describe('Gesture in spread', () => {
     }
   });
   it('keeps flatten when spread removes gesture but retains no-flatten attrs', async function() {
-    const spyRemoveGesture = vi.spyOn(globalThis, '__RemoveGestureDetector');
+    const spyRemoveGesture = rstest.spyOn(globalThis, '__RemoveGestureDetector');
     let _gesture = {
       id: 1,
       type: 0,
@@ -1200,8 +1200,8 @@ describe('Gesture in spread', () => {
     }
   });
   it('remove stale detector ids when gesture count shrinks on diff', async function() {
-    const spySetGesture = vi.spyOn(globalThis, '__SetGestureDetector');
-    const spyRemoveGesture = vi.spyOn(globalThis, '__RemoveGestureDetector');
+    const spySetGesture = rstest.spyOn(globalThis, '__SetGestureDetector');
+    const spyRemoveGesture = rstest.spyOn(globalThis, '__RemoveGestureDetector');
 
     const createGesture = (id) => ({
       id,
@@ -1295,7 +1295,7 @@ describe('Gesture in spread', () => {
     }
   });
   it('updates reordered composed gesture detectors with one-to-one old matches', async function() {
-    const spySetGesture = vi.spyOn(globalThis, '__SetGestureDetector');
+    const spySetGesture = rstest.spyOn(globalThis, '__SetGestureDetector');
 
     const createGesture = (id, wkltId) => ({
       id,

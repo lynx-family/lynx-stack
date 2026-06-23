@@ -1,4 +1,4 @@
-import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { beforeEach, describe, expect, it, rstest } from '@rstest/core';
 
 import { resetElementTemplateCommitState } from '../../../../src/element-template/background/commit-hook.js';
 import { BackgroundElementTemplateInstance } from '../../../../src/element-template/background/instance.js';
@@ -46,14 +46,14 @@ describe('Element Template prop adapter hydration', () => {
     clearEventState();
     clearRefState();
     resetElementTemplateCommitState();
-    vi.clearAllMocks();
+    rstest.clearAllMocks();
   });
 
   it('registers event handlers for background-only insertion subtrees during hydrate', () => {
     __etAttrPlanMap.child = [0, adaptEventAttrSlot];
     const root = new BackgroundElementTemplateInstance('root');
     const child = new BackgroundElementTemplateInstance('child');
-    const handler = vi.fn();
+    const handler = rstest.fn();
     child.setAttribute('attributeSlots', [handler]);
     root.appendChild(child);
 
@@ -84,7 +84,7 @@ describe('Element Template prop adapter hydration', () => {
   it('prepares background event handlers with the serialized uid before diffing hydrate slots', () => {
     __etAttrPlanMap.root = [0, adaptEventAttrSlot];
     const root = new BackgroundElementTemplateInstance('root');
-    const handler = vi.fn();
+    const handler = rstest.fn();
     root.setAttribute('attributeSlots', [handler]);
 
     const stream = hydrate(
@@ -102,7 +102,7 @@ describe('Element Template prop adapter hydration', () => {
   it('patches a hydrated event value when main thread serialized null but background has a handler', () => {
     __etAttrPlanMap.root = [0, adaptEventAttrSlot];
     const root = new BackgroundElementTemplateInstance('root');
-    const handler = vi.fn();
+    const handler = rstest.fn();
     root.setAttribute('attributeSlots', [handler]);
 
     const stream = hydrate(
@@ -147,7 +147,7 @@ describe('Element Template prop adapter hydration', () => {
   it('prepares background spread event handlers with the serialized uid before diffing hydrate slots', () => {
     __etAttrPlanMap.root = [0, adaptSpreadAttrSlot];
     const root = new BackgroundElementTemplateInstance('root');
-    const handleTap = vi.fn();
+    const handleTap = rstest.fn();
     root.setAttribute('attributeSlots', [{
       id: 'cta',
       bindtap: handleTap,
@@ -172,7 +172,7 @@ describe('Element Template prop adapter hydration', () => {
   it('patches a hydrated spread value when main thread serialized null but background has a spread event', () => {
     __etAttrPlanMap.root = [0, adaptSpreadAttrSlot];
     const root = new BackgroundElementTemplateInstance('root');
-    const handleTap = vi.fn();
+    const handleTap = rstest.fn();
     root.setAttribute('attributeSlots', [{
       id: 'cta',
       bindtap: handleTap,
@@ -224,7 +224,7 @@ describe('Element Template prop adapter hydration', () => {
   it('prepares spread ref markers with the serialized uid without queueing hydrate ref callbacks', () => {
     __etAttrPlanMap.root = [0, adaptSpreadAttrSlot];
     const root = new BackgroundElementTemplateInstance('root');
-    const ref = vi.fn();
+    const ref = rstest.fn();
     root.setAttribute('attributeSlots', [{ ref }]);
     flushPendingRefs();
     expect(ref).toHaveBeenCalledTimes(1);

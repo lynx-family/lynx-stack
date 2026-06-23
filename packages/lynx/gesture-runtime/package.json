@@ -28,7 +28,7 @@
   "scripts": {
     "build": "rslib build",
     "dev": "rslib build --watch",
-    "test": "vitest run"
+    "test": "rstest"
   },
   "devDependencies": {
     "@lynx-js/react": "workspace:*",

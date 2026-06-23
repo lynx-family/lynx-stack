@@ -2,7 +2,14 @@
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
 
-import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
+import {
+  afterEach,
+  beforeEach,
+  describe,
+  expect,
+  test,
+  rstest,
+} from '@rstest/core';
 import { runOnMainThread, useEffect } from '@lynx-js/react';
 import { act, render } from '@lynx-js/react/testing-library';
 
@@ -27,8 +34,8 @@ describe('MotionValue', () => {
   });
 
   afterEach(() => {
-    vi.restoreAllMocks();
-    vi.useRealTimers(); // Ensure timers are reset
+    rstest.restoreAllMocks();
+    rstest.useRealTimers(); // Ensure timers are reset
     delete (globalThis as any).runOnRegistered;
     delete (globalThis as any).__TEST_ERROR;
     delete (globalThis as any).__MV;
@@ -131,7 +138,7 @@ describe('MotionValue', () => {
 
   describe('velocity tracking', () => {
     test('should track velocity on number value changes', async () => {
-      vi.useFakeTimers();
+      rstest.useFakeTimers();
 
       const App = () => {
         useEffect(() => {
@@ -156,7 +163,7 @@ describe('MotionValue', () => {
 
       // Manually handle waiting logic since timers are mocked
       await act(async () => {
-        vi.advanceTimersByTime(10);
+        rstest.advanceTimersByTime(10);
       });
       await checkError();
 
@@ -164,7 +171,7 @@ describe('MotionValue', () => {
       await act(async () => {
         // We already advanced 10ms for previous check.
         // We want total 100ms interval for easy math.
-        vi.advanceTimersByTime(90);
+        rstest.advanceTimersByTime(90);
       });
 
       // Step 3: Set value
@@ -191,7 +198,7 @@ describe('MotionValue', () => {
       rerender(<Step2 />);
 
       await act(async () => {
-        vi.advanceTimersByTime(10);
+        rstest.advanceTimersByTime(10);
       });
       await checkError();
     });

@@ -5,14 +5,13 @@
   "type": "module",
   "scripts": {
     "rstest": "rstest run",
-    "test": "vitest run",
-    "test:rstest": "rstest run",
-    "test:vitest": "vitest run"
+    "test": "rstest run"
   },
   "dependencies": {
     "@lynx-js/react": "workspace:*"
   },
   "devDependencies": {
+    "@lynx-js/react-rsbuild-plugin": "workspace:*",
     "@testing-library/jest-dom": "^6.9.1"
   }
 }

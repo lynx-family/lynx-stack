@@ -41,7 +41,8 @@
     "tsdoc-metadata.json"
   ],
   "scripts": {
-    "api-extractor": "api-extractor run --verbose"
+    "api-extractor": "api-extractor run --verbose",
+    "test": "rstest"
   },
   "dependencies": {
     "eventemitter3": "^5.0.4"

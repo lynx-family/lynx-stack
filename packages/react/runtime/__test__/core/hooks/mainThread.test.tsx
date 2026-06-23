@@ -2,12 +2,15 @@
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
 
-import { beforeEach, afterEach, vi } from 'vitest';
+import { beforeEach, afterEach, rstest } from '@rstest/core';
+// `rstest.resetModules()` must be a literal call (module-mock APIs are not
+// aliasable).
+import { rstest } from '@rstest/core';
 import { globalEnvManager } from '../../snapshot/utils/envManager';
-import { describe } from 'vitest';
-import { it } from 'vitest';
-import { expect } from 'vitest';
-import { beforeAll } from 'vitest';
+import { describe } from '@rstest/core';
+import { it } from '@rstest/core';
+import { expect } from '@rstest/core';
+import { beforeAll } from '@rstest/core';
 import { replaceCommitHook } from '../../../src/snapshot/lifecycle/patch/commit';
 import { elementTree } from '../../snapshot/utils/nativeMethod';
 import { __root } from '../../../src/root';
@@ -38,8 +41,8 @@ beforeEach(() => {
 
 afterEach(() => {
   elementTree.clear();
-  vi.resetModules();
-  vi.restoreAllMocks();
+  rstest.resetModules();
+  rstest.restoreAllMocks();
   globalThis.__GLOBAL_PROPS_MODE__ = 'reactive';
 });
 
@@ -54,8 +57,8 @@ describe('mainThread hooks', () => {
 
   it('should get initialValue', () => {
     let setCount;
-    options[HOOK] = vi.fn();
-    options.useDebugValue = vi.fn();
+    options[HOOK] = rstest.fn();
+    options.useDebugValue = rstest.fn();
     lynx.reportError = (e) => {
       console.error('Error boundary caught error', e);
     };
@@ -184,7 +187,7 @@ describe('mainThread hooks', () => {
       // SubComp useId
       expect(options[HOOK]).toHaveBeenNthCalledWith(9, expect.anything(), 0, 11);
 
-      console.error = vi.fn();
+      console.error = rstest.fn();
       setCount(1);
       expect(console.error).toBeCalledWith('Cannot update state in main thread!');
     }

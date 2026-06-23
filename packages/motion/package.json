@@ -44,7 +44,7 @@
   "scripts": {
     "build": "rslib build",
     "dev": "rslib build --watch",
-    "test": "vitest run"
+    "test": "rstest"
   },
   "dependencies": {
     "framer-motion": "12.34.1",

@@ -1,7 +1,19 @@
 import { JSDOM } from 'jsdom';
 import * as fs from 'fs';
 import { fileURLToPath } from 'url';
-import { vi } from 'vitest';
+
+// `jsdom.ts` is shared by the rstest test run AND the tinybench benchmark
+// (`pnpm run bench`, plain Node). Take the runner's mock API from the global —
+// `rstest` under rstest, `vi` under vitest — instead of hard-importing a
+// runner. Under plain Node neither exists, so fall back to a minimal stub that
+// only needs to satisfy the `CSS` global mock below.
+const mockApi: {
+  mockObject: (o: object) => any;
+  fn: () => { mockReturnValue: (v: unknown) => unknown };
+} = (globalThis as any).rstest ?? (globalThis as any).vi ?? {
+  mockObject: (o: object) => o,
+  fn: () => ({ mockReturnValue: () => {} }),
+};
 
 const { window } = new JSDOM(undefined, { url: 'http://localhost/' });
 const document = window.document;
@@ -96,6 +108,15 @@ class MockWorker {
     mainThreadPort.close();
   }
 }
+// The tinybench benchmarks (`pnpm run bench`, plain Node) construct a native
+// `EventTarget` (`Bench`) that dispatches native `Event`s, but the assignments
+// below replace `globalThis.Event`/`MouseEvent` with jsdom's versions (needed
+// by the rstest tests). Stash the natives so the bench files can restore them
+// for tinybench; this is inert under the rstest run.
+Object.assign(globalThis, {
+  __nativeEvent__: globalThis.Event,
+  __nativeMouseEvent__: globalThis.MouseEvent,
+});
 Object.assign(globalThis, {
   document,
   window,
@@ -107,8 +128,8 @@ Object.assign(globalThis, {
   requestAnimationFrame: (cb: any) => setTimeout(cb, 0),
   Worker: MockWorker,
   location: window.location,
-  CSS: vi.mockObject({
-    supports: vi.fn().mockReturnValue(true),
+  CSS: mockApi.mockObject({
+    supports: mockApi.fn().mockReturnValue(true),
   }),
   // jsdom provides these on `window` but does not surface them as globals;
   // production code relies on these being available globally, and the

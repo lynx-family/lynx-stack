@@ -16,8 +16,8 @@
     "tests",
     "playwright.config.ts",
     "rslib.config.ts",
-    "vitest.config.ts",
-    "vitest.snapshot.config.ts",
+    "rstest.config.ts",
+    "rstest.snapshot.config.ts",
   ],
   "references": [],
 }

@@ -11,7 +11,7 @@
 
 /* eslint-disable */
 
-import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { beforeEach, describe, expect, it, rstest } from '@rstest/core';
 
 import { Component, createElement, Fragment, memo } from '@lynx-js/react';
 import type { PropsWithChildren } from '@lynx-js/react';
@@ -22,7 +22,7 @@ import { useSyncExternalStoreWithSelector } from '../with-selector.js';
 // This tests shared behavior between the built-in and shim implementations of
 // of useSyncExternalStore.
 describe('useSyncExternalStoreWithSelector', () => {
-  const log = vi.fn();
+  const log = rstest.fn();
   function assertLog(expected: string[]) {
     expect(log.mock.calls.map(args => args.join(' '))).toStrictEqual(expected);
     log.mockClear();

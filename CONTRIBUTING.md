@@ -49,7 +49,7 @@ pnpm eslint .
 pnpm eslint --fix .
 ```
 
-#### Tests for all packages via [`vitest`](https://vitest.dev/):
+#### Tests for all packages via [`rstest`](https://rstest.rs/):
 
 ```sh
 pnpm test
@@ -94,10 +94,10 @@ pnpm run test server
 #### Run test with Node debugger
 
 Quick way to debug tests in VS Code is via `JavaScript Debug Terminal`.
-Open a new `JavaScript Debug Terminal` and run `pnpm vitest`.
+Open a new `JavaScript Debug Terminal` and run `pnpm test`.
 _This works with any code ran in Node, so will work with most JS testing frameworks._
 
-See [Debugging Vitest](https://vitest.dev/guide/debugging.html) for more details.
+See [Debugging Rstest](https://rstest.rs/guide/basic/debugging) for more details.
 
 You can combine debug with `--project` or `.only` to debug a subset of tests. If you plan to stay long in the debugger (which you'll likely do!), you may increase the test timeout by setting `--testTimeout`.
 

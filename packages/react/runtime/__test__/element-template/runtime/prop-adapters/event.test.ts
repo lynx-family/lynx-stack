@@ -1,4 +1,4 @@
-import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, rstest } from '@rstest/core';
 
 import { destroyElementTemplateBackgroundRuntime } from '../../../../src/element-template/background/destroy.js';
 import { BackgroundElementTemplateInstance } from '../../../../src/element-template/background/instance.js';
@@ -31,7 +31,7 @@ describe('ElementTemplate event bridge', () => {
   }
 
   beforeEach(() => {
-    vi.clearAllMocks();
+    rstest.clearAllMocks();
     backgroundElementTemplateInstanceManager.clear();
     backgroundElementTemplateInstanceManager.nextId = 0;
     clearEtAttrPlanMap();
@@ -44,7 +44,7 @@ describe('ElementTemplate event bridge', () => {
   });
 
   it('dispatches publishEvent to the current handler', () => {
-    const handler = vi.fn();
+    const handler = rstest.fn();
     const eventData = { type: 'tap', detail: { x: 1 } };
     createEventInstance(-1, [0, adaptEventAttrSlot], [handler]);
 
@@ -77,7 +77,7 @@ describe('ElementTemplate event bridge', () => {
     globalThis.__ALOG__ = false;
     const alog = console.alog as unknown as { mock: { calls: unknown[][] }; mockClear(): void };
     alog.mockClear();
-    const handler = vi.fn();
+    const handler = rstest.fn();
     createEventInstance(-9, [0, adaptEventAttrSlot], [handler]);
 
     publishEvent('-9:0:', { type: 'tap' });
@@ -87,7 +87,7 @@ describe('ElementTemplate event bridge', () => {
   });
 
   it('dispatches publicComponentEvent through the same handler lookup', () => {
-    const handler = vi.fn();
+    const handler = rstest.fn();
     const eventData = { type: 'tap' };
     createEventInstance(-2, [0, adaptEventAttrSlot], [handler]);
 
@@ -97,7 +97,7 @@ describe('ElementTemplate event bridge', () => {
   });
 
   it('dispatches spread event values through the same handler lookup', () => {
-    const handler = vi.fn();
+    const handler = rstest.fn();
     const eventData = { type: 'tap', spread: true };
     createEventInstance(-8, [0, adaptSpreadAttrSlot], [{ bindtap: handler }]);
 
@@ -107,8 +107,8 @@ describe('ElementTemplate event bridge', () => {
   });
 
   it('dispatches direct and spread event values from their owning raw slots', () => {
-    const directHandler = vi.fn();
-    const spreadHandler = vi.fn();
+    const directHandler = rstest.fn();
+    const spreadHandler = rstest.fn();
     createEventInstance(
       -9,
       [0, adaptEventAttrSlot, 1, adaptSpreadAttrSlot],
@@ -125,7 +125,7 @@ describe('ElementTemplate event bridge', () => {
   it('reports handler errors without throwing through native', () => {
     const error = new Error('event failed');
     const oldReportError = lynx.reportError;
-    const reportError = vi.fn();
+    const reportError = rstest.fn();
     lynx.reportError = reportError;
     try {
       createEventInstance(-3, [0, adaptEventAttrSlot], [() => {
@@ -140,8 +140,8 @@ describe('ElementTemplate event bridge', () => {
   });
 
   it('queues missing handlers before hydrate and drops missing handlers after flush', () => {
-    const queuedHandler = vi.fn();
-    const droppedHandler = vi.fn();
+    const queuedHandler = rstest.fn();
+    const droppedHandler = rstest.fn();
     const queuedEvent = { type: 'tap', phase: 'before-hydrate' };
     const droppedEvent = { type: 'tap', phase: 'after-hydrate' };
 
@@ -158,7 +158,7 @@ describe('ElementTemplate event bridge', () => {
   });
 
   it('clears queued events when the background runtime is destroyed', () => {
-    const handler = vi.fn();
+    const handler = rstest.fn();
     resetEventStateForRuntime();
     publishEvent('-6:0:', { type: 'tap' });
 
@@ -170,7 +170,7 @@ describe('ElementTemplate event bridge', () => {
   });
 
   it('does not queue stale native events after the background runtime is destroyed', () => {
-    const handler = vi.fn();
+    const handler = rstest.fn();
     resetEventStateForRuntime();
     destroyElementTemplateBackgroundRuntime();
 

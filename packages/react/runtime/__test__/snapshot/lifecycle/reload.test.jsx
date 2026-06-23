@@ -4,7 +4,7 @@
 // LICENSE file in the root directory of this source tree.
 */
 import { render } from 'preact';
-import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
+import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, it, rstest } from '@rstest/core';
 
 import { BasicBG, ListBG, ListConditionalBG, ViewBG, setObj, setStr } from './reloadBG';
 import { BasicMT, ListConditionalMT, ListMT, ViewMT } from './reloadMT';
@@ -30,7 +30,7 @@ beforeEach(() => {
 });
 
 afterEach(() => {
-  vi.restoreAllMocks();
+  rstest.restoreAllMocks();
 
   globalEnvManager.resetEnv();
   elementTree.clear();

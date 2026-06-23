@@ -1,5 +1,5 @@
 import { Component, h, options, render } from 'preact';
-import { afterEach, beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, beforeAll, beforeEach, describe, expect, it, rstest } from '@rstest/core';
 import { setupPage } from '../../../src/snapshot';
 import { globalEnvManager } from '../utils/envManager';
 import { elementTree, waitSchedule } from '../utils/nativeMethod';
@@ -15,7 +15,7 @@ beforeEach(() => {
 });
 
 afterEach(() => {
-  vi.restoreAllMocks();
+  rstest.restoreAllMocks();
   elementTree.clear();
   lynx.performance.__functionCallHistory = [];
 });

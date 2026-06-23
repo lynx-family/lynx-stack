@@ -1,4 +1,4 @@
-import { afterAll, describe, test, expect } from 'vitest';
+import { afterAll, describe, test, expect } from '@rstest/core';
 import { Rpc } from '../src/index.js';
 import {
   addAsync,
@@ -13,8 +13,16 @@ import {
   callbackifyEndpoint,
 } from './endpoints';
 import { Worker } from 'node:worker_threads';
+import { fileURLToPath } from 'node:url';
+import path from 'node:path';
 
-const worker = new Worker(new URL('./worker.js', import.meta.url));
+// Resolve the worker entry via an absolute path rather than
+// `new Worker(new URL('./worker.js', import.meta.url))`: rstest's bundler
+// rewrites that literal pattern to a hashed asset it never emits, which makes
+// the worker fail with MODULE_NOT_FOUND and hangs the handshake below.
+const worker = new Worker(
+  path.join(path.dirname(fileURLToPath(import.meta.url)), 'worker.js'),
+);
 const privateChannel = new MessageChannel();
 
 const readyPromise = new Promise<void>((resolve) => {

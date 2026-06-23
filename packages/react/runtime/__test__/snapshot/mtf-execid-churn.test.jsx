@@ -1,5 +1,5 @@
 import { options, render } from 'preact';
-import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
+import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, it, rstest } from '@rstest/core';
 
 import { useState } from '../../src/index';
 import { replaceCommitHook } from '../../src/snapshot/lifecycle/patch/commit';
@@ -41,7 +41,7 @@ beforeEach(() => {
 
 afterEach(() => {
   SystemInfo.lynxSdkVersion = prevLynxSdkVersion;
-  vi.restoreAllMocks();
+  rstest.restoreAllMocks();
   elementTree.clear();
 });
 

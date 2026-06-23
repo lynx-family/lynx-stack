@@ -41,8 +41,7 @@
   "devDependencies": {
     "@lynx-js/chunk-loading-webpack-plugin": "workspace:*",
     "@lynx-js/test-tools": "workspace:*",
-    "@rspack/core": "catalog:rspack",
-    "@rstest/core": "catalog:rstest"
+    "@rspack/core": "catalog:rspack"
   },
   "engines": {
     "node": ">=18"

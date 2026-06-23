@@ -4,7 +4,7 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { describe, it } from 'vitest';
+import { describe, it } from '@rstest/core';
 import ts from 'typescript';
 
 const __filename = fileURLToPath(import.meta.url);

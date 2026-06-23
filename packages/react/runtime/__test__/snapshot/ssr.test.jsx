@@ -1,6 +1,6 @@
 /** @jsxImportSource ../../lepus */
 
-import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
+import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, it, rstest } from '@rstest/core';
 
 import { globalEnvManager } from './utils/envManager';
 import { elementTree, options } from './utils/nativeMethod';
@@ -401,8 +401,8 @@ describe('ssr', () => {
 
     const __GetPageElement = () => __page;
     const __GetTemplateParts = () => Object.fromEntries(ssrIDMap.entries());
-    vi.stubGlobal('__GetPageElement', __GetPageElement);
-    vi.stubGlobal('__GetTemplateParts', __GetTemplateParts);
+    rstest.stubGlobal('__GetPageElement', __GetPageElement);
+    rstest.stubGlobal('__GetTemplateParts', __GetTemplateParts);
 
     ssrHydrate(info);
     expect(__root.__element_root).toMatchInlineSnapshot(`
@@ -425,7 +425,7 @@ describe('ssr', () => {
       </page>
     `);
 
-    vi.unstubAllGlobals();
+    rstest.unstubAllGlobals();
   });
 
   it('basic - ssrEncode - list', () => {
@@ -462,8 +462,8 @@ describe('ssr', () => {
 
     const __GetPageElement = () => __page;
     const __GetTemplateParts = () => Object.fromEntries(ssrIDMap.entries());
-    vi.stubGlobal('__GetPageElement', __GetPageElement);
-    vi.stubGlobal('__GetTemplateParts', __GetTemplateParts);
+    rstest.stubGlobal('__GetPageElement', __GetPageElement);
+    rstest.stubGlobal('__GetTemplateParts', __GetTemplateParts);
 
     ssrHydrate(info);
     expect(__internalPage).toBe(__page);
@@ -475,7 +475,7 @@ describe('ssr', () => {
       expect(elementTree.triggerComponentAtIndex(listRef, 2)).toEqual(uiSign3);
     }
 
-    vi.unstubAllGlobals();
+    rstest.unstubAllGlobals();
   });
 
   it('ssrEncode - filter _wkltId', () => {

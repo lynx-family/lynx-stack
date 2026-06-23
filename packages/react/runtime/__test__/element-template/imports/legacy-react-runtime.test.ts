@@ -1,4 +1,4 @@
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it } from '@rstest/core';
 
 import ReactLegacyRuntime, * as ReactLegacyRuntimeNamespace from '@lynx-js/react/legacy-react-runtime';
 import { wrapWithLynxComponent } from '@lynx-js/react/element-template/internal';

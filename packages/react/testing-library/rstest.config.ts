@@ -1,13 +1,22 @@
+import { createRequire } from 'node:module';
+
 import { defineConfig } from '@rstest/core';
-import { pluginReactLynx } from '@lynx-js/react-rsbuild-plugin';
 import { withDefaultConfig } from './src/rstest-config.ts';
+
+const require = createRequire(import.meta.url);
 
 export default defineConfig({
   extends: withDefaultConfig({
     modifyRstestConfig(config) {
       return {
         ...config,
+        // The vitest runner's `spyOn` is idempotent when a method is already
+        // spied; rstest's is not, so a spy re-installed across loop iterations
+        // (e.g. lazy-bundle Suspense map) recurses. Restore spies between tests
+        // to match vitest semantics.
+        restoreMocks: true,
         tools: {
+          ...config.tools,
           swc: {
             jsc: {
               transform: {
@@ -16,10 +25,6 @@ export default defineConfig({
             },
           },
         },
-        plugins: [
-          ...(config.plugins || []),
-          pluginReactLynx(),
-        ],
         source: {
           ...config.source,
           define: {

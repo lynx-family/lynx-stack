@@ -2,7 +2,7 @@
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
 
-import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { beforeEach, describe, expect, it, rstest } from '@rstest/core';
 
 import { globalCommitContext } from '../../../../src/element-template/background/commit-context.js';
 import {
@@ -124,7 +124,7 @@ describe('BackgroundElementTemplateInstance', () => {
 
   it('reports illegal typed element handle ids on create', () => {
     const oldReportError = lynx.reportError;
-    const reportError = vi.fn();
+    const reportError = rstest.fn();
     lynx.reportError = reportError;
 
     try {
@@ -240,8 +240,8 @@ describe('BackgroundElementTemplateInstance', () => {
   });
 
   it('queues lifetime cleanup when logically removing a hydrated list item', () => {
-    const cleanup = vi.fn();
-    const ref = vi.fn(() => cleanup);
+    const cleanup = rstest.fn();
+    const ref = rstest.fn(() => cleanup);
     __etAttrPlanMap._et_item_a = [0, adaptRefAttrSlot];
     const list = new BackgroundListElementTemplateInstance();
     backgroundElementTemplateInstanceManager.updateId(list.instanceId, -10);
@@ -500,7 +500,7 @@ describe('BackgroundElementTemplateInstance', () => {
     });
 
     it('queues direct ref attach when inserting a post-hydration template', () => {
-      const ref = vi.fn();
+      const ref = rstest.fn();
       __etAttrPlanMap.view = [0, adaptRefAttrSlot];
       const parent = new BackgroundElementTemplateInstance('view');
       parent.emitCreate();
@@ -536,7 +536,7 @@ describe('BackgroundElementTemplateInstance', () => {
       // ref publishing disabled on unmaterialized children (attach is deferred
       // to `emitCreate`). If `removeChild` unconditionally queues a cleanup,
       // the ref observes a spurious detach for an attach that never fired.
-      const ref = vi.fn();
+      const ref = rstest.fn();
       __etAttrPlanMap.view = [0, adaptRefAttrSlot];
       markElementTemplateHydrated();
       const parent = new BackgroundElementTemplateInstance('view');
@@ -553,7 +553,7 @@ describe('BackgroundElementTemplateInstance', () => {
     });
 
     it('does not re-attach stable direct refs when moving an existing hydrated child', () => {
-      const ref = vi.fn();
+      const ref = rstest.fn();
       __etAttrPlanMap.view = [0, adaptRefAttrSlot];
       const parent = new BackgroundElementTemplateInstance('view');
       const before = new BackgroundElementTemplateInstance('view');
@@ -991,8 +991,8 @@ describe('BackgroundElementTemplateInstance', () => {
     });
 
     it('queues direct ref cleanup when removing a hydrated subtree', () => {
-      const cleanup = vi.fn();
-      const ref = vi.fn(() => cleanup);
+      const cleanup = rstest.fn();
+      const ref = rstest.fn(() => cleanup);
       __etAttrPlanMap.view = [0, adaptRefAttrSlot];
       const parent = new BackgroundElementTemplateInstance('view');
       const child = new BackgroundElementTemplateInstance('view');
@@ -1042,9 +1042,9 @@ describe('BackgroundElementTemplateInstance', () => {
     });
 
     it('queues all direct and spread ref cleanups when removing a hydrated subtree', () => {
-      const directRef = vi.fn();
-      const cleanup = vi.fn();
-      const spreadRef = vi.fn(() => cleanup);
+      const directRef = rstest.fn();
+      const cleanup = rstest.fn();
+      const spreadRef = rstest.fn(() => cleanup);
       __etAttrPlanMap.view = [0, adaptRefAttrSlot, 1, adaptSpreadAttrSlot];
       const parent = new BackgroundElementTemplateInstance('view');
       const child = new BackgroundElementTemplateInstance('view');
@@ -1069,11 +1069,11 @@ describe('BackgroundElementTemplateInstance', () => {
     });
 
     it('queues nested direct and spread ref cleanup when removing a hydrated subtree', () => {
-      const childCleanup = vi.fn();
-      const childRef = vi.fn(() => childCleanup);
-      const directGrandchildRef = vi.fn();
-      const grandchildCleanup = vi.fn();
-      const grandchildSpreadRef = vi.fn(() => grandchildCleanup);
+      const childCleanup = rstest.fn();
+      const childRef = rstest.fn(() => childCleanup);
+      const directGrandchildRef = rstest.fn();
+      const grandchildCleanup = rstest.fn();
+      const grandchildSpreadRef = rstest.fn(() => grandchildCleanup);
       __etAttrPlanMap.view = [0, adaptRefAttrSlot, 1, adaptSpreadAttrSlot];
       const parent = new BackgroundElementTemplateInstance('view');
       const child = new BackgroundElementTemplateInstance('view');
@@ -1117,8 +1117,8 @@ describe('BackgroundElementTemplateInstance', () => {
     });
 
     it('does not repeat direct function ref cleanup for detached subtrees on destroy', () => {
-      const cleanup = vi.fn();
-      const ref = vi.fn(() => cleanup);
+      const cleanup = rstest.fn();
+      const ref = rstest.fn(() => cleanup);
       __etAttrPlanMap.view = [0, adaptRefAttrSlot];
       const parent = new BackgroundElementTemplateInstance('view');
       const child = new BackgroundElementTemplateInstance('view');
@@ -1183,8 +1183,8 @@ describe('BackgroundElementTemplateInstance', () => {
       // Regression: an earlier rewrite left a redundant `queueRefCleanupForSubtree`
       // inside the pre-hydration branch in addition to the unconditional one
       // emitted at the end of `removeChild`, so callback ref cleanups fired twice.
-      const cleanup = vi.fn();
-      const ref = vi.fn(() => cleanup);
+      const cleanup = rstest.fn();
+      const ref = rstest.fn(() => cleanup);
       __etAttrPlanMap.view = [0, adaptRefAttrSlot];
       const parent = new BackgroundElementTemplateInstance('view');
       const child = new BackgroundElementTemplateInstance('view');
@@ -1263,7 +1263,7 @@ describe('BackgroundElementTemplateInstance', () => {
   it('reports error for emitCreate with illegal handleId 0 in dev', () => {
     const lynxObj = globalThis.lynx as typeof lynx & { reportError?: (error: Error) => void };
     const oldReportError = lynxObj.reportError;
-    const reportErrorSpy = vi.fn();
+    const reportErrorSpy = rstest.fn();
     lynxObj.reportError = reportErrorSpy;
 
     const instance = new BackgroundElementTemplateInstance('view');
@@ -1305,7 +1305,7 @@ describe('BackgroundElementTemplateInstance', () => {
   });
 
   it('queues direct ref attach when preparing hydrated attribute slots', () => {
-    const ref = vi.fn();
+    const ref = rstest.fn();
     __etAttrPlanMap.view = [0, adaptRefAttrSlot];
     const instance = new BackgroundElementTemplateInstance('view', [ref]);
     backgroundElementTemplateInstanceManager.updateId(instance.instanceId, -2);
@@ -1320,8 +1320,8 @@ describe('BackgroundElementTemplateInstance', () => {
   });
 
   it('queues direct ref changes without emitting native ops when marker is unchanged', () => {
-    const oldRef = vi.fn();
-    const newRef = vi.fn();
+    const oldRef = rstest.fn();
+    const newRef = rstest.fn();
     __etAttrPlanMap.view = [0, adaptRefAttrSlot];
     const instance = new BackgroundElementTemplateInstance('view');
     backgroundElementTemplateInstanceManager.updateId(instance.instanceId, -2);
@@ -1344,8 +1344,8 @@ describe('BackgroundElementTemplateInstance', () => {
   });
 
   it('queues spread ref attach/update/detach from raw ref identity', () => {
-    const oldRef = vi.fn();
-    const newRef = vi.fn();
+    const oldRef = rstest.fn();
+    const newRef = rstest.fn();
     __etAttrPlanMap.view = [0, adaptSpreadAttrSlot];
     const instance = new BackgroundElementTemplateInstance('view');
     backgroundElementTemplateInstanceManager.updateId(instance.instanceId, -2);
@@ -1390,8 +1390,8 @@ describe('BackgroundElementTemplateInstance', () => {
   });
 
   it('queues direct and spread refs independently in descriptor order', () => {
-    const directRef = vi.fn();
-    const spreadRef = vi.fn();
+    const directRef = rstest.fn();
+    const spreadRef = rstest.fn();
     __etAttrPlanMap.view = [0, adaptRefAttrSlot, 1, adaptSpreadAttrSlot];
     const instance = new BackgroundElementTemplateInstance('view');
     backgroundElementTemplateInstanceManager.updateId(instance.instanceId, -2);
@@ -1419,7 +1419,7 @@ describe('BackgroundElementTemplateInstance', () => {
   });
 
   it('does not let explicit undefined spread refs detach sibling direct refs', () => {
-    const directRef = vi.fn();
+    const directRef = rstest.fn();
     __etAttrPlanMap.view = [0, adaptRefAttrSlot, 1, adaptSpreadAttrSlot];
     const instance = new BackgroundElementTemplateInstance('view');
     backgroundElementTemplateInstanceManager.updateId(instance.instanceId, -2);
@@ -1436,7 +1436,7 @@ describe('BackgroundElementTemplateInstance', () => {
   });
 
   it('keeps a stable direct ref attached while spread ref presence changes', () => {
-    const ref = vi.fn();
+    const ref = rstest.fn();
     __etAttrPlanMap.view = [0, adaptRefAttrSlot, 1, adaptSpreadAttrSlot];
     const instance = new BackgroundElementTemplateInstance('view');
     backgroundElementTemplateInstanceManager.updateId(instance.instanceId, -2);
@@ -1463,8 +1463,8 @@ describe('BackgroundElementTemplateInstance', () => {
   });
 
   it('queues spread and later direct refs independently', () => {
-    const spreadRef = vi.fn();
-    const directRef = vi.fn();
+    const spreadRef = rstest.fn();
+    const directRef = rstest.fn();
     __etAttrPlanMap.view = [0, adaptSpreadAttrSlot, 1, adaptRefAttrSlot];
     const instance = new BackgroundElementTemplateInstance('view');
     backgroundElementTemplateInstanceManager.updateId(instance.instanceId, -2);
@@ -1714,7 +1714,7 @@ describe('BackgroundElementTemplateInstance Shadow State', () => {
     markElementTemplateHydrated();
     globalCommitContext.ops = [];
 
-    const handler = vi.fn();
+    const handler = rstest.fn();
     instance.setAttribute('attributeSlots', [handler]);
 
     const eventValue = `${instance.instanceId}:0:`;
@@ -1734,8 +1734,8 @@ describe('BackgroundElementTemplateInstance Shadow State', () => {
     instance.emitCreate();
     markElementTemplateHydrated();
 
-    const firstHandler = vi.fn();
-    const secondHandler = vi.fn();
+    const firstHandler = rstest.fn();
+    const secondHandler = rstest.fn();
     instance.setAttribute('attributeSlots', [firstHandler]);
     globalCommitContext.ops = [];
 
@@ -1753,7 +1753,7 @@ describe('BackgroundElementTemplateInstance Shadow State', () => {
     instance.emitCreate();
     markElementTemplateHydrated();
 
-    const handler = vi.fn();
+    const handler = rstest.fn();
     instance.setAttribute('attributeSlots', [handler]);
     const eventValue = `${instance.instanceId}:0:`;
     globalCommitContext.ops = [];
@@ -1771,7 +1771,7 @@ describe('BackgroundElementTemplateInstance Shadow State', () => {
     instance.emitCreate();
     markElementTemplateHydrated();
 
-    const handler = vi.fn();
+    const handler = rstest.fn();
     instance.setAttribute('attributeSlots', [handler]);
     const eventValue = `${instance.instanceId}:0:`;
     globalCommitContext.ops = [];
@@ -1792,7 +1792,7 @@ describe('BackgroundElementTemplateInstance Shadow State', () => {
     __etAttrPlanMap.view = [0, adaptEventAttrSlot];
     markElementTemplateHydrated();
     const instance = new BackgroundElementTemplateInstance('view');
-    const handler = vi.fn();
+    const handler = rstest.fn();
     instance.setAttribute('attributeSlots', [handler]);
     globalCommitContext.ops = [];
 
@@ -1814,7 +1814,7 @@ describe('BackgroundElementTemplateInstance Shadow State', () => {
     __etAttrPlanMap.view = [0, adaptEventAttrSlot];
     markElementTemplateHydrated();
     const instance = new BackgroundElementTemplateInstance('view');
-    const handler = vi.fn();
+    const handler = rstest.fn();
     instance.setAttribute('attributeSlots', [handler]);
     const eventValue = `${instance.instanceId}:0:`;
 
@@ -1827,7 +1827,7 @@ describe('BackgroundElementTemplateInstance Shadow State', () => {
     __etAttrPlanMap.view = [0, adaptEventAttrSlot];
     markElementTemplateHydrated();
     const instance = new BackgroundElementTemplateInstance('view');
-    const handler = vi.fn();
+    const handler = rstest.fn();
     instance.setAttribute('attributeSlots', [handler]);
     const eventValue = `${instance.instanceId}:0:`;
 
@@ -1843,8 +1843,8 @@ describe('BackgroundElementTemplateInstance Shadow State', () => {
     markElementTemplateHydrated();
     globalCommitContext.ops = [];
 
-    const handleTap = vi.fn();
-    const handleTouch = vi.fn();
+    const handleTap = rstest.fn();
+    const handleTouch = rstest.fn();
     instance.setAttribute('attributeSlots', [{
       id: 'cta',
       bindtap: handleTap,
@@ -1875,8 +1875,8 @@ describe('BackgroundElementTemplateInstance Shadow State', () => {
     instance.emitCreate();
     markElementTemplateHydrated();
 
-    const firstHandler = vi.fn();
-    const secondHandler = vi.fn();
+    const firstHandler = rstest.fn();
+    const secondHandler = rstest.fn();
     instance.setAttribute('attributeSlots', [{ id: 'cta', bindtap: firstHandler }]);
     globalCommitContext.ops = [];
 
@@ -1894,8 +1894,8 @@ describe('BackgroundElementTemplateInstance Shadow State', () => {
     instance.emitCreate();
     markElementTemplateHydrated();
 
-    const handleTap = vi.fn();
-    const handleTouch = vi.fn();
+    const handleTap = rstest.fn();
+    const handleTouch = rstest.fn();
     instance.setAttribute('attributeSlots', [{ id: 'cta', bindtap: handleTap }]);
     const removedEventValue = `${instance.instanceId}:0:bindtap`;
     globalCommitContext.ops = [];
@@ -1919,7 +1919,7 @@ describe('BackgroundElementTemplateInstance Shadow State', () => {
     __etAttrPlanMap.view = [0, adaptSpreadAttrSlot];
     markElementTemplateHydrated();
     const instance = new BackgroundElementTemplateInstance('view');
-    const handleTap = vi.fn();
+    const handleTap = rstest.fn();
     instance.setAttribute('attributeSlots', [{ id: 'cta', bindtap: handleTap }]);
     globalCommitContext.ops = [];
 
@@ -1942,7 +1942,7 @@ describe('BackgroundElementTemplateInstance Shadow State', () => {
     __etAttrPlanMap.view = [0, adaptSpreadAttrSlot];
     markElementTemplateHydrated();
     const instance = new BackgroundElementTemplateInstance('view');
-    const handleTap = vi.fn();
+    const handleTap = rstest.fn();
     instance.setAttribute('attributeSlots', [{ bindtap: handleTap }]);
     const eventValue = `${instance.instanceId}:0:bindtap`;
 
@@ -1955,7 +1955,7 @@ describe('BackgroundElementTemplateInstance Shadow State', () => {
     __etAttrPlanMap.view = [0, adaptSpreadAttrSlot];
     markElementTemplateHydrated();
     const instance = new BackgroundElementTemplateInstance('view');
-    const handleTap = vi.fn();
+    const handleTap = rstest.fn();
     instance.setAttribute('attributeSlots', [{ bindtap: handleTap }]);
     const eventValue = `${instance.instanceId}:0:bindtap`;
 

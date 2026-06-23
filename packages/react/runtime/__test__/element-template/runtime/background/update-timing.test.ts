@@ -1,4 +1,4 @@
-import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, rstest } from '@rstest/core';
 import { options } from 'preact';
 
 import {
@@ -40,7 +40,7 @@ describe('ElementTemplate update timing (background commit)', () => {
   const envManager = new ElementTemplateEnvManager();
   let updateEvents: UpdateEvent[] = [];
   let updatePatchOptions: Array<ElementTemplateUpdatePatchOptions | undefined> = [];
-  let nativeMarkTiming: ReturnType<typeof vi.fn>;
+  let nativeMarkTiming: ReturnType<typeof rstest.fn>;
   let originalLynx: typeof lynx;
 
   const onUpdate = (event: UpdateRuntimeEvent) => {
@@ -56,7 +56,7 @@ describe('ElementTemplate update timing (background commit)', () => {
 
     updateEvents = [];
     updatePatchOptions = [];
-    nativeMarkTiming = vi.fn();
+    nativeMarkTiming = rstest.fn();
     originalLynx = globalThis.lynx;
     globalThis.lynx = {
       ...(originalLynx as object),

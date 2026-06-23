@@ -35,7 +35,7 @@
     "build": "rslib build",
     "build:fixture": "rspeedy build",
     "serve": "rspeedy dev",
-    "test": "vitest run"
+    "test": "rstest run"
   },
   "dependencies": {
     "@lynx-js/devtool-connector": "workspace:*",
@@ -52,7 +52,6 @@
     "execa": "^9.6.1",
     "jpeg-js": "^0.4.4",
     "rsbuild-plugin-publint": "0.3.4",
-    "typescript": "^5.9.3",
-    "vitest": "^3.2.4"
+    "typescript": "^5.9.3"
   }
 }

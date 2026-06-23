@@ -2,7 +2,7 @@
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
 
-import { afterEach, vi } from 'vitest';
+import { afterEach, rstest } from '@rstest/core';
 
 // removed context import
 import {
@@ -73,7 +73,7 @@ export function installMockNativePapi(
     return node['__mockNativeId'];
   };
 
-  const mockCreateElementTemplate = vi.fn().mockImplementation((
+  const mockCreateElementTemplate = rstest.fn().mockImplementation((
     templateKey: string,
     bundleUrl: string | null | undefined,
     attributeSlots: unknown[] | null | undefined,
@@ -119,7 +119,7 @@ export function installMockNativePapi(
     return element;
   });
 
-  const mockCreateTypedElementTemplate = vi.fn().mockImplementation((
+  const mockCreateTypedElementTemplate = rstest.fn().mockImplementation((
     type: string,
     attributes: unknown,
     elementSlots: Array<unknown[] | null | undefined> | null | undefined,
@@ -164,18 +164,18 @@ export function installMockNativePapi(
     return element;
   });
 
-  const mockSerializeElementTemplate = vi.fn().mockImplementation((templateInstance: unknown) => {
+  const mockSerializeElementTemplate = rstest.fn().mockImplementation((templateInstance: unknown) => {
     return serializeTemplateInstance(templateInstance);
   });
 
-  const mockReportError = vi.fn().mockImplementation((error: Error) => {
+  const mockReportError = rstest.fn().mockImplementation((error: Error) => {
     const g = globalThis as unknown as { __LYNX_REPORT_ERROR_CALLS?: Error[] };
     g.__LYNX_REPORT_ERROR_CALLS ??= [];
     g.__LYNX_REPORT_ERROR_CALLS.push(error);
     nativeLog.push(['lynx.reportError', error]);
   });
 
-  const mockSetAttribute = vi.fn().mockImplementation((element: unknown, name: string, value: unknown) => {
+  const mockSetAttribute = rstest.fn().mockImplementation((element: unknown, name: string, value: unknown) => {
     nativeLog.push(['__SetAttribute', formatNode(element), name, value]);
     if (!isRecord(element)) {
       return;
@@ -196,7 +196,7 @@ export function installMockNativePapi(
     }
   });
 
-  const mockSetClasses = vi.fn().mockImplementation((element: unknown, value: unknown) => {
+  const mockSetClasses = rstest.fn().mockImplementation((element: unknown, value: unknown) => {
     nativeLog.push(['__SetClasses', formatNode(element), value]);
     if (!isRecord(element)) {
       return;
@@ -211,7 +211,7 @@ export function installMockNativePapi(
     element['attributes'] = { class: value };
   });
 
-  const mockSetInlineStyles = vi.fn().mockImplementation((element: unknown, value: unknown) => {
+  const mockSetInlineStyles = rstest.fn().mockImplementation((element: unknown, value: unknown) => {
     nativeLog.push(['__SetInlineStyles', formatNode(element), value]);
     if (!isRecord(element)) {
       return;
@@ -226,7 +226,7 @@ export function installMockNativePapi(
     element['attributes'] = { style: value };
   });
 
-  const mockSetID = vi.fn().mockImplementation((element: unknown, value: unknown) => {
+  const mockSetID = rstest.fn().mockImplementation((element: unknown, value: unknown) => {
     nativeLog.push(['__SetID', formatNode(element), value]);
     if (!isRecord(element)) {
       return;
@@ -247,7 +247,7 @@ export function installMockNativePapi(
     }
   });
 
-  const mockAddDataset = vi.fn().mockImplementation((element: unknown, key: string, value: unknown) => {
+  const mockAddDataset = rstest.fn().mockImplementation((element: unknown, key: string, value: unknown) => {
     nativeLog.push(['__AddDataset', formatNode(element), key, value]);
     if (!isRecord(element)) {
       return;
@@ -263,7 +263,7 @@ export function installMockNativePapi(
     element['attributes'] = { [datasetKey]: value };
   });
 
-  const mockSetDataset = vi.fn().mockImplementation((element: unknown, value: unknown) => {
+  const mockSetDataset = rstest.fn().mockImplementation((element: unknown, value: unknown) => {
     nativeLog.push(['__SetDataset', formatNode(element), value]);
     if (!isRecord(element)) {
       return;
@@ -285,7 +285,7 @@ export function installMockNativePapi(
     element['attributes'] = attributes;
   });
 
-  const mockSetAttributeOfElementTemplate = vi.fn().mockImplementation(
+  const mockSetAttributeOfElementTemplate = rstest.fn().mockImplementation(
     (nativeRef: unknown, attrSlotIndex: number, value: unknown, options: unknown) => {
       nativeLog.push([
         '__SetAttributeOfElementTemplate',
@@ -300,7 +300,7 @@ export function installMockNativePapi(
     },
   );
 
-  const mockInsertNodeToElementTemplate = vi.fn().mockImplementation(
+  const mockInsertNodeToElementTemplate = rstest.fn().mockImplementation(
     (nativeRef: unknown, elementSlotIndex: number, node: unknown, referenceNode: unknown) => {
       nativeLog.push([
         '__InsertNodeToElementTemplate',
@@ -320,7 +320,7 @@ export function installMockNativePapi(
     },
   );
 
-  const mockRemoveNodeFromElementTemplate = vi.fn().mockImplementation(
+  const mockRemoveNodeFromElementTemplate = rstest.fn().mockImplementation(
     (nativeRef: unknown, elementSlotIndex: number, node: unknown) => {
       nativeLog.push([
         '__RemoveNodeFromElementTemplate',
@@ -334,27 +334,27 @@ export function installMockNativePapi(
     },
   );
 
-  const mockFlushElementTree = vi.fn().mockImplementation((element: unknown, options: unknown) => {
+  const mockFlushElementTree = rstest.fn().mockImplementation((element: unknown, options: unknown) => {
     nativeLog.push(['__FlushElementTree', formatNode(element), options]);
   });
 
-  vi.stubGlobal('__CreateElementTemplate', mockCreateElementTemplate);
-  vi.stubGlobal('__CreateTypedElementTemplate', mockCreateTypedElementTemplate);
-  vi.stubGlobal('__AddDataset', mockAddDataset);
-  vi.stubGlobal('__SetDataset', mockSetDataset);
-  vi.stubGlobal('__SetAttribute', mockSetAttribute);
-  vi.stubGlobal('__SetClasses', mockSetClasses);
-  vi.stubGlobal('__SetInlineStyles', mockSetInlineStyles);
-  vi.stubGlobal('__SetID', mockSetID);
-  vi.stubGlobal('__GetElementUniqueID', vi.fn().mockImplementation(getElementUniqueID));
-  vi.stubGlobal('__SetAttributeOfElementTemplate', mockSetAttributeOfElementTemplate);
-  vi.stubGlobal('__InsertNodeToElementTemplate', mockInsertNodeToElementTemplate);
-  vi.stubGlobal('__RemoveNodeFromElementTemplate', mockRemoveNodeFromElementTemplate);
-  vi.stubGlobal('__SerializeElementTemplate', mockSerializeElementTemplate);
-  vi.stubGlobal('__FlushElementTree', mockFlushElementTree);
+  rstest.stubGlobal('__CreateElementTemplate', mockCreateElementTemplate);
+  rstest.stubGlobal('__CreateTypedElementTemplate', mockCreateTypedElementTemplate);
+  rstest.stubGlobal('__AddDataset', mockAddDataset);
+  rstest.stubGlobal('__SetDataset', mockSetDataset);
+  rstest.stubGlobal('__SetAttribute', mockSetAttribute);
+  rstest.stubGlobal('__SetClasses', mockSetClasses);
+  rstest.stubGlobal('__SetInlineStyles', mockSetInlineStyles);
+  rstest.stubGlobal('__SetID', mockSetID);
+  rstest.stubGlobal('__GetElementUniqueID', rstest.fn().mockImplementation(getElementUniqueID));
+  rstest.stubGlobal('__SetAttributeOfElementTemplate', mockSetAttributeOfElementTemplate);
+  rstest.stubGlobal('__InsertNodeToElementTemplate', mockInsertNodeToElementTemplate);
+  rstest.stubGlobal('__RemoveNodeFromElementTemplate', mockRemoveNodeFromElementTemplate);
+  rstest.stubGlobal('__SerializeElementTemplate', mockSerializeElementTemplate);
+  rstest.stubGlobal('__FlushElementTree', mockFlushElementTree);
   const currentLynx = (globalThis as unknown as { lynx?: any }).lynx;
   const baseLynx = (currentLynx && typeof currentLynx === 'object') ? currentLynx : {};
-  vi.stubGlobal('lynx', {
+  rstest.stubGlobal('lynx', {
     ...baseLynx,
     reportError: mockReportError,
   });

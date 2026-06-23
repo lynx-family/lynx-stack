@@ -20,6 +20,17 @@ export default defineConfig({
         },
       },
       output: {
+        // Ship the rspack transform loader verbatim (it is a CommonJS `.cjs`
+        // file loaded by rspack via `require`, so it must NOT go through the
+        // rslib entry pipeline that would rewrite it to ESM).
+        copy: {
+          patterns: [
+            {
+              from: './src/setupFiles/transform-loader.cjs',
+              to: './setupFiles/transform-loader.cjs',
+            },
+          ],
+        },
         externals: [
           /^@lynx-js\/react/,
           /^\.\.\/\.\.\/runtime\/lib/,

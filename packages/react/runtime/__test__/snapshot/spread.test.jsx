@@ -4,7 +4,7 @@
 // LICENSE file in the root directory of this source tree.
 */
 import { render } from 'preact';
-import { afterEach, beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, beforeAll, beforeEach, describe, expect, it, rstest } from '@rstest/core';
 
 import { useState } from '../../src/index';
 import { initGlobalSnapshotPatch, takeGlobalSnapshotPatch } from '../../src/snapshot/lifecycle/patch/snapshotPatch';
@@ -29,7 +29,7 @@ beforeEach(() => {
 });
 
 afterEach(() => {
-  vi.restoreAllMocks();
+  rstest.restoreAllMocks();
 
   globalEnvManager.switchToMainThread();
   render(null, scratch);

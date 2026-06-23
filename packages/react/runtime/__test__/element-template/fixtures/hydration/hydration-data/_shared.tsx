@@ -1,7 +1,7 @@
 import fs from 'node:fs';
 import path from 'node:path';
 
-import { vi } from 'vitest';
+import { rstest } from '@rstest/core';
 
 import { root } from '../../../../../src/element-template/index.js';
 import { ElementTemplateLifecycleConstant } from '../../../../../src/element-template/protocol/lifecycle-constant.js';
@@ -22,7 +22,7 @@ interface HydrationContext {
 }
 
 function setup(): HydrationContext {
-  vi.clearAllMocks();
+  rstest.clearAllMocks();
   const installed = installMockNativePapi({ clearTemplatesOnCleanup: false });
   elementTemplateRegistry.clear();
   resetTemplateId();
@@ -32,7 +32,7 @@ function setup(): HydrationContext {
   envManager.setUseElementTemplate(true);
 
   const hydrationData: unknown[] = [];
-  const onHydrate = vi.fn().mockImplementation((event: { data: unknown }) => {
+  const onHydrate = rstest.fn().mockImplementation((event: { data: unknown }) => {
     hydrationData.push(...extractSerializedHydrateInstances(event.data));
   });
   lynx.getCoreContext().addEventListener(ElementTemplateLifecycleConstant.hydrate, onHydrate);

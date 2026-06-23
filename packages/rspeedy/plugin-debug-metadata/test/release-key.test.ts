@@ -3,7 +3,7 @@
 // LICENSE file in the root directory of this source tree.
 
 import type { Rspack } from '@rsbuild/core'
-import { describe, expect, test } from 'vitest'
+import { describe, expect, test } from '@rstest/core'
 
 import {
   computeChunkReleaseKey,

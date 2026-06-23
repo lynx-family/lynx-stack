@@ -5,7 +5,7 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
-import { beforeAll, describe, expect, test } from 'vitest';
+import { beforeAll, describe, expect, test } from '@rstest/core';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 

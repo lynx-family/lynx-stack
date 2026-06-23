@@ -1,14 +1,14 @@
 // Copyright 2025 The Lynx Authors. All rights reserved.
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
-import { afterAll, beforeEach, describe, expect, it, vi } from 'vitest';
+import { afterAll, beforeEach, describe, expect, it, rstest } from '@rstest/core';
 
 import { initApiEnv } from '../../src/worklet-runtime/api/lynxApi';
 import { RunWorkletSource } from '../../src/worklet-runtime/bindings/types';
 import { initWorklet } from '../../src/worklet-runtime/workletRuntime';
 
 describe('EventPropagation', () => {
-  const consoleMock = vi.spyOn(console, 'warn').mockImplementation(() => undefined);
+  const consoleMock = rstest.spyOn(console, 'warn').mockImplementation(() => undefined);
 
   beforeEach(() => {
     globalThis.SystemInfo = {
@@ -16,7 +16,7 @@ describe('EventPropagation', () => {
     };
     delete globalThis.lynxWorkletImpl;
     globalThis.lynx = {
-      requestAnimationFrame: vi.fn(),
+      requestAnimationFrame: rstest.fn(),
     };
     initApiEnv();
   });
@@ -27,7 +27,7 @@ describe('EventPropagation', () => {
 
   it('stopPropagation should have __EventReturnResult be 1', async () => {
     initWorklet();
-    const fn = vi.fn(function(event) {
+    const fn = rstest.fn(function(event) {
       globalThis.lynxWorkletImpl._workletMap['1'].bind(this);
 
       event.stopPropagation();
@@ -48,7 +48,7 @@ describe('EventPropagation', () => {
 
   it('stopImmediatePropagation should have __EventReturnResult be 2', async () => {
     initWorklet();
-    const fn = vi.fn(function(event) {
+    const fn = rstest.fn(function(event) {
       globalThis.lynxWorkletImpl._workletMap['1'].bind(this);
       event.stopImmediatePropagation();
     });
@@ -68,7 +68,7 @@ describe('EventPropagation', () => {
 
   it('call stopPropagation and stopImmediatePropagation should have __EventReturnResult be 3', async () => {
     initWorklet();
-    const fn = vi.fn(function(event) {
+    const fn = rstest.fn(function(event) {
       globalThis.lynxWorkletImpl._workletMap['1'].bind(this);
       event.stopImmediatePropagation();
       event.stopPropagation();

@@ -1,4 +1,4 @@
-import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, rstest } from '@rstest/core';
 import { options } from 'preact';
 
 import { globalCommitContext } from '../../../src/element-template/background/commit-context.js';
@@ -18,7 +18,7 @@ import { ElementTemplateEnvManager } from '../test-utils/debug/envManager.js';
 
 const envManager = new ElementTemplateEnvManager();
 
-let nativeMarkTiming: ReturnType<typeof vi.fn>;
+let nativeMarkTiming: ReturnType<typeof rstest.fn>;
 let originalLynx: unknown;
 
 function createRawTextOps(id: number, text: string) {
@@ -35,7 +35,7 @@ function createRawTextOps(id: number, text: string) {
 beforeEach(() => {
   envManager.resetEnv('background');
 
-  nativeMarkTiming = vi.fn();
+  nativeMarkTiming = rstest.fn();
   originalLynx = globalThis.lynx;
   globalThis.lynx = {
     ...(originalLynx as object),

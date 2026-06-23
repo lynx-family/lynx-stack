@@ -1,4 +1,4 @@
-import { describe, it, expect, vi } from 'vitest';
+import { describe, it, expect, rstest } from '@rstest/core';
 import ReactLynx from '@lynx-js/react';
 import { startTransition as preactStartTransition, useTransition as preactUseTransition } from 'preact/compat';
 

@@ -1,7 +1,7 @@
 // Copyright 2025 The Lynx Authors. All rights reserved.
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
-import { describe, expect, it, vi } from 'vitest';
+import { describe, expect, it, rstest } from '@rstest/core';
 
 import { gridColumn } from '../../plugins/lynx/gridColumn.js';
 import { gridRow } from '../../plugins/lynx/gridRow.js';
@@ -22,7 +22,7 @@ describe('gridRow plugin', () => {
       },
     });
 
-    const matchUtilities = vi.mocked(api.matchUtilities);
+    const matchUtilities = rstest.mocked(api.matchUtilities);
     expect(matchUtilities).toHaveBeenCalledTimes(1);
 
     const [utils, options] = matchUtilities.mock.calls[0] as [
@@ -71,7 +71,7 @@ describe('gridColumn plugin', () => {
       },
     });
 
-    const matchUtilities = vi.mocked(api.matchUtilities);
+    const matchUtilities = rstest.mocked(api.matchUtilities);
     expect(matchUtilities).toHaveBeenCalledTimes(1);
 
     const [utils, options] = matchUtilities.mock.calls[0] as [

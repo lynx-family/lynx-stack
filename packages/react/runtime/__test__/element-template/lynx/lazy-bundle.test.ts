@@ -1,5 +1,5 @@
 import type { ComponentType } from 'preact';
-import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, rstest } from '@rstest/core';
 
 import { loadLazyBundle } from '../../../src/core/lynx/lazy-bundle.js';
 import { ElementTemplateEnvManager } from '../test-utils/debug/envManager.js';
@@ -60,7 +60,7 @@ describe('element-template loadLazyBundle', () => {
   let originalGetDynamicComponentExports: DynamicExportsGetter | undefined;
 
   beforeEach(() => {
-    vi.clearAllMocks();
+    rstest.clearAllMocks();
     envManager.resetEnv('background');
 
     originalQueryComponent = g.__QueryComponent;
@@ -87,7 +87,7 @@ describe('element-template loadLazyBundle', () => {
 
   it('returns main-thread query results with synchronous then semantics', () => {
     envManager.resetEnv('main');
-    const __QueryComponent = vi.fn(() => ({ evalResult: makeExports('main') }));
+    const __QueryComponent = rstest.fn(() => ({ evalResult: makeExports('main') }));
     g.__QueryComponent = __QueryComponent;
 
     const promise = loadLazyBundle<LazyExports>('entry-main');
@@ -126,7 +126,7 @@ describe('element-template loadLazyBundle', () => {
 
   it('preserves thenable returns and rejected sync then callbacks', async () => {
     envManager.resetEnv('main');
-    const __QueryComponent = vi.fn(() => ({ evalResult: makeExports('main') }));
+    const __QueryComponent = rstest.fn(() => ({ evalResult: makeExports('main') }));
     g.__QueryComponent = __QueryComponent;
 
     const promise = loadLazyBundle<LazyExports>('entry-main');
@@ -160,7 +160,7 @@ describe('element-template loadLazyBundle', () => {
         throw new Error('not parsed yet');
       },
     });
-    const __QueryComponent = vi.fn(() => query as { evalResult: LazyExports });
+    const __QueryComponent = rstest.fn(() => query as { evalResult: LazyExports });
     g.__QueryComponent = __QueryComponent;
 
     const promise = loadLazyBundle<LazyExports>('entry-main');
@@ -181,10 +181,10 @@ describe('element-template loadLazyBundle', () => {
 
   it('returns synchronously resolved background QueryComponent exports', () => {
     envManager.resetEnv('background');
-    const QueryComponent = vi.fn((source: string, callback: QueryComponentCallback) => {
+    const QueryComponent = rstest.fn((source: string, callback: QueryComponentCallback) => {
       callback({ code: 0, detail: { schema: source } });
     });
-    const getDynamicComponentExports = vi.fn((schema: string) => makeExports(schema));
+    const getDynamicComponentExports = rstest.fn((schema: string) => makeExports(schema));
     (lynx as LynxWithQuery).QueryComponent = QueryComponent;
     (lynxCoreInject.tt as typeof lynxCoreInject.tt & {
       getDynamicComponentExports?: DynamicExportsGetter;
@@ -206,10 +206,10 @@ describe('element-template loadLazyBundle', () => {
   it('resolves and rejects asynchronous background QueryComponent callbacks', async () => {
     envManager.resetEnv('background');
     const callbacks = new Map<string, QueryComponentCallback>();
-    const QueryComponent = vi.fn((source: string, callback: QueryComponentCallback) => {
+    const QueryComponent = rstest.fn((source: string, callback: QueryComponentCallback) => {
       callbacks.set(source, callback);
     });
-    const getDynamicComponentExports = vi.fn((schema: string) => makeExports(schema));
+    const getDynamicComponentExports = rstest.fn((schema: string) => makeExports(schema));
     (lynx as LynxWithQuery).QueryComponent = QueryComponent;
     (lynxCoreInject.tt as typeof lynxCoreInject.tt & {
       getDynamicComponentExports?: DynamicExportsGetter;
@@ -241,10 +241,10 @@ describe('element-template loadLazyBundle', () => {
 
   it('rejects synchronously when parsed background exports are unavailable', async () => {
     envManager.resetEnv('background');
-    const QueryComponent = vi.fn((source: string, callback: QueryComponentCallback) => {
+    const QueryComponent = rstest.fn((source: string, callback: QueryComponentCallback) => {
       callback({ code: 0, detail: { schema: source } });
     });
-    const getDynamicComponentExports = vi.fn(() => undefined);
+    const getDynamicComponentExports = rstest.fn(() => undefined);
     (lynx as LynxWithQuery).QueryComponent = QueryComponent;
     (lynxCoreInject.tt as typeof lynxCoreInject.tt & {
       getDynamicComponentExports?: DynamicExportsGetter;
@@ -260,10 +260,10 @@ describe('element-template loadLazyBundle', () => {
 
   it('falls back to native QueryComponent when lynx.QueryComponent is unavailable', () => {
     envManager.resetEnv('background');
-    const nativeQueryComponent = vi.fn((source: string, callback: QueryComponentCallback) => {
+    const nativeQueryComponent = rstest.fn((source: string, callback: QueryComponentCallback) => {
       callback({ code: 0, detail: { schema: source } });
     });
-    const getDynamicComponentExports = vi.fn((schema: string) => makeExports(schema));
+    const getDynamicComponentExports = rstest.fn((schema: string) => makeExports(schema));
     delete (lynx as LynxWithQuery).QueryComponent;
     lynx.getNativeLynx = () =>
       ({

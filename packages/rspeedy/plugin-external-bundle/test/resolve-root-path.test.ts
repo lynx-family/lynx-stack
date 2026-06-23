@@ -1,17 +1,17 @@
 // Copyright 2026 The Lynx Authors. All rights reserved.
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
-import { afterEach, describe, expect, it, vi } from 'vitest'
+import { afterEach, describe, expect, it, rstest } from '@rstest/core'
 
-const resolveMock = vi.fn((id: string, options?: { paths?: string[] }) =>
+const resolveMock = rstest.fn((id: string, options?: { paths?: string[] }) =>
   (options?.paths?.length ?? 0) > 0
     ? `${options!.paths![0]}/${id}.js`
     : `/default/${id}.js`
 )
 
 async function loadModule() {
-  vi.resetModules()
-  vi.doMock('node:module', () => ({
+  rstest.resetModules()
+  rstest.doMock('node:module', () => ({
     createRequire: () => ({
       resolve: resolveMock,
     }),
@@ -22,12 +22,12 @@ async function loadModule() {
 
 describe('pluginExternalBundle reactlynx peer resolution', () => {
   afterEach(() => {
-    vi.clearAllMocks()
-    vi.unstubAllEnvs()
+    rstest.clearAllMocks()
+    rstest.unstubAllEnvs()
   })
 
   it('resolves @lynx-js/react-umd from the rsbuild rootPath', async () => {
-    vi.stubEnv('NODE_ENV', 'development')
+    rstest.stubEnv('NODE_ENV', 'development')
     const { pluginExternalBundle } = await loadModule()
 
     const plugin = pluginExternalBundle({

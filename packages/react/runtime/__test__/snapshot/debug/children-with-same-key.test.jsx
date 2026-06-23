@@ -1,10 +1,10 @@
-import { expect, test, vi } from 'vitest';
+import { expect, test, rstest } from '@rstest/core';
 
 test('preact/debug - children with the same key attribute', async () => {
-  vi.stubGlobal('__MAIN_THREAD__', false)
+  rstest.stubGlobal('__MAIN_THREAD__', false)
     .stubGlobal('__LEPUS__', false);
 
-  const consoleError = vi.spyOn(console, 'error');
+  const consoleError = rstest.spyOn(console, 'error');
 
   await import('preact/debug');
   const { root } = await import('../../../src/index');

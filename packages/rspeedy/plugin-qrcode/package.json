@@ -45,7 +45,7 @@
   "scripts": {
     "api-extractor": "api-extractor run --verbose",
     "build": "rslib build",
-    "test": "pnpm -w run test --project rspeedy/qrcode"
+    "test": "rstest"
   },
   "devDependencies": {
     "@clack/prompts": "1.0.1",

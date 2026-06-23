@@ -1,8 +1,9 @@
 import fs from 'node:fs';
 import path from 'node:path';
-import { pathToFileURL } from 'node:url';
 
-import { vi } from 'vitest';
+import { rstest } from '@rstest/core';
+
+import { loadCaseModule } from './caseModuleContext.js';
 
 import { resetElementTemplateHydrationListener } from '../../../../src/element-template/background/hydration-listener.js';
 import { renderOpcodesIntoElementTemplate } from '../../../../src/element-template/runtime/render/render-opcodes.js';
@@ -10,6 +11,7 @@ import { clearEtAttrPlanMap } from '../../../../src/element-template/runtime/tem
 import { resetTemplateId } from '../../../../src/element-template/runtime/template/handle.js';
 import { elementTemplateRegistry } from '../../../../src/element-template/runtime/template/registry.js';
 import { renderToString } from '../../../../src/element-template/runtime/render/render-to-opcodes.js';
+import { evaluateCompiledModule } from './compiledModuleEval.js';
 import {
   assertMissingFile,
   assertOrUpdateTextFile,
@@ -91,7 +93,7 @@ async function runCaseFixture(options: {
   update: boolean;
 }): Promise<void> {
   const { casePath, fixtureDir, fixtureName, update } = options;
-  const caseModule = (await import(pathToFileURL(casePath).href)) as CaseFixtureModule;
+  const caseModule = loadCaseModule(casePath) as CaseFixtureModule;
   const reportErrorCount = caseModule.reportErrorCount ?? 0;
   const result = await caseModule.run({ fixtureDir, fixtureName });
   const normalized = normalizeCaseFixtureResult(result);
@@ -129,13 +131,12 @@ async function runCompiledRenderFixture(options: {
   tempDir: string;
   update: boolean;
 }): Promise<void> {
-  const { fixtureDir, fixtureName, tempDir, update } = options;
+  const { fixtureDir, fixtureName, update } = options;
   const sourcePath = path.join(fixtureDir, 'index.tsx');
   const compiledJsPath = path.join(fixtureDir, 'index.js.txt');
   const templatesPath = path.join(fixtureDir, 'templates.json.txt');
   const expectedPath = path.join(fixtureDir, 'output.txt');
   const papiPath = path.join(fixtureDir, 'papi.txt');
-  const tempImportPath = path.join(tempDir, 'temp_actual.js');
   const fixtureConfig = readCompiledRenderFixtureConfig(fixtureDir, fixtureName);
   const previousGlobDynamicComponentEntry = globalThis.globDynamicComponentEntry;
 
@@ -143,7 +144,7 @@ async function runCompiledRenderFixture(options: {
     throw new Error(`Source file missing for fixture "${fixtureName}"`);
   }
 
-  vi.resetAllMocks();
+  rstest.resetAllMocks();
   elementTemplateRegistry.clear();
   clearEtAttrPlanMap();
   resetTemplateId();
@@ -246,9 +247,10 @@ async function runCompiledRenderFixture(options: {
       );
     }
 
-    fs.writeFileSync(tempImportPath, importableCode);
-    try {
-      const module = (await import(`${pathToFileURL(tempImportPath).href}?t=${Date.now()}`)) as { App: unknown };
+    {
+      // Evaluate the compiled fixture in-process rather than via a temp-file
+      // `import()` (see compiledModuleEval.ts).
+      const module = evaluateCompiledModule<{ App: unknown }>(importableCode);
       const vnode = { type: module.App, props: {}, key: null, ref: null };
       const opcodes = renderToString(vnode, null);
       const { rootRefs } = renderOpcodesIntoElementTemplate(opcodes);
@@ -270,15 +272,26 @@ async function runCompiledRenderFixture(options: {
         fixtureName,
         label: 'papi log',
       });
-    } finally {
-      if (fs.existsSync(tempImportPath)) {
-        fs.unlinkSync(tempImportPath);
-      }
     }
 
     expectReportErrorCount(0);
   } finally {
+    // The hydration listener is a background-thread resource; removing it goes
+    // through `coreContext.removeEventListener`, which the mock asserts must run
+    // on the background thread. The compiled-render flow above leaves the
+    // globals in main-thread mode, so switch to background for this cleanup and
+    // restore main-thread afterwards. (Previously this was masked because the
+    // temp-file `import()` evaluated the fixture in a *separate* module graph, so
+    // the shared listener registration was never observed here.)
+    globalThis.__LEPUS__ = false;
+    globalThis.__JS__ = true;
+    globalThis.__MAIN_THREAD__ = false;
+    globalThis.__BACKGROUND__ = true;
     resetElementTemplateHydrationListener();
+    globalThis.__LEPUS__ = true;
+    globalThis.__JS__ = false;
+    globalThis.__MAIN_THREAD__ = true;
+    globalThis.__BACKGROUND__ = false;
     clearEtAttrPlanMap();
     cleanup();
     globalThis.__USE_ELEMENT_TEMPLATE__ = undefined;

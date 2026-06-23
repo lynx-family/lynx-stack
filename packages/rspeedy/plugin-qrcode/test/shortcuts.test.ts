@@ -2,18 +2,18 @@
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
 import type { RsbuildPluginAPI } from '@rsbuild/core'
-import { beforeEach, describe, expect, test, vi } from 'vitest'
+import { beforeEach, describe, expect, rstest, test } from '@rstest/core'
 
 import { registerConsoleShortcuts } from '../src/shortcuts.js'
 
-vi.mock('@clack/prompts')
+rstest.mock('@clack/prompts', { spy: true })
 
 describe('PluginQRCode - CLI Shortcuts', () => {
   const mockedRsbuildAPI = {
-    getNormalizedConfig: vi.fn().mockReturnValue({
+    getNormalizedConfig: rstest.fn().mockReturnValue({
       dev: { assetPrefix: 'https://example.com/' },
     }),
-    useExposed: vi.fn().mockReturnValue({
+    useExposed: rstest.fn().mockReturnValue({
       config: { filename: '[name].[platform].bundle' },
     }),
   } as unknown as RsbuildPluginAPI
@@ -53,7 +53,9 @@ describe('PluginQRCode - CLI Shortcuts', () => {
     })
 
     test('prints all entries with all schema URLs', async () => {
-      const writeSpy = vi.spyOn(process.stdout, 'write').mockReturnValue(true)
+      const writeSpy = rstest.spyOn(process.stdout, 'write').mockReturnValue(
+        true,
+      )
 
       await registerConsoleShortcuts({
         api: mockedRsbuildAPI,
@@ -72,7 +74,7 @@ describe('PluginQRCode - CLI Shortcuts', () => {
     })
 
     test('calls onPrint for every schema URL', async () => {
-      const onPrint = vi.fn()
+      const onPrint = rstest.fn()
 
       await registerConsoleShortcuts({
         api: mockedRsbuildAPI,
@@ -101,12 +103,14 @@ describe('PluginQRCode - CLI Shortcuts', () => {
         port: 3000,
       })
 
-      expect(vi.mocked(selectKey)).not.toHaveBeenCalled()
+      expect(rstest.mocked(selectKey)).not.toHaveBeenCalled()
     })
 
     test('prints multiple schema URLs per entry', async () => {
-      const writeSpy = vi.spyOn(process.stdout, 'write').mockReturnValue(true)
-      const onPrint = vi.fn()
+      const writeSpy = rstest.spyOn(process.stdout, 'write').mockReturnValue(
+        true,
+      )
+      const onPrint = rstest.fn()
 
       await registerConsoleShortcuts({
         api: mockedRsbuildAPI,
@@ -131,22 +135,22 @@ describe('PluginQRCode - CLI Shortcuts', () => {
   })
 
   test('open page', async () => {
-    vi.stubEnv('NODE_ENV', 'development')
-    const onPrint = vi.fn()
-    const onOpen = vi.fn()
+    rstest.stubEnv('NODE_ENV', 'development')
+    const onPrint = rstest.fn()
+    const onOpen = rstest.fn()
 
     const { selectKey, isCancel } = await import('@clack/prompts')
     let i = 0
-    vi.mocked(selectKey).mockImplementation(() => {
+    rstest.mocked(selectKey).mockImplementation(() => {
       i++
       if (i === 1) {
         return Promise.resolve('o')
       } else if (i === 2) {
-        return new Promise(vi.fn())
+        return new Promise(rstest.fn())
       }
       expect.fail('should not call selectKey 3 times')
     })
-    vi.mocked(isCancel).mockReturnValue(false)
+    rstest.mocked(isCancel).mockReturnValue(false)
 
     const unregister = await registerConsoleShortcuts({
       api: mockedRsbuildAPI,

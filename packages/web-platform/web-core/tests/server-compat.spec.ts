@@ -4,9 +4,10 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-import { describe, it, expect, vi } from 'vitest';
+import { describe, it, expect } from '@rstest/core';
+import { rstest } from '@rstest/core';
 
-vi.mock('../css/in_shadow.css?inline', () => ({
+rstest.mock('../css/in_shadow.css?inline', () => ({
   default: '/* INJECTED_SHADOW_CSS */',
 }));
 

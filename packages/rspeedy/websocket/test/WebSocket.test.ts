@@ -3,11 +3,25 @@
 // LICENSE file in the root directory of this source tree.
 import { createServer } from 'node:http'
 
-import { beforeAll, beforeEach, describe, expect, test, vi } from 'vitest'
+import {
+  beforeAll,
+  beforeEach,
+  describe,
+  expect,
+  rstest,
+  test,
+} from '@rstest/core'
 import { WebSocketServer } from 'ws'
 import type { WebSocket } from 'ws'
 
 import { StubWebSocketModule, stubLynx } from './stubWebSocketModule.js'
+
+// `WebSocketImpl` reads `lynx.getJSModule('GlobalEventEmitter')` at module-eval
+// time, and rstest evaluates the `describe.each` `import('../src/index.js')`
+// eagerly at collection time — before the `beforeEach` `stubGlobal('lynx')`
+// runs. Install the stub now so the module captures the test's emitter.
+const globalWithLynx = globalThis as unknown as { lynx: typeof stubLynx }
+globalWithLynx.lynx = stubLynx
 
 describe('WebSocket', () => {
   const server = createServer()
@@ -18,7 +32,7 @@ describe('WebSocket', () => {
   )
 
   beforeEach(() => {
-    vi
+    rstest
       .stubGlobal('lynx', stubLynx)
       .stubGlobal('NativeModules', {
         LynxWebSocketModule,
@@ -26,7 +40,7 @@ describe('WebSocket', () => {
       .clearAllMocks()
 
     return () => {
-      vi.unstubAllGlobals()
+      rstest.unstubAllGlobals()
     }
   })
 
@@ -114,7 +128,7 @@ describe('WebSocket', () => {
         'connect without WebSocketModule',
         async () => {
           const { WebSocket } = await impl
-          vi.stubGlobal('NativeModules', {})
+          rstest.stubGlobal('NativeModules', {})
 
           const ws = new WebSocket('ws://localhost:3000')
 
@@ -183,7 +197,7 @@ describe('WebSocket', () => {
       })
 
       test('send after close', async () => {
-        const send = vi.spyOn(LynxWebSocketModule, 'send')
+        const send = rstest.spyOn(LynxWebSocketModule, 'send')
         const { WebSocket } = await impl
         const ws = await createWebSocket()
 
@@ -256,7 +270,7 @@ describe('WebSocket', () => {
       })
 
       test('ping after close', async () => {
-        const ping = vi.spyOn(StubWebSocketModule.prototype, 'ping')
+        const ping = rstest.spyOn(StubWebSocketModule.prototype, 'ping')
         const { WebSocket } = await impl
         const ws = await createWebSocket()
 
@@ -276,7 +290,7 @@ describe('WebSocket', () => {
 
       test('close multiple times', async () => {
         const { WebSocket } = await impl
-        const close = vi.spyOn(StubWebSocketModule.prototype, 'close')
+        const close = rstest.spyOn(StubWebSocketModule.prototype, 'close')
         const ws = await createWebSocket()
 
         ws.close()

@@ -1,4 +1,4 @@
-import { afterEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, describe, expect, it, rstest, rstest } from '@rstest/core';
 
 import { ElementTemplateEnvManager } from '../test-utils/debug/envManager.js';
 
@@ -9,16 +9,16 @@ describe('ElementTemplate native init', () => {
 
   afterEach(() => {
     process.env['NODE_ENV'] = originalEnv;
-    vi.resetModules();
-    vi.doUnmock('../../../src/element-template/lynx/performance.js');
+    rstest.resetModules();
+    rstest.doUnmock('../../../src/element-template/lynx/performance.js');
   });
 
   it('initializes timing api outside test env', async () => {
     process.env['NODE_ENV'] = 'production';
     envManager.resetEnv('background');
 
-    const initTimingAPI = vi.fn();
-    vi.doMock('../../../src/element-template/lynx/performance.js', () => ({
+    const initTimingAPI = rstest.fn();
+    rstest.doMock('../../../src/element-template/lynx/performance.js', () => ({
       initTimingAPI,
     }));
 

@@ -1,7 +1,7 @@
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
-import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, rstest } from '@rstest/core';
 
 import {
   installElementTemplateCommitHook,
@@ -201,51 +201,51 @@ function findLastNativeSetAttributeValue(): unknown {
   return setAttributeLog[3];
 }
 
-function installMockWorkletRuntime(hydrateCtx = vi.fn()): {
-  hydrateCtx: ReturnType<typeof vi.fn>;
-  loadLepusChunk: ReturnType<typeof vi.fn>;
+function installMockWorkletRuntime(hydrateCtx = rstest.fn()): {
+  hydrateCtx: ReturnType<typeof rstest.fn>;
+  loadLepusChunk: ReturnType<typeof rstest.fn>;
 } {
-  const loadLepusChunk = vi.fn().mockImplementation(() => {
+  const loadLepusChunk = rstest.fn().mockImplementation(() => {
     globalThis.lynxWorkletImpl = {
       _workletMap: {},
       _eventDelayImpl: {
-        clearDelayedWorklets: vi.fn(),
-        runDelayedWorklet: vi.fn(),
+        clearDelayedWorklets: rstest.fn(),
+        runDelayedWorklet: rstest.fn(),
       },
       _refImpl: {
         _firstScreenWorkletRefMap: new Map(),
         _workletRefMap: {},
-        clearFirstScreenWorkletRefMap: vi.fn(),
-        updateWorkletRef: vi.fn(),
-        updateWorkletRefInitValueChanges: vi.fn(),
+        clearFirstScreenWorkletRefMap: rstest.fn(),
+        updateWorkletRef: rstest.fn(),
+        updateWorkletRefInitValueChanges: rstest.fn(),
       },
       _runOnBackgroundDelayImpl: {
-        delayRunOnBackground: vi.fn(),
-        runDelayedBackgroundFunctions: vi.fn(),
+        delayRunOnBackground: rstest.fn(),
+        runDelayedBackgroundFunctions: rstest.fn(),
       },
       _hydrateCtx: hydrateCtx,
       _eomImpl: {
-        setShouldFlush: vi.fn(),
+        setShouldFlush: rstest.fn(),
       },
-      _runRunOnMainThreadTask: vi.fn(),
+      _runRunOnMainThreadTask: rstest.fn(),
     };
     globalThis.registerWorkletInternal = (_type, id, worklet) => {
       globalThis.lynxWorkletImpl._workletMap[id] = worklet;
     };
     return true;
   });
-  vi.stubGlobal('__LoadLepusChunk', loadLepusChunk);
+  rstest.stubGlobal('__LoadLepusChunk', loadLepusChunk);
   return { hydrateCtx, loadLepusChunk };
 }
 
 function installRealWorkletRuntime(): {
-  loadLepusChunk: ReturnType<typeof vi.fn>;
+  loadLepusChunk: ReturnType<typeof rstest.fn>;
 } {
-  const loadLepusChunk = vi.fn().mockImplementation(() => {
+  const loadLepusChunk = rstest.fn().mockImplementation(() => {
     initWorklet();
     return true;
   });
-  vi.stubGlobal('__LoadLepusChunk', loadLepusChunk);
+  rstest.stubGlobal('__LoadLepusChunk', loadLepusChunk);
   return { loadLepusChunk };
 }
 
@@ -381,7 +381,7 @@ describe('Compiled direct event background updates', () => {
   }
 
   beforeEach(() => {
-    vi.clearAllMocks();
+    rstest.clearAllMocks();
     originalLynxSdkVersion = SystemInfo.lynxSdkVersion;
     resetElementTemplateCommitState();
     clearEtAttrPlanMap();
@@ -432,7 +432,7 @@ describe('Compiled direct event background updates', () => {
     expect(mainArtifact.code).not.toContain('registerWorkletOnBackground');
     expect(mainArtifact.code).not.toContain('transformToWorklet');
 
-    const hydrateCtx = vi.fn();
+    const hydrateCtx = rstest.fn();
     const { loadLepusChunk } = installMockWorkletRuntime(hydrateCtx);
 
     const { backgroundModule, mainModule } = await loadCompiledMainThreadDirectEventFixture();
@@ -519,7 +519,7 @@ describe('Compiled direct event background updates', () => {
       dynamicComponentEntry: undefined,
       chunkType: 0,
     });
-    const onReport = vi.fn((label: string) => `reported:${label}`);
+    const onReport = rstest.fn((label: string) => `reported:${label}`);
     const host = renderCompiledFixtureOnBackground(backgroundModule, envManager, { label: 'first', onReport });
     renderCompiledFixtureOnMainThread(mainModule, envManager, { label: 'first', onReport });
 
@@ -611,8 +611,8 @@ describe('Compiled direct event background updates', () => {
 
   it('uses the latest background handler without dispatching a native patch when only handler identity changes', async () => {
     const { backgroundModule, mainModule } = await loadCompiledDirectEventFixture();
-    const firstHandler = vi.fn();
-    const secondHandler = vi.fn();
+    const firstHandler = rstest.fn();
+    const secondHandler = rstest.fn();
 
     const host = renderDirectEventOnBackground(backgroundModule, firstHandler);
     hydrateDirectEventFromMainThread(mainModule, firstHandler);
@@ -632,7 +632,7 @@ describe('Compiled direct event background updates', () => {
 
   it('uses ordinary setAttribute patches when direct event handlers are added or removed', async () => {
     const { backgroundModule, mainModule } = await loadCompiledDirectEventFixture();
-    const handler = vi.fn();
+    const handler = rstest.fn();
 
     const host = renderDirectEventOnBackground(backgroundModule);
     hydrateDirectEventFromMainThread(mainModule);
@@ -669,8 +669,8 @@ describe('Compiled direct event background updates', () => {
 
   it('dispatches native event values to the latest hydrated direct event handler', async () => {
     const { backgroundModule, mainModule } = await loadCompiledDirectEventFixture();
-    const firstHandler = vi.fn();
-    const secondHandler = vi.fn();
+    const firstHandler = rstest.fn();
+    const secondHandler = rstest.fn();
 
     const host = renderDirectEventOnBackground(backgroundModule, firstHandler);
     hydrateDirectEventFromMainThread(mainModule, firstHandler);
@@ -688,8 +688,8 @@ describe('Compiled direct event background updates', () => {
 
   it('hydrates compiled spread attrs and dispatches direct plus spread event values independently', async () => {
     const { backgroundModule, mainModule } = await loadCompiledSpreadEventFixture();
-    const handleSpreadTap = vi.fn();
-    const handleDirectCatch = vi.fn();
+    const handleSpreadTap = rstest.fn();
+    const handleDirectCatch = rstest.fn();
 
     const host = renderSpreadEventOnBackground(
       backgroundModule,
@@ -718,8 +718,8 @@ describe('Compiled direct event background updates', () => {
 
   it('updates compiled spread plain attrs through a whole-slot setAttribute patch', async () => {
     const { backgroundModule, mainModule } = await loadCompiledSpreadEventFixture();
-    const handleSpreadTap = vi.fn();
-    const handleDirectCatch = vi.fn();
+    const handleSpreadTap = rstest.fn();
+    const handleDirectCatch = rstest.fn();
 
     const host = renderSpreadEventOnBackground(
       backgroundModule,
@@ -755,7 +755,7 @@ describe('Compiled direct event background updates', () => {
 
   it('registers and dispatches spread events on inserted compiled subtrees', async () => {
     const { backgroundModule, mainModule } = await loadCompiledSpreadEventFixture();
-    const handleSpreadTap = vi.fn();
+    const handleSpreadTap = rstest.fn();
 
     const host = renderSpreadEventOnBackground(backgroundModule, undefined, undefined, {
       showChild: false,
@@ -791,7 +791,7 @@ describe('Compiled direct event background updates', () => {
 
   it('registers and dispatches direct events on inserted compiled subtrees', async () => {
     const { backgroundModule, mainModule } = await loadCompiledConditionalDirectEventFixture();
-    const handler = vi.fn();
+    const handler = rstest.fn();
 
     const host = renderConditionalDirectEventOnBackground(backgroundModule, false);
     hydrateConditionalDirectEventFromMainThread(mainModule, false);
@@ -821,7 +821,7 @@ describe('Compiled direct event background updates', () => {
 
   it('cleans direct event handlers when compiled subtrees are removed', async () => {
     const { backgroundModule, mainModule } = await loadCompiledConditionalDirectEventFixture();
-    const handler = vi.fn();
+    const handler = rstest.fn();
 
     const host = renderConditionalDirectEventOnBackground(backgroundModule, true, handler);
     hydrateConditionalDirectEventFromMainThread(mainModule, true, handler);
@@ -831,7 +831,7 @@ describe('Compiled direct event background updates', () => {
     expect(getEventHandlerForEventValue(eventValue)).toBe(handler);
     updateEvents = [];
 
-    vi.useFakeTimers();
+    rstest.useFakeTimers();
     try {
       renderConditionalDirectEventOnBackground(backgroundModule, false);
 
@@ -846,14 +846,14 @@ describe('Compiled direct event background updates', () => {
       envManager.switchToBackground();
       expect(getEventHandlerForEventValue(eventValue)).toBe(handler);
 
-      vi.advanceTimersByTime(10000);
+      rstest.advanceTimersByTime(10000);
 
       expect(backgroundElementTemplateInstanceManager.get(removed.instanceId)).toBeUndefined();
       expect(getEventHandlerForEventValue(eventValue)).toBeUndefined();
       publishEvent(eventValue, { type: 'tap', phase: 'removed' });
       expect(handler).not.toHaveBeenCalledWith({ type: 'tap', phase: 'removed' });
     } finally {
-      vi.useRealTimers();
+      rstest.useRealTimers();
     }
   });
 });

@@ -58,7 +58,6 @@
     "@rsbuild/core": "catalog:rsbuild",
     "@rsbuild/plugin-sass": "1.5.2",
     "@rsbuild/plugin-typed-css-modules": "1.2.2",
-    "@rstest/core": "catalog:rstest",
     "rsbuild-plugin-arethetypeswrong": "0.3.1",
     "rsbuild-plugin-publint": "0.3.4",
     "source-map": "^0.7.6",

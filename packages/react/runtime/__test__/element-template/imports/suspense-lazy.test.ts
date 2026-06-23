@@ -1,5 +1,5 @@
 import type { ComponentType } from 'preact';
-import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, rstest, rstest } from '@rstest/core';
 
 import ElementTemplateRuntime, * as ElementTemplateRoot from '@lynx-js/react/element-template';
 import { Suspense, lazy } from '@lynx-js/react/element-template';
@@ -125,7 +125,7 @@ describe('element-template Suspense and lazy imports', () => {
   let originalLazyTargetDescriptors: Map<symbol, PropertyDescriptor | undefined>;
 
   beforeEach(() => {
-    vi.clearAllMocks();
+    rstest.clearAllMocks();
     envManager.resetEnv('background');
 
     originalQueryComponent = (lynx as LynxWithDynamicImportMocks).QueryComponent;
@@ -176,10 +176,10 @@ describe('element-template Suspense and lazy imports', () => {
   });
 
   it('routes ET component dynamic imports through loadLazyBundle', async () => {
-    const QueryComponent = vi.fn((source: string, callback: QueryComponentCallback) => {
+    const QueryComponent = rstest.fn((source: string, callback: QueryComponentCallback) => {
       callback({ code: 0, detail: { schema: source } });
     });
-    const getDynamicComponentExports = vi.fn((schema: string) => makeExports(schema));
+    const getDynamicComponentExports = rstest.fn((schema: string) => makeExports(schema));
     (lynx as LynxWithDynamicImportMocks).QueryComponent = QueryComponent;
     (lynxCoreInject.tt as typeof lynxCoreInject.tt & {
       getDynamicComponentExports?: DynamicExportsGetter;
@@ -196,7 +196,7 @@ describe('element-template Suspense and lazy imports', () => {
   });
 
   it('routes ET plain dynamic imports through lynx.requireModuleAsync', async () => {
-    const requireModuleAsync = vi.fn((
+    const requireModuleAsync = rstest.fn((
       source: string,
       callback: (error: Error | null, data?: { data: string }) => void,
     ) => {
@@ -212,7 +212,7 @@ describe('element-template Suspense and lazy imports', () => {
 
   it('populates standalone lazy target symbols with ET root/internal and lazy ABI exports', async () => {
     clearLazyTargetSymbols();
-    vi.resetModules();
+    rstest.resetModules();
 
     await import('../../../lazy/element-template-import.js');
     const [

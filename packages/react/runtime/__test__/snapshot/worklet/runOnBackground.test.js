@@ -1,7 +1,7 @@
 // Copyright 2024 The Lynx Authors. All rights reserved.
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
-import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, rstest } from '@rstest/core';
 
 import { onPostWorkletCtx } from '../../../src/snapshot/worklet/ctx';
 import { destroyWorklet } from '../../../src/snapshot/worklet/destroy';
@@ -18,14 +18,14 @@ beforeEach(() => {
   globalEnvManager.switchToBackground();
   globalThis.lynxWorkletImpl = {
     _runOnBackgroundDelayImpl: {
-      delayRunOnBackground: vi.fn(),
+      delayRunOnBackground: rstest.fn(),
     },
   };
 });
 
 afterEach(() => {
   destroyWorklet();
-  vi.clearAllMocks();
+  rstest.clearAllMocks();
 });
 
 describe('runOnBackground', () => {
@@ -78,7 +78,7 @@ describe('runOnBackground', () => {
   });
 
   it('should get return value', async () => {
-    const fn = vi.fn(() => 'world');
+    const fn = rstest.fn(() => 'world');
     const worklet = {
       xxx: {
         yyy: 1,
@@ -103,7 +103,7 @@ describe('runOnBackground', () => {
       xxx: {
         yyy: {
           _jsFnId: 233,
-          _fn: vi.fn(),
+          _fn: rstest.fn(),
         },
       },
     };
@@ -195,7 +195,7 @@ describe('EventListeners', () => {
 
 describe('runJSFunction', () => {
   it('should run JS Function', () => {
-    const fn = vi.fn();
+    const fn = rstest.fn();
     const worklet = {
       xxx: {
         yyy: 1,

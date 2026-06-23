@@ -1,4 +1,4 @@
-import { describe, expect, test, vi } from 'vitest';
+import { describe, expect, test, rstest } from '@rstest/core';
 import { globalEnvManager } from '../utils/envManager.ts';
 
 describe('processEvalResult', () => {
@@ -9,7 +9,7 @@ describe('processEvalResult', () => {
 
     expect(processEvalResult).toStrictEqual(expect.any(Function));
 
-    const fn = vi.fn().mockReturnValue('bar');
+    const fn = rstest.fn().mockReturnValue('bar');
 
     expect(processEvalResult(fn, 'https://example.com/')).toBe('bar');
     expect(fn).toBeCalledWith('https://example.com/');

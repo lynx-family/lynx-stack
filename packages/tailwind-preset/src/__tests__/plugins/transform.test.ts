@@ -1,7 +1,7 @@
 // Copyright 2025 The Lynx Authors. All rights reserved.
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
-import { describe, expect, it, vi } from 'vitest';
+import { describe, expect, it, rstest } from '@rstest/core';
 
 import { cssTransformValue, transform } from '../../plugins/lynx/transform.js';
 import type { CSSRuleObject } from '../../types/tailwind-types.js';
@@ -11,7 +11,7 @@ describe('transform plugin', () => {
   it('registers base transform utilities', () => {
     const { api } = runPlugin(transform);
 
-    const addUtilities = vi.mocked(api.addUtilities);
+    const addUtilities = rstest.mocked(api.addUtilities);
     expect(addUtilities).toHaveBeenCalledTimes(1);
 
     const addUtilitiesCall = addUtilities.mock.calls[0];
@@ -29,7 +29,7 @@ describe('transform plugin', () => {
   it('supports arbitrary transform values', () => {
     const { api } = runPlugin(transform);
 
-    const matchUtilities = vi.mocked(api.matchUtilities);
+    const matchUtilities = rstest.mocked(api.matchUtilities);
     const utils: Record<string, (value: unknown) => unknown> = {};
 
     for (const call of matchUtilities.mock.calls) {

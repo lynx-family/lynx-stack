@@ -1,4 +1,4 @@
-import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, rstest } from '@rstest/core';
 
 import { WorkletEvents } from '@lynx-js/react/worklet-runtime/bindings';
 import { options } from 'preact';
@@ -67,12 +67,12 @@ function installDataChangeHarness() {
 
   const listeners = new Set<DataChangeListener>();
   const emitter = {
-    addListener: vi.fn((eventName: string, listener: DataChangeListener) => {
+    addListener: rstest.fn((eventName: string, listener: DataChangeListener) => {
       if (eventName === 'onDataChanged') {
         listeners.add(listener);
       }
     }),
-    removeListener: vi.fn((eventName: string, listener: DataChangeListener) => {
+    removeListener: rstest.fn((eventName: string, listener: DataChangeListener) => {
       if (eventName === 'onDataChanged') {
         listeners.delete(listener);
       }
@@ -210,8 +210,8 @@ describe('ElementTemplate commit hook', () => {
     markElementTemplateHydrated();
     const dispatchError = new Error('update dispatch failed');
     const coreContext = lynx.getCoreContext();
-    const removeEventListener = vi.spyOn(coreContext, 'removeEventListener');
-    vi.spyOn(coreContext, 'dispatchEvent').mockImplementationOnce(() => {
+    const removeEventListener = rstest.spyOn(coreContext, 'removeEventListener');
+    rstest.spyOn(coreContext, 'dispatchEvent').mockImplementationOnce(() => {
       throw dispatchError;
     });
     const worklet = { _wkltId: 'failed-commit-main-thread-function' };
@@ -223,7 +223,7 @@ describe('ElementTemplate commit hook', () => {
     enqueueDelayedRunOnMainThreadData({
       worklet,
       params: [],
-      resolveId: onFunctionCall(vi.fn()),
+      resolveId: onFunctionCall(rstest.fn()),
     });
 
     expect(() => options.__c?.({} as unknown as object, [])).toThrow(dispatchError);
@@ -309,7 +309,7 @@ describe('ElementTemplate commit hook', () => {
 
   it('notifies useInitDataChanged listeners through aliased ET hooks', () => {
     const dataChange = installDataChangeHarness();
-    const onChanged = vi.fn();
+    const onChanged = rstest.fn();
 
     try {
       function App() {
@@ -478,7 +478,7 @@ describe('ElementTemplate commit hook', () => {
     globalThis.__ALOG__ = false;
     const alog = console.alog as unknown as { mock: { calls: unknown[][] }; mockClear(): void };
     alog.mockClear();
-    const formatSpy = vi.spyOn(elementTemplateAlog, 'formatElementTemplateUpdateCommands');
+    const formatSpy = rstest.spyOn(elementTemplateAlog, 'formatElementTemplateUpdateCommands');
 
     markElementTemplateHydrated();
     globalCommitContext.ops = createRawTextOps(1, 'hello');
@@ -491,7 +491,7 @@ describe('ElementTemplate commit hook', () => {
   });
 
   it('schedules delayed cleanup from the current commit non-payload state', () => {
-    vi.useFakeTimers();
+    rstest.useFakeTimers();
     try {
       markElementTemplateHydrated();
       const root = new BackgroundElementTemplateInstance('root');
@@ -500,19 +500,19 @@ describe('ElementTemplate commit hook', () => {
 
       options.__c?.({} as unknown as object, []);
       expect(globalCommitContext.nonPayload.removedSubtreesAwaitingTeardown).toEqual([]);
-      vi.advanceTimersByTime(9999);
+      rstest.advanceTimersByTime(9999);
       expect(backgroundElementTemplateInstanceManager.get(root.instanceId)).toBe(root);
 
-      vi.advanceTimersByTime(1);
+      rstest.advanceTimersByTime(1);
 
       expect(backgroundElementTemplateInstanceManager.get(root.instanceId)).toBeUndefined();
     } finally {
-      vi.useRealTimers();
+      rstest.useRealTimers();
     }
   });
 
   it('keeps a removed subtree that is reattached before delayed cleanup', () => {
-    vi.useFakeTimers();
+    rstest.useFakeTimers();
     try {
       const parent = new BackgroundElementTemplateInstance('parent');
       const root = new BackgroundElementTemplateInstance('root');
@@ -525,17 +525,17 @@ describe('ElementTemplate commit hook', () => {
       scheduleElementTemplateRemovedSubtreeCleanup(takeRemovedSubtreesForPostDispatchTeardown());
       parent.appendChild(root);
 
-      vi.advanceTimersByTime(10000);
+      rstest.advanceTimersByTime(10000);
 
       expect(backgroundElementTemplateInstanceManager.get(root.instanceId)).toBe(root);
       expect(root.parent).toBe(parent);
     } finally {
-      vi.useRealTimers();
+      rstest.useRealTimers();
     }
   });
 
   it('releases detached subtrees without destroying data needed for later reattach', () => {
-    vi.useFakeTimers();
+    rstest.useFakeTimers();
     try {
       const parent = new BackgroundElementTemplateInstance('parent');
       const root = new BackgroundElementTemplateInstance('root');
@@ -549,7 +549,7 @@ describe('ElementTemplate commit hook', () => {
 
       parent.removeChild(root);
       scheduleElementTemplateRemovedSubtreeCleanup(takeRemovedSubtreesForPostDispatchTeardown());
-      vi.advanceTimersByTime(10000);
+      rstest.advanceTimersByTime(10000);
 
       expect(backgroundElementTemplateInstanceManager.get(root.instanceId)).toBeUndefined();
       expect(backgroundElementTemplateInstanceManager.get(child.instanceId)).toBeUndefined();
@@ -582,12 +582,12 @@ describe('ElementTemplate commit hook', () => {
         0,
       ]);
     } finally {
-      vi.useRealTimers();
+      rstest.useRealTimers();
     }
   });
 
   it('does not overwrite a conflicting manager entry when recreating a detached subtree', () => {
-    vi.useFakeTimers();
+    rstest.useFakeTimers();
     try {
       const parent = new BackgroundElementTemplateInstance('parent');
       const root = new BackgroundElementTemplateInstance('root');
@@ -598,7 +598,7 @@ describe('ElementTemplate commit hook', () => {
 
       parent.removeChild(root);
       scheduleElementTemplateRemovedSubtreeCleanup(takeRemovedSubtreesForPostDispatchTeardown());
-      vi.advanceTimersByTime(10000);
+      rstest.advanceTimersByTime(10000);
       expect(backgroundElementTemplateInstanceManager.get(root.instanceId)).toBeUndefined();
 
       const conflicting = new BackgroundElementTemplateInstance('conflicting');
@@ -611,12 +611,12 @@ describe('ElementTemplate commit hook', () => {
       expect(backgroundElementTemplateInstanceManager.get(root.instanceId)).toBe(conflicting);
       expect(globalCommitContext.ops).toEqual([]);
     } finally {
-      vi.useRealTimers();
+      rstest.useRealTimers();
     }
   });
 
   it('flushes ref-only updates without dispatching native ops', () => {
-    const ref = vi.fn();
+    const ref = rstest.fn();
     markElementTemplateHydrated();
     queueRefAttrUpdate(null, ref, -2, 0);
 
@@ -631,7 +631,7 @@ describe('ElementTemplate commit hook', () => {
   });
 
   it('dispatches data-updated payload while flushing ref-only effects', () => {
-    const ref = vi.fn();
+    const ref = rstest.fn();
     markElementTemplateHydrated();
     globalCommitContext.flushOptions = { triggerDataUpdated: true };
     queueRefAttrUpdate(null, ref, -2, 0);
@@ -654,7 +654,7 @@ describe('ElementTemplate commit hook', () => {
   });
 
   it('flushes pre-hydration ref effects on commit without dispatching native ops', () => {
-    const ref = vi.fn();
+    const ref = rstest.fn();
     queueRefAttrUpdate(null, ref, 1, 0);
 
     options.__c?.({} as unknown as object, []);
@@ -677,26 +677,26 @@ describe('ElementTemplate commit hook', () => {
   });
 
   it('cancels scheduled removed subtree cleanup on background destroy', () => {
-    vi.useFakeTimers();
+    rstest.useFakeTimers();
     try {
       const root = new BackgroundElementTemplateInstance('root');
-      const tearDown = vi.spyOn(root, 'tearDown');
+      const tearDown = rstest.spyOn(root, 'tearDown');
       scheduleElementTemplateRemovedSubtreeCleanup([root]);
 
       destroyElementTemplateBackgroundRuntime();
-      vi.advanceTimersByTime(10000);
+      rstest.advanceTimersByTime(10000);
 
       expect(tearDown).not.toHaveBeenCalled();
       expect(backgroundElementTemplateInstanceManager.get(root.instanceId)).toBeUndefined();
     } finally {
-      vi.useRealTimers();
+      rstest.useRealTimers();
     }
   });
 
   it('resets commit state when update dispatch throws', () => {
-    vi.useFakeTimers();
+    rstest.useFakeTimers();
     const dispatchError = new Error('update dispatch failed');
-    const dispatchSpy = vi.spyOn(lynx.getCoreContext(), 'dispatchEvent').mockImplementationOnce(() => {
+    const dispatchSpy = rstest.spyOn(lynx.getCoreContext(), 'dispatchEvent').mockImplementationOnce(() => {
       throw dispatchError;
     });
 
@@ -710,18 +710,18 @@ describe('ElementTemplate commit hook', () => {
       expect(globalCommitContext.ops).toEqual([]);
       expect(globalCommitContext.nonPayload.removedSubtreesAwaitingTeardown).toEqual([]);
 
-      vi.advanceTimersByTime(10000);
+      rstest.advanceTimersByTime(10000);
       expect(backgroundElementTemplateInstanceManager.get(root.instanceId)).toBeUndefined();
     } finally {
       dispatchSpy.mockRestore();
-      vi.useRealTimers();
+      rstest.useRealTimers();
     }
   });
 
   it('clears pending refs when update dispatch throws', () => {
-    const ref = vi.fn();
+    const ref = rstest.fn();
     const dispatchError = new Error('update dispatch failed');
-    const dispatchSpy = vi.spyOn(lynx.getCoreContext(), 'dispatchEvent').mockImplementationOnce(() => {
+    const dispatchSpy = rstest.spyOn(lynx.getCoreContext(), 'dispatchEvent').mockImplementationOnce(() => {
       throw dispatchError;
     });
 

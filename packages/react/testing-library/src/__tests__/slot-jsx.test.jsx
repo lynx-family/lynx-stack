@@ -1,4 +1,4 @@
-import { expect } from 'vitest';
+import { expect, vi } from 'vitest';
 import { useState } from '@lynx-js/react';
 
 import { fireEvent, render, act } from '..';
@@ -948,18 +948,18 @@ function runSlotFuzz({ withKey, sparse, seed: initialSeed }) {
   }
 }
 
-test('fuzz (keyed): cross-slot keyed moves keep slot order', { timeout: 30000 }, () => {
+test('fuzz (keyed): cross-slot keyed moves keep slot order', () => {
   runSlotFuzz({ withKey: true, sparse: false, seed: 0xDEADBEEF });
-});
+}, { timeout: 30000 });
 
-test('fuzz (unkeyed): positional slot updates keep slot order', { timeout: 30000 }, () => {
+test('fuzz (unkeyed): positional slot updates keep slot order', () => {
   runSlotFuzz({ withKey: false, sparse: false, seed: 0x1337C0DE });
-});
+}, { timeout: 30000 });
 
-test('fuzz (keyed, sparse): random null/filled slots stay correct', { timeout: 30000 }, () => {
+test('fuzz (keyed, sparse): random null/filled slots stay correct', () => {
   runSlotFuzz({ withKey: true, sparse: true, seed: 0xCAFEBABE });
-});
+}, { timeout: 30000 });
 
-test('fuzz (unkeyed, sparse): random null/filled slots stay correct', { timeout: 30000 }, () => {
+test('fuzz (unkeyed, sparse): random null/filled slots stay correct', () => {
   runSlotFuzz({ withKey: false, sparse: true, seed: 0xFEEDFACE });
-});
+}, { timeout: 30000 });

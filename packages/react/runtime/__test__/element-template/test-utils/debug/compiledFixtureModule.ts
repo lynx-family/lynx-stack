@@ -1,13 +1,9 @@
-import fs from 'node:fs';
-import os from 'node:os';
-import path from 'node:path';
-import { pathToFileURL } from 'node:url';
-
 import {
   compileFixtureSource,
   type CompiledFixtureArtifact,
   type CompiledFixtureTarget,
 } from './compiledFixtureCompiler.js';
+import { evaluateCompiledModule } from './compiledModuleEval.js';
 import { primeCompiledFixtureTemplates } from './compiledFixtureRegistry.js';
 
 export interface CompiledFixtureModuleExports {
@@ -19,15 +15,10 @@ export interface CompiledFixtureModuleExports {
 export async function loadCompiledFixtureModule<T extends object = CompiledFixtureModuleExports>(
   artifact: CompiledFixtureArtifact,
 ): Promise<T> {
-  const tempDir = fs.mkdtempSync(path.join(os.tmpdir(), 'lynx-compiled-fixture-'));
-  const tempImportPath = path.join(tempDir, 'app.js');
-
-  fs.writeFileSync(tempImportPath, artifact.code);
-  try {
-    return await import(`${pathToFileURL(tempImportPath).href}?t=${Date.now()}`) as T;
-  } finally {
-    fs.rmSync(tempDir, { recursive: true, force: true });
-  }
+  // Evaluate the compiled module in-process (see compiledModuleEval.ts). Writing
+  // it to a temp file and `import()`ing escapes rspack into Node's loader, which
+  // cannot resolve the bare `@lynx-js/react/*` (TypeScript src) specifiers.
+  return evaluateCompiledModule<T>(artifact.code);
 }
 
 interface LoadCompiledFixturePairOptions {

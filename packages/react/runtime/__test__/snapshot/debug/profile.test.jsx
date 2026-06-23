@@ -4,7 +4,7 @@
 // LICENSE file in the root directory of this source tree.
 */
 import { render, options, Component } from 'preact';
-import { beforeAll, beforeEach, describe, expect, test, vi } from 'vitest';
+import { beforeAll, beforeEach, describe, expect, test, rstest } from '@rstest/core';
 
 import { setupDocument } from '../../../src/document';
 import { setupPage, snapshotInstanceManager } from '../../../src/snapshot';
@@ -26,7 +26,7 @@ describe('profile', () => {
   });
 
   test('original options hooks should be called', async () => {
-    const noop = vi.fn();
+    const noop = rstest.fn();
 
     const oldDiff = options[DIFF];
     const oldDiff2 = options[DIFF2];
@@ -259,10 +259,10 @@ describe('profile', () => {
               "changed (shallow diff) state keys": "[]",
               "componentName": "App",
               "current state keys": "[]",
-              "currentValue": ""() => \\"A\\""",
+              "currentValue": ""()=>'A'"",
               "hookIdx": "0",
               "next state keys": "[]",
-              "nextValue": ""() => \\"B\\""",
+              "nextValue": ""()=>'B'"",
             },
             "flowId": 666,
           },

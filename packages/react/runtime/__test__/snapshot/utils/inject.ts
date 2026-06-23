@@ -4,7 +4,7 @@
 // LICENSE file in the root directory of this source tree.
 */
 import { elementTree, withQueue } from './nativeMethod.js';
-import { vi } from 'vitest';
+import { rstest } from '@rstest/core';
 
 export function __injectElementApi(target?: any) {
   if (typeof target === 'undefined') {
@@ -26,6 +26,6 @@ export function __injectElementApi(target?: any) {
     console.error('registerDataProcessor is not implemented');
   };
 
-  target.__OnLifecycleEvent = vi.fn();
-  target._ReportError = vi.fn();
+  target.__OnLifecycleEvent = rstest.fn();
+  target._ReportError = rstest.fn();
 }

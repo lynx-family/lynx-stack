@@ -2,7 +2,15 @@
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
 
-import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
+import {
+  afterEach,
+  beforeEach,
+  describe,
+  expect,
+  test,
+  rstest,
+} from '@rstest/core';
+import { rstest } from '@rstest/core';
 import { runOnMainThread, useEffect } from '@lynx-js/react';
 import { act, render } from '@lynx-js/react/testing-library';
 
@@ -10,48 +18,53 @@ import * as framerMotionDom from 'framer-motion/dom';
 import * as motionDom from 'motion-dom';
 
 import { animate, motionValue, stagger } from '../../src/animation/index.js';
-import { ElementCompt } from '../../src/polyfill/element.js';
+import * as elementModule from '../../src/polyfill/element.js';
 
-// Mock dependencies
-vi.mock('framer-motion/dom', async (importOriginal) => {
-  const actual = await importOriginal<typeof framerMotionDom>();
-  return {
-    ...actual,
-    animate: (...args: any[]) => {
-      (globalThis as any).__ANIMATE_ARGS = args;
-      return { then: () => {}, play: () => {}, cancel: () => {} };
-    },
-    stagger: (...args: any[]) => {
-      (globalThis as any).__STAGGER_ARGS = args;
-      return (i: number) => i * 0.1;
-    },
-  };
-});
-
-vi.mock('motion-dom', async (importOriginal) => {
-  const actual = await importOriginal<typeof motionDom>();
-  return {
-    ...actual,
-    motionValue: (...args: any[]) => {
-      (globalThis as any).__MOTION_VALUE_ARGS = args;
-      return { set: () => {}, get: () => 0 };
-    },
-  };
-});
-
-vi.mock('../../src/polyfill/element.js', async (importOriginal) => {
-  return {
-    ElementCompt: class ElementCompt {
-      constructor(el: any) {
-        (globalThis as any).__ELEMENT_COMPT_ARGS = el;
-      }
-    },
-  };
-});
+// Mock dependencies.
+//
+// These modules are imported by `src/animation` with `{ runtime: 'shared' }`,
+// so the ReactLynx transform bundles them into a shared chunk that is loaded by
+// the main-thread (lepus) layer. A factory `rstest.mock(mod, () => ...)` does
+// not propagate to that shared chunk (its replacement module is invisible to
+// the main thread, leaving e.g. `ElementCompt` undefined → "not a constructor").
+//
+// `{ spy: true }` keeps the REAL module (so non-mocked exports like `mix`,
+// `clamp`, `progress` survive in the shared chunk) and lets `rstest.spyOn(...)
+// .mockImplementation(...)` patch individual exports in place — and those spied
+// implementations DO reach the main thread. Implementations are installed in
+// `beforeEach` so each test starts from a clean spy.
+rstest.mock('framer-motion/dom', { spy: true });
+rstest.mock('motion-dom', { spy: true });
+rstest.mock('../../src/polyfill/element.js', { spy: true });
 
 describe('Wrapper Animation', () => {
   beforeEach(() => {
-    vi.clearAllMocks();
+    rstest.clearAllMocks();
+
+    rstest.spyOn(framerMotionDom, 'animate').mockImplementation(
+      (...args: any[]) => {
+        (globalThis as any).__ANIMATE_ARGS = args;
+        return { then: () => {}, play: () => {}, cancel: () => {} } as any;
+      },
+    );
+    rstest.spyOn(framerMotionDom, 'stagger').mockImplementation(
+      (...args: any[]) => {
+        (globalThis as any).__STAGGER_ARGS = args;
+        return ((i: number) => i * 0.1) as any;
+      },
+    );
+    rstest.spyOn(motionDom, 'motionValue').mockImplementation(
+      (...args: any[]) => {
+        (globalThis as any).__MOTION_VALUE_ARGS = args;
+        return { set: () => {}, get: () => 0 } as any;
+      },
+    );
+    rstest.spyOn(elementModule, 'ElementCompt').mockImplementation(
+      function(this: any, el: any) {
+        (globalThis as any).__ELEMENT_COMPT_ARGS = el;
+        return this;
+      } as any,
+    );
     // Cleanup globals
     delete (globalThis as any).__ANIMATE_ARGS;
     delete (globalThis as any).__STAGGER_ARGS;

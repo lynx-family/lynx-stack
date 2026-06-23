@@ -2,14 +2,14 @@
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
 
-import { beforeEach, describe, expect, test, vi } from 'vitest';
+import { beforeEach, describe, expect, test, rstest } from '@rstest/core';
 
 /* global lynx */
 
 describe('loadLazyBundle', () => {
   describe('main thread', () => {
     beforeEach(() => {
-      vi
+      rstest
         .unstubAllGlobals()
         .stubGlobal('__LEPUS__', true)
         .stubGlobal('__MAIN_THREAD__', true);
@@ -26,9 +26,9 @@ describe('loadLazyBundle', () => {
     });
 
     test('blocking __QueryComponent', async () => {
-      const __QueryComponent = vi.fn();
+      const __QueryComponent = rstest.fn();
       __QueryComponent.mockReturnValueOnce({ evalResult: { data: 'foo' } });
-      vi.stubGlobal('__QueryComponent', __QueryComponent);
+      rstest.stubGlobal('__QueryComponent', __QueryComponent);
 
       const { loadLazyBundle } = await import('../../../src/core/lynx/lazy-bundle');
 
@@ -55,9 +55,9 @@ describe('loadLazyBundle', () => {
     });
 
     test('blocking __QueryComponent with primitive returns', async () => {
-      const __QueryComponent = vi.fn();
+      const __QueryComponent = rstest.fn();
       __QueryComponent.mockReturnValueOnce({ evalResult: { data: 'foo' } });
-      vi.stubGlobal('__QueryComponent', __QueryComponent);
+      rstest.stubGlobal('__QueryComponent', __QueryComponent);
 
       const { loadLazyBundle } = await import('../../../src/core/lynx/lazy-bundle');
 
@@ -83,9 +83,9 @@ describe('loadLazyBundle', () => {
     });
 
     test('blocking __QueryComponent without onFulfilled', async () => {
-      const __QueryComponent = vi.fn();
+      const __QueryComponent = rstest.fn();
       __QueryComponent.mockReturnValueOnce({ evalResult: { data: 'foo' } });
-      vi.stubGlobal('__QueryComponent', __QueryComponent);
+      rstest.stubGlobal('__QueryComponent', __QueryComponent);
 
       const { loadLazyBundle } = await import('../../../src/core/lynx/lazy-bundle');
 
@@ -104,9 +104,9 @@ describe('loadLazyBundle', () => {
     });
 
     test('blocking __QueryComponent with thenable returns', async () => {
-      const __QueryComponent = vi.fn();
+      const __QueryComponent = rstest.fn();
       __QueryComponent.mockReturnValueOnce({ evalResult: { data: 'foo' } });
-      vi.stubGlobal('__QueryComponent', __QueryComponent);
+      rstest.stubGlobal('__QueryComponent', __QueryComponent);
 
       const { loadLazyBundle } = await import('../../../src/core/lynx/lazy-bundle');
 
@@ -147,9 +147,9 @@ describe('loadLazyBundle', () => {
     });
 
     test('blocking __QueryComponent with throw in onFulfilled', async () => {
-      const __QueryComponent = vi.fn();
+      const __QueryComponent = rstest.fn();
       __QueryComponent.mockReturnValueOnce({ evalResult: { data: 'foo' } });
-      vi.stubGlobal('__QueryComponent', __QueryComponent);
+      rstest.stubGlobal('__QueryComponent', __QueryComponent);
 
       const { loadLazyBundle } = await import('../../../src/core/lynx/lazy-bundle');
 
@@ -173,9 +173,9 @@ describe('loadLazyBundle', () => {
     test.todo('blocking __QueryComponent with throw in onRejected');
 
     test('non-blocking __QueryComponent', async () => {
-      const __QueryComponent = vi.fn();
+      const __QueryComponent = rstest.fn();
       __QueryComponent.mockReturnValueOnce(undefined);
-      vi.stubGlobal('__QueryComponent', __QueryComponent);
+      rstest.stubGlobal('__QueryComponent', __QueryComponent);
 
       const { loadLazyBundle } = await import('../../../src/core/lynx/lazy-bundle');
 
@@ -202,13 +202,13 @@ describe('loadLazyBundle', () => {
   });
 
   describe('background thread', () => {
-    const QueryComponent = vi.fn();
-    const getDynamicComponentExports = vi.fn((data) => ({ data }));
+    const QueryComponent = rstest.fn();
+    const getDynamicComponentExports = rstest.fn((data) => ({ data }));
 
     beforeEach(() => {
       QueryComponent.mockReset();
 
-      vi.unstubAllGlobals()
+      rstest.unstubAllGlobals()
         .stubGlobal('__LEPUS__', false)
         .stubGlobal('__MAIN_THREAD__', false)
         .stubGlobal('__BACKGROUND__', true)
@@ -535,7 +535,7 @@ describe('loadLazyBundle', () => {
       QueryComponent.mockImplementation((source, callback) => {
         callback({ code: 0, detail: { schema: source } });
       });
-      vi.stubGlobal('lynx', { getNativeLynx: () => ({ QueryComponent }) });
+      rstest.stubGlobal('lynx', { getNativeLynx: () => ({ QueryComponent }) });
       const { loadLazyBundle } = await import('../../../src/core/lynx/lazy-bundle');
 
       const promise = loadLazyBundle('foo');
@@ -554,7 +554,7 @@ describe('loadLazyBundle', () => {
   });
 
   test('unreachable', async () => {
-    vi
+    rstest
       .stubGlobal('__JS__', false)
       .stubGlobal('__BACKGROUND__', false)
       .stubGlobal('__MAIN_THREAD__', false)

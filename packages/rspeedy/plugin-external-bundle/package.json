@@ -35,7 +35,7 @@
   ],
   "scripts": {
     "api-extractor": "api-extractor run --verbose",
-    "test": "pnpm -w run test --project rspeedy/externals"
+    "test": "rstest"
   },
   "dependencies": {
     "@lynx-js/externals-loading-webpack-plugin": "workspace:*"

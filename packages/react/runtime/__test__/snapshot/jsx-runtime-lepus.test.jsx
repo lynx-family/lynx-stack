@@ -1,4 +1,4 @@
-import { afterEach, beforeEach, describe, expect, it } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it } from '@rstest/core';
 
 import { jsx } from '../../lepus/jsx-runtime';
 import { SnapshotInstance, snapshotCreatorMap } from '../../src/snapshot';

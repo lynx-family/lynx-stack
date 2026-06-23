@@ -9,7 +9,7 @@
   "scripts": {
     "build": "tsc --build",
     "prepare": "husky && ts-patch install",
-    "test": "vitest"
+    "test": "rstest run -c rstest.config.ts && pnpm --filter @lynx-js/react-runtime --filter @lynx-js/reactlynx-testing-library --filter @lynx-js/gesture-runtime --filter @lynx-js/use-sync-external-store --filter @lynx-js/motion --filter @lynx-js/testing-environment --filter @lynx-js/testing-library-example-basic --filter @lynx-js/testing-library-example-library --filter @lynx-js/testing-library-example-react-compiler run test"
   },
   "lint-staged": {
     "*.{ts,tsx,js,jsx,cjs,mjs,css,sass,scss,less,html,yml,yaml,rs,toml,md,json}": [
@@ -25,7 +25,6 @@
   "devDependencies": {
     "@biomejs/biome": "^1.9.4",
     "@changesets/cli": "^2.29.8",
-    "@codspeed/vitest-plugin": "^5.2.0",
     "@eslint/js": "^9.39.3",
     "@eslint/markdown": "^7.5.1",
     "@microsoft/api-extractor": "catalog:",
@@ -39,9 +38,7 @@
     "@tsconfig/strictest": "^2.0.8",
     "@types/node": "^24.10.13",
     "@typescript/native-preview": "7.0.0-dev.20260212.1",
-    "@vitest/coverage-v8": "^3.2.4",
     "@vitest/eslint-plugin": "^1.6.9",
-    "@vitest/ui": "^3.2.4",
     "dprint": "^0.51.1",
     "eslint": "^9.39.3",
     "eslint-import-resolver-typescript": "^4.4.4",

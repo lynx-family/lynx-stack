@@ -1,4 +1,4 @@
-import { describe, expect, it, vi } from 'vitest';
+import { describe, expect, it, rstest } from '@rstest/core';
 import { useTransition, startTransition } from '../../../compat';
 
 describe('useTransition', () => {
@@ -30,7 +30,7 @@ describe('startTransition', () => {
   });
 
   it('should call the callback function', () => {
-    const mockCallback = vi.fn();
+    const mockCallback = rstest.fn();
     startTransition(mockCallback);
     expect(mockCallback).toHaveBeenCalled();
   });

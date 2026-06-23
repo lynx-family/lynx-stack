@@ -1,7 +1,7 @@
 // Copyright 2025 The Lynx Authors. All rights reserved.
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
-import { describe, expect, it, vi } from 'vitest';
+import { describe, expect, it, rstest } from '@rstest/core';
 
 import { cssTransformValue } from '../../plugins/lynx/transform.js';
 import { translate } from '../../plugins/lynx/translate.js';
@@ -18,7 +18,7 @@ describe('translate plugin', () => {
       },
     });
 
-    const matchUtilities = vi.mocked(api.matchUtilities);
+    const matchUtilities = rstest.mocked(api.matchUtilities);
 
     // Build a strictly typed utility map
     type UtilityFn = (value: unknown) => Record<string, string> | null;

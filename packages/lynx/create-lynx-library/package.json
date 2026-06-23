@@ -33,7 +33,7 @@
   "scripts": {
     "build": "rslib build",
     "dev": "rslib build --watch",
-    "test": "vitest run"
+    "test": "rstest run"
   },
   "dependencies": {
     "@clack/prompts": "1.0.1"

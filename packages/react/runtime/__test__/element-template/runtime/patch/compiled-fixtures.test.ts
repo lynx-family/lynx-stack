@@ -2,7 +2,7 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
-import { beforeEach, describe } from 'vitest';
+import { beforeEach, describe } from '@rstest/core';
 
 import { clearTemplates } from '../../test-utils/debug/registry.js';
 import { assertOrUpdateTextFile, formatFixtureOutput, runFixtureTests } from '../../test-utils/debug/fixtureRunner.js';

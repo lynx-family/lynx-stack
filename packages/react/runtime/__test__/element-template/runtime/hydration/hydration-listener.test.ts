@@ -1,4 +1,4 @@
-import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, rstest } from '@rstest/core';
 
 import { WorkletEvents } from '@lynx-js/react/worklet-runtime/bindings';
 
@@ -76,7 +76,7 @@ describe('ElementTemplate hydration listener', () => {
   let originalLynxSdkVersion: string | undefined;
 
   beforeEach(() => {
-    vi.clearAllMocks();
+    rstest.clearAllMocks();
     originalLynxSdkVersion = SystemInfo.lynxSdkVersion;
     clearEtAttrPlanMap();
     clearEventState();
@@ -129,7 +129,7 @@ describe('ElementTemplate hydration listener', () => {
   it('dispatches hydration boundary after clean hydrate without ops', () => {
     envManager.switchToBackground();
     installElementTemplateHydrationListener();
-    const dispatchSpy = vi.spyOn(lynx.getCoreContext(), 'dispatchEvent');
+    const dispatchSpy = rstest.spyOn(lynx.getCoreContext(), 'dispatchEvent');
 
     const backgroundRoot = __root as BackgroundElementTemplateInstance;
     const after = new BackgroundElementTemplateInstance('_et_test');
@@ -164,7 +164,7 @@ describe('ElementTemplate hydration listener', () => {
   it('dispatches delayed-only runOnMainThread payloads after clean hydrate', () => {
     envManager.switchToBackground();
     installElementTemplateHydrationListener();
-    const dispatchSpy = vi.spyOn(lynx.getCoreContext(), 'dispatchEvent');
+    const dispatchSpy = rstest.spyOn(lynx.getCoreContext(), 'dispatchEvent');
 
     const backgroundRoot = __root as BackgroundElementTemplateInstance;
     const after = new BackgroundElementTemplateInstance('_et_test');
@@ -207,9 +207,9 @@ describe('ElementTemplate hydration listener', () => {
     SystemInfo.lynxSdkVersion = '4.0';
     envManager.switchToBackground();
     installElementTemplateHydrationListener();
-    const removeEventListener = vi.spyOn(lynx.getCoreContext(), 'removeEventListener');
+    const removeEventListener = rstest.spyOn(lynx.getCoreContext(), 'removeEventListener');
     const oldReportError = lynx.reportError;
-    const reportError = vi.fn();
+    const reportError = rstest.fn();
     lynx.reportError = reportError;
 
     try {
@@ -273,7 +273,7 @@ describe('ElementTemplate hydration listener', () => {
 
   it('hydrates typed list roots sent from main thread', () => {
     const oldReportError = lynx.reportError;
-    const reportError = vi.fn();
+    const reportError = rstest.fn();
     lynx.reportError = reportError;
 
     try {
@@ -320,13 +320,13 @@ describe('ElementTemplate hydration listener', () => {
 
   it('reconciles root type mismatch through page slot update instead of hydrate failure', () => {
     const oldReportError = lynx.reportError;
-    const reportError = vi.fn();
+    const reportError = rstest.fn();
     lynx.reportError = reportError;
 
     try {
       envManager.switchToBackground();
       installElementTemplateHydrationListener();
-      const dispatchSpy = vi.spyOn(lynx.getCoreContext(), 'dispatchEvent');
+      const dispatchSpy = rstest.spyOn(lynx.getCoreContext(), 'dispatchEvent');
 
       const backgroundRoot = __root as BackgroundElementTemplateInstance;
       const after = new BackgroundElementTemplateInstance('_et_after', ['after']);
@@ -379,7 +379,7 @@ describe('ElementTemplate hydration listener', () => {
   it('inserts background-only roots during hydrate', () => {
     envManager.switchToBackground();
     installElementTemplateHydrationListener();
-    const dispatchSpy = vi.spyOn(lynx.getCoreContext(), 'dispatchEvent');
+    const dispatchSpy = rstest.spyOn(lynx.getCoreContext(), 'dispatchEvent');
 
     const backgroundRoot = __root as BackgroundElementTemplateInstance;
     const after = new BackgroundElementTemplateInstance('_et_after');
@@ -421,7 +421,7 @@ describe('ElementTemplate hydration listener', () => {
   it('removes serialized-only roots during hydrate', () => {
     envManager.switchToBackground();
     installElementTemplateHydrationListener();
-    const dispatchSpy = vi.spyOn(lynx.getCoreContext(), 'dispatchEvent');
+    const dispatchSpy = rstest.spyOn(lynx.getCoreContext(), 'dispatchEvent');
 
     envManager.switchToMainThread();
     lynx.getJSContext().dispatchEvent({
@@ -451,11 +451,11 @@ describe('ElementTemplate hydration listener', () => {
   });
 
   it('schedules delayed cleanup for removed subtrees produced during hydration', () => {
-    vi.useFakeTimers();
+    rstest.useFakeTimers();
     try {
       envManager.switchToBackground();
       installElementTemplateHydrationListener();
-      const dispatchSpy = vi.spyOn(lynx.getCoreContext(), 'dispatchEvent');
+      const dispatchSpy = rstest.spyOn(lynx.getCoreContext(), 'dispatchEvent');
 
       const backgroundRoot = __root as BackgroundElementTemplateInstance;
       const host = new BackgroundElementTemplateInstance('_et_test');
@@ -484,28 +484,28 @@ describe('ElementTemplate hydration listener', () => {
           reloadVersion: getReloadVersion(),
         }),
       );
-      vi.advanceTimersByTime(9999);
+      rstest.advanceTimersByTime(9999);
       expect(backgroundElementTemplateInstanceManager.get(stale.instanceId)).toBe(stale);
 
-      vi.advanceTimersByTime(1);
+      rstest.advanceTimersByTime(1);
       expect(backgroundElementTemplateInstanceManager.get(stale.instanceId)).toBeUndefined();
     } finally {
-      vi.useRealTimers();
+      rstest.useRealTimers();
     }
   });
 
   it('resets commit state when hydrate update dispatch throws', () => {
     SystemInfo.lynxSdkVersion = '4.0';
-    vi.useFakeTimers();
+    rstest.useFakeTimers();
     const dispatchError = new Error('hydrate update dispatch failed');
-    let dispatchSpy: ReturnType<typeof vi.spyOn> | undefined;
+    let dispatchSpy: ReturnType<typeof rstest.spyOn> | undefined;
 
     try {
       envManager.switchToBackground();
       installElementTemplateHydrationListener();
       const coreContext = lynx.getCoreContext();
-      const removeEventListener = vi.spyOn(coreContext, 'removeEventListener');
-      dispatchSpy = vi.spyOn(coreContext, 'dispatchEvent').mockImplementationOnce(() => {
+      const removeEventListener = rstest.spyOn(coreContext, 'removeEventListener');
+      dispatchSpy = rstest.spyOn(coreContext, 'dispatchEvent').mockImplementationOnce(() => {
         throw dispatchError;
       });
 
@@ -532,24 +532,24 @@ describe('ElementTemplate hydration listener', () => {
       expect(takeDelayedRunOnMainThreadData()).toEqual([]);
       expect(removeEventListener).toHaveBeenCalledWith(WorkletEvents.FunctionCallRet, expect.any(Function));
 
-      vi.advanceTimersByTime(10000);
+      rstest.advanceTimersByTime(10000);
       expect(backgroundElementTemplateInstanceManager.get(stale.instanceId)).toBeUndefined();
     } finally {
       dispatchSpy?.mockRestore();
-      vi.useRealTimers();
+      rstest.useRealTimers();
     }
   });
 
   it('clears pending direct refs when hydrate update dispatch throws', () => {
     const dispatchError = new Error('hydrate update dispatch failed');
-    const ref = vi.fn();
-    let dispatchSpy: ReturnType<typeof vi.spyOn> | undefined;
+    const ref = rstest.fn();
+    let dispatchSpy: ReturnType<typeof rstest.spyOn> | undefined;
 
     try {
       __etAttrPlanMap._et_ref_parent = [0, adaptRefAttrSlot];
       envManager.switchToBackground();
       installElementTemplateHydrationListener();
-      dispatchSpy = vi.spyOn(lynx.getCoreContext(), 'dispatchEvent').mockImplementationOnce(() => {
+      dispatchSpy = rstest.spyOn(lynx.getCoreContext(), 'dispatchEvent').mockImplementationOnce(() => {
         throw dispatchError;
       });
 
@@ -638,7 +638,7 @@ describe('ElementTemplate hydration listener', () => {
     installElementTemplateHydrationListener();
 
     const eventData = { type: 'tap' };
-    const handler = vi.fn();
+    const handler = rstest.fn();
     const backgroundRoot = __root as BackgroundElementTemplateInstance;
     const after = new BackgroundElementTemplateInstance('_et_event');
     after.setAttribute('attributeSlots', [handler]);
@@ -668,7 +668,7 @@ describe('ElementTemplate hydration listener', () => {
     __etAttrPlanMap._et_event = [0, adaptEventAttrSlot];
     resetEventStateForRuntime();
     const oldReportError = lynx.reportError;
-    const reportError = vi.fn();
+    const reportError = rstest.fn();
     lynx.reportError = reportError;
 
     try {
@@ -676,7 +676,7 @@ describe('ElementTemplate hydration listener', () => {
       installElementTemplateHydrationListener();
 
       const eventData = { type: 'tap' };
-      const handler = vi.fn();
+      const handler = rstest.fn();
       const backgroundRoot = __root as BackgroundElementTemplateInstance;
       const after = new BackgroundElementTemplateInstance('_et_event');
       after.setAttribute('attributeSlots', [handler]);
@@ -709,15 +709,15 @@ describe('ElementTemplate hydration listener', () => {
   it('drops queued direct events when hydrate update dispatch throws', () => {
     const dispatchError = new Error('hydrate update dispatch failed');
     const eventData = { type: 'tap' };
-    const handler = vi.fn();
-    let dispatchSpy: ReturnType<typeof vi.spyOn> | undefined;
+    const handler = rstest.fn();
+    let dispatchSpy: ReturnType<typeof rstest.spyOn> | undefined;
 
     try {
       __etAttrPlanMap._et_event_parent = [0, adaptEventAttrSlot];
       resetEventStateForRuntime();
       envManager.switchToBackground();
       installElementTemplateHydrationListener();
-      dispatchSpy = vi.spyOn(lynx.getCoreContext(), 'dispatchEvent').mockImplementationOnce(() => {
+      dispatchSpy = rstest.spyOn(lynx.getCoreContext(), 'dispatchEvent').mockImplementationOnce(() => {
         throw dispatchError;
       });
 
@@ -771,7 +771,7 @@ describe('ElementTemplate hydration listener', () => {
   });
 
   it('does not attach pending direct refs during hydrate', () => {
-    const ref = vi.fn();
+    const ref = rstest.fn();
     __etAttrPlanMap._et_ref = [0, adaptRefAttrSlot];
     envManager.switchToBackground();
     installElementTemplateHydrationListener();
@@ -800,15 +800,15 @@ describe('ElementTemplate hydration listener', () => {
   });
 
   it('does not re-attach pre-hydration refs and replays delayed ref ops after hydrate', () => {
-    const exec = vi.fn();
-    const setNativeProps = vi.fn(() => ({ exec }));
-    const select = vi.fn(() => ({ setNativeProps }));
-    const createSelectorQuery = vi.fn(() => ({ select }));
+    const exec = rstest.fn();
+    const setNativeProps = rstest.fn(() => ({ exec }));
+    const select = rstest.fn(() => ({ setNativeProps }));
+    const createSelectorQuery = rstest.fn(() => ({ select }));
     const oldCreateSelectorQuery = lynx.createSelectorQuery;
     lynx.createSelectorQuery = createSelectorQuery as typeof lynx.createSelectorQuery;
 
     try {
-      const ref = vi.fn();
+      const ref = rstest.fn();
       __etAttrPlanMap._et_ref = [0, adaptRefAttrSlot];
       envManager.switchToBackground();
       installElementTemplateHydrationListener();
@@ -848,15 +848,15 @@ describe('ElementTemplate hydration listener', () => {
   });
 
   it('does not re-attach pre-hydration spread refs and replays delayed ref ops after hydrate', () => {
-    const exec = vi.fn();
-    const setNativeProps = vi.fn(() => ({ exec }));
-    const select = vi.fn(() => ({ setNativeProps }));
-    const createSelectorQuery = vi.fn(() => ({ select }));
+    const exec = rstest.fn();
+    const setNativeProps = rstest.fn(() => ({ exec }));
+    const select = rstest.fn(() => ({ setNativeProps }));
+    const createSelectorQuery = rstest.fn(() => ({ select }));
     const oldCreateSelectorQuery = lynx.createSelectorQuery;
     lynx.createSelectorQuery = createSelectorQuery as typeof lynx.createSelectorQuery;
 
     try {
-      const ref = vi.fn();
+      const ref = rstest.fn();
       __etAttrPlanMap._et_spread = [0, adaptSpreadAttrSlot];
       envManager.switchToBackground();
       installElementTemplateHydrationListener();
@@ -896,8 +896,8 @@ describe('ElementTemplate hydration listener', () => {
   });
 
   it('detaches and attaches spread refs on real updates after hydrate', () => {
-    const oldRef = vi.fn();
-    const newRef = vi.fn();
+    const oldRef = rstest.fn();
+    const newRef = rstest.fn();
     __etAttrPlanMap._et_spread = [0, adaptSpreadAttrSlot];
     envManager.switchToBackground();
     installElementTemplateHydrationListener();
@@ -935,18 +935,18 @@ describe('ElementTemplate hydration listener', () => {
   });
 
   it('drops delayed ref ops when hydrate fails before stable handle binding', () => {
-    const exec = vi.fn();
-    const setNativeProps = vi.fn(() => ({ exec }));
-    const select = vi.fn(() => ({ setNativeProps }));
-    const createSelectorQuery = vi.fn(() => ({ select }));
+    const exec = rstest.fn();
+    const setNativeProps = rstest.fn(() => ({ exec }));
+    const select = rstest.fn(() => ({ setNativeProps }));
+    const createSelectorQuery = rstest.fn(() => ({ select }));
     const oldCreateSelectorQuery = lynx.createSelectorQuery;
     const oldReportError = lynx.reportError;
-    const reportError = vi.fn();
+    const reportError = rstest.fn();
     lynx.createSelectorQuery = createSelectorQuery as typeof lynx.createSelectorQuery;
     lynx.reportError = reportError;
 
     try {
-      const ref = vi.fn();
+      const ref = rstest.fn();
       __etAttrPlanMap._et_ref = [0, adaptRefAttrSlot];
       envManager.switchToBackground();
       installElementTemplateHydrationListener();
@@ -1074,8 +1074,8 @@ describe('ElementTemplate hydration listener', () => {
 
     const alog = console.alog as unknown as { mock: { calls: unknown[][] }; mockClear(): void };
     alog.mockClear();
-    const formatSpy = vi.spyOn(elementTemplateAlog, 'formatElementTemplateUpdateCommands');
-    const printSpy = vi.spyOn(elementTemplateAlog, 'printElementTemplateTreeToString');
+    const formatSpy = rstest.spyOn(elementTemplateAlog, 'formatElementTemplateUpdateCommands');
+    const printSpy = rstest.spyOn(elementTemplateAlog, 'printElementTemplateTreeToString');
 
     const backgroundRoot = __root as BackgroundElementTemplateInstance;
     const after = new BackgroundElementTemplateInstance('_et_test', ['before']);
@@ -1102,13 +1102,13 @@ describe('ElementTemplate hydration listener', () => {
   });
 
   it('fails serialized-only invalid root removal without dispatching updates or replaying delayed refs', () => {
-    const exec = vi.fn();
-    const setNativeProps = vi.fn(() => ({ exec }));
-    const select = vi.fn(() => ({ setNativeProps }));
-    const createSelectorQuery = vi.fn(() => ({ select }));
+    const exec = rstest.fn();
+    const setNativeProps = rstest.fn(() => ({ exec }));
+    const select = rstest.fn(() => ({ setNativeProps }));
+    const createSelectorQuery = rstest.fn(() => ({ select }));
     const oldCreateSelectorQuery = lynx.createSelectorQuery;
     const oldReportError = lynx.reportError;
-    const reportError = vi.fn();
+    const reportError = rstest.fn();
     lynx.createSelectorQuery = createSelectorQuery as typeof lynx.createSelectorQuery;
     lynx.reportError = reportError;
 
@@ -1116,10 +1116,10 @@ describe('ElementTemplate hydration listener', () => {
       __etAttrPlanMap._et_ref = [0, adaptRefAttrSlot];
       envManager.switchToBackground();
       installElementTemplateHydrationListener();
-      const dispatchSpy = vi.spyOn(lynx.getCoreContext(), 'dispatchEvent');
+      const dispatchSpy = rstest.spyOn(lynx.getCoreContext(), 'dispatchEvent');
 
       const backgroundRoot = __root as BackgroundElementTemplateInstance;
-      const ref = vi.fn();
+      const ref = rstest.fn();
       const after = new BackgroundElementTemplateInstance('_et_ref');
       after.setAttribute('attributeSlots', [ref]);
       backgroundRoot.appendChild(after);
@@ -1158,7 +1158,7 @@ describe('ElementTemplate hydration listener', () => {
 
     const lynxObj = globalThis.lynx as typeof lynx & { reportError?: (error: Error) => void };
     const oldReportError = lynxObj.reportError;
-    const reportErrorSpy = vi.fn();
+    const reportErrorSpy = rstest.fn();
     lynxObj.reportError = reportErrorSpy;
 
     const backgroundRoot = __root as BackgroundElementTemplateInstance;
@@ -1188,7 +1188,7 @@ describe('ElementTemplate hydration listener', () => {
 
     const lynxObj = globalThis.lynx as typeof lynx & { reportError?: (error: Error) => void };
     const oldReportError = lynxObj.reportError;
-    const reportErrorSpy = vi.fn();
+    const reportErrorSpy = rstest.fn();
     lynxObj.reportError = reportErrorSpy;
 
     const backgroundRoot = __root as BackgroundElementTemplateInstance;

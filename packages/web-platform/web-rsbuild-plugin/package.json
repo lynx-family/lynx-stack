@@ -32,7 +32,7 @@
   ],
   "scripts": {
     "build": "rslib build",
-    "test": "vitest"
+    "test": "rstest"
   },
   "dependencies": {
     "loader-utils": "^3.3.1"
@@ -43,8 +43,7 @@
     "@rsbuild/core": "catalog:rsbuild",
     "@rspack/core": "catalog:rspack",
     "@types/loader-utils": "^2.0.6",
-    "typescript": "^5.9.3",
-    "vitest": "^3.2.4"
+    "typescript": "^5.9.3"
   },
   "peerDependencies": {
     "@lynx-js/web-core": ">0.0.0",

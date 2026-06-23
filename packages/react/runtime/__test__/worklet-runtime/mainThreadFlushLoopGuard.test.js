@@ -1,7 +1,7 @@
 // Copyright 2026 The Lynx Authors. All rights reserved.
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
-import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, rstest } from '@rstest/core';
 
 import { Element, setShouldFlush } from '../../src/worklet-runtime/api/element';
 import { RunWorkletSource } from '../../src/worklet-runtime/bindings/types';
@@ -22,10 +22,10 @@ describe('MainThread flush loop guard (worklet-runtime only)', () => {
 
     initWorklet();
 
-    globalThis.__SetAttribute = vi.fn();
-    globalThis.__AddInlineStyle = vi.fn();
-    globalThis.__InvokeUIMethod = vi.fn();
-    globalThis.__FlushElementTree = vi.fn();
+    globalThis.__SetAttribute = rstest.fn();
+    globalThis.__AddInlineStyle = rstest.fn();
+    globalThis.__InvokeUIMethod = rstest.fn();
+    globalThis.__FlushElementTree = rstest.fn();
     globalThis.__DEV__ = true;
   });
 
@@ -34,12 +34,12 @@ describe('MainThread flush loop guard (worklet-runtime only)', () => {
 
     setShouldFlush(true);
     mainThreadFlushLoopReset();
-    vi.useRealTimers();
-    vi.clearAllMocks();
+    rstest.useRealTimers();
+    rstest.clearAllMocks();
   });
 
   it('throws with trace', async () => {
-    vi.useFakeTimers();
+    rstest.useFakeTimers();
 
     // Ensure a stable main-thread function exists.
     globalThis.registerWorklet('main-thread', '1', () => undefined);
@@ -55,7 +55,7 @@ describe('MainThread flush loop guard (worklet-runtime only)', () => {
 
     let thrown;
     try {
-      await vi.runAllTimersAsync();
+      await rstest.runAllTimersAsync();
     } catch (e) {
       thrown = e;
     }

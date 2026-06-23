@@ -1,7 +1,7 @@
-import { expect, test, vi } from 'vitest';
+import { expect, test, rstest } from '@rstest/core';
 
 test('preact/debug - Too many re-renders', async () => {
-  vi.stubGlobal('__MAIN_THREAD__', false)
+  rstest.stubGlobal('__MAIN_THREAD__', false)
     .stubGlobal('__LEPUS__', false);
 
   await import('preact/debug');

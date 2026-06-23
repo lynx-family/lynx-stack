@@ -1,4 +1,7 @@
-import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, rstest } from '@rstest/core';
+// `rstest.resetModules()` must be a literal call (module-mock APIs are not
+// aliasable).
+import { rstest } from '@rstest/core';
 
 type PerformanceLike = {
   isProfileRecording?: () => boolean;
@@ -16,7 +19,7 @@ describe('shared/profile module', () => {
   let originalProfileFlag: unknown;
 
   beforeEach(() => {
-    vi.resetModules();
+    rstest.resetModules();
     originalLynx = globalThis.lynx as LynxLike;
     // eslint-disable-next-line no-undef
     originalProfileFlag = typeof __PROFILE__ === 'undefined' ? undefined : __PROFILE__;
@@ -30,7 +33,7 @@ describe('shared/profile module', () => {
 
   it('should indicate profiling is enabled when recording is active', async () => {
     const perf: PerformanceLike = {
-      isProfileRecording: vi.fn(() => true),
+      isProfileRecording: rstest.fn(() => true),
     };
     globalThis.lynx = {
       ...globalThis.lynx,
@@ -44,7 +47,7 @@ describe('shared/profile module', () => {
 
   it('should fallback to no-op APIs when profile functions are unavailable', async () => {
     const perf: PerformanceLike = {
-      isProfileRecording: vi.fn(() => false),
+      isProfileRecording: rstest.fn(() => false),
     };
     // eslint-disable-next-line no-undef
     globalThis.__PROFILE__ = false;
@@ -63,10 +66,10 @@ describe('shared/profile module', () => {
 
   it('should bind and call native profile APIs when available', async () => {
     const perf = {
-      isProfileRecording: vi.fn(() => true),
-      profileStart: vi.fn(),
-      profileEnd: vi.fn(),
-      profileFlowId: vi.fn(() => 123),
+      isProfileRecording: rstest.fn(() => true),
+      profileStart: rstest.fn(),
+      profileEnd: rstest.fn(),
+      profileFlowId: rstest.fn(() => 123),
     };
     // eslint-disable-next-line no-undef
     globalThis.__PROFILE__ = true;

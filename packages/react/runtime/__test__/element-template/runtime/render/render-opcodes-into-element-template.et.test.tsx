@@ -2,7 +2,7 @@
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
 
-import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, rstest } from '@rstest/core';
 
 import { renderOpcodesIntoElementTemplate } from '../../../../src/element-template/runtime/render/render-opcodes.js';
 import {
@@ -27,14 +27,14 @@ import {
 } from '../../../../src/element-template/runtime/render/render-to-opcodes.js';
 
 describe('renderOpcodesIntoElementTemplate', () => {
-  const createElementTemplate = vi.fn();
-  const createTypedElementTemplate = vi.fn();
-  const getElementUniqueID = vi.fn();
-  const insertNodeToElementTemplate = vi.fn();
-  const removeNodeFromElementTemplate = vi.fn();
-  const flushElementTree = vi.fn();
-  const addEvent = vi.fn();
-  const onLifecycleEvent = vi.fn();
+  const createElementTemplate = rstest.fn();
+  const createTypedElementTemplate = rstest.fn();
+  const getElementUniqueID = rstest.fn();
+  const insertNodeToElementTemplate = rstest.fn();
+  const removeNodeFromElementTemplate = rstest.fn();
+  const flushElementTree = rstest.fn();
+  const addEvent = rstest.fn();
+  const onLifecycleEvent = rstest.fn();
 
   beforeEach(() => {
     createElementTemplate.mockReset();
@@ -46,14 +46,14 @@ describe('renderOpcodesIntoElementTemplate', () => {
     addEvent.mockReset();
     onLifecycleEvent.mockReset();
     getElementUniqueID.mockImplementation((node: { __mockNativeId?: number }) => node.__mockNativeId);
-    vi.stubGlobal('__CreateElementTemplate', createElementTemplate);
-    vi.stubGlobal('__CreateTypedElementTemplate', createTypedElementTemplate);
-    vi.stubGlobal('__GetElementUniqueID', getElementUniqueID);
-    vi.stubGlobal('__InsertNodeToElementTemplate', insertNodeToElementTemplate);
-    vi.stubGlobal('__RemoveNodeFromElementTemplate', removeNodeFromElementTemplate);
-    vi.stubGlobal('__FlushElementTree', flushElementTree);
-    vi.stubGlobal('__AddEvent', addEvent);
-    vi.stubGlobal('__OnLifecycleEvent', onLifecycleEvent);
+    rstest.stubGlobal('__CreateElementTemplate', createElementTemplate);
+    rstest.stubGlobal('__CreateTypedElementTemplate', createTypedElementTemplate);
+    rstest.stubGlobal('__GetElementUniqueID', getElementUniqueID);
+    rstest.stubGlobal('__InsertNodeToElementTemplate', insertNodeToElementTemplate);
+    rstest.stubGlobal('__RemoveNodeFromElementTemplate', removeNodeFromElementTemplate);
+    rstest.stubGlobal('__FlushElementTree', flushElementTree);
+    rstest.stubGlobal('__AddEvent', addEvent);
+    rstest.stubGlobal('__OnLifecycleEvent', onLifecycleEvent);
     elementTemplateRegistry.clear();
     destroyAllElementTemplateListStates();
     clearEtAttrPlanMap();
@@ -61,7 +61,7 @@ describe('renderOpcodesIntoElementTemplate', () => {
   });
 
   afterEach(() => {
-    vi.unstubAllGlobals();
+    rstest.unstubAllGlobals();
     clearEtAttrPlanMap();
   });
 
@@ -366,7 +366,7 @@ describe('renderOpcodesIntoElementTemplate', () => {
 
   it('prepares direct event slots before native create', () => {
     const rootRef = { kind: 'root-ref' };
-    const handleTap = vi.fn();
+    const handleTap = rstest.fn();
     createElementTemplate.mockReturnValue(rootRef);
     __etAttrPlanMap._et_event = [
       0,
@@ -470,7 +470,7 @@ describe('renderOpcodesIntoElementTemplate', () => {
 
   it('prepares direct ref values before native create', () => {
     const rootRef = { kind: 'root-ref' };
-    const ref = vi.fn();
+    const ref = rstest.fn();
     createElementTemplate.mockReturnValue(rootRef);
     __etAttrPlanMap._et_ref = [0, adaptRefAttrSlot];
 
@@ -495,7 +495,7 @@ describe('renderOpcodesIntoElementTemplate', () => {
 
   it('prepares spread event values before native create', () => {
     const rootRef = { kind: 'root-ref' };
-    const handleTap = vi.fn();
+    const handleTap = rstest.fn();
     createElementTemplate.mockReturnValue(rootRef);
     __etAttrPlanMap._et_spread = [0, adaptSpreadAttrSlot];
 
@@ -527,7 +527,7 @@ describe('renderOpcodesIntoElementTemplate', () => {
 
   it('prepares spread ref values before native create without leaking unsupported ref-like props', () => {
     const rootRef = { kind: 'root-ref' };
-    const ref = vi.fn();
+    const ref = rstest.fn();
     createElementTemplate.mockReturnValue(rootRef);
     __etAttrPlanMap._et_spread = [0, adaptSpreadAttrSlot];
 
@@ -539,8 +539,8 @@ describe('renderOpcodesIntoElementTemplate', () => {
       [{
         id: 'cta',
         ref,
-        'main-thread:ref': vi.fn(),
-        'worklet:ref': vi.fn(),
+        'main-thread:ref': rstest.fn(),
+        'worklet:ref': rstest.fn(),
       }],
       __OpEnd,
     ]);

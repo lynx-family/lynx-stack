@@ -4,7 +4,7 @@
 import { createContext } from 'preact';
 import { createElement } from 'preact/compat';
 import { useState } from 'preact/hooks';
-import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, rstest } from '@rstest/core';
 
 import { createGlobalProps, isGlobalPropsEventMode, updateGlobalProps } from '../../src/core/globalProps.js';
 import type { useLynxGlobalEventListener } from '../../src/core/hooks/useLynxGlobalEventListener.js';
@@ -26,8 +26,8 @@ describe('core/globalProps', () => {
   afterEach(() => {
     lynx.__globalProps = originalGlobalProps;
     lynxCoreInject.tt.GlobalEventEmitter = originalEmitter;
-    vi.unstubAllGlobals();
-    vi.restoreAllMocks();
+    rstest.unstubAllGlobals();
+    rstest.restoreAllMocks();
   });
 
   function createDeps(useListener: typeof useLynxGlobalEventListener) {
@@ -40,15 +40,15 @@ describe('core/globalProps', () => {
   }
 
   it('creates the reactive fallback shell with warning and changed listener support', () => {
-    vi.stubGlobal('__GLOBAL_PROPS_MODE__', 'reactive');
-    vi.stubGlobal('__LEPUS__', false);
-    vi.stubGlobal('__DEV__', true);
-    const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
-    const useListener = vi.fn() as unknown as typeof useLynxGlobalEventListener;
+    rstest.stubGlobal('__GLOBAL_PROPS_MODE__', 'reactive');
+    rstest.stubGlobal('__LEPUS__', false);
+    rstest.stubGlobal('__DEV__', true);
+    const warn = rstest.spyOn(console, 'warn').mockImplementation(() => {});
+    const useListener = rstest.fn() as unknown as typeof useLynxGlobalEventListener;
     lynx.__globalProps = { theme: 'dark' };
 
     const globalProps = createGlobalProps<{ theme: string }>(createDeps(useListener));
-    const callback = vi.fn();
+    const callback = rstest.fn();
 
     expect((globalProps.Provider() as any)({ children: 'child' })).toBe('child');
     expect((globalProps.Consumer() as any)({ children: (data: { theme: string }) => data.theme })).toBe('dark');
@@ -60,23 +60,23 @@ describe('core/globalProps', () => {
   });
 
   it('keeps the fallback shell quiet and listener-free on lepus', () => {
-    vi.stubGlobal('__GLOBAL_PROPS_MODE__', 'reactive');
-    vi.stubGlobal('__LEPUS__', true);
-    vi.stubGlobal('__DEV__', true);
-    const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
-    const useListener = vi.fn() as unknown as typeof useLynxGlobalEventListener;
+    rstest.stubGlobal('__GLOBAL_PROPS_MODE__', 'reactive');
+    rstest.stubGlobal('__LEPUS__', true);
+    rstest.stubGlobal('__DEV__', true);
+    const warn = rstest.spyOn(console, 'warn').mockImplementation(() => {});
+    const useListener = rstest.fn() as unknown as typeof useLynxGlobalEventListener;
 
     const globalProps = createGlobalProps(createDeps(useListener));
     globalProps.use()();
-    globalProps.useChanged()(vi.fn());
+    globalProps.useChanged()(rstest.fn());
 
     expect(warn).not.toHaveBeenCalled();
     expect(useListener).not.toHaveBeenCalled();
   });
 
   it('creates the event-mode shell through the shared InitData factory', () => {
-    vi.stubGlobal('__GLOBAL_PROPS_MODE__', 'event');
-    const useListener = vi.fn() as unknown as typeof useLynxGlobalEventListener;
+    rstest.stubGlobal('__GLOBAL_PROPS_MODE__', 'event');
+    const useListener = rstest.fn() as unknown as typeof useLynxGlobalEventListener;
 
     const globalProps = createGlobalProps(createDeps(useListener));
 
@@ -88,15 +88,15 @@ describe('core/globalProps', () => {
   });
 
   it('treats missing mode as reactive mode', () => {
-    vi.stubGlobal('__GLOBAL_PROPS_MODE__', undefined);
+    rstest.stubGlobal('__GLOBAL_PROPS_MODE__', undefined);
 
     expect(isGlobalPropsEventMode()).toBe(false);
   });
 
   it('mutates globalProps in reactive mode, emits current data, and queues force render', async () => {
-    vi.stubGlobal('__GLOBAL_PROPS_MODE__', 'reactive');
-    const listener = vi.fn();
-    const forceRerender = vi.fn();
+    rstest.stubGlobal('__GLOBAL_PROPS_MODE__', 'reactive');
+    const listener = rstest.fn();
+    const forceRerender = rstest.fn();
     const previousGlobalProps = { theme: 'dark', stable: true };
     lynx.__globalProps = previousGlobalProps;
     emitter.addListener('onGlobalPropsChanged', listener);
@@ -114,7 +114,7 @@ describe('core/globalProps', () => {
   });
 
   it('allows reactive updates without a force callback', async () => {
-    vi.stubGlobal('__GLOBAL_PROPS_MODE__', 'reactive');
+    rstest.stubGlobal('__GLOBAL_PROPS_MODE__', 'reactive');
     lynx.__globalProps = { theme: 'dark' };
 
     expect(() => updateGlobalProps({ theme: 'light' })).not.toThrow();
@@ -123,9 +123,9 @@ describe('core/globalProps', () => {
   });
 
   it('COW merges globalProps in event mode and skips force render', async () => {
-    vi.stubGlobal('__GLOBAL_PROPS_MODE__', 'event');
-    const listener = vi.fn();
-    const forceRerender = vi.fn();
+    rstest.stubGlobal('__GLOBAL_PROPS_MODE__', 'event');
+    const listener = rstest.fn();
+    const forceRerender = rstest.fn();
     const previousGlobalProps = { theme: 'dark', stable: true };
     lynx.__globalProps = previousGlobalProps;
     emitter.addListener('onGlobalPropsChanged', listener);

@@ -1,12 +1,12 @@
-import { describe, it, vi } from 'vitest';
+import { describe, it, rstest } from '@rstest/core';
 import { initElementPAPICallAlog } from '../../../src/snapshot/alog/elementPAPICall';
 import { globalEnvManager } from '../utils/envManager';
-import { expect } from 'vitest';
+import { expect } from '@rstest/core';
 
 describe('ElementPAPICall Alog', () => {
   it('should log ElementPAPICall as ALog', () => {
     globalEnvManager.switchToMainThread();
-    console.alog = vi.fn();
+    console.alog = rstest.fn();
     initElementPAPICallAlog();
 
     const page = __CreatePage('0', 0);

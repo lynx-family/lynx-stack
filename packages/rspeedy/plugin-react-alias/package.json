@@ -43,7 +43,6 @@
     "@microsoft/api-extractor": "catalog:",
     "@rsbuild/core": "catalog:rsbuild",
     "@rspack/core": "catalog:rspack",
-    "@rstest/core": "catalog:rstest",
     "@types/semver": "^7.7.1",
     "semver": "^7.7.4"
   },

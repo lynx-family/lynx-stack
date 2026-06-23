@@ -1,7 +1,7 @@
 // Copyright 2024 The Lynx Authors. All rights reserved.
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
-import { afterEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, describe, expect, it, rstest } from '@rstest/core';
 
 import { onPostWorkletCtx } from '../../../src/snapshot/worklet/ctx';
 import { destroyWorklet } from '../../../src/snapshot/worklet/destroy';
@@ -14,7 +14,7 @@ describe('WorkletOnPost', () => {
   it('error when sdk version not fulfilled', async function() {
     lynx.getCoreContext = undefined;
     const reportError = lynx.reportError;
-    lynx.reportError = vi.fn();
+    lynx.reportError = rstest.fn();
 
     expect(onPostWorkletCtx({
       _wkltId: '835d:450ef:1',

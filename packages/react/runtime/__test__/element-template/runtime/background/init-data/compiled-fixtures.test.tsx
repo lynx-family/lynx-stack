@@ -2,7 +2,7 @@ import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 import { createElement } from 'preact';
-import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, rstest } from '@rstest/core';
 
 import {
   installElementTemplateCommitHook,
@@ -60,7 +60,7 @@ describe('Compiled ET InitData updateData fixture', () => {
 
   function installInitData(initData: Record<string, unknown>): void {
     const baseLynx = globalThis.lynx;
-    vi.stubGlobal('lynx', {
+    rstest.stubGlobal('lynx', {
       ...baseLynx,
       __initData: initData,
       getJSModule(moduleName: string) {
@@ -73,7 +73,7 @@ describe('Compiled ET InitData updateData fixture', () => {
   }
 
   beforeEach(() => {
-    vi.clearAllMocks();
+    rstest.clearAllMocks();
     originalLynx = globalThis.lynx;
     emitter = new LynxTestEventEmitter();
     updateEvents = [];
@@ -99,7 +99,7 @@ describe('Compiled ET InitData updateData fixture', () => {
     resetElementTemplateHydrationListener();
     resetElementTemplateCommitState();
     envManager.setUseElementTemplate(false);
-    vi.stubGlobal('lynx', originalLynx);
+    rstest.stubGlobal('lynx', originalLynx);
   });
 
   it('updates raw text after hydrated background updateCardData', async () => {

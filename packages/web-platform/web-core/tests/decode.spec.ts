@@ -1,4 +1,5 @@
-import { describe, it, expect, vi } from 'vitest';
+import { describe, it, expect, rstest } from '@rstest/core';
+import { rstest } from '@rstest/core';
 import { decodeTemplate } from '../ts/server/decode.js';
 import {
   MagicHeader0,
@@ -7,8 +8,8 @@ import {
 } from '../ts/constants.js';
 import * as wasm from '../ts/server/wasm.js';
 
-vi.mock('../ts/server/wasm.js', () => ({
-  decode_style_info: vi.fn((buffer: Uint8Array) => buffer),
+rstest.mock('../ts/server/wasm.js', () => ({
+  decode_style_info: rstest.fn((buffer: Uint8Array) => buffer),
 }));
 
 function encodeString(str: string): Uint8Array {

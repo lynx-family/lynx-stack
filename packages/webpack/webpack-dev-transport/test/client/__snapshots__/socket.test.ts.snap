@@ -1,4 +1,4 @@
-// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+// Rstest Snapshot v1
 
 exports[`socket > should default to LynxTransportClient when no __webpack_dev_server_client__ set 1`] = `
 [

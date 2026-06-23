@@ -2,7 +2,7 @@
 
 import { Component, createContext, Fragment } from 'preact';
 import { useMemo, useState } from 'preact/hooks';
-import { afterEach, beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, beforeAll, beforeEach, describe, expect, it, rstest } from '@rstest/core';
 
 import { elementTree, waitSchedule } from './utils/nativeMethod';
 import { globalEnvManager } from './utils/envManager';
@@ -29,7 +29,7 @@ describe('renderToString', () => {
   });
 
   afterEach(() => {
-    vi.clearAllMocks();
+    rstest.clearAllMocks();
 
     globalEnvManager.resetEnv();
     elementTree.clear();
@@ -318,7 +318,7 @@ describe('renderToString', () => {
   });
 
   it('should render with attr', () => {
-    vi.spyOn(Math, 'random').mockReturnValue(0.5);
+    rstest.spyOn(Math, 'random').mockReturnValue(0.5);
     const random = Math.random();
 
     function App() {
@@ -673,15 +673,15 @@ describe('renderToString', () => {
             <App />
           </view>,
         ),
-    ).toThrowErrorMatchingInlineSnapshot(`[TypeError: (void 0) is not a function]`);
+    ).toThrowErrorMatchingInlineSnapshot(`[TypeError: undefined is not a function]`);
 
     // renderToString will throw on Error without calling `options[DIFFED]`
-    vi.mocked(console.profile).mockClear();
-    vi.mocked(console.profileEnd).mockClear();
+    rstest.mocked(console.profile).mockClear();
+    rstest.mocked(console.profileEnd).mockClear();
   });
 
   it('should throw when error occur - with ErrorBoundary ignored', () => {
-    const f = vi.fn();
+    const f = rstest.fn();
 
     class ErrorBoundary extends Component {
       componentDidCatch = f;
@@ -705,7 +705,7 @@ describe('renderToString', () => {
             </ErrorBoundary>
           </view>,
         ),
-    ).toThrowErrorMatchingInlineSnapshot(`[TypeError: (void 0) is not a function]`);
+    ).toThrowErrorMatchingInlineSnapshot(`[TypeError: undefined is not a function]`);
     expect(f).toBeCalledTimes(0);
 
     class ErrorBoundary2 extends Component {
@@ -726,12 +726,12 @@ describe('renderToString', () => {
             </ErrorBoundary2>
           </view>,
         ),
-    ).toThrowErrorMatchingInlineSnapshot(`[TypeError: (void 0) is not a function]`);
+    ).toThrowErrorMatchingInlineSnapshot(`[TypeError: undefined is not a function]`);
     expect(f).toBeCalledTimes(0);
 
     // renderToString will throw on Error without calling `options[DIFFED]`
-    vi.mocked(console.profile).mockClear();
-    vi.mocked(console.profileEnd).mockClear();
+    rstest.mocked(console.profile).mockClear();
+    rstest.mocked(console.profileEnd).mockClear();
   });
 
   it('should render fallback when a direct child suspends', async () => {
@@ -1234,7 +1234,7 @@ describe('renderOpcodesInto', () => {
       return <view />;
     }
 
-    renderToString(<Counter ref={vi.fn()} count={1} />, scratch);
+    renderToString(<Counter ref={rstest.fn()} count={1} />, scratch);
     // renderOpcodesInto(opcodes, scratch);
     expect(scratch.__element_root).toMatchInlineSnapshot(`
       <page
@@ -1401,7 +1401,7 @@ describe('createElement', () => {
       return <view />;
     }
 
-    const opcodes1 = renderToString(<Key key={1} {...s} ref={vi.fn()} />);
+    const opcodes1 = renderToString(<Key key={1} {...s} ref={rstest.fn()} />);
     expect(opcodes1).toMatchInlineSnapshot(`
       [
         0,
@@ -1416,7 +1416,7 @@ describe('createElement', () => {
         1,
       ]
     `);
-    const opcodes2 = renderToString(<Key {...s} key={1} ref={vi.fn()} />);
+    const opcodes2 = renderToString(<Key {...s} key={1} ref={rstest.fn()} />);
     expect(opcodes2).toMatchInlineSnapshot(`
       [
         0,

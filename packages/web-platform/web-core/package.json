@@ -48,9 +48,10 @@
     "README.md"
   ],
   "scripts": {
+    "bench": "node --disable-warning=ExperimentalWarning --experimental-transform-types --import ./tests/bench-loader.mjs tests/encode.bench.spec.ts && node --disable-warning=ExperimentalWarning --experimental-transform-types --import ./tests/bench-loader.mjs tests/element-apis.bench.spec.ts",
     "build": "rsbuild build && rslib build",
     "build:wasm": "node ./scripts/build.js",
-    "test": "vitest run"
+    "test": "rstest run"
   },
   "browserslist": {
     "production": [
@@ -67,6 +68,7 @@
     "wasm-feature-detect": "^1.8.0"
   },
   "devDependencies": {
+    "@lynx-js/codspeed-tinybench": "workspace:*",
     "@lynx-js/css-serializer": "workspace:*",
     "@lynx-js/lynx-core": "0.1.4",
     "@rsbuild/core": "catalog:rsbuild",

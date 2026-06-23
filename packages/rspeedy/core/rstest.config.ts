@@ -17,7 +17,7 @@ const config: RstestConfig = defineConfig({
     name: 'rspeedy',
     url: import.meta.url,
     setupFiles: ['@lynx-js/test-tools/setup-rspeedy'],
-    // vitest defaulted NODE_ENV to 'test'; rstest leaves it unset and rsbuild
+    // rstest leaves NODE_ENV unset, so set it explicitly; otherwise rsbuild
     // would treat builds as production (hashed filenames).
     env: { NODE_ENV: 'test' },
   }),

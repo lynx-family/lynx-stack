@@ -1,5 +1,5 @@
 import { Component, options, render } from 'preact';
-import { afterEach, beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, beforeAll, beforeEach, describe, expect, it, rstest } from '@rstest/core';
 
 import { useEffect, useLayoutEffect, useState } from '../../src/index';
 import { globalEnvManager } from './utils/envManager';
@@ -24,13 +24,13 @@ afterEach(() => {
   globalCommitTaskMap.clear();
   globalEnvManager.resetEnv();
   deinitGlobalSnapshotPatch();
-  vi.restoreAllMocks();
+  rstest.restoreAllMocks();
 });
 
 describe('useEffect', () => {
   it('basic', async function() {
-    const cleanUp = vi.fn();
-    const callback = vi.fn().mockImplementation(() => cleanUp);
+    const cleanUp = rstest.fn();
+    const callback = rstest.fn().mockImplementation(() => cleanUp);
 
     function Comp() {
       const [val, setVal] = useState(1);
@@ -60,9 +60,9 @@ describe('useEffect', () => {
     globalEnvManager.switchToBackground();
 
     const catchError = options[CATCH_ERROR];
-    options[CATCH_ERROR] = vi.fn();
+    options[CATCH_ERROR] = rstest.fn();
 
-    const callback = vi.fn().mockImplementation(() => {
+    const callback = rstest.fn().mockImplementation(() => {
       throw '???';
     });
 
@@ -92,7 +92,7 @@ describe('componentDidMount', () => {
     let mtCallbacks = lynx.getNativeApp().callLepusMethod.mock.calls;
 
     let x_ = 0;
-    const callback = vi.fn();
+    const callback = rstest.fn();
 
     class Comp extends Component {
       x = 1;
@@ -136,11 +136,11 @@ describe('componentDidMount', () => {
     globalEnvManager.switchToBackground();
 
     const catchError = options[CATCH_ERROR];
-    options[CATCH_ERROR] = vi.fn();
+    options[CATCH_ERROR] = rstest.fn();
 
     let mtCallbacks = lynx.getNativeApp().callLepusMethod.mock.calls;
 
-    const callback = vi.fn().mockImplementation(() => {
+    const callback = rstest.fn().mockImplementation(() => {
       throw '???';
     });
 
@@ -188,8 +188,8 @@ describe('componentWillUnmount', () => {
     let mtCallbacks = lynx.getNativeApp().callLepusMethod.mock.calls;
 
     let x_ = 0;
-    const willUnmount = vi.fn();
-    const didMount = vi.fn();
+    const willUnmount = rstest.fn();
+    const didMount = rstest.fn();
 
     class Comp extends Component {
       x = 1;
@@ -244,9 +244,9 @@ describe('componentWillUnmount', () => {
 
     let showB = true;
     let showA = true;
-    const willUnmount = vi.fn();
-    const didCatch = vi.fn();
-    const willUnmountBase = vi.fn();
+    const willUnmount = rstest.fn();
+    const didCatch = rstest.fn();
+    const willUnmountBase = rstest.fn();
 
     class BaseComponent extends Component {
       componentWillUnmount() {
@@ -333,7 +333,7 @@ describe('componentWillUnmount', () => {
   it('page destroy', async function(ctx) {
     globalEnvManager.switchToBackground();
 
-    const willUnmount = vi.fn();
+    const willUnmount = rstest.fn();
     let showB = true;
 
     class B extends Component {
@@ -374,10 +374,10 @@ describe('componentWillUnmount', () => {
 
 describe('BackgroundSnapshotInstance remove', () => {
   beforeEach(() => {
-    vi.useFakeTimers();
+    rstest.useFakeTimers();
   });
   afterEach(() => {
-    vi.useRealTimers();
+    rstest.useRealTimers();
   });
 
   it('basic', async function() {
@@ -400,7 +400,7 @@ describe('BackgroundSnapshotInstance remove', () => {
 
     render(<Comp />, __root);
     await Promise.resolve().then(() => {});
-    vi.runAllTimers();
+    rstest.runAllTimers();
     expect([...backgroundSnapshotInstanceManager.values.keys()]).toMatchInlineSnapshot(`
         [
           1,
@@ -412,7 +412,7 @@ describe('BackgroundSnapshotInstance remove', () => {
     mtCallbacks = [];
     setShow_(false);
     await Promise.resolve().then(() => {});
-    vi.runAllTimers();
+    rstest.runAllTimers();
 
     mtCallbacks[0][2]();
     expect([...backgroundSnapshotInstanceManager.values.keys()]).toMatchInlineSnapshot(`
@@ -423,7 +423,7 @@ describe('BackgroundSnapshotInstance remove', () => {
         ]
       `);
     await Promise.resolve().then(() => {});
-    vi.runAllTimers();
+    rstest.runAllTimers();
     expect([...backgroundSnapshotInstanceManager.values.keys()]).toMatchInlineSnapshot(`
         [
           1,
@@ -560,9 +560,9 @@ describe('componentDidUpdate', () => {
   it('basic', async function() {
     globalEnvManager.switchToBackground();
 
-    const callback = vi.fn();
+    const callback = rstest.fn();
     let mtCallbacks = lynx.getNativeApp().callLepusMethod.mock.calls;
-    let _setState = vi.fn();
+    let _setState = rstest.fn();
 
     class Comp extends Component {
       state = {
@@ -618,9 +618,9 @@ describe('componentDidUpdate', () => {
   it('multiple updates', async function() {
     globalEnvManager.switchToBackground();
 
-    const callback = vi.fn();
+    const callback = rstest.fn();
     let mtCallbacks = lynx.getNativeApp().callLepusMethod.mock.calls;
-    let _setState = vi.fn();
+    let _setState = rstest.fn();
 
     class Comp extends Component {
       state = {

@@ -3,7 +3,7 @@
 // LICENSE file in the root directory of this source tree.
 
 import { createElement } from 'preact';
-import { vi } from 'vitest';
+import { rstest } from '@rstest/core';
 
 import { BackgroundElementTemplateInstance } from '../../../../src/element-template/background/instance.js';
 import { hydrateBackground } from '../../test-utils/debug/hydrate.js';
@@ -67,7 +67,7 @@ export interface UpdateFixtureContext {
 }
 
 export function setupPatchContext(): PatchContext {
-  vi.clearAllMocks();
+  rstest.clearAllMocks();
   elementTemplateRegistry.clear();
   resetTemplateId();
   registerBuiltinRawTextTemplate();
@@ -88,7 +88,7 @@ export function setupPatchContext(): PatchContext {
   installElementTemplatePatchListener();
   envManager.switchToBackground();
 
-  const onHydrate = vi.fn().mockImplementation((event: { data: unknown }) => {
+  const onHydrate = rstest.fn().mockImplementation((event: { data: unknown }) => {
     hydrationData.push(...extractSerializedHydrateInstances(event.data));
   });
   lynx.getCoreContext().addEventListener(ElementTemplateLifecycleConstant.hydrate, onHydrate);
@@ -104,7 +104,7 @@ export function setupPatchContext(): PatchContext {
 }
 
 export function setupUpdateFixtureContext(): UpdateFixtureContext {
-  vi.clearAllMocks();
+  rstest.clearAllMocks();
   elementTemplateRegistry.clear();
   resetTemplateId();
   registerBuiltinRawTextTemplate();

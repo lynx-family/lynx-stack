@@ -1,4 +1,4 @@
-import { describe, expect, it, vi } from 'vitest';
+import { describe, expect, it, rstest } from '@rstest/core';
 
 import { root } from '@lynx-js/react/element-template';
 import type { DataProcessorDefinition, DataProcessors, InitData, InitDataRaw } from '@lynx-js/react/element-template';
@@ -6,7 +6,7 @@ import type { DataProcessorDefinition, DataProcessors, InitData, InitDataRaw } f
 describe('element-template registerDataProcessors entry', () => {
   it('forwards definitions through the public root alias', () => {
     const originalRegisterDataProcessors = lynx.registerDataProcessors;
-    const registerDataProcessors = vi.fn();
+    const registerDataProcessors = rstest.fn();
     lynx.registerDataProcessors = registerDataProcessors;
 
     try {

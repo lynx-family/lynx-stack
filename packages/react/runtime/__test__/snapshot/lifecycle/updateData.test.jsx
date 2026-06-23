@@ -3,7 +3,7 @@
 // LICENSE file in the root directory of this source tree.
 
 import { Component, render } from 'preact';
-import { afterEach, beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, beforeAll, beforeEach, describe, expect, it, rstest } from '@rstest/core';
 
 import { replaceCommitHook } from '../../../src/snapshot/lifecycle/patch/commit';
 import { deinitGlobalSnapshotPatch } from '../../../src/snapshot/lifecycle/patch/snapshotPatch';
@@ -15,7 +15,7 @@ import { elementTree, waitSchedule } from '../utils/nativeMethod';
 
 beforeAll(() => {
   replaceCommitHook();
-  globalThis.__FlushElementTree = vi.fn();
+  globalThis.__FlushElementTree = rstest.fn();
 });
 
 beforeEach(() => {
@@ -25,7 +25,7 @@ beforeEach(() => {
 afterEach(() => {
   deinitGlobalSnapshotPatch();
   elementTree.clear();
-  vi.restoreAllMocks();
+  rstest.restoreAllMocks();
 });
 
 describe('main-thread updatePage initData', () => {
@@ -618,7 +618,7 @@ describe('triggerDataUpdated', () => {
    * 7. **Final Update:** Applies the changes to the main thread and verifies the UI is updated.
    */
   it('should send triggerDataUpdated when using withInitDataInState', async function() {
-    const willUnmount = vi.fn();
+    const willUnmount = rstest.fn();
 
     class App extends Component {
       componentWillUnmount() {
@@ -1098,7 +1098,7 @@ describe('flush pending `renderComponent` before hydrate', () => {
     {
       globalEnvManager.switchToBackground();
 
-      const spy = vi.spyOn(Component.prototype, 'setState');
+      const spy = rstest.spyOn(Component.prototype, 'setState');
       lynxCoreInject.tt.updateCardData({ msg: 'update' });
       expect(spy).toBeCalled();
       spy.mockRestore();
@@ -1200,7 +1200,7 @@ describe('flush pending `renderComponent` before hydrate', () => {
     {
       globalEnvManager.switchToBackground();
       // LifecycleConstant.firstScreen
-      const spy = vi.spyOn(lynx, 'reportError');
+      const spy = rstest.spyOn(lynx, 'reportError');
       lynxCoreInject.tt.OnLifecycleEvent(...globalThis.__OnLifecycleEvent.mock.calls[0]);
       expect(spy.mock.calls).toMatchInlineSnapshot(`
         [

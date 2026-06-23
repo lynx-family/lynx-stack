@@ -2,13 +2,13 @@
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
 
-import { beforeEach, afterEach, vi } from 'vitest';
+import { beforeEach, afterEach, rstest } from '@rstest/core';
 import { globalEnvManager } from '../utils/envManager';
-import { describe } from 'vitest';
-import { it } from 'vitest';
-import { expect } from 'vitest';
+import { describe } from '@rstest/core';
+import { it } from '@rstest/core';
+import { expect } from '@rstest/core';
 import { waitSchedule } from '../utils/nativeMethod';
-import { beforeAll } from 'vitest';
+import { beforeAll } from '@rstest/core';
 import { replaceCommitHook } from '../../../src/snapshot/lifecycle/patch/commit';
 import { elementTree } from '../utils/nativeMethod';
 import { __root } from '../../../src/root';
@@ -23,7 +23,7 @@ beforeEach(() => {
 
 afterEach(() => {
   elementTree.clear();
-  vi.restoreAllMocks();
+  rstest.restoreAllMocks();
   globalThis.__GLOBAL_PROPS_MODE__ = 'reactive';
 });
 
@@ -121,7 +121,7 @@ describe('updateGlobalProps', () => {
   });
 
   it('should update global props once when use useGlobalProps and get warning', async () => {
-    vi.spyOn(console, 'warn').mockImplementation(() => {});
+    rstest.spyOn(console, 'warn').mockImplementation(() => {});
     const { useGlobalProps } = await import('../../../src/lynx-api');
     const Comp = () => {
       const globalProps = useGlobalProps();
@@ -206,7 +206,7 @@ describe('updateGlobalProps', () => {
   });
 
   it('should update global props once when use GlobalPropsConsumer / GlobalPropsProvider and get warning', async () => {
-    vi.spyOn(console, 'warn').mockImplementation(() => {});
+    rstest.spyOn(console, 'warn').mockImplementation(() => {});
     const { GlobalPropsProvider, GlobalPropsConsumer, useGlobalPropsChanged } = await import('../../../src/lynx-api');
     let count = 0;
     let dataTheme, globalPropsTheme;

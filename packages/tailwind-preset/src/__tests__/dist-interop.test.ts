@@ -5,7 +5,7 @@
 import { execSync } from 'node:child_process';
 import { pathToFileURL } from 'node:url';
 import { resolve } from 'node:path';
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it } from '@rstest/core';
 
 const PKG_ROOT = resolve(import.meta.dirname, '../../');
 const DIST_ESM = pathToFileURL(resolve(PKG_ROOT, 'dist/lynx.js')).href;

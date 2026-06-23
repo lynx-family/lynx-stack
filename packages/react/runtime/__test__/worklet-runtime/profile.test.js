@@ -1,7 +1,7 @@
 // Copyright 2026 The Lynx Authors. All rights reserved.
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
-import { afterEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, describe, expect, it, rstest } from '@rstest/core';
 
 import { profile } from '../../src/worklet-runtime/utils/profile';
 
@@ -16,8 +16,8 @@ describe('profile', () => {
 
   it('uses console.profile when available', () => {
     globalThis.__DEV__ = true;
-    console.profile = vi.fn();
-    console.profileEnd = vi.fn();
+    console.profile = rstest.fn();
+    console.profileEnd = rstest.fn();
 
     const ret = profile('x', () => 123);
     expect(ret).toBe(123);

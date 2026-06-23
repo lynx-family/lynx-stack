@@ -1,4 +1,4 @@
-import { test, expect, beforeAll } from 'vitest';
+import { test, expect, beforeAll } from '@rstest/core';
 import { createRsbuild, type RsbuildDevServer } from '@rsbuild/core';
 import { createWebVirtualFilesMiddleware } from '../src/node/index.js';
 

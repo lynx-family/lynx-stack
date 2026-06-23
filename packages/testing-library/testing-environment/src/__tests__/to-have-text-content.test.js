@@ -1,5 +1,5 @@
 import '@testing-library/jest-dom';
-import { expect, test } from 'vitest';
+import { expect, test } from '@rstest/core';
 
 describe('.toHaveTextContent', () => {
   test('handles positive test cases', () => {

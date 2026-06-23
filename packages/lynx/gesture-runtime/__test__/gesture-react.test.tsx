@@ -1,8 +1,15 @@
 // Copyright 2025 The Lynx Authors. All rights reserved.
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
-import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
-import type { MockInstance } from 'vitest';
+import {
+  afterEach,
+  beforeEach,
+  describe,
+  expect,
+  test,
+  rstest,
+} from '@rstest/core';
+import type { MockInstance } from '@rstest/core';
 
 import { useState } from '@lynx-js/react';
 import {
@@ -166,7 +173,7 @@ describe('gestures mt', () => {
   let spySetGesture: MockInstance;
 
   beforeEach(() => {
-    spySetGesture = vi.spyOn(
+    spySetGesture = rstest.spyOn(
       lynxTestingEnv.mainThread.globalThis,
       '__SetGestureDetector',
     );
@@ -289,7 +296,7 @@ describe('test processGesture in MTS', () => {
   let spySetGesture: MockInstance;
 
   beforeEach(() => {
-    spySetGesture = vi.spyOn(
+    spySetGesture = rstest.spyOn(
       lynxTestingEnv.mainThread.globalThis,
       '__SetGestureDetector',
     );

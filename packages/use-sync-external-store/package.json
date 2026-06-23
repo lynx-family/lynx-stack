@@ -41,8 +41,8 @@
     "LICENSE"
   ],
   "scripts": {
-    "test": "vitest",
-    "test:type": "vitest --typecheck.only"
+    "test": "rstest",
+    "test:type": "tsc --noEmit"
   },
   "devDependencies": {
     "@lynx-js/react": "workspace:*"

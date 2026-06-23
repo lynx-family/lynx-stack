@@ -2,7 +2,7 @@
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
 
-import { describe, expect, test } from 'vitest'
+import { describe, expect, test } from '@rstest/core'
 
 import { UI_SOURCE_MAP_RECORDS_BUILD_INFO } from '@lynx-js/debug-metadata'
 import type { UiSourceMapRecord } from '@lynx-js/debug-metadata'

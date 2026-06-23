@@ -21,9 +21,9 @@
   "scripts": {
     "build": "rslib build",
     "test": "pnpm run test:playwright",
-    "test:android": "vitest run --config vitest.config.ts",
+    "test:android": "rstest run --config rstest.config.ts",
     "test:playwright": "playwright test",
-    "update:react-fixture-snapshot": "vitest run --config vitest.snapshot.config.ts"
+    "update:react-fixture-snapshot": "rstest run --config rstest.snapshot.config.ts"
   },
   "dependencies": {
     "@lynx-js/genui": "workspace:*",
@@ -41,8 +41,7 @@
     "@lynx-js/rspeedy": "workspace:*",
     "@lynx-js/types": "3.7.0",
     "@types/node": "^24.10.13",
-    "@types/react": "^18.3.28",
-    "vitest": "^3.2.4"
+    "@types/react": "^18.3.28"
   },
   "engines": {
     "node": ">=22"

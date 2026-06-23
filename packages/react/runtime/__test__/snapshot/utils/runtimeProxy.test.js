@@ -2,7 +2,7 @@
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
 
-import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { beforeEach, describe, expect, it, rstest } from '@rstest/core';
 
 import { globalEnvManager } from './envManager.ts';
 
@@ -12,7 +12,7 @@ describe('runtimeProxy', () => {
   });
 
   it('should dispatch event', () => {
-    const event = vi.fn();
+    const event = rstest.fn();
     lynx.getJSContext().addEventListener('event1', event);
     globalEnvManager.switchToBackground();
     lynx.getCoreContext().dispatchEvent({ type: 'event1', data: 'test' });
@@ -21,7 +21,7 @@ describe('runtimeProxy', () => {
   });
 
   it('should not trigger event when context mismatch', () => {
-    const event = vi.fn();
+    const event = rstest.fn();
     lynx.getJSContext().addEventListener('event1', event);
     lynx.getJSContext().dispatchEvent({ type: 'event1', data: 'test' });
     expect(event).not.toBeCalled();

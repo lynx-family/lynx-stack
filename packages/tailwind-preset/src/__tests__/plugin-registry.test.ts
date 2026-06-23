@@ -1,8 +1,9 @@
 // Copyright 2025 The Lynx Authors. All rights reserved.
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
-import { assertType, describe, expect, it } from 'vitest';
+import { describe, expect, it } from '@rstest/core';
 
+import { assertType } from './assertType.js';
 import type { Plugin, PluginWithOptions } from '../helpers.js';
 import * as P from '../plugins/lynx/index.js';
 import {

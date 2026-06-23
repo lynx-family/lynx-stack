@@ -2,7 +2,14 @@
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
 
-import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
+import {
+  afterEach,
+  beforeEach,
+  describe,
+  expect,
+  test,
+  rstest,
+} from '@rstest/core';
 
 import { runOnMainThread, useEffect, useMainThreadRef } from '@lynx-js/react';
 import { act, render } from '@lynx-js/react/testing-library';
@@ -18,7 +25,7 @@ describe('Hooks', () => {
 
   beforeEach(() => {
     mockRegisteredMap = new Map<string, CallableFunction>();
-    vi.spyOn(globalThis, 'runOnRegistered', 'get').mockImplementation(
+    rstest.spyOn(globalThis, 'runOnRegistered', 'get').mockImplementation(
       function(id: string) {
         const func = mockRegisteredMap.get(id) ?? noop;
         return func;
@@ -27,7 +34,7 @@ describe('Hooks', () => {
   });
 
   afterEach(() => {
-    vi.restoreAllMocks();
+    rstest.restoreAllMocks();
   });
 
   describe('useMotionValueRef', () => {
@@ -69,8 +76,8 @@ describe('Hooks', () => {
     });
 
     test('should support different value types', async () => {
-      const numberRef = vi.fn();
-      const stringRef = vi.fn();
+      const numberRef = rstest.fn();
+      const stringRef = rstest.fn();
 
       const AppNumber = () => {
         useMotionValueRef(123);
@@ -101,7 +108,7 @@ describe('Hooks', () => {
 
   describe('useMotionValueRefEvent', () => {
     test('should set up event listener without errors', () => {
-      const callback = vi.fn();
+      const callback = rstest.fn();
 
       const App = () => {
         const mvRef = useMotionValueRef(0);
@@ -119,7 +126,7 @@ describe('Hooks', () => {
     });
 
     test('should accept callback function', async () => {
-      const callback = vi.fn();
+      const callback = rstest.fn();
 
       const App = () => {
         const mvRef = useMotionValueRef(0);
@@ -141,7 +148,7 @@ describe('Hooks', () => {
     });
 
     test('should work with unmount', async () => {
-      const callback = vi.fn();
+      const callback = rstest.fn();
 
       const App = () => {
         const mvRef = useMotionValueRef(0);
@@ -167,7 +174,7 @@ describe('Hooks', () => {
 
   describe('Integration scenarios', () => {
     test('should work together without errors', async () => {
-      const callback = vi.fn();
+      const callback = rstest.fn();
 
       const App = () => {
         const mvRef = useMotionValueRef(0);
@@ -189,8 +196,8 @@ describe('Hooks', () => {
     });
 
     test('should support multiple motion value refs', async () => {
-      const callback1 = vi.fn();
-      const callback2 = vi.fn();
+      const callback1 = rstest.fn();
+      const callback2 = rstest.fn();
 
       const App = () => {
         const mvRef1 = useMotionValueRef(0);

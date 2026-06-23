@@ -7,8 +7,15 @@ import { tmpdir } from 'node:os';
 import path, { dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
+import {
+  afterEach,
+  beforeEach,
+  describe,
+  expect,
+  rstest,
+  test,
+} from '@rstest/core';
 import { pluginI18nextExtractor } from 'rsbuild-plugin-i18next-extractor';
-import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
 
 import { pluginReactLynx } from '@lynx-js/react-rsbuild-plugin';
 import { createRspeedy } from '@lynx-js/rspeedy';
@@ -27,11 +34,11 @@ const fixtureRoot = path.join(testDir, 'fixtures/i18next-rspeedy-project');
 const pluginReactRoot = path.resolve(testDir, '../../../rspeedy/plugin-react');
 
 beforeEach(() => {
-  vi.stubEnv('DEBUG', 'rspeedy');
+  rstest.stubEnv('DEBUG', 'rspeedy');
 });
 
 afterEach(() => {
-  vi.unstubAllEnvs();
+  rstest.unstubAllEnvs();
 });
 
 describe('i18next translation dedupe integration', () => {

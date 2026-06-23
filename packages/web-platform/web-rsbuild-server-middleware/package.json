@@ -23,7 +23,8 @@
     "README.md"
   ],
   "scripts": {
-    "build": "rsbuild build"
+    "build": "rsbuild build",
+    "test": "rstest"
   },
   "devDependencies": {
     "@lynx-js/web-core": "workspace:*",

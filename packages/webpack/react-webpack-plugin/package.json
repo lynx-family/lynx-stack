@@ -49,7 +49,6 @@
     "@microsoft/api-extractor": "catalog:",
     "@rspack/core": "catalog:rspack",
     "@rspack/lite-tapable": "1.1.0",
-    "@rstest/core": "catalog:rstest",
     "css-loader": "^7.1.4",
     "swc-loader": "^0.2.7"
   },

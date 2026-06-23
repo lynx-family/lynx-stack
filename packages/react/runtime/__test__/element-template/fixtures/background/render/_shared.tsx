@@ -1,4 +1,4 @@
-import { vi } from 'vitest';
+import { rstest } from '@rstest/core';
 
 import { resetElementTemplateHydrationListener } from '../../../../../src/element-template/background/hydration-listener.js';
 import { BackgroundElementTemplateInstance } from '../../../../../src/element-template/background/instance.js';
@@ -17,7 +17,7 @@ function defineCase(name: string, runner: CaseRunner): void {
 }
 
 function setup(): void {
-  vi.stubGlobal('__BACKGROUND__', true);
+  rstest.stubGlobal('__BACKGROUND__', true);
   backgroundElementTemplateInstanceManager.clear();
   backgroundElementTemplateInstanceManager.nextId = 0;
   setRoot(new BackgroundElementTemplateInstance('root'));
@@ -26,7 +26,7 @@ function setup(): void {
 function teardown(): void {
   resetElementTemplatePatchListener();
   resetElementTemplateHydrationListener();
-  vi.unstubAllGlobals();
+  rstest.unstubAllGlobals();
   (globalThis as { __LYNX_REPORT_ERROR_CALLS?: Error[] }).__LYNX_REPORT_ERROR_CALLS = [];
 }
 

@@ -3,7 +3,7 @@
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
 */
-import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, rstest } from '@rstest/core';
 
 import { elementTree } from './utils/nativeMethod';
 import { SnapshotInstance, snapshotInstanceManager } from '../../src/snapshot';
@@ -339,7 +339,7 @@ describe('removeChild', () => {
     );
 
     // suppress the error of `__RemoveElement` called with mismatched parent and child element
-    vi.spyOn(globalThis, '__RemoveElement').mockImplementation(() => {});
+    rstest.spyOn(globalThis, '__RemoveElement').mockImplementation(() => {});
     expect(() => a.removeChild(b)).toThrowErrorMatchingInlineSnapshot(
       `[Error: The node to be removed is not a child of this node.]`,
     );
@@ -377,7 +377,7 @@ describe('setAttribute', () => {
     a.setAttribute(0, 'id');
     {
       const pre = a.__snapshot_def.update[0];
-      a.__snapshot_def.update[0] = vi.fn();
+      a.__snapshot_def.update[0] = rstest.fn();
       a.setAttribute(0, 'id');
       expect(a.__snapshot_def.update[0]).toHaveBeenCalledTimes(0);
       a.__snapshot_def.update[0] = pre;

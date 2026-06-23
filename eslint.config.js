@@ -58,10 +58,15 @@ export default tseslint.config(
       // Configs
       'eslint.config.js',
       'vitest.config.ts',
+      'rstest.config.ts',
+      'rstest.*.config.ts',
       '**/rslib.config.ts',
 
       // Ignored packages
       'packages/**/vitest.config.ts',
+      'packages/**/rstest.config.ts',
+      'packages/**/rstest.*.config.ts',
+      'packages/**/rstest.config.*.ts',
       'packages/genui/cli/templates/**',
       'packages/react/runtime/compat/**',
       'packages/rspeedy/create-rspeedy/template-*/**',
@@ -177,7 +182,10 @@ export default tseslint.config(
       'n/file-extension-in-import': ['error', 'always'],
       'n/prefer-node-protocol': 'error',
       'n/no-extraneous-import': ['error', {
-        allowModules: ['vitest', 'preact'],
+        // `@rstest/core` (the test runner) and `vitest` (third-party RLTL) are
+        // provided by the workspace root, so packages import them without
+        // declaring a direct dependency.
+        allowModules: ['@rstest/core', 'vitest', 'preact'],
       }],
       'n/no-unpublished-import': 'off',
       'n/no-missing-import': 'off',

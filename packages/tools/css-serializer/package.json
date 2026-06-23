@@ -20,7 +20,7 @@
     "README.md"
   ],
   "scripts": {
-    "test": "vitest"
+    "test": "rstest"
   },
   "dependencies": {
     "css-tree": "^3.1.0"

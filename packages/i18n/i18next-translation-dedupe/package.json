@@ -30,7 +30,7 @@
     "README.md"
   ],
   "scripts": {
-    "test": "vitest run"
+    "test": "rstest"
   },
   "devDependencies": {
     "@lynx-js/react": "workspace:*",

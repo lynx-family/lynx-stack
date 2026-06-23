@@ -6,7 +6,7 @@
   "scripts": {
     "build": "rspeedy build",
     "dev": "rspeedy dev",
-    "test:type": "vitest --typecheck.only"
+    "test:type": "tsc --noEmit"
   },
   "dependencies": {
     "@lynx-js/react": "workspace:*"
@@ -17,6 +17,7 @@
     "@lynx-js/react-rsbuild-plugin": "workspace:*",
     "@lynx-js/rspeedy": "workspace:*",
     "@lynx-js/types": "3.7.0",
-    "@types/react": "^18.3.28"
+    "@types/react": "^18.3.28",
+    "expect-type": "^1.2.1"
   }
 }

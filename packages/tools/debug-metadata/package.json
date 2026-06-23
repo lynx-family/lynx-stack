@@ -36,11 +36,10 @@
   ],
   "scripts": {
     "api-extractor": "api-extractor run --verbose",
-    "test": "vitest run"
+    "test": "rstest"
   },
   "devDependencies": {
-    "@microsoft/api-extractor": "catalog:",
-    "@rollup/plugin-typescript": "^12.3.0"
+    "@microsoft/api-extractor": "catalog:"
   },
   "engines": {
     "node": ">=18"

@@ -80,7 +80,7 @@ async function buildSourcemapFixture(
                 .uses.get(CHAIN_ID.USE.IGNORE_CSS)
               rule.loader(
                 // add .ts suffix to ignore-css-loader
-                // this workaround is needed because vitest
+                // this workaround is needed because the test runner
                 // runs on our ts files.
                 rule.get('loader') as string + '.ts',
               )

@@ -1,5 +1,5 @@
 import { createElement } from 'preact';
-import { afterEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, describe, expect, it, rstest, rstest } from '@rstest/core';
 
 import { LynxTestEventEmitter } from '../../../test-utils/lynx-event-emitter.js';
 import { parseElementTemplateUpdateEventPayload } from '../../../../src/element-template/protocol/update-event.js';
@@ -14,8 +14,8 @@ function waitForRender(): Promise<void> {
 }
 
 async function setupGlobalPropsRuntime(mode: 'reactive' | 'event') {
-  vi.resetModules();
-  vi.stubGlobal('__GLOBAL_PROPS_MODE__', mode);
+  rstest.resetModules();
+  rstest.stubGlobal('__GLOBAL_PROPS_MODE__', mode);
 
   const { ElementTemplateEnvManager } = await import('../../test-utils/debug/envManager.js');
   const { ElementTemplateLifecycleConstant } = await import(
@@ -45,7 +45,7 @@ async function setupGlobalPropsRuntime(mode: 'reactive' | 'event') {
 
   const baseLynx = globalThis.lynx;
   const originalGlobalEventEmitter = globalThis.lynxCoreInject.tt.GlobalEventEmitter;
-  vi.stubGlobal('lynx', {
+  rstest.stubGlobal('lynx', {
     ...baseLynx,
     __globalProps: { theme: 'dark', stable: true },
     getJSModule(moduleName: string) {
@@ -82,13 +82,13 @@ async function setupGlobalPropsRuntime(mode: 'reactive' | 'event') {
 
 describe('ElementTemplate background GlobalProps', () => {
   afterEach(() => {
-    vi.unstubAllGlobals();
-    vi.restoreAllMocks();
+    rstest.unstubAllGlobals();
+    rstest.restoreAllMocks();
   });
 
   it('reactive updateGlobalProps force-renders direct globalProps reads', async () => {
     const runtime = await setupGlobalPropsRuntime('reactive');
-    const emitted = vi.fn();
+    const emitted = rstest.fn();
     const renderedThemes: unknown[] = [];
 
     try {
@@ -115,7 +115,7 @@ describe('ElementTemplate background GlobalProps', () => {
 
   it('event mode emits without force-rendering direct globalProps reads', async () => {
     const runtime = await setupGlobalPropsRuntime('event');
-    const emitted = vi.fn();
+    const emitted = rstest.fn();
     const renderedThemes: unknown[] = [];
 
     try {
@@ -147,7 +147,7 @@ describe('ElementTemplate background GlobalProps', () => {
 
   it('event mode updates GlobalProps hook users through the changed event', async () => {
     const runtime = await setupGlobalPropsRuntime('event');
-    const changed = vi.fn();
+    const changed = rstest.fn();
     const renderedThemes: unknown[] = [];
 
     try {

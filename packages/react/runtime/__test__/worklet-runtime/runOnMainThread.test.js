@@ -1,7 +1,7 @@
 // Copyright 2024 The Lynx Authors. All rights reserved.
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
-import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, rstest } from '@rstest/core';
 
 import { runRunOnMainThreadTask } from '../../src/worklet-runtime/runOnMainThread';
 import { initWorklet } from '../../src/worklet-runtime/workletRuntime';
@@ -11,9 +11,9 @@ beforeEach(() => {
     lynxSdkVersion: '2.16',
   };
   initWorklet();
-  const dispatchEvent = vi.fn();
+  const dispatchEvent = rstest.fn();
   globalThis.lynx = {
-    getJSContext: vi.fn(() => ({
+    getJSContext: rstest.fn(() => ({
       dispatchEvent,
     })),
   };
@@ -25,7 +25,7 @@ afterEach(() => {
 
 describe('runOnMainThread', () => {
   it('worklet should be called', () => {
-    const fn = vi.fn(() => 'ret');
+    const fn = rstest.fn(() => 'ret');
     globalThis.registerWorklet('main-thread', '1', fn);
     let worklet = {
       _wkltId: '1',
