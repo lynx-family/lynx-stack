@@ -11,7 +11,22 @@ export function createServerLynx(
   globalProps: Cloneable,
   customSections: Record<string, Cloneable>,
 ): MainThreadLynx {
+  let pipelineIdInc = 0;
   return {
+    performance: {
+      _generatePipelineOptions: () => ({
+        pipelineID: `_pipeline_ssr_` + (pipelineIdInc++),
+        needTimestamps: false,
+      }),
+      _onPipelineStart: () => {},
+      _bindPipelineIdWithTimingFlag: () => {},
+      _markTiming: () => {},
+      profileStart: () => {},
+      profileEnd: () => {},
+      profileMark: () => {},
+      profileFlowId: () => 0,
+      isProfileRecording: () => false,
+    },
     getJSContext() {
       // Return a basic mock for SSR
       return {} as any;

@@ -1,9 +1,8 @@
-// Copyright 2023 The Lynx Authors. All rights reserved.
+// Copyright 2026 The Lynx Authors. All rights reserved.
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
 
-import type { NativeApp } from '../../../types/index.js';
-import type { TimingSystem } from './createTimingSystem.js';
+import type { LynxPerformance } from '../../types/index.js';
 
 type ProfileTraceOption = unknown;
 
@@ -12,6 +11,12 @@ interface ProfileTimingContext {
   startMarkName: string;
   option?: ProfileTraceOption;
 }
+
+type MarkTiming = (
+  timingKey: string,
+  pipelineId?: string,
+  timeStamp?: number,
+) => void;
 
 function getUserTimingPerformance(): Performance | undefined {
   const browserPerformance = globalThis.performance;
@@ -82,48 +87,31 @@ function measureUserTiming(
   }
 }
 
-export function createPerformanceApis(timingSystem: TimingSystem): Pick<
-  NativeApp,
-  | 'generatePipelineOptions'
-  | 'onPipelineStart'
-  | 'markPipelineTiming'
-  | 'bindPipelineIdWithTimingFlag'
-  | 'profileStart'
-  | 'profileEnd'
-  | 'profileMark'
-  | 'profileFlowId'
-  | 'isProfileRecording'
-> {
-  let inc = 0;
+export function createMainThreadLynxPerformance(
+  markTiming: MarkTiming,
+): LynxPerformance {
+  let pipelineIdInc = 0;
   let profileFlowIdInc = 0;
   let profileMarkInc = 0;
   const profileTimingStack: ProfileTimingContext[] = [];
-  const performanceApis = {
-    generatePipelineOptions: () => {
-      const newPipelineId = `_pipeline_` + (inc++);
+  return {
+    _generatePipelineOptions: () => {
       return {
-        pipelineID: newPipelineId,
+        pipelineID: `_pipeline_mts_` + (pipelineIdInc++),
         needTimestamps: false,
       };
     },
-    onPipelineStart: function(): void {
-      // Do nothing
+    _onPipelineStart: () => {
+      // Do nothing.
     },
-    markPipelineTiming: function(
+    _bindPipelineIdWithTimingFlag: () => {
+      // Timing flags are posted by the element flush path on the web main thread.
+    },
+    _markTiming: (
       pipelineId: string,
       timingKey: string,
-    ): void {
-      timingSystem.markTimingInternal(timingKey, pipelineId);
-    },
-    bindPipelineIdWithTimingFlag: function(
-      pipelineId: string,
-      timingFlag: string,
-    ): void {
-      if (!timingSystem.pipelineIdToTimingFlags.has(pipelineId)) {
-        timingSystem.pipelineIdToTimingFlags.set(pipelineId, []);
-      }
-      const timingFlags = timingSystem.pipelineIdToTimingFlags.get(pipelineId)!;
-      timingFlags.push(timingFlag);
+    ): void => {
+      markTiming(timingKey, pipelineId);
     },
     profileStart: (
       traceName: string,
@@ -174,5 +162,4 @@ export function createPerformanceApis(timingSystem: TimingSystem): Pick<
       return getUserTimingPerformance() !== undefined;
     },
   };
-  return performanceApis;
 }
