@@ -38,7 +38,7 @@
     "test": "vitest run"
   },
   "dependencies": {
-    "@lynx-js/devtool-connector": "workspace:*",
+    "@lynx-js/devtool-connector": "^0.9.3",
     "@yume-chan/adb": "catalog:adb",
     "@yume-chan/adb-server-node-tcp": "catalog:adb"
   },
