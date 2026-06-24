@@ -1,5 +1,5 @@
 import './jsdom.js';
-import { describe, test, expect } from 'vitest';
+import { describe, test, expect } from '@rstest/core';
 import {
   encodeCSS,
   RawStyleInfo,

@@ -18,11 +18,20 @@ import type {
 } from '../../../../testing-library/kitten-lynx/src/index.js';
 
 const HELPER_DIR = dirname(fileURLToPath(import.meta.url));
+const REPO_ROOT = resolve(HELPER_DIR, '../../../../..');
+const RSPEEDY_CLI_PATH = resolve(
+  REPO_ROOT,
+  'packages/rspeedy/core/bin/rspeedy.js',
+);
 
 export const REACT_FIXTURE_DIR = resolve(HELPER_DIR, '../fixtures/react');
+export const REACT_FIXTURE_DIST_DIR = resolve(
+  REACT_FIXTURE_DIR,
+  '.generated',
+);
 export const REACT_BUNDLE_NAME = 'main.lynx.bundle';
 export const REACT_REFERENCE_SNAPSHOT_PATH = resolve(
-  REACT_FIXTURE_DIR,
+  REACT_FIXTURE_DIST_DIR,
   'main.lynx.snapshot.png',
 );
 
@@ -30,6 +39,8 @@ const CONTENT_TIMEOUT_MS = 30_000;
 const NAVIGATION_TIMEOUT_MS = 30_000;
 const POLL_INTERVAL_MS = 500;
 const LOG_LIMIT = 12_000;
+
+let reactFixtureBuildPromise: Promise<void> | undefined;
 
 export interface FixtureServer {
   readonly baseUrl: string;
@@ -70,6 +81,8 @@ export async function captureReactFixtureScreenshot(
 }
 
 export async function startReactFixtureServer(): Promise<FixtureServer> {
+  await ensureReactFixtureBuilt();
+
   const server = createServer((request, response) => {
     void handleFixtureRequest(request, response);
   });
@@ -97,6 +110,15 @@ export async function startReactFixtureServer(): Promise<FixtureServer> {
       });
     },
   };
+}
+
+export async function ensureReactFixtureBuilt(): Promise<void> {
+  reactFixtureBuildPromise ??= buildReactFixture().catch((error: unknown) => {
+    reactFixtureBuildPromise = undefined;
+    throw error;
+  });
+
+  await reactFixtureBuildPromise;
 }
 
 export async function reverseAdbPort(port: number): Promise<void> {
@@ -202,8 +224,8 @@ async function handleFixtureRequest(
     const requestedFile = pathname === '/'
       ? REACT_BUNDLE_NAME
       : pathname.replace(/^\/+/, '');
-    const filePath = resolve(REACT_FIXTURE_DIR, requestedFile);
-    const relativePath = relative(REACT_FIXTURE_DIR, filePath);
+    const filePath = resolve(REACT_FIXTURE_DIST_DIR, requestedFile);
+    const relativePath = relative(REACT_FIXTURE_DIST_DIR, filePath);
     if (
       relativePath.startsWith('..')
       || relativePath === ''
@@ -254,6 +276,21 @@ async function hasVisiblePixels(screenshot: Buffer): Promise<boolean> {
   );
 }
 
+async function buildReactFixture(): Promise<void> {
+  await runCommand(process.execPath, [
+    RSPEEDY_CLI_PATH,
+    'build',
+    '--root',
+    REACT_FIXTURE_DIR,
+  ], {
+    cwd: REPO_ROOT,
+    env: {
+      ...process.env,
+      NODE_ENV: 'production',
+    },
+  });
+}
+
 function getFixtureContentType(filePath: string): string {
   if (filePath.endsWith('.js') || filePath.endsWith('.bundle')) {
     return 'application/javascript; charset=utf-8';
@@ -283,8 +320,14 @@ async function listAdbDevices(): Promise<string[]> {
 async function runCommand(
   command: string,
   args: string[],
+  options: {
+    cwd?: string;
+    env?: NodeJS.ProcessEnv;
+  } = {},
 ): Promise<{ stdout: string }> {
   const child = spawn(command, args, {
+    cwd: options.cwd,
+    env: options.env,
     stdio: ['ignore', 'pipe', 'pipe'],
   });
   const stdout = new BoundedLog();

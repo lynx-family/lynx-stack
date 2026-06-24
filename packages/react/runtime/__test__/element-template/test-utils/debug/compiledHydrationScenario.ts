@@ -1,16 +1,16 @@
 import { vi } from 'vitest';
 
-import { hydrate as hydrateBackground } from '../../../../src/element-template/background/hydrate.js';
 import type { BackgroundElementTemplateInstance } from '../../../../src/element-template/background/instance.js';
 import { ElementTemplateLifecycleConstant } from '../../../../src/element-template/protocol/lifecycle-constant.js';
 import type {
   ElementTemplateUpdateCommandStream,
-  SerializedElementTemplate,
+  SerializedEtNode,
 } from '../../../../src/element-template/protocol/types.js';
 import { installMockNativePapi } from '../mock/mockNativePapi.js';
 import type { CompiledFixtureTarget } from './compiledFixtureCompiler.js';
 import { loadCompiledFixturePair } from './compiledFixtureModule.js';
 import { ElementTemplateEnvManager } from './envManager.js';
+import { hydrateBackground } from './hydrate.js';
 import { extractSerializedHydrateInstances } from './hydratePayload.js';
 import { renderCompiledFixtureOnBackground, renderCompiledFixtureOnMainThread } from './compiledThreadRunner.js';
 
@@ -24,7 +24,7 @@ interface RunCompiledHydrationScenarioOptions {
 
 export interface CompiledHydrationScenarioResult {
   after: BackgroundElementTemplateInstance;
-  before: SerializedElementTemplate;
+  before: SerializedEtNode;
   stream: ElementTemplateUpdateCommandStream;
 }
 
@@ -45,7 +45,7 @@ export async function runCompiledHydrationScenario(
   envManager.resetEnv('background');
   envManager.setUseElementTemplate(true);
 
-  const hydrationData: SerializedElementTemplate[] = [];
+  const hydrationData: SerializedEtNode[] = [];
   const onHydrate = vi.fn().mockImplementation((event: { data: unknown }) => {
     hydrationData.push(...extractSerializedHydrateInstances(event.data));
   });

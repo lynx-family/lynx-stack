@@ -247,6 +247,102 @@ describe('element template', () => {
     expect(result.elementTemplates).toEqual([]);
   });
 
+  it('should lower list as an exact typed host in element template mode', async () => {
+    const result = await transformReactLynx(
+      `
+        const node = (
+          <list id={listId} className="feed">
+            <list-item key="a" item-key={firstKey} full-span />
+            <list-item key="b" item-key={secondKey} recyclable />
+          </list>
+        );
+      `,
+      {
+        mode: 'test',
+        pluginName: '',
+        filename: 'test.js',
+        sourcemap: false,
+        cssScope: false,
+        elementTemplate: {
+          preserveJsx: false,
+          runtimePkg: '@lynx-js/react',
+          filename: 'test.js',
+          target: 'LEPUS',
+        },
+        jsx: true,
+        directiveDCE: false,
+        defineDCE: false,
+        shake: false,
+        compat: true,
+        worklet: false,
+        refresh: false,
+      },
+    );
+
+    expect(result.elementTemplates?.some(template => template.compiledTemplate.type === 'list')).toBe(false);
+    expect(result.elementTemplates?.some(template => template.compiledTemplate.type === 'list-item')).toBe(true);
+    expect(result.code).toMatchInlineSnapshot(`
+      "import { jsx as _jsx } from "react/jsx-runtime";
+      const _et_4f796f70cdd7 = \`\${globDynamicComponentEntry}:\${"_et_4f796f70cdd7"}\`;
+      const _et_b8da8bac988e = \`\${globDynamicComponentEntry}:\${"_et_b8da8bac988e"}\`;
+      /*#__PURE__*/ _jsx("list", {
+          attributes: {
+              "id": listId,
+              "class": "feed"
+          },
+          $0: [
+              /*#__PURE__*/ _jsx(_et_4f796f70cdd7, {
+                  attributeSlots: [
+                      firstKey
+                  ],
+                  __listItemPlatformInfo: {
+                      "item-key": firstKey,
+                      "full-span": true
+                  }
+              }, "a"),
+              /*#__PURE__*/ _jsx(_et_b8da8bac988e, {
+                  attributeSlots: [
+                      secondKey
+                  ],
+                  __listItemPlatformInfo: {
+                      "item-key": secondKey,
+                      "recyclable": true
+                  }
+              }, "b")
+          ]
+      });
+      "
+    `);
+  });
+
+  it('should keep deferred list items on the existing unsupported component path in element template mode', async () => {
+    const result = await transformReactLynx('const node = <list><list-item defer item-key="1" /></list>;', {
+      mode: 'test',
+      pluginName: '',
+      filename: 'test.js',
+      sourcemap: false,
+      cssScope: false,
+      elementTemplate: {
+        preserveJsx: false,
+        runtimePkg: '@lynx-js/react',
+        filename: 'test.js',
+        target: 'LEPUS',
+      },
+      jsx: true,
+      directiveDCE: false,
+      defineDCE: false,
+      shake: false,
+      compat: true,
+      worklet: false,
+      refresh: false,
+    });
+
+    expect(result.errors).toEqual([]);
+    expect(result.code).toContain('DeferredListItem');
+    expect(result.code).toContain('_jsx("list", {');
+    expect(result.elementTemplates?.some(template => template.compiledTemplate.type === 'list')).toBe(false);
+  });
+
   it('should warn when snapshot and element template are both explicitly enabled', async () => {
     const result = await transformReactLynx('const node = <view />;', {
       mode: 'test',

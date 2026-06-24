@@ -22,6 +22,7 @@ export const OPENUI_CATEGORIES = [
   { id: 'content', label: 'Content' },
   { id: 'buttons', label: 'Buttons' },
   { id: 'data-display', label: 'Data Display' },
+  { id: 'overlays', label: 'Overlays' },
   { id: 'inputs', label: 'Inputs' },
 ] as const;
 
@@ -61,6 +62,102 @@ export const OPENUI_COMPONENT_CATALOG: OpenUIComponentDoc[] = [
     usage: `root = Stack([title, subtitle], "column", false, "l")
 title = TextContent("Hello World", "large-heavy")
 subtitle = TextContent("A simple stack example")`,
+  },
+  {
+    name: 'Row',
+    category: 'layout',
+    description: 'Horizontal flex layout container.',
+    props: [
+      { name: 'children', type: 'any[]', description: 'Child elements.' },
+      {
+        name: 'justify',
+        type: '"start" | "center" | "end" | "between" | "around" | "evenly"',
+        description: 'Main-axis alignment.',
+        default: '"start"',
+      },
+      {
+        name: 'align',
+        type: '"start" | "center" | "end" | "stretch"',
+        description: 'Cross-axis alignment.',
+        default: '"center"',
+      },
+      {
+        name: 'gap',
+        type: '"none" | "xs" | "s" | "m" | "l" | "xl"',
+        description: 'Gap between children.',
+        default: '"m"',
+      },
+      { name: 'wrap', type: 'boolean', description: 'Enable flex-wrap.' },
+    ],
+    usage:
+      `root = Row([Text("Design", "h5"), Tag("Active"), Icon("arrow_forward", "sm", "muted")], "start", "center", "s", true)`,
+  },
+  {
+    name: 'Column',
+    category: 'layout',
+    description: 'Vertical flex layout container.',
+    props: [
+      { name: 'children', type: 'any[]', description: 'Child elements.' },
+      {
+        name: 'justify',
+        type: '"start" | "center" | "end" | "between" | "around" | "evenly"',
+        description: 'Main-axis alignment.',
+        default: '"start"',
+      },
+      {
+        name: 'align',
+        type: '"start" | "center" | "end" | "stretch"',
+        description: 'Cross-axis alignment.',
+        default: '"stretch"',
+      },
+      {
+        name: 'gap',
+        type: '"none" | "xs" | "s" | "m" | "l" | "xl"',
+        description: 'Gap between children.',
+        default: '"m"',
+      },
+    ],
+    usage:
+      `root = Column([Text("Step 1", "body"), Text("Step 2", "body")], "start", "stretch", "s")`,
+  },
+  {
+    name: 'List',
+    category: 'layout',
+    description:
+      'List container for repeated children with optional item dividers.',
+    props: [
+      { name: 'children', type: 'any[]', description: 'Child elements.' },
+      {
+        name: 'items',
+        type: 'any[]',
+        description: 'Alias for children when list data is provided as items.',
+      },
+      {
+        name: 'direction',
+        type: '"vertical" | "horizontal"',
+        description: 'List direction.',
+        default: '"vertical"',
+      },
+      {
+        name: 'align',
+        type: '"start" | "center" | "end" | "stretch"',
+        description: 'Cross-axis alignment.',
+        default: '"stretch"',
+      },
+      {
+        name: 'gap',
+        type: '"none" | "xs" | "s" | "m" | "l" | "xl"',
+        description: 'Gap between items.',
+        default: '"m"',
+      },
+      {
+        name: 'divider',
+        type: 'boolean',
+        description: 'Render dividers between items.',
+      },
+    ],
+    usage:
+      `root = List([Text("First", "body"), Text("Second", "body"), Text("Third", "body")], "vertical", "stretch", "s", true)`,
   },
   {
     name: 'Card',
@@ -116,6 +213,26 @@ content = TextContent("Card body text goes here.")`,
     usage: `root = Stack([Card([CardHeader("Main Title", "Subtitle text")])])`,
   },
   {
+    name: 'Text',
+    category: 'content',
+    description: 'Plain text with display variants.',
+    props: [
+      {
+        name: 'text',
+        type: 'string | number | boolean | { path: string }',
+        description: 'Text to display.',
+      },
+      {
+        name: 'variant',
+        type: '"h1" | "h2" | "h3" | "h4" | "h5" | "caption" | "body"',
+        description: 'Text display variant.',
+        default: '"body"',
+      },
+    ],
+    usage:
+      `root = Column([Text("Launch Plan", "h2"), Text("Updated today", "caption")], "start", "stretch", "s")`,
+  },
+  {
     name: 'TextContent',
     category: 'content',
     description: 'Text content with optional size.',
@@ -144,6 +261,21 @@ t3 = TextContent("Large heavy text", "large-heavy")`,
     props: [],
     usage:
       `root = Stack([TextContent("Above"), Separator(), TextContent("Below")])`,
+  },
+  {
+    name: 'Divider',
+    category: 'content',
+    description: 'Horizontal or vertical divider.',
+    props: [
+      {
+        name: 'axis',
+        type: '"horizontal" | "vertical"',
+        description: 'Divider orientation.',
+        default: '"horizontal"',
+      },
+    ],
+    usage:
+      `root = Column([Text("Above", "body"), Divider("horizontal"), Text("Below", "body")], "start", "stretch", "s")`,
   },
   {
     name: 'Button',
@@ -256,6 +388,44 @@ feature = Image("https://example.com/hero.png", "contain", "largeFeature")`,
 row = Stack([Icon("check", "md", "primary"), Icon("close", "lg", "muted")], "row", false, "s")`,
   },
   {
+    name: 'Video',
+    category: 'data-display',
+    description: 'Video attachment placeholder with title and URL.',
+    props: [
+      {
+        name: 'url',
+        type: 'string | number | boolean | { path: string }',
+        description: 'Video URL.',
+      },
+      {
+        name: 'title',
+        type: 'string | number | boolean | { path: string }',
+        description: 'Optional video title.',
+      },
+    ],
+    usage:
+      `root = Card([CardHeader("Walkthrough"), Video("https://example.com/demo.mp4", "Product walkthrough")])`,
+  },
+  {
+    name: 'AudioPlayer',
+    category: 'data-display',
+    description: 'Audio attachment placeholder with description and URL.',
+    props: [
+      {
+        name: 'url',
+        type: 'string | number | boolean | { path: string }',
+        description: 'Audio URL.',
+      },
+      {
+        name: 'description',
+        type: 'string | number | boolean | { path: string }',
+        description: 'Optional audio description.',
+      },
+    ],
+    usage:
+      `root = Card([CardHeader("Podcast"), AudioPlayer("https://example.com/episode.mp3", "Episode preview")])`,
+  },
+  {
     name: 'Loading',
     category: 'data-display',
     description: 'Skeleton placeholder while content loads.',
@@ -271,10 +441,61 @@ row = Stack([Icon("check", "md", "primary"), Icon("close", "lg", "muted")], "row
       `root = Stack([Loading("inline"), Loading("block")], "column", false, "m")`,
   },
   {
+    name: 'Tabs',
+    category: 'overlays',
+    description: 'Tabbed content switcher with per-tab child content.',
+    props: [
+      {
+        name: 'tabs',
+        type: '{ value: string; title: string; child: any }[]',
+        description: 'Tab definitions with a stable value, title, and child.',
+      },
+      {
+        name: 'value',
+        type: 'string',
+        description: 'Initially selected tab value.',
+      },
+    ],
+    usage:
+      `root = Tabs([{ value: "summary", title: "Summary", child: summary }, { value: "details", title: "Details", child: details }])
+summary = Card([Text("Summary", "h3")])
+details = Card([Text("Details", "h3")])`,
+  },
+  {
+    name: 'Modal',
+    category: 'overlays',
+    description: 'Tap-triggered modal container with custom content.',
+    props: [
+      {
+        name: 'trigger',
+        type: 'any',
+        description: 'Trigger element, usually a Button.',
+      },
+      {
+        name: 'content',
+        type: 'any',
+        description: 'Modal body content.',
+      },
+      {
+        name: 'title',
+        type: 'string | number | boolean | { path: string }',
+        description: 'Optional modal title.',
+      },
+      {
+        name: 'closeOnAction',
+        type: 'boolean',
+        description: 'Close the modal after an action inside the body fires.',
+        default: 'true',
+      },
+    ],
+    usage:
+      `root = Modal(Button("Open details", Action([@ToAssistant("open")]), "secondary"), Card([Text("Modal body", "body")]), "Details")`,
+  },
+  {
     name: 'CheckBox',
     category: 'inputs',
     description:
-      'Toggleable checkbox. Tap fires the action; visual state is controlled by the caller.',
+      'Toggleable checkbox. Tap the row to update local visual state and fire the action.',
     props: [
       { name: 'label', type: 'string', description: 'Checkbox label text.' },
       {
@@ -322,6 +543,49 @@ box2 = CheckBox("Subscribe to updates", false, Action([@ToAssistant("Subscribe")
     ],
     usage: `root = Stack([rg])
 rg = RadioGroup(["Small", "Medium", "Large"], "Medium", "row", Action([@ToAssistant("size")]))`,
+  },
+  {
+    name: 'ChoicePicker',
+    category: 'inputs',
+    description:
+      'Choice picker rendered as selectable chips, list items, or a dropdown-like field.',
+    props: [
+      {
+        name: 'label',
+        type: 'string | number | boolean | { path: string }',
+        description: 'Optional picker label.',
+      },
+      {
+        name: 'options',
+        type:
+          '(string | number | boolean | { path: string })[] | string | { path: string }',
+        description: 'Picker options.',
+      },
+      {
+        name: 'value',
+        type: 'string | number | boolean | { path: string }',
+        description: 'Selected option.',
+      },
+      {
+        name: 'variant',
+        type: '"default" | "card"',
+        description: 'Visual variant.',
+        default: '"default"',
+      },
+      {
+        name: 'displayStyle',
+        type: '"list" | "chips" | "dropdown"',
+        description: 'Option layout style.',
+        default: '"chips"',
+      },
+      {
+        name: 'filterable',
+        type: 'boolean | { path: string }',
+        description: 'Whether the picker is filterable.',
+      },
+    ],
+    usage:
+      `root = ChoicePicker("Tier", ["Free", "Pro", "Team"], "Pro", "card", "chips", true)`,
   },
   {
     name: 'Slider',
@@ -390,5 +654,45 @@ s2 = Slider("Brightness", 0, 100, 75, 5, Action([@ToAssistant("brightness")]))`,
 tf1 = TextField("Email", "user@example.com", "shortText", "", Action([@ToAssistant("email")]))
 tf2 = TextField("Age", "30", "number", "", Action([@ToAssistant("age")]))
 tf3 = TextField("Notes", "Hello", "longText", "", Action([@ToAssistant("notes")]))`,
+  },
+  {
+    name: 'DateTimeInput',
+    category: 'inputs',
+    description:
+      'Date/time value display with optional label, min/max, and enabled date/time hints.',
+    props: [
+      {
+        name: 'value',
+        type: 'string | number | boolean | { path: string }',
+        description: 'Current date/time value.',
+      },
+      {
+        name: 'enableDate',
+        type: 'boolean | { path: string }',
+        description: 'Whether date selection is enabled.',
+      },
+      {
+        name: 'enableTime',
+        type: 'boolean | { path: string }',
+        description: 'Whether time selection is enabled.',
+      },
+      {
+        name: 'min',
+        type: 'string | number | boolean | { path: string }',
+        description: 'Optional minimum value.',
+      },
+      {
+        name: 'max',
+        type: 'string | number | boolean | { path: string }',
+        description: 'Optional maximum value.',
+      },
+      {
+        name: 'label',
+        type: 'string | number | boolean | { path: string }',
+        description: 'Optional field label.',
+      },
+    ],
+    usage:
+      `root = DateTimeInput("2026-06-16T09:30:00", true, true, "2026-06-01", "2026-06-30", "Launch window")`,
   },
 ];

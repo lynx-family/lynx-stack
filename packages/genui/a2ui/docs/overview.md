@@ -80,6 +80,27 @@ the renderer does not care. The rest of this page explains what happens
 between `store.push(...)` and the rendered surface. For install details and
 optional theme tokens, see the [README](../README.md).
 
+## Compact final-state messages
+
+Use `compactA2UIMessagesToSnapshot` when you need the final UI state, not the
+full streaming history. The helper runs the A2UI messages through a snapshot
+state machine, removes unreachable components and data paths, and returns a
+new message array that can be rendered or shared like any other A2UI payload.
+
+```ts
+import { compactA2UIMessagesToSnapshot } from '@lynx-js/genui/a2ui/snapshot';
+import { createMessageStore } from '@lynx-js/genui/a2ui';
+
+const snapshot = compactA2UIMessagesToSnapshot(messages);
+const store = createMessageStore({ initialMessages: snapshot.messages });
+```
+
+Use `snapshot.messages` for final-state previews, shared URLs, QR payloads,
+thumbnail rendering, and benchmark final renders. Keep the original messages
+for playback or any UI that needs to show the stream chunk by chunk.
+`snapshot.metadata` is for diagnostics and tests; it does not affect
+rendering.
+
 ## The mental model
 
 If you have written React, the shift is small but important:

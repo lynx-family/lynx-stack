@@ -44,4 +44,23 @@ describe('runOnMainThread', () => {
       ]
     `);
   });
+
+  it('dispatches the legacy return event when the worklet throws', () => {
+    const error = new Error('main-thread worklet failed');
+    globalThis.registerWorklet('main-thread', '1', () => {
+      throw error;
+    });
+
+    expect(() => runRunOnMainThreadTask({ _wkltId: '1' }, [], 10)).toThrow(error);
+    expect(globalThis.lynx.getJSContext().dispatchEvent.mock.calls).toMatchInlineSnapshot(`
+      [
+        [
+          {
+            "data": "{"resolveId":10}",
+            "type": "Lynx.Worklet.FunctionCallRet",
+          },
+        ],
+      ]
+    `);
+  });
 });

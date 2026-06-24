@@ -2,6 +2,7 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { resetElementTemplateCommitState } from '../../../../src/element-template/background/commit-hook.js';
 import { BackgroundElementTemplateInstance } from '../../../../src/element-template/background/instance.js';
+import { installElementTemplateRenderScopeHooks } from '../../../../src/element-template/background/render-scope.js';
 import { callDestroyLifetimeFun } from '../../../../src/element-template/native/callDestroyLifetimeFun.js';
 import { root } from '../../../../src/element-template/index.js';
 import { clearRefState, flushPendingRefs } from '../../../../src/element-template/prop-adapters/ref.js';
@@ -41,6 +42,13 @@ describe('ElementTemplate root render timing', () => {
     const { performance } = lynx;
     expect(performance.profileStart).toHaveBeenCalledWith('ReactLynx::renderBackground');
     expect(performance.profileEnd).toHaveBeenCalled();
+  });
+
+  it('keeps render scope hook installation idempotent', () => {
+    expect(() => {
+      installElementTemplateRenderScopeHooks();
+      installElementTemplateRenderScopeHooks();
+    }).not.toThrow();
   });
 
   it('cleans direct refs through root unmount on background destroy', () => {

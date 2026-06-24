@@ -22,6 +22,8 @@ import type {
   ElementTemplateUpdateCommandStream,
   ElementTemplateUpdateCommitContext,
 } from '../../../../../src/element-template/protocol/types.js';
+import { parseElementTemplateType } from '../../../../../src/element-template/protocol/template-type.js';
+import { parseElementTemplateUpdateEventPayload } from '../../../../../src/element-template/protocol/update-event.js';
 import { clearEtAttrPlanMap } from '../../../../../src/element-template/runtime/template/attr-slot-plan.js';
 import { __root } from '../../../../../src/element-template/runtime/page/root-instance.js';
 import {
@@ -77,11 +79,12 @@ function collectRecursiveCreateCommandStream(
       commands.push(...collectRecursiveCreateCommandStream(child));
     }
   }
+  const nativeTemplate = parseElementTemplateType(instance.type);
   commands.push(
     ElementTemplateUpdateOps.createTemplate,
     instance.instanceId,
-    instance.type,
-    null,
+    nativeTemplate.templateKey,
+    nativeTemplate.bundleUrl,
     instance.attributeSlots,
     instance.elementSlots.map(children => (children ?? []).map(child => child.instanceId)),
   );
@@ -92,7 +95,7 @@ describe('Compiled background Preact updates', () => {
   const envManager = new ElementTemplateEnvManager();
   let updateEvents: ElementTemplateUpdateCommitContext[] = [];
   const onUpdate = (event: { data: unknown }) => {
-    updateEvents.push(event.data as ElementTemplateUpdateCommitContext);
+    updateEvents.push(parseElementTemplateUpdateEventPayload(event.data));
   };
 
   async function loadCompiledFixture(sourcePath: string): Promise<{

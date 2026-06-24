@@ -1,14 +1,14 @@
-import type { SerializedElementTemplate } from '../../../../src/element-template/protocol/types.js';
+import type { SerializedEtNode } from '../../../../src/element-template/protocol/types.js';
 
-export function extractSerializedHydrateInstances(data: unknown): SerializedElementTemplate[] {
+export function extractSerializedHydrateInstances(data: unknown): SerializedEtNode[] {
   if (Array.isArray(data)) {
-    return data as SerializedElementTemplate[];
+    return data as SerializedEtNode[];
   }
 
   if (data !== null && typeof data === 'object') {
     const payload = data as { instances?: unknown };
     if (Array.isArray(payload.instances)) {
-      return payload.instances as SerializedElementTemplate[];
+      return payload.instances as SerializedEtNode[];
     }
   }
 

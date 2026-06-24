@@ -5,12 +5,12 @@ import type { ActionPlan } from '@openuidev/lang-core';
 import { BuiltinActionType } from '@openuidev/lang-core';
 import { z } from 'zod/v4';
 
-import { Checkbox, CheckboxIndicator } from '@lynx-js/lynx-ui';
 import { useEffect, useRef, useState } from '@lynx-js/react';
 
 import {
   useFormName,
   useGetFieldValue,
+  useIsStreaming,
   useSetDefaultValue,
   useSetFieldValue,
   useTriggerAction,
@@ -36,6 +36,7 @@ export const CheckBox = defineComponent({
   component: ({ props }) => {
     const triggerAction = useTriggerAction();
     const formName = useFormName();
+    const isStreaming = useIsStreaming();
     const getFieldValue = useGetFieldValue();
     const setFieldValue = useSetFieldValue();
     const [checked, setChecked] = useState<boolean>(props.value === true);
@@ -70,7 +71,7 @@ export const CheckBox = defineComponent({
       if (props.name) {
         setFieldValue(formName, 'CheckBox', props.name, next, true);
       }
-      if (!props.action) return;
+      if (isStreaming || !props.action) return;
       if ('steps' in props.action) {
         void triggerAction(props.label, formName, props.action as ActionPlan);
         return;
@@ -88,19 +89,23 @@ export const CheckBox = defineComponent({
         params: actionParams,
       });
     };
+    const onToggle = () => onChange(!checked);
 
     return (
-      <view className='OpenUICheckBoxRow'>
-        <Checkbox
-          checked={checked}
-          onChange={onChange}
-          className='OpenUICheckBoxInput'
+      <view
+        className='OpenUICheckBoxRow'
+        {...(isStreaming ? {} : ({ bindtap: onToggle }))}
+      >
+        <view
+          className={checked
+            ? 'OpenUICheckBoxInput ui-checked'
+            : 'OpenUICheckBoxInput'}
         >
-          <CheckboxIndicator>
-            <text>✓</text>
-          </CheckboxIndicator>
-        </Checkbox>
-        <text className='OpenUICheckBoxLabel'>{props.label}</text>
+          {checked ? <text className='OpenUICheckBoxMark'>✓</text> : null}
+        </view>
+        <view className='OpenUICheckBoxLabelHitbox'>
+          <text className='OpenUICheckBoxLabel'>{props.label}</text>
+        </view>
       </view>
     );
   },

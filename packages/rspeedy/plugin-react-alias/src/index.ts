@@ -173,18 +173,29 @@ export function pluginReactAlias(options: Options): RsbuildPlugin {
           'worklet-runtime/bindings',
         ]
 
-        await Promise.all(
-          transformedEntries
-            .map(entry => `@lynx-js/react/${entry}`)
-            .map(entry =>
-              resolve(entry).then(value => {
-                chain
-                  .resolve
-                  .alias
-                  .set(`${entry}$`, value)
-              })
-            ),
+        const transformedEntryAliases = new Map<string, string>()
+        if (elementTemplate) {
+          transformedEntryAliases.set(
+            'experimental/lazy/import',
+            path.join(reactLynxDir, 'runtime/lazy/element-template-import.js'),
+          )
+        }
+
+        const resolvedTransformedEntryAliases = await Promise.all(
+          transformedEntries.map(async entry => {
+            const request = `@lynx-js/react/${entry}`
+            const value = transformedEntryAliases.get(entry)
+              ?? (await resolve(request))
+            return [`${request}$`, value] as const
+          }),
         )
+
+        for (const [request, value] of resolvedTransformedEntryAliases) {
+          chain
+            .resolve
+            .alias
+            .set(request, value)
+        }
 
         if (isProd) {
           chain.resolve.alias.set('@lynx-js/react/debug$', false)

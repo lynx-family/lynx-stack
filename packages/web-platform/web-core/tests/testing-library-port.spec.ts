@@ -1,44 +1,31 @@
 import './jsdom.js';
-import { describe, test, expect, beforeEach, vi } from 'vitest';
+import { describe, test, expect, beforeEach, rstest } from '@rstest/core';
 import { createElementAPI } from '../ts/client/mainthread/elementAPIs/createElementAPI.js';
-import { WASMJSBinding } from '../ts/client/mainthread/elementAPIs/WASMJSBinding.js';
+import {
+  WASMJSBinding,
+  type WASMJSBindingInjectedHandler,
+} from '../ts/client/mainthread/elementAPIs/WASMJSBinding.js';
+import { createTestLynxViewInstance } from './createTestLynxViewInstance.js';
 
 describe('Testing Library Port', () => {
   let lynxViewDom: HTMLElement;
   let rootDom: ShadowRoot;
   let mtsGlobalThis: ReturnType<typeof createElementAPI>;
   let mtsBinding: WASMJSBinding;
-  const mockedBackground = vi.mockObject({
-    publishEvent: vi.fn(),
-    postTimingFlags: vi.fn(),
-  });
   beforeEach(() => {
-    vi.resetAllMocks();
+    rstest.resetAllMocks();
     lynxViewDom = document.createElement('div') as unknown as HTMLElement;
     rootDom = lynxViewDom.attachShadow({ mode: 'open' });
 
     mtsBinding = new WASMJSBinding(
-      vi.mockObject({
+      createTestLynxViewInstance(
         rootDom,
-        backgroundThread: vi.mockObject({
-          publicComponentEvent: vi.fn(),
-          publishEvent: vi.fn(),
-          postTimingFlags: vi.fn(),
-          markTiming: vi.fn(),
-          flushTimingInfo: vi.fn(),
-          jsContext: vi.mockObject({
-            dispatchEvent: vi.fn(),
-          }),
-        } as any),
-        exposureServices: vi.mockObject({
-          updateExposureStatus: vi.fn(),
-        } as any),
-        mainThreadGlobalThis: globalThis as any,
-      }),
+        globalThis as WASMJSBindingInjectedHandler['mainThreadGlobalThis'],
+      ),
     );
     mtsGlobalThis = createElementAPI(
       rootDom,
-      mtsBinding as any,
+      mtsBinding,
       true,
       true,
       true,
@@ -138,8 +125,8 @@ describe('Testing Library Port', () => {
 
     test('should add event listener', () => {
       // Spy on mtsBinding methods
-      vi.spyOn(mtsBinding, 'addEventListener');
-      vi.spyOn(mtsBinding, 'publishEvent');
+      rstest.spyOn(mtsBinding, 'addEventListener');
+      rstest.spyOn(mtsBinding, 'publishEvent');
 
       const page = mtsGlobalThis.__CreatePage('0', 0);
       const view0 = mtsGlobalThis.__CreateView(0);

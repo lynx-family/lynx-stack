@@ -67,6 +67,59 @@ describe('Element Template renderToOpcodes', () => {
     );
   });
 
+  it('emits typed list attributes and logical children through slot 0', () => {
+    const ItemTemplate = '_et_list_item';
+    const attributes = { id: 'feed' };
+    const itemPlatformInfo = { 'item-key': 'a' };
+
+    const opcodes = renderToString(
+      h('list', {
+        attributes,
+        $0: <ItemTemplate __listItemPlatformInfo={itemPlatformInfo} />,
+      }),
+    );
+
+    expect(opcodes[0]).toBe(__OpBegin);
+    expect(opcodes[1]).toMatchObject({ type: 'list' });
+    expect(opcodes[2]).toBe(__OpAttr);
+    expect(opcodes[3]).toBe('typedAttributes');
+    expect(opcodes[4]).toBe(attributes);
+    expect(opcodes[5]).toBe(__OpSlot);
+    expect(opcodes[6]).toBe(0);
+    expect(opcodes[7]).toBe(__OpBegin);
+    expect(opcodes[8]).toMatchObject({
+      type: ItemTemplate,
+      props: {
+        __listItemPlatformInfo: itemPlatformInfo,
+      },
+    });
+    expect(opcodes.at(-1)).toBe(__OpEnd);
+  });
+
+  it('rejects non-zero typed list logical slots in development', () => {
+    const ItemTemplate = '_et_list_item';
+
+    expect(() =>
+      renderToString(
+        h('list', {
+          $1: <ItemTemplate __listItemPlatformInfo={{ 'item-key': 'a' }} />,
+        }),
+      )
+    ).toThrow('Element Template typed list only supports logical slot $0.');
+  });
+
+  it('rejects non-list uncompiled hosts outside development too', () => {
+    const originalDev = globalThis.__DEV__;
+    globalThis.__DEV__ = false;
+    try {
+      expect(() => renderToString(h('view', null))).toThrow(
+        'Element Template main-thread renderer received an uncompiled host vnode: view',
+      );
+    } finally {
+      globalThis.__DEV__ = originalDev;
+    }
+  });
+
   it('throws in development when an invalid vnode reaches the ET render path', () => {
     expect(() => renderToString({ type: null, props: {} })).toThrow(
       'Element Template main-thread renderer received an invalid vnode.',
@@ -218,6 +271,102 @@ describe('Element Template renderToOpcodes', () => {
     );
 
     expect(opcodes).toContain('loading');
+  });
+
+  it('renders every Fragment fallback child when a child suspends', () => {
+    function AsyncText() {
+      throw Promise.resolve();
+    }
+
+    const opcodes = renderToString(
+      h(
+        Suspense,
+        {
+          fallback: h(
+            Fragment,
+            null,
+            'loading 1',
+            'loading 2',
+          ),
+        },
+        h(AsyncText, null),
+      ),
+    );
+
+    expect(opcodes).toContain('loading 1');
+    expect(opcodes).toContain('loading 2');
+  });
+
+  it('renders resolved outer content with the nearest inner Suspense fallback', () => {
+    function AsyncText() {
+      throw Promise.resolve();
+    }
+
+    function OuterContent() {
+      return h(
+        Fragment,
+        null,
+        'before',
+        h(
+          Suspense,
+          { fallback: 'inner loading' },
+          h(AsyncText, null),
+        ),
+        'after',
+      );
+    }
+
+    const opcodes = renderToString(
+      h(
+        Suspense,
+        { fallback: 'outer loading' },
+        h(OuterContent, null),
+      ),
+    );
+
+    expect(opcodes).toContain('before');
+    expect(opcodes).toContain('inner loading');
+    expect(opcodes).toContain('after');
+    expect(opcodes).not.toContain('outer loading');
+  });
+
+  it('renders already resolved Suspense content without fallback', async () => {
+    let resolved = false;
+    const pending = Promise.resolve();
+    void pending.then(() => {
+      resolved = true;
+    });
+
+    function Suspender() {
+      if (!resolved) {
+        throw pending;
+      }
+      return 'ready';
+    }
+
+    const pendingOpcodes = renderToString(
+      h(
+        Suspense,
+        { fallback: 'loading' },
+        h(Suspender, null),
+      ),
+    );
+
+    expect(pendingOpcodes).toContain('loading');
+    expect(pendingOpcodes).not.toContain('ready');
+
+    await pending;
+
+    const resolvedOpcodes = renderToString(
+      h(
+        Suspense,
+        { fallback: 'loading' },
+        h(Suspender, null),
+      ),
+    );
+
+    expect(resolvedOpcodes).toContain('ready');
+    expect(resolvedOpcodes).not.toContain('loading');
   });
 
   it('does not re-render function components when main-thread hooks schedule an update during render', () => {

@@ -1,7 +1,7 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { injectCalledByNative } from '../../../src/element-template/native/main-thread-api.js';
-import { reloadMainThread } from '../../../src/element-template/native/reload.js';
+import { reloadMainThread } from '../../../src/element-template/native/reload-main-thread.js';
 import { createElementTemplatePage, setupPage } from '../../../src/element-template/runtime/page/page.js';
 import {
   renderMainThread,
@@ -27,7 +27,7 @@ vi.mock('../../../src/element-template/runtime/render/render-main-thread.js', ()
   resetMainThreadRootRefs: vi.fn(),
 }));
 
-vi.mock('../../../src/element-template/native/reload.js', () => ({
+vi.mock('../../../src/element-template/native/reload-main-thread.js', () => ({
   reloadMainThread: vi.fn(),
 }));
 

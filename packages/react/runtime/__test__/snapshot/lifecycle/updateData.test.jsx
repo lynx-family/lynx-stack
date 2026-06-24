@@ -918,6 +918,113 @@ describe('triggerDataUpdated when jsReady is enabled', () => {
       `);
     }
   });
+
+  /**
+   * Reproduces the `withInitDataInState` main-thread staleness bug.
+   *
+   * `withInitDataInState` injects `lynx.__initData` into the class component's state only in
+   * the constructor, and its `onDataChanged` listener is gated to the background thread. On
+   * the main thread, `renderToString` reuses the same class instance across an `updatePage`
+   * re-render (the constructor never re-runs), so the state stays frozen at the data injected
+   * on first mount. When the main thread re-renders before hydration (an `updatePage` while
+   * `__FIRST_SCREEN_SYNC_TIMING__` is `'jsReady'`), the stale state surfaces as a stale render.
+   */
+  it('should refresh withInitDataInState state on a main-thread updatePage re-render', async function() {
+    class App extends Component {
+      render() {
+        // reads from state (what `withInitDataInState` injects), like real pages do
+        return <text>{this.state.msg}</text>;
+      }
+    }
+
+    const Comp = withInitDataInState(App);
+
+    // first screen renders cache data into the injected state (jsReady mode: not synced yet)
+    {
+      __root.__jsx = <Comp />;
+      renderPage({ msg: 'cache' });
+      expect(__root.__element_root).toMatchInlineSnapshot(`
+        <page
+          cssId="default-entry-from-native:0"
+        >
+          <text>
+            <raw-text
+              text="cache"
+            />
+          </text>
+        </page>
+      `);
+    }
+
+    // the second render: the main thread re-renders with real data via `updatePage` before hydration.
+    // The injected state must refresh to the new data — otherwise the render is stale.
+    {
+      updatePage({ msg: 'real' });
+      expect(__root.__element_root).toMatchInlineSnapshot(`
+        <page
+          cssId="default-entry-from-native:0"
+        >
+          <text>
+            <raw-text
+              text="real"
+            />
+          </text>
+        </page>
+      `);
+    }
+  });
+
+  /**
+   * Verifies that `withInitDataInState` composes with — and does not drop — the wrapped
+   * component's own `getDerivedStateFromProps` on the main thread. The wrapped
+   * `getDerivedStateFromProps` keeps running on each `updatePage` re-render and sees the
+   * freshened `initData`, while the injected `initData` itself is also refreshed.
+   */
+  it('should keep the wrapped getDerivedStateFromProps working on a main-thread updatePage re-render', async function() {
+    class App extends Component {
+      static getDerivedStateFromProps(props, state) {
+        // derives from the injected initData in state, proving it sees the fresh data
+        return { upper: state.msg?.toUpperCase() };
+      }
+
+      render() {
+        return <text>{`${this.state.msg}|${this.state.upper}`}</text>;
+      }
+    }
+
+    const Comp = withInitDataInState(App);
+
+    {
+      __root.__jsx = <Comp />;
+      renderPage({ msg: 'cache' });
+      expect(__root.__element_root).toMatchInlineSnapshot(`
+        <page
+          cssId="default-entry-from-native:0"
+        >
+          <text>
+            <raw-text
+              text="cache|CACHE"
+            />
+          </text>
+        </page>
+      `);
+    }
+
+    {
+      updatePage({ msg: 'real' });
+      expect(__root.__element_root).toMatchInlineSnapshot(`
+        <page
+          cssId="default-entry-from-native:0"
+        >
+          <text>
+            <raw-text
+              text="real|REAL"
+            />
+          </text>
+        </page>
+      `);
+    }
+  });
 });
 
 describe('flush pending `renderComponent` before hydrate', () => {

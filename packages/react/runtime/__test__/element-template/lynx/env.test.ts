@@ -8,10 +8,15 @@ const envManager = new ElementTemplateEnvManager();
 type GlobalWithEnv = typeof globalThis & {
   __OnLifecycleEvent?: ReturnType<typeof vi.fn>;
   NativeModules?: unknown;
+  SystemInfo?: unknown;
   processData?: (data: unknown, processorName?: string) => unknown;
   __I18N_RESOURCE_TRANSLATION__?: unknown;
   __EXTRACT_STR__?: boolean;
   __EXTRACT_STR_IDENT_FLAG__?: string;
+};
+
+type LynxWithSystemInfo = typeof globalThis.lynx & {
+  SystemInfo?: unknown;
 };
 
 describe('setupLynxEnv', () => {
@@ -19,6 +24,8 @@ describe('setupLynxEnv', () => {
   let originalOnLifecycleEvent: typeof g.__OnLifecycleEvent;
   let originalProcessData: typeof g.processData;
   let originalNativeModules: typeof g.NativeModules;
+  let originalSystemInfo: typeof g.SystemInfo;
+  let originalLynxSystemInfo: LynxWithSystemInfo['SystemInfo'];
   let originalI18n: typeof g.__I18N_RESOURCE_TRANSLATION__;
   let originalExtractStr: typeof g.__EXTRACT_STR__;
   let originalExtractStrFlag: typeof g.__EXTRACT_STR_IDENT_FLAG__;
@@ -29,6 +36,8 @@ describe('setupLynxEnv', () => {
     originalOnLifecycleEvent = g.__OnLifecycleEvent;
     originalProcessData = g.processData;
     originalNativeModules = g.NativeModules;
+    originalSystemInfo = g.SystemInfo;
+    originalLynxSystemInfo = (globalThis.lynx as LynxWithSystemInfo).SystemInfo;
     originalI18n = g.__I18N_RESOURCE_TRANSLATION__;
     originalExtractStr = g.__EXTRACT_STR__;
     originalExtractStrFlag = g.__EXTRACT_STR_IDENT_FLAG__;
@@ -50,6 +59,18 @@ describe('setupLynxEnv', () => {
       delete g.NativeModules;
     } else {
       g.NativeModules = originalNativeModules;
+    }
+
+    if (originalSystemInfo === undefined) {
+      delete g.SystemInfo;
+    } else {
+      g.SystemInfo = originalSystemInfo;
+    }
+
+    if (originalLynxSystemInfo === undefined) {
+      delete (globalThis.lynx as LynxWithSystemInfo).SystemInfo;
+    } else {
+      (globalThis.lynx as LynxWithSystemInfo).SystemInfo = originalLynxSystemInfo;
     }
 
     if (originalI18n === undefined) {
@@ -186,6 +207,25 @@ describe('setupLynxEnv', () => {
     expect(g.processData?.({ value: 2 })).toEqual({
       value: 2,
     });
+  });
+
+  it('exposes SystemInfo in main-thread env for worklet runtime initialization', () => {
+    envManager.resetEnv('main');
+    const systemInfo = { lynxSdkVersion: '4.1' };
+    (globalThis.lynx as LynxWithSystemInfo).SystemInfo = systemInfo;
+
+    setupLynxEnv();
+
+    expect(g.SystemInfo).toBe(systemInfo);
+  });
+
+  it('falls back to empty SystemInfo when lynx.SystemInfo is unavailable', () => {
+    envManager.resetEnv('main');
+    delete (globalThis.lynx as LynxWithSystemInfo).SystemInfo;
+
+    setupLynxEnv();
+
+    expect(g.SystemInfo).toEqual({});
   });
 
   it('falls back to raw data when named or default processors are missing', () => {

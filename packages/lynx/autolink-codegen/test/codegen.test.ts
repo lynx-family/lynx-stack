@@ -174,6 +174,53 @@ export declare class StorageModule {
     );
   });
 
+  it('generates Android specs only when only Android is configured', () => {
+    const root = createFixture({
+      manifest: {
+        platforms: {
+          android: {
+            packageName: 'com.example.storage',
+          },
+        },
+      },
+      types: `/** @lynxmodule */
+export declare class StorageModule {
+  clear(): void;
+}
+`,
+    });
+
+    const files = generate({ root });
+
+    expect(files.map((file) => file.path).sort()).toEqual([
+      'generated/StorageModule.ts',
+      'android/src/main/java/com/example/storage/generated/StorageModuleSpec.java',
+    ].sort());
+  });
+
+  it('generates iOS specs only when only iOS is configured', () => {
+    const root = createFixture({
+      manifest: {
+        platforms: {
+          ios: {},
+        },
+      },
+      types: `/** @lynxmodule */
+export declare class StorageModule {
+  clear(): void;
+}
+`,
+    });
+
+    const files = generate({ root });
+
+    expect(files.map((file) => file.path).sort()).toEqual([
+      'generated/StorageModule.ts',
+      'ios/src/generated/StorageModuleSpec.h',
+      'ios/src/generated/StorageModuleSpec.m',
+    ].sort());
+  });
+
   it('writes generated files from a temp library package', () => {
     const root = createFixture({
       manifest: {
@@ -302,6 +349,17 @@ export declare class StorageModule {
     expect(() => generate({ root })).toThrow(
       /platforms\.android\.packageName/,
     );
+  });
+
+  it('fails clearly when no Native platform is configured', () => {
+    const root = createFixture({
+      manifest: {
+        platforms: {},
+      },
+      types: '',
+    });
+
+    expect(() => generate({ root })).toThrow(/at least one Native platform/);
   });
 
   it('fails clearly when android packageName is not a Java package identifier', () => {

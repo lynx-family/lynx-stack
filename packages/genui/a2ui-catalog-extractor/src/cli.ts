@@ -15,8 +15,8 @@ import {
   writeA2UICatalog,
   writeCatalogArtifacts,
   writeCatalogComponents,
-} from './index.js';
-import type { TypeDocProject } from './index.js';
+} from './core.js';
+import type { TypeDocProject } from './core.js';
 
 interface CliOptions {
   catalogId?: string;

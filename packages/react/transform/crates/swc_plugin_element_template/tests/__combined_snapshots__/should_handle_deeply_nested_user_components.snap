@@ -3,7 +3,7 @@ source: packages/react/transform/crates/swc_plugin_element_template/tests/elemen
 expression: "serde_json::json!({\n    \"code\": code, \"templates\": template_snapshot_json(&templates),\n})"
 ---
 {
-  "code": "import * as ReactLynx from \"@lynx-js/react\";\nconst _et_efe140538def = \"_et_efe140538def\";\nconst _et_d7c09654e316 = \"_et_d7c09654e316\";\n<_et_d7c09654e316 $0={<Outer title={title}>\n        <Middle enabled={enabled}>\n          <Inner count={count}>\n            <_et_efe140538def/>\n          </Inner>\n        </Middle>\n      </Outer>}/>;\n",
+  "code": "import * as ReactLynx from \"@lynx-js/react\";\nconst _et_efe140538def = `${globDynamicComponentEntry}:${\"_et_efe140538def\"}`;\nconst _et_d7c09654e316 = `${globDynamicComponentEntry}:${\"_et_d7c09654e316\"}`;\n<_et_d7c09654e316 $0={<Outer title={title}>\n        <Middle enabled={enabled}>\n          <Inner count={count}>\n            <_et_efe140538def/>\n          </Inner>\n        </Middle>\n      </Outer>}/>;\n",
   "templates": [
     {
       "template_id": "_et_efe140538def",

@@ -2,6 +2,7 @@ import { createElement } from 'preact';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
 import { LynxTestEventEmitter } from '../../../test-utils/lynx-event-emitter.js';
+import { parseElementTemplateUpdateEventPayload } from '../../../../src/element-template/protocol/update-event.js';
 
 type UpdateEvent = {
   ops: unknown[];
@@ -34,7 +35,7 @@ async function setupGlobalPropsRuntime(mode: 'reactive' | 'event') {
   const emitter = new LynxTestEventEmitter();
   const updateEvents: UpdateEvent[] = [];
   const onUpdate = (event: { data: unknown }) => {
-    updateEvents.push(event.data as UpdateEvent);
+    updateEvents.push(parseElementTemplateUpdateEventPayload(event.data) as UpdateEvent);
   };
 
   resetElementTemplateCommitState();

@@ -31,6 +31,23 @@ export type FormattedElementTemplateUpdateCommand =
     value: unknown;
   }
   | {
+    op: 'insertTypedListItem';
+    targetId: number;
+    item: unknown;
+    beforeId: number;
+  }
+  | {
+    op: 'removeTypedListItem';
+    targetId: number;
+    itemId: number;
+    removedSubtreeHandleIds: number[];
+  }
+  | {
+    op: 'updateTypedListItem';
+    targetId: number;
+    item: unknown;
+  }
+  | {
     op: 'insertNode';
     targetId: number;
     elementSlotIndex: number;
@@ -92,6 +109,32 @@ export function formatElementTemplateUpdateCommands(
           attributes: stream[index++],
           elementSlots: stream[index++],
           options: stream[index++],
+        });
+        break;
+
+      case ElementTemplateUpdateOps.insertTypedListItem:
+        result.push({
+          op: 'insertTypedListItem',
+          targetId: stream[index++] as number,
+          item: stream[index++],
+          beforeId: stream[index++] as number,
+        });
+        break;
+
+      case ElementTemplateUpdateOps.removeTypedListItem:
+        result.push({
+          op: 'removeTypedListItem',
+          targetId: stream[index++] as number,
+          itemId: stream[index++] as number,
+          removedSubtreeHandleIds: stream[index++] as number[],
+        });
+        break;
+
+      case ElementTemplateUpdateOps.updateTypedListItem:
+        result.push({
+          op: 'updateTypedListItem',
+          targetId: stream[index++] as number,
+          item: stream[index++],
         });
         break;
 

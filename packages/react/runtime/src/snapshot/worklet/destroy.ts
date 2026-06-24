@@ -3,16 +3,12 @@
 // LICENSE file in the root directory of this source tree.
 
 import { takeWorkletRefInitValuePatch } from './ref/workletRefPool.js';
-
-export const destroyTasks: (() => void)[] = [];
+import { runDestroyTasks } from '../../core/runtime-destroy.js';
 
 export function destroyWorklet(): void {
   if (typeof __BACKGROUND__ !== 'undefined' && __BACKGROUND__) {
     takeWorkletRefInitValuePatch();
   }
 
-  for (const task of destroyTasks) {
-    task();
-  }
-  destroyTasks.length = 0;
+  runDestroyTasks();
 }

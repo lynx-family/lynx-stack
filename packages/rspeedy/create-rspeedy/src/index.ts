@@ -119,6 +119,11 @@ void create({
       source: 'lynx-community/skills',
       value: 'lynx-devtool',
     },
+    {
+      label: 'Rspeedy Bundle Size',
+      source: 'lynx-community/skills',
+      value: 'rspeedy-bundle-size',
+    },
   ],
   mapESLintTemplate(templateName) {
     const lang = templateName.split('-').at(-1)

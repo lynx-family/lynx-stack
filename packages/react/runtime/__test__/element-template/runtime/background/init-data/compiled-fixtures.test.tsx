@@ -20,6 +20,7 @@ import {
 } from '../../../../../src/element-template/native/patch-listener.js';
 import { ElementTemplateLifecycleConstant } from '../../../../../src/element-template/protocol/lifecycle-constant.js';
 import type { ElementTemplateUpdateCommitContext } from '../../../../../src/element-template/protocol/types.js';
+import { parseElementTemplateUpdateEventPayload } from '../../../../../src/element-template/protocol/update-event.js';
 import { __page } from '../../../../../src/element-template/runtime/page/page.js';
 import { clearEtAttrPlanMap } from '../../../../../src/element-template/runtime/template/attr-slot-plan.js';
 import { LynxTestEventEmitter } from '../../../../test-utils/lynx-event-emitter.js';
@@ -54,7 +55,7 @@ describe('Compiled ET InitData updateData fixture', () => {
   let updateEvents: ElementTemplateUpdateCommitContext[] = [];
 
   const onUpdate = (event: { data: unknown }) => {
-    updateEvents.push(event.data as ElementTemplateUpdateCommitContext);
+    updateEvents.push(parseElementTemplateUpdateEventPayload(event.data));
   };
 
   function installInitData(initData: Record<string, unknown>): void {

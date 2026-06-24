@@ -88,6 +88,8 @@ function markAsDirty() {
 /* v8 ignore stop */
 
 const EMPTY_OBJ = {};
+const TYPED_LIST_HOST_TYPE = 'list';
+const TYPED_LIST_LOGICAL_SLOT_PROP = '$0';
 
 export const __OpBegin = 0;
 export const __OpEnd = 1;
@@ -269,8 +271,42 @@ function renderCompiledEtHostVNode(vnode, props, context, opcodes) {
   opcodes.push(__OpEnd);
 }
 
+function renderTypedListHostVNode(vnode, props, context, opcodes) {
+  opcodes.push(__OpBegin, vnode);
+
+  try {
+    if (__DEV__) {
+      for (const name in props) {
+        if (name.startsWith('$') && name !== TYPED_LIST_LOGICAL_SLOT_PROP) {
+          throw new Error('Element Template typed list only supports logical slot $0.');
+        }
+      }
+    }
+
+    const attributes = props.attributes;
+    if (attributes !== undefined) {
+      opcodes.push(__OpAttr, 'typedAttributes', attributes);
+    }
+
+    const listChildren = props[TYPED_LIST_LOGICAL_SLOT_PROP];
+    if (shouldRenderEtChild(listChildren)) {
+      opcodes.push(__OpSlot, 0);
+      _renderToString(listChildren, context, vnode, opcodes);
+    }
+  } finally {
+    cleanupVNode(vnode);
+  }
+
+  opcodes.push(__OpEnd);
+}
+
 function renderStringHostVNode(type, vnode, props, context, opcodes) {
-  if (__DEV__ && !isCompiledEtHostType(type)) {
+  if (type === TYPED_LIST_HOST_TYPE) {
+    renderTypedListHostVNode(vnode, props, context, opcodes);
+    return;
+  }
+
+  if (!isCompiledEtHostType(type)) {
     cleanupVNode(vnode);
     throw new Error(
       `Element Template main-thread renderer received an uncompiled host vnode: ${type}`,

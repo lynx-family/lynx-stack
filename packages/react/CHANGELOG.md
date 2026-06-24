@@ -1,5 +1,31 @@
 # @lynx-js/react
 
+## 0.121.2
+
+### Patch Changes
+
+- Fix `addComponentElement` compat transforms so explicit `removeComponentElement={true}` is honored consistently even when it appears before a JSX spread like `{...props}`. ([#2758](https://github.com/lynx-family/lynx-stack/pull/2758))
+
+  Previously, the compat transform could short-circuit while scanning opening attributes and treat:
+
+  ```jsx
+  <Component removeComponentElement={true} {...props} />;
+  ```
+
+  differently from:
+
+  ```jsx
+  <Component {...props} removeComponentElement={true} />;
+  ```
+
+  The transform now collects the full opening-attribute state first, so both prop orders compile the same way in normal and `compilerOnly` modes.
+
+- Fix directive DCE for TypeScript async output with nested `"background only"` directives. ([#2830](https://github.com/lynx-family/lynx-stack/pull/2830))
+
+- Rename the `bundle-url` element attribute to `lazy-bundle-url`. ([#2723](https://github.com/lynx-family/lynx-stack/pull/2723))
+
+  The attribute set on lazy bundle border elements (when a child belongs to a different lazy bundle entry than its parent) is renamed from `bundle-url` to `lazy-bundle-url` to make its purpose explicit.
+
 ## 0.121.1
 
 ### Patch Changes

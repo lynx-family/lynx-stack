@@ -1,6 +1,6 @@
 {
   "name": "@lynx-js/genui",
-  "version": "0.0.3",
+  "version": "0.0.4",
   "description": "Generative UI for Lynx.",
   "repository": {
     "type": "git",
@@ -29,6 +29,10 @@
     "./a2ui/store": {
       "types": "./a2ui/dist/store/index.d.ts",
       "default": "./a2ui/dist/store/index.js"
+    },
+    "./a2ui/snapshot": {
+      "types": "./a2ui/dist/snapshot/index.d.ts",
+      "default": "./a2ui/dist/snapshot/index.js"
     },
     "./a2ui/catalog": {
       "types": "./a2ui/dist/catalog/index.d.ts",
@@ -63,6 +67,10 @@
     "./openui/catalog": {
       "types": "./openui/dist/catalog/index.d.ts",
       "default": "./openui/dist/catalog/index.js"
+    },
+    "./openui/prompt": {
+      "types": "./openui/dist/openui-prompt/index.d.ts",
+      "default": "./openui/dist/openui-prompt/index.js"
     },
     "./openui/styles/renderer.css": "./openui/dist/core/renderer.css"
   },
@@ -118,8 +126,8 @@
     "@lynx-js/rspeedy": "workspace:^"
   },
   "peerDependencies": {
-    "@lynx-js/lynx-ui": "^3.133.0",
-    "@lynx-js/react": "^0.121.0"
+    "@lynx-js/lynx-ui": ">=3.133.0",
+    "@lynx-js/react": ">=0.121.0"
   },
   "peerDependenciesMeta": {
     "@lynx-js/lynx-ui": {

@@ -52,7 +52,7 @@ const catalog = defineCatalog([Text, Button]);
 
 ## 内置组件
 
-这个包提供 20 个 A2UI v0.9 basic-catalog renderer。每个都是独立、可 tree-shake
+这个包提供 21 个 A2UI v0.9 basic-catalog renderer。每个都是独立、可 tree-shake
 的导出，既可从根导入，也可从 `@lynx-js/genui/a2ui/catalog/<Name>` 导入。
 
 **布局与容器**
@@ -69,11 +69,12 @@ const catalog = defineCatalog([Text, Button]);
 
 **内容**
 
-| 组件    | 渲染什么                                      |
-| ------- | --------------------------------------------- |
-| `Text`  | 一段文本，带 `variant`（如 `body`）控制样式。 |
-| `Image` | 来自 source URL 的图片。                      |
-| `Icon`  | 一个具名 icon 字形。                          |
+| 组件            | 渲染什么                                      |
+| --------------- | --------------------------------------------- |
+| `Text`          | 一段文本，带 `variant`（如 `body`）控制样式。 |
+| `Image`         | 来自 source URL 的图片。                      |
+| `Icon`          | 一个具名 icon 字形。                          |
+| `LazyComponent` | 从资源 URL 加载的 ReactLynx lazy bundle。     |
 
 **输入与动作**
 
@@ -183,6 +184,7 @@ import {
   Column,
   DateTimeInput,
   Divider,
+  LazyComponent,
   Icon,
   Image,
   LineChart,
@@ -216,6 +218,9 @@ import dateTimeInputManifest from '@lynx-js/genui/a2ui/catalog/DateTimeInput/cat
   type: 'json',
 };
 import dividerManifest from '@lynx-js/genui/a2ui/catalog/Divider/catalog.json' with {
+  type: 'json',
+};
+import lazyComponentManifest from '@lynx-js/genui/a2ui/catalog/LazyComponent/catalog.json' with {
   type: 'json',
 };
 import iconManifest from '@lynx-js/genui/a2ui/catalog/Icon/catalog.json' with {
@@ -268,6 +273,7 @@ export const allBuiltins = defineCatalog([
   [Modal, modalManifest],
   [Button, buttonManifest],
   [Divider, dividerManifest],
+  [LazyComponent, lazyComponentManifest],
   [LineChart, lineChartManifest],
   [PieChart, pieChartManifest],
   [TextField, textFieldManifest],

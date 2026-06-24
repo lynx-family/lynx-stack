@@ -5,6 +5,7 @@
 import {
   dispatchCoreContextOnBackgroundEndpoint,
   dispatchJSContextOnMainThreadEndpoint,
+  fetchExternalBundleEndpoint,
   reloadEndpoint,
 } from '../../endpoints.js';
 import type { Rpc } from '@lynx-js/web-worker-rpc';
@@ -24,6 +25,9 @@ export function createBackgroundLynx(
     receiveEventEndpoint: dispatchCoreContextOnBackgroundEndpoint,
     sendEventEndpoint: dispatchJSContextOnMainThreadEndpoint,
   });
+  const fetchExternalBundle = mainThreadRpc.createCall(
+    fetchExternalBundleEndpoint,
+  );
   return {
     __globalProps: globalProps,
     getJSModule(_moduleName: string): any {
@@ -59,6 +63,16 @@ export function createBackgroundLynx(
     ) => nativeApp.queryComponent(source, callback),
     reload: () => {
       mainThreadRpc.invoke(reloadEndpoint, []);
+    },
+    fetchBundle(url: string) {
+      return fetchExternalBundle(url);
+    },
+    loadScript(sectionPath: string, options: { bundleName: string }) {
+      // `fetchBundle` registered the bundle's raw sections with the worker as
+      // bts chunks (updateBTSChunk -> templateCache); hand the section's init
+      // object to lynx-core (>= 0.1.4), which runs `_$executeInit` and caches
+      // the resulting exports.
+      return nativeApp.loadScript(sectionPath, options.bundleName);
     },
   };
 }

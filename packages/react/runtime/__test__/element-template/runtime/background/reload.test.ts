@@ -8,7 +8,7 @@ import {
 } from '../../../../src/element-template/background/hydration-listener.js';
 import { BackgroundElementTemplateInstance } from '../../../../src/element-template/background/instance.js';
 import { backgroundElementTemplateInstanceManager } from '../../../../src/element-template/background/manager.js';
-import { reloadBackground } from '../../../../src/element-template/native/reload.js';
+import { reloadBackground } from '../../../../src/element-template/native/reload-background.js';
 import { ElementTemplateLifecycleConstant } from '../../../../src/element-template/protocol/lifecycle-constant.js';
 import type { SerializedElementTemplate } from '../../../../src/element-template/protocol/types.js';
 import { __root, setRoot } from '../../../../src/element-template/runtime/page/root-instance.js';

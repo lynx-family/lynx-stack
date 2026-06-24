@@ -5,11 +5,11 @@
 // import { Suspense, createElement, lazy } from 'preact/compat';
 // import type { FC } from 'react';
 
+import './runtime-backend-marker.js';
 import './native/index.js';
 
 // import { factory as factory2 } from '../compat/componentIs.js';
 // import { useMemo } from '../core/hooks/react.js';
-// import { loadLazyBundle } from '../lynx/lazy-bundle.js';
 import { __root } from './runtime/page/root-instance.js';
 
 /**
@@ -32,7 +32,7 @@ export {
 } from 'preact';
 export type { Options } from 'preact';
 
-// export { loadDynamicJS, __dynamicImport } from '../lynx/dynamic-js.js';
+export { loadDynamicJS, __dynamicImport } from '../core/lynx/dynamic-import.js';
 
 export { withInitDataInState } from '../core/initData.js';
 
@@ -47,15 +47,22 @@ export { wrapWithLynxComponent } from '../core/compat/lynxComponent.js';
 //   loadLazyBundle,
 // );
 
-// export { loadLazyBundle } from '../lynx/lazy-bundle.js';
+export { loadLazyBundle } from '../core/lynx/lazy-bundle.js';
 
-// TODO: enable when worklet/runtime integration is implemented for ElementTemplate entry.
-// export { transformToWorklet } from '../worklet/call/transformToWorklet.js';
-// export { registerWorkletOnBackground } from '../worklet/hmr.js';
-// export { loadWorkletRuntime } from '@lynx-js/react/worklet-runtime/bindings';
+// TODO(ET MTS): add MTRef hydrate semantics in follow-up tracks.
+export { transformToWorklet } from './runtime/template/main-thread-background-function.js';
+export { loadWorkletRuntime } from '@lynx-js/react/worklet-runtime/bindings';
+
+export function registerWorkletOnBackground(
+  _type: string,
+  _hash: string,
+  _fn: (...args: unknown[]) => unknown,
+): void {}
+
 export {
   __etAttrPlanMap,
   adaptEventAttrSlot,
+  adaptMTEventAttrSlot,
   adaptRefAttrSlot,
   adaptSpreadAttrSlot,
 } from './runtime/template/attr-slot-plan.js';

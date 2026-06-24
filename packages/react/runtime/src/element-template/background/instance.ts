@@ -12,7 +12,10 @@ import { parseElementTemplateType } from '../protocol/template-type.js';
 import type {
   ElementTemplateHandleSlotsCommand,
   ElementTemplateUpdateCommandStream,
+  RuntimeOptionsCommand,
   SerializableValue,
+  TypedElementAttributesCommand,
+  UpdateTypedListItemCommand,
 } from '../protocol/types.js';
 
 function pushOp(...items: ElementTemplateUpdateCommandStream): void {
@@ -35,6 +38,9 @@ function stringifyRawTextValue(value: SerializableValue | undefined): string {
   return '';
 }
 
+const EMPTY_LIST_ITEM_PLATFORM_INFO: Record<string, SerializableValue> = {};
+const EMPTY_REMOVED_SUBTREE_HANDLE_IDS: number[] = [];
+
 export class BackgroundElementTemplateInstance {
   public instanceId: number = 0; // Assigned by manager
   public type: string;
@@ -50,7 +56,8 @@ export class BackgroundElementTemplateInstance {
   // Shadow State for Hydration
   public attributeSlots: SerializableValue[];
   private rawAttributeSlots: readonly unknown[] | undefined;
-  private isMaterializedOnMainThread = false;
+  protected isMaterializedOnMainThread = false;
+  private listItemPlatformInfo: Record<string, SerializableValue> | undefined;
 
   get parentNode(): BackgroundElementTemplateInstance | null {
     return this.parent;
@@ -100,10 +107,11 @@ export class BackgroundElementTemplateInstance {
     if (this.isMaterializedOnMainThread) {
       return;
     }
-    if (this.instanceId === 0 && __DEV__) {
+    if (__DEV__ && this.instanceId === 0) {
       lynx.reportError(new Error('ElementTemplate patch has illegal handleId 0.'));
       return;
     }
+    this.restoreManagerRegistration();
 
     // Walk the linked-list children once to build the slot-indexed handle list
     // for the createTemplate op. Going via `this.elementSlots` would allocate
@@ -128,7 +136,52 @@ export class BackgroundElementTemplateInstance {
   }
 
   private needsMainThreadCreate(): boolean {
-    return this.instanceId > 0 && !this.isMaterializedOnMainThread;
+    return this.instanceId !== 0 && !this.isMaterializedOnMainThread;
+  }
+
+  private markSubtreeDetachedFromMainThread(): void {
+    if (this.instanceId !== 0) {
+      this.isMaterializedOnMainThread = false;
+    }
+    let child = this.firstChild;
+    while (child) {
+      child.markSubtreeDetachedFromMainThread();
+      child = child.nextSibling;
+    }
+  }
+
+  releaseDetachedSubtreeFromManager(): void {
+    if (this.parent !== null || this.isMaterializedOnMainThread) {
+      return;
+    }
+    this.releaseSubtreeFromManager();
+  }
+
+  private restoreManagerRegistration(): void {
+    if (this.instanceId === 0) {
+      return;
+    }
+    const instances = backgroundElementTemplateInstanceManager.values;
+    const existing = instances.get(this.instanceId);
+    if (existing === this) {
+      return;
+    }
+    if (existing) {
+      throw new Error(`ElementTemplate handleId ${this.instanceId} is already bound.`);
+    }
+    instances.set(this.instanceId, this);
+  }
+
+  private releaseSubtreeFromManager(): void {
+    const instances = backgroundElementTemplateInstanceManager.values;
+    if (instances.get(this.instanceId) === this) {
+      instances.delete(this.instanceId);
+    }
+    let child = this.firstChild;
+    while (child) {
+      child.releaseSubtreeFromManager();
+      child = child.nextSibling;
+    }
   }
 
   emitMainThreadCreateIfNeeded(): void {
@@ -141,10 +194,42 @@ export class BackgroundElementTemplateInstance {
     this.emitCreate();
   }
 
-  private canEmitUpdatePatch(): boolean {
+  protected canEmitUpdatePatch(): boolean {
     // Background tree construction is local until hydrate binds it to main-thread
     // instances. Only hydrated and materialized owners can emit update ops.
     return isElementTemplateHydrated() && !this.needsMainThreadCreate();
+  }
+
+  protected cleanupDetachedChildForLifetimeRemoval(
+    child: BackgroundElementTemplateInstance,
+    canEmitUpdatePatch: boolean,
+  ): void {
+    if (canEmitUpdatePatch) {
+      child.markSubtreeDetachedFromMainThread();
+      // The removed JS object graph may outlive the detach until GC, so keep
+      // it pending and tear it down on the Snapshot-aligned delayed boundary.
+      markRemovedSubtreeForPostDispatchTeardown(child);
+      child.queueRefCleanupForSubtree();
+      return;
+    }
+
+    // Mirrors `shouldQueueRefEffects` in `setAttribute`: pre-hydration
+    // commits and post-hydration materialized children publish their refs
+    // to user effects. Post-hydration unmaterialized children defer attach
+    // to `emitCreate`, which never fires for a subtree torn down before
+    // insert — so cleaning up there would emit a spurious detach.
+    const refAttachWasPublished = !isElementTemplateHydrated()
+      || !child.needsMainThreadCreate();
+    if (refAttachWasPublished) {
+      // Run before any tearDown below: `tearDown` clears `rawAttributeSlots`,
+      // which `queueRefCleanupForSubtree` walks to enqueue the detach.
+      child.queueRefCleanupForSubtree();
+    }
+    if (child.needsMainThreadCreate()) {
+      // An unmaterialized subtree has no main-thread registry entry, so it
+      // can be released from the background manager without delayed cleanup.
+      child.tearDown();
+    }
   }
 
   // DOM API for Preact
@@ -231,7 +316,8 @@ export class BackgroundElementTemplateInstance {
     if (silent) {
       return;
     }
-    if (this.canEmitUpdatePatch()) {
+    const canEmitUpdatePatch = this.canEmitUpdatePatch();
+    if (canEmitUpdatePatch) {
       pushOp(
         ElementTemplateUpdateOps.removeNode,
         this.instanceId,
@@ -239,29 +325,8 @@ export class BackgroundElementTemplateInstance {
         child.instanceId,
         collectElementTemplateSubtreeHandleIds(child),
       );
-      // The removed JS object graph may outlive the detach until GC, so keep
-      // it pending and tear it down on the Snapshot-aligned delayed boundary.
-      markRemovedSubtreeForPostDispatchTeardown(child);
-      child.queueRefCleanupForSubtree();
-    } else {
-      // Mirrors `shouldQueueRefEffects` in `setAttribute`: pre-hydration
-      // commits and post-hydration materialized children publish their refs
-      // to user effects. Post-hydration unmaterialized children defer attach
-      // to `emitCreate`, which never fires for a subtree torn down before
-      // insert — so cleaning up there would emit a spurious detach.
-      const refAttachWasPublished = !isElementTemplateHydrated()
-        || !child.needsMainThreadCreate();
-      if (refAttachWasPublished) {
-        // Run before any tearDown below: `tearDown` clears `rawAttributeSlots`,
-        // which `queueRefCleanupForSubtree` walks to enqueue the detach.
-        child.queueRefCleanupForSubtree();
-      }
-      if (child.needsMainThreadCreate()) {
-        // An unmaterialized subtree has no main-thread registry entry, so it
-        // can be released from the background manager without delayed cleanup.
-        child.tearDown();
-      }
     }
+    this.cleanupDetachedChildForLifetimeRemoval(child, canEmitUpdatePatch);
   }
 
   tearDown(): void {
@@ -309,9 +374,10 @@ export class BackgroundElementTemplateInstance {
     // Hydration binds this object to a template that already exists on the main
     // thread; future updates must treat it as materialized without emitting create.
     this.isMaterializedOnMainThread = true;
+    this.restoreManagerRegistration();
   }
 
-  prepareAttributeSlotsForNative(options?: { queueRefEffects?: boolean }): void {
+  prepareAttributeSlotsForNative(options?: { publishRefEffects?: boolean }): void {
     if (!this.rawAttributeSlots) {
       return;
     }
@@ -320,22 +386,33 @@ export class BackgroundElementTemplateInstance {
       this.instanceId,
       this.rawAttributeSlots,
       {
-        queueRefEffects: options?.queueRefEffects ?? true,
+        previousPreparedSlots: this.attributeSlots,
+        previousRawSlots: this.rawAttributeSlots,
       },
     );
+    if (options?.publishRefEffects ?? true) {
+      queueRefAttributeSlotUpdates(this.type, this.instanceId, undefined, this.rawAttributeSlots);
+    }
   }
 
   prepareAttributeSlotsForHydration(): void {
     // Hydrate only rebinds the selector marker to the stable handle. The ref was
     // already made visible to user effects on the pre-hydration commit path.
     this.prepareAttributeSlotsForNative({
-      queueRefEffects: false,
+      publishRefEffects: false,
     });
   }
 
   setAttribute(key: string, value: unknown): void {
     if (isBuiltinRawTextTemplateKey(this.type) && (key === '0' || key === 'data')) {
       this.text = String(value);
+    } else if (key === '__listItemPlatformInfo') {
+      const previous = this.getListItemPlatformInfo();
+      const next = value as Record<string, SerializableValue>;
+      this.listItemPlatformInfo = next;
+      if (!isDirectOrDeepEqual(previous, next)) {
+        this.notifyParentListOfLogicalChildUpdate();
+      }
     } else if (key === 'attributeSlots' && Array.isArray(value)) {
       const previousSlots = this.attributeSlots;
       const previousRawSlots = this.rawAttributeSlots ?? previousSlots;
@@ -349,10 +426,13 @@ export class BackgroundElementTemplateInstance {
         this.instanceId,
         value,
         {
+          previousPreparedSlots: previousSlots,
           previousRawSlots,
-          queueRefEffects: shouldQueueRefEffects,
         },
       );
+      if (shouldQueueRefEffects) {
+        queueRefAttributeSlotUpdates(this.type, this.instanceId, previousRawSlots, value);
+      }
       this.rawAttributeSlots = nextSlots === value ? undefined : value;
       const maxLength = Math.max(previousSlots.length, nextSlots.length);
       this.attributeSlots = nextSlots;
@@ -400,6 +480,187 @@ export class BackgroundElementTemplateInstance {
   set data(value: string) {
     this.text = value;
   }
+
+  getListItemPlatformInfo(): Record<string, SerializableValue> {
+    return this.listItemPlatformInfo ?? EMPTY_LIST_ITEM_PLATFORM_INFO;
+  }
+
+  private notifyParentListOfLogicalChildUpdate(): void {
+    if (this.parent instanceof BackgroundListElementTemplateInstance) {
+      this.parent.notifyLogicalChildUpdated(this);
+    }
+  }
+}
+
+function toTypedAttributesCommand(value: unknown): TypedElementAttributesCommand | null {
+  if (value == null || typeof value !== 'object' || Array.isArray(value)) {
+    return null;
+  }
+  return value as TypedElementAttributesCommand;
+}
+
+export class BackgroundTypedElementTemplateInstance extends BackgroundElementTemplateInstance {
+  constructor(type: string) {
+    super(type);
+  }
+
+  override emitCreate(): void {
+    if (this.isMaterializedOnMainThread) {
+      return;
+    }
+    if (__DEV__ && this.instanceId === 0) {
+      lynx.reportError(new Error('ElementTemplate patch has illegal handleId 0.'));
+      return;
+    }
+
+    pushOp(
+      ElementTemplateUpdateOps.createTypedElement,
+      this.instanceId,
+      this.type,
+      this.getTypedAttributesForCreate(),
+      this.getElementSlotsForCreate(),
+      this.getRuntimeOptionsForCreate(),
+    );
+    this.isMaterializedOnMainThread = true;
+  }
+
+  override setAttribute(key: string, value: unknown): void {
+    if (key !== 'attributes') {
+      super.setAttribute(key, value);
+      return;
+    }
+    const previousValue = this.attributeSlots[0];
+    const nextValue = toTypedAttributesCommand(value);
+    this.attributeSlots = [nextValue];
+    if (
+      isElementTemplateHydrated()
+      && this.isMaterializedOnMainThread
+      && !isDirectOrDeepEqual(previousValue, nextValue)
+    ) {
+      pushOp(
+        ElementTemplateUpdateOps.setAttribute,
+        this.instanceId,
+        0,
+        nextValue,
+      );
+    }
+  }
+
+  protected getTypedAttributesForCreate(): TypedElementAttributesCommand | null {
+    return toTypedAttributesCommand(this.attributeSlots[0]);
+  }
+
+  protected getElementSlotsForCreate(): ElementTemplateHandleSlotsCommand | null {
+    return null;
+  }
+
+  protected getRuntimeOptionsForCreate(): RuntimeOptionsCommand | null {
+    return null;
+  }
+}
+
+export class BackgroundListElementTemplateInstance extends BackgroundTypedElementTemplateInstance {
+  constructor() {
+    super('list');
+  }
+
+  protected override getRuntimeOptionsForCreate(): RuntimeOptionsCommand {
+    const listChildren: UpdateTypedListItemCommand[] = [];
+    let child = this.firstChild;
+    while (child) {
+      listChildren.push(toUpdateTypedListItemCommand(child));
+      child = child.nextSibling;
+    }
+    return {
+      listChildren,
+    };
+  }
+
+  override insertBefore(
+    child: BackgroundElementTemplateInstance,
+    beforeChild: BackgroundElementTemplateInstance | null,
+    silent?: boolean,
+  ): void {
+    const previousParent = child.parent;
+    super.insertBefore(child, beforeChild, true);
+    if (!silent) {
+      if (previousParent instanceof BackgroundListElementTemplateInstance) {
+        previousParent.emitTypedListItemRemove(child, EMPTY_REMOVED_SUBTREE_HANDLE_IDS);
+      }
+      this.emitTypedListItemInsert(child, beforeChild);
+    }
+  }
+
+  override removeChild(child: BackgroundElementTemplateInstance, silent?: boolean): void {
+    super.removeChild(child, true);
+    if (!silent) {
+      const canEmitUpdatePatch = this.canEmitUpdatePatch();
+      const removedSubtreeHandleIds = canEmitUpdatePatch
+        ? collectElementTemplateSubtreeHandleIds(child)
+        : EMPTY_REMOVED_SUBTREE_HANDLE_IDS;
+      this.cleanupDetachedChildForLifetimeRemoval(child, canEmitUpdatePatch);
+      this.emitTypedListItemRemove(child, removedSubtreeHandleIds);
+    }
+  }
+
+  notifyLogicalChildUpdated(child: BackgroundElementTemplateInstance): void {
+    this.emitTypedListItemUpdate(child);
+  }
+
+  private emitTypedListItemInsert(
+    child: BackgroundElementTemplateInstance,
+    beforeChild: BackgroundElementTemplateInstance | null,
+  ): void {
+    if (!isElementTemplateHydrated() || !this.isMaterializedOnMainThread) {
+      return;
+    }
+
+    emitMainThreadCreateRecursive(child);
+    pushOp(
+      ElementTemplateUpdateOps.insertTypedListItem,
+      this.instanceId,
+      toUpdateTypedListItemCommand(child),
+      beforeChild?.instanceId ?? 0,
+    );
+  }
+
+  private emitTypedListItemRemove(
+    child: BackgroundElementTemplateInstance,
+    removedSubtreeHandleIds: number[],
+  ): void {
+    if (!isElementTemplateHydrated() || !this.isMaterializedOnMainThread) {
+      return;
+    }
+
+    pushOp(
+      ElementTemplateUpdateOps.removeTypedListItem,
+      this.instanceId,
+      child.instanceId,
+      removedSubtreeHandleIds,
+    );
+  }
+
+  private emitTypedListItemUpdate(child: BackgroundElementTemplateInstance): void {
+    if (!isElementTemplateHydrated() || !this.isMaterializedOnMainThread) {
+      return;
+    }
+
+    pushOp(
+      ElementTemplateUpdateOps.updateTypedListItem,
+      this.instanceId,
+      toUpdateTypedListItemCommand(child),
+    );
+  }
+}
+
+export function toUpdateTypedListItemCommand(
+  child: BackgroundElementTemplateInstance,
+): UpdateTypedListItemCommand {
+  return {
+    __etHandleRef: child.instanceId,
+    type: child.type,
+    platformInfo: child.getListItemPlatformInfo(),
+  };
 }
 
 export function collectElementTemplateSubtreeHandleIds(
@@ -427,7 +688,7 @@ function collectElementTemplateSubtreeHandleIdsImpl(
 function emitMainThreadCreateRecursive(instance: BackgroundElementTemplateInstance): void {
   if (
     !isElementTemplateHydrated()
-    || instance.instanceId < 0
+    || instance.instanceId === 0
   ) {
     return;
   }

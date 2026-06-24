@@ -81,6 +81,24 @@ export function factory<Data>(
   };
 }
 
+// dev-only: lets the page-data reset paths report an error when a reset meets this HOC.
+let usesWithInitDataInState = false;
+
+/**
+ * @internal
+ */
+export function hasWithInitDataInStateUsage(): boolean {
+  return usesWithInitDataInState;
+}
+
+/**
+ * @internal
+ */
+export const RESET_WITH_INIT_DATA_IN_STATE_ERROR =
+  'Resetting page data does not clear the state injected by `withInitDataInState`: the HOC merges '
+  + '`lynx.__initData` into the component state and cannot drop keys removed by the reset. '
+  + 'Use `useInitData()` instead, or avoid combining a data reset with `withInitDataInState`.';
+
 /**
  * Higher-Order Component (HOC) that injects `initData` into the state of the given class component.
  *
@@ -119,6 +137,9 @@ export function withInitDataInState<P, S>(App: ComponentClass<P, S>): ComponentC
 
     constructor(props: P) {
       super(props);
+      if (__DEV__) {
+        usesWithInitDataInState = true;
+      }
       this.state = {
         ...this.state,
         ...lynx.__initData,
@@ -145,6 +166,25 @@ export function withInitDataInState<P, S>(App: ComponentClass<P, S>): ComponentC
         );
       }
     }
+  }
+
+  // Installed on the main thread only. There, `renderToString` reuses this component
+  // instance across an `updatePage` re-render (the constructor never re-runs) and there
+  // is no `onDataChanged` listener, so the constructor's one-time `initData` injection
+  // goes stale; refresh it on every render, mirroring how `useInitData` re-reads
+  // `lynx.__initData`. It is not installed on the background thread because defining
+  // `getDerivedStateFromProps` at all would disable the wrapped component's legacy
+  // `componentWillMount` / `componentWillReceiveProps` lifecycles — and the background
+  // path already refreshes the state via its `onDataChanged` listener.
+  if (__LEPUS__) {
+    (C as ComponentClass<P, S>).getDerivedStateFromProps = (props: P, state: S): Partial<S> => {
+      const base = { ...state, ...lynx.__initData } as S;
+      // Compose with the wrapped component's own (or inherited) `getDerivedStateFromProps`
+      // — passing it the freshened `initData` and letting its derived values win, matching
+      // how it runs (and wins) on the background thread.
+      const derived = App.getDerivedStateFromProps?.(props, base) ?? null;
+      return { ...base, ...derived } as Partial<S>;
+    };
   }
 
   return C;

@@ -16,7 +16,7 @@ class JsFunctionLifecycleManager {
   private execIdSetToFire = new Set<number>();
   private retainedObjects = new WeakSet<object>();
   private willFire = false;
-  private registry?: FinalizationRegistry<number> = undefined;
+  private registry: FinalizationRegistry<number>;
 
   constructor() {
     this.registry = new FinalizationRegistry<number>(this.removeRef.bind(this));
@@ -31,7 +31,7 @@ class JsFunctionLifecycleManager {
       execId,
       (this.execIdRefCount.get(execId) ?? 0) + 1,
     );
-    this.registry!.register(objToRef, execId);
+    this.registry.register(objToRef, execId);
   }
 
   removeRef(execId: number): void {

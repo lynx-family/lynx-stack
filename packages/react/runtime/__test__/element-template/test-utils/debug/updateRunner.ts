@@ -2,16 +2,20 @@
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
 
-import { hydrate as hydrateBackground } from '../../../../src/element-template/background/hydrate.js';
 import type { BackgroundElementTemplateInstance } from '../../../../src/element-template/background/instance.js';
+import { formatElementTemplateUpdateCommands } from '../../../../src/element-template/debug/alog.js';
+import type { FormattedElementTemplateUpdateCommand } from '../../../../src/element-template/debug/alog.js';
 import { root } from '../../../../src/element-template/index.js';
-import { ElementTemplateUpdateOps } from '../../../../src/element-template/protocol/opcodes.js';
 import { ElementTemplateLifecycleConstant } from '../../../../src/element-template/protocol/lifecycle-constant.js';
 import type {
   ElementTemplateUpdateCommandStream,
   ElementTemplateUpdateCommitContext,
-  SerializedElementTemplate,
+  SerializedEtNode,
 } from '../../../../src/element-template/protocol/types.js';
+import {
+  createElementTemplateUpdateEvent,
+  parseElementTemplateUpdateEventPayload,
+} from '../../../../src/element-template/protocol/update-event.js';
 import {
   installElementTemplatePatchListener,
   resetElementTemplatePatchListener,
@@ -19,6 +23,7 @@ import {
 import { __page } from '../../../../src/element-template/runtime/page/page.js';
 import { __root } from '../../../../src/element-template/runtime/page/root-instance.js';
 import { ElementTemplateEnvManager } from './envManager.js';
+import { hydrateBackground } from './hydrate.js';
 import { extractSerializedHydrateInstances } from './hydratePayload.js';
 import { lastMock } from '../mock/mockNativePapi.js';
 import { serializeBackgroundTree, serializeToJSX } from './serializer.js';
@@ -42,6 +47,23 @@ type FormattedUpdateEntry =
     options: unknown;
   }
   | {
+    type: 'insertTypedListItem';
+    id: number;
+    item: unknown;
+    before: unknown;
+  }
+  | {
+    type: 'removeTypedListItem';
+    id: number;
+    item: unknown;
+    removedSubtreeHandleIds: unknown;
+  }
+  | {
+    type: 'updateTypedListItem';
+    id: number;
+    item: unknown;
+  }
+  | {
     type: 'setAttribute';
     id: number;
     attrSlotIndex: number;
@@ -60,6 +82,12 @@ type FormattedUpdateEntry =
     elementSlotIndex: number;
     child: unknown;
     removedSubtreeHandleIds: unknown;
+  }
+  | {
+    type: 'unknown';
+    opcode: unknown;
+    index: number;
+    remaining: unknown[];
   };
 
 export interface UpdateRunOptions {
@@ -78,64 +106,87 @@ export interface UpdateRunResult {
 }
 
 export function formatUpdateStream(stream: ElementTemplateUpdateCommandStream): FormattedUpdateEntry[] {
-  const formatted: FormattedUpdateEntry[] = [];
-  let index = 0;
-  while (index < stream.length) {
-    const opcode = stream[index++] as number;
-    if (opcode === ElementTemplateUpdateOps.createTemplate) {
-      formatted.push({
+  return formatElementTemplateUpdateCommands(stream).map(formatUpdateEntry);
+}
+
+function formatUpdateEntry(entry: FormattedElementTemplateUpdateCommand): FormattedUpdateEntry {
+  switch (entry.op) {
+    case 'createTemplate':
+      return {
         type: 'create',
-        id: stream[index++] as number,
-        template: stream[index++] as string,
-        attributeSlots: stream[index + 1] as unknown,
-        elementSlots: stream[index + 2] as unknown,
-      });
-      index += 3;
-      continue;
-    }
+        id: entry.handleId,
+        template: entry.templateKey,
+        attributeSlots: entry.attributeSlots,
+        elementSlots: entry.elementSlots,
+      };
 
-    if (opcode === ElementTemplateUpdateOps.setAttribute) {
-      formatted.push({
-        type: 'setAttribute',
-        id: stream[index++] as number,
-        attrSlotIndex: stream[index++] as number,
-        value: stream[index++] as unknown,
-      });
-      continue;
-    }
-
-    if (opcode === ElementTemplateUpdateOps.createTypedElement) {
-      formatted.push({
+    case 'createTypedElement':
+      return {
         type: 'createTypedElement',
-        id: stream[index++] as number,
-        elementType: stream[index++] as string,
-        attributes: stream[index++] as unknown,
-        elementSlots: stream[index++] as unknown,
-        options: stream[index++] as unknown,
-      });
-      continue;
-    }
+        id: entry.handleId,
+        elementType: entry.type,
+        attributes: entry.attributes,
+        elementSlots: entry.elementSlots,
+        options: entry.options,
+      };
 
-    if (opcode === ElementTemplateUpdateOps.insertNode) {
-      formatted.push({
+    case 'setAttribute':
+      return {
+        type: 'setAttribute',
+        id: entry.targetId,
+        attrSlotIndex: entry.attrSlotIndex,
+        value: entry.value,
+      };
+
+    case 'insertTypedListItem':
+      return {
+        type: 'insertTypedListItem',
+        id: entry.targetId,
+        item: entry.item,
+        before: entry.beforeId,
+      };
+
+    case 'removeTypedListItem':
+      return {
+        type: 'removeTypedListItem',
+        id: entry.targetId,
+        item: entry.itemId,
+        removedSubtreeHandleIds: entry.removedSubtreeHandleIds,
+      };
+
+    case 'updateTypedListItem':
+      return {
+        type: 'updateTypedListItem',
+        id: entry.targetId,
+        item: entry.item,
+      };
+
+    case 'insertNode':
+      return {
         type: 'insertNode',
-        id: stream[index++] as number,
-        elementSlotIndex: stream[index++] as number,
-        child: stream[index++] as unknown,
-        reference: stream[index++] as unknown,
-      });
-      continue;
-    }
+        id: entry.targetId,
+        elementSlotIndex: entry.elementSlotIndex,
+        child: entry.childId,
+        reference: entry.referenceId,
+      };
 
-    formatted.push({
-      type: 'removeNode',
-      id: stream[index++] as number,
-      elementSlotIndex: stream[index++] as number,
-      child: stream[index++] as unknown,
-      removedSubtreeHandleIds: stream[index++] as unknown,
-    });
+    case 'removeNode':
+      return {
+        type: 'removeNode',
+        id: entry.targetId,
+        elementSlotIndex: entry.elementSlotIndex,
+        child: entry.childId,
+        removedSubtreeHandleIds: entry.removedSubtreeHandleIds,
+      };
+
+    case 'unknown':
+      return {
+        type: 'unknown',
+        opcode: entry.opcode,
+        index: entry.index,
+        remaining: entry.remaining,
+      };
   }
-  return formatted;
 }
 
 export function formatNativePatchLog(nativeLog: unknown[]): unknown[] {
@@ -157,7 +208,7 @@ export function formatNativePatchLog(nativeLog: unknown[]): unknown[] {
 export function runElementTemplateUpdate(options: UpdateRunOptions): UpdateRunResult {
   const envManager = new ElementTemplateEnvManager();
   const nativeLog = lastMock!.nativeLog;
-  const hydrationData: SerializedElementTemplate[] = [];
+  const hydrationData: SerializedEtNode[] = [];
   envManager.resetEnv('background');
   envManager.setUseElementTemplate(true);
   const onHydrate = (event: { data: unknown }) => {
@@ -169,7 +220,7 @@ export function runElementTemplateUpdate(options: UpdateRunOptions): UpdateRunRe
   envManager.switchToMainThread();
   installElementTemplatePatchListener();
   const onUpdate = (event: { data: unknown }) => {
-    updateEvents.push(event.data as ElementTemplateUpdateCommitContext);
+    updateEvents.push(parseElementTemplateUpdateEventPayload(event.data));
   };
   lynx.getJSContext().addEventListener(ElementTemplateLifecycleConstant.update, onUpdate);
 
@@ -198,13 +249,12 @@ export function runElementTemplateUpdate(options: UpdateRunOptions): UpdateRunRe
 
     const ops = hydrateBackground(before, afterBackground);
     if (ops.length > 0) {
-      lynx.getCoreContext().dispatchEvent({
-        type: ElementTemplateLifecycleConstant.update,
-        data: {
+      lynx.getCoreContext().dispatchEvent(
+        createElementTemplateUpdateEvent({
           ops,
           flushOptions: {},
-        },
-      });
+        }),
+      );
     }
 
     envManager.switchToMainThread();

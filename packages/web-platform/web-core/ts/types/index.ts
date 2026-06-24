@@ -15,6 +15,7 @@ export type * from './I18nTypes.js';
 export type * from './NativeApp.js';
 export type * from './LynxContextEventTarget.js';
 export type * from './MainThreadLynx.js';
+export type * from './ExternalBundle.js';
 export type * from './IMtsBinding.js';
 export type * from './JSRealm.js';
 export type * from './TimingAPIs.js';

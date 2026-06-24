@@ -16,6 +16,7 @@ import {
   DYNAMIC_PRESETS,
   EXTENDED_STATIC_DEMOS,
   OFFICIAL_STATIC_DEMOS,
+  STATIC_DEMO_JSON_IDS,
 } from '../demos.js';
 import { DEFAULT_A2UI_DEMO_URL } from '../utils/demoUrl.js';
 import type { Protocol } from '../utils/protocol.js';
@@ -37,10 +38,6 @@ const ALL_EXAMPLES: ExampleScenario[] = [
   ...DYNAMIC_EXAMPLES,
 ];
 
-const STATIC_DEMO_IDS = new Set(
-  [...OFFICIAL_STATIC_DEMOS, ...EXTENDED_STATIC_DEMOS].map((d) => d.id),
-);
-
 export function DemosListPage(
   props: { protocol: Protocol; theme: 'light' | 'dark' },
 ) {
@@ -58,7 +55,7 @@ export function DemosListPage(
               demoUrl: DEFAULT_A2UI_DEMO_URL,
               messages: scenario.messages,
               theme,
-              demoId: STATIC_DEMO_IDS.has(scenario.id)
+              demoId: STATIC_DEMO_JSON_IDS.has(scenario.id)
                 ? scenario.id
                 : undefined,
               instant: true,

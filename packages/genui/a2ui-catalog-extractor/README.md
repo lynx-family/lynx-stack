@@ -424,120 +424,42 @@ files. It ignores `.d.ts`, `node_modules`, `dist`, and `.turbo`.
 
 ## Repository-internal Programmatic API
 
-These exports are documented for maintainers of `@lynx-js/genui-cli`, extractor
-tests, and repository-internal tooling. They are not the external integration
-surface for product code. Product build scripts should call
-`genui a2ui generate catalog` instead of importing this package
-directly.
-
-### Generate components from source files
-
-```ts
-import {
-  extractCatalogComponents,
-  writeComponentCatalogs,
-} from '@lynx-js/genui/a2ui-catalog-extractor';
-
-const components = await extractCatalogComponents({
-  sourceFiles: ['src/catalog/QuickStartCard.tsx'],
-});
-
-await writeComponentCatalogs({
-  sourceFiles: ['src/catalog/QuickStartCard.tsx'],
-  outDir: 'dist',
-});
-```
-
-Use `cwd` when paths should be resolved relative to a specific project
-directory:
-
-```ts
-await writeComponentCatalogs({
-  cwd: process.cwd(),
-  sourceFiles: ['src/catalog/QuickStartCard.tsx'],
-  outDir: 'dist',
-});
-```
-
-Use `tsconfig` when the project needs a specific TypeScript config:
-
-```ts
-const components = await extractCatalogComponents({
-  cwd: process.cwd(),
-  sourceFiles: ['src/catalog/QuickStartCard.tsx'],
-  tsconfig: 'tsconfig.json',
-});
-```
-
-### Generate components from TypeDoc JSON
-
-If your build already produces a TypeDoc JSON project, reuse it:
-
-```ts
-import * as fs from 'node:fs';
-
-import {
-  extractCatalogComponentsFromTypeDocJson,
-  writeCatalogComponents,
-} from '@lynx-js/genui/a2ui-catalog-extractor';
-
-const projectJson = JSON.parse(
-  await fs.promises.readFile('typedoc.json', 'utf8'),
-);
-const components = extractCatalogComponentsFromTypeDocJson(projectJson);
-
-writeCatalogComponents(components, {
-  outDir: 'dist',
-});
-```
-
-The equivalent CLI command is:
-
-```bash
-genui a2ui generate catalog --typedoc-json typedoc.json --out-dir dist
-```
-
-### Create a full A2UI catalog object
-
-`createA2UICatalog` is a small helper that wraps generated components with
-the other top-level A2UI catalog fields:
+The package entry point intentionally exposes only the extraction helpers needed
+by repository tooling and tests. It is not the external integration surface for
+product code. Product build scripts should call
+`genui a2ui generate catalog` instead of importing this package directly.
 
 ```ts
 import {
   createA2UICatalog,
   extractCatalogComponents,
+  extractCatalogFunctions,
+  findCatalogSourceFiles,
 } from '@lynx-js/genui/a2ui-catalog-extractor';
 
+const sourceFiles = findCatalogSourceFiles('src/catalog');
 const components = await extractCatalogComponents({
-  sourceFiles: ['src/catalog/QuickStartCard.tsx'],
+  sourceFiles,
+  tsconfig: 'tsconfig.json',
+});
+const functions = await extractCatalogFunctions({
+  sourceFiles,
+  tsconfig: 'tsconfig.json',
 });
 
 const catalog = createA2UICatalog({
   catalogId: 'https://example.com/catalogs/basic/v1/catalog.json',
   components,
-  functions: [
-    {
-      name: 'formatDisplayValue',
-      description: 'Format a raw value for display.',
-      parameters: {
-        type: 'object',
-        properties: {
-          value: { type: 'string' },
-        },
-        required: ['value'],
-        additionalProperties: false,
-      },
-      returnType: 'string',
-    },
-  ],
+  functions,
   theme: {
     accentColor: { type: 'string' },
   },
 });
 ```
 
-`functions` and `theme` are not extracted from TypeScript. Pass them
-explicitly if your catalog needs them.
+Use `cwd` in extraction options when paths should be resolved relative to a
+specific project directory. Artifact writing and TypeDoc JSON reuse are CLI
+implementation details; use `genui a2ui generate catalog` for those flows.
 
 ## Troubleshooting
 

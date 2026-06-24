@@ -330,10 +330,12 @@ interface SerializedEtNodeBaseForMock {
 interface SerializedCompiledNodeForMock extends SerializedEtNodeBaseForMock {
   templateKey: string;
   bundleUrl?: string;
+  attributeSlots?: SerializableValueForMock[] | null;
 }
 
 interface SerializedTypedNodeForMock extends SerializedEtNodeBaseForMock {
-  type: string;
+  tag: string;
+  attributes?: SerializableValueForMock | null;
 }
 
 type SerializedEtNodeForMock = SerializedCompiledNodeForMock | SerializedTypedNodeForMock;
@@ -575,10 +577,13 @@ function serializeTemplateNode(
 
   if (typeof root['__typedElementType'] === 'string') {
     const options = serializeRuntimeOptions(root['__options']);
+    const attributeSlots = normalizeAttributeSlots(root['__attributeSlots']);
     return {
-      type: root['__typedElementType'],
-      attributeSlots: normalizeAttributeSlots(root['__attributeSlots']),
-      elementSlots: serializeElementSlotsFromSlots(root['__elementSlots']),
+      tag: root['__typedElementType'],
+      attributes: attributeSlots[0] ?? null,
+      elementSlots: isUnknownArray(root['__elementSlots'])
+        ? serializeElementSlotsFromSlots(root['__elementSlots'])
+        : null,
       uid: handleId,
       ...(options ? { options } : {}),
     };

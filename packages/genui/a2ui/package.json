@@ -17,6 +17,10 @@
       "types": "./dist/store/index.d.ts",
       "default": "./dist/store/index.js"
     },
+    "./snapshot": {
+      "types": "./dist/snapshot/index.d.ts",
+      "default": "./dist/snapshot/index.js"
+    },
     "./catalog": {
       "types": "./dist/catalog/index.d.ts",
       "default": "./dist/catalog/index.js"
@@ -87,6 +91,11 @@
       "default": "./dist/catalog/Divider/index.js"
     },
     "./catalog/Divider/catalog.json": "./dist/catalog/Divider/catalog.json",
+    "./catalog/LazyComponent": {
+      "types": "./dist/catalog/LazyComponent/index.d.ts",
+      "default": "./dist/catalog/LazyComponent/index.js"
+    },
+    "./catalog/LazyComponent/catalog.json": "./dist/catalog/LazyComponent/catalog.json",
     "./catalog/TextField": {
       "types": "./dist/catalog/TextField/index.d.ts",
       "default": "./dist/catalog/TextField/index.js"
@@ -157,8 +166,8 @@
     "@types/react": "^18.3.28"
   },
   "peerDependencies": {
-    "@lynx-js/lynx-ui": "^3.133.0",
-    "@lynx-js/react": "workspace:^"
+    "@lynx-js/lynx-ui": ">=3.133.0",
+    "@lynx-js/react": ">=0.121.0"
   },
   "peerDependenciesMeta": {
     "@lynx-js/lynx-ui": {

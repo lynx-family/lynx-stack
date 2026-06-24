@@ -1,6 +1,9 @@
 // Copyright 2024 The Lynx Authors. All rights reserved.
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
+
+import type { ReactLynxChildren } from '../runtime/lib/index.js';
+
 declare global {
   /**
    * Determines if code should be placed in the background thread, used as a compile-time define macro
@@ -74,6 +77,17 @@ export { Fragment, Suspense } from 'react';
  * @see https://react.dev/reference/react/legacy
  */
 export { Component, PureComponent, cloneElement, createElement, createRef, isValidElement } from 'react';
+
+export type { ReactLynxChildren } from '../runtime/lib/index.js';
+
+/**
+ * ReactLynx children utilities.
+ *
+ * Arrays returned by `map`, `forEach`, and `toArray` are frozen.
+ *
+ * @public
+ */
+export const Children: ReactLynxChildren;
 
 /**
  * Renders children into a different ReactLynx element identified by a

@@ -10,10 +10,19 @@ import { globalCommitContext } from '../../../../src/element-template/background
 import { beginPipeline, markTimingLegacy, PipelineOrigins, setPipeline } from '../../../../src/core/performance.js';
 import { ElementTemplateUpdateOps } from '../../../../src/element-template/protocol/opcodes.js';
 import { ElementTemplateLifecycleConstant } from '../../../../src/element-template/protocol/lifecycle-constant.js';
+import {
+  parseElementTemplateUpdateEventPayload,
+  type ElementTemplateUpdateEventData,
+  type ElementTemplateUpdatePatchOptions,
+} from '../../../../src/element-template/protocol/update-event.js';
 import { ElementTemplateEnvManager } from '../../test-utils/debug/envManager.js';
 
 interface UpdateEvent {
   flushOptions?: Record<string, unknown>;
+}
+
+interface UpdateRuntimeEvent {
+  data: unknown;
 }
 
 function createRawTextOps(id: number, text: string) {
@@ -30,11 +39,14 @@ function createRawTextOps(id: number, text: string) {
 describe('ElementTemplate update timing (background commit)', () => {
   const envManager = new ElementTemplateEnvManager();
   let updateEvents: UpdateEvent[] = [];
+  let updatePatchOptions: Array<ElementTemplateUpdatePatchOptions | undefined> = [];
   let nativeMarkTiming: ReturnType<typeof vi.fn>;
   let originalLynx: typeof lynx;
 
-  const onUpdate = (event: { data: unknown }) => {
-    updateEvents.push(event.data as UpdateEvent);
+  const onUpdate = (event: UpdateRuntimeEvent) => {
+    const data = event.data as ElementTemplateUpdateEventData;
+    updateEvents.push(parseElementTemplateUpdateEventPayload(data) as UpdateEvent);
+    updatePatchOptions.push(data.patchOptions);
   };
 
   beforeEach(() => {
@@ -43,6 +55,7 @@ describe('ElementTemplate update timing (background commit)', () => {
     installElementTemplateCommitHook();
 
     updateEvents = [];
+    updatePatchOptions = [];
     nativeMarkTiming = vi.fn();
     originalLynx = globalThis.lynx;
     globalThis.lynx = {
@@ -81,6 +94,15 @@ describe('ElementTemplate update timing (background commit)', () => {
     expect(updateEvents).toHaveLength(1);
     expect(updateEvents[0]?.flushOptions).toMatchObject({
       nativeUpdateDataOrder: 9,
+      pipelineOptions: {
+        pipelineID: 'pipelineID',
+        needTimestamps: true,
+        pipelineOrigin: PipelineOrigins.updateTriggeredByBts,
+        dsl: 'reactLynx',
+        stage: 'update',
+      },
+    });
+    expect(updatePatchOptions[0]).toMatchObject({
       pipelineOptions: {
         pipelineID: 'pipelineID',
         needTimestamps: true,

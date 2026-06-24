@@ -2,15 +2,78 @@
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
 
-import type { RsbuildPlugin, RsbuildPluginAPI } from '@rsbuild/core'
+import path from 'node:path'
+
+import type { RsbuildPlugin, RsbuildPluginAPI, Rspack } from '@rsbuild/core'
 
 import type { LynxTemplatePlugin } from '@lynx-js/template-webpack-plugin'
 
+import { DEBUG_METADATA_ASSET_NAME } from './constants.js'
 import { LynxDebugMetadataPlugin } from './LynxDebugMetadataPlugin.js'
 import { createDebugMetadataMiddleware } from './middleware.js'
 import type { CompilerHandle } from './middleware.js'
 
 const PLUGIN_NAME = 'lynx:debug-metadata'
+
+/**
+ * `DEBUG=rspeedy` (and friends) — mirrors `isDebug()` in
+ * `@lynx-js/template-webpack-plugin`, replicated here to avoid widening that
+ * package's public API for a single env check.
+ */
+function isDebugMode(): boolean {
+  const debug = process.env['DEBUG']
+  if (!debug) return false
+  const values = debug.toLocaleLowerCase().split(',')
+  return ['rspeedy', '*', 'rspeedy:*', 'rspeedy:template'].some((key) =>
+    values.includes(key)
+  )
+}
+
+/**
+ * Delete every emitted `debug-metadata.json` from a build's output unless
+ * `DEBUG=rspeedy`. `LynxEncodePlugin` only strips it (via its intermediate-asset
+ * cleanup) when *not* under Rsdoctor — Rsdoctor keeps intermediate files split
+ * so it can analyse them — which would otherwise leak debug metadata into
+ * `RSDOCTOR=true` bundles. Dev builds keep the asset in memory so the
+ * debug-metadata middleware can still serve it.
+ *
+ * @internal
+ */
+export function stripDebugMetadataFromOutput(
+  compiler: Rspack.Compiler | Rspack.MultiCompiler,
+): void {
+  if (isDebugMode()) return
+  const compilers = 'compilers' in compiler ? compiler.compilers : [compiler]
+  for (const child of compilers) {
+    if (
+      child.options.mode === 'development'
+      || process.env['NODE_ENV'] === 'development'
+    ) {
+      continue
+    }
+    const { Compilation } = child.webpack
+    child.hooks.thisCompilation.tap(
+      PLUGIN_NAME,
+      (compilation: Rspack.Compilation) => {
+        compilation.hooks.processAssets.tap(
+          {
+            name: PLUGIN_NAME,
+            // After `PROCESS_ASSETS_STAGE_REPORT` (e.g. source-map upload) so
+            // anything reading the metadata during the build still sees it.
+            stage: Compilation.PROCESS_ASSETS_STAGE_REPORT + 1,
+          },
+          () => {
+            for (const { name } of compilation.getAssets()) {
+              if (path.posix.basename(name) === DEBUG_METADATA_ASSET_NAME) {
+                compilation.deleteAsset(name)
+              }
+            }
+          },
+        )
+      },
+    )
+  }
+}
 
 /**
  * Resolve the origin (plus path) used to rewrite source-map trailers from a
@@ -86,6 +149,7 @@ export function pluginLynxDebugMetadata(): RsbuildPlugin {
 
       api.onAfterCreateCompiler(({ compiler }) => {
         compilerHandle.compiler = compiler
+        stripDebugMetadataFromOutput(compiler)
       })
 
       api.modifyBundlerChain((chain, { environment }) => {

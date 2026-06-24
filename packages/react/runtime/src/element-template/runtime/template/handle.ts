@@ -2,8 +2,18 @@
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
 
+import {
+  deleteMainThreadDynamicAttrStateForSubtree,
+  initializeMainThreadDynamicAttrSlots,
+} from './main-thread-dynamic-attr-state.js';
 import { deleteElementTemplateNativeRef, setElementTemplateNativeRef } from './registry.js';
-import type { RuntimeElementSlots, SerializableValue } from '../../protocol/types.js';
+import { elementTemplateTypeTag } from '../../protocol/template-type.js';
+import type {
+  RuntimeElementSlots,
+  RuntimeOptions,
+  RuntimeTypedElementAttributes,
+  SerializableValue,
+} from '../../protocol/types.js';
 
 // Main-thread IFR allocates ids as consecutive negative integers.
 let nextId = -1;
@@ -27,6 +37,31 @@ export function createElementTemplateWithReservedHandle(
     elementSlots,
     handleId,
   );
+  if (nativeRef) {
+    setElementTemplateNativeRef(handleId, nativeRef);
+    initializeMainThreadDynamicAttrSlots(
+      handleId,
+      elementTemplateTypeTag(templateKey, bundleUrl),
+      attributeSlots,
+    );
+  }
+  return nativeRef;
+}
+
+export function createTypedElementTemplateWithReservedHandle(
+  handleId: number,
+  type: string,
+  attributes: RuntimeTypedElementAttributes | null | undefined,
+  elementSlots: RuntimeElementSlots | null | undefined,
+  options: RuntimeOptions | null | undefined,
+): ElementRef {
+  const nativeRef = __CreateTypedElementTemplate(
+    type,
+    attributes,
+    elementSlots,
+    handleId,
+    options,
+  );
   setElementTemplateNativeRef(handleId, nativeRef);
   return nativeRef;
 }
@@ -37,4 +72,5 @@ export function resetTemplateId(): void {
 
 export function destroyElementTemplateId(id: number): void {
   deleteElementTemplateNativeRef(id);
+  deleteMainThreadDynamicAttrStateForSubtree([id]);
 }

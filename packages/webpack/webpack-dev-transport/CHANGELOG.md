@@ -1,5 +1,11 @@
 # @lynx-js/webpack-dev-transport
 
+## 0.3.0
+
+### Minor Changes
+
+- Update the development transport client to use Rspack's hot update emitter directly, replace the webpack hot emitter declaration with an Rspack declaration. ([#2603](https://github.com/lynx-family/lynx-stack/pull/2603))
+
 ## 0.2.0
 
 ### Minor Changes

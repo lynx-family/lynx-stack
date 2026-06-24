@@ -53,6 +53,12 @@ beforeEach(() => {
   installMockNativePapi();
   installThreadContexts();
 
+  // Compiled main-thread templates reference `globDynamicComponentEntry`
+  // (Element Template always tags template types with it). Real builds define
+  // it via the banner/wrapper; reset it here so a fixture that mutates it for a
+  // dynamic component does not leak an undefined value into later tests.
+  globalThis.globDynamicComponentEntry = '__Card__';
+
   resetPerformanceMocks();
 });
 

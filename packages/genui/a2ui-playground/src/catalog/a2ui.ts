@@ -4,6 +4,10 @@
 import { catalogManifests } from '@lynx-js/genui/a2ui/catalog';
 
 import type { ProtocolName } from './utils/protocol.js';
+import {
+  buildLazyComponentBundleUrl,
+  getA2UIPlaygroundBaseUrl,
+} from '../mock/basic/lazy-component.js';
 
 export interface ComponentProp {
   name: string;
@@ -384,6 +388,69 @@ export const COMPONENT_CATALOG: ComponentDoc[] = [
               color: 'inherit',
             },
           ],
+        },
+      ],
+      openui: [],
+    },
+  },
+  {
+    name: 'LazyComponent',
+    category: 'Display',
+    description:
+      'Loads a ReactLynx lazy bundle from a URL and passes sourceData into the bundle component.',
+    props: schemaToProps(catalogManifests.LazyComponent),
+    usage: {
+      a2ui: {
+        id: 'lazy-component',
+        component: 'LazyComponent',
+        url: buildLazyComponentBundleUrl({
+          baseUrl: getA2UIPlaygroundBaseUrl(),
+          platform: 'lynx',
+        }),
+        webUrl: buildLazyComponentBundleUrl({
+          baseUrl: getA2UIPlaygroundBaseUrl(),
+          platform: 'web',
+        }),
+        sourceData: {
+          title: 'Campaign performance',
+          subtitle: 'Rendered by a lazy bundle component.',
+          accent: '#2563eb',
+          kpis: [
+            { label: 'Revenue', value: '$42.8K', delta: '+18.4%' },
+            { label: 'Orders', value: '1,284', delta: '+9.7%' },
+            { label: 'Conversion', value: '6.3%', delta: '+1.1 pt' },
+          ],
+        },
+      },
+      openui: {},
+    },
+    usageExamples: {
+      a2ui: [
+        {
+          label: 'Lazy KPI Component',
+          value: {
+            id: 'lazy-component',
+            component: 'LazyComponent',
+            url: buildLazyComponentBundleUrl({
+              baseUrl: getA2UIPlaygroundBaseUrl(),
+              platform: 'lynx',
+            }),
+            webUrl: buildLazyComponentBundleUrl({
+              baseUrl: getA2UIPlaygroundBaseUrl(),
+              platform: 'web',
+            }),
+            fallbackText: 'Loading remote catalog component',
+            sourceData: {
+              title: 'Campaign performance',
+              subtitle: 'Rendered by a lazy bundle component.',
+              accent: '#2563eb',
+              kpis: [
+                { label: 'Revenue', value: '$42.8K', delta: '+18.4%' },
+                { label: 'Orders', value: '1,284', delta: '+9.7%' },
+                { label: 'Conversion', value: '6.3%', delta: '+1.1 pt' },
+              ],
+            },
+          },
         },
       ],
       openui: [],

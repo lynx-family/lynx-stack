@@ -150,4 +150,37 @@ describe('runOnBackground', () => {
         .delayedBackgroundFunctionArray.length,
     ).toBe(0);
   });
+
+  it('should skip stale delayed background entries during hydration', () => {
+    const firstScreenWorklet = {
+      _wkltId: 'ctx1',
+      _jsFn: {
+        '_jsFn1': { '_isFirstScreen': true, _delayIndices: [0, 1] },
+      },
+    };
+    const worklet = {
+      _wkltId: 'ctx1',
+      _jsFn: {
+        '_jsFn1': { '_jsFnId': 1 },
+      },
+      _execId: 8,
+    };
+    const task = vi.fn();
+    globalThis.lynxWorkletImpl._runOnBackgroundDelayImpl
+      .delayedBackgroundFunctionArray[1] = { task };
+
+    globalThis.lynxWorkletImpl._hydrateCtx(worklet, firstScreenWorklet);
+
+    expect(
+      globalThis.lynxWorkletImpl._runOnBackgroundDelayImpl
+        .delayedBackgroundFunctionArray[1],
+    ).toMatchObject({
+      jsFnHandle: {
+        _execId: 8,
+        _jsFnId: 1,
+      },
+      task,
+    });
+    expect(task).not.toHaveBeenCalled();
+  });
 });

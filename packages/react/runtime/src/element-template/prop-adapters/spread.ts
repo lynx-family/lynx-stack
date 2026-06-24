@@ -6,10 +6,6 @@ import { getEventValue } from './event-value.js';
 import { prepareSpreadRefAttrValue } from './ref.js';
 import type { SerializableValue } from '../protocol/types.js';
 
-export interface SpreadAttrAdapterContext {
-  previousPreparedValue?: unknown;
-}
-
 const eventPropKeyRegExp = /^(?:global-bind|bind|catch|capture-bind|capture-catch)[A-Za-z]+$/;
 const namespacedEventKeyRegExp = /^[A-Za-z-]+:(?:global-bind|bind|catch|capture-bind|capture-catch)[A-Za-z]+$/;
 
@@ -25,7 +21,6 @@ export function prepareSpreadAttrSlot(
   handleId: number,
   attrSlotIndex: number,
   value: unknown,
-  _context?: SpreadAttrAdapterContext,
 ): SerializableValue | null {
   if (value === false || !isSpreadRecord(value)) {
     return null;

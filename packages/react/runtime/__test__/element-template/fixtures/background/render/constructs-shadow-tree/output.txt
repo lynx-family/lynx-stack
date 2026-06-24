@@ -1,7 +1,7 @@
 Object {
   "isRootInstance": true,
   "tree": "<root>
-  <_et_8aa39ef57bf1 />
+  <__Card__:_et_8aa39ef57bf1 />
 </root>
 ",
 }

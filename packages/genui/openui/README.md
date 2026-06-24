@@ -14,8 +14,10 @@ This package includes:
   `Action([@...])` steps.
 - `createParser` / `createStreamingParser`: parse OpenUI DSL text
   (functional notation) into a renderable AST.
-- `catalog/*`: built-in component renderers (Stack, Card, CardHeader,
-  TextContent, Separator, Button, Buttons, Tag).
+- `catalog/*`: built-in component renderers (Stack, Row, Column, List, Card,
+  CardHeader, Text, TextContent, Separator, Divider, Button, Buttons, Tag,
+  Image, Icon, Video, AudioPlayer, Loading, Tabs, Modal, CheckBox,
+  RadioGroup, ChoicePicker, Slider, TextField, DateTimeInput).
 
 ## Exports
 

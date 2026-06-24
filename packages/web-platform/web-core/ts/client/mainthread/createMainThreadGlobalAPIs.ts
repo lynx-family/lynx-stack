@@ -10,6 +10,7 @@ import type {
 } from '../../types/index.js';
 import { templateManager } from './TemplateManager.js';
 import { type LynxViewInstance } from './LynxViewInstance.js';
+import { createMainThreadLynxPerformance } from './createMainThreadLynxPerformance.js';
 
 function createMainThreadLynx(
   lynxViewInstance: LynxViewInstance,
@@ -21,6 +22,11 @@ function createMainThreadLynx(
   const setIntervalBrowserImpl = setInterval;
   const clearIntervalBrowserImpl = clearInterval;
   return {
+    performance: createMainThreadLynxPerformance(
+      lynxViewInstance.backgroundThread.markTiming.bind(
+        lynxViewInstance.backgroundThread,
+      ),
+    ),
     getJSContext() {
       return lynxViewInstance.backgroundThread.jsContext;
     },
@@ -45,6 +51,23 @@ function createMainThreadLynx(
     clearTimeout: clearTimeoutBrowserImpl,
     setInterval: setIntervalBrowserImpl,
     clearInterval: clearIntervalBrowserImpl,
+    fetchBundle(url: string) {
+      return lynxViewInstance.loadExternalBundle(url);
+    },
+    loadScript(sectionPath: string, options: { bundleName: string }) {
+      // An external bundle's mts chunk rides the `lepusCode` section: the decode
+      // worker already wrapped it (with a `module`/`exports` env) into a blob
+      // url registered under `lepusCodeUrls`. Evaluate it in the mts iframe
+      // realm; `loadScriptSync` returns its `module.exports`.
+      const blobUrl = lynxViewInstance.lepusCodeUrls.get(options.bundleName)
+        ?.[sectionPath];
+      if (blobUrl === undefined) {
+        throw new Error(
+          `lynx.loadScript: section "${sectionPath}" not found in bundle ${options.bundleName}`,
+        );
+      }
+      return lynxViewInstance.mtsRealm!.loadScriptSync(blobUrl);
+    },
   };
 }
 

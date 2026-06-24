@@ -17,6 +17,10 @@
     "./catalog": {
       "types": "./dist/catalog/index.d.ts",
       "default": "./dist/catalog/index.js"
+    },
+    "./openui-prompt": {
+      "types": "./dist/openui-prompt/index.d.ts",
+      "default": "./dist/openui-prompt/index.js"
     }
   },
   "main": "./dist/core/index.js",
@@ -40,8 +44,8 @@
     "@types/react": "^18.3.28"
   },
   "peerDependencies": {
-    "@lynx-js/lynx-ui": "^3.133.0",
-    "@lynx-js/react": "^0.121.0"
+    "@lynx-js/lynx-ui": ">=3.133.0",
+    "@lynx-js/react": ">=0.121.0"
   },
   "peerDependenciesMeta": {
     "@lynx-js/lynx-ui": {

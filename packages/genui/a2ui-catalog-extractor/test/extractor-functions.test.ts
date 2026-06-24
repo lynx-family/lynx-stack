@@ -8,10 +8,10 @@ import { fileURLToPath } from 'node:url';
 
 import { afterAll, describe, expect, test } from '@rstest/core';
 
+import { writeCatalogArtifacts } from '../src/core.js';
 import {
   extractCatalogFunctions,
   findCatalogSourceFiles,
-  writeCatalogArtifacts,
 } from '../src/index.js';
 
 const __filename = fileURLToPath(import.meta.url);

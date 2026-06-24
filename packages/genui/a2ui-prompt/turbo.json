@@ -10,6 +10,7 @@
       ],
       "inputs": [
         "src/**",
+        "../server/agent/a2ui-catalog-id.ts",
         "../server/agent/a2ui-catalog.ts",
         "../server/agent/a2ui-examples.ts",
         "../server/agent/a2ui-prompt.ts",

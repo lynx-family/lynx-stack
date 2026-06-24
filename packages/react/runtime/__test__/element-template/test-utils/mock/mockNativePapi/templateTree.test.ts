@@ -55,7 +55,7 @@ describe('mock native template tree spread slots', () => {
     expect(root.attributes).toEqual({ id: 'cta-next' });
   });
 
-  it('serializes typed nodes with attributeSlots and omits function fields', () => {
+  it('serializes typed nodes with native tag/attributes and omits function fields', () => {
     const child = {
       templateId: '_et_builtin_raw_text',
       attributes: { text: 'row' },
@@ -65,16 +65,15 @@ describe('mock native template tree spread slots', () => {
     const componentAtIndex = () => child;
     const root = {
       tag: 'list',
-      type: 'list',
       attributes: {},
-      children: [child],
+      children: [],
       __typedElementType: 'list',
       __handleId: 1,
       __attributeSlots: [{
         'component-at-index': componentAtIndex,
         'update-list-info': { insertAction: [] },
       }],
-      __elementSlots: [[child]],
+      __elementSlots: null,
       __options: {
         listChildren: [child],
         callback: componentAtIndex,
@@ -89,9 +88,9 @@ describe('mock native template tree spread slots', () => {
     };
 
     expect(serializeTemplateInstance(root)).toEqual({
-      type: 'list',
-      attributeSlots: [{ 'update-list-info': { insertAction: [] } }],
-      elementSlots: [[serializedChild]],
+      tag: 'list',
+      attributes: { 'update-list-info': { insertAction: [] } },
+      elementSlots: null,
       uid: 1,
       options: {
         listChildren: [serializedChild],
@@ -128,7 +127,6 @@ describe('mock native template tree spread slots', () => {
     const child = { tag: 'view' };
     const root = {
       tag: 'list',
-      type: 'list',
       attributes: {},
       children: [child],
       __typedElementType: 'list',

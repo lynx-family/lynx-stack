@@ -5,6 +5,7 @@
  */
 import type {
   Cloneable,
+  ExternalBundleResponse,
   InitI18nResources,
   InvokeUIMethodPAPI,
   JSRealm,
@@ -68,7 +69,10 @@ export class LynxViewInstance implements AsyncDisposable {
   readonly exposureServices: ExposureServices;
   readonly webElementsLoadingPromises: Promise<void>[] = [];
 
-  #queryComponentCache: Map<string, Promise<unknown>> = new Map();
+  // A `.web.bundle` url is only ever loaded one way — as a lazy component
+  // (`queryComponent`) or as an external bundle (`loadExternalBundle`), never
+  // both — so both share a single per-url promise cache.
+  #bundleLoadCache: Map<string, Promise<unknown>> = new Map();
   #pageConfig?: PageConfig;
   #nativeModulesMap: NativeModulesMap;
   #napiModulesMap: NapiModulesMap;
@@ -180,9 +184,12 @@ export class LynxViewInstance implements AsyncDisposable {
       currentUrl,
       urlMap,
     );
-    if (!isLazy) {
+    // External bundles register their mts chunks here (so `lynx.loadScript` can
+    // load them on demand) but have no `root` chunk to auto-execute, so the
+    // `urlMap['root']` guard skips the page render for them.
+    if (!isLazy && urlMap && urlMap['root']) {
       await this.mtsRealm.loadScript(
-        urlMap['root']!,
+        urlMap['root'],
       );
       this.onMTSScriptsExecuted();
     }
@@ -244,8 +251,8 @@ export class LynxViewInstance implements AsyncDisposable {
   }
 
   queryComponent(url: string): Promise<unknown> {
-    if (this.#queryComponentCache.has(url)) {
-      return this.#queryComponentCache.get(url)!;
+    if (this.#bundleLoadCache.has(url)) {
+      return this.#bundleLoadCache.get(url)!;
     }
     const promise = templateManager.fetchBundle(
       url,
@@ -272,7 +279,47 @@ export class LynxViewInstance implements AsyncDisposable {
         ) ?? lepusRootChunkExport;
         return lepusRootChunkExport;
       });
-    this.#queryComponentCache.set(url, promise);
+    this.#bundleLoadCache.set(url, promise);
+    return promise;
+  }
+
+  /**
+   * Fetch + decode + cache an external `.lynx.bundle` for `lynx.fetchBundle`.
+   * Reuses the same machinery as {@link queryComponent} — the shared decode
+   * worker, the bundle cache, and `onStyleInfoReady`, which applies the bundle's
+   * pre-processed style section via the wasm style engine — but does not load a
+   * lepus root chunk. Resolves to a response object (never rejects) so the
+   * externals plugin can branch on `code`.
+   */
+  loadExternalBundle(url: string): Promise<ExternalBundleResponse> {
+    if (this.#bundleLoadCache.has(url)) {
+      return this.#bundleLoadCache.get(url)! as Promise<ExternalBundleResponse>;
+    }
+    const promise = templateManager.fetchBundle(
+      url,
+      Promise.resolve(this),
+      this.transformVW,
+      this.transformVH,
+      this.transformREM,
+      {
+        enableCSSSelector: this.#pageConfig!['enableCSSSelector'],
+        // An external bundle ships global styles (they apply to the consumer's
+        // elements), so decode its StyleInfo unscoped rather than scoping it to
+        // the bundle url the way a lazy component's styles are scoped.
+        isLazy: 'false',
+        // Mark the bundle external so the decode worker wraps its mts
+        // (`lepusCode`) chunks with a CommonJS `module`/`exports` env.
+        isExternalBundle: 'true',
+      },
+    ).then(
+      () => ({ url, code: 0, errorMsg: '' }),
+      (error) => ({
+        url,
+        code: -1,
+        errorMsg: (error as Error)?.message ?? String(error),
+      }),
+    );
+    this.#bundleLoadCache.set(url, promise);
     return promise;
   }
 
