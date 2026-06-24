@@ -32,6 +32,7 @@ import {
 } from '../../../../../src/element-template/native/patch-listener.js';
 import { ElementTemplateLifecycleConstant } from '../../../../../src/element-template/protocol/lifecycle-constant.js';
 import { ElementTemplateUpdateOps } from '../../../../../src/element-template/protocol/opcodes.js';
+import { parseElementTemplateType } from '../../../../../src/element-template/protocol/template-type.js';
 import type {
   ElementTemplateUpdateCommandStream,
   ElementTemplateUpdateCommitContext,
@@ -131,11 +132,12 @@ function collectRecursiveCreateCommandStream(
       commands.push(...collectRecursiveCreateCommandStream(child));
     }
   }
+  const nativeTemplate = parseElementTemplateType(instance.type);
   commands.push(
     ElementTemplateUpdateOps.createTemplate,
     instance.instanceId,
-    instance.type,
-    null,
+    nativeTemplate.templateKey,
+    nativeTemplate.bundleUrl,
     instance.attributeSlots,
     instance.elementSlots.map(children => (children ?? []).map(child => child.instanceId)),
   );
@@ -515,8 +517,11 @@ describe('Compiled direct event background updates', () => {
 
     const { loadLepusChunk } = installRealWorkletRuntime();
     const { backgroundModule, mainModule } = await loadCompiledMainThreadRunOnBackgroundEventFixture();
+    // Real main bundles define `globDynamicComponentEntry` as the `__Card__`
+    // sentinel via the webpack banner, so the compiled main thread forwards it
+    // to the worklet runtime loader (matching production for the main card).
     expect(loadLepusChunk).toHaveBeenCalledWith('worklet-runtime', {
-      dynamicComponentEntry: undefined,
+      dynamicComponentEntry: '__Card__',
       chunkType: 0,
     });
     const onReport = vi.fn((label: string) => `reported:${label}`);

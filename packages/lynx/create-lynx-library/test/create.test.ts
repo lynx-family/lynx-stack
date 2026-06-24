@@ -7,7 +7,11 @@ import path from 'node:path';
 
 import { afterEach, describe, expect, it } from 'vitest';
 
-import { createLynxLibrary, parseLibraryFeatures } from '../src/index.js';
+import {
+  createLynxLibrary,
+  parseLibraryFeatures,
+  parseLibraryPlatforms,
+} from '../src/index.js';
 
 const tempDirs: string[] = [];
 
@@ -34,7 +38,15 @@ describe('create-lynx-library', () => {
     );
   });
 
-  it('creates a mixed native Lynx library', () => {
+  it('parses non-interactive Native platform flags', () => {
+    expect(parseLibraryPlatforms('android,ios')).toEqual(['android', 'ios']);
+    expect(parseLibraryPlatforms('ALL')).toEqual(['android', 'ios']);
+    expect(() => parseLibraryPlatforms('web')).toThrow(
+      /Unsupported Native platform/,
+    );
+  });
+
+  it('creates a mixed native Lynx library for all platforms by default', () => {
     const dir = createTempDir('mixed');
     const files = createLynxLibrary({
       dir,
@@ -80,6 +92,16 @@ describe('create-lynx-library', () => {
     expect(read(dir, 'lynx.lib.json')).toContain(
       '"packageName": "com.example.button"',
     );
+    expect(readJson<Manifest>(dir, 'lynx.lib.json').platforms).toEqual({
+      android: {
+        packageName: 'com.example.button',
+        sourceDir: 'android',
+      },
+      ios: {
+        sourceDir: 'ios',
+        podspecPath: 'ios/build.podspec',
+      },
+    });
     expect(read(dir, 'ios/build.podspec')).toContain(
       's.dependency \'LynxServiceAPI\'',
     );
@@ -156,6 +178,78 @@ describe('create-lynx-library', () => {
     expect(read(dir, 'ios/build.podspec')).not.toContain('LynxServiceAPI');
   });
 
+  it('creates Android-only projects without iOS files', () => {
+    const dir = createTempDir('android-only');
+    const files = createLynxLibrary({
+      dir,
+      features: ['native-module', 'element', 'service'],
+      platforms: ['android'],
+      packageName: 'android-library',
+      androidPackage: 'com.example.android',
+      moduleName: 'AndroidModule',
+      elementName: 'x-android',
+      serviceName: 'AndroidService',
+    });
+    const filePaths = files.map((file) => file.path);
+
+    expect(filePaths).toContain(
+      'android/src/main/java/com/example/android/AndroidModule.java',
+    );
+    expect(filePaths).toContain(
+      'android/src/main/java/com/example/android/AndroidElement.java',
+    );
+    expect(filePaths).toContain(
+      'android/src/main/java/com/example/android/AndroidService.java',
+    );
+    expect(filePaths.some((file) => file.startsWith('ios/'))).toBe(false);
+    expect(readJson<Manifest>(dir, 'lynx.lib.json').platforms).toEqual({
+      android: {
+        packageName: 'com.example.android',
+        sourceDir: 'android',
+      },
+    });
+    expect(readJson<PackageJson>(dir, 'package.json').files).toContain(
+      'android',
+    );
+    expect(readJson<PackageJson>(dir, 'package.json').files).not.toContain(
+      'ios',
+    );
+    expect(read(dir, 'README.md')).toContain('`android/`');
+    expect(read(dir, 'README.md')).not.toContain('`ios/`');
+  });
+
+  it('creates iOS-only projects without Android files', () => {
+    const dir = createTempDir('ios-only');
+    const files = createLynxLibrary({
+      dir,
+      features: ['native-module', 'element', 'service'],
+      platforms: ['ios'],
+      packageName: 'ios-library',
+      moduleName: 'IosModule',
+      elementName: 'x-ios',
+      serviceName: 'IosService',
+    });
+    const filePaths = files.map((file) => file.path);
+
+    expect(filePaths).toContain('ios/src/IosModule.h');
+    expect(filePaths).toContain('ios/src/IosElement.h');
+    expect(filePaths).toContain('ios/src/IosService.h');
+    expect(filePaths.some((file) => file.startsWith('android/'))).toBe(false);
+    expect(readJson<Manifest>(dir, 'lynx.lib.json').platforms).toEqual({
+      ios: {
+        sourceDir: 'ios',
+        podspecPath: 'ios/build.podspec',
+      },
+    });
+    expect(readJson<PackageJson>(dir, 'package.json').files).toContain('ios');
+    expect(readJson<PackageJson>(dir, 'package.json').files).not.toContain(
+      'android',
+    );
+    expect(read(dir, 'ios/build.podspec')).toContain('LynxServiceAPI');
+    expect(read(dir, 'README.md')).toContain('`ios/`');
+    expect(read(dir, 'README.md')).not.toContain('`android/`');
+  });
+
   it('creates Element and Service projects with Lynx markers', () => {
     const dir = createTempDir('view');
     const files = createLynxLibrary({
@@ -199,6 +293,30 @@ describe('create-lynx-library', () => {
     ).toThrow(
       /workspace dependencies without version mappings: @lynx-js\/autolink-codegen/,
     );
+  });
+
+  it('requires at least one Native platform', () => {
+    const dir = createTempDir('missing-platform');
+
+    expect(() =>
+      createLynxLibrary({
+        dir,
+        features: ['native-module'],
+        platforms: [],
+      })
+    ).toThrow(/At least one Native platform/);
+  });
+
+  it('rejects unsupported Native platforms', () => {
+    const dir = createTempDir('unsupported-platform');
+
+    expect(() =>
+      createLynxLibrary({
+        dir,
+        features: ['native-module'],
+        platforms: ['web' as never],
+      })
+    ).toThrow(/Unsupported Native platform/);
   });
 
   it('adds package template context when rendered package JSON is invalid', () => {
@@ -260,4 +378,16 @@ function createTempDir(name: string): string {
 
 function read(root: string, file: string): string {
   return fs.readFileSync(path.join(root, file), 'utf8');
+}
+
+function readJson<T>(root: string, file: string): T {
+  return JSON.parse(read(root, file)) as T;
+}
+
+interface Manifest {
+  platforms: Record<string, unknown>;
+}
+
+interface PackageJson {
+  files: string[];
 }

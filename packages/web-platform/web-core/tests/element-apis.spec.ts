@@ -1,8 +1,14 @@
 import './jsdom.js';
-import { describe, test, expect, beforeEach, beforeAll } from 'vitest';
+import {
+  beforeAll,
+  beforeEach,
+  describe,
+  expect,
+  rstest,
+  test,
+} from '@rstest/core';
 import { createElementAPI } from '../ts/client/mainthread/elementAPIs/createElementAPI.js';
 import { WASMJSBinding } from '../ts/client/mainthread/elementAPIs/WASMJSBinding.js';
-import { vi } from 'vitest';
 import { cssIdAttribute, lynxEntryNameAttribute } from '../ts/constants.js';
 import {
   createElementAPI as createServerElementAPI,
@@ -12,6 +18,7 @@ import { wasmInstance } from '../ts/client/wasm.js';
 import { encodeCSS } from '../ts/encode/encodeCSS.js';
 import { createMainThreadGlobalAPIs } from '../ts/client/mainthread/createMainThreadGlobalAPIs.js';
 import type { LynxViewInstance } from '../ts/client/mainthread/LynxViewInstance.js';
+import { createTestLynxViewInstance } from './createTestLynxViewInstance.js';
 
 describe('Element APIs', () => {
   let lynxViewDom: HTMLElement;
@@ -19,29 +26,11 @@ describe('Element APIs', () => {
   let mtsGlobalThis: ReturnType<typeof createElementAPI>;
   let mtsBinding: WASMJSBinding;
   beforeEach(() => {
-    vi.resetAllMocks();
+    rstest.resetAllMocks();
     lynxViewDom = document.createElement('div') as unknown as HTMLElement;
     rootDom = lynxViewDom.attachShadow({ mode: 'open' });
 
-    mtsBinding = new WASMJSBinding(
-      vi.mockObject({
-        rootDom,
-        backgroundThread: vi.mockObject({
-          publicComponentEvent: vi.fn(),
-          publishEvent: vi.fn(),
-          postTimingFlags: vi.fn(),
-          markTiming: vi.fn(),
-          flushTimingInfo: vi.fn(),
-          jsContext: vi.mockObject({
-            dispatchEvent: vi.fn(),
-          }),
-        } as any),
-        exposureServices: vi.mockObject({
-          updateExposureStatus: vi.fn(),
-        }) as any,
-        mainThreadGlobalThis: vi.mockObject({}) as any,
-      }),
-    );
+    mtsBinding = new WASMJSBinding(createTestLynxViewInstance(rootDom));
     mtsGlobalThis = createElementAPI(
       rootDom,
       mtsBinding,
@@ -52,7 +41,7 @@ describe('Element APIs', () => {
   });
   test('#commonEventHandler should filter out -1 uniqueId', () => {
     mtsBinding.wasmContext = Object.assign(mtsBinding.wasmContext || {}, {
-      common_event_handler: vi.fn(),
+      common_event_handler: rstest.fn(),
     }) as any;
     mtsBinding.addEventListener('touchstart');
 
@@ -1550,8 +1539,8 @@ describe('Element APIs', () => {
   });
 
   test('event upper case `Tap` works', () => {
-    vi.spyOn(mtsBinding, 'addEventListener');
-    vi.spyOn(mtsBinding, 'publishEvent');
+    rstest.spyOn(mtsBinding, 'addEventListener');
+    rstest.spyOn(mtsBinding, 'publishEvent');
     let page = mtsGlobalThis.__CreatePage('0', 0);
     let parent = mtsGlobalThis.__CreateComponent(
       0,
@@ -1580,8 +1569,8 @@ describe('Element APIs', () => {
   });
 
   test('publicComponentEvent', () => {
-    vi.spyOn(mtsBinding, 'addEventListener');
-    vi.spyOn(mtsBinding, 'publishEvent');
+    rstest.spyOn(mtsBinding, 'addEventListener');
+    rstest.spyOn(mtsBinding, 'publishEvent');
     let page = mtsGlobalThis.__CreatePage('0', 0);
     let parent = mtsGlobalThis.__CreateComponent(
       0,
@@ -1637,8 +1626,8 @@ describe('Element APIs', () => {
   });
 
   test('event with bubbles: false should not bubble to parent', () => {
-    vi.spyOn(mtsBinding, 'addEventListener');
-    vi.spyOn(mtsBinding, 'publishEvent');
+    rstest.spyOn(mtsBinding, 'addEventListener');
+    rstest.spyOn(mtsBinding, 'publishEvent');
     let page = mtsGlobalThis.__CreatePage('0', 0);
     let parent = mtsGlobalThis.__CreateComponent(
       0,
@@ -1784,8 +1773,8 @@ describe('Element APIs', () => {
     const element = mtsGlobalThis.__CreateScrollView(0);
     mtsGlobalThis.__AppendElement(root, element);
 
-    const enableSpy = vi.spyOn(mtsBinding, 'enableElementEvent');
-    const disableSpy = vi.spyOn(mtsBinding, 'disableElementEvent');
+    const enableSpy = rstest.spyOn(mtsBinding, 'enableElementEvent');
+    const disableSpy = rstest.spyOn(mtsBinding, 'disableElementEvent');
 
     mtsGlobalThis.__AddEvent(element, 'bindEvent', 'input', 'handler1');
     expect(enableSpy).toHaveBeenCalledTimes(1);
@@ -1838,8 +1827,8 @@ describe('Element APIs', () => {
     const element = mtsGlobalThis.__CreateView(0);
     mtsGlobalThis.__AppendElement(root, element);
 
-    const enableSpy = vi.spyOn(mtsBinding, 'enableElementEvent');
-    const disableSpy = vi.spyOn(mtsBinding, 'disableElementEvent');
+    const enableSpy = rstest.spyOn(mtsBinding, 'enableElementEvent');
+    const disableSpy = rstest.spyOn(mtsBinding, 'disableElementEvent');
 
     // Test add_run_worklet_event
     mtsGlobalThis.__AddEvent(
@@ -1877,7 +1866,7 @@ describe('Element APIs', () => {
     mtsGlobalThis.__SetID(element2, 'global_bind_watcher');
     mtsGlobalThis.__FlushElementTree();
 
-    const publishSpy = vi.spyOn(mtsBinding, 'publishEvent');
+    const publishSpy = rstest.spyOn(mtsBinding, 'publishEvent');
 
     // Register global-bind on element2
     mtsGlobalThis.__AddEvent(
@@ -1931,7 +1920,7 @@ describe('Element APIs', () => {
     mtsGlobalThis.__SetID(element2, 'global_bind_watcher_worklet');
     mtsGlobalThis.__FlushElementTree();
 
-    const runWorkletSpy = vi.spyOn(mtsBinding, 'runWorklet');
+    const runWorkletSpy = rstest.spyOn(mtsBinding, 'runWorklet');
 
     // Register global-bind on element2
     mtsGlobalThis.__AddEvent(
@@ -1981,7 +1970,7 @@ describe('Element APIs', () => {
     mtsGlobalThis.__AddClass(element, 'bar');
     mtsGlobalThis.__AppendElement(root, element);
 
-    const spy = vi.spyOn(mtsBinding, 'getClassList');
+    const spy = rstest.spyOn(mtsBinding, 'getClassList');
     const classes = mtsBinding.getClassList(new WeakRef(element));
 
     expect(spy).toHaveBeenCalledWith(expect.any(WeakRef));
@@ -2166,22 +2155,22 @@ describe('Element APIs', () => {
 
   test('__LoadLepusChunk with dynamicComponentEntry', () => {
     const originalCancelAnimationFrame = globalThis.cancelAnimationFrame;
-    globalThis.cancelAnimationFrame = vi.fn();
+    globalThis.cancelAnimationFrame = rstest.fn();
 
     const lynxViewInstance = {
       templateUrl: 'app.js',
       globalprops: {},
       systemInfo: {},
       backgroundThread: {
-        markTiming: vi.fn(),
-        jsContext: { dispatchEvent: vi.fn() },
+        markTiming: rstest.fn(),
+        jsContext: { dispatchEvent: rstest.fn() },
       },
       lepusCodeUrls: new Map([
         ['app.js', { 'chunk.js': 'app-chunk.js' }],
         ['dynamic.js', { 'chunk.js': 'dynamic-chunk.js' }],
       ]),
-      mtsRealm: { loadScriptSync: vi.fn() },
-      i18nManager: { _I18nResourceTranslation: vi.fn() },
+      mtsRealm: { loadScriptSync: rstest.fn() },
+      i18nManager: { _I18nResourceTranslation: rstest.fn() },
     } as unknown as LynxViewInstance;
 
     const apis = createMainThreadGlobalAPIs(lynxViewInstance);

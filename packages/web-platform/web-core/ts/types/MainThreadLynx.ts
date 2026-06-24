@@ -6,7 +6,9 @@
 import type { Cloneable } from './Cloneable.js';
 import type { ExternalBundleLynxAPIs } from './ExternalBundle.js';
 import type { LynxContextEventTarget } from './LynxContextEventTarget.js';
+import type { LynxPerformance } from './NativeApp.js';
 export interface MainThreadLynx extends ExternalBundleLynxAPIs {
+  performance: LynxPerformance;
   getJSContext: () => LynxContextEventTarget;
   requestAnimationFrame: (cb: () => void) => number;
   cancelAnimationFrame: (handler: number) => void;

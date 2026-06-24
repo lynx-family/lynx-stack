@@ -1,6 +1,6 @@
 import { jsx as _jsx } from "@lynx-js/react/jsx-runtime";
 import { Component } from '@lynx-js/react';
-const _et_eed499fe6178 = "_et_eed499fe6178";
+const _et_eed499fe6178 = `${globDynamicComponentEntry}:${"_et_eed499fe6178"}`;
 function PrimaryRow({ label }) {
     return /*#__PURE__*/ _jsx(_et_eed499fe6178, {
         $0: label
@@ -11,7 +11,7 @@ function SecondaryRow({ label }) {
         $0: label
     });
 }
-const _et_d7c09654e316 = "_et_d7c09654e316";
+const _et_d7c09654e316 = `${globDynamicComponentEntry}:${"_et_d7c09654e316"}`;
 export class App extends Component {
     render() {
         return /*#__PURE__*/ _jsx(_et_d7c09654e316, {

@@ -23,12 +23,14 @@
     "README.md"
   ],
   "scripts": {
-    "build": "rsbuild build"
+    "build": "rsbuild build",
+    "test": "rstest"
   },
   "devDependencies": {
     "@lynx-js/web-core": "workspace:*",
     "@lynx-js/web-elements": "workspace:*",
     "@rsbuild/core": "catalog:rsbuild",
+    "@rstest/core": "catalog:rstest",
     "rsbuild-plugin-arethetypeswrong": "0.3.1",
     "rsbuild-plugin-publint": "0.3.4"
   }

@@ -1,4 +1,4 @@
-import { test, expect } from 'vitest';
+import { test, expect } from '@rstest/core';
 import * as path from 'path';
 import * as fs from 'fs';
 import { format } from 'prettier';

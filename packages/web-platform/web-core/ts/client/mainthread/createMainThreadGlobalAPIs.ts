@@ -10,6 +10,7 @@ import type {
 } from '../../types/index.js';
 import { templateManager } from './TemplateManager.js';
 import { type LynxViewInstance } from './LynxViewInstance.js';
+import { createMainThreadLynxPerformance } from './createMainThreadLynxPerformance.js';
 
 function createMainThreadLynx(
   lynxViewInstance: LynxViewInstance,
@@ -21,6 +22,11 @@ function createMainThreadLynx(
   const setIntervalBrowserImpl = setInterval;
   const clearIntervalBrowserImpl = clearInterval;
   return {
+    performance: createMainThreadLynxPerformance(
+      lynxViewInstance.backgroundThread.markTiming.bind(
+        lynxViewInstance.backgroundThread,
+      ),
+    ),
     getJSContext() {
       return lynxViewInstance.backgroundThread.jsContext;
     },

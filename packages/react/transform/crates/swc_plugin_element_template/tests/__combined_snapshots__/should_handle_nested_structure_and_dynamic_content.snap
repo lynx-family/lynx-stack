@@ -3,7 +3,7 @@ source: packages/react/transform/crates/swc_plugin_element_template/tests/elemen
 expression: "serde_json::json!({\n    \"code\": code, \"templates\": template_snapshot_json(&templates),\n})"
 ---
 {
-  "code": "import * as ReactLynx from \"@lynx-js/react\";\nconst _et_dd10eca65d68 = \"_et_dd10eca65d68\";\nconst _et_f2aabcaaedd9 = \"_et_f2aabcaaedd9\";\nconst _et_9a26fdfe48b4 = \"_et_9a26fdfe48b4\";\n<_et_9a26fdfe48b4 $0={items.map((item)=><_et_dd10eca65d68 $0={item}/>)} $1={showCopyright && <_et_f2aabcaaedd9/>}/>;\n",
+  "code": "import * as ReactLynx from \"@lynx-js/react\";\nconst _et_dd10eca65d68 = `${globDynamicComponentEntry}:${\"_et_dd10eca65d68\"}`;\nconst _et_f2aabcaaedd9 = `${globDynamicComponentEntry}:${\"_et_f2aabcaaedd9\"}`;\nconst _et_9a26fdfe48b4 = `${globDynamicComponentEntry}:${\"_et_9a26fdfe48b4\"}`;\n<_et_9a26fdfe48b4 $0={items.map((item)=><_et_dd10eca65d68 $0={item}/>)} $1={showCopyright && <_et_f2aabcaaedd9/>}/>;\n",
   "templates": [
     {
       "template_id": "_et_dd10eca65d68",

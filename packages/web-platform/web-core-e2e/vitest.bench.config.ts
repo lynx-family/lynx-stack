@@ -1,6 +1,9 @@
 import { defineConfig } from 'vitest/config';
 import codspeed from '@codspeed/vitest-plugin';
-import * as path from 'path';
+import path from 'node:path';
+import { fileURLToPath } from 'node:url';
+
+const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
 export default defineConfig({
   resolve: {
@@ -16,9 +19,7 @@ export default defineConfig({
     },
   },
   test: {
-    include: ['server-tests/**/*.test.ts'],
-    exclude: ['bench/**/*.bench.vitest.spec.ts'],
-    testTimeout: 10000,
+    include: [],
     benchmark: {
       include: ['bench/**/*.bench.vitest.spec.ts'],
     },

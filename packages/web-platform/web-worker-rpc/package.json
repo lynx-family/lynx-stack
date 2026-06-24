@@ -29,6 +29,9 @@
     "README.md"
   ],
   "scripts": {
-    "test": "vitest"
+    "test": "rstest"
+  },
+  "devDependencies": {
+    "@rstest/core": "catalog:rstest"
   }
 }
