@@ -122,10 +122,10 @@ export const loadLazyBundle: <
             reject(e instanceof Error ? e : new Error(String(e)));
             return;
           }
-          // No `rLynxPrepareLazyBundleMTS` round-trip is needed (unlike
-          // Snapshot): once `fetchBundle` resolves, the native cache holds the
-          // bundle, so any `__CreateElementTemplate` patch the background thread
-          // emits next resolves its template on the main thread.
+          // No `processEvalResult` round-trip is needed (unlike the
+          // QueryComponent path): once `fetchBundle` resolves, the native cache
+          // holds the bundle, so any `__CreateElementTemplate` patch the
+          // background thread emits next resolves its template on the main thread.
           resolve(result);
         });
       });
