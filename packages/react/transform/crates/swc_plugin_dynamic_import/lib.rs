@@ -346,6 +346,12 @@ mod tests {
       await import("https://www/a.js", { with: { type: "component" } });
       await import(url, { with: { type: "component" } });
       await import(url+"?v=1.0", { with: { type: "component" } });
+
+      await import("./index.js", { with: { mode: "sync" } });
+      await import("./index.js", { with: { mode: "async" } });
+      await import("ftp://www/a.js", { with: { mode: "sync" } });
+      await import("https://www/a.js", { with: { mode: "async" } });
+      await import("./index.js", { with: { type: "component", mode: "sync" } });
     })();
     "#
   );
