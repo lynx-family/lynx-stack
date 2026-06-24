@@ -6,6 +6,22 @@ on:
         required: false
       LHCI_GITHUB_APP_TOKEN:
         required: false
+      A2UI_BENCH_JUDGE_API_KEY:
+        required: false
+      A2UI_BENCH_JUDGE_BASE_URL:
+        required: false
+      A2UI_BENCH_JUDGE_MODEL:
+        required: false
+      MIDSCENE_MODEL_API_KEY:
+        required: false
+      MIDSCENE_MODEL_BASE_URL:
+        required: false
+      MIDSCENE_MODEL_NAME:
+        required: false
+      OPENAI_API_KEY:
+        required: false
+      OPENAI_BASE_URL:
+        required: false
     inputs:
       runs-on:
         required: true
@@ -95,6 +111,14 @@ jobs:
           CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           LHCI_GITHUB_APP_TOKEN: ${{ secrets.LHCI_GITHUB_APP_TOKEN }}
+          A2UI_BENCH_JUDGE_API_KEY: ${{ secrets.A2UI_BENCH_JUDGE_API_KEY }}
+          A2UI_BENCH_JUDGE_BASE_URL: ${{ secrets.A2UI_BENCH_JUDGE_BASE_URL }}
+          A2UI_BENCH_JUDGE_MODEL: ${{ secrets.A2UI_BENCH_JUDGE_MODEL }}
+          MIDSCENE_MODEL_API_KEY: ${{ secrets.MIDSCENE_MODEL_API_KEY }}
+          MIDSCENE_MODEL_BASE_URL: ${{ secrets.MIDSCENE_MODEL_BASE_URL }}
+          MIDSCENE_MODEL_NAME: ${{ secrets.MIDSCENE_MODEL_NAME }}
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+          OPENAI_BASE_URL: ${{ secrets.OPENAI_BASE_URL }}
         run: ${{ inputs.run }}
       - name: Upload coverage reports to Codecov
         if: ${{ inputs.upload-codecov }}

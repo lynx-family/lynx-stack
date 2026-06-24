@@ -13,6 +13,7 @@ members = [
 
 [workspace.dependencies]
 base64 = "0.22.1"
+clap = "4.5.53"
 convert_case = "0.8.0"
 dashmap = "5.5.3"
 droidrun-adb = "0.1.2"
@@ -25,6 +26,7 @@ napi = { version = "2.7.0", default-features = false, features = ["napi4"] }
 napi-derive = "2.7.0"
 once_cell = "1.21.3"
 regex = "1.11.3"
+reqwest = { version = "0.12.25", default-features = false }
 rustc-hash = "2.1.1"
 semver = "1.0.22"
 serde = "1.0.228"

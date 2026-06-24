@@ -2,7 +2,7 @@
   "name": "@lynx-js/ui-judge",
   "version": "0.0.0",
   "private": true,
-  "description": "GenUI screenshot visual evaluation utilities powered by an agent SDK.",
+  "description": "GenUI screenshot visual evaluation utilities and Rust Android UI judging tools.",
   "license": "Apache-2.0",
   "type": "module",
   "exports": {

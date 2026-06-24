@@ -67,5 +67,23 @@ including authentication, URL allowlists, and private-network filtering for
 remote image URLs.
 
 The Rust Kitten-Lynx/Android automation lives in the same package under
-`rust/`. It owns device connection, protocol handling, and Android e2e coverage;
-the TypeScript package stays focused on screenshot comparison.
+`rust/`. It owns device connection, protocol handling, Android e2e coverage,
+Android task scoring, GEQI dimensions, and PR report generation; the TypeScript
+package stays focused on screenshot comparison.
+
+Rust Android scoring is exposed through the `ui-judge` binary:
+
+```bash
+cargo run -p ui_judge --bin ui-judge -- judge-android-agent \
+  --scenarios packages/genui/ui-judge/tests/scenarios/android-geqi.json \
+  --result-file ui-judge-results.json \
+  --comment-file ui-judge-comment.md \
+  --device-id emulator-5554 \
+  --all-geqi
+```
+
+The scenario JSON supplies Android Lynx page URLs, tasks, and optional text to
+wait for before scoring. The Rust scorer captures the Android screenshot and
+asks an OpenAI-compatible model for integer scores from 0 through 5. It supports
+`OPENAI_*`, `A2UI_BENCH_JUDGE_*`, and legacy `MIDSCENE_MODEL_*` environment
+variable names as endpoint aliases, but it does not depend on Midscene.
