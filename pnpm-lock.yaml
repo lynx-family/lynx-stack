@@ -401,8 +401,8 @@ importers:
         version: link:../../packages/react
     devDependencies:
       '@lynx-js/preact-devtools':
-        specifier: 5.0.1-20260525112551-dfe2d03
-        version: 5.0.1-20260525112551-dfe2d03
+        specifier: 5.0.1-20260624133547-6641319
+        version: 5.0.1-20260624133547-6641319
       '@lynx-js/qrcode-rsbuild-plugin':
         specifier: workspace:*
         version: link:../../packages/rspeedy/plugin-qrcode
