@@ -10,16 +10,23 @@ import { fileURLToPath } from 'node:url';
 
 import { cancel, isCancel, multiselect, text } from '@clack/prompts';
 
-import type { CreateLynxLibraryOptions, LibraryFeature } from './index.js';
+import type {
+  CreateLynxLibraryOptions,
+  LibraryFeature,
+  LibraryPlatform,
+} from './index.js';
 import {
   LIBRARY_FEATURES,
+  LIBRARY_PLATFORMS,
   createLynxLibrary,
   parseLibraryFeatures,
+  parseLibraryPlatforms,
 } from './index.js';
 
 export interface CliOptions {
   dir?: string;
   features?: LibraryFeature[];
+  platforms?: LibraryPlatform[];
   packageName?: string;
   androidPackage?: string;
   moduleName?: string;
@@ -69,6 +76,14 @@ const LIBRARY_FEATURE_HINTS: Record<LibraryFeature, string> = {
   element: 'native UI element registered with Lynx',
   service: 'native service implementation registered globally',
 };
+const LIBRARY_PLATFORM_LABELS: Record<LibraryPlatform, string> = {
+  android: 'Android',
+  ios: 'iOS',
+};
+const LIBRARY_PLATFORM_HINTS: Record<LibraryPlatform, string> = {
+  android: 'Android native source directory and manifest entry',
+  ios: 'iOS native source directory and podspec',
+};
 
 /**
  * Parses command-line arguments for the library scaffold CLI.
@@ -98,6 +113,15 @@ export function parseArgs(argv: string[]): CliOptions {
       options.features = [
         ...(options.features ?? []),
         ...parseLibraryFeatures(readValue(argv, index, arg)),
+      ];
+      index += 1;
+      continue;
+    }
+
+    if (arg === '--platforms' || arg === '--platform') {
+      options.platforms = [
+        ...(options.platforms ?? []),
+        ...parseLibraryPlatforms(readValue(argv, index, arg)),
       ];
       index += 1;
       continue;
@@ -169,6 +193,8 @@ function printHelp(runtime: CliRuntime): void {
 Options:
   --dir, -d <dir>              Target directory.
   --feature, --features <list> Comma-separated list or "all".
+  --platform, --platforms <list>
+                              Comma-separated Native platforms or "all".
   --package-name <name>        npm package name.
   --android-package <name>     Android package name for lynx.lib.json.
   --module-name <name>         Native module class name.
@@ -181,10 +207,14 @@ Library features:
   element                      Native UI element registered with Lynx.
   service                      Native service implementation registered globally.
 
+Native platforms:
+  android                      Android native source directory and manifest entry.
+  ios                          iOS native source directory and podspec.
+
 Examples:
   create-lynx-library
-  create-lynx-library lynx-button --features native-module,element,service
-  create-lynx-library lynx-kit --features all
+  create-lynx-library lynx-button --features native-module,element,service --platforms android,ios
+  create-lynx-library lynx-kit --features all --platforms all
 `);
 }
 
@@ -198,7 +228,9 @@ async function fillInteractiveOptions(
   const next: CliOptions = { ...options };
   const needsPrompt = next.dir === undefined
     || next.features === undefined
-    || next.features.length === 0;
+    || next.features.length === 0
+    || next.platforms === undefined
+    || next.platforms.length === 0;
 
   if (!needsPrompt) {
     return next;
@@ -214,11 +246,15 @@ async function fillInteractiveOptions(
       missingOptions.push('--features');
     }
 
-    throw new Error(
-      `Missing required options in non-interactive mode: ${
-        missingOptions.join(', ')
-      }`,
-    );
+    if (missingOptions.length > 0) {
+      throw new Error(
+        `Missing required options in non-interactive mode: ${
+          missingOptions.join(', ')
+        }`,
+      );
+    }
+
+    return next;
   }
 
   const prompts = getPrompts(runtime);
@@ -259,6 +295,24 @@ async function fillInteractiveOptions(
     );
   }
 
+  if (next.platforms === undefined || next.platforms.length === 0) {
+    next.platforms = checkCancel<LibraryPlatform[]>(
+      await prompts.multiselect<LibraryPlatform>({
+        input: runtime.input,
+        output: runtime.output,
+        message:
+          'Select Native platforms (Use <space> to select, <enter> to continue)',
+        options: LIBRARY_PLATFORMS.map((platform) => ({
+          value: platform,
+          label: LIBRARY_PLATFORM_LABELS[platform],
+          hint: LIBRARY_PLATFORM_HINTS[platform],
+        })),
+        required: true,
+      }),
+      runtime,
+    );
+  }
+
   return next;
 }
 
@@ -286,11 +340,18 @@ export async function main(
     throw new Error('At least one library feature is required');
   }
 
+  if (options.platforms !== undefined && options.platforms.length === 0) {
+    throw new Error('At least one Native platform is required');
+  }
+
   const createOptions: CreateLynxLibraryOptions = {
     dir: path.resolve(options.dir),
     features: options.features,
   };
 
+  if (options.platforms !== undefined) {
+    createOptions.platforms = options.platforms;
+  }
   if (options.packageName !== undefined) {
     createOptions.packageName = options.packageName;
   }
@@ -314,6 +375,7 @@ export async function main(
     filesCount: files.length,
     packageManager: detectPackageManager(),
     features: options.features,
+    platforms: options.platforms ?? [...LIBRARY_PLATFORMS],
   }));
 }
 
@@ -372,11 +434,13 @@ function formatSuccessMessage({
   filesCount,
   packageManager,
   features,
+  platforms,
 }: {
   dir: string;
   filesCount: number;
   packageManager: PackageManager;
   features: LibraryFeature[];
+  platforms: LibraryPlatform[];
 }): string {
   // Display library features in the canonical order from LIBRARY_FEATURES.
   const selectedFeatures = LIBRARY_FEATURES.filter((feature) =>
@@ -384,6 +448,12 @@ function formatSuccessMessage({
   );
   const featureSummary = selectedFeatures
     .map((feature) => `  - ${LIBRARY_FEATURE_LABELS[feature]}`)
+    .join('\n');
+  const selectedPlatforms = LIBRARY_PLATFORMS.filter((platform) =>
+    platforms.includes(platform)
+  );
+  const platformSummary = selectedPlatforms
+    .map((platform) => `  - ${LIBRARY_PLATFORM_LABELS[platform]}`)
     .join('\n');
   const nextSteps = [
     `1. cd ${formatTargetDir(dir)}`,
@@ -398,6 +468,9 @@ function formatSuccessMessage({
 
 Library features:
 ${featureSummary}
+
+Native platforms:
+${platformSummary}
 
 Next steps:
 ${nextSteps.map((step) => `  ${step}`).join('\n')}`;

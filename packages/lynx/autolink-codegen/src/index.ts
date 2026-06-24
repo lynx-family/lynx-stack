@@ -38,11 +38,11 @@ export interface NativeModuleSpec {
 
 interface LynxLibJson {
   platforms: {
-    android: {
+    android?: {
       packageName: string;
       sourceDir: string;
     };
-    ios: {
+    ios?: {
       sourceDir: string;
     };
   };
@@ -224,39 +224,44 @@ export function generate(options: CodegenOptions = {}): GeneratedFile[] {
       path: path.posix.join('generated', `${module.name}.ts`),
       content: generateJsFacade(module),
     });
-    files.push({
-      path: path.posix.join(
-        manifest.platforms.android.sourceDir,
-        'src',
-        'main',
-        'java',
-        ...manifest.platforms.android.packageName.split('.'),
-        'generated',
-        `${module.name}Spec.java`,
-      ),
-      content: generateAndroidSpec(
-        module,
-        manifest.platforms.android.packageName,
-      ),
-    });
-    files.push({
-      path: path.posix.join(
-        manifest.platforms.ios.sourceDir,
-        'src',
-        'generated',
-        `${module.name}Spec.h`,
-      ),
-      content: generateIosHeader(module),
-    });
-    files.push({
-      path: path.posix.join(
-        manifest.platforms.ios.sourceDir,
-        'src',
-        'generated',
-        `${module.name}Spec.m`,
-      ),
-      content: generateIosImplementation(module),
-    });
+    if (manifest.platforms.android !== undefined) {
+      files.push({
+        path: path.posix.join(
+          manifest.platforms.android.sourceDir,
+          'src',
+          'main',
+          'java',
+          ...manifest.platforms.android.packageName.split('.'),
+          'generated',
+          `${module.name}Spec.java`,
+        ),
+        content: generateAndroidSpec(
+          module,
+          manifest.platforms.android.packageName,
+        ),
+      });
+    }
+
+    if (manifest.platforms.ios !== undefined) {
+      files.push({
+        path: path.posix.join(
+          manifest.platforms.ios.sourceDir,
+          'src',
+          'generated',
+          `${module.name}Spec.h`,
+        ),
+        content: generateIosHeader(module),
+      });
+      files.push({
+        path: path.posix.join(
+          manifest.platforms.ios.sourceDir,
+          'src',
+          'generated',
+          `${module.name}Spec.m`,
+        ),
+        content: generateIosImplementation(module),
+      });
+    }
   }
 
   return files;
@@ -717,41 +722,55 @@ function readManifest(root: string): LynxLibJson {
 
   const json = JSON.parse(fs.readFileSync(manifestPath, 'utf8')) as unknown;
   const platforms = readObject(json, 'platforms', manifestPath);
-  const android = readObject(platforms, 'android', manifestPath);
-  const ios = readObject(platforms, 'ios', manifestPath);
-  const packageName = readRequiredString(
-    android,
-    'packageName',
-    manifestPath,
-    'platforms.android.packageName',
-  );
+  const android = readOptionalObject(platforms, 'android', manifestPath);
+  const ios = readOptionalObject(platforms, 'ios', manifestPath);
 
-  if (!JAVA_PACKAGE_NAME_PATTERN.test(packageName)) {
+  if (android === undefined && ios === undefined) {
     throw new Error(
-      `${manifestPath} must define "platforms.android.packageName" as a valid Java package identifier (got "${packageName}")`,
+      `${manifestPath} must define at least one Native platform under "platforms"`,
     );
   }
 
+  const normalizedPlatforms: LynxLibJson['platforms'] = {};
+
+  if (android !== undefined) {
+    const packageName = readRequiredString(
+      android,
+      'packageName',
+      manifestPath,
+      'platforms.android.packageName',
+    );
+
+    if (!JAVA_PACKAGE_NAME_PATTERN.test(packageName)) {
+      throw new Error(
+        `${manifestPath} must define "platforms.android.packageName" as a valid Java package identifier (got "${packageName}")`,
+      );
+    }
+
+    normalizedPlatforms.android = {
+      packageName,
+      sourceDir: readOptionalString(
+        android,
+        'sourceDir',
+        manifestPath,
+        'platforms.android.sourceDir',
+      ) ?? 'android',
+    };
+  }
+
+  if (ios !== undefined) {
+    normalizedPlatforms.ios = {
+      sourceDir: readOptionalString(
+        ios,
+        'sourceDir',
+        manifestPath,
+        'platforms.ios.sourceDir',
+      ) ?? 'ios',
+    };
+  }
+
   return {
-    platforms: {
-      android: {
-        packageName,
-        sourceDir: readOptionalString(
-          android,
-          'sourceDir',
-          manifestPath,
-          'platforms.android.sourceDir',
-        ) ?? 'android',
-      },
-      ios: {
-        sourceDir: readOptionalString(
-          ios,
-          'sourceDir',
-          manifestPath,
-          'platforms.ios.sourceDir',
-        ) ?? 'ios',
-      },
-    },
+    platforms: normalizedPlatforms,
   };
 }
 
@@ -768,6 +787,27 @@ function readObject(
   }
 
   const child = value[key];
+
+  if (!isRecord(child)) {
+    throw new Error(`${manifestPath} must define object "${key}"`);
+  }
+
+  return child;
+}
+
+/**
+ * Reads an optional object property from `lynx.lib.json`.
+ */
+function readOptionalObject(
+  value: Record<string, unknown>,
+  key: string,
+  manifestPath: string,
+): Record<string, unknown> | undefined {
+  const child = value[key];
+
+  if (child === undefined) {
+    return undefined;
+  }
 
   if (!isRecord(child)) {
     throw new Error(`${manifestPath} must define object "${key}"`);
