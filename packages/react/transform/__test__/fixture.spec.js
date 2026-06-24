@@ -283,8 +283,8 @@ describe('element template', () => {
     expect(result.elementTemplates?.some(template => template.compiledTemplate.type === 'list-item')).toBe(true);
     expect(result.code).toMatchInlineSnapshot(`
       "import { jsx as _jsx } from "react/jsx-runtime";
-      const _et_4f796f70cdd7 = "_et_4f796f70cdd7";
-      const _et_b8da8bac988e = "_et_b8da8bac988e";
+      const _et_4f796f70cdd7 = \`\${globDynamicComponentEntry}:\${"_et_4f796f70cdd7"}\`;
+      const _et_b8da8bac988e = \`\${globDynamicComponentEntry}:\${"_et_b8da8bac988e"}\`;
       /*#__PURE__*/ _jsx("list", {
           attributes: {
               "id": listId,

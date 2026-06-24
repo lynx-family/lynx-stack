@@ -3,7 +3,7 @@
 // LICENSE file in the root directory of this source tree.
 
 import { __OpAttr, __OpBegin, __OpEnd, __OpSlot, __OpText } from './render-to-opcodes.js';
-import { parseElementTemplateType } from '../../protocol/template-type.js';
+import { elementTemplateIdentityKey, parseElementTemplateType } from '../../protocol/template-type.js';
 import type { RuntimeTypedElementAttributes, SerializableValue } from '../../protocol/types.js';
 import {
   composeElementTemplateListAttributes,
@@ -169,7 +169,10 @@ export function renderOpcodesIntoElementTemplate(
         );
         if (listItemPlatformInfo !== undefined) {
           registerElementTemplateListItem(handleId, elementRef, {
-            templateKey: concreteType,
+            // The native list identifies items by the same identity the template
+            // was registered under (sentinel stripped for the main card), so the
+            // update path (`resolveTypedListItem`) stays consistent with it.
+            templateKey: elementTemplateIdentityKey(nativeTemplate.templateKey, nativeTemplate.bundleUrl),
             platformInfo: listItemPlatformInfo,
           });
         }

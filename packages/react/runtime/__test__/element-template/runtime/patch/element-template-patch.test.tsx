@@ -317,7 +317,9 @@ describe('ElementTemplate patch stream (apply)', () => {
   it('records main-thread dynamic attr state after createTemplate PAPI succeeds', () => {
     const handleId = 107;
     const ctx = { _wkltId: 'created' };
-    __etAttrPlanMap.view = [0, adaptMTEventAttrSlot];
+    // The transform keys the attr plan by the full `${entry}:${key}` tag; the
+    // main card uses the `__Card__` sentinel (normalized from a null bundleUrl).
+    __etAttrPlanMap['__Card__:view'] = [0, adaptMTEventAttrSlot];
     registerTemplates([{
       templateId: 'view',
       compiledTemplate: {

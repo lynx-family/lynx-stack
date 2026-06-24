@@ -79,7 +79,9 @@ describe('ElementTemplateHandle', () => {
   it('records main-thread dynamic attr state after reserved-handle create succeeds', () => {
     const id = reserveElementTemplateId();
     const ctx = { _wkltId: 'tap' };
-    __etAttrPlanMap._et_test = [0, adaptMTEventAttrSlot];
+    // The transform keys the attr plan by the full `${entry}:${key}` tag; the
+    // main card uses the `__Card__` sentinel (normalized from a null bundleUrl).
+    __etAttrPlanMap['__Card__:_et_test'] = [0, adaptMTEventAttrSlot];
     createElementTemplateWithReservedHandle(
       id,
       '_et_test',

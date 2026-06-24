@@ -7,7 +7,7 @@ import {
   initializeMainThreadDynamicAttrSlots,
 } from './main-thread-dynamic-attr-state.js';
 import { deleteElementTemplateNativeRef, setElementTemplateNativeRef } from './registry.js';
-import { elementTemplateIdentityKey } from '../../protocol/template-type.js';
+import { elementTemplateTypeTag } from '../../protocol/template-type.js';
 import type {
   RuntimeElementSlots,
   RuntimeOptions,
@@ -41,7 +41,7 @@ export function createElementTemplateWithReservedHandle(
     setElementTemplateNativeRef(handleId, nativeRef);
     initializeMainThreadDynamicAttrSlots(
       handleId,
-      elementTemplateIdentityKey(templateKey, bundleUrl),
+      elementTemplateTypeTag(templateKey, bundleUrl),
       attributeSlots,
     );
   }

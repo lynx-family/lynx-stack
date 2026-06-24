@@ -21,7 +21,11 @@ import type { ETListFlushResult, ETListUpdateItem } from './list/list.js';
 import { elementTemplateRegistry } from './template/registry.js';
 import { ElementTemplateUpdateOps } from '../protocol/opcodes.js';
 import type { ElementTemplateUpdateOp } from '../protocol/opcodes.js';
-import { elementTemplateIdentityKey } from '../protocol/template-type.js';
+import {
+  elementTemplateIdentityKey,
+  elementTemplateTypeTag,
+  parseElementTemplateType,
+} from '../protocol/template-type.js';
 import type {
   ElementTemplateHandleSlotsCommand,
   ElementTemplateUpdateCommandStream,
@@ -88,7 +92,7 @@ export function applyElementTemplateUpdateCommands(
           elementTemplateRegistry.set(handleId, nativeRef);
           initializeMainThreadDynamicAttrSlots(
             handleId,
-            elementTemplateIdentityKey(templateKey, bundleUrl),
+            elementTemplateTypeTag(templateKey, bundleUrl),
             nativeAttributeSlots,
           );
         }
@@ -408,10 +412,14 @@ function resolveTypedListItem(
   if (ref === null) {
     return null;
   }
+  // `item.type` is the full `${globDynamicComponentEntry}:${key}` tag; the
+  // native list identifies items by the same identity key the templates were
+  // registered under (see the `createTemplate` op above), so normalize it.
+  const nativeTemplate = parseElementTemplateType(item.type);
   return {
     uid: item.__etHandleRef,
     ref,
-    templateKey: item.type,
+    templateKey: elementTemplateIdentityKey(nativeTemplate.templateKey, nativeTemplate.bundleUrl),
     platformInfo: item.platformInfo,
   };
 }

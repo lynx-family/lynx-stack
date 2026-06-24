@@ -1,7 +1,7 @@
 import { jsx as _jsx } from "@lynx-js/react/jsx-runtime";
-const _et_01c4a5c2b24f = "_et_01c4a5c2b24f";
-const _et_dd10eca65d68 = "_et_dd10eca65d68";
-const _et_192834fffc79 = "_et_192834fffc79";
+const _et_01c4a5c2b24f = `${globDynamicComponentEntry}:${"_et_01c4a5c2b24f"}`;
+const _et_dd10eca65d68 = `${globDynamicComponentEntry}:${"_et_dd10eca65d68"}`;
+const _et_192834fffc79 = `${globDynamicComponentEntry}:${"_et_192834fffc79"}`;
 export function App({ showHeader = false, items = [
     'body'
 ] }) {

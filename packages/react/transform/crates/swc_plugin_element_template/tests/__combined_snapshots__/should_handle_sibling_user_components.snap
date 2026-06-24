@@ -3,7 +3,7 @@ source: packages/react/transform/crates/swc_plugin_element_template/tests/elemen
 expression: "serde_json::json!({\n    \"code\": code, \"templates\": template_snapshot_json(&templates),\n})"
 ---
 {
-  "code": "import * as ReactLynx from \"@lynx-js/react\";\nconst _et_1d658c77caa0 = \"_et_1d658c77caa0\";\nconst _et_f4df0f2dba8f = \"_et_f4df0f2dba8f\";\nconst _et_d7c09654e316 = \"_et_d7c09654e316\";\n<_et_d7c09654e316 $0={[\n    <Component>\n        <_et_1d658c77caa0/>\n      </Component>,\n    <Component>\n        <_et_f4df0f2dba8f/>\n      </Component>\n]}/>;\n",
+  "code": "import * as ReactLynx from \"@lynx-js/react\";\nconst _et_1d658c77caa0 = `${globDynamicComponentEntry}:${\"_et_1d658c77caa0\"}`;\nconst _et_f4df0f2dba8f = `${globDynamicComponentEntry}:${\"_et_f4df0f2dba8f\"}`;\nconst _et_d7c09654e316 = `${globDynamicComponentEntry}:${\"_et_d7c09654e316\"}`;\n<_et_d7c09654e316 $0={[\n    <Component>\n        <_et_1d658c77caa0/>\n      </Component>,\n    <Component>\n        <_et_f4df0f2dba8f/>\n      </Component>\n]}/>;\n",
   "templates": [
     {
       "template_id": "_et_1d658c77caa0",
