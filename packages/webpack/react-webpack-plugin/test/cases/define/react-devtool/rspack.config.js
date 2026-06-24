@@ -12,7 +12,13 @@ config.plugins.unshift({
 
 config.plugins.push({
   apply: () => {
-    process.env.REACT_DEVTOOL = oldReactDevtool;
+    // Restore precisely: an unset var must be deleted, not assigned
+    // `undefined` (which would coerce to the truthy string "undefined").
+    if (oldReactDevtool === undefined) {
+      delete process.env.REACT_DEVTOOL;
+    } else {
+      process.env.REACT_DEVTOOL = oldReactDevtool;
+    }
   },
 });
 
