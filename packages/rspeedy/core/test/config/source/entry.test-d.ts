@@ -59,6 +59,24 @@ describe('Config - source.entry', () => {
     assertType<Source>({
       entry: {
         main: {
+          import: 'src/index.js',
+          dependOn: 'vendor',
+        },
+      },
+    })
+
+    assertType<Source>({
+      entry: {
+        main: {
+          import: 'src/index.js',
+          dependOn: ['vendor', 'runtime'],
+        },
+      },
+    })
+
+    assertType<Source>({
+      entry: {
+        main: {
           publicPath: 'https://example.com/',
         },
       },

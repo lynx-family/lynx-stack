@@ -75,7 +75,14 @@ export interface CssLoader {
    * })
    * ```
    */
-  modules?: boolean | CssLoaderModules | undefined
+  modules?:
+    | boolean
+    | 'local'
+    | 'global'
+    | 'pure'
+    | 'icss'
+    | CssLoaderModules
+    | undefined
 }
 
 /**
