@@ -19,6 +19,7 @@ import {
 import { getA2UIAgentService } from '../../../service/a2ui-agent';
 import {
   errorMessage,
+  extractUsageMetrics,
   pickChatOptions,
   readJsonBodyWithLimit,
   validateConversation,
@@ -286,11 +287,17 @@ export async function POST(req: Request) {
         await Promise.allSettled(streamingImageResolutions);
 
         let { text: finalText, usage, finishReason } = await finalize();
+        let usageMetrics = extractUsageMetrics(usage);
+        let cachedTokens = usageMetrics.cachedTokens;
         finalText ??= streamedText;
         log('upstream.finalized', {
           finalTextLength: finalText?.length ?? 0,
           finishReason,
           hasUsage: usage !== undefined,
+          catalogId: catalog.id,
+          model: opts.model ?? process.env.OPENAI_MODEL ?? 'default',
+          api: opts.api ?? process.env.OPENAI_API_STYLE ?? 'default',
+          ...usageMetrics,
         });
         let repair:
           | {
@@ -367,6 +374,8 @@ export async function POST(req: Request) {
             if (repaired.ok) {
               finalText = repaired.text;
               usage = repaired.usage;
+              usageMetrics = extractUsageMetrics(usage);
+              cachedTokens = usageMetrics.cachedTokens;
               finishReason = repaired.finishReason;
               resolvedMessages = await resolveMessagesForStreaming(
                 repaired.messages,
@@ -418,11 +427,16 @@ export async function POST(req: Request) {
           hasPreviewUrl: Boolean(preview?.messagesUrl),
           repairAttempted: repair?.attempted ?? false,
           repairOk: repair?.ok,
+          catalogId: catalog.id,
+          model: opts.model ?? process.env.OPENAI_MODEL ?? 'default',
+          api: opts.api ?? process.env.OPENAI_API_STYLE ?? 'default',
+          ...usageMetrics,
           requestId,
         });
         enqueue('done', {
           text: finalText,
           usage,
+          cachedTokens,
           finishReason,
           validation,
           preview,
