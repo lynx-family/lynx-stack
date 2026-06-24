@@ -1,4 +1,4 @@
-import { test, expect, beforeAll } from 'vitest';
+import { test, expect, beforeAll } from '@rstest/core';
 import { createRsbuild, type RsbuildDevServer } from '@rsbuild/core';
 import { createWebVirtualFilesMiddleware } from '../src/node/index.js';
 
@@ -18,7 +18,9 @@ beforeAll(async () => {
 
 const GET = async (path: string) => {
   // Make an HTTP request over the IPC socket
-  const result = await fetch(`http://localhost:${port}/${path}`);
+  const result = await fetch(
+    `http://localhost:${port}${path.startsWith('/') ? path : `/${path}`}`,
+  );
   if (result.status !== 200) {
     throw new Error(`Request failed with status ${result.status}`);
   }

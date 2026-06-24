@@ -1,8 +1,11 @@
 import { createRsbuild } from '@rsbuild/core';
-import { describe, expect, test, vi } from 'vitest';
+import { describe, expect, test } from '@rstest/core';
 import { pluginWebPlatform } from '../dist/index.js';
 import path from 'path';
+import { fileURLToPath } from 'url';
 import type { Stats, NormalModule } from '@rspack/core';
+
+const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
 describe('Bundle Build', () => {
   test('native-modules bundle', async () => {

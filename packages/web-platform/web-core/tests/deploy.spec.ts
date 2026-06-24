@@ -1,4 +1,4 @@
-import { describe, it, expect, vi, beforeEach } from 'vitest';
+import { describe, it, expect, rstest, beforeEach } from '@rstest/core';
 import { executeTemplate } from '../ts/server/deploy.js';
 import * as decodeModule from '../ts/server/decode.js';
 import type { DecodedTemplate } from '../ts/server/decode.js';
@@ -6,27 +6,27 @@ import * as createElementAPIModule from '../ts/server/elementAPIs/createElementA
 import type { MainThreadServerContext } from '../ts/server/wasm.js';
 import type { ElementPAPIs } from '../ts/types/index.js';
 
-vi.mock('../ts/server/decode.js', () => ({
-  decodeTemplate: vi.fn(),
+rstest.mock('../ts/server/decode.js', () => ({
+  decodeTemplate: rstest.fn(),
 }));
 
-vi.mock('../ts/server/elementAPIs/createElementAPI.js', () => ({
-  createElementAPI: vi.fn(),
+rstest.mock('../ts/server/elementAPIs/createElementAPI.js', () => ({
+  createElementAPI: rstest.fn(),
 }));
 
-vi.mock('vm', () => ({
-  createContext: vi.fn(),
-  runInContext: vi.fn(),
+rstest.mock('vm', () => ({
+  createContext: rstest.fn(),
+  runInContext: rstest.fn(),
 }));
 
 describe('executeTemplate', () => {
   beforeEach(() => {
-    vi.clearAllMocks();
+    rstest.clearAllMocks();
   });
 
   it('should pass viewAttributes correctly when called with 7 arguments (legacy call)', () => {
-    const mockDecodeTemplate = vi.mocked(decodeModule.decodeTemplate);
-    const mockCreateElementAPI = vi.mocked(
+    const mockDecodeTemplate = rstest.mocked(decodeModule.decodeTemplate);
+    const mockCreateElementAPI = rstest.mocked(
       createElementAPIModule.createElementAPI,
     );
 
