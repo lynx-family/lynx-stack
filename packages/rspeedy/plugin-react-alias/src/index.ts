@@ -188,7 +188,12 @@ export function pluginReactAlias(options: Options): RsbuildPlugin {
 
         if (isProd) {
           chain.resolve.alias.set('@lynx-js/react/debug$', false)
-          chain.resolve.alias.set('@lynx-js/preact-devtools$', false)
+          // `@lynx-js/preact-devtools` is stripped in production by default.
+          // Setting the `REACT_DEVTOOL` environment variable keeps it so a
+          // user-imported preact devtools still works in prod.
+          if (!process.env['REACT_DEVTOOL']) {
+            chain.resolve.alias.set('@lynx-js/preact-devtools$', false)
+          }
         }
 
         if (!chain.resolve.alias.has('react$')) {

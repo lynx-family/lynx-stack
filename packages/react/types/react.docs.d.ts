@@ -30,6 +30,13 @@ declare global {
    * Determines if running in profile mode
    */
   let __PROFILE__: boolean;
+  /**
+   * Determines if preact devtools is enabled.
+   *
+   * Enabled by default in development. In production it can be enabled by the
+   * environment variable `REACT_DEVTOOL=true`.
+   */
+  let __REACT_DEVTOOL__: boolean | undefined;
 }
 
 /**

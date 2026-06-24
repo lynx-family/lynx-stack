@@ -176,6 +176,42 @@ describe('React - alias', () => {
       '@lynx-js/react/debug$',
       false,
     )
+
+    expect(config.resolve.alias).toHaveProperty(
+      '@lynx-js/preact-devtools$',
+      false,
+    )
+  })
+
+  test('REACT_DEVTOOL=true keeps preact devtools in production', async () => {
+    rstest.stubEnv('NODE_ENV', 'production')
+    rstest.stubEnv('REACT_DEVTOOL', 'true')
+    const { pluginReactAlias } = await import('../src/index.js')
+
+    const rsbuild = await createRsbuild({
+      rsbuildConfig: {
+        plugins: [
+          pluginReactAlias({
+            LAYERS,
+          }),
+        ],
+      },
+      cwd: path.dirname(fileURLToPath(import.meta.url)),
+    })
+
+    const [config] = await rsbuild.initConfigs()
+
+    if (!config?.resolve?.alias) {
+      expect.fail('should have config.resolve.alias')
+    }
+
+    // `@lynx-js/react/debug` is dev-only, so it is still stripped in prod.
+    expect(config.resolve.alias).toHaveProperty('@lynx-js/react/debug$', false)
+    // A user-imported preact devtools is no longer aliased away.
+    expect(config.resolve.alias).not.toHaveProperty('@lynx-js/preact-devtools$')
+
+    // Avoid leaking the `REACT_DEVTOOL` stub into later tests.
+    rstest.unstubAllEnvs()
   })
 
   test('element-template aliases transformed legacy runtime and background lepus entry to ET runtime', async () => {
