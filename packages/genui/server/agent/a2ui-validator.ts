@@ -705,7 +705,7 @@ function validateComponentAgainstCatalog(
   for (const prop of spec.props) {
     const hasValue = Object.prototype.hasOwnProperty.call(comp, prop.name);
     if (prop.required && !hasValue) {
-      if (isOptionalServerResolvedProp(comp, prop.name)) {
+      if (isOptionalServerResolvedProp(comp, prop.name, hasValue)) {
         continue;
       }
       errors.push(
@@ -732,7 +732,7 @@ function validateComponentAgainstCatalog(
       prop.schema,
       `${comp.id}.${prop.name}`,
     );
-    if (isOptionalServerResolvedProp(comp, prop.name)) {
+    if (isOptionalServerResolvedProp(comp, prop.name, hasValue)) {
       continue;
     }
     errors.push(...propErrors);
@@ -742,9 +742,14 @@ function validateComponentAgainstCatalog(
 function isOptionalServerResolvedProp(
   comp: A2UIComponent,
   propName: string,
+  hasValue: boolean,
 ): boolean {
   if (comp.component === 'Button' && propName === 'action') {
-    return true;
+    return !hasValue;
+  }
+
+  if (!hasValue) {
+    return false;
   }
 
   if (comp.component !== 'Image' || propName !== 'url') {

@@ -119,7 +119,8 @@ function findCachedTokens(value: unknown): number | undefined {
   const direct = readNumberProperty(value, 'cached_tokens')
     ?? readNumberProperty(value, 'cachedTokens')
     ?? readNumberProperty(value, 'cached_input_tokens')
-    ?? readNumberProperty(value, 'cachedInputTokens');
+    ?? readNumberProperty(value, 'cachedInputTokens')
+    ?? readNumberProperty(value, 'cache_read_input_tokens');
   if (direct !== undefined) return direct;
 
   for (const nested of Object.values(value)) {

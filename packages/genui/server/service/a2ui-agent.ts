@@ -115,7 +115,7 @@ function parseReasoningEffort(
 function resolveReasoningEffort(
   opts: ChatOptions,
 ): OpenAIReasoningEffort | undefined {
-  return opts.reasoningEffort
+  return parseReasoningEffort(opts.reasoningEffort)
     ?? parseReasoningEffort(process.env.OPENAI_REASONING_EFFORT);
 }
 
