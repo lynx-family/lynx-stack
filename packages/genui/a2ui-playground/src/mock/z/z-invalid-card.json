@@ -1,0 +1,171 @@
+[
+  {
+    "version": "v0.9",
+    "createSurface": {
+      "surfaceId": "z-invalid-card",
+      "catalogId": "https://a2ui.org/specification/v0_9/basic_catalog.json"
+    }
+  },
+  {
+    "version": "v0.9",
+    "updateComponents": {
+      "surfaceId": "z-invalid-card",
+      "components": [
+        {
+          "id": "root",
+          "component": "Card",
+          "child": "invalid-body",
+          "variant": "elevated"
+        },
+        {
+          "id": "invalid-body",
+          "component": "Column",
+          "children": [
+            "invalid-titlebar",
+            "invalid-content"
+          ],
+          "align": "stretch"
+        },
+        {
+          "id": "invalid-titlebar",
+          "component": "Row",
+          "children": [
+            "invalid-app",
+            "invalid-more-action"
+          ],
+          "align": "center",
+          "justify": "spaceBetween"
+        },
+        {
+          "id": "invalid-app",
+          "component": "Row",
+          "children": [
+            "invalid-app-mark",
+            "invalid-app-name"
+          ],
+          "align": "center",
+          "justify": "start"
+        },
+        {
+          "id": "invalid-app-mark",
+          "component": "Icon",
+          "name": "home",
+          "color": "primary",
+          "size": "md"
+        },
+        {
+          "id": "invalid-app-name",
+          "component": "Text",
+          "text": "z 应用",
+          "variant": "caption",
+          "emphasis": "medium"
+        },
+        {
+          "id": "invalid-more",
+          "component": "Row",
+          "children": [
+            "invalid-more-text",
+            "invalid-more-icon"
+          ],
+          "align": "center",
+          "justify": "start"
+        },
+        {
+          "id": "invalid-more-text",
+          "component": "Text",
+          "text": "更多",
+          "variant": "caption"
+        },
+        {
+          "id": "invalid-more-icon",
+          "component": "Icon",
+          "name": "more_vert",
+          "color": "muted",
+          "size": "md"
+        },
+        {
+          "id": "invalid-more-action",
+          "component": "Button",
+          "child": "invalid-more",
+          "variant": "borderless",
+          "action": {
+            "event": {
+              "name": "invalid-more-action.tap",
+              "context": {
+                "templatePackage": "z",
+                "templateVersion": "0.0.35"
+              }
+            }
+          }
+        },
+        {
+          "id": "invalid-content",
+          "component": "Button",
+          "child": "invalid-row-card",
+          "variant": "borderless",
+          "action": {
+            "event": {
+              "name": "invalid-content.tap",
+              "context": {
+                "templatePackage": "z",
+                "templateVersion": "0.0.35"
+              }
+            }
+          }
+        },
+        {
+          "id": "invalid-row-card",
+          "component": "Card",
+          "child": "invalid-row",
+          "variant": "filled"
+        },
+        {
+          "id": "invalid-row",
+          "component": "Row",
+          "children": [
+            "invalid-icon",
+            "invalid-copy",
+            "invalid-chevron"
+          ],
+          "align": "center",
+          "justify": "spaceBetween"
+        },
+        {
+          "id": "invalid-icon",
+          "component": "Icon",
+          "name": "info",
+          "color": "primary",
+          "size": "md"
+        },
+        {
+          "id": "invalid-copy",
+          "component": "Column",
+          "children": [
+            "invalid-title",
+            "invalid-desc"
+          ],
+          "align": "stretch"
+        },
+        {
+          "id": "invalid-title",
+          "component": "Text",
+          "text": "任务状态已更新",
+          "variant": "h4"
+        },
+        {
+          "id": "invalid-desc",
+          "component": "Text",
+          "text": "当前卡片内容已失效，请返回查看最新状态。",
+          "variant": "caption"
+        },
+        {
+          "id": "invalid-chevron",
+          "component": "Icon",
+          "name": "arrow_forward",
+          "color": "muted",
+          "size": "md"
+        }
+      ]
+    }
+  }
+]

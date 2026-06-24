@@ -11,6 +11,7 @@ import pieChartChinaEvShare from './mock/basic/pie-chart-china-ev-share.json';
 import recs from './mock/basic/recs.json';
 import tripPlanner from './mock/basic/trip-planner.json';
 import workoutPlan from './mock/basic/workout-plan.json';
+import { Z_TEMPLATE_DEMOS } from './mock/z/z-template.js';
 
 function collectComponentNamesFromMessages(
   value: unknown,
@@ -176,9 +177,21 @@ export const EXTENDED_STATIC_DEMOS: StaticDemo[] = [
   },
 ];
 
+export const Z_STATIC_DEMOS: StaticDemo[] = Z_TEMPLATE_DEMOS.map(
+  (demo) => ({
+    id: demo.id,
+    title: demo.title,
+    description: demo.description,
+    hasStaticJson: demo.hasStaticJson,
+    tags: tagsFromMessages(demo.messages),
+    messages: demo.messages,
+  }),
+);
+
 export const STATIC_DEMOS: StaticDemo[] = [
   ...OFFICIAL_STATIC_DEMOS,
   ...EXTENDED_STATIC_DEMOS,
+  ...Z_STATIC_DEMOS,
 ];
 
 export const STATIC_DEMO_JSON_IDS = new Set(

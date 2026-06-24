@@ -1,0 +1,453 @@
+[
+  {
+    "version": "v0.9",
+    "createSurface": {
+      "surfaceId": "z-order-card",
+      "catalogId": "https://a2ui.org/specification/v0_9/basic_catalog.json"
+    }
+  },
+  {
+    "version": "v0.9",
+    "updateComponents": {
+      "surfaceId": "z-order-card",
+      "components": [
+        {
+          "id": "root",
+          "component": "Card",
+          "child": "order-body",
+          "variant": "elevated"
+        },
+        {
+          "id": "order-body",
+          "component": "Column",
+          "children": [
+            "order-titlebar",
+            "order-products",
+            "order-info",
+            "order-fees",
+            "order-actions"
+          ],
+          "align": "stretch"
+        },
+        {
+          "id": "order-titlebar",
+          "component": "Row",
+          "children": [
+            "order-app",
+            "order-more-action"
+          ],
+          "align": "center",
+          "justify": "spaceBetween"
+        },
+        {
+          "id": "order-app",
+          "component": "Row",
+          "children": [
+            "order-app-mark",
+            "order-app-name"
+          ],
+          "align": "center",
+          "justify": "start"
+        },
+        {
+          "id": "order-app-mark",
+          "component": "Icon",
+          "name": "home",
+          "color": "primary",
+          "size": "md"
+        },
+        {
+          "id": "order-app-name",
+          "component": "Text",
+          "text": "z 应用",
+          "variant": "caption",
+          "emphasis": "medium"
+        },
+        {
+          "id": "order-more",
+          "component": "Row",
+          "children": [
+            "order-more-text",
+            "order-more-icon"
+          ],
+          "align": "center",
+          "justify": "start"
+        },
+        {
+          "id": "order-more-text",
+          "component": "Text",
+          "text": "更多",
+          "variant": "caption"
+        },
+        {
+          "id": "order-more-icon",
+          "component": "Icon",
+          "name": "more_vert",
+          "color": "muted",
+          "size": "md"
+        },
+        {
+          "id": "order-more-action",
+          "component": "Button",
+          "child": "order-more",
+          "variant": "borderless",
+          "action": {
+            "event": {
+              "name": "order-more-action.tap",
+              "context": {
+                "templatePackage": "z",
+                "templateVersion": "0.0.35"
+              }
+            }
+          }
+        },
+        {
+          "id": "order-products",
+          "component": "Column",
+          "children": [
+            "order-product-1",
+            "order-product-2"
+          ],
+          "align": "stretch"
+        },
+        {
+          "id": "order-product-1",
+          "component": "Card",
+          "child": "order-product-1-body",
+          "variant": "outlined"
+        },
+        {
+          "id": "order-product-1-body",
+          "component": "Row",
+          "children": [
+            "order-product-1-copy",
+            "order-product-1-price"
+          ],
+          "align": "start",
+          "justify": "spaceBetween"
+        },
+        {
+          "id": "order-product-1-copy",
+          "component": "Column",
+          "children": [
+            "order-product-1-title",
+            "order-product-1-spec"
+          ],
+          "align": "stretch"
+        },
+        {
+          "id": "order-product-1-title",
+          "component": "Text",
+          "text": "拿铁咖啡",
+          "variant": "body",
+          "emphasis": "medium"
+        },
+        {
+          "id": "order-product-1-spec",
+          "component": "Text",
+          "text": "中杯 / 少冰",
+          "variant": "caption"
+        },
+        {
+          "id": "order-product-1-price",
+          "component": "Column",
+          "children": [
+            "order-product-1-price-value",
+            "order-product-1-qty"
+          ],
+          "align": "end"
+        },
+        {
+          "id": "order-product-1-price-value",
+          "component": "Text",
+          "text": "¥5.8",
+          "variant": "body",
+          "emphasis": "medium"
+        },
+        {
+          "id": "order-product-1-qty",
+          "component": "Text",
+          "text": "x1",
+          "variant": "caption"
+        },
+        {
+          "id": "order-product-2",
+          "component": "Card",
+          "child": "order-product-2-body",
+          "variant": "outlined"
+        },
+        {
+          "id": "order-product-2-body",
+          "component": "Row",
+          "children": [
+            "order-product-2-copy",
+            "order-product-2-price"
+          ],
+          "align": "start",
+          "justify": "spaceBetween"
+        },
+        {
+          "id": "order-product-2-copy",
+          "component": "Column",
+          "children": [
+            "order-product-2-title",
+            "order-product-2-spec"
+          ],
+          "align": "stretch"
+        },
+        {
+          "id": "order-product-2-title",
+          "component": "Text",
+          "text": "芝士贝果",
+          "variant": "body",
+          "emphasis": "medium"
+        },
+        {
+          "id": "order-product-2-spec",
+          "component": "Text",
+          "text": "加热",
+          "variant": "caption"
+        },
+        {
+          "id": "order-product-2-price",
+          "component": "Column",
+          "children": [
+            "order-product-2-price-value",
+            "order-product-2-qty"
+          ],
+          "align": "end"
+        },
+        {
+          "id": "order-product-2-price-value",
+          "component": "Text",
+          "text": "¥4.0",
+          "variant": "body",
+          "emphasis": "medium"
+        },
+        {
+          "id": "order-product-2-qty",
+          "component": "Text",
+          "text": "x2",
+          "variant": "caption"
+        },
+        {
+          "id": "order-info",
+          "component": "Column",
+          "children": [
+            "order-info-1",
+            "order-info-2"
+          ],
+          "align": "stretch"
+        },
+        {
+          "id": "order-info-1",
+          "component": "Row",
+          "children": [
+            "order-info-1-label",
+            "order-info-1-values"
+          ],
+          "align": "start",
+          "justify": "spaceBetween"
+        },
+        {
+          "id": "order-info-1-label",
+          "component": "Text",
+          "text": "取餐方式",
+          "variant": "caption"
+        },
+        {
+          "id": "order-info-1-values",
+          "component": "Column",
+          "children": [
+            "order-info-1-value",
+            "order-info-1-extra"
+          ],
+          "align": "end"
+        },
+        {
+          "id": "order-info-1-value",
+          "component": "Text",
+          "text": "到店自取",
+          "variant": "body",
+          "emphasis": "medium"
+        },
+        {
+          "id": "order-info-1-extra",
+          "component": "Text",
+          "text": "中关村创业大街店",
+          "variant": "caption"
+        },
+        {
+          "id": "order-info-2",
+          "component": "Row",
+          "children": [
+            "order-info-2-label",
+            "order-info-2-values"
+          ],
+          "align": "start",
+          "justify": "spaceBetween"
+        },
+        {
+          "id": "order-info-2-label",
+          "component": "Text",
+          "text": "预计时间",
+          "variant": "caption"
+        },
+        {
+          "id": "order-info-2-values",
+          "component": "Column",
+          "children": [
+            "order-info-2-value"
+          ],
+          "align": "end"
+        },
+        {
+          "id": "order-info-2-value",
+          "component": "Text",
+          "text": "今天 18:30 前",
+          "variant": "body",
+          "emphasis": "medium"
+        },
+        {
+          "id": "order-fees",
+          "component": "Column",
+          "children": [
+            "order-fee-1",
+            "order-fee-2",
+            "order-discount",
+            "order-total"
+          ],
+          "align": "stretch"
+        },
+        {
+          "id": "order-fee-1",
+          "component": "Row",
+          "children": [
+            "order-fee-1-label",
+            "order-fee-1-value"
+          ],
+          "align": "center",
+          "justify": "spaceBetween"
+        },
+        {
+          "id": "order-fee-1-label",
+          "component": "Text",
+          "text": "运费",
+          "variant": "caption"
+        },
+        {
+          "id": "order-fee-1-value",
+          "component": "Text",
+          "text": "¥3.0",
+          "variant": "body",
+          "emphasis": "medium"
+        },
+        {
+          "id": "order-fee-2",
+          "component": "Row",
+          "children": [
+            "order-fee-2-label",
+            "order-fee-2-value"
+          ],
+          "align": "center",
+          "justify": "spaceBetween"
+        },
+        {
+          "id": "order-fee-2-label",
+          "component": "Text",
+          "text": "打包费",
+          "variant": "caption"
+        },
+        {
+          "id": "order-fee-2-value",
+          "component": "Text",
+          "text": "¥1.0",
+          "variant": "body",
+          "emphasis": "medium"
+        },
+        {
+          "id": "order-discount",
+          "component": "Text",
+          "text": "已优惠 ¥2.0",
+          "variant": "caption"
+        },
+        {
+          "id": "order-total",
+          "component": "Row",
+          "children": [
+            "order-total-label",
+            "order-total-price"
+          ],
+          "align": "center",
+          "justify": "spaceBetween"
+        },
+        {
+          "id": "order-total-label",
+          "component": "Text",
+          "text": "合计",
+          "variant": "h4"
+        },
+        {
+          "id": "order-total-price",
+          "component": "Text",
+          "text": "¥16.8",
+          "variant": "h2"
+        },
+        {
+          "id": "order-actions",
+          "component": "Row",
+          "children": [
+            "order-secondary",
+            "order-primary"
+          ],
+          "align": "center",
+          "justify": "start"
+        },
+        {
+          "id": "order-secondary-text",
+          "component": "Text",
+          "text": "修改订单",
+          "variant": "body",
+          "emphasis": "medium"
+        },
+        {
+          "id": "order-secondary",
+          "component": "Button",
+          "child": "order-secondary-text",
+          "variant": "borderless",
+          "action": {
+            "event": {
+              "name": "order-secondary.tap",
+              "context": {
+                "templatePackage": "z",
+                "templateVersion": "0.0.35"
+              }
+            }
+          }
+        },
+        {
+          "id": "order-primary-text",
+          "component": "Text",
+          "text": "去支付",
+          "variant": "body",
+          "emphasis": "medium"
+        },
+        {
+          "id": "order-primary",
+          "component": "Button",
+          "child": "order-primary-text",
+          "variant": "primary",
+          "action": {
+            "event": {
+              "name": "order-primary.tap",
+              "context": {
+                "templatePackage": "z",
+                "templateVersion": "0.0.35"
+              }
+            }
+          }
+        }
+      ]
+    }
+  }
+]

@@ -1,0 +1,76 @@
+[
+  {
+    "version": "v0.9",
+    "createSurface": {
+      "surfaceId": "z-task-action-card",
+      "catalogId": "https://a2ui.org/specification/v0_9/basic_catalog.json"
+    }
+  },
+  {
+    "version": "v0.9",
+    "updateComponents": {
+      "surfaceId": "z-task-action-card",
+      "components": [
+        {
+          "id": "root",
+          "component": "Card",
+          "child": "task-body",
+          "variant": "elevated"
+        },
+        {
+          "id": "task-body",
+          "component": "Row",
+          "children": [
+            "task-action-copy",
+            "task-action-button"
+          ],
+          "align": "center",
+          "justify": "spaceBetween"
+        },
+        {
+          "id": "task-action-copy",
+          "component": "Column",
+          "children": [
+            "task-action-title",
+            "task-action-desc"
+          ],
+          "align": "stretch"
+        },
+        {
+          "id": "task-action-title",
+          "component": "Text",
+          "text": "任务操作",
+          "variant": "h3"
+        },
+        {
+          "id": "task-action-desc",
+          "component": "Text",
+          "text": "查看状态更新并执行下一步。",
+          "variant": "caption"
+        },
+        {
+          "id": "task-action-button-text",
+          "component": "Text",
+          "text": "操作1",
+          "variant": "body",
+          "emphasis": "medium"
+        },
+        {
+          "id": "task-action-button",
+          "component": "Button",
+          "child": "task-action-button-text",
+          "variant": "primary",
+          "action": {
+            "event": {
+              "name": "task-action-button.tap",
+              "context": {
+                "templatePackage": "z",
+                "templateVersion": "0.0.35"
+              }
+            }
+          }
+        }
+      ]
+    }
+  }
+]

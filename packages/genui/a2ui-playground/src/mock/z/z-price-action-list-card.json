@@ -1,0 +1,383 @@
+[
+  {
+    "version": "v0.9",
+    "createSurface": {
+      "surfaceId": "z-price-action-list-card",
+      "catalogId": "https://a2ui.org/specification/v0_9/basic_catalog.json"
+    }
+  },
+  {
+    "version": "v0.9",
+    "updateComponents": {
+      "surfaceId": "z-price-action-list-card",
+      "components": [
+        {
+          "id": "root",
+          "component": "Card",
+          "child": "price-list-body",
+          "variant": "elevated"
+        },
+        {
+          "id": "price-list-body",
+          "component": "Column",
+          "children": [
+            "price-list-titlebar",
+            "price-list-items",
+            "price-list-footer"
+          ],
+          "align": "stretch"
+        },
+        {
+          "id": "price-list-titlebar",
+          "component": "Row",
+          "children": [
+            "price-list-app",
+            "price-list-more-action"
+          ],
+          "align": "center",
+          "justify": "spaceBetween"
+        },
+        {
+          "id": "price-list-app",
+          "component": "Row",
+          "children": [
+            "price-list-app-mark",
+            "price-list-app-name"
+          ],
+          "align": "center",
+          "justify": "start"
+        },
+        {
+          "id": "price-list-app-mark",
+          "component": "Icon",
+          "name": "home",
+          "color": "primary",
+          "size": "md"
+        },
+        {
+          "id": "price-list-app-name",
+          "component": "Text",
+          "text": "z 应用",
+          "variant": "caption",
+          "emphasis": "medium"
+        },
+        {
+          "id": "price-list-more",
+          "component": "Row",
+          "children": [
+            "price-list-more-text",
+            "price-list-more-icon"
+          ],
+          "align": "center",
+          "justify": "start"
+        },
+        {
+          "id": "price-list-more-text",
+          "component": "Text",
+          "text": "更多",
+          "variant": "caption"
+        },
+        {
+          "id": "price-list-more-icon",
+          "component": "Icon",
+          "name": "more_vert",
+          "color": "muted",
+          "size": "md"
+        },
+        {
+          "id": "price-list-more-action",
+          "component": "Button",
+          "child": "price-list-more",
+          "variant": "borderless",
+          "action": {
+            "event": {
+              "name": "price-list-more-action.tap",
+              "context": {
+                "templatePackage": "z",
+                "templateVersion": "0.0.35"
+              }
+            }
+          }
+        },
+        {
+          "id": "price-list-items",
+          "component": "Column",
+          "children": [
+            "price-item-1",
+            "price-item-2",
+            "price-item-3"
+          ],
+          "align": "stretch"
+        },
+        {
+          "id": "price-item-1",
+          "component": "Card",
+          "child": "price-item-1-body",
+          "variant": "outlined"
+        },
+        {
+          "id": "price-item-1-body",
+          "component": "Row",
+          "children": [
+            "price-item-1-price-block",
+            "price-item-1-copy",
+            "price-item-1-action"
+          ],
+          "align": "center",
+          "justify": "spaceBetween"
+        },
+        {
+          "id": "price-item-1-price-block",
+          "component": "Column",
+          "children": [
+            "price-item-1-price",
+            "price-item-1-badge"
+          ],
+          "align": "stretch"
+        },
+        {
+          "id": "price-item-1-price",
+          "component": "Text",
+          "text": "¥199",
+          "variant": "h3"
+        },
+        {
+          "id": "price-item-1-badge",
+          "component": "Text",
+          "text": "热门",
+          "variant": "caption"
+        },
+        {
+          "id": "price-item-1-copy",
+          "component": "Column",
+          "children": [
+            "price-item-1-line-1",
+            "price-item-1-line-2"
+          ],
+          "align": "stretch"
+        },
+        {
+          "id": "price-item-1-line-1",
+          "component": "Text",
+          "text": "含 3 次上门服务",
+          "variant": "body",
+          "emphasis": "medium"
+        },
+        {
+          "id": "price-item-1-line-2",
+          "component": "Text",
+          "text": "今晚可约",
+          "variant": "caption"
+        },
+        {
+          "id": "price-item-1-action-text",
+          "component": "Text",
+          "text": "选择",
+          "variant": "body",
+          "emphasis": "medium"
+        },
+        {
+          "id": "price-item-1-action",
+          "component": "Button",
+          "child": "price-item-1-action-text",
+          "variant": "borderless",
+          "action": {
+            "event": {
+              "name": "price-item-1-action.tap",
+              "context": {
+                "templatePackage": "z",
+                "templateVersion": "0.0.35"
+              }
+            }
+          }
+        },
+        {
+          "id": "price-item-2",
+          "component": "Card",
+          "child": "price-item-2-body",
+          "variant": "outlined"
+        },
+        {
+          "id": "price-item-2-body",
+          "component": "Row",
+          "children": [
+            "price-item-2-price-block",
+            "price-item-2-copy",
+            "price-item-2-action"
+          ],
+          "align": "center",
+          "justify": "spaceBetween"
+        },
+        {
+          "id": "price-item-2-price-block",
+          "component": "Column",
+          "children": [
+            "price-item-2-price",
+            "price-item-2-badge"
+          ],
+          "align": "stretch"
+        },
+        {
+          "id": "price-item-2-price",
+          "component": "Text",
+          "text": "¥299",
+          "variant": "h3"
+        },
+        {
+          "id": "price-item-2-badge",
+          "component": "Text",
+          "text": "推荐",
+          "variant": "caption"
+        },
+        {
+          "id": "price-item-2-copy",
+          "component": "Column",
+          "children": [
+            "price-item-2-line-1",
+            "price-item-2-line-2"
+          ],
+          "align": "stretch"
+        },
+        {
+          "id": "price-item-2-line-1",
+          "component": "Text",
+          "text": "含 5 次上门服务",
+          "variant": "body",
+          "emphasis": "medium"
+        },
+        {
+          "id": "price-item-2-line-2",
+          "component": "Text",
+          "text": "赠送一次保养",
+          "variant": "caption"
+        },
+        {
+          "id": "price-item-2-action-text",
+          "component": "Text",
+          "text": "选择",
+          "variant": "body",
+          "emphasis": "medium"
+        },
+        {
+          "id": "price-item-2-action",
+          "component": "Button",
+          "child": "price-item-2-action-text",
+          "variant": "borderless",
+          "action": {
+            "event": {
+              "name": "price-item-2-action.tap",
+              "context": {
+                "templatePackage": "z",
+                "templateVersion": "0.0.35"
+              }
+            }
+          }
+        },
+        {
+          "id": "price-item-3",
+          "component": "Card",
+          "child": "price-item-3-body",
+          "variant": "outlined"
+        },
+        {
+          "id": "price-item-3-body",
+          "component": "Row",
+          "children": [
+            "price-item-3-price-block",
+            "price-item-3-copy",
+            "price-item-3-action"
+          ],
+          "align": "center",
+          "justify": "spaceBetween"
+        },
+        {
+          "id": "price-item-3-price-block",
+          "component": "Column",
+          "children": [
+            "price-item-3-price",
+            "price-item-3-badge"
+          ],
+          "align": "stretch"
+        },
+        {
+          "id": "price-item-3-price",
+          "component": "Text",
+          "text": "¥499",
+          "variant": "h3"
+        },
+        {
+          "id": "price-item-3-badge",
+          "component": "Text",
+          "text": "尊享",
+          "variant": "caption"
+        },
+        {
+          "id": "price-item-3-copy",
+          "component": "Column",
+          "children": [
+            "price-item-3-line-1",
+            "price-item-3-line-2"
+          ],
+          "align": "stretch"
+        },
+        {
+          "id": "price-item-3-line-1",
+          "component": "Text",
+          "text": "一年权益包",
+          "variant": "body",
+          "emphasis": "medium"
+        },
+        {
+          "id": "price-item-3-line-2",
+          "component": "Text",
+          "text": "专属客服",
+          "variant": "caption"
+        },
+        {
+          "id": "price-item-3-action-text",
+          "component": "Text",
+          "text": "选择",
+          "variant": "body",
+          "emphasis": "medium"
+        },
+        {
+          "id": "price-item-3-action",
+          "component": "Button",
+          "child": "price-item-3-action-text",
+          "variant": "borderless",
+          "action": {
+            "event": {
+              "name": "price-item-3-action.tap",
+              "context": {
+                "templatePackage": "z",
+                "templateVersion": "0.0.35"
+              }
+            }
+          }
+        },
+        {
+          "id": "price-list-footer-text",
+          "component": "Text",
+          "text": "查看全部报价",
+          "variant": "body",
+          "emphasis": "medium"
+        },
+        {
+          "id": "price-list-footer",
+          "component": "Button",
+          "child": "price-list-footer-text",
+          "variant": "primary",
+          "action": {
+            "event": {
+              "name": "price-list-footer.tap",
+              "context": {
+                "templatePackage": "z",
+                "templateVersion": "0.0.35"
+              }
+            }
+          }
+        }
+      ]
+    }
+  }
+]

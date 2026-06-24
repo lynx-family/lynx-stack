@@ -1,0 +1,232 @@
+[
+  {
+    "version": "v0.9",
+    "createSurface": {
+      "surfaceId": "z-media-layout-card",
+      "catalogId": "https://a2ui.org/specification/v0_9/basic_catalog.json"
+    }
+  },
+  {
+    "version": "v0.9",
+    "updateComponents": {
+      "surfaceId": "z-media-layout-card",
+      "components": [
+        {
+          "id": "root",
+          "component": "Card",
+          "child": "media-body",
+          "variant": "elevated"
+        },
+        {
+          "id": "media-body",
+          "component": "Column",
+          "children": [
+            "media-titlebar",
+            "media-content",
+            "media-actions"
+          ],
+          "align": "stretch"
+        },
+        {
+          "id": "media-titlebar",
+          "component": "Row",
+          "children": [
+            "media-app",
+            "media-more-action"
+          ],
+          "align": "center",
+          "justify": "spaceBetween"
+        },
+        {
+          "id": "media-app",
+          "component": "Row",
+          "children": [
+            "media-app-mark",
+            "media-app-name"
+          ],
+          "align": "center",
+          "justify": "start"
+        },
+        {
+          "id": "media-app-mark",
+          "component": "Icon",
+          "name": "home",
+          "color": "primary",
+          "size": "md"
+        },
+        {
+          "id": "media-app-name",
+          "component": "Text",
+          "text": "z 应用",
+          "variant": "caption",
+          "emphasis": "medium"
+        },
+        {
+          "id": "media-more",
+          "component": "Row",
+          "children": [
+            "media-more-text",
+            "media-more-icon"
+          ],
+          "align": "center",
+          "justify": "start"
+        },
+        {
+          "id": "media-more-text",
+          "component": "Text",
+          "text": "更多",
+          "variant": "caption"
+        },
+        {
+          "id": "media-more-icon",
+          "component": "Icon",
+          "name": "more_vert",
+          "color": "muted",
+          "size": "md"
+        },
+        {
+          "id": "media-more-action",
+          "component": "Button",
+          "child": "media-more",
+          "variant": "borderless",
+          "action": {
+            "event": {
+              "name": "media-more-action.tap",
+              "context": {
+                "templatePackage": "z",
+                "templateVersion": "0.0.35"
+              }
+            }
+          }
+        },
+        {
+          "id": "media-content",
+          "component": "Row",
+          "children": [
+            "media-image",
+            "media-copy",
+            "media-extra"
+          ],
+          "align": "start",
+          "justify": "spaceBetween"
+        },
+        {
+          "id": "media-image",
+          "component": "Image",
+          "url": "https://images.unsplash.com/photo-1516321318423-f06f85e504b3?auto=format&fit=crop&w=720&q=80",
+          "fit": "cover",
+          "variant": "smallFeature"
+        },
+        {
+          "id": "media-copy",
+          "component": "Column",
+          "children": [
+            "media-title",
+            "media-info-1",
+            "media-info-2"
+          ],
+          "align": "stretch"
+        },
+        {
+          "id": "media-title",
+          "component": "Text",
+          "text": "小程序开发助手",
+          "variant": "h3"
+        },
+        {
+          "id": "media-info-1",
+          "component": "Text",
+          "text": "提供开发、构建、调试和发布能力。",
+          "variant": "caption"
+        },
+        {
+          "id": "media-info-2",
+          "component": "Text",
+          "text": "最近更新：2 分钟前",
+          "variant": "caption"
+        },
+        {
+          "id": "media-extra",
+          "component": "Card",
+          "child": "media-extra-copy",
+          "variant": "filled"
+        },
+        {
+          "id": "media-extra-copy",
+          "component": "Column",
+          "children": [
+            "media-extra-label",
+            "media-extra-value"
+          ],
+          "align": "center"
+        },
+        {
+          "id": "media-extra-label",
+          "component": "Text",
+          "text": "状态",
+          "variant": "caption"
+        },
+        {
+          "id": "media-extra-value",
+          "component": "Text",
+          "text": "可用",
+          "variant": "h4"
+        },
+        {
+          "id": "media-actions",
+          "component": "Row",
+          "children": [
+            "media-secondary",
+            "media-primary"
+          ],
+          "align": "center",
+          "justify": "start"
+        },
+        {
+          "id": "media-secondary-text",
+          "component": "Text",
+          "text": "取消",
+          "variant": "body",
+          "emphasis": "medium"
+        },
+        {
+          "id": "media-secondary",
+          "component": "Button",
+          "child": "media-secondary-text",
+          "variant": "borderless",
+          "action": {
+            "event": {
+              "name": "media-secondary.tap",
+              "context": {
+                "templatePackage": "z",
+                "templateVersion": "0.0.35"
+              }
+            }
+          }
+        },
+        {
+          "id": "media-primary-text",
+          "component": "Text",
+          "text": "确认",
+          "variant": "body",
+          "emphasis": "medium"
+        },
+        {
+          "id": "media-primary",
+          "component": "Button",
+          "child": "media-primary-text",
+          "variant": "primary",
+          "action": {
+            "event": {
+              "name": "media-primary.tap",
+              "context": {
+                "templatePackage": "z",
+                "templateVersion": "0.0.35"
+              }
+            }
+          }
+        }
+      ]
+    }
+  }
+]

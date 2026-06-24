@@ -17,6 +17,7 @@ import {
   EXTENDED_STATIC_DEMOS,
   OFFICIAL_STATIC_DEMOS,
   STATIC_DEMO_JSON_IDS,
+  Z_STATIC_DEMOS,
 } from '../demos.js';
 import { DEFAULT_A2UI_DEMO_URL } from '../utils/demoUrl.js';
 import type { Protocol } from '../utils/protocol.js';
@@ -30,11 +31,13 @@ interface ExampleScenario {
 }
 
 const EXTENDED_EXAMPLES: ExampleScenario[] = [...EXTENDED_STATIC_DEMOS];
+const Z_EXAMPLES: ExampleScenario[] = [...Z_STATIC_DEMOS];
 const OFFICIAL_EXAMPLES: ExampleScenario[] = [...OFFICIAL_STATIC_DEMOS];
 const DYNAMIC_EXAMPLES: ExampleScenario[] = [...DYNAMIC_PRESETS];
 const ALL_EXAMPLES: ExampleScenario[] = [
   ...EXTENDED_EXAMPLES,
   ...OFFICIAL_EXAMPLES,
+  ...Z_EXAMPLES,
   ...DYNAMIC_EXAMPLES,
 ];
 
@@ -136,6 +139,24 @@ export function DemosListPage(
                   scenario={scenario}
                   previewUrl={previewUrls.get(scenario.id)}
                   badge='From A2UI Gallery'
+                  onOpen={handleOpenExample}
+                  onKeyDown={handleCardKeyDown}
+                />
+              ))}
+            </div>
+          </section>
+          <section className='exampleSection'>
+            <div className='exampleSectionHeader'>
+              <h2 className='exampleSectionTitle'>z</h2>
+              <span className='chip'>{Z_EXAMPLES.length}</span>
+            </div>
+            <div className='exampleGrid'>
+              {Z_EXAMPLES.map((scenario) => (
+                <ExamplePreviewCard
+                  key={scenario.id}
+                  scenario={scenario}
+                  previewUrl={previewUrls.get(scenario.id)}
+                  badge='z 0.0.35'
                   onOpen={handleOpenExample}
                   onKeyDown={handleCardKeyDown}
                 />

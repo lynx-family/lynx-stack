@@ -1,0 +1,406 @@
+[
+  {
+    "version": "v0.9",
+    "createSurface": {
+      "surfaceId": "z-list-card",
+      "catalogId": "https://a2ui.org/specification/v0_9/basic_catalog.json"
+    }
+  },
+  {
+    "version": "v0.9",
+    "updateComponents": {
+      "surfaceId": "z-list-card",
+      "components": [
+        {
+          "id": "root",
+          "component": "Card",
+          "child": "list-card-body",
+          "variant": "elevated"
+        },
+        {
+          "id": "list-card-body",
+          "component": "Column",
+          "children": [
+            "list-titlebar",
+            "list-items",
+            "list-view-more"
+          ],
+          "align": "stretch"
+        },
+        {
+          "id": "list-titlebar",
+          "component": "Row",
+          "children": [
+            "list-app",
+            "list-more-action"
+          ],
+          "align": "center",
+          "justify": "spaceBetween"
+        },
+        {
+          "id": "list-app",
+          "component": "Row",
+          "children": [
+            "list-app-mark",
+            "list-app-name"
+          ],
+          "align": "center",
+          "justify": "start"
+        },
+        {
+          "id": "list-app-mark",
+          "component": "Icon",
+          "name": "home",
+          "color": "primary",
+          "size": "md"
+        },
+        {
+          "id": "list-app-name",
+          "component": "Text",
+          "text": "z 应用",
+          "variant": "caption",
+          "emphasis": "medium"
+        },
+        {
+          "id": "list-more",
+          "component": "Row",
+          "children": [
+            "list-more-text",
+            "list-more-icon"
+          ],
+          "align": "center",
+          "justify": "start"
+        },
+        {
+          "id": "list-more-text",
+          "component": "Text",
+          "text": "更多",
+          "variant": "caption"
+        },
+        {
+          "id": "list-more-icon",
+          "component": "Icon",
+          "name": "more_vert",
+          "color": "muted",
+          "size": "md"
+        },
+        {
+          "id": "list-more-action",
+          "component": "Button",
+          "child": "list-more",
+          "variant": "borderless",
+          "action": {
+            "event": {
+              "name": "list-more-action.tap",
+              "context": {
+                "templatePackage": "z",
+                "templateVersion": "0.0.35"
+              }
+            }
+          }
+        },
+        {
+          "id": "list-items",
+          "component": "Column",
+          "children": [
+            "list-item-1",
+            "list-item-2",
+            "list-item-3",
+            "list-item-4"
+          ],
+          "align": "stretch"
+        },
+        {
+          "id": "list-item-1",
+          "component": "Card",
+          "child": "list-item-1-body",
+          "variant": "outlined"
+        },
+        {
+          "id": "list-item-1-body",
+          "component": "Row",
+          "children": [
+            "list-item-1-media",
+            "list-item-1-copy",
+            "list-item-1-action"
+          ],
+          "align": "center",
+          "justify": "spaceBetween"
+        },
+        {
+          "id": "list-item-1-media",
+          "component": "Image",
+          "url": "https://images.unsplash.com/photo-1542291026-7eec264c27ff?auto=format&fit=crop&w=720&q=80",
+          "fit": "cover",
+          "variant": "smallFeature"
+        },
+        {
+          "id": "list-item-1-copy",
+          "component": "Column",
+          "children": [
+            "list-item-1-title",
+            "list-item-1-meta"
+          ],
+          "align": "stretch"
+        },
+        {
+          "id": "list-item-1-title",
+          "component": "Text",
+          "text": "智能跑鞋 Pro",
+          "variant": "h4"
+        },
+        {
+          "id": "list-item-1-meta",
+          "component": "Text",
+          "text": "4199元 · 轻量缓震",
+          "variant": "caption"
+        },
+        {
+          "id": "list-item-1-action-text",
+          "component": "Text",
+          "text": "下单",
+          "variant": "body",
+          "emphasis": "medium"
+        },
+        {
+          "id": "list-item-1-action",
+          "component": "Button",
+          "child": "list-item-1-action-text",
+          "variant": "borderless",
+          "action": {
+            "event": {
+              "name": "list-item-1-action.tap",
+              "context": {
+                "templatePackage": "z",
+                "templateVersion": "0.0.35"
+              }
+            }
+          }
+        },
+        {
+          "id": "list-item-2",
+          "component": "Card",
+          "child": "list-item-2-body",
+          "variant": "outlined"
+        },
+        {
+          "id": "list-item-2-body",
+          "component": "Row",
+          "children": [
+            "list-item-2-media",
+            "list-item-2-copy",
+            "list-item-2-action"
+          ],
+          "align": "center",
+          "justify": "spaceBetween"
+        },
+        {
+          "id": "list-item-2-media",
+          "component": "Icon",
+          "name": "star",
+          "color": "muted",
+          "size": "md"
+        },
+        {
+          "id": "list-item-2-copy",
+          "component": "Column",
+          "children": [
+            "list-item-2-title",
+            "list-item-2-meta"
+          ],
+          "align": "stretch"
+        },
+        {
+          "id": "list-item-2-title",
+          "component": "Text",
+          "text": "便携咖啡杯",
+          "variant": "h4"
+        },
+        {
+          "id": "list-item-2-meta",
+          "component": "Text",
+          "text": "299元 · 保温 12 小时",
+          "variant": "caption"
+        },
+        {
+          "id": "list-item-2-action-text",
+          "component": "Text",
+          "text": "查看",
+          "variant": "body",
+          "emphasis": "medium"
+        },
+        {
+          "id": "list-item-2-action",
+          "component": "Button",
+          "child": "list-item-2-action-text",
+          "variant": "borderless",
+          "action": {
+            "event": {
+              "name": "list-item-2-action.tap",
+              "context": {
+                "templatePackage": "z",
+                "templateVersion": "0.0.35"
+              }
+            }
+          }
+        },
+        {
+          "id": "list-item-3",
+          "component": "Card",
+          "child": "list-item-3-body",
+          "variant": "outlined"
+        },
+        {
+          "id": "list-item-3-body",
+          "component": "Row",
+          "children": [
+            "list-item-3-media",
+            "list-item-3-copy",
+            "list-item-3-action"
+          ],
+          "align": "center",
+          "justify": "spaceBetween"
+        },
+        {
+          "id": "list-item-3-media",
+          "component": "Icon",
+          "name": "location_on",
+          "color": "muted",
+          "size": "md"
+        },
+        {
+          "id": "list-item-3-copy",
+          "component": "Column",
+          "children": [
+            "list-item-3-title",
+            "list-item-3-meta"
+          ],
+          "align": "stretch"
+        },
+        {
+          "id": "list-item-3-title",
+          "component": "Text",
+          "text": "城市周末套票",
+          "variant": "h4"
+        },
+        {
+          "id": "list-item-3-meta",
+          "component": "Text",
+          "text": "168元 · 含双人下午茶",
+          "variant": "caption"
+        },
+        {
+          "id": "list-item-3-action-text",
+          "component": "Text",
+          "text": "查看",
+          "variant": "body",
+          "emphasis": "medium"
+        },
+        {
+          "id": "list-item-3-action",
+          "component": "Button",
+          "child": "list-item-3-action-text",
+          "variant": "borderless",
+          "action": {
+            "event": {
+              "name": "list-item-3-action.tap",
+              "context": {
+                "templatePackage": "z",
+                "templateVersion": "0.0.35"
+              }
+            }
+          }
+        },
+        {
+          "id": "list-item-4",
+          "component": "Card",
+          "child": "list-item-4-body",
+          "variant": "outlined"
+        },
+        {
+          "id": "list-item-4-body",
+          "component": "Row",
+          "children": [
+            "list-item-4-media",
+            "list-item-4-copy",
+            "list-item-4-action"
+          ],
+          "align": "center",
+          "justify": "spaceBetween"
+        },
+        {
+          "id": "list-item-4-media",
+          "component": "Icon",
+          "name": "star",
+          "color": "muted",
+          "size": "md"
+        },
+        {
+          "id": "list-item-4-copy",
+          "component": "Column",
+          "children": [
+            "list-item-4-title",
+            "list-item-4-meta"
+          ],
+          "align": "stretch"
+        },
+        {
+          "id": "list-item-4-title",
+          "component": "Text",
+          "text": "蓝牙降噪耳机",
+          "variant": "h4"
+        },
+        {
+          "id": "list-item-4-meta",
+          "component": "Text",
+          "text": "699元 · 通勤低延迟",
+          "variant": "caption"
+        },
+        {
+          "id": "list-item-4-action-text",
+          "component": "Text",
+          "text": "查看",
+          "variant": "body",
+          "emphasis": "medium"
+        },
+        {
+          "id": "list-item-4-action",
+          "component": "Button",
+          "child": "list-item-4-action-text",
+          "variant": "borderless",
+          "action": {
+            "event": {
+              "name": "list-item-4-action.tap",
+              "context": {
+                "templatePackage": "z",
+                "templateVersion": "0.0.35"
+              }
+            }
+          }
+        },
+        {
+          "id": "list-view-more-text",
+          "component": "Text",
+          "text": "查看更多",
+          "variant": "body",
+          "emphasis": "medium"
+        },
+        {
+          "id": "list-view-more",
+          "component": "Button",
+          "child": "list-view-more-text",
+          "variant": "primary",
+          "action": {
+            "event": {
+              "name": "list-view-more.tap",
+              "context": {
+                "templatePackage": "z",
+                "templateVersion": "0.0.35"
+              }
+            }
+          }
+        }
+      ]
+    }
+  }
+]

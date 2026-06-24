@@ -203,6 +203,10 @@ export default defineConfig({
         from: 'src/mock/a2ui-gallery/*.json',
         to: 'demos/[name][ext]',
       },
+      {
+        from: 'src/mock/z/*.json',
+        to: 'demos/[name][ext]',
+      },
     ],
   },
   server: {

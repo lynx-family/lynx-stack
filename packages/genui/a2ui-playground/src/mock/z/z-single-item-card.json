@@ -1,0 +1,244 @@
+[
+  {
+    "version": "v0.9",
+    "createSurface": {
+      "surfaceId": "z-single-item-card",
+      "catalogId": "https://a2ui.org/specification/v0_9/basic_catalog.json"
+    }
+  },
+  {
+    "version": "v0.9",
+    "updateComponents": {
+      "surfaceId": "z-single-item-card",
+      "components": [
+        {
+          "id": "root",
+          "component": "Card",
+          "child": "single-body",
+          "variant": "elevated"
+        },
+        {
+          "id": "single-body",
+          "component": "Column",
+          "children": [
+            "single-titlebar",
+            "single-product",
+            "single-actions"
+          ],
+          "align": "stretch"
+        },
+        {
+          "id": "single-titlebar",
+          "component": "Row",
+          "children": [
+            "single-app",
+            "single-more-action"
+          ],
+          "align": "center",
+          "justify": "spaceBetween"
+        },
+        {
+          "id": "single-app",
+          "component": "Row",
+          "children": [
+            "single-app-mark",
+            "single-app-name"
+          ],
+          "align": "center",
+          "justify": "start"
+        },
+        {
+          "id": "single-app-mark",
+          "component": "Icon",
+          "name": "home",
+          "color": "primary",
+          "size": "md"
+        },
+        {
+          "id": "single-app-name",
+          "component": "Text",
+          "text": "z 应用",
+          "variant": "caption",
+          "emphasis": "medium"
+        },
+        {
+          "id": "single-more",
+          "component": "Row",
+          "children": [
+            "single-more-text",
+            "single-more-icon"
+          ],
+          "align": "center",
+          "justify": "start"
+        },
+        {
+          "id": "single-more-text",
+          "component": "Text",
+          "text": "查看更多",
+          "variant": "caption"
+        },
+        {
+          "id": "single-more-icon",
+          "component": "Icon",
+          "name": "more_vert",
+          "color": "muted",
+          "size": "md"
+        },
+        {
+          "id": "single-more-action",
+          "component": "Button",
+          "child": "single-more",
+          "variant": "borderless",
+          "action": {
+            "event": {
+              "name": "single-more-action.tap",
+              "context": {
+                "templatePackage": "z",
+                "templateVersion": "0.0.35"
+              }
+            }
+          }
+        },
+        {
+          "id": "single-product",
+          "component": "Row",
+          "children": [
+            "single-image",
+            "single-copy"
+          ],
+          "align": "start",
+          "justify": "start"
+        },
+        {
+          "id": "single-image",
+          "component": "Image",
+          "url": "https://images.unsplash.com/photo-1542291026-7eec264c27ff?auto=format&fit=crop&w=720&q=80",
+          "fit": "cover",
+          "variant": "smallFeature"
+        },
+        {
+          "id": "single-copy",
+          "component": "Column",
+          "children": [
+            "single-heading-row",
+            "single-info-1",
+            "single-info-2",
+            "single-price"
+          ],
+          "align": "stretch"
+        },
+        {
+          "id": "single-heading-row",
+          "component": "Row",
+          "children": [
+            "single-heading",
+            "single-chevron"
+          ],
+          "align": "center",
+          "justify": "spaceBetween"
+        },
+        {
+          "id": "single-heading",
+          "component": "Text",
+          "text": "智能跑鞋 Pro",
+          "variant": "h3"
+        },
+        {
+          "id": "single-chevron",
+          "component": "Icon",
+          "name": "arrow_forward",
+          "color": "muted",
+          "size": "md"
+        },
+        {
+          "id": "single-info-1",
+          "component": "Text",
+          "text": "限时优惠 · 今日达",
+          "variant": "caption"
+        },
+        {
+          "id": "single-info-2",
+          "component": "Text",
+          "text": "运动装备 · 42 码",
+          "variant": "caption"
+        },
+        {
+          "id": "single-price",
+          "component": "Row",
+          "children": [
+            "single-price-value",
+            "single-quantity"
+          ],
+          "align": "center",
+          "justify": "spaceBetween"
+        },
+        {
+          "id": "single-price-value",
+          "component": "Text",
+          "text": "券后 ¥4199",
+          "variant": "h3"
+        },
+        {
+          "id": "single-quantity",
+          "component": "Text",
+          "text": "x1",
+          "variant": "caption"
+        },
+        {
+          "id": "single-actions",
+          "component": "Row",
+          "children": [
+            "single-secondary",
+            "single-primary"
+          ],
+          "align": "center",
+          "justify": "start"
+        },
+        {
+          "id": "single-secondary-text",
+          "component": "Text",
+          "text": "改规格",
+          "variant": "body",
+          "emphasis": "medium"
+        },
+        {
+          "id": "single-secondary",
+          "component": "Button",
+          "child": "single-secondary-text",
+          "variant": "borderless",
+          "action": {
+            "event": {
+              "name": "single-secondary.tap",
+              "context": {
+                "templatePackage": "z",
+                "templateVersion": "0.0.35"
+              }
+            }
+          }
+        },
+        {
+          "id": "single-primary-text",
+          "component": "Text",
+          "text": "去下单",
+          "variant": "body",
+          "emphasis": "medium"
+        },
+        {
+          "id": "single-primary",
+          "component": "Button",
+          "child": "single-primary-text",
+          "variant": "primary",
+          "action": {
+            "event": {
+              "name": "single-primary.tap",
+              "context": {
+                "templatePackage": "z",
+                "templateVersion": "0.0.35"
+              }
+            }
+          }
+        }
+      ]
+    }
+  }
+]
