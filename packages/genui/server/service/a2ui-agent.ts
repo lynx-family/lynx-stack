@@ -25,12 +25,21 @@ export interface ConversationContext {
   dataModel: Record<string, unknown>;
 }
 
+export type OpenAIReasoningEffort =
+  | 'none'
+  | 'minimal'
+  | 'low'
+  | 'medium'
+  | 'high'
+  | 'xhigh';
+
 export interface ChatOptions {
   resourceId?: string | undefined;
   apiKey?: string | undefined;
   baseURL?: string | undefined;
   model?: string | undefined;
   api?: 'chat' | 'responses' | undefined;
+  reasoningEffort?: OpenAIReasoningEffort | undefined;
   catalog?: A2UICatalog | undefined;
   maxRepairAttempts?: number | undefined;
   onPerformanceEvent?: (
@@ -65,6 +74,15 @@ interface MastraStreamResult extends MastraResult {
   textStream?: ReadableStream<string> | AsyncIterable<string>;
 }
 
+const REASONING_EFFORTS = new Set<OpenAIReasoningEffort>([
+  'none',
+  'minimal',
+  'low',
+  'medium',
+  'high',
+  'xhigh',
+]);
+
 function isReadableStream(
   stream: ReadableStream<string> | AsyncIterable<string>,
 ): stream is ReadableStream<string> {
@@ -84,6 +102,31 @@ function pickDefined<T extends Record<string, unknown>>(input: T): Partial<T> {
 function hashApiKey(apiKey: string | undefined): string {
   if (!apiKey) return 'default';
   return createHash('sha256').update(apiKey).digest('hex');
+}
+
+function parseReasoningEffort(
+  value: string | undefined,
+): OpenAIReasoningEffort | undefined {
+  return REASONING_EFFORTS.has(value as OpenAIReasoningEffort)
+    ? value as OpenAIReasoningEffort
+    : undefined;
+}
+
+function resolveReasoningEffort(
+  opts: ChatOptions,
+): OpenAIReasoningEffort | undefined {
+  return opts.reasoningEffort
+    ?? parseReasoningEffort(process.env.OPENAI_REASONING_EFFORT);
+}
+
+function buildAgentRunOptions(opts: ChatOptions) {
+  const reasoningEffort = resolveReasoningEffort(opts);
+  return pickDefined({
+    resourceId: opts.resourceId,
+    providerOptions: reasoningEffort
+      ? { openai: { reasoningEffort } }
+      : undefined,
+  });
 }
 
 function buildDataModelSystemMessage(
@@ -153,12 +196,12 @@ export default class A2UIAgentService {
     });
 
     const streamStartedAt = performance.now();
-    opts.onPerformanceEvent?.('agent.stream.invoke.started');
+    opts.onPerformanceEvent?.('agent.stream.invoke.started', {
+      reasoningEffort: resolveReasoningEffort(opts),
+    });
     const result = agent.stream(
       modelMessages,
-      pickDefined({
-        resourceId: opts.resourceId,
-      }),
+      buildAgentRunOptions(opts),
     ) as MastraStreamResult;
     opts.onPerformanceEvent?.('agent.stream.invoke.completed', {
       durationMs: performance.now() - streamStartedAt,
@@ -246,9 +289,7 @@ export default class A2UIAgentService {
     const agent = await this.getAgent(opts);
     return agent.generate(
       this.toModelMessages(messages),
-      pickDefined({
-        resourceId: opts.resourceId,
-      }),
+      buildAgentRunOptions(opts),
     );
   }
 
@@ -290,9 +331,7 @@ export default class A2UIAgentService {
     for (let attempt = 1; attempt <= maxAttempts; attempt++) {
       const result = await agent.generate(
         this.toModelMessages(convo),
-        pickDefined({
-          resourceId: opts.resourceId,
-        }),
+        buildAgentRunOptions(opts),
       ) as MastraResult;
 
       const text = await extractText(result);

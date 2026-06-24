@@ -18,7 +18,10 @@ import {
   resolveStaticA2UIImageComponent,
 } from '../../../../agent/image-resolver';
 import { getA2UIAgentService } from '../../../../service/a2ui-agent';
-import type { ChatMessage } from '../../../../service/a2ui-agent';
+import type {
+  ChatMessage,
+  OpenAIReasoningEffort,
+} from '../../../../service/a2ui-agent';
 import {
   MAX_MESSAGE_CHARS,
   errorMessage,
@@ -65,6 +68,7 @@ interface A2UIActionStreamBody {
   model?: string;
   apiKey?: string;
   baseURL?: string;
+  reasoningEffort?: OpenAIReasoningEffort;
   catalog?: A2UICatalog;
   maxRepairAttempts?: number;
 }

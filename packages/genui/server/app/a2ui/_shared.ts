@@ -6,6 +6,7 @@ import type {
   ChatMessage,
   ChatOptions,
   ConversationContext,
+  OpenAIReasoningEffort,
 } from '../../service/a2ui-agent';
 
 export interface A2UIChatBody {
@@ -16,6 +17,7 @@ export interface A2UIChatBody {
   apiKey?: string;
   baseURL?: string;
   api?: 'chat' | 'responses';
+  reasoningEffort?: OpenAIReasoningEffort;
   catalog?: A2UICatalog;
   maxRepairAttempts?: number;
   validate?: boolean;
@@ -73,6 +75,7 @@ export function pickChatOptions(body: {
   apiKey?: string;
   baseURL?: string;
   api?: 'chat' | 'responses';
+  reasoningEffort?: OpenAIReasoningEffort;
   catalog?: A2UICatalog;
   maxRepairAttempts?: number;
 }): ChatOptions {
@@ -83,6 +86,7 @@ export function pickChatOptions(body: {
     apiKey: allowOverride ? body.apiKey : undefined,
     baseURL: allowOverride ? body.baseURL : undefined,
     api: allowOverride ? body.api : undefined,
+    reasoningEffort: allowOverride ? body.reasoningEffort : undefined,
     catalog: body.catalog,
     maxRepairAttempts: body.maxRepairAttempts,
   };
