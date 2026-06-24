@@ -22,12 +22,6 @@
     "build": "rslib build",
     "test": "vitest run"
   },
-  "dependencies": {
-    "@ai-sdk/openai": "^3.0.63",
-    "@mastra/core": "1.13.2",
-    "sharp": "^0.34.5",
-    "zod": "^3.25.76"
-  },
   "devDependencies": {
     "@types/node": "^24.10.13",
     "vitest": "^3.2.4"

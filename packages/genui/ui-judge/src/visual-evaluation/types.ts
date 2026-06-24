@@ -102,12 +102,6 @@ export type EvaluationIssueCategory =
 
 export type EvaluationIssueSeverity = 'high' | 'low' | 'medium';
 
-export type EvaluateFn = (
-  image1DataUrl: string,
-  image2DataUrl: string,
-  options?: VisualEvaluationAgentOptions,
-) => Promise<EvaluationResult | string | Record<string, unknown>>;
-
 export type VisualEvaluationErrorCode =
   | 'EVALUATION_API_ERROR'
   | 'IMAGE_ALIGNMENT_ERROR'
@@ -128,22 +122,12 @@ export interface VisualEvaluationErrorResponse {
 
 export interface RunVisualEvaluationOptions {
   agent?: VisualEvaluationAgentOptions;
-  evaluate?: EvaluateFn;
-  fetch?: typeof fetch;
 }
 
 export interface VisualEvaluationAgentOptions {
-  agent?: VisualEvaluationAgent;
   api?: 'chat' | 'responses';
   apiKey?: string;
   baseURL?: string;
   model?: string;
   resourceId?: string;
-}
-
-export interface VisualEvaluationAgent {
-  generate(
-    messages: unknown,
-    options?: { resourceId?: string },
-  ): Promise<unknown> | unknown;
 }

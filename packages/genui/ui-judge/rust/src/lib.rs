@@ -9,6 +9,7 @@ mod model;
 mod protocol;
 pub mod report;
 mod transport;
+mod visual;
 
 pub use api::{ConnectOptions, Element, Error, Lynx, Page, Result, ScreenshotOptions};
 pub use judge::{
@@ -19,3 +20,11 @@ pub use judge::{
 pub use model::{ModelApi, ModelClient, ModelOptions};
 pub use protocol::{BoxModel, ComputedStyleProperty, NodeInfo, Session};
 pub use report::{format_report_markdown, ReportPayload, ReportResult};
+pub use visual::{
+  parse_visual_model_result, run_visual_evaluation, AlignCrop, AlignResult, CompareDiffBlock,
+  CompareResult, EvaluationIssue, EvaluationResult, VisualEvaluationAlignOptions,
+  VisualEvaluationArtifacts, VisualEvaluationCompareOptions, VisualEvaluationError,
+  VisualEvaluationErrorCode, VisualEvaluationErrorResponse, VisualEvaluationMetrics,
+  VisualEvaluationRequest, VisualEvaluationResponse, VISUAL_EVALUATION_SYSTEM_PROMPT,
+  VISUAL_EVALUATION_USER_PROMPT,
+};

@@ -7,10 +7,11 @@ use std::time::{Duration, Instant};
 
 use base64::prelude::{Engine, BASE64_STANDARD};
 use clap::{Parser, Subcommand};
-use serde::Deserialize;
+use serde::{Deserialize, Serialize};
 use ui_judge::{
-  format_report_markdown, judge_android_agent, ConnectOptions, Lynx, ModelApi, ModelClient,
-  ModelOptions, ReportPayload, ScreenshotOptions, UiJudgeDimension, GEQI_DIMENSIONS,
+  format_report_markdown, judge_android_agent, run_visual_evaluation, ConnectOptions, Lynx,
+  ModelApi, ModelClient, ModelOptions, ReportPayload, ScreenshotOptions, UiJudgeDimension,
+  VisualEvaluationError, VisualEvaluationErrorCode, VisualEvaluationRequest, GEQI_DIMENSIONS,
 };
 
 #[derive(Debug, Parser)]
@@ -25,6 +26,7 @@ struct Cli {
 enum Command {
   JudgeAndroidAgent(JudgeAndroidAgentCommand),
   Report(ReportCommand),
+  VisualEvaluation(VisualEvaluationCommand),
 }
 
 #[derive(Debug, Parser)]
@@ -71,6 +73,24 @@ struct ReportCommand {
   fallback_error: Option<String>,
 }
 
+#[derive(Debug, Parser)]
+struct VisualEvaluationCommand {
+  #[arg(long)]
+  request_file: PathBuf,
+  #[arg(long)]
+  result_file: PathBuf,
+  #[arg(long)]
+  api_key: Option<String>,
+  #[arg(long)]
+  base_url: Option<String>,
+  #[arg(long)]
+  model: Option<String>,
+  #[arg(long)]
+  api: Option<ModelApi>,
+  #[arg(long)]
+  timeout_ms: Option<u64>,
+}
+
 #[derive(Debug, Deserialize)]
 #[serde(rename_all = "camelCase")]
 struct ScenarioFile {
@@ -110,6 +130,7 @@ async fn run() -> Result<(), Box<dyn std::error::Error>> {
   match cli.command {
     Command::JudgeAndroidAgent(command) => run_judge_android_agent(command).await,
     Command::Report(command) => run_report(command).await,
+    Command::VisualEvaluation(command) => run_visual_evaluation_cli(command).await,
   }
 }
 
@@ -161,6 +182,43 @@ async fn run_report(command: ReportCommand) -> Result<(), Box<dyn std::error::Er
   )
   .await?;
   Ok(())
+}
+
+async fn run_visual_evaluation_cli(
+  command: VisualEvaluationCommand,
+) -> Result<(), Box<dyn std::error::Error>> {
+  let content = tokio::fs::read_to_string(&command.request_file).await?;
+  let request = match serde_json::from_str::<VisualEvaluationRequest>(&content) {
+    Ok(request) => request,
+    Err(error) => {
+      let error = VisualEvaluationError::new(
+        400,
+        VisualEvaluationErrorCode::InvalidRequest,
+        format!("Request body must be valid JSON: {error}"),
+      );
+      write_visual_error(&command.result_file, &error).await?;
+      return Err(Box::new(error));
+    }
+  };
+  let result = match ModelClient::new(visual_model_options(&command)) {
+    Ok(model) => run_visual_evaluation(request, &model).await,
+    Err(error) => Err(VisualEvaluationError::new(
+      502,
+      VisualEvaluationErrorCode::EvaluationApiError,
+      error.to_string(),
+    )),
+  };
+
+  match result {
+    Ok(response) => {
+      write_json_file(&command.result_file, &response).await?;
+      Ok(())
+    }
+    Err(error) => {
+      write_visual_error(&command.result_file, &error).await?;
+      Err(Box::new(error))
+    }
+  }
 }
 
 async fn judge_scenario(
@@ -329,6 +387,26 @@ fn model_options(command: &JudgeAndroidAgentCommand) -> ModelOptions {
   options
 }
 
+fn visual_model_options(command: &VisualEvaluationCommand) -> ModelOptions {
+  let mut options = ModelOptions::from_env();
+  if command.api_key.is_some() {
+    options.api_key = command.api_key.clone();
+  }
+  if command.base_url.is_some() {
+    options.base_url = command.base_url.clone();
+  }
+  if command.model.is_some() {
+    options.model = command.model.clone();
+  }
+  if command.api.is_some() {
+    options.api = command.api;
+  }
+  if command.timeout_ms.is_some() {
+    options.timeout_ms = command.timeout_ms;
+  }
+  options
+}
+
 async fn wait_for_text(
   page: &ui_judge::Page,
   expected: &[String],
@@ -389,6 +467,24 @@ async fn write_report_files(
   }
 
   Ok(())
+}
+
+async fn write_json_file<T: Serialize>(
+  path: &PathBuf,
+  payload: &T,
+) -> Result<(), Box<dyn std::error::Error>> {
+  if let Some(parent) = path.parent() {
+    tokio::fs::create_dir_all(parent).await?;
+  }
+  tokio::fs::write(path, serde_json::to_string_pretty(payload)? + "\n").await?;
+  Ok(())
+}
+
+async fn write_visual_error(
+  path: &PathBuf,
+  error: &VisualEvaluationError,
+) -> Result<(), Box<dyn std::error::Error>> {
+  write_json_file(path, &error.response()).await
 }
 
 fn fallback_payload(message: String) -> ReportPayload {

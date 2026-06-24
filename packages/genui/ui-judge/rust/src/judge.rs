@@ -242,7 +242,10 @@ pub async fn judge_android_agent(
   }
 
   let prompt = build_judge_prompt(&request);
-  match client.evaluate(&prompt, &request.screenshot_data_url).await {
+  match client
+    .evaluate(&prompt, &[&request.screenshot_data_url])
+    .await
+  {
     Ok(raw) => match parse_model_result(&raw) {
       Ok(model_result) => UiJudgeResult {
         dimension: request.dimension,

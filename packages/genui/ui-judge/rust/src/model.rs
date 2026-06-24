@@ -4,8 +4,9 @@
 
 use std::time::Duration;
 
+use async_openai::{config::OpenAIConfig, Client as OpenAIClient};
 use clap::ValueEnum;
-use reqwest::Client;
+use reqwest::Client as HttpClient;
 use serde::{Deserialize, Serialize};
 use serde_json::{json, Value};
 use thiserror::Error;
@@ -67,8 +68,10 @@ pub struct ModelClient {
   api: ModelApi,
   api_key: String,
   base_url: String,
-  client: Client,
+  http_client: HttpClient,
+  mock_response: Option<String>,
   model: String,
+  openai: OpenAIClient<OpenAIConfig>,
 }
 
 #[derive(Debug, Error)]
@@ -77,6 +80,8 @@ pub enum ModelError {
   MissingApiKey,
   #[error("model API request failed: {0}")]
   Request(#[from] reqwest::Error),
+  #[error("OpenAI SDK request failed: {0}")]
+  OpenAi(#[from] async_openai::error::OpenAIError),
   #[error("model API returned HTTP {status}: {body}")]
   Http { status: u16, body: String },
   #[error("model API response did not contain text output")]
@@ -85,7 +90,11 @@ pub enum ModelError {
 
 impl ModelClient {
   pub fn new(options: ModelOptions) -> Result<Self, ModelError> {
-    let api_key = options.api_key.ok_or(ModelError::MissingApiKey)?;
+    let mock_response = first_env(&["UI_JUDGE_MODEL_RESPONSE_JSON"]);
+    let api_key = options
+      .api_key
+      .or_else(|| mock_response.as_ref().map(|_| "ui-judge-mock".to_string()))
+      .ok_or(ModelError::MissingApiKey)?;
     let base_url = normalize_base_url(
       options
         .base_url
@@ -99,81 +108,115 @@ impl ModelClient {
       }
     });
     let timeout = Duration::from_millis(options.timeout_ms.unwrap_or(DEFAULT_TIMEOUT_MS));
-    let client = Client::builder().timeout(timeout).build()?;
+    let http_client = HttpClient::builder().timeout(timeout).build()?;
+    let openai = OpenAIClient::build(
+      http_client.clone(),
+      OpenAIConfig::new()
+        .with_api_key(api_key.clone())
+        .with_api_base(base_url.clone()),
+    );
 
     Ok(Self {
       api,
       api_key,
       base_url,
-      client,
+      http_client,
+      mock_response,
       model: options.model.unwrap_or_else(|| DEFAULT_MODEL.to_string()),
+      openai,
     })
   }
 
   pub async fn evaluate(
     &self,
     prompt: &str,
-    screenshot_data_url: &str,
+    image_data_urls: &[&str],
   ) -> Result<String, ModelError> {
+    self
+      .evaluate_with_system(SYSTEM_PROMPT, prompt, image_data_urls)
+      .await
+  }
+
+  pub async fn evaluate_with_system(
+    &self,
+    system_prompt: &str,
+    prompt: &str,
+    image_data_urls: &[&str],
+  ) -> Result<String, ModelError> {
+    if let Some(response) = &self.mock_response {
+      return Ok(response.clone());
+    }
     match self.api {
-      ModelApi::Chat => self.evaluate_chat(prompt, screenshot_data_url).await,
-      ModelApi::Responses => self.evaluate_responses(prompt, screenshot_data_url).await,
+      ModelApi::Chat => {
+        self
+          .evaluate_chat(system_prompt, prompt, image_data_urls)
+          .await
+      }
+      ModelApi::Responses => {
+        self
+          .evaluate_responses(system_prompt, prompt, image_data_urls)
+          .await
+      }
     }
   }
 
   async fn evaluate_chat(
     &self,
+    system_prompt: &str,
     prompt: &str,
-    screenshot_data_url: &str,
+    image_data_urls: &[&str],
   ) -> Result<String, ModelError> {
     let body = json!({
       "model": self.model,
       "messages": [
-        { "role": "system", "content": SYSTEM_PROMPT },
+        { "role": "system", "content": system_prompt },
         {
           "role": "user",
-          "content": [
-            { "type": "text", "text": prompt },
-            { "type": "image_url", "image_url": { "url": screenshot_data_url } }
-          ]
+          "content": chat_content(prompt, image_data_urls)
         }
       ],
       "temperature": 0
     });
-    let response = self.post_json(chat_endpoint(&self.base_url), body).await?;
+    let response = if uses_query_ak_auth(&self.base_url) {
+      self.post_json(chat_endpoint(&self.base_url), body).await?
+    } else {
+      self.openai.chat().create_byot(body).await?
+    };
     extract_chat_text(&response).ok_or(ModelError::MissingOutput)
   }
 
   async fn evaluate_responses(
     &self,
+    system_prompt: &str,
     prompt: &str,
-    screenshot_data_url: &str,
+    image_data_urls: &[&str],
   ) -> Result<String, ModelError> {
     let body = json!({
       "model": self.model,
       "input": [
         {
           "role": "system",
-          "content": [{ "type": "input_text", "text": SYSTEM_PROMPT }]
+          "content": [{ "type": "input_text", "text": system_prompt }]
         },
         {
           "role": "user",
-          "content": [
-            { "type": "input_text", "text": prompt },
-            { "type": "input_image", "image_url": screenshot_data_url }
-          ]
+          "content": responses_content(prompt, image_data_urls)
         }
       ],
       "temperature": 0
     });
-    let response = self
-      .post_json(format!("{}/responses", self.base_url), body)
-      .await?;
+    let response = if uses_query_ak_auth(&self.base_url) {
+      self
+        .post_json(format!("{}/responses", self.base_url), body)
+        .await?
+    } else {
+      self.openai.responses().create_byot(body).await?
+    };
     extract_responses_text(&response).ok_or(ModelError::MissingOutput)
   }
 
   async fn post_json(&self, endpoint: String, body: Value) -> Result<Value, ModelError> {
-    let mut request = self.client.post(endpoint).json(&body);
+    let mut request = self.http_client.post(endpoint).json(&body);
     if uses_query_ak_auth(&self.base_url) {
       request = request.query(&[("ak", self.api_key.as_str())]);
     } else {
@@ -195,6 +238,26 @@ impl ModelClient {
       body: format!("invalid JSON response: {error}; body: {text}"),
     })
   }
+}
+
+fn chat_content(prompt: &str, image_data_urls: &[&str]) -> Vec<Value> {
+  let mut content = vec![json!({ "type": "text", "text": prompt })];
+  content.extend(
+    image_data_urls
+      .iter()
+      .map(|image| json!({ "type": "image_url", "image_url": { "url": image } })),
+  );
+  content
+}
+
+fn responses_content(prompt: &str, image_data_urls: &[&str]) -> Vec<Value> {
+  let mut content = vec![json!({ "type": "input_text", "text": prompt })];
+  content.extend(
+    image_data_urls
+      .iter()
+      .map(|image| json!({ "type": "input_image", "image_url": image })),
+  );
+  content
 }
 
 fn read_api_env() -> Option<ModelApi> {

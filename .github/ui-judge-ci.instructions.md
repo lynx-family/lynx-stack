@@ -2,7 +2,7 @@
 applyTo: ".github/workflows/test.yml,.github/workflows/workflow-test.yml,.github/ui-judge*.instructions.md"
 ---
 
-Run `@lynx-js/ui-judge` TypeScript CI as a normal Vitest package job with `pnpm --filter @lynx-js/ui-judge test` on a Linux runner. It should not use the Playwright container or upload Playwright reports.
+Run `@lynx-js/ui-judge` TypeScript CI as a normal Vitest package job with `pnpm --filter @lynx-js/ui-judge test` on a Linux runner with the Rust toolchain available. It should not use the Playwright container or upload Playwright reports.
 
 Keep UI Judge CI dependent on the repository `build` job through the reusable `workflow-test.yml`, so the reusable workflow still runs its root `pnpm turbo build --summarize` before tests.
 

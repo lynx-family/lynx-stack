@@ -18,11 +18,12 @@ name = "android_e2e"
 path = "rust/tests/android_e2e.rs"
 
 [dependencies]
+async-openai = { workspace = true, features = ["byot", "chat-completion", "responses", "rustls"] }
 base64 = { workspace = true }
 clap = { workspace = true, features = ["derive"] }
 droidrun-adb = { workspace = true }
 image = { workspace = true }
-reqwest = { workspace = true, default-features = false, features = ["json", "rustls-tls"] }
+reqwest = { workspace = true, default-features = false, features = ["json", "rustls"] }
 serde = { workspace = true, features = ["derive"] }
 serde_json = { workspace = true, features = ["preserve_order"] }
 thiserror = { workspace = true }
