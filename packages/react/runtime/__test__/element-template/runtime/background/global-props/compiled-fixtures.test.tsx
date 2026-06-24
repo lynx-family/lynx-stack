@@ -21,6 +21,7 @@ const [
   { renderCompiledFixtureOnBackground, renderCompiledFixtureOnMainThread },
   { ElementTemplateEnvManager },
   { serializeToJSX },
+  { parseElementTemplateUpdateEventPayload },
 ] = await Promise.all([
   import('../../../../../src/element-template/background/commit-hook.js'),
   import('../../../../../src/element-template/background/hydration-listener.js'),
@@ -34,6 +35,7 @@ const [
   import('../../../test-utils/debug/compiledThreadRunner.js'),
   import('../../../test-utils/debug/envManager.js'),
   import('../../../test-utils/debug/serializer.js'),
+  import('../../../../../src/element-template/protocol/update-event.js'),
 ]);
 
 const __filename = fileURLToPath(import.meta.url);
@@ -74,7 +76,7 @@ describe('Compiled ET GlobalProps update fixtures', () => {
   let updateEvents: ElementTemplateUpdateCommitContext[] = [];
 
   const onUpdate = (event: { data: unknown }) => {
-    updateEvents.push(event.data as ElementTemplateUpdateCommitContext);
+    updateEvents.push(parseElementTemplateUpdateEventPayload(event.data));
   };
 
   function installGlobalProps(globalProps: Record<string, unknown>): void {

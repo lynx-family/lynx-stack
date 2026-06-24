@@ -4,14 +4,14 @@
  * LICENSE file in the root directory of this source tree.
  */
 import './jsdom.js';
-import { describe, expect, test, vi } from 'vitest';
+import { describe, expect, test, rstest } from '@rstest/core';
 import { I18nManager } from '../ts/client/mainthread/I18n.js';
 import { BackgroundThread } from '../ts/client/mainthread/Background.js';
 import { i18nResourceMissedEventName } from '../ts/constants.js';
 
 describe('I18nManager', () => {
   const mockBackground = {
-    dispatchI18nResource: vi.fn(),
+    dispatchI18nResource: rstest.fn(),
   } as unknown as BackgroundThread;
 
   const rootDom = document.createElement('div').attachShadow({ mode: 'open' });
@@ -38,7 +38,7 @@ describe('I18nManager', () => {
 
   test('should return undefined and trigger fallback when resource not found', () => {
     const i18nManager = new I18nManager(mockBackground, rootDom, []);
-    const dispatchEventSpy = vi.spyOn(rootDom, 'dispatchEvent');
+    const dispatchEventSpy = rstest.spyOn(rootDom, 'dispatchEvent');
 
     const result = i18nManager._I18nResourceTranslation({
       locale: 'fr',

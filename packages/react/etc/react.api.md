@@ -4,9 +4,11 @@
 
 ```ts
 
+import { Children as Children_2 } from 'preact/compat';
 import { cloneElement } from 'react';
 import { Component } from 'react';
 import type { ComponentChild } from 'preact';
+import type { ComponentChildren } from 'preact';
 import type { ComponentClass } from 'react';
 import type { Consumer } from 'react';
 import { createContext } from 'react';
@@ -36,6 +38,9 @@ import { useRef } from 'react';
 import { useState } from 'react';
 import { useSyncExternalStore } from 'react';
 import type { VNode } from 'preact';
+
+// @public
+export const Children: ReactLynxChildren;
 
 export { cloneElement }
 
@@ -131,6 +136,13 @@ export function markFirstScreenSyncReady(): void;
 export { memo }
 
 export { PureComponent }
+
+// @public
+export type ReactLynxChildren = Omit<typeof Children_2, 'map' | 'forEach' | 'toArray'> & {
+    map<T extends ComponentChild, R>(children: T | T[], fn: (child: T, index: number) => R): readonly R[] | null;
+    forEach<T extends ComponentChild, R>(children: T | T[], fn: (child: T, index: number) => R): readonly R[] | null;
+    toArray(children: ComponentChildren): Readonly<ReturnType<(typeof Children_2)['toArray']>>;
+};
 
 // @public
 export interface Root {

@@ -8,7 +8,46 @@ export interface OpenUIScenario {
   raw: string;
 }
 
+const NEW_LAYOUT_SHOWCASE_RAW =
+  `root = Column([hero, layoutCard, listCard], "start", "stretch", "m")
+hero = Card([Text("Layout Showcase", "h2"), Text("Row, Column, List and Divider compose a compact planning view.", "body")], "card", "column", false, "s", "start", "start")
+layoutCard = Card([CardHeader("Release Roadmap", "Row and Column primitives"), statusRow, Divider("horizontal"), milestoneColumn], "card", "column", false, "m", "stretch", "start")
+statusRow = Row([Text("Design", "h5"), Tag("In review"), Icon("arrow_forward", "sm", "muted"), Text("Build", "h5"), Tag("Active"), Icon("arrow_forward", "sm", "muted"), Text("Launch", "h5")], "between", "center", "s", true)
+milestoneColumn = Column([Text("1. API shape finalized", "body"), Text("2. Playground coverage added", "body"), Text("3. Browser verification complete", "body")], "start", "stretch", "s")
+listCard = Card([CardHeader("Checklist", "Tap each item to update local state"), List([CheckBox("Document usage snippets", true), CheckBox("Verify tabs and modal interactions", false), CheckBox("Confirm media placeholders render", false)], "vertical", "stretch", "s", true)], "sunk", "column", false, "m", "stretch", "start")`;
+
+const NEW_INTERACTIVE_CONTROLS_RAW = `$plan = "Pro"
+root = Column([header, tabs, modalLauncher], "start", "stretch", "m")
+header = Card([Text("Interactive Controls", "h2"), Text("Tabs, ChoicePicker, DateTimeInput and Modal in one flow.", "body")], "card", "column", false, "s", "start", "start")
+tabs = Tabs([{ value: "plan", title: "Plan", child: planCard }, { value: "schedule", title: "Schedule", child: scheduleCard }])
+planCard = Card([CardHeader("Plan", "ChoicePicker updates local visual state"), ChoicePicker("Tier", ["Free", "Pro", "Team"], $plan, "card", "chips", true), Buttons([Button("Set Free", Action([@Set($plan, "Free")]), "secondary"), Button("Set Team", Action([@Set($plan, "Team")]), "primary")])], "sunk", "column", false, "m", "stretch", "start")
+scheduleCard = Card([CardHeader("Schedule", "DateTimeInput displays date and time constraints"), DateTimeInput("2026-06-16T09:30:00", true, true, "2026-06-01", "2026-06-30", "Launch window")], "sunk", "column", false, "m", "stretch", "start")
+modalContent = Card([Text("Confirmation", "h3"), Text("The modal renders arbitrary OpenUI content.", "body"), Button("Looks good", Action([@ToAssistant("Confirmed modal content")]), "primary")], "card", "column", false, "m", "stretch", "start")
+modalLauncher = Modal(Button("Open confirmation", Action([@ToAssistant("Opened confirmation modal")]), "secondary"), modalContent, "Review details")`;
+
+const NEW_MEDIA_CARDS_RAW =
+  `root = Column([header, mediaTabs], "start", "stretch", "m")
+header = Card([Text("Media Cards", "h2"), Text("AudioPlayer and Video provide lightweight media attachment surfaces.", "body")], "card", "column", false, "s", "start", "start")
+mediaTabs = Tabs([{ value: "audio", title: "Audio", child: audioCard }, { value: "video", title: "Video", child: videoCard }])
+audioCard = Card([CardHeader("Podcast Preview", "AudioPlayer placeholder"), AudioPlayer("https://example.com/openui-weekly.mp3", "OpenUI Weekly - catalog additions"), Row([Icon("pause", "sm", "muted"), Text("12 min episode", "caption"), Tag("Transcript ready")], "start", "center", "s", true)], "card", "column", false, "m", "stretch", "start")
+videoCard = Card([CardHeader("Launch Walkthrough", "Video placeholder"), Video("https://example.com/openui-launch.mp4", "OpenUI component walkthrough"), List([Text("Covers layout primitives", "body"), Text("Shows tabs and modal", "body"), Text("Highlights media cards", "body")], "vertical", "stretch", "xs", true)], "card", "column", false, "m", "stretch", "start")`;
+
 export const OPENUI_SCENARIOS: OpenUIScenario[] = [
+  {
+    id: 'new-layout-showcase',
+    title: 'New Layout Showcase',
+    raw: NEW_LAYOUT_SHOWCASE_RAW,
+  },
+  {
+    id: 'new-interactive-controls',
+    title: 'New Interactive Controls',
+    raw: NEW_INTERACTIVE_CONTROLS_RAW,
+  },
+  {
+    id: 'new-media-cards',
+    title: 'New Media Cards',
+    raw: NEW_MEDIA_CARDS_RAW,
+  },
   {
     id: 'pricing-cards',
     title: 'Pricing Cards',

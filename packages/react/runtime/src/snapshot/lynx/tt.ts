@@ -7,6 +7,10 @@ import { runWithForce } from './runWithForce.js';
 import { updateGlobalProps as updateGlobalPropsCore } from '../../core/globalProps.js';
 import { updateCardData } from '../../core/lynx-update-data.js';
 import { PerformanceTimingFlags, PipelineOrigins, beginPipeline, markTiming } from '../../core/performance.js';
+import {
+  delayedRunOnMainThreadData,
+  takeDelayedRunOnMainThreadData,
+} from '../../core/thread-function-call/main-thread.js';
 import { __root } from '../../root.js';
 import { profileEnd, profileStart } from '../../shared/profile.js';
 import { CHILDREN } from '../../shared/render-constants.js';
@@ -28,10 +32,6 @@ import {
   hydrate,
 } from '../snapshot/backgroundSnapshot.js';
 import type { SerializedSnapshotInstance } from '../snapshot/types.js';
-import {
-  delayedRunOnMainThreadData,
-  takeDelayedRunOnMainThreadData,
-} from '../worklet/call/delayedRunOnMainThreadData.js';
 import { destroyWorklet } from '../worklet/destroy.js';
 import { sendMTRefInitValueToMainThread } from '../worklet/ref/updateInitValue.js';
 

@@ -1,5 +1,5 @@
 import './jsdom.js';
-import { describe, test, expect, vi, beforeEach } from 'vitest';
+import { describe, test, expect, rstest, beforeEach } from '@rstest/core';
 import { encode, type TasmJSONInfo } from '../ts/encode/index.js';
 import { MagicHeader0, MagicHeader1 } from '../ts/constants.js';
 import type { LynxViewInstance } from '../ts/client/mainthread/LynxViewInstance.js';
@@ -10,7 +10,7 @@ await import('../ts/client/decodeWorker/decode.worker.js');
 // -------------------------------------
 
 // Mock wasm-feature-detect to ensure we load the standard WASM
-vi.mock('wasm-feature-detect', () => ({
+rstest.mock('wasm-feature-detect', () => ({
   referenceTypes: async () => true,
   simd: async () => true,
 }));
@@ -41,12 +41,12 @@ const sampleTasm: TasmJSONInfo = {
 };
 
 const mockLynxViewInstance = {
-  onPageConfigReady: vi.fn(),
-  onStyleInfoReady: vi.fn(),
-  onMTSScriptsLoaded: vi.fn(),
-  onBTSScriptsLoaded: vi.fn(),
-  backgroundThread: vi.mockObject({
-    markTiming: vi.fn(),
+  onPageConfigReady: rstest.fn(),
+  onStyleInfoReady: rstest.fn(),
+  onMTSScriptsLoaded: rstest.fn(),
+  onBTSScriptsLoaded: rstest.fn(),
+  backgroundThread: rstest.mockObject({
+    markTiming: rstest.fn(),
   }),
 } as unknown as LynxViewInstance;
 
@@ -58,12 +58,12 @@ function isHeartbreakMessage(message: unknown): message is HeartbreakMessage {
 
 describe('Template Manager', () => {
   beforeEach(() => {
-    vi.clearAllMocks();
-    globalThis.fetch = vi.fn();
+    rstest.clearAllMocks();
+    globalThis.fetch = rstest.fn();
   });
 
   test('should exchange worker-level heartbreak ack messages', async () => {
-    const postMessageSpy = vi.spyOn(globalThis, 'postMessage');
+    const postMessageSpy = rstest.spyOn(globalThis, 'postMessage');
 
     try {
       const startedAt = performance.now();
@@ -455,13 +455,13 @@ describe('Template Manager', () => {
 
     const instance1 = {
       ...mockLynxViewInstance,
-      onPageConfigReady: vi.fn(),
-      backgroundThread: { markTiming: vi.fn() },
+      onPageConfigReady: rstest.fn(),
+      backgroundThread: { markTiming: rstest.fn() },
     };
     const instance2 = {
       ...mockLynxViewInstance,
-      onPageConfigReady: vi.fn(),
-      backgroundThread: { markTiming: vi.fn() },
+      onPageConfigReady: rstest.fn(),
+      backgroundThread: { markTiming: rstest.fn() },
     };
 
     // Trigger both concurrently

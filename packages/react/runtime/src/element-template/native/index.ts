@@ -9,7 +9,7 @@ import { callDestroyLifetimeFun } from './callDestroyLifetimeFun.js';
 import { injectCalledByNative } from './main-thread-api.js';
 import { installOnMtsDestruction } from './mts-destroy.js';
 import { installElementTemplatePatchListener } from './patch-listener.js';
-import { reloadBackground } from './reload.js';
+import { reloadBackground } from './reload-background.js';
 import { runWithForceRootRender } from '../../core/forceRootRender.js';
 import { updateGlobalProps as updateGlobalPropsCore } from '../../core/globalProps.js';
 import { installMainThreadHooks } from '../../core/hooks/mainThreadImpl.js';
@@ -18,6 +18,7 @@ import { installElementTemplateCommitHook } from '../background/commit-hook.js';
 import { setupBackgroundElementTemplateDocument } from '../background/document.js';
 import { installElementTemplateHydrationListener } from '../background/hydration-listener.js';
 import { BackgroundElementTemplateInstance } from '../background/instance.js';
+import { installElementTemplateRenderScopeHooks } from '../background/render-scope.js';
 import { initElementTemplatePAPICallAlog } from '../debug/elementPAPICall.js';
 import { initProfileHook } from '../debug/profile.js';
 import { setupLynxEnv } from '../lynx/env.js';
@@ -73,6 +74,7 @@ function init(): void {
     lynxCoreInject.tt.updateGlobalProps = updateGlobalProps;
     lynxCoreInject.tt.updateCardData = updateCardData;
     lynxCoreInject.tt.onAppReload = reloadBackground;
+    installElementTemplateRenderScopeHooks();
     installElementTemplateCommitHook();
     if (process.env['NODE_ENV'] !== 'test') {
       initTimingAPI();

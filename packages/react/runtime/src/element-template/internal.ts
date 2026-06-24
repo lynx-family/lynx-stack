@@ -49,13 +49,20 @@ export { wrapWithLynxComponent } from '../core/compat/lynxComponent.js';
 
 export { loadLazyBundle } from '../core/lynx/lazy-bundle.js';
 
-// TODO: enable when worklet/runtime integration is implemented for ElementTemplate entry.
-// export { transformToWorklet } from '../worklet/call/transformToWorklet.js';
-// export { registerWorkletOnBackground } from '../worklet/hmr.js';
-// export { loadWorkletRuntime } from '@lynx-js/react/worklet-runtime/bindings';
+// TODO(ET MTS): add MTRef hydrate semantics in follow-up tracks.
+export { transformToWorklet } from './runtime/template/main-thread-background-function.js';
+export { loadWorkletRuntime } from '@lynx-js/react/worklet-runtime/bindings';
+
+export function registerWorkletOnBackground(
+  _type: string,
+  _hash: string,
+  _fn: (...args: unknown[]) => unknown,
+): void {}
+
 export {
   __etAttrPlanMap,
   adaptEventAttrSlot,
+  adaptMTEventAttrSlot,
   adaptRefAttrSlot,
   adaptSpreadAttrSlot,
 } from './runtime/template/attr-slot-plan.js';

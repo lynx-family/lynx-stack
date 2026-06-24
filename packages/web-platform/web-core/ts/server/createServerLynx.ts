@@ -11,7 +11,22 @@ export function createServerLynx(
   globalProps: Cloneable,
   customSections: Record<string, Cloneable>,
 ): MainThreadLynx {
+  let pipelineIdInc = 0;
   return {
+    performance: {
+      _generatePipelineOptions: () => ({
+        pipelineID: `_pipeline_ssr_` + (pipelineIdInc++),
+        needTimestamps: false,
+      }),
+      _onPipelineStart: () => {},
+      _bindPipelineIdWithTimingFlag: () => {},
+      _markTiming: () => {},
+      profileStart: () => {},
+      profileEnd: () => {},
+      profileMark: () => {},
+      profileFlowId: () => 0,
+      isProfileRecording: () => false,
+    },
     getJSContext() {
       // Return a basic mock for SSR
       return {} as any;
@@ -42,5 +57,19 @@ export function createServerLynx(
     clearTimeout: clearTimeout,
     setInterval: setInterval,
     clearInterval: clearInterval,
+    fetchBundle(url: string) {
+      // External bundle fetching is not supported during server-side rendering.
+      return Promise.resolve({
+        url,
+        code: -1,
+        errorMsg:
+          'lynx.fetchBundle is not supported during server-side rendering',
+      });
+    },
+    loadScript(_sectionPath: string, _options: { bundleName: string }) {
+      throw new Error(
+        'lynx.loadScript is not supported during server-side rendering',
+      );
+    },
   };
 }

@@ -1,0 +1,148 @@
+:root {
+  background-color: #f5f7fb;
+}
+
+.Page {
+  min-height: 100vh;
+  background-color: #f5f7fb;
+  display: flex;
+  flex-direction: column;
+  padding: 24px 18px 28px;
+}
+
+.Header {
+  flex-direction: column;
+  margin-bottom: 14px;
+}
+
+.Title {
+  color: #111827;
+  font-size: 28px;
+  font-weight: 700;
+}
+
+.Subtitle {
+  color: #526070;
+  font-size: 14px;
+  margin-top: 6px;
+}
+
+.Summary {
+  background-color: #ffffff;
+  border-color: #d4dce8;
+  border-radius: 8px;
+  border-width: 1px;
+  display: flex;
+  flex-direction: row;
+  margin-bottom: 12px;
+  padding: 12px 10px;
+}
+
+.Summary--pass {
+  border-color: #2e7d55;
+  background-color: #f0fbf5;
+}
+
+.SummaryColumn {
+  flex: 1;
+  flex-direction: column;
+  min-width: 0;
+  padding-right: 8px;
+}
+
+.SummaryColumn--narrow {
+  flex: 0.6;
+  padding-right: 0;
+}
+
+.SummaryLabel {
+  color: #64748b;
+  font-size: 11px;
+  font-weight: 600;
+}
+
+.SummaryValue {
+  color: #121826;
+  font-size: 16px;
+  font-weight: 700;
+  margin-top: 4px;
+}
+
+.SummaryValue--small {
+  font-size: 12px;
+}
+
+.CheckList {
+  flex-direction: column;
+}
+
+.CheckCard {
+  background-color: #ffffff;
+  border-color: #d4dce8;
+  border-radius: 7px;
+  border-width: 1px;
+  display: flex;
+  flex-direction: column;
+  margin-bottom: 9px;
+  min-height: 88px;
+  padding: 10px 12px;
+}
+
+.CheckCard--pass {
+  background-color: #f0fbf5;
+  border-color: #2e7d55;
+}
+
+.CheckHeader {
+  align-items: center;
+  display: flex;
+  flex-direction: row;
+  margin-bottom: 6px;
+}
+
+.CheckTitle {
+  color: #111827;
+  flex: 1;
+  font-size: 16px;
+  font-weight: 700;
+  min-width: 0;
+}
+
+.CheckBadge {
+  background-color: #eef2f7;
+  border-color: #d4dce8;
+  border-radius: 5px;
+  border-width: 1px;
+  color: #475569;
+  font-size: 11px;
+  font-weight: 800;
+  height: 24px;
+  line-height: 24px;
+  margin-left: 8px;
+  text-align: center;
+  width: 46px;
+}
+
+.CheckBadge--pass {
+  background-color: #2e7d55;
+  border-color: #2e7d55;
+  color: #ffffff;
+}
+
+.CheckExpected {
+  color: #526070;
+  font-size: 12px;
+  line-height: 1.25;
+  margin-bottom: 4px;
+}
+
+.CheckActual {
+  color: #111827;
+  font-size: 13px;
+  font-weight: 700;
+  line-height: 1.25;
+}
+
+.CheckActual--small {
+  font-size: 12px;
+}

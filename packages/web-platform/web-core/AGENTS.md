@@ -100,12 +100,12 @@ This package uses a hybrid build system involving `pnpm`, `rsbuild`, and `cargo`
   2. Generates high-performance JS bindings with `wasm-bindgen`.
   3. Optimizes the binary size with `wasm-opt`.
   4. Builds three variants: `client` (browser runtime), `server` (SSR), and `encode` (build tool).
-- **`pnpm test`**: Runs `vitest`. Note: If you modify Rust code, you must run `pnpm build:wasm` first for the changes to take effect in the tests.
+- **`pnpm test`**: Runs `rstest`. Note: If you modify Rust code, you must run `pnpm build:wasm` first for the changes to take effect in the tests.
 
 ### Configuration
 
 - **`rsbuild.config.ts`**: Configures the bundling of the client-side JavaScript, ensuring correct entry points (`ts/client/index.ts`) and output paths.
-- **`vitest.config.ts`**: Configures the test runner, including mappings to load the Wasm binary during tests.
+- **`rstest.config.ts`**: Configures the test runner, including mappings to load the Wasm binary during tests.
 
 ### Testing Strategy
 
@@ -115,9 +115,9 @@ This package uses a hybrid build system involving `pnpm`, `rsbuild`, and `cargo`
 - **Rust Tests**: run `cargo test --all-features` and `cargo test --target wasm32-unknown-unknown --all-features` separately.
 - **Server E2E Tests (`packages/web-platform/web-core-e2e`)**:
   - Located in `packages/web-platform/web-core-e2e`.
-  - Uses `vitest` to run tests against the **built artifacts** (e.g., `dist/api-globalThis.web.bundle`).
+  - Uses `rstest` to run server tests against the **built artifacts** (e.g., `dist/api-globalThis.web.bundle`).
   - Verifies server-side execution of templates using `executeTemplate` and isolated VM contexts.
-  - Run with `pnpm test` inside the `web-core-e2e` directory.
+  - Run with `pnpm test:server` inside the `web-core-e2e` directory. `pnpm test` is reserved for Playwright e2e tests.
 
 ## Guidelines for LLMs
 
@@ -132,6 +132,39 @@ This package uses a hybrid build system involving `pnpm`, `rsbuild`, and `cargo`
 
 - **Recursive Borrowing**: Avoid patterns where Rust calls JS, and JS immediately calls back into Rust to retrieve data that Rust already possesses. This will cause `RefCell` borrowing panics ("recursive use of an object").
 - **Object Passing**: Instead of passing IDs (like `uniqueId`) from Rust to JS and having JS callback to retrieve the object, pass the object reference (e.g., `&web_sys::HtmlElement`) directly from Rust to JS. `wasm-bindgen` handles this seamlessly and key for avoiding re-entrant calls.
+
+### External Bundles (`lynx.fetchBundle` / `lynx.loadScript`)
+
+External bundles let a card load extra `.web.bundle`s at runtime (used by `@lynx-js/externals-loading-webpack-plugin`). Web supports the **async** path only (there is no `promise.wait()`).
+
+**Key idea: mts and bts chunks have different formats, so don't lump them into one custom/external section — route each to the bundle slot whose format it matches, exactly like the card does.** An external bundle's mts chunk rides `LepusCode`, its bts chunk rides `Manifest`, its CSS rides `StyleInfo`. The decode worker + runtime then reuse the card's own lepus/manifest paths.
+
+- `lynx.fetchBundle(url)` → `Promise<{ url, code, errorMsg }>` (`code` `0` = ok, `-1` = fail, `-2` = timeout-not-supported). `LynxViewInstance.loadExternalBundle` decodes it through the same `TemplateManager` + decode worker as a lazy component (`queryComponent`), with override config `{ isLazy: 'false', isExternalBundle: 'true' }`. Its section handlers do the registration automatically: `Manifest` → `onBTSScriptsLoaded` → `updateBTSChunk(url, backgroundCode)` (bts worker `templateCache`); `LepusCode` → `onMTSScriptsLoaded` → `lepusCodeUrls.set(url, …)` (mts). The `urlMap['root']` guard skips the page render (an external bundle has no `root` chunk), and `startBTS()` is idempotent.
+- `lynx.loadScript(sectionPath, { bundleName })` returns a section's exports:
+  - **bts**: `nativeApp.loadScript(sectionPath, bundleName)` → `readScript` from `templateCache` (`/<sectionPath>`) → the bts chunk wrapper. **The plugin consumes the return value as the module's exports**, and lynx-core (>= 0.1.4) runs the `init`.
+  - **mts**: `lepusCodeUrls.get(bundleName)[sectionPath]` → the decode-worker-built blob url → `mtsRealm.loadScriptSync` returns its `module.exports`.
+
+**The two realms wire `lynx` differently — check both when touching either API:**
+
+- **bts** (`createBackgroundLynx`): the worker's `lynx` is built by `@lynx-js/lynx-core` (web-core requires **>= 0.1.4**). lynx-core calls `getNativeLynx().loadScript` / `getNativeLynx().fetchBundle` — forwarded from `createBackgroundLynx`, so those methods **must** be defined there (removing `loadScript` makes `lynx.loadScript` `undefined` and the externals call throws — verified by the `external-bundle` e2e). In **>= 0.1.4** lynx-core's own `loadScript` wrapper runs `_$executeInit` (and caches) on the returned `{ init }` object, so `createBackgroundLynx.loadScript` returns `nativeApp.loadScript(...)` **without** calling `.init`. (Historical: 0.1.3 forwarded `lynx.loadScript = getNativeLynx().loadScript` verbatim with no init handling, so there the method had to call `.init` itself.)
+- **mts** (`createMainThreadGlobalAPIs` / `createMainThreadLynx`): injected into the iframe realm; `loadScript` resolves the section's blob url from `lepusCodeUrls` and evals it via `mtsRealm.loadScriptSync`.
+
+### Web binary external bundle build
+
+Built with `defineExternalBundleRslibConfig(userLibConfig, { target: 'web' })` from `@lynx-js/lynx-bundle-rslib-config` (default `target: 'tasm'` = native bundle via `@lynx-js/tasm`). For the **web** target, `webEncode.ts` routes each section by the `encoding` tag `ExternalBundleWebpackPlugin` sets from the chunk's layer — not by name, since a user-declared `layer: 'main-thread'` entry has no `__main-thread` suffix:
+
+- `JsBytecode` (main-thread chunk) → `lepusCode` (the mts chunk).
+- other JS → `manifest` (the bts chunk), keyed `/<sectionPath>` to match the card's `/app-service.js` convention.
+- `CSS` → `StyleInfo` (the web style engine pre-processes it; never rebuild stylesheets in the browser).
+- JS is kept as **raw source** (the `JsBytecode` tag only selects the slot) — do **not** add the lynx_core AMD wrapper at build time; the runtime wraps each chunk at load. Encoded via `@lynx-js/web-core/encode` (`SDRA`/`WROF` magic header).
+
+### Decode worker chunk wrappers (mts format mismatch)
+
+The external mts chunk is a webpack/rspack **library** that writes to bare `exports`. The bts chunk wrapper (`createBundleInitReturnObj`) passes `exports` as a parameter, so the bts chunk fits `Manifest` directly. But the `LepusCode` decode wrapper is `(function(){ const navigator=…; [module.exports=]CODE })()` — it provides the iframe `module` but **not** `exports`, and its lazy variant expects CODE to be an _expression_ (the shape lazy-component roots use). So the decode worker's `LepusCode` case has an **external variant** (gated on `config.isExternalBundle`) that prepends `var exports=(module.exports={});` to give the library chunk a CommonJS env. Don't try to make one wrapper serve both shapes — the lazy _expression_ form and the library _exports_ form are incompatible.
+
+### Style-engine test gotcha
+
+When testing external/lazy stylesheets, assert **`background-color`**, not `color`: the web style transformer makes `color` cascade/inherit, so a `color` assertion can pass even when the stylesheet was never applied (false positive). `decode_style_info`'s `entryName` (set when `isLazy`) scopes selectors with `[l-e-name="<url>"]`; pass `isLazy: 'false'` to load an external bundle's CSS globally.
 
 ## Benchmarking
 

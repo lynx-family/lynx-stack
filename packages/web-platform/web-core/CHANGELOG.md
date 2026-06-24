@@ -1,5 +1,21 @@
 # @lynx-js/web-core
 
+## 0.21.1
+
+### Patch Changes
+
+- fix: avoid wasm 4kb error on chrome < 115 ([#2717](https://github.com/lynx-family/lynx-stack/pull/2717))
+
+  fix `Uncaught (in promise) RangeError: WebAssembly.Instance is disallowed on the main thread, if the buffer size is larger than 4KB. Use WebAssembly.instantiate.` error on `chrome < 115`
+
+- Fix web font-face stylesheet insertion so custom fonts are appended through the Lynx view shadow host. ([#2745](https://github.com/lynx-family/lynx-stack/pull/2745))
+
+- Restore CSS var fallback values when encoding web binary templates. ([#2841](https://github.com/lynx-family/lynx-stack/pull/2841))
+
+- Updated dependencies [[`445c6c7`](https://github.com/lynx-family/lynx-stack/commit/445c6c77c227bb30ae4a92f8385518cf8b4b8bc2)]:
+  - @lynx-js/web-elements@0.12.4
+  - @lynx-js/web-worker-rpc@0.21.1
+
 ## 0.21.0
 
 ### Minor Changes

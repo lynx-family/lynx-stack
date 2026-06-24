@@ -90,7 +90,6 @@ describe('children api', () => {
       return (
         <view className={props.className}>
           {renderJSX.map((child) => {
-            console.log(child);
             if (child.props.values) {
               // for builtin element, keep dynamic values array
               expect(child.props).toMatchInlineSnapshot(`
@@ -317,5 +316,157 @@ describe('children api', () => {
         <view />
       </page>
     `);
+  });
+
+  it('Children.toArray', function() {
+    let arr;
+    const showIfChild = true;
+    const hideIfChild = false;
+    const list = ['map-a', 'map-b'];
+    const Item = () => <view />;
+    function Comp(props) {
+      arr = Children.toArray(props.children);
+      return props.children;
+    }
+    __root.__jsx = (
+      <Comp>
+        <Item label='static' />
+        {hideIfChild ? <Item label='if-hidden' /> : null}
+        {showIfChild ? <Item label='if-visible' /> : null}
+        {undefined}
+        {list.map((label) => <Item key={label} label={label} />)}
+      </Comp>
+    );
+    renderPage();
+    expect(Array.isArray(arr)).toBe(true);
+    // null and undefined should be filtered out
+    expect(arr).toHaveLength(4);
+    expect(arr.map((child) => child.props.label)).toEqual(['static', 'if-visible', 'map-a', 'map-b']);
+    expect(arr).toMatchInlineSnapshot(`
+      [
+        <Item
+          label="static"
+        />,
+        <Item
+          label="if-visible"
+        />,
+        <Item
+          label="map-a"
+        />,
+        <Item
+          label="map-b"
+        />,
+      ]
+    `);
+  });
+
+  it('Children.toArray with static jsx children', function() {
+    let arr;
+    function Comp(props) {
+      arr = Children.toArray(props.children);
+      return arr;
+    }
+    __root.__jsx = (
+      <Comp>
+        <view />
+        <text>Hello</text>
+        <view>
+          <text>Lynx</text>
+        </view>
+      </Comp>
+    );
+    renderPage();
+    expect(arr).toHaveLength(3);
+    expect(arr).toMatchInlineSnapshot(`
+      [
+        <__snapshot_a94a8_test_25 />,
+        <__snapshot_a94a8_test_26 />,
+        <__snapshot_a94a8_test_27 />,
+      ]
+    `);
+    expect(__root.__element_root).toMatchInlineSnapshot(`
+      <page
+        cssId="default-entry-from-native:0"
+      >
+        <view />
+        <text>
+          <raw-text
+            text="Hello"
+          />
+        </text>
+        <view>
+          <text>
+            <raw-text
+              text="Lynx"
+            />
+          </text>
+        </view>
+      </page>
+    `);
+  });
+
+  it('Children.toArray result is frozen', function() {
+    let arr;
+    function Comp(props) {
+      arr = Children.toArray(props.children);
+      return props.children;
+    }
+    __root.__jsx = (
+      <Comp>
+        <view />
+        <view />
+      </Comp>
+    );
+    renderPage();
+    expect(Object.isFrozen(arr)).toBe(true);
+    expect(() => arr.push(<view />)).toThrow('Cannot add property 2, object is not extensible');
+    // Non-mutating operations should still work
+    expect([...arr]).toHaveLength(2);
+    expect(arr.filter(() => true)).toHaveLength(2);
+  });
+
+  it('Children.map result is frozen', function() {
+    let results;
+    const Comp = (props) => {
+      results = Children.map(props.children, (child) => child);
+      return results;
+    };
+    __root.__jsx = (
+      <Comp>
+        <view />
+        <view />
+      </Comp>
+    );
+    renderPage();
+    expect(Object.isFrozen(results)).toBe(true);
+    expect(() => results.push(<view />)).toThrow('Cannot add property 2, object is not extensible');
+    // Non-mutating operations should still work
+    expect([...results]).toHaveLength(2);
+    expect(results.filter(() => true)).toHaveLength(2);
+  });
+
+  it('Children.forEach result is frozen', function() {
+    let results;
+    const Comp = (props) => {
+      results = Children.forEach(props.children, (child) => child);
+      return results;
+    };
+    __root.__jsx = (
+      <Comp>
+        <view />
+        <view />
+      </Comp>
+    );
+    renderPage();
+    expect(Object.isFrozen(results)).toBe(true);
+    expect(() => results.push(<view />)).toThrow('Cannot add property 2, object is not extensible');
+    // Non-mutating operations should still work
+    expect([...results]).toHaveLength(2);
+    expect(results.filter(() => true)).toHaveLength(2);
+  });
+
+  it('Children.map returns null when children is null', function() {
+    const result = Children.map(null, (child) => child);
+    expect(result).toBeNull();
   });
 });

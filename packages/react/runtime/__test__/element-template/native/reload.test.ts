@@ -6,12 +6,24 @@ import { destroyElementTemplateBackgroundRuntime } from '../../../src/element-te
 import { installElementTemplateHydrationListener } from '../../../src/element-template/background/hydration-listener.js';
 import { BackgroundElementTemplateInstance } from '../../../src/element-template/background/instance.js';
 import { profileEnd, profileStart } from '../../../src/element-template/debug/profile.js';
-import { reloadBackground, reloadMainThread } from '../../../src/element-template/native/reload.js';
+import { reloadBackground } from '../../../src/element-template/native/reload-background.js';
+import { reloadMainThread } from '../../../src/element-template/native/reload-main-thread.js';
 import { resetEventStateForRuntime } from '../../../src/element-template/prop-adapters/event.js';
+import { destroyAllElementTemplateListStates } from '../../../src/element-template/runtime/list/list.js';
 import { setupPage } from '../../../src/element-template/runtime/page/page.js';
 import { __root, setRoot } from '../../../src/element-template/runtime/page/root-instance.js';
 import { elementTemplateRegistry } from '../../../src/element-template/runtime/template/registry.js';
 import { resetTemplateId } from '../../../src/element-template/runtime/template/handle.js';
+import {
+  clearMainThreadDynamicAttrState,
+  getMainThreadDynamicAttrState,
+  initializeMainThreadDynamicAttrSlots,
+} from '../../../src/element-template/runtime/template/main-thread-dynamic-attr-state.js';
+import {
+  __etAttrPlanMap,
+  adaptMTEventAttrSlot,
+  clearEtAttrPlanMap,
+} from '../../../src/element-template/runtime/template/attr-slot-plan.js';
 import {
   renderMainThread,
   resetMainThreadRootRefs,
@@ -73,6 +85,11 @@ vi.mock('../../../src/element-template/runtime/template/handle.js', () => ({
   resetTemplateId: vi.fn(),
 }));
 
+vi.mock('../../../src/element-template/runtime/list/list.js', () => ({
+  destroyAllElementTemplateListStates: vi.fn(),
+  flushInitialElementTemplateListUpdates: vi.fn(() => []),
+}));
+
 vi.mock('../../../src/element-template/background/destroy.js', () => ({
   destroyElementTemplateBackgroundRuntime: vi.fn(),
 }));
@@ -110,6 +127,8 @@ describe('ElementTemplate reloadMainThread', () => {
     resetMainThreadRootRefs();
     mockedState.page = undefined;
     mockedState.root = {};
+    clearMainThreadDynamicAttrState();
+    clearEtAttrPlanMap();
     vi.stubGlobal('__PROFILE__', false);
     vi.stubGlobal('__FlushElementTree', vi.fn());
     vi.stubGlobal('__InsertNodeToElementTemplate', vi.fn());
@@ -156,6 +175,12 @@ describe('ElementTemplate reloadMainThread', () => {
       uid: -1,
     };
     const dispatchEvent = vi.fn();
+    __etAttrPlanMap._et_old = [0, adaptMTEventAttrSlot];
+    initializeMainThreadDynamicAttrSlots(-1, '_et_old', [{
+      type: 'worklet',
+      value: { _wkltId: 'old' },
+    }]);
+    expect(getMainThreadDynamicAttrState(-1, 0)).toBeDefined();
     vi.mocked(mockRender).mockReturnValueOnce(['old-opcode']);
     vi.mocked(mockRenderOpcodesIntoElementTemplate).mockReturnValueOnce({ rootRefs: [oldRootRef] });
     vi.mocked(__SerializeElementTemplate).mockReturnValueOnce(
@@ -183,7 +208,12 @@ describe('ElementTemplate reloadMainThread', () => {
     expect(increaseReloadVersion).toHaveBeenCalledTimes(1);
     expect(lynx.__initData).toBe(initData);
     expect(lynx.__initData).toEqual({ msg: 'reload', stable: true });
+    expect(destroyAllElementTemplateListStates).toHaveBeenCalledTimes(1);
+    expect(vi.mocked(destroyAllElementTemplateListStates).mock.invocationCallOrder[0]!).toBeLessThan(
+      vi.mocked(elementTemplateRegistry.clear).mock.invocationCallOrder[0]!,
+    );
     expect(elementTemplateRegistry.clear).toHaveBeenCalledTimes(1);
+    expect(getMainThreadDynamicAttrState(-1, 0)).toBeUndefined();
     expect(resetTemplateId).toHaveBeenCalledTimes(1);
     expect(vi.mocked(setupPage)).not.toHaveBeenCalled();
     expect(__RemoveNodeFromElementTemplate).toHaveBeenCalledWith(page, 0, oldRootRef);
@@ -203,6 +233,54 @@ describe('ElementTemplate reloadMainThread', () => {
       },
     });
     expect(__FlushElementTree).toHaveBeenCalledWith(page, options);
+  });
+
+  it('clears delayed runOnBackground tasks during main-thread reload', () => {
+    const delayedBackgroundFunctionArray = [{ task: vi.fn() }];
+    globalThis.lynxWorkletImpl = {
+      ...(globalThis.lynxWorkletImpl ?? {}),
+      _runOnBackgroundDelayImpl: {
+        delayedBackgroundFunctionArray,
+        clearDelayedBackgroundFunctions: vi.fn(() => {
+          delayedBackgroundFunctionArray.length = 0;
+        }),
+      },
+    } as typeof globalThis.lynxWorkletImpl;
+    mockedState.root = { __jsx: null };
+    vi.mocked(mockRender).mockReturnValue([]);
+    vi.mocked(mockRenderOpcodesIntoElementTemplate).mockReturnValue({ rootRefs: [] });
+
+    reloadMainThread(undefined, { reloadTemplate: true });
+
+    expect(globalThis.lynxWorkletImpl._runOnBackgroundDelayImpl.clearDelayedBackgroundFunctions).toHaveBeenCalledTimes(
+      1,
+    );
+    expect(delayedBackgroundFunctionArray).toHaveLength(0);
+  });
+
+  it('keeps newly rendered main-thread dynamic attr state when reload flush throws after create succeeds', () => {
+    const jsx = { type: 'App' };
+    const oldRoot = { __jsx: jsx };
+    mockedState.root = oldRoot;
+    mockedState.page = { type: 'page', id: '0', children: [] };
+    const ctx = { _wkltId: 'new' };
+    const rootRef = { type: 'ref-a' } as unknown as ElementRef;
+    vi.mocked(mockRender).mockReturnValue(['opcode']);
+    vi.mocked(mockRenderOpcodesIntoElementTemplate).mockImplementationOnce(() => {
+      __etAttrPlanMap._et_reload = [0, adaptMTEventAttrSlot];
+      initializeMainThreadDynamicAttrSlots(-2, '_et_reload', [{
+        type: 'worklet',
+        value: ctx,
+      }]);
+      return { rootRefs: [rootRef] };
+    });
+    vi.mocked(__FlushElementTree).mockImplementationOnce(() => {
+      throw new Error('flush failed');
+    });
+
+    expect(() => reloadMainThread({ msg: 'reload' }, { reloadTemplate: true })).toThrow('flush failed');
+
+    expect(getMainThreadDynamicAttrState(-2, 0)?.nativeHeldValue).toBe(ctx);
   });
 
   it('clears initData before resetPageData main-thread reloads', () => {

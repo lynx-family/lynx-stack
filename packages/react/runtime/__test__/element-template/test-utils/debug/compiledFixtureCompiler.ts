@@ -17,6 +17,8 @@ export interface CompiledFixtureArtifact {
 }
 
 interface CompileFixtureSourceOptions {
+  enableWorkletTransform?: boolean;
+  isDynamicComponent?: boolean;
   target?: CompiledFixtureTarget;
 }
 
@@ -28,7 +30,7 @@ export async function compileFixtureSource(
   sourcePath: string,
   options: CompileFixtureSourceOptions = {},
 ): Promise<CompiledFixtureArtifact> {
-  const { target = 'LEPUS' } = options;
+  const { enableWorkletTransform = false, isDynamicComponent = false, target = 'LEPUS' } = options;
   const code = fs.readFileSync(sourcePath, 'utf8');
   const filename = toFixtureFilename(sourcePath);
   const { transformReactLynx } = await import('@lynx-js/react-transform');
@@ -44,13 +46,20 @@ export async function compileFixtureSource(
       preserveJsx: false,
       runtimePkg: '@lynx-js/react/element-template/internal',
       filename,
+      isDynamicComponent,
       target,
     },
     shake: false,
     compat: true,
     directiveDCE: false,
     defineDCE: false,
-    worklet: false,
+    worklet: enableWorkletTransform
+      ? {
+        filename,
+        runtimePkg: '@lynx-js/react/internal',
+        target,
+      }
+      : false,
     refresh: false,
   })) as TransformResult;
 

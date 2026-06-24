@@ -17,6 +17,10 @@
       "types": "./dist/store/index.d.ts",
       "default": "./dist/store/index.js"
     },
+    "./snapshot": {
+      "types": "./dist/snapshot/index.d.ts",
+      "default": "./dist/snapshot/index.js"
+    },
     "./catalog": {
       "types": "./dist/catalog/index.d.ts",
       "default": "./dist/catalog/index.js"
@@ -162,8 +166,8 @@
     "@types/react": "^18.3.28"
   },
   "peerDependencies": {
-    "@lynx-js/lynx-ui": "^3.133.0",
-    "@lynx-js/react": "workspace:^"
+    "@lynx-js/lynx-ui": ">=3.133.0",
+    "@lynx-js/react": ">=0.121.0"
   },
   "peerDependenciesMeta": {
     "@lynx-js/lynx-ui": {

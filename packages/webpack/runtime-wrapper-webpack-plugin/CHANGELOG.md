@@ -1,5 +1,13 @@
 # @lynx-js/runtime-wrapper-webpack-plugin
 
+## 0.2.0
+
+### Minor Changes
+
+- **BREAKING CHANGE** ([#2803](https://github.com/lynx-family/lynx-stack/pull/2803))
+
+  Drop webpack support — the plugins now target Rspack only. All public types come from `@rspack/core` instead of `webpack` (e.g. `Compiler`, `Compilation`, `LoaderContext`), and the `webpack` dependency is removed.
+
 ## 0.1.3
 
 ### Patch Changes

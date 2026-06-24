@@ -5,10 +5,6 @@ import {
   resetGlobalCommitContext,
 } from '../../../../../src/element-template/background/commit-context.js';
 import {
-  hydrate as hydrateBackground,
-  hydrateIntoContext,
-} from '../../../../../src/element-template/background/hydrate.js';
-import {
   installElementTemplateHydrationListener,
   resetElementTemplateHydrationListener,
 } from '../../../../../src/element-template/background/hydration-listener.js';
@@ -29,6 +25,7 @@ import type { SerializedElementTemplate } from '../../../../../src/element-templ
 import { __page } from '../../../../../src/element-template/runtime/page/page.js';
 import { __root } from '../../../../../src/element-template/runtime/page/root-instance.js';
 import { ElementTemplateEnvManager } from '../../../test-utils/debug/envManager.js';
+import { hydrateBackground } from '../../../test-utils/debug/hydrate.js';
 import { extractSerializedHydrateInstances } from '../../../test-utils/debug/hydratePayload.js';
 import { installMockNativePapi } from '../../../test-utils/mock/mockNativePapi.js';
 import { serializeToJSX } from '../../../test-utils/debug/serializer.js';
@@ -152,28 +149,17 @@ export function runCaseByName(name: string): unknown {
 }
 
 {
-  defineCase('reports-key-mismatch', () => {
+  defineCase('root-key-mismatch-reconciles', () => {
     backgroundElementTemplateInstanceManager.clear();
     backgroundElementTemplateInstanceManager.nextId = 0;
-
-    const lynxObj = globalThis.lynx as typeof lynx & { reportError?: (error: Error) => void };
-    const oldReportError = lynxObj.reportError;
-    const reportErrorSpy = vi.fn();
-    lynxObj.reportError = reportErrorSpy;
 
     const after = new BackgroundElementTemplateInstance('after');
     const before = createHydrationTemplate(-1, 'before');
 
     const stream = hydrateBackground(before, after);
-    const firstError = reportErrorSpy.mock.calls[0]?.[0] as Error | undefined;
-
-    reportErrorSpy.mockClear();
-    (globalThis as { __LYNX_REPORT_ERROR_CALLS?: Error[] }).__LYNX_REPORT_ERROR_CALLS = [];
-    lynxObj.reportError = oldReportError;
 
     return {
       stream,
-      errorMessage: firstError?.message ?? null,
       afterInstanceId: after.instanceId,
     };
   });

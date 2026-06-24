@@ -5468,4 +5468,21 @@ test.describe('reactlynx3 tests', () => {
       },
     );
   });
+
+  test.describe('external-bundle', () => {
+    test('external-bundle', async ({ page }, { title }) => {
+      await goto(page, title);
+      // The external module is fetched + evaluated via lynx.fetchBundle +
+      // lynx.loadScript (background and main-thread layers) and rendered.
+      await expectHasText(page, 'hello-from-external');
+      // The external bundle's pre-processed style section is applied through the
+      // wasm style engine (push_style_sheet) during lynx.fetchBundle, so the
+      // element receives its background-color. (background-color, unlike color,
+      // does not inherit, so this proves the rule reached a real stylesheet.)
+      await expect(page.locator('#target')).toHaveCSS(
+        'background-color',
+        'rgb(1, 2, 3)',
+      );
+    });
+  });
 });

@@ -5,15 +5,24 @@ import {
   markElementTemplateHydrated,
   resetElementTemplateCommitState,
 } from '../../../../src/element-template/background/commit-hook.js';
-import { hydrate } from '../../../../src/element-template/background/hydrate.js';
 import {
   BackgroundElementTemplateInstance,
+  BackgroundListElementTemplateInstance,
   BUILTIN_RAW_TEXT_TEMPLATE_KEY,
 } from '../../../../src/element-template/background/instance.js';
 import { backgroundElementTemplateInstanceManager } from '../../../../src/element-template/background/manager.js';
 import { ElementTemplateUpdateOps } from '../../../../src/element-template/protocol/opcodes.js';
-import type { SerializedElementTemplate } from '../../../../src/element-template/protocol/types.js';
-import { clearEtAttrPlanMap } from '../../../../src/element-template/runtime/template/attr-slot-plan.js';
+import type {
+  SerializedElementTemplate,
+  SerializedTypedNode,
+} from '../../../../src/element-template/protocol/types.js';
+import {
+  __etAttrPlanMap,
+  adaptEventAttrSlot,
+  adaptMTEventAttrSlot,
+  clearEtAttrPlanMap,
+} from '../../../../src/element-template/runtime/template/attr-slot-plan.js';
+import { hydrateBackground as hydrate } from '../../test-utils/debug/hydrate.js';
 
 function createHydrationTemplate(
   handleId: number,
@@ -78,6 +87,106 @@ describe('hydrate', () => {
 
     expect(stream).toEqual([]);
     expect(root.elementSlots[0]).toEqual([child]);
+  });
+
+  it('binds hydration handles outside development without reporting dev invariant errors', () => {
+    const originalDev = globalThis.__DEV__;
+    globalThis.__DEV__ = false;
+    try {
+      const root = new BackgroundElementTemplateInstance('root');
+      const oldRootId = root.instanceId;
+
+      const stream = hydrate(
+        createHydrationTemplate(-10, 'root'),
+        root,
+      );
+
+      expect(stream).toEqual([]);
+      expect(backgroundElementTemplateInstanceManager.get(oldRootId)).toBeUndefined();
+      expect(backgroundElementTemplateInstanceManager.get(-10)).toBe(root);
+    } finally {
+      globalThis.__DEV__ = originalDev;
+    }
+  });
+
+  it('forces direct MTEvent hydrate slot updates even when wrappers are deep-equal', () => {
+    __etAttrPlanMap.root = [0, adaptMTEventAttrSlot];
+    const ctx = { _wkltId: 'tap' };
+    const root = new BackgroundElementTemplateInstance('root', [ctx]);
+
+    const stream = hydrate(
+      createHydrationTemplate(root.instanceId, 'root', {
+        attributeSlots: [{ type: 'worklet', value: { _wkltId: 'tap' } }],
+      }),
+      root,
+    );
+
+    expect(stream).toEqual([
+      ElementTemplateUpdateOps.setAttribute,
+      root.instanceId,
+      0,
+      { type: 'worklet', value: ctx },
+    ]);
+  });
+
+  it('keeps deep-equal hydrate wrappers skipped without a direct MTEvent attr plan', () => {
+    const wrapper = { type: 'worklet', value: { _wkltId: 'tap' } };
+    const root = new BackgroundElementTemplateInstance('root', [wrapper]);
+
+    const stream = hydrate(
+      createHydrationTemplate(root.instanceId, 'root', {
+        attributeSlots: [{ type: 'worklet', value: { _wkltId: 'tap' } }],
+      }),
+      root,
+    );
+
+    expect(stream).toEqual([]);
+  });
+
+  it('keeps deep-equal hydrate wrappers skipped when the planned adapter is not MTEvent', () => {
+    __etAttrPlanMap.root = [0, adaptEventAttrSlot];
+    const wrapper = { type: 'worklet', value: { _wkltId: 'tap' } };
+    const root = new BackgroundElementTemplateInstance('root');
+    root.attributeSlots = [wrapper];
+
+    const stream = hydrate(
+      createHydrationTemplate(root.instanceId, 'root', {
+        attributeSlots: [{ type: 'worklet', value: { _wkltId: 'tap' } }],
+      }),
+      root,
+    );
+
+    expect(stream).toEqual([]);
+  });
+
+  it('keeps direct MTEvent hydrate clears on the normal null diff path', () => {
+    __etAttrPlanMap.root = [0, adaptMTEventAttrSlot];
+    const root = new BackgroundElementTemplateInstance('root', [false]);
+
+    const stream = hydrate(
+      createHydrationTemplate(root.instanceId, 'root', {
+        attributeSlots: [{ type: 'worklet', value: { _wkltId: 'tap' } }],
+      }),
+      root,
+    );
+
+    expect(stream).toEqual([
+      ElementTemplateUpdateOps.setAttribute,
+      root.instanceId,
+      0,
+      null,
+    ]);
+  });
+
+  it('keeps ordinary post-hydration direct MTEvent deep-equal updates skipped', () => {
+    __etAttrPlanMap.root = [0, adaptMTEventAttrSlot];
+    const root = new BackgroundElementTemplateInstance('root', [{ _wkltId: 'tap' }]);
+
+    markElementTemplateHydrated();
+    globalCommitContext.ops = [];
+    root.setAttribute('attributeSlots', [{ _wkltId: 'tap' }]);
+
+    expect(globalCommitContext.ops).toEqual([]);
   });
 
   it('patches attribute slots while creating and inserting background-only children', () => {
@@ -295,6 +404,39 @@ describe('hydrate', () => {
     expect(globalCommitContext.nonPayload.removedSubtreesAwaitingTeardown).toEqual([]);
     expect(backgroundElementTemplateInstanceManager.get(mainThreadId)).toBeUndefined();
     expect(backgroundElementTemplateInstanceManager.get(localId)).toBe(moved);
+  });
+
+  it('rejects unsupported typed nodes when they match a live background child', () => {
+    const oldReportError = lynx.reportError;
+    const reportError = vi.fn();
+    lynx.reportError = reportError;
+
+    try {
+      const root = new BackgroundElementTemplateInstance('root');
+      const typed = new BackgroundElementTemplateInstance('scroll-view');
+      root.appendChild(typed);
+
+      const stream = hydrate(
+        createHydrationTemplate(root.instanceId, 'root', {
+          elementSlots: [[{
+            tag: 'scroll-view',
+            attributes: null,
+            elementSlots: [],
+            uid: -10,
+          } as SerializedTypedNode]],
+        }),
+        root,
+      );
+
+      expect(stream).toEqual([]);
+      expect(reportError).toHaveBeenCalledTimes(1);
+      expect(String(reportError.mock.calls[0]?.[0]?.message ?? '')).toContain(
+        'does not support serialized typed node \'scroll-view\'',
+      );
+    } finally {
+      lynx.reportError = oldReportError;
+      (globalThis as { __LYNX_REPORT_ERROR_CALLS?: Error[] }).__LYNX_REPORT_ERROR_CALLS = [];
+    }
   });
 
   it('does not pull cross-slot hydrate recreate candidates back into a non-empty source slot', () => {
@@ -709,6 +851,153 @@ describe('hydrate', () => {
     ]);
   });
 
+  it('fails serialized-only removal when the stale child uid is invalid', () => {
+    const oldReportError = lynx.reportError;
+    const reportError = vi.fn();
+    lynx.reportError = reportError;
+
+    try {
+      const root = new BackgroundElementTemplateInstance('root');
+
+      const stream = hydrate(
+        createHydrationTemplate(root.instanceId, 'root', {
+          elementSlots: [[createHydrationChild(0, 'child')]],
+        }),
+        root,
+      );
+
+      expect(stream).toEqual([]);
+      expect(reportError).toHaveBeenCalledTimes(1);
+      expect(String(reportError.mock.calls[0]?.[0]?.message ?? '')).toContain('invalid uid 0');
+    } finally {
+      lynx.reportError = oldReportError;
+      (globalThis as { __LYNX_REPORT_ERROR_CALLS?: Error[] }).__LYNX_REPORT_ERROR_CALLS = [];
+    }
+  });
+
+  it('fails serialized-only removal when a nested stale child uid is invalid', () => {
+    const oldReportError = lynx.reportError;
+    const reportError = vi.fn();
+    lynx.reportError = reportError;
+
+    try {
+      const root = new BackgroundElementTemplateInstance('root');
+
+      const stream = hydrate(
+        createHydrationTemplate(root.instanceId, 'root', {
+          elementSlots: [[createHydrationChild(-2, 'child', {
+            elementSlots: [[createHydrationChild(0, 'grandchild')]],
+          })]],
+        }),
+        root,
+      );
+
+      expect(stream).toEqual([]);
+      expect(reportError).toHaveBeenCalledTimes(1);
+      expect(String(reportError.mock.calls[0]?.[0]?.message ?? '')).toContain('invalid uid 0');
+    } finally {
+      lynx.reportError = oldReportError;
+      (globalThis as { __LYNX_REPORT_ERROR_CALLS?: Error[] }).__LYNX_REPORT_ERROR_CALLS = [];
+    }
+  });
+
+  it('fails serialized-only typed list removal when listChildren is missing', () => {
+    const oldReportError = lynx.reportError;
+    const reportError = vi.fn();
+    lynx.reportError = reportError;
+
+    try {
+      const root = new BackgroundElementTemplateInstance('root');
+
+      const stream = hydrate(
+        createHydrationTemplate(root.instanceId, 'root', {
+          elementSlots: [[{
+            tag: 'list',
+            attributes: null,
+            elementSlots: [],
+            uid: -10,
+          } as SerializedTypedNode]],
+        }),
+        root,
+      );
+
+      expect(stream).toEqual([]);
+      expect(reportError).toHaveBeenCalledTimes(1);
+      expect(String(reportError.mock.calls[0]?.[0]?.message ?? '')).toContain(
+        'requires options.listChildren',
+      );
+    } finally {
+      lynx.reportError = oldReportError;
+      (globalThis as { __LYNX_REPORT_ERROR_CALLS?: Error[] }).__LYNX_REPORT_ERROR_CALLS = [];
+    }
+  });
+
+  it('fails serialized-only typed list removal when generic element slots are present', () => {
+    const oldReportError = lynx.reportError;
+    const reportError = vi.fn();
+    lynx.reportError = reportError;
+
+    try {
+      const root = new BackgroundElementTemplateInstance('root');
+
+      const stream = hydrate(
+        createHydrationTemplate(root.instanceId, 'root', {
+          elementSlots: [[{
+            tag: 'list',
+            attributes: null,
+            elementSlots: [[createHydrationChild(-11, '_et_list_item')]],
+            uid: -10,
+            options: {
+              listChildren: [],
+            },
+          } as SerializedTypedNode]],
+        }),
+        root,
+      );
+
+      expect(stream).toEqual([]);
+      expect(reportError).toHaveBeenCalledTimes(1);
+      expect(String(reportError.mock.calls[0]?.[0]?.message ?? '')).toContain(
+        'does not support elementSlots',
+      );
+    } finally {
+      lynx.reportError = oldReportError;
+      (globalThis as { __LYNX_REPORT_ERROR_CALLS?: Error[] }).__LYNX_REPORT_ERROR_CALLS = [];
+    }
+  });
+
+  it('fails serialized-only typed list removal when a nested logical child uid is invalid', () => {
+    const oldReportError = lynx.reportError;
+    const reportError = vi.fn();
+    lynx.reportError = reportError;
+
+    try {
+      const root = new BackgroundElementTemplateInstance('root');
+
+      const stream = hydrate(
+        createHydrationTemplate(root.instanceId, 'root', {
+          elementSlots: [[{
+            tag: 'list',
+            attributes: null,
+            elementSlots: [],
+            uid: -10,
+            options: {
+              listChildren: [createHydrationChild(0, '_et_list_item')],
+            },
+          } as SerializedTypedNode]],
+        }),
+        root,
+      );
+
+      expect(stream).toEqual([]);
+      expect(reportError).toHaveBeenCalledTimes(1);
+      expect(String(reportError.mock.calls[0]?.[0]?.message ?? '')).toContain('invalid uid 0');
+    } finally {
+      lynx.reportError = oldReportError;
+      (globalThis as { __LYNX_REPORT_ERROR_CALLS?: Error[] }).__LYNX_REPORT_ERROR_CALLS = [];
+    }
+  });
+
   it('does not retain legacy runtime options on background instances', () => {
     const root = new BackgroundElementTemplateInstance('root');
 
@@ -917,6 +1206,620 @@ describe('hydrate', () => {
       0,
       child.instanceId,
       0,
+    ]);
+  });
+
+  it('hydrates native typed list roots from options listChildren', () => {
+    const list = new BackgroundListElementTemplateInstance();
+    const item = new BackgroundElementTemplateInstance('_et_list_item');
+    list.setAttribute('attributes', { id: 'feed' });
+    list.appendChild(item);
+    const oldListId = list.instanceId;
+    const oldItemId = item.instanceId;
+
+    const stream = hydrate(
+      {
+        tag: 'list',
+        attributes: {
+          id: 'feed',
+          'component-at-index': null,
+          'component-at-indexes': null,
+          'enqueue-component': null,
+          'update-list-info': {
+            insertAction: [{ position: 0, type: '_et_list_item' }],
+            removeAction: [],
+            updateAction: [],
+          },
+        },
+        elementSlots: null,
+        uid: -10,
+        options: {
+          listChildren: [createHydrationChild(-11, '_et_list_item')],
+        },
+      } satisfies SerializedTypedNode,
+      list,
+    );
+
+    expect(stream).toEqual([
+      ElementTemplateUpdateOps.updateTypedListItem,
+      -10,
+      { __etHandleRef: -11, type: '_et_list_item', platformInfo: {} },
+    ]);
+    expect(backgroundElementTemplateInstanceManager.get(oldListId)).toBeUndefined();
+    expect(backgroundElementTemplateInstanceManager.get(oldItemId)).toBeUndefined();
+    expect(backgroundElementTemplateInstanceManager.get(-10)).toBe(list);
+    expect(backgroundElementTemplateInstanceManager.get(-11)).toBe(item);
+  });
+
+  it('hydrates typed lists outside development while dropping transient native list attributes', () => {
+    const originalDev = globalThis.__DEV__;
+    globalThis.__DEV__ = false;
+    try {
+      const list = new BackgroundListElementTemplateInstance();
+      const oldListId = list.instanceId;
+
+      const stream = hydrate(
+        {
+          tag: 'list',
+          attributes: {
+            'component-at-index': null,
+            'component-at-indexes': null,
+            'enqueue-component': null,
+            'update-list-info': {
+              insertAction: [],
+              removeAction: [],
+              updateAction: [],
+            },
+          },
+          elementSlots: null,
+          uid: -10,
+          options: {
+            listChildren: [],
+          },
+        } satisfies SerializedTypedNode,
+        list,
+      );
+
+      expect(stream).toEqual([]);
+      expect(backgroundElementTemplateInstanceManager.get(oldListId)).toBeUndefined();
+      expect(backgroundElementTemplateInstanceManager.get(-10)).toBe(list);
+    } finally {
+      globalThis.__DEV__ = originalDev;
+    }
+  });
+
+  it('hydrates nested typed list children inside compiled parent slots', () => {
+    const root = new BackgroundElementTemplateInstance('root');
+    const list = new BackgroundListElementTemplateInstance();
+    const item = new BackgroundElementTemplateInstance('_et_list_item');
+    list.setAttribute('attributes', { id: 'feed' });
+    list.appendChild(item);
+    root.appendChild(list);
+
+    const stream = hydrate(
+      createHydrationTemplate(root.instanceId, 'root', {
+        elementSlots: [[{
+          tag: 'list',
+          attributes: { id: 'feed' },
+          elementSlots: null,
+          uid: -10,
+          options: {
+            listChildren: [createHydrationChild(-11, '_et_list_item')],
+          },
+        } as SerializedTypedNode]],
+      }),
+      root,
+    );
+
+    expect(stream).toEqual([
+      ElementTemplateUpdateOps.updateTypedListItem,
+      -10,
+      { __etHandleRef: -11, type: '_et_list_item', platformInfo: {} },
+    ]);
+    expect(backgroundElementTemplateInstanceManager.get(-10)).toBe(list);
+    expect(backgroundElementTemplateInstanceManager.get(-11)).toBe(item);
+  });
+
+  it('reconciles typed list hydrate when the background list has extra item roots', () => {
+    const list = new BackgroundListElementTemplateInstance();
+    const first = new BackgroundElementTemplateInstance('_et_item_a');
+    const second = new BackgroundElementTemplateInstance('_et_item_b', ['second']);
+    first.setAttribute('__listItemPlatformInfo', { 'item-key': 'a' });
+    second.setAttribute('__listItemPlatformInfo', { 'item-key': 'b' });
+    list.appendChild(first);
+    list.appendChild(second);
+    const secondLocalId = second.instanceId;
+
+    const stream = hydrate(
+      {
+        tag: 'list',
+        attributes: null,
+        elementSlots: [],
+        uid: -10,
+        options: {
+          listChildren: [createHydrationChild(-11, '_et_item_a')],
+        },
+      } satisfies SerializedTypedNode,
+      list,
+    );
+
+    expect(stream).toEqual([
+      ElementTemplateUpdateOps.createTemplate,
+      secondLocalId,
+      '_et_item_b',
+      null,
+      ['second'],
+      [],
+      ElementTemplateUpdateOps.insertTypedListItem,
+      -10,
+      { __etHandleRef: secondLocalId, type: '_et_item_b', platformInfo: { 'item-key': 'b' } },
+      0,
+      ElementTemplateUpdateOps.updateTypedListItem,
+      -10,
+      { __etHandleRef: -11, type: '_et_item_a', platformInfo: { 'item-key': 'a' } },
+    ]);
+    expect(backgroundElementTemplateInstanceManager.get(secondLocalId)).toBe(second);
+  });
+
+  it('orders typed list hydrate inserts so pending anchors exist before earlier siblings', () => {
+    const list = new BackgroundListElementTemplateInstance();
+    const extraFirst = new BackgroundElementTemplateInstance('_et_item_x', ['x']);
+    const extraSecond = new BackgroundElementTemplateInstance('_et_item_y', ['y']);
+    const existing = new BackgroundElementTemplateInstance('_et_item_a');
+    extraFirst.setAttribute('__listItemPlatformInfo', { 'item-key': 'x' });
+    extraSecond.setAttribute('__listItemPlatformInfo', { 'item-key': 'y' });
+    existing.setAttribute('__listItemPlatformInfo', { 'item-key': 'a' });
+    list.appendChild(extraFirst);
+    list.appendChild(extraSecond);
+    list.appendChild(existing);
+    const extraFirstLocalId = extraFirst.instanceId;
+    const extraSecondLocalId = extraSecond.instanceId;
+
+    const stream = hydrate(
+      {
+        tag: 'list',
+        attributes: null,
+        elementSlots: [],
+        uid: -10,
+        options: {
+          listChildren: [createHydrationChild(-11, '_et_item_a')],
+        },
+      } satisfies SerializedTypedNode,
+      list,
+    );
+
+    expect(stream).toEqual([
+      ElementTemplateUpdateOps.createTemplate,
+      extraSecondLocalId,
+      '_et_item_y',
+      null,
+      ['y'],
+      [],
+      ElementTemplateUpdateOps.insertTypedListItem,
+      -10,
+      { __etHandleRef: extraSecondLocalId, type: '_et_item_y', platformInfo: { 'item-key': 'y' } },
+      -11,
+      ElementTemplateUpdateOps.createTemplate,
+      extraFirstLocalId,
+      '_et_item_x',
+      null,
+      ['x'],
+      [],
+      ElementTemplateUpdateOps.insertTypedListItem,
+      -10,
+      { __etHandleRef: extraFirstLocalId, type: '_et_item_x', platformInfo: { 'item-key': 'x' } },
+      extraSecondLocalId,
+      ElementTemplateUpdateOps.updateTypedListItem,
+      -10,
+      { __etHandleRef: -11, type: '_et_item_a', platformInfo: { 'item-key': 'a' } },
+    ]);
+  });
+
+  it('reconciles typed list hydrate when serialized list has stale item roots', () => {
+    const list = new BackgroundListElementTemplateInstance();
+    const first = new BackgroundElementTemplateInstance('_et_item_a');
+    first.setAttribute('__listItemPlatformInfo', { 'item-key': 'a' });
+    list.appendChild(first);
+
+    const stream = hydrate(
+      {
+        tag: 'list',
+        attributes: null,
+        elementSlots: [],
+        uid: -10,
+        options: {
+          listChildren: [
+            createHydrationChild(-11, '_et_item_a'),
+            createHydrationChild(-12, '_et_item_b'),
+          ],
+        },
+      } satisfies SerializedTypedNode,
+      list,
+    );
+
+    expect(stream).toEqual([
+      ElementTemplateUpdateOps.removeTypedListItem,
+      -10,
+      -12,
+      [-12],
+      ElementTemplateUpdateOps.updateTypedListItem,
+      -10,
+      { __etHandleRef: -11, type: '_et_item_a', platformInfo: { 'item-key': 'a' } },
+    ]);
+    expect(backgroundElementTemplateInstanceManager.get(-12)).toBeUndefined();
+  });
+
+  it('rejects unsupported stale typed nodes while reconciling typed list removals', () => {
+    const oldReportError = lynx.reportError;
+    const reportError = vi.fn();
+    lynx.reportError = reportError;
+
+    try {
+      const list = new BackgroundListElementTemplateInstance();
+
+      const stream = hydrate(
+        {
+          tag: 'list',
+          attributes: null,
+          elementSlots: [],
+          uid: -10,
+          options: {
+            listChildren: [{
+              tag: 'scroll-view',
+              attributes: null,
+              elementSlots: [],
+              uid: -11,
+            } as SerializedTypedNode],
+          },
+        } satisfies SerializedTypedNode,
+        list,
+      );
+
+      expect(stream).toEqual([]);
+      expect(reportError).toHaveBeenCalledTimes(1);
+      expect(String(reportError.mock.calls[0]?.[0]?.message ?? '')).toContain(
+        'does not support serialized typed node \'scroll-view\'',
+      );
+    } finally {
+      lynx.reportError = oldReportError;
+      (globalThis as { __LYNX_REPORT_ERROR_CALLS?: Error[] }).__LYNX_REPORT_ERROR_CALLS = [];
+    }
+  });
+
+  it('reconciles typed list hydrate reorder through incremental list mutations', () => {
+    const list = new BackgroundListElementTemplateInstance();
+    const itemA = new BackgroundElementTemplateInstance('_et_item_a');
+    const itemB = new BackgroundElementTemplateInstance('_et_item_b');
+    itemA.setAttribute('__listItemPlatformInfo', { 'item-key': 'a' });
+    itemB.setAttribute('__listItemPlatformInfo', { 'item-key': 'b' });
+    list.appendChild(itemB);
+    list.appendChild(itemA);
+
+    const stream = hydrate(
+      {
+        tag: 'list',
+        attributes: null,
+        elementSlots: [],
+        uid: -10,
+        options: {
+          listChildren: [
+            createHydrationChild(-11, '_et_item_a'),
+            createHydrationChild(-12, '_et_item_b'),
+          ],
+        },
+      } satisfies SerializedTypedNode,
+      list,
+    );
+
+    expect(stream).toEqual([
+      ElementTemplateUpdateOps.removeTypedListItem,
+      -10,
+      -11,
+      [],
+      ElementTemplateUpdateOps.insertTypedListItem,
+      -10,
+      { __etHandleRef: -11, type: '_et_item_a', platformInfo: { 'item-key': 'a' } },
+      0,
+      ElementTemplateUpdateOps.updateTypedListItem,
+      -10,
+      { __etHandleRef: -12, type: '_et_item_b', platformInfo: { 'item-key': 'b' } },
+    ]);
+    expect(backgroundElementTemplateInstanceManager.get(-11)).toBe(itemA);
+    expect(backgroundElementTemplateInstanceManager.get(-12)).toBe(itemB);
+  });
+
+  it('orders typed list hydrate move and insert ops against final anchors', () => {
+    const list = new BackgroundListElementTemplateInstance();
+    const itemB = new BackgroundElementTemplateInstance('_et_item_b');
+    const extra = new BackgroundElementTemplateInstance('_et_item_x', ['x']);
+    const itemA = new BackgroundElementTemplateInstance('_et_item_a');
+    itemB.setAttribute('__listItemPlatformInfo', { 'item-key': 'b' });
+    extra.setAttribute('__listItemPlatformInfo', { 'item-key': 'x' });
+    itemA.setAttribute('__listItemPlatformInfo', { 'item-key': 'a', 'reuse-identifier': 'next' });
+    list.appendChild(itemB);
+    list.appendChild(extra);
+    list.appendChild(itemA);
+    const extraLocalId = extra.instanceId;
+
+    const stream = hydrate(
+      {
+        tag: 'list',
+        attributes: null,
+        elementSlots: [],
+        uid: -10,
+        options: {
+          listChildren: [
+            createHydrationChild(-11, '_et_item_a'),
+            createHydrationChild(-12, '_et_item_b'),
+            createHydrationChild(-13, '_et_item_c'),
+          ],
+        },
+      } satisfies SerializedTypedNode,
+      list,
+    );
+
+    expect(stream).toEqual([
+      ElementTemplateUpdateOps.removeTypedListItem,
+      -10,
+      -11,
+      [],
+      ElementTemplateUpdateOps.removeTypedListItem,
+      -10,
+      -13,
+      [-13],
+      ElementTemplateUpdateOps.insertTypedListItem,
+      -10,
+      { __etHandleRef: -11, type: '_et_item_a', platformInfo: { 'item-key': 'a', 'reuse-identifier': 'next' } },
+      0,
+      ElementTemplateUpdateOps.createTemplate,
+      extraLocalId,
+      '_et_item_x',
+      null,
+      ['x'],
+      [],
+      ElementTemplateUpdateOps.insertTypedListItem,
+      -10,
+      { __etHandleRef: extraLocalId, type: '_et_item_x', platformInfo: { 'item-key': 'x' } },
+      -11,
+      ElementTemplateUpdateOps.updateTypedListItem,
+      -10,
+      { __etHandleRef: -12, type: '_et_item_b', platformInfo: { 'item-key': 'b' } },
+    ]);
+  });
+
+  it('treats typed list item type mismatch as list replacement instead of hydrate failure', () => {
+    const oldReportError = lynx.reportError;
+    const reportError = vi.fn();
+    lynx.reportError = reportError;
+
+    try {
+      const list = new BackgroundListElementTemplateInstance();
+      const next = new BackgroundElementTemplateInstance('_et_next_item', ['next']);
+      next.setAttribute('__listItemPlatformInfo', { 'item-key': 'next' });
+      list.appendChild(next);
+      const nextLocalId = next.instanceId;
+
+      const stream = hydrate(
+        {
+          tag: 'list',
+          attributes: null,
+          elementSlots: [],
+          uid: -10,
+          options: {
+            listChildren: [createHydrationChild(-11, '_et_old_item')],
+          },
+        } satisfies SerializedTypedNode,
+        list,
+      );
+
+      expect(reportError).not.toHaveBeenCalled();
+      expect(stream).toEqual([
+        ElementTemplateUpdateOps.removeTypedListItem,
+        -10,
+        -11,
+        [-11],
+        ElementTemplateUpdateOps.createTemplate,
+        nextLocalId,
+        '_et_next_item',
+        null,
+        ['next'],
+        [],
+        ElementTemplateUpdateOps.insertTypedListItem,
+        -10,
+        { __etHandleRef: nextLocalId, type: '_et_next_item', platformInfo: { 'item-key': 'next' } },
+        0,
+      ]);
+      expect(backgroundElementTemplateInstanceManager.get(-11)).toBeUndefined();
+    } finally {
+      lynx.reportError = oldReportError;
+      (globalThis as { __LYNX_REPORT_ERROR_CALLS?: Error[] }).__LYNX_REPORT_ERROR_CALLS = [];
+    }
+  });
+
+  it('refreshes typed list platform info during hydrate', () => {
+    const list = new BackgroundListElementTemplateInstance();
+    const item = new BackgroundElementTemplateInstance('_et_item');
+    item.setAttribute('__listItemPlatformInfo', { 'item-key': 'after', 'reuse-identifier': 'next' });
+    list.appendChild(item);
+
+    const stream = hydrate(
+      {
+        tag: 'list',
+        attributes: null,
+        elementSlots: [],
+        uid: -10,
+        options: {
+          listChildren: [createHydrationChild(-11, '_et_item')],
+        },
+      } satisfies SerializedTypedNode,
+      list,
+    );
+
+    expect(stream).toEqual([
+      ElementTemplateUpdateOps.updateTypedListItem,
+      -10,
+      {
+        __etHandleRef: -11,
+        type: '_et_item',
+        platformInfo: { 'item-key': 'after', 'reuse-identifier': 'next' },
+      },
+    ]);
+  });
+
+  it('rejects typed list hydrate when a matched logical child cannot bind its handle', () => {
+    const oldReportError = lynx.reportError;
+    const reportError = vi.fn();
+    lynx.reportError = reportError;
+
+    try {
+      const list = new BackgroundListElementTemplateInstance();
+      const item = new BackgroundElementTemplateInstance('_et_item');
+      list.appendChild(item);
+
+      const stream = hydrate(
+        {
+          tag: 'list',
+          attributes: null,
+          elementSlots: [],
+          uid: -10,
+          options: {
+            listChildren: [createHydrationChild(0, '_et_item')],
+          },
+        } satisfies SerializedTypedNode,
+        list,
+      );
+
+      expect(stream).toEqual([]);
+      expect(reportError).toHaveBeenCalledTimes(1);
+      expect(String(reportError.mock.calls[0]?.[0]?.message ?? '')).toContain('invalid uid 0');
+    } finally {
+      lynx.reportError = oldReportError;
+      (globalThis as { __LYNX_REPORT_ERROR_CALLS?: Error[] }).__LYNX_REPORT_ERROR_CALLS = [];
+    }
+  });
+
+  it('rejects typed list payloads without options listChildren before rebinding handles', () => {
+    const oldReportError = lynx.reportError;
+    const reportError = vi.fn();
+    lynx.reportError = reportError;
+
+    try {
+      const list = new BackgroundListElementTemplateInstance();
+      const oldListId = list.instanceId;
+
+      const stream = hydrate(
+        {
+          tag: 'list',
+          attributes: null,
+          elementSlots: [],
+          uid: -10,
+        } satisfies SerializedTypedNode,
+        list,
+      );
+
+      expect(stream).toEqual([]);
+      expect(String(reportError.mock.calls[0]?.[0]?.message ?? '')).toContain(
+        'requires options.listChildren',
+      );
+      expect(backgroundElementTemplateInstanceManager.get(oldListId)).toBe(list);
+      expect(backgroundElementTemplateInstanceManager.get(-10)).toBeUndefined();
+    } finally {
+      lynx.reportError = oldReportError;
+      (globalThis as { __LYNX_REPORT_ERROR_CALLS?: Error[] }).__LYNX_REPORT_ERROR_CALLS = [];
+    }
+  });
+
+  it('rejects typed list payloads with invalid holder uid before hydrating children', () => {
+    const oldReportError = lynx.reportError;
+    const reportError = vi.fn();
+    lynx.reportError = reportError;
+
+    try {
+      const list = new BackgroundListElementTemplateInstance();
+      const oldListId = list.instanceId;
+
+      const stream = hydrate(
+        {
+          tag: 'list',
+          attributes: null,
+          elementSlots: [],
+          uid: 0,
+          options: {
+            listChildren: [],
+          },
+        } satisfies SerializedTypedNode,
+        list,
+      );
+
+      expect(stream).toEqual([]);
+      expect(String(reportError.mock.calls[0]?.[0]?.message ?? '')).toContain('invalid uid 0');
+      expect(backgroundElementTemplateInstanceManager.get(oldListId)).toBe(list);
+      expect(backgroundElementTemplateInstanceManager.get(0)).toBeUndefined();
+    } finally {
+      lynx.reportError = oldReportError;
+      (globalThis as { __LYNX_REPORT_ERROR_CALLS?: Error[] }).__LYNX_REPORT_ERROR_CALLS = [];
+    }
+  });
+
+  it('rejects typed list payloads with generic elementSlots before rebinding handles', () => {
+    const oldReportError = lynx.reportError;
+    const reportError = vi.fn();
+    lynx.reportError = reportError;
+
+    try {
+      const list = new BackgroundListElementTemplateInstance();
+      const oldListId = list.instanceId;
+
+      const stream = hydrate(
+        {
+          tag: 'list',
+          attributes: null,
+          elementSlots: [[createHydrationChild(-11, '_et_list_item')]],
+          uid: -10,
+          options: {
+            listChildren: [],
+          },
+        } satisfies SerializedTypedNode,
+        list,
+      );
+
+      expect(stream).toEqual([]);
+      expect(String(reportError.mock.calls[0]?.[0]?.message ?? '')).toContain(
+        'does not support elementSlots',
+      );
+      expect(backgroundElementTemplateInstanceManager.get(oldListId)).toBe(list);
+      expect(backgroundElementTemplateInstanceManager.get(-10)).toBeUndefined();
+      expect(backgroundElementTemplateInstanceManager.get(-11)).toBeUndefined();
+    } finally {
+      lynx.reportError = oldReportError;
+      (globalThis as { __LYNX_REPORT_ERROR_CALLS?: Error[] }).__LYNX_REPORT_ERROR_CALLS = [];
+    }
+  });
+
+  it('collects typed list logical children when removing a stale serialized subtree', () => {
+    const root = new BackgroundElementTemplateInstance('root');
+
+    const stream = hydrate(
+      createHydrationTemplate(root.instanceId, 'root', {
+        elementSlots: [[{
+          tag: 'list',
+          attributes: null,
+          elementSlots: null,
+          uid: -10,
+          options: {
+            listChildren: [createHydrationChild(-11, '_et_list_item')],
+          },
+        } as SerializedTypedNode]],
+      }),
+      root,
+    );
+
+    expect(stream).toEqual([
+      ElementTemplateUpdateOps.removeNode,
+      root.instanceId,
+      0,
+      -10,
+      [-10, -11],
     ]);
   });
 });

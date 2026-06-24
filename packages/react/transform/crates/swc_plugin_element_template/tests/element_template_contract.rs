@@ -578,6 +578,53 @@ fn should_not_consume_hidden_et_slots_for_list_item_platform_attrs() {
     code.contains("attributeSlots={[itemKey]}"),
     "legacy list platform info must not consume ET attribute slots, got: {code}"
   );
+  assert!(
+    code.contains("__listItemPlatformInfo={{\"item-key\":itemKey,\"recyclable\":true}}"),
+    "list item platform info should be available as an ET runtime-only carrier, got: {code}"
+  );
+}
+
+#[test]
+fn should_lower_exact_list_as_typed_runtime_host() {
+  let (templates, code) = transform_fixture(
+    r#"
+      <list id={listId} className="feed">
+        <list-item key="a" item-key={firstKey} full-span />
+        <list-item key="b" item-key={secondKey} recyclable />
+      </list>
+    "#,
+    element_template_config(),
+  );
+
+  let user_templates: Vec<_> = templates
+    .into_iter()
+    .filter(|template| template.template_id != BUILTIN_RAW_TEXT_TEMPLATE_ID)
+    .map(|template| serde_json::to_value(template.compiled_template).expect("compiled template"))
+    .collect();
+
+  assert!(
+    user_templates
+      .iter()
+      .all(|template| template["type"] != "list"),
+    "exact list must stay as a typed runtime host instead of a compiled template: {user_templates:?}"
+  );
+  assert!(
+    user_templates
+      .iter()
+      .any(|template| template["type"] == "list-item"),
+    "non-defer list items should remain ordinary compiled ET roots: {user_templates:?}"
+  );
+
+  let code = without_whitespace(&code);
+  assert!(
+    code.contains("<listattributes={{\"id\":listId,\"class\":\"feed\"}}$0={["),
+    "ET list output should expose exact list, attributes, and $0 logical children, got: {code}"
+  );
+  assert!(
+    code.contains("__listItemPlatformInfo={{\"item-key\":firstKey,\"full-span\":true}}")
+      && code.contains("__listItemPlatformInfo={{\"item-key\":secondKey,\"recyclable\":true}}"),
+    "list item roots should carry platform info beside compiled ET roots, got: {code}"
+  );
 }
 
 #[test]
@@ -626,6 +673,14 @@ fn should_keep_worklet_attr_descriptor_keys_for_namespaced_attrs() {
   );
   let code = without_whitespace(&code);
   assert!(
+    code.contains("adaptMTEventAttrSlot"),
+    "main-thread event must use the ET MTEvent adapter, got: {code}"
+  );
+  assert!(
+    !code.contains("adaptEventAttrSlot"),
+    "main-thread event must not use the ordinary ET event adapter, got: {code}"
+  );
+  assert!(
     !code.contains("adaptRefAttrSlot"),
     "main-thread:ref must not be lowered as an ordinary ET ref adapter, got: {code}"
   );
@@ -646,6 +701,38 @@ fn should_keep_worklet_attr_descriptor_keys_for_namespaced_attrs() {
   assert_eq!(attrs[1]["kind"], "slot");
   assert_eq!(attrs[1]["key"], "main-thread:ref");
   assert_eq!(attrs[1]["attrSlotIndex"].as_f64(), Some(1.0));
+}
+
+#[test]
+fn should_not_emit_mt_event_adapter_for_non_event_main_thread_attrs() {
+  let (code, template) = first_user_template_json_with_code(
+    r#"
+      <view main-thread:id={getId} />
+    "#,
+    element_template_config(),
+  );
+  let code = without_whitespace(&code);
+  assert!(
+    !code.contains("adaptMTEventAttrSlot"),
+    "non-event main-thread attrs are future-track scoped and must not use the MTEvent adapter, got: {code}"
+  );
+  assert!(
+    !code.contains("adaptEventAttrSlot"),
+    "non-event main-thread attrs must not use the ordinary event adapter, got: {code}"
+  );
+  assert!(
+    !code.contains("adaptRefAttrSlot"),
+    "non-event main-thread attrs must not use the ordinary ref adapter, got: {code}"
+  );
+
+  let attrs = template["attributesArray"]
+    .as_array()
+    .expect("attributesArray");
+  assert_eq!(attrs.len(), 1);
+
+  assert_eq!(attrs[0]["kind"], "slot");
+  assert_eq!(attrs[0]["key"], "main-thread:id");
+  assert_eq!(attrs[0]["attrSlotIndex"].as_f64(), Some(0.0));
 }
 
 #[test]

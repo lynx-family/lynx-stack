@@ -10,6 +10,7 @@ const elementTemplatePAPINameList = [
   '__SetAttributeOfElementTemplate',
   '__InsertNodeToElementTemplate',
   '__RemoveNodeFromElementTemplate',
+  '__FlushElementTree',
   '__SerializeElementTemplate',
 ] as const;
 

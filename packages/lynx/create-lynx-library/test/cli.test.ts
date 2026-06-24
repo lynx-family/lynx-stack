@@ -37,6 +37,10 @@ describe('create-lynx-library CLI', () => {
         'native-module,element',
         '--feature',
         'service',
+        '--platforms',
+        'android',
+        '--platform',
+        'ios',
         '--package-name',
         '@example/demo-library',
         '--android-package',
@@ -52,6 +56,7 @@ describe('create-lynx-library CLI', () => {
       help: false,
       dir: 'demo-library',
       features: ['native-module', 'element', 'service'],
+      platforms: ['android', 'ios'],
       packageName: '@example/demo-library',
       androidPackage: 'com.example.demo',
       moduleName: 'DemoModule',
@@ -68,6 +73,12 @@ describe('create-lynx-library CLI', () => {
     expect(() => parseArgs(['--dir'])).toThrow(/--dir requires a value/);
     expect(() => parseArgs(['--features', '--dir'])).toThrow(
       /--features requires a value/,
+    );
+    expect(() => parseArgs(['--platforms', '--dir'])).toThrow(
+      /--platforms requires a value/,
+    );
+    expect(() => parseArgs(['--platforms', 'web'])).toThrow(
+      /Unsupported Native platform/,
     );
   });
 
@@ -123,6 +134,40 @@ describe('create-lynx-library CLI', () => {
     );
   });
 
+  it('creates a scaffold for an explicit Native platform', async () => {
+    const dir = createTempPath('android-library');
+    const runtime = createRuntime();
+
+    await main([
+      '--dir',
+      dir,
+      '--features',
+      'native-module',
+      '--platforms',
+      'android',
+      '--package-name',
+      '@example/android-library',
+      '--android-package',
+      'com.example.android',
+      '--module-name',
+      'AndroidModule',
+    ], runtime);
+
+    expect(runtime.info).toHaveBeenCalledWith(
+      expect.stringContaining('Native platforms:\n  - Android'),
+    );
+    const message = vi.mocked(runtime.info).mock.calls[0]?.[0] ?? '';
+    expect(message).not.toContain('  - iOS');
+    expect(
+      read(
+        dir,
+        'android/src/main/java/com/example/android/AndroidModule.java',
+      ),
+    )
+      .toContain('@LynxNativeModule(name = "AndroidModule")');
+    expect(fs.existsSync(path.join(dir, 'ios'))).toBe(false);
+  });
+
   it('creates an all-in-one scaffold from the shorthand feature flag', async () => {
     const dir = createTempPath('all-library');
     const runtime = createRuntime();
@@ -170,14 +215,16 @@ describe('create-lynx-library CLI', () => {
     );
   });
 
-  it('prompts with project text and library feature multiselect controls', async () => {
+  it('prompts with project text, library feature, and Native platform controls', async () => {
     const dir = createTempPath('interactive-library');
     const textPrompt = vi.fn().mockResolvedValue(dir);
-    const multiselectPrompt = vi.fn().mockResolvedValue([
-      'native-module',
-      'element',
-      'service',
-    ]);
+    const multiselectPrompt = vi.fn()
+      .mockResolvedValueOnce([
+        'native-module',
+        'element',
+        'service',
+      ])
+      .mockResolvedValueOnce(['android', 'ios']);
     const runtime = createRuntime({
       isTTY: true,
       prompts: {
@@ -195,17 +242,19 @@ describe('create-lynx-library CLI', () => {
         placeholder: 'lynx-library',
       }),
     );
-    expect(multiselectPrompt).toHaveBeenCalledWith(
+    expect(multiselectPrompt).toHaveBeenNthCalledWith(
+      1,
       expect.objectContaining({
         initialValues: ['native-module', 'element', 'service'],
         required: true,
       }),
     );
-    const multiselectOptions = multiselectPrompt.mock.calls[0]?.[0] as
+    const featureOptions = multiselectPrompt.mock.calls[0]?.[0] as
       | { message?: string }
       | undefined;
-    expect(multiselectOptions?.message).toContain('Select library features');
-    expect(multiselectPrompt).toHaveBeenCalledWith(
+    expect(featureOptions?.message).toContain('Select library features');
+    expect(multiselectPrompt).toHaveBeenNthCalledWith(
+      1,
       expect.objectContaining({
         options: [
           expect.objectContaining({
@@ -214,6 +263,26 @@ describe('create-lynx-library CLI', () => {
           }),
           expect.objectContaining({ label: 'Element', value: 'element' }),
           expect.objectContaining({ label: 'Service', value: 'service' }),
+        ],
+      }),
+    );
+    expect(multiselectPrompt).toHaveBeenNthCalledWith(
+      2,
+      expect.objectContaining({
+        required: true,
+      }),
+    );
+    const platformOptions = multiselectPrompt.mock.calls[1]?.[0] as
+      | { initialValues?: unknown; message?: string }
+      | undefined;
+    expect(platformOptions?.message).toContain('Select Native platforms');
+    expect(platformOptions?.initialValues).toBeUndefined();
+    expect(multiselectPrompt).toHaveBeenNthCalledWith(
+      2,
+      expect.objectContaining({
+        options: [
+          expect.objectContaining({ label: 'Android', value: 'android' }),
+          expect.objectContaining({ label: 'iOS', value: 'ios' }),
         ],
       }),
     );
@@ -236,6 +305,23 @@ describe('create-lynx-library CLI', () => {
 
     await expect(main(['--dir', dir], runtime)).rejects.toThrow(
       /At least one library feature is required/,
+    );
+  });
+
+  it('rejects empty interactive Native platform answers', async () => {
+    const dir = createTempPath('interactive-library');
+    const runtime = createRuntime({
+      isTTY: true,
+      prompts: {
+        text: vi.fn().mockResolvedValue(dir) as CliPrompts['text'],
+        multiselect: vi.fn()
+          .mockResolvedValueOnce(['native-module'])
+          .mockResolvedValueOnce([]) as CliPrompts['multiselect'],
+      },
+    });
+
+    await expect(main(['--dir', dir], runtime)).rejects.toThrow(
+      /At least one Native platform is required/,
     );
   });
 

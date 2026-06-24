@@ -6,7 +6,10 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { onPostWorkletCtx } from '../../../src/snapshot/worklet/ctx';
 import { destroyWorklet } from '../../../src/snapshot/worklet/destroy';
 import { clearConfigCacheForTesting } from '../../../src/snapshot/worklet/functionality';
-import { runOnBackground } from '../../../src/snapshot/worklet/call/runOnBackground';
+import {
+  runBackgroundFunction as runJSFunction,
+  runOnBackground,
+} from '../../../src/core/background-function/run-on-background';
 import { globalEnvManager } from '../utils/envManager';
 
 beforeEach(() => {
@@ -93,6 +96,31 @@ describe('runOnBackground', () => {
     })('hello');
     expect(fn).toBeCalledWith('hello');
     expect(ret).toBe('world');
+  });
+
+  it('should throw when retained ctx does not contain the requested function handle', () => {
+    const worklet = {
+      xxx: {
+        yyy: {
+          _jsFnId: 233,
+          _fn: vi.fn(),
+        },
+      },
+    };
+    const id = onPostWorkletCtx(worklet)._execId;
+
+    expect(() => {
+      runJSFunction({
+        data: JSON.stringify({
+          obj: {
+            _jsFnId: 234,
+            _execId: id,
+          },
+          params: [],
+          resolveId: 1,
+        }),
+      });
+    }).toThrowError('runOnBackground: JS function not found');
   });
 
   it('should throw when on the main thread', () => {

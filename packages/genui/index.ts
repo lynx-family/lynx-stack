@@ -58,13 +58,25 @@ export {
 } from '@lynx-js/genui/a2ui/functions';
 export * from '@lynx-js/genui/openui';
 export {
+  buildOpenUiSystemPrompt,
+  createOpenUiPromptLibrary,
+  OPENUI_SYSTEM_PROMPT,
+  openUiPromptActionPropSchema,
+} from '@lynx-js/genui/openui/prompt';
+export type {
+  BuildOpenUiSystemPromptOptions,
+  CreateOpenUiPromptLibraryOptions,
+  OpenUiPromptComponent,
+  OpenUiPromptLibrary,
+} from '@lynx-js/genui/openui/prompt';
+export {
   A2UI_PROTOCOL_VERSION,
-  A2UI_SYSTEM_PROMPT,
-  BASIC_CATALOG,
   BASIC_CATALOG_EXAMPLES,
   BASIC_CATALOG_ID,
   buildA2UISystemPrompt,
+  buildA2UISystemPromptAsync,
   createA2UICatalogFromManifests,
+  loadBasicCatalog,
   readA2UICatalogFromDirectory,
   renderCatalogReference,
 } from '@lynx-js/genui/a2ui-prompt';
@@ -81,34 +93,14 @@ export type {
 export {
   createA2UICatalog,
   extractCatalogComponents,
-  extractCatalogComponentsFromTypeDocJson,
-  extractCatalogComponentsFromTypeDocProject,
   extractCatalogFunctions,
-  extractCatalogFunctionsFromTypeDocJson,
-  extractCatalogFunctionsFromTypeDocProject,
   findCatalogSourceFiles,
-  writeCatalogArtifacts,
-  writeCatalogComponents,
-  writeCatalogFunctionDefinitions,
-  writeCatalogFunctions,
-  writeComponentCatalogs,
 } from '@lynx-js/genui/a2ui-catalog-extractor';
 export type {
   A2UICatalog as ExtractedA2UICatalog,
-  CatalogArtifacts,
   CatalogComponent as ExtractedCatalogComponent,
   CatalogFunction,
-  ExtractCatalogFromTypeDocOptions,
   ExtractCatalogOptions,
   FunctionDefinition,
   JsonSchema as ExtractedJsonSchema,
-  TypeDocComment,
-  TypeDocCommentDisplayPart,
-  TypeDocCommentTag,
-  TypeDocProject,
-  TypeDocReflection,
-  TypeDocSignature,
-  TypeDocSource,
-  TypeDocType,
-  WriteComponentCatalogOptions,
 } from '@lynx-js/genui/a2ui-catalog-extractor';

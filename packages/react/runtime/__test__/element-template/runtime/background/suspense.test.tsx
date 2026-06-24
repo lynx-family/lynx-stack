@@ -19,6 +19,7 @@ import type {
   ElementTemplateUpdateCommitContext,
   SerializableValue,
 } from '../../../../src/element-template/protocol/types.js';
+import { parseElementTemplateUpdateEventPayload } from '../../../../src/element-template/protocol/update-event.js';
 import { __root } from '../../../../src/element-template/runtime/page/root-instance.js';
 import { clearEtAttrPlanMap } from '../../../../src/element-template/runtime/template/attr-slot-plan.js';
 import { ElementTemplateEnvManager } from '../../test-utils/debug/envManager.js';
@@ -280,7 +281,7 @@ describe('ElementTemplate Suspense background lifecycle', () => {
   let previousDebounceRendering: typeof options.debounceRendering;
   let updateEvents: ElementTemplateUpdateCommitContext[] = [];
   const onUpdate = (event: { data: unknown }) => {
-    updateEvents.push(event.data as ElementTemplateUpdateCommitContext);
+    updateEvents.push(parseElementTemplateUpdateEventPayload(event.data));
   };
 
   beforeEach(() => {

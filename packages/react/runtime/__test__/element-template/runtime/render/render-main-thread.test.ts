@@ -2,8 +2,14 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { renderMainThread } from '../../../../src/element-template/runtime/render/render-main-thread.js';
 import { getReloadVersion } from '../../../../src/core/reload-version.js';
+import {
+  createElementTemplateListState,
+  destroyAllElementTemplateListStates,
+  registerElementTemplateListState,
+} from '../../../../src/element-template/runtime/list/list.js';
 import { setupPage } from '../../../../src/element-template/runtime/page/page.js';
 import { setRoot } from '../../../../src/element-template/runtime/page/root-instance.js';
+import { elementTemplateRegistry } from '../../../../src/element-template/runtime/template/registry.js';
 
 vi.mock('../../../../src/element-template/runtime/render/render-to-opcodes.js', () => ({
   render: vi.fn(),
@@ -32,12 +38,16 @@ describe('renderMainThread', () => {
       })),
     } as typeof lynx;
     vi.stubGlobal('__InsertNodeToElementTemplate', vi.fn());
+    vi.stubGlobal('__SetAttributeOfElementTemplate', vi.fn());
     vi.stubGlobal('__SerializeElementTemplate', vi.fn());
+    elementTemplateRegistry.clear();
+    destroyAllElementTemplateListStates();
     vi.mocked(mockRenderOpcodesIntoElementTemplate).mockReturnValue({ rootRefs: [] });
   });
 
   afterEach(() => {
     vi.clearAllMocks();
+    destroyAllElementTemplateListStates();
   });
 
   it('should report error when renderToOpcodes fails', () => {
@@ -116,5 +126,55 @@ describe('renderMainThread', () => {
         reloadVersion: getReloadVersion(),
       },
     });
+  });
+
+  it('flushes initial list metadata after page insertion and before serialize', () => {
+    const rootRef = { type: 'root-ref' } as unknown as ElementRef;
+    const listRef = { type: 'list-ref' } as unknown as ElementRef;
+    const serialized = {
+      templateKey: '_et_root',
+      attributeSlots: [],
+      elementSlots: [],
+      uid: -1,
+    };
+    vi.mocked(mockRender).mockReturnValue([]);
+    vi.mocked(mockRenderOpcodesIntoElementTemplate).mockReturnValue({
+      rootRefs: [rootRef],
+    });
+    vi.mocked(__SerializeElementTemplate).mockReturnValue(
+      serialized as unknown as ReturnType<typeof __SerializeElementTemplate>,
+    );
+    elementTemplateRegistry.set(-2, listRef);
+    registerElementTemplateListState(
+      -2,
+      createElementTemplateListState([], { id: 'feed' }),
+      true,
+      listRef,
+    );
+
+    renderMainThread();
+
+    expect(__SetAttributeOfElementTemplate).toHaveBeenCalledWith(
+      listRef,
+      0,
+      {
+        id: 'feed',
+        'component-at-index': expect.any(Function),
+        'component-at-indexes': expect.any(Function),
+        'enqueue-component': expect.any(Function),
+        'update-list-info': {
+          insertAction: [],
+          removeAction: [],
+          updateAction: [],
+        },
+      },
+      null,
+    );
+    expect(vi.mocked(__InsertNodeToElementTemplate).mock.invocationCallOrder[0]).toBeLessThan(
+      vi.mocked(__SetAttributeOfElementTemplate).mock.invocationCallOrder[0]!,
+    );
+    expect(vi.mocked(__SetAttributeOfElementTemplate).mock.invocationCallOrder[0]).toBeLessThan(
+      vi.mocked(__SerializeElementTemplate).mock.invocationCallOrder[0]!,
+    );
   });
 });

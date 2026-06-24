@@ -17,6 +17,7 @@ import { ComponentsPage } from './pages/ComponentsPage.js';
 import { DemosListPage } from './pages/DemosListPage.js';
 import { DemosPage } from './pages/DemosPage.js';
 import { OpenUIComponentsPage } from './pages/OpenUIComponentsPage.js';
+import { OpenUICreatePage } from './pages/OpenUICreatePage.js';
 import { OpenUIDemosListPage } from './pages/OpenUIDemosListPage.js';
 import { OpenUIDemosPage } from './pages/OpenUIDemosPage.js';
 import type { Protocol, ProtocolName } from './utils/protocol.js';
@@ -42,6 +43,7 @@ const A2UI_TABS: TabDef[] = [
 ];
 
 const OPENUI_TABS: TabDef[] = [
+  { id: 'create', label: 'Create' },
   { id: 'examples', label: 'Examples' },
   { id: 'components', label: 'Components' },
 ];
@@ -89,8 +91,6 @@ function parseHash(hash: string): Route {
   if (rest[0] === 'playback') {
     return { protocol, tab: 'examples' };
   }
-  // OpenUI has no create tab, default to examples.
-  if (protocol.name === 'openui') return { protocol, tab: 'examples' };
   return { protocol, tab: 'create' };
 }
 
@@ -179,9 +179,8 @@ export function App() {
   }, [protocol.name]);
 
   const handleProtocolSelect = useCallback((name: ProtocolName) => {
-    // When switching to openui and current tab is A2UI-only, fallback to examples.
-    const tab = name === 'openui'
-        && (route.tab === 'create' || route.tab === 'bench')
+    // When switching to OpenUI and current tab is A2UI-only, fallback to examples.
+    const tab = name === 'openui' && route.tab === 'bench'
       ? 'examples'
       : route.tab;
     window.location.hash = `#/${name}/${tab}`;
@@ -204,6 +203,8 @@ export function App() {
 
     if (protocol.name === 'openui') {
       switch (route.tab) {
+        case 'create':
+          return <OpenUICreatePage key='openui-create' protocol={protocol} />;
         case 'components':
         case 'catalog':
           return (

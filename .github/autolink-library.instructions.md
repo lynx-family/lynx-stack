@@ -22,6 +22,13 @@ updating Lynx libraries.
   `create-rspeedy` by using `@clack/prompts` prompt primitives. Library feature
   selection should be a required multi-select that can produce Native Module,
   Element, and Service files in one package.
+- Platform selection is Native-only and limited to Android and iOS. Interactive
+  platform selection should be a required multi-select without preselected
+  values, while non-interactive scaffolds should default to Android and iOS when
+  no platform flag is provided.
+- `lynx.lib.json.platforms.android` and `lynx.lib.json.platforms.ios` are
+  optional per package, but at least one supported Native platform must be
+  declared.
 - Keep generated package dependency versions as workspace placeholders in
   templates, then replace them from `create-lynx-library` package metadata at
   scaffold time so published CLIs emit published versions.
