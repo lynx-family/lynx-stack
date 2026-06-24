@@ -7,11 +7,17 @@ import { fileURLToPath } from 'node:url'
 import { createRsbuild } from '@rsbuild/core'
 import type { RsbuildPlugin } from '@rsbuild/core'
 import type { RuleSetRule } from '@rspack/core'
-import { describe, expect, rstest, test } from '@rstest/core'
+import { afterEach, describe, expect, rstest, test } from '@rstest/core'
 
 import { LAYERS } from '@lynx-js/react-webpack-plugin'
 
 describe('React - alias', () => {
+  // Guarantee env stubs (e.g. NODE_ENV / REACT_DEVTOOL) never leak between
+  // tests, even if an assertion throws before an in-body cleanup would run.
+  afterEach(() => {
+    rstest.unstubAllEnvs()
+  })
+
   test('alias with development', async () => {
     rstest.stubEnv('NODE_ENV', 'development')
     const { pluginReactAlias } = await import('../src/index.js')
@@ -209,9 +215,6 @@ describe('React - alias', () => {
     expect(config.resolve.alias).toHaveProperty('@lynx-js/react/debug$', false)
     // A user-imported preact devtools is no longer aliased away.
     expect(config.resolve.alias).not.toHaveProperty('@lynx-js/preact-devtools$')
-
-    // Avoid leaking the `REACT_DEVTOOL` stub into later tests.
-    rstest.unstubAllEnvs()
   })
 
   test('element-template aliases transformed legacy runtime and background lepus entry to ET runtime', async () => {
