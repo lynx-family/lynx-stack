@@ -12,4 +12,4 @@ Keep Rust Kitten-Lynx/Android automation, screenshot alignment/diffing, visual m
 
 The Rust `ui-judge` CLI consumes JSON scenario files, captures screenshots from Android Lynx pages, calls an OpenAI-compatible model client, writes old-compatible result JSON, and writes PR-comment Markdown. Keep the CI-facing model environment variable names compatible with the existing `MIDSCENE_MODEL_*` and `MIDSCENE_OPENAI_INIT_CONFIG_JSON` secrets even though the implementation must not add a Midscene runtime dependency back.
 
-For Rust Android e2e fixtures, keep the Lynx bundle fixture available under `packages/genui/ui-judge/tests/fixtures` unless the Rust test is updated to a new fixture path in the same change.
+For Rust Android e2e fixtures, keep the React Lynx fixture source under `packages/genui/ui-judge/tests/fixtures/react` and build the `.lynx.bundle` into the ignored `.generated/` directory with `rspeedy build`. Do not commit generated `.lynx.bundle` binaries.

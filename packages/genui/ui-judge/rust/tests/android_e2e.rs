@@ -10,6 +10,7 @@ use image::GenericImageView;
 use serial_test::serial;
 use tokio::io::{AsyncReadExt, AsyncWriteExt};
 use tokio::net::{TcpListener, TcpStream};
+use tokio::process::Command;
 use tokio::sync::oneshot;
 use tokio::task::JoinHandle;
 use tokio::time::sleep;
@@ -126,8 +127,7 @@ fn connect_options() -> ConnectOptions {
 }
 
 async fn start_fixture_server() -> FixtureServer {
-  let fixture_path =
-    PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("tests/fixtures/react/main.lynx.bundle");
+  let fixture_path = build_fixture_bundle().await;
   let bundle = Arc::new(
     tokio::fs::read(&fixture_path)
       .await
@@ -158,6 +158,41 @@ async fn start_fixture_server() -> FixtureServer {
     shutdown: Some(shutdown_tx),
     task,
   }
+}
+
+async fn build_fixture_bundle() -> PathBuf {
+  let package_dir = PathBuf::from(env!("CARGO_MANIFEST_DIR"));
+  let fixture_dir = package_dir.join("tests/fixtures/react");
+  let bundle_path = fixture_dir.join(".generated/main.lynx.bundle");
+
+  let output = Command::new("pnpm")
+    .args(["exec", "rspeedy", "build", "--root", "tests/fixtures/react"])
+    .current_dir(&package_dir)
+    .output()
+    .await
+    .unwrap_or_else(|error| {
+      panic!(
+        "run rspeedy build for fixture {}: {error}",
+        fixture_dir.display()
+      )
+    });
+
+  if !output.status.success() {
+    panic!(
+      "rspeedy build failed for fixture {}\nstdout:\n{}\nstderr:\n{}",
+      fixture_dir.display(),
+      String::from_utf8_lossy(&output.stdout),
+      String::from_utf8_lossy(&output.stderr)
+    );
+  }
+
+  assert!(
+    bundle_path.exists(),
+    "rspeedy build did not create fixture bundle {}",
+    bundle_path.display()
+  );
+
+  bundle_path
 }
 
 async fn serve_fixture_request(mut stream: TcpStream, bundle: &[u8]) -> std::io::Result<()> {
