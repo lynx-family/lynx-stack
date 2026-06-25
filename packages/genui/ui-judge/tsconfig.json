@@ -12,9 +12,7 @@
   },
   "include": [
     "src",
-    "tests",
     "rslib.config.ts",
-    "vitest.config.ts",
   ],
   "references": [],
 }

@@ -20,11 +20,10 @@
   ],
   "scripts": {
     "build": "rslib build",
-    "test": "vitest run"
+    "test": "cargo test -p ui_judge --all-targets --all-features"
   },
   "devDependencies": {
-    "@types/node": "^24.10.13",
-    "vitest": "^3.2.4"
+    "@types/node": "^24.10.13"
   },
   "engines": {
     "node": ">=22"

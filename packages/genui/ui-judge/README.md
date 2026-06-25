@@ -98,3 +98,9 @@ cargo run -p ui_judge --bin ui-judge -- visual-evaluation \
   --request-file request.json \
   --result-file result.json
 ```
+
+Run package tests through Rust:
+
+```bash
+cargo test -p ui_judge --all-targets --all-features
+```

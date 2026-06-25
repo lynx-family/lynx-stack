@@ -17,6 +17,10 @@ path = "rust/src/bin/ui-judge.rs"
 name = "android_e2e"
 path = "rust/tests/android_e2e.rs"
 
+[[test]]
+name = "visual_evaluation_cli"
+path = "rust/tests/visual_evaluation_cli.rs"
+
 [dependencies]
 async-openai = { workspace = true, features = ["byot", "chat-completion", "responses", "rustls"] }
 base64 = { workspace = true }

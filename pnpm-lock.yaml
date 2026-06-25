@@ -964,9 +964,6 @@ importers:
       '@types/node':
         specifier: ^24.10.13
         version: 24.10.13
-      vitest:
-        specifier: ^3.2.4
-        version: 3.2.4(@types/debug@4.1.12)(@types/node@24.10.13)(@vitest/ui@3.2.4)(jsdom@27.4.0)(less@4.6.4)(lightningcss@1.31.1)(sass-embedded@1.99.0)(sass@1.99.0)(terser@5.31.6)
 
   packages/i18n/i18next-translation-dedupe:
     devDependencies:
