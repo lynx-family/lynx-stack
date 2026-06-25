@@ -705,6 +705,9 @@ function validateComponentAgainstCatalog(
   for (const prop of spec.props) {
     const hasValue = Object.prototype.hasOwnProperty.call(comp, prop.name);
     if (prop.required && !hasValue) {
+      if (isOptionalServerResolvedProp(comp, prop.name, hasValue)) {
+        continue;
+      }
       errors.push(
         `Component "${comp.id}" (${comp.component}) is missing required prop "${prop.name}".`,
       );
@@ -729,8 +732,31 @@ function validateComponentAgainstCatalog(
       prop.schema,
       `${comp.id}.${prop.name}`,
     );
+    if (isOptionalServerResolvedProp(comp, prop.name, hasValue)) {
+      continue;
+    }
     errors.push(...propErrors);
   }
+}
+
+function isOptionalServerResolvedProp(
+  comp: A2UIComponent,
+  propName: string,
+  hasValue: boolean,
+): boolean {
+  if (comp.component === 'Button' && propName === 'action') {
+    return !hasValue;
+  }
+
+  if (!hasValue) {
+    return false;
+  }
+
+  if (comp.component !== 'Image' || propName !== 'url') {
+    return false;
+  }
+  const url = (comp as Record<string, unknown>).url;
+  return isRecord(url) && typeof url.path === 'string';
 }
 
 function sanitizeInvalidStringEnumProp(

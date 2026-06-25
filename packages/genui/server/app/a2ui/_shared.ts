@@ -6,6 +6,7 @@ import type {
   ChatMessage,
   ChatOptions,
   ConversationContext,
+  OpenAIReasoningEffort,
 } from '../../service/a2ui-agent';
 
 export interface A2UIChatBody {
@@ -16,6 +17,7 @@ export interface A2UIChatBody {
   apiKey?: string;
   baseURL?: string;
   api?: 'chat' | 'responses';
+  reasoningEffort?: OpenAIReasoningEffort;
   catalog?: A2UICatalog;
   maxRepairAttempts?: number;
   validate?: boolean;
@@ -73,6 +75,7 @@ export function pickChatOptions(body: {
   apiKey?: string;
   baseURL?: string;
   api?: 'chat' | 'responses';
+  reasoningEffort?: OpenAIReasoningEffort;
   catalog?: A2UICatalog;
   maxRepairAttempts?: number;
 }): ChatOptions {
@@ -83,6 +86,7 @@ export function pickChatOptions(body: {
     apiKey: allowOverride ? body.apiKey : undefined,
     baseURL: allowOverride ? body.baseURL : undefined,
     api: allowOverride ? body.api : undefined,
+    reasoningEffort: allowOverride ? body.reasoningEffort : undefined,
     catalog: body.catalog,
     maxRepairAttempts: body.maxRepairAttempts,
   };
@@ -97,6 +101,72 @@ export function errorMessage(
 
 function isRecord(value: unknown): value is Record<string, unknown> {
   return value !== null && typeof value === 'object' && !Array.isArray(value);
+}
+
+function readNumberProperty(
+  value: Record<string, unknown>,
+  key: string,
+): number | undefined {
+  const candidate = value[key];
+  return typeof candidate === 'number' && Number.isFinite(candidate)
+    ? candidate
+    : undefined;
+}
+
+function findCachedTokens(value: unknown): number | undefined {
+  if (!isRecord(value)) return undefined;
+
+  const direct = readNumberProperty(value, 'cached_tokens')
+    ?? readNumberProperty(value, 'cachedTokens')
+    ?? readNumberProperty(value, 'cached_input_tokens')
+    ?? readNumberProperty(value, 'cachedInputTokens')
+    ?? readNumberProperty(value, 'cache_read_input_tokens');
+  if (direct !== undefined) return direct;
+
+  for (const nested of Object.values(value)) {
+    const found = findCachedTokens(nested);
+    if (found !== undefined) return found;
+  }
+  return undefined;
+}
+
+export function extractCachedTokens(usage: unknown): number | undefined {
+  return findCachedTokens(usage);
+}
+
+export interface UsageMetrics {
+  inputTokens?: number | undefined;
+  outputTokens?: number | undefined;
+  totalTokens?: number | undefined;
+  cachedTokens?: number | undefined;
+  cachedTokenRatio?: number | undefined;
+}
+
+export function extractUsageMetrics(usage: unknown): UsageMetrics {
+  if (!isRecord(usage)) return {};
+
+  const inputTokens = readNumberProperty(usage, 'inputTokens')
+    ?? readNumberProperty(usage, 'input_tokens')
+    ?? readNumberProperty(usage, 'promptTokens')
+    ?? readNumberProperty(usage, 'prompt_tokens');
+  const outputTokens = readNumberProperty(usage, 'outputTokens')
+    ?? readNumberProperty(usage, 'output_tokens')
+    ?? readNumberProperty(usage, 'completionTokens')
+    ?? readNumberProperty(usage, 'completion_tokens');
+  const totalTokens = readNumberProperty(usage, 'totalTokens')
+    ?? readNumberProperty(usage, 'total_tokens');
+  const cachedTokens = extractCachedTokens(usage);
+  const cachedTokenRatio = inputTokens && cachedTokens !== undefined
+    ? cachedTokens / inputTokens
+    : undefined;
+
+  return {
+    inputTokens,
+    outputTokens,
+    totalTokens,
+    cachedTokens,
+    cachedTokenRatio,
+  };
 }
 
 export function validateAction(value: unknown):

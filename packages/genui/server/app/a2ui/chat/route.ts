@@ -4,6 +4,7 @@
 import { getA2UIAgentService } from '../../../service/a2ui-agent';
 import {
   errorMessage,
+  extractUsageMetrics,
   pickChatOptions,
   readJsonBodyWithLimit,
   validateConversation,
@@ -64,7 +65,13 @@ export async function POST(req: Request) {
         opts,
         validatedConversation.conversation,
       );
-      return jsonWithCors(req, { ok: true, text, usage, finishReason });
+      return jsonWithCors(req, {
+        ok: true,
+        text,
+        usage,
+        cachedTokens: extractUsageMetrics(usage).cachedTokens,
+        finishReason,
+      });
     }
 
     const validatedResult = await service.generateValidated(
@@ -72,7 +79,10 @@ export async function POST(req: Request) {
       opts,
       validatedConversation.conversation,
     );
-    return jsonWithCors(req, validatedResult);
+    return jsonWithCors(req, {
+      ...validatedResult,
+      cachedTokens: extractUsageMetrics(validatedResult.usage).cachedTokens,
+    });
   } catch (err: unknown) {
     const { message, name } = errorMessage(err);
     return jsonWithCors(req, { ok: false, error: message, name });
