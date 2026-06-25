@@ -33,7 +33,7 @@ const HELPER_DIR = dirname(fileURLToPath(import.meta.url));
 const WORKSPACE_ROOT = resolve(HELPER_DIR, '../../../../..');
 const PLAYGROUND_CWD = resolve(
   WORKSPACE_ROOT,
-  'packages/genui/a2ui-playground',
+  'packages/genui/playground',
 );
 const REQUIRED_CATALOG_ARTIFACTS = [
   'packages/genui/a2ui/dist/catalog/Button/catalog.json',

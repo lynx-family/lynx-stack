@@ -1,4 +1,4 @@
-# A2UI Playground
+# GenUI Playground
 
 Interactive playground for the Lynx **GenUI** toolchain. Chat with an agent to
 generate A2UI / OpenUI surfaces, browse ready-made examples, and preview the
@@ -30,7 +30,7 @@ Then start the playground and open the URL it prints (defaults to
 
 ```bash
 # 3. Start the playground
-pnpm -C packages/genui/a2ui-playground dev
+pnpm -C packages/genui/playground dev
 ```
 
 On `localhost`, the Create tab automatically targets your local server on

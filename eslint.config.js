@@ -35,9 +35,9 @@ export default tseslint.config(
       '**/test/js',
       '**/dist/**',
       '**/lib/**',
-      // rspeedy/rsbuild build output for the a2ui-playground (lynx bundle
+      // rspeedy/rsbuild build output for the genui-playground (lynx bundle
       // + the rsbuild static site that serves it).
-      'packages/genui/a2ui-playground/www/**',
+      'packages/genui/playground/www/**',
       'website/doc_build/**',
       '.changeset/*',
       '**/CHANGELOG.md',

@@ -121,7 +121,7 @@ with `speed=0`, for example
 Prepare the playground artifacts first:
 
 ```sh
-pnpm turbo build:lynx --filter a2ui-playground
+pnpm turbo build:lynx --filter genui-playground
 pnpm --filter @lynx-js/ui-judge test
 ```
 

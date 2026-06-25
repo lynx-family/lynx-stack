@@ -1,4 +1,4 @@
-# A2UI playground examples
+# GenUI playground examples
 
 Reference implementations that intentionally live **outside**
 `@lynx-js/genui/a2ui`. The package itself ships only:

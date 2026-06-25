@@ -376,4 +376,4 @@ MyChart.displayName = 'MyChart';
 - [概览与架构](./overview_zh.md)——一条 message 如何变成 UI、职责划分，以及
   export 映射。
 - [System Prompts](./system-prompts_zh.md)——生成让 Agent 与你的 catalog 配套的模型指令。
-- [打开 A2UI playground](https://lynxjs.org/a2ui)——在线体验。
+- [打开 GenUI playground](https://lynxjs.org/genui)——在线体验。

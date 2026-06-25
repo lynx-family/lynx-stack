@@ -130,7 +130,7 @@ export const A2UI_EN_NAV_ITEMS = [
   },
   {
     text: 'Playground',
-    link: '/a2ui',
+    link: '/genui',
   },
 ];
 
@@ -153,7 +153,7 @@ export const A2UI_ZH_NAV_ITEMS = [
   },
   {
     text: 'Playground',
-    link: '/a2ui',
+    link: '/genui',
   },
 ];
 

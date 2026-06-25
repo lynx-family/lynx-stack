@@ -131,7 +131,7 @@ function a2uiPayloadMiddleware(
 }
 
 const a2uiPayloadPlugin: RsbuildPlugin = {
-  name: 'a2ui-playground:payload-store',
+  name: 'genui-playground:payload-store',
   setup(api) {
     api.onBeforeStartDevServer(({ server }) => {
       server.middlewares.use(a2uiPayloadMiddleware);
@@ -179,7 +179,7 @@ export default defineConfig({
     },
   },
   html: {
-    title: 'Lynx A2UI Playground',
+    title: 'Lynx GenUI Playground',
     tags: [
       {
         tag: 'link',

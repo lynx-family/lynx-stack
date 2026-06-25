@@ -753,9 +753,9 @@ const config: UserConfig = defineConfig({
         link: '/repl',
       },
       {
-        text: 'A2UI',
-        link: '/a2ui',
-        activeMatch: '^/(a2ui|guide/genui/a2ui)',
+        text: 'GenUI',
+        link: '/genui',
+        activeMatch: '^/(genui|guide/genui/a2ui)',
         items: A2UI_EN_NAV_ITEMS,
       },
       {

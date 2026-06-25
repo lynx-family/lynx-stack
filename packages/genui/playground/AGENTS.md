@@ -1,4 +1,4 @@
-# a2ui-playground (packages/genui/a2ui-playground)
+# genui-playground (packages/genui/playground)
 
 This package is a playground app for `@lynx-js/genui/a2ui`.
 
@@ -73,14 +73,14 @@ Run from repo root:
 
 ```bash
 # Web
-pnpm -C packages/genui/a2ui-playground dev
-pnpm -C packages/genui/a2ui-playground build
-pnpm -C packages/genui/a2ui-playground preview
+pnpm -C packages/genui/playground dev
+pnpm -C packages/genui/playground build
+pnpm -C packages/genui/playground preview
 
 # Lynx
-pnpm -C packages/genui/a2ui-playground dev:lynx
-pnpm -C packages/genui/a2ui-playground build:lynx
-pnpm -C packages/genui/a2ui-playground preview:lynx
+pnpm -C packages/genui/playground dev:lynx
+pnpm -C packages/genui/playground build:lynx
+pnpm -C packages/genui/playground preview:lynx
 ```
 
 ## Output

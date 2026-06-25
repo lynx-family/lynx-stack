@@ -20,15 +20,21 @@ import { OpenUIComponentsPage } from './pages/OpenUIComponentsPage.js';
 import { OpenUICreatePage } from './pages/OpenUICreatePage.js';
 import { OpenUIDemosListPage } from './pages/OpenUIDemosListPage.js';
 import { OpenUIDemosPage } from './pages/OpenUIDemosPage.js';
-import type { Protocol, ProtocolName } from './utils/protocol.js';
-import { DEFAULT_PROTOCOL, PROTOCOLS, getProtocol } from './utils/protocol.js';
+import type { Route, Tab } from './utils/appRoute.js';
+import {
+  DEFAULT_ROUTE_HASH,
+  buildRouteHash,
+  getRouteHash,
+  isEmptyRouteHash,
+  parseRouteHash,
+} from './utils/appRoute.js';
+import type { ProtocolName } from './utils/protocol.js';
+import { PROTOCOLS } from './utils/protocol.js';
 
 const LYNX_LIGHT_LOGO =
   'https://lf-lynx.tiktok-cdns.com/obj/lynx-artifacts-oss-sg/lynx-website/assets/lynx-dark-logo.svg';
 const LYNX_DARK_LOGO =
   'https://lf-lynx.tiktok-cdns.com/obj/lynx-artifacts-oss-sg/lynx-website/assets/lynx-light-logo.svg';
-
-type Tab = 'create' | 'examples' | 'components' | 'catalog' | 'bench';
 
 interface TabDef {
   id: Tab;
@@ -48,50 +54,15 @@ const OPENUI_TABS: TabDef[] = [
   { id: 'components', label: 'Components' },
 ];
 
-interface Route {
-  protocol: Protocol;
-  tab: Tab;
-  componentName?: string;
-  demoId?: string;
+function ensureDefaultRouteHash(): void {
+  if (!isEmptyRouteHash(window.location.hash)) return;
+  const url = new URL(window.location.href);
+  url.hash = DEFAULT_ROUTE_HASH;
+  window.history.replaceState(null, '', url);
 }
 
-function parseHash(hash: string): Route {
-  const cleaned = hash.replace(/^#\/?/u, '');
-  const parts = cleaned.split('/');
-
-  let protocol: Protocol = DEFAULT_PROTOCOL;
-  let rest = parts;
-
-  if (parts[0] === 'a2ui' || parts[0] === 'openui') {
-    protocol = getProtocol(parts[0]);
-    rest = parts.slice(1);
-  }
-
-  if (rest[0] === 'demos' || rest[0] === 'examples') {
-    return {
-      protocol,
-      tab: 'examples',
-      demoId: rest[1],
-    };
-  }
-  if (rest[0] === 'components' || rest[0] === 'catalog') {
-    return {
-      protocol,
-      tab: protocol.name === 'a2ui' ? 'catalog' : 'components',
-      componentName: rest[1],
-    };
-  }
-  if (rest[0] === 'chat' || rest[0] === 'create') {
-    return { protocol, tab: 'create' };
-  }
-  if (rest[0] === 'bench' && protocol.name === 'a2ui') {
-    return { protocol, tab: 'bench' };
-  }
-  // Back-compat: the standalone Playback tab is gone; route it to Examples.
-  if (rest[0] === 'playback') {
-    return { protocol, tab: 'examples' };
-  }
-  return { protocol, tab: 'create' };
+function getCurrentRouteHash(): string {
+  return getRouteHash(window.location.hash);
 }
 
 type Theme = 'light' | 'dark';
@@ -141,7 +112,7 @@ function getForcedTheme(): Theme | null {
 
 export function App() {
   const [route, setRoute] = useState<Route>(() =>
-    parseHash(window.location.hash)
+    parseRouteHash(getCurrentRouteHash())
   );
   const [theme, setTheme] = useState<Theme>(() => {
     return getForcedTheme() ?? getInitialTheme();
@@ -153,6 +124,7 @@ export function App() {
   const tabs = protocol.name === 'openui' ? OPENUI_TABS : A2UI_TABS;
 
   useLayoutEffect(() => {
+    ensureDefaultRouteHash();
     document.documentElement.setAttribute('data-theme', theme);
     document.documentElement.style.colorScheme = theme;
   }, [theme]);
@@ -168,14 +140,15 @@ export function App() {
 
   useEffect(() => {
     const onHashChange = () => {
-      setRoute(parseHash(window.location.hash));
+      ensureDefaultRouteHash();
+      setRoute(parseRouteHash(getCurrentRouteHash()));
     };
     window.addEventListener('hashchange', onHashChange);
     return () => window.removeEventListener('hashchange', onHashChange);
   }, []);
 
   const handleTabClick = useCallback((id: Tab) => {
-    window.location.hash = `#/${protocol.name}/${id}`;
+    window.location.hash = buildRouteHash(protocol.name, id);
   }, [protocol.name]);
 
   const handleProtocolSelect = useCallback((name: ProtocolName) => {
@@ -183,7 +156,7 @@ export function App() {
     const tab = name === 'openui' && route.tab === 'bench'
       ? 'examples'
       : route.tab;
-    window.location.hash = `#/${name}/${tab}`;
+    window.location.hash = buildRouteHash(name, tab);
   }, [route.tab]);
 
   const page = useMemo(() => {

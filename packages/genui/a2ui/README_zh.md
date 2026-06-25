@@ -100,4 +100,4 @@ async function sendPrompt(input: string) {
 - [概览与架构](./docs/overview_zh.md)
 - [Catalogs、内置组件与自定义组件](./docs/catalog-guide_zh.md)
 - [System Prompts](./docs/system-prompts_zh.md)
-- [打开 A2UI Playground](https://lynxjs.org/a2ui)
+- [打开 GenUI Playground](https://lynxjs.org/genui)

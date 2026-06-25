@@ -28,8 +28,8 @@ Model-backed Playwright tests should use the real Midscene service when `MIDSCEN
 
 Prefer `page.setContent()` or another non-listening fixture setup for static `@lynx-js/ui-judge` Playwright fixtures. Avoid starting local HTTP servers in package tests unless the behavior under test specifically needs network navigation.
 
-When a `@lynx-js/ui-judge` Playwright test needs real network navigation, use the A2UI playground preview server rather than a package-local scratch HTTP server. Start `pnpm dev` from `packages/genui/a2ui-playground` and navigate Playwright to the playground `render.html` demo route, such as `/render.html?protocol=a2ui&demoUrl=.%2Fa2ui.web.js&theme=light&demo=recs&speed=0`.
+When a `@lynx-js/ui-judge` Playwright test needs real network navigation, use the GenUI playground preview server rather than a package-local scratch HTTP server. Start `pnpm dev` from `packages/genui/playground` and navigate Playwright to the playground `render.html` demo route, such as `/render.html?protocol=a2ui&demoUrl=.%2Fa2ui.web.js&theme=light&demo=recs&speed=0`.
 
-The A2UI playground preview server requires generated catalog artifacts from `@lynx-js/a2ui-reactlynx`. If they are missing, fail with a clear prerequisite message that points to `pnpm --filter @lynx-js/a2ui-reactlynx build` instead of silently running broad cross-package builds from Playwright hooks.
+The GenUI playground preview server requires generated catalog artifacts from `@lynx-js/a2ui-reactlynx`. If they are missing, fail with a clear prerequisite message that points to `pnpm --filter @lynx-js/a2ui-reactlynx build` instead of silently running broad cross-package builds from Playwright hooks.
 
 The Codex sandbox blocks TCP listeners on loopback addresses such as `127.0.0.1`, `localhost`, `0.0.0.0`, and `::1`, so bind-dependent verification should use an escalated command such as `pnpm --filter @lynx-js/ui-judge test` rather than rewriting the test to avoid the bind.
