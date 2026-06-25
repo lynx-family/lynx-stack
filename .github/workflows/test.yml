@@ -371,9 +371,22 @@ jobs:
         with:
           persist-credentials: false
       - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4
+        continue-on-error: true
         with:
           name: ui-judge-report
           path: ui-judge-report
+      - name: Ensure UI Judge comment body
+        shell: bash
+        run: |
+          mkdir -p ui-judge-report
+          if [ ! -s ui-judge-report/ui-judge-comment.md ]; then
+            {
+              echo "<!-- ui-judge-comment -->"
+              echo "### UI Judge"
+              echo
+              echo "UI Judge report artifact was not uploaded. See [workflow run](${GITHUB_SERVER_URL}/${GITHUB_REPOSITORY}/actions/runs/${GITHUB_RUN_ID}) for details."
+            } > ui-judge-report/ui-judge-comment.md
+          fi
       - uses: ./.github/actions/ui-judge-comment
         with:
           body-file: ui-judge-report/ui-judge-comment.md
