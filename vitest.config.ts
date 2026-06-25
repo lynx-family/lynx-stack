@@ -17,8 +17,8 @@ export default defineConfig({
         '**/*.bench.js',
         '**/*.bench.ts',
         '**/dist/**',
-        // rspeedy/rsbuild build output for the a2ui-playground.
-        'packages/genui/a2ui-playground/www/**',
+        // rspeedy/rsbuild build output for the genui-playground.
+        'packages/genui/playground/www/**',
         '.github/**',
         'examples/**',
         'packages/**/lib/**',

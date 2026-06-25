@@ -5,7 +5,7 @@
 /**
  * Concurrency-capped, priority-aware mount queue.
  *
- * Used by the A2UI playground Showcase to keep the number of simultaneous
+ * Used by the GenUI playground Showcase to keep the number of simultaneous
  * `<lynx-view>`-bearing iframes bounded. Without it, mounting all ~43 cards
  * at once spawns ~43 Web Workers and saturates the main thread.
  *

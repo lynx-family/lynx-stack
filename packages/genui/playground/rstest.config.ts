@@ -4,6 +4,6 @@
 import { defineConfig } from '@rstest/core';
 
 export default defineConfig({
-  name: 'genui/a2ui-playground',
+  name: 'genui/genui-playground',
   include: ['src/**/*.test.ts'],
 });
