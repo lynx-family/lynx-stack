@@ -84,6 +84,7 @@ jobs:
     with:
       runs-on: lynx-ubuntu-24.04-medium
       upload-codecov: false
+      install-rust: true
       run: cargo test -p ui_judge --all-targets --all-features
 
   lighthouse:
@@ -281,8 +282,9 @@ jobs:
     with:
       runs-on: lynx-ubuntu-22.04-physical-medium
       upload-codecov: false
-      artifact-name: ui-judge-report
-      artifact-path: ui-judge-comment.md
+      install-rust: true
+      artifact-name: ui-judge-results
+      artifact-path: ui-judge-results.json
       artifact-if-no-files-found: error
       run: |
         # 4. Start Emulator
@@ -331,28 +333,34 @@ jobs:
         echo "Lynx Explorer is running."
 
         # 8. Run the Rust Android integration tests
-        cargo test -p ui_judge --test android_e2e -- --ignored --test-threads=1
+        ANDROID_E2E_STATUS=0
+        cargo test -p ui_judge --test android_e2e -- --ignored --test-threads=1 || ANDROID_E2E_STATUS=$?
 
         # 9. Run Rust UI Judge model scoring when credentials are available.
+        MODEL_SCORING_STATUS=0
         if { [ -n "${MIDSCENE_MODEL_API_KEY:-}" ] && [ -n "${MIDSCENE_MODEL_NAME:-}" ]; } || [ -n "${MIDSCENE_OPENAI_INIT_CONFIG_JSON:-}" ]; then
           if ! cargo run -p ui_judge --bin ui-judge -- judge-android-agent \
             --scenarios packages/genui/ui-judge/tests/scenarios/android-geqi.json \
             --result-file ui-judge-results.json \
-            --comment-file ui-judge-comment.md \
             --device-id emulator-5554 \
             --clear-data \
             --all-geqi; then
             cargo run -p ui_judge --bin ui-judge -- report \
               --result-file ui-judge-results.json \
-              --comment-file ui-judge-comment.md \
               --fallback-error "Rust UI Judge Android model scoring failed. See the workflow logs for details."
-            exit 1
+            MODEL_SCORING_STATUS=1
           fi
         else
           cargo run -p ui_judge --bin ui-judge -- report \
             --result-file ui-judge-results.json \
-            --comment-file ui-judge-comment.md \
             --fallback-error "Rust UI Judge Android model scoring skipped because model credentials are unavailable."
+        fi
+
+        if [ "${ANDROID_E2E_STATUS}" -ne 0 ]; then
+          exit "${ANDROID_E2E_STATUS}"
+        fi
+        if [ "${MODEL_SCORING_STATUS}" -ne 0 ]; then
+          exit "${MODEL_SCORING_STATUS}"
         fi
 
   ui-judge-comment:
@@ -372,25 +380,35 @@ jobs:
         if: ${{ github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name == github.repository && needs.kitten-lynx-android-emulator.result != 'skipped' && needs.kitten-lynx-android-emulator.result != 'cancelled' }}
         continue-on-error: true
         with:
-          name: ui-judge-report
-          path: ui-judge-report
-      - name: Ensure UI Judge comment body
+          name: ui-judge-results
+          path: ui-judge-results
+      - name: Ensure UI Judge result payload
         if: ${{ github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name == github.repository && needs.kitten-lynx-android-emulator.result != 'skipped' && needs.kitten-lynx-android-emulator.result != 'cancelled' }}
         shell: bash
         run: |
-          mkdir -p ui-judge-report
-          if [ ! -s ui-judge-report/ui-judge-comment.md ]; then
-            {
-              echo "<!-- ui-judge-comment -->"
-              echo "### UI Judge"
-              echo
-              echo "UI Judge report artifact was not uploaded. See [workflow run](${GITHUB_SERVER_URL}/${GITHUB_REPOSITORY}/actions/runs/${GITHUB_RUN_ID}) for details."
-            } > ui-judge-report/ui-judge-comment.md
+          mkdir -p ui-judge-results
+          if [ ! -s ui-judge-results/ui-judge-results.json ]; then
+            cat > ui-judge-results/ui-judge-results.json <<'JSON'
+          {
+            "results": [
+              {
+                "demoId": "fallback",
+                "dimension": "visual-correctness",
+                "error": {
+                  "message": "UI Judge result artifact was not uploaded. See the workflow logs for details."
+                },
+                "score": 0,
+                "steps": [],
+                "url": ""
+              }
+            ]
+          }
+          JSON
           fi
       - uses: ./.github/actions/ui-judge-comment
         if: ${{ github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name == github.repository && needs.kitten-lynx-android-emulator.result != 'skipped' && needs.kitten-lynx-android-emulator.result != 'cancelled' }}
         with:
-          body-file: ui-judge-report/ui-judge-comment.md
+          result-file: ui-judge-results/ui-judge-results.json
           github-token: ${{ github.token }}
       - name: Skip UI Judge comment
         if: ${{ !(github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name == github.repository && needs.kitten-lynx-android-emulator.result != 'skipped' && needs.kitten-lynx-android-emulator.result != 'cancelled') }}

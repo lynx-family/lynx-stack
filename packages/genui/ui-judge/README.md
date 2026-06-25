@@ -71,8 +71,10 @@ remote image URLs.
 The Rust implementation lives in the same package under `rust/`. It owns image
 loading and normalization, screenshot alignment, block diffing, visual
 evaluation, device connection, protocol handling, Android e2e coverage, Android
-task scoring, GEQI dimensions, and PR report generation. The TypeScript package
-is now a thin compatibility facade over the Rust CLI.
+task scoring, GEQI dimensions, and structured report JSON generation. The
+TypeScript package is now a thin compatibility facade over the Rust CLI. PR
+comment Markdown is rendered by `.github/actions/ui-judge-comment` from the JSON
+payload.
 
 Rust Android scoring is exposed through the `ui-judge` binary:
 
@@ -80,7 +82,6 @@ Rust Android scoring is exposed through the `ui-judge` binary:
 cargo run -p ui_judge --bin ui-judge -- judge-android-agent \
   --scenarios packages/genui/ui-judge/tests/scenarios/android-geqi.json \
   --result-file ui-judge-results.json \
-  --comment-file ui-judge-comment.md \
   --device-id emulator-5554 \
   --all-geqi
 ```

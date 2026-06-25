@@ -8,9 +8,11 @@ use std::time::{Duration, Instant};
 use base64::prelude::{Engine, BASE64_STANDARD};
 use clap::{Parser, Subcommand};
 use serde::{Deserialize, Serialize};
+use serde_json::Value;
+use tokio::task::JoinSet;
 use ui_judge::{
-  format_report_markdown, judge_android_agent, run_visual_evaluation, ConnectOptions, Lynx,
-  ModelApi, ModelClient, ModelOptions, ReportPayload, ScreenshotOptions, UiJudgeDimension,
+  judge_android_agent, run_visual_evaluation, ConnectOptions, Lynx, ModelApi, ModelClient,
+  ModelOptions, ReportPayload, ScreenshotOptions, UiJudgeDimension, UiJudgeResult,
   VisualEvaluationError, VisualEvaluationErrorCode, VisualEvaluationRequest, GEQI_DIMENSIONS,
 };
 
@@ -35,10 +37,6 @@ struct JudgeAndroidAgentCommand {
   scenarios: PathBuf,
   #[arg(long)]
   result_file: PathBuf,
-  #[arg(long)]
-  comment_file: Option<PathBuf>,
-  #[arg(long, default_value = "UI Judge")]
-  title: String,
   #[arg(long)]
   device_id: Option<String>,
   #[arg(long, default_value = "com.lynx.explorer")]
@@ -65,10 +63,6 @@ struct JudgeAndroidAgentCommand {
 struct ReportCommand {
   #[arg(long)]
   result_file: PathBuf,
-  #[arg(long)]
-  comment_file: PathBuf,
-  #[arg(long, default_value = "UI Judge")]
-  title: String,
   #[arg(long)]
   fallback_error: Option<String>,
 }
@@ -155,33 +149,36 @@ async fn run_judge_android_agent(
   }
 
   let payload = ReportPayload { results };
-  write_report_files(
-    &command.result_file,
-    command.comment_file.as_ref(),
-    &command.title,
-    &payload,
-  )
-  .await?;
+  write_report_file(&command.result_file, &payload).await?;
   Ok(())
 }
 
 async fn run_report(command: ReportCommand) -> Result<(), Box<dyn std::error::Error>> {
+  let fallback_error = command.fallback_error.clone();
   let payload = if command.result_file.exists() {
-    let content = tokio::fs::read_to_string(&command.result_file).await?;
-    serde_json::from_str::<ReportPayload>(&content)?
+    match read_report_payload(&command.result_file).await {
+      Ok(payload) => payload,
+      Err(error) => {
+        let Some(fallback_error) = fallback_error else {
+          return Err(error);
+        };
+        fallback_payload(format!(
+          "{fallback_error} Existing UI Judge result file could not be parsed: {error}"
+        ))
+      }
+    }
   } else {
-    fallback_payload(command.fallback_error.unwrap_or_else(|| {
+    fallback_payload(fallback_error.unwrap_or_else(|| {
       "UI Judge did not produce a model result. See the workflow logs for details.".to_string()
     }))
   };
-  write_report_files(
-    &command.result_file,
-    Some(&command.comment_file),
-    &command.title,
-    &payload,
-  )
-  .await?;
+  write_report_file(&command.result_file, &payload).await?;
   Ok(())
+}
+
+async fn read_report_payload(path: &PathBuf) -> Result<ReportPayload, Box<dyn std::error::Error>> {
+  let content = tokio::fs::read_to_string(path).await?;
+  Ok(serde_json::from_str::<ReportPayload>(&content)?)
 }
 
 async fn run_visual_evaluation_cli(
@@ -227,21 +224,18 @@ async fn judge_scenario(
   scenario: JudgeScenario,
   dimensions: Vec<UiJudgeDimension>,
 ) -> ui_judge::report::ReportResult {
-  if !scenario.steps.is_empty() {
-    return scenario_error_result(
-      scenario,
-      dimensions,
-      "Rust UI Judge does not support non-empty natural-language steps yet.",
-    );
-  }
-
   let timeout = Duration::from_millis(scenario.timeout_ms.unwrap_or(180_000));
+  let scenario_start = Instant::now();
   let navigation = page.goto(&scenario.url, timeout).await;
   if let Err(error) = navigation {
     return scenario_error_result(scenario, dimensions, error.to_string());
   }
 
-  if let Err(error) = wait_for_text(page, &scenario.wait_for_text, timeout).await {
+  let remaining = match remaining_scenario_timeout(scenario_start, timeout) {
+    Ok(remaining) => remaining,
+    Err(error) => return scenario_error_result(scenario, dimensions, error),
+  };
+  if let Err(error) = wait_for_text(page, &scenario.wait_for_text, remaining).await {
     return scenario_error_result(scenario, dimensions, error);
   }
 
@@ -250,47 +244,13 @@ async fn judge_scenario(
     Err(error) => return scenario_error_result(scenario, dimensions, error.to_string()),
   };
   let screenshot_data_url = screenshot_data_url(&screenshot);
-  let visual_dimension = UiJudgeDimension::VisualCorrectness;
-  let visual_result = judge_android_agent(
-    model,
-    ui_judge::JudgeAndroidAgentRequest {
-      dimension: visual_dimension,
-      reference: scenario.reference.clone(),
-      screenshot_data_url: screenshot_data_url.clone(),
-      task: scenario.task.clone(),
-      url: scenario.url.clone(),
-    },
-  )
-  .await;
-  let mut dimension_results = Vec::new();
-  for dimension in dimensions
-    .into_iter()
-    .filter(|dimension| *dimension != UiJudgeDimension::VisualCorrectness)
-  {
-    let mut result = judge_android_agent(
-      model,
-      ui_judge::JudgeAndroidAgentRequest {
-        dimension,
-        reference: scenario.reference.clone(),
-        screenshot_data_url: screenshot_data_url.clone(),
-        task: scenario.task.clone(),
-        url: scenario.url.clone(),
-      },
-    )
-    .await;
-    if let Some(geqi) = GEQI_DIMENSIONS
-      .iter()
-      .find(|candidate| candidate.dimension == dimension)
-    {
-      result.dimension_label = Some(geqi.dimension_label.to_string());
-      result.weight = Some(geqi.weight);
-    }
-    dimension_results.push(result);
-  }
+  let task = scenario_task(&scenario);
+  let (visual_result, dimension_results) =
+    judge_all_dimensions(model, &scenario, dimensions, &screenshot_data_url, &task).await;
 
   ui_judge::report::ReportResult::from_visual_result(
     scenario.id,
-    scenario.task,
+    task,
     visual_result,
     dimension_results,
   )
@@ -302,12 +262,14 @@ fn scenario_error_result(
   message: impl Into<String>,
 ) -> ui_judge::report::ReportResult {
   let message = message.into();
-  let visual = ui_judge::error_result(
+  let task = scenario_task(&scenario);
+  let mut visual = ui_judge::error_result(
     UiJudgeDimension::VisualCorrectness,
     scenario.reference.clone(),
     scenario.url.clone(),
     message.clone(),
   );
+  visual.steps = scenario.steps.clone();
   let dimension_results = dimensions
     .into_iter()
     .filter(|dimension| *dimension != UiJudgeDimension::VisualCorrectness)
@@ -325,23 +287,125 @@ fn scenario_error_result(
         result.dimension_label = Some(geqi.dimension_label.to_string());
         result.weight = Some(geqi.weight);
       }
+      result.steps = scenario.steps.clone();
       result
     })
     .collect();
-  ui_judge::report::ReportResult::from_visual_result(
-    scenario.id,
-    scenario.task,
-    visual,
+  ui_judge::report::ReportResult::from_visual_result(scenario.id, task, visual, dimension_results)
+}
+
+async fn judge_all_dimensions(
+  model: &ModelClient,
+  scenario: &JudgeScenario,
+  dimensions: Vec<UiJudgeDimension>,
+  screenshot_data_url: &str,
+  task: &str,
+) -> (UiJudgeResult, Vec<UiJudgeResult>) {
+  let mut dimensions_to_judge = vec![UiJudgeDimension::VisualCorrectness];
+  dimensions_to_judge.extend(
+    dimensions
+      .into_iter()
+      .filter(|dimension| *dimension != UiJudgeDimension::VisualCorrectness),
+  );
+
+  let mut jobs = JoinSet::new();
+  for (index, dimension) in dimensions_to_judge.into_iter().enumerate() {
+    let model = model.clone();
+    let reference = scenario.reference.clone();
+    let screenshot_data_url = screenshot_data_url.to_string();
+    let steps = scenario.steps.clone();
+    let task = task.to_string();
+    let url = scenario.url.clone();
+    jobs.spawn(async move {
+      let mut result = judge_android_agent(
+        &model,
+        ui_judge::JudgeAndroidAgentRequest {
+          dimension,
+          reference,
+          screenshot_data_url,
+          task,
+          url,
+        },
+      )
+      .await;
+      apply_geqi_metadata(&mut result);
+      result.steps = steps;
+      (index, result)
+    });
+  }
+
+  let mut results = Vec::new();
+  while let Some(job) = jobs.join_next().await {
+    if let Ok(result) = job {
+      results.push(result);
+    }
+  }
+  results.sort_by_key(|(index, _)| *index);
+  let mut visual_result = None;
+  let mut dimension_results = Vec::new();
+  for (_, result) in results {
+    if result.dimension == UiJudgeDimension::VisualCorrectness {
+      visual_result = Some(result);
+    } else {
+      dimension_results.push(result);
+    }
+  }
+
+  (
+    visual_result.unwrap_or_else(|| {
+      let mut result = ui_judge::error_result(
+        UiJudgeDimension::VisualCorrectness,
+        scenario.reference.clone(),
+        scenario.url.clone(),
+        "visual correctness scoring task did not complete",
+      );
+      result.steps = scenario.steps.clone();
+      result
+    }),
     dimension_results,
   )
 }
 
+fn apply_geqi_metadata(result: &mut UiJudgeResult) {
+  if let Some(geqi) = GEQI_DIMENSIONS
+    .iter()
+    .find(|candidate| candidate.dimension == result.dimension)
+  {
+    result.dimension_label = Some(geqi.dimension_label.to_string());
+    result.weight = Some(geqi.weight);
+  }
+}
+
+fn scenario_task(scenario: &JudgeScenario) -> String {
+  if scenario.steps.is_empty() {
+    return scenario.task.clone();
+  }
+
+  let mut task = scenario.task.clone();
+  task.push_str("\n\nSteps:");
+  for (index, step) in scenario.steps.iter().enumerate() {
+    task.push_str(&format!("\n{}. {}", index + 1, step));
+  }
+  task
+}
+
+fn remaining_scenario_timeout(start: Instant, timeout: Duration) -> Result<Duration, String> {
+  match timeout.checked_sub(start.elapsed()) {
+    Some(remaining) if !remaining.is_zero() => Ok(remaining),
+    _ => Err(format!(
+      "scenario exceeded timeout of {} ms before content checks completed",
+      timeout.as_millis(),
+    )),
+  }
+}
+
 async fn read_scenarios(path: &PathBuf) -> Result<Vec<JudgeScenario>, Box<dyn std::error::Error>> {
   let content = tokio::fs::read_to_string(path).await?;
-  if let Ok(file) = serde_json::from_str::<ScenarioFile>(&content) {
-    return Ok(file.scenarios);
+  let value = serde_json::from_str::<Value>(&content)?;
+  if value.get("scenarios").is_some() {
+    return Ok(serde_json::from_value::<ScenarioFile>(value)?.scenarios);
   }
-  Ok(serde_json::from_str::<Vec<JudgeScenario>>(&content)?)
+  Ok(serde_json::from_value::<Vec<JudgeScenario>>(value)?)
 }
 
 fn command_dimensions(command: &JudgeAndroidAgentCommand) -> Vec<UiJudgeDimension> {
@@ -448,24 +512,14 @@ fn screenshot_data_url(bytes: &[u8]) -> String {
   format!("data:{mime};base64,{}", BASE64_STANDARD.encode(bytes))
 }
 
-async fn write_report_files(
+async fn write_report_file(
   result_file: &PathBuf,
-  comment_file: Option<&PathBuf>,
-  title: &str,
   payload: &ReportPayload,
 ) -> Result<(), Box<dyn std::error::Error>> {
   if let Some(parent) = result_file.parent() {
     tokio::fs::create_dir_all(parent).await?;
   }
   tokio::fs::write(result_file, serde_json::to_string_pretty(payload)? + "\n").await?;
-
-  if let Some(comment_file) = comment_file {
-    if let Some(parent) = comment_file.parent() {
-      tokio::fs::create_dir_all(parent).await?;
-    }
-    tokio::fs::write(comment_file, format_report_markdown(title, payload)).await?;
-  }
-
   Ok(())
 }
 

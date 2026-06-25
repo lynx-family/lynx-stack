@@ -9,6 +9,7 @@ use tokio::io::{AsyncRead, AsyncReadExt, AsyncWrite, AsyncWriteExt};
 use crate::api::{Error, Result};
 
 const PEERTALK_HEADER_LEN: usize = 20;
+const MAX_PEERTALK_PAYLOAD_LEN: usize = 16 * 1024 * 1024;
 const PEERTALK_VERSION: u32 = 1;
 const PEERTALK_TYPE: u32 = 101;
 
@@ -161,6 +162,12 @@ where
   let mut header = [0_u8; PEERTALK_HEADER_LEN];
   reader.read_exact(&mut header).await?;
   let payload_len = read_u32(&header[16..20]) as usize;
+  if payload_len > MAX_PEERTALK_PAYLOAD_LEN {
+    return Err(Error::Protocol(format!(
+      "Peertalk payload length {payload_len} exceeds the {} byte limit",
+      MAX_PEERTALK_PAYLOAD_LEN,
+    )));
+  }
   let mut payload = vec![0_u8; payload_len];
   reader.read_exact(&mut payload).await?;
   Ok(serde_json::from_slice(&payload)?)
@@ -418,6 +425,20 @@ mod tests {
 
     let payload: Value = serde_json::from_slice(&frame[PEERTALK_HEADER_LEN..]).unwrap();
     assert_eq!(payload, value);
+  }
+
+  #[tokio::test]
+  async fn rejects_oversized_peertalk_frame() {
+    let mut frame = [0_u8; PEERTALK_HEADER_LEN];
+    write_u32(&mut frame[16..20], MAX_PEERTALK_PAYLOAD_LEN as u32 + 1);
+
+    let mut reader = &frame[..];
+    let error = read_peertalk_message(&mut reader)
+      .await
+      .expect_err("oversized frame is rejected before payload allocation");
+    assert!(error
+      .to_string()
+      .contains("Peertalk payload length 16777217 exceeds"));
   }
 
   #[test]

@@ -141,7 +141,10 @@ impl Page {
   }
 
   pub async fn goto(&mut self, url: &str, timeout_duration: Duration) -> Result<()> {
-    self.wait_for_devtool(Duration::from_secs(60)).await?;
+    let start = Instant::now();
+    self
+      .wait_for_devtool(timeout_duration.min(Duration::from_secs(60)))
+      .await?;
     let existing = self
       .connector
       .list_sessions(self.client_port)
@@ -151,17 +154,21 @@ impl Page {
       .map(|session| session.session_id)
       .collect::<Vec<_>>();
 
-    if self
+    if let Err(open_page_error) = self
       .connector
       .send_app_open_page(self.client_port, url)
       .await
-      .is_err()
     {
-      let _ = self.connector.send_open_card(self.client_port, url).await;
+      if let Err(open_card_error) = self.connector.send_open_card(self.client_port, url).await {
+        return Err(Error::App(format!(
+          "failed to open {url}: App.openPage failed: {open_page_error}; openCard failed: {open_card_error}",
+        )));
+      }
     }
 
+    let remaining = remaining_timeout(start, timeout_duration, "opening page")?;
     let session = self
-      .wait_for_session(url, &existing, timeout_duration)
+      .wait_for_session(url, &existing, remaining)
       .await
       .ok_or_else(|| Error::SessionNotFound(url.to_string()))?;
 
@@ -482,6 +489,20 @@ fn strip_base64_whitespace(value: &str) -> String {
     .chars()
     .filter(|character| !character.is_ascii_whitespace())
     .collect()
+}
+
+fn remaining_timeout(
+  start: Instant,
+  timeout_duration: Duration,
+  operation: &str,
+) -> Result<Duration> {
+  match timeout_duration.checked_sub(start.elapsed()) {
+    Some(remaining) if !remaining.is_zero() => Ok(remaining),
+    _ => Err(Error::Timeout(format!(
+      "{operation} exceeded {} ms",
+      timeout_duration.as_millis(),
+    ))),
+  }
 }
 
 fn content_to_string(buffer: &mut String, node: &NodeInfo) {

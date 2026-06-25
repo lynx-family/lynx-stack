@@ -253,7 +253,7 @@ These instructions were generated through comprehensive analysis and testing of 
 ### GenUI UI Judge (`packages/genui/ui-judge/`)
 
 - The public TypeScript API is a thin screenshot-first facade around the Rust `ui-judge` CLI.
-- Keep image loading, PNG normalization, screenshot alignment, block diffing, OpenAI-compatible visual evaluation, Android `judgeAndroidAgent`, GEQI scoring, and PR report generation in Rust under `packages/genui/ui-judge/rust`.
+- Keep image loading, PNG normalization, screenshot alignment, block diffing, OpenAI-compatible visual evaluation, Android `judgeAndroidAgent`, GEQI scoring, and structured report JSON generation in Rust under `packages/genui/ui-judge/rust`. Keep PR comment Markdown rendering and GitHub comment create/update in `.github/actions/ui-judge-comment`.
 - Do not reintroduce webpage testing, Playwright page ownership, Sharp image processing, Mastra/AI SDK agent construction, Midscene adapters, or custom TypeScript evaluate hooks into `@lynx-js/ui-judge`.
 - TypeScript tests for this package should use the Rust mock-response hook for model output and must not require browsers, emulators, physical devices, or real model credentials.
 

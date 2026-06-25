@@ -145,12 +145,12 @@ pub struct GeqiDimension {
 pub const GEQI_DIMENSIONS: [GeqiDimension; 5] = [
   GeqiDimension {
     dimension: UiJudgeDimension::UsabilityInteraction,
-    dimension_label: "Usability & Interaction",
+    dimension_label: "Usability & Interaction Logic",
     weight: 30,
   },
   GeqiDimension {
     dimension: UiJudgeDimension::VisualAesthetics,
-    dimension_label: "Visual & Aesthetics",
+    dimension_label: "Visual Communication & Aesthetics",
     weight: 25,
   },
   GeqiDimension {
@@ -160,7 +160,7 @@ pub const GEQI_DIMENSIONS: [GeqiDimension; 5] = [
   },
   GeqiDimension {
     dimension: UiJudgeDimension::ArchitectureWriting,
-    dimension_label: "Architecture & UX Writing",
+    dimension_label: "Information Architecture & UX Writing",
     weight: 15,
   },
   GeqiDimension {

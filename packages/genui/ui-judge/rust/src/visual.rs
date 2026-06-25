@@ -20,6 +20,7 @@ const MAX_IMAGE_BYTES: usize = 10 * 1024 * 1024;
 const IMAGE_FETCH_TIMEOUT_MS: u64 = 10_000;
 
 const DEFAULT_DOWNSAMPLE_WIDTH: f64 = 256.0;
+const MAX_ALIGN_TARGET_WIDTH: f64 = 8_192.0;
 const DEFAULT_MAX_DX: f64 = 0.0;
 const DEFAULT_MAX_DY_RATIO: f64 = 0.18;
 const DEFAULT_MIN_SCORE: f64 = 0.15;
@@ -470,7 +471,17 @@ fn validate_request(mut request: VisualEvaluationRequest) -> VisualResult<Visual
 
 fn validate_align_options(options: &VisualEvaluationAlignOptions) -> VisualResult<()> {
   validate_positive(options.target_width, "alignOptions.targetWidth")?;
+  validate_max(
+    options.target_width,
+    "alignOptions.targetWidth",
+    MAX_ALIGN_TARGET_WIDTH,
+  )?;
   validate_positive(options.downsample_width, "alignOptions.downsampleWidth")?;
+  validate_max(
+    options.downsample_width,
+    "alignOptions.downsampleWidth",
+    MAX_ALIGN_TARGET_WIDTH,
+  )?;
   validate_ratio(options.top_skip_ratio, "alignOptions.topSkipRatio")?;
   validate_ratio(
     options.window_height_ratio,
@@ -503,6 +514,17 @@ fn validate_positive(value: Option<f64>, field_name: &str) -> VisualResult<()> {
     if value <= 0.0 {
       return Err(invalid_request(format!(
         "{field_name} must be greater than 0."
+      )));
+    }
+  }
+  Ok(())
+}
+
+fn validate_max(value: Option<f64>, field_name: &str, max: f64) -> VisualResult<()> {
+  if let Some(value) = value {
+    if value > max {
+      return Err(invalid_request(format!(
+        "{field_name} must be less than or equal to {max}."
       )));
     }
   }

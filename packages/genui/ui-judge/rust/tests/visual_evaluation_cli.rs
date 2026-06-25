@@ -109,6 +109,43 @@ fn writes_invalid_rendered_image_errors() {
   assert_eq!(run.result["status"], 400);
 }
 
+#[test]
+fn report_writes_fallback_result_json() {
+  let workspace = TempWorkspace::new("report-cli");
+  let result_file = workspace.path.join("result.json");
+  let output = Command::new(env!("CARGO_BIN_EXE_ui-judge"))
+    .arg("report")
+    .arg("--result-file")
+    .arg(&result_file)
+    .arg("--fallback-error")
+    .arg("model scoring skipped")
+    .output()
+    .expect("run ui-judge report");
+
+  assert!(
+    output.status.success(),
+    "expected report CLI success\nstdout:\n{}\nstderr:\n{}",
+    String::from_utf8_lossy(&output.stdout),
+    String::from_utf8_lossy(&output.stderr)
+  );
+  let result_content = fs::read_to_string(&result_file).unwrap_or_else(|error| {
+    panic!(
+      "read report result file {}\nstdout:\n{}\nstderr:\n{}\nerror: {error}",
+      result_file.display(),
+      String::from_utf8_lossy(&output.stdout),
+      String::from_utf8_lossy(&output.stderr)
+    )
+  });
+  let result: Value = serde_json::from_str(&result_content)
+    .unwrap_or_else(|error| panic!("parse report result JSON: {error}"));
+  assert_eq!(result["results"][0]["demoId"], "fallback");
+  assert_eq!(result["results"][0]["score"], 0);
+  assert_eq!(
+    result["results"][0]["error"]["message"],
+    "model scoring skipped"
+  );
+}
+
 struct CliRun {
   result: Value,
   status: ExitStatus,
