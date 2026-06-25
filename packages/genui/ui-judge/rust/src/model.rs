@@ -35,30 +35,61 @@ pub struct ModelOptions {
 
 impl ModelOptions {
   pub fn from_env() -> Self {
+    let init_config = midscene_openai_init_config();
     Self {
-      api: read_api_env(),
-      api_key: first_env(&[
-        "A2UI_BENCH_JUDGE_API_KEY",
-        "OPENAI_API_KEY",
-        "MIDSCENE_MODEL_API_KEY",
-      ]),
-      base_url: first_env(&[
-        "A2UI_BENCH_JUDGE_BASE_URL",
-        "OPENAI_BASE_URL",
-        "MIDSCENE_MODEL_BASE_URL",
-      ]),
-      model: first_env(&[
-        "A2UI_BENCH_JUDGE_MODEL",
-        "JUDGE_MODEL",
-        "OPENAI_MODEL",
-        "MIDSCENE_MODEL_NAME",
-      ]),
-      timeout_ms: first_env(&[
-        "A2UI_BENCH_JUDGE_TIMEOUT_MS",
-        "JUDGE_TIMEOUT_MS",
-        "MIDSCENE_MODEL_TIMEOUT",
-      ])
-      .and_then(|value| value.parse::<u64>().ok()),
+      api: json_config_string(
+        init_config.as_ref(),
+        &["api", "apiStyle", "api_style", "OPENAI_API_STYLE"],
+      )
+      .and_then(|value| parse_model_api(&value)),
+      api_key: first_env(&["MIDSCENE_MODEL_API_KEY"]).or_else(|| {
+        json_config_string(
+          init_config.as_ref(),
+          &[
+            "apiKey",
+            "api_key",
+            "MIDSCENE_MODEL_API_KEY",
+            "OPENAI_API_KEY",
+          ],
+        )
+      }),
+      base_url: first_env(&["MIDSCENE_MODEL_BASE_URL"]).or_else(|| {
+        json_config_string(
+          init_config.as_ref(),
+          &[
+            "baseURL",
+            "baseUrl",
+            "base_url",
+            "MIDSCENE_MODEL_BASE_URL",
+            "OPENAI_BASE_URL",
+          ],
+        )
+      }),
+      model: first_env(&["MIDSCENE_MODEL_NAME"]).or_else(|| {
+        json_config_string(
+          init_config.as_ref(),
+          &[
+            "model",
+            "modelName",
+            "model_name",
+            "MIDSCENE_MODEL_NAME",
+            "OPENAI_MODEL",
+          ],
+        )
+      }),
+      timeout_ms: first_env(&["MIDSCENE_MODEL_TIMEOUT"])
+        .and_then(|value| value.parse::<u64>().ok())
+        .or_else(|| {
+          json_config_u64(
+            init_config.as_ref(),
+            &[
+              "timeoutMs",
+              "timeout_ms",
+              "MIDSCENE_MODEL_TIMEOUT",
+              "JUDGE_TIMEOUT_MS",
+            ],
+          )
+        }),
     }
   }
 }
@@ -76,7 +107,7 @@ pub struct ModelClient {
 
 #[derive(Debug, Error)]
 pub enum ModelError {
-  #[error("OpenAI credentials not provided: set OPENAI_API_KEY, A2UI_BENCH_JUDGE_API_KEY, or MIDSCENE_MODEL_API_KEY")]
+  #[error("OpenAI-compatible credentials not provided: set MIDSCENE_MODEL_API_KEY or MIDSCENE_OPENAI_INIT_CONFIG_JSON")]
   MissingApiKey,
   #[error("model API request failed: {0}")]
   Request(#[from] reqwest::Error),
@@ -260,12 +291,12 @@ fn responses_content(prompt: &str, image_data_urls: &[&str]) -> Vec<Value> {
   content
 }
 
-fn read_api_env() -> Option<ModelApi> {
-  first_env(&["A2UI_BENCH_JUDGE_API", "OPENAI_API_STYLE"]).and_then(|value| match value.as_str() {
+fn parse_model_api(value: &str) -> Option<ModelApi> {
+  match value.trim().to_ascii_lowercase().as_str() {
     "chat" => Some(ModelApi::Chat),
     "responses" => Some(ModelApi::Responses),
     _ => None,
-  })
+  }
 }
 
 fn first_env(names: &[&str]) -> Option<String> {
@@ -275,6 +306,44 @@ fn first_env(names: &[&str]) -> Option<String> {
       .map(|value| value.trim().to_string())
       .filter(|value| !value.is_empty())
   })
+}
+
+fn midscene_openai_init_config() -> Option<Value> {
+  first_env(&["MIDSCENE_OPENAI_INIT_CONFIG_JSON"])
+    .and_then(|value| serde_json::from_str::<Value>(&value).ok())
+}
+
+fn json_config_string(config: Option<&Value>, keys: &[&str]) -> Option<String> {
+  let value = find_json_key(config?, keys)?;
+  value
+    .as_str()
+    .map(str::trim)
+    .filter(|value| !value.is_empty())
+    .map(str::to_string)
+}
+
+fn json_config_u64(config: Option<&Value>, keys: &[&str]) -> Option<u64> {
+  let value = find_json_key(config?, keys)?;
+  if let Some(value) = value.as_u64() {
+    return Some(value);
+  }
+  value
+    .as_str()
+    .map(str::trim)
+    .and_then(|value| value.parse::<u64>().ok())
+}
+
+fn find_json_key<'a>(value: &'a Value, keys: &[&str]) -> Option<&'a Value> {
+  let object = value.as_object()?;
+  for key in keys {
+    if let Some(value) = object.get(*key) {
+      return Some(value);
+    }
+  }
+  object
+    .values()
+    .filter(|value| value.is_object())
+    .find_map(|value| find_json_key(value, keys))
 }
 
 fn normalize_base_url(mut value: String) -> String {
@@ -391,5 +460,36 @@ mod tests {
       extract_responses_text(&value).as_deref(),
       Some("{\"score\": 5}")
     );
+  }
+
+  #[test]
+  fn extracts_midscene_openai_init_config_fields() {
+    let config = json!({
+      "openai": {
+        "apiKey": "key-from-json",
+        "baseURL": "https://example.com/v1",
+        "modelName": "judge-model",
+        "apiStyle": "responses",
+        "timeoutMs": 30_000
+      }
+    });
+
+    assert_eq!(
+      json_config_string(Some(&config), &["apiKey"]).as_deref(),
+      Some("key-from-json")
+    );
+    assert_eq!(
+      json_config_string(Some(&config), &["baseURL"]).as_deref(),
+      Some("https://example.com/v1")
+    );
+    assert_eq!(
+      json_config_string(Some(&config), &["modelName"]).as_deref(),
+      Some("judge-model")
+    );
+    assert_eq!(
+      json_config_string(Some(&config), &["apiStyle"]).and_then(|value| parse_model_api(&value)),
+      Some(ModelApi::Responses)
+    );
+    assert_eq!(json_config_u64(Some(&config), &["timeoutMs"]), Some(30_000));
   }
 }

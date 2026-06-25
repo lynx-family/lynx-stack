@@ -90,18 +90,11 @@ async function runRustVisualEvaluation(
       ...rustArgs,
     ];
   const cwd = binary ? process.cwd() : findWorkspaceRoot();
-  const env = {
-    ...process.env,
-    ...(agent?.apiKey ? { A2UI_BENCH_JUDGE_API_KEY: agent.apiKey } : {}),
-    ...(agent?.baseURL ? { A2UI_BENCH_JUDGE_BASE_URL: agent.baseURL } : {}),
-    ...(agent?.model ? { A2UI_BENCH_JUDGE_MODEL: agent.model } : {}),
-    ...(agent?.api ? { A2UI_BENCH_JUDGE_API: agent.api } : {}),
-  };
 
   return await new Promise<ChildResult>((resolve, reject) => {
     const child = spawn(command, args, {
       cwd,
-      env,
+      env: process.env,
       stdio: ['ignore', 'pipe', 'pipe'],
     });
     let stdout = '';

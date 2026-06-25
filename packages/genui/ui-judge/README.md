@@ -18,7 +18,7 @@ const result = await runVisualEvaluation(
   },
   {
     agent: {
-      apiKey: process.env.OPENAI_API_KEY,
+      apiKey: process.env.MIDSCENE_MODEL_API_KEY,
       model: 'gpt-4o-mini',
     },
   },
@@ -57,7 +57,7 @@ interface VisualEvaluationResponse {
 
 The TypeScript API delegates image loading, alignment, diffing, and model
 evaluation to the Rust `ui-judge` binary. Configure the model through the
-`agent` options or the `OPENAI_*` / `A2UI_BENCH_JUDGE_*` environment variables.
+`agent` options or the existing `MIDSCENE_MODEL_*` environment variables.
 Official OpenAI base URLs default to the Responses API; custom base URLs
 default to chat completions for compatibility.
 
@@ -88,10 +88,10 @@ cargo run -p ui_judge --bin ui-judge -- judge-android-agent \
 The scenario JSON supplies Android Lynx page URLs, tasks, and optional text to
 wait for before scoring. The Rust scorer captures the Android screenshot and
 asks an OpenAI-compatible model for integer scores from 0 through 5. It supports
-`OPENAI_*`, `A2UI_BENCH_JUDGE_*`, and legacy `MIDSCENE_MODEL_*` environment
-variable names as endpoint aliases, but it does not depend on Midscene. The
-default Android app package is `com.lynx.explorer`; pass `--app-package` to use
-another installed app id.
+the existing `MIDSCENE_MODEL_*` and `MIDSCENE_OPENAI_INIT_CONFIG_JSON`
+environment variable names for CI compatibility, but it does not depend on
+Midscene. The default Android app package is `com.lynx.explorer`; pass
+`--app-package` to use another installed app id.
 
 Screenshot visual evaluation is also exposed through the same binary:
 
