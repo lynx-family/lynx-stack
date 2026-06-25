@@ -87,6 +87,15 @@ pub const TEMPLATE_SCROLL_VIEW: &str = r#"<style>
 
 pub const TEMPLATE_X_AUDIO_TT: &str = r#"<audio id="audio"></audio>"#;
 
+pub const TEMPLATE_X_VIDEO: &str = r#"<style>
+  #video {
+    width: 100%;
+    height: 100%;
+    display: block;
+  }
+</style>
+<video id="video" part="video" playsinline webkit-playsinline></video>"#;
+
 pub fn template_x_image(src: Option<&str>) -> Result<String, String> {
   if let Some(src_str) = src {
     let has_xss = src_str
