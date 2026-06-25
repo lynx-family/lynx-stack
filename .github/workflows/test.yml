@@ -84,7 +84,7 @@ jobs:
     with:
       runs-on: lynx-ubuntu-24.04-medium
       upload-codecov: false
-      run: pnpm --filter @lynx-js/ui-judge test
+      run: cargo test -p ui_judge --all-targets --all-features
 
   lighthouse:
     needs: build
@@ -277,13 +277,13 @@ jobs:
       MIDSCENE_MODEL_FAMILY: ${{ secrets.MIDSCENE_MODEL_FAMILY }}
       MIDSCENE_MODEL_NAME: ${{ secrets.MIDSCENE_MODEL_NAME }}
       MIDSCENE_OPENAI_INIT_CONFIG_JSON: ${{ secrets.MIDSCENE_OPENAI_INIT_CONFIG_JSON }}
-    name: UI Judge Rust Android Emulator Test
+    name: Kitten Lynx Android Emulator Test
     with:
       runs-on: lynx-ubuntu-22.04-physical-medium
       upload-codecov: false
       artifact-name: ui-judge-report
       artifact-path: ui-judge-comment.md
-      artifact-if-no-files-found: warn
+      artifact-if-no-files-found: error
       run: |
         # 4. Start Emulator
         echo "Starting emulator..."
@@ -334,7 +334,7 @@ jobs:
         cargo test -p ui_judge --test android_e2e -- --ignored --test-threads=1
 
         # 9. Run Rust UI Judge model scoring when credentials are available.
-        if [ -n "${MIDSCENE_MODEL_API_KEY:-}" ] && [ -n "${MIDSCENE_MODEL_NAME:-}" ]; then
+        if { [ -n "${MIDSCENE_MODEL_API_KEY:-}" ] && [ -n "${MIDSCENE_MODEL_NAME:-}" ]; } || [ -n "${MIDSCENE_OPENAI_INIT_CONFIG_JSON:-}" ]; then
           if ! cargo run -p ui_judge --bin ui-judge -- judge-android-agent \
             --scenarios packages/genui/ui-judge/tests/scenarios/android-geqi.json \
             --result-file ui-judge-results.json \
@@ -358,7 +358,7 @@ jobs:
   ui-judge-comment:
     needs: kitten-lynx-android-emulator
     if: ${{ always() }}
-    runs-on: ubuntu-latest
+    runs-on: lynx-ubuntu-24.04-medium
     permissions:
       contents: read
       issues: write
@@ -368,7 +368,7 @@ jobs:
         if: ${{ github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name == github.repository && needs.kitten-lynx-android-emulator.result != 'skipped' && needs.kitten-lynx-android-emulator.result != 'cancelled' }}
         with:
           persist-credentials: false
-      - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4
+      - uses: actions/download-artifact@634f93cb2916e3fdff6788551b99b062d0335ce0 # v5
         if: ${{ github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name == github.repository && needs.kitten-lynx-android-emulator.result != 'skipped' && needs.kitten-lynx-android-emulator.result != 'cancelled' }}
         continue-on-error: true
         with:
