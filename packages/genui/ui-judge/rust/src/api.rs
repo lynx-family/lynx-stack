@@ -21,8 +21,6 @@ use crate::transport::Connector;
 
 pub type Result<T> = std::result::Result<T, Error>;
 
-const DEFAULT_APP_PACKAGE: &str = "com.lynx.explorer";
-
 #[derive(Debug, Error)]
 pub enum Error {
   #[error("no Android device connected")]
@@ -68,7 +66,7 @@ impl Default for ConnectOptions {
   fn default() -> Self {
     Self {
       device_id: None,
-      app_package: DEFAULT_APP_PACKAGE.to_string(),
+      app_package: "com.lynx.explorer".to_string(),
       clear_data: false,
     }
   }

@@ -41,7 +41,7 @@ impl AndroidDevice {
 
     for candidate in candidates {
       let device = server.device_by_serial(&candidate.serial).await?;
-      let packages = device.list_packages(&["-3"]).await?;
+      let packages = device.list_packages(&[]).await?;
       if packages.iter().any(|package| package == package_name) {
         return Ok(Self { inner: device });
       }

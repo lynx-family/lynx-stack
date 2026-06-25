@@ -89,7 +89,9 @@ The scenario JSON supplies Android Lynx page URLs, tasks, and optional text to
 wait for before scoring. The Rust scorer captures the Android screenshot and
 asks an OpenAI-compatible model for integer scores from 0 through 5. It supports
 `OPENAI_*`, `A2UI_BENCH_JUDGE_*`, and legacy `MIDSCENE_MODEL_*` environment
-variable names as endpoint aliases, but it does not depend on Midscene.
+variable names as endpoint aliases, but it does not depend on Midscene. The
+default Android app package is `com.lynx.explorer`; pass `--app-package` to use
+another installed app id.
 
 Screenshot visual evaluation is also exposed through the same binary:
 
