@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <title>Redirecting to GenUI</title>
+    <meta http-equiv="refresh" content="0; url=/genui">
+    <link rel="canonical" href="/genui">
+    <script>
+    (function() {
+        var url = new URL(window.location.href);
+        var targetPathname = url.hash ? '/genui/' : '/genui';
+        var nextPathname = url.pathname.replace(
+          /\/a2ui(?:\/index\.html|\.html|\/?)$/u,
+          targetPathname,
+        );
+        if (nextPathname === url.pathname) {
+          nextPathname = targetPathname;
+        }
+        url.pathname = nextPathname;
+        window.location.replace(url.toString());
+      })();
+    </script>
+  </head>
+  <body>
+    <p>
+      Redirecting to <a href="/genui">GenUI</a>.
+    </p>
+  </body>
+</html>

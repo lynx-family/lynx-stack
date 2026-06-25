@@ -14,4 +14,6 @@ When documenting GenUI CLI usage, use `npx @lynx-js/a2ui-cli` as the user-facing
 
 When documenting the GenUI playground, only present the hosted URL `https://lynx-stack.dev/genui/` as the trial path. Do not document local `genui-playground` package usage, local server startup, or local playground endpoint overrides in user-facing docs; the package is not planned as a published product surface.
 
+Keep the legacy hosted playground route `https://lynx-stack.dev/a2ui` as a static redirect to `https://lynx-stack.dev/genui` for users with old links. Preserve query strings and hash fragments when changing redirect code so links such as `/a2ui/#/openui` continue to land on the matching GenUI route.
+
 Avoid literal wording such as "recommended shape" / "推荐形状" in user-facing docs. Prefer "interface best practice", "implementation pattern", "接口设计最佳实践", or other product-facing phrases that read naturally to React developers.
