@@ -464,16 +464,3 @@ impl Drop for UpdateMeta {
     }
   }
 }
-
-#[cfg(test)]
-mod tests {
-  use super::*;
-
-  #[test]
-  fn builder_accepts_viewport_values_without_library() {
-    assert_eq!(
-      std::mem::size_of::<RawNativeModule>(),
-      std::mem::size_of::<RawNativeModule>()
-    );
-  }
-}

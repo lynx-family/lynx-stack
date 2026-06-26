@@ -1,3 +1,9 @@
+//! Raw Lynx C ABI bindings and dynamic symbol loading.
+//!
+//! This module is intentionally low level. Most embedders should use the safe
+//! wrappers re-exported from the crate root. Use `sys` when you need direct
+//! access to a loaded `libLynx_clay` symbol or a checked-in ABI type.
+
 #![allow(non_camel_case_types)]
 #![allow(non_snake_case)]
 #![allow(non_upper_case_globals)]

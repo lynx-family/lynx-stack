@@ -1,3 +1,12 @@
+//! Runtime-loaded Rust bindings for headless Lynx embedding.
+//!
+//! The crate does not link against `libLynx_clay` at build time. Load a runtime
+//! with [`Env::load`] or [`Env::load_from_path`], then compose a
+//! [`WindowlessRenderer`], optional [`ResourceFetcher`], and [`HeadlessView`].
+//!
+//! Raw C ABI bindings are available in [`sys`] for integration code that needs
+//! to call a symbol not wrapped by the safe API yet.
+
 mod buffer;
 mod env;
 mod error;
