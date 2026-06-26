@@ -44,6 +44,9 @@ import type {
   AddEventPAPI,
   DecoratedHTMLElement,
   ElementPAPIs,
+  RemoveElementPAPI,
+  ReplaceElementPAPI,
+  ReplaceElementsPAPI,
   SetCSSIdPAPI,
   UpdateListInfoAttributeValue,
 } from '../../../types/index.js';
@@ -87,6 +90,11 @@ export function createElementAPI(
     rootDom,
     mtsBinding,
     config_enable_css_selector,
+    config_default_display_linear,
+    config_default_overflow_visible,
+    transform_vw,
+    transform_vh,
+    transform_rem,
   );
   let page: DecoratedHTMLElement | undefined = undefined;
   const timingFlags: string[] = [];
@@ -162,6 +170,40 @@ export function createElementAPI(
           frameworkCrossThreadIdentifier != null,
         );
       }
+    }
+  };
+  const cleanupElementTemplate = (element: HTMLElement) => {
+    wasmContext.remove_element_template(element);
+  };
+  const normalizeElementList = (
+    elements: HTMLElement[] | HTMLElement | null | undefined,
+  ) => elements ? Array.isArray(elements) ? elements : [elements] : [];
+  const __RemoveElementWithCleanup: RemoveElementPAPI = (parent, child) => {
+    const removedChild = __RemoveElement(parent, child);
+    cleanupElementTemplate(child);
+    return removedChild;
+  };
+  const __ReplaceElementWithCleanup: ReplaceElementPAPI = (
+    newElement,
+    oldElement,
+  ) => {
+    __ReplaceElement(newElement, oldElement);
+    if (newElement !== oldElement) {
+      cleanupElementTemplate(oldElement);
+    }
+  };
+  const __ReplaceElementsWithCleanup: ReplaceElementsPAPI = (
+    parent,
+    newChildren,
+    oldChildren,
+  ) => {
+    const newChildSet = new Set(normalizeElementList(newChildren));
+    const removedChildren = normalizeElementList(oldChildren).filter(
+      child => !newChildSet.has(child),
+    );
+    __ReplaceElements(parent, newChildren, oldChildren);
+    for (const child of removedChildren) {
+      cleanupElementTemplate(child);
     }
   };
   return {
@@ -278,6 +320,68 @@ export function createElementAPI(
         new WeakRef(dom),
       );
       return dom;
+    },
+    __CreateElementTemplate(
+      templateKey,
+      bundleUrl,
+      attributeSlots,
+      elementSlots,
+      uid,
+    ) {
+      return wasmContext.create_element_template(
+        templateKey,
+        bundleUrl ?? undefined,
+        attributeSlots ?? undefined,
+        elementSlots ?? undefined,
+        uid ?? undefined,
+      ) as HTMLElement;
+    },
+    __CreateTypedElementTemplate(
+      tag,
+      attributes,
+      elementSlots,
+      uid,
+      options,
+    ) {
+      if (tag === 'page' && page) return page;
+      const dom = wasmContext.create_typed_element_template(
+        tag,
+        attributes ?? undefined,
+        elementSlots ?? undefined,
+        uid ?? undefined,
+        options ?? undefined,
+      ) as HTMLElement;
+      if (tag === 'page') {
+        page = dom as DecoratedHTMLElement;
+      }
+      return dom;
+    },
+    __SetAttributeOfElementTemplate(
+      element,
+      attributeSlotIndex,
+      value,
+      options,
+    ) {
+      wasmContext.set_attribute_of_element_template(
+        element,
+        attributeSlotIndex,
+        value,
+        options ?? undefined,
+      );
+    },
+    __InsertNodeToElementTemplate(element, slotIndex, child, reference) {
+      wasmContext.insert_node_to_element_template(
+        element,
+        slotIndex,
+        child,
+        reference ?? undefined,
+      );
+    },
+    __RemoveNodeFromElementTemplate(element, _slotIndex, child) {
+      wasmContext.remove_node_from_element_template(element, child);
+    },
+    __SerializeElementTemplate(element) {
+      return wasmContext.serialize_element_template(element) as any;
     },
     __CreatePage(componentID, componentCSSID) {
       if (page) return page;
@@ -531,11 +635,11 @@ export function createElementAPI(
     __InsertElementBefore,
     __LastElement,
     __NextElement,
-    __RemoveElement,
-    __ReplaceElement,
+    __RemoveElement: __RemoveElementWithCleanup,
+    __ReplaceElement: __ReplaceElementWithCleanup,
     __GetAttributes,
     __GetAttributeByName,
-    __ReplaceElements,
+    __ReplaceElements: __ReplaceElementsWithCleanup,
     __GetID,
     __SetID,
     __GetTag,

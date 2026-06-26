@@ -24,6 +24,8 @@ export const mainthreadwasmcontext_add_dataset: (a: number, b: number, c: number
 export const mainthreadwasmcontext_add_run_worklet_event: (a: number, b: number, c: number, d: number, e: number, f: number, g: number) => void;
 export const mainthreadwasmcontext_common_event_handler: (a: number, b: number, c: number, d: number, e: number, f: number, g: number) => void;
 export const mainthreadwasmcontext_create_element_common: (a: number, b: number, c: number, d: number, e: number, f: number, g: number) => number;
+export const mainthreadwasmcontext_create_element_template: (a: number, b: number, c: number, d: number, e: number, f: number, g: number, h: number, i: number) => void;
+export const mainthreadwasmcontext_create_typed_element_template: (a: number, b: number, c: number, d: number, e: number, f: number, g: number, h: number) => void;
 export const mainthreadwasmcontext_dispatch_event_by_path: (a: number, b: number, c: number, d: number, e: number, f: number, g: number) => number;
 export const mainthreadwasmcontext_dispatch_global_bind_event: (a: number, b: number, c: number, d: number, e: number, f: number) => void;
 export const mainthreadwasmcontext_gc: (a: number) => void;
@@ -36,8 +38,14 @@ export const mainthreadwasmcontext_get_element_config: (a: number, b: number, c:
 export const mainthreadwasmcontext_get_event: (a: number, b: number, c: number, d: number, e: number, f: number) => number;
 export const mainthreadwasmcontext_get_events: (a: number, b: number, c: number) => void;
 export const mainthreadwasmcontext_get_unique_id_by_component_id: (a: number, b: number, c: number) => number;
-export const mainthreadwasmcontext_new: (a: number, b: number, c: number) => number;
+export const mainthreadwasmcontext_insert_node_to_element_template: (a: number, b: number, c: number, d: number, e: number, f: number) => void;
+export const mainthreadwasmcontext_new: (a: number, b: number, c: number, d: number, e: number, f: number, g: number, h: number) => number;
 export const mainthreadwasmcontext_push_style_sheet: (a: number, b: number, c: number, d: number, e: number) => void;
+export const mainthreadwasmcontext_register_element_templates: (a: number, b: number, c: number, d: number, e: number) => void;
+export const mainthreadwasmcontext_remove_element_template: (a: number, b: number, c: number) => void;
+export const mainthreadwasmcontext_remove_node_from_element_template: (a: number, b: number, c: number, d: number) => void;
+export const mainthreadwasmcontext_serialize_element_template: (a: number, b: number, c: number) => void;
+export const mainthreadwasmcontext_set_attribute_of_element_template: (a: number, b: number, c: number, d: number, e: number, f: number) => void;
 export const mainthreadwasmcontext_set_config: (a: number, b: number, c: number, d: number) => void;
 export const mainthreadwasmcontext_set_css_id: (a: number, b: number, c: number, d: number, e: number, f: number, g: number) => void;
 export const mainthreadwasmcontext_set_dataset: (a: number, b: number, c: number, d: number, e: number) => void;

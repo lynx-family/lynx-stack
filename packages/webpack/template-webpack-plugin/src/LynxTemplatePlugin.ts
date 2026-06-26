@@ -50,7 +50,7 @@ export interface EncodeOptions {
   /**
    * Element template data used by encoders that support element template output.
    */
-  elementTemplate?: Record<string, unknown>;
+  elementTemplates?: Record<string, unknown>;
   [k: string]: unknown;
 }
 
@@ -338,7 +338,7 @@ interface EncodeRawData {
     appType: string;
     config: Record<string, unknown>;
   };
-  elementTemplate?: Record<string, unknown>;
+  elementTemplates?: Record<string, unknown>;
   [k: string]: unknown;
 }
 

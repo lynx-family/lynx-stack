@@ -4,7 +4,10 @@
  * LICENSE file in the root directory of this source tree.
  */
 import type * as CSS from '@lynx-js/css-serializer';
-import type { ElementTemplateData } from '../types/index.js';
+import type {
+  ElementTemplateAsset,
+  ElementTemplateInput,
+} from '../types/index.js';
 import { encodeCSS } from './encodeCSS.js';
 import {
   MagicHeader0,
@@ -12,8 +15,8 @@ import {
   TemplateSectionLabel,
 } from '../constants.js';
 
-function encodeAsJSON(map: Record<string, unknown>): Uint8Array {
-  const jsonString = JSON.stringify(map);
+function encodeAsJSON(value: unknown): Uint8Array {
+  const jsonString = JSON.stringify(value);
   const utf16Array = new Uint16Array(jsonString.length);
   for (let i = 0; i < jsonString.length; i++) {
     utf16Array[i] = jsonString.charCodeAt(i);
@@ -59,6 +62,21 @@ function encodeStringMap(map: Record<string, string>): Uint8Array {
   return buffer;
 }
 
+function writeSection(
+  buffer: Uint8Array,
+  dataView: DataView,
+  offset: number,
+  label: number,
+  content: Uint8Array,
+): number {
+  dataView.setUint32(offset, label, true);
+  offset += 4;
+  dataView.setUint32(offset, content.length, true);
+  offset += 4;
+  buffer.set(content, offset);
+  return offset + content.length;
+}
+
 export type TasmJSONInfo = {
   styleInfo: Record<string, CSS.LynxStyleNode[]>;
   manifest: Record<string, string>;
@@ -70,8 +88,25 @@ export type TasmJSONInfo = {
     type?: 'lazy';
     content: string | Record<string, unknown>;
   }>;
-  elementTemplates: Record<string, ElementTemplateData>;
+  elementTemplates?: ElementTemplateInput;
 };
+
+function normalizeElementTemplates(
+  elementTemplates: ElementTemplateInput | undefined,
+): ElementTemplateAsset[] {
+  if (!elementTemplates) {
+    return [];
+  }
+  if (Array.isArray(elementTemplates)) {
+    return elementTemplates;
+  }
+  return Object.entries(elementTemplates).map((
+    [templateId, compiledTemplate],
+  ) => ({
+    templateId,
+    compiledTemplate,
+  }));
+}
 
 export function encode(tasmJSON: TasmJSONInfo): Uint8Array {
   const {
@@ -82,12 +117,17 @@ export function encode(tasmJSON: TasmJSONInfo): Uint8Array {
     pageConfig,
     lepusCode,
     customSections,
+    elementTemplates: rawElementTemplates,
   } = tasmJSON;
+  const elementTemplates = normalizeElementTemplates(rawElementTemplates);
   const encodedStyleInfo = encodeCSS(styleInfo);
   const encodedManifest = encodeStringMap(manifest);
   const encodedLepusCode = encodeStringMap(lepusCode);
 
   const encodedCustomSections = encodeAsJSON(customSections);
+  const encodedElementTemplates = elementTemplates.length > 0
+    ? encodeAsJSON(elementTemplates)
+    : undefined;
 
   const configMap: Record<string, string> = {};
   configMap['cardType'] = cardType;
@@ -102,9 +142,12 @@ export function encode(tasmJSON: TasmJSONInfo): Uint8Array {
     /*section label*/
     /*section length*/
     + 4 + 4 + encodedConfigurations.length // Configurations
-    + 4 + 4 + encodedStyleInfo.length // Style Info
+    + (encodedElementTemplates
+      ? 4 + 4 + encodedElementTemplates.length
+      : 0) // Element Templates
     + 4 + 4 + encodedLepusCode.length // Lepus Code
     + 4 + 4 + encodedCustomSections.length // Custom Sections
+    + 4 + 4 + encodedStyleInfo.length // Style Info
     + 4 + 4 + encodedManifest.length // Manifest
   ;
 
@@ -121,42 +164,58 @@ export function encode(tasmJSON: TasmJSONInfo): Uint8Array {
   dataView.setUint32(offset, 1, true);
   offset += 4;
 
-  // Configurations
-  dataView.setUint32(offset, TemplateSectionLabel.Configurations, true); // section label
-  offset += 4;
-  dataView.setUint32(offset, encodedConfigurations.length, true); // section length
-  offset += 4;
-  buffer.set(encodedConfigurations, offset);
-  offset += encodedConfigurations.length;
+  offset = writeSection(
+    buffer,
+    dataView,
+    offset,
+    TemplateSectionLabel.Configurations,
+    encodedConfigurations,
+  );
 
-  // Lepus Code
-  dataView.setUint32(offset, TemplateSectionLabel.LepusCode, true); // section label
-  offset += 4;
-  dataView.setUint32(offset, encodedLepusCode.length, true); // section length
-  offset += 4;
-  buffer.set(encodedLepusCode, offset);
-  offset += encodedLepusCode.length;
-  // Custom Sections
-  dataView.setUint32(offset, TemplateSectionLabel.CustomSections, true); // section label
-  offset += 4;
-  dataView.setUint32(offset, encodedCustomSections.length, true); // section length
-  offset += 4;
-  buffer.set(encodedCustomSections, offset);
-  offset += encodedCustomSections.length;
-  // Style Info
-  dataView.setUint32(offset, TemplateSectionLabel.StyleInfo, true); // section label
-  offset += 4;
-  dataView.setUint32(offset, encodedStyleInfo.length, true); // section length
-  offset += 4;
-  buffer.set(encodedStyleInfo, offset);
-  offset += encodedStyleInfo.length;
-  // Manifest
-  dataView.setUint32(offset, TemplateSectionLabel.Manifest, true); // section label
-  offset += 4;
-  dataView.setUint32(offset, encodedManifest.length, true); // section length
-  offset += 4;
-  buffer.set(encodedManifest, offset);
-  offset += encodedManifest.length;
+  if (encodedElementTemplates) {
+    offset = writeSection(
+      buffer,
+      dataView,
+      offset,
+      TemplateSectionLabel.ElementTemplates,
+      encodedElementTemplates,
+    );
+  }
+
+  offset = writeSection(
+    buffer,
+    dataView,
+    offset,
+    TemplateSectionLabel.LepusCode,
+    encodedLepusCode,
+  );
+  offset = writeSection(
+    buffer,
+    dataView,
+    offset,
+    TemplateSectionLabel.CustomSections,
+    encodedCustomSections,
+  );
+  offset = writeSection(
+    buffer,
+    dataView,
+    offset,
+    TemplateSectionLabel.StyleInfo,
+    encodedStyleInfo,
+  );
+  offset = writeSection(
+    buffer,
+    dataView,
+    offset,
+    TemplateSectionLabel.Manifest,
+    encodedManifest,
+  );
+
+  if (offset !== bufferLength) {
+    throw new Error(
+      `Unexpected encoded bundle length: ${offset}/${bufferLength}`,
+    );
+  }
 
   return buffer;
 }

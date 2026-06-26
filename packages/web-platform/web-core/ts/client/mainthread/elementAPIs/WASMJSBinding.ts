@@ -96,6 +96,10 @@ export class WASMJSBinding implements RustMainthreadContextBinding {
     return undefined;
   }
 
+  setElementUniqueId(element: DecoratedHTMLElement, uniqueId: number): void {
+    element[uniqueIdSymbol] = uniqueId;
+  }
+
   runWorklet(
     handler: { value: unknown },
     eventObject: LynxCrossThreadEvent,

@@ -72,6 +72,28 @@ test.describe('reactlynx3 tests', () => {
       await expect(target).toHaveCSS('background-color', 'rgb(255, 192, 203)');
     });
 
+    test('basic-element-template-csr', async ({ page }, { title }) => {
+      test.skip(isSSR, 'Element template support is CSR-only on web-core.');
+      await goto(page, title);
+      await wait(100);
+
+      const target = page.locator('#target');
+      await expect(target).toHaveAttribute('data-state', 'idle');
+      await expect(target).toHaveCSS('background-color', 'rgb(255, 0, 0)');
+      await expect(page.locator('#label')).toHaveText('idle');
+      await expect(page.locator('#slot-child')).toHaveText('slot-off');
+      expect(await target.getAttribute('l-uid')).toBeNull();
+
+      await target.click();
+      await wait(100);
+
+      await expect(target).toHaveAttribute('data-state', 'active');
+      await expect(target).toHaveCSS('background-color', 'rgb(0, 128, 0)');
+      await expect(page.locator('#label')).toHaveText('enabled');
+      await expect(page.locator('#slot-child')).toHaveText('slot-on');
+      expect(await target.getAttribute('l-uid')).toBeNull();
+    });
+
     test('basic-reload', async ({ page }, { title }) => {
       await goto(page, title);
       await wait(100);

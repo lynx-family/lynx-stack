@@ -59,6 +59,7 @@ export class TemplateManager {
         const lynxViewInstance = await lynxViewInstancePromise;
         lynxViewInstance.backgroundThread.markTiming('decode_start');
         lynxViewInstance.onPageConfigReady(config);
+        lynxViewInstance.onElementTemplatesReady(url);
         lynxViewInstance.onStyleInfoReady(url);
         lynxViewInstance.onMTSScriptsLoaded(url, config.isLazy === 'true');
         lynxViewInstance.onBTSScriptsLoaded(url);
@@ -70,6 +71,7 @@ export class TemplateManager {
         const lynxViewInstance = await lynxViewInstancePromise;
         lynxViewInstance.backgroundThread.markTiming('decode_start');
         lynxViewInstance.onPageConfigReady(config);
+        lynxViewInstance.onElementTemplatesReady(url);
         lynxViewInstance.onStyleInfoReady(url);
         lynxViewInstance.onMTSScriptsLoaded(url, config.isLazy === 'true');
         lynxViewInstance.onBTSScriptsLoaded(url);
@@ -254,6 +256,11 @@ export class TemplateManager {
         instance.onStyleInfoReady(url);
         break;
       }
+      case TemplateSectionLabel.ElementTemplates: {
+        this.#setElementTemplates(url, data);
+        instance.onElementTemplatesReady(url);
+        break;
+      }
       case TemplateSectionLabel.LepusCode: {
         const blobMap = data as Record<string, string>;
         this.#setLepusCode(url, blobMap);
@@ -358,12 +365,26 @@ export class TemplateManager {
     }
   }
 
+  #setElementTemplates(
+    url: string,
+    elementTemplates: DecodedTemplate['elementTemplates'],
+  ) {
+    const bundle = this.#loadingBundles.get(url);
+    if (bundle) {
+      bundle.elementTemplates = elementTemplates;
+    }
+  }
+
   public getBundle(url: string): DecodedTemplate | undefined {
     return this.#bundles.get(url) || this.#loadingBundles.get(url);
   }
 
   public getStyleSheet(url: string): any {
     return this.getBundle(url)?.styleSheet;
+  }
+
+  public getElementTemplates(url: string): DecodedTemplate['elementTemplates'] {
+    return this.getBundle(url)?.elementTemplates;
   }
 }
 

@@ -176,6 +176,19 @@ export class LynxViewInstance implements AsyncDisposable {
     }
   }
 
+  onElementTemplatesReady(
+    currentUrl: string,
+  ) {
+    const wasmContext = this.mtsWasmBinding.wasmContext;
+    const elementTemplates = templateManager.getElementTemplates(currentUrl);
+    if (wasmContext) {
+      wasmContext.register_element_templates(
+        elementTemplates ?? [],
+        this.templateUrl === currentUrl ? undefined : currentUrl,
+      );
+    }
+  }
+
   async onMTSScriptsLoaded(currentUrl: string, isLazy: boolean) {
     this.backgroundThread.markTiming('lepus_execute_start');
     const urlMap = templateManager.getBundle(currentUrl)

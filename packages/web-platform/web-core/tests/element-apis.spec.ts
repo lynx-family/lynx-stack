@@ -20,6 +20,17 @@ import { createMainThreadGlobalAPIs } from '../ts/client/mainthread/createMainTh
 import type { LynxViewInstance } from '../ts/client/mainthread/LynxViewInstance.js';
 import { createTestLynxViewInstance } from './createTestLynxViewInstance.js';
 
+const builtinRawTextTemplate = {
+  templateId: '_et_builtin_raw_text',
+  compiledTemplate: {
+    kind: 'element',
+    type: 'raw-text',
+    attributesArray: [
+      { kind: 'slot', key: 'text', attrSlotIndex: 0 },
+    ],
+  },
+};
+
 describe('Element APIs', () => {
   let lynxViewDom: HTMLElement;
   let rootDom: ShadowRoot;
@@ -37,6 +48,9 @@ describe('Element APIs', () => {
       true,
       true,
       true,
+      false,
+      false,
+      false,
     );
   });
   test('#commonEventHandler should filter out -1 uniqueId', () => {
@@ -108,6 +122,296 @@ describe('Element APIs', () => {
   test('createElementView', () => {
     const element = mtsGlobalThis.__CreateElement('view', 0);
     expect(mtsGlobalThis.__GetTag(element)).toBe('view');
+  });
+
+  test('element template creates, patches, moves, and serializes DOM in wasm', () => {
+    mtsBinding.wasmContext!.register_element_templates([
+      builtinRawTextTemplate,
+      {
+        templateId: '_et_card',
+        compiledTemplate: {
+          kind: 'element',
+          type: 'view',
+          attributesArray: [
+            { kind: 'static', key: 'class', value: 'static-class' },
+            { kind: 'slot', key: 'class', attrSlotIndex: 0 },
+            { kind: 'spread', attrSlotIndex: 1 },
+            { kind: 'slot', key: 'style', attrSlotIndex: 2 },
+            { kind: 'slot', key: 'bindTap', attrSlotIndex: 3 },
+          ],
+          children: [
+            {
+              kind: 'element',
+              type: 'raw-text',
+              attributesArray: [
+                { kind: 'static', key: 'text', value: 'static' },
+              ],
+            },
+            { kind: 'elementSlot', type: 'slot', elementSlotIndex: 0 },
+          ],
+        },
+      },
+    ]);
+
+    const firstChild = mtsGlobalThis.__CreateElementTemplate(
+      '_et_builtin_raw_text',
+      null,
+      ['first'],
+      null,
+      2,
+    );
+    const root = mtsGlobalThis.__CreateElementTemplate(
+      '_et_card',
+      null,
+      [
+        'dynamic-class',
+        { id: 'from-spread', 'data-kind': 'initial' },
+        { width: '12px', height: '10px' },
+        'tap-handler',
+      ],
+      [[firstChild]],
+      1,
+    );
+
+    expect(root.tagName.toLowerCase()).toBe('x-view');
+    expect(root.className).toBe('dynamic-class');
+    expect(root.id).toBe('from-spread');
+    expect(root.getAttribute('data-kind')).toBe('initial');
+    expect(root.getAttribute('style')).toContain('width:12px');
+    expect(root.children).toHaveLength(2);
+    expect(root.children[0]!.getAttribute('text')).toBe('static');
+    expect(root.children[1]!.getAttribute('text')).toBe('first');
+    expect(
+      mtsBinding.wasmContext!.get_event(
+        mtsGlobalThis.__GetElementUniqueID(root),
+        'tap',
+        'bindevent',
+      ),
+    ).toBe('tap-handler');
+
+    mtsGlobalThis.__SetAttributeOfElementTemplate(root, 0, null);
+    expect(root.className).toBe('static-class');
+
+    mtsGlobalThis.__SetAttributeOfElementTemplate(root, 1, { id: 'updated' });
+    expect(root.id).toBe('updated');
+    expect(root.hasAttribute('data-kind')).toBe(false);
+
+    mtsGlobalThis.__SetAttributeOfElementTemplate(root, 2, 'height: 20px;');
+    expect(root.getAttribute('style')).toContain('height:20px');
+
+    const secondChild = mtsGlobalThis.__CreateElementTemplate(
+      '_et_builtin_raw_text',
+      null,
+      ['second'],
+      null,
+      3,
+    );
+    mtsGlobalThis.__InsertNodeToElementTemplate(
+      root,
+      0,
+      secondChild,
+      firstChild,
+    );
+    expect([...root.children].map(child => child.getAttribute('text'))).toEqual(
+      ['static', 'second', 'first'],
+    );
+
+    mtsGlobalThis.__RemoveNodeFromElementTemplate(root, 0, firstChild);
+    expect([...root.children].map(child => child.getAttribute('text'))).toEqual(
+      ['static', 'second'],
+    );
+    expect(() => mtsGlobalThis.__SerializeElementTemplate(firstChild)).toThrow(
+      /Element template instance not found/,
+    );
+
+    expect(mtsGlobalThis.__SerializeElementTemplate(root)).toMatchObject({
+      uid: 1,
+      templateKey: '_et_card',
+      attributeSlots: [
+        null,
+        { id: 'updated' },
+        'height: 20px;',
+        'tap-handler',
+      ],
+      elementSlots: [
+        [
+          {
+            uid: 3,
+            templateKey: '_et_builtin_raw_text',
+            attributeSlots: ['second'],
+          },
+        ],
+      ],
+    });
+  });
+
+  test('element template spread removal restores sibling dynamic binding', () => {
+    mtsBinding.wasmContext!.register_element_templates([
+      {
+        templateId: '_et_spread_restore',
+        compiledTemplate: {
+          kind: 'element',
+          type: 'view',
+          attributesArray: [
+            { kind: 'slot', key: 'id', attrSlotIndex: 0 },
+            { kind: 'spread', attrSlotIndex: 1 },
+          ],
+        },
+      },
+    ]);
+
+    const root = mtsGlobalThis.__CreateElementTemplate(
+      '_et_spread_restore',
+      null,
+      ['slot-id', { id: 'spread-id', 'data-kind': 'initial' }],
+      null,
+      4,
+    );
+
+    expect(root.id).toBe('spread-id');
+    expect(root.getAttribute('data-kind')).toBe('initial');
+
+    mtsGlobalThis.__SetAttributeOfElementTemplate(root, 0, 'slot-updated');
+
+    expect(root.id).toBe('spread-id');
+
+    mtsGlobalThis.__SetAttributeOfElementTemplate(root, 1, {});
+
+    expect(root.id).toBe('slot-updated');
+    expect(root.hasAttribute('data-kind')).toBe(false);
+
+    mtsGlobalThis.__SetAttributeOfElementTemplate(root, 0, null);
+
+    expect(root.hasAttribute('id')).toBe(false);
+  });
+
+  test('element template cleanup runs when removed through normal DOM PAPI', () => {
+    mtsBinding.wasmContext!.register_element_templates([
+      builtinRawTextTemplate,
+    ]);
+    const parent = mtsGlobalThis.__CreateView(0);
+    const child = mtsGlobalThis.__CreateElementTemplate(
+      '_et_builtin_raw_text',
+      null,
+      ['detached'],
+      null,
+      5,
+    );
+
+    mtsGlobalThis.__AppendElement(parent, child);
+    expect(mtsGlobalThis.__SerializeElementTemplate(child)).toMatchObject({
+      uid: 5,
+      templateKey: '_et_builtin_raw_text',
+    });
+
+    mtsGlobalThis.__RemoveElement(parent, child);
+
+    expect(() => mtsGlobalThis.__SerializeElementTemplate(child)).toThrow(
+      /Element template instance not found/,
+    );
+  });
+
+  test('element template cleanup scans removed DOM subtree', () => {
+    mtsBinding.wasmContext!.register_element_templates([
+      builtinRawTextTemplate,
+    ]);
+    const parent = mtsGlobalThis.__CreateView(0);
+    const wrapper = mtsGlobalThis.__CreateView(0);
+    const child = mtsGlobalThis.__CreateElementTemplate(
+      '_et_builtin_raw_text',
+      null,
+      ['nested'],
+      null,
+      6,
+    );
+
+    mtsGlobalThis.__AppendElement(parent, wrapper);
+    mtsGlobalThis.__AppendElement(wrapper, child);
+    expect(mtsGlobalThis.__SerializeElementTemplate(child)).toMatchObject({
+      uid: 6,
+      templateKey: '_et_builtin_raw_text',
+    });
+
+    mtsGlobalThis.__RemoveElement(parent, wrapper);
+
+    expect(() => mtsGlobalThis.__SerializeElementTemplate(child)).toThrow(
+      /Element template instance not found/,
+    );
+  });
+
+  test('element template cleanup preserves reused replaceElements child', () => {
+    mtsBinding.wasmContext!.register_element_templates([
+      builtinRawTextTemplate,
+    ]);
+    const parent = mtsGlobalThis.__CreateView(0);
+    const child = mtsGlobalThis.__CreateElementTemplate(
+      '_et_builtin_raw_text',
+      null,
+      ['reused'],
+      null,
+      7,
+    );
+
+    mtsGlobalThis.__AppendElement(parent, child);
+    mtsGlobalThis.__ReplaceElements(parent, child, child);
+
+    expect(mtsGlobalThis.__SerializeElementTemplate(child)).toMatchObject({
+      uid: 7,
+      templateKey: '_et_builtin_raw_text',
+    });
+  });
+
+  test('element template move detaches child from previous slot owner', () => {
+    mtsBinding.wasmContext!.register_element_templates([
+      builtinRawTextTemplate,
+      {
+        templateId: '_et_slot_host',
+        compiledTemplate: {
+          kind: 'element',
+          type: 'view',
+          children: [
+            {
+              kind: 'elementSlot',
+              type: 'slot',
+              elementSlotIndex: 0,
+            },
+          ],
+        },
+      },
+    ]);
+    const firstHost = mtsGlobalThis.__CreateElementTemplate(
+      '_et_slot_host',
+      null,
+      null,
+      null,
+      8,
+    );
+    const secondHost = mtsGlobalThis.__CreateElementTemplate(
+      '_et_slot_host',
+      null,
+      null,
+      null,
+      9,
+    );
+    const child = mtsGlobalThis.__CreateElementTemplate(
+      '_et_builtin_raw_text',
+      null,
+      ['moving'],
+      null,
+      10,
+    );
+
+    mtsGlobalThis.__InsertNodeToElementTemplate(firstHost, 0, child);
+    mtsGlobalThis.__InsertNodeToElementTemplate(secondHost, 0, child);
+
+    expect(mtsGlobalThis.__SerializeElementTemplate(firstHost)).not
+      .toHaveProperty('elementSlots');
+    expect(mtsGlobalThis.__SerializeElementTemplate(secondHost)).toMatchObject({
+      elementSlots: [[{
+        uid: 10,
+        templateKey: '_et_builtin_raw_text',
+      }]],
+    });
   });
 
   test('createCrossThreadEvent properly sets touch detail x and y', async () => {

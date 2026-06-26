@@ -4,6 +4,7 @@
  * LICENSE file in the root directory of this source tree.
  */
 
+use super::element_template::{ElementTemplateDefinition, ElementTemplateInstance};
 use super::style_manager::StyleManager;
 use crate::constants;
 use crate::js_binding::RustMainthreadContextBinding;
@@ -19,13 +20,21 @@ pub struct MainThreadWasmContext {
   pub(super) unique_id_to_element_map: Vec<Option<Rc<RefCell<Box<LynxElementData>>>>>,
   pub(super) unique_id_to_dom_map: FnvHashMap<usize, js_sys::WeakRef>,
   pub(super) timing_flags: Vec<String>,
+  pub(super) document: web_sys::Document,
 
   pub(super) enabled_events: FnvHashSet<String>,
   pub(super) page_element_unique_id: Option<usize>,
   pub(super) mts_binding: RustMainthreadContextBinding,
   pub(super) config_enable_css_selector: bool,
+  pub(super) config_transform_vw: bool,
+  pub(super) config_transform_vh: bool,
+  pub(super) config_transform_rem: bool,
   pub(super) style_manager: StyleManager,
   pub(super) global_bind_events: FnvHashMap<String, FnvHashSet<usize>>,
+  pub(super) element_template_definitions: FnvHashMap<String, Rc<ElementTemplateDefinition>>,
+  pub(super) element_template_instances: FnvHashMap<usize, ElementTemplateInstance>,
+  pub(super) config_default_display_linear: bool,
+  pub(super) config_default_overflow_visible: bool,
 }
 
 impl MainThreadWasmContext {
@@ -47,18 +56,34 @@ impl MainThreadWasmContext {
     root_node: web_sys::Node,
     mts_binding: RustMainthreadContextBinding,
     config_enable_css_selector: bool,
+    config_default_display_linear: bool,
+    config_default_overflow_visible: bool,
+    config_transform_vw: bool,
+    config_transform_vh: bool,
+    config_transform_rem: bool,
   ) -> MainThreadWasmContext {
+    let document = root_node
+      .owner_document()
+      .expect_throw("Root node should have an owner document");
     let style_manager = StyleManager::new(root_node.clone());
     MainThreadWasmContext {
       mts_binding,
       unique_id_to_element_map: vec![None],
       unique_id_to_dom_map: FnvHashMap::default(),
+      document,
       enabled_events: FnvHashSet::default(),
       timing_flags: vec![],
       page_element_unique_id: None,
       config_enable_css_selector,
+      config_transform_vw,
+      config_transform_vh,
+      config_transform_rem,
       style_manager,
       global_bind_events: FnvHashMap::default(),
+      element_template_definitions: FnvHashMap::default(),
+      element_template_instances: FnvHashMap::default(),
+      config_default_display_linear,
+      config_default_overflow_visible,
     }
   }
 
@@ -82,13 +107,32 @@ impl MainThreadWasmContext {
     component_css_id: Option<i32>,
     component_id: Option<String>,
   ) -> usize {
+    self.create_element_with_css_id(
+      parent_component_unique_id,
+      dom,
+      dom_ref,
+      None,
+      component_css_id,
+      component_id,
+    )
+  }
+
+  pub(crate) fn create_element_with_css_id(
+    self: &mut MainThreadWasmContext,
+    parent_component_unique_id: usize,
+    dom: web_sys::HtmlElement,
+    dom_ref: js_sys::WeakRef,
+    explicit_css_id: Option<i32>,
+    component_css_id: Option<i32>,
+    component_id: Option<String>,
+  ) -> usize {
     // unique id
     /*
      if the css selector is disabled, we need to set the unique id attribute for element lookup by using attribute selector
     */
     let unique_id = self.unique_id_to_element_map.len();
 
-    let css_id = {
+    let css_id = explicit_css_id.unwrap_or_else(|| {
       if let Some(parent_component_data) =
         self.get_element_data_by_unique_id(parent_component_unique_id)
       {
@@ -96,7 +140,7 @@ impl MainThreadWasmContext {
       } else {
         0
       }
-    };
+    });
     if !self.config_enable_css_selector {
       let _ = dom.set_attribute(constants::LYNX_UNIQUE_ID_ATTRIBUTE, &unique_id.to_string());
     }
@@ -116,6 +160,7 @@ impl MainThreadWasmContext {
       .unique_id_to_element_map
       .push(Some(Rc::new(RefCell::new(element_data))));
     self.unique_id_to_dom_map.insert(unique_id, dom_ref);
+    self.mts_binding.set_element_unique_id(&dom, unique_id);
     unique_id
   }
 
@@ -154,5 +199,6 @@ impl MainThreadWasmContext {
         *element_data = None;
       }
     }
+    self.gc_element_template_instances();
   }
 }

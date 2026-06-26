@@ -56,6 +56,13 @@ extern "C" {
     element: &js_sys::WeakRef,
   ) -> Result<Vec<String>, JsValue>;
 
+  #[wasm_bindgen(method, js_name = "setElementUniqueId")]
+  pub fn set_element_unique_id(
+    this: &RustMainthreadContextBinding,
+    element: &web_sys::HtmlElement,
+    unique_id: usize,
+  );
+
   #[wasm_bindgen(method, catch, js_name = "setAttribute")]
   pub fn set_attribute(
     this: &RustMainthreadContextBinding,
