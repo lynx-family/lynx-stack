@@ -26,7 +26,6 @@ import { __page } from '../../../../../src/element-template/runtime/page/page.js
 import { __root } from '../../../../../src/element-template/runtime/page/root-instance.js';
 import { ElementTemplateEnvManager } from '../../../test-utils/debug/envManager.js';
 import { hydrateBackground } from '../../../test-utils/debug/hydrate.js';
-import { extractSerializedHydrateInstances } from '../../../test-utils/debug/hydratePayload.js';
 import { installMockNativePapi } from '../../../test-utils/mock/mockNativePapi.js';
 import { serializeToJSX } from '../../../test-utils/debug/serializer.js';
 
@@ -40,7 +39,7 @@ declare module '@lynx-js/types' {
 
 interface CaseContext {
   hydrationData: SerializedElementTemplate[];
-  onHydrate: (event: { data: unknown }) => void;
+  onHydrate: (event: { data: { instances: SerializedElementTemplate[] } }) => void;
 }
 
 const envManager = new ElementTemplateEnvManager();
@@ -97,8 +96,8 @@ function setup(): CaseContext {
   envManager.resetEnv('background');
   envManager.setUseElementTemplate(true);
 
-  const onHydrate = vi.fn().mockImplementation((event: { data: unknown }) => {
-    hydrationData.push(...extractSerializedHydrateInstances(event.data));
+  const onHydrate = vi.fn().mockImplementation((event: { data: { instances: SerializedElementTemplate[] } }) => {
+    hydrationData.push(...event.data.instances);
   });
   lynx.getCoreContext().addEventListener(ElementTemplateLifecycleConstant.hydrate, onHydrate);
 

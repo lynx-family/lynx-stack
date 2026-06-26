@@ -106,7 +106,7 @@ describe('renderMainThread contract', () => {
     ]);
 
     const dispatched = dispatchEvent.mock.calls[0]?.[0] as
-      | { type: string; data: { instances?: unknown[]; reloadVersion?: unknown } }
+      | { type: string; data: { instances: unknown[]; reloadVersion: unknown } }
       | undefined;
     expect(dispatched?.type).toBe('rLynxElementTemplateHydrate');
     expect(Array.isArray(dispatched?.data.instances)).toBe(true);

@@ -11,7 +11,6 @@ import type { CompiledFixtureTarget } from './compiledFixtureCompiler.js';
 import { loadCompiledFixturePair } from './compiledFixtureModule.js';
 import { ElementTemplateEnvManager } from './envManager.js';
 import { hydrateBackground } from './hydrate.js';
-import { extractSerializedHydrateInstances } from './hydratePayload.js';
 import { renderCompiledFixtureOnBackground, renderCompiledFixtureOnMainThread } from './compiledThreadRunner.js';
 
 interface RunCompiledHydrationScenarioOptions {
@@ -46,8 +45,8 @@ export async function runCompiledHydrationScenario(
   envManager.setUseElementTemplate(true);
 
   const hydrationData: SerializedEtNode[] = [];
-  const onHydrate = vi.fn().mockImplementation((event: { data: unknown }) => {
-    hydrationData.push(...extractSerializedHydrateInstances(event.data));
+  const onHydrate = vi.fn().mockImplementation((event: { data: { instances: SerializedEtNode[] } }) => {
+    hydrationData.push(...event.data.instances);
   });
   lynx.getCoreContext().addEventListener(ElementTemplateLifecycleConstant.hydrate, onHydrate);
 

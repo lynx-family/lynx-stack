@@ -1,5 +1,6 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
+import { getReloadVersion } from '../../../src/core/reload-version.js';
 import {
   globalCommitContext,
   markRemovedSubtreeForPostDispatchTeardown,
@@ -66,14 +67,17 @@ describe('callDestroyLifetimeFun', () => {
     envManager.switchToMainThread();
     lynx.getJSContext().dispatchEvent({
       type: ElementTemplateLifecycleConstant.hydrate,
-      data: [
-        {
-          templateKey: '_et_test',
-          attributeSlots: [],
-          elementSlots: [],
-          uid: -1,
-        } satisfies SerializedElementTemplate,
-      ],
+      data: {
+        instances: [
+          {
+            templateKey: '_et_test',
+            attributeSlots: [],
+            elementSlots: [],
+            uid: -1,
+          } satisfies SerializedElementTemplate,
+        ],
+        reloadVersion: getReloadVersion(),
+      },
     });
 
     envManager.switchToBackground();

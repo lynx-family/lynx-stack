@@ -9,7 +9,6 @@ import { resetTemplateId } from '../../../../../src/element-template/runtime/tem
 import { elementTemplateRegistry } from '../../../../../src/element-template/runtime/template/registry.js';
 import { loadCompiledFixtureApp } from '../../../test-utils/debug/compiledFixtureApp.js';
 import { ElementTemplateEnvManager } from '../../../test-utils/debug/envManager.js';
-import { extractSerializedHydrateInstances } from '../../../test-utils/debug/hydratePayload.js';
 import { installMockNativePapi } from '../../../test-utils/mock/mockNativePapi.js';
 
 declare const renderPage: () => void;
@@ -18,7 +17,7 @@ interface HydrationContext {
   hydrationData: unknown[];
   envManager: ElementTemplateEnvManager;
   cleanup: () => void;
-  onHydrate: (event: { data: unknown }) => void;
+  onHydrate: (event: { data: { instances: unknown[] } }) => void;
 }
 
 function setup(): HydrationContext {
@@ -32,8 +31,8 @@ function setup(): HydrationContext {
   envManager.setUseElementTemplate(true);
 
   const hydrationData: unknown[] = [];
-  const onHydrate = vi.fn().mockImplementation((event: { data: unknown }) => {
-    hydrationData.push(...extractSerializedHydrateInstances(event.data));
+  const onHydrate = vi.fn().mockImplementation((event: { data: { instances: unknown[] } }) => {
+    hydrationData.push(...event.data.instances);
   });
   lynx.getCoreContext().addEventListener(ElementTemplateLifecycleConstant.hydrate, onHydrate);
 
