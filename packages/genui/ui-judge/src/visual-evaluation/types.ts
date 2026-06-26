@@ -4,17 +4,9 @@
 
 export interface VisualEvaluationRequest {
   alignOptions?: VisualEvaluationAlignOptions;
-  capture?: VisualEvaluationCaptureRequestOptions;
   compareOptions?: VisualEvaluationCompareOptions;
   referenceImage: string;
-  templateUrl: string;
-  traceId?: string;
-}
-
-export interface VisualEvaluationCaptureRequestOptions {
-  maxRetry?: number;
-  silent?: boolean;
-  waitTimeMs?: number;
+  renderedImage: string;
 }
 
 export interface VisualEvaluationAlignOptions {
@@ -43,11 +35,11 @@ export interface VisualEvaluationResponse {
 }
 
 export interface VisualEvaluationArtifacts {
-  alignedDeviceImageBase64: string;
+  alignedRenderedImageBase64: string;
   alignedReferenceImageBase64: string;
-  deviceImageBase64: string;
   diffImageBase64: string;
   referenceImageBase64: string;
+  renderedImageBase64: string;
 }
 
 export interface VisualEvaluationMetrics {
@@ -110,32 +102,15 @@ export type EvaluationIssueCategory =
 
 export type EvaluationIssueSeverity = 'high' | 'low' | 'medium';
 
-export interface CaptureOptions {
-  maxRetry?: number;
-  silent?: boolean;
-  targetPageUrl: string;
-  traceId?: string;
-  waitTimeMs?: number;
-}
-
-export type CaptureFn = (
-  options: CaptureOptions,
-) => Promise<string | undefined>;
-
-export type EvaluateFn = (
-  image1DataUrl: string,
-  image2DataUrl: string,
-) => Promise<EvaluationResult | string | Record<string, unknown>>;
-
 export type VisualEvaluationErrorCode =
-  | 'CAPTURE_EMPTY_RESULT'
-  | 'CAPTURE_UPSTREAM_ERROR'
   | 'EVALUATION_API_ERROR'
   | 'IMAGE_ALIGNMENT_ERROR'
   | 'IMAGE_COMPARE_ERROR'
   | 'INVALID_REQUEST'
   | 'REFERENCE_IMAGE_FETCH_FAILED'
   | 'REFERENCE_IMAGE_INVALID'
+  | 'RENDERED_IMAGE_FETCH_FAILED'
+  | 'RENDERED_IMAGE_INVALID'
   | 'VISUAL_EVALUATION_ERROR';
 
 export interface VisualEvaluationErrorResponse {
@@ -146,7 +121,13 @@ export interface VisualEvaluationErrorResponse {
 }
 
 export interface RunVisualEvaluationOptions {
-  capture?: CaptureFn;
-  evaluate?: EvaluateFn;
-  fetch?: typeof fetch;
+  agent?: VisualEvaluationAgentOptions;
+}
+
+export interface VisualEvaluationAgentOptions {
+  api?: 'chat' | 'responses';
+  apiKey?: string;
+  baseURL?: string;
+  model?: string;
+  resourceId?: string;
 }

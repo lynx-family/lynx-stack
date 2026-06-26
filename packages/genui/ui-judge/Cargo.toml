@@ -1,0 +1,37 @@
+[package]
+name = "ui_judge"
+version = "0.1.0"
+edition = "2021"
+license = "Apache-2.0"
+description = "Rust Android E2E test infrastructure for UI Judge"
+
+[lib]
+crate-type = ["rlib"]
+path = "rust/src/lib.rs"
+
+[[bin]]
+name = "ui-judge"
+path = "rust/src/bin/ui-judge.rs"
+
+[[test]]
+name = "android_e2e"
+path = "rust/tests/android_e2e.rs"
+
+[[test]]
+name = "visual_evaluation_cli"
+path = "rust/tests/visual_evaluation_cli.rs"
+
+[dependencies]
+async-openai = { workspace = true, features = ["byot", "chat-completion", "responses", "rustls"] }
+base64 = { workspace = true }
+clap = { workspace = true, features = ["derive"] }
+droidrun-adb = { workspace = true }
+image = { workspace = true }
+reqwest = { workspace = true, default-features = false, features = ["json", "rustls"] }
+serde = { workspace = true, features = ["derive"] }
+serde_json = { workspace = true, features = ["preserve_order"] }
+thiserror = { workspace = true }
+tokio = { workspace = true, features = ["io-util", "macros", "net", "process", "rt-multi-thread", "sync", "time"] }
+
+[dev-dependencies]
+serial_test = { workspace = true }

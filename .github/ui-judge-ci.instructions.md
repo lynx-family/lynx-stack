@@ -1,21 +1,19 @@
 ---
-applyTo: ".github/workflows/test.yml,.github/workflows/workflow-test.yml,.github/scripts/write-ui-judge-result.mjs,.github/ui-judge*.instructions.md,.github/actions/ui-judge-comment/**"
+applyTo: ".github/workflows/test.yml,.github/workflows/workflow-test.yml,.github/ui-judge*.instructions.md"
 ---
 
-When wiring `@lynx-js/ui-judge` into pull request CI, preserve the PR comment even when the model-backed test fails, but do not hide the failed test. Prefer running UI Judge through the reusable `workflow-test.yml` job with `is-web: true`, uploading `ui-judge-results.json` as an artifact, and posting the comment from a separate thin job with `issues: write` and `pull-requests: write`.
+Run `@lynx-js/ui-judge` package tests through Rust with `cargo test -p ui_judge --all-targets --all-features` on a Linux runner with the Rust toolchain available. When routing cargo commands through `.github/workflows/workflow-test.yml`, set `install-rust: true` so the reusable workflow invokes `./.github/actions/rustup` on that runner. Do not add a Vitest package job for UI Judge; screenshot visual-evaluation coverage should live in Rust unit or integration tests. It should not use the Playwright container or upload Playwright reports.
 
-Keep long UI Judge work inside a job with a bounded timeout. If UI Judge setup is ever split back into custom steps outside the reusable workflow, use step-level `timeout-minutes` on long setup, build, and model execution steps so the PR comment action can still run when a result artifact exists.
+Keep UI Judge CI dependent on the repository `build` job through the reusable `workflow-test.yml`, so the reusable workflow still runs its root `pnpm turbo build --summarize` before tests.
 
-Keep the UI Judge Playwright job dependent on the repository `build` job, matching the `playwright-web-elements` dependency shape. Let the reusable `workflow-test.yml` run its default `pnpm turbo build --summarize`; do not add UI Judge-specific build overrides. The GenUI playground Turbo config already makes `build` depend on `build:lynx`.
+Keep Android model-backed UI Judge coverage in the Rust Android emulator job. That job should run the Rust Android e2e test and remember its exit code, then still use `cargo run -p ui_judge --bin ui-judge -- judge-android-agent` to produce result JSON from JSON scenarios when model credentials are available. If model credentials are unavailable or model scoring fails, use the Rust `report` subcommand to emit a score-0 fallback JSON payload before the job exits.
 
-Use the upstream build job's restored turbo cache in UI Judge CI. Do not call package scripts directly with `pnpm --filter <package> build`, and do not pass `--force`; use Turbo commands so dependency ordering and cached outputs remain consistent.
+Keep CI-facing model secret names on the existing `MIDSCENE_MODEL_*` and `MIDSCENE_OPENAI_INIT_CONFIG_JSON` names. Do not add `OPENAI_*` or `A2UI_BENCH_JUDGE_*` workflow secrets for UI Judge. When changing PR-comment wiring in `test.yml`, keep the existing runner class and pinned artifact actions unless there is a separate workflow-wide reason to change them.
 
-Do not add changed-file gating, GitHub API calls, or extra reusable workflow inputs for UI Judge CI. If Midscene secrets are unavailable, the UI Judge test command should write a clear skipped result and exit successfully; fork pull requests should skip the comment steps rather than requiring write permissions.
-
-Raise the soft open-file limit before running UI Judge Playwright tests in the Playwright container. The GenUI playground dev server uses rsbuild/chokidar watchers, so mirror the web-elements Playwright pattern by echoing the current soft and hard open-file limits, running `ulimit -Sn "$(ulimit -Hn)"`, and echoing the resulting limits before invoking `pnpm --filter @lynx-js/ui-judge test`.
-
-Inject the full Midscene/OpenAI model environment into the UI Judge execution step, including `MIDSCENE_MODEL_API_KEY`, `MIDSCENE_MODEL_BASE_URL`, `MIDSCENE_MODEL_FAMILY`, `MIDSCENE_MODEL_NAME`, and `MIDSCENE_OPENAI_INIT_CONFIG_JSON`.
+For new UI Judge CI wiring, upload `ui-judge-results.json` and pass it to `.github/actions/ui-judge-comment` through `result-file`. Rust owns Android capture, scoring, GEQI result data, and fallback JSON generation; the JavaScript action owns Markdown rendering and GitHub PR comment create/update. Do not bypass the action with Rust-generated Markdown in CI.
 
 When rendering the UI Judge PR comment, include `GITHUB_RUN_ATTEMPT` in the workflow footer/link. GitHub reruns keep the same `GITHUB_RUN_ID`, so relying only on the run URL can make a successful rerun write an identical comment body and appear not to update.
 
 Keep `.github/actions/ui-judge-comment` self-contained for self-hosted runners: set up Node inside the composite action before invoking `comment.mjs`, rather than requiring every caller job to prepare `node` separately.
+
+Do not add changed-file gating or GitHub API calls to the Rust screenshot unit-test job.

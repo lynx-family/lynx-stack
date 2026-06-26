@@ -9,6 +9,9 @@ inputs:
   result-json:
     description: Inline JSON containing a UiJudgeResult, an array of results, or an object with a results array.
     required: false
+  body-file:
+    description: Path to a pre-rendered markdown comment body.
+    required: false
   pr-number:
     description: Pull request number. Defaults to the pull_request payload number.
     required: false
@@ -57,6 +60,7 @@ runs:
       env:
         INPUT_RESULT_FILE: ${{ inputs.result-file }}
         INPUT_RESULT_JSON: ${{ inputs.result-json }}
+        INPUT_BODY_FILE: ${{ inputs.body-file }}
         INPUT_PR_NUMBER: ${{ inputs.pr-number }}
         INPUT_TITLE: ${{ inputs.title }}
         INPUT_MARKER: ${{ inputs.marker }}
