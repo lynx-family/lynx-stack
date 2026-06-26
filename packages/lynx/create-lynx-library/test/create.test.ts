@@ -39,8 +39,16 @@ describe('create-lynx-library', () => {
   });
 
   it('parses non-interactive Native platform flags', () => {
-    expect(parseLibraryPlatforms('android,ios')).toEqual(['android', 'ios']);
-    expect(parseLibraryPlatforms('ALL')).toEqual(['android', 'ios']);
+    expect(parseLibraryPlatforms('android,ios,lynxtron')).toEqual([
+      'android',
+      'ios',
+      'lynxtron',
+    ]);
+    expect(parseLibraryPlatforms('ALL')).toEqual([
+      'android',
+      'ios',
+      'lynxtron',
+    ]);
     expect(() => parseLibraryPlatforms('web')).toThrow(
       /Unsupported Native platform/,
     );
@@ -67,6 +75,18 @@ describe('create-lynx-library', () => {
         'lynx.lib.json',
         'types/index.d.ts',
         'src/index.ts',
+        'shared/CMakeLists.txt',
+        'lynxtron/CMakeLists.txt',
+        'lynxtron/index.cjs',
+        'lynxtron/library_entry.cc',
+        'shared/modules/CMakeLists.txt',
+        'shared/modules/ButtonModule.h',
+        'shared/modules/ButtonModule.cc',
+        'shared/modules/ButtonModuleRegistration.cc',
+        'shared/elements/CMakeLists.txt',
+        'shared/elements/ButtonElement.h',
+        'shared/elements/ButtonElement.cc',
+        'shared/elements/ButtonElementRegistration.cc',
         'android/src/main/java/com/example/button/ButtonModule.java',
         'android/src/main/java/com/example/button/ButtonElement.java',
         'android/src/main/java/com/example/button/ButtonService.java',
@@ -81,6 +101,37 @@ describe('create-lynx-library', () => {
 
     expect(read(dir, 'package.json')).toContain(
       '"codegen": "lynx-autolink-codegen"',
+    );
+    const packageJson = readJson<
+      PackageJson & {
+        devDependencies: Record<string, string>;
+        exports: {
+          '.': { types: string; default: string };
+          './lynxtron': string;
+          './package.json': string;
+        };
+      }
+    >(dir, 'package.json');
+
+    expect(packageJson.files).toEqual(
+      expect.arrayContaining(['android', 'dist', 'lynxtron', 'shared', 'ios']),
+    );
+    expect(packageJson.files).not.toContain('CMakeLists.txt');
+    expect(packageJson.exports).toMatchObject({
+      '.': {
+        types: './types/index.d.ts',
+        default: './src/index.ts',
+      },
+      './lynxtron': './lynxtron/index.cjs',
+      './package.json': './package.json',
+    });
+    expect(packageJson.devDependencies['@lynx-js/lynx-library-headers'])
+      .toBe('*');
+    expect(packageJson.devDependencies['@lynx-js/weak-node-api']).toBe(
+      '^0.0.9',
+    );
+    expect(read(dir, 'package.json')).toContain(
+      '"build:lynxtron": "cmake -S lynxtron -B build/lynxtron -DCMAKE_BUILD_TYPE=Release && cmake --build build/lynxtron --config Release"',
     );
     expect(read(dir, 'package.json')).toContain(
       '"@lynx-js/autolink-codegen": "^0.123.0"',
@@ -101,7 +152,43 @@ describe('create-lynx-library', () => {
         sourceDir: 'ios',
         podspecPath: 'ios/build.podspec',
       },
+      'lynxtron': {
+        path: 'dist',
+      },
+      macos: {
+        sourceDir: 'shared',
+      },
+      windows: {
+        sourceDir: 'shared',
+      },
     });
+    expect(read(dir, 'lynxtron/CMakeLists.txt')).toContain(
+      '${LYNX_LIBRARY_PACKAGE_ROOT}/shared',
+    );
+    expect(read(dir, 'lynxtron/CMakeLists.txt')).toContain(
+      'LYNX_LIBRARY_NODE_API_WEAK_SUFFIX',
+    );
+    expect(read(dir, 'shared/CMakeLists.txt')).toContain(
+      'CMAKE_SYSTEM_NAME STREQUAL "OHOS"',
+    );
+    expect(read(dir, 'shared/CMakeLists.txt')).toContain(
+      'require.resolve(\'${PACKAGE_NAME}/package.json\')',
+    );
+    expect(read(dir, 'shared/CMakeLists.txt')).toContain(
+      '"@lynx-js/lynx-library-headers"',
+    );
+    expect(read(dir, 'shared/CMakeLists.txt')).toContain(
+      '"@lynx-js/weak-node-api"',
+    );
+    expect(read(dir, 'shared/modules/CMakeLists.txt')).toContain(
+      'LYNX_LIBRARY_NODE_API_WEAK_SUFFIX',
+    );
+    expect(read(dir, 'shared/modules/CMakeLists.txt')).not.toContain(
+      'LYNX_SHARED_ENABLE_WEAK_NAPI',
+    );
+    expect(read(dir, 'shared/elements/CMakeLists.txt')).not.toContain(
+      'LYNX_SHARED_ENABLE_STATIC_REGISTER',
+    );
     expect(read(dir, 'ios/build.podspec')).toContain(
       's.dependency \'LynxServiceAPI\'',
     );
@@ -148,6 +235,15 @@ describe('create-lynx-library', () => {
     expect(read(dir, 'ios/src/ButtonService.h')).toContain(
       '#import <LynxServiceAPI/ServiceAPI.h>',
     );
+    expect(read(dir, 'shared/modules/ButtonModule.h')).toContain(
+      '#include "weak_napi_defines.h"',
+    );
+    expect(read(dir, 'shared/modules/ButtonModuleRegistration.cc')).toContain(
+      'LYNX_REGISTER_NATIVE_MODULE(',
+    );
+    expect(read(dir, 'shared/elements/ButtonElementRegistration.cc')).toContain(
+      'LYNX_REGISTER_ELEMENT(',
+    );
     expect(files.every((file) => !/__[A-Z0-9_]+__/.test(file.path))).toBe(
       true,
     );
@@ -169,13 +265,133 @@ describe('create-lynx-library', () => {
     expect(files.map((file) => file.path)).toContain(
       'android/src/main/java/com/example/storage/StorageModule.java',
     );
+    expect(files.map((file) => file.path)).toContain(
+      'shared/CMakeLists.txt',
+    );
+    expect(files.map((file) => file.path)).toContain(
+      'lynxtron/CMakeLists.txt',
+    );
+    expect(files.map((file) => file.path)).toContain(
+      'shared/modules/StorageModule.cc',
+    );
+    expect(files.map((file) => file.path)).toContain(
+      'shared/modules/StorageModuleRegistration.cc',
+    );
     expect(files.map((file) => file.path)).not.toContain(
       'android/src/main/java/com/example/storage/StorageElement.java',
+    );
+    expect(files.map((file) => file.path)).not.toContain(
+      'shared/elements/StorageElement.cc',
     );
     expect(read(dir, 'src/index.ts')).toContain(
       'export { StorageModule } from \'../generated/StorageModule\';',
     );
     expect(read(dir, 'ios/build.podspec')).not.toContain('LynxServiceAPI');
+  });
+
+  it('creates Lynxtron projects with shared C++ sources', () => {
+    const dir = createTempDir('lynxtron');
+    const files = createLynxLibrary({
+      dir,
+      features: ['native-module', 'element'],
+      platforms: ['lynxtron'],
+      packageName: '@example/lynxtron-library',
+      moduleName: 'LynxtronModule',
+      elementName: 'x-lynxtron',
+    });
+    const filePaths = files.map((file) => file.path);
+
+    expect(filePaths).toEqual(
+      expect.arrayContaining([
+        'shared/CMakeLists.txt',
+        'lynxtron/CMakeLists.txt',
+        'lynxtron/index.cjs',
+        'lynxtron/library_entry.cc',
+        'shared/modules/CMakeLists.txt',
+        'shared/modules/LynxtronModule.cc',
+        'shared/modules/LynxtronModuleRegistration.cc',
+        'shared/elements/CMakeLists.txt',
+        'shared/elements/LynxtronElement.cc',
+        'shared/elements/LynxtronElementRegistration.cc',
+      ]),
+    );
+    expect(filePaths.some((file) => file.startsWith('android/'))).toBe(false);
+    expect(filePaths.some((file) => file.startsWith('ios/'))).toBe(false);
+    expect(filePaths).not.toContain('CMakeLists.txt');
+
+    const packageJson = readJson<
+      PackageJson & {
+        devDependencies: Record<string, string>;
+        exports: {
+          '.': { types: string; default: string };
+          './lynxtron': string;
+          './package.json': string;
+        };
+      }
+    >(dir, 'package.json');
+
+    expect(packageJson.files).toEqual(
+      expect.arrayContaining(['dist', 'lynxtron', 'shared']),
+    );
+    expect(packageJson.files).not.toContain('android');
+    expect(packageJson.files).not.toContain('ios');
+    expect(packageJson.files).not.toContain('CMakeLists.txt');
+    expect(packageJson.exports).toMatchObject({
+      '.': {
+        types: './types/index.d.ts',
+        default: './src/index.ts',
+      },
+      './lynxtron': './lynxtron/index.cjs',
+      './package.json': './package.json',
+    });
+    expect(packageJson.devDependencies['@lynx-js/lynx-library-headers'])
+      .toBe('*');
+    expect(packageJson.devDependencies['@lynx-js/weak-node-api']).toBe(
+      '^0.0.9',
+    );
+    expect(read(dir, 'package.json')).toContain(
+      '"build:lynxtron": "cmake -S lynxtron -B build/lynxtron -DCMAKE_BUILD_TYPE=Release && cmake --build build/lynxtron --config Release"',
+    );
+    expect(readJson<Manifest>(dir, 'lynx.lib.json').platforms).toEqual({
+      'lynxtron': {
+        path: 'dist',
+      },
+      macos: {
+        sourceDir: 'shared',
+      },
+      windows: {
+        sourceDir: 'shared',
+      },
+    });
+    expect(read(dir, 'lynxtron/CMakeLists.txt')).toContain(
+      '${LYNX_LIBRARY_PACKAGE_ROOT}/shared',
+    );
+    expect(read(dir, 'lynxtron/CMakeLists.txt')).toContain(
+      'LYNX_LIBRARY_NODE_API_WEAK_SUFFIX',
+    );
+    expect(read(dir, 'shared/CMakeLists.txt')).toContain(
+      'CMAKE_SYSTEM_NAME STREQUAL "OHOS"',
+    );
+    expect(read(dir, 'shared/CMakeLists.txt')).toContain(
+      'require.resolve(\'${PACKAGE_NAME}/package.json\')',
+    );
+    expect(read(dir, 'shared/CMakeLists.txt')).toContain(
+      '"@lynx-js/lynx-library-headers"',
+    );
+    expect(read(dir, 'shared/CMakeLists.txt')).toContain(
+      '"@lynx-js/weak-node-api"',
+    );
+    expect(read(dir, 'shared/modules/CMakeLists.txt')).toContain(
+      'LYNX_LIBRARY_NODE_API_WEAK_SUFFIX',
+    );
+    expect(read(dir, 'shared/modules/CMakeLists.txt')).not.toContain(
+      'LYNX_SHARED_ENABLE_WEAK_NAPI',
+    );
+    expect(read(dir, 'shared/elements/CMakeLists.txt')).not.toContain(
+      'LYNX_SHARED_ENABLE_STATIC_REGISTER',
+    );
+    expect(read(dir, 'README.md')).toContain('`lynxtron/`');
+    expect(read(dir, 'README.md')).toContain('`shared/`');
   });
 
   it('creates Android-only projects without iOS files', () => {
@@ -263,9 +479,19 @@ describe('create-lynx-library', () => {
 
     expect(files.map((file) => file.path)).toEqual(
       expect.arrayContaining([
+        'shared/CMakeLists.txt',
+        'lynxtron/CMakeLists.txt',
+        'lynxtron/index.cjs',
+        'lynxtron/library_entry.cc',
+        'shared/elements/CMakeLists.txt',
+        'shared/elements/ViewElement.cc',
+        'shared/elements/ViewElementRegistration.cc',
         'ios/src/ViewElement.h',
         'ios/src/ViewService.h',
       ]),
+    );
+    expect(files.map((file) => file.path)).not.toContain(
+      'shared/modules/ViewLibraryModule.cc',
     );
     expect(read(dir, 'types/index.d.ts')).toContain(
       'Add native module declarations',
@@ -278,6 +504,19 @@ describe('create-lynx-library', () => {
     expect(read(dir, 'ios/src/ViewService.m')).toContain(
       '@LynxServiceRegister(ViewService, ViewServiceProtocol)',
     );
+    expect(JSON.parse(read(dir, 'lynx.lib.json'))).toMatchObject({
+      platforms: {
+        'lynxtron': {
+          path: 'dist',
+        },
+        macos: {
+          sourceDir: 'shared',
+        },
+        windows: {
+          sourceDir: 'shared',
+        },
+      },
+    });
     expect(read(dir, 'example/src/App.tsx')).not.toContain('import {');
   });
 

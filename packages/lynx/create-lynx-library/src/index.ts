@@ -6,7 +6,7 @@ import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 export type LibraryFeature = 'native-module' | 'element' | 'service';
-export type LibraryPlatform = 'android' | 'ios';
+export type LibraryPlatform = 'android' | 'ios' | 'lynxtron';
 
 export interface CreateLynxLibraryOptions {
   dir: string;
@@ -26,12 +26,16 @@ export interface CreatedFile {
 }
 
 interface TemplateContext {
+  addonBinaryName: string;
+  addonTargetName: string;
   packageName: string;
   androidPackage: string;
   androidPackagePath: string;
   moduleName: string;
+  moduleSymbolName: string;
   elementName: string;
   elementClassName: string;
+  elementSymbolName: string;
   serviceName: string;
   serviceProtocolName: string;
   dependencyVersions: Record<string, string>;
@@ -54,6 +58,12 @@ export const LIBRARY_FEATURES: readonly LibraryFeature[] = [
 export const LIBRARY_PLATFORMS: readonly LibraryPlatform[] = [
   'android',
   'ios',
+  'lynxtron',
+] as const;
+export const DEFAULT_LIBRARY_PLATFORMS: readonly LibraryPlatform[] = [
+  'android',
+  'ios',
+  'lynxtron',
 ] as const;
 
 const PACKAGE_ROOT = path.resolve(
@@ -61,6 +71,10 @@ const PACKAGE_ROOT = path.resolve(
   '..',
 );
 const TEMPLATE_FILE_SUFFIX = '.tmpl';
+const LYNX_EXTENSION_HEADERS_PACKAGE = '@lynx-js/lynx-library-headers';
+const LYNX_EXTENSION_HEADERS_VERSION = '*';
+const WEAK_NODE_API_PACKAGE = '@lynx-js/weak-node-api';
+const WEAK_NODE_API_VERSION = '^0.0.9';
 const PACKAGE_JSON_DEPENDENCY_FIELDS = [
   'dependencies',
   'devDependencies',
@@ -100,7 +114,7 @@ export function createLynxLibrary(
     }
   }
 
-  const platforms = new Set(options.platforms ?? LIBRARY_PLATFORMS);
+  const platforms = new Set(options.platforms ?? DEFAULT_LIBRARY_PLATFORMS);
 
   if (platforms.size === 0) {
     throw new Error('At least one Native platform must be selected');
@@ -211,12 +225,16 @@ function createContext(
     ?? `com.example.${toJavaPackageSegment(prefix)}`;
 
   return {
+    addonBinaryName: toKebabCase(baseName) || 'lynx-library',
+    addonTargetName: `${toCIdentifier(prefix, 'LynxLibrary')}Addon`,
     packageName,
     androidPackage,
     androidPackagePath: androidPackage.replaceAll('.', '/'),
     moduleName,
+    moduleSymbolName: toCIdentifier(moduleName, 'LynxModule'),
     elementName,
     elementClassName: `${elementPrefix}Element`,
+    elementSymbolName: toCIdentifier(`${elementPrefix}Element`, 'LynxElement'),
     serviceName,
     serviceProtocolName: `${serviceName}Protocol`,
     dependencyVersions: options.dependencyVersions
@@ -231,6 +249,10 @@ function createContext(
  */
 function createFiles(context: TemplateContext): CreatedFile[] {
   const groups = ['template-common'];
+
+  if (hasSharedTarget(context)) {
+    groups.push('template-shared');
+  }
 
   if (context.features.has('native-module')) {
     groups.push('template-native-module');
@@ -299,6 +321,13 @@ function shouldCreateTemplateFile(
 
   if (relativePath.startsWith('ios/')) {
     return context.platforms.has('ios');
+  }
+
+  if (
+    relativePath.startsWith('lynxtron/')
+    || relativePath.startsWith('shared/')
+  ) {
+    return hasSharedTarget(context);
   }
 
   return true;
@@ -418,22 +447,32 @@ function createTemplateReplacements(
   context: TemplateContext,
 ): Record<string, string> {
   return {
+    ADDON_BINARY_NAME: context.addonBinaryName,
+    ADDON_TARGET_NAME: context.addonTargetName,
     ANDROID_PACKAGE: context.androidPackage,
     ANDROID_PACKAGE_PATH: context.androidPackagePath,
     ELEMENT_CLASS_NAME: context.elementClassName,
     ELEMENT_NAME: context.elementName,
+    ELEMENT_SYMBOL_NAME: context.elementSymbolName,
     EXAMPLE_ELEMENT: exampleElement(context),
     EXAMPLE_IMPORT: exampleImport(context),
     EXAMPLE_MODULE_BUTTON: exampleModuleButton(context),
     IOS_SERVICE_API_DEPENDENCY: iosServiceApiDependency(context),
+    LYNX_ELEMENT_MODULE_NAME: elementModuleName(context),
+    MODULE_KEEP_ALIVE_SYMBOL: moduleKeepAliveSymbol(context),
     MODULE_NAME: context.moduleName,
+    MODULE_SYMBOL_NAME: context.moduleSymbolName,
     PACKAGE_NAME: context.packageName,
+    PACKAGE_EXPORTS_FIELD: packageExportsField(context),
     PACKAGE_FILES: packageFiles(context),
+    PACKAGE_SELF_RENDER_DEV_DEPENDENCY: packageSelfRenderDevDependency(context),
+    PACKAGE_SELF_RENDER_SCRIPTS: packageSelfRenderScripts(context),
     PLATFORM_DIRECTORY_LIST: platformDirectoryList(context),
     PLATFORM_MANIFEST_ENTRIES: platformManifestEntries(context),
     PODSPEC_NAME: podspecName(context.packageName),
     SERVICE_NAME: context.serviceName,
     SERVICE_PROTOCOL_NAME: context.serviceProtocolName,
+    SELF_RENDER_README: selfRenderReadme(context),
     SOURCE_INDEX: sourceIndex(context),
     TYPES_DECLARATION: typesDeclaration(context),
   };
@@ -451,8 +490,13 @@ function renderTemplate(
     (match: string, key: string): string => {
       return replacements[key] ?? match;
     },
+  ).replaceAll(
+    /\*\*([A-Z0-9_]+)\*\*/g,
+    (match: string, key: string): string => {
+      return replacements[key] ?? match;
+    },
   );
-  const unresolvedToken = /__[A-Z0-9_]+__/.exec(rendered);
+  const unresolvedToken = /__[A-Z0-9_]+__|\*\*[A-Z0-9_]+\*\*/.exec(rendered);
 
   if (unresolvedToken !== null) {
     throw new Error(`Unresolved template token: ${unresolvedToken[0]}`);
@@ -477,6 +521,54 @@ function resolveInside(targetDir: string, filePath: string): string {
   }
 
   return absolutePath;
+}
+
+function hasSharedTarget(context: TemplateContext): boolean {
+  return context.platforms.has('lynxtron')
+    && (context.features.has('native-module') || context.features.has(
+      'element',
+    ));
+}
+
+function packageExportsField(context: TemplateContext): string {
+  if (!hasSharedTarget(context)) {
+    return '';
+  }
+
+  return `  "exports": {
+    ".": {
+      "types": "./types/index.d.ts",
+      "default": "./src/index.ts"
+    },
+    "./lynxtron": "./lynxtron/index.cjs",
+    "./package.json": "./package.json"
+  },
+`;
+}
+
+function packageSelfRenderScripts(context: TemplateContext): string {
+  if (!hasSharedTarget(context)) {
+    return '';
+  }
+
+  return `,
+    "build:lynxtron": "cmake -S lynxtron -B build/lynxtron -DCMAKE_BUILD_TYPE=Release && cmake --build build/lynxtron --config Release"`;
+}
+
+function packageSelfRenderDevDependency(context: TemplateContext): string {
+  if (!hasSharedTarget(context)) {
+    return '';
+  }
+
+  const headersVersion =
+    context.dependencyVersions[LYNX_EXTENSION_HEADERS_PACKAGE]
+      ?? LYNX_EXTENSION_HEADERS_VERSION;
+  const weakNodeApiVersion = context.dependencyVersions[WEAK_NODE_API_PACKAGE]
+    ?? WEAK_NODE_API_VERSION;
+
+  return `,
+    "${LYNX_EXTENSION_HEADERS_PACKAGE}": "${headersVersion}",
+    "${WEAK_NODE_API_PACKAGE}": "${weakNodeApiVersion}"`;
 }
 
 /**
@@ -552,12 +644,48 @@ function iosServiceApiDependency(context: TemplateContext): string {
     : '';
 }
 
+function elementModuleName(context: TemplateContext): string {
+  return `${
+    toCIdentifier(toPascalCase(context.addonBinaryName), 'LynxLibrary')
+  }ElementModule`;
+}
+
+function moduleKeepAliveSymbol(context: TemplateContext): string {
+  const packagePart = toCIdentifier(context.packageName, 'Package');
+  const modulePart = toCIdentifier(context.moduleName, 'Module');
+  return `LynxSharedModuleKeepAlive_${packagePart}_${modulePart}_${
+    hashString(`${context.packageName}:${context.moduleName}`)
+  }`;
+}
+
+function selfRenderReadme(context: TemplateContext): string {
+  if (!hasSharedTarget(context)) {
+    return '';
+  }
+
+  return `
+## Lynxtron Library Target
+
+This package contains shared C++ sources for the selected Native Module and
+Element features. Build the current OS/architecture Lynxtron library with:
+
+\`\`\`bash
+npm run build:lynxtron
+\`\`\`
+
+The build writes \`dist/<platform>/<arch>/${context.addonBinaryName}.node\`.
+Run it on each OS/architecture you want to publish. The package also exposes
+\`./lynxtron\`, which loads the matching artifact for Lynxtron based hosts.
+`;
+}
+
 /**
  * Generates the package files list for the selected native platforms.
  */
 function packageFiles(context: TemplateContext): string {
   const files = [
     ...(context.platforms.has('android') ? ['android'] : []),
+    ...(hasSharedTarget(context) ? ['dist', 'lynxtron', 'shared'] : []),
     'generated',
     ...(context.platforms.has('ios') ? ['ios'] : []),
     'src',
@@ -589,6 +717,18 @@ function platformManifestEntries(context: TemplateContext): string {
     }`);
   }
 
+  if (hasSharedTarget(context)) {
+    entries.push(`    "lynxtron": {
+      "path": "dist"
+    }`);
+    entries.push(`    "macos": {
+      "sourceDir": "shared"
+    }`);
+    entries.push(`    "windows": {
+      "sourceDir": "shared"
+    }`);
+  }
+
   return entries.join(',\n');
 }
 
@@ -596,14 +736,21 @@ function platformManifestEntries(context: TemplateContext): string {
  * Formats the selected native platform directories for generated README text.
  */
 function platformDirectoryList(context: TemplateContext): string {
-  const dirs = LIBRARY_PLATFORMS.filter((platform) =>
-    context.platforms.has(platform)
-  )
-    .map((platform) => `\`${platform}/\``);
+  const dirs = [
+    ...(context.platforms.has('android') ? ['`android/`'] : []),
+    ...(context.platforms.has('ios') ? ['`ios/`'] : []),
+    ...(hasSharedTarget(context) ? ['`lynxtron/`', '`shared/`'] : []),
+  ];
 
-  return dirs.length === 1
-    ? dirs[0] ?? ''
-    : `${dirs[0] ?? ''} and ${dirs[1] ?? ''}`;
+  return formatList(dirs);
+}
+
+function formatList(items: string[]): string {
+  if (items.length <= 2) {
+    return items.join(' and ');
+  }
+
+  return `${items.slice(0, -1).join(', ')}, and ${items.at(-1) ?? ''}`;
 }
 
 /**
@@ -642,6 +789,26 @@ function toKebabCase(name: string): string {
 function toJavaPackageSegment(name: string): string {
   const segment = toKebabCase(name).replaceAll('-', '');
   return segment.length > 0 ? segment : 'library';
+}
+
+function toCIdentifier(name: string, fallback: string): string {
+  const identifier = name.replaceAll(/\W/g, '_')
+    .replaceAll(/_+/g, '_')
+    .replaceAll(/^_|_$/g, '');
+  const safeIdentifier = identifier.length > 0 ? identifier : fallback;
+
+  return /^\d/.test(safeIdentifier) ? `_${safeIdentifier}` : safeIdentifier;
+}
+
+function hashString(source: string): string {
+  let hash = 2166136261;
+
+  for (let index = 0; index < source.length; index += 1) {
+    hash ^= source.charCodeAt(index);
+    hash = Math.imul(hash, 16777619);
+  }
+
+  return (hash >>> 0).toString(16);
 }
 
 /**

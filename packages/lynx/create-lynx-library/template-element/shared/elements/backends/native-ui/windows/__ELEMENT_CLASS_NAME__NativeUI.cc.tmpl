@@ -1,0 +1,175 @@
+#include "shared/elements/__ELEMENT_CLASS_NAME__.h"
+
+#ifndef WIN32_LEAN_AND_MEAN
+#define WIN32_LEAN_AND_MEAN
+#endif
+#ifndef NOMINMAX
+#define NOMINMAX
+#endif
+
+#include <windows.h>
+
+#include <algorithm>
+#include <string>
+
+#include <lynx_native_view.h>
+
+namespace {
+
+constexpr wchar_t kHostClassName[] = L"__ELEMENT_SYMBOL_NAME__NativeUIHost";
+
+std::wstring Utf8ToWide(const char* value) {
+  if (value == nullptr || value[0] == '\0') {
+    return L"";
+  }
+
+  const int size = MultiByteToWideChar(CP_UTF8, 0, value, -1, nullptr, 0);
+  if (size <= 0) {
+    return L"";
+  }
+
+  std::wstring result(static_cast<size_t>(size - 1), L'\0');
+  MultiByteToWideChar(CP_UTF8, 0, value, -1, result.data(), size);
+  return result;
+}
+
+bool EnsureHostClassRegistered() {
+  static bool registered = false;
+  if (registered) {
+    return true;
+  }
+
+  WNDCLASSEXW window_class{};
+  window_class.cbSize = sizeof(window_class);
+  window_class.lpfnWndProc = DefWindowProcW;
+  window_class.hInstance = GetModuleHandleW(nullptr);
+  window_class.hCursor = LoadCursor(nullptr, IDC_ARROW);
+  window_class.hbrBackground = reinterpret_cast<HBRUSH>(COLOR_WINDOW + 1);
+  window_class.lpszClassName = kHostClassName;
+  registered = RegisterClassExW(&window_class) != 0 ||
+      GetLastError() == ERROR_CLASS_ALREADY_EXISTS;
+  return registered;
+}
+
+struct MainWindowSearch {
+  DWORD process_id = 0;
+  HWND hwnd = nullptr;
+};
+
+BOOL CALLBACK FindMainWindowCallback(HWND hwnd, LPARAM data) {
+  auto* search = reinterpret_cast<MainWindowSearch*>(data);
+  DWORD window_process_id = 0;
+  GetWindowThreadProcessId(hwnd, &window_process_id);
+  if (window_process_id == search->process_id && IsWindowVisible(hwnd) &&
+      GetWindow(hwnd, GW_OWNER) == nullptr) {
+    search->hwnd = hwnd;
+    return FALSE;
+  }
+  return TRUE;
+}
+
+HWND FindMainWindow() {
+  MainWindowSearch search{GetCurrentProcessId(), nullptr};
+  EnumWindows(FindMainWindowCallback, reinterpret_cast<LPARAM>(&search));
+  return search.hwnd != nullptr ? search.hwnd : GetActiveWindow();
+}
+
+class __ELEMENT_SYMBOL_NAME__NativeUIView : public lynx::pub::LynxNativeView {
+ public:
+  ~__ELEMENT_SYMBOL_NAME__NativeUIView() override {
+    if (label_ != nullptr) {
+      DestroyWindow(label_);
+      label_ = nullptr;
+    }
+    if (host_ != nullptr) {
+      DestroyWindow(host_);
+      host_ = nullptr;
+    }
+  }
+
+  bool IsSurfaceEnabled() override { return false; }
+
+  void OnDetach() override {
+    if (host_ != nullptr) {
+      ShowWindow(host_, SW_HIDE);
+    }
+  }
+
+  void OnLayoutChanged(
+      float left,
+      float top,
+      float width,
+      float height,
+      float pixel_ratio) override {
+    HWND parent = FindMainWindow();
+    if (parent == nullptr || !EnsureHostClassRegistered()) {
+      return;
+    }
+
+    const float ratio = pixel_ratio > 0 ? pixel_ratio : 1;
+    const int x = static_cast<int>(left * ratio);
+    const int y = static_cast<int>(top * ratio);
+    const int w = std::max(1, static_cast<int>(width * ratio));
+    const int h = std::max(1, static_cast<int>(height * ratio));
+    POINT origin{x, y};
+    ClientToScreen(parent, &origin);
+
+    if (host_ == nullptr) {
+      host_ = CreateWindowExW(
+          WS_EX_TOOLWINDOW,
+          kHostClassName,
+          L"",
+          WS_POPUP | WS_CLIPCHILDREN | WS_CLIPSIBLINGS,
+          origin.x,
+          origin.y,
+          w,
+          h,
+          parent,
+          nullptr,
+          GetModuleHandleW(nullptr),
+          nullptr);
+    }
+
+    if (host_ == nullptr) {
+      return;
+    }
+
+    if (label_ == nullptr) {
+      label_ = CreateWindowExW(
+          0,
+          L"STATIC",
+          Utf8ToWide("__ELEMENT_NAME__").c_str(),
+          WS_CHILD | WS_VISIBLE,
+          0,
+          0,
+          w,
+          h,
+          host_,
+          nullptr,
+          GetModuleHandleW(nullptr),
+          nullptr);
+    }
+
+    SetWindowPos(
+        host_,
+        HWND_TOP,
+        origin.x,
+        origin.y,
+        w,
+        h,
+        SWP_SHOWWINDOW | SWP_NOACTIVATE);
+    SetWindowPos(label_, HWND_TOP, 0, 0, w, h, SWP_SHOWWINDOW);
+  }
+
+ private:
+  HWND host_ = nullptr;
+  HWND label_ = nullptr;
+};
+
+}  // namespace
+
+lynx_native_view_t* Create__ELEMENT_SYMBOL_NAME__NativeUINativeView(void* opaque) {
+  (void)opaque;
+  auto* view = new __ELEMENT_SYMBOL_NAME__NativeUIView();
+  return view->native_view();
+}

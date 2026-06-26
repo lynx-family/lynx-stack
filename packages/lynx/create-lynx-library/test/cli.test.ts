@@ -41,6 +41,8 @@ describe('create-lynx-library CLI', () => {
         'android',
         '--platform',
         'ios',
+        '--platform',
+        'lynxtron',
         '--package-name',
         '@example/demo-library',
         '--android-package',
@@ -56,7 +58,7 @@ describe('create-lynx-library CLI', () => {
       help: false,
       dir: 'demo-library',
       features: ['native-module', 'element', 'service'],
-      platforms: ['android', 'ios'],
+      platforms: ['android', 'ios', 'lynxtron'],
       packageName: '@example/demo-library',
       androidPackage: 'com.example.demo',
       moduleName: 'DemoModule',
@@ -114,7 +116,7 @@ describe('create-lynx-library CLI', () => {
     ], runtime);
 
     expect(runtime.info).toHaveBeenCalledWith(
-      expect.stringContaining(`Created 19 files in ${path.resolve(dir)}`),
+      expect.stringContaining(`Created 36 files in ${path.resolve(dir)}`),
     );
     expect(runtime.info).toHaveBeenCalledWith(
       expect.stringContaining(
@@ -124,8 +126,22 @@ describe('create-lynx-library CLI', () => {
     expect(runtime.info).toHaveBeenCalledWith(
       expect.stringContaining('Next steps:'),
     );
+    expect(runtime.info).toHaveBeenCalledWith(
+      expect.stringContaining(
+        'Native platforms:\n  - Android\n  - iOS\n  - Lynxtron',
+      ),
+    );
     expect(read(dir, 'package.json')).toContain(
       '"name": "@example/cli-library"',
+    );
+    expect(read(dir, 'lynxtron/index.cjs')).toContain(
+      '\'dist\'',
+    );
+    expect(read(dir, 'lynxtron/index.cjs')).toContain(
+      '\'cli-library.node\'',
+    );
+    expect(read(dir, 'shared/CMakeLists.txt')).toContain(
+      '@lynx-js/lynx-library-headers',
     );
     expect(read(dir, 'android/src/main/java/com/example/cli/CliModule.java'))
       .toContain('@LynxNativeModule(name = "CliModule")');
@@ -165,6 +181,34 @@ describe('create-lynx-library CLI', () => {
       ),
     )
       .toContain('@LynxNativeModule(name = "AndroidModule")');
+    expect(fs.existsSync(path.join(dir, 'ios'))).toBe(false);
+  });
+
+  it('creates a scaffold for the Lynxtron platform', async () => {
+    const dir = createTempPath('lynxtron-library');
+    const runtime = createRuntime();
+
+    await main([
+      '--dir',
+      dir,
+      '--features',
+      'native-module,element',
+      '--platforms',
+      'lynxtron',
+      '--package-name',
+      '@example/lynxtron-library',
+      '--module-name',
+      'LynxtronModule',
+      '--element-name',
+      'x-lynxtron',
+    ], runtime);
+
+    expect(runtime.info).toHaveBeenCalledWith(
+      expect.stringContaining('Native platforms:\n  - Lynxtron'),
+    );
+    expect(fs.existsSync(path.join(dir, 'lynxtron/index.cjs'))).toBe(true);
+    expect(fs.existsSync(path.join(dir, 'shared/CMakeLists.txt'))).toBe(true);
+    expect(fs.existsSync(path.join(dir, 'android'))).toBe(false);
     expect(fs.existsSync(path.join(dir, 'ios'))).toBe(false);
   });
 
@@ -283,6 +327,7 @@ describe('create-lynx-library CLI', () => {
         options: [
           expect.objectContaining({ label: 'Android', value: 'android' }),
           expect.objectContaining({ label: 'iOS', value: 'ios' }),
+          expect.objectContaining({ label: 'Lynxtron', value: 'lynxtron' }),
         ],
       }),
     );

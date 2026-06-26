@@ -1,0 +1,232 @@
+cmake_minimum_required(VERSION 3.20)
+
+if(CMAKE_SOURCE_DIR STREQUAL CMAKE_CURRENT_SOURCE_DIR)
+  project(__ADDON_TARGET_NAME__Shared LANGUAGES C CXX)
+endif()
+
+set(CMAKE_CXX_STANDARD 17)
+set(CMAKE_CXX_STANDARD_REQUIRED ON)
+set(CMAKE_POSITION_INDEPENDENT_CODE ON)
+set(CMAKE_C_VISIBILITY_PRESET hidden)
+set(CMAKE_CXX_VISIBILITY_PRESET hidden)
+set(CMAKE_OBJC_VISIBILITY_PRESET hidden)
+set(CMAKE_OBJCXX_VISIBILITY_PRESET hidden)
+set(CMAKE_VISIBILITY_INLINES_HIDDEN ON)
+
+if(NOT DEFINED LYNX_LIBRARY_PACKAGE_ROOT)
+  get_filename_component(
+    LYNX_LIBRARY_PACKAGE_ROOT
+    "${CMAKE_CURRENT_SOURCE_DIR}/.."
+    ABSOLUTE
+  )
+endif()
+
+if(NOT DEFINED NODE_EXECUTABLE)
+  find_program(NODE_EXECUTABLE NAMES node)
+endif()
+
+if(NOT NODE_EXECUTABLE)
+  message(FATAL_ERROR "Unable to find node. Install Node.js before configuring the shared target.")
+endif()
+
+function(lynx_resolve_node_package PACKAGE_NAME OUT_VAR)
+  execute_process(
+    COMMAND
+      "${NODE_EXECUTABLE}"
+      -p
+      "require('node:path').dirname(require.resolve('${PACKAGE_NAME}/package.json'))"
+    WORKING_DIRECTORY "${LYNX_LIBRARY_PACKAGE_ROOT}"
+    RESULT_VARIABLE NODE_PACKAGE_RESULT
+    OUTPUT_VARIABLE NODE_PACKAGE_ROOT
+    ERROR_VARIABLE NODE_PACKAGE_ERROR
+    OUTPUT_STRIP_TRAILING_WHITESPACE
+  )
+
+  if(NOT NODE_PACKAGE_RESULT EQUAL 0 OR NOT NODE_PACKAGE_ROOT)
+    string(REPLACE "\n" " " NODE_PACKAGE_ERROR "${NODE_PACKAGE_ERROR}")
+    message(FATAL_ERROR "Unable to resolve ${PACKAGE_NAME}. Run npm install first. ${NODE_PACKAGE_ERROR}")
+  endif()
+
+  set(${OUT_VAR} "${NODE_PACKAGE_ROOT}" PARENT_SCOPE)
+endfunction()
+
+if(NOT DEFINED LYNX_LIBRARY_PLATFORM)
+  if(CMAKE_SYSTEM_NAME STREQUAL "Darwin")
+    set(LYNX_LIBRARY_PLATFORM "macos")
+  elseif(WIN32)
+    set(LYNX_LIBRARY_PLATFORM "windows")
+  elseif(CMAKE_SYSTEM_NAME STREQUAL "Linux")
+    set(LYNX_LIBRARY_PLATFORM "linux")
+  else()
+    string(TOLOWER "${CMAKE_SYSTEM_NAME}" LYNX_LIBRARY_PLATFORM)
+  endif()
+endif()
+
+if(NOT DEFINED LYNX_LIBRARY_ARCH)
+  if(CMAKE_SYSTEM_PROCESSOR MATCHES "^(arm64|aarch64|AARCH64)$")
+    set(LYNX_LIBRARY_ARCH "arm64")
+  elseif(CMAKE_SYSTEM_PROCESSOR MATCHES "^(x86_64|AMD64|amd64)$")
+    set(LYNX_LIBRARY_ARCH "x64")
+  else()
+    string(TOLOWER "${CMAKE_SYSTEM_PROCESSOR}" LYNX_LIBRARY_ARCH)
+  endif()
+endif()
+
+if(NOT DEFINED LYNX_LIBRARY_OUTPUT_DIR)
+  set(
+    LYNX_LIBRARY_OUTPUT_DIR
+    "${LYNX_LIBRARY_PACKAGE_ROOT}/dist/${LYNX_LIBRARY_PLATFORM}/${LYNX_LIBRARY_ARCH}"
+  )
+endif()
+
+set(LYNX_SHARED_THIRD_PARTY_DIR "${CMAKE_CURRENT_SOURCE_DIR}/third_party")
+
+if(NOT DEFINED LYNX_EXTENSION_HEADERS_DIR)
+  lynx_resolve_node_package(
+    "@lynx-js/lynx-library-headers"
+    LYNX_EXTENSION_HEADERS_PACKAGE_ROOT
+  )
+  set(
+    LYNX_EXTENSION_HEADERS_DIR
+    "${LYNX_SHARED_THIRD_PARTY_DIR}/lynx-library-headers"
+  )
+
+  file(REMOVE_RECURSE "${LYNX_EXTENSION_HEADERS_DIR}/include")
+  file(MAKE_DIRECTORY "${LYNX_EXTENSION_HEADERS_DIR}")
+  file(
+    COPY "${LYNX_EXTENSION_HEADERS_PACKAGE_ROOT}/include"
+    DESTINATION "${LYNX_EXTENSION_HEADERS_DIR}"
+  )
+endif()
+
+if(NOT EXISTS "${LYNX_EXTENSION_HEADERS_DIR}/include/lynx/registration.h")
+  message(FATAL_ERROR "Missing Lynx extension headers. Run npm install first.")
+endif()
+
+if(NOT DEFINED LYNX_LIBRARY_NODE_API_WEAK_SUFFIX)
+  set(LYNX_LIBRARY_NODE_API_WEAK_SUFFIX_DEFAULT OFF)
+  if(
+    LYNX_LIBRARY_PLATFORM MATCHES "^(harmony|harmonyos|ohos)$"
+    OR CMAKE_SYSTEM_NAME STREQUAL "OHOS"
+  )
+    set(LYNX_LIBRARY_NODE_API_WEAK_SUFFIX_DEFAULT ON)
+  endif()
+  set(
+    LYNX_LIBRARY_NODE_API_WEAK_SUFFIX
+    ${LYNX_LIBRARY_NODE_API_WEAK_SUFFIX_DEFAULT}
+    CACHE BOOL
+    "Use weak suffix NAPI symbols for shared native modules"
+  )
+endif()
+
+if(LYNX_LIBRARY_NODE_API_WEAK_SUFFIX)
+  if(NOT DEFINED LYNX_WEAK_NODE_API_HEADERS_DIR)
+    lynx_resolve_node_package(
+      "@lynx-js/weak-node-api"
+      LYNX_WEAK_NODE_API_PACKAGE_ROOT
+    )
+    set(
+      LYNX_WEAK_NODE_API_HEADERS_DIR
+      "${LYNX_SHARED_THIRD_PARTY_DIR}/weak-node-api/headers"
+    )
+
+    file(REMOVE_RECURSE "${LYNX_WEAK_NODE_API_HEADERS_DIR}")
+    file(MAKE_DIRECTORY "${LYNX_SHARED_THIRD_PARTY_DIR}/weak-node-api")
+    file(
+      COPY "${LYNX_WEAK_NODE_API_PACKAGE_ROOT}/headers"
+      DESTINATION "${LYNX_SHARED_THIRD_PARTY_DIR}/weak-node-api"
+    )
+  endif()
+
+  if(NOT EXISTS "${LYNX_WEAK_NODE_API_HEADERS_DIR}/weak_napi_defines.h")
+    message(FATAL_ERROR "Missing weak-node-api headers. Run npm install first.")
+  endif()
+endif()
+
+set(
+  LYNX_NATIVE_ELEMENT_BACKEND
+  "texture"
+  CACHE STRING
+  "Native element backend: texture or native-ui"
+)
+set_property(
+  CACHE LYNX_NATIVE_ELEMENT_BACKEND
+  PROPERTY STRINGS texture native-ui
+)
+
+if(LYNX_NATIVE_ELEMENT_BACKEND STREQUAL "texture")
+  set(LYNX_NATIVE_ELEMENT_BACKEND_TEXTURE 1)
+elseif(LYNX_NATIVE_ELEMENT_BACKEND STREQUAL "native-ui")
+  set(LYNX_NATIVE_ELEMENT_BACKEND_TEXTURE 0)
+else()
+  message(FATAL_ERROR "LYNX_NATIVE_ELEMENT_BACKEND must be texture or native-ui")
+endif()
+
+option(
+  LYNX_SHARED_BUILD_NATIVE_MODULES
+  "Build shared native module sources"
+  ON
+)
+option(
+  LYNX_SHARED_BUILD_ELEMENTS
+  "Build shared element sources"
+  ON
+)
+
+set(LYNX_SHARED_PLATFORM_COMPILE_DEFINITIONS)
+set(LYNX_SHARED_PLATFORM_LINK_LIBRARIES)
+set(LYNX_SHARED_PLATFORM_LINK_OPTIONS)
+
+if(APPLE)
+  enable_language(OBJCXX)
+
+  find_library(APPKIT_FRAMEWORK AppKit)
+  find_library(COREGRAPHICS_FRAMEWORK CoreGraphics)
+  find_library(CORETEXT_FRAMEWORK CoreText)
+  find_library(FOUNDATION_FRAMEWORK Foundation)
+  find_library(IOSURFACE_FRAMEWORK IOSurface)
+
+  list(APPEND LYNX_SHARED_PLATFORM_LINK_OPTIONS
+    "-undefined"
+    "dynamic_lookup"
+  )
+  list(APPEND LYNX_SHARED_PLATFORM_LINK_LIBRARIES
+    ${APPKIT_FRAMEWORK}
+    ${COREGRAPHICS_FRAMEWORK}
+    ${CORETEXT_FRAMEWORK}
+    ${FOUNDATION_FRAMEWORK}
+    ${IOSURFACE_FRAMEWORK}
+  )
+elseif(WIN32)
+  list(APPEND LYNX_SHARED_PLATFORM_COMPILE_DEFINITIONS
+    WIN32_LEAN_AND_MEAN
+    NOMINMAX
+    UNICODE
+    _UNICODE
+  )
+  list(APPEND LYNX_SHARED_PLATFORM_LINK_LIBRARIES
+    d3d11
+    dxgi
+    gdi32
+    user32
+  )
+endif()
+
+set(LYNX_SHARED_TARGETS)
+
+if(LYNX_SHARED_BUILD_NATIVE_MODULES AND EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/modules/CMakeLists.txt")
+  add_subdirectory(modules)
+  list(APPEND LYNX_SHARED_TARGETS __ADDON_TARGET_NAME__NativeModules)
+endif()
+
+if(LYNX_SHARED_BUILD_ELEMENTS AND EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/elements/CMakeLists.txt")
+  add_subdirectory(elements)
+  list(APPEND LYNX_SHARED_TARGETS __ADDON_TARGET_NAME__Elements)
+endif()
+
+if(NOT CMAKE_SOURCE_DIR STREQUAL CMAKE_CURRENT_SOURCE_DIR)
+  set(LYNX_SHARED_TARGETS ${LYNX_SHARED_TARGETS} PARENT_SCOPE)
+  set(LYNX_SHARED_PLATFORM_COMPILE_DEFINITIONS ${LYNX_SHARED_PLATFORM_COMPILE_DEFINITIONS} PARENT_SCOPE)
+  set(LYNX_SHARED_PLATFORM_LINK_LIBRARIES ${LYNX_SHARED_PLATFORM_LINK_LIBRARIES} PARENT_SCOPE)
+  set(LYNX_SHARED_PLATFORM_LINK_OPTIONS ${LYNX_SHARED_PLATFORM_LINK_OPTIONS} PARENT_SCOPE)
+endif()

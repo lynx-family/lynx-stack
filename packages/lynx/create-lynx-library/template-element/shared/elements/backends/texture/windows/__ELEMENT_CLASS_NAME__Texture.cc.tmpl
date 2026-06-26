@@ -1,0 +1,199 @@
+#include <lynx_extension.h>
+
+#ifndef WIN32_LEAN_AND_MEAN
+#define WIN32_LEAN_AND_MEAN
+#endif
+#ifndef NOMINMAX
+#define NOMINMAX
+#endif
+
+#include <d3d11.h>
+#include <d3d11_1.h>
+#include <dxgi.h>
+#include <windows.h>
+#include <wrl/client.h>
+
+#include <cstring>
+#include <cstdint>
+#include <iterator>
+#include <string>
+#include <vector>
+
+using Microsoft::WRL::ComPtr;
+
+namespace {
+
+bool CreateD3DDevice(
+    ComPtr<ID3D11Device>* device,
+    ComPtr<ID3D11DeviceContext>* context) {
+  constexpr D3D_FEATURE_LEVEL kFeatureLevels[] = {
+      D3D_FEATURE_LEVEL_11_1,
+      D3D_FEATURE_LEVEL_11_0,
+      D3D_FEATURE_LEVEL_10_1,
+      D3D_FEATURE_LEVEL_10_0,
+  };
+  D3D_FEATURE_LEVEL created_level = D3D_FEATURE_LEVEL_11_0;
+  UINT flags = D3D11_CREATE_DEVICE_BGRA_SUPPORT;
+  HRESULT hr = D3D11CreateDevice(
+      nullptr,
+      D3D_DRIVER_TYPE_HARDWARE,
+      nullptr,
+      flags,
+      kFeatureLevels,
+      static_cast<UINT>(std::size(kFeatureLevels)),
+      D3D11_SDK_VERSION,
+      device->GetAddressOf(),
+      &created_level,
+      context->GetAddressOf());
+  if (SUCCEEDED(hr)) {
+    return true;
+  }
+
+  hr = D3D11CreateDevice(
+      nullptr,
+      D3D_DRIVER_TYPE_WARP,
+      nullptr,
+      flags,
+      kFeatureLevels,
+      static_cast<UINT>(std::size(kFeatureLevels)),
+      D3D11_SDK_VERSION,
+      device->GetAddressOf(),
+      &created_level,
+      context->GetAddressOf());
+  return SUCCEEDED(hr);
+}
+
+std::wstring Utf8ToWide(const char* value) {
+  if (value == nullptr || value[0] == '\0') {
+    return L"";
+  }
+
+  const int size = MultiByteToWideChar(CP_UTF8, 0, value, -1, nullptr, 0);
+  if (size <= 0) {
+    return L"";
+  }
+
+  std::wstring result(static_cast<size_t>(size - 1), L'\0');
+  MultiByteToWideChar(CP_UTF8, 0, value, -1, result.data(), size);
+  return result;
+}
+
+std::vector<std::uint32_t> DrawTextPixels(
+    int width_px,
+    int height_px,
+    const char* text) {
+  std::vector<std::uint32_t> pixels(
+      static_cast<size_t>(width_px) * height_px,
+      0xffffffff);
+
+  BITMAPINFO bitmap_info{};
+  bitmap_info.bmiHeader.biSize = sizeof(BITMAPINFOHEADER);
+  bitmap_info.bmiHeader.biWidth = width_px;
+  bitmap_info.bmiHeader.biHeight = -height_px;
+  bitmap_info.bmiHeader.biPlanes = 1;
+  bitmap_info.bmiHeader.biBitCount = 32;
+  bitmap_info.bmiHeader.biCompression = BI_RGB;
+
+  void* bits = nullptr;
+  HBITMAP bitmap = CreateDIBSection(
+      nullptr,
+      &bitmap_info,
+      DIB_RGB_COLORS,
+      &bits,
+      nullptr,
+      0);
+  if (bitmap == nullptr || bits == nullptr) {
+    return pixels;
+  }
+
+  HDC dc = CreateCompatibleDC(nullptr);
+  HGDIOBJ previous = SelectObject(dc, bitmap);
+  RECT bounds{0, 0, width_px, height_px};
+  FillRect(dc, &bounds, reinterpret_cast<HBRUSH>(GetStockObject(WHITE_BRUSH)));
+  SetBkMode(dc, TRANSPARENT);
+  SetTextColor(dc, RGB(0, 0, 0));
+
+  const std::wstring label = Utf8ToWide(text);
+  RECT text_rect{8, 0, width_px - 8, height_px};
+  DrawTextW(
+      dc,
+      label.c_str(),
+      static_cast<int>(label.size()),
+      &text_rect,
+      DT_CENTER | DT_VCENTER | DT_SINGLELINE | DT_END_ELLIPSIS);
+
+  std::memcpy(pixels.data(), bits, pixels.size() * sizeof(std::uint32_t));
+  for (auto& pixel : pixels) {
+    pixel |= 0xff000000;
+  }
+
+  SelectObject(dc, previous);
+  DeleteDC(dc);
+  DeleteObject(bitmap);
+  return pixels;
+}
+
+}  // namespace
+
+bool Draw__ELEMENT_SYMBOL_NAME__TextureSurface(
+    lynx_surface_handle_t* handle,
+    int width_px,
+    int height_px,
+    const char* text) {
+  if (handle == nullptr || width_px <= 0 || height_px <= 0) {
+    return false;
+  }
+
+  ComPtr<ID3D11Device> device;
+  ComPtr<ID3D11DeviceContext> context;
+  if (!CreateD3DDevice(&device, &context)) {
+    return false;
+  }
+
+  ComPtr<ID3D11Texture2D> texture;
+  HRESULT hr = device->OpenSharedResource(
+      reinterpret_cast<HANDLE>(handle),
+      __uuidof(ID3D11Texture2D),
+      reinterpret_cast<void**>(texture.GetAddressOf()));
+  if (FAILED(hr) || !texture) {
+    ComPtr<ID3D11Device1> device1;
+    if (SUCCEEDED(device.As(&device1)) && device1) {
+      hr = device1->OpenSharedResource1(
+          reinterpret_cast<HANDLE>(handle),
+          __uuidof(ID3D11Texture2D),
+          reinterpret_cast<void**>(texture.GetAddressOf()));
+    }
+  }
+  if (FAILED(hr) || !texture) {
+    return false;
+  }
+
+  D3D11_TEXTURE2D_DESC desc{};
+  texture->GetDesc(&desc);
+  if (static_cast<int>(desc.Width) != width_px ||
+      static_cast<int>(desc.Height) != height_px) {
+    return false;
+  }
+
+  ComPtr<IDXGIKeyedMutex> keyed_mutex;
+  if (SUCCEEDED(texture.As(&keyed_mutex)) && keyed_mutex) {
+    if (FAILED(keyed_mutex->AcquireSync(0, 100))) {
+      return false;
+    }
+  }
+
+  const auto pixels = DrawTextPixels(width_px, height_px, text);
+  context->UpdateSubresource(
+      texture.Get(),
+      0,
+      nullptr,
+      pixels.data(),
+      static_cast<UINT>(width_px * sizeof(std::uint32_t)),
+      0);
+  context->Flush();
+
+  if (keyed_mutex) {
+    keyed_mutex->ReleaseSync(0);
+  }
+  return true;
+}
