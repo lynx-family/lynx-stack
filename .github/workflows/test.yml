@@ -44,15 +44,11 @@ jobs:
           # We need full history for changeset status check
           fetch-depth: 0
           persist-credentials: false
-      - uses: actions/setup-node@a0853c24544627f65ddf259abe73b1d18a591444 # v5
+      - name: Install
+        uses: ./.github/actions/pnpm-install
         with:
           node-version: "24"
-          package-manager-cache: false
-      - name: Install
-        run: |
-          npm install -g corepack@latest
-          corepack enable
-          pnpm install --frozen-lockfile
+          save-if: ${{ github.ref_name == 'main' }}
       - name: Code Style Check
         run: |
           pnpm dprint check
