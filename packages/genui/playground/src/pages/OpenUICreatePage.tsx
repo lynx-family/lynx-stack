@@ -8,6 +8,8 @@ import './AIChatPage.css';
 import './OpenUICreatePage.css';
 
 import { Button } from '../components/Button.js';
+import { ConfirmDialog } from '../components/ConfirmDialog.js';
+import { ConversationListPanel } from '../components/ConversationListPanel.js';
 import { CopyToast, useCopyToast } from '../components/CopyToast.js';
 import { Send, Sparkles } from '../components/Icon.js';
 import { MobileTabBar } from '../components/MobileTabBar.js';
@@ -16,15 +18,31 @@ import { PageHeader } from '../components/PageHeader.js';
 import { PanelResizeHandle } from '../components/PanelResizeHandle.js';
 import { PreviewPanel } from '../components/PreviewPanel.js';
 import { PreviewViewport } from '../components/PreviewViewport.js';
+import { useConversation } from '../hooks/useConversation.js';
+import type { ModelChatMessage } from '../hooks/useConversation.js';
 import { useResizablePanels } from '../hooks/useResizablePanels.js';
 import {
   OPENUI_SCENARIOS,
   parseOpenUIScenarioRaw,
 } from '../mock/openui-scenarios.js';
 import type { OpenUIScenario } from '../mock/openui-scenarios.js';
+import {
+  loadConversation,
+  saveConversationSharePayload,
+} from '../storage/conversationRepo.js';
+import {
+  isSharedConversationDoc,
+  serializeConversation,
+} from '../storage/sharedConversation.js';
 import { copyToClipboard } from '../utils/clipboard.js';
 import type { Protocol } from '../utils/protocol.js';
 import { isDevHost } from '../utils/publishPayload.js';
+import {
+  buildConversationShareUrl,
+  clearImportConversationParam,
+  publishConversation,
+  readImportConversationParam,
+} from '../utils/shareConversation.js';
 
 interface ChatMessage {
   id?: string;
@@ -323,8 +341,115 @@ function GeneratedOutputViewer(props: {
   );
 }
 
+const LOCAL_SCENARIO_PROMPT_PREFIX = 'Load local OpenUI scenario: ';
+
+function localScenarioTitleFromPrompt(content: string): string | null {
+  if (!content.startsWith(LOCAL_SCENARIO_PROMPT_PREFIX)) return null;
+  const title = content.slice(LOCAL_SCENARIO_PROMPT_PREFIX.length).trim();
+  return title || null;
+}
+
+function createGeneratedStatus(): ChatMessage {
+  return {
+    role: 'status',
+    tone: 'success',
+    content: (
+      <>
+        <span className='chatMessageStatusIcon' aria-hidden='true'>
+          <Sparkles size={13} strokeWidth={2} />
+        </span>
+        <span>
+          Generated OpenUI Lang from the server agent. The Lynx Preview is
+          rendering the final response.
+        </span>
+      </>
+    ),
+  };
+}
+
+function createLoadedScenarioStatus(title: string): ChatMessage {
+  return {
+    role: 'status',
+    tone: 'success',
+    content: (
+      <>
+        <span className='chatMessageStatusIcon' aria-hidden='true'>
+          <Sparkles size={13} strokeWidth={2} />
+        </span>
+        <span>
+          Loaded local OpenUI scenario{' '}
+          <code className='chatMessageStatusInline'>{title}</code>. No API call
+          was made.
+        </span>
+      </>
+    ),
+  };
+}
+
+function buildChatMessagesFromHistory(
+  history: ModelChatMessage[],
+): ChatMessage[] {
+  if (history.length === 0) return [WELCOME_MESSAGE];
+
+  const next: ChatMessage[] = [WELCOME_MESSAGE];
+  let previousScenarioTitle: string | null = null;
+  for (const message of history) {
+    if (message.role === 'user') {
+      previousScenarioTitle = localScenarioTitleFromPrompt(message.content);
+      next.push({ role: 'user', content: message.content });
+      continue;
+    }
+    if (message.role === 'assistant') {
+      next.push(
+        previousScenarioTitle
+          ? createLoadedScenarioStatus(previousScenarioTitle)
+          : createGeneratedStatus(),
+      );
+      previousScenarioTitle = null;
+    }
+  }
+  return next;
+}
+
+function getLastGeneratedOpenUI(
+  history: ModelChatMessage[],
+): GeneratedOpenUI | null {
+  for (let i = history.length - 1; i >= 0; i--) {
+    const message = history[i];
+    if (message?.role !== 'assistant') continue;
+    const rawText = message.content.trim();
+    if (!rawText) continue;
+    const previousUser = history
+      .slice(0, i)
+      .reverse()
+      .find((item) => item.role === 'user');
+    return {
+      rawText,
+      scenarioTitle: previousUser
+        ? localScenarioTitleFromPrompt(previousUser.content) ?? 'Saved response'
+        : 'Saved response',
+    };
+  }
+  return null;
+}
+
 export function OpenUICreatePage(props: { protocol: Protocol }) {
   const { protocol } = props;
+  const conversation = useConversation(protocol.name);
+  const {
+    activeId,
+    buildConversationContext,
+    conversations,
+    createNew,
+    importShared,
+    isPersistent,
+    isReady,
+    messages: persistedMessages,
+    recordTurn,
+    remove,
+    rename,
+    switchTo,
+  } = conversation;
   const [messages, setMessages] = useState<ChatMessage[]>(() => [
     WELCOME_MESSAGE,
   ]);
@@ -335,8 +460,13 @@ export function OpenUICreatePage(props: { protocol: Protocol }) {
   const [activeMobileTab, setActiveMobileTab] = useState<MobilePaneTab>(
     'edit',
   );
+  const [deleteConversationId, setDeleteConversationId] = useState<
+    string | null
+  >(null);
   const abortRef = useRef<AbortController | null>(null);
   const chatMessagesRef = useRef<HTMLDivElement>(null);
+  const hydratedActiveIdRef = useRef<string | null>(null);
+  const importHandledRef = useRef(false);
   const { showCopyToast, toast: copyToast } = useCopyToast();
 
   const {
@@ -389,33 +519,59 @@ export function OpenUICreatePage(props: { protocol: Protocol }) {
     [showCopyToast],
   );
 
+  const baseUrl = useMemo(() => window.location.href.replace(/#.*$/, ''), []);
+
+  useEffect(() => {
+    if (!isReady || isGenerating) return;
+    if (hydratedActiveIdRef.current === activeId) return;
+    hydratedActiveIdRef.current = activeId;
+    setMessages(buildChatMessagesFromHistory(persistedMessages));
+    setGenerated(getLastGeneratedOpenUI(persistedMessages));
+    setInputValue('');
+    setPreviewRenderKey((value) => value + 1);
+  }, [activeId, isGenerating, isReady, persistedMessages]);
+
+  useEffect(() => {
+    if (!isReady || importHandledRef.current) return;
+    const importUrl = readImportConversationParam();
+    if (!importUrl) {
+      importHandledRef.current = true;
+      return;
+    }
+    importHandledRef.current = true;
+    void (async () => {
+      try {
+        const response = await window.fetch(importUrl);
+        if (!response.ok) {
+          throw new Error(
+            `Failed to load shared conversation: ${response.status}`,
+          );
+        }
+        const doc = (await response.json()) as unknown;
+        if (!isSharedConversationDoc(doc)) {
+          throw new Error('Invalid shared conversation document');
+        }
+        await importShared(doc);
+      } catch (err) {
+        console.warn('[openui] Failed to import shared conversation', err);
+      } finally {
+        clearImportConversationParam();
+      }
+    })();
+  }, [importShared, isReady]);
+
   const applyScenario = useCallback((scenario: OpenUIScenario) => {
     const nextGenerated: GeneratedOpenUI = {
       rawText: scenario.raw,
       scenarioTitle: scenario.title,
     };
+    const userPrompt = `${LOCAL_SCENARIO_PROMPT_PREFIX}${scenario.title}`;
     setGenerated(nextGenerated);
     setPreviewRenderKey((value) => value + 1);
     setMessages([
       WELCOME_MESSAGE,
-      {
-        role: 'status' as const,
-        tone: 'success' as const,
-        content: (
-          <>
-            <span className='chatMessageStatusIcon' aria-hidden='true'>
-              <Sparkles size={13} strokeWidth={2} />
-            </span>
-            <span>
-              Loaded local OpenUI scenario{' '}
-              <code className='chatMessageStatusInline'>
-                {scenario.title}
-              </code>
-              . No API call was made.
-            </span>
-          </>
-        ),
-      },
+      { role: 'user', content: userPrompt },
+      createLoadedScenarioStatus(scenario.title),
     ]);
   }, []);
 
@@ -426,7 +582,16 @@ export function OpenUICreatePage(props: { protocol: Protocol }) {
     setInputValue('');
     setIsGenerating(false);
     applyScenario(scenario);
-  }, [applyScenario, isGenerating]);
+    void recordTurn({
+      userMessage: {
+        role: 'user',
+        content: `${LOCAL_SCENARIO_PROMPT_PREFIX}${scenario.title}`,
+      },
+      assistantContent: scenario.raw,
+      a2uiMessages: [],
+      previewMessages: [],
+    });
+  }, [applyScenario, isGenerating, recordTurn]);
 
   const handleSend = useCallback(() => {
     const prompt = inputValue.trim();
@@ -438,6 +603,8 @@ export function OpenUICreatePage(props: { protocol: Protocol }) {
     const { signal } = controller;
 
     const pendingId = createMessageId('openui-pending');
+    const userMessage: ModelChatMessage = { role: 'user', content: prompt };
+    const requestConversation = buildConversationContext();
     setInputValue('');
     setGenerated(null);
     setIsGenerating(true);
@@ -468,7 +635,8 @@ export function OpenUICreatePage(props: { protocol: Protocol }) {
           },
           body: JSON.stringify({
             resourceId: 'openui-create',
-            messages: [{ role: 'user', content: prompt }],
+            messages: [userMessage],
+            conversation: requestConversation,
           }),
           signal,
         });
@@ -514,23 +682,18 @@ export function OpenUICreatePage(props: { protocol: Protocol }) {
           scenarioTitle: 'Agent response',
         });
         setPreviewRenderKey((value) => value + 1);
+        await recordTurn({
+          userMessage,
+          assistantContent: generatedText,
+          a2uiMessages: [],
+          previewMessages: [],
+        });
         setMessages((current) =>
           current.map((message) =>
             message.id === pendingId
               ? {
                 ...message,
-                tone: 'success',
-                content: (
-                  <>
-                    <span className='chatMessageStatusIcon' aria-hidden='true'>
-                      <Sparkles size={13} strokeWidth={2} />
-                    </span>
-                    <span>
-                      Generated OpenUI Lang from the server agent. The Lynx
-                      Preview is rendering the final response.
-                    </span>
-                  </>
-                ),
+                ...createGeneratedStatus(),
               }
               : message
           )
@@ -566,17 +729,7 @@ export function OpenUICreatePage(props: { protocol: Protocol }) {
         }
       }
     })();
-  }, [inputValue, isGenerating]);
-
-  const handleCreateNew = useCallback(() => {
-    abortRef.current?.abort();
-    abortRef.current = null;
-    setInputValue('');
-    setGenerated(null);
-    setIsGenerating(false);
-    setMessages([WELCOME_MESSAGE]);
-    setPreviewRenderKey((value) => value + 1);
-  }, []);
+  }, [buildConversationContext, inputValue, isGenerating, recordTurn]);
 
   const handleKeyDown = useCallback(
     (event: KeyboardEvent<HTMLTextAreaElement>) => {
@@ -589,6 +742,90 @@ export function OpenUICreatePage(props: { protocol: Protocol }) {
     [handleSend],
   );
 
+  const handleCreateConversation = useCallback(() => {
+    abortRef.current?.abort();
+    abortRef.current = null;
+    setInputValue('');
+    setGenerated(null);
+    setIsGenerating(false);
+    setMessages([WELCOME_MESSAGE]);
+    setPreviewRenderKey((value) => value + 1);
+    void createNew();
+  }, [createNew]);
+
+  const handleSwitchConversation = useCallback((id: string) => {
+    if (isGenerating) return;
+    abortRef.current?.abort();
+    abortRef.current = null;
+    void switchTo(id);
+  }, [isGenerating, switchTo]);
+
+  const shareConversation = useCallback(
+    async (id: string) => {
+      try {
+        const record = await loadConversation(id);
+        if (!record || record.messages.length === 0) {
+          showCopyToast(false);
+          return;
+        }
+
+        const cached = record.snapshot?.sharePayload;
+        let conversationUrl: string | undefined;
+        if (cached && cached.updatedAt === record.meta.updatedAt) {
+          conversationUrl = cached.url;
+        }
+        if (!conversationUrl) {
+          const doc = serializeConversation(record, protocol.name);
+          conversationUrl = await publishConversation(doc);
+          await saveConversationSharePayload(
+            id,
+            conversationUrl,
+            record.meta.updatedAt,
+          );
+        }
+        const link = buildConversationShareUrl(
+          conversationUrl,
+          baseUrl,
+          protocol.name,
+        );
+        showCopyToast(await copyToClipboard(link));
+      } catch {
+        showCopyToast(false);
+      }
+    },
+    [baseUrl, protocol.name, showCopyToast],
+  );
+
+  const handleShareConversation = useCallback((id: string) => {
+    void shareConversation(id);
+  }, [shareConversation]);
+
+  const handleRenameConversation = useCallback((id: string, title: string) => {
+    void rename(id, title);
+  }, [rename]);
+
+  const handleRemoveConversation = useCallback((id: string) => {
+    setDeleteConversationId(id);
+  }, []);
+
+  const deleteConversationTitle = useMemo(
+    () =>
+      conversations.find((item) => item.id === deleteConversationId)?.title
+        ?? 'this conversation',
+    [conversations, deleteConversationId],
+  );
+
+  const handleCancelDeleteConversation = useCallback(() => {
+    setDeleteConversationId(null);
+  }, []);
+
+  const handleConfirmDeleteConversation = useCallback(() => {
+    const id = deleteConversationId;
+    if (!id) return;
+    setDeleteConversationId(null);
+    void remove(id);
+  }, [deleteConversationId, remove]);
+
   return (
     <div
       ref={pageRef}
@@ -598,7 +835,29 @@ export function OpenUICreatePage(props: { protocol: Protocol }) {
       data-active-tab={activeMobileTab}
     >
       <CopyToast toast={copyToast} />
+      <ConfirmDialog
+        open={deleteConversationId !== null}
+        title='Delete conversation?'
+        description={`"${deleteConversationTitle}" will be removed from this browser. This cannot be undone.`}
+        confirmLabel='Delete'
+        cancelLabel='Keep'
+        tone='danger'
+        onCancel={handleCancelDeleteConversation}
+        onConfirm={handleConfirmDeleteConversation}
+      />
       <div className='chatPageBody'>
+        <ConversationListPanel
+          conversations={conversations}
+          activeId={activeId}
+          disabled={!isReady || isGenerating}
+          isPersistent={isPersistent}
+          onCreate={handleCreateConversation}
+          onSwitch={handleSwitchConversation}
+          onShare={handleShareConversation}
+          onRename={handleRenameConversation}
+          onRemove={handleRemoveConversation}
+        />
+
         <div className='chatPanel' style={chatPanelStyle}>
           <PageHeader
             className='chatHeader'
@@ -731,7 +990,7 @@ export function OpenUICreatePage(props: { protocol: Protocol }) {
                   variant='ghost'
                   size='lg'
                   disabled={isGenerating}
-                  onClick={handleCreateNew}
+                  onClick={handleCreateConversation}
                 >
                   New draft
                 </Button>

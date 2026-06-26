@@ -1049,7 +1049,7 @@ export function AIChatPage(
   props: { protocol: Protocol; theme: 'light' | 'dark' },
 ) {
   const { protocol, theme } = props;
-  const conversation = useConversation();
+  const conversation = useConversation(protocol.name);
   const {
     activeId,
     buildConversationContext,
