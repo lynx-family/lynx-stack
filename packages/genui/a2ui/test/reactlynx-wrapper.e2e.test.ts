@@ -34,6 +34,10 @@ const CONTENT_TIMEOUT_MS = 30_000;
 const NAVIGATION_TIMEOUT_MS = 30_000;
 const POLL_INTERVAL_MS = 500;
 const LOG_LIMIT = 12_000;
+const EXPECTED_RENDERED_TEXTS = [
+  'Generated ReactLynx wrapper',
+  'Rendered by Kitten Lynx',
+] as const;
 
 interface KittenLynxView {
   goto(url: string, options?: { timeout?: number }): Promise<void>;
@@ -84,8 +88,13 @@ beforeAll(async () => {
   if (!RUN_REACTLYNX_CODEGEN_E2E) return;
 
   projectDir = await createReactLynxFixture();
+  const distDir = resolve(projectDir, '.generated');
   await buildReactLynxFixture(projectDir);
-  fixtureServer = await startFixtureServer(resolve(projectDir, '.generated'));
+  await assertCompiledBundle(
+    resolve(distDir, BUNDLE_NAME),
+    EXPECTED_RENDERED_TEXTS,
+  );
+  fixtureServer = await startFixtureServer(distDir);
   reversedPort = fixtureServer.port;
   await reverseAdbPort(reversedPort);
 
@@ -142,13 +151,12 @@ reactLynxCodegenE2ETest(
     await page.goto(fixtureServer.createUrl(BUNDLE_NAME), {
       timeout: NAVIGATION_TIMEOUT_MS,
     });
-    const content = await waitForContent(page, [
-      'Generated ReactLynx wrapper',
-      'Rendered by Kitten Lynx',
-    ]);
+    const content = await waitForContent(page, EXPECTED_RENDERED_TEXTS);
 
-    expect(content).toContain('Generated ReactLynx wrapper');
-    expect(content).toContain('Rendered by Kitten Lynx');
+    expect(content).not.toBe('<#document><page></page></#document>');
+    for (const text of EXPECTED_RENDERED_TEXTS) {
+      expect(content).toContain(text);
+    }
   },
 );
 
@@ -208,6 +216,7 @@ async function createReactLynxFixture(): Promise<string> {
     surfaceClassName: 'generated-codegen-e2e-surface',
     surfaceWrapperClassName: 'generated-codegen-e2e-shell',
   });
+  assertGeneratedSource(appSource, EXPECTED_RENDERED_TEXTS);
 
   await writeFile(resolve(srcDir, 'App.tsx'), appSource);
   await writeFile(
@@ -257,6 +266,48 @@ async function createReactLynxFixture(): Promise<string> {
   );
 
   return fixtureDir;
+}
+
+function assertGeneratedSource(
+  source: string,
+  expectedTexts: readonly string[],
+): void {
+  const requiredSnippets = [
+    'from "@lynx-js/genui/a2ui";',
+    'from "@lynx-js/genui/a2ui/catalog";',
+    'import "@lynx-js/genui/a2ui/styles/theme.css";',
+    'const generatedA2UIMessages',
+    '<A2UI',
+    'generated-codegen-e2e-surface',
+  ];
+
+  for (const snippet of [...requiredSnippets, ...expectedTexts]) {
+    if (!source.includes(snippet)) {
+      throw new Error(
+        `Generated ReactLynx source is missing expected snippet: ${snippet}`,
+      );
+    }
+  }
+}
+
+async function assertCompiledBundle(
+  bundlePath: string,
+  expectedTexts: readonly string[],
+): Promise<void> {
+  const bundle = await readFile(bundlePath, 'utf8');
+  if (bundle.length < 1_000) {
+    throw new Error(
+      `Compiled ReactLynx bundle is unexpectedly small: ${bundle.length} bytes`,
+    );
+  }
+
+  for (const text of expectedTexts) {
+    if (!bundle.includes(text)) {
+      throw new Error(
+        `Compiled ReactLynx bundle is missing expected text: ${text}`,
+      );
+    }
+  }
 }
 
 async function buildReactLynxFixture(fixtureDir: string): Promise<void> {
