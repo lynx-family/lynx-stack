@@ -1,27 +1,27 @@
-# Lynx Rust headless crates
+# Lynx Rust headless crate
 
-This workspace publishes Lynx as runtime-loaded Rust crates for windowless
+This workspace publishes Lynx as a runtime-loaded Rust crate for windowless
 embedding. It does not expose windowed APIs or NativeView.
 
-## Crates
+## Crate
 
-- `lynx-cpp-bridge` provides checked-in C ABI bindings and loads
-  `libLynx_clay` with `dlopen`/`dlsym`. It expects the runtime library to
-  export the Rust-friendly `lynx_rust_*` C ABI shim symbols.
-- `lynx` provides RAII wrappers for the headless view, windowless renderer,
-  resource fetcher, task runner, input events, and platform callbacks.
+- `lynx` provides checked-in C ABI bindings under `lynx::sys`, loads
+  `libLynx_clay` with `dlopen`/`dlsym`, and exposes RAII wrappers for the
+  headless view, windowless renderer, resource fetcher, task runner, input
+  events, and platform callbacks. It expects the runtime library to export the
+  Rust-friendly `lynx_rust_*` C ABI shim symbols.
 - `examples/headless` shows a minimal software renderer and resource fetcher.
 
 ## Library loading
 
-The crates do not link `libLynx_clay` at build time. `cargo test` can run
+The crate does not link `libLynx_clay` at build time. `cargo test` can run
 without an SDK because real loading only starts when you call `Env::load()` or
 `Env::load_from_path()`.
 
-`lynx-cpp-bridge` resolves Rust-only C ABI exports, such as
-`lynx_rust_view_set_frame`. Those shims are intentionally expected from
-`libLynx_clay` so the existing C++ exports with reference parameters can remain
-unchanged for current C++ embedders.
+`lynx::sys` resolves Rust-only C ABI exports, such as `lynx_rust_view_set_frame`.
+Those shims are intentionally expected from `libLynx_clay` so the existing C++
+exports with reference parameters can remain unchanged for current C++
+embedders.
 
 Set one of these environment variables before creating `Env`:
 

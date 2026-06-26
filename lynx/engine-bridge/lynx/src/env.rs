@@ -1,5 +1,5 @@
+use crate::sys;
 use crate::{c_str_to_string, c_string, Result};
-use lynx_cpp_bridge as sys;
 use std::ffi::c_void;
 use std::path::Path;
 use std::sync::Arc;

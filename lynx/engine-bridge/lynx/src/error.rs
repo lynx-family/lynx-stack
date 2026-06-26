@@ -5,7 +5,7 @@ pub type Result<T> = std::result::Result<T, Error>;
 
 #[derive(Debug)]
 pub enum Error {
-  Sys(lynx_cpp_bridge::Error),
+  Sys(crate::sys::Error),
   InteriorNul {
     field: &'static str,
   },
@@ -21,8 +21,8 @@ pub enum Error {
   Message(String),
 }
 
-impl From<lynx_cpp_bridge::Error> for Error {
-  fn from(value: lynx_cpp_bridge::Error) -> Self {
+impl From<crate::sys::Error> for Error {
+  fn from(value: crate::sys::Error) -> Self {
     Error::Sys(value)
   }
 }
