@@ -21,6 +21,7 @@ import {
 } from '@lynx-js/template-webpack-plugin'
 
 import type { PluginReactLynxOptions } from './pluginReactLynx.js'
+import { resolveLazyBundleFetcher } from './resolveLazyBundleFetcher.js'
 
 const PLUGIN_NAME_REACT = 'lynx:react'
 const PLUGIN_NAME_TEMPLATE = 'lynx:template'
@@ -55,6 +56,8 @@ export function applyEntry(
 
     experimental_isLazyBundle,
   } = options
+
+  const lazyBundleFetcher = resolveLazyBundleFetcher(targetSdkVersion)
 
   api.modifyBundlerChain(async (chain, { environment, isDev, isProd }) => {
     const mainThreadChunks: string[] = []
@@ -235,6 +238,7 @@ export function applyEntry(
             targetSdkVersion,
 
             experimental_isLazyBundle,
+            lazyBundleFetcher,
             cssPlugins: [],
           }])
           .end()
@@ -316,6 +320,7 @@ export function applyEntry(
         workletRuntimePath: await resolve(
           `@lynx-js/react/${isDev ? 'worklet-dev-runtime' : 'worklet-runtime'}`,
         ),
+        lazyBundleFetcher,
       }])
 
     function getDefaultProfile(): boolean | undefined {

@@ -2,6 +2,18 @@
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
 
+// Inlined rather than imported from `snapshot/` so this `core/` module stays
+// free of runtime-backend dependencies (enforced by
+// `guardrails/snapshot-containment`). `PREPARE_LAZY_BUNDLE_MTS` must stay in
+// sync with `snapshot/lifecycle/constant.ts`'s
+// `LifecycleConstant.prepareLazyBundleMTS`, the lifecycle name the snapshot
+// backend registers the main-thread prepare handler under.
+const SECTION_MAIN_THREAD = 'main-thread';
+const SECTION_BACKGROUND = 'background';
+const SECTION_CSS = 'CSS';
+const LYNX_LAZY_SYNC_TIMEOUT_SECONDS = 5;
+const PREPARE_LAZY_BUNDLE_MTS = 'rLynxPrepareLazyBundleMTS';
+
 /**
  * To make code below works
  * const App1 = lazy(() => import("./x").then(({App1}) => ({default: App1})))
@@ -55,20 +67,38 @@ export const makeSyncThen = function<T>(result: T): Promise<T>['then'] {
   };
 };
 
+export type LazyBundleMode = 'sync' | 'async';
+
 /**
  * Load dynamic component from source. Designed to be used with `lazy`.
+ *
+ * The `mode` is threaded in by the chunk-loading runtime from the
+ * `import(..., { with: { mode } })` import attribute (see `lynx_acm`), so each
+ * lazy import carries its own mode instead of relying on shared mutable state.
  * @param source - where dynamic component template.js locates
+ * @param mode - `'sync'` (first-screen blocking) or `'async'` (default)
  * @returns
  * @public
  */
 export const loadLazyBundle: <
   T extends { default: React.ComponentType<any> },
->(source: string) => Promise<T> = /*#__PURE__*/ (() => {
-  lynx.loadLazyBundle = loadLazyBundle;
+>(source: string, mode?: LazyBundleMode) => Promise<T> = /*#__PURE__*/ (() => {
+  // Default to QueryComponent when `__LAZY_BUNDLE_FETCHER__` is missing —
+  // older react-webpack-plugin builds don't stamp it and they predate
+  // FetchBundle support, so falling through to QueryComponent is the only
+  // safe behavior.
+  const useFetchBundle = typeof __LAZY_BUNDLE_FETCHER__ !== 'undefined'
+    && __LAZY_BUNDLE_FETCHER__ === 'FetchBundle';
 
-  function loadLazyBundle<
+  const impl = useFetchBundle
+    ? loadLazyBundleWithFetchBundle
+    : loadLazyBundleWithQueryComponent;
+
+  lynx.loadLazyBundle = impl;
+
+  function loadLazyBundleWithQueryComponent<
     T extends { default: React.ComponentType<any> },
-  >(source: string): Promise<T> {
+  >(source: string, mode?: LazyBundleMode): Promise<T> {
     if (__LEPUS__) {
       const query = __QueryComponent(source);
       let result: T;
@@ -89,6 +119,12 @@ export const loadLazyBundle: <
       r.then = makeSyncThen(result);
       return r;
     } else if (__JS__) {
+      if (__DEV__ && mode !== undefined) {
+        throw new Error(
+          `Lazy bundle import \`mode: '${mode}'\` requires FetchBundle, but the current build uses QueryComponent. `
+            + `Set \`engineVersion: '3.8'\` (or higher) in \`pluginReactLynx\` to enable FetchBundle.`,
+        );
+      }
       const resolver = withSyncResolvers<T>();
 
       const callback: (result: { code: number; detail: { schema: string } }) => void = result => {
@@ -132,7 +168,122 @@ export const loadLazyBundle: <
     throw new Error('unreachable');
   }
 
-  return loadLazyBundle;
+  function loadLazyBundleWithFetchBundle<
+    T extends { default: React.ComponentType<any> },
+  >(source: string, mode?: LazyBundleMode): Promise<T> {
+    if (__MAIN_THREAD__) {
+      if (mode !== 'sync') {
+        // Fire the fetch and ignore the result so the request goes out early
+        // and warms the native bundle cache; the background `async` path then
+        // waits less. The main thread renders nothing here.
+        try {
+          lynx.fetchBundle(source, {});
+        } catch {}
+        return new Promise(() => {});
+      }
+      let response;
+      try {
+        response = lynx.fetchBundle(source, {}).wait(
+          LYNX_LAZY_SYNC_TIMEOUT_SECONDS,
+        );
+      } catch {
+        return new Promise(() => {});
+      }
+      if (!response || response.code !== 0) {
+        return new Promise(() => {});
+      }
+      let result: T;
+      try {
+        result = lynx.loadScript<T>(SECTION_MAIN_THREAD, {
+          bundleName: response.url,
+        });
+        const styleSheet = __LoadStyleSheet(SECTION_CSS, response.url);
+        if (styleSheet !== null) {
+          __AdoptStyleSheet(styleSheet);
+        }
+      } catch {
+        return new Promise(() => {});
+      }
+      const r: Promise<T> = Promise.resolve(result);
+      r.then = makeSyncThen(result);
+      return r;
+    } else if (__JS__) {
+      if (mode === 'sync') {
+        let response;
+        try {
+          response = lynx.fetchBundle(source, {}).wait(
+            LYNX_LAZY_SYNC_TIMEOUT_SECONDS,
+          );
+        } catch (e) {
+          return Promise.reject(e instanceof Error ? e : new Error(String(e)));
+        }
+        if (!response || response.code !== 0) {
+          console.error('Lazy bundle load failed', response);
+          const e = new Error('Lazy bundle load failed, schema: ' + source);
+          e.cause = JSON.stringify(response);
+          return Promise.reject(e);
+        }
+        let result: T;
+        try {
+          result = lynx.loadScript<T>(SECTION_BACKGROUND, {
+            bundleName: response.url,
+          });
+        } catch (e) {
+          return Promise.reject(e instanceof Error ? e : new Error(String(e)));
+        }
+        const r: Promise<T> = Promise.resolve(result);
+        r.then = makeSyncThen(result);
+        return r;
+      }
+
+      // async (default)
+      return new Promise<T>((resolve, reject) => {
+        let handler;
+        try {
+          handler = lynx.fetchBundle(source, {});
+        } catch (e) {
+          reject(e instanceof Error ? e : new Error(String(e)));
+          return;
+        }
+        handler.then((response) => {
+          if (!response || response.code !== 0) {
+            console.error('Lazy bundle load failed', response);
+            const e = new Error('Lazy bundle load failed, schema: ' + source);
+            e.cause = JSON.stringify(response);
+            reject(e);
+            return;
+          }
+          let btsResult: T;
+          try {
+            btsResult = lynx.loadScript<T>(SECTION_BACKGROUND, {
+              bundleName: response.url,
+            });
+          } catch (e) {
+            reject(e instanceof Error ? e : new Error(String(e)));
+            return;
+          }
+          // Bundle is now in native cache, so MT's `.then` fires sync and
+          // the whole prepare runs synchronously inside `Call`, meaning the
+          // cb fires only after MT snapshots are registered.
+          try {
+            lynx.getNativeApp().callLepusMethod(
+              PREPARE_LAZY_BUNDLE_MTS,
+              { url: source },
+              () => {
+                resolve(btsResult);
+              },
+            );
+          } catch (e) {
+            reject(e instanceof Error ? e : new Error(String(e)));
+          }
+        });
+      });
+    }
+
+    throw new Error('unreachable');
+  }
+
+  return impl;
 })();
 
 function withSyncResolvers<T>() {

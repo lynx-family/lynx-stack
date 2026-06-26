@@ -27,9 +27,12 @@ coverage:
 ignore:
   - ".github/**"
   - "codecov.yml"
+  - "examples/**"
   - "packages/genui/**"
   - "pnpm-lock.yaml"
   - "rstest.config.ts"
+  - "**/__swc_snapshots__/**"
+  - "**/__snapshots__/**"
   - "**/__test__/**/fixtures/**"
 
 fixes:

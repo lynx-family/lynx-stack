@@ -25,11 +25,12 @@ export function loadDynamicJS<T>(url: string): Promise<T> {
 
 export function __dynamicImport<T>(
   url: string,
-  options?: { with?: { type?: 'component' | 'tsx' | 'jsx' } },
+  options?: { with?: { type?: 'component' | 'tsx' | 'jsx'; mode?: 'sync' | 'async' } },
 ): Promise<T> {
-  const t = options?.with?.type;
+  const w = options?.with;
+  const t = w?.type;
   if (t === 'component' || t === 'tsx' || t === 'jsx') {
-    return loadLazyBundle<any>(url);
+    return loadLazyBundle<any>(url, w?.mode);
   } else {
     return loadDynamicJS(url);
   }
