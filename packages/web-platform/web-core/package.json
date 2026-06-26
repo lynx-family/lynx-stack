@@ -75,7 +75,7 @@
     "@rslib/core": "0.21.5",
     "@rstest/core": "catalog:rstest",
     "binaryen": "^125.0.0",
-    "eslint-plugin-compat": "^6.2.0",
+    "eslint-plugin-compat": "^7.0.2",
     "fb-dotslash": "^0.5.8",
     "jsdom": "^27.4.0",
     "tslib": "^2.8.1"
