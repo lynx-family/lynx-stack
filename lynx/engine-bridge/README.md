@@ -1,68 +1,120 @@
-# Lynx Rust headless crate
+# Lynx Rust engine bridge
 
-This workspace publishes Lynx as a runtime-loaded Rust crate for windowless
-embedding. It does not expose windowed APIs or NativeView.
+This workspace contains the Rust bridge for embedding Lynx without a native
+window. It provides one library crate, `lynx`, and a headless example.
 
-## Crate
+The Rust crate loads `libLynx_clay` at runtime with `dlopen` and `dlsym`. It
+does not link the runtime library at build time, so normal Rust builds and unit
+tests can run without a local Lynx SDK.
 
-- `lynx` provides checked-in C ABI bindings under `lynx::sys`, loads
-  `libLynx_clay` with `dlopen`/`dlsym`, and exposes RAII wrappers for the
-  headless view, windowless renderer, resource fetcher, task runner, input
-  events, and platform callbacks. It expects the runtime library to export the
-  Rust-friendly `lynx_rust_*` C ABI shim symbols.
-- `examples/headless` shows a minimal software renderer and resource fetcher.
+## Scope
 
-## Library loading
+Use this workspace when you need to:
 
-The crate does not link `libLynx_clay` at build time. `cargo test` can run
-without an SDK because real loading only starts when you call `Env::load()` or
-`Env::load_from_path()`.
+- load a prebuilt `libLynx_clay` runtime from Rust
+- create a headless Lynx view
+- provide a windowless renderer callback
+- serve bundle, image, font, or other resources from Rust
+- drive Lynx tasks and input events in a non-windowed host
 
-`lynx::sys` resolves Rust-only C ABI exports, such as `lynx_rust_view_set_frame`.
-Those shims are intentionally expected from `libLynx_clay` so the existing C++
-exports with reference parameters can remain unchanged for current C++
-embedders.
+This workspace does not build `libLynx_clay`, package a full SDK, or expose
+windowed APIs such as `NativeView`.
 
-Set one of these environment variables before creating `Env`:
+## Layout
+
+- `lynx/` contains the Rust library crate.
+- `lynx/src/sys/` contains checked-in C ABI types and runtime symbol loading.
+- `examples/headless/` contains a software-rendering example that writes a PNG.
+- `tools/adhoc_sign_macos_sdk.py` ad-hoc signs a downloaded macOS runtime for
+  local or CI loading.
+- `docs/architecture.md` describes the crate boundaries and ownership model.
+
+## Runtime loading
+
+Set one of these environment variables before calling `Env::load()`:
 
 ```sh
 export LYNX_LIB_PATH=/path/to/libLynx_clay.dylib
 export LYNX_SDK_DIR=/path/to/lynx-sdk
 ```
 
-`LYNX_LIB_PATH` wins for the runtime library. If it is not set, `Env::load()`
-tries `$LYNX_SDK_DIR/lib/libLynx_clay.dylib` on macOS and
-`$LYNX_SDK_DIR/lib/libLynx_clay.so` on Linux. It also accepts the root build-dir
-layout used by local GN builds, where `libLynx_clay.{dylib,so}` sits directly
-under `$LYNX_SDK_DIR`.
+`LYNX_LIB_PATH` wins when both variables are set. If only `LYNX_SDK_DIR` is set,
+the loader checks these paths:
+
+- `$LYNX_SDK_DIR/lib/libLynx_clay.dylib` on macOS
+- `$LYNX_SDK_DIR/lib/libLynx_clay.so` on Linux
+- `$LYNX_SDK_DIR/libLynx_clay.dylib` on macOS
+- `$LYNX_SDK_DIR/libLynx_clay.so` on Linux
+
+The loaded runtime must export the `lynx_rust_*` shim symbols, such as
+`lynx_rust_view_set_frame`. These symbols keep the Rust ABI simple while the
+existing C++ exports can keep reference-parameter signatures.
 
 ## macOS signing
 
-Ordinary `cargo test` does not require Developer ID signing because Cargo test
-binaries are not signed with Hardened Runtime or Library Validation by default.
-For local Rust SDKs, run `tools/adhoc_sign_macos_sdk.py <sdk-dir>` from this
-workspace to ad-hoc sign `libLynx_clay.dylib` when present.
+Cargo test binaries are not signed with Hardened Runtime or Library Validation,
+so ordinary local tests do not need Developer ID signing.
 
-Apps or CLI tools that redistribute `libLynx_clay.dylib` need to sign and notarize
-their final bundle with their own Apple Team ID.
-
-## Run tests
-
-Run the Rust workspace tests from this folder:
+If macOS refuses to load a downloaded runtime, ad-hoc sign it from this
+workspace:
 
 ```sh
-cargo test
+tools/adhoc_sign_macos_sdk.py /path/to/lynx-sdk
 ```
 
-Run the headless example after setting `LYNX_LIB_PATH` or `LYNX_SDK_DIR`.
-The example waits for a non-transparent software frame and writes a PNG
-screenshot:
+The script signs `lib/libLynx_clay.dylib` and `libLynx_clay.dylib` when they are
+present under the SDK folder.
+
+## Validation
+
+Run Rust checks from this folder:
+
+```sh
+cargo fmt --all --check
+cargo clippy --locked --all-targets --all-features -- -D warnings
+cargo test --locked --all-targets --all-features
+```
+
+To run the runtime-loading test, set `LYNX_LIB_PATH` or `LYNX_SDK_DIR` first:
+
+```sh
+LYNX_SDK_DIR=/path/to/lynx-sdk \
+cargo test --locked --all-targets --all-features
+```
+
+The CI job downloads the macOS runtime dylib into a temporary SDK folder,
+ad-hoc signs it, sets `LYNX_SDK_DIR`, and runs the same checks.
+
+## Run the headless example
+
+The example loads a Lynx bundle, waits for a non-transparent software frame, and
+writes a PNG screenshot.
 
 ```sh
 LYNX_SDK_DIR=/path/to/lynx-sdk \
 cargo run -p lynx-headless-example -- \
-  --bundle ../explorer/homepage/dist/main.lynx.bundle \
-  --asset-root ../explorer/homepage/dist \
+  --bundle /path/to/main.lynx.bundle \
+  --asset-root /path/to/assets \
   --asset-root /path/to/lynx-sdk/bundles/LynxResources.bundle/Contents/Resources \
   --screenshot /tmp/lynx-headless.png
 ```
+
+Use `--initial-data-json` and `--global-props-json` to pass JSON strings to the
+template load request.
+
+## Troubleshooting
+
+`libLynx_clay was not found`
+
+Set `LYNX_LIB_PATH` to the exact runtime library path, or set `LYNX_SDK_DIR` to a
+folder that contains the runtime in `lib/`.
+
+`failed to load symbol lynx_rust_*`
+
+The runtime was built without the Rust-friendly shim exports. Use a runtime
+artifact that includes those symbols.
+
+`resource not found`
+
+Add each folder that can contain bundle dependencies with `--asset-root`. The
+example checks each asset root and then the bundle's parent folder.
