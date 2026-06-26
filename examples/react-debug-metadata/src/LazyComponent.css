@@ -1,0 +1,25 @@
+.LazyComponent {
+  font-weight: 700;
+  color: yellow;
+}
+
+/* crash rows inside the dynamic component (own bundle, own css) */
+.crash-section {
+  margin-top: 14px;
+  width: 88vw;
+  display: flex;
+  flex-direction: column;
+}
+
+.crash-row {
+  background-color: rgba(0, 0, 0, 0.6);
+  border: 1px solid rgba(255, 255, 255, 0.28);
+  border-radius: 10px;
+  padding: 14px 16px;
+  margin-bottom: 12px;
+}
+
+.crash-row text {
+  color: #fff;
+  font-size: 15px;
+}

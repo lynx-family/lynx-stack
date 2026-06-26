@@ -38,6 +38,11 @@ export default tseslint.config(
       // rspeedy/rsbuild build output for the genui-playground (lynx bundle
       // + the rsbuild static site that serves it).
       'packages/genui/playground/www/**',
+      // rspeedy build output for the standalone examples (producer / consumer
+      // dist; react-debug-metadata keeps it as a turbo cache output so its
+      // error-remapping suite can read it — build artifacts, not source).
+      'examples/*/dist-producer/**',
+      'examples/*/dist-consumer/**',
       'website/doc_build/**',
       '.changeset/*',
       '**/CHANGELOG.md',

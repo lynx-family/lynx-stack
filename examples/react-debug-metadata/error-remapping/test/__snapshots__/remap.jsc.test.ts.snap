@@ -1,0 +1,437 @@
+// Rstest Snapshot v1
+
+exports[`1 · LazyComponent (dynamic) > L1. nested deep stack (dynamic, background) 1`] = `
+{
+  "code": 0,
+  "raw": "@.rspeedy/LazyComponent/background.<hash>.js:<loc>",
+  "release": "debugmetadata:<release>",
+  "steps": [
+    {
+      "colno": -1,
+      "context_line": "  throw new Error('boom from deep nested call (LazyComponent, background)'); // LazyComponent.tsx lazyDeepInner",
+      "filename": "src/LazyComponent.tsx",
+      "function_name": "Error",
+      "kind": "source-map",
+      "lineno": 11,
+      "post_context": [
+        "}",
+        "function lazyDeepMid() {",
+        "  lazyDeepInner();",
+        "}",
+        "",
+      ],
+      "pre_context": [
+        "// from the host (consumer main.lynx.bundle where CrashDemo lives). Use them to",
+        "// verify remap resolves a dynamic-component stack against the right bundle.",
+        "// ---------------------------------------------------------------------------",
+        "",
+        "function lazyDeepInner(): never {",
+      ],
+    },
+  ],
+}
+`;
+
+exports[`1 · LazyComponent (dynamic) > L2. TypeError (dynamic, background) 1`] = `
+{
+  "code": 0,
+  "raw": "@.rspeedy/LazyComponent/background.<hash>.js:<loc>",
+  "release": "debugmetadata:<release>",
+  "steps": [
+    {
+      "colno": -1,
+      "context_line": "  return (obj.gone as () => void)();",
+      "filename": "src/LazyComponent.tsx",
+      "kind": "source-map",
+      "lineno": 24,
+      "post_context": [
+        "}",
+        "",
+        "function lazyCrashUndefinedProp() {",
+        "  const obj = {} as { missing?: { x: number } };",
+        "  // TypeError: Cannot read properties of undefined (reading 'x')",
+      ],
+      "pre_context": [
+        "}",
+        "",
+        "function lazyCrashType() {",
+        "  const obj = {} as { gone?: () => void };",
+        "  // TypeError inside the dynamic component",
+      ],
+    },
+  ],
+}
+`;
+
+exports[`1 · LazyComponent (dynamic) > L3. main-thread error (dynamic) 1`] = `
+{
+  "code": 0,
+  "raw": "at <anonymous> (.rspeedy/LazyComponent/main-thread.js:<loc>)",
+  "release": "debugmetadata:<release>",
+  "steps": [
+    {
+      "colno": -1,
+      "context_line": "<generated>",
+      "filename": "main-thread.js",
+      "kind": "bytecode-debug-info",
+      "lineno": -1,
+      "post_context": [],
+      "pre_context": [],
+    },
+    {
+      "colno": -1,
+      "context_line": "  throw new Error('boom from LazyComponent main-thread'); // LazyComponent.tsx lazyCrashMainThread",
+      "filename": "src/LazyComponent.tsx",
+      "kind": "source-map",
+      "lineno": 35,
+      "post_context": [
+        "}",
+        "",
+        "export default function LazyComponent() {",
+        "  return (",
+        "    <view className='crash-section'>",
+      ],
+      "pre_context": [
+        "  return obj.missing!.x; // LazyComponent.tsx lazyCrashUndefinedProp",
+        "}",
+        "",
+        "function lazyCrashMainThread() {",
+        "  'main thread';",
+      ],
+    },
+  ],
+}
+`;
+
+exports[`1 · LazyComponent (dynamic) > L4. read .x of undefined (dynamic, background) 1`] = `
+{
+  "code": 0,
+  "raw": "@.rspeedy/LazyComponent/background.<hash>.js:<loc>",
+  "release": "debugmetadata:<release>",
+  "steps": [
+    {
+      "colno": -1,
+      "context_line": "  return obj.missing!.x; // LazyComponent.tsx lazyCrashUndefinedProp",
+      "filename": "src/LazyComponent.tsx",
+      "kind": "source-map",
+      "lineno": 30,
+      "post_context": [
+        "}",
+        "",
+        "function lazyCrashMainThread() {",
+        "  'main thread';",
+        "  throw new Error('boom from LazyComponent main-thread'); // LazyComponent.tsx lazyCrashMainThread",
+      ],
+      "pre_context": [
+        "}",
+        "",
+        "function lazyCrashUndefinedProp() {",
+        "  const obj = {} as { missing?: { x: number } };",
+        "  // TypeError: Cannot read properties of undefined (reading 'x')",
+      ],
+    },
+  ],
+}
+`;
+
+exports[`2 · Host (App.tsx) > H1. throw new Error (host, background) 1`] = `
+{
+  "code": 0,
+  "raw": "@.rspeedy/main/background.<hash>.js:<loc>",
+  "release": "debugmetadata:<release>",
+  "steps": [
+    {
+      "colno": -1,
+      "context_line": "  throw new Error('explicit throw new Error (App.tsx host, background)'); // App.tsx appCrashThrow",
+      "filename": "src/App.tsx",
+      "function_name": "Error",
+      "kind": "source-map",
+      "lineno": 36,
+      "post_context": [
+        "}",
+        "",
+        "function appCrashMainThread() {",
+        "  'main thread';",
+        "  throw new Error('boom from App.tsx main-thread (host)'); // App.tsx appCrashMainThread",
+      ],
+      "pre_context": [
+        "  // TypeError: obj.missing is not a function (host)",
+        "  return (obj.missing as () => void)();",
+        "}",
+        "",
+        "function appCrashThrow() {",
+      ],
+    },
+  ],
+}
+`;
+
+exports[`2 · Host (App.tsx) > H2. TypeError (host, background) 1`] = `
+{
+  "code": 0,
+  "raw": "@.rspeedy/main/background.<hash>.js:<loc>",
+  "release": "debugmetadata:<release>",
+  "steps": [
+    {
+      "colno": -1,
+      "context_line": "  return (obj.missing as () => void)();",
+      "filename": "src/App.tsx",
+      "kind": "source-map",
+      "lineno": 32,
+      "post_context": [
+        "}",
+        "",
+        "function appCrashThrow() {",
+        "  throw new Error('explicit throw new Error (App.tsx host, background)'); // App.tsx appCrashThrow",
+        "}",
+      ],
+      "pre_context": [
+        "}",
+        "",
+        "function appCrashType() {",
+        "  const obj = {} as { missing?: () => void };",
+        "  // TypeError: obj.missing is not a function (host)",
+      ],
+    },
+  ],
+}
+`;
+
+exports[`2 · Host (App.tsx) > H3. nested deep stack (host, background) 1`] = `
+{
+  "code": 0,
+  "raw": "@.rspeedy/main/background.<hash>.js:<loc>",
+  "release": "debugmetadata:<release>",
+  "steps": [
+    {
+      "colno": -1,
+      "context_line": "  throw new Error('boom from App.tsx deep nested call (host, background)'); // App.tsx appDeepInner",
+      "filename": "src/App.tsx",
+      "function_name": "Error",
+      "kind": "source-map",
+      "lineno": 20,
+      "post_context": [
+        "}",
+        "function appDeepMid() {",
+        "  appDeepInner();",
+        "}",
+        "function appCrashNested() {",
+      ],
+      "pre_context": [
+        "",
+        "// ---- host (App.tsx, consumer main.lynx.bundle) inline crash sites ----",
+        "// These compile straight into the host main bundle (NOT a dynamic component),",
+        "// so a remapped stack should resolve here against the host's release.",
+        "function appDeepInner(): never {",
+      ],
+    },
+  ],
+}
+`;
+
+exports[`2 · Host (App.tsx) > H4. main-thread error (host) 1`] = `
+{
+  "code": 0,
+  "raw": "at <anonymous> (.rspeedy/main/main-thread.js:<loc>)",
+  "release": "debugmetadata:<release>",
+  "steps": [
+    {
+      "colno": -1,
+      "context_line": "<generated>",
+      "filename": "main-thread.js",
+      "kind": "bytecode-debug-info",
+      "lineno": -1,
+      "post_context": [],
+      "pre_context": [],
+    },
+    {
+      "colno": -1,
+      "context_line": "  throw new Error('boom from App.tsx main-thread (host)'); // App.tsx appCrashMainThread",
+      "filename": "src/App.tsx",
+      "kind": "source-map",
+      "lineno": 41,
+      "post_context": [
+        "}",
+        "",
+        "export function App() {",
+        "  useEffect(() => {",
+        "    console.info('Hello, ReactLynx');",
+      ],
+      "pre_context": [
+        "  throw new Error('explicit throw new Error (App.tsx host, background)'); // App.tsx appCrashThrow",
+        "}",
+        "",
+        "function appCrashMainThread() {",
+        "  'main thread';",
+      ],
+    },
+  ],
+}
+`;
+
+exports[`3 · CrashDemo (host) > 1. TypeError (call undefined, background) 1`] = `
+{
+  "code": 0,
+  "raw": "@.rspeedy/main/background.<hash>.js:<loc>",
+  "release": "debugmetadata:<release>",
+  "steps": [
+    {
+      "colno": -1,
+      "context_line": "  return (obj.notAFunction as () => void)();",
+      "filename": "src/CrashDemo.tsx",
+      "kind": "source-map",
+      "lineno": 27,
+      "post_context": [
+        "}",
+        "",
+        "function crashReferenceError(): number {",
+        "  // ReferenceError: notDefinedVariable is not defined",
+        "  // @ts-expect-error intentional undefined reference for the crash demo",
+      ],
+      "pre_context": [
+        "}",
+        "",
+        "function crashTypeError() {",
+        "  const obj = {} as { notAFunction?: () => void };",
+        "  // TypeError: obj.notAFunction is not a function",
+      ],
+    },
+  ],
+}
+`;
+
+exports[`3 · CrashDemo (host) > 2. ReferenceError (background) 1`] = `
+{
+  "code": 0,
+  "raw": "@.rspeedy/main/background.<hash>.js:<loc>",
+  "release": "debugmetadata:<release>",
+  "steps": [
+    {
+      "colno": -1,
+      "context_line": "  return notDefinedVariable + 1;",
+      "filename": "src/CrashDemo.tsx",
+      "function_name": "notDefinedVariable",
+      "kind": "source-map",
+      "lineno": 34,
+      "post_context": [
+        "}",
+        "",
+        "function crashExplicit() {",
+        "  throw new Error('explicit throw new Error (background)'); // CrashDemo.tsx crashExplicit",
+        "}",
+      ],
+      "pre_context": [
+        "",
+        "function crashReferenceError(): number {",
+        "  // ReferenceError: notDefinedVariable is not defined",
+        "  // @ts-expect-error intentional undefined reference for the crash demo",
+        "  // eslint-disable-next-line @typescript-eslint/no-unsafe-return",
+      ],
+    },
+  ],
+}
+`;
+
+exports[`3 · CrashDemo (host) > 3. throw new Error (background) 1`] = `
+{
+  "code": 0,
+  "raw": "@.rspeedy/main/background.<hash>.js:<loc>",
+  "release": "debugmetadata:<release>",
+  "steps": [
+    {
+      "colno": -1,
+      "context_line": "  throw new Error('explicit throw new Error (background)'); // CrashDemo.tsx crashExplicit",
+      "filename": "src/CrashDemo.tsx",
+      "function_name": "Error",
+      "kind": "source-map",
+      "lineno": 38,
+      "post_context": [
+        "}",
+        "",
+        "function crashNested() {",
+        "  outer();",
+        "}",
+      ],
+      "pre_context": [
+        "  // eslint-disable-next-line @typescript-eslint/no-unsafe-return",
+        "  return notDefinedVariable + 1;",
+        "}",
+        "",
+        "function crashExplicit() {",
+      ],
+    },
+  ],
+}
+`;
+
+exports[`3 · CrashDemo (host) > 4. nested deep stack (background) 1`] = `
+{
+  "code": 0,
+  "raw": "@.rspeedy/main/background.<hash>.js:<loc>",
+  "release": "debugmetadata:<release>",
+  "steps": [
+    {
+      "colno": -1,
+      "context_line": "  throw new Error('boom from deep nested call (background)'); // CrashDemo.tsx innerThrow",
+      "filename": "src/CrashDemo.tsx",
+      "function_name": "Error",
+      "kind": "source-map",
+      "lineno": 15,
+      "post_context": [
+        "}",
+        "function mid() {",
+        "  innerThrow();",
+        "}",
+        "function outer() {",
+      ],
+      "pre_context": [
+        "// - main-thread:bindtap handlers run on the MAIN thread -> bytecode 两步反解",
+        "// ---------------------------------------------------------------------------",
+        "",
+        "// nested call chain -> multi-frame background stack (innerThrow -> mid -> outer)",
+        "function innerThrow(): never {",
+      ],
+    },
+  ],
+}
+`;
+
+exports[`3 · CrashDemo (host) > 7. main-thread error 1`] = `
+{
+  "code": 0,
+  "raw": "at <anonymous> (.rspeedy/main/main-thread.js:<loc>)",
+  "release": "debugmetadata:<release>",
+  "steps": [
+    {
+      "colno": -1,
+      "context_line": "<generated>",
+      "filename": "main-thread.js",
+      "kind": "bytecode-debug-info",
+      "lineno": -1,
+      "post_context": [],
+      "pre_context": [],
+    },
+    {
+      "colno": -1,
+      "context_line": "  throw new Error('boom from main-thread'); // CrashDemo.tsx crashMainThread",
+      "filename": "src/CrashDemo.tsx",
+      "kind": "source-map",
+      "lineno": 48,
+      "post_context": [
+        "}",
+        "",
+        "export function CrashDemo() {",
+        "  const [, setTick] = useState(0);",
+        "  return (",
+      ],
+      "pre_context": [
+        "}",
+        "",
+        "// runs on the MAIN thread -> produces an \`at fn:function_id:pc\` stack",
+        "function crashMainThread() {",
+        "  'main thread';",
+      ],
+    },
+  ],
+}
+`;
