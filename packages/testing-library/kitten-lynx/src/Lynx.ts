@@ -1,7 +1,7 @@
-import { Connector } from '@lynx-js/devtool-connector';
-import { AndroidTransport } from '@lynx-js/devtool-connector/transport';
 import { AdbServerClient } from '@yume-chan/adb';
 import { AdbServerNodeTcpConnector } from '@yume-chan/adb-server-node-tcp';
+import { Connector } from './connector/index.js';
+import { AndroidTransport } from './connector/transport/android.js';
 import { KittenLynxView } from './KittenLynxView.js';
 
 /**

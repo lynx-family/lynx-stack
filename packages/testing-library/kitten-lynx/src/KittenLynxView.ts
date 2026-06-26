@@ -1,4 +1,4 @@
-import type { Connector } from '@lynx-js/devtool-connector';
+import type { Connector } from './connector/index.js';
 import { CDPChannel } from './CDPChannel.js';
 import type { NodeInfoInGetDocument } from './CDPChannel.js';
 import { ElementNode } from './ElementNode.js';

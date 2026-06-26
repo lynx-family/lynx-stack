@@ -23,7 +23,7 @@ Using the Chrome DevTools Protocol (CDP) over USB/ADB, `kitten-lynx` gives you t
 
 In standard Web Playwright/Puppeteer, you connect to a persistent browser WebSocket. **Lynx is different.**
 
-1. **Stateless Connector:** This library uses `@lynx-js/devtool-connector` which operates via Android Debug Bridge (ADB). It sends isolated Request/Response commands. There is no long-living socket.
+1. **Stateless Connector:** This library uses its local `src/connector` fork of the devtool connector, which operates via Android Debug Bridge (ADB). It sends isolated Request/Response commands. There is no long-living socket.
 2. **Session Hopping:** When you tell Lynx to navigate to a new URL, Lynx creates an entirely **new debugging session**.
 3. **`Lynx.ts`**: Handles the physical device connection, force-stops the app, restarts it, and ensures the Master devtool switch is ON.
 4. **`KittenLynxView.ts`**: Represents a single "Page". When you call `goto(url)`, it sends the navigate command, and then intensely **polls** the ADB session list until it finds the new session matching your URL, and re-attaches to it.

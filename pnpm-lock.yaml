@@ -1918,15 +1918,18 @@ importers:
 
   packages/testing-library/kitten-lynx:
     dependencies:
-      '@lynx-js/devtool-connector':
-        specifier: workspace:*
-        version: link:../../mcp-servers/devtool-connector
       '@yume-chan/adb':
         specifier: catalog:adb
         version: 2.5.1
       '@yume-chan/adb-server-node-tcp':
         specifier: catalog:adb
         version: 2.5.2
+      debug:
+        specifier: ^4.4.3
+        version: 4.4.3
+      usbmux-client:
+        specifier: ^0.2.1
+        version: 0.2.1
     devDependencies:
       '@lynx-js/preact-devtools':
         specifier: 5.0.1-20260525112551-dfe2d03
@@ -1943,6 +1946,9 @@ importers:
       '@lynx-js/types':
         specifier: 4.0.0
         version: 4.0.0
+      '@types/debug':
+        specifier: ^4.1.12
+        version: 4.1.12
       '@types/react':
         specifier: ^18.3.28
         version: 18.3.28

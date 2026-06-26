@@ -4,7 +4,7 @@ This document provides context, architecture guidelines, and workflows for agent
 
 ## Overview
 
-`kitten-lynx` is a Puppeteer-like testing library designed for interacting with the Lynx browser engine and Lynx Explorer Android application. It utilizes the `@lynx-js/devtool-connector` (stateless, short-lived connection architecture) to communicate with Lynx apps running on Android devices via ADB.
+`kitten-lynx` is a Puppeteer-like testing library designed for interacting with the Lynx browser engine and Lynx Explorer Android application. It utilizes the local `src/connector` fork of the devtool connector (stateless, short-lived connection architecture) to communicate with Lynx apps running on Android devices via ADB.
 
 Through the Chrome DevTools Protocol (CDP), `kitten-lynx` enables:
 
@@ -25,7 +25,7 @@ Through the Chrome DevTools Protocol (CDP), `kitten-lynx` enables:
 
 ### Key Design Patterns
 
-- **Stateless connector**: The `devtool-connector` does not maintain persistent WebSocket connections. Each `sendCDPMessage` / `sendListSessionMessage` call is a self-contained request through ADB/USB transport.
+- **Stateless connector**: The local `src/connector` fork does not maintain persistent WebSocket connections. Each `sendCDPMessage` / `sendListSessionMessage` call is a self-contained request through ADB/USB transport.
 - **Retry-based initialization**: After restarting the app, polling loops handle the delay before the devtool server is ready. `onAttachedToTarget()` only assigns `_channel` after all CDP domain enables succeed, making the whole operation retryable.
 - **Session URL matching**: After `Page.navigate`, the Lynx runtime creates a new session for the navigated URL. `goto()` polls `sendListSessionMessage()` and matches sessions by URL (full URL, filename, or suffix) to find the correct one.
 

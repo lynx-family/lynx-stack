@@ -1,4 +1,4 @@
-import type { Connector } from '@lynx-js/devtool-connector';
+import type { Connector } from './connector/index.js';
 
 const sessionIdToChannel: Record<string, WeakRef<CDPChannel>> = {};
 type Quad = [number, number, number, number, number, number, number, number];
