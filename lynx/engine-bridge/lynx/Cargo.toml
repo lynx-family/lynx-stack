@@ -1,0 +1,13 @@
+[package]
+name = "lynx"
+version = "0.1.0"
+edition = "2021"
+license = "Apache-2.0"
+rust-version = "1.70"
+description = "Safe Rust wrapper for windowless/headless Lynx embedding."
+
+[dependencies]
+lynx-cpp-bridge = { path = "../lynx-cpp-bridge", version = "0.1.0" }
+
+[lib]
+path = "src/lib.rs"

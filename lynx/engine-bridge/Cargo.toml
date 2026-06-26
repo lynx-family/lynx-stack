@@ -1,0 +1,7 @@
+[workspace]
+members = [
+  "examples/headless",
+  "lynx",
+  "lynx-cpp-bridge",
+]
+resolver = "2"
