@@ -778,7 +778,54 @@ importers:
         specifier: ^24.10.13
         version: 24.10.13
 
-  packages/genui/a2ui-playground:
+  packages/genui/a2ui-prompt:
+    devDependencies:
+      '@types/node':
+        specifier: ^24.10.13
+        version: 24.10.13
+
+  packages/genui/cli:
+    dependencies:
+      '@lynx-js/genui-a2ui-catalog-extractor':
+        specifier: workspace:*
+        version: link:../a2ui-catalog-extractor
+      '@lynx-js/genui-a2ui-prompt':
+        specifier: workspace:*
+        version: link:../a2ui-prompt
+    devDependencies:
+      '@rstest/core':
+        specifier: catalog:rstest
+        version: 0.10.5(core-js@3.48.0)(jsdom@27.4.0)
+      '@types/node':
+        specifier: ^24.10.13
+        version: 24.10.13
+      typescript:
+        specifier: ^5.9.3
+        version: 5.9.3
+
+  packages/genui/openui:
+    dependencies:
+      '@openuidev/lang-core':
+        specifier: ^0.2.5
+        version: 0.2.5(@modelcontextprotocol/sdk@1.25.2(hono@4.12.12)(zod@3.25.76))(zod@3.25.76)
+      zod:
+        specifier: ^3.25.76
+        version: 3.25.76
+    devDependencies:
+      '@lynx-js/lynx-ui':
+        specifier: ^3.133.0
+        version: 3.133.0(@lynx-js/react@packages+react)(@lynx-js/types@4.0.0)(@types/react@18.3.28)(react-dom@19.2.4(react@19.2.5))(react@19.2.5)
+      '@lynx-js/react':
+        specifier: workspace:*
+        version: link:../../react
+      '@lynx-js/types':
+        specifier: 4.0.0
+        version: 4.0.0
+      '@types/react':
+        specifier: ^18.3.28
+        version: 18.3.28
+
+  packages/genui/playground:
     dependencies:
       '@codemirror/lang-json':
         specifier: ^6.0.2
@@ -862,53 +909,6 @@ importers:
       typescript:
         specifier: ^5.9.3
         version: 5.9.3
-
-  packages/genui/a2ui-prompt:
-    devDependencies:
-      '@types/node':
-        specifier: ^24.10.13
-        version: 24.10.13
-
-  packages/genui/cli:
-    dependencies:
-      '@lynx-js/genui-a2ui-catalog-extractor':
-        specifier: workspace:*
-        version: link:../a2ui-catalog-extractor
-      '@lynx-js/genui-a2ui-prompt':
-        specifier: workspace:*
-        version: link:../a2ui-prompt
-    devDependencies:
-      '@rstest/core':
-        specifier: catalog:rstest
-        version: 0.10.5(core-js@3.48.0)(jsdom@27.4.0)
-      '@types/node':
-        specifier: ^24.10.13
-        version: 24.10.13
-      typescript:
-        specifier: ^5.9.3
-        version: 5.9.3
-
-  packages/genui/openui:
-    dependencies:
-      '@openuidev/lang-core':
-        specifier: ^0.2.5
-        version: 0.2.5(@modelcontextprotocol/sdk@1.25.2(hono@4.12.12)(zod@3.25.76))(zod@3.25.76)
-      zod:
-        specifier: ^3.25.76
-        version: 3.25.76
-    devDependencies:
-      '@lynx-js/lynx-ui':
-        specifier: ^3.133.0
-        version: 3.133.0(@lynx-js/react@packages+react)(@lynx-js/types@4.0.0)(@types/react@18.3.28)(react-dom@19.2.4(react@19.2.5))(react@19.2.5)
-      '@lynx-js/react':
-        specifier: workspace:*
-        version: link:../../react
-      '@lynx-js/types':
-        specifier: 4.0.0
-        version: 4.0.0
-      '@types/react':
-        specifier: ^18.3.28
-        version: 18.3.28
 
   packages/genui/server:
     dependencies:

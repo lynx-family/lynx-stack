@@ -1,7 +1,7 @@
 # A2UI Playground — Showcase grid bundle-loading optimization
 
 **Date:** 2026-05-28
-**Scope:** `packages/genui/a2ui-playground` only
+**Scope:** `packages/genui/playground` only
 **Status:** Approved (approach B)
 
 ## Problem
@@ -31,7 +31,7 @@ deferral mechanism never kicks in.
 - Cards visible to the user render first.
 - No regression in per-card visual fidelity (same iframe + lynx-view path
   once a card is mounted).
-- No changes outside `packages/genui/a2ui-playground`.
+- No changes outside `packages/genui/playground`.
 
 ## Approach — Concurrency-capped, viewport-prioritized mount queue
 
@@ -118,8 +118,8 @@ DemosListPage
 
 ### Manual
 
-1. `pnpm -C packages/genui/a2ui-playground build:lynx` (one-time).
-2. `PORT=5371 pnpm -C packages/genui/a2ui-playground dev` (unique port
+1. `pnpm -C packages/genui/playground build:lynx` (one-time).
+2. `PORT=5371 pnpm -C packages/genui/playground dev` (unique port
    avoids conflicting with other devs servers).
 3. Open `http://localhost:5371` → click "Examples" tab.
 4. DevTools → Network: at most 4 in-flight `a2ui.web.js` requests at

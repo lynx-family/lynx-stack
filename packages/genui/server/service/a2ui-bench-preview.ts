@@ -49,7 +49,7 @@ interface JudgeProxy {
   close: () => Promise<void>;
 }
 
-const DEFAULT_PLAYGROUND_BASE_URL = 'https://lynx-stack.dev/a2ui/';
+const DEFAULT_PLAYGROUND_BASE_URL = 'https://lynx-stack.dev/genui/';
 const PREVIEW_WIDTH = 450;
 const PREVIEW_HEIGHT = 970;
 const IFRAME_WIDTH = 430;

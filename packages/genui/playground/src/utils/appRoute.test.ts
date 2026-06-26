@@ -1,0 +1,37 @@
+// Copyright 2026 The Lynx Authors. All rights reserved.
+// Licensed under the Apache License Version 2.0 that can be found in the
+// LICENSE file in the root directory of this source tree.
+import { describe, expect, test } from '@rstest/core';
+
+import {
+  DEFAULT_ROUTE_HASH,
+  buildRouteHash,
+  getRouteHash,
+  parseRouteHash,
+} from './appRoute.js';
+
+describe('app route hash', () => {
+  test('uses A2UI as the default route hash', () => {
+    expect(getRouteHash('')).toBe(DEFAULT_ROUTE_HASH);
+    expect(getRouteHash('#')).toBe(DEFAULT_ROUTE_HASH);
+    expect(getRouteHash('#/')).toBe(DEFAULT_ROUTE_HASH);
+    expect(parseRouteHash('')).toMatchObject({
+      protocol: { name: 'a2ui' },
+      tab: 'create',
+    });
+  });
+
+  test('uses protocol roots as canonical create routes', () => {
+    expect(buildRouteHash('a2ui', 'create')).toBe('#/a2ui');
+    expect(buildRouteHash('openui', 'create')).toBe('#/openui');
+  });
+
+  test('keeps deep links under the selected protocol', () => {
+    expect(buildRouteHash('a2ui', 'examples')).toBe('#/a2ui/examples');
+    expect(parseRouteHash('#/openui/components/Button')).toMatchObject({
+      protocol: { name: 'openui' },
+      tab: 'components',
+      componentName: 'Button',
+    });
+  });
+});

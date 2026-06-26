@@ -3,21 +3,21 @@
     {
       "id": "product-card",
       "name": "Product Card",
-      "url": "https://lynx-stack.dev/a2ui.lynx.js?messagesUrl=https%3A%2F%2Flynx-stack.dev%2Fa2ui%2Fdemos%2Fproduct-card.json&instant=1&theme=light&fullscreen=true",
+      "url": "https://lynx-stack.dev/genui/a2ui.lynx.js?messagesUrl=https%3A%2F%2Flynx-stack.dev%2Fgenui%2Fdemos%2Fproduct-card.json&instant=1&theme=light&fullscreen=true",
       "task": "The A2UI Android preview should show a Wireless Headphones Pro product card with a visible Add to Cart action.",
       "waitForText": ["Wireless Headphones Pro", "Add to Cart"]
     },
     {
       "id": "weather-current",
       "name": "Weather Current",
-      "url": "https://lynx-stack.dev/a2ui.lynx.js?messagesUrl=https%3A%2F%2Flynx-stack.dev%2Fa2ui%2Fdemos%2Fweather-current.json&instant=1&theme=light&fullscreen=true",
+      "url": "https://lynx-stack.dev/genui/a2ui.lynx.js?messagesUrl=https%3A%2F%2Flynx-stack.dev%2Fgenui%2Fdemos%2Fweather-current.json&instant=1&theme=light&fullscreen=true",
       "task": "The A2UI Android preview should show the current weather for Austin, TX, including clear skies with light breeze.",
       "waitForText": ["Austin, TX", "Clear skies with light breeze"]
     },
     {
       "id": "trip-planner",
       "name": "Trip Planner",
-      "url": "https://lynx-stack.dev/a2ui.lynx.js?messagesUrl=https%3A%2F%2Flynx-stack.dev%2Fa2ui%2Fdemos%2Ftrip-planner.json&instant=1&theme=light&fullscreen=true",
+      "url": "https://lynx-stack.dev/genui/a2ui.lynx.js?messagesUrl=https%3A%2F%2Flynx-stack.dev%2Fgenui%2Fdemos%2Ftrip-planner.json&instant=1&theme=light&fullscreen=true",
       "task": "The A2UI Android preview should show a Kyoto 48-hour trip planner with Day 1 and Day 2 itinerary sections, including Monkey Park Viewpoint.",
       "waitForText": ["Trip Planner: Kyoto in 48 Hours", "Monkey Park Viewpoint"]
     }

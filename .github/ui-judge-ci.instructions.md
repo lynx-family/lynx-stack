@@ -12,4 +12,8 @@ Keep CI-facing model secret names on the existing `MIDSCENE_MODEL_*` and `MIDSCE
 
 For new UI Judge CI wiring, upload `ui-judge-results.json` and pass it to `.github/actions/ui-judge-comment` through `result-file`. Rust owns Android capture, scoring, GEQI result data, and fallback JSON generation; the JavaScript action owns Markdown rendering and GitHub PR comment create/update. Do not bypass the action with Rust-generated Markdown in CI.
 
+When rendering the UI Judge PR comment, include `GITHUB_RUN_ATTEMPT` in the workflow footer/link. GitHub reruns keep the same `GITHUB_RUN_ID`, so relying only on the run URL can make a successful rerun write an identical comment body and appear not to update.
+
+Keep `.github/actions/ui-judge-comment` self-contained for self-hosted runners: set up Node inside the composite action before invoking `comment.mjs`, rather than requiring every caller job to prepare `node` separately.
+
 Do not add changed-file gating or GitHub API calls to the Rust screenshot unit-test job.
