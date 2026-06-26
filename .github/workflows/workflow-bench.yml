@@ -36,10 +36,10 @@ jobs:
       - uses: actions/checkout@93cb6efe18208431cddfb8368fd83d5badbf9bfd # v5
         with:
           persist-credentials: false
-      - uses: actions/setup-node@a0853c24544627f65ddf259abe73b1d18a591444 # v5
+      - name: Install
+        uses: ./.github/actions/pnpm-install
         with:
           node-version: "24"
-          package-manager-cache: false
       - uses: astral-sh/setup-uv@d0cc045d04ccac9d8b7881df0226f9e82c39688e # v6
       - name: Setup Rust
         shell: bash
@@ -77,11 +77,6 @@ jobs:
           # different OSS bucket than this physical-exclusive runner, so we
           # tolerate cache misses and let `pnpm turbo build` rebuild locally.
           key: turbo-v4-${{ runner.os }}-${{ hashFiles('**/packages/**/src/**/*.rs') }}-${{ github.sha }}
-      - name: Install
-        run: |
-          npm install -g corepack@latest
-          corepack enable
-          pnpm install --frozen-lockfile
       - name: Build
         run: |
           pnpm turbo build

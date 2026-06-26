@@ -1,0 +1,48 @@
+name: pnpm install
+description: Install pnpm dependencies with store cache
+
+inputs:
+  node-version:
+    description: Node.js version to install
+    default: "22"
+    required: false
+  save-if:
+    description: Whether to save the cache (set to true on main branch builds)
+    default: "true"
+    required: false
+
+runs:
+  using: composite
+  steps:
+    - uses: actions/setup-node@a0853c24544627f65ddf259abe73b1d18a591444 # v5
+      with:
+        node-version: ${{ inputs.node-version }}
+        package-manager-cache: false
+
+    - name: Get pnpm store directory
+      id: pnpm-store
+      shell: bash
+      run: | # zizmor: ignore[adhoc-packages] corepack must be installed globally outside of a lockfile
+        npm install -g corepack@latest
+        corepack enable
+        echo "path=$(pnpm store path)" >> "$GITHUB_OUTPUT"
+
+    - name: Restore pnpm store cache
+      id: restore
+      uses: lynx-infra/cache/restore@5c6160a6a4c7fca80a2f3057bb9dfc9513fcb732
+      with:
+        path: ${{ steps.pnpm-store.outputs.path }}
+        key: pnpm-store-v1-${{ runner.os }}-${{ hashFiles('pnpm-lock.yaml') }}
+        restore-keys: |
+          pnpm-store-v1-${{ runner.os }}-
+
+    - name: Install
+      shell: bash
+      run: pnpm install --frozen-lockfile
+
+    - name: Save pnpm store cache
+      if: ${{ inputs.save-if == 'true' && steps.restore.outputs.cache-hit != 'true' }}
+      uses: lynx-infra/cache/save@5c6160a6a4c7fca80a2f3057bb9dfc9513fcb732
+      with:
+        path: ${{ steps.pnpm-store.outputs.path }}
+        key: pnpm-store-v1-${{ runner.os }}-${{ hashFiles('pnpm-lock.yaml') }}

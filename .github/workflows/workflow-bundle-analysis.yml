@@ -34,10 +34,6 @@ jobs:
       - uses: actions/checkout@93cb6efe18208431cddfb8368fd83d5badbf9bfd # v5
         with:
           persist-credentials: false
-      - uses: actions/setup-node@a0853c24544627f65ddf259abe73b1d18a591444 # v5
-        with:
-          node-version: "24"
-          package-manager-cache: false
       - name: TurboCache
         uses: lynx-infra/cache@5c6160a6a4c7fca80a2f3057bb9dfc9513fcb732
         with:
@@ -46,10 +42,9 @@ jobs:
           key: turbo-v4-${{ runner.os }}-${{ hashFiles('**/packages/**/src/**/*.rs') }}-${{ github.sha }}
           fail-on-cache-miss: true
       - name: Install
-        run: |
-          npm install -g corepack@latest
-          corepack enable
-          pnpm install --frozen-lockfile
+        uses: ./.github/actions/pnpm-install
+        with:
+          node-version: "24"
       - name: Build
         run: |
           pnpm turbo build --summarize

@@ -81,10 +81,6 @@ jobs:
       - uses: actions/checkout@93cb6efe18208431cddfb8368fd83d5badbf9bfd # v5
         with:
           persist-credentials: false
-      - uses: actions/setup-node@a0853c24544627f65ddf259abe73b1d18a591444 # v5
-        with:
-          node-version: "22"
-          package-manager-cache: false
       - name: Setup Rust
         uses: ./.github/actions/rustup
         with:
@@ -105,10 +101,7 @@ jobs:
             turbo-v4-${{ runner.os }}-${{ hashFiles('packages/**/src/**/*.rs') }}-
             turbo-v4-${{ runner.os }}-
       - name: Install
-        run: |
-          npm install -g corepack@latest
-          corepack enable
-          pnpm install --frozen-lockfile
+        uses: ./.github/actions/pnpm-install
       - name: Build
         id: build
         run: |
