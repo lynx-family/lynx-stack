@@ -8,6 +8,7 @@ import { join } from 'node:path';
 import { pluginSass } from '@rsbuild/plugin-sass';
 import { defineConfig } from '@rspress/core';
 import type { Sidebar, UserConfig } from '@rspress/core';
+import { pluginClientRedirects } from '@rspress/plugin-client-redirects';
 import {
   transformerNotationDiff,
   transformerNotationFocus,
@@ -471,6 +472,16 @@ const config: UserConfig = defineConfig({
   route: {
     cleanUrls: true,
   },
+  plugins: [
+    pluginClientRedirects({
+      redirects: [
+        {
+          from: '^/a2ui(?:\\.html|/index\\.html|/)?$',
+          to: '/genui',
+        },
+      ],
+    }),
+  ],
   themeConfig: {
     editLink: {
       docRepoBaseUrl:
