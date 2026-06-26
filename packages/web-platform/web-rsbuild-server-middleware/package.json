@@ -4,6 +4,10 @@
   "private": false,
   "description": "a dev server middleware for rsbuild to serve Lynx Web Platform shell project",
   "keywords": [],
+  "homepage": "https://github.com/lynx-family/lynx-stack/tree/main/packages/web-platform/web-rsbuild-server-middleware#readme",
+  "bugs": {
+    "url": "https://github.com/lynx-family/lynx-stack/issues"
+  },
   "repository": {
     "type": "git",
     "url": "git+https://github.com/lynx-family/lynx-stack.git",

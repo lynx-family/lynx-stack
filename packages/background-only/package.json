@@ -6,6 +6,10 @@
     "react",
     "lynx"
   ],
+  "homepage": "https://github.com/lynx-family/lynx-stack/tree/main/packages/background-only#readme",
+  "bugs": {
+    "url": "https://github.com/lynx-family/lynx-stack/issues"
+  },
   "repository": {
     "type": "git",
     "url": "https://github.com/lynx-family/lynx-stack.git",

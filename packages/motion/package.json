@@ -9,6 +9,10 @@
     "motion",
     "framer-motion"
   ],
+  "homepage": "https://github.com/lynx-family/lynx-stack/tree/main/packages/motion#readme",
+  "bugs": {
+    "url": "https://github.com/lynx-family/lynx-stack/issues"
+  },
   "repository": {
     "type": "git",
     "url": "git+https://github.com/lynx-family/lynx-stack.git",

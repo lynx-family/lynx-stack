@@ -9,6 +9,10 @@
     "external bundle",
     "umd"
   ],
+  "homepage": "https://github.com/lynx-family/lynx-stack/tree/main/packages/react-umd#readme",
+  "bugs": {
+    "url": "https://github.com/lynx-family/lynx-stack/issues"
+  },
   "repository": {
     "type": "git",
     "url": "https://github.com/lynx-family/lynx-stack.git",

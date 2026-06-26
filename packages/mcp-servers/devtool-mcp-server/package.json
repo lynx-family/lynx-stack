@@ -2,6 +2,10 @@
   "name": "@lynx-js/devtool-mcp-server",
   "version": "0.5.1",
   "description": "The Lynx DevTool for coding agent.",
+  "homepage": "https://github.com/lynx-family/lynx-stack/tree/main/packages/mcp-servers/devtool-mcp-server#readme",
+  "bugs": {
+    "url": "https://github.com/lynx-family/lynx-stack/issues"
+  },
   "repository": {
     "type": "git",
     "url": "git+https://github.com/lynx-family/lynx-stack.git",

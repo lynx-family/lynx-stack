@@ -8,6 +8,10 @@
     "rspeedy",
     "rsbuild"
   ],
+  "homepage": "https://github.com/lynx-family/lynx-stack/tree/main/packages/i18n/i18next-translation-dedupe#readme",
+  "bugs": {
+    "url": "https://github.com/lynx-family/lynx-stack/issues"
+  },
   "repository": {
     "type": "git",
     "url": "https://github.com/lynx-family/lynx-stack.git",
