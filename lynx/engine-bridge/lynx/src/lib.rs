@@ -3,6 +3,7 @@ mod env;
 mod error;
 mod renderer;
 mod resource;
+pub mod sys;
 mod view;
 
 pub use env::Env;
@@ -17,7 +18,7 @@ pub use resource::{
 };
 pub use view::{HeadlessView, HeadlessViewBuilder};
 
-pub use lynx_cpp_bridge::{lynx_key_event_t as KeyEvent, lynx_pointer_event_t as PointerEvent};
+pub use sys::{lynx_key_event_t as KeyEvent, lynx_pointer_event_t as PointerEvent};
 
 fn c_string(value: &str, field: &'static str) -> Result<std::ffi::CString> {
   std::ffi::CString::new(value).map_err(|_| Error::InteriorNul { field })

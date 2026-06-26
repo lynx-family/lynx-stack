@@ -1,5 +1,5 @@
+use crate::sys;
 use crate::{c_str_to_string, Env, Error, Result};
-use lynx_cpp_bridge as sys;
 use std::collections::HashMap;
 use std::ffi::{c_char, c_void, CStr, CString};
 use std::panic::{catch_unwind, AssertUnwindSafe};

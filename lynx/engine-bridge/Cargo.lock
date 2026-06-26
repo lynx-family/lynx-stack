@@ -5,13 +5,6 @@ version = 3
 [[package]]
 name = "lynx"
 version = "0.1.0"
-dependencies = [
- "lynx-cpp-bridge",
-]
-
-[[package]]
-name = "lynx-cpp-bridge"
-version = "0.1.0"
 
 [[package]]
 name = "lynx-headless-example"

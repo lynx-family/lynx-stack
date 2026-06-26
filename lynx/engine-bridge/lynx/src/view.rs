@@ -1,7 +1,7 @@
 use crate::buffer::CByteBuffer;
 use crate::resource::{GenericResourceFetcher, ResourceFetcher};
+use crate::sys;
 use crate::{c_string, Env, Error, Result, WindowlessRenderer};
-use lynx_cpp_bridge as sys;
 use std::ffi::{c_void, CString};
 use std::ptr;
 use std::sync::Arc;

@@ -1,4 +1,4 @@
-use lynx_cpp_bridge as sys;
+use crate::sys;
 use std::ffi::c_void;
 use std::ptr;
 
