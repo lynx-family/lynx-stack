@@ -20,6 +20,8 @@ export default defineConfig({
     }),
     pluginLynxConfig({
       enableCSSInlineVariables: true,
+      // required for CSS Logical Properties support
+      enableCSSInheritance: true,
     }),
   ],
 });
