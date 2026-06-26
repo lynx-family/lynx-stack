@@ -38,7 +38,7 @@
   },
   "devDependencies": {
     "@rstest/core": "catalog:rstest",
-    "@types/node": "^24.10.13",
+    "@types/node": "^24.13.2",
     "typescript": "^5.9.3"
   },
   "engines": {
