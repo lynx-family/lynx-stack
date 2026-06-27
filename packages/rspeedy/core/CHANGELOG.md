@@ -1,5 +1,15 @@
 # @lynx-js/rspeedy
 
+## 0.15.1
+
+### Patch Changes
+
+- Add Rspeedy config types for `entry.dependOn` and `cssLoader.modules`. ([#2871](https://github.com/lynx-family/lynx-stack/pull/2871))
+
+- Updated dependencies [[`cd195c1`](https://github.com/lynx-family/lynx-stack/commit/cd195c13fb3f6dd890562db1f2f3ca260b29f484)]:
+  - @lynx-js/debug-metadata-rsbuild-plugin@0.1.1
+  - @lynx-js/web-rsbuild-server-middleware@0.22.0
+
 ## 0.15.0
 
 ### Minor Changes
