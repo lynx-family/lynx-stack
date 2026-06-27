@@ -966,10 +966,10 @@ importers:
         version: 149.0.0
       next:
         specifier: 16.2.6
-        version: 16.2.6(@playwright/test@1.58.2)(react-dom@19.2.4(react@19.2.4))(react@19.2.4)(sass@1.99.0)
+        version: 16.2.6(@playwright/test@1.61.1)(react-dom@19.2.4(react@19.2.4))(react@19.2.4)(sass@1.99.0)
       playwright-core:
-        specifier: ^1.58.2
-        version: 1.58.2
+        specifier: ^1.61.1
+        version: 1.61.1
       react:
         specifier: 19.2.4
         version: 19.2.4
@@ -1003,10 +1003,10 @@ importers:
         version: 1.8.0(ws@8.20.0)
       '@midscene/web':
         specifier: ^1.8.0
-        version: 1.8.0(@playwright/test@1.58.2)(playwright@1.58.2)
+        version: 1.8.0(@playwright/test@1.61.1)(playwright@1.61.1)
       '@playwright/test':
-        specifier: ^1.58.2
-        version: 1.58.2
+        specifier: ^1.61.1
+        version: 1.61.1
       sharp:
         specifier: ^0.34.5
         version: 0.34.5
@@ -1991,8 +1991,8 @@ importers:
         version: 9.3.0
     devDependencies:
       '@playwright/test':
-        specifier: ^1.58.2
-        version: 1.58.2
+        specifier: ^1.61.1
+        version: 1.61.1
 
   packages/web-platform/web-core:
     dependencies:
@@ -2070,8 +2070,8 @@ importers:
         specifier: workspace:*
         version: link:../web-rsbuild-server-middleware
       '@playwright/test':
-        specifier: ^1.58.2
-        version: 1.58.2
+        specifier: ^1.61.1
+        version: 1.61.1
       '@rsbuild/core':
         specifier: catalog:rsbuild
         version: 2.0.11(core-js@3.49.0)
@@ -2104,8 +2104,8 @@ importers:
         specifier: workspace:*
         version: link:../playwright-fixtures
       '@playwright/test':
-        specifier: ^1.58.2
-        version: 1.58.2
+        specifier: ^1.61.1
+        version: 1.61.1
       '@rsbuild/core':
         specifier: catalog:rsbuild
         version: 2.0.11(core-js@3.49.0)
@@ -4729,8 +4729,8 @@ packages:
     resolution: {integrity: sha512-+1VkjdD0QBLPodGrJUeqarH8VAIvQODIbwh9XpP5Syisf7YoQgsJKPNFoqqLQlu+VQ/tVSshMR6loPMn8U+dPg==}
     engines: {node: '>=14'}
 
-  '@playwright/test@1.58.2':
-    resolution: {integrity: sha512-akea+6bHYBBfA9uQqSYmlJXn61cTa+jbO87xVLCWbTqbWadRVmhxlXATaOjOgcBaWU4ePo0wB41KMFv3o35IXA==}
+  '@playwright/test@1.61.1':
+    resolution: {integrity: sha512-8nKv6+0RJSL9FE4jYOEGXnPeM/Hg12qZpmqzZjRh3qM0Y7c3z1mrOTfFLids72RDQYVh9WpLEfR5WdpNX4fkig==}
     engines: {node: '>=18'}
     hasBin: true
 
@@ -10096,13 +10096,13 @@ packages:
     resolution: {integrity: sha512-HRDzbaKjC+AOWVXxAU/x54COGeIv9eb+6CkDSQoNTt4XyWoIJvuPsXizxu/Fr23EiekbtZwmh1IcIG/l/a10GQ==}
     engines: {node: '>=8'}
 
-  playwright-core@1.58.2:
-    resolution: {integrity: sha512-yZkEtftgwS8CsfYo7nm0KE8jsvm6i/PTgVtB8DL726wNf6H2IMsDuxCpJj59KDaxCtSnrWan2AeDqM7JBaultg==}
+  playwright-core@1.61.1:
+    resolution: {integrity: sha512-h7Qlt6m4REp25qvIdvbDtVmD4LqVXfpRxhORv9L0jzETM05p4fuPJ3dKyuSXQxDSbXnmS79HAgi9589lGSpLkg==}
     engines: {node: '>=18'}
     hasBin: true
 
-  playwright@1.58.2:
-    resolution: {integrity: sha512-vA30H8Nvkq/cPBnNw4Q8TWz1EJyqgpuinBcHET0YVJVFldr8JDNiU9LaWAE1KqSkRYazuaBhTpB5ZzShOezQ6A==}
+  playwright@1.61.1:
+    resolution: {integrity: sha512-DWnY5o3YbLWK4GovuAVwpqL+1VwGNdUGrRr++8j8PtQQzvAVZUIMjKQ90fY689sEJZJBbZVw1rXaOKSTitkzPQ==}
     engines: {node: '>=18'}
     hasBin: true
 
@@ -14884,7 +14884,7 @@ snapshots:
     transitivePeerDependencies:
       - supports-color
 
-  '@midscene/web@1.8.0(@playwright/test@1.58.2)(playwright@1.58.2)':
+  '@midscene/web@1.8.0(@playwright/test@1.61.1)(playwright@1.61.1)':
     dependencies:
       '@midscene/core': 1.8.0(ws@8.20.0)
       '@midscene/playground': 1.8.0(ws@8.20.0)
@@ -14893,14 +14893,14 @@ snapshots:
       dayjs: 1.11.20
       dotenv: 16.4.7
       http-server: 14.1.1
-      playwright: 1.58.2
+      playwright: 1.61.1
       puppeteer-core: 24.6.0
       semver: 7.5.2
       socket.io: 4.8.1
       socket.io-client: 4.8.1
       ws: 8.20.0
     optionalDependencies:
-      '@playwright/test': 1.58.2
+      '@playwright/test': 1.61.1
     transitivePeerDependencies:
       - bare-abort-controller
       - bare-buffer
@@ -15101,9 +15101,9 @@ snapshots:
   '@pkgjs/parseargs@0.11.0':
     optional: true
 
-  '@playwright/test@1.58.2':
+  '@playwright/test@1.61.1':
     dependencies:
-      playwright: 1.58.2
+      playwright: 1.61.1
 
   '@polka/url@1.0.0-next.25': {}
 
@@ -20951,7 +20951,7 @@ snapshots:
 
   netmask@2.1.1: {}
 
-  next@16.2.6(@playwright/test@1.58.2)(react-dom@19.2.4(react@19.2.4))(react@19.2.4)(sass@1.99.0):
+  next@16.2.6(@playwright/test@1.61.1)(react-dom@19.2.4(react@19.2.4))(react@19.2.4)(sass@1.99.0):
     dependencies:
       '@next/env': 16.2.6
       '@swc/helpers': 0.5.15
@@ -20970,7 +20970,7 @@ snapshots:
       '@next/swc-linux-x64-musl': 16.2.6
       '@next/swc-win32-arm64-msvc': 16.2.6
       '@next/swc-win32-x64-msvc': 16.2.6
-      '@playwright/test': 1.58.2
+      '@playwright/test': 1.61.1
       sass: 1.99.0
       sharp: 0.34.5
     transitivePeerDependencies:
@@ -21327,11 +21327,11 @@ snapshots:
     dependencies:
       find-up: 4.1.0
 
-  playwright-core@1.58.2: {}
+  playwright-core@1.61.1: {}
 
-  playwright@1.58.2:
+  playwright@1.61.1:
     dependencies:
-      playwright-core: 1.58.2
+      playwright-core: 1.61.1
     optionalDependencies:
       fsevents: 2.3.2
 
