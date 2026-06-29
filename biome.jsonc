@@ -10,6 +10,7 @@
     // This generated stylesheet exceeds Biome's file-size limit and should be skipped entirely.
     "ignore": [
       "packages/genui/a2ui/styles/theme.css",
+      "lynx/engine-bridge/examples/headless/tests/fixtures/LynxResources.bundle/**",
     ],
   },
   "organizeImports": {

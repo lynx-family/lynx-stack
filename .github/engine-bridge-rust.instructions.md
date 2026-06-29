@@ -12,4 +12,6 @@ For macOS runtime experiments, remember that `LynxResources.bundle` is resolved 
 
 Keep the safe API surface tied to exercised workflows. Do not add view-client lifecycle wrappers, callback glue, or extra dylib symbols only for debugging screenshot tests unless a committed integration path uses them.
 
+Treat files under `examples/headless/tests/fixtures/LynxResources.bundle` as vendored runtime resources. Keep them out of repository-wide formatting, lint, and typo checks; they are copied beside the Cargo-built binary so macOS `NSBundle` lookup can resolve `lynx_core.js`.
+
 Keep `README.md` and `docs/architecture.md` in sync with API or ownership changes. Do not add SDK packaging scripts unless the workspace also owns the build inputs and CI path that validate them.
