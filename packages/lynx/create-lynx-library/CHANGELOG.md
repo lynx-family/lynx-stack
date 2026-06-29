@@ -1,5 +1,11 @@
 # create-lynx-library
 
+## 0.2.1
+
+### Patch Changes
+
+- Add Android and iOS platform selection to library scaffolding and make native autolink codegen honor the platforms declared in `lynx.lib.json`. ([#2864](https://github.com/lynx-family/lynx-stack/pull/2864))
+
 ## 0.2.0
 
 ### Minor Changes

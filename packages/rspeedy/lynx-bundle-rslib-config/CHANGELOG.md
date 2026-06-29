@@ -1,5 +1,18 @@
 # @lynx-js/lynx-bundle-rslib-config
 
+## 0.5.0
+
+### Minor Changes
+
+- Add a `web` encode target to `defineExternalBundleRslibConfig` (`encodeOptions.target: 'web'`). ([#2846](https://github.com/lynx-family/lynx-stack/pull/2846))
+
+  When set, the external bundle is emitted as a web binary bundle (`<name>.web.bundle`, encoded via `@lynx-js/web-core/encode`) that the Lynx web platform can decode and load with `lynx.fetchBundle` / `lynx.loadScript`. For the web target, each section is routed to the bundle slot whose chunk format it matches — the main-thread chunk into `lepusCode`, other JS chunks into `manifest`, and CSS into `StyleInfo` — emitting JS as raw source (the web runtime wraps it at load). The default `target: 'tasm'` (the native bundle via `@lynx-js/tasm`) is unchanged.
+
+### Patch Changes
+
+- Updated dependencies [[`46573b5`](https://github.com/lynx-family/lynx-stack/commit/46573b5f7fb59a8f85492cb1f6929887d77a5a42), [`88922df`](https://github.com/lynx-family/lynx-stack/commit/88922df8e09696eb4e24a027e3ed7269f9cc05f1)]:
+  - @lynx-js/web-core@0.22.0
+
 ## 0.4.0
 
 ### Minor Changes
