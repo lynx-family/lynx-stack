@@ -56,6 +56,8 @@ export const mainthreadwasmcontext_set_attribute_of_element_template: (a: number
 export const mainthreadwasmcontext_set_config: (a: number, b: number, c: any) => [number, number];
 export const mainthreadwasmcontext_set_css_id: (a: number, b: number, c: number, d: number, e: number, f: number) => [number, number];
 export const mainthreadwasmcontext_set_dataset: (a: number, b: number, c: any, d: any) => [number, number];
+export const mainthreadwasmcontext_set_inline_styles_in_key_value_vec: (a: number, b: any, c: number, d: number) => void;
+export const mainthreadwasmcontext_set_inline_styles_in_str: (a: number, b: any, c: number, d: number) => number;
 export const mainthreadwasmcontext_set_page_element_unique_id: (a: number, b: number) => void;
 export const mainthreadwasmcontext_take_timing_flags: (a: number) => [number, number];
 export const mainthreadwasmcontext_update_component_css_id: (a: number, b: number, c: number) => [number, number];
@@ -71,8 +73,6 @@ export const rule_set_prelude: (a: number, b: number) => void;
 export const ruleprelude_new: () => number;
 export const ruleprelude_push_selector: (a: number, b: number) => void;
 export const selector_push_one_selector_section: (a: number, b: number, c: number, d: number, e: number) => [number, number];
-export const set_inline_styles_in_key_value_vec: (a: any, b: number, c: number, d: number, e: number, f: number) => void;
-export const set_inline_styles_in_str: (a: any, b: number, c: number, d: number, e: number, f: number) => number;
 export const set_inline_styles_number_key: (a: any, b: number, c: number, d: number) => void;
 export const stylesheetresource_new: (a: any, b: any) => [number, number, number];
 export const selector_new: () => number;

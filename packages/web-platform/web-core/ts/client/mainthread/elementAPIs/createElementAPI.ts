@@ -55,8 +55,6 @@ const {
   MainThreadWasmContext,
   add_inline_style_raw_string_key,
   set_inline_styles_number_key,
-  set_inline_styles_in_str,
-  set_inline_styles_in_key_value_vec,
 } = wasmInstance;
 
 function dispatchLynxViewLoadEvent(host: HTMLElement & { url?: string }) {
@@ -421,12 +419,9 @@ export function createElementAPI(
       } else {
         if (typeof value === 'string') {
           if (
-            !set_inline_styles_in_str(
+            !wasmContext.set_inline_styles_in_str(
               element,
               value,
-              transform_vw,
-              transform_vh,
-              transform_rem,
             )
           ) {
             element.setAttribute('style', value);
@@ -440,12 +435,9 @@ export function createElementAPI(
               vec.push(k, v.toString());
             }
           }
-          set_inline_styles_in_key_value_vec(
+          wasmContext.set_inline_styles_in_key_value_vec(
             element,
             vec,
-            transform_vw,
-            transform_vh,
-            transform_rem,
           );
         }
       }

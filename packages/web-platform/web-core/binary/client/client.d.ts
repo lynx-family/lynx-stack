@@ -66,6 +66,8 @@ export class MainThreadWasmContext {
     set_config(unique_id: number, config: object): void;
     set_css_id(elements_unique_id: Uint32Array, css_id: number, entry_name?: string | null): void;
     set_dataset(unique_id: number, dom: HTMLElement, new_dataset: object): void;
+    set_inline_styles_in_key_value_vec(dom: HTMLElement, k_v_vec: string[]): void;
+    set_inline_styles_in_str(dom: HTMLElement, styles: string): boolean;
     set_page_element_unique_id(unique_id: number): void;
     take_timing_flags(): string[];
     update_component_css_id(unique_id: number, component_css_id: number): void;
@@ -190,10 +192,6 @@ export function get_font_face_content(buffer: Uint8Array): string;
 
 export function get_style_content(buffer: Uint8Array): string;
 
-export function set_inline_styles_in_key_value_vec(dom: HTMLElement, k_v_vec: string[], transform_vw: boolean, transform_vh: boolean, transform_rem: boolean): void;
-
-export function set_inline_styles_in_str(dom: HTMLElement, styles: string, transform_vw: boolean, transform_vh: boolean, transform_rem: boolean): boolean;
-
 export function set_inline_styles_number_key(dom: HTMLElement, key: number, value?: string | null): void;
 
 export type InitInput = RequestInfo | URL | Response | BufferSource | WebAssembly.Module;
@@ -255,6 +253,8 @@ export interface InitOutput {
     readonly mainthreadwasmcontext_set_config: (a: number, b: number, c: any) => [number, number];
     readonly mainthreadwasmcontext_set_css_id: (a: number, b: number, c: number, d: number, e: number, f: number) => [number, number];
     readonly mainthreadwasmcontext_set_dataset: (a: number, b: number, c: any, d: any) => [number, number];
+    readonly mainthreadwasmcontext_set_inline_styles_in_key_value_vec: (a: number, b: any, c: number, d: number) => void;
+    readonly mainthreadwasmcontext_set_inline_styles_in_str: (a: number, b: any, c: number, d: number) => number;
     readonly mainthreadwasmcontext_set_page_element_unique_id: (a: number, b: number) => void;
     readonly mainthreadwasmcontext_take_timing_flags: (a: number) => [number, number];
     readonly mainthreadwasmcontext_update_component_css_id: (a: number, b: number, c: number) => [number, number];
@@ -270,8 +270,6 @@ export interface InitOutput {
     readonly ruleprelude_new: () => number;
     readonly ruleprelude_push_selector: (a: number, b: number) => void;
     readonly selector_push_one_selector_section: (a: number, b: number, c: number, d: number, e: number) => [number, number];
-    readonly set_inline_styles_in_key_value_vec: (a: any, b: number, c: number, d: number, e: number, f: number) => void;
-    readonly set_inline_styles_in_str: (a: any, b: number, c: number, d: number, e: number, f: number) => number;
     readonly set_inline_styles_number_key: (a: any, b: number, c: number, d: number) => void;
     readonly stylesheetresource_new: (a: any, b: any) => [number, number, number];
     readonly selector_new: () => number;

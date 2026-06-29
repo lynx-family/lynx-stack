@@ -6,7 +6,6 @@
 
 use super::main_thread_context::MainThreadWasmContext;
 use crate::constants;
-use crate::style_transformer::token_transformer::TransformerConfig;
 use crate::style_transformer::{
   transform_inline_style_key_value_vec, transform_inline_style_string,
 };
@@ -51,7 +50,6 @@ pub struct ElementTemplateDefinitionBuilder {
   definition: ElementTemplateDefinition,
   document: Document,
   elements: Vec<HtmlElement>,
-  transformer_config: TransformerConfig,
 }
 
 pub(crate) struct InstanceAttributeBinding {
@@ -167,7 +165,8 @@ impl ElementTemplateDefinitionBuilder {
     };
 
     if normalized_key == "style" {
-      MainThreadWasmContext::set_style_attribute(&element, &value, &self.transformer_config);
+      // Static template styles are written when the builder is registered so
+      // the transform config has one owner: MainThreadWasmContext.
     } else if MainThreadWasmContext::value_is_nullish(&value) {
       let _ = element.remove_attribute(normalized_key);
     } else {
@@ -279,15 +278,11 @@ impl MainThreadWasmContext {
       .ok()
   }
 
-  fn set_style_attribute(
-    element: &HtmlElement,
-    value: &JsValue,
-    transformer_config: &TransformerConfig,
-  ) {
+  fn set_style_attribute(&self, element: &HtmlElement, value: &JsValue) {
     if Self::value_is_nullish(value) {
       let _ = element.remove_attribute("style");
     } else if let Some(style) = value.as_string() {
-      let transformed = transform_inline_style_string(&style, transformer_config);
+      let transformed = transform_inline_style_string(&style, &self.transformer_config);
       if transformed == style {
         let _ = element.set_attribute("style", &style);
       } else {
@@ -306,7 +301,8 @@ impl MainThreadWasmContext {
           }
         }
       }
-      let transformed = transform_inline_style_key_value_vec(key_value_vec, transformer_config);
+      let transformed =
+        transform_inline_style_key_value_vec(key_value_vec, &self.transformer_config);
       let _ = element.set_attribute("style", &transformed);
     } else {
       let _ = element.set_attribute("style", &Self::value_to_string(value));
@@ -406,7 +402,7 @@ impl MainThreadWasmContext {
     }
 
     if normalized_key == "style" {
-      Self::set_style_attribute(&element, value, &self.transformer_config);
+      self.set_style_attribute(&element, value);
       return Ok(());
     }
 
@@ -823,7 +819,6 @@ impl MainThreadWasmContext {
       },
       document: self.document.clone(),
       elements: Vec::new(),
-      transformer_config: self.transformer_config,
     })
   }
 
@@ -839,6 +834,12 @@ impl MainThreadWasmContext {
       .is_none()
     {
       return Err(JsError::new("Element template definition missing root"));
+    }
+    for binding in &definition_builder.definition.static_bindings {
+      if binding.key == "style" {
+        let element = definition_builder.element_by_index(binding.element_index)?;
+        self.set_style_attribute(&element, &binding.value);
+      }
     }
     let definition = definition_builder.definition;
     let identity_key =
