@@ -282,36 +282,6 @@ impl MainThreadWasmContext {
       .and_then(|value| value.parse::<usize>().ok())
   }
 
-  fn collect_descendant_template_unique_ids(node: &Node, unique_ids: &mut Vec<usize>) {
-    if let Some(element) = node.dyn_ref::<HtmlElement>() {
-      if let Some(unique_id) = element
-        .get_attribute(constants::LYNX_ELEMENT_TEMPLATE_MARKER_ATTRIBUTE)
-        .and_then(|value| value.parse::<usize>().ok())
-      {
-        unique_ids.push(unique_id);
-      }
-    }
-
-    let mut child = node.first_child();
-    while let Some(current) = child {
-      child = current.next_sibling();
-      Self::collect_descendant_template_unique_ids(&current, unique_ids);
-    }
-  }
-
-  fn collect_removed_subtree_unique_ids(element: &HtmlElement) -> Vec<usize> {
-    let mut unique_ids = Vec::new();
-    if let Some(unique_id) = Self::element_template_root_unique_id(element) {
-      unique_ids.push(unique_id);
-    }
-    let mut child = element.first_child();
-    while let Some(current) = child {
-      child = current.next_sibling();
-      Self::collect_descendant_template_unique_ids(&current, &mut unique_ids);
-    }
-    unique_ids
-  }
-
   fn get_dom_by_unique_id_strong(&self, unique_id: usize) -> Option<HtmlElement> {
     self
       .unique_id_to_dom_map
@@ -319,30 +289,6 @@ impl MainThreadWasmContext {
       .deref()?
       .dyn_into::<HtmlElement>()
       .ok()
-  }
-
-  fn collect_clone_nodes(
-    node: &Node,
-    elements: &mut Vec<HtmlElement>,
-    slot_anchors: &mut FnvHashMap<usize, Node>,
-  ) {
-    if let Some(element) = node.dyn_ref::<HtmlElement>() {
-      elements.push(element.clone());
-    } else if node.node_type() == Node::COMMENT_NODE {
-      if let Some(value) = node.node_value() {
-        if let Some(slot_index) = value.strip_prefix(SLOT_ANCHOR_PREFIX) {
-          if let Ok(slot_index) = slot_index.parse::<usize>() {
-            slot_anchors.insert(slot_index, node.clone());
-          }
-        }
-      }
-    }
-
-    let mut child = node.first_child();
-    while let Some(current) = child {
-      child = current.next_sibling();
-      Self::collect_clone_nodes(&current, elements, slot_anchors);
-    }
   }
 
   fn set_style_attribute(
@@ -815,20 +761,6 @@ impl MainThreadWasmContext {
     Ok(serialized.into())
   }
 
-  fn cleanup_element_template_instance(&mut self, root_unique_id: usize) {
-    let Some(instance) = self.element_template_instances.remove(&root_unique_id) else {
-      return;
-    };
-    if self.page_element_unique_id == Some(root_unique_id) {
-      self.page_element_unique_id = None;
-    }
-    for children in instance.element_slots.into_values() {
-      for child_unique_id in children {
-        self.cleanup_element_template_instance(child_unique_id);
-      }
-    }
-  }
-
   fn detach_element_template_instance_references(&mut self, root_unique_ids: &FnvHashSet<usize>) {
     for instance in self.element_template_instances.values_mut() {
       instance.element_slots.retain(|_, children| {
@@ -842,10 +774,29 @@ impl MainThreadWasmContext {
     if unique_ids.is_empty() {
       return;
     }
-    let unique_id_set = unique_ids.iter().copied().collect::<FnvHashSet<_>>();
+    let mut unique_ids_to_remove = Vec::new();
+    let mut unique_id_set = FnvHashSet::default();
+    let mut pending_unique_ids = unique_ids;
+    while let Some(unique_id) = pending_unique_ids.pop() {
+      if !unique_id_set.insert(unique_id) {
+        continue;
+      }
+      unique_ids_to_remove.push(unique_id);
+      if let Some(instance) = self.element_template_instances.get(&unique_id) {
+        pending_unique_ids.extend(
+          instance
+            .element_slots
+            .values()
+            .flat_map(|children| children.iter().copied()),
+        );
+      }
+    }
     self.detach_element_template_instance_references(&unique_id_set);
-    for root_unique_id in unique_ids {
-      self.cleanup_element_template_instance(root_unique_id);
+    for root_unique_id in unique_ids_to_remove {
+      if self.page_element_unique_id == Some(root_unique_id) {
+        self.page_element_unique_id = None;
+      }
+      self.element_template_instances.remove(&root_unique_id);
     }
   }
 
@@ -943,7 +894,32 @@ impl MainThreadWasmContext {
 
     let mut elements = Vec::new();
     let mut slot_anchors = FnvHashMap::default();
-    Self::collect_clone_nodes(&root_node, &mut elements, &mut slot_anchors);
+    {
+      // Walk the cloned DOM in preorder so template element indexes keep the
+      // same order as the builder used while registering the definition.
+      let mut pending_nodes = vec![root_node.clone()];
+      while let Some(node) = pending_nodes.pop() {
+        if let Some(element) = node.dyn_ref::<HtmlElement>() {
+          elements.push(element.clone());
+        } else if node.node_type() == Node::COMMENT_NODE {
+          if let Some(value) = node.node_value() {
+            if let Some(slot_index) = value.strip_prefix(SLOT_ANCHOR_PREFIX) {
+              if let Ok(slot_index) = slot_index.parse::<usize>() {
+                slot_anchors.insert(slot_index, node.clone());
+              }
+            }
+          }
+        }
+
+        let mut child_nodes = Vec::new();
+        let mut child = node.first_child();
+        while let Some(current) = child {
+          child = current.next_sibling();
+          child_nodes.push(current);
+        }
+        pending_nodes.extend(child_nodes.into_iter().rev());
+      }
+    }
     let mut unique_ids_by_index = Vec::with_capacity(elements.len());
     for element in &elements {
       let css_id = element
@@ -1397,7 +1373,36 @@ impl MainThreadWasmContext {
         .remove_child(&child)
         .map_err(|e| JsError::new(&format!("Failed to remove slot child: {e:?}")))?;
     }
-    self.cleanup_element_template_instances(Self::collect_removed_subtree_unique_ids(&child));
+    let mut unique_ids = Vec::new();
+    let mut pending_nodes = vec![(child.clone().unchecked_into::<Node>(), true)];
+    while let Some((node, include_plain_uid)) = pending_nodes.pop() {
+      if let Some(element) = node.dyn_ref::<HtmlElement>() {
+        let unique_id = if include_plain_uid {
+          Self::element_template_root_unique_id(element)
+        } else {
+          element
+            .get_attribute(constants::LYNX_ELEMENT_TEMPLATE_MARKER_ATTRIBUTE)
+            .and_then(|value| value.parse::<usize>().ok())
+        };
+        if let Some(unique_id) = unique_id {
+          unique_ids.push(unique_id);
+        }
+      }
+
+      let mut child_nodes = Vec::new();
+      let mut child = node.first_child();
+      while let Some(current) = child {
+        child = current.next_sibling();
+        child_nodes.push(current);
+      }
+      pending_nodes.extend(
+        child_nodes
+          .into_iter()
+          .rev()
+          .map(|child_node| (child_node, false)),
+      );
+    }
+    self.cleanup_element_template_instances(unique_ids);
     Ok(())
   }
 
