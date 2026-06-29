@@ -8,6 +8,7 @@ import type {
   ElementTemplateElementNode,
 } from '../../types/index.js';
 import { cssIdAttribute, LYNX_TAG_TO_HTML_TAG_MAP } from '../../constants.js';
+import { wasmInstance } from '../wasm.js';
 import type { MainThreadWasmContext } from '../wasm.js';
 
 export const elementTemplateSlotAnchorPrefix = 'lynx-et-slot:';
@@ -54,7 +55,7 @@ export function registerElementTemplates(
 
   for (const { templateId, compiledTemplate } of elementTemplates ?? []) {
     const template = document.createElement('template');
-    const definitionId = wasmContext.create_element_template_definition(
+    const definition = new wasmInstance.ElementTemplateDefinition(
       templateId,
       bundleUrl,
     );
@@ -99,32 +100,28 @@ export function registerElementTemplates(
           case 'static':
             switch (typeof attribute.value) {
               case 'string':
-                wasmContext.add_element_template_static_string_binding(
-                  definitionId,
+                definition.add_static_string_binding(
                   elementIndex,
                   attribute.key,
                   attribute.value,
                 );
                 break;
               case 'number':
-                wasmContext.add_element_template_static_number_binding(
-                  definitionId,
+                definition.add_static_number_binding(
                   elementIndex,
                   attribute.key,
                   attribute.value,
                 );
                 break;
               case 'boolean':
-                wasmContext.add_element_template_static_bool_binding(
-                  definitionId,
+                definition.add_static_bool_binding(
                   elementIndex,
                   attribute.key,
                   attribute.value,
                 );
                 break;
               default:
-                wasmContext.add_element_template_static_null_binding(
-                  definitionId,
+                definition.add_static_null_binding(
                   elementIndex,
                   attribute.key,
                 );
@@ -174,8 +171,7 @@ export function registerElementTemplates(
               maxAttributeSlotIndex,
               attribute.attrSlotIndex,
             );
-            wasmContext.add_element_template_attribute_binding(
-              definitionId,
+            definition.add_attribute_binding(
               elementIndex,
               attribute.attrSlotIndex,
               attribute.key,
@@ -186,8 +182,7 @@ export function registerElementTemplates(
               maxAttributeSlotIndex,
               attribute.attrSlotIndex,
             );
-            wasmContext.add_element_template_spread_binding(
-              definitionId,
+            definition.add_spread_binding(
               elementIndex,
               attribute.attrSlotIndex,
             );
@@ -217,7 +212,7 @@ export function registerElementTemplates(
       }
     }
 
-    wasmContext.finish_element_template_definition(definitionId);
+    wasmContext.register_element_template_definition(definition);
     registry.set(getElementTemplateIdentityKey(templateId, bundleUrl), {
       template,
       maxAttributeSlotIndex,

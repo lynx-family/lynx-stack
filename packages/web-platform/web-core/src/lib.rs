@@ -18,8 +18,8 @@ pub mod utils;
 #[cfg(feature = "client")]
 pub use main_thread::{
   client::{
-    element_apis::event_apis::EventInfo, main_thread_context::MainThreadWasmContext,
-    style_manager::StyleManager,
+    element_apis::event_apis::EventInfo, element_template::ElementTemplateDefinition,
+    main_thread_context::MainThreadWasmContext, style_manager::StyleManager,
   },
   element_data::LynxElementData,
 };

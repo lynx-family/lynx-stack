@@ -135,14 +135,7 @@ describe('Element APIs', () => {
 
   test('registerElementTemplates builds template DOM in JS and updates Rust metadata incrementally', () => {
     const wasmContext = {
-      create_element_template_definition: rstest.fn(() => 11),
-      add_element_template_attribute_binding: rstest.fn(),
-      add_element_template_spread_binding: rstest.fn(),
-      add_element_template_static_bool_binding: rstest.fn(),
-      add_element_template_static_null_binding: rstest.fn(),
-      add_element_template_static_number_binding: rstest.fn(),
-      add_element_template_static_string_binding: rstest.fn(),
-      finish_element_template_definition: rstest.fn(),
+      register_element_template_definition: rstest.fn(),
       transform_element_template_style: rstest.fn((style: string) =>
         style.replace('width', 'height')
       ),
@@ -174,20 +167,11 @@ describe('Element APIs', () => {
       },
     ], 'lazy.js');
 
-    expect(wasmContext.create_element_template_definition)
-      .toHaveBeenCalledWith('_et_metadata', 'lazy.js');
-    expect(wasmContext.add_element_template_static_number_binding)
-      .toHaveBeenCalledWith(11, 0, 'css-id', 7);
-    expect(wasmContext.add_element_template_static_string_binding)
-      .toHaveBeenCalledWith(11, 0, 'style', 'width: 1px;');
-    expect(wasmContext.add_element_template_attribute_binding)
-      .toHaveBeenCalledWith(11, 0, 0, 'class');
-    expect(wasmContext.add_element_template_static_string_binding)
-      .toHaveBeenCalledWith(11, 1, 'text', 'hello');
-    expect(wasmContext.add_element_template_spread_binding)
-      .toHaveBeenCalledWith(11, 1, 1);
-    expect(wasmContext.finish_element_template_definition)
-      .toHaveBeenCalledWith(11);
+    expect(wasmContext.register_element_template_definition)
+      .toHaveBeenCalledTimes(1);
+    const definition = wasmContext.register_element_template_definition.mock
+      .calls[0]![0];
+    expect(definition).toBeInstanceOf(wasmInstance.ElementTemplateDefinition);
 
     const template = getRegisteredElementTemplate(
       wasmContext as any,
@@ -203,6 +187,7 @@ describe('Element APIs', () => {
     expect(root.childNodes[0]!.nodeName.toLowerCase()).toBe('raw-text');
     expect(root.childNodes[1]!.nodeType).toBe(8);
     expect(root.childNodes[1]!.nodeValue).toBe('lynx-et-slot:2');
+    definition.free();
   });
 
   test('element template creates, patches, moves, and serializes DOM from JS state', () => {

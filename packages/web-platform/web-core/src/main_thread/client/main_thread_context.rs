@@ -29,8 +29,6 @@ pub struct MainThreadWasmContext {
   pub(super) transformer_config: TransformerConfig,
   pub(super) style_manager: StyleManager,
   pub(super) global_bind_events: FnvHashMap<String, FnvHashSet<usize>>,
-  pub(super) next_element_template_definition_id: usize,
-  pub(super) element_template_definition_builders: FnvHashMap<usize, ElementTemplateDefinition>,
   pub(super) element_template_definitions: FnvHashMap<String, Rc<ElementTemplateDefinition>>,
   pub(super) element_template_instances: FnvHashMap<usize, ElementTemplateInstance>,
 }
@@ -74,8 +72,6 @@ impl MainThreadWasmContext {
       },
       style_manager,
       global_bind_events: FnvHashMap::default(),
-      next_element_template_definition_id: 0,
-      element_template_definition_builders: FnvHashMap::default(),
       element_template_definitions: FnvHashMap::default(),
       element_template_instances: FnvHashMap::default(),
     }

@@ -34,12 +34,68 @@ pub(crate) struct TemplateStaticBinding {
   value: JsValue,
 }
 
-pub(crate) struct ElementTemplateDefinition {
+#[wasm_bindgen]
+pub struct ElementTemplateDefinition {
   template_key: String,
   bundle_url: Option<String>,
   attribute_bindings: Vec<TemplateAttributeBinding>,
   spread_bindings: Vec<TemplateSpreadBinding>,
   static_bindings: Vec<TemplateStaticBinding>,
+}
+
+impl ElementTemplateDefinition {
+  fn add_static_binding(&mut self, element_index: usize, key: String, value: JsValue) {
+    self.static_bindings.push(TemplateStaticBinding {
+      element_index,
+      key,
+      value,
+    });
+  }
+}
+
+#[wasm_bindgen]
+impl ElementTemplateDefinition {
+  #[wasm_bindgen(constructor)]
+  pub fn new(template_key: String, bundle_url: Option<String>) -> ElementTemplateDefinition {
+    ElementTemplateDefinition {
+      template_key,
+      bundle_url,
+      attribute_bindings: Vec::new(),
+      spread_bindings: Vec::new(),
+      static_bindings: Vec::new(),
+    }
+  }
+
+  pub fn add_attribute_binding(&mut self, element_index: usize, slot_index: usize, key: String) {
+    self.attribute_bindings.push(TemplateAttributeBinding {
+      element_index,
+      slot_index,
+      key,
+    });
+  }
+
+  pub fn add_spread_binding(&mut self, element_index: usize, slot_index: usize) {
+    self.spread_bindings.push(TemplateSpreadBinding {
+      element_index,
+      slot_index,
+    });
+  }
+
+  pub fn add_static_string_binding(&mut self, element_index: usize, key: String, value: String) {
+    self.add_static_binding(element_index, key, JsValue::from_str(&value));
+  }
+
+  pub fn add_static_number_binding(&mut self, element_index: usize, key: String, value: f64) {
+    self.add_static_binding(element_index, key, JsValue::from_f64(value));
+  }
+
+  pub fn add_static_bool_binding(&mut self, element_index: usize, key: String, value: bool) {
+    self.add_static_binding(element_index, key, JsValue::from_bool(value));
+  }
+
+  pub fn add_static_null_binding(&mut self, element_index: usize, key: String) {
+    self.add_static_binding(element_index, key, JsValue::NULL);
+  }
 }
 
 pub(crate) struct InstanceAttributeBinding {
@@ -452,26 +508,6 @@ impl MainThreadWasmContext {
     self.cleanup_element_template_instances(ids_to_remove);
   }
 
-  fn add_element_template_static_binding(
-    &mut self,
-    definition_id: usize,
-    element_index: usize,
-    key: String,
-    value: JsValue,
-  ) -> Result<(), JsError> {
-    self
-      .element_template_definition_builders
-      .get_mut(&definition_id)
-      .ok_or_else(|| JsError::new("Element template definition builder not found"))?
-      .static_bindings
-      .push(TemplateStaticBinding {
-        element_index,
-        key,
-        value,
-      });
-    Ok(())
-  }
-
   fn insert_element_template_slot_child_state(
     &mut self,
     root_unique_id: usize,
@@ -510,132 +546,12 @@ impl MainThreadWasmContext {
 
 #[wasm_bindgen]
 impl MainThreadWasmContext {
-  pub fn create_element_template_definition(
-    &mut self,
-    template_key: String,
-    bundle_url: Option<String>,
-  ) -> usize {
-    let definition_id = self.next_element_template_definition_id;
-    self.next_element_template_definition_id += 1;
-    self.element_template_definition_builders.insert(
-      definition_id,
-      ElementTemplateDefinition {
-        template_key,
-        bundle_url,
-        attribute_bindings: Vec::new(),
-        spread_bindings: Vec::new(),
-        static_bindings: Vec::new(),
-      },
-    );
-    definition_id
-  }
-
-  pub fn add_element_template_attribute_binding(
-    &mut self,
-    definition_id: usize,
-    element_index: usize,
-    slot_index: usize,
-    key: String,
-  ) -> Result<(), JsError> {
-    self
-      .element_template_definition_builders
-      .get_mut(&definition_id)
-      .ok_or_else(|| JsError::new("Element template definition builder not found"))?
-      .attribute_bindings
-      .push(TemplateAttributeBinding {
-        element_index,
-        slot_index,
-        key,
-      });
-    Ok(())
-  }
-
-  pub fn add_element_template_spread_binding(
-    &mut self,
-    definition_id: usize,
-    element_index: usize,
-    slot_index: usize,
-  ) -> Result<(), JsError> {
-    self
-      .element_template_definition_builders
-      .get_mut(&definition_id)
-      .ok_or_else(|| JsError::new("Element template definition builder not found"))?
-      .spread_bindings
-      .push(TemplateSpreadBinding {
-        element_index,
-        slot_index,
-      });
-    Ok(())
-  }
-
-  pub fn add_element_template_static_string_binding(
-    &mut self,
-    definition_id: usize,
-    element_index: usize,
-    key: String,
-    value: String,
-  ) -> Result<(), JsError> {
-    self.add_element_template_static_binding(
-      definition_id,
-      element_index,
-      key,
-      JsValue::from_str(&value),
-    )
-  }
-
-  pub fn add_element_template_static_number_binding(
-    &mut self,
-    definition_id: usize,
-    element_index: usize,
-    key: String,
-    value: f64,
-  ) -> Result<(), JsError> {
-    self.add_element_template_static_binding(
-      definition_id,
-      element_index,
-      key,
-      JsValue::from_f64(value),
-    )
-  }
-
-  pub fn add_element_template_static_bool_binding(
-    &mut self,
-    definition_id: usize,
-    element_index: usize,
-    key: String,
-    value: bool,
-  ) -> Result<(), JsError> {
-    self.add_element_template_static_binding(
-      definition_id,
-      element_index,
-      key,
-      JsValue::from_bool(value),
-    )
-  }
-
-  pub fn add_element_template_static_null_binding(
-    &mut self,
-    definition_id: usize,
-    element_index: usize,
-    key: String,
-  ) -> Result<(), JsError> {
-    self.add_element_template_static_binding(definition_id, element_index, key, JsValue::NULL)
-  }
-
-  pub fn finish_element_template_definition(
-    &mut self,
-    definition_id: usize,
-  ) -> Result<(), JsError> {
-    let definition = self
-      .element_template_definition_builders
-      .remove(&definition_id)
-      .ok_or_else(|| JsError::new("Element template definition builder not found"))?;
+  pub fn register_element_template_definition(&mut self, definition: ElementTemplateDefinition) {
     let identity_key =
       Self::template_identity_key(&definition.template_key, definition.bundle_url.as_deref());
     self
       .element_template_definitions
       .insert(identity_key, Rc::new(definition));
-    Ok(())
   }
 
   pub fn transform_element_template_style(&self, style: String) -> String {

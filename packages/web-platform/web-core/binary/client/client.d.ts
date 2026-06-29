@@ -1,6 +1,18 @@
 /* tslint:disable */
 /* eslint-disable */
 
+export class ElementTemplateDefinition {
+    free(): void;
+    [Symbol.dispose](): void;
+    add_attribute_binding(element_index: number, slot_index: number, key: string): void;
+    add_spread_binding(element_index: number, slot_index: number): void;
+    add_static_bool_binding(element_index: number, key: string, value: boolean): void;
+    add_static_null_binding(element_index: number, key: string): void;
+    add_static_number_binding(element_index: number, key: string, value: number): void;
+    add_static_string_binding(element_index: number, key: string, value: string): void;
+    constructor(template_key: string, bundle_url?: string | null);
+}
+
 /**
  *
  * * for return of __GetEvents
@@ -20,22 +32,14 @@ export class MainThreadWasmContext {
     [Symbol.dispose](): void;
     add_cross_thread_event(unique_id: number, event_type: string, event_name: string, event_handler_identifier?: string | null): void;
     add_dataset(unique_id: number, key: any, value: any): void;
-    add_element_template_attribute_binding(definition_id: number, element_index: number, slot_index: number, key: string): void;
     add_element_template_instance_element(root_unique_id: number, element_index: number, target_unique_id: number): void;
-    add_element_template_spread_binding(definition_id: number, element_index: number, slot_index: number): void;
-    add_element_template_static_bool_binding(definition_id: number, element_index: number, key: string, value: boolean): void;
-    add_element_template_static_null_binding(definition_id: number, element_index: number, key: string): void;
-    add_element_template_static_number_binding(definition_id: number, element_index: number, key: string, value: number): void;
-    add_element_template_static_string_binding(definition_id: number, element_index: number, key: string, value: string): void;
     add_run_worklet_event(unique_id: number, event_type: string, event_name: string, event_handler_identifier?: any | null): void;
     common_event_handler(event: any, bubble_unique_id_path: Uint32Array, event_name: string, is_bubble: boolean): void;
     create_element(parent_component_unique_id: number, dom: HTMLElement, dom_ref: WeakRef<object>, explicit_css_id?: number | null, component_css_id?: number | null, component_id?: string | null): number;
-    create_element_template_definition(template_key: string, bundle_url?: string | null): number;
     create_element_template_instance(template_key: string, bundle_url: string | null | undefined, root_unique_id: number): void;
     create_typed_element_template_instance(root_unique_id: number): void;
     dispatch_event_by_path(bubble_unique_id_path: Uint32Array, event_name: string, is_capture: boolean, serialized_event: any): boolean;
     dispatch_global_bind_event(bubble_unique_id_path: Uint32Array, event_name: string, serialized_event: any): void;
-    finish_element_template_definition(definition_id: number): void;
     finish_element_template_instance(root_unique_id: number): void;
     gc(): void;
     get_component_id(unique_id: number): string | undefined;
@@ -50,6 +54,7 @@ export class MainThreadWasmContext {
     insert_element_template_slot_child(root_unique_id: number, slot_index: number, child_unique_id: number, reference_unique_id?: number | null): void;
     constructor(root_node: Node, mts_binding: any, config_enable_css_selector: boolean, config_transform_vw: boolean, config_transform_vh: boolean, config_transform_rem: boolean);
     push_style_sheet(style_info: StyleSheetResource, entry_name?: string | null): void;
+    register_element_template_definition(definition: ElementTemplateDefinition): void;
     remove_element_template_instance_by_id(root_unique_id: number): void;
     set_attribute_of_element_template_by_id(root_unique_id: number, attribute_slot_index: number, value: any): void;
     /**
@@ -195,6 +200,7 @@ export type InitInput = RequestInfo | URL | Response | BufferSource | WebAssembl
 
 export interface InitOutput {
     readonly memory: WebAssembly.Memory;
+    readonly __wbg_elementtemplatedefinition_free: (a: number, b: number) => void;
     readonly __wbg_eventinfo_free: (a: number, b: number) => void;
     readonly __wbg_get_eventinfo_event_handler: (a: number) => any;
     readonly __wbg_get_eventinfo_event_name: (a: number) => [number, number];
@@ -210,27 +216,26 @@ export interface InitOutput {
     readonly __wbg_stylesheetresource_free: (a: number, b: number) => void;
     readonly add_inline_style_raw_string_key: (a: any, b: number, c: number, d: number, e: number) => void;
     readonly decode_style_info: (a: any, b: number, c: number, d: number, e: number, f: number, g: number) => [number, number, number];
+    readonly elementtemplatedefinition_add_attribute_binding: (a: number, b: number, c: number, d: number, e: number) => void;
+    readonly elementtemplatedefinition_add_spread_binding: (a: number, b: number, c: number) => void;
+    readonly elementtemplatedefinition_add_static_bool_binding: (a: number, b: number, c: number, d: number, e: number) => void;
+    readonly elementtemplatedefinition_add_static_null_binding: (a: number, b: number, c: number, d: number) => void;
+    readonly elementtemplatedefinition_add_static_number_binding: (a: number, b: number, c: number, d: number, e: number) => void;
+    readonly elementtemplatedefinition_add_static_string_binding: (a: number, b: number, c: number, d: number, e: number, f: number) => void;
+    readonly elementtemplatedefinition_new: (a: number, b: number, c: number, d: number) => number;
     readonly encode_legacy_json_generated_raw_style_info: (a: number, b: number, c: number, d: number, e: number, f: number, g: number) => [number, number, number];
     readonly get_font_face_content: (a: any) => [number, number, number, number];
     readonly get_style_content: (a: any) => [number, number, number, number];
     readonly mainthreadwasmcontext_add_cross_thread_event: (a: number, b: number, c: number, d: number, e: number, f: number, g: number, h: number) => void;
     readonly mainthreadwasmcontext_add_dataset: (a: number, b: number, c: any, d: any) => [number, number];
-    readonly mainthreadwasmcontext_add_element_template_attribute_binding: (a: number, b: number, c: number, d: number, e: number, f: number) => [number, number];
     readonly mainthreadwasmcontext_add_element_template_instance_element: (a: number, b: number, c: number, d: number) => [number, number];
-    readonly mainthreadwasmcontext_add_element_template_spread_binding: (a: number, b: number, c: number, d: number) => [number, number];
-    readonly mainthreadwasmcontext_add_element_template_static_bool_binding: (a: number, b: number, c: number, d: number, e: number, f: number) => [number, number];
-    readonly mainthreadwasmcontext_add_element_template_static_null_binding: (a: number, b: number, c: number, d: number, e: number) => [number, number];
-    readonly mainthreadwasmcontext_add_element_template_static_number_binding: (a: number, b: number, c: number, d: number, e: number, f: number) => [number, number];
-    readonly mainthreadwasmcontext_add_element_template_static_string_binding: (a: number, b: number, c: number, d: number, e: number, f: number, g: number) => [number, number];
     readonly mainthreadwasmcontext_add_run_worklet_event: (a: number, b: number, c: number, d: number, e: number, f: number, g: number) => void;
     readonly mainthreadwasmcontext_common_event_handler: (a: number, b: any, c: number, d: number, e: number, f: number, g: number) => void;
     readonly mainthreadwasmcontext_create_element: (a: number, b: number, c: any, d: any, e: number, f: number, g: number, h: number) => number;
-    readonly mainthreadwasmcontext_create_element_template_definition: (a: number, b: number, c: number, d: number, e: number) => number;
     readonly mainthreadwasmcontext_create_element_template_instance: (a: number, b: number, c: number, d: number, e: number, f: number) => [number, number];
     readonly mainthreadwasmcontext_create_typed_element_template_instance: (a: number, b: number) => [number, number];
     readonly mainthreadwasmcontext_dispatch_event_by_path: (a: number, b: number, c: number, d: number, e: number, f: number, g: any) => number;
     readonly mainthreadwasmcontext_dispatch_global_bind_event: (a: number, b: number, c: number, d: number, e: number, f: any) => void;
-    readonly mainthreadwasmcontext_finish_element_template_definition: (a: number, b: number) => [number, number];
     readonly mainthreadwasmcontext_finish_element_template_instance: (a: number, b: number) => [number, number];
     readonly mainthreadwasmcontext_gc: (a: number) => void;
     readonly mainthreadwasmcontext_get_component_id: (a: number, b: number) => [number, number, number, number];
@@ -245,6 +250,7 @@ export interface InitOutput {
     readonly mainthreadwasmcontext_insert_element_template_slot_child: (a: number, b: number, c: number, d: number, e: number) => [number, number];
     readonly mainthreadwasmcontext_new: (a: any, b: any, c: number, d: number, e: number, f: number) => number;
     readonly mainthreadwasmcontext_push_style_sheet: (a: number, b: number, c: number, d: number) => [number, number];
+    readonly mainthreadwasmcontext_register_element_template_definition: (a: number, b: number) => void;
     readonly mainthreadwasmcontext_remove_element_template_instance_by_id: (a: number, b: number) => [number, number];
     readonly mainthreadwasmcontext_set_attribute_of_element_template_by_id: (a: number, b: number, c: number, d: any) => [number, number];
     readonly mainthreadwasmcontext_set_config: (a: number, b: number, c: any) => [number, number];
