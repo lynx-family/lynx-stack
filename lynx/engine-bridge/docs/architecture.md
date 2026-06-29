@@ -21,9 +21,13 @@ panics are caught before they cross the FFI boundary.
 `GenericResourceFetcher` wraps resource callbacks. It converts Lynx resource
 requests into Rust values and writes `FetchResponse` values back to the runtime.
 
+`LynxGroup` wraps Lynx group ownership. The current safe API covers group
+creation, group-thread toggling, and preload JavaScript paths so headless hosts
+can provide runtime JavaScript explicitly when needed.
+
 `HeadlessView` builds and owns a Lynx view. It binds the renderer, optional
-resource fetcher, viewport metrics, ICU path, and module registrations before
-creating the runtime view.
+resource fetcher, optional Lynx group, viewport metrics, ICU path, and module
+registrations before creating the runtime view.
 
 `examples/headless` shows how these pieces fit together in a non-windowed
 process. It uses a software renderer and a folder-backed resource fetcher.
@@ -45,6 +49,7 @@ Runtime objects are released through RAII wrappers:
 
 - `WindowlessRenderer` calls `lynx_windowless_renderer_release`.
 - `GenericResourceFetcher` calls `lynx_generic_resource_fetcher_release`.
+- `LynxGroup` calls `lynx_group_release`.
 - `HeadlessView` calls `lynx_view_release`.
 - internal template and meta objects release themselves after load/update calls.
 
@@ -76,3 +81,8 @@ The Rust CI job validates two paths:
 The runtime-loading test only runs the real loader when `LYNX_LIB_PATH` or
 `LYNX_SDK_DIR` is set. This keeps local unit tests independent from binary
 artifacts while still checking the downloaded dylib in CI.
+
+The headless example has a deterministic PNG comparison test that stores its
+reference image under `examples/headless/tests/fixtures/`. It validates the
+screenshot writer and golden-update workflow without requiring a runtime
+software-present callback.

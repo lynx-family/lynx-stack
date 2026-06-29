@@ -157,6 +157,14 @@ pub struct LoadedLibrary {
   pub lynx_env_register_extension_module:
     unsafe extern "C" fn(*const c_char, Option<extension_module_creator>, bool, *mut c_void),
 
+  pub lynx_group_create: unsafe extern "C" fn(*const c_char) -> *mut lynx_group_t,
+  pub lynx_group_create_with_id:
+    unsafe extern "C" fn(*const c_char, *const c_char) -> *mut lynx_group_t,
+  pub lynx_group_set_preload_js_paths:
+    unsafe extern "C" fn(*mut lynx_group_t, *const *const c_char, usize),
+  pub lynx_group_set_enable_js_group_thread: unsafe extern "C" fn(*mut lynx_group_t, c_int),
+  pub lynx_group_release: unsafe extern "C" fn(*mut lynx_group_t),
+
   pub lynx_view_builder_create: unsafe extern "C" fn() -> *mut lynx_view_builder_t,
   pub lynx_rust_view_builder_set_screen_size:
     unsafe extern "C" fn(*mut lynx_view_builder_t, f32, f32, f32),
@@ -165,6 +173,8 @@ pub struct LoadedLibrary {
   pub lynx_rust_view_builder_set_font_scale: unsafe extern "C" fn(*mut lynx_view_builder_t, f32),
   pub lynx_view_builder_set_icu_data_path:
     unsafe extern "C" fn(*mut lynx_view_builder_t, *const c_char),
+  pub lynx_view_builder_set_lynx_group:
+    unsafe extern "C" fn(*mut lynx_view_builder_t, *mut lynx_group_t),
   pub lynx_view_builder_set_windowless_renderer:
     unsafe extern "C" fn(*mut lynx_view_builder_t, *mut lynx_windowless_renderer_t),
   pub lynx_view_builder_set_generic_resource_fetcher:
@@ -375,6 +385,15 @@ impl LoadedLibrary {
       lynx_env_register_native_module: load_symbol!(library, lynx_env_register_native_module),
       lynx_env_register_extension_module: load_symbol!(library, lynx_env_register_extension_module),
 
+      lynx_group_create: load_symbol!(library, lynx_group_create),
+      lynx_group_create_with_id: load_symbol!(library, lynx_group_create_with_id),
+      lynx_group_set_preload_js_paths: load_symbol!(library, lynx_group_set_preload_js_paths),
+      lynx_group_set_enable_js_group_thread: load_symbol!(
+        library,
+        lynx_group_set_enable_js_group_thread
+      ),
+      lynx_group_release: load_symbol!(library, lynx_group_release),
+
       lynx_view_builder_create: load_symbol!(library, lynx_view_builder_create),
       lynx_rust_view_builder_set_screen_size,
       lynx_rust_view_builder_set_frame,
@@ -383,6 +402,7 @@ impl LoadedLibrary {
         library,
         lynx_view_builder_set_icu_data_path
       ),
+      lynx_view_builder_set_lynx_group: load_symbol!(library, lynx_view_builder_set_lynx_group),
       lynx_view_builder_set_windowless_renderer: load_symbol!(
         library,
         lynx_view_builder_set_windowless_renderer

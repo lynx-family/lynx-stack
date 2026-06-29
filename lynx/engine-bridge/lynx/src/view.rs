@@ -1,4 +1,5 @@
 use crate::buffer::CByteBuffer;
+use crate::group::LynxGroup;
 use crate::resource::{GenericResourceFetcher, ResourceFetcher};
 use crate::sys;
 use crate::{c_string, Env, Error, Result, WindowlessRenderer};
@@ -15,6 +16,7 @@ pub struct HeadlessViewBuilder {
   font_scale: f32,
   icu_data_path: Option<CString>,
   resource_fetcher: Option<GenericResourceFetcher>,
+  lynx_group: Option<LynxGroup>,
   native_modules: Vec<RawNativeModule>,
   extension_modules: Vec<RawExtensionModule>,
 }
@@ -43,6 +45,7 @@ impl HeadlessViewBuilder {
       font_scale: 1.0,
       icu_data_path: None,
       resource_fetcher: None,
+      lynx_group: None,
       native_modules: Vec::new(),
       extension_modules: Vec::new(),
     }
@@ -68,6 +71,11 @@ impl HeadlessViewBuilder {
   pub fn resource_fetcher(mut self, fetcher: impl ResourceFetcher) -> Result<Self> {
     self.resource_fetcher = Some(GenericResourceFetcher::new(&self.env, fetcher)?);
     Ok(self)
+  }
+
+  pub fn lynx_group(mut self, group: LynxGroup) -> Self {
+    self.lynx_group = Some(group);
+    self
   }
 
   /// Registers a native module on this view builder.
@@ -139,6 +147,9 @@ impl HeadlessViewBuilder {
       if let Some(path) = &self.icu_data_path {
         (sys.lynx_view_builder_set_icu_data_path)(builder, path.as_ptr());
       }
+      if let Some(group) = &self.lynx_group {
+        (sys.lynx_view_builder_set_lynx_group)(builder, group.raw());
+      }
       (sys.lynx_view_builder_set_windowless_renderer)(builder, self.renderer.raw());
       if let Some(fetcher) = &self.resource_fetcher {
         (sys.lynx_view_builder_set_generic_resource_fetcher)(builder, fetcher.raw());
@@ -175,6 +186,7 @@ impl HeadlessViewBuilder {
       raw,
       renderer: self.renderer,
       _resource_fetcher: self.resource_fetcher,
+      _lynx_group: self.lynx_group,
     })
   }
 }
@@ -200,6 +212,7 @@ pub struct HeadlessView {
   raw: *mut sys::lynx_view_t,
   renderer: WindowlessRenderer,
   _resource_fetcher: Option<GenericResourceFetcher>,
+  _lynx_group: Option<LynxGroup>,
 }
 
 impl HeadlessView {

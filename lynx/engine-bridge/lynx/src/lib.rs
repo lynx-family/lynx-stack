@@ -10,6 +10,7 @@
 mod buffer;
 mod env;
 mod error;
+mod group;
 mod renderer;
 mod resource;
 pub mod sys;
@@ -17,6 +18,7 @@ mod view;
 
 pub use env::Env;
 pub use error::{Error, Result};
+pub use group::LynxGroup;
 pub use renderer::{
   run_global_ui_task, set_global_ui_task_runner, AcceleratedPaintInfo, AcceleratedRenderer,
   GlRenderer, GlobalUiTaskRunner, NoopHost, SoftwareFrame, SoftwareRenderer, Task, WindowlessHost,
