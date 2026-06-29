@@ -54,7 +54,6 @@ export class MainThreadWasmContext {
     constructor(root_node: Node, mts_binding: any, config_enable_css_selector: boolean, config_transform_vw: boolean, config_transform_vh: boolean, config_transform_rem: boolean);
     push_style_sheet(style_info: StyleSheetResource, entry_name?: string | null): void;
     register_element_template(definition_builder: ElementTemplateDefinitionBuilder): void;
-    remove_element_template(element: HTMLElement): void;
     remove_node_from_element_template(element: HTMLElement, child: HTMLElement): void;
     serialize_element_template(element: HTMLElement): any;
     set_attribute_of_element_template(element: HTMLElement, attribute_slot_index: number, value: any, _options: any): void;
@@ -250,7 +249,6 @@ export interface InitOutput {
     readonly mainthreadwasmcontext_new: (a: any, b: any, c: number, d: number, e: number, f: number) => number;
     readonly mainthreadwasmcontext_push_style_sheet: (a: number, b: number, c: number, d: number) => [number, number];
     readonly mainthreadwasmcontext_register_element_template: (a: number, b: number) => [number, number];
-    readonly mainthreadwasmcontext_remove_element_template: (a: number, b: any) => [number, number];
     readonly mainthreadwasmcontext_remove_node_from_element_template: (a: number, b: any, c: any) => [number, number];
     readonly mainthreadwasmcontext_serialize_element_template: (a: number, b: any) => [number, number, number];
     readonly mainthreadwasmcontext_set_attribute_of_element_template: (a: number, b: any, c: number, d: any, e: any) => [number, number];

@@ -345,60 +345,6 @@ describe('Element APIs', () => {
     expect(root.hasAttribute('id')).toBe(false);
   });
 
-  test('element template cleanup runs when removed through normal DOM PAPI', () => {
-    registerElementTemplates(mtsBinding.wasmContext!, [
-      builtinRawTextTemplate,
-    ]);
-    const parent = mtsGlobalThis.__CreateView(0);
-    const child = mtsGlobalThis.__CreateElementTemplate(
-      '_et_builtin_raw_text',
-      null,
-      ['detached'],
-      null,
-      5,
-    );
-
-    mtsGlobalThis.__AppendElement(parent, child);
-    expect(mtsGlobalThis.__SerializeElementTemplate(child)).toMatchObject({
-      uid: 5,
-      templateKey: '_et_builtin_raw_text',
-    });
-
-    mtsGlobalThis.__RemoveElement(parent, child);
-
-    expect(() => mtsGlobalThis.__SerializeElementTemplate(child)).toThrow(
-      /Element template instance not found/,
-    );
-  });
-
-  test('element template cleanup scans removed DOM subtree', () => {
-    registerElementTemplates(mtsBinding.wasmContext!, [
-      builtinRawTextTemplate,
-    ]);
-    const parent = mtsGlobalThis.__CreateView(0);
-    const wrapper = mtsGlobalThis.__CreateView(0);
-    const child = mtsGlobalThis.__CreateElementTemplate(
-      '_et_builtin_raw_text',
-      null,
-      ['nested'],
-      null,
-      6,
-    );
-
-    mtsGlobalThis.__AppendElement(parent, wrapper);
-    mtsGlobalThis.__AppendElement(wrapper, child);
-    expect(mtsGlobalThis.__SerializeElementTemplate(child)).toMatchObject({
-      uid: 6,
-      templateKey: '_et_builtin_raw_text',
-    });
-
-    mtsGlobalThis.__RemoveElement(parent, wrapper);
-
-    expect(() => mtsGlobalThis.__SerializeElementTemplate(child)).toThrow(
-      /Element template instance not found/,
-    );
-  });
-
   test('element template cleanup preserves reused replaceElements child', () => {
     registerElementTemplates(mtsBinding.wasmContext!, [
       builtinRawTextTemplate,

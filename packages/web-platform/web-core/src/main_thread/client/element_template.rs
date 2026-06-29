@@ -1401,11 +1401,6 @@ impl MainThreadWasmContext {
     Ok(())
   }
 
-  pub fn remove_element_template(&mut self, element: HtmlElement) -> Result<(), JsError> {
-    self.cleanup_element_template_instances(Self::collect_removed_subtree_unique_ids(&element));
-    Ok(())
-  }
-
   pub fn serialize_element_template(&self, element: HtmlElement) -> Result<JsValue, JsError> {
     let root_unique_id = Self::element_template_root_unique_id(&element)
       .ok_or_else(|| JsError::new("Element template root missing unique id"))?;

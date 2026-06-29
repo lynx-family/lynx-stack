@@ -45,9 +45,6 @@ import type {
   AddEventPAPI,
   DecoratedHTMLElement,
   ElementPAPIs,
-  RemoveElementPAPI,
-  ReplaceElementPAPI,
-  ReplaceElementsPAPI,
   SetCSSIdPAPI,
   UpdateListInfoAttributeValue,
 } from '../../../types/index.js';
@@ -169,40 +166,6 @@ export function createElementAPI(
           frameworkCrossThreadIdentifier != null,
         );
       }
-    }
-  };
-  const cleanupElementTemplate = (element: HTMLElement) => {
-    wasmContext.remove_element_template(element);
-  };
-  const normalizeElementList = (
-    elements: HTMLElement[] | HTMLElement | null | undefined,
-  ) => elements ? Array.isArray(elements) ? elements : [elements] : [];
-  const __RemoveElementWithCleanup: RemoveElementPAPI = (parent, child) => {
-    const removedChild = __RemoveElement(parent, child);
-    cleanupElementTemplate(child);
-    return removedChild;
-  };
-  const __ReplaceElementWithCleanup: ReplaceElementPAPI = (
-    newElement,
-    oldElement,
-  ) => {
-    __ReplaceElement(newElement, oldElement);
-    if (newElement !== oldElement) {
-      cleanupElementTemplate(oldElement);
-    }
-  };
-  const __ReplaceElementsWithCleanup: ReplaceElementsPAPI = (
-    parent,
-    newChildren,
-    oldChildren,
-  ) => {
-    const newChildSet = new Set(normalizeElementList(newChildren));
-    const removedChildren = normalizeElementList(oldChildren).filter(
-      child => !newChildSet.has(child),
-    );
-    __ReplaceElements(parent, newChildren, oldChildren);
-    for (const child of removedChildren) {
-      cleanupElementTemplate(child);
     }
   };
   const createPage = (
@@ -646,11 +609,11 @@ export function createElementAPI(
     __InsertElementBefore,
     __LastElement,
     __NextElement,
-    __RemoveElement: __RemoveElementWithCleanup,
-    __ReplaceElement: __ReplaceElementWithCleanup,
+    __RemoveElement,
+    __ReplaceElement,
     __GetAttributes,
     __GetAttributeByName,
-    __ReplaceElements: __ReplaceElementsWithCleanup,
+    __ReplaceElements,
     __GetID,
     __SetID,
     __GetTag,
