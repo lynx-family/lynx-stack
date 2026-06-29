@@ -9,6 +9,7 @@ use super::style_manager::StyleManager;
 use crate::constants;
 use crate::js_binding::RustMainthreadContextBinding;
 use crate::main_thread::element_data::LynxElementData;
+use crate::style_transformer::token_transformer::TransformerConfig;
 use crate::template::template_sections::style_info::StyleSheetResource;
 use fnv::{FnvHashMap, FnvHashSet};
 use std::cell::RefCell;
@@ -26,9 +27,7 @@ pub struct MainThreadWasmContext {
   pub(super) page_element_unique_id: Option<usize>,
   pub(super) mts_binding: RustMainthreadContextBinding,
   pub(super) config_enable_css_selector: bool,
-  pub(super) config_transform_vw: bool,
-  pub(super) config_transform_vh: bool,
-  pub(super) config_transform_rem: bool,
+  pub(super) transformer_config: TransformerConfig,
   pub(super) style_manager: StyleManager,
   pub(super) global_bind_events: FnvHashMap<String, FnvHashSet<usize>>,
   pub(super) element_template_definitions: FnvHashMap<String, Rc<ElementTemplateDefinition>>,
@@ -71,9 +70,11 @@ impl MainThreadWasmContext {
       timing_flags: vec![],
       page_element_unique_id: None,
       config_enable_css_selector,
-      config_transform_vw,
-      config_transform_vh,
-      config_transform_rem,
+      transformer_config: TransformerConfig {
+        transform_vw: config_transform_vw,
+        transform_vh: config_transform_vh,
+        transform_rem: config_transform_rem,
+      },
       style_manager,
       global_bind_events: FnvHashMap::default(),
       element_template_definitions: FnvHashMap::default(),
