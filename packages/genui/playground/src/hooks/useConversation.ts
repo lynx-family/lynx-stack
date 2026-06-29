@@ -19,6 +19,7 @@ import {
 import type { SharedConversationDoc } from '../storage/sharedConversation.js';
 import type {
   ConversationMeta,
+  ConversationProtocol,
   DataModelSnapshot,
   PersistedMessage,
   PreviewPayloadUrls,
@@ -265,7 +266,9 @@ function cloneHotState(state: ConversationHotState): ConversationHotState {
   };
 }
 
-export function useConversation(): UseConversationReturn {
+export function useConversation(
+  protocol: ConversationProtocol = 'a2ui',
+): UseConversationReturn {
   const [conversations, setConversations] = useState<ConversationMeta[]>([]);
   const [activeId, setActiveId] = useState<string | null>(null);
   const [messages, setMessages] = useState<ModelChatMessage[]>([]);
@@ -338,7 +341,7 @@ export function useConversation(): UseConversationReturn {
       const record = persistentRef.current ? await loadConversation(id) : null;
       if (activationTokenRef.current !== token) return false;
       if (!record) return false;
-      await setActiveConversationId(id);
+      await setActiveConversationId(id, protocol);
       if (activationTokenRef.current !== token) return false;
       activeIdRef.current = id;
       setActiveId(id);
@@ -351,28 +354,28 @@ export function useConversation(): UseConversationReturn {
       );
       return true;
     },
-    [syncHotState],
+    [protocol, syncHotState],
   );
 
   const refreshConversations = useCallback(async () => {
     if (!persistentRef.current) return;
-    setConversations(await listConversations());
-  }, []);
+    setConversations(await listConversations(protocol));
+  }, [protocol]);
 
   useEffect(() => {
     let cancelled = false;
     void (async () => {
       try {
-        let items = await listConversations();
-        let id = await getActiveConversationId();
+        let items = await listConversations(protocol);
+        let id = await getActiveConversationId(protocol);
         if (!id || !items.some((item) => item.id === id)) {
           if (items.length === 0) {
-            const created = await createConversation();
+            const created = await createConversation(undefined, protocol);
             id = created.id;
             items = [created];
           } else {
             id = items[0]?.id ?? null;
-            await setActiveConversationId(id);
+            await setActiveConversationId(id, protocol);
           }
         }
         if (cancelled || !id) return;
@@ -385,7 +388,7 @@ export function useConversation(): UseConversationReturn {
         );
         persistentRef.current = false;
         if (cancelled) return;
-        const meta = createConversationMeta();
+        const meta = createConversationMeta(undefined, protocol);
         setIsPersistent(false);
         setConversations([meta]);
         activeIdRef.current = meta.id;
@@ -399,7 +402,7 @@ export function useConversation(): UseConversationReturn {
     return () => {
       cancelled = true;
     };
-  }, [activateRecord, syncHotState]);
+  }, [activateRecord, protocol, syncHotState]);
 
   const switchTo = useCallback(
     async (id: string) => {
@@ -427,7 +430,7 @@ export function useConversation(): UseConversationReturn {
 
   const createNew = useCallback(async () => {
     if (!persistentRef.current) {
-      const meta = createConversationMeta();
+      const meta = createConversationMeta(undefined, protocol);
       const hotState = createEmptyHotState();
       conversationHotStateMapRef.current.set(meta.id, hotState);
       setConversations((prev) => [meta, ...prev]);
@@ -444,22 +447,25 @@ export function useConversation(): UseConversationReturn {
       return meta.id;
     }
 
-    const meta = await createConversation();
-    await setActiveConversationId(meta.id);
+    const meta = await createConversation(undefined, protocol);
+    await setActiveConversationId(meta.id, protocol);
     setConversations((prev) => [meta, ...prev]);
     activationTokenRef.current = null;
     activeIdRef.current = meta.id;
     setActiveId(meta.id);
     syncHotState([], {}, new Set(), [], null);
     return meta.id;
-  }, [syncHotState]);
+  }, [protocol, syncHotState]);
 
   const importShared = useCallback(
     async (doc: SharedConversationDoc): Promise<string> => {
       // In-memory fallback (IndexedDB unavailable): build hot state directly.
       if (!persistentRef.current) {
         const meta: ConversationMeta = {
-          ...createConversationMeta(doc.title || 'Shared conversation'),
+          ...createConversationMeta(
+            doc.title || 'Shared conversation',
+            protocol,
+          ),
           messageCount: doc.messages.length,
           previewText: previewTextFromSharedMessages(doc.messages),
         };
@@ -495,24 +501,24 @@ export function useConversation(): UseConversationReturn {
         return meta.id;
       }
 
-      const meta = await importConversation(doc);
-      await setActiveConversationId(meta.id);
+      const meta = await importConversation(doc, protocol);
+      await setActiveConversationId(meta.id, protocol);
       await refreshConversations();
       await activateRecord(meta.id);
       return meta.id;
     },
-    [activateRecord, refreshConversations, syncHotState],
+    [activateRecord, protocol, refreshConversations, syncHotState],
   );
 
   const remove = useCallback(
     async (id: string) => {
       if (persistentRef.current) {
-        await deleteConversation(id);
+        await deleteConversation(id, protocol);
       } else {
         conversationHotStateMapRef.current.delete(id);
       }
       const nextItems = persistentRef.current
-        ? await listConversations()
+        ? await listConversations(protocol)
         : conversations.filter((item) => item.id !== id);
       if (nextItems.length === 0) {
         const nextId = await createNew();
@@ -525,7 +531,7 @@ export function useConversation(): UseConversationReturn {
         await switchTo(nextItems[0]?.id ?? '');
       }
     },
-    [conversations, createNew, switchTo],
+    [conversations, createNew, protocol, switchTo],
   );
 
   const rename = useCallback(async (id: string, title: string) => {
@@ -571,9 +577,13 @@ export function useConversation(): UseConversationReturn {
 
       const existingMeta =
         conversationsRef.current.find((item) => item.id === id)
-          ?? createConversationMeta();
-      const nextMeta: ConversationMeta = {
+          ?? createConversationMeta(undefined, protocol);
+      const baseMeta = {
         ...existingMeta,
+        protocol,
+      };
+      const nextMeta: ConversationMeta = {
+        ...baseMeta,
         id,
         title: existingMeta.messageCount === 0
           ? titleFromMessage(input.userMessage.content)
@@ -631,7 +641,7 @@ export function useConversation(): UseConversationReturn {
         }
       }
     },
-    [createNew, syncHotState],
+    [createNew, protocol, syncHotState],
   );
 
   const updateLastAssistantPreviewMetrics = useCallback(

@@ -6,6 +6,12 @@ applyTo: "packages/genui/playground/**"
 
 When wiring playback state between the Lynx app and the web preview, prefer `NativeModules.bridge.call('A2UI_PLAYBACK_SYNC', state, callback)` on the Lynx side and `lynxView.onNativeModulesCall` on the web preview side. Keep `window.postMessage` only as a compatibility fallback for older bundles. Do not add new playback sync paths that bypass the NativeModules bridge.
 
+## Conversation Storage
+
+When adding or updating playground conversation history, keep records isolated by protocol. Store new records with `ConversationMeta.protocol`, use protocol-scoped active-id metadata such as `activeConversationId:a2ui` and `activeConversationId:openui`, and treat legacy records without a `protocol` field as A2UI conversations so existing browser history remains visible.
+
+When importing shared playground conversations, validate the `importConv` URL before fetching it. Accept only current-origin documents or the GenUI Supabase Storage conversation-object path, then validate the shared document protocol before calling `importShared`; missing shared-document protocol is legacy A2UI, and unknown or mismatched protocols should be rejected.
+
 ## Native Bundles
 
 When serving the playground's native Lynx bundles as static Android test fixtures, keep HMR/React refresh out of `a2ui.lynx.js` and `openui.lynx.js`. The Android Lynx runtime does not provide globals such as `__prefresh_utils__` or Node's `process`, so normalize `process.env.NODE_ENV` at build time and disable HMR for these bundles instead of relying on the caller's `NODE_ENV`.

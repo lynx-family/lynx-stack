@@ -31,6 +31,7 @@ import {
 } from '../storage/conversationRepo.js';
 import {
   isSharedConversationDoc,
+  resolveSharedConversationProtocol,
   serializeConversation,
 } from '../storage/sharedConversation.js';
 import type { PreviewPerformanceMetrics } from '../storage/types.js';
@@ -44,6 +45,7 @@ import {
   clearImportConversationParam,
   publishConversation,
   readImportConversationParam,
+  resolveTrustedConversationImportUrl,
 } from '../utils/shareConversation.js';
 
 interface ChatMessage {
@@ -1049,7 +1051,7 @@ export function AIChatPage(
   props: { protocol: Protocol; theme: 'light' | 'dark' },
 ) {
   const { protocol, theme } = props;
-  const conversation = useConversation();
+  const conversation = useConversation(protocol.name);
   const {
     activeId,
     buildConversationContext,
@@ -1545,7 +1547,13 @@ export function AIChatPage(
     importHandledRef.current = true;
     void (async () => {
       try {
-        const response = await window.fetch(importUrl);
+        const trustedImportUrl = resolveTrustedConversationImportUrl(importUrl);
+        if (!trustedImportUrl) {
+          throw new Error('Untrusted shared conversation URL');
+        }
+        const response = await window.fetch(trustedImportUrl, {
+          credentials: 'omit',
+        });
         if (!response.ok) {
           throw new Error(
             `Failed to load shared conversation: ${response.status}`,
@@ -1555,6 +1563,10 @@ export function AIChatPage(
         if (!isSharedConversationDoc(doc)) {
           throw new Error('Invalid shared conversation document');
         }
+        const docProtocol = resolveSharedConversationProtocol(doc);
+        if (docProtocol !== protocol.name) {
+          throw new Error('Shared conversation protocol does not match A2UI');
+        }
         await importShared(doc);
       } catch (err) {
         console.warn('[a2ui] Failed to import shared conversation', err);
@@ -1562,7 +1574,7 @@ export function AIChatPage(
         clearImportConversationParam();
       }
     })();
-  }, [isReady, importShared]);
+  }, [isReady, importShared, protocol.name]);
 
   useEffect(() => {
     return () => {

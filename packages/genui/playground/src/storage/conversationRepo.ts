@@ -5,6 +5,7 @@ import { getDB } from './db.js';
 import type { SharedConversationDoc } from './sharedConversation.js';
 import type {
   ConversationMeta,
+  ConversationProtocol,
   DataModelSnapshot,
   MetaRecord,
   PersistedMessage,
@@ -22,12 +23,24 @@ function createId(): string {
   }`;
 }
 
+function activeConversationMetaKey(protocol: ConversationProtocol): string {
+  return `activeConversationId:${protocol}`;
+}
+
+export function resolveConversationProtocol(
+  conversation: Pick<ConversationMeta, 'protocol'>,
+): ConversationProtocol {
+  return conversation.protocol ?? 'a2ui';
+}
+
 export function createConversationMeta(
   title = 'New conversation',
+  protocol: ConversationProtocol = 'a2ui',
 ): ConversationMeta {
   const now = Date.now();
   return {
     id: createId(),
+    protocol,
     title,
     createdAt: now,
     updatedAt: now,
@@ -36,39 +49,60 @@ export function createConversationMeta(
   };
 }
 
-export async function listConversations(): Promise<ConversationMeta[]> {
+export async function listConversations(
+  protocol: ConversationProtocol = 'a2ui',
+): Promise<ConversationMeta[]> {
   const db = await getDB();
   const tx = db.transaction('conversations', 'readonly');
   const items = await tx.store.index('by_updatedAt').getAll();
-  return items.sort((a, b) => b.updatedAt - a.updatedAt);
+  return items
+    .filter((item) => resolveConversationProtocol(item) === protocol)
+    .sort((a, b) => b.updatedAt - a.updatedAt);
 }
 
-export async function getActiveConversationId(): Promise<string | null> {
+export async function getActiveConversationId(
+  protocol: ConversationProtocol = 'a2ui',
+): Promise<string | null> {
   const db = await getDB();
-  const record = await db.get('meta', 'activeConversationId');
-  return record?.value ?? null;
+  const record = await db.get('meta', activeConversationMetaKey(protocol));
+  if (record) return record.value;
+  if (protocol !== 'a2ui') return null;
+  const legacyRecord = await db.get('meta', 'activeConversationId');
+  return legacyRecord?.value ?? null;
 }
 
 export async function setActiveConversationId(
   id: string | null,
+  protocol: ConversationProtocol = 'a2ui',
 ): Promise<void> {
   const db = await getDB();
+  const key = activeConversationMetaKey(protocol);
   if (id === null) {
-    await db.delete('meta', 'activeConversationId');
+    await db.delete('meta', key);
+    if (protocol === 'a2ui') {
+      await db.delete('meta', 'activeConversationId');
+    }
     return;
   }
   const record: MetaRecord = {
-    key: 'activeConversationId',
+    key,
     value: id,
   };
   await db.put('meta', record);
+  if (protocol === 'a2ui') {
+    await db.put('meta', {
+      key: 'activeConversationId',
+      value: id,
+    });
+  }
 }
 
 export async function createConversation(
   title?: string,
+  protocol: ConversationProtocol = 'a2ui',
 ): Promise<ConversationMeta> {
   const db = await getDB();
-  const meta = createConversationMeta(title);
+  const meta = createConversationMeta(title, protocol);
   const tx = db.transaction(
     ['conversations', 'snapshots', 'meta'],
     'readwrite',
@@ -82,9 +116,15 @@ export async function createConversation(
     updatedAt: meta.updatedAt,
   });
   await tx.objectStore('meta').put({
-    key: 'activeConversationId',
+    key: activeConversationMetaKey(protocol),
     value: meta.id,
   });
+  if (protocol === 'a2ui') {
+    await tx.objectStore('meta').put({
+      key: 'activeConversationId',
+      value: meta.id,
+    });
+  }
   await tx.done;
   return meta;
 }
@@ -174,10 +214,11 @@ export function previewTextFromSharedMessages(
  */
 export async function importConversation(
   doc: SharedConversationDoc,
+  protocol: ConversationProtocol = 'a2ui',
 ): Promise<ConversationMeta> {
   const now = Date.now();
   const meta: ConversationMeta = {
-    ...createConversationMeta(doc.title || 'Shared conversation'),
+    ...createConversationMeta(doc.title || 'Shared conversation', protocol),
     messageCount: doc.messages.length,
     previewText: previewTextFromSharedMessages(doc.messages),
   };
@@ -218,7 +259,10 @@ export async function renameConversation(
   return next;
 }
 
-export async function deleteConversation(id: string): Promise<void> {
+export async function deleteConversation(
+  id: string,
+  protocol: ConversationProtocol = 'a2ui',
+): Promise<void> {
   const db = await getDB();
   const tx = db.transaction(
     ['conversations', 'messages', 'snapshots', 'meta'],
@@ -231,9 +275,18 @@ export async function deleteConversation(id: string): Promise<void> {
   for (const key of await messageIndex.getAllKeys(id)) {
     await messageStore.delete(key);
   }
-  const active = await tx.objectStore('meta').get('activeConversationId');
+  const activeKey = activeConversationMetaKey(protocol);
+  const active = await tx.objectStore('meta').get(activeKey);
   if (active?.value === id) {
-    await tx.objectStore('meta').delete('activeConversationId');
+    await tx.objectStore('meta').delete(activeKey);
+  }
+  if (protocol === 'a2ui') {
+    const legacyActive = await tx.objectStore('meta').get(
+      'activeConversationId',
+    );
+    if (legacyActive?.value === id) {
+      await tx.objectStore('meta').delete('activeConversationId');
+    }
   }
   await tx.done;
 }
