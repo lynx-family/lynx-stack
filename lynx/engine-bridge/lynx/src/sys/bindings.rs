@@ -11,7 +11,6 @@ macro_rules! opaque {
 
 opaque!(lynx_view_builder_t);
 opaque!(lynx_view_t);
-opaque!(lynx_view_client_t);
 opaque!(lynx_group_t);
 opaque!(lynx_windowless_renderer_t);
 opaque!(lynx_generic_resource_fetcher_t);
@@ -252,21 +251,6 @@ pub type lynx_windowless_ui_task_runner_runs_on_current_thread_callback =
   unsafe extern "C" fn(user_data: *mut c_void) -> bool;
 pub type lynx_windowless_ui_task_runner_post_task_callback =
   unsafe extern "C" fn(task: lynx_task_t, target_time_nanos: u64, user_data: *mut c_void);
-
-pub type on_page_start = unsafe extern "C" fn(*mut lynx_view_client_t, *const c_char);
-pub type on_load_success = unsafe extern "C" fn(*mut lynx_view_client_t);
-pub type on_first_screen = unsafe extern "C" fn(*mut lynx_view_client_t);
-pub type on_page_updated = unsafe extern "C" fn(*mut lynx_view_client_t);
-pub type on_data_updated = unsafe extern "C" fn(*mut lynx_view_client_t);
-pub type on_destroy = unsafe extern "C" fn(*mut lynx_view_client_t);
-pub type on_runtime_ready = unsafe extern "C" fn(*mut lynx_view_client_t);
-pub type on_received_error = unsafe extern "C" fn(*mut lynx_view_client_t, c_int, *const c_char);
-pub type on_timing_setup = unsafe extern "C" fn(*mut lynx_view_client_t, *const c_char);
-pub type on_timing_update =
-  unsafe extern "C" fn(*mut lynx_view_client_t, *const c_char, *const c_char, *const c_char);
-pub type on_enter_foreground = unsafe extern "C" fn(*mut lynx_view_client_t);
-pub type on_enter_background = unsafe extern "C" fn(*mut lynx_view_client_t);
-pub type on_frame_timing = unsafe extern "C" fn(*mut lynx_view_client_t, i64, i64);
 
 #[repr(C)]
 #[derive(Copy, Clone)]

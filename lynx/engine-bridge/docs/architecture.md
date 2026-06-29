@@ -1,93 +1,136 @@
 # Engine bridge architecture
 
-The engine bridge is a single Rust crate, `lynx`, layered over a runtime-loaded
-`libLynx_clay` dynamic library. The crate keeps raw ABI access available while
-giving embedders a smaller safe API for the headless path.
+The engine bridge is a small Cargo workspace that embeds a prebuilt Lynx runtime
+from Rust. It has one library crate, `lynx`, and one executable example,
+`lynx-headless-example`.
 
-## Components
+The Rust code does not link `libLynx_clay` at build time. `lynx::Env` loads the
+runtime with `dlopen`, resolves the C ABI symbols with `dlsym`, and shares those
+function pointers with the safe wrappers that create a headless Lynx view.
 
-`lynx::sys` owns raw C ABI definitions and symbol loading. It contains the
-checked-in structs, constants, callback types, and the `LoadedLibrary` table.
-All direct function pointers live there.
+## Code map
 
-`Env` owns a reference-counted `LoadedLibrary`. It is the entry point for
-loading the runtime and for process-wide runtime settings such as ICU data,
-DevTool, LogBox, and module registration.
+`lynx/src/sys` is the raw ABI layer. `bindings.rs` contains checked-in C types,
+constants, and callback signatures. `loader.rs` owns dynamic library discovery,
+`dlopen`, `dlsym`, and the `LoadedLibrary` symbol table.
 
-`WindowlessRenderer` wraps Lynx renderer callbacks. It stores the Rust renderer
-and host objects behind pointers registered with the C runtime. Callback
-panics are caught before they cross the FFI boundary.
+`lynx/src/env.rs` is the runtime entry point. `Env::load()` reads `LYNX_LIB_PATH`
+or `LYNX_SDK_DIR`, creates a reference-counted `LoadedLibrary`, and exposes
+process-wide runtime settings such as ICU data, DevTool, LogBox, and module
+registration.
 
-`GenericResourceFetcher` wraps resource callbacks. It converts Lynx resource
-requests into Rust values and writes `FetchResponse` values back to the runtime.
+`lynx/src/renderer.rs` wraps the windowless renderer API. It supports software,
+GL, GL-direct, and accelerated renderers. It also exposes host task callbacks,
+input events, and the optional process-global UI task runner.
 
-`LynxGroup` wraps Lynx group ownership. The current safe API covers group
-creation, group-thread toggling, and preload JavaScript paths so headless hosts
-can provide runtime JavaScript explicitly when needed.
+`lynx/src/resource.rs` wraps generic resource loading. It converts C resource
+requests into `ResourceRequest` values and writes `FetchResponse` data back to
+the runtime.
 
-`HeadlessView` builds and owns a Lynx view. It binds the renderer, optional
-resource fetcher, optional Lynx group, viewport metrics, ICU path, and module
-registrations before creating the runtime view.
+`lynx/src/group.rs` wraps `LynxGroup`. The headless example uses it to preload
+`lynx_core.js` when a full SDK path is available.
 
-`examples/headless` shows how these pieces fit together in a non-windowed
-process. It uses a software renderer and a folder-backed resource fetcher.
+`lynx/src/view.rs` creates and owns the headless view. `HeadlessViewBuilder`
+binds the renderer, optional resource fetcher, optional group, viewport metrics,
+ICU path, and module registrations before it calls `lynx_view_create`.
+`HeadlessView` loads templates, updates data, sends global events, and forwards
+viewport changes.
 
-## Runtime loading flow
+`examples/headless` is the executable workflow. It wires a software renderer, a
+folder-backed resource fetcher, and a `HeadlessView` together, then writes the
+latest non-transparent software frame as a PNG.
 
-1. The caller sets `LYNX_LIB_PATH` or `LYNX_SDK_DIR`.
-2. `Env::load()` asks `lynx::sys` for candidate runtime paths.
-3. `LoadedLibrary` opens the first loadable dynamic library.
-4. `LoadedLibrary` resolves all required `lynx_*` and `lynx_rust_*` symbols.
-5. Safe wrappers keep an `Arc<LoadedLibrary>` so function pointers remain valid
-   while wrappers created from the environment are alive.
+## Runtime loading workflow
 
-No Rust crate in this workspace links `libLynx_clay` at build time.
+1. The caller sets `LYNX_LIB_PATH` to a runtime library or `LYNX_SDK_DIR` to an
+   SDK folder.
+2. `Env::load()` asks `sys::candidate_library_paths()` for runtime paths.
+3. `LoadedLibrary::load()` opens the first loadable dynamic library.
+4. `LoadedLibrary::from_dynamic_library()` resolves every required `lynx_*` and
+   `lynx_rust_*` symbol.
+5. Safe wrappers clone `Arc<LoadedLibrary>` so the dynamic library stays loaded
+   while any object created from the environment is alive.
 
-## Ownership model
+No crate in this workspace links `libLynx_clay` at compile time, so ordinary
+Rust unit tests can run without a local SDK.
 
-Runtime objects are released through RAII wrappers:
+## Headless rendering workflow
+
+1. The example loads `Env` and configures ICU data from `LYNX_SDK_DIR` when the
+   SDK contains it.
+2. It creates a `WindowlessRenderer::software()` with a `FrameSink`. Each
+   software present callback copies the current frame bytes into Rust-owned
+   memory.
+3. It creates a `DirectoryResourceFetcher` from every `--asset-root` and the
+   bundle parent folder. The fetcher resolves `assets://`, `local://`,
+   `file://`, and `file://lynx?` URLs to files under those roots.
+4. It optionally creates a `LynxGroup` with preload JavaScript paths. When
+   `LYNX_SDK_DIR` points at a full SDK, the example tries to discover
+   `lynx_core.js`.
+5. It builds `HeadlessView` with an `800x600` viewport and loads the bundle with
+   `load_template_bundle_bytes_with_global_props()`.
+6. It pumps renderer tasks and, when configured, the Rust global UI task queue
+   until a non-transparent software frame arrives or the timeout expires.
+7. It writes the captured RGBA frame to the requested screenshot path.
+
+On macOS, real ReactLynx bundles should use `--native-ui-loop`. That lets the
+runtime drive its Darwin/FML UI loop. The Rust queue-backed global UI runner is
+kept for focused task-runner experiments, but it does not drive every actor used
+by the GenUI React fixture.
+
+## Screenshot test workflow
+
+The screenshot test validates the real GenUI fixture output:
+
+1. The test skips on macOS unless `LYNX_LIB_PATH` or `LYNX_SDK_DIR` is set.
+2. It runs the checked-in compiled bundle at
+   `packages/genui/ui-judge/tests/fixtures/react/.generated/main.lynx.bundle`.
+3. It copies `examples/headless/tests/fixtures/LynxResources.bundle` beside the
+   Cargo-built example binary. The macOS runtime resolves `lynx_core.js` through
+   the process main bundle.
+4. It launches `lynx-headless-example --native-ui-loop` with the bundle folder
+   and `src/assets` as asset roots.
+5. It compares the rendered PNG byte-for-byte with
+   `packages/genui/ui-judge/tests/fixtures/react/main.lynx.snapshot.png`.
+
+Set `LYNX_UPDATE_REFERENCES=1` when you intentionally update the reference
+image. Rerun the same test without that environment variable before committing.
+
+## Ownership and error boundaries
+
+Runtime objects are owned by RAII wrappers:
 
 - `WindowlessRenderer` calls `lynx_windowless_renderer_release`.
 - `GenericResourceFetcher` calls `lynx_generic_resource_fetcher_release`.
 - `LynxGroup` calls `lynx_group_release`.
 - `HeadlessView` calls `lynx_view_release`.
-- internal template and meta objects release themselves after load/update calls.
+- internal template, bundle, load-meta, and update-meta wrappers release their
+  raw runtime objects after load or update operations.
 
-Callback contexts are stored in process-local maps keyed by runtime pointers.
-The runtime finalizer callbacks remove those entries and drop the boxed Rust
-state. This avoids passing borrowed Rust references through the C ABI.
+Callback contexts for renderers and resource fetchers are stored in
+process-local maps keyed by runtime pointers. Runtime finalizer callbacks remove
+those entries and drop the boxed Rust state. This keeps borrowed Rust references
+out of the C ABI.
 
-## Error boundaries
+The safe API returns `Result<T, lynx::Error>` for failures that Rust can detect:
+invalid C strings, missing runtime libraries, missing symbols, null pointers
+from runtime constructors, template-bundle decode errors, and local I/O errors
+in the example.
 
-The safe API returns `Result<T, lynx::Error>` for operations that can fail before
-control enters the runtime, such as:
-
-- invalid C strings
-- missing or unloadable runtime libraries
-- missing required symbols
-- null pointers returned by runtime constructors
-- local I/O in the headless example
-
-Runtime callbacks catch Rust panics with `catch_unwind` and translate them into
-failure values that the C ABI can handle. Panics must not cross FFI boundaries.
+Rust callbacks catch panics with `catch_unwind` before returning to C. Panics
+must not cross FFI boundaries.
 
 ## CI coverage
 
-The Rust CI job validates two paths:
+The `Engine Bridge (macOS)` CI job downloads `libLynx_clay.dylib` into a
+temporary SDK folder, ad-hoc signs it, sets `LYNX_SDK_DIR`, and runs:
 
-- ordinary Rust checks that do not need a runtime
-- runtime loading on macOS with a downloaded `libLynx_clay.dylib`
+```sh
+cargo fmt --all --check
+cargo clippy --locked --all-targets --all-features -- -D warnings
+cargo test --locked --all-targets --all-features
+```
 
-The runtime-loading test only runs the real loader when `LYNX_LIB_PATH` or
-`LYNX_SDK_DIR` is set. This keeps local unit tests independent from binary
-artifacts while still checking the downloaded dylib in CI.
-
-The headless example has a real rendering comparison test that runs
-`packages/genui/ui-judge/tests/fixtures/react/.generated/main.lynx.bundle` and
-compares the captured software frame with
-`packages/genui/ui-judge/tests/fixtures/react/main.lynx.snapshot.png`.
-The macOS test copies `examples/headless/tests/fixtures/LynxResources.bundle`
-beside the example binary before launch because the runtime resolves
-`lynx_core.js` through the process main bundle. Real bundle rendering uses the
-native Darwin/FML UI loop; the Rust queue-backed global UI runner is kept for
-focused runner experiments and does not drive every actor used by ReactLynx.
+The runtime-loading unit test only exercises the real loader when `LYNX_LIB_PATH`
+or `LYNX_SDK_DIR` is set. This keeps local tests independent from binary
+artifacts while CI still validates the downloaded runtime.

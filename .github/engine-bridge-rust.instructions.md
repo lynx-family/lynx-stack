@@ -10,4 +10,6 @@ Headless screenshot coverage should run the real GenUI React fixture bundle at `
 
 For macOS runtime experiments, remember that `LynxResources.bundle` is resolved through the process main bundle; for Cargo binaries that means placing the bundle beside `target/debug/lynx-headless-example` or the built test binary. Passing `--preload-js` can provide `lynx_core.js`, but it does not replace the runtime's bundle lookup. Real React fixture rendering should use `--native-ui-loop`; the Rust queue-backed global UI runner does not drive every FML actor used by ReactLynx.
 
+Keep the safe API surface tied to exercised workflows. Do not add view-client lifecycle wrappers, callback glue, or extra dylib symbols only for debugging screenshot tests unless a committed integration path uses them.
+
 Keep `README.md` and `docs/architecture.md` in sync with API or ownership changes. Do not add SDK packaging scripts unless the workspace also owns the build inputs and CI path that validate them.

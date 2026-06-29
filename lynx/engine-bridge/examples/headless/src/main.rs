@@ -1,7 +1,7 @@
 use lynx::{
   run_global_ui_task, set_global_ui_task_runner, Env, FetchResponse, GlobalUiTaskRunner,
   HeadlessView, LynxGroup, ResourceFetcher, ResourceRequest, SoftwareFrame, SoftwareRenderer, Task,
-  ViewClient, ViewClientHandler, WindowlessHost, WindowlessRenderer,
+  WindowlessHost, WindowlessRenderer,
 };
 use lynx_headless_example::write_png;
 use std::env;
@@ -145,153 +145,6 @@ impl SoftwareRenderer for FrameSink {
   }
 }
 
-#[derive(Clone, Default)]
-struct LifecycleRecorder {
-  state: Arc<Mutex<LifecycleState>>,
-}
-
-#[derive(Debug, Default)]
-struct LifecycleState {
-  page_start_url: Option<String>,
-  load_success: bool,
-  first_screen: bool,
-  page_updates: usize,
-  data_updates: usize,
-  runtime_ready: bool,
-  enter_foreground_count: usize,
-  enter_background_count: usize,
-  frame_timings: usize,
-  destroyed: bool,
-  errors: Vec<String>,
-}
-
-impl LifecycleRecorder {
-  fn state(&self) -> Arc<Mutex<LifecycleState>> {
-    self.state.clone()
-  }
-}
-
-impl LifecycleState {
-  fn summary(&self) -> String {
-    format!(
-      "page_start_url={:?} load_success={} first_screen={} runtime_ready={} page_updates={} data_updates={} enter_foreground={} enter_background={} frame_timings={} destroyed={} errors={:?}",
-      self.page_start_url,
-      self.load_success,
-      self.first_screen,
-      self.runtime_ready,
-      self.page_updates,
-      self.data_updates,
-      self.enter_foreground_count,
-      self.enter_background_count,
-      self.frame_timings,
-      self.destroyed,
-      self.errors
-    )
-  }
-}
-
-impl ViewClientHandler for LifecycleRecorder {
-  fn on_page_start(&mut self, url: &str) {
-    println!("view lifecycle: page_start url={url}");
-    self
-      .state
-      .lock()
-      .expect("lifecycle lock poisoned")
-      .page_start_url = Some(url.to_string());
-  }
-
-  fn on_load_success(&mut self) {
-    println!("view lifecycle: load_success");
-    self
-      .state
-      .lock()
-      .expect("lifecycle lock poisoned")
-      .load_success = true;
-  }
-
-  fn on_first_screen(&mut self) {
-    println!("view lifecycle: first_screen");
-    self
-      .state
-      .lock()
-      .expect("lifecycle lock poisoned")
-      .first_screen = true;
-  }
-
-  fn on_page_updated(&mut self) {
-    println!("view lifecycle: page_updated");
-    self
-      .state
-      .lock()
-      .expect("lifecycle lock poisoned")
-      .page_updates += 1;
-  }
-
-  fn on_data_updated(&mut self) {
-    println!("view lifecycle: data_updated");
-    self
-      .state
-      .lock()
-      .expect("lifecycle lock poisoned")
-      .data_updates += 1;
-  }
-
-  fn on_runtime_ready(&mut self) {
-    println!("view lifecycle: runtime_ready");
-    self
-      .state
-      .lock()
-      .expect("lifecycle lock poisoned")
-      .runtime_ready = true;
-  }
-
-  fn on_received_error(&mut self, error_code: i32, message: &str) {
-    println!("view lifecycle: error code={error_code} message={message}");
-    self
-      .state
-      .lock()
-      .expect("lifecycle lock poisoned")
-      .errors
-      .push(format!("{error_code}: {message}"));
-  }
-
-  fn on_enter_foreground(&mut self) {
-    self
-      .state
-      .lock()
-      .expect("lifecycle lock poisoned")
-      .enter_foreground_count += 1;
-  }
-
-  fn on_enter_background(&mut self) {
-    self
-      .state
-      .lock()
-      .expect("lifecycle lock poisoned")
-      .enter_background_count += 1;
-  }
-
-  fn on_frame_timing(&mut self, frame_start_time_in_ns: i64, frame_finish_time_in_ns: i64) {
-    println!(
-      "view lifecycle: frame_timing start={frame_start_time_in_ns} finish={frame_finish_time_in_ns}"
-    );
-    self
-      .state
-      .lock()
-      .expect("lifecycle lock poisoned")
-      .frame_timings += 1;
-  }
-
-  fn on_destroy(&mut self) {
-    println!("view lifecycle: destroy");
-    self
-      .state
-      .lock()
-      .expect("lifecycle lock poisoned")
-      .destroyed = true;
-  }
-}
-
 struct DirectoryResourceFetcher {
   roots: Vec<PathBuf>,
 }
@@ -422,10 +275,7 @@ fn main() -> lynx::Result<()> {
   if let Some(group) = lynx_group {
     builder = builder.lynx_group(group);
   }
-  let lifecycle = LifecycleRecorder::default();
-  let lifecycle_state = lifecycle.state();
-  let mut view = builder.build()?;
-  view.add_client(ViewClient::new(&env, lifecycle)?);
+  let view = builder.build()?;
   view.enter_foreground();
 
   let bundle = fs::read(&options.bundle).map_err(|source| lynx::Error::Io {
@@ -484,12 +334,8 @@ fn main() -> lynx::Result<()> {
     .expect("frame lock poisoned")
     .take()
     .ok_or_else(|| {
-      let lifecycle = lifecycle_state
-        .lock()
-        .expect("lifecycle lock poisoned")
-        .summary();
       lynx::Error::Message(format!(
-        "timed out waiting for software frame; renderer_tasks_run={renderer_tasks_run} global_tasks_run={global_tasks_run}; {lifecycle}"
+        "timed out waiting for software frame; renderer_tasks_run={renderer_tasks_run} global_tasks_run={global_tasks_run}"
       ))
     })?;
   if frame.visible_pixel_count() == 0 {
