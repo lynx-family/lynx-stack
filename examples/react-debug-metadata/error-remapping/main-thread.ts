@@ -139,18 +139,20 @@ export async function inferMainThread(
             line: cand.line,
             column: cand.column,
           });
+          // The engine reports the LAST bytecode on the throw line (device:
+          // function_id 21, pc 38). Scan every function_info entry and keep the
+          // globally highest pc, so the pick is deterministic rather than
+          // JSON-order-dependent when several functions map to the same line.
           if (
             pos.source && path.basename(pos.source) === file
             && pos.line === throwLine
+            && i + 1 > pc
           ) {
-            // the engine reports the LAST bytecode on the throw line (device:
-            // function_id 21, pc 38); keep the highest pc.
             fid = fn.function_id;
             pc = i + 1;
             lc = cand;
           }
         }
-        if (fid >= 0) break;
       }
       if (fid < 0 || !lc) {
         throw new Error(

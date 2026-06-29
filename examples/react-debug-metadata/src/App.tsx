@@ -50,6 +50,8 @@ export function App() {
       },
     }).then((res: typeof import('./utils/add.js')) => {
       console.info('dynamic import add', res.add(1, 2));
+    }).catch((err) => {
+      console.error('dynamic import add failed', err);
     });
     void import(createProducerBundleUrl('dynamic.lynx.bundle'), {
       with: {
@@ -59,7 +61,11 @@ export function App() {
       console.info('dynamic import dynamic');
       void res.dynamicAdd(1, 2).then((res) => {
         console.info('dynamic add', res);
+      }).catch((err) => {
+        console.error('dynamic add failed', err);
       });
+    }).catch((err) => {
+      console.error('dynamic import dynamic failed', err);
     });
   }, []);
 

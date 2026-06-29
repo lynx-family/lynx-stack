@@ -35,7 +35,7 @@ token's start / end / call-expr end / module top.
 
 ## Files
 
-```
+```text
 cases.ts        Every crash button: { name, kind, err, find, token } | { name, kind:'main-thread', marker }
 infer.ts        background frames: locate the token, pick the column by engine + err
 mainThread.ts        main-thread frames: invert bytecode-debug-info → (function_id, pc) → 2-step reverse

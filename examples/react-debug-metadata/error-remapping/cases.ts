@@ -12,8 +12,8 @@
  *   bytecode is engine-independent, so a mainThread case reverses the same for every
  *   engine (kept in all three files for page-order parity).
  *
- * MainThread pcs and the QuickJS column rule are inferred without a device sample
- * yet — verify those against a device.
+ * MainThread pcs are inferred without a device sample yet — verify those against
+ * a device. (The QuickJS column anchors are device-calibrated; see infer.ts.)
  */
 import type { ErrorKind } from './infer.js';
 
