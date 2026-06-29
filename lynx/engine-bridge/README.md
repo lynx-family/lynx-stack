@@ -36,6 +36,23 @@ windowed APIs such as `NativeView`.
   local or CI loading.
 - `docs/architecture.md` describes the crate boundaries and ownership model.
 
+## How the bridge works
+
+The bridge follows this runtime path:
+
+1. `Env::load()` finds and opens `libLynx_clay` from `LYNX_LIB_PATH` or
+   `LYNX_SDK_DIR`.
+2. `lynx::sys::LoadedLibrary` resolves the required C ABI symbols.
+3. `WindowlessRenderer` and `GenericResourceFetcher` register Rust callbacks
+   with the runtime.
+4. `HeadlessViewBuilder` binds the renderer, resource fetcher, optional
+   `LynxGroup`, viewport metrics, ICU path, and module registrations.
+5. `HeadlessView` loads a template bundle, pumps renderer tasks, receives a
+   software frame, and the headless example writes that frame to PNG.
+
+See `docs/architecture.md` for the module walkthrough and CI rendering
+workflow.
+
 ## Runtime loading
 
 Set one of these environment variables before calling `Env::load()`:

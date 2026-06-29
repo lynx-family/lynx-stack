@@ -27,7 +27,7 @@ pub use renderer::{
 pub use resource::{
   FetchResponse, GenericResourceFetcher, ResourceFetcher, ResourceRequest, ResourceType,
 };
-pub use view::{HeadlessView, HeadlessViewBuilder, ViewClient, ViewClientHandler};
+pub use view::{HeadlessView, HeadlessViewBuilder};
 
 pub use sys::{lynx_key_event_t as KeyEvent, lynx_pointer_event_t as PointerEvent};
 
