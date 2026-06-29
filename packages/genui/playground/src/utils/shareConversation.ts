@@ -7,6 +7,9 @@ import type { SharedConversationDoc } from '../storage/sharedConversation.js';
 
 /** Query param that carries the URL of a shared conversation document. */
 export const IMPORT_CONVERSATION_PARAM = 'importConv';
+const SUPABASE_STORAGE_HOST_SUFFIX = '.supabase.co';
+const SUPABASE_CONVERSATION_PATH_PATTERN =
+  /^\/storage\/v1\/object\/public\/genui\/a2ui\/[^/]+\/messages\.json$/u;
 
 /**
  * Upload a serialized conversation to the GenUI server (Supabase Storage) and
@@ -42,6 +45,46 @@ export function readImportConversationParam(): string | null {
   return new URLSearchParams(window.location.search).get(
     IMPORT_CONVERSATION_PARAM,
   );
+}
+
+function currentPageOrigin(): string {
+  return typeof window === 'undefined'
+    ? 'http://localhost'
+    : window.location.origin;
+}
+
+function isTrustedSupabaseConversationUrl(endpoint: URL): boolean {
+  return endpoint.protocol === 'https:'
+    && endpoint.hostname.endsWith(SUPABASE_STORAGE_HOST_SUFFIX)
+    && SUPABASE_CONVERSATION_PATH_PATTERN.test(endpoint.pathname);
+}
+
+/**
+ * Resolve and validate a shared-conversation document URL before fetching it.
+ * Conversation shares are published either on the current playground origin
+ * (local/dev payload store) or as public Supabase Storage objects created by
+ * the GenUI payload publisher.
+ */
+export function resolveTrustedConversationImportUrl(
+  raw: string,
+  pageOrigin = currentPageOrigin(),
+): string | null {
+  try {
+    const endpoint = new URL(raw, pageOrigin);
+    const origin = new URL(pageOrigin);
+    if (
+      endpoint.origin === origin.origin
+      && (endpoint.protocol === 'http:' || endpoint.protocol === 'https:')
+    ) {
+      return endpoint.toString();
+    }
+    if (isTrustedSupabaseConversationUrl(endpoint)) {
+      return endpoint.toString();
+    }
+  } catch {
+    return null;
+  }
+  return null;
 }
 
 /** Remove the import param from the URL so a reload does not re-import. */

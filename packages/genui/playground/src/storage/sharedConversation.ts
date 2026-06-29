@@ -3,7 +3,11 @@
 // LICENSE file in the root directory of this source tree.
 
 import type { ConversationRecord } from './conversationRepo.js';
-import type { PreviewPayloadUrls, PreviewPerformanceMetrics } from './types.js';
+import type {
+  ConversationProtocol,
+  PreviewPayloadUrls,
+  PreviewPerformanceMetrics,
+} from './types.js';
 
 export const SHARED_CONVERSATION_KIND = 'a2ui-conversation';
 
@@ -110,4 +114,14 @@ export function isSharedConversationDoc(
     && Array.isArray(doc.messages)
     && doc.messages.every((message) => isSharedConversationMessage(message))
   );
+}
+
+export function resolveSharedConversationProtocol(
+  doc: Pick<SharedConversationDoc, 'protocol'>,
+): ConversationProtocol | null {
+  if (doc.protocol === undefined) return 'a2ui';
+  if (doc.protocol === 'a2ui' || doc.protocol === 'openui') {
+    return doc.protocol;
+  }
+  return null;
 }

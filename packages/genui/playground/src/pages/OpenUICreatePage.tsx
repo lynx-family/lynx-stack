@@ -32,6 +32,7 @@ import {
 } from '../storage/conversationRepo.js';
 import {
   isSharedConversationDoc,
+  resolveSharedConversationProtocol,
   serializeConversation,
 } from '../storage/sharedConversation.js';
 import { copyToClipboard } from '../utils/clipboard.js';
@@ -42,6 +43,7 @@ import {
   clearImportConversationParam,
   publishConversation,
   readImportConversationParam,
+  resolveTrustedConversationImportUrl,
 } from '../utils/shareConversation.js';
 
 interface ChatMessage {
@@ -541,7 +543,13 @@ export function OpenUICreatePage(props: { protocol: Protocol }) {
     importHandledRef.current = true;
     void (async () => {
       try {
-        const response = await window.fetch(importUrl);
+        const trustedImportUrl = resolveTrustedConversationImportUrl(importUrl);
+        if (!trustedImportUrl) {
+          throw new Error('Untrusted shared conversation URL');
+        }
+        const response = await window.fetch(trustedImportUrl, {
+          credentials: 'omit',
+        });
         if (!response.ok) {
           throw new Error(
             `Failed to load shared conversation: ${response.status}`,
@@ -551,6 +559,10 @@ export function OpenUICreatePage(props: { protocol: Protocol }) {
         if (!isSharedConversationDoc(doc)) {
           throw new Error('Invalid shared conversation document');
         }
+        const docProtocol = resolveSharedConversationProtocol(doc);
+        if (docProtocol !== protocol.name) {
+          throw new Error('Shared conversation protocol does not match OpenUI');
+        }
         await importShared(doc);
       } catch (err) {
         console.warn('[openui] Failed to import shared conversation', err);
@@ -558,7 +570,7 @@ export function OpenUICreatePage(props: { protocol: Protocol }) {
         clearImportConversationParam();
       }
     })();
-  }, [importShared, isReady]);
+  }, [importShared, isReady, protocol.name]);
 
   const applyScenario = useCallback((scenario: OpenUIScenario) => {
     const nextGenerated: GeneratedOpenUI = {
@@ -576,7 +588,7 @@ export function OpenUICreatePage(props: { protocol: Protocol }) {
   }, []);
 
   const handleLoadScenario = useCallback((scenario: OpenUIScenario) => {
-    if (isGenerating) return;
+    if (!isReady || isGenerating) return;
     abortRef.current?.abort();
     abortRef.current = null;
     setInputValue('');
@@ -591,11 +603,11 @@ export function OpenUICreatePage(props: { protocol: Protocol }) {
       a2uiMessages: [],
       previewMessages: [],
     });
-  }, [applyScenario, isGenerating, recordTurn]);
+  }, [applyScenario, isGenerating, isReady, recordTurn]);
 
   const handleSend = useCallback(() => {
     const prompt = inputValue.trim();
-    if (!prompt || isGenerating) return;
+    if (!isReady || !prompt || isGenerating) return;
 
     abortRef.current?.abort();
     const controller = new AbortController();
@@ -729,7 +741,13 @@ export function OpenUICreatePage(props: { protocol: Protocol }) {
         }
       }
     })();
-  }, [buildConversationContext, inputValue, isGenerating, recordTurn]);
+  }, [
+    buildConversationContext,
+    inputValue,
+    isGenerating,
+    isReady,
+    recordTurn,
+  ]);
 
   const handleKeyDown = useCallback(
     (event: KeyboardEvent<HTMLTextAreaElement>) => {
@@ -743,6 +761,7 @@ export function OpenUICreatePage(props: { protocol: Protocol }) {
   );
 
   const handleCreateConversation = useCallback(() => {
+    if (!isReady) return;
     abortRef.current?.abort();
     abortRef.current = null;
     setInputValue('');
@@ -751,14 +770,14 @@ export function OpenUICreatePage(props: { protocol: Protocol }) {
     setMessages([WELCOME_MESSAGE]);
     setPreviewRenderKey((value) => value + 1);
     void createNew();
-  }, [createNew]);
+  }, [createNew, isReady]);
 
   const handleSwitchConversation = useCallback((id: string) => {
-    if (isGenerating) return;
+    if (!isReady || isGenerating) return;
     abortRef.current?.abort();
     abortRef.current = null;
     void switchTo(id);
-  }, [isGenerating, switchTo]);
+  }, [isGenerating, isReady, switchTo]);
 
   const shareConversation = useCallback(
     async (id: string) => {
@@ -934,7 +953,7 @@ export function OpenUICreatePage(props: { protocol: Protocol }) {
                           key={prompt.label}
                           type='button'
                           className='chatSuggestionChip'
-                          disabled={isGenerating}
+                          disabled={!isReady || isGenerating}
                           onClick={() => setInputValue(prompt.text)}
                         >
                           {prompt.label}
@@ -962,7 +981,7 @@ export function OpenUICreatePage(props: { protocol: Protocol }) {
                           key={scenario.id}
                           type='button'
                           className='chatSuggestionChip'
-                          disabled={isGenerating}
+                          disabled={!isReady || isGenerating}
                           onClick={() => handleLoadScenario(scenario)}
                         >
                           {scenario.title}
@@ -981,7 +1000,7 @@ export function OpenUICreatePage(props: { protocol: Protocol }) {
                 placeholder='Describe the OpenUI surface, data, state, or interactions you want to generate...'
                 value={inputValue}
                 rows={3}
-                disabled={isGenerating}
+                disabled={!isReady || isGenerating}
                 onChange={(event) => setInputValue(event.target.value)}
                 onKeyDown={handleKeyDown}
               />
@@ -989,7 +1008,7 @@ export function OpenUICreatePage(props: { protocol: Protocol }) {
                 <Button
                   variant='ghost'
                   size='lg'
-                  disabled={isGenerating}
+                  disabled={!isReady || isGenerating}
                   onClick={handleCreateConversation}
                 >
                   New draft
@@ -998,7 +1017,8 @@ export function OpenUICreatePage(props: { protocol: Protocol }) {
                   variant='primary'
                   size='lg'
                   iconBefore={Send}
-                  disabled={isGenerating || inputValue.trim().length === 0}
+                  disabled={!isReady || isGenerating
+                    || inputValue.trim().length === 0}
                   onClick={handleSend}
                 >
                   {isGenerating ? 'Generating' : 'Send'}
