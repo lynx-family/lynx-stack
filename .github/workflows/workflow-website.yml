@@ -59,8 +59,10 @@ jobs:
           pnpm --filter genui-playground build
       - name: Copy GenUI Playground into website output
         run: |
-          rm -rf website/doc_build/genui
+          rm -rf website/doc_build/genui website/doc_build/zh/genui
+          mkdir -p website/doc_build/zh
           cp -r packages/genui/playground/dist website/doc_build/genui
+          cp -r packages/genui/playground/dist website/doc_build/zh/genui
       - name: Upload artifact
         uses: actions/upload-pages-artifact@7b1f4a764d45c48632c6b24a0339c27f5614fb0b # v4
         with:
