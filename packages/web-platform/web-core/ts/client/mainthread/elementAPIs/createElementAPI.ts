@@ -174,10 +174,11 @@ export function createElementAPI(
     const dom = document.createElement(
       'div',
     ) as HTMLElement as DecoratedHTMLElement;
-    const uniqueId = wasmContext.create_element_common(
+    const uniqueId = wasmContext.create_element(
       0,
       dom,
       new WeakRef(dom),
+      undefined,
       componentCSSID,
       componentID,
     );
@@ -196,7 +197,7 @@ export function createElementAPI(
   return {
     __CreateView(parentComponentUniqueId: number) {
       const dom = document.createElement('x-view') as DecoratedHTMLElement;
-      dom[uniqueIdSymbol] = wasmContext.create_element_common(
+      dom[uniqueIdSymbol] = wasmContext.create_element(
         parentComponentUniqueId,
         dom,
         new WeakRef(dom),
@@ -205,7 +206,7 @@ export function createElementAPI(
     },
     __CreateText(parentComponentUniqueId) {
       const dom = document.createElement('x-text') as DecoratedHTMLElement;
-      dom[uniqueIdSymbol] = wasmContext.create_element_common(
+      dom[uniqueIdSymbol] = wasmContext.create_element(
         parentComponentUniqueId,
         dom,
         new WeakRef(dom),
@@ -214,7 +215,7 @@ export function createElementAPI(
     },
     __CreateImage(parentComponentUniqueId) {
       const dom = document.createElement('x-image') as DecoratedHTMLElement;
-      dom[uniqueIdSymbol] = wasmContext.create_element_common(
+      dom[uniqueIdSymbol] = wasmContext.create_element(
         parentComponentUniqueId,
         dom,
         new WeakRef(dom),
@@ -225,7 +226,7 @@ export function createElementAPI(
       const dom = document.createElement(
         LYNX_TAG_TO_HTML_TAG_MAP['frame']!,
       ) as DecoratedHTMLElement;
-      dom[uniqueIdSymbol] = wasmContext.create_element_common(
+      dom[uniqueIdSymbol] = wasmContext.create_element(
         parentComponentUniqueId,
         dom,
         new WeakRef(dom),
@@ -235,7 +236,7 @@ export function createElementAPI(
     __CreateRawText(text) {
       const dom = document.createElement('raw-text') as DecoratedHTMLElement;
       dom.setAttribute('text', text);
-      dom[uniqueIdSymbol] = wasmContext.create_element_common(
+      dom[uniqueIdSymbol] = wasmContext.create_element(
         -1,
         dom,
         new WeakRef(dom),
@@ -245,7 +246,7 @@ export function createElementAPI(
     __CreateScrollView(parentComponentUniqueId) {
       const dom = document.createElement('scroll-view') as DecoratedHTMLElement;
 
-      dom[uniqueIdSymbol] = wasmContext.create_element_common(
+      dom[uniqueIdSymbol] = wasmContext.create_element(
         parentComponentUniqueId,
         dom,
         new WeakRef(dom),
@@ -256,7 +257,7 @@ export function createElementAPI(
       const dom = document.createElement(
         LYNX_TAG_TO_HTML_TAG_MAP[tagName] ?? tagName,
       ) as DecoratedHTMLElement;
-      dom[uniqueIdSymbol] = wasmContext.create_element_common(
+      dom[uniqueIdSymbol] = wasmContext.create_element(
         parentComponentUniqueId,
         dom,
         new WeakRef(dom),
@@ -271,10 +272,11 @@ export function createElementAPI(
       name,
     ) {
       const dom = document.createElement('x-view') as DecoratedHTMLElement;
-      dom[uniqueIdSymbol] = wasmContext.create_element_common(
+      dom[uniqueIdSymbol] = wasmContext.create_element(
         parentComponentUniqueId,
         dom,
         new WeakRef(dom),
+        undefined,
         componentCSSID,
         componentID,
       );
@@ -290,7 +292,7 @@ export function createElementAPI(
       const dom = document.createElement(
         'lynx-wrapper',
       ) as DecoratedHTMLElement;
-      dom[uniqueIdSymbol] = wasmContext.create_element_common(
+      dom[uniqueIdSymbol] = wasmContext.create_element(
         parentComponentUniqueId,
         dom,
         new WeakRef(dom),
@@ -301,7 +303,7 @@ export function createElementAPI(
       const dom = document.createElement('x-list') as DecoratedHTMLElement;
       dom.componentAtIndex = componentAtIndex;
       dom.enqueueComponent = enqueueComponent;
-      dom[uniqueIdSymbol] = wasmContext.create_element_common(
+      dom[uniqueIdSymbol] = wasmContext.create_element(
         parentComponentUniqueId,
         dom,
         new WeakRef(dom),

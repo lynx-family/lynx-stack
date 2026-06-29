@@ -94,25 +94,7 @@ impl MainThreadWasmContext {
     self.page_element_unique_id = Some(unique_id);
   }
 
-  pub fn create_element_common(
-    self: &mut MainThreadWasmContext,
-    parent_component_unique_id: usize,
-    dom: web_sys::HtmlElement,
-    dom_ref: js_sys::WeakRef,
-    component_css_id: Option<i32>,
-    component_id: Option<String>,
-  ) -> usize {
-    self.create_element_with_css_id(
-      parent_component_unique_id,
-      dom,
-      dom_ref,
-      None,
-      component_css_id,
-      component_id,
-    )
-  }
-
-  pub(crate) fn create_element_with_css_id(
+  pub fn create_element(
     self: &mut MainThreadWasmContext,
     parent_component_unique_id: usize,
     dom: web_sys::HtmlElement,
@@ -155,7 +137,6 @@ impl MainThreadWasmContext {
       .unique_id_to_element_map
       .push(Some(Rc::new(RefCell::new(element_data))));
     self.unique_id_to_dom_map.insert(unique_id, dom_ref);
-    self.mts_binding.set_element_unique_id(&dom, unique_id);
     unique_id
   }
 

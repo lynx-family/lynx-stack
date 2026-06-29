@@ -269,15 +269,6 @@ impl MainThreadWasmContext {
       .and_then(|value| value.parse::<usize>().ok())
   }
 
-  fn get_dom_by_unique_id_strong(&self, unique_id: usize) -> Option<HtmlElement> {
-    self
-      .unique_id_to_dom_map
-      .get(&unique_id)?
-      .deref()?
-      .dyn_into::<HtmlElement>()
-      .ok()
-  }
-
   fn set_style_attribute(&self, element: &HtmlElement, value: &JsValue) {
     if Self::value_is_nullish(value) {
       let _ = element.remove_attribute("style");
@@ -367,7 +358,10 @@ impl MainThreadWasmContext {
     }
 
     let element = self
-      .get_dom_by_unique_id_strong(target_unique_id)
+      .unique_id_to_dom_map
+      .get(&target_unique_id)
+      .and_then(|weak_ref| weak_ref.deref())
+      .and_then(|value| value.dyn_into::<HtmlElement>().ok())
       .ok_or_else(|| JsError::new("Element template target not found"))?;
     let normalized_key = match key {
       "css-id" => constants::CSS_ID_ATTRIBUTE,
@@ -913,13 +907,18 @@ impl MainThreadWasmContext {
         .get_attribute(constants::CSS_ID_ATTRIBUTE)
         .and_then(|value| value.parse::<i32>().ok())
         .unwrap_or(0);
-      let unique_id = self.create_element_with_css_id(
+      let unique_id = self.create_element(
         0,
         element.clone(),
         WeakRef::new(element),
         Some(css_id),
         None,
         None,
+      );
+      let _ = Reflect::set(
+        element.as_ref(),
+        &JsValue::from_str(constants::LYNX_UNIQUE_ID_PROPERTY),
+        &JsValue::from_f64(unique_id as f64),
       );
       unique_ids_by_index.push(unique_id);
       if !self.config_enable_css_selector {
@@ -1062,7 +1061,12 @@ impl MainThreadWasmContext {
       .map_err(|e| JsError::new(&format!("Failed to create typed template: {e:?}")))?
       .unchecked_into::<HtmlElement>();
     let root_unique_id =
-      self.create_element_with_css_id(0, root.clone(), WeakRef::new(&root), Some(0), None, None);
+      self.create_element(0, root.clone(), WeakRef::new(&root), Some(0), None, None);
+    let _ = Reflect::set(
+      root.as_ref(),
+      &JsValue::from_str(constants::LYNX_UNIQUE_ID_PROPERTY),
+      &JsValue::from_f64(root_unique_id as f64),
+    );
     root
       .set_attribute(
         constants::LYNX_ELEMENT_TEMPLATE_MARKER_ATTRIBUTE,
@@ -1277,14 +1281,20 @@ impl MainThreadWasmContext {
         (
           anchor,
           self
-            .get_dom_by_unique_id_strong(root_unique_id)
+            .unique_id_to_dom_map
+            .get(&root_unique_id)
+            .and_then(|weak_ref| weak_ref.deref())
+            .and_then(|value| value.dyn_into::<HtmlElement>().ok())
             .ok_or_else(|| JsError::new("Element template host not found"))?,
         )
       } else if self.page_element_unique_id == Some(root_unique_id) {
         (
           None,
           self
-            .get_dom_by_unique_id_strong(root_unique_id)
+            .unique_id_to_dom_map
+            .get(&root_unique_id)
+            .and_then(|weak_ref| weak_ref.deref())
+            .and_then(|value| value.dyn_into::<HtmlElement>().ok())
             .ok_or_else(|| JsError::new("Element template page not found"))?,
         )
       } else {

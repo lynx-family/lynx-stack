@@ -13,6 +13,7 @@ import {
   cssIdAttribute,
   lynxElementTemplateMarkerAttribute,
   lynxEntryNameAttribute,
+  lynxUniqueIdAttribute,
 } from '../ts/constants.js';
 import {
   createElementAPI as createServerElementAPI,
@@ -179,16 +180,20 @@ describe('Element APIs', () => {
     );
 
     expect(root.tagName.toLowerCase()).toBe('x-view');
+    const rootUniqueId = mtsGlobalThis.__GetElementUniqueID(root);
+    expect(rootUniqueId).toBeGreaterThan(0);
+    expect(root.getAttribute(lynxUniqueIdAttribute)).toBeNull();
     expect(root.className).toBe('dynamic-class');
     expect(root.id).toBe('from-spread');
     expect(root.getAttribute('data-kind')).toBe('initial');
     expect(root.getAttribute('style')).toContain('width:12px');
     expect(root.children).toHaveLength(2);
     expect(root.children[0]!.getAttribute('text')).toBe('static');
+    expect(root.children[0]!.getAttribute(lynxUniqueIdAttribute)).toBeNull();
     expect(root.children[1]!.getAttribute('text')).toBe('first');
     expect(
       mtsBinding.wasmContext!.get_event(
-        mtsGlobalThis.__GetElementUniqueID(root),
+        rootUniqueId,
         'tap',
         'bindevent',
       ),

@@ -4,6 +4,8 @@
 
 export const lynxUniqueIdAttribute = /*#__PURE__*/ 'l-uid' as const;
 
+export const lynxUniqueIdProperty = /*#__PURE__*/ '__lynxUniqueId' as const;
+
 export const cssIdAttribute = /*#__PURE__*/ 'l-css-id' as const;
 
 export const lynxEntryNameAttribute = /*#__PURE__*/ 'l-e-name' as const;

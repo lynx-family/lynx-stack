@@ -8,10 +8,7 @@ import type {
   CloneableObject,
   MainThreadGlobalThis,
 } from '../../../types/index.js';
-import {
-  LynxEventNameToW3cCommon,
-  uniqueIdSymbol,
-} from '../../../constants.js';
+import { LynxEventNameToW3cCommon } from '../../../constants.js';
 import type { MainThreadWasmContext } from '../../wasm.js';
 import { __GetElementUniqueID } from './pureElementPAPIs.js';
 import type { BackgroundThread } from '../Background.js';
@@ -60,7 +57,7 @@ export class WASMJSBinding implements RustMainthreadContextBinding {
     element: DecoratedHTMLElement,
     dataset: CloneableObject,
   ): LynxCrossThreadEventTarget {
-    const uniqueId = element[uniqueIdSymbol];
+    const uniqueId = __GetElementUniqueID(element);
     return {
       dataset: Object.assign(Object.create(null), dataset),
       id: element.id || null,
@@ -94,10 +91,6 @@ export class WASMJSBinding implements RustMainthreadContextBinding {
       return this.getElementByUniqueId(uniqueId);
     }
     return undefined;
-  }
-
-  setElementUniqueId(element: DecoratedHTMLElement, uniqueId: number): void {
-    element[uniqueIdSymbol] = uniqueId;
   }
 
   runWorklet(

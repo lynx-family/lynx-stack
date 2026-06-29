@@ -43,8 +43,6 @@ export interface RustMainthreadContextBinding {
 
   getClassList(element: WeakRef<HTMLElement>): string[];
 
-  setElementUniqueId(element: HTMLElement, uniqueId: number): void;
-
   setAttribute(
     element: WeakRef<HTMLElement>,
     name: string,
