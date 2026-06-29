@@ -341,6 +341,14 @@ class ReactWebpackPlugin {
 
     new DefinePlugin({
       __DEV__: isDev,
+      // Whether preact devtools is enabled. Enabled by default in development;
+      // in production it can be enabled by environment variable `REACT_DEVTOOL`
+      // (which also keeps `@lynx-js/preact-devtools` from being stripped). This
+      // gates the dev-only runtime hooks that devtools depends on
+      // (e.g. `injectLepusMethods`).
+      __REACT_DEVTOOL__: JSON.stringify(
+        isDev || Boolean(process.env['REACT_DEVTOOL']),
+      ),
       // We enable profile by default in development.
       // It can also be disabled by environment variable `REACT_PROFILE=false`
       __PROFILE__: JSON.stringify(

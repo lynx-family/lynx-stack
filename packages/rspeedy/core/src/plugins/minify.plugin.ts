@@ -23,6 +23,14 @@ function mergeJsOptions(
 }
 
 export function pluginMinify(options?: Minify | boolean): RsbuildPlugin {
+  // When preact devtools is enabled (`REACT_DEVTOOL`), keep function and class
+  // names. Devtools relies on them to resolve component names (`type.name`) and
+  // to reconstruct the hook tree (it matches stack frames by function name).
+  // Without this, minification mangles/inlines those names away, so components
+  // show up as `Anonymous` and hook inspection breaks. Only enabled with
+  // devtools since it slightly increases bundle size.
+  const keepNames = Boolean(process.env['REACT_DEVTOOL'])
+
   const defaultJsOptions = Object.freeze<NonNullable<Minify['jsOptions']>>({
     minimizerOptions: {
       compress: {
@@ -40,6 +48,14 @@ export function pluginMinify(options?: Minify | boolean): RsbuildPlugin {
 
         // Allow return in module wrapper
         side_effects: false,
+
+        // `mangle.keep_*` below is what preserves most names, but it still lets
+        // the compressor inline single-use functions (incl. one-shot user
+        // components) into anonymity. `compress.keep_*` stops that, so devtools
+        // can still resolve their names. Cheap, so we keep both.
+        ...(keepNames
+          ? { keep_fnames: true, keep_classnames: true }
+          : {}),
       },
       format: {
         keep_quoted_props: true,
@@ -47,6 +63,10 @@ export function pluginMinify(options?: Minify | boolean): RsbuildPlugin {
       },
       mangle: {
         toplevel: true,
+
+        ...(keepNames
+          ? { keep_fnames: true, keep_classnames: true }
+          : {}),
       },
     },
   })
