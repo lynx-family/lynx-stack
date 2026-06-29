@@ -1,5 +1,11 @@
 # @lynx-js/debug-metadata-rsbuild-plugin
 
+## 0.1.1
+
+### Patch Changes
+
+- Stop emitting `debug-metadata.json` in production builds unless `DEBUG=rspeedy`. Previously an `RSDOCTOR=true` build leaked the file into the output, because `LynxEncodePlugin`'s intermediate-asset cleanup is skipped under Rsdoctor (it keeps intermediate files split so Rsdoctor can analyse them). The debug-metadata plugin now strips the asset itself. Dev builds keep it in memory so the debug-metadata middleware can still serve it. ([#2850](https://github.com/lynx-family/lynx-stack/pull/2850))
+
 ## 0.1.0
 
 ### Minor Changes

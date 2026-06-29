@@ -1,5 +1,11 @@
 # create-rspeedy
 
+## 0.15.1
+
+### Patch Changes
+
+- Add the `rspeedy-bundle-size` skill to the optional skills users can select during project creation. It analyzes and reduces the bundle size of rspeedy/Lynx apps, sourced from `lynx-community/skills`. ([#2872](https://github.com/lynx-family/lynx-stack/pull/2872))
+
 ## 0.15.0
 
 ### Minor Changes
