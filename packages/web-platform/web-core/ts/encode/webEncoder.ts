@@ -6,7 +6,7 @@
 import type * as CSS from '@lynx-js/css-serializer';
 import type {
   ElementTemplateAsset,
-  ElementTemplateInput,
+  ElementTemplateElementNode,
 } from '../types/index.js';
 import { encodeCSS } from './encodeCSS.js';
 import {
@@ -88,25 +88,10 @@ export type TasmJSONInfo = {
     type?: 'lazy';
     content: string | Record<string, unknown>;
   }>;
-  elementTemplates?: ElementTemplateInput;
+  elementTemplates?:
+    | ElementTemplateAsset[]
+    | Record<string, ElementTemplateElementNode>;
 };
-
-function normalizeElementTemplates(
-  elementTemplates: ElementTemplateInput | undefined,
-): ElementTemplateAsset[] {
-  if (!elementTemplates) {
-    return [];
-  }
-  if (Array.isArray(elementTemplates)) {
-    return elementTemplates;
-  }
-  return Object.entries(elementTemplates).map((
-    [templateId, compiledTemplate],
-  ) => ({
-    templateId,
-    compiledTemplate,
-  }));
-}
 
 export function encode(tasmJSON: TasmJSONInfo): Uint8Array {
   const {
@@ -119,7 +104,16 @@ export function encode(tasmJSON: TasmJSONInfo): Uint8Array {
     customSections,
     elementTemplates: rawElementTemplates,
   } = tasmJSON;
-  const elementTemplates = normalizeElementTemplates(rawElementTemplates);
+  const elementTemplates = !rawElementTemplates
+    ? []
+    : Array.isArray(rawElementTemplates)
+    ? rawElementTemplates
+    : Object.entries(rawElementTemplates).map((
+      [templateId, compiledTemplate],
+    ) => ({
+      templateId,
+      compiledTemplate,
+    }));
   const encodedStyleInfo = encodeCSS(styleInfo);
   const encodedManifest = encodeStringMap(manifest);
   const encodedLepusCode = encodeStringMap(lepusCode);

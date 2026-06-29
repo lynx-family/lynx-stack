@@ -43,18 +43,8 @@ export type ElementTemplateNode =
   | ElementTemplateElementNode
   | ElementTemplateSlotNode;
 
-export type ElementTemplateData = ElementTemplateElementNode;
-
 export type ElementTemplateAsset = {
   templateId: string;
-  compiledTemplate: ElementTemplateData;
+  compiledTemplate: ElementTemplateElementNode;
   sourceFile?: string;
 };
-
-export type ElementTemplateRecord = Record<string, ElementTemplateData>;
-
-export type ElementTemplateBundle = ElementTemplateAsset[];
-
-export type ElementTemplateInput =
-  | ElementTemplateBundle
-  | ElementTemplateRecord;

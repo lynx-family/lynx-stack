@@ -18,6 +18,7 @@ import { wasmInstance } from '../ts/client/wasm.js';
 import { encodeCSS } from '../ts/encode/encodeCSS.js';
 import { createMainThreadGlobalAPIs } from '../ts/client/mainthread/createMainThreadGlobalAPIs.js';
 import type { LynxViewInstance } from '../ts/client/mainthread/LynxViewInstance.js';
+import { registerElementTemplates } from '../ts/client/mainthread/registerElementTemplates.js';
 import { createTestLynxViewInstance } from './createTestLynxViewInstance.js';
 
 const builtinRawTextTemplate = {
@@ -125,7 +126,7 @@ describe('Element APIs', () => {
   });
 
   test('element template creates, patches, moves, and serializes DOM in wasm', () => {
-    mtsBinding.wasmContext!.register_element_templates([
+    registerElementTemplates(mtsBinding.wasmContext!, [
       builtinRawTextTemplate,
       {
         templateId: '_et_card',
@@ -246,7 +247,7 @@ describe('Element APIs', () => {
   });
 
   test('element template spread removal restores sibling dynamic binding', () => {
-    mtsBinding.wasmContext!.register_element_templates([
+    registerElementTemplates(mtsBinding.wasmContext!, [
       {
         templateId: '_et_spread_restore',
         compiledTemplate: {
@@ -286,7 +287,7 @@ describe('Element APIs', () => {
   });
 
   test('element template cleanup runs when removed through normal DOM PAPI', () => {
-    mtsBinding.wasmContext!.register_element_templates([
+    registerElementTemplates(mtsBinding.wasmContext!, [
       builtinRawTextTemplate,
     ]);
     const parent = mtsGlobalThis.__CreateView(0);
@@ -312,7 +313,7 @@ describe('Element APIs', () => {
   });
 
   test('element template cleanup scans removed DOM subtree', () => {
-    mtsBinding.wasmContext!.register_element_templates([
+    registerElementTemplates(mtsBinding.wasmContext!, [
       builtinRawTextTemplate,
     ]);
     const parent = mtsGlobalThis.__CreateView(0);
@@ -340,7 +341,7 @@ describe('Element APIs', () => {
   });
 
   test('element template cleanup preserves reused replaceElements child', () => {
-    mtsBinding.wasmContext!.register_element_templates([
+    registerElementTemplates(mtsBinding.wasmContext!, [
       builtinRawTextTemplate,
     ]);
     const parent = mtsGlobalThis.__CreateView(0);
@@ -362,7 +363,7 @@ describe('Element APIs', () => {
   });
 
   test('element template move detaches child from previous slot owner', () => {
-    mtsBinding.wasmContext!.register_element_templates([
+    registerElementTemplates(mtsBinding.wasmContext!, [
       builtinRawTextTemplate,
       {
         templateId: '_et_slot_host',

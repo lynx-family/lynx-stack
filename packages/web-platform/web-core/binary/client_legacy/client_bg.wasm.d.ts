@@ -1,6 +1,7 @@
 /* tslint:disable */
 /* eslint-disable */
 export const memory: WebAssembly.Memory;
+export const __wbg_elementtemplatedefinitionbuilder_free: (a: number, b: number) => void;
 export const __wbg_eventinfo_free: (a: number, b: number) => void;
 export const __wbg_get_eventinfo_event_handler: (a: number) => number;
 export const __wbg_get_eventinfo_event_name: (a: number, b: number) => void;
@@ -16,6 +17,12 @@ export const __wbg_set_eventinfo_event_type: (a: number, b: number, c: number) =
 export const __wbg_stylesheetresource_free: (a: number, b: number) => void;
 export const add_inline_style_raw_string_key: (a: number, b: number, c: number, d: number, e: number) => void;
 export const decode_style_info: (a: number, b: number, c: number, d: number, e: number, f: number, g: number, h: number) => void;
+export const elementtemplatedefinitionbuilder_append_child: (a: number, b: number, c: number, d: number, e: number) => void;
+export const elementtemplatedefinitionbuilder_append_root: (a: number, b: number, c: number, d: number) => void;
+export const elementtemplatedefinitionbuilder_append_slot: (a: number, b: number, c: number, d: number) => void;
+export const elementtemplatedefinitionbuilder_push_slot_attribute: (a: number, b: number, c: number, d: number, e: number) => void;
+export const elementtemplatedefinitionbuilder_push_spread_attribute: (a: number, b: number, c: number) => void;
+export const elementtemplatedefinitionbuilder_push_static_attribute: (a: number, b: number, c: number, d: number, e: number, f: number) => void;
 export const encode_legacy_json_generated_raw_style_info: (a: number, b: number, c: number, d: number, e: number, f: number, g: number, h: number) => void;
 export const get_font_face_content: (a: number, b: number) => void;
 export const get_style_content: (a: number, b: number) => void;
@@ -25,6 +32,7 @@ export const mainthreadwasmcontext_add_run_worklet_event: (a: number, b: number,
 export const mainthreadwasmcontext_common_event_handler: (a: number, b: number, c: number, d: number, e: number, f: number, g: number) => void;
 export const mainthreadwasmcontext_create_element_common: (a: number, b: number, c: number, d: number, e: number, f: number, g: number) => number;
 export const mainthreadwasmcontext_create_element_template: (a: number, b: number, c: number, d: number, e: number, f: number, g: number, h: number, i: number) => void;
+export const mainthreadwasmcontext_create_element_template_definition: (a: number, b: number, c: number, d: number, e: number, f: number) => void;
 export const mainthreadwasmcontext_create_typed_element_template: (a: number, b: number, c: number, d: number, e: number, f: number, g: number, h: number) => void;
 export const mainthreadwasmcontext_dispatch_event_by_path: (a: number, b: number, c: number, d: number, e: number, f: number, g: number) => number;
 export const mainthreadwasmcontext_dispatch_global_bind_event: (a: number, b: number, c: number, d: number, e: number, f: number) => void;
@@ -41,7 +49,7 @@ export const mainthreadwasmcontext_get_unique_id_by_component_id: (a: number, b:
 export const mainthreadwasmcontext_insert_node_to_element_template: (a: number, b: number, c: number, d: number, e: number, f: number) => void;
 export const mainthreadwasmcontext_new: (a: number, b: number, c: number, d: number, e: number, f: number, g: number, h: number) => number;
 export const mainthreadwasmcontext_push_style_sheet: (a: number, b: number, c: number, d: number, e: number) => void;
-export const mainthreadwasmcontext_register_element_templates: (a: number, b: number, c: number, d: number, e: number) => void;
+export const mainthreadwasmcontext_register_element_template: (a: number, b: number, c: number) => void;
 export const mainthreadwasmcontext_remove_element_template: (a: number, b: number, c: number) => void;
 export const mainthreadwasmcontext_remove_node_from_element_template: (a: number, b: number, c: number, d: number) => void;
 export const mainthreadwasmcontext_serialize_element_template: (a: number, b: number, c: number) => void;
