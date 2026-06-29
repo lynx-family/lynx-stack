@@ -1,11 +1,12 @@
 use lynx::{
   run_global_ui_task, set_global_ui_task_runner, Env, FetchResponse, GlobalUiTaskRunner,
-  HeadlessView, ResourceFetcher, ResourceRequest, SoftwareFrame, SoftwareRenderer, Task,
+  HeadlessView, LynxGroup, ResourceFetcher, ResourceRequest, SoftwareFrame, SoftwareRenderer, Task,
   WindowlessHost, WindowlessRenderer,
 };
+use lynx_headless_example::write_png;
 use std::env;
 use std::fs;
-use std::path::{Path, PathBuf};
+use std::path::PathBuf;
 use std::sync::{Arc, Mutex};
 use std::thread;
 use std::thread::ThreadId;
@@ -188,6 +189,7 @@ struct Options {
   bundle: PathBuf,
   screenshot: PathBuf,
   asset_roots: Vec<PathBuf>,
+  preload_js_paths: Vec<PathBuf>,
   timeout: Duration,
   initial_data_json: String,
   global_props_json: String,
@@ -196,9 +198,10 @@ struct Options {
 fn main() -> lynx::Result<()> {
   let options = parse_options();
   let env = Env::load()?;
-  if let Ok(sdk_dir) = env::var("LYNX_SDK_DIR") {
+  let sdk_dir = env::var_os("LYNX_SDK_DIR").map(PathBuf::from);
+  if let Some(sdk_dir) = &sdk_dir {
     for relative in ["data/icudtl.dat", "icudtl.dat"] {
-      let icu_path = Path::new(&sdk_dir).join(relative);
+      let icu_path = sdk_dir.join(relative);
       if icu_path.is_file() {
         env.set_icu_data_path(icu_path.to_string_lossy().as_ref())?;
         break;
@@ -233,10 +236,41 @@ fn main() -> lynx::Result<()> {
   if let Some(parent) = options.bundle.parent() {
     roots.push(parent.to_path_buf());
   }
-  let view = HeadlessView::builder(env.clone(), renderer)
+  let mut preload_js_paths = options.preload_js_paths.clone();
+  if preload_js_paths.is_empty() {
+    if let Some(sdk_dir) = &sdk_dir {
+      for relative in [
+        "bundles/LynxResources.bundle/Contents/Resources/lynx_core.js",
+        "LynxResources.bundle/Contents/Resources/lynx_core.js",
+        "lynx_core.js",
+      ] {
+        let candidate = sdk_dir.join(relative);
+        if candidate.is_file() {
+          preload_js_paths.push(candidate);
+          break;
+        }
+      }
+    }
+  }
+  let lynx_group = if preload_js_paths.is_empty() {
+    None
+  } else {
+    let mut group = LynxGroup::with_id(&env, "lynx-headless-example", "-1")?;
+    let paths = preload_js_paths
+      .iter()
+      .map(|path| path.to_string_lossy().into_owned())
+      .collect::<Vec<_>>();
+    group.set_preload_js_paths(paths.iter().map(String::as_str))?;
+    Some(group)
+  };
+
+  let mut builder = HeadlessView::builder(env.clone(), renderer)
     .viewport(DEFAULT_WIDTH, DEFAULT_HEIGHT, DEFAULT_DPR)
-    .resource_fetcher(DirectoryResourceFetcher::new(roots))?
-    .build()?;
+    .resource_fetcher(DirectoryResourceFetcher::new(roots))?;
+  if let Some(group) = lynx_group {
+    builder = builder.lynx_group(group);
+  }
+  let view = builder.build()?;
   view.enter_foreground();
 
   let bundle = fs::read(&options.bundle).map_err(|source| lynx::Error::Io {
@@ -286,7 +320,7 @@ fn main() -> lynx::Result<()> {
         .and_then(|deadline| deadline.checked_duration_since(now))
         .unwrap_or_else(|| Duration::from_millis(16))
         .min(Duration::from_millis(16));
-      thread::sleep(sleep_for);
+      wait_for_host_events(sleep_for);
     }
   }
 
@@ -321,6 +355,10 @@ fn parse_options() -> Options {
     .map(PathBuf::from)
     .unwrap_or_else(|| env::temp_dir().join("lynx-headless-e2e.png"));
   let mut asset_roots = Vec::new();
+  let mut preload_js_paths = env::var_os("LYNX_E2E_PRELOAD_JS")
+    .map(PathBuf::from)
+    .into_iter()
+    .collect::<Vec<_>>();
   let mut timeout = Duration::from_secs(10);
   let mut initial_data_json = "{}".to_string();
   let mut global_props_json = format!(
@@ -341,6 +379,11 @@ fn parse_options() -> Options {
       "--asset-root" => {
         if let Some(root) = args.next() {
           asset_roots.push(PathBuf::from(root));
+        }
+      }
+      "--preload-js" => {
+        if let Some(path) = args.next() {
+          preload_js_paths.push(PathBuf::from(path));
         }
       }
       "--timeout-ms" => {
@@ -370,94 +413,35 @@ fn parse_options() -> Options {
     bundle,
     screenshot,
     asset_roots,
+    preload_js_paths,
     timeout,
     initial_data_json,
     global_props_json,
   }
 }
 
-fn write_png(path: &Path, width: usize, height: usize, rgba: &[u8]) -> std::io::Result<()> {
-  let expected = width
-    .checked_mul(height)
-    .and_then(|pixels| pixels.checked_mul(4))
-    .ok_or_else(|| std::io::Error::new(std::io::ErrorKind::InvalidInput, "image too large"))?;
-  if rgba.len() < expected {
-    return Err(std::io::Error::new(
-      std::io::ErrorKind::InvalidInput,
-      "frame is smaller than expected",
-    ));
+#[cfg(target_os = "macos")]
+fn wait_for_host_events(duration: Duration) {
+  use std::ffi::c_void;
+
+  type CFRunLoopMode = *const c_void;
+
+  #[link(name = "CoreFoundation", kind = "framework")]
+  extern "C" {
+    static kCFRunLoopDefaultMode: CFRunLoopMode;
+    fn CFRunLoopRunInMode(
+      mode: CFRunLoopMode,
+      seconds: f64,
+      return_after_source_handled: u8,
+    ) -> i32;
   }
 
-  let mut scanlines = Vec::with_capacity(height * (width * 4 + 1));
-  for row in 0..height {
-    scanlines.push(0);
-    let start = row * width * 4;
-    scanlines.extend_from_slice(&rgba[start..start + width * 4]);
+  unsafe {
+    CFRunLoopRunInMode(kCFRunLoopDefaultMode, duration.as_secs_f64(), 1);
   }
-
-  let mut png = Vec::new();
-  png.extend_from_slice(b"\x89PNG\r\n\x1a\n");
-
-  let mut ihdr = Vec::with_capacity(13);
-  ihdr.extend_from_slice(&(width as u32).to_be_bytes());
-  ihdr.extend_from_slice(&(height as u32).to_be_bytes());
-  ihdr.extend_from_slice(&[8, 6, 0, 0, 0]);
-  write_chunk(&mut png, b"IHDR", &ihdr);
-  write_chunk(&mut png, b"IDAT", &zlib_store(&scanlines));
-  write_chunk(&mut png, b"IEND", &[]);
-
-  fs::write(path, png)
 }
 
-fn zlib_store(data: &[u8]) -> Vec<u8> {
-  let mut out = Vec::with_capacity(data.len() + data.len() / 65535 * 5 + 6);
-  out.extend_from_slice(&[0x78, 0x01]);
-  let mut remaining = data;
-  while !remaining.is_empty() {
-    let chunk_len = remaining.len().min(65_535);
-    let final_block = chunk_len == remaining.len();
-    out.push(if final_block { 1 } else { 0 });
-    out.extend_from_slice(&(chunk_len as u16).to_le_bytes());
-    out.extend_from_slice((!(chunk_len as u16)).to_le_bytes().as_slice());
-    out.extend_from_slice(&remaining[..chunk_len]);
-    remaining = &remaining[chunk_len..];
-  }
-  if data.is_empty() {
-    out.extend_from_slice(&[1, 0, 0, 0xff, 0xff]);
-  }
-  out.extend_from_slice(&adler32(data).to_be_bytes());
-  out
-}
-
-fn write_chunk(png: &mut Vec<u8>, kind: &[u8; 4], data: &[u8]) {
-  png.extend_from_slice(&(data.len() as u32).to_be_bytes());
-  png.extend_from_slice(kind);
-  png.extend_from_slice(data);
-  let mut crc_data = Vec::with_capacity(kind.len() + data.len());
-  crc_data.extend_from_slice(kind);
-  crc_data.extend_from_slice(data);
-  png.extend_from_slice(&crc32(&crc_data).to_be_bytes());
-}
-
-fn adler32(data: &[u8]) -> u32 {
-  const MOD: u32 = 65_521;
-  let mut a = 1u32;
-  let mut b = 0u32;
-  for byte in data {
-    a = (a + u32::from(*byte)) % MOD;
-    b = (b + a) % MOD;
-  }
-  (b << 16) | a
-}
-
-fn crc32(data: &[u8]) -> u32 {
-  let mut crc = 0xffff_ffffu32;
-  for byte in data {
-    crc ^= u32::from(*byte);
-    for _ in 0..8 {
-      let mask = 0u32.wrapping_sub(crc & 1);
-      crc = (crc >> 1) ^ (0xedb8_8320 & mask);
-    }
-  }
-  !crc
+#[cfg(not(target_os = "macos"))]
+fn wait_for_host_events(duration: Duration) {
+  thread::sleep(duration);
 }

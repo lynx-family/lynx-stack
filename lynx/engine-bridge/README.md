@@ -25,6 +25,8 @@ windowed APIs such as `NativeView`.
 - `lynx/` contains the Rust library crate.
 - `lynx/src/sys/` contains checked-in C ABI types and runtime symbol loading.
 - `examples/headless/` contains a software-rendering example that writes a PNG.
+- `examples/headless/tests/fixtures/reference.png` is the checked-in screenshot
+  reference used by the PNG output comparison test.
 - `tools/adhoc_sign_macos_sdk.py` ad-hoc signs a downloaded macOS runtime for
   local or CI loading.
 - `docs/architecture.md` describes the crate boundaries and ownership model.
@@ -85,6 +87,20 @@ cargo test --locked --all-targets --all-features
 The CI job downloads the macOS runtime dylib into a temporary SDK folder,
 ad-hoc signs it, sets `LYNX_SDK_DIR`, and runs the same checks.
 
+The headless example package also has a screenshot golden test. It writes a
+deterministic RGBA frame as PNG and compares it to the checked-in reference:
+
+```sh
+cargo test --locked -p lynx-headless-example --test screenshot
+```
+
+Update the reference image intentionally with:
+
+```sh
+LYNX_UPDATE_REFERENCES=1 \
+cargo test --locked -p lynx-headless-example --test screenshot
+```
+
 ## Run the headless example
 
 The example loads a Lynx bundle, waits for a non-transparent software frame, and
@@ -101,6 +117,14 @@ cargo run -p lynx-headless-example -- \
 
 Use `--initial-data-json` and `--global-props-json` to pass JSON strings to the
 template load request.
+
+On macOS, the runtime also expects `LynxResources.bundle` to be discoverable via
+the process main bundle. For a Cargo-built CLI this means placing
+`LynxResources.bundle` beside the example binary, such as
+`target/debug/LynxResources.bundle`. The example can additionally preload core
+JavaScript through a Lynx group with `--preload-js /path/to/lynx_core.js`; when
+`LYNX_SDK_DIR` points at a full SDK, it will try to discover that file
+automatically.
 
 ## Troubleshooting
 

@@ -11,6 +11,7 @@ macro_rules! opaque {
 
 opaque!(lynx_view_builder_t);
 opaque!(lynx_view_t);
+opaque!(lynx_group_t);
 opaque!(lynx_windowless_renderer_t);
 opaque!(lynx_generic_resource_fetcher_t);
 opaque!(lynx_resource_request_t);
