@@ -37,8 +37,13 @@ export const loadLazyBundle: <
     if (__MAIN_THREAD__) {
       // `async`: the lazy subtree is rendered on the background thread and
       // materialized on the main thread from native templates, so the main
-      // thread runs no JS here.
+      // thread renders nothing here — but we still fire the fetch (ignoring
+      // the result) to warm the native bundle cache so the background `async`
+      // path waits less.
       if (mode !== 'sync') {
+        try {
+          lynx.fetchBundle(source, {});
+        } catch {}
         return new Promise(() => {});
       }
       // `sync` (first-screen direct render): the main thread must run the lazy
@@ -56,9 +61,12 @@ export const loadLazyBundle: <
       }
       let result: T;
       try {
-        result = lynx.loadScript!<T>(SECTION_MAIN_THREAD, {
+        const oldGlobalDynamicComponentEntry = globalThis.globDynamicComponentEntry;
+        globalThis.globDynamicComponentEntry = response.url;
+        result = lynx.loadScript<T>(SECTION_MAIN_THREAD, {
           bundleName: response.url,
         });
+        globalThis.globDynamicComponentEntry = oldGlobalDynamicComponentEntry;
       } catch {
         return new Promise(() => {});
       }
@@ -82,9 +90,12 @@ export const loadLazyBundle: <
         }
         let result: T;
         try {
-          result = lynx.loadScript!<T>(SECTION_BACKGROUND, {
+          const oldGlobalDynamicComponentEntry = globalThis.globDynamicComponentEntry;
+          globalThis.globDynamicComponentEntry = response.url;
+          result = lynx.loadScript<T>(SECTION_BACKGROUND, {
             bundleName: response.url,
           });
+          globalThis.globDynamicComponentEntry = oldGlobalDynamicComponentEntry;
         } catch (e) {
           return Promise.reject(e instanceof Error ? e : new Error(String(e)));
         }
@@ -115,9 +126,12 @@ export const loadLazyBundle: <
           }
           let result: T;
           try {
-            result = lynx.loadScript!<T>(SECTION_BACKGROUND, {
+            const oldGlobalDynamicComponentEntry = globalThis.globDynamicComponentEntry;
+            globalThis.globDynamicComponentEntry = response.url;
+            result = lynx.loadScript<T>(SECTION_BACKGROUND, {
               bundleName: response.url,
             });
+            globalThis.globDynamicComponentEntry = oldGlobalDynamicComponentEntry;
           } catch (e) {
             reject(e instanceof Error ? e : new Error(String(e)));
             return;

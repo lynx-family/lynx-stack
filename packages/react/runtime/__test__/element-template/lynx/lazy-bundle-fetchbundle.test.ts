@@ -62,9 +62,30 @@ describe('element-template loadLazyBundle (FetchBundle)', () => {
 
   // --- main thread ---
 
-  it('main thread async mode stays pending (background-driven)', async () => {
+  it('main thread async mode stays pending but warms the cache', async () => {
     envManager.resetEnv('main');
     const fetchBundle = syncFetch({ code: 0, url: 'u' });
+    l().fetchBundle = fetchBundle;
+    const loadScript = vi.fn(() => makeExports('mt')) as unknown as LoadScript;
+    l().loadScript = loadScript;
+
+    const promise = loadLazyBundle<LazyExports>('entry', 'async');
+    let settled = false;
+    void promise.then(() => (settled = true), () => (settled = true));
+    await Promise.resolve();
+    expect(settled).toBe(false);
+    // The main thread fires fetchBundle (fire-and-forget) to warm the native
+    // cache so the background path waits less...
+    expect(fetchBundle).toHaveBeenCalledWith('entry', {});
+    // ...but does no rendering here.
+    expect(loadScript).not.toHaveBeenCalled();
+  });
+
+  it('main thread async mode swallows a fetchBundle throw and stays pending', async () => {
+    envManager.resetEnv('main');
+    const fetchBundle = vi.fn(() => {
+      throw new Error('fetchBundle unavailable');
+    }) as unknown as FetchBundle;
     l().fetchBundle = fetchBundle;
 
     const promise = loadLazyBundle<LazyExports>('entry', 'async');
@@ -72,7 +93,7 @@ describe('element-template loadLazyBundle (FetchBundle)', () => {
     void promise.then(() => (settled = true), () => (settled = true));
     await Promise.resolve();
     expect(settled).toBe(false);
-    expect(fetchBundle).not.toHaveBeenCalled();
+    expect(fetchBundle).toHaveBeenCalledWith('entry', {});
   });
 
   it('main thread sync mode loads the main-thread section synchronously', () => {

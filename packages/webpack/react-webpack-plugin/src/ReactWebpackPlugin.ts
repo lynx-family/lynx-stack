@@ -523,7 +523,7 @@ class ReactWebpackPlugin {
                     old =>
                       new ConcatSource(
                         isFetchBundle
-                          ? `(function () {\n  var globDynamicComponentEntry = '__Card__';\n`
+                          ? `(function () {\n  var globDynamicComponentEntry = globalThis.globDynamicComponentEntry || '__Card__';\n`
                           : `(function (globDynamicComponentEntry) {\n`,
                         `  const module = { exports: {} }\n`,
                         `  const exports = module.exports;\n`,
