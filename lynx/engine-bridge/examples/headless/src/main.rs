@@ -1,7 +1,7 @@
 use lynx::{
   run_global_ui_task, set_global_ui_task_runner, Env, FetchResponse, GlobalUiTaskRunner,
   HeadlessView, LynxGroup, ResourceFetcher, ResourceRequest, SoftwareFrame, SoftwareRenderer, Task,
-  WindowlessHost, WindowlessRenderer,
+  ViewClient, ViewClientHandler, WindowlessHost, WindowlessRenderer,
 };
 use lynx_headless_example::write_png;
 use std::env;
@@ -145,6 +145,153 @@ impl SoftwareRenderer for FrameSink {
   }
 }
 
+#[derive(Clone, Default)]
+struct LifecycleRecorder {
+  state: Arc<Mutex<LifecycleState>>,
+}
+
+#[derive(Debug, Default)]
+struct LifecycleState {
+  page_start_url: Option<String>,
+  load_success: bool,
+  first_screen: bool,
+  page_updates: usize,
+  data_updates: usize,
+  runtime_ready: bool,
+  enter_foreground_count: usize,
+  enter_background_count: usize,
+  frame_timings: usize,
+  destroyed: bool,
+  errors: Vec<String>,
+}
+
+impl LifecycleRecorder {
+  fn state(&self) -> Arc<Mutex<LifecycleState>> {
+    self.state.clone()
+  }
+}
+
+impl LifecycleState {
+  fn summary(&self) -> String {
+    format!(
+      "page_start_url={:?} load_success={} first_screen={} runtime_ready={} page_updates={} data_updates={} enter_foreground={} enter_background={} frame_timings={} destroyed={} errors={:?}",
+      self.page_start_url,
+      self.load_success,
+      self.first_screen,
+      self.runtime_ready,
+      self.page_updates,
+      self.data_updates,
+      self.enter_foreground_count,
+      self.enter_background_count,
+      self.frame_timings,
+      self.destroyed,
+      self.errors
+    )
+  }
+}
+
+impl ViewClientHandler for LifecycleRecorder {
+  fn on_page_start(&mut self, url: &str) {
+    println!("view lifecycle: page_start url={url}");
+    self
+      .state
+      .lock()
+      .expect("lifecycle lock poisoned")
+      .page_start_url = Some(url.to_string());
+  }
+
+  fn on_load_success(&mut self) {
+    println!("view lifecycle: load_success");
+    self
+      .state
+      .lock()
+      .expect("lifecycle lock poisoned")
+      .load_success = true;
+  }
+
+  fn on_first_screen(&mut self) {
+    println!("view lifecycle: first_screen");
+    self
+      .state
+      .lock()
+      .expect("lifecycle lock poisoned")
+      .first_screen = true;
+  }
+
+  fn on_page_updated(&mut self) {
+    println!("view lifecycle: page_updated");
+    self
+      .state
+      .lock()
+      .expect("lifecycle lock poisoned")
+      .page_updates += 1;
+  }
+
+  fn on_data_updated(&mut self) {
+    println!("view lifecycle: data_updated");
+    self
+      .state
+      .lock()
+      .expect("lifecycle lock poisoned")
+      .data_updates += 1;
+  }
+
+  fn on_runtime_ready(&mut self) {
+    println!("view lifecycle: runtime_ready");
+    self
+      .state
+      .lock()
+      .expect("lifecycle lock poisoned")
+      .runtime_ready = true;
+  }
+
+  fn on_received_error(&mut self, error_code: i32, message: &str) {
+    println!("view lifecycle: error code={error_code} message={message}");
+    self
+      .state
+      .lock()
+      .expect("lifecycle lock poisoned")
+      .errors
+      .push(format!("{error_code}: {message}"));
+  }
+
+  fn on_enter_foreground(&mut self) {
+    self
+      .state
+      .lock()
+      .expect("lifecycle lock poisoned")
+      .enter_foreground_count += 1;
+  }
+
+  fn on_enter_background(&mut self) {
+    self
+      .state
+      .lock()
+      .expect("lifecycle lock poisoned")
+      .enter_background_count += 1;
+  }
+
+  fn on_frame_timing(&mut self, frame_start_time_in_ns: i64, frame_finish_time_in_ns: i64) {
+    println!(
+      "view lifecycle: frame_timing start={frame_start_time_in_ns} finish={frame_finish_time_in_ns}"
+    );
+    self
+      .state
+      .lock()
+      .expect("lifecycle lock poisoned")
+      .frame_timings += 1;
+  }
+
+  fn on_destroy(&mut self) {
+    println!("view lifecycle: destroy");
+    self
+      .state
+      .lock()
+      .expect("lifecycle lock poisoned")
+      .destroyed = true;
+  }
+}
+
 struct DirectoryResourceFetcher {
   roots: Vec<PathBuf>,
 }
@@ -193,6 +340,7 @@ struct Options {
   timeout: Duration,
   initial_data_json: String,
   global_props_json: String,
+  native_ui_loop: bool,
 }
 
 fn main() -> lynx::Result<()> {
@@ -212,14 +360,18 @@ fn main() -> lynx::Result<()> {
 
   let renderer_tasks = SharedTasks::new();
   let global_tasks = SharedTasks::new();
-  let global_runner_set = set_global_ui_task_runner(
-    &env,
-    QueueingGlobalRunner {
-      tasks: global_tasks.clone(),
-      thread_id: thread::current().id(),
-    },
-  )?;
-  println!("global UI task runner set: {global_runner_set}");
+  if options.native_ui_loop {
+    println!("global UI task runner skipped; using native UI loop");
+  } else {
+    let global_runner_set = set_global_ui_task_runner(
+      &env,
+      QueueingGlobalRunner {
+        tasks: global_tasks.clone(),
+        thread_id: thread::current().id(),
+      },
+    )?;
+    println!("global UI task runner set: {global_runner_set}");
+  }
 
   let frame_slot = Arc::new(Mutex::new(None));
   let renderer = WindowlessRenderer::software(
@@ -270,7 +422,10 @@ fn main() -> lynx::Result<()> {
   if let Some(group) = lynx_group {
     builder = builder.lynx_group(group);
   }
-  let view = builder.build()?;
+  let lifecycle = LifecycleRecorder::default();
+  let lifecycle_state = lifecycle.state();
+  let mut view = builder.build()?;
+  view.add_client(ViewClient::new(&env, lifecycle)?);
   view.enter_foreground();
 
   let bundle = fs::read(&options.bundle).map_err(|source| lynx::Error::Io {
@@ -278,7 +433,7 @@ fn main() -> lynx::Result<()> {
     path: options.bundle.clone(),
     source,
   })?;
-  view.load_template_bytes_with_global_props(
+  view.load_template_bundle_bytes_with_global_props(
     "assets://main.lynx.bundle",
     &bundle,
     Some(&options.initial_data_json),
@@ -325,14 +480,18 @@ fn main() -> lynx::Result<()> {
   }
 
   let frame = frame_slot
+    .lock()
+    .expect("frame lock poisoned")
+    .take()
+    .ok_or_else(|| {
+      let lifecycle = lifecycle_state
         .lock()
-        .expect("frame lock poisoned")
-        .take()
-        .ok_or_else(|| {
-            lynx::Error::Message(format!(
-                "timed out waiting for software frame; renderer_tasks_run={renderer_tasks_run} global_tasks_run={global_tasks_run}"
-            ))
-        })?;
+        .expect("lifecycle lock poisoned")
+        .summary();
+      lynx::Error::Message(format!(
+        "timed out waiting for software frame; renderer_tasks_run={renderer_tasks_run} global_tasks_run={global_tasks_run}; {lifecycle}"
+      ))
+    })?;
   if frame.visible_pixel_count() == 0 {
     return Err(lynx::Error::Message(
       "timed out waiting for non-empty software frame".into(),
@@ -360,6 +519,7 @@ fn parse_options() -> Options {
     .into_iter()
     .collect::<Vec<_>>();
   let mut timeout = Duration::from_secs(10);
+  let mut native_ui_loop = false;
   let mut initial_data_json = "{}".to_string();
   let mut global_props_json = format!(
         "{{\"initialPage\":\"home\",\"platform\":\"{}\",\"screenWidth\":{},\"screenHeight\":{},\"theme\":\"light\",\"frontendTheme\":\"light\",\"preferredTheme\":\"light\",\"safeAreaTop\":0,\"safeAreaBottom\":0,\"safeAreaLeft\":0,\"safeAreaRight\":0}}",
@@ -401,6 +561,9 @@ fn parse_options() -> Options {
           global_props_json = value;
         }
       }
+      "--native-ui-loop" => {
+        native_ui_loop = true;
+      }
       _ => {}
     }
   }
@@ -417,6 +580,7 @@ fn parse_options() -> Options {
     timeout,
     initial_data_json,
     global_props_json,
+    native_ui_loop,
   }
 }
 
