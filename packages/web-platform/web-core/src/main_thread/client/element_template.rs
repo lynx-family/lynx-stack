@@ -172,51 +172,16 @@ impl ElementTemplateDefinitionBuilder {
       _ => &key,
     };
 
-    if MainThreadWasmContext::value_is_nullish(&value) {
+    if normalized_key == "style" {
+      MainThreadWasmContext::set_style_attribute(
+        &element,
+        &value,
+        self.config_transform_vw,
+        self.config_transform_vh,
+        self.config_transform_rem,
+      );
+    } else if MainThreadWasmContext::value_is_nullish(&value) {
       let _ = element.remove_attribute(normalized_key);
-    } else if normalized_key == "style" {
-      if let Some(style) = value.as_string() {
-        let transformed = transform_inline_style_string(
-          &style,
-          &TransformerConfig {
-            transform_vw: self.config_transform_vw,
-            transform_vh: self.config_transform_vh,
-            transform_rem: self.config_transform_rem,
-          },
-        );
-        let _ = element.set_attribute(
-          "style",
-          if transformed == style {
-            &style
-          } else {
-            &transformed
-          },
-        );
-      } else if value.is_object() {
-        let mut key_value_vec = Vec::new();
-        let keys = MainThreadWasmContext::object_keys(&value);
-        for index in 0..keys.length() {
-          let key = keys.get(index);
-          let item_value = Reflect::get(&value, &key).unwrap_or(JsValue::UNDEFINED);
-          if !MainThreadWasmContext::value_is_nullish(&item_value) {
-            if let Some(key) = key.as_string() {
-              key_value_vec.push(key);
-              key_value_vec.push(MainThreadWasmContext::value_to_string(&item_value));
-            }
-          }
-        }
-        let transformed = transform_inline_style_key_value_vec(
-          key_value_vec,
-          &TransformerConfig {
-            transform_vw: self.config_transform_vw,
-            transform_vh: self.config_transform_vh,
-            transform_rem: self.config_transform_rem,
-          },
-        );
-        let _ = element.set_attribute("style", &transformed);
-      } else {
-        let _ = element.set_attribute("style", &MainThreadWasmContext::value_to_string(&value));
-      }
     } else {
       element
         .set_attribute(
@@ -300,10 +265,6 @@ impl MainThreadWasmContext {
     value.is_null() || value.is_undefined()
   }
 
-  fn value_is_primitive(value: &JsValue) -> bool {
-    value.is_string() || value.as_f64().is_some() || value.as_bool().is_some()
-  }
-
   fn set_property(target: &JsValue, key: &str, value: &JsValue) -> Result<(), JsError> {
     Reflect::set(target, &JsValue::from_str(key), value)
       .map(|_| ())
@@ -314,35 +275,6 @@ impl MainThreadWasmContext {
     Object::keys(value.unchecked_ref::<Object>())
   }
 
-  fn js_array_to_vec(value: &JsValue) -> Vec<JsValue> {
-    if Array::is_array(value) {
-      let array: Array = value.clone().unchecked_into();
-      (0..array.length()).map(|index| array.get(index)).collect()
-    } else {
-      Vec::new()
-    }
-  }
-
-  fn normalize_slot_children(value: &JsValue) -> Vec<HtmlElement> {
-    if Self::value_is_nullish(value) {
-      return Vec::new();
-    }
-    if Array::is_array(value) {
-      let array: Array = value.clone().unchecked_into();
-      let mut elements = Vec::with_capacity(array.length() as usize);
-      for index in 0..array.length() {
-        if let Ok(element) = array.get(index).dyn_into::<HtmlElement>() {
-          elements.push(element);
-        }
-      }
-      elements
-    } else if let Ok(element) = value.clone().dyn_into::<HtmlElement>() {
-      vec![element]
-    } else {
-      Vec::new()
-    }
-  }
-
   fn element_template_root_unique_id(element: &HtmlElement) -> Option<usize> {
     element
       .get_attribute(constants::LYNX_ELEMENT_TEMPLATE_MARKER_ATTRIBUTE)
@@ -350,15 +282,12 @@ impl MainThreadWasmContext {
       .and_then(|value| value.parse::<usize>().ok())
   }
 
-  fn element_template_marker_unique_id(element: &HtmlElement) -> Option<usize> {
-    element
-      .get_attribute(constants::LYNX_ELEMENT_TEMPLATE_MARKER_ATTRIBUTE)
-      .and_then(|value| value.parse::<usize>().ok())
-  }
-
   fn collect_descendant_template_unique_ids(node: &Node, unique_ids: &mut Vec<usize>) {
     if let Some(element) = node.dyn_ref::<HtmlElement>() {
-      if let Some(unique_id) = Self::element_template_marker_unique_id(element) {
+      if let Some(unique_id) = element
+        .get_attribute(constants::LYNX_ELEMENT_TEMPLATE_MARKER_ATTRIBUTE)
+        .and_then(|value| value.parse::<usize>().ok())
+      {
         unique_ids.push(unique_id);
       }
     }
@@ -416,48 +345,22 @@ impl MainThreadWasmContext {
     }
   }
 
-  fn parse_css_id(element: &HtmlElement) -> i32 {
-    element
-      .get_attribute(constants::CSS_ID_ATTRIBUTE)
-      .and_then(|value| value.parse::<i32>().ok())
-      .unwrap_or(0)
-  }
-
-  fn register_template_elements(
-    &mut self,
-    elements: &[HtmlElement],
-  ) -> Result<Vec<usize>, JsError> {
-    let mut unique_ids = Vec::with_capacity(elements.len());
-    for element in elements {
-      let unique_id = self.create_element_with_css_id(
-        0,
-        element.clone(),
-        WeakRef::new(element),
-        Some(Self::parse_css_id(element)),
-        None,
-        None,
-      );
-      unique_ids.push(unique_id);
-      if !self.config_enable_css_selector {
-        self.update_css_og_style(
-          unique_id,
-          element.get_attribute(constants::LYNX_ENTRY_NAME_ATTRIBUTE),
-        )?;
-      }
-    }
-    Ok(unique_ids)
-  }
-
-  fn set_style_attribute(&self, element: &HtmlElement, value: &JsValue) {
+  fn set_style_attribute(
+    element: &HtmlElement,
+    value: &JsValue,
+    transform_vw: bool,
+    transform_vh: bool,
+    transform_rem: bool,
+  ) {
     if Self::value_is_nullish(value) {
       let _ = element.remove_attribute("style");
     } else if let Some(style) = value.as_string() {
       let transformed = transform_inline_style_string(
         &style,
         &TransformerConfig {
-          transform_vw: self.config_transform_vw,
-          transform_vh: self.config_transform_vh,
-          transform_rem: self.config_transform_rem,
+          transform_vw,
+          transform_vh,
+          transform_rem,
         },
       );
       if transformed == style {
@@ -481,9 +384,9 @@ impl MainThreadWasmContext {
       let transformed = transform_inline_style_key_value_vec(
         key_value_vec,
         &TransformerConfig {
-          transform_vw: self.config_transform_vw,
-          transform_vh: self.config_transform_vh,
-          transform_rem: self.config_transform_rem,
+          transform_vw,
+          transform_vh,
+          transform_rem,
         },
       );
       let _ = element.set_attribute("style", &transformed);
@@ -492,8 +395,14 @@ impl MainThreadWasmContext {
     }
   }
 
-  fn parse_event_attribute_key(key: &str) -> Option<(String, String, bool)> {
-    let (namespace, key) = key
+  fn apply_attribute_value(
+    &mut self,
+    target_unique_id: usize,
+    key: &str,
+    value: &JsValue,
+  ) -> Result<(), JsError> {
+    // Event attributes are stored in Rust event maps instead of DOM attributes.
+    let (namespace, event_key) = key
       .split_once(':')
       .map(|(namespace, key)| (Some(namespace), key))
       .unwrap_or((None, key));
@@ -505,45 +414,41 @@ impl MainThreadWasmContext {
       ("bind", "bindevent"),
       ("catch", "catchevent"),
     ] {
-      if let Some(event_name) = key.strip_prefix(prefix) {
-        if !event_name.is_empty() {
-          return Some((
-            event_type.to_string(),
-            event_name.to_string(),
-            force_worklet,
-          ));
+      let Some(event_name) = event_key.strip_prefix(prefix) else {
+        continue;
+      };
+      if event_name.is_empty() {
+        continue;
+      }
+      let event_type = event_type.to_string();
+      let event_name = event_name.to_string();
+      if Self::value_is_nullish(value) {
+        self.add_cross_thread_event(
+          target_unique_id,
+          event_type.clone(),
+          event_name.clone(),
+          None,
+        );
+        self.add_run_worklet_event(target_unique_id, event_type, event_name, None);
+      } else if !force_worklet {
+        if let Some(identifier) = value.as_string() {
+          self.add_cross_thread_event(target_unique_id, event_type, event_name, Some(identifier));
+        } else {
+          self.add_run_worklet_event(
+            target_unique_id,
+            event_type,
+            event_name,
+            Some(value.clone()),
+          );
         }
-      }
-    }
-    None
-  }
-
-  fn apply_event_attribute(&mut self, unique_id: usize, key: &str, value: &JsValue) -> bool {
-    let Some((event_type, event_name, force_worklet)) = Self::parse_event_attribute_key(key) else {
-      return false;
-    };
-    if Self::value_is_nullish(value) {
-      self.add_cross_thread_event(unique_id, event_type.clone(), event_name.clone(), None);
-      self.add_run_worklet_event(unique_id, event_type, event_name, None);
-    } else if !force_worklet {
-      if let Some(identifier) = value.as_string() {
-        self.add_cross_thread_event(unique_id, event_type, event_name, Some(identifier));
       } else {
-        self.add_run_worklet_event(unique_id, event_type, event_name, Some(value.clone()));
+        self.add_run_worklet_event(
+          target_unique_id,
+          event_type,
+          event_name,
+          Some(value.clone()),
+        );
       }
-    } else {
-      self.add_run_worklet_event(unique_id, event_type, event_name, Some(value.clone()));
-    }
-    true
-  }
-
-  fn apply_attribute_value(
-    &mut self,
-    target_unique_id: usize,
-    key: &str,
-    value: &JsValue,
-  ) -> Result<(), JsError> {
-    if self.apply_event_attribute(target_unique_id, key, value) {
       return Ok(());
     }
 
@@ -583,7 +488,13 @@ impl MainThreadWasmContext {
     }
 
     if normalized_key == "style" {
-      self.set_style_attribute(&element, value);
+      Self::set_style_attribute(
+        &element,
+        value,
+        self.config_transform_vw,
+        self.config_transform_vh,
+        self.config_transform_rem,
+      );
       return Ok(());
     }
 
@@ -600,45 +511,12 @@ impl MainThreadWasmContext {
     if Self::value_is_nullish(value) {
       let _ = element.remove_attribute(normalized_key);
       let _ = Reflect::delete_property(element.as_ref(), &JsValue::from_str(normalized_key));
-    } else if Self::value_is_primitive(value) {
+    } else if value.is_string() || value.as_f64().is_some() || value.as_bool().is_some() {
       let _ = element.set_attribute(normalized_key, &Self::value_to_string(value));
     } else {
       let _ = Reflect::set(element.as_ref(), &JsValue::from_str(normalized_key), value);
     }
     Ok(())
-  }
-
-  fn spread_slot_value_for_key(
-    attribute_slots: &[JsValue],
-    binding: &InstanceSpreadBinding,
-    key: &str,
-  ) -> Option<JsValue> {
-    let value = attribute_slots.get(binding.slot_index)?;
-    if Self::value_is_nullish(value) || !value.is_object() || Array::is_array(value) {
-      return None;
-    }
-    let key = JsValue::from_str(key);
-    if !Reflect::has(value, &key).unwrap_or(false) {
-      return None;
-    }
-    let value = Reflect::get(value, &key).unwrap_or(JsValue::UNDEFINED);
-    if Self::value_is_nullish(&value) {
-      None
-    } else {
-      Some(value)
-    }
-  }
-
-  fn slot_binding_value(
-    attribute_slots: &[JsValue],
-    binding: &InstanceAttributeBinding,
-  ) -> Option<JsValue> {
-    let value = attribute_slots.get(binding.slot_index)?;
-    if Self::value_is_nullish(value) {
-      None
-    } else {
-      Some(value.clone())
-    }
   }
 
   fn restore_binding_or_remove(
@@ -658,7 +536,18 @@ impl MainThreadWasmContext {
       if ignored_spread == Some((binding.slot_index, binding.target_unique_id)) {
         continue;
       }
-      if let Some(value) = Self::spread_slot_value_for_key(attribute_slots, binding, key) {
+      let Some(value) = attribute_slots.get(binding.slot_index) else {
+        continue;
+      };
+      if Self::value_is_nullish(value) || !value.is_object() || Array::is_array(value) {
+        continue;
+      }
+      let js_key = JsValue::from_str(key);
+      if !Reflect::has(value, &js_key).unwrap_or(false) {
+        continue;
+      }
+      let value = Reflect::get(value, &js_key).unwrap_or(JsValue::UNDEFINED);
+      if !Self::value_is_nullish(&value) {
         return self.apply_attribute_value(target_unique_id, key, &value);
       }
     }
@@ -668,8 +557,10 @@ impl MainThreadWasmContext {
       .rev()
       .find(|binding| binding.target_unique_id == target_unique_id && binding.key == key)
     {
-      if let Some(value) = Self::slot_binding_value(attribute_slots, binding) {
-        return self.apply_attribute_value(target_unique_id, key, &value);
+      if let Some(value) = attribute_slots.get(binding.slot_index) {
+        if !Self::value_is_nullish(value) {
+          return self.apply_attribute_value(target_unique_id, key, value);
+        }
       }
     }
 
@@ -764,117 +655,6 @@ impl MainThreadWasmContext {
     Ok(new_keys)
   }
 
-  fn instance_bindings_from_definition(
-    definition: &ElementTemplateDefinition,
-    unique_ids_by_index: &[usize],
-  ) -> (
-    Vec<InstanceAttributeBinding>,
-    Vec<InstanceSpreadBinding>,
-    Vec<InstanceStaticBinding>,
-  ) {
-    let attribute_bindings = definition
-      .attribute_bindings
-      .iter()
-      .filter_map(|binding| {
-        unique_ids_by_index
-          .get(binding.element_index)
-          .map(|target_unique_id| InstanceAttributeBinding {
-            target_unique_id: *target_unique_id,
-            slot_index: binding.slot_index,
-            key: binding.key.clone(),
-          })
-      })
-      .collect();
-    let spread_bindings = definition
-      .spread_bindings
-      .iter()
-      .filter_map(|binding| {
-        unique_ids_by_index
-          .get(binding.element_index)
-          .map(|target_unique_id| InstanceSpreadBinding {
-            target_unique_id: *target_unique_id,
-            slot_index: binding.slot_index,
-          })
-      })
-      .collect();
-    let static_bindings = definition
-      .static_bindings
-      .iter()
-      .filter_map(|binding| {
-        unique_ids_by_index
-          .get(binding.element_index)
-          .map(|target_unique_id| InstanceStaticBinding {
-            target_unique_id: *target_unique_id,
-            key: binding.key.clone(),
-            value: binding.value.clone(),
-          })
-      })
-      .collect();
-    (attribute_bindings, spread_bindings, static_bindings)
-  }
-
-  fn max_slot_index(
-    attribute_bindings: &[InstanceAttributeBinding],
-    spread_bindings: &[InstanceSpreadBinding],
-  ) -> Option<usize> {
-    attribute_bindings
-      .iter()
-      .map(|binding| binding.slot_index)
-      .chain(spread_bindings.iter().map(|binding| binding.slot_index))
-      .max()
-  }
-
-  fn normalized_attribute_slots(
-    attribute_slots: &JsValue,
-    attribute_bindings: &[InstanceAttributeBinding],
-    spread_bindings: &[InstanceSpreadBinding],
-  ) -> Vec<JsValue> {
-    let mut slots = Self::js_array_to_vec(attribute_slots);
-    if let Some(max_slot_index) = Self::max_slot_index(attribute_bindings, spread_bindings) {
-      while slots.len() <= max_slot_index {
-        slots.push(JsValue::NULL);
-      }
-    }
-    slots
-  }
-
-  fn apply_initial_attribute_slots(
-    &mut self,
-    attribute_slots: &[JsValue],
-    attribute_bindings: &[InstanceAttributeBinding],
-    spread_bindings: &[InstanceSpreadBinding],
-    static_bindings: &[InstanceStaticBinding],
-  ) -> Result<FnvHashMap<(usize, usize), Vec<String>>, JsError> {
-    for binding in attribute_bindings {
-      self.apply_slot_binding(
-        binding,
-        attribute_slots,
-        attribute_bindings,
-        spread_bindings,
-        static_bindings,
-      )?;
-    }
-
-    let mut spread_keys = FnvHashMap::default();
-    for binding in spread_bindings {
-      let value = attribute_slots
-        .get(binding.slot_index)
-        .cloned()
-        .unwrap_or(JsValue::NULL);
-      let keys = self.apply_spread_binding(
-        binding,
-        attribute_slots,
-        attribute_bindings,
-        spread_bindings,
-        static_bindings,
-        Vec::new(),
-        &value,
-      )?;
-      spread_keys.insert((binding.slot_index, binding.target_unique_id), keys);
-    }
-    Ok(spread_keys)
-  }
-
   fn apply_initial_element_slots(
     &mut self,
     host: &HtmlElement,
@@ -896,7 +676,20 @@ impl MainThreadWasmContext {
         continue;
       };
       let slot_value = Reflect::get(element_slots, &key).unwrap_or(JsValue::UNDEFINED);
-      let children = Self::normalize_slot_children(&slot_value);
+      let mut children = Vec::new();
+      if !Self::value_is_nullish(&slot_value) {
+        if Array::is_array(&slot_value) {
+          let array: Array = slot_value.unchecked_into();
+          children.reserve(array.length() as usize);
+          for index in 0..array.length() {
+            if let Ok(element) = array.get(index).dyn_into::<HtmlElement>() {
+              children.push(element);
+            }
+          }
+        } else if let Ok(element) = slot_value.dyn_into::<HtmlElement>() {
+          children.push(element);
+        }
+      }
       for child in children {
         let child_unique_id = Self::element_template_root_unique_id(&child)
           .ok_or_else(|| JsError::new("Element template child missing unique id"))?;
@@ -954,72 +747,6 @@ impl MainThreadWasmContext {
     } else {
       Ok(Object::new().into())
     }
-  }
-
-  fn insert_node_to_instance(
-    &mut self,
-    root_unique_id: usize,
-    slot_index: usize,
-    child: HtmlElement,
-    reference: Option<HtmlElement>,
-  ) -> Result<(), JsError> {
-    let child_unique_id = Self::element_template_root_unique_id(&child)
-      .ok_or_else(|| JsError::new("Element template child missing unique id"))?;
-    let (anchor, host) = {
-      let instance = self
-        .element_template_instances
-        .get(&root_unique_id)
-        .ok_or_else(|| JsError::new("Element template instance not found"))?;
-      (
-        instance.slot_anchors.get(&slot_index).cloned(),
-        self
-          .get_dom_by_unique_id_strong(root_unique_id)
-          .ok_or_else(|| JsError::new("Element template host not found"))?,
-      )
-    };
-
-    if let Some(reference) = reference.as_ref() {
-      reference
-        .parent_node()
-        .ok_or_else(|| JsError::new("Reference node missing parent"))?
-        .insert_before(&child, Some(reference))
-        .map_err(|e| JsError::new(&format!("Failed to insert before reference: {e:?}")))?;
-    } else if let Some(anchor) = anchor {
-      anchor
-        .parent_node()
-        .ok_or_else(|| JsError::new("Element template slot anchor missing parent"))?
-        .insert_before(&child, Some(&anchor))
-        .map_err(|e| JsError::new(&format!("Failed to insert before anchor: {e:?}")))?;
-    } else {
-      host
-        .append_child(&child)
-        .map_err(|e| JsError::new(&format!("Failed to append slot child: {e:?}")))?;
-    }
-
-    let mut child_unique_ids = FnvHashSet::default();
-    child_unique_ids.insert(child_unique_id);
-    self.detach_element_template_instance_references(&child_unique_ids);
-
-    if let Some(instance) = self.element_template_instances.get_mut(&root_unique_id) {
-      let children = instance.element_slots.entry(slot_index).or_default();
-      if let Some(reference) = reference.as_ref() {
-        if let Some(reference_unique_id) = Self::element_template_root_unique_id(reference) {
-          if let Some(position) = children
-            .iter()
-            .position(|unique_id| *unique_id == reference_unique_id)
-          {
-            children.insert(position, child_unique_id);
-          } else {
-            children.push(child_unique_id);
-          }
-        } else {
-          children.push(child_unique_id);
-        }
-      } else {
-        children.push(child_unique_id);
-      }
-    }
-    Ok(())
   }
 
   fn serialize_instance_by_unique_id(&self, root_unique_id: usize) -> Result<JsValue, JsError> {
@@ -1122,10 +849,6 @@ impl MainThreadWasmContext {
     }
   }
 
-  fn cleanup_removed_element_template_subtree(&mut self, element: &HtmlElement) {
-    self.cleanup_element_template_instances(Self::collect_removed_subtree_unique_ids(element));
-  }
-
   pub(crate) fn gc_element_template_instances(&mut self) {
     let ids_to_remove = self
       .element_template_instances
@@ -1221,7 +944,28 @@ impl MainThreadWasmContext {
     let mut elements = Vec::new();
     let mut slot_anchors = FnvHashMap::default();
     Self::collect_clone_nodes(&root_node, &mut elements, &mut slot_anchors);
-    let unique_ids_by_index = self.register_template_elements(&elements)?;
+    let mut unique_ids_by_index = Vec::with_capacity(elements.len());
+    for element in &elements {
+      let css_id = element
+        .get_attribute(constants::CSS_ID_ATTRIBUTE)
+        .and_then(|value| value.parse::<i32>().ok())
+        .unwrap_or(0);
+      let unique_id = self.create_element_with_css_id(
+        0,
+        element.clone(),
+        WeakRef::new(element),
+        Some(css_id),
+        None,
+        None,
+      );
+      unique_ids_by_index.push(unique_id);
+      if !self.config_enable_css_selector {
+        self.update_css_og_style(
+          unique_id,
+          element.get_attribute(constants::LYNX_ENTRY_NAME_ATTRIBUTE),
+        )?;
+      }
+    }
     let root_unique_id = *unique_ids_by_index
       .first()
       .ok_or_else(|| JsError::new("Element template root not registered"))?;
@@ -1232,16 +976,94 @@ impl MainThreadWasmContext {
       )
       .map_err(|e| JsError::new(&format!("Failed to mark template root: {e:?}")))?;
 
-    let (attribute_bindings, spread_bindings, static_bindings) =
-      Self::instance_bindings_from_definition(&definition, &unique_ids_by_index);
-    let attribute_slots =
-      Self::normalized_attribute_slots(&attribute_slots, &attribute_bindings, &spread_bindings);
-    let spread_keys = self.apply_initial_attribute_slots(
-      &attribute_slots,
-      &attribute_bindings,
-      &spread_bindings,
-      &static_bindings,
-    )?;
+    let (attribute_bindings, spread_bindings, static_bindings) = {
+      let attribute_bindings = definition
+        .attribute_bindings
+        .iter()
+        .filter_map(|binding| {
+          unique_ids_by_index
+            .get(binding.element_index)
+            .map(|target_unique_id| InstanceAttributeBinding {
+              target_unique_id: *target_unique_id,
+              slot_index: binding.slot_index,
+              key: binding.key.clone(),
+            })
+        })
+        .collect::<Vec<_>>();
+      let spread_bindings = definition
+        .spread_bindings
+        .iter()
+        .filter_map(|binding| {
+          unique_ids_by_index
+            .get(binding.element_index)
+            .map(|target_unique_id| InstanceSpreadBinding {
+              target_unique_id: *target_unique_id,
+              slot_index: binding.slot_index,
+            })
+        })
+        .collect::<Vec<_>>();
+      let static_bindings = definition
+        .static_bindings
+        .iter()
+        .filter_map(|binding| {
+          unique_ids_by_index
+            .get(binding.element_index)
+            .map(|target_unique_id| InstanceStaticBinding {
+              target_unique_id: *target_unique_id,
+              key: binding.key.clone(),
+              value: binding.value.clone(),
+            })
+        })
+        .collect::<Vec<_>>();
+      (attribute_bindings, spread_bindings, static_bindings)
+    };
+
+    let mut attribute_slots = if Array::is_array(&attribute_slots) {
+      let array: Array = attribute_slots.clone().unchecked_into();
+      (0..array.length())
+        .map(|index| array.get(index))
+        .collect::<Vec<_>>()
+    } else {
+      Vec::new()
+    };
+    if let Some(max_slot_index) = attribute_bindings
+      .iter()
+      .map(|binding| binding.slot_index)
+      .chain(spread_bindings.iter().map(|binding| binding.slot_index))
+      .max()
+    {
+      while attribute_slots.len() <= max_slot_index {
+        attribute_slots.push(JsValue::NULL);
+      }
+    }
+
+    for binding in &attribute_bindings {
+      self.apply_slot_binding(
+        binding,
+        &attribute_slots,
+        &attribute_bindings,
+        &spread_bindings,
+        &static_bindings,
+      )?;
+    }
+
+    let mut spread_keys = FnvHashMap::default();
+    for binding in &spread_bindings {
+      let value = attribute_slots
+        .get(binding.slot_index)
+        .cloned()
+        .unwrap_or(JsValue::NULL);
+      let keys = self.apply_spread_binding(
+        binding,
+        &attribute_slots,
+        &attribute_bindings,
+        &spread_bindings,
+        &static_bindings,
+        Vec::new(),
+        &value,
+      )?;
+      spread_keys.insert((binding.slot_index, binding.target_unique_id), keys);
+    }
     let element_slots = self.apply_initial_element_slots(&root, &slot_anchors, &element_slots)?;
 
     self.element_template_instances.insert(
@@ -1507,7 +1329,65 @@ impl MainThreadWasmContext {
   ) -> Result<(), JsError> {
     let root_unique_id = Self::element_template_root_unique_id(&element)
       .ok_or_else(|| JsError::new("Element template root missing unique id"))?;
-    self.insert_node_to_instance(root_unique_id, slot_index, child, reference)
+    let child_unique_id = Self::element_template_root_unique_id(&child)
+      .ok_or_else(|| JsError::new("Element template child missing unique id"))?;
+    let (anchor, host) = {
+      let instance = self
+        .element_template_instances
+        .get(&root_unique_id)
+        .ok_or_else(|| JsError::new("Element template instance not found"))?;
+      (
+        instance.slot_anchors.get(&slot_index).cloned(),
+        self
+          .get_dom_by_unique_id_strong(root_unique_id)
+          .ok_or_else(|| JsError::new("Element template host not found"))?,
+      )
+    };
+
+    if let Some(reference) = reference.as_ref() {
+      reference
+        .parent_node()
+        .ok_or_else(|| JsError::new("Reference node missing parent"))?
+        .insert_before(&child, Some(reference))
+        .map_err(|e| JsError::new(&format!("Failed to insert before reference: {e:?}")))?;
+    } else if let Some(anchor) = anchor {
+      anchor
+        .parent_node()
+        .ok_or_else(|| JsError::new("Element template slot anchor missing parent"))?
+        .insert_before(&child, Some(&anchor))
+        .map_err(|e| JsError::new(&format!("Failed to insert before anchor: {e:?}")))?;
+    } else {
+      host
+        .append_child(&child)
+        .map_err(|e| JsError::new(&format!("Failed to append slot child: {e:?}")))?;
+    }
+
+    // Moving a template child between slots must detach it from the old owner
+    // before it is recorded on the new owner.
+    let mut child_unique_ids = FnvHashSet::default();
+    child_unique_ids.insert(child_unique_id);
+    self.detach_element_template_instance_references(&child_unique_ids);
+
+    if let Some(instance) = self.element_template_instances.get_mut(&root_unique_id) {
+      let children = instance.element_slots.entry(slot_index).or_default();
+      if let Some(reference) = reference.as_ref() {
+        if let Some(reference_unique_id) = Self::element_template_root_unique_id(reference) {
+          if let Some(position) = children
+            .iter()
+            .position(|unique_id| *unique_id == reference_unique_id)
+          {
+            children.insert(position, child_unique_id);
+          } else {
+            children.push(child_unique_id);
+          }
+        } else {
+          children.push(child_unique_id);
+        }
+      } else {
+        children.push(child_unique_id);
+      }
+    }
+    Ok(())
   }
 
   pub fn remove_node_from_element_template(
@@ -1529,7 +1409,7 @@ impl MainThreadWasmContext {
   }
 
   pub fn remove_element_template(&mut self, element: HtmlElement) -> Result<(), JsError> {
-    self.cleanup_removed_element_template_subtree(&element);
+    self.cleanup_element_template_instances(Self::collect_removed_subtree_unique_ids(&element));
     Ok(())
   }
 
