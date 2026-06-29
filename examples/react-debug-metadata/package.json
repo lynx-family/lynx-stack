@@ -5,8 +5,8 @@
   "type": "module",
   "scripts": {
     "build": "pnpm run build:producer && pnpm run build:consumer",
-    "build:consumer": "cross-env DEBUG=rspeedy,rsbuild rspeedy build --config lynx.config.consumer.js",
-    "build:producer": "cross-env DEBUG=rspeedy,rsbuild rspeedy build --config lynx.config.producer.js",
+    "build:consumer": "rspeedy build --config lynx.config.consumer.js",
+    "build:producer": "rspeedy build --config lynx.config.producer.js",
     "dev": "node scripts/serve.mjs dev",
     "dev:consumer": "rspeedy dev --config lynx.config.consumer.js",
     "dev:producer": "rspeedy dev --config lynx.config.producer.js",
