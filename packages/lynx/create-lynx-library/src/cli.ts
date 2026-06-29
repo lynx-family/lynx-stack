@@ -69,11 +69,13 @@ const DEFAULT_PROMPTS: CliPrompts = {
 const DEFAULT_PROJECT_NAME = 'lynx-library';
 const LIBRARY_FEATURE_LABELS: Record<LibraryFeature, string> = {
   'native-module': 'Native Module',
+  'napi-native-module': 'NAPI Native Module',
   element: 'Element',
   service: 'Service',
 };
 const LIBRARY_FEATURE_HINTS: Record<LibraryFeature, string> = {
-  'native-module': 'JS bridge APIs for Android, iOS, and shared C++ targets',
+  'native-module': 'JS bridge APIs for Android and iOS platform targets',
+  'napi-native-module': 'shared C++ N-API native module generated from typings',
   element: 'native UI element for Android, iOS, and shared C++ targets',
   service: 'native service implementation registered globally',
 };
@@ -206,7 +208,8 @@ Options:
   --help, -h                   Show this help message.
 
 Library features:
-  native-module                JS bridge APIs for Android, iOS, and shared C++ targets.
+  native-module                JS bridge APIs for Android and iOS platform targets.
+  napi-native-module           Shared C++ N-API native module generated from typings.
   element                      Native UI element for Android, iOS, and shared C++ targets.
   service                      Native service implementation registered globally.
 
@@ -217,7 +220,7 @@ Native platforms:
 
 Examples:
   create-lynx-library
-  create-lynx-library lynx-button --features native-module,element,service --platforms android,ios,lynxtron
+  create-lynx-library lynx-button --features native-module,napi-native-module,element,service --platforms android,ios,lynxtron
   create-lynx-library lynx-kit --features all --platforms all
 `);
 }
@@ -464,7 +467,10 @@ function formatSuccessMessage({
     `2. ${packageManager} install`,
   ];
 
-  if (selectedFeatures.includes('native-module')) {
+  if (
+    selectedFeatures.includes('native-module')
+    || selectedFeatures.includes('napi-native-module')
+  ) {
     nextSteps.push(`3. ${packageManager} run codegen`);
   }
 

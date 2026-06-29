@@ -116,7 +116,7 @@ describe('create-lynx-library CLI', () => {
     ], runtime);
 
     expect(runtime.info).toHaveBeenCalledWith(
-      expect.stringContaining(`Created 36 files in ${path.resolve(dir)}`),
+      expect.stringContaining(`Created 33 files in ${path.resolve(dir)}`),
     );
     expect(runtime.info).toHaveBeenCalledWith(
       expect.stringContaining(
@@ -134,6 +134,7 @@ describe('create-lynx-library CLI', () => {
     expect(read(dir, 'package.json')).toContain(
       '"name": "@example/cli-library"',
     );
+    expect(read(dir, 'package.json')).not.toContain('workspace:');
     expect(read(dir, 'lynxtron/index.cjs')).toContain(
       '\'dist\'',
     );
@@ -228,7 +229,9 @@ describe('create-lynx-library CLI', () => {
     ], runtime);
 
     expect(runtime.info).toHaveBeenCalledWith(
-      expect.stringContaining('  - Native Module\n  - Element\n  - Service'),
+      expect.stringContaining(
+        '  - Native Module\n  - NAPI Native Module\n  - Element\n  - Service',
+      ),
     );
     expect(
       read(
@@ -289,7 +292,12 @@ describe('create-lynx-library CLI', () => {
     expect(multiselectPrompt).toHaveBeenNthCalledWith(
       1,
       expect.objectContaining({
-        initialValues: ['native-module', 'element', 'service'],
+        initialValues: [
+          'native-module',
+          'napi-native-module',
+          'element',
+          'service',
+        ],
         required: true,
       }),
     );
@@ -304,6 +312,10 @@ describe('create-lynx-library CLI', () => {
           expect.objectContaining({
             label: 'Native Module',
             value: 'native-module',
+          }),
+          expect.objectContaining({
+            label: 'NAPI Native Module',
+            value: 'napi-native-module',
           }),
           expect.objectContaining({ label: 'Element', value: 'element' }),
           expect.objectContaining({ label: 'Service', value: 'service' }),

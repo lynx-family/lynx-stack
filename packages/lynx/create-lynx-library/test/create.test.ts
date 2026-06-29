@@ -30,6 +30,7 @@ describe('create-lynx-library', () => {
     ]);
     expect(parseLibraryFeatures('ALL')).toEqual([
       'native-module',
+      'napi-native-module',
       'element',
       'service',
     ]);
@@ -74,15 +75,12 @@ describe('create-lynx-library', () => {
         'package.json',
         'lynx.lib.json',
         'types/index.d.ts',
+        'types/platform-native-module.d.ts',
         'src/index.ts',
         'shared/CMakeLists.txt',
         'lynxtron/CMakeLists.txt',
         'lynxtron/index.cjs',
         'lynxtron/library_entry.cc',
-        'shared/modules/CMakeLists.txt',
-        'shared/modules/ButtonModule.h',
-        'shared/modules/ButtonModule.cc',
-        'shared/modules/ButtonModuleRegistration.cc',
         'shared/elements/CMakeLists.txt',
         'shared/elements/ButtonElement.h',
         'shared/elements/ButtonElement.cc',
@@ -180,20 +178,19 @@ describe('create-lynx-library', () => {
     expect(read(dir, 'shared/CMakeLists.txt')).toContain(
       '"@lynx-js/weak-node-api"',
     );
-    expect(read(dir, 'shared/modules/CMakeLists.txt')).toContain(
-      'LYNX_LIBRARY_NODE_API_WEAK_SUFFIX',
-    );
-    expect(read(dir, 'shared/modules/CMakeLists.txt')).not.toContain(
-      'LYNX_SHARED_ENABLE_WEAK_NAPI',
-    );
     expect(read(dir, 'shared/elements/CMakeLists.txt')).not.toContain(
       'LYNX_SHARED_ENABLE_STATIC_REGISTER',
     );
     expect(read(dir, 'ios/build.podspec')).toContain(
       's.dependency \'LynxServiceAPI\'',
     );
-    expect(read(dir, 'types/index.d.ts')).toContain('/** @lynxmodule */');
     expect(read(dir, 'types/index.d.ts')).toContain(
+      'export * from \'./platform-native-module\';',
+    );
+    expect(read(dir, 'types/platform-native-module.d.ts')).toContain(
+      '/** @lynxmodule */',
+    );
+    expect(read(dir, 'types/platform-native-module.d.ts')).toContain(
       'setValue(key: string, value: string): void;',
     );
     expect(
@@ -235,12 +232,6 @@ describe('create-lynx-library', () => {
     expect(read(dir, 'ios/src/ButtonService.h')).toContain(
       '#import <LynxServiceAPI/ServiceAPI.h>',
     );
-    expect(read(dir, 'shared/modules/ButtonModule.h')).toContain(
-      '#include "weak_napi_defines.h"',
-    );
-    expect(read(dir, 'shared/modules/ButtonModuleRegistration.cc')).toContain(
-      'LYNX_REGISTER_NATIVE_MODULE(',
-    );
     expect(read(dir, 'shared/elements/ButtonElementRegistration.cc')).toContain(
       'LYNX_REGISTER_ELEMENT(',
     );
@@ -265,17 +256,11 @@ describe('create-lynx-library', () => {
     expect(files.map((file) => file.path)).toContain(
       'android/src/main/java/com/example/storage/StorageModule.java',
     );
-    expect(files.map((file) => file.path)).toContain(
+    expect(files.map((file) => file.path)).not.toContain(
       'shared/CMakeLists.txt',
     );
-    expect(files.map((file) => file.path)).toContain(
+    expect(files.map((file) => file.path)).not.toContain(
       'lynxtron/CMakeLists.txt',
-    );
-    expect(files.map((file) => file.path)).toContain(
-      'shared/modules/StorageModule.cc',
-    );
-    expect(files.map((file) => file.path)).toContain(
-      'shared/modules/StorageModuleRegistration.cc',
     );
     expect(files.map((file) => file.path)).not.toContain(
       'android/src/main/java/com/example/storage/StorageElement.java',
@@ -289,11 +274,45 @@ describe('create-lynx-library', () => {
     expect(read(dir, 'ios/build.podspec')).not.toContain('LynxServiceAPI');
   });
 
+  it('creates NAPI Native Module projects with split typings', () => {
+    const dir = createTempDir('napi-module');
+    const files = createLynxLibrary({
+      dir,
+      features: ['napi-native-module'],
+      packageName: 'napi-library',
+      moduleName: 'StorageModule',
+    });
+    const filePaths = files.map((file) => file.path);
+
+    expect(filePaths).toContain('shared/CMakeLists.txt');
+    expect(filePaths).toContain('shared/nativeModule/CMakeLists.txt');
+    expect(filePaths).toContain('lynxtron/CMakeLists.txt');
+    expect(filePaths).toContain('types/napi-native-module.d.ts');
+    expect(filePaths).not.toContain(
+      'android/src/main/java/com/example/storage/StorageModule.java',
+    );
+    expect(read(dir, 'types/index.d.ts')).toContain(
+      'export * from \'./napi-native-module\';',
+    );
+    expect(read(dir, 'types/napi-native-module.d.ts')).toContain(
+      'export declare class StorageModule',
+    );
+    expect(read(dir, 'src/index.ts')).toContain(
+      'export { StorageModule } from \'../generated/StorageModule\';',
+    );
+    expect(read(dir, 'shared/CMakeLists.txt')).toContain(
+      'add_subdirectory(nativeModule)',
+    );
+    expect(read(dir, 'shared/nativeModule/CMakeLists.txt')).toContain(
+      'NapiNativeModules',
+    );
+  });
+
   it('creates Lynxtron projects with shared C++ sources', () => {
     const dir = createTempDir('lynxtron');
     const files = createLynxLibrary({
       dir,
-      features: ['native-module', 'element'],
+      features: ['napi-native-module', 'element'],
       platforms: ['lynxtron'],
       packageName: '@example/lynxtron-library',
       moduleName: 'LynxtronModule',
@@ -307,9 +326,7 @@ describe('create-lynx-library', () => {
         'lynxtron/CMakeLists.txt',
         'lynxtron/index.cjs',
         'lynxtron/library_entry.cc',
-        'shared/modules/CMakeLists.txt',
-        'shared/modules/LynxtronModule.cc',
-        'shared/modules/LynxtronModuleRegistration.cc',
+        'shared/nativeModule/CMakeLists.txt',
         'shared/elements/CMakeLists.txt',
         'shared/elements/LynxtronElement.cc',
         'shared/elements/LynxtronElementRegistration.cc',
@@ -381,10 +398,10 @@ describe('create-lynx-library', () => {
     expect(read(dir, 'shared/CMakeLists.txt')).toContain(
       '"@lynx-js/weak-node-api"',
     );
-    expect(read(dir, 'shared/modules/CMakeLists.txt')).toContain(
+    expect(read(dir, 'shared/nativeModule/CMakeLists.txt')).toContain(
       'LYNX_LIBRARY_NODE_API_WEAK_SUFFIX',
     );
-    expect(read(dir, 'shared/modules/CMakeLists.txt')).not.toContain(
+    expect(read(dir, 'shared/nativeModule/CMakeLists.txt')).not.toContain(
       'LYNX_SHARED_ENABLE_WEAK_NAPI',
     );
     expect(read(dir, 'shared/elements/CMakeLists.txt')).not.toContain(
