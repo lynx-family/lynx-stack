@@ -7,59 +7,187 @@ import type {
   ElementTemplateAsset,
   ElementTemplateElementNode,
 } from '../../types/index.js';
+import { cssIdAttribute, LYNX_TAG_TO_HTML_TAG_MAP } from '../../constants.js';
 import type { MainThreadWasmContext } from '../wasm.js';
+
+export const elementTemplateSlotAnchorPrefix = 'lynx-et-slot:';
+
+export type RegisteredElementTemplate = {
+  template: HTMLTemplateElement;
+  maxAttributeSlotIndex: number;
+};
+
+const elementTemplateRegistry = new WeakMap<
+  InstanceType<MainThreadWasmContext>,
+  Map<string, RegisteredElementTemplate>
+>();
+
+export function getElementTemplateIdentityKey(
+  templateKey: string,
+  bundleUrl?: string | null,
+) {
+  return bundleUrl && bundleUrl !== '__Card__'
+    ? `${bundleUrl}:${templateKey}`
+    : templateKey;
+}
+
+export function getRegisteredElementTemplate(
+  wasmContext: InstanceType<MainThreadWasmContext>,
+  templateKey: string,
+  bundleUrl?: string | null,
+) {
+  return elementTemplateRegistry.get(wasmContext)?.get(
+    getElementTemplateIdentityKey(templateKey, bundleUrl),
+  );
+}
 
 export function registerElementTemplates(
   wasmContext: InstanceType<MainThreadWasmContext>,
   elementTemplates: ElementTemplateAsset[] | undefined,
   bundleUrl?: string,
 ) {
+  let registry = elementTemplateRegistry.get(wasmContext);
+  if (!registry) {
+    registry = new Map();
+    elementTemplateRegistry.set(wasmContext, registry);
+  }
+
   for (const { templateId, compiledTemplate } of elementTemplates ?? []) {
-    const definition = wasmContext.create_element_template_definition(
+    const template = document.createElement('template');
+    const definitionId = wasmContext.create_element_template_definition(
       templateId,
       bundleUrl,
     );
+    let nextElementIndex = 0;
+    let maxAttributeSlotIndex = -1;
     const stack: Array<
       | {
         kind: 'element';
         node: ElementTemplateElementNode;
-        parentIndex?: number;
+        parent?: HTMLElement;
       }
       | {
         kind: 'slot';
         slotIndex: number;
-        parentIndex: number;
+        parent: HTMLElement;
       }
     > = [{ kind: 'element', node: compiledTemplate }];
 
     while (stack.length > 0) {
       const action = stack.pop()!;
       if (action.kind === 'slot') {
-        definition.append_slot(action.parentIndex, action.slotIndex);
+        action.parent.appendChild(
+          document.createComment(
+            `${elementTemplateSlotAnchorPrefix}${action.slotIndex}`,
+          ),
+        );
         continue;
       }
 
-      const elementIndex = action.parentIndex === undefined
-        ? definition.append_root(action.node.type)
-        : definition.append_child(action.parentIndex, action.node.type);
+      const elementIndex = nextElementIndex++;
+      const element = document.createElement(
+        LYNX_TAG_TO_HTML_TAG_MAP[action.node.type] ?? action.node.type,
+      );
+      if (action.parent) {
+        action.parent.appendChild(element);
+      } else {
+        template.content.appendChild(element);
+      }
+
       for (const attribute of action.node.attributesArray ?? []) {
         switch (attribute.kind) {
           case 'static':
-            definition.push_static_attribute(
-              elementIndex,
-              attribute.key,
-              attribute.value,
-            );
+            switch (typeof attribute.value) {
+              case 'string':
+                wasmContext.add_element_template_static_string_binding(
+                  definitionId,
+                  elementIndex,
+                  attribute.key,
+                  attribute.value,
+                );
+                break;
+              case 'number':
+                wasmContext.add_element_template_static_number_binding(
+                  definitionId,
+                  elementIndex,
+                  attribute.key,
+                  attribute.value,
+                );
+                break;
+              case 'boolean':
+                wasmContext.add_element_template_static_bool_binding(
+                  definitionId,
+                  elementIndex,
+                  attribute.key,
+                  attribute.value,
+                );
+                break;
+              default:
+                wasmContext.add_element_template_static_null_binding(
+                  definitionId,
+                  elementIndex,
+                  attribute.key,
+                );
+                break;
+            }
+
+            {
+              const key = attribute.key === 'css-id'
+                ? cssIdAttribute
+                : attribute.key === 'className'
+                ? 'class'
+                : attribute.key;
+              if (key === 'style') {
+                if (attribute.value == null) {
+                  element.removeAttribute(key);
+                } else {
+                  element.setAttribute(
+                    key,
+                    wasmContext.transform_element_template_style(
+                      String(attribute.value),
+                    ),
+                  );
+                }
+                break;
+              }
+              if (attribute.value == null) {
+                element.removeAttribute(key);
+              } else {
+                element.setAttribute(key, String(attribute.value));
+                if (key === 'text') {
+                  switch (element.tagName.toLowerCase()) {
+                    case 'x-text':
+                    case 'raw-text':
+                      for (const child of Array.from(element.childNodes)) {
+                        if (child.nodeType === 3) {
+                          child.remove();
+                        }
+                      }
+                      break;
+                  }
+                }
+              }
+            }
             break;
           case 'slot':
-            definition.push_slot_attribute(
-              elementIndex,
-              attribute.key,
+            maxAttributeSlotIndex = Math.max(
+              maxAttributeSlotIndex,
               attribute.attrSlotIndex,
+            );
+            wasmContext.add_element_template_attribute_binding(
+              definitionId,
+              elementIndex,
+              attribute.attrSlotIndex,
+              attribute.key,
             );
             break;
           case 'spread':
-            definition.push_spread_attribute(
+            maxAttributeSlotIndex = Math.max(
+              maxAttributeSlotIndex,
+              attribute.attrSlotIndex,
+            );
+            wasmContext.add_element_template_spread_binding(
+              definitionId,
               elementIndex,
               attribute.attrSlotIndex,
             );
@@ -76,19 +204,23 @@ export function registerElementTemplates(
             stack.push({
               kind: 'slot',
               slotIndex: child.elementSlotIndex,
-              parentIndex: elementIndex,
+              parent: element,
             });
           } else {
             stack.push({
               kind: 'element',
               node: child,
-              parentIndex: elementIndex,
+              parent: element,
             });
           }
         }
       }
     }
 
-    wasmContext.register_element_template(definition);
+    wasmContext.finish_element_template_definition(definitionId);
+    registry.set(getElementTemplateIdentityKey(templateId, bundleUrl), {
+      template,
+      maxAttributeSlotIndex,
+    });
   }
 }

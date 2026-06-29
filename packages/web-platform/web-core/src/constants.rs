@@ -8,13 +8,9 @@ use fnv::{FnvHashMap, FnvHashSet};
 
 pub const CSS_ID_ATTRIBUTE: &str = "l-css-id";
 pub const LYNX_ENTRY_NAME_ATTRIBUTE: &str = "l-e-name";
-#[cfg(feature = "client")]
-pub const LYNX_ELEMENT_TEMPLATE_MARKER_ATTRIBUTE: &str = "l-template";
 
 #[cfg(any(feature = "client", feature = "server"))]
 pub const LYNX_UNIQUE_ID_ATTRIBUTE: &str = "l-uid";
-#[cfg(feature = "client")]
-pub const LYNX_UNIQUE_ID_PROPERTY: &str = "__lynxUniqueId";
 // #[cfg(feature = "client")]
 // pub const LYNX_TEMPLATE_MEMBER_ID_ATTRIBUTE: &str = "l-t-e-id";
 // #[cfg(feature = "client")]

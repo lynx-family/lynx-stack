@@ -10,15 +10,13 @@ use crate::style_transformer::{
   transform_inline_style_key_value_vec, transform_inline_style_string,
 };
 use fnv::{FnvHashMap, FnvHashSet};
-use js_sys::{Array, Object, Reflect, WeakRef};
+use js_sys::{Array, Object, Reflect};
 use std::rc::Rc;
 use wasm_bindgen::prelude::*;
 use wasm_bindgen::JsCast;
-use web_sys::{DocumentFragment, HtmlElement, HtmlTemplateElement, Node};
+use web_sys::HtmlElement;
 
 const MAIN_BUNDLE_URL_SENTINEL: &str = "__Card__";
-const SLOT_ANCHOR_PREFIX: &str = "lynx-et-slot:";
-
 pub(crate) struct TemplateAttributeBinding {
   element_index: usize,
   slot_index: usize,
@@ -39,16 +37,9 @@ pub(crate) struct TemplateStaticBinding {
 pub(crate) struct ElementTemplateDefinition {
   template_key: String,
   bundle_url: Option<String>,
-  template: HtmlTemplateElement,
   attribute_bindings: Vec<TemplateAttributeBinding>,
   spread_bindings: Vec<TemplateSpreadBinding>,
   static_bindings: Vec<TemplateStaticBinding>,
-}
-
-#[wasm_bindgen]
-pub struct ElementTemplateDefinitionBuilder {
-  definition: ElementTemplateDefinition,
-  elements: Vec<HtmlElement>,
 }
 
 pub(crate) struct InstanceAttributeBinding {
@@ -70,159 +61,18 @@ pub(crate) struct InstanceStaticBinding {
 
 pub(crate) enum ElementTemplateInstance {
   Compiled {
-    handle_id: JsValue,
-    template_key: String,
-    bundle_url: Option<String>,
+    definition: Rc<ElementTemplateDefinition>,
     attribute_slots: Vec<JsValue>,
     attribute_bindings: Vec<InstanceAttributeBinding>,
     spread_bindings: Vec<InstanceSpreadBinding>,
     static_bindings: Vec<InstanceStaticBinding>,
     spread_keys: FnvHashMap<(usize, usize), Vec<String>>,
-    slot_anchors: FnvHashMap<usize, Node>,
     element_slots: FnvHashMap<usize, Vec<usize>>,
+    element_index_to_unique_id: Vec<usize>,
   },
   Typed {
-    handle_id: JsValue,
-    tag: String,
-    attributes: JsValue,
-    options: Option<JsValue>,
     element_slots: FnvHashMap<usize, Vec<usize>>,
   },
-}
-
-impl ElementTemplateDefinitionBuilder {
-  fn create_element(&mut self, tag: &str) -> Result<(usize, HtmlElement), JsError> {
-    let document = self
-      .definition
-      .template
-      .owner_document()
-      .ok_or_else(|| JsError::new("Element template missing owner document"))?;
-    let element = document
-      .create_element(MainThreadWasmContext::map_lynx_tag_to_html_tag(tag))
-      .map_err(|e| JsError::new(&format!("Failed to create element: {e:?}")))?
-      .unchecked_into::<HtmlElement>();
-    let element_index = self.elements.len();
-    self.elements.push(element.clone());
-    Ok((element_index, element))
-  }
-
-  fn element_by_index(&self, element_index: usize) -> Result<HtmlElement, JsError> {
-    self
-      .elements
-      .get(element_index)
-      .cloned()
-      .ok_or_else(|| JsError::new("Element template builder target not found"))
-  }
-}
-
-#[wasm_bindgen]
-impl ElementTemplateDefinitionBuilder {
-  pub fn append_root(&mut self, tag: String) -> Result<usize, JsError> {
-    if self.definition.template.content().first_child().is_some() {
-      return Err(JsError::new(
-        "Element template definition already has a root",
-      ));
-    }
-
-    let (element_index, element) = self.create_element(&tag)?;
-    self
-      .definition
-      .template
-      .content()
-      .append_child(&element)
-      .map_err(|e| JsError::new(&format!("Failed to append template root: {e:?}")))?;
-    Ok(element_index)
-  }
-
-  pub fn append_child(&mut self, parent_index: usize, tag: String) -> Result<usize, JsError> {
-    let parent = self.element_by_index(parent_index)?;
-    let (element_index, element) = self.create_element(&tag)?;
-    parent
-      .append_child(&element)
-      .map_err(|e| JsError::new(&format!("Failed to append child: {e:?}")))?;
-    Ok(element_index)
-  }
-
-  pub fn append_slot(&self, parent_index: usize, slot_index: usize) -> Result<(), JsError> {
-    let parent = self.element_by_index(parent_index)?;
-    let document = self
-      .definition
-      .template
-      .owner_document()
-      .ok_or_else(|| JsError::new("Element template missing owner document"))?;
-    let anchor = document.create_comment(&format!("{SLOT_ANCHOR_PREFIX}{slot_index}"));
-    parent
-      .append_child(&anchor)
-      .map_err(|e| JsError::new(&format!("Failed to append slot anchor: {e:?}")))?;
-    Ok(())
-  }
-
-  pub fn push_static_attribute(
-    &mut self,
-    element_index: usize,
-    key: String,
-    value: JsValue,
-  ) -> Result<(), JsError> {
-    let element = self.element_by_index(element_index)?;
-    let normalized_key = match key.as_str() {
-      "css-id" => constants::CSS_ID_ATTRIBUTE,
-      "className" => "class",
-      _ => &key,
-    };
-
-    if normalized_key == "style" {
-      // Static template styles are written when the builder is registered so
-      // the transform config has one owner: MainThreadWasmContext.
-    } else if MainThreadWasmContext::value_is_nullish(&value) {
-      let _ = element.remove_attribute(normalized_key);
-    } else {
-      element
-        .set_attribute(
-          normalized_key,
-          &MainThreadWasmContext::value_to_string(&value),
-        )
-        .map_err(|e| JsError::new(&format!("Failed to set attribute: {e:?}")))?;
-      if normalized_key == "text" {
-        match element.tag_name().to_ascii_lowercase().as_str() {
-          "x-text" | "raw-text" => {
-            let mut child = element.first_child();
-            while let Some(current) = child {
-              child = current.next_sibling();
-              if current.node_type() == Node::TEXT_NODE {
-                let _ = element.remove_child(&current);
-              }
-            }
-          }
-          _ => {}
-        }
-      }
-    }
-
-    self.definition.static_bindings.push(TemplateStaticBinding {
-      element_index,
-      key,
-      value,
-    });
-    Ok(())
-  }
-
-  pub fn push_slot_attribute(&mut self, element_index: usize, key: String, slot_index: usize) {
-    self
-      .definition
-      .attribute_bindings
-      .push(TemplateAttributeBinding {
-        element_index,
-        slot_index,
-        key,
-      });
-  }
-
-  pub fn push_spread_attribute(&mut self, element_index: usize, slot_index: usize) {
-    self.definition.spread_bindings.push(TemplateSpreadBinding {
-      element_index,
-      slot_index,
-    });
-  }
 }
 
 impl MainThreadWasmContext {
@@ -233,13 +83,6 @@ impl MainThreadWasmContext {
       }
       _ => template_key.to_string(),
     }
-  }
-
-  fn map_lynx_tag_to_html_tag(tag: &str) -> &str {
-    constants::LYNX_TAG_TO_HTML_TAG_MAP
-      .get(tag)
-      .copied()
-      .unwrap_or(tag)
   }
 
   fn value_to_string(value: &JsValue) -> String {
@@ -258,21 +101,8 @@ impl MainThreadWasmContext {
     value.is_null() || value.is_undefined()
   }
 
-  fn set_property(target: &JsValue, key: &str, value: &JsValue) -> Result<(), JsError> {
-    Reflect::set(target, &JsValue::from_str(key), value)
-      .map(|_| ())
-      .map_err(|e| JsError::new(&format!("Failed to set JS property {key}: {e:?}")))
-  }
-
   fn object_keys(value: &JsValue) -> Array {
     Object::keys(value.unchecked_ref::<Object>())
-  }
-
-  fn element_template_root_unique_id(element: &HtmlElement) -> Option<usize> {
-    element
-      .get_attribute(constants::LYNX_ELEMENT_TEMPLATE_MARKER_ATTRIBUTE)
-      .or_else(|| element.get_attribute(constants::LYNX_UNIQUE_ID_ATTRIBUTE))
-      .and_then(|value| value.parse::<usize>().ok())
   }
 
   fn set_style_attribute(&self, element: &HtmlElement, value: &JsValue) {
@@ -563,179 +393,6 @@ impl MainThreadWasmContext {
     Ok(new_keys)
   }
 
-  fn apply_initial_element_slots(
-    &mut self,
-    host: &HtmlElement,
-    slot_anchors: &FnvHashMap<usize, Node>,
-    element_slots: &JsValue,
-  ) -> Result<FnvHashMap<usize, Vec<usize>>, JsError> {
-    let mut slot_map = FnvHashMap::default();
-    if Self::value_is_nullish(element_slots) || !element_slots.is_object() {
-      return Ok(slot_map);
-    }
-
-    let keys = Self::object_keys(element_slots);
-    for index in 0..keys.length() {
-      let key = keys.get(index);
-      let Some(key_string) = key.as_string() else {
-        continue;
-      };
-      let Ok(slot_index) = key_string.parse::<usize>() else {
-        continue;
-      };
-      let slot_value = Reflect::get(element_slots, &key).unwrap_or(JsValue::UNDEFINED);
-      let mut children = Vec::new();
-      if !Self::value_is_nullish(&slot_value) {
-        if Array::is_array(&slot_value) {
-          let array: Array = slot_value.unchecked_into();
-          children.reserve(array.length() as usize);
-          for index in 0..array.length() {
-            if let Ok(element) = array.get(index).dyn_into::<HtmlElement>() {
-              children.push(element);
-            }
-          }
-        } else if let Ok(element) = slot_value.dyn_into::<HtmlElement>() {
-          children.push(element);
-        }
-      }
-      for child in children {
-        let child_unique_id = Self::element_template_root_unique_id(&child)
-          .ok_or_else(|| JsError::new("Element template child missing unique id"))?;
-        if let Some(anchor) = slot_anchors.get(&slot_index) {
-          let parent = anchor
-            .parent_node()
-            .ok_or_else(|| JsError::new("Element template slot anchor missing parent"))?;
-          parent
-            .insert_before(&child, Some(anchor))
-            .map_err(|e| JsError::new(&format!("Failed to insert slot child: {e:?}")))?;
-        } else {
-          host
-            .append_child(&child)
-            .map_err(|e| JsError::new(&format!("Failed to append typed slot child: {e:?}")))?;
-        }
-        slot_map
-          .entry(slot_index)
-          .or_insert_with(Vec::new)
-          .push(child_unique_id);
-      }
-    }
-    Ok(slot_map)
-  }
-
-  fn apply_typed_attributes(
-    &mut self,
-    root_unique_id: usize,
-    old_attributes: &JsValue,
-    new_attributes: &JsValue,
-  ) -> Result<JsValue, JsError> {
-    if old_attributes.is_object() {
-      let old_keys = Self::object_keys(old_attributes);
-      for index in 0..old_keys.length() {
-        let key = old_keys.get(index);
-        if Reflect::has(new_attributes, &key).unwrap_or(false) {
-          continue;
-        }
-        if let Some(key) = key.as_string() {
-          self.apply_attribute_value(root_unique_id, &key, &JsValue::NULL)?;
-        }
-      }
-    }
-
-    if new_attributes.is_object() && !Array::is_array(new_attributes) {
-      let keys = Self::object_keys(new_attributes);
-      for index in 0..keys.length() {
-        let key = keys.get(index);
-        if let Some(key) = key.as_string() {
-          let value =
-            Reflect::get(new_attributes, &JsValue::from_str(&key)).unwrap_or(JsValue::UNDEFINED);
-          self.apply_attribute_value(root_unique_id, &key, &value)?;
-        }
-      }
-      Ok(new_attributes.clone())
-    } else {
-      Ok(Object::new().into())
-    }
-  }
-
-  fn serialize_instance_by_unique_id(&self, root_unique_id: usize) -> Result<JsValue, JsError> {
-    let instance = self
-      .element_template_instances
-      .get(&root_unique_id)
-      .ok_or_else(|| JsError::new("Element template instance not found"))?;
-    let serialized = Object::new();
-    let handle_id = match instance {
-      ElementTemplateInstance::Compiled { handle_id, .. }
-      | ElementTemplateInstance::Typed { handle_id, .. } => handle_id,
-    };
-    let uid = if handle_id.is_undefined() || handle_id.is_null() {
-      JsValue::from_f64(root_unique_id as f64)
-    } else {
-      handle_id.clone()
-    };
-    Self::set_property(serialized.as_ref(), "uid", &uid)?;
-
-    let element_slots = match instance {
-      ElementTemplateInstance::Compiled {
-        template_key,
-        bundle_url,
-        attribute_slots,
-        element_slots,
-        ..
-      } => {
-        Self::set_property(
-          serialized.as_ref(),
-          "templateKey",
-          &JsValue::from_str(template_key),
-        )?;
-        if let Some(bundle_url) = bundle_url {
-          Self::set_property(
-            serialized.as_ref(),
-            "bundleUrl",
-            &JsValue::from_str(bundle_url),
-          )?;
-        }
-        let slots = Array::new();
-        for slot in attribute_slots {
-          slots.push(slot);
-        }
-        Self::set_property(serialized.as_ref(), "attributeSlots", slots.as_ref())?;
-        element_slots
-      }
-      ElementTemplateInstance::Typed {
-        tag,
-        attributes,
-        options,
-        element_slots,
-        ..
-      } => {
-        Self::set_property(serialized.as_ref(), "tag", &JsValue::from_str(tag))?;
-        Self::set_property(serialized.as_ref(), "attributes", attributes)?;
-        if let Some(options) = options {
-          Self::set_property(serialized.as_ref(), "options", options)?;
-        }
-        element_slots
-      }
-    };
-
-    if !element_slots.is_empty() {
-      let slots = Array::new();
-      let mut slot_indexes = element_slots.keys().copied().collect::<Vec<_>>();
-      slot_indexes.sort_unstable();
-      for slot_index in slot_indexes {
-        let children_array = Array::new();
-        if let Some(children) = element_slots.get(&slot_index) {
-          for child_unique_id in children {
-            children_array.push(&self.serialize_instance_by_unique_id(*child_unique_id)?);
-          }
-        }
-        slots.set(slot_index as u32, children_array.into());
-      }
-      Self::set_property(serialized.as_ref(), "elementSlots", slots.as_ref())?;
-    }
-
-    Ok(serialized.into())
-  }
-
   fn detach_element_template_instance_references(&mut self, root_unique_ids: &FnvHashSet<usize>) {
     for instance in self.element_template_instances.values_mut() {
       let element_slots = match instance {
@@ -794,53 +451,185 @@ impl MainThreadWasmContext {
       .collect::<Vec<_>>();
     self.cleanup_element_template_instances(ids_to_remove);
   }
+
+  fn add_element_template_static_binding(
+    &mut self,
+    definition_id: usize,
+    element_index: usize,
+    key: String,
+    value: JsValue,
+  ) -> Result<(), JsError> {
+    self
+      .element_template_definition_builders
+      .get_mut(&definition_id)
+      .ok_or_else(|| JsError::new("Element template definition builder not found"))?
+      .static_bindings
+      .push(TemplateStaticBinding {
+        element_index,
+        key,
+        value,
+      });
+    Ok(())
+  }
+
+  fn insert_element_template_slot_child_state(
+    &mut self,
+    root_unique_id: usize,
+    slot_index: usize,
+    child_unique_id: usize,
+    reference_unique_id: Option<usize>,
+  ) -> Result<(), JsError> {
+    let mut child_unique_ids = FnvHashSet::default();
+    child_unique_ids.insert(child_unique_id);
+    self.detach_element_template_instance_references(&child_unique_ids);
+
+    let instance = self
+      .element_template_instances
+      .get_mut(&root_unique_id)
+      .ok_or_else(|| JsError::new("Element template instance not found"))?;
+    let element_slots = match instance {
+      ElementTemplateInstance::Compiled { element_slots, .. }
+      | ElementTemplateInstance::Typed { element_slots, .. } => element_slots,
+    };
+    let children = element_slots.entry(slot_index).or_default();
+    if let Some(reference_unique_id) = reference_unique_id {
+      if let Some(position) = children
+        .iter()
+        .position(|unique_id| *unique_id == reference_unique_id)
+      {
+        children.insert(position, child_unique_id);
+      } else {
+        children.push(child_unique_id);
+      }
+    } else {
+      children.push(child_unique_id);
+    }
+    Ok(())
+  }
 }
 
 #[wasm_bindgen]
 impl MainThreadWasmContext {
   pub fn create_element_template_definition(
-    &self,
+    &mut self,
     template_key: String,
     bundle_url: Option<String>,
-  ) -> Result<ElementTemplateDefinitionBuilder, JsError> {
-    let template = self
-      .document
-      .create_element("template")
-      .map_err(|e| JsError::new(&format!("Failed to create template element: {e:?}")))?
-      .unchecked_into::<HtmlTemplateElement>();
-    Ok(ElementTemplateDefinitionBuilder {
-      definition: ElementTemplateDefinition {
+  ) -> usize {
+    let definition_id = self.next_element_template_definition_id;
+    self.next_element_template_definition_id += 1;
+    self.element_template_definition_builders.insert(
+      definition_id,
+      ElementTemplateDefinition {
         template_key,
         bundle_url,
-        template,
         attribute_bindings: Vec::new(),
         spread_bindings: Vec::new(),
         static_bindings: Vec::new(),
       },
-      elements: Vec::new(),
-    })
+    );
+    definition_id
   }
 
-  pub fn register_element_template(
+  pub fn add_element_template_attribute_binding(
     &mut self,
-    definition_builder: ElementTemplateDefinitionBuilder,
+    definition_id: usize,
+    element_index: usize,
+    slot_index: usize,
+    key: String,
   ) -> Result<(), JsError> {
-    if definition_builder
-      .definition
-      .template
-      .content()
-      .first_child()
-      .is_none()
-    {
-      return Err(JsError::new("Element template definition missing root"));
-    }
-    for binding in &definition_builder.definition.static_bindings {
-      if binding.key == "style" {
-        let element = definition_builder.element_by_index(binding.element_index)?;
-        self.set_style_attribute(&element, &binding.value);
-      }
-    }
-    let definition = definition_builder.definition;
+    self
+      .element_template_definition_builders
+      .get_mut(&definition_id)
+      .ok_or_else(|| JsError::new("Element template definition builder not found"))?
+      .attribute_bindings
+      .push(TemplateAttributeBinding {
+        element_index,
+        slot_index,
+        key,
+      });
+    Ok(())
+  }
+
+  pub fn add_element_template_spread_binding(
+    &mut self,
+    definition_id: usize,
+    element_index: usize,
+    slot_index: usize,
+  ) -> Result<(), JsError> {
+    self
+      .element_template_definition_builders
+      .get_mut(&definition_id)
+      .ok_or_else(|| JsError::new("Element template definition builder not found"))?
+      .spread_bindings
+      .push(TemplateSpreadBinding {
+        element_index,
+        slot_index,
+      });
+    Ok(())
+  }
+
+  pub fn add_element_template_static_string_binding(
+    &mut self,
+    definition_id: usize,
+    element_index: usize,
+    key: String,
+    value: String,
+  ) -> Result<(), JsError> {
+    self.add_element_template_static_binding(
+      definition_id,
+      element_index,
+      key,
+      JsValue::from_str(&value),
+    )
+  }
+
+  pub fn add_element_template_static_number_binding(
+    &mut self,
+    definition_id: usize,
+    element_index: usize,
+    key: String,
+    value: f64,
+  ) -> Result<(), JsError> {
+    self.add_element_template_static_binding(
+      definition_id,
+      element_index,
+      key,
+      JsValue::from_f64(value),
+    )
+  }
+
+  pub fn add_element_template_static_bool_binding(
+    &mut self,
+    definition_id: usize,
+    element_index: usize,
+    key: String,
+    value: bool,
+  ) -> Result<(), JsError> {
+    self.add_element_template_static_binding(
+      definition_id,
+      element_index,
+      key,
+      JsValue::from_bool(value),
+    )
+  }
+
+  pub fn add_element_template_static_null_binding(
+    &mut self,
+    definition_id: usize,
+    element_index: usize,
+    key: String,
+  ) -> Result<(), JsError> {
+    self.add_element_template_static_binding(definition_id, element_index, key, JsValue::NULL)
+  }
+
+  pub fn finish_element_template_definition(
+    &mut self,
+    definition_id: usize,
+  ) -> Result<(), JsError> {
+    let definition = self
+      .element_template_definition_builders
+      .remove(&definition_id)
+      .ok_or_else(|| JsError::new("Element template definition builder not found"))?;
     let identity_key =
       Self::template_identity_key(&definition.template_key, definition.bundle_url.as_deref());
     self
@@ -849,14 +638,16 @@ impl MainThreadWasmContext {
     Ok(())
   }
 
-  pub fn create_element_template(
+  pub fn transform_element_template_style(&self, style: String) -> String {
+    transform_inline_style_string(&style, &self.transformer_config)
+  }
+
+  pub fn create_element_template_instance(
     &mut self,
     template_key: String,
     bundle_url: Option<String>,
-    attribute_slots: JsValue,
-    element_slots: JsValue,
-    handle_id: JsValue,
-  ) -> Result<HtmlElement, JsError> {
+    root_unique_id: usize,
+  ) -> Result<(), JsError> {
     let identity_key = Self::template_identity_key(&template_key, bundle_url.as_deref());
     let definition = self
       .element_template_definitions
@@ -864,135 +655,106 @@ impl MainThreadWasmContext {
       .cloned()
       .ok_or_else(|| JsError::new(&format!("Element template not found: {identity_key}")))?;
 
-    let fragment = definition
-      .template
-      .content()
-      .clone_node_with_deep(true)
-      .map_err(|e| JsError::new(&format!("Failed to clone template content: {e:?}")))?
-      .unchecked_into::<DocumentFragment>();
-    let root_node = fragment
-      .first_child()
-      .ok_or_else(|| JsError::new("Element template root missing"))?;
-    let root = root_node
-      .clone()
-      .dyn_into::<HtmlElement>()
-      .map_err(|_| JsError::new("Element template root should be an HTMLElement"))?;
+    self.element_template_instances.insert(
+      root_unique_id,
+      ElementTemplateInstance::Compiled {
+        definition,
+        attribute_slots: Vec::new(),
+        attribute_bindings: Vec::new(),
+        spread_bindings: Vec::new(),
+        static_bindings: Vec::new(),
+        spread_keys: FnvHashMap::default(),
+        element_slots: FnvHashMap::default(),
+        element_index_to_unique_id: Vec::new(),
+      },
+    );
 
-    let mut elements = Vec::new();
-    let mut slot_anchors = FnvHashMap::default();
-    {
-      // Walk the cloned DOM in preorder so template element indexes keep the
-      // same order as the builder used while registering the definition.
-      let mut pending_nodes = vec![root_node.clone()];
-      while let Some(node) = pending_nodes.pop() {
-        if let Some(element) = node.dyn_ref::<HtmlElement>() {
-          elements.push(element.clone());
-        } else if node.node_type() == Node::COMMENT_NODE {
-          if let Some(value) = node.node_value() {
-            if let Some(slot_index) = value.strip_prefix(SLOT_ANCHOR_PREFIX) {
-              if let Ok(slot_index) = slot_index.parse::<usize>() {
-                slot_anchors.insert(slot_index, node.clone());
-              }
-            }
-          }
-        }
+    Ok(())
+  }
 
-        let mut child_nodes = Vec::new();
-        let mut child = node.first_child();
-        while let Some(current) = child {
-          child = current.next_sibling();
-          child_nodes.push(current);
-        }
-        pending_nodes.extend(child_nodes.into_iter().rev());
-      }
+  pub fn add_element_template_instance_element(
+    &mut self,
+    root_unique_id: usize,
+    element_index: usize,
+    target_unique_id: usize,
+  ) -> Result<(), JsError> {
+    let Some(ElementTemplateInstance::Compiled {
+      element_index_to_unique_id,
+      ..
+    }) = self.element_template_instances.get_mut(&root_unique_id)
+    else {
+      return Err(JsError::new("Element template instance not found"));
+    };
+    if element_index_to_unique_id.len() <= element_index {
+      element_index_to_unique_id.resize(element_index + 1, usize::MAX);
     }
-    let mut unique_ids_by_index = Vec::with_capacity(elements.len());
-    for element in &elements {
-      let css_id = element
-        .get_attribute(constants::CSS_ID_ATTRIBUTE)
-        .and_then(|value| value.parse::<i32>().ok())
-        .unwrap_or(0);
-      let unique_id = self.create_element(
-        0,
-        element.clone(),
-        WeakRef::new(element),
-        Some(css_id),
-        None,
-        None,
-      );
-      let _ = Reflect::set(
-        element.as_ref(),
-        &JsValue::from_str(constants::LYNX_UNIQUE_ID_PROPERTY),
-        &JsValue::from_f64(unique_id as f64),
-      );
-      unique_ids_by_index.push(unique_id);
-      if !self.config_enable_css_selector {
-        self.update_css_og_style(
-          unique_id,
-          element.get_attribute(constants::LYNX_ENTRY_NAME_ATTRIBUTE),
-        )?;
-      }
-    }
-    let root_unique_id = *unique_ids_by_index
-      .first()
-      .ok_or_else(|| JsError::new("Element template root not registered"))?;
-    root
-      .set_attribute(
-        constants::LYNX_ELEMENT_TEMPLATE_MARKER_ATTRIBUTE,
-        &root_unique_id.to_string(),
+    element_index_to_unique_id[element_index] = target_unique_id;
+    Ok(())
+  }
+
+  pub fn finish_element_template_instance(&mut self, root_unique_id: usize) -> Result<(), JsError> {
+    let (definition, unique_ids_by_index, mut attribute_slots) = {
+      let Some(ElementTemplateInstance::Compiled {
+        definition,
+        attribute_slots,
+        element_index_to_unique_id,
+        ..
+      }) = self.element_template_instances.get(&root_unique_id)
+      else {
+        return Err(JsError::new("Element template instance not found"));
+      };
+      (
+        definition.clone(),
+        element_index_to_unique_id.clone(),
+        attribute_slots.clone(),
       )
-      .map_err(|e| JsError::new(&format!("Failed to mark template root: {e:?}")))?;
-
-    let (attribute_bindings, spread_bindings, static_bindings) = {
-      let attribute_bindings = definition
-        .attribute_bindings
-        .iter()
-        .filter_map(|binding| {
-          unique_ids_by_index
-            .get(binding.element_index)
-            .map(|target_unique_id| InstanceAttributeBinding {
-              target_unique_id: *target_unique_id,
-              slot_index: binding.slot_index,
-              key: binding.key.clone(),
-            })
-        })
-        .collect::<Vec<_>>();
-      let spread_bindings = definition
-        .spread_bindings
-        .iter()
-        .filter_map(|binding| {
-          unique_ids_by_index
-            .get(binding.element_index)
-            .map(|target_unique_id| InstanceSpreadBinding {
-              target_unique_id: *target_unique_id,
-              slot_index: binding.slot_index,
-            })
-        })
-        .collect::<Vec<_>>();
-      let static_bindings = definition
-        .static_bindings
-        .iter()
-        .filter_map(|binding| {
-          unique_ids_by_index
-            .get(binding.element_index)
-            .map(|target_unique_id| InstanceStaticBinding {
-              target_unique_id: *target_unique_id,
-              key: binding.key.clone(),
-              value: binding.value.clone(),
-            })
-        })
-        .collect::<Vec<_>>();
-      (attribute_bindings, spread_bindings, static_bindings)
     };
 
-    let mut attribute_slots = if Array::is_array(&attribute_slots) {
-      let array: Array = attribute_slots.clone().unchecked_into();
-      (0..array.length())
-        .map(|index| array.get(index))
-        .collect::<Vec<_>>()
-    } else {
-      Vec::new()
-    };
+    let attribute_bindings = definition
+      .attribute_bindings
+      .iter()
+      .filter_map(|binding| {
+        unique_ids_by_index
+          .get(binding.element_index)
+          .copied()
+          .filter(|unique_id| *unique_id != usize::MAX)
+          .map(|target_unique_id| InstanceAttributeBinding {
+            target_unique_id,
+            slot_index: binding.slot_index,
+            key: binding.key.clone(),
+          })
+      })
+      .collect::<Vec<_>>();
+    let spread_bindings = definition
+      .spread_bindings
+      .iter()
+      .filter_map(|binding| {
+        unique_ids_by_index
+          .get(binding.element_index)
+          .copied()
+          .filter(|unique_id| *unique_id != usize::MAX)
+          .map(|target_unique_id| InstanceSpreadBinding {
+            target_unique_id,
+            slot_index: binding.slot_index,
+          })
+      })
+      .collect::<Vec<_>>();
+    let static_bindings = definition
+      .static_bindings
+      .iter()
+      .filter_map(|binding| {
+        unique_ids_by_index
+          .get(binding.element_index)
+          .copied()
+          .filter(|unique_id| *unique_id != usize::MAX)
+          .map(|target_unique_id| InstanceStaticBinding {
+            target_unique_id,
+            key: binding.key.clone(),
+            value: binding.value.clone(),
+          })
+      })
+      .collect::<Vec<_>>();
+
     if let Some(max_slot_index) = attribute_bindings
       .iter()
       .map(|binding| binding.slot_index)
@@ -1031,108 +793,83 @@ impl MainThreadWasmContext {
       )?;
       spread_keys.insert((binding.slot_index, binding.target_unique_id), keys);
     }
-    let element_slots = self.apply_initial_element_slots(&root, &slot_anchors, &element_slots)?;
 
-    self.element_template_instances.insert(
-      root_unique_id,
-      ElementTemplateInstance::Compiled {
-        handle_id,
-        template_key: definition.template_key.clone(),
-        bundle_url: definition.bundle_url.clone(),
-        attribute_slots,
-        attribute_bindings,
-        spread_bindings,
-        static_bindings,
-        spread_keys,
-        slot_anchors,
-        element_slots,
-      },
-    );
-
-    Ok(root)
+    if let Some(ElementTemplateInstance::Compiled {
+      attribute_slots: instance_attribute_slots,
+      attribute_bindings: instance_attribute_bindings,
+      spread_bindings: instance_spread_bindings,
+      static_bindings: instance_static_bindings,
+      spread_keys: instance_spread_keys,
+      ..
+    }) = self.element_template_instances.get_mut(&root_unique_id)
+    {
+      *instance_attribute_slots = attribute_slots;
+      *instance_attribute_bindings = attribute_bindings;
+      *instance_spread_bindings = spread_bindings;
+      *instance_static_bindings = static_bindings;
+      *instance_spread_keys = spread_keys;
+    }
+    Ok(())
   }
 
-  pub fn create_typed_element_template(
+  pub fn create_typed_element_template_instance(
     &mut self,
-    tag: String,
-    attributes: JsValue,
-    element_slots: JsValue,
-    handle_id: JsValue,
-    options: JsValue,
-  ) -> Result<HtmlElement, JsError> {
-    let root = self
-      .document
-      .create_element(Self::map_lynx_tag_to_html_tag(&tag))
-      .map_err(|e| JsError::new(&format!("Failed to create typed template: {e:?}")))?
-      .unchecked_into::<HtmlElement>();
-    let root_unique_id =
-      self.create_element(0, root.clone(), WeakRef::new(&root), Some(0), None, None);
-    let _ = Reflect::set(
-      root.as_ref(),
-      &JsValue::from_str(constants::LYNX_UNIQUE_ID_PROPERTY),
-      &JsValue::from_f64(root_unique_id as f64),
-    );
-    root
-      .set_attribute(
-        constants::LYNX_ELEMENT_TEMPLATE_MARKER_ATTRIBUTE,
-        &root_unique_id.to_string(),
-      )
-      .map_err(|e| JsError::new(&format!("Failed to mark typed template root: {e:?}")))?;
-
-    let typed_attributes =
-      self.apply_typed_attributes(root_unique_id, &Object::new().into(), &attributes)?;
-    let slot_source = if !Self::value_is_nullish(&element_slots) {
-      element_slots
-    } else {
-      Reflect::get(&options, &JsValue::from_str("listChildren")).unwrap_or(JsValue::UNDEFINED)
-    };
-    let element_slots =
-      self.apply_initial_element_slots(&root, &FnvHashMap::default(), &slot_source)?;
-
+    root_unique_id: usize,
+  ) -> Result<(), JsError> {
     self.element_template_instances.insert(
       root_unique_id,
       ElementTemplateInstance::Typed {
-        handle_id,
-        tag,
-        attributes: typed_attributes,
-        options: if Self::value_is_nullish(&options) {
-          None
-        } else {
-          Some(options)
-        },
-        element_slots,
+        element_slots: FnvHashMap::default(),
       },
     );
 
-    Ok(root)
+    Ok(())
   }
 
-  pub fn set_attribute_of_element_template(
+  pub fn insert_element_template_slot_child(
     &mut self,
-    element: HtmlElement,
+    root_unique_id: usize,
+    slot_index: usize,
+    child_unique_id: usize,
+    reference_unique_id: Option<usize>,
+  ) -> Result<(), JsError> {
+    self.insert_element_template_slot_child_state(
+      root_unique_id,
+      slot_index,
+      child_unique_id,
+      reference_unique_id,
+    )
+  }
+
+  pub fn remove_element_template_instance_by_id(
+    &mut self,
+    root_unique_id: usize,
+  ) -> Result<(), JsError> {
+    self.cleanup_element_template_instances(vec![root_unique_id]);
+    Ok(())
+  }
+
+  pub fn set_typed_element_template_attribute(
+    &mut self,
+    root_unique_id: usize,
+    key: String,
+    value: JsValue,
+  ) -> Result<(), JsError> {
+    if !matches!(
+      self.element_template_instances.get(&root_unique_id),
+      Some(ElementTemplateInstance::Typed { .. })
+    ) {
+      return Err(JsError::new("Typed element template instance not found"));
+    }
+    self.apply_attribute_value(root_unique_id, &key, &value)
+  }
+
+  pub fn set_attribute_of_element_template_by_id(
+    &mut self,
+    root_unique_id: usize,
     attribute_slot_index: usize,
     value: JsValue,
   ) -> Result<(), JsError> {
-    let root_unique_id = Self::element_template_root_unique_id(&element)
-      .ok_or_else(|| JsError::new("Element template root missing unique id"))?;
-    if let Some(old_attributes) = self
-      .element_template_instances
-      .get(&root_unique_id)
-      .and_then(|instance| match instance {
-        ElementTemplateInstance::Typed { attributes, .. } => Some(attributes.clone()),
-        ElementTemplateInstance::Compiled { .. } => None,
-      })
-    {
-      let typed_attributes =
-        self.apply_typed_attributes(root_unique_id, &old_attributes, &value)?;
-      if let Some(ElementTemplateInstance::Typed { attributes, .. }) =
-        self.element_template_instances.get_mut(&root_unique_id)
-      {
-        *attributes = typed_attributes;
-      }
-      return Ok(());
-    }
-
     let (
       attribute_slots,
       attribute_bindings,
@@ -1262,150 +999,5 @@ impl MainThreadWasmContext {
     }
 
     Ok(())
-  }
-
-  pub fn insert_node_to_element_template(
-    &mut self,
-    element: HtmlElement,
-    slot_index: usize,
-    child: HtmlElement,
-    reference: Option<HtmlElement>,
-  ) -> Result<(), JsError> {
-    let root_unique_id = Self::element_template_root_unique_id(&element)
-      .ok_or_else(|| JsError::new("Element template root missing unique id"))?;
-    let child_unique_id = Self::element_template_root_unique_id(&child)
-      .ok_or_else(|| JsError::new("Element template child missing unique id"))?;
-    let (anchor, host) =
-      if let Some(instance) = self.element_template_instances.get(&root_unique_id) {
-        let anchor = match instance {
-          ElementTemplateInstance::Compiled { slot_anchors, .. } => {
-            slot_anchors.get(&slot_index).cloned()
-          }
-          ElementTemplateInstance::Typed { .. } => None,
-        };
-        (
-          anchor,
-          self
-            .unique_id_to_dom_map
-            .get(&root_unique_id)
-            .and_then(|weak_ref| weak_ref.deref())
-            .and_then(|value| value.dyn_into::<HtmlElement>().ok())
-            .ok_or_else(|| JsError::new("Element template host not found"))?,
-        )
-      } else if self.page_element_unique_id == Some(root_unique_id) {
-        (
-          None,
-          self
-            .unique_id_to_dom_map
-            .get(&root_unique_id)
-            .and_then(|weak_ref| weak_ref.deref())
-            .and_then(|value| value.dyn_into::<HtmlElement>().ok())
-            .ok_or_else(|| JsError::new("Element template page not found"))?,
-        )
-      } else {
-        return Err(JsError::new("Element template instance not found"));
-      };
-
-    if let Some(reference) = reference.as_ref() {
-      reference
-        .parent_node()
-        .ok_or_else(|| JsError::new("Reference node missing parent"))?
-        .insert_before(&child, Some(reference))
-        .map_err(|e| JsError::new(&format!("Failed to insert before reference: {e:?}")))?;
-    } else if let Some(anchor) = anchor {
-      anchor
-        .parent_node()
-        .ok_or_else(|| JsError::new("Element template slot anchor missing parent"))?
-        .insert_before(&child, Some(&anchor))
-        .map_err(|e| JsError::new(&format!("Failed to insert before anchor: {e:?}")))?;
-    } else {
-      host
-        .append_child(&child)
-        .map_err(|e| JsError::new(&format!("Failed to append slot child: {e:?}")))?;
-    }
-
-    // Moving a template child between slots must detach it from the old owner
-    // before it is recorded on the new owner.
-    let mut child_unique_ids = FnvHashSet::default();
-    child_unique_ids.insert(child_unique_id);
-    self.detach_element_template_instance_references(&child_unique_ids);
-
-    if let Some(instance) = self.element_template_instances.get_mut(&root_unique_id) {
-      let element_slots = match instance {
-        ElementTemplateInstance::Compiled { element_slots, .. }
-        | ElementTemplateInstance::Typed { element_slots, .. } => element_slots,
-      };
-      let children = element_slots.entry(slot_index).or_default();
-      if let Some(reference) = reference.as_ref() {
-        if let Some(reference_unique_id) = Self::element_template_root_unique_id(reference) {
-          if let Some(position) = children
-            .iter()
-            .position(|unique_id| *unique_id == reference_unique_id)
-          {
-            children.insert(position, child_unique_id);
-          } else {
-            children.push(child_unique_id);
-          }
-        } else {
-          children.push(child_unique_id);
-        }
-      } else {
-        children.push(child_unique_id);
-      }
-    }
-    Ok(())
-  }
-
-  pub fn remove_node_from_element_template(
-    &mut self,
-    element: HtmlElement,
-    child: HtmlElement,
-  ) -> Result<(), JsError> {
-    Self::element_template_root_unique_id(&element)
-      .ok_or_else(|| JsError::new("Element template root missing unique id"))?;
-    Self::element_template_root_unique_id(&child)
-      .ok_or_else(|| JsError::new("Element template child missing unique id"))?;
-    if let Some(parent) = child.parent_node() {
-      parent
-        .remove_child(&child)
-        .map_err(|e| JsError::new(&format!("Failed to remove slot child: {e:?}")))?;
-    }
-    let mut unique_ids = Vec::new();
-    let mut pending_nodes = vec![(child.clone().unchecked_into::<Node>(), true)];
-    while let Some((node, include_plain_uid)) = pending_nodes.pop() {
-      if let Some(element) = node.dyn_ref::<HtmlElement>() {
-        let unique_id = if include_plain_uid {
-          Self::element_template_root_unique_id(element)
-        } else {
-          element
-            .get_attribute(constants::LYNX_ELEMENT_TEMPLATE_MARKER_ATTRIBUTE)
-            .and_then(|value| value.parse::<usize>().ok())
-        };
-        if let Some(unique_id) = unique_id {
-          unique_ids.push(unique_id);
-        }
-      }
-
-      let mut child_nodes = Vec::new();
-      let mut child = node.first_child();
-      while let Some(current) = child {
-        child = current.next_sibling();
-        child_nodes.push(current);
-      }
-      pending_nodes.extend(
-        child_nodes
-          .into_iter()
-          .rev()
-          .map(|child_node| (child_node, false)),
-      );
-    }
-    self.cleanup_element_template_instances(unique_ids);
-    Ok(())
-  }
-
-  pub fn serialize_element_template(&self, element: HtmlElement) -> Result<JsValue, JsError> {
-    let root_unique_id = Self::element_template_root_unique_id(&element)
-      .ok_or_else(|| JsError::new("Element template root missing unique id"))?;
-    self.serialize_instance_by_unique_id(root_unique_id)
   }
 }

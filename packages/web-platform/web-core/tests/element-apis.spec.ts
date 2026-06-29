@@ -23,7 +23,10 @@ import { wasmInstance } from '../ts/client/wasm.js';
 import { encodeCSS } from '../ts/encode/encodeCSS.js';
 import { createMainThreadGlobalAPIs } from '../ts/client/mainthread/createMainThreadGlobalAPIs.js';
 import type { LynxViewInstance } from '../ts/client/mainthread/LynxViewInstance.js';
-import { registerElementTemplates } from '../ts/client/mainthread/registerElementTemplates.js';
+import {
+  getRegisteredElementTemplate,
+  registerElementTemplates,
+} from '../ts/client/mainthread/registerElementTemplates.js';
 import { createTestLynxViewInstance } from './createTestLynxViewInstance.js';
 
 const builtinRawTextTemplate = {
@@ -130,7 +133,79 @@ describe('Element APIs', () => {
     expect(mtsGlobalThis.__GetTag(element)).toBe('view');
   });
 
-  test('element template creates, patches, moves, and serializes DOM in wasm', () => {
+  test('registerElementTemplates builds template DOM in JS and updates Rust metadata incrementally', () => {
+    const wasmContext = {
+      create_element_template_definition: rstest.fn(() => 11),
+      add_element_template_attribute_binding: rstest.fn(),
+      add_element_template_spread_binding: rstest.fn(),
+      add_element_template_static_bool_binding: rstest.fn(),
+      add_element_template_static_null_binding: rstest.fn(),
+      add_element_template_static_number_binding: rstest.fn(),
+      add_element_template_static_string_binding: rstest.fn(),
+      finish_element_template_definition: rstest.fn(),
+      transform_element_template_style: rstest.fn((style: string) =>
+        style.replace('width', 'height')
+      ),
+    };
+
+    registerElementTemplates(wasmContext as any, [
+      {
+        templateId: '_et_metadata',
+        compiledTemplate: {
+          kind: 'element',
+          type: 'view',
+          attributesArray: [
+            { kind: 'static', key: 'css-id', value: 7 },
+            { kind: 'static', key: 'style', value: 'width: 1px;' },
+            { kind: 'slot', key: 'class', attrSlotIndex: 0 },
+          ],
+          children: [
+            {
+              kind: 'element',
+              type: 'raw-text',
+              attributesArray: [
+                { kind: 'static', key: 'text', value: 'hello' },
+                { kind: 'spread', attrSlotIndex: 1 },
+              ],
+            },
+            { kind: 'elementSlot', type: 'slot', elementSlotIndex: 2 },
+          ],
+        },
+      },
+    ], 'lazy.js');
+
+    expect(wasmContext.create_element_template_definition)
+      .toHaveBeenCalledWith('_et_metadata', 'lazy.js');
+    expect(wasmContext.add_element_template_static_number_binding)
+      .toHaveBeenCalledWith(11, 0, 'css-id', 7);
+    expect(wasmContext.add_element_template_static_string_binding)
+      .toHaveBeenCalledWith(11, 0, 'style', 'width: 1px;');
+    expect(wasmContext.add_element_template_attribute_binding)
+      .toHaveBeenCalledWith(11, 0, 0, 'class');
+    expect(wasmContext.add_element_template_static_string_binding)
+      .toHaveBeenCalledWith(11, 1, 'text', 'hello');
+    expect(wasmContext.add_element_template_spread_binding)
+      .toHaveBeenCalledWith(11, 1, 1);
+    expect(wasmContext.finish_element_template_definition)
+      .toHaveBeenCalledWith(11);
+
+    const template = getRegisteredElementTemplate(
+      wasmContext as any,
+      '_et_metadata',
+      'lazy.js',
+    )!.template;
+    expect(template.tagName.toLowerCase()).toBe('template');
+
+    const root = template.content.firstElementChild as HTMLElement;
+    expect(root.tagName.toLowerCase()).toBe('x-view');
+    expect(root.getAttribute(cssIdAttribute)).toBe('7');
+    expect(root.getAttribute('style')).toBe('height: 1px;');
+    expect(root.childNodes[0]!.nodeName.toLowerCase()).toBe('raw-text');
+    expect(root.childNodes[1]!.nodeType).toBe(8);
+    expect(root.childNodes[1]!.nodeValue).toBe('lynx-et-slot:2');
+  });
+
+  test('element template creates, patches, moves, and serializes DOM from JS state', () => {
     registerElementTemplates(mtsBinding.wasmContext!, [
       builtinRawTextTemplate,
       {

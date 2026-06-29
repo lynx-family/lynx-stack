@@ -21,7 +21,6 @@ pub struct MainThreadWasmContext {
   pub(super) unique_id_to_element_map: Vec<Option<Rc<RefCell<Box<LynxElementData>>>>>,
   pub(super) unique_id_to_dom_map: FnvHashMap<usize, js_sys::WeakRef>,
   pub(super) timing_flags: Vec<String>,
-  pub(super) document: web_sys::Document,
 
   pub(super) enabled_events: FnvHashSet<String>,
   pub(super) page_element_unique_id: Option<usize>,
@@ -30,6 +29,8 @@ pub struct MainThreadWasmContext {
   pub(super) transformer_config: TransformerConfig,
   pub(super) style_manager: StyleManager,
   pub(super) global_bind_events: FnvHashMap<String, FnvHashSet<usize>>,
+  pub(super) next_element_template_definition_id: usize,
+  pub(super) element_template_definition_builders: FnvHashMap<usize, ElementTemplateDefinition>,
   pub(super) element_template_definitions: FnvHashMap<String, Rc<ElementTemplateDefinition>>,
   pub(super) element_template_instances: FnvHashMap<usize, ElementTemplateInstance>,
 }
@@ -57,15 +58,11 @@ impl MainThreadWasmContext {
     config_transform_vh: bool,
     config_transform_rem: bool,
   ) -> MainThreadWasmContext {
-    let document = root_node
-      .owner_document()
-      .expect_throw("Root node should have an owner document");
     let style_manager = StyleManager::new(root_node.clone());
     MainThreadWasmContext {
       mts_binding,
       unique_id_to_element_map: vec![None],
       unique_id_to_dom_map: FnvHashMap::default(),
-      document,
       enabled_events: FnvHashSet::default(),
       timing_flags: vec![],
       page_element_unique_id: None,
@@ -77,6 +74,8 @@ impl MainThreadWasmContext {
       },
       style_manager,
       global_bind_events: FnvHashMap::default(),
+      next_element_template_definition_id: 0,
+      element_template_definition_builders: FnvHashMap::default(),
       element_template_definitions: FnvHashMap::default(),
       element_template_instances: FnvHashMap::default(),
     }
