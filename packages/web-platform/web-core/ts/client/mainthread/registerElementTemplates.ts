@@ -20,14 +20,12 @@ export function ensureElementTemplateDefinitions(
     return;
   }
   const definitions = bundle.elementTemplateDefinitions ??= new Map();
-  let elementDocument: Document | undefined;
 
   for (const { templateId, compiledTemplate } of bundle.elementTemplates) {
     if (definitions.has(templateId)) {
       continue;
     }
 
-    elementDocument ??= document.implementation.createHTMLDocument('');
     const template = document.createElement('template');
     const definition = new wasmInstance.ElementTemplateDefinition();
     let nextElementIndex = 0;
@@ -49,7 +47,7 @@ export function ensureElementTemplateDefinitions(
       const action = stack.pop()!;
       if (action.kind === 'slot') {
         action.parent.appendChild(
-          elementDocument.createComment(
+          document.createComment(
             `${elementTemplateSlotAnchorPrefix}${action.slotIndex}`,
           ),
         );
@@ -57,7 +55,7 @@ export function ensureElementTemplateDefinitions(
       }
 
       const elementIndex = nextElementIndex++;
-      const element = elementDocument.createElement(
+      const element = document.createElement(
         LYNX_TAG_TO_HTML_TAG_MAP[action.node.type] ?? action.node.type,
       );
 
