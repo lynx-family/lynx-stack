@@ -9,6 +9,10 @@ npm install
 npm run codegen
 ```
 
-The generated native specs are written to `generated/`,
+The generated JS specs are written to `generated/`. Platform native module
+typings live in `types/platform-native-module.d.ts`; NAPI native module typings
+live in `types/napi-native-module.d.ts`. NAPI native modules use a minimal
+shared C++ N-API callback stub. Selected native files are written to
 __PLATFORM_DIRECTORY_LIST__. The package is discovered by Lynx through
 `lynx.lib.json`.
+__SELF_RENDER_README__

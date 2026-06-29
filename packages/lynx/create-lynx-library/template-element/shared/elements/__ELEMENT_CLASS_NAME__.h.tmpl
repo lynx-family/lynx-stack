@@ -1,0 +1,9 @@
+#pragma once
+
+#if __has_include(<lynx_extension.h>)
+#include <lynx_extension.h>
+#elif __has_include(<lynx/extension.h>)
+#include <lynx/extension.h>
+#endif
+
+lynx_native_view_t* Create__ELEMENT_SYMBOL_NAME__NativeView(void* opaque);

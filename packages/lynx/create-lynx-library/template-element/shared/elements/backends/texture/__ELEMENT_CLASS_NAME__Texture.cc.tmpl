@@ -1,0 +1,78 @@
+#include "shared/elements/__ELEMENT_CLASS_NAME__.h"
+
+#include <algorithm>
+#include <cmath>
+
+#include <lynx_native_view.h>
+
+// This shared texture backend depends on LynxNativeView C API surface handles.
+bool Draw__ELEMENT_SYMBOL_NAME__TextureSurface(
+    lynx_surface_handle_t* handle,
+    int width_px,
+    int height_px,
+    const char* text);
+
+namespace {
+
+constexpr float kYFlipTransform[3 * 3] = {1, 0, 0, 0, -1, 1, 0, 0, 1};
+
+class __ELEMENT_SYMBOL_NAME__TextureView : public lynx::pub::LynxNativeView {
+ public:
+  bool IsSurfaceEnabled() override { return true; }
+  lynx_surface_buffer_mode_t SurfaceBufferMode() override {
+    return kTripleBuffer;
+  }
+
+  void OnAttach() override {
+    attached_ = true;
+    Render();
+  }
+
+  void OnDetach() override { attached_ = false; }
+
+  void OnLayoutChanged(
+      float left,
+      float top,
+      float width,
+      float height,
+      float pixel_ratio) override {
+    (void)left;
+    (void)top;
+    const float ratio = pixel_ratio > 0 ? pixel_ratio : 1;
+    width_px_ = std::max(1, static_cast<int>(std::lround(width * ratio)));
+    height_px_ = std::max(1, static_cast<int>(std::lround(height * ratio)));
+    Render();
+  }
+
+ private:
+  void Render() {
+    if (!attached_ || width_px_ <= 0 || height_px_ <= 0) {
+      return;
+    }
+
+    lynx_surface_handle_t* surface = AcquireSurface(width_px_, height_px_);
+    if (surface == nullptr) {
+      return;
+    }
+
+    if (Draw__ELEMENT_SYMBOL_NAME__TextureSurface(
+            surface,
+            width_px_,
+            height_px_,
+            "__ELEMENT_NAME__")) {
+      PresentSurface(width_px_, height_px_, kYFlipTransform, surface);
+    }
+  }
+
+  bool attached_ = false;
+  int width_px_ = 0;
+  int height_px_ = 0;
+};
+
+}  // namespace
+
+lynx_native_view_t* Create__ELEMENT_SYMBOL_NAME__TextureNativeView(void* opaque) {
+  (void)opaque;
+  auto* view = new __ELEMENT_SYMBOL_NAME__TextureView();
+  return view->native_view();
+}

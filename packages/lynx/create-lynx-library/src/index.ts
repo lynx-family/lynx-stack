@@ -2,11 +2,16 @@
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
 import fs from 'node:fs';
+import { createRequire } from 'node:module';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
-export type LibraryFeature = 'native-module' | 'element' | 'service';
-export type LibraryPlatform = 'android' | 'ios';
+export type LibraryFeature =
+  | 'native-module'
+  | 'napi-native-module'
+  | 'element'
+  | 'service';
+export type LibraryPlatform = 'android' | 'ios' | 'lynxtron';
 
 export interface CreateLynxLibraryOptions {
   dir: string;
@@ -26,12 +31,16 @@ export interface CreatedFile {
 }
 
 interface TemplateContext {
+  addonBinaryName: string;
+  addonTargetName: string;
   packageName: string;
   androidPackage: string;
   androidPackagePath: string;
   moduleName: string;
+  napiModuleName: string;
   elementName: string;
   elementClassName: string;
+  elementSymbolName: string;
   serviceName: string;
   serviceProtocolName: string;
   dependencyVersions: Record<string, string>;
@@ -48,19 +57,31 @@ interface PackageJson {
 
 export const LIBRARY_FEATURES: readonly LibraryFeature[] = [
   'native-module',
+  'napi-native-module',
   'element',
   'service',
 ] as const;
 export const LIBRARY_PLATFORMS: readonly LibraryPlatform[] = [
   'android',
   'ios',
+  'lynxtron',
+] as const;
+export const DEFAULT_LIBRARY_PLATFORMS: readonly LibraryPlatform[] = [
+  'android',
+  'ios',
+  'lynxtron',
 ] as const;
 
 const PACKAGE_ROOT = path.resolve(
   path.dirname(fileURLToPath(import.meta.url)),
   '..',
 );
+const moduleRequire = createRequire(import.meta.url);
 const TEMPLATE_FILE_SUFFIX = '.tmpl';
+const LYNX_EXTENSION_HEADERS_PACKAGE = '@lynx-js/lynx-library-headers';
+const LYNX_EXTENSION_HEADERS_VERSION = '*';
+const WEAK_NODE_API_PACKAGE = '@lynx-js/weak-node-api';
+const WEAK_NODE_API_VERSION = '^0.0.9';
 const PACKAGE_JSON_DEPENDENCY_FIELDS = [
   'dependencies',
   'devDependencies',
@@ -100,7 +121,7 @@ export function createLynxLibrary(
     }
   }
 
-  const platforms = new Set(options.platforms ?? LIBRARY_PLATFORMS);
+  const platforms = new Set(options.platforms ?? DEFAULT_LIBRARY_PLATFORMS);
 
   if (platforms.size === 0) {
     throw new Error('At least one Native platform must be selected');
@@ -204,6 +225,9 @@ function createContext(
   const baseName = packageName.split('/').at(-1) ?? packageName;
   const prefix = toPascalCase(baseName);
   const moduleName = options.moduleName ?? `${prefix}Module`;
+  const napiModuleName = features.has('native-module')
+    ? `${moduleName}Napi`
+    : moduleName;
   const elementName = options.elementName ?? `x-${toKebabCase(prefix)}`;
   const serviceName = options.serviceName ?? `${prefix}Service`;
   const elementPrefix = toPascalCase(elementName.replace(/^x-/, ''));
@@ -211,12 +235,16 @@ function createContext(
     ?? `com.example.${toJavaPackageSegment(prefix)}`;
 
   return {
+    addonBinaryName: toKebabCase(baseName) || 'lynx-library',
+    addonTargetName: `${toCIdentifier(prefix, 'LynxLibrary')}Addon`,
     packageName,
     androidPackage,
     androidPackagePath: androidPackage.replaceAll('.', '/'),
     moduleName,
+    napiModuleName,
     elementName,
     elementClassName: `${elementPrefix}Element`,
+    elementSymbolName: toCIdentifier(`${elementPrefix}Element`, 'LynxElement'),
     serviceName,
     serviceProtocolName: `${serviceName}Protocol`,
     dependencyVersions: options.dependencyVersions
@@ -232,8 +260,16 @@ function createContext(
 function createFiles(context: TemplateContext): CreatedFile[] {
   const groups = ['template-common'];
 
+  if (hasSharedSources(context)) {
+    groups.push('template-shared');
+  }
+
   if (context.features.has('native-module')) {
     groups.push('template-native-module');
+  }
+
+  if (context.features.has('napi-native-module')) {
+    groups.push('template-napi-native-module');
   }
 
   if (context.features.has('element')) {
@@ -301,6 +337,28 @@ function shouldCreateTemplateFile(
     return context.platforms.has('ios');
   }
 
+  if (relativePath === 'types/platform-native-module.d.ts.tmpl') {
+    return context.features.has('native-module');
+  }
+
+  if (relativePath === 'types/napi-native-module.d.ts.tmpl') {
+    return context.features.has('napi-native-module');
+  }
+
+  if (relativePath.startsWith('lynxtron/')) {
+    return hasLynxtronTarget(context);
+  }
+
+  if (relativePath.startsWith('shared/')) {
+    return hasSharedSources(context);
+  }
+
+  if (
+    relativePath === 'types/index.d.ts.tmpl'
+  ) {
+    return true;
+  }
+
   return true;
 }
 
@@ -315,8 +373,54 @@ function readDefaultDependencyVersions(): Record<string, string> {
   const packageJson = JSON.parse(
     fs.readFileSync(path.join(PACKAGE_ROOT, 'package.json'), 'utf8'),
   ) as PackageJson;
+  const versions: Record<string, string> = {};
 
-  return packageJson.devDependencies ?? {};
+  for (
+    const [name, version] of Object.entries(packageJson.devDependencies ?? {})
+  ) {
+    versions[name] = version.startsWith('workspace:')
+      ? readPackageVersion(name)
+      : version;
+  }
+
+  return versions;
+}
+
+/**
+ * Reads the installed package version for a workspace dependency.
+ */
+function readPackageVersion(packageName: string): string {
+  const packageJsonPath = findPackageJson(moduleRequire.resolve(packageName));
+  const packageJson = JSON.parse(
+    fs.readFileSync(packageJsonPath, 'utf8'),
+  ) as { version?: unknown };
+
+  if (
+    typeof packageJson.version !== 'string' || packageJson.version.length === 0
+  ) {
+    throw new Error(`Unable to read package version for ${packageName}`);
+  }
+
+  return packageJson.version;
+}
+
+/**
+ * Finds the package metadata for a resolved package entry without relying on package.json exports.
+ */
+function findPackageJson(entrypoint: string): string {
+  let current = path.dirname(entrypoint);
+
+  while (current !== path.dirname(current)) {
+    const packageJsonPath = path.join(current, 'package.json');
+
+    if (fs.existsSync(packageJsonPath)) {
+      return packageJsonPath;
+    }
+
+    current = path.dirname(current);
+  }
+
+  throw new Error(`Unable to find package.json from ${entrypoint}`);
 }
 
 /**
@@ -418,24 +522,35 @@ function createTemplateReplacements(
   context: TemplateContext,
 ): Record<string, string> {
   return {
+    ADDON_BINARY_NAME: context.addonBinaryName,
+    ADDON_TARGET_NAME: context.addonTargetName,
     ANDROID_PACKAGE: context.androidPackage,
     ANDROID_PACKAGE_PATH: context.androidPackagePath,
     ELEMENT_CLASS_NAME: context.elementClassName,
     ELEMENT_NAME: context.elementName,
+    ELEMENT_SYMBOL_NAME: context.elementSymbolName,
     EXAMPLE_ELEMENT: exampleElement(context),
     EXAMPLE_IMPORT: exampleImport(context),
     EXAMPLE_MODULE_BUTTON: exampleModuleButton(context),
     IOS_SERVICE_API_DEPENDENCY: iosServiceApiDependency(context),
+    LYNX_ELEMENT_MODULE_NAME: elementModuleName(context),
     MODULE_NAME: context.moduleName,
+    NAPI_MODULE_NAME: context.napiModuleName,
     PACKAGE_NAME: context.packageName,
+    PACKAGE_EXPORTS_FIELD: packageExportsField(context),
     PACKAGE_FILES: packageFiles(context),
+    PACKAGE_SELF_RENDER_DEV_DEPENDENCY: packageSelfRenderDevDependency(context),
+    PACKAGE_SELF_RENDER_SCRIPTS: packageSelfRenderScripts(context),
     PLATFORM_DIRECTORY_LIST: platformDirectoryList(context),
     PLATFORM_MANIFEST_ENTRIES: platformManifestEntries(context),
     PODSPEC_NAME: podspecName(context.packageName),
     SERVICE_NAME: context.serviceName,
     SERVICE_PROTOCOL_NAME: context.serviceProtocolName,
+    SELF_RENDER_README: selfRenderReadme(context),
     SOURCE_INDEX: sourceIndex(context),
-    TYPES_DECLARATION: typesDeclaration(context),
+    NAPI_NATIVE_MODULE_TYPES: napiNativeModuleTypes(context),
+    PLATFORM_NATIVE_MODULE_TYPES: platformNativeModuleTypes(context),
+    TYPES_INDEX: typesIndex(context),
   };
 }
 
@@ -451,8 +566,13 @@ function renderTemplate(
     (match: string, key: string): string => {
       return replacements[key] ?? match;
     },
+  ).replaceAll(
+    /\*\*([A-Z0-9_]+)\*\*/g,
+    (match: string, key: string): string => {
+      return replacements[key] ?? match;
+    },
   );
-  const unresolvedToken = /__[A-Z0-9_]+__/.exec(rendered);
+  const unresolvedToken = /__[A-Z0-9_]+__|\*\*[A-Z0-9_]+\*\*/.exec(rendered);
 
   if (unresolvedToken !== null) {
     throw new Error(`Unresolved template token: ${unresolvedToken[0]}`);
@@ -479,30 +599,129 @@ function resolveInside(targetDir: string, filePath: string): string {
   return absolutePath;
 }
 
+function hasSharedSources(context: TemplateContext): boolean {
+  return context.features.has('napi-native-module')
+    || (
+      context.platforms.has('lynxtron')
+      && context.features.has('element')
+    );
+}
+
+function hasLynxtronTarget(context: TemplateContext): boolean {
+  return context.platforms.has('lynxtron')
+    && (context.features.has('napi-native-module') || context.features.has(
+      'element',
+    ));
+}
+
+function packageExportsField(context: TemplateContext): string {
+  if (!hasLynxtronTarget(context)) {
+    return '';
+  }
+
+  return `  "exports": {
+    ".": {
+      "types": "./types/index.d.ts",
+      "default": "./src/index.ts"
+    },
+    "./lynxtron": "./lynxtron/index.cjs",
+    "./package.json": "./package.json"
+  },
+`;
+}
+
+function packageSelfRenderScripts(context: TemplateContext): string {
+  if (!hasLynxtronTarget(context)) {
+    return '';
+  }
+
+  return `,
+    "build:lynxtron": "cmake -S lynxtron -B build/lynxtron -DCMAKE_BUILD_TYPE=Release && cmake --build build/lynxtron --config Release"`;
+}
+
+function packageSelfRenderDevDependency(context: TemplateContext): string {
+  if (!hasSharedSources(context)) {
+    return '';
+  }
+
+  const headersVersion =
+    context.dependencyVersions[LYNX_EXTENSION_HEADERS_PACKAGE]
+      ?? LYNX_EXTENSION_HEADERS_VERSION;
+  const weakNodeApiVersion = context.dependencyVersions[WEAK_NODE_API_PACKAGE]
+    ?? WEAK_NODE_API_VERSION;
+
+  return `,
+    "${LYNX_EXTENSION_HEADERS_PACKAGE}": "${headersVersion}",
+    "${WEAK_NODE_API_PACKAGE}": "${weakNodeApiVersion}"`;
+}
+
 /**
  * Generates the package entry point.
  */
 function sourceIndex(context: TemplateContext): string {
-  if (!context.features.has('native-module')) {
+  const exportLines: string[] = [];
+
+  if (context.features.has('native-module')) {
+    exportLines.push(
+      `export { ${context.moduleName} } from '../generated/${context.moduleName}';`,
+    );
+  }
+
+  if (context.features.has('napi-native-module')) {
+    exportLines.push(
+      `export { ${context.napiModuleName} } from '../generated/${context.napiModuleName}';`,
+    );
+  }
+
+  if (exportLines.length === 0) {
     return `// Lynx library package entry.
 `;
   }
 
-  return `export { ${context.moduleName} } from '../generated/${context.moduleName}';
-`;
+  return `${exportLines.join('\n')}\n`;
 }
 
 /**
- * Generates the initial native module type declarations.
+ * Generates the aggregate type declarations entry.
  */
-function typesDeclaration(context: TemplateContext): string {
-  if (!context.features.has('native-module')) {
+function typesIndex(context: TemplateContext): string {
+  const exportLines: string[] = [];
+
+  if (context.features.has('native-module')) {
+    exportLines.push(`export * from './platform-native-module';`);
+  }
+
+  if (context.features.has('napi-native-module')) {
+    exportLines.push(`export * from './napi-native-module';`);
+  }
+
+  if (exportLines.length === 0) {
     return `// Add native module declarations here and run npm run codegen.
 `;
   }
 
+  return `${exportLines.join('\n')}\n`;
+}
+
+/**
+ * Generates the initial platform native module type declarations.
+ */
+function platformNativeModuleTypes(context: TemplateContext): string {
   return `/** @lynxmodule */
 export declare class ${context.moduleName} {
+  setValue(key: string, value: string): void;
+  getValue(key: string): string | null;
+  clear(): void;
+}
+`;
+}
+
+/**
+ * Generates the initial NAPI native module type declarations.
+ */
+function napiNativeModuleTypes(context: TemplateContext): string {
+  return `/** @lynxmodule */
+export declare class ${context.napiModuleName} {
   setValue(key: string, value: string): void;
   getValue(key: string): string | null;
   clear(): void;
@@ -514,11 +733,21 @@ export declare class ${context.moduleName} {
  * Generates the example app import for the selected library features.
  */
 function exampleImport(context: TemplateContext): string {
-  if (!context.features.has('native-module')) {
+  const modules: string[] = [];
+
+  if (context.features.has('native-module')) {
+    modules.push(context.moduleName);
+  }
+
+  if (context.features.has('napi-native-module')) {
+    modules.push(context.napiModuleName);
+  }
+
+  if (modules.length === 0) {
     return '';
   }
 
-  return `import { ${context.moduleName} } from '${context.packageName}';
+  return `import { ${modules.join(', ')} } from '${context.packageName}';
 
 `;
 }
@@ -527,13 +756,25 @@ function exampleImport(context: TemplateContext): string {
  * Generates the example app native module action.
  */
 function exampleModuleButton(context: TemplateContext): string {
-  if (!context.features.has('native-module')) {
-    return '';
+  const buttons: string[] = [];
+
+  if (context.features.has('native-module')) {
+    buttons.push(
+      `<text bindtap={() => ${context.moduleName}.setValue('key', 'value')}>
+        Native module
+      </text>`,
+    );
   }
 
-  return `<text bindtap={() => ${context.moduleName}.setValue('key', 'value')}>
-        Native module
-      </text>`;
+  if (context.features.has('napi-native-module')) {
+    buttons.push(
+      `<text bindtap={() => ${context.napiModuleName}.setValue('key', 'value')}>
+        NAPI native module
+      </text>`,
+    );
+  }
+
+  return buttons.join('\n      ');
 }
 
 /**
@@ -552,12 +793,41 @@ function iosServiceApiDependency(context: TemplateContext): string {
     : '';
 }
 
+function elementModuleName(context: TemplateContext): string {
+  return `${
+    toCIdentifier(toPascalCase(context.addonBinaryName), 'LynxLibrary')
+  }ElementModule`;
+}
+
+function selfRenderReadme(context: TemplateContext): string {
+  if (!hasLynxtronTarget(context)) {
+    return '';
+  }
+
+  return `
+## Lynxtron Library Target
+
+This package contains shared C++ sources for the selected NAPI Native Module and
+Element features. Build the current OS/architecture Lynxtron library with:
+
+\`\`\`bash
+npm run build:lynxtron
+\`\`\`
+
+The build writes \`dist/<platform>/<arch>/${context.addonBinaryName}.node\`.
+Run it on each OS/architecture you want to publish. The package also exposes
+\`./lynxtron\`, which loads the matching artifact for Lynxtron based hosts.
+`;
+}
+
 /**
  * Generates the package files list for the selected native platforms.
  */
 function packageFiles(context: TemplateContext): string {
   const files = [
     ...(context.platforms.has('android') ? ['android'] : []),
+    ...(hasLynxtronTarget(context) ? ['dist', 'lynxtron'] : []),
+    ...(hasSharedSources(context) ? ['shared'] : []),
     'generated',
     ...(context.platforms.has('ios') ? ['ios'] : []),
     'src',
@@ -589,6 +859,18 @@ function platformManifestEntries(context: TemplateContext): string {
     }`);
   }
 
+  if (hasLynxtronTarget(context)) {
+    entries.push(`    "lynxtron": {
+      "path": "dist"
+    }`);
+    entries.push(`    "macos": {
+      "sourceDir": "shared"
+    }`);
+    entries.push(`    "windows": {
+      "sourceDir": "shared"
+    }`);
+  }
+
   return entries.join(',\n');
 }
 
@@ -596,14 +878,22 @@ function platformManifestEntries(context: TemplateContext): string {
  * Formats the selected native platform directories for generated README text.
  */
 function platformDirectoryList(context: TemplateContext): string {
-  const dirs = LIBRARY_PLATFORMS.filter((platform) =>
-    context.platforms.has(platform)
-  )
-    .map((platform) => `\`${platform}/\``);
+  const dirs = [
+    ...(context.platforms.has('android') ? ['`android/`'] : []),
+    ...(context.platforms.has('ios') ? ['`ios/`'] : []),
+    ...(hasLynxtronTarget(context) ? ['`lynxtron/`'] : []),
+    ...(hasSharedSources(context) ? ['`shared/`'] : []),
+  ];
 
-  return dirs.length === 1
-    ? dirs[0] ?? ''
-    : `${dirs[0] ?? ''} and ${dirs[1] ?? ''}`;
+  return formatList(dirs);
+}
+
+function formatList(items: string[]): string {
+  if (items.length <= 2) {
+    return items.join(' and ');
+  }
+
+  return `${items.slice(0, -1).join(', ')}, and ${items.at(-1) ?? ''}`;
 }
 
 /**
@@ -642,6 +932,15 @@ function toKebabCase(name: string): string {
 function toJavaPackageSegment(name: string): string {
   const segment = toKebabCase(name).replaceAll('-', '');
   return segment.length > 0 ? segment : 'library';
+}
+
+function toCIdentifier(name: string, fallback: string): string {
+  const identifier = name.replaceAll(/\W/g, '_')
+    .replaceAll(/_+/g, '_')
+    .replaceAll(/^_|_$/g, '');
+  const safeIdentifier = identifier.length > 0 ? identifier : fallback;
+
+  return /^\d/.test(safeIdentifier) ? `_${safeIdentifier}` : safeIdentifier;
 }
 
 /**
