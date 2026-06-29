@@ -99,6 +99,25 @@ if(NOT DEFINED LYNX_EXTENSION_HEADERS_DIR)
   )
 endif()
 
+if(WIN32 AND NOT DEFINED LYNX_EXTENSION_HEADERS_PACKAGE_ROOT)
+  lynx_resolve_node_package(
+    "@lynx-js/lynx-library-headers"
+    LYNX_EXTENSION_HEADERS_PACKAGE_ROOT
+  )
+endif()
+
+if(DEFINED LYNX_EXTENSION_HEADERS_PACKAGE_ROOT)
+  set(
+    LYNX_LIBRARY_HEADERS_CMAKE
+    "${LYNX_EXTENSION_HEADERS_PACKAGE_ROOT}/cmake/lynx-library-headers.cmake"
+  )
+  if(EXISTS "${LYNX_LIBRARY_HEADERS_CMAKE}")
+    include("${LYNX_LIBRARY_HEADERS_CMAKE}")
+  elseif(WIN32)
+    message(FATAL_ERROR "Missing Lynx library CMake helper: ${LYNX_LIBRARY_HEADERS_CMAKE}")
+  endif()
+endif()
+
 if(NOT EXISTS "${LYNX_EXTENSION_HEADERS_DIR}/include/lynx/registration.h")
   message(FATAL_ERROR "Missing Lynx extension headers. Run npm install first.")
 endif()
@@ -210,6 +229,12 @@ elseif(WIN32)
     gdi32
     user32
   )
+  if(COMMAND lynx_resolve_lynxtron_import_library)
+    lynx_resolve_lynxtron_import_library(LYNXTRON_RESOLVED_IMPORT_LIB)
+    list(APPEND LYNX_SHARED_PLATFORM_LINK_LIBRARIES
+      "${LYNXTRON_RESOLVED_IMPORT_LIB}"
+    )
+  endif()
 endif()
 
 set(LYNX_SHARED_TARGETS)
