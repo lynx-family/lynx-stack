@@ -5,6 +5,7 @@ it('should inject env variables', () => {
   expect(__EXTRACT_STR__).toBe(false);
   expect(__DISABLE_CREATE_SELECTOR_QUERY_INCOMPATIBLE_WARNING__).toBe(false);
   expect(__PROFILE__).toBe(false);
+  expect(__REACT_DEVTOOL__).toBe(false);
 
   if (__filename.includes('main-thread')) {
     // This is false in LEPUS bundle

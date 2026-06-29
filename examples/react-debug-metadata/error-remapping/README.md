@@ -16,13 +16,13 @@ Each crash reduces to one failing identifier — the callee of a `throw Error(..
 / `obj.method()`, the property being read, or an undefined global variable. Where
 each engine points depends on the crash class: **call** / **read** / **global**.
 
-| engine  | call (throw / method)     | read (property) | global (undefined var) |
-| ------- | ------------------------- | --------------- | ---------------------- |
-| v8      | callee start              | token end       | token end              |
-| jsc     | callee end (`(`)          | token end       | token end              |
-| quickjs | call-expr end (after `)`) | property start  | module top             |
+| engine | call (throw / method)     | read (property) | global (undefined var) |
+| ------ | ------------------------- | --------------- | ---------------------- |
+| v8     | callee start              | token end       | token end              |
+| jsc    | callee end (`(`)          | token end       | token end              |
+| primjs | call-expr end (after `)`) | property start  | module top             |
 
-QuickJS is the odd one out: a call reports its return address (after `)`), a read
+PrimJS is the odd one out: a call reports its return address (after `)`), a read
 reports the property itself, and an undefined-global ReferenceError reports the
 module top (no real mapping → reverses to null). Reversal itself is
 engine-agnostic (`colno - 1` in, `+ 1` out, faithful to the source map); the
@@ -36,13 +36,13 @@ token's start / end / call-expr end / module top.
 ## Files
 
 ```
-cases.ts        每个 demo 崩溃按钮: { name, kind, err, find, token } | { name, kind:'main-thread', marker }
+cases.ts        Every crash button: { name, kind, err, find, token } | { name, kind:'main-thread', marker }
 infer.ts        background frames: locate the token, pick the column by engine + err
 mainThread.ts        main-thread frames: invert bytecode-debug-info → (function_id, pc) → 2-step reverse
 remap-lib.ts    reversal lib (colno-1 in / +1 out; ±5 context lines, long lines clipped)
 frames.ts       computeFrame: one case+engine → backend-shaped frame
 runEngine.ts    parameterised run of every case for one engine
-test/           remap.{jsc,v8,quickjs}.test.ts → one snapshot file each
+test/           remap.{jsc,v8,primjs}.test.ts → one snapshot file each
 __snapshots__/  golden snapshots, each frame = { code, release, raw, steps[] }
 ```
 

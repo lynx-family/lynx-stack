@@ -68,18 +68,11 @@ function portable(frame: ComputedFrame): ComputedFrame {
   return {
     code: frame.code,
     release: stripEnv(frame.release),
-    // The background bundle's generated column (in `raw`) is minifier-specific;
-    // a deps bump that changes codegen shifts it, and the reversed source column
-    // can drift a few chars at segment boundaries too. Both are environment-
-    // dependent, so normalize the column and let the snapshot track the stable
-    // part: filename, line and context. The engine column rules are covered by
-    // the e2e suite and the device-calibrated notes in infer.ts.
-    // The engine location (`raw`) and the bytecode-debug-info step both point
-    // into the minified bundle, whose codegen is platform- and deps-specific
-    // (macOS and Linux minify differently). Normalize every generated
-    // coordinate plus the generated context, keeping only the reverse-mapped
-    // source result (the source-map step's filename / line / context), the
-    // thing actually under test. Engine column rules: e2e suite + infer.ts.
+    // `raw` is the engine's frame in the MINIFIED bundle; infer.ts derives its
+    // column by locating the token in the current build's output, so it shifts
+    // with minify (deps / platform). Normalize that generated location. The
+    // bytecode-debug-info step likewise points into the minified main-thread.js,
+    // so its generated coordinates and context are normalized too.
     raw: raw.replace(/:\d+:\d+(\)?)$/, ':<loc>$1'),
     steps: frame.steps.map((s) =>
       s.kind === 'bytecode-debug-info'
@@ -91,10 +84,17 @@ function portable(frame: ComputedFrame): ComputedFrame {
           pre_context: [],
           post_context: [],
         }
+        // The source-map step is the actual reverse-mapping result. Keep its
+        // source line AND column verbatim: each build's own source-map maps the
+        // token back to the same source position regardless of minify (the
+        // engine anchor floors to the token's mapping segment), so asserting the
+        // real reversed column catches reversal regressions instead of hiding
+        // them. Only env-specific tokens in the context lines are stripped.
         : {
           ...s,
-          colno: -1,
-          context_line: stripEnv(s.context_line),
+          context_line: s.context_line === undefined
+            ? undefined
+            : stripEnv(s.context_line),
           pre_context: s.pre_context.map((l) => stripEnv(l)),
           post_context: s.post_context.map((l) => stripEnv(l)),
         }

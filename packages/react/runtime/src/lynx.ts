@@ -37,7 +37,10 @@ if (typeof __MAIN_THREAD__ !== 'undefined' && __MAIN_THREAD__) {
   injectCalledByNative();
   injectUpdateMainThread();
   injectUpdateMTRefInitValue();
-  if (__DEV__) {
+  // `injectLepusMethods` exposes the snapshot <-> element mapping that preact
+  // devtools relies on, so it must also run when devtools is enabled in
+  // production via `REACT_DEVTOOL=true`.
+  if (__DEV__ || (typeof __REACT_DEVTOOL__ !== 'undefined' && __REACT_DEVTOOL__)) {
     injectLepusMethods();
   }
 }

@@ -19,6 +19,7 @@ declare global {
   declare const __BACKGROUND__: boolean;
   declare const __MAIN_THREAD__: boolean;
   declare const __PROFILE__: boolean;
+  declare const __REACT_DEVTOOL__: boolean | undefined;
   declare const __ALOG__: boolean | undefined;
   declare const __ALOG_ELEMENT_API__: boolean | undefined;
   declare const __ENABLE_SSR__: boolean;

@@ -7,7 +7,7 @@ exports[`1 · LazyComponent (dynamic) > L1. nested deep stack (dynamic, backgrou
   "release": "debugmetadata:<release>",
   "steps": [
     {
-      "colno": -1,
+      "colno": 1,
       "context_line": "}",
       "filename": "src/LazyComponent.tsx",
       "kind": "source-map",
@@ -38,7 +38,7 @@ exports[`1 · LazyComponent (dynamic) > L2. TypeError (dynamic, background) 1`] 
   "release": "debugmetadata:<release>",
   "steps": [
     {
-      "colno": -1,
+      "colno": 19,
       "context_line": "  return (obj.gone as () => void)();",
       "filename": "src/LazyComponent.tsx",
       "kind": "source-map",
@@ -78,7 +78,7 @@ exports[`1 · LazyComponent (dynamic) > L3. main-thread error (dynamic) 1`] = `
       "pre_context": [],
     },
     {
-      "colno": -1,
+      "colno": 19,
       "context_line": "  throw new Error('boom from LazyComponent main-thread'); // LazyComponent.tsx lazyCrashMainThread",
       "filename": "src/LazyComponent.tsx",
       "kind": "source-map",
@@ -109,7 +109,7 @@ exports[`1 · LazyComponent (dynamic) > L4. read .x of undefined (dynamic, backg
   "release": "debugmetadata:<release>",
   "steps": [
     {
-      "colno": -1,
+      "colno": 23,
       "context_line": "  return obj.missing!.x; // LazyComponent.tsx lazyCrashUndefinedProp",
       "filename": "src/LazyComponent.tsx",
       "kind": "source-map",
@@ -140,7 +140,7 @@ exports[`2 · Host (App.tsx) > H1. throw new Error (host, background) 1`] = `
   "release": "debugmetadata:<release>",
   "steps": [
     {
-      "colno": -1,
+      "colno": 1,
       "context_line": "}",
       "filename": "src/App.tsx",
       "kind": "source-map",
@@ -171,7 +171,7 @@ exports[`2 · Host (App.tsx) > H2. TypeError (host, background) 1`] = `
   "release": "debugmetadata:<release>",
   "steps": [
     {
-      "colno": -1,
+      "colno": 22,
       "context_line": "  return (obj.missing as () => void)();",
       "filename": "src/App.tsx",
       "kind": "source-map",
@@ -202,7 +202,7 @@ exports[`2 · Host (App.tsx) > H3. nested deep stack (host, background) 1`] = `
   "release": "debugmetadata:<release>",
   "steps": [
     {
-      "colno": -1,
+      "colno": 1,
       "context_line": "}",
       "filename": "src/App.tsx",
       "kind": "source-map",
@@ -242,7 +242,7 @@ exports[`2 · Host (App.tsx) > H4. main-thread error (host) 1`] = `
       "pre_context": [],
     },
     {
-      "colno": -1,
+      "colno": 19,
       "context_line": "  throw new Error('boom from App.tsx main-thread (host)'); // App.tsx appCrashMainThread",
       "filename": "src/App.tsx",
       "kind": "source-map",
@@ -273,7 +273,7 @@ exports[`3 · CrashDemo (host) > 1. TypeError (call undefined, background) 1`] =
   "release": "debugmetadata:<release>",
   "steps": [
     {
-      "colno": -1,
+      "colno": 27,
       "context_line": "  return (obj.notAFunction as () => void)();",
       "filename": "src/CrashDemo.tsx",
       "kind": "source-map",
@@ -313,7 +313,7 @@ exports[`3 · CrashDemo (host) > 3. throw new Error (background) 1`] = `
   "release": "debugmetadata:<release>",
   "steps": [
     {
-      "colno": -1,
+      "colno": 1,
       "context_line": "}",
       "filename": "src/CrashDemo.tsx",
       "kind": "source-map",
@@ -344,7 +344,7 @@ exports[`3 · CrashDemo (host) > 4. nested deep stack (background) 1`] = `
   "release": "debugmetadata:<release>",
   "steps": [
     {
-      "colno": -1,
+      "colno": 1,
       "context_line": "}",
       "filename": "src/CrashDemo.tsx",
       "kind": "source-map",
@@ -384,7 +384,7 @@ exports[`3 · CrashDemo (host) > 7. main-thread error 1`] = `
       "pre_context": [],
     },
     {
-      "colno": -1,
+      "colno": 19,
       "context_line": "  throw new Error('boom from main-thread'); // CrashDemo.tsx crashMainThread",
       "filename": "src/CrashDemo.tsx",
       "kind": "source-map",

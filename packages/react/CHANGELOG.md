@@ -1,5 +1,23 @@
 # @lynx-js/react
 
+## 0.122.0
+
+### Minor Changes
+
+- Expose the `Children` API from ReactLynx and freeze the arrays returned by `Children.map`, `Children.forEach`, and `Children.toArray`. ([#2376](https://github.com/lynx-family/lynx-stack/pull/2376))
+
+  Allow `@lynx-js/react` 0.121 and newer in GenUI peer dependency ranges.
+
+### Patch Changes
+
+- Report a development error when a page-data reset is combined with `withInitDataInState`. ([#2869](https://github.com/lynx-family/lynx-stack/pull/2869))
+
+  `withInitDataInState` merges `lynx.__initData` into the wrapped component's state, so resetting the page data — `updatePage(..., { resetPageData: true })` on the main thread, or `updateData(..., { type: 'reset' })` on the background thread — cannot drop the keys the reset removed; the component keeps rendering the stale keys. A dev-only error is now reported (once per reset path) on both threads, pointing to `useInitData()` instead. The check is gated by `__DEV__` and is fully removed from production builds.
+
+- Fix `withInitDataInState` not refreshing the component state on a main-thread re-render. ([#2868](https://github.com/lynx-family/lynx-stack/pull/2868))
+
+  `withInitDataInState` injected `lynx.__initData` into the class component's state only in the constructor, and its `onDataChanged` listener was active on the background thread only. On the main thread the component instance is reused across an `updatePage` re-render (the constructor never re-runs), so the injected state stayed frozen at the data from the first render. This surfaces whenever the main thread re-renders the screen itself before hydration (an `updatePage` while `firstScreenSyncTiming` is `'jsReady'`). The HOC now re-reads `lynx.__initData` on every render via `getDerivedStateFromProps`, composing with — and not overriding — the wrapped component's own `getDerivedStateFromProps`.
+
 ## 0.121.2
 
 ### Patch Changes

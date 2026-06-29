@@ -1,5 +1,21 @@
 # @lynx-js/react-rsbuild-plugin
 
+## 0.17.1
+
+### Patch Changes
+
+- Expose the `Children` API from ReactLynx and freeze the arrays returned by `Children.map`, `Children.forEach`, and `Children.toArray`. ([#2376](https://github.com/lynx-family/lynx-stack/pull/2376))
+
+  Allow `@lynx-js/react` 0.121 and newer in GenUI peer dependency ranges.
+
+- Updated dependencies []:
+  - @lynx-js/react-alias-rsbuild-plugin@0.17.1
+  - @lynx-js/use-sync-external-store@1.5.0
+  - @lynx-js/react-refresh-webpack-plugin@0.4.0
+  - @lynx-js/react-webpack-plugin@0.9.4
+  - @lynx-js/template-webpack-plugin@0.12.1
+  - @lynx-js/css-extract-webpack-plugin@0.8.0
+
 ## 0.17.0
 
 ### Minor Changes
