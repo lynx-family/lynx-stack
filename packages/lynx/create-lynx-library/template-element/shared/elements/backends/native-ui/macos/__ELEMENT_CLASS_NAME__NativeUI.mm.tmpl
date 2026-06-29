@@ -1,0 +1,102 @@
+#include "shared/elements/__ELEMENT_CLASS_NAME__.h"
+
+#import <Cocoa/Cocoa.h>
+
+#include <lynx_native_view.h>
+
+namespace {
+
+class __ELEMENT_SYMBOL_NAME__NativeUIView : public lynx::pub::LynxNativeView {
+ public:
+  explicit __ELEMENT_SYMBOL_NAME__NativeUIView(void* opaque)
+      : lynx_view_(static_cast<lynx_view_t*>(opaque)) {
+    RunOnMainThreadSync(^{
+      label_ = [NSTextField labelWithString:@"__ELEMENT_NAME__"];
+      label_.textColor = [NSColor blackColor];
+    });
+  }
+
+  ~__ELEMENT_SYMBOL_NAME__NativeUIView() override {
+    RunOnMainThreadSync(^{
+      [label_ removeFromSuperview];
+      label_ = nil;
+    });
+  }
+
+  bool IsSurfaceEnabled() override { return false; }
+
+  void OnAttach() override {
+    RunOnMainThreadSync(^{
+      AttachToParent();
+    });
+  }
+
+  void OnDetach() override {
+    RunOnMainThreadSync(^{
+      [label_ removeFromSuperview];
+    });
+  }
+
+  void OnLayoutChanged(
+      float left,
+      float top,
+      float width,
+      float height,
+      float pixel_ratio) override {
+    (void)pixel_ratio;
+    RunOnMainThreadSync(^{
+      NSView* lynx_parent = ParentView();
+      NSView* parent = AttachToParent(lynx_parent);
+      if (lynx_parent == nil || parent == nil) {
+        return;
+      }
+
+      const NSRect frame_in_lynx = NSMakeRect(left, top, width, height);
+      label_.frame = [lynx_parent convertRect:frame_in_lynx toView:parent];
+    });
+  }
+
+ private:
+  using MainThreadBlock = void (^)(void);
+
+  static void RunOnMainThreadSync(MainThreadBlock block) {
+    if ([NSThread isMainThread]) {
+      block();
+      return;
+    }
+    dispatch_sync(dispatch_get_main_queue(), block);
+  }
+
+  NSView* ParentView() {
+    if (lynx_view_ == nullptr) {
+      return nil;
+    }
+    return (__bridge NSView*)lynx_view_get_native_window(lynx_view_);
+  }
+
+  NSView* AttachToParent() { return AttachToParent(ParentView()); }
+
+  NSView* AttachToParent(NSView* lynx_parent) {
+    if (label_ == nil || lynx_parent == nil) {
+      return nil;
+    }
+    NSView* parent =
+        lynx_parent.window.contentView != nil ? lynx_parent.window.contentView
+                                              : lynx_parent;
+    if (label_.superview != parent) {
+      [label_ removeFromSuperview];
+      [parent addSubview:label_ positioned:NSWindowAbove relativeTo:nil];
+    }
+    return parent;
+  }
+
+  lynx_view_t* lynx_view_ = nullptr;
+  NSTextField* label_ = nil;
+};
+
+}  // namespace
+
+lynx_native_view_t* Create__ELEMENT_SYMBOL_NAME__NativeUINativeView(void* opaque) {
+  auto* view = new __ELEMENT_SYMBOL_NAME__NativeUIView(opaque);
+  return view->native_view();
+}

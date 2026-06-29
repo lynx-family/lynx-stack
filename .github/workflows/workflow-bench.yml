@@ -21,6 +21,7 @@ jobs:
     permissions: {}
     timeout-minutes: 45
     # CodSpeed does not support merge_group event.
+    # add a comment
     #
     # Error: Event merge_group is not supported by CodSpeed
     # Error: unknown variant `merge_group`, expected one of `push`, `pull_request`, `workflow_dispatch`, `schedule`, `local` at line 1 column 13
@@ -97,7 +98,7 @@ jobs:
         run: |
           export HOME=/root
           . "$HOME/.cargo/env"
-          codspeed run --mode walltime -- pnpm -r run --workspace-concurrency=1 bench
+          taskset -c 176-191 codspeed run --mode walltime -- pnpm -r run --workspace-concurrency=1 bench
       - name: React benchmark - Run perfetto
         run: |
           pnpm -r run --workspace-concurrency=1 perfetto

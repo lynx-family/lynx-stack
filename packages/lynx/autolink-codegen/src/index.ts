@@ -11,29 +11,68 @@ export interface CodegenOptions {
 export interface GeneratedFile {
   path: string;
   content: string;
+  overwrite?: boolean;
 }
 
-export type NativeModuleTypeName = 'void' | 'string' | 'number' | 'boolean';
+export type NativeModuleTypeName =
+  | 'void'
+  | 'string'
+  | 'number'
+  | 'boolean'
+  | 'bigint'
+  | 'date'
+  | 'symbol'
+  | 'array'
+  | 'arraybuffer'
+  | 'typedarray'
+  | 'int8array'
+  | 'uint8array'
+  | 'int16array'
+  | 'uint16array'
+  | 'int32array'
+  | 'uint32array'
+  | 'float32array'
+  | 'float64array'
+  | 'bigint64array'
+  | 'biguint64array'
+  | 'dataview'
+  | 'object'
+  | 'function'
+  | 'promise'
+  | 'buffer'
+  | 'value';
 
 export interface NativeModuleType {
   name: NativeModuleTypeName;
   nullable: boolean;
 }
 
+interface NativeModuleTypeWithSource extends NativeModuleType {
+  source?: string;
+}
+
+interface NativeModuleSourceLocation {
+  file: string;
+  line: number;
+}
+
 export interface NativeModuleParam {
   name: string;
   type: NativeModuleType;
+  source?: NativeModuleSourceLocation;
 }
 
 export interface NativeModuleMethod {
   name: string;
   params: NativeModuleParam[];
   returnType: NativeModuleType;
+  source?: NativeModuleSourceLocation;
 }
 
 export interface NativeModuleSpec {
   name: string;
   methods: NativeModuleMethod[];
+  source?: NativeModuleSourceLocation;
 }
 
 interface LynxLibJson {
@@ -45,6 +84,7 @@ interface LynxLibJson {
     ios?: {
       sourceDir: string;
     };
+    lynxtron?: Record<string, unknown>;
   };
 }
 
@@ -52,6 +92,35 @@ const MODULE_HEADER_PATTERN =
   /\/\*\*[\s\S]*?@lynxmodule[\s\S]*?\*\/\s*export\s+declare\s+class\s+([A-Za-z_$][\w$]*)\s*\{/g;
 const IDENTIFIER_PATTERN = /^[A-Z_$][\w$]*$/i;
 const JAVA_PACKAGE_NAME_PATTERN = /^[A-Z_]\w*(?:\.[A-Z_]\w*)*$/i;
+const PLATFORM_NATIVE_MODULE_TYPES_FILE = 'platform-native-module.d.ts';
+const NAPI_NATIVE_MODULE_TYPES_FILE = 'napi-native-module.d.ts';
+const NAPI_CPP_WRAPPER_TYPES: Partial<Record<NativeModuleTypeName, string>> = {
+  array: 'Napi::Array',
+  arraybuffer: 'Napi::ArrayBuffer',
+  bigint: 'Napi::BigInt',
+  bigint64array: 'Napi::BigInt64Array',
+  biguint64array: 'Napi::BigUint64Array',
+  boolean: 'Napi::Boolean',
+  buffer: 'Napi::Buffer<uint8_t>',
+  dataview: 'Napi::DataView',
+  date: 'Napi::Date',
+  float32array: 'Napi::Float32Array',
+  float64array: 'Napi::Float64Array',
+  function: 'Napi::Function',
+  int16array: 'Napi::Int16Array',
+  int32array: 'Napi::Int32Array',
+  int8array: 'Napi::Int8Array',
+  number: 'Napi::Number',
+  object: 'Napi::Object',
+  promise: 'Napi::Promise',
+  string: 'Napi::String',
+  symbol: 'Napi::Symbol',
+  typedarray: 'Napi::TypedArray',
+  uint16array: 'Napi::Uint16Array',
+  uint32array: 'Napi::Uint32Array',
+  uint8array: 'Napi::Uint8Array',
+  value: 'Napi::Value',
+};
 
 /**
  * Parses native module declarations marked with `@lynxmodule` from a TypeScript declaration source.
@@ -60,27 +129,37 @@ export function parseNativeModules(
   source: string,
   filename = '<inline>',
 ): NativeModuleSpec[] {
+  const sourceFilename = normalizeSourcePath(filename);
   const modules: NativeModuleSpec[] = [];
   const seen = new Set<string>();
 
   for (
-    const { body, name: moduleName } of findNativeModuleDeclarations(
-      source,
-      filename,
-    )
+    const {
+      body,
+      bodyStartLine,
+      line,
+      name: moduleName,
+    } of findNativeModuleDeclarations(source, sourceFilename)
   ) {
     if (seen.has(moduleName)) {
-      throw new Error(`Duplicate native module "${moduleName}" in ${filename}`);
+      throw new Error(
+        `Duplicate native module "${moduleName}" in ${sourceFilename}`,
+      );
     }
     seen.add(moduleName);
 
     modules.push({
       name: moduleName,
-      methods: parseMethods(body, filename, moduleName),
+      methods: parseMethods(body, sourceFilename, moduleName, bodyStartLine),
+      source: { file: sourceFilename, line },
     });
   }
 
   return modules;
+}
+
+function normalizeSourcePath(filename: string): string {
+  return filename.split(path.win32.sep).join(path.posix.sep);
 }
 
 /**
@@ -89,8 +168,13 @@ export function parseNativeModules(
 function findNativeModuleDeclarations(
   source: string,
   filename: string,
-): Array<{ name: string; body: string }> {
-  const declarations: Array<{ name: string; body: string }> = [];
+): Array<{ name: string; body: string; line: number; bodyStartLine: number }> {
+  const declarations: Array<{
+    name: string;
+    body: string;
+    line: number;
+    bodyStartLine: number;
+  }> = [];
   const pattern = new RegExp(MODULE_HEADER_PATTERN);
   let match = pattern.exec(source);
 
@@ -115,6 +199,8 @@ function findNativeModuleDeclarations(
     declarations.push({
       name: moduleName,
       body: source.slice(openBraceIndex + 1, closeBraceIndex),
+      line: lineNumberAt(source, match.index),
+      bodyStartLine: lineNumberAt(source, openBraceIndex + 1),
     });
 
     pattern.lastIndex = closeBraceIndex + 1;
@@ -122,6 +208,18 @@ function findNativeModuleDeclarations(
   }
 
   return declarations;
+}
+
+function lineNumberAt(source: string, index: number): number {
+  let line = 1;
+
+  for (let current = 0; current < index; current += 1) {
+    if (source.charAt(current) === '\n') {
+      line += 1;
+    }
+  }
+
+  return line;
 }
 
 /**
@@ -210,11 +308,11 @@ function findMatchingBrace(source: string, openBraceIndex: number): number {
 export function generate(options: CodegenOptions = {}): GeneratedFile[] {
   const root = path.resolve(options.root ?? process.cwd());
   const manifest = readManifest(root);
-  const modules = readNativeModuleSpecs(root);
+  const { napiModules, platformModules } = readNativeModuleSpecs(root);
   const seenModules = new Set<string>();
   const files: GeneratedFile[] = [];
 
-  for (const module of modules) {
+  for (const module of platformModules) {
     if (seenModules.has(module.name)) {
       throw new Error(`Duplicate native module "${module.name}" across types`);
     }
@@ -264,6 +362,27 @@ export function generate(options: CodegenOptions = {}): GeneratedFile[] {
     }
   }
 
+  if (napiModules.length > 0) {
+    files.push({
+      path: path.posix.join('shared', 'nativeModule', 'CMakeLists.txt'),
+      content: generateNapiNativeModuleCMake(),
+      overwrite: false,
+    });
+  }
+
+  for (const module of napiModules) {
+    if (seenModules.has(module.name)) {
+      throw new Error(`Duplicate native module "${module.name}" across types`);
+    }
+    seenModules.add(module.name);
+
+    files.push({
+      path: path.posix.join('generated', `${module.name}.ts`),
+      content: generateJsFacade(module),
+    });
+    files.push(...generateNapiNativeModuleFiles(module));
+  }
+
   return files;
 }
 
@@ -283,6 +402,10 @@ export function runCodegen(options: CodegenOptions = {}): GeneratedFile[] {
   }
 
   for (const { file, target } of targets) {
+    if (file.overwrite === false && fs.existsSync(target)) {
+      continue;
+    }
+
     fs.mkdirSync(path.dirname(target), { recursive: true });
     fs.writeFileSync(target, file.content);
   }
@@ -297,11 +420,20 @@ function parseMethods(
   body: string,
   filename: string,
   moduleName: string,
+  bodyStartLine: number,
 ): NativeModuleMethod[] {
   const methods: NativeModuleMethod[] = [];
   const seen = new Set<string>();
 
-  for (const trimmed of splitMethodDeclarations(body, filename, moduleName)) {
+  for (
+    const declaration of splitMethodDeclarations(
+      body,
+      filename,
+      moduleName,
+      bodyStartLine,
+    )
+  ) {
+    const trimmed = declaration.source;
     const openParen = trimmed.indexOf('(');
     const closeParen = trimmed.lastIndexOf(')');
     const returnColon = closeParen === -1
@@ -335,16 +467,29 @@ function parseMethods(
 
     methods.push({
       name: methodName,
-      params: parseParams(paramsSource, filename, moduleName, methodName),
+      params: parseParams(
+        paramsSource,
+        filename,
+        moduleName,
+        methodName,
+        declaration,
+      ),
       returnType: parseType(
         returnSource.trim(),
         filename,
         `${moduleName}.${methodName} return`,
       ),
+      source: { file: filename, line: declaration.line },
     });
   }
 
   return methods;
+}
+
+interface MethodDeclaration {
+  source: string;
+  text: string;
+  line: number;
 }
 
 /**
@@ -436,27 +581,45 @@ function splitMethodDeclarations(
   body: string,
   filename: string,
   moduleName: string,
-): string[] {
-  const declarations: string[] = [];
+  bodyStartLine: number,
+): MethodDeclaration[] {
+  const declarations: MethodDeclaration[] = [];
   const source = stripTypeScriptComments(body);
   let buffer = '';
+  let rawBuffer = '';
+  let bufferLine = bodyStartLine;
 
-  for (const line of source.split(/\r?\n/)) {
+  const lines = source.split(/\r?\n/);
+
+  for (let lineIndex = 0; lineIndex < lines.length; lineIndex += 1) {
+    const line = lines[lineIndex] ?? '';
     const parts = line.split(';');
 
     for (let index = 0; index < parts.length; index += 1) {
-      const part = parts[index]?.trim();
+      const rawPart = parts[index] ?? '';
+      const part = rawPart.trim();
 
-      if (part !== undefined && part.length > 0) {
+      if (part.length > 0) {
+        if (buffer.length === 0) {
+          bufferLine = bodyStartLine + lineIndex;
+        }
         buffer = `${buffer} ${part}`.trim();
+        rawBuffer = rawBuffer.length === 0
+          ? rawPart
+          : `${rawBuffer}\n${rawPart}`;
       }
 
       if (
         buffer.length > 0
         && (index < parts.length - 1 || isCompleteMethodDeclaration(buffer))
       ) {
-        declarations.push(buffer);
+        declarations.push({
+          source: buffer,
+          text: rawBuffer,
+          line: bufferLine,
+        });
         buffer = '';
+        rawBuffer = '';
       }
     }
   }
@@ -516,6 +679,7 @@ function parseParams(
   filename: string,
   moduleName: string,
   methodName: string,
+  declaration: MethodDeclaration,
 ): NativeModuleParam[] {
   const trimmed = source.trim();
 
@@ -523,7 +687,7 @@ function parseParams(
     return [];
   }
 
-  const params = trimmed.split(',').filter((paramSource) =>
+  const params = splitTypeScriptParameterList(trimmed).filter((paramSource) =>
     paramSource.trim().length > 0
   );
 
@@ -566,8 +730,114 @@ function parseParams(
       );
     }
 
-    return { name, type };
+    return {
+      name,
+      type,
+      source: {
+        file: filename,
+        line: findParameterLine(declaration, name),
+      },
+    };
   });
+}
+
+function findParameterLine(
+  declaration: MethodDeclaration,
+  paramName: string,
+): number {
+  const pattern = new RegExp(
+    `(?:^\\s*|[(,]\\s*)${escapeRegExp(paramName)}\\s*:`,
+  );
+  const lines = declaration.text.split(/\r?\n/);
+
+  for (let index = 0; index < lines.length; index += 1) {
+    if (pattern.test(lines[index] ?? '')) {
+      return declaration.line + index;
+    }
+  }
+
+  return declaration.line;
+}
+
+function escapeRegExp(source: string): string {
+  return source.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+}
+
+/**
+ * Splits a TypeScript parameter list without splitting inside generic or nested type syntax.
+ */
+function splitTypeScriptParameterList(source: string): string[] {
+  const params: string[] = [];
+  let buffer = '';
+  let angleDepth = 0;
+  let parenDepth = 0;
+  let bracketDepth = 0;
+  let braceDepth = 0;
+  let quote: string | undefined;
+
+  for (let index = 0; index < source.length; index += 1) {
+    const character = source[index] ?? '';
+    const previous = source[index - 1];
+
+    if (quote !== undefined) {
+      buffer += character;
+
+      if (character === quote && previous !== '\\') {
+        quote = undefined;
+      }
+      continue;
+    }
+
+    if (character === '\'' || character === '"' || character === '`') {
+      quote = character;
+      buffer += character;
+      continue;
+    }
+
+    switch (character) {
+      case '<':
+        angleDepth += 1;
+        break;
+      case '>':
+        angleDepth = Math.max(0, angleDepth - 1);
+        break;
+      case '(':
+        parenDepth += 1;
+        break;
+      case ')':
+        parenDepth = Math.max(0, parenDepth - 1);
+        break;
+      case '[':
+        bracketDepth += 1;
+        break;
+      case ']':
+        bracketDepth = Math.max(0, bracketDepth - 1);
+        break;
+      case '{':
+        braceDepth += 1;
+        break;
+      case '}':
+        braceDepth = Math.max(0, braceDepth - 1);
+        break;
+      case ',':
+        if (
+          angleDepth === 0
+          && parenDepth === 0
+          && bracketDepth === 0
+          && braceDepth === 0
+        ) {
+          params.push(buffer);
+          buffer = '';
+          continue;
+        }
+        break;
+    }
+
+    buffer += character;
+  }
+
+  params.push(buffer);
+  return params;
 }
 
 /**
@@ -630,17 +900,14 @@ function parseType(
     throw unsupportedType(source, filename, context);
   }
 
-  const name = nonNullParts[0];
+  const nonNullTypeSource = nonNullParts[0];
+  if (nonNullTypeSource === undefined) {
+    throw unsupportedType(source, filename, context);
+  }
 
-  if (
-    name === undefined
-    || (
-      name !== 'void'
-      && name !== 'string'
-      && name !== 'number'
-      && name !== 'boolean'
-    )
-  ) {
+  const name = normalizeNativeModuleType(nonNullTypeSource);
+
+  if (name === undefined) {
     throw unsupportedType(source, filename, context);
   }
 
@@ -648,7 +915,94 @@ function parseType(
     throw unsupportedType(source, filename, context);
   }
 
-  return { name, nullable };
+  return withTypeSource({ name, nullable }, nonNullTypeSource);
+}
+
+/**
+ * Stores the original non-null TypeScript type syntax for regenerated comments.
+ */
+function withTypeSource(
+  type: NativeModuleType,
+  source: string,
+): NativeModuleType {
+  Object.defineProperty(type, 'source', {
+    configurable: true,
+    enumerable: false,
+    value: source.trim(),
+  });
+  return type;
+}
+
+/**
+ * Normalizes TypeScript native module type syntax into the supported codegen type set.
+ */
+function normalizeNativeModuleType(
+  source: string,
+): NativeModuleTypeName | undefined {
+  const trimmed = source.trim();
+  const lower = trimmed.toLowerCase();
+
+  switch (trimmed) {
+    case 'void':
+    case 'string':
+    case 'number':
+    case 'boolean':
+      return trimmed;
+  }
+
+  const directTypes: Record<string, NativeModuleTypeName> = {
+    any: 'value',
+    array: 'array',
+    arraybuffer: 'arraybuffer',
+    bigint: 'bigint',
+    bigint64array: 'bigint64array',
+    biguint64array: 'biguint64array',
+    boolean: 'boolean',
+    buffer: 'buffer',
+    dataview: 'dataview',
+    date: 'date',
+    float32array: 'float32array',
+    float64array: 'float64array',
+    function: 'function',
+    int16array: 'int16array',
+    int32array: 'int32array',
+    int8array: 'int8array',
+    object: 'object',
+    promise: 'promise',
+    symbol: 'symbol',
+    typedarray: 'typedarray',
+    uint16array: 'uint16array',
+    uint32array: 'uint32array',
+    uint8array: 'uint8array',
+    unknown: 'value',
+    value: 'value',
+  };
+  const directType = directTypes[lower];
+
+  if (directType !== undefined) {
+    return directType;
+  }
+
+  if (trimmed.endsWith('[]') || /^(?:ReadonlyArray|Array)<.+>$/.test(trimmed)) {
+    return 'array';
+  }
+
+  if (/^(?:Record|Map|WeakMap|Set|WeakSet)<.+>$/.test(trimmed)) {
+    return 'object';
+  }
+
+  if (/^Promise<.+>$/.test(trimmed)) {
+    return 'promise';
+  }
+
+  if (
+    /^\(.*\)\s*=>\s*(?:\S.*|[\t\v\f \u00a0\u1680\u2000-\u200a\u202f\u205f\u3000\ufeff])$/
+      .test(trimmed)
+  ) {
+    return 'function';
+  }
+
+  return undefined;
 }
 
 /**
@@ -660,32 +1014,71 @@ function unsupportedType(
   context: string,
 ): Error {
   return new Error(
-    `Unsupported type "${source}" for ${context} in ${filename}. Lynx library codegen v1 supports void, string, number, boolean, and unions with null.`,
+    `Unsupported type "${source}" for ${context} in ${filename}. Lynx library codegen v1 supports N-API wrapped value types and unions with null.`,
   );
 }
 
 /**
- * Reads all native module specs declared under the package `types` directory.
+ * Reads platform and NAPI native module specs declared under the package `types` directory.
  */
-function readNativeModuleSpecs(root: string): NativeModuleSpec[] {
+function readNativeModuleSpecs(root: string): {
+  napiModules: NativeModuleSpec[];
+  platformModules: NativeModuleSpec[];
+} {
   const typesDir = path.join(root, 'types');
 
   if (!fs.existsSync(typesDir)) {
-    return [];
+    return { napiModules: [], platformModules: [] };
   }
 
+  const platformTypesFile = path.join(
+    typesDir,
+    PLATFORM_NATIVE_MODULE_TYPES_FILE,
+  );
+  const napiTypesFile = path.join(typesDir, NAPI_NATIVE_MODULE_TYPES_FILE);
+  const napiModules = fs.existsSync(napiTypesFile)
+    ? readNativeModuleSpecFile(napiTypesFile, root)
+    : [];
+  const platformModules = fs.existsSync(platformTypesFile)
+    ? readNativeModuleSpecFile(platformTypesFile, root)
+    : readLegacyNativeModuleSpecs(typesDir, root, napiTypesFile);
+
+  return { napiModules, platformModules };
+}
+
+/**
+ * Reads pre-split native module specs while excluding the NAPI split file.
+ */
+function readLegacyNativeModuleSpecs(
+  typesDir: string,
+  root: string,
+  napiTypesFile: string,
+): NativeModuleSpec[] {
   const modules: NativeModuleSpec[] = [];
 
   for (const file of walkFiles(typesDir)) {
-    if (!file.endsWith('.d.ts')) {
+    if (
+      !file.endsWith('.d.ts')
+      || path.resolve(file) === path.resolve(napiTypesFile)
+    ) {
       continue;
     }
 
-    const source = fs.readFileSync(file, 'utf8');
-    modules.push(...parseNativeModules(source, path.relative(root, file)));
+    modules.push(...readNativeModuleSpecFile(file, root));
   }
 
   return modules;
+}
+
+/**
+ * Reads one native module declaration file.
+ */
+function readNativeModuleSpecFile(
+  file: string,
+  root: string,
+): NativeModuleSpec[] {
+  const source = fs.readFileSync(file, 'utf8');
+  return parseNativeModules(source, path.relative(root, file));
 }
 
 /**
@@ -724,8 +1117,9 @@ function readManifest(root: string): LynxLibJson {
   const platforms = readObject(json, 'platforms', manifestPath);
   const android = readOptionalObject(platforms, 'android', manifestPath);
   const ios = readOptionalObject(platforms, 'ios', manifestPath);
+  const lynxtron = readOptionalObject(platforms, 'lynxtron', manifestPath);
 
-  if (android === undefined && ios === undefined) {
+  if (android === undefined && ios === undefined && lynxtron === undefined) {
     throw new Error(
       `${manifestPath} must define at least one Native platform under "platforms"`,
     );
@@ -767,6 +1161,10 @@ function readManifest(root: string): LynxLibJson {
         'platforms.ios.sourceDir',
       ) ?? 'ios',
     };
+  }
+
+  if (lynxtron !== undefined) {
+    normalizedPlatforms.lynxtron = lynxtron;
   }
 
   return {
@@ -892,6 +1290,346 @@ export default ${module.name};
 }
 
 /**
+ * Generates the shared C++ N-API files for one NAPI native module.
+ */
+function generateNapiNativeModuleFiles(
+  module: NativeModuleSpec,
+): GeneratedFile[] {
+  const baseDir = path.posix.join('shared', 'nativeModule');
+
+  return [
+    {
+      path: path.posix.join(baseDir, `${module.name}.cc`),
+      content: generateNapiNativeModuleImplementation(module),
+      overwrite: false,
+    },
+  ];
+}
+
+/**
+ * Generates the shared NAPI native module CMake target.
+ */
+function generateNapiNativeModuleCMake(): string {
+  return `file(GLOB_RECURSE LYNX_LIBRARY_NAPI_NATIVE_MODULE_SOURCES CONFIGURE_DEPENDS
+  "\${CMAKE_CURRENT_SOURCE_DIR}/*.cc"
+)
+
+if(NOT DEFINED LYNX_LIBRARY_NAPI_NATIVE_MODULE_TARGET)
+  set(LYNX_LIBRARY_NAPI_NATIVE_MODULE_TARGET "\${PROJECT_NAME}NapiNativeModules")
+endif()
+
+add_library(\${LYNX_LIBRARY_NAPI_NATIVE_MODULE_TARGET} OBJECT
+  \${LYNX_LIBRARY_NAPI_NATIVE_MODULE_SOURCES}
+)
+
+target_include_directories(\${LYNX_LIBRARY_NAPI_NATIVE_MODULE_TARGET} PRIVATE
+  "\${CMAKE_CURRENT_SOURCE_DIR}/../.."
+  "\${LYNX_EXTENSION_HEADERS_DIR}/include"
+)
+
+if(LYNX_LIBRARY_NODE_API_WEAK_SUFFIX)
+  target_include_directories(\${LYNX_LIBRARY_NAPI_NATIVE_MODULE_TARGET} PRIVATE
+    "\${LYNX_WEAK_NODE_API_HEADERS_DIR}"
+  )
+  target_compile_definitions(\${LYNX_LIBRARY_NAPI_NATIVE_MODULE_TARGET} PRIVATE
+    USE_WEAK_SUFFIX_NAPI=1
+  )
+endif()
+
+if(NOT CMAKE_SOURCE_DIR STREQUAL CMAKE_CURRENT_SOURCE_DIR)
+  set(
+    LYNX_LIBRARY_NAPI_NATIVE_MODULE_TARGET
+    "\${LYNX_LIBRARY_NAPI_NATIVE_MODULE_TARGET}"
+    PARENT_SCOPE
+  )
+endif()
+`;
+}
+
+/**
+ * Generates the user-owned C++ N-API stub for one NAPI native module.
+ */
+function generateNapiNativeModuleImplementation(
+  module: NativeModuleSpec,
+): string {
+  const bindSymbol = `Bind${toCppIdentifier(module.name, 'LynxNapiModule')}`;
+  const createSymbol = `Create${
+    toCppIdentifier(module.name, 'LynxNapiModule')
+  }`;
+  const callbacks = module.methods.map((method) =>
+    generateNapiMethodCallback(method)
+  ).join('\n\n');
+  const registrations = module.methods.map((method) =>
+    `  SetFunction(env, exports, "${method.name}", ${
+      toNapiCallbackShimName(method)
+    });`
+  ).join('\n');
+
+  return `// Generated by @lynx-js/autolink-codegen. Edit the method bodies as needed.
+#include <lynx/registration.h>
+
+#include "napi.h"
+
+#ifdef USE_WEAK_SUFFIX_NAPI
+#include "weak_napi_defines.h"
+#endif
+
+namespace {
+
+void Check(napi_env env, napi_status status) {
+  if (status != napi_ok) {
+    napi_throw_error(env, nullptr, "N-API call failed");
+  }
+}
+
+void SetFunction(
+    napi_env env,
+    napi_value object,
+    const char* name,
+    napi_callback callback) {
+  napi_value function;
+  Check(env, napi_create_function(
+      env, name, NAPI_AUTO_LENGTH, callback, nullptr, &function));
+  Check(env, napi_set_named_property(env, object, name, function));
+}
+
+${callbacks}
+
+${generateNapiMethodCallbackShims(module)}
+
+void ${bindSymbol}(napi_env env, napi_value exports) {
+${registrations}
+}
+
+static napi_value ${createSymbol}(
+    ::lynx::registration::LynxNapiEnv env,
+    ::lynx::registration::LynxNapiValue exports,
+    const char* module_name,
+    void* opaque) {
+  (void)module_name;
+  (void)opaque;
+  ${bindSymbol}(env, exports);
+  return exports;
+}
+
+}  // namespace
+
+LYNX_REGISTER_NATIVE_MODULE(
+    "${module.name}",
+    ${createSymbol},
+    nullptr)
+
+#ifdef USE_WEAK_SUFFIX_NAPI
+#include "weak_napi_undefs.h"
+#endif
+`;
+}
+
+/**
+ * Generates one N-API callback wrapper.
+ */
+function generateNapiMethodCallback(
+  method: NativeModuleMethod,
+): string {
+  const callbackName = toPascalIdentifier(method.name);
+  const methodComment = formatNapiMethodComment(method);
+
+  if (method.params.length === 0) {
+    return `Napi::Value ${callbackName}(const Napi::CallbackInfo& info) {
+  Napi::Env env = info.Env();
+${methodComment}
+  return ${defaultNapiReturnExpression(method.returnType)};
+}`;
+  }
+
+  const args = method.params.map((param, index) => {
+    const name = toNapiArgumentIdentifier(param, index);
+    return `${formatNapiParamComment(param)}
+  ${toNapiCppValueType(param.type)} ${name} = info[${index}].${
+      toNapiCppValueCast(param.type)
+    };
+  (void)${name};`;
+  }).join('\n');
+
+  return `Napi::Value ${callbackName}(const Napi::CallbackInfo& info) {
+  Napi::Env env = info.Env();
+${methodComment}
+  if (info.Length() < ${method.params.length}) {
+    return env.Undefined();
+  }
+${args}
+  return ${defaultNapiReturnExpression(method.returnType)};
+}`;
+}
+
+function formatNapiMethodComment(method: NativeModuleMethod): string {
+  const lines = [
+    '  // Method:',
+  ];
+
+  if (method.params.length === 0) {
+    lines.push(`  //   ${method.name}(): ${toTsType(method.returnType)}`);
+    lines.push(`  // ${formatSourceLocation(method.source)}`);
+    return lines.join('\n');
+  }
+
+  lines.push(`  //   ${method.name}(`);
+
+  for (const param of method.params) {
+    lines.push(`  //     ${param.name}: ${toTsType(param.type)},`);
+  }
+
+  lines.push(`  //   ): ${toTsType(method.returnType)}`);
+  lines.push(`  // ${formatSourceLocation(method.source)}`);
+  return lines.join('\n');
+}
+
+function formatNapiParamComment(param: NativeModuleParam): string {
+  return `  // Param: ${param.name}: ${toTsType(param.type)}
+  // ${formatSourceLocation(param.source)}`;
+}
+
+function formatSourceLocation(
+  location: NativeModuleSourceLocation | undefined,
+): string {
+  if (location === undefined) {
+    return 'unknown';
+  }
+
+  return `${location.file}:${location.line}`;
+}
+
+/**
+ * Generates C callbacks that adapt N-API entry points to weak-node-api C++ callbacks.
+ */
+function generateNapiMethodCallbackShims(module: NativeModuleSpec): string {
+  return module.methods.map((method) => {
+    const callbackName = toPascalIdentifier(method.name);
+    const shimName = toNapiCallbackShimName(method);
+
+    return `napi_value ${shimName}(napi_env env, napi_callback_info info) {
+  return ${callbackName}(Napi::CallbackInfo(env, info));
+}`;
+  }).join('\n\n');
+}
+
+/**
+ * Converts a parsed type into the C++ wrapper value used in generated stubs.
+ */
+function toNapiCppValueType(type: NativeModuleType): string {
+  if (type.nullable) {
+    return 'Napi::Value';
+  }
+
+  const wrapper = NAPI_CPP_WRAPPER_TYPES[type.name];
+  if (wrapper === undefined) {
+    throw new Error('void parameters are not supported');
+  }
+
+  return wrapper;
+}
+
+/**
+ * Converts a parsed type into the C++ wrapper cast used in generated stubs.
+ */
+function toNapiCppValueCast(type: NativeModuleType): string {
+  if (type.nullable) {
+    return 'As<Napi::Value>()';
+  }
+
+  return `As<${toNapiCppValueType(type)}>()`;
+}
+
+/**
+ * Generates a default return expression for a user-owned NAPI C++ callback stub.
+ */
+function defaultNapiReturnExpression(type: NativeModuleType): string {
+  if (type.nullable) {
+    return 'env.Null()';
+  }
+
+  switch (type.name) {
+    case 'void':
+      return 'env.Undefined()';
+    case 'string':
+      return 'Napi::String::New(env, "")';
+    case 'number':
+      return 'Napi::Number::New(env, 0)';
+    case 'boolean':
+      return 'Napi::Boolean::New(env, false)';
+    case 'bigint':
+      return 'Napi::BigInt::New(env, static_cast<int64_t>(0))';
+    case 'date':
+      return 'Napi::Date::New(env, 0)';
+    case 'array':
+      return 'Napi::Array::New(env)';
+    case 'arraybuffer':
+      return 'Napi::ArrayBuffer::New(env, 0)';
+    case 'object':
+      return 'Napi::Object::New(env)';
+    case 'promise':
+      return 'Napi::Promise::Deferred::New(env).Promise()';
+    case 'typedarray':
+    case 'int8array':
+    case 'uint8array':
+    case 'int16array':
+    case 'uint16array':
+    case 'int32array':
+    case 'uint32array':
+    case 'float32array':
+    case 'float64array':
+    case 'bigint64array':
+    case 'biguint64array':
+    case 'dataview':
+    case 'function':
+    case 'symbol':
+    case 'buffer':
+    case 'value':
+      return 'env.Undefined()';
+  }
+}
+
+/**
+ * Converts a TypeScript parameter name into a safe C++ local variable name.
+ */
+function toNapiArgumentIdentifier(
+  param: NativeModuleParam,
+  index: number,
+): string {
+  const identifier = toCppIdentifier(param.name, `arg${index}`);
+  return new Set(['env', 'info', 'argc', 'args']).has(identifier)
+    ? `${identifier}_arg`
+    : identifier;
+}
+
+/**
+ * Converts a TypeScript method name into the C callback shim name.
+ */
+function toNapiCallbackShimName(method: NativeModuleMethod): string {
+  return `${toPascalIdentifier(method.name)}Callback`;
+}
+
+/**
+ * Converts a TypeScript method name into a PascalCase C++ method name.
+ */
+function toPascalIdentifier(name: string): string {
+  const identifier = toCppIdentifier(name, 'Method');
+  return `${identifier.charAt(0).toUpperCase()}${identifier.slice(1)}`;
+}
+
+/**
+ * Converts an identifier-like source into a safe C++ identifier.
+ */
+function toCppIdentifier(name: string, fallback: string): string {
+  const identifier = name.replaceAll(/\W/g, '_')
+    .replaceAll(/_+/g, '_')
+    .replaceAll(/^_|_$/g, '');
+  const safeIdentifier = identifier.length > 0 ? identifier : fallback;
+
+  return /^\d/.test(safeIdentifier) ? `_${safeIdentifier}` : safeIdentifier;
+}
+
+/**
  * Generates the Android abstract native module spec for one native module.
  */
 function generateAndroidSpec(
@@ -964,7 +1702,63 @@ function generateIosImplementation(module: NativeModuleSpec): string {
  * Converts a parsed native module type to TypeScript syntax.
  */
 function toTsType(type: NativeModuleType): string {
-  const base = type.name === 'void' ? 'void' : type.name;
+  const source = (type as NativeModuleTypeWithSource).source;
+  if (source !== undefined && source.length > 0) {
+    return type.nullable ? `${source} | null` : source;
+  }
+
+  const base = (() => {
+    switch (type.name) {
+      case 'void':
+      case 'string':
+      case 'number':
+      case 'boolean':
+      case 'object':
+        return type.name;
+      case 'bigint':
+        return 'bigint';
+      case 'date':
+        return 'Date';
+      case 'symbol':
+        return 'symbol';
+      case 'array':
+        return 'unknown[]';
+      case 'arraybuffer':
+        return 'ArrayBuffer';
+      case 'typedarray':
+        return 'TypedArray';
+      case 'int8array':
+        return 'Int8Array';
+      case 'uint8array':
+        return 'Uint8Array';
+      case 'int16array':
+        return 'Int16Array';
+      case 'uint16array':
+        return 'Uint16Array';
+      case 'int32array':
+        return 'Int32Array';
+      case 'uint32array':
+        return 'Uint32Array';
+      case 'float32array':
+        return 'Float32Array';
+      case 'float64array':
+        return 'Float64Array';
+      case 'bigint64array':
+        return 'BigInt64Array';
+      case 'biguint64array':
+        return 'BigUint64Array';
+      case 'dataview':
+        return 'DataView';
+      case 'function':
+        return 'Function';
+      case 'promise':
+        return 'Promise<unknown>';
+      case 'buffer':
+        return 'Buffer';
+      case 'value':
+        return 'unknown';
+    }
+  })();
   return type.nullable ? `${base} | null` : base;
 }
 
@@ -981,6 +1775,29 @@ function toJavaType(type: NativeModuleType): string {
       return type.nullable ? '@Nullable Double' : 'double';
     case 'boolean':
       return type.nullable ? '@Nullable Boolean' : 'boolean';
+    case 'bigint':
+    case 'date':
+    case 'symbol':
+    case 'array':
+    case 'arraybuffer':
+    case 'typedarray':
+    case 'int8array':
+    case 'uint8array':
+    case 'int16array':
+    case 'uint16array':
+    case 'int32array':
+    case 'uint32array':
+    case 'float32array':
+    case 'float64array':
+    case 'bigint64array':
+    case 'biguint64array':
+    case 'dataview':
+    case 'object':
+    case 'function':
+    case 'promise':
+    case 'buffer':
+    case 'value':
+      return type.nullable ? '@Nullable Object' : 'Object';
   }
 }
 
@@ -997,6 +1814,29 @@ function toObjCReturnType(type: NativeModuleType): string {
       return type.nullable ? 'nullable NSNumber *' : 'double';
     case 'boolean':
       return type.nullable ? 'nullable NSNumber *' : 'BOOL';
+    case 'bigint':
+    case 'date':
+    case 'symbol':
+    case 'array':
+    case 'arraybuffer':
+    case 'typedarray':
+    case 'int8array':
+    case 'uint8array':
+    case 'int16array':
+    case 'uint16array':
+    case 'int32array':
+    case 'uint32array':
+    case 'float32array':
+    case 'float64array':
+    case 'bigint64array':
+    case 'biguint64array':
+    case 'dataview':
+    case 'object':
+    case 'function':
+    case 'promise':
+    case 'buffer':
+    case 'value':
+      return type.nullable ? 'nullable id' : 'id';
   }
 }
 
@@ -1013,6 +1853,29 @@ function toObjCParamType(type: NativeModuleType): string {
       return type.nullable ? 'nullable NSNumber *' : 'double';
     case 'boolean':
       return type.nullable ? 'nullable NSNumber *' : 'BOOL';
+    case 'bigint':
+    case 'date':
+    case 'symbol':
+    case 'array':
+    case 'arraybuffer':
+    case 'typedarray':
+    case 'int8array':
+    case 'uint8array':
+    case 'int16array':
+    case 'uint16array':
+    case 'int32array':
+    case 'uint32array':
+    case 'float32array':
+    case 'float64array':
+    case 'bigint64array':
+    case 'biguint64array':
+    case 'dataview':
+    case 'object':
+    case 'function':
+    case 'promise':
+    case 'buffer':
+    case 'value':
+      return type.nullable ? 'nullable id' : 'id';
   }
 }
 

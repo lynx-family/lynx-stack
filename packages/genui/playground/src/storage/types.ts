@@ -2,8 +2,11 @@
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
 
+export type ConversationProtocol = 'a2ui' | 'openui';
+
 export interface ConversationMeta {
   id: string;
+  protocol?: ConversationProtocol;
   title: string;
   createdAt: number;
   updatedAt: number;
@@ -51,6 +54,6 @@ export interface DataModelSnapshot {
 }
 
 export interface MetaRecord {
-  key: 'activeConversationId' | 'schemaVersion';
+  key: string;
   value: string;
 }

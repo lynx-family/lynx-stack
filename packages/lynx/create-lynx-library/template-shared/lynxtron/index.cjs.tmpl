@@ -1,0 +1,26 @@
+'use strict';
+
+const path = require('node:path');
+
+const nativeBinding = require(path.join(
+  __dirname,
+  '..',
+  'dist',
+  normalizePlatform(process.platform),
+  process.arch,
+  '__ADDON_BINARY_NAME__.node',
+));
+
+module.exports = nativeBinding;
+module.exports.default = nativeBinding;
+
+function normalizePlatform(platform) {
+  switch (platform) {
+    case 'darwin':
+      return 'macos';
+    case 'win32':
+      return 'windows';
+    default:
+      return platform;
+  }
+}

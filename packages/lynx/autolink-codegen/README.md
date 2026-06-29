@@ -2,13 +2,23 @@
 
 Lynx library code generator.
 
-It scans `types/**/*.d.ts` for native module declarations annotated with
-`/** @lynxmodule */`, reads `lynx.lib.json`, and generates:
+It scans native module declarations annotated with `/** @lynxmodule */`, reads
+`lynx.lib.json`, and generates:
 
 - `generated/<ModuleName>.ts`
-- Android `<ModuleName>Spec.java`, when `platforms.android` is declared
-- iOS `<ModuleName>Spec.h` and `<ModuleName>Spec.m`, when `platforms.ios` is
-  declared
+- Android `<ModuleName>Spec.java` from `types/platform-native-module.d.ts`,
+  when `platforms.android` is declared
+- iOS `<ModuleName>Spec.h` and `<ModuleName>Spec.m` from
+  `types/platform-native-module.d.ts`, when `platforms.ios` is declared
+- shared C++ N-API binding files from `types/napi-native-module.d.ts`
+
+For NAPI native modules, codegen creates a minimal user-owned N-API callback
+stub under `shared/nativeModule/`. The stub registers each module method as a
+`napi_value` callback and leaves argument parsing to the method body via
+`napi_callback_info`.
+
+For compatibility, packages without split typings still use `types/**/*.d.ts`
+as platform native module declarations.
 
 `lynx.lib.json` must declare at least one supported Native platform under
 `platforms`.
@@ -30,5 +40,4 @@ can use:
 }
 ```
 
-The first version intentionally supports only native library code generation.
 Web spec generation is outside this package.
