@@ -14,7 +14,7 @@ use js_sys::{Array, Object, Reflect, WeakRef};
 use std::rc::Rc;
 use wasm_bindgen::prelude::*;
 use wasm_bindgen::JsCast;
-use web_sys::{Document, DocumentFragment, HtmlElement, HtmlTemplateElement, Node};
+use web_sys::{DocumentFragment, HtmlElement, HtmlTemplateElement, Node};
 
 const MAIN_BUNDLE_URL_SENTINEL: &str = "__Card__";
 const SLOT_ANCHOR_PREFIX: &str = "lynx-et-slot:";
@@ -48,7 +48,6 @@ pub(crate) struct ElementTemplateDefinition {
 #[wasm_bindgen]
 pub struct ElementTemplateDefinitionBuilder {
   definition: ElementTemplateDefinition,
-  document: Document,
   elements: Vec<HtmlElement>,
 }
 
@@ -93,8 +92,12 @@ pub(crate) enum ElementTemplateInstance {
 
 impl ElementTemplateDefinitionBuilder {
   fn create_element(&mut self, tag: &str) -> Result<(usize, HtmlElement), JsError> {
-    let element = self
-      .document
+    let document = self
+      .definition
+      .template
+      .owner_document()
+      .ok_or_else(|| JsError::new("Element template missing owner document"))?;
+    let element = document
       .create_element(MainThreadWasmContext::map_lynx_tag_to_html_tag(tag))
       .map_err(|e| JsError::new(&format!("Failed to create element: {e:?}")))?
       .unchecked_into::<HtmlElement>();
@@ -142,9 +145,12 @@ impl ElementTemplateDefinitionBuilder {
 
   pub fn append_slot(&self, parent_index: usize, slot_index: usize) -> Result<(), JsError> {
     let parent = self.element_by_index(parent_index)?;
-    let anchor = self
-      .document
-      .create_comment(&format!("{SLOT_ANCHOR_PREFIX}{slot_index}"));
+    let document = self
+      .definition
+      .template
+      .owner_document()
+      .ok_or_else(|| JsError::new("Element template missing owner document"))?;
+    let anchor = document.create_comment(&format!("{SLOT_ANCHOR_PREFIX}{slot_index}"));
     parent
       .append_child(&anchor)
       .map_err(|e| JsError::new(&format!("Failed to append slot anchor: {e:?}")))?;
@@ -811,7 +817,6 @@ impl MainThreadWasmContext {
         spread_bindings: Vec::new(),
         static_bindings: Vec::new(),
       },
-      document: self.document.clone(),
       elements: Vec::new(),
     })
   }
