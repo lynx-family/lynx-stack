@@ -37,7 +37,7 @@ const sampleTasm: TasmJSONInfo = {
       content: 'some content',
     },
   },
-  elementTemplates: [],
+  elementTemplates: {},
 };
 
 const mockLynxViewInstance = {

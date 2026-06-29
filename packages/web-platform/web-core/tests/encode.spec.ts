@@ -543,7 +543,7 @@ describe('webEncoder', () => {
       pageConfig: {},
       lepusCode: {},
       customSections: {},
-      elementTemplates: [],
+      elementTemplates: {},
     };
     const buffer = encode(tasmJSON);
     const sections = readSections(buffer);

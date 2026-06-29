@@ -257,7 +257,10 @@ export class TemplateManager {
         break;
       }
       case TemplateSectionLabel.ElementTemplates: {
-        this.#setElementTemplates(url, data);
+        const bundle = this.#loadingBundles.get(url);
+        if (bundle) {
+          bundle.elementTemplates = data;
+        }
         instance.onElementTemplatesReady(url);
         break;
       }
@@ -365,26 +368,12 @@ export class TemplateManager {
     }
   }
 
-  #setElementTemplates(
-    url: string,
-    elementTemplates: DecodedTemplate['elementTemplates'],
-  ) {
-    const bundle = this.#loadingBundles.get(url);
-    if (bundle) {
-      bundle.elementTemplates = elementTemplates;
-    }
-  }
-
   public getBundle(url: string): DecodedTemplate | undefined {
     return this.#bundles.get(url) || this.#loadingBundles.get(url);
   }
 
   public getStyleSheet(url: string): any {
     return this.getBundle(url)?.styleSheet;
-  }
-
-  public getElementTemplates(url: string): DecodedTemplate['elementTemplates'] {
-    return this.getBundle(url)?.elementTemplates;
   }
 }
 

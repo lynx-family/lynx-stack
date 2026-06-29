@@ -56,7 +56,7 @@ export class MainThreadWasmContext {
     register_element_template(definition_builder: ElementTemplateDefinitionBuilder): void;
     remove_node_from_element_template(element: HTMLElement, child: HTMLElement): void;
     serialize_element_template(element: HTMLElement): any;
-    set_attribute_of_element_template(element: HTMLElement, attribute_slot_index: number, value: any, _options: any): void;
+    set_attribute_of_element_template(element: HTMLElement, attribute_slot_index: number, value: any): void;
     /**
      *
      *   * key: String
@@ -251,7 +251,7 @@ export interface InitOutput {
     readonly mainthreadwasmcontext_register_element_template: (a: number, b: number, c: number) => void;
     readonly mainthreadwasmcontext_remove_node_from_element_template: (a: number, b: number, c: number, d: number) => void;
     readonly mainthreadwasmcontext_serialize_element_template: (a: number, b: number, c: number) => void;
-    readonly mainthreadwasmcontext_set_attribute_of_element_template: (a: number, b: number, c: number, d: number, e: number, f: number) => void;
+    readonly mainthreadwasmcontext_set_attribute_of_element_template: (a: number, b: number, c: number, d: number, e: number) => void;
     readonly mainthreadwasmcontext_set_config: (a: number, b: number, c: number, d: number) => void;
     readonly mainthreadwasmcontext_set_css_id: (a: number, b: number, c: number, d: number, e: number, f: number, g: number) => void;
     readonly mainthreadwasmcontext_set_dataset: (a: number, b: number, c: number, d: number, e: number) => void;

@@ -779,9 +779,6 @@ impl MainThreadWasmContext {
     }
     self.detach_element_template_instance_references(&unique_id_set);
     for root_unique_id in unique_ids_to_remove {
-      if self.page_element_unique_id == Some(root_unique_id) {
-        self.page_element_unique_id = None;
-      }
       self.element_template_instances.remove(&root_unique_id);
     }
   }
@@ -1105,7 +1102,6 @@ impl MainThreadWasmContext {
     element: HtmlElement,
     attribute_slot_index: usize,
     value: JsValue,
-    _options: JsValue,
   ) -> Result<(), JsError> {
     let root_unique_id = Self::element_template_root_unique_id(&element)
       .ok_or_else(|| JsError::new("Element template root missing unique id"))?;

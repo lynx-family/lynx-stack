@@ -90,7 +90,7 @@ export type TasmJSONInfo = {
     content: string | Record<string, unknown>;
   }>;
   elementTemplates?:
-    | ElementTemplateAsset[]
+    | Array<ElementTemplateAsset & { sourceFile?: string }>
     | Record<string, ElementTemplateElementNode>;
 };
 
@@ -108,7 +108,10 @@ export function encode(tasmJSON: TasmJSONInfo): Uint8Array {
   const elementTemplates = !rawElementTemplates
     ? []
     : Array.isArray(rawElementTemplates)
-    ? rawElementTemplates
+    ? rawElementTemplates.map(({ templateId, compiledTemplate }) => ({
+      templateId,
+      compiledTemplate,
+    }))
     : Object.entries(rawElementTemplates).map((
       [templateId, compiledTemplate],
     ) => ({

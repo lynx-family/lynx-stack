@@ -83,7 +83,7 @@ export function getWebEncodeMode(): (
         appType: sourceContent.appType,
         pageConfig: compilerOptions,
         customSections: {},
-        elementTemplates: elementTemplates ?? [],
+        ...(elementTemplates === undefined ? {} : { elementTemplates }),
       })),
     }
   }

@@ -46,5 +46,4 @@ export type ElementTemplateNode =
 export type ElementTemplateAsset = {
   templateId: string;
   compiledTemplate: ElementTemplateElementNode;
-  sourceFile?: string;
 };

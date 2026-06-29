@@ -345,28 +345,6 @@ describe('Element APIs', () => {
     expect(root.hasAttribute('id')).toBe(false);
   });
 
-  test('element template cleanup preserves reused replaceElements child', () => {
-    registerElementTemplates(mtsBinding.wasmContext!, [
-      builtinRawTextTemplate,
-    ]);
-    const parent = mtsGlobalThis.__CreateView(0);
-    const child = mtsGlobalThis.__CreateElementTemplate(
-      '_et_builtin_raw_text',
-      null,
-      ['reused'],
-      null,
-      7,
-    );
-
-    mtsGlobalThis.__AppendElement(parent, child);
-    mtsGlobalThis.__ReplaceElements(parent, child, child);
-
-    expect(mtsGlobalThis.__SerializeElementTemplate(child)).toMatchObject({
-      uid: 7,
-      templateKey: '_et_builtin_raw_text',
-    });
-  });
-
   test('element template move detaches child from previous slot owner', () => {
     registerElementTemplates(mtsBinding.wasmContext!, [
       builtinRawTextTemplate,

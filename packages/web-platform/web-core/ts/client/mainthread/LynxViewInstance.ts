@@ -184,7 +184,7 @@ export class LynxViewInstance implements AsyncDisposable {
     if (wasmContext) {
       registerElementTemplates(
         wasmContext,
-        templateManager.getElementTemplates(currentUrl),
+        templateManager.getBundle(currentUrl)?.elementTemplates,
         this.templateUrl === currentUrl ? undefined : currentUrl,
       );
     }

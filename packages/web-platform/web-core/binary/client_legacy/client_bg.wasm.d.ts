@@ -52,7 +52,7 @@ export const mainthreadwasmcontext_push_style_sheet: (a: number, b: number, c: n
 export const mainthreadwasmcontext_register_element_template: (a: number, b: number, c: number) => void;
 export const mainthreadwasmcontext_remove_node_from_element_template: (a: number, b: number, c: number, d: number) => void;
 export const mainthreadwasmcontext_serialize_element_template: (a: number, b: number, c: number) => void;
-export const mainthreadwasmcontext_set_attribute_of_element_template: (a: number, b: number, c: number, d: number, e: number, f: number) => void;
+export const mainthreadwasmcontext_set_attribute_of_element_template: (a: number, b: number, c: number, d: number, e: number) => void;
 export const mainthreadwasmcontext_set_config: (a: number, b: number, c: number, d: number) => void;
 export const mainthreadwasmcontext_set_css_id: (a: number, b: number, c: number, d: number, e: number, f: number, g: number) => void;
 export const mainthreadwasmcontext_set_dataset: (a: number, b: number, c: number, d: number, e: number) => void;

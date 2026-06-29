@@ -353,13 +353,12 @@ export function createElementAPI(
       element,
       attributeSlotIndex,
       value,
-      options,
+      _options,
     ) {
       wasmContext.set_attribute_of_element_template(
         element,
         attributeSlotIndex,
         value,
-        options ?? undefined,
       );
     },
     __InsertNodeToElementTemplate(element, slotIndex, child, reference) {
