@@ -6,10 +6,7 @@ export class ElementTemplateDefinition {
     [Symbol.dispose](): void;
     add_attribute_binding(element_index: number, slot_index: number, key: string): void;
     add_spread_binding(element_index: number, slot_index: number): void;
-    add_static_bool_binding(element_index: number, key: string, value: boolean): void;
-    add_static_null_binding(element_index: number, key: string): void;
-    add_static_number_binding(element_index: number, key: string, value: number): void;
-    add_static_string_binding(element_index: number, key: string, value: string): void;
+    add_static_binding(element_index: number, key: string, value?: string | null): void;
     constructor(template_key: string, bundle_url?: string | null);
 }
 
@@ -218,10 +215,7 @@ export interface InitOutput {
     readonly decode_style_info: (a: any, b: number, c: number, d: number, e: number, f: number, g: number) => [number, number, number];
     readonly elementtemplatedefinition_add_attribute_binding: (a: number, b: number, c: number, d: number, e: number) => void;
     readonly elementtemplatedefinition_add_spread_binding: (a: number, b: number, c: number) => void;
-    readonly elementtemplatedefinition_add_static_bool_binding: (a: number, b: number, c: number, d: number, e: number) => void;
-    readonly elementtemplatedefinition_add_static_null_binding: (a: number, b: number, c: number, d: number) => void;
-    readonly elementtemplatedefinition_add_static_number_binding: (a: number, b: number, c: number, d: number, e: number) => void;
-    readonly elementtemplatedefinition_add_static_string_binding: (a: number, b: number, c: number, d: number, e: number, f: number) => void;
+    readonly elementtemplatedefinition_add_static_binding: (a: number, b: number, c: number, d: number, e: number, f: number) => void;
     readonly elementtemplatedefinition_new: (a: number, b: number, c: number, d: number) => number;
     readonly encode_legacy_json_generated_raw_style_info: (a: number, b: number, c: number, d: number, e: number, f: number, g: number) => [number, number, number];
     readonly get_font_face_content: (a: any) => [number, number, number, number];

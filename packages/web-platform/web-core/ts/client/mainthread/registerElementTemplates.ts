@@ -98,59 +98,24 @@ export function registerElementTemplates(
       for (const attribute of action.node.attributesArray ?? []) {
         switch (attribute.kind) {
           case 'static':
-            switch (typeof attribute.value) {
-              case 'string':
-                definition.add_static_string_binding(
-                  elementIndex,
-                  attribute.key,
-                  attribute.value,
-                );
-                break;
-              case 'number':
-                definition.add_static_number_binding(
-                  elementIndex,
-                  attribute.key,
-                  attribute.value,
-                );
-                break;
-              case 'boolean':
-                definition.add_static_bool_binding(
-                  elementIndex,
-                  attribute.key,
-                  attribute.value,
-                );
-                break;
-              default:
-                definition.add_static_null_binding(
-                  elementIndex,
-                  attribute.key,
-                );
-                break;
-            }
-
             {
               const key = attribute.key === 'css-id'
                 ? cssIdAttribute
                 : attribute.key === 'className'
                 ? 'class'
                 : attribute.key;
-              if (key === 'style') {
-                if (attribute.value == null) {
-                  element.removeAttribute(key);
-                } else {
-                  element.setAttribute(
-                    key,
-                    wasmContext.transform_element_template_style(
-                      String(attribute.value),
-                    ),
-                  );
-                }
-                break;
-              }
-              if (attribute.value == null) {
+              const value = attribute.value == null
+                ? undefined
+                : key === 'style'
+                ? wasmContext.transform_element_template_style(
+                  String(attribute.value),
+                )
+                : String(attribute.value);
+              definition.add_static_binding(elementIndex, attribute.key, value);
+              if (value == null) {
                 element.removeAttribute(key);
               } else {
-                element.setAttribute(key, String(attribute.value));
+                element.setAttribute(key, value);
                 if (key === 'text') {
                   switch (element.tagName.toLowerCase()) {
                     case 'x-text':

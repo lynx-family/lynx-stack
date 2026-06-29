@@ -19,10 +19,7 @@ export const add_inline_style_raw_string_key: (a: number, b: number, c: number, 
 export const decode_style_info: (a: number, b: number, c: number, d: number, e: number, f: number, g: number, h: number) => void;
 export const elementtemplatedefinition_add_attribute_binding: (a: number, b: number, c: number, d: number, e: number) => void;
 export const elementtemplatedefinition_add_spread_binding: (a: number, b: number, c: number) => void;
-export const elementtemplatedefinition_add_static_bool_binding: (a: number, b: number, c: number, d: number, e: number) => void;
-export const elementtemplatedefinition_add_static_null_binding: (a: number, b: number, c: number, d: number) => void;
-export const elementtemplatedefinition_add_static_number_binding: (a: number, b: number, c: number, d: number, e: number) => void;
-export const elementtemplatedefinition_add_static_string_binding: (a: number, b: number, c: number, d: number, e: number, f: number) => void;
+export const elementtemplatedefinition_add_static_binding: (a: number, b: number, c: number, d: number, e: number, f: number) => void;
 export const elementtemplatedefinition_new: (a: number, b: number, c: number, d: number) => number;
 export const encode_legacy_json_generated_raw_style_info: (a: number, b: number, c: number, d: number, e: number, f: number, g: number, h: number) => void;
 export const get_font_face_content: (a: number, b: number) => void;

@@ -31,7 +31,7 @@ pub(crate) struct TemplateSpreadBinding {
 pub(crate) struct TemplateStaticBinding {
   element_index: usize,
   key: String,
-  value: JsValue,
+  value: Option<String>,
 }
 
 #[wasm_bindgen]
@@ -41,16 +41,6 @@ pub struct ElementTemplateDefinition {
   attribute_bindings: Vec<TemplateAttributeBinding>,
   spread_bindings: Vec<TemplateSpreadBinding>,
   static_bindings: Vec<TemplateStaticBinding>,
-}
-
-impl ElementTemplateDefinition {
-  fn add_static_binding(&mut self, element_index: usize, key: String, value: JsValue) {
-    self.static_bindings.push(TemplateStaticBinding {
-      element_index,
-      key,
-      value,
-    });
-  }
 }
 
 #[wasm_bindgen]
@@ -81,20 +71,12 @@ impl ElementTemplateDefinition {
     });
   }
 
-  pub fn add_static_string_binding(&mut self, element_index: usize, key: String, value: String) {
-    self.add_static_binding(element_index, key, JsValue::from_str(&value));
-  }
-
-  pub fn add_static_number_binding(&mut self, element_index: usize, key: String, value: f64) {
-    self.add_static_binding(element_index, key, JsValue::from_f64(value));
-  }
-
-  pub fn add_static_bool_binding(&mut self, element_index: usize, key: String, value: bool) {
-    self.add_static_binding(element_index, key, JsValue::from_bool(value));
-  }
-
-  pub fn add_static_null_binding(&mut self, element_index: usize, key: String) {
-    self.add_static_binding(element_index, key, JsValue::NULL);
+  pub fn add_static_binding(&mut self, element_index: usize, key: String, value: Option<String>) {
+    self.static_bindings.push(TemplateStaticBinding {
+      element_index,
+      key,
+      value,
+    });
   }
 }
 
@@ -112,7 +94,7 @@ pub(crate) struct InstanceSpreadBinding {
 pub(crate) struct InstanceStaticBinding {
   target_unique_id: usize,
   key: String,
-  value: JsValue,
+  value: Option<String>,
 }
 
 pub(crate) enum ElementTemplateInstance {
@@ -363,10 +345,77 @@ impl MainThreadWasmContext {
       .rev()
       .find(|binding| binding.target_unique_id == target_unique_id && binding.key == key)
     {
-      self.apply_attribute_value(target_unique_id, key, &binding.value)
-    } else {
-      self.apply_attribute_value(target_unique_id, key, &JsValue::NULL)
+      let element = self
+        .unique_id_to_dom_map
+        .get(&target_unique_id)
+        .and_then(|weak_ref| weak_ref.deref())
+        .and_then(|value| value.dyn_into::<HtmlElement>().ok())
+        .ok_or_else(|| JsError::new("Element template target not found"))?;
+      let normalized_key = match key {
+        "css-id" => constants::CSS_ID_ATTRIBUTE,
+        "className" => "class",
+        _ => key,
+      };
+
+      if normalized_key == constants::CSS_ID_ATTRIBUTE {
+        let css_id = binding
+          .value
+          .as_deref()
+          .and_then(|value| value.parse::<i32>().ok())
+          .unwrap_or(0);
+        let entry_name = element.get_attribute(constants::LYNX_ENTRY_NAME_ATTRIBUTE);
+        return self.set_css_id(vec![target_unique_id], css_id, entry_name);
+      }
+
+      if normalized_key == "class" {
+        if let Some(value) = binding.value.as_deref() {
+          let _ = element.set_attribute("class", value);
+        } else {
+          let _ = element.remove_attribute("class");
+        }
+        if !self.config_enable_css_selector {
+          self.update_css_og_style(
+            target_unique_id,
+            element.get_attribute(constants::LYNX_ENTRY_NAME_ATTRIBUTE),
+          )?;
+        }
+        return Ok(());
+      }
+
+      if normalized_key == "style" {
+        if let Some(value) = binding.value.as_deref() {
+          let _ = element.set_attribute("style", value);
+        } else {
+          let _ = element.remove_attribute("style");
+        }
+        return Ok(());
+      }
+
+      if let Some(dataset_key) = normalized_key.strip_prefix("data-") {
+        let dataset_value = if let Some(value) = binding.value.as_deref() {
+          let _ = element.set_attribute(normalized_key, value);
+          JsValue::from_str(value)
+        } else {
+          let _ = element.remove_attribute(normalized_key);
+          JsValue::NULL
+        };
+        self.add_dataset(
+          target_unique_id,
+          &JsValue::from_str(dataset_key),
+          &dataset_value,
+        )?;
+        return Ok(());
+      }
+
+      if let Some(value) = binding.value.as_deref() {
+        let _ = element.set_attribute(normalized_key, value);
+      } else {
+        let _ = element.remove_attribute(normalized_key);
+        let _ = Reflect::delete_property(element.as_ref(), &JsValue::from_str(normalized_key));
+      }
+      return Ok(());
     }
+    self.apply_attribute_value(target_unique_id, key, &JsValue::NULL)
   }
 
   fn apply_slot_binding(
