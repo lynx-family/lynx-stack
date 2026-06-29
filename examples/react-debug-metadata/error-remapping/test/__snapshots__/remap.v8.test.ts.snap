@@ -339,9 +339,10 @@ exports[`3 · CrashDemo (host) > 3. throw new Error (background) 1`] = `
   "release": "debugmetadata:<release>",
   "steps": [
     {
-      "colno": 9,
+      "colno": 13,
       "context_line": "  throw new Error('explicit throw new Error (background)'); // CrashDemo.tsx crashExplicit",
       "filename": "src/CrashDemo.tsx",
+      "function_name": "Error",
       "kind": "source-map",
       "lineno": 38,
       "post_context": [
@@ -370,10 +371,9 @@ exports[`3 · CrashDemo (host) > 4. nested deep stack (background) 1`] = `
   "release": "debugmetadata:<release>",
   "steps": [
     {
-      "colno": 13,
+      "colno": 9,
       "context_line": "  throw new Error('boom from deep nested call (background)'); // CrashDemo.tsx innerThrow",
       "filename": "src/CrashDemo.tsx",
-      "function_name": "Error",
       "kind": "source-map",
       "lineno": 15,
       "post_context": [
