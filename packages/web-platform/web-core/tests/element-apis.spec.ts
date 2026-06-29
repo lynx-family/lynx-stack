@@ -23,13 +23,14 @@ import { wasmInstance } from '../ts/client/wasm.js';
 import { encodeCSS } from '../ts/encode/encodeCSS.js';
 import { createMainThreadGlobalAPIs } from '../ts/client/mainthread/createMainThreadGlobalAPIs.js';
 import type { LynxViewInstance } from '../ts/client/mainthread/LynxViewInstance.js';
-import {
-  getRegisteredElementTemplate,
-  registerElementTemplates,
-} from '../ts/client/mainthread/registerElementTemplates.js';
+import { ensureElementTemplateDefinitions } from '../ts/client/mainthread/registerElementTemplates.js';
 import { createTestLynxViewInstance } from './createTestLynxViewInstance.js';
+import type {
+  DecodedTemplate,
+  ElementTemplateAsset,
+} from '../ts/types/index.js';
 
-const builtinRawTextTemplate = {
+const builtinRawTextTemplate: ElementTemplateAsset = {
   templateId: '_et_builtin_raw_text',
   compiledTemplate: {
     kind: 'element',
@@ -41,14 +42,17 @@ const builtinRawTextTemplate = {
 };
 
 describe('Element APIs', () => {
+  const mainElementTemplateBundleUrl = 'test://main';
   let lynxViewDom: HTMLElement;
   let rootDom: ShadowRoot;
   let mtsGlobalThis: ReturnType<typeof createElementAPI>;
   let mtsBinding: WASMJSBinding;
+  let elementTemplateBundles: Map<string, DecodedTemplate>;
   beforeEach(() => {
     rstest.resetAllMocks();
     lynxViewDom = document.createElement('div') as unknown as HTMLElement;
     rootDom = lynxViewDom.attachShadow({ mode: 'open' });
+    elementTemplateBundles = new Map();
 
     mtsBinding = new WASMJSBinding(createTestLynxViewInstance(rootDom));
     mtsGlobalThis = createElementAPI(
@@ -60,8 +64,32 @@ describe('Element APIs', () => {
       false,
       false,
       false,
+      bundleUrl =>
+        elementTemplateBundles.get(
+          bundleUrl && bundleUrl !== '__Card__'
+            ? bundleUrl
+            : mainElementTemplateBundleUrl,
+        ),
     );
   });
+  function registerTestElementTemplates(
+    elementTemplates: ElementTemplateAsset[],
+    bundleUrl?: string,
+  ) {
+    const bundle: DecodedTemplate = { elementTemplates };
+    elementTemplateBundles.set(
+      bundleUrl && bundleUrl !== '__Card__'
+        ? bundleUrl
+        : mainElementTemplateBundleUrl,
+      bundle,
+    );
+    ensureElementTemplateDefinitions(
+      bundle,
+      style => mtsBinding.wasmContext!.transform_element_template_style(style),
+    );
+    return bundle;
+  }
+
   test('#commonEventHandler should filter out -1 uniqueId', () => {
     mtsBinding.wasmContext = Object.assign(mtsBinding.wasmContext || {}, {
       common_event_handler: rstest.fn(),
@@ -133,51 +161,53 @@ describe('Element APIs', () => {
     expect(mtsGlobalThis.__GetTag(element)).toBe('view');
   });
 
-  test('registerElementTemplates builds template DOM in JS and updates Rust metadata incrementally', () => {
+  test('ensureElementTemplateDefinitions builds template DOM in JS and updates Rust metadata incrementally', () => {
     const wasmContext = {
-      register_element_template_definition: rstest.fn(),
       transform_element_template_style: rstest.fn((style: string) =>
         style.replace('width', 'height')
       ),
     };
 
-    registerElementTemplates(wasmContext as any, [
-      {
-        templateId: '_et_metadata',
-        compiledTemplate: {
-          kind: 'element',
-          type: 'view',
-          attributesArray: [
-            { kind: 'static', key: 'css-id', value: 7 },
-            { kind: 'static', key: 'style', value: 'width: 1px;' },
-            { kind: 'slot', key: 'class', attrSlotIndex: 0 },
-          ],
-          children: [
-            {
-              kind: 'element',
-              type: 'raw-text',
-              attributesArray: [
-                { kind: 'static', key: 'text', value: 'hello' },
-                { kind: 'spread', attrSlotIndex: 1 },
-              ],
-            },
-            { kind: 'elementSlot', type: 'slot', elementSlotIndex: 2 },
-          ],
+    const bundle: DecodedTemplate = {
+      elementTemplates: [
+        {
+          templateId: '_et_metadata',
+          compiledTemplate: {
+            kind: 'element',
+            type: 'view',
+            attributesArray: [
+              { kind: 'static', key: 'css-id', value: 7 },
+              { kind: 'static', key: 'style', value: 'width: 1px;' },
+              { kind: 'slot', key: 'class', attrSlotIndex: 0 },
+            ],
+            children: [
+              {
+                kind: 'element',
+                type: 'raw-text',
+                attributesArray: [
+                  { kind: 'static', key: 'text', value: 'hello' },
+                  { kind: 'spread', attrSlotIndex: 1 },
+                ],
+              },
+              { kind: 'elementSlot', type: 'slot', elementSlotIndex: 2 },
+            ],
+          },
         },
-      },
-    ], 'lazy.js');
+      ],
+    };
+    ensureElementTemplateDefinitions(
+      bundle,
+      style => wasmContext.transform_element_template_style(style),
+    );
 
-    expect(wasmContext.register_element_template_definition)
-      .toHaveBeenCalledTimes(1);
-    const definition = wasmContext.register_element_template_definition.mock
-      .calls[0]![0];
+    expect(wasmContext.transform_element_template_style)
+      .toHaveBeenCalledWith('width: 1px;');
+    const definition = bundle.elementTemplateDefinitions!.get('_et_metadata')!
+      .definition;
     expect(definition).toBeInstanceOf(wasmInstance.ElementTemplateDefinition);
 
-    const template = getRegisteredElementTemplate(
-      wasmContext as any,
-      '_et_metadata',
-      'lazy.js',
-    )!.template;
+    const template = bundle.elementTemplateDefinitions!.get('_et_metadata')!
+      .template;
     expect(template.tagName.toLowerCase()).toBe('template');
 
     const root = template.content.firstElementChild as HTMLElement;
@@ -191,7 +221,7 @@ describe('Element APIs', () => {
   });
 
   test('element template creates, patches, moves, and serializes DOM from JS state', () => {
-    registerElementTemplates(mtsBinding.wasmContext!, [
+    registerTestElementTemplates([
       builtinRawTextTemplate,
       {
         templateId: '_et_card',
@@ -316,7 +346,7 @@ describe('Element APIs', () => {
   });
 
   test('typed element template page reuses page API as non-serialized host', () => {
-    registerElementTemplates(mtsBinding.wasmContext!, [
+    registerTestElementTemplates([
       builtinRawTextTemplate,
     ]);
 
@@ -371,7 +401,7 @@ describe('Element APIs', () => {
   });
 
   test('element template spread removal restores sibling dynamic binding', () => {
-    registerElementTemplates(mtsBinding.wasmContext!, [
+    registerTestElementTemplates([
       {
         templateId: '_et_spread_restore',
         compiledTemplate: {
@@ -411,7 +441,7 @@ describe('Element APIs', () => {
   });
 
   test('element template move detaches child from previous slot owner', () => {
-    registerElementTemplates(mtsBinding.wasmContext!, [
+    registerTestElementTemplates([
       builtinRawTextTemplate,
       {
         templateId: '_et_slot_host',

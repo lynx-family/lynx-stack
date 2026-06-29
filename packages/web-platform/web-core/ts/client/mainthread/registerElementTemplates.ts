@@ -4,61 +4,32 @@
  * LICENSE file in the root directory of this source tree.
  */
 import type {
-  ElementTemplateAsset,
+  DecodedTemplate,
   ElementTemplateElementNode,
 } from '../../types/index.js';
 import { cssIdAttribute, LYNX_TAG_TO_HTML_TAG_MAP } from '../../constants.js';
 import { wasmInstance } from '../wasm.js';
-import type { MainThreadWasmContext } from '../wasm.js';
 
 export const elementTemplateSlotAnchorPrefix = 'lynx-et-slot:';
 
-export type RegisteredElementTemplate = {
-  template: HTMLTemplateElement;
-  maxAttributeSlotIndex: number;
-};
-
-const elementTemplateRegistry = new WeakMap<
-  InstanceType<MainThreadWasmContext>,
-  Map<string, RegisteredElementTemplate>
->();
-
-export function getElementTemplateIdentityKey(
-  templateKey: string,
-  bundleUrl?: string | null,
+export function ensureElementTemplateDefinitions(
+  bundle: DecodedTemplate | undefined,
+  transformStyle: (style: string) => string,
 ) {
-  return bundleUrl && bundleUrl !== '__Card__'
-    ? `${bundleUrl}:${templateKey}`
-    : templateKey;
-}
-
-export function getRegisteredElementTemplate(
-  wasmContext: InstanceType<MainThreadWasmContext>,
-  templateKey: string,
-  bundleUrl?: string | null,
-) {
-  return elementTemplateRegistry.get(wasmContext)?.get(
-    getElementTemplateIdentityKey(templateKey, bundleUrl),
-  );
-}
-
-export function registerElementTemplates(
-  wasmContext: InstanceType<MainThreadWasmContext>,
-  elementTemplates: ElementTemplateAsset[] | undefined,
-  bundleUrl?: string,
-) {
-  let registry = elementTemplateRegistry.get(wasmContext);
-  if (!registry) {
-    registry = new Map();
-    elementTemplateRegistry.set(wasmContext, registry);
+  if (!bundle?.elementTemplates) {
+    return;
   }
+  const definitions = bundle.elementTemplateDefinitions ??= new Map();
+  let elementDocument: Document | undefined;
 
-  for (const { templateId, compiledTemplate } of elementTemplates ?? []) {
+  for (const { templateId, compiledTemplate } of bundle.elementTemplates) {
+    if (definitions.has(templateId)) {
+      continue;
+    }
+
+    elementDocument ??= document.implementation.createHTMLDocument('');
     const template = document.createElement('template');
-    const definition = new wasmInstance.ElementTemplateDefinition(
-      templateId,
-      bundleUrl,
-    );
+    const definition = new wasmInstance.ElementTemplateDefinition();
     let nextElementIndex = 0;
     let maxAttributeSlotIndex = -1;
     const stack: Array<
@@ -78,7 +49,7 @@ export function registerElementTemplates(
       const action = stack.pop()!;
       if (action.kind === 'slot') {
         action.parent.appendChild(
-          document.createComment(
+          elementDocument.createComment(
             `${elementTemplateSlotAnchorPrefix}${action.slotIndex}`,
           ),
         );
@@ -86,14 +57,9 @@ export function registerElementTemplates(
       }
 
       const elementIndex = nextElementIndex++;
-      const element = document.createElement(
+      const element = elementDocument.createElement(
         LYNX_TAG_TO_HTML_TAG_MAP[action.node.type] ?? action.node.type,
       );
-      if (action.parent) {
-        action.parent.appendChild(element);
-      } else {
-        template.content.appendChild(element);
-      }
 
       for (const attribute of action.node.attributesArray ?? []) {
         switch (attribute.kind) {
@@ -107,27 +73,13 @@ export function registerElementTemplates(
               const value = attribute.value == null
                 ? undefined
                 : key === 'style'
-                ? wasmContext.transform_element_template_style(
-                  String(attribute.value),
-                )
+                ? transformStyle(String(attribute.value))
                 : String(attribute.value);
               definition.add_static_binding(elementIndex, attribute.key, value);
               if (value == null) {
                 element.removeAttribute(key);
               } else {
                 element.setAttribute(key, value);
-                if (key === 'text') {
-                  switch (element.tagName.toLowerCase()) {
-                    case 'x-text':
-                    case 'raw-text':
-                      for (const child of Array.from(element.childNodes)) {
-                        if (child.nodeType === 3) {
-                          child.remove();
-                        }
-                      }
-                      break;
-                  }
-                }
               }
             }
             break;
@@ -155,6 +107,12 @@ export function registerElementTemplates(
         }
       }
 
+      if (action.parent) {
+        action.parent.appendChild(element);
+      } else {
+        template.content.appendChild(element);
+      }
+
       // Push in reverse so the LIFO traversal appends children in template order.
       const children = action.node.children;
       if (children) {
@@ -177,9 +135,9 @@ export function registerElementTemplates(
       }
     }
 
-    wasmContext.register_element_template_definition(definition);
-    registry.set(getElementTemplateIdentityKey(templateId, bundleUrl), {
+    definitions.set(templateId, {
       template,
+      definition,
       maxAttributeSlotIndex,
     });
   }

@@ -4,7 +4,7 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-use super::element_template::{ElementTemplateDefinition, ElementTemplateInstance};
+use super::element_template::ElementTemplateInstance;
 use super::style_manager::StyleManager;
 use crate::constants;
 use crate::js_binding::RustMainthreadContextBinding;
@@ -29,7 +29,6 @@ pub struct MainThreadWasmContext {
   pub(super) transformer_config: TransformerConfig,
   pub(super) style_manager: StyleManager,
   pub(super) global_bind_events: FnvHashMap<String, FnvHashSet<usize>>,
-  pub(super) element_template_definitions: FnvHashMap<String, Rc<ElementTemplateDefinition>>,
   pub(super) element_template_instances: FnvHashMap<usize, ElementTemplateInstance>,
 }
 
@@ -72,7 +71,6 @@ impl MainThreadWasmContext {
       },
       style_manager,
       global_bind_events: FnvHashMap::default(),
-      element_template_definitions: FnvHashMap::default(),
       element_template_instances: FnvHashMap::default(),
     }
   }

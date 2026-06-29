@@ -42,13 +42,11 @@ import {
   __QuerySelector,
   __QuerySelectorAll,
 } from './pureElementPAPIs.js';
-import {
-  elementTemplateSlotAnchorPrefix,
-  getRegisteredElementTemplate,
-} from '../registerElementTemplates.js';
+import { elementTemplateSlotAnchorPrefix } from '../registerElementTemplates.js';
 import type {
   AddEventPAPI,
   DecoratedHTMLElement,
+  DecodedTemplate,
   ElementPAPIs,
   SerializedElementTemplateNode,
   SetCSSIdPAPI,
@@ -107,6 +105,9 @@ export function createElementAPI(
   transform_vw: boolean,
   transform_vh: boolean,
   transform_rem: boolean,
+  resolveElementTemplateBundle?: (
+    bundleUrl?: string | null,
+  ) => DecodedTemplate | undefined,
 ): ElementPAPIs {
   let wasmContext = new MainThreadWasmContext(
     rootDom,
@@ -515,11 +516,8 @@ export function createElementAPI(
     elementSlots: unknown,
     uid: unknown,
   ) => {
-    const registered = getRegisteredElementTemplate(
-      wasmContext,
-      templateKey,
-      bundleUrl,
-    );
+    const registered = resolveElementTemplateBundle?.(bundleUrl)
+      ?.elementTemplateDefinitions?.get(templateKey);
     if (!registered) {
       throw new Error(`Element template not found: ${templateKey}`);
     }
@@ -578,11 +576,7 @@ export function createElementAPI(
     elementTemplateStates.set(root, state);
     elementTemplateStatesById.set(rootUniqueId, state);
     elementTemplateRootsById.set(rootUniqueId, root);
-    wasmContext.create_element_template_instance(
-      templateKey,
-      bundleUrl ?? undefined,
-      rootUniqueId,
-    );
+    wasmContext.create_element_template_instance(rootUniqueId);
     for (let index = 0; index < uniqueIdsByIndex.length; index++) {
       wasmContext.add_element_template_instance_element(
         rootUniqueId,
@@ -590,7 +584,10 @@ export function createElementAPI(
         uniqueIdsByIndex[index]!,
       );
     }
-    wasmContext.finish_element_template_instance(rootUniqueId);
+    wasmContext.finish_element_template_instance(
+      registered.definition,
+      rootUniqueId,
+    );
     for (let index = 0; index < providedAttributeSlots.length; index++) {
       setCompiledElementTemplateAttributeSlot(
         rootUniqueId,

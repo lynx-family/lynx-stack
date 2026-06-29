@@ -27,7 +27,7 @@ import { ExposureServices } from './ExposureServices.js';
 import { createElementAPI } from './elementAPIs/createElementAPI.js';
 import { createMainThreadGlobalAPIs } from './createMainThreadGlobalAPIs.js';
 import { templateManager } from './TemplateManager.js';
-import { registerElementTemplates } from './registerElementTemplates.js';
+import { ensureElementTemplateDefinitions } from './registerElementTemplates.js';
 import { loadAllWebElements } from '../webElementsDynamicLoader.js';
 // @ts-expect-error
 import IN_SHADOW_CSS_MODERN from '../../../css/in_shadow.css?inline';
@@ -156,6 +156,12 @@ export class LynxViewInstance implements AsyncDisposable {
         this.transformVW,
         this.transformVH,
         this.transformREM,
+        bundleUrl =>
+          templateManager.getBundle(
+            bundleUrl && bundleUrl !== '__Card__'
+              ? bundleUrl
+              : this.templateUrl,
+          ),
       ),
       createMainThreadGlobalAPIs(
         this,
@@ -182,10 +188,9 @@ export class LynxViewInstance implements AsyncDisposable {
   ) {
     const wasmContext = this.mtsWasmBinding.wasmContext;
     if (wasmContext) {
-      registerElementTemplates(
-        wasmContext,
-        templateManager.getBundle(currentUrl)?.elementTemplates,
-        this.templateUrl === currentUrl ? undefined : currentUrl,
+      ensureElementTemplateDefinitions(
+        templateManager.getBundle(currentUrl),
+        style => wasmContext.transform_element_template_style(style),
       );
     }
   }

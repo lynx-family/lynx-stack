@@ -11,12 +11,10 @@ use crate::style_transformer::{
 };
 use fnv::{FnvHashMap, FnvHashSet};
 use js_sys::{Array, Object, Reflect};
-use std::rc::Rc;
 use wasm_bindgen::prelude::*;
 use wasm_bindgen::JsCast;
 use web_sys::HtmlElement;
 
-const MAIN_BUNDLE_URL_SENTINEL: &str = "__Card__";
 pub(crate) struct TemplateAttributeBinding {
   element_index: usize,
   slot_index: usize,
@@ -36,8 +34,6 @@ pub(crate) struct TemplateStaticBinding {
 
 #[wasm_bindgen]
 pub struct ElementTemplateDefinition {
-  template_key: String,
-  bundle_url: Option<String>,
   attribute_bindings: Vec<TemplateAttributeBinding>,
   spread_bindings: Vec<TemplateSpreadBinding>,
   static_bindings: Vec<TemplateStaticBinding>,
@@ -46,10 +42,8 @@ pub struct ElementTemplateDefinition {
 #[wasm_bindgen]
 impl ElementTemplateDefinition {
   #[wasm_bindgen(constructor)]
-  pub fn new(template_key: String, bundle_url: Option<String>) -> ElementTemplateDefinition {
+  pub fn new() -> ElementTemplateDefinition {
     ElementTemplateDefinition {
-      template_key,
-      bundle_url,
       attribute_bindings: Vec::new(),
       spread_bindings: Vec::new(),
       static_bindings: Vec::new(),
@@ -99,7 +93,6 @@ pub(crate) struct InstanceStaticBinding {
 
 pub(crate) enum ElementTemplateInstance {
   Compiled {
-    definition: Rc<ElementTemplateDefinition>,
     attribute_slots: Vec<JsValue>,
     attribute_bindings: Vec<InstanceAttributeBinding>,
     spread_bindings: Vec<InstanceSpreadBinding>,
@@ -114,15 +107,6 @@ pub(crate) enum ElementTemplateInstance {
 }
 
 impl MainThreadWasmContext {
-  fn template_identity_key(template_key: &str, bundle_url: Option<&str>) -> String {
-    match bundle_url {
-      Some(url) if !url.is_empty() && url != MAIN_BUNDLE_URL_SENTINEL => {
-        format!("{url}:{template_key}")
-      }
-      _ => template_key.to_string(),
-    }
-  }
-
   fn value_to_string(value: &JsValue) -> String {
     if let Some(value) = value.as_string() {
       value
@@ -595,35 +579,17 @@ impl MainThreadWasmContext {
 
 #[wasm_bindgen]
 impl MainThreadWasmContext {
-  pub fn register_element_template_definition(&mut self, definition: ElementTemplateDefinition) {
-    let identity_key =
-      Self::template_identity_key(&definition.template_key, definition.bundle_url.as_deref());
-    self
-      .element_template_definitions
-      .insert(identity_key, Rc::new(definition));
-  }
-
   pub fn transform_element_template_style(&self, style: String) -> String {
     transform_inline_style_string(&style, &self.transformer_config)
   }
 
   pub fn create_element_template_instance(
     &mut self,
-    template_key: String,
-    bundle_url: Option<String>,
     root_unique_id: usize,
   ) -> Result<(), JsError> {
-    let identity_key = Self::template_identity_key(&template_key, bundle_url.as_deref());
-    let definition = self
-      .element_template_definitions
-      .get(&identity_key)
-      .cloned()
-      .ok_or_else(|| JsError::new(&format!("Element template not found: {identity_key}")))?;
-
     self.element_template_instances.insert(
       root_unique_id,
       ElementTemplateInstance::Compiled {
-        definition,
         attribute_slots: Vec::new(),
         attribute_bindings: Vec::new(),
         spread_bindings: Vec::new(),
@@ -657,10 +623,13 @@ impl MainThreadWasmContext {
     Ok(())
   }
 
-  pub fn finish_element_template_instance(&mut self, root_unique_id: usize) -> Result<(), JsError> {
-    let (definition, unique_ids_by_index, mut attribute_slots) = {
+  pub fn finish_element_template_instance(
+    &mut self,
+    definition: &ElementTemplateDefinition,
+    root_unique_id: usize,
+  ) -> Result<(), JsError> {
+    let (unique_ids_by_index, mut attribute_slots) = {
       let Some(ElementTemplateInstance::Compiled {
-        definition,
         attribute_slots,
         element_index_to_unique_id,
         ..
@@ -668,11 +637,7 @@ impl MainThreadWasmContext {
       else {
         return Err(JsError::new("Element template instance not found"));
       };
-      (
-        definition.clone(),
-        element_index_to_unique_id.clone(),
-        attribute_slots.clone(),
-      )
+      (element_index_to_unique_id.clone(), attribute_slots.clone())
     };
 
     let attribute_bindings = definition
