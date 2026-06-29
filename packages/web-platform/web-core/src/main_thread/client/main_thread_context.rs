@@ -33,8 +33,6 @@ pub struct MainThreadWasmContext {
   pub(super) global_bind_events: FnvHashMap<String, FnvHashSet<usize>>,
   pub(super) element_template_definitions: FnvHashMap<String, Rc<ElementTemplateDefinition>>,
   pub(super) element_template_instances: FnvHashMap<usize, ElementTemplateInstance>,
-  pub(super) config_default_display_linear: bool,
-  pub(super) config_default_overflow_visible: bool,
 }
 
 impl MainThreadWasmContext {
@@ -56,8 +54,6 @@ impl MainThreadWasmContext {
     root_node: web_sys::Node,
     mts_binding: RustMainthreadContextBinding,
     config_enable_css_selector: bool,
-    config_default_display_linear: bool,
-    config_default_overflow_visible: bool,
     config_transform_vw: bool,
     config_transform_vh: bool,
     config_transform_rem: bool,
@@ -82,8 +78,6 @@ impl MainThreadWasmContext {
       global_bind_events: FnvHashMap::default(),
       element_template_definitions: FnvHashMap::default(),
       element_template_instances: FnvHashMap::default(),
-      config_default_display_linear,
-      config_default_overflow_visible,
     }
   }
 

@@ -8,6 +8,7 @@ import {
   lynxDefaultDisplayLinearAttribute,
   lynxDefaultOverflowVisibleAttribute,
   lynxDisposedAttribute,
+  lynxElementTemplateMarkerAttribute,
   lynxEntryNameAttribute,
   uniqueIdSymbol,
 } from '../../../constants.js';
@@ -90,8 +91,6 @@ export function createElementAPI(
     rootDom,
     mtsBinding,
     config_enable_css_selector,
-    config_default_display_linear,
-    config_default_overflow_visible,
     transform_vw,
     transform_vh,
     transform_rem,
@@ -205,6 +204,33 @@ export function createElementAPI(
     for (const child of removedChildren) {
       cleanupElementTemplate(child);
     }
+  };
+  const createPage = (
+    componentID: string,
+    componentCSSID: number,
+  ): DecoratedHTMLElement => {
+    if (page) return page;
+    const dom = document.createElement(
+      'div',
+    ) as HTMLElement as DecoratedHTMLElement;
+    const uniqueId = wasmContext.create_element_common(
+      0,
+      dom,
+      new WeakRef(dom),
+      componentCSSID,
+      componentID,
+    );
+    dom[uniqueIdSymbol] = uniqueId;
+    wasmContext.set_page_element_unique_id(uniqueId);
+    if (config_default_overflow_visible) {
+      dom.setAttribute(lynxDefaultOverflowVisibleAttribute, 'true');
+    }
+    if (!config_default_display_linear) {
+      dom.setAttribute(lynxDefaultDisplayLinearAttribute, 'false');
+    }
+    dom.setAttribute('part', 'page');
+    page = dom;
+    return dom;
   };
   return {
     __CreateView(parentComponentUniqueId: number) {
@@ -343,7 +369,14 @@ export function createElementAPI(
       uid,
       options,
     ) {
-      if (tag === 'page' && page) return page;
+      if (tag === 'page') {
+        const dom = createPage(String(uid ?? '0'), 0);
+        dom.setAttribute(
+          lynxElementTemplateMarkerAttribute,
+          String(dom[uniqueIdSymbol]),
+        );
+        return dom;
+      }
       const dom = wasmContext.create_typed_element_template(
         tag,
         attributes ?? undefined,
@@ -351,9 +384,6 @@ export function createElementAPI(
         uid ?? undefined,
         options ?? undefined,
       ) as HTMLElement;
-      if (tag === 'page') {
-        page = dom as DecoratedHTMLElement;
-      }
       return dom;
     },
     __SetAttributeOfElementTemplate(
@@ -384,26 +414,7 @@ export function createElementAPI(
       return wasmContext.serialize_element_template(element) as any;
     },
     __CreatePage(componentID, componentCSSID) {
-      if (page) return page;
-      const dom = document.createElement(
-        'div',
-      ) as HTMLElement as DecoratedHTMLElement;
-      dom[uniqueIdSymbol] = wasmContext.create_element_common(
-        0,
-        dom,
-        new WeakRef(dom),
-        componentCSSID,
-        componentID,
-      );
-      if (config_default_overflow_visible) {
-        dom.setAttribute(lynxDefaultOverflowVisibleAttribute, 'true');
-      }
-      if (!config_default_display_linear) {
-        dom.setAttribute(lynxDefaultDisplayLinearAttribute, 'false');
-      }
-      dom.setAttribute('part', 'page');
-      page = dom;
-      return dom;
+      return createPage(componentID, componentCSSID);
     },
     __SetClasses: config_enable_css_selector
       ? __SetClasses

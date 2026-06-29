@@ -47,7 +47,7 @@ export const mainthreadwasmcontext_get_event: (a: number, b: number, c: number, 
 export const mainthreadwasmcontext_get_events: (a: number, b: number, c: number) => void;
 export const mainthreadwasmcontext_get_unique_id_by_component_id: (a: number, b: number, c: number) => number;
 export const mainthreadwasmcontext_insert_node_to_element_template: (a: number, b: number, c: number, d: number, e: number, f: number) => void;
-export const mainthreadwasmcontext_new: (a: number, b: number, c: number, d: number, e: number, f: number, g: number, h: number) => number;
+export const mainthreadwasmcontext_new: (a: number, b: number, c: number, d: number, e: number, f: number) => number;
 export const mainthreadwasmcontext_push_style_sheet: (a: number, b: number, c: number, d: number, e: number) => void;
 export const mainthreadwasmcontext_register_element_template: (a: number, b: number, c: number) => void;
 export const mainthreadwasmcontext_remove_element_template: (a: number, b: number, c: number) => void;

@@ -1111,19 +1111,6 @@ impl MainThreadWasmContext {
       )
       .map_err(|e| JsError::new(&format!("Failed to mark typed template root: {e:?}")))?;
 
-    if tag == "page" {
-      self.page_element_unique_id = Some(root_unique_id);
-      root
-        .set_attribute("part", "page")
-        .map_err(|e| JsError::new(&format!("Failed to set page part: {e:?}")))?;
-      if self.config_default_overflow_visible {
-        let _ = root.set_attribute(constants::LYNX_DEFAULT_OVERFLOW_VISIBLE_ATTRIBUTE, "true");
-      }
-      if !self.config_default_display_linear {
-        let _ = root.set_attribute(constants::LYNX_DEFAULT_DISPLAY_LINEAR_ATTRIBUTE, "false");
-      }
-    }
-
     let typed_attributes =
       self.apply_typed_attributes(root_unique_id, &Object::new().into(), &attributes)?;
     let slot_source = if !Self::value_is_nullish(&element_slots) {
@@ -1331,18 +1318,24 @@ impl MainThreadWasmContext {
       .ok_or_else(|| JsError::new("Element template root missing unique id"))?;
     let child_unique_id = Self::element_template_root_unique_id(&child)
       .ok_or_else(|| JsError::new("Element template child missing unique id"))?;
-    let (anchor, host) = {
-      let instance = self
-        .element_template_instances
-        .get(&root_unique_id)
-        .ok_or_else(|| JsError::new("Element template instance not found"))?;
-      (
-        instance.slot_anchors.get(&slot_index).cloned(),
-        self
-          .get_dom_by_unique_id_strong(root_unique_id)
-          .ok_or_else(|| JsError::new("Element template host not found"))?,
-      )
-    };
+    let (anchor, host) =
+      if let Some(instance) = self.element_template_instances.get(&root_unique_id) {
+        (
+          instance.slot_anchors.get(&slot_index).cloned(),
+          self
+            .get_dom_by_unique_id_strong(root_unique_id)
+            .ok_or_else(|| JsError::new("Element template host not found"))?,
+        )
+      } else if self.page_element_unique_id == Some(root_unique_id) {
+        (
+          None,
+          self
+            .get_dom_by_unique_id_strong(root_unique_id)
+            .ok_or_else(|| JsError::new("Element template page not found"))?,
+        )
+      } else {
+        return Err(JsError::new("Element template instance not found"));
+      };
 
     if let Some(reference) = reference.as_ref() {
       reference

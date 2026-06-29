@@ -10,10 +10,6 @@ pub const CSS_ID_ATTRIBUTE: &str = "l-css-id";
 pub const LYNX_ENTRY_NAME_ATTRIBUTE: &str = "l-e-name";
 #[cfg(feature = "client")]
 pub const LYNX_ELEMENT_TEMPLATE_MARKER_ATTRIBUTE: &str = "l-template";
-#[cfg(feature = "client")]
-pub const LYNX_DEFAULT_DISPLAY_LINEAR_ATTRIBUTE: &str = "lynx-default-display-linear";
-#[cfg(feature = "client")]
-pub const LYNX_DEFAULT_OVERFLOW_VISIBLE_ATTRIBUTE: &str = "lynx-default-overflow-visible";
 
 #[cfg(any(feature = "client", feature = "server"))]
 pub const LYNX_UNIQUE_ID_ATTRIBUTE: &str = "l-uid";

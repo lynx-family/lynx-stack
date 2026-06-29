@@ -608,4 +608,32 @@ describe('webEncoder', () => {
       },
     ]);
   });
+
+  test('should reject page in elementTemplates during encode', () => {
+    const tasmJSON: TasmJSONInfo = {
+      styleInfo: {},
+      manifest: {},
+      cardType: 'card',
+      appType: 'card',
+      pageConfig: {},
+      lepusCode: {},
+      customSections: {},
+      elementTemplates: {
+        _et_bad_page: {
+          kind: 'element',
+          type: 'view',
+          children: [
+            {
+              kind: 'element',
+              type: 'page',
+            },
+          ],
+        },
+      },
+    };
+
+    expect(() => encode(tasmJSON)).toThrow(
+      'Element template "_et_bad_page" cannot contain <page />.',
+    );
+  });
 });

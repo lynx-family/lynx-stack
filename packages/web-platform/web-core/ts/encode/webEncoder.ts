@@ -7,6 +7,7 @@ import type * as CSS from '@lynx-js/css-serializer';
 import type {
   ElementTemplateAsset,
   ElementTemplateElementNode,
+  ElementTemplateNode,
 } from '../types/index.js';
 import { encodeCSS } from './encodeCSS.js';
 import {
@@ -114,6 +115,23 @@ export function encode(tasmJSON: TasmJSONInfo): Uint8Array {
       templateId,
       compiledTemplate,
     }));
+  for (const { templateId, compiledTemplate } of elementTemplates) {
+    const stack: ElementTemplateNode[] = [compiledTemplate];
+    while (stack.length > 0) {
+      const node = stack.pop()!;
+      if (node.kind !== 'element') {
+        continue;
+      }
+      if (node.type === 'page') {
+        throw new Error(
+          `Element template "${templateId}" cannot contain <page />.`,
+        );
+      }
+      if (node.children) {
+        stack.push(...node.children);
+      }
+    }
+  }
   const encodedStyleInfo = encodeCSS(styleInfo);
   const encodedManifest = encodeStringMap(manifest);
   const encodedLepusCode = encodeStringMap(lepusCode);

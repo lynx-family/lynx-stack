@@ -9,7 +9,11 @@ import {
 } from '@rstest/core';
 import { createElementAPI } from '../ts/client/mainthread/elementAPIs/createElementAPI.js';
 import { WASMJSBinding } from '../ts/client/mainthread/elementAPIs/WASMJSBinding.js';
-import { cssIdAttribute, lynxEntryNameAttribute } from '../ts/constants.js';
+import {
+  cssIdAttribute,
+  lynxElementTemplateMarkerAttribute,
+  lynxEntryNameAttribute,
+} from '../ts/constants.js';
 import {
   createElementAPI as createServerElementAPI,
   SSRBinding,
@@ -244,6 +248,61 @@ describe('Element APIs', () => {
         ],
       ],
     });
+  });
+
+  test('typed element template page reuses page API as non-serialized host', () => {
+    registerElementTemplates(mtsBinding.wasmContext!, [
+      builtinRawTextTemplate,
+    ]);
+
+    const page = mtsGlobalThis.__CreateTypedElementTemplate(
+      'page',
+      null,
+      null,
+      '0',
+      null,
+    );
+    const reusedPage = mtsGlobalThis.__CreateTypedElementTemplate(
+      'page',
+      { id: 'ignored' },
+      null,
+      'ignored',
+      null,
+    );
+    const child = mtsGlobalThis.__CreateElementTemplate(
+      '_et_builtin_raw_text',
+      null,
+      ['root'],
+      null,
+      4,
+    );
+
+    expect(reusedPage).toBe(page);
+    expect(page.tagName.toLowerCase()).toBe('div');
+    expect(page.getAttribute('part')).toBe('page');
+    expect(page.getAttribute(lynxElementTemplateMarkerAttribute)).toBe(
+      String(mtsGlobalThis.__GetElementUniqueID(page)),
+    );
+
+    mtsGlobalThis.__InsertNodeToElementTemplate(page, 0, child);
+
+    expect(page.children).toHaveLength(1);
+    expect(page.children[0]).toBe(child);
+    expect(mtsGlobalThis.__SerializeElementTemplate(child)).toMatchObject({
+      uid: 4,
+      templateKey: '_et_builtin_raw_text',
+      attributeSlots: ['root'],
+    });
+    expect(() => mtsGlobalThis.__SerializeElementTemplate(page)).toThrow(
+      /Element template instance not found/,
+    );
+
+    mtsGlobalThis.__RemoveNodeFromElementTemplate(page, 0, child);
+
+    expect(page.children).toHaveLength(0);
+    expect(() => mtsGlobalThis.__SerializeElementTemplate(child)).toThrow(
+      /Element template instance not found/,
+    );
   });
 
   test('element template spread removal restores sibling dynamic binding', () => {

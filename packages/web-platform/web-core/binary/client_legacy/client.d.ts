@@ -51,7 +51,7 @@ export class MainThreadWasmContext {
     get_events(unique_id: number): EventInfo[];
     get_unique_id_by_component_id(component_id: string): number | undefined;
     insert_node_to_element_template(element: HTMLElement, slot_index: number, child: HTMLElement, reference?: HTMLElement | null): void;
-    constructor(root_node: Node, mts_binding: any, config_enable_css_selector: boolean, config_default_display_linear: boolean, config_default_overflow_visible: boolean, config_transform_vw: boolean, config_transform_vh: boolean, config_transform_rem: boolean);
+    constructor(root_node: Node, mts_binding: any, config_enable_css_selector: boolean, config_transform_vw: boolean, config_transform_vh: boolean, config_transform_rem: boolean);
     push_style_sheet(style_info: StyleSheetResource, entry_name?: string | null): void;
     register_element_template(definition_builder: ElementTemplateDefinitionBuilder): void;
     remove_element_template(element: HTMLElement): void;
@@ -247,7 +247,7 @@ export interface InitOutput {
     readonly mainthreadwasmcontext_get_events: (a: number, b: number, c: number) => void;
     readonly mainthreadwasmcontext_get_unique_id_by_component_id: (a: number, b: number, c: number) => number;
     readonly mainthreadwasmcontext_insert_node_to_element_template: (a: number, b: number, c: number, d: number, e: number, f: number) => void;
-    readonly mainthreadwasmcontext_new: (a: number, b: number, c: number, d: number, e: number, f: number, g: number, h: number) => number;
+    readonly mainthreadwasmcontext_new: (a: number, b: number, c: number, d: number, e: number, f: number) => number;
     readonly mainthreadwasmcontext_push_style_sheet: (a: number, b: number, c: number, d: number, e: number) => void;
     readonly mainthreadwasmcontext_register_element_template: (a: number, b: number, c: number) => void;
     readonly mainthreadwasmcontext_remove_element_template: (a: number, b: number, c: number) => void;
