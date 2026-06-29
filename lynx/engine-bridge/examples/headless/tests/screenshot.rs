@@ -1,53 +1,121 @@
-use lynx_headless_example::write_png;
 use std::fs;
-use std::path::Path;
+use std::path::{Path, PathBuf};
+use std::process::Command;
 
-const WIDTH: usize = 64;
-const HEIGHT: usize = 48;
+const REACT_BUNDLE_NAME: &str = "main.lynx.bundle";
+const REACT_REFERENCE_NAME: &str = "main.lynx.snapshot.png";
 
 #[test]
-fn screenshot_output_matches_reference_png() {
-  let fixture_dir = Path::new(env!("CARGO_MANIFEST_DIR")).join("tests/fixtures");
-  let reference = fixture_dir.join("reference.png");
+#[cfg(target_os = "macos")]
+fn react_fixture_render_matches_reference_png() {
+  if std::env::var_os("LYNX_SDK_DIR").is_none() && std::env::var_os("LYNX_LIB_PATH").is_none() {
+    eprintln!("skipping headless render test; set LYNX_SDK_DIR or LYNX_LIB_PATH to libLynx_clay");
+    return;
+  }
+
+  let manifest_dir = Path::new(env!("CARGO_MANIFEST_DIR"));
+  let repo_root = manifest_dir
+    .join("../../../..")
+    .canonicalize()
+    .expect("canonicalize repository root");
+  let react_fixture_dir = repo_root.join("packages/genui/ui-judge/tests/fixtures/react");
+  let react_dist_dir = react_fixture_dir.join(".generated");
+  let bundle = react_dist_dir.join(REACT_BUNDLE_NAME);
+  let reference = react_fixture_dir.join(REACT_REFERENCE_NAME);
+  assert!(
+    bundle.is_file(),
+    "missing React fixture bundle: {}; build or restore the checked-in fixture output",
+    bundle.display()
+  );
+
+  let executable = PathBuf::from(env!("CARGO_BIN_EXE_lynx-headless-example"));
+  install_lynx_resources_bundle(manifest_dir, &executable);
+
   let actual = std::env::temp_dir().join(format!(
-    "lynx-headless-reference-{}-{}.png",
+    "lynx-react-fixture-{}-{}.png",
     std::process::id(),
     thread_id()
   ));
 
-  write_png(&actual, WIDTH, HEIGHT, &fixture_rgba()).expect("write actual screenshot");
+  let output = Command::new(&executable)
+    .arg("--native-ui-loop")
+    .arg("--bundle")
+    .arg(&bundle)
+    .arg("--asset-root")
+    .arg(&react_dist_dir)
+    .arg("--asset-root")
+    .arg(react_fixture_dir.join("src/assets"))
+    .arg("--timeout-ms")
+    .arg("30000")
+    .arg("--screenshot")
+    .arg(&actual)
+    .output()
+    .expect("run headless renderer");
+  assert!(
+    output.status.success(),
+    "headless renderer failed with status {:?}\nstdout:\n{}\nstderr:\n{}",
+    output.status.code(),
+    String::from_utf8_lossy(&output.stdout),
+    String::from_utf8_lossy(&output.stderr)
+  );
 
   if std::env::var_os("LYNX_UPDATE_REFERENCES").is_some() {
-    fs::create_dir_all(&fixture_dir).expect("create fixture directory");
+    fs::create_dir_all(&react_fixture_dir).expect("create reference directory");
     fs::copy(&actual, &reference).expect("update reference screenshot");
     return;
   }
 
   let actual_bytes = fs::read(&actual).expect("read actual screenshot");
   let reference_bytes = fs::read(&reference).expect("read reference screenshot");
+  assert!(
+    actual_bytes.len() > 100,
+    "rendered screenshot is unexpectedly small"
+  );
   assert_eq!(
     actual_bytes,
     reference_bytes,
-    "screenshot output changed; inspect {actual} and update {reference} intentionally",
+    "React fixture rendering changed; inspect {actual} and update {reference} intentionally with LYNX_UPDATE_REFERENCES=1",
     actual = actual.display(),
     reference = reference.display()
   );
 }
 
-fn fixture_rgba() -> Vec<u8> {
-  let mut rgba = Vec::with_capacity(WIDTH * HEIGHT * 4);
-  for y in 0..HEIGHT {
-    for x in 0..WIDTH {
-      let inside = (8..56).contains(&x) && (6..42).contains(&y);
-      let stripe = ((x / 8) + (y / 6)) % 2 == 0;
-      let red = if inside { 0x28 + (x as u8 * 2) } else { 0x10 };
-      let green = if stripe { 0xb8 } else { 0x54 };
-      let blue = if inside { 0xe0 - (y as u8 * 2) } else { 0x40 };
-      let alpha = if inside { 0xff } else { 0xcc };
-      rgba.extend_from_slice(&[red, green, blue, alpha]);
+#[test]
+#[cfg(not(target_os = "macos"))]
+fn react_fixture_render_matches_reference_png() {
+  eprintln!("skipping headless render test; libLynx_clay fixture is currently macOS-only");
+}
+
+#[cfg(target_os = "macos")]
+fn install_lynx_resources_bundle(manifest_dir: &Path, executable: &Path) {
+  let source = manifest_dir
+    .join("tests/fixtures/LynxResources.bundle")
+    .canonicalize()
+    .expect("canonicalize LynxResources.bundle fixture");
+  let destination = executable
+    .parent()
+    .expect("headless executable has parent directory")
+    .join("LynxResources.bundle");
+  if destination.exists() {
+    fs::remove_dir_all(&destination).expect("remove stale LynxResources.bundle");
+  }
+  copy_dir_all(&source, &destination).expect("copy LynxResources.bundle beside headless binary");
+}
+
+#[cfg(target_os = "macos")]
+fn copy_dir_all(source: &Path, destination: &Path) -> std::io::Result<()> {
+  fs::create_dir_all(destination)?;
+  for entry in fs::read_dir(source)? {
+    let entry = entry?;
+    let file_type = entry.file_type()?;
+    let destination_path = destination.join(entry.file_name());
+    if file_type.is_dir() {
+      copy_dir_all(&entry.path(), &destination_path)?;
+    } else {
+      fs::copy(entry.path(), destination_path)?;
     }
   }
-  rgba
+  Ok(())
 }
 
 fn thread_id() -> String {

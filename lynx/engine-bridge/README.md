@@ -25,8 +25,13 @@ windowed APIs such as `NativeView`.
 - `lynx/` contains the Rust library crate.
 - `lynx/src/sys/` contains checked-in C ABI types and runtime symbol loading.
 - `examples/headless/` contains a software-rendering example that writes a PNG.
-- `examples/headless/tests/fixtures/reference.png` is the checked-in screenshot
-  reference used by the PNG output comparison test.
+- `examples/headless/tests/fixtures/LynxResources.bundle` contains the
+  `lynx_core.js` resource bundle needed by the macOS runtime during tests.
+- `../../packages/genui/ui-judge/tests/fixtures/react/.generated/main.lynx.bundle`
+  is the compiled React fixture bundle used by the headless rendering
+  comparison test.
+- `../../packages/genui/ui-judge/tests/fixtures/react/main.lynx.snapshot.png`
+  is the checked-in screenshot reference for that bundle.
 - `tools/adhoc_sign_macos_sdk.py` ad-hoc signs a downloaded macOS runtime for
   local or CI loading.
 - `docs/architecture.md` describes the crate boundaries and ownership model.
@@ -87,8 +92,11 @@ cargo test --locked --all-targets --all-features
 The CI job downloads the macOS runtime dylib into a temporary SDK folder,
 ad-hoc signs it, sets `LYNX_SDK_DIR`, and runs the same checks.
 
-The headless example package also has a screenshot golden test. It writes a
-deterministic RGBA frame as PNG and compares it to the checked-in reference:
+The headless example package also has a screenshot golden test. It runs the
+checked-in React fixture bundle from
+`packages/genui/ui-judge/tests/fixtures/react/.generated/main.lynx.bundle`,
+captures the software-rendered frame, and compares it with
+`packages/genui/ui-judge/tests/fixtures/react/main.lynx.snapshot.png`:
 
 ```sh
 cargo test --locked -p lynx-headless-example --test screenshot
@@ -109,6 +117,7 @@ writes a PNG screenshot.
 ```sh
 LYNX_SDK_DIR=/path/to/lynx-sdk \
 cargo run -p lynx-headless-example -- \
+  --native-ui-loop \
   --bundle /path/to/main.lynx.bundle \
   --asset-root /path/to/assets \
   --asset-root /path/to/lynx-sdk/bundles/LynxResources.bundle/Contents/Resources \
@@ -125,6 +134,11 @@ the process main bundle. For a Cargo-built CLI this means placing
 JavaScript through a Lynx group with `--preload-js /path/to/lynx_core.js`; when
 `LYNX_SDK_DIR` points at a full SDK, it will try to discover that file
 automatically.
+
+Use `--native-ui-loop` on macOS when rendering real Lynx bundles. It lets the
+runtime drive its own Darwin/FML UI loop; the custom Rust task queue is useful
+for narrow task-runner experiments but does not drive every runtime actor needed
+by the React fixture.
 
 ## Troubleshooting
 

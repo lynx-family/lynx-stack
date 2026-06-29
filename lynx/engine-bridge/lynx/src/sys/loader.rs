@@ -197,6 +197,8 @@ pub struct LoadedLibrary {
   pub lynx_view_create:
     unsafe extern "C" fn(*mut lynx_view_builder_t, *mut c_void) -> *mut lynx_view_t,
   pub lynx_view_release: unsafe extern "C" fn(*mut lynx_view_t),
+  pub lynx_view_add_client: unsafe extern "C" fn(*mut lynx_view_t, *mut lynx_view_client_t),
+  pub lynx_view_remove_client: unsafe extern "C" fn(*mut lynx_view_t, *mut lynx_view_client_t),
   pub lynx_view_load_template: unsafe extern "C" fn(*mut lynx_view_t, *mut lynx_load_meta_t),
   pub lynx_view_update_data: unsafe extern "C" fn(*mut lynx_view_t, *mut lynx_update_meta_t),
   pub lynx_view_reload_template:
@@ -209,6 +211,36 @@ pub struct LoadedLibrary {
   pub lynx_view_enter_foreground: unsafe extern "C" fn(*mut lynx_view_t),
   pub lynx_view_enter_background: unsafe extern "C" fn(*mut lynx_view_t),
 
+  pub lynx_view_client_create: unsafe extern "C" fn(*mut c_void) -> *mut lynx_view_client_t,
+  pub lynx_view_client_get_user_data: unsafe extern "C" fn(*mut lynx_view_client_t) -> *mut c_void,
+  pub lynx_view_client_bind_on_page_start:
+    unsafe extern "C" fn(*mut lynx_view_client_t, Option<on_page_start>),
+  pub lynx_view_client_bind_on_load_success:
+    unsafe extern "C" fn(*mut lynx_view_client_t, Option<on_load_success>),
+  pub lynx_view_client_bind_on_first_screen:
+    unsafe extern "C" fn(*mut lynx_view_client_t, Option<on_first_screen>),
+  pub lynx_view_client_bind_on_page_updated:
+    unsafe extern "C" fn(*mut lynx_view_client_t, Option<on_page_updated>),
+  pub lynx_view_client_bind_on_data_updated:
+    unsafe extern "C" fn(*mut lynx_view_client_t, Option<on_data_updated>),
+  pub lynx_view_client_bind_on_destroy:
+    unsafe extern "C" fn(*mut lynx_view_client_t, Option<on_destroy>),
+  pub lynx_view_client_bind_on_runtime_ready:
+    unsafe extern "C" fn(*mut lynx_view_client_t, Option<on_runtime_ready>),
+  pub lynx_view_client_bind_on_received_error:
+    unsafe extern "C" fn(*mut lynx_view_client_t, Option<on_received_error>),
+  pub lynx_view_client_bind_on_timing_setup:
+    unsafe extern "C" fn(*mut lynx_view_client_t, Option<on_timing_setup>),
+  pub lynx_view_client_bind_on_timing_update:
+    unsafe extern "C" fn(*mut lynx_view_client_t, Option<on_timing_update>),
+  pub lynx_view_client_bind_on_enter_foreground:
+    unsafe extern "C" fn(*mut lynx_view_client_t, Option<on_enter_foreground>),
+  pub lynx_view_client_bind_on_enter_background:
+    unsafe extern "C" fn(*mut lynx_view_client_t, Option<on_enter_background>),
+  pub lynx_view_client_bind_on_frame_timing:
+    unsafe extern "C" fn(*mut lynx_view_client_t, Option<on_frame_timing>),
+  pub lynx_view_client_release: unsafe extern "C" fn(*mut lynx_view_client_t),
+
   pub lynx_load_meta_create: unsafe extern "C" fn() -> *mut lynx_load_meta_t,
   pub lynx_load_meta_set_url: unsafe extern "C" fn(*mut lynx_load_meta_t, *const c_char),
   pub lynx_load_meta_set_binary_data: unsafe extern "C" fn(
@@ -218,6 +250,8 @@ pub struct LoadedLibrary {
     Option<binary_data_dtor>,
     *mut c_void,
   ),
+  pub lynx_load_meta_set_template_bundle:
+    unsafe extern "C" fn(*mut lynx_load_meta_t, *mut lynx_template_bundle_t),
   pub lynx_load_meta_set_initial_data:
     unsafe extern "C" fn(*mut lynx_load_meta_t, *mut lynx_template_data_t),
   pub lynx_load_meta_set_global_props:
@@ -236,6 +270,17 @@ pub struct LoadedLibrary {
   pub lynx_template_data_mark_state: unsafe extern "C" fn(*mut lynx_template_data_t, *const c_char),
   pub lynx_template_data_set_read_only: unsafe extern "C" fn(*mut lynx_template_data_t, c_int),
   pub lynx_template_data_release: unsafe extern "C" fn(*mut lynx_template_data_t),
+
+  pub lynx_template_bundle_create: unsafe extern "C" fn(
+    *mut u8,
+    usize,
+    Option<binary_data_dtor>,
+    *mut c_void,
+  ) -> *mut lynx_template_bundle_t,
+  pub lynx_template_bundle_is_valid: unsafe extern "C" fn(*mut lynx_template_bundle_t) -> c_int,
+  pub lynx_template_bundle_get_error_message:
+    unsafe extern "C" fn(*mut lynx_template_bundle_t) -> *const c_char,
+  pub lynx_template_bundle_release: unsafe extern "C" fn(*mut lynx_template_bundle_t),
 
   pub lynx_generic_resource_fetcher_create_with_finalizer:
     unsafe extern "C" fn(
@@ -423,6 +468,8 @@ impl LoadedLibrary {
 
       lynx_view_create: load_symbol!(library, lynx_view_create),
       lynx_view_release: load_symbol!(library, lynx_view_release),
+      lynx_view_add_client: load_symbol!(library, lynx_view_add_client),
+      lynx_view_remove_client: load_symbol!(library, lynx_view_remove_client),
       lynx_view_load_template: load_symbol!(library, lynx_view_load_template),
       lynx_view_update_data: load_symbol!(library, lynx_view_update_data),
       lynx_view_reload_template: load_symbol!(library, lynx_view_reload_template),
@@ -433,9 +480,63 @@ impl LoadedLibrary {
       lynx_view_enter_foreground: load_symbol!(library, lynx_view_enter_foreground),
       lynx_view_enter_background: load_symbol!(library, lynx_view_enter_background),
 
+      lynx_view_client_create: load_symbol!(library, lynx_view_client_create),
+      lynx_view_client_get_user_data: load_symbol!(library, lynx_view_client_get_user_data),
+      lynx_view_client_bind_on_page_start: load_symbol!(
+        library,
+        lynx_view_client_bind_on_page_start
+      ),
+      lynx_view_client_bind_on_load_success: load_symbol!(
+        library,
+        lynx_view_client_bind_on_load_success
+      ),
+      lynx_view_client_bind_on_first_screen: load_symbol!(
+        library,
+        lynx_view_client_bind_on_first_screen
+      ),
+      lynx_view_client_bind_on_page_updated: load_symbol!(
+        library,
+        lynx_view_client_bind_on_page_updated
+      ),
+      lynx_view_client_bind_on_data_updated: load_symbol!(
+        library,
+        lynx_view_client_bind_on_data_updated
+      ),
+      lynx_view_client_bind_on_destroy: load_symbol!(library, lynx_view_client_bind_on_destroy),
+      lynx_view_client_bind_on_runtime_ready: load_symbol!(
+        library,
+        lynx_view_client_bind_on_runtime_ready
+      ),
+      lynx_view_client_bind_on_received_error: load_symbol!(
+        library,
+        lynx_view_client_bind_on_received_error
+      ),
+      lynx_view_client_bind_on_timing_setup: load_symbol!(
+        library,
+        lynx_view_client_bind_on_timing_setup
+      ),
+      lynx_view_client_bind_on_timing_update: load_symbol!(
+        library,
+        lynx_view_client_bind_on_timing_update
+      ),
+      lynx_view_client_bind_on_enter_foreground: load_symbol!(
+        library,
+        lynx_view_client_bind_on_enter_foreground
+      ),
+      lynx_view_client_bind_on_enter_background: load_symbol!(
+        library,
+        lynx_view_client_bind_on_enter_background
+      ),
+      lynx_view_client_bind_on_frame_timing: load_symbol!(
+        library,
+        lynx_view_client_bind_on_frame_timing
+      ),
+      lynx_view_client_release: load_symbol!(library, lynx_view_client_release),
+
       lynx_load_meta_create: load_symbol!(library, lynx_load_meta_create),
       lynx_load_meta_set_url: load_symbol!(library, lynx_load_meta_set_url),
       lynx_load_meta_set_binary_data: load_symbol!(library, lynx_load_meta_set_binary_data),
+      lynx_load_meta_set_template_bundle: load_symbol!(library, lynx_load_meta_set_template_bundle),
       lynx_load_meta_set_initial_data: load_symbol!(library, lynx_load_meta_set_initial_data),
       lynx_load_meta_set_global_props: load_symbol!(library, lynx_load_meta_set_global_props),
       lynx_load_meta_release: load_symbol!(library, lynx_load_meta_release),
@@ -452,6 +553,14 @@ impl LoadedLibrary {
       lynx_template_data_mark_state: load_symbol!(library, lynx_template_data_mark_state),
       lynx_template_data_set_read_only: load_symbol!(library, lynx_template_data_set_read_only),
       lynx_template_data_release: load_symbol!(library, lynx_template_data_release),
+
+      lynx_template_bundle_create: load_symbol!(library, lynx_template_bundle_create),
+      lynx_template_bundle_is_valid: load_symbol!(library, lynx_template_bundle_is_valid),
+      lynx_template_bundle_get_error_message: load_symbol!(
+        library,
+        lynx_template_bundle_get_error_message
+      ),
+      lynx_template_bundle_release: load_symbol!(library, lynx_template_bundle_release),
 
       lynx_generic_resource_fetcher_create_with_finalizer: load_symbol!(
         library,

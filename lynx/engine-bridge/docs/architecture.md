@@ -82,7 +82,12 @@ The runtime-loading test only runs the real loader when `LYNX_LIB_PATH` or
 `LYNX_SDK_DIR` is set. This keeps local unit tests independent from binary
 artifacts while still checking the downloaded dylib in CI.
 
-The headless example has a deterministic PNG comparison test that stores its
-reference image under `examples/headless/tests/fixtures/`. It validates the
-screenshot writer and golden-update workflow without requiring a runtime
-software-present callback.
+The headless example has a real rendering comparison test that runs
+`packages/genui/ui-judge/tests/fixtures/react/.generated/main.lynx.bundle` and
+compares the captured software frame with
+`packages/genui/ui-judge/tests/fixtures/react/main.lynx.snapshot.png`.
+The macOS test copies `examples/headless/tests/fixtures/LynxResources.bundle`
+beside the example binary before launch because the runtime resolves
+`lynx_core.js` through the process main bundle. Real bundle rendering uses the
+native Darwin/FML UI loop; the Rust queue-backed global UI runner is kept for
+focused runner experiments and does not drive every actor used by ReactLynx.

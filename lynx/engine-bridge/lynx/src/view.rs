@@ -2,10 +2,12 @@ use crate::buffer::CByteBuffer;
 use crate::group::LynxGroup;
 use crate::resource::{GenericResourceFetcher, ResourceFetcher};
 use crate::sys;
-use crate::{c_string, Env, Error, Result, WindowlessRenderer};
-use std::ffi::{c_void, CString};
+use crate::{c_str_to_string, c_string, Env, Error, Result, WindowlessRenderer};
+use std::collections::HashMap;
+use std::ffi::{c_char, c_void, CString};
+use std::panic::{catch_unwind, AssertUnwindSafe};
 use std::ptr;
-use std::sync::Arc;
+use std::sync::{Arc, Mutex, OnceLock};
 
 pub struct HeadlessViewBuilder {
   env: Env,
@@ -32,6 +34,108 @@ struct RawExtensionModule {
   creator: sys::extension_module_creator,
   is_lazy_create: bool,
   opaque: *mut c_void,
+}
+
+pub trait ViewClientHandler: Send + 'static {
+  fn on_page_start(&mut self, _url: &str) {}
+  fn on_load_success(&mut self) {}
+  fn on_first_screen(&mut self) {}
+  fn on_page_updated(&mut self) {}
+  fn on_data_updated(&mut self) {}
+  fn on_destroy(&mut self) {}
+  fn on_runtime_ready(&mut self) {}
+  fn on_received_error(&mut self, _error_code: i32, _message: &str) {}
+  fn on_timing_setup(&mut self, _timing_info: &str) {}
+  fn on_timing_update(&mut self, _timing_info: &str, _update_timing: &str, _update_flag: &str) {}
+  fn on_enter_foreground(&mut self) {}
+  fn on_enter_background(&mut self) {}
+  fn on_frame_timing(&mut self, _frame_start_time_in_ns: i64, _frame_finish_time_in_ns: i64) {}
+}
+
+struct ViewClientContext {
+  handler: Mutex<Box<dyn ViewClientHandler>>,
+}
+
+fn view_client_contexts() -> &'static Mutex<HashMap<usize, usize>> {
+  static CONTEXTS: OnceLock<Mutex<HashMap<usize, usize>>> = OnceLock::new();
+  CONTEXTS.get_or_init(|| Mutex::new(HashMap::new()))
+}
+
+pub struct ViewClient {
+  sys: Arc<sys::LoadedLibrary>,
+  raw: *mut sys::lynx_view_client_t,
+  context: *mut ViewClientContext,
+}
+
+impl ViewClient {
+  pub fn new(env: &Env, handler: impl ViewClientHandler) -> Result<Self> {
+    let sys = env.sys().clone();
+    let context = Box::new(ViewClientContext {
+      handler: Mutex::new(Box::new(handler)),
+    });
+    let context_ptr = Box::into_raw(context);
+    let raw = unsafe { (sys.lynx_view_client_create)(context_ptr.cast::<c_void>()) };
+    if raw.is_null() {
+      unsafe {
+        drop(Box::from_raw(context_ptr));
+      }
+      return Err(Error::NullPointer {
+        operation: "create view client",
+      });
+    }
+
+    view_client_contexts()
+      .lock()
+      .expect("view client context lock poisoned")
+      .insert(raw as usize, context_ptr as usize);
+
+    unsafe {
+      (sys.lynx_view_client_bind_on_page_start)(raw, Some(view_client_on_page_start));
+      (sys.lynx_view_client_bind_on_load_success)(raw, Some(view_client_on_load_success));
+      (sys.lynx_view_client_bind_on_first_screen)(raw, Some(view_client_on_first_screen));
+      (sys.lynx_view_client_bind_on_page_updated)(raw, Some(view_client_on_page_updated));
+      (sys.lynx_view_client_bind_on_data_updated)(raw, Some(view_client_on_data_updated));
+      (sys.lynx_view_client_bind_on_destroy)(raw, Some(view_client_on_destroy));
+      (sys.lynx_view_client_bind_on_runtime_ready)(raw, Some(view_client_on_runtime_ready));
+      (sys.lynx_view_client_bind_on_received_error)(raw, Some(view_client_on_received_error));
+      (sys.lynx_view_client_bind_on_timing_setup)(raw, Some(view_client_on_timing_setup));
+      (sys.lynx_view_client_bind_on_timing_update)(raw, Some(view_client_on_timing_update));
+      (sys.lynx_view_client_bind_on_enter_foreground)(raw, Some(view_client_on_enter_foreground));
+      (sys.lynx_view_client_bind_on_enter_background)(raw, Some(view_client_on_enter_background));
+      (sys.lynx_view_client_bind_on_frame_timing)(raw, Some(view_client_on_frame_timing));
+    }
+
+    Ok(Self {
+      sys,
+      raw,
+      context: context_ptr,
+    })
+  }
+
+  fn raw(&self) -> *mut sys::lynx_view_client_t {
+    self.raw
+  }
+}
+
+impl Drop for ViewClient {
+  fn drop(&mut self) {
+    if !self.raw.is_null() {
+      view_client_contexts()
+        .lock()
+        .expect("view client context lock poisoned")
+        .remove(&(self.raw as usize));
+      unsafe {
+        (self.sys.lynx_view_client_release)(self.raw);
+      }
+      self.raw = ptr::null_mut();
+    }
+    if !self.context.is_null() {
+      unsafe {
+        drop(Box::from_raw(self.context));
+      }
+      self.context = ptr::null_mut();
+    }
+  }
 }
 
 impl HeadlessViewBuilder {
@@ -187,6 +291,7 @@ impl HeadlessViewBuilder {
       renderer: self.renderer,
       _resource_fetcher: self.resource_fetcher,
       _lynx_group: self.lynx_group,
+      clients: Vec::new(),
     })
   }
 }
@@ -213,6 +318,7 @@ pub struct HeadlessView {
   renderer: WindowlessRenderer,
   _resource_fetcher: Option<GenericResourceFetcher>,
   _lynx_group: Option<LynxGroup>,
+  clients: Vec<ViewClient>,
 }
 
 impl HeadlessView {
@@ -222,6 +328,13 @@ impl HeadlessView {
 
   pub fn renderer(&self) -> &WindowlessRenderer {
     &self.renderer
+  }
+
+  pub fn add_client(&mut self, client: ViewClient) {
+    unsafe {
+      (self.env.sys().lynx_view_add_client)(self.raw, client.raw());
+    }
+    self.clients.push(client);
   }
 
   pub fn load_template_from_url(&self, url: &str, initial_data_json: Option<&str>) -> Result<()> {
@@ -256,6 +369,25 @@ impl HeadlessView {
     self.load_template(url, Some(bytes), initial_data_json, global_props_json)
   }
 
+  pub fn load_template_bundle_bytes(
+    &self,
+    url: &str,
+    bytes: &[u8],
+    initial_data_json: Option<&str>,
+  ) -> Result<()> {
+    self.load_template_bundle(url, bytes, initial_data_json, None)
+  }
+
+  pub fn load_template_bundle_bytes_with_global_props(
+    &self,
+    url: &str,
+    bytes: &[u8],
+    initial_data_json: Option<&str>,
+    global_props_json: Option<&str>,
+  ) -> Result<()> {
+    self.load_template_bundle(url, bytes, initial_data_json, global_props_json)
+  }
+
   pub fn load_template(
     &self,
     url: &str,
@@ -273,6 +405,41 @@ impl HeadlessView {
         let (ptr, len, dtor, opaque) = binary_data.into_ffi();
         (sys.lynx_load_meta_set_binary_data)(meta.raw, ptr, len, dtor, opaque);
       }
+    }
+    let initial_data = match initial_data_json {
+      Some(json) => Some(TemplateData::from_json(sys.clone(), json)?),
+      None => None,
+    };
+    let global_props = match global_props_json {
+      Some(json) => Some(TemplateData::from_json(sys.clone(), json)?),
+      None => None,
+    };
+    unsafe {
+      if let Some(data) = &initial_data {
+        (sys.lynx_load_meta_set_initial_data)(meta.raw, data.raw);
+      }
+      if let Some(data) = &global_props {
+        (sys.lynx_load_meta_set_global_props)(meta.raw, data.raw);
+      }
+      (sys.lynx_view_load_template)(self.raw, meta.raw);
+    }
+    Ok(())
+  }
+
+  fn load_template_bundle(
+    &self,
+    url: &str,
+    bytes: &[u8],
+    initial_data_json: Option<&str>,
+    global_props_json: Option<&str>,
+  ) -> Result<()> {
+    let sys = self.env.sys().clone();
+    let meta = LoadMeta::new(sys.clone())?;
+    let url = c_string(url, "template_url")?;
+    let template_bundle = TemplateBundle::from_bytes(sys.clone(), bytes)?;
+    unsafe {
+      (sys.lynx_load_meta_set_url)(meta.raw, url.as_ptr());
+      (sys.lynx_load_meta_set_template_bundle)(meta.raw, template_bundle.raw);
     }
     let initial_data = match initial_data_json {
       Some(json) => Some(TemplateData::from_json(sys.clone(), json)?),
@@ -393,6 +560,112 @@ impl Drop for HeadlessView {
   }
 }
 
+fn with_view_client_handler(
+  client: *mut sys::lynx_view_client_t,
+  f: impl FnOnce(&mut dyn ViewClientHandler),
+) {
+  let context = view_client_contexts()
+    .lock()
+    .expect("view client context lock poisoned")
+    .get(&(client as usize))
+    .copied();
+  let Some(context) = context else {
+    return;
+  };
+  let context = unsafe { &*(context as *const ViewClientContext) };
+  let result = catch_unwind(AssertUnwindSafe(|| {
+    if let Ok(mut handler) = context.handler.lock() {
+      f(handler.as_mut());
+    }
+  }));
+  if result.is_err() {
+    eprintln!("panic in Lynx view client callback");
+  }
+}
+
+unsafe extern "C" fn view_client_on_page_start(
+  client: *mut sys::lynx_view_client_t,
+  url: *const c_char,
+) {
+  let url = unsafe { c_str_to_string(url) };
+  with_view_client_handler(client, |handler| handler.on_page_start(&url));
+}
+
+unsafe extern "C" fn view_client_on_load_success(client: *mut sys::lynx_view_client_t) {
+  with_view_client_handler(client, |handler| handler.on_load_success());
+}
+
+unsafe extern "C" fn view_client_on_first_screen(client: *mut sys::lynx_view_client_t) {
+  with_view_client_handler(client, |handler| handler.on_first_screen());
+}
+
+unsafe extern "C" fn view_client_on_page_updated(client: *mut sys::lynx_view_client_t) {
+  with_view_client_handler(client, |handler| handler.on_page_updated());
+}
+
+unsafe extern "C" fn view_client_on_data_updated(client: *mut sys::lynx_view_client_t) {
+  with_view_client_handler(client, |handler| handler.on_data_updated());
+}
+
+unsafe extern "C" fn view_client_on_destroy(client: *mut sys::lynx_view_client_t) {
+  with_view_client_handler(client, |handler| handler.on_destroy());
+}
+
+unsafe extern "C" fn view_client_on_runtime_ready(client: *mut sys::lynx_view_client_t) {
+  with_view_client_handler(client, |handler| handler.on_runtime_ready());
+}
+
+unsafe extern "C" fn view_client_on_received_error(
+  client: *mut sys::lynx_view_client_t,
+  error_code: i32,
+  message: *const c_char,
+) {
+  let message = unsafe { c_str_to_string(message) };
+  with_view_client_handler(client, |handler| {
+    handler.on_received_error(error_code, &message)
+  });
+}
+
+unsafe extern "C" fn view_client_on_timing_setup(
+  client: *mut sys::lynx_view_client_t,
+  timing_info: *const c_char,
+) {
+  let timing_info = unsafe { c_str_to_string(timing_info) };
+  with_view_client_handler(client, |handler| handler.on_timing_setup(&timing_info));
+}
+
+unsafe extern "C" fn view_client_on_timing_update(
+  client: *mut sys::lynx_view_client_t,
+  timing_info: *const c_char,
+  update_timing: *const c_char,
+  update_flag: *const c_char,
+) {
+  let timing_info = unsafe { c_str_to_string(timing_info) };
+  let update_timing = unsafe { c_str_to_string(update_timing) };
+  let update_flag = unsafe { c_str_to_string(update_flag) };
+  with_view_client_handler(client, |handler| {
+    handler.on_timing_update(&timing_info, &update_timing, &update_flag)
+  });
+}
+
+unsafe extern "C" fn view_client_on_enter_foreground(client: *mut sys::lynx_view_client_t) {
+  with_view_client_handler(client, |handler| handler.on_enter_foreground());
+}
+
+unsafe extern "C" fn view_client_on_enter_background(client: *mut sys::lynx_view_client_t) {
+  with_view_client_handler(client, |handler| handler.on_enter_background());
+}
+
+unsafe extern "C" fn view_client_on_frame_timing(
+  client: *mut sys::lynx_view_client_t,
+  frame_start_time_in_ns: i64,
+  frame_finish_time_in_ns: i64,
+) {
+  with_view_client_handler(client, |handler| {
+    handler.on_frame_timing(frame_start_time_in_ns, frame_finish_time_in_ns)
+  });
+}
+
 struct TemplateData {
   sys: Arc<sys::LoadedLibrary>,
   raw: *mut sys::lynx_template_data_t,
@@ -416,6 +689,47 @@ impl Drop for TemplateData {
     if !self.raw.is_null() {
       unsafe {
         (self.sys.lynx_template_data_release)(self.raw);
+      }
+      self.raw = ptr::null_mut();
+    }
+  }
+}
+
+struct TemplateBundle {
+  sys: Arc<sys::LoadedLibrary>,
+  raw: *mut sys::lynx_template_bundle_t,
+}
+
+impl TemplateBundle {
+  fn from_bytes(sys: Arc<sys::LoadedLibrary>, bytes: &[u8]) -> Result<Self> {
+    let buffer = CByteBuffer::copy_from_slice(bytes);
+    let (ptr, len, dtor, opaque) = buffer.into_ffi();
+    let raw = unsafe { (sys.lynx_template_bundle_create)(ptr, len, dtor, opaque) };
+    if raw.is_null() {
+      return Err(Error::NullPointer {
+        operation: "create template bundle",
+      });
+    }
+    let bundle = Self { sys, raw };
+    if unsafe { (bundle.sys.lynx_template_bundle_is_valid)(bundle.raw) } == 0 {
+      let message = unsafe {
+        c_str_to_string((bundle.sys.lynx_template_bundle_get_error_message)(
+          bundle.raw,
+        ))
+      };
+      return Err(Error::Message(format!(
+        "failed to decode template bundle: {message}"
+      )));
+    }
+    Ok(bundle)
+  }
+}
+
+impl Drop for TemplateBundle {
+  fn drop(&mut self) {
+    if !self.raw.is_null() {
+      unsafe {
+        (self.sys.lynx_template_bundle_release)(self.raw);
       }
       self.raw = ptr::null_mut();
     }
