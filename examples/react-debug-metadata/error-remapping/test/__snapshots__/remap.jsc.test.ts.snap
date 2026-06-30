@@ -7,10 +7,9 @@ exports[`1 · LazyComponent (dynamic) > L1. nested deep stack (dynamic, backgrou
   "release": "debugmetadata:<release>",
   "steps": [
     {
-      "colno": 13,
+      "colno": 9,
       "context_line": "  throw new Error('boom from deep nested call (LazyComponent, background)'); // LazyComponent.tsx lazyDeepInner",
       "filename": "src/LazyComponent.tsx",
-      "function_name": "Error",
       "kind": "source-map",
       "lineno": 11,
       "post_context": [
@@ -141,10 +140,9 @@ exports[`2 · Host (App.tsx) > H1. throw new Error (host, background) 1`] = `
   "release": "debugmetadata:<release>",
   "steps": [
     {
-      "colno": 13,
+      "colno": 9,
       "context_line": "  throw new Error('explicit throw new Error (App.tsx host, background)'); // App.tsx appCrashThrow",
       "filename": "src/App.tsx",
-      "function_name": "Error",
       "kind": "source-map",
       "lineno": 36,
       "post_context": [
@@ -204,10 +202,9 @@ exports[`2 · Host (App.tsx) > H3. nested deep stack (host, background) 1`] = `
   "release": "debugmetadata:<release>",
   "steps": [
     {
-      "colno": 13,
+      "colno": 9,
       "context_line": "  throw new Error('boom from App.tsx deep nested call (host, background)'); // App.tsx appDeepInner",
       "filename": "src/App.tsx",
-      "function_name": "Error",
       "kind": "source-map",
       "lineno": 20,
       "post_context": [
@@ -339,10 +336,9 @@ exports[`3 · CrashDemo (host) > 3. throw new Error (background) 1`] = `
   "release": "debugmetadata:<release>",
   "steps": [
     {
-      "colno": 13,
+      "colno": 9,
       "context_line": "  throw new Error('explicit throw new Error (background)'); // CrashDemo.tsx crashExplicit",
       "filename": "src/CrashDemo.tsx",
-      "function_name": "Error",
       "kind": "source-map",
       "lineno": 38,
       "post_context": [
@@ -371,10 +367,9 @@ exports[`3 · CrashDemo (host) > 4. nested deep stack (background) 1`] = `
   "release": "debugmetadata:<release>",
   "steps": [
     {
-      "colno": 13,
+      "colno": 9,
       "context_line": "  throw new Error('boom from deep nested call (background)'); // CrashDemo.tsx innerThrow",
       "filename": "src/CrashDemo.tsx",
-      "function_name": "Error",
       "kind": "source-map",
       "lineno": 15,
       "post_context": [

@@ -12,7 +12,12 @@ import { existsSync, readFileSync, readdirSync } from 'node:fs';
 import path from 'node:path';
 
 import { SourceMapConsumer } from 'source-map';
-import type { RawSourceMap } from 'source-map';
+import type {
+  BasicSourceMapConsumer,
+  IndexedSourceMapConsumer,
+  MappingItem,
+  RawSourceMap,
+} from 'source-map';
 
 export interface MapEntry {
   kind: string;
@@ -74,8 +79,50 @@ function sliceContext(
 }
 
 /**
+ * Greatest-lower-bound lookup that mirrors the Go backend (biz_sourcemap's
+ * sourcemap_parser uses `sort.Search`): the mapping with the greatest generated
+ * position `<= (genLine, genCol0)`, and on a generated-column tie the FIRST one.
+ *
+ * `source-map`'s `originalPositionFor` resolves a same-column tie by where its
+ * recursive binary search happens to land, so it can return a different
+ * duplicate than the backend and flip across builds when the mapping array
+ * shifts. A minified `new Error(...)` -> `Error(...)` is exactly this case: the
+ * dropped `new` collapses the statement start (no name) and the `Error`
+ * identifier (name "Error") onto one generated column, so the two co-located
+ * mappings are equally valid and only the tie-break decides. This picks the
+ * backend's choice deterministically.
+ */
+function greatestLowerBound(
+  consumer: BasicSourceMapConsumer | IndexedSourceMapConsumer,
+  genLine: number,
+  genCol0: number,
+): MappingItem | null {
+  let best: MappingItem | null = null;
+  consumer.eachMapping(
+    (m) => {
+      const atOrBefore = m.generatedLine < genLine
+        || (m.generatedLine === genLine && m.generatedColumn <= genCol0);
+      if (!atOrBefore) return;
+      if (
+        best === null
+        || m.generatedLine > best.generatedLine
+        || (m.generatedLine === best.generatedLine
+          && m.generatedColumn > best.generatedColumn)
+      ) {
+        best = m;
+      }
+    },
+    null,
+    SourceMapConsumer.GENERATED_ORDER,
+  );
+  return best;
+}
+
+/**
  * Reverse a generated position through a source map into a full step (with
  * context lines), the same shape biz_sourcemap returns. `genCol0` is 0-based.
+ * Uses {@link greatestLowerBound} rather than `originalPositionFor` so the
+ * duplicate-column tie-break matches the Go backend.
  */
 export async function resolveStep(
   map: RawSourceMap,
@@ -83,21 +130,18 @@ export async function resolveStep(
   genCol0: number,
 ): Promise<Step | null> {
   return SourceMapConsumer.with(map, null, (consumer) => {
-    const pos = consumer.originalPositionFor({
-      line: genLine,
-      column: Math.max(0, genCol0),
-    });
-    if (!pos.source || pos.line == null) return null;
-    const content = consumer.sourceContentFor(pos.source, true);
+    const m = greatestLowerBound(consumer, genLine, Math.max(0, genCol0));
+    if (m === null || !m.source) return null;
+    const content = consumer.sourceContentFor(m.source, true);
     const lines = content ? content.split('\n') : [];
     const step: Step = {
       kind: 'source-map',
-      filename: normalizeSource(pos.source),
-      lineno: pos.line,
-      colno: (pos.column ?? 0) + 1,
-      ...sliceContext(lines, pos.line),
+      filename: normalizeSource(m.source),
+      lineno: m.originalLine,
+      colno: m.originalColumn + 1,
+      ...sliceContext(lines, m.originalLine),
     };
-    if (pos.name) step.function_name = pos.name;
+    if (m.name) step.function_name = m.name;
     return step;
   });
 }
