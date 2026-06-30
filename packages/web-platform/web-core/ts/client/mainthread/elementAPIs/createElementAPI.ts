@@ -4,6 +4,7 @@ import { setElementPropertyOrAttribute } from '../utils/setElementPropertyOrAttr
 import {
   AnimationOperation,
   cssIdAttribute,
+  elementTemplateSlotAnchorPrefix,
   LYNX_TAG_TO_HTML_TAG_MAP,
   LYNX_TIMING_FLAG_ATTRIBUTE,
   lynxDefaultDisplayLinearAttribute,
@@ -42,11 +43,10 @@ import {
   __QuerySelector,
   __QuerySelectorAll,
 } from './pureElementPAPIs.js';
-import { elementTemplateSlotAnchorPrefix } from '../registerElementTemplates.js';
+import { templateManager } from '../TemplateManager.js';
 import type {
   AddEventPAPI,
   DecoratedHTMLElement,
-  DecodedTemplate,
   ElementPAPIs,
   SerializedElementTemplateNode,
   SetCSSIdPAPI,
@@ -105,9 +105,7 @@ export function createElementAPI(
   transform_vw: boolean,
   transform_vh: boolean,
   transform_rem: boolean,
-  resolveElementTemplateBundle?: (
-    bundleUrl?: string | null,
-  ) => DecodedTemplate | undefined,
+  templateUrl = '',
 ): ElementPAPIs {
   let wasmContext = new MainThreadWasmContext(
     rootDom,
@@ -430,7 +428,7 @@ export function createElementAPI(
   const elementPAPIs: ElementPAPIs = {
     __CreateView(parentComponentUniqueId: number) {
       const dom = document.createElement('x-view') as DecoratedHTMLElement;
-      dom[uniqueIdSymbol] = wasmContext.create_element(
+      dom[uniqueIdSymbol] = wasmContext.create_element_common(
         parentComponentUniqueId,
         dom,
         new WeakRef(dom),
@@ -439,7 +437,7 @@ export function createElementAPI(
     },
     __CreateText(parentComponentUniqueId) {
       const dom = document.createElement('x-text') as DecoratedHTMLElement;
-      dom[uniqueIdSymbol] = wasmContext.create_element(
+      dom[uniqueIdSymbol] = wasmContext.create_element_common(
         parentComponentUniqueId,
         dom,
         new WeakRef(dom),
@@ -448,7 +446,7 @@ export function createElementAPI(
     },
     __CreateImage(parentComponentUniqueId) {
       const dom = document.createElement('x-image') as DecoratedHTMLElement;
-      dom[uniqueIdSymbol] = wasmContext.create_element(
+      dom[uniqueIdSymbol] = wasmContext.create_element_common(
         parentComponentUniqueId,
         dom,
         new WeakRef(dom),
@@ -459,7 +457,7 @@ export function createElementAPI(
       const dom = document.createElement(
         LYNX_TAG_TO_HTML_TAG_MAP['frame']!,
       ) as DecoratedHTMLElement;
-      dom[uniqueIdSymbol] = wasmContext.create_element(
+      dom[uniqueIdSymbol] = wasmContext.create_element_common(
         parentComponentUniqueId,
         dom,
         new WeakRef(dom),
@@ -469,7 +467,7 @@ export function createElementAPI(
     __CreateRawText(text) {
       const dom = document.createElement('raw-text') as DecoratedHTMLElement;
       dom.setAttribute('text', text);
-      dom[uniqueIdSymbol] = wasmContext.create_element(
+      dom[uniqueIdSymbol] = wasmContext.create_element_common(
         -1,
         dom,
         new WeakRef(dom),
@@ -479,7 +477,7 @@ export function createElementAPI(
     __CreateScrollView(parentComponentUniqueId) {
       const dom = document.createElement('scroll-view') as DecoratedHTMLElement;
 
-      dom[uniqueIdSymbol] = wasmContext.create_element(
+      dom[uniqueIdSymbol] = wasmContext.create_element_common(
         parentComponentUniqueId,
         dom,
         new WeakRef(dom),
@@ -490,7 +488,7 @@ export function createElementAPI(
       const dom = document.createElement(
         LYNX_TAG_TO_HTML_TAG_MAP[tagName] ?? tagName,
       ) as DecoratedHTMLElement;
-      dom[uniqueIdSymbol] = wasmContext.create_element(
+      dom[uniqueIdSymbol] = wasmContext.create_element_common(
         parentComponentUniqueId,
         dom,
         new WeakRef(dom),
@@ -505,7 +503,7 @@ export function createElementAPI(
       name,
     ) {
       const dom = document.createElement('x-view') as DecoratedHTMLElement;
-      dom[uniqueIdSymbol] = wasmContext.create_element(
+      dom[uniqueIdSymbol] = wasmContext.create_element_common(
         parentComponentUniqueId,
         dom,
         new WeakRef(dom),
@@ -525,7 +523,7 @@ export function createElementAPI(
       const dom = document.createElement(
         'lynx-wrapper',
       ) as DecoratedHTMLElement;
-      dom[uniqueIdSymbol] = wasmContext.create_element(
+      dom[uniqueIdSymbol] = wasmContext.create_element_common(
         parentComponentUniqueId,
         dom,
         new WeakRef(dom),
@@ -536,7 +534,7 @@ export function createElementAPI(
       const dom = document.createElement('x-list') as DecoratedHTMLElement;
       dom.componentAtIndex = componentAtIndex;
       dom.enqueueComponent = enqueueComponent;
-      dom[uniqueIdSymbol] = wasmContext.create_element(
+      dom[uniqueIdSymbol] = wasmContext.create_element_common(
         parentComponentUniqueId,
         dom,
         new WeakRef(dom),
@@ -550,7 +548,9 @@ export function createElementAPI(
       elementSlots,
       uid,
     ) {
-      const registered = resolveElementTemplateBundle?.(bundleUrl)
+      const registered = templateManager.getBundle(
+        bundleUrl && bundleUrl !== '__Card__' ? bundleUrl : templateUrl,
+      )
         ?.elementTemplateDefinitions?.get(templateKey);
       if (!registered) {
         throw new Error(`Element template not found: ${templateKey}`);
@@ -592,12 +592,12 @@ export function createElementAPI(
 
       const uniqueIdsByIndex: number[] = [];
       for (const element of elements) {
-        const cssId = Number(element.getAttribute(cssIdAttribute) ?? 0) || 0;
-        const uniqueId = wasmContext.create_element(
+        const cssId = element.getAttribute(cssIdAttribute);
+        const uniqueId = wasmContext.create_element_common(
           0,
           element,
           new WeakRef(element),
-          cssId,
+          cssId == null ? undefined : Number(cssId) || 0,
           undefined,
           undefined,
         );
@@ -695,13 +695,10 @@ export function createElementAPI(
       const dom = document.createElement(
         LYNX_TAG_TO_HTML_TAG_MAP[tag] ?? tag,
       ) as DecoratedHTMLElement;
-      const uniqueId = wasmContext.create_element(
+      const uniqueId = wasmContext.create_element_common(
         0,
         dom,
         new WeakRef(dom),
-        0,
-        undefined,
-        undefined,
       );
       dom[uniqueIdSymbol] = uniqueId;
       dom.setAttribute(lynxElementTemplateMarkerAttribute, String(uniqueId));
@@ -819,7 +816,7 @@ export function createElementAPI(
       const dom = document.createElement(
         'div',
       ) as HTMLElement as DecoratedHTMLElement;
-      const uniqueId = wasmContext.create_element(
+      const uniqueId = wasmContext.create_element_common(
         0,
         dom,
         new WeakRef(dom),

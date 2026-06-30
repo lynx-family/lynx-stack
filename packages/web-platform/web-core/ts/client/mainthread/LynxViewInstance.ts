@@ -156,12 +156,7 @@ export class LynxViewInstance implements AsyncDisposable {
         this.transformVW,
         this.transformVH,
         this.transformREM,
-        bundleUrl =>
-          templateManager.getBundle(
-            bundleUrl && bundleUrl !== '__Card__'
-              ? bundleUrl
-              : this.templateUrl,
-          ),
+        this.templateUrl,
       ),
       createMainThreadGlobalAPIs(
         this,

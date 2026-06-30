@@ -87,7 +87,7 @@ impl MainThreadWasmContext {
     self.page_element_unique_id = Some(unique_id);
   }
 
-  pub fn create_element(
+  pub fn create_element_common(
     self: &mut MainThreadWasmContext,
     parent_component_unique_id: usize,
     dom: web_sys::HtmlElement,

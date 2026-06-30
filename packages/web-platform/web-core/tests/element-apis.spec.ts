@@ -24,6 +24,7 @@ import { encodeCSS } from '../ts/encode/encodeCSS.js';
 import { createMainThreadGlobalAPIs } from '../ts/client/mainthread/createMainThreadGlobalAPIs.js';
 import type { LynxViewInstance } from '../ts/client/mainthread/LynxViewInstance.js';
 import { ensureElementTemplateDefinitions } from '../ts/client/mainthread/registerElementTemplates.js';
+import { templateManager } from '../ts/client/mainthread/TemplateManager.js';
 import { createTestLynxViewInstance } from './createTestLynxViewInstance.js';
 import type {
   DecodedTemplate,
@@ -53,6 +54,9 @@ describe('Element APIs', () => {
     lynxViewDom = document.createElement('div') as unknown as HTMLElement;
     rootDom = lynxViewDom.attachShadow({ mode: 'open' });
     elementTemplateBundles = new Map();
+    rstest.spyOn(templateManager, 'getBundle').mockImplementation(url =>
+      elementTemplateBundles.get(url)
+    );
 
     mtsBinding = new WASMJSBinding(createTestLynxViewInstance(rootDom));
     mtsGlobalThis = createElementAPI(
@@ -64,12 +68,7 @@ describe('Element APIs', () => {
       false,
       false,
       false,
-      bundleUrl =>
-        elementTemplateBundles.get(
-          bundleUrl && bundleUrl !== '__Card__'
-            ? bundleUrl
-            : mainElementTemplateBundleUrl,
-        ),
+      mainElementTemplateBundleUrl,
     );
   });
   function registerTestElementTemplates(

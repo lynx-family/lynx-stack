@@ -32,7 +32,7 @@ export class MainThreadWasmContext {
     add_element_template_instance_element(root_unique_id: number, element_index: number, target_unique_id: number): void;
     add_run_worklet_event(unique_id: number, event_type: string, event_name: string, event_handler_identifier?: any | null): void;
     common_event_handler(event: any, bubble_unique_id_path: Uint32Array, event_name: string, is_bubble: boolean): void;
-    create_element(parent_component_unique_id: number, dom: HTMLElement, dom_ref: WeakRef<object>, explicit_css_id?: number | null, component_css_id?: number | null, component_id?: string | null): number;
+    create_element_common(parent_component_unique_id: number, dom: HTMLElement, dom_ref: WeakRef<object>, explicit_css_id?: number | null, component_css_id?: number | null, component_id?: string | null): number;
     create_element_template_instance(root_unique_id: number): void;
     create_typed_element_template_instance(root_unique_id: number): void;
     dispatch_event_by_path(bubble_unique_id_path: Uint32Array, event_name: string, is_capture: boolean, serialized_event: any): boolean;
@@ -224,7 +224,7 @@ export interface InitOutput {
     readonly mainthreadwasmcontext_add_element_template_instance_element: (a: number, b: number, c: number, d: number) => [number, number];
     readonly mainthreadwasmcontext_add_run_worklet_event: (a: number, b: number, c: number, d: number, e: number, f: number, g: number) => void;
     readonly mainthreadwasmcontext_common_event_handler: (a: number, b: any, c: number, d: number, e: number, f: number, g: number) => void;
-    readonly mainthreadwasmcontext_create_element: (a: number, b: number, c: any, d: any, e: number, f: number, g: number, h: number) => number;
+    readonly mainthreadwasmcontext_create_element_common: (a: number, b: number, c: any, d: any, e: number, f: number, g: number, h: number) => number;
     readonly mainthreadwasmcontext_create_element_template_instance: (a: number, b: number) => [number, number];
     readonly mainthreadwasmcontext_create_typed_element_template_instance: (a: number, b: number) => [number, number];
     readonly mainthreadwasmcontext_dispatch_event_by_path: (a: number, b: number, c: number, d: number, e: number, f: number, g: any) => number;

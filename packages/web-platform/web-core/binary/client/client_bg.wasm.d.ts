@@ -29,7 +29,7 @@ export const mainthreadwasmcontext_add_dataset: (a: number, b: number, c: any, d
 export const mainthreadwasmcontext_add_element_template_instance_element: (a: number, b: number, c: number, d: number) => [number, number];
 export const mainthreadwasmcontext_add_run_worklet_event: (a: number, b: number, c: number, d: number, e: number, f: number, g: number) => void;
 export const mainthreadwasmcontext_common_event_handler: (a: number, b: any, c: number, d: number, e: number, f: number, g: number) => void;
-export const mainthreadwasmcontext_create_element: (a: number, b: number, c: any, d: any, e: number, f: number, g: number, h: number) => number;
+export const mainthreadwasmcontext_create_element_common: (a: number, b: number, c: any, d: any, e: number, f: number, g: number, h: number) => number;
 export const mainthreadwasmcontext_create_element_template_instance: (a: number, b: number) => [number, number];
 export const mainthreadwasmcontext_create_typed_element_template_instance: (a: number, b: number) => [number, number];
 export const mainthreadwasmcontext_dispatch_event_by_path: (a: number, b: number, c: number, d: number, e: number, f: number, g: any) => number;

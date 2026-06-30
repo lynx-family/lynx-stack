@@ -8,10 +8,12 @@ import type {
   DecodedTemplate,
   ElementTemplateElementNode,
 } from '../../types/index.js';
-import { cssIdAttribute, LYNX_TAG_TO_HTML_TAG_MAP } from '../../constants.js';
+import {
+  cssIdAttribute,
+  elementTemplateSlotAnchorPrefix,
+  LYNX_TAG_TO_HTML_TAG_MAP,
+} from '../../constants.js';
 import { wasmInstance } from '../wasm.js';
-
-export const elementTemplateSlotAnchorPrefix = 'lynx-et-slot:';
 
 export function ensureElementTemplateDefinitions(
   bundle: DecodedTemplate | undefined,

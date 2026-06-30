@@ -15,6 +15,9 @@ export const lynxDisposedAttribute = /*#__PURE__*/ 'l-disposed' as const;
 export const lynxElementTemplateMarkerAttribute =
   /*#__PURE__*/ 'l-template' as const;
 
+export const elementTemplateSlotAnchorPrefix =
+  /*#__PURE__*/ 'lynx-et-slot:' as const;
+
 export const lynxPartIdAttribute = /*#__PURE__*/ 'dirtyID' as const;
 
 export const lynxDefaultDisplayLinearAttribute = /*#__PURE__*/
