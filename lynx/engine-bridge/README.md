@@ -112,8 +112,10 @@ ad-hoc signs it, sets `LYNX_SDK_DIR`, and runs the same checks.
 The headless example package also has a screenshot golden test. It runs the
 checked-in React fixture bundle from
 `packages/genui/ui-judge/tests/fixtures/react/.generated/main.lynx.bundle`,
-captures the software-rendered frame, and compares it with
-`packages/genui/ui-judge/tests/fixtures/react/main.lynx.snapshot.png`:
+captures the software-rendered frame, and compares the decoded RGBA pixels
+against
+`packages/genui/ui-judge/tests/fixtures/react/main.lynx.snapshot.png` with a
+small tolerance for runner-level antialiasing differences:
 
 ```sh
 cargo test --locked -p lynx-headless-example --test screenshot
