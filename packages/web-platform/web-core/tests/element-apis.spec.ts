@@ -347,6 +347,38 @@ describe('Element APIs', () => {
     });
   });
 
+  test('element template serialization does not pad missing trailing attribute slots', () => {
+    registerTestElementTemplates([
+      {
+        templateId: '_et_sparse_attrs',
+        compiledTemplate: {
+          kind: 'element',
+          type: 'view',
+          attributesArray: [
+            { kind: 'slot', key: 'id', attrSlotIndex: 0 },
+            { kind: 'slot', key: 'class', attrSlotIndex: 3 },
+          ],
+        },
+      },
+    ]);
+
+    const root = mtsGlobalThis.__CreateElementTemplate(
+      '_et_sparse_attrs',
+      null,
+      ['stable'],
+      null,
+      11,
+    );
+
+    expect(root.id).toBe('stable');
+    expect(root.className).toBe('');
+    expect(mtsGlobalThis.__SerializeElementTemplate(root)).toMatchObject({
+      uid: 11,
+      templateKey: '_et_sparse_attrs',
+      attributeSlots: ['stable'],
+    });
+  });
+
   test('typed element template page reuses page API as non-serialized host', () => {
     registerTestElementTemplates([
       builtinRawTextTemplate,

@@ -14,7 +14,6 @@ import type { ElementTemplateAsset } from './ElementTemplateData.js';
 export interface DecodedElementTemplateDefinition {
   template: HTMLTemplateElement;
   definition: ElementTemplateDefinition;
-  maxAttributeSlotIndex: number;
 }
 
 export interface DecodedTemplate {

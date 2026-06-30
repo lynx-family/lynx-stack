@@ -611,13 +611,9 @@ export function createElementAPI(
         String(rootUniqueId),
       );
       elementTemplateSlotAnchors.set(root, slotAnchors);
-      const providedAttributeSlots = Array.isArray(attributeSlots)
+      const attributeSlotValues = Array.isArray(attributeSlots)
         ? Array.from(attributeSlots)
         : [];
-      const attributeSlotValues = [...providedAttributeSlots];
-      while (attributeSlotValues.length <= registered.maxAttributeSlotIndex) {
-        attributeSlotValues.push(null);
-      }
       const state: ElementTemplateRuntimeState = {
         kind: 'compiled',
         uid,
@@ -641,11 +637,11 @@ export function createElementAPI(
         registered.definition,
         rootUniqueId,
       );
-      for (let index = 0; index < providedAttributeSlots.length; index++) {
+      for (let index = 0; index < attributeSlotValues.length; index++) {
         setCompiledElementTemplateAttributeSlot(
           rootUniqueId,
           index,
-          providedAttributeSlots[index],
+          attributeSlotValues[index],
         );
       }
       insertInitialElementTemplateSlots(

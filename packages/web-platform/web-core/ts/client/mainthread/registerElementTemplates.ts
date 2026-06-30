@@ -35,7 +35,6 @@ export function ensureElementTemplateDefinitions(
     const template = document.createElement('template');
     const definition = new wasmInstance.ElementTemplateDefinition();
     let nextElementIndex = 0;
-    let maxAttributeSlotIndex = -1;
     const stack: Array<
       | {
         kind: 'element';
@@ -94,10 +93,6 @@ export function ensureElementTemplateDefinitions(
             }
             break;
           case 'slot':
-            maxAttributeSlotIndex = Math.max(
-              maxAttributeSlotIndex,
-              attribute.attrSlotIndex,
-            );
             definition.add_attribute_binding(
               elementIndex,
               attribute.attrSlotIndex,
@@ -105,10 +100,6 @@ export function ensureElementTemplateDefinitions(
             );
             break;
           case 'spread':
-            maxAttributeSlotIndex = Math.max(
-              maxAttributeSlotIndex,
-              attribute.attrSlotIndex,
-            );
             definition.add_spread_binding(
               elementIndex,
               attribute.attrSlotIndex,
@@ -148,7 +139,6 @@ export function ensureElementTemplateDefinitions(
     definitions.set(templateId, {
       template,
       definition,
-      maxAttributeSlotIndex,
     });
   }
 }
