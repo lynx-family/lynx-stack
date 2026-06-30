@@ -118,16 +118,13 @@ jobs:
       - name: Upload Valgrind profile
         # Uploaded on every run (including green) on purpose: the raw callgrind
         # profile is kept so a later regression can be diffed against main's
-        # profile. include-hidden-files keeps the dotfiles; if-no-files-found is
-        # ignore only as a safety net (the runner leaves the profile in place,
-        # so this directory is normally non-empty).
+        # profile. include-hidden-files keeps the dotfiles.
         if: ${{ always() }}
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
         with:
           name: codspeed-valgrind-tmp-${{ github.sha }}
           path: ${{ runner.temp }}/codspeed-valgrind-tmp
           include-hidden-files: true
-          if-no-files-found: ignore
           overwrite: true
       - name: Run benchmark (walltime)
         run: |
