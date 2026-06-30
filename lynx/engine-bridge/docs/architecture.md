@@ -90,8 +90,9 @@ The screenshot test validates the real GenUI fixture output:
    the process main bundle.
 4. It launches `lynx-headless-example --native-ui-loop` with the bundle folder
    and `src/assets` as asset roots.
-5. It compares the rendered PNG byte-for-byte with
-   `packages/genui/ui-judge/tests/fixtures/react/main.lynx.snapshot.png`.
+5. It decodes the rendered PNG and compares RGBA pixels with
+   `packages/genui/ui-judge/tests/fixtures/react/main.lynx.snapshot.png`,
+   allowing a small tolerance for runner-level antialiasing differences.
 
 Set `LYNX_UPDATE_REFERENCES=1` when you intentionally update the reference
 image. Rerun the same test without that environment variable before committing.

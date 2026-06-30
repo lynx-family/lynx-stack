@@ -6,7 +6,7 @@ applyTo: "lynx/engine-bridge/**"
 
 Runtime-loading tests are conditional: ordinary local tests do not need a Lynx runtime, but setting `LYNX_LIB_PATH` or `LYNX_SDK_DIR` should exercise real `libLynx_clay` loading. Keep CI downloading runtime dylibs into a temporary SDK directory instead of committing binary artifacts.
 
-Headless screenshot coverage should run the real GenUI React fixture bundle at `packages/genui/ui-judge/tests/fixtures/react/.generated/main.lynx.bundle` and compare against `packages/genui/ui-judge/tests/fixtures/react/main.lynx.snapshot.png`. Update that reference only through `LYNX_UPDATE_REFERENCES=1 cargo test --locked -p lynx-headless-example --test screenshot`, then rerun the same test without the environment variable.
+Headless screenshot coverage should run the real GenUI React fixture bundle at `packages/genui/ui-judge/tests/fixtures/react/.generated/main.lynx.bundle` and pixel-compare against `packages/genui/ui-judge/tests/fixtures/react/main.lynx.snapshot.png` with tolerance for runner-level antialiasing. Update that reference only through `LYNX_UPDATE_REFERENCES=1 cargo test --locked -p lynx-headless-example --test screenshot`, then rerun the same test without the environment variable.
 
 For macOS runtime experiments, remember that `LynxResources.bundle` is resolved through the process main bundle; for Cargo binaries that means placing the bundle beside `target/debug/lynx-headless-example` or the built test binary. Passing `--preload-js` can provide `lynx_core.js`, but it does not replace the runtime's bundle lookup. Real React fixture rendering should use `--native-ui-loop`; the Rust queue-backed global UI runner does not drive every FML actor used by ReactLynx.
 
