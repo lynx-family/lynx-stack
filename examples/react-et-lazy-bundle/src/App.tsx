@@ -47,7 +47,9 @@ function delayedImport<T>(
 const BasicLazy = lazy(() =>
   delayedImport(() => import('./LazyComponent.js'), 80)
 );
-const FirstScreenLazy = lazy(() => import('./LazyFirstScreenContent.js'));
+const FirstScreenLazy = lazy(() =>
+  import('./LazyFirstScreenContent.js', { with: { mode: 'sync' } })
+);
 const NestedLazy = lazy(() =>
   delayedImport(() => import('./LazyNestedContent.js'), 160)
 );

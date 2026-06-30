@@ -14,6 +14,13 @@ export const RuntimeGlobals = {
   lynxAsyncChunkIds: '__webpack_require__.lynx_aci',
 
   /**
+   * A map from `chunk.id` to the lazy-bundle loading mode (`'sync'` | `'async'`)
+   * derived from the `import(..., { with: { mode } })` import attribute.
+   * Only async chunks carrying a `mode` attribute appear here.
+   */
+  lynxAsyncChunkMode: '__webpack_require__.lynx_acm',
+
+  /**
    * A map from `chunk.id` to entryName of the chunk.
    */
   lynxChunkEntries: 'lynx.__chunk_entries__',

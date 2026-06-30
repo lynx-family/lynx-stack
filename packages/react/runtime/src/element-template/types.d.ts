@@ -18,6 +18,14 @@ declare global {
 
   const __USE_ELEMENT_TEMPLATE__: boolean;
 
+  /**
+   * The lazy bundle's entry URL. The FetchBundle loader sets this before
+   * running a lazy bundle's `loadScript` so the bundle wrapper resolves its
+   * own element templates instead of falling back to the main card
+   * (`__Card__`).
+   */
+  var globDynamicComponentEntry: string | undefined;
+
   function __CreateElementTemplate(
     templateKey: string,
     bundleUrl: string | null | undefined,
