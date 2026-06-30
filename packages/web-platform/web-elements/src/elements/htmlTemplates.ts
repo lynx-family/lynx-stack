@@ -31,37 +31,6 @@ export const templateScrollView = `<style>
   ::-webkit-scrollbar {
     display: none;
   }
-
-  @keyframes topFading {
-    0% {
-      box-shadow: transparent 0px 0px 0px 0px;
-    }
-    5% {
-      box-shadow: var(--scroll-view-bg-color) 0px 0px
-        var(--scroll-view-fading-edge-length)
-        var(--scroll-view-fading-edge-length);
-    }
-    100% {
-      box-shadow: var(--scroll-view-bg-color) 0px 0px
-        var(--scroll-view-fading-edge-length)
-        var(--scroll-view-fading-edge-length);
-    }
-  }
-  @keyframes botFading {
-    0% {
-      box-shadow: var(--scroll-view-bg-color) 0px 0px
-        var(--scroll-view-fading-edge-length)
-        var(--scroll-view-fading-edge-length);
-    }
-    95% {
-      box-shadow: var(--scroll-view-bg-color) 0px 0px
-        var(--scroll-view-fading-edge-length)
-        var(--scroll-view-fading-edge-length);
-    }
-    100% {
-      box-shadow: transparent 0px 0px 0px 0px;
-    }
-  }
 </style>
   <div
     class="mask placeholder-dom"
