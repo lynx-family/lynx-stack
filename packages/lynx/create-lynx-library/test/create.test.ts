@@ -176,10 +176,16 @@ describe('create-lynx-library', () => {
       '"@lynx-js/lynx-library-headers"',
     );
     expect(read(dir, 'shared/CMakeLists.txt')).toContain(
+      'lynx_resolve_lynxtron_import_library',
+    );
+    expect(read(dir, 'shared/CMakeLists.txt')).toContain(
       '"@lynx-js/weak-node-api"',
     );
     expect(read(dir, 'shared/elements/CMakeLists.txt')).not.toContain(
       'LYNX_SHARED_ENABLE_STATIC_REGISTER',
+    );
+    expect(read(dir, 'shared/elements/CMakeLists.txt')).toMatch(
+      /if\(LYNX_NATIVE_ELEMENT_BACKEND_TEXTURE\)[\s\S]*backends\/texture\/windows\/\*\.cc[\s\S]*else\(\)[\s\S]*backends\/native-ui\/windows\/\*\.cc/,
     );
     expect(read(dir, 'ios/build.podspec')).toContain(
       's.dependency \'LynxServiceAPI\'',
@@ -396,6 +402,9 @@ describe('create-lynx-library', () => {
       '"@lynx-js/lynx-library-headers"',
     );
     expect(read(dir, 'shared/CMakeLists.txt')).toContain(
+      'lynx_resolve_lynxtron_import_library',
+    );
+    expect(read(dir, 'shared/CMakeLists.txt')).toContain(
       '"@lynx-js/weak-node-api"',
     );
     expect(read(dir, 'shared/nativeModule/CMakeLists.txt')).toContain(
@@ -406,6 +415,9 @@ describe('create-lynx-library', () => {
     );
     expect(read(dir, 'shared/elements/CMakeLists.txt')).not.toContain(
       'LYNX_SHARED_ENABLE_STATIC_REGISTER',
+    );
+    expect(read(dir, 'shared/elements/CMakeLists.txt')).toMatch(
+      /if\(LYNX_NATIVE_ELEMENT_BACKEND_TEXTURE\)[\s\S]*backends\/texture\/windows\/\*\.cc[\s\S]*else\(\)[\s\S]*backends\/native-ui\/windows\/\*\.cc/,
     );
     expect(read(dir, 'README.md')).toContain('`lynxtron/`');
     expect(read(dir, 'README.md')).toContain('`shared/`');

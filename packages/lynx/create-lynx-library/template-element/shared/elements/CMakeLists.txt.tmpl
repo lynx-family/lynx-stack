@@ -1,27 +1,43 @@
 file(GLOB LYNX_ELEMENT_SOURCES CONFIGURE_DEPENDS
   "${CMAKE_CURRENT_SOURCE_DIR}/*.cc"
-  "${CMAKE_CURRENT_SOURCE_DIR}/backends/texture/*.cc"
 )
 
+set(LYNX_ELEMENT_BACKEND_SOURCES)
 set(LYNX_ELEMENT_PLATFORM_SOURCES)
 
-if(APPLE)
-  file(GLOB_RECURSE LYNX_ELEMENT_PLATFORM_SOURCES CONFIGURE_DEPENDS
-    "${CMAKE_CURRENT_SOURCE_DIR}/backends/texture/macos/*.cc"
-    "${CMAKE_CURRENT_SOURCE_DIR}/backends/texture/macos/*.mm"
-    "${CMAKE_CURRENT_SOURCE_DIR}/backends/native-ui/macos/*.cc"
-    "${CMAKE_CURRENT_SOURCE_DIR}/backends/native-ui/macos/*.mm"
+if(LYNX_NATIVE_ELEMENT_BACKEND_TEXTURE)
+  file(GLOB LYNX_ELEMENT_BACKEND_SOURCES CONFIGURE_DEPENDS
+    "${CMAKE_CURRENT_SOURCE_DIR}/backends/texture/*.cc"
   )
-elseif(WIN32)
-  file(GLOB_RECURSE LYNX_ELEMENT_PLATFORM_SOURCES CONFIGURE_DEPENDS
-    "${CMAKE_CURRENT_SOURCE_DIR}/backends/texture/windows/*.cc"
-    "${CMAKE_CURRENT_SOURCE_DIR}/backends/native-ui/windows/*.cc"
-  )
+
+  if(APPLE)
+    file(GLOB_RECURSE LYNX_ELEMENT_PLATFORM_SOURCES CONFIGURE_DEPENDS
+      "${CMAKE_CURRENT_SOURCE_DIR}/backends/texture/macos/*.cc"
+      "${CMAKE_CURRENT_SOURCE_DIR}/backends/texture/macos/*.mm"
+    )
+  elseif(WIN32)
+    file(GLOB_RECURSE LYNX_ELEMENT_PLATFORM_SOURCES CONFIGURE_DEPENDS
+      "${CMAKE_CURRENT_SOURCE_DIR}/backends/texture/windows/*.cc"
+    )
+  endif()
+else()
+  if(APPLE)
+    file(GLOB_RECURSE LYNX_ELEMENT_PLATFORM_SOURCES CONFIGURE_DEPENDS
+      "${CMAKE_CURRENT_SOURCE_DIR}/backends/native-ui/macos/*.cc"
+      "${CMAKE_CURRENT_SOURCE_DIR}/backends/native-ui/macos/*.mm"
+    )
+  elseif(WIN32)
+    file(GLOB_RECURSE LYNX_ELEMENT_PLATFORM_SOURCES CONFIGURE_DEPENDS
+      "${CMAKE_CURRENT_SOURCE_DIR}/backends/native-ui/windows/*.cc"
+    )
+  endif()
 endif()
+
+list(APPEND LYNX_ELEMENT_BACKEND_SOURCES ${LYNX_ELEMENT_PLATFORM_SOURCES})
 
 add_library(__ADDON_TARGET_NAME__Elements OBJECT
   ${LYNX_ELEMENT_SOURCES}
-  ${LYNX_ELEMENT_PLATFORM_SOURCES}
+  ${LYNX_ELEMENT_BACKEND_SOURCES}
 )
 
 target_include_directories(__ADDON_TARGET_NAME__Elements PRIVATE
