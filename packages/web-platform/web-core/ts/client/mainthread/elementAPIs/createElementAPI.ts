@@ -557,36 +557,34 @@ export function createElementAPI(
       const fragment = registered.template.content.cloneNode(
         true,
       ) as DocumentFragment;
-      const root = fragment.firstChild as DecoratedHTMLElement | null;
-      if (!root || root.nodeType !== 1) {
+      const root = fragment.firstElementChild as DecoratedHTMLElement | null;
+      if (!root) {
         throw new Error('Element template root missing');
       }
 
-      // Traverse the cloned template once to register elements in clone order
-      // and retain invisible element-slot anchors for later insertion.
-      const elements: HTMLElement[] = [];
+      // querySelectorAll gives the cloned element tree in document order; root
+      // is added explicitly because Element#querySelectorAll excludes self.
+      const elements = [
+        root,
+        ...Array.from(root.querySelectorAll<HTMLElement>('*')),
+      ];
       const slotAnchors = new Map<number, Node>();
-      const stack: Node[] = [root];
-      while (stack.length > 0) {
-        const node = stack.pop()!;
-        if (node.nodeType === 1) {
-          elements.push(node as HTMLElement);
-        } else if (node.nodeType === 8) {
-          const value = node.nodeValue;
-          if (value?.startsWith(elementTemplateSlotAnchorPrefix)) {
-            const slotIndex = Number(
-              value.slice(elementTemplateSlotAnchorPrefix.length),
-            );
-            if (Number.isInteger(slotIndex)) {
-              slotAnchors.set(slotIndex, node);
-            }
+      const slotAnchorWalker = document.createTreeWalker(
+        root,
+        128, // NodeFilter.SHOW_COMMENT
+      );
+      let slotAnchor = slotAnchorWalker.nextNode();
+      while (slotAnchor) {
+        const value = slotAnchor.nodeValue;
+        if (value?.startsWith(elementTemplateSlotAnchorPrefix)) {
+          const slotIndex = Number(
+            value.slice(elementTemplateSlotAnchorPrefix.length),
+          );
+          if (Number.isInteger(slotIndex)) {
+            slotAnchors.set(slotIndex, slotAnchor);
           }
         }
-
-        const childNodes = Array.from(node.childNodes);
-        for (let index = childNodes.length - 1; index >= 0; index--) {
-          stack.push(childNodes[index]!);
-        }
+        slotAnchor = slotAnchorWalker.nextNode();
       }
 
       const uniqueIdsByIndex: number[] = [];
@@ -607,10 +605,7 @@ export function createElementAPI(
           );
         }
       }
-      const rootUniqueId = uniqueIdsByIndex[0];
-      if (rootUniqueId == null) {
-        throw new Error('Element template root not registered');
-      }
+      const rootUniqueId = uniqueIdsByIndex[0]!;
       root.setAttribute(
         lynxElementTemplateMarkerAttribute,
         String(rootUniqueId),
@@ -783,22 +778,19 @@ export function createElementAPI(
       if (rootUniqueId >= 0) {
         uniqueIds.push(rootUniqueId);
       }
-      const stack = Array.from(child.childNodes);
-      while (stack.length > 0) {
-        const node = stack.pop()!;
-        if (node.nodeType === 1) {
-          const current = node as HTMLElement;
-          const templateUniqueId = current.getAttribute(
-            lynxElementTemplateMarkerAttribute,
-          );
-          if (templateUniqueId != null) {
-            const uniqueId = Number(templateUniqueId);
-            if (Number.isInteger(uniqueId)) {
-              uniqueIds.push(uniqueId);
-            }
-          }
+      for (
+        const current of Array.from(
+          child.querySelectorAll<HTMLElement>(
+            `[${lynxElementTemplateMarkerAttribute}]`,
+          ),
+        )
+      ) {
+        const uniqueId = Number(
+          current.getAttribute(lynxElementTemplateMarkerAttribute),
+        );
+        if (Number.isInteger(uniqueId)) {
+          uniqueIds.push(uniqueId);
         }
-        stack.push(...Array.from(node.childNodes));
       }
       for (const uniqueId of uniqueIds) {
         wasmContext.remove_element_template_instance_by_id(uniqueId);
