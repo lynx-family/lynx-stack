@@ -64,7 +64,6 @@ const {
 type ElementTemplateRuntimeState =
   & {
     uid: unknown;
-    elementSlots: Map<number, number[]>;
   }
   & (
     | {
@@ -195,22 +194,14 @@ export function createElementAPI(
     HTMLElement,
     Map<number, Node>
   >();
-  const elementTemplateStates = new WeakMap<
-    HTMLElement,
-    ElementTemplateRuntimeState
-  >();
   const elementTemplateStatesById = new Map<
     number,
     ElementTemplateRuntimeState
   >();
-  const elementTemplateRootsById = new Map<number, HTMLElement>();
-  const elementTemplateOwners = new Map<
-    number,
-    { ownerUniqueId: number; slotIndex: number }
-  >();
-  const serializeElementTemplateById = (
-    uniqueId: number,
+  const serializeElementTemplate = (
+    element: HTMLElement,
   ): SerializedElementTemplateNode => {
+    const uniqueId = __GetElementUniqueID(element);
     const state = elementTemplateStatesById.get(uniqueId);
     if (!state) {
       throw new Error('Element template instance not found');
@@ -236,7 +227,7 @@ export function createElementAPI(
       if (value instanceof HTMLElement) {
         const valueUniqueId = __GetElementUniqueID(value);
         if (elementTemplateStatesById.has(valueUniqueId)) {
-          return serializeElementTemplateById(valueUniqueId);
+          return serializeElementTemplate(value);
         }
       }
       if (Array.isArray(value)) {
@@ -262,76 +253,44 @@ export function createElementAPI(
       }
     }
 
-    if (state.elementSlots.size > 0) {
+    if (state.kind === 'compiled') {
+      const slotAnchors = elementTemplateSlotAnchors.get(element);
       const slots: SerializedElementTemplateNode[][] = [];
-      const slotIndexes = Array.from(state.elementSlots.keys()).sort((a, b) =>
-        a - b
-      );
-      for (const slotIndex of slotIndexes) {
-        slots[slotIndex] = (state.elementSlots.get(slotIndex) ?? [])
-          .map(serializeElementTemplateById);
+      for (
+        const slotIndex of Array.from(slotAnchors?.keys() ?? []).sort((a, b) =>
+          a - b
+        )
+      ) {
+        const anchor = slotAnchors?.get(slotIndex);
+        if (!anchor) continue;
+        const slotChildren: SerializedElementTemplateNode[] = [];
+        let child = anchor.previousSibling;
+        while (
+          child instanceof HTMLElement
+          && child.getAttribute(lynxElementTemplateMarkerAttribute) !== null
+        ) {
+          slotChildren.unshift(serializeElementTemplate(child));
+          child = child.previousSibling;
+        }
+        if (slotChildren.length > 0) {
+          slots[slotIndex] = slotChildren;
+        }
       }
-      serialized.elementSlots = slots;
+      if (slots.length > 0) {
+        serialized.elementSlots = slots;
+      }
+    } else if (state.tag !== 'list') {
+      const slotChildren = Array.from(element.children)
+        .filter(child =>
+          child instanceof HTMLElement
+          && child.getAttribute(lynxElementTemplateMarkerAttribute) !== null
+        )
+        .map(child => serializeElementTemplate(child as HTMLElement));
+      if (slotChildren.length > 0) {
+        serialized.elementSlots = [slotChildren];
+      }
     }
     return serialized;
-  };
-  const detachElementTemplateChildReference = (childUniqueId: number) => {
-    const owner = elementTemplateOwners.get(childUniqueId);
-    if (!owner) return;
-    const ownerState = elementTemplateStatesById.get(owner.ownerUniqueId);
-    const children = ownerState?.elementSlots.get(owner.slotIndex);
-    if (children) {
-      const position = children.indexOf(childUniqueId);
-      if (position >= 0) {
-        children.splice(position, 1);
-      }
-      if (children.length === 0) {
-        ownerState!.elementSlots.delete(owner.slotIndex);
-      }
-    }
-    elementTemplateOwners.delete(childUniqueId);
-  };
-  const recordElementTemplateSlotChild = (
-    rootUniqueId: number,
-    slotIndex: number,
-    childUniqueId: number,
-    referenceUniqueId?: number,
-  ) => {
-    detachElementTemplateChildReference(childUniqueId);
-    const state = elementTemplateStatesById.get(rootUniqueId);
-    if (!state) return;
-    const children = state.elementSlots.get(slotIndex) ?? [];
-    if (referenceUniqueId != null) {
-      const position = children.indexOf(referenceUniqueId);
-      if (position >= 0) {
-        children.splice(position, 0, childUniqueId);
-      } else {
-        children.push(childUniqueId);
-      }
-    } else {
-      children.push(childUniqueId);
-    }
-    state.elementSlots.set(slotIndex, children);
-    elementTemplateOwners.set(childUniqueId, {
-      ownerUniqueId: rootUniqueId,
-      slotIndex,
-    });
-  };
-  const removeElementTemplateState = (uniqueId: number) => {
-    const state = elementTemplateStatesById.get(uniqueId);
-    if (!state) return;
-    const childUniqueIds = Array.from(state.elementSlots.values()).flat();
-    for (const childUniqueId of childUniqueIds) {
-      removeElementTemplateState(childUniqueId);
-    }
-    detachElementTemplateChildReference(uniqueId);
-    const root = elementTemplateRootsById.get(uniqueId);
-    if (root) {
-      elementTemplateStates.delete(root);
-      elementTemplateSlotAnchors.delete(root);
-      elementTemplateRootsById.delete(uniqueId);
-    }
-    elementTemplateStatesById.delete(uniqueId);
   };
   const setCompiledElementTemplateAttributeSlot = (
     rootUniqueId: number,
@@ -382,10 +341,8 @@ export function createElementAPI(
   };
   const insertInitialElementTemplateSlots = (
     host: HTMLElement,
-    rootUniqueId: number,
     slotAnchors: Map<number, Node>,
     elementSlots: unknown,
-    recordState: boolean,
   ) => {
     if (!elementSlots || typeof elementSlots !== 'object') return;
     for (const key of Object.keys(elementSlots)) {
@@ -408,19 +365,6 @@ export function createElementAPI(
           anchor.parentNode.insertBefore(child, anchor);
         } else {
           host.appendChild(child);
-        }
-        if (recordState) {
-          wasmContext.insert_element_template_slot_child(
-            rootUniqueId,
-            slotIndex,
-            childUniqueId,
-            undefined,
-          );
-          recordElementTemplateSlotChild(
-            rootUniqueId,
-            slotIndex,
-            childUniqueId,
-          );
         }
       }
     }
@@ -620,11 +564,8 @@ export function createElementAPI(
         templateKey,
         bundleUrl,
         attributeSlots: attributeSlotValues,
-        elementSlots: new Map(),
       };
-      elementTemplateStates.set(root, state);
       elementTemplateStatesById.set(rootUniqueId, state);
-      elementTemplateRootsById.set(rootUniqueId, root);
       wasmContext.create_element_template_instance(rootUniqueId);
       for (let index = 0; index < uniqueIdsByIndex.length; index++) {
         wasmContext.add_element_template_instance_element(
@@ -646,10 +587,8 @@ export function createElementAPI(
       }
       insertInitialElementTemplateSlots(
         root,
-        rootUniqueId,
         slotAnchors,
         elementSlots,
-        true,
       );
       return root;
     },
@@ -669,13 +608,11 @@ export function createElementAPI(
         );
         insertInitialElementTemplateSlots(
           dom,
-          rootUniqueId,
           new Map(),
           elementSlots
             ?? (options && typeof options === 'object'
               ? (options as { listChildren?: unknown }).listChildren
               : undefined),
-          false,
         );
         return dom;
       }
@@ -696,22 +633,16 @@ export function createElementAPI(
         tag,
         attributes: {},
         options,
-        elementSlots: new Map(),
       };
-      elementTemplateStates.set(dom, state);
       elementTemplateStatesById.set(uniqueId, state);
-      elementTemplateRootsById.set(uniqueId, dom);
-      wasmContext.create_typed_element_template_instance(uniqueId);
       updateTypedElementTemplateAttributes(uniqueId, attributes);
       insertInitialElementTemplateSlots(
         dom,
-        uniqueId,
         new Map(),
         elementSlots
           ?? (options && typeof options === 'object'
             ? (options as { listChildren?: unknown }).listChildren
             : undefined),
-        true,
       );
       return dom;
     },
@@ -722,7 +653,7 @@ export function createElementAPI(
       _options,
     ) {
       const rootUniqueId = __GetElementUniqueID(element);
-      const state = elementTemplateStates.get(element);
+      const state = elementTemplateStatesById.get(rootUniqueId);
       if (state?.kind === 'typed') {
         updateTypedElementTemplateAttributes(rootUniqueId, value);
         return;
@@ -735,6 +666,9 @@ export function createElementAPI(
     },
     __InsertNodeToElementTemplate(element, slotIndex, child, reference) {
       const rootUniqueId = __GetElementUniqueID(element);
+      if (element !== page && !elementTemplateStatesById.has(rootUniqueId)) {
+        throw new Error('Element template instance not found');
+      }
       const childUniqueId = __GetElementUniqueID(child);
       if (childUniqueId < 0) {
         throw new Error('Element template child missing unique id');
@@ -748,23 +682,6 @@ export function createElementAPI(
         } else {
           element.appendChild(child);
         }
-      }
-      if (element !== page) {
-        const referenceUniqueId = reference
-          ? __GetElementUniqueID(reference)
-          : undefined;
-        wasmContext.insert_element_template_slot_child(
-          rootUniqueId,
-          slotIndex,
-          childUniqueId,
-          referenceUniqueId,
-        );
-        recordElementTemplateSlotChild(
-          rootUniqueId,
-          slotIndex,
-          childUniqueId,
-          referenceUniqueId,
-        );
       }
     },
     __RemoveNodeFromElementTemplate(_element, _slotIndex, child) {
@@ -790,11 +707,11 @@ export function createElementAPI(
       }
       for (const uniqueId of uniqueIds) {
         wasmContext.remove_element_template_instance_by_id(uniqueId);
-        removeElementTemplateState(uniqueId);
+        elementTemplateStatesById.delete(uniqueId);
       }
     },
     __SerializeElementTemplate(element) {
-      return serializeElementTemplateById(__GetElementUniqueID(element));
+      return serializeElementTemplate(element);
     },
     __CreatePage(componentID, componentCSSID) {
       if (page) return page;

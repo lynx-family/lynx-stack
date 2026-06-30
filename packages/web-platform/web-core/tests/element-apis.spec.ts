@@ -434,6 +434,44 @@ describe('Element APIs', () => {
     );
   });
 
+  test('typed list serializes logical children through options only', () => {
+    registerTestElementTemplates([
+      builtinRawTextTemplate,
+    ]);
+
+    const child = mtsGlobalThis.__CreateElementTemplate(
+      '_et_builtin_raw_text',
+      null,
+      ['item'],
+      null,
+      12,
+    );
+    const list = mtsGlobalThis.__CreateTypedElementTemplate(
+      'list',
+      { 'data-kind': 'typed-list' },
+      null,
+      13,
+      { listChildren: [child] } as any,
+    );
+
+    expect(list.children[0]).toBe(child);
+    expect(mtsGlobalThis.__SerializeElementTemplate(list)).toMatchObject({
+      uid: 13,
+      tag: 'list',
+      attributes: { 'data-kind': 'typed-list' },
+      options: {
+        listChildren: [{
+          uid: 12,
+          templateKey: '_et_builtin_raw_text',
+          attributeSlots: ['item'],
+        }],
+      },
+    });
+    expect(mtsGlobalThis.__SerializeElementTemplate(list)).not.toHaveProperty(
+      'elementSlots',
+    );
+  });
+
   test('element template spread removal restores sibling dynamic binding', () => {
     registerTestElementTemplates([
       {
