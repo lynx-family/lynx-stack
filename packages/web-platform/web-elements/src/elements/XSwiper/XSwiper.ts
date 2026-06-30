@@ -30,9 +30,6 @@ export class XSwiper extends HTMLElement {
     'indicator-dots',
   ]);
 
-  #resizeObserver?: ResizeObserver;
-  #syncCurrentOnResizeAnimationFrame?: number;
-
   #getContentContainer = genDomGetter(() => this.shadowRoot!, '#content').bind(
     this,
   );
@@ -130,16 +127,6 @@ export class XSwiper extends HTMLElement {
       });
     }
   }
-  #scrollToCurrentAttribute(behavior: ScrollBehavior) {
-    const current = this.getAttribute('current');
-    if (current === null) {
-      return;
-    }
-    const currentIndex = Number(current);
-    if (!Number.isNaN(currentIndex)) {
-      this.#scrollToIndex(currentIndex, behavior);
-    }
-  }
   get snapDistance() {
     return this.#getNeatestElementIndexAndDistanceToMid().minOffsetToMid;
   }
@@ -183,25 +170,10 @@ export class XSwiper extends HTMLElement {
   }
 
   connectedCallback() {
-    // first layout should always scroll instant
-    this.#scrollToCurrentAttribute('instant');
-    this.#resizeObserver = new ResizeObserver(() => {
-      if (this.#syncCurrentOnResizeAnimationFrame !== undefined) {
-        return;
-      }
-      this.#syncCurrentOnResizeAnimationFrame = requestAnimationFrame(() => {
-        this.#syncCurrentOnResizeAnimationFrame = undefined;
-        this.#scrollToCurrentAttribute('instant');
-      });
-    });
-    this.#resizeObserver.observe(this);
-  }
-  disconnectedCallback() {
-    this.#resizeObserver?.disconnect();
-    this.#resizeObserver = undefined;
-    if (this.#syncCurrentOnResizeAnimationFrame !== undefined) {
-      cancelAnimationFrame(this.#syncCurrentOnResizeAnimationFrame);
-      this.#syncCurrentOnResizeAnimationFrame = undefined;
+    const current = this.getAttribute('current');
+    if (current !== null) {
+      // first layout should always scroll instant
+      this.#scrollToIndex(Number(current), 'instant');
     }
   }
   get [scrollContainerDom]() {
