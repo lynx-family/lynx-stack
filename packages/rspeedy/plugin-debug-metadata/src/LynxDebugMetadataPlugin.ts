@@ -116,12 +116,20 @@ export class LynxDebugMetadataPluginImpl {
     compiler.hooks.thisCompilation.tap(this.name, compilation => {
       // Bake the per-chunk release banner into each JS asset here (rather than
       // via `BannerPlugin`) so it can read `compilation.chunkGraph` to derive
-      // the release key. Runs at PROCESS_ASSETS_STAGE_ADDITIONS — before source
-      // maps are generated — so the maps account for the prepended banner.
+      // the release key. Runs at PROCESS_ASSETS_STAGE_DERIVED — before source
+      // maps are generated, so the maps account for the prepended banner, and
+      // strictly before `RuntimeWrapperWebpackPlugin`'s `BannerPlugin` (default
+      // PROCESS_ASSETS_STAGE_ADDITIONS, -100). Since `raw` banners prepend, the
+      // banner that runs first ends up innermost: prepending here means the
+      // wrapper wraps AROUND this banner, so the release runtime lands inside
+      // the bundle wrapper where `tt` / `lynxCoreInject` are in scope. The
+      // background (JS) thread has no global `_SetSourceMapRelease` and
+      // `lynxCoreInject` is the wrapper parameter, not a global, so a top-level
+      // banner would never register the release there.
       compilation.hooks.processAssets.tap(
         {
           name: this.name,
-          stage: compiler.webpack.Compilation.PROCESS_ASSETS_STAGE_ADDITIONS,
+          stage: compiler.webpack.Compilation.PROCESS_ASSETS_STAGE_DERIVED,
         },
         () => {
           for (const chunk of compilation.chunks) {
