@@ -296,7 +296,7 @@ fn inflate_zlib_store_blocks(bytes: &[u8]) -> Result<Vec<u8>, String> {
     let is_final_block = block_header & 1 == 1;
     let block_type = (block_header >> 1) & 0b11;
     if block_type != 0 {
-      return Err("compressed deflate blocks are not supported in test PNGs".into());
+      return Err("compressed deflate blocks are not supported in test PNG files".into());
     }
     if cursor + 4 > adler_start {
       return Err("truncated deflate store block length".into());
