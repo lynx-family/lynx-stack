@@ -4,6 +4,7 @@
  * LICENSE file in the root directory of this source tree.
  */
 import type {
+  DecodedElementTemplateDefinition,
   DecodedTemplate,
   ElementTemplateElementNode,
 } from '../../types/index.js';
@@ -19,7 +20,10 @@ export function ensureElementTemplateDefinitions(
   if (!bundle?.elementTemplates) {
     return;
   }
-  const definitions = bundle.elementTemplateDefinitions ??= new Map();
+  const definitions = bundle.elementTemplateDefinitions ??= new Map<
+    string,
+    DecodedElementTemplateDefinition
+  >();
 
   for (const { templateId, compiledTemplate } of bundle.elementTemplates) {
     if (definitions.has(templateId)) {

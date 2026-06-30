@@ -307,13 +307,6 @@ export class TemplateManager {
         if (bundle.styleSheet) {
           bundle.styleSheet.free();
         }
-        if (bundle.elementTemplateDefinitions) {
-          for (
-            const { definition } of bundle.elementTemplateDefinitions.values()
-          ) {
-            definition.free();
-          }
-        }
       }
       this.#bundles.delete(url);
     }
@@ -332,13 +325,6 @@ export class TemplateManager {
         }
         if (bundle.styleSheet) {
           bundle.styleSheet.free();
-        }
-        if (bundle.elementTemplateDefinitions) {
-          for (
-            const { definition } of bundle.elementTemplateDefinitions.values()
-          ) {
-            definition.free();
-          }
         }
       }
       this.#loadingBundles.delete(url);
