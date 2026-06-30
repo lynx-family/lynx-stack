@@ -50,4 +50,4 @@ ReactLynx.snapshotCreatorMap[__snapshot_da39a_test_1] = (__snapshot_da39a_test_1
         "full-span": true,
         "reuse-identifier": x
     }
-]}/>}/>} $1={<A/>}/>;
+]} __listItemPlatformInfo={0}/>}/>} $1={<A/>}/>;

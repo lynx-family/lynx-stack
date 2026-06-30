@@ -459,6 +459,7 @@ describe('jsx', () => {
                               "item-key": "1"
                           }
                       ],
+                      __listItemPlatformInfo: 0,
                       $0: __c
                   }),
               renderChildren: ()=>[],

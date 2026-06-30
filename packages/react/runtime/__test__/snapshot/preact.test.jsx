@@ -7,6 +7,7 @@ import { globalBackgroundSnapshotInstancesToRemove } from '../../src/snapshot/li
 import {
   deinitGlobalSnapshotPatch,
   initGlobalSnapshotPatch,
+  SnapshotOperation,
   takeGlobalSnapshotPatch,
 } from '../../src/snapshot/lifecycle/patch/snapshotPatch';
 import { runWithForce } from '../../src/snapshot/lynx/tt';
@@ -60,6 +61,49 @@ function collectRawText2(root) {
     }
   });
   return collect;
+}
+
+function collectSnapshotPatchOps(patch) {
+  const ops = [];
+  for (let i = 0; i < patch.length;) {
+    const op = patch[i++];
+    ops.push(op);
+    switch (op) {
+      case SnapshotOperation.CreateElement:
+        i += 2;
+        break;
+      case SnapshotOperation.InsertBefore:
+        i += 4;
+        break;
+      case SnapshotOperation.RemoveChild:
+        i += 2;
+        break;
+      case SnapshotOperation.SetAttribute:
+        i += 3;
+        break;
+      case SnapshotOperation.SetAttributes:
+        i += 2;
+        break;
+      case SnapshotOperation.nodesRefInsertBefore:
+        i += 3;
+        break;
+      case SnapshotOperation.nodesRefRemoveChild:
+        i += 2;
+        break;
+      case SnapshotOperation.DEV_ONLY_AddSnapshot:
+        i += 2;
+        break;
+      case SnapshotOperation.DEV_ONLY_RegisterWorklet:
+        i += 2;
+        break;
+      case SnapshotOperation.DEV_ONLY_SetSnapshotEntryName:
+        i += 2;
+        break;
+      default:
+        throw new Error(`Unknown snapshot patch op: ${op}`);
+    }
+  }
+  return ops;
 }
 
 describe('document', () => {
@@ -606,6 +650,91 @@ describe('document - background', () => {
         "x": 1,
       }
     `);
+  });
+
+  it('listItemPlatformInfo marker - should set snapshot field', () => {
+    const platformInfo = { 'item-key': 'item-0', 'full-span': true };
+    const directPlatformInfo = { 'item-key': 'direct' };
+    const backgroundNextId = backgroundSnapshotInstanceManager.nextId;
+
+    try {
+      const mainThreadItem = new SnapshotInstance('list-item', -10_000);
+      mainThreadItem.setAttribute('values', [platformInfo]);
+      mainThreadItem.setAttribute('__listItemPlatformInfo', 0);
+      expect(mainThreadItem.__listItemPlatformInfo).toEqual(platformInfo);
+      expect(JSON.parse(JSON.stringify(mainThreadItem)).__listItemPlatformInfo).toEqual(platformInfo);
+
+      const mainThreadItemWithIndexedValue = new SnapshotInstance('list-item', -10_001);
+      mainThreadItemWithIndexedValue.setAttribute('__listItemPlatformInfo', 0);
+      mainThreadItemWithIndexedValue.setAttribute(0, platformInfo);
+      expect(mainThreadItemWithIndexedValue.__listItemPlatformInfo).toEqual(platformInfo);
+
+      const mainThreadItemWithDirectInfo = new SnapshotInstance('list-item', -10_002);
+      mainThreadItemWithDirectInfo.setAttribute('__listItemPlatformInfo', directPlatformInfo);
+      expect(mainThreadItemWithDirectInfo.__listItemPlatformInfo).toEqual(directPlatformInfo);
+
+      const backgroundItem = new BackgroundSnapshotInstance('list-item');
+      backgroundItem.setAttribute('__listItemPlatformInfo', 0);
+      backgroundItem.setAttribute('values', [platformInfo]);
+      expect(backgroundItem.__listItemPlatformInfo).toEqual(platformInfo);
+      expect(backgroundItem.__extraProps?.__listItemPlatformInfo).toBeUndefined();
+
+      const backgroundItemWithIndexedValue = new BackgroundSnapshotInstance('list-item');
+      backgroundItemWithIndexedValue.setAttribute('__listItemPlatformInfo', 0);
+      backgroundItemWithIndexedValue.setAttribute(0, platformInfo);
+      expect(backgroundItemWithIndexedValue.__listItemPlatformInfo).toEqual(platformInfo);
+
+      const backgroundItemWithDirectInfo = new BackgroundSnapshotInstance('list-item');
+      backgroundItemWithDirectInfo.setAttribute('__listItemPlatformInfo', directPlatformInfo);
+      expect(backgroundItemWithDirectInfo.__listItemPlatformInfo).toEqual(directPlatformInfo);
+      expect(backgroundItemWithDirectInfo.__extraProps?.__listItemPlatformInfo).toBeUndefined();
+    } finally {
+      snapshotInstanceManager.values.delete(-10_000);
+      snapshotInstanceManager.values.delete(-10_001);
+      snapshotInstanceManager.values.delete(-10_002);
+      backgroundSnapshotInstanceManager.nextId = backgroundNextId - 1;
+    }
+  });
+
+  it('hydrate list children should align by listItemPlatformInfo item-key', () => {
+    const backgroundNextId = backgroundSnapshotInstanceManager.nextId;
+    const before = {
+      id: -1,
+      type: 'list',
+      children: [
+        {
+          id: -2,
+          type: 'list-item',
+          values: [{ 'item-key': 'before-0' }],
+          __listItemPlatformInfo: { 'item-key': 'before-0' },
+        },
+        {
+          id: -3,
+          type: 'list-item',
+          values: [{ 'item-key': 'before-1' }],
+          __listItemPlatformInfo: { 'item-key': 'before-1' },
+        },
+      ],
+    };
+    try {
+      const after = new BackgroundSnapshotInstance('list');
+      const first = new BackgroundSnapshotInstance('list-item');
+      first.setAttribute('values', [{ 'item-key': 'after-0' }]);
+      first.setAttribute('__listItemPlatformInfo', 0);
+      const second = new BackgroundSnapshotInstance('list-item');
+      second.setAttribute('values', [{ 'item-key': 'after-1' }]);
+      second.setAttribute('__listItemPlatformInfo', 0);
+      after.insertBefore(first);
+      after.insertBefore(second);
+
+      const ops = collectSnapshotPatchOps(hydrate(before, after));
+      expect(ops.filter(op => op === SnapshotOperation.RemoveChild)).toHaveLength(2);
+      expect(ops.filter(op => op === SnapshotOperation.CreateElement)).toHaveLength(2);
+      expect(ops.filter(op => op === SnapshotOperation.InsertBefore)).toHaveLength(2);
+      expect(ops.filter(op => op === SnapshotOperation.SetAttribute)).toHaveLength(0);
+    } finally {
+      backgroundSnapshotInstanceManager.nextId = backgroundNextId - 1;
+    }
   });
 });
 
