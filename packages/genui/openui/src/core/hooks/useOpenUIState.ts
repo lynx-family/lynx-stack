@@ -171,9 +171,10 @@ export function useOpenUIState(
   const storeInitKeyRef = useRef<unknown>(Symbol());
   useEffect(() => {
     if (!result?.stateDeclarations && !initialState) return;
-    const key = `${JSON.stringify(result?.stateDeclarations)}::${
-      JSON.stringify(initialState)
-    }`;
+    const stateDeclarations = result?.stateDeclarations ?? {};
+    const key = `${isStreaming ? 'streaming' : 'stable'}::${
+      JSON.stringify(stateDeclarations)
+    }::${JSON.stringify(initialState)}`;
     if (storeInitKeyRef.current === key) return;
     storeInitKeyRef.current = key;
 
@@ -189,8 +190,22 @@ export function useOpenUIState(
         }
       }
     }
-    store.initialize(result?.stateDeclarations ?? {}, bindingDefaults);
-  }, [result?.stateDeclarations, store, initialState]);
+
+    if (isStreaming) {
+      for (const [key, value] of Object.entries(bindingDefaults)) {
+        store.set(key, value);
+      }
+      for (const [key, value] of Object.entries(stateDeclarations)) {
+        if (Object.prototype.hasOwnProperty.call(bindingDefaults, key)) {
+          continue;
+        }
+        store.set(key, value);
+      }
+      return;
+    }
+
+    store.initialize(stateDeclarations, bindingDefaults);
+  }, [result?.stateDeclarations, store, initialState, isStreaming]);
 
   // ─── Subscribe to Store and QueryManager for re-renders ───
   const storeSnapshot = useSyncExternalStore(

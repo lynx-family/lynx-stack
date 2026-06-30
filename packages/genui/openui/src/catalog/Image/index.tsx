@@ -4,11 +4,12 @@
 import { z } from 'zod/v4';
 
 import { defineComponent } from '../../core/library.jsx';
+import { stringLikeSchema, stringifyValue } from '../utils.js';
 
 export const Image = defineComponent({
   name: 'Image',
   props: z.object({
-    url: z.string(),
+    url: stringLikeSchema,
     fit: z.enum(['contain', 'cover', 'fill', 'none', 'scale-down']).optional(),
     variant: z.enum([
       'icon',
@@ -23,6 +24,7 @@ export const Image = defineComponent({
   component: ({ props }) => {
     const fit = props.fit ?? 'cover';
     const variant = props.variant ?? 'mediumFeature';
+    const url = stringifyValue(props.url);
 
     const mode = (() => {
       switch (fit) {
@@ -41,7 +43,7 @@ export const Image = defineComponent({
     return (
       <image
         auto-size
-        src={props.url ?? ''}
+        src={url}
         mode={mode}
         className={`OpenUIImage OpenUIImageVariant${
           variant.charAt(0).toUpperCase() + variant.slice(1)

@@ -357,15 +357,18 @@
 }
 
 .OpenUIImageVariantSmallFeature {
-  max-width: 120rpx;
+  width: 120rpx;
+  height: 90rpx;
 }
 
 .OpenUIImageVariantMediumFeature {
-  max-width: 240rpx;
+  width: 240rpx;
+  height: 160rpx;
 }
 
 .OpenUIImageVariantLargeFeature {
-  max-height: 400rpx;
+  width: 100%;
+  height: 400rpx;
 }
 
 .dark .OpenUIImage {
