@@ -90,10 +90,40 @@ jobs:
         run: |
           curl -fsSL https://github.com/CodSpeedHQ/codspeed/releases/download/v4.17.5/codspeed-runner-installer.sh | bash -s -- --quiet
       - name: Run benchmark (simulation)
+        env:
+          # CodSpeed's simulation mode runs the benchmark under Valgrind, which
+          # writes its intermediate files to $TMPDIR (falling back to /tmp).
+          # Pin TMPDIR to a dedicated directory so those files can be collected
+          # afterwards instead of being scattered in the default temp dir.
+          TMPDIR: ${{ runner.temp }}/codspeed-valgrind-tmp
         run: |
           export HOME=/root
           . "$HOME/.cargo/env"
+          mkdir -p "$TMPDIR"
           codspeed run --mode simulation -- pnpm -r run --workspace-concurrency=1 bench
+      - name: Prepare Valgrind temporary files artifact
+        # Always run so a crashed/timed-out simulation run still leaves a
+        # collectable trail for debugging.
+        if: ${{ always() }}
+        run: |
+          mkdir -p "${RUNNER_TEMP}/codspeed-valgrind-tmp"
+          {
+            echo "TMPDIR=${RUNNER_TEMP}/codspeed-valgrind-tmp"
+            echo
+            find "${RUNNER_TEMP}/codspeed-valgrind-tmp" -mindepth 1 -maxdepth 2 -printf '%M %s %p\n' | sort
+          } > "${RUNNER_TEMP}/codspeed-valgrind-tmp/MANIFEST.txt"
+      - name: Upload Valgrind temporary files
+        # On a clean run Valgrind removes its own temp files, so this artifact
+        # is mainly a forensic aid when the simulation benchmark misbehaves;
+        # if-no-files-found is set to ignore for the empty (green) case.
+        if: ${{ always() }}
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        with:
+          name: codspeed-valgrind-tmp-${{ github.sha }}
+          path: ${{ runner.temp }}/codspeed-valgrind-tmp
+          include-hidden-files: true
+          if-no-files-found: ignore
+          overwrite: true
       - name: Run benchmark (walltime)
         run: |
           export HOME=/root
