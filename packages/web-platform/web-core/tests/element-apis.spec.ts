@@ -184,6 +184,7 @@ describe('Element APIs', () => {
                 kind: 'element',
                 type: 'raw-text',
                 attributesArray: [
+                  { kind: 'static', key: 'css-id', value: 0 },
                   { kind: 'static', key: 'text', value: 'hello' },
                   { kind: 'spread', attrSlotIndex: 1 },
                 ],
@@ -214,6 +215,8 @@ describe('Element APIs', () => {
     expect(root.getAttribute(cssIdAttribute)).toBe('7');
     expect(root.getAttribute('style')).toBe('height: 1px;');
     expect(root.childNodes[0]!.nodeName.toLowerCase()).toBe('raw-text');
+    expect((root.childNodes[0] as HTMLElement).getAttribute(cssIdAttribute))
+      .toBeNull();
     expect(root.childNodes[1]!.nodeType).toBe(8);
     expect(root.childNodes[1]!.nodeValue).toBe('lynx-et-slot:2');
     definition.free();

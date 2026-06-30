@@ -507,7 +507,6 @@ export function createElementAPI(
         parentComponentUniqueId,
         dom,
         new WeakRef(dom),
-        undefined,
         componentCSSID,
         componentID,
       );
@@ -597,16 +596,14 @@ export function createElementAPI(
           0,
           element,
           new WeakRef(element),
-          cssId == null ? undefined : Number(cssId) || 0,
-          undefined,
-          undefined,
         );
         (element as DecoratedHTMLElement)[uniqueIdSymbol] = uniqueId;
         uniqueIdsByIndex.push(uniqueId);
-        if (!config_enable_css_selector) {
-          wasmContext.update_css_og_style(
-            uniqueId,
-            element.getAttribute(lynxEntryNameAttribute),
+        if (cssId != null) {
+          __SetCSSId(
+            [element],
+            Number(cssId) || 0,
+            element.getAttribute(lynxEntryNameAttribute) ?? undefined,
           );
         }
       }
@@ -820,7 +817,6 @@ export function createElementAPI(
         0,
         dom,
         new WeakRef(dom),
-        undefined,
         componentCSSID,
         componentID,
       );

@@ -69,6 +69,12 @@ export function ensureElementTemplateDefinitions(
         switch (attribute.kind) {
           case 'static':
             {
+              if (
+                attribute.key === 'css-id'
+                && (attribute.value == null || Number(attribute.value) === 0)
+              ) {
+                break;
+              }
               const key = attribute.key === 'css-id'
                 ? cssIdAttribute
                 : attribute.key === 'className'

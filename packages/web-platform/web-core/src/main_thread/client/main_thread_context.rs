@@ -92,7 +92,6 @@ impl MainThreadWasmContext {
     parent_component_unique_id: usize,
     dom: web_sys::HtmlElement,
     dom_ref: js_sys::WeakRef,
-    explicit_css_id: Option<i32>,
     component_css_id: Option<i32>,
     component_id: Option<String>,
   ) -> usize {
@@ -102,15 +101,13 @@ impl MainThreadWasmContext {
     */
     let unique_id = self.unique_id_to_element_map.len();
 
-    let css_id = explicit_css_id.unwrap_or_else(|| {
-      if let Some(parent_component_data) =
-        self.get_element_data_by_unique_id(parent_component_unique_id)
-      {
-        parent_component_data.borrow().component_css_id
-      } else {
-        0
-      }
-    });
+    let css_id = if let Some(parent_component_data) =
+      self.get_element_data_by_unique_id(parent_component_unique_id)
+    {
+      parent_component_data.borrow().component_css_id
+    } else {
+      0
+    };
     if !self.config_enable_css_selector {
       let _ = dom.set_attribute(constants::LYNX_UNIQUE_ID_ATTRIBUTE, &unique_id.to_string());
     }
