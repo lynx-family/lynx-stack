@@ -1,7 +1,7 @@
 /**
  * Main-thread (mainThread / lepusNG) reversal + inference, mirroring biz_sourcemap's
  * 2-step path. The main-thread engine is always PrimJS-family, so there is one
- * result per case (no v8/jsc/quickjs split).
+ * result per case (no v8/jsc/primjs split).
  *
  * A mainThread frame is `fn:function_id:pc`. Reversal:
  *   function_info[function_id].line_col[pc - 1] -> {line,col} in main-thread.js

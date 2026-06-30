@@ -10,17 +10,17 @@
  *   call  (throw Error(...), obj.method()):
  *     v8      -> callee identifier START   (matches Node/V8)
  *     jsc     -> callee identifier END     (the `(`)
- *     quickjs -> call expression END       (after `)`, the call's return address)
+ *     primjs -> call expression END       (after `)`, the call's return address)
  *   read  (property access, e.g. (void 0).x):
  *     v8/jsc  -> identifier END
- *     quickjs -> identifier START          (device L4: the `x` itself)
+ *     primjs -> identifier START          (device L4: the `x` itself)
  *   global (undefined GLOBAL variable, ReferenceError):
  *     v8      -> identifier END            (device: `notDefinedVariable+1` -> `+`;
  *                Lynx V8 differs from Node/V8, which reports START)
  *     jsc     -> identifier END            (provisional)
- *     quickjs -> MODULE TOP                (device C2: 85608 = the outermost IIFE
+ *     primjs -> MODULE TOP                (device C2: 85608 = the outermost IIFE
  *                call `(` at the bundle's end. It has NO source-map mapping, so it
- *                reverses to null — QuickJS blames the module entry, not the
+ *                reverses to null — PrimJS blames the module entry, not the
  *                variable, which actually sits at 84177. Real engine behaviour.)
  *
  * So a case needs a `token` (the failing identifier) plus its `err` class; the
@@ -30,8 +30,8 @@ import { readFileSync } from 'node:fs';
 
 import type { MapEntry } from './remap-lib.js';
 
-export type Engine = 'v8' | 'jsc' | 'quickjs';
-export const ENGINES: Engine[] = ['v8', 'jsc', 'quickjs'];
+export type Engine = 'v8' | 'jsc' | 'primjs';
+export const ENGINES: Engine[] = ['v8', 'jsc', 'primjs'];
 
 /** Crash class — drives where each engine points (see file header for devices). */
 export type ErrorKind = 'call' | 'read' | 'global';
@@ -40,7 +40,7 @@ type Anchor = 'start' | 'end' | 'call-end' | 'module-top';
 
 function anchor(engine: Engine, err: ErrorKind): Anchor {
   if (engine === 'v8') return err === 'call' ? 'start' : 'end';
-  if (engine === 'quickjs') {
+  if (engine === 'primjs') {
     if (err === 'call') return 'call-end';
     if (err === 'global') return 'module-top';
     return 'start'; // property read
@@ -50,7 +50,7 @@ function anchor(engine: Engine, err: ErrorKind): Anchor {
 
 /**
  * From the call's `(` at `openIdx0` (0-based), return the 0-based column just
- * after the matching `)` — QuickJS reports a call site at the call expression's
+ * after the matching `)` — PrimJS reports a call site at the call expression's
  * exclusive end (its return address), not the callee token. String literals
  * (whose parens must not count) are skipped.
  */
@@ -114,7 +114,7 @@ export function inferBgFrame(
       } else if (a === 'call-end') {
         col0 = callExprEnd(line, end0);
       } else if (a === 'module-top') {
-        // outermost IIFE call — QuickJS's report for an undefined global
+        // outermost IIFE call — PrimJS's report for an undefined global
         col0 = line.lastIndexOf('(');
       }
       return { lineno: li + 1, colno: col0 + 1, release };

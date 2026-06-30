@@ -13,7 +13,7 @@
  *   engine (kept in all three files for page-order parity).
  *
  * MainThread pcs are inferred without a device sample yet — verify those against
- * a device. (The QuickJS column anchors are device-calibrated; see infer.ts.)
+ * a device. (The PrimJS column anchors are device-calibrated; see infer.ts.)
  */
 import type { ErrorKind } from './infer.js';
 
@@ -99,7 +99,7 @@ export const sections: Section[] = [
         find: '.notAFunction(',
         token: 'notAFunction',
       },
-      // 'global', not 'read': QuickJS reports an undefined-GLOBAL ReferenceError
+      // 'global', not 'read': PrimJS reports an undefined-GLOBAL ReferenceError
       // at the module top (the outermost IIFE call, no source-map mapping ->
       // reverses to null), not the variable site. v8/jsc report the variable.
       {
