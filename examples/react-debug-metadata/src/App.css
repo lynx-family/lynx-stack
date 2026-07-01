@@ -1,0 +1,69 @@
+:root {
+  background-color: #000;
+  --color-text: #fff;
+}
+
+/* dedicated demo page: plain dark, fully scrollable (no fixed backdrop that
+   would swallow scroll gestures) */
+.App {
+  height: 100vh;
+  background-color: #0d0d12;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 20px 0 96px;
+}
+
+text {
+  color: var(--color-text);
+}
+
+.Banner {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  margin-bottom: 8px;
+}
+
+.Title {
+  font-size: 20px;
+  font-weight: 700;
+}
+
+.Subtitle {
+  font-size: 13px;
+  color: #9aa0aa;
+  margin-top: 4px;
+}
+
+.Suspense {
+  margin-top: 16px;
+}
+
+/* crash-demo rows: clearly separated, padded, tappable, readable over the bg */
+.crash-section {
+  margin-top: 18px;
+  width: 88vw;
+  display: flex;
+  flex-direction: column;
+}
+
+.crash-title {
+  font-weight: 700;
+  color: #fff;
+  margin-bottom: 10px;
+  font-size: 15px;
+}
+
+.crash-row {
+  background-color: rgba(0, 0, 0, 0.6);
+  border: 1px solid rgba(255, 255, 255, 0.28);
+  border-radius: 10px;
+  padding: 14px 16px;
+  margin-bottom: 12px;
+}
+
+.crash-row text {
+  color: #fff;
+  font-size: 15px;
+}

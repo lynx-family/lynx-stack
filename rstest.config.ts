@@ -22,5 +22,6 @@ export default defineConfig({
     'packages/rspeedy/*/rstest.config.ts',
     'packages/web-platform/*/rstest.config.ts',
     'packages/webpack/*/rstest.config.ts',
+    'examples/react-debug-metadata/error-remapping/rstest.config.ts',
   ],
 });
