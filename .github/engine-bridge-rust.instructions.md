@@ -4,7 +4,7 @@ applyTo: "lynx/engine-bridge/**"
 
 `lynx/engine-bridge` is an independent Cargo workspace whose only library crate is `lynx`; raw C ABI bindings live under `lynx::sys` rather than a separate bridge crate. Validate it from that directory with `cargo fmt --all --check`, `cargo clippy --locked --all-targets --all-features -- -D warnings`, and `cargo test --locked --all-targets --all-features`.
 
-Runtime-backed tests require a Lynx runtime locally and in CI. Use `python3 tools/download_runtime.py --emit-env` from `lynx/engine-bridge` for local setup, and keep CI downloading runtime dylibs into a temporary SDK directory instead of committing binary artifacts. Missing `LYNX_LIB_PATH` or `LYNX_SDK_DIR` should fail runtime integration tests instead of skipping them.
+Runtime-backed tests require a Lynx runtime locally and in CI. Package `build.rs` files should use `tools/download_runtime.py` to prepare the default macOS dylib under `target/lynx-engine-bridge-sdk` and inject `LYNX_SDK_DIR`; keep the manual downloader available for refreshes and non-Cargo runs. Missing runtime configuration should fail runtime integration tests instead of skipping them.
 
 Keep Rust integration coverage for the `lynx` library crate under `lynx/engine-bridge/lynx/tests/`. These tests should cover public API behavior independently from `examples/headless`, and runtime-backed cases should load the configured dylib/so rather than using mocks.
 

@@ -1,6 +1,6 @@
 use super::bindings::*;
 use std::env;
-use std::ffi::{c_char, c_int, c_void, CStr, CString};
+use std::ffi::{c_char, c_int, c_void, CStr, CString, OsString};
 use std::fmt;
 use std::mem;
 use std::path::{Path, PathBuf};
@@ -77,10 +77,10 @@ pub fn library_filename() -> Result<&'static str> {
 
 pub fn candidate_library_paths() -> Result<Vec<PathBuf>> {
   let mut candidates = Vec::new();
-  if let Some(path) = env::var_os("LYNX_LIB_PATH") {
+  if let Some(path) = configured_lib_path() {
     push_unique_path(&mut candidates, PathBuf::from(path));
   }
-  if let Some(sdk_dir) = env::var_os("LYNX_SDK_DIR") {
+  if let Some(sdk_dir) = configured_sdk_dir() {
     let sdk_dir = PathBuf::from(sdk_dir);
     push_unique_path(
       &mut candidates,
@@ -89,6 +89,14 @@ pub fn candidate_library_paths() -> Result<Vec<PathBuf>> {
     push_unique_path(&mut candidates, sdk_dir.join(library_filename()?));
   }
   Ok(candidates)
+}
+
+fn configured_lib_path() -> Option<OsString> {
+  env::var_os("LYNX_LIB_PATH").or_else(|| option_env!("LYNX_LIB_PATH").map(OsString::from))
+}
+
+fn configured_sdk_dir() -> Option<OsString> {
+  env::var_os("LYNX_SDK_DIR").or_else(|| option_env!("LYNX_SDK_DIR").map(OsString::from))
 }
 
 fn push_unique_path(candidates: &mut Vec<PathBuf>, path: PathBuf) {

@@ -5,6 +5,7 @@ use lynx::{
 };
 use lynx_headless_example::write_png;
 use std::env;
+use std::ffi::OsString;
 use std::fs;
 use std::path::PathBuf;
 use std::sync::{Arc, Mutex};
@@ -196,10 +197,16 @@ struct Options {
   native_ui_loop: bool,
 }
 
+fn configured_sdk_dir() -> Option<PathBuf> {
+  env::var_os("LYNX_SDK_DIR")
+    .or_else(|| option_env!("LYNX_SDK_DIR").map(OsString::from))
+    .map(PathBuf::from)
+}
+
 fn main() -> lynx::Result<()> {
   let options = parse_options();
   let env = Env::load()?;
-  let sdk_dir = env::var_os("LYNX_SDK_DIR").map(PathBuf::from);
+  let sdk_dir = configured_sdk_dir();
   if let Some(sdk_dir) = &sdk_dir {
     for relative in ["data/icudtl.dat", "icudtl.dat"] {
       let icu_path = sdk_dir.join(relative);

@@ -145,13 +145,21 @@ fn runtime_public_methods_reject_interior_nul_before_ffi() {
 }
 
 fn configured_env() -> Env {
-  if env::var_os("LYNX_LIB_PATH").is_none() && env::var_os("LYNX_SDK_DIR").is_none() {
+  if !has_runtime_configuration() {
     panic!(
       "runtime integration tests require LYNX_LIB_PATH or LYNX_SDK_DIR; run \
+       `cargo test` to let build.rs download the runtime, or run \
        `python3 tools/download_runtime.py --emit-env` from lynx/engine-bridge"
     );
   }
   Env::load().expect("load configured Lynx runtime")
+}
+
+fn has_runtime_configuration() -> bool {
+  env::var_os("LYNX_LIB_PATH").is_some()
+    || env::var_os("LYNX_SDK_DIR").is_some()
+    || option_env!("LYNX_LIB_PATH").is_some()
+    || option_env!("LYNX_SDK_DIR").is_some()
 }
 
 fn runtime_test_guard() -> MutexGuard<'static, ()> {

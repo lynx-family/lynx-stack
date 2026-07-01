@@ -79,13 +79,6 @@ jobs:
         with:
           key: engine-bridge-${{ matrix.runs-on.name }}
           save-if: ${{ github.ref_name == 'main' }}
-      - name: Download Lynx runtime
-        run: |
-          set -euo pipefail
-          sdk_dir="$RUNNER_TEMP/lynx-engine-bridge-sdk"
-          python3 lynx/engine-bridge/tools/download_runtime.py \
-            --sdk-dir "$sdk_dir" \
-            --github-env "$GITHUB_ENV"
       - name: Format
         working-directory: lynx/engine-bridge
         run: cargo fmt --all --check
