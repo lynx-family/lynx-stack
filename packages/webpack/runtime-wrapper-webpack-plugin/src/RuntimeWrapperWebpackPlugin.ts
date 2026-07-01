@@ -157,6 +157,12 @@ class RuntimeWrapperWebpackPluginImpl {
     new BannerPlugin({
       test: test!,
       raw: true,
+      // Wrap at PROCESS_ASSETS_STAGE_NONE (0), after the release BannerPlugins
+      // the legacy source-map plugin + debug-metadata, at/around ADDITIONS
+      // (-100) so the wrapper stays outermost and their `_SetSourceMapRelease`
+      // runtimes land INSIDE it, yet still before DEV_TOOLING so the source map
+      // accounts for it.
+      stage: compiler.webpack.Compilation.PROCESS_ASSETS_STAGE_NONE,
       banner: ({ chunk, filename }) => {
         const banner = this.#getBannerType(filename) === 'script'
           ? loadScriptBanner()
@@ -187,6 +193,7 @@ class RuntimeWrapperWebpackPluginImpl {
       test: test!,
       footer: true,
       raw: true,
+      stage: compiler.webpack.Compilation.PROCESS_ASSETS_STAGE_NONE,
       banner: ({ filename }) => {
         const footer = this.#getBannerType(filename) === 'script'
           ? loadScriptFooter
