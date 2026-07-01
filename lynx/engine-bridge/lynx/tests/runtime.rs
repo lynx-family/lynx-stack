@@ -148,8 +148,8 @@ fn configured_env() -> Env {
   if !has_runtime_configuration() {
     panic!(
       "runtime integration tests require LYNX_LIB_PATH or LYNX_SDK_DIR; run \
-       `cargo test` to let build.rs download the runtime, or run \
-       `python3 tools/download_runtime.py --emit-env` from lynx/engine-bridge"
+       `cargo test` to let build.rs download the runtime, or set one of the \
+       variables explicitly"
     );
   }
   Env::load().expect("load configured Lynx runtime")
