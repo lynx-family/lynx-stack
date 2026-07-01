@@ -20,8 +20,8 @@ import { installElementTemplateCommitHook } from '../../../../src/element-templa
 import '../../../../src/element-template/native/index.js';
 import { ElementTemplateLifecycleConstant } from '../../../../src/element-template/protocol/lifecycle-constant.js';
 import type {
+  ElementTemplateHydrateCommitContext,
   ElementTemplateUpdateCommitContext,
-  SerializedElementTemplate,
 } from '../../../../src/element-template/protocol/types.js';
 import { parseElementTemplateUpdateEventPayload } from '../../../../src/element-template/protocol/update-event.js';
 import { root } from '../../../../src/element-template/client/root.js';
@@ -47,11 +47,13 @@ interface RootNode {
   type: 'root';
 }
 
-type HydrateEvent = { data: { instances: SerializedElementTemplate[] } };
+type HydrateEvent = { data: ElementTemplateHydrateCommitContext };
+type HydrateInstance = ElementTemplateHydrateCommitContext['instances'][number];
+type HydrateInstances = ElementTemplateHydrateCommitContext['instances'];
 
 export interface PatchContext {
   envManager: ElementTemplateEnvManager;
-  hydrationData: SerializedElementTemplate[];
+  hydrationData: HydrateInstances;
   onHydrate: (event: HydrateEvent) => void;
   root: RootNode;
   nativeLog: unknown[];
@@ -60,7 +62,7 @@ export interface PatchContext {
 
 export interface UpdateFixtureContext {
   envManager: ElementTemplateEnvManager;
-  hydrationData: SerializedElementTemplate[];
+  hydrationData: HydrateInstances;
   updateEvents: ElementTemplateUpdateCommitContext[];
   onHydrate: (event: HydrateEvent) => void;
   onUpdate: (event: { data: unknown }) => void;
@@ -76,7 +78,7 @@ export function setupPatchContext(): PatchContext {
   const installed = installMockNativePapi({ clearTemplatesOnCleanup: false });
 
   const envManager = new ElementTemplateEnvManager();
-  const hydrationData: SerializedElementTemplate[] = [];
+  const hydrationData: HydrateInstances = [];
 
   envManager.resetEnv('background');
   envManager.setUseElementTemplate(true);
@@ -112,7 +114,7 @@ export function setupUpdateFixtureContext(): UpdateFixtureContext {
 
   const installed = installMockNativePapi({ clearTemplatesOnCleanup: false });
   const envManager = new ElementTemplateEnvManager();
-  const hydrationData: SerializedElementTemplate[] = [];
+  const hydrationData: HydrateInstances = [];
   const updateEvents: ElementTemplateUpdateCommitContext[] = [];
 
   envManager.resetEnv('background');
@@ -178,7 +180,7 @@ export function teardownUpdateFixtureContext(context: UpdateFixtureContext): voi
 }
 
 export function renderAndCollect(App: () => JSX.Element, context: PatchContext): {
-  before: SerializedElementTemplate;
+  before: HydrateInstance;
   after: BackgroundElementTemplateInstance;
 } {
   root.render(<App />);

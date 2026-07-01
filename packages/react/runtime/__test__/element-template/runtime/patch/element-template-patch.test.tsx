@@ -14,10 +14,10 @@ import {
 import { ElementTemplateLifecycleConstant } from '../../../../src/element-template/protocol/lifecycle-constant.js';
 import { ElementTemplateUpdateOps } from '../../../../src/element-template/protocol/opcodes.js';
 import type {
+  ElementTemplateHydrateCommitContext,
   ElementTemplateHandleSlotsCommand,
   ElementTemplateUpdateCommandStream,
   ElementTemplateUpdateCommitContext,
-  SerializedElementTemplate,
 } from '../../../../src/element-template/protocol/types.js';
 import { createElementTemplateUpdateEvent } from '../../../../src/element-template/protocol/update-event.js';
 import { __page, setupPage } from '../../../../src/element-template/runtime/page/page.js';
@@ -62,7 +62,8 @@ interface PageWithChildren {
   children?: Array<{ templateId?: string }>;
 }
 
-type HydrateEvent = { data: { instances: SerializedElementTemplate[] } };
+type HydrateEvent = { data: ElementTemplateHydrateCommitContext };
+type HydrateInstances = ElementTemplateHydrateCommitContext['instances'];
 
 function createRawTextOps(id: number, text: string) {
   return [
@@ -116,7 +117,7 @@ function seedMTEventState(
 
 describe('ElementTemplate patch stream (apply)', () => {
   const envManager = new ElementTemplateEnvManager();
-  let hydrationData: SerializedElementTemplate[] = [];
+  let hydrationData: HydrateInstances = [];
 
   let onHydrate: (event: HydrateEvent) => void;
   let mockCreateTypedElementTemplate: ReportErrorMock;

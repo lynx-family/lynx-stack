@@ -5,6 +5,7 @@ import { vi } from 'vitest';
 
 import { root } from '../../../../../src/element-template/index.js';
 import { ElementTemplateLifecycleConstant } from '../../../../../src/element-template/protocol/lifecycle-constant.js';
+import type { ElementTemplateHydrateCommitContext } from '../../../../../src/element-template/protocol/types.js';
 import { resetTemplateId } from '../../../../../src/element-template/runtime/template/handle.js';
 import { elementTemplateRegistry } from '../../../../../src/element-template/runtime/template/registry.js';
 import { loadCompiledFixtureApp } from '../../../test-utils/debug/compiledFixtureApp.js';
@@ -13,11 +14,14 @@ import { installMockNativePapi } from '../../../test-utils/mock/mockNativePapi.j
 
 declare const renderPage: () => void;
 
+type HydrateEvent = { data: ElementTemplateHydrateCommitContext };
+type HydrateInstances = ElementTemplateHydrateCommitContext['instances'];
+
 interface HydrationContext {
-  hydrationData: unknown[];
+  hydrationData: HydrateInstances;
   envManager: ElementTemplateEnvManager;
   cleanup: () => void;
-  onHydrate: (event: { data: { instances: unknown[] } }) => void;
+  onHydrate: (event: HydrateEvent) => void;
 }
 
 function setup(): HydrationContext {
@@ -30,8 +34,8 @@ function setup(): HydrationContext {
   envManager.resetEnv('background');
   envManager.setUseElementTemplate(true);
 
-  const hydrationData: unknown[] = [];
-  const onHydrate = vi.fn().mockImplementation((event: { data: { instances: unknown[] } }) => {
+  const hydrationData: HydrateInstances = [];
+  const onHydrate = vi.fn().mockImplementation((event: HydrateEvent) => {
     hydrationData.push(...event.data.instances);
   });
   lynx.getCoreContext().addEventListener(ElementTemplateLifecycleConstant.hydrate, onHydrate);
