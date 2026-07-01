@@ -1,0 +1,42 @@
+{
+  "name": "@lynx-js/dom-shim",
+  "version": "0.0.0",
+  "private": true,
+  "description": "[EXPERIMENTAL] Phase 1 benchmark for LLM-output validation: compares raw Element PAPI / DOM Shim / A2UI routes. See PRD.md at worktree root.",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/lynx-family/lynx-stack.git",
+    "directory": "packages/dom-shim"
+  },
+  "license": "Apache-2.0",
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts",
+    "./runtime": "./src/runtime/index.ts",
+    "./tiers": "./src/runtime/tiers.ts",
+    "./tiers/strict": "./src/runtime/tiers-strict.ts"
+  },
+  "scripts": {
+    "benchmark": "node --experimental-strip-types benchmarks/cli.ts",
+    "test:corpus-validate": "node --experimental-strip-types benchmarks/scripts/validate-corpus.ts",
+    "test:runtime": "vitest run src/runtime",
+    "test:schema-validate": "node --experimental-strip-types benchmarks/scripts/validate-schema.ts",
+    "typecheck": "tsc --noEmit",
+    "wpt-update-baseline": "WPT_UPDATE_BASELINE=1 vitest run src/runtime/__tests__/wpt-baseline.test.ts"
+  },
+  "dependencies": {
+    "htmlparser2": "^9.1.0"
+  },
+  "devDependencies": {
+    "@anthropic-ai/sdk": "^0.30.1",
+    "ajv": "^8.17.1",
+    "ajv-formats": "^3.0.1",
+    "openai": "^4.74.0",
+    "puppeteer": "^23.11.1",
+    "typescript": "5.9.3",
+    "vitest": "^3.2.4"
+  },
+  "engines": {
+    "node": "^22 || ^24"
+  }
+}

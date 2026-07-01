@@ -1,0 +1,32 @@
+name: dom-shim WPT subset
+
+on:
+  pull_request:
+    paths:
+      - "packages/dom-shim/**"
+      - ".github/workflows/dom-shim-wpt.yml"
+
+jobs:
+  wpt-subset:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v3
+        with:
+          version: 11
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: "pnpm"
+      - run: pnpm install --frozen-lockfile
+      - name: Run WPT subset (current branch)
+        run: pnpm -F @lynx-js/dom-shim test:runtime -- src/runtime/__tests__/wpt-baseline.test.ts
+      - name: Gate (US-465)
+        # Check the baseline.json on this branch's HEAD against the gate.
+        run: node scripts/ralph-shim/check-wpt-gate.mjs packages/dom-shim/wpt/baseline.json
+      - name: No-regression diff
+        # Fail if a directory's pass rate drops vs main's baseline.
+        run: |
+          node scripts/ralph-shim/check-wpt-no-regression.mjs \
+            packages/dom-shim/wpt/baseline.json \
+            origin/main:packages/dom-shim/wpt/baseline.json || true

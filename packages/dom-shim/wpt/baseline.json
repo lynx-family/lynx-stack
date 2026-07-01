@@ -1,0 +1,620 @@
+{
+  "schemaVersion": "1",
+  "startedAt": "2026-06-15T01:58:32.309Z",
+  "finishedAt": "2026-06-15T01:58:32.322Z",
+  "totalTests": 86,
+  "passed": 86,
+  "failed": 0,
+  "errored": 0,
+  "skipped": 0,
+  "overallPassRate": 1,
+  "gateThreshold": 0.7,
+  "directories": [
+    {
+      "path": "dom/nodes/read",
+      "passed": 26,
+      "failed": 0,
+      "errored": 0,
+      "skipped": 0,
+      "passRate": 1,
+      "tests": [
+        {
+          "directory": "dom/nodes/read",
+          "name": "Node-tagName",
+          "status": "pass",
+          "diagnostics": []
+        },
+        {
+          "directory": "dom/nodes/read",
+          "name": "Node-nodeName",
+          "status": "pass",
+          "diagnostics": []
+        },
+        {
+          "directory": "dom/nodes/read",
+          "name": "Node-nodeType",
+          "status": "pass",
+          "diagnostics": []
+        },
+        {
+          "directory": "dom/nodes/read",
+          "name": "Node-nodeValue",
+          "status": "pass",
+          "diagnostics": []
+        },
+        {
+          "directory": "dom/nodes/read",
+          "name": "Node-parentNode",
+          "status": "pass",
+          "diagnostics": []
+        },
+        {
+          "directory": "dom/nodes/read",
+          "name": "Node-childNodes",
+          "status": "pass",
+          "diagnostics": []
+        },
+        {
+          "directory": "dom/nodes/read",
+          "name": "Node-firstChild",
+          "status": "pass",
+          "diagnostics": []
+        },
+        {
+          "directory": "dom/nodes/read",
+          "name": "Node-lastChild",
+          "status": "pass",
+          "diagnostics": []
+        },
+        {
+          "directory": "dom/nodes/read",
+          "name": "Node-nextSibling",
+          "status": "pass",
+          "diagnostics": []
+        },
+        {
+          "directory": "dom/nodes/read",
+          "name": "Node-previousSibling",
+          "status": "pass",
+          "diagnostics": []
+        },
+        {
+          "directory": "dom/nodes/read",
+          "name": "Node-hasChildNodes",
+          "status": "pass",
+          "diagnostics": []
+        },
+        {
+          "directory": "dom/nodes/read",
+          "name": "Node-isEqualNode",
+          "status": "pass",
+          "diagnostics": []
+        },
+        {
+          "directory": "dom/nodes/read",
+          "name": "Node-isSameNode",
+          "status": "pass",
+          "diagnostics": []
+        },
+        {
+          "directory": "dom/nodes/read",
+          "name": "Node-isConnected",
+          "status": "pass",
+          "diagnostics": []
+        },
+        {
+          "directory": "dom/nodes/read",
+          "name": "Node-contains",
+          "status": "pass",
+          "diagnostics": []
+        },
+        {
+          "directory": "dom/nodes/read",
+          "name": "Node-getRootNode",
+          "status": "pass",
+          "diagnostics": []
+        },
+        {
+          "directory": "dom/nodes/read",
+          "name": "Node-compareDocumentPosition",
+          "status": "pass",
+          "diagnostics": []
+        },
+        {
+          "directory": "dom/nodes/read",
+          "name": "Element-tagName",
+          "status": "pass",
+          "diagnostics": []
+        },
+        {
+          "directory": "dom/nodes/read",
+          "name": "Element-localName",
+          "status": "pass",
+          "diagnostics": []
+        },
+        {
+          "directory": "dom/nodes/read",
+          "name": "Element-id",
+          "status": "pass",
+          "diagnostics": []
+        },
+        {
+          "directory": "dom/nodes/read",
+          "name": "Element-children",
+          "status": "pass",
+          "diagnostics": []
+        },
+        {
+          "directory": "dom/nodes/read",
+          "name": "Element-firstElementChild",
+          "status": "pass",
+          "diagnostics": []
+        },
+        {
+          "directory": "dom/nodes/read",
+          "name": "Element-lastElementChild",
+          "status": "pass",
+          "diagnostics": []
+        },
+        {
+          "directory": "dom/nodes/read",
+          "name": "Element-childElementCount",
+          "status": "pass",
+          "diagnostics": []
+        },
+        {
+          "directory": "dom/nodes/read",
+          "name": "Element-nextElementSibling",
+          "status": "pass",
+          "diagnostics": []
+        },
+        {
+          "directory": "dom/nodes/read",
+          "name": "Element-previousElementSibling",
+          "status": "pass",
+          "diagnostics": []
+        }
+      ]
+    },
+    {
+      "path": "dom/nodes/write",
+      "passed": 16,
+      "failed": 0,
+      "errored": 0,
+      "skipped": 0,
+      "passRate": 1,
+      "tests": [
+        {
+          "directory": "dom/nodes/write",
+          "name": "Element-setAttribute",
+          "status": "pass",
+          "diagnostics": []
+        },
+        {
+          "directory": "dom/nodes/write",
+          "name": "Element-removeAttribute",
+          "status": "pass",
+          "diagnostics": []
+        },
+        {
+          "directory": "dom/nodes/write",
+          "name": "Element-toggleAttribute",
+          "status": "pass",
+          "diagnostics": []
+        },
+        {
+          "directory": "dom/nodes/write",
+          "name": "Element-classList",
+          "status": "pass",
+          "diagnostics": []
+        },
+        {
+          "directory": "dom/nodes/write",
+          "name": "Element-className",
+          "status": "pass",
+          "diagnostics": []
+        },
+        {
+          "directory": "dom/nodes/write",
+          "name": "Element-appendChild",
+          "status": "pass",
+          "diagnostics": []
+        },
+        {
+          "directory": "dom/nodes/write",
+          "name": "Element-removeChild",
+          "status": "pass",
+          "diagnostics": []
+        },
+        {
+          "directory": "dom/nodes/write",
+          "name": "Element-insertBefore",
+          "status": "pass",
+          "diagnostics": []
+        },
+        {
+          "directory": "dom/nodes/write",
+          "name": "Element-replaceChild",
+          "status": "pass",
+          "diagnostics": []
+        },
+        {
+          "directory": "dom/nodes/write",
+          "name": "Element-cloneNode",
+          "status": "pass",
+          "diagnostics": []
+        },
+        {
+          "directory": "dom/nodes/write",
+          "name": "ChildNode-remove",
+          "status": "pass",
+          "diagnostics": []
+        },
+        {
+          "directory": "dom/nodes/write",
+          "name": "ChildNode-replaceWith",
+          "status": "pass",
+          "diagnostics": []
+        },
+        {
+          "directory": "dom/nodes/write",
+          "name": "ChildNode-before",
+          "status": "pass",
+          "diagnostics": []
+        },
+        {
+          "directory": "dom/nodes/write",
+          "name": "ChildNode-after",
+          "status": "pass",
+          "diagnostics": []
+        },
+        {
+          "directory": "dom/nodes/write",
+          "name": "ParentNode-append",
+          "status": "pass",
+          "diagnostics": []
+        },
+        {
+          "directory": "dom/nodes/write",
+          "name": "ParentNode-prepend",
+          "status": "pass",
+          "diagnostics": []
+        }
+      ]
+    },
+    {
+      "path": "dom/events",
+      "passed": 10,
+      "failed": 0,
+      "errored": 0,
+      "skipped": 0,
+      "passRate": 1,
+      "tests": [
+        {
+          "directory": "dom/events",
+          "name": "EventTarget-addEventListener",
+          "status": "pass",
+          "diagnostics": []
+        },
+        {
+          "directory": "dom/events",
+          "name": "EventTarget-removeEventListener",
+          "status": "pass",
+          "diagnostics": []
+        },
+        {
+          "directory": "dom/events",
+          "name": "Event-dispatchEvent",
+          "status": "pass",
+          "diagnostics": []
+        },
+        {
+          "directory": "dom/events",
+          "name": "Event-preventDefault",
+          "status": "pass",
+          "diagnostics": []
+        },
+        {
+          "directory": "dom/events",
+          "name": "Event-stopPropagation",
+          "status": "pass",
+          "diagnostics": []
+        },
+        {
+          "directory": "dom/events",
+          "name": "Event-stopImmediatePropagation",
+          "status": "pass",
+          "diagnostics": []
+        },
+        {
+          "directory": "dom/events",
+          "name": "Event-capture-bubble",
+          "status": "pass",
+          "diagnostics": []
+        },
+        {
+          "directory": "dom/events",
+          "name": "Event-target-currentTarget",
+          "status": "pass",
+          "diagnostics": []
+        },
+        {
+          "directory": "dom/events",
+          "name": "Event-once-option",
+          "status": "pass",
+          "diagnostics": []
+        },
+        {
+          "directory": "dom/events",
+          "name": "Event-signal-option",
+          "status": "pass",
+          "diagnostics": []
+        }
+      ]
+    },
+    {
+      "path": "dom/lists",
+      "passed": 7,
+      "failed": 0,
+      "errored": 0,
+      "skipped": 0,
+      "passRate": 1,
+      "tests": [
+        {
+          "directory": "dom/lists",
+          "name": "DOMTokenList-add",
+          "status": "pass",
+          "diagnostics": []
+        },
+        {
+          "directory": "dom/lists",
+          "name": "DOMTokenList-remove",
+          "status": "pass",
+          "diagnostics": []
+        },
+        {
+          "directory": "dom/lists",
+          "name": "DOMTokenList-toggle",
+          "status": "pass",
+          "diagnostics": []
+        },
+        {
+          "directory": "dom/lists",
+          "name": "DOMTokenList-replace",
+          "status": "pass",
+          "diagnostics": []
+        },
+        {
+          "directory": "dom/lists",
+          "name": "DOMTokenList-contains",
+          "status": "pass",
+          "diagnostics": []
+        },
+        {
+          "directory": "dom/lists",
+          "name": "DOMTokenList-iteration",
+          "status": "pass",
+          "diagnostics": []
+        },
+        {
+          "directory": "dom/lists",
+          "name": "DOMTokenList-length-item",
+          "status": "pass",
+          "diagnostics": []
+        }
+      ]
+    },
+    {
+      "path": "dom/abort",
+      "passed": 2,
+      "failed": 0,
+      "errored": 0,
+      "skipped": 0,
+      "passRate": 1,
+      "tests": [
+        {
+          "directory": "dom/abort",
+          "name": "abort-signal-addEventListener",
+          "status": "pass",
+          "diagnostics": []
+        },
+        {
+          "directory": "dom/abort",
+          "name": "abort-signal-once-listener",
+          "status": "pass",
+          "diagnostics": []
+        }
+      ]
+    },
+    {
+      "path": "html/dom/innerhtml",
+      "passed": 6,
+      "failed": 0,
+      "errored": 0,
+      "skipped": 0,
+      "passRate": 1,
+      "tests": [
+        {
+          "directory": "html/dom/innerhtml",
+          "name": "Element-innerHTML-basic",
+          "status": "pass",
+          "diagnostics": []
+        },
+        {
+          "directory": "html/dom/innerhtml",
+          "name": "Element-innerHTML-getter",
+          "status": "pass",
+          "diagnostics": []
+        },
+        {
+          "directory": "html/dom/innerhtml",
+          "name": "Element-innerHTML-script-skip",
+          "status": "pass",
+          "diagnostics": []
+        },
+        {
+          "directory": "html/dom/innerhtml",
+          "name": "Element-outerHTML",
+          "status": "pass",
+          "diagnostics": []
+        },
+        {
+          "directory": "html/dom/innerhtml",
+          "name": "Element-insertAdjacentHTML",
+          "status": "pass",
+          "diagnostics": []
+        },
+        {
+          "directory": "html/dom/innerhtml",
+          "name": "Element-insertAdjacentText",
+          "status": "pass",
+          "diagnostics": []
+        }
+      ]
+    },
+    {
+      "path": "html/dom/global-attributes",
+      "passed": 5,
+      "failed": 0,
+      "errored": 0,
+      "skipped": 0,
+      "passRate": 1,
+      "tests": [
+        {
+          "directory": "html/dom/global-attributes",
+          "name": "dataset",
+          "status": "pass",
+          "diagnostics": []
+        },
+        {
+          "directory": "html/dom/global-attributes",
+          "name": "data-attribute-roundtrip",
+          "status": "pass",
+          "diagnostics": []
+        },
+        {
+          "directory": "html/dom/global-attributes",
+          "name": "class-attribute",
+          "status": "pass",
+          "diagnostics": []
+        },
+        {
+          "directory": "html/dom/global-attributes",
+          "name": "id-attribute",
+          "status": "pass",
+          "diagnostics": []
+        },
+        {
+          "directory": "html/dom/global-attributes",
+          "name": "style-attribute",
+          "status": "pass",
+          "diagnostics": []
+        }
+      ]
+    },
+    {
+      "path": "css/cssom",
+      "passed": 7,
+      "failed": 0,
+      "errored": 0,
+      "skipped": 0,
+      "passRate": 1,
+      "tests": [
+        {
+          "directory": "css/cssom",
+          "name": "cssom-setProperty",
+          "status": "pass",
+          "diagnostics": []
+        },
+        {
+          "directory": "css/cssom",
+          "name": "cssom-getPropertyValue",
+          "status": "pass",
+          "diagnostics": []
+        },
+        {
+          "directory": "css/cssom",
+          "name": "cssom-removeProperty",
+          "status": "pass",
+          "diagnostics": []
+        },
+        {
+          "directory": "css/cssom",
+          "name": "cssom-cssText",
+          "status": "pass",
+          "diagnostics": []
+        },
+        {
+          "directory": "css/cssom",
+          "name": "cssom-cssText-set",
+          "status": "pass",
+          "diagnostics": []
+        },
+        {
+          "directory": "css/cssom",
+          "name": "cssom-camelCase-accessor",
+          "status": "pass",
+          "diagnostics": []
+        },
+        {
+          "directory": "css/cssom",
+          "name": "cssom-css-custom-property",
+          "status": "pass",
+          "diagnostics": []
+        }
+      ]
+    },
+    {
+      "path": "selectors",
+      "passed": 7,
+      "failed": 0,
+      "errored": 0,
+      "skipped": 0,
+      "passRate": 1,
+      "tests": [
+        {
+          "directory": "selectors",
+          "name": "querySelector-id",
+          "status": "pass",
+          "diagnostics": []
+        },
+        {
+          "directory": "selectors",
+          "name": "querySelector-class",
+          "status": "pass",
+          "diagnostics": []
+        },
+        {
+          "directory": "selectors",
+          "name": "querySelector-tag",
+          "status": "pass",
+          "diagnostics": []
+        },
+        {
+          "directory": "selectors",
+          "name": "querySelector-compound",
+          "status": "pass",
+          "diagnostics": []
+        },
+        {
+          "directory": "selectors",
+          "name": "querySelectorAll-multiple",
+          "status": "pass",
+          "diagnostics": []
+        },
+        {
+          "directory": "selectors",
+          "name": "matches-basic",
+          "status": "pass",
+          "diagnostics": []
+        },
+        {
+          "directory": "selectors",
+          "name": "closest-walks-ancestors",
+          "status": "pass",
+          "diagnostics": []
+        }
+      ]
+    }
+  ]
+}

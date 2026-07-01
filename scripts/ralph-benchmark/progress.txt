@@ -1,0 +1,162 @@
+# Ralph Phase 1 Benchmark Progress
+
+Branch: Huxpro/lynx-dom-shim-benchmark
+PRD: /Users/bytedance/github/lynx-stack/.worktrees/lynx-dom-shim-benchmark/PRD.md
+Completion promise: PHASE_1_SMOKE_DONE
+
+## Story Status
+
+- US-101: DONE — set up workspace package skeleton
+- US-102: DONE — curate 50-prompt corpus
+- US-103: DONE — define scoring rubric and result schema
+- US-104: DONE — build benchmark harness CLI (stub routes)
+- US-105: DONE — implement Route A raw PAPI runner
+- US-106: DONE — implement Route B DOM Shim mock runner
+- US-107: DONE — implement Route C A2UI JSON runner
+- US-108: DONE — implement visual similarity scoring
+- US-109: DONE (infra) — generate Phase 1 comparison report + smoke test
+        Dry-run smoke gate passes; live smoke run BLOCKED on ANTHROPIC_API_KEY.
+        See packages/dom-shim/SMOKE_TEST_README.md.
+
+## Notes for next iteration
+
+Always use absolute paths in Bash calls (cwd does not persist).
+Worktree: /Users/bytedance/github/lynx-stack/.worktrees/lynx-dom-shim-benchmark/
+
+**Environment quirk:** Local default node is v23.8 which the repo rejects (`engines: ^22 || ^24`).
+Always prepend: `export PATH="/Users/bytedance/.nvm/versions/node/v22.19.0/bin:$PATH"`
+before any pnpm/node/tsc/eslint/biome command. Without this, every `pnpm install`
+and `pnpm -F` invocation fails with ERR_PNPM_UNSUPPORTED_ENGINE.
+
+**Lint contract (learned the hard way in iterations 2 and 3):**
+- ESLint disallows `process.exit()` — use `throw new Error()` and let it propagate
+- Biome disallows `console.log` — use `console.info` instead
+- TypeScript `--strictest` + `verbatimModuleSyntax` + `isolatedDeclarations` are on
+- Pre-commit hook runs eslint+biome+dprint in lint-staged; auto-fix only catches some
+- After Write/Edit, dprint may reformat (trailing commas, blank lines after MD headers).
+  System reminders surface the post-format file content — trust them.
+- ESLint `n/file-extension-in-import: ['error', 'always']` rewrites `.ts` to `.js` on
+  --fix, which breaks Node's --experimental-strip-types resolver. Worked around with
+  a per-package override at packages/dom-shim/**/*.ts in eslint.config.js.
+- Biome `useAwait`: async functions must use `await`. If a Route stub returns sync,
+  drop the `async` keyword and use `Promise.resolve`/`Promise.reject` explicitly.
+- ESLint `n/no-unsupported-features/node-builtins`: parseArgs (added in Node 20)
+  requires the package to declare `engines.node` of at least ^22. Add to package.json.
+- tsconfig: must set `allowImportingTsExtensions: true` and
+  `exactOptionalPropertyTypes: false` to be permissive enough for Phase 1 mock code.
+
+Phase 1 is mock-only — no real Lynx engine integration, no real device tests.
+Do NOT run the full 50-prompt sweep. Stop at US-109 smoke test gate.
+
+## Completed iterations log
+
+### Iteration 4 — US-105 Route A raw PAPI runner
+- Files: benchmarks/src/mocks/mock-papi.ts (~30 PAPI fns with call counters,
+  element-tree builder, toPreviewHTML() for screenshot pipeline),
+  benchmarks/src/llm/anthropic-client.ts (Anthropic SDK wrapper with
+  ANTHROPIC_API_KEY check + extractCodeBlock helper),
+  benchmarks/src/routes/route-a-papi.ts (system prompt embeds the full
+  element-papi-reference.d.ts.txt copied from
+  @lynx-js/type-element-api@0.0.8, parseTypeScript via ts.createSourceFile
+  for parse_ok, vm.runInNewContext sandbox for runtime with __ROUTE_ERROR__
+  capture, render_ok = creates>=1 && appends>=1 && flushes>=1),
+  benchmarks/src/routes/registry.ts (ROUTES = {A: real, B: stub, C: stub})
+- benchmarks/src/routes/element-papi-reference.d.ts.txt (476 lines, copied
+  from npm @lynx-js/type-element-api@0.0.8/types/element-api.d.ts)
+- package.json: added @anthropic-ai/sdk, typescript devDeps
+- cli.ts: imports ROUTES from registry instead of ALL_STUBS
+- Lint gotchas this iteration:
+  * `MockTagName: 'page' | ... | string` collapses — biome's
+    no-redundant-type-constituents fires. Fix: drop literals, just use `string`.
+  * `unicorn/no-array-callback-reference`: never `.map(fn)`, always
+    `.map(x => fn(x))`.
+  * `unicorn/no-nested-ternary`: hoist nested ternaries into lookup objects
+    (e.g. HTML_ESCAPES table).
+  * Biome `useAwait` again on Route A runner — handled via early return for
+    dry_run + Promise chain for real path.
+  * `@typescript-eslint/no-base-to-string` on `String(unknownObj)`: must
+    explicitly check `instanceof Error` or property-narrow before String().
+  * Biome doesn't recognize biome-ignore-start/-end pair syntax. For empty
+    function bodies, use IIFE with named `noop = () => { void 0; }`.
+- Verification: pnpm -F @lynx-js/dom-shim benchmark --dry-run --routes A,B,C
+  --prompts P001,P002 --rounds 1 exits 0 with 6 records; real run without
+  ANTHROPIC_API_KEY throws "ANTHROPIC_API_KEY is not set..." clearly;
+  typecheck + eslint + biome all clean.
+
+### Iteration 3 — US-103 rubric+schema, US-104 harness CLI (stubs)
+- US-103 files: benchmarks/RUBRIC.md, benchmarks/schema/result.schema.json,
+  benchmarks/scripts/validate-schema.ts (1 positive + 6 negative cases with ajv)
+- US-104 files: benchmarks/src/types.ts (Route, RouteContext, BenchmarkRecord,
+  BenchmarkReport), benchmarks/src/harness.ts (runBenchmark with concurrency loop,
+  per-cell sequential rounds with error-feedback, JSONL streaming via fs.appendFile,
+  per-route + per-category aggregation, report.json + report.md emission,
+  ≥20pp recommendation rule), benchmarks/src/utils/retry.ts (exponential backoff
+  3x retry on transient errors), benchmarks/src/routes/stubs.ts (A/B/C stubs that
+  throw outside dry-run), benchmarks/cli.ts (parseArgs-based flag parser with
+  --routes/--prompts/--all/--rounds/--model/--out/--concurrency/--dry-run flags)
+- Added benchmarks/.gitignore (reports/, cache/)
+- Added eslint.config.js override (n/file-extension-in-import: off for dom-shim)
+- Added engines.node and ajv deps to package.json
+- Verification: pnpm -F @lynx-js/dom-shim benchmark --dry-run --routes A,B,C
+  --prompts P001,P002 --rounds 1 runs end-to-end, generates 6 records, writes
+  report.json + report.md; typecheck, eslint, biome, schema-validate all pass.
+
+### Iteration 2 — US-102 curate 50-prompt corpus
+- Files: packages/dom-shim/benchmarks/corpus/prompts.json (50 entries), packages/dom-shim/benchmarks/scripts/validate-corpus.ts
+- Distribution: category 8/7/8/7/5/7/8 (interactive/form/layout/list/media/navigation/data-display), complexity 15/19/11/5 (trivial/simple/moderate/complex)
+- Verification: pnpm -F @lynx-js/dom-shim test:corpus-validate exits 0; typecheck exits 0; eslint exits 0; biome lint exits 0
+- Notes: validator enforces both shape (id format /^P\d{3}$/, unique IDs, non-empty capabilities, prompt >= 20 chars) and distribution windows. Lint contract documented in "Notes for next iteration" above.
+
+### Next up — US-103 through US-109
+
+US-103 (rubric+schema, ~30 min): Pure documentation file + result.schema.json. Fast.
+US-104 (harness CLI, ~1-2h): Significant code. Define types, CLI parser, JSONL writer,
+  retry logic, dry-run mode. Don't call real API in dry-run.
+US-105 (route A): Embed @lynx-js/type-element-api@0.0.8 d.ts (476 lines) as string in
+  system prompt. Mock PAPI shared with B in benchmarks/src/mocks/mock-papi.ts.
+US-106 (route B): Mock DOM Shim ~300 LOC over mock PAPI. htmlparser2 for innerHTML.
+US-107 (route C): A2UI-style JSON schema, walk into mock PAPI calls.
+US-108 (visual scorer): @anthropic-ai/sdk with Claude Opus 4.7 vision. Cache by
+  (screenshot_hash, prompt_id). If ANTHROPIC_API_KEY env unset, skip live scoring;
+  return {score: null, rationale: "no API key"} and note in report.
+US-109 (report + smoke gate): Render report.md + report.json. Run with
+  --prompts P001,P002 --routes A,B,C --rounds 1 --dry-run first (no API key needed);
+  then real smoke run if ANTHROPIC_API_KEY set. Commit report artifacts under
+  benchmarks/reports/smoke-<timestamp>/. Only then emit PHASE_1_SMOKE_DONE in promise tag.
+
+If ANTHROPIC_API_KEY is unset in env, the real smoke run cannot execute. Per PRD
+section 11 instruction 11, that counts as a blocker requiring human judgment —
+report it and do NOT emit the promise tag.
+
+## CURRENT STATE — Ralph future iterations read this first
+
+All Phase 1 user stories (US-101..109) are CODE COMPLETE and committed. The
+dry-run smoke gate passes end-to-end. The live (non-dry-run) smoke run is the
+only remaining step, and it requires ANTHROPIC_API_KEY in the environment.
+
+**If ANTHROPIC_API_KEY is still unset when you start an iteration:**
+- Do NOT write more code. Everything is already implemented.
+- Do NOT run pnpm install or any benchmark.
+- Just check env, report the blocker in one short paragraph, and end the turn
+  without emitting PHASE_1_SMOKE_DONE. The human-in-the-loop has to either
+  (a) set ANTHROPIC_API_KEY and rerun, or (b) interrupt the loop.
+- The loop will hit max-iterations 50 eventually and stop on its own.
+
+**If ANTHROPIC_API_KEY IS set when you start an iteration:**
+1. Run: pnpm -F @lynx-js/dom-shim benchmark --routes A,B,C --prompts P001,P002 --rounds 1
+   (no --dry-run, real LLM calls; small smoke, 6 records, ~30-90 seconds)
+2. Copy the generated report.md to packages/dom-shim/SMOKE_TEST_LIVE.md and the
+   report.json to packages/dom-shim/SMOKE_TEST_LIVE.json.
+3. Update packages/dom-shim/SMOKE_TEST_README.md noting the live run completed.
+4. Commit with message "feat(dom-shim): US-109 — live smoke test passes".
+5. Output PHASE_1_SMOKE_DONE inside a promise tag.
+
+DO NOT run the full 50-prompt sweep under any circumstances. The gate is the
+2-prompt smoke only.
+
+### Iteration 1 — US-101 set up workspace package skeleton
+- Files: packages/dom-shim/{package.json,tsconfig.json,README.md,src/index.ts,benchmarks/.gitkeep}
+- pnpm-workspace.yaml: added `packages/dom-shim` line
+- scripts/ralph-benchmark/progress.txt: created tracker
+- Verification: pnpm install ok (88 projects), pnpm -F @lynx-js/dom-shim typecheck exits 0
+- Notes: Used PATH override to v22.19.0 (repo wants ^22 || ^24; local default v23.8 rejected). Subsequent iterations must prepend PATH="/Users/bytedance/.nvm/versions/node/v22.19.0/bin:$PATH" before any pnpm/node command.

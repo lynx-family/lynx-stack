@@ -1,0 +1,352 @@
+[
+  {
+    "id": "P001",
+    "category": "interactive",
+    "prompt": "Build a counter component that shows a number starting at 0, with +1 and -1 buttons that update the number when clicked.",
+    "expected_capabilities": ["click event", "text content set", "state update"],
+    "complexity": "trivial"
+  },
+  {
+    "id": "P002",
+    "category": "interactive",
+    "prompt": "Render a toggle switch (on/off) that visually flips state and updates its color when clicked.",
+    "expected_capabilities": ["click event", "classList toggle"],
+    "complexity": "trivial"
+  },
+  {
+    "id": "P003",
+    "category": "interactive",
+    "prompt": "Build a button labeled 'Hover me' that shows a tooltip with the text 'Hello' above it when hovered or focused.",
+    "expected_capabilities": ["mouseover event", "mouseout event", "style.display change"],
+    "complexity": "simple"
+  },
+  {
+    "id": "P004",
+    "category": "interactive",
+    "prompt": "Build an 'Open dialog' button that opens a modal overlay with a title, body text, and a 'Close' button that dismisses it.",
+    "expected_capabilities": ["click event", "classList toggle", "element creation"],
+    "complexity": "simple"
+  },
+  {
+    "id": "P005",
+    "category": "interactive",
+    "prompt": "Build a 3-item accordion. Each header expands and collapses its content on click; multiple items may be open at once.",
+    "expected_capabilities": ["click event", "classList toggle", "style.display change"],
+    "complexity": "simple"
+  },
+  {
+    "id": "P006",
+    "category": "interactive",
+    "prompt": "Render 5 star icons in a row. Clicking a star fills it and all stars to its left, representing a rating.",
+    "expected_capabilities": ["click event", "classList toggle", "data attribute read"],
+    "complexity": "simple"
+  },
+  {
+    "id": "P007",
+    "category": "interactive",
+    "prompt": "Build a horizontal range slider with values 0 to 100 and a label that updates to show the current value as the user drags.",
+    "expected_capabilities": ["input event", "attribute set", "text content set"],
+    "complexity": "moderate"
+  },
+  {
+    "id": "P008",
+    "category": "interactive",
+    "prompt": "Build a 6-color palette grid. Clicking a swatch highlights it as selected and updates a preview box's background color.",
+    "expected_capabilities": ["click event", "style.backgroundColor set", "classList toggle"],
+    "complexity": "moderate"
+  },
+  {
+    "id": "P009",
+    "category": "form",
+    "prompt": "Render a static login form with an email input, a password input, and a 'Sign in' button. No submission logic needed.",
+    "expected_capabilities": ["element creation", "attribute set"],
+    "complexity": "trivial"
+  },
+  {
+    "id": "P010",
+    "category": "form",
+    "prompt": "Build a search input that filters and shows a list of 6 hard-coded fruit names as the user types.",
+    "expected_capabilities": ["input event", "innerHTML set", "text content read"],
+    "complexity": "simple"
+  },
+  {
+    "id": "P011",
+    "category": "form",
+    "prompt": "Build a tag input: a text field where pressing Enter adds the typed word as a removable tag chip below.",
+    "expected_capabilities": ["keydown event", "element creation", "click event"],
+    "complexity": "simple"
+  },
+  {
+    "id": "P012",
+    "category": "form",
+    "prompt": "Render a static date input field with placeholder 'YYYY-MM-DD' and a calendar icon to its right.",
+    "expected_capabilities": ["element creation", "attribute set"],
+    "complexity": "trivial"
+  },
+  {
+    "id": "P013",
+    "category": "form",
+    "prompt": "Build a settings page with 3 sections (Profile, Notifications, Display). Each section contains 2 to 3 toggles or selects. No persistence required.",
+    "expected_capabilities": ["element creation", "input event", "classList toggle"],
+    "complexity": "moderate"
+  },
+  {
+    "id": "P014",
+    "category": "form",
+    "prompt": "Build a signup form with email and password fields. Show an inline error under email if it's not a valid format on blur, and disable the submit button until both fields are non-empty.",
+    "expected_capabilities": ["blur event", "input event", "attribute set", "text content set"],
+    "complexity": "moderate"
+  },
+  {
+    "id": "P015",
+    "category": "form",
+    "prompt": "Build a drag-and-drop file upload zone with a dashed border. Accept drops, list dropped file names below with size, and a per-file remove button.",
+    "expected_capabilities": ["dragover event", "drop event", "element creation", "click event"],
+    "complexity": "complex"
+  },
+  {
+    "id": "P016",
+    "category": "layout",
+    "prompt": "Render a hero section with a centered headline 'Welcome', a subheading paragraph, and a single 'Get started' button.",
+    "expected_capabilities": ["element creation"],
+    "complexity": "trivial"
+  },
+  {
+    "id": "P017",
+    "category": "layout",
+    "prompt": "Render a page footer with three columns of links (4 links each) and a copyright line below.",
+    "expected_capabilities": ["element creation"],
+    "complexity": "trivial"
+  },
+  {
+    "id": "P018",
+    "category": "layout",
+    "prompt": "Render an empty-state placeholder with a centered icon (emoji is fine), a 'No items yet' heading, and a CTA button.",
+    "expected_capabilities": ["element creation"],
+    "complexity": "trivial"
+  },
+  {
+    "id": "P019",
+    "category": "layout",
+    "prompt": "Render 3 placeholder skeleton cards. Each is a rectangle with two gray bars inside. No animation needed.",
+    "expected_capabilities": ["element creation", "style.backgroundColor set"],
+    "complexity": "trivial"
+  },
+  {
+    "id": "P020",
+    "category": "layout",
+    "prompt": "Render a user profile card with an avatar placeholder image, name, role, and a 'Follow' button that toggles to 'Following' when clicked.",
+    "expected_capabilities": ["element creation", "click event", "text content set"],
+    "complexity": "simple"
+  },
+  {
+    "id": "P021",
+    "category": "layout",
+    "prompt": "Render a 3-column grid of 6 product cards. Each card has an image placeholder, title, price, and 'Add to cart' button.",
+    "expected_capabilities": ["element creation", "click event"],
+    "complexity": "simple"
+  },
+  {
+    "id": "P022",
+    "category": "layout",
+    "prompt": "Render a two-column layout: left sidebar with 5 nav items, right main area with a heading and a paragraph of lorem ipsum.",
+    "expected_capabilities": ["element creation"],
+    "complexity": "simple"
+  },
+  {
+    "id": "P023",
+    "category": "layout",
+    "prompt": "Build a single-page marketing site with a sticky nav at top, hero, a 3-feature section, a testimonial block, and a footer.",
+    "expected_capabilities": ["element creation", "click event"],
+    "complexity": "moderate"
+  },
+  {
+    "id": "P024",
+    "category": "list",
+    "prompt": "Render a horizontal row of 8 colored badges with labels like 'Beta', 'New', 'Pro', 'Featured'.",
+    "expected_capabilities": ["element creation", "classList set"],
+    "complexity": "trivial"
+  },
+  {
+    "id": "P025",
+    "category": "list",
+    "prompt": "Render a row of 6 circular avatar placeholder images with overlapping spacing showing recent active users.",
+    "expected_capabilities": ["element creation", "style.marginLeft set"],
+    "complexity": "trivial"
+  },
+  {
+    "id": "P026",
+    "category": "list",
+    "prompt": "Build an FAQ list with 5 questions. Clicking a question expands or collapses its answer below.",
+    "expected_capabilities": ["click event", "classList toggle"],
+    "complexity": "simple"
+  },
+  {
+    "id": "P027",
+    "category": "list",
+    "prompt": "Build a todo list: text input at top, 'Add' button, list below. Each todo has a 'Done' checkbox and a 'Delete' button.",
+    "expected_capabilities": ["click event", "element creation", "removeChild"],
+    "complexity": "simple"
+  },
+  {
+    "id": "P028",
+    "category": "list",
+    "prompt": "Render a vertical timeline of 5 events. Each event has a date on the left, a dot in the middle, and a description on the right.",
+    "expected_capabilities": ["element creation"],
+    "complexity": "simple"
+  },
+  {
+    "id": "P029",
+    "category": "list",
+    "prompt": "Build a comment thread with 3 top-level comments and 2 nested replies under the second comment. Each comment shows author, timestamp, and body.",
+    "expected_capabilities": ["element creation"],
+    "complexity": "moderate"
+  },
+  {
+    "id": "P030",
+    "category": "list",
+    "prompt": "Build a chat UI: scrollable message list with alternating left/right alignment per sender, sender name, timestamp, and a text input plus send button at bottom that appends a new message on click.",
+    "expected_capabilities": ["click event", "element creation", "scroll behavior", "innerHTML set"],
+    "complexity": "complex"
+  },
+  {
+    "id": "P031",
+    "category": "media",
+    "prompt": "Render a yellow warning banner at the top with an icon, message text, and a dismiss 'x' button.",
+    "expected_capabilities": ["element creation", "click event"],
+    "complexity": "trivial"
+  },
+  {
+    "id": "P032",
+    "category": "media",
+    "prompt": "Render a 3x3 thumbnail image gallery (use placeholder image URLs). Clicking a thumbnail highlights it with a border.",
+    "expected_capabilities": ["click event", "classList toggle"],
+    "complexity": "simple"
+  },
+  {
+    "id": "P033",
+    "category": "media",
+    "prompt": "Render an audio player UI: album art placeholder on left, song title, artist, play/pause button (toggles icon), and a progress bar visualization at the bottom.",
+    "expected_capabilities": ["click event", "classList toggle", "style.width change"],
+    "complexity": "moderate"
+  },
+  {
+    "id": "P034",
+    "category": "media",
+    "prompt": "Render a video player UI: large video area placeholder, controls bar with play/pause button, progress bar, time display, volume icon, fullscreen icon. No actual playback needed.",
+    "expected_capabilities": ["click event", "classList toggle", "element creation"],
+    "complexity": "complex"
+  },
+  {
+    "id": "P035",
+    "category": "media",
+    "prompt": "Render a code editor UI: line numbers gutter on left, code area on right with at least 10 lines, a language tab at top, and faux syntax highlighting using colored spans.",
+    "expected_capabilities": ["element creation", "innerHTML set", "classList set"],
+    "complexity": "complex"
+  },
+  {
+    "id": "P036",
+    "category": "navigation",
+    "prompt": "Render a top navigation bar with logo on left, 4 menu links in center, and a 'Sign in' button on right.",
+    "expected_capabilities": ["element creation"],
+    "complexity": "trivial"
+  },
+  {
+    "id": "P037",
+    "category": "navigation",
+    "prompt": "Render a breadcrumb showing 'Home > Products > Electronics > Headphones' with '>' separators.",
+    "expected_capabilities": ["element creation"],
+    "complexity": "trivial"
+  },
+  {
+    "id": "P038",
+    "category": "navigation",
+    "prompt": "Render pagination controls: prev arrow, pages '1 2 3 ... 10', next arrow. The current page (3) is visually highlighted.",
+    "expected_capabilities": ["click event", "classList toggle"],
+    "complexity": "simple"
+  },
+  {
+    "id": "P039",
+    "category": "navigation",
+    "prompt": "Build a 3-tab interface (Overview, Details, Reviews). Clicking a tab highlights it and shows its corresponding panel; only one panel visible at a time.",
+    "expected_capabilities": ["click event", "classList toggle", "style.display change"],
+    "complexity": "simple"
+  },
+  {
+    "id": "P040",
+    "category": "navigation",
+    "prompt": "Build a dropdown menu: a 'Menu' button that toggles a 4-item list below it on click. Clicking outside or selecting an item closes it.",
+    "expected_capabilities": ["click event", "classList toggle"],
+    "complexity": "simple"
+  },
+  {
+    "id": "P041",
+    "category": "navigation",
+    "prompt": "Build a 4-step horizontal stepper. 'Next' button advances to the next step; 'Back' returns. Show current step visually with a filled circle vs empty circles.",
+    "expected_capabilities": ["click event", "classList toggle", "text content set"],
+    "complexity": "moderate"
+  },
+  {
+    "id": "P042",
+    "category": "navigation",
+    "prompt": "Build a 3-column kanban board (To Do / In Progress / Done) with 2 to 3 cards per column. Cards can be moved between columns by clicking a 'Next' button on each card.",
+    "expected_capabilities": ["click event", "element creation", "appendChild", "removeChild"],
+    "complexity": "moderate"
+  },
+  {
+    "id": "P043",
+    "category": "data-display",
+    "prompt": "Render a horizontal progress bar at 65% completion with a percentage label inside or beside it.",
+    "expected_capabilities": ["element creation", "style.width set"],
+    "complexity": "trivial"
+  },
+  {
+    "id": "P044",
+    "category": "data-display",
+    "prompt": "Render a bar chart placeholder: 5 vertical bars of varying heights with axis labels A, B, C, D, E and a title above.",
+    "expected_capabilities": ["element creation", "style.height set"],
+    "complexity": "trivial"
+  },
+  {
+    "id": "P045",
+    "category": "data-display",
+    "prompt": "Render a green success toast notification at the bottom-right with a checkmark icon and 'Saved!' text.",
+    "expected_capabilities": ["element creation"],
+    "complexity": "simple"
+  },
+  {
+    "id": "P046",
+    "category": "data-display",
+    "prompt": "Render a 3-tier pricing table (Basic, Pro, Enterprise). Each column shows price, 4 feature bullets, and a CTA button. The middle tier is highlighted.",
+    "expected_capabilities": ["element creation", "classList set"],
+    "complexity": "simple"
+  },
+  {
+    "id": "P047",
+    "category": "data-display",
+    "prompt": "Render a scoreboard showing 2 teams ('Team A: 24' and 'Team B: 18') with a 'Quarter 3' indicator and a time-remaining display '04:32'.",
+    "expected_capabilities": ["element creation"],
+    "complexity": "simple"
+  },
+  {
+    "id": "P048",
+    "category": "data-display",
+    "prompt": "Render a 4-column data table (Name, Email, Role, Status) with 8 rows of sample user data. Header row is styled distinctly; rows alternate background colors.",
+    "expected_capabilities": ["element creation", "classList set"],
+    "complexity": "moderate"
+  },
+  {
+    "id": "P049",
+    "category": "data-display",
+    "prompt": "Build a markdown preview pane that takes raw markdown text from a textarea and renders it (headings, bold, italic, lists, code) live in a side preview as the user types.",
+    "expected_capabilities": ["input event", "innerHTML set"],
+    "complexity": "moderate"
+  },
+  {
+    "id": "P050",
+    "category": "data-display",
+    "prompt": "Render a monthly calendar grid for the current month. Show day-of-week headers, all dates in a 7-column grid, highlight today, and visually mark a sample 'event' on 3 different dates.",
+    "expected_capabilities": ["element creation", "classList set", "text content set"],
+    "complexity": "complex"
+  }
+]
