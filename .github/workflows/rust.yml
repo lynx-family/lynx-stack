@@ -83,12 +83,9 @@ jobs:
         run: |
           set -euo pipefail
           sdk_dir="$RUNNER_TEMP/lynx-engine-bridge-sdk"
-          mkdir -p "$sdk_dir/lib"
-          curl -L --fail --retry 5 --retry-connrefused \
-            https://github.com/PupilTong/playground/releases/download/lynx-runtime-clay-manual-0.0.1/libLynx_clay.dylib \
-            -o "$sdk_dir/lib/libLynx_clay.dylib"
-          python3 lynx/engine-bridge/tools/adhoc_sign_macos_sdk.py "$sdk_dir"
-          echo "LYNX_SDK_DIR=$sdk_dir" >> "$GITHUB_ENV"
+          python3 lynx/engine-bridge/tools/download_runtime.py \
+            --sdk-dir "$sdk_dir" \
+            --github-env "$GITHUB_ENV"
       - name: Format
         working-directory: lynx/engine-bridge
         run: cargo fmt --all --check

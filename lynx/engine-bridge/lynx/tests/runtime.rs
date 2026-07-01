@@ -48,9 +48,7 @@ fn software_frame_exposes_presented_bytes() {
 #[test]
 fn runtime_env_loads_and_process_settings_are_callable() {
   let _guard = runtime_test_guard();
-  let Some(env) = configured_env() else {
-    return;
-  };
+  let env = configured_env();
 
   assert!(env.sys().path.is_file());
   assert!(!env.sdk_version().is_empty());
@@ -70,9 +68,7 @@ fn runtime_env_loads_and_process_settings_are_callable() {
 #[test]
 fn runtime_builds_headless_view_and_validates_bundle_errors() {
   let _guard = runtime_test_guard();
-  let Some(env) = configured_env() else {
-    return;
-  };
+  let env = configured_env();
 
   let renderer = WindowlessRenderer::software(&env, CountingSoftwareRenderer::default(), NoopHost)
     .expect("create software renderer");
@@ -134,9 +130,7 @@ fn runtime_builds_headless_view_and_validates_bundle_errors() {
 #[test]
 fn runtime_public_methods_reject_interior_nul_before_ffi() {
   let _guard = runtime_test_guard();
-  let Some(env) = configured_env() else {
-    return;
-  };
+  let env = configured_env();
 
   assert_interior_nul(LynxGroup::new(&env, "bad\0group").map(|_| ()), "group_name");
 
@@ -150,12 +144,14 @@ fn runtime_public_methods_reject_interior_nul_before_ffi() {
   );
 }
 
-fn configured_env() -> Option<Env> {
+fn configured_env() -> Env {
   if env::var_os("LYNX_LIB_PATH").is_none() && env::var_os("LYNX_SDK_DIR").is_none() {
-    eprintln!("skipping runtime integration test; set LYNX_LIB_PATH or LYNX_SDK_DIR");
-    return None;
+    panic!(
+      "runtime integration tests require LYNX_LIB_PATH or LYNX_SDK_DIR; run \
+       `python3 tools/download_runtime.py --emit-env` from lynx/engine-bridge"
+    );
   }
-  Some(Env::load().expect("load configured Lynx runtime"))
+  Env::load().expect("load configured Lynx runtime")
 }
 
 fn runtime_test_guard() -> MutexGuard<'static, ()> {

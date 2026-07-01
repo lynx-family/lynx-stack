@@ -79,8 +79,20 @@ existing C++ exports can keep reference-parameter signatures.
 Cargo test binaries are not signed with Hardened Runtime or Library Validation,
 so ordinary local tests do not need Developer ID signing.
 
-If macOS refuses to load a downloaded runtime, ad-hoc sign it from this
-workspace:
+Download the runtime before running local tests:
+
+```sh
+eval "$(python3 tools/download_runtime.py --emit-env)"
+```
+
+By default the downloader writes
+`target/lynx-engine-bridge-sdk/lib/libLynx_clay.dylib` on macOS and ad-hoc signs
+it. Existing non-empty runtime files are reused; pass `--force` to refresh the
+artifact. To use another runtime artifact, pass `--url` or set
+`LYNX_RUNTIME_URL`.
+
+If macOS refuses to load a runtime you downloaded through another path, ad-hoc
+sign it from this workspace:
 
 ```sh
 tools/adhoc_sign_macos_sdk.py /path/to/lynx-sdk
@@ -94,12 +106,14 @@ present under the SDK folder.
 Run Rust checks from this folder:
 
 ```sh
+eval "$(python3 tools/download_runtime.py --emit-env)"
 cargo fmt --all --check
 cargo clippy --locked --all-targets --all-features -- -D warnings
 cargo test --locked --all-targets --all-features
 ```
 
-To run the runtime-loading test, set `LYNX_LIB_PATH` or `LYNX_SDK_DIR` first:
+Runtime-backed tests require `LYNX_LIB_PATH` or `LYNX_SDK_DIR`. If you have an
+SDK already, set it directly:
 
 ```sh
 LYNX_SDK_DIR=/path/to/lynx-sdk \
@@ -110,9 +124,10 @@ The CI job downloads the macOS runtime dylib into a temporary SDK folder,
 ad-hoc signs it, sets `LYNX_SDK_DIR`, and runs the same checks.
 
 The `lynx/tests/runtime.rs` integration test belongs to the library crate. It
-contains public API tests that run without a runtime and runtime-backed tests
-that skip unless `LYNX_LIB_PATH` or `LYNX_SDK_DIR` is set. Keep this coverage in
-the library crate when moving or splitting the headless example.
+contains public API tests and runtime-backed tests. Runtime-backed tests fail
+when `LYNX_LIB_PATH` or `LYNX_SDK_DIR` is missing, so keep the local downloader
+and CI download step in sync. Keep this coverage in the library crate when
+moving or splitting the headless example.
 
 The headless example package also has a screenshot golden test. It runs the
 checked-in React fixture bundle from
