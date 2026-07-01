@@ -33,12 +33,9 @@ windowed APIs such as `NativeView`.
   comparison test.
 - `../../packages/genui/ui-judge/tests/fixtures/react/main.lynx.snapshot.png`
   is the checked-in screenshot reference for that bundle.
-- `tools/download_runtime.py` downloads the runtime artifact used by local
-  Cargo builds and CI.
 - `tools/runtime_build.rs` is included by package `build.rs` files so runtime
-  setup stays consistent between the library crate and the headless example.
-- `tools/adhoc_sign_macos_sdk.py` ad-hoc signs a downloaded macOS runtime for
-  local or CI loading.
+  setup, download, and ad-hoc signing stay consistent between the library crate
+  and the headless example.
 - `docs/architecture.md` describes the crate boundaries and ownership model.
 
 ## How the bridge works
@@ -82,37 +79,20 @@ existing C++ exports can keep reference-parameter signatures.
 
 When building with Cargo, `build.rs` downloads the default runtime on macOS when
 neither variable is set, stores it under `target/lynx-engine-bridge-sdk`, and
-injects `LYNX_SDK_DIR` for tests and examples. Set `LYNX_DOWNLOAD_RUNTIME=0` to
-disable the automatic download. On Linux, set `LYNX_RUNTIME_URL` or provide
-`LYNX_LIB_PATH` / `LYNX_SDK_DIR`.
+injects `LYNX_SDK_DIR` for tests and examples. Existing non-empty runtime files
+are reused. Set `LYNX_DOWNLOAD_RUNTIME=0` to disable the automatic download. On
+Linux, set `LYNX_RUNTIME_URL` or provide `LYNX_LIB_PATH` / `LYNX_SDK_DIR`.
 
 ## macOS signing
 
 Cargo test binaries are not signed with Hardened Runtime or Library Validation,
 so ordinary local tests do not need Developer ID signing.
 
-Cargo downloads the runtime before building tests and examples. To prefetch or
-refresh it manually, run:
-
-```sh
-eval "$(python3 tools/download_runtime.py --emit-env)"
-```
-
-By default the downloader writes
-`target/lynx-engine-bridge-sdk/lib/libLynx_clay.dylib` on macOS and ad-hoc signs
-it. Existing non-empty runtime files are reused; pass `--force` to refresh the
-artifact. To use another runtime artifact, pass `--url` or set
-`LYNX_RUNTIME_URL`.
-
-If macOS refuses to load a runtime you downloaded through another path, ad-hoc
-sign it from this workspace:
-
-```sh
-tools/adhoc_sign_macos_sdk.py /path/to/lynx-sdk
-```
-
-The script signs `lib/libLynx_clay.dylib` and `libLynx_clay.dylib` when they are
-present under the SDK folder.
+Cargo downloads and ad-hoc signs the runtime before building tests and examples.
+To refresh the downloaded artifact, remove
+`target/lynx-engine-bridge-sdk/lib/libLynx_clay.dylib` and rerun Cargo. Set
+`LYNX_RUNTIME_URL` to test another runtime artifact, or set
+`LYNX_SKIP_ADHOC_SIGN=1` if you need to debug signing locally.
 
 ## Validation
 
@@ -138,9 +118,8 @@ the same checks.
 
 The `lynx/tests/runtime.rs` integration test belongs to the library crate. It
 contains public API tests and runtime-backed tests. Runtime-backed tests fail
-when no runtime is available, so keep `build.rs`, the local downloader, and CI
-in sync. Keep this coverage in the library crate when moving or splitting the
-headless example.
+when no runtime is available, so keep `build.rs` and CI in sync. Keep this
+coverage in the library crate when moving or splitting the headless example.
 
 The headless example package also has a screenshot golden test. It runs the
 checked-in React fixture bundle from
