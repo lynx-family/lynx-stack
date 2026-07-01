@@ -109,6 +109,11 @@ cargo test --locked --all-targets --all-features
 The CI job downloads the macOS runtime dylib into a temporary SDK folder,
 ad-hoc signs it, sets `LYNX_SDK_DIR`, and runs the same checks.
 
+The `lynx/tests/runtime.rs` integration test belongs to the library crate. It
+contains public API tests that run without a runtime and runtime-backed tests
+that skip unless `LYNX_LIB_PATH` or `LYNX_SDK_DIR` is set. Keep this coverage in
+the library crate when moving or splitting the headless example.
+
 The headless example package also has a screenshot golden test. It runs the
 checked-in React fixture bundle from
 `packages/genui/ui-judge/tests/fixtures/react/.generated/main.lynx.bundle`,
