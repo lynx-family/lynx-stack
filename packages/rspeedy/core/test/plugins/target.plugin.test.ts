@@ -29,6 +29,8 @@ describe('target.plugin', () => {
     expect(config.target).toEqual(['es2017'])
   })
 
+  // `web` must not use the `'web'` target: it makes Rsbuild inject its web HMR
+  // runtime, which crashes the Lynx web main thread.
   test('Web', async () => {
     const rspeedy = await createStubRspeedy({
       environments: {
@@ -38,7 +40,7 @@ describe('target.plugin', () => {
 
     const config = await rspeedy.unwrapConfig()
 
-    expect(config.target).toEqual(['es2017', 'web'])
+    expect(config.target).toEqual(['es2017'])
   })
 
   test('multiple environments', async () => {
@@ -51,7 +53,7 @@ describe('target.plugin', () => {
 
     const [webConfig, lynxConfig] = await rspeedy.initConfigs()
 
-    expect(webConfig?.target).toEqual(['es2017', 'web'])
+    expect(webConfig?.target).toEqual(['es2017'])
     expect(lynxConfig?.target).toEqual(['es2017'])
   })
 })
