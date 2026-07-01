@@ -4,9 +4,9 @@ applyTo: "lynx/engine-bridge/**"
 
 `lynx/engine-bridge` is an independent Cargo workspace whose only library crate is `lynx`; raw C ABI bindings live under `lynx::sys` rather than a separate bridge crate. Validate it from that directory with `cargo fmt --all --check`, `cargo clippy --locked --all-targets --all-features -- -D warnings`, and `cargo test --locked --all-targets --all-features`.
 
-Runtime-loading tests are conditional: ordinary local tests do not need a Lynx runtime, but setting `LYNX_LIB_PATH` or `LYNX_SDK_DIR` should exercise real `libLynx_clay` loading. Keep CI downloading runtime dylibs into a temporary SDK directory instead of committing binary artifacts.
+Runtime-backed tests require a Lynx runtime locally and in CI. Use `python3 tools/download_runtime.py --emit-env` from `lynx/engine-bridge` for local setup, and keep CI downloading runtime dylibs into a temporary SDK directory instead of committing binary artifacts. Missing `LYNX_LIB_PATH` or `LYNX_SDK_DIR` should fail runtime integration tests instead of skipping them.
 
-Keep Rust integration coverage for the `lynx` library crate under `lynx/engine-bridge/lynx/tests/`. These tests should cover public API behavior independently from `examples/headless`, with runtime-backed cases skipping unless `LYNX_LIB_PATH` or `LYNX_SDK_DIR` is configured.
+Keep Rust integration coverage for the `lynx` library crate under `lynx/engine-bridge/lynx/tests/`. These tests should cover public API behavior independently from `examples/headless`, and runtime-backed cases should load the configured dylib/so rather than using mocks.
 
 Headless screenshot coverage should run the real GenUI React fixture bundle at `packages/genui/ui-judge/tests/fixtures/react/.generated/main.lynx.bundle` and pixel-compare against `packages/genui/ui-judge/tests/fixtures/react/main.lynx.snapshot.png` with tolerance for runner-level antialiasing. Update that reference only through `LYNX_UPDATE_REFERENCES=1 cargo test --locked -p lynx-headless-example --test screenshot`, then rerun the same test without the environment variable.
 
