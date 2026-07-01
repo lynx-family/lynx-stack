@@ -4,8 +4,9 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "build": "rspeedy build && pnpm run build:fetchbundle",
+    "build": "pnpm run build:querycomponent && pnpm run build:fetchbundle",
     "build:fetchbundle": "cross-env LAZY_BUNDLE_FETCHBUNDLE=1 rspeedy build",
+    "build:querycomponent": "rspeedy build",
     "dev": "rspeedy dev",
     "dev:fetchbundle": "cross-env LAZY_BUNDLE_FETCHBUNDLE=1 rspeedy dev",
     "preview": "rspeedy preview",

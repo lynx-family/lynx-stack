@@ -4,10 +4,11 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "build": "pnpm run --parallel \"/^build:(producer|consumer)$/\"",
+    "build": "pnpm run build:querycomponent && pnpm run build:fetchbundle",
     "build:consumer": "rspeedy build --config lynx.config.consumer.js",
-    "build:fetchbundle": "cross-env LAZY_BUNDLE_FETCHBUNDLE=1 pnpm run build",
+    "build:fetchbundle": "cross-env LAZY_BUNDLE_FETCHBUNDLE=1 pnpm run build:querycomponent",
     "build:producer": "rspeedy build --config lynx.config.producer.js",
+    "build:querycomponent": "pnpm run --parallel \"/^build:(producer|consumer)$/\"",
     "dev": "node scripts/serve.mjs dev",
     "dev:consumer": "rspeedy dev --config lynx.config.consumer.js",
     "dev:fetchbundle": "cross-env LAZY_BUNDLE_FETCHBUNDLE=1 node scripts/serve.mjs dev",
