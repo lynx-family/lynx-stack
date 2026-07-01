@@ -1,5 +1,6 @@
 ---
 "@lynx-js/debug-metadata-rsbuild-plugin": patch
+"@lynx-js/runtime-wrapper-webpack-plugin": patch
 ---
 
-fix(debug-metadata): bake the release banner inside the bundle wrapper so the background thread registers its release
+fix(debug-metadata): register the background-thread release inside the bundle wrapper, keeping the legacy source-map release authoritative during the transition

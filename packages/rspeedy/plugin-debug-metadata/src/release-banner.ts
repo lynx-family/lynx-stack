@@ -50,7 +50,7 @@ export const RELEASE_DEFINE = '__DEBUG_METADATA_RELEASE__'
 /**
  * Prefix tagging the runtime release as debug-metadata-origin. Reverse-
  * resolution services route releases starting with this to the debug-metadata
- * container path (vs the legacy slardar source-map path) and strip it before
+ * container path (vs the legacy source-map path) and strip it before
  * matching the bare release `key` stored in `debug-metadata.json`.
  */
 export const RELEASE_PREFIX = 'debugmetadata:'
