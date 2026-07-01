@@ -12,8 +12,6 @@
 #include <algorithm>
 #include <string>
 
-#include <lynx_native_view.h>
-
 namespace {
 
 constexpr wchar_t kHostClassName[] = L"__ELEMENT_SYMBOL_NAME__NativeUIHost";
@@ -74,8 +72,11 @@ HWND FindMainWindow() {
   return search.hwnd != nullptr ? search.hwnd : GetActiveWindow();
 }
 
-class __ELEMENT_SYMBOL_NAME__NativeUIView : public lynx::pub::LynxNativeView {
+class __ELEMENT_SYMBOL_NAME__NativeUIView : public __ELEMENT_SYMBOL_NAME__View {
  public:
+  explicit __ELEMENT_SYMBOL_NAME__NativeUIView(void* opaque)
+      : __ELEMENT_SYMBOL_NAME__View(opaque) {}
+
   ~__ELEMENT_SYMBOL_NAME__NativeUIView() override {
     if (label_ != nullptr) {
       DestroyWindow(label_);
@@ -135,10 +136,11 @@ class __ELEMENT_SYMBOL_NAME__NativeUIView : public lynx::pub::LynxNativeView {
     }
 
     if (label_ == nullptr) {
+      const std::wstring text = Utf8ToWide(value().c_str());
       label_ = CreateWindowExW(
           0,
           L"STATIC",
-          Utf8ToWide("__ELEMENT_NAME__").c_str(),
+          text.c_str(),
           WS_CHILD | WS_VISIBLE,
           0,
           0,
@@ -162,6 +164,14 @@ class __ELEMENT_SYMBOL_NAME__NativeUIView : public lynx::pub::LynxNativeView {
   }
 
  private:
+  void OnValueChanged(const std::string& value) override {
+    if (label_ == nullptr) {
+      return;
+    }
+    const std::wstring text = Utf8ToWide(value.c_str());
+    SetWindowTextW(label_, text.c_str());
+  }
+
   HWND host_ = nullptr;
   HWND label_ = nullptr;
 };
@@ -169,7 +179,6 @@ class __ELEMENT_SYMBOL_NAME__NativeUIView : public lynx::pub::LynxNativeView {
 }  // namespace
 
 lynx_native_view_t* Create__ELEMENT_SYMBOL_NAME__NativeUINativeView(void* opaque) {
-  (void)opaque;
-  auto* view = new __ELEMENT_SYMBOL_NAME__NativeUIView();
+  auto* view = new __ELEMENT_SYMBOL_NAME__NativeUIView(opaque);
   return view->native_view();
 }

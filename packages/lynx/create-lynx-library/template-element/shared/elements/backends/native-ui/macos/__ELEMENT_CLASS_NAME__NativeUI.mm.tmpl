@@ -2,16 +2,19 @@
 
 #import <Cocoa/Cocoa.h>
 
-#include <lynx_native_view.h>
-
 namespace {
 
-class __ELEMENT_SYMBOL_NAME__NativeUIView : public lynx::pub::LynxNativeView {
+NSString* NSStringFromStdString(const std::string& value) {
+  NSString* result = [NSString stringWithUTF8String:value.c_str()];
+  return result != nil ? result : @"";
+}
+
+class __ELEMENT_SYMBOL_NAME__NativeUIView : public __ELEMENT_SYMBOL_NAME__View {
  public:
   explicit __ELEMENT_SYMBOL_NAME__NativeUIView(void* opaque)
-      : lynx_view_(static_cast<lynx_view_t*>(opaque)) {
+      : __ELEMENT_SYMBOL_NAME__View(opaque) {
     RunOnMainThreadSync(^{
-      label_ = [NSTextField labelWithString:@"__ELEMENT_NAME__"];
+      label_ = [NSTextField labelWithString:NSStringFromStdString(value())];
       label_.textColor = [NSColor blackColor];
     });
   }
@@ -59,6 +62,15 @@ class __ELEMENT_SYMBOL_NAME__NativeUIView : public lynx::pub::LynxNativeView {
  private:
   using MainThreadBlock = void (^)(void);
 
+  void OnValueChanged(const std::string& value) override {
+    std::string text = value;
+    RunOnMainThreadSync(^{
+      if (label_ != nil) {
+        label_.stringValue = NSStringFromStdString(text);
+      }
+    });
+  }
+
   static void RunOnMainThreadSync(MainThreadBlock block) {
     if ([NSThread isMainThread]) {
       block();
@@ -68,10 +80,10 @@ class __ELEMENT_SYMBOL_NAME__NativeUIView : public lynx::pub::LynxNativeView {
   }
 
   NSView* ParentView() {
-    if (lynx_view_ == nullptr) {
+    if (lynx_view() == nullptr) {
       return nil;
     }
-    return (__bridge NSView*)lynx_view_get_native_window(lynx_view_);
+    return (__bridge NSView*)lynx_view_get_native_window(lynx_view());
   }
 
   NSView* AttachToParent() { return AttachToParent(ParentView()); }
@@ -90,7 +102,6 @@ class __ELEMENT_SYMBOL_NAME__NativeUIView : public lynx::pub::LynxNativeView {
     return parent;
   }
 
-  lynx_view_t* lynx_view_ = nullptr;
   NSTextField* label_ = nil;
 };
 

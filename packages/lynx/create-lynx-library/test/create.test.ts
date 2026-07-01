@@ -241,6 +241,24 @@ describe('create-lynx-library', () => {
     expect(read(dir, 'shared/elements/ButtonElementRegistration.cc')).toContain(
       'LYNX_REGISTER_ELEMENT(',
     );
+    expect(read(dir, 'shared/elements/ButtonElement.h')).toContain(
+      'class ButtonElementView : public lynx::pub::LynxNativeView',
+    );
+    expect(
+      read(dir, 'shared/elements/backends/texture/ButtonElementTexture.cc'),
+    ).toContain('class ButtonElementTextureView : public ButtonElementView');
+    expect(
+      read(
+        dir,
+        'shared/elements/backends/native-ui/macos/ButtonElementNativeUI.mm',
+      ),
+    ).toContain('class ButtonElementNativeUIView : public ButtonElementView');
+    expect(
+      read(
+        dir,
+        'shared/elements/backends/native-ui/windows/ButtonElementNativeUI.cc',
+      ),
+    ).toContain('class ButtonElementNativeUIView : public ButtonElementView');
     expect(files.every((file) => !/__[A-Z0-9_]+__/.test(file.path))).toBe(
       true,
     );

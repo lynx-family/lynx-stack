@@ -3,8 +3,6 @@
 #include <algorithm>
 #include <cmath>
 
-#include <lynx_native_view.h>
-
 // This shared texture backend depends on LynxNativeView C API surface handles.
 bool Draw__ELEMENT_SYMBOL_NAME__TextureSurface(
     lynx_surface_handle_t* handle,
@@ -16,8 +14,11 @@ namespace {
 
 constexpr float kYFlipTransform[3 * 3] = {1, 0, 0, 0, -1, 1, 0, 0, 1};
 
-class __ELEMENT_SYMBOL_NAME__TextureView : public lynx::pub::LynxNativeView {
+class __ELEMENT_SYMBOL_NAME__TextureView : public __ELEMENT_SYMBOL_NAME__View {
  public:
+  explicit __ELEMENT_SYMBOL_NAME__TextureView(void* opaque)
+      : __ELEMENT_SYMBOL_NAME__View(opaque) {}
+
   bool IsSurfaceEnabled() override { return true; }
   lynx_surface_buffer_mode_t SurfaceBufferMode() override {
     return kTripleBuffer;
@@ -45,6 +46,11 @@ class __ELEMENT_SYMBOL_NAME__TextureView : public lynx::pub::LynxNativeView {
   }
 
  private:
+  void OnValueChanged(const std::string& value) override {
+    (void)value;
+    Render();
+  }
+
   void Render() {
     if (!attached_ || width_px_ <= 0 || height_px_ <= 0) {
       return;
@@ -59,7 +65,7 @@ class __ELEMENT_SYMBOL_NAME__TextureView : public lynx::pub::LynxNativeView {
             surface,
             width_px_,
             height_px_,
-            "__ELEMENT_NAME__")) {
+            value().c_str())) {
       PresentSurface(width_px_, height_px_, kYFlipTransform, surface);
     }
   }
@@ -72,7 +78,6 @@ class __ELEMENT_SYMBOL_NAME__TextureView : public lynx::pub::LynxNativeView {
 }  // namespace
 
 lynx_native_view_t* Create__ELEMENT_SYMBOL_NAME__TextureNativeView(void* opaque) {
-  (void)opaque;
-  auto* view = new __ELEMENT_SYMBOL_NAME__TextureView();
+  auto* view = new __ELEMENT_SYMBOL_NAME__TextureView(opaque);
   return view->native_view();
 }
