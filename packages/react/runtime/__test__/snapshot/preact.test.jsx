@@ -660,12 +660,12 @@ describe('document - background', () => {
     try {
       const mainThreadItem = new SnapshotInstance('list-item', -10_000);
       mainThreadItem.setAttribute('values', [platformInfo]);
-      mainThreadItem.setAttribute('__listItemPlatformInfo', 0);
+      mainThreadItem.setAttribute('__listItemPlatformInfoIndex', 0);
       expect(mainThreadItem.__listItemPlatformInfo).toEqual(platformInfo);
       expect(JSON.parse(JSON.stringify(mainThreadItem)).__listItemPlatformInfo).toEqual(platformInfo);
 
       const mainThreadItemWithIndexedValue = new SnapshotInstance('list-item', -10_001);
-      mainThreadItemWithIndexedValue.setAttribute('__listItemPlatformInfo', 0);
+      mainThreadItemWithIndexedValue.setAttribute('__listItemPlatformInfoIndex', 0);
       mainThreadItemWithIndexedValue.setAttribute(0, platformInfo);
       expect(mainThreadItemWithIndexedValue.__listItemPlatformInfo).toEqual(platformInfo);
 
@@ -674,13 +674,13 @@ describe('document - background', () => {
       expect(mainThreadItemWithDirectInfo.__listItemPlatformInfo).toEqual(directPlatformInfo);
 
       const backgroundItem = new BackgroundSnapshotInstance('list-item');
-      backgroundItem.setAttribute('__listItemPlatformInfo', 0);
+      backgroundItem.setAttribute('__listItemPlatformInfoIndex', 0);
       backgroundItem.setAttribute('values', [platformInfo]);
       expect(backgroundItem.__listItemPlatformInfo).toEqual(platformInfo);
-      expect(backgroundItem.__extraProps?.__listItemPlatformInfo).toBeUndefined();
+      expect(backgroundItem.__extraProps?.__listItemPlatformInfoIndex).toBeUndefined();
 
       const backgroundItemWithIndexedValue = new BackgroundSnapshotInstance('list-item');
-      backgroundItemWithIndexedValue.setAttribute('__listItemPlatformInfo', 0);
+      backgroundItemWithIndexedValue.setAttribute('__listItemPlatformInfoIndex', 0);
       backgroundItemWithIndexedValue.setAttribute(0, platformInfo);
       expect(backgroundItemWithIndexedValue.__listItemPlatformInfo).toEqual(platformInfo);
 
@@ -720,10 +720,10 @@ describe('document - background', () => {
       const after = new BackgroundSnapshotInstance('list');
       const first = new BackgroundSnapshotInstance('list-item');
       first.setAttribute('values', [{ 'item-key': 'after-0' }]);
-      first.setAttribute('__listItemPlatformInfo', 0);
+      first.setAttribute('__listItemPlatformInfoIndex', 0);
       const second = new BackgroundSnapshotInstance('list-item');
       second.setAttribute('values', [{ 'item-key': 'after-1' }]);
-      second.setAttribute('__listItemPlatformInfo', 0);
+      second.setAttribute('__listItemPlatformInfoIndex', 0);
       after.insertBefore(first);
       after.insertBefore(second);
 

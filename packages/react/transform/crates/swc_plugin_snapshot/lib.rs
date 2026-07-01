@@ -1566,7 +1566,10 @@ where
             if let Some(index) = list_item_platform_info_index {
               snapshot_attrs.push(JSXAttrOrSpread::JSXAttr(JSXAttr {
                 span: DUMMY_SP,
-                name: JSXAttrName::Ident(IdentName::new("__listItemPlatformInfo".into(), DUMMY_SP)),
+                name: JSXAttrName::Ident(IdentName::new(
+                  "__listItemPlatformInfoIndex".into(),
+                  DUMMY_SP,
+                )),
                 value: Some(JSXAttrValue::JSXExprContainer(JSXExprContainer {
                   span: DUMMY_SP,
                   expr: JSXExpr::Expr(Box::new(i32_to_expr(&index))),
@@ -1793,7 +1796,7 @@ mod tests {
       let comments = tester.comments.clone();
       let output = tester.print(&program, &comments);
       assert!(
-        output.contains("__listItemPlatformInfo={0}"),
+        output.contains("__listItemPlatformInfoIndex={0}"),
         "list-item snapshot JSX should carry the platform-info value index; output:\n{output}",
       );
       assert_eq!(

@@ -112,26 +112,26 @@ require('@lynx-js/react/internal').snapshotCreatorMap[__snapshot_da39a_test_1] =
         {
             "item-key": "1"
         }
-    ]} __listItemPlatformInfo={0}/>,
+    ]} __listItemPlatformInfoIndex={0}/>,
     <__snapshot_da39a_test_4 key="2" values={[
         {
             "item-key": "2"
         }
-    ]} __listItemPlatformInfo={0}/>,
+    ]} __listItemPlatformInfoIndex={0}/>,
     <__snapshot_da39a_test_5 key="3" values={[
         {
             "item-key": "3"
         }
-    ]} __listItemPlatformInfo={0} $0={<__snapshot_da39a_test_6 $0={[
+    ]} __listItemPlatformInfoIndex={0} $0={<__snapshot_da39a_test_6 $0={[
         <__snapshot_da39a_test_7 key="1" values={[
             {
                 "item-key": "1"
             }
-        ]} __listItemPlatformInfo={0}/>,
+        ]} __listItemPlatformInfoIndex={0}/>,
         <__snapshot_da39a_test_8 key="2" values={[
             {
                 "item-key": "2"
             }
-        ]} __listItemPlatformInfo={0}/>
+        ]} __listItemPlatformInfoIndex={0}/>
     ]}/>}/>
 ]}/>}/>;

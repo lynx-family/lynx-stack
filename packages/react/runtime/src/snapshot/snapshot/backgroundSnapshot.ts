@@ -393,13 +393,16 @@ export class BackgroundSnapshotInstance {
     }
 
     if (typeof key === 'string') {
-      if (key === '__listItemPlatformInfo') {
-        if (typeof value === 'number') {
-          this.__listItemPlatformInfoIndex = value;
-          this.syncListItemPlatformInfo();
-        } else {
-          this.__listItemPlatformInfo = value as PlatformInfo;
+      if (key === '__listItemPlatformInfoIndex') {
+        this.__listItemPlatformInfoIndex = value as number;
+        this.syncListItemPlatformInfo();
+        if (typeof __PROFILE__ !== 'undefined' && __PROFILE__) {
+          profileEnd();
         }
+        return;
+      }
+      if (key === '__listItemPlatformInfo') {
+        this.__listItemPlatformInfo = value as PlatformInfo;
         if (typeof __PROFILE__ !== 'undefined' && __PROFILE__) {
           profileEnd();
         }

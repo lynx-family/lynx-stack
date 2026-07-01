@@ -22,4 +22,4 @@ const node = <__snapshot_da39a_test_1 values={[
     {
         "item-key": getItemKey()
     }
-]} __listItemPlatformInfo={1}/>;
+]} __listItemPlatformInfoIndex={1}/>;

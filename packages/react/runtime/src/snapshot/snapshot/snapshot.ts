@@ -555,13 +555,13 @@ export class SnapshotInstance {
     }
 
     if (typeof key === 'string') {
+      if (key === '__listItemPlatformInfoIndex') {
+        this.__listItemPlatformInfoIndex = value as number;
+        this.syncListItemPlatformInfo();
+        return;
+      }
       if (key === '__listItemPlatformInfo') {
-        if (typeof value === 'number') {
-          this.__listItemPlatformInfoIndex = value;
-          this.syncListItemPlatformInfo();
-        } else {
-          this.__listItemPlatformInfo = value as PlatformInfo;
-        }
+        this.__listItemPlatformInfo = value as PlatformInfo;
         return;
       }
       // for more flexible usage, we allow setting non-indexed attributes

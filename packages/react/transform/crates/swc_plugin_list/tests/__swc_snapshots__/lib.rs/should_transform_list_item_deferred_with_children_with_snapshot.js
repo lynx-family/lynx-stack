@@ -41,7 +41,7 @@ require('@lynx-js/react/internal').snapshotCreatorMap[__snapshot_da39a_test_4] =
             "item-key": "1"
         },
         noop
-    ]} __listItemPlatformInfo={0} $0={__c}/>} renderChildren={()=>[
+    ]} __listItemPlatformInfoIndex={0} $0={__c}/>} renderChildren={()=>[
         <__snapshot_da39a_test_2/>,
         <__snapshot_da39a_test_3/>,
         <__snapshot_da39a_test_4/>
@@ -72,7 +72,7 @@ require('@lynx-js/react/internal').snapshotCreatorMap[__snapshot_da39a_test_6] =
             "item-key": "1"
         },
         noop
-    ]} __listItemPlatformInfo={0} $0={__c}/>} renderChildren={()=><__snapshot_da39a_test_6/>} key="1" defer/>;
+    ]} __listItemPlatformInfoIndex={0} $0={__c}/>} renderChildren={()=><__snapshot_da39a_test_6/>} key="1" defer/>;
 const __snapshot_da39a_test_7 = "__snapshot_da39a_test_7";
 require('@lynx-js/react/internal').snapshotCreatorMap[__snapshot_da39a_test_7] = (__snapshot_da39a_test_7)=>require('@lynx-js/react/internal').createSnapshot(__snapshot_da39a_test_7, function() {
         const pageId = require('@lynx-js/react/internal').__pageId;
@@ -91,4 +91,4 @@ require('@lynx-js/react/internal').snapshotCreatorMap[__snapshot_da39a_test_7] =
             "item-key": "1"
         },
         noop
-    ]} __listItemPlatformInfo={0} $0={__c}/>} renderChildren={()=><App/>} key="1" defer/>;
+    ]} __listItemPlatformInfoIndex={0} $0={__c}/>} renderChildren={()=><App/>} key="1" defer/>;
