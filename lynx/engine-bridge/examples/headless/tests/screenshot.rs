@@ -14,10 +14,10 @@ const MAX_MEAN_CHANNEL_DELTA: f64 = 8.0;
 #[test]
 #[cfg(target_os = "macos")]
 fn react_fixture_render_matches_reference_png() {
-  if std::env::var_os("LYNX_SDK_DIR").is_none() && std::env::var_os("LYNX_LIB_PATH").is_none() {
-    eprintln!("skipping headless render test; set LYNX_SDK_DIR or LYNX_LIB_PATH to libLynx_clay");
-    return;
-  }
+  assert!(
+    runtime_configured(),
+    "headless render test requires LYNX_SDK_DIR or LYNX_LIB_PATH; run `cargo test` to let build.rs download libLynx_clay"
+  );
 
   let manifest_dir = Path::new(env!("CARGO_MANIFEST_DIR"));
   let repo_root = manifest_dir
@@ -72,6 +72,14 @@ fn react_fixture_render_matches_reference_png() {
   }
 
   assert_pngs_are_similar(&actual, &reference);
+}
+
+#[cfg(target_os = "macos")]
+fn runtime_configured() -> bool {
+  std::env::var_os("LYNX_SDK_DIR").is_some()
+    || std::env::var_os("LYNX_LIB_PATH").is_some()
+    || option_env!("LYNX_SDK_DIR").is_some()
+    || option_env!("LYNX_LIB_PATH").is_some()
 }
 
 #[test]

@@ -43,7 +43,8 @@ latest non-transparent software frame as a PNG.
 ## Runtime loading workflow
 
 1. The caller sets `LYNX_LIB_PATH` to a runtime library or `LYNX_SDK_DIR` to an
-   SDK folder.
+   SDK folder. When running through Cargo on macOS, package `build.rs` files
+   download the default runtime and inject `LYNX_SDK_DIR` automatically.
 2. `Env::load()` asks `sys::candidate_library_paths()` for runtime paths.
 3. `LoadedLibrary::load()` opens the first loadable dynamic library.
 4. `LoadedLibrary::from_dynamic_library()` resolves every required `lynx_*` and
@@ -51,8 +52,9 @@ latest non-transparent software frame as a PNG.
 5. Safe wrappers clone `Arc<LoadedLibrary>` so the dynamic library stays loaded
    while any object created from the environment is alive.
 
-No crate in this workspace links `libLynx_clay` at compile time, so ordinary
-Rust unit tests can run without a local SDK.
+No crate in this workspace links `libLynx_clay` at compile time. Runtime-backed
+tests still require a loadable dynamic library; local Cargo builds and CI use
+`build.rs` to prepare that artifact before tests execute.
 
 ## Headless rendering workflow
 
@@ -82,7 +84,9 @@ by the GenUI React fixture.
 
 The screenshot test validates the real GenUI fixture output:
 
-1. The test skips on macOS unless `LYNX_LIB_PATH` or `LYNX_SDK_DIR` is set.
+1. The test requires a runtime configuration. On macOS, `build.rs` downloads the
+   default runtime and injects `LYNX_SDK_DIR`; otherwise the test fails instead
+   of silently skipping.
 2. It runs the checked-in compiled bundle at
    `packages/genui/ui-judge/tests/fixtures/react/.generated/main.lynx.bundle`.
 3. It copies `examples/headless/tests/fixtures/LynxResources.bundle` beside the
@@ -123,8 +127,9 @@ must not cross FFI boundaries.
 
 ## CI coverage
 
-The `Engine Bridge (macOS)` CI job downloads `libLynx_clay.dylib` into a
-temporary SDK folder, ad-hoc signs it, sets `LYNX_SDK_DIR`, and runs:
+The `Engine Bridge (macOS)` CI job lets `build.rs` download
+`libLynx_clay.dylib` into `target/lynx-engine-bridge-sdk`, ad-hoc sign it,
+inject `LYNX_SDK_DIR`, and runs:
 
 ```sh
 cargo fmt --all --check
@@ -132,6 +137,6 @@ cargo clippy --locked --all-targets --all-features -- -D warnings
 cargo test --locked --all-targets --all-features
 ```
 
-The runtime-loading unit test only exercises the real loader when `LYNX_LIB_PATH`
-or `LYNX_SDK_DIR` is set. This keeps local tests independent from binary
-artifacts while CI still validates the downloaded runtime.
+Runtime-backed tests fail when no runtime is available. This keeps local and CI
+coverage aligned with the real downloaded runtime instead of passing through
+silent skips.

@@ -49,7 +49,7 @@ def _download(url, destination, retries, force):
     _log(f'Using existing Lynx runtime at {destination}')
     return
 
-  tmp_destination = destination.with_suffix(destination.suffix + '.tmp')
+  tmp_destination = destination.with_suffix(f'{destination.suffix}.{os.getpid()}.tmp')
   for attempt in range(1, retries + 1):
     try:
       _log(f'Downloading {url} -> {destination}')

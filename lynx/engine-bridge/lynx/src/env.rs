@@ -114,14 +114,9 @@ impl Env {
 #[cfg(test)]
 mod tests {
   use super::*;
-  use std::env;
 
   #[test]
   fn configured_runtime_library_loads() {
-    if env::var_os("LYNX_LIB_PATH").is_none() && env::var_os("LYNX_SDK_DIR").is_none() {
-      return;
-    }
-
     let env = Env::load().expect("configured Lynx runtime library should load");
     assert!(env.sys().path.exists());
     let _ = env.sdk_version();

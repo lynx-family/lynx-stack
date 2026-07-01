@@ -4,8 +4,9 @@ This workspace contains the Rust bridge for embedding Lynx without a native
 window. It provides one library crate, `lynx`, and a headless example.
 
 The Rust crate loads `libLynx_clay` at runtime with `dlopen` and `dlsym`. It
-does not link the runtime library at build time, so normal Rust builds and unit
-tests can run without a local Lynx SDK.
+does not link the runtime library at build time. Cargo builds prepare the
+downloaded runtime through `build.rs` so local development and CI exercise the
+same dynamic library path.
 
 ## Scope
 
@@ -32,6 +33,10 @@ windowed APIs such as `NativeView`.
   comparison test.
 - `../../packages/genui/ui-judge/tests/fixtures/react/main.lynx.snapshot.png`
   is the checked-in screenshot reference for that bundle.
+- `tools/download_runtime.py` downloads the runtime artifact used by local
+  Cargo builds and CI.
+- `tools/runtime_build.rs` is included by package `build.rs` files so runtime
+  setup stays consistent between the library crate and the headless example.
 - `tools/adhoc_sign_macos_sdk.py` ad-hoc signs a downloaded macOS runtime for
   local or CI loading.
 - `docs/architecture.md` describes the crate boundaries and ownership model.
@@ -55,7 +60,8 @@ workflow.
 
 ## Runtime loading
 
-Set one of these environment variables before calling `Env::load()`:
+Set one of these environment variables before calling `Env::load()` from a
+non-Cargo host:
 
 ```sh
 export LYNX_LIB_PATH=/path/to/libLynx_clay.dylib
@@ -74,12 +80,19 @@ The loaded runtime must export the `lynx_rust_*` shim symbols, such as
 `lynx_rust_view_set_frame`. These symbols keep the Rust ABI simple while the
 existing C++ exports can keep reference-parameter signatures.
 
+When building with Cargo, `build.rs` downloads the default runtime on macOS when
+neither variable is set, stores it under `target/lynx-engine-bridge-sdk`, and
+injects `LYNX_SDK_DIR` for tests and examples. Set `LYNX_DOWNLOAD_RUNTIME=0` to
+disable the automatic download. On Linux, set `LYNX_RUNTIME_URL` or provide
+`LYNX_LIB_PATH` / `LYNX_SDK_DIR`.
+
 ## macOS signing
 
 Cargo test binaries are not signed with Hardened Runtime or Library Validation,
 so ordinary local tests do not need Developer ID signing.
 
-Download the runtime before running local tests:
+Cargo downloads the runtime before building tests and examples. To prefetch or
+refresh it manually, run:
 
 ```sh
 eval "$(python3 tools/download_runtime.py --emit-env)"
@@ -106,7 +119,6 @@ present under the SDK folder.
 Run Rust checks from this folder:
 
 ```sh
-eval "$(python3 tools/download_runtime.py --emit-env)"
 cargo fmt --all --check
 cargo clippy --locked --all-targets --all-features -- -D warnings
 cargo test --locked --all-targets --all-features
@@ -120,14 +132,15 @@ LYNX_SDK_DIR=/path/to/lynx-sdk \
 cargo test --locked --all-targets --all-features
 ```
 
-The CI job downloads the macOS runtime dylib into a temporary SDK folder,
-ad-hoc signs it, sets `LYNX_SDK_DIR`, and runs the same checks.
+The CI job lets `build.rs` download the macOS runtime dylib into
+`target/lynx-engine-bridge-sdk`, ad-hoc sign it, inject `LYNX_SDK_DIR`, and run
+the same checks.
 
 The `lynx/tests/runtime.rs` integration test belongs to the library crate. It
 contains public API tests and runtime-backed tests. Runtime-backed tests fail
-when `LYNX_LIB_PATH` or `LYNX_SDK_DIR` is missing, so keep the local downloader
-and CI download step in sync. Keep this coverage in the library crate when
-moving or splitting the headless example.
+when no runtime is available, so keep `build.rs`, the local downloader, and CI
+in sync. Keep this coverage in the library crate when moving or splitting the
+headless example.
 
 The headless example package also has a screenshot golden test. It runs the
 checked-in React fixture bundle from
