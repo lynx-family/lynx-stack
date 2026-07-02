@@ -148,6 +148,7 @@ export class SnapshotInstance {
   __listItemPlatformInfo?: PlatformInfo;
   __extraProps?: Record<string, unknown> | undefined;
   __slotIndex: number = 0;
+  private __listItemPlatformInfoIndex?: number;
 
   constructor(public type: string, id?: number) {
     // Suspense uses 'div'
@@ -549,10 +550,20 @@ export class SnapshotInstance {
           this.callUpdateIfNotDirectOrDeepEqual(index, undefined, values[index]);
         }
       }
+      this.syncListItemPlatformInfo();
       return;
     }
 
     if (typeof key === 'string') {
+      if (key === '__listItemPlatformInfoIndex') {
+        this.__listItemPlatformInfoIndex = value as number;
+        this.syncListItemPlatformInfo();
+        return;
+      }
+      if (key === '__listItemPlatformInfo') {
+        this.__listItemPlatformInfo = value as PlatformInfo;
+        return;
+      }
       // for more flexible usage, we allow setting non-indexed attributes
       (this.__extraProps ??= {})[key] = value;
       return;
@@ -560,6 +571,14 @@ export class SnapshotInstance {
 
     this.__values ??= [];
     this.callUpdateIfNotDirectOrDeepEqual(key, this.__values[key], this.__values[key] = value);
+    this.syncListItemPlatformInfo();
+  }
+
+  private syncListItemPlatformInfo(): void {
+    if (this.__listItemPlatformInfoIndex === undefined || !this.__values) {
+      return;
+    }
+    this.__listItemPlatformInfo = this.__values[this.__listItemPlatformInfoIndex] as PlatformInfo;
   }
 
   toJSON(): Omit<SerializedSnapshotInstance, 'children'> & { children: SnapshotInstance[] | undefined } {
@@ -573,6 +592,9 @@ export class SnapshotInstance {
     // To save serialize time, we only serialize slotIndex if it is not 0
     if (this.__slotIndex > 0) {
       json.slotIndex = this.__slotIndex;
+    }
+    if (this.__listItemPlatformInfo) {
+      json.__listItemPlatformInfo = this.__listItemPlatformInfo;
     }
     return json;
   }
