@@ -107,11 +107,6 @@ fn target_triple_name() -> String {
 }
 
 fn prepare_runtime(sdk_dir: &Path, runtime_path: &Path, url: String) {
-  if has_existing_runtime(runtime_path, &url) {
-    adhoc_sign_if_needed(runtime_path);
-    return;
-  }
-
   fs::create_dir_all(sdk_dir).unwrap_or_else(|error| {
     panic!(
       "failed to create Lynx runtime SDK directory {}: {error}",
