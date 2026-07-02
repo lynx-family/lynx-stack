@@ -156,7 +156,18 @@ jobs:
               "$BASE_REF":"refs/remotes/origin/$BASE_REF" \
               "$CURRENT_REF":"refs/remotes/origin/pr-merge"
           done
-          echo "::error::Unable to find a merge base between origin/$BASE_REF and HEAD after 10 deepen iterations" >&2
+          echo "Unable to find a merge base after 10 deepen iterations; fetching full history for the compared refs." >&2
+          if ! git fetch -q --unshallow origin \
+            "$BASE_REF":"refs/remotes/origin/$BASE_REF" \
+            "$CURRENT_REF":"refs/remotes/origin/pr-merge"; then
+            git fetch -q --depth=2147483647 origin \
+              "$BASE_REF":"refs/remotes/origin/$BASE_REF" \
+              "$CURRENT_REF":"refs/remotes/origin/pr-merge"
+          fi
+          if git merge-base "refs/remotes/origin/$BASE_REF" HEAD >/dev/null 2>&1; then
+            exit 0
+          fi
+          echo "::error::Unable to find a merge base between origin/$BASE_REF and HEAD after full-history fallback" >&2
           exit 1
       - name: Collect packages with changesets
         id: changeset

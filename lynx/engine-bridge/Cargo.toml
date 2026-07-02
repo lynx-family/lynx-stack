@@ -1,0 +1,6 @@
+[workspace]
+members = [
+  "examples/headless",
+  "lynx",
+]
+resolver = "2"
