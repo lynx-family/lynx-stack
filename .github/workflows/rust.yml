@@ -79,6 +79,10 @@ jobs:
         with:
           key: engine-bridge-${{ matrix.runs-on.name }}
           save-if: ${{ github.ref_name == 'main' }}
+      - name: Install runtime dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends libepoxy0
       - name: Format
         working-directory: lynx/engine-bridge
         run: cargo fmt --all --check

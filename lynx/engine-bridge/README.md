@@ -110,8 +110,10 @@ cargo test --locked --all-targets --all-features
 
 The CI job runs on Linux only. It lets `build.rs` download the Linux runtime
 artifact into `target/lynx-engine-bridge-sdk`, inject `LYNX_SDK_DIR`, and run the
-same checks. macOS uses the same Rust code path and remains available for local
-development, but it is not required as a PR check.
+same checks. The Linux runtime also needs `libepoxy.so.0`; install the
+`libepoxy0` system package before running runtime-backed tests locally on Linux.
+macOS uses the same Rust code path and remains available for local development,
+but it is not required as a PR check.
 
 The `lynx/tests/runtime.rs` integration test belongs to the library crate. It
 contains public API tests and runtime-backed tests. Runtime-backed tests fail
@@ -161,6 +163,11 @@ folder that contains the runtime in `lib/`.
 
 The runtime was built without the Rust-friendly shim exports. Use a runtime
 artifact that includes those symbols.
+
+`libepoxy.so.0: cannot open shared object file`
+
+Install the Linux runtime dependency with your system package manager. On Ubuntu
+24.04, install `libepoxy0`.
 
 `resource not found`
 
