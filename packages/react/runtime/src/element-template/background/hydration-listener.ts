@@ -32,30 +32,23 @@ import { profileEnd, profileStart } from '../debug/profile.js';
 import { clearPendingEvents, flushPendingEvents } from '../prop-adapters/event.js';
 import { clearDelayedRefUiOps, clearPendingRefs, flushDelayedRefUiOps } from '../prop-adapters/ref.js';
 import { ElementTemplateLifecycleConstant } from '../protocol/lifecycle-constant.js';
-import type { ElementTemplateHydrateCommitContext, SerializedEtNode } from '../protocol/types.js';
+import type { ElementTemplateHydrateCommitContext } from '../protocol/types.js';
 import { createElementTemplateUpdateEvent } from '../protocol/update-event.js';
 import { __root } from '../runtime/page/root-instance.js';
 import { resetElementTemplateMainThreadFunctionRuntime } from '../runtime/template/main-thread-function.js';
 
 let listener:
-  | ((event: { data: unknown }) => void)
+  | ((event: { data: ElementTemplateHydrateCommitContext }) => void)
   | undefined;
 
 export function installElementTemplateHydrationListener(): void {
   resetElementTemplateHydrationListener();
   resetElementTemplateCommitState();
 
-  listener = (event: { data: unknown }) => {
-    const { data } = event;
-    let instances: SerializedEtNode[];
-    if (Array.isArray(data)) {
-      instances = data as SerializedEtNode[];
-    } else {
-      const payload = data as ElementTemplateHydrateCommitContext;
-      if (typeof payload.reloadVersion === 'number' && payload.reloadVersion < getReloadVersion()) {
-        return;
-      }
-      instances = payload.instances;
+  listener = (event: { data: ElementTemplateHydrateCommitContext }) => {
+    const { instances, reloadVersion } = event.data;
+    if (reloadVersion < getReloadVersion()) {
+      return;
     }
 
     const root = __root as BackgroundElementTemplateInstance;
@@ -64,109 +57,124 @@ export function installElementTemplateHydrationListener(): void {
       profileStart('ReactLynx::hydrate');
     }
     beginPipeline(true, PipelineOrigins.reactLynxHydrate, PerformanceTimingFlags.reactLynxHydrate);
-    markTiming('hydrateParseSnapshotStart');
-    markTiming('hydrateParseSnapshotEnd');
-    markTiming('diffVdomStart');
+    try {
+      markTiming('hydrateParseSnapshotStart');
+      markTiming('hydrateParseSnapshotEnd');
+      markTiming('diffVdomStart');
 
-    resetGlobalCommitContext();
-    if (typeof __ALOG__ !== 'undefined' && __ALOG__) {
-      console.alog?.(
-        '[ReactLynxDebug] ElementTemplate MTS -> BTS hydrate:\n'
-          + JSON.stringify({ data: instances }, null, 2),
-      );
-      console.alog?.(
-        '[ReactLynxDebug] BackgroundElementTemplate tree before hydration:\n'
-          + printElementTemplateTreeToString(root),
-      );
-    }
-
-    const didHydrateMatchedInstances = hydrateRootChildrenIntoContext(instances, root);
-    if (typeof __ALOG__ !== 'undefined' && __ALOG__) {
-      console.alog?.(
-        '[ReactLynxDebug] BackgroundElementTemplate tree after hydration:\n'
-          + printElementTemplateTreeToString(root),
-      );
-    }
-
-    if (__PROFILE__) {
-      profileEnd();
-    }
-    markTiming('diffVdomEnd');
-
-    if (didHydrateMatchedInstances) {
-      markElementTemplateHydrated();
-    } else {
-      // Hydrate is not transactional; a later failure can happen after earlier
-      // nodes were rebound. Treat the pass as failed for externally observable
-      // work, so delayed refs/events are not released from an incomplete tree.
-      clearPendingEvents();
-      clearPendingRefs();
-      clearDelayedRefUiOps();
-      resetElementTemplateMainThreadFunctionRuntime();
       resetGlobalCommitContext();
-    }
-
-    let didDispatchHydrateUpdate = false;
-    let delayedRunOnMainThreadPayload: typeof delayedRunOnMainThreadData | undefined;
-    if (didHydrateMatchedInstances) {
-      const hasDelayedRunOnMainThread = delayedRunOnMainThreadData.length > 0;
-      delayedRunOnMainThreadPayload = hasDelayedRunOnMainThread
-        ? takeDelayedRunOnMainThreadData()
-        : undefined;
-      if (globalPipelineOptions) {
-        globalCommitContext.flushOptions.pipelineOptions = globalPipelineOptions;
-        setPipeline(undefined);
-      }
       if (typeof __ALOG__ !== 'undefined' && __ALOG__) {
         console.alog?.(
-          '[ReactLynxDebug] ElementTemplate hydrate update commands:\n'
-            + JSON.stringify(
-              {
-                ops: formatElementTemplateUpdateCommands(globalCommitContext.ops),
-                flushOptions: globalCommitContext.flushOptions,
-                flowIds: globalCommitContext.flowIds,
-                isHydration: true,
-                delayedRunOnMainThreadDataCount: delayedRunOnMainThreadPayload?.length,
-              },
-              null,
-              2,
-            ),
+          '[ReactLynxDebug] ElementTemplate MTS -> BTS hydrate:\n'
+            + JSON.stringify({ data: instances }, null, 2),
+        );
+        console.alog?.(
+          '[ReactLynxDebug] BackgroundElementTemplate tree before hydration:\n'
+            + printElementTemplateTreeToString(root),
         );
       }
-      const removedSubtreesAwaitingTeardown = globalCommitContext.ops.length > 0
-        ? takeRemovedSubtreesForPostDispatchTeardown()
-        : [];
-      try {
-        lynx.getCoreContext().dispatchEvent(createElementTemplateUpdateEvent({
-          ops: globalCommitContext.ops,
-          flushOptions: globalCommitContext.flushOptions,
-          isHydration: true,
-          reloadVersion: getReloadVersion(),
-          flowIds: globalCommitContext.flowIds,
-          delayedRunOnMainThreadData: delayedRunOnMainThreadPayload,
-        }));
-        didDispatchHydrateUpdate = true;
-      } finally {
-        if (delayedRunOnMainThreadPayload && !didDispatchHydrateUpdate) {
-          dropFunctionCallReturnIds(delayedRunOnMainThreadPayload.map(data => data.resolveId));
+
+      const didHydrateMatchedInstances = hydrateRootChildrenIntoContext(instances, root);
+      if (typeof __ALOG__ !== 'undefined' && __ALOG__) {
+        console.alog?.(
+          '[ReactLynxDebug] BackgroundElementTemplate tree after hydration:\n'
+            + printElementTemplateTreeToString(root),
+        );
+      }
+
+      if (__PROFILE__) {
+        profileEnd();
+      }
+      markTiming('diffVdomEnd');
+
+      if (didHydrateMatchedInstances) {
+        markElementTemplateHydrated();
+      } else {
+        // Hydrate is not transactional; a later failure can happen after earlier
+        // nodes were rebound. Treat the pass as failed for externally observable
+        // work, so delayed refs/events are not released from an incomplete tree.
+        clearPendingEvents();
+        clearPendingRefs();
+        clearDelayedRefUiOps();
+        resetElementTemplateMainThreadFunctionRuntime();
+        resetGlobalCommitContext();
+      }
+
+      if (didHydrateMatchedInstances) {
+        const hasDelayedRunOnMainThread = delayedRunOnMainThreadData.length > 0;
+        const delayedRunOnMainThreadPayload = hasDelayedRunOnMainThread
+          ? takeDelayedRunOnMainThreadData()
+          : undefined;
+        const pipelineOptions = globalPipelineOptions;
+        if (pipelineOptions) {
+          globalCommitContext.flushOptions.pipelineOptions = pipelineOptions;
         }
-        if (!didDispatchHydrateUpdate) {
+        if (typeof __ALOG__ !== 'undefined' && __ALOG__) {
+          console.alog?.(
+            '[ReactLynxDebug] ElementTemplate hydrate update commands:\n'
+              + JSON.stringify(
+                {
+                  ops: formatElementTemplateUpdateCommands(globalCommitContext.ops),
+                  flushOptions: globalCommitContext.flushOptions,
+                  flowIds: globalCommitContext.flowIds,
+                  isHydration: true,
+                  delayedRunOnMainThreadDataCount: delayedRunOnMainThreadPayload?.length,
+                },
+                null,
+                2,
+              ),
+          );
+        }
+        const removedSubtreesAwaitingTeardown = globalCommitContext.ops.length > 0
+          ? takeRemovedSubtreesForPostDispatchTeardown()
+          : [];
+        let hydrateUpdateEvent: ReturnType<typeof createElementTemplateUpdateEvent> | undefined;
+        if (__PROFILE__) {
+          profileStart('ReactLynx::commitChanges');
+        }
+        markTiming('packChangesStart');
+        try {
+          hydrateUpdateEvent = createElementTemplateUpdateEvent({
+            ops: globalCommitContext.ops,
+            flushOptions: globalCommitContext.flushOptions,
+            isHydration: true,
+            reloadVersion: getReloadVersion(),
+            flowIds: globalCommitContext.flowIds,
+            delayedRunOnMainThreadData: delayedRunOnMainThreadPayload,
+          });
+        } catch (error) {
+          if (delayedRunOnMainThreadPayload) {
+            dropFunctionCallReturnIds(delayedRunOnMainThreadPayload.map(data => data.resolveId));
+          }
           // Do not expose refs or replay delayed selector ops if the hydrate
-          // patch failed to reach the main thread; selectors may still point at
-          // stale pre-hydration ids in that case.
+          // patch failed to serialize; selectors may still point at stale
+          // pre-hydration ids in that case.
           clearPendingEvents();
           clearPendingRefs();
           clearDelayedRefUiOps();
+          lynx.reportError(error as Error);
+        }
+        markTiming('packChangesEnd');
+        if (pipelineOptions) {
+          setPipeline(undefined);
+        }
+        if (__PROFILE__) {
+          profileEnd();
         }
         resetGlobalCommitContext();
         scheduleElementTemplateRemovedSubtreeCleanup(removedSubtreesAwaitingTeardown);
+
+        if (!hydrateUpdateEvent) {
+          return;
+        }
+        lynx.getCoreContext().dispatchEvent(hydrateUpdateEvent);
+        flushPendingEvents();
+        // Ordinary refs attach on Preact commit boundaries; hydration only releases
+        // delayed selector ops after ids have been rebound to stable native handles.
+        flushDelayedRefUiOps();
       }
-    }
-    if (didHydrateMatchedInstances && didDispatchHydrateUpdate) {
-      flushPendingEvents();
-      // Ordinary refs attach on Preact commit boundaries; hydration only releases
-      // delayed selector ops after ids have been rebound to stable native handles.
-      flushDelayedRefUiOps();
+    } finally {
+      setPipeline(undefined);
     }
   };
 

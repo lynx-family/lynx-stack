@@ -17,6 +17,7 @@ import {
   render as mockRender,
 } from '../../../../src/element-template/runtime/render/render-to-opcodes.js';
 import { renderMainThread } from '../../../../src/element-template/runtime/render/render-main-thread.js';
+import type { ElementTemplateHydrateCommitContext } from '../../../../src/element-template/protocol/types.js';
 import { setupPage } from '../../../../src/element-template/runtime/page/page.js';
 import { setRoot } from '../../../../src/element-template/runtime/page/root-instance.js';
 import { resetTemplateId } from '../../../../src/element-template/runtime/template/handle.js';
@@ -106,7 +107,7 @@ describe('renderMainThread contract', () => {
     ]);
 
     const dispatched = dispatchEvent.mock.calls[0]?.[0] as
-      | { type: string; data: { instances?: unknown[]; reloadVersion?: unknown } }
+      | { type: string; data: ElementTemplateHydrateCommitContext }
       | undefined;
     expect(dispatched?.type).toBe('rLynxElementTemplateHydrate');
     expect(Array.isArray(dispatched?.data.instances)).toBe(true);

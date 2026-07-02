@@ -21,12 +21,14 @@ import {
 } from '../../../../../src/element-template/native/patch-listener.js';
 import { ElementTemplateLifecycleConstant } from '../../../../../src/element-template/protocol/lifecycle-constant.js';
 import { ElementTemplateUpdateOps } from '../../../../../src/element-template/protocol/opcodes.js';
-import type { SerializedElementTemplate } from '../../../../../src/element-template/protocol/types.js';
+import type {
+  ElementTemplateHydrateCommitContext,
+  SerializedElementTemplate,
+} from '../../../../../src/element-template/protocol/types.js';
 import { __page } from '../../../../../src/element-template/runtime/page/page.js';
 import { __root } from '../../../../../src/element-template/runtime/page/root-instance.js';
 import { ElementTemplateEnvManager } from '../../../test-utils/debug/envManager.js';
 import { hydrateBackground } from '../../../test-utils/debug/hydrate.js';
-import { extractSerializedHydrateInstances } from '../../../test-utils/debug/hydratePayload.js';
 import { installMockNativePapi } from '../../../test-utils/mock/mockNativePapi.js';
 import { serializeToJSX } from '../../../test-utils/debug/serializer.js';
 
@@ -38,9 +40,12 @@ declare module '@lynx-js/types' {
   }
 }
 
+type HydrateEvent = { data: ElementTemplateHydrateCommitContext };
+type HydrateInstances = ElementTemplateHydrateCommitContext['instances'];
+
 interface CaseContext {
-  hydrationData: SerializedElementTemplate[];
-  onHydrate: (event: { data: unknown }) => void;
+  hydrationData: HydrateInstances;
+  onHydrate: (event: HydrateEvent) => void;
 }
 
 const envManager = new ElementTemplateEnvManager();
@@ -93,12 +98,12 @@ function createHydrationRawTextChild(handleId: number, text: unknown): Serialize
 function setup(): CaseContext {
   vi.clearAllMocks();
   installMockNativePapi({ clearTemplatesOnCleanup: false });
-  const hydrationData: SerializedElementTemplate[] = [];
+  const hydrationData: HydrateInstances = [];
   envManager.resetEnv('background');
   envManager.setUseElementTemplate(true);
 
-  const onHydrate = vi.fn().mockImplementation((event: { data: unknown }) => {
-    hydrationData.push(...extractSerializedHydrateInstances(event.data));
+  const onHydrate = vi.fn().mockImplementation((event: HydrateEvent) => {
+    hydrationData.push(...event.data.instances);
   });
   lynx.getCoreContext().addEventListener(ElementTemplateLifecycleConstant.hydrate, onHydrate);
 
