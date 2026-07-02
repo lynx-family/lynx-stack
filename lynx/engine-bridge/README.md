@@ -60,12 +60,10 @@ export LYNX_SDK_DIR=/path/to/lynx-sdk
 ```
 
 `LYNX_LIB_PATH` wins when both variables are set. If only `LYNX_SDK_DIR` is set,
-the loader checks these paths:
+the loader checks one canonical path for the current platform:
 
 - `$LYNX_SDK_DIR/lib/libLynx_clay.dylib` on macOS
 - `$LYNX_SDK_DIR/lib/libLynx_clay.so` on Linux
-- `$LYNX_SDK_DIR/libLynx_clay.dylib` on macOS
-- `$LYNX_SDK_DIR/libLynx_clay.so` on Linux
 
 The loaded runtime must export the `lynx_rust_*` shim symbols, such as
 `lynx_rust_view_set_frame`. These symbols keep the Rust ABI simple while the

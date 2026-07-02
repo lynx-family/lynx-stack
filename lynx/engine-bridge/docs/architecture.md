@@ -46,8 +46,9 @@ latest non-transparent software frame as a PNG.
    SDK folder. When running through Cargo on supported targets, package
    `build.rs` files download the default runtime and inject `LYNX_SDK_DIR`
    automatically.
-2. `Env::load()` asks `sys::candidate_library_paths()` for runtime paths.
-3. `LoadedLibrary::load()` opens the first loadable dynamic library.
+2. `Env::load()` asks `sys::candidate_library_paths()` for the configured
+   runtime path.
+3. `LoadedLibrary::load()` opens that dynamic library.
 4. `LoadedLibrary::from_dynamic_library()` resolves every required `lynx_*` and
    `lynx_rust_*` symbol.
 5. Safe wrappers clone `Arc<LoadedLibrary>` so the dynamic library stays loaded
