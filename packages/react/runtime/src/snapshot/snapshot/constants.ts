@@ -20,3 +20,8 @@ export const DEFAULT_CSS_ID = 0;
  * Default snapshot type for compiled snapshots.
  */
 export const COMPILED_SNAPSHOT = '__snapshot';
+
+/**
+ * Default snapshot type for clone snapshots.
+ */
+export const CLONE_SNAPSHOT = '__clone';

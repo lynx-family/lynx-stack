@@ -37,3 +37,44 @@ text {
   font-size: 36px;
   font-weight: 700;
 }
+
+.CloneSection {
+  margin-top: 28px;
+  width: 64vw;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.SectionTitle {
+  color: #8be9fd;
+  font-size: 18px;
+  font-weight: 700;
+}
+
+.CloneCard {
+  padding: 10px;
+  border: 1px solid rgba(255, 255, 255, 0.36);
+  border-radius: 8px;
+  background-color: rgba(255, 255, 255, 0.12);
+}
+
+.CloneNode {
+  background-color: rgba(55, 214, 169, 0.22);
+}
+
+.CloneComponent {
+  background-color: rgba(255, 196, 87, 0.22);
+}
+
+.CloneTitle {
+  color: #ffffff;
+  font-size: 16px;
+  font-weight: 700;
+}
+
+.CloneBody {
+  color: #ffffff;
+  font-size: 14px;
+  margin-top: 4px;
+}
