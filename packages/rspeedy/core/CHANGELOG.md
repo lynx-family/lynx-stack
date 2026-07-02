@@ -1,5 +1,28 @@
 # @lynx-js/rspeedy
 
+## 0.15.2
+
+### Patch Changes
+
+- Support enabling preact devtools in production via the `REACT_DEVTOOL` environment variable. ([#2880](https://github.com/lynx-family/lynx-stack/pull/2880))
+
+  By default `@lynx-js/preact-devtools` is aliased away in production builds. Setting the `REACT_DEVTOOL` environment variable now:
+
+  1. keeps a user-imported `@lynx-js/preact-devtools` from being stripped;
+  2. defines `__REACT_DEVTOOL__`, which gates the dev-only runtime hooks devtools depends on (such as `injectLepusMethods`) so they also run in production;
+  3. keeps function/class names during minification (`keep_fnames`/`keep_classnames`), which devtools needs to resolve component names (`type.name`) and to reconstruct the hook tree (it matches minified stack frames by function name).
+
+  `@lynx-js/react/debug` remains development-only.
+
+- Fix the `web` environment crashing in development because its main thread was bundled with the Rsbuild web HMR runtime. ([#2910](https://github.com/lynx-family/lynx-stack/pull/2910))
+
+  Previously the `web` environment was compiled with `target: 'web'`, which makes Rsbuild inject its own HMR client (`@rsbuild/core/dist/client/hmr.js`). That client drives `__webpack_require__.hmrM`, which is implemented with `lynx.requireModuleAsync` — an API the web main thread does not provide — so hot updates crashed.
+
+  The `web` environment now uses the same target and HMR entry as the `lynx` environment, going through Lynx's own HMR runtime instead of the Rsbuild web one.
+
+- Updated dependencies [[`7a6577a`](https://github.com/lynx-family/lynx-stack/commit/7a6577a5b29db4020cbba22a911f712bafde7e66)]:
+  - @lynx-js/debug-metadata-rsbuild-plugin@0.1.2
+
 ## 0.15.1
 
 ### Patch Changes
