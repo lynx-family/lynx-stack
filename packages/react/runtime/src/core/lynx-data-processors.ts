@@ -4,6 +4,18 @@
 import type { DataProcessorDefinition, InitData, InitDataRaw } from '../lynx-api.js';
 import { profileEnd, profileStart } from '../shared/profile.js';
 
+// `true` only while the default data processor is running. `defaultDataProcessor` is
+// invoked by the native side as a separate call *before* `renderPage` / `updatePage`,
+// so a `markFirstScreenSyncReady()` made inside it must not sync the *previous* tree
+// (still latched ready) — a re-render of the data being processed is imminent. The
+// first-screen sync backend reads this to defer such a mark. Lives here (not in the
+// backend) so `core` does not depend on a runtime backend.
+let processingDefaultData = false;
+
+export function isProcessingDefaultData(): boolean {
+  return processingDefaultData;
+}
+
 export function createProcessData(
   dataProcessorDefinition?: DataProcessorDefinition,
 ): (data: InitDataRaw, processorName?: string) => InitData | InitDataRaw {
@@ -19,7 +31,14 @@ export function createProcessData(
       if (processorName) {
         result = dataProcessorDefinition?.dataProcessors?.[processorName]?.(data) as InitData ?? data;
       } else {
-        result = dataProcessorDefinition?.defaultDataProcessor?.(data) ?? data;
+        // a `markFirstScreenSyncReady()` made inside `defaultDataProcessor` must be
+        // deferred until the data being processed renders (see `processingDefaultData`)
+        processingDefaultData = true;
+        try {
+          result = dataProcessorDefinition?.defaultDataProcessor?.(data) ?? data;
+        } finally {
+          processingDefaultData = false;
+        }
       }
     } catch (error: unknown) {
       lynx.reportError(error as Error);

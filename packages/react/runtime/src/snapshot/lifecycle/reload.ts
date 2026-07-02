@@ -21,7 +21,7 @@ import { hydrate } from '../renderToOpcodes/hydrate.js';
 import { __page } from '../snapshot/definition.js';
 import { SnapshotInstance, snapshotInstanceManager } from '../snapshot/snapshot.js';
 import { applyRefQueue } from '../snapshot/workletRef.js';
-import { clearJSReadyEventIdSwap, isJSReady } from './event/jsReady.js';
+import { clearFirstScreenEventIdSwap, isFirstScreenSynced } from './event/firstScreenSync.js';
 import { deinitGlobalSnapshotPatch } from './patch/snapshotPatch.js';
 import { shouldDelayUiOps } from './ref/delay.js';
 
@@ -38,7 +38,7 @@ function reloadMainThread(data: unknown, options: UpdatePageOption): void {
 
   snapshotInstanceManager.clear();
   __pendingListUpdates.clearAttachedLists();
-  clearJSReadyEventIdSwap();
+  clearFirstScreenEventIdSwap();
 
   const oldRoot = __root;
   setRoot(new SnapshotInstance('root'));
@@ -52,7 +52,7 @@ function reloadMainThread(data: unknown, options: UpdatePageOption): void {
   __pendingListUpdates.flush();
   applyRefQueue();
 
-  if (isJSReady) {
+  if (isFirstScreenSynced) {
     __OnLifecycleEvent([
       LifecycleConstant.firstScreen, /* FIRST_SCREEN */
       {

@@ -51,7 +51,7 @@ export interface ReactWebpackPluginOptions {
     experimental_isLazyBundle?: boolean;
     experimental_useElementTemplate?: boolean;
     extractStr?: Partial<ExtractStrConfig> | boolean;
-    firstScreenSyncTiming?: 'immediately' | 'jsReady';
+    firstScreenSyncTiming?: 'immediately' | 'jsReady' | 'manual';
     globalPropsMode?: 'reactive' | 'event';
     mainThreadChunks?: string[] | undefined;
     profile?: boolean | undefined;

@@ -1274,7 +1274,7 @@ describe('firstScreenSyncTiming - jsReady', () => {
       expect(lynx.getNativeApp().callLepusMethod).toHaveBeenCalledTimes(1);
       expect(lynx.getNativeApp().callLepusMethod.mock.calls[0]).toMatchInlineSnapshot(`
         [
-          "rLynxJSReady",
+          "rLynxFirstScreenSyncReady",
           {},
         ]
       `);
@@ -1296,7 +1296,7 @@ describe('firstScreenSyncTiming - jsReady', () => {
           [
             "rLynxFirstScreen",
             {
-              "jsReadyEventIdSwap": {
+              "firstScreenEventIdSwap": {
                 "-1": -6,
                 "-10": -15,
                 "-2": -7,
@@ -1484,7 +1484,7 @@ describe('firstScreenSyncTiming - jsReady', () => {
       expect(lynx.getNativeApp().callLepusMethod).toHaveBeenCalledTimes(1);
       expect(lynx.getNativeApp().callLepusMethod.mock.calls[0]).toMatchInlineSnapshot(`
         [
-          "rLynxJSReady",
+          "rLynxFirstScreenSyncReady",
           {},
         ]
       `);
@@ -1505,7 +1505,7 @@ describe('firstScreenSyncTiming - jsReady', () => {
           [
             "rLynxFirstScreen",
             {
-              "jsReadyEventIdSwap": {
+              "firstScreenEventIdSwap": {
                 "-1": -9,
                 "-13": -21,
                 "-5": -13,
@@ -1649,7 +1649,7 @@ describe('firstScreenSyncTiming - jsReady', () => {
       expect(lynx.getNativeApp().callLepusMethod).toHaveBeenCalledTimes(1);
       expect(lynx.getNativeApp().callLepusMethod.mock.calls[0]).toMatchInlineSnapshot(`
         [
-          "rLynxJSReady",
+          "rLynxFirstScreenSyncReady",
           {},
         ]
       `);
@@ -1670,7 +1670,7 @@ describe('firstScreenSyncTiming - jsReady', () => {
           [
             "rLynxFirstScreen",
             {
-              "jsReadyEventIdSwap": {
+              "firstScreenEventIdSwap": {
                 "-1": -2,
                 "-2": -10,
                 "-6": -14,
@@ -1845,7 +1845,7 @@ describe('firstScreenSyncTiming - jsReady', () => {
       expect(lynx.getNativeApp().callLepusMethod).toHaveBeenCalledTimes(1);
       expect(lynx.getNativeApp().callLepusMethod.mock.calls[0]).toMatchInlineSnapshot(`
         [
-          "rLynxJSReady",
+          "rLynxFirstScreenSyncReady",
           {},
         ]
       `);
@@ -1867,7 +1867,7 @@ describe('firstScreenSyncTiming - jsReady', () => {
           [
             "rLynxFirstScreen",
             {
-              "jsReadyEventIdSwap": {},
+              "firstScreenEventIdSwap": {},
               "root": "{"id":-11,"type":"root","children":[{"id":-12,"type":"__snapshot_a94a8_test_2","values":[{"dataX":"WorldX"}],"children":[{"id":-13,"type":null,"values":["Hello 2"]},{"id":-14,"type":null,"values":["World"],"slotIndex":1},{"id":-15,"type":"__snapshot_a94a8_test_1","values":[{"attr":{"dataX":"WorldX"}}],"slotIndex":2}]}]}",
             },
           ],
