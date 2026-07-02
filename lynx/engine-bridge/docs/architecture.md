@@ -102,16 +102,18 @@ must not cross FFI boundaries.
 
 ## CI coverage
 
-The `Engine Bridge` CI job runs on Linux only. It lets `build.rs` download the
-Linux `libLynx_clay.so` artifact into `target/lynx-engine-bridge-sdk`, inject
-`LYNX_SDK_DIR`, and runs:
+The crate is a root Cargo workspace member and follows the main Rust workflow.
+CI does not run a separate engine-bridge job. The workspace-level Rust jobs run:
 
 ```sh
-cargo fmt --package lynx --check
-cargo clippy --locked -p lynx --all-targets --all-features -- -D warnings
-cargo test --locked -p lynx --all-targets --all-features
+cargo fmt --check
+cargo clippy --tests --all-features -- -D warnings
+cargo llvm-cov nextest --all-targets --all-features --profile ci --config-file .cargo/nextest.toml --lcov --output-path lcov.info --release
 ```
 
+The Linux test job installs `libepoxy0`, lets `build.rs` download
+`libLynx_clay.so` into `target/lynx-engine-bridge-sdk`, injects `LYNX_SDK_DIR`,
+and runs the engine-bridge runtime tests with the rest of the workspace.
 Runtime-backed tests fail when no runtime is available. This keeps local and CI
 coverage aligned with the real downloaded runtime instead of passing through
 silent skips.

@@ -64,36 +64,6 @@ jobs:
           token: ${{ secrets.CODECOV_TOKEN }}
           files: target/nextest/ci/test-report.junit.xml
 
-  engine-bridge:
-    name: Engine Bridge (${{ matrix.runs-on.name }})
-    runs-on: ${{ matrix.runs-on.label }}
-    strategy:
-      matrix:
-        runs-on:
-          - label: lynx-ubuntu-24.04-medium
-            name: Linux
-    timeout-minutes: 30
-    permissions:
-      contents: read
-    steps:
-      - uses: actions/checkout@93cb6efe18208431cddfb8368fd83d5badbf9bfd # v5
-        with:
-          persist-credentials: false
-      - uses: ./.github/actions/rustup
-        with:
-          key: engine-bridge-${{ matrix.runs-on.name }}
-          save-if: ${{ github.ref_name == 'main' }}
-      - name: Install runtime dependencies
-        run: |
-          sudo apt-get update
-          sudo apt-get install -y --no-install-recommends libepoxy0
-      - name: Format
-        run: cargo fmt --package lynx --check
-      - name: Clippy
-        run: cargo clippy --locked -p lynx --all-targets --all-features -- -D warnings
-      - name: Test
-        run: cargo test --locked -p lynx --all-targets --all-features
-
   rustfmt:
     runs-on: lynx-ubuntu-24.04-medium
     timeout-minutes: 10

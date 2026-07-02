@@ -90,11 +90,17 @@ refresh the downloaded artifact, remove the runtime library under
 
 ## Validation
 
-Run Rust checks from the repository root:
+Run CI-equivalent Rust checks from the repository root:
 
 ```sh
-cargo fmt --package lynx --check
-cargo clippy --locked -p lynx --all-targets --all-features -- -D warnings
+cargo fmt --check
+cargo clippy --tests --all-features -- -D warnings
+cargo llvm-cov nextest --all-targets --all-features --profile ci --config-file .cargo/nextest.toml --lcov --output-path lcov.info --release
+```
+
+For a focused local loop while editing this crate, run:
+
+```sh
 cargo test --locked -p lynx --all-targets --all-features
 ```
 
@@ -106,12 +112,15 @@ LYNX_SDK_DIR=/path/to/lynx-sdk \
 cargo test --locked -p lynx --all-targets --all-features
 ```
 
-The CI job runs on Linux only. It lets `build.rs` download the Linux runtime
-artifact into `target/lynx-engine-bridge-sdk`, inject `LYNX_SDK_DIR`, and run the
-same checks. The Linux runtime also needs `libepoxy.so.0`; install the
-`libepoxy0` system package before running runtime-backed tests locally on Linux.
-macOS uses the same Rust code path and remains available for local development,
-but it is not required as a PR check.
+CI does not run a separate engine-bridge job. The crate is part of the root
+Cargo workspace, so the main Rust workflow covers it through workspace-level
+fmt, clippy, and test jobs. The Linux test job lets `build.rs` download the
+Linux runtime artifact into `target/lynx-engine-bridge-sdk`, inject
+`LYNX_SDK_DIR`, and run the runtime-backed tests with the rest of the workspace.
+The Linux runtime also needs `libepoxy.so.0`; install the `libepoxy0` system
+package before running runtime-backed tests locally on Linux. macOS uses the
+same Rust code path and remains available for local development, but it is not
+required as a PR check.
 
 The `lynx/tests/runtime.rs` integration test belongs to the library crate. It
 contains public API tests and runtime-backed tests. Runtime-backed tests fail
