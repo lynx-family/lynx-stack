@@ -2,14 +2,13 @@
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
 
+use fs2::FileExt;
 use std::env;
 use std::ffi::OsStr;
-use std::fs;
-use std::io::ErrorKind;
+use std::fs::{self, File, OpenOptions};
+use std::io;
 use std::path::{Path, PathBuf};
 use std::process::Command;
-use std::thread;
-use std::time::Duration;
 
 const MACOS_AARCH64_RUNTIME_URL: &str = concat!(
   "https://github.com/PupilTong/playground/releases/download/",
@@ -114,8 +113,8 @@ fn prepare_runtime(sdk_dir: &Path, runtime_path: &Path, url: String) {
     )
   });
 
-  let lock_dir = sdk_dir.join(".download-lock");
-  let _lock = RuntimeDownloadLock::acquire(&lock_dir);
+  let lock_path = sdk_dir.join(".download.lock");
+  let _lock = RuntimeDownloadLock::acquire(&lock_path);
 
   if !has_existing_runtime(runtime_path, &url) {
     download_runtime(&url, runtime_path);
@@ -146,36 +145,36 @@ fn download_runtime(url: &str, runtime_path: &Path) {
     )
   });
 
-  let tmp_path = runtime_path.with_extension(format!(
-    "{}.{}.tmp",
-    runtime_path
-      .extension()
-      .and_then(OsStr::to_str)
-      .unwrap_or("download"),
-    std::process::id()
-  ));
-  let status = Command::new("curl")
-    .arg("-L")
-    .arg("--silent")
-    .arg("--show-error")
-    .arg("--fail")
-    .arg("--retry")
-    .arg("5")
-    .arg("--retry-connrefused")
-    .arg("-o")
-    .arg(&tmp_path)
-    .arg(url)
-    .status()
-    .unwrap_or_else(|error| panic!("failed to start curl for Lynx runtime download: {error}"));
-  if !status.success() {
-    let _ = fs::remove_file(&tmp_path);
-    panic!("failed to download Lynx runtime from {url}: {status}");
-  }
-  fs::rename(&tmp_path, runtime_path).unwrap_or_else(|error| {
-    let _ = fs::remove_file(&tmp_path);
+  let mut response = ureq::get(url)
+    .call()
+    .unwrap_or_else(|error| panic!("failed to download Lynx runtime from {url}: {error}"))
+    .into_reader();
+  let mut tmp_file = tempfile::Builder::new()
+    .prefix(
+      runtime_path
+        .file_name()
+        .and_then(OsStr::to_str)
+        .unwrap_or("libLynx_clay"),
+    )
+    .suffix(".tmp")
+    .tempfile_in(parent)
+    .unwrap_or_else(|error| {
+      panic!(
+        "failed to create temporary Lynx runtime file in {}: {error}",
+        parent.display()
+      )
+    });
+  io::copy(&mut response, &mut tmp_file).unwrap_or_else(|error| {
     panic!(
-      "failed to move downloaded Lynx runtime to {}: {error}",
-      runtime_path.display()
+      "failed to write downloaded Lynx runtime to {}: {error}",
+      tmp_file.path().display()
+    )
+  });
+  tmp_file.persist(runtime_path).unwrap_or_else(|error| {
+    panic!(
+      "failed to move downloaded Lynx runtime to {}: {}",
+      runtime_path.display(),
+      error.error
     )
   });
   write_runtime_url_marker(runtime_path, url);
@@ -247,38 +246,42 @@ fn emit_runtime_env(key: &str, value: impl AsRef<Path>) {
 }
 
 struct RuntimeDownloadLock {
-  path: PathBuf,
+  file: File,
 }
 
 impl RuntimeDownloadLock {
   fn acquire(path: &Path) -> Self {
-    for _ in 0..600 {
-      match fs::create_dir(path) {
-        Ok(()) => {
-          return Self {
-            path: path.to_path_buf(),
-          };
-        }
-        Err(error) if error.kind() == ErrorKind::AlreadyExists => {
-          thread::sleep(Duration::from_millis(500));
-        }
-        Err(error) => {
-          panic!(
-            "failed to create Lynx runtime download lock {}: {error}",
-            path.display()
-          );
-        }
-      }
-    }
-    panic!(
-      "timed out waiting for Lynx runtime download lock {}",
-      path.display()
-    );
+    let parent = path.parent().expect("lock path has parent directory");
+    fs::create_dir_all(parent).unwrap_or_else(|error| {
+      panic!(
+        "failed to create Lynx runtime lock directory {}: {error}",
+        parent.display()
+      )
+    });
+    let file = OpenOptions::new()
+      .create(true)
+      .read(true)
+      .truncate(false)
+      .write(true)
+      .open(path)
+      .unwrap_or_else(|error| {
+        panic!(
+          "failed to open Lynx runtime download lock {}: {error}",
+          path.display()
+        )
+      });
+    file.lock_exclusive().unwrap_or_else(|error| {
+      panic!(
+        "failed to lock Lynx runtime download lock {}: {error}",
+        path.display()
+      )
+    });
+    Self { file }
   }
 }
 
 impl Drop for RuntimeDownloadLock {
   fn drop(&mut self) {
-    let _ = fs::remove_dir(&self.path);
+    let _ = FileExt::unlock(&self.file);
   }
 }

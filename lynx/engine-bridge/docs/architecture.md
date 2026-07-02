@@ -1,18 +1,18 @@
 # Engine bridge architecture
 
-The engine bridge is a small Cargo workspace that embeds a prebuilt Lynx runtime
-from Rust. It has one library crate, `lynx`, and one executable example,
-`lynx-headless-example`.
+The engine bridge is a small Cargo workspace with one library crate, `lynx`.
+The crate exposes an rlib for embedding a prebuilt Lynx runtime from Rust. It
+does not contain a CLI or runnable example binary.
 
 The Rust code does not link `libLynx_clay` at build time. `lynx::Env` loads the
-runtime with `dlopen`, resolves the C ABI symbols with `dlsym`, and shares those
+runtime with `libloading`, resolves the required C ABI symbols, and shares those
 function pointers with the safe wrappers that create a headless Lynx view.
 
 ## Code map
 
 `lynx/src/sys` is the raw ABI layer. `bindings.rs` contains checked-in C types,
 constants, and callback signatures. `loader.rs` owns dynamic library discovery,
-`dlopen`, `dlsym`, and the `LoadedLibrary` symbol table.
+dynamic loading, and the `LoadedLibrary` symbol table.
 
 `lynx/src/env.rs` is the runtime entry point. `Env::load()` reads `LYNX_LIB_PATH`
 or `LYNX_SDK_DIR`, creates a reference-counted `LoadedLibrary`, and exposes
@@ -27,18 +27,18 @@ input events, and the optional process-global UI task runner.
 requests into `ResourceRequest` values and writes `FetchResponse` data back to
 the runtime.
 
-`lynx/src/group.rs` wraps `LynxGroup`. The headless example uses it to preload
-`lynx_core.js` when a full SDK path is available.
+`lynx/src/group.rs` wraps `LynxGroup`, including preload JavaScript paths and
+the JavaScript group-thread toggle.
 
 `lynx/src/view.rs` creates and owns the headless view. `HeadlessViewBuilder`
 binds the renderer, optional resource fetcher, optional group, viewport metrics,
 ICU path, and module registrations before it calls `lynx_view_create`.
-`HeadlessView` loads templates, updates data, sends global events, and forwards
-viewport changes.
+`HeadlessView` loads templates, updates data, sends global events, forwards
+viewport changes, and enters foreground or background state.
 
-`examples/headless` is the executable workflow. It wires a software renderer, a
-folder-backed resource fetcher, and a `HeadlessView` together, then writes the
-latest non-transparent software frame as a PNG.
+`tools/runtime_build.rs` is included by package `build.rs` files. It prepares
+the configured or downloaded runtime and emits the environment variables that
+tests use.
 
 ## Runtime loading workflow
 
@@ -48,7 +48,7 @@ latest non-transparent software frame as a PNG.
    automatically.
 2. `Env::load()` asks `sys::candidate_library_paths()` for the configured
    runtime path.
-3. `LoadedLibrary::load()` opens that dynamic library.
+3. `LoadedLibrary::load()` opens that dynamic library with `libloading`.
 4. `LoadedLibrary::from_dynamic_library()` resolves every required `lynx_*` and
    `lynx_rust_*` symbol.
 5. Safe wrappers clone `Arc<LoadedLibrary>` so the dynamic library stays loaded
@@ -56,31 +56,26 @@ latest non-transparent software frame as a PNG.
 
 No crate in this workspace links `libLynx_clay` at compile time. Runtime-backed
 tests still require a loadable dynamic library; local Cargo builds and CI use
-`build.rs` to prepare that artifact before tests execute.
+`build.rs` to prepare that artifact before tests run.
 
-## Headless rendering workflow
+## Embedding workflow
 
-1. The example loads `Env` and configures ICU data from `LYNX_SDK_DIR` when the
-   SDK contains it.
-2. It creates a `WindowlessRenderer::software()` with a `FrameSink`. Each
-   software present callback copies the current frame bytes into Rust-owned
-   memory.
-3. It creates a `DirectoryResourceFetcher` from every `--asset-root` and the
-   bundle parent folder. The fetcher resolves `assets://`, `local://`,
-   `file://`, and `file://lynx?` URLs to files under those roots.
-4. It optionally creates a `LynxGroup` with preload JavaScript paths. When
-   `LYNX_SDK_DIR` points at a full SDK, the example tries to discover
-   `lynx_core.js`.
-5. It builds `HeadlessView` with an `800x600` viewport and loads the bundle with
-   `load_template_bundle_bytes_with_global_props()`.
-6. It pumps renderer tasks and, when configured, the Rust global UI task queue
-   until a non-transparent software frame arrives or the timeout expires.
-7. It writes the captured RGBA frame to the requested screenshot path.
+1. The host loads `Env` and configures runtime-wide settings such as ICU data
+   when needed.
+2. The host creates a `WindowlessRenderer` and registers callbacks for the
+   renderer mode it needs.
+3. The host creates a `GenericResourceFetcher` when the bundle needs runtime
+   resource requests to resolve through Rust.
+4. The host optionally creates a `LynxGroup` and configures preload JavaScript
+   paths or group-thread behavior.
+5. The host builds `HeadlessView` with viewport metrics and loads template bytes
+   through `load_template_bundle_bytes_with_global_props()` or related methods.
+6. The host drives renderer tasks, UI tasks, input events, and lifecycle methods
+   according to its embedding environment.
 
-On macOS, real ReactLynx bundles should use `--native-ui-loop`. That lets the
-runtime drive its Darwin/FML UI loop. The Rust queue-backed global UI runner is
-kept for focused task-runner experiments, but it does not drive every actor used
-by some ReactLynx bundles.
+The library intentionally stops at these embedding primitives. CLI argument
+parsing, filesystem-backed fetchers, screenshot writing, and application-level
+event loops belong to the host or to a separate example workspace.
 
 ## Ownership and error boundaries
 
@@ -100,8 +95,7 @@ out of the C ABI.
 
 The safe API returns `Result<T, lynx::Error>` for failures that Rust can detect:
 invalid C strings, missing runtime libraries, missing symbols, null pointers
-from runtime constructors, template-bundle decode errors, and local I/O errors
-in the example.
+from runtime constructors, and template-bundle decode errors.
 
 Rust callbacks catch panics with `catch_unwind` before returning to C. Panics
 must not cross FFI boundaries.

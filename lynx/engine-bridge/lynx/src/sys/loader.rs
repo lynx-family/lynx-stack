@@ -1,67 +1,30 @@
 use super::bindings::*;
+#[cfg(unix)]
+use libloading::os::unix::{Library as UnixLibrary, RTLD_LOCAL, RTLD_NOW};
+use libloading::Library;
 use std::env;
-use std::ffi::{c_char, c_int, c_void, CStr, CString, OsString};
-use std::fmt;
+use std::ffi::{c_char, c_int, c_void, OsString};
+#[cfg(test)]
 use std::mem;
 use std::path::{Path, PathBuf};
-use std::ptr::NonNull;
 
 pub type Result<T> = std::result::Result<T, Error>;
 
-#[derive(Debug)]
+#[derive(Debug, thiserror::Error)]
 pub enum Error {
-  UnsupportedTarget {
-    target: String,
-  },
+  #[error("unsupported Lynx runtime loading target: {target}")]
+  UnsupportedTarget { target: String },
+  #[error("libLynx_clay was not found; set LYNX_LIB_PATH or LYNX_SDK_DIR")]
   NoLibraryCandidates,
-  InvalidLibraryPath {
-    path: PathBuf,
-  },
-  OpenLibrary {
-    path: PathBuf,
-    message: String,
-  },
+  #[error("failed to open {}: {message}", path.display())]
+  OpenLibrary { path: PathBuf, message: String },
+  #[error("failed to load symbol {symbol} from {}: {message}", path.display())]
   MissingSymbol {
     path: PathBuf,
     symbol: &'static str,
     message: String,
   },
 }
-
-impl fmt::Display for Error {
-  fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-    match self {
-      Error::UnsupportedTarget { target } => {
-        write!(f, "unsupported Lynx runtime loading target: {target}")
-      }
-      Error::NoLibraryCandidates => write!(
-        f,
-        "libLynx_clay was not found; set LYNX_LIB_PATH or LYNX_SDK_DIR"
-      ),
-      Error::InvalidLibraryPath { path } => {
-        write!(
-          f,
-          "library path contains an interior NUL: {}",
-          path.display()
-        )
-      }
-      Error::OpenLibrary { path, message } => {
-        write!(f, "failed to open {}: {message}", path.display())
-      }
-      Error::MissingSymbol {
-        path,
-        symbol,
-        message,
-      } => write!(
-        f,
-        "failed to load symbol {symbol} from {}: {message}",
-        path.display()
-      ),
-    }
-  }
-}
-
-impl std::error::Error for Error {}
 
 pub fn library_filename() -> Result<&'static str> {
   if cfg!(target_os = "macos") {
@@ -105,7 +68,7 @@ fn sdk_library_path(sdk_dir: PathBuf) -> Result<PathBuf> {
 }
 
 struct DynamicLibrary {
-  handle: NonNull<c_void>,
+  library: Library,
   path: PathBuf,
 }
 
@@ -115,36 +78,33 @@ unsafe impl Sync for DynamicLibrary {}
 impl DynamicLibrary {
   fn open(path: impl AsRef<Path>) -> Result<Self> {
     let path = path.as_ref().to_path_buf();
-    let c_path = CString::new(path.to_string_lossy().as_bytes())
-      .map_err(|_| Error::InvalidLibraryPath { path: path.clone() })?;
-    let handle = unsafe { dlopen(c_path.as_ptr(), RTLD_NOW | RTLD_LOCAL) };
-    let handle = NonNull::new(handle).ok_or_else(|| Error::OpenLibrary {
+    let library = open_library(&path).map_err(|error| Error::OpenLibrary {
       path: path.clone(),
-      message: last_dl_error(),
+      message: error.to_string(),
     })?;
-    Ok(Self { handle, path })
+    Ok(Self { library, path })
   }
 
   unsafe fn symbol<T: Copy>(&self, symbol: &'static str) -> Result<T> {
-    let c_symbol = CString::new(symbol).expect("symbol names are static and NUL-free");
-    let ptr = dlsym(self.handle.as_ptr(), c_symbol.as_ptr());
-    if ptr.is_null() {
-      return Err(Error::MissingSymbol {
+    let symbol_value = unsafe { self.library.get::<T>(symbol.as_bytes()) }.map_err(|error| {
+      Error::MissingSymbol {
         path: self.path.clone(),
         symbol,
-        message: last_dl_error(),
-      });
-    }
-    Ok(mem::transmute_copy::<*mut c_void, T>(&ptr))
+        message: error.to_string(),
+      }
+    })?;
+    Ok(*symbol_value)
   }
 }
 
-impl Drop for DynamicLibrary {
-  fn drop(&mut self) {
-    unsafe {
-      dlclose(self.handle.as_ptr());
-    }
-  }
+#[cfg(unix)]
+fn open_library(path: &Path) -> std::result::Result<Library, libloading::Error> {
+  unsafe { UnixLibrary::open(Some(path), RTLD_NOW | RTLD_LOCAL).map(Into::into) }
+}
+
+#[cfg(not(unix))]
+fn open_library(path: &Path) -> std::result::Result<Library, libloading::Error> {
+  unsafe { Library::new(path) }
 }
 
 #[allow(non_camel_case_types)]
@@ -607,32 +567,6 @@ impl LoadedLibrary {
     })
   }
 }
-
-fn last_dl_error() -> String {
-  unsafe {
-    let error = dlerror();
-    if error.is_null() {
-      "unknown dynamic loader error".to_string()
-    } else {
-      CStr::from_ptr(error).to_string_lossy().into_owned()
-    }
-  }
-}
-
-const RTLD_LOCAL: c_int = 0;
-const RTLD_NOW: c_int = 2;
-
-#[cfg(any(target_os = "macos", target_os = "linux"))]
-extern "C" {
-  fn dlopen(filename: *const c_char, flags: c_int) -> *mut c_void;
-  fn dlsym(handle: *mut c_void, symbol: *const c_char) -> *mut c_void;
-  fn dlclose(handle: *mut c_void) -> c_int;
-  fn dlerror() -> *const c_char;
-}
-
-#[cfg(target_os = "linux")]
-#[link(name = "dl")]
-extern "C" {}
 
 #[cfg(test)]
 mod tests {
