@@ -11,9 +11,13 @@ use std::process::Command;
 use std::thread;
 use std::time::Duration;
 
-const MACOS_RUNTIME_URL: &str = concat!(
+const MACOS_AARCH64_RUNTIME_URL: &str = concat!(
   "https://github.com/PupilTong/playground/releases/download/",
-  "lynx-runtime-clay-manual-0.0.1/libLynx_clay.dylib"
+  "lynx-runtime-clay-manual-0.0.2/macos-arm64-libLynx_clay.dylib"
+);
+const LINUX_X86_64_RUNTIME_URL: &str = concat!(
+  "https://github.com/PupilTong/playground/releases/download/",
+  "lynx-runtime-clay-manual-0.0.2/linux-amd64-libLynx_clay.so"
 );
 
 fn main() {
@@ -45,7 +49,7 @@ fn main() {
 
   let sdk_dir = root.join("target/lynx-engine-bridge-sdk");
   let runtime_path = sdk_dir.join("lib").join(library_name);
-  prepare_runtime(&sdk_dir, &runtime_path, runtime_url(library_name));
+  prepare_runtime(&sdk_dir, &runtime_path, runtime_url());
 
   emit_runtime_env("LYNX_SDK_DIR", sdk_dir);
 }
@@ -62,8 +66,7 @@ fn should_download_runtime() -> bool {
   if let Some(value) = env::var_os("LYNX_DOWNLOAD_RUNTIME") {
     return enabled_env_flag(&value);
   }
-  env::var("CARGO_CFG_TARGET_OS").as_deref() == Ok("macos")
-    || env::var_os("LYNX_RUNTIME_URL").is_some()
+  default_runtime_url().is_some() || env::var_os("LYNX_RUNTIME_URL").is_some()
 }
 
 fn enabled_env_flag(value: &OsStr) -> bool {
@@ -73,18 +76,38 @@ fn enabled_env_flag(value: &OsStr) -> bool {
   )
 }
 
-fn runtime_url(library_name: &str) -> String {
+fn runtime_url() -> String {
   if let Some(url) = env::var_os("LYNX_RUNTIME_URL") {
     return url.to_string_lossy().into_owned();
   }
-  if library_name.ends_with(".dylib") {
-    return MACOS_RUNTIME_URL.to_string();
+  if let Some(url) = default_runtime_url() {
+    return url.to_string();
   }
-  panic!("no default Lynx runtime URL is configured; set LYNX_RUNTIME_URL");
+  panic!(
+    "no default Lynx runtime URL is configured for target {}; set LYNX_RUNTIME_URL",
+    target_triple_name()
+  );
+}
+
+fn default_runtime_url() -> Option<&'static str> {
+  match (
+    env::var("CARGO_CFG_TARGET_OS").as_deref(),
+    env::var("CARGO_CFG_TARGET_ARCH").as_deref(),
+  ) {
+    (Ok("macos"), Ok("aarch64")) => Some(MACOS_AARCH64_RUNTIME_URL),
+    (Ok("linux"), Ok("x86_64")) => Some(LINUX_X86_64_RUNTIME_URL),
+    _ => None,
+  }
+}
+
+fn target_triple_name() -> String {
+  let arch = env::var("CARGO_CFG_TARGET_ARCH").unwrap_or_else(|_| "unknown".into());
+  let os = env::var("CARGO_CFG_TARGET_OS").unwrap_or_else(|_| "unknown".into());
+  format!("{arch}-{os}")
 }
 
 fn prepare_runtime(sdk_dir: &Path, runtime_path: &Path, url: String) {
-  if has_existing_runtime(runtime_path) {
+  if has_existing_runtime(runtime_path, &url) {
     adhoc_sign_if_needed(runtime_path);
     return;
   }
@@ -99,15 +122,17 @@ fn prepare_runtime(sdk_dir: &Path, runtime_path: &Path, url: String) {
   let lock_dir = sdk_dir.join(".download-lock");
   let _lock = RuntimeDownloadLock::acquire(&lock_dir);
 
-  if !has_existing_runtime(runtime_path) {
+  if !has_existing_runtime(runtime_path, &url) {
     download_runtime(&url, runtime_path);
   }
   adhoc_sign_if_needed(runtime_path);
 }
 
-fn has_existing_runtime(runtime_path: &Path) -> bool {
+fn has_existing_runtime(runtime_path: &Path, url: &str) -> bool {
   match fs::metadata(runtime_path) {
-    Ok(metadata) if metadata.is_file() && metadata.len() > 0 => {
+    Ok(metadata)
+      if metadata.is_file() && metadata.len() > 0 && runtime_url_matches(runtime_path, url) =>
+    {
       eprintln!("Using existing Lynx runtime at {}", runtime_path.display());
       true
     }
@@ -158,6 +183,31 @@ fn download_runtime(url: &str, runtime_path: &Path) {
       runtime_path.display()
     )
   });
+  write_runtime_url_marker(runtime_path, url);
+}
+
+fn runtime_url_matches(runtime_path: &Path, url: &str) -> bool {
+  fs::read_to_string(runtime_url_marker_path(runtime_path))
+    .map(|stored_url| stored_url.trim() == url)
+    .unwrap_or(false)
+}
+
+fn write_runtime_url_marker(runtime_path: &Path, url: &str) {
+  let marker_path = runtime_url_marker_path(runtime_path);
+  fs::write(&marker_path, format!("{url}\n")).unwrap_or_else(|error| {
+    panic!(
+      "failed to write Lynx runtime URL marker {}: {error}",
+      marker_path.display()
+    )
+  });
+}
+
+fn runtime_url_marker_path(runtime_path: &Path) -> PathBuf {
+  let filename = runtime_path
+    .file_name()
+    .expect("runtime path has filename")
+    .to_string_lossy();
+  runtime_path.with_file_name(format!("{filename}.url"))
 }
 
 fn adhoc_sign_if_needed(runtime_path: &Path) {
