@@ -114,9 +114,10 @@ LYNX_SDK_DIR=/path/to/lynx-sdk \
 cargo test --locked --all-targets --all-features
 ```
 
-The CI job runs on macOS and Linux. It lets `build.rs` download the matching
-runtime artifact into `target/lynx-engine-bridge-sdk`, ad-hoc sign it on macOS,
-inject `LYNX_SDK_DIR`, and run the same checks.
+The CI job runs on Linux only. It lets `build.rs` download the Linux runtime
+artifact into `target/lynx-engine-bridge-sdk`, inject `LYNX_SDK_DIR`, and run the
+same checks. macOS uses the same Rust code path and remains available for local
+development, but it is not required as a PR check.
 
 The `lynx/tests/runtime.rs` integration test belongs to the library crate. It
 contains public API tests and runtime-backed tests. Runtime-backed tests fail
