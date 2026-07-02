@@ -44,6 +44,10 @@ jobs:
         uses: taiki-e/install-action@71b48393496777ee11188c07a34d48b048a985cd # v2
         with:
           tool: cargo-llvm-cov,cargo-nextest
+      - name: Install runtime dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends libepoxy0
       - name: Test
         env:
           CARGO_LLVM_COV_FLAGS_NO_RUNNER: --no-sparse
@@ -84,14 +88,11 @@ jobs:
           sudo apt-get update
           sudo apt-get install -y --no-install-recommends libepoxy0
       - name: Format
-        working-directory: lynx/engine-bridge
-        run: cargo fmt --all --check
+        run: cargo fmt --package lynx --check
       - name: Clippy
-        working-directory: lynx/engine-bridge
-        run: cargo clippy --locked --all-targets --all-features -- -D warnings
+        run: cargo clippy --locked -p lynx --all-targets --all-features -- -D warnings
       - name: Test
-        working-directory: lynx/engine-bridge
-        run: cargo test --locked --all-targets --all-features
+        run: cargo test --locked -p lynx --all-targets --all-features
 
   rustfmt:
     runs-on: lynx-ubuntu-24.04-medium

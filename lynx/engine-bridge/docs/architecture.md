@@ -1,8 +1,8 @@
 # Engine bridge architecture
 
-The engine bridge is a small Cargo workspace with one library crate, `lynx`.
-The crate exposes an rlib for embedding a prebuilt Lynx runtime from Rust. It
-does not contain a CLI or runnable example binary.
+The engine bridge contains one library crate, `lynx`, which is a member of the
+repository Cargo workspace. The crate exposes an rlib for embedding a prebuilt
+Lynx runtime from Rust. It does not contain a CLI or runnable example binary.
 
 The Rust code does not link `libLynx_clay` at build time. `lynx::Env` loads the
 runtime with `libloading`, resolves the required C ABI symbols, and shares those
@@ -107,9 +107,9 @@ Linux `libLynx_clay.so` artifact into `target/lynx-engine-bridge-sdk`, inject
 `LYNX_SDK_DIR`, and runs:
 
 ```sh
-cargo fmt --all --check
-cargo clippy --locked --all-targets --all-features -- -D warnings
-cargo test --locked --all-targets --all-features
+cargo fmt --package lynx --check
+cargo clippy --locked -p lynx --all-targets --all-features -- -D warnings
+cargo test --locked -p lynx --all-targets --all-features
 ```
 
 Runtime-backed tests fail when no runtime is available. This keeps local and CI

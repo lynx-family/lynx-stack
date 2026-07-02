@@ -2,7 +2,7 @@
 applyTo: "lynx/engine-bridge/**"
 ---
 
-`lynx/engine-bridge` is an independent Cargo workspace whose only crate is the `lynx` rlib; raw C ABI bindings live under `lynx::sys` rather than a separate bridge crate. Do not add CLI/example binaries under this workspace. Validate it from that directory with `cargo fmt --all --check`, `cargo clippy --locked --all-targets --all-features -- -D warnings`, and `cargo test --locked --all-targets --all-features`.
+`lynx/engine-bridge/lynx` is the `lynx` rlib crate and a member of the repository Cargo workspace; raw C ABI bindings live under `lynx::sys` rather than a separate bridge crate. Do not add CLI/example binaries under `lynx/engine-bridge`. Validate it from the repository root with `cargo fmt --package lynx --check`, `cargo clippy --locked -p lynx --all-targets --all-features -- -D warnings`, and `cargo test --locked -p lynx --all-targets --all-features`.
 
 Runtime-backed tests require a Lynx runtime locally and in CI. Package `build.rs` files should prepare the default runtime artifact for supported targets under `target/lynx-engine-bridge-sdk` and inject `LYNX_SDK_DIR`; avoid separate downloader scripts unless they are needed outside Cargo. CI should run the Engine Bridge checks on Linux only unless there is a product requirement to validate platform differences, and Linux runtime-backed checks should install the `libepoxy0` system package before loading `libLynx_clay.so`. Missing runtime configuration should fail runtime integration tests instead of skipping them.
 

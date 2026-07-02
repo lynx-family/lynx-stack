@@ -1,5 +1,0 @@
-[workspace]
-members = [
-  "lynx",
-]
-resolver = "2"

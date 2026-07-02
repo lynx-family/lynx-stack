@@ -2,7 +2,7 @@
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
 
-use fs2::FileExt;
+use fs4::FileExt;
 use std::env;
 use std::ffi::OsStr;
 use std::fs::{self, File, OpenOptions};
@@ -147,8 +147,8 @@ fn download_runtime(url: &str, runtime_path: &Path) {
 
   let mut response = ureq::get(url)
     .call()
-    .unwrap_or_else(|error| panic!("failed to download Lynx runtime from {url}: {error}"))
-    .into_reader();
+    .unwrap_or_else(|error| panic!("failed to download Lynx runtime from {url}: {error}"));
+  let mut response_body = response.body_mut().as_reader();
   let mut tmp_file = tempfile::Builder::new()
     .prefix(
       runtime_path
@@ -164,7 +164,7 @@ fn download_runtime(url: &str, runtime_path: &Path) {
         parent.display()
       )
     });
-  io::copy(&mut response, &mut tmp_file).unwrap_or_else(|error| {
+  io::copy(&mut response_body, &mut tmp_file).unwrap_or_else(|error| {
     panic!(
       "failed to write downloaded Lynx runtime to {}: {error}",
       tmp_file.path().display()
@@ -270,7 +270,7 @@ impl RuntimeDownloadLock {
           path.display()
         )
       });
-    file.lock_exclusive().unwrap_or_else(|error| {
+    FileExt::lock(&file).unwrap_or_else(|error| {
       panic!(
         "failed to lock Lynx runtime download lock {}: {error}",
         path.display()

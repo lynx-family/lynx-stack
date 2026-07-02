@@ -1,8 +1,8 @@
 # Lynx Rust engine bridge
 
-This workspace contains the Rust `lynx` rlib for embedding a prebuilt
-`libLynx_clay` runtime in a non-windowed host. It does not ship a CLI or
-runnable example binary.
+This folder contains the Rust `lynx` rlib for embedding a prebuilt
+`libLynx_clay` runtime in a non-windowed host. The crate is part of the
+repository Cargo workspace. It does not ship a CLI or runnable example binary.
 
 The crate loads `libLynx_clay` at runtime with `libloading`. It does not link
 the runtime library at build time. Cargo builds prepare the downloaded runtime
@@ -24,7 +24,7 @@ windowed APIs such as `NativeView`, or provide CLI/example binaries.
 
 ## Layout
 
-- `lynx/` contains the Rust library crate.
+- `lynx/` contains the Rust library crate and Cargo workspace member.
 - `lynx/src/sys/` contains checked-in C ABI types and runtime symbol loading.
 - `tools/runtime_build.rs` is included by package `build.rs` files so runtime
   setup, download, and ad-hoc signing stay consistent.
@@ -90,12 +90,12 @@ refresh the downloaded artifact, remove the runtime library under
 
 ## Validation
 
-Run Rust checks from this folder:
+Run Rust checks from the repository root:
 
 ```sh
-cargo fmt --all --check
-cargo clippy --locked --all-targets --all-features -- -D warnings
-cargo test --locked --all-targets --all-features
+cargo fmt --package lynx --check
+cargo clippy --locked -p lynx --all-targets --all-features -- -D warnings
+cargo test --locked -p lynx --all-targets --all-features
 ```
 
 The runtime-backed tests use the runtime prepared by `build.rs`. If you have an
@@ -103,7 +103,7 @@ SDK already, set it directly:
 
 ```sh
 LYNX_SDK_DIR=/path/to/lynx-sdk \
-cargo test --locked --all-targets --all-features
+cargo test --locked -p lynx --all-targets --all-features
 ```
 
 The CI job runs on Linux only. It lets `build.rs` download the Linux runtime
