@@ -35,6 +35,20 @@ export class XAudioTT extends HTMLElement {
   [xAudioSrc]?: { id: string; play_url: string };
   [xAudioBlob]?: Promise<void>;
 
+  #dispatchError(code: XAudioErrorCode, from: 'res loader' | 'player') {
+    this.dispatchEvent(
+      new CustomEvent('error', {
+        ...commonComponentEventSetting,
+        detail: {
+          code,
+          msg: '',
+          from,
+          currentSrcID: this[xAudioSrc]?.id,
+        },
+      }),
+    );
+  }
+
   #fetchAudio = () => {
     const parsedSrc = this[xAudioSrc];
 
@@ -68,18 +82,9 @@ export class XAudioTT extends HTMLElement {
       });
 
       if (!response.ok) {
-        this.dispatchEvent(
-          new CustomEvent('error', {
-            ...commonComponentEventSetting,
-            detail: {
-              code: XAudioErrorCode.DownloadError,
-              msg: '',
-              from: 'res loader',
-              currentSrcID: parsedSrc.id,
-            },
-          }),
-        );
+        this.#dispatchError(XAudioErrorCode.DownloadError, 'res loader');
         reject();
+        return;
       }
 
       this.dispatchEvent(
@@ -93,12 +98,23 @@ export class XAudioTT extends HTMLElement {
         }),
       );
 
+      if (
+        response.headers.get('content-type')?.toLowerCase().startsWith(
+          'text/html',
+        )
+      ) {
+        this.#dispatchError(XAudioErrorCode.PlayerPlaybackError, 'player');
+        reject();
+        return;
+      }
+
       const blob = await response.blob();
       const blobUrl = URL.createObjectURL(blob);
 
       this.#setAudioSrc(blobUrl);
       resolve();
     });
+    void this[xAudioBlob].catch(() => {});
   };
 
   play() {
@@ -111,8 +127,14 @@ export class XAudioTT extends HTMLElement {
       const audio = this.#getAudio();
 
       audio.currentTime = 0;
-      audio.play();
-    });
+      try {
+        void audio.play().catch(() => {
+          this.#dispatchError(XAudioErrorCode.PlayerPlaybackError, 'player');
+        });
+      } catch {
+        this.#dispatchError(XAudioErrorCode.PlayerPlaybackError, 'player');
+      }
+    }, () => {});
 
     return {
       currentSrcID: this[xAudioSrc]?.id,
