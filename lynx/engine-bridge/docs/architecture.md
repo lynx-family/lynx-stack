@@ -128,9 +128,9 @@ must not cross FFI boundaries.
 
 ## CI coverage
 
-The `Engine Bridge` CI job runs on macOS and Linux. It lets `build.rs` download
-the matching `libLynx_clay` artifact into `target/lynx-engine-bridge-sdk`,
-ad-hoc sign it on macOS, inject `LYNX_SDK_DIR`, and runs:
+The `Engine Bridge` CI job runs on Linux only. It lets `build.rs` download the
+Linux `libLynx_clay.so` artifact into `target/lynx-engine-bridge-sdk`, inject
+`LYNX_SDK_DIR`, and runs:
 
 ```sh
 cargo fmt --all --check
