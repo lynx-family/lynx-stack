@@ -42,6 +42,7 @@ const sampleTasm: TasmJSONInfo = {
 
 const mockLynxViewInstance = {
   onPageConfigReady: rstest.fn(),
+  onElementTemplatesReady: rstest.fn(),
   onStyleInfoReady: rstest.fn(),
   onMTSScriptsLoaded: rstest.fn(),
   onBTSScriptsLoaded: rstest.fn(),

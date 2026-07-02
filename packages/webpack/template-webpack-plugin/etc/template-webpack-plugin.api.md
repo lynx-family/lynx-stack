@@ -35,7 +35,7 @@ export interface EncodeOptions {
         type?: 'lazy';
         content: string | Record<string, unknown>;
     }>;
-    elementTemplate?: Record<string, unknown>;
+    elementTemplates?: Record<string, unknown>;
     // (undocumented)
     lepusCode: {
         root: string | undefined;

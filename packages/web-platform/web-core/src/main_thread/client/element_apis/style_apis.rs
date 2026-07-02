@@ -72,6 +72,27 @@ impl MainThreadWasmContext {
     )?;
     Ok(())
   }
+
+  pub fn set_inline_styles_in_str(&self, dom: &web_sys::HtmlElement, styles: String) -> bool {
+    let transformed_style_str = transform_inline_style_string(&styles, &self.transformer_config);
+    // we compare the transformed style string with the original one
+    // The reason is copy utf-8 string from wasm to js is expensive
+    if transformed_style_str == styles {
+      return false;
+    }
+    let _ = dom.set_attribute("style", &transformed_style_str);
+    true
+  }
+
+  pub fn set_inline_styles_in_key_value_vec(
+    &self,
+    dom: &web_sys::HtmlElement,
+    k_v_vec: Vec<String>,
+  ) {
+    let transformed_style_str =
+      transform_inline_style_key_value_vec(k_v_vec, &self.transformer_config);
+    let _ = dom.set_attribute("style", &transformed_style_str);
+  }
 }
 
 #[wasm_bindgen]
@@ -116,47 +137,4 @@ pub fn set_inline_styles_number_key(dom: &web_sys::HtmlElement, key: usize, valu
   } else {
     let _ = dom.style().remove_property(&property_id.to_string());
   }
-}
-#[wasm_bindgen]
-pub fn set_inline_styles_in_str(
-  dom: &web_sys::HtmlElement,
-  styles: String,
-  transform_vw: bool,
-  transform_vh: bool,
-  transform_rem: bool,
-) -> bool {
-  let transformed_style_str = transform_inline_style_string(
-    &styles,
-    &crate::style_transformer::token_transformer::TransformerConfig {
-      transform_vw,
-      transform_vh,
-      transform_rem,
-    },
-  );
-  // we compare the transformed style string with the original one
-  // The reason is copy utf-8 string from wasm to js is expensive
-  if transformed_style_str == styles {
-    return false;
-  }
-  let _ = dom.set_attribute("style", &transformed_style_str);
-  true
-}
-
-#[wasm_bindgen]
-pub fn set_inline_styles_in_key_value_vec(
-  dom: &web_sys::HtmlElement,
-  k_v_vec: Vec<String>,
-  transform_vw: bool,
-  transform_vh: bool,
-  transform_rem: bool,
-) {
-  let transformed_style_str = transform_inline_style_key_value_vec(
-    k_v_vec,
-    &crate::style_transformer::token_transformer::TransformerConfig {
-      transform_vw,
-      transform_vh,
-      transform_rem,
-    },
-  );
-  let _ = dom.set_attribute("style", &transformed_style_str);
 }

@@ -3,11 +3,14 @@ import { setElementPropertyOrAttribute } from '../utils/setElementPropertyOrAttr
 
 import {
   AnimationOperation,
+  cssIdAttribute,
+  elementTemplateSlotAnchorPrefix,
   LYNX_TAG_TO_HTML_TAG_MAP,
   LYNX_TIMING_FLAG_ATTRIBUTE,
   lynxDefaultDisplayLinearAttribute,
   lynxDefaultOverflowVisibleAttribute,
   lynxDisposedAttribute,
+  lynxElementTemplateMarkerAttribute,
   lynxEntryNameAttribute,
   uniqueIdSymbol,
 } from '../../../constants.js';
@@ -40,10 +43,12 @@ import {
   __QuerySelector,
   __QuerySelectorAll,
 } from './pureElementPAPIs.js';
+import { templateManager } from '../TemplateManager.js';
 import type {
   AddEventPAPI,
   DecoratedHTMLElement,
   ElementPAPIs,
+  SerializedElementTemplateNode,
   SetCSSIdPAPI,
   UpdateListInfoAttributeValue,
 } from '../../../types/index.js';
@@ -54,9 +59,26 @@ const {
   MainThreadWasmContext,
   add_inline_style_raw_string_key,
   set_inline_styles_number_key,
-  set_inline_styles_in_str,
-  set_inline_styles_in_key_value_vec,
 } = wasmInstance;
+
+type ElementTemplateRuntimeState =
+  & {
+    uid: unknown;
+  }
+  & (
+    | {
+      kind: 'compiled';
+      templateKey: string;
+      bundleUrl: string | null | undefined;
+      attributeSlots: unknown[];
+    }
+    | {
+      kind: 'typed';
+      tag: string;
+      attributes: Record<string, unknown>;
+      options: unknown;
+    }
+  );
 
 function dispatchLynxViewLoadEvent(host: HTMLElement & { url?: string }) {
   host.dispatchEvent(
@@ -82,11 +104,15 @@ export function createElementAPI(
   transform_vw: boolean,
   transform_vh: boolean,
   transform_rem: boolean,
+  templateUrl = '',
 ): ElementPAPIs {
   let wasmContext = new MainThreadWasmContext(
     rootDom,
     mtsBinding,
     config_enable_css_selector,
+    transform_vw,
+    transform_vh,
+    transform_rem,
   );
   let page: DecoratedHTMLElement | undefined = undefined;
   const timingFlags: string[] = [];
@@ -164,7 +190,186 @@ export function createElementAPI(
       }
     }
   };
-  return {
+  const elementTemplateSlotAnchors = new WeakMap<
+    HTMLElement,
+    Map<number, Node>
+  >();
+  const elementTemplateStatesById = new Map<
+    number,
+    ElementTemplateRuntimeState
+  >();
+  const serializeElementTemplate = (
+    element: HTMLElement,
+  ): SerializedElementTemplateNode => {
+    const uniqueId = __GetElementUniqueID(element);
+    const state = elementTemplateStatesById.get(uniqueId);
+    if (!state) {
+      throw new Error('Element template instance not found');
+    }
+    const uid = (state.uid == null ? uniqueId : state.uid) as string | number;
+    const serialized: SerializedElementTemplateNode = state.kind === 'compiled'
+      ? {
+        uid,
+        templateKey: state.templateKey,
+        attributeSlots: state.attributeSlots as any[],
+      }
+      : {
+        uid,
+        tag: state.tag,
+        attributes: state.attributes as any,
+      };
+
+    if (state.kind === 'compiled' && state.bundleUrl) {
+      serialized.bundleUrl = state.bundleUrl;
+    }
+
+    const serializeOptionValue = (value: unknown): unknown => {
+      if (value instanceof HTMLElement) {
+        const valueUniqueId = __GetElementUniqueID(value);
+        if (elementTemplateStatesById.has(valueUniqueId)) {
+          return serializeElementTemplate(value);
+        }
+      }
+      if (Array.isArray(value)) {
+        return value.map(item => serializeOptionValue(item) ?? null);
+      }
+      if (value && typeof value === 'object') {
+        const output: Record<string, unknown> = {};
+        for (const [key, item] of Object.entries(value)) {
+          const serializedItem = serializeOptionValue(item);
+          if (serializedItem !== undefined) {
+            output[key] = serializedItem;
+          }
+        }
+        return output;
+      }
+      return value;
+    };
+
+    if (state.kind === 'typed') {
+      const options = serializeOptionValue(state.options);
+      if (options && typeof options === 'object' && !Array.isArray(options)) {
+        serialized.options = options as any;
+      }
+    }
+
+    if (state.kind === 'compiled') {
+      const slotAnchors = elementTemplateSlotAnchors.get(element);
+      const slots: SerializedElementTemplateNode[][] = [];
+      for (
+        const slotIndex of Array.from(slotAnchors?.keys() ?? []).sort((a, b) =>
+          a - b
+        )
+      ) {
+        const anchor = slotAnchors?.get(slotIndex);
+        if (!anchor) continue;
+        const slotChildren: SerializedElementTemplateNode[] = [];
+        let child = anchor.previousSibling;
+        while (
+          child instanceof HTMLElement
+          && child.getAttribute(lynxElementTemplateMarkerAttribute) !== null
+        ) {
+          slotChildren.unshift(serializeElementTemplate(child));
+          child = child.previousSibling;
+        }
+        if (slotChildren.length > 0) {
+          slots[slotIndex] = slotChildren;
+        }
+      }
+      if (slots.length > 0) {
+        serialized.elementSlots = slots;
+      }
+    } else if (state.tag !== 'list') {
+      const slotChildren = Array.from(element.children)
+        .filter(child =>
+          child instanceof HTMLElement
+          && child.getAttribute(lynxElementTemplateMarkerAttribute) !== null
+        )
+        .map(child => serializeElementTemplate(child as HTMLElement));
+      if (slotChildren.length > 0) {
+        serialized.elementSlots = [slotChildren];
+      }
+    }
+    return serialized;
+  };
+  const setCompiledElementTemplateAttributeSlot = (
+    rootUniqueId: number,
+    attributeSlotIndex: number,
+    value: unknown,
+  ) => {
+    const state = elementTemplateStatesById.get(rootUniqueId);
+    if (state?.kind === 'compiled') {
+      while (state.attributeSlots.length <= attributeSlotIndex) {
+        state.attributeSlots.push(null);
+      }
+      state.attributeSlots[attributeSlotIndex] = value;
+    }
+    wasmContext.set_attribute_of_element_template_by_id(
+      rootUniqueId,
+      attributeSlotIndex,
+      value,
+    );
+  };
+  const updateTypedElementTemplateAttributes = (
+    rootUniqueId: number,
+    nextAttributesValue: unknown,
+  ) => {
+    const state = elementTemplateStatesById.get(rootUniqueId);
+    if (state?.kind !== 'typed') return;
+    const nextAttributes = !nextAttributesValue
+        || typeof nextAttributesValue !== 'object'
+        || Array.isArray(nextAttributesValue)
+      ? {}
+      : { ...(nextAttributesValue as Record<string, unknown>) };
+    for (const key of Object.keys(state.attributes)) {
+      if (!(key in nextAttributes)) {
+        wasmContext.set_typed_element_template_attribute(
+          rootUniqueId,
+          key,
+          null,
+        );
+      }
+    }
+    for (const [key, value] of Object.entries(nextAttributes)) {
+      wasmContext.set_typed_element_template_attribute(
+        rootUniqueId,
+        key,
+        value,
+      );
+    }
+    state.attributes = nextAttributes;
+  };
+  const insertInitialElementTemplateSlots = (
+    host: HTMLElement,
+    slotAnchors: Map<number, Node>,
+    elementSlots: unknown,
+  ) => {
+    if (!elementSlots || typeof elementSlots !== 'object') return;
+    for (const key of Object.keys(elementSlots)) {
+      const slotIndex = Number(key);
+      if (!Number.isInteger(slotIndex)) continue;
+      const slotValue = (elementSlots as Record<string, unknown>)[key];
+      const children = slotValue == null
+        ? []
+        : Array.isArray(slotValue)
+        ? slotValue
+        : [slotValue];
+      for (const child of children) {
+        if (!(child instanceof HTMLElement)) continue;
+        const childUniqueId = __GetElementUniqueID(child);
+        if (childUniqueId < 0) {
+          throw new Error('Element template child missing unique id');
+        }
+        const anchor = slotAnchors.get(slotIndex);
+        if (anchor?.parentNode) {
+          anchor.parentNode.insertBefore(child, anchor);
+        } else {
+          host.appendChild(child);
+        }
+      }
+    }
+  };
+  const elementPAPIs: ElementPAPIs = {
     __CreateView(parentComponentUniqueId: number) {
       const dom = document.createElement('x-view') as DecoratedHTMLElement;
       dom[uniqueIdSymbol] = wasmContext.create_element_common(
@@ -279,18 +484,249 @@ export function createElementAPI(
       );
       return dom;
     },
+    __CreateElementTemplate(
+      templateKey,
+      bundleUrl,
+      attributeSlots,
+      elementSlots,
+      uid,
+    ) {
+      const registered = templateManager.getBundle(
+        bundleUrl && bundleUrl !== '__Card__' ? bundleUrl : templateUrl,
+      )
+        ?.elementTemplateDefinitions?.get(templateKey);
+      if (!registered) {
+        throw new Error(`Element template not found: ${templateKey}`);
+      }
+      const fragment = registered.template.content.cloneNode(
+        true,
+      ) as DocumentFragment;
+      const root = fragment.firstElementChild as DecoratedHTMLElement | null;
+      if (!root) {
+        throw new Error('Element template root missing');
+      }
+
+      // querySelectorAll gives the cloned element tree in document order; root
+      // is added explicitly because Element#querySelectorAll excludes self.
+      const elements = [
+        root,
+        ...Array.from(root.querySelectorAll<HTMLElement>('*')),
+      ];
+      const slotAnchors = new Map<number, Node>();
+      const slotAnchorWalker = document.createTreeWalker(
+        root,
+        128, // NodeFilter.SHOW_COMMENT
+      );
+      let slotAnchor = slotAnchorWalker.nextNode();
+      while (slotAnchor) {
+        const value = slotAnchor.nodeValue;
+        if (value?.startsWith(elementTemplateSlotAnchorPrefix)) {
+          const slotIndex = Number(
+            value.slice(elementTemplateSlotAnchorPrefix.length),
+          );
+          if (Number.isInteger(slotIndex)) {
+            slotAnchors.set(slotIndex, slotAnchor);
+          }
+        }
+        slotAnchor = slotAnchorWalker.nextNode();
+      }
+
+      const uniqueIdsByIndex: number[] = [];
+      for (const element of elements) {
+        const cssId = element.getAttribute(cssIdAttribute);
+        const uniqueId = wasmContext.create_element_common(
+          0,
+          element,
+          new WeakRef(element),
+        );
+        (element as DecoratedHTMLElement)[uniqueIdSymbol] = uniqueId;
+        uniqueIdsByIndex.push(uniqueId);
+        if (cssId != null) {
+          __SetCSSId(
+            [element],
+            Number(cssId) || 0,
+            element.getAttribute(lynxEntryNameAttribute) ?? undefined,
+          );
+        }
+      }
+      const rootUniqueId = uniqueIdsByIndex[0]!;
+      root.setAttribute(
+        lynxElementTemplateMarkerAttribute,
+        String(rootUniqueId),
+      );
+      elementTemplateSlotAnchors.set(root, slotAnchors);
+      const attributeSlotValues = Array.isArray(attributeSlots)
+        ? Array.from(attributeSlots)
+        : [];
+      const state: ElementTemplateRuntimeState = {
+        kind: 'compiled',
+        uid,
+        templateKey,
+        bundleUrl,
+        attributeSlots: attributeSlotValues,
+      };
+      elementTemplateStatesById.set(rootUniqueId, state);
+      wasmContext.create_element_template_instance(rootUniqueId);
+      for (let index = 0; index < uniqueIdsByIndex.length; index++) {
+        wasmContext.add_element_template_instance_element(
+          rootUniqueId,
+          index,
+          uniqueIdsByIndex[index]!,
+        );
+      }
+      wasmContext.finish_element_template_instance(
+        registered.definition,
+        rootUniqueId,
+      );
+      for (let index = 0; index < attributeSlotValues.length; index++) {
+        setCompiledElementTemplateAttributeSlot(
+          rootUniqueId,
+          index,
+          attributeSlotValues[index],
+        );
+      }
+      insertInitialElementTemplateSlots(
+        root,
+        slotAnchors,
+        elementSlots,
+      );
+      return root;
+    },
+    __CreateTypedElementTemplate(
+      tag,
+      attributes,
+      elementSlots,
+      uid,
+      options,
+    ) {
+      if (tag === 'page') {
+        const dom = elementPAPIs.__CreatePage(String(uid ?? '0'), 0);
+        const rootUniqueId = __GetElementUniqueID(dom);
+        dom.setAttribute(
+          lynxElementTemplateMarkerAttribute,
+          String(rootUniqueId),
+        );
+        insertInitialElementTemplateSlots(
+          dom,
+          new Map(),
+          elementSlots
+            ?? (options && typeof options === 'object'
+              ? (options as { listChildren?: unknown }).listChildren
+              : undefined),
+        );
+        return dom;
+      }
+
+      const dom = document.createElement(
+        LYNX_TAG_TO_HTML_TAG_MAP[tag] ?? tag,
+      ) as DecoratedHTMLElement;
+      const uniqueId = wasmContext.create_element_common(
+        0,
+        dom,
+        new WeakRef(dom),
+      );
+      dom[uniqueIdSymbol] = uniqueId;
+      dom.setAttribute(lynxElementTemplateMarkerAttribute, String(uniqueId));
+      const state: ElementTemplateRuntimeState = {
+        kind: 'typed',
+        uid,
+        tag,
+        attributes: {},
+        options,
+      };
+      elementTemplateStatesById.set(uniqueId, state);
+      updateTypedElementTemplateAttributes(uniqueId, attributes);
+      insertInitialElementTemplateSlots(
+        dom,
+        new Map(),
+        elementSlots
+          ?? (options && typeof options === 'object'
+            ? (options as { listChildren?: unknown }).listChildren
+            : undefined),
+      );
+      return dom;
+    },
+    __SetAttributeOfElementTemplate(
+      element,
+      attributeSlotIndex,
+      value,
+      _options,
+    ) {
+      const rootUniqueId = __GetElementUniqueID(element);
+      const state = elementTemplateStatesById.get(rootUniqueId);
+      if (state?.kind === 'typed') {
+        updateTypedElementTemplateAttributes(rootUniqueId, value);
+        return;
+      }
+      setCompiledElementTemplateAttributeSlot(
+        rootUniqueId,
+        attributeSlotIndex,
+        value,
+      );
+    },
+    __InsertNodeToElementTemplate(element, slotIndex, child, reference) {
+      const rootUniqueId = __GetElementUniqueID(element);
+      if (element !== page && !elementTemplateStatesById.has(rootUniqueId)) {
+        throw new Error('Element template instance not found');
+      }
+      const childUniqueId = __GetElementUniqueID(child);
+      if (childUniqueId < 0) {
+        throw new Error('Element template child missing unique id');
+      }
+      if (reference) {
+        reference.parentNode?.insertBefore(child, reference);
+      } else {
+        const anchor = elementTemplateSlotAnchors.get(element)?.get(slotIndex);
+        if (anchor?.parentNode) {
+          anchor.parentNode.insertBefore(child, anchor);
+        } else {
+          element.appendChild(child);
+        }
+      }
+    },
+    __RemoveNodeFromElementTemplate(_element, _slotIndex, child) {
+      child.parentNode?.removeChild(child);
+      const uniqueIds: number[] = [];
+      const rootUniqueId = __GetElementUniqueID(child);
+      if (rootUniqueId >= 0) {
+        uniqueIds.push(rootUniqueId);
+      }
+      for (
+        const current of Array.from(
+          child.querySelectorAll<HTMLElement>(
+            `[${lynxElementTemplateMarkerAttribute}]`,
+          ),
+        )
+      ) {
+        const uniqueId = Number(
+          current.getAttribute(lynxElementTemplateMarkerAttribute),
+        );
+        if (Number.isInteger(uniqueId)) {
+          uniqueIds.push(uniqueId);
+        }
+      }
+      for (const uniqueId of uniqueIds) {
+        wasmContext.remove_element_template_instance_by_id(uniqueId);
+        elementTemplateStatesById.delete(uniqueId);
+      }
+    },
+    __SerializeElementTemplate(element) {
+      return serializeElementTemplate(element);
+    },
     __CreatePage(componentID, componentCSSID) {
       if (page) return page;
       const dom = document.createElement(
         'div',
       ) as HTMLElement as DecoratedHTMLElement;
-      dom[uniqueIdSymbol] = wasmContext.create_element_common(
+      const uniqueId = wasmContext.create_element_common(
         0,
         dom,
         new WeakRef(dom),
         componentCSSID,
         componentID,
       );
+      dom[uniqueIdSymbol] = uniqueId;
+      wasmContext.set_page_element_unique_id(uniqueId);
       if (config_default_overflow_visible) {
         dom.setAttribute(lynxDefaultOverflowVisibleAttribute, 'true');
       }
@@ -344,12 +780,9 @@ export function createElementAPI(
       } else {
         if (typeof value === 'string') {
           if (
-            !set_inline_styles_in_str(
+            !wasmContext.set_inline_styles_in_str(
               element,
               value,
-              transform_vw,
-              transform_vh,
-              transform_rem,
             )
           ) {
             element.setAttribute('style', value);
@@ -363,12 +796,9 @@ export function createElementAPI(
               vec.push(k, v.toString());
             }
           }
-          set_inline_styles_in_key_value_vec(
+          wasmContext.set_inline_styles_in_key_value_vec(
             element,
             vec,
-            transform_vw,
-            transform_vh,
-            transform_rem,
           );
         }
       }
@@ -669,4 +1099,5 @@ export function createElementAPI(
       );
     },
   };
+  return elementPAPIs;
 }

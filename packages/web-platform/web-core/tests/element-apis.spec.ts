@@ -9,7 +9,12 @@ import {
 } from '@rstest/core';
 import { createElementAPI } from '../ts/client/mainthread/elementAPIs/createElementAPI.js';
 import { WASMJSBinding } from '../ts/client/mainthread/elementAPIs/WASMJSBinding.js';
-import { cssIdAttribute, lynxEntryNameAttribute } from '../ts/constants.js';
+import {
+  cssIdAttribute,
+  lynxElementTemplateMarkerAttribute,
+  lynxEntryNameAttribute,
+  lynxUniqueIdAttribute,
+} from '../ts/constants.js';
 import {
   createElementAPI as createServerElementAPI,
   SSRBinding,
@@ -18,17 +23,40 @@ import { wasmInstance } from '../ts/client/wasm.js';
 import { encodeCSS } from '../ts/encode/encodeCSS.js';
 import { createMainThreadGlobalAPIs } from '../ts/client/mainthread/createMainThreadGlobalAPIs.js';
 import type { LynxViewInstance } from '../ts/client/mainthread/LynxViewInstance.js';
+import { ensureElementTemplateDefinitions } from '../ts/client/mainthread/registerElementTemplates.js';
+import { templateManager } from '../ts/client/mainthread/TemplateManager.js';
 import { createTestLynxViewInstance } from './createTestLynxViewInstance.js';
+import type {
+  DecodedTemplate,
+  ElementTemplateAsset,
+} from '../ts/types/index.js';
+
+const builtinRawTextTemplate: ElementTemplateAsset = {
+  templateId: '_et_builtin_raw_text',
+  compiledTemplate: {
+    kind: 'element',
+    type: 'raw-text',
+    attributesArray: [
+      { kind: 'slot', key: 'text', attrSlotIndex: 0 },
+    ],
+  },
+};
 
 describe('Element APIs', () => {
+  const mainElementTemplateBundleUrl = 'test://main';
   let lynxViewDom: HTMLElement;
   let rootDom: ShadowRoot;
   let mtsGlobalThis: ReturnType<typeof createElementAPI>;
   let mtsBinding: WASMJSBinding;
+  let elementTemplateBundles: Map<string, DecodedTemplate>;
   beforeEach(() => {
     rstest.resetAllMocks();
     lynxViewDom = document.createElement('div') as unknown as HTMLElement;
     rootDom = lynxViewDom.attachShadow({ mode: 'open' });
+    elementTemplateBundles = new Map();
+    rstest.spyOn(templateManager, 'getBundle').mockImplementation(url =>
+      elementTemplateBundles.get(url)
+    );
 
     mtsBinding = new WASMJSBinding(createTestLynxViewInstance(rootDom));
     mtsGlobalThis = createElementAPI(
@@ -37,8 +65,30 @@ describe('Element APIs', () => {
       true,
       true,
       true,
+      false,
+      false,
+      false,
+      mainElementTemplateBundleUrl,
     );
   });
+  function registerTestElementTemplates(
+    elementTemplates: ElementTemplateAsset[],
+    bundleUrl?: string,
+  ) {
+    const bundle: DecodedTemplate = { elementTemplates };
+    elementTemplateBundles.set(
+      bundleUrl && bundleUrl !== '__Card__'
+        ? bundleUrl
+        : mainElementTemplateBundleUrl,
+      bundle,
+    );
+    ensureElementTemplateDefinitions(
+      bundle,
+      style => mtsBinding.wasmContext!.transform_element_template_style(style),
+    );
+    return bundle;
+  }
+
   test('#commonEventHandler should filter out -1 uniqueId', () => {
     mtsBinding.wasmContext = Object.assign(mtsBinding.wasmContext || {}, {
       common_event_handler: rstest.fn(),
@@ -108,6 +158,411 @@ describe('Element APIs', () => {
   test('createElementView', () => {
     const element = mtsGlobalThis.__CreateElement('view', 0);
     expect(mtsGlobalThis.__GetTag(element)).toBe('view');
+  });
+
+  test('ensureElementTemplateDefinitions builds template DOM in JS and updates Rust metadata incrementally', () => {
+    const wasmContext = {
+      transform_element_template_style: rstest.fn((style: string) =>
+        style.replace('width', 'height')
+      ),
+    };
+
+    const bundle: DecodedTemplate = {
+      elementTemplates: [
+        {
+          templateId: '_et_metadata',
+          compiledTemplate: {
+            kind: 'element',
+            type: 'view',
+            attributesArray: [
+              { kind: 'static', key: 'css-id', value: 7 },
+              { kind: 'static', key: 'style', value: 'width: 1px;' },
+              { kind: 'slot', key: 'class', attrSlotIndex: 0 },
+            ],
+            children: [
+              {
+                kind: 'element',
+                type: 'raw-text',
+                attributesArray: [
+                  { kind: 'static', key: 'css-id', value: 0 },
+                  { kind: 'static', key: 'text', value: 'hello' },
+                  { kind: 'spread', attrSlotIndex: 1 },
+                ],
+              },
+              { kind: 'elementSlot', type: 'slot', elementSlotIndex: 2 },
+            ],
+          },
+        },
+      ],
+    };
+    ensureElementTemplateDefinitions(
+      bundle,
+      style => wasmContext.transform_element_template_style(style),
+    );
+
+    expect(wasmContext.transform_element_template_style)
+      .toHaveBeenCalledWith('width: 1px;');
+    const definition = bundle.elementTemplateDefinitions!.get('_et_metadata')!
+      .definition;
+    expect(definition).toBeInstanceOf(wasmInstance.ElementTemplateDefinition);
+
+    const template = bundle.elementTemplateDefinitions!.get('_et_metadata')!
+      .template;
+    expect(template.tagName.toLowerCase()).toBe('template');
+
+    const root = template.content.firstElementChild as HTMLElement;
+    expect(root.tagName.toLowerCase()).toBe('x-view');
+    expect(root.getAttribute(cssIdAttribute)).toBe('7');
+    expect(root.getAttribute('style')).toBe('height: 1px;');
+    expect(root.childNodes[0]!.nodeName.toLowerCase()).toBe('raw-text');
+    expect((root.childNodes[0] as HTMLElement).getAttribute(cssIdAttribute))
+      .toBeNull();
+    expect(root.childNodes[1]!.nodeType).toBe(8);
+    expect(root.childNodes[1]!.nodeValue).toBe('lynx-et-slot:2');
+    definition.free();
+  });
+
+  test('element template creates, patches, moves, and serializes DOM from JS state', () => {
+    registerTestElementTemplates([
+      builtinRawTextTemplate,
+      {
+        templateId: '_et_card',
+        compiledTemplate: {
+          kind: 'element',
+          type: 'view',
+          attributesArray: [
+            { kind: 'static', key: 'class', value: 'static-class' },
+            { kind: 'slot', key: 'class', attrSlotIndex: 0 },
+            { kind: 'spread', attrSlotIndex: 1 },
+            { kind: 'slot', key: 'style', attrSlotIndex: 2 },
+            { kind: 'slot', key: 'bindTap', attrSlotIndex: 3 },
+          ],
+          children: [
+            {
+              kind: 'element',
+              type: 'raw-text',
+              attributesArray: [
+                { kind: 'static', key: 'text', value: 'static' },
+              ],
+            },
+            { kind: 'elementSlot', type: 'slot', elementSlotIndex: 0 },
+          ],
+        },
+      },
+    ]);
+
+    const firstChild = mtsGlobalThis.__CreateElementTemplate(
+      '_et_builtin_raw_text',
+      null,
+      ['first'],
+      null,
+      2,
+    );
+    const root = mtsGlobalThis.__CreateElementTemplate(
+      '_et_card',
+      null,
+      [
+        'dynamic-class',
+        { id: 'from-spread', 'data-kind': 'initial' },
+        { width: '12px', height: '10px' },
+        'tap-handler',
+      ],
+      [[firstChild]],
+      1,
+    );
+
+    expect(root.tagName.toLowerCase()).toBe('x-view');
+    const rootUniqueId = mtsGlobalThis.__GetElementUniqueID(root);
+    expect(rootUniqueId).toBeGreaterThan(0);
+    expect(root.getAttribute(lynxUniqueIdAttribute)).toBeNull();
+    expect(root.className).toBe('dynamic-class');
+    expect(root.id).toBe('from-spread');
+    expect(root.getAttribute('data-kind')).toBe('initial');
+    expect(root.getAttribute('style')).toContain('width:12px');
+    expect(root.children).toHaveLength(2);
+    expect(root.children[0]!.getAttribute('text')).toBe('static');
+    expect(root.children[0]!.getAttribute(lynxUniqueIdAttribute)).toBeNull();
+    expect(root.children[1]!.getAttribute('text')).toBe('first');
+    expect(
+      mtsBinding.wasmContext!.get_event(
+        rootUniqueId,
+        'tap',
+        'bindevent',
+      ),
+    ).toBe('tap-handler');
+
+    mtsGlobalThis.__SetAttributeOfElementTemplate(root, 0, null);
+    expect(root.className).toBe('static-class');
+
+    mtsGlobalThis.__SetAttributeOfElementTemplate(root, 1, { id: 'updated' });
+    expect(root.id).toBe('updated');
+    expect(root.hasAttribute('data-kind')).toBe(false);
+
+    mtsGlobalThis.__SetAttributeOfElementTemplate(root, 2, 'height: 20px;');
+    expect(root.getAttribute('style')).toContain('height:20px');
+
+    const secondChild = mtsGlobalThis.__CreateElementTemplate(
+      '_et_builtin_raw_text',
+      null,
+      ['second'],
+      null,
+      3,
+    );
+    mtsGlobalThis.__InsertNodeToElementTemplate(
+      root,
+      0,
+      secondChild,
+      firstChild,
+    );
+    expect([...root.children].map(child => child.getAttribute('text'))).toEqual(
+      ['static', 'second', 'first'],
+    );
+
+    mtsGlobalThis.__RemoveNodeFromElementTemplate(root, 0, firstChild);
+    expect([...root.children].map(child => child.getAttribute('text'))).toEqual(
+      ['static', 'second'],
+    );
+    expect(() => mtsGlobalThis.__SerializeElementTemplate(firstChild)).toThrow(
+      /Element template instance not found/,
+    );
+
+    expect(mtsGlobalThis.__SerializeElementTemplate(root)).toMatchObject({
+      uid: 1,
+      templateKey: '_et_card',
+      attributeSlots: [
+        null,
+        { id: 'updated' },
+        'height: 20px;',
+        'tap-handler',
+      ],
+      elementSlots: [
+        [
+          {
+            uid: 3,
+            templateKey: '_et_builtin_raw_text',
+            attributeSlots: ['second'],
+          },
+        ],
+      ],
+    });
+  });
+
+  test('element template serialization does not pad missing trailing attribute slots', () => {
+    registerTestElementTemplates([
+      {
+        templateId: '_et_sparse_attrs',
+        compiledTemplate: {
+          kind: 'element',
+          type: 'view',
+          attributesArray: [
+            { kind: 'slot', key: 'id', attrSlotIndex: 0 },
+            { kind: 'slot', key: 'class', attrSlotIndex: 3 },
+          ],
+        },
+      },
+    ]);
+
+    const root = mtsGlobalThis.__CreateElementTemplate(
+      '_et_sparse_attrs',
+      null,
+      ['stable'],
+      null,
+      11,
+    );
+
+    expect(root.id).toBe('stable');
+    expect(root.className).toBe('');
+    expect(mtsGlobalThis.__SerializeElementTemplate(root)).toMatchObject({
+      uid: 11,
+      templateKey: '_et_sparse_attrs',
+      attributeSlots: ['stable'],
+    });
+  });
+
+  test('typed element template page reuses page API as non-serialized host', () => {
+    registerTestElementTemplates([
+      builtinRawTextTemplate,
+    ]);
+
+    const page = mtsGlobalThis.__CreateTypedElementTemplate(
+      'page',
+      null,
+      null,
+      '0',
+      null,
+    );
+    const reusedPage = mtsGlobalThis.__CreateTypedElementTemplate(
+      'page',
+      { id: 'ignored' },
+      null,
+      'ignored',
+      null,
+    );
+    const child = mtsGlobalThis.__CreateElementTemplate(
+      '_et_builtin_raw_text',
+      null,
+      ['root'],
+      null,
+      4,
+    );
+
+    expect(reusedPage).toBe(page);
+    expect(page.tagName.toLowerCase()).toBe('div');
+    expect(page.getAttribute('part')).toBe('page');
+    expect(page.getAttribute(lynxElementTemplateMarkerAttribute)).toBe(
+      String(mtsGlobalThis.__GetElementUniqueID(page)),
+    );
+
+    mtsGlobalThis.__InsertNodeToElementTemplate(page, 0, child);
+
+    expect(page.children).toHaveLength(1);
+    expect(page.children[0]).toBe(child);
+    expect(mtsGlobalThis.__SerializeElementTemplate(child)).toMatchObject({
+      uid: 4,
+      templateKey: '_et_builtin_raw_text',
+      attributeSlots: ['root'],
+    });
+    expect(() => mtsGlobalThis.__SerializeElementTemplate(page)).toThrow(
+      /Element template instance not found/,
+    );
+
+    mtsGlobalThis.__RemoveNodeFromElementTemplate(page, 0, child);
+
+    expect(page.children).toHaveLength(0);
+    expect(() => mtsGlobalThis.__SerializeElementTemplate(child)).toThrow(
+      /Element template instance not found/,
+    );
+  });
+
+  test('typed list serializes logical children through options only', () => {
+    registerTestElementTemplates([
+      builtinRawTextTemplate,
+    ]);
+
+    const child = mtsGlobalThis.__CreateElementTemplate(
+      '_et_builtin_raw_text',
+      null,
+      ['item'],
+      null,
+      12,
+    );
+    const list = mtsGlobalThis.__CreateTypedElementTemplate(
+      'list',
+      { 'data-kind': 'typed-list' },
+      null,
+      13,
+      { listChildren: [child] } as any,
+    );
+
+    expect(list.children[0]).toBe(child);
+    expect(mtsGlobalThis.__SerializeElementTemplate(list)).toMatchObject({
+      uid: 13,
+      tag: 'list',
+      attributes: { 'data-kind': 'typed-list' },
+      options: {
+        listChildren: [{
+          uid: 12,
+          templateKey: '_et_builtin_raw_text',
+          attributeSlots: ['item'],
+        }],
+      },
+    });
+    expect(mtsGlobalThis.__SerializeElementTemplate(list)).not.toHaveProperty(
+      'elementSlots',
+    );
+  });
+
+  test('element template spread removal restores sibling dynamic binding', () => {
+    registerTestElementTemplates([
+      {
+        templateId: '_et_spread_restore',
+        compiledTemplate: {
+          kind: 'element',
+          type: 'view',
+          attributesArray: [
+            { kind: 'slot', key: 'id', attrSlotIndex: 0 },
+            { kind: 'spread', attrSlotIndex: 1 },
+          ],
+        },
+      },
+    ]);
+
+    const root = mtsGlobalThis.__CreateElementTemplate(
+      '_et_spread_restore',
+      null,
+      ['slot-id', { id: 'spread-id', 'data-kind': 'initial' }],
+      null,
+      4,
+    );
+
+    expect(root.id).toBe('spread-id');
+    expect(root.getAttribute('data-kind')).toBe('initial');
+
+    mtsGlobalThis.__SetAttributeOfElementTemplate(root, 0, 'slot-updated');
+
+    expect(root.id).toBe('spread-id');
+
+    mtsGlobalThis.__SetAttributeOfElementTemplate(root, 1, {});
+
+    expect(root.id).toBe('slot-updated');
+    expect(root.hasAttribute('data-kind')).toBe(false);
+
+    mtsGlobalThis.__SetAttributeOfElementTemplate(root, 0, null);
+
+    expect(root.hasAttribute('id')).toBe(false);
+  });
+
+  test('element template move detaches child from previous slot owner', () => {
+    registerTestElementTemplates([
+      builtinRawTextTemplate,
+      {
+        templateId: '_et_slot_host',
+        compiledTemplate: {
+          kind: 'element',
+          type: 'view',
+          children: [
+            {
+              kind: 'elementSlot',
+              type: 'slot',
+              elementSlotIndex: 0,
+            },
+          ],
+        },
+      },
+    ]);
+    const firstHost = mtsGlobalThis.__CreateElementTemplate(
+      '_et_slot_host',
+      null,
+      null,
+      null,
+      8,
+    );
+    const secondHost = mtsGlobalThis.__CreateElementTemplate(
+      '_et_slot_host',
+      null,
+      null,
+      null,
+      9,
+    );
+    const child = mtsGlobalThis.__CreateElementTemplate(
+      '_et_builtin_raw_text',
+      null,
+      ['moving'],
+      null,
+      10,
+    );
+
+    mtsGlobalThis.__InsertNodeToElementTemplate(firstHost, 0, child);
+    mtsGlobalThis.__InsertNodeToElementTemplate(secondHost, 0, child);
+
+    expect(mtsGlobalThis.__SerializeElementTemplate(firstHost)).not
+      .toHaveProperty('elementSlots');
+    expect(mtsGlobalThis.__SerializeElementTemplate(secondHost)).toMatchObject({
+      elementSlots: [[{
+        uid: 10,
+        templateKey: '_et_builtin_raw_text',
+      }]],
+    });
   });
 
   test('createCrossThreadEvent properly sets touch detail x and y', async () => {

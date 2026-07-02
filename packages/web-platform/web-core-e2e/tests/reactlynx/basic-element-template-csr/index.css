@@ -1,0 +1,20 @@
+/* Copyright 2026 The Lynx Authors. All rights reserved.
+ * Licensed under the Apache License Version 2.0 that can be found in the
+ * LICENSE file in the root directory of this source tree.
+ */
+
+#target {
+  width: 120px;
+  height: 80px;
+  background-color: rgb(255, 0, 0);
+}
+
+#target.active {
+  background-color: rgb(0, 128, 0);
+}
+
+#label,
+#slot-child {
+  color: rgb(255, 255, 255);
+  font-size: 14px;
+}

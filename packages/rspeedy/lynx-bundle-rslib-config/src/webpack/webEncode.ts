@@ -11,6 +11,7 @@ import type { TasmJSONInfo } from '@lynx-js/web-core/encode'
 interface ExternalBundleEncodeOptions {
   compilerOptions: Record<string, unknown>
   sourceContent: { appType: string }
+  elementTemplates?: TasmJSONInfo['elementTemplates']
   customSections: Record<string, {
     encoding?: string
     content: string | { ruleList: LynxStyleNode[] }
@@ -41,7 +42,7 @@ export function getWebEncodeMode(): (
   opts: unknown,
 ) => Promise<{ buffer: Buffer }> {
   return async (opts: unknown) => {
-    const { compilerOptions, sourceContent, customSections } =
+    const { compilerOptions, sourceContent, customSections, elementTemplates } =
       opts as ExternalBundleEncodeOptions
 
     const styleInfo: TasmJSONInfo['styleInfo'] = {}
@@ -82,7 +83,7 @@ export function getWebEncodeMode(): (
         appType: sourceContent.appType,
         pageConfig: compilerOptions,
         customSections: {},
-        elementTemplates: {},
+        ...(elementTemplates === undefined ? {} : { elementTemplates }),
       })),
     }
   }
