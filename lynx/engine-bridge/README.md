@@ -1,7 +1,7 @@
 # Lynx Rust engine bridge
 
 This workspace contains the Rust bridge for embedding Lynx without a native
-window. It provides one library crate, `lynx`, and a headless example.
+window. It provides the `lynx` library crate and a headless example CLI.
 
 The Rust crate loads `libLynx_clay` at runtime with `dlopen` and `dlsym`. It
 does not link the runtime library at build time. Cargo builds prepare the
@@ -47,10 +47,12 @@ The bridge follows this runtime path:
 
 See `docs/architecture.md` for the module walkthrough and CI workflow.
 
-## Runtime loading
+## Configure the runtime
 
-Set one of these environment variables before calling `Env::load()` from a
-non-Cargo host:
+Cargo builds prepare a default runtime for supported targets when neither
+`LYNX_LIB_PATH` nor `LYNX_SDK_DIR` is set. To use your own runtime, set one of
+these environment variables before building or before calling `Env::load()` from
+a non-Cargo host:
 
 ```sh
 export LYNX_LIB_PATH=/path/to/libLynx_clay.dylib # or libLynx_clay.so
@@ -69,24 +71,26 @@ The loaded runtime must export the `lynx_rust_*` shim symbols, such as
 `lynx_rust_view_set_frame`. These symbols keep the Rust ABI simple while the
 existing C++ exports can keep reference-parameter signatures.
 
-When building with Cargo, `build.rs` downloads the default runtime for supported
-targets when neither variable is set, stores it under
-`target/lynx-engine-bridge-sdk`, and injects `LYNX_SDK_DIR` for tests and
+When Cargo downloads a runtime, it stores the files under
+`target/lynx-engine-bridge-sdk` and injects `LYNX_SDK_DIR` for tests and
 examples. Existing non-empty runtime files are reused when they match the
 current runtime URL. The default artifacts are available for macOS arm64 and
-Linux x86_64. Set `LYNX_DOWNLOAD_RUNTIME=0` to disable the automatic download,
-or set `LYNX_RUNTIME_URL` to test another runtime artifact.
+Linux x86_64.
+
+Use these build-time variables to change the default behavior:
+
+- `LYNX_DOWNLOAD_RUNTIME=0` disables the automatic download.
+- `LYNX_RUNTIME_URL` downloads a different runtime artifact.
+- `LYNX_SKIP_ADHOC_SIGN=1` skips ad-hoc signing on macOS.
 
 ## macOS signing
 
 Cargo test binaries are not signed with Hardened Runtime or Library Validation,
 so ordinary local tests do not need Developer ID signing.
 
-Cargo downloads and ad-hoc signs the runtime before building tests and examples.
-To refresh the downloaded artifact, remove
-`target/lynx-engine-bridge-sdk/lib/libLynx_clay.dylib` or
-`target/lynx-engine-bridge-sdk/lib/libLynx_clay.so` and rerun Cargo. Set
-`LYNX_SKIP_ADHOC_SIGN=1` if you need to debug signing locally.
+On macOS, Cargo ad-hoc signs the downloaded runtime before building tests and
+examples. To refresh the downloaded artifact, remove the runtime library under
+`target/lynx-engine-bridge-sdk/lib/` and rerun Cargo.
 
 ## Validation
 
@@ -98,7 +102,7 @@ cargo clippy --locked --all-targets --all-features -- -D warnings
 cargo test --locked --all-targets --all-features
 ```
 
-Runtime-backed tests require `LYNX_LIB_PATH` or `LYNX_SDK_DIR`. If you have an
+The runtime-backed tests use the runtime prepared by `build.rs`. If you have an
 SDK already, set it directly:
 
 ```sh
@@ -132,7 +136,8 @@ cargo run -p lynx-headless-example -- \
 ```
 
 Use `--initial-data-json` and `--global-props-json` to pass JSON strings to the
-template load request.
+template load request. Run `cargo run -p lynx-headless-example -- --help` for
+the full option list.
 
 On macOS, the runtime also expects `LynxResources.bundle` to be discoverable via
 the process main bundle. For a Cargo-built CLI this means placing
@@ -143,9 +148,9 @@ JavaScript through a Lynx group with `--preload-js /path/to/lynx_core.js`; when
 automatically.
 
 Use `--native-ui-loop` on macOS when rendering real Lynx bundles. It lets the
-runtime drive its own Darwin/FML UI loop; the custom Rust task queue is useful
-for narrow task-runner experiments but does not drive every runtime actor needed
-by the React fixture.
+runtime drive its own Darwin/FML UI loop. The custom Rust task queue is useful
+for narrow task-runner experiments, but it does not drive every runtime actor
+needed by some ReactLynx bundles.
 
 ## Troubleshooting
 
