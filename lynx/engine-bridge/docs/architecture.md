@@ -79,7 +79,7 @@ tests still require a loadable dynamic library; local Cargo builds and CI use
 On macOS, real ReactLynx bundles should use `--native-ui-loop`. That lets the
 runtime drive its Darwin/FML UI loop. The Rust queue-backed global UI runner is
 kept for focused task-runner experiments, but it does not drive every actor used
-by the GenUI React fixture.
+by some ReactLynx bundles.
 
 ## Ownership and error boundaries
 

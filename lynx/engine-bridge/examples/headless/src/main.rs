@@ -7,7 +7,7 @@ use lynx_headless_example::write_png;
 use std::env;
 use std::ffi::OsString;
 use std::fs;
-use std::path::PathBuf;
+use std::path::{Component, Path, PathBuf};
 use std::sync::{Arc, Mutex};
 use std::thread;
 use std::thread::ThreadId;
@@ -16,6 +16,17 @@ use std::time::{Duration, Instant};
 const DEFAULT_WIDTH: f32 = 800.0;
 const DEFAULT_HEIGHT: f32 = 600.0;
 const DEFAULT_DPR: f32 = 1.0;
+const USAGE: &str = concat!(
+  "usage: lynx-headless-example --bundle path/to/main.lynx.bundle [options]\n\n",
+  "options:\n",
+  "  --screenshot path/to/output.png\n",
+  "  --asset-root path/to/assets\n",
+  "  --preload-js path/to/lynx_core.js\n",
+  "  --timeout-ms milliseconds\n",
+  "  --initial-data-json json\n",
+  "  --global-props-json json\n",
+  "  --native-ui-loop"
+);
 
 #[derive(Clone)]
 struct SharedTasks {
@@ -156,16 +167,9 @@ impl DirectoryResourceFetcher {
   }
 
   fn resolve(&self, url: &str) -> Option<PathBuf> {
-    let path = url
-      .strip_prefix("file://lynx?")
-      .unwrap_or(url)
-      .strip_prefix("local://")
-      .or_else(|| url.strip_prefix("assets://"))
-      .or_else(|| url.strip_prefix("file://"))
-      .unwrap_or(url)
-      .trim_start_matches('/');
+    let path = resource_path_from_url(url)?;
     for root in &self.roots {
-      let candidate = root.join(path);
+      let candidate = root.join(&path);
       if candidate.is_file() {
         return Some(candidate);
       }
@@ -186,6 +190,35 @@ impl ResourceFetcher for DirectoryResourceFetcher {
   }
 }
 
+fn resource_path_from_url(url: &str) -> Option<PathBuf> {
+  let path = if let Some(path) = url.strip_prefix("file://lynx?") {
+    path
+  } else if let Some(path) = url.strip_prefix("local://") {
+    path
+  } else if let Some(path) = url.strip_prefix("assets://") {
+    path
+  } else if let Some(path) = url.strip_prefix("file://") {
+    path
+  } else {
+    url
+  }
+  .trim_start_matches('/');
+  if path.is_empty() {
+    return None;
+  }
+
+  let mut relative_path = PathBuf::new();
+  for component in Path::new(path).components() {
+    match component {
+      Component::Normal(part) => relative_path.push(part),
+      Component::CurDir | Component::RootDir => {}
+      Component::ParentDir | Component::Prefix(_) => return None,
+    }
+  }
+
+  (!relative_path.as_os_str().is_empty()).then_some(relative_path)
+}
+
 struct Options {
   bundle: PathBuf,
   screenshot: PathBuf,
@@ -203,8 +236,18 @@ fn configured_sdk_dir() -> Option<PathBuf> {
     .map(PathBuf::from)
 }
 
-fn main() -> lynx::Result<()> {
-  let options = parse_options();
+fn main() {
+  if let Err(error) = run() {
+    eprintln!("{error}");
+    std::process::exit(1);
+  }
+}
+
+fn run() -> lynx::Result<()> {
+  let Some(options) = parse_options()? else {
+    println!("{USAGE}");
+    return Ok(());
+  };
   let env = Env::load()?;
   let sdk_dir = configured_sdk_dir();
   if let Some(sdk_dir) = &sdk_dir {
@@ -361,7 +404,7 @@ fn main() -> lynx::Result<()> {
   Ok(())
 }
 
-fn parse_options() -> Options {
+fn parse_options() -> lynx::Result<Option<Options>> {
   let mut bundle = env::var_os("LYNX_E2E_BUNDLE").map(PathBuf::from);
   let mut screenshot = env::var_os("LYNX_E2E_SCREENSHOT")
     .map(PathBuf::from)
@@ -374,58 +417,44 @@ fn parse_options() -> Options {
   let mut timeout = Duration::from_secs(10);
   let mut native_ui_loop = false;
   let mut initial_data_json = "{}".to_string();
-  let mut global_props_json = format!(
-        "{{\"initialPage\":\"home\",\"platform\":\"{}\",\"screenWidth\":{},\"screenHeight\":{},\"theme\":\"light\",\"frontendTheme\":\"light\",\"preferredTheme\":\"light\",\"safeAreaTop\":0,\"safeAreaBottom\":0,\"safeAreaLeft\":0,\"safeAreaRight\":0}}",
-        env::consts::OS, DEFAULT_WIDTH as u32, DEFAULT_HEIGHT as u32
-    );
+  let mut global_props_json = default_global_props_json();
 
   let mut args = env::args().skip(1);
   while let Some(arg) = args.next() {
     match arg.as_str() {
-      "--bundle" => bundle = args.next().map(PathBuf::from),
+      "--bundle" => bundle = Some(PathBuf::from(next_arg(&mut args, "--bundle")?)),
       "--screenshot" => {
-        screenshot = args
-          .next()
-          .map(PathBuf::from)
-          .unwrap_or_else(|| screenshot.clone())
+        screenshot = PathBuf::from(next_arg(&mut args, "--screenshot")?);
       }
       "--asset-root" => {
-        if let Some(root) = args.next() {
-          asset_roots.push(PathBuf::from(root));
-        }
+        asset_roots.push(PathBuf::from(next_arg(&mut args, "--asset-root")?));
       }
       "--preload-js" => {
-        if let Some(path) = args.next() {
-          preload_js_paths.push(PathBuf::from(path));
-        }
+        preload_js_paths.push(PathBuf::from(next_arg(&mut args, "--preload-js")?));
       }
       "--timeout-ms" => {
-        if let Some(value) = args.next().and_then(|value| value.parse::<u64>().ok()) {
-          timeout = Duration::from_millis(value);
-        }
+        let value = next_arg(&mut args, "--timeout-ms")?;
+        let milliseconds = value.parse::<u64>().map_err(|error| {
+          usage_error(format!("--timeout-ms expects an integer value: {error}"))
+        })?;
+        timeout = Duration::from_millis(milliseconds);
       }
       "--initial-data-json" => {
-        if let Some(value) = args.next() {
-          initial_data_json = value;
-        }
+        initial_data_json = next_arg(&mut args, "--initial-data-json")?;
       }
       "--global-props-json" => {
-        if let Some(value) = args.next() {
-          global_props_json = value;
-        }
+        global_props_json = next_arg(&mut args, "--global-props-json")?;
       }
       "--native-ui-loop" => {
         native_ui_loop = true;
       }
-      _ => {}
+      "--help" | "-h" => return Ok(None),
+      _ => return Err(usage_error(format!("unknown argument: {arg}"))),
     }
   }
 
-  let bundle = bundle.unwrap_or_else(|| {
-    eprintln!("usage: lynx-headless-example --bundle path/to/main.lynx.bundle");
-    std::process::exit(2);
-  });
-  Options {
+  let bundle = bundle.ok_or_else(|| usage_error("missing required --bundle"))?;
+  Ok(Some(Options {
     bundle,
     screenshot,
     asset_roots,
@@ -434,7 +463,31 @@ fn parse_options() -> Options {
     initial_data_json,
     global_props_json,
     native_ui_loop,
-  }
+  }))
+}
+
+fn next_arg(args: &mut impl Iterator<Item = String>, flag: &'static str) -> lynx::Result<String> {
+  args
+    .next()
+    .ok_or_else(|| usage_error(format!("{flag} requires a value")))
+}
+
+fn usage_error(message: impl AsRef<str>) -> lynx::Error {
+  lynx::Error::Message(format!("{}\n\n{USAGE}", message.as_ref()))
+}
+
+fn default_global_props_json() -> String {
+  format!(
+    concat!(
+      r#"{{"initialPage":"home","platform":"{}","#,
+      r#""screenWidth":{},"screenHeight":{},"theme":"light","#,
+      r#""frontendTheme":"light","preferredTheme":"light","#,
+      r#""safeAreaTop":0,"safeAreaBottom":0,"safeAreaLeft":0,"safeAreaRight":0}}"#
+    ),
+    env::consts::OS,
+    DEFAULT_WIDTH as u32,
+    DEFAULT_HEIGHT as u32
+  )
 }
 
 #[cfg(target_os = "macos")]
@@ -461,4 +514,31 @@ fn wait_for_host_events(duration: Duration) {
 #[cfg(not(target_os = "macos"))]
 fn wait_for_host_events(duration: Duration) {
   thread::sleep(duration);
+}
+
+#[cfg(test)]
+mod tests {
+  use super::*;
+
+  #[test]
+  fn resource_path_from_url_accepts_supported_schemes() {
+    assert_eq!(
+      resource_path_from_url("assets://images/icon.png"),
+      Some(PathBuf::from("images/icon.png"))
+    );
+    assert_eq!(
+      resource_path_from_url("local://fonts/app.ttf"),
+      Some(PathBuf::from("fonts/app.ttf"))
+    );
+    assert_eq!(
+      resource_path_from_url("file://lynx?lynx_core.js"),
+      Some(PathBuf::from("lynx_core.js"))
+    );
+  }
+
+  #[test]
+  fn resource_path_from_url_rejects_paths_outside_roots() {
+    assert_eq!(resource_path_from_url("assets://../secret.txt"), None);
+    assert_eq!(resource_path_from_url(""), None);
+  }
 }
