@@ -12,6 +12,7 @@ export default function generateDevUrls(
   entry: string,
   schemaFn: CustomizedSchemaFn,
   port: number,
+  host?: string,
 ): Record<string, string> {
   const { dev: { assetPrefix } } = api.getNormalizedConfig()
   const { config } = api.useExposed<ExposedAPI>(
@@ -34,11 +35,18 @@ export default function generateDevUrls(
     ? bundle({ lazyBundle: false, entryName: entry, platform: 'lynx' })
     : bundle) ?? defaultFilename
 
+  // <port> is supported in `dev.assetPrefix`, we should replace it with the real port
+  let base = assetPrefix.replaceAll('<port>', String(port))
+  if (host !== undefined) {
+    const baseURL = new URL(base)
+    baseURL.hostname = host
+    base = baseURL.toString()
+  }
+
   const customSchema = schemaFn(
     new URL(
       name.replace('[name]', entry).replace('[platform]', 'lynx'),
-      // <port> is supported in `dev.assetPrefix`, we should replace it with the real port
-      assetPrefix.replaceAll('<port>', String(port)),
+      base,
     ).toString(),
   )
 
