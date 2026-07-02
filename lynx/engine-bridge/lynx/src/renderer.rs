@@ -655,6 +655,9 @@ unsafe extern "C" fn global_post_task(
 #[cfg(test)]
 mod tests {
   use super::*;
+  use std::ffi::{CStr, CString};
+  use std::ptr::NonNull;
+  use std::sync::{Arc, Mutex};
 
   #[test]
   fn software_frame_len_is_checked() {
@@ -673,5 +676,385 @@ mod tests {
       task: 42,
     };
     assert_eq!(Task::from_raw(raw).raw(), raw);
+  }
+
+  #[test]
+  fn software_frame_bytes_returns_none_for_null_allocation() {
+    let frame = SoftwareFrame {
+      allocation: ptr::null(),
+      row_bytes: 4,
+      height: 2,
+    };
+
+    assert_eq!(unsafe { frame.bytes() }, None);
+  }
+
+  #[test]
+  fn accelerated_paint_info_copies_raw_fields() {
+    let shared_texture_handle = NonNull::<c_void>::dangling().as_ptr();
+    let raw = sys::lynx_accelerated_paint_info_t {
+      struct_size: std::mem::size_of::<sys::lynx_accelerated_paint_info_t>(),
+      shared_texture_handle,
+      color_type: sys::kLynxColorTypeBGRA_8888,
+      width: 320,
+      height: 240,
+    };
+
+    let info = AcceleratedPaintInfo::from(raw);
+    assert_eq!(info.shared_texture_handle, shared_texture_handle);
+    assert_eq!(info.color_type, sys::kLynxColorTypeBGRA_8888);
+    assert_eq!(info.width, 320);
+    assert_eq!(info.height, 240);
+  }
+
+  #[test]
+  fn renderer_callbacks_without_context_return_defaults() {
+    unsafe {
+      assert!(!on_software_present(ptr::null_mut(), ptr::null(), 0, 0));
+      assert!(!on_gl_make_current(ptr::null_mut()));
+      assert!(!on_gl_clear_current(ptr::null_mut()));
+      assert!(!on_gl_present(ptr::null_mut()));
+      assert_eq!(on_gl_create_fbo(ptr::null_mut(), 1, 2), 0);
+      assert_eq!(
+        on_gl_proc_resolver(ptr::null_mut(), ptr::null()),
+        ptr::null_mut()
+      );
+      assert!(!on_accelerated_present(ptr::null_mut()));
+      on_post_task(ptr::null_mut(), sys::lynx_task_t::default(), 0);
+      assert_eq!(get_clipboard_data(ptr::null_mut()), ptr::null());
+      set_clipboard_data(ptr::null_mut(), ptr::null());
+      activate_system_cursor(ptr::null_mut(), sys::kLynxCursorTypeBasic, ptr::null());
+      show_text_input(ptr::null_mut(), true);
+      update_caret_position(ptr::null_mut(), 1.0, 2.0, 3.0, 4.0);
+      set_cursor_position(ptr::null_mut(), 5);
+      set_marked_text_rect(ptr::null_mut(), 6.0, 7.0, 8.0, 9.0);
+      set_editable_transform(ptr::null_mut(), ptr::null());
+      assert!(!global_runs_on_current_thread(ptr::null_mut()));
+      global_post_task(sys::lynx_task_t::default(), 0, ptr::null_mut());
+    }
+  }
+
+  #[test]
+  fn software_and_host_callbacks_dispatch_to_context() {
+    let events = Arc::new(Mutex::new(Vec::new()));
+    let presents = Arc::new(Mutex::new(Vec::new()));
+    let host = RecordingHost {
+      events: events.clone(),
+    };
+    let renderer = RecordingSoftwareRenderer {
+      byte_lengths: presents.clone(),
+    };
+
+    with_renderer_context(
+      RendererBackend::Software(Box::new(renderer)),
+      host,
+      |raw| unsafe {
+        let frame = [1_u8, 2, 3, 4];
+        assert!(on_software_present(raw, frame.as_ptr().cast(), 2, 2));
+
+        on_post_task(
+          raw,
+          sys::lynx_task_t {
+            runner: ptr::null_mut(),
+            task: 7,
+          },
+          42,
+        );
+
+        let clipboard = get_clipboard_data(raw);
+        assert_eq!(CStr::from_ptr(clipboard).to_str().unwrap(), "clipboard");
+
+        let clipboard_text = CString::new("written").unwrap();
+        set_clipboard_data(raw, clipboard_text.as_ptr());
+
+        let cursor_path = CString::new("/tmp/cursor").unwrap();
+        activate_system_cursor(raw, sys::kLynxCursorTypeText, cursor_path.as_ptr());
+        show_text_input(raw, true);
+        update_caret_position(raw, 1.0, 2.0, 3.0, 4.0);
+        set_cursor_position(raw, 5);
+        set_marked_text_rect(raw, 6.0, 7.0, 8.0, 9.0);
+
+        let transform = [2.0_f32; 16];
+        set_editable_transform(raw, transform.as_ptr());
+        set_editable_transform(raw, ptr::null());
+      },
+    );
+
+    assert_eq!(*presents.lock().unwrap(), vec![4]);
+    assert_eq!(
+      *events.lock().unwrap(),
+      vec![
+        "post:7:42",
+        "clipboard:written",
+        "cursor:13:/tmp/cursor",
+        "show_text_input:true",
+        "caret:1:2:3:4",
+        "cursor_position:5",
+        "marked_text_rect:6:7:8:9",
+        "transform:2",
+      ]
+    );
+  }
+
+  #[test]
+  fn gl_callbacks_dispatch_to_context() {
+    let events = Arc::new(Mutex::new(Vec::new()));
+    let renderer = RecordingGlRenderer {
+      events: events.clone(),
+    };
+
+    with_renderer_context(
+      RendererBackend::Gl(Box::new(renderer)),
+      NoopHost,
+      |raw| unsafe {
+        assert!(on_gl_make_current(raw));
+        assert!(on_gl_clear_current(raw));
+        assert!(on_gl_present(raw));
+        assert_eq!(on_gl_create_fbo(raw, 10, 20), 30);
+
+        let name = CString::new("glBindBuffer").unwrap();
+        assert_eq!(on_gl_proc_resolver(raw, name.as_ptr()), ptr::null_mut());
+      },
+    );
+
+    assert_eq!(
+      *events.lock().unwrap(),
+      vec![
+        "make_current",
+        "clear_current",
+        "present",
+        "create_fbo:10:20",
+        "proc:glBindBuffer",
+      ]
+    );
+  }
+
+  #[test]
+  fn accelerated_callback_dispatches_to_context() {
+    let presents = Arc::new(Mutex::new(0));
+    let renderer = RecordingAcceleratedRenderer {
+      presents: presents.clone(),
+    };
+
+    with_renderer_context(
+      RendererBackend::Accelerated(Box::new(renderer)),
+      NoopHost,
+      |raw| unsafe {
+        assert!(on_accelerated_present(raw));
+      },
+    );
+
+    assert_eq!(*presents.lock().unwrap(), 1);
+  }
+
+  #[test]
+  fn global_ui_task_runner_callbacks_dispatch_to_context() {
+    let events = Arc::new(Mutex::new(Vec::new()));
+    let context = Box::new(GlobalUiTaskRunnerContext {
+      runner: Mutex::new(Box::new(RecordingGlobalRunner {
+        events: events.clone(),
+      })),
+    });
+    let context_ptr = Box::into_raw(context).cast::<c_void>();
+
+    unsafe {
+      assert!(global_runs_on_current_thread(context_ptr));
+      global_post_task(
+        sys::lynx_task_t {
+          runner: ptr::null_mut(),
+          task: 11,
+        },
+        99,
+        context_ptr,
+      );
+      drop(Box::from_raw(
+        context_ptr.cast::<GlobalUiTaskRunnerContext>(),
+      ));
+    }
+
+    assert_eq!(
+      *events.lock().unwrap(),
+      vec!["runs_on_current_thread", "global_post:11:99"]
+    );
+  }
+
+  fn with_renderer_context<T>(
+    backend: RendererBackend,
+    host: impl WindowlessHost,
+    f: impl FnOnce(*mut sys::lynx_windowless_renderer_t) -> T,
+  ) -> T {
+    let context = Box::new(RendererContext {
+      backend: Mutex::new(backend),
+      host: Mutex::new(Box::new(host)),
+      clipboard_return: Mutex::new(None),
+    });
+    let context_ptr = Box::into_raw(context);
+    let token_ptr = Box::into_raw(Box::new(0_u8));
+    let raw = token_ptr.cast::<sys::lynx_windowless_renderer_t>();
+    renderer_contexts()
+      .lock()
+      .expect("renderer context lock poisoned")
+      .insert(raw as usize, context_ptr as usize);
+
+    let result = f(raw);
+
+    renderer_contexts()
+      .lock()
+      .expect("renderer context lock poisoned")
+      .remove(&(raw as usize));
+    unsafe {
+      drop(Box::from_raw(context_ptr));
+      drop(Box::from_raw(token_ptr));
+    }
+    result
+  }
+
+  struct RecordingSoftwareRenderer {
+    byte_lengths: Arc<Mutex<Vec<usize>>>,
+  }
+
+  impl SoftwareRenderer for RecordingSoftwareRenderer {
+    fn present(&mut self, frame: SoftwareFrame) -> bool {
+      self
+        .byte_lengths
+        .lock()
+        .unwrap()
+        .push(frame.byte_len().unwrap());
+      true
+    }
+  }
+
+  struct RecordingGlRenderer {
+    events: Arc<Mutex<Vec<&'static str>>>,
+  }
+
+  impl GlRenderer for RecordingGlRenderer {
+    fn make_current(&mut self) -> bool {
+      self.events.lock().unwrap().push("make_current");
+      true
+    }
+
+    fn clear_current(&mut self) -> bool {
+      self.events.lock().unwrap().push("clear_current");
+      true
+    }
+
+    fn present(&mut self) -> bool {
+      self.events.lock().unwrap().push("present");
+      true
+    }
+
+    fn create_fbo(&mut self, width: i32, height: i32) -> u32 {
+      self.events.lock().unwrap().push("create_fbo:10:20");
+      (width + height) as u32
+    }
+
+    unsafe fn get_proc_address(&mut self, name: &CStr) -> *mut c_void {
+      assert_eq!(name.to_str().unwrap(), "glBindBuffer");
+      self.events.lock().unwrap().push("proc:glBindBuffer");
+      ptr::null_mut()
+    }
+  }
+
+  struct RecordingAcceleratedRenderer {
+    presents: Arc<Mutex<usize>>,
+  }
+
+  impl AcceleratedRenderer for RecordingAcceleratedRenderer {
+    fn present(&mut self) -> bool {
+      *self.presents.lock().unwrap() += 1;
+      true
+    }
+  }
+
+  struct RecordingHost {
+    events: Arc<Mutex<Vec<String>>>,
+  }
+
+  impl WindowlessHost for RecordingHost {
+    fn post_task(&mut self, task: Task, interval_nanoseconds: u64) {
+      self
+        .events
+        .lock()
+        .unwrap()
+        .push(format!("post:{}:{interval_nanoseconds}", task.raw().task));
+    }
+
+    fn get_clipboard_data(&mut self) -> Option<String> {
+      Some("clipboard".into())
+    }
+
+    fn set_clipboard_data(&mut self, data: &str) {
+      self
+        .events
+        .lock()
+        .unwrap()
+        .push(format!("clipboard:{data}"));
+    }
+
+    fn activate_system_cursor(&mut self, cursor_type: sys::lynx_cursor_type_e, path: &str) {
+      self
+        .events
+        .lock()
+        .unwrap()
+        .push(format!("cursor:{cursor_type}:{path}"));
+    }
+
+    fn show_text_input(&mut self, show: bool) {
+      self
+        .events
+        .lock()
+        .unwrap()
+        .push(format!("show_text_input:{show}"));
+    }
+
+    fn update_caret_position(&mut self, x: f32, y: f32, width: f32, height: f32) {
+      self
+        .events
+        .lock()
+        .unwrap()
+        .push(format!("caret:{x}:{y}:{width}:{height}"));
+    }
+
+    fn set_cursor_position(&mut self, position: i32) {
+      self
+        .events
+        .lock()
+        .unwrap()
+        .push(format!("cursor_position:{position}"));
+    }
+
+    fn set_marked_text_rect(&mut self, x: f32, y: f32, width: f32, height: f32) {
+      self
+        .events
+        .lock()
+        .unwrap()
+        .push(format!("marked_text_rect:{x}:{y}:{width}:{height}"));
+    }
+
+    fn set_editable_transform(&mut self, transform_matrix: [f32; 16]) {
+      self
+        .events
+        .lock()
+        .unwrap()
+        .push(format!("transform:{}", transform_matrix[0]));
+    }
+  }
+
+  struct RecordingGlobalRunner {
+    events: Arc<Mutex<Vec<&'static str>>>,
+  }
+
+  impl GlobalUiTaskRunner for RecordingGlobalRunner {
+    fn runs_on_current_thread(&mut self) -> bool {
+      self.events.lock().unwrap().push("runs_on_current_thread");
+      true
+    }
+
+    fn post_task(&mut self, task: Task, target_time_nanos: u64) {
+      assert_eq!(task.raw().task, 11);
+      assert_eq!(target_time_nanos, 99);
+      self.events.lock().unwrap().push("global_post:11:99");
+    }
   }
 }

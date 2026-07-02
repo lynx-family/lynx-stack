@@ -314,11 +314,54 @@ mod tests {
   }
 
   #[test]
-  fn resource_type_maps_unknown_values() {
-    assert_eq!(ResourceType::from(999), ResourceType::Unknown(999));
-    assert_eq!(
-      ResourceType::from(sys::kLynxResourceTypeTemplate),
-      ResourceType::Template
-    );
+  fn resource_type_maps_known_and_unknown_values() {
+    let cases = [
+      (sys::kLynxResourceTypeGeneric, ResourceType::Generic),
+      (sys::kLynxResourceTypeImage, ResourceType::Image),
+      (sys::kLynxResourceTypeFont, ResourceType::Font),
+      (sys::kLynxResourceTypeLottie, ResourceType::Lottie),
+      (sys::kLynxResourceTypeVideo, ResourceType::Video),
+      (sys::kLynxResourceTypeSVG, ResourceType::Svg),
+      (sys::kLynxResourceTypeTemplate, ResourceType::Template),
+      (sys::kLynxResourceTypeLynxCoreJS, ResourceType::LynxCoreJs),
+      (sys::kLynxResourceTypeLazyBundle, ResourceType::LazyBundle),
+      (sys::kLynxResourceTypeI18NText, ResourceType::I18nText),
+      (sys::kLynxResourceTypeTheme, ResourceType::Theme),
+      (
+        sys::kLynxResourceTypeExternalJSSource,
+        ResourceType::ExternalJsSource,
+      ),
+      (
+        sys::kLynxResourceTypeExternalByteCode,
+        ResourceType::ExternalByteCode,
+      ),
+      (sys::kLynxResourceTypeAssets, ResourceType::Assets),
+      (999, ResourceType::Unknown(999)),
+    ];
+
+    for (raw, expected) in cases {
+      assert_eq!(ResourceType::from(raw), expected);
+    }
+  }
+
+  #[test]
+  fn resource_fetcher_default_methods_delegate_or_noop() {
+    struct EchoFetcher;
+
+    impl ResourceFetcher for EchoFetcher {
+      fn fetch(&mut self, request: ResourceRequest) -> FetchResponse {
+        FetchResponse::ok(request.url)
+      }
+    }
+
+    let mut fetcher = EchoFetcher;
+    let response = fetcher.fetch_path(ResourceRequest {
+      id: 7,
+      url: "memory://asset".into(),
+      resource_type: ResourceType::Assets,
+    });
+
+    assert_eq!(response.data, Some(b"memory://asset".to_vec()));
+    fetcher.cancel(7);
   }
 }

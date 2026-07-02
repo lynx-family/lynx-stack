@@ -42,3 +42,24 @@ unsafe fn c_str_to_string(ptr: *const std::ffi::c_char) -> String {
     std::ffi::CStr::from_ptr(ptr).to_string_lossy().into_owned()
   }
 }
+
+#[cfg(test)]
+mod tests {
+  use super::*;
+  use std::ffi::CString;
+  use std::ptr;
+
+  #[test]
+  fn c_string_rejects_interior_nul_with_field_name() {
+    let error = c_string("bad\0value", "field").expect_err("interior NUL should fail");
+    assert!(matches!(error, Error::InteriorNul { field: "field" }));
+  }
+
+  #[test]
+  fn c_str_to_string_handles_null_and_utf8_lossy() {
+    assert_eq!(unsafe { c_str_to_string(ptr::null()) }, "");
+
+    let value = CString::new("lynx").unwrap();
+    assert_eq!(unsafe { c_str_to_string(value.as_ptr()) }, "lynx");
+  }
+}

@@ -48,3 +48,28 @@ unsafe extern "C" fn release_c_byte_buffer(content: *mut u8, length: usize, _opa
     )));
   }
 }
+
+#[cfg(test)]
+mod tests {
+  use super::*;
+
+  #[test]
+  fn into_ffi_transfers_buffer_to_destructor() {
+    let buffer = CByteBuffer::copy_from_slice(b"lynx");
+    let (ptr, len, dtor, opaque) = buffer.into_ffi();
+
+    assert_eq!(len, 4);
+    assert!(!ptr.is_null());
+    assert_eq!(unsafe { std::slice::from_raw_parts(ptr, len) }, b"lynx");
+
+    unsafe {
+      dtor.expect("byte buffer destructor")(ptr, len, opaque);
+    }
+  }
+
+  #[test]
+  fn drop_releases_buffer_when_not_transferred() {
+    let buffer = CByteBuffer::from_vec(vec![1, 2, 3]);
+    drop(buffer);
+  }
+}
