@@ -76,19 +76,20 @@ pub fn library_filename() -> Result<&'static str> {
 }
 
 pub fn candidate_library_paths() -> Result<Vec<PathBuf>> {
-  let mut candidates = Vec::new();
-  if let Some(path) = configured_lib_path() {
-    push_unique_path(&mut candidates, PathBuf::from(path));
+  candidate_library_paths_from(configured_lib_path(), configured_sdk_dir())
+}
+
+fn candidate_library_paths_from(
+  configured_lib_path: Option<OsString>,
+  configured_sdk_dir: Option<OsString>,
+) -> Result<Vec<PathBuf>> {
+  if let Some(path) = configured_lib_path {
+    return Ok(vec![PathBuf::from(path)]);
   }
-  if let Some(sdk_dir) = configured_sdk_dir() {
-    let sdk_dir = PathBuf::from(sdk_dir);
-    push_unique_path(
-      &mut candidates,
-      sdk_dir.join("lib").join(library_filename()?),
-    );
-    push_unique_path(&mut candidates, sdk_dir.join(library_filename()?));
+  if let Some(sdk_dir) = configured_sdk_dir {
+    return Ok(vec![sdk_library_path(PathBuf::from(sdk_dir))?]);
   }
-  Ok(candidates)
+  Ok(Vec::new())
 }
 
 fn configured_lib_path() -> Option<OsString> {
@@ -99,10 +100,8 @@ fn configured_sdk_dir() -> Option<OsString> {
   env::var_os("LYNX_SDK_DIR").or_else(|| option_env!("LYNX_SDK_DIR").map(OsString::from))
 }
 
-fn push_unique_path(candidates: &mut Vec<PathBuf>, path: PathBuf) {
-  if !candidates.iter().any(|candidate| candidate == &path) {
-    candidates.push(path);
-  }
+fn sdk_library_path(sdk_dir: PathBuf) -> Result<PathBuf> {
+  Ok(sdk_dir.join("lib").join(library_filename()?))
 }
 
 struct DynamicLibrary {
@@ -654,6 +653,27 @@ mod tests {
     if cfg!(target_os = "linux") {
       assert_eq!(filename, "libLynx_clay.so");
     }
+  }
+
+  #[test]
+  fn sdk_library_path_uses_single_canonical_lib_directory() {
+    let path = sdk_library_path(PathBuf::from("/tmp/lynx-sdk")).unwrap();
+    if cfg!(target_os = "macos") {
+      assert_eq!(path, PathBuf::from("/tmp/lynx-sdk/lib/libLynx_clay.dylib"));
+    }
+    if cfg!(target_os = "linux") {
+      assert_eq!(path, PathBuf::from("/tmp/lynx-sdk/lib/libLynx_clay.so"));
+    }
+  }
+
+  #[test]
+  fn explicit_library_path_wins_over_sdk_dir() {
+    let paths = candidate_library_paths_from(
+      Some(OsString::from("/tmp/custom/libLynx_clay.dylib")),
+      Some(OsString::from("/tmp/lynx-sdk")),
+    )
+    .unwrap();
+    assert_eq!(paths, vec![PathBuf::from("/tmp/custom/libLynx_clay.dylib")]);
   }
 
   #[test]

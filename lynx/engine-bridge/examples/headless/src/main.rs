@@ -7,6 +7,7 @@ use lynx_headless_example::write_png;
 use std::env;
 use std::ffi::OsString;
 use std::fs;
+use std::io::ErrorKind;
 use std::path::{Component, Path, PathBuf};
 use std::sync::{Arc, Mutex};
 use std::thread;
@@ -166,26 +167,31 @@ impl DirectoryResourceFetcher {
     Self { roots }
   }
 
-  fn resolve(&self, url: &str) -> Option<PathBuf> {
-    let path = resource_path_from_url(url)?;
+  fn read(&self, url: &str) -> std::result::Result<Vec<u8>, String> {
+    let path = resource_path_from_url(url)
+      .ok_or_else(|| format!("resource URL is not a relative file path: {url}"))?;
     for root in &self.roots {
       let candidate = root.join(&path);
-      if candidate.is_file() {
-        return Some(candidate);
+      match fs::read(&candidate) {
+        Ok(data) => return Ok(data),
+        Err(error) if error.kind() == ErrorKind::NotFound => {}
+        Err(error) => {
+          return Err(format!(
+            "failed to read resource {} for URL {url}: {error}",
+            candidate.display()
+          ));
+        }
       }
     }
-    None
+    Err(format!("resource not found: {url}"))
   }
 }
 
 impl ResourceFetcher for DirectoryResourceFetcher {
   fn fetch(&mut self, request: ResourceRequest) -> FetchResponse {
-    match self
-      .resolve(&request.url)
-      .and_then(|path| fs::read(path).ok())
-    {
-      Some(data) => FetchResponse::ok(data),
-      None => FetchResponse::error(-1, format!("resource not found: {}", request.url)),
+    match self.read(&request.url) {
+      Ok(data) => FetchResponse::ok(data),
+      Err(message) => FetchResponse::error(-1, message),
     }
   }
 }
@@ -540,5 +546,47 @@ mod tests {
   fn resource_path_from_url_rejects_paths_outside_roots() {
     assert_eq!(resource_path_from_url("assets://../secret.txt"), None);
     assert_eq!(resource_path_from_url(""), None);
+  }
+
+  #[test]
+  fn directory_resource_fetcher_reports_specific_errors() {
+    let root = env::temp_dir().join(format!("lynx-headless-fetcher-test-{}", std::process::id()));
+    let _ = fs::remove_dir_all(&root);
+    fs::create_dir_all(&root).expect("create resource test root");
+    fs::write(root.join("asset.txt"), b"ok").expect("write resource fixture");
+
+    let mut fetcher = DirectoryResourceFetcher::new(vec![root.clone()]);
+    assert_eq!(
+      fetcher.fetch(ResourceRequest {
+        id: 1,
+        url: "assets://asset.txt".into(),
+        resource_type: lynx::ResourceType::Assets,
+      }),
+      FetchResponse::ok(b"ok".to_vec())
+    );
+    assert_eq!(
+      fetcher
+        .fetch(ResourceRequest {
+          id: 2,
+          url: "assets://missing.txt".into(),
+          resource_type: lynx::ResourceType::Assets,
+        })
+        .error_message
+        .as_deref(),
+      Some("resource not found: assets://missing.txt")
+    );
+    assert_eq!(
+      fetcher
+        .fetch(ResourceRequest {
+          id: 3,
+          url: "assets://../secret.txt".into(),
+          resource_type: lynx::ResourceType::Assets,
+        })
+        .error_message
+        .as_deref(),
+      Some("resource URL is not a relative file path: assets://../secret.txt")
+    );
+
+    let _ = fs::remove_dir_all(root);
   }
 }
