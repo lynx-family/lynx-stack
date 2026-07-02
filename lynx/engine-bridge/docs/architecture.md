@@ -43,8 +43,9 @@ latest non-transparent software frame as a PNG.
 ## Runtime loading workflow
 
 1. The caller sets `LYNX_LIB_PATH` to a runtime library or `LYNX_SDK_DIR` to an
-   SDK folder. When running through Cargo on macOS, package `build.rs` files
-   download the default runtime and inject `LYNX_SDK_DIR` automatically.
+   SDK folder. When running through Cargo on supported targets, package
+   `build.rs` files download the default runtime and inject `LYNX_SDK_DIR`
+   automatically.
 2. `Env::load()` asks `sys::candidate_library_paths()` for runtime paths.
 3. `LoadedLibrary::load()` opens the first loadable dynamic library.
 4. `LoadedLibrary::from_dynamic_library()` resolves every required `lynx_*` and
@@ -84,9 +85,9 @@ by the GenUI React fixture.
 
 The screenshot test validates the real GenUI fixture output:
 
-1. The test requires a runtime configuration. On macOS, `build.rs` downloads the
-   default runtime and injects `LYNX_SDK_DIR`; otherwise the test fails instead
-   of silently skipping.
+1. The test requires a runtime configuration. On supported targets, `build.rs`
+   downloads the default runtime and injects `LYNX_SDK_DIR`; otherwise the test
+   fails instead of silently skipping.
 2. It runs the checked-in compiled bundle at
    `packages/genui/ui-judge/tests/fixtures/react/.generated/main.lynx.bundle`.
 3. It copies `examples/headless/tests/fixtures/LynxResources.bundle` beside the
@@ -127,9 +128,9 @@ must not cross FFI boundaries.
 
 ## CI coverage
 
-The `Engine Bridge (macOS)` CI job lets `build.rs` download
-`libLynx_clay.dylib` into `target/lynx-engine-bridge-sdk`, ad-hoc sign it,
-inject `LYNX_SDK_DIR`, and runs:
+The `Engine Bridge` CI job runs on macOS and Linux. It lets `build.rs` download
+the matching `libLynx_clay` artifact into `target/lynx-engine-bridge-sdk`,
+ad-hoc sign it on macOS, inject `LYNX_SDK_DIR`, and runs:
 
 ```sh
 cargo fmt --all --check

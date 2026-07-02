@@ -61,7 +61,7 @@ Set one of these environment variables before calling `Env::load()` from a
 non-Cargo host:
 
 ```sh
-export LYNX_LIB_PATH=/path/to/libLynx_clay.dylib
+export LYNX_LIB_PATH=/path/to/libLynx_clay.dylib # or libLynx_clay.so
 export LYNX_SDK_DIR=/path/to/lynx-sdk
 ```
 
@@ -77,11 +77,13 @@ The loaded runtime must export the `lynx_rust_*` shim symbols, such as
 `lynx_rust_view_set_frame`. These symbols keep the Rust ABI simple while the
 existing C++ exports can keep reference-parameter signatures.
 
-When building with Cargo, `build.rs` downloads the default runtime on macOS when
-neither variable is set, stores it under `target/lynx-engine-bridge-sdk`, and
-injects `LYNX_SDK_DIR` for tests and examples. Existing non-empty runtime files
-are reused. Set `LYNX_DOWNLOAD_RUNTIME=0` to disable the automatic download. On
-Linux, set `LYNX_RUNTIME_URL` or provide `LYNX_LIB_PATH` / `LYNX_SDK_DIR`.
+When building with Cargo, `build.rs` downloads the default runtime for supported
+targets when neither variable is set, stores it under
+`target/lynx-engine-bridge-sdk`, and injects `LYNX_SDK_DIR` for tests and
+examples. Existing non-empty runtime files are reused when they match the
+current runtime URL. The default artifacts are available for macOS arm64 and
+Linux x86_64. Set `LYNX_DOWNLOAD_RUNTIME=0` to disable the automatic download,
+or set `LYNX_RUNTIME_URL` to test another runtime artifact.
 
 ## macOS signing
 
@@ -90,8 +92,8 @@ so ordinary local tests do not need Developer ID signing.
 
 Cargo downloads and ad-hoc signs the runtime before building tests and examples.
 To refresh the downloaded artifact, remove
-`target/lynx-engine-bridge-sdk/lib/libLynx_clay.dylib` and rerun Cargo. Set
-`LYNX_RUNTIME_URL` to test another runtime artifact, or set
+`target/lynx-engine-bridge-sdk/lib/libLynx_clay.dylib` or
+`target/lynx-engine-bridge-sdk/lib/libLynx_clay.so` and rerun Cargo. Set
 `LYNX_SKIP_ADHOC_SIGN=1` if you need to debug signing locally.
 
 ## Validation
@@ -112,9 +114,9 @@ LYNX_SDK_DIR=/path/to/lynx-sdk \
 cargo test --locked --all-targets --all-features
 ```
 
-The CI job lets `build.rs` download the macOS runtime dylib into
-`target/lynx-engine-bridge-sdk`, ad-hoc sign it, inject `LYNX_SDK_DIR`, and run
-the same checks.
+The CI job runs on macOS and Linux. It lets `build.rs` download the matching
+runtime artifact into `target/lynx-engine-bridge-sdk`, ad-hoc sign it on macOS,
+inject `LYNX_SDK_DIR`, and run the same checks.
 
 The `lynx/tests/runtime.rs` integration test belongs to the library crate. It
 contains public API tests and runtime-backed tests. Runtime-backed tests fail
