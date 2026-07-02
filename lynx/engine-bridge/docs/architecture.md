@@ -81,27 +81,6 @@ runtime drive its Darwin/FML UI loop. The Rust queue-backed global UI runner is
 kept for focused task-runner experiments, but it does not drive every actor used
 by the GenUI React fixture.
 
-## Screenshot test workflow
-
-The screenshot test validates the real GenUI fixture output:
-
-1. The test requires a runtime configuration. On supported targets, `build.rs`
-   downloads the default runtime and injects `LYNX_SDK_DIR`; otherwise the test
-   fails instead of silently skipping.
-2. It runs the checked-in compiled bundle at
-   `packages/genui/ui-judge/tests/fixtures/react/.generated/main.lynx.bundle`.
-3. It copies `examples/headless/tests/fixtures/LynxResources.bundle` beside the
-   Cargo-built example binary. The macOS runtime resolves `lynx_core.js` through
-   the process main bundle.
-4. It launches `lynx-headless-example --native-ui-loop` with the bundle folder
-   and `src/assets` as asset roots.
-5. It decodes the rendered PNG and compares RGBA pixels with
-   `packages/genui/ui-judge/tests/fixtures/react/main.lynx.snapshot.png`,
-   allowing a small tolerance for runner-level antialiasing differences.
-
-Set `LYNX_UPDATE_REFERENCES=1` when you intentionally update the reference
-image. Rerun the same test without that environment variable before committing.
-
 ## Ownership and error boundaries
 
 Runtime objects are owned by RAII wrappers:

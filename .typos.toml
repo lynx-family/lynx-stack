@@ -9,7 +9,6 @@ extend-exclude = [
   "pnpm-lock.yaml",
   "biome.jsonc",
   "packages/web-platform/web-explorer/preinstalled/homepage.json",
-  "lynx/engine-bridge/examples/headless/tests/fixtures/LynxResources.bundle/**",
 ]
 
 [default]

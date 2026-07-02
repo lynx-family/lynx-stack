@@ -26,13 +26,6 @@ windowed APIs such as `NativeView`.
 - `lynx/` contains the Rust library crate.
 - `lynx/src/sys/` contains checked-in C ABI types and runtime symbol loading.
 - `examples/headless/` contains a software-rendering example that writes a PNG.
-- `examples/headless/tests/fixtures/LynxResources.bundle` contains the
-  `lynx_core.js` resource bundle needed by the macOS runtime during tests.
-- `../../packages/genui/ui-judge/tests/fixtures/react/.generated/main.lynx.bundle`
-  is the compiled React fixture bundle used by the headless rendering
-  comparison test.
-- `../../packages/genui/ui-judge/tests/fixtures/react/main.lynx.snapshot.png`
-  is the checked-in screenshot reference for that bundle.
 - `tools/runtime_build.rs` is included by package `build.rs` files so runtime
   setup, download, and ad-hoc signing stay consistent between the library crate
   and the headless example.
@@ -52,8 +45,7 @@ The bridge follows this runtime path:
 5. `HeadlessView` loads a template bundle, pumps renderer tasks, receives a
    software frame, and the headless example writes that frame to PNG.
 
-See `docs/architecture.md` for the module walkthrough and CI rendering
-workflow.
+See `docs/architecture.md` for the module walkthrough and CI workflow.
 
 ## Runtime loading
 
@@ -123,25 +115,6 @@ The `lynx/tests/runtime.rs` integration test belongs to the library crate. It
 contains public API tests and runtime-backed tests. Runtime-backed tests fail
 when no runtime is available, so keep `build.rs` and CI in sync. Keep this
 coverage in the library crate when moving or splitting the headless example.
-
-The headless example package also has a screenshot golden test. It runs the
-checked-in React fixture bundle from
-`packages/genui/ui-judge/tests/fixtures/react/.generated/main.lynx.bundle`,
-captures the software-rendered frame, and compares the decoded RGBA pixels
-against
-`packages/genui/ui-judge/tests/fixtures/react/main.lynx.snapshot.png` with a
-small tolerance for runner-level antialiasing differences:
-
-```sh
-cargo test --locked -p lynx-headless-example --test screenshot
-```
-
-Update the reference image intentionally with:
-
-```sh
-LYNX_UPDATE_REFERENCES=1 \
-cargo test --locked -p lynx-headless-example --test screenshot
-```
 
 ## Run the headless example
 

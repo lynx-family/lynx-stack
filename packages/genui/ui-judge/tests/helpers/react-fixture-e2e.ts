@@ -30,10 +30,6 @@ export const REACT_FIXTURE_DIST_DIR = resolve(
   '.generated',
 );
 export const REACT_BUNDLE_NAME = 'main.lynx.bundle';
-export const REACT_REFERENCE_SNAPSHOT_PATH = resolve(
-  REACT_FIXTURE_DIST_DIR,
-  'main.lynx.snapshot.png',
-);
 
 const CONTENT_TIMEOUT_MS = 30_000;
 const NAVIGATION_TIMEOUT_MS = 30_000;
