@@ -9,6 +9,7 @@ export const LifecycleConstant = {
   patchUpdate: 'rLynxChange',
   publishEvent: 'rLynxPublishEvent',
   updateMTRefInitValue: 'rLynxChangeRefInitValue',
+  prepareLazyBundleMTS: 'rLynxPrepareLazyBundleMTS',
 } as const;
 
 export type LifecycleConstant = (typeof LifecycleConstant)[keyof typeof LifecycleConstant];

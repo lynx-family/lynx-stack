@@ -32,6 +32,11 @@ export default function() {
               const promise = lynx.loadLazyBundle(
                 $RuntimeGlobals_publicPath$
                   + $RuntimeGlobals_lynxAsyncChunkIds$[chunkId],
+                // `lynx_acm` may be absent (e.g. a build that emits `lynx_aci`
+                // without the mode map); the loader treats a missing mode as
+                // `async`.
+                $RuntimeGlobals_lynxAsyncChunkMode$
+                  && $RuntimeGlobals_lynxAsyncChunkMode$[chunkId],
               ).then((exports) => {
                 installChunk(exports);
                 return exports;

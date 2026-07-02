@@ -40,6 +40,12 @@ declare global {
    * environment variable `REACT_DEVTOOL=true`.
    */
   let __REACT_DEVTOOL__: boolean | undefined;
+  /**
+   * Which lazy bundle fetcher the build is wired up to. `'FetchBundle'`
+   * enables the `lynx.fetchBundle`-based path (and `import(..., { with: { mode } })`
+   * mode hints); `'QueryComponent'` is the legacy `lynx.QueryComponent` path.
+   */
+  let __LAZY_BUNDLE_FETCHER__: 'FetchBundle' | 'QueryComponent';
 }
 
 /**

@@ -115,6 +115,24 @@ fn is_import_call_with_type(call_expr: &CallExpr) -> (bool, bool, Value) {
   }
 }
 
+fn import_call_has_with_key(call_expr: &CallExpr, key: &str) -> bool {
+  match &call_expr.callee {
+    Callee::Import(_) if call_expr.args.len() >= 2 => match &*call_expr.args[1].expr {
+      Expr::Object(object) => {
+        let (is_lit, _) = calc_literal_cost(object, false);
+        if is_lit {
+          let with = jsonify(Expr::Object(object.clone()));
+          with.pointer(&format!("/with/{key}")).is_some()
+        } else {
+          false
+        }
+      }
+      _ => false,
+    },
+    _ => false,
+  }
+}
+
 fn create_import_decl(name: &str) -> ModuleItem {
   ModuleItem::ModuleDecl(ModuleDecl::Import(ImportDecl {
     span: DUMMY_SP,
@@ -168,6 +186,10 @@ where
 
     let (is_import_call_lit, is_import_call_str_lit, str_lit) = is_import_call_str_lit(call_expr);
     let (has_option, is_import_call_with_type, _with_type) = is_import_call_with_type(call_expr);
+    // FetchBundle lazy bundles accept `{ with: { mode: 'sync' | 'async' } }`
+    // (read at build time via the dependency's import attributes), so a `mode`
+    // option is valid on its own without `type`.
+    let is_import_call_with_mode = import_call_has_with_key(call_expr, "mode");
 
     // TODO: reject dynamic import without `{ with: { type: "component" } }`
 
@@ -194,7 +216,7 @@ where
       || str_lit.starts_with("//");
 
     if is_import_call_str_lit && !is_explicitly_external {
-      if has_option && !is_import_call_with_type {
+      if has_option && !is_import_call_with_type && !is_import_call_with_mode {
         HANDLER.with(|handler| {
           handler
             .struct_span_err(
@@ -324,6 +346,12 @@ mod tests {
       await import("https://www/a.js", { with: { type: "component" } });
       await import(url, { with: { type: "component" } });
       await import(url+"?v=1.0", { with: { type: "component" } });
+
+      await import("./index.js", { with: { mode: "sync" } });
+      await import("./index.js", { with: { mode: "async" } });
+      await import("ftp://www/a.js", { with: { mode: "sync" } });
+      await import("https://www/a.js", { with: { mode: "async" } });
+      await import("./index.js", { with: { type: "component", mode: "sync" } });
     })();
     "#
   );

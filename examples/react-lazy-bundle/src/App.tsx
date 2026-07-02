@@ -2,7 +2,32 @@ import { Suspense, lazy, useEffect } from '@lynx-js/react';
 
 import './App.css';
 
-const LazyComponent = lazy(() => import('./LazyComponent.js'));
+let LazyComponentDemo: () => JSX.Element;
+if (__LAZY_BUNDLE_FETCHER__ === 'FetchBundle') {
+  const LazyComponentSync = lazy(() =>
+    import('./LazyComponentSync.js', { with: { mode: 'sync' } })
+  );
+  const LazyComponentAsync = lazy(() =>
+    import('./LazyComponentAsync.js', { with: { mode: 'async' } })
+  );
+  LazyComponentDemo = () => (
+    <>
+      <Suspense fallback={<text>Loading sync...</text>}>
+        <LazyComponentSync />
+      </Suspense>
+      <Suspense fallback={<text>Loading async...</text>}>
+        <LazyComponentAsync />
+      </Suspense>
+    </>
+  );
+} else {
+  const LazyComponent = lazy(() => import('./LazyComponent.js'));
+  LazyComponentDemo = () => (
+    <Suspense fallback={<text>Loading...</text>}>
+      <LazyComponent />
+    </Suspense>
+  );
+}
 
 export function App() {
   useEffect(() => {
@@ -27,9 +52,7 @@ export function App() {
           <text className='Subtitle'>on Lynx</text>
         </view>
         <view className='Suspense'>
-          <Suspense fallback={<text>Loading...</text>}>
-            <LazyComponent />
-          </Suspense>
+          <LazyComponentDemo />
         </view>
       </view>
     </view>

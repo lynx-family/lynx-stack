@@ -580,6 +580,9 @@ importers:
       '@types/react':
         specifier: ^18.3.28
         version: 18.3.28
+      cross-env:
+        specifier: ^7.0.3
+        version: 7.0.3
 
   examples/react-lazy-bundle-standalone:
     dependencies:
@@ -605,6 +608,9 @@ importers:
       '@types/react':
         specifier: ^18.3.28
         version: 18.3.28
+      cross-env:
+        specifier: ^7.0.3
+        version: 7.0.3
 
   examples/react-main-thread-function:
     dependencies:
@@ -2436,6 +2442,9 @@ importers:
       css-loader:
         specifier: ^7.1.4
         version: 7.1.4(@rspack/core@2.0.8(@swc/helpers@0.5.23))(webpack@5.105.2(lightningcss@1.31.1))
+      webpack:
+        specifier: ^5.99.9
+        version: 5.105.2(lightningcss@1.31.1)
 
   packages/webpack/test-tools:
     devDependencies:
