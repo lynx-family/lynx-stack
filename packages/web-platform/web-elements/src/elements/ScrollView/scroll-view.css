@@ -86,13 +86,43 @@ scroll-view[scroll-orientation="horizontal"][enable-scroll="false"] {
     https://chromestatus.com/feature/6752840701706240 It notes that this feature is actively implementing in webkit and gecko.
     chrome 115, firefox no, safari no
   */
+  @keyframes scrollViewTopFading {
+    0% {
+      box-shadow: transparent 0px 0px 0px 0px;
+    }
+    5% {
+      box-shadow: var(--scroll-view-bg-color) 0px 0px
+        var(--scroll-view-fading-edge-length)
+        var(--scroll-view-fading-edge-length);
+    }
+    100% {
+      box-shadow: var(--scroll-view-bg-color) 0px 0px
+        var(--scroll-view-fading-edge-length)
+        var(--scroll-view-fading-edge-length);
+    }
+  }
+  @keyframes scrollViewBotFading {
+    0% {
+      box-shadow: var(--scroll-view-bg-color) 0px 0px
+        var(--scroll-view-fading-edge-length)
+        var(--scroll-view-fading-edge-length);
+    }
+    95% {
+      box-shadow: var(--scroll-view-bg-color) 0px 0px
+        var(--scroll-view-fading-edge-length)
+        var(--scroll-view-fading-edge-length);
+    }
+    100% {
+      box-shadow: transparent 0px 0px 0px 0px;
+    }
+  }
   scroll-view[fading-edge-length]::part(top-fade-mask) {
     top: 0;
-    animation-name: topFading;
+    animation-name: scrollViewTopFading;
   }
   scroll-view[fading-edge-length]::part(bot-fade-mask) {
     bottom: 0;
-    animation-name: botFading;
+    animation-name: scrollViewBotFading;
   }
   scroll-view[fading-edge-length]::part(top-fade-mask),
   scroll-view[fading-edge-length]::part(bot-fade-mask) {
