@@ -274,6 +274,13 @@ test.describe('web-elements test suite', () => {
       await gotoWebComponentPage(page, title);
       await diffScreenShot(page, title, 'index');
     });
+    test('x-text/avatar-text-inline', async ({ page }, { title }) => {
+      await gotoWebComponentPage(page, title);
+      await wait(100);
+      await expect(
+        page.locator('#target'),
+      ).not.toHaveAttribute('x-show-inline-truncation', '');
+    });
 
     test('x-text/text-overflow-inherit', async ({ page }, { title }) => {
       await gotoWebComponentPage(page, title);
