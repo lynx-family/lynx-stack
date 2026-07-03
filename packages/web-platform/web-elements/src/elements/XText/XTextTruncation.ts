@@ -614,10 +614,7 @@ class LazyNodesList {
   #nodeCache: (Text | Element)[] = [];
   #treeWalker: TreeWalker;
   constructor(dom: HTMLElement) {
-    const isInAtomicView = (node: Node) => {
-      const parentElement = node.nodeType === Node.ELEMENT_NODE
-        ? (node as Element).parentElement
-        : node.parentElement;
+    const isInAtomicView = (parentElement: Element | null) => {
       for (
         let element = parentElement;
         element && element !== dom;
@@ -633,7 +630,7 @@ class LazyNodesList {
       dom,
       NodeFilter.SHOW_TEXT | NodeFilter.SHOW_ELEMENT,
       (node: Node) => {
-        if (isInAtomicView(node)) {
+        if (isInAtomicView(node.parentElement)) {
           return NodeFilter.FILTER_REJECT;
         }
         if (node.nodeType === Node.ELEMENT_NODE) {
