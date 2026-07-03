@@ -217,7 +217,7 @@
       "matchPackageNames": [
         "mcr.microsoft.com/playwright",
       ],
-      "versioning": "regex:^v(?<major>\\d+)\\.(?<minor>\\d+)\\.(?<patch>\\d+)-noble$",
+      "versioning": "regex:^v(?<major>\\d+)\\.(?<minor>\\d+)\\.(?<patch>\\d+)-resolute$",
     },
   ],
 
