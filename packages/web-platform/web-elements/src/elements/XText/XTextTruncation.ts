@@ -614,22 +614,27 @@ class LazyNodesList {
   #nodeCache: (Text | Element)[] = [];
   #treeWalker: TreeWalker;
   constructor(dom: HTMLElement) {
+    const isInAtomicView = (node: Node) => {
+      const parentElement = node.nodeType === Node.ELEMENT_NODE
+        ? (node as Element).parentElement
+        : node.parentElement;
+      for (
+        let element = parentElement;
+        element && element !== dom;
+        element = element.parentElement
+      ) {
+        if (element.tagName === 'X-VIEW') {
+          return true;
+        }
+      }
+      return false;
+    };
     this.#treeWalker = document.createTreeWalker(
       dom,
       NodeFilter.SHOW_TEXT | NodeFilter.SHOW_ELEMENT,
       (node: Node) => {
-        const parentElement = node.nodeType === Node.ELEMENT_NODE
-          ? (node as Element).parentElement
-          : node.parentElement;
-        for (
-          let element = parentElement;
-          element && element !== dom;
-          element = element.parentElement
-        ) {
-          // x-view is measured as one inline box.
-          if (element.tagName === 'X-VIEW') {
-            return NodeFilter.FILTER_REJECT;
-          }
+        if (isInAtomicView(node)) {
+          return NodeFilter.FILTER_REJECT;
         }
         if (node.nodeType === Node.ELEMENT_NODE) {
           const tagName = (node as Element).tagName;
