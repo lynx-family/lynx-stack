@@ -34,13 +34,34 @@ export interface PlatformInfo {
   'recyclable'?: boolean;
 }
 
+function extractListItemPlatformInfo(value: unknown): PlatformInfo {
+  if (value && typeof value === 'object') {
+    const object = value as Record<string, unknown>;
+    const result: Record<string, unknown> = {};
+    for (const key in object) {
+      if (platformInfoAttributes.has(key)) {
+        result[key] = object[key];
+      }
+    }
+    return result as PlatformInfo;
+  }
+  return value as PlatformInfo;
+}
+
+function getListItemPlatformInfoFromIndexedValue(value: unknown, isSpreadValue = false): PlatformInfo {
+  if (isSpreadValue || (value && typeof value === 'object' && '__spread' in value)) {
+    return extractListItemPlatformInfo(value);
+  }
+  return value as PlatformInfo;
+}
+
 function updateListItemPlatformInfo(
   ctx: SnapshotInstance,
   index: number,
   oldValue: any,
   elementIndex: number,
 ): void {
-  const newValue = ctx.__listItemPlatformInfo = ctx.__values![index] as PlatformInfo;
+  const newValue = ctx.__listItemPlatformInfo = getListItemPlatformInfoFromIndexedValue(ctx.__values![index]);
 
   if (__pendingListUpdates.values) {
     const list = ctx.parentNode;
@@ -67,4 +88,9 @@ function updateListItemPlatformInfo(
   }
 }
 
-export { updateListItemPlatformInfo, platformInfoAttributes };
+export {
+  updateListItemPlatformInfo,
+  platformInfoAttributes,
+  extractListItemPlatformInfo,
+  getListItemPlatformInfoFromIndexedValue,
+};

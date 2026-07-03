@@ -113,7 +113,7 @@ pub struct UISourceMapRecord {
 #[derive(Debug)]
 pub enum DynamicPart {
   Attr(Expr, i32, AttrName),
-  Spread(Expr, i32),
+  Spread(Expr, i32, bool),
   Slot(Expr, i32),
   ListSlot(Expr, i32),
 }
@@ -235,7 +235,7 @@ impl DynamicPart {
             ns: Expr = Expr::Lit(Lit::Str(ns.clone().into())),
           ),
         },
-        DynamicPart::Spread(_, element_index) => quote!(
+        DynamicPart::Spread(_, element_index, _) => quote!(
           "(snapshot, index, oldValue) => $runtime_id.updateSpread(snapshot, index, oldValue, $element_index)" as Expr,
           runtime_id: Expr = runtime_id.clone(),
           element_index: Expr = i32_to_expr(element_index)
@@ -598,7 +598,8 @@ where
           _ => panic!("unknown node"),
         });
 
-      if jsx_is_list_item(n) {
+      let is_list_item = jsx_is_list_item(n);
+      if is_list_item {
         if has_spread_element {
         } else {
           let mut list_item_platform_info: Vec<JSXAttr> = vec![];
@@ -684,6 +685,7 @@ where
         self.dynamic_parts.push(DynamicPart::Spread(
           Expr::Object(spread_obj),
           self.element_index,
+          is_list_item,
         ));
       } else {
         let el = Expr::Ident(el.clone());
@@ -1370,14 +1372,16 @@ where
       .dynamic_parts
       .into_iter()
       .partition(|dynamic_part| match dynamic_part {
-        DynamicPart::Attr(_, _, _) | DynamicPart::Spread(_, _) => true,
+        DynamicPart::Attr(_, _, _) | DynamicPart::Spread(_, _, _) => true,
         DynamicPart::Slot(_, _) | DynamicPart::ListSlot(_, _) => false,
       });
 
     dynamic_part_attr.into_iter().for_each(|dynamic_part| {
       match &dynamic_part {
-        DynamicPart::Attr(_, _, _) | DynamicPart::Spread(_, _) => {
-          if let DynamicPart::Attr(_, _, AttrName::Ref) | DynamicPart::Spread(_, _) = dynamic_part {
+        DynamicPart::Attr(_, _, _) | DynamicPart::Spread(_, _, _) => {
+          if let DynamicPart::Attr(_, _, AttrName::Ref) | DynamicPart::Spread(_, _, _) =
+            dynamic_part
+          {
             snapshot_refs_and_spread_index.push(Some(
               Expr::Lit(Lit::Num(snapshot_dynamic_part_def.len().into())).into(),
             ));
@@ -1424,7 +1428,10 @@ where
           }));
           snapshot_values_has_attr = true;
         }
-        DynamicPart::Spread(value, _) => {
+        DynamicPart::Spread(value, _, is_list_item) => {
+          if is_list_item {
+            list_item_platform_info_index = Some(snapshot_values.len() as i32);
+          }
           snapshot_values.push(Some(ExprOrSpread {
             spread: None,
             expr: Box::new(value),
@@ -1450,7 +1457,7 @@ where
           .into_iter()
           .for_each(|dynamic_part| match dynamic_part {
             DynamicPart::Attr(_, _, _) => {}
-            DynamicPart::Spread(_, _) => {}
+            DynamicPart::Spread(_, _, _) => {}
             DynamicPart::ListSlot(expr, element_index) => {
               snapshot_children.push(expr);
               snapshot_slot_def.push(Some(ExprOrSpread {
@@ -1866,6 +1873,41 @@ mod tests {
       <view id={getViewId()}>
         <list-item item-key={getItemKey()} />
       </view>
+    );
+    "#
+  );
+
+  test!(
+    module,
+    Syntax::Es(EsSyntax {
+      jsx: true,
+      ..Default::default()
+    }),
+    |t| {
+      let unresolved_mark = Mark::new();
+      let top_level_mark = Mark::new();
+
+      (
+        resolver(unresolved_mark, top_level_mark, true),
+        visit_mut_pass(JSXTransformer::new(
+          super::JSXTransformerConfig {
+            preserve_jsx: true,
+            target: TransformTarget::MIXED,
+            ..Default::default()
+          },
+          Some(t.comments.clone()),
+          TransformMode::Test,
+          Some(t.cm.clone()),
+        )),
+      )
+    },
+    should_emit_list_item_platform_info_marker_for_spread_props,
+    // Input codes
+    r#"
+    const node = (
+      <list>
+        <list-item {...getProps()} />
+      </list>
     );
     "#
   );

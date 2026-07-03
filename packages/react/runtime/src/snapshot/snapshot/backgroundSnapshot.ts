@@ -13,6 +13,7 @@ import type { Worklet } from '@lynx-js/react/worklet-runtime/bindings';
 import { createCloneSnapshot, createRuntimeSnapshot, snapshotManager } from './definition.js';
 import type { Snapshot } from './definition.js';
 import { DynamicPartType } from './dynamicPartType.js';
+import { getListItemPlatformInfoFromIndexedValue } from './platformInfo.js';
 import type { PlatformInfo } from './platformInfo.js';
 import { reconstructInstanceTree } from './reconstructInstanceTree.js';
 import { clearQueuedRefs, clearRef, getRefFromValue, queueRefAttrUpdate } from './ref.js';
@@ -432,7 +433,11 @@ export class BackgroundSnapshotInstance {
     if (this.__listItemPlatformInfoIndex === undefined || !this.__values) {
       return;
     }
-    this.__listItemPlatformInfo = this.__values[this.__listItemPlatformInfoIndex] as PlatformInfo;
+    const index = this.__listItemPlatformInfoIndex;
+    this.__listItemPlatformInfo = getListItemPlatformInfoFromIndexedValue(
+      this.__values[index],
+      this.__snapshot_def.refAndSpreadIndexes?.includes(index),
+    );
   }
 
   private setAttributeImpl(newValue: unknown, oldValue: unknown, index: number): {
