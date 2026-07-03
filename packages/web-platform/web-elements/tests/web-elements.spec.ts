@@ -276,7 +276,25 @@ test.describe('web-elements test suite', () => {
     });
     test('x-text/avatar-text-inline', async ({ page }, { title }) => {
       await gotoWebComponentPage(page, title);
-      await wait(100);
+      await page.waitForFunction(() => {
+        const target = document.querySelector('#target');
+        const innerBox = target?.shadowRoot?.querySelector(
+          '#inner-box',
+        ) as HTMLElement | undefined;
+        const avatarSlot = document.querySelector('.avatar-slot');
+        const avatarRect = avatarSlot?.getBoundingClientRect();
+        return innerBox?.style.webkitLineClamp === '2'
+          && !!avatarRect?.width
+          && !!avatarRect.height;
+      });
+      await page.evaluate(
+        () =>
+          new Promise<void>((resolve) => {
+            requestAnimationFrame(() => {
+              resolve();
+            });
+          }),
+      );
       await expect(
         page.locator('#target'),
       ).not.toHaveAttribute('x-show-inline-truncation', '');
