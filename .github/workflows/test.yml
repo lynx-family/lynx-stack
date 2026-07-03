@@ -442,7 +442,7 @@ jobs:
       - web-core-e2e
       - website
     if: always()
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-26.04
     name: Done
     steps:
       - run: exit 1

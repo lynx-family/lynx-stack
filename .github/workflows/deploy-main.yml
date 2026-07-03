@@ -19,7 +19,7 @@ env:
   NPM_CONFIG_PROVENANCE: true
 jobs:
   build:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-26.04
     timeout-minutes: 30
     if: github.repository == 'lynx-family/lynx-stack'
     permissions:
@@ -136,7 +136,7 @@ jobs:
   publish:
     timeout-minutes: 30
     needs: build
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-26.04
     if: github.repository == 'lynx-family/lynx-stack'
     concurrency:
       group: ${{ github.workflow }}-publish-${{ github.ref }}
@@ -187,7 +187,7 @@ jobs:
   canary-publish:
     timeout-minutes: 30
     needs: build
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-26.04
     if: github.repository == 'lynx-family/lynx-stack'
     environment: npm
     permissions:
@@ -240,7 +240,7 @@ jobs:
     timeout-minutes: 10
     needs: website-build
     if: github.repository == 'lynx-family/lynx-stack'
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-26.04
     # Grant GITHUB_TOKEN the permissions required to make a Pages deployment
     permissions:
       pages: write # to deploy to Pages
