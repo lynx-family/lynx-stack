@@ -262,6 +262,17 @@ pub struct lynx_windowless_ui_task_runner_config_t {
   pub post_task_callback: Option<lynx_windowless_ui_task_runner_post_task_callback>,
 }
 
+impl Default for lynx_windowless_ui_task_runner_config_t {
+  fn default() -> Self {
+    Self {
+      struct_size: std::mem::size_of::<Self>(),
+      user_data: std::ptr::null_mut(),
+      runs_on_current_thread_callback: None,
+      post_task_callback: None,
+    }
+  }
+}
+
 pub type napi_finalize = unsafe extern "C" fn(env: napi_env, data: *mut c_void, hint: *mut c_void);
 pub type napi_module_creator = unsafe extern "C" fn(
   env: napi_env,

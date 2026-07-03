@@ -337,23 +337,6 @@ impl LoadedLibrary {
 
   fn from_dynamic_library(library: DynamicLibrary) -> Result<Self> {
     let path = library.path.clone();
-    let (
-      lynx_rust_view_builder_set_screen_size,
-      lynx_rust_view_builder_set_frame,
-      lynx_rust_view_builder_set_font_scale,
-      lynx_rust_view_update_screen_metrics,
-      lynx_rust_view_set_frame,
-      lynx_rust_view_set_font_scale,
-    ) = {
-      (
-        load_symbol!(library, lynx_rust_view_builder_set_screen_size),
-        load_symbol!(library, lynx_rust_view_builder_set_frame),
-        load_symbol!(library, lynx_rust_view_builder_set_font_scale),
-        load_symbol!(library, lynx_rust_view_update_screen_metrics),
-        load_symbol!(library, lynx_rust_view_set_frame),
-        load_symbol!(library, lynx_rust_view_set_font_scale),
-      )
-    };
     Ok(Self {
       lynx_env_get_sdk_version: load_symbol!(library, lynx_env_get_sdk_version),
       lynx_env_set_icu_data_path: load_symbol!(library, lynx_env_set_icu_data_path),
@@ -375,9 +358,15 @@ impl LoadedLibrary {
       lynx_group_release: load_symbol!(library, lynx_group_release),
 
       lynx_view_builder_create: load_symbol!(library, lynx_view_builder_create),
-      lynx_rust_view_builder_set_screen_size,
-      lynx_rust_view_builder_set_frame,
-      lynx_rust_view_builder_set_font_scale,
+      lynx_rust_view_builder_set_screen_size: load_symbol!(
+        library,
+        lynx_rust_view_builder_set_screen_size
+      ),
+      lynx_rust_view_builder_set_frame: load_symbol!(library, lynx_rust_view_builder_set_frame),
+      lynx_rust_view_builder_set_font_scale: load_symbol!(
+        library,
+        lynx_rust_view_builder_set_font_scale
+      ),
       lynx_view_builder_set_icu_data_path: load_symbol!(
         library,
         lynx_view_builder_set_icu_data_path
@@ -407,9 +396,12 @@ impl LoadedLibrary {
       lynx_view_update_data: load_symbol!(library, lynx_view_update_data),
       lynx_view_reload_template: load_symbol!(library, lynx_view_reload_template),
       lynx_view_send_global_event: load_symbol!(library, lynx_view_send_global_event),
-      lynx_rust_view_update_screen_metrics,
-      lynx_rust_view_set_frame,
-      lynx_rust_view_set_font_scale,
+      lynx_rust_view_update_screen_metrics: load_symbol!(
+        library,
+        lynx_rust_view_update_screen_metrics
+      ),
+      lynx_rust_view_set_frame: load_symbol!(library, lynx_rust_view_set_frame),
+      lynx_rust_view_set_font_scale: load_symbol!(library, lynx_rust_view_set_font_scale),
       lynx_view_enter_foreground: load_symbol!(library, lynx_view_enter_foreground),
       lynx_view_enter_background: load_symbol!(library, lynx_view_enter_background),
 

@@ -3,6 +3,7 @@
 // LICENSE file in the root directory of this source tree.
 
 use fs4::FileExt;
+use sha2::{Digest, Sha256};
 use std::env;
 use std::ffi::OsStr;
 use std::fs::{self, File, OpenOptions};
@@ -14,15 +15,20 @@ const MACOS_AARCH64_RUNTIME_URL: &str = concat!(
   "https://github.com/PupilTong/playground/releases/download/",
   "lynx-runtime-clay-manual-0.0.2/macos-arm64-libLynx_clay.dylib"
 );
+const MACOS_AARCH64_RUNTIME_SHA256: &str =
+  "7d215f2f9e56f395fbcaa72d37f8bdd89d5df3c139bc7224e4401090cb875983";
 const LINUX_X86_64_RUNTIME_URL: &str = concat!(
   "https://github.com/PupilTong/playground/releases/download/",
   "lynx-runtime-clay-manual-0.0.2/linux-amd64-libLynx_clay.so"
 );
+const LINUX_X86_64_RUNTIME_SHA256: &str =
+  "908dc407b4e0b11a5c44e6aa6510f138803fdeb54af791cfe52ff3b42f27401c";
 
 fn main() {
   println!("cargo:rerun-if-env-changed=LYNX_LIB_PATH");
   println!("cargo:rerun-if-env-changed=LYNX_SDK_DIR");
   println!("cargo:rerun-if-env-changed=LYNX_RUNTIME_URL");
+  println!("cargo:rerun-if-env-changed=LYNX_RUNTIME_SHA256");
   println!("cargo:rerun-if-env-changed=LYNX_DOWNLOAD_RUNTIME");
   println!("cargo:rerun-if-env-changed=LYNX_SKIP_ADHOC_SIGN");
 
@@ -48,7 +54,9 @@ fn main() {
 
   let sdk_dir = root.join("target/lynx-engine-bridge-sdk");
   let runtime_path = sdk_dir.join("lib").join(library_name);
-  prepare_runtime(&sdk_dir, &runtime_path, runtime_url());
+  let url = runtime_url();
+  let sha256 = runtime_sha256(&url);
+  prepare_runtime(&sdk_dir, &runtime_path, &url, &sha256);
 
   emit_runtime_env("LYNX_SDK_DIR", sdk_dir);
 }
@@ -88,6 +96,17 @@ fn runtime_url() -> String {
   );
 }
 
+fn runtime_sha256(url: &str) -> String {
+  if let Some(sha256) = env::var_os("LYNX_RUNTIME_SHA256") {
+    return sha256.to_string_lossy().into_owned();
+  }
+  match url {
+    MACOS_AARCH64_RUNTIME_URL => MACOS_AARCH64_RUNTIME_SHA256.to_string(),
+    LINUX_X86_64_RUNTIME_URL => LINUX_X86_64_RUNTIME_SHA256.to_string(),
+    _ => panic!("LYNX_RUNTIME_SHA256 must be set when LYNX_RUNTIME_URL is customized"),
+  }
+}
+
 fn default_runtime_url() -> Option<&'static str> {
   match (
     env::var("CARGO_CFG_TARGET_OS").as_deref(),
@@ -105,7 +124,7 @@ fn target_triple_name() -> String {
   format!("{arch}-{os}")
 }
 
-fn prepare_runtime(sdk_dir: &Path, runtime_path: &Path, url: String) {
+fn prepare_runtime(sdk_dir: &Path, runtime_path: &Path, url: &str, sha256: &str) {
   fs::create_dir_all(sdk_dir).unwrap_or_else(|error| {
     panic!(
       "failed to create Lynx runtime SDK directory {}: {error}",
@@ -116,17 +135,18 @@ fn prepare_runtime(sdk_dir: &Path, runtime_path: &Path, url: String) {
   let lock_path = sdk_dir.join(".download.lock");
   let _lock = RuntimeDownloadLock::acquire(&lock_path);
 
-  if !has_existing_runtime(runtime_path, &url) {
-    download_runtime(&url, runtime_path);
+  if !has_existing_runtime(runtime_path, url, sha256) {
+    download_runtime(url, runtime_path, sha256);
   }
   adhoc_sign_if_needed(runtime_path);
 }
 
-fn has_existing_runtime(runtime_path: &Path, url: &str) -> bool {
+fn has_existing_runtime(runtime_path: &Path, url: &str, sha256: &str) -> bool {
   match fs::metadata(runtime_path) {
     Ok(metadata)
       if metadata.is_file() && metadata.len() > 0 && runtime_url_matches(runtime_path, url) =>
     {
+      verify_runtime_checksum(runtime_path, sha256);
       eprintln!("Using existing Lynx runtime at {}", runtime_path.display());
       true
     }
@@ -134,7 +154,7 @@ fn has_existing_runtime(runtime_path: &Path, url: &str) -> bool {
   }
 }
 
-fn download_runtime(url: &str, runtime_path: &Path) {
+fn download_runtime(url: &str, runtime_path: &Path, sha256: &str) {
   let parent = runtime_path
     .parent()
     .expect("runtime path has parent directory");
@@ -170,6 +190,7 @@ fn download_runtime(url: &str, runtime_path: &Path) {
       tmp_file.path().display()
     )
   });
+  verify_runtime_checksum(tmp_file.path(), sha256);
   tmp_file.persist(runtime_path).unwrap_or_else(|error| {
     panic!(
       "failed to move downloaded Lynx runtime to {}: {}",
@@ -178,6 +199,35 @@ fn download_runtime(url: &str, runtime_path: &Path) {
     )
   });
   write_runtime_url_marker(runtime_path, url);
+}
+
+fn verify_runtime_checksum(runtime_path: &Path, expected_sha256: &str) {
+  let actual_sha256 = file_sha256(runtime_path);
+  if actual_sha256 != expected_sha256.trim().to_ascii_lowercase() {
+    panic!(
+      "Lynx runtime checksum mismatch for {}: expected {}, got {}",
+      runtime_path.display(),
+      expected_sha256,
+      actual_sha256
+    );
+  }
+}
+
+fn file_sha256(path: &Path) -> String {
+  let mut file = File::open(path).unwrap_or_else(|error| {
+    panic!(
+      "failed to open Lynx runtime for checksum {}: {error}",
+      path.display()
+    )
+  });
+  let mut hasher = Sha256::new();
+  io::copy(&mut file, &mut hasher).unwrap_or_else(|error| {
+    panic!(
+      "failed to read Lynx runtime for checksum {}: {error}",
+      path.display()
+    )
+  });
+  format!("{:x}", hasher.finalize())
 }
 
 fn runtime_url_matches(runtime_path: &Path, url: &str) -> bool {

@@ -101,8 +101,8 @@ struct ResourceFetcherContext {
   fetcher: Mutex<Box<dyn ResourceFetcher>>,
 }
 
-fn contexts() -> &'static Mutex<HashMap<usize, usize>> {
-  static CONTEXTS: OnceLock<Mutex<HashMap<usize, usize>>> = OnceLock::new();
+fn contexts() -> &'static Mutex<HashMap<usize, Arc<ResourceFetcherContext>>> {
+  static CONTEXTS: OnceLock<Mutex<HashMap<usize, Arc<ResourceFetcherContext>>>> = OnceLock::new();
   CONTEXTS.get_or_init(|| Mutex::new(HashMap::new()))
 }
 
@@ -114,20 +114,20 @@ pub struct GenericResourceFetcher {
 impl GenericResourceFetcher {
   pub fn new(fetch_env: &Env, fetcher: impl ResourceFetcher) -> Result<Self> {
     let sys = fetch_env.sys().clone();
-    let context = Box::new(ResourceFetcherContext {
+    let context = Arc::new(ResourceFetcherContext {
       sys: sys.clone(),
       fetcher: Mutex::new(Box::new(fetcher)),
     });
-    let context_ptr = Box::into_raw(context);
+    let context_ptr = Arc::into_raw(context.clone());
     let raw = unsafe {
       (sys.lynx_generic_resource_fetcher_create_with_finalizer)(
-        context_ptr.cast::<c_void>(),
+        context_ptr as *mut c_void,
         Some(resource_fetcher_finalizer),
       )
     };
     if raw.is_null() {
       unsafe {
-        drop(Box::from_raw(context_ptr));
+        drop(Arc::from_raw(context_ptr));
       }
       return Err(Error::NullPointer {
         operation: "create generic resource fetcher",
@@ -137,7 +137,7 @@ impl GenericResourceFetcher {
     contexts()
       .lock()
       .expect("resource fetcher context lock poisoned")
-      .insert(raw as usize, context_ptr as usize);
+      .insert(raw as usize, context);
 
     unsafe {
       (sys.lynx_generic_resource_fetcher_bind_fetch_resource)(raw, Some(fetch_resource));
@@ -168,13 +168,15 @@ unsafe extern "C" fn resource_fetcher_finalizer(
   fetcher: *mut sys::lynx_generic_resource_fetcher_t,
   user_data: *mut c_void,
 ) {
-  contexts()
-    .lock()
-    .expect("resource fetcher context lock poisoned")
-    .remove(&(fetcher as usize));
-  if !user_data.is_null() {
-    drop(Box::from_raw(user_data.cast::<ResourceFetcherContext>()));
-  }
+  let _ = catch_unwind(AssertUnwindSafe(|| {
+    contexts()
+      .lock()
+      .expect("resource fetcher context lock poisoned")
+      .remove(&(fetcher as usize));
+    if !user_data.is_null() {
+      drop(Arc::from_raw(user_data.cast::<ResourceFetcherContext>()));
+    }
+  }));
 }
 
 unsafe extern "C" fn fetch_resource(
@@ -214,10 +216,9 @@ unsafe fn complete_fetch(
   path_only: bool,
 ) {
   let Some(context) = context_for(fetcher) else {
-    release_request_response(fetcher, request, response);
     return;
   };
-  let request_info = read_request(context, request);
+  let request_info = read_request(&context, request);
   let outcome = catch_unwind(AssertUnwindSafe(|| {
     let mut fetcher = context
       .fetcher
@@ -230,19 +231,18 @@ unsafe fn complete_fetch(
     }
   }))
   .unwrap_or_else(|_| FetchResponse::error(-1, "resource fetcher panicked"));
-  write_response(context, response, outcome);
-  release_request_response(fetcher, request, response);
+  write_response(&context, response, outcome);
+  release_request_response(&context, request, response);
 }
 
 unsafe fn context_for(
   fetcher: *mut sys::lynx_generic_resource_fetcher_t,
-) -> Option<&'static ResourceFetcherContext> {
-  let context = contexts()
+) -> Option<Arc<ResourceFetcherContext>> {
+  contexts()
     .lock()
     .expect("resource fetcher context lock poisoned")
     .get(&(fetcher as usize))
-    .copied()?;
-  Some(&*(context as *const ResourceFetcherContext))
+    .cloned()
 }
 
 unsafe fn read_request(
@@ -284,18 +284,16 @@ unsafe fn write_response(
 }
 
 unsafe fn release_request_response(
-  fetcher: *mut sys::lynx_generic_resource_fetcher_t,
+  context: &ResourceFetcherContext,
   request: *mut sys::lynx_resource_request_t,
   response: *mut sys::lynx_resource_response_t,
 ) {
-  if let Some(context) = context_for(fetcher) {
-    if !response.is_null() {
-      (context.sys.lynx_resource_response_callback)(response);
-      (context.sys.lynx_resource_response_release)(response);
-    }
-    if !request.is_null() {
-      (context.sys.lynx_resource_request_release)(request);
-    }
+  if !response.is_null() {
+    (context.sys.lynx_resource_response_callback)(response);
+    (context.sys.lynx_resource_response_release)(response);
+  }
+  if !request.is_null() {
+    (context.sys.lynx_resource_request_release)(request);
   }
 }
 

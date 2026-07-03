@@ -13,5 +13,6 @@ thiserror = "2.0.18"
 
 [build-dependencies]
 fs4 = "1.1.0"
+sha2 = { workspace = true }
 tempfile = "3.27.0"
 ureq = "3.3.0"

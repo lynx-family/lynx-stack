@@ -45,7 +45,7 @@ impl SoftwareFrame {
   /// frame, unless their embedder contract explicitly extends that lifetime.
   pub unsafe fn bytes<'a>(self) -> Option<&'a [u8]> {
     let len = self.byte_len()?;
-    if self.allocation.is_null() {
+    if self.allocation.is_null() || len > isize::MAX as usize {
       return None;
     }
     Some(std::slice::from_raw_parts(
@@ -127,8 +127,8 @@ struct RendererContext {
   clipboard_return: Mutex<Option<CString>>,
 }
 
-fn renderer_contexts() -> &'static Mutex<HashMap<usize, usize>> {
-  static CONTEXTS: OnceLock<Mutex<HashMap<usize, usize>>> = OnceLock::new();
+fn renderer_contexts() -> &'static Mutex<HashMap<usize, Arc<RendererContext>>> {
+  static CONTEXTS: OnceLock<Mutex<HashMap<usize, Arc<RendererContext>>>> = OnceLock::new();
   CONTEXTS.get_or_init(|| Mutex::new(HashMap::new()))
 }
 
@@ -193,22 +193,22 @@ impl WindowlessRenderer {
     host: impl WindowlessHost,
   ) -> Result<Self> {
     let sys = env.sys().clone();
-    let context = Box::new(RendererContext {
+    let context = Arc::new(RendererContext {
       backend: Mutex::new(backend),
       host: Mutex::new(Box::new(host)),
       clipboard_return: Mutex::new(None),
     });
-    let context_ptr = Box::into_raw(context);
+    let context_ptr = Arc::into_raw(context.clone());
     let raw = unsafe {
       (sys.lynx_windowless_renderer_create_with_finalizer)(
         renderer_type,
-        context_ptr.cast::<c_void>(),
+        context_ptr as *mut c_void,
         Some(renderer_finalizer),
       )
     };
     if raw.is_null() {
       unsafe {
-        drop(Box::from_raw(context_ptr));
+        drop(Arc::from_raw(context_ptr));
       }
       return Err(Error::NullPointer {
         operation: "create windowless renderer",
@@ -218,7 +218,7 @@ impl WindowlessRenderer {
     renderer_contexts()
       .lock()
       .expect("renderer context lock poisoned")
-      .insert(raw as usize, context_ptr as usize);
+      .insert(raw as usize, context);
 
     unsafe {
       (sys.lynx_windowless_renderer_bind_on_post_task)(raw, Some(on_post_task));
@@ -330,10 +330,10 @@ pub fn set_global_ui_task_runner(env: &Env, runner: impl GlobalUiTaskRunner) -> 
   });
   let context_ptr = Box::into_raw(context);
   let config = sys::lynx_windowless_ui_task_runner_config_t {
-    struct_size: std::mem::size_of::<sys::lynx_windowless_ui_task_runner_config_t>(),
     user_data: context_ptr.cast::<c_void>(),
     runs_on_current_thread_callback: Some(global_runs_on_current_thread),
     post_task_callback: Some(global_post_task),
+    ..Default::default()
   };
 
   let ok = unsafe { (env.sys().lynx_windowless_set_global_ui_task_runner)(&config) };
@@ -356,24 +356,25 @@ unsafe extern "C" fn renderer_finalizer(
   renderer: *mut sys::lynx_windowless_renderer_t,
   user_data: *mut c_void,
 ) {
-  renderer_contexts()
-    .lock()
-    .expect("renderer context lock poisoned")
-    .remove(&(renderer as usize));
-  if !user_data.is_null() {
-    drop(Box::from_raw(user_data.cast::<RendererContext>()));
-  }
+  let _ = catch_unwind(AssertUnwindSafe(|| {
+    renderer_contexts()
+      .lock()
+      .expect("renderer context lock poisoned")
+      .remove(&(renderer as usize));
+    if !user_data.is_null() {
+      drop(Arc::from_raw(user_data.cast::<RendererContext>()));
+    }
+  }));
 }
 
 unsafe fn context_for(
   renderer: *mut sys::lynx_windowless_renderer_t,
-) -> Option<&'static RendererContext> {
-  let context = renderer_contexts()
+) -> Option<Arc<RendererContext>> {
+  renderer_contexts()
     .lock()
     .expect("renderer context lock poisoned")
     .get(&(renderer as usize))
-    .copied()?;
-  Some(&*(context as *const RendererContext))
+    .cloned()
 }
 
 unsafe extern "C" fn on_software_present(
@@ -687,6 +688,14 @@ mod tests {
     };
 
     assert_eq!(unsafe { frame.bytes() }, None);
+
+    let oversized = SoftwareFrame {
+      allocation: NonNull::<u8>::dangling().as_ptr().cast(),
+      row_bytes: isize::MAX as usize + 1,
+      height: 1,
+    };
+
+    assert_eq!(unsafe { oversized.bytes() }, None);
   }
 
   #[test]
@@ -883,18 +892,17 @@ mod tests {
     host: impl WindowlessHost,
     f: impl FnOnce(*mut sys::lynx_windowless_renderer_t) -> T,
   ) -> T {
-    let context = Box::new(RendererContext {
+    let context = Arc::new(RendererContext {
       backend: Mutex::new(backend),
       host: Mutex::new(Box::new(host)),
       clipboard_return: Mutex::new(None),
     });
-    let context_ptr = Box::into_raw(context);
     let token_ptr = Box::into_raw(Box::new(0_u8));
     let raw = token_ptr.cast::<sys::lynx_windowless_renderer_t>();
     renderer_contexts()
       .lock()
       .expect("renderer context lock poisoned")
-      .insert(raw as usize, context_ptr as usize);
+      .insert(raw as usize, context);
 
     let result = f(raw);
 
@@ -903,7 +911,6 @@ mod tests {
       .expect("renderer context lock poisoned")
       .remove(&(raw as usize));
     unsafe {
-      drop(Box::from_raw(context_ptr));
       drop(Box::from_raw(token_ptr));
     }
     result

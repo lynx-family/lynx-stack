@@ -77,6 +77,8 @@ Use these build-time variables to change the default behavior:
 
 - `LYNX_DOWNLOAD_RUNTIME=0` disables the automatic download.
 - `LYNX_RUNTIME_URL` downloads a different runtime artifact.
+- `LYNX_RUNTIME_SHA256` is required when `LYNX_RUNTIME_URL` points to a
+  non-default artifact.
 - `LYNX_SKIP_ADHOC_SIGN=1` skips ad-hoc signing on macOS.
 
 ## macOS signing
