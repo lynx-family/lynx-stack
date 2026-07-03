@@ -612,13 +612,25 @@ class TextRenderingMeasureTool {
 }
 class LazyNodesList {
   #nodeCache: (Text | Element)[] = [];
-  #lastAtomicView?: Element;
   #treeWalker: TreeWalker;
   constructor(dom: HTMLElement) {
     this.#treeWalker = document.createTreeWalker(
       dom,
       NodeFilter.SHOW_TEXT | NodeFilter.SHOW_ELEMENT,
       (node: Node) => {
+        const parentElement = node.nodeType === Node.ELEMENT_NODE
+          ? (node as Element).parentElement
+          : node.parentElement;
+        for (
+          let element = parentElement;
+          element && element !== dom;
+          element = element.parentElement
+        ) {
+          // x-view is measured as one inline box.
+          if (element.tagName === 'X-VIEW') {
+            return NodeFilter.FILTER_REJECT;
+          }
+        }
         if (node.nodeType === Node.ELEMENT_NODE) {
           const tagName = (node as Element).tagName;
           if (
@@ -647,17 +659,6 @@ class LazyNodesList {
       index >= this.#nodeCache.length
       && (currentNode = this.#treeWalker.nextNode())
     ) {
-      // x-view is measured as one inline box.
-      if (
-        this.#lastAtomicView
-        && this.#lastAtomicView.contains(currentNode)
-      ) {
-        continue;
-      }
-      this.#lastAtomicView = currentNode.nodeType === Node.ELEMENT_NODE
-          && (currentNode as Element).tagName === 'X-VIEW'
-        ? currentNode as Element
-        : undefined;
       this.#nodeCache.push(currentNode as Text | Element);
       break;
     }
