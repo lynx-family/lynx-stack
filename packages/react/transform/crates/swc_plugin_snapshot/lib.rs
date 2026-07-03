@@ -1356,6 +1356,7 @@ where
     let mut snapshot_dynamic_part_def: Vec<Option<ExprOrSpread>> = vec![];
     let mut snapshot_refs_and_spread_index: Vec<Option<ExprOrSpread>> = vec![];
     let mut snapshot_slot_def: Vec<Option<ExprOrSpread>> = vec![];
+    let mut list_item_platform_info_index: Option<i32> = None;
 
     if let Some(key) = dynamic_part_extractor.key {
       snapshot_attrs.push(JSXAttrOrSpread::JSXAttr(JSXAttr {
@@ -1396,6 +1397,9 @@ where
 
       match dynamic_part {
         DynamicPart::Attr(value, _, attr_name) => {
+          if matches!(attr_name, AttrName::ListItemPlatformInfo) {
+            list_item_platform_info_index = Some(snapshot_values.len() as i32);
+          }
           snapshot_values.push(Some(ExprOrSpread {
             spread: None,
             expr: Box::new(if let AttrName::Event(_, _) = attr_name {
@@ -1559,6 +1563,19 @@ where
                 })),
               }))
             };
+            if let Some(index) = list_item_platform_info_index {
+              snapshot_attrs.push(JSXAttrOrSpread::JSXAttr(JSXAttr {
+                span: DUMMY_SP,
+                name: JSXAttrName::Ident(IdentName::new(
+                  "__listItemPlatformInfoIndex".into(),
+                  DUMMY_SP,
+                )),
+                value: Some(JSXAttrValue::JSXExprContainer(JSXExprContainer {
+                  span: DUMMY_SP,
+                  expr: JSXExpr::Expr(Box::new(i32_to_expr(&index))),
+                })),
+              }))
+            }
             snapshot_attrs.extend(snapshot_children.iter_mut().enumerate().map(
               |(index, child)| {
                 JSXAttrOrSpread::JSXAttr(JSXAttr {
@@ -1741,6 +1758,57 @@ mod tests {
     });
   }
 
+  #[test]
+  fn should_emit_list_item_platform_info_marker_without_repeating_values() {
+    Tester::run(|tester| {
+      let top_level_mark = Mark::new();
+      let unresolved_mark = Mark::new();
+
+      let program = tester.apply_transform(
+        (
+          resolver(unresolved_mark, top_level_mark, true),
+          visit_mut_pass(JSXTransformer::<&SingleThreadedComments>::new(
+            super::JSXTransformerConfig {
+              preserve_jsx: true,
+              target: TransformTarget::MIXED,
+              ..Default::default()
+            },
+            None,
+            TransformMode::Test,
+            Some(tester.cm.clone()),
+          )),
+        ),
+        "input.js",
+        Syntax::Es(EsSyntax {
+          jsx: true,
+          ..Default::default()
+        }),
+        Some(true),
+        r#"
+        const node = (
+          <list>
+            <list-item item-key={getItemKey()} full-span />
+          </list>
+        );
+        "#,
+      )?;
+
+      let comments = tester.comments.clone();
+      let output = tester.print(&program, &comments);
+      assert!(
+        output.contains("__listItemPlatformInfoIndex={0}"),
+        "list-item snapshot JSX should carry the platform-info value index; output:\n{output}",
+      );
+      assert_eq!(
+        output.matches("getItemKey").count(),
+        1,
+        "platform info marker must not duplicate dynamic expression evaluation; output:\n{output}",
+      );
+
+      Ok(())
+    });
+  }
+
   test!(
     module,
     Syntax::Es(EsSyntax {
@@ -1772,6 +1840,33 @@ mod tests {
       <text>!!!</text>
       <frame/>
     </view>
+    "#
+  );
+
+  test!(
+    module,
+    Syntax::Es(EsSyntax {
+      jsx: true,
+      ..Default::default()
+    }),
+    |t| visit_mut_pass(JSXTransformer::new(
+      super::JSXTransformerConfig {
+        preserve_jsx: true,
+        target: TransformTarget::MIXED,
+        ..Default::default()
+      },
+      Some(t.comments.clone()),
+      TransformMode::Test,
+      Some(t.cm.clone()),
+    )),
+    should_emit_list_item_platform_info_marker_for_non_zero_value_index,
+    // Input codes
+    r#"
+    const node = (
+      <view id={getViewId()}>
+        <list-item item-key={getItemKey()} />
+      </view>
+    );
     "#
   );
 
