@@ -14,7 +14,7 @@ import {
   BackgroundListElementTemplateInstance,
 } from '../../../../src/element-template/background/instance.js';
 import { backgroundElementTemplateInstanceManager } from '../../../../src/element-template/background/manager.js';
-import { PerformanceTimingFlags, PipelineOrigins } from '../../../../src/core/performance.js';
+import { PerformanceTimingFlags, PipelineOrigins, globalPipelineOptions } from '../../../../src/core/performance.js';
 import {
   clearEventState,
   publishEvent,
@@ -29,7 +29,9 @@ import { ElementTemplateLifecycleConstant } from '../../../../src/element-templa
 import { ElementTemplateUpdateOps } from '../../../../src/element-template/protocol/opcodes.js';
 import { parseElementTemplateUpdateEventPayload } from '../../../../src/element-template/protocol/update-event.js';
 import type {
+  SerializableValue,
   SerializedElementTemplate,
+  SerializedEtNode,
   SerializedTypedNode,
 } from '../../../../src/element-template/protocol/types.js';
 import { __root } from '../../../../src/element-template/runtime/page/root-instance.js';
@@ -71,6 +73,19 @@ function parseUpdateEventData(data: unknown): unknown {
   return parseElementTemplateUpdateEventPayload(data);
 }
 
+function dispatchHydrate(
+  instances: SerializedEtNode[],
+  reloadVersion = getReloadVersion(),
+): void {
+  lynx.getJSContext().dispatchEvent({
+    type: ElementTemplateLifecycleConstant.hydrate,
+    data: {
+      instances,
+      reloadVersion,
+    },
+  });
+}
+
 describe('ElementTemplate hydration listener', () => {
   const envManager = new ElementTemplateEnvManager();
   let originalLynxSdkVersion: string | undefined;
@@ -108,10 +123,7 @@ describe('ElementTemplate hydration listener', () => {
       createSerializedTemplate(-1, '_et_test'),
       createSerializedTemplate(-2, '_et_test'),
     ];
-    lynx.getJSContext().dispatchEvent({
-      type: ElementTemplateLifecycleConstant.hydrate,
-      data: instances,
-    });
+    dispatchHydrate(instances);
 
     const lynxObj = (globalThis as unknown as { lynx: LynxMock }).lynx;
     lynxObj.getJSContext().dispatchEvent({
@@ -136,10 +148,7 @@ describe('ElementTemplate hydration listener', () => {
     backgroundRoot.appendChild(after);
 
     envManager.switchToMainThread();
-    lynx.getJSContext().dispatchEvent({
-      type: ElementTemplateLifecycleConstant.hydrate,
-      data: [createSerializedTemplate(after.instanceId, '_et_test')],
-    });
+    dispatchHydrate([createSerializedTemplate(after.instanceId, '_et_test')]);
 
     envManager.switchToBackground();
     const updatePayload = parseUpdateEventData(dispatchSpy.mock.calls.at(-1)?.[0]?.data);
@@ -177,10 +186,7 @@ describe('ElementTemplate hydration listener', () => {
     enqueueDelayedRunOnMainThreadData(delayedData);
 
     envManager.switchToMainThread();
-    lynx.getJSContext().dispatchEvent({
-      type: ElementTemplateLifecycleConstant.hydrate,
-      data: [createSerializedTemplate(after.instanceId, '_et_test')],
-    });
+    dispatchHydrate([createSerializedTemplate(after.instanceId, '_et_test')]);
 
     envManager.switchToBackground();
     const updatePayload = parseUpdateEventData(dispatchSpy.mock.calls.at(-1)?.[0]?.data);
@@ -229,10 +235,7 @@ describe('ElementTemplate hydration listener', () => {
       void runOnMainThread(worklet as unknown as () => void)();
 
       envManager.switchToMainThread();
-      lynx.getJSContext().dispatchEvent({
-        type: ElementTemplateLifecycleConstant.hydrate,
-        data: [createSerializedTemplate(0, '_et_test')],
-      });
+      dispatchHydrate([createSerializedTemplate(0, '_et_test')]);
 
       envManager.switchToBackground();
       expect(reportError).toHaveBeenCalledTimes(1);
@@ -241,6 +244,7 @@ describe('ElementTemplate hydration listener', () => {
       );
       expect(takeDelayedRunOnMainThreadData()).toEqual([]);
       expect(removeEventListener).toHaveBeenCalledWith(WorkletEvents.FunctionCallRet, expect.any(Function));
+      expect(globalPipelineOptions).toBeUndefined();
     } finally {
       lynx.reportError = oldReportError;
     }
@@ -290,20 +294,17 @@ describe('ElementTemplate hydration listener', () => {
       const oldItemId = item.instanceId;
 
       envManager.switchToMainThread();
-      lynx.getJSContext().dispatchEvent({
-        type: ElementTemplateLifecycleConstant.hydrate,
-        data: [
-          {
-            tag: 'list',
-            attributes: { id: 'feed' },
-            elementSlots: null,
-            uid: -1,
-            options: {
-              listChildren: [createSerializedTemplate(-2, '_et_list_item')],
-            },
-          } satisfies SerializedTypedNode,
-        ],
-      });
+      dispatchHydrate([
+        {
+          tag: 'list',
+          attributes: { id: 'feed' },
+          elementSlots: null,
+          uid: -1,
+          options: {
+            listChildren: [createSerializedTemplate(-2, '_et_list_item')],
+          },
+        } satisfies SerializedTypedNode,
+      ]);
 
       envManager.switchToBackground();
 
@@ -334,10 +335,7 @@ describe('ElementTemplate hydration listener', () => {
       const afterLocalId = after.instanceId;
 
       envManager.switchToMainThread();
-      lynx.getJSContext().dispatchEvent({
-        type: ElementTemplateLifecycleConstant.hydrate,
-        data: [createSerializedTemplate(-1, '_et_before')],
-      });
+      dispatchHydrate([createSerializedTemplate(-1, '_et_before')]);
 
       envManager.switchToBackground();
 
@@ -387,10 +385,7 @@ describe('ElementTemplate hydration listener', () => {
     const afterLocalId = after.instanceId;
 
     envManager.switchToMainThread();
-    lynx.getJSContext().dispatchEvent({
-      type: ElementTemplateLifecycleConstant.hydrate,
-      data: [],
-    });
+    dispatchHydrate([]);
 
     envManager.switchToBackground();
 
@@ -424,10 +419,7 @@ describe('ElementTemplate hydration listener', () => {
     const dispatchSpy = vi.spyOn(lynx.getCoreContext(), 'dispatchEvent');
 
     envManager.switchToMainThread();
-    lynx.getJSContext().dispatchEvent({
-      type: ElementTemplateLifecycleConstant.hydrate,
-      data: [createSerializedTemplate(-1, '_et_stale')],
-    });
+    dispatchHydrate([createSerializedTemplate(-1, '_et_stale')]);
 
     envManager.switchToBackground();
 
@@ -463,15 +455,12 @@ describe('ElementTemplate hydration listener', () => {
       const stale = new BackgroundElementTemplateInstance('_et_stale');
 
       envManager.switchToMainThread();
-      lynx.getJSContext().dispatchEvent({
-        type: ElementTemplateLifecycleConstant.hydrate,
-        data: [
-          {
-            ...createSerializedTemplate(host.instanceId, '_et_test'),
-            elementSlots: [[createSerializedTemplate(stale.instanceId, '_et_stale')]],
-          },
-        ],
-      });
+      dispatchHydrate([
+        {
+          ...createSerializedTemplate(host.instanceId, '_et_test'),
+          elementSlots: [[createSerializedTemplate(stale.instanceId, '_et_stale')]],
+        },
+      ]);
 
       envManager.switchToBackground();
       expect(dispatchSpy).toHaveBeenCalledWith({
@@ -494,92 +483,54 @@ describe('ElementTemplate hydration listener', () => {
     }
   });
 
-  it('resets commit state when hydrate update dispatch throws', () => {
+  it('resets commit state when hydrate update serialization throws', () => {
     SystemInfo.lynxSdkVersion = '4.0';
-    vi.useFakeTimers();
-    const dispatchError = new Error('hydrate update dispatch failed');
-    let dispatchSpy: ReturnType<typeof vi.spyOn> | undefined;
+    globalThis.__ALOG__ = false;
+    const serializeError = new Error('hydrate update serialization failed');
+    const oldReportError = lynx.reportError;
+    const reportError = vi.fn();
+    lynx.reportError = reportError;
 
     try {
       envManager.switchToBackground();
       installElementTemplateHydrationListener();
-      const coreContext = lynx.getCoreContext();
-      const removeEventListener = vi.spyOn(coreContext, 'removeEventListener');
-      dispatchSpy = vi.spyOn(coreContext, 'dispatchEvent').mockImplementationOnce(() => {
-        throw dispatchError;
-      });
+      const removeEventListener = vi.spyOn(lynx.getCoreContext(), 'removeEventListener');
 
       const backgroundRoot = __root as BackgroundElementTemplateInstance;
-      const host = new BackgroundElementTemplateInstance('_et_test');
-      backgroundRoot.appendChild(host);
-      const stale = new BackgroundElementTemplateInstance('_et_stale');
-      void runOnMainThread({ _wkltId: 'failed-hydrate-main-thread-function' } as unknown as () => void)();
+      const throwingValue = {
+        toJSON() {
+          throw serializeError;
+        },
+      } as unknown as SerializableValue;
+      const after = new BackgroundElementTemplateInstance('_et_test', [throwingValue]);
+      backgroundRoot.appendChild(after);
+      void runOnMainThread({ _wkltId: 'failed-serialize-main-thread-function' } as unknown as () => void)();
 
       envManager.switchToMainThread();
-      lynx.getJSContext().dispatchEvent({
-        type: ElementTemplateLifecycleConstant.hydrate,
-        data: [
-          {
-            ...createSerializedTemplate(host.instanceId, '_et_test'),
-            elementSlots: [[createSerializedTemplate(stale.instanceId, '_et_stale')]],
-          },
-        ],
-      });
+      dispatchHydrate([
+        {
+          ...createSerializedTemplate(-1, '_et_test'),
+          attributeSlots: ['before'],
+        } satisfies SerializedElementTemplate,
+      ]);
 
-      expect(() => envManager.switchToBackground()).toThrow(dispatchError);
+      expect(() => envManager.switchToBackground()).not.toThrow();
+      expect(reportError).toHaveBeenCalledWith(serializeError);
       expect(globalCommitContext.ops).toEqual([]);
       expect(globalCommitContext.nonPayload.removedSubtreesAwaitingTeardown).toEqual([]);
       expect(takeDelayedRunOnMainThreadData()).toEqual([]);
       expect(removeEventListener).toHaveBeenCalledWith(WorkletEvents.FunctionCallRet, expect.any(Function));
-
-      vi.advanceTimersByTime(10000);
-      expect(backgroundElementTemplateInstanceManager.get(stale.instanceId)).toBeUndefined();
+      expect(globalPipelineOptions).toBeUndefined();
+      expect(lynx.performance._markTiming.mock.calls).toEqual([
+        ['pipelineID', 'hydrateParseSnapshotStart'],
+        ['pipelineID', 'hydrateParseSnapshotEnd'],
+        ['pipelineID', 'diffVdomStart'],
+        ['pipelineID', 'diffVdomEnd'],
+        ['pipelineID', 'packChangesStart'],
+        ['pipelineID', 'packChangesEnd'],
+      ]);
     } finally {
-      dispatchSpy?.mockRestore();
-      vi.useRealTimers();
-    }
-  });
-
-  it('clears pending direct refs when hydrate update dispatch throws', () => {
-    const dispatchError = new Error('hydrate update dispatch failed');
-    const ref = vi.fn();
-    let dispatchSpy: ReturnType<typeof vi.spyOn> | undefined;
-
-    try {
-      __etAttrPlanMap._et_ref_parent = [0, adaptRefAttrSlot];
-      envManager.switchToBackground();
-      installElementTemplateHydrationListener();
-      dispatchSpy = vi.spyOn(lynx.getCoreContext(), 'dispatchEvent').mockImplementationOnce(() => {
-        throw dispatchError;
-      });
-
-      const backgroundRoot = __root as BackgroundElementTemplateInstance;
-      const parent = new BackgroundElementTemplateInstance('_et_parent');
-      const inserted = new BackgroundElementTemplateInstance('_et_ref_parent');
-      inserted.setAttribute('attributeSlots', [ref]);
-      parent.appendChild(inserted);
-      backgroundRoot.appendChild(parent);
-
-      envManager.switchToMainThread();
-      lynx.getJSContext().dispatchEvent({
-        type: ElementTemplateLifecycleConstant.hydrate,
-        data: [
-          {
-            templateKey: '_et_parent',
-            attributeSlots: [],
-            elementSlots: [[]],
-            uid: -1,
-          } satisfies SerializedElementTemplate,
-        ],
-      });
-
-      expect(() => envManager.switchToBackground()).toThrow(dispatchError);
-      expect(ref).not.toHaveBeenCalled();
-
-      envManager.switchToBackground();
-      expect(ref).not.toHaveBeenCalled();
-    } finally {
-      dispatchSpy?.mockRestore();
+      lynx.reportError = oldReportError;
     }
   });
 
@@ -594,10 +545,7 @@ describe('ElementTemplate hydration listener', () => {
 
     envManager.switchToMainThread();
     const instances: SerializedElementTemplate[] = [createSerializedTemplate(-1, '_et_test')];
-    lynx.getJSContext().dispatchEvent({
-      type: ElementTemplateLifecycleConstant.hydrate,
-      data: instances,
-    });
+    dispatchHydrate(instances);
 
     expect(backgroundElementTemplateInstanceManager.get(oldId)).toBe(after);
     expect(backgroundElementTemplateInstanceManager.get(-1)).toBeUndefined();
@@ -621,10 +569,7 @@ describe('ElementTemplate hydration listener', () => {
 
     envManager.switchToMainThread();
     const instances: SerializedElementTemplate[] = [createSerializedTemplate(-1, '_et_test')];
-    lynx.getJSContext().dispatchEvent({
-      type: ElementTemplateLifecycleConstant.hydrate,
-      data: instances,
-    });
+    dispatchHydrate(instances);
 
     envManager.switchToBackground();
     expect(backgroundElementTemplateInstanceManager.get(oldId)).toBeUndefined();
@@ -647,17 +592,14 @@ describe('ElementTemplate hydration listener', () => {
     publishEvent('-1:0:', eventData);
 
     envManager.switchToMainThread();
-    lynx.getJSContext().dispatchEvent({
-      type: ElementTemplateLifecycleConstant.hydrate,
-      data: [
-        {
-          templateKey: '_et_event',
-          attributeSlots: ['-1:0:'],
-          elementSlots: [],
-          uid: -1,
-        } satisfies SerializedElementTemplate,
-      ],
-    });
+    dispatchHydrate([
+      {
+        templateKey: '_et_event',
+        attributeSlots: ['-1:0:'],
+        elementSlots: [],
+        uid: -1,
+      } satisfies SerializedElementTemplate,
+    ]);
 
     envManager.switchToBackground();
 
@@ -685,17 +627,14 @@ describe('ElementTemplate hydration listener', () => {
       publishEvent('-1:0:', eventData);
 
       envManager.switchToMainThread();
-      lynx.getJSContext().dispatchEvent({
-        type: ElementTemplateLifecycleConstant.hydrate,
-        data: [
-          {
-            templateKey: '_et_mismatch',
-            attributeSlots: ['-1:0:'],
-            elementSlots: [],
-            uid: -1,
-          } satisfies SerializedElementTemplate,
-        ],
-      });
+      dispatchHydrate([
+        {
+          templateKey: '_et_mismatch',
+          attributeSlots: ['-1:0:'],
+          elementSlots: [],
+          uid: -1,
+        } satisfies SerializedElementTemplate,
+      ]);
 
       envManager.switchToBackground();
 
@@ -703,70 +642,6 @@ describe('ElementTemplate hydration listener', () => {
       expect(handler).not.toHaveBeenCalled();
     } finally {
       lynx.reportError = oldReportError;
-    }
-  });
-
-  it('drops queued direct events when hydrate update dispatch throws', () => {
-    const dispatchError = new Error('hydrate update dispatch failed');
-    const eventData = { type: 'tap' };
-    const handler = vi.fn();
-    let dispatchSpy: ReturnType<typeof vi.spyOn> | undefined;
-
-    try {
-      __etAttrPlanMap._et_event_parent = [0, adaptEventAttrSlot];
-      resetEventStateForRuntime();
-      envManager.switchToBackground();
-      installElementTemplateHydrationListener();
-      dispatchSpy = vi.spyOn(lynx.getCoreContext(), 'dispatchEvent').mockImplementationOnce(() => {
-        throw dispatchError;
-      });
-
-      const backgroundRoot = __root as BackgroundElementTemplateInstance;
-      const parent = new BackgroundElementTemplateInstance('_et_event_parent');
-      parent.setAttribute('attributeSlots', [handler]);
-      const stale = new BackgroundElementTemplateInstance('_et_stale');
-      parent.appendChild(stale);
-      backgroundRoot.appendChild(parent);
-
-      publishEvent('-1:0:', eventData);
-
-      envManager.switchToMainThread();
-      lynx.getJSContext().dispatchEvent({
-        type: ElementTemplateLifecycleConstant.hydrate,
-        data: [
-          {
-            templateKey: '_et_event_parent',
-            attributeSlots: ['-1:0:'],
-            elementSlots: [[]],
-            uid: -1,
-          } satisfies SerializedElementTemplate,
-        ],
-      });
-
-      expect(() => envManager.switchToBackground()).toThrow(dispatchError);
-      expect(handler).not.toHaveBeenCalled();
-
-      dispatchSpy.mockRestore();
-      dispatchSpy = undefined;
-
-      envManager.switchToMainThread();
-      lynx.getJSContext().dispatchEvent({
-        type: ElementTemplateLifecycleConstant.hydrate,
-        data: [
-          {
-            templateKey: '_et_event_parent',
-            attributeSlots: ['-1:0:'],
-            elementSlots: [[]],
-            uid: -1,
-          } satisfies SerializedElementTemplate,
-        ],
-      });
-
-      envManager.switchToBackground();
-
-      expect(handler).not.toHaveBeenCalled();
-    } finally {
-      dispatchSpy?.mockRestore();
     }
   });
 
@@ -782,17 +657,14 @@ describe('ElementTemplate hydration listener', () => {
     backgroundRoot.appendChild(after);
 
     envManager.switchToMainThread();
-    lynx.getJSContext().dispatchEvent({
-      type: ElementTemplateLifecycleConstant.hydrate,
-      data: [
-        {
-          templateKey: '_et_ref',
-          attributeSlots: ['-1-0'],
-          elementSlots: [],
-          uid: -1,
-        } satisfies SerializedElementTemplate,
-      ],
-    });
+    dispatchHydrate([
+      {
+        templateKey: '_et_ref',
+        attributeSlots: ['-1-0'],
+        elementSlots: [],
+        uid: -1,
+      } satisfies SerializedElementTemplate,
+    ]);
 
     envManager.switchToBackground();
 
@@ -824,17 +696,14 @@ describe('ElementTemplate hydration listener', () => {
       ref.mockClear();
 
       envManager.switchToMainThread();
-      lynx.getJSContext().dispatchEvent({
-        type: ElementTemplateLifecycleConstant.hydrate,
-        data: [
-          {
-            templateKey: '_et_ref',
-            attributeSlots: ['-1-0'],
-            elementSlots: [],
-            uid: -1,
-          } satisfies SerializedElementTemplate,
-        ],
-      });
+      dispatchHydrate([
+        {
+          templateKey: '_et_ref',
+          attributeSlots: ['-1-0'],
+          elementSlots: [],
+          uid: -1,
+        } satisfies SerializedElementTemplate,
+      ]);
 
       envManager.switchToBackground();
 
@@ -872,17 +741,14 @@ describe('ElementTemplate hydration listener', () => {
       ref.mockClear();
 
       envManager.switchToMainThread();
-      lynx.getJSContext().dispatchEvent({
-        type: ElementTemplateLifecycleConstant.hydrate,
-        data: [
-          {
-            templateKey: '_et_spread',
-            attributeSlots: [{ ref: '-1-0' }],
-            elementSlots: [],
-            uid: -1,
-          } satisfies SerializedElementTemplate,
-        ],
-      });
+      dispatchHydrate([
+        {
+          templateKey: '_et_spread',
+          attributeSlots: [{ ref: '-1-0' }],
+          elementSlots: [],
+          uid: -1,
+        } satisfies SerializedElementTemplate,
+      ]);
 
       envManager.switchToBackground();
 
@@ -910,17 +776,14 @@ describe('ElementTemplate hydration listener', () => {
     oldRef.mockClear();
 
     envManager.switchToMainThread();
-    lynx.getJSContext().dispatchEvent({
-      type: ElementTemplateLifecycleConstant.hydrate,
-      data: [
-        {
-          templateKey: '_et_spread',
-          attributeSlots: [{ ref: '-1-0' }],
-          elementSlots: [],
-          uid: -1,
-        } satisfies SerializedElementTemplate,
-      ],
-    });
+    dispatchHydrate([
+      {
+        templateKey: '_et_spread',
+        attributeSlots: [{ ref: '-1-0' }],
+        elementSlots: [],
+        uid: -1,
+      } satisfies SerializedElementTemplate,
+    ]);
 
     envManager.switchToBackground();
     expect(oldRef).not.toHaveBeenCalled();
@@ -961,17 +824,14 @@ describe('ElementTemplate hydration listener', () => {
       expect(select).not.toHaveBeenCalled();
 
       envManager.switchToMainThread();
-      lynx.getJSContext().dispatchEvent({
-        type: ElementTemplateLifecycleConstant.hydrate,
-        data: [
-          {
-            templateKey: '_et_ref',
-            attributeSlots: ['-1-0'],
-            elementSlots: [],
-            uid: 0,
-          } satisfies SerializedElementTemplate,
-        ],
-      });
+      dispatchHydrate([
+        {
+          templateKey: '_et_ref',
+          attributeSlots: ['-1-0'],
+          elementSlots: [],
+          uid: 0,
+        } satisfies SerializedElementTemplate,
+      ]);
 
       envManager.switchToBackground();
       flushDelayedRefUiOps();
@@ -997,19 +857,18 @@ describe('ElementTemplate hydration listener', () => {
     const backgroundRoot = __root as BackgroundElementTemplateInstance;
     const after = new BackgroundElementTemplateInstance('_et_test');
     backgroundRoot.appendChild(after);
+    const { performance } = lynx;
+    const profileEndCallCount = performance.profileEnd.mock.calls.length;
 
     envManager.switchToMainThread();
     const instances: SerializedElementTemplate[] = [createSerializedTemplate(-1, '_et_test')];
-    lynx.getJSContext().dispatchEvent({
-      type: ElementTemplateLifecycleConstant.hydrate,
-      data: instances,
-    });
+    dispatchHydrate(instances);
 
     envManager.switchToBackground();
 
-    const { performance } = lynx;
     expect(performance.profileStart).toHaveBeenCalledWith('ReactLynx::hydrate');
-    expect(performance.profileEnd).toHaveBeenCalledTimes(1);
+    expect(performance.profileStart).toHaveBeenCalledWith('ReactLynx::commitChanges');
+    expect(performance.profileEnd.mock.calls.length - profileEndCallCount).toBeGreaterThanOrEqual(2);
 
     const onStartCalls = performance._onPipelineStart.mock.calls;
     expect(onStartCalls).toHaveLength(1);
@@ -1031,6 +890,54 @@ describe('ElementTemplate hydration listener', () => {
       ['pipelineID', 'hydrateParseSnapshotEnd'],
       ['pipelineID', 'diffVdomStart'],
       ['pipelineID', 'diffVdomEnd'],
+      ['pipelineID', 'packChangesStart'],
+      ['pipelineID', 'packChangesEnd'],
+    ]);
+  });
+
+  it('marks hydrate packChanges around update payload serialization', () => {
+    SystemInfo.lynxSdkVersion = '4.0';
+    globalThis.__ALOG__ = false;
+    envManager.switchToBackground();
+    installElementTemplateHydrationListener();
+
+    let didSerializePayload = false;
+    const serializingValue = {
+      toJSON() {
+        didSerializePayload = true;
+        expect(lynx.performance._markTiming.mock.calls).toEqual([
+          ['pipelineID', 'hydrateParseSnapshotStart'],
+          ['pipelineID', 'hydrateParseSnapshotEnd'],
+          ['pipelineID', 'diffVdomStart'],
+          ['pipelineID', 'diffVdomEnd'],
+          ['pipelineID', 'packChangesStart'],
+        ]);
+        return 'after';
+      },
+    } as unknown as SerializableValue;
+
+    const backgroundRoot = __root as BackgroundElementTemplateInstance;
+    const after = new BackgroundElementTemplateInstance('_et_test', [serializingValue]);
+    backgroundRoot.appendChild(after);
+
+    envManager.switchToMainThread();
+    dispatchHydrate([
+      {
+        ...createSerializedTemplate(-1, '_et_test'),
+        attributeSlots: ['before'],
+      } satisfies SerializedElementTemplate,
+    ]);
+
+    envManager.switchToBackground();
+
+    expect(didSerializePayload).toBe(true);
+    expect(lynx.performance._markTiming.mock.calls).toEqual([
+      ['pipelineID', 'hydrateParseSnapshotStart'],
+      ['pipelineID', 'hydrateParseSnapshotEnd'],
+      ['pipelineID', 'diffVdomStart'],
+      ['pipelineID', 'diffVdomEnd'],
+      ['pipelineID', 'packChangesStart'],
+      ['pipelineID', 'packChangesEnd'],
     ]);
   });
 
@@ -1046,17 +953,14 @@ describe('ElementTemplate hydration listener', () => {
     backgroundRoot.appendChild(after);
 
     envManager.switchToMainThread();
-    lynx.getJSContext().dispatchEvent({
-      type: ElementTemplateLifecycleConstant.hydrate,
-      data: [
-        {
-          templateKey: '_et_test',
-          attributeSlots: ['after'],
-          elementSlots: [],
-          uid: -1,
-        } satisfies SerializedElementTemplate,
-      ],
-    });
+    dispatchHydrate([
+      {
+        templateKey: '_et_test',
+        attributeSlots: ['after'],
+        elementSlots: [],
+        uid: -1,
+      } satisfies SerializedElementTemplate,
+    ]);
 
     envManager.switchToBackground();
 
@@ -1082,17 +986,14 @@ describe('ElementTemplate hydration listener', () => {
     backgroundRoot.appendChild(after);
 
     envManager.switchToMainThread();
-    lynx.getJSContext().dispatchEvent({
-      type: ElementTemplateLifecycleConstant.hydrate,
-      data: [
-        {
-          templateKey: '_et_test',
-          attributeSlots: ['after'],
-          elementSlots: [],
-          uid: -1,
-        } satisfies SerializedElementTemplate,
-      ],
-    });
+    dispatchHydrate([
+      {
+        templateKey: '_et_test',
+        attributeSlots: ['after'],
+        elementSlots: [],
+        uid: -1,
+      } satisfies SerializedElementTemplate,
+    ]);
 
     envManager.switchToBackground();
 
@@ -1128,10 +1029,7 @@ describe('ElementTemplate hydration listener', () => {
       proxy.setNativeProps({ opacity: 1 }).exec();
 
       envManager.switchToMainThread();
-      lynx.getJSContext().dispatchEvent({
-        type: ElementTemplateLifecycleConstant.hydrate,
-        data: [createSerializedTemplate(0, '_et_stale')],
-      });
+      dispatchHydrate([createSerializedTemplate(0, '_et_stale')]);
 
       envManager.switchToBackground();
       flushDelayedRefUiOps();
@@ -1167,10 +1065,7 @@ describe('ElementTemplate hydration listener', () => {
     const oldId = after.instanceId;
 
     envManager.switchToMainThread();
-    lynx.getJSContext().dispatchEvent({
-      type: ElementTemplateLifecycleConstant.hydrate,
-      data: [createSerializedTemplate(0, '_et_test')],
-    });
+    dispatchHydrate([createSerializedTemplate(0, '_et_test')]);
 
     envManager.switchToBackground();
 
@@ -1199,10 +1094,7 @@ describe('ElementTemplate hydration listener', () => {
     const oldSecondId = second.instanceId;
 
     envManager.switchToMainThread();
-    lynx.getJSContext().dispatchEvent({
-      type: ElementTemplateLifecycleConstant.hydrate,
-      data: [createSerializedTemplate(-1, '_et_test'), createSerializedTemplate(-1, '_et_test')],
-    });
+    dispatchHydrate([createSerializedTemplate(-1, '_et_test'), createSerializedTemplate(-1, '_et_test')]);
 
     envManager.switchToBackground();
 

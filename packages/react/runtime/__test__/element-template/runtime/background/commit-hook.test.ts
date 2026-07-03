@@ -422,7 +422,10 @@ describe('ElementTemplate commit hook', () => {
     envManager.switchToMainThread();
     lynx.getJSContext().dispatchEvent({
       type: ElementTemplateLifecycleConstant.hydrate,
-      data: [],
+      data: {
+        instances: [],
+        reloadVersion: getReloadVersion(),
+      },
     });
     envManager.switchToBackground();
 
@@ -453,6 +456,14 @@ describe('ElementTemplate commit hook', () => {
       },
     });
     expect(updateEvents[1]?.flushOptions.pipelineOptions).toBeUndefined();
+    expect(lynx.performance._markTiming.mock.calls).toEqual([
+      ['pipelineID', 'hydrateParseSnapshotStart'],
+      ['pipelineID', 'hydrateParseSnapshotEnd'],
+      ['pipelineID', 'diffVdomStart'],
+      ['pipelineID', 'diffVdomEnd'],
+      ['pipelineID', 'packChangesStart'],
+      ['pipelineID', 'packChangesEnd'],
+    ]);
     envManager.switchToBackground();
   });
 
