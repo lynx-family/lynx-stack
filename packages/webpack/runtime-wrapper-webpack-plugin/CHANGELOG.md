@@ -1,5 +1,11 @@
 # @lynx-js/runtime-wrapper-webpack-plugin
 
+## 0.2.1
+
+### Patch Changes
+
+- fix(debug-metadata): register the background-thread release inside the bundle wrapper, keeping the legacy source-map release authoritative during the transition ([#2891](https://github.com/lynx-family/lynx-stack/pull/2891))
+
 ## 0.2.0
 
 ### Minor Changes
