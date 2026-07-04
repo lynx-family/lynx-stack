@@ -2,7 +2,7 @@
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
 
-use fs4::FileExt;
+use fs2::FileExt;
 use sha2::{Digest, Sha256};
 use std::env;
 use std::ffi::OsStr;
@@ -165,10 +165,10 @@ fn download_runtime(url: &str, runtime_path: &Path, sha256: &str) {
     )
   });
 
-  let mut response = ureq::get(url)
+  let response = ureq::get(url)
     .call()
     .unwrap_or_else(|error| panic!("failed to download Lynx runtime from {url}: {error}"));
-  let mut response_body = response.body_mut().as_reader();
+  let mut response_body = response.into_reader();
   let mut tmp_file = tempfile::Builder::new()
     .prefix(
       runtime_path
@@ -320,7 +320,7 @@ impl RuntimeDownloadLock {
           path.display()
         )
       });
-    FileExt::lock(&file).unwrap_or_else(|error| {
+    file.lock_exclusive().unwrap_or_else(|error| {
       panic!(
         "failed to lock Lynx runtime download lock {}: {error}",
         path.display()
@@ -332,6 +332,6 @@ impl RuntimeDownloadLock {
 
 impl Drop for RuntimeDownloadLock {
   fn drop(&mut self) {
-    let _ = FileExt::unlock(&self.file);
+    let _ = self.file.unlock();
   }
 }

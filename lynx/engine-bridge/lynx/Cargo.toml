@@ -8,11 +8,11 @@ edition = "2021"
 path = "src/lib.rs"
 
 [dependencies]
-libloading = "0.9.0"
-thiserror = "2.0.18"
+libloading = "0.9"
+thiserror = "2"
 
 [build-dependencies]
-fs4 = "1.1.0"
+fs2 = "0.4"
 sha2 = { workspace = true }
-tempfile = "3.27.0"
-ureq = "3.3.0"
+tempfile = "3"
+ureq = "2"
