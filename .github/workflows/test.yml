@@ -308,16 +308,24 @@ jobs:
       CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
     with:
       runs-on: lynx-ubuntu-24.04-medium
-      run: >
-        pnpm exec rstest run
-        -c rstest.config.ts
-        --coverage
-        --testTimeout=50000
-        --hookTimeout=50000
-      # DEBUG(remove later): upload react-debug-metadata build intermediates so we
-      # can compare the CI-built LazyComponent bundles against a local build.
+      # DEBUG(remove later): dump the restored turbo cache + on-disk dist right
+      # before the test reads it, to locate where the example bundles vanish.
+      run: |
+        set +e
+        mkdir -p _diag
+        ls -la .turbo/cache/ > _diag/turbo-cache-ls.txt 2>&1
+        find examples/react-debug-metadata/dist-producer examples/react-debug-metadata/dist-consumer -type f 2>/dev/null | sort > _diag/dist-files.txt
+        for f in .turbo/cache/*.tar.zst; do
+          if zstd -dc "$f" 2>/dev/null | tar -tf - 2>/dev/null | grep -q react-debug-metadata/dist-producer; then
+            echo "TARBALL=$f SIZE=$(stat -c%s "$f")" >> _diag/cache-info.txt
+            zstd -dc "$f" 2>/dev/null | tar -tf - 2>/dev/null | grep react-debug-metadata > _diag/cache-contents.txt
+            cp "$f" _diag/example-cache.tar.zst
+          fi
+        done
+        pnpm exec rstest run -c rstest.config.ts --coverage --testTimeout=50000 --hookTimeout=50000
       artifact-name: debug-react-debug-metadata-dist
       artifact-path: |
+        _diag
         examples/react-debug-metadata/dist-producer
         examples/react-debug-metadata/dist-consumer
       artifact-if-no-files-found: warn
