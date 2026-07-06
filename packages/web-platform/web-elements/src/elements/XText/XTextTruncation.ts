@@ -618,6 +618,16 @@ class LazyNodesList {
       dom,
       NodeFilter.SHOW_TEXT | NodeFilter.SHOW_ELEMENT,
       (node: Node) => {
+        for (
+          let element = node.parentElement;
+          element && element !== dom;
+          element = element.parentElement
+        ) {
+          if (element.tagName === 'X-VIEW') {
+            // x-view is measured as a single inline box, so skip its subtree.
+            return NodeFilter.FILTER_REJECT;
+          }
+        }
         if (node.nodeType === Node.ELEMENT_NODE) {
           const tagName = (node as Element).tagName;
           if (
