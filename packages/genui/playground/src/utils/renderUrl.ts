@@ -6,6 +6,7 @@ import type { Protocol } from './protocol.js';
 
 export const RENDER_INIT_DATA_QUERY_PARAM = 'initData';
 export const RENDER_METRIC_ID_QUERY_PARAM = 'previewMetricId';
+export const OPENUI_INLINE_RENDER_URL_MAX_LENGTH = 7_000;
 
 export interface RenderInit {
   protocol: Protocol;
@@ -153,4 +154,8 @@ export function buildOpenUIRenderUrl(
   }
 
   return url.toString();
+}
+
+export function canInlineOpenUIRenderUrl(url: string): boolean {
+  return url.length <= OPENUI_INLINE_RENDER_URL_MAX_LENGTH;
 }
