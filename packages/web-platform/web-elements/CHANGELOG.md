@@ -1,5 +1,11 @@
 # @lynx-js/web-elements
 
+## 0.12.5
+
+### Patch Changes
+
+- Fix web element compatibility issues surfaced by Playwright 1.61 snapshots. ([#2898](https://github.com/lynx-family/lynx-stack/pull/2898))
+
 ## 0.12.4
 
 ### Patch Changes
