@@ -1,268 +1,192 @@
 // Copyright 2026 The Lynx Authors. All rights reserved.
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
-import { readFile } from 'node:fs/promises';
+import { spawn } from 'node:child_process';
+import { existsSync } from 'node:fs';
+import { mkdtemp, readFile, rm, writeFile } from 'node:fs/promises';
+import { tmpdir } from 'node:os';
+import { dirname, join } from 'node:path';
+import { fileURLToPath } from 'node:url';
 
-import { alignImages } from './align-images.js';
-import { defaultCapture } from './capture.js';
-import { compareImages } from './compare-images.js';
-import {
-  createVisualEvaluationError,
-  getErrorMessage,
-  rethrowAsVisualEvaluationError,
-} from './errors.js';
-import {
-  evaluateImagesWithMidscene,
-  normalizeEvaluationResult,
-} from './evaluation-api.js';
-import {
-  bufferToImageDataUrl,
-  decodeBase64Image,
-  normalizeImageToPngBuffer,
-} from './image-format.js';
-import { loadReferenceImage } from './load-reference-image.js';
+import { VisualEvaluationError } from './errors.js';
 import type {
-  AlignResult,
-  CaptureOptions,
-  CompareResult,
-  EvaluationResult,
   RunVisualEvaluationOptions,
+  VisualEvaluationErrorResponse,
   VisualEvaluationRequest,
   VisualEvaluationResponse,
 } from './types.js';
-import { validateVisualEvaluationRequest } from './validation.js';
-import {
-  createVisualEvaluationWorkspace,
-  removeVisualEvaluationWorkspace,
-  writeInputImages,
-} from './workspace.js';
+
+interface ChildResult {
+  code: number | null;
+  signal: NodeJS.Signals | null;
+  stderr: string;
+  stdout: string;
+}
 
 export async function runVisualEvaluation(
   body: VisualEvaluationRequest,
   options: RunVisualEvaluationOptions = {},
 ): Promise<VisualEvaluationResponse> {
-  const request = validateVisualEvaluationRequest(body);
-  const warnings: string[] = [];
-  const referenceBuffer = await loadReferenceImage(
-    request.referenceImage,
-    options.fetch ?? fetch,
-  );
+  assertNoTypeScriptHooks(options);
 
-  const capture = options.capture ?? defaultCapture;
-  let deviceImageBase64: string | undefined;
-  try {
-    const captureOptions: CaptureOptions = {
-      targetPageUrl: request.templateUrl,
-    };
-    if (request.capture?.maxRetry !== undefined) {
-      captureOptions.maxRetry = request.capture.maxRetry;
-    }
-    if (request.capture?.silent !== undefined) {
-      captureOptions.silent = request.capture.silent;
-    }
-    if (request.traceId !== undefined) {
-      captureOptions.traceId = request.traceId;
-    }
-    if (request.capture?.waitTimeMs !== undefined) {
-      captureOptions.waitTimeMs = request.capture.waitTimeMs;
-    }
-    deviceImageBase64 = await capture(captureOptions);
-  } catch (error) {
-    rethrowAsVisualEvaluationError(error, 502, 'CAPTURE_UPSTREAM_ERROR');
-  }
-
-  if (!deviceImageBase64) {
-    throw createVisualEvaluationError(
-      502,
-      'CAPTURE_EMPTY_RESULT',
-      'Capture returned no image data.',
-    );
-  }
-
-  const deviceBuffer = await normalizeCapturedImage(deviceImageBase64);
-  const workspace = await createVisualEvaluationWorkspace();
+  const workspace = await mkdtemp(join(tmpdir(), 'ui-judge-'));
+  const requestFile = join(workspace, 'request.json');
+  const resultFile = join(workspace, 'result.json');
 
   try {
-    await writeInputImages(workspace, referenceBuffer, deviceBuffer);
-
-    const alignment = await runAlignment(workspace, request, warnings);
-    const compareResult = await runCompare(
-      alignment.referencePath,
-      alignment.devicePath,
-      workspace.diffPath,
-      request,
-    );
-    const [
-      alignedReferenceBuffer,
-      alignedDeviceBuffer,
-      diffBuffer,
-    ] = await Promise.all([
-      readFile(alignment.referencePath),
-      readFile(alignment.devicePath),
-      readFile(workspace.diffPath),
-    ]);
-    const evaluationResult = await runEvaluation(
-      alignedReferenceBuffer,
-      alignedDeviceBuffer,
+    await writeFile(requestFile, JSON.stringify(body), 'utf8');
+    const child = await runRustVisualEvaluation(
+      requestFile,
+      resultFile,
       options,
     );
-
-    return buildResponse({
-      alignResult: alignment.result,
-      alignedDeviceBuffer,
-      alignedReferenceBuffer,
-      compareResult,
-      deviceBuffer,
-      diffBuffer,
-      evaluationResult,
-      referenceBuffer,
-      warnings,
-    });
+    const result = await readRustResult(resultFile, child);
+    if (isVisualEvaluationErrorResponse(result)) {
+      throw new VisualEvaluationError(
+        result.status,
+        result.code,
+        result.message,
+      );
+    }
+    if (child.code !== 0) {
+      throw rustProcessError(child);
+    }
+    return result as VisualEvaluationResponse;
   } finally {
-    await removeVisualEvaluationWorkspace(workspace);
+    await rm(workspace, { force: true, recursive: true });
   }
 }
 
-async function normalizeCapturedImage(
-  deviceImageBase64: string,
-): Promise<Buffer> {
-  let buffer: Buffer;
-  try {
-    buffer = decodeBase64Image(
-      deviceImageBase64,
-      'CAPTURE_EMPTY_RESULT',
-      'Capture returned malformed image data.',
-    );
-  } catch (error) {
-    throw createVisualEvaluationError(
-      502,
-      'CAPTURE_EMPTY_RESULT',
-      getErrorMessage(error),
-    );
-  }
-  return await normalizeImageToPngBuffer(
-    buffer,
-    502,
-    'CAPTURE_EMPTY_RESULT',
-    'Capture returned malformed image data.',
-  );
-}
-
-async function runAlignment(
-  workspace: Awaited<ReturnType<typeof createVisualEvaluationWorkspace>>,
-  request: VisualEvaluationRequest,
-  warnings: string[],
-): Promise<{
-  devicePath: string;
-  referencePath: string;
-  result: AlignResult | null;
-}> {
-  let alignResult: AlignResult | null;
-  try {
-    alignResult = await alignImages(
-      workspace.referencePath,
-      workspace.devicePath,
-      {
-        ...request.alignOptions,
-        outputAlignedDevicePath: workspace.alignedDevicePath,
-        outputAlignedReferencePath: workspace.alignedReferencePath,
-      },
-    );
-  } catch (error) {
-    rethrowAsVisualEvaluationError(error, 500, 'IMAGE_ALIGNMENT_ERROR');
-  }
-
-  if (!alignResult) {
-    warnings.push(
-      'Image alignment confidence too low; compared original images.',
-    );
-    return {
-      devicePath: workspace.devicePath,
-      referencePath: workspace.referencePath,
-      result: null,
-    };
-  }
-
-  return {
-    devicePath: workspace.alignedDevicePath,
-    referencePath: workspace.alignedReferencePath,
-    result: alignResult,
-  };
-}
-
-async function runCompare(
-  referencePath: string,
-  devicePath: string,
-  diffPath: string,
-  request: VisualEvaluationRequest,
-): Promise<CompareResult> {
-  try {
-    return await compareImages(referencePath, devicePath, {
-      ...request.compareOptions,
-      outputPath: diffPath,
-    });
-  } catch (error) {
-    rethrowAsVisualEvaluationError(error, 500, 'IMAGE_COMPARE_ERROR');
-  }
-}
-
-async function runEvaluation(
-  alignedReferenceBuffer: Buffer,
-  alignedDeviceBuffer: Buffer,
+async function runRustVisualEvaluation(
+  requestFile: string,
+  resultFile: string,
   options: RunVisualEvaluationOptions,
-): Promise<EvaluationResult> {
-  const evaluate = options.evaluate ?? evaluateImagesWithMidscene;
+): Promise<ChildResult> {
+  const rustArgs = [
+    'visual-evaluation',
+    '--request-file',
+    requestFile,
+    '--result-file',
+    resultFile,
+  ];
+  const agent = options.agent;
+  if (agent?.apiKey) rustArgs.push('--api-key', agent.apiKey);
+  if (agent?.baseURL) rustArgs.push('--base-url', agent.baseURL);
+  if (agent?.model) rustArgs.push('--model', agent.model);
+  if (agent?.api) rustArgs.push('--api', agent.api);
+
+  const binary = process.env['UI_JUDGE_BIN'];
+  const command = binary ?? 'cargo';
+  const args = binary
+    ? rustArgs
+    : [
+      'run',
+      '--quiet',
+      '-p',
+      'ui_judge',
+      '--bin',
+      'ui-judge',
+      '--',
+      ...rustArgs,
+    ];
+  const cwd = binary ? process.cwd() : findWorkspaceRoot();
+
+  return await new Promise<ChildResult>((resolve, reject) => {
+    const child = spawn(command, args, {
+      cwd,
+      env: process.env,
+      stdio: ['ignore', 'pipe', 'pipe'],
+    });
+    let stdout = '';
+    let stderr = '';
+    child.stdout.setEncoding('utf8');
+    child.stderr.setEncoding('utf8');
+    child.stdout.on('data', (chunk: string) => {
+      stdout += chunk;
+    });
+    child.stderr.on('data', (chunk: string) => {
+      stderr += chunk;
+    });
+    child.on('error', reject);
+    child.on('close', (code, signal) => {
+      resolve({ code, signal, stderr, stdout });
+    });
+  });
+}
+
+async function readRustResult(
+  resultFile: string,
+  child: ChildResult,
+): Promise<VisualEvaluationResponse | VisualEvaluationErrorResponse> {
+  let content: string;
   try {
-    const rawResult = await evaluate(
-      bufferToImageDataUrl(alignedReferenceBuffer),
-      bufferToImageDataUrl(alignedDeviceBuffer),
+    content = await readFile(resultFile, 'utf8');
+  } catch {
+    throw rustProcessError(child);
+  }
+
+  try {
+    return JSON.parse(content) as
+      | VisualEvaluationResponse
+      | VisualEvaluationErrorResponse;
+  } catch {
+    throw new VisualEvaluationError(
+      500,
+      'VISUAL_EVALUATION_ERROR',
+      'Rust UI Judge returned invalid JSON.',
     );
-    return normalizeEvaluationResult(rawResult);
-  } catch (error) {
-    rethrowAsVisualEvaluationError(error, 502, 'EVALUATION_API_ERROR');
   }
 }
 
-function buildResponse(options: {
-  alignResult: AlignResult | null;
-  alignedDeviceBuffer: Buffer;
-  alignedReferenceBuffer: Buffer;
-  compareResult: CompareResult;
-  deviceBuffer: Buffer;
-  diffBuffer: Buffer;
-  evaluationResult: EvaluationResult;
-  referenceBuffer: Buffer;
-  warnings: string[];
-}): VisualEvaluationResponse {
-  const response: VisualEvaluationResponse = {
-    artifacts: {
-      alignedDeviceImageBase64: options.alignedDeviceBuffer.toString('base64'),
-      alignedReferenceImageBase64: options.alignedReferenceBuffer.toString(
-        'base64',
-      ),
-      deviceImageBase64: options.deviceBuffer.toString('base64'),
-      diffImageBase64: options.diffBuffer.toString('base64'),
-      referenceImageBase64: options.referenceBuffer.toString('base64'),
-    },
-    metrics: {
-      alignResult: options.alignResult,
-      compareResult: options.compareResult,
-      evaluationResult: options.evaluationResult,
-    },
-    ok: true,
+function findWorkspaceRoot(): string {
+  const configured = process.env['UI_JUDGE_WORKSPACE_ROOT'];
+  if (configured) return configured;
+
+  let current = dirname(fileURLToPath(import.meta.url));
+  for (let depth = 0; depth < 12; depth++) {
+    if (existsSync(join(current, 'packages/genui/ui-judge/rust/src/lib.rs'))) {
+      return current;
+    }
+    const parent = dirname(current);
+    if (parent === current) break;
+    current = parent;
+  }
+  return process.cwd();
+}
+
+function assertNoTypeScriptHooks(options: RunVisualEvaluationOptions): void {
+  const legacyOptions = options as RunVisualEvaluationOptions & {
+    evaluate?: unknown;
+    fetch?: unknown;
   };
-
-  if (typeof options.evaluationResult.score === 'number') {
-    response.score = options.evaluationResult.score;
+  const customAgent = options.agent as
+    | (NonNullable<RunVisualEvaluationOptions['agent']> & { agent?: unknown })
+    | undefined;
+  if (legacyOptions.evaluate || legacyOptions.fetch || customAgent?.agent) {
+    throw new VisualEvaluationError(
+      400,
+      'INVALID_REQUEST',
+      'Custom TypeScript visual-evaluation hooks are no longer supported; configure the Rust model client instead.',
+    );
   }
+}
 
-  if (typeof options.evaluationResult.reason === 'string') {
-    response.reason = options.evaluationResult.reason;
-  }
+function isVisualEvaluationErrorResponse(
+  value: unknown,
+): value is VisualEvaluationErrorResponse {
+  return typeof value === 'object'
+    && value !== null
+    && (value as { ok?: unknown }).ok === false
+    && typeof (value as { status?: unknown }).status === 'number'
+    && typeof (value as { code?: unknown }).code === 'string'
+    && typeof (value as { message?: unknown }).message === 'string';
+}
 
-  if (options.warnings.length > 0) {
-    response.warnings = options.warnings;
-  }
-
-  return response;
+function rustProcessError(child: ChildResult): VisualEvaluationError {
+  const detail = child.stderr.trim()
+    || child.stdout.trim()
+    || (child.signal
+      ? `Rust UI Judge was terminated by ${child.signal}.`
+      : `Rust UI Judge exited with code ${child.code ?? 'unknown'}.`);
+  return new VisualEvaluationError(500, 'VISUAL_EVALUATION_ERROR', detail);
 }
