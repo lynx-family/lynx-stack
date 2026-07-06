@@ -51,8 +51,6 @@ minimumReleaseAgeExclude:
   - "@rspack/*"
   - "@rsbuild/*"
   - "@rstest/*"
-  # Renovate security update: ws@8.20.1
-  - ws@8.20.1
 # npm's abbreviated metadata omits the `time` field, so a strict check hard-fails
 # (`ERR_PNPM_MISSING_TIME`) on packages it cannot date — e.g. during
 # `pnpm dedupe --check`. Run non-strict so the age check is enforced when `time`
