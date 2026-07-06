@@ -83,8 +83,8 @@ export function applyEntry(
       const isWeb = environment.name === 'web'
         || environment.name.startsWith('web-')
       const { hmr, liveReload } = environment.config.dev ?? {}
-      const enabledHMR = isDev && !isWeb && hmr !== false
-      const enabledLiveReload = isDev && !isWeb && liveReload !== false
+      const enabledHMR = isDev && hmr !== false
+      const enabledLiveReload = isDev && liveReload !== false
 
       chain.entryPoints.clear()
 

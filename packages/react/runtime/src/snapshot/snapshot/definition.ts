@@ -14,8 +14,9 @@ import {
 } from './dynamicPartType.js';
 import { snapshotCreateList } from './list.js';
 import type { SnapshotInstance } from './snapshot.js';
+import { snapshotCreatorMap } from './snapshotCreatorMap.js';
 import { updateSpread } from './spread.js';
-import { entryUniqID } from './utils.js';
+import { entryUniqID, getCloneSnapshotInfo } from './utils.js';
 import { SnapshotOperation, __globalSnapshotPatch } from '../lifecycle/patch/snapshotPatch.js';
 
 // Declared globally at runtime; kept here for TS/ESLint project resolution.
@@ -207,4 +208,49 @@ export function createRuntimeSnapshot(type: string): void {
     isListHolder,
     refAndSpreadIndexes: [0],
   });
+}
+
+export function createCloneSnapshot(type: string): void {
+  /* v8 ignore start */
+  if (snapshotManager.values.has(type)) {
+    return;
+  }
+  /* v8 ignore stop */
+  const cloneSnapshotInfo = getCloneSnapshotInfo(type);
+  if (!cloneSnapshotInfo) {
+    throw new Error(`Invalid clone snapshot type: ${type}`);
+  }
+  const { originalType, cloneSpreadIndex } = cloneSnapshotInfo;
+
+  // get the original snapshot definition
+  let originalDef = snapshotManager.values.get(originalType);
+  if (!originalDef) {
+    snapshotCreatorMap[originalType]?.(originalType);
+    originalDef = snapshotManager.values.get(originalType);
+  }
+  if (!originalDef) {
+    throw new Error('Snapshot not found: ' + originalType);
+  }
+
+  // clone the original snapshot definition with spread updater
+  const originalDefUpdate = originalDef.update ?? [];
+  const update = originalDefUpdate.slice();
+  update[cloneSpreadIndex] = (ctx, index, oldValue) => {
+    /* v8 ignore start */
+    if (__JS__ && !__DEV__) {
+      return;
+    }
+    /* v8 ignore stop */
+    updateSpread(ctx, index, oldValue as Record<string, unknown>, 0);
+  };
+  const s: Snapshot = {
+    ...originalDef,
+    update,
+    refAndSpreadIndexes: [
+      ...(originalDef.refAndSpreadIndexes ?? []),
+      cloneSpreadIndex,
+    ],
+  };
+
+  snapshotManager.values.set(type, s);
 }

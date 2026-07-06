@@ -33,6 +33,7 @@ export const {
   loadLazyBundle,
   loadWorkletRuntime,
   options,
+  preactCloneElement,
   process,
   registerWorkletOnBackground,
   snapshotCreateList,

@@ -1511,7 +1511,7 @@ describe('firstScreenSyncTiming - jsReady', () => {
                 "-5": -13,
                 "-9": -17,
               },
-              "root": "{"id":-17,"type":"root","children":[{"id":-21,"type":"__snapshot_a94a8_test_5","children":[{"id":-18,"type":"__snapshot_a94a8_test_6","values":[{"item-key":0}],"children":[{"id":-22,"type":"__snapshot_a94a8_test_4","values":["a"]}]},{"id":-19,"type":"__snapshot_a94a8_test_6","values":[{"item-key":1}],"children":[{"id":-23,"type":"__snapshot_a94a8_test_4","values":["b"]}]},{"id":-20,"type":"__snapshot_a94a8_test_6","values":[{"item-key":2}],"children":[{"id":-24,"type":"__snapshot_a94a8_test_4","values":["c"]}]}]}]}",
+              "root": "{"id":-17,"type":"root","children":[{"id":-21,"type":"__snapshot_a94a8_test_5","children":[{"id":-18,"type":"__snapshot_a94a8_test_6","values":[{"item-key":0}],"children":[{"id":-22,"type":"__snapshot_a94a8_test_4","values":["a"]}],"__listItemPlatformInfo":{"item-key":0}},{"id":-19,"type":"__snapshot_a94a8_test_6","values":[{"item-key":1}],"children":[{"id":-23,"type":"__snapshot_a94a8_test_4","values":["b"]}],"__listItemPlatformInfo":{"item-key":1}},{"id":-20,"type":"__snapshot_a94a8_test_6","values":[{"item-key":2}],"children":[{"id":-24,"type":"__snapshot_a94a8_test_4","values":["c"]}],"__listItemPlatformInfo":{"item-key":2}}]}]}",
             },
           ],
         ]
@@ -1675,7 +1675,7 @@ describe('firstScreenSyncTiming - jsReady', () => {
                 "-2": -10,
                 "-6": -14,
               },
-              "root": "{"id":-10,"type":"root","children":[{"id":-14,"type":"__snapshot_a94a8_test_7","children":[{"id":-11,"type":"__snapshot_a94a8_test_8","values":[{"item-key":0}],"children":[{"id":-15,"type":"__snapshot_a94a8_test_4","values":["a"]}]},{"id":-12,"type":"__snapshot_a94a8_test_8","values":[{"item-key":1}],"children":[{"id":-16,"type":"__snapshot_a94a8_test_4","values":["b"]}]},{"id":-13,"type":"__snapshot_a94a8_test_8","values":[{"item-key":2}],"children":[{"id":-17,"type":"__snapshot_a94a8_test_4","values":["c"]}]}]}]}",
+              "root": "{"id":-10,"type":"root","children":[{"id":-14,"type":"__snapshot_a94a8_test_7","children":[{"id":-11,"type":"__snapshot_a94a8_test_8","values":[{"item-key":0}],"children":[{"id":-15,"type":"__snapshot_a94a8_test_4","values":["a"]}],"__listItemPlatformInfo":{"item-key":0}},{"id":-12,"type":"__snapshot_a94a8_test_8","values":[{"item-key":1}],"children":[{"id":-16,"type":"__snapshot_a94a8_test_4","values":["b"]}],"__listItemPlatformInfo":{"item-key":1}},{"id":-13,"type":"__snapshot_a94a8_test_8","values":[{"item-key":2}],"children":[{"id":-17,"type":"__snapshot_a94a8_test_4","values":["c"]}],"__listItemPlatformInfo":{"item-key":2}}]}]}",
             },
           ],
         ]

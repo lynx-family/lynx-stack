@@ -14,10 +14,10 @@ import {
 import { ElementTemplateLifecycleConstant } from '../../../../src/element-template/protocol/lifecycle-constant.js';
 import { ElementTemplateUpdateOps } from '../../../../src/element-template/protocol/opcodes.js';
 import type {
+  ElementTemplateHydrateCommitContext,
   ElementTemplateHandleSlotsCommand,
   ElementTemplateUpdateCommandStream,
   ElementTemplateUpdateCommitContext,
-  SerializedElementTemplate,
 } from '../../../../src/element-template/protocol/types.js';
 import { createElementTemplateUpdateEvent } from '../../../../src/element-template/protocol/update-event.js';
 import { __page, setupPage } from '../../../../src/element-template/runtime/page/page.js';
@@ -42,7 +42,6 @@ import {
 } from '../../../../src/element-template/runtime/template/attr-slot-plan.js';
 import { elementTemplateRegistry } from '../../../../src/element-template/runtime/template/registry.js';
 import { ElementTemplateEnvManager } from '../../test-utils/debug/envManager.js';
-import { extractSerializedHydrateInstances } from '../../test-utils/debug/hydratePayload.js';
 import { registerBuiltinRawTextTemplate, registerTemplates } from '../../test-utils/debug/registry.js';
 import { lastMock } from '../../test-utils/mock/mockNativePapi.js';
 import { serializeToJSX } from '../../test-utils/debug/serializer.js';
@@ -62,6 +61,9 @@ interface LynxWithReportErrorMock {
 interface PageWithChildren {
   children?: Array<{ templateId?: string }>;
 }
+
+type HydrateEvent = { data: ElementTemplateHydrateCommitContext };
+type HydrateInstances = ElementTemplateHydrateCommitContext['instances'];
 
 function createRawTextOps(id: number, text: string) {
   return [
@@ -115,9 +117,9 @@ function seedMTEventState(
 
 describe('ElementTemplate patch stream (apply)', () => {
   const envManager = new ElementTemplateEnvManager();
-  let hydrationData: SerializedElementTemplate[] = [];
+  let hydrationData: HydrateInstances = [];
 
-  let onHydrate: (event: { data: unknown }) => void;
+  let onHydrate: (event: HydrateEvent) => void;
   let mockCreateTypedElementTemplate: ReportErrorMock;
   let mockSetAttribute: ReportErrorMock;
   let mockSetAttributeOfElementTemplate: ReportErrorMock;
@@ -142,8 +144,8 @@ describe('ElementTemplate patch stream (apply)', () => {
     envManager.resetEnv('background');
     envManager.setUseElementTemplate(true);
 
-    onHydrate = vi.fn().mockImplementation((event: { data: unknown }) => {
-      hydrationData.push(...extractSerializedHydrateInstances(event.data));
+    onHydrate = vi.fn().mockImplementation((event: HydrateEvent) => {
+      hydrationData.push(...event.data.instances);
     });
     lynx.getCoreContext().addEventListener(ElementTemplateLifecycleConstant.hydrate, onHydrate);
   });

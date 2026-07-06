@@ -16,8 +16,9 @@ const CLIENT_PAYLOAD_STORE_ENABLED = process.env.NODE_ENV !== 'production'
 // In-memory A2UI payload store. Keeps the dev-bundle / render URLs short
 // enough to fit inside a scannable QR code.
 interface StoredPayload {
-  messages: unknown;
+  messages?: unknown;
   actionMocks?: unknown;
+  rawText?: string;
   createdAt: number;
 }
 const payloadStore = new Map<string, StoredPayload>();
@@ -58,6 +59,16 @@ function sendJson(res: ServerResponse, status: number, body: unknown): void {
   res.end(JSON.stringify(body));
 }
 
+function sendText(res: ServerResponse, status: number, body: string): void {
+  res.statusCode = status;
+  res.setHeader('Content-Type', 'text/plain; charset=utf-8');
+  res.setHeader('Access-Control-Allow-Origin', '*');
+  res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
+  res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
+  res.setHeader('Cache-Control', 'no-store');
+  res.end(body);
+}
+
 function a2uiPayloadMiddleware(
   req: IncomingMessage,
   res: ServerResponse,
@@ -67,7 +78,12 @@ function a2uiPayloadMiddleware(
 
   if (
     req.method === 'OPTIONS'
-    && (url.startsWith('/__a2ui_payload') || url.startsWith('/__a2ui/'))
+    && (
+      url.startsWith('/__a2ui_payload')
+      || url.startsWith('/__a2ui/')
+      || url.startsWith('/__openui_payload')
+      || url.startsWith('/__openui/')
+    )
   ) {
     res.statusCode = 204;
     res.setHeader('Access-Control-Allow-Origin', '*');
@@ -107,6 +123,35 @@ function a2uiPayloadMiddleware(
     return;
   }
 
+  if (req.method === 'POST' && url.startsWith('/__openui_payload')) {
+    void (async () => {
+      try {
+        gcPayloads();
+        const body = (await readJsonBody(req)) as {
+          rawText?: unknown;
+        };
+        if (typeof body.rawText !== 'string') {
+          sendJson(res, 400, { error: 'rawText is required' });
+          return;
+        }
+        const id = randomUUID();
+        payloadStore.set(id, {
+          rawText: body.rawText,
+          createdAt: Date.now(),
+        });
+        sendJson(res, 200, {
+          id,
+          rawTextUrl: `/__openui/${id}/rawText`,
+        });
+      } catch (e) {
+        sendJson(res, 400, {
+          error: e instanceof Error ? e.message : 'bad request',
+        });
+      }
+    })();
+    return;
+  }
+
   if (req.method === 'GET' && url.startsWith('/__a2ui/')) {
     // Sweep expired entries before reads too — otherwise an idle dev
     // server keeps stale payloads retrievable far past the TTL.
@@ -120,6 +165,21 @@ function a2uiPayloadMiddleware(
           ? entry.messages
           : entry.actionMocks;
         sendJson(res, 200, value ?? null);
+        return;
+      }
+    }
+    sendJson(res, 404, { error: 'not found' });
+    return;
+  }
+
+  if (req.method === 'GET' && url.startsWith('/__openui/')) {
+    gcPayloads();
+    const m = /^\/__openui\/([^/]+)\/rawText(?:\?|$)/.exec(url);
+    if (m) {
+      const [, id] = m;
+      const entry = id ? payloadStore.get(id) : undefined;
+      if (typeof entry?.rawText === 'string') {
+        sendText(res, 200, entry.rawText);
         return;
       }
     }

@@ -5,7 +5,7 @@
 /**
  * Utility functions for snapshot system.
  */
-import { COMPILED_SNAPSHOT } from './constants.js';
+import { CLONE_SNAPSHOT, COMPILED_SNAPSHOT } from './constants.js';
 import type { WithChildren } from './types.js';
 
 /**
@@ -30,3 +30,25 @@ export function traverseSnapshotInstance<I extends WithChildren>(
 }
 
 export const isCompiledSnapshot: (type: string) => boolean = (type: string) => type.includes(COMPILED_SNAPSHOT);
+
+export const isCloneSnapshot: (type: string) => boolean = (type: string) => type.startsWith(`${CLONE_SNAPSHOT}_`);
+
+export function getCloneSnapshotInfo(type: string): { originalType: string; cloneSpreadIndex: number } | undefined {
+  // Format: `${CLONE_SNAPSHOT}_${cloneSpreadIndex}_${originalType}`.
+  const match = new RegExp(`^${CLONE_SNAPSHOT}_(0|[1-9]\\d*)_(.+)$`).exec(type);
+  if (!match) {
+    return undefined;
+  }
+
+  const cloneSpreadIndexString = match[1]!;
+  const cloneSpreadIndex = Number(cloneSpreadIndexString);
+  const originalType = match[2]!;
+  if (!isCompiledSnapshot(originalType)) {
+    return undefined;
+  }
+  return { originalType, cloneSpreadIndex };
+}
+
+export function getCloneSnapshotType(type: string, cloneSpreadIndex: number): string {
+  return isCloneSnapshot(type) ? type : `${CLONE_SNAPSHOT}_${cloneSpreadIndex}_${type}`;
+}

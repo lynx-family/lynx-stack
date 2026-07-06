@@ -143,14 +143,18 @@ describe('children api', () => {
         <view>
           <view
             class="a"
-            id="init"
+            id="test"
           />
           <view
             class="a"
             id="test"
           />
-          <view />
-          <view />
+          <view
+            id="test"
+          />
+          <view
+            id="test"
+          />
         </view>
       </page>
     `);

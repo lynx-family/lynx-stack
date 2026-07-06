@@ -27,12 +27,10 @@ coverage:
 ignore:
   - ".github/**"
   - "codecov.yml"
-  - "examples/**"
+  - "lynx/engine-bridge/tools/runtime_build.rs"
   - "packages/genui/**"
   - "pnpm-lock.yaml"
   - "rstest.config.ts"
-  - "**/__swc_snapshots__/**"
-  - "**/__snapshots__/**"
   - "**/__test__/**/fixtures/**"
 
 fixes:

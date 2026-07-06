@@ -25,7 +25,7 @@ export interface DiffResult<K> {
 
 export interface Typed {
   type: string;
-  __listItemPlatformInfo?: PlatformInfo;
+  __listItemPlatformInfo?: PlatformInfo | undefined;
 }
 
 export function isEmptyDiffResult<K>(diffResult: DiffResult<K>): boolean {

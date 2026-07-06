@@ -10,9 +10,10 @@
 
 import type { Worklet } from '@lynx-js/react/worklet-runtime/bindings';
 
-import { createRuntimeSnapshot, snapshotManager } from './definition.js';
+import { createCloneSnapshot, createRuntimeSnapshot, snapshotManager } from './definition.js';
 import type { Snapshot } from './definition.js';
 import { DynamicPartType } from './dynamicPartType.js';
+import type { PlatformInfo } from './platformInfo.js';
 import { reconstructInstanceTree } from './reconstructInstanceTree.js';
 import { clearQueuedRefs, clearRef, getRefFromValue, queueRefAttrUpdate } from './ref.js';
 import type { Ref } from './ref.js';
@@ -20,7 +21,7 @@ import { snapshotCreatorMap } from './snapshot.js';
 import { hydrationMap } from './snapshotInstanceHydrationMap.js';
 import { transformSpread } from './spread.js';
 import type { SerializedSnapshotInstance } from './types.js';
-import { isCompiledSnapshot, traverseSnapshotInstance } from './utils.js';
+import { isCloneSnapshot, isCompiledSnapshot, traverseSnapshotInstance } from './utils.js';
 import { globalPipelineOptions } from '../../core/performance.js';
 import { profileEnd, profileStart } from '../../shared/profile.js';
 import { isDirectOrDeepEqual } from '../../utils.js';
@@ -154,6 +155,8 @@ export class BackgroundSnapshotInstance {
     if (!snapshotManager.values.has(type) && type !== 'div') {
       if (snapshotCreatorMap[type]) {
         snapshotCreatorMap[type](type);
+      } else if (isCloneSnapshot(type)) {
+        createCloneSnapshot(type);
       } else if (isCompiledSnapshot(type)) {
         throw new Error('BackgroundSnapshot not found: ' + type);
       } else {
@@ -171,8 +174,10 @@ export class BackgroundSnapshotInstance {
   __id: number;
   __values: unknown[] | undefined;
   __snapshot_def: Snapshot;
+  __listItemPlatformInfo?: PlatformInfo;
   __extraProps?: Record<string, unknown> | undefined;
   __slotIndex: number = 0;
+  private __listItemPlatformInfoIndex?: number;
 
   private __parent: BackgroundSnapshotInstance | null = null;
   private __firstChild: BackgroundSnapshotInstance | null = null;
@@ -382,6 +387,7 @@ export class BackgroundSnapshotInstance {
         });
       }
       this.__values = value as unknown[];
+      this.syncListItemPlatformInfo();
       if (typeof __PROFILE__ !== 'undefined' && __PROFILE__) {
         profileEnd();
       }
@@ -389,11 +395,27 @@ export class BackgroundSnapshotInstance {
     }
 
     if (typeof key === 'string') {
+      if (key === '__listItemPlatformInfoIndex') {
+        this.__listItemPlatformInfoIndex = value as number;
+        this.syncListItemPlatformInfo();
+        if (typeof __PROFILE__ !== 'undefined' && __PROFILE__) {
+          profileEnd();
+        }
+        return;
+      }
+      if (key === '__listItemPlatformInfo') {
+        this.__listItemPlatformInfo = value as PlatformInfo;
+        if (typeof __PROFILE__ !== 'undefined' && __PROFILE__) {
+          profileEnd();
+        }
+        return;
+      }
       (this.__extraProps ??= {})[key] = value;
     } else {
       // old path (`this.setAttribute(0, xxx)`)
       // is reserved as slow path
       (this.__values ??= [])[key] = value;
+      this.syncListItemPlatformInfo();
     }
     __globalSnapshotPatch?.push(
       SnapshotOperation.SetAttribute,
@@ -404,6 +426,13 @@ export class BackgroundSnapshotInstance {
     if (typeof __PROFILE__ !== 'undefined' && __PROFILE__) {
       profileEnd();
     }
+  }
+
+  private syncListItemPlatformInfo(): void {
+    if (this.__listItemPlatformInfoIndex === undefined || !this.__values) {
+      return;
+    }
+    this.__listItemPlatformInfo = this.__values[this.__listItemPlatformInfoIndex] as PlatformInfo;
   }
 
   private setAttributeImpl(newValue: unknown, oldValue: unknown, index: number): {
@@ -647,8 +676,7 @@ export function hydrate(
               (a, b) => {
                 helper(a, b);
               },
-              // Should be `false` in hydrate as SerializedSnapshotInstance has no item-key
-              false,
+              type === DynamicPartType.ListChildren || type === DynamicPartType.ListSlotV2,
             );
             diffArrayAction(
               filteredBeforeChildNodes,
