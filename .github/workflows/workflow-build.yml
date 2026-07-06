@@ -135,6 +135,8 @@ jobs:
           mkdir -p _build_diag
           uname -a > _build_diag/host.txt
           nproc >> _build_diag/host.txt
+          ls -la .turbo/cache/ > _build_diag/turbo-cache-ls.txt 2>&1
+          grep -rlE 'react-debug-metadata.*build' .turbo/runs/*.json > _build_diag/turbo-runs-hit.txt 2>&1
           find examples/react-debug-metadata/dist-producer examples/react-debug-metadata/dist-consumer -type f 2>/dev/null | sort > _build_diag/disk-files.txt
           for f in .turbo/cache/*.tar.zst; do
             if zstd -dc "$f" 2>/dev/null | tar -tf - 2>/dev/null | grep -q react-debug-metadata/dist-producer; then
@@ -160,6 +162,7 @@ jobs:
       # repo's required-approval setting — the same trust boundary the Build
       # step above (which already runs fork install/build scripts) relies on.
       - name: Fetch base ref for changeset status
+        continue-on-error: true # DEBUG(remove later): unblock test-rstest on 26.04 runners
         if: >
           matrix.runs-on.label == 'lynx-ubuntu-24.04-xlarge' &&
           github.event_name == 'pull_request'
