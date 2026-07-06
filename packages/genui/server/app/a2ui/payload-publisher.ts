@@ -10,6 +10,8 @@ const SUPABASE_S3_SECRET_ACCESS_KEY = process.env.SUPABASE_S3_SECRET_ACCESS_KEY;
 const SUPABASE_STORAGE_BUCKET = process.env.SUPABASE_STORAGE_BUCKET
   ?? 'genui';
 const SUPABASE_STORAGE_PREFIX = process.env.SUPABASE_STORAGE_PREFIX ?? 'a2ui';
+const SUPABASE_OPENUI_STORAGE_PREFIX =
+  process.env.SUPABASE_OPENUI_STORAGE_PREFIX ?? 'openui';
 const SUPABASE_STORAGE_REGION = process.env.SUPABASE_STORAGE_REGION
   ?? 'us-east-1';
 
@@ -18,12 +20,20 @@ export interface A2UIPublishedPayload {
   actionMocksUrl?: string;
 }
 
+export interface OpenUIPublishedPayload {
+  rawTextUrl: string;
+}
+
 function trimSlashes(value: string): string {
   return value.replace(/^\/+|\/+$/g, '');
 }
 
-function buildSupabaseStoragePath(id: string, file: string): string {
-  const prefix = trimSlashes(SUPABASE_STORAGE_PREFIX);
+function buildSupabaseStoragePath(
+  id: string,
+  file: string,
+  storagePrefix = SUPABASE_STORAGE_PREFIX,
+): string {
+  const prefix = trimSlashes(storagePrefix);
   return prefix ? `${prefix}/${id}/${file}` : `${id}/${file}`;
 }
 
@@ -59,15 +69,46 @@ async function uploadSupabaseJson(
   path: string,
   payload: unknown,
 ): Promise<void> {
+  await uploadSupabaseObject(
+    path,
+    JSON.stringify(payload),
+    'application/json; charset=utf-8',
+  );
+}
+
+async function uploadSupabaseText(
+  path: string,
+  text: string,
+): Promise<void> {
+  await uploadSupabaseObject(
+    path,
+    text,
+    'text/plain; charset=utf-8',
+  );
+}
+
+async function uploadSupabaseObject(
+  path: string,
+  body: string,
+  contentType: string,
+): Promise<void> {
   const client = createSupabaseS3Client();
   await client.send(
     new PutObjectCommand({
       Bucket: SUPABASE_STORAGE_BUCKET,
       Key: path,
-      Body: JSON.stringify(payload),
-      ContentType: 'application/json; charset=utf-8',
+      Body: body,
+      ContentType: contentType,
       CacheControl: 'public, max-age=1800',
     }),
+  );
+}
+
+function isSupabaseStorageConfigured(): boolean {
+  return Boolean(
+    SUPABASE_URL
+      && SUPABASE_S3_ACCESS_KEY_ID
+      && SUPABASE_S3_SECRET_ACCESS_KEY,
   );
 }
 
@@ -77,11 +118,7 @@ export async function publishA2UIPayload(
 ): Promise<A2UIPublishedPayload | undefined> {
   if (messages === undefined) return undefined;
 
-  if (
-    !SUPABASE_URL
-    || !SUPABASE_S3_ACCESS_KEY_ID
-    || !SUPABASE_S3_SECRET_ACCESS_KEY
-  ) {
+  if (!isSupabaseStorageConfigured()) {
     console.warn(
       '[a2ui:payload-publisher] Supabase Storage S3 is not configured',
     );
@@ -107,6 +144,36 @@ export async function publishA2UIPayload(
   } catch (err) {
     console.warn(
       '[a2ui:payload-publisher] Supabase Storage upload failed',
+      err,
+    );
+    return undefined;
+  }
+}
+
+export async function publishOpenUIRawText(
+  rawText: string,
+): Promise<OpenUIPublishedPayload | undefined> {
+  if (!isSupabaseStorageConfigured()) {
+    console.warn(
+      '[openui:payload-publisher] Supabase Storage S3 is not configured',
+    );
+    return undefined;
+  }
+
+  try {
+    const id = crypto.randomUUID();
+    const rawTextPath = buildSupabaseStoragePath(
+      id,
+      'raw.txt',
+      SUPABASE_OPENUI_STORAGE_PREFIX,
+    );
+    await uploadSupabaseText(rawTextPath, rawText);
+    const rawTextUrl = buildSupabaseObjectUrl(rawTextPath);
+    if (!rawTextUrl) return undefined;
+    return { rawTextUrl };
+  } catch (err) {
+    console.warn(
+      '[openui:payload-publisher] Supabase Storage upload failed',
       err,
     );
     return undefined;

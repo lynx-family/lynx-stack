@@ -1,5 +1,24 @@
 # @lynx-js/react-rsbuild-plugin
 
+## 0.17.2
+
+### Patch Changes
+
+- Fix the `web` environment crashing in development because its main thread was bundled with the Rsbuild web HMR runtime. ([#2910](https://github.com/lynx-family/lynx-stack/pull/2910))
+
+  Previously the `web` environment was compiled with `target: 'web'`, which makes Rsbuild inject its own HMR client (`@rsbuild/core/dist/client/hmr.js`). That client drives `__webpack_require__.hmrM`, which is implemented with `lynx.requireModuleAsync` — an API the web main thread does not provide — so hot updates crashed.
+
+  The `web` environment now uses the same target and HMR entry as the `lynx` environment, going through Lynx's own HMR runtime instead of the Rsbuild web one.
+
+- Updated dependencies [[`7a6577a`](https://github.com/lynx-family/lynx-stack/commit/7a6577a5b29db4020cbba22a911f712bafde7e66), [`d18c3e7`](https://github.com/lynx-family/lynx-stack/commit/d18c3e7a3976569ec9ba2a1b4a1e0e6c3ffa1f1d)]:
+  - @lynx-js/runtime-wrapper-webpack-plugin@0.2.1
+  - @lynx-js/react-alias-rsbuild-plugin@0.17.2
+  - @lynx-js/react-webpack-plugin@0.9.5
+  - @lynx-js/use-sync-external-store@1.5.0
+  - @lynx-js/react-refresh-webpack-plugin@0.4.0
+  - @lynx-js/template-webpack-plugin@0.12.2
+  - @lynx-js/css-extract-webpack-plugin@0.8.0
+
 ## 0.17.1
 
 ### Patch Changes
