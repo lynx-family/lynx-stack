@@ -473,6 +473,46 @@ describe('jsx', () => {
       }
     `);
   });
+
+  it('<list-item> with dynamic key and spread attributes', async () => {
+    const result = await transformReactLynx(
+      `
+      const jsx = (
+        <list>
+          <list-item key={dynamicKey} item-key="hello-world" {...{ 'estimated-height-px': '10px' }}>
+            <text>123</text>
+          </list-item>
+        </list>
+      );
+      `,
+      {
+        pluginName: '',
+        filename: '',
+        sourceFileName: '',
+        defineDCE: true,
+        sourcemap: false,
+        compat: false,
+        jsx: true,
+        shake: true,
+        cssScope: false,
+        refresh: false,
+        directiveDCE: {
+          target: 'LEPUS',
+        },
+        worklet: true,
+        experimental_moduleCompress: false,
+      },
+    );
+
+    expect(result.errors).toEqual([]);
+    expect(result.warnings).toEqual([]);
+    expect(result.code).toContain(
+      'ReactLynx.updateSpread(snapshot, index, oldValue, 0, true)',
+    );
+    expect(result.code).toContain('"item-key": "hello-world"');
+    expect(result.code).toContain('\'estimated-height-px\': \'10px\'');
+    expect(result.code).toContain('}, dynamicKey)');
+  });
 });
 
 describe('errors and warnings', () => {
@@ -665,7 +705,7 @@ Component, View
                     el
                 ];
             }, [
-                (snapshot, index, oldValue)=>ReactLynx.updateSpread(snapshot, index, oldValue, 0)
+                (snapshot, index, oldValue)=>ReactLynx.updateSpread(snapshot, index, oldValue, 0, false)
             ], ReactLynx.__DynamicPartSlotV2_0, undefined, globDynamicComponentEntry, [
                 0
             ], true);
