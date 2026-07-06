@@ -32,6 +32,10 @@ on:
         required: false
         type: boolean
         default: true
+      install-rust:
+        required: false
+        type: boolean
+        default: false
       web-report-name:
         required: false
         type: string
@@ -79,6 +83,10 @@ jobs:
           # Codecov requires fetch-depth: 0
           fetch-depth: 0
           persist-credentials: false
+      - uses: ./.github/actions/rustup
+        if: ${{ inputs.install-rust }}
+        with:
+          key: workflow-test-${{ runner.os }}-${{ hashFiles('**/Cargo.lock') }}
       - name: TurboCache
         uses: lynx-infra/cache@5c6160a6a4c7fca80a2f3057bb9dfc9513fcb732
         with:
