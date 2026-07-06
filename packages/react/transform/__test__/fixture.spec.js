@@ -504,9 +504,8 @@ describe('jsx', () => {
       },
     );
 
-    expect(result).toMatchInlineSnapshot(`
-      {
-        "code": "import { jsx as _jsx } from "@lynx-js/react/jsx-runtime";
+    expect(result.code).toMatchInlineSnapshot(`
+      "import { jsx as _jsx } from "@lynx-js/react/jsx-runtime";
       import * as ReactLynx from "@lynx-js/react";
       const __snapshot_da39a_5e2e0_2 = "__snapshot_da39a_5e2e0_2";
       ReactLynx.snapshotCreatorMap[__snapshot_da39a_5e2e0_2] = (__snapshot_da39a_5e2e0_2)=>ReactLynx.createSnapshot(__snapshot_da39a_5e2e0_2, function() {
@@ -550,11 +549,7 @@ describe('jsx', () => {
               ]
           }, dynamicKey)
       });
-      ",
-        "errors": [],
-        "uiSourceMapRecords": [],
-        "warnings": [],
-      }
+      "
     `);
   });
 });
