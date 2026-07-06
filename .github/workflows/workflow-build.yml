@@ -125,6 +125,33 @@ jobs:
           retention-days: 1
           overwrite: true
           include-hidden-files: true
+      # DEBUG(remove later): capture react-debug-metadata build output vs what
+      # turbo cached, right where the cache is created, to find why test-rstest
+      # restores a bundle-less dist.
+      - name: DEBUG dump example cache
+        if: ${{ always() && matrix.runs-on.label == 'lynx-ubuntu-24.04-xlarge' }}
+        run: |
+          set +e
+          mkdir -p _build_diag
+          uname -a > _build_diag/host.txt
+          nproc >> _build_diag/host.txt
+          find examples/react-debug-metadata/dist-producer examples/react-debug-metadata/dist-consumer -type f 2>/dev/null | sort > _build_diag/disk-files.txt
+          for f in .turbo/cache/*.tar.zst; do
+            if zstd -dc "$f" 2>/dev/null | tar -tf - 2>/dev/null | grep -q react-debug-metadata/dist-producer; then
+              echo "TARBALL=$f SIZE=$(stat -c%s "$f")" >> _build_diag/cache-info.txt
+              zstd -dc "$f" 2>/dev/null | tar -tf - 2>/dev/null | grep react-debug-metadata > _build_diag/cache-contents.txt
+              cp "$f" _build_diag/example-cache.tar.zst
+            fi
+          done
+      - name: DEBUG upload example cache
+        if: ${{ always() && matrix.runs-on.label == 'lynx-ubuntu-24.04-xlarge' }}
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        with:
+          name: debug-build-example-cache
+          path: _build_diag
+          retention-days: 1
+          overwrite: true
+          include-hidden-files: true
       # Publish PR previews to pkg.pr.new. Only runs on the Ubuntu leg of the
       # build matrix, and only when the PR adds a changeset that actually
       # bumps a publishable package. Fork PRs are included: this is a
