@@ -54,6 +54,27 @@ const pkg = JSON.parse(await readFile(pkgPath, 'utf-8')) as {
 
 const MCP_SERVER_NAME = 'lynx-docs';
 
+function registerCodexCompatibilityHandlers(mcpServer: McpServer) {
+  // Codex expects tool discovery to exist during startup. Register one disabled
+  // placeholder so the SDK exposes tools/list while keeping the catalog empty.
+  const dummyTool = mcpServer.registerTool(
+    'dummyTool',
+    {
+      description: 'Internal compatibility shim for Codex MCP startup.',
+    },
+    async () => ({
+      content: [
+        {
+          type: 'text',
+          text: 'This compatibility shim should never be called.',
+        },
+      ],
+    }),
+  );
+
+  dummyTool.disable();
+}
+
 async function crawlAndRegisterResources(
   baseURL: string,
   mcpServer: McpServer,
@@ -238,6 +259,8 @@ For any questions or requirements regarding Lynx:
     ROOT_DOC_MARKDOWN,
     visited,
   );
+
+  registerCodexCompatibilityHandlers(mcpServer);
 
   const transport = new StdioServerTransport();
   await mcpServer.connect(transport);

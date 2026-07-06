@@ -1,5 +1,13 @@
 # @lynx-js/lynx-bundle-rslib-config
 
+## 0.5.1
+
+### Patch Changes
+
+- Updated dependencies [[`7a6577a`](https://github.com/lynx-family/lynx-stack/commit/7a6577a5b29db4020cbba22a911f712bafde7e66)]:
+  - @lynx-js/runtime-wrapper-webpack-plugin@0.2.1
+  - @lynx-js/web-core@0.22.1
+
 ## 0.5.0
 
 ### Minor Changes

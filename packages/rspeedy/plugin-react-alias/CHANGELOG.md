@@ -1,5 +1,19 @@
 # @lynx-js/react-alias-rsbuild-plugin
 
+## 0.17.2
+
+### Patch Changes
+
+- Support enabling preact devtools in production via the `REACT_DEVTOOL` environment variable. ([#2880](https://github.com/lynx-family/lynx-stack/pull/2880))
+
+  By default `@lynx-js/preact-devtools` is aliased away in production builds. Setting the `REACT_DEVTOOL` environment variable now:
+
+  1. keeps a user-imported `@lynx-js/preact-devtools` from being stripped;
+  2. defines `__REACT_DEVTOOL__`, which gates the dev-only runtime hooks devtools depends on (such as `injectLepusMethods`) so they also run in production;
+  3. keeps function/class names during minification (`keep_fnames`/`keep_classnames`), which devtools needs to resolve component names (`type.name`) and to reconstruct the hook tree (it matches minified stack frames by function name).
+
+  `@lynx-js/react/debug` remains development-only.
+
 ## 0.17.1
 
 ## 0.17.0

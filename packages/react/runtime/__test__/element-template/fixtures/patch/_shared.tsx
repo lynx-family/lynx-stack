@@ -20,8 +20,8 @@ import { installElementTemplateCommitHook } from '../../../../src/element-templa
 import '../../../../src/element-template/native/index.js';
 import { ElementTemplateLifecycleConstant } from '../../../../src/element-template/protocol/lifecycle-constant.js';
 import type {
+  ElementTemplateHydrateCommitContext,
   ElementTemplateUpdateCommitContext,
-  SerializedElementTemplate,
 } from '../../../../src/element-template/protocol/types.js';
 import { parseElementTemplateUpdateEventPayload } from '../../../../src/element-template/protocol/update-event.js';
 import { root } from '../../../../src/element-template/client/root.js';
@@ -31,7 +31,6 @@ import { resetTemplateId } from '../../../../src/element-template/runtime/templa
 import { elementTemplateRegistry } from '../../../../src/element-template/runtime/template/registry.js';
 import { registerBuiltinRawTextTemplate } from '../../test-utils/debug/registry.js';
 import { ElementTemplateEnvManager } from '../../test-utils/debug/envManager.js';
-import { extractSerializedHydrateInstances } from '../../test-utils/debug/hydratePayload.js';
 import { compileFixtureSource } from '../../test-utils/debug/compiledFixtureCompiler.js';
 import {
   loadCompiledFixtureModule,
@@ -48,10 +47,14 @@ interface RootNode {
   type: 'root';
 }
 
+type HydrateEvent = { data: ElementTemplateHydrateCommitContext };
+type HydrateInstance = ElementTemplateHydrateCommitContext['instances'][number];
+type HydrateInstances = ElementTemplateHydrateCommitContext['instances'];
+
 export interface PatchContext {
   envManager: ElementTemplateEnvManager;
-  hydrationData: SerializedElementTemplate[];
-  onHydrate: (event: { data: unknown }) => void;
+  hydrationData: HydrateInstances;
+  onHydrate: (event: HydrateEvent) => void;
   root: RootNode;
   nativeLog: unknown[];
   cleanupNative: () => void;
@@ -59,9 +62,9 @@ export interface PatchContext {
 
 export interface UpdateFixtureContext {
   envManager: ElementTemplateEnvManager;
-  hydrationData: SerializedElementTemplate[];
+  hydrationData: HydrateInstances;
   updateEvents: ElementTemplateUpdateCommitContext[];
-  onHydrate: (event: { data: unknown }) => void;
+  onHydrate: (event: HydrateEvent) => void;
   onUpdate: (event: { data: unknown }) => void;
   cleanupNative: () => void;
 }
@@ -75,7 +78,7 @@ export function setupPatchContext(): PatchContext {
   const installed = installMockNativePapi({ clearTemplatesOnCleanup: false });
 
   const envManager = new ElementTemplateEnvManager();
-  const hydrationData: SerializedElementTemplate[] = [];
+  const hydrationData: HydrateInstances = [];
 
   envManager.resetEnv('background');
   envManager.setUseElementTemplate(true);
@@ -88,8 +91,8 @@ export function setupPatchContext(): PatchContext {
   installElementTemplatePatchListener();
   envManager.switchToBackground();
 
-  const onHydrate = vi.fn().mockImplementation((event: { data: unknown }) => {
-    hydrationData.push(...extractSerializedHydrateInstances(event.data));
+  const onHydrate = vi.fn().mockImplementation((event: HydrateEvent) => {
+    hydrationData.push(...event.data.instances);
   });
   lynx.getCoreContext().addEventListener(ElementTemplateLifecycleConstant.hydrate, onHydrate);
 
@@ -111,7 +114,7 @@ export function setupUpdateFixtureContext(): UpdateFixtureContext {
 
   const installed = installMockNativePapi({ clearTemplatesOnCleanup: false });
   const envManager = new ElementTemplateEnvManager();
-  const hydrationData: SerializedElementTemplate[] = [];
+  const hydrationData: HydrateInstances = [];
   const updateEvents: ElementTemplateUpdateCommitContext[] = [];
 
   envManager.resetEnv('background');
@@ -120,8 +123,8 @@ export function setupUpdateFixtureContext(): UpdateFixtureContext {
   envManager.switchToBackground();
   installElementTemplateHydrationListener();
   installElementTemplateCommitHook();
-  const onHydrate = (event: { data: unknown }) => {
-    hydrationData.push(...extractSerializedHydrateInstances(event.data));
+  const onHydrate = (event: HydrateEvent) => {
+    hydrationData.push(...event.data.instances);
   };
   lynx.getCoreContext().addEventListener(ElementTemplateLifecycleConstant.hydrate, onHydrate);
 
@@ -177,7 +180,7 @@ export function teardownUpdateFixtureContext(context: UpdateFixtureContext): voi
 }
 
 export function renderAndCollect(App: () => JSX.Element, context: PatchContext): {
-  before: SerializedElementTemplate;
+  before: HydrateInstance;
   after: BackgroundElementTemplateInstance;
 } {
   root.render(<App />);

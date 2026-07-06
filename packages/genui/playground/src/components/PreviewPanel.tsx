@@ -27,7 +27,12 @@ import { useMediaQuery } from '../hooks/useMediaQuery.js';
 import { copyToClipboard } from '../utils/clipboard.js';
 import { DEFAULT_A2UI_DEMO_URL } from '../utils/demoUrl.js';
 import type { Protocol } from '../utils/protocol.js';
-import { buildOpenUIRenderUrl, buildRenderUrl } from '../utils/renderUrl.js';
+import { publishOpenUIPayload } from '../utils/publishPayload.js';
+import {
+  buildOpenUIRenderUrl,
+  buildRenderUrl,
+  canInlineOpenUIRenderUrl,
+} from '../utils/renderUrl.js';
 
 declare const __A2UI_PLAYGROUND_CLIENT_PAYLOAD_STORE__: boolean;
 
@@ -247,6 +252,26 @@ function absoluteUrl(url: string, origin: string): string {
 
 function shouldUseClientPayloadStore(): boolean {
   return __A2UI_PLAYGROUND_CLIENT_PAYLOAD_STORE__;
+}
+
+async function publishOpenUIRawTextToClientStore(
+  baseUrl: string,
+  rawText: string,
+): Promise<string> {
+  const payloadOrigin = new URL(baseUrl).origin;
+  const res = await window.fetch(`${payloadOrigin}/__openui_payload`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ rawText }),
+  });
+  if (!res.ok) {
+    throw new Error('Failed to publish local OpenUI raw text');
+  }
+  const data = (await res.json()) as { rawTextUrl?: unknown };
+  if (typeof data.rawTextUrl !== 'string') {
+    throw new Error('Invalid local OpenUI payload response');
+  }
+  return absoluteUrl(data.rawTextUrl, payloadOrigin);
 }
 
 function isPreviewMetricName(value: unknown): value is PreviewMetricName {
@@ -736,67 +761,80 @@ export function PreviewPanel(props: PreviewPanelProps) {
       return;
     }
 
-    const url = buildOpenUIRenderUrl({
+    const inlineUrl = buildOpenUIRenderUrl({
       rawText: previewSource.rawText,
       speed,
       playbackMode: previewSource.playbackMode,
     }, baseUrl);
-    const shareUrl = buildOpenUIRenderUrl({
+    const inlineShareUrl = buildOpenUIRenderUrl({
       rawText: previewSource.rawText,
       speed,
     }, shareBaseUrl);
-    setRenderUrl(url);
-    setRenderShareUrl(shareUrl);
+    const canInline = canInlineOpenUIRenderUrl(inlineUrl)
+      && canInlineOpenUIRenderUrl(inlineShareUrl);
 
-    if (!rspeedyDevUrl) {
+    setRenderUrl(canInline ? inlineUrl : '');
+    setRenderShareUrl(canInline ? inlineShareUrl : '');
+
+    const setOpenUILynxDevUrl = (
+      payload: { rawText: string } | { rawTextUrl: string },
+    ) => {
+      if (!rspeedyDevUrl) {
+        setLynxDevUrl('');
+        return;
+      }
+      const u = new URL(rspeedyDevUrl);
+      u.pathname = u.pathname.replace('a2ui.lynx', 'openui.lynx');
+      if ('rawTextUrl' in payload) {
+        u.searchParams.set('rawTextUrl', payload.rawTextUrl);
+        u.searchParams.delete('rawText');
+      } else {
+        u.searchParams.set('rawText', payload.rawText);
+        u.searchParams.delete('rawTextUrl');
+      }
+      if (speed !== 1) {
+        u.searchParams.set('speed', String(speed));
+      }
+      setLynxDevUrl(u.toString());
+    };
+
+    if (canInline) {
+      setOpenUILynxDevUrl({ rawText: previewSource.rawText });
+      return;
+    }
+
+    if (!previewSource.rawText) {
       setLynxDevUrl('');
       return;
     }
 
-    const uInline = new URL(rspeedyDevUrl);
-    uInline.pathname = uInline.pathname.replace('a2ui.lynx', 'openui.lynx');
-    uInline.searchParams.set('rawText', previewSource.rawText);
-    if (speed !== 1) {
-      uInline.searchParams.set('speed', String(speed));
-    }
-    setLynxDevUrl(uInline.toString());
+    setLynxDevUrl('');
 
     void (async () => {
       try {
-        const rspeedyOrigin = new URL(rspeedyDevUrl).origin;
-        const res = await window.fetch(`${rspeedyOrigin}/__openui_payload`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ rawText: previewSource.rawText }),
-        });
-        if (!res.ok) return;
-        const data = (await res.json()) as { rawTextUrl?: string };
-
+        const published = shouldUseClientPayloadStore()
+          ? {
+            rawTextUrl: await publishOpenUIRawTextToClientStore(
+              baseUrl,
+              previewSource.rawText,
+            ),
+          }
+          : await publishOpenUIPayload(previewSource.rawText);
+        const rawTextUrl = published.rawTextUrl;
         if (seq !== buildSeqRef.current) return;
 
-        if (typeof data.rawTextUrl === 'string') {
-          const rawTextUrlAbs = `${rspeedyOrigin}${data.rawTextUrl}`;
-          const u = new URL(rspeedyDevUrl);
-          u.pathname = u.pathname.replace('a2ui.lynx', 'openui.lynx');
-          u.searchParams.set('rawTextUrl', rawTextUrlAbs);
-          u.searchParams.delete('rawText');
-          if (speed !== 1) {
-            u.searchParams.set('speed', String(speed));
-          }
-          setLynxDevUrl(u.toString());
-
-          setRenderUrl(buildOpenUIRenderUrl({
-            rawTextUrl: rawTextUrlAbs,
-            speed,
-            playbackMode: previewSource.playbackMode,
-          }, baseUrl));
-          setRenderShareUrl(buildOpenUIRenderUrl({
-            rawTextUrl: rawTextUrlAbs,
-            speed,
-          }, shareBaseUrl));
-        }
-      } catch {
-        // Keep the inline URLs above if shortening is unavailable.
+        setOpenUILynxDevUrl({ rawTextUrl });
+        setRenderUrl(buildOpenUIRenderUrl({
+          rawTextUrl,
+          speed,
+          playbackMode: previewSource.playbackMode,
+        }, baseUrl));
+        setRenderShareUrl(buildOpenUIRenderUrl({
+          rawTextUrl,
+          speed,
+        }, shareBaseUrl));
+      } catch (err) {
+        console.warn('[openui] Failed to publish preview raw text', err);
       }
     })();
   }, [baseUrl, previewSource, rspeedyDevUrl, shareBaseUrl, speed]);

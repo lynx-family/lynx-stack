@@ -33,6 +33,20 @@ const diffScreenShot = async (
   });
 };
 
+const scrollSwiperToCurrent = async (page: Page, testId: string) => {
+  await page.getByTestId(testId).evaluate((element) => {
+    const current = Number(element.getAttribute('current'));
+    if (!Number.isFinite(current)) {
+      return;
+    }
+    (
+      element as HTMLElement & {
+        scrollTo(options: { index: number; smooth: boolean }): void;
+      }
+    ).scrollTo({ index: current, smooth: false });
+  });
+};
+
 const expectHasText = async (page: Page, text: string) => {
   await expect(page.getByText(text)).toHaveCount(1);
 };
@@ -4130,6 +4144,9 @@ test.describe('reactlynx3 tests', () => {
           );
           await page.getByTestId('swiper-0').click();
           await wait(500);
+          // Firefox keeps the old scroll offset when this click changes the
+          // first swiper width; Chromium/WebKit snap to the current item.
+          await scrollSwiperToCurrent(page, 'swiper-0');
           await diffScreenShot(
             page,
             'x-swiper',
@@ -4141,6 +4158,7 @@ test.describe('reactlynx3 tests', () => {
           );
           await page.getByTestId('swiper-0').click();
           await wait(500);
+          await scrollSwiperToCurrent(page, 'swiper-0');
           await diffScreenShot(
             page,
             'x-swiper',

@@ -85,7 +85,7 @@ export type SerializedEtNode = SerializedCompiledNode | SerializedTypedNode;
 
 export interface ElementTemplateHydrateCommitContext {
   instances: SerializedEtNode[];
-  reloadVersion?: number;
+  reloadVersion: number;
 }
 
 // Legacy compiled-node alias kept for fixture helpers. Its child slots can now

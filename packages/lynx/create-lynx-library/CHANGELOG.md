@@ -1,5 +1,17 @@
 # create-lynx-library
 
+## 0.3.0
+
+### Minor Changes
+
+- Add shared native targets for native module and element library templates, with ([#2843](https://github.com/lynx-family/lynx-stack/pull/2843))
+  Node-API package subpath loading for desktop hosts.
+
+### Patch Changes
+
+- Refine desktop element templates to share `LynxNativeView` state between Native ([#2909](https://github.com/lynx-family/lynx-stack/pull/2909))
+  UI and Texture backends.
+
 ## 0.2.1
 
 ### Patch Changes
