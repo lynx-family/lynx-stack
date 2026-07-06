@@ -28,3 +28,5 @@ nd = "nd"
 bui = "bui"
 ba = "ba"
 alog = "alog"
+# Yarn Plug'n'Play
+Pn = "Pn"

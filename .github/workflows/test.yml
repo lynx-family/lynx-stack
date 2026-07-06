@@ -36,7 +36,7 @@ jobs:
     needs: build
     uses: ./.github/workflows/workflow-bundle-analysis.yml
   code-style-check:
-    runs-on: lynx-ubuntu-24.04-medium
+    runs-on: lynx-ubuntu-26.04-medium
     timeout-minutes: 10
     steps:
       - uses: actions/checkout@93cb6efe18208431cddfb8368fd83d5badbf9bfd # v5
@@ -75,7 +75,7 @@ jobs:
     uses: ./.github/workflows/workflow-test.yml
     permissions: {}
     with:
-      runs-on: lynx-ubuntu-24.04-medium
+      runs-on: lynx-ubuntu-26.04-medium
       run: pnpm eslint . --flag v10_config_lookup_from_file
 
   ui-judge:
@@ -113,7 +113,7 @@ jobs:
   ui-judge-comment:
     needs: ui-judge
     if: always()
-    runs-on: lynx-ubuntu-24.04-medium
+    runs-on: lynx-ubuntu-26.04-medium
     permissions:
       contents: read
       issues: write
@@ -206,7 +206,7 @@ jobs:
     uses: ./.github/workflows/workflow-test.yml
 
     with:
-      runs-on: lynx-ubuntu-24.04-medium
+      runs-on: lynx-ubuntu-26.04-medium
       run: |
         pnpm turbo api-extractor -- --local
         if test "$(git diff -- './packages/**/*.api.md' --name-only | wc -l)" -gt 0 ; then
@@ -230,7 +230,7 @@ jobs:
     needs: build
     uses: ./.github/workflows/workflow-test.yml
     with:
-      runs-on: lynx-ubuntu-24.04-medium
+      runs-on: lynx-ubuntu-26.04-medium
       run: |
         # Generated smoke-test projects do not carry a packageManager pin, so
         # keep this stage on pnpm 10 even when Corepack's registry default moves.
@@ -273,7 +273,7 @@ jobs:
     secrets:
       CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
     with:
-      runs-on: lynx-ubuntu-24.04-medium
+      runs-on: lynx-ubuntu-26.04-medium
       run: >
         pnpm
         --filter @lynx-js/react-runtime
@@ -299,7 +299,7 @@ jobs:
     secrets:
       CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
     with:
-      runs-on: lynx-ubuntu-24.04-medium
+      runs-on: lynx-ubuntu-26.04-medium
       run: pnpm -r run test:type
   test-rstest:
     needs: build
@@ -307,7 +307,7 @@ jobs:
     secrets:
       CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
     with:
-      runs-on: lynx-ubuntu-24.04-medium
+      runs-on: lynx-ubuntu-26.04-medium
       # DEBUG(remove later): dump the restored turbo cache + on-disk dist right
       # before the test reads it, to locate where the example bundles vanish.
       run: |
@@ -341,7 +341,7 @@ jobs:
       MIDSCENE_OPENAI_INIT_CONFIG_JSON: ${{ secrets.MIDSCENE_OPENAI_INIT_CONFIG_JSON }}
     name: Kitten Lynx Android Emulator Test
     with:
-      runs-on: lynx-ubuntu-22.04-physical-medium
+      runs-on: lynx-ubuntu-26.04-physical-medium
       run: |
         # 4. Start Emulator
         echo "Starting emulator..."
@@ -397,7 +397,7 @@ jobs:
         fi
 
   test-typos:
-    runs-on: lynx-ubuntu-24.04-medium
+    runs-on: lynx-ubuntu-26.04-medium
     steps:
       - uses: taiki-e/checkout-action@3ab630d442e198ebb0ca30872832406ca01c46eb # v1.4.0
       - uses: crate-ci/typos@57b11c6b7e54c402ccd9cda953f1072ec4f78e33 # v1.43.5
@@ -411,7 +411,7 @@ jobs:
       matrix:
         runs-on:
           - name: Ubuntu
-            label: lynx-ubuntu-24.04-medium
+            label: lynx-ubuntu-26.04-medium
           - name: Windows
             label: lynx-windows-2022-large
     name: Vitest (${{ matrix.runs-on.name }})
@@ -457,7 +457,7 @@ jobs:
       - web-core-e2e
       - website
     if: always()
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-26.04
     name: Done
     steps:
       - run: exit 1
