@@ -1,5 +1,5 @@
 ---
-"@lynx-js/react": minor
+"@lynx-js/react": patch
 ---
 
 Fix the error when using dynamic `key` with spread attributes on `<list-item>`.

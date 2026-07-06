@@ -73,7 +73,7 @@ function updateSpread(
   index: number,
   oldValue: Record<string, unknown> | undefined | null,
   elementIndex: number,
-  isListItem: boolean,
+  isListItem = false,
 ): void {
   oldValue ??= {};
   let newValue: Record<string, unknown> = snapshot.__values![index] as Record<string, unknown>; // compiler guarantee this must be an object;
@@ -105,6 +105,8 @@ function updateSpread(
       updateListItemPlatformInfo(fakeSnapshot, index, oldPlatformInfo, elementIndex);
     }
   } else if (isListItem) {
+    // Only seed list-item platform info before the snapshot is attached to a list holder.
+    // Non-platform spread attributes continue through the normal update loop below.
     const platformInfo = pick(newValue, platformInfoAttributes);
     snapshot.__listItemPlatformInfo = platformInfo;
   }
