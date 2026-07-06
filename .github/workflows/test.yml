@@ -314,6 +314,13 @@ jobs:
         --coverage
         --testTimeout=50000
         --hookTimeout=50000
+      # DEBUG(remove later): upload react-debug-metadata build intermediates so we
+      # can compare the CI-built LazyComponent bundles against a local build.
+      artifact-name: debug-react-debug-metadata-dist
+      artifact-path: |
+        examples/react-debug-metadata/dist-producer
+        examples/react-debug-metadata/dist-consumer
+      artifact-if-no-files-found: warn
   kitten-lynx-android-emulator:
     needs: build
     uses: ./.github/workflows/workflow-test.yml
