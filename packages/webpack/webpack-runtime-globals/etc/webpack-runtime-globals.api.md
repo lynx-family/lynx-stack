@@ -10,6 +10,7 @@ export const RuntimeGlobals: {
     readonly lynxAsyncChunkMode: "__webpack_require__.lynx_acm";
     readonly lynxChunkEntries: "lynx.__chunk_entries__";
     readonly lynxProcessEvalResult: "globalThis.processEvalResult";
+    readonly lynxProcessEvalResultByHost: "globalThis.processEvalResultByHost";
     readonly lynxCacheEventsSetupList: "__webpack_require__.lynx_ce.setupList";
     readonly lynxCacheEvents: "__webpack_require__.lynx_ce";
 };

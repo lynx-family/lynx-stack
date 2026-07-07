@@ -69,6 +69,21 @@ export const makeSyncThen = function<T>(result: T): Promise<T>['then'] {
 
 export type LazyBundleMode = 'sync' | 'async';
 
+// loadScript a background section with `globalThis.globDynamicComponentEntry`
+// set to `entry` (restored after). The bundle's wrapper reads it once as
+// `g.globDynamicComponentEntry || '__Card__'`, so without this its modules — and
+// any nested `import()` it triggers — would resolve against the caller's host.
+function loadBackgroundBundle<T>(bundleName: string, entry: string): T {
+  const g = globalThis as { globDynamicComponentEntry?: string | undefined };
+  const previous = g.globDynamicComponentEntry;
+  g.globDynamicComponentEntry = entry;
+  try {
+    return lynx.loadScript<T>(SECTION_BACKGROUND, { bundleName });
+  } finally {
+    g.globDynamicComponentEntry = previous;
+  }
+}
+
 /**
  * Load dynamic component from source. Designed to be used with `lazy`.
  *
@@ -82,7 +97,7 @@ export type LazyBundleMode = 'sync' | 'async';
  */
 export const loadLazyBundle: <
   T extends { default: React.ComponentType<any> },
->(source: string, mode?: LazyBundleMode) => Promise<T> = /*#__PURE__*/ (() => {
+>(source: string, mode?: LazyBundleMode, host?: string) => Promise<T> = /*#__PURE__*/ (() => {
   // Default to QueryComponent when `__LAZY_BUNDLE_FETCHER__` is missing —
   // older react-webpack-plugin builds don't stamp it and they predate
   // FetchBundle support, so falling through to QueryComponent is the only
@@ -170,7 +185,7 @@ export const loadLazyBundle: <
 
   function loadLazyBundleWithFetchBundle<
     T extends { default: React.ComponentType<any> },
-  >(source: string, mode?: LazyBundleMode): Promise<T> {
+  >(source: string, mode?: LazyBundleMode, host?: string): Promise<T> {
     if (__MAIN_THREAD__) {
       if (mode !== 'sync') {
         // Fire the fetch and ignore the result so the request goes out early
@@ -194,9 +209,9 @@ export const loadLazyBundle: <
       }
       let result: T;
       try {
-        result = lynx.loadScript<T>(SECTION_MAIN_THREAD, {
+        result = lynx.loadScript<(entry: string) => T>(SECTION_MAIN_THREAD, {
           bundleName: response.url,
-        });
+        })(source);
         const styleSheet = __LoadStyleSheet(SECTION_CSS, response.url);
         if (styleSheet !== null) {
           __AdoptStyleSheet(styleSheet);
@@ -225,9 +240,7 @@ export const loadLazyBundle: <
         }
         let result: T;
         try {
-          result = lynx.loadScript<T>(SECTION_BACKGROUND, {
-            bundleName: response.url,
-          });
+          result = loadBackgroundBundle<T>(response.url, source);
         } catch (e) {
           return Promise.reject(e instanceof Error ? e : new Error(String(e)));
         }
@@ -255,9 +268,7 @@ export const loadLazyBundle: <
           }
           let btsResult: T;
           try {
-            btsResult = lynx.loadScript<T>(SECTION_BACKGROUND, {
-              bundleName: response.url,
-            });
+            btsResult = loadBackgroundBundle<T>(response.url, source);
           } catch (e) {
             reject(e instanceof Error ? e : new Error(String(e)));
             return;
@@ -268,7 +279,7 @@ export const loadLazyBundle: <
           try {
             lynx.getNativeApp().callLepusMethod(
               PREPARE_LAZY_BUNDLE_MTS,
-              { url: source },
+              { url: source, host },
               () => {
                 resolve(btsResult);
               },

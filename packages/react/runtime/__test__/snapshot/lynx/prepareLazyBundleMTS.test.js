@@ -12,6 +12,7 @@ import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
 // `lynx.fetchBundle(url, {}).then(cb)` fires sync on lepus).
 
 describe('prepareLazyBundleMTS handler', () => {
+  const HOST = '__Card__';
   let fetchBundle;
   let thenMock;
   let loadScript;
@@ -26,7 +27,9 @@ describe('prepareLazyBundleMTS handler', () => {
 
     thenMock = vi.fn();
     fetchBundle = vi.fn(() => ({ then: thenMock }));
-    loadScript = vi.fn();
+    // The main-thread bundle is wrapped as `(globDynamicComponentEntry) => exports`;
+    // `loadScript` returns that function and the handler invokes it with the url.
+    loadScript = vi.fn(() => () => ({ chunk: 'x' }));
     loadStyleSheet = vi.fn();
     adoptStyleSheet = vi.fn();
     processEvalResult = vi.fn();
@@ -35,7 +38,8 @@ describe('prepareLazyBundleMTS handler', () => {
       .stubGlobal('lynx', { fetchBundle, loadScript })
       .stubGlobal('__LoadStyleSheet', loadStyleSheet)
       .stubGlobal('__AdoptStyleSheet', adoptStyleSheet)
-      .stubGlobal('processEvalResult', processEvalResult);
+      // Handlers are keyed by the loading host's entry, not a single global.
+      .stubGlobal('processEvalResultByHost', { [HOST]: processEvalResult });
 
     ({ injectPrepareLazyBundleMTS } = await import(
       '../../../src/snapshot/lynx/prepareLazyBundleMTS'
@@ -48,30 +52,69 @@ describe('prepareLazyBundleMTS handler', () => {
     vi.unstubAllGlobals();
   });
 
-  function invoke(url) {
-    return globalThis.rLynxPrepareLazyBundleMTS({ url });
+  function invoke(url, host = HOST) {
+    return globalThis.rLynxPrepareLazyBundleMTS({ url, host });
   }
 
-  test('happy path: fetchBundle.then → loadScript(main-thread) → processEvalResult → CSS adopt', () => {
+  test('happy path: loadScript(main-thread) → evaluate(url) → host handler → CSS adopt', () => {
     thenMock.mockImplementationOnce((cb) => cb({ code: 0, url: 'u' }));
-    loadScript.mockReturnValueOnce({ chunk: 'x' });
+    const evaluate = vi.fn(() => ({ chunk: 'x' }));
+    loadScript.mockReturnValueOnce(evaluate);
     loadStyleSheet.mockReturnValueOnce({ id: 'sheet' });
 
     invoke('foo');
 
     expect(fetchBundle).toHaveBeenCalledWith('foo', {});
     expect(loadScript).toHaveBeenCalledWith('main-thread', { bundleName: 'u' });
+    // The bundle is evaluated with its own url as `globDynamicComponentEntry`.
+    expect(evaluate).toHaveBeenCalledWith('foo');
     expect(processEvalResult).toHaveBeenCalledWith(expect.any(Function), 'foo');
-    // The factory passed to processEvalResult returns the loaded chunk.
+    // The factory passed to the handler returns the loaded chunk.
     const factory = processEvalResult.mock.calls[0][0];
     expect(factory()).toEqual({ chunk: 'x' });
     expect(loadStyleSheet).toHaveBeenCalledWith('CSS', 'u');
     expect(adoptStyleSheet).toHaveBeenCalledWith({ id: 'sheet' });
   });
 
+  test('routes to the loading host, not another host', () => {
+    thenMock.mockImplementationOnce((cb) => cb({ code: 0, url: 'u' }));
+    const other = vi.fn();
+    vi.stubGlobal('processEvalResultByHost', {
+      [HOST]: processEvalResult,
+      B: other,
+    });
+
+    invoke('foo', HOST);
+
+    expect(processEvalResult).toHaveBeenCalledTimes(1);
+    expect(other).not.toHaveBeenCalled();
+  });
+
+  test('no host → skip handler, still loadScript + CSS', () => {
+    thenMock.mockImplementationOnce((cb) => cb({ code: 0, url: 'u' }));
+    loadStyleSheet.mockReturnValueOnce({ id: 'sheet' });
+
+    // A standalone component loaded directly carries no `host` in the payload.
+    globalThis.rLynxPrepareLazyBundleMTS({ url: 'foo' });
+
+    expect(loadScript).toHaveBeenCalled();
+    expect(processEvalResult).not.toHaveBeenCalled();
+    expect(adoptStyleSheet).toHaveBeenCalledWith({ id: 'sheet' });
+  });
+
+  test('host with no registered handler → skip, still loadScript + CSS', () => {
+    thenMock.mockImplementationOnce((cb) => cb({ code: 0, url: 'u' }));
+    loadStyleSheet.mockReturnValueOnce({ id: 'sheet' });
+
+    invoke('foo', 'unknown-host');
+
+    expect(loadScript).toHaveBeenCalled();
+    expect(processEvalResult).not.toHaveBeenCalled();
+    expect(adoptStyleSheet).toHaveBeenCalledWith({ id: 'sheet' });
+  });
+
   test('cache: second call with same url is a no-op', () => {
     thenMock.mockImplementation((cb) => cb({ code: 0, url: 'u' }));
-    loadScript.mockReturnValue({ chunk: 'x' });
     loadStyleSheet.mockReturnValue(null);
 
     invoke('foo');
@@ -84,7 +127,6 @@ describe('prepareLazyBundleMTS handler', () => {
 
   test('cache: different urls are not deduped', () => {
     thenMock.mockImplementation((cb) => cb({ code: 0, url: 'u' }));
-    loadScript.mockReturnValue({ chunk: 'x' });
     loadStyleSheet.mockReturnValue(null);
 
     invoke('foo');
@@ -116,7 +158,7 @@ describe('prepareLazyBundleMTS handler', () => {
     expect(loadStyleSheet).not.toHaveBeenCalled();
   });
 
-  test('loadScript throws (BG-only bundle) → no processEvalResult, no CSS', () => {
+  test('loadScript throws (BG-only bundle) → no handler, no CSS', () => {
     thenMock.mockImplementationOnce((cb) => cb({ code: 0, url: 'u' }));
     loadScript.mockImplementationOnce(() => {
       throw new Error('no MTS section');
@@ -127,35 +169,8 @@ describe('prepareLazyBundleMTS handler', () => {
     expect(loadStyleSheet).not.toHaveBeenCalled();
   });
 
-  test('processEvalResult absent → still loadScript + CSS adopt', async () => {
-    // Re-import without processEvalResult global.
-    vi.resetModules();
-    delete globalThis.rLynxPrepareLazyBundleMTS;
-    vi.unstubAllGlobals();
-    thenMock = vi.fn((cb) => cb({ code: 0, url: 'u' }));
-    fetchBundle = vi.fn(() => ({ then: thenMock }));
-    loadScript = vi.fn(() => ({ chunk: 'x' }));
-    loadStyleSheet = vi.fn(() => ({ id: 'sheet' }));
-    adoptStyleSheet = vi.fn();
-    vi
-      .stubGlobal('lynx', { fetchBundle, loadScript })
-      .stubGlobal('__LoadStyleSheet', loadStyleSheet)
-      .stubGlobal('__AdoptStyleSheet', adoptStyleSheet);
-    // No processEvalResult stub.
-
-    const fresh = await import(
-      '../../../src/snapshot/lynx/prepareLazyBundleMTS'
-    );
-    fresh.injectPrepareLazyBundleMTS();
-
-    expect(() => globalThis.rLynxPrepareLazyBundleMTS({ url: 'foo' })).not.toThrow();
-    expect(loadScript).toHaveBeenCalled();
-    expect(adoptStyleSheet).toHaveBeenCalledWith({ id: 'sheet' });
-  });
-
   test('null stylesheet → no AdoptStyleSheet call', () => {
     thenMock.mockImplementationOnce((cb) => cb({ code: 0, url: 'u' }));
-    loadScript.mockReturnValueOnce({ chunk: 'x' });
     loadStyleSheet.mockReturnValueOnce(null);
 
     invoke('foo');

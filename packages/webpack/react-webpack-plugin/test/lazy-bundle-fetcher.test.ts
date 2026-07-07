@@ -90,13 +90,21 @@ async function build(
 }
 
 describe('ReactWebpackPlugin: lazyBundleFetcher', () => {
-  test('FetchBundle: main-thread chunk wrapped as self-invoking IIFE with __Card__', async () => {
+  test('FetchBundle: main-thread chunk wrapped as parameterised non-IIFE', async () => {
+    // FetchBundle uses the same wrapper as QueryComponent: the loader invokes
+    // it with the bundle's own url as `globDynamicComponentEntry` (per-host
+    // module routing), rather than self-invoking with a hardcoded '__Card__'.
     const { mainThread } = await build({ lazyBundleFetcher: 'FetchBundle' });
-    expect(mainThread).toContain(
+    expect(mainThread).not.toContain(
       `var globDynamicComponentEntry = '__Card__'`,
     );
-    expect(mainThread.trimStart().startsWith('(function () {')).toBe(true);
-    expect(mainThread.trimEnd().endsWith('})()')).toBe(true);
+    expect(
+      mainThread.trimStart().startsWith(
+        '(function (globDynamicComponentEntry) {',
+      ),
+    ).toBe(true);
+    // Importantly: NOT self-invoking.
+    expect(mainThread.trimEnd().endsWith('})()')).toBe(false);
   });
 
   test('QueryComponent (default): main-thread chunk wrapped as parameterised non-IIFE', async () => {

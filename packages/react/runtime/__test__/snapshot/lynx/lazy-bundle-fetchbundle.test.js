@@ -40,7 +40,10 @@ describe('loadLazyBundle (FetchBundle) — main thread sync', () => {
 
   test('happy path: .wait → loadScript(main-thread) → CSS adopt → sync then', async () => {
     waitMock.mockReturnValueOnce({ code: 0, url: 'cached-url' });
-    loadScript.mockReturnValueOnce({ default: 'MTChunk' });
+    // The main-thread bundle is wrapped as `(globDynamicComponentEntry) => exports`;
+    // the loader invokes it with the bundle's own `source`.
+    const mtEval = vi.fn(() => ({ default: 'MTChunk' }));
+    loadScript.mockReturnValueOnce(mtEval);
     loadStyleSheet.mockReturnValueOnce({ id: 'sheet' });
 
     const { loadLazyBundle } = await import(
@@ -54,6 +57,8 @@ describe('loadLazyBundle (FetchBundle) — main thread sync', () => {
     expect(loadScript).toHaveBeenCalledWith('main-thread', {
       bundleName: 'cached-url',
     });
+    // Invoked with the bundle's own url so its `globDynamicComponentEntry` is `foo`.
+    expect(mtEval).toHaveBeenCalledWith('foo');
     expect(loadStyleSheet).toHaveBeenCalledWith('CSS', 'cached-url');
     expect(adoptStyleSheet).toHaveBeenCalledWith({ id: 'sheet' });
 
@@ -160,7 +165,7 @@ describe('loadLazyBundle (FetchBundle) — main thread sync', () => {
 
   test('null stylesheet → chunk still resolved, no AdoptStyleSheet', async () => {
     waitMock.mockReturnValueOnce({ code: 0, url: 'x' });
-    loadScript.mockReturnValueOnce({ default: 'C' });
+    loadScript.mockReturnValueOnce(() => ({ default: 'C' }));
     loadStyleSheet.mockReturnValueOnce(null);
 
     const { loadLazyBundle } = await import(
@@ -348,6 +353,45 @@ describe('loadLazyBundle (FetchBundle) — background async (cb-as-readiness)', 
       expect.any(Function),
     );
     await expect(promise).resolves.toEqual({ default: 'BG' });
+  });
+
+  test('threads the loading `host` into the prepare payload', async () => {
+    thenMock.mockImplementationOnce((cb) => cb({ code: 0, url: 'u' }));
+    loadScript.mockReturnValueOnce({ default: 'BG' });
+    callLepusMethod.mockImplementationOnce((_n, _p, cb) => cb());
+
+    const { loadLazyBundle } = await import(
+      '../../../src/core/lynx/lazy-bundle'
+    );
+
+    await loadLazyBundle('foo', undefined, '__Card__');
+
+    expect(callLepusMethod).toHaveBeenCalledWith(
+      'rLynxPrepareLazyBundleMTS',
+      { url: 'foo', host: '__Card__' },
+      expect.any(Function),
+    );
+  });
+
+  test('sets globalThis.globDynamicComponentEntry to the url around bts loadScript', async () => {
+    const before = globalThis.globDynamicComponentEntry;
+    const seen = [];
+    thenMock.mockImplementationOnce((cb) => cb({ code: 0, url: 'u' }));
+    loadScript.mockImplementationOnce(() => {
+      seen.push(globalThis.globDynamicComponentEntry);
+      return { default: 'BG' };
+    });
+    callLepusMethod.mockImplementationOnce((_n, _p, cb) => cb());
+
+    const { loadLazyBundle } = await import(
+      '../../../src/core/lynx/lazy-bundle'
+    );
+
+    await loadLazyBundle('foo');
+
+    // Set to the bundle's own url while evaluating, restored after.
+    expect(seen).toEqual(['foo']);
+    expect(globalThis.globDynamicComponentEntry).toBe(before);
   });
 
   test('cb only fires AFTER loadScript completes (sequencing)', async () => {

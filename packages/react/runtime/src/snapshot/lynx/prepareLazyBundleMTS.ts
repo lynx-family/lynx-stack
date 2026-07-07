@@ -7,8 +7,8 @@ import { LifecycleConstant } from '../lifecycle/constant.js';
 
 const cache = new Set<string>();
 
-function prepareLazyBundleMTS(payload: { url: string }): void {
-  const { url } = payload;
+function prepareLazyBundleMTS(payload: { url: string; host?: string }): void {
+  const { url, host } = payload;
   if (cache.has(url)) return;
   cache.add(url);
   let handler;
@@ -23,21 +23,28 @@ function prepareLazyBundleMTS(payload: { url: string }): void {
     if (!response || response.code !== 0) return;
     let loaded: unknown;
     try {
-      loaded = lynx.loadScript(SECTION_MAIN_THREAD, {
-        bundleName: response.url,
-      });
+      const evaluate = lynx.loadScript<(entry: string) => unknown>(
+        SECTION_MAIN_THREAD,
+        { bundleName: response.url },
+      );
+      loaded = evaluate(url);
     } catch {
       // BG-only bundle (no main-thread section)
       return;
     }
-    const processEvalResult = (
-      globalThis as unknown as {
-        processEvalResult?: (
-          result: ((schema: string) => unknown) | undefined,
-          schema: string,
-        ) => unknown;
-      }
-    ).processEvalResult;
+    // Route to the loading `host`'s handler — the chunk's modules install into
+    // that host's registry. No host (e.g. a standalone component loaded
+    // directly, self-contained in its own registry) → nothing to install here.
+    const processEvalResult = host == null
+      ? undefined
+      : (
+        globalThis as unknown as {
+          processEvalResultByHost?: Record<
+            string,
+            (result: (schema: string) => unknown, schema: string) => unknown
+          >;
+        }
+      ).processEvalResultByHost?.[host];
     if (typeof processEvalResult === 'function') {
       processEvalResult(() => loaded, url);
     }

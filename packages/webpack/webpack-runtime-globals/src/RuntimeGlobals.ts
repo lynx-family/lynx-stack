@@ -26,9 +26,18 @@ export const RuntimeGlobals = {
   lynxChunkEntries: 'lynx.__chunk_entries__',
 
   /**
-   * A function to process the eval result of lazy bundle.
+   * A function to process the eval result of a lazy bundle.
+   *
+   * @deprecated Unreliable when multiple lazy bundles load — each overwrites it.
+   * Prefer {@link RuntimeGlobals.lynxProcessEvalResultByHost}.
    */
   lynxProcessEvalResult: 'globalThis.processEvalResult',
+
+  /**
+   * A map from a lazy bundle's own url to the function that processes its eval
+   * result, closing over that bundle's `__webpack_require__`.
+   */
+  lynxProcessEvalResultByHost: 'globalThis.processEvalResultByHost',
 
   /**
    * A list of functions to setup the cache layer.

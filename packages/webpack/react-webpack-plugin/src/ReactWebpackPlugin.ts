@@ -393,11 +393,11 @@ class ReactWebpackPlugin {
       compilation.hooks.runtimeRequirementInTree.for(
         compiler.webpack.RuntimeGlobals.ensureChunkHandlers,
       ).tap('ReactWebpackPlugin', (_, runtimeRequirements) => {
-        runtimeRequirements.add(RuntimeGlobals.lynxProcessEvalResult);
+        runtimeRequirements.add(RuntimeGlobals.lynxProcessEvalResultByHost);
       });
 
       compilation.hooks.runtimeRequirementInTree.for(
-        RuntimeGlobals.lynxProcessEvalResult,
+        RuntimeGlobals.lynxProcessEvalResultByHost,
       ).tap('ReactWebpackPlugin', (chunk) => {
         if (onceForChunkSet.has(chunk)) {
           return;
@@ -522,21 +522,15 @@ class ReactWebpackPlugin {
                     continue;
                   }
 
-                  const isFetchBundle =
-                    options.lazyBundleFetcher === 'FetchBundle';
                   compilation.updateAsset(
                     file,
                     old =>
                       new ConcatSource(
-                        isFetchBundle
-                          ? `(function () {\n  var globDynamicComponentEntry = '__Card__';\n`
-                          : `(function (globDynamicComponentEntry) {\n`,
+                        `(function (globDynamicComponentEntry) {\n`,
                         `  const module = { exports: {} }\n`,
                         `  const exports = module.exports;\n`,
                         old,
-                        isFetchBundle
-                          ? `\n  ;return module.exports\n})()`
-                          : `\n  ;return module.exports\n})`,
+                        `\n  ;return module.exports\n})`,
                       ),
                   );
                 }

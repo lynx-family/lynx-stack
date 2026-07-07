@@ -28,8 +28,10 @@ export function createLynxProcessEvalResultRuntimeModule(
         return '';
       }
 
+      // Register per-bundle under `globDynamicComponentEntry`; also assign the
+      // deprecated single global for backward compatibility.
       return `
-${LynxRuntimeGlobals.lynxProcessEvalResult} = function (result, schema) {
+globalThis.processEvalResult = (${LynxRuntimeGlobals.lynxProcessEvalResultByHost} || (${LynxRuntimeGlobals.lynxProcessEvalResultByHost} = {}))[globDynamicComponentEntry] = function (result, schema) {
   var chunk = result && result(schema);
   if (chunk && chunk.ids && chunk.modules) {
     // We only deal with webpack chunk
