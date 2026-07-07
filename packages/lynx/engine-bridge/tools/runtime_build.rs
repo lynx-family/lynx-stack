@@ -135,10 +135,14 @@ fn prepare_runtime(sdk_dir: &Path, runtime_path: &Path, url: &str, sha256: &str)
   let lock_path = sdk_dir.join(".download.lock");
   let _lock = RuntimeDownloadLock::acquire(&lock_path);
 
-  if !has_existing_runtime(runtime_path, url, sha256) {
-    download_runtime(url, runtime_path, sha256);
+  let runtime_existed = has_existing_runtime(runtime_path, url, sha256);
+  if !runtime_existed {
+    download_runtime(url, runtime_path);
+    adhoc_sign_if_needed(runtime_path);
+    verify_runtime_checksum(runtime_path, sha256);
+  } else {
+    adhoc_sign_if_needed(runtime_path);
   }
-  adhoc_sign_if_needed(runtime_path);
 }
 
 fn has_existing_runtime(runtime_path: &Path, url: &str, sha256: &str) -> bool {
@@ -154,7 +158,7 @@ fn has_existing_runtime(runtime_path: &Path, url: &str, sha256: &str) -> bool {
   }
 }
 
-fn download_runtime(url: &str, runtime_path: &Path, sha256: &str) {
+fn download_runtime(url: &str, runtime_path: &Path) {
   let parent = runtime_path
     .parent()
     .expect("runtime path has parent directory");
@@ -190,7 +194,6 @@ fn download_runtime(url: &str, runtime_path: &Path, sha256: &str) {
       tmp_file.path().display()
     )
   });
-  verify_runtime_checksum(tmp_file.path(), sha256);
   tmp_file.persist(runtime_path).unwrap_or_else(|error| {
     panic!(
       "failed to move downloaded Lynx runtime to {}: {}",

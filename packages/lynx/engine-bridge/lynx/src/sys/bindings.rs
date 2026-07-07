@@ -20,6 +20,7 @@ opaque!(lynx_template_data_t);
 opaque!(lynx_template_bundle_t);
 opaque!(lynx_load_meta_t);
 opaque!(lynx_update_meta_t);
+opaque!(lynx_view_client_t);
 opaque!(lynx_extension_module_t);
 opaque!(lynx_vsync_observer_t);
 opaque!(lynx_event_reporter_service_t);
@@ -252,6 +253,31 @@ pub type lynx_windowless_ui_task_runner_runs_on_current_thread_callback =
 pub type lynx_windowless_ui_task_runner_post_task_callback =
   unsafe extern "C" fn(task: lynx_task_t, target_time_nanos: u64, user_data: *mut c_void);
 
+pub type on_page_start = unsafe extern "C" fn(client: *mut lynx_view_client_t, url: *const c_char);
+pub type on_load_success = unsafe extern "C" fn(client: *mut lynx_view_client_t);
+pub type on_first_screen = unsafe extern "C" fn(client: *mut lynx_view_client_t);
+pub type on_page_updated = unsafe extern "C" fn(client: *mut lynx_view_client_t);
+pub type on_data_updated = unsafe extern "C" fn(client: *mut lynx_view_client_t);
+pub type on_destroy = unsafe extern "C" fn(client: *mut lynx_view_client_t);
+pub type on_runtime_ready = unsafe extern "C" fn(client: *mut lynx_view_client_t);
+pub type on_received_error =
+  unsafe extern "C" fn(client: *mut lynx_view_client_t, error_code: c_int, message: *const c_char);
+pub type on_timing_setup =
+  unsafe extern "C" fn(client: *mut lynx_view_client_t, timing_info: *const c_char);
+pub type on_timing_update = unsafe extern "C" fn(
+  client: *mut lynx_view_client_t,
+  timing_info: *const c_char,
+  update_timing: *const c_char,
+  update_flag: *const c_char,
+);
+pub type on_enter_foreground = unsafe extern "C" fn(client: *mut lynx_view_client_t);
+pub type on_enter_background = unsafe extern "C" fn(client: *mut lynx_view_client_t);
+pub type on_frame_timing = unsafe extern "C" fn(
+  client: *mut lynx_view_client_t,
+  frame_start_time_in_ns: i64,
+  frame_finish_time_in_ns: i64,
+);
+
 #[repr(C)]
 #[derive(Copy, Clone)]
 pub struct lynx_windowless_ui_task_runner_config_t {
@@ -349,7 +375,6 @@ pub type cancel_fetch_func = unsafe extern "C" fn(
   fetcher: *mut lynx_generic_resource_fetcher_t,
   request_id: lynx_resource_request_id,
 );
-
 pub type lynx_windowless_renderer_finalizer =
   unsafe extern "C" fn(renderer: *mut lynx_windowless_renderer_t, user_data: *mut c_void);
 pub type lynx_generic_resource_fetcher_finalizer =
