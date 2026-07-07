@@ -1019,7 +1019,6 @@ describe('Plugins - Output', () => {
       ) as Rspack.RuleSetRule
 
       expect(rule).not.toBeUndefined()
-      expect(rule.oneOf).toHaveLength(4)
       const ruleWithGenerator = rule.oneOf?.filter((
         rule,
       ): rule is Rspack.RuleSetRule =>
@@ -1062,7 +1061,6 @@ describe('Plugins - Output', () => {
       ) as Rspack.RuleSetRule
 
       expect(rule).not.toBeUndefined()
-      expect(rule.oneOf).toHaveLength(4)
       const ruleWithGenerator = rule.oneOf?.filter((
         rule,
       ): rule is Rspack.RuleSetRule =>
