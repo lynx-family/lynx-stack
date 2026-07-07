@@ -9,7 +9,7 @@ import type {
   MainThreadLynx,
 } from '../../types/index.js';
 import { templateManager } from './TemplateManager.js';
-import { type LynxViewInstance } from './LynxViewInstance.js';
+import type { LynxViewInstance } from './LynxViewInstance.js';
 import { createMainThreadLynxPerformance } from './createMainThreadLynxPerformance.js';
 
 function createMainThreadLynx(
