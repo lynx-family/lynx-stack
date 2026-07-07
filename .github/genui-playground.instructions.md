@@ -24,6 +24,10 @@ When runtime code needs to distinguish Lynx for Web from native Lynx, prefer `Sy
 
 When maintaining the OpenUI Lynx entry under `packages/genui/playground/lynx-src/openui`, keep the renderer stylesheet imported by the entry CSS through `@lynx-js/genui/openui/styles/renderer.css`. The OpenUI catalog components emit plain `OpenUI*` class names, so the native preview will look unstyled if that renderer CSS is not bundled with `openui.lynx.js`.
 
+## OpenUI Preview Payloads
+
+When building OpenUI playground preview links, avoid inlining large OpenUI Lang source in `rawText` query parameters. URL-encoded Chinese or generated DSL can exceed common request-line limits on deployed hosts; publish large source text and pass `rawTextUrl` to `render.html` instead.
+
 ## Lazy Bundles
 
 When adding an GenUI playground example that uses a ReactLynx standalone lazy bundle, build that lazy bundle with a separate Rspeedy config using `pluginReactLynx({ experimental_isLazyBundle: true })`.

@@ -10,6 +10,10 @@ export interface PublishedPayload {
   actionMocksUrl?: string;
 }
 
+export interface PublishedOpenUIPayload {
+  rawTextUrl: string;
+}
+
 export function isDevHost(hostname: string): boolean {
   return (
     hostname === 'localhost'
@@ -28,6 +32,15 @@ export function getA2UIPayloadEndpoint(): string {
     return `http://${window.location.hostname}:${LOCAL_A2UI_SERVER_PORT}/a2ui/payload`;
   }
   return `${ONLINE_A2UI_SERVER_ORIGIN}/a2ui/payload`;
+}
+
+export function getOpenUIPayloadEndpoint(): string {
+  if (
+    window.location.protocol === 'http:' && isDevHost(window.location.hostname)
+  ) {
+    return `http://${window.location.hostname}:${LOCAL_A2UI_SERVER_PORT}/openui/payload`;
+  }
+  return `${ONLINE_A2UI_SERVER_ORIGIN}/openui/payload`;
 }
 
 /**
@@ -63,5 +76,35 @@ export async function publishA2UIPayload(
     actionMocksUrl: typeof payload.preview.actionMocksUrl === 'string'
       ? payload.preview.actionMocksUrl
       : undefined,
+  };
+}
+
+/**
+ * Upload OpenUI Lang source to the GenUI server and return a durable public
+ * text URL. Use this instead of inlining large `rawText` query params.
+ */
+export async function publishOpenUIPayload(
+  rawText: string,
+): Promise<PublishedOpenUIPayload> {
+  const res = await window.fetch(getOpenUIPayloadEndpoint(), {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ rawText }),
+  });
+  const payload = await res.json().catch(() => ({})) as {
+    preview?: {
+      rawTextUrl?: unknown;
+    };
+    error?: unknown;
+  };
+  if (!res.ok || typeof payload.preview?.rawTextUrl !== 'string') {
+    throw new Error(
+      typeof payload.error === 'string'
+        ? payload.error
+        : 'Failed to publish OpenUI raw text',
+    );
+  }
+  return {
+    rawTextUrl: payload.preview.rawTextUrl,
   };
 }

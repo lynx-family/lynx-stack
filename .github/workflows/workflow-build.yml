@@ -10,7 +10,7 @@ env:
 jobs:
   get-merge-base:
     permissions: {}
-    runs-on: lynx-ubuntu-24.04-medium
+    runs-on: lynx-ubuntu-26.04-medium
     timeout-minutes: 5
     env:
       # We have 2 cases:
@@ -71,7 +71,7 @@ jobs:
       fail-fast: false
       matrix:
         runs-on:
-          - label: lynx-ubuntu-24.04-xlarge
+          - label: lynx-ubuntu-26.04-xlarge
             name: Ubuntu
           - label: lynx-windows-2022-large
             name: Windows
@@ -134,7 +134,7 @@ jobs:
       # step above (which already runs fork install/build scripts) relies on.
       - name: Fetch base ref for changeset status
         if: >
-          matrix.runs-on.label == 'lynx-ubuntu-24.04-xlarge' &&
+          matrix.runs-on.label == 'lynx-ubuntu-26.04-xlarge' &&
           github.event_name == 'pull_request'
         env:
           BASE_REF: ${{ github.base_ref }}
@@ -161,7 +161,7 @@ jobs:
       - name: Collect packages with changesets
         id: changeset
         if: >
-          matrix.runs-on.label == 'lynx-ubuntu-24.04-xlarge' &&
+          matrix.runs-on.label == 'lynx-ubuntu-26.04-xlarge' &&
           github.event_name == 'pull_request'
         env:
           BASE_REF: ${{ github.base_ref }}

@@ -1,5 +1,11 @@
 # @lynx-js/genui
 
+## 0.0.6
+
+### Patch Changes
+
+- Fix OpenUI streamed image rendering so partial state declaration values do not stick and image variants keep stable dimensions. ([#2905](https://github.com/lynx-family/lynx-stack/pull/2905))
+
 ## 0.0.5
 
 ### Patch Changes

@@ -274,6 +274,31 @@ test.describe('web-elements test suite', () => {
       await gotoWebComponentPage(page, title);
       await diffScreenShot(page, title, 'index');
     });
+    test('x-text/avatar-text-inline', async ({ page }, { title }) => {
+      await gotoWebComponentPage(page, title);
+      await page.waitForFunction(() => {
+        const target = document.querySelector('#target');
+        const innerBox = target?.shadowRoot?.querySelector(
+          '#inner-box',
+        ) as HTMLElement | undefined;
+        const avatarSlot = document.querySelector('.avatar-slot');
+        const avatarRect = avatarSlot?.getBoundingClientRect();
+        return innerBox?.style.webkitLineClamp === '2'
+          && !!avatarRect?.width
+          && !!avatarRect.height;
+      });
+      await page.evaluate(
+        () =>
+          new Promise<void>((resolve) => {
+            requestAnimationFrame(() => {
+              resolve();
+            });
+          }),
+      );
+      await expect(
+        page.locator('#target'),
+      ).not.toHaveAttribute('x-show-inline-truncation', '');
+    });
 
     test('x-text/text-overflow-inherit', async ({ page }, { title }) => {
       await gotoWebComponentPage(page, title);
