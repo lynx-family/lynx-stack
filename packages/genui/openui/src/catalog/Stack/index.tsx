@@ -6,6 +6,8 @@ import { z } from 'zod/v4';
 import { defineComponent } from '../../core/library.jsx';
 import { GAP_CLASS, asArray } from '../utils.js';
 
+import '../../../styles/catalog/Stack.css';
+
 function getAlignClass(align: 'start' | 'center' | 'end' | 'stretch'): string {
   switch (align) {
     case 'start':

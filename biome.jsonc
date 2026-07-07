@@ -10,6 +10,7 @@
     // This generated stylesheet exceeds Biome's file-size limit and should be skipped entirely.
     "ignore": [
       "packages/genui/a2ui/styles/material-icons.css",
+      "packages/genui/openui/styles/material-icons.css",
     ],
   },
   "organizeImports": {

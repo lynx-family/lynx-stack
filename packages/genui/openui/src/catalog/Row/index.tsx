@@ -11,6 +11,8 @@ import {
   getJustifyClass,
 } from '../utils.js';
 
+import '../../../styles/catalog/Row.css';
+
 const rowPropsSchema = z.object({
   children: z.array(z.any()),
   justify: z.enum([

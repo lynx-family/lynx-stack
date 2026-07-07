@@ -8,8 +8,13 @@
     "directory": "packages/genui/openui"
   },
   "license": "Apache-2.0",
+  "sideEffects": [
+    "**/*.css"
+  ],
   "type": "module",
   "exports": {
+    "./styles/theme.css": "./styles/theme.css",
+    "./styles/material-icons.css": "./styles/material-icons.css",
     ".": {
       "types": "./dist/core/index.d.ts",
       "default": "./dist/core/index.js"
@@ -27,6 +32,7 @@
   "types": "./dist/core/index.d.ts",
   "files": [
     "dist",
+    "styles",
     "README.md"
   ],
   "scripts": {

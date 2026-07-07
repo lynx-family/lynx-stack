@@ -30,6 +30,7 @@
         "cli/tsconfig.json",
         "cli/tsconfig.build.json",
         "openui/src/**",
+        "openui/styles/**",
         "openui/package.json",
         "openui/tsconfig.json",
         "openui/tsconfig.build.json"
