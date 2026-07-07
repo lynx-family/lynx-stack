@@ -5,7 +5,7 @@ import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, it, vi } 
 import { globalEnvManager } from './utils/envManager';
 import { elementTree, options } from './utils/nativeMethod';
 import { __page as __internalPage } from '../../src/internal';
-import { jsReadyEventIdSwap } from '../../src/snapshot/lifecycle/event/jsReady';
+import { firstScreenEventIdSwap } from '../../src/snapshot/lifecycle/event/firstScreenSync';
 import { __root } from '../../src/root';
 import { clearPage } from '../../src/snapshot';
 
@@ -467,7 +467,7 @@ describe('ssr', () => {
 
     ssrHydrate(info);
     expect(__internalPage).toBe(__page);
-    expect(jsReadyEventIdSwap).toEqual({});
+    expect(firstScreenEventIdSwap).toEqual({});
     {
       const listRef = elementTree.getElementById('ssr-list');
       expect(elementTree.triggerComponentAtIndex(listRef, 0)).toEqual(uiSign1);

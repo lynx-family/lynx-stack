@@ -16,7 +16,7 @@ describe('ElementPAPICall Alog', () => {
     __AppendElement(text0, rawText0);
     __AppendElement(page, text0);
     __AddDataset(text0, 'testid', 'count-value');
-    __OnLifecycleEvent(['rLynxFirstScreen', { 'root': '{}', 'jsReadyEventIdSwap': {} }]);
+    __OnLifecycleEvent(['rLynxFirstScreen', { 'root': '{}', 'firstScreenEventIdSwap': {} }]);
 
     expect(console.alog.mock.calls).toMatchInlineSnapshot(`
       [
@@ -42,7 +42,7 @@ describe('ElementPAPICall Alog', () => {
           "[ReactLynxDebug] FiberElement API call #7: __AddDataset(text#1, "testid", "count-value")",
         ],
         [
-          "[ReactLynxDebug] FiberElement API call #8: __OnLifecycleEvent(["rLynxFirstScreen", {"root":"{}","jsReadyEventIdSwap":{}}])",
+          "[ReactLynxDebug] FiberElement API call #8: __OnLifecycleEvent(["rLynxFirstScreen", {"root":"{}","firstScreenEventIdSwap":{}}])",
         ],
       ]
     `);

@@ -179,7 +179,7 @@ interface ReactWebpackPluginOptions {
   /**
    * {@inheritdoc @lynx-js/react-rsbuild-plugin#PluginReactLynxOptions.firstScreenSyncTiming}
    */
-  firstScreenSyncTiming?: 'immediately' | 'jsReady';
+  firstScreenSyncTiming?: 'immediately' | 'jsReady' | 'manual';
 
   /**
    * {@inheritdoc @lynx-js/react-rsbuild-plugin#PluginReactLynxOptions.globalPropsMode}
