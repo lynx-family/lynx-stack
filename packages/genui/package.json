@@ -18,6 +18,7 @@
       "default": "./dist/index.js"
     },
     "./a2ui/styles/theme.css": "./a2ui/styles/theme.css",
+    "./a2ui/styles/material-icons.css": "./a2ui/styles/material-icons.css",
     "./a2ui": {
       "types": "./a2ui/dist/index.d.ts",
       "default": "./a2ui/dist/index.js"
