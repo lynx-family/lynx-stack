@@ -1,6 +1,6 @@
 use lynx::{
-  run_global_ui_task, sys, Env, FetchResponse, HeadlessView, ResourceFetcher, ResourceRequest,
-  SoftwareFrame, SoftwareRenderer, Task, WindowlessHost, WindowlessRenderer,
+  run_global_ui_task, sys, Env, HeadlessView, SoftwareFrame, SoftwareRenderer, Task,
+  WindowlessHost, WindowlessRenderer,
 };
 #[cfg(not(target_os = "macos"))]
 use lynx::{set_global_ui_task_runner, GlobalUiTaskRunner};
@@ -10,7 +10,7 @@ use std::ffi::c_void;
 use std::ffi::{c_char, CStr};
 use std::fs::{self, File};
 use std::io::{BufWriter, Error as IoError, ErrorKind};
-use std::path::{Component, Path, PathBuf};
+use std::path::{Path, PathBuf};
 use std::ptr;
 use std::sync::{Arc, Mutex};
 #[cfg(not(target_os = "macos"))]
@@ -58,16 +58,13 @@ pub fn run_react_fixture() -> Result<RunReport, Box<dyn std::error::Error>> {
       VIEWPORT_HEIGHT as f32,
       DEVICE_PIXEL_RATIO,
     )
-    .resource_fetcher(DirectoryResourceFetcher::new(vec![fixture
-      .dist_dir
-      .clone()]))?
     .build()?;
   let lifecycle_client = LifecycleClient::new(&env)?;
   let _lifecycle_registration = lifecycle_client.register(&view);
 
   view.enter_foreground();
   let bundle = fs::read(&fixture.bundle_path)?;
-  view.load_template_bundle_bytes_with_global_props(
+  view.load_template_bytes_with_global_props(
     "assets://main.lynx.bundle",
     &bundle,
     Some("{}"),
@@ -88,9 +85,15 @@ pub fn run_react_fixture() -> Result<RunReport, Box<dyn std::error::Error>> {
   )?;
   let screenshot_path = default_screenshot_path();
   write_png(&screenshot_path, &frame)?;
-  let stats = expectation
-    .assert_matches(&frame)
-    .map_err(|error| format!("{error}; lifecycle={:?}", lifecycle_client.snapshot()))?;
+  let stats = expectation.assert_matches(&frame).map_err(|error| {
+    let stats = screenshot_stats(&frame);
+    format!(
+      "{error}; {}; stats={stats:?}; screenshot={}; lifecycle={:?}",
+      missing_image_hint(&stats),
+      screenshot_path.display(),
+      lifecycle_client.snapshot()
+    )
+  })?;
 
   Ok(RunReport {
     width: frame.width,
@@ -464,71 +467,6 @@ impl SoftwareRenderer for FrameSink {
   }
 }
 
-struct DirectoryResourceFetcher {
-  roots: Vec<PathBuf>,
-}
-
-impl DirectoryResourceFetcher {
-  fn new(roots: Vec<PathBuf>) -> Self {
-    Self {
-      roots: roots
-        .into_iter()
-        .map(|root| root.canonicalize().unwrap_or(root))
-        .collect(),
-    }
-  }
-
-  fn resolve(&self, url: &str) -> Option<PathBuf> {
-    if let Some(path) = url.strip_prefix("file://") {
-      return self.resolve_absolute_path(PathBuf::from(path));
-    }
-
-    let path = url
-      .strip_prefix("file://lynx?")
-      .unwrap_or(url)
-      .strip_prefix("local://")
-      .or_else(|| url.strip_prefix("assets://"))
-      .unwrap_or(url)
-      .trim_start_matches('/');
-    if Path::new(path)
-      .components()
-      .any(|component| matches!(component, Component::ParentDir))
-    {
-      return None;
-    }
-
-    self
-      .roots
-      .iter()
-      .map(|root| root.join(path))
-      .find(|candidate| candidate.is_file())
-  }
-
-  fn resolve_absolute_path(&self, path: PathBuf) -> Option<PathBuf> {
-    let path = path.canonicalize().ok()?;
-    if !path.is_file() {
-      return None;
-    }
-    if self.roots.iter().any(|root| path.starts_with(root)) {
-      Some(path)
-    } else {
-      None
-    }
-  }
-}
-
-impl ResourceFetcher for DirectoryResourceFetcher {
-  fn fetch(&mut self, request: ResourceRequest) -> FetchResponse {
-    let Some(path) = self.resolve(&request.url) else {
-      return FetchResponse::error(-1, format!("resource not found: {}", request.url));
-    };
-    match fs::read(&path) {
-      Ok(data) => FetchResponse::ok(data),
-      Err(error) => FetchResponse::error(-1, format!("failed to read {}: {error}", path.display())),
-    }
-  }
-}
-
 struct ScreenshotExpectation {
   width: usize,
   height: usize,
@@ -539,6 +477,7 @@ struct ScreenshotExpectation {
   min_arrow_pixels: usize,
 }
 
+#[derive(Debug)]
 struct ScreenshotStats {
   visible_pixels: usize,
   white_pixels: usize,
@@ -673,6 +612,17 @@ fn is_saturated_image_pixel(red: u8, green: u8, blue: u8) -> bool {
   max_channel > 80 && max_channel.saturating_sub(min_channel) > 50
 }
 
+fn missing_image_hint(stats: &ScreenshotStats) -> &'static str {
+  if stats.gradient_pixels > 0
+    && stats.white_pixels > 0
+    && (stats.logo_pixels == 0 || stats.arrow_pixels == 0)
+  {
+    "background/text rendered but inline image pixels are absent; verify the native headless runtime disables the image texture backend for kRendererTypeSoftware"
+  } else {
+    "rendered frame did not match expected fixture signals"
+  }
+}
+
 fn wait_for_frame(
   env: &Env,
   view: &HeadlessView,
@@ -686,15 +636,14 @@ fn wait_for_frame(
   let deadline = Instant::now() + timeout;
   let mut renderer_tasks_run = 0usize;
   let mut global_tasks_run = 0usize;
-  let mut next_frame_request = Instant::now();
-  let mut saw_visible_frame = false;
+  let mut requested_initial_frame = false;
   let mut latest_frame = None;
   let mut latest_mismatch = None;
   while Instant::now() < deadline {
     let mut ran_task = false;
-    if !saw_visible_frame && Instant::now() >= next_frame_request {
+    if !requested_initial_frame {
       view.set_frame(0.0, 0.0, VIEWPORT_WIDTH as f32, VIEWPORT_HEIGHT as f32);
-      next_frame_request = Instant::now() + Duration::from_millis(250);
+      requested_initial_frame = true;
     }
     for task in renderer_tasks.drain_ready() {
       view.renderer().run_task(task);
@@ -708,7 +657,6 @@ fn wait_for_frame(
     }
     if let Some(frame) = frame_slot.lock().expect("frame lock poisoned").take() {
       if frame.visible_pixel_count() > 0 {
-        saw_visible_frame = true;
         match expectation.assert_matches(&frame) {
           Ok(_) => return Ok(frame),
           Err(mismatch) => {
@@ -780,7 +728,6 @@ unsafe extern "C" {
 }
 
 struct ReactFixture {
-  dist_dir: PathBuf,
   bundle_path: PathBuf,
   lynx_core_path: PathBuf,
 }
@@ -793,7 +740,6 @@ impl ReactFixture {
     Self {
       bundle_path: dist_dir.join("main.lynx.bundle"),
       lynx_core_path: crate_dir.join("fixtures/react/lynx_core.js"),
-      dist_dir,
     }
   }
 }

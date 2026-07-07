@@ -16,7 +16,7 @@ For fixture-backed `@lynx-js/ui-judge` Android E2E tests, commit source fixtures
 
 When generating UI Judge fixture bundles from Vitest, force the fixture build to use `NODE_ENV=production` rather than inheriting Vitest's `NODE_ENV=test`, so generated outputs mirror the committed example build behavior.
 
-The React fixture keeps `output.dataUriLimit` at infinity by default so UI Judge's normal generated bundle is self-contained. Only the Rust headless runner should build it with `LYNX_HEADLESS_RUST_EXTERNAL_ASSETS=1`, which emits PNG assets and gives the bundle an absolute `file://` asset prefix for the native windowless resource loader.
+The React fixture keeps `output.dataUriLimit` at infinity so generated bundles are self-contained. Rust headless tests should rely on Clay's built-in `data:image/...;base64,...` decoding instead of changing the fixture to emit external PNG assets.
 
 Midscene scoring in this package should use `aiNumber()` for non-mutating score queries and normalize the returned number into an integer from 0 to 5. Keep `aiAct()` only for caller-provided setup steps that intentionally mutate the UI. For scoring-only prompts, make it clear that the current UI state is enough, no actions should be emitted, and the `Number` field should contain exactly one concrete integer from 0 through 5. Avoid placeholder text such as angle-bracketed score variables, because model-backed CI may copy the placeholder verbatim. Do not reintroduce letter grades or `GRADE:` output in prompts.
 

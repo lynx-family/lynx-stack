@@ -12,16 +12,16 @@ crate.
 Build the bundle with the same command used by the UI Judge fixture helper:
 
 ```bash
-LYNX_HEADLESS_RUST_EXTERNAL_ASSETS=1 NODE_ENV=production node packages/rspeedy/core/bin/rspeedy.js build --root packages/genui/ui-judge/tests/fixtures/react
+NODE_ENV=production node packages/rspeedy/core/bin/rspeedy.js build --root packages/genui/ui-judge/tests/fixtures/react
 ```
 
 The expected first frame is the React fixture UI: an 800x600 viewport with a
 black background, a large purple/magenta radial gradient, the Lynx logo, the
 arrow image, and white `React` / `on Lynx` text centered in the viewport. The
 test asserts those visual signals directly from the captured RGBA frame instead
-of comparing a golden image. The external-assets build mode keeps the UI Judge
-fixture default unchanged while avoiding `data:image` URLs that the current
-macOS windowless runtime does not route through the generic resource fetcher.
+of comparing a golden image. The fixture inlines PNG assets as
+`data:image/...;base64,...`; Clay decodes those images internally, so the runner
+does not install a generic resource fetcher for them.
 
 Run the integration target with:
 
@@ -34,8 +34,12 @@ The runner writes a debug PNG to
 the `lynx` crate: set `LYNX_LIB_PATH` or `LYNX_SDK_DIR` explicitly, or let the
 crate build script download the default supported runtime.
 
-The CI fixture test currently runs on Linux. The shipped macOS windowless
-runtime can present the software frame locally, but this runtime currently does
-not paint PNG `<image>` nodes into that frame even when the bundle uses
-absolute `file://` asset URLs. Keep the macOS run as a diagnostic path until
-the runtime exposes image painting for the windowless software backend.
+The CI fixture test currently runs on Linux. The same Rust code can be run
+locally on macOS as a diagnostic path, but Linux is the runtime-backed contract
+for this crate.
+
+If a captured frame contains the gradient and text but has no logo or arrow
+pixels, the bundle and Rust task plumbing have already reached first paint. In
+that case, check the native windowless runtime: `kRendererTypeSoftware` must
+also configure Clay with software image rendering so image resources are painted
+into the software present buffer.
