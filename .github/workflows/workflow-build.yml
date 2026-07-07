@@ -26,6 +26,8 @@ jobs:
           ref: ${{ env.HEAD_REF }}
           repository: ${{ github.event.pull_request.head.repo.full_name || github.repository }}
           persist-credentials: false
+      - name: Disable local Git maintenance
+        run: git config --local maintenance.auto false
       # Set up common variables for git operations
       - name: Setup git refs
         id: git-refs
@@ -81,6 +83,8 @@ jobs:
       - uses: actions/checkout@93cb6efe18208431cddfb8368fd83d5badbf9bfd # v5
         with:
           persist-credentials: false
+      - name: Disable local Git maintenance
+        run: git config --local maintenance.auto false
       - uses: actions/setup-node@a0853c24544627f65ddf259abe73b1d18a591444 # v5
         with:
           node-version: "22"
