@@ -11,7 +11,7 @@ on:
 jobs:
   zizmor:
     timeout-minutes: 10
-    runs-on: lynx-ubuntu-24.04-medium
+    runs-on: lynx-ubuntu-26.04-medium
     permissions:
       security-events: write
     steps:

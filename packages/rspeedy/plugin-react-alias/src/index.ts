@@ -320,7 +320,11 @@ export function createLazyResolver(
       if (!resolverLazy) {
         const resolver = new ResolverFactory({
           conditionNames,
-          enablePnp: true,
+          // Only enable Yarn PnP when the process is actually running under
+          // the PnP runtime. Otherwise a stray `.pnp.cjs` in an ancestor
+          // directory would hijack resolution and break npm/pnpm projects.
+          // See https://github.com/lynx-family/lynx-stack/issues/2539
+          enablePnp: !!process.versions['pnp'],
         })
         resolverLazy = (dir: string, req: string) => resolver.sync(dir, req)
       }
