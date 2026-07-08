@@ -130,6 +130,47 @@ describe('PluginQRCode - CLI Shortcuts', () => {
     })
   })
 
+  describe('showQRCode option', () => {
+    test('renders the QR block by default', async () => {
+      const { log } = await import('@clack/prompts')
+      vi.mocked(log.success).mockClear()
+
+      const unregister = await registerConsoleShortcuts({
+        api: mockedRsbuildAPI,
+        entries: ['foo'],
+        schema: i => i,
+        port: 3000,
+      })
+
+      // showQRCode calls log.success twice (once for the QR ASCII, once for
+      // the URL line).
+      expect(vi.mocked(log.success).mock.calls.length).toBeGreaterThanOrEqual(1)
+      unregister()
+    })
+
+    test('skips the QR block when showQRCode is false', async () => {
+      const { log } = await import('@clack/prompts')
+      vi.mocked(log.success).mockClear()
+      const onPrint = vi.fn()
+
+      const unregister = await registerConsoleShortcuts({
+        api: mockedRsbuildAPI,
+        entries: ['foo'],
+        schema: i => i,
+        port: 3000,
+        showQRCode: false,
+        onPrint,
+      })
+
+      expect(vi.mocked(log.success)).not.toHaveBeenCalled()
+      // URL is still surfaced through onPrint.
+      expect(onPrint).toHaveBeenCalledWith(
+        'https://example.com/foo.lynx.bundle',
+      )
+      unregister()
+    })
+  })
+
   test('open page', async () => {
     vi.stubEnv('NODE_ENV', 'development')
     const onPrint = vi.fn()
