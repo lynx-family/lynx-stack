@@ -656,6 +656,7 @@ describe('document - background', () => {
     const platformInfo = { 'item-key': 'item-0', 'full-span': true };
     const directPlatformInfo = { 'item-key': 'direct' };
     const spreadPlatformInfo = { 'item-key': 'spread', className: 'ignored', __spread: true };
+    const primitivePlatformInfo = 'primitive-key';
     const backgroundNextId = backgroundSnapshotInstanceManager.nextId;
 
     try {
@@ -682,6 +683,14 @@ describe('document - background', () => {
         'item-key': 'spread',
       });
 
+      const mainThreadItemWithPrimitiveSpread = new SnapshotInstance('list-item', -10_004);
+      mainThreadItemWithPrimitiveSpread.__values = [primitivePlatformInfo];
+      mainThreadItemWithPrimitiveSpread.setAttribute('__listItemPlatformInfoIndex', 0);
+      expect(mainThreadItemWithPrimitiveSpread.__listItemPlatformInfo).toEqual(primitivePlatformInfo);
+      expect(JSON.parse(JSON.stringify(mainThreadItemWithPrimitiveSpread)).__listItemPlatformInfo).toEqual(
+        primitivePlatformInfo,
+      );
+
       const backgroundItem = new BackgroundSnapshotInstance('list-item');
       backgroundItem.setAttribute('__listItemPlatformInfoIndex', 0);
       backgroundItem.setAttribute('values', [platformInfo]);
@@ -699,6 +708,12 @@ describe('document - background', () => {
       expect(backgroundItemWithSpread.__listItemPlatformInfo).toEqual({ 'item-key': 'spread' });
       expect(backgroundItemWithSpread.__extraProps?.__listItemPlatformInfoIndex).toBeUndefined();
 
+      const backgroundItemWithPrimitiveSpread = new BackgroundSnapshotInstance('list-item');
+      backgroundItemWithPrimitiveSpread.setAttribute(0, primitivePlatformInfo);
+      backgroundItemWithPrimitiveSpread.setAttribute('__listItemPlatformInfoIndex', 0);
+      expect(backgroundItemWithPrimitiveSpread.__listItemPlatformInfo).toEqual(primitivePlatformInfo);
+      expect(backgroundItemWithPrimitiveSpread.__extraProps?.__listItemPlatformInfoIndex).toBeUndefined();
+
       const backgroundItemWithDirectInfo = new BackgroundSnapshotInstance('list-item');
       backgroundItemWithDirectInfo.setAttribute('__listItemPlatformInfo', directPlatformInfo);
       expect(backgroundItemWithDirectInfo.__listItemPlatformInfo).toEqual(directPlatformInfo);
@@ -708,6 +723,7 @@ describe('document - background', () => {
       snapshotInstanceManager.values.delete(-10_001);
       snapshotInstanceManager.values.delete(-10_002);
       snapshotInstanceManager.values.delete(-10_003);
+      snapshotInstanceManager.values.delete(-10_004);
       backgroundSnapshotInstanceManager.nextId = backgroundNextId - 1;
     }
   });
