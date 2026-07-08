@@ -126,15 +126,14 @@ export class ReactRefreshRspackPlugin {
 
     const { ProvidePlugin } = compiler.webpack;
 
-    const provide: Record<string, string> = {
-      __prefresh_utils__: path.resolve(__dirname, '../runtime/refresh.cjs'),
-    };
-
+    // `__prefresh_utils__` is injected by the loader (`../loader.cjs`) as an ESM
+    // import, not here — only the optional error overlay still needs
+    // `ProvidePlugin`.
     if (this.#options.overlay) {
-      provide['__prefresh_errors__'] = this.#options.overlay.module;
+      new ProvidePlugin({
+        __prefresh_errors__: this.#options.overlay.module,
+      }).apply(compiler);
     }
-
-    new ProvidePlugin(provide).apply(compiler);
 
     compiler.hooks.thisCompilation.tap(PLUGIN_NAME, (compilation) => {
       compilation.hooks.runtimeModule.tap(PLUGIN_NAME, (runtimeModule) => {

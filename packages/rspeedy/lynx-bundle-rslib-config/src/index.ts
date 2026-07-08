@@ -16,6 +16,7 @@ export {
 export type {
   EncodeOptions,
   ExternalBundleLibConfig,
+  ExternalObject,
   Externals,
   ExternalsPresetDefinition,
   ExternalsPresetDefinitions,

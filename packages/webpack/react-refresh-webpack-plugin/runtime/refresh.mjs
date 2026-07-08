@@ -1,4 +1,8 @@
-const { isComponent, flush } = require('@lynx-js/react/refresh');
+// ESM (imported via `../loader.cjs`), not `ProvidePlugin`:
+// `@lynx-js/react/refresh` is an async module under async externals, and only a
+// harmony import edge is awaited, so the injected footer sees resolved
+// `isComponent`/`flush`.
+import { flush, isComponent } from '@lynx-js/react/refresh';
 
 // eslint-disable-next-line
 const getExports = m => m.exports || m.__proto__.exports;
@@ -52,9 +56,4 @@ const shouldBind = m => {
   return isCitizen;
 };
 
-module.exports = Object.freeze({
-  getExports,
-  shouldBind,
-  flush,
-  registerExports,
-});
+export { flush, getExports, registerExports, shouldBind };

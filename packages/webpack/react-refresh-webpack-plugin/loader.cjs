@@ -9,8 +9,27 @@ const LOADER_RUNTIME = fs.readFileSync(
   'utf-8',
 );
 
+const REFRESH_RUNTIME_ABS = path.resolve(__dirname, './runtime/refresh.mjs');
+
 const RefreshHotLoader = function RefreshHotLoader(source, inputSourceMap) {
-  this.callback(null, source + '\n\n' + LOADER_RUNTIME, inputSourceMap);
+  // Inject `__prefresh_utils__` as a real ESM import (not `ProvidePlugin`): only
+  // harmony edges are async-awaited, so the footer sees resolved
+  // `isComponent`/`flush` under async externals. Relative request keeps the
+  // bundler-derived binding name stable across machines/snapshots.
+  let request = path
+    .relative(path.dirname(this.resourcePath), REFRESH_RUNTIME_ABS)
+    .replace(/\\/g, '/');
+  if (!request.startsWith('.')) {
+    request = './' + request;
+  }
+  const importPrefreshUtils = `\nimport * as __prefresh_utils__ from ${
+    JSON.stringify(request)
+  };\n`;
+  this.callback(
+    null,
+    source + '\n\n' + LOADER_RUNTIME + importPrefreshUtils,
+    inputSourceMap,
+  );
 };
 
 module.exports = RefreshHotLoader;

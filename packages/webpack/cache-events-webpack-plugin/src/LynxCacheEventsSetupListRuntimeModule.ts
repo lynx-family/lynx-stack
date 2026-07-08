@@ -12,6 +12,7 @@ type LynxCacheEventsSetupListRuntimeModule = new(
   setupListTransformer: NonNullable<
     LynxCacheEventsPluginOptions['setupListTransformer']
   >,
+  isMainThread?: boolean,
 ) => RuntimeModule;
 
 export function createLynxCacheEventsSetupListRuntimeModule(
@@ -24,6 +25,7 @@ export function createLynxCacheEventsSetupListRuntimeModule(
       public setupListTransformer: NonNullable<
         LynxCacheEventsPluginOptions['setupListTransformer']
       >,
+      public isMainThread = false,
     ) {
       super(
         'webpack/runtime/lynx cache events setup list',
@@ -34,13 +36,51 @@ export function createLynxCacheEventsSetupListRuntimeModule(
     override generate(): string {
       const { Template } = this.compilation!.compiler.webpack;
 
-      return `// lynx cache events setup list
-${LynxRuntimeGlobals.lynxCacheEvents} = {};
-${LynxRuntimeGlobals.lynxCacheEventsSetupList} = ${
-        Template.asString(
-          '['
-            + this.setupListTransformer([
-              `{
+      // Main thread: native calls `renderPage` before ReactLynx loads; cache
+      // it and replay against the real one from `onLoaded`.
+      const setupList = this.isMainThread
+        ? [
+          `{
+      name: 'renderPage',
+      setup: () => {
+        const oldRenderPage = globalThis.renderPage;
+        const mockRenderPage = (...args) => {
+          if (${LynxRuntimeGlobals.lynxCacheEvents}.loaded) {
+            return oldRenderPage && oldRenderPage(...args);
+          }
+          ${LynxRuntimeGlobals.lynxCacheEvents}.cachedActions.push({
+            type: 'renderPage',
+            data: { args },
+          });
+        };
+        globalThis.renderPage = mockRenderPage;
+
+        return () => {
+          ${LynxRuntimeGlobals.lynxCacheEvents}.cachedActions.forEach(action => {
+            if (action.type === 'renderPage') {
+              // now the real renderPage installed by ReactLynx
+              globalThis.renderPage(...action.data.args);
+            }
+          });
+          // don't clobber ReactLynx's real renderPage
+          if (globalThis.renderPage === mockRenderPage) {
+            globalThis.renderPage = oldRenderPage;
+          }
+        }
+      },
+    }`,
+          `{
+      name: 'processData',
+      setup: () => {
+        // Passthrough shim (return consumed synchronously, can't be deferred);
+        // ReactLynx overwrites it once loaded.
+        globalThis.processData = globalThis.processData || ((data) => data);
+        return () => {};
+      },
+    }`,
+        ]
+        : [
+          `{
       name: 'ttMethod',
       setup: () => {
         const tt = lynxCoreInject.tt;
@@ -58,11 +98,9 @@ ${LynxRuntimeGlobals.lynxCacheEventsSetupList} = ${
         const methodsToMockFn = {};
 
         methodsToMock.forEach(methodName => {
-          // biome-ignore lint/complexity/useOptionalChain: optional chain not supported here
           methodsToOldFn[methodName] = tt[methodName] && tt[methodName].bind(tt);
           tt[methodName] = methodsToMockFn[methodName] = (...args) => {
             if (${LynxRuntimeGlobals.lynxCacheEvents}.loaded) {
-              // biome-ignore lint/complexity/useOptionalChain: optional chain not supported here
               return methodsToOldFn[methodName]
                 && methodsToOldFn[methodName](...args);
             }
@@ -92,7 +130,7 @@ ${LynxRuntimeGlobals.lynxCacheEventsSetupList} = ${
         }
       },
     }`,
-              `{
+          `{
       name: 'performanceEvent',
       setup: () => {
           const tt = lynxCoreInject.tt;
@@ -139,7 +177,7 @@ ${LynxRuntimeGlobals.lynxCacheEventsSetupList} = ${
         }
       }
     }`,
-              `{
+          `{
       name: 'globalThis',
       setup: () => {
         const g = globalThis;
@@ -150,11 +188,9 @@ ${LynxRuntimeGlobals.lynxCacheEventsSetupList} = ${
         const methodsToMockFn = {};
 
         methodsToMock.forEach(methodName => {
-          // biome-ignore lint/complexity/useOptionalChain: optional chain not supported here
           methodsToOldFn[methodName] = g[methodName] && g[methodName].bind(g);
           g[methodName] = methodsToMockFn[methodName] = (...args) => {
             if (${LynxRuntimeGlobals.lynxCacheEvents}.loaded) {
-              // biome-ignore lint/complexity/useOptionalChain: optional chain not supported here
               return methodsToOldFn[methodName]
                 && methodsToOldFn[methodName](...args);
             }
@@ -184,8 +220,16 @@ ${LynxRuntimeGlobals.lynxCacheEventsSetupList} = ${
         }
       },
     }`,
-            ]).join(',')
-            + ']',
+        ];
+
+      return `// lynx cache events setup list
+${LynxRuntimeGlobals.lynxCacheEvents} = {};
+${LynxRuntimeGlobals.lynxCacheEventsSetupList} = ${
+        Template.asString(
+          '['
+            + this.setupListTransformer(setupList, {
+              isMainThread: this.isMainThread,
+            }).join(',') + ']',
         )
       };
 
