@@ -110,7 +110,7 @@ jobs:
             turbo-v4-${{ runner.os }}-
       - name: Install
         run: |
-          npm install -g corepack@latest
+          npm install -g corepack@0.35.0
           corepack enable
           pnpm install --frozen-lockfile
       - name: Build

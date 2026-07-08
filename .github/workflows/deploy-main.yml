@@ -39,7 +39,7 @@ jobs:
           package-manager-cache: false
       - name: Install
         run: |
-          npm install -g corepack@latest
+          npm install -g corepack@0.35.0
           corepack enable && corepack prepare
           corepack pnpm install --frozen-lockfile
       - name: build
@@ -161,7 +161,7 @@ jobs:
           package-manager-cache: false
       - name: Install
         run: |
-          npm install -g corepack@latest
+          npm install -g corepack@0.35.0
           corepack enable && corepack prepare
           corepack pnpm install --frozen-lockfile
       - name: Download Turbo Cache
@@ -209,7 +209,7 @@ jobs:
           package-manager-cache: false
       - name: Install
         run: |
-          npm install -g corepack@latest
+          npm install -g corepack@0.35.0
           corepack enable && corepack prepare
           corepack pnpm install --frozen-lockfile
       - name: Download Turbo Cache
