@@ -1159,6 +1159,7 @@ where
   filename_hash: String,
   content_hash: String,
   runtime_id: Lazy<Expr>,
+  dev_creator_param: bool,
   runtime_components_ident: Ident,
   runtime_components_module_item: Option<ModuleItem>,
   css_id_value: Option<Expr>,
@@ -1188,15 +1189,15 @@ where
     JSXTransformer {
       filename_hash: calc_hash(&cfg.filename.clone()),
       content_hash: "test".into(),
-      runtime_id: match mode {
-        TransformMode::Development => {
-          // We should find a way to use `cfg.runtime_pkg`
-          Lazy::new(|| quote!("require('@lynx-js/react/internal')" as Expr))
-        }
-        TransformMode::Production | TransformMode::Test => {
-          Lazy::new(|| Expr::Ident(private_ident!("ReactLynx")))
-        }
-      },
+      // Bound via the `import * as ReactLynx from <cfg.runtime_pkg>` prepended
+      // in `visit_mut_module` — no dev-only `require()`, so promise (async)
+      // externals are awaited through the regular import machinery.
+      runtime_id: Lazy::new(|| Expr::Ident(private_ident!("ReactLynx"))),
+      // Dev creators are stringified for cross-thread HMR
+      // (`DEV_ONLY_AddSnapshot`) and take the runtime as an arrow parameter
+      // instead of capturing module bindings. Production creators keep the
+      // module-scope reference, which stays statically tree-shakeable.
+      dev_creator_param: matches!(mode, TransformMode::Development),
       runtime_components_ident: private_ident!("ReactLynxRuntimeComponents"),
       runtime_components_module_item: None,
       cfg,
@@ -1321,6 +1322,16 @@ where
 
     let target = self.cfg.target;
     let runtime_id = self.runtime_id.clone();
+    // In dev the creator arrow is stringified for cross-thread HMR
+    // (`DEV_ONLY_AddSnapshot`), so everything inside it references the runtime
+    // through the arrow's own parameter; in production it keeps the
+    // module-scope import binding (statically tree-shakeable).
+    let creator_runtime_id = private_ident!("__runtime__");
+    let creator_runtime_expr = if self.dev_creator_param {
+      Expr::Ident(creator_runtime_id.clone())
+    } else {
+      self.runtime_id.clone()
+    };
     let filename_hash = self.filename_hash.clone();
     let content_hash = self.content_hash.clone();
     let ui_source_map_records = self.ui_source_map_records.clone();
@@ -1355,7 +1366,7 @@ where
     };
 
     let mut dynamic_part_extractor = DynamicPartExtractor::new(
-      self.runtime_id.clone(),
+      creator_runtime_expr.clone(),
       self,
       self.cfg.enable_ui_source_map,
       node_index_fn,
@@ -1401,7 +1412,7 @@ where
           snapshot_dynamic_part_def.push(Some(ExprOrSpread {
             spread: None,
             expr: Box::new(dynamic_part.to_updater(
-              runtime_id.clone(),
+              creator_runtime_expr.clone(),
               target,
               snapshot_dynamic_part_def.len() as i32,
             )),
@@ -1461,7 +1472,7 @@ where
         snapshot_children.push(expr.clone());
         quote!(
           "$runtime_id.__DynamicPartSlotV2_0" as Expr,
-          runtime_id: Expr = runtime_id.clone(),
+          runtime_id: Expr = creator_runtime_expr.clone(),
         )
       }
       _ => {
@@ -1476,7 +1487,7 @@ where
                 spread: None,
                 expr: Box::new(quote!(
                   "[$runtime_id.__DynamicPartListSlotV2, $element_index]" as Expr,
-                  runtime_id: Expr = runtime_id.clone(),
+                  runtime_id: Expr = creator_runtime_expr.clone(),
                   element_index: Expr = i32_to_expr(&element_index),
                 )),
               }));
@@ -1487,7 +1498,7 @@ where
                 spread: None,
                 expr: Box::new(quote!(
                   "[$runtime_id.__DynamicPartSlotV2, $element_index]" as Expr,
-                  runtime_id: Expr = runtime_id.clone(),
+                  runtime_id: Expr = creator_runtime_expr.clone(),
                   element_index: Expr = i32_to_expr(&element_index),
                 )),
               }));
@@ -1520,37 +1531,70 @@ where
       Expr::Ident("globDynamicComponentEntry".into())
     };
 
-    let snapshot_create_call = quote!(
-        r#"$runtime_id.snapshotCreatorMap[$snapshot_id] = ($snapshot_id) => $runtime_id.createSnapshot(
-             $snapshot_id,
-             $snapshot_creator,
-             $snapshot_dynamic_parts_def,
-             $slot,
-             $css_id,
-             $entry_name,
-             $snapshot_refs_and_spread_index,
-             true
-        )"# as Expr,
-        runtime_id: Expr = self.runtime_id.clone(),
-        snapshot_id = snapshot_id.clone(),
-        entry_name: Expr = entry_name,
-        snapshot_creator: Expr = snapshot_creator,
-        snapshot_dynamic_parts_def: Expr = match (target, snapshot_dynamic_part_def.len()) {
-          (TransformTarget::JS, _) | (_, 0) => Expr::Lit(Lit::Null(Null { span: DUMMY_SP })),
-          _ => Expr::Array(ArrayLit { span: DUMMY_SP, elems: snapshot_dynamic_part_def }),
-        },
-        slot: Expr = slot_expr,
-        css_id: Expr = match &self.css_id_value {
-          Some(css_id_expr) => css_id_expr.clone(),
-          // We use `undefined` here since runtime will skip `__SetCSSId` when `cssId === undefined && entryName === undefined`
-          None => Expr::Ident("undefined".into()),
-        },
-        snapshot_refs_and_spread_index: Expr = match snapshot_refs_and_spread_index.len() {
-          0 => Expr::Lit(Lit::Null(Null { span: DUMMY_SP })),
-          _ => Expr::Array(ArrayLit { span: DUMMY_SP, elems: snapshot_refs_and_spread_index }),
-        },
-        // has_multi_children: Expr = Expr::Lit(Lit::Num(Number { span: DUMMY_SP, value: wrap_dynamic_part.dynamic_part_count as f64, raw: None })),
-    );
+    let snapshot_dynamic_parts_def: Expr = match (target, snapshot_dynamic_part_def.len()) {
+      (TransformTarget::JS, _) | (_, 0) => Expr::Lit(Lit::Null(Null { span: DUMMY_SP })),
+      _ => Expr::Array(ArrayLit {
+        span: DUMMY_SP,
+        elems: snapshot_dynamic_part_def,
+      }),
+    };
+    let css_id: Expr = match &self.css_id_value {
+      Some(css_id_expr) => css_id_expr.clone(),
+      // We use `undefined` here since runtime will skip `__SetCSSId` when `cssId === undefined && entryName === undefined`
+      None => Expr::Ident("undefined".into()),
+    };
+    let snapshot_refs_and_spread_index: Expr = match snapshot_refs_and_spread_index.len() {
+      0 => Expr::Lit(Lit::Null(Null { span: DUMMY_SP })),
+      _ => Expr::Array(ArrayLit {
+        span: DUMMY_SP,
+        elems: snapshot_refs_and_spread_index,
+      }),
+    };
+
+    let snapshot_create_call = if self.dev_creator_param {
+      quote!(
+          r#"$runtime_id.snapshotCreatorMap[$snapshot_id] = ($snapshot_id, $creator_runtime) => $creator_runtime.createSnapshot(
+               $snapshot_id,
+               $snapshot_creator,
+               $snapshot_dynamic_parts_def,
+               $slot,
+               $css_id,
+               $entry_name,
+               $snapshot_refs_and_spread_index,
+               true
+          )"# as Expr,
+          runtime_id: Expr = self.runtime_id.clone(),
+          creator_runtime = creator_runtime_id.clone(),
+          snapshot_id = snapshot_id.clone(),
+          entry_name: Expr = entry_name,
+          snapshot_creator: Expr = snapshot_creator,
+          snapshot_dynamic_parts_def: Expr = snapshot_dynamic_parts_def,
+          slot: Expr = slot_expr,
+          css_id: Expr = css_id,
+          snapshot_refs_and_spread_index: Expr = snapshot_refs_and_spread_index,
+      )
+    } else {
+      quote!(
+          r#"$runtime_id.snapshotCreatorMap[$snapshot_id] = ($snapshot_id) => $runtime_id.createSnapshot(
+               $snapshot_id,
+               $snapshot_creator,
+               $snapshot_dynamic_parts_def,
+               $slot,
+               $css_id,
+               $entry_name,
+               $snapshot_refs_and_spread_index,
+               true
+          )"# as Expr,
+          runtime_id: Expr = self.runtime_id.clone(),
+          snapshot_id = snapshot_id.clone(),
+          entry_name: Expr = entry_name,
+          snapshot_creator: Expr = snapshot_creator,
+          snapshot_dynamic_parts_def: Expr = snapshot_dynamic_parts_def,
+          slot: Expr = slot_expr,
+          css_id: Expr = css_id,
+          snapshot_refs_and_spread_index: Expr = snapshot_refs_and_spread_index,
+      )
+    };
 
     let mut entry_snapshot_uid = quote!("$snapshot_uid" as Expr, snapshot_uid: Expr = Expr::Lit(Lit::Str(snapshot_uid.clone().into())));
     if matches!(self.cfg.is_dynamic_component, Some(true)) {

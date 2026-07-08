@@ -1,7 +1,8 @@
 import { jsx as _jsx } from "@lynx-js/react/jsx-runtime";
+import * as ReactLynx from "@lynx-js/react";
 const __snapshot_da39a_test_1 = "__snapshot_da39a_test_1";
-require('@lynx-js/react/internal').snapshotCreatorMap[__snapshot_da39a_test_1] = (__snapshot_da39a_test_1)=>require('@lynx-js/react/internal').createSnapshot(__snapshot_da39a_test_1, function() {
-        const pageId = require('@lynx-js/react/internal').__pageId;
+ReactLynx.snapshotCreatorMap[__snapshot_da39a_test_1] = (__snapshot_da39a_test_1, __runtime__)=>__runtime__.createSnapshot(__snapshot_da39a_test_1, function() {
+        const pageId = __runtime__.__pageId;
         const el = __CreateView(pageId);
         const el1 = __CreateText(pageId);
         __AppendElement(el, el1);
@@ -25,9 +26,9 @@ require('@lynx-js/react/internal').snapshotCreatorMap[__snapshot_da39a_test_1] =
             el6
         ];
     }, [
-        (snapshot, index, oldValue)=>require('@lynx-js/react/internal').updateRef(snapshot, index, oldValue, 1),
-        (snapshot, index, oldValue)=>require('@lynx-js/react/internal').updateEvent(snapshot, index, oldValue, 3, "bindEvent", "tap", ''),
-        (snapshot, index, oldValue)=>require('@lynx-js/react/internal').updateRef(snapshot, index, oldValue, 5)
+        (snapshot, index, oldValue)=>__runtime__.updateRef(snapshot, index, oldValue, 1),
+        (snapshot, index, oldValue)=>__runtime__.updateEvent(snapshot, index, oldValue, 3, "bindEvent", "tap", ''),
+        (snapshot, index, oldValue)=>__runtime__.updateRef(snapshot, index, oldValue, 5)
     ], null, undefined, globDynamicComponentEntry, [
         0,
         2
@@ -36,9 +37,9 @@ function Comp() {
     const handleRef = ()=>{};
     return _jsx(__snapshot_da39a_test_1, {
         values: [
-            require('@lynx-js/react/internal').transformRef(handleRef),
+            ReactLynx.transformRef(handleRef),
             handleRef,
-            require('@lynx-js/react/internal').transformRef(handleRef)
+            ReactLynx.transformRef(handleRef)
         ]
     });
 }

@@ -148,13 +148,13 @@ export function snapshotPatchApply(snapshotPatch: SnapshotPatch): void {
 
 /* v8 ignore start */
 /**
- * Evaluates a string as code with ReactLynx runtime injected.
- * Used for HMR (Hot Module Replacement) to update snapshot definitions.
+ * Deserializes a stringified snapshot creator for HMR.
  */
 function evaluate<T>(code: string): T {
   if (__DEV__) {
-    // We are using `eval` here to make the updated snapshot to access variables like `__webpack_require__`.
-    // See: https://github.com/lynx-family/lynx-stack/issues/983.
+    // Creators are self-contained: the runtime is injected as a call argument
+    // (see `SnapshotCreator`), so the evaluated code needs nothing from this
+    // scope.
     return eval(`(() => ${code})()`) as T;
   }
   throw new Error('unreachable: evaluate is not supported in production');

@@ -14,7 +14,7 @@ import {
 } from './dynamicPartType.js';
 import { snapshotCreateList } from './list.js';
 import type { SnapshotInstance } from './snapshot.js';
-import { snapshotCreatorMap } from './snapshotCreatorMap.js';
+import { snapshotCreatorMap, snapshotCreatorRuntime } from './snapshotCreatorMap.js';
 import { updateSpread } from './spread.js';
 import { entryUniqID, getCloneSnapshotInfo } from './utils.js';
 import { SnapshotOperation, __globalSnapshotPatch } from '../lifecycle/patch/snapshotPatch.js';
@@ -225,7 +225,7 @@ export function createCloneSnapshot(type: string): void {
   // get the original snapshot definition
   let originalDef = snapshotManager.values.get(originalType);
   if (!originalDef) {
-    snapshotCreatorMap[originalType]?.(originalType);
+    snapshotCreatorMap[originalType]?.(originalType, snapshotCreatorRuntime);
     originalDef = snapshotManager.values.get(originalType);
   }
   if (!originalDef) {

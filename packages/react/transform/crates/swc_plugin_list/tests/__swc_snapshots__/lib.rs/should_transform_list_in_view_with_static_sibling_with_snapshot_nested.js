@@ -1,59 +1,60 @@
+import * as ReactLynx from "@lynx-js/react";
 const __snapshot_da39a_test_3 = "__snapshot_da39a_test_3";
-require('@lynx-js/react/internal').snapshotCreatorMap[__snapshot_da39a_test_3] = (__snapshot_da39a_test_3)=>require('@lynx-js/react/internal').createSnapshot(__snapshot_da39a_test_3, function() {
-        const pageId = require('@lynx-js/react/internal').__pageId;
+ReactLynx.snapshotCreatorMap[__snapshot_da39a_test_3] = (__snapshot_da39a_test_3, __runtime__)=>__runtime__.createSnapshot(__snapshot_da39a_test_3, function() {
+        const pageId = __runtime__.__pageId;
         const el = __CreateElement("list-item", pageId);
         return [
             el
         ];
     }, [
-        (snapshot, index, oldValue)=>require('@lynx-js/react/internal').updateListItemPlatformInfo(snapshot, index, oldValue, 0)
+        (snapshot, index, oldValue)=>__runtime__.updateListItemPlatformInfo(snapshot, index, oldValue, 0)
     ], null, undefined, globDynamicComponentEntry, null, true);
 const __snapshot_da39a_test_4 = "__snapshot_da39a_test_4";
-require('@lynx-js/react/internal').snapshotCreatorMap[__snapshot_da39a_test_4] = (__snapshot_da39a_test_4)=>require('@lynx-js/react/internal').createSnapshot(__snapshot_da39a_test_4, function() {
-        const pageId = require('@lynx-js/react/internal').__pageId;
+ReactLynx.snapshotCreatorMap[__snapshot_da39a_test_4] = (__snapshot_da39a_test_4, __runtime__)=>__runtime__.createSnapshot(__snapshot_da39a_test_4, function() {
+        const pageId = __runtime__.__pageId;
         const el = __CreateElement("list-item", pageId);
         return [
             el
         ];
     }, [
-        (snapshot, index, oldValue)=>require('@lynx-js/react/internal').updateListItemPlatformInfo(snapshot, index, oldValue, 0)
+        (snapshot, index, oldValue)=>__runtime__.updateListItemPlatformInfo(snapshot, index, oldValue, 0)
     ], null, undefined, globDynamicComponentEntry, null, true);
 const __snapshot_da39a_test_7 = "__snapshot_da39a_test_7";
-require('@lynx-js/react/internal').snapshotCreatorMap[__snapshot_da39a_test_7] = (__snapshot_da39a_test_7)=>require('@lynx-js/react/internal').createSnapshot(__snapshot_da39a_test_7, function() {
-        const pageId = require('@lynx-js/react/internal').__pageId;
+ReactLynx.snapshotCreatorMap[__snapshot_da39a_test_7] = (__snapshot_da39a_test_7, __runtime__)=>__runtime__.createSnapshot(__snapshot_da39a_test_7, function() {
+        const pageId = __runtime__.__pageId;
         const el = __CreateElement("list-item", pageId);
         return [
             el
         ];
     }, [
-        (snapshot, index, oldValue)=>require('@lynx-js/react/internal').updateListItemPlatformInfo(snapshot, index, oldValue, 0)
+        (snapshot, index, oldValue)=>__runtime__.updateListItemPlatformInfo(snapshot, index, oldValue, 0)
     ], null, undefined, globDynamicComponentEntry, null, true);
 const __snapshot_da39a_test_8 = "__snapshot_da39a_test_8";
-require('@lynx-js/react/internal').snapshotCreatorMap[__snapshot_da39a_test_8] = (__snapshot_da39a_test_8)=>require('@lynx-js/react/internal').createSnapshot(__snapshot_da39a_test_8, function() {
-        const pageId = require('@lynx-js/react/internal').__pageId;
+ReactLynx.snapshotCreatorMap[__snapshot_da39a_test_8] = (__snapshot_da39a_test_8, __runtime__)=>__runtime__.createSnapshot(__snapshot_da39a_test_8, function() {
+        const pageId = __runtime__.__pageId;
         const el = __CreateElement("list-item", pageId);
         return [
             el
         ];
     }, [
-        (snapshot, index, oldValue)=>require('@lynx-js/react/internal').updateListItemPlatformInfo(snapshot, index, oldValue, 0)
+        (snapshot, index, oldValue)=>__runtime__.updateListItemPlatformInfo(snapshot, index, oldValue, 0)
     ], null, undefined, globDynamicComponentEntry, null, true);
 const __snapshot_da39a_test_6 = "__snapshot_da39a_test_6";
-require('@lynx-js/react/internal').snapshotCreatorMap[__snapshot_da39a_test_6] = (__snapshot_da39a_test_6)=>require('@lynx-js/react/internal').createSnapshot(__snapshot_da39a_test_6, function(snapshotInstance) {
-        const pageId = require('@lynx-js/react/internal').__pageId;
-        const el = require('@lynx-js/react/internal').snapshotCreateList(pageId, snapshotInstance, 0);
+ReactLynx.snapshotCreatorMap[__snapshot_da39a_test_6] = (__snapshot_da39a_test_6, __runtime__)=>__runtime__.createSnapshot(__snapshot_da39a_test_6, function(snapshotInstance) {
+        const pageId = __runtime__.__pageId;
+        const el = __runtime__.snapshotCreateList(pageId, snapshotInstance, 0);
         return [
             el
         ];
     }, null, [
         [
-            require('@lynx-js/react/internal').__DynamicPartListSlotV2,
+            __runtime__.__DynamicPartListSlotV2,
             0
         ]
     ], undefined, globDynamicComponentEntry, null, true);
 const __snapshot_da39a_test_5 = "__snapshot_da39a_test_5";
-require('@lynx-js/react/internal').snapshotCreatorMap[__snapshot_da39a_test_5] = (__snapshot_da39a_test_5)=>require('@lynx-js/react/internal').createSnapshot(__snapshot_da39a_test_5, function() {
-        const pageId = require('@lynx-js/react/internal').__pageId;
+ReactLynx.snapshotCreatorMap[__snapshot_da39a_test_5] = (__snapshot_da39a_test_5, __runtime__)=>__runtime__.createSnapshot(__snapshot_da39a_test_5, function() {
+        const pageId = __runtime__.__pageId;
         const el = __CreateElement("list-item", pageId);
         const el1 = __CreateView(pageId);
         __AppendElement(el, el1);
@@ -68,29 +69,29 @@ require('@lynx-js/react/internal').snapshotCreatorMap[__snapshot_da39a_test_5] =
             el3
         ];
     }, [
-        (snapshot, index, oldValue)=>require('@lynx-js/react/internal').updateListItemPlatformInfo(snapshot, index, oldValue, 0)
+        (snapshot, index, oldValue)=>__runtime__.updateListItemPlatformInfo(snapshot, index, oldValue, 0)
     ], [
         [
-            require('@lynx-js/react/internal').__DynamicPartSlotV2,
+            __runtime__.__DynamicPartSlotV2,
             2
         ]
     ], undefined, globDynamicComponentEntry, null, true);
 const __snapshot_da39a_test_2 = "__snapshot_da39a_test_2";
-require('@lynx-js/react/internal').snapshotCreatorMap[__snapshot_da39a_test_2] = (__snapshot_da39a_test_2)=>require('@lynx-js/react/internal').createSnapshot(__snapshot_da39a_test_2, function(snapshotInstance) {
-        const pageId = require('@lynx-js/react/internal').__pageId;
-        const el = require('@lynx-js/react/internal').snapshotCreateList(pageId, snapshotInstance, 0);
+ReactLynx.snapshotCreatorMap[__snapshot_da39a_test_2] = (__snapshot_da39a_test_2, __runtime__)=>__runtime__.createSnapshot(__snapshot_da39a_test_2, function(snapshotInstance) {
+        const pageId = __runtime__.__pageId;
+        const el = __runtime__.snapshotCreateList(pageId, snapshotInstance, 0);
         return [
             el
         ];
     }, null, [
         [
-            require('@lynx-js/react/internal').__DynamicPartListSlotV2,
+            __runtime__.__DynamicPartListSlotV2,
             0
         ]
     ], undefined, globDynamicComponentEntry, null, true);
 const __snapshot_da39a_test_1 = "__snapshot_da39a_test_1";
-require('@lynx-js/react/internal').snapshotCreatorMap[__snapshot_da39a_test_1] = (__snapshot_da39a_test_1)=>require('@lynx-js/react/internal').createSnapshot(__snapshot_da39a_test_1, function() {
-        const pageId = require('@lynx-js/react/internal').__pageId;
+ReactLynx.snapshotCreatorMap[__snapshot_da39a_test_1] = (__snapshot_da39a_test_1, __runtime__)=>__runtime__.createSnapshot(__snapshot_da39a_test_1, function() {
+        const pageId = __runtime__.__pageId;
         const el = __CreateView(pageId);
         const el1 = __CreateWrapperElement(pageId);
         __AppendElement(el, el1);
@@ -103,7 +104,7 @@ require('@lynx-js/react/internal').snapshotCreatorMap[__snapshot_da39a_test_1] =
         ];
     }, null, [
         [
-            require('@lynx-js/react/internal').__DynamicPartSlotV2,
+            __runtime__.__DynamicPartSlotV2,
             1
         ]
     ], undefined, globDynamicComponentEntry, null, true);
