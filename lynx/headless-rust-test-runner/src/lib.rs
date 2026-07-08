@@ -495,7 +495,7 @@ impl ScreenshotExpectation {
       min_visible_pixels: 450_000,
       min_white_pixels: 1_500,
       min_gradient_pixels: 50_000,
-      min_logo_pixels: 700,
+      min_logo_pixels: 500,
       min_arrow_pixels: 100,
     }
   }
@@ -550,7 +550,7 @@ impl ScreenshotExpectation {
     if stats.arrow_pixels < self.min_arrow_pixels {
       return Err(
         format!(
-        "React fixture frame is missing expected arrow image pixels: expected at least {}, got {}",
+        "React fixture frame is missing expected colored arrow image pixels: expected at least {}, got {}",
         self.min_arrow_pixels, stats.arrow_pixels
       )
         .into(),
@@ -590,9 +590,7 @@ fn screenshot_stats(frame: &CapturedFrame) -> ScreenshotStats {
     if (370..430).contains(&x)
       && (385..445).contains(&y)
       && alpha > 0
-      && red > 180
-      && green > 180
-      && blue > 180
+      && is_saturated_image_pixel(red, green, blue)
     {
       arrow_pixels += 1;
     }

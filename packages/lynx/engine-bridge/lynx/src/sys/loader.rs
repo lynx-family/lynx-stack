@@ -175,6 +175,7 @@ pub struct LoadedLibrary {
   pub lynx_rust_view_update_screen_metrics: unsafe extern "C" fn(*mut lynx_view_t, f32, f32, f32),
   pub lynx_rust_view_set_frame: unsafe extern "C" fn(*mut lynx_view_t, f32, f32, f32, f32),
   pub lynx_rust_view_set_font_scale: unsafe extern "C" fn(*mut lynx_view_t, f32),
+  pub lynx_rust_view_set_use_texture_backend: unsafe extern "C" fn(*mut lynx_view_t, bool) -> bool,
   pub lynx_view_enter_foreground: unsafe extern "C" fn(*mut lynx_view_t),
   pub lynx_view_enter_background: unsafe extern "C" fn(*mut lynx_view_t),
 
@@ -436,6 +437,10 @@ impl LoadedLibrary {
       ),
       lynx_rust_view_set_frame: load_symbol!(library, lynx_rust_view_set_frame),
       lynx_rust_view_set_font_scale: load_symbol!(library, lynx_rust_view_set_font_scale),
+      lynx_rust_view_set_use_texture_backend: load_symbol!(
+        library,
+        lynx_rust_view_set_use_texture_backend
+      ),
       lynx_view_enter_foreground: load_symbol!(library, lynx_view_enter_foreground),
       lynx_view_enter_background: load_symbol!(library, lynx_view_enter_background),
 

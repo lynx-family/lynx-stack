@@ -5,7 +5,7 @@ edition = "2021"
 publish = false
 
 [dependencies]
-lynx = { path = "../engine-bridge/lynx" }
+lynx = { path = "../../packages/lynx/engine-bridge/lynx" }
 png = "0.18.1"
 serde_json = { workspace = true }
 

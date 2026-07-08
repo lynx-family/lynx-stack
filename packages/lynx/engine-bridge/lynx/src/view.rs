@@ -180,6 +180,14 @@ impl HeadlessViewBuilder {
         operation: "create headless view",
       });
     }
+    let configured = unsafe {
+      (sys.lynx_rust_view_set_use_texture_backend)(raw, self.renderer.use_texture_backend())
+    };
+    if !configured {
+      return Err(Error::Message(
+        "failed to configure headless texture backend".to_string(),
+      ));
+    }
 
     Ok(HeadlessView {
       env: self.env,
