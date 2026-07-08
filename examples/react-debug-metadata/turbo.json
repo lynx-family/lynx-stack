@@ -3,7 +3,8 @@
   "extends": ["//"],
   "tasks": {
     "build": {
-      "outputs": ["dist-producer/**", "dist-consumer/**"]
+      "outputs": ["dist-producer/**", "dist-consumer/**"],
+      "cache": false
     }
   }
 }

@@ -6,6 +6,8 @@ import { z } from 'zod/v4';
 import { defineComponent } from '../../core/library.jsx';
 import { stringLikeSchema, stringifyValue } from '../utils.js';
 
+import '../../../styles/catalog/AudioPlayer.css';
+
 export const AudioPlayer = defineComponent({
   name: 'AudioPlayer',
   props: z.object({

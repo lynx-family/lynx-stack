@@ -1,4 +1,5 @@
 @import "../theme.css";
+@import "../material-icons.css";
 
 .datetime-input {
   display: flex;

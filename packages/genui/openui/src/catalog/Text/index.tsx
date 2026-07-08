@@ -6,6 +6,8 @@ import { z } from 'zod/v4';
 import { defineComponent } from '../../core/library.jsx';
 import { stringLikeSchema, stringifyValue } from '../utils.js';
 
+import '../../../styles/catalog/Text.css';
+
 const textVariants = [
   'h1',
   'h2',

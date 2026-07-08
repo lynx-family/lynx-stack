@@ -1,0 +1,87 @@
+/* ===== Stack ===== */
+.OpenUIStack {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 12rpx;
+}
+
+.OpenUIStackRow {
+  flex-direction: row;
+}
+
+.OpenUIStackColumn {
+  flex-direction: column;
+}
+
+.OpenUIStackWrap {
+  flex-wrap: wrap;
+}
+
+.OpenUIGapNone {
+  gap: 0;
+}
+
+.OpenUIGapXs {
+  gap: 6rpx;
+}
+
+.OpenUIGapS {
+  gap: 10rpx;
+}
+
+.OpenUIGapM {
+  gap: 12rpx;
+}
+
+.OpenUIGapL {
+  gap: 16rpx;
+}
+
+.OpenUIGapXl {
+  gap: 24rpx;
+}
+
+.OpenUIAlignStart {
+  align-items: flex-start;
+}
+
+.OpenUIAlignCenter {
+  align-items: center;
+}
+
+.OpenUIAlignEnd {
+  align-items: flex-end;
+}
+
+.OpenUIAlignStretch {
+  align-items: stretch;
+}
+
+.OpenUIJustifyStart {
+  justify-content: flex-start;
+}
+
+.OpenUIJustifyCenter {
+  justify-content: center;
+}
+
+.OpenUIJustifyEnd {
+  justify-content: flex-end;
+}
+
+.OpenUIJustifyBetween {
+  justify-content: space-between;
+}
+
+.OpenUIJustifyAround {
+  justify-content: space-around;
+}
+
+.OpenUIJustifyEvenly {
+  justify-content: space-evenly;
+}
+
+.OpenUIJustifyStretch {
+  justify-content: stretch;
+}

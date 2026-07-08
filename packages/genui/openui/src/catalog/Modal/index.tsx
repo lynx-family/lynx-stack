@@ -14,6 +14,8 @@ import {
 import { defineComponent } from '../../core/library.jsx';
 import { stringLikeSchema, stringifyValue } from '../utils.js';
 
+import '../../../styles/catalog/Modal.css';
+
 const modalPropsSchema = z.object({
   trigger: z.any(),
   content: z.any(),

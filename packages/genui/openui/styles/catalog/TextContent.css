@@ -1,0 +1,37 @@
+/* ===== TextContent ===== */
+.OpenUITextContent {
+  color: var(--openui-color-text-body);
+  font-size: 26rpx;
+  line-height: 36rpx;
+}
+
+.OpenUITextContentSmall {
+  font-size: 24rpx;
+  line-height: 34rpx;
+}
+
+.OpenUITextContentDefault {
+  font-size: 26rpx;
+  line-height: 36rpx;
+}
+
+.OpenUITextContentLarge {
+  font-size: 28rpx;
+  line-height: 38rpx;
+}
+
+.OpenUITextContentSmallHeavy {
+  font-size: 24rpx;
+  line-height: 34rpx;
+  font-weight: 700;
+}
+
+.OpenUITextContentLargeHeavy {
+  font-size: 28rpx;
+  line-height: 38rpx;
+  font-weight: 700;
+}
+
+.dark .OpenUITextContent {
+  color: var(--openui-color-text-body);
+}

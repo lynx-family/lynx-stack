@@ -407,6 +407,41 @@ describe('mount externals library', () => {
       .toBeTypeOf('number')
   })
 
+  it('emits a `commonjs2` module.exports assignment, not a static export copy', async () => {
+    const rslibConfig = defineExternalBundleRslibConfig({
+      source: {
+        entry: {
+          utils: path.join(__dirname, './fixtures/utils-lib/index.ts'),
+        },
+      },
+      id: 'utils-reactlynx-cjs2',
+      output: {
+        distPath: {
+          root: path.join(fixtureDir, 'dist'),
+        },
+        externals: {
+          '@lynx-js/react': ['ReactLynx', 'React'],
+        },
+        minify: false,
+      },
+      plugins: [pluginReactLynx()],
+    })
+
+    await build(rslibConfig)
+
+    const decodedResult = await decodeTemplate(
+      path.join(fixtureDir, 'dist/utils-reactlynx-cjs2.lynx.bundle'),
+    )
+    const backgroundSection = decodedResult['custom-sections']['utils']!
+
+    // `commonjs2` assigns the whole namespace, so an async-external entry can
+    // expose its exports Promise for consumers to await.
+    expect(backgroundSection).toContain('module.exports = __webpack_exports__')
+    // The default `commonjs-static` per-name copy would read `undefined` off a
+    // pending async-external entry Promise, so it must not be emitted.
+    expect(backgroundSection).not.toContain('for(var __rspack_i')
+  })
+
   it('should apply reactlynx externals preset to the final bundle', async () => {
     const rslibConfig = defineExternalBundleRslibConfig({
       source: {
@@ -638,6 +673,46 @@ describe('mount externals library', () => {
     ).toBe(true)
     expect(decodedResult['custom-sections']['utils__main-thread']![0])
       .toBeTypeOf('number')
+  })
+
+  it('should emit promise externals for async externals with subpaths', async () => {
+    const rslibConfig = defineExternalBundleRslibConfig({
+      source: {
+        entry: {
+          utils: path.join(__dirname, './fixtures/utils-lib/index.ts'),
+        },
+      },
+      id: 'utils-reactlynx-async',
+      output: {
+        distPath: {
+          root: path.join(fixtureDir, 'dist'),
+        },
+        externals: {
+          // Multi-level subpath: every segment after the mount key must be
+          // picked after the mounted namespace promise resolves.
+          '@lynx-js/react': {
+            libraryName: ['ReactLynx', 'Nested', 'React'],
+            async: true,
+          },
+        },
+        minify: false,
+      },
+      plugins: [pluginReactLynx()],
+    })
+
+    await build(rslibConfig)
+
+    const decodedResult = await decodeTemplate(
+      path.join(fixtureDir, 'dist/utils-reactlynx-async.lynx.bundle'),
+    )
+    expect(decodedResult['custom-sections']['utils']).toContain(
+      'Promise.resolve(lynx[Symbol.for("__LYNX_EXTERNAL_GLOBAL__")]["ReactLynx"])'
+        + '.then(function (m) { return m["Nested"]["React"]; })',
+    )
+    // No synchronous property access on the pending promise.
+    expect(decodedResult['custom-sections']['utils']).not.toContain(
+      '["ReactLynx"]["Nested"]',
+    )
   })
 })
 

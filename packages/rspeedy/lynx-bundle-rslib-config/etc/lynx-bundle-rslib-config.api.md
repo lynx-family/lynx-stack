@@ -50,7 +50,13 @@ export interface ExternalBundleWebpackPluginOptions {
 }
 
 // @public
-export type Externals = Record<string, string | string[]>;
+export interface ExternalObject {
+    async?: boolean;
+    libraryName: string | string[];
+}
+
+// @public
+export type Externals = Record<string, string | string[] | ExternalObject>;
 
 // @public
 export interface ExternalsPresetDefinition {

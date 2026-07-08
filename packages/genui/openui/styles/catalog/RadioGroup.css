@@ -1,0 +1,105 @@
+/* ===== RadioGroup ===== */
+.OpenUIRadioGroup {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  min-width: 0;
+}
+
+.OpenUIRadioGroupContainer {
+  display: flex;
+  flex-direction: column;
+  gap: 18rpx;
+}
+
+.OpenUIRadioGroup-row .OpenUIRadioGroupContainer {
+  flex-direction: row;
+  flex-wrap: wrap;
+  gap: 18rpx;
+  align-items: center;
+}
+
+.OpenUIRadioGroup-card .OpenUIRadioOption {
+  padding: 14rpx 16rpx;
+  border-width: 1rpx;
+  border-style: solid;
+  border-color: var(--openui-color-border);
+  border-radius: 14rpx;
+  background-color: var(--openui-color-surface-strong);
+}
+
+.OpenUIRadioOption {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: 14rpx;
+  min-width: 0;
+}
+
+.OpenUIRadioLabel {
+  font-size: 28rpx;
+  font-weight: 500;
+  color: var(--openui-color-text);
+  line-height: 1.5;
+}
+
+.OpenUIRadioItem {
+  width: 36rpx;
+  height: 36rpx;
+  border-radius: 999rpx;
+  border-width: 1.5rpx;
+  border-style: solid;
+  border-color: var(--openui-color-border-input);
+  background-color: transparent;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.OpenUIRadioItem.ui-checked {
+  border-color: var(--openui-color-primary);
+  background-color: var(--openui-color-primary);
+}
+
+.OpenUIRadioIndicator {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.OpenUIRadioIndicatorDot {
+  width: 16rpx;
+  height: 16rpx;
+  border-radius: 999rpx;
+  background-color: var(--openui-color-on-primary);
+}
+
+.OpenUIRadioGroup-card .OpenUIRadioOption {
+  background-color: var(--openui-color-surface-muted);
+}
+
+.dark .OpenUIRadioLabel {
+  color: var(--openui-color-text);
+}
+
+.dark .OpenUIRadioItem {
+  border-color: var(--openui-color-border-input);
+  background-color: transparent;
+}
+
+.dark .OpenUIRadioItem.ui-checked {
+  border-color: var(--openui-color-primary);
+  background-color: var(--openui-color-primary);
+}
+
+.dark .OpenUIRadioIndicatorDot {
+  background-color: var(--openui-color-on-primary);
+}
+
+.dark .OpenUIRadioGroup-card .OpenUIRadioOption {
+  background-color: var(--openui-color-surface-muted);
+  border-color: var(--openui-color-border);
+}

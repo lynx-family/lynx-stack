@@ -1,0 +1,80 @@
+/* ===== ChoicePicker ===== */
+.OpenUIChoicePicker {
+  width: 100%;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 10rpx;
+}
+
+.OpenUIChoicePickerLabel {
+  color: var(--openui-color-text-muted);
+  font-size: 26rpx;
+  font-weight: 650;
+  line-height: 1.5;
+}
+
+.OpenUIChoicePickerHint {
+  color: var(--openui-color-text-subtle);
+  font-size: 22rpx;
+  line-height: 1.4;
+}
+
+.OpenUIChoicePickerOptions {
+  display: flex;
+  flex-direction: row;
+  flex-wrap: wrap;
+  gap: 10rpx;
+}
+
+.OpenUIChoicePicker-list .OpenUIChoicePickerOptions,
+.OpenUIChoicePicker-dropdown .OpenUIChoicePickerOptions {
+  flex-direction: column;
+}
+
+.OpenUIChoiceItem {
+  padding: 10rpx 14rpx;
+  border-radius: 12rpx;
+  border-width: 1rpx;
+  border-style: solid;
+  border-color: var(--openui-color-border-strong);
+  background-color: var(--openui-color-surface-subtle);
+}
+
+.OpenUIChoicePicker-card .OpenUIChoiceItem {
+  border-radius: 16rpx;
+  padding: 14rpx 16rpx;
+}
+
+.OpenUIChoiceItemSelected {
+  border-color: var(--openui-color-primary-border-strong);
+  background-color: var(--openui-color-primary-surface-strong);
+}
+
+.OpenUIChoiceItemText {
+  color: var(--openui-color-text);
+  font-size: 24rpx;
+  font-weight: 560;
+}
+
+.dark .OpenUIChoicePickerLabel {
+  color: var(--openui-color-text-muted);
+}
+
+.dark .OpenUIChoicePickerHint {
+  color: var(--openui-color-text-subtle);
+}
+
+.dark .OpenUIChoiceItem {
+  border-color: var(--openui-color-border);
+  background-color: var(--openui-color-surface-subtle);
+}
+
+.dark .OpenUIChoiceItemSelected {
+  border-color: var(--openui-color-primary-border-strong);
+  background-color: var(--openui-color-primary-surface-strong);
+}
+
+.dark .OpenUIChoiceItemText {
+  color: var(--openui-color-text);
+}
