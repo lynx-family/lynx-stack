@@ -1,25 +1,24 @@
 import { defineExternalBundleRslibConfig } from '@lynx-js/lynx-bundle-rslib-config';
 import { pluginReactLynx } from '@lynx-js/react-rsbuild-plugin';
 
-const target = process.env['EXTERNAL_BUNDLE_TARGET'] === 'web' ? 'web' : 'tasm';
-
 export default defineExternalBundleRslibConfig({
-  id: process.env.NODE_ENV === 'development' ? 'react-dev' : 'react-prod',
+  id: 'comp-lib',
   source: {
     entry: {
-      'ReactLynx': './src/index.ts',
+      './App.js': './external-bundle/CompLib.tsx',
     },
   },
   plugins: [
     pluginReactLynx(),
   ],
   output: {
-    cleanDistPath: false,
-    distPath: './dist',
-  },
-  performance: {
-    buildCache: false,
+    externalsPresets: {
+      reactlynx: {
+        async: true,
+      },
+    },
+    globalObject: 'globalThis',
   },
 }, {
-  target,
+  target: 'web',
 });

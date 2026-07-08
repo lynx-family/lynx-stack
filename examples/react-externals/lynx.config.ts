@@ -1,9 +1,6 @@
 import os from 'node:os';
 
-import {
-  builtInExternalsPresetDefinitions,
-  pluginExternalBundle,
-} from '@lynx-js/external-bundle-rsbuild-plugin';
+import { pluginExternalBundle } from '@lynx-js/external-bundle-rsbuild-plugin';
 import { pluginQRCode } from '@lynx-js/qrcode-rsbuild-plugin';
 import { pluginReactLynx } from '@lynx-js/react-rsbuild-plugin';
 import { defineConfig } from '@lynx-js/rspeedy';
@@ -33,8 +30,6 @@ function detectLanHost() {
 const port = Number(process.env['PORT'] ?? 3000);
 const assetPrefix = `http://${detectLanHost()}:${port}/`;
 
-const reactlynxPreset = builtInExternalsPresetDefinitions['reactlynx']!;
-
 export default defineConfig({
   plugins: [
     pluginReactLynx(),
@@ -47,24 +42,9 @@ export default defineConfig({
     pluginExternalBundle({
       ...(isAsync && {
         externalBundleRoot: 'dist-external-bundle-react-async',
-        externalsPresetDefinitions: {
-          'reactlynx-async': {
-            resolveExternals: (value, context) =>
-              Object.fromEntries(
-                Object.entries(
-                  reactlynxPreset.resolveExternals!(value, context),
-                ).map(([request, external]) => [
-                  request,
-                  { ...external, async: true },
-                ]),
-              ),
-            resolveManagedAssets: (value, context) =>
-              reactlynxPreset.resolveManagedAssets!(value, context),
-          },
-        },
       }),
       externalsPresets: isAsync
-        ? { 'reactlynx-async': true }
+        ? { reactlynx: { async: true } }
         : { reactlynx: true },
       externals: {
         './App.js': 'comp-lib.lynx.bundle',

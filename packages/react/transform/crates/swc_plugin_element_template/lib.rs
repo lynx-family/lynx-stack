@@ -218,6 +218,9 @@ pub struct JSXTransformerConfig {
   /// @internal
   pub target: TransformTarget,
   pub is_dynamic_component: Option<bool>,
+  /// @internal
+  #[serde(default)]
+  pub is_external_bundle: Option<bool>,
 }
 
 impl Default for JSXTransformerConfig {
@@ -231,6 +234,7 @@ impl Default for JSXTransformerConfig {
       filename: Default::default(),
       target: TransformTarget::LEPUS,
       is_dynamic_component: Some(false),
+      is_external_bundle: Some(false),
     }
   }
 }
@@ -562,10 +566,15 @@ where
     };
     let template_uid = template_identity.template_id.clone();
 
-    // Always keep the `globDynamicComponentEntry` prefix
-    // since __CreateElementTemplate needs to know the bundle URL of lazy
-    // bundle.
-    let entry_template_uid = quote!("`${globDynamicComponentEntry}:${$template_uid}`" as Expr, template_uid: Expr = Expr::Lit(Lit::Str(template_uid.clone().into())));
+    // External bundles have no `globDynamicComponentEntry` in scope; use the
+    // `__Card__` entry-name literal.
+    let entry_template_uid = if matches!(self.cfg.is_external_bundle, Some(true))
+      && !matches!(self.cfg.is_dynamic_component, Some(true))
+    {
+      quote!("`__Card__:${$template_uid}`" as Expr, template_uid: Expr = Expr::Lit(Lit::Str(template_uid.clone().into())))
+    } else {
+      quote!("`${globDynamicComponentEntry}:${$template_uid}`" as Expr, template_uid: Expr = Expr::Lit(Lit::Str(template_uid.clone().into())))
+    };
 
     if is_new_template {
       let entry_template_uid_def = ModuleItem::Stmt(quote!(

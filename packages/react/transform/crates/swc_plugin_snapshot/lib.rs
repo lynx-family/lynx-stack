@@ -1129,6 +1129,9 @@ pub struct JSXTransformerConfig {
   pub enable_ui_source_map: bool,
   /// @internal
   pub is_dynamic_component: Option<bool>,
+  /// @internal
+  #[serde(default)]
+  pub is_external_bundle: Option<bool>,
 }
 
 impl Default for JSXTransformerConfig {
@@ -1141,6 +1144,7 @@ impl Default for JSXTransformerConfig {
       target: TransformTarget::LEPUS,
       enable_ui_source_map: false,
       is_dynamic_component: Some(false),
+      is_external_bundle: Some(false),
     }
   }
 }
@@ -1502,6 +1506,16 @@ where
       })
     };
 
+    // External bundles have no `globDynamicComponentEntry` in scope; use the
+    // `__Card__` entry-name literal.
+    let entry_name: Expr = if matches!(self.cfg.is_external_bundle, Some(true))
+      && !matches!(self.cfg.is_dynamic_component, Some(true))
+    {
+      Expr::Lit(Lit::Str("__Card__".into()))
+    } else {
+      Expr::Ident("globDynamicComponentEntry".into())
+    };
+
     let snapshot_create_call = quote!(
         r#"$runtime_id.snapshotCreatorMap[$snapshot_id] = ($snapshot_id) => $runtime_id.createSnapshot(
              $snapshot_id,
@@ -1509,12 +1523,13 @@ where
              $snapshot_dynamic_parts_def,
              $slot,
              $css_id,
-             globDynamicComponentEntry,
+             $entry_name,
              $snapshot_refs_and_spread_index,
              true
         )"# as Expr,
         runtime_id: Expr = self.runtime_id.clone(),
         snapshot_id = snapshot_id.clone(),
+        entry_name: Expr = entry_name,
         snapshot_creator: Expr = snapshot_creator,
         snapshot_dynamic_parts_def: Expr = match (target, snapshot_dynamic_part_def.len()) {
           (TransformTarget::JS, _) | (_, 0) => Expr::Lit(Lit::Null(Null { span: DUMMY_SP })),
@@ -2530,6 +2545,29 @@ mod tests {
     <view style={`background-color: red; width: ${w};`} />;
     <view style={{backgroundColor: "red", width: w, height: "100rpx"}} />;
     <view style={{backgroundColor: "red", ...style}} />;
+    "#
+  );
+
+  // External bundles use the `"__Card__"` entry-name literal in `createSnapshot`.
+  test!(
+    module,
+    Syntax::Es(EsSyntax {
+      jsx: true,
+      ..Default::default()
+    }),
+    |t| visit_mut_pass(JSXTransformer::new(
+      super::JSXTransformerConfig {
+        is_external_bundle: Some(true),
+        ..Default::default()
+      },
+      Some(t.comments.clone()),
+      TransformMode::Test,
+      Some(t.cm.clone()),
+    )),
+    external_bundle_uses_card_entry_name,
+    // Input codes
+    r#"
+    <view><text>hello</text></view>;
     "#
   );
 

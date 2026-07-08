@@ -69,8 +69,13 @@ export type ExternalsPresetDefinitions = Record<string, ExternalsPresetDefinitio
 
 // @public
 export type ExternalsPresets = {
-    reactlynx?: boolean;
-} & Record<string, boolean>;
+    reactlynx?: ExternalsPresetValue;
+} & Record<string, ExternalsPresetValue>;
+
+// @public
+export type ExternalsPresetValue = boolean | {
+    async?: boolean;
+};
 
 // @public
 export class MainThreadRuntimeWrapperWebpackPlugin {

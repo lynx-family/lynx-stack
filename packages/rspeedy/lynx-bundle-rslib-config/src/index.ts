@@ -21,6 +21,7 @@ export type {
   ExternalsPresetDefinition,
   ExternalsPresetDefinitions,
   ExternalsPresets,
+  ExternalsPresetValue,
   OutputConfig,
 } from './externalBundleRslibConfig.js'
 export { ExternalBundleWebpackPlugin } from './webpack/ExternalBundleWebpackPlugin.js'

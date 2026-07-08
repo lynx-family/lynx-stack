@@ -79,6 +79,13 @@ export interface ReactLoaderOptions {
   isDynamicComponent?: boolean | undefined;
 
   /**
+   * Whether is building an external bundle.
+   *
+   * @internal
+   */
+  isExternalBundle?: boolean | undefined;
+
+  /**
    * The absolute path to `@lynx-js/react/transform`
    *
    * @internal
@@ -115,6 +122,7 @@ function getCommonOptions(
     enableUiSourceMap,
     inlineSourcesContent,
     isDynamicComponent,
+    isExternalBundle,
     engineVersion,
     experimental_useElementTemplate,
     defineDCE = { define: {} },
@@ -188,6 +196,7 @@ function getCommonOptions(
       runtimePkg: RUNTIME_PKG,
       filename,
       isDynamicComponent: isDynamicComponent ?? false,
+      isExternalBundle: isExternalBundle ?? false,
     },
     elementTemplate: useElementTemplate
       ? {
@@ -197,6 +206,7 @@ function getCommonOptions(
         filename,
         target: 'JS',
         isDynamicComponent: isDynamicComponent ?? false,
+        isExternalBundle: isExternalBundle ?? false,
       } satisfies ElementTemplateConfig
       : false,
     engineVersion: engineVersion ?? '',

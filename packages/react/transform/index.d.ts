@@ -598,6 +598,8 @@ export interface JsxTransformerConfig {
   enableUiSourceMap?: boolean
   /** @internal */
   isDynamicComponent?: boolean
+  /** @internal */
+  isExternalBundle?: boolean
 }
 /** @internal */
 export interface ElementTemplateConfig {
@@ -613,6 +615,8 @@ export interface ElementTemplateConfig {
   target: 'LEPUS' | 'JS' | 'MIXED'
   /** @internal */
   isDynamicComponent?: boolean
+  /** @internal */
+  isExternalBundle?: boolean
 }
 export interface WorkletVisitorConfig {
   /**
