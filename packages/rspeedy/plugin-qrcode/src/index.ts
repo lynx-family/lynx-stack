@@ -11,11 +11,8 @@
 import type {
   EnvironmentContext,
   RsbuildConfig,
-  RsbuildEntry,
   RsbuildPlugin,
 } from '@rsbuild/core'
-
-import type { ExposedAPI } from '@lynx-js/rspeedy'
 
 import { registerConsoleShortcuts } from './shortcuts.js'
 
@@ -151,63 +148,45 @@ export function pluginQRCode(
         unregisterPreviewShortcuts = undefined
       })
 
-      api.onAfterStartPreviewServer(async ({ environments, port }) => {
+      api.onAfterStartPreviewServer(async ({ environments, routes, port }) => {
         unregisterPreviewShortcuts?.()
-        unregisterPreviewShortcuts = await main(getEntries(environments), port)
+        unregisterPreviewShortcuts = await main(
+          getEntriesFromRoutes(routes, environments),
+          port,
+        )
       })
 
-      let printedQRCode = false
+      api.onAfterStartDevServer(async ({ environments, routes, port }) => {
+        const entries = getEntriesFromRoutes(routes, environments)
 
-      api.onAfterDevCompile(async ({ stats, environments }) => {
-        if (!api.context.devServer) {
+        if (entries.length === 0) {
           return
         }
 
-        if (stats.hasErrors()) {
-          return
-        }
-
-        if (printedQRCode) {
-          return
-        }
-
-        printedQRCode = true
-
-        const unregister = await main(
-          getEntries(environments),
-          api.context.devServer.port,
+        const unregister = await registerConsoleShortcuts(
+          {
+            entries,
+            api,
+            port,
+            schema: effectiveSchema,
+          },
         )
         if (unregister) {
           api.onCloseDevServer(unregister)
         }
       })
 
-      function getEntries(
-        environments: Record<string, EnvironmentContext> | undefined,
-      ) {
-        // biome-ignore lint/correctness/useHookAtTopLevel: not react hooks
-        return api.useExposed<ExposedAPI>(Symbol.for('rspeedy.env.entries'))
-          ?.entries ?? environments?.['lynx']?.entry
-      }
-
       async function main(
-        entries: RsbuildEntry | undefined,
+        entries: string[],
         port: number,
       ): Promise<(() => void) | undefined> {
-        if (!entries) {
-          // No entry points, skip print QRCode
-          return
-        }
-
-        const entriesArray = Object.keys(entries)
-
-        if (entriesArray.length === 0) {
+        if (entries.length === 0) {
           return
         }
 
         const unregister = await registerConsoleShortcuts(
           {
-            entries: entriesArray,
+            entries,
             api,
             port,
             schema: effectiveSchema,
@@ -217,6 +196,20 @@ export function pluginQRCode(
       }
     },
   }
+}
+
+function getEntriesFromRoutes(
+  routes: { entryName: string }[],
+  environments: Record<string, EnvironmentContext>,
+): string[] {
+  const entries = new Set(Object.keys(environments['lynx']?.entry ?? {}))
+  return [
+    ...new Set(
+      routes
+        .map(route => route.entryName)
+        .filter(entryName => entries.has(entryName)),
+    ),
+  ]
 }
 
 type PrintUrlsFn = Extract<

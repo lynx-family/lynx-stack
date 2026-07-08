@@ -6,7 +6,11 @@ import { createRequire } from 'node:module'
 import path from 'node:path'
 
 import { logger } from '@rsbuild/core'
-import type { RsbuildConfig, RsbuildPlugin } from '@rsbuild/core'
+import type {
+  EnvironmentContext,
+  RsbuildConfig,
+  RsbuildPlugin,
+} from '@rsbuild/core'
 import color from 'picocolors'
 
 import type { Dev } from '../config/dev/index.js'
@@ -75,6 +79,72 @@ export function pluginDev(
 
       debug(`dev.assetPrefix is normalized to ${assetPrefix}`)
 
+      // Resolve the main bundle filename template for a given entry/platform.
+      // When `bundle` is a function, it is called with `lazyBundle: false`
+      // since the dev URLs always point at the main bundle.
+      // Lazily initialized on first use (needs the exposed rspeedy API to be
+      // available which is guaranteed after plugin setup ordering).
+      let resolveBundleName: (entry: string, platform: string) => string
+
+      function getResolveBundleName() {
+        if (!resolveBundleName) {
+          // biome-ignore lint/correctness/useHookAtTopLevel: not react hooks
+          const rspeedyAPIs = api.useExposed<ExposedAPI>(
+            Symbol.for('rspeedy.api'),
+          )!
+          const defaultFilename = '[name].[platform].bundle'
+          const { filename } = rspeedyAPIs.config.output ?? {}
+          const bundle = typeof filename === 'object'
+            ? filename.bundle ?? filename.template
+            : filename
+          resolveBundleName = (entry: string, platform: string): string => {
+            const resolved = typeof bundle === 'function'
+              ? bundle({ lazyBundle: false, entryName: entry, platform })
+              : bundle ?? defaultFilename
+            return resolved
+              .replaceAll('[name]', entry)
+              .replaceAll('[platform]', platform)
+          }
+        }
+        return resolveBundleName
+      }
+
+      function appendBundleRoutes({
+        routes,
+        environments,
+      }: {
+        routes: { entryName: string, pathname: string }[]
+        environments: Record<string, EnvironmentContext>
+      }) {
+        const resolveName = getResolveBundleName()
+        for (
+          const [environmentName, environmentContext] of Object.entries(
+            environments,
+          )
+        ) {
+          for (const entryName of Object.keys(environmentContext.entry)) {
+            routes.push({
+              entryName,
+              pathname: `/${resolveName(entryName, environmentName)}`,
+            })
+          }
+        }
+      }
+
+      // Rsbuild's getRoutes() only includes environments that produce HTML
+      // files (htmlPaths). Lynx environments produce .bundle files instead,
+      // so we populate dev/preview routes with the correct bundle pathnames
+      // before any user plugin runs, using order: 'pre'.
+      api.onAfterStartDevServer({
+        handler: appendBundleRoutes,
+        order: 'pre',
+      })
+
+      api.onAfterStartPreviewServer({
+        handler: appendBundleRoutes,
+        order: 'pre',
+      })
+
       api.onBeforeStartDevServer(async ({ environments, server }) => {
         if (environments['web']) {
           const { createWebVirtualFilesMiddleware } = await import(
@@ -104,25 +174,7 @@ export function pluginDev(
       })
 
       api.modifyRsbuildConfig((config, { mergeRsbuildConfig }) => {
-        const rspeedyAPIs = api.useExposed<ExposedAPI>(
-          Symbol.for('rspeedy.api'),
-        )!
-        const defaultFilename = '[name].[platform].bundle'
-        const { filename } = rspeedyAPIs.config.output ?? {}
-        const bundle = typeof filename === 'object'
-          ? filename.bundle ?? filename.template
-          : filename
-        // Resolve the main bundle filename template for a given entry/platform.
-        // When `bundle` is a function, it is called with `lazyBundle: false`
-        // since the dev URLs always point at the main bundle.
-        const resolveName = (entry: string, platform: string): string => {
-          const resolved = typeof bundle === 'function'
-            ? bundle({ lazyBundle: false, entryName: entry, platform })
-            : bundle ?? defaultFilename
-          return resolved
-            .replaceAll('[name]', entry)
-            .replaceAll('[platform]', platform)
-        }
+        const resolveName = getResolveBundleName()
         if (
           config.server?.printUrls === undefined
           || config.server?.printUrls === true

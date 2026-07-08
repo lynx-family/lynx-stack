@@ -743,4 +743,97 @@ describe('Plugins - Dev', () => {
       'url': 'http://example.com:8080/__web_preview?casename=main.web.bundle',
     })
   })
+
+  test('onAfterStartDevServer routes contains bundle entries', async () => {
+    const rsbuild = await createStubRspeedy({
+      source: {
+        entry: path.resolve(__dirname, './fixtures/hello-world/index.js'),
+      },
+      server: {
+        port: 8080,
+      },
+    })
+
+    let receivedRoutes: { entryName: string, pathname: string }[] | undefined
+
+    rsbuild.onAfterStartDevServer(({ routes }) => {
+      receivedRoutes = [...routes]
+    })
+
+    await using server = await rsbuild.usingDevServer()
+    await server.waitDevCompileDone()
+
+    expect(receivedRoutes).toContainEqual({
+      entryName: 'main',
+      pathname: '/main.lynx.bundle',
+    })
+  })
+
+  test('onAfterStartDevServer routes contains multiple environment entries', async () => {
+    const rsbuild = await createStubRspeedy({
+      source: {
+        entry: path.resolve(__dirname, './fixtures/hello-world/index.js'),
+      },
+      server: {
+        port: 8080,
+      },
+      environments: {
+        web: {},
+        lynx: {},
+      },
+    })
+
+    let receivedRoutes: { entryName: string, pathname: string }[] | undefined
+
+    rsbuild.onAfterStartDevServer(({ routes }) => {
+      receivedRoutes = [...routes]
+    })
+
+    await using server = await rsbuild.usingDevServer()
+    await server.waitDevCompileDone()
+
+    expect(receivedRoutes).toContainEqual({
+      entryName: 'main',
+      pathname: '/main.lynx.bundle',
+    })
+    expect(receivedRoutes).toContainEqual({
+      entryName: 'main',
+      pathname: '/main.web.bundle',
+    })
+  })
+
+  test('onAfterStartPreviewServer routes contains bundle entries', async () => {
+    const rsbuild = await createStubRspeedy({
+      source: {
+        entry: path.resolve(__dirname, './fixtures/hello-world/index.js'),
+      },
+      server: {
+        port: 8080,
+      },
+      environments: {
+        web: {},
+        lynx: {},
+      },
+    })
+
+    let receivedRoutes: { entryName: string, pathname: string }[] | undefined
+
+    rsbuild.onAfterStartPreviewServer(({ routes }) => {
+      receivedRoutes = [...routes]
+    })
+
+    const { server } = await rsbuild.preview({ checkDistDir: false })
+    try {
+      expect(receivedRoutes).toContainEqual({
+        entryName: 'main',
+        pathname: '/main.lynx.bundle',
+      })
+      expect(receivedRoutes).toContainEqual({
+        entryName: 'main',
+        pathname: '/main.web.bundle',
+      })
+    } finally {
+      await server.close()
+    }
+  })
 })
