@@ -10,7 +10,7 @@ ReactLynx.snapshotCreatorMap[__snapshot_da39a_test_1] = (__snapshot_da39a_test_1
             el1
         ];
     }, [
-        (snapshot, index, oldValue)=>ReactLynx.updateSpread(snapshot, index, oldValue, 1)
+        (snapshot, index, oldValue)=>ReactLynx.updateSpread(snapshot, index, oldValue, 1, true)
     ], null, undefined, globDynamicComponentEntry, [
         0
     ], true);

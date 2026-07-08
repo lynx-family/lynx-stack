@@ -126,6 +126,13 @@ pub fn i32_to_expr(i: &i32) -> Expr {
   }))
 }
 
+pub fn bool_to_expr(b: &bool) -> Expr {
+  Expr::Lit(Lit::Bool(Bool {
+    span: DUMMY_SP,
+    value: *b,
+  }))
+}
+
 fn bool_jsx_attr(value: bool) -> JSXAttrValue {
   JSXAttrValue::JSXExprContainer(JSXExprContainer {
     span: DUMMY_SP,
@@ -235,10 +242,11 @@ impl DynamicPart {
             ns: Expr = Expr::Lit(Lit::Str(ns.clone().into())),
           ),
         },
-        DynamicPart::Spread(_, element_index, _) => quote!(
-          "(snapshot, index, oldValue) => $runtime_id.updateSpread(snapshot, index, oldValue, $element_index)" as Expr,
+        DynamicPart::Spread(_, element_index, is_list_item) => quote!(
+          "(snapshot, index, oldValue) => $runtime_id.updateSpread(snapshot, index, oldValue, $element_index, $is_list_item)" as Expr,
           runtime_id: Expr = runtime_id.clone(),
-          element_index: Expr = i32_to_expr(element_index)
+          element_index: Expr = i32_to_expr(element_index),
+          is_list_item: Expr = bool_to_expr(is_list_item)
         ),
         DynamicPart::Slot(_, _) => Expr::Lit(Lit::Null(Null { span: DUMMY_SP })),
         DynamicPart::ListSlot(_, _) => Expr::Lit(Lit::Null(Null { span: DUMMY_SP })),
@@ -2634,6 +2642,53 @@ mod tests {
     <view>
       <text before={"bbb"} {...obj} after={"aaa"}>!!!</text>
     </view>
+    "#
+  );
+
+  test!(
+    module,
+    Syntax::Es(EsSyntax {
+      jsx: true,
+      ..Default::default()
+    }),
+    |t| {
+      let top_level_mark = Mark::new();
+      let unresolved_mark = Mark::new();
+      (
+        visit_mut_pass(JSXTransformer::<&SingleThreadedComments>::new(
+          super::JSXTransformerConfig {
+            preserve_jsx: false,
+            ..Default::default()
+          },
+          None,
+          TransformMode::Test,
+          Some(t.cm.clone()),
+        )),
+        react::react::<&SingleThreadedComments>(
+          t.cm.clone(),
+          None,
+          react::Options {
+            next: Some(false),
+            runtime: Some(react::Runtime::Automatic),
+            import_source: Some("@lynx-js/react".into()),
+            pragma: None,
+            pragma_frag: None,
+            throw_if_namespace: None,
+            development: Some(false),
+            refresh: None,
+            ..Default::default()
+          },
+          top_level_mark,
+          unresolved_mark,
+        ),
+      )
+    },
+    basic_spread_list_item,
+    // Input codes
+    r#"
+    <list>
+      <list-item key="hello" item-key="world" {...obj}>!!!</list-item>
+    </list>
     "#
   );
 
