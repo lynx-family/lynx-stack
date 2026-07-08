@@ -23,7 +23,9 @@
   "exports": {
     "./entry": "./src/index.js",
     "./dev": "./dist/react-dev.lynx.bundle",
-    "./prod": "./dist/react-prod.lynx.bundle"
+    "./prod": "./dist/react-prod.lynx.bundle",
+    "./dev-web": "./dist/react-dev.web.bundle",
+    "./prod-web": "./dist/react-prod.web.bundle"
   },
   "files": [
     "src",
@@ -32,9 +34,11 @@
     "README.md"
   ],
   "scripts": {
-    "build": "rimraf dist && pnpm build:development && pnpm build:production",
+    "build": "rimraf dist && pnpm build:development && pnpm build:production && pnpm build:development:web && pnpm build:production:web",
     "build:development": "cross-env NODE_ENV=development rslib build",
-    "build:production": "rslib build"
+    "build:development:web": "cross-env NODE_ENV=development EXTERNAL_BUNDLE_TARGET=web rslib build",
+    "build:production": "rslib build",
+    "build:production:web": "cross-env EXTERNAL_BUNDLE_TARGET=web rslib build"
   },
   "devDependencies": {
     "@lynx-js/lynx-bundle-rslib-config": "workspace:*",

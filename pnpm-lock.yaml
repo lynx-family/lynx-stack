@@ -531,6 +531,46 @@ importers:
         specifier: ^7.0.3
         version: 7.0.3
 
+  examples/react-externals-web:
+    dependencies:
+      '@lynx-js/react':
+        specifier: workspace:*
+        version: link:../../packages/react
+    devDependencies:
+      '@lynx-js/external-bundle-rsbuild-plugin':
+        specifier: workspace:*
+        version: link:../../packages/rspeedy/plugin-external-bundle
+      '@lynx-js/lynx-bundle-rslib-config':
+        specifier: workspace:*
+        version: link:../../packages/rspeedy/lynx-bundle-rslib-config
+      '@lynx-js/lynx-core':
+        specifier: 0.1.4
+        version: 0.1.4
+      '@lynx-js/react-rsbuild-plugin':
+        specifier: workspace:*
+        version: link:../../packages/rspeedy/plugin-react
+      '@lynx-js/react-umd':
+        specifier: workspace:*
+        version: link:../../packages/react-umd
+      '@lynx-js/rspeedy':
+        specifier: workspace:*
+        version: link:../../packages/rspeedy/core
+      '@lynx-js/types':
+        specifier: 4.0.0
+        version: 4.0.0
+      '@lynx-js/web-core':
+        specifier: workspace:*
+        version: link:../../packages/web-platform/web-core
+      '@lynx-js/web-elements':
+        specifier: workspace:*
+        version: link:../../packages/web-platform/web-elements
+      '@rsbuild/core':
+        specifier: catalog:rsbuild
+        version: 2.0.11(core-js@3.49.0)
+      '@types/react':
+        specifier: ^18.3.28
+        version: 18.3.28
+
   examples/react-keyboard:
     dependencies:
       '@lynx-js/react':

@@ -170,6 +170,18 @@ export const reactLynxExternalsPreset: Externals = {
 }
 
 /**
+ * How an externals preset is enabled.
+ *
+ * `true` mounts the preset's libraries synchronously. The `{ async: true }`
+ * object form mounts them asynchronously (as Promises), for the web target
+ * where external bundles are loaded via `fetchBundle().then` — see
+ * {@link ExternalObject.async}.
+ *
+ * @public
+ */
+export type ExternalsPresetValue = boolean | { async?: boolean }
+
+/**
  * Enabled externals presets.
  *
  * Preset names are resolved from the built-in preset definitions plus any
@@ -178,8 +190,8 @@ export const reactLynxExternalsPreset: Externals = {
  * @public
  */
 export type ExternalsPresets = {
-  reactlynx?: boolean
-} & Record<string, boolean>
+  reactlynx?: ExternalsPresetValue
+} & Record<string, ExternalsPresetValue>
 
 /**
  * Definition for a named externals preset.
@@ -368,6 +380,21 @@ function resolvePresetDefinitions(
  * - preset-based config exposed by `defineExternalBundleRslibConfig`, and
  * - the final `var` externals shape consumed by Rspack/Rslib.
  */
+/**
+ * Convert a preset's externals to the async ({@link ExternalObject} `async`)
+ * form so the produced bundle awaits each library before reading its subpaths.
+ */
+function toAsyncExternals(externals: Externals): Externals {
+  return Object.fromEntries(
+    Object.entries(externals).map(([request, value]) => [
+      request,
+      typeof value === 'object' && !Array.isArray(value)
+        ? { ...value, async: true }
+        : { libraryName: value, async: true },
+    ]),
+  )
+}
+
 function transformExternals(
   externalsPresets?: ExternalsPresets,
   externals?: Externals,
@@ -378,13 +405,20 @@ function transformExternals(
 
   if (externalsPresets) {
     const presetExternals: Externals = {}
-    for (const [presetName, isEnabled] of Object.entries(externalsPresets)) {
-      if (!isEnabled) {
+    for (const [presetName, presetValue] of Object.entries(externalsPresets)) {
+      if (!presetValue) {
         continue
       }
+      const resolved = resolvePresetExternals(
+        presetName,
+        resolvedPresetDefinitions,
+        [],
+      )
+      const isAsync = typeof presetValue === 'object'
+        && presetValue.async === true
       Object.assign(
         presetExternals,
-        resolvePresetExternals(presetName, resolvedPresetDefinitions, []),
+        isAsync ? toAsyncExternals(resolved) : resolved,
       )
     }
     externals = {
@@ -571,7 +605,21 @@ const externalBundleRsbuildPlugin = ({
     }
 
     api.modifyBundlerChain(
-      async (chain, { environment: { name: libName } }) => {
+      async (chain, { CHAIN_ID, environment: { name: libName } }) => {
+        // Mark the react loaders as building an external bundle.
+        const jsMainRule = chain.module
+          .rule(CHAIN_ID.RULE.JS)
+          .oneOf(CHAIN_ID.ONE_OF.JS_MAIN)
+        for (const layer of [LAYERS.BACKGROUND, LAYERS.MAIN_THREAD]) {
+          jsMainRule
+            .oneOf(layer)
+            .use(layer)
+            .tap((loaderOptions) => ({
+              ...(loaderOptions as Record<string, unknown>),
+              isExternalBundle: true,
+            }))
+        }
+
         // copy entries
         const entries = chain.entryPoints.entries() ?? {}
 

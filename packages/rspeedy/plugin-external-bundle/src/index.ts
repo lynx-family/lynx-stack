@@ -30,6 +30,7 @@ const require = createRequire(import.meta.url)
 
 const DEFAULT_REACT_UMD_PACKAGE_NAME = '@lynx-js/react-umd'
 const REACT_LYNX_BUNDLE_FILE_NAME = 'react.lynx.bundle'
+const REACT_LYNX_WEB_BUNDLE_FILE_NAME = 'react.web.bundle'
 
 const reactLynxExternalTemplate = {
   'react': {
@@ -157,6 +158,20 @@ export interface ReactLynxExternalsPresetOptions {
    * @defaultValue `'@lynx-js/react-umd'`
    */
   reactUmdPackageName?: string
+
+  /**
+   * Load the ReactLynx runtime bundle asynchronously, for the web target.
+   *
+   * The web runtime (`@lynx-js/web-core`) can only fetch external bundles
+   * asynchronously (`fetchBundle().then`), so ReactLynx must be mounted as a
+   * promise that consuming modules await before reading a subpath (otherwise
+   * `React.memo` etc. are read off a pending promise and are `undefined`).
+   * Enabling this also resolves the web-encoded `@lynx-js/react-umd/{dev,prod}-web`
+   * bundle and defaults `bundlePath` to `react.web.bundle`.
+   *
+   * @defaultValue `false`
+   */
+  async?: boolean
 
   /**
    * Override the runtime bundle URL directly.
@@ -369,6 +384,7 @@ function createBuiltInExternalsPresetDefinitions(): ExternalsPresetDefinitions {
             getReactLynxBundlePath(
               context.rootPath,
               preset.reactUmdPackageName ?? DEFAULT_REACT_UMD_PACKAGE_NAME,
+              preset.async ?? false,
             ),
           ],
         ])
@@ -380,10 +396,12 @@ function createBuiltInExternalsPresetDefinitions(): ExternalsPresetDefinitions {
 function getReactLynxBundlePath(
   rootPath: string,
   reactUmdPackageName: string,
+  isWeb: boolean,
 ): string {
-  const reactUmdExport = process.env['NODE_ENV'] === 'production'
-    ? `${reactUmdPackageName}/prod`
-    : `${reactUmdPackageName}/dev`
+  const variant = process.env['NODE_ENV'] === 'production' ? 'prod' : 'dev'
+  const reactUmdExport = `${reactUmdPackageName}/${variant}${
+    isWeb ? '-web' : ''
+  }`
   try {
     return require.resolve(reactUmdExport, { paths: [rootPath] })
   } catch {
@@ -561,6 +579,7 @@ function createReactLynxExternals(
       request,
       {
         ...external,
+        ...(preset?.async === undefined ? {} : { async: preset.async }),
         ...bundleReference,
       },
     ]),
@@ -612,7 +631,12 @@ class EmitManagedBundleAssetsPlugin {
 function getDefaultReactLynxBundlePath(
   preset: ReactLynxExternalsPresetOptions | undefined,
 ) {
-  return normalizeBundlePath(preset?.bundlePath ?? REACT_LYNX_BUNDLE_FILE_NAME)
+  if (preset?.bundlePath) {
+    return normalizeBundlePath(preset.bundlePath)
+  }
+  return preset?.async
+    ? REACT_LYNX_WEB_BUNDLE_FILE_NAME
+    : REACT_LYNX_BUNDLE_FILE_NAME
 }
 
 function joinUrlPath(base: string | undefined, bundlePath: string) {
