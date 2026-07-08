@@ -15,11 +15,11 @@ import type { Element, Worklet, WorkletRefImpl } from '@lynx-js/react/worklet-ru
 import type { BackgroundSnapshotInstance } from './backgroundSnapshot.js';
 import { updateEvent } from './event.js';
 import { updateGesture } from './gesture.js';
-import { platformInfoAttributes, updateListItemPlatformInfo } from './platformInfo.js';
+import { extractListItemPlatformInfo, platformInfoAttributes, updateListItemPlatformInfo } from './platformInfo.js';
 import { transformRef, updateRef } from './ref.js';
 import { updateWorkletEvent } from './workletEvent.js';
 import { updateWorkletRef } from './workletRef.js';
-import { isDirectOrDeepEqual, isEmptyObject, pick } from '../../utils.js';
+import { isDirectOrDeepEqual, isEmptyObject } from '../../utils.js';
 import { retainGestureWorkletCtx } from '../gesture/processGesture.js';
 import type { GestureKind } from '../gesture/types.js';
 import { ListUpdateInfoRecording } from '../list/listUpdateInfo.js';
@@ -80,8 +80,8 @@ function updateSpread(
 
   const list = snapshot.parentNode;
   if (list?.__snapshot_def.isListHolder) {
-    const oldPlatformInfo = pick(oldValue, platformInfoAttributes);
-    const platformInfo = pick(newValue, platformInfoAttributes);
+    const oldPlatformInfo = extractListItemPlatformInfo(oldValue);
+    const platformInfo = extractListItemPlatformInfo(newValue);
     if (!isDirectOrDeepEqual(oldPlatformInfo, platformInfo)) {
       if (__pendingListUpdates.values) {
         (__pendingListUpdates.values[list.__id] ??= new ListUpdateInfoRecording(list)).onSetAttribute(
@@ -107,7 +107,7 @@ function updateSpread(
   } else if (isListItem) {
     // Only seed list-item platform info before the snapshot is attached to a list holder.
     // Non-platform spread attributes continue through the normal update loop below.
-    const platformInfo = pick(newValue, platformInfoAttributes);
+    const platformInfo = extractListItemPlatformInfo(newValue);
     snapshot.__listItemPlatformInfo = platformInfo;
   }
 

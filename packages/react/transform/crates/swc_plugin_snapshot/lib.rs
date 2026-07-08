@@ -243,7 +243,7 @@ impl DynamicPart {
           ),
         },
         DynamicPart::Spread(_, element_index, is_list_item) => quote!(
-          "(snapshot, index, oldValue) => $runtime_id.updateSpread(snapshot, index, oldValue, $element_index, $is_list_item )" as Expr,
+          "(snapshot, index, oldValue) => $runtime_id.updateSpread(snapshot, index, oldValue, $element_index, $is_list_item)" as Expr,
           runtime_id: Expr = runtime_id.clone(),
           element_index: Expr = i32_to_expr(element_index),
           is_list_item: Expr = bool_to_expr(is_list_item)
@@ -606,7 +606,8 @@ where
           _ => panic!("unknown node"),
         });
 
-      if jsx_is_list_item(n) {
+      let is_list_item = jsx_is_list_item(n);
+      if is_list_item {
         if has_spread_element {
         } else {
           let mut list_item_platform_info: Vec<JSXAttr> = vec![];
@@ -692,7 +693,7 @@ where
         self.dynamic_parts.push(DynamicPart::Spread(
           Expr::Object(spread_obj),
           self.element_index,
-          jsx_is_list_item(n),
+          is_list_item,
         ));
       } else {
         let el = Expr::Ident(el.clone());
@@ -1439,7 +1440,10 @@ where
           }));
           snapshot_values_has_attr = true;
         }
-        DynamicPart::Spread(value, _, _) => {
+        DynamicPart::Spread(value, _, is_list_item) => {
+          if is_list_item {
+            list_item_platform_info_index = Some(snapshot_values.len() as i32);
+          }
           snapshot_values.push(Some(ExprOrSpread {
             spread: None,
             expr: Box::new(value),
@@ -1892,6 +1896,41 @@ mod tests {
       <view id={getViewId()}>
         <list-item item-key={getItemKey()} />
       </view>
+    );
+    "#
+  );
+
+  test!(
+    module,
+    Syntax::Es(EsSyntax {
+      jsx: true,
+      ..Default::default()
+    }),
+    |t| {
+      let unresolved_mark = Mark::new();
+      let top_level_mark = Mark::new();
+
+      (
+        resolver(unresolved_mark, top_level_mark, true),
+        visit_mut_pass(JSXTransformer::new(
+          super::JSXTransformerConfig {
+            preserve_jsx: true,
+            target: TransformTarget::MIXED,
+            ..Default::default()
+          },
+          Some(t.comments.clone()),
+          TransformMode::Test,
+          Some(t.cm.clone()),
+        )),
+      )
+    },
+    should_emit_list_item_platform_info_marker_for_spread_props,
+    // Input codes
+    r#"
+    const node = (
+      <list>
+        <list-item {...getProps()} />
+      </list>
     );
     "#
   );

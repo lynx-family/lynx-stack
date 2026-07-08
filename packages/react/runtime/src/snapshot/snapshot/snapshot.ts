@@ -15,6 +15,7 @@ import { createCloneSnapshot, createRuntimeSnapshot, snapshotManager } from './d
 import type { Snapshot } from './definition.js';
 import { DynamicPartType, __DynamicPartChildren_0 } from './dynamicPartType.js';
 import { snapshotDestroyList } from './list.js';
+import { getListItemPlatformInfoFromIndexedValue } from './platformInfo.js';
 import type { PlatformInfo } from './platformInfo.js';
 import { unref } from './ref.js';
 import { setSnapshotCreatorMap, snapshotCreatorMap } from './snapshotCreatorMap.js';
@@ -583,7 +584,11 @@ export class SnapshotInstance {
     if (this.__listItemPlatformInfoIndex === undefined || !this.__values) {
       return;
     }
-    this.__listItemPlatformInfo = this.__values[this.__listItemPlatformInfoIndex] as PlatformInfo;
+    const index = this.__listItemPlatformInfoIndex;
+    this.__listItemPlatformInfo = getListItemPlatformInfoFromIndexedValue(
+      this.__values[index],
+      this.__snapshot_def.refAndSpreadIndexes?.includes(index),
+    );
   }
 
   toJSON(): Omit<SerializedSnapshotInstance, 'children'> & { children: SnapshotInstance[] | undefined } {
