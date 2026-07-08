@@ -18,6 +18,8 @@ import { actionPropSchema } from '../Action/index.jsx';
 import type { ActionLike } from '../Action/index.jsx';
 import { asArray } from '../utils.js';
 
+import '../../../styles/catalog/Button.css';
+
 const CONTINUE_CONVERSATION_ACTION = String(
   BuiltinActionType.ContinueConversation,
 );

@@ -36,6 +36,8 @@ import type { ComponentRenderer, Library, RenderOutput } from './library.jsx';
 import { keyFrom } from './utils.js';
 import type { LegacyActionConfig } from '../catalog/Action/index.jsx';
 
+import './renderer.css';
+
 export type { Library, RenderOutput };
 
 export type ToolProviderInput =

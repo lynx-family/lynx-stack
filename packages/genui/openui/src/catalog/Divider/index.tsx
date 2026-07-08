@@ -5,6 +5,8 @@ import { z } from 'zod/v4';
 
 import { defineComponent } from '../../core/library.jsx';
 
+import '../../../styles/catalog/Divider.css';
+
 export const Divider = defineComponent({
   name: 'Divider',
   props: z.object({

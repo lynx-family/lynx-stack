@@ -51,11 +51,14 @@ interface RuntimeSandbox {
     tt: TtMethods;
   };
   loadDynamicComponent?: (...args: unknown[]) => unknown;
+  renderPage?: (...args: unknown[]) => unknown;
+  processData?: (data: unknown) => unknown;
 }
 
 function createRuntimeSandbox(options: {
   tt?: TtMethods;
   loadDynamicComponent?: (...args: unknown[]) => unknown;
+  isMainThread?: boolean;
 } = {}): {
   runtimeCache: RuntimeCache;
   sandbox: RuntimeSandbox;
@@ -63,7 +66,10 @@ function createRuntimeSandbox(options: {
   const SetupListRuntimeModule = createLynxCacheEventsSetupListRuntimeModule(
     rspack,
   );
-  const module = new SetupListRuntimeModule((setupList) => setupList);
+  const module = new SetupListRuntimeModule(
+    (setupList) => setupList,
+    options.isMainThread,
+  );
 
   module.compilation = {
     compiler: {
@@ -253,5 +259,57 @@ describe('LynxCacheEventsSetupListRuntimeModule', () => {
 
     expect(originalLoadDynamicComponent).toHaveBeenCalledTimes(2);
     expect(originalLoadDynamicComponent).toHaveBeenLastCalledWith('card-b');
+  });
+
+  it('caches renderPage and replays it against the real one on the main thread', () => {
+    const { runtimeCache, sandbox } = createRuntimeSandbox({
+      isMainThread: true,
+    });
+
+    expect(runtimeCache.setupList.map(item => item.name)).toEqual([
+      'renderPage',
+      'processData',
+    ]);
+
+    runtimeCache.loaded = false;
+    runtimeCache.cachedActions = [];
+
+    // Native's first-screen call arrives before ReactLynx installs the real
+    // `renderPage`, so it is cached rather than lost.
+    const cleanup = getSetupItem(runtimeCache, 'renderPage').setup();
+    sandbox.renderPage?.({ initData: 1 });
+
+    expect(runtimeCache.cachedActions).toEqual([
+      {
+        type: 'renderPage',
+        data: {
+          args: [{ initData: 1 }],
+        },
+      },
+    ]);
+
+    // ReactLynx has since installed the real `renderPage`; the cached call is
+    // replayed against it once startup settles.
+    const realRenderPage = rstest.fn();
+    sandbox.renderPage = realRenderPage;
+    runtimeCache.loaded = true;
+    cleanup();
+
+    expect(realRenderPage).toHaveBeenCalledTimes(1);
+    expect(realRenderPage).toHaveBeenCalledWith({ initData: 1 });
+  });
+
+  it('passes processData through synchronously on the main thread', () => {
+    const { runtimeCache, sandbox } = createRuntimeSandbox({
+      isMainThread: true,
+    });
+
+    const cleanup = getSetupItem(runtimeCache, 'processData').setup();
+
+    // Unlike `renderPage`, `processData` must return synchronously, so it is a
+    // passthrough while the async ReactLynx runtime is still loading.
+    expect(sandbox.processData?.({ x: 2 })).toEqual({ x: 2 });
+
+    cleanup();
   });
 });

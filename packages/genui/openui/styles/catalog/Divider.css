@@ -1,0 +1,20 @@
+/* ===== Divider ===== */
+.OpenUIDivider {
+  flex-shrink: 0;
+  background-color: var(--openui-color-border);
+}
+
+.OpenUIDividerHorizontal {
+  width: 100%;
+  height: 1rpx;
+}
+
+.OpenUIDividerVertical {
+  width: 1rpx;
+  min-height: 48rpx;
+  align-self: stretch;
+}
+
+.dark .OpenUIDivider {
+  background-color: var(--openui-color-border);
+}

@@ -1,0 +1,73 @@
+/* ===== AudioPlayer ===== */
+.OpenUIAudio {
+  width: 100%;
+  min-width: 0;
+  border-radius: 16rpx;
+  border-width: 1rpx;
+  border-style: solid;
+  border-color: var(--openui-color-border);
+  background-color: var(--openui-color-surface-muted);
+  padding: 14rpx;
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: 12rpx;
+}
+
+.OpenUIAudioIcon {
+  width: 44rpx;
+  height: 44rpx;
+  border-radius: 999rpx;
+  background-color: var(--openui-color-primary-surface-strong);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.OpenUIAudioIconText {
+  font-family: var(--openui-icon-font-family);
+  color: var(--openui-color-primary);
+  font-size: 28rpx;
+  line-height: 1;
+}
+
+.OpenUIAudioContent {
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 4rpx;
+}
+
+.OpenUIAudioTitle {
+  color: var(--openui-color-text-strong);
+  font-size: 26rpx;
+  font-weight: 650;
+}
+
+.OpenUIAudioUrl {
+  color: var(--openui-color-text-subtle);
+  font-size: 22rpx;
+  line-height: 1.4;
+}
+
+.dark .OpenUIAudio {
+  border-color: var(--openui-color-border);
+  background-color: var(--openui-color-surface-muted);
+}
+
+.dark .OpenUIAudioIcon {
+  background-color: var(--openui-color-primary-surface-strong);
+}
+
+.dark .OpenUIAudioIconText {
+  color: var(--openui-color-primary);
+}
+
+.dark .OpenUIAudioTitle {
+  color: var(--openui-color-text-strong);
+}
+
+.dark .OpenUIAudioUrl {
+  color: var(--openui-color-text-subtle);
+}

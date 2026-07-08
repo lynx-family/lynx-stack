@@ -73,7 +73,7 @@
       "types": "./openui/dist/openui-prompt/index.d.ts",
       "default": "./openui/dist/openui-prompt/index.js"
     },
-    "./openui/styles/renderer.css": "./openui/dist/core/renderer.css"
+    "./openui/styles/theme.css": "./openui/styles/theme.css"
   },
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",
@@ -102,6 +102,7 @@
     "a2ui-catalog-extractor/skills",
     "a2ui-catalog-extractor/README.md",
     "openui/dist",
+    "openui/styles",
     "openui/README.md"
   ],
   "scripts": {

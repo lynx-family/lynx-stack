@@ -433,7 +433,6 @@ describe('CLI - dev', () => {
 
     expect(core.createRsbuild).toBeCalledTimes(1)
 
-    // @ts-expect-error mocked emitter
     const { emitter } = getMockedChokidar(chokidar)
 
     await Promise.resolve()

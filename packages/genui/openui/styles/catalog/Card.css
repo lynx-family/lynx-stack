@@ -1,0 +1,44 @@
+@import "./Stack.css";
+
+/* ===== Card ===== */
+.OpenUICard {
+  width: 100%;
+  padding: 14rpx;
+  border-radius: 14rpx;
+  display: flex;
+  flex-direction: column;
+  gap: 12rpx;
+}
+
+.OpenUICardVariantCard {
+  background-color: var(--openui-color-surface-strong);
+  border-width: 1rpx;
+  border-style: solid;
+  border-color: var(--openui-color-border);
+}
+
+.OpenUICardVariantSunk {
+  background-color: var(--openui-color-surface-muted);
+  border-width: 1rpx;
+  border-style: solid;
+  border-color: var(--openui-color-border-muted);
+}
+
+.OpenUICardVariantClear {
+  background-color: transparent;
+}
+
+.dark .OpenUICard {
+  background-color: var(--openui-color-surface-muted);
+  border-color: var(--openui-color-border);
+}
+
+.dark .OpenUICardVariantCard {
+  background-color: var(--openui-color-surface-strong);
+  border-color: var(--openui-color-border);
+}
+
+.dark .OpenUICardVariantSunk {
+  background-color: var(--openui-color-surface-muted);
+  border-color: var(--openui-color-border-muted);
+}
