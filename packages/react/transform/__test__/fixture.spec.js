@@ -546,7 +546,8 @@ describe('jsx', () => {
                       'estimated-height-px': '10px',
                       __spread: true
                   }
-              ]
+              ],
+              __listItemPlatformInfoIndex: 0
           }, dynamicKey)
       });
       "
