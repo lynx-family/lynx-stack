@@ -2,7 +2,6 @@
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
 import { createRsbuild, logger } from '@rsbuild/core'
-import type { RsbuildEntry } from '@rsbuild/core'
 import { beforeEach, describe, expect, test, vi } from 'vitest'
 
 import type { Config, ExposedAPI, RsbuildPlugin } from '@lynx-js/rspeedy'
@@ -25,13 +24,6 @@ const pluginStubRspeedyAPI = (config: Config = {}): RsbuildPlugin => ({
       logger,
       version: '1.0.0',
     })
-  },
-})
-
-const pluginStubEnvEntries = (entries: RsbuildEntry): RsbuildPlugin => ({
-  name: 'lynx:rsbuild:env-entries',
-  setup(api) {
-    api.expose(Symbol.for('rspeedy.env.entries'), { entries })
   },
 })
 
@@ -239,7 +231,7 @@ describe('Preview', () => {
     expect(exit).not.toBeCalled()
   })
 
-  test('preview with exposed custom environment entries', async () => {
+  test('preview without lynx ignores custom environment routes', async () => {
     vi.stubEnv('NODE_ENV', 'development')
     const { renderUnicodeCompact } = await import('uqr')
 
@@ -258,9 +250,6 @@ describe('Preview', () => {
         },
         plugins: [
           pluginStubRspeedyAPI(),
-          pluginStubEnvEntries({
-            main: './fixtures/hello-world/index.js',
-          }),
           pluginQRCode(),
         ],
         environments: {
@@ -277,18 +266,13 @@ describe('Preview', () => {
 
     const { server } = await rsbuild.preview({ checkDistDir: false })
 
-    expect(renderUnicodeCompact).toBeCalled()
-    expect(renderUnicodeCompact).toBeCalledWith(
-      'http://example.com/main.lynx.bundle',
-    )
+    expect(renderUnicodeCompact).not.toBeCalled()
 
     await server.close()
-    await vi.waitFor(() => {
-      expect(exit).toBeCalledTimes(1)
-    })
+    expect(exit).not.toBeCalled()
   })
 
-  test('preview with empty exposed entries', async () => {
+  test('preview without routes does not print qrcode', async () => {
     vi.stubEnv('NODE_ENV', 'development')
     const { renderUnicodeCompact } = await import('uqr')
 
@@ -302,7 +286,6 @@ describe('Preview', () => {
       rsbuildConfig: {
         plugins: [
           pluginStubRspeedyAPI(),
-          pluginStubEnvEntries({}),
           pluginQRCode(),
         ],
         environments: {

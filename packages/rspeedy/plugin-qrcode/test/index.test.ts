@@ -9,7 +9,6 @@ import { isCancel } from '@clack/prompts'
 import { createRsbuild, logger } from '@rsbuild/core'
 import type {
   EnvironmentContext,
-  RsbuildEntry,
   RsbuildInstance,
   RsbuildPlugin,
   RsbuildPluginAPI,
@@ -37,13 +36,6 @@ const pluginStubRspeedyAPI = (config: Config = {}): RsbuildPlugin => ({
       logger,
       version: '1.0.0',
     })
-  },
-})
-
-const pluginStubEnvEntries = (entries: RsbuildEntry): RsbuildPlugin => ({
-  name: 'lynx:rsbuild:env-entries',
-  setup(api) {
-    api.expose(Symbol.for('rspeedy.env.entries'), { entries })
   },
 })
 
@@ -306,6 +298,7 @@ describe('Plugins - Terminal', () => {
         | ((params: {
           environments: Record<string, EnvironmentContext>
           port: number
+          routes: { entryName: string, pathname: string }[]
         }) => Promise<void>)
         | undefined
       let onExit: (() => void) | undefined
@@ -314,7 +307,7 @@ describe('Plugins - Terminal', () => {
         onAfterStartPreviewServer(handler: typeof onAfterStartPreviewServer) {
           onAfterStartPreviewServer = handler
         },
-        onAfterDevCompile: vi.fn(),
+        onAfterStartDevServer: vi.fn(),
         onCloseDevServer,
         onExit(handler: () => void) {
           onExit = handler
@@ -337,6 +330,7 @@ describe('Plugins - Terminal', () => {
           } as unknown as EnvironmentContext,
         },
         port: 3000,
+        routes: [{ entryName: 'main', pathname: '/main.lynx.bundle' }],
       })
 
       expect(registerConsoleShortcuts).toBeCalledTimes(1)
@@ -355,6 +349,7 @@ describe('Plugins - Terminal', () => {
           } as unknown as EnvironmentContext,
         },
         port: 3001,
+        routes: [{ entryName: 'main', pathname: '/main.lynx.bundle' }],
       })
 
       expect(unregister).toBeCalledTimes(1)
@@ -436,7 +431,7 @@ describe('Plugins - Terminal', () => {
       expect(renderUnicodeCompact).toBeCalledTimes(1)
     })
 
-    test('print qrcode with exposed custom environment entries', async () => {
+    test('does not print qrcode without lynx environment', async () => {
       vi.stubEnv('NODE_ENV', 'development')
       const { selectKey, isCancel } = await import('@clack/prompts')
       vi.mocked(selectKey).mockResolvedValue('foo')
@@ -469,9 +464,6 @@ describe('Plugins - Terminal', () => {
             },
             plugins: [
               pluginStubRspeedyAPI(),
-              pluginStubEnvEntries({
-                main: entry,
-              }),
               pluginQRCode(),
             ],
           },
@@ -482,7 +474,7 @@ describe('Plugins - Terminal', () => {
 
       await server.waitDevCompileDone()
 
-      expect(renderUnicodeCompact).toBeCalledTimes(1)
+      expect(renderUnicodeCompact).toBeCalledTimes(0)
     })
 
     test('print qrcode when dev with host specified', async () => {
@@ -535,7 +527,7 @@ describe('Plugins - Terminal', () => {
       )
     })
 
-    test('print qrcode when errors are fixed', async () => {
+    test('print qrcode immediately even with compile errors', async () => {
       vi.stubEnv('NODE_ENV', 'development')
 
       const entry = join(
@@ -587,12 +579,9 @@ describe('Plugins - Terminal', () => {
 
       await server.waitDevCompileDone()
 
-      expect(renderUnicodeCompact).toBeCalledTimes(0)
-      // fix syntax error
-      await writeFile(entry, source, 'utf-8')
-
-      await server.waitDevCompileSuccess()
-
+      // QR code is printed immediately when the dev server starts,
+      // regardless of compilation errors (the URL is valid once the
+      // server is listening).
       expect(renderUnicodeCompact).toBeCalledTimes(1)
     })
   })
