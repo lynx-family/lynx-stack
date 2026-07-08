@@ -1,0 +1,47 @@
+/* ===== Text ===== */
+.OpenUIText {
+  color: var(--openui-color-text);
+  line-height: 1.4;
+}
+
+.OpenUITextH1 {
+  font-size: 40rpx;
+  font-weight: 800;
+}
+
+.OpenUITextH2 {
+  font-size: 36rpx;
+  font-weight: 780;
+}
+
+.OpenUITextH3 {
+  font-size: 32rpx;
+  font-weight: 720;
+}
+
+.OpenUITextH4 {
+  font-size: 30rpx;
+  font-weight: 680;
+}
+
+.OpenUITextH5 {
+  font-size: 28rpx;
+  font-weight: 640;
+}
+
+.OpenUITextCaption {
+  color: var(--openui-color-text-muted);
+  font-size: 22rpx;
+}
+
+.OpenUITextBody {
+  font-size: 26rpx;
+}
+
+.dark .OpenUIText {
+  color: var(--openui-color-text);
+}
+
+.dark .OpenUITextCaption {
+  color: var(--openui-color-text-muted);
+}

@@ -6,7 +6,7 @@
 ## Asset Files
 - Bundle: rspack-bundle.js
 - Manifest: main.LAST_HASH.hot-update.json, size: 28
-- Update: main.LAST_HASH.hot-update.js, size: 4631
+- Update: main.LAST_HASH.hot-update.js, size: 4734
 
 ## Manifest
 
@@ -45,8 +45,8 @@ __webpack_require__.d(__webpack_exports__, {
 });
 /* import */ var _lynx_js_react_jsx_dev_runtime__rspack_import_0 = __webpack_require__(/*! @lynx-js/react/jsx-dev-runtime */ "../../../../../../react/runtime/jsx-dev-runtime/index.js");
 /* import */ var _lynx_js_react__rspack_import_1 = __webpack_require__(/*! @lynx-js/react */ "../../../../../../react/runtime/lib/index.js");
+/* import */ var _runtime_refresh_mjs__rspack_import_2 = __webpack_require__(/*! ../../../../runtime/refresh.mjs */ "../../../../runtime/refresh.mjs");
 /* module decorator */ module = __webpack_require__.hmd(module);
-/* provided dependency */ var __prefresh_utils__ = __webpack_require__(/*! ../../../../runtime/refresh.cjs */ "../../../../runtime/refresh.cjs");
 
 
 const Theme = (0,_lynx_js_react__rspack_import_1.createContext)('light');
@@ -97,21 +97,21 @@ function App() {
 
 
 // @ts-nocheck
-const isPrefreshComponent = __prefresh_utils__.shouldBind(module);
+const isPrefreshComponent = _runtime_refresh_mjs__rspack_import_2.shouldBind(module);
 
 const moduleHot = module.hot;
 
 if (moduleHot) {
-  const currentExports = __prefresh_utils__.getExports(module);
+  const currentExports = _runtime_refresh_mjs__rspack_import_2.getExports(module);
   const previousHotModuleExports = moduleHot.data
     && moduleHot.data.moduleExports;
 
-  __prefresh_utils__.registerExports(currentExports, module.id);
+  _runtime_refresh_mjs__rspack_import_2.registerExports(currentExports, module.id);
 
   if (isPrefreshComponent) {
     if (previousHotModuleExports) {
       try {
-        __prefresh_utils__.flush();
+        _runtime_refresh_mjs__rspack_import_2.flush();
         if (
           typeof __prefresh_errors__ !== 'undefined'
           && __prefresh_errors__
@@ -130,7 +130,7 @@ if (moduleHot) {
     }
 
     moduleHot.dispose(data => {
-      data.moduleExports = __prefresh_utils__.getExports(module);
+      data.moduleExports = _runtime_refresh_mjs__rspack_import_2.getExports(module);
     });
 
     moduleHot.accept(function errorRecovery() {
@@ -146,6 +146,8 @@ if (moduleHot) {
     });
   }
 }
+
+
 
 
 },

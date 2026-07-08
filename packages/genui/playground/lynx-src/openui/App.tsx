@@ -19,12 +19,21 @@ const DEFAULT_CHUNK_SIZE = 8;
 const DEFAULT_STREAM_DELAY_MS = 30;
 const OPENUI_PLAYBACK_CHUNK_SIZE = 240;
 
+type Theme = 'light' | 'dark';
+
 function chunkOpenUIResponse(rawText: string): string[] {
   const chunks: string[] = [];
   for (let i = 0; i < rawText.length; i += OPENUI_PLAYBACK_CHUNK_SIZE) {
     chunks.push(rawText.slice(i, i + OPENUI_PLAYBACK_CHUNK_SIZE));
   }
   return chunks;
+}
+
+function readTheme(value: unknown): Theme | null {
+  if (value === 'light' || value === 'dark') return value;
+  if (value === 'Light') return 'light';
+  if (value === 'Dark') return 'dark';
+  return null;
 }
 
 export function App() {
@@ -94,6 +103,13 @@ export function App() {
     const value = globalProps?.playbackMode;
     return value === true || value === '1' || value === 1;
   }, [globalProps]);
+
+  const theme = useMemo<Theme>(() => {
+    return readTheme(globalProps?.theme) ?? 'light';
+  }, [globalProps]);
+  const themeClassName = theme === 'dark'
+    ? 'openui-page openui-dark luna-dark'
+    : 'openui-page openui-light luna-light';
 
   // Speed multiplier from globalProps (e.g. ?speed=2)
   const streamDelay = useMemo(() => {
@@ -209,18 +225,18 @@ export function App() {
   }, []);
 
   return (
-    <view style={{ width: '100%', height: '100%', backgroundColor: '#fff' }}>
+    <view className={themeClassName}>
       {error
         ? (
-          <view style={{ padding: '12px' }}>
-            <text style={{ color: '#c40000' }}>{error}</text>
+          <view className='openui-feedback'>
+            <text className='openui-error'>{error}</text>
           </view>
         )
         : null}
 
       {loading
         ? (
-          <view style={{ padding: '12px' }}>
+          <view className='openui-feedback'>
             <text>Loading...</text>
           </view>
         )
@@ -228,7 +244,7 @@ export function App() {
 
       {response
         ? (
-          <scroll-view scroll-y style={{ height: '100%', width: '100%' }}>
+          <scroll-view scroll-y className='openui-scroll'>
             <OpenUiRenderer
               response={response}
               library={openUiLibrary}

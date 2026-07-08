@@ -16,10 +16,12 @@ export {
 export type {
   EncodeOptions,
   ExternalBundleLibConfig,
+  ExternalObject,
   Externals,
   ExternalsPresetDefinition,
   ExternalsPresetDefinitions,
   ExternalsPresets,
+  ExternalsPresetValue,
   OutputConfig,
 } from './externalBundleRslibConfig.js'
 export { ExternalBundleWebpackPlugin } from './webpack/ExternalBundleWebpackPlugin.js'

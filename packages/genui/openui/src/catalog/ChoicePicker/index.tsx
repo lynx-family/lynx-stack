@@ -15,6 +15,8 @@ import {
   stringifyValue,
 } from '../utils.js';
 
+import '../../../styles/catalog/ChoicePicker.css';
+
 const choicePickerPropsSchema = z.object({
   label: stringLikeSchema.optional(),
   options: z.union([z.array(stringLikeSchema), stringLikeSchema]),

@@ -22,7 +22,11 @@ When runtime code needs to distinguish Lynx for Web from native Lynx, prefer `Sy
 
 ## OpenUI Styling
 
-When maintaining the OpenUI Lynx entry under `packages/genui/playground/lynx-src/openui`, keep the renderer stylesheet imported by the entry CSS through `@lynx-js/genui/openui/styles/renderer.css`. The OpenUI catalog components emit plain `OpenUI*` class names, so the native preview will look unstyled if that renderer CSS is not bundled with `openui.lynx.js`.
+When maintaining the OpenUI Lynx entry under `packages/genui/playground/lynx-src/openui`, import only the host-level style inputs that the entry owns: `@lynx-js/luna-styles/index.css` first, then `@lynx-js/genui/openui/styles/theme.css`. Do not import OpenUI catalog CSS, renderer CSS, `styles/material-icons.css`, `styles/index.css`, or `styles/renderer.css` from the playground entry.
+
+OpenUI catalog styles are bundled by each catalog component's relative CSS import, the renderer style is bundled by `renderer.tsx` importing `./renderer.css`, and Material Icons font CSS is bundled by the Icon component. If the native preview looks unstyled, fix the source-side CSS import in `packages/genui/openui` instead of adding a package-level aggregate stylesheet to the playground entry.
+
+OpenUI playground theming should apply matching classes such as `openui-light luna-light` or `openui-dark luna-dark` on the Lynx root view. Keep theme-specific feedback, loading, and scroll styling in the entry CSS instead of inline styles so Luna variables can control both the shell and renderer content.
 
 ## OpenUI Preview Payloads
 

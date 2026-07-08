@@ -1,0 +1,19 @@
+/* ===== Tag ===== */
+.OpenUITag {
+  padding: 6rpx 10rpx;
+  border-radius: 999rpx;
+  background-color: var(--openui-color-surface-subtle);
+}
+
+.OpenUITagText {
+  color: var(--openui-color-text-body);
+  font-size: 22rpx;
+}
+
+.dark .OpenUITag {
+  background-color: var(--openui-color-surface-subtle);
+}
+
+.dark .OpenUITagText {
+  color: var(--openui-color-text-body);
+}

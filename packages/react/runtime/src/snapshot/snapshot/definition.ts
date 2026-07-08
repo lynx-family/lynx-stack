@@ -201,7 +201,7 @@ export function createRuntimeSnapshot(type: string): void {
           return;
         }
         /* v8 ignore stop */
-        updateSpread(ctx, index, oldValue as Record<string, unknown>, 0);
+        updateSpread(ctx, index, oldValue as Record<string, unknown>, 0, false);
       },
     ],
     slot: isListHolder ? __DynamicPartListSlotV2_0 : __DynamicPartSlotV2_0,
@@ -241,7 +241,7 @@ export function createCloneSnapshot(type: string): void {
       return;
     }
     /* v8 ignore stop */
-    updateSpread(ctx, index, oldValue as Record<string, unknown>, 0);
+    updateSpread(ctx, index, oldValue as Record<string, unknown>, 0, false);
   };
   const s: Snapshot = {
     ...originalDef,

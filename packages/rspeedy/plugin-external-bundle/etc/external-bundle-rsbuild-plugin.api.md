@@ -58,6 +58,7 @@ export interface PluginExternalValue extends Omit<ExternalValue, 'url'> {
 
 // @public
 export interface ReactLynxExternalsPresetOptions {
+    async?: boolean;
     bundlePath?: string;
     reactUmdPackageName?: string;
     // @deprecated

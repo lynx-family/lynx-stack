@@ -1,0 +1,25 @@
+/* ===== CardHeader ===== */
+.OpenUICardHeader {
+  display: flex;
+  flex-direction: column;
+  gap: 6rpx;
+}
+
+.OpenUICardHeaderTitle {
+  color: var(--openui-color-text);
+  font-size: 30rpx;
+  font-weight: 700;
+}
+
+.OpenUICardHeaderSubtitle {
+  color: var(--openui-color-text-muted);
+  font-size: 24rpx;
+}
+
+.dark .OpenUICardHeaderTitle {
+  color: var(--openui-color-text);
+}
+
+.dark .OpenUICardHeaderSubtitle {
+  color: var(--openui-color-text-muted);
+}

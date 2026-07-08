@@ -1,0 +1,106 @@
+/* ===== Theme tokens ===== */
+:root,
+.openui-light,
+.luna-light,
+.lunaris-light {
+  --openui-icon-font-family: "Material Icons Round";
+  --openui-color-background: var(--canvas, #ffffff);
+  --openui-color-surface: var(--paper, #f8f8f8);
+  --openui-color-surface-strong: var(--paper-clear, #ffffff);
+  --openui-color-surface-muted: var(--neutral-film, rgba(0, 0, 0, 0.025));
+  --openui-color-surface-subtle: var(--neutral-film, rgba(0, 0, 0, 0.04));
+  --openui-color-surface-raised: var(--paper-clear, #ffffff);
+  --openui-color-border: var(--rule, rgba(0, 0, 0, 0.08));
+  --openui-color-border-muted: var(--line, rgba(0, 0, 0, 0.06));
+  --openui-color-border-strong: var(--line, rgba(0, 0, 0, 0.1));
+  --openui-color-border-control: var(--line, rgba(0, 0, 0, 0.15));
+  --openui-color-border-input: var(--line, rgba(0, 0, 0, 0.25));
+  --openui-color-text: var(--content, rgba(0, 0, 0, 0.88));
+  --openui-color-text-strong: var(--content-2, rgba(0, 0, 0, 0.86));
+  --openui-color-text-body: var(--content-2, rgba(0, 0, 0, 0.78));
+  --openui-color-text-muted: var(--content-muted, rgba(0, 0, 0, 0.55));
+  --openui-color-text-subtle: var(--content-subtle, rgba(0, 0, 0, 0.45));
+  --openui-color-primary: var(--primary, rgba(59, 130, 246, 1));
+  --openui-color-primary-muted: var(--primary-2, rgba(59, 130, 246, 0.72));
+  --openui-color-primary-surface: var(
+    --secondary,
+    rgba(59, 130, 246, 0.1)
+  );
+  --openui-color-primary-surface-strong: var(
+    --secondary-2,
+    rgba(59, 130, 246, 0.12)
+  );
+  --openui-color-primary-surface-muted: var(
+    --neutral-film,
+    rgba(59, 130, 246, 0.16)
+  );
+  --openui-color-primary-border: var(
+    --primary-muted,
+    rgba(59, 130, 246, 0.2)
+  );
+  --openui-color-primary-border-strong: var(
+    --primary,
+    rgba(59, 130, 246, 0.42)
+  );
+  --openui-color-on-primary: var(--primary-content, #ffffff);
+  --openui-color-error: #d92d20;
+  --openui-color-error-surface: rgba(217, 45, 32, 0.08);
+  --openui-color-skeleton-start: rgba(0, 0, 0, 0.06);
+  --openui-color-skeleton-mid: rgba(0, 0, 0, 0.16);
+  --openui-color-skeleton-peak: rgba(0, 0, 0, 0.24);
+  --openui-color-video-surface: var(--neutral-film, rgba(15, 23, 42, 0.08));
+  --openui-color-video-icon: var(--content-muted, rgba(15, 23, 42, 0.62));
+}
+
+.dark,
+.openui-dark,
+.luna-dark,
+.lunaris-dark {
+  --openui-icon-font-family: "Material Icons Round";
+  --openui-color-background: var(--canvas, #0d0d0d);
+  --openui-color-surface: var(--paper, #1a1a1a);
+  --openui-color-surface-strong: var(--paper-clear, #232323);
+  --openui-color-surface-muted: var(--neutral-film, rgba(255, 255, 255, 0.06));
+  --openui-color-surface-subtle: var(--neutral-film, rgba(255, 255, 255, 0.08));
+  --openui-color-surface-raised: var(--paper-clear, #171717);
+  --openui-color-border: var(--rule, rgba(255, 255, 255, 0.12));
+  --openui-color-border-muted: var(--line, rgba(255, 255, 255, 0.08));
+  --openui-color-border-strong: var(--line, rgba(255, 255, 255, 0.12));
+  --openui-color-border-control: var(--line, rgba(255, 255, 255, 0.15));
+  --openui-color-border-input: var(--line, rgba(255, 255, 255, 0.3));
+  --openui-color-text: var(--content, rgba(255, 255, 255, 0.92));
+  --openui-color-text-strong: var(--content-2, rgba(255, 255, 255, 0.9));
+  --openui-color-text-body: var(--content-2, rgba(255, 255, 255, 0.88));
+  --openui-color-text-muted: var(--content-muted, rgba(255, 255, 255, 0.72));
+  --openui-color-text-subtle: var(--content-subtle, rgba(255, 255, 255, 0.48));
+  --openui-color-primary: var(--primary, rgba(96, 165, 250, 1));
+  --openui-color-primary-muted: var(--primary-2, rgba(96, 165, 250, 0.72));
+  --openui-color-primary-surface: var(
+    --secondary,
+    rgba(96, 165, 250, 0.18)
+  );
+  --openui-color-primary-surface-strong: var(
+    --secondary-2,
+    rgba(96, 165, 250, 0.2)
+  );
+  --openui-color-primary-surface-muted: var(
+    --neutral-film,
+    rgba(96, 165, 250, 0.2)
+  );
+  --openui-color-primary-border: var(
+    --primary-muted,
+    rgba(96, 165, 250, 0.22)
+  );
+  --openui-color-primary-border-strong: var(
+    --primary,
+    rgba(96, 165, 250, 0.36)
+  );
+  --openui-color-on-primary: var(--primary-content, #010101);
+  --openui-color-error: #ff6b6b;
+  --openui-color-error-surface: rgba(255, 107, 107, 0.12);
+  --openui-color-skeleton-start: rgba(255, 255, 255, 0.08);
+  --openui-color-skeleton-mid: rgba(255, 255, 255, 0.18);
+  --openui-color-skeleton-peak: rgba(255, 255, 255, 0.28);
+  --openui-color-video-surface: var(--neutral-film, rgba(255, 255, 255, 0.08));
+  --openui-color-video-icon: var(--content-muted, rgba(255, 255, 255, 0.72));
+}

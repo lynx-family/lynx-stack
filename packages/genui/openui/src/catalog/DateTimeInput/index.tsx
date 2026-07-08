@@ -11,6 +11,8 @@ import {
   stringifyValue,
 } from '../utils.js';
 
+import '../../../styles/catalog/DateTimeInput.css';
+
 const dateTimeInputPropsSchema = z.object({
   value: stringLikeSchema,
   enableDate: booleanLikeSchema.optional(),

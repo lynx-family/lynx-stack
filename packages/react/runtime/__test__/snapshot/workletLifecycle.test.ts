@@ -130,4 +130,23 @@ describe('worklet lifecycle without elements', () => {
 
     expect(addRef).not.toHaveBeenCalled();
   });
+
+  it('seeds list-item platform info from spread before elements are materialized', () => {
+    const snapshot = createSnapshot({
+      'estimated-height-px': '10px',
+      'full-span': true,
+      id: 'not-platform-info',
+      'item-key': 'item-0',
+    });
+
+    updateSpread(snapshot, 0, {}, 0, true);
+
+    expect(snapshot.__listItemPlatformInfo).toMatchInlineSnapshot(`
+      {
+        "estimated-height-px": "10px",
+        "full-span": true,
+        "item-key": "item-0",
+      }
+    `);
+  });
 });
