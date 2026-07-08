@@ -1404,10 +1404,15 @@ describe('firstScreenSyncTiming - manual', () => {
     // hydrate
     {
       globalEnvManager.switchToBackground();
+      lynxCoreInject.tt.updateCardData({
+        msg: 'update2',
+        ready: true,
+      });
       // LifecycleConstant.firstScreen
       lynxCoreInject.tt.OnLifecycleEvent(...globalThis.__OnLifecycleEvent.mock.calls[0]);
       expect(lynx.getNativeApp().callLepusMethod.mock.calls.map(call => call[0])).toMatchInlineSnapshot(`
         [
+          "rLynxFirstScreenSyncReady",
           "rLynxChange",
         ]
       `);
@@ -1416,9 +1421,21 @@ describe('firstScreenSyncTiming - manual', () => {
     // rLynxChange: apply the hydration patch to the main thread
     {
       globalEnvManager.switchToMainThread();
-      const rLynxChange = lynx.getNativeApp().callLepusMethod.mock.calls[0];
-      globalThis[rLynxChange[0]](rLynxChange[1]);
+      for (const patch of lynx.getNativeApp().callLepusMethod.mock.calls) {
+        globalThis[patch[0]](patch[1]);
+      }
       await waitSchedule();
+      expect(__root.__element_root).toMatchInlineSnapshot(`
+        <page
+          cssId="default-entry-from-native:0"
+        >
+          <text>
+            <raw-text
+              text="update2"
+            />
+          </text>
+        </page>
+      `);
     }
 
     // main thread updatePage after the first screen is synced:
@@ -1434,7 +1451,7 @@ describe('firstScreenSyncTiming - manual', () => {
         >
           <text>
             <raw-text
-              text="update"
+              text="update2"
             />
           </text>
         </page>
