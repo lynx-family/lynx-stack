@@ -130,6 +130,9 @@ export class MainThreadRef<T> extends WorkletRef<T> {
     constructor(initValue: T);
 }
 
+// @public
+export function markFirstScreenSyncReady(): void;
+
 export { memo }
 
 export { PureComponent }

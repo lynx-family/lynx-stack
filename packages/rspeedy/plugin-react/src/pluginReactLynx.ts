@@ -221,18 +221,21 @@ export interface PluginReactLynxOptions {
   /**
    * This flag controls when MainThread (Lepus) transfers control to Background after the first screen
    *
-   * This flag has two options:
+   * This flag has three options:
    *
    * `"immediately"`: Transfer immediately
    *
    * `"jsReady"`: Transfer when background (JS Runtime) is ready
+   *
+   * `"manual"`: Transfer when the business calls the `markFirstScreenSyncReady()` API exported
+   * by `@lynx-js/react`, so the handover timing is fully controlled by the user
    *
    * After handing over control, MainThread (Lepus) runtime can no longer respond to data updates,
    * and data updates will be forwarded to background (JS Runtime) and processed __asynchronously__
    *
    * @defaultValue "immediately"
    */
-  firstScreenSyncTiming?: 'immediately' | 'jsReady'
+  firstScreenSyncTiming?: 'immediately' | 'jsReady' | 'manual'
 
   /**
    * `enableSSR` enable Lynx SSR feature for this build.

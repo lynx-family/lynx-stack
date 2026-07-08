@@ -5,7 +5,15 @@ import { applyUpdatePageData } from '../../core/lynx-page-data.js';
 import { markTiming, setPipeline } from '../../core/performance.js';
 import { __root, setRoot } from '../../root.js';
 import { LifecycleConstant } from '../lifecycle/constant.js';
-import { isJSReady, jsReady, jsReadyEventIdSwap, resetJSReady } from '../lifecycle/event/jsReady.js';
+import {
+  firstScreenEventIdSwap,
+  isFirstScreenSynced,
+  onFirstScreenSyncReady,
+  onFirstScreenTreeReady,
+  resetFirstScreenSyncState,
+  resetFirstScreenTreeReady,
+  syncFirstScreen,
+} from '../lifecycle/event/firstScreenSync.js';
 import { reloadMainThread } from '../lifecycle/reload.js';
 import { renderMainThread } from '../lifecycle/render.js';
 import { __pendingListUpdates } from '../list/pendingListUpdates.js';
@@ -48,7 +56,7 @@ function ssrHydrate(info: string) {
     throw new Error('SSR Hydration Failed! Please check if the SSR content loaded successfully!');
   }
 
-  resetJSReady();
+  resetFirstScreenSyncState();
   setupPage(nativePage);
   const refsMap = __GetTemplateParts(nativePage);
 
@@ -83,14 +91,11 @@ function injectCalledByNative(): void {
 
   Object.assign(globalThis, calledByNative);
   Object.assign(globalThis, {
-    [LifecycleConstant.jsReady]: jsReady,
+    [LifecycleConstant.firstScreenSyncReady]: onFirstScreenSyncReady,
   });
 }
 
 function renderPage(data: Record<string, unknown> | undefined): void {
-  // reset `jsReady` state
-  resetJSReady();
-
   lynx.__initData = data ?? {};
 
   setupPage(__CreatePage('0', 0));
@@ -104,7 +109,11 @@ function renderPage(data: Record<string, unknown> | undefined): void {
   applyRefQueue();
 
   if (__FIRST_SCREEN_SYNC_TIMING__ === 'immediately') {
-    jsReady();
+    syncFirstScreen();
+  } else {
+    // `jsReady` / `manual`: the tree is ready, but the sync waits for the
+    // `rLynxFirstScreenSyncReady` signal.
+    onFirstScreenTreeReady();
   }
 }
 
@@ -117,7 +126,13 @@ function updatePage(data: Record<string, unknown> | undefined, options?: UpdateP
   applyUpdatePageData(data, options);
 
   const flushOptions = options ?? {};
-  if (!isJSReady) {
+  if (!isFirstScreenSynced) {
+    if (__FIRST_SCREEN_SYNC_TIMING__ === 'manual') {
+      // a `markFirstScreenSyncReady` call during the re-render below must not
+      // sync the half-rendered tree; it is deferred to `onFirstScreenTreeReady`
+      resetFirstScreenTreeReady();
+    }
+
     const oldRoot = __root;
     setRoot(new SnapshotInstance('root'));
     __root.__jsx = oldRoot.__jsx;
@@ -127,18 +142,23 @@ function updatePage(data: Record<string, unknown> | undefined, options?: UpdateP
     {
       __pendingListUpdates.clearAttachedLists();
       renderMainThread();
-      // As said by codename `jsReadyEventIdSwap`, this swap will only be used for event remap,
+      // As said by codename `firstScreenEventIdSwap`, this swap will only be used for event remap,
       // because ref & unref cause by previous render will be ignored
       hydrate(
         oldRoot as SnapshotInstance,
         __root as SnapshotInstance,
-        { skipUnRef: true, swap: jsReadyEventIdSwap },
+        { skipUnRef: true, swap: firstScreenEventIdSwap },
       );
 
       // always call this before `__FlushElementTree`
       __pendingListUpdates.flush();
       applyRefQueue();
     }
+
+    if (__FIRST_SCREEN_SYNC_TIMING__ === 'manual') {
+      onFirstScreenTreeReady();
+    }
+
     flushOptions.triggerDataUpdated = true;
     markTiming('updateDiffVdomEnd');
   }

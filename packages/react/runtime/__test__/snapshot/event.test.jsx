@@ -1126,11 +1126,11 @@ describe('event when firstScreenSyncTiming is jsReady', () => {
 
       expect(lynx.getNativeApp().callLepusMethod).toHaveBeenCalledTimes(1);
       expect(lynx.getNativeApp().callLepusMethod.mock.calls[0]).toMatchInlineSnapshot(`
-          [
-            "rLynxJSReady",
-            {},
-          ]
-        `);
+        [
+          "rLynxFirstScreenSyncReady",
+          {},
+        ]
+      `);
       globalEnvManager.switchToMainThread();
       const rLynxJSReady = lynx.getNativeApp().callLepusMethod.mock.calls[0];
       globalThis[rLynxJSReady[0]](rLynxJSReady[1]);
@@ -1148,7 +1148,7 @@ describe('event when firstScreenSyncTiming is jsReady', () => {
           [
             "rLynxFirstScreen",
             {
-              "jsReadyEventIdSwap": {
+              "firstScreenEventIdSwap": {
                 "-1": -4,
                 "-2": -5,
                 "-3": -6,
@@ -1264,7 +1264,7 @@ describe('call `root.render()` async', () => {
           [
             "rLynxFirstScreen",
             {
-              "jsReadyEventIdSwap": {},
+              "firstScreenEventIdSwap": {},
               "root": "{"id":-1,"type":"root","children":[{"id":-2,"type":"__snapshot_a94a8_test_14","children":[{"id":-3,"type":"__snapshot_a94a8_test_13","values":["-3:0:"]}]}]}",
             },
           ],
