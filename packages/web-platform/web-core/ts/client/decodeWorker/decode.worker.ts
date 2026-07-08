@@ -303,11 +303,14 @@ async function handleStream(
         const codeMap = decodeBinaryMap(content);
         const isLazy = config['isLazy'] === 'true';
         // An external bundle's mts chunk is CommonJS-style (it writes to
-        // `exports`), so give it a `module.exports`/`exports` env. A card's own
-        // lepus chunk is either side-effecting (non-lazy) or an expression
-        // assigned to `module.exports` (lazy component root).
+        // `exports`), so give it a `module.exports`/`exports` env. It also
+        // references `globDynamicComponentEntry` bare (a card's own root gets it
+        // as a wrapping function parameter, but an external chunk does not), so
+        // declare it here too — defaulting to `'__Card__'`, the main-card entry.
+        // A card's own lepus chunk is either side-effecting (non-lazy) or an
+        // expression assigned to `module.exports` (lazy root).
         const prefix = config['isExternalBundle'] === 'true'
-          ? 'var exports=(module.exports={}); '
+          ? 'var globDynamicComponentEntry="__Card__"; var exports=(module.exports={}); '
           : isLazy
           ? 'module.exports='
           : '';
