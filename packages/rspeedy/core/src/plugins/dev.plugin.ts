@@ -20,6 +20,10 @@ import type { ExposedAPI } from '../index.js'
 import { isLynx } from '../utils/is-lynx.js'
 import { ProvidePlugin } from '../webpack/ProvidePlugin.js'
 
+const DEFAULT_SERVER_HOST = '0.0.0.0'
+
+type RsbuildServerHost = NonNullable<RsbuildConfig['server']>['host']
+
 export function pluginDev(
   options?: Dev,
   server?: Server,
@@ -30,55 +34,6 @@ export function pluginDev(
       return action === 'dev' || config.mode === 'development'
     },
     async setup(api) {
-      const hostname = server?.host ?? await findIp('v4')
-
-      let assetPrefix = options?.assetPrefix
-
-      switch (typeof assetPrefix) {
-        case 'string': {
-          if (server?.port !== undefined) {
-            // We should change the port of `assetPrefix` when `server.port` is set.
-
-            const hasPortPlaceholder = assetPrefix.includes('<port>')
-            if (!hasPortPlaceholder) {
-              // There is not `<port>` in `dev.assetPrefix`.
-              const assetPrefixURL = new URL(assetPrefix)
-
-              if (assetPrefixURL.port !== String(server.port)) {
-                logger.warn(
-                  `Setting different port values in ${
-                    color.cyan('server.port')
-                  } and ${color.cyan('dev.assetPrefix')}. Using server.port(${
-                    color.cyan(server.port)
-                  }) to make HMR work.`,
-                )
-                assetPrefixURL.port = String(server.port)
-                assetPrefix = assetPrefixURL.toString()
-              }
-            }
-          }
-
-          break
-        }
-        case 'undefined':
-        case 'boolean': {
-          if (options?.assetPrefix !== false) {
-            // assetPrefix === true || assetPrefix === undefined
-            assetPrefix = `http://${hostname}:<port>/`
-          }
-          break
-        }
-      }
-
-      if (server?.base) {
-        if ((assetPrefix as string).endsWith('/')) {
-          assetPrefix = (assetPrefix as string).slice(0, -1)
-        }
-        assetPrefix = `${assetPrefix}${server.base}/`
-      }
-
-      debug(`dev.assetPrefix is normalized to ${assetPrefix}`)
-
       // Resolve the main bundle filename template for a given entry/platform.
       // When `bundle` is a function, it is called with `lazyBundle: false`
       // since the dev URLs always point at the main bundle.
@@ -157,20 +112,77 @@ export function pluginDev(
         }
       })
 
-      api.modifyRsbuildConfig((config, { mergeRsbuildConfig }) => {
-        return mergeRsbuildConfig(config, {
-          dev: {
-            assetPrefix,
-            client: {
-              // Lynx cannot use `location.hostname`.
-              host: hostname,
-              port: '<port>',
+      api.modifyRsbuildConfig({
+        handler: async (config, { mergeRsbuildConfig }) => {
+          const hostname = await resolveHostname(
+            config.server?.host,
+            server?.host,
+          )
+
+          let assetPrefix = options?.assetPrefix
+
+          switch (typeof assetPrefix) {
+            case 'string': {
+              if (server?.port !== undefined) {
+                // We should change the port of `assetPrefix` when `server.port` is set.
+
+                const hasPortPlaceholder = assetPrefix.includes('<port>')
+                if (!hasPortPlaceholder) {
+                  // There is not `<port>` in `dev.assetPrefix`.
+                  const assetPrefixURL = new URL(assetPrefix)
+
+                  if (assetPrefixURL.port !== String(server.port)) {
+                    logger.warn(
+                      `Setting different port values in ${
+                        color.cyan('server.port')
+                      } and ${
+                        color.cyan('dev.assetPrefix')
+                      }. Using server.port(${
+                        color.cyan(server.port)
+                      }) to make HMR work.`,
+                    )
+                    assetPrefixURL.port = String(server.port)
+                    assetPrefix = assetPrefixURL.toString()
+                  }
+                }
+              }
+
+              break
+            }
+            case 'undefined':
+            case 'boolean': {
+              if (options?.assetPrefix !== false) {
+                // assetPrefix === true || assetPrefix === undefined
+                assetPrefix = `http://${hostname}:<port>/`
+              }
+              break
+            }
+          }
+
+          if (server?.base) {
+            if ((assetPrefix as string).endsWith('/')) {
+              assetPrefix = (assetPrefix as string).slice(0, -1)
+            }
+            assetPrefix = `${assetPrefix}${server.base}/`
+          }
+
+          debug(`dev.assetPrefix is normalized to ${assetPrefix}`)
+
+          return mergeRsbuildConfig(config, {
+            dev: {
+              assetPrefix,
+              client: {
+                // Lynx cannot use `location.hostname`.
+                host: hostname,
+                port: '<port>',
+              },
             },
-          },
-          // When using `rspeedy dev --mode production`
-          // Rsbuild would use `output.assetPrefix` instead of `dev.assetPrefix`
-          output: { assetPrefix },
-        } as RsbuildConfig)
+            // When using `rspeedy dev --mode production`
+            // Rsbuild would use `output.assetPrefix` instead of `dev.assetPrefix`
+            output: { assetPrefix },
+          } as RsbuildConfig)
+        },
+        order: 'post',
       })
 
       api.modifyRsbuildConfig((config, { mergeRsbuildConfig }) => {
@@ -183,6 +195,10 @@ export function pluginDev(
           return mergeRsbuildConfig(config, {
             server: {
               printUrls: (param) => {
+                const currentConfig = api.getRsbuildConfig('current')
+                const assetPrefix = currentConfig.dev?.assetPrefix
+                const hostname = currentConfig.dev?.client?.host
+                  ?? formatHostname(currentConfig.server?.host)
                 const finalUrls: { label: string, url: string }[] = []
                 const baseForUrls = (
                   typeof assetPrefix === 'string'
@@ -238,6 +254,7 @@ export function pluginDev(
         const rspeedyDir = path.dirname(
           require.resolve('@lynx-js/rspeedy/package.json'),
         )
+        const hostname = environment.config.dev?.client?.host ?? ''
 
         const searchParams = new URLSearchParams({
           hostname,
@@ -317,7 +334,7 @@ export function pluginDev(
 export async function findIp(
   family: 'v4' | 'v6',
   isInternal = false,
-): Promise<string> {
+): Promise<string | undefined> {
   // Use the `default` export (the live CJS exports object) instead of the
   // namespace: builtin namespaces snapshot named exports, which breaks
   // `spyOn(os, 'networkInterfaces')` in tests.
@@ -374,10 +391,33 @@ export async function findIp(
     }
   }
 
-  if (!host) {
-    throw new Error(`No valid IP found`)
+  return host
+}
+
+async function resolveHostname(
+  host: RsbuildServerHost | undefined,
+  originalHost: string | undefined,
+): Promise<string> {
+  const hostname = formatHostname(host)
+  if (originalHost !== undefined || hostname !== DEFAULT_SERVER_HOST) {
+    return hostname
   }
 
+  return await findIp('v4')
+    ?? await findIp('v6')
+    ?? hostname
+}
+
+function formatHostname(host: RsbuildServerHost | undefined): string {
+  if (host === true || host === undefined) {
+    return DEFAULT_SERVER_HOST
+  }
+  if (host === false) {
+    return 'localhost'
+  }
+  if (host.includes(':') && !host.startsWith('[')) {
+    return `[${host}]`
+  }
   return host
 }
 
