@@ -363,7 +363,8 @@ feature = Image("https://example.com/hero.png", "contain", "largeFeature")`,
   {
     name: 'Icon',
     category: 'data-display',
-    description: 'Material icon ligature. Font is loaded via renderer.css.',
+    description:
+      'Material icon ligature. Font CSS is bundled with this component.',
     props: [
       {
         name: 'name',

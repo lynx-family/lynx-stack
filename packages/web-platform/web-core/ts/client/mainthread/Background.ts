@@ -34,7 +34,7 @@ import type {
   WorkerStartMessage,
 } from '../../types/index.js';
 import { LynxCrossThreadContext } from '../LynxCrossThreadContext.js';
-import { type LynxViewInstance } from './LynxViewInstance.js';
+import type { LynxViewInstance } from './LynxViewInstance.js';
 import { registerInvokeUIMethodHandler } from './crossThreadHandlers/registerInvokeUIMethodHandler.js';
 import { registerNativePropsHandler } from './crossThreadHandlers/registerSetNativePropsHandler.js';
 import { registerGetPathInfoHandler } from './crossThreadHandlers/registerGetPathInfoHandler.js';

@@ -5,6 +5,8 @@ import { z } from 'zod/v4';
 
 import { defineComponent } from '../../core/library.jsx';
 
+import '../../../styles/catalog/Separator.css';
+
 export const Separator = defineComponent({
   name: 'Separator',
   props: z.object({}),

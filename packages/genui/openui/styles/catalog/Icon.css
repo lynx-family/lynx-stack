@@ -1,0 +1,48 @@
+/* ===== Icon ===== */
+.OpenUIIcon {
+  font-family: var(--openui-icon-font-family);
+  font-style: normal;
+  font-weight: normal;
+  line-height: 1;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  color: var(--openui-color-text-body);
+}
+
+.OpenUIIconSm {
+  font-size: 28rpx;
+}
+
+.OpenUIIconMd {
+  font-size: 40rpx;
+}
+
+.OpenUIIconLg {
+  font-size: 56rpx;
+}
+
+.OpenUIIconColorPrimary {
+  color: var(--openui-color-primary);
+}
+
+.OpenUIIconColorMuted {
+  color: var(--openui-color-text-subtle);
+}
+
+.OpenUIIconColorInherit {
+  color: inherit;
+}
+
+.dark .OpenUIIcon {
+  color: var(--openui-color-text-body);
+}
+
+.dark .OpenUIIconColorPrimary {
+  color: var(--openui-color-primary);
+}
+
+.dark .OpenUIIconColorMuted {
+  color: var(--openui-color-text-subtle);
+}

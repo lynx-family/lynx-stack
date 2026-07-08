@@ -5,6 +5,9 @@ import { z } from 'zod/v4';
 
 import { defineComponent } from '../../core/library.jsx';
 
+import '../../../styles/material-icons.css';
+import '../../../styles/catalog/Icon.css';
+
 const ICON_NAMES = [
   'account_circle',
   'add',
@@ -48,7 +51,7 @@ export const Icon = defineComponent({
     size: z.enum(['sm', 'md', 'lg']).optional(),
     color: z.enum(['primary', 'muted', 'inherit']).optional(),
   }),
-  description: 'Material icon. Font is bundled in renderer.css.',
+  description: 'Material icon. Font CSS is bundled with this component.',
   component: ({ props }) => {
     const size = props.size ?? 'md';
     const color = props.color ?? 'inherit';

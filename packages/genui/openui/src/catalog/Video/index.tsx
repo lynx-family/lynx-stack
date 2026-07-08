@@ -6,6 +6,8 @@ import { z } from 'zod/v4';
 import { defineComponent } from '../../core/library.jsx';
 import { stringLikeSchema, stringifyValue } from '../utils.js';
 
+import '../../../styles/catalog/Video.css';
+
 export const Video = defineComponent({
   name: 'Video',
   props: z.object({

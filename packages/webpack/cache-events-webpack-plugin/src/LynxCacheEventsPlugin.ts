@@ -18,6 +18,11 @@ export interface LynxCacheEventsPluginOptions {
   /**
    * The transformer function to modify the setup list.
    *
+   * It runs once per caching chunk — separately for the background thread and
+   * for an async-external main thread — so `context.isMainThread` tells you
+   * which thread's list you are transforming. Use it to add a cache function to
+   * only one thread.
+   *
    * @example
    * ```js
    * // webpack.config.js
@@ -26,18 +31,21 @@ export interface LynxCacheEventsPluginOptions {
    * const config = {
    *   plugins: [
    *     new LynxCacheEventsPlugin({
-   *       setupListTransformer: (setupList) => {
-   *         setupList.push(
-   *           `{
-   *             name: 'customCacheEvent',
-   *             setup: () => {
-   *               console.log('customCacheEvent setup');
-   *               return () => {
-   *                 console.log('customCacheEvent teardown');
+   *       setupListTransformer: (setupList, { isMainThread }) => {
+   *         // only cache this event on the background thread
+   *         if (!isMainThread) {
+   *           setupList.push(
+   *             `{
+   *               name: 'customCacheEvent',
+   *               setup: () => {
+   *                 console.log('customCacheEvent setup');
+   *                 return () => {
+   *                   console.log('customCacheEvent teardown');
+   *                 }
    *               }
-   *             }
-   *           }`
-   *         )
+   *             }`
+   *           )
+   *         }
    *         return setupList;
    *       },
    *     }),
@@ -47,7 +55,10 @@ export interface LynxCacheEventsPluginOptions {
    *
    * @public
    */
-  setupListTransformer?: (setupList: string[]) => string[];
+  setupListTransformer?: (
+    setupList: string[],
+    context: { isMainThread: boolean },
+  ) => string[];
 }
 
 /**
@@ -117,6 +128,30 @@ export class LynxCacheEventsPluginImpl {
     const { RuntimeGlobals } = compiler.webpack;
 
     compiler.hooks.thisCompilation.tap(this.name, compilation => {
+      // Async-external main-thread entries (their startup is wrapped below);
+      // only these need the main-thread `renderPage` cache.
+      const asyncMainThreadEntries = new WeakSet<Chunk>();
+      const isMainThreadChunk = (chunk: Chunk): boolean =>
+        chunk.name?.includes('__main-thread') ?? false;
+
+      // An async-external entry renders startup as a plain
+      // `__webpack_require__(entry)` that never requires `RuntimeGlobals.startup`,
+      // so the caching runtime below isn't injected. Force `startup` on such
+      // chunks so rspack emits a startup function whose returned Promise
+      // `next().finally(onLoaded)` awaits.
+      compilation.hooks.additionalTreeRuntimeRequirements.tap(
+        this.name,
+        (chunk, runtimeRequirements) => {
+          if (runtimeRequirements.has(RuntimeGlobals.startup)) return;
+          if (!chunk.hasRuntime()) return;
+          if (!runtimeRequirements.has(RuntimeGlobals.asyncModule)) return;
+          runtimeRequirements.add(RuntimeGlobals.startup);
+          if (isMainThreadChunk(chunk)) {
+            asyncMainThreadEntries.add(chunk);
+          }
+        },
+      );
+
       const handler = (chunk: Chunk, runtimeRequirements: Set<string>) => {
         const globalChunkLoading = compilation.outputOptions.chunkLoading;
         const isEnabledForChunk = (chunk: Chunk): boolean => {
@@ -160,7 +195,10 @@ export class LynxCacheEventsPluginImpl {
         }
         onceForChunkSet[LynxRuntimeGlobals.lynxCacheEventsSetupList].add(chunk);
 
-        if (chunk.name?.includes('__main-thread')) {
+        const isMainThread = isMainThreadChunk(chunk);
+        // Background chunks always cache; main-thread only for async-external
+        // entries (see `asyncMainThreadEntries`).
+        if (isMainThread && !asyncMainThreadEntries.has(chunk)) {
           return;
         }
 
@@ -168,6 +206,7 @@ export class LynxCacheEventsPluginImpl {
           chunk,
           new LynxCacheEventsSetupListRuntimeModule(
             this.options.setupListTransformer,
+            isMainThread,
           ),
         );
       });
@@ -180,7 +219,7 @@ export class LynxCacheEventsPluginImpl {
         }
         onceForChunkSet[LynxRuntimeGlobals.lynxCacheEvents].add(chunk);
 
-        if (chunk.name?.includes('__main-thread')) {
+        if (isMainThreadChunk(chunk) && !asyncMainThreadEntries.has(chunk)) {
           return;
         }
 

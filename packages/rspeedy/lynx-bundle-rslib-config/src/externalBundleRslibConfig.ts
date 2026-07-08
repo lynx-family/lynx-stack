@@ -85,6 +85,46 @@ export const DEFAULT_EXTERNAL_BUNDLE_LIB_CONFIG: LibConfig = {
   source: {
     include: [/node_modules/],
   },
+  tools: {
+    rspack: {
+      output: {
+        library: {
+          // `commonjs2` (not rslib's default `commonjs-static`): with an async
+          // (`promise`) external the entry is an async module whose exports sit
+          // behind a Promise; a static per-name copy reads `undefined`, whereas
+          // `module.exports = ...` passes the Promise through for consumers to
+          // await.
+          type: 'commonjs2',
+        },
+      },
+    },
+  },
+}
+
+/**
+ * Object form of an external mapping.
+ *
+ * Use this instead of the plain global-name form when the external library is
+ * mounted asynchronously (as a Promise) by the consuming application, i.e. the
+ * matching `pluginExternalBundle` external is configured with `async: true`.
+ *
+ * @public
+ */
+export interface ExternalObject {
+  /**
+   * The global name (with optional subpath) of the external library.
+   */
+  libraryName: string | string[]
+
+  /**
+   * Whether the library is mounted as a Promise resolving to the library
+   * namespace. When enabled, the external is emitted as a `promise` external
+   * so importing modules await the mounted value instead of reading it
+   * synchronously.
+   *
+   * @defaultValue false
+   */
+  async?: boolean
 }
 
 /**
@@ -93,7 +133,7 @@ export const DEFAULT_EXTERNAL_BUNDLE_LIB_CONFIG: LibConfig = {
  *
  * @public
  */
-export type Externals = Record<string, string | string[]>
+export type Externals = Record<string, string | string[] | ExternalObject>
 
 /**
  * Standard ReactLynx external mappings used by the built-in `reactlynx`
@@ -357,13 +397,35 @@ function transformExternals(
 
   return function({ request }, callback) {
     if (!request) return callback()
-    const libraryName = externals[request]
-    if (!libraryName) return callback()
+    const external = externals[request]
+    if (!external) return callback()
 
-    callback(undefined, [
-      `${globalObject ?? 'lynx'}[Symbol.for("__LYNX_EXTERNAL_GLOBAL__")]`,
-      ...(Array.isArray(libraryName) ? libraryName : [libraryName]),
-    ], 'var')
+    const isObjectForm = typeof external === 'object'
+      && !Array.isArray(external)
+    const libraryName = isObjectForm ? external.libraryName : external
+    const names = Array.isArray(libraryName) ? libraryName : [libraryName]
+    const lynxExternalGlobal = `${
+      globalObject ?? 'lynx'
+    }[Symbol.for("__LYNX_EXTERNAL_GLOBAL__")]`
+
+    if (isObjectForm && external.async) {
+      // One promise per library, mounted at `names[0]` and resolving to the
+      // whole namespace; pick subpaths inside `.then` after it resolves. An
+      // array request would read them off the pending promise and yield
+      // undefined.
+      const mount = `${lynxExternalGlobal}[${JSON.stringify(names[0])}]`
+      const accessor = names.slice(1).map((name) => `[${JSON.stringify(name)}]`)
+        .join('')
+      return callback(
+        undefined,
+        accessor
+          ? `Promise.resolve(${mount}).then(function (m) { return m${accessor}; })`
+          : mount,
+        'promise',
+      )
+    }
+
+    callback(undefined, [lynxExternalGlobal, ...names], 'var')
   }
 }
 

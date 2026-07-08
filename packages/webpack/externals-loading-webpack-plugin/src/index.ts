@@ -671,13 +671,32 @@ function createLoadExternalSync(handler, sectionPath, timeout) {
       ) {
         const isAsync = externals[request]?.async ?? true;
         const libraryName = externals[request]?.libraryName ?? request;
+        const names = Array.isArray(libraryName) ? libraryName : [libraryName];
+        if (isAsync) {
+          // A `promise` external must be a single expression evaluating to a
+          // promise whose resolved value becomes the module exports. The
+          // runtime module mounts one promise per library that resolves to
+          // the whole namespace, so subpaths have to be picked after that
+          // promise resolves — an array request would apply the property
+          // access synchronously on the pending promise and yield undefined.
+          const mount = `${getLynxExternalGlobal(globalObject)}[${
+            JSON.stringify(names[0])
+          }]`;
+          const accessor = names.slice(1).map((name) =>
+            `[${JSON.stringify(name)}]`
+          ).join('');
+          return callback(
+            undefined,
+            accessor
+              ? `Promise.resolve(${mount}).then(function (m) { return m${accessor}; })`
+              : mount,
+            'promise',
+          );
+        }
         return callback(
           undefined,
-          [
-            getLynxExternalGlobal(globalObject),
-            ...(Array.isArray(libraryName) ? libraryName : [libraryName]),
-          ],
-          isAsync ? 'promise' : undefined,
+          [getLynxExternalGlobal(globalObject), ...names],
+          undefined,
         );
       }
       // Continue without externalizing the import

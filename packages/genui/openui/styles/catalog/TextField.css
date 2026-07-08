@@ -1,0 +1,64 @@
+/* ===== TextField ===== */
+.OpenUITextField {
+  display: flex;
+  flex-direction: column;
+  gap: 6rpx;
+  width: 100%;
+  min-width: 0;
+}
+
+.OpenUITextFieldLabel {
+  font-size: 26rpx;
+  font-weight: 600;
+  color: var(--openui-color-text-muted);
+  line-height: 1.5;
+}
+
+.OpenUITextFieldControl {
+  width: 100%;
+  min-height: 72rpx;
+  padding-left: 24rpx;
+  padding-right: 24rpx;
+  padding-top: 16rpx;
+  padding-bottom: 16rpx;
+  border-width: 1rpx;
+  border-style: solid;
+  border-color: var(--openui-color-border-control);
+  border-radius: 12rpx;
+  background-color: var(--openui-color-surface-strong);
+  color: var(--openui-color-text);
+  font-size: 28rpx;
+  line-height: 1.5;
+}
+
+.OpenUITextFieldTextarea {
+  min-height: 180rpx;
+}
+
+.OpenUITextField-invalid .OpenUITextFieldControl {
+  border-color: var(--openui-color-error);
+}
+
+.OpenUITextFieldError {
+  font-size: 22rpx;
+  color: var(--openui-color-error);
+  line-height: 1.5;
+}
+
+.dark .OpenUITextFieldLabel {
+  color: var(--openui-color-text-muted);
+}
+
+.dark .OpenUITextFieldControl {
+  background-color: transparent;
+  border-color: var(--openui-color-border-control);
+  color: var(--openui-color-text);
+}
+
+.dark .OpenUITextField-invalid .OpenUITextFieldControl {
+  border-color: var(--openui-color-error);
+}
+
+.dark .OpenUITextFieldError {
+  color: var(--openui-color-error);
+}

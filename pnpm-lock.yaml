@@ -699,27 +699,6 @@ importers:
         specifier: ^3.4.19
         version: 3.4.19
 
-  examples/template-webpack:
-    devDependencies:
-      '@lynx-js/qrcode-rsbuild-plugin':
-        specifier: workspace:*
-        version: link:../../packages/rspeedy/plugin-qrcode
-      '@lynx-js/react':
-        specifier: workspace:*
-        version: link:../../packages/react
-      '@lynx-js/rspeedy':
-        specifier: workspace:*
-        version: link:../../packages/rspeedy/core
-      '@lynx-js/runtime-wrapper-webpack-plugin':
-        specifier: workspace:*
-        version: link:../../packages/webpack/runtime-wrapper-webpack-plugin
-      '@lynx-js/template-webpack-plugin':
-        specifier: workspace:*
-        version: link:../../packages/webpack/template-webpack-plugin
-      '@rspack/core':
-        specifier: 2.0.8
-        version: 2.0.8(@swc/helpers@0.5.23)
-
   packages/background-only: {}
 
   packages/genui:
