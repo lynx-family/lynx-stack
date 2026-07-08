@@ -733,7 +733,7 @@ struct ReactFixture {
 impl ReactFixture {
   fn new() -> Self {
     let crate_dir = PathBuf::from(env!("CARGO_MANIFEST_DIR"));
-    let repo_root = crate_dir.join("../..");
+    let repo_root = crate_dir.join("../../..");
     let dist_dir = repo_root.join("packages/genui/ui-judge/tests/fixtures/react/.generated");
     Self {
       bundle_path: dist_dir.join("main.lynx.bundle"),
@@ -798,7 +798,7 @@ fn copy_lynx_core_to(source: &Path, bundle_dir: &Path) -> Result<(), Box<dyn std
 
 fn default_screenshot_path() -> PathBuf {
   PathBuf::from(env!("CARGO_MANIFEST_DIR"))
-    .join("../../target/headless-rust-test-runner/react-fixture.png")
+    .join("../../../target/headless-rust-test-runner/react-fixture.png")
 }
 
 fn write_png(path: &Path, frame: &CapturedFrame) -> Result<(), Box<dyn std::error::Error>> {

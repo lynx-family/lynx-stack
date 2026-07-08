@@ -12,7 +12,7 @@
       "packages/genui/a2ui/styles/material-icons.css",
       "packages/genui/openui/styles/material-icons.css",
       "packages/genui/a2ui/styles/theme.css",
-      "lynx/headless-rust-test-runner/fixtures/**",
+      "packages/lynx/headless-rust-test-runner/fixtures/**",
     ],
   },
   "organizeImports": {
@@ -36,7 +36,7 @@
       "website/docs/zh/api/**",
       "website/docs/en/changelog/**",
       "website/docs/zh/changelog/**",
-      "lynx/headless-rust-test-runner/fixtures/**",
+      "packages/lynx/headless-rust-test-runner/fixtures/**",
 
       "fixtures/error/**",
       "test/diagnostic/**",

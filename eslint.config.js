@@ -35,7 +35,7 @@ export default tseslint.config(
       '**/test/js',
       '**/dist/**',
       '**/lib/**',
-      'lynx/headless-rust-test-runner/fixtures/**',
+      'packages/lynx/headless-rust-test-runner/fixtures/**',
       // rspeedy/rsbuild build output for the genui-playground (lynx bundle
       // + the rsbuild static site that serves it).
       'packages/genui/playground/www/**',

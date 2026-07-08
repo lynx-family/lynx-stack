@@ -1,8 +1,8 @@
 ---
-applyTo: "lynx/headless-rust-test-runner/**"
+applyTo: "packages/lynx/headless-rust-test-runner/**"
 ---
 
-`lynx/headless-rust-test-runner` is a Rust-only integration runner for the engine bridge. Keep it as a workspace rlib/bin crate that uses `packages/lynx/engine-bridge/lynx`; do not add JS package metadata around it.
+`packages/lynx/headless-rust-test-runner` is a Rust-only integration runner for the engine bridge. Keep it as a workspace rlib/bin crate that uses `packages/lynx/engine-bridge/lynx`; do not add JS package metadata around it.
 
 The React fixture bundle is a generated build output, not a copied runner fixture. Build it with `NODE_ENV=production node packages/rspeedy/core/bin/rspeedy.js build --root packages/genui/ui-judge/tests/fixtures/react`, then read `packages/genui/ui-judge/tests/fixtures/react/.generated/main.lynx.bundle` directly from the Rust runner. Keep `fixtures/react/lynx_core.js` aligned with the external Lynx core output used by the runtime. Do not run ESLint, Biome, or dprint over runner fixture files.
 
