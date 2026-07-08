@@ -21,25 +21,51 @@ interface FakeChunk {
   name: string;
 }
 
+interface FakeDependency {
+  attributes?: Record<string, unknown>;
+  loc?: { start: { line: number; column: number } };
+}
+
 interface FakeBlock {
-  dependencies: Array<{ attributes?: Record<string, unknown> }>;
+  dependencies: FakeDependency[];
+  loc?: { start: { line: number; column: number } };
   blocks: FakeBlock[];
 }
 
+interface FakeModule {
+  blocks: FakeBlock[];
+  readableIdentifier?: () => string;
+}
+
 // Drive `generate()` with the minimal shape it reads, so the test stays a unit
-// test of the emit logic (no full rspack compilation).
-function generate(
+// test of the emit logic (no full rspack compilation). Returns the emitted
+// source plus any errors the module pushed onto the compilation.
+function run(
   asyncChunks: FakeChunk[],
-  modules: Array<{ blocks: FakeBlock[] }> = [],
+  modules: FakeModule[] = [],
   blockChunkGroup: { chunks: FakeChunk[] } | null = null,
-): string {
+): { out: string; errors: Error[] } {
   const mod = new LynxAsyncChunksRuntimeModule((chunkName) => chunkName);
+  const errors: Error[] = [];
   Object.assign(mod, {
     chunk: { getAllAsyncChunks: () => new Set(asyncChunks) },
-    compilation: { modules, getPath: (filename: string) => filename },
+    compilation: {
+      modules,
+      errors,
+      requestShortener: undefined,
+      getPath: (filename: string) => filename,
+    },
     chunkGraph: { getBlockChunkGroup: () => blockChunkGroup },
   });
-  return mod.generate();
+  return { out: mod.generate(), errors };
+}
+
+function generate(
+  asyncChunks: FakeChunk[],
+  modules: FakeModule[] = [],
+  blockChunkGroup: { chunks: FakeChunk[] } | null = null,
+): string {
+  return run(asyncChunks, modules, blockChunkGroup).out;
 }
 
 describe('LynxAsyncChunksRuntimeModule', () => {
@@ -71,5 +97,68 @@ describe('LynxAsyncChunksRuntimeModule', () => {
     );
     expect(out).toContain(RuntimeGlobals.lynxAsyncChunkMode);
     expect(out).toContain('"sync"');
+  });
+
+  test('keeps a single mode when every import site agrees', () => {
+    const chunk: FakeChunk = { id: 0, name: 'a' };
+    const { out, errors } = run(
+      [chunk],
+      [
+        {
+          blocks: [{
+            dependencies: [{ attributes: { mode: 'sync' } }],
+            blocks: [],
+          }],
+        },
+        {
+          blocks: [{
+            dependencies: [{ attributes: { mode: 'sync' } }],
+            blocks: [],
+          }],
+        },
+      ],
+      { chunks: [chunk] },
+    );
+    expect(errors).toHaveLength(0);
+    expect(out).toContain('"sync"');
+  });
+
+  test('reports a conflict and falls back to async when a bundle is both sync and async', () => {
+    const chunk: FakeChunk = { id: 0, name: 'a' };
+    const { out, errors } = run(
+      [chunk],
+      [
+        {
+          readableIdentifier: () => 'src/host/first-screen.tsx',
+          blocks: [{
+            dependencies: [{
+              attributes: { mode: 'sync' },
+              loc: { start: { line: 12, column: 4 } },
+            }],
+            blocks: [],
+          }],
+        },
+        {
+          readableIdentifier: () => 'src/host/lazy.tsx',
+          blocks: [{
+            dependencies: [{
+              attributes: { mode: 'async' },
+              loc: { start: { line: 30, column: 2 } },
+            }],
+            blocks: [],
+          }],
+        },
+      ],
+      { chunks: [chunk] },
+    );
+    // Conflict reported with both sites, and the mode entry is dropped so the
+    // chunk-loading runtime uses its non-blocking async default.
+    expect(errors).toHaveLength(1);
+    const message = errors[0]!.message;
+    expect(message).toContain('\'sync\'');
+    expect(message).toContain('\'async\'');
+    expect(message).toContain('src/host/first-screen.tsx:12:4');
+    expect(message).toContain('src/host/lazy.tsx:30:2');
+    expect(out).not.toContain(RuntimeGlobals.lynxAsyncChunkMode);
   });
 });

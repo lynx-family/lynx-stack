@@ -22,3 +22,8 @@ To override the loader regardless of `engineVersion`, set the
 loader, `FetchBundle` forces the new one (which still requires
 `engineVersion >= 3.8`, otherwise the build errors). Leave it unset to let
 `engineVersion` decide.
+
+Importing the same lazy bundle with conflicting `mode`s (e.g. `'sync'` at one
+site and `'async'` at another) now fails the build with an error listing every
+conflicting `import()` site, since a single bundle can only load one way. Until
+the conflict is resolved the bundle falls back to `mode: 'async'`.
