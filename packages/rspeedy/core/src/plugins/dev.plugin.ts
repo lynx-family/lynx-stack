@@ -114,7 +114,7 @@ export function pluginDev(
 
       api.modifyRsbuildConfig({
         handler: async (config, { mergeRsbuildConfig }) => {
-          const hostname = await resolveHostname(
+          const { bindHost, hostname } = await resolveHostname(
             config.server?.host,
             server?.host,
           )
@@ -159,9 +159,9 @@ export function pluginDev(
             }
           }
 
-          if (server?.base) {
-            if ((assetPrefix as string).endsWith('/')) {
-              assetPrefix = (assetPrefix as string).slice(0, -1)
+          if (server?.base && typeof assetPrefix === 'string') {
+            if (assetPrefix.endsWith('/')) {
+              assetPrefix = assetPrefix.slice(0, -1)
             }
             assetPrefix = `${assetPrefix}${server.base}/`
           }
@@ -169,6 +169,13 @@ export function pluginDev(
           debug(`dev.assetPrefix is normalized to ${assetPrefix}`)
 
           return mergeRsbuildConfig(config, {
+            ...(bindHost
+              ? {
+                server: {
+                  host: bindHost,
+                },
+              }
+              : {}),
             dev: {
               assetPrefix,
               client: {
@@ -397,15 +404,26 @@ export async function findIp(
 async function resolveHostname(
   host: RsbuildServerHost | undefined,
   originalHost: string | undefined,
-): Promise<string> {
+): Promise<{ bindHost?: string, hostname: string }> {
   const hostname = formatHostname(host)
   if (originalHost !== undefined || hostname !== DEFAULT_SERVER_HOST) {
-    return hostname
+    return { hostname }
   }
 
-  return await findIp('v4')
-    ?? await findIp('v6')
-    ?? hostname
+  const ipv4Hostname = await findIp('v4')
+  if (ipv4Hostname) {
+    return { hostname: ipv4Hostname }
+  }
+
+  const ipv6Hostname = await findIp('v6')
+  if (ipv6Hostname) {
+    return {
+      bindHost: stripHostnameBrackets(ipv6Hostname),
+      hostname: ipv6Hostname,
+    }
+  }
+
+  return { hostname }
 }
 
 function formatHostname(host: RsbuildServerHost | undefined): string {
@@ -419,6 +437,13 @@ function formatHostname(host: RsbuildServerHost | undefined): string {
     return `[${host}]`
   }
   return host
+}
+
+function stripHostnameBrackets(hostname: string): string {
+  if (hostname.startsWith('[') && hostname.endsWith(']')) {
+    return hostname.slice(1, -1)
+  }
+  return hostname
 }
 
 function getNetworkPriority(name: string, address: string): number {

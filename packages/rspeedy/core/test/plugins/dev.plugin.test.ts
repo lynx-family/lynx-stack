@@ -86,6 +86,7 @@ describe('Plugins - Dev', () => {
     const config = await rsbuild.unwrapConfig()
 
     expect(config.output?.publicPath).toBe('http://[fd00::1]:3000/')
+    expect(rsbuild.getRsbuildConfig().server!.host).toBe('fd00::1')
     expect(rsbuild.getRsbuildConfig().dev!.client!.host).toBe('[fd00::1]')
   })
 
@@ -400,6 +401,23 @@ describe('Plugins - Dev', () => {
 
     expect(typeof config.output?.publicPath).toBe('string')
     expect(config.output?.publicPath).toBe('/')
+  })
+
+  test('dev.assetPrefix: false with server.base', async () => {
+    const rsbuild = await createStubRspeedy({
+      dev: {
+        assetPrefix: false,
+      },
+      server: {
+        base: '/dist',
+      },
+    })
+
+    const config = await rsbuild.unwrapConfig()
+
+    expect(typeof config.output?.publicPath).toBe('string')
+    expect(config.output?.publicPath).toBe('/')
+    expect(rsbuild.getRsbuildConfig().dev!.assetPrefix).toBe(false)
   })
 
   test('assetPrefix with mode production', async () => {
