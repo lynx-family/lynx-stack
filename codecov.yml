@@ -27,7 +27,7 @@ coverage:
 ignore:
   - ".github/**"
   - "codecov.yml"
-  - "lynx/engine-bridge/tools/runtime_build.rs"
+  - "packages/lynx/engine-bridge/tools/runtime_build.rs"
   - "packages/genui/**"
   - "pnpm-lock.yaml"
   - "rstest.config.ts"
