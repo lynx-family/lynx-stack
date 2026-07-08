@@ -1,0 +1,56 @@
+/* ===== Button ===== */
+.OpenUIButtonGroup {
+  display: flex;
+  flex-direction: row;
+  flex-wrap: wrap;
+  gap: 10rpx;
+}
+
+.OpenUIButton {
+  padding: 10rpx 14rpx;
+  border-radius: 12rpx;
+  border-width: 1rpx;
+  border-style: solid;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.OpenUIButtonPrimary {
+  background-color: var(--openui-color-primary-surface);
+  border-color: var(--openui-color-primary-border);
+}
+
+.OpenUIButtonSecondary {
+  background-color: var(--openui-color-surface-subtle);
+  border-color: var(--openui-color-border-strong);
+}
+
+.OpenUIButtonGhost {
+  background-color: transparent;
+  border-color: var(--openui-color-border-strong);
+}
+
+.OpenUIButtonText {
+  color: var(--openui-color-text);
+  font-size: 22rpx;
+  font-weight: 600;
+}
+
+.dark .OpenUIButtonPrimary {
+  background-color: var(--openui-color-primary-surface);
+  border-color: var(--openui-color-primary-border);
+}
+
+.dark .OpenUIButtonSecondary {
+  background-color: var(--openui-color-surface-subtle);
+  border-color: var(--openui-color-border);
+}
+
+.dark .OpenUIButtonGhost {
+  border-color: var(--openui-color-border);
+}
+
+.dark .OpenUIButtonText {
+  color: var(--openui-color-text);
+}

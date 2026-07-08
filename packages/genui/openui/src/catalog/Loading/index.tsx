@@ -5,6 +5,8 @@ import { z } from 'zod/v4';
 
 import { defineComponent } from '../../core/library.jsx';
 
+import '../../../styles/catalog/Loading.css';
+
 export const Loading = defineComponent({
   name: 'Loading',
   props: z.object({

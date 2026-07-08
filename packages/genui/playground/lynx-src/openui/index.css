@@ -1,6 +1,33 @@
-@import "@lynx-js/genui/openui/styles/renderer.css";
+@import "@lynx-js/luna-styles/index.css";
+@import "@lynx-js/genui/openui/styles/theme.css";
 
-page {
+:root {
+  display: flex;
+  flex-direction: column;
+  box-sizing: border-box;
+  background-color: var(--canvas);
+  color: var(--content);
+}
+
+.openui-page {
+  width: 100%;
+  height: 100%;
   padding: 10px;
   box-sizing: border-box;
+  color: var(--content);
+  background-color: var(--canvas);
+}
+
+.openui-scroll {
+  width: 100%;
+  height: 100%;
+}
+
+.openui-feedback {
+  padding: 12px;
+  color: var(--content);
+}
+
+.openui-error {
+  color: var(--openui-color-error);
 }

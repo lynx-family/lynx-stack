@@ -1,0 +1,10 @@
+/* ===== Separator ===== */
+.OpenUISeparator {
+  width: 100%;
+  height: 1rpx;
+  background-color: var(--openui-color-border);
+}
+
+.dark .OpenUISeparator {
+  background-color: var(--openui-color-border);
+}

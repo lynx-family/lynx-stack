@@ -1,0 +1,50 @@
+/* ===== Image ===== */
+.OpenUIImage {
+  flex-shrink: 0;
+  overflow: hidden;
+  border-radius: 16rpx;
+  background-color: var(--openui-color-surface-subtle);
+  border-width: 1rpx;
+  border-style: solid;
+  border-color: var(--openui-color-border);
+}
+
+.OpenUIImageVariantIcon {
+  width: 24rpx;
+  height: 24rpx;
+  border-radius: 0;
+  border-width: 0;
+  background-color: transparent;
+}
+
+.OpenUIImageVariantAvatar {
+  width: 40rpx;
+  height: 40rpx;
+  border-radius: 999rpx;
+}
+
+.OpenUIImageVariantHeader {
+  width: 100%;
+  height: 200rpx;
+  border-radius: 18rpx;
+}
+
+.OpenUIImageVariantSmallFeature {
+  width: 120rpx;
+  height: 90rpx;
+}
+
+.OpenUIImageVariantMediumFeature {
+  width: 240rpx;
+  height: 160rpx;
+}
+
+.OpenUIImageVariantLargeFeature {
+  width: 100%;
+  height: 400rpx;
+}
+
+.dark .OpenUIImage {
+  background-color: var(--openui-color-surface-subtle);
+  border-color: var(--openui-color-border);
+}

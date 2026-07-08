@@ -1,0 +1,69 @@
+/* ===== CheckBox ===== */
+.OpenUICheckBoxRow {
+  width: 100%;
+  min-width: 0;
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: 14rpx;
+  padding: 8rpx 0;
+}
+
+.OpenUICheckBoxInput {
+  flex-shrink: 0;
+  width: 36rpx;
+  height: 36rpx;
+  border-radius: 8rpx;
+  border-width: 1.5rpx;
+  border-style: solid;
+  border-color: var(--openui-color-border-input);
+  background-color: var(--openui-color-surface-strong);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--openui-color-on-primary);
+  font-size: 26rpx;
+  line-height: 1;
+}
+
+.OpenUICheckBoxInput.ui-checked {
+  background-color: var(--openui-color-primary);
+  border-color: var(--openui-color-primary);
+}
+
+.OpenUICheckBoxMark {
+  color: var(--openui-color-on-primary);
+  font-size: 24rpx;
+  line-height: 1;
+  font-weight: 800;
+  opacity: 0;
+}
+
+.OpenUICheckBoxInput.ui-checked .OpenUICheckBoxMark {
+  opacity: 1;
+}
+
+.OpenUICheckBoxLabelHitbox {
+  flex: 1;
+  min-width: 0;
+  padding: 4rpx 0;
+}
+
+.dark .OpenUICheckBoxInput {
+  background-color: transparent;
+  border-color: var(--openui-color-border-input);
+}
+
+.dark .OpenUICheckBoxInput.ui-checked {
+  background-color: var(--openui-color-primary);
+  border-color: var(--openui-color-primary);
+}
+
+.OpenUICheckBoxLabel {
+  font-size: 28rpx;
+  color: var(--openui-color-text);
+}
+
+.dark .OpenUICheckBoxLabel {
+  color: var(--openui-color-text);
+}

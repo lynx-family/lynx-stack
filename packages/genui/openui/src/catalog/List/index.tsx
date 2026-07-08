@@ -15,6 +15,8 @@ import {
   templateChildrenSchema,
 } from '../utils.js';
 
+import '../../../styles/catalog/List.css';
+
 const listChildrenSchema = z.union([z.array(z.any()), templateChildrenSchema]);
 
 const listPropsSchema = z.object({

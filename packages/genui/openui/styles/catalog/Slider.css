@@ -1,0 +1,97 @@
+/* ===== Slider ===== */
+.OpenUISlider {
+  display: flex;
+  flex-direction: column;
+  gap: 6rpx;
+  width: 100%;
+  min-width: 0;
+}
+
+.OpenUISliderHeader {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10rpx;
+  min-width: 0;
+}
+
+.OpenUISliderLabel {
+  min-width: 0;
+  color: var(--openui-color-text-muted);
+  font-size: 26rpx;
+  font-weight: 600;
+  line-height: 1.5;
+}
+
+.OpenUISliderValue {
+  flex-shrink: 0;
+  color: var(--openui-color-text-muted);
+  font-size: 22rpx;
+  line-height: 1.5;
+}
+
+.OpenUISliderControl {
+  margin-left: 14rpx;
+  margin-right: 14rpx;
+}
+
+.OpenUISliderRoot {
+  width: 100%;
+  height: 72rpx;
+  display: flex;
+  align-items: center;
+}
+
+.OpenUISliderTrack {
+  position: relative;
+  width: 100%;
+  height: 16rpx;
+  border-radius: 999rpx;
+  background-color: var(--openui-color-surface-subtle);
+}
+
+.OpenUISliderIndicator {
+  height: 100%;
+  border-radius: 999rpx;
+  background-color: var(--openui-color-primary);
+}
+
+.OpenUISliderThumb {
+  width: 56rpx;
+  height: 56rpx;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.OpenUISliderThumbDot {
+  width: 40rpx;
+  height: 40rpx;
+  border-radius: 999rpx;
+  border-width: 4rpx;
+  border-style: solid;
+  border-color: var(--openui-color-primary);
+  background-color: var(--openui-color-surface-strong);
+}
+
+.dark .OpenUISliderLabel {
+  color: var(--openui-color-text-muted);
+}
+
+.dark .OpenUISliderValue {
+  color: var(--openui-color-text-muted);
+}
+
+.dark .OpenUISliderTrack {
+  background-color: var(--openui-color-surface-subtle);
+}
+
+.dark .OpenUISliderIndicator {
+  background-color: var(--openui-color-primary);
+}
+
+.dark .OpenUISliderThumbDot {
+  border-color: var(--openui-color-primary);
+  background-color: var(--openui-color-surface-strong);
+}
