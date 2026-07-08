@@ -121,8 +121,12 @@ export function createLynxAsyncChunksRuntimeModule(
         )
         .join(',\n');
 
-      return `// lynx async chunks ids
-${RuntimeGlobals.lynxAsyncChunkIds} = {${ids}}
+      const idsBlock = `// lynx async chunks ids
+${RuntimeGlobals.lynxAsyncChunkIds} = {${ids}}`;
+      if (modes.length === 0) {
+        return idsBlock;
+      }
+      return `${idsBlock}
 // lynx async chunks modes
 ${RuntimeGlobals.lynxAsyncChunkMode} = {${modes}}`;
     }
