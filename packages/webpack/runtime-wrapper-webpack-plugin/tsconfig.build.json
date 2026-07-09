@@ -6,4 +6,7 @@
     "rootDir": "./src",
   },
   "include": ["src"],
+  "references": [
+    { "path": "../webpack-runtime-globals/tsconfig.build.json" },
+  ],
 }

@@ -7,4 +7,7 @@
   },
   "include": ["src/**/*"],
   "exclude": ["src/runtime/**/*"],
+  "references": [
+    { "path": "../react-webpack-plugin/tsconfig.build.json" },
+  ],
 }
