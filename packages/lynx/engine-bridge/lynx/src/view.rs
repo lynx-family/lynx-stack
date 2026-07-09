@@ -184,6 +184,9 @@ impl HeadlessViewBuilder {
       (sys.lynx_rust_view_set_use_texture_backend)(raw, self.renderer.use_texture_backend())
     };
     if !configured {
+      unsafe {
+        (sys.lynx_view_release)(raw);
+      }
       return Err(Error::Message(
         "failed to configure headless texture backend".to_string(),
       ));

@@ -211,7 +211,7 @@ unsafe extern "C" fn fake_display_link_timer_fired(_timer: CFRunLoopTimerRef, in
     return;
   };
 
-  if state.invalidated || state.target.is_null() {
+  if state.invalidated || state.paused || state.target.is_null() {
     return;
   }
 

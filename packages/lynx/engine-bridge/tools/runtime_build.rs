@@ -210,8 +210,10 @@ fn download_runtime(url: &str, runtime_path: &Path, sha256: &str) {
 }
 
 fn existing_runtime_matches_downloaded_bytes() -> bool {
-  !(env::var("CARGO_CFG_TARGET_OS").as_deref() == Ok("macos")
-    && env::var_os("LYNX_SKIP_ADHOC_SIGN").is_none())
+  env::var("CARGO_CFG_TARGET_OS").as_deref() != Ok("macos")
+    || env::var_os("LYNX_SKIP_ADHOC_SIGN")
+      .as_deref()
+      .is_some_and(enabled_env_flag)
 }
 
 fn verify_runtime_checksum(runtime_path: &Path, expected_sha256: &str) {
