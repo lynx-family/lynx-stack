@@ -4,11 +4,12 @@
 import { describe, test } from '@rstest/core'
 import { expectTypeOf } from 'expect-type'
 
+import type { Config } from '@lynx-js/rspeedy'
+
 import type {
   ConfigExport,
   ConfigParams,
 } from '../../src/config/defineConfig.js'
-import type { Config } from '../../src/config/index.js'
 import { defineConfig } from '../../src/index.js'
 import { assertType } from '../assertType.js'
 

@@ -4,91 +4,62 @@
 
 ```ts
 
-import type { CompressOptions } from '@rsbuild/core';
+import { BuildCache } from '@lynx-js/preset-rsbuild-plugin';
+import { BundleFilename } from '@lynx-js/preset-rsbuild-plugin';
+import { BundleFilenameContext } from '@lynx-js/preset-rsbuild-plugin';
+import { ChunkSplit } from '@lynx-js/preset-rsbuild-plugin';
+import { ChunkSplitBySize } from '@lynx-js/preset-rsbuild-plugin';
+import { ChunkSplitCustom } from '@lynx-js/preset-rsbuild-plugin';
+import { Config } from '@lynx-js/preset-rsbuild-plugin';
+import { ConsoleType } from '@lynx-js/preset-rsbuild-plugin';
 import type { CreateRsbuildOptions } from '@rsbuild/core';
-import type { DataUriLimit } from '@rsbuild/core';
-import type { DistPathConfig } from '@rsbuild/core';
-import type { InlineChunkConfig } from '@rsbuild/core';
+import { CssExtract } from '@lynx-js/preset-rsbuild-plugin';
+import { CssExtractRspackLoaderOptions } from '@lynx-js/preset-rsbuild-plugin';
+import { CssExtractRspackPluginOptions } from '@lynx-js/preset-rsbuild-plugin';
+import { CssLoader } from '@lynx-js/preset-rsbuild-plugin';
+import { CssLoaderModules } from '@lynx-js/preset-rsbuild-plugin';
+import { CssModuleLocalsConvention } from '@lynx-js/preset-rsbuild-plugin';
+import { CssModules } from '@lynx-js/preset-rsbuild-plugin';
+import { Decorators } from '@lynx-js/preset-rsbuild-plugin';
+import { Dev } from '@lynx-js/preset-rsbuild-plugin';
+import { DevClient } from '@lynx-js/preset-rsbuild-plugin';
+import { DistPath } from '@lynx-js/preset-rsbuild-plugin';
+import { Entry } from '@lynx-js/preset-rsbuild-plugin';
+import { EntryDescription } from '@lynx-js/preset-rsbuild-plugin';
+import { ExposedAPI } from '@lynx-js/preset-rsbuild-plugin';
+import { Filename } from '@lynx-js/preset-rsbuild-plugin';
 import { logger } from '@rsbuild/core';
-import type { PerformanceConfig } from '@rsbuild/core';
-import type { ProxyConfig } from '@rsbuild/core';
-import type { RsbuildConfig } from '@rsbuild/core';
-import type { RsbuildEntry } from '@rsbuild/core';
+import { mergeRspeedyConfig } from '@lynx-js/preset-rsbuild-plugin';
+import { Minify } from '@lynx-js/preset-rsbuild-plugin';
+import { Output } from '@lynx-js/preset-rsbuild-plugin';
+import { Performance } from '@lynx-js/preset-rsbuild-plugin';
+import { Resolve } from '@lynx-js/preset-rsbuild-plugin';
 import type { RsbuildInstance } from '@rsbuild/core';
 import { RsbuildPlugin } from '@rsbuild/core';
 import { RsbuildPluginAPI } from '@rsbuild/core';
-import type { RsbuildPlugins } from '@rsbuild/core';
 import { version as rsbuildVersion } from '@rsbuild/core';
-import type { RsdoctorRspackPluginOptions as RsdoctorRspackPluginOptions_2 } from '@rsdoctor/core';
+import { RsdoctorRspackPluginOptions } from '@lynx-js/preset-rsbuild-plugin';
 import { Rspack } from '@rsbuild/core';
 import { rspack } from '@rsbuild/core';
-import type { ServerConfig } from '@rsbuild/core';
-import type { ToolsConfig } from '@rsbuild/core';
-import type { WatchFiles } from '@rsbuild/core';
+import { Server } from '@lynx-js/preset-rsbuild-plugin';
+import { Source } from '@lynx-js/preset-rsbuild-plugin';
+import { SourceMap } from '@lynx-js/preset-rsbuild-plugin';
+import { Tools } from '@lynx-js/preset-rsbuild-plugin';
+import { TransformImport } from '@lynx-js/preset-rsbuild-plugin';
 
-// @beta
-export interface BuildCache {
-    buildDependencies?: string[] | undefined;
-    cacheDigest?: Array<string | undefined> | undefined;
-    cacheDirectory?: string | undefined;
-}
+export { BuildCache }
 
-// @public
-export type BundleFilename = string | ((context: BundleFilenameContext) => string);
+export { BundleFilename }
 
-// @public
-export interface BundleFilenameContext {
-    entryName?: string | undefined;
-    lazyBundle: boolean;
-    platform: string;
-}
+export { BundleFilenameContext }
 
-// @public @deprecated
-export interface ChunkSplit {
-    override?: Rspack.Configuration extends {
-        optimization?: {
-            splitChunks?: infer P;
-        } | undefined;
-    } ? P : never;
-    strategy?: 'all-in-one' | 'split-by-module' | 'split-by-experience' | 'single-vendor' | undefined;
-}
+export { ChunkSplit }
 
-// @public @deprecated
-export interface ChunkSplitBySize {
-    maxSize?: number | undefined;
-    minSize?: number | undefined;
-    override?: Rspack.Configuration extends {
-        optimization?: {
-            splitChunks?: infer P;
-        } | undefined;
-    } ? P : never;
-    strategy: 'split-by-size';
-}
+export { ChunkSplitBySize }
 
-// @public @deprecated
-export interface ChunkSplitCustom {
-    splitChunks?: Rspack.Configuration extends {
-        optimization?: {
-            splitChunks?: infer P;
-        } | undefined;
-    } ? P : never;
-    strategy: 'custom';
-}
+export { ChunkSplitCustom }
 
-// @public
-export interface Config {
-    dev?: Dev | undefined;
-    environments?: RsbuildConfig['environments'] | undefined;
-    mode?: 'development' | 'production' | 'none' | undefined;
-    output?: Output | undefined;
-    performance?: Performance | undefined;
-    plugins?: RsbuildPlugins | undefined;
-    resolve?: Resolve | undefined;
-    server?: Server | undefined;
-    source?: Source | undefined;
-    splitChunks?: RsbuildConfig['splitChunks'] | undefined;
-    tools?: Tools | undefined;
-}
+export { Config }
 
 // @public
 export interface ConfigParams {
@@ -96,8 +67,7 @@ export interface ConfigParams {
     env: 'production' | 'development' | 'test' | (string & Record<never, never>);
 }
 
-// @public
-export type ConsoleType = 'log' | 'warn' | 'error' | 'info' | 'debug' | 'profile' | 'profileEnd' | (string & Record<never, never>);
+export { ConsoleType }
 
 // @public
 export function createRspeedy(input: CreateRspeedyOptions): Promise<RspeedyInstance>;
@@ -111,52 +81,21 @@ export interface CreateRspeedyOptions {
     rspeedyConfig?: Config;
 }
 
-// @public
-export interface CssExtract {
-    loaderOptions?: CssExtractRspackLoaderOptions | undefined;
-    pluginOptions?: CssExtractRspackPluginOptions | undefined;
-}
+export { CssExtract }
 
-// @public
-export interface CssExtractRspackLoaderOptions {
-    esModule?: boolean | undefined;
-}
+export { CssExtractRspackLoaderOptions }
 
-// @public
-export interface CssExtractRspackPluginOptions {
-    ignoreOrder?: boolean | undefined;
-    pathinfo?: boolean | undefined;
-}
+export { CssExtractRspackPluginOptions }
 
-// @public
-export interface CssLoader {
-    importLoaders?: 0 | 1 | 2 | undefined;
-    modules?: boolean | 'local' | 'global' | 'pure' | 'icss' | CssLoaderModules | undefined;
-}
+export { CssLoader }
 
-// @public
-export interface CssLoaderModules {
-    auto?: boolean | RegExp | ((filename: string) => boolean) | undefined;
-    exportLocalsConvention?: CssModuleLocalsConvention | undefined;
-    localIdentName?: string | undefined;
-    namedExport?: boolean | undefined;
-}
+export { CssLoaderModules }
 
-// @public
-export type CssModuleLocalsConvention = 'asIs' | 'camelCase' | 'camelCaseOnly' | 'dashes' | 'dashesOnly';
+export { CssModuleLocalsConvention }
 
-// @public
-export interface CssModules {
-    auto?: boolean | RegExp | ((filename: string) => boolean) | undefined;
-    exportGlobals?: boolean | undefined;
-    exportLocalsConvention?: CssModuleLocalsConvention | undefined;
-    localIdentName?: string | undefined;
-}
+export { CssModules }
 
-// @public
-export interface Decorators {
-    version?: 'legacy' | '2022-03';
-}
+export { Decorators }
 
 // @public
 export function defineConfig(config: Config): Config;
@@ -170,64 +109,19 @@ export function defineConfig(config: Promise<Config>): Promise<Config>;
 // @public
 export function defineConfig(config: (params: ConfigParams) => Promise<Config>): (params: ConfigParams) => Promise<Config>;
 
-// @public
-export interface Dev {
-    assetPrefix?: string | boolean | undefined;
-    client?: DevClient | undefined;
-    hmr?: boolean | undefined;
-    liveReload?: boolean | undefined;
-    progressBar?: boolean | {
-        id?: string;
-    } | undefined;
-    watchFiles?: WatchFiles | WatchFiles[] | undefined;
-    writeToDisk?: boolean | ((filename: string) => boolean) | undefined;
-}
+export { Dev }
 
-// @public
-export interface DevClient {
-    websocketTransport?: string | undefined;
-}
+export { DevClient }
 
-// @public
-export interface DistPath extends DistPathConfig {
-    // @deprecated
-    intermediate?: string | undefined;
-}
+export { DistPath }
 
-// @public
-export type Entry = string | string[] | Record<string, string | string[] | EntryDescription>;
+export { Entry }
 
-// @public
-export interface EntryDescription {
-    dependOn?: string | string[] | undefined;
-    import?: string | string[] | undefined;
-    publicPath?: string | undefined;
-}
+export { EntryDescription }
 
-// @public
-export interface ExposedAPI {
-    config: Config;
-    debug: (message: string | (() => string)) => void;
-    entries?: RsbuildEntry;
-    exit: (code?: number) => Promise<void> | void;
-    logger: typeof logger;
-    version: string;
-}
+export { ExposedAPI }
 
-// @public
-export interface Filename {
-    assets?: Rspack.AssetModuleFilename;
-    bundle?: BundleFilename | undefined;
-    css?: Rspack.CssFilename | undefined;
-    font?: Rspack.AssetModuleFilename | undefined;
-    image?: Rspack.AssetModuleFilename | undefined;
-    js?: Rspack.Filename | undefined;
-    media?: Rspack.AssetModuleFilename | undefined;
-    svg?: Rspack.AssetModuleFilename | undefined;
-    // @deprecated
-    template?: string | undefined;
-    wasm?: Rspack.WebassemblyModuleFilename;
-}
+export { Filename }
 
 // @public
 export function loadConfig(loadConfigOptions: LoadConfigOptions): Promise<LoadConfigResult>;
@@ -246,52 +140,15 @@ export interface LoadConfigResult {
 
 export { logger }
 
-// @public
-export function mergeRspeedyConfig(...configs: Config[]): Config;
+export { mergeRspeedyConfig }
 
-// @public
-export interface Minify {
-    backgroundOptions?: Rspack.SwcJsMinimizerRspackPluginOptions | undefined;
-    css?: boolean | undefined;
-    js?: boolean | undefined;
-    jsOptions?: Rspack.SwcJsMinimizerRspackPluginOptions | undefined;
-    mainThreadOptions?: Rspack.SwcJsMinimizerRspackPluginOptions | undefined;
-}
+export { Minify }
 
-// @public
-export interface Output {
-    assetPrefix?: string | undefined;
-    cleanDistPath?: boolean | undefined;
-    copy?: Rspack.CopyRspackPluginOptions | Rspack.CopyRspackPluginOptions['patterns'] | undefined;
-    cssModules?: CssModules | undefined;
-    dataUriLimit?: number | DataUriLimit | undefined;
-    distPath?: DistPath | undefined;
-    filename?: string | Filename | undefined;
-    filenameHash?: boolean | string | undefined;
-    inlineScripts?: InlineChunkConfig | undefined;
-    legalComments?: 'none' | 'inline' | 'linked' | undefined;
-    minify?: Minify | boolean | undefined;
-    sourceMap?: boolean | SourceMap | undefined;
-}
+export { Output }
 
-// @public
-export interface Performance {
-    // @beta
-    buildCache?: BuildCache | boolean | undefined;
-    // @deprecated
-    chunkSplit?: ChunkSplit | ChunkSplitBySize | ChunkSplitCustom | undefined;
-    printFileSize?: PerformanceConfig['printFileSize'] | undefined;
-    profile?: boolean | undefined;
-    removeConsole?: boolean | ConsoleType[] | undefined;
-}
+export { Performance }
 
-// @public
-export interface Resolve {
-    alias?: Record<string, string | false | string[]> | undefined;
-    aliasStrategy?: 'prefer-tsconfig' | 'prefer-alias' | undefined;
-    dedupe?: string[] | undefined;
-    extensions?: string[] | undefined;
-}
+export { Resolve }
 
 export { RsbuildPlugin }
 
@@ -299,15 +156,7 @@ export { RsbuildPluginAPI }
 
 export { rsbuildVersion }
 
-// @public
-export interface RsdoctorRspackPluginOptions extends Omit<RsdoctorRspackPluginOptions_2<[]>, 'linter'> {
-    // (undocumented)
-    linter?: {
-        rules?: Record<string, unknown>;
-        level?: 'Ignore' | 'Warn' | 'Error';
-        extends?: unknown[];
-    };
-}
+export { RsdoctorRspackPluginOptions }
 
 export { Rspack }
 
@@ -323,57 +172,15 @@ export type RspeedyInstance = RsbuildInstance & {
     getRspeedyConfig(): Config;
 };
 
-// @public
-export interface Server {
-    base?: string | undefined;
-    compress?: boolean | CompressOptions | undefined;
-    cors?: ServerConfig['cors'] | undefined;
-    headers?: Record<string, string | string[]> | undefined;
-    host?: string | undefined;
-    port?: number | undefined;
-    proxy?: ProxyConfig | undefined;
-    strictPort?: boolean | undefined;
-}
+export { Server }
 
-// @public
-export interface Source {
-    // @deprecated
-    alias?: Record<string, string | false | string[]> | undefined;
-    assetsInclude?: Rspack.RuleSetCondition | undefined;
-    decorators?: Decorators | undefined;
-    define?: Rspack.DefinePluginOptions;
-    entry?: Entry | undefined;
-    exclude?: Rspack.RuleSetCondition[] | undefined;
-    include?: Rspack.RuleSetCondition[] | undefined;
-    preEntry?: string | string[] | undefined;
-    transformImport?: TransformImport[] | undefined;
-    tsconfigPath?: string | undefined;
-}
+export { Source }
 
-// @public
-export interface SourceMap {
-    css?: boolean | undefined;
-    js?: Rspack.DevTool | undefined | `${Exclude<Rspack.DevTool, false | 'eval'>}-debugids`;
-}
+export { SourceMap }
 
-// @public
-export interface Tools {
-    bundlerChain?: ToolsConfig['bundlerChain'] | undefined;
-    cssExtract?: CssExtract | undefined;
-    cssLoader?: CssLoader | undefined;
-    rsdoctor?: RsdoctorRspackPluginOptions | undefined;
-    rspack?: ToolsConfig['rspack'] | undefined;
-    swc?: ToolsConfig['swc'] | undefined;
-}
+export { Tools }
 
-// @public
-export interface TransformImport {
-    camelToDashComponentName?: boolean | undefined;
-    customName?: string | undefined;
-    libraryDirectory?: string | undefined;
-    libraryName: string;
-    transformToDefaultImport?: boolean | undefined;
-}
+export { TransformImport }
 
 // Warning: (ae-missing-release-tag) "version" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
 //
