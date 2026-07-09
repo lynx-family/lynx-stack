@@ -1,4 +1,5 @@
 @import "../theme.css";
+@import "../material-icons.css";
 
 .a2ui-icon {
   font-family: var(--a2ui-icon-font-family);

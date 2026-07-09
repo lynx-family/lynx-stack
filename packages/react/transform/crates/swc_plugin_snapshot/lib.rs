@@ -113,7 +113,7 @@ pub struct UISourceMapRecord {
 #[derive(Debug)]
 pub enum DynamicPart {
   Attr(Expr, i32, AttrName),
-  Spread(Expr, i32),
+  Spread(Expr, i32, bool),
   Slot(Expr, i32),
   ListSlot(Expr, i32),
 }
@@ -123,6 +123,13 @@ pub fn i32_to_expr(i: &i32) -> Expr {
     span: DUMMY_SP,
     value: *i as f64,
     raw: None,
+  }))
+}
+
+pub fn bool_to_expr(b: &bool) -> Expr {
+  Expr::Lit(Lit::Bool(Bool {
+    span: DUMMY_SP,
+    value: *b,
   }))
 }
 
@@ -235,10 +242,11 @@ impl DynamicPart {
             ns: Expr = Expr::Lit(Lit::Str(ns.clone().into())),
           ),
         },
-        DynamicPart::Spread(_, element_index) => quote!(
-          "(snapshot, index, oldValue) => $runtime_id.updateSpread(snapshot, index, oldValue, $element_index)" as Expr,
+        DynamicPart::Spread(_, element_index, is_list_item) => quote!(
+          "(snapshot, index, oldValue) => $runtime_id.updateSpread(snapshot, index, oldValue, $element_index, $is_list_item)" as Expr,
           runtime_id: Expr = runtime_id.clone(),
-          element_index: Expr = i32_to_expr(element_index)
+          element_index: Expr = i32_to_expr(element_index),
+          is_list_item: Expr = bool_to_expr(is_list_item)
         ),
         DynamicPart::Slot(_, _) => Expr::Lit(Lit::Null(Null { span: DUMMY_SP })),
         DynamicPart::ListSlot(_, _) => Expr::Lit(Lit::Null(Null { span: DUMMY_SP })),
@@ -598,7 +606,8 @@ where
           _ => panic!("unknown node"),
         });
 
-      if jsx_is_list_item(n) {
+      let is_list_item = jsx_is_list_item(n);
+      if is_list_item {
         if has_spread_element {
         } else {
           let mut list_item_platform_info: Vec<JSXAttr> = vec![];
@@ -684,6 +693,7 @@ where
         self.dynamic_parts.push(DynamicPart::Spread(
           Expr::Object(spread_obj),
           self.element_index,
+          is_list_item,
         ));
       } else {
         let el = Expr::Ident(el.clone());
@@ -1120,6 +1130,9 @@ pub struct JSXTransformerConfig {
   pub enable_ui_source_map: bool,
   /// @internal
   pub is_dynamic_component: Option<bool>,
+  /// @internal
+  #[serde(default)]
+  pub is_external_bundle: Option<bool>,
 }
 
 impl Default for JSXTransformerConfig {
@@ -1132,6 +1145,7 @@ impl Default for JSXTransformerConfig {
       target: TransformTarget::LEPUS,
       enable_ui_source_map: false,
       is_dynamic_component: Some(false),
+      is_external_bundle: Some(false),
     }
   }
 }
@@ -1370,14 +1384,16 @@ where
       .dynamic_parts
       .into_iter()
       .partition(|dynamic_part| match dynamic_part {
-        DynamicPart::Attr(_, _, _) | DynamicPart::Spread(_, _) => true,
+        DynamicPart::Attr(_, _, _) | DynamicPart::Spread(_, _, _) => true,
         DynamicPart::Slot(_, _) | DynamicPart::ListSlot(_, _) => false,
       });
 
     dynamic_part_attr.into_iter().for_each(|dynamic_part| {
       match &dynamic_part {
-        DynamicPart::Attr(_, _, _) | DynamicPart::Spread(_, _) => {
-          if let DynamicPart::Attr(_, _, AttrName::Ref) | DynamicPart::Spread(_, _) = dynamic_part {
+        DynamicPart::Attr(_, _, _) | DynamicPart::Spread(_, _, _) => {
+          if let DynamicPart::Attr(_, _, AttrName::Ref) | DynamicPart::Spread(_, _, _) =
+            dynamic_part
+          {
             snapshot_refs_and_spread_index.push(Some(
               Expr::Lit(Lit::Num(snapshot_dynamic_part_def.len().into())).into(),
             ));
@@ -1424,7 +1440,10 @@ where
           }));
           snapshot_values_has_attr = true;
         }
-        DynamicPart::Spread(value, _) => {
+        DynamicPart::Spread(value, _, is_list_item) => {
+          if is_list_item {
+            list_item_platform_info_index = Some(snapshot_values.len() as i32);
+          }
           snapshot_values.push(Some(ExprOrSpread {
             spread: None,
             expr: Box::new(value),
@@ -1450,7 +1469,7 @@ where
           .into_iter()
           .for_each(|dynamic_part| match dynamic_part {
             DynamicPart::Attr(_, _, _) => {}
-            DynamicPart::Spread(_, _) => {}
+            DynamicPart::Spread(_, _, _) => {}
             DynamicPart::ListSlot(expr, element_index) => {
               snapshot_children.push(expr);
               snapshot_slot_def.push(Some(ExprOrSpread {
@@ -1491,6 +1510,16 @@ where
       })
     };
 
+    // External bundles have no `globDynamicComponentEntry` in scope; use the
+    // `__Card__` entry-name literal.
+    let entry_name: Expr = if matches!(self.cfg.is_external_bundle, Some(true))
+      && !matches!(self.cfg.is_dynamic_component, Some(true))
+    {
+      Expr::Lit(Lit::Str("__Card__".into()))
+    } else {
+      Expr::Ident("globDynamicComponentEntry".into())
+    };
+
     let snapshot_create_call = quote!(
         r#"$runtime_id.snapshotCreatorMap[$snapshot_id] = ($snapshot_id) => $runtime_id.createSnapshot(
              $snapshot_id,
@@ -1498,12 +1527,13 @@ where
              $snapshot_dynamic_parts_def,
              $slot,
              $css_id,
-             globDynamicComponentEntry,
+             $entry_name,
              $snapshot_refs_and_spread_index,
              true
         )"# as Expr,
         runtime_id: Expr = self.runtime_id.clone(),
         snapshot_id = snapshot_id.clone(),
+        entry_name: Expr = entry_name,
         snapshot_creator: Expr = snapshot_creator,
         snapshot_dynamic_parts_def: Expr = match (target, snapshot_dynamic_part_def.len()) {
           (TransformTarget::JS, _) | (_, 0) => Expr::Lit(Lit::Null(Null { span: DUMMY_SP })),
@@ -1866,6 +1896,41 @@ mod tests {
       <view id={getViewId()}>
         <list-item item-key={getItemKey()} />
       </view>
+    );
+    "#
+  );
+
+  test!(
+    module,
+    Syntax::Es(EsSyntax {
+      jsx: true,
+      ..Default::default()
+    }),
+    |t| {
+      let unresolved_mark = Mark::new();
+      let top_level_mark = Mark::new();
+
+      (
+        resolver(unresolved_mark, top_level_mark, true),
+        visit_mut_pass(JSXTransformer::new(
+          super::JSXTransformerConfig {
+            preserve_jsx: true,
+            target: TransformTarget::MIXED,
+            ..Default::default()
+          },
+          Some(t.comments.clone()),
+          TransformMode::Test,
+          Some(t.cm.clone()),
+        )),
+      )
+    },
+    should_emit_list_item_platform_info_marker_for_spread_props,
+    // Input codes
+    r#"
+    const node = (
+      <list>
+        <list-item {...getProps()} />
+      </list>
     );
     "#
   );
@@ -2522,6 +2587,29 @@ mod tests {
     "#
   );
 
+  // External bundles use the `"__Card__"` entry-name literal in `createSnapshot`.
+  test!(
+    module,
+    Syntax::Es(EsSyntax {
+      jsx: true,
+      ..Default::default()
+    }),
+    |t| visit_mut_pass(JSXTransformer::new(
+      super::JSXTransformerConfig {
+        is_external_bundle: Some(true),
+        ..Default::default()
+      },
+      Some(t.comments.clone()),
+      TransformMode::Test,
+      Some(t.cm.clone()),
+    )),
+    external_bundle_uses_card_entry_name,
+    // Input codes
+    r#"
+    <view><text>hello</text></view>;
+    "#
+  );
+
   test!(
     module,
     Syntax::Es(EsSyntax {
@@ -2592,6 +2680,53 @@ mod tests {
     <view>
       <text before={"bbb"} {...obj} after={"aaa"}>!!!</text>
     </view>
+    "#
+  );
+
+  test!(
+    module,
+    Syntax::Es(EsSyntax {
+      jsx: true,
+      ..Default::default()
+    }),
+    |t| {
+      let top_level_mark = Mark::new();
+      let unresolved_mark = Mark::new();
+      (
+        visit_mut_pass(JSXTransformer::<&SingleThreadedComments>::new(
+          super::JSXTransformerConfig {
+            preserve_jsx: false,
+            ..Default::default()
+          },
+          None,
+          TransformMode::Test,
+          Some(t.cm.clone()),
+        )),
+        react::react::<&SingleThreadedComments>(
+          t.cm.clone(),
+          None,
+          react::Options {
+            next: Some(false),
+            runtime: Some(react::Runtime::Automatic),
+            import_source: Some("@lynx-js/react".into()),
+            pragma: None,
+            pragma_frag: None,
+            throw_if_namespace: None,
+            development: Some(false),
+            refresh: None,
+            ..Default::default()
+          },
+          top_level_mark,
+          unresolved_mark,
+        ),
+      )
+    },
+    basic_spread_list_item,
+    // Input codes
+    r#"
+    <list>
+      <list-item key="hello" item-key="world" {...obj}>!!!</list-item>
+    </list>
     "#
   );
 

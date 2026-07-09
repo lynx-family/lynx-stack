@@ -18,6 +18,8 @@ import {
 import { defineComponent } from '../../core/library.jsx';
 import { actionPropSchema } from '../Action/index.jsx';
 
+import '../../../styles/catalog/RadioGroup.css';
+
 const CONTINUE_CONVERSATION_ACTION = String(
   BuiltinActionType.ContinueConversation,
 );

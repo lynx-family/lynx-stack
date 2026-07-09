@@ -116,7 +116,7 @@ describe('element ref', () => {
           [
             "rLynxFirstScreen",
             {
-              "jsReadyEventIdSwap": {},
+              "firstScreenEventIdSwap": {},
               "root": "{"id":-1,"type":"root","children":[{"id":-2,"type":"__snapshot_a94a8_test_3","values":["react-ref--2-0","react-ref--2-1"]}]}",
             },
           ],
@@ -495,7 +495,7 @@ describe('element ref', () => {
           [
             "rLynxFirstScreen",
             {
-              "jsReadyEventIdSwap": {},
+              "firstScreenEventIdSwap": {},
               "root": "{"id":-1,"type":"root","children":[{"id":-2,"type":"__snapshot_a94a8_test_9","values":["react-ref--2-0","react-ref--2-1","react-ref--2-2"]}]}",
             },
           ],
@@ -902,7 +902,7 @@ describe('element ref', () => {
           [
             "rLynxFirstScreen",
             {
-              "jsReadyEventIdSwap": {},
+              "firstScreenEventIdSwap": {},
               "root": "{"id":-1,"type":"root","children":[{"id":-2,"type":"__snapshot_a94a8_test_17"}]}",
             },
           ],
@@ -1014,7 +1014,7 @@ describe('element ref in spread', () => {
             [
               "rLynxFirstScreen",
               {
-                "jsReadyEventIdSwap": {},
+                "firstScreenEventIdSwap": {},
                 "root": "{"id":-1,"type":"root","children":[{"id":-2,"type":"__snapshot_a94a8_test_19","values":[{},{"ref":"react-ref--2-1"},{}]}]}",
               },
             ],

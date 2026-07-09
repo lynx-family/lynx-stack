@@ -473,6 +473,86 @@ describe('jsx', () => {
       }
     `);
   });
+
+  it('<list-item> with dynamic key and spread attributes', async () => {
+    const result = await transformReactLynx(
+      `
+      const jsx = (
+        <list>
+          <list-item key={dynamicKey} item-key="hello-world" {...{ 'estimated-height-px': '10px' }}>
+            <text>123</text>
+          </list-item>
+        </list>
+      );
+      `,
+      {
+        pluginName: '',
+        filename: '',
+        sourceFileName: '',
+        defineDCE: true,
+        sourcemap: false,
+        compat: false,
+        jsx: true,
+        shake: true,
+        cssScope: false,
+        refresh: false,
+        directiveDCE: {
+          target: 'LEPUS',
+        },
+        worklet: true,
+        experimental_moduleCompress: false,
+      },
+    );
+
+    expect(result.code).toMatchInlineSnapshot(`
+      "import { jsx as _jsx } from "@lynx-js/react/jsx-runtime";
+      import * as ReactLynx from "@lynx-js/react";
+      const __snapshot_da39a_5e2e0_2 = "__snapshot_da39a_5e2e0_2";
+      ReactLynx.snapshotCreatorMap[__snapshot_da39a_5e2e0_2] = (__snapshot_da39a_5e2e0_2)=>ReactLynx.createSnapshot(__snapshot_da39a_5e2e0_2, function() {
+              const pageId = ReactLynx.__pageId;
+              const el = __CreateElement("list-item", pageId);
+              const el1 = __CreateText(pageId);
+              __AppendElement(el, el1);
+              const el2 = __CreateRawText("123");
+              __AppendElement(el1, el2);
+              return [
+                  el,
+                  el1,
+                  el2
+              ];
+          }, [
+              (snapshot, index, oldValue)=>ReactLynx.updateSpread(snapshot, index, oldValue, 0, true)
+          ], null, undefined, globDynamicComponentEntry, [
+              0
+          ], true);
+      const __snapshot_da39a_5e2e0_1 = "__snapshot_da39a_5e2e0_1";
+      ReactLynx.snapshotCreatorMap[__snapshot_da39a_5e2e0_1] = (__snapshot_da39a_5e2e0_1)=>ReactLynx.createSnapshot(__snapshot_da39a_5e2e0_1, function(snapshotInstance) {
+              const pageId = ReactLynx.__pageId;
+              const el = ReactLynx.snapshotCreateList(pageId, snapshotInstance, 0);
+              return [
+                  el
+              ];
+          }, null, [
+              [
+                  ReactLynx.__DynamicPartListSlotV2,
+                  0
+              ]
+          ], undefined, globDynamicComponentEntry, null, true);
+      /*#__PURE__*/ _jsx(__snapshot_da39a_5e2e0_1, {
+          $0: /*#__PURE__*/ _jsx(__snapshot_da39a_5e2e0_2, {
+              values: [
+                  {
+                      "item-key": "hello-world",
+                      'estimated-height-px': '10px',
+                      __spread: true
+                  }
+              ],
+              __listItemPlatformInfoIndex: 0
+          }, dynamicKey)
+      });
+      "
+    `);
+  });
 });
 
 describe('errors and warnings', () => {
@@ -665,7 +745,7 @@ Component, View
                     el
                 ];
             }, [
-                (snapshot, index, oldValue)=>ReactLynx.updateSpread(snapshot, index, oldValue, 0)
+                (snapshot, index, oldValue)=>ReactLynx.updateSpread(snapshot, index, oldValue, 0, false)
             ], ReactLynx.__DynamicPartSlotV2_0, undefined, globDynamicComponentEntry, [
                 0
             ], true);

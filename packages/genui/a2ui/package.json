@@ -9,6 +9,7 @@
   "type": "module",
   "exports": {
     "./styles/theme.css": "./styles/theme.css",
+    "./styles/material-icons.css": "./styles/material-icons.css",
     ".": {
       "types": "./dist/index.d.ts",
       "default": "./dist/index.js"

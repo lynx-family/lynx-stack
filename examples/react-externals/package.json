@@ -4,10 +4,13 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "build": "pnpm run build:comp-lib && rspeedy build",
+    "build": "pnpm run build:comp-lib && rspeedy build && cross-env REACTLYNX_ASYNC=true pnpm run build:comp-lib && cross-env REACTLYNX_ASYNC=true rspeedy build",
     "build:comp-lib": "rslib build --config rslib-comp-lib.config.ts",
     "build:comp-lib:dev": "cross-env NODE_ENV=development rslib build --config rslib-comp-lib.config.ts",
-    "dev": "rspeedy dev"
+    "dev": "pnpm run build:comp-lib && rspeedy dev",
+    "dev:react-async": "cross-env REACTLYNX_ASYNC=true pnpm run build:comp-lib && cross-env REACTLYNX_ASYNC=true rspeedy dev",
+    "preview": "rspeedy preview",
+    "preview:react-async": "cross-env REACTLYNX_ASYNC=true rspeedy preview"
   },
   "dependencies": {
     "@lynx-js/react": "workspace:*"

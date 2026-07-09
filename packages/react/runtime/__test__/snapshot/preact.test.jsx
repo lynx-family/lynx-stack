@@ -655,6 +655,8 @@ describe('document - background', () => {
   it('listItemPlatformInfo marker - should set snapshot field', () => {
     const platformInfo = { 'item-key': 'item-0', 'full-span': true };
     const directPlatformInfo = { 'item-key': 'direct' };
+    const spreadPlatformInfo = { 'item-key': 'spread', className: 'ignored', __spread: true };
+    const primitivePlatformInfo = 'primitive-key';
     const backgroundNextId = backgroundSnapshotInstanceManager.nextId;
 
     try {
@@ -673,6 +675,22 @@ describe('document - background', () => {
       mainThreadItemWithDirectInfo.setAttribute('__listItemPlatformInfo', directPlatformInfo);
       expect(mainThreadItemWithDirectInfo.__listItemPlatformInfo).toEqual(directPlatformInfo);
 
+      const mainThreadItemWithSpread = new SnapshotInstance('list-item', -10_003);
+      mainThreadItemWithSpread.setAttribute('__listItemPlatformInfoIndex', 0);
+      mainThreadItemWithSpread.setAttribute('values', [spreadPlatformInfo]);
+      expect(mainThreadItemWithSpread.__listItemPlatformInfo).toEqual({ 'item-key': 'spread' });
+      expect(JSON.parse(JSON.stringify(mainThreadItemWithSpread)).__listItemPlatformInfo).toEqual({
+        'item-key': 'spread',
+      });
+
+      const mainThreadItemWithPrimitiveSpread = new SnapshotInstance('list-item', -10_004);
+      mainThreadItemWithPrimitiveSpread.__values = [primitivePlatformInfo];
+      mainThreadItemWithPrimitiveSpread.setAttribute('__listItemPlatformInfoIndex', 0);
+      expect(mainThreadItemWithPrimitiveSpread.__listItemPlatformInfo).toEqual(primitivePlatformInfo);
+      expect(JSON.parse(JSON.stringify(mainThreadItemWithPrimitiveSpread)).__listItemPlatformInfo).toEqual(
+        primitivePlatformInfo,
+      );
+
       const backgroundItem = new BackgroundSnapshotInstance('list-item');
       backgroundItem.setAttribute('__listItemPlatformInfoIndex', 0);
       backgroundItem.setAttribute('values', [platformInfo]);
@@ -684,6 +702,18 @@ describe('document - background', () => {
       backgroundItemWithIndexedValue.setAttribute(0, platformInfo);
       expect(backgroundItemWithIndexedValue.__listItemPlatformInfo).toEqual(platformInfo);
 
+      const backgroundItemWithSpread = new BackgroundSnapshotInstance('list-item');
+      backgroundItemWithSpread.setAttribute('__listItemPlatformInfoIndex', 0);
+      backgroundItemWithSpread.setAttribute('values', [spreadPlatformInfo]);
+      expect(backgroundItemWithSpread.__listItemPlatformInfo).toEqual({ 'item-key': 'spread' });
+      expect(backgroundItemWithSpread.__extraProps?.__listItemPlatformInfoIndex).toBeUndefined();
+
+      const backgroundItemWithPrimitiveSpread = new BackgroundSnapshotInstance('list-item');
+      backgroundItemWithPrimitiveSpread.setAttribute(0, primitivePlatformInfo);
+      backgroundItemWithPrimitiveSpread.setAttribute('__listItemPlatformInfoIndex', 0);
+      expect(backgroundItemWithPrimitiveSpread.__listItemPlatformInfo).toEqual(primitivePlatformInfo);
+      expect(backgroundItemWithPrimitiveSpread.__extraProps?.__listItemPlatformInfoIndex).toBeUndefined();
+
       const backgroundItemWithDirectInfo = new BackgroundSnapshotInstance('list-item');
       backgroundItemWithDirectInfo.setAttribute('__listItemPlatformInfo', directPlatformInfo);
       expect(backgroundItemWithDirectInfo.__listItemPlatformInfo).toEqual(directPlatformInfo);
@@ -692,6 +722,8 @@ describe('document - background', () => {
       snapshotInstanceManager.values.delete(-10_000);
       snapshotInstanceManager.values.delete(-10_001);
       snapshotInstanceManager.values.delete(-10_002);
+      snapshotInstanceManager.values.delete(-10_003);
+      snapshotInstanceManager.values.delete(-10_004);
       backgroundSnapshotInstanceManager.nextId = backgroundNextId - 1;
     }
   });
@@ -719,10 +751,10 @@ describe('document - background', () => {
     try {
       const after = new BackgroundSnapshotInstance('list');
       const first = new BackgroundSnapshotInstance('list-item');
-      first.setAttribute('values', [{ 'item-key': 'after-0' }]);
+      first.setAttribute('values', [{ 'item-key': 'after-0', className: 'ignored', __spread: true }]);
       first.setAttribute('__listItemPlatformInfoIndex', 0);
       const second = new BackgroundSnapshotInstance('list-item');
-      second.setAttribute('values', [{ 'item-key': 'after-1' }]);
+      second.setAttribute('values', [{ 'item-key': 'after-1', className: 'ignored', __spread: true }]);
       second.setAttribute('__listItemPlatformInfoIndex', 0);
       after.insertBefore(first);
       after.insertBefore(second);

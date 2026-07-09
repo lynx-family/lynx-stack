@@ -50,7 +50,13 @@ export interface ExternalBundleWebpackPluginOptions {
 }
 
 // @public
-export type Externals = Record<string, string | string[]>;
+export interface ExternalObject {
+    async?: boolean;
+    libraryName: string | string[];
+}
+
+// @public
+export type Externals = Record<string, string | string[] | ExternalObject>;
 
 // @public
 export interface ExternalsPresetDefinition {
@@ -63,8 +69,13 @@ export type ExternalsPresetDefinitions = Record<string, ExternalsPresetDefinitio
 
 // @public
 export type ExternalsPresets = {
-    reactlynx?: boolean;
-} & Record<string, boolean>;
+    reactlynx?: ExternalsPresetValue;
+} & Record<string, ExternalsPresetValue>;
+
+// @public
+export type ExternalsPresetValue = boolean | {
+    async?: boolean;
+};
 
 // @public
 export class MainThreadRuntimeWrapperWebpackPlugin {

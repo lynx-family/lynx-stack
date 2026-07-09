@@ -1,0 +1,67 @@
+/* ===== Loading ===== */
+.OpenUILoading {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  justify-content: center;
+  flex-shrink: 0;
+  gap: 10rpx;
+}
+
+.OpenUILoadingInline {
+  width: 100%;
+  min-height: 28rpx;
+}
+
+.OpenUILoadingBlock {
+  width: 100%;
+  min-height: 96rpx;
+  padding: 12rpx 0;
+}
+
+.OpenUILoadingSkeleton {
+  height: 28rpx;
+  border-radius: 999rpx;
+  background: linear-gradient(
+    90deg,
+    var(--openui-color-skeleton-start) 0%,
+    var(--openui-color-skeleton-mid) 30%,
+    var(--openui-color-skeleton-peak) 50%,
+    var(--openui-color-skeleton-mid) 70%,
+    var(--openui-color-skeleton-start) 100%
+  );
+  background-size: 220% 100%;
+  animation-name: OpenUILoadingShimmer;
+  animation-duration: 1200ms;
+  animation-timing-function: ease-in-out;
+  animation-iteration-count: infinite;
+}
+
+.OpenUILoadingSkeletonPrimary {
+  width: 96%;
+}
+
+.OpenUILoadingSkeletonSecondary {
+  width: 68%;
+}
+
+@keyframes OpenUILoadingShimmer {
+  0% {
+    background-position: 120% 0;
+  }
+  100% {
+    background-position: -120% 0;
+  }
+}
+
+.dark .OpenUILoadingSkeleton {
+  background: linear-gradient(
+    90deg,
+    var(--openui-color-skeleton-start) 0%,
+    var(--openui-color-skeleton-mid) 30%,
+    var(--openui-color-skeleton-peak) 50%,
+    var(--openui-color-skeleton-mid) 70%,
+    var(--openui-color-skeleton-start) 100%
+  );
+  background-size: 220% 100%;
+}

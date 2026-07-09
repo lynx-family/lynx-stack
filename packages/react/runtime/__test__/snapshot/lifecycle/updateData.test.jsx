@@ -5,9 +5,17 @@
 import { Component, render } from 'preact';
 import { afterEach, beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
 
+import { createProcessData } from '../../../src/core/lynx-data-processors';
 import { replaceCommitHook } from '../../../src/snapshot/lifecycle/patch/commit';
 import { deinitGlobalSnapshotPatch } from '../../../src/snapshot/lifecycle/patch/snapshotPatch';
-import { InitDataConsumer, InitDataProvider, useInitData, withInitDataInState } from '../../../src/lynx-api';
+import {
+  InitDataConsumer,
+  InitDataProvider,
+  markFirstScreenSyncReady,
+  root,
+  useInitData,
+  withInitDataInState,
+} from '../../../src/lynx-api';
 import { useState } from '../../../src/index';
 import { __root } from '../../../src/root';
 import { globalEnvManager } from '../utils/envManager';
@@ -860,10 +868,10 @@ describe('triggerDataUpdated when jsReady is enabled', () => {
       render(<Comp />, __root);
     }
 
-    // LifecycleConstant.jsReady
+    // LifecycleConstant.firstScreenSyncReady (jsReady mode)
     {
       globalEnvManager.switchToMainThread();
-      rLynxJSReady();
+      rLynxFirstScreenSyncReady();
     }
 
     // hydrate
@@ -1088,10 +1096,10 @@ describe('flush pending `renderComponent` before hydrate', () => {
       render(<Comp />, __root);
     }
 
-    // LifecycleConstant.jsReady
+    // LifecycleConstant.firstScreenSyncReady (jsReady mode)
     {
       globalEnvManager.switchToMainThread();
-      rLynxJSReady();
+      rLynxFirstScreenSyncReady();
     }
 
     // background updateCardData
@@ -1190,10 +1198,10 @@ describe('flush pending `renderComponent` before hydrate', () => {
       _setShouldThrow(true);
     }
 
-    // LifecycleConstant.jsReady
+    // LifecycleConstant.firstScreenSyncReady (jsReady mode)
     {
       globalEnvManager.switchToMainThread();
-      rLynxJSReady();
+      rLynxFirstScreenSyncReady();
     }
 
     // hydrate
@@ -1249,6 +1257,461 @@ describe('flush pending `renderComponent` before hydrate', () => {
             </wrapper>
           </text>
         </page>
+      `);
+    }
+  });
+});
+
+describe('firstScreenSyncTiming - manual', () => {
+  beforeEach(() => {
+    globalThis.__FIRST_SCREEN_SYNC_TIMING__ = 'manual';
+  });
+
+  afterEach(() => {
+    globalThis.__FIRST_SCREEN_SYNC_TIMING__ = 'immediately';
+  });
+
+  /**
+   * This test verifies the `manual` mode: the main thread keeps the UI control after the
+   * first screen and responds to `updateData` __synchronously__, until the user calls
+   * `markFirstScreenSyncReady()` on the main thread. Only then is the first screen
+   * (`SnapshotInstance` tree) synced to the background for hydration.
+   * The test follows these steps:
+   * 1. **Initial Render (Main Thread):** Renders the component on the main thread, no `firstScreen` is sent.
+   * 2. **Main Thread Update:** Updates data on the main thread, which is applied synchronously
+   *    and still does NOT trigger the first screen sync.
+   * 3. **Background Render:** Renders the component in the background, which should NOT notify
+   *    the main thread with `rLynxJSReady`; calling `markFirstScreenSyncReady()` on the
+   *    background thread is forwarded to the main thread via `rLynxFirstScreenSyncReady`
+   *    (here we only assert the forward, without dispatching it, so the main-thread render
+   *    path below is exercised; the full forwarded flow is covered by a dedicated test).
+   * 4. **Mark Ready (Main Thread, during render):** Updates data again; the component marks
+   *    ready during the synchronous main-thread re-render, and the sync is deferred until the
+   *    re-render completes (the half-rendered tree must not be synced).
+   * 5. **Hydration:** The background receives `firstScreen` and hydrates; the hydration patch is
+   *    applied to the main thread.
+   * 6. **Main Thread Update (No-op):** Updates data on the main thread again, which is no longer
+   *    processed by the main thread.
+   * 7. **Mark Ready Again (No-op):** Calls `markFirstScreenSyncReady()` again, which has no effect.
+   */
+  it('should sync first screen after markFirstScreenSyncReady during updateData render', async function() {
+    function Comp() {
+      const initData = useInitData();
+
+      if (initData.ready) {
+        markFirstScreenSyncReady();
+      }
+
+      return <text>{initData.msg}</text>;
+    }
+
+    // main thread render
+    {
+      globalThis.__OnLifecycleEvent.mockClear();
+      __root.__jsx = <Comp />;
+      renderPage({ msg: 'init' });
+      // the first screen is NOT synced at `renderPage`
+      expect(globalThis.__OnLifecycleEvent).not.toBeCalled();
+    }
+
+    // main thread updatePage: processed synchronously, still no first screen sync
+    {
+      globalThis.__FlushElementTree.mockClear();
+      updatePage({ msg: 'update' });
+      expect(globalThis.__OnLifecycleEvent).not.toBeCalled();
+      expect(__root.__element_root).toMatchInlineSnapshot(`
+        <page
+          cssId="default-entry-from-native:0"
+        >
+          <text>
+            <raw-text
+              text="update"
+            />
+          </text>
+        </page>
+      `);
+      expect(globalThis.__FlushElementTree.mock.calls[0][1]).toMatchInlineSnapshot(`
+        {
+          "triggerDataUpdated": true,
+        }
+      `);
+    }
+
+    // background render: should NOT notify the main thread with `rLynxJSReady`.
+    // `markFirstScreenSyncReady` on the background thread is forwarded to the main
+    // thread via `rLynxFirstScreenSyncReady`. We assert the forward but do NOT
+    // dispatch it to the main thread, so the mark does not take effect here and the
+    // main-thread render path below is exercised instead.
+    {
+      globalEnvManager.switchToBackground();
+      lynx.getNativeApp().callLepusMethod.mockClear();
+      root.render(<Comp />, __root);
+      markFirstScreenSyncReady();
+      expect(lynx.getNativeApp().callLepusMethod.mock.calls.map(call => call[0])).toMatchInlineSnapshot(`
+        [
+          "rLynxFirstScreenSyncReady",
+        ]
+      `);
+      expect(globalThis.__OnLifecycleEvent).not.toBeCalled();
+      lynx.getNativeApp().callLepusMethod.mockClear();
+    }
+
+    // main thread updatePage marking ready: the component calls
+    // `markFirstScreenSyncReady()` during the re-render, and the first screen
+    // is synced right after the re-render completes
+    {
+      globalEnvManager.switchToMainThread();
+      globalThis.__FlushElementTree.mockClear();
+      updatePage({ msg: 'update2', ready: true });
+      expect(__root.__element_root).toMatchInlineSnapshot(`
+        <page
+          cssId="default-entry-from-native:0"
+        >
+          <text>
+            <raw-text
+              text="update2"
+            />
+          </text>
+        </page>
+      `);
+      expect(globalThis.__FlushElementTree.mock.calls[0][1]).toMatchInlineSnapshot(`
+        {
+          "triggerDataUpdated": true,
+        }
+      `);
+      expect(globalThis.__OnLifecycleEvent.mock.calls).toMatchInlineSnapshot(`
+        [
+          [
+            [
+              "rLynxFirstScreen",
+              {
+                "firstScreenEventIdSwap": {
+                  "-1": -4,
+                  "-2": -5,
+                  "-3": -6,
+                  "-4": -7,
+                  "-5": -8,
+                  "-6": -9,
+                },
+                "root": "{"id":-7,"type":"root","children":[{"id":-8,"type":"__snapshot_a94a8_test_15","children":[{"id":-9,"type":null,"values":["update2"]}]}]}",
+              },
+            ],
+          ],
+        ]
+      `);
+    }
+
+    // hydrate
+    {
+      globalEnvManager.switchToBackground();
+      lynxCoreInject.tt.updateCardData({
+        msg: 'update2',
+        ready: true,
+      });
+      // LifecycleConstant.firstScreen
+      lynxCoreInject.tt.OnLifecycleEvent(...globalThis.__OnLifecycleEvent.mock.calls[0]);
+      expect(lynx.getNativeApp().callLepusMethod.mock.calls.map(call => call[0])).toMatchInlineSnapshot(`
+        [
+          "rLynxFirstScreenSyncReady",
+          "rLynxChange",
+        ]
+      `);
+    }
+
+    // rLynxChange: apply the hydration patch to the main thread
+    {
+      globalEnvManager.switchToMainThread();
+      for (const patch of lynx.getNativeApp().callLepusMethod.mock.calls) {
+        globalThis[patch[0]](patch[1]);
+      }
+      await waitSchedule();
+      expect(__root.__element_root).toMatchInlineSnapshot(`
+        <page
+          cssId="default-entry-from-native:0"
+        >
+          <text>
+            <raw-text
+              text="update2"
+            />
+          </text>
+        </page>
+      `);
+    }
+
+    // main thread updatePage after the first screen is synced:
+    // no longer processed by the main thread
+    {
+      globalThis.__OnLifecycleEvent.mockClear();
+      globalThis.__FlushElementTree.mockClear();
+      updatePage({ msg: 'update3' });
+      expect(globalThis.__OnLifecycleEvent).not.toBeCalled();
+      expect(__root.__element_root).toMatchInlineSnapshot(`
+        <page
+          cssId="default-entry-from-native:0"
+        >
+          <text>
+            <raw-text
+              text="update2"
+            />
+          </text>
+        </page>
+      `);
+      expect(globalThis.__FlushElementTree.mock.calls[0][1]).toMatchInlineSnapshot(`{}`);
+    }
+
+    // markFirstScreenSyncReady again: no effect
+    {
+      markFirstScreenSyncReady();
+      expect(globalThis.__OnLifecycleEvent).not.toBeCalled();
+    }
+  });
+
+  /**
+   * This test verifies that a ready mark set BEFORE `renderPage` (e.g. inside
+   * `defaultDataProcessor`, which runs before the first render) is preserved by
+   * `renderPage` and the first screen is synced once the render completes.
+   */
+  it('should keep a ready mark set before renderPage (e.g. in defaultDataProcessor)', async function() {
+    function Comp() {
+      const initData = useInitData();
+
+      return <text>{initData.msg}</text>;
+    }
+
+    // `markFirstScreenSyncReady()` invoked before `renderPage`, simulating a call
+    // from `defaultDataProcessor`. The tree is not ready yet, so it does not sync.
+    {
+      globalThis.__OnLifecycleEvent.mockClear();
+      markFirstScreenSyncReady();
+      expect(globalThis.__OnLifecycleEvent).not.toBeCalled();
+    }
+
+    // `renderPage` must NOT clear the earlier mark; the first screen is synced
+    // once the tree is ready.
+    {
+      __root.__jsx = <Comp />;
+      renderPage({ msg: 'init' });
+      expect(globalThis.__OnLifecycleEvent.mock.calls).toMatchInlineSnapshot(`
+        [
+          [
+            [
+              "rLynxFirstScreen",
+              {
+                "firstScreenEventIdSwap": {},
+                "root": "{"id":-1,"type":"root","children":[{"id":-2,"type":"__snapshot_a94a8_test_16","children":[{"id":-3,"type":null,"values":["init"]}]}]}",
+              },
+            ],
+          ],
+        ]
+      `);
+    }
+  });
+
+  /**
+   * This test verifies that when `markFirstScreenSyncReady()` is called during the
+   * first-screen render (before the tree is ready), the mark is kept and the first
+   * screen is synced right after `renderPage` completes.
+   */
+  it('should sync first screen at renderPage when marked ready during render', async function() {
+    function Comp() {
+      const initData = useInitData();
+
+      // mark ready during the first-screen render, before the tree is ready
+      markFirstScreenSyncReady();
+
+      return <text>{initData.msg}</text>;
+    }
+
+    // main thread render: the first screen is synced once the tree is ready
+    {
+      globalThis.__OnLifecycleEvent.mockClear();
+      __root.__jsx = <Comp />;
+      renderPage({ msg: 'init' });
+      expect(globalThis.__OnLifecycleEvent.mock.calls).toMatchInlineSnapshot(`
+        [
+          [
+            [
+              "rLynxFirstScreen",
+              {
+                "firstScreenEventIdSwap": {},
+                "root": "{"id":-1,"type":"root","children":[{"id":-2,"type":"__snapshot_a94a8_test_17","children":[{"id":-3,"type":null,"values":["init"]}]}]}",
+              },
+            ],
+          ],
+        ]
+      `);
+    }
+  });
+
+  /**
+   * This test verifies that when `markFirstScreenSyncReady()` is called on the main
+   * thread while the first-screen tree is already rendered (e.g. from a main thread
+   * script), the first screen is synced immediately.
+   */
+  it('should sync first screen immediately when marked ready after render', async function() {
+    function Comp() {
+      const initData = useInitData();
+
+      return <text>{initData.msg}</text>;
+    }
+
+    // main thread render
+    {
+      globalThis.__OnLifecycleEvent.mockClear();
+      __root.__jsx = <Comp />;
+      renderPage({ msg: 'init' });
+      expect(globalThis.__OnLifecycleEvent).not.toBeCalled();
+    }
+
+    // mark ready on the main thread: the tree is already rendered, sync immediately
+    {
+      markFirstScreenSyncReady();
+      expect(globalThis.__OnLifecycleEvent.mock.calls).toMatchInlineSnapshot(`
+        [
+          [
+            [
+              "rLynxFirstScreen",
+              {
+                "firstScreenEventIdSwap": {},
+                "root": "{"id":-1,"type":"root","children":[{"id":-2,"type":"__snapshot_a94a8_test_18","children":[{"id":-3,"type":null,"values":["init"]}]}]}",
+              },
+            ],
+          ],
+        ]
+      `);
+    }
+  });
+
+  /**
+   * This test verifies that `markFirstScreenSyncReady()` called on the background thread
+   * is forwarded to the main thread via `rLynxFirstScreenSyncReady`, and the actual sync
+   * happens on the main thread once the forwarded message is processed there.
+   */
+  it('should sync first screen when marked ready from the background thread', async function() {
+    function Comp() {
+      const initData = useInitData();
+
+      return <text>{initData.msg}</text>;
+    }
+
+    // main thread render: the first screen is NOT synced at `renderPage`
+    {
+      globalThis.__OnLifecycleEvent.mockClear();
+      __root.__jsx = <Comp />;
+      renderPage({ msg: 'init' });
+      expect(globalThis.__OnLifecycleEvent).not.toBeCalled();
+    }
+
+    // background render + mark ready: forwarded to the main thread, NOT synced here
+    {
+      globalEnvManager.switchToBackground();
+      lynx.getNativeApp().callLepusMethod.mockClear();
+      root.render(<Comp />, __root);
+      markFirstScreenSyncReady();
+      expect(lynx.getNativeApp().callLepusMethod.mock.calls.map(call => call[0])).toMatchInlineSnapshot(`
+        [
+          "rLynxFirstScreenSyncReady",
+        ]
+      `);
+      expect(globalThis.__OnLifecycleEvent).not.toBeCalled();
+    }
+
+    // main thread receives the forwarded `rLynxFirstScreenSyncReady`: the tree is
+    // already ready, so the first screen is synced immediately
+    {
+      globalEnvManager.switchToMainThread();
+      const rLynxFirstScreenSyncReady = lynx.getNativeApp().callLepusMethod.mock.calls[0];
+      globalThis[rLynxFirstScreenSyncReady[0]](rLynxFirstScreenSyncReady[1]);
+      expect(globalThis.__OnLifecycleEvent.mock.calls).toMatchInlineSnapshot(`
+        [
+          [
+            [
+              "rLynxFirstScreen",
+              {
+                "firstScreenEventIdSwap": {},
+                "root": "{"id":-1,"type":"root","children":[{"id":-2,"type":"__snapshot_a94a8_test_19","children":[{"id":-3,"type":null,"values":["init"]}]}]}",
+              },
+            ],
+          ],
+        ]
+      `);
+    }
+  });
+
+  /**
+   * Regression test: `markFirstScreenSyncReady()` called inside `defaultDataProcessor`.
+   *
+   * The native side runs `defaultDataProcessor` (via `globalThis.processData`) as a
+   * separate call BEFORE `updatePage`. After the first `renderPage`, the previous tree
+   * is still latched ready, so a naive implementation would sync that STALE tree the
+   * moment the mark is made, and the following `updatePage` would then skip its
+   * main-thread render entirely — the new data would never render on the main thread
+   * (it would only re-render later on the background thread after hydration).
+   *
+   * The mark made during data processing must be deferred so the new data renders on
+   * the main thread first, and only then syncs.
+   */
+  it('should defer a markFirstScreenSyncReady made inside defaultDataProcessor until the data renders', async function() {
+    function Comp() {
+      const initData = useInitData();
+
+      return <text>{initData.msg}</text>;
+    }
+
+    // first screen renders cache data: the tree is ready but NOT synced (manual mode)
+    {
+      globalThis.__OnLifecycleEvent.mockClear();
+      __root.__jsx = <Comp />;
+      renderPage({ msg: 'cache' });
+      expect(globalThis.__OnLifecycleEvent).not.toBeCalled();
+    }
+
+    // the "二刷": native runs the default data processor, which marks ready inside it.
+    // Although the previous tree is still latched ready, the mark must be deferred —
+    // a re-render of this data is imminent — so NO sync happens here.
+    globalThis.__EXTRACT_STR__ = false;
+    const processData = createProcessData({
+      defaultDataProcessor(rawData) {
+        markFirstScreenSyncReady();
+        return rawData;
+      },
+    });
+    {
+      globalThis.__OnLifecycleEvent.mockClear();
+      const processed = processData({ msg: 'real' });
+      expect(globalThis.__OnLifecycleEvent).not.toBeCalled();
+
+      // native then calls `updatePage` with the processed data: it renders on the
+      // main thread and only THEN syncs the new tree (not the stale cache tree)
+      globalThis.__FlushElementTree.mockClear();
+      updatePage(processed);
+      expect(__root.__element_root).toMatchInlineSnapshot(`
+        <page
+          cssId="default-entry-from-native:0"
+        >
+          <text>
+            <raw-text
+              text="real"
+            />
+          </text>
+        </page>
+      `);
+      expect(globalThis.__OnLifecycleEvent.mock.calls).toMatchInlineSnapshot(`
+        [
+          [
+            [
+              "rLynxFirstScreen",
+              {
+                "firstScreenEventIdSwap": {
+                  "-1": -4,
+                  "-2": -5,
+                  "-3": -6,
+                },
+                "root": "{"id":-4,"type":"root","children":[{"id":-5,"type":"__snapshot_a94a8_test_20","children":[{"id":-6,"type":null,"values":["real"]}]}]}",
+              },
+            ],
+          ],
+        ]
       `);
     }
   });

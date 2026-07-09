@@ -10,6 +10,8 @@ import { useIsStreaming } from '../../core/context.jsx';
 import { defineComponent } from '../../core/library.jsx';
 import { stringLikeSchema, stringifyValue } from '../utils.js';
 
+import '../../../styles/catalog/Tabs.css';
+
 const tabSchema = z.object({
   value: z.string(),
   title: stringLikeSchema,

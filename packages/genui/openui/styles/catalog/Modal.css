@@ -1,0 +1,95 @@
+/* ===== Modal ===== */
+.OpenUIModal {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 10rpx;
+}
+
+.OpenUIModalTrigger {
+  width: 100%;
+}
+
+.OpenUIModalMask {
+  width: 100%;
+  min-width: 0;
+  padding: 10rpx 0 0;
+  display: flex;
+  align-items: stretch;
+  justify-content: flex-start;
+}
+
+.OpenUIModalContent {
+  width: 100%;
+  min-width: 0;
+  padding: 16rpx;
+  border-radius: 16rpx;
+  border-width: 1rpx;
+  border-style: solid;
+  border-color: var(--openui-color-border);
+  background-color: var(--openui-color-surface-raised);
+  display: flex;
+  flex-direction: column;
+  gap: 14rpx;
+}
+
+.OpenUIModalHeader {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12rpx;
+}
+
+.OpenUIModalTitle {
+  min-width: 0;
+  color: var(--openui-color-text);
+  font-size: 28rpx;
+  font-weight: 700;
+}
+
+.OpenUIModalClose {
+  width: 40rpx;
+  height: 40rpx;
+  border-radius: 999rpx;
+  background-color: var(--openui-color-surface-subtle);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.OpenUIModalCloseText {
+  color: var(--openui-color-text-body);
+  font-size: 24rpx;
+  font-weight: 700;
+}
+
+.OpenUIModalBody {
+  width: 100%;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 12rpx;
+}
+
+.dark .OpenUIModalMask {
+  background-color: transparent;
+}
+
+.dark .OpenUIModalContent {
+  background-color: var(--openui-color-surface-raised);
+  border-color: var(--openui-color-border);
+}
+
+.dark .OpenUIModalTitle {
+  color: var(--openui-color-text);
+}
+
+.dark .OpenUIModalClose {
+  background-color: var(--openui-color-surface-subtle);
+}
+
+.dark .OpenUIModalCloseText {
+  color: var(--openui-color-text-body);
+}
