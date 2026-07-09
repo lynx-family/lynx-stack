@@ -69,7 +69,6 @@ export function applyEntry(
       : rsbuildConfig.splitChunks !== false
     // `lynx.api` is exposed by `pluginLynxPreset` when running on Rsbuild
     // directly (without the Rspeedy CLI).
-    // biome-ignore lint/correctness/useHookAtTopLevel: This is not a React hook.
     const lynxAPI = api.useExposed<ExposedAPI>(Symbol.for('lynx.api'))
     const rspeedyConfig = api.context.callerName === 'rspeedy'
       // biome-ignore lint/correctness/useHookAtTopLevel: This is not a React hook.

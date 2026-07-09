@@ -1697,6 +1697,12 @@ importers:
         specifier: ^1.3.3
         version: 1.3.3
     devDependencies:
+      '@lynx-js/rspeedy':
+        specifier: workspace:*
+        version: link:../core
+      '@lynx-js/test-tools':
+        specifier: workspace:*
+        version: link:../../webpack/test-tools
       '@microsoft/api-extractor':
         specifier: 'catalog:'
         version: 7.58.2(@types/node@24.10.13)
@@ -1706,6 +1712,9 @@ importers:
       '@rsdoctor/core':
         specifier: ~1.5.6
         version: 1.5.6(@emnapi/core@1.11.1)(@emnapi/runtime@1.11.1)(@rsbuild/core@2.1.4(core-js@3.49.0))(@rspack/core@2.1.3(@swc/helpers@0.5.23))(webpack@5.105.2(@swc/core@1.15.30(@swc/helpers@0.5.23))(lightningcss@1.31.1))
+      '@rstest/core':
+        specifier: catalog:rstest
+        version: 0.11.0(core-js@3.49.0)(jsdom@27.4.0)
       '@swc/core':
         specifier: ^1.15.30
         version: 1.15.30(@swc/helpers@0.5.23)
