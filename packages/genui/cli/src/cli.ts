@@ -9,12 +9,13 @@ const usage = `Usage: genui <namespace> <command> [options]
 
 Namespaces:
   a2ui    Generate A2UI catalog artifacts and system prompts.
-  openui  Reserved for future OpenUI workflows.
+  openui  Generate OpenUI system prompts.
 
 Examples:
   genui a2ui create my-app
   genui a2ui generate catalog --catalog-dir src/catalog --out-dir dist/catalog
   genui a2ui generate prompt --out dist/a2ui-system-prompt.txt
+  genui openui generate prompt --out dist/openui-system-prompt.txt
 `;
 
 export interface CliOptions {
@@ -45,7 +46,7 @@ export async function runCli(
     return await runA2UICli(args.slice(1), cwd, { programName: 'genui a2ui' });
   }
   if (command === 'openui') {
-    return runOpenUICli(args.slice(1));
+    return await runOpenUICli(args.slice(1), cwd);
   }
 
   throw new Error(`Unknown namespace: ${command}`);

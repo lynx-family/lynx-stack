@@ -845,6 +845,9 @@ importers:
       '@lynx-js/genui-a2ui-prompt':
         specifier: workspace:*
         version: link:../a2ui-prompt
+      '@lynx-js/genui-openui':
+        specifier: workspace:*
+        version: link:../openui
     devDependencies:
       '@rstest/core':
         specifier: catalog:rstest
