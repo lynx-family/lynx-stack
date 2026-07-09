@@ -1697,9 +1697,6 @@ importers:
         specifier: ^1.3.3
         version: 1.3.3
     devDependencies:
-      '@lynx-js/rspeedy':
-        specifier: workspace:*
-        version: link:../core
       '@lynx-js/test-tools':
         specifier: workspace:*
         version: link:../../webpack/test-tools

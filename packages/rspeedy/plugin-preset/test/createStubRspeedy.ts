@@ -4,11 +4,35 @@
 import path from 'node:path'
 import { fileURLToPath } from 'node:url'
 
-import type { InitConfigsOptions, Rspack } from '@rsbuild/core'
+import { createRsbuild } from '@rsbuild/core'
+import type {
+  InitConfigsOptions,
+  RsbuildConfig,
+  RsbuildInstance,
+  Rspack,
+} from '@rsbuild/core'
+import { pluginCssMinimizer } from '@rsbuild/plugin-css-minimizer'
 import { rstest } from '@rstest/core'
 
-import { createRspeedy } from '@lynx-js/rspeedy'
-import type { Config, RspeedyInstance } from '@lynx-js/rspeedy'
+import { pluginLynxDebugMetadata } from '@lynx-js/debug-metadata-rsbuild-plugin'
+
+import type { Config } from '../src/config/index.js'
+import {
+  applyDefaultRspeedyConfig,
+  pluginChunkLoading,
+  pluginDev,
+  pluginMinify,
+  pluginOptimization,
+  pluginOutput,
+  pluginResolve,
+  pluginRsdoctor,
+  pluginSourcemap,
+  pluginStatsJson,
+  pluginSwc,
+  pluginTarget,
+  toRsbuildConfig,
+} from '../src/internal.js'
+import { pluginLynxAPI } from '../src/plugin-api.js'
 
 interface RsbuildHelper {
   unwrapConfig(options?: InitConfigsOptions): Promise<Rspack.Configuration>
@@ -20,16 +44,43 @@ interface RsbuildHelper {
   }>
 }
 
+/**
+ * A standalone stub that composes the default Lynx plugins directly on top of
+ * `createRsbuild` — the same set (and order) the Rspeedy CLI applies via
+ * `applyDefaultPlugins`, threading the config through `pluginLynxAPI`. It lives
+ * here (rather than reusing `@lynx-js/rspeedy`'s `createRspeedy`) so the preset
+ * package does not depend back on the CLI, keeping the build graph acyclic.
+ */
 export async function createStubRspeedy(
   config: Config,
   cwd?: string,
-): Promise<RspeedyInstance & RsbuildHelper> {
-  const rsbuild = await createRspeedy({
-    rspeedyConfig: config,
+): Promise<RsbuildInstance & RsbuildHelper> {
+  const resolved = applyDefaultRspeedyConfig(config)
+
+  const rsbuild = await createRsbuild({
     // Pin to the package root: rstest's cwd differs between per-package runs
     // and the root CI run, which would make cwd-derived snapshots unstable.
     cwd: cwd ?? path.join(path.dirname(fileURLToPath(import.meta.url)), '..'),
+    rsbuildConfig: toRsbuildConfig(resolved) as RsbuildConfig,
+    callerName: 'rspeedy',
   })
+
+  rsbuild.addPlugins([
+    pluginLynxAPI(resolved),
+    pluginChunkLoading(),
+    pluginLynxDebugMetadata(),
+    pluginDev(resolved.dev, resolved.server),
+    pluginMinify(resolved.output?.minify),
+    pluginOptimization(),
+    pluginOutput(resolved.output),
+    pluginResolve(),
+    pluginRsdoctor(resolved.tools?.rsdoctor),
+    pluginSourcemap(),
+    pluginStatsJson(resolved),
+    pluginSwc(),
+    pluginTarget(),
+    pluginCssMinimizer(),
+  ])
 
   const helper: RsbuildHelper = {
     async unwrapConfig(options?: InitConfigsOptions) {
