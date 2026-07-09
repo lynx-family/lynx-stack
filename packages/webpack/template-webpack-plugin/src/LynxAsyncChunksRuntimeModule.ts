@@ -20,12 +20,14 @@ type Webpack = typeof import('@rspack/core').rspack;
 
 const LAZY_BUNDLE_MODE_ATTRIBUTE = 'mode';
 
-// `file:line:column` for a lazy-bundle `import()` site, used in conflict errors.
-// `readableIdentifier`/`requestShortener`/`loc` are runtime-supported but not on
-// the public rspack types, hence the loose casts.
-function describeModeUsage(
+// The importing module's readable path (e.g. `./src/App.tsx`), used to point at
+// conflicting `import()` sites. rspack's `Dependency.loc` is `null` for these
+// dependencies even pre-seal, so a line:column is not available — the module
+// path plus the import request is the most precise pointer we can give.
+// `readableIdentifier`/`requestShortener` are runtime-supported but not on the
+// public rspack types, hence the loose casts.
+function describeImportingModule(
   module: Module,
-  loc: unknown,
   compilation: Compilation,
 ): string {
   const mod = module as {
@@ -34,24 +36,14 @@ function describeModeUsage(
   };
   const requestShortener =
     (compilation as { requestShortener?: unknown }).requestShortener;
-  const resource = typeof mod.readableIdentifier === 'function'
+  return typeof mod.readableIdentifier === 'function'
     ? mod.readableIdentifier(requestShortener)
     : String(mod.identifier?.() ?? 'unknown module');
-  const start = loc && typeof loc === 'object' && 'start' in loc
-    ? (loc as { start?: { line?: number; column?: number } }).start
-    : undefined;
-  return start && typeof start.line === 'number'
-    ? `${resource}:${start.line}:${start.column ?? 0}`
-    : resource;
 }
 
-// Building the `chunk.id -> mode` map walks the whole module graph, so memoize
-// it per compilation: `generate()` runs once per runtime chunk and the result
-// is identical for all of them.
-const modeCache = new WeakMap<
-  Compilation,
-  Map<string | number, string>
->();
+// Building the maps walks the whole module graph, so memoize per compilation:
+// `generate()` runs once per runtime chunk and the result is identical for all.
+const modeCache = new WeakMap<Compilation, Map<string | number, string>>();
 
 function collectLazyBundleModes(
   compilation: Compilation,
@@ -63,13 +55,13 @@ function collectLazyBundleModes(
     return cached;
   }
 
-  // chunk.id -> mode -> source locations that requested it. Keeping every
-  // location (not just the last mode) lets us detect and report when the same
-  // lazy bundle is imported with conflicting `mode`s.
-  const usagesByChunkId = new Map<
-    string | number,
-    Map<string, Set<string>>
-  >();
+  // chunk.id -> modes seen (for the runtime `lynx_acm` map).
+  const modesByChunkId = new Map<string | number, Set<string>>();
+  // request -> mode -> importing module paths (for conflict reporting), so a
+  // component that splits into main-thread + background chunks is reported once,
+  // not once per chunk.
+  const usagesByRequest = new Map<string, Map<string, Set<string>>>();
+
   const visitBlock = (module: Module, block: AsyncDependenciesBlock): void => {
     for (const dependency of block.dependencies) {
       // `import(..., { with: { mode } })` surfaces here as a dependency import
@@ -82,24 +74,30 @@ function collectLazyBundleModes(
       if (chunkGroup === null) {
         continue;
       }
-      const loc = (dependency as { loc?: unknown }).loc
-        ?? (block as { loc?: unknown }).loc;
-      const location = describeModeUsage(module, loc, compilation);
+      const request = (dependency as { request?: string }).request
+        ?? '<unknown request>';
+      let byMode = usagesByRequest.get(request);
+      if (byMode === undefined) {
+        byMode = new Map();
+        usagesByRequest.set(request, byMode);
+      }
+      let locations = byMode.get(mode);
+      if (locations === undefined) {
+        locations = new Set();
+        byMode.set(mode, locations);
+      }
+      locations.add(describeImportingModule(module, compilation));
+
       for (const chunk of chunkGroup.chunks) {
         if (chunk.id === undefined) {
           continue;
         }
-        let byMode = usagesByChunkId.get(chunk.id);
-        if (byMode === undefined) {
-          byMode = new Map();
-          usagesByChunkId.set(chunk.id, byMode);
+        let modes = modesByChunkId.get(chunk.id);
+        if (modes === undefined) {
+          modes = new Set();
+          modesByChunkId.set(chunk.id, modes);
         }
-        let locations = byMode.get(mode);
-        if (locations === undefined) {
-          locations = new Set();
-          byMode.set(mode, locations);
-        }
-        locations.add(location);
+        modes.add(mode);
       }
     }
     for (const nested of block.blocks) {
@@ -114,17 +112,21 @@ function collectLazyBundleModes(
   }
 
   const modeByChunkId = new Map<string | number, string>();
-  for (const [chunkId, byMode] of usagesByChunkId) {
-    if (byMode.size <= 1) {
-      // Every import site agrees on the mode (or there is only one).
-      modeByChunkId.set(chunkId, byMode.keys().next().value!);
-      continue;
+  for (const [chunkId, modes] of modesByChunkId) {
+    if (modes.size === 1) {
+      modeByChunkId.set(chunkId, modes.values().next().value!);
     }
-    // The same lazy bundle is imported both `sync` and `async`. A single bundle
-    // can only load one way, so report every conflicting site and fall back to
-    // `async` (omitting the entry -> chunk-loading's non-blocking default) so
-    // the output stays deterministic instead of last-writer-wins.
-    compilation.errors.push(createModeConflictError(webpack, chunkId, byMode));
+    // A chunk with conflicting modes is left out -> chunk-loading falls back to
+    // its non-blocking `async` default, so the output stays deterministic. The
+    // conflict itself is reported once per request below.
+  }
+
+  for (const [request, byMode] of usagesByRequest) {
+    if (byMode.size > 1) {
+      compilation.errors.push(
+        createModeConflictError(webpack, request, byMode),
+      );
+    }
   }
 
   modeCache.set(compilation, modeByChunkId);
@@ -133,22 +135,22 @@ function collectLazyBundleModes(
 
 function createModeConflictError(
   webpack: Webpack,
-  chunkId: string | number,
+  request: string,
   byMode: Map<string, Set<string>>,
 ): Error {
-  const details = Array.from(byMode, ([mode, locations]) =>
+  const details = Array.from(byMode, ([mode, modules]) =>
     [
       `  mode: '${mode}'`,
-      ...Array.from(locations, location => `    at ${location}`),
+      ...Array.from(modules, module => `    imported in ${module}`),
     ].join('\n')).join('\n');
   const modeList = Array.from(byMode.keys(), mode => `'${mode}'`).join(' and ');
   const error = new webpack.WebpackError(
-    `Conflicting lazy bundle \`mode\` for the same dynamic component `
-      + `(chunk ${JSON.stringify(chunkId)}).\n`
+    `Conflicting lazy bundle \`mode\` for "${request}".\n`
       + `It is imported with ${modeList}, but a lazy bundle can only load one `
       + `way:\n${details}\n`
-      + `Use the same \`mode\` at every \`import(..., { with: { mode } })\` `
-      + `site. Until fixed, this bundle falls back to \`mode: 'async'\`.`,
+      + `Use the same \`mode\` at every `
+      + `\`import("${request}", { with: { mode } })\` site. `
+      + `Until fixed, this bundle falls back to \`mode: 'async'\`.`,
   ) as Error & { hideStack?: boolean };
   error.hideStack = true;
   return error;

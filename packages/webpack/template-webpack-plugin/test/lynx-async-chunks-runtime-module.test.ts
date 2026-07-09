@@ -23,12 +23,11 @@ interface FakeChunk {
 
 interface FakeDependency {
   attributes?: Record<string, unknown>;
-  loc?: { start: { line: number; column: number } };
+  request?: string;
 }
 
 interface FakeBlock {
   dependencies: FakeDependency[];
-  loc?: { start: { line: number; column: number } };
   blocks: FakeBlock[];
 }
 
@@ -123,17 +122,20 @@ describe('LynxAsyncChunksRuntimeModule', () => {
     expect(out).toContain('"sync"');
   });
 
-  test('reports a conflict and falls back to async when a bundle is both sync and async', () => {
-    const chunk: FakeChunk = { id: 0, name: 'a' };
+  test('reports one conflict per request and falls back to async when a bundle is both sync and async', () => {
+    // Both threads of the same component (main-thread + background) map to the
+    // same import request, so a single conflict is reported — not one per chunk.
+    const mainThread: FakeChunk = { id: 0, name: 'foo__main-thread' };
+    const background: FakeChunk = { id: 1, name: 'foo__background' };
     const { out, errors } = run(
-      [chunk],
+      [mainThread, background],
       [
         {
           readableIdentifier: () => 'src/host/first-screen.tsx',
           blocks: [{
             dependencies: [{
               attributes: { mode: 'sync' },
-              loc: { start: { line: 12, column: 4 } },
+              request: './LazyFoo.js',
             }],
             blocks: [],
           }],
@@ -143,22 +145,51 @@ describe('LynxAsyncChunksRuntimeModule', () => {
           blocks: [{
             dependencies: [{
               attributes: { mode: 'async' },
-              loc: { start: { line: 30, column: 2 } },
+              request: './LazyFoo.js',
             }],
             blocks: [],
           }],
         },
       ],
-      { chunks: [chunk] },
+      { chunks: [mainThread, background] },
     );
-    // Conflict reported with both sites, and the mode entry is dropped so the
-    // chunk-loading runtime uses its non-blocking async default.
+    // One error (grouped by request), naming the bundle, both modes, and each
+    // importing module. Both chunks' mode entries are dropped so the runtime
+    // uses its non-blocking async default.
     expect(errors).toHaveLength(1);
     const message = errors[0]!.message;
+    expect(message).toContain('./LazyFoo.js');
     expect(message).toContain('\'sync\'');
     expect(message).toContain('\'async\'');
-    expect(message).toContain('src/host/first-screen.tsx:12:4');
-    expect(message).toContain('src/host/lazy.tsx:30:2');
+    expect(message).toContain('src/host/first-screen.tsx');
+    expect(message).toContain('src/host/lazy.tsx');
     expect(out).not.toContain(RuntimeGlobals.lynxAsyncChunkMode);
+  });
+
+  test('does not merge distinct requests into one conflict', () => {
+    const chunkA: FakeChunk = { id: 0, name: 'a' };
+    const { errors } = run(
+      [chunkA],
+      [
+        {
+          blocks: [{
+            dependencies: [{ attributes: { mode: 'sync' }, request: './A.js' }],
+            blocks: [],
+          }],
+        },
+        {
+          blocks: [{
+            dependencies: [{
+              attributes: { mode: 'async' },
+              request: './B.js',
+            }],
+            blocks: [],
+          }],
+        },
+      ],
+      { chunks: [chunkA] },
+    );
+    // Different requests, each with a single mode -> no conflict.
+    expect(errors).toHaveLength(0);
   });
 });
