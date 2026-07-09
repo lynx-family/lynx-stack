@@ -4,10 +4,9 @@
     "rootDir": ".",
     "noEmit": true,
   },
-  "include": ["src", "test", "rstest.config.ts"],
+  "include": ["src", "test", "rstest.config.ts", "package.json"],
   "exclude": ["test/**/fixtures"],
   "references": [
-    { "path": "../core/tsconfig.build.json" },
     { "path": "../plugin-debug-metadata/tsconfig.build.json" },
   ],
 }
