@@ -8,6 +8,7 @@ extend-exclude = [
   "**/CHANGELOG.md",
   "pnpm-lock.yaml",
   "biome.jsonc",
+  "packages/lynx/headless-rust-test-runner/fixtures/**",
   "packages/web-platform/web-explorer/preinstalled/homepage.json",
 ]
 
