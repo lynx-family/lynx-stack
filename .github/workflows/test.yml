@@ -29,9 +29,21 @@ jobs:
       BUCKET_NAME: ${{ secrets.BUCKET_NAME }}
       REGION: ${{ secrets.REGION }}
   build:
+    name: Build (Ubuntu)
     uses: ./.github/workflows/workflow-build.yml
     secrets:
       CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
+    with:
+      runs-on: lynx-ubuntu-26.04-xlarge
+      runs-on-name: Ubuntu
+  build-windows:
+    name: Build (Windows)
+    uses: ./.github/workflows/workflow-build.yml
+    secrets:
+      CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
+    with:
+      runs-on: lynx-windows-2022-large
+      runs-on-name: Windows
   bundle-analysis:
     needs: build
     uses: ./.github/workflows/workflow-bundle-analysis.yml
@@ -387,19 +399,34 @@ jobs:
   test-vitest:
     needs: build
     uses: ./.github/workflows/workflow-test.yml
-    strategy:
-      fail-fast: false
-      matrix:
-        runs-on:
-          - name: Ubuntu
-            label: lynx-ubuntu-26.04-medium
-          - name: Windows
-            label: lynx-windows-2022-large
-    name: Vitest (${{ matrix.runs-on.name }})
+    name: Vitest (Ubuntu)
     secrets:
       CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
     with:
-      runs-on: ${{ matrix.runs-on.label }}
+      runs-on: lynx-ubuntu-26.04-medium
+      run: >
+        pnpm run test
+        --reporter=github-actions
+        --reporter=dot
+        --reporter=junit
+        --outputFile=test-report.junit.xml
+        --expect.poll.timeout=5000
+        --testTimeout=50000
+        --hookTimeout=50000
+        --coverage
+        --coverage.reporter='json'
+        --coverage.reporter='text'
+        --no-cache
+        --logHeapUsage
+        --silent
+  test-vitest-windows:
+    needs: build-windows
+    uses: ./.github/workflows/workflow-test.yml
+    name: Vitest (Windows)
+    secrets:
+      CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
+    with:
+      runs-on: lynx-windows-2022-large
       run: >
         pnpm run test
         --reporter=github-actions
@@ -435,6 +462,7 @@ jobs:
       - test-rstest
       - test-typos
       - test-vitest
+      - test-vitest-windows
       - web-core-e2e
       - website
     if: always()

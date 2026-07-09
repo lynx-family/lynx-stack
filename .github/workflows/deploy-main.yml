@@ -56,11 +56,23 @@ jobs:
     concurrency:
       group: ${{ github.workflow }}-build-${{ github.ref }}
       cancel-in-progress: false
+    strategy:
+      fail-fast: false
+      matrix:
+        runs-on:
+          - label: lynx-ubuntu-26.04-xlarge
+            name: Ubuntu
+          - label: lynx-windows-2022-large
+            name: Windows
+    name: Build (${{ matrix.runs-on.name }})
     uses: ./.github/workflows/workflow-build.yml
     if: github.repository == 'lynx-family/lynx-stack'
     permissions: {}
     secrets:
       CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
+    with:
+      runs-on: ${{ matrix.runs-on.label }}
+      runs-on-name: ${{ matrix.runs-on.name }}
   benchmark:
     needs: build-all
     uses: ./.github/workflows/workflow-bench.yml
