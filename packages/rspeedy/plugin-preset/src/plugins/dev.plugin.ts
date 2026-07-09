@@ -259,7 +259,7 @@ export function pluginDev(
         }
         const rsbuildPath = require.resolve('@rsbuild/core')
         const rspeedyDir = path.dirname(
-          require.resolve('@lynx-js/rspeedy/package.json'),
+          require.resolve('@lynx-js/preset-rsbuild-plugin/package.json'),
         )
         const hostname = environment.config.dev?.client?.host ?? ''
 

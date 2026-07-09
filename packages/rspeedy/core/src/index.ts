@@ -20,14 +20,17 @@
  */
 
 // API
-export type { ExposedAPI } from './api.js'
+// The Lynx build engine (plugins, config types, `ExposedAPI`, `mergeRspeedyConfig`)
+// now lives in `@lynx-js/preset-rsbuild-plugin`; re-exported here so the
+// `@lynx-js/rspeedy` public API is unchanged for existing consumers.
+export type { ExposedAPI } from '@lynx-js/preset-rsbuild-plugin'
 export {
   createRspeedy,
   type RspeedyInstance,
   type CreateRspeedyOptions,
 } from './create-rspeedy.js'
 export { logger } from '@rsbuild/core'
-export { mergeRspeedyConfig } from './config/mergeRspeedyConfig.js'
+export { mergeRspeedyConfig } from '@lynx-js/preset-rsbuild-plugin'
 
 // Config
 export { defineConfig } from './config/defineConfig.js'
@@ -37,35 +40,40 @@ export {
   type LoadConfigOptions,
   type LoadConfigResult,
 } from './config/loadConfig.js'
-export type { Config } from './config/index.js'
-
-// Dev
-export type { Dev } from './config/dev/index.js'
-export type { Client as DevClient } from './config/dev/client.js'
-
-// Output
 export type {
-  CssModules,
-  CssModuleLocalsConvention,
-} from './config/output/css-modules.js'
-export type { DistPath } from './config/output/dist-path.js'
-export type {
+  BuildCache,
   BundleFilename,
   BundleFilenameContext,
-  Filename,
-} from './config/output/filename.js'
-export type { Minify } from './config/output/minify.js'
-export type { SourceMap } from './config/output/source-map.js'
-export type { Output } from './config/output/index.js'
-
-// Performance
-export type { ConsoleType, Performance } from './config/performance/index.js'
-export type { BuildCache } from './config/performance/build-cache.js'
-export type {
   ChunkSplit,
   ChunkSplitBySize,
   ChunkSplitCustom,
-} from './config/performance/chunk-split.js'
+  Config,
+  ConsoleType,
+  CssExtract,
+  CssExtractRspackLoaderOptions,
+  CssExtractRspackPluginOptions,
+  CssLoader,
+  CssLoaderModules,
+  CssModuleLocalsConvention,
+  CssModules,
+  Decorators,
+  Dev,
+  DevClient,
+  DistPath,
+  Entry,
+  EntryDescription,
+  Filename,
+  Minify,
+  Output,
+  Performance,
+  Resolve,
+  RsdoctorRspackPluginOptions,
+  Server,
+  Source,
+  SourceMap,
+  Tools,
+  TransformImport,
+} from '@lynx-js/preset-rsbuild-plugin'
 
 // RsbuildPlugin
 export type { RsbuildPlugin, RsbuildPluginAPI } from '@rsbuild/core'
@@ -73,30 +81,6 @@ export type { RsbuildPlugin, RsbuildPluginAPI } from '@rsbuild/core'
 export { rspack } from '@rsbuild/core'
 // Rspack Types
 export type { Rspack } from '@rsbuild/core'
-
-// Resolve
-export type { Resolve } from './config/resolve/index.js'
-
-// Server
-export type { Server } from './config/server/index.js'
-
-// Source
-export type { Source } from './config/source/index.js'
-export type { Decorators } from './config/source/decorators.js'
-export type { Entry, EntryDescription } from './config/source/entry.js'
-export type { TransformImport } from './config/source/transformImport.js'
-
-// Tools
-export type {
-  CssExtract,
-  CssExtractRspackLoaderOptions,
-  CssExtractRspackPluginOptions,
-} from './config/tools/css-extract.js'
-export type { CssLoader, CssLoaderModules } from './config/tools/css-loader.js'
-export type {
-  RsdoctorRspackPluginOptions,
-  Tools,
-} from './config/tools/index.js'
 
 // Version
 export { version, rsbuildVersion, rspackVersion } from './version.js'
