@@ -7,6 +7,7 @@ import { fileURLToPath } from 'node:url'
 import type { RsbuildPlugin } from '@rsbuild/core'
 import { beforeEach, describe, expect, rstest, test } from '@rstest/core'
 import { Command } from 'commander'
+import { EventEmitter } from 'eventemitter3'
 
 import { dev } from '../../src/cli/dev.js'
 
@@ -25,9 +26,7 @@ rstest.mock(import('@rsbuild/core'), () => {
   }
 })
 
-rstest.mock('chokidar', async () => {
-  const { EventEmitter } = await import('eventemitter3')
-
+rstest.mock('chokidar', () => {
   const emitter = new EventEmitter()
 
   // @ts-expect-error mock
@@ -36,15 +35,26 @@ rstest.mock('chokidar', async () => {
     return Promise.resolve()
   }
 
+  const chokidar = {
+    emitter,
+    watch: rstest.fn(() => {
+      return emitter
+    }),
+  }
+
   return {
-    default: {
-      emitter,
-      watch: rstest.fn(() => {
-        return emitter
-      }),
-    },
+    __esModule: true,
+    ...chokidar,
+    default: chokidar,
   }
 })
+
+function getMockedChokidar(chokidar: typeof import('chokidar')) {
+  return (chokidar.default ?? chokidar) as unknown as {
+    emitter: import('eventemitter3').EventEmitter
+    watch: ReturnType<typeof rstest.fn>
+  }
+}
 
 describe('CLI - dev', () => {
   const fixturesRoot = join(
@@ -258,8 +268,9 @@ describe('CLI - dev', () => {
   test('dev.watchFiles(array) with `type: "reload-server"`', async () => {
     const core = await import('@rsbuild/core')
     const chokidar = await import('chokidar')
+    const mockedChokidar = getMockedChokidar(chokidar)
 
-    rstest.mocked(chokidar.default.watch).mockClear()
+    rstest.mocked(mockedChokidar.watch).mockClear()
 
     const close = rstest.fn(() => {
       return Promise.resolve()
@@ -288,7 +299,7 @@ describe('CLI - dev', () => {
     )
 
     expect(core.createRsbuild).toBeCalledTimes(1)
-    expect(chokidar.default.watch).toBeCalledWith(
+    expect(mockedChokidar.watch).toBeCalledWith(
       [
         'lynx.config.js',
         'foo.js',
@@ -305,8 +316,9 @@ describe('CLI - dev', () => {
   test('dev.watchFiles(object) with `type: "reload-server"`', async () => {
     const core = await import('@rsbuild/core')
     const chokidar = await import('chokidar')
+    const mockedChokidar = getMockedChokidar(chokidar)
 
-    rstest.mocked(chokidar.default.watch).mockClear()
+    rstest.mocked(mockedChokidar.watch).mockClear()
 
     const close = rstest.fn(() => {
       return Promise.resolve()
@@ -335,7 +347,7 @@ describe('CLI - dev', () => {
     )
 
     expect(core.createRsbuild).toBeCalledTimes(1)
-    expect(chokidar.default.watch).toBeCalledWith(
+    expect(mockedChokidar.watch).toBeCalledWith(
       [
         'object.js',
         'bar.js',
@@ -351,8 +363,9 @@ describe('CLI - dev', () => {
   test('dev with --mode=production', async () => {
     const core = await import('@rsbuild/core')
     const chokidar = await import('chokidar')
+    const mockedChokidar = getMockedChokidar(chokidar)
 
-    rstest.mocked(chokidar.default.watch).mockClear()
+    rstest.mocked(mockedChokidar.watch).mockClear()
 
     const close = rstest.fn(() => {
       return Promise.resolve()
@@ -420,10 +433,7 @@ describe('CLI - dev', () => {
 
     expect(core.createRsbuild).toBeCalledTimes(1)
 
-    // @ts-expect-error mocked emitter
-    const { emitter } = chokidar.default as {
-      emitter: import('eventemitter3').EventEmitter
-    }
+    const { emitter } = getMockedChokidar(chokidar)
 
     await Promise.resolve()
 
