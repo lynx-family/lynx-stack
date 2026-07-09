@@ -152,9 +152,10 @@ export function snapshotPatchApply(snapshotPatch: SnapshotPatch): void {
  */
 function evaluate<T>(code: string): T {
   if (__DEV__) {
-    // Creators are self-contained: the runtime is injected as a call argument
-    // (see `SnapshotCreator`), so the evaluated code needs nothing from this
-    // scope.
+    // Creators receive the runtime as a call argument (see `SnapshotCreator`).
+    // Direct `eval` is kept for the legacy `__runtime__ || require(...)`
+    // fallback, which resolves `__webpack_require__` from this scope on
+    // runtimes that call creators with a single argument.
     return eval(`(() => ${code})()`) as T;
   }
   throw new Error('unreachable: evaluate is not supported in production');

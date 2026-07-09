@@ -1328,7 +1328,18 @@ where
     // module-scope import binding (statically tree-shakeable).
     let creator_runtime_id = private_ident!("__runtime__");
     let creator_runtime_expr = if self.dev_creator_param {
-      Expr::Ident(creator_runtime_id.clone())
+      // `__runtime__` is passed by runtimes that pass `SnapshotCreator`'s
+      // second argument; the inline `require` keeps the compiled output
+      // working on older runtimes that still call creators with a single
+      // argument (they load synchronously, so the pending-promise issue the
+      // parameter solves cannot occur there).
+      // TODO(compat): drop the `require` fallback once runtimes without
+      // `snapshotCreatorRuntime` are out of support.
+      quote!(
+        "($creator_runtime || require($runtime_pkg))" as Expr,
+        creator_runtime = creator_runtime_id.clone(),
+        runtime_pkg: Expr = Expr::Lit(Lit::Str(self.cfg.runtime_pkg.clone().into())),
+      )
     } else {
       self.runtime_id.clone()
     };
@@ -1553,7 +1564,7 @@ where
 
     let snapshot_create_call = if self.dev_creator_param {
       quote!(
-          r#"$runtime_id.snapshotCreatorMap[$snapshot_id] = ($snapshot_id, $creator_runtime) => $creator_runtime.createSnapshot(
+          r#"$runtime_id.snapshotCreatorMap[$snapshot_id] = ($snapshot_id, $creator_runtime) => $creator_runtime_ref.createSnapshot(
                $snapshot_id,
                $snapshot_creator,
                $snapshot_dynamic_parts_def,
@@ -1565,6 +1576,7 @@ where
           )"# as Expr,
           runtime_id: Expr = self.runtime_id.clone(),
           creator_runtime = creator_runtime_id.clone(),
+          creator_runtime_ref: Expr = creator_runtime_expr.clone(),
           snapshot_id = snapshot_id.clone(),
           entry_name: Expr = entry_name,
           snapshot_creator: Expr = snapshot_creator,
