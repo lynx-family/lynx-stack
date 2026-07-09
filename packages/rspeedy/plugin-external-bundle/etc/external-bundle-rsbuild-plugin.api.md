@@ -13,6 +13,7 @@ export const builtInExternalsPresetDefinitions: ExternalsPresetDefinitions;
 
 // @public
 export interface ExternalsPresetContext {
+    environmentName?: string;
     rootPath: string;
 }
 

@@ -64,9 +64,12 @@ describe('pluginExternalBundle reactlynx peer resolution', () => {
         )
       },
       modifyRspackConfig(
-        callback: (config: { plugins?: unknown[] }) => { plugins?: unknown[] },
+        callback: (
+          config: { plugins?: unknown[] },
+          utils: { environment: { name: string } },
+        ) => { plugins?: unknown[] },
       ) {
-        callback({ plugins: [] })
+        callback({ plugins: [] }, { environment: { name: 'lynx' } })
       },
       getRsbuildConfig() {
         return {}

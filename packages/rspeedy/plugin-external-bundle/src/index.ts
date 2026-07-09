@@ -213,6 +213,17 @@ export interface ExternalsPresetContext {
    * The current Rsbuild project root path.
    */
   rootPath: string
+
+  /**
+   * The Rsbuild environment being resolved (e.g. `'lynx'`, `'web'`).
+   *
+   * @remarks
+   *
+   * Presets use this to pick environment-specific artifacts — for example the
+   * built-in `reactlynx` preset resolves the web-encoded `react.web.bundle`
+   * for the `web` environment and `react.lynx.bundle` otherwise.
+   */
+  environmentName?: string
 }
 
 /**
@@ -366,9 +377,10 @@ export function normalizeBundlePath(bundlePath: string): string {
 function createBuiltInExternalsPresetDefinitions(): ExternalsPresetDefinitions {
   return {
     reactlynx: {
-      resolveExternals(value) {
+      resolveExternals(value, context) {
         return createReactLynxExternals(
           normalizeReactLynxPreset(value as ExternalsPresets['reactlynx']),
+          isWebEnvironment(context),
         )
       },
       resolveManagedAssets(value, context) {
@@ -378,19 +390,32 @@ function createBuiltInExternalsPresetDefinitions(): ExternalsPresetDefinitions {
         if (!preset || preset.url) {
           return new Map()
         }
+        const isWeb = isWebEnvironment(context)
         return new Map([
           [
-            getDefaultReactLynxBundlePath(preset),
+            getDefaultReactLynxBundlePath(preset, isWeb),
             getReactLynxBundlePath(
               context.rootPath,
               preset.reactUmdPackageName ?? DEFAULT_REACT_UMD_PACKAGE_NAME,
-              preset.async ?? false,
+              isWeb,
             ),
           ],
         ])
       },
     },
   }
+}
+
+// The bundle encoding follows the target environment: `lynx` / `lynx-*`
+// environments decode `tasm` bundles (mirroring rspeedy's `isLynx`
+// convention), every other environment (e.g. `web`) decodes web-encoded
+// bundles. `async` only controls how the external is mounted.
+function isWebEnvironment(context: ExternalsPresetContext): boolean {
+  const name = context.environmentName
+  if (name === undefined) {
+    return false
+  }
+  return name !== 'lynx' && !name.startsWith('lynx-')
 }
 
 function getReactLynxBundlePath(
@@ -569,10 +594,11 @@ function resolvePresetExternals(
 
 function createReactLynxExternals(
   preset: ReactLynxExternalsPresetOptions | undefined,
+  isWeb: boolean,
 ): ExternalsLoadingPluginOptions['externals'] {
   const bundleReference = preset?.url
     ? { url: preset.url }
-    : { bundlePath: getDefaultReactLynxBundlePath(preset) }
+    : { bundlePath: getDefaultReactLynxBundlePath(preset, isWeb) }
 
   return Object.fromEntries(
     Object.entries(reactLynxExternalTemplate).map(([request, external]) => [
@@ -630,11 +656,12 @@ class EmitManagedBundleAssetsPlugin {
 
 function getDefaultReactLynxBundlePath(
   preset: ReactLynxExternalsPresetOptions | undefined,
+  isWeb: boolean,
 ) {
   if (preset?.bundlePath) {
     return normalizeBundlePath(preset.bundlePath)
   }
-  return preset?.async
+  return isWeb
     ? REACT_LYNX_WEB_BUNDLE_FILE_NAME
     : REACT_LYNX_BUNDLE_FILE_NAME
 }
@@ -687,29 +714,6 @@ function getManagedBundleAssets(
         externalBundleRoot,
         normalizeBundlePath(external.bundlePath),
       ),
-    )
-  }
-
-  return assets
-}
-
-function getLocalBundleAssets(
-  options: PluginExternalBundleOptions,
-  presetManagedAssets: ManagedBundleAssets,
-  api: RsbuildPluginAPI,
-  serverBase: string | undefined,
-): Map<string, string> {
-  const assets = new Map<string, string>()
-  for (
-    const [bundlePath, sourcePath] of getManagedBundleAssets(
-      options,
-      presetManagedAssets,
-      api,
-    )
-  ) {
-    assets.set(
-      joinUrlPath(serverBase, bundlePath),
-      sourcePath,
     )
   }
 
@@ -802,23 +806,20 @@ export function pluginExternalBundle(
       const presetDefinitions = resolvePresetDefinitions(
         options.externalsPresetDefinitions,
       )
-      const presetResolution = resolvePresetExternals(
-        options.externalsPresets,
-        presetDefinitions,
-        {
-          rootPath: api.context.rootPath,
-        },
-      )
+      // Presets resolve per environment (in `modifyRspackConfig`, where the
+      // environment name is known); this map collects every environment's
+      // local bundle assets for the dev-server middleware, which reads it at
+      // request time.
+      const localBundleAssets = new Map<string, string>()
+      let serverBase: string | undefined
 
       api.modifyRsbuildConfig((config, { mergeRsbuildConfig }) => {
-        const localBundleAssets = getLocalBundleAssets(
-          options,
-          presetResolution.managedAssets,
-          api,
-          config.server?.base,
-        )
+        serverBase = config.server?.base
 
-        if (localBundleAssets.size === 0) {
+        if (
+          options.externals === undefined
+          && options.externalsPresets === undefined
+        ) {
           return config
         }
 
@@ -860,7 +861,7 @@ export function pluginExternalBundle(
         })
       })
 
-      api.modifyRspackConfig((config) => {
+      api.modifyRspackConfig((config, { environment }) => {
         const LAYERS = api.useExposed<ExposedLayers>(
           Symbol.for('LAYERS'),
         )
@@ -871,6 +872,14 @@ export function pluginExternalBundle(
           )
         }
 
+        const presetResolution = resolvePresetExternals(
+          options.externalsPresets,
+          presetDefinitions,
+          {
+            rootPath: api.context.rootPath,
+            environmentName: environment.name,
+          },
+        )
         const explicitExternals = resolvePluginExternals(
           options.externals,
         )
@@ -883,6 +892,12 @@ export function pluginExternalBundle(
           presetResolution.managedAssets,
           api,
         )
+        for (const [bundlePath, sourcePath] of managedBundleAssets) {
+          localBundleAssets.set(
+            joinUrlPath(serverBase, bundlePath),
+            sourcePath,
+          )
+        }
 
         config.plugins = config.plugins || []
         if (managedBundleAssets.size > 0) {
