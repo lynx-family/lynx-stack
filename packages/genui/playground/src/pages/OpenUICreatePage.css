@@ -74,8 +74,14 @@
 .openuiCreateCodeBlock {
   max-height: 360px;
   margin: 0;
+  overflow-x: hidden;
   border-top: 1px solid var(--geist-border);
   border-radius: 0 0 var(--geist-radius-md) var(--geist-radius-md);
+  padding: 14px 16px 18px;
+  line-height: 1.9;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+  word-break: break-word;
 }
 
 .openuiCreatePage .chatComposerFooter {

@@ -510,6 +510,29 @@
   overflow: auto;
 }
 
+.openuiCodeEditor .cm-scroller {
+  overflow-x: hidden;
+}
+
+.openuiCodeEditor .cm-editor {
+  font-size: 13px;
+  line-height: 1.65;
+}
+
+.openuiCodeEditor .cm-content {
+  padding: 18px 22px 26px;
+}
+
+.openuiCodeEditor .cm-line {
+  padding: 0 0 12px;
+  overflow-wrap: anywhere;
+  word-break: break-word;
+}
+
+.openuiCodeEditor .cm-line:last-child {
+  padding-bottom: 0;
+}
+
 .codeEditor .cm-gutters {
   background: var(--geist-code-bg);
   border-right: 1px solid var(--geist-border);
