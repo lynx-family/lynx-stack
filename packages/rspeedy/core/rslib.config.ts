@@ -6,13 +6,18 @@ import { pluginAreTheTypesWrong } from 'rsbuild-plugin-arethetypeswrong'
 import { pluginPublint } from 'rsbuild-plugin-publint'
 import { TypiaRspackPlugin } from 'typia-rspack-plugin'
 
-import { BUNDLE_STATS_JSON_OPTIONS } from './src/plugins/statsJsonOptions.js'
+import { BUNDLE_STATS_JSON_OPTIONS } from '../plugin-preset/src/plugins/statsJsonOptions.js'
 
 export default defineConfig({
   lib: [
     {
       format: 'esm',
       syntax: 'es2022',
+      source: {
+        entry: {
+          index: './src/index.ts',
+        },
+      },
       dts: {
         bundle: true,
         // There are type-check issues when using tsgo.

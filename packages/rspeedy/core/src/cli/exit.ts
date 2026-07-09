@@ -6,7 +6,7 @@ import { logger } from '@rsbuild/core'
 import { asyncExitHook, gracefulExit } from 'exit-hook'
 import color from 'picocolors'
 
-import { debug } from '../debug.js'
+import { debug } from '@lynx-js/preset-rsbuild-plugin/internal'
 
 const start = Date.now()
 
