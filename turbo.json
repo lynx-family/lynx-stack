@@ -8,7 +8,12 @@
     "COREPACK_INTEGRITY_KEYS",
     "COREPACK_NPM_REGISTRY",
     "COREPACK_DEFAULT_TO_LATEST",
-    "NODE_OPTIONS"
+    "GOCACHE",
+    "GOMODCACHE",
+    "GOPATH",
+    "NODE_OPTIONS",
+    "XDG_CACHE_HOME",
+    "npm_config_cache"
   ],
   "ui": "tui",
   "tasks": {

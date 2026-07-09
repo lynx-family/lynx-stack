@@ -91,7 +91,7 @@ export type RpcEndpoint<Parameters extends any[], Return> =
   | RpcEndpointAsyncVoid<Parameters>
   | RpcEndpointAsyncWithTransfer<Parameters, Return>;
 
-export function createRpcEndpoint<Parameters extends any[], Return = void>(
+export function createRpcEndpoint<Parameters extends any[], _Return = void>(
   name: string,
   isSync: false,
   hasReturn: false,

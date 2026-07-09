@@ -1,5 +1,4 @@
 import { defineConfig } from '@rslib/core'
-import { TypiaRspackPlugin } from 'typia-rspack-plugin'
 
 export default defineConfig({
   lib: [
@@ -7,12 +6,5 @@ export default defineConfig({
   ],
   source: {
     tsconfigPath: './tsconfig.build.json',
-  },
-  tools: {
-    rspack: {
-      plugins: [
-        new TypiaRspackPlugin({ log: false }),
-      ],
-    },
   },
 })

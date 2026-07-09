@@ -1,12 +1,14 @@
 import { mkdirSync, writeFileSync } from 'node:fs'
 import path from 'node:path'
+import { fileURLToPath } from 'node:url'
 
 import { defineConfig, type rsbuild } from '@rslib/core'
 import { pluginAreTheTypesWrong } from 'rsbuild-plugin-arethetypeswrong'
 import { pluginPublint } from 'rsbuild-plugin-publint'
-import { TypiaRspackPlugin } from 'typia-rspack-plugin'
 
 import { BUNDLE_STATS_JSON_OPTIONS } from './src/plugins/statsJsonOptions.js'
+
+const dirname = path.dirname(fileURLToPath(import.meta.url))
 
 export default defineConfig({
   lib: [
@@ -15,10 +17,6 @@ export default defineConfig({
       syntax: 'es2022',
       dts: {
         bundle: true,
-        // There are type-check issues when using tsgo.
-        // Excessive stack depth comparing types 'UnionToTuple<ArrayToUnion<[...?]>, LastOf<ArrayToUnion<[...?]>>, [ArrayToUnion<[...?]>] extends [never] ? true : false>' and 'ExtendRuleData<any, string>[]'.ts(2321)
-        // See: rsdoctor.plugin.ts
-        tsgo: false,
       },
       plugins: [pluginTypia(), pluginStatsJson()],
     },
@@ -86,22 +84,28 @@ export default defineConfig({
 })
 
 function pluginTypia(): rsbuild.RsbuildPlugin {
+  const project = path.join(dirname, 'tsconfig.build.json')
+  const source = path.join(dirname, 'src/config/validate.ts')
+
   return {
     name: 'rspeedy-plugin-typia',
     setup(api) {
       api.modifyBundlerChain(chain => {
-        const { source } = api.getRsbuildConfig()
-
         chain
-          .plugin('typia')
-          .use(TypiaRspackPlugin, [
+          .module
+          .rule('ttsc-typia')
+          .test(/\.[cm]?tsx?$/)
+          .include
+          .add(source)
+          .end()
+          .enforce('pre')
+          .use('ttsc')
+          .loader('@ttsc/unplugin/turbopack')
+          .options(
             {
-              cache: false,
-              include: './src/config/validate.ts',
-              tsconfig: source?.tsconfigPath,
-              log: false,
+              project,
             },
-          ])
+          )
       })
     },
   }

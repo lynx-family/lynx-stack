@@ -1,12 +1,8 @@
 // Copyright 2026 The Lynx Authors. All rights reserved.
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
-import path from 'node:path'
-import { fileURLToPath } from 'node:url'
-
 import { defineConfig } from '@rstest/core'
 import type { RstestConfig } from '@rstest/core'
-import { TypiaRspackPlugin } from 'typia-rspack-plugin'
 
 import { lynxRstestConfig } from '@lynx-js/test-tools/rstest-config'
 
@@ -21,19 +17,12 @@ const config: RstestConfig = defineConfig({
     // would treat builds as production (hashed filenames).
     env: { NODE_ENV: 'test' },
   }),
-  // Expand `src`'s typia macros; `include` keeps typia away from other
-  // packages' compiled output (see rspeedy/plugin-config).
   tools: {
     rspack: {
       // This `tools` overrides the preset's — keep its `url: false` here.
-      module: { parser: { javascript: { url: false } } },
-      plugins: [
-        new TypiaRspackPlugin({
-          include: [
-            path.join(path.dirname(fileURLToPath(import.meta.url)), 'src'),
-          ],
-        }),
-      ],
+      module: {
+        parser: { javascript: { url: false } },
+      },
     },
   },
 })

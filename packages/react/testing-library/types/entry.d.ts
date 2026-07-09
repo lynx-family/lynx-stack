@@ -11,6 +11,7 @@ import { queries, Queries, BoundFunction } from '@testing-library/dom';
 import { LynxElement, type ElementTree, type LynxTestingEnv } from '@lynx-js/testing-environment';
 import { act } from 'preact/test-utils';
 import type { EventType, FireFunction, FireObject } from '@testing-library/dom';
+import type * as React from 'react';
 export * from '@testing-library/dom';
 export { ElementTree, LynxTestingEnv, act };
 

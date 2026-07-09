@@ -11,7 +11,7 @@ try {
 } catch {
   // ignore error
 }
-const { main } = await import('../lib/cli/main.js')
+const { main } = await import('../dist/cli/main.js')
 
 await main(process.argv)
 

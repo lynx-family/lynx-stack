@@ -41,6 +41,9 @@ export function pluginRsdoctor(
           }
 
           config.plugins ??= []
+          const RsdoctorPlugin = RsdoctorRspackPlugin as new(
+            options: unknown,
+          ) => NonNullable<typeof config.plugins>[number]
 
           const defaultOptions: RsdoctorRspackPluginOptions = {
             // We disable client server on CI by default.
@@ -64,13 +67,8 @@ export function pluginRsdoctor(
 
           config.plugins.push(
             // Normalize the simplified config type at the plugin boundary.
-            new RsdoctorRspackPlugin(
-              mergeRsbuildConfig(
-                defaultOptions,
-                options,
-              ) as unknown as ConstructorParameters<
-                typeof RsdoctorRspackPlugin<[]>
-              >[0],
+            new RsdoctorPlugin(
+              mergeRsbuildConfig(defaultOptions, options),
             ),
           )
         }

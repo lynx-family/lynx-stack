@@ -49,13 +49,13 @@ class WebSocket_2 {
     static CLOSED: ReadyState;
     static CLOSING: ReadyState;
     static CONNECTING: ReadyState;
-    get onclose(): ((event: EventMap["close"]) => void) | null;
+    get onclose(): ((event: EventMap['close']) => void) | null;
     set onclose(callback: ((event: EventMap['close']) => void) | null);
-    get onerror(): ((event: EventMap["error"]) => void) | null;
+    get onerror(): ((event: EventMap['error']) => void) | null;
     set onerror(callback: ((event: EventMap['error']) => void) | null);
-    get onmessage(): ((event: EventMap["message"]) => void) | null;
+    get onmessage(): ((event: EventMap['message']) => void) | null;
     set onmessage(callback: ((event: EventMap['message']) => void) | null);
-    get onopen(): ((event: EventMap["open"]) => void) | null;
+    get onopen(): ((event: EventMap['open']) => void) | null;
     set onopen(callback: ((event: EventMap['open']) => void) | null);
     static OPEN: ReadyState;
     ping(): void;

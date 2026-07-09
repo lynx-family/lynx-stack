@@ -3,7 +3,10 @@
 // LICENSE file in the root directory of this source tree.
 import type { DeviceAction, Size } from '@midscene/core';
 import { Agent as MidsceneAgent } from '@midscene/core/agent';
-import { callAIWithStringResponse } from '@midscene/core/ai-model';
+import {
+  callAIWithStringResponse,
+  getModelRuntime,
+} from '@midscene/core/ai-model';
 import type { ChatCompletionMessageParam } from '@midscene/core/ai-model';
 import type { AbstractInterface } from '@midscene/core/device';
 import sharp from 'sharp';
@@ -93,15 +96,6 @@ Rules for the JSON:
 - Mention approximate regions such as "top bar", "main card", "bottom section", or "right icon" when describing issues.
 - Do not invent hidden or non-visible differences.`;
 
-interface MidsceneVisualEvaluationAgent {
-  modelConfigManager: {
-    getModelConfig(
-      intent: 'insight',
-    ): Parameters<typeof callAIWithStringResponse>[1];
-  };
-  destroy(): Promise<void>;
-}
-
 class StaticImageMidscenePage {
   interfaceType = 'static';
 
@@ -143,7 +137,7 @@ export async function evaluateImagesWithMidscene(
   const agent = new MidsceneAgent(page, {
     autoPrintReportMsg: false,
     generateReport: false,
-  }) as MidsceneVisualEvaluationAgent;
+  });
   const messages = buildVisualEvaluationMessages(
     referenceImageDataUrl,
     renderedImageDataUrl,
@@ -151,7 +145,10 @@ export async function evaluateImagesWithMidscene(
 
   try {
     const modelConfig = agent.modelConfigManager.getModelConfig('insight');
-    const { content } = await callAIWithStringResponse(messages, modelConfig);
+    const { content } = await callAIWithStringResponse(
+      messages,
+      getModelRuntime(modelConfig),
+    );
     return normalizeEvaluationResult(content);
   } finally {
     await agent.destroy().catch(() => {

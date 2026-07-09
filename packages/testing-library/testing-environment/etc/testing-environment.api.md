@@ -53,7 +53,7 @@ export const initElementTree: () => {
     __CreateWrapperElement(parentComponentUniqueId: number): LynxElement;
     __AddInlineStyle(e: HTMLElement, key: number, value: string): void;
     __AppendElement(parent: LynxElement, child: LynxElement): void;
-    __SetCSSId(e: LynxElement[] | LynxElement, id: string, entryName?: string | undefined): void;
+    __SetCSSId(e: LynxElement | LynxElement[], id: string, entryName?: string): void;
     __SetAttribute(e: LynxElement, key: string, value: any): void;
     __AddEvent(e: LynxElement, eventType: string, eventName: string, eventHandler: string | Record<string, any>): void;
     __GetEvent(e: LynxElement, eventType: string, eventName: string): {
@@ -69,7 +69,7 @@ export const initElementTree: () => {
     __RemoveGestureDetector(e: LynxElement, id: number): void;
     __GetDataset(e: LynxElement): DOMStringMap;
     __RemoveElement(parent: LynxElement, child: LynxElement): void;
-    __InsertElementBefore(parent: LynxElement, child: LynxElement, ref?: LynxElement | undefined): void;
+    __InsertElementBefore(parent: LynxElement, child: LynxElement, ref?: LynxElement): void;
     __ReplaceElement(newElement: LynxElement, oldElement: LynxElement): void;
     __FlushElementTree(): void;
     __UpdateListComponents(_list: LynxElement, _components: string[]): void;

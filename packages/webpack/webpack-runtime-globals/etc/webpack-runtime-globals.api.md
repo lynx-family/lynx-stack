@@ -6,11 +6,11 @@
 
 // @public
 export const RuntimeGlobals: {
-    readonly lynxAsyncChunkIds: "__webpack_require__.lynx_aci";
-    readonly lynxChunkEntries: "lynx.__chunk_entries__";
-    readonly lynxProcessEvalResult: "globalThis.processEvalResult";
-    readonly lynxCacheEventsSetupList: "__webpack_require__.lynx_ce.setupList";
-    readonly lynxCacheEvents: "__webpack_require__.lynx_ce";
+    readonly lynxAsyncChunkIds: '__webpack_require__.lynx_aci';
+    readonly lynxChunkEntries: 'lynx.__chunk_entries__';
+    readonly lynxProcessEvalResult: 'globalThis.processEvalResult';
+    readonly lynxCacheEventsSetupList: '__webpack_require__.lynx_ce.setupList';
+    readonly lynxCacheEvents: '__webpack_require__.lynx_ce';
 };
 
 ```

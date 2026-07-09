@@ -1,11 +1,10 @@
 import { defineConfig } from '@rslib/core'
 import { pluginAreTheTypesWrong } from 'rsbuild-plugin-arethetypeswrong'
 import { pluginPublint } from 'rsbuild-plugin-publint'
-import { TypiaRspackPlugin } from 'typia-rspack-plugin'
 
 export default defineConfig({
   lib: [
-    { format: 'esm', syntax: 'es2022', dts: { bundle: true, tsgo: false } },
+    { format: 'esm', syntax: 'es2022', dts: { bundle: true } },
   ],
   source: {
     entry: {
@@ -32,11 +31,4 @@ export default defineConfig({
     }),
     pluginPublint(),
   ],
-  tools: {
-    rspack: {
-      plugins: [
-        new TypiaRspackPlugin({ log: false }),
-      ],
-    },
-  },
 })

@@ -45,8 +45,14 @@ minimumReleaseAge: 4320
 # would otherwise be blocked by `minimumReleaseAge`.
 minimumReleaseAgeExclude:
   - "@lynx-js/*"
-  # typia-rspack-plugin uses trusted publish + staged publish
-  - "typia-rspack-plugin"
+  # TypeScript 7's native packages and typia's ttsc toolchain are upgraded
+  # together for the TS 7 migration and publish coordinated fresh binaries.
+  - "@ttsc/*"
+  - "@typia/*"
+  - "@typescript/*"
+  - "ttsc"
+  - "typia"
+  - "typescript"
   # First-party Rspack/Rsbuild toolchain — trusted, upgraded deliberately.
   - "@rspack/*"
   - "@rsbuild/*"
@@ -85,6 +91,7 @@ peerDependencyRules:
     "@lynx-js/lynx-ui-switch>@types/react": "^19.2.0"
     "@standard-community/standard-json>quansync": "^0.2.10 || ^0.2.11"
     "@types/react-dom>@types/react": "^18 || ^19.2.0"
+    "i18next>typescript": "^7.0.0"
     "rsbuild-plugin-tailwindcss>tailwindcss": "^3 || ^4"
 
 # Default catalogs

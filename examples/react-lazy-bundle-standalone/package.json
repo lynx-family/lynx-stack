@@ -4,7 +4,7 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "build": "pnpm run --parallel \"/^build:(producer|consumer)$/\"",
+    "build": "pnpm run \"/^build:(producer|consumer)$/\"",
     "build:consumer": "rspeedy build --config lynx.config.consumer.js",
     "build:producer": "rspeedy build --config lynx.config.producer.js",
     "dev": "node scripts/serve.mjs dev",

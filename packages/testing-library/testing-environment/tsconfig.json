@@ -4,6 +4,7 @@
     "verbatimModuleSyntax": false,
     "noImplicitAny": false,
     "isolatedDeclarations": false,
+    "lib": ["ES2022", "DOM", "DOM.Iterable"],
     "rootDir": "src",
     "outDir": "dist",
     "declarationDir": "dist",

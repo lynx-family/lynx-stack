@@ -61,9 +61,9 @@ export function pluginReactLynx(userOptions?: PluginReactLynxOptions): RsbuildPl
 
 // @public
 export interface PluginReactLynxOptions {
-    compat?: Partial<CompatVisitorConfig> & {
+    compat?: (Partial<CompatVisitorConfig> & {
         disableCreateSelectorQueryIncompatibleWarning?: boolean;
-    } | undefined;
+    }) | undefined;
     customCSSInheritanceList?: string[] | undefined;
     debugInfoOutside?: boolean;
     defaultDisplayLinear?: boolean;

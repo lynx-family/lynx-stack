@@ -4,11 +4,7 @@
 import { setTimeout as sleep } from 'node:timers/promises';
 
 import type { DeviceAction, Size } from '@midscene/core';
-import {
-  defineActionSwipe,
-  defineActionTap,
-  normalizeMobileSwipeParam,
-} from '@midscene/core/device';
+import { defineActionSwipe, defineActionTap } from '@midscene/core/device';
 
 import type { KittenLynxJudgePage } from '../types.js';
 import { getImageFormat, getImageSize } from './image-size.js';
@@ -42,17 +38,16 @@ export class KittenLynxMidscenePage {
 
   actionSpace(): DeviceAction[] {
     return [
-      defineActionTap(async ({ locate }) => {
-        await this.tapAt({
-          x: locate.center[0],
-          y: locate.center[1],
-        });
-      }),
-      defineActionSwipe(async (param) => {
-        const swipe = normalizeMobileSwipeParam(param, await this.size());
-        for (let index = 0; index < swipe.repeatCount; index++) {
-          await this.swipe(swipe.startPoint, swipe.endPoint, swipe.duration);
-        }
+      defineActionTap(point => this.tapAt(point)),
+      defineActionSwipe({
+        size: () => this.size(),
+        swipe: async (startPoint, endPoint, options) => {
+          const repeat = options?.repeat ?? 1;
+          const duration = options?.duration ?? 0;
+          for (let index = 0; index < repeat; index++) {
+            await this.swipe(startPoint, endPoint, duration);
+          }
+        },
       }),
     ];
   }

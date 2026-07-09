@@ -19,7 +19,7 @@
     "@lynx-js/types": "4.0.0",
     "@rsbuild/plugin-type-check": "1.3.4",
     "@types/react": "^18.3.28",
-    "typescript": "~5.9.3"
+    "typescript": "~7.0.2"
   },
   "engines": {
     "node": ">=18"

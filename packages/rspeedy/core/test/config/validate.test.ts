@@ -213,7 +213,7 @@ describe('Config Validation', () => {
           [Error: Invalid configuration.
 
           Invalid config on \`$input.dev.progressBar\`.
-            - Expect to be (__type | boolean | undefined)
+            - Expect to be (boolean | undefined | { id?: string; })
             - Got: null
           ]
         `)
@@ -1038,7 +1038,7 @@ describe('Config Validation', () => {
             - Got: undefined
 
           Invalid config on \`$input.output.copy.patterns\`.
-            - Expect to be Array<string | (Pick<RawCopyPattern, "from"> & Partial<Omit<RawCopyPattern, "from">>)>
+            - Expect to be Array<string | Pick<RawCopyPattern, "from"> & Partial<Omit<RawCopyPattern, "from">>>
             - Got: undefined
           ]
         `)
@@ -1052,7 +1052,7 @@ describe('Config Validation', () => {
             - Got: null
 
           Invalid config on \`$input.output.copy.patterns\`.
-            - Expect to be Array<string | (Pick<RawCopyPattern, "from"> & Partial<Omit<RawCopyPattern, "from">>)>
+            - Expect to be Array<string | Pick<RawCopyPattern, "from"> & Partial<Omit<RawCopyPattern, "from">>>
             - Got: undefined
           ]
         `)
@@ -1066,7 +1066,7 @@ describe('Config Validation', () => {
             - Got: undefined
 
           Invalid config on \`$input.output.copy.patterns\`.
-            - Expect to be Array<string | (Pick<RawCopyPattern, "from"> & Partial<Omit<RawCopyPattern, "from">>)>
+            - Expect to be Array<string | Pick<RawCopyPattern, "from"> & Partial<Omit<RawCopyPattern, "from">>>
             - Got: undefined
           ]
         `)
@@ -1080,7 +1080,7 @@ describe('Config Validation', () => {
             - Got: undefined
 
           Invalid config on \`$input.output.copy.patterns\`.
-            - Expect to be Array<string | (Pick<RawCopyPattern, "from"> & Partial<Omit<RawCopyPattern, "from">>)>
+            - Expect to be Array<string | Pick<RawCopyPattern, "from"> & Partial<Omit<RawCopyPattern, "from">>>
             - Got: undefined
           ]
         `)
@@ -1094,7 +1094,7 @@ describe('Config Validation', () => {
           Unknown property: \`$input.output.copy[0].dist\` in configuration
 
           Invalid config on \`$input.output.copy.patterns\`.
-            - Expect to be Array<string | (Pick<RawCopyPattern, "from"> & Partial<Omit<RawCopyPattern, "from">>)>
+            - Expect to be Array<string | Pick<RawCopyPattern, "from"> & Partial<Omit<RawCopyPattern, "from">>>
             - Got: undefined
           ]
         `)
@@ -1108,7 +1108,7 @@ describe('Config Validation', () => {
             - Got: null
 
           Invalid config on \`$input.output.copy.patterns\`.
-            - Expect to be Array<string | (Pick<RawCopyPattern, "from"> & Partial<Omit<RawCopyPattern, "from">>)>
+            - Expect to be Array<string | Pick<RawCopyPattern, "from"> & Partial<Omit<RawCopyPattern, "from">>>
             - Got: undefined
           ]
         `)
@@ -1557,7 +1557,7 @@ describe('Config Validation', () => {
         [Error: Invalid configuration.
 
         Invalid config on \`$input.performance.buildCache.cacheDigest\`.
-          - Expect to be (Array<string | undefined> | undefined)
+          - Expect to be (Array<undefined | string> | undefined)
           - Got: null
         ]
       `)
@@ -2136,7 +2136,7 @@ describe('Config Validation', () => {
           [Error: Invalid configuration.
 
           Invalid config on \`$input.server.cors.origin\`.
-            - Expect to be (Array<string | boolean | RegExp> | RegExp | boolean | string | undefined)
+            - Expect to be (Array<string | false | true | RegExp> | RegExp | boolean | string | undefined)
             - Got: number
           ]
         `)
@@ -2931,7 +2931,7 @@ describe('Config Validation', () => {
           [Error: Invalid configuration.
 
           Invalid config on \`$input.tools.bundlerChain\`.
-            - Expect to be (Array<__type> | undefined)
+            - Expect to be (((chain: RspackChain, utils: ModifyBundlerChainUtils) => MaybePromise<void>)[] | undefined)
             - Got: object
           ]
         `)
@@ -2947,7 +2947,7 @@ describe('Config Validation', () => {
           [Error: Invalid configuration.
 
           Invalid config on \`$input.tools.bundlerChain\`.
-            - Expect to be (Array<__type> | undefined)
+            - Expect to be (((chain: RspackChain, utils: ModifyBundlerChainUtils) => MaybePromise<void>)[] | undefined)
             - Got: number
           ]
         `)

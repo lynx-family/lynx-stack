@@ -18,6 +18,9 @@ type FunctionPropertyNames<T> = {
 }[keyof T];
 
 export type ForwardableNodesRefMethod = Exclude<FunctionPropertyNames<NodesRef>, 'exec'>;
+type ForwardableNodesRefMethodArgs = {
+  [K in ForwardableNodesRefMethod]: Parameters<NodesRef[K]>;
+}[ForwardableNodesRefMethod];
 export type RefProxyForwardedMethods<TProxy> = {
   [K in ForwardableNodesRefMethod]: (...args: Parameters<NodesRef[K]>) => TProxy;
 };
@@ -134,7 +137,7 @@ export abstract class SelectorRefProxy<TProxy extends SelectorRefProxy<TProxy>> 
           return Reflect.get(target, prop, receiver);
         }
 
-        return <K extends ForwardableNodesRefMethod>(...args: Parameters<NodesRef[K]>) => {
+        return (...args: ForwardableNodesRefMethodArgs) => {
           return target.createProxyTarget().setTask(prop as ForwardableNodesRefMethod, args);
         };
       },
@@ -147,12 +150,12 @@ export abstract class SelectorRefProxy<TProxy extends SelectorRefProxy<TProxy>> 
 
   abstract get selector(): string;
 
-  private setTask<K extends ForwardableNodesRefMethod>(
-    method: K,
-    args: Parameters<NodesRef[K]>,
+  private setTask(
+    method: ForwardableNodesRefMethod,
+    args: ForwardableNodesRefMethodArgs,
   ): TProxy {
     this.task = (nodesRef) => {
-      const nodesRefMethod = nodesRef[method] as (...params: Parameters<NodesRef[K]>) => SelectorQuery;
+      const nodesRefMethod = nodesRef[method] as (...params: ForwardableNodesRefMethodArgs) => SelectorQuery;
       return nodesRefMethod.apply(nodesRef, args);
     };
     return this as unknown as TProxy;
