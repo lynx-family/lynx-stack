@@ -2,10 +2,9 @@
 "@lynx-js/react-rsbuild-plugin": minor
 ---
 
-feat(lazy-bundle): choose the lazy bundle loader from `engineVersion`
-
-Select the new `fetchBundle` loader when `engineVersion >= 3.8`, otherwise keep
-the legacy `QueryComponent` loader:
+Choose the lazy bundle loader from `engineVersion`: use the new `fetchBundle`
+loader when `engineVersion >= 3.8`, otherwise keep the legacy `QueryComponent`
+loader.
 
 ```js
 import('./Foo.jsx', { with: { mode: 'sync' | 'async' } });

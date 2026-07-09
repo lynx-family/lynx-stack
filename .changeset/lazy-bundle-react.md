@@ -2,9 +2,7 @@
 "@lynx-js/react": minor
 ---
 
-feat(lazy-bundle): add the `lynx.fetchBundle`-based lazy bundle loader
-
-Load a lazy bundle through `lynx.fetchBundle` and control whether the first
+Add the `lynx.fetchBundle`-based lazy bundle loader. Control whether the first
 screen blocks on the fetch with the `mode` import attribute:
 
 ```js
