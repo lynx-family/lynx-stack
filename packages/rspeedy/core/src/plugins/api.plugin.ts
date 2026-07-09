@@ -5,9 +5,9 @@
 import { logger } from '@rsbuild/core'
 import type { RsbuildPlugin } from '@rsbuild/core'
 
-import type { ExposedAPI } from '../api.js'
-import type { Config } from '../config/index.js'
-import { debug } from '../debug.js'
+import type { Config, ExposedAPI } from '@lynx-js/preset-rsbuild-plugin'
+import { debug } from '@lynx-js/preset-rsbuild-plugin/internal'
+
 import { version } from '../version.js'
 
 const sAPI = Symbol.for('rspeedy.api')
