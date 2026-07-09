@@ -137,6 +137,8 @@ overrides:
   "@rsbuild/core>@rspack/core": "$@rspack/core"
   "@rsdoctor/rspack-plugin>@rspack/core": "$@rspack/core"
   "@rsdoctor/types>@rspack/core": "$@rspack/core"
+  # errorstacks@2.4.2 requires Node >=24, but CI installs on Node 22.
+  errorstacks: 2.4.1
 
 packageExtensions:
   "@rspack/test-tools@*":

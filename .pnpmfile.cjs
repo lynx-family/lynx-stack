@@ -8,6 +8,7 @@ const packagesUsingLegacyTypeScriptApi = new Set([
   '@typescript-eslint/type-utils',
   '@typescript-eslint/typescript-estree',
   '@typescript-eslint/utils',
+  'rsbuild-plugin-arethetypeswrong',
   'ts-api-utils',
   'typedoc',
   'typescript-eslint',
