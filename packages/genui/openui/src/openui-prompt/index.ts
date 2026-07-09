@@ -76,7 +76,58 @@ const ICON_NAMES = [
 
 const GAP_VALUES = ['none', 'xs', 's', 'm', 'l', 'xl'] as const;
 const ALIGN_VALUES = ['start', 'center', 'end', 'stretch'] as const;
-const JUSTIFY_VALUES = ['start', 'center', 'end', 'between'] as const;
+const STACK_JUSTIFY_VALUES = ['start', 'center', 'end', 'between'] as const;
+const EXTENDED_JUSTIFY_VALUES = [
+  'start',
+  'center',
+  'end',
+  'between',
+  'around',
+  'evenly',
+  'spaceBetween',
+  'spaceAround',
+  'spaceEvenly',
+  'stretch',
+] as const;
+const TEXT_VARIANTS = [
+  'h1',
+  'h2',
+  'h3',
+  'h4',
+  'h5',
+  'caption',
+  'body',
+] as const;
+
+const pathBindingSchema = z.object({
+  path: z.string(),
+});
+tagSchemaId(pathBindingSchema, 'PathBinding');
+
+const stringLikeSchema = z.union([
+  z.string(),
+  z.number(),
+  z.boolean(),
+  pathBindingSchema,
+]);
+tagSchemaId(stringLikeSchema, 'StringLike');
+
+const booleanLikeSchema = z.union([
+  z.boolean(),
+  pathBindingSchema,
+]);
+tagSchemaId(booleanLikeSchema, 'BooleanLike');
+
+const templateChildrenSchema = z.object({
+  componentId: z.string(),
+  path: z.string(),
+});
+tagSchemaId(templateChildrenSchema, 'TemplateChildren');
+
+const listChildrenSchema = z.union([
+  z.array(z.any()),
+  templateChildrenSchema,
+]);
 
 const actionStepSchema = z.looseObject({
   type: z.string(),
@@ -108,9 +159,49 @@ const Stack = defineComponent({
     wrap: z.boolean().optional(),
     gap: z.enum(GAP_VALUES).optional(),
     align: z.enum(ALIGN_VALUES).optional(),
-    justify: z.enum(JUSTIFY_VALUES).optional(),
+    justify: z.enum(STACK_JUSTIFY_VALUES).optional(),
   }),
   description: 'Flex layout container.',
+  component: () => null,
+});
+
+const Row = defineComponent({
+  name: 'Row',
+  props: z.object({
+    children: z.array(z.any()),
+    justify: z.enum(EXTENDED_JUSTIFY_VALUES).optional(),
+    align: z.enum(ALIGN_VALUES).optional(),
+    gap: z.enum(GAP_VALUES).optional(),
+    wrap: z.boolean().optional(),
+  }),
+  description: 'Horizontal flex layout container.',
+  component: () => null,
+});
+
+const Column = defineComponent({
+  name: 'Column',
+  props: z.object({
+    children: z.array(z.any()),
+    justify: z.enum(EXTENDED_JUSTIFY_VALUES).optional(),
+    align: z.enum(ALIGN_VALUES).optional(),
+    gap: z.enum(GAP_VALUES).optional(),
+  }),
+  description: 'Vertical flex layout container.',
+  component: () => null,
+});
+
+const List = defineComponent({
+  name: 'List',
+  props: z.object({
+    children: listChildrenSchema.optional(),
+    items: listChildrenSchema.optional(),
+    direction: z.enum(['vertical', 'horizontal']).optional(),
+    align: z.enum(ALIGN_VALUES).optional(),
+    gap: z.enum(GAP_VALUES).optional(),
+    divider: z.boolean().optional(),
+  }),
+  description:
+    'List container for repeated children. Pass child components as the first argument.',
   component: () => null,
 });
 
@@ -123,7 +214,7 @@ const Card = defineComponent({
     wrap: z.boolean().optional(),
     gap: z.enum(GAP_VALUES).optional(),
     align: z.enum(ALIGN_VALUES).optional(),
-    justify: z.enum(JUSTIFY_VALUES).optional(),
+    justify: z.enum(STACK_JUSTIFY_VALUES).optional(),
   }),
   description:
     'Styled container (card/sunk/clear). Accepts Stack layout parameters.',
@@ -151,10 +242,30 @@ const TextContent = defineComponent({
   component: () => null,
 });
 
+const Text = defineComponent({
+  name: 'Text',
+  props: z.object({
+    text: stringLikeSchema,
+    variant: z.enum(TEXT_VARIANTS).optional(),
+  }),
+  description:
+    'Plain text with semantic variants h1, h2, h3, h4, h5, caption, and body.',
+  component: () => null,
+});
+
 const Separator = defineComponent({
   name: 'Separator',
   props: z.object({}),
   description: 'Visual separator.',
+  component: () => null,
+});
+
+const Divider = defineComponent({
+  name: 'Divider',
+  props: z.object({
+    axis: z.enum(['horizontal', 'vertical']).optional(),
+  }),
+  description: 'Horizontal or vertical divider.',
   component: () => null,
 });
 
@@ -192,7 +303,7 @@ const Tag = defineComponent({
 const Image = defineComponent({
   name: 'Image',
   props: z.object({
-    url: z.string(),
+    url: stringLikeSchema,
     fit: z.enum(['contain', 'cover', 'fill', 'none', 'scale-down']).optional(),
     variant: z.enum([
       'icon',
@@ -227,6 +338,26 @@ const Loading = defineComponent({
   component: () => null,
 });
 
+const AudioPlayer = defineComponent({
+  name: 'AudioPlayer',
+  props: z.object({
+    url: stringLikeSchema,
+    description: stringLikeSchema.optional(),
+  }),
+  description: 'Audio attachment placeholder with URL and description.',
+  component: () => null,
+});
+
+const Video = defineComponent({
+  name: 'Video',
+  props: z.object({
+    url: stringLikeSchema,
+    title: stringLikeSchema.optional(),
+  }),
+  description: 'Video attachment placeholder with URL and optional title.',
+  component: () => null,
+});
+
 const CheckBox = defineComponent({
   name: 'CheckBox',
   props: z.object({
@@ -253,6 +384,21 @@ const RadioGroup = defineComponent({
   component: () => null,
 });
 
+const ChoicePicker = defineComponent({
+  name: 'ChoicePicker',
+  props: z.object({
+    label: stringLikeSchema.optional(),
+    options: z.union([z.array(stringLikeSchema), stringLikeSchema]),
+    value: stringLikeSchema.optional(),
+    variant: z.enum(['default', 'card']).optional(),
+    displayStyle: z.enum(['list', 'chips', 'dropdown']).optional(),
+    filterable: booleanLikeSchema.optional(),
+  }),
+  description:
+    'Choice picker rendered as selectable chips, list items, or a dropdown-like field.',
+  component: () => null,
+});
+
 const Slider = defineComponent({
   name: 'Slider',
   props: z.object({
@@ -265,6 +411,21 @@ const Slider = defineComponent({
     name: z.string().optional(),
   }),
   description: 'Continuous-value slider.',
+  component: () => null,
+});
+
+const DateTimeInput = defineComponent({
+  name: 'DateTimeInput',
+  props: z.object({
+    value: stringLikeSchema,
+    enableDate: booleanLikeSchema.optional(),
+    enableTime: booleanLikeSchema.optional(),
+    min: stringLikeSchema.optional(),
+    max: stringLikeSchema.optional(),
+    label: stringLikeSchema.optional(),
+  }),
+  description:
+    'Date/time value display with optional label, min/max, and enabled date/time hints.',
   component: () => null,
 });
 
@@ -284,41 +445,104 @@ const TextField = defineComponent({
   component: () => null,
 });
 
+const Modal = defineComponent({
+  name: 'Modal',
+  props: z.object({
+    trigger: z.any(),
+    content: z.any(),
+    title: stringLikeSchema.optional(),
+    closeOnAction: z.boolean().optional(),
+  }),
+  description:
+    'Tap-triggered modal container. Pass the trigger component first and content second.',
+  component: () => null,
+});
+
+const Tabs = defineComponent({
+  name: 'Tabs',
+  props: z.object({
+    tabs: z.array(z.object({
+      value: z.string(),
+      title: stringLikeSchema,
+      child: z.any(),
+    })),
+    value: z.string().optional(),
+  }),
+  description:
+    'Tabbed content switcher. Each tab item is an object with value, title, and child.',
+  component: () => null,
+});
+
 const DEFAULT_COMPONENTS: OpenUiPromptComponent[] = [
   Stack,
+  Row,
+  Column,
+  List,
   Card,
   CardHeader,
+  Text,
   TextContent,
   Separator,
+  Divider,
   Button,
   Buttons,
   Tag,
   Image,
   Icon,
   Loading,
+  AudioPlayer,
+  Video,
   CheckBox,
   RadioGroup,
+  ChoicePicker,
   Slider,
+  DateTimeInput,
   TextField,
+  Modal,
+  Tabs,
 ];
 
 const DEFAULT_COMPONENT_GROUPS: ComponentGroup[] = [
-  { name: 'Layout', components: ['Stack'] },
+  {
+    name: 'Layout',
+    components: [
+      'Stack',
+      'Row',
+      'Column',
+      'List',
+      'Tabs',
+      'Modal',
+      'Separator',
+      'Divider',
+    ],
+  },
   {
     name: 'Content',
-    components: ['Card', 'CardHeader', 'TextContent', 'Separator'],
+    components: ['Card', 'CardHeader', 'Text', 'TextContent'],
   },
   { name: 'Buttons', components: ['Button', 'Buttons'] },
-  { name: 'Data Display', components: ['Tag', 'Image', 'Icon', 'Loading'] },
+  { name: 'Data Display', components: ['Tag', 'Icon', 'Loading'] },
+  { name: 'Media', components: ['Image', 'AudioPlayer', 'Video'] },
   {
     name: 'Inputs',
-    components: ['CheckBox', 'RadioGroup', 'Slider', 'TextField'],
+    components: [
+      'CheckBox',
+      'RadioGroup',
+      'ChoicePicker',
+      'Slider',
+      'DateTimeInput',
+      'TextField',
+    ],
   },
 ];
 
 const DEFAULT_ADDITIONAL_RULES = [
   'Use the built-in OpenUI components exactly as listed; do not invent component names or named-argument syntax.',
-  'Prefer compact, mobile-friendly layouts. Use Stack and Card for structure, CardHeader for titles, and TextContent for text.',
+  'Prefer compact, mobile-friendly layouts. Use Stack, Row, Column, List, and Card for structure, CardHeader for titles, and Text/TextContent for text.',
+  'Use Tabs for alternate views, Modal for tap-to-open details, and List for repeated or grouped items.',
+  'For List, pass the child component array as the first argument; only use TemplateChildren when the host provides template data.',
+  'For Tabs, each tab entry is an object like { value: "summary", title: "Summary", child: summaryContent }.',
+  'For Modal, pass trigger first and content second: Modal(triggerButton, modalContent, "Title").',
   'When no real tool list is provided, use realistic Query() defaults or static data instead of inventing external tool behavior.',
   'Return only OpenUI Lang code unless inlineMode is explicitly enabled.',
 ];
@@ -334,6 +558,20 @@ const DEFAULT_EXAMPLES = [
     'weather = Query("get_weather", { city: $city }, { city: "Seattle", temp: "62", condition: "Cloudy", alerts: [] })',
     'root = Stack([card], "column", false, "m", "stretch", "start")',
     'card = Card([CardHeader("Live Weather", "Query-backed card"), TextContent(weather.city + " - " + weather.condition, "large-heavy"), TextContent(weather.temp + "F"), Buttons([Button("Refresh", Action([@Run(weather)]), "secondary"), Button("Use SF", Action([@Set($city, "San Francisco"), @Run(weather)]), "tertiary")])], "card", "column", false, "s", "start", "start")',
+  ].join('\n'),
+  [
+    'root = Column([header, tabs, media], "start", "stretch", "m")',
+    'header = Row([Icon("location_on", "md", "primary"), Text("Trip Plan", "h3")], "start", "center", "s")',
+    'tabs = Tabs([{ value: "summary", title: "Summary", child: summary }, { value: "details", title: "Details", child: details }])',
+    'summary = Card([CardHeader("Friday", "Downtown route"), TextContent("Three stops, light walking, dinner at 7 PM.")], "card", "column", false, "s")',
+    'details = List([Text("Museum tickets confirmed.", "body"), DateTimeInput("2026-07-10T19:00", true, true, "2026-07-10T18:00", "2026-07-10T21:00", "Dinner reservation")])',
+    'media = Row([Image("https://example.com/map.png", "cover", "smallFeature"), Video("https://example.com/preview.mp4", "Route preview")], "start", "center", "s", true)',
+  ].join('\n'),
+  [
+    'root = Stack([filters, list, detailsModal], "column", false, "m", "stretch", "start")',
+    'filters = ChoicePicker("Priority", ["High", "Normal", "Low"], "Normal", "card", "chips")',
+    'list = List([Card([Text("Inbox triage", "h4"), TextContent("12 items need review."), AudioPlayer("https://example.com/briefing.mp3", "Briefing audio")], "card", "column", false, "s")])',
+    'detailsModal = Modal(Button("Open details", Action([@ToAssistant("Open inbox details")]), "secondary"), Card([CardHeader("Details"), TextContent("Use actions to confirm or defer items.")]), "Inbox details")',
   ].join('\n'),
 ];
 
