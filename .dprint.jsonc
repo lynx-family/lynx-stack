@@ -39,6 +39,7 @@
     "**/lib/**",
     "**/dist/**",
     "**/etc/*.md",
+    "packages/lynx/headless-rust-test-runner/fixtures/**",
     "website/docs/en/api/**",
     "website/docs/zh/api/**",
     "website/docs/en/changelog/**",

@@ -66,7 +66,9 @@ the loader checks one canonical path for the current platform:
 
 The loaded runtime must export the `lynx_rust_*` shim symbols, such as
 `lynx_rust_view_set_frame`. These symbols keep the Rust ABI narrow while the
-existing C++ exports keep reference-parameter signatures.
+existing C++ exports keep reference-parameter signatures. The software
+windowless path also uses `lynx_rust_view_set_use_texture_backend` to switch
+Clay image resources away from the texture backend before loading templates.
 
 When Cargo downloads a runtime, it stores the files under
 `target/lynx-engine-bridge-sdk` and injects `LYNX_SDK_DIR` for tests. Existing

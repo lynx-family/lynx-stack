@@ -3,6 +3,7 @@ resolver = "2"
 
 members = [
   "packages/lynx/engine-bridge/lynx",
+  "packages/lynx/headless-rust-test-runner",
   "packages/react/transform",
   "packages/react/transform/crates/*",
   "packages/react/transform/swc-plugin-reactlynx",

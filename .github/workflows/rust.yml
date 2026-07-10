@@ -48,6 +48,23 @@ jobs:
         run: |
           sudo apt-get update
           sudo apt-get install -y --no-install-recommends libepoxy0
+      - name: TurboCache
+        uses: lynx-infra/cache@5c6160a6a4c7fca80a2f3057bb9dfc9513fcb732
+        with:
+          path: .turbo
+          # We have to be strict here to make sure getting the cache of build-all
+          key: turbo-v4-${{ runner.os }}-${{ hashFiles('**/packages/**/src/**/*.rs') }}-${{ github.sha }}
+          fail-on-cache-miss: true
+      - name: Install
+        uses: ./.github/actions/pnpm-install
+        with:
+          node-version: "22"
+          save-if: ${{ github.ref_name == 'main' }}
+      - name: Build
+        run: pnpm turbo build --summarize
+      - name: Build React fixture
+        run: |
+          NODE_ENV=production node packages/rspeedy/core/bin/rspeedy.js build --root packages/genui/ui-judge/tests/fixtures/react
       - name: Test
         env:
           CARGO_LLVM_COV_FLAGS_NO_RUNNER: --no-sparse

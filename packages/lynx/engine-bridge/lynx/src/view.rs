@@ -180,6 +180,17 @@ impl HeadlessViewBuilder {
         operation: "create headless view",
       });
     }
+    let configured = unsafe {
+      (sys.lynx_rust_view_set_use_texture_backend)(raw, self.renderer.use_texture_backend())
+    };
+    if !configured {
+      unsafe {
+        (sys.lynx_view_release)(raw);
+      }
+      return Err(Error::Message(
+        "failed to configure headless texture backend".to_string(),
+      ));
+    }
 
     Ok(HeadlessView {
       env: self.env,
@@ -222,6 +233,26 @@ impl HeadlessView {
 
   pub fn renderer(&self) -> &WindowlessRenderer {
     &self.renderer
+  }
+
+  /// Adds a raw view client to receive Lynx lifecycle callbacks.
+  ///
+  /// # Safety
+  ///
+  /// `client` must be a valid `lynx_view_client_t` created for the same loaded
+  /// runtime and must outlive its registration on this view.
+  pub unsafe fn add_client_raw(&self, client: *mut sys::lynx_view_client_t) {
+    (self.env.sys().lynx_view_add_client)(self.raw, client);
+  }
+
+  /// Removes a raw view client previously registered on this view.
+  ///
+  /// # Safety
+  ///
+  /// `client` must be a valid `lynx_view_client_t` that was previously added
+  /// to this view and has not been released.
+  pub unsafe fn remove_client_raw(&self, client: *mut sys::lynx_view_client_t) {
+    (self.env.sys().lynx_view_remove_client)(self.raw, client);
   }
 
   pub fn load_template_from_url(&self, url: &str, initial_data_json: Option<&str>) -> Result<()> {

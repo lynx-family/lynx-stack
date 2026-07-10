@@ -13,16 +13,16 @@ use std::process::Command;
 
 const MACOS_AARCH64_RUNTIME_URL: &str = concat!(
   "https://github.com/PupilTong/playground/releases/download/",
-  "lynx-runtime-clay-manual-0.0.2/macos-arm64-libLynx_clay.dylib"
+  "lynx-runtime-clay-manual-0.0.3/macos-arm64-libLynx_clay.dylib"
 );
 const MACOS_AARCH64_RUNTIME_SHA256: &str =
-  "7d215f2f9e56f395fbcaa72d37f8bdd89d5df3c139bc7224e4401090cb875983";
+  "7bc65d3aa90d0c9b1d406dcb3533f795615a4966b8261bcd3d74bebe96ebbc65";
 const LINUX_X86_64_RUNTIME_URL: &str = concat!(
   "https://github.com/PupilTong/playground/releases/download/",
-  "lynx-runtime-clay-manual-0.0.2/linux-amd64-libLynx_clay.so"
+  "lynx-runtime-clay-manual-0.0.3/linux-amd64-libLynx_clay.so"
 );
 const LINUX_X86_64_RUNTIME_SHA256: &str =
-  "908dc407b4e0b11a5c44e6aa6510f138803fdeb54af791cfe52ff3b42f27401c";
+  "244b45c4cc82ecbedc5d10f297a2c8695d93cc59793e430bdc6f4718500e1709";
 
 fn main() {
   println!("cargo:rerun-if-env-changed=LYNX_LIB_PATH");
@@ -135,19 +135,28 @@ fn prepare_runtime(sdk_dir: &Path, runtime_path: &Path, url: &str, sha256: &str)
   let lock_path = sdk_dir.join(".download.lock");
   let _lock = RuntimeDownloadLock::acquire(&lock_path);
 
-  if !has_existing_runtime(runtime_path, url, sha256) {
+  let runtime_existed = has_existing_runtime(runtime_path, url, sha256);
+  if !runtime_existed {
     download_runtime(url, runtime_path, sha256);
+    adhoc_sign_if_needed(runtime_path);
+    write_runtime_url_marker(runtime_path, url);
+    write_runtime_sha256_marker(runtime_path, sha256);
+  } else {
+    eprintln!("Using existing Lynx runtime at {}", runtime_path.display());
   }
-  adhoc_sign_if_needed(runtime_path);
 }
 
 fn has_existing_runtime(runtime_path: &Path, url: &str, sha256: &str) -> bool {
   match fs::metadata(runtime_path) {
     Ok(metadata)
-      if metadata.is_file() && metadata.len() > 0 && runtime_url_matches(runtime_path, url) =>
+      if metadata.is_file()
+        && metadata.len() > 0
+        && runtime_url_matches(runtime_path, url)
+        && runtime_sha256_marker_matches(runtime_path, sha256) =>
     {
-      verify_runtime_checksum(runtime_path, sha256);
-      eprintln!("Using existing Lynx runtime at {}", runtime_path.display());
+      if existing_runtime_matches_downloaded_bytes() {
+        verify_runtime_checksum(runtime_path, sha256);
+      }
       true
     }
     _ => false,
@@ -198,7 +207,13 @@ fn download_runtime(url: &str, runtime_path: &Path, sha256: &str) {
       error.error
     )
   });
-  write_runtime_url_marker(runtime_path, url);
+}
+
+fn existing_runtime_matches_downloaded_bytes() -> bool {
+  env::var("CARGO_CFG_TARGET_OS").as_deref() != Ok("macos")
+    || env::var_os("LYNX_SKIP_ADHOC_SIGN")
+      .as_deref()
+      .is_some_and(enabled_env_flag)
 }
 
 fn verify_runtime_checksum(runtime_path: &Path, expected_sha256: &str) {
@@ -246,12 +261,40 @@ fn write_runtime_url_marker(runtime_path: &Path, url: &str) {
   });
 }
 
+fn runtime_sha256_marker_matches(runtime_path: &Path, sha256: &str) -> bool {
+  fs::read_to_string(runtime_sha256_marker_path(runtime_path))
+    .map(|stored_sha256| stored_sha256.trim() == sha256.trim().to_ascii_lowercase())
+    .unwrap_or(false)
+}
+
+fn write_runtime_sha256_marker(runtime_path: &Path, sha256: &str) {
+  let marker_path = runtime_sha256_marker_path(runtime_path);
+  fs::write(
+    &marker_path,
+    format!("{}\n", sha256.trim().to_ascii_lowercase()),
+  )
+  .unwrap_or_else(|error| {
+    panic!(
+      "failed to write Lynx runtime SHA256 marker {}: {error}",
+      marker_path.display()
+    )
+  });
+}
+
 fn runtime_url_marker_path(runtime_path: &Path) -> PathBuf {
   let filename = runtime_path
     .file_name()
     .expect("runtime path has filename")
     .to_string_lossy();
   runtime_path.with_file_name(format!("{filename}.url"))
+}
+
+fn runtime_sha256_marker_path(runtime_path: &Path) -> PathBuf {
+  let filename = runtime_path
+    .file_name()
+    .expect("runtime path has filename")
+    .to_string_lossy();
+  runtime_path.with_file_name(format!("{filename}.sha256"))
 }
 
 fn adhoc_sign_if_needed(runtime_path: &Path) {
