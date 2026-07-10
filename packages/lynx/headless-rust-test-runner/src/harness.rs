@@ -12,7 +12,7 @@ use lynx::{set_global_ui_task_runner, GlobalUiTaskRunner};
 use crate::{Error, Result};
 
 #[cfg(target_os = "macos")]
-#[path = "../../headless-rust-test-runner/src/macos_headless_display.rs"]
+#[path = "macos_headless_display.rs"]
 mod macos_headless_display;
 
 #[derive(Clone)]

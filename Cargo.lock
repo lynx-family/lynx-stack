@@ -1228,20 +1228,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "kitten-lynx-rust"
-version = "0.1.0"
-dependencies = [
- "lynx",
- "png",
- "serde",
- "serde_json",
- "thiserror 2.0.9",
- "tokio",
- "ureq",
- "url",
-]
-
-[[package]]
 name = "lazy_static"
 version = "1.5.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1349,7 +1335,12 @@ version = "0.1.0"
 dependencies = [
  "lynx",
  "png",
+ "serde",
  "serde_json",
+ "thiserror 2.0.9",
+ "tokio",
+ "ureq",
+ "url",
 ]
 
 [[package]]

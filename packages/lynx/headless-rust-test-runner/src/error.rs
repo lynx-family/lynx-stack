@@ -22,7 +22,7 @@ pub enum Error {
   LynxCoreNotFound(PathBuf),
   #[error("failed to fetch {url}: {message}")]
   Fetch { url: String, message: String },
-  #[error("no Kitten Lynx debug-router client found")]
+  #[error("no headless Rust test runner debug-router client found")]
   ClientNotFound,
   #[error("cannot find a debug session for URL: {0}")]
   SessionNotFound(String),

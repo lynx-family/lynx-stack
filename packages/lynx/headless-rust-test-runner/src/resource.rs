@@ -3,7 +3,7 @@ use std::io::Read;
 use std::path::{Path, PathBuf};
 use std::sync::{Arc, Mutex};
 
-use lynx::{FetchResponse, ResourceFetcher, ResourceRequest};
+use lynx::{FetchResponse, ResourceFetcher, ResourceRequest, ResourceType};
 use url::Url;
 
 use crate::{Error, Result};
@@ -12,13 +12,15 @@ use crate::{Error, Result};
 pub(crate) struct ResourceContext {
   base_url: Arc<Mutex<String>>,
   resources_path: Option<PathBuf>,
+  lynx_core_path: PathBuf,
 }
 
 impl ResourceContext {
-  pub(crate) fn new(resources_path: Option<PathBuf>) -> Self {
+  pub(crate) fn new(resources_path: Option<PathBuf>, lynx_core_path: PathBuf) -> Self {
     Self {
       base_url: Arc::new(Mutex::new(String::new())),
       resources_path,
+      lynx_core_path,
     }
   }
 
@@ -100,10 +102,16 @@ pub(crate) struct HostResourceFetcher {
 
 impl ResourceFetcher for HostResourceFetcher {
   fn fetch(&mut self, request: ResourceRequest) -> FetchResponse {
-    let result = match self.context.resolve_url(&request.url) {
-      Ok(ResolvedResource::Http(url)) => fetch_http(&url),
-      Ok(ResolvedResource::File(path)) => fs::read(path).map_err(Error::from),
-      Err(error) => Err(error),
+    let result = if request.resource_type == ResourceType::LynxCoreJs
+      || request.url.contains("lynx_core.js")
+    {
+      fs::read(&self.context.lynx_core_path).map_err(Error::from)
+    } else {
+      match self.context.resolve_url(&request.url) {
+        Ok(ResolvedResource::Http(url)) => fetch_http(&url),
+        Ok(ResolvedResource::File(path)) => fs::read(path).map_err(Error::from),
+        Err(error) => Err(error),
+      }
     };
     match result {
       Ok(bytes) => FetchResponse::ok(bytes),
@@ -152,4 +160,35 @@ fn safe_join(root: &Path, relative: &str) -> Result<PathBuf> {
     )));
   }
   Ok(path)
+}
+
+#[cfg(test)]
+mod tests {
+  use super::*;
+
+  #[test]
+  fn lynx_core_requests_use_the_installed_resource() {
+    let core_path = std::env::temp_dir().join(format!(
+      "headless-rust-test-runner-lynx-core-{}-{}.js",
+      std::process::id(),
+      std::time::SystemTime::now()
+        .duration_since(std::time::UNIX_EPOCH)
+        .unwrap()
+        .as_nanos()
+    ));
+    fs::write(&core_path, b"globalThis.loadCard = () => true;").unwrap();
+    let mut fetcher = ResourceContext::new(None, core_path.clone()).fetcher();
+
+    let response = fetcher.fetch(ResourceRequest {
+      id: 1,
+      url: "file:///unrelated/bundle/lynx_core.js".into(),
+      resource_type: ResourceType::LynxCoreJs,
+    });
+
+    assert_eq!(
+      response.data.as_deref(),
+      Some(b"globalThis.loadCard = () => true;".as_slice())
+    );
+    let _ = fs::remove_file(core_path);
+  }
 }
