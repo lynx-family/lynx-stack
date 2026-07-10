@@ -5,8 +5,8 @@ import type { ReactCodeMirrorProps } from '@uiw/react-codemirror';
 import { useEffect, useMemo, useState } from 'react';
 
 import { ComponentUsagePreview } from './ComponentUsagePreview.js';
-import { PageHeader } from './PageHeader.js';
-import type { Protocol } from '../utils/protocol.js';
+import { PageHeader } from '../../components/PageHeader.js';
+import type { Protocol } from '../../utils/protocol.js';
 
 import './ComponentCatalog.css';
 

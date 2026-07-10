@@ -14,11 +14,9 @@ import { Moon, Sun } from './components/Icon.js';
 import { AIChatPage } from './pages/AIChatPage.js';
 import { BenchPage } from './pages/BenchPage.js';
 import { ComponentsPage } from './pages/catalog/ComponentsPage.js';
-import { DemosListPage } from './pages/DemosListPage.js';
-import { DemosPage } from './pages/DemosPage.js';
+import { DemosListPage } from './pages/demos/DemosListPage.js';
+import { DemosPage } from './pages/demos/DemosPage.js';
 import { OpenUICreatePage } from './pages/OpenUICreatePage.js';
-import { OpenUIDemosListPage } from './pages/OpenUIDemosListPage.js';
-import { OpenUIDemosPage } from './pages/OpenUIDemosPage.js';
 import type { Route, Tab } from './utils/appRoute.js';
 import {
   DEFAULT_ROUTE_HASH,
@@ -190,16 +188,18 @@ export function App() {
         default:
           return route.demoId
             ? (
-              <OpenUIDemosPage
+              <DemosPage
                 key='openui-examples-detail'
                 protocol={protocol}
                 demoId={route.demoId}
+                theme={theme}
               />
             )
             : (
-              <OpenUIDemosListPage
+              <DemosListPage
                 key='openui-examples-index'
                 protocol={protocol}
+                theme={theme}
               />
             );
       }
