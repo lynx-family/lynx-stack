@@ -5,54 +5,33 @@
 import { logger } from '@rsbuild/core'
 import type { RsbuildConfig, RsbuildPlugin } from '@rsbuild/core'
 
+import type { Config } from './config/index.js'
+import { toRsbuildConfig } from './config/rsbuild/index.js'
+
 /**
- * Inject the Lynx build defaults that the Rspeedy CLI would otherwise apply
- * before handing the config to Rsbuild.
+ * Translate the (already default-applied) Lynx {@link Config} into an Rsbuild
+ * config and merge it into the build, so a `rsbuild.config.ts` gets the same
+ * defaults the Rspeedy CLI applies — and so a migrating project can pass its
+ * `lynx.config.ts` contents straight into `pluginLynxPreset(config)`.
  *
- * Two kinds of fields are handled differently:
- *
- * - **defaults**: applied only when the user did not set the field. Decided
- *   against `getRsbuildConfig('original')` because Rsbuild merges its own
- *   defaults into the config *before* `modifyRsbuildConfig` runs, so the
- *   incoming config can no longer tell "user set it" from "Rsbuild default".
- * - **forced**: always override the user, because these fields would break the
- *   Lynx output (Lynx produces a bundle template, not an HTML page).
+ * Merge precedence (lowest to highest):
+ * 1. Rsbuild's own defaults (already merged into the incoming `config`).
+ * 2. The Lynx-translated config (this is where `pluginLynxPreset(config)` lands).
+ * 3. The user's explicit `rsbuild.config.ts` — read via `getRsbuildConfig('original')`
+ *    so Rsbuild's defaults are not mistaken for user intent.
+ * 4. `forced` fields Lynx requires (it emits a bundle template, not an HTML page).
  */
-export function pluginLynxDefaults(): RsbuildPlugin {
+export function pluginLynxConfig(resolved: Config): RsbuildPlugin {
   return {
-    name: 'lynx:preset:defaults',
+    name: 'lynx:preset:config',
     setup(api) {
       api.modifyRsbuildConfig((config, { mergeRsbuildConfig }) => {
         const original = api.getRsbuildConfig('original')
+        // Drop `plugins` from the re-asserted native layer: `mergeRsbuildConfig`
+        // concatenates plugin arrays, and `config` already carries them.
+        const { plugins: _plugins, ...native } = original
 
-        // `inlineScripts` mirrors Rspeedy: on unless chunk splitting is enabled.
-        const splitChunks = original.splitChunks ?? false
-        const inlineScripts = original.output?.inlineScripts
-          ?? splitChunks === false
-
-        const defaults: RsbuildConfig = {
-          dev: {
-            writeToDisk: original.dev?.writeToDisk ?? true,
-            progressBar: original.dev?.progressBar ?? true,
-            lazyCompilation: original.dev?.lazyCompilation ?? false,
-          },
-          server: {
-            host: original.server?.host ?? '0.0.0.0',
-          },
-          output: {
-            dataUriLimit: original.output?.dataUriLimit ?? 2 * 1024,
-            legalComments: original.output?.legalComments ?? 'none',
-            sourceMap: typeof original.output?.sourceMap === 'object'
-              ? original.output.sourceMap
-              : { css: true },
-            inlineScripts,
-            cssModules: {
-              localIdentName: original.output?.cssModules?.localIdentName
-                ?? '[local]-[hash:base64:6]',
-            },
-          },
-          splitChunks,
-        }
+        const translated = toRsbuildConfig(resolved) as RsbuildConfig
 
         const forced: RsbuildConfig = {
           output: {
@@ -66,7 +45,7 @@ export function pluginLynxDefaults(): RsbuildPlugin {
 
         warnForcedOverrides(original)
 
-        return mergeRsbuildConfig(config, defaults, forced)
+        return mergeRsbuildConfig(config, translated, native, forced)
       })
     },
   }

@@ -29,8 +29,9 @@ import { pluginCssMinimizer } from '@rsbuild/plugin-css-minimizer'
 
 import { pluginLynxDebugMetadata } from '@lynx-js/debug-metadata-rsbuild-plugin'
 
+import { applyDefaultRspeedyConfig } from './config/defaults.js'
 import type { Config } from './config/index.js'
-import { pluginLynxDefaults } from './defaults.js'
+import { pluginLynxConfig } from './defaults.js'
 import {
   pluginChunkLoading,
   pluginDev,
@@ -46,30 +47,26 @@ import {
 } from './internal.js'
 import { pluginLynxAPI } from './plugin-api.js'
 
-const DEFAULT_FILENAME = '[name].[platform].bundle'
-
 /**
  * Compose all the plugins the Rspeedy CLI applies by default, plus the Lynx
  * config defaults, into a single plugin usable from `rsbuild.config.ts`.
  *
+ * @param config - An optional Lynx {@link Config} (the same shape as
+ * `lynx.config.ts`). A project migrating off the Rspeedy CLI can pass its
+ * existing config here; its `source`, `output`, `resolve`, `dev`,
+ * `performance`, `tools`, etc. are translated into the Rsbuild build.
+ *
  * @public
  */
-export function pluginLynxPreset(): RsbuildPlugins {
-  // The Lynx-shaped config published to DSL plugins. `output.filename.bundle`
-  // is read by `pluginReactLynx` (to name the emitted template) and by
-  // `pluginQRCode` (to build dev URLs).
-  const exposedConfig: Config = {
-    output: {
-      filename: {
-        bundle: DEFAULT_FILENAME,
-        template: DEFAULT_FILENAME,
-      },
-    },
-  }
+export function pluginLynxPreset(config: Config = {}): RsbuildPlugins {
+  // Resolve once: fill the Lynx defaults (filename, sourceMap, cssModules, …)
+  // so both the exposed config (read by DSL plugins like `pluginReactLynx` and
+  // `pluginQRCode`) and the Rsbuild-config translation see the same values.
+  const resolved = applyDefaultRspeedyConfig(config)
 
   return [
-    pluginLynxAPI(exposedConfig),
-    pluginLynxDefaults(),
+    pluginLynxAPI(resolved),
+    pluginLynxConfig(resolved),
 
     pluginChunkLoading(),
     pluginLynxDebugMetadata(),
@@ -80,7 +77,7 @@ export function pluginLynxPreset(): RsbuildPlugins {
     pluginResolve(),
     pluginRsdoctor(),
     pluginSourcemap(),
-    pluginStatsJson(exposedConfig),
+    pluginStatsJson(resolved),
     pluginSwc(),
     pluginTarget(),
     pluginCssMinimizer(),
