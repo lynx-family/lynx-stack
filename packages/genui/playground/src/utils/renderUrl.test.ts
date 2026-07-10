@@ -30,4 +30,15 @@ describe('OpenUI render URLs', () => {
     expect(url).toContain('rawTextUrl=');
     expect(url).not.toContain('rawText=');
   });
+
+  test('forwards the selected theme to the OpenUI runtime', () => {
+    const url = buildOpenUIRenderUrl({
+      rawText: 'root = Stack([])',
+      theme: 'dark',
+      instant: true,
+    }, 'https://lynx-stack.dev/genui/');
+
+    expect(new URL(url).searchParams.get('theme')).toBe('dark');
+    expect(new URL(url).searchParams.get('instant')).toBe('1');
+  });
 });

@@ -2,7 +2,7 @@
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
 import { createParser } from '@openuidev/lang-core';
-import type { LibraryJSONSchema } from '@openuidev/lang-core';
+import type { LibraryJSONSchema, ParseResult } from '@openuidev/lang-core';
 
 export interface OpenUIScenario {
   id: string;
@@ -186,8 +186,12 @@ const OPENUI_SCENARIO_SCHEMA: LibraryJSONSchema = {
 
 const openUiScenarioParser = createParser(OPENUI_SCENARIO_SCHEMA, 'Stack');
 
+export function parseOpenUIScenario(raw: string): ParseResult {
+  return openUiScenarioParser.parse(raw);
+}
+
 export function parseOpenUIScenarioRaw(raw: string): string {
-  return JSON.stringify(openUiScenarioParser.parse(raw), null, 2);
+  return JSON.stringify(parseOpenUIScenario(raw), null, 2);
 }
 
 const V05_QUERY_WEATHER_RAW = `$city = "Seattle"
