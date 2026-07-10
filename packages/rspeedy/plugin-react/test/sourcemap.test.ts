@@ -176,7 +176,7 @@ describe('Sourcemap', () => {
       readFile(
         path.join(
           tmp,
-          '.rspeedy/async/lazy-bundle-comp.jsx/debug-metadata.json',
+          '.rspeedy/async/fixtures/sourcemap/lazy-bundle-comp.tsx/debug-metadata.json',
         ),
         'utf-8',
       ),
@@ -257,7 +257,7 @@ describe('Sourcemap', () => {
         readFile(
           path.join(
             tmp,
-            '.rspeedy/async/lazy-bundle-comp.jsx/debug-metadata.json',
+            '.rspeedy/async/fixtures/sourcemap/lazy-bundle-comp.tsx/debug-metadata.json',
           ),
           'utf-8',
         ),

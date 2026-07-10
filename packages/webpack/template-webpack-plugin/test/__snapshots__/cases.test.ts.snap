@@ -33,37 +33,3 @@ exports[`template > templateCases-cases/defaults/config > should pass 1`] = `
   useNewSwiper: true,
 }
 `;
-
-exports[`template > templateCases-cases/runtime-module/async-chunks-dedupe > should pass 1`] = `
-{
-  bundleModuleMode: ReturnByFunction,
-  debugInfoOutside: true,
-  defaultDisplayLinear: true,
-  defaultOverflowVisible: true,
-  enableCSSInvalidation: false,
-  enableCSSSelector: true,
-  enableFiberArch: true,
-  enableLepusDebug: true,
-  enableRemoveCSSScope: false,
-  enableReuseContext: true,
-  targetSdkVersion: 3.2,
-  templateDebugUrl: ,
-  useLepusNG: true,
-}
-`;
-
-exports[`template > templateCases-cases/runtime-module/async-chunks-dedupe > should pass 2`] = `
-{
-  debugMetadataUrl: ,
-  enableA11y: true,
-  enableAccessibilityElement: false,
-  enableCSSInheritance: false,
-  enableNativeList: true,
-  enableNewGesture: false,
-  enableNewIntersectionObserver: true,
-  lepusStrict: true,
-  removeDescendantSelectorScope: false,
-  syncXElementRegistry: true,
-  useNewSwiper: true,
-}
-`;
