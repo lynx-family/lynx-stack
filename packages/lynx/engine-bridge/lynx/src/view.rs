@@ -436,6 +436,24 @@ impl HeadlessView {
     Ok(())
   }
 
+  pub fn send_touch_event(&self, name: &str, id: i32) -> Result<()> {
+    let name = c_string(name, "touch_event_name")?;
+    unsafe {
+      (self.env.sys().lynx_view_send_touch_event)(
+        self.raw,
+        name.as_ptr(),
+        id,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+      );
+    }
+    Ok(())
+  }
+
   pub fn update_screen_metrics(&self, width: f32, height: f32, pixel_ratio: f32) {
     unsafe {
       (self.env.sys().lynx_rust_view_update_screen_metrics)(self.raw, width, height, pixel_ratio);
