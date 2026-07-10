@@ -122,8 +122,8 @@ a2ui-catalog-extractor --help
 ```
 
 `a2ui-cli` is also kept as a compatibility alias for existing A2UI scripts. New
-scripts should prefer the namespace-first `genui a2ui ...` form so OpenUI
-commands can be added under `genui openui ...` later.
+scripts should prefer the namespace-first `genui a2ui ...` or
+`genui openui ...` form.
 
 Generate catalog artifacts:
 
@@ -140,6 +140,12 @@ Generate an A2UI system prompt:
 genui a2ui generate prompt \
   --catalog-dir dist/catalog \
   --out dist/a2ui-system-prompt.txt
+```
+
+Generate an OpenUI system prompt:
+
+```bash
+genui openui generate prompt --out dist/openui-system-prompt.txt
 ```
 
 ## Published Package Layout

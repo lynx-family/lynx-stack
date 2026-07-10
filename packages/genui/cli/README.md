@@ -1,8 +1,8 @@
 # GenUI CLI
 
 `@lynx-js/genui-cli` is the command line entry point for GenUI workflows. It is
-structured by namespace so A2UI commands can live beside future OpenUI commands
-without adding another package or binary.
+structured by namespace so A2UI and OpenUI workflows can share one package and
+binary.
 
 ## Usage
 
@@ -13,7 +13,7 @@ genui <namespace> <command> [options]
 Available namespaces:
 
 - `a2ui`: generate A2UI catalog artifacts and system prompts.
-- `openui`: reserved for future OpenUI workflows.
+- `openui`: generate OpenUI system prompts.
 
 The package also exposes `genui-cli` as an alias. `a2ui-cli` remains available as
 a compatibility alias for existing A2UI-only scripts.
@@ -54,6 +54,19 @@ genui a2ui generate prompt \
 `--catalog-dir` only when generating a prompt for custom generated catalog
 artifacts. When `--catalog-dir` is provided, the directory must contain files
 like `<Component>/catalog.json`.
+
+## OpenUI Commands
+
+Generate an OpenUI system prompt:
+
+```bash
+genui openui generate prompt --out dist/openui-system-prompt.txt
+```
+
+`generate prompt` uses the bundled OpenUI prompt library. Useful options:
+
+- `--out <file>`: write the prompt to a file instead of stdout.
+- `--appendix <text>`: append extra instructions to the generated prompt.
 
 ### `genui a2ui create`
 

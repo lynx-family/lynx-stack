@@ -34,7 +34,8 @@
   },
   "dependencies": {
     "@lynx-js/genui-a2ui-catalog-extractor": "workspace:*",
-    "@lynx-js/genui-a2ui-prompt": "workspace:*"
+    "@lynx-js/genui-a2ui-prompt": "workspace:*",
+    "@lynx-js/genui-openui": "workspace:*"
   },
   "devDependencies": {
     "@rstest/core": "catalog:rstest",

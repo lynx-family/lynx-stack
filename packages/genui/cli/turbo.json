@@ -7,7 +7,8 @@
     "build": {
       "dependsOn": [
         "@lynx-js/genui-a2ui-catalog-extractor#build",
-        "@lynx-js/genui-a2ui-prompt#build"
+        "@lynx-js/genui-a2ui-prompt#build",
+        "@lynx-js/genui-openui#build"
       ],
       "inputs": [
         "src/**",
