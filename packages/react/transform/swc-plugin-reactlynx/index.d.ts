@@ -25,6 +25,8 @@ export interface JsxTransformerConfig {
   enableUiSourceMap?: boolean;
   /** @internal */
   isDynamicComponent?: boolean;
+  /** @internal */
+  legacySlot?: boolean;
 }
 
 /** @internal */

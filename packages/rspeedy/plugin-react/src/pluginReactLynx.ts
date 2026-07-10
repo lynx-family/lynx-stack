@@ -51,11 +51,12 @@ export interface PluginReactLynxOptions {
   enableUiSourceMap?: boolean
 
   /**
-   * The `compat` option controls compatibilities with ReactLynx2.0.
+   * The `compat` option controls compatibilities with legacy ReactLynx.
    *
    * @remarks
    *
-   * These options should only be used for migrating from ReactLynx2.0.
+   * These options should only be used for migrating from ReactLynx2.0 or
+   * targeting legacy ReactLynx3 runtimes.
    *
    * @defaultValue `undefined`
    */

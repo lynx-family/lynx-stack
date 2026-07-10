@@ -26,7 +26,7 @@ use swc_plugin_directive_dce::{DirectiveDCEVisitor, DirectiveDCEVisitorConfig};
 use swc_plugin_dynamic_import::{DynamicImportVisitor, DynamicImportVisitorConfig};
 use swc_plugin_element_template::{ElementTemplateTransformer, ElementTemplateTransformerConfig};
 use swc_plugin_inject::{InjectVisitor, InjectVisitorConfig};
-use swc_plugin_list::ListVisitor;
+use swc_plugin_list::{LegacyListVisitor, ListVisitor};
 use swc_plugin_shake::{ShakeVisitor, ShakeVisitorConfig};
 use swc_plugin_snapshot::{
   JSXTransformer as SnapshotJSXTransformer, JSXTransformerConfig as SnapshotJSXTransformerConfig,
@@ -238,6 +238,7 @@ pub fn process_transform(program: Program, metadata: TransformPluginProgramMetad
   let use_snapshot_plugin = snapshot_enabled && !use_element_template_plugin;
   let jsx_backend_enabled = use_snapshot_plugin || use_element_template_plugin;
 
+  let legacy_slot = matches!(snapshot_plugin_config.legacy_slot, Some(true));
   let snapshot_plugin = Optional::new(
     visit_mut_pass(
       SnapshotJSXTransformer::new(
@@ -266,7 +267,11 @@ pub fn process_transform(program: Program, metadata: TransformPluginProgramMetad
 
   let list_plugin = Optional::new(
     visit_mut_pass(ListVisitor::new(Some(&comments))),
-    jsx_backend_enabled,
+    jsx_backend_enabled && !legacy_slot,
+  );
+  let legacy_list_plugin = Optional::new(
+    visit_mut_pass(LegacyListVisitor::new(Some(&comments))),
+    jsx_backend_enabled && legacy_slot,
   );
 
   let is_ge_3_1: bool = is_engine_version_ge(&options.engine_version, "3.1");
@@ -347,6 +352,7 @@ pub fn process_transform(program: Program, metadata: TransformPluginProgramMetad
     (
       text_plugin,
       list_plugin,
+      legacy_list_plugin,
       snapshot_plugin,
       element_template_plugin,
     ),

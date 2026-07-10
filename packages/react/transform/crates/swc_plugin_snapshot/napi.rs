@@ -33,6 +33,8 @@ pub struct JSXTransformerConfig {
   pub is_dynamic_component: Option<bool>,
   /// @internal
   pub is_external_bundle: Option<bool>,
+  /// @internal
+  pub legacy_slot: Option<bool>,
 }
 
 /// @internal
@@ -80,6 +82,7 @@ impl Default for JSXTransformerConfig {
       enable_ui_source_map: Some(false),
       is_dynamic_component: Some(false),
       is_external_bundle: Some(false),
+      legacy_slot: Some(false),
     }
   }
 }
@@ -95,6 +98,7 @@ impl From<JSXTransformerConfig> for CoreJSXTransformerConfig {
       enable_ui_source_map: val.enable_ui_source_map.unwrap_or(false),
       is_dynamic_component: val.is_dynamic_component,
       is_external_bundle: val.is_external_bundle,
+      legacy_slot: val.legacy_slot,
     }
   }
 }
@@ -110,6 +114,7 @@ impl From<CoreJSXTransformerConfig> for JSXTransformerConfig {
       enable_ui_source_map: Some(val.enable_ui_source_map),
       is_dynamic_component: val.is_dynamic_component,
       is_external_bundle: val.is_external_bundle,
+      legacy_slot: val.legacy_slot,
     }
   }
 }

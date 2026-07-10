@@ -1,3 +1,11 @@
+//! Frozen legacy (pre-SlotV2) list pass, used together with the
+//! `legacy_slot.rs` snapshot codegen when `legacySlot` is enabled.
+//!
+//! Unlike the mainline `ListVisitor`, it performs no SlotV2-oriented
+//! `<list>` children pre-wrapping — the legacy snapshot codegen extracts
+//! list children itself. Like `swc_plugin_snapshot/legacy_slot.rs`, this
+//! module is FROZEN: do not refactor it along with mainline changes.
+
 use swc_core::{
   common::{comments::Comments, util::take::Take, DUMMY_SP},
   ecma::{
@@ -8,14 +16,9 @@ use swc_core::{
   quote,
 };
 
-use swc_plugins_shared::jsx_helpers::{
-  jsx_attr_value, jsx_children_to_expr, jsx_is_list, jsx_is_list_item,
-};
+use swc_plugins_shared::jsx_helpers::{jsx_attr_value, jsx_children_to_expr, jsx_is_list_item};
 
-mod legacy_slot;
-pub use legacy_slot::LegacyListVisitor;
-
-pub struct ListVisitor<C>
+pub struct LegacyListVisitor<C>
 where
   C: Comments,
 {
@@ -24,12 +27,12 @@ where
   _comments: Option<C>,
 }
 
-impl<C> ListVisitor<C>
+impl<C> LegacyListVisitor<C>
 where
   C: Comments,
 {
   pub fn new(comments: Option<C>) -> Self {
-    ListVisitor {
+    LegacyListVisitor {
       runtime_components_ident: private_ident!("ReactLynxRuntimeComponents"),
       runtime_components_module_item: None,
       _comments: comments,
@@ -60,7 +63,7 @@ fn jsx_list_item_deferred(n: &JSXElement) -> bool {
   })
 }
 
-impl<C> VisitMut for ListVisitor<C>
+impl<C> VisitMut for LegacyListVisitor<C>
 where
   C: Comments,
 {
@@ -75,13 +78,6 @@ where
   //   renderChildren={() => <>...</>}
   // />
   fn visit_mut_jsx_element(&mut self, n: &mut JSXElement) {
-    if jsx_is_list(n) {
-      n.children = vec![JSXElementChild::JSXExprContainer(JSXExprContainer {
-        expr: JSXExpr::Expr(Box::new(jsx_children_to_expr(n.children.take()))),
-        span: DUMMY_SP,
-      })];
-    }
-
     n.visit_mut_children_with(self);
 
     if jsx_list_item_deferred(n) {
@@ -174,21 +170,6 @@ where
     }
   }
 
-  fn visit_mut_jsx_element_child(&mut self, node: &mut JSXElementChild) {
-    if let JSXElementChild::JSXElement(jsx_element) = node {
-      if jsx_is_list(jsx_element) {
-        jsx_element.visit_mut_with(self);
-        *node = JSXElementChild::JSXExprContainer(JSXExprContainer {
-          expr: JSXExpr::Expr(Box::new(Expr::JSXElement(Box::new(*jsx_element.take())))),
-          span: DUMMY_SP,
-        });
-        return;
-      }
-    }
-
-    node.visit_mut_children_with(self);
-  }
-
   fn visit_mut_module_items(&mut self, n: &mut Vec<ModuleItem>) {
     let mut new_items: Vec<ModuleItem> = vec![];
     for item in n.iter_mut() {
@@ -215,7 +196,7 @@ mod tests {
     },
   };
 
-  use super::ListVisitor;
+  use super::LegacyListVisitor;
   #[cfg(feature = "napi")]
   use swc_plugin_snapshot::napi::{JSXTransformer, JSXTransformerConfig};
   use swc_plugins_shared::{target_napi::TransformTarget, transform_mode_napi::TransformMode};
@@ -228,9 +209,10 @@ mod tests {
     }),
     |t| {
       (
-        visit_mut_pass(ListVisitor::new(Some(t.comments.clone()))),
+        visit_mut_pass(LegacyListVisitor::new(Some(t.comments.clone()))),
         visit_mut_pass(JSXTransformer::<&SingleThreadedComments>::new(
           JSXTransformerConfig {
+            legacy_slot: Some(true),
             preserve_jsx: true,
             ..Default::default()
           },
@@ -240,7 +222,7 @@ mod tests {
         )),
       )
     },
-    basic_list,
+    basic_list_legacy_slot,
     // Input codes
     r#"
     <view>
@@ -260,9 +242,10 @@ mod tests {
     }),
     |t| {
       (
-        visit_mut_pass(ListVisitor::new(Some(t.comments.clone()))),
+        visit_mut_pass(LegacyListVisitor::new(Some(t.comments.clone()))),
         visit_mut_pass(JSXTransformer::<&SingleThreadedComments>::new(
           JSXTransformerConfig {
+            legacy_slot: Some(true),
             preserve_jsx: true,
             ..Default::default()
           },
@@ -272,7 +255,7 @@ mod tests {
         )),
       )
     },
-    basic_list_with_fragment,
+    basic_list_with_fragment_legacy_slot,
     // Input codes
     r#"
     <view>
@@ -295,9 +278,10 @@ mod tests {
     }),
     |t| {
       (
-        visit_mut_pass(ListVisitor::new(Some(t.comments.clone()))),
+        visit_mut_pass(LegacyListVisitor::new(Some(t.comments.clone()))),
         visit_mut_pass(JSXTransformer::<&SingleThreadedComments>::new(
           JSXTransformerConfig {
+            legacy_slot: Some(true),
             preserve_jsx: true,
             ..Default::default()
           },
@@ -307,7 +291,7 @@ mod tests {
         )),
       )
     },
-    basic_list_toplevel,
+    basic_list_toplevel_legacy_slot,
     // Input codes
     r#"
     <list>
@@ -323,8 +307,8 @@ mod tests {
       jsx: true,
       ..Default::default()
     }),
-    |t| visit_mut_pass(ListVisitor::new(Some(t.comments.clone()))),
-    should_transform_list_in_view,
+    |t| visit_mut_pass(LegacyListVisitor::new(Some(t.comments.clone()))),
+    should_transform_list_in_view_legacy_slot,
     r#"
     <view>
       <list>
@@ -343,9 +327,10 @@ mod tests {
     }),
     |t| {
       (
-        visit_mut_pass(ListVisitor::new(Some(t.comments.clone()))),
+        visit_mut_pass(LegacyListVisitor::new(Some(t.comments.clone()))),
         visit_mut_pass(JSXTransformer::<&SingleThreadedComments>::new(
           JSXTransformerConfig {
+            legacy_slot: Some(true),
             preserve_jsx: false,
             target: TransformTarget::MIXED,
             ..Default::default()
@@ -356,7 +341,7 @@ mod tests {
         )),
       )
     },
-    should_transform_list_in_view_with_snapshot,
+    should_transform_list_in_view_with_snapshot_legacy_slot,
     r#"
     <view>
       <list>
@@ -373,143 +358,8 @@ mod tests {
       jsx: true,
       ..Default::default()
     }),
-    |t| {
-      (
-        visit_mut_pass(ListVisitor::new(Some(t.comments.clone()))),
-        visit_mut_pass(JSXTransformer::<&SingleThreadedComments>::new(
-          JSXTransformerConfig {
-            preserve_jsx: false,
-            target: TransformTarget::MIXED,
-            ..Default::default()
-          },
-          None,
-          TransformMode::Development,
-          None,
-        )),
-      )
-    },
-    should_transform_list_in_view_with_static_sibling_with_snapshot,
-    r#"
-    <view>
-      <list>
-        <list-item key="1" item-key="1"></list-item>
-        <list-item key="2" item-key="2"></list-item>
-      </list>
-      <view/>
-    </view>;
-    "#
-  );
-
-  test!(
-    module,
-    Syntax::Es(EsSyntax {
-      jsx: true,
-      ..Default::default()
-    }),
-    |t| { visit_mut_pass(ListVisitor::new(Some(t.comments.clone()))) },
-    should_transform_list_in_view_with_static_sibling_nested,
-    r#"
-    <view>
-      <list>
-        <list-item key="1" item-key="1"></list-item>
-        <list-item key="2" item-key="2"></list-item>
-        <list-item key="3" item-key="3">
-          <view>
-            <list>
-              <list-item key="1" item-key="1"></list-item>
-              <list-item key="2" item-key="2"></list-item>
-            </list>
-            <view />
-          </view>
-        </list-item>
-      </list>
-      <view/>
-    </view>;
-    "#
-  );
-
-  test!(
-    module,
-    Syntax::Es(EsSyntax {
-      jsx: true,
-      ..Default::default()
-    }),
-    |t| {
-      (
-        visit_mut_pass(ListVisitor::new(Some(t.comments.clone()))),
-        visit_mut_pass(JSXTransformer::<&SingleThreadedComments>::new(
-          JSXTransformerConfig {
-            preserve_jsx: false,
-            target: TransformTarget::MIXED,
-            ..Default::default()
-          },
-          None,
-          TransformMode::Development,
-          None,
-        )),
-      )
-    },
-    should_transform_list_in_view_with_static_sibling_with_snapshot_nested,
-    r#"
-    <view>
-      <list>
-        <list-item key="1" item-key="1"></list-item>
-        <list-item key="2" item-key="2"></list-item>
-        <list-item key="3" item-key="3">
-          <view>
-            <list>
-              <list-item key="1" item-key="1"></list-item>
-              <list-item key="2" item-key="2"></list-item>
-            </list>
-            <view />
-          </view>
-        </list-item>
-      </list>
-      <view/>
-    </view>;
-    "#
-  );
-
-  test!(
-    module,
-    Syntax::Es(EsSyntax {
-      jsx: true,
-      ..Default::default()
-    }),
-    |t| { visit_mut_pass(ListVisitor::new(Some(t.comments.clone()))) },
-    should_transform_list_in_view_with_static_sibling,
-    r#"
-    <view>
-      <list>
-        <list-item key="1" item-key="1"></list-item>
-        <list-item key="2" item-key="2"></list-item>
-      </list>
-      <view/>
-    </view>;
-    "#
-  );
-
-  test!(
-    module,
-    Syntax::Es(EsSyntax {
-      jsx: true,
-      ..Default::default()
-    }),
-    |t| visit_mut_pass(ListVisitor::new(Some(t.comments.clone()))),
-    should_transform_list_item_deferred_basic,
-    r#"
-    <list-item defer key="1" item-key="1"></list-item>;
-    "#
-  );
-
-  test!(
-    module,
-    Syntax::Es(EsSyntax {
-      jsx: true,
-      ..Default::default()
-    }),
-    |t| visit_mut_pass(ListVisitor::new(Some(t.comments.clone()))),
-    should_transform_list_item_deferred_in_list,
+    |t| visit_mut_pass(LegacyListVisitor::new(Some(t.comments.clone()))),
+    should_transform_list_item_deferred_in_list_legacy_slot,
     r#"
     <list>
       <list-item defer key="1" item-key="1"></list-item>
@@ -524,83 +374,12 @@ mod tests {
       jsx: true,
       ..Default::default()
     }),
-    |t| visit_mut_pass(ListVisitor::new(Some(t.comments.clone()))),
-    should_transform_list_item_not_deferred,
-    r#"
-    <list-item key="1" item-key="1"></list-item>;
-    "#
-  );
-
-  test!(
-    module,
-    Syntax::Es(EsSyntax {
-      jsx: true,
-      ..Default::default()
-    }),
-    |t| visit_mut_pass(ListVisitor::new(Some(t.comments.clone()))),
-    should_transform_list_item_with_spread_deferred,
-    r#"
-    <list-item defer key="1" item-key="1" {...spread}></list-item>;
-    "#
-  );
-
-  test!(
-    module,
-    Syntax::Es(EsSyntax {
-      jsx: true,
-      ..Default::default()
-    }),
-    |t| visit_mut_pass(ListVisitor::new(Some(t.comments.clone()))),
-    should_not_transform_list_item_with_defer_false,
-    r#"
-    <list-item defer={false}></list-item>;
-    "#
-  );
-
-  test!(
-    module,
-    Syntax::Es(EsSyntax {
-      jsx: true,
-      ..Default::default()
-    }),
-    |t| visit_mut_pass(ListVisitor::new(Some(t.comments.clone()))),
-    should_transform_list_item_when_defer_is_expr,
-    r#"
-    <list-item defer={index >= 10}></list-item>;
-    <list-item defer={shouldDefer}></list-item>;
-    <list-item defer={"x"}></list-item>;
-    "#
-  );
-
-  test!(
-    module,
-    Syntax::Es(EsSyntax {
-      jsx: true,
-      ..Default::default()
-    }),
-    |t| visit_mut_pass(ListVisitor::new(Some(t.comments.clone()))),
-    should_transform_list_item_deferred_with_children,
-    r#"
-    <list-item defer key="1" item-key="1" style="color: red; width: 100rpx;" className="x" bindtap={noop}>
-      <view/>
-      <text/>
-      <image/>
-    </list-item>;
-    "#
-  );
-
-  #[cfg(feature = "napi")]
-  test!(
-    module,
-    Syntax::Es(EsSyntax {
-      jsx: true,
-      ..Default::default()
-    }),
     |t| {
       (
-        visit_mut_pass(ListVisitor::new(Some(t.comments.clone()))),
+        visit_mut_pass(LegacyListVisitor::new(Some(t.comments.clone()))),
         visit_mut_pass(JSXTransformer::<&SingleThreadedComments>::new(
           JSXTransformerConfig {
+            legacy_slot: Some(true),
             preserve_jsx: false,
             target: TransformTarget::MIXED,
             ..Default::default()
@@ -611,7 +390,7 @@ mod tests {
         )),
       )
     },
-    should_transform_list_item_deferred_with_children_with_snapshot,
+    should_transform_list_item_deferred_with_children_with_snapshot_legacy_slot,
     r#"
     <list-item defer key="1" item-key="1" style="color: red; width: 100rpx;" className="x" bindtap={noop}>
       <view/>
