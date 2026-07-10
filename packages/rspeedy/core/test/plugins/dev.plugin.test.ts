@@ -5,6 +5,7 @@ import { isIP, isIPv4 } from 'node:net'
 import type { AddressInfo } from 'node:net'
 import path from 'node:path'
 
+import type { RsbuildPlugin } from '@rsbuild/core'
 import {
   assert,
   beforeEach,
@@ -61,6 +62,70 @@ describe('Plugins - Dev', () => {
     expect(isIPv4(rsbuild.getRsbuildConfig().dev!.client!.host!)).toBe(true)
 
     assert(config.resolve?.alias)
+  })
+
+  test('defaults fallback to ipv6 when no ipv4 is found', async () => {
+    const { default: os } = await import('node:os')
+
+    rstest.spyOn(os, 'networkInterfaces').mockReturnValue({
+      eth0: [
+        {
+          address: 'fd00::1',
+          family: 'IPv6',
+          internal: false,
+          netmask: 'ffff:ffff:ffff:ffff::',
+          mac: '00:00:00:00:00:00',
+          cidr: 'fd00::1/64',
+          scopeid: 0,
+        },
+      ],
+    })
+
+    const rsbuild = await createStubRspeedy({})
+
+    const config = await rsbuild.unwrapConfig()
+
+    expect(config.output?.publicPath).toBe('http://[fd00::1]:3000/')
+    expect(rsbuild.getRsbuildConfig().server!.host).toBe('fd00::1')
+    expect(rsbuild.getRsbuildConfig().dev!.client!.host).toBe('[fd00::1]')
+  })
+
+  test('defaults keep server.host when no ip is found', async () => {
+    const { default: os } = await import('node:os')
+
+    rstest.spyOn(os, 'networkInterfaces').mockReturnValue({})
+
+    const rsbuild = await createStubRspeedy({})
+
+    const config = await rsbuild.unwrapConfig()
+
+    expect(rsbuild.getRsbuildConfig().server!.host).toBe('0.0.0.0')
+    expect(config.output?.publicPath).toBe('http://0.0.0.0:3000/')
+    expect(rsbuild.getRsbuildConfig().dev!.client!.host).toBe('0.0.0.0')
+  })
+
+  test('dev.assetPrefix uses server.host modified by plugins', async () => {
+    const rsbuild = await createStubRspeedy({
+      plugins: [
+        {
+          name: 'test:server-host',
+          setup(api) {
+            api.modifyRsbuildConfig((config, { mergeRsbuildConfig }) => {
+              return mergeRsbuildConfig(config, {
+                server: {
+                  host: '10.0.0.2',
+                },
+              })
+            })
+          },
+        } satisfies RsbuildPlugin,
+      ],
+    })
+
+    const config = await rsbuild.unwrapConfig()
+
+    expect(config.output?.publicPath).toBe('http://10.0.0.2:3000/')
+    expect(rsbuild.getRsbuildConfig().dev!.client!.host).toBe('10.0.0.2')
   })
 
   test('provide HMR variables', async () => {
@@ -336,6 +401,23 @@ describe('Plugins - Dev', () => {
 
     expect(typeof config.output?.publicPath).toBe('string')
     expect(config.output?.publicPath).toBe('/')
+  })
+
+  test('dev.assetPrefix: false with server.base', async () => {
+    const rsbuild = await createStubRspeedy({
+      dev: {
+        assetPrefix: false,
+      },
+      server: {
+        base: '/dist',
+      },
+    })
+
+    const config = await rsbuild.unwrapConfig()
+
+    expect(typeof config.output?.publicPath).toBe('string')
+    expect(config.output?.publicPath).toBe('/')
+    expect(rsbuild.getRsbuildConfig().dev!.assetPrefix).toBe(false)
   })
 
   test('assetPrefix with mode production', async () => {
