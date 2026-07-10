@@ -192,6 +192,7 @@ export class ExternalBundleWebpackPlugin {
       targetSdkVersion: this.options.engineVersion ?? '3.5',
       enableCSSInvalidation: true,
       enableCSSSelector: true,
+      debugInfoOutside: true,
     }
 
     const encodeOptions = {
