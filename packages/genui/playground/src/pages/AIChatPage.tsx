@@ -78,12 +78,14 @@ interface A2UIDonePayload {
     messagesUrl?: unknown;
     actionMocksUrl?: unknown;
   };
+  cachedTokens?: unknown;
 }
 
 interface TokenUsage {
   promptTokens: number;
   completionTokens: number;
   totalTokens: number;
+  cachedTokens: number;
 }
 
 type CreateMetricValues = PreviewPerformanceMetrics;
@@ -116,7 +118,38 @@ interface PersistedProviderSettings {
   preset?: ProviderPresetId;
 }
 
-function parseUsage(value: unknown): TokenUsage | null {
+function readNumberProperty(
+  value: Record<string, unknown>,
+  key: string,
+): number | undefined {
+  const candidate = value[key];
+  return typeof candidate === 'number' && Number.isFinite(candidate)
+    ? candidate
+    : undefined;
+}
+
+function parseCachedTokens(value: unknown): number | undefined {
+  if (typeof value === 'number' && Number.isFinite(value)) {
+    return value;
+  }
+  if (!value || typeof value !== 'object' || Array.isArray(value)) {
+    return undefined;
+  }
+  const record = value as Record<string, unknown>;
+  const direct = readNumberProperty(record, 'cachedTokens')
+    ?? readNumberProperty(record, 'cached_tokens')
+    ?? readNumberProperty(record, 'cachedInputTokens')
+    ?? readNumberProperty(record, 'cached_input_tokens')
+    ?? readNumberProperty(record, 'cache_read_input_tokens');
+  if (direct !== undefined) return direct;
+  for (const nested of Object.values(record)) {
+    const found = parseCachedTokens(nested);
+    if (found !== undefined) return found;
+  }
+  return undefined;
+}
+
+function parseUsage(value: unknown, cachedTokens?: unknown): TokenUsage | null {
   if (!value || typeof value !== 'object') return null;
   const record = value as Record<string, unknown>;
   const pickNumber = (...keys: string[]): number => {
@@ -143,7 +176,14 @@ function parseUsage(value: unknown): TokenUsage | null {
   if (promptTokens === 0 && completionTokens === 0 && totalTokens === 0) {
     return null;
   }
-  return { promptTokens, completionTokens, totalTokens };
+  return {
+    promptTokens,
+    completionTokens,
+    totalTokens,
+    cachedTokens: parseCachedTokens(cachedTokens)
+      ?? parseCachedTokens(value)
+      ?? 0,
+  };
 }
 
 function formatTokenCount(value: number): string {
@@ -151,6 +191,12 @@ function formatTokenCount(value: number): string {
   if (value < 10_000) return `${(value / 1000).toFixed(2)}k`;
   if (value < 1_000_000) return `${(value / 1000).toFixed(1)}k`;
   return `${(value / 1_000_000).toFixed(2)}M`;
+}
+
+function hasCachedTokenHit(
+  metrics: PreviewPerformanceMetrics | null | undefined,
+): boolean {
+  return typeof metrics?.cachedTokens === 'number' && metrics.cachedTokens > 0;
 }
 
 function formatMetricValue(value: number | undefined): string {
@@ -213,6 +259,7 @@ function hasCreateMetrics(
   metrics: PreviewPerformanceMetrics | null | undefined,
 ): boolean {
   if (!metrics) return false;
+  if (hasCachedTokenHit(metrics)) return true;
   return CREATE_PREVIEW_METRIC_DEFINITIONS.some((item) =>
     typeof metrics[item.key] === 'number'
   );
@@ -228,6 +275,12 @@ function mergeCreateMetrics(
     if (typeof value === 'number' && Number.isFinite(value)) {
       next[item.key] = value;
     }
+  }
+  if (
+    typeof patch.cachedTokens === 'number'
+    && Number.isFinite(patch.cachedTokens)
+  ) {
+    next.cachedTokens = patch.cachedTokens;
   }
   return next;
 }
@@ -730,7 +783,10 @@ async function readA2UIResponse(
       throw new Error(normalizeErrorPayload(payload));
     }
     if (payload && typeof payload === 'object') {
-      const usage = parseUsage((payload as A2UIDonePayload).usage);
+      const usage = parseUsage(
+        (payload as A2UIDonePayload).usage,
+        (payload as A2UIDonePayload).cachedTokens,
+      );
       if (usage) onUsage?.(usage);
       const preview = normalizePreviewPayloadUrls(payload);
       if (preview) options.onPreviewPayload?.(preview);
@@ -788,7 +844,10 @@ async function readA2UIResponse(
       if (parsed.event === 'done') {
         const doneMessages = normalizeA2UIMessages(parsed.data);
         if (parsed.data && typeof parsed.data === 'object') {
-          const usage = parseUsage((parsed.data as A2UIDonePayload).usage);
+          const usage = parseUsage(
+            (parsed.data as A2UIDonePayload).usage,
+            (parsed.data as A2UIDonePayload).cachedTokens,
+          );
           if (usage) onUsage?.(usage);
           const preview = normalizePreviewPayloadUrls(parsed.data);
           if (preview) options.onPreviewPayload?.(preview);
@@ -943,6 +1002,29 @@ function renderChatStatusMetrics(
   if (!hasCreateMetrics(metrics)) return null;
   return (
     <div className='chatMessageMetrics' aria-label='Metrics'>
+      {hasCachedTokenHit(metrics)
+        ? (
+          <span
+            className='chatMessageMetricItem chatMessageMetricItemHit'
+            title='The model response used cached input tokens.'
+            tabIndex={0}
+            aria-label={`Cache hit: ${
+              formatTokenCount(metrics.cachedTokens ?? 0)
+            } cached tokens`}
+          >
+            <span className='chatMessageMetricName'>Cache hit</span>
+            <span className='chatMessageMetricValue'>
+              {formatTokenCount(metrics.cachedTokens ?? 0)}
+            </span>
+            <span className='chatMessageMetricTooltip' role='tooltip'>
+              <span className='chatMessageMetricTooltipTitle'>
+                Cached tokens
+              </span>
+              <span>The model response used cached input tokens.</span>
+            </span>
+          </span>
+        )
+        : null}
       {CREATE_PREVIEW_METRIC_DEFINITIONS.map((item) => {
         const value = metrics?.[item.key];
         if (typeof value !== 'number') return null;
@@ -1092,6 +1174,7 @@ export function AIChatPage(
     promptTokens: 0,
     completionTokens: 0,
     totalTokens: 0,
+    cachedTokens: 0,
   });
   const [createMetricValues, setCreateMetricValues] = useState<
     CreateMetricValues
@@ -1506,6 +1589,7 @@ export function AIChatPage(
       promptTokens: 0,
       completionTokens: 0,
       totalTokens: 0,
+      cachedTokens: 0,
     });
     updatePreviewPayloadUrls(persistedPreviewPayloadUrls);
     if (replayMessages.length > 0) {
@@ -1610,6 +1694,7 @@ export function AIChatPage(
       promptTokens: 0,
       completionTokens: 0,
       totalTokens: 0,
+      cachedTokens: 0,
     });
     resetCreateMetrics();
     setIsGenerating(true);
@@ -1689,7 +1774,11 @@ export function AIChatPage(
               promptTokens: prev.promptTokens + usage.promptTokens,
               completionTokens: prev.completionTokens + usage.completionTokens,
               totalTokens: prev.totalTokens + usage.totalTokens,
+              cachedTokens: prev.cachedTokens + usage.cachedTokens,
             }));
+            if (usage.cachedTokens > 0) {
+              updateCreateMetrics({ cachedTokens: usage.cachedTokens });
+            }
           },
           {
             parseDeltaMessages: false,
@@ -1949,7 +2038,11 @@ export function AIChatPage(
                 completionTokens: prev.completionTokens
                   + usage.completionTokens,
                 totalTokens: prev.totalTokens + usage.totalTokens,
+                cachedTokens: prev.cachedTokens + usage.cachedTokens,
               }));
+              if (usage.cachedTokens > 0) {
+                updateCreateMetrics({ cachedTokens: usage.cachedTokens });
+              }
             },
             {
               onPreviewPayload: (preview) => {
@@ -2278,11 +2371,22 @@ export function AIChatPage(
                   ? (
                     <span
                       className='chatTokenUsageBadge'
-                      title={`Prompt: ${tokenUsage.promptTokens} · Completion: ${tokenUsage.completionTokens} · Total: ${tokenUsage.totalTokens}`}
+                      title={`Prompt: ${tokenUsage.promptTokens} · Completion: ${tokenUsage.completionTokens} · Total: ${tokenUsage.totalTokens}${
+                        tokenUsage.cachedTokens > 0
+                          ? ` · Cached: ${tokenUsage.cachedTokens}`
+                          : ''
+                      }`}
                     >
                       <span className='chatTokenUsageItem'>
                         Prompt {formatTokenCount(tokenUsage.promptTokens)}
                       </span>
+                      {tokenUsage.cachedTokens > 0
+                        ? (
+                          <span className='chatTokenUsageItem chatTokenUsageCached'>
+                            Cached {formatTokenCount(tokenUsage.cachedTokens)}
+                          </span>
+                        )
+                        : null}
                       <span className='chatTokenUsageItem'>
                         Output {formatTokenCount(tokenUsage.completionTokens)}
                       </span>

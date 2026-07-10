@@ -389,6 +389,10 @@
   font-weight: 600;
 }
 
+.chatTokenUsageCached {
+  color: color-mix(in srgb, #10a37f 72%, var(--geist-foreground));
+}
+
 .chatHeaderSub {
   margin: 4px 0 0;
   font-size: 12px;
@@ -624,6 +628,17 @@
   cursor: help;
   outline: none;
   white-space: nowrap;
+}
+
+.chatMessageMetricItemHit {
+  border-color: color-mix(in srgb, #10a37f 42%, var(--geist-border));
+  background: color-mix(in srgb, #10a37f 10%, var(--geist-background));
+  color: color-mix(in srgb, #10a37f 72%, var(--geist-foreground));
+}
+
+.chatMessageMetricItemHit .chatMessageMetricName,
+.chatMessageMetricItemHit .chatMessageMetricValue {
+  color: color-mix(in srgb, #10a37f 74%, var(--geist-foreground));
 }
 
 .chatMessageMetricItem:focus-visible {

@@ -25,6 +25,7 @@ export interface PreviewPerformanceMetrics {
   ttiMs?: number;
   agentOutputMs?: number;
   renderMs?: number;
+  cachedTokens?: number;
 }
 
 export interface PersistedMessage {
