@@ -1,7 +1,7 @@
 // Copyright 2026 The Lynx Authors. All rights reserved.
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
-import CodeMirror from '@uiw/react-codemirror';
+import CodeMirror, { EditorView } from '@uiw/react-codemirror';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import type { CSSProperties, PointerEvent as ReactPointerEvent } from 'react';
 
@@ -41,6 +41,7 @@ const PLAYBACK_PANEL_MIN_HEIGHT_ACTIVE = 200;
 const PLAYBACK_PANEL_ACTIVE_RATIO = 0.66;
 const PLAYBACK_PANEL_MAX_RATIO = 0.85;
 const OPENUI_PLAYBACK_CHUNK_SIZE = 240;
+const OPENUI_CODE_EXTENSIONS = [EditorView.lineWrapping];
 
 function findScenarioById(id?: string): OpenUIScenario | undefined {
   if (!id) return undefined;
@@ -703,8 +704,9 @@ export function OpenUIDemosPage(props: {
             </div>
             <CodeMirror
               key={codeView}
-              className='codeEditor'
+              className='codeEditor openuiCodeEditor'
               value={codeView === 'raw' ? customRawText : parsedJson}
+              extensions={OPENUI_CODE_EXTENSIONS}
               onChange={codeView === 'raw' ? setCustomRawText : undefined}
               editable={codeView === 'raw'}
               theme='dark'
