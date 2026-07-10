@@ -944,3 +944,34 @@ describe('DSL plugin without layer loaders', () => {
     await expect(build(rslibConfig)).resolves.toBeDefined()
   })
 })
+
+describe('debug info outside', () => {
+  const fixtureDir = path.join(__dirname, './fixtures/utils-lib')
+
+  it('should keep bytecode debug info out of the tasm bundle', async () => {
+    rstest.stubEnv('DEBUG', 'rspeedy')
+    try {
+      const distRoot = path.join(fixtureDir, 'dist')
+      await build(defineExternalBundleRslibConfig({
+        source: {
+          entry: {
+            utils: path.join(fixtureDir, 'index.ts'),
+          },
+        },
+        id: 'utils-dbg-outside',
+        output: {
+          distPath: {
+            root: distRoot,
+          },
+        },
+        plugins: [pluginReactLynx()],
+      }))
+      const tasmJson = JSON.parse(
+        fs.readFileSync(path.join(distRoot, 'tasm.json'), 'utf-8'),
+      ) as { compilerOptions: Record<string, unknown> }
+      expect(tasmJson.compilerOptions['debugInfoOutside']).toBe(true)
+    } finally {
+      rstest.unstubAllEnvs()
+    }
+  })
+})
