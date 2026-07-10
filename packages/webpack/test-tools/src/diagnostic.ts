@@ -42,6 +42,39 @@ function lynxDefaultOptions(
   };
 }
 
+function escapeRegExp(value: string): string {
+  return value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+}
+
+function normalizePath(value: string): string {
+  return value.replaceAll(path.sep, '/');
+}
+
+function normalizeDiagnosticPaths(output: string, cwd: string): string {
+  const testRoot = normalizePath(path.dirname(cwd));
+  const workspaceRoot = normalizePath(process.cwd());
+  const relativeTestRoot = normalizePath(
+    path.relative(workspaceRoot, testRoot),
+  );
+  const packageTestRoot = (/(?:^|\/)(packages\/.+\/test)$/.exec(testRoot))?.[1];
+
+  const patterns = [
+    escapeRegExp(testRoot),
+    String.raw`(?:\.\./)+${escapeRegExp(relativeTestRoot)}`,
+    packageTestRoot
+      ? String.raw`(?:\.\./)+${escapeRegExp(packageTestRoot)}`
+      : undefined,
+    escapeRegExp(relativeTestRoot),
+    packageTestRoot ? escapeRegExp(packageTestRoot) : undefined,
+  ].filter((pattern): pattern is string => Boolean(pattern));
+
+  return patterns.reduce(
+    (result, pattern) =>
+      result.replace(new RegExp(`${pattern}(?=/)`, 'g'), '<TEST_ROOT>'),
+    output,
+  );
+}
+
 function createDiagnosticProcessor(
   name: string,
   src: string,
@@ -100,10 +133,8 @@ function createDiagnosticProcessor(
       // Normalize remaining paths/pnpm-inner/`file://` with the same
       // `normalizePlaceholder` the `toMatchFileSnapshotSync` matcher applies, then
       // collapse line:column.
-      output = normalizePlaceholder(output).replaceAll(
-        /\d+:\d+/g,
-        '<LINE:COLUMN>',
-      );
+      output = normalizeDiagnosticPaths(normalizePlaceholder(output), cwd)
+        .replaceAll(/\d+:\d+/g, '<LINE:COLUMN>');
 
       // `toMatchFileSnapshotSync` is registered by
       // `@rspack/test-tools/setup-expect`.

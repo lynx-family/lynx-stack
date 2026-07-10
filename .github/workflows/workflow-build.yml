@@ -1,6 +1,13 @@
 name: Build
 on:
   workflow_call:
+    inputs:
+      runs-on:
+        required: true
+        type: string
+      runs-on-name:
+        required: true
+        type: string
     secrets:
       CODECOV_TOKEN:
         required: false
@@ -67,16 +74,8 @@ jobs:
           echo "merge-base=$(git merge-base "$CLEAN_BASE_REF" "$CLEAN_HEAD_REF" || git rev-parse "$CLEAN_BASE_REF")" >> $GITHUB_OUTPUT
   build-all:
     permissions: {}
-    name: Build (${{ matrix.runs-on.name }})
-    runs-on: ${{ matrix.runs-on.label }}
-    strategy:
-      fail-fast: false
-      matrix:
-        runs-on:
-          - label: lynx-ubuntu-26.04-xlarge
-            name: Ubuntu
-          - label: lynx-windows-2022-large
-            name: Windows
+    name: Build (${{ inputs.runs-on-name }})
+    runs-on: ${{ inputs.runs-on }}
     timeout-minutes: 45
     needs: get-merge-base
     steps:
@@ -125,8 +124,8 @@ jobs:
           retention-days: 1
           overwrite: true
           include-hidden-files: true
-      # Publish PR previews to pkg.pr.new. Only runs on the Ubuntu leg of the
-      # build matrix, and only when the PR adds a changeset that actually
+      # Publish PR previews to pkg.pr.new. Only runs on the Ubuntu build, and
+      # only when the PR adds a changeset that actually
       # bumps a publishable package. Fork PRs are included: this is a
       # `pull_request` (not `pull_request_target`) workflow, so fork runs use
       # a read-only token with no base-repo secrets, and are gated by the
@@ -134,7 +133,7 @@ jobs:
       # step above (which already runs fork install/build scripts) relies on.
       - name: Fetch base ref for changeset status
         if: >
-          matrix.runs-on.label == 'lynx-ubuntu-26.04-xlarge' &&
+          inputs.runs-on == 'lynx-ubuntu-26.04-xlarge' &&
           github.event_name == 'pull_request'
         env:
           BASE_REF: ${{ github.base_ref }}
@@ -161,7 +160,7 @@ jobs:
       - name: Collect packages with changesets
         id: changeset
         if: >
-          matrix.runs-on.label == 'lynx-ubuntu-26.04-xlarge' &&
+          inputs.runs-on == 'lynx-ubuntu-26.04-xlarge' &&
           github.event_name == 'pull_request'
         env:
           BASE_REF: ${{ github.base_ref }}

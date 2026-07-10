@@ -2940,7 +2940,6 @@ describe('Config', () => {
     })
   })
 
-  // eslint-disable-next-line @typescript-eslint/no-misused-promises -- rstest types describe callbacks as sync, but the runner awaits async factories
   describe('callerName: rstest', async () => {
     const { pluginReactLynx } = await import('../src/pluginReactLynx.js')
 
@@ -2982,7 +2981,9 @@ describe('Config', () => {
           && typeof rule === 'object'
           && rule.test
           && rule.test.toString() === (/\.css$/).toString()
-        ).flatMap(rule => getLoaderBranches(rule)),
+        ).flatMap(rule => getLoaderBranches(rule)).filter(branch =>
+          branch.length > 0
+        ),
       ).toMatchInlineSnapshot(`
         [
           [
@@ -2994,7 +2995,6 @@ describe('Config', () => {
             "<ROOT>/node_modules/<PNPM_INNER>/@rsbuild/core/compiled/css-loader/index.js",
             "builtin:lightningcss-loader",
           ],
-          [],
           [
             "<ROOT>/node_modules/<PNPM_INNER>/@rspack/core/dist/cssExtractLoader.js",
             "<ROOT>/node_modules/<PNPM_INNER>/@rsbuild/core/compiled/css-loader/index.js",
@@ -3011,18 +3011,18 @@ describe('Config', () => {
           && rule.test
           && rule.test.toString()
             === (/\.(?:js|jsx|mjs|cjs|ts|tsx|mts|cts)$/).toString()
-        ).flatMap(rule => getLoaderBranches(rule)),
+        ).flatMap(rule => getLoaderBranches(rule)).filter(branch =>
+          branch.length > 0
+        ),
       ).toMatchInlineSnapshot(`
         [
           [
             "<ROOT>/node_modules/<PNPM_INNER>/@rsbuild/core/dist/workerLoader.mjs",
           ],
-          [],
           [
             "builtin:swc-loader",
             "<ROOT>/packages/webpack/react-webpack-plugin/lib/loaders/testing.js",
           ],
-          [],
         ]
       `)
     })

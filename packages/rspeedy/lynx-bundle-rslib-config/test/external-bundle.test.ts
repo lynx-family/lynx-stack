@@ -7,7 +7,7 @@ import path from 'node:path'
 import { fileURLToPath } from 'node:url'
 
 import { createRslib } from '@rslib/core'
-import type { RslibConfig } from '@rslib/core'
+import type { RslibConfig, rsbuild } from '@rslib/core'
 import { afterAll, beforeAll, describe, expect, it, rstest } from '@rstest/core'
 
 import { LAYERS, pluginReactLynx } from '@lynx-js/react-rsbuild-plugin'
@@ -834,5 +834,39 @@ describe('pluginReactLynx', () => {
     ).toBe(true)
     expect(decodedResult['custom-sections']['utils__main-thread']![0])
       .toBeTypeOf('number')
+  })
+})
+
+describe('DSL plugin without layer loaders', () => {
+  const fixtureDir = path.join(__dirname, './fixtures/plain-lib')
+
+  it('should build when the DSL plugin does not register layer loaders', async () => {
+    const rslibConfig = defineExternalBundleRslibConfig({
+      source: {
+        entry: {
+          plain: path.join(fixtureDir, 'index.ts'),
+        },
+      },
+      id: 'plain-no-layer-loaders',
+      output: {
+        distPath: {
+          root: path.join(fixtureDir, 'dist'),
+        },
+      },
+      plugins: [
+        {
+          // Mimics a DSL plugin (e.g. TTML) that exposes LAYERS without
+          // registering the ReactLynx layer loaders. The `isExternalBundle`
+          // tap must not create a loader-less use entry in this case, which
+          // Rspack >= 2.0.8 rejects.
+          name: 'test:dsl-without-layer-loaders',
+          setup(api) {
+            api.expose(Symbol.for('LAYERS'), LAYERS)
+          },
+        } satisfies rsbuild.RsbuildPlugin,
+      ],
+    })
+
+    await expect(build(rslibConfig)).resolves.toBeDefined()
   })
 })

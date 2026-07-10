@@ -611,13 +611,17 @@ const externalBundleRsbuildPlugin = ({
           .rule(CHAIN_ID.RULE.JS)
           .oneOf(CHAIN_ID.ONE_OF.JS_MAIN)
         for (const layer of [LAYERS.BACKGROUND, LAYERS.MAIN_THREAD]) {
-          jsMainRule
-            .oneOf(layer)
-            .use(layer)
-            .tap((loaderOptions) => ({
-              ...(loaderOptions as Record<string, unknown>),
-              isExternalBundle: true,
-            }))
+          // Only tap when the DSL plugin has registered a loader for this
+          // layer. Creating the use entry here would produce a loader-less
+          // `{ options }` record that Rspack >= 2.0.8 rejects.
+          const layerUse = jsMainRule.oneOfs.get(layer)?.uses.get(layer)
+          if (!layerUse) {
+            continue
+          }
+          layerUse.tap((loaderOptions) => ({
+            ...(loaderOptions as Record<string, unknown>),
+            isExternalBundle: true,
+          }))
         }
 
         // copy entries
