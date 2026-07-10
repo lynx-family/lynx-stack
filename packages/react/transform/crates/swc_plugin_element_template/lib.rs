@@ -61,27 +61,6 @@ fn lazy_runtime_id(init: impl FnOnce() -> Expr + 'static) -> Lazy<Expr, RuntimeI
   Lazy::new(Box::new(init))
 }
 
-fn require_runtime_id(runtime_pkg: String) -> Lazy<Expr, RuntimeIdInitializer> {
-  lazy_runtime_id(move || {
-    Expr::Call(CallExpr {
-      ctxt: SyntaxContext::default(),
-      span: DUMMY_SP,
-      callee: Callee::Expr(Box::new(Expr::Ident(
-        IdentName::new("require".into(), DUMMY_SP).into(),
-      ))),
-      args: vec![ExprOrSpread {
-        spread: None,
-        expr: Box::new(Expr::Lit(Lit::Str(Str {
-          span: DUMMY_SP,
-          value: runtime_pkg.into(),
-          raw: None,
-        }))),
-      }],
-      type_args: None,
-    })
-  })
-}
-
 fn jsx_expr_attr(name: &str, expr: Expr) -> JSXAttrOrSpread {
   JSXAttrOrSpread::JSXAttr(JSXAttr {
     span: DUMMY_SP,
@@ -278,30 +257,16 @@ where
   pub fn new_with_element_templates(
     cfg: JSXTransformerConfig,
     comments: Option<C>,
-    mode: TransformMode,
+    _mode: TransformMode,
     _source_map: Option<Lrc<SourceMap>>,
     element_templates: Option<Rc<RefCell<Vec<ElementTemplateAsset>>>>,
   ) -> Self {
     JSXTransformer {
       content_hash: "test".into(),
-      runtime_id: match mode {
-        TransformMode::Development => {
-          let runtime_pkg = cfg.runtime_pkg.clone();
-          require_runtime_id(runtime_pkg)
-        }
-        TransformMode::Production | TransformMode::Test => {
-          lazy_runtime_id(|| Expr::Ident(private_ident!("ReactLynx")))
-        }
-      },
-      internal_runtime_id: match mode {
-        TransformMode::Development => {
-          let runtime_pkg = internal_runtime_pkg(&cfg.runtime_pkg);
-          require_runtime_id(runtime_pkg)
-        }
-        TransformMode::Production | TransformMode::Test => {
-          lazy_runtime_id(|| Expr::Ident(private_ident!("ReactLynxInternal")))
-        }
-      },
+      // All modes bind the runtimes via the imports prepended in
+      // `visit_mut_module` (see the ident-gated `prepend_stmt` calls).
+      runtime_id: lazy_runtime_id(|| Expr::Ident(private_ident!("ReactLynx"))),
+      internal_runtime_id: lazy_runtime_id(|| Expr::Ident(private_ident!("ReactLynxInternal"))),
       element_templates,
       cfg,
       template_idents_by_canonical_content: HashMap::new(),

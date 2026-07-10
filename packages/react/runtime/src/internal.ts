@@ -10,6 +10,7 @@ import './lynx.js';
 
 import { useMemo } from './core/hooks/react.js';
 import { loadLazyBundle } from './core/lynx/lazy-bundle.js';
+import * as ReactLynxInternalSelf from './internal.js';
 import { __root } from './root.js';
 import { factory as factory2 } from './snapshot/compat/componentIs.js';
 import { BackgroundSnapshotInstance } from './snapshot/snapshot/backgroundSnapshot.js';
@@ -17,6 +18,7 @@ import { __page, __pageId, createSnapshot, snapshotManager } from './snapshot/sn
 import { DynamicPartType } from './snapshot/snapshot/dynamicPartType.js';
 import { snapshotCreateList } from './snapshot/snapshot/list.js';
 import { SnapshotInstance, snapshotCreatorMap } from './snapshot/snapshot/snapshot.js';
+import { setSnapshotCreatorRuntime } from './snapshot/snapshot/snapshotCreatorMap.js';
 
 export { CHILDREN, COMPONENT, DIFF, DIRTY, DOM, FLAGS, INDEX, PARENT } from './shared/render-constants.js';
 
@@ -80,3 +82,11 @@ export { createBackgroundFunctionHandle as transformToWorklet } from './core/bac
 export { registerWorkletOnBackground } from './snapshot/worklet/hmr.js';
 
 export { loadWorkletRuntime } from '@lynx-js/react/worklet-runtime/bindings';
+
+if (__DEV__) {
+  // Dev snapshot creators take the runtime as a parameter (they are
+  // stringified for cross-thread HMR and must not capture module bindings);
+  // register this namespace as that runtime. Production creators close over
+  // their own module's runtime import, so this reference is dropped there.
+  setSnapshotCreatorRuntime(ReactLynxInternalSelf);
+}

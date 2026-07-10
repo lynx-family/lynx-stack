@@ -19,6 +19,7 @@ import { reconstructInstanceTree } from './reconstructInstanceTree.js';
 import { clearQueuedRefs, clearRef, getRefFromValue, queueRefAttrUpdate } from './ref.js';
 import type { Ref } from './ref.js';
 import { snapshotCreatorMap } from './snapshot.js';
+import { snapshotCreatorRuntime } from './snapshotCreatorMap.js';
 import { hydrationMap } from './snapshotInstanceHydrationMap.js';
 import { transformSpread } from './spread.js';
 import type { SerializedSnapshotInstance } from './types.js';
@@ -155,7 +156,7 @@ export class BackgroundSnapshotInstance {
     // Suspense uses 'div'
     if (!snapshotManager.values.has(type) && type !== 'div') {
       if (snapshotCreatorMap[type]) {
-        snapshotCreatorMap[type](type);
+        snapshotCreatorMap[type](type, snapshotCreatorRuntime);
       } else if (isCloneSnapshot(type)) {
         createCloneSnapshot(type);
       } else if (isCompiledSnapshot(type)) {

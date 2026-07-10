@@ -114,6 +114,9 @@ describe('pluginExternalBundle', () => {
         dev: {
           assetPrefix: 'http://example.com/assets/',
         },
+        environments: {
+          lynx: {},
+        },
         source: {
           entry: {
             main: './fixtures/basic.tsx',
@@ -320,6 +323,9 @@ describe('pluginExternalBundle', () => {
         dev: {
           assetPrefix: 'http://example.com/assets/',
         },
+        environments: {
+          lynx: {},
+        },
         source: {
           entry: {
             main: './fixtures/basic.tsx',
@@ -376,6 +382,9 @@ describe('pluginExternalBundle', () => {
         dev: {
           assetPrefix: 'http://100.82.226.164:<port>/',
         },
+        environments: {
+          lynx: {},
+        },
         source: {
           entry: {
             main: './fixtures/basic.tsx',
@@ -406,6 +415,68 @@ describe('pluginExternalBundle', () => {
     expect(reactExternal?.bundlePath).toBe('react.lynx.bundle')
   })
 
+  test('should pick bundle encoding per environment for the async reactlynx preset', async () => {
+    const { pluginExternalBundle } = await import('../src/index.js')
+
+    const capturedByEnv: Record<string, unknown[]> = {}
+
+    const rsbuild = await createRsbuild({
+      cwd: __dirname,
+      rsbuildConfig: {
+        environments: {
+          lynx: {},
+          web: {},
+        },
+        source: {
+          entry: {
+            main: './fixtures/basic.tsx',
+          },
+        },
+        tools: {
+          rspack(config, { environment }) {
+            capturedByEnv[environment.name] = config.plugins ?? []
+            return config
+          },
+        },
+        plugins: [
+          pluginStubLayers(),
+          pluginExternalBundle({
+            externalsPresets: {
+              reactlynx: { async: true },
+            },
+          }),
+        ],
+      },
+    })
+
+    await rsbuild.inspectConfig()
+
+    // `async` controls the mount form only; the bundle encoding follows the
+    // environment (lynx -> tasm, web -> web-encoded).
+    expect(getExternalsLoadingPlugin(capturedByEnv['lynx'] ?? []))
+      .toMatchObject({
+        options: {
+          externals: {
+            '@lynx-js/react': {
+              async: true,
+              bundlePath: 'react.lynx.bundle',
+            },
+          },
+        },
+      })
+    expect(getExternalsLoadingPlugin(capturedByEnv['web'] ?? []))
+      .toMatchObject({
+        options: {
+          externals: {
+            '@lynx-js/react': {
+              async: true,
+              bundlePath: 'react.web.bundle',
+            },
+          },
+        },
+      })
+  })
+
   test('should emit the reactlynx bundle into build output by default', async () => {
     const { pluginExternalBundle } = await import('../src/index.js')
 
@@ -424,6 +495,9 @@ describe('pluginExternalBundle', () => {
             distPath: {
               root: distRoot,
             },
+          },
+          environments: {
+            lynx: {},
           },
           source: {
             entry: {
@@ -462,6 +536,9 @@ describe('pluginExternalBundle', () => {
       rsbuildConfig: {
         dev: {
           assetPrefix: 'http://example.com/assets/',
+        },
+        environments: {
+          lynx: {},
         },
         source: {
           entry: {
@@ -569,6 +646,9 @@ describe('pluginExternalBundle', () => {
       rsbuildConfig: {
         dev: {
           assetPrefix: 'http://example.com/assets/',
+        },
+        environments: {
+          lynx: {},
         },
         source: {
           entry: {
@@ -715,6 +795,9 @@ describe('pluginExternalBundle', () => {
             distPath: {
               root: distRoot,
             },
+          },
+          environments: {
+            lynx: {},
           },
           source: {
             entry: {

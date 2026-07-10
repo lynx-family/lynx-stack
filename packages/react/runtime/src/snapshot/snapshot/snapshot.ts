@@ -18,7 +18,8 @@ import { snapshotDestroyList } from './list.js';
 import { getListItemPlatformInfoFromIndexedValue } from './platformInfo.js';
 import type { PlatformInfo } from './platformInfo.js';
 import { unref } from './ref.js';
-import { setSnapshotCreatorMap, snapshotCreatorMap } from './snapshotCreatorMap.js';
+import { setSnapshotCreatorMap, snapshotCreatorMap, snapshotCreatorRuntime } from './snapshotCreatorMap.js';
+import type { SnapshotCreator } from './snapshotCreatorMap.js';
 import type { SerializedSnapshotInstance } from './types.js';
 import { isCloneSnapshot, isCompiledSnapshot, traverseSnapshotInstance } from './utils.js';
 import { isDirectOrDeepEqual } from '../../utils.js';
@@ -107,7 +108,7 @@ export { snapshotCreatorMap } from './snapshotCreatorMap.js';
 if (__DEV__ && __JS__) {
   setSnapshotCreatorMap(
     new Proxy(snapshotCreatorMap, {
-      set(target, prop: string, value: (uniqId: string) => string) {
+      set(target, prop: string, value: SnapshotCreator) {
         if (
           // `__globalSnapshotPatch` does not exist before hydration,
           // so the snapshot of the first screen will not be sent to the main thread.
@@ -158,7 +159,7 @@ export class SnapshotInstance {
     // Suspense uses 'div'
     if (!snapshotManager.values.has(type) && type !== 'div') {
       if (snapshotCreatorMap[type]) {
-        snapshotCreatorMap[type](type);
+        snapshotCreatorMap[type](type, snapshotCreatorRuntime);
       } else if (isCloneSnapshot(type)) {
         createCloneSnapshot(type);
       } else if (isCompiledSnapshot(type)) {
