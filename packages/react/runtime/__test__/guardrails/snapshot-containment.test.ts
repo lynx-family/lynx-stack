@@ -147,6 +147,16 @@ describe('snapshot containment guardrails', () => {
     expect(offenders).toEqual([]);
   });
 
+  test('keeps devtools lepus ID mapping on the minimal snapshot manager module', () => {
+    const code = fs.readFileSync(
+      path.join(srcRoot, 'snapshot', 'lynx', 'injectLepusMethods.ts'),
+      'utf8',
+    );
+
+    expect(code).toContain('from \'../snapshot/snapshotInstanceManager.js\'');
+    expect(code).not.toContain('from \'../snapshot/snapshot.js\'');
+  });
+
   test('allows ReactLynx hooks to live under core instead of snapshot', () => {
     expect(fs.existsSync(path.join(srcRoot, 'snapshot', 'hooks'))).toBe(false);
     expect(fs.existsSync(path.join(srcRoot, 'core', 'hooks'))).toBe(true);
