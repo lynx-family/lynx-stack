@@ -22,6 +22,7 @@ export function defineExternalBundleRslibConfig(userLibConfig: ExternalBundleLib
 
 // @public
 export interface EncodeOptions {
+    enableJsBytecode?: boolean;
     engineVersion?: string;
     target?: 'web' | 'tasm';
 }
@@ -42,6 +43,7 @@ export class ExternalBundleWebpackPlugin {
 // @public
 export interface ExternalBundleWebpackPluginOptions {
     bundleFileName: string;
+    enableJsBytecode?: boolean | undefined;
     encode: (opts: unknown) => Promise<{
         buffer: Buffer;
     }>;

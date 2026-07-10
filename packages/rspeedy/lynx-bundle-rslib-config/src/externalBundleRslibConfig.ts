@@ -35,6 +35,21 @@ export interface EncodeOptions {
    * @defaultValue 'tasm'
    */
   target?: 'web' | 'tasm'
+
+  /**
+   * Whether to compile main thread chunks to JsBytecode in the emitted bundle.
+   *
+   * @remarks
+   * When disabled, main thread chunks are encoded as plain JavaScript source,
+   * which keeps them readable for debugging and speeds up encoding.
+   *
+   * Only takes effect for the `'tasm'` target. For the `'web'` target the
+   * `JsBytecode` tag only routes main thread chunks to the correct bundle
+   * slot (the chunk is never bytecode-compiled), so it is always kept.
+   *
+   * @defaultValue `false` when `NODE_ENV` is `'development'`, otherwise `true`
+   */
+  enableJsBytecode?: boolean
 }
 
 const DEFAULT_EXTERNAL_BUNDLE_MINIFY_CONFIG = {
@@ -564,6 +579,7 @@ export function defineExternalBundleRslibConfig(
       externalBundleRsbuildPlugin({
         engineVersion: encodeOptions.engineVersion,
         target: encodeOptions.target,
+        enableJsBytecode: encodeOptions.enableJsBytecode,
       }),
     ],
   }
@@ -585,9 +601,11 @@ interface ExposedLayers {
 const externalBundleRsbuildPlugin = ({
   engineVersion,
   target,
+  enableJsBytecode,
 }: {
   engineVersion: string | undefined
   target: 'web' | 'tasm' | undefined
+  enableJsBytecode: boolean | undefined
 }): rsbuild.RsbuildPlugin => ({
   name: 'lynx:external-bundle',
   // ensure dsl plugin has exposed LAYERS
@@ -740,6 +758,9 @@ const externalBundleRsbuildPlugin = ({
               encode,
               engineVersion,
               mainThreadChunks,
+              // For web the `JsBytecode` tag is routing-only (sections stay
+              // raw JS), so it must survive regardless of the user option.
+              enableJsBytecode: isWeb ? true : enableJsBytecode,
             },
           ],
         )
