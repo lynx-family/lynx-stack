@@ -36,6 +36,8 @@ export interface RenderInit {
 export interface OpenUIRenderInit {
   rawText?: string;
   rawTextUrl?: string;
+  /** Theme forwarded to the OpenUI preview runtime. */
+  theme?: 'light' | 'dark';
   speed?: number;
   instant?: boolean;
   playbackMode?: boolean;
@@ -134,6 +136,10 @@ export function buildOpenUIRenderUrl(
   const url = new URL('render.html', baseUrl);
   url.searchParams.set('protocol', 'openui');
   url.searchParams.set('demoUrl', './openui.web.js');
+
+  if (init.theme) {
+    url.searchParams.set('theme', init.theme);
+  }
 
   if (init.rawTextUrl) {
     url.searchParams.set('rawTextUrl', init.rawTextUrl);

@@ -13,10 +13,9 @@ import { Button } from './components/Button.js';
 import { Moon, Sun } from './components/Icon.js';
 import { AIChatPage } from './pages/AIChatPage.js';
 import { BenchPage } from './pages/BenchPage.js';
-import { ComponentsPage } from './pages/ComponentsPage.js';
+import { ComponentsPage } from './pages/catalog/ComponentsPage.js';
 import { DemosListPage } from './pages/DemosListPage.js';
 import { DemosPage } from './pages/DemosPage.js';
-import { OpenUIComponentsPage } from './pages/OpenUIComponentsPage.js';
 import { OpenUICreatePage } from './pages/OpenUICreatePage.js';
 import { OpenUIDemosListPage } from './pages/OpenUIDemosListPage.js';
 import { OpenUIDemosPage } from './pages/OpenUIDemosPage.js';
@@ -181,10 +180,11 @@ export function App() {
         case 'components':
         case 'catalog':
           return (
-            <OpenUIComponentsPage
+            <ComponentsPage
               key='openui-components'
               protocol={protocol}
               componentName={route.componentName}
+              theme={theme}
             />
           );
         default:

@@ -356,9 +356,9 @@ buttons = Buttons([Button("OK", Action([@ToAssistant("ok")]), "primary"), Button
       },
     ],
     usage: `root = Stack([avatar, header, feature])
-avatar = Image("https://example.com/avatar.png", "cover", "avatar")
-header = Image("https://example.com/banner.png", "cover", "header")
-feature = Image("https://example.com/hero.png", "contain", "largeFeature")`,
+avatar = Image("https://picsum.photos/seed/a2ui-image-feature/480/280", "cover", "avatar")
+header = Image("https://picsum.photos/seed/a2ui-image-feature/480/280", "cover", "header")
+feature = Image("https://picsum.photos/seed/a2ui-image-feature/480/280", "contain", "largeFeature")`,
   },
   {
     name: 'Icon',
