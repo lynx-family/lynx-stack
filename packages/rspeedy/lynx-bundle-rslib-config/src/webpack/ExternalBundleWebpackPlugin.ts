@@ -49,6 +49,18 @@ export interface ExternalBundleWebpackPluginOptions {
    * @defaultValue []
    */
   mainThreadChunks?: string[] | undefined
+
+  /**
+   * Whether to tag main thread chunks with the `JsBytecode` encoding so the
+   * encoder compiles them to bytecode.
+   *
+   * @remarks
+   * When disabled, main thread chunks are encoded as plain JavaScript source,
+   * which keeps them readable for debugging and speeds up encoding.
+   *
+   * @defaultValue `false` when `NODE_ENV` is `'development'`, otherwise `true`
+   */
+  enableJsBytecode?: boolean | undefined
 }
 
 const isDebug = (): boolean => {
@@ -99,7 +111,15 @@ export class ExternalBundleWebpackPlugin {
     compilation: Compilation,
   ): Promise<void> {
     const assets = compilation.getAssets()
-    const { buffer, encodeOptions } = await this.#encode(assets)
+    // `rslib build` always compiles with rspack mode `production`, so the
+    // development signal here is `NODE_ENV`, matching the `minify` default
+    // of `DEFAULT_EXTERNAL_BUNDLE_LIB_CONFIG`.
+    const enableJsBytecode = this.options.enableJsBytecode
+      ?? process.env['NODE_ENV'] !== 'development'
+    const { buffer, encodeOptions } = await this.#encode(
+      assets,
+      enableJsBytecode,
+    )
 
     const { RawSource } = compiler.webpack.sources
     compilation.emitAsset(
@@ -120,7 +140,7 @@ export class ExternalBundleWebpackPlugin {
     }
   }
 
-  async #encode(assets: readonly Asset[]) {
+  async #encode(assets: readonly Asset[], enableJsBytecode: boolean) {
     const customSections = assets
       .reduce<
         Record<string, {
@@ -135,7 +155,8 @@ export class ExternalBundleWebpackPlugin {
               return ({
                 ...prev,
                 [cur.name.replace(/\.js$/, '')]: {
-                  ...(this.options.mainThreadChunks?.includes(cur.name)
+                  ...(enableJsBytecode
+                      && this.options.mainThreadChunks?.includes(cur.name)
                     ? {
                       'encoding': 'JsBytecode',
                     }

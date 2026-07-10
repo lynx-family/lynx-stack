@@ -262,6 +262,80 @@ describe('should build external bundle', () => {
   })
 })
 
+describe('JsBytecode encoding', () => {
+  const fixtureDir = path.join(__dirname, './fixtures/utils-lib')
+
+  const buildAndDecode = async (
+    id: string,
+    encodeOptions?: { enableJsBytecode?: boolean },
+    nodeEnv?: 'development' | 'production',
+  ) => {
+    const prevNodeEnv = process.env['NODE_ENV']
+    if (nodeEnv) {
+      process.env['NODE_ENV'] = nodeEnv
+    }
+    try {
+      const rslibConfig = defineExternalBundleRslibConfig({
+        source: {
+          entry: {
+            utils: path.join(fixtureDir, 'index.ts'),
+          },
+        },
+        id,
+        output: {
+          distPath: {
+            root: path.join(fixtureDir, 'dist'),
+          },
+        },
+        plugins: [pluginReactLynx()],
+      }, encodeOptions)
+      await build(rslibConfig)
+      return await decodeTemplate(
+        path.join(fixtureDir, `dist/${id}.lynx.bundle`),
+      )
+    } finally {
+      process.env['NODE_ENV'] = prevNodeEnv
+    }
+  }
+
+  it('should emit plain JS for main thread chunks when enableJsBytecode is false', async () => {
+    const decodedResult = await buildAndDecode('utils-no-bytecode', {
+      enableJsBytecode: false,
+    })
+
+    expect(decodedResult['custom-sections']['utils__main-thread']).toBeTypeOf(
+      'string',
+    )
+    expect(decodedResult['custom-sections']['utils']).toBeTypeOf('string')
+  })
+
+  it('should not compile main thread chunks to bytecode in development by default', async () => {
+    const decodedResult = await buildAndDecode(
+      'utils-dev-no-bytecode',
+      undefined,
+      'development',
+    )
+
+    expect(decodedResult['custom-sections']['utils__main-thread']).toBeTypeOf(
+      'string',
+    )
+  })
+
+  it('should compile main thread chunks to bytecode when explicitly enabled in development', async () => {
+    const decodedResult = await buildAndDecode(
+      'utils-dev-bytecode',
+      { enableJsBytecode: true },
+      'development',
+    )
+
+    expect(
+      Array.isArray(decodedResult['custom-sections']['utils__main-thread']),
+    ).toBe(true)
+    expect(decodedResult['custom-sections']['utils__main-thread']![0])
+      .toBeTypeOf('number')
+  })
+})
+
 describe('NODE_ENV configuration', () => {
   const fixtureDir = path.join(__dirname, './fixtures/utils-lib')
 
