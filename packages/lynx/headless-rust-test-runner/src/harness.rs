@@ -151,12 +151,6 @@ pub(crate) struct CapturedFrame {
   pub sequence: u64,
 }
 
-impl CapturedFrame {
-  fn has_visible_pixels(&self) -> bool {
-    self.rgba.chunks_exact(4).any(|pixel| pixel[3] != 0)
-  }
-}
-
 #[derive(Default)]
 struct FrameState {
   sequence: u64,
@@ -233,7 +227,7 @@ impl TaskPump {
     while Instant::now() < deadline {
       self.pump_once(view);
       if let Some(frame) = frames.latest() {
-        if frame.sequence > after_sequence && frame.has_visible_pixels() {
+        if frame.sequence > after_sequence {
           return Ok(frame);
         }
       }

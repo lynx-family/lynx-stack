@@ -102,9 +102,7 @@ pub(crate) struct HostResourceFetcher {
 
 impl ResourceFetcher for HostResourceFetcher {
   fn fetch(&mut self, request: ResourceRequest) -> FetchResponse {
-    let result = if request.resource_type == ResourceType::LynxCoreJs
-      || request.url.contains("lynx_core.js")
-    {
+    let result = if is_lynx_core_request(&request) {
       fs::read(&self.context.lynx_core_path).map_err(Error::from)
     } else {
       match self.context.resolve_url(&request.url) {
@@ -122,6 +120,21 @@ impl ResourceFetcher for HostResourceFetcher {
   fn fetch_path(&mut self, request: ResourceRequest) -> FetchResponse {
     self.fetch(request)
   }
+}
+
+fn is_lynx_core_request(request: &ResourceRequest) -> bool {
+  if request.resource_type == ResourceType::LynxCoreJs {
+    return true;
+  }
+  request
+    .url
+    .split(['?', '#'])
+    .next()
+    .unwrap_or(&request.url)
+    .trim_end_matches('/')
+    .rsplit('/')
+    .next()
+    == Some("lynx_core.js")
 }
 
 enum ResolvedResource {
@@ -190,5 +203,31 @@ mod tests {
       Some(b"globalThis.loadCard = () => true;".as_slice())
     );
     let _ = fs::remove_file(core_path);
+  }
+
+  #[test]
+  fn lynx_core_url_fallback_requires_the_exact_filename() {
+    let request = |url: &str, resource_type| ResourceRequest {
+      id: 1,
+      url: url.into(),
+      resource_type,
+    };
+
+    assert!(is_lynx_core_request(&request(
+      "assets://lynx_core.js?version=1#resource",
+      ResourceType::Generic
+    )));
+    assert!(is_lynx_core_request(&request(
+      "assets://unrelated.js",
+      ResourceType::LynxCoreJs
+    )));
+    assert!(!is_lynx_core_request(&request(
+      "assets://app_lynx_core.js",
+      ResourceType::Generic
+    )));
+    assert!(!is_lynx_core_request(&request(
+      "assets://lynx_core.js.map",
+      ResourceType::Generic
+    )));
   }
 }

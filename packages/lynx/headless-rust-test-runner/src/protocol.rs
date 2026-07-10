@@ -242,6 +242,16 @@ fn read_u32(source: &[u8]) -> u32 {
 mod tests {
   use super::*;
 
+  fn cdp_response(message: Value) -> Value {
+    json!({
+      "event": "Customized",
+      "data": {
+        "type": "CDP",
+        "data": { "message": message.to_string() },
+      },
+    })
+  }
+
   #[tokio::test]
   async fn peertalk_frame_roundtrip() {
     let value = json!({ "event": "Initialize", "data": 8901 });
@@ -261,5 +271,82 @@ mod tests {
     });
     let sessions = parse_session_list_response(&response).unwrap().unwrap();
     assert_eq!(sessions[0].session_id, 1);
+  }
+
+  #[test]
+  fn parses_matching_cdp_response() {
+    let response = cdp_response(json!({
+      "id": 42,
+      "result": { "nodeId": 7 },
+    }));
+    let result: QuerySelectorResult = parse_cdp_response(&response, 42).unwrap().unwrap();
+    assert_eq!(result.node_id, 7);
+  }
+
+  #[test]
+  fn extracts_cdp_protocol_errors() {
+    let response = cdp_response(json!({
+      "id": 42,
+      "error": { "message": "node not found" },
+    }));
+    assert!(matches!(
+      parse_cdp_response::<Value>(&response, 42),
+      Err(Error::Cdp(message)) if message == "node not found"
+    ));
+  }
+
+  #[test]
+  fn ignores_cdp_response_with_a_different_id() {
+    let response = cdp_response(json!({
+      "id": 99,
+      "result": {},
+    }));
+    assert!(parse_cdp_response::<Value>(&response, 42)
+      .unwrap()
+      .is_none());
+  }
+
+  #[test]
+  fn rejects_cdp_response_without_a_result() {
+    let response = cdp_response(json!({ "id": 42 }));
+    assert!(matches!(
+      parse_cdp_response::<Value>(&response, 42),
+      Err(Error::Protocol(message)) if message == "CDP response missing result"
+    ));
+  }
+
+  #[test]
+  fn parses_initialize_response() {
+    let response = json!({
+      "event": "Register",
+      "data": { "info": { "App": "headless" } },
+    });
+    let info = parse_initialize_response(&response).unwrap().unwrap();
+    assert_eq!(info.app, "headless");
+
+    assert!(parse_initialize_response(&json!({ "event": "Customized" }))
+      .unwrap()
+      .is_none());
+  }
+
+  #[test]
+  fn rejects_initialize_response_without_app_info() {
+    let missing_info = json!({
+      "event": "Register",
+      "data": {},
+    });
+    assert!(matches!(
+      parse_initialize_response(&missing_info),
+      Err(Error::Protocol(message)) if message == "Register response missing data.info"
+    ));
+
+    let missing_app = json!({
+      "event": "Register",
+      "data": { "info": {} },
+    });
+    assert!(matches!(
+      parse_initialize_response(&missing_app),
+      Err(Error::Json(_))
+    ));
   }
 }

@@ -7,7 +7,7 @@ use serde::Serialize;
 use serde_json::Value;
 use tokio::net::TcpStream;
 use tokio::sync::Mutex;
-use tokio::time::{sleep, timeout, Instant};
+use tokio::time::{sleep, timeout};
 
 use crate::protocol::{
   cdp_request, global_switch_request, initialize_request, list_session_request, parse_cdp_response,
@@ -47,25 +47,45 @@ pub(crate) struct DebugRouter {
 
 impl DebugRouter {
   pub(crate) async fn connect(app_name: &str, connect_timeout: Duration) -> Result<Self> {
-    let deadline = Instant::now() + connect_timeout;
-    while Instant::now() < deadline {
-      for port in FIRST_DEBUG_ROUTER_PORT..=LAST_DEBUG_ROUTER_PORT {
-        if let Ok((stream, info)) = initialize(port).await {
-          if info.app == app_name {
-            let router = Self {
-              port,
-              stream: Mutex::new(stream),
-              next_id: AtomicU32::new(10_000),
-            };
-            let _ = router.set_global_switch("enable_devtool", true).await;
-            let _ = router.set_global_switch("enable_dom_tree", true).await;
-            return Ok(router);
+    timeout(connect_timeout, async {
+      loop {
+        for port in FIRST_DEBUG_ROUTER_PORT..=LAST_DEBUG_ROUTER_PORT {
+          if let Ok((stream, info)) = initialize(port).await {
+            if info.app == app_name {
+              let router = Self {
+                port,
+                stream: Mutex::new(stream),
+                next_id: AtomicU32::new(10_000),
+              };
+              router
+                .set_global_switch("enable_devtool", true)
+                .await
+                .map_err(|error| {
+                  Error::Protocol(format!(
+                    "failed to enable debug-router switch enable_devtool: {error}"
+                  ))
+                })?;
+              router
+                .set_global_switch("enable_dom_tree", true)
+                .await
+                .map_err(|error| {
+                  Error::Protocol(format!(
+                    "failed to enable debug-router switch enable_dom_tree: {error}"
+                  ))
+                })?;
+              return Ok(router);
+            }
           }
         }
+        sleep(Duration::from_millis(100)).await;
       }
-      sleep(Duration::from_millis(100)).await;
-    }
-    Err(Error::ClientNotFound)
+    })
+    .await
+    .map_err(|_| {
+      Error::Timeout(format!(
+        "connecting to debug-router client {app_name} within {connect_timeout:?}"
+      ))
+    })?
   }
 
   pub(crate) async fn list_sessions(&self) -> Result<Vec<Session>> {

@@ -228,10 +228,8 @@ impl Page {
     let timeout = options.timeout.unwrap_or(self.runtime.timeout);
     let existing_session_ids = self
       .runtime
-      .debug_router
       .list_sessions()
-      .await
-      .unwrap_or_default()
+      .await?
       .into_iter()
       .map(|session| session.session_id)
       .collect::<HashSet<_>>();
@@ -359,33 +357,46 @@ impl Page {
     existing_session_ids: &HashSet<i64>,
     timeout: Duration,
   ) -> Result<Session> {
-    let url_path = url.rsplit('/').next().unwrap_or(url);
     let deadline = Instant::now() + timeout;
-    let mut fallback = None;
+    let mut last_error = None;
     while Instant::now() < deadline {
-      if let Ok(sessions) = self.runtime.list_sessions().await {
-        if std::env::var_os("HEADLESS_RUST_TEST_RUNNER_DEBUG").is_some() {
-          eprintln!("[headless-rust-test-runner] sessions: {sessions:?}");
+      match self.runtime.list_sessions().await {
+        Ok(sessions) => {
+          if std::env::var_os("HEADLESS_RUST_TEST_RUNNER_DEBUG").is_some() {
+            eprintln!("[headless-rust-test-runner] sessions: {sessions:?}");
+          }
+          let matches = sessions
+            .into_iter()
+            .filter(|session| session_url_matches(url, &session.url))
+            .collect::<Vec<_>>();
+          if let Some(session) = matches
+            .iter()
+            .filter(|session| !existing_session_ids.contains(&session.session_id))
+            .max_by_key(|session| session.session_id)
+          {
+            return Ok(session.clone());
+          }
+          if let Some(current_session_id) = self.session_id {
+            if let Some(session) = matches
+              .into_iter()
+              .find(|session| session.session_id == current_session_id)
+            {
+              return Ok(session);
+            }
+          }
         }
-        let matches = sessions
-          .into_iter()
-          .filter(|session| session_url_matches(url, url_path, &session.url))
-          .collect::<Vec<_>>();
-        if let Some(session) = matches
-          .iter()
-          .filter(|session| !existing_session_ids.contains(&session.session_id))
-          .max_by_key(|session| session.session_id)
-        {
-          return Ok(session.clone());
-        }
-        fallback = matches.into_iter().max_by_key(|session| session.session_id);
-        if fallback.is_some() {
-          break;
+        Err(error) => {
+          last_error = Some(error.to_string());
         }
       }
       self.runtime.pump_for(Duration::from_millis(100)).await;
     }
-    fallback.ok_or_else(|| Error::SessionNotFound(url.to_string()))
+    if let Some(last_error) = last_error {
+      return Err(Error::Protocol(format!(
+        "failed while waiting for a debug session for {url}: {last_error}"
+      )));
+    }
+    Err(Error::SessionNotFound(url.to_string()))
   }
 
   async fn attach_to_session(&mut self, session_id: i64, timeout: Duration) -> Result<()> {
@@ -640,11 +651,26 @@ fn content_to_string(buffer: &mut String, node: &NodeInfo) {
   buffer.push('>');
 }
 
-fn session_url_matches(url: &str, url_path: &str, session_url: &str) -> bool {
+fn session_url_matches(url: &str, session_url: &str) -> bool {
+  if session_url.is_empty() {
+    return false;
+  }
   session_url == url
-    || session_url == url_path
-    || url.ends_with(session_url)
-    || session_url.ends_with(url_path)
+    || match (final_url_component(url), final_url_component(session_url)) {
+      (Some(expected), Some(actual)) => actual == expected,
+      _ => false,
+    }
+}
+
+fn final_url_component(url: &str) -> Option<&str> {
+  url
+    .split(['?', '#'])
+    .next()
+    .unwrap_or(url)
+    .trim_end_matches('/')
+    .rsplit('/')
+    .next()
+    .filter(|component| !component.is_empty())
 }
 
 #[cfg(test)]
@@ -673,11 +699,27 @@ mod tests {
   }
 
   #[test]
-  fn matches_session_url_suffixes() {
+  fn matches_session_url_by_exact_filename() {
     assert!(session_url_matches(
       "file:///tmp/main.lynx.bundle",
-      "main.lynx.bundle",
       "main.lynx.bundle"
+    ));
+    assert!(session_url_matches(
+      "https://example.test/main.lynx.bundle?version=1",
+      "file:///tmp/main.lynx.bundle#document"
+    ));
+  }
+
+  #[test]
+  fn rejects_missing_or_suffix_session_urls() {
+    assert!(!session_url_matches("file:///tmp/main.lynx.bundle", ""));
+    assert!(!session_url_matches(
+      "file:///tmp/main.lynx.bundle",
+      "not-main.lynx.bundle"
+    ));
+    assert!(!session_url_matches(
+      "file:///tmp/main.lynx.bundle",
+      "main.lynx.bundle.map"
     ));
   }
 }
