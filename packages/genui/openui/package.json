@@ -40,8 +40,8 @@
     "build:api": "tsc -p tsconfig.build.json"
   },
   "dependencies": {
-    "@openuidev/lang-core": "^0.2.5",
-    "zod": "^3.25.76"
+    "@openuidev/lang-core": "^0.2.7",
+    "zod": "^3.25.76 || ^4.0.0"
   },
   "devDependencies": {
     "@lynx-js/lynx-ui": "^3.133.0",

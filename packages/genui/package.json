@@ -111,10 +111,10 @@
   },
   "dependencies": {
     "@a2ui/web_core": "0.9.1",
-    "@openuidev/lang-core": "^0.2.5",
+    "@openuidev/lang-core": "^0.2.7",
     "@preact/signals": "^2.5.1",
     "typedoc": "^0.28.19",
-    "zod": "^3.25.76"
+    "zod": "^3.25.76 || ^4.0.0"
   },
   "devDependencies": {
     "@lynx-js/genui-a2ui": "workspace:*",
