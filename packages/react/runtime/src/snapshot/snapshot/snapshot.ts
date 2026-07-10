@@ -20,29 +20,13 @@ import type { PlatformInfo } from './platformInfo.js';
 import { unref } from './ref.js';
 import { setSnapshotCreatorMap, snapshotCreatorMap, snapshotCreatorRuntime } from './snapshotCreatorMap.js';
 import type { SnapshotCreator } from './snapshotCreatorMap.js';
+import { snapshotInstanceManager } from './snapshotInstanceManager.js';
 import type { SerializedSnapshotInstance } from './types.js';
 import { isCloneSnapshot, isCompiledSnapshot, traverseSnapshotInstance } from './utils.js';
 import { isDirectOrDeepEqual } from '../../utils.js';
-import { clearSnapshotVNodeSource } from '../debug/vnodeSource.js';
 import { SnapshotOperation, __globalSnapshotPatch } from '../lifecycle/patch/snapshotPatch.js';
 import { ListUpdateInfoRecording } from '../list/listUpdateInfo.js';
 import { __pendingListUpdates } from '../list/pendingListUpdates.js';
-
-export const snapshotInstanceManager: {
-  nextId: number;
-  values: Map<number, SnapshotInstance>;
-  clear(): void;
-} = {
-  nextId: 0,
-  values: /* @__PURE__ */ new Map<number, SnapshotInstance>(),
-  clear() {
-    // not resetting `nextId` to prevent id collision
-    this.values.clear();
-    if (__DEV__) {
-      clearSnapshotVNodeSource();
-    }
-  },
-};
 
 function isRemovedSnapshot(
   value: unknown,
@@ -104,6 +88,7 @@ function clearTransientChildPropRefs(owner: SnapshotInstance, removedSnapshots: 
 }
 
 export { snapshotCreatorMap } from './snapshotCreatorMap.js';
+export { snapshotInstanceManager };
 
 if (__DEV__ && __JS__) {
   setSnapshotCreatorMap(
