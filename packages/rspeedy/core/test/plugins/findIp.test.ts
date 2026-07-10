@@ -215,9 +215,7 @@ describe('findIp', () => {
 
     const { findIp } = await import('../../src/plugins/dev.plugin.js')
 
-    await expect(findIp('v4')).rejects.toThrow(
-      'No valid IP found',
-    )
+    await expect(findIp('v4')).resolves.toBeUndefined()
   })
 
   test('no ips', async () => {
@@ -227,9 +225,7 @@ describe('findIp', () => {
 
     const { findIp } = await import('../../src/plugins/dev.plugin.js')
 
-    await expect(findIp('v4')).rejects.toThrow(
-      'No valid IP found',
-    )
+    await expect(findIp('v4')).resolves.toBeUndefined()
   })
 
   test('invalid network interfaces', async () => {
@@ -242,9 +238,7 @@ describe('findIp', () => {
 
     const { findIp } = await import('../../src/plugins/dev.plugin.js')
 
-    await expect(findIp('v4')).rejects.toThrow(
-      'No valid IP found',
-    )
+    await expect(findIp('v4')).resolves.toBeUndefined()
   })
 
   test('invalid ip address', async () => {
@@ -261,8 +255,6 @@ describe('findIp', () => {
 
     const { findIp } = await import('../../src/plugins/dev.plugin.js')
 
-    await expect(findIp('v4')).rejects.toThrow(
-      'No valid IP found',
-    )
+    await expect(findIp('v4')).resolves.toBeUndefined()
   })
 })
