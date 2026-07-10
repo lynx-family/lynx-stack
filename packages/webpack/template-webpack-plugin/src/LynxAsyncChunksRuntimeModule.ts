@@ -2,12 +2,12 @@
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
 
-import type { RuntimeModule } from '@rspack/core';
+import type { Chunk, RuntimeModule } from '@rspack/core';
 
 import { RuntimeGlobals } from '@lynx-js/webpack-runtime-globals';
 
 type LynxAsyncChunksRuntimeModule = new(
-  getChunkName: (chunkName: string) => string,
+  getFilenameTemplate: (chunk: Chunk) => string,
 ) => RuntimeModule;
 
 export function createLynxAsyncChunksRuntimeModule(
@@ -15,7 +15,7 @@ export function createLynxAsyncChunksRuntimeModule(
 ): LynxAsyncChunksRuntimeModule {
   return class LynxAsyncChunksRuntimeModule extends webpack.RuntimeModule {
     constructor(
-      public getChunkName: (chunkName: string) => string,
+      public getFilenameTemplate: (chunk: Chunk) => string,
     ) {
       super(
         'webpack/runtime/lynx async chunks',
@@ -32,7 +32,7 @@ ${RuntimeGlobals.lynxAsyncChunkIds} = {${
         Array.from(chunk.getAllAsyncChunks())
           .filter(c => c.name !== null && c.name !== undefined)
           .map(c => {
-            const filename = this.getChunkName(c.name!);
+            const filename = this.getFilenameTemplate(c);
 
             // Modified from https://github.com/webpack/webpack/blob/11449f02175f055a4540d76aa4478958c4cb297e/lib/runtime/GetChunkFilenameRuntimeModule.js#L154-L157
             // Rspack currently ignores `hashWithLength` (also missing from its
