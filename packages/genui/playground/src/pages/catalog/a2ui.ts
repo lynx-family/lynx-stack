@@ -3,9 +3,9 @@
 // LICENSE file in the root directory of this source tree.
 import { json } from '@codemirror/lang-json';
 
+import type { ComponentCatalogSource } from './ComponentCatalog.js';
 import { CATEGORIES, COMPONENT_CATALOG } from '../../catalog/a2ui.js';
 import type { ComponentDoc } from '../../catalog/a2ui.js';
-import type { ComponentCatalogSource } from '../../components/ComponentCatalog.js';
 import { DEFAULT_A2UI_DEMO_URL } from '../../utils/demoUrl.js';
 import { buildRenderUrl } from '../../utils/renderUrl.js';
 

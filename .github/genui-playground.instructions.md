@@ -34,9 +34,9 @@ When importing shared playground conversations, validate the `importConv` URL be
 
 ### Shared Page and Protocol Sources
 
-Keep page structure and editor/example selection state in `components/ComponentCatalog.tsx`, with its styles co-located in `components/ComponentCatalog.css`. Route both protocols through `pages/catalog/ComponentsPage.tsx`, and keep protocol-specific catalog data, validation, and render URL construction in `pages/catalog/a2ui.ts` and `pages/catalog/openui.ts`.
+Keep page structure and editor/example selection state in `pages/catalog/ComponentCatalog.tsx`, with its styles co-located in `pages/catalog/ComponentCatalog.css`. Route both protocols through `pages/catalog/ComponentsPage.tsx`, and keep protocol-specific catalog data, validation, and render URL construction in `pages/catalog/a2ui.ts` and `pages/catalog/openui.ts`.
 
-Keep the shared editor, copy feedback, example tabs, and `PreviewViewport` layout in `ComponentUsagePreview`.
+Keep the shared editor, copy feedback, example tabs, and `PreviewViewport` layout in `pages/catalog/ComponentUsagePreview.tsx`.
 
 ### Shared Presentation
 
@@ -47,6 +47,14 @@ Keep the A2UI and OpenUI component catalog pages visually identical by rendering
 Send editable OpenUI usage DSL through `buildOpenUIRenderUrl` with `instant: true`, and forward the playground theme so the Lynx preview matches the surrounding catalog page.
 
 Component catalog examples are intentionally inline-only. Keep every bundled usage snippet below `OPENUI_INLINE_RENDER_URL_MAX_LENGTH`, reject oversized edits with a visible error, and reserve `rawTextUrl` publishing for larger Examples/Create payloads rather than publishing on each catalog-editor keystroke.
+
+## Example Showcase Architecture
+
+Keep the shared example-list page structure, preview queue, keyboard interaction, section rendering, and card layout in `pages/demos/DemosList.tsx`. Route both protocols through `pages/demos/DemosListPage.tsx`, and keep protocol-specific scenarios, sections, preview URL construction, and queue reset keys in `pages/demos/a2ui.ts` and `pages/demos/openui.ts`.
+
+Protocol-specific showcase sources may vary their header copy, section links, badges, layout mode, and preview payload construction, but must not duplicate the shared list-page JSX or card interaction logic.
+
+Keep the shared example-detail workspace, editor/preview resizing, playback state machine, progress bridge, scenario sidebar, and mobile tabs in `pages/demos/DemosPage.tsx`, with its styles in `pages/demos/DemosPage.css`. Keep protocol-specific editor configuration, commit validation, playback chunking, payload publishing, and `PreviewPanelSource` construction in the existing `pages/demos/a2ui.ts` and `pages/demos/openui.ts` source modules.
 
 ## OpenUI Integration
 

@@ -1,12 +1,12 @@
 // Copyright 2026 The Lynx Authors. All rights reserved.
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
+import type { ComponentCatalogSource } from './ComponentCatalog.js';
 import {
   OPENUI_CATEGORIES,
   OPENUI_COMPONENT_CATALOG,
 } from '../../catalog/openui.js';
 import type { OpenUIComponentDoc } from '../../catalog/openui.js';
-import type { ComponentCatalogSource } from '../../components/ComponentCatalog.js';
 import { parseOpenUIScenario } from '../../mock/openui-scenarios.js';
 import {
   buildOpenUIRenderUrl,
