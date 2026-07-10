@@ -1505,18 +1505,9 @@ importers:
       tiny-invariant:
         specifier: ^1.3.3
         version: 1.3.3
-      ts-blank-space:
-        specifier: ^0.7.0
-        version: 0.7.0
       type-fest:
         specifier: ^5.4.4
         version: 5.4.4
-      typia:
-        specifier: 12.1.1
-        version: 12.1.1(typescript@5.9.3)
-      typia-rspack-plugin:
-        specifier: 3.0.1
-        version: 3.0.1(@rspack/core@2.1.3(@swc/helpers@0.5.23))(typescript@5.9.3)(typia@12.1.1(typescript@5.9.3))
 
   packages/rspeedy/create-rspeedy:
     dependencies:
@@ -1715,9 +1706,21 @@ importers:
       '@swc/core':
         specifier: ^1.15.30
         version: 1.15.30(@swc/helpers@0.5.23)
+      expect-type:
+        specifier: ^1.2.1
+        version: 1.2.1
+      ts-blank-space:
+        specifier: ^0.7.0
+        version: 0.7.0
       type-fest:
         specifier: ^5.4.4
         version: 5.4.4
+      typia:
+        specifier: 12.1.1
+        version: 12.1.1(typescript@5.9.3)
+      typia-rspack-plugin:
+        specifier: 3.0.1
+        version: 3.0.1(@rspack/core@2.1.3(@swc/helpers@0.5.23))(typescript@5.9.3)(typia@12.1.1(typescript@5.9.3))
 
   packages/rspeedy/plugin-qrcode:
     devDependencies:

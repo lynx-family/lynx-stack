@@ -31,6 +31,11 @@ import { pluginLynxDebugMetadata } from '@lynx-js/debug-metadata-rsbuild-plugin'
 
 import { applyDefaultRspeedyConfig } from './config/defaults.js'
 import type { Config } from './config/index.js'
+import { loadConfig } from './config/loadConfig.js'
+import type {
+  LoadConfigOptions,
+  LoadConfigResult,
+} from './config/loadConfig.js'
 import { pluginLynxConfig } from './defaults.js'
 import {
   pluginChunkLoading,
@@ -83,6 +88,37 @@ export function pluginLynxPreset(config: Config = {}): RsbuildPlugins {
     pluginCssMinimizer(),
   ]
 }
+
+/**
+ * Load (and validate) a `lynx.config.ts` and return the Lynx {@link Config},
+ * so an existing Rspeedy project can be built with the Rsbuild CLI without
+ * rewriting its config:
+ *
+ * @example
+ * ```ts
+ * // rsbuild.config.ts
+ * import { defineConfig } from '@rsbuild/core'
+ * import { loadLynxConfig, pluginLynxPreset } from '@lynx-js/preset-rsbuild-plugin'
+ *
+ * export default defineConfig(async () => ({
+ *   plugins: [pluginLynxPreset(await loadLynxConfig())],
+ * }))
+ * ```
+ *
+ * @public
+ */
+export async function loadLynxConfig(
+  options: LoadConfigOptions = {},
+): Promise<Config> {
+  const { content } = await loadConfig(options)
+  return content
+}
+
+// Config loading, re-exported by `@lynx-js/rspeedy` for the CLI's public API.
+export { loadConfig }
+export type { LoadConfigOptions, LoadConfigResult }
+export { defineConfig } from './config/defineConfig.js'
+export type { ConfigParams } from './config/defineConfig.js'
 
 // The Lynx-shaped config surface. Re-exported by `@lynx-js/rspeedy` so the
 // `import { Config } from '@lynx-js/rspeedy'` used by DSL plugins keeps working.

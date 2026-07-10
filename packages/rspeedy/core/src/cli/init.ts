@@ -1,9 +1,9 @@
 // Copyright 2024 The Lynx Authors. All rights reserved.
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
+import { loadConfig } from '@lynx-js/preset-rsbuild-plugin'
 import type { Config } from '@lynx-js/preset-rsbuild-plugin'
 
-import { loadConfig } from '../config/loadConfig.js'
 import type { CreateRspeedyOptions } from '../create-rspeedy.js'
 import type { BuildOptions } from './build.js'
 import type { DevOptions } from './dev.js'

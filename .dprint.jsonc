@@ -54,6 +54,9 @@
     "/tsconfig.json",
 
     // Tests depend on format
+    // Rspeedy config-loading fixtures are hand-crafted config inputs (some
+    // intentionally malformed, e.g. `import {}`) that must not be reformatted.
+    "**/test/**/fixtures/**",
     "packages/tools/css-serializer/test/__preparation__/**",
     "packages/webpack/css-extract-webpack-plugin/test/js/**",
     "packages/webpack/css-extract-webpack-plugin/test/rspack-js/**",

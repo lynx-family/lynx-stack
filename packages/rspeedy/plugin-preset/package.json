@@ -19,6 +19,12 @@
     "email": "yimingli.cs@gmail.com"
   },
   "type": "module",
+  "imports": {
+    "#register": {
+      "types": "./register/index.d.ts",
+      "import": "./register/index.js"
+    }
+  },
   "exports": {
     ".": {
       "types": "./lib/index.d.ts",
@@ -63,7 +69,11 @@
     "@rsdoctor/core": "~1.5.6",
     "@rstest/core": "catalog:rstest",
     "@swc/core": "^1.15.30",
-    "type-fest": "^5.4.4"
+    "expect-type": "^1.2.1",
+    "ts-blank-space": "^0.7.0",
+    "type-fest": "^5.4.4",
+    "typia": "12.1.1",
+    "typia-rspack-plugin": "3.0.1"
   },
   "peerDependencies": {
     "@rsbuild/core": "^2.0.0"
@@ -83,6 +93,12 @@
         "default": "./dist/internal.js"
       },
       "./package.json": "./package.json"
+    },
+    "imports": {
+      "#register": {
+        "types": "./dist/register/index.d.ts",
+        "import": "./dist/register/index.js"
+      }
     },
     "types": "./dist/index.d.ts"
   }

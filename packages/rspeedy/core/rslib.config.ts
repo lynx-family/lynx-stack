@@ -4,7 +4,6 @@ import path from 'node:path'
 import { defineConfig, type rsbuild } from '@rslib/core'
 import { pluginAreTheTypesWrong } from 'rsbuild-plugin-arethetypeswrong'
 import { pluginPublint } from 'rsbuild-plugin-publint'
-import { TypiaRspackPlugin } from 'typia-rspack-plugin'
 
 import { BUNDLE_STATS_JSON_OPTIONS } from '../plugin-preset/src/plugins/statsJsonOptions.js'
 
@@ -25,7 +24,7 @@ export default defineConfig({
         // See: rsdoctor.plugin.ts
         tsgo: false,
       },
-      plugins: [pluginTypia(), pluginStatsJson()],
+      plugins: [pluginStatsJson()],
     },
     {
       format: 'esm',
@@ -36,38 +35,8 @@ export default defineConfig({
         },
       },
       dts: false,
-      plugins: [pluginTypia()],
-    },
-    {
-      format: 'esm',
-      syntax: 'es2022',
-      source: {
-        entry: {
-          'register/index': './register/index.js',
-          'register/hooks': './register/hooks.js',
-        },
-      },
-      dts: false,
-      output: {
-        copy: {
-          patterns: [
-            {
-              from: './register/index.d.ts',
-              to: './register/index.d.ts',
-            },
-          ],
-        },
-        externals: [
-          'typescript',
-        ],
-      },
     },
   ],
-  output: {
-    externals: [
-      '#register',
-    ],
-  },
   plugins: [
     pluginAreTheTypesWrong({
       areTheTypesWrongOptions: {
@@ -89,28 +58,6 @@ export default defineConfig({
     },
   },
 })
-
-function pluginTypia(): rsbuild.RsbuildPlugin {
-  return {
-    name: 'rspeedy-plugin-typia',
-    setup(api) {
-      api.modifyBundlerChain(chain => {
-        const { source } = api.getRsbuildConfig()
-
-        chain
-          .plugin('typia')
-          .use(TypiaRspackPlugin, [
-            {
-              cache: false,
-              include: './src/config/validate.ts',
-              tsconfig: source?.tsconfigPath,
-              log: false,
-            },
-          ])
-      })
-    },
-  }
-}
 
 // https://rsbuild.rs/guide/upgrade/v1-to-v2#remove-performanceprofile
 function pluginStatsJson(): rsbuild.RsbuildPlugin {

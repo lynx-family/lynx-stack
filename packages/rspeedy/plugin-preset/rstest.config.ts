@@ -6,6 +6,7 @@ import { fileURLToPath } from 'node:url'
 
 import { defineConfig } from '@rstest/core'
 import type { RstestConfig } from '@rstest/core'
+import { TypiaRspackPlugin } from 'typia-rspack-plugin'
 
 import { lynxRstestConfig } from '@lynx-js/test-tools/rstest-config'
 
@@ -28,6 +29,15 @@ const config: RstestConfig = defineConfig({
       // share a single module instance.
       '@lynx-js/preset-rsbuild-plugin/internal': path.join(src, 'internal.ts'),
       '@lynx-js/preset-rsbuild-plugin': path.join(src, 'index.ts'),
+    },
+  },
+  // Expand the typia macros in `src/config/validate.ts` for `validate.test`.
+  tools: {
+    rspack: {
+      module: { parser: { javascript: { url: false } } },
+      plugins: [
+        new TypiaRspackPlugin({ include: [src] }),
+      ],
     },
   },
 })

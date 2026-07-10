@@ -12,7 +12,7 @@ import { Command } from 'commander'
 import type { Config, CreateRspeedyOptions } from '../../src/index.js'
 
 rstest.mock('../../src/cli/exit.js', { mock: true })
-rstest.mock('../../src/config/loadConfig.js', { mock: true })
+rstest.mock('@lynx-js/preset-rsbuild-plugin', { mock: true })
 rstest.mock('../../src/create-rspeedy.js', () => {
   const rsbuildCore = rstest.requireActual<
     typeof import('../../src/create-rspeedy.js')
@@ -40,7 +40,7 @@ describe('CLI - Inspect', () => {
   })
 
   test('inspect with default options', async () => {
-    const { loadConfig } = await import('../../src/config/loadConfig.js')
+    const { loadConfig } = await import('@lynx-js/preset-rsbuild-plugin')
 
     await rstest.mocked(loadConfig).withImplementation(
       () => Promise.resolve({ content: {}, configPath: '' }),
@@ -115,7 +115,7 @@ describe('CLI - Inspect', () => {
   })
 
   test('inspect with env: production', async () => {
-    const { loadConfig } = await import('../../src/config/loadConfig.js')
+    const { loadConfig } = await import('@lynx-js/preset-rsbuild-plugin')
 
     await rstest.mocked(loadConfig).withImplementation(
       () => Promise.resolve({ content: {}, configPath: '' }),
@@ -194,7 +194,7 @@ describe('CLI - Inspect', () => {
   })
 
   test('inspect with env: development', async () => {
-    const { loadConfig } = await import('../../src/config/loadConfig.js')
+    const { loadConfig } = await import('@lynx-js/preset-rsbuild-plugin')
 
     await rstest.mocked(loadConfig).withImplementation(
       () => Promise.resolve({ content: {}, configPath: '' }),
@@ -272,7 +272,7 @@ describe('CLI - Inspect', () => {
   })
 
   test('inspect with verbose', async () => {
-    const { loadConfig } = await import('../../src/config/loadConfig.js')
+    const { loadConfig } = await import('@lynx-js/preset-rsbuild-plugin')
 
     await rstest.mocked(loadConfig).withImplementation(
       () => Promise.resolve({ content: {}, configPath: '' }),
@@ -346,7 +346,7 @@ describe('CLI - Inspect', () => {
   })
 
   test('inspect rspeedy config', async () => {
-    const { loadConfig } = await import('../../src/config/loadConfig.js')
+    const { loadConfig } = await import('@lynx-js/preset-rsbuild-plugin')
 
     await rstest.mocked(loadConfig).withImplementation(
       () =>
@@ -384,7 +384,7 @@ describe('CLI - Inspect', () => {
   })
 
   test('parse', async () => {
-    const { loadConfig } = await import('../../src/config/loadConfig.js')
+    const { loadConfig } = await import('@lynx-js/preset-rsbuild-plugin')
 
     await rstest.mocked(loadConfig).withImplementation(
       () =>
