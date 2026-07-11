@@ -66,6 +66,14 @@ export default defineConfig({
       '011-transform-async-to-generator': [
         './cases/011-transform-async-to-generator/index.tsx',
       ],
+      '012-heavy-first-screen': [
+        './src/patchProfile.ts',
+        './cases/012-heavy-first-screen/index.tsx',
+      ],
+      '013-background-boundary': [
+        './src/patchProfile.ts',
+        './cases/013-background-boundary/index.tsx',
+      ],
     },
   },
   plugins: [

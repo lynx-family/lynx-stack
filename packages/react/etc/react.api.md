@@ -40,6 +40,15 @@ import { useSyncExternalStore } from 'react';
 import type { VNode } from 'preact';
 
 // @public
+export function Background(props: BackgroundProps): ReactNode;
+
+// @public
+export interface BackgroundProps {
+    children?: ReactNode | undefined;
+    fallback?: ReactNode | undefined;
+}
+
+// @public
 export const Children: ReactLynxChildren;
 
 export { cloneElement }

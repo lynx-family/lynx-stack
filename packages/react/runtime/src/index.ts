@@ -17,6 +17,7 @@ import {
   useSyncExternalStore,
 } from 'preact/compat';
 
+import { Background } from './core/background.js';
 import { installComponentCompat } from './core/component.js';
 import {
   useCallback,
@@ -36,6 +37,7 @@ import { createPortal } from './snapshot/lynx/portals.js';
 import { Suspense } from './snapshot/lynx/suspense.js';
 
 export type { ReactLynxChildren } from './snapshot/lynx/children.js';
+export type { BackgroundProps } from './core/background.js';
 
 installComponentCompat();
 
@@ -74,9 +76,11 @@ export default {
   createElement,
   cloneElement,
   createPortal,
+  Background,
 };
 
 export {
+  Background,
   Children,
   createRef,
   Fragment,
