@@ -13,6 +13,7 @@ import {
 } from './commit-hook.js';
 import { hydrateRootChildrenIntoContext } from './hydrate.js';
 import type { BackgroundElementTemplateInstance } from './instance.js';
+import { markHydrationCompleted } from '../../core/hydration.js';
 import {
   PerformanceTimingFlags,
   PipelineOrigins,
@@ -172,6 +173,9 @@ export function installElementTemplateHydrationListener(): void {
         // Ordinary refs attach on Preact commit boundaries; hydration only releases
         // delayed selector ops after ids have been rebound to stable native handles.
         flushDelayedRefUiOps();
+        // The hydration update has been dispatched to the main thread — resolve
+        // `root.hydrate()` on this thread.
+        markHydrationCompleted();
       }
     } finally {
       setPipeline(undefined);

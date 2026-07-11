@@ -8,6 +8,7 @@ import { runRunOnMainThreadTask, setEomShouldFlushElementTree } from '@lynx-js/r
 import type { PatchList, PatchOptions } from './commit.js';
 import { setMainThreadHydrating } from './isMainThreadHydrating.js';
 import { snapshotPatchApply } from './snapshotPatchApply.js';
+import { markHydrationCompleted } from '../../../core/hydration.js';
 import { markTiming, setPipeline } from '../../../core/performance.js';
 import { getReloadVersion } from '../../../core/reload-version.js';
 import { prettyFormatSnapshotPatch } from '../../debug/formatPatch.js';
@@ -99,6 +100,11 @@ function updateMainThread(
     flushOptions.pipelineOptions = patchOptions.pipelineOptions;
   }
   __FlushElementTree(__page, flushOptions);
+
+  if (patchOptions.isHydration) {
+    // The hydration patch is applied — resolve `root.hydrate()` on this thread.
+    markHydrationCompleted();
+  }
 
   if (flowIds) {
     lynx.performance.profileEnd();

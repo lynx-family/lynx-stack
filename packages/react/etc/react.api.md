@@ -139,7 +139,7 @@ export class MainThreadRef<T> extends WorkletRef<T> {
     constructor(initValue: T);
 }
 
-// @public
+// @public @deprecated
 export function markFirstScreenSyncReady(): void;
 
 export { memo }
@@ -155,13 +155,19 @@ export type ReactLynxChildren = Omit<typeof Children_2, 'map' | 'forEach' | 'toA
 
 // @public
 export interface Root {
+    hydrate: () => Promise<void>;
     // @deprecated
     registerDataProcessors: (dataProcessorDefinition: DataProcessorDefinition) => void;
-    render: (jsx: ReactNode) => void;
+    render: (jsx: ReactNode, options?: RootRenderOptions) => void;
 }
 
 // @public
 export const root: Root;
+
+// @public
+export interface RootRenderOptions {
+    hydrate?: boolean | undefined;
+}
 
 // @public
 export function runOnBackground<R, Fn extends (...args: any[]) => R>(f: Fn): (...args: Parameters<Fn>) => Promise<R>;
