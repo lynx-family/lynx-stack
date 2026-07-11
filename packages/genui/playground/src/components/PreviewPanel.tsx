@@ -86,6 +86,7 @@ interface A2UIPreviewSource {
   actionMocks?: Record<string, unknown>;
   actionMocksUrl?: string;
   demoId?: string;
+  liveAction?: boolean;
   /**
    * When true, build the render URL in playback mode so the Lynx app waits
    * for `A2UI_PLAYBACK_PROGRESS` events instead of streaming on its own.
@@ -96,6 +97,8 @@ interface A2UIPreviewSource {
 interface OpenUIPreviewSource {
   kind: 'openui';
   rawText: string;
+  theme?: 'light' | 'dark';
+  liveAction?: boolean;
   playbackMode?: boolean;
 }
 
@@ -596,6 +599,7 @@ export function PreviewPanel(props: PreviewPanelProps) {
           theme: previewSource.theme,
           demoId: previewSource.demoId,
           speed,
+          liveAction: previewSource.liveAction,
           playbackMode: previewSource.playbackMode,
         },
         baseUrl,
@@ -714,6 +718,7 @@ export function PreviewPanel(props: PreviewPanelProps) {
               actionMocksUrl,
               theme: previewSource.theme,
               speed,
+              liveAction: previewSource.liveAction,
               playbackMode: previewSource.playbackMode,
             },
             baseUrl,
@@ -763,11 +768,14 @@ export function PreviewPanel(props: PreviewPanelProps) {
 
     const inlineUrl = buildOpenUIRenderUrl({
       rawText: previewSource.rawText,
+      theme: previewSource.theme,
       speed,
+      liveAction: previewSource.liveAction,
       playbackMode: previewSource.playbackMode,
     }, baseUrl);
     const inlineShareUrl = buildOpenUIRenderUrl({
       rawText: previewSource.rawText,
+      theme: previewSource.theme,
       speed,
     }, shareBaseUrl);
     const canInline = canInlineOpenUIRenderUrl(inlineUrl)
@@ -785,6 +793,9 @@ export function PreviewPanel(props: PreviewPanelProps) {
       }
       const u = new URL(rspeedyDevUrl);
       u.pathname = u.pathname.replace('a2ui.lynx', 'openui.lynx');
+      if (previewSource.theme) {
+        u.searchParams.set('theme', previewSource.theme);
+      }
       if ('rawTextUrl' in payload) {
         u.searchParams.set('rawTextUrl', payload.rawTextUrl);
         u.searchParams.delete('rawText');
@@ -826,11 +837,14 @@ export function PreviewPanel(props: PreviewPanelProps) {
         setOpenUILynxDevUrl({ rawTextUrl });
         setRenderUrl(buildOpenUIRenderUrl({
           rawTextUrl,
+          theme: previewSource.theme,
           speed,
+          liveAction: previewSource.liveAction,
           playbackMode: previewSource.playbackMode,
         }, baseUrl));
         setRenderShareUrl(buildOpenUIRenderUrl({
           rawTextUrl,
+          theme: previewSource.theme,
           speed,
         }, shareBaseUrl));
       } catch (err) {

@@ -28,9 +28,18 @@ describe('app route hash', () => {
 
   test('keeps deep links under the selected protocol', () => {
     expect(buildRouteHash('a2ui', 'examples')).toBe('#/a2ui/examples');
+    expect(buildRouteHash('openui', 'catalog')).toBe('#/openui/catalog');
+    expect(parseRouteHash('#/openui/catalog/Button')).toMatchObject({
+      protocol: { name: 'openui' },
+      tab: 'catalog',
+      componentName: 'Button',
+    });
+  });
+
+  test('keeps components links as a catalog compatibility alias', () => {
     expect(parseRouteHash('#/openui/components/Button')).toMatchObject({
       protocol: { name: 'openui' },
-      tab: 'components',
+      tab: 'catalog',
       componentName: 'Button',
     });
   });

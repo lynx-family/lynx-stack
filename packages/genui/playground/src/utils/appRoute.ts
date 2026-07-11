@@ -4,7 +4,7 @@
 import type { Protocol, ProtocolName } from './protocol.js';
 import { DEFAULT_PROTOCOL, getProtocol } from './protocol.js';
 
-export type Tab = 'create' | 'examples' | 'components' | 'catalog' | 'bench';
+export type Tab = 'create' | 'examples' | 'catalog' | 'bench';
 
 export interface Route {
   protocol: Protocol;
@@ -51,7 +51,7 @@ export function parseRouteHash(hash: string): Route {
   if (rest[0] === 'components' || rest[0] === 'catalog') {
     return {
       protocol,
-      tab: protocol.name === 'a2ui' ? 'catalog' : 'components',
+      tab: 'catalog',
       componentName: rest[1],
     };
   }
