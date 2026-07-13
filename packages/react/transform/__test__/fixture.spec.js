@@ -1409,6 +1409,65 @@ describe('dynamic import', () => {
         ]
       `);
   });
+  it('lazy bundle mode option', async () => {
+    const result = await transformReactLynx(
+      `\
+(async function () {
+  await import("./index.js", { with: { mode: "sync" } });
+  await import("./index.js", { with: { mode: "async" } });
+  await import("https://www/a.js", { with: { mode: "async" } });
+  await import("./index.js", { with: { type: "component", mode: "sync" } });
+})();
+`,
+      {
+        pluginName: '',
+        filename: '',
+        sourcemap: false,
+        parserConfig: {
+          tsx: true,
+        },
+        cssScope: false,
+        jsx: false,
+        directiveDCE: false,
+        defineDCE: false,
+        shake: false,
+        compat: false,
+        worklet: false,
+        refresh: false,
+      },
+    );
+
+    expect(result.code).toMatchInlineSnapshot(`
+      "import 'data:text/javascript;charset=utf-8,import { loadLazyBundle } from "@lynx-js/react/internal";lynx.loadLazyBundle = loadLazyBundle;';
+      import "@lynx-js/react/experimental/lazy/import";
+      import { __dynamicImport } from "@lynx-js/react/internal";
+      (async function() {
+          await import(/*webpackChunkName: "./index.js-"*/ "./index.js", {
+              with: {
+                  mode: "sync"
+              }
+          });
+          await import(/*webpackChunkName: "./index.js-"*/ "./index.js", {
+              with: {
+                  mode: "async"
+              }
+          });
+          await __dynamicImport("https://www/a.js", {
+              with: {
+                  mode: "async"
+              }
+          });
+          await import(/*webpackChunkName: "./index.js-"*/ "./index.js", {
+              with: {
+                  type: "component",
+                  mode: "sync"
+              }
+          });
+      })();
+      "
+    `);
+    expect(result.errors).toMatchInlineSnapshot(`[]`);
+  });
 });
 
 describe('define dce', () => {

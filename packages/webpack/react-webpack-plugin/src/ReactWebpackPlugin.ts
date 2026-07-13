@@ -511,15 +511,26 @@ class ReactWebpackPlugin {
                     continue;
                   }
 
+                  // Element Template loads lazy bundles via `lynx.fetchBundle`
+                  // + `lynx.loadScript`, which evaluate the section and read its
+                  // returned `module.exports`. So the wrapper must self-execute
+                  // and bake the entry, unlike the QueryComponent form where the
+                  // host calls the function with `globDynamicComponentEntry`.
+                  const isFetchBundle =
+                    options.experimental_useElementTemplate === true;
                   compilation.updateAsset(
                     file,
                     old =>
                       new ConcatSource(
-                        `(function (globDynamicComponentEntry) {\n`,
+                        isFetchBundle
+                          ? `(function () {\n  var globDynamicComponentEntry = globalThis.globDynamicComponentEntry || '__Card__';\n`
+                          : `(function (globDynamicComponentEntry) {\n`,
                         `  const module = { exports: {} }\n`,
                         `  const exports = module.exports;\n`,
                         old,
-                        `\n  ;return module.exports\n})`,
+                        isFetchBundle
+                          ? `\n  ;return module.exports\n})()`
+                          : `\n  ;return module.exports\n})`,
                       ),
                   );
                 }

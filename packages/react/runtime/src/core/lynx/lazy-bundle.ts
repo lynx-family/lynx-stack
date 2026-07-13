@@ -4,8 +4,8 @@
 
 /**
  * To make code below works
- * const App1 = lazy(() => import("./x").then(({App1}) => ({default: App1})))
- * const App2 = lazy(() => import("./x").then(({App2}) => ({default: App2})))
+ * const App1 = lazy(() => import("./components.jsx").then(({App1}) => ({default: App1})))
+ * const App2 = lazy(() => import("./components.jsx").then(({App2}) => ({default: App2})))
  * @internal
  */
 export const makeSyncThen = function<T>(result: T): Promise<T>['then'] {
@@ -27,7 +27,7 @@ export const makeSyncThen = function<T>(result: T): Promise<T>['then'] {
 
       if (ret && typeof (ret as PromiseLike<TR1>).then === 'function' /* `thenable` object */) {
         // lazy(() =>
-        //   import("./x").then(() => new Promise(...))
+        //   import("./components.jsx").then(() => new Promise(...))
         // )
         // Calling `then` and passing a callback is standard behavior
         // but in Lepus runtime the callback will never be called
@@ -37,7 +37,7 @@ export const makeSyncThen = function<T>(result: T): Promise<T>['then'] {
         // TODO(hongzhiyuan.hzy): Avoid warning that cannot be turned-off, so the warning is commented
         // lynx.reportError(
         //   new Error(
-        //     'You returned a Promise in promise-chain of lazy-bundle import (eg. `import("./x").then(() => new Promise(...))`), which will cause related Component unavailable at first-screen, '
+        //     'You returned a Promise in promise-chain of lazy-bundle import (eg. `import("./components.jsx").then(() => new Promise(...))`), which will cause related Component unavailable at first-screen, '
         //   ),
         //   { level: "warning" }
         // );

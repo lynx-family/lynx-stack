@@ -291,7 +291,17 @@ declare module '@lynx-js/types/background' {
     getNativeLynx(): NativeLynx;
     reportError(e: Error): void;
     QueryComponent?(source: string, callback: (result: any) => void): void;
-    loadLazyBundle?<T extends { default: React.ComponentType<any> }>(source: string): Promise<T>;
+    loadLazyBundle?<T extends { default: React.ComponentType<any> }>(
+      source: string,
+      mode?: 'sync' | 'async',
+    ): Promise<T>;
+
+    /**
+     * Evaluate a named section of a bundle already loaded via
+     * {@link fetchBundle} and return its `module.exports`.
+     * @since 3.8
+     */
+    loadScript?<T>(section: string, options: { bundleName: string }): T;
 
     /**
      * @since 2.14
