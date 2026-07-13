@@ -71,6 +71,31 @@ export interface BackgroundProps {
  * }
  * ```
  *
+ * @remarks
+ * By default the boundary is a runtime opt-out: the deferred subtree's code is
+ * still bundled into the main thread, it just does not run there. To also keep
+ * that code out of the main-thread bundle — so no side effect can leak onto the
+ * main thread — author the deferred component with the `'background only'`
+ * directive. Its render body is then stripped from the main-thread bundle,
+ * while its element and main-thread-script (worklet) definitions (which the
+ * hydration needs to build the real content) are retained:
+ *
+ * ```tsx
+ * // Feed.tsx
+ * export function Feed() {
+ *   'background only';
+ *   // hooks, effects, event handlers, data formatting — none of this reaches
+ *   // the main-thread bundle
+ *   return <view>...</view>
+ * }
+ * ```
+ *
+ * Use the two together: `<Background>` provides the runtime boundary and the
+ * fallback, while the `'background only'` component provides the compile-time
+ * separation. The component must be rendered behind a `<Background>` boundary,
+ * because its main-thread render is a no-op — rendering it on the first screen
+ * without a boundary would produce an empty frame.
+ *
  * @public
  */
 export function Background(props: BackgroundProps): ReactNode {
