@@ -41,6 +41,9 @@ export type {
   LoadConfigOptions,
   LoadConfigResult,
 } from '@lynx-js/preset-rsbuild-plugin'
+export type { Config } from '@lynx-js/preset-rsbuild-plugin'
+// The granular config sub-types now live at the preset's `/config` subpath;
+// re-exported here unchanged so `import { Output } from '@lynx-js/rspeedy'` works.
 export type {
   BuildCache,
   BundleFilename,
@@ -48,7 +51,6 @@ export type {
   ChunkSplit,
   ChunkSplitBySize,
   ChunkSplitCustom,
-  Config,
   ConsoleType,
   CssExtract,
   CssExtractRspackLoaderOptions,
@@ -74,7 +76,7 @@ export type {
   SourceMap,
   Tools,
   TransformImport,
-} from '@lynx-js/preset-rsbuild-plugin'
+} from '@lynx-js/preset-rsbuild-plugin/config'
 
 // RsbuildPlugin
 export type { RsbuildPlugin, RsbuildPluginAPI } from '@rsbuild/core'

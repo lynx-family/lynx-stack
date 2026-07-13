@@ -20,67 +20,36 @@ import type { ServerConfig } from '@rsbuild/core';
 import type { ToolsConfig } from '@rsbuild/core';
 import type { WatchFiles } from '@rsbuild/core';
 
-// @beta
-export interface BuildCache {
-    buildDependencies?: string[] | undefined;
-    cacheDigest?: Array<string | undefined> | undefined;
-    cacheDirectory?: string | undefined;
-}
-
-// @public
-export type BundleFilename = string | ((context: BundleFilenameContext) => string);
-
-// @public
-export interface BundleFilenameContext {
-    entryName?: string | undefined;
-    lazyBundle: boolean;
-    platform: string;
-}
-
-// @public @deprecated
-export interface ChunkSplit {
-    override?: Rspack.Configuration extends {
-        optimization?: {
-            splitChunks?: infer P;
-        } | undefined;
-    } ? P : never;
-    strategy?: 'all-in-one' | 'split-by-module' | 'split-by-experience' | 'single-vendor' | undefined;
-}
-
-// @public @deprecated
-export interface ChunkSplitBySize {
-    maxSize?: number | undefined;
-    minSize?: number | undefined;
-    override?: Rspack.Configuration extends {
-        optimization?: {
-            splitChunks?: infer P;
-        } | undefined;
-    } ? P : never;
-    strategy: 'split-by-size';
-}
-
-// @public @deprecated
-export interface ChunkSplitCustom {
-    splitChunks?: Rspack.Configuration extends {
-        optimization?: {
-            splitChunks?: infer P;
-        } | undefined;
-    } ? P : never;
-    strategy: 'custom';
-}
-
 // @public
 export interface Config {
+    // Warning: (ae-forgotten-export) The symbol "Dev" needs to be exported by the entry point index.d.ts
+    // Warning: (ae-unresolved-link) The @link reference could not be resolved: The package "@lynx-js/preset-rsbuild-plugin" does not have an export "Dev"
     dev?: Dev | undefined;
     environments?: RsbuildConfig['environments'] | undefined;
+    // Warning: (ae-unresolved-link) The @link reference could not be resolved: The package "@lynx-js/preset-rsbuild-plugin" does not have an export "Output"
+    // Warning: (ae-unresolved-link) The @link reference could not be resolved: The package "@lynx-js/preset-rsbuild-plugin" does not have an export "Output"
+    // Warning: (ae-unresolved-link) The @link reference could not be resolved: The package "@lynx-js/preset-rsbuild-plugin" does not have an export "CssModules"
+    // Warning: (ae-unresolved-link) The @link reference could not be resolved: The package "@lynx-js/preset-rsbuild-plugin" does not have an export "Output"
     mode?: 'development' | 'production' | 'none' | undefined;
+    // Warning: (ae-forgotten-export) The symbol "Output" needs to be exported by the entry point index.d.ts
+    // Warning: (ae-unresolved-link) The @link reference could not be resolved: The package "@lynx-js/preset-rsbuild-plugin" does not have an export "Output"
     output?: Output | undefined;
+    // Warning: (ae-forgotten-export) The symbol "Performance" needs to be exported by the entry point index.d.ts
+    // Warning: (ae-unresolved-link) The @link reference could not be resolved: The package "@lynx-js/preset-rsbuild-plugin" does not have an export "Performance"
     performance?: Performance | undefined;
     plugins?: RsbuildPlugins | undefined;
+    // Warning: (ae-forgotten-export) The symbol "Resolve" needs to be exported by the entry point index.d.ts
+    // Warning: (ae-unresolved-link) The @link reference could not be resolved: The package "@lynx-js/preset-rsbuild-plugin" does not have an export "Resolve"
     resolve?: Resolve | undefined;
+    // Warning: (ae-forgotten-export) The symbol "Server" needs to be exported by the entry point index.d.ts
+    // Warning: (ae-unresolved-link) The @link reference could not be resolved: The package "@lynx-js/preset-rsbuild-plugin" does not have an export "Server"
     server?: Server | undefined;
+    // Warning: (ae-forgotten-export) The symbol "Source" needs to be exported by the entry point index.d.ts
+    // Warning: (ae-unresolved-link) The @link reference could not be resolved: The package "@lynx-js/preset-rsbuild-plugin" does not have an export "Source"
     source?: Source | undefined;
     splitChunks?: RsbuildConfig['splitChunks'] | undefined;
+    // Warning: (ae-forgotten-export) The symbol "Tools" needs to be exported by the entry point index.d.ts
+    // Warning: (ae-unresolved-link) The @link reference could not be resolved: The package "@lynx-js/preset-rsbuild-plugin" does not have an export "Tools"
     tools?: Tools | undefined;
 }
 
@@ -88,56 +57,6 @@ export interface Config {
 export interface ConfigParams {
     command: 'build' | 'dev' | 'inspect' | 'preview' | (string & Record<never, never>);
     env: 'production' | 'development' | 'test' | (string & Record<never, never>);
-}
-
-// @public
-export type ConsoleType = 'log' | 'warn' | 'error' | 'info' | 'debug' | 'profile' | 'profileEnd' | (string & Record<never, never>);
-
-// @public
-export interface CssExtract {
-    loaderOptions?: CssExtractRspackLoaderOptions | undefined;
-    pluginOptions?: CssExtractRspackPluginOptions | undefined;
-}
-
-// @public
-export interface CssExtractRspackLoaderOptions {
-    esModule?: boolean | undefined;
-}
-
-// @public
-export interface CssExtractRspackPluginOptions {
-    ignoreOrder?: boolean | undefined;
-    pathinfo?: boolean | undefined;
-}
-
-// @public
-export interface CssLoader {
-    importLoaders?: 0 | 1 | 2 | undefined;
-    modules?: boolean | 'local' | 'global' | 'pure' | 'icss' | CssLoaderModules | undefined;
-}
-
-// @public
-export interface CssLoaderModules {
-    auto?: boolean | RegExp | ((filename: string) => boolean) | undefined;
-    exportLocalsConvention?: CssModuleLocalsConvention | undefined;
-    localIdentName?: string | undefined;
-    namedExport?: boolean | undefined;
-}
-
-// @public
-export type CssModuleLocalsConvention = 'asIs' | 'camelCase' | 'camelCaseOnly' | 'dashes' | 'dashesOnly';
-
-// @public
-export interface CssModules {
-    auto?: boolean | RegExp | ((filename: string) => boolean) | undefined;
-    exportGlobals?: boolean | undefined;
-    exportLocalsConvention?: CssModuleLocalsConvention | undefined;
-    localIdentName?: string | undefined;
-}
-
-// @public
-export interface Decorators {
-    version?: 'legacy' | '2022-03';
 }
 
 // @public
@@ -153,40 +72,6 @@ export function defineConfig(config: Promise<Config>): Promise<Config>;
 export function defineConfig(config: (params: ConfigParams) => Promise<Config>): (params: ConfigParams) => Promise<Config>;
 
 // @public
-export interface Dev {
-    assetPrefix?: string | boolean | undefined;
-    client?: DevClient | undefined;
-    hmr?: boolean | undefined;
-    liveReload?: boolean | undefined;
-    progressBar?: boolean | {
-        id?: string;
-    } | undefined;
-    watchFiles?: WatchFiles | WatchFiles[] | undefined;
-    writeToDisk?: boolean | ((filename: string) => boolean) | undefined;
-}
-
-// @public
-export interface DevClient {
-    websocketTransport?: string | undefined;
-}
-
-// @public
-export interface DistPath extends DistPathConfig {
-    // @deprecated
-    intermediate?: string | undefined;
-}
-
-// @public
-export type Entry = string | string[] | Record<string, string | string[] | EntryDescription>;
-
-// @public
-export interface EntryDescription {
-    dependOn?: string | string[] | undefined;
-    import?: string | string[] | undefined;
-    publicPath?: string | undefined;
-}
-
-// @public
 export interface ExposedAPI {
     config: Config;
     debug: (message: string | (() => string)) => void;
@@ -194,21 +79,6 @@ export interface ExposedAPI {
     exit: (code?: number) => Promise<void> | void;
     logger: typeof logger;
     version: string;
-}
-
-// @public
-export interface Filename {
-    assets?: Rspack.AssetModuleFilename;
-    bundle?: BundleFilename | undefined;
-    css?: Rspack.CssFilename | undefined;
-    font?: Rspack.AssetModuleFilename | undefined;
-    image?: Rspack.AssetModuleFilename | undefined;
-    js?: Rspack.Filename | undefined;
-    media?: Rspack.AssetModuleFilename | undefined;
-    svg?: Rspack.AssetModuleFilename | undefined;
-    // @deprecated
-    template?: string | undefined;
-    wasm?: Rspack.WebassemblyModuleFilename;
 }
 
 // @public
@@ -233,112 +103,6 @@ export function loadLynxConfig(options?: LoadConfigOptions): Promise<Config>;
 export function mergeRspeedyConfig(...configs: Config[]): Config;
 
 // @public
-export interface Minify {
-    backgroundOptions?: Rspack.SwcJsMinimizerRspackPluginOptions | undefined;
-    css?: boolean | undefined;
-    js?: boolean | undefined;
-    jsOptions?: Rspack.SwcJsMinimizerRspackPluginOptions | undefined;
-    mainThreadOptions?: Rspack.SwcJsMinimizerRspackPluginOptions | undefined;
-}
-
-// @public
-export interface Output {
-    assetPrefix?: string | undefined;
-    cleanDistPath?: boolean | undefined;
-    copy?: Rspack.CopyRspackPluginOptions | Rspack.CopyRspackPluginOptions['patterns'] | undefined;
-    cssModules?: CssModules | undefined;
-    dataUriLimit?: number | DataUriLimit | undefined;
-    distPath?: DistPath | undefined;
-    filename?: string | Filename | undefined;
-    filenameHash?: boolean | string | undefined;
-    inlineScripts?: InlineChunkConfig | undefined;
-    legalComments?: 'none' | 'inline' | 'linked' | undefined;
-    minify?: Minify | boolean | undefined;
-    sourceMap?: boolean | SourceMap | undefined;
-}
-
-// @public
-export interface Performance {
-    // @beta
-    buildCache?: BuildCache | boolean | undefined;
-    // @deprecated
-    chunkSplit?: ChunkSplit | ChunkSplitBySize | ChunkSplitCustom | undefined;
-    printFileSize?: PerformanceConfig['printFileSize'] | undefined;
-    profile?: boolean | undefined;
-    removeConsole?: boolean | ConsoleType[] | undefined;
-}
-
-// @public
 export function pluginLynxPreset(config?: Config): RsbuildPlugins;
-
-// @public
-export interface Resolve {
-    alias?: Record<string, string | false | string[]> | undefined;
-    aliasStrategy?: 'prefer-tsconfig' | 'prefer-alias' | undefined;
-    dedupe?: string[] | undefined;
-    extensions?: string[] | undefined;
-}
-
-// @public
-export interface RsdoctorRspackPluginOptions extends Omit<RsdoctorRspackPluginOptions_2<[]>, 'linter'> {
-    // (undocumented)
-    linter?: {
-        rules?: Record<string, unknown>;
-        level?: 'Ignore' | 'Warn' | 'Error';
-        extends?: unknown[];
-    };
-}
-
-// @public
-export interface Server {
-    base?: string | undefined;
-    compress?: boolean | CompressOptions | undefined;
-    cors?: ServerConfig['cors'] | undefined;
-    headers?: Record<string, string | string[]> | undefined;
-    host?: string | undefined;
-    port?: number | undefined;
-    proxy?: ProxyConfig | undefined;
-    strictPort?: boolean | undefined;
-}
-
-// @public
-export interface Source {
-    // @deprecated
-    alias?: Record<string, string | false | string[]> | undefined;
-    assetsInclude?: Rspack.RuleSetCondition | undefined;
-    decorators?: Decorators | undefined;
-    define?: Rspack.DefinePluginOptions;
-    entry?: Entry | undefined;
-    exclude?: Rspack.RuleSetCondition[] | undefined;
-    include?: Rspack.RuleSetCondition[] | undefined;
-    preEntry?: string | string[] | undefined;
-    transformImport?: TransformImport[] | undefined;
-    tsconfigPath?: string | undefined;
-}
-
-// @public
-export interface SourceMap {
-    css?: boolean | undefined;
-    js?: Rspack.DevTool | undefined | `${Exclude<Rspack.DevTool, false | 'eval'>}-debugids`;
-}
-
-// @public
-export interface Tools {
-    bundlerChain?: ToolsConfig['bundlerChain'] | undefined;
-    cssExtract?: CssExtract | undefined;
-    cssLoader?: CssLoader | undefined;
-    rsdoctor?: RsdoctorRspackPluginOptions | undefined;
-    rspack?: ToolsConfig['rspack'] | undefined;
-    swc?: ToolsConfig['swc'] | undefined;
-}
-
-// @public
-export interface TransformImport {
-    camelToDashComponentName?: boolean | undefined;
-    customName?: string | undefined;
-    libraryDirectory?: string | undefined;
-    libraryName: string;
-    transformToDefaultImport?: boolean | undefined;
-}
 
 ```

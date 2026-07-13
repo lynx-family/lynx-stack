@@ -9,6 +9,8 @@ export default defineConfig({
       source: {
         entry: {
           index: './src/index.ts',
+          // Granular config sub-types published at the `/config` subpath.
+          'config-types': './src/config-types.ts',
           // Seam consumed by the `@lynx-js/rspeedy` CLI. See `src/internal.ts`.
           internal: './src/internal.ts',
         },
