@@ -14,8 +14,23 @@ export interface BackgroundProps {
    * The content that opts out of the main-thread first-screen render. It is
    * always rendered by the background thread and shows up once the
    * first-screen hydration completes.
+   *
+   * `children` may also be a thunk (`() => <Subtree />`). The thunk form is
+   * only ever invoked on the background thread, so annotating its body with
+   * the `'background only'` directive lets the compiler strip the subtree's
+   * render logic from the main-thread bundle while keeping the element and
+   * main-thread-script (worklet) code the hydration needs:
+   *
+   * ```tsx
+   * <Background fallback={<FeedSkeleton />}>
+   *   {() => {
+   *     'background only';
+   *     return <Feed />;
+   *   }}
+   * </Background>
+   * ```
    */
-  children?: ReactNode | undefined;
+  children?: ReactNode | (() => ReactNode) | undefined;
 
   /**
    * The placeholder rendered during the first screen (e.g. a skeleton). It
@@ -77,5 +92,13 @@ export function Background(props: BackgroundProps): ReactNode {
   if (__MAIN_THREAD__) {
     return props.fallback ?? null;
   }
-  return props.children ?? null;
+  const { children } = props;
+  // The thunk form (`{() => <Subtree/>}`) is resolved on the background thread
+  // only. On the main thread the branch above returns early, so the thunk is
+  // never called — which is what lets its `'background only'` body be emptied
+  // in the main-thread bundle.
+  const resolved = typeof children === 'function'
+    ? (children as () => ReactNode)()
+    : children;
+  return resolved ?? null;
 }
