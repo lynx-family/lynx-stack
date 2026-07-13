@@ -110,6 +110,22 @@ describe('Element APIs', () => {
     expect(mtsGlobalThis.__GetTag(element)).toBe('view');
   });
 
+  test('createElement maps input to x-input', () => {
+    // `input` is created as the `x-input` custom element so Lynx event
+    // forwarding wires up (matches native behavior on web).
+    const element = mtsGlobalThis.__CreateElement('input', 0);
+    expect(element.tagName.toLowerCase()).toBe('x-input');
+  });
+
+  test('createElement maps textarea to x-textarea', () => {
+    // `textarea` must be created as the `x-textarea` custom element, otherwise
+    // a bare <textarea> is created and input/focus/blur never bridge to the
+    // framework thread.
+    const element = mtsGlobalThis.__CreateElement('textarea', 0);
+    expect(element.tagName.toLowerCase()).toBe('x-textarea');
+    expect(mtsGlobalThis.__GetTag(element)).toBe('textarea');
+  });
+
   test('createCrossThreadEvent properly sets touch detail x and y', async () => {
     const { createCrossThreadEvent } = await import(
       '../ts/client/mainthread/elementAPIs/createCrossThreadEvent.js'
