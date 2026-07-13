@@ -36,6 +36,9 @@ function transformReactLynxPlugin(): Plugin {
           jsxImportSource: '@lynx-js/react',
           filename: 'test',
           target: 'MIXED',
+          // Files named `*.legacy-slot.test.jsx` are compiled with the
+          // legacy children + wrapper codegen (`compat.legacySlot`).
+          legacySlot: relativePath.endsWith('.legacy-slot.test.jsx'),
         },
         dynamicImport: false,
         // snapshot: true,

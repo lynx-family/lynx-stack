@@ -2254,3 +2254,95 @@ export class A extends Component {}
     `);
   });
 });
+
+describe('legacySlot', () => {
+  // eslint-disable-next-line unicorn/consistent-function-scoping
+  const options = (legacySlot) => ({
+    mode: 'test',
+    pluginName: '',
+    filename: '',
+    sourcemap: false,
+    cssScope: false,
+    snapshot: {
+      preserveJsx: false,
+      runtimePkg: '@lynx-js/react',
+      jsxImportSource: '@lynx-js/react',
+      filename: 'test',
+      target: 'MIXED',
+      legacySlot,
+    },
+    jsx: true,
+    directiveDCE: false,
+    defineDCE: false,
+    shake: false,
+    compat: false,
+    worklet: false,
+    refresh: false,
+  });
+
+  it('should compile dynamic children as children + wrapper when enabled', async () => {
+    const inputContent = 'const jsx = <view><text>{content}</text></view>;';
+
+    const result = await transformReactLynx(inputContent, options(true));
+    expect(result.errors).toEqual([]);
+    expect(result.code).toContain('__DynamicPartChildren');
+    expect(result.code).not.toContain('SlotV2');
+    expect(result.code).toMatchInlineSnapshot(`
+      "import { jsx as _jsx } from "@lynx-js/react/jsx-runtime";
+      import * as ReactLynx from "@lynx-js/react";
+      const __snapshot_a94a8_test_1 = "__snapshot_a94a8_test_1";
+      ReactLynx.snapshotCreatorMap[__snapshot_a94a8_test_1] = (__snapshot_a94a8_test_1)=>ReactLynx.createSnapshot(__snapshot_a94a8_test_1, function() {
+              const pageId = ReactLynx.__pageId;
+              const el = __CreateView(pageId);
+              const el1 = __CreateText(pageId);
+              __AppendElement(el, el1);
+              return [
+                  el,
+                  el1
+              ];
+          }, null, [
+              [
+                  ReactLynx.__DynamicPartChildren,
+                  1
+              ]
+          ], undefined, globDynamicComponentEntry, null, true);
+      /*#__PURE__*/ _jsx(__snapshot_a94a8_test_1, {
+          children: content
+      });
+      "
+    `);
+  });
+
+  it('should keep the default SlotV2 codegen when disabled', async () => {
+    const inputContent = 'const jsx = <view><text>{content}</text></view>;';
+
+    const result = await transformReactLynx(inputContent, options(false));
+    expect(result.errors).toEqual([]);
+    expect(result.code).toContain('__DynamicPartSlotV2');
+    expect(result.code).not.toContain('__DynamicPartChildren');
+    expect(result.code).toMatchInlineSnapshot(`
+      "import { jsx as _jsx } from "@lynx-js/react/jsx-runtime";
+      import * as ReactLynx from "@lynx-js/react";
+      const __snapshot_a94a8_test_1 = "__snapshot_a94a8_test_1";
+      ReactLynx.snapshotCreatorMap[__snapshot_a94a8_test_1] = (__snapshot_a94a8_test_1)=>ReactLynx.createSnapshot(__snapshot_a94a8_test_1, function() {
+              const pageId = ReactLynx.__pageId;
+              const el = __CreateView(pageId);
+              const el1 = __CreateText(pageId);
+              __AppendElement(el, el1);
+              return [
+                  el,
+                  el1
+              ];
+          }, null, [
+              [
+                  ReactLynx.__DynamicPartSlotV2,
+                  1
+              ]
+          ], undefined, globDynamicComponentEntry, null, true);
+      /*#__PURE__*/ _jsx(__snapshot_a94a8_test_1, {
+          $0: content
+      });
+      "
+    `);
+  });
+});

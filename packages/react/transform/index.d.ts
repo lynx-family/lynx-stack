@@ -362,6 +362,40 @@ export interface CompatVisitorConfig {
    * ```
    */
   darkMode?: boolean | DarkModeConfig
+
+  /**
+   * Compile dynamic children as children + wrapper (the pre-SlotV2 slot
+   * codegen: `Slot`/`Children` dynamic parts rendered through wrapper
+   * elements) instead of the default SlotV2 codegen (`$N` slot props).
+   *
+   * @remarks
+   *
+   * Enable this when the compiled output needs to run on legacy
+   * `@lynx-js/react` runtimes without `SlotV2` support (`< 0.120.0`),
+   * e.g. a standalone lazy bundle consumed by a host App that ships an
+   * older runtime. It only changes the compile output; the runtime
+   * supports both forms.
+   *
+   * @example
+   *
+   * ```js
+   * import { defineConfig } from '@lynx-js/rspeedy'
+   * import { pluginReactLynx } from '@lynx-js/react-rsbuild-plugin'
+   *
+   * export default defineConfig({
+   *   plugins: [
+   *     pluginReactLynx({
+   *       compat: {
+   *         legacySlot: true,
+   *       },
+   *     })
+   *   ],
+   * })
+   * ```
+   *
+   * @defaultValue `false`
+   */
+  legacySlot?: boolean
 }
 export interface CssScopeVisitorConfig {
   /** @public */
@@ -600,6 +634,8 @@ export interface JsxTransformerConfig {
   isDynamicComponent?: boolean
   /** @internal */
   isExternalBundle?: boolean
+  /** @internal */
+  legacySlot?: boolean
 }
 /** @internal */
 export interface ElementTemplateConfig {

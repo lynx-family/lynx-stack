@@ -594,9 +594,14 @@ fn transform_react_lynx_inner(
       )
     };
 
+    let legacy_slot = matches!(snapshot_plugin_config.legacy_slot, Some(true));
     let list_plugin = Optional::new(
       visit_mut_pass(swc_plugin_list::ListVisitor::new(Some(&comments))),
-      jsx_backend_enabled,
+      jsx_backend_enabled && !legacy_slot,
+    );
+    let legacy_list_plugin = Optional::new(
+      visit_mut_pass(swc_plugin_list::LegacyListVisitor::new(Some(&comments))),
+      jsx_backend_enabled && legacy_slot,
     );
 
     let is_ge_3_1: bool = is_engine_version_ge(&options.engine_version, "3.1");
@@ -732,6 +737,7 @@ fn transform_react_lynx_inner(
       (
         text_plugin,
         list_plugin,
+        legacy_list_plugin,
         snapshot_plugin,
         element_template_plugin,
       ),

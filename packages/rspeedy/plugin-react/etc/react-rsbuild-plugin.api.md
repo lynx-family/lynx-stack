@@ -24,6 +24,7 @@ export interface CompatVisitorConfig {
     // @deprecated (undocumented)
     darkMode?: boolean | DarkModeConfig
     disableDeprecatedWarning: boolean
+    legacySlot?: boolean
     newRuntimePkg: string
     oldRuntimePkg: Array<string>
     // @deprecated

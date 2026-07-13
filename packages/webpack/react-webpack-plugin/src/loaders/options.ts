@@ -197,6 +197,7 @@ function getCommonOptions(
       filename,
       isDynamicComponent: isDynamicComponent ?? false,
       isExternalBundle: isExternalBundle ?? false,
+      legacySlot: compat?.legacySlot ?? false,
     },
     elementTemplate: useElementTemplate
       ? {

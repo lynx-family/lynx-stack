@@ -23,6 +23,7 @@ use swc_core::{
 };
 
 mod attr_name;
+mod legacy_slot;
 
 #[cfg(feature = "napi")]
 pub mod napi;
@@ -1133,6 +1134,12 @@ pub struct JSXTransformerConfig {
   /// @internal
   #[serde(default)]
   pub is_external_bundle: Option<bool>,
+  /// Compile dynamic children with the frozen legacy (pre-SlotV2) codegen in
+  /// `legacy_slot.rs` so the output runs on legacy runtimes without `SlotV2`
+  /// support (< 0.120.0).
+  /// @internal
+  #[serde(default)]
+  pub legacy_slot: Option<bool>,
 }
 
 impl Default for JSXTransformerConfig {
@@ -1146,6 +1153,7 @@ impl Default for JSXTransformerConfig {
       enable_ui_source_map: false,
       is_dynamic_component: Some(false),
       is_external_bundle: Some(false),
+      legacy_slot: Some(false),
     }
   }
 }
@@ -1305,6 +1313,12 @@ where
       _ => {
         return node.visit_mut_children_with(self);
       }
+    }
+
+    if matches!(self.cfg.legacy_slot, Some(true)) {
+      // Frozen pre-SlotV2 codegen lives entirely in legacy_slot.rs; keep the
+      // default (SlotV2) pipeline below free of legacy concerns.
+      return legacy_slot::transform_jsx_element(self, node);
     }
 
     self.snapshot_counter += 1;
