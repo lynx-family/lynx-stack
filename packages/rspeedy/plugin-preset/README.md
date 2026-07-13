@@ -52,7 +52,9 @@ responsibility.
 ## Status
 
 > [!NOTE]
-> This package currently consumes the Lynx internal plugins from
-> `@lynx-js/rspeedy/internal`. The long-term direction is to move those plugins
-> into this package and have the Rspeedy CLI depend on the preset, at which
-> point `@lynx-js/rspeedy` becomes an optional convenience CLI on top.
+> This package now **owns** the Lynx build engine: the internal plugins live
+> here and are exposed via `@lynx-js/preset-rsbuild-plugin/internal`.
+> `@lynx-js/rspeedy` is a thin CLI shell on top that depends on this package and
+> re-composes those plugins to produce byte-identical output. The two share that
+> `/internal` contract, so they are expected to move in lockstep. This is an
+> experimental direction under evaluation.
