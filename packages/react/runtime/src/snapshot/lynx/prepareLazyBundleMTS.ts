@@ -10,17 +10,24 @@ const cache = new Set<string>();
 function prepareLazyBundleMTS(payload: { url: string; host?: string }): void {
   const { url, host } = payload;
   if (cache.has(url)) return;
-  cache.add(url);
   let handler;
   try {
     handler = lynx.fetchBundle(url, {});
   } catch {
+    // fetchBundle threw — the bundle never loaded. Leave `url` out of the
+    // cache so a later prepare for the same url can retry.
     return;
   }
   // .then will be a sync function
   // since the bundle has been loaded in BTS
   handler.then((response) => {
     if (!response || response.code !== 0) return;
+    // The bundle is now loaded in native (code === 0), so the native SDK
+    // won't re-eval it. Only now mark it done — caching earlier would have
+    // pinned a failed fetch/non-zero response and blocked the retry above.
+    // A subsequent `loadScript` throw below is a BG-only bundle (deterministic,
+    // not retryable), so caching here is still correct.
+    cache.add(url);
     let loaded: unknown;
     try {
       const evaluate = lynx.loadScript<(entry: string) => unknown>(

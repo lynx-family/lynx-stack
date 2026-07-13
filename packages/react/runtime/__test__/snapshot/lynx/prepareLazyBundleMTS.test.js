@@ -148,6 +148,22 @@ describe('prepareLazyBundleMTS handler', () => {
     expect(loadStyleSheet).not.toHaveBeenCalled();
   });
 
+  test('cache: a fetchBundle throw is not cached → next prepare retries', () => {
+    fetchBundle.mockImplementationOnce(() => {
+      throw new Error('net');
+    });
+    invoke('foo');
+
+    // Second prepare for the same url must retry, not short-circuit.
+    thenMock.mockImplementation((cb) => cb({ code: 0, url: 'u' }));
+    loadStyleSheet.mockReturnValue(null);
+    invoke('foo');
+
+    expect(fetchBundle).toHaveBeenCalledTimes(2);
+    expect(loadScript).toHaveBeenCalledTimes(1);
+    expect(processEvalResult).toHaveBeenCalledTimes(1);
+  });
+
   test('response.code !== 0 → silent skip', () => {
     thenMock.mockImplementationOnce((cb) => cb({ code: 1, url: 'u' }));
 
@@ -156,6 +172,21 @@ describe('prepareLazyBundleMTS handler', () => {
     expect(loadScript).not.toHaveBeenCalled();
     expect(processEvalResult).not.toHaveBeenCalled();
     expect(loadStyleSheet).not.toHaveBeenCalled();
+  });
+
+  test('cache: a non-zero response is not cached → next prepare retries', () => {
+    thenMock.mockImplementationOnce((cb) => cb({ code: 1, url: 'u' }));
+    invoke('foo');
+    expect(loadScript).not.toHaveBeenCalled();
+
+    // The failed load left `foo` uncached, so a retry runs the full prepare.
+    thenMock.mockImplementation((cb) => cb({ code: 0, url: 'u' }));
+    loadStyleSheet.mockReturnValue(null);
+    invoke('foo');
+
+    expect(fetchBundle).toHaveBeenCalledTimes(2);
+    expect(loadScript).toHaveBeenCalledTimes(1);
+    expect(processEvalResult).toHaveBeenCalledTimes(1);
   });
 
   test('loadScript throws (BG-only bundle) → no handler, no CSS', () => {

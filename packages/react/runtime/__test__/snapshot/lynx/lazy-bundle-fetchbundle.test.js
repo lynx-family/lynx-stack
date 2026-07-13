@@ -189,20 +189,24 @@ describe('loadLazyBundle (FetchBundle) — background sync', () => {
   let fetchBundle;
   let waitMock;
   let loadScript;
+  let callLepusMethod;
+  let getNativeApp;
 
   beforeEach(() => {
     waitMock = vi.fn();
     fetchBundle = vi.fn(() => ({ wait: waitMock }));
     loadScript = vi.fn();
+    callLepusMethod = vi.fn();
+    getNativeApp = vi.fn(() => ({ callLepusMethod }));
     vi
       .stubGlobal('__LEPUS__', false)
       .stubGlobal('__MAIN_THREAD__', false)
       .stubGlobal('__BACKGROUND__', true)
       .stubGlobal('__JS__', true)
-      .stubGlobal('lynx', { fetchBundle, loadScript });
+      .stubGlobal('lynx', { fetchBundle, loadScript, getNativeApp });
   });
 
-  test('happy path: .wait → loadScript(background) → sync then', async () => {
+  test('happy path: .wait → loadScript(background) → prepare MTS → sync then', async () => {
     waitMock.mockReturnValueOnce({ code: 0, url: 'u' });
     loadScript.mockReturnValueOnce({ default: 'BG' });
 
@@ -214,6 +218,14 @@ describe('loadLazyBundle (FetchBundle) — background sync', () => {
 
     expect(fetchBundle).toHaveBeenCalledWith('foo', {});
     expect(loadScript).toHaveBeenCalledWith('background', { bundleName: 'u' });
+    // A sync bundle loaded on the background thread still triggers the
+    // main-thread prepare (createSnapshot side effect) so a non-first-screen
+    // component's snapshot is registered.
+    expect(callLepusMethod).toHaveBeenCalledWith(
+      'rLynxPrepareLazyBundleMTS',
+      { url: 'foo', host: undefined },
+      expect.any(Function),
+    );
 
     let thenCalled = false;
     promise.then((v) => {
@@ -221,6 +233,53 @@ describe('loadLazyBundle (FetchBundle) — background sync', () => {
       thenCalled = true;
     });
     expect(thenCalled).toBe(true);
+  });
+
+  test('a repeat sync load is served from the success cache (no re-fetch/prepare)', async () => {
+    waitMock.mockReturnValueOnce({ code: 0, url: 'u' });
+    loadScript.mockReturnValueOnce({ default: 'BG' });
+
+    const { loadLazyBundle } = await import(
+      '../../../src/core/lynx/lazy-bundle'
+    );
+
+    let first;
+    loadLazyBundle('foo', 'sync').then((v) => {
+      first = v;
+    });
+    expect(first).toEqual({ default: 'BG' });
+    expect(fetchBundle).toHaveBeenCalledTimes(1);
+    expect(callLepusMethod).toHaveBeenCalledTimes(1);
+
+    let second;
+    loadLazyBundle('foo', 'sync').then((v) => {
+      second = v;
+    });
+    // Same exports, served synchronously, without re-fetching or re-preparing.
+    expect(second).toEqual({ default: 'BG' });
+    expect(fetchBundle).toHaveBeenCalledTimes(1);
+    expect(callLepusMethod).toHaveBeenCalledTimes(1);
+  });
+
+  test('a failed load is not cached → next load retries', async () => {
+    waitMock.mockImplementationOnce(() => {
+      throw new Error('timeout');
+    });
+    const { loadLazyBundle } = await import(
+      '../../../src/core/lynx/lazy-bundle'
+    );
+
+    await expect(loadLazyBundle('foo', 'sync')).rejects.toThrow('timeout');
+
+    // Second attempt: the earlier failure was not cached, so it re-fetches.
+    waitMock.mockReturnValueOnce({ code: 0, url: 'u' });
+    loadScript.mockReturnValueOnce({ default: 'BG' });
+    let retried;
+    loadLazyBundle('foo', 'sync').then((v) => {
+      retried = v;
+    });
+    expect(retried).toEqual({ default: 'BG' });
+    expect(fetchBundle).toHaveBeenCalledTimes(2);
   });
 
   test('.wait throws → reject', async () => {

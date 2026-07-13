@@ -14,6 +14,13 @@ const SECTION_CSS = 'CSS';
 const LYNX_LAZY_SYNC_TIMEOUT_SECONDS = 5;
 const PREPARE_LAZY_BUNDLE_MTS = 'rLynxPrepareLazyBundleMTS';
 
+// Background-thread dedup cache: a `source` whose FetchBundle load fully
+// succeeded maps to its exports, so a repeat load returns the same result
+// without re-fetching or re-triggering the main-thread prepare. Only populated
+// on success — a failed load stays out of the cache and can be retried, exactly
+// like `prepareLazyBundleMTS`'s main-thread cache.
+const fetchBundleBgCache = new Map<string, unknown>();
+
 /**
  * To make code below works
  * const App1 = lazy(() => import("./x").then(({App1}) => ({default: App1})))
@@ -223,6 +230,12 @@ export const loadLazyBundle: <
       r.then = makeSyncThen(result);
       return r;
     } else if (__JS__) {
+      const cached = fetchBundleBgCache.get(source);
+      if (cached !== undefined) {
+        const r: Promise<T> = Promise.resolve(cached as T);
+        r.then = makeSyncThen(cached as T);
+        return r;
+      }
       if (mode === 'sync') {
         let response;
         try {
@@ -244,6 +257,22 @@ export const loadLazyBundle: <
         } catch (e) {
           return Promise.reject(e instanceof Error ? e : new Error(String(e)));
         }
+        // A sync bundle that wasn't part of the first-screen main-thread render
+        // still needs its main-thread section prepared on the MT (the
+        // createSnapshot side effect), or a later patch referencing it hits
+        // "snapshot not found". Runs synchronously — the bundle is already in
+        // the native cache — just like the async path below.
+        try {
+          lynx.getNativeApp().callLepusMethod(
+            PREPARE_LAZY_BUNDLE_MTS,
+            { url: source, host },
+            () => {},
+          );
+        } catch (e) {
+          return Promise.reject(e instanceof Error ? e : new Error(String(e)));
+        }
+        // Fully loaded and prepared — cache so repeat loads skip the work above.
+        fetchBundleBgCache.set(source, result);
         const r: Promise<T> = Promise.resolve(result);
         r.then = makeSyncThen(result);
         return r;
@@ -281,6 +310,9 @@ export const loadLazyBundle: <
               PREPARE_LAZY_BUNDLE_MTS,
               { url: source, host },
               () => {
+                // Fully loaded and MT-prepared — cache so repeat loads skip
+                // the fetch / background eval / MT prepare above.
+                fetchBundleBgCache.set(source, btsResult);
                 resolve(btsResult);
               },
             );
