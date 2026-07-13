@@ -1,45 +1,61 @@
 # Lynx Headless Rust Test Runner
 
-`lynx-headless-rust-test-runner` is a Rust workspace crate that exercises the
-runtime-loaded `lynx` engine bridge against a real ReactLynx bundle. It creates
-a windowless software renderer, captures the RGBA frame passed to
-`SoftwareRenderer::present`, and writes that frame as a PNG. It uses the
-compiled fixture output at
-`packages/genui/ui-judge/tests/fixtures/react/.generated/main.lynx.bundle` and a
-checked-in `lynx_core.js` resource; the bundle itself is not copied into this
-crate.
+`lynx-headless-rust-test-runner` drives a real Lynx runtime in-process through
+Tokio futures and Puppeteer-style page APIs. It combines the original
+windowless software-rendering harness with DOM inspection and interaction APIs:
 
-Build the bundle with the same command used by the UI Judge fixture helper:
+- `Lynx::connect` initializes the runtime and local DebugRouter.
+- `Lynx::new_page` creates a windowless `Page`.
+- `Page::goto`, `content`, and `locator` load and inspect Lynx bundles through
+  CDP.
+- `ElementNode` reads attributes and computed styles and dispatches taps by
+  native node id, without absolute coordinates or hit-testing.
+- `Page::screenshot` captures the software renderer directly as PNG.
+- DebugRouter I/O, resource loading, waits, and public waiting operations use
+  Tokio `async`/`await`.
+
+## Example
+
+```rust
+use lynx_headless_rust_test_runner::{
+  ConnectOptions, GotoOptions, Lynx, ScreenshotOptions,
+};
+
+let lynx = Lynx::connect(ConnectOptions {
+  lynx_core_path: Some("/path/to/lynx_core.js".into()),
+  ..ConnectOptions::default()
+}).await?;
+let mut page = lynx.new_page()?;
+page.goto("/path/to/main.lynx.bundle", GotoOptions::default()).await?;
+
+let title = page.locator(".Title").await?.expect("title exists");
+assert_eq!(title.get_attribute("class").await?.as_deref(), Some("Title"));
+let png = page.screenshot(ScreenshotOptions::default()).await?;
+# Ok::<(), lynx_headless_rust_test_runner::Error>(())
+```
+
+Run these futures on a Tokio current-thread runtime. The headless Lynx view and
+its native task pump stay on the thread where the page was created.
+
+The runtime needs `lynx_core.js` beside the executable on Linux or inside
+`LynxResources.bundle` beside it on macOS. Set `lynx_core_path` or
+`LYNX_CORE_JS_PATH`; the runner installs the file and also serves
+`ResourceType::LynxCoreJs` requests from that installed path.
+
+## React fixture test
+
+Build the shared fixture before running the runtime-backed test:
 
 ```bash
 NODE_ENV=production node packages/rspeedy/core/bin/rspeedy.js build --root packages/genui/ui-judge/tests/fixtures/react
+cargo test -p lynx-headless-rust-test-runner --all-targets
 ```
 
-The expected first frame is the React fixture UI: an 800x600 viewport with a
-black background, a large purple/magenta radial gradient, the Lynx logo, the
-arrow image, and white `React` / `on Lynx` text centered in the viewport. The
-test asserts those visual signals directly from the captured RGBA frame instead
-of comparing a golden image. The fixture inlines PNG assets as
-`data:image/...;base64,...`; Clay decodes those images internally, so the runner
-does not install a generic resource fetcher for them.
-
-Run the integration target with:
+The test uses the public page APIs to verify DOM content, attributes, computed
+styles, node-id tap state updates, PNG capture, and the original runner's visual
+pixel signals. Linux is the CI contract. On macOS, run the ignored integration
+test explicitly for diagnostics:
 
 ```bash
-cargo run -p lynx-headless-rust-test-runner
+cargo test -p lynx-headless-rust-test-runner --test react_fixture -- --ignored
 ```
-
-The runner writes a debug PNG to
-`target/headless-rust-test-runner/react-fixture.png`. Runtime resolution follows
-the `lynx` crate: set `LYNX_LIB_PATH` or `LYNX_SDK_DIR` explicitly, or let the
-crate build script download the default supported runtime.
-
-The CI fixture test currently runs on Linux. The same Rust code can be run
-locally on macOS as a diagnostic path, but Linux is the runtime-backed contract
-for this crate.
-
-If a captured frame contains the gradient and text but has no logo or arrow
-pixels, the bundle and Rust task plumbing have already reached first paint. In
-that case, check the native windowless runtime: `kRendererTypeSoftware` must
-also configure Clay with software image rendering so image resources are painted
-into the software present buffer.

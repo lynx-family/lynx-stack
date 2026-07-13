@@ -115,8 +115,10 @@ pub struct LoadedLibrary {
   pub lynx_env_get_sdk_version: unsafe extern "C" fn() -> *const c_char,
   pub lynx_env_set_icu_data_path: unsafe extern "C" fn(*const c_char),
   pub lynx_env_get_icu_data_path: unsafe extern "C" fn() -> *const c_char,
+  pub lynx_env_set_devtool_app_info: unsafe extern "C" fn(*const c_char, *const c_char),
   pub lynx_env_enable_devtool: unsafe extern "C" fn(c_int),
   pub lynx_env_is_devtool_enabled: unsafe extern "C" fn() -> c_int,
+  pub lynx_env_connect_devtool: unsafe extern "C" fn(*const c_char) -> c_int,
   pub lynx_env_enable_logbox: unsafe extern "C" fn(c_int),
   pub lynx_env_is_logbox_enabled: unsafe extern "C" fn() -> c_int,
   pub lynx_env_register_native_module:
@@ -172,6 +174,8 @@ pub struct LoadedLibrary {
     unsafe extern "C" fn(*mut lynx_view_t, *mut lynx_template_data_t, *mut lynx_template_data_t),
   pub lynx_view_send_global_event:
     unsafe extern "C" fn(*mut lynx_view_t, *const c_char, *const c_char),
+  pub lynx_view_send_touch_event:
+    unsafe extern "C" fn(*mut lynx_view_t, *const c_char, i32, f32, f32, f32, f32, f32, f32),
   pub lynx_rust_view_update_screen_metrics: unsafe extern "C" fn(*mut lynx_view_t, f32, f32, f32),
   pub lynx_rust_view_set_frame: unsafe extern "C" fn(*mut lynx_view_t, f32, f32, f32, f32),
   pub lynx_rust_view_set_font_scale: unsafe extern "C" fn(*mut lynx_view_t, f32),
@@ -374,8 +378,10 @@ impl LoadedLibrary {
       lynx_env_get_sdk_version: load_symbol!(library, lynx_env_get_sdk_version),
       lynx_env_set_icu_data_path: load_symbol!(library, lynx_env_set_icu_data_path),
       lynx_env_get_icu_data_path: load_symbol!(library, lynx_env_get_icu_data_path),
+      lynx_env_set_devtool_app_info: load_symbol!(library, lynx_env_set_devtool_app_info),
       lynx_env_enable_devtool: load_symbol!(library, lynx_env_enable_devtool),
       lynx_env_is_devtool_enabled: load_symbol!(library, lynx_env_is_devtool_enabled),
+      lynx_env_connect_devtool: load_symbol!(library, lynx_env_connect_devtool),
       lynx_env_enable_logbox: load_symbol!(library, lynx_env_enable_logbox),
       lynx_env_is_logbox_enabled: load_symbol!(library, lynx_env_is_logbox_enabled),
       lynx_env_register_native_module: load_symbol!(library, lynx_env_register_native_module),
@@ -431,6 +437,7 @@ impl LoadedLibrary {
       lynx_view_update_data: load_symbol!(library, lynx_view_update_data),
       lynx_view_reload_template: load_symbol!(library, lynx_view_reload_template),
       lynx_view_send_global_event: load_symbol!(library, lynx_view_send_global_event),
+      lynx_view_send_touch_event: load_symbol!(library, lynx_view_send_touch_event),
       lynx_rust_view_update_screen_metrics: load_symbol!(
         library,
         lynx_rust_view_update_screen_metrics
