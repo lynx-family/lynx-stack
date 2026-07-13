@@ -30,6 +30,10 @@
       "types": "./lib/index.d.ts",
       "default": "./lib/index.js"
     },
+    "./config": {
+      "types": "./lib/config-types.d.ts",
+      "default": "./lib/config-types.js"
+    },
     "./internal": {
       "types": "./lib/internal.d.ts",
       "default": "./lib/internal.js"
@@ -87,6 +91,10 @@
       ".": {
         "types": "./dist/index.d.ts",
         "default": "./dist/index.js"
+      },
+      "./config": {
+        "types": "./dist/config-types.d.ts",
+        "default": "./dist/config-types.js"
       },
       "./internal": {
         "types": "./dist/internal.d.ts",
