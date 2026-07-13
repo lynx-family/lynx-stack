@@ -85,6 +85,12 @@ export interface Config {
 }
 
 // @public
+export interface ConfigParams {
+    command: 'build' | 'dev' | 'inspect' | 'preview' | (string & Record<never, never>);
+    env: 'production' | 'development' | 'test' | (string & Record<never, never>);
+}
+
+// @public
 export type ConsoleType = 'log' | 'warn' | 'error' | 'info' | 'debug' | 'profile' | 'profileEnd' | (string & Record<never, never>);
 
 // @public
@@ -133,6 +139,18 @@ export interface CssModules {
 export interface Decorators {
     version?: 'legacy' | '2022-03';
 }
+
+// @public
+export function defineConfig(config: Config): Config;
+
+// @public
+export function defineConfig(config: (params: ConfigParams) => Config): (params: ConfigParams) => Config;
+
+// @public
+export function defineConfig(config: Promise<Config>): Promise<Config>;
+
+// @public
+export function defineConfig(config: (params: ConfigParams) => Promise<Config>): (params: ConfigParams) => Promise<Config>;
 
 // @public
 export interface Dev {
@@ -194,6 +212,24 @@ export interface Filename {
 }
 
 // @public
+export function loadConfig(loadConfigOptions: LoadConfigOptions): Promise<LoadConfigResult>;
+
+// @public
+export interface LoadConfigOptions {
+    configPath?: string | undefined;
+    cwd?: string | undefined;
+}
+
+// @public
+export interface LoadConfigResult {
+    configPath: string;
+    content: Config;
+}
+
+// @public
+export function loadLynxConfig(options?: LoadConfigOptions): Promise<Config>;
+
+// @public
 export function mergeRspeedyConfig(...configs: Config[]): Config;
 
 // @public
@@ -233,7 +269,7 @@ export interface Performance {
 }
 
 // @public
-export function pluginLynxPreset(): RsbuildPlugins;
+export function pluginLynxPreset(config?: Config): RsbuildPlugins;
 
 // @public
 export interface Resolve {

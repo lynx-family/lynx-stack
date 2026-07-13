@@ -29,8 +29,14 @@ import { pluginCssMinimizer } from '@rsbuild/plugin-css-minimizer'
 
 import { pluginLynxDebugMetadata } from '@lynx-js/debug-metadata-rsbuild-plugin'
 
+import { applyDefaultRspeedyConfig } from './config/defaults.js'
 import type { Config } from './config/index.js'
-import { pluginLynxDefaults } from './defaults.js'
+import { loadConfig } from './config/loadConfig.js'
+import type {
+  LoadConfigOptions,
+  LoadConfigResult,
+} from './config/loadConfig.js'
+import { pluginLynxConfig } from './defaults.js'
 import {
   pluginChunkLoading,
   pluginDev,
@@ -46,46 +52,77 @@ import {
 } from './internal.js'
 import { pluginLynxAPI } from './plugin-api.js'
 
-const DEFAULT_FILENAME = '[name].[platform].bundle'
-
 /**
  * Compose all the plugins the Rspeedy CLI applies by default, plus the Lynx
  * config defaults, into a single plugin usable from `rsbuild.config.ts`.
  *
+ * @param config - An optional Lynx {@link Config} (the same shape as
+ * `lynx.config.ts`). A project migrating off the Rspeedy CLI can pass its
+ * existing config here; its `source`, `output`, `resolve`, `dev`,
+ * `performance`, `tools`, etc. are translated into the Rsbuild build.
+ *
  * @public
  */
-export function pluginLynxPreset(): RsbuildPlugins {
-  // The Lynx-shaped config published to DSL plugins. `output.filename.bundle`
-  // is read by `pluginReactLynx` (to name the emitted template) and by
-  // `pluginQRCode` (to build dev URLs).
-  const exposedConfig: Config = {
-    output: {
-      filename: {
-        bundle: DEFAULT_FILENAME,
-        template: DEFAULT_FILENAME,
-      },
-    },
-  }
+export function pluginLynxPreset(config: Config = {}): RsbuildPlugins {
+  // Resolve once: fill the Lynx defaults (filename, sourceMap, cssModules, …)
+  // so both the exposed config (read by DSL plugins like `pluginReactLynx` and
+  // `pluginQRCode`) and the Rsbuild-config translation see the same values.
+  const resolved = applyDefaultRspeedyConfig(config)
 
   return [
-    pluginLynxAPI(exposedConfig),
-    pluginLynxDefaults(),
+    pluginLynxAPI(resolved),
+    pluginLynxConfig(resolved),
 
     pluginChunkLoading(),
     pluginLynxDebugMetadata(),
-    pluginDev(),
-    pluginMinify(),
+    // Thread the resolved config into the sub-plugins that read from their
+    // arguments (not only from the translated Rsbuild config), matching the
+    // Rspeedy CLI's `applyDefaultPlugins`. Without this, user-set fields like
+    // `dev.assetPrefix` are silently replaced by defaults.
+    pluginDev(resolved.dev, resolved.server),
+    pluginMinify(resolved.output?.minify),
     pluginOptimization(),
-    pluginOutput(),
+    pluginOutput(resolved.output),
     pluginResolve(),
-    pluginRsdoctor(),
+    pluginRsdoctor(resolved.tools?.rsdoctor),
     pluginSourcemap(),
-    pluginStatsJson(exposedConfig),
+    pluginStatsJson(resolved),
     pluginSwc(),
     pluginTarget(),
     pluginCssMinimizer(),
   ]
 }
+
+/**
+ * Load (and validate) a `lynx.config.ts` and return the Lynx {@link Config},
+ * so an existing Rspeedy project can be built with the Rsbuild CLI without
+ * rewriting its config:
+ *
+ * @example
+ * ```ts
+ * // rsbuild.config.ts
+ * import { defineConfig } from '@rsbuild/core'
+ * import { loadLynxConfig, pluginLynxPreset } from '@lynx-js/preset-rsbuild-plugin'
+ *
+ * export default defineConfig(async () => ({
+ *   plugins: [pluginLynxPreset(await loadLynxConfig())],
+ * }))
+ * ```
+ *
+ * @public
+ */
+export async function loadLynxConfig(
+  options: LoadConfigOptions = {},
+): Promise<Config> {
+  const { content } = await loadConfig(options)
+  return content
+}
+
+// Config loading, re-exported by `@lynx-js/rspeedy` for the CLI's public API.
+export { loadConfig }
+export type { LoadConfigOptions, LoadConfigResult }
+export { defineConfig } from './config/defineConfig.js'
+export type { ConfigParams } from './config/defineConfig.js'
 
 // The Lynx-shaped config surface. Re-exported by `@lynx-js/rspeedy` so the
 // `import { Config } from '@lynx-js/rspeedy'` used by DSL plugins keeps working.

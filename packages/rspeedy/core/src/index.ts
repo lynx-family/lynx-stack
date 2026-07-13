@@ -33,13 +33,14 @@ export { logger } from '@rsbuild/core'
 export { mergeRspeedyConfig } from '@lynx-js/preset-rsbuild-plugin'
 
 // Config
-export { defineConfig } from './config/defineConfig.js'
-export type { ConfigParams } from './config/defineConfig.js'
-export {
-  loadConfig,
-  type LoadConfigOptions,
-  type LoadConfigResult,
-} from './config/loadConfig.js'
+// `defineConfig` / `loadConfig` now live in `@lynx-js/preset-rsbuild-plugin`
+// (which owns the config schema and its loader); re-exported here unchanged.
+export { defineConfig, loadConfig } from '@lynx-js/preset-rsbuild-plugin'
+export type {
+  ConfigParams,
+  LoadConfigOptions,
+  LoadConfigResult,
+} from '@lynx-js/preset-rsbuild-plugin'
 export type {
   BuildCache,
   BundleFilename,
