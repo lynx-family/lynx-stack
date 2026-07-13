@@ -393,7 +393,10 @@ class ReactWebpackPlugin {
         }
         onceForChunkSet.add(chunk);
 
-        if (!chunk.name?.includes('__main-thread')) {
+        const isMainThreadChunk = Array.from(
+          compilation.chunkGraph.getChunkModulesIterable(chunk),
+        ).some(module => module.layer === LAYERS.MAIN_THREAD);
+        if (!isMainThreadChunk) {
           return;
         }
 
@@ -528,16 +531,6 @@ class ReactWebpackPlugin {
           },
         );
       }
-
-      // The react-transform will add `-react__${LAYER}` to the webpackChunkName.
-      // We replace it with an empty string here to make sure main-thread & background chunk match.
-      hooks.asyncChunkName.tap(
-        this.constructor.name,
-        (chunkName) =>
-          chunkName
-            ?.replaceAll(`-react__background`, '')
-            ?.replaceAll(`-react__main-thread`, ''),
-      );
 
       if (options.experimental_useElementTemplate) {
         hooks.beforeEncode.tap(

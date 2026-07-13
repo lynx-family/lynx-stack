@@ -12,17 +12,17 @@ it('should have chunkName', async () => {
 
   const content = await readFile(__filename, 'utf-8');
 
-  const LAYER = __LEPUS__ ? 'react__main-thread' : 'react__background';
+  const LAYER = __LEPUS__ ? 'main-thread' : 'background';
 
   expect(content).toContain(
-    `__webpack_require__.e(/* import() | ./foo.js-${LAYER} */ "./foo.js-${LAYER}")`,
+    `__webpack_require__.e(/* import() */ "_react_${LAYER}_foo_js")`,
   );
 });
 
 it('should have async chunks', () => {
-  const LAYER = __LEPUS__ ? 'react__main-thread' : 'react__background';
+  const LAYER = __LEPUS__ ? 'main-thread' : 'background';
 
   expect(existsSync(
-    join(__dirname, `foo.js-${LAYER}.js`),
+    join(__dirname, `_react_${LAYER}_foo_js.js`),
   )).toBeTruthy();
 });

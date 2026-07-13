@@ -268,8 +268,9 @@ export function applyEntry(
               })
             },
             targetSdkVersion,
-            // Inject runtime wrapper for all `.js` but not `main-thread.js` and `main-thread.[hash].js`.
-            test: /^(?!.*main-thread(?:\.[A-Fa-f0-9]*)?\.js$).*\.js$/,
+            // Inject runtime wrapper for all `.js` but not main-thread chunks
+            // (the layer marker can appear anywhere in the async chunk name).
+            test: /^(?!.*main-thread).*\.js$/,
             experimental_isLazyBundle,
           }])
           .end()

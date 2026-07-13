@@ -49,10 +49,8 @@ function normalizeImports(value: RsbuildEntry[string]): string[] {
  */
 export function collectLazyBundleEntryResources(
   compilation: Rspack.Compilation,
-  chunkGroupName: string,
+  cg: Rspack.ChunkGroup,
 ): string[] {
-  const cg = compilation.namedChunkGroups.get(chunkGroupName)
-  if (!cg) return []
   const chunkGraph = compilation.chunkGraph
   const moduleGraph = compilation.moduleGraph
   if (!chunkGraph || !moduleGraph) return []

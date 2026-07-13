@@ -193,11 +193,11 @@ describe('Sourcemap', () => {
 
     expect(mapPathsInMetadata).toMatchInlineSnapshot(`
       [
+        ".rspeedy/async/fixtures/sourcemap/lazy-bundle-comp.tsx/background.js.map",
+        ".rspeedy/async/fixtures/sourcemap/lazy-bundle-comp.tsx/main-thread.js.map",
         ".rspeedy/main/background.js.map",
         ".rspeedy/main/main-thread.js.map",
         ".rspeedy/main/main.css.map",
-        "static/js/async/lazy-bundle-comp.jsx-react__background.js.map",
-        "static/js/async/lazy-bundle-comp.jsx-react__main-thread.js.map",
       ]
     `)
   }, 25_000)
@@ -273,11 +273,11 @@ describe('Sourcemap', () => {
 
       expect(sourceMapFiles).toMatchInlineSnapshot(`
         [
+          ".rspeedy/async/fixtures/sourcemap/lazy-bundle-comp.tsx/background.js.map",
+          ".rspeedy/async/fixtures/sourcemap/lazy-bundle-comp.tsx/main-thread.js.map",
           ".rspeedy/main/background.js.map",
           ".rspeedy/main/main-thread.js.map",
           ".rspeedy/main/main.css.map",
-          "static/js/async/lazy-bundle-comp.jsx-react__background.js.map",
-          "static/js/async/lazy-bundle-comp.jsx-react__main-thread.js.map",
         ]
       `)
       expect(sourceMapFiles).toContain('.rspeedy/main/main.css.map')

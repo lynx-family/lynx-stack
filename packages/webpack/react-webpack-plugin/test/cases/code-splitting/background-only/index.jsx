@@ -13,7 +13,7 @@ it('should have chunkName', async () => {
     const content = await readFile(__filename, 'utf-8');
 
     expect(content).toContain(
-      `__webpack_require__.e(/*! import() | ./foo.js-react__background */ "./foo.js-react__background")`,
+      `__webpack_require__.e(/*! import() */ "_react_background_foo_js")`,
     );
   }
 });
@@ -38,7 +38,7 @@ it('should have async chunks', () => {
     expect(['foo', 'bar', 'baz'].every(entry =>
       existsSync(join(
         __dirname,
-        `${entry}.js-react__background.js`,
+        `_react_background_${entry}_js.js`,
       ))
     )).toBeTruthy();
   }

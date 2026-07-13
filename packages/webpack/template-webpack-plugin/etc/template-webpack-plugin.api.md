@@ -78,6 +78,7 @@ export class LynxTemplatePlugin {
         cssSource: Record<string, string>;
     };
     static defaultOptions: Readonly<Required<LynxTemplatePluginOptions>>;
+    static getAsyncChunkLayoutName(compilation: Compilation, chunkId: string | number): string | undefined;
     static getLynxTemplatePluginHooks(compilation: Compilation): TemplateHooks;
 }
 
