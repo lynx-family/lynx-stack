@@ -14,22 +14,10 @@ import type {
 import { pluginCssMinimizer } from '@rsbuild/plugin-css-minimizer'
 import { rstest } from '@rstest/core'
 
-import { pluginLynxDebugMetadata } from '@lynx-js/debug-metadata-rsbuild-plugin'
-
 import type { Config } from '../src/config/index.js'
 import {
   applyDefaultRspeedyConfig,
-  pluginChunkLoading,
-  pluginDev,
-  pluginMinify,
-  pluginOptimization,
-  pluginOutput,
-  pluginResolve,
-  pluginRsdoctor,
-  pluginSourcemap,
-  pluginStatsJson,
-  pluginSwc,
-  pluginTarget,
+  composeLynxBuildPlugins,
   toRsbuildConfig,
 } from '../src/internal.js'
 import { pluginLynxAPI } from '../src/plugin-api.js'
@@ -67,18 +55,7 @@ export async function createStubRspeedy(
 
   rsbuild.addPlugins([
     pluginLynxAPI(resolved),
-    pluginChunkLoading(),
-    pluginLynxDebugMetadata(),
-    pluginDev(resolved.dev, resolved.server),
-    pluginMinify(resolved.output?.minify),
-    pluginOptimization(),
-    pluginOutput(resolved.output),
-    pluginResolve(),
-    pluginRsdoctor(resolved.tools?.rsdoctor),
-    pluginSourcemap(),
-    pluginStatsJson(resolved),
-    pluginSwc(),
-    pluginTarget(),
+    ...composeLynxBuildPlugins(resolved),
     pluginCssMinimizer(),
   ])
 

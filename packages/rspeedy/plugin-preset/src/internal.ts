@@ -11,17 +11,9 @@
 // Keep these as plain `//` comments: a leading `/** @packageDocumentation */`
 // JSDoc block makes tsc's declaration emitter drop the first `export` below.
 
-export { pluginChunkLoading } from './plugins/chunkLoading.plugin.js'
-export { pluginDev } from './plugins/dev.plugin.js'
-export { pluginMinify } from './plugins/minify.plugin.js'
-export { pluginOptimization } from './plugins/optimization.plugin.js'
-export { pluginOutput } from './plugins/output.plugin.js'
-export { pluginResolve } from './plugins/resolve.plugin.js'
-export { pluginRsdoctor } from './plugins/rsdoctor.plugin.js'
-export { pluginSourcemap } from './plugins/sourcemap.plugin.js'
-export { pluginStatsJson } from './plugins/statsJson.plugin.js'
-export { pluginSwc } from './plugins/swc.plugin.js'
-export { pluginTarget } from './plugins/target.plugin.js'
+// The Lynx build plugins as one shared composer (was 11 individual exports the
+// CLI had to list in the same order — now a single source of truth).
+export { composeLynxBuildPlugins } from './build-plugins.js'
 
 export { debug, isDebug } from './debug.js'
 export { isCI } from './utils/is-ci.js'

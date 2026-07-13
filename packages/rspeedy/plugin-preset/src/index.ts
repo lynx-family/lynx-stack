@@ -27,8 +27,7 @@
 import type { RsbuildPlugins } from '@rsbuild/core'
 import { pluginCssMinimizer } from '@rsbuild/plugin-css-minimizer'
 
-import { pluginLynxDebugMetadata } from '@lynx-js/debug-metadata-rsbuild-plugin'
-
+import { composeLynxBuildPlugins } from './build-plugins.js'
 import { applyDefaultRspeedyConfig } from './config/defaults.js'
 import type { Config } from './config/index.js'
 import { loadConfig } from './config/loadConfig.js'
@@ -37,19 +36,6 @@ import type {
   LoadConfigResult,
 } from './config/loadConfig.js'
 import { pluginLynxConfig } from './defaults.js'
-import {
-  pluginChunkLoading,
-  pluginDev,
-  pluginMinify,
-  pluginOptimization,
-  pluginOutput,
-  pluginResolve,
-  pluginRsdoctor,
-  pluginSourcemap,
-  pluginStatsJson,
-  pluginSwc,
-  pluginTarget,
-} from './internal.js'
 import { pluginLynxAPI } from './plugin-api.js'
 
 /**
@@ -73,22 +59,10 @@ export function pluginLynxPreset(config: Config = {}): RsbuildPlugins {
     pluginLynxAPI(resolved),
     pluginLynxConfig(resolved),
 
-    pluginChunkLoading(),
-    pluginLynxDebugMetadata(),
-    // Thread the resolved config into the sub-plugins that read from their
-    // arguments (not only from the translated Rsbuild config), matching the
-    // Rspeedy CLI's `applyDefaultPlugins`. Without this, user-set fields like
-    // `dev.assetPrefix` are silently replaced by defaults.
-    pluginDev(resolved.dev, resolved.server),
-    pluginMinify(resolved.output?.minify),
-    pluginOptimization(),
-    pluginOutput(resolved.output),
-    pluginResolve(),
-    pluginRsdoctor(resolved.tools?.rsdoctor),
-    pluginSourcemap(),
-    pluginStatsJson(resolved),
-    pluginSwc(),
-    pluginTarget(),
+    // The Lynx build plugins, shared with the Rspeedy CLI (single source of
+    // truth for the set/order/args — see `composeLynxBuildPlugins`).
+    ...composeLynxBuildPlugins(resolved),
+
     pluginCssMinimizer(),
   ]
 }
