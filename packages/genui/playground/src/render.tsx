@@ -65,6 +65,11 @@ interface UserActionMessage {
   action: unknown;
 }
 
+interface OpenUIUserActionMessage {
+  type: 'OPENUI_USER_ACTION';
+  action: unknown;
+}
+
 interface ActionResponseMessage {
   type: 'A2UI_ACTION_RESPONSE';
   messages: unknown[];
@@ -629,6 +634,15 @@ function Render() {
         }
         return;
       }
+      if (name === 'OPENUI_USER_ACTION') {
+        if (window.parent && window.parent !== window) {
+          window.parent.postMessage(
+            { type: 'OPENUI_USER_ACTION', action: data },
+            '*',
+          );
+        }
+        return;
+      }
     };
 
     return () => {
@@ -654,6 +668,16 @@ function Render() {
         e.data
         && typeof e.data === 'object'
         && (e.data as UserActionMessage).type === 'A2UI_USER_ACTION'
+      ) {
+        if (window.parent && window.parent !== window) {
+          window.parent.postMessage(e.data, '*');
+        }
+        return;
+      }
+      if (
+        e.data
+        && typeof e.data === 'object'
+        && (e.data as OpenUIUserActionMessage).type === 'OPENUI_USER_ACTION'
       ) {
         if (window.parent && window.parent !== window) {
           window.parent.postMessage(e.data, '*');

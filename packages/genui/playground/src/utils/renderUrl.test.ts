@@ -36,9 +36,11 @@ describe('OpenUI render URLs', () => {
       rawText: 'root = Stack([])',
       theme: 'dark',
       instant: true,
+      liveAction: true,
     }, 'https://lynx-stack.dev/genui/');
 
     expect(new URL(url).searchParams.get('theme')).toBe('dark');
     expect(new URL(url).searchParams.get('instant')).toBe('1');
+    expect(new URL(url).searchParams.get('liveAction')).toBe('1');
   });
 });

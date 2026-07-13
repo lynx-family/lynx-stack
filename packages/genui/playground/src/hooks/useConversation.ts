@@ -52,6 +52,7 @@ export interface RecordTurnInput {
   a2uiMessages: unknown[];
   previewMessages?: unknown[];
   previewPayloadUrls?: PreviewPayloadUrls | null;
+  /** When present, including `null`, overrides the snapshot preview URL. */
   snapshotPreviewPayloadUrls?: PreviewPayloadUrls | null;
   previewMetrics?: PreviewPerformanceMetrics | null;
 }
@@ -570,9 +571,14 @@ export function useConversation(
         input.a2uiMessages,
       );
       const nextPreviewMessages = input.previewMessages ?? input.a2uiMessages;
-      const nextPreviewPayloadUrls = input.snapshotPreviewPayloadUrls
-        ?? input.previewPayloadUrls
-        ?? null;
+      const hasSnapshotPreviewPayloadUrls = Object.prototype.hasOwnProperty
+        .call(
+          input,
+          'snapshotPreviewPayloadUrls',
+        );
+      const nextPreviewPayloadUrls = hasSnapshotPreviewPayloadUrls
+        ? input.snapshotPreviewPayloadUrls ?? null
+        : input.previewPayloadUrls ?? null;
       const now = Date.now();
 
       const existingMeta =

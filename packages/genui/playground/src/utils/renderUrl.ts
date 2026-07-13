@@ -40,6 +40,8 @@ export interface OpenUIRenderInit {
   theme?: 'light' | 'dark';
   speed?: number;
   instant?: boolean;
+  /** When true, actions are forwarded to the parent frame for live agent handling. */
+  liveAction?: boolean;
   playbackMode?: boolean;
 }
 
@@ -153,6 +155,10 @@ export function buildOpenUIRenderUrl(
 
   if (init.instant) {
     url.searchParams.set('instant', '1');
+  }
+
+  if (init.liveAction) {
+    url.searchParams.set('liveAction', '1');
   }
 
   if (init.playbackMode) {
