@@ -27,39 +27,16 @@ export async function applyDefaultPlugins(
   rsbuildInstance: RsbuildInstance,
   config: Config,
 ): Promise<void> {
-  // The default build plugins now live in `@lynx-js/preset-rsbuild-plugin`.
-  // The CLI composes them itself (threading the loaded `lynx.config.ts` into
-  // each) rather than using the batteries-included `pluginLynxPreset`.
+  // The default build plugins live in `@lynx-js/preset-rsbuild-plugin`. The CLI
+  // composes them through the same `composeLynxBuildPlugins` seam that
+  // `pluginLynxPreset` uses (one source of truth for the set/order/args), and
+  // adds its own API plugin (with the real CLI `exit`) around it.
   const defaultPlugins = Promise.all([
     import('./api.plugin.js'),
-    import('@lynx-js/debug-metadata-rsbuild-plugin'),
     import('@lynx-js/preset-rsbuild-plugin/internal'),
-  ]).then(([{ pluginAPI }, { pluginLynxDebugMetadata }, {
-    pluginChunkLoading,
-    pluginDev,
-    pluginMinify,
-    pluginOptimization,
-    pluginOutput,
-    pluginResolve,
-    pluginRsdoctor,
-    pluginSourcemap,
-    pluginStatsJson,
-    pluginSwc,
-    pluginTarget,
-  }]) => [
+  ]).then(([{ pluginAPI }, { composeLynxBuildPlugins }]) => [
     pluginAPI(config),
-    pluginChunkLoading(),
-    pluginLynxDebugMetadata(),
-    pluginDev(config.dev, config.server),
-    pluginMinify(config.output?.minify),
-    pluginOptimization(),
-    pluginOutput(config.output),
-    pluginResolve(),
-    pluginRsdoctor(config.tools?.rsdoctor),
-    pluginSourcemap(),
-    pluginStatsJson(config),
-    pluginSwc(),
-    pluginTarget(),
+    ...composeLynxBuildPlugins(config),
   ])
 
   const promises: Promise<void>[] = [
