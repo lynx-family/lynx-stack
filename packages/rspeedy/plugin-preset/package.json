@@ -1,6 +1,6 @@
 {
   "name": "@lynx-js/preset-rsbuild-plugin",
-  "version": "0.1.0",
+  "version": "0.15.2",
   "description": "An Rsbuild plugin that builds a Lynx app with the Rsbuild CLI directly, without the Rspeedy CLI.",
   "keywords": [
     "rsbuild",
