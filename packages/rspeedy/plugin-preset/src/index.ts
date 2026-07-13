@@ -75,12 +75,16 @@ export function pluginLynxPreset(config: Config = {}): RsbuildPlugins {
 
     pluginChunkLoading(),
     pluginLynxDebugMetadata(),
-    pluginDev(),
-    pluginMinify(),
+    // Thread the resolved config into the sub-plugins that read from their
+    // arguments (not only from the translated Rsbuild config), matching the
+    // Rspeedy CLI's `applyDefaultPlugins`. Without this, user-set fields like
+    // `dev.assetPrefix` are silently replaced by defaults.
+    pluginDev(resolved.dev, resolved.server),
+    pluginMinify(resolved.output?.minify),
     pluginOptimization(),
-    pluginOutput(),
+    pluginOutput(resolved.output),
     pluginResolve(),
-    pluginRsdoctor(),
+    pluginRsdoctor(resolved.tools?.rsdoctor),
     pluginSourcemap(),
     pluginStatsJson(resolved),
     pluginSwc(),

@@ -25,6 +25,19 @@ async function unwrapConfig(config?: Config): Promise<Rspack.Configuration> {
   return rspackConfig!
 }
 
+async function unwrapDevConfig(config?: Config): Promise<Rspack.Configuration> {
+  const rsbuild = await createRsbuild({
+    cwd,
+    rsbuildConfig: {
+      mode: 'development',
+      plugins: [pluginLynxPreset(config)],
+      environments: { lynx: {} },
+    },
+  })
+  const [rspackConfig] = await rsbuild.initConfigs({ environment: ['lynx'] })
+  return rspackConfig!
+}
+
 describe('pluginLynxPreset', () => {
   test('applies the Lynx default entry with no config', async () => {
     const config = await unwrapConfig()
@@ -55,5 +68,17 @@ describe('pluginLynxPreset', () => {
       '__LYNX_PRESET_TEST__',
     )
     expect(hasDefine).toBe(true)
+  })
+
+  // Regression: `pluginLynxPreset` must thread `config.dev`/`config.server`
+  // (and `config.output`, `config.tools.rsdoctor`) into the sub-plugins, the
+  // same way the Rspeedy CLI's `applyDefaultPlugins` does. Otherwise a
+  // user-set `dev.assetPrefix` is silently replaced by the default, because
+  // `pluginDev` reads it from its argument, not from the translated config.
+  test('honors `dev.assetPrefix` from the Lynx config (dev)', async () => {
+    const config = await unwrapDevConfig({
+      dev: { assetPrefix: 'https://cdn.example.com/' },
+    })
+    expect(config.output?.publicPath).toContain('cdn.example.com')
   })
 })
