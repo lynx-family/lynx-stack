@@ -282,6 +282,45 @@ describe('loadLazyBundle (FetchBundle) — background sync', () => {
     expect(fetchBundle).toHaveBeenCalledTimes(2);
   });
 
+  test('prepare (callLepusMethod) throws → reject, not cached', async () => {
+    waitMock.mockReturnValueOnce({ code: 0, url: 'u' });
+    loadScript.mockReturnValueOnce({ default: 'BG' });
+    callLepusMethod.mockImplementationOnce(() => {
+      throw new Error('prepare boom');
+    });
+    const { loadLazyBundle } = await import(
+      '../../../src/core/lynx/lazy-bundle'
+    );
+
+    await expect(loadLazyBundle('foo', 'sync')).rejects.toThrow('prepare boom');
+
+    // A prepare failure is not cached → the next load retries the full path.
+    waitMock.mockReturnValueOnce({ code: 0, url: 'u' });
+    loadScript.mockReturnValueOnce({ default: 'BG' });
+    let retried;
+    loadLazyBundle('foo', 'sync').then((v) => {
+      retried = v;
+    });
+    expect(retried).toEqual({ default: 'BG' });
+    expect(fetchBundle).toHaveBeenCalledTimes(2);
+  });
+
+  test('prepare throws non-Error → wrapped reject', async () => {
+    waitMock.mockReturnValueOnce({ code: 0, url: 'u' });
+    loadScript.mockReturnValueOnce({ default: 'BG' });
+    callLepusMethod.mockImplementationOnce(() => {
+      // eslint-disable-next-line no-throw-literal
+      throw 'prepare string err';
+    });
+    const { loadLazyBundle } = await import(
+      '../../../src/core/lynx/lazy-bundle'
+    );
+
+    await expect(
+      loadLazyBundle('foo', 'sync'),
+    ).rejects.toThrow('prepare string err');
+  });
+
   test('.wait throws → reject', async () => {
     waitMock.mockImplementationOnce(() => {
       throw new Error('timeout');
