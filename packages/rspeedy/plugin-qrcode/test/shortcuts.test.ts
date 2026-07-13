@@ -166,4 +166,50 @@ describe('PluginQRCode - CLI Shortcuts', () => {
     expect(onOpen).toBeCalledTimes(1)
     unregister()
   })
+
+  describe('showQRCode option', () => {
+    test('renders the QR block by default', async () => {
+      const { log, selectKey } = await import('@clack/prompts')
+      vi.mocked(log.success).mockClear()
+      // Park the interactive loop so log.success is only called by the initial print.
+      vi.mocked(selectKey).mockReset().mockImplementation(() =>
+        new Promise(vi.fn())
+      )
+
+      const unregister = await registerConsoleShortcuts({
+        api: mockedRsbuildAPI,
+        entries: ['foo'],
+        schema: i => i,
+        port: 3000,
+      })
+
+      expect(vi.mocked(log.success).mock.calls.length).toBeGreaterThanOrEqual(1)
+      unregister()
+    })
+
+    test('skips the QR block when showQRCode is false', async () => {
+      const { log, selectKey } = await import('@clack/prompts')
+      vi.mocked(log.success).mockClear()
+      vi.mocked(selectKey).mockReset().mockImplementation(() =>
+        new Promise(vi.fn())
+      )
+      const onPrint = vi.fn()
+
+      const unregister = await registerConsoleShortcuts({
+        api: mockedRsbuildAPI,
+        entries: ['foo'],
+        schema: i => i,
+        port: 3000,
+        showQRCode: false,
+        onPrint,
+      })
+
+      expect(vi.mocked(log.success)).not.toHaveBeenCalled()
+      // URL is still surfaced through onPrint.
+      expect(onPrint).toHaveBeenCalledWith(
+        'https://example.com/foo.lynx.bundle',
+      )
+      unregister()
+    })
+  })
 })
