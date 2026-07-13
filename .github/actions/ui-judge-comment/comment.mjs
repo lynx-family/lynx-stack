@@ -16,12 +16,7 @@ main().catch((error) => {
 
 async function main() {
   const inputs = readInputs();
-  const results = normalizeResults(await readResultPayload(inputs));
-  const body = truncateComment(formatComment({
-    marker: inputs.marker,
-    results,
-    title: inputs.title,
-  }));
+  const body = truncateComment(await readCommentBody(inputs));
 
   await writeOutput('body', body);
 
@@ -64,16 +59,22 @@ async function main() {
 }
 
 function readInputs() {
+  const bodyFile = emptyToUndefined(process.env.INPUT_BODY_FILE);
   const resultFile = emptyToUndefined(process.env.INPUT_RESULT_FILE);
   const resultJson = emptyToUndefined(process.env.INPUT_RESULT_JSON);
-  if (!resultFile && !resultJson) {
-    throw new Error('Pass result-file or result-json to ui-judge-comment.');
+  const payloadCount = [bodyFile, resultFile, resultJson].filter(Boolean)
+    .length;
+  if (payloadCount === 0) {
+    throw new Error(
+      'Pass body-file, result-file, or result-json to ui-judge-comment.',
+    );
   }
-  if (resultFile && resultJson) {
-    throw new Error('Pass only one of result-file or result-json.');
+  if (payloadCount > 1) {
+    throw new Error('Pass only one of body-file, result-file, or result-json.');
   }
 
   return {
+    bodyFile,
     dryRun: parseBoolean(process.env.INPUT_DRY_RUN, false),
     githubToken: emptyToUndefined(process.env.INPUT_GITHUB_TOKEN),
     marker: process.env.INPUT_MARKER?.trim() || '<!-- ui-judge-comment -->',
@@ -83,6 +84,31 @@ function readInputs() {
     title: process.env.INPUT_TITLE?.trim() || 'UI Judge',
     updateExisting: parseBoolean(process.env.INPUT_UPDATE_EXISTING, true),
   };
+}
+
+async function readCommentBody(inputs) {
+  if (inputs.bodyFile) {
+    return await readMarkdownBody(inputs.bodyFile, inputs.marker);
+  }
+
+  const results = normalizeResults(await readResultPayload(inputs));
+  return formatComment({
+    marker: inputs.marker,
+    results,
+    title: inputs.title,
+  });
+}
+
+async function readMarkdownBody(bodyFile, marker) {
+  const workspace = process.env.GITHUB_WORKSPACE || process.cwd();
+  const filePath = isAbsolute(bodyFile)
+    ? bodyFile
+    : resolve(workspace, bodyFile);
+  const body = await readFile(filePath, 'utf8');
+  if (!body.includes(marker)) {
+    return `${marker}\n${body}`;
+  }
+  return body;
 }
 
 async function readResultPayload(inputs) {
@@ -570,7 +596,8 @@ function parseRepository(repository) {
 }
 
 function createGitHubClient(token) {
-  const apiUrl = process.env.GITHUB_API_URL || 'https://api.github.com';
+  const apiUrl = (process.env.GITHUB_API_URL || 'https://api.github.com')
+    .replace(/\/+$/, '');
   return async function request(path, options = {}) {
     const response = await fetch(`${apiUrl}${path}`, {
       ...options,

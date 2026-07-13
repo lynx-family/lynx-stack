@@ -66,6 +66,7 @@ export interface BenchScenarioRequest {
   action?: string;
   judgeTask?: string;
   judgeSteps?: string[];
+  referenceImage?: string;
 }
 
 export interface BenchJobRequest {
