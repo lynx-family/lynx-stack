@@ -5,8 +5,8 @@ import CodeMirror, { EditorView } from '@uiw/react-codemirror';
 import type { ReactCodeMirrorProps } from '@uiw/react-codemirror';
 import { useEffect, useMemo, useRef, useState } from 'react';
 
-import { PreviewViewport } from './PreviewViewport.js';
-import { copyToClipboard } from '../utils/clipboard.js';
+import { PreviewViewport } from '../../components/PreviewViewport.js';
+import { copyToClipboard } from '../../utils/clipboard.js';
 
 interface UsageExampleTab {
   label: string;

@@ -1,12 +1,12 @@
 // Copyright 2026 The Lynx Authors. All rights reserved.
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
+import type { ComponentCatalogSource } from './ComponentCatalog.js';
 import {
   OPENUI_CATEGORIES,
   OPENUI_COMPONENT_CATALOG,
 } from '../../catalog/openui.js';
 import type { OpenUIComponentDoc } from '../../catalog/openui.js';
-import type { ComponentCatalogSource } from '../../components/ComponentCatalog.js';
 import { parseOpenUIScenario } from '../../mock/openui-scenarios.js';
 import {
   buildOpenUIRenderUrl,
@@ -28,7 +28,7 @@ function getOpenUIParseError(raw: string): string {
 export const OPENUI_COMPONENT_CATALOG_SOURCE = {
   categories: OPENUI_CATEGORIES,
   components: OPENUI_COMPONENT_CATALOG,
-  routeSegment: 'components',
+  routeSegment: 'catalog',
   headerTitle: 'OpenUI Catalog',
   headerDescription:
     'Browse the OpenUI DSL component catalog, prop contracts, and usage snippets.',

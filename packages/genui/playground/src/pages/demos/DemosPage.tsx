@@ -1,34 +1,33 @@
 // Copyright 2026 The Lynx Authors. All rights reserved.
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
-import CodeMirror, { EditorView } from '@uiw/react-codemirror';
+import CodeMirror from '@uiw/react-codemirror';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import type { CSSProperties, PointerEvent as ReactPointerEvent } from 'react';
 
-import './DemosPage.css';
-
-import { Button } from '../components/Button.js';
-import { ChevronLeft, Pause, Play, RotateCcw, X } from '../components/Icon.js';
-import { MobileTabBar } from '../components/MobileTabBar.js';
-import type { MobilePaneTab } from '../components/MobileTabBar.js';
-import { PanelResizeHandle } from '../components/PanelResizeHandle.js';
-import { PreviewPanel } from '../components/PreviewPanel.js';
-import { PreviewViewport } from '../components/PreviewViewport.js';
-import { useResizablePanels } from '../hooks/useResizablePanels.js';
+import { A2UI_DEMOS_PAGE_SOURCE } from './a2ui.js';
+import { OPENUI_DEMOS_PAGE_SOURCE } from './openui.js';
+import type { DemoCommit, DemoPageScenario, DemosPageSource } from './type.js';
+import { Button } from '../../components/Button.js';
 import {
-  OPENUI_SCENARIOS,
-  parseOpenUIScenarioRaw,
-} from '../mock/openui-scenarios.js';
-import type { OpenUIScenario } from '../mock/openui-scenarios.js';
-import type { Protocol } from '../utils/protocol.js';
+  ChevronLeft,
+  Pause,
+  Play,
+  RotateCcw,
+  X,
+} from '../../components/Icon.js';
+import { MobileTabBar } from '../../components/MobileTabBar.js';
+import type { MobilePaneTab } from '../../components/MobileTabBar.js';
+import { PanelResizeHandle } from '../../components/PanelResizeHandle.js';
+import { PreviewPanel } from '../../components/PreviewPanel.js';
+import { PreviewViewport } from '../../components/PreviewViewport.js';
+import { useResizablePanels } from '../../hooks/useResizablePanels.js';
+import type { Protocol } from '../../utils/protocol.js';
 
-interface PreviewInput {
-  rawText: string;
-}
+import './DemosPage.css';
 
 type PlayState = 'idle' | 'playing' | 'paused' | 'done';
 type PlaybackProgressStatus = 'idle' | 'streaming' | 'paused' | 'done';
-type CodeView = 'raw' | 'parsed';
 
 const DESKTOP_PREVIEW_MIN_WIDTH = 360;
 const DESKTOP_CODE_MIN_WIDTH = 360;
@@ -40,45 +39,39 @@ const PLAYBACK_PANEL_IDLE_HEIGHT = 48;
 const PLAYBACK_PANEL_MIN_HEIGHT_ACTIVE = 200;
 const PLAYBACK_PANEL_ACTIVE_RATIO = 0.66;
 const PLAYBACK_PANEL_MAX_RATIO = 0.85;
-const OPENUI_PLAYBACK_CHUNK_SIZE = 240;
-const OPENUI_CODE_EXTENSIONS = [EditorView.lineWrapping];
 
-function findScenarioById(id?: string): OpenUIScenario | undefined {
-  if (!id) return undefined;
-  return OPENUI_SCENARIOS.find((scenario) => scenario.id === id);
+function joinClassNames(...values: Array<string | undefined>): string {
+  return values.filter(Boolean).join(' ');
 }
 
-function chunkOpenUI(rawText: string): string[] {
-  const chunks: string[] = [];
-  for (let i = 0; i < rawText.length; i += OPENUI_PLAYBACK_CHUNK_SIZE) {
-    chunks.push(rawText.slice(i, i + OPENUI_PLAYBACK_CHUNK_SIZE));
-  }
-  return chunks;
-}
-
-function formatChunk(chunk: string): string {
-  return chunk;
-}
-
-export function OpenUIDemosPage(props: {
+function DemosPageContent<
+  TScenario extends DemoPageScenario,
+  TPreviewInput,
+  TChunk,
+  TMeta,
+>(props: {
   protocol: Protocol;
   demoId?: string;
+  theme: 'light' | 'dark';
+  source: DemosPageSource<TScenario, TPreviewInput, TChunk, TMeta>;
 }) {
-  const { protocol, demoId } = props;
-  const initialScenario = findScenarioById(demoId) ?? OPENUI_SCENARIOS[0];
+  const { demoId, protocol, source, theme } = props;
+  const initialScenario = source.findScenario(demoId) ?? source.scenarios[0];
 
-  const [scenarioId, setScenarioId] = useState<string>(
-    initialScenario?.id ?? '',
+  const [scenarioId, setScenarioId] = useState(initialScenario?.id ?? '');
+  const [editorValue, setEditorValue] = useState(() =>
+    initialScenario ? source.getEditorValue(initialScenario) : ''
   );
-  const [customRawText, setCustomRawText] = useState<string>(
-    initialScenario?.raw ?? '',
-  );
+  const [editorEdited, setEditorEdited] = useState(false);
   const [error, setError] = useState('');
   const [previewRenderKey, setPreviewRenderKey] = useState(0);
+  const [isPreparingPreview, setIsPreparingPreview] = useState(false);
   const [activeMobileTab, setActiveMobileTab] = useState<MobilePaneTab>('edit');
-  const [codeView, setCodeView] = useState<CodeView>('raw');
-  const [previewInput, setPreviewInput] = useState<PreviewInput | null>(() =>
-    initialScenario ? { rawText: initialScenario.raw } : null
+  const [activeEditorView, setActiveEditorView] = useState(
+    source.editor.defaultView ?? source.editor.views?.[0]?.id ?? 'source',
+  );
+  const [previewInput, setPreviewInput] = useState<TPreviewInput | null>(() =>
+    initialScenario ? source.createScenarioPreviewInput(initialScenario) : null
   );
 
   const [playState, setPlayState] = useState<PlayState>('idle');
@@ -88,7 +81,7 @@ export function OpenUIDemosPage(props: {
     PLAYBACK_PANEL_IDLE_HEIGHT,
   );
   const [isPlaybackResizing, setIsPlaybackResizing] = useState(false);
-  const [playbackChunksSource, setPlaybackChunksSource] = useState<string[]>(
+  const [playbackChunksSource, setPlaybackChunksSource] = useState<TChunk[]>(
     [],
   );
 
@@ -118,22 +111,21 @@ export function OpenUIDemosPage(props: {
   });
 
   const currentScenario = useMemo(
-    () => findScenarioById(scenarioId) ?? OPENUI_SCENARIOS[0],
-    [scenarioId],
+    () => source.findScenario(scenarioId) ?? source.scenarios[0],
+    [scenarioId, source],
   );
-
-  const parsedJson = useMemo(() => {
-    if (!customRawText.trim()) return '';
-    if (currentScenario && customRawText === currentScenario.raw) {
-      return currentScenario.parsed;
-    }
-
-    try {
-      return parseOpenUIScenarioRaw(customRawText);
-    } catch (err) {
-      return `Unable to parse OpenUI DSL:\n${String(err)}`;
-    }
-  }, [currentScenario, customRawText]);
+  const currentEditorView = source.editor.views?.find((view) =>
+    view.id === activeEditorView
+  );
+  const displayedEditorValue = useMemo(
+    () =>
+      currentEditorView?.getValue({
+        editorValue,
+        scenario: currentScenario,
+      }) ?? editorValue,
+    [currentEditorView, currentScenario, editorValue],
+  );
+  const editorIsEditable = currentEditorView?.editable ?? true;
 
   const isPlaybackActive = playState !== 'idle';
   const isPlaying = playState === 'playing';
@@ -170,17 +162,17 @@ export function OpenUIDemosPage(props: {
       setPlaybackPanelHeight(target);
       return;
     }
-
     setPlaybackPanelHeight(PLAYBACK_PANEL_IDLE_HEIGHT);
   }, [isPlaybackActive]);
 
   useEffect(() => {
-    const nextScenario = findScenarioById(demoId) ?? OPENUI_SCENARIOS[0];
+    const nextScenario = source.findScenario(demoId) ?? source.scenarios[0];
     if (!nextScenario) return;
     setScenarioId(nextScenario.id);
-    setCustomRawText(nextScenario.raw);
+    setEditorValue(source.getEditorValue(nextScenario));
+    setEditorEdited(false);
     setError('');
-    setPreviewInput({ rawText: nextScenario.raw });
+    setPreviewInput(source.createScenarioPreviewInput(nextScenario));
     if (streamTimerRef.current !== null) {
       window.clearTimeout(streamTimerRef.current);
       streamTimerRef.current = null;
@@ -189,69 +181,92 @@ export function OpenUIDemosPage(props: {
     setDeliveredCount(0);
     setPlaybackChunksSource([]);
     lastSentDeliveredRef.current = -1;
-  }, [demoId]);
+  }, [demoId, source]);
 
   const previewSource = useMemo(() => {
     if (!previewInput) return undefined;
-    return {
-      kind: 'openui' as const,
-      rawText: previewInput.rawText,
-      playbackMode: isPlaybackActive,
-    };
-  }, [isPlaybackActive, previewInput]);
+    return source.createPreviewSource({
+      input: previewInput,
+      isPlaybackActive,
+      protocol,
+      theme,
+    });
+  }, [isPlaybackActive, previewInput, protocol, source, theme]);
 
-  const handleSelectScenario = useCallback(
-    (id: string) => {
-      window.location.hash = `#/${protocol.name}/examples/${id}`;
-      setScenarioId(id);
-      setError('');
-      const scenario = findScenarioById(id);
-      if (scenario) {
-        setCustomRawText(scenario.raw);
-        setPreviewInput({ rawText: scenario.raw });
-      }
-      resetPlayback();
-    },
-    [protocol.name, resetPlayback],
-  );
+  const handleSelectScenario = useCallback((id: string) => {
+    window.location.hash = `#/${protocol.name}/examples/${id}`;
+    const scenario = source.findScenario(id);
+    if (!scenario) return;
+    setScenarioId(id);
+    setEditorValue(source.getEditorValue(scenario));
+    setEditorEdited(false);
+    setError('');
+    setPreviewInput(source.createScenarioPreviewInput(scenario));
+    resetPlayback();
+  }, [protocol.name, resetPlayback, source]);
+
+  const commitEditor = useCallback(():
+    | DemoCommit<TPreviewInput, TChunk, TMeta>
+    | null =>
+  {
+    const result = source.commit({
+      editorValue,
+      editorEdited,
+      scenario: currentScenario,
+    });
+    if ('error' in result) {
+      setError(result.error);
+      return null;
+    }
+    setError('');
+    setPreviewInput(result.value.previewInput);
+    return result.value;
+  }, [currentScenario, editorEdited, editorValue, source]);
+
+  const handleRender = useCallback(() => {
+    const committed = commitEditor();
+    if (!committed) return;
+    resetPlayback();
+
+    const shouldPrepare = source.preparePreviewInput
+      && (source.shouldPreparePreview?.(committed) ?? true);
+    if (shouldPrepare && source.preparePreviewInput) {
+      setIsPreparingPreview(true);
+      void source.preparePreviewInput(committed).then((input) => {
+        setPreviewInput(input);
+        setPreviewRenderKey((value) => value + 1);
+      }).catch((caught) => {
+        setError(caught instanceof Error ? caught.message : String(caught));
+      }).finally(() => {
+        setIsPreparingPreview(false);
+      });
+      return;
+    }
+
+    setPreviewRenderKey((value) => value + 1);
+  }, [commitEditor, resetPlayback, source]);
+
+  const handleFillExample = useCallback(() => {
+    setError('');
+    setEditorEdited(false);
+    if (currentScenario) {
+      setEditorValue(source.getEditorValue(currentScenario));
+      setPreviewInput(source.createScenarioPreviewInput(currentScenario));
+    }
+    if (source.resetPlaybackOnFill) resetPlayback();
+  }, [currentScenario, resetPlayback, source]);
+
+  const handleClear = useCallback(() => {
+    setEditorValue(source.emptyEditorValue);
+    setEditorEdited(false);
+    setPreviewInput(null);
+    setError('');
+    resetPlayback();
+  }, [resetPlayback, source]);
 
   const handleBackToExamples = useCallback(() => {
     window.location.hash = `#/${protocol.name}/examples`;
   }, [protocol.name]);
-
-  const commitRawText = useCallback((): string | null => {
-    if (!customRawText.trim()) {
-      setError('Raw output is empty.');
-      return null;
-    }
-
-    setError('');
-    setPreviewInput({ rawText: customRawText });
-    return customRawText;
-  }, [customRawText]);
-
-  const handleRender = useCallback(() => {
-    const committed = commitRawText();
-    if (!committed) return;
-    resetPlayback();
-    setPreviewRenderKey((value) => value + 1);
-  }, [commitRawText, resetPlayback]);
-
-  const handleFillExample = useCallback(() => {
-    setError('');
-    if (currentScenario) {
-      setCustomRawText(currentScenario.raw);
-      setPreviewInput({ rawText: currentScenario.raw });
-    }
-    resetPlayback();
-  }, [currentScenario, resetPlayback]);
-
-  const handleClear = useCallback(() => {
-    setCustomRawText('');
-    setPreviewInput(null);
-    setError('');
-    resetPlayback();
-  }, [resetPlayback]);
 
   const sendPlaybackProgress = useCallback((
     delivered: number,
@@ -280,22 +295,20 @@ export function OpenUIDemosPage(props: {
   }, []);
 
   const handlePlay = useCallback(() => {
-    const committed = commitRawText();
+    const committed = commitEditor();
     if (!committed) return;
-
-    const nextChunks = chunkOpenUI(committed);
-    if (nextChunks.length === 0) {
-      setError('Nothing to play: raw output is empty.');
+    if (committed.playbackChunks.length === 0) {
+      setError(source.emptyPlaybackError);
       return;
     }
 
     stopStreamTimer();
-    setPlaybackChunksSource(nextChunks);
+    setPlaybackChunksSource(committed.playbackChunks);
     setDeliveredCount(0);
     lastSentDeliveredRef.current = -1;
     setPlayState('playing');
     setPreviewRenderKey((value) => value + 1);
-  }, [commitRawText, stopStreamTimer]);
+  }, [commitEditor, source, stopStreamTimer]);
 
   const handlePause = useCallback(() => {
     if (!isPlaying) return;
@@ -498,7 +511,7 @@ export function OpenUIDemosPage(props: {
         <div className='sidebarSection'>
           <div className='sidebarHeading'>Scenarios</div>
           <div className='scenarioList'>
-            {OPENUI_SCENARIOS.map((scenario) => (
+            {source.scenarios.map((scenario) => (
               <button
                 key={scenario.id}
                 type='button'
@@ -585,10 +598,8 @@ export function OpenUIDemosPage(props: {
                       {' / '}
                       {playbackTotal} chunks
                       {isDone
-                        ? ' - complete'
-                        : (isPaused
-                          ? ' - paused'
-                          : ' - streaming...')}
+                        ? ' — complete'
+                        : (isPaused ? ' — paused' : ' — streaming…')}
                     </span>
                   </div>
 
@@ -616,14 +627,14 @@ export function OpenUIDemosPage(props: {
                                 : null}
                             </div>
                             <pre className='playbackChunkJson'>
-                              {formatChunk(chunk)}
+                              {source.formatPlaybackChunk(chunk)}
                             </pre>
                           </div>
                         );
                       })
                       : (
                         <div className='playbackEmpty subtle'>
-                          Streaming...
+                          Streaming…
                         </div>
                       )}
                   </div>
@@ -638,7 +649,7 @@ export function OpenUIDemosPage(props: {
               : 'playbackSplitter'}
             role='separator'
             aria-orientation='horizontal'
-            aria-label='Resize Playback and OpenUI output panels'
+            aria-label={source.editor.splitterAriaLabel}
             title='Drag to resize'
             onPointerDown={handlePlaybackResizeStart}
           >
@@ -646,77 +657,111 @@ export function OpenUIDemosPage(props: {
           </div>
 
           <div className='codePanelEditorSection'>
-            <div className='codePanelToolbar openuiCodeToolbar'>
-              <div className='codePanelTitle openuiCodeTitle'>
-                <span className='openuiCodeTitleText'>OpenUI Output</span>
+            <div
+              className={joinClassNames(
+                'codePanelToolbar',
+                source.editor.toolbarClassName,
+              )}
+            >
+              <div
+                className={joinClassNames(
+                  'codePanelTitle',
+                  source.editor.titleClassName,
+                )}
+              >
+                {source.editor.titleTextClassName
+                  ? (
+                    <span className={source.editor.titleTextClassName}>
+                      {source.editor.title}
+                    </span>
+                  )
+                  : source.editor.title}
+                {source.editor.badge
+                  ? <span className='sectionBadge'>{source.editor.badge}</span>
+                  : null}
               </div>
-              <div className='previewModeSwitch openuiCodeViewSwitch'>
-                <button
-                  type='button'
-                  className={codeView === 'raw'
-                    ? 'previewModeBtn active'
-                    : 'previewModeBtn'}
-                  onClick={() => setCodeView('raw')}
-                  title='Raw Output'
-                >
-                  Raw
-                </button>
-                <button
-                  type='button'
-                  className={codeView === 'parsed'
-                    ? 'previewModeBtn active'
-                    : 'previewModeBtn'}
-                  onClick={() => setCodeView('parsed')}
-                  title='Parsed JSON'
-                >
-                  JSON
-                </button>
-              </div>
+              {source.editor.views && source.editor.views.length > 1
+                ? (
+                  <div className='previewModeSwitch openuiCodeViewSwitch'>
+                    {source.editor.views.map((view) => (
+                      <button
+                        key={view.id}
+                        type='button'
+                        className={activeEditorView === view.id
+                          ? 'previewModeBtn active'
+                          : 'previewModeBtn'}
+                        onClick={() => setActiveEditorView(view.id)}
+                        title={view.title}
+                      >
+                        {view.label}
+                      </button>
+                    ))}
+                  </div>
+                )
+                : null}
               <div className='spacer' />
-              <div className='toolbarActions openuiToolbarActions'>
+              <div
+                className={joinClassNames(
+                  'toolbarActions',
+                  source.editor.actionsClassName,
+                )}
+              >
                 <Button
                   variant='ghost'
                   size='sm'
-                  iconOnly
+                  iconOnly={source.editor.iconOnlyActions}
                   iconBefore={RotateCcw}
                   onClick={handleFillExample}
                   title='Reset to example'
-                  aria-label='Reset to example'
-                />
+                  aria-label={source.editor.iconOnlyActions
+                    ? 'Reset to example'
+                    : undefined}
+                >
+                  Reset
+                </Button>
                 <Button
                   variant='ghost'
                   size='sm'
-                  iconOnly
+                  iconOnly={source.editor.iconOnlyActions}
                   iconBefore={X}
                   onClick={handleClear}
                   title='Clear editor'
-                  aria-label='Clear editor'
-                />
+                  aria-label={source.editor.iconOnlyActions
+                    ? 'Clear editor'
+                    : undefined}
+                >
+                  Clear
+                </Button>
                 <Button
                   variant='primary'
                   size='sm'
                   iconBefore={Play}
                   onClick={handleRender}
+                  disabled={isPreparingPreview}
                 >
-                  Render
+                  {isPreparingPreview
+                    ? source.editor.renderPendingLabel ?? 'Preparing...'
+                    : 'Render'}
                 </Button>
               </div>
             </div>
             <CodeMirror
-              key={codeView}
-              className='codeEditor openuiCodeEditor'
-              value={codeView === 'raw' ? customRawText : parsedJson}
-              extensions={OPENUI_CODE_EXTENSIONS}
-              onChange={codeView === 'raw' ? setCustomRawText : undefined}
-              editable={codeView === 'raw'}
+              key={activeEditorView}
+              className={joinClassNames(
+                'codeEditor',
+                source.editor.editorClassName,
+              )}
+              value={displayedEditorValue}
+              extensions={source.editor.extensions}
+              onChange={editorIsEditable
+                ? (value) => {
+                  setEditorValue(value);
+                  setEditorEdited(true);
+                }
+                : undefined}
+              editable={editorIsEditable}
               theme='dark'
-              basicSetup={{
-                lineNumbers: false,
-                foldGutter: false,
-                bracketMatching: true,
-                closeBrackets: true,
-                autocompletion: true,
-              }}
+              basicSetup={source.editor.basicSetup}
             />
             {error ? <div className='codeError'>{error}</div> : null}
           </div>
@@ -726,7 +771,7 @@ export function OpenUIDemosPage(props: {
       <PanelResizeHandle
         isActive={isPanelResizing}
         isCompactLayout={isCompactLayout}
-        ariaLabel='Resize OpenUI output and preview panels'
+        ariaLabel={source.editor.panelResizeAriaLabel}
         onPointerDown={handlePanelResizeStart}
       />
 
@@ -744,7 +789,7 @@ export function OpenUIDemosPage(props: {
             iframeRef={iframeRef}
             onLoad={handleIframeLoad}
             retainPreviousFrame
-            emptyTitle='Select a scenario to preview'
+            emptyTitle={source.editor.emptyPreviewTitle}
             emptySubTitle='Lynx rendering will appear here'
           />
         </PreviewPanel>
@@ -756,5 +801,29 @@ export function OpenUIDemosPage(props: {
         editLabel='Code'
       />
     </div>
+  );
+}
+
+export function DemosPage(props: {
+  protocol: Protocol;
+  demoId?: string;
+  theme: 'light' | 'dark';
+}) {
+  if (props.protocol.name === 'openui') {
+    return (
+      <DemosPageContent
+        key='openui'
+        {...props}
+        source={OPENUI_DEMOS_PAGE_SOURCE}
+      />
+    );
+  }
+
+  return (
+    <DemosPageContent
+      key='a2ui'
+      {...props}
+      source={A2UI_DEMOS_PAGE_SOURCE}
+    />
   );
 }

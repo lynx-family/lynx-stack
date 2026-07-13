@@ -16,6 +16,17 @@ interface Options {
   entries: string[]
   schema: CustomizedSchemaFn
   port: number
+  /**
+   * Whether to render the ASCII QR code in the terminal.
+   *
+   * When `false`, the plugin still prints the URL(s) and keeps the interactive
+   * shortcuts working, but skips the QR code block. Useful for hosts that
+   * always launch via a schema / deep link and don't need the scan flow, or
+   * for terminals where the QR block is visually noisy.
+   *
+   * @defaultValue `true`
+   */
+  showQRCode?: boolean | undefined
   customShortcuts?: Record<
     string,
     { value: string, label: string, hint?: string, action?(): Promise<void> }
@@ -37,6 +48,7 @@ export async function registerConsoleShortcuts(
   ] = await Promise.all([
     import('./showQRCode.js'),
   ])
+  const shouldShowQRCode = options.showQRCode ?? true
 
   const currentEntry = options.entries[0]!
   const devUrls = generateDevUrls(
@@ -48,7 +60,9 @@ export async function registerConsoleShortcuts(
 
   const value: string | symbol = Object.values(devUrls)[0]!
   await options.onPrint?.(value)
-  showQRCode(value)
+  if (shouldShowQRCode) {
+    showQRCode(value)
+  }
 
   gExistingShortcuts.add(options)
 
@@ -99,6 +113,7 @@ async function loop(
     import('@clack/prompts'),
     import('./showQRCode.js'),
   ])
+  const shouldShowQRCode = options.showQRCode ?? true
 
   const selectFn = (length: number) => length > 5 ? autocomplete : select
 
@@ -171,7 +186,9 @@ async function loop(
       await options.customShortcuts[name].action?.()
     }
     await options.onPrint?.(value)
-    showQRCode(value)
+    if (shouldShowQRCode) {
+      showQRCode(value)
+    }
   }
 
   // If the `options` is not deleted from `gExistingShortcuts`, means that this is an explicitly

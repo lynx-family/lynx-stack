@@ -104,6 +104,11 @@ export function App() {
     return value === true || value === '1' || value === 1;
   }, [globalProps]);
 
+  const liveAction = useMemo(() => {
+    const value = globalProps?.liveAction;
+    return value === true || value === '1' || value === 1;
+  }, [globalProps]);
+
   const theme = useMemo<Theme>(() => {
     return readTheme(globalProps?.theme) ?? 'light';
   }, [globalProps]);
@@ -220,9 +225,14 @@ export function App() {
     streamDelay,
   ]);
 
-  const onOpenUiAction = useCallback((_event: ActionEvent) => {
-    // noop for now
-  }, []);
+  const onOpenUiAction = useCallback((event: ActionEvent) => {
+    if (!liveAction) return;
+    NativeModules.bridge?.call?.(
+      'OPENUI_USER_ACTION',
+      event as unknown as Record<string, unknown>,
+      () => undefined,
+    );
+  }, [liveAction]);
 
   return (
     <view className={themeClassName}>

@@ -20,11 +20,25 @@ When wiring playback state between the Lynx app and the web preview, prefer `Nat
 
 When serving the playground's native Lynx bundles as static Android test fixtures, keep HMR/React refresh out of `a2ui.lynx.js` and `openui.lynx.js`. The Android Lynx runtime does not provide globals such as `__prefresh_utils__` or Node's `process`, so normalize `process.env.NODE_ENV` at build time and disable HMR for these bundles instead of relying on the caller's `NODE_ENV`.
 
+## Chat Page Architecture
+
+Route both protocols' Create tabs through `pages/chat/ChatPage.tsx`. Keep all shared React state, effects, conversation operations, provider controls, usage and preview metrics, streaming transport, examples, actions, and rendering in `pages/chat/ChatController.tsx`. Keep the shared conversation list, header, transcript/composer slots, resizable preview, delete confirmation, copy toast, and mobile tabs in `pages/chat/ChatWorkspace.tsx`, with styles in `pages/chat/ChatPage.css`.
+
+Keep `pages/chat/a2ui.ts` and `pages/chat/openui.ts` as hook-free, JSX-free protocol adapters. They may define protocol request bodies, stream reducers, history conversion, persistence payloads, artifacts, examples, preview sources, and action conversion, but must not duplicate the controller's React state or host-side effects.
+
+Keep OpenUI artifacts visually aligned with A2UI Generated Output cards: use the same transcript width, compact header alignment, single divider, and code-block density while preserving OpenUI-specific Raw/Parsed views and metadata.
+
+When rendering the unified `ChatPage`, key it by protocol so switching between A2UI and OpenUI fully remounts the controller. This prevents in-flight requests, import guards, provider state, transcript state, and preview refs from leaking across protocols.
+
 ## Protocol-Aware Conversation Data
 
 ### Local History
 
 When adding or updating playground conversation history, keep records isolated by protocol. Store new records with `ConversationMeta.protocol`, use protocol-scoped active-id metadata such as `activeConversationId:a2ui` and `activeConversationId:openui`, and treat legacy records without a `protocol` field as A2UI conversations so existing browser history remains visible.
+
+Rebuild A2UI `Generated Output` cards from each ordinary assistant history entry, preserving transcript order and rendering the entry's A2UI message array as separate chunks. Keep successful action responses in their action-specific Applied cards, and do not replace history-scoped output cards with a single controller-level artifact derived from the latest preview output.
+
+When an action response is merged with the current preview messages, clear any previous or action-only snapshot payload URL and persist the merged inline preview. Treat an explicitly present `snapshotPreviewPayloadUrls: null` as a clear operation rather than falling back to `previewPayloadUrls`; otherwise reopened and shared conversations can render a stale pre-action snapshot.
 
 ### Shared Imports
 
@@ -34,9 +48,11 @@ When importing shared playground conversations, validate the `importConv` URL be
 
 ### Shared Page and Protocol Sources
 
-Keep page structure and editor/example selection state in `components/ComponentCatalog.tsx`, with its styles co-located in `components/ComponentCatalog.css`. Route both protocols through `pages/catalog/ComponentsPage.tsx`, and keep protocol-specific catalog data, validation, and render URL construction in `pages/catalog/a2ui.ts` and `pages/catalog/openui.ts`.
+Keep page structure and editor/example selection state in `pages/catalog/ComponentCatalog.tsx`, with its styles co-located in `pages/catalog/ComponentCatalog.css`. Route both protocols through `pages/catalog/ComponentsPage.tsx`, and keep protocol-specific catalog data, validation, and render URL construction in `pages/catalog/a2ui.ts` and `pages/catalog/openui.ts`.
 
-Keep the shared editor, copy feedback, example tabs, and `PreviewViewport` layout in `ComponentUsagePreview`.
+Use `catalog` as the canonical tab id and URL segment for both A2UI and OpenUI component catalogs. Continue parsing legacy `components` URLs as a compatibility alias, but generate all new navigation and component-detail links with `catalog`.
+
+Keep the shared editor, copy feedback, example tabs, and `PreviewViewport` layout in `pages/catalog/ComponentUsagePreview.tsx`.
 
 ### Shared Presentation
 
@@ -47,6 +63,14 @@ Keep the A2UI and OpenUI component catalog pages visually identical by rendering
 Send editable OpenUI usage DSL through `buildOpenUIRenderUrl` with `instant: true`, and forward the playground theme so the Lynx preview matches the surrounding catalog page.
 
 Component catalog examples are intentionally inline-only. Keep every bundled usage snippet below `OPENUI_INLINE_RENDER_URL_MAX_LENGTH`, reject oversized edits with a visible error, and reserve `rawTextUrl` publishing for larger Examples/Create payloads rather than publishing on each catalog-editor keystroke.
+
+## Example Showcase Architecture
+
+Keep the shared example-list page structure, preview queue, keyboard interaction, section rendering, and card layout in `pages/demos/DemosList.tsx`. Route both protocols through `pages/demos/DemosListPage.tsx`, and keep protocol-specific scenarios, sections, preview URL construction, and queue reset keys in `pages/demos/a2ui.ts` and `pages/demos/openui.ts`.
+
+Protocol-specific showcase sources may vary their header copy, section links, badges, layout mode, and preview payload construction, but must not duplicate the shared list-page JSX or card interaction logic.
+
+Keep the shared example-detail workspace, editor/preview resizing, playback state machine, progress bridge, scenario sidebar, and mobile tabs in `pages/demos/DemosPage.tsx`, with its styles in `pages/demos/DemosPage.css`. Keep protocol-specific editor configuration, commit validation, playback chunking, payload publishing, and `PreviewPanelSource` construction in the existing `pages/demos/a2ui.ts` and `pages/demos/openui.ts` source modules.
 
 ## OpenUI Integration
 
