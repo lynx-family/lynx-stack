@@ -1,0 +1,17 @@
+import { __MODULE_NAME__Spec } from './generated/__MODULE_NAME__Spec';
+
+export class __MODULE_NAME__ extends __MODULE_NAME__Spec {
+  private readonly values: Map<string, string> = new Map();
+
+  setValue(key: string, value: string): void {
+    this.values.set(key, value);
+  }
+
+  getValue(key: string): string | null {
+    return this.values.get(key) ?? null;
+  }
+
+  clear(): void {
+    this.values.clear();
+  }
+}

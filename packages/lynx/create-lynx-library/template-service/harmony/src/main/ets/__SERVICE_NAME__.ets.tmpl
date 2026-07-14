@@ -1,0 +1,14 @@
+import { ILynxExtensionService, LynxContext } from '@lynx/lynx';
+
+export class __SERVICE_NAME__ implements ILynxExtensionService {
+  static readonly instance: __SERVICE_NAME__ = new __SERVICE_NAME__();
+
+  private constructor() {
+  }
+
+  onLynxViewSetup(_context: LynxContext, _uiDelegate: number[], _isHostRenderer: boolean): void {
+  }
+
+  onLynxViewDestroy(_context: LynxContext): void {
+  }
+}

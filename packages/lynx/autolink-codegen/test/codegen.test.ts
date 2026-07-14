@@ -242,6 +242,85 @@ export declare class StorageModule {
     ].sort());
   });
 
+  it('generates Harmony specs for primitive methods and nullable returns', () => {
+    const root = createFixture({
+      manifest: {
+        platforms: {
+          harmony: {},
+        },
+      },
+      types: `/** @lynxmodule */
+export declare class StorageModule {
+  setValue(key: string, score: number, enabled: boolean): void;
+  getValue(key: string): string | null;
+  getScore(): number | null;
+  isEnabled(): boolean | null;
+}
+`,
+    });
+
+    const files = generate({ root });
+    const spec = files.find((file) =>
+      file.path === 'harmony/src/main/ets/generated/StorageModuleSpec.ets'
+    );
+
+    expect(files.map((file) => file.path).sort()).toEqual([
+      'generated/StorageModule.ts',
+      'harmony/src/main/ets/generated/StorageModuleSpec.ets',
+    ].sort());
+    expect(spec?.content).toContain(
+      'import { LynxModule } from \'@lynx/lynx\';',
+    );
+    expect(spec?.content).toContain(
+      'abstract setValue(key: string, score: number, enabled: boolean): void;',
+    );
+    expect(spec?.content).toContain(
+      'abstract getValue(key: string): string | null;',
+    );
+    expect(spec?.content).toContain('abstract getScore(): number | null;');
+    expect(spec?.content).toContain('abstract isEnabled(): boolean | null;');
+  });
+
+  it('uses the configured Harmony source directory', () => {
+    const root = createFixture({
+      manifest: {
+        platforms: {
+          harmony: {
+            sourceDir: 'native/harmony',
+          },
+        },
+      },
+      types: `/** @lynxmodule */
+export declare class StorageModule {
+  clear(): void;
+}
+`,
+    });
+
+    expect(generate({ root }).map((file) => file.path)).toContain(
+      'native/harmony/src/main/ets/generated/StorageModuleSpec.ets',
+    );
+  });
+
+  it('fails clearly for native module types unsupported by Harmony', () => {
+    const root = createFixture({
+      manifest: {
+        platforms: {
+          harmony: {},
+        },
+      },
+      types: `/** @lynxmodule */
+export declare class StorageModule {
+  configure(options: object): void;
+}
+`,
+    });
+
+    expect(() => generate({ root })).toThrow(
+      /Unsupported Harmony type "object" for StorageModule\.configure/,
+    );
+  });
+
   it('generates shared NAPI stubs from napi native module typings', () => {
     const root = createFixture({
       manifest: {
@@ -657,6 +736,21 @@ export declare class StorageModule {
     expect(() => generate({ root })).toThrow(
       /platforms\.android\.sourceDir/,
     );
+
+    const harmonyRoot = createFixture({
+      manifest: {
+        platforms: {
+          harmony: {
+            sourceDir: '',
+          },
+        },
+      },
+      types: '',
+    });
+
+    expect(() => generate({ root: harmonyRoot })).toThrow(
+      /platforms\.harmony\.sourceDir/,
+    );
   });
 
   it('fails clearly for unsupported native module types', () => {
@@ -692,6 +786,7 @@ export declare class BadModule {
     writeJson(path.join(root, 'lynx.lib.json'), {
       platforms: {
         android: { packageName: 'com.example.dupe' },
+        harmony: {},
         ios: {},
       },
     });

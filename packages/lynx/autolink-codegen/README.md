@@ -10,7 +10,12 @@ It scans native module declarations annotated with `/** @lynxmodule */`, reads
   when `platforms.android` is declared
 - iOS `<ModuleName>Spec.h` and `<ModuleName>Spec.m` from
   `types/platform-native-module.d.ts`, when `platforms.ios` is declared
+- Harmony `src/main/ets/generated/<ModuleName>Spec.ets` from
+  `types/platform-native-module.d.ts`, when `platforms.harmony` is declared
 - shared C++ N-API binding files from `types/napi-native-module.d.ts`
+
+Harmony Native Module specs extend `LynxModule` and support `void`, `string`,
+`number`, `boolean`, and nullable primitive values.
 
 For NAPI native modules, codegen creates a minimal user-owned N-API callback
 stub under `shared/nativeModule/`. The stub registers each module method as a
