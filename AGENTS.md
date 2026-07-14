@@ -252,10 +252,10 @@ These instructions were generated through comprehensive analysis and testing of 
 
 ### GenUI UI Judge (`packages/genui/ui-judge/`)
 
-- The public TypeScript API is a thin screenshot-first facade around the Rust `ui-judge` CLI.
-- Keep image loading, PNG normalization, screenshot alignment, block diffing, OpenAI-compatible visual evaluation, Android `judgeAndroidAgent`, GEQI scoring, and structured report JSON generation in Rust under `packages/genui/ui-judge/rust`. Keep PR comment Markdown rendering and GitHub comment create/update in `.github/actions/ui-judge-comment`.
-- Do not reintroduce webpage testing, Playwright page ownership, Sharp image processing, Mastra/AI SDK agent construction, Midscene adapters, or custom TypeScript evaluate hooks into `@lynx-js/ui-judge`.
-- TypeScript tests for this package should use the Rust mock-response hook for model output and must not require browsers, emulators, physical devices, or real model credentials.
+- UI Judge is a pure Rust library crate. Keep its public API, implementation, and tests in the conventional `src/` and `tests/` Cargo layout; do not add a binary target, CLI, npm metadata, TypeScript facade, or server process adapter back to this directory.
+- Do not expand `lynx-headless-rust-test-runner` for UI Judge. `judge_page` accepts only `file://`, `http://`, and `https://` URLs and rejects bare paths before model or runtime initialization. It internally owns visual-correctness model creation, the headless Lynx connection, and the page lifecycle; call it sequentially on a Tokio current-thread runtime. Restrict crate-root exports to `judge_page`, `JudgePageRequest`, `UiJudgeResult`, and `UiJudgeError`; do not expose model, runner, prompt, fixture, dimension, or screenshot-comparison APIs.
+- Keep VLM evaluation on Agent SDK while preserving the existing `MIDSCENE_MODEL_*`, `MIDSCENE_MODEL_INIT_CONFIG_JSON`, and legacy `MIDSCENE_OPENAI_INIT_CONFIG_JSON` configuration names. Those names are compatibility inputs only; do not add Midscene, Playwright, Kitten-Lynx, Android, or ADB dependencies to the crate.
+- Keep UI Judge unit tests deterministic with the mock-response hook. Its runtime-backed `headless_e2e` integration test must instead reject mock-response variables and call the real model supplied through the injected environment; it runs on both Linux and macOS. Tests must not require browsers, emulators, or physical devices. Do not add UI Judge PR-comment publishing code or workflow jobs.
 
 Remember: This is a complex, multi-language monorepo. Always allow extra time for builds and tests, and follow the exact command sequences provided.
 

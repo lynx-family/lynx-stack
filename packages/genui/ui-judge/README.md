@@ -1,109 +1,101 @@
-# @lynx-js/ui-judge
+# UI Judge
 
-`@lynx-js/ui-judge` compares a prepared reference screenshot with a rendered
-screenshot. It aligns the two images, writes a visual diff artifact, and asks an
-OpenAI-compatible Rust model client to score visual fidelity.
+`ui_judge` is a pure Rust library crate that renders a Lynx URL with the
+existing `lynx-headless-rust-test-runner`, performs optional natural-language
+steps, captures the software-renderer frame, and asks Agent SDK for a structured
+visual-correctness score.
 
-The TypeScript API does not open webpages or capture screenshots. Callers own
-rendering and screenshot capture, then pass both images into
-`runVisualEvaluation`.
+UI Judge has no Kitten-Lynx, Android, ADB, Playwright, Midscene, CLI, or npm
+runtime. It does not modify or duplicate the headless runner.
 
-```ts
-import { runVisualEvaluation } from '@lynx-js/ui-judge';
+## Rust API
 
-const result = await runVisualEvaluation(
-  {
-    referenceImage: 'data:image/png;base64,...',
-    renderedImage: 'data:image/png;base64,...',
-  },
-  {
-    agent: {
-      apiKey: process.env.MIDSCENE_MODEL_API_KEY,
-      model: 'gpt-4o-mini',
-    },
-  },
-);
+The crate root exposes only `judge_page`, `JudgePageRequest`, and the
+corresponding `UiJudgeResult` / `UiJudgeError` output types. Callers only need
+the request API to invoke it:
 
-console.log(result.score, result.reason);
-console.log(result.artifacts.diffImageBase64);
-```
+```rust
+use std::time::Duration;
+use ui_judge::{judge_page, JudgePageRequest};
 
-`referenceImage` and `renderedImage` accept plain base64,
-`data:image/...;base64,...`, or an `http://` / `https://` image URL for PNG,
-JPEG, or WebP images.
+#[tokio::main(flavor = "current_thread")]
+async fn main() {
+  let result = judge_page(JudgePageRequest {
+    reference: None,
+    screenshot_settle: Duration::from_millis(16),
+    steps: vec!["Tap the Save button".into()],
+    task: "The saved state should be clear and visually correct".into(),
+    timeout: Duration::from_secs(120),
+    url: "file:///absolute/path/to/dist/main.lynx.bundle".into(),
+  })
+  .await;
 
-The visual evaluation result follows this shape:
-
-```ts
-interface VisualEvaluationResponse {
-  ok: true;
-  score?: number;
-  reason?: string;
-  artifacts: {
-    referenceImageBase64: string;
-    renderedImageBase64: string;
-    alignedReferenceImageBase64: string;
-    alignedRenderedImageBase64: string;
-    diffImageBase64: string;
-  };
-  metrics: {
-    alignResult: AlignResult | null;
-    compareResult: CompareResult;
-    evaluationResult: EvaluationResult;
-  };
-  warnings?: string[];
+  println!("score: {}/5", result.score);
 }
 ```
 
-The TypeScript API delegates image loading, alignment, diffing, and model
-evaluation to the Rust `ui-judge` binary. Configure the model through the
-`agent` options or the existing `MIDSCENE_MODEL_*` environment variables.
-Official OpenAI base URLs default to the Responses API; custom base URLs
-default to chat completions for compatibility.
+`judge_page` accepts `file://`, `http://`, and `https://` URLs. Local bundles
+must use an absolute `file:///...` URL; bare filesystem paths are rejected
+before model or runtime initialization.
 
-`@lynx-js/ui-judge` intentionally exposes only a programming API for visual
-evaluation. It does not create an HTTP endpoint or enforce caller
-authentication. If an implementation wires user-controlled requests into
-`runVisualEvaluation`, that implementation must enforce its own trust boundary,
-including authentication, URL allowlists, and private-network filtering for
-remote image URLs.
+The function internally creates the model client from the environment,
+connects to headless Lynx, creates and navigates the page, executes steps,
+captures the final PNG, and releases the page and Lynx connection before final
+scoring. Model, runner, page, screenshot-comparison, prompt, and fixture-helper
+types are implementation details and are not exported.
 
-The Rust implementation lives in the same package under `rust/`. It owns image
-loading and normalization, screenshot alignment, block diffing, visual
-evaluation, device connection, protocol handling, Android e2e coverage, Android
-task scoring, GEQI dimensions, and structured report JSON generation. The
-TypeScript package is now a thin compatibility facade over the Rust CLI. PR
-comment Markdown is rendered by `.github/actions/ui-judge-comment` from the JSON
-payload.
+Run `judge_page` sequentially on a Tokio current-thread runtime. The runner's
+native task pump and page state remain bound to their creation thread. The
+runner must have its standard runtime resources installed, including
+`lynx_core.js` beside the executable on Linux or in `LynxResources.bundle` on
+macOS.
 
-Rust Android scoring is exposed through the `ui-judge` binary:
+Natural-language steps are planned with Agent SDK from the current DOM and
+screenshot, then executed with selector-based tap and wait APIs. The runner has
+no public swipe, scroll, typing, or coordinate-touch API, so those actions
+produce an explicit unsupported error.
+
+## Model configuration
+
+The internal model client preserves the existing environment-variable
+interface:
+
+- `MIDSCENE_MODEL_API_KEY`
+- `MIDSCENE_MODEL_BASE_URL`
+- `MIDSCENE_MODEL_NAME`
+- `MIDSCENE_MODEL_FAMILY`
+- `MIDSCENE_MODEL_API` (`chat` or `responses`)
+- `MIDSCENE_MODEL_TIMEOUT` or `MIDSCENE_MODEL_TIMEOUT_MS`
+- `MIDSCENE_MODEL_INIT_CONFIG_JSON`
+- `MIDSCENE_OPENAI_INIT_CONFIG_JSON` (legacy alias)
+- `OPENAI_ORG_ID`
+- `OPENAI_PROJECT_ID`
+
+These names are retained for configuration compatibility; the implementation
+does not load Midscene. OpenAI-compatible `OPENAI_*` aliases are also accepted.
+The JSON init config preserves scalar `defaultHeaders` / `extraHeaders`,
+`defaultQuery`, `organization`, and `project` entries. Both Chat Completions and
+Responses wire formats feed Agent SDK structured-output validation. The legacy
+`/crawl?ak=` endpoint is Chat-only.
+
+Unit tests use `UI_JUDGE_MODEL_RESPONSE_JSON` or
+`UI_JUDGE_MODEL_RESPONSES_JSON` for deterministic model output. The
+`headless_e2e` integration test rejects both mock variables and calls the real
+configured model.
+
+## Tests
+
+From the workspace root, install and build repository dependencies, generate
+the React fixture, configure the model environment variables, then run the Rust
+tests:
 
 ```bash
-cargo run -p ui_judge --bin ui-judge -- judge-android-agent \
-  --scenarios packages/genui/ui-judge/tests/scenarios/android-geqi.json \
-  --result-file ui-judge-results.json \
-  --device-id emulator-5554 \
-  --all-geqi
+pnpm install --frozen-lockfile
+pnpm turbo build
+NODE_ENV=production node packages/rspeedy/core/bin/rspeedy.js build \
+  --root packages/genui/ui-judge/tests/fixtures/react
+cargo test -p ui_judge --lib --tests --all-features
 ```
 
-The scenario JSON supplies Android Lynx page URLs, tasks, and optional text to
-wait for before scoring. The Rust scorer captures the Android screenshot and
-asks an OpenAI-compatible model for integer scores from 0 through 5. It supports
-the existing `MIDSCENE_MODEL_*` and `MIDSCENE_OPENAI_INIT_CONFIG_JSON`
-environment variable names for CI compatibility, but it does not depend on
-Midscene. The default Android app package is `com.lynx.explorer`; pass
-`--app-package` to use another installed app id.
-
-Screenshot visual evaluation is also exposed through the same binary:
-
-```bash
-cargo run -p ui_judge --bin ui-judge -- visual-evaluation \
-  --request-file request.json \
-  --result-file result.json
-```
-
-Run package tests through Rust:
-
-```bash
-cargo test -p ui_judge --all-targets --all-features
-```
+The generated `.generated/main.lynx.bundle` is ignored by Git. Runtime-backed
+headless coverage runs on Linux and macOS.

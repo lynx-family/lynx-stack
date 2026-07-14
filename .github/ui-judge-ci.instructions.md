@@ -1,19 +1,9 @@
 ---
-applyTo: ".github/workflows/test.yml,.github/workflows/workflow-test.yml,.github/ui-judge*.instructions.md"
+applyTo: ".github/workflows/rust.yml,.github/workflows/test.yml,.github/ui-judge*.instructions.md"
 ---
 
-Run `@lynx-js/ui-judge` package tests through Rust with `cargo test -p ui_judge --all-targets --all-features` on a Linux runner with the Rust toolchain available. When routing cargo commands through `.github/workflows/workflow-test.yml`, set `install-rust: true` so the reusable workflow invokes `./.github/actions/rustup` on that runner. Do not add a Vitest package job for UI Judge; screenshot visual-evaluation coverage should live in Rust unit or integration tests. It should not use the Playwright container or upload Playwright reports.
+Cover UI Judge through the existing Linux Rust workflow's workspace-wide test command; do not add a separate UI Judge job. Keep the React fixture build and required native runtime packages in that Rust workflow. Do not add a binary or CLI test target, Vitest, Playwright container, Android emulator, ADB, or Kitten-Lynx UI Judge test job.
 
-Keep UI Judge CI dependent on the repository `build` job through the reusable `workflow-test.yml`, so the reusable workflow still runs its root `pnpm turbo build --summarize` before tests.
+Inject `MIDSCENE_MODEL_*` and legacy `MIDSCENE_OPENAI_INIT_CONFIG_JSON` secrets only into the Rust test step for configuration compatibility. Use the Rust mock-response hook for deterministic unit tests. The runtime-backed `headless_e2e` integration test must use the injected real model configuration and reject mock-response variables. The crate must continue accepting `MIDSCENE_MODEL_INIT_CONFIG_JSON` in deployments even though CI does not currently define that canonical secret.
 
-Keep Android model-backed UI Judge coverage in the Rust Android emulator job. That job should run the Rust Android e2e test and remember its exit code, then still use `cargo run -p ui_judge --bin ui-judge -- judge-android-agent` to produce result JSON from JSON scenarios when model credentials are available. If model credentials are unavailable or model scoring fails, use the Rust `report` subcommand to emit a score-0 fallback JSON payload before the job exits.
-
-Keep CI-facing model secret names on the existing `MIDSCENE_MODEL_*` and `MIDSCENE_OPENAI_INIT_CONFIG_JSON` names. Do not add `OPENAI_*` or `A2UI_BENCH_JUDGE_*` workflow secrets for UI Judge. When changing PR-comment wiring in `test.yml`, keep the existing runner class and pinned artifact actions unless there is a separate workflow-wide reason to change them.
-
-For new UI Judge CI wiring, upload `ui-judge-results.json` and pass it to `.github/actions/ui-judge-comment` through `result-file`. Rust owns Android capture, scoring, GEQI result data, and fallback JSON generation; the JavaScript action owns Markdown rendering and GitHub PR comment create/update. Do not bypass the action with Rust-generated Markdown in CI.
-
-When rendering the UI Judge PR comment, include `GITHUB_RUN_ATTEMPT` in the workflow footer/link. GitHub reruns keep the same `GITHUB_RUN_ID`, so relying only on the run URL can make a successful rerun write an identical comment body and appear not to update.
-
-Keep `.github/actions/ui-judge-comment` self-contained for self-hosted runners: set up Node inside the composite action before invoking `comment.mjs`, rather than requiring every caller job to prepare `node` separately.
-
-Do not add changed-file gating or GitHub API calls to the Rust screenshot unit-test job.
+Do not add UI Judge result-comment jobs, PR-comment permissions, result artifacts whose only consumer is a comment job, or a JavaScript comment renderer. CI should validate the Rust library directly.

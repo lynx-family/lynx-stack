@@ -86,15 +86,6 @@ jobs:
       runs-on: lynx-ubuntu-26.04-medium
       run: pnpm eslint . --flag v10_config_lookup_from_file
 
-  ui-judge:
-    needs: build
-    uses: ./.github/workflows/workflow-test.yml
-    with:
-      runs-on: lynx-ubuntu-26.04-medium
-      upload-codecov: false
-      install-rust: true
-      run: cargo test -p ui_judge --all-targets --all-features
-
   lighthouse:
     needs: build
     uses: ./.github/workflows/workflow-test.yml
@@ -256,6 +247,11 @@ jobs:
     uses: ./.github/workflows/rust.yml
     secrets:
       CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
+      MIDSCENE_MODEL_API_KEY: ${{ secrets.MIDSCENE_MODEL_API_KEY }}
+      MIDSCENE_MODEL_BASE_URL: ${{ secrets.MIDSCENE_MODEL_BASE_URL }}
+      MIDSCENE_MODEL_FAMILY: ${{ secrets.MIDSCENE_MODEL_FAMILY }}
+      MIDSCENE_MODEL_NAME: ${{ secrets.MIDSCENE_MODEL_NAME }}
+      MIDSCENE_OPENAI_INIT_CONFIG_JSON: ${{ secrets.MIDSCENE_OPENAI_INIT_CONFIG_JSON }}
   test-type:
     needs: build
     uses: ./.github/workflows/workflow-test.yml
@@ -282,19 +278,9 @@ jobs:
     uses: ./.github/workflows/workflow-test.yml
     secrets:
       CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
-      MIDSCENE_MODEL_API_KEY: ${{ secrets.MIDSCENE_MODEL_API_KEY }}
-      MIDSCENE_MODEL_BASE_URL: ${{ secrets.MIDSCENE_MODEL_BASE_URL }}
-      MIDSCENE_MODEL_FAMILY: ${{ secrets.MIDSCENE_MODEL_FAMILY }}
-      MIDSCENE_MODEL_NAME: ${{ secrets.MIDSCENE_MODEL_NAME }}
-      MIDSCENE_OPENAI_INIT_CONFIG_JSON: ${{ secrets.MIDSCENE_OPENAI_INIT_CONFIG_JSON }}
     name: Kitten Lynx Android Emulator Test
     with:
       runs-on: lynx-ubuntu-26.04-physical-medium
-      upload-codecov: false
-      install-rust: true
-      artifact-name: ui-judge-results
-      artifact-path: ui-judge-results.json
-      artifact-if-no-files-found: error
       run: |
         # 4. Start Emulator
         echo "Starting emulator..."
@@ -341,87 +327,8 @@ jobs:
         done
         echo "Lynx Explorer is running."
 
-        # 8. Run the Rust Android integration tests
-        ANDROID_E2E_STATUS=0
-        cargo test -p ui_judge --test android_e2e -- --ignored --test-threads=1 || ANDROID_E2E_STATUS=$?
-
-        # 9. Run Rust UI Judge model scoring when credentials are available.
-        MODEL_SCORING_STATUS=0
-        if { [ -n "${MIDSCENE_MODEL_API_KEY:-}" ] && [ -n "${MIDSCENE_MODEL_NAME:-}" ]; } || [ -n "${MIDSCENE_OPENAI_INIT_CONFIG_JSON:-}" ]; then
-          if ! cargo run -p ui_judge --bin ui-judge -- judge-android-agent \
-            --scenarios packages/genui/ui-judge/tests/scenarios/android-geqi.json \
-            --result-file ui-judge-results.json \
-            --device-id emulator-5554 \
-            --clear-data \
-            --all-geqi; then
-            cargo run -p ui_judge --bin ui-judge -- report \
-              --result-file ui-judge-results.json \
-              --fallback-error "Rust UI Judge Android model scoring failed. See the workflow logs for details."
-            MODEL_SCORING_STATUS=1
-          fi
-        else
-          cargo run -p ui_judge --bin ui-judge -- report \
-            --result-file ui-judge-results.json \
-            --fallback-error "Rust UI Judge Android model scoring skipped because model credentials are unavailable."
-        fi
-
-        if [ "${ANDROID_E2E_STATUS}" -ne 0 ]; then
-          exit "${ANDROID_E2E_STATUS}"
-        fi
-        if [ "${MODEL_SCORING_STATUS}" -ne 0 ]; then
-          exit "${MODEL_SCORING_STATUS}"
-        fi
-
-  ui-judge-comment:
-    needs: kitten-lynx-android-emulator
-    if: ${{ always() }}
-    runs-on: lynx-ubuntu-26.04-medium
-    permissions:
-      contents: read
-      issues: write
-      pull-requests: write
-    steps:
-      - uses: actions/checkout@93cb6efe18208431cddfb8368fd83d5badbf9bfd # v5
-        if: ${{ github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name == github.repository && needs.kitten-lynx-android-emulator.result != 'skipped' && needs.kitten-lynx-android-emulator.result != 'cancelled' }}
-        with:
-          persist-credentials: false
-      - uses: actions/download-artifact@634f93cb2916e3fdff6788551b99b062d0335ce0 # v5
-        if: ${{ github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name == github.repository && needs.kitten-lynx-android-emulator.result != 'skipped' && needs.kitten-lynx-android-emulator.result != 'cancelled' }}
-        continue-on-error: true
-        with:
-          name: ui-judge-results
-          path: ui-judge-results
-      - name: Ensure UI Judge result payload
-        if: ${{ github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name == github.repository && needs.kitten-lynx-android-emulator.result != 'skipped' && needs.kitten-lynx-android-emulator.result != 'cancelled' }}
-        shell: bash
-        run: |
-          mkdir -p ui-judge-results
-          if [ ! -s ui-judge-results/ui-judge-results.json ]; then
-            cat > ui-judge-results/ui-judge-results.json <<'JSON'
-          {
-            "results": [
-              {
-                "demoId": "fallback",
-                "dimension": "visual-correctness",
-                "error": {
-                  "message": "UI Judge result artifact was not uploaded. See the workflow logs for details."
-                },
-                "score": 0,
-                "steps": [],
-                "url": ""
-              }
-            ]
-          }
-          JSON
-          fi
-      - uses: ./.github/actions/ui-judge-comment
-        if: ${{ github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name == github.repository && needs.kitten-lynx-android-emulator.result != 'skipped' && needs.kitten-lynx-android-emulator.result != 'cancelled' }}
-        with:
-          result-file: ui-judge-results/ui-judge-results.json
-          github-token: ${{ github.token }}
-      - name: Skip UI Judge comment
-        if: ${{ !(github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name == github.repository && needs.kitten-lynx-android-emulator.result != 'skipped' && needs.kitten-lynx-android-emulator.result != 'cancelled') }}
-        run: echo "Skipping UI Judge PR comment for this event or PR source."
+        # 8. Run Kitten Lynx's Android tests.
+        pnpm --filter @lynx-js/kitten-lynx-test-infra run test --coverage --reporter=github-actions --reporter=dot --reporter=junit --outputFile=test-report.junit.xml --coverage.reporter='json' --coverage.reporter='text' --testTimeout=50000 --no-cache --logHeapUsage --silent
 
   test-typos:
     runs-on: lynx-ubuntu-26.04-medium
@@ -484,8 +391,6 @@ jobs:
       - benchmark
       - code-style-check
       - eslint
-      - ui-judge
-      - ui-judge-comment
       # - playwright-linux
       - playwright-web-elements
       - test-api

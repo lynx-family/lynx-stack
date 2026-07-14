@@ -381,7 +381,7 @@ function buildReport(
       renderMetrics: request.settings.renderMetricsEnabled
         ? 'enabled'
         : 'disabled',
-      judge: request.settings.judgeEnabled ? 'enabled' : 'disabled',
+      judge: 'disabled',
     },
     warnings,
     groups: request.groups,

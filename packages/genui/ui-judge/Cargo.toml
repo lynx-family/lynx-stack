@@ -3,35 +3,17 @@ name = "ui_judge"
 version = "0.1.0"
 edition = "2021"
 license = "Apache-2.0"
-description = "Rust Android E2E test infrastructure for UI Judge"
-
-[lib]
-crate-type = ["rlib"]
-path = "rust/src/lib.rs"
-
-[[bin]]
-name = "ui-judge"
-path = "rust/src/bin/ui-judge.rs"
-
-[[test]]
-name = "android_e2e"
-path = "rust/tests/android_e2e.rs"
-
-[[test]]
-name = "visual_evaluation_cli"
-path = "rust/tests/visual_evaluation_cli.rs"
+publish = false
+description = "Headless Lynx UI evaluation and VLM scoring"
 
 [dependencies]
-async-openai = { workspace = true, features = ["byot", "chat-completion", "responses", "rustls"] }
-base64 = { workspace = true }
-clap = { workspace = true, features = ["derive"] }
-droidrun-adb = { workspace = true }
-image = { workspace = true }
-reqwest = { workspace = true, default-features = false, features = ["json", "rustls"] }
+agent-sdk = { version = "0.12.0", default-features = false }
+anyhow = "1.0.102"
+async-trait = "0.1.89"
+base64 = "0.22.1"
+lynx-headless-rust-test-runner = { path = "../../lynx/headless-rust-test-runner" }
+reqwest = { version = "0.13.4", default-features = false, features = ["json", "rustls"] }
 serde = { workspace = true, features = ["derive"] }
 serde_json = { workspace = true, features = ["preserve_order"] }
-thiserror = { workspace = true }
-tokio = { workspace = true, features = ["io-util", "macros", "net", "process", "rt-multi-thread", "sync", "time"] }
-
-[dev-dependencies]
-serial_test = { workspace = true }
+thiserror = "2.0.18"
+tokio = { workspace = true, features = ["macros", "rt", "time"] }

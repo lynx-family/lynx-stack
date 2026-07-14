@@ -5,9 +5,7 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   serverExternalPackages: [
-    '@ai-sdk/openai',
     '@mastra/core',
-    '@lynx-js/ui-judge',
     '@sparticuz/chromium',
     'playwright-core',
   ],

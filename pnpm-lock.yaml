@@ -984,9 +984,6 @@ importers:
       '@lynx-js/genui-openui':
         specifier: workspace:*
         version: link:../openui
-      '@lynx-js/ui-judge':
-        specifier: workspace:*
-        version: link:../ui-judge
       '@mastra/core':
         specifier: 1.13.2
         version: 1.13.2(@standard-community/standard-json@0.3.5(@standard-schema/spec@1.1.0)(@types/json-schema@7.0.15)(quansync@0.2.10)(zod-to-json-schema@3.25.2(zod@3.25.76))(zod@3.25.76))(@standard-community/standard-openapi@0.2.9(@standard-community/standard-json@0.3.5(@standard-schema/spec@1.1.0)(@types/json-schema@7.0.15)(quansync@0.2.10)(zod-to-json-schema@3.25.2(zod@3.25.76))(zod@3.25.76))(@standard-schema/spec@1.1.0)(openapi-types@12.1.3)(zod@3.25.76))(@types/json-schema@7.0.15)(openapi-types@12.1.3)(zod@3.25.76)
@@ -1021,27 +1018,6 @@ importers:
       typescript:
         specifier: ^5.9.3
         version: 5.9.3
-
-  packages/genui/ui-judge:
-    devDependencies:
-      '@lynx-js/react':
-        specifier: workspace:*
-        version: link:../../react
-      '@lynx-js/react-rsbuild-plugin':
-        specifier: workspace:*
-        version: link:../../rspeedy/plugin-react
-      '@lynx-js/rspeedy':
-        specifier: workspace:*
-        version: link:../../rspeedy/core
-      '@lynx-js/types':
-        specifier: 4.0.0
-        version: 4.0.0
-      '@types/node':
-        specifier: ^24.10.13
-        version: 24.10.13
-      '@types/react':
-        specifier: ^18.3.28
-        version: 18.3.28
 
   packages/i18n/i18next-translation-dedupe:
     devDependencies:
