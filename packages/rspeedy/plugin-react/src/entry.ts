@@ -268,11 +268,7 @@ export function applyEntry(
               })
             },
             targetSdkVersion,
-            // Inject runtime wrapper for all `.js` but not `main-thread.js` and
-            // `main-thread.[hash].js`. Lazy bundle chunks are routed to
-            // `.rspeedy/async/<name>/<layer>.js`, so the layer is always the
-            // basename and matching the `main-thread.js` suffix stays exact
-            // even when a module path contains `main-thread`.
+            // Inject runtime wrapper for all `.js` but not `main-thread.js` and `main-thread.[hash].js`.
             test: /^(?!.*main-thread(?:\.[A-Fa-f0-9]*)?\.js$).*\.js$/,
             experimental_isLazyBundle,
           }])
