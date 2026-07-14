@@ -21,6 +21,7 @@ const MAX_DOM_CHARS: usize = 40_000;
 const MAX_WAIT_MS: u64 = 5_000;
 const STEP_SYSTEM_PROMPT: &str = "You control a headless Lynx page. Return exactly one JSON action matching the schema. Use only selectors present in the supplied DOM.";
 
+/// Inputs for loading, interacting with, capturing, and judging a Lynx page.
 #[derive(Debug, Clone)]
 pub struct JudgePageRequest {
   /// Optional textual target included in the VLM prompt.
@@ -30,10 +31,20 @@ pub struct JudgePageRequest {
   /// Accepts base64, a base64 data URL, or an HTTP(S) URL. The image is never
   /// sent to the VLM.
   pub reference_image: Option<String>,
+  /// Time to wait for the renderer to settle before the final screenshot.
   pub screenshot_settle: Duration,
+  /// Natural-language interactions to perform in order before the final capture.
   pub steps: Vec<String>,
+  /// The visual task that the VLM should evaluate against the final screenshot.
   pub task: String,
+  /// Maximum duration for each independently timed operation.
+  ///
+  /// The connection, navigation, every individual natural-language step,
+  /// final screenshot capture, VLM scoring, and optional reference-image
+  /// comparison each receive this full duration. This preserves the legacy UI
+  /// Judge behavior and is not an overall deadline for the entire request.
   pub timeout: Duration,
+  /// The `file://`, `http://`, or `https://` Lynx page URL to load.
   pub url: String,
 }
 

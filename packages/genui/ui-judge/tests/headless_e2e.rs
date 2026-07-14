@@ -14,6 +14,12 @@ async fn drives_and_judges_the_existing_headless_runner_page_with_the_real_model
       && std::env::var_os("UI_JUDGE_MODEL_RESPONSES_JSON").is_none(),
     "headless_e2e must call the configured real model; unset UI_JUDGE_MODEL_RESPONSE_JSON and UI_JUDGE_MODEL_RESPONSES_JSON"
   );
+  if !real_model_credentials_configured() {
+    eprintln!(
+      "skipping headless_e2e: no real-model API key is configured through the supported environment"
+    );
+    return;
+  }
 
   let bundle = fixture_bundle();
   assert!(
@@ -73,6 +79,18 @@ fn fixture_lynx_core() -> PathBuf {
 
 fn fixture_url(bundle: &Path) -> String {
   format!("file://{}", bundle.display())
+}
+
+fn real_model_credentials_configured() -> bool {
+  [
+    "MIDSCENE_MODEL_API_KEY",
+    "OPENAI_API_KEY",
+    "MIDSCENE_MODEL_INIT_CONFIG_JSON",
+    "MIDSCENE_OPENAI_INIT_CONFIG_JSON",
+    "OPENAI_INIT_CONFIG_JSON",
+  ]
+  .iter()
+  .any(|name| std::env::var(name).is_ok_and(|value| !value.trim().is_empty()))
 }
 
 fn restore_env(name: &str, value: Option<std::ffi::OsString>) {

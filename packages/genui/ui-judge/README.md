@@ -41,6 +41,11 @@ async fn main() {
 must use an absolute `file:///...` URL; bare filesystem paths are rejected
 before model or runtime initialization.
 
+`timeout` applies independently to connection, navigation, each natural
+language step, final screenshot capture, VLM scoring, and optional reference
+image comparison. It is not an overall deadline for the entire request; this
+preserves the behavior of the former TypeScript implementation.
+
 `reference` remains an optional textual target for the model. Set
 `reference_image` to a plain base64 image, a `data:image/...;base64,...` URL, or
 an HTTP(S) image URL to enable deterministic visual comparison. UI Judge uses
@@ -109,7 +114,9 @@ Responses wire formats feed Agent SDK structured-output validation. The legacy
 Unit tests use `UI_JUDGE_MODEL_RESPONSE_JSON` or
 `UI_JUDGE_MODEL_RESPONSES_JSON` for deterministic model output. The
 `headless_e2e` integration test rejects both mock variables and calls the real
-configured model.
+configured model. If no supported credential environment variable is set, the
+integration test reports that it was skipped so fork pull requests can still
+run the rest of the Rust suite.
 
 ## Tests
 
