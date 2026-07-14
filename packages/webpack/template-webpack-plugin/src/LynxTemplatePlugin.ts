@@ -783,7 +783,9 @@ class LynxTemplatePluginImpl {
           continue;
         }
         const name = names.get(chunk.id);
-        if (name === undefined) {
+        // Context imports (`import(`./x/${y}`)`) group under an empty name and
+        // are not lazy bundles — leave their chunks on the default template.
+        if (name === undefined || name === '') {
           continue;
         }
         let layer: string | undefined;
