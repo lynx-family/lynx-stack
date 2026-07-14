@@ -412,6 +412,28 @@ export function pluginReactLynx(
       setup(api) {
         const isRslib = api.context.callerName === 'rslib'
         const isRstest = api.context.callerName === 'rstest'
+        const isRspeedy = api.context.callerName === 'rspeedy'
+
+        // Fail fast when a user adds `pluginReactLynx()` to a plain Rsbuild
+        // config but forgets `pluginLynxPreset()`. Without the preset, the Lynx
+        // build engine (config translation, chunk loading, target, dev/HMR, ...)
+        // is never applied and the build silently produces a broken bundle.
+        // The Rspeedy CLI and rslib/rstest supply that engine another way, so
+        // only guard the direct-Rsbuild path.
+        const hasLynxPreset =
+          api.useExposed(Symbol.for('lynx.api')) !== undefined
+        if (!isRspeedy && !isRslib && !isRstest && !hasLynxPreset) {
+          throw new Error(
+            `[lynx:react] \`pluginReactLynx()\` requires \`pluginLynxPreset()\` from `
+              + `'@lynx-js/preset-rsbuild-plugin'. Add it before \`pluginReactLynx()\` `
+              + `in your \`rsbuild.config.ts\`:\n\n`
+              + `  import { pluginLynxPreset } from '@lynx-js/preset-rsbuild-plugin'\n`
+              + `  import { pluginReactLynx } from '@lynx-js/react-rsbuild-plugin'\n\n`
+              + `  export default {\n`
+              + `    plugins: [pluginLynxPreset(), pluginReactLynx()],\n`
+              + `  }\n`,
+          )
+        }
 
         const exposedConfig = api.useExposed<{ config: Config }>(
           Symbol.for('lynx.config'),
