@@ -96,6 +96,24 @@ export interface BackgroundProps {
  * because its main-thread render is a no-op — rendering it on the first screen
  * without a boundary would produce an empty frame.
  *
+ * At the render root, `<Background>` becomes the 0.0 first screen — the whole
+ * first frame is the static `fallback` and nothing renders on the main thread:
+ *
+ * ```tsx
+ * root.render(
+ *   // host-element fallback only, since component bodies are stripped from the
+ *   // main thread
+ *   <Background fallback={<view><text>Loading…</text></view>}>
+ *     <App />
+ *   </Background>,
+ * )
+ * ```
+ *
+ * The build detects this and strips every component render body from the
+ * main-thread bundle automatically — the whole-program endpoint of the same
+ * boundary, with no per-component annotation. The `fallback` must then be
+ * composed of host elements rather than user components.
+ *
  * @public
  */
 export function Background(props: BackgroundProps): ReactNode {

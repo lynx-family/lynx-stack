@@ -11,12 +11,20 @@ pub struct DirectiveDCEVisitorConfig {
   /// @internal
   #[napi(ts_type = "'LEPUS' | 'JS' | 'MIXED'")]
   pub target: TransformTarget,
+  /// When `true` on the `LEPUS` target, empties the render body of every
+  /// component while keeping the module-scope snapshot and worklet
+  /// definitions — the compile-time half of a root-level `<Background>`
+  /// (0.0 first screen), so component render logic never reaches the
+  /// main-thread bundle without per-component annotation.
+  /// @internal
+  pub strip_all_components: Option<bool>,
 }
 
 impl Default for DirectiveDCEVisitorConfig {
   fn default() -> Self {
     DirectiveDCEVisitorConfig {
       target: TransformTarget::MIXED,
+      strip_all_components: None,
     }
   }
 }
@@ -25,6 +33,7 @@ impl From<DirectiveDCEVisitorConfig> for CoreConfig {
   fn from(val: DirectiveDCEVisitorConfig) -> Self {
     CoreConfig {
       target: val.target.into(),
+      strip_all_components: val.strip_all_components.unwrap_or(false),
     }
   }
 }
@@ -33,6 +42,7 @@ impl From<CoreConfig> for DirectiveDCEVisitorConfig {
   fn from(val: CoreConfig) -> Self {
     DirectiveDCEVisitorConfig {
       target: val.target.into(),
+      strip_all_components: Some(val.strip_all_components),
     }
   }
 }
