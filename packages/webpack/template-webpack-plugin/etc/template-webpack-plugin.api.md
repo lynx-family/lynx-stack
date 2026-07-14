@@ -47,6 +47,12 @@ export interface EncodeOptions {
 }
 
 // @public
+export class LynxAsyncChunkLayoutPlugin {
+    // (undocumented)
+    apply(compiler: Compiler): void;
+}
+
+// @public
 export class LynxEncodePlugin {
     constructor(options?: LynxEncodePluginOptions | undefined);
     apply(compiler: Compiler): void;

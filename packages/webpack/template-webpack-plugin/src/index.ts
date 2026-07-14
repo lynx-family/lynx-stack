@@ -17,6 +17,7 @@ export type {
   TemplateHooks,
   EncodeOptions,
 } from './LynxTemplatePlugin.js';
+export { LynxAsyncChunkLayoutPlugin } from './LynxAsyncChunkLayoutPlugin.js';
 export { LynxEncodePlugin } from './LynxEncodePlugin.js';
 export type { LynxEncodePluginOptions } from './LynxEncodePlugin.js';
 export { processTasmCSSDiagnostics } from './cssDiagnostics.js';
