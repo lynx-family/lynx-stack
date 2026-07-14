@@ -27,6 +27,28 @@ describe('findIp', () => {
     expect(ip).toBe('192.168.1.1')
   })
 
+  test('v4 internal', async () => {
+    const { default: os } = await import('node:os')
+
+    rstest.spyOn(os, 'networkInterfaces').mockReturnValue({
+      lo: [
+        {
+          address: '127.0.0.1',
+          family: 'IPv4',
+          internal: true,
+          netmask: '255.0.0.0',
+          mac: '00:00:00:00:00:00',
+          cidr: '127.0.0.1/8',
+        },
+      ],
+    })
+
+    const { findIp } = await import('../../src/plugins/dev.plugin.js')
+
+    const ip = await findIp('v4', true)
+    expect(ip).toBe('127.0.0.1')
+  })
+
   test('v6', async () => {
     const { default: os } = await import('node:os')
 
