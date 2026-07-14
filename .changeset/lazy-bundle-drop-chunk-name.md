@@ -3,7 +3,10 @@
 "@lynx-js/react-webpack-plugin": minor
 "@lynx-js/template-webpack-plugin": minor
 "@lynx-js/react-rsbuild-plugin": minor
-"@lynx-js/debug-metadata-rsbuild-plugin": minor
 ---
 
-Fix lazy bundle intermediate files escaping the output directory when a dynamic import resolves above the compiler context. The ReactLynx transform no longer injects a `webpackChunkName`, so async chunk outputs stay inside the output directory, and each lazy bundle's intermediate JS is emitted under `.rspeedy/async/<bundle-name>/<layer>.js` (the bundle name resolved by `LynxTemplatePlugin`, with explicit `webpackChunkName` values still preserved).
+Stop injecting `webpackChunkName` into dynamic imports so lazy bundle intermediate files stay inside the output directory.
+
+The ReactLynx transform injected `webpackChunkName: "<request>-react__<layer>"`, so a dynamic import resolving above the compiler context (e.g. `import('../../Foo.js')`) leaked `../` into `[name]`/`[id]` and the intermediate js/css/hmr files escaped the output directory. Async chunks now keep rspack's own ids, `__webpack_require__.lynx_aci` maps them by chunk id, and each lazy bundle's intermediate JS is emitted under `.rspeedy/async/<bundle-name>/<layer>.js` next to its other intermediate outputs. Explicit `webpackChunkName` comments written by users are still honored.
+
+These packages release together and must be upgraded together: `@lynx-js/react-webpack-plugin` requires `@lynx-js/template-webpack-plugin` `^0.13.0`, and `@lynx-js/react-rsbuild-plugin` requires `@lynx-js/react` `^0.123.0`.
