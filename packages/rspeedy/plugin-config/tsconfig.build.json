@@ -8,7 +8,6 @@
     ],
     "composite": true,
     "outDir": "./lib",
-    "baseUrl": "./",
     "rootDir": "./src",
     "declarationMap": true,
   },

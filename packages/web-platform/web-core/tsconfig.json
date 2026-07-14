@@ -2,6 +2,7 @@
   "extends": "../tsconfig.json",
   "compilerOptions": {
     "composite": true,
+    "types": ["node"],
     "rootDir": "./ts",
     "outDir": "./dist",
     "lib": ["DOM", "ESNext", "WebWorker"],

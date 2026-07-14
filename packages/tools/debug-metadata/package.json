@@ -40,7 +40,8 @@
   },
   "devDependencies": {
     "@microsoft/api-extractor": "catalog:",
-    "@rollup/plugin-typescript": "^12.3.0"
+    "@rollup/plugin-typescript": "^12.3.0",
+    "@types/node": "^24.10.13"
   },
   "engines": {
     "node": ">=18"

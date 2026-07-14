@@ -44,7 +44,7 @@
     "@rspack/core": "catalog:rspack",
     "@rstest/core": "catalog:rstest",
     "@types/loader-utils": "^2.0.6",
-    "typescript": "^5.9.3"
+    "typescript": "^6.0.3"
   },
   "peerDependencies": {
     "@lynx-js/web-core": ">0.0.0",

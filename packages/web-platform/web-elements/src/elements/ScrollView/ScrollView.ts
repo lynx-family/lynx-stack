@@ -98,7 +98,7 @@ export class ScrollView extends HTMLElement {
         : parseFloat(options.rate);
       const tickDistance = (rate * ScrollView.scrollInterval) / 1000;
       this.#autoScrollTimer = setInterval(
-        (dom) => {
+        (dom: ScrollView) => {
           dom.scrollBy({
             left: tickDistance,
             top: tickDistance,

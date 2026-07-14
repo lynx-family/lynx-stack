@@ -3,9 +3,8 @@
   "compilerOptions": {
     "composite": true,
     "outDir": "./lib",
-    "baseUrl": "./",
     "rootDir": ".",
-    "lib": ["DOM"],
+    "lib": ["DOM", "ES2022"],
   },
   "include": ["client"],
 }

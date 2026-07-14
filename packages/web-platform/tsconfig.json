@@ -6,7 +6,7 @@
     "module": "ESNext",
     "lib": ["DOM", "ESNext"],
     "moduleResolution": "Bundler",
-    "esModuleInterop": false,
+    "esModuleInterop": true,
     "exactOptionalPropertyTypes": false,
     "isolatedDeclarations": false,
   },
