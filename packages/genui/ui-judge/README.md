@@ -1,20 +1,21 @@
 # UI Judge
 
-`ui_judge` is a pure Rust library crate that renders a Lynx URL with the
-existing `lynx-headless-rust-test-runner`, performs optional natural-language
-steps, captures the software-renderer frame, and asks Agent SDK for a structured
-visual-correctness score. When a reference image is supplied, the crate also
+`ui_judge` is a Rust crate that renders a Lynx URL with the existing
+`lynx-headless-rust-test-runner`, performs optional natural-language steps,
+captures the software-renderer frame, and asks Agent SDK for a structured
+visual-correctness score. When a reference image is included, the crate also
 normalizes, aligns, and compares it with the same captured frame through a
-separate deterministic evaluation chain.
+separate deterministic evaluation chain. The default build provides the Rust
+library. The `server` feature adds an HTTP server binary.
 
-UI Judge has no Kitten-Lynx, Android, ADB, Playwright, Midscene, CLI, or npm
-runtime. It does not modify or duplicate the headless runner.
+UI Judge has no Kitten-Lynx, Android, ADB, Playwright, Midscene, or npm runtime.
+It does not modify or duplicate the headless runner.
 
 ## Rust API
 
-The crate root exposes only `judge_page`, `JudgePageRequest`, and the
-corresponding `UiJudgeResult` / `UiJudgeError` output types. Callers only need
-the request API to invoke it:
+Without the `server` feature, the crate root exposes only `judge_page`,
+`JudgePageRequest`, and the corresponding `UiJudgeResult` / `UiJudgeError`
+output types. Callers only need the request API to invoke it:
 
 ```rust
 use std::time::Duration;
@@ -61,9 +62,9 @@ output, pixel-diff output, or algorithmic similarity. Consequently the public
 field reports failures in the primary page-capture or VLM chain. A
 reference-image failure is reported separately as `reference_image_error` and
 does not replace a successful VLM result; a VLM failure likewise does not
-discard successful comparison diagnostics. The public crate surface remains
-`judge_page`, `JudgePageRequest`, `UiJudgeResult`, and `UiJudgeError`; comparison
-types and algorithms stay internal.
+discard successful comparison diagnostics. The default public crate surface
+remains `judge_page`, `JudgePageRequest`, `UiJudgeResult`, and `UiJudgeError`;
+comparison types and algorithms stay internal.
 
 The public VLM `score` remains an integer from 0 through 5. The independent
 `visual_similarity` diagnostic is a block-level ratio from 0 through 1. Input
@@ -87,6 +88,50 @@ Natural-language steps are planned with Agent SDK from the current DOM and
 screenshot, then executed with selector-based tap and wait APIs. The runner has
 no public swipe, scroll, typing, or coordinate-touch API, so those actions
 produce an explicit unsupported error.
+
+## HTTP server
+
+Turn on the `server` feature to serve UI Judge over HTTP:
+
+```bash
+PORT=8080 cargo run -p ui_judge --features server --bin ui-judge-server
+```
+
+`PORT` defaults to `8080`. The process listens on both `0.0.0.0:{PORT}` and
+`[::]:{PORT}`. Use `GET /health` for a readiness check and `POST /judge` to
+evaluate a page.
+
+The following request evaluates a local bundle. `url` and `task` are required.
+The other fields are optional.
+
+```bash
+curl --request POST http://127.0.0.1:8080/judge \
+  --header 'content-type: application/json' \
+  --data '{
+    "url": "file:///absolute/path/to/dist/main.lynx.bundle",
+    "task": "The saved state should be clear and visually correct",
+    "reference": null,
+    "referenceImage": null,
+    "steps": ["Tap the Save button"],
+    "screenshotSettleMs": 16,
+    "timeoutMs": 60000
+  }'
+```
+
+The response is a JSON-encoded `UiJudgeResult`. A completed evaluation returns
+HTTP `200`, including evaluation failures reported in the result's `error`
+field. Invalid HTTP input returns `400`, `413`, or `422`. The server returns
+`503` when its bounded capture queue is full or the headless worker is no longer
+available. Request bodies are limited to 16 MiB.
+
+The server accepts connections concurrently. It keeps native Lynx capture on a
+dedicated current-thread runtime because the renderer is thread-bound. After a
+capture completes, Tokio runs model scoring concurrently across requests and a
+bounded Rayon pool performs CPU-heavy image normalization, alignment, and
+comparison. The capture queue holds at most eight requests. Dropped queued
+requests release their request data, dropped visual waiters signal cooperative
+cancellation, and SIGINT or SIGTERM triggers graceful HTTP shutdown before the
+headless worker is joined.
 
 ## Model configuration
 

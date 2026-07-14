@@ -7,5 +7,8 @@ mod judge;
 mod model;
 mod visual;
 
+#[cfg(feature = "server")]
+pub mod server;
+
 pub use headless::{judge_page, JudgePageRequest};
 pub use judge::{UiJudgeError, UiJudgeResult};

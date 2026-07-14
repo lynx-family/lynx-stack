@@ -87,7 +87,7 @@ struct PageAction {
   selector: Option<String>,
 }
 
-struct CapturedPage {
+pub(crate) struct CapturedPage {
   png: Vec<u8>,
   steps: Vec<String>,
   url: String,
@@ -122,19 +122,38 @@ async fn run_page_steps(
 
 /// Loads a Lynx URL, executes requested steps, captures the final frame, and
 /// scores it using the model configured through the environment.
-pub async fn judge_page(mut request: JudgePageRequest) -> UiJudgeResult {
+pub async fn judge_page(request: JudgePageRequest) -> UiJudgeResult {
+  let (request, client) = match prepare_judge_page_request(request) {
+    Ok(prepared) => prepared,
+    Err(result) => return *result,
+  };
+  match capture_prepared_page(&client, &request).await {
+    Ok(capture) => score_captured_page(&client, &request, capture).await,
+    Err(result) => result,
+  }
+}
+
+pub(crate) fn prepare_judge_page_request(
+  mut request: JudgePageRequest,
+) -> Result<(JudgePageRequest, ModelClient), Box<UiJudgeResult>> {
   request.url = request.url.trim().to_string();
   if request.url.is_empty() {
-    return page_request_error(&request, "judge_page requires a non-empty URL.");
+    return Err(Box::new(page_request_error(
+      &request,
+      "judge_page requires a non-empty URL.",
+    )));
   }
   if !is_supported_page_url(&request.url) {
-    return page_request_error(
+    return Err(Box::new(page_request_error(
       &request,
       "judge_page URL must use file://, http://, or https://.",
-    );
+    )));
   }
   if request.task.trim().is_empty() {
-    return page_request_error(&request, "judge_page requires a non-empty task.");
+    return Err(Box::new(page_request_error(
+      &request,
+      "judge_page requires a non-empty task.",
+    )));
   }
   request.reference_image = request
     .reference_image
@@ -142,12 +161,19 @@ pub async fn judge_page(mut request: JudgePageRequest) -> UiJudgeResult {
 
   let model_options = match ModelOptions::from_env() {
     Ok(options) => options,
-    Err(error) => return page_request_error(&request, error.to_string()),
+    Err(error) => return Err(Box::new(page_request_error(&request, error.to_string()))),
   };
   let client = match ModelClient::new(model_options) {
     Ok(client) => client,
-    Err(error) => return page_request_error(&request, error.to_string()),
+    Err(error) => return Err(Box::new(page_request_error(&request, error.to_string()))),
   };
+  Ok((request, client))
+}
+
+pub(crate) async fn capture_prepared_page(
+  client: &ModelClient,
+  request: &JudgePageRequest,
+) -> Result<CapturedPage, UiJudgeResult> {
   let lynx = match tokio::time::timeout(
     request.timeout,
     Lynx::connect(ConnectOptions {
@@ -158,20 +184,27 @@ pub async fn judge_page(mut request: JudgePageRequest) -> UiJudgeResult {
   .await
   {
     Ok(Ok(lynx)) => lynx,
-    Ok(Err(error)) => return page_request_error(&request, error.to_string()),
+    Ok(Err(error)) => return Err(page_request_error(request, error.to_string())),
     Err(_) => {
-      return page_request_error(
-        &request,
+      return Err(page_request_error(
+        request,
         operation_timeout("Lynx connection", request.timeout).to_string(),
-      )
+      ))
     }
   };
+  let capture = capture_with_lynx(&lynx, client, request).await;
+  lynx.close();
+  capture
+}
+
+async fn capture_with_lynx(
+  lynx: &Lynx,
+  client: &ModelClient,
+  request: &JudgePageRequest,
+) -> Result<CapturedPage, UiJudgeResult> {
   let mut page = match lynx.new_page() {
     Ok(page) => page,
-    Err(error) => {
-      lynx.close();
-      return page_request_error(&request, error.to_string());
-    }
+    Err(error) => return Err(page_request_error(request, error.to_string())),
   };
   let navigation = tokio::time::timeout(
     request.timeout,
@@ -190,18 +223,10 @@ pub async fn judge_page(mut request: JudgePageRequest) -> UiJudgeResult {
     Err(_) => Some(operation_timeout("navigation", request.timeout).to_string()),
   };
   if let Some(error) = navigation_error {
-    drop(page);
-    lynx.close();
-    return page_request_error(&request, error);
+    return Err(page_request_error(request, error));
   }
 
-  let capture = capture_loaded_page(&client, &mut page, &request).await;
-  drop(page);
-  lynx.close();
-  match capture {
-    Ok(capture) => score_captured_page(&client, &request, capture).await,
-    Err(result) => result,
-  }
+  capture_loaded_page(client, &mut page, request).await
 }
 
 async fn capture_loaded_page(
@@ -257,7 +282,7 @@ async fn capture_loaded_page(
   })
 }
 
-async fn score_captured_page(
+pub(crate) async fn score_captured_page(
   client: &ModelClient,
   request: &JudgePageRequest,
   capture: CapturedPage,
