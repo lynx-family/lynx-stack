@@ -8,6 +8,8 @@
       ],
       "inputs": [
         "src/**",
+        "scripts/**",
+        "skills/**",
         "styles/**",
         "tsconfig.json",
         "tsconfig.build.json",

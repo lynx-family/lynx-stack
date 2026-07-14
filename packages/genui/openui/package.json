@@ -26,18 +26,21 @@
     "./openui-prompt": {
       "types": "./dist/openui-prompt/index.d.ts",
       "default": "./dist/openui-prompt/index.js"
-    }
+    },
+    "./skill": "./skills/lynx-openui/SKILL.md"
   },
   "main": "./dist/core/index.js",
   "types": "./dist/core/index.d.ts",
   "files": [
     "dist",
     "styles",
+    "skills",
     "README.md"
   ],
   "scripts": {
-    "build": "tsc -p tsconfig.build.json && cp src/core/renderer.css dist/core/renderer.css",
-    "build:api": "tsc -p tsconfig.build.json"
+    "build": "tsc -p tsconfig.build.json && cp src/core/renderer.css dist/core/renderer.css && npm run validate:skill",
+    "build:api": "tsc -p tsconfig.build.json",
+    "validate:skill": "node scripts/validateSkill.mjs"
   },
   "dependencies": {
     "@openuidev/lang-core": "^0.2.7",
