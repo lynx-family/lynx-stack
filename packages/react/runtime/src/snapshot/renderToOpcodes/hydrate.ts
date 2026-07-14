@@ -405,6 +405,20 @@ export function hydrate(before: SnapshotInstance, after: SnapshotInstance, optio
           });
         }
 
+        if (typeof __ALOG__ !== 'undefined' && __ALOG__) {
+          console.alog?.(
+            '[ReactLynxDebug] ReactLynx::listHydrate::updateListInfo:\n'
+              + JSON.stringify(
+                {
+                  listID,
+                  updateListInfo: info,
+                },
+                null,
+                2,
+              ),
+          );
+        }
+
         const listElement = before.__elements![elementIndex]!;
         __SetAttribute(listElement, 'update-list-info', info);
         const [componentAtIndex, componentAtIndexes] = componentAtIndexFactory(afterChildNodes, hydrate);
