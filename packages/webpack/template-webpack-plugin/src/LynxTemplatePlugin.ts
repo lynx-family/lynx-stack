@@ -103,6 +103,10 @@ export interface TemplateHooks {
   beforeEncode: AsyncSeriesWaterfallHook<{
     encodeData: EncodeRawData;
     filenameTemplate: string;
+    /**
+     * The entry names covered by this template. Always empty for an async
+     * lazy bundle template, whose chunk groups are unnamed.
+     */
     entryNames: string[];
     intermediate: string;
     intermediateAssets: string[];
@@ -134,6 +138,10 @@ export interface TemplateHooks {
     outputName: string;
     mainThreadAssets: Asset[];
     cssChunks: Asset[];
+    /**
+     * The entry names covered by this template. Always empty for an async
+     * lazy bundle template, whose chunk groups are unnamed.
+     */
     entryNames: string[];
   }>;
 
@@ -837,10 +845,9 @@ class LynxTemplatePluginImpl {
     await Promise.all(
       Object.entries(asyncChunkGroups).map(
         ([filename, chunkGroups]): Promise<void> => {
-          const entryNames = chunkGroups
-            .filter(cg => cg.name !== null && cg.name !== undefined).map(cg =>
-              cg.name!
-            );
+          // Async lazy bundle chunk groups are unnamed — the hooks of an
+          // async template always receive an empty `entryNames`.
+          const entryNames: string[] = [];
 
           // If no filename is found, avoid generating async template
           if (!filename) {
