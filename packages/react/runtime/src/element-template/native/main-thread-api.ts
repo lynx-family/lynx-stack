@@ -25,7 +25,13 @@ function renderPage(data: Record<string, unknown> | undefined): void {
   lynx.__initData = data ?? {};
   setupPage(createElementTemplatePage());
   resetMainThreadRootRefs();
-  renderMainThread();
+  // `mainThreadRender: false` turns the main-thread first-screen render (IFR)
+  // off wholesale; the background render fills the screen in through
+  // hydration. The `typeof` guard keeps environments without the define on
+  // the default behavior.
+  if (typeof __MAIN_THREAD_RENDER__ === 'undefined' || __MAIN_THREAD_RENDER__) {
+    renderMainThread();
+  }
 }
 
 function updatePage(data: Record<string, unknown> | undefined, options?: UpdatePageOption): void {

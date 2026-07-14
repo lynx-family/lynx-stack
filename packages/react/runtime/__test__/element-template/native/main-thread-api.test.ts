@@ -117,6 +117,23 @@ describe('injectCalledByNative', () => {
     expect(vi.mocked(renderMainThread)).toHaveBeenCalledTimes(1);
   });
 
+  it('skips the main-thread first-screen render when __MAIN_THREAD_RENDER__ is false', () => {
+    injectCalledByNative();
+    const globalAny = globalThis as typeof globalThis & {
+      renderPage: (data?: Record<string, unknown>) => void;
+    };
+
+    vi.stubGlobal('__MAIN_THREAD_RENDER__', false);
+    globalAny.renderPage({});
+    expect(vi.mocked(renderMainThread)).not.toHaveBeenCalled();
+    // the page structure is still set up for the hydration to fill in
+    expect(vi.mocked(setupPage)).toHaveBeenCalledTimes(1);
+
+    vi.stubGlobal('__MAIN_THREAD_RENDER__', true);
+    globalAny.renderPage({});
+    expect(vi.mocked(renderMainThread)).toHaveBeenCalledTimes(1);
+  });
+
   it('merges updatePage data into initData and flushes the current page', () => {
     injectCalledByNative();
     const globalAny = globalThis as typeof globalThis & {

@@ -83,6 +83,7 @@ export interface PluginReactLynxOptions {
     extractStr?: Partial<ExtractStrConfig> | boolean;
     firstScreenSyncTiming?: 'immediately' | 'jsReady' | 'manual';
     globalPropsMode?: 'reactive' | 'event';
+    mainThreadRender?: boolean;
     optimizeBundleSize?: boolean | {
         mainThread?: boolean;
         background?: boolean;

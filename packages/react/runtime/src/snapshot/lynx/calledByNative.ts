@@ -8,6 +8,7 @@ import { LifecycleConstant } from '../lifecycle/constant.js';
 import {
   firstScreenEventIdSwap,
   isFirstScreenSynced,
+  isHydrationHeld,
   onFirstScreenSyncReady,
   onFirstScreenTreeReady,
   resetFirstScreenSyncState,
@@ -101,20 +102,32 @@ function renderPage(data: Record<string, unknown> | undefined): void {
   setupPage(__CreatePage('0', 0));
   (__root as SnapshotInstance).ensureElements();
 
-  renderMainThread();
+  if (isMainThreadRenderEnabled()) {
+    renderMainThread();
+  }
 
   // always call this before `__FlushElementTree`
   // (There is an implicit `__FlushElementTree` in `renderPage`)
   __pendingListUpdates.flush();
   applyRefQueue();
 
-  if (__FIRST_SCREEN_SYNC_TIMING__ === 'immediately') {
+  if (__FIRST_SCREEN_SYNC_TIMING__ === 'immediately' && !isHydrationHeld()) {
     syncFirstScreen();
   } else {
-    // `jsReady` / `manual`: the tree is ready, but the sync waits for the
+    // `jsReady` / a held handover (`'manual'` or `root.render(jsx,
+    // { hydrate: false })`): the tree is ready, but the sync waits for the
     // `rLynxFirstScreenSyncReady` signal.
     onFirstScreenTreeReady();
   }
+}
+
+// `mainThreadRender: false` (a build option of `pluginReactLynx`) turns the
+// main-thread first-screen render (IFR) off wholesale: the first screen is an
+// empty tree that the background render fills in through hydration. The
+// `typeof` guard keeps environments without the define (e.g. older testing
+// setups) on the default behavior.
+function isMainThreadRenderEnabled(): boolean {
+  return typeof __MAIN_THREAD_RENDER__ === 'undefined' || __MAIN_THREAD_RENDER__;
 }
 
 function updatePage(data: Record<string, unknown> | undefined, options?: UpdatePageOption): void {
@@ -126,10 +139,11 @@ function updatePage(data: Record<string, unknown> | undefined, options?: UpdateP
   applyUpdatePageData(data, options);
 
   const flushOptions = options ?? {};
-  if (!isFirstScreenSynced) {
-    if (__FIRST_SCREEN_SYNC_TIMING__ === 'manual') {
-      // a `markFirstScreenSyncReady` call during the re-render below must not
-      // sync the half-rendered tree; it is deferred to `onFirstScreenTreeReady`
+  if (!isFirstScreenSynced && isMainThreadRenderEnabled()) {
+    if (isHydrationHeld()) {
+      // a `root.hydrate()` / `markFirstScreenSyncReady` call during the
+      // re-render below must not sync the half-rendered tree; it is deferred
+      // to `onFirstScreenTreeReady`
       resetFirstScreenTreeReady();
     }
 
@@ -155,7 +169,7 @@ function updatePage(data: Record<string, unknown> | undefined, options?: UpdateP
       applyRefQueue();
     }
 
-    if (__FIRST_SCREEN_SYNC_TIMING__ === 'manual') {
+    if (isHydrationHeld()) {
       onFirstScreenTreeReady();
     }
 

@@ -54,6 +54,7 @@ export interface ReactWebpackPluginOptions {
     firstScreenSyncTiming?: 'immediately' | 'jsReady' | 'manual';
     globalPropsMode?: 'reactive' | 'event';
     mainThreadChunks?: string[] | undefined;
+    mainThreadRender?: boolean;
     profile?: boolean | undefined;
     workletRuntimePath: string;
 }

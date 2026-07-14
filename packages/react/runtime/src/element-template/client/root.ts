@@ -7,7 +7,8 @@ import type { ComponentChild, ContainerNode } from 'preact';
 import { render } from 'preact';
 import type { ReactNode } from 'react';
 
-import type { DataProcessorDefinition } from '../../lynx-api.js';
+import { getHydrationPromise } from '../../core/hydration.js';
+import type { DataProcessorDefinition, RootRenderOptions } from '../../lynx-api.js';
 import { profileEnd, profileStart } from '../debug/profile.js';
 import { __root } from '../runtime/page/root-instance.js';
 
@@ -34,7 +35,15 @@ export interface Root {
    *
    * @public
    */
-  render: (jsx: ReactNode) => void;
+  render: (jsx: ReactNode, options?: RootRenderOptions) => void;
+  /**
+   * Await the hydration handover on the background thread. The element
+   * template backend performs the handover automatically; a held handover
+   * (`{ hydrate: false }`) is not supported yet.
+   *
+   * @public
+   */
+  hydrate: () => Promise<void>;
   /**
    * {@inheritDoc Lynx.registerDataProcessors}
    * @deprecated use {@link Lynx.registerDataProcessors | lynx.registerDataProcessors} instead
@@ -53,7 +62,12 @@ export interface Root {
  * @public
  */
 export const root: Root = {
-  render: (jsx: ReactNode): void => {
+  render: (jsx: ReactNode, options?: RootRenderOptions): void => {
+    if (options?.hydrate === false) {
+      throw new Error(
+        'The element template backend does not support a held handover (`root.render(jsx, { hydrate: false })`) yet.',
+      );
+    }
     __root.__jsx = jsx;
     if (__BACKGROUND__) {
       if (__PROFILE__) {
@@ -64,6 +78,14 @@ export const root: Root = {
         profileEnd();
       }
     }
+  },
+  hydrate: (): Promise<void> => {
+    if (!__BACKGROUND__) {
+      throw new Error(
+        'The element template backend supports `root.hydrate()` on the background thread only.',
+      );
+    }
+    return getHydrationPromise();
   },
   registerDataProcessors: (dataProcessorDefinition?: DataProcessorDefinition): void => {
     lynx.registerDataProcessors(dataProcessorDefinition);

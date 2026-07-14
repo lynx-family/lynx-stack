@@ -247,6 +247,26 @@ export interface PluginReactLynxOptions {
   enableSSR?: boolean
 
   /**
+   * `mainThreadRender` controls whether the main thread renders the first
+   * screen (IFR, Instant First-Frame Rendering).
+   *
+   * When `false`, the main thread produces an empty first screen and the
+   * background render fills the screen in through the first-screen hydration
+   * — semantically equivalent to wrapping the root in a `<Background>`
+   * boundary. Use it when the whole first screen depends on data that is only
+   * available asynchronously, or as an escape hatch for code that must not
+   * run on the main thread.
+   *
+   * Note that this is not a performance optimization: the first frame becomes
+   * empty and all content waits for the background thread.
+   *
+   * @defaultValue `true`
+   *
+   * @public
+   */
+  mainThreadRender?: boolean
+
+  /**
    * removeDescendantSelectorScope is used to remove the scope of descendant selectors.
    *
    * @defaultValue `true`
@@ -377,6 +397,7 @@ export function pluginReactLynx(
     enableRemoveCSSScope: true,
     firstScreenSyncTiming: 'immediately',
     enableSSR: false,
+    mainThreadRender: true,
     removeDescendantSelectorScope: true,
     shake: undefined,
     defineDCE: undefined,

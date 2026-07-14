@@ -9,12 +9,49 @@ import type { Consumer, FC, ReactNode } from 'react';
 import { createGlobalProps } from './core/globalProps.js';
 import type { GlobalProps } from './core/globalProps.js';
 import { useLynxGlobalEventListener } from './core/hooks/useLynxGlobalEventListener.js';
+import { getHydrationPromise } from './core/hydration.js';
 import { factory, withInitDataInState } from './core/initData.js';
 import { __root } from './root.js';
 import { profileEnd, profileStart } from './shared/profile.js';
 import { LifecycleConstant } from './snapshot/lifecycle/constant.js';
-import { onFirstScreenSyncReady } from './snapshot/lifecycle/event/firstScreenSync.js';
+import {
+  disableAutoHydrate,
+  isHydrationHeld,
+  onFirstScreenSyncReady,
+} from './snapshot/lifecycle/event/firstScreenSync.js';
 import { flushDelayedLifecycleEvents } from './snapshot/lynx/tt.js';
+
+/**
+ * Options of {@link Root.render}.
+ *
+ * @public
+ */
+export interface RootRenderOptions {
+  /**
+   * Whether the framework performs the hydration handover to the background
+   * thread on its own.
+   *
+   * By default (`true`), the handover happens automatically following the
+   * `firstScreenSyncTiming` preset. Pass `false` to split the two verbs: the
+   * main thread keeps the UI (and keeps responding to data updates
+   * synchronously) until you call {@link Root.hydrate}.
+   *
+   * @example
+   *
+   * ```ts
+   * import { root } from '@lynx-js/react';
+   *
+   * root.render(<App />, { hydrate: false });
+   *
+   * const data = await fetchInitialData();
+   * store.prime(data);
+   * await root.hydrate();
+   * ```
+   *
+   * @defaultValue `true`
+   */
+  hydrate?: boolean | undefined;
+}
 
 /**
  * The default root exported by `@lynx-js/react` for you to render a JSX
@@ -66,7 +103,42 @@ export interface Root {
    *
    * @public
    */
-  render: (jsx: ReactNode) => void;
+  render: (jsx: ReactNode, options?: RootRenderOptions) => void;
+  /**
+   * Perform (or await) the hydration handover: the background thread
+   * reconciles against the main-thread first-screen tree and takes the UI
+   * ownership over.
+   *
+   * The returned promise resolves when the handover completes on the calling
+   * thread — on the background thread, after the main thread has applied and
+   * acknowledged the hydration patch; on the main thread, right after the
+   * hydration patch is applied.
+   *
+   * When the handover is held — either through
+   * `root.render(jsx, { hydrate: false })` or through the
+   * `firstScreenSyncTiming: 'manual'` preset — calling this API also triggers
+   * the handover. In the automatic presets it only awaits the completion.
+   *
+   * Note that until the handover completes, updates rendered by the background
+   * thread are not visible and background event handlers are queued. Every
+   * "wait" before `hydrate()` should therefore come with a timeout or another
+   * bound:
+   *
+   * @example
+   *
+   * ```ts
+   * import { root } from '@lynx-js/react';
+   *
+   * root.render(<App />, { hydrate: false });
+   *
+   * // Take over once the data is ready, but never wait longer than 300ms.
+   * await Promise.race([dataReady, timeout(300)]);
+   * await root.hydrate();
+   * ```
+   *
+   * @public
+   */
+  hydrate: () => Promise<void>;
   /**
    * {@inheritDoc Lynx.registerDataProcessors}
    * @deprecated use {@link Lynx.registerDataProcessors | lynx.registerDataProcessors} instead
@@ -85,7 +157,12 @@ export interface Root {
  * @public
  */
 export const root: Root = {
-  render: (jsx: ReactNode): void => {
+  render: (jsx: ReactNode, options?: RootRenderOptions): void => {
+    if (options?.hydrate === false) {
+      // Runs on both threads before `renderPage`, so the main thread makes its
+      // hold-or-sync decision with this flag already in place.
+      disableAutoHydrate();
+    }
     /* v8 ignore next 2 */
     if (typeof __MAIN_THREAD__ !== 'undefined' && __MAIN_THREAD__) {
       __root.__jsx = jsx;
@@ -99,17 +176,28 @@ export const root: Root = {
       if (typeof __PROFILE__ !== 'undefined' && __PROFILE__) {
         profileEnd();
       }
-      if (__FIRST_SCREEN_SYNC_TIMING__ === 'jsReady') {
+      if (__FIRST_SCREEN_SYNC_TIMING__ === 'jsReady' && !isHydrationHeld()) {
         // `jsReady` is a special case of the `manual` first-screen sync: the
         // framework marks ready automatically once the background is ready.
         lynx.getNativeApp().callLepusMethod(LifecycleConstant.firstScreenSyncReady, {});
       } else {
-        // `immediately` or `manual`: the first screen is synced without waiting
-        // for the background, so the `firstScreen` message might have been
-        // reached when `root.render()` is called asynchronously.
+        // `immediately` or a held handover: the first screen is synced without
+        // waiting for the background, so the `firstScreen` message might have
+        // been reached when `root.render()` is called asynchronously.
         flushDelayedLifecycleEvents();
       }
     }
+  },
+  hydrate: (): Promise<void> => {
+    if (isHydrationHeld()) {
+      if (typeof __BACKGROUND__ !== 'undefined' && __BACKGROUND__) {
+        // The handover happens on the main thread, forward the request to it.
+        lynx.getNativeApp().callLepusMethod(LifecycleConstant.firstScreenSyncReady, {});
+      } else {
+        onFirstScreenSyncReady();
+      }
+    }
+    return getHydrationPromise();
   },
   /* v8 ignore next 3 */
   registerDataProcessors: (dataProcessorDefinition: DataProcessorDefinition): void => {
@@ -124,6 +212,10 @@ export const root: Root = {
  * the background thread (for hydration) is fully controlled by the user. It can be called
  * from both threads (a background-thread call is forwarded to the main thread), is a no-op
  * unless `firstScreenSyncTiming` is `'manual'`, and has no further effect once called.
+ *
+ * @deprecated Use {@link Root.hydrate | root.hydrate()} instead — it triggers the same
+ * handover, works together with `root.render(jsx, { hydrate: false })` without any build
+ * configuration, and returns a promise that resolves when the handover completes.
  *
  * @example
  *

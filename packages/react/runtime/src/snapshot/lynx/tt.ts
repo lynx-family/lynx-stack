@@ -5,6 +5,7 @@ import { process, render } from 'preact';
 
 import { runWithForce } from './runWithForce.js';
 import { updateGlobalProps as updateGlobalPropsCore } from '../../core/globalProps.js';
+import { markHydrationCompleted } from '../../core/hydration.js';
 import { updateCardData } from '../../core/lynx-update-data.js';
 import { PerformanceTimingFlags, PipelineOrigins, beginPipeline, markTiming } from '../../core/performance.js';
 import {
@@ -172,6 +173,9 @@ function onLifecycleEventImpl(type: LifecycleConstant, data: unknown): void {
           commitTask();
           globalCommitTaskMap.delete(id);
         });
+        // The main thread has applied and acked the hydration patch — the
+        // handover is complete; resolve `root.hydrate()` on this thread.
+        markHydrationCompleted();
       });
       runDelayedUiOps();
 

@@ -192,6 +192,11 @@ interface ReactWebpackPluginOptions {
   enableSSR?: boolean;
 
   /**
+   * {@inheritdoc @lynx-js/react-rsbuild-plugin#PluginReactLynxOptions.mainThreadRender}
+   */
+  mainThreadRender?: boolean;
+
+  /**
    * The chunk names to be considered as main thread chunks.
    */
   mainThreadChunks?: string[] | undefined;
@@ -300,6 +305,7 @@ class ReactWebpackPlugin {
       firstScreenSyncTiming: 'immediately',
       globalPropsMode: 'reactive',
       enableSSR: false,
+      mainThreadRender: true,
       mainThreadChunks: [],
       extractStr: false,
       experimental_isLazyBundle: false,
@@ -368,6 +374,7 @@ class ReactWebpackPlugin {
       ),
       __GLOBAL_PROPS_MODE__: JSON.stringify(options.globalPropsMode),
       __ENABLE_SSR__: JSON.stringify(options.enableSSR),
+      __MAIN_THREAD_RENDER__: JSON.stringify(options.mainThreadRender),
       __DISABLE_CREATE_SELECTOR_QUERY_INCOMPATIBLE_WARNING__: JSON.stringify(
         options.disableCreateSelectorQueryIncompatibleWarning,
       ),

@@ -1,6 +1,7 @@
 // Copyright 2025 The Lynx Authors. All rights reserved.
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
+import { resetHydrationState } from '../../../core/hydration.js';
 import { isProcessingDefaultData } from '../../../core/lynx-data-processors.js';
 import { __root } from '../../../root.js';
 import { profileEnd, profileStart } from '../../../shared/profile.js';
@@ -13,6 +14,22 @@ let isFirstScreenSynced = false;
 let firstScreenEventIdSwap: Record<string | number, number> = {};
 let isMarkedFirstScreenSyncReady = false;
 let isFirstScreenTreeReady = false;
+
+// Set by `root.render(jsx, { hydrate: false })` (which runs on both threads
+// before `renderPage`): the framework must not hand over the UI to the
+// background thread on its own; the handover waits for `root.hydrate()`.
+let isAutoHydrateDisabled = false;
+
+function disableAutoHydrate(): void {
+  isAutoHydrateDisabled = true;
+}
+
+// Whether the handover is held for an explicit `root.hydrate()` call, either
+// through the `firstScreenSyncTiming: 'manual'` preset or through
+// `root.render(jsx, { hydrate: false })`.
+function isHydrationHeld(): boolean {
+  return isAutoHydrateDisabled || __FIRST_SCREEN_SYNC_TIMING__ === 'manual';
+}
 
 function syncFirstScreen(): void {
   isFirstScreenSynced = true;
@@ -80,6 +97,8 @@ function resetFirstScreenSyncState(): void {
   firstScreenEventIdSwap = {};
   isMarkedFirstScreenSyncReady = false;
   isFirstScreenTreeReady = false;
+  isAutoHydrateDisabled = false;
+  resetHydrationState();
 }
 
 /**
@@ -94,4 +113,6 @@ export {
   onFirstScreenSyncReady,
   onFirstScreenTreeReady,
   resetFirstScreenTreeReady,
+  disableAutoHydrate,
+  isHydrationHeld,
 };
