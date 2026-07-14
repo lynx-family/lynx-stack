@@ -6,8 +6,10 @@ import { createRequire } from 'node:module';
 
 import type {
   Chunk,
+  Compilation,
   Compiler,
   CssExtractRspackPluginOptions as ExternalCssExtractRspackPluginOptions,
+  PathData,
   RspackError,
 } from '@rspack/core';
 
@@ -151,9 +153,35 @@ class CssExtractRspackPluginImpl {
     compiler: Compiler,
     public options: CssExtractRspackPluginOptions,
   ) {
+    // Route a lazy bundle's CSS chunk to `.rspeedy/async/<name>/<layer>.css`,
+    // co-located with the bundle's other intermediate outputs. Non-lazy
+    // chunks keep the configured template.
+    let currentCompilation: Compilation | undefined;
+    compiler.hooks.thisCompilation.tap(this.name, (compilation) => {
+      currentCompilation = compilation;
+    });
+    const userChunkFilename = options.chunkFilename;
+    const chunkFilename = userChunkFilename === undefined
+      ? ''
+      : (pathData: PathData) => {
+        const id = pathData.chunk?.id;
+        if (
+          currentCompilation !== undefined && id !== undefined && id !== null
+        ) {
+          const layoutName = LynxTemplatePlugin.getAsyncChunkLayoutName(
+            currentCompilation,
+            id,
+          );
+          if (layoutName !== undefined) {
+            return `.rspeedy/async/${layoutName}.css`;
+          }
+        }
+        return userChunkFilename;
+      };
+
     new compiler.webpack.CssExtractRspackPlugin({
       filename: options.filename ?? '[name].css',
-      chunkFilename: options.chunkFilename ?? '',
+      chunkFilename,
       ignoreOrder: options.ignoreOrder ?? false,
       insert: options.insert ?? '',
       attributes: options.attributes ?? {},
@@ -174,9 +202,15 @@ class CssExtractRspackPluginImpl {
           const content: string[] = cssChunks.map((chunk) =>
             chunk.source.source().toString('utf-8')
           );
-          for (const entryName of args.entryNames) {
+          // Generate the hot update files of this template's own chunks —
+          // `entryNames` cannot be used as the key since async lazy bundle
+          // templates have none.
+          const chunkKeys = args.chunkGroups
+            .flatMap(cg => cg.chunks)
+            .map(chunk => String(chunk.name ?? chunk.id));
+          for (const chunkKey of chunkKeys) {
             // generate hot update file which is required by cssHotUpdateList
-            const hotUpdateFilePath = this.hotUpdateFiles.get(entryName);
+            const hotUpdateFilePath = this.hotUpdateFiles.get(chunkKey);
             if (!hotUpdateFilePath) {
               continue;
             }
@@ -270,11 +304,19 @@ class CssExtractRspackPluginImpl {
 
             const asyncChunks = Array.from(chunk.getAllAsyncChunks())
               .map(c => {
-                const { path } = compilation.getAssetPathWithInfo(
-                  options.chunkFilename ?? '.rspeedy/async/[name]/[name].css',
-                  { chunk: c },
-                );
-                return [c.name!, path];
+                const layoutName = c.id !== null && c.id !== undefined
+                  ? LynxTemplatePlugin.getAsyncChunkLayoutName(
+                    compilation,
+                    c.id,
+                  )
+                  : undefined;
+                const path = layoutName === undefined
+                  ? compilation.getAssetPathWithInfo(
+                    options.chunkFilename ?? '.rspeedy/async/[name]/[name].css',
+                    { chunk: c },
+                  ).path
+                  : `.rspeedy/async/${layoutName}.css`;
+                return [String(c.name ?? c.id), path] as const;
               });
 
             const { path } = compilation.getPathWithInfo(
@@ -288,14 +330,14 @@ class CssExtractRspackPluginImpl {
               [chunkName, cssHotUpdatePath],
             ) => {
               // use hash of previous compilation cause CSSHotUpdateRuntimeModule can not get hash immediately
-              const hotUpdatePath = cssHotUpdatePath!.replace(
+              const hotUpdatePath = cssHotUpdatePath.replace(
                 '.css',
                 `${this.hash ? `.${this.hash}` : ''}.css.hot-update.json`,
               );
               // save all hot update file info
-              this.hotUpdateFiles.set(chunkName!, hotUpdatePath);
+              this.hotUpdateFiles.set(chunkName, hotUpdatePath);
               return [
-                chunkName!,
+                chunkName,
                 hotUpdatePath,
               ];
             });

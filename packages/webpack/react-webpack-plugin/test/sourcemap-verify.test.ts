@@ -171,7 +171,9 @@ describe('Lazy Bundle Sourcemap Verification', () => {
       'Should capture the initial main-thread asset',
     ).toContain('main__main-thread.js');
     expect(
-      mainThreadFiles.some(name => name.includes('_react_main-thread')),
+      mainThreadFiles.some(name =>
+        name.includes('.rspeedy/async/') && name.endsWith('main-thread.js')
+      ),
       'Should capture at least one async main-thread asset from dynamic import',
     ).toBe(true);
 
@@ -182,14 +184,15 @@ describe('Lazy Bundle Sourcemap Verification', () => {
     const { capturedAssets, capturedMaps } = await captureAssets(
       nonLazyAsyncConfig,
       path.join(__dirname, 'cases/main-thread/lazy-bundle-sourcemap'),
-      name => name.includes('_react_main-thread') && name.endsWith('.js'),
+      name =>
+        name.includes('.rspeedy/async/') && name.endsWith('main-thread.js'),
     );
 
     const assetNames = [...capturedAssets.keys()];
 
     expect(
       assetNames.some(name =>
-        name.includes('_react_main-thread') && name.includes('lazy')
+        name.endsWith('main-thread.js') && name.includes('lazy')
       ),
       'Should capture the async lazy main-thread chunk',
     ).toBe(true);

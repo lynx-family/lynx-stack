@@ -165,10 +165,7 @@ export class LynxDebugMetadataPluginImpl {
       templateHooks.beforeEncode.tap(
         this.constructor.name,
         (args) => {
-          // Async lazy-bundle chunk groups are unnamed, so `entryNames` is
-          // empty for them. Recover this bundle's chunk groups from the chunk
-          // files that the encode data enumerates.
-          const chunkGroups = resolveChunkGroups(compilation, args)
+          const chunkGroups = args.chunkGroups
           const uiSourceMapRecords = collectUiSourceMapRecords(
             compilation,
             chunkGroups,
@@ -301,55 +298,6 @@ export class LynxDebugMetadataPluginImpl {
       )
     })
   }
-}
-
-/**
- * Resolve the chunk groups a template covers. Named entries resolve directly;
- * async lazy bundles have unnamed chunk groups (so `entryNames` is empty), and
- * are recovered from the chunk files the encode data enumerates.
- */
-function resolveChunkGroups(
-  compilation: Rspack.Compilation,
-  args: {
-    entryNames: string[]
-    encodeData: {
-      lepusCode: {
-        root?: { name: string } | undefined
-        chunks: Array<{ name: string }>
-      }
-      manifest: Record<string, unknown>
-      css: { chunks: Array<{ name: string }> }
-    }
-  },
-): Rspack.ChunkGroup[] {
-  const named = args.entryNames
-    .map(name =>
-      compilation.namedChunkGroups.get(name)
-        ?? compilation.entrypoints.get(name)
-    )
-    .filter((cg): cg is Rspack.ChunkGroup => cg != null)
-  if (named.length > 0) {
-    return named
-  }
-
-  const files = new Set<string>()
-  const { lepusCode, manifest, css } = args.encodeData
-  if (lepusCode.root?.name) files.add(lepusCode.root.name)
-  for (const chunk of lepusCode.chunks) files.add(chunk.name)
-  for (const name of Object.keys(manifest)) files.add(name)
-  for (const chunk of css.chunks) files.add(chunk.name)
-
-  // Select only groups belonging to this bundle: a group from another lazy
-  // bundle that merely shares a split chunk still has its own chunks (whose
-  // files are absent here), so requiring *every* file-bearing chunk to be one
-  // of this bundle's files excludes it.
-  return compilation.chunkGroups.filter(cg => {
-    const withFiles = cg.chunks.filter(chunk => chunk.files.size > 0)
-    return withFiles.length > 0
-      && withFiles.every(chunk =>
-        [...chunk.files].some(file => files.has(file))
-      )
-  })
 }
 
 /**

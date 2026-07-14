@@ -39,7 +39,7 @@ export default {
               [ // main entry
                 'main__main-thread.js',
                 // foo.js lazy bundle
-                '.rspeedy/async/_react_main-thread_foo_js.js',
+                '.rspeedy/async/foo.js/main-thread.js',
               ],
             );
             expect(
@@ -49,7 +49,7 @@ export default {
               [ // main entry
                 'main__background.js',
                 // foo.js lazy bundle
-                '.rspeedy/async/_react_background_foo_js.js',
+                '.rspeedy/async/foo.js/background.js',
               ],
             );
           },

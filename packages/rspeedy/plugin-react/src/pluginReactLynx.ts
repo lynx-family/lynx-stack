@@ -23,7 +23,6 @@ import type {
 import { LAYERS } from '@lynx-js/react-webpack-plugin'
 import { LynxTemplatePlugin } from '@lynx-js/template-webpack-plugin'
 
-import { applyAsyncChunkLayout } from './asyncChunkLayout.js'
 import { applyBackgroundOnly } from './backgroundOnly.js'
 import { applyCSS } from './css.js'
 import { applyEntry } from './entry.js'
@@ -430,7 +429,6 @@ export function pluginReactLynx(
           applyCSS(api, resolvedOptions)
         }
         applyEntry(api, resolvedOptions)
-        applyAsyncChunkLayout(api)
         applyBackgroundOnly(api)
         applyGenerator(api, resolvedOptions)
         if (isRstest) {

@@ -36,7 +36,7 @@ it('should generate correct async chunk', async () => {
   const content = await fs.promises.readFile(
     path.resolve(
       __dirname,
-      `bundle-splitting_async-chunk_dynamic_js.${path.basename(__filename)}`,
+      `.rspeedy/async/bundle-splitting/async-chunk/dynamic.js.js`,
     ),
     'utf-8',
   );
@@ -46,7 +46,7 @@ it('should generate correct async chunk', async () => {
   const content2 = await fs.promises.readFile(
     path.resolve(
       __dirname,
-      `bundle-splitting_async-chunk_dynamic2_js.${path.basename(__filename)}`,
+      `.rspeedy/async/bundle-splitting/async-chunk/dynamic2.js.js`,
     ),
     'utf-8',
   );
@@ -56,7 +56,7 @@ it('should generate correct async chunk', async () => {
   const content3 = await fs.promises.readFile(
     path.resolve(
       __dirname,
-      `bundle-splitting_async-chunk_dynamic3_js.${path.basename(__filename)}`,
+      `.rspeedy/async/bundle-splitting/async-chunk/dynamic3.js.js`,
     ),
     'utf-8',
   );

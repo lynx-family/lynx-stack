@@ -19,13 +19,13 @@ it('should have chunkName', async () => {
 });
 
 it('should not have duplicated chunk', async () => {
-  const files = await readdir(__dirname, { recursive: false });
+  const files = await readdir(join(__dirname, '.rspeedy/async'), {
+    recursive: true,
+  });
   expect(
-    files.filter(file => file.endsWith('.js')),
-  ).toHaveLength(
+    files.filter(file => file.endsWith('background.js')).length,
+  ).toBe(
     [
-      'main',
-      'main__background',
       'foo',
       'bar',
       'baz',
@@ -38,7 +38,7 @@ it('should have async chunks', () => {
     expect(['foo', 'bar', 'baz'].every(entry =>
       existsSync(join(
         __dirname,
-        `_react_background_${entry}_js.js`,
+        `.rspeedy/async/${entry}.js/background.js`,
       ))
     )).toBeTruthy();
   }

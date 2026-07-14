@@ -349,7 +349,7 @@ describe('Lazy', () => {
           backgroundJSContent,
         )![1]
       expect(cssHotUpdateList).toMatchInlineSnapshot(
-        `"[[null,".rspeedy/async/_react_background_fixtures_lazy-bundle_LazyComponent_tsx/_react_background_fixtures_lazy-bundle_LazyComponent_tsx.css.hot-update.json"],["main",".rspeedy/main/main.css.hot-update.json"]]"`,
+        `"[["_react_background_fixtures_lazy-bundle_LazyComponent_tsx",".rspeedy/async/fixtures/lazy-bundle/LazyComponent.tsx/background.css.hot-update.json"],["main",".rspeedy/main/main.css.hot-update.json"]]"`,
       )
     } finally {
       rstest.unstubAllEnvs()
