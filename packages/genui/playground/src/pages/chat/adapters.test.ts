@@ -67,7 +67,12 @@ describe('chat protocol adapters', () => {
     expect(done.emissions).toEqual([
       {
         type: 'usage',
-        usage: { promptTokens: 2, completionTokens: 3, totalTokens: 5 },
+        usage: {
+          promptTokens: 2,
+          completionTokens: 3,
+          totalTokens: 5,
+          cachedTokens: 0,
+        },
       },
       {
         type: 'previewPayload',
@@ -117,7 +122,12 @@ describe('chat protocol adapters', () => {
       { type: 'progress', text: output.rawText },
       {
         type: 'usage',
-        usage: { promptTokens: 4, completionTokens: 6, totalTokens: 10 },
+        usage: {
+          promptTokens: 4,
+          completionTokens: 6,
+          totalTokens: 10,
+          cachedTokens: 0,
+        },
       },
       { type: 'final', output },
     ]);

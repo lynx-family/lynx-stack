@@ -113,6 +113,9 @@ function clonePreviewPerformanceMetrics(
     next.agentOutputMs = value.agentOutputMs;
   }
   if (typeof value.renderMs === 'number') next.renderMs = value.renderMs;
+  if (typeof value.cachedTokens === 'number') {
+    next.cachedTokens = value.cachedTokens;
+  }
   return Object.keys(next).length > 0 ? next : undefined;
 }
 

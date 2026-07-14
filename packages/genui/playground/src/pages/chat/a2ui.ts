@@ -47,6 +47,7 @@ interface A2UIDonePayload {
   message?: unknown;
   messages?: unknown;
   usage?: unknown;
+  cachedTokens?: unknown;
   preview?: {
     messagesUrl?: unknown;
     actionMocksUrl?: unknown;
@@ -204,7 +205,7 @@ function metadataEmissions(
   if (!isRecord(payload)) return [];
   const record = payload as A2UIDonePayload;
   const emissions: ChatStreamEmission<A2UIOutput>[] = [];
-  const usage = parseTokenUsage(record.usage);
+  const usage = parseTokenUsage(record.usage, record.cachedTokens);
   if (usage) emissions.push({ type: 'usage', usage });
   const preview = normalizePreviewPayload(payload);
   if (preview) emissions.push({ type: 'previewPayload', value: preview });

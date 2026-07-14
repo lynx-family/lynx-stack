@@ -32,6 +32,7 @@ export interface ChatTokenUsage {
   promptTokens: number;
   completionTokens: number;
   totalTokens: number;
+  cachedTokens: number;
 }
 
 export type ChatMessageKind =

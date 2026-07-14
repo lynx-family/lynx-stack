@@ -304,6 +304,9 @@ function formatMetricValue(value: number | undefined): string {
 }
 
 function MessageMetrics(props: { metrics: PreviewPerformanceMetrics }) {
+  const cachedTokens = props.metrics.cachedTokens;
+  const hasCachedTokens = typeof cachedTokens === 'number'
+    && cachedTokens > 0;
   const items = [
     { key: 'fcpMs', label: 'FCP', value: props.metrics.fcpMs },
     { key: 'fmpMs', label: 'FMP', value: props.metrics.fmpMs },
@@ -315,9 +318,19 @@ function MessageMetrics(props: { metrics: PreviewPerformanceMetrics }) {
     },
     { key: 'renderMs', label: 'Render', value: props.metrics.renderMs },
   ].filter((item) => typeof item.value === 'number');
-  if (items.length === 0) return null;
+  if (items.length === 0 && !hasCachedTokens) return null;
   return (
     <div className='chatMessageMetrics' aria-label='Metrics'>
+      {hasCachedTokens
+        ? (
+          <span className='chatMessageMetricItem chatMessageMetricItemHit'>
+            <span className='chatMessageMetricName'>Cache hit</span>
+            <span className='chatMessageMetricValue'>
+              {formatTokenCount(cachedTokens)}
+            </span>
+          </span>
+        )
+        : null}
       {items.map((item) => (
         <span className='chatMessageMetricItem' key={item.key}>
           <span className='chatMessageMetricName'>{item.label}</span>
@@ -482,6 +495,7 @@ function mergeMetrics(
       'ttiMs',
       'agentOutputMs',
       'renderMs',
+      'cachedTokens',
     ] as const
   ) {
     const value = patch[key];
@@ -872,7 +886,17 @@ export function ChatController<
       return;
     }
     if (emission.type === 'usage') {
-      setUsage((current) => addTokenUsage(current, emission.usage));
+      setUsage((current) => {
+        const nextUsage = addTokenUsage(current, emission.usage);
+        if (nextUsage.cachedTokens > 0) {
+          const nextMetrics = mergeMetrics(metricsRef.current, {
+            cachedTokens: nextUsage.cachedTokens,
+          });
+          metricsRef.current = nextMetrics;
+          setMetrics(nextMetrics);
+        }
+        return nextUsage;
+      });
       return;
     }
     if (emission.type === 'previewPayload') {
@@ -1248,7 +1272,17 @@ export function ChatController<
               onEmission: (emission) => {
                 if (runIdRef.current !== runId) return;
                 if (emission.type === 'usage') {
-                  setUsage((current) => addTokenUsage(current, emission.usage));
+                  setUsage((current) => {
+                    const nextUsage = addTokenUsage(current, emission.usage);
+                    if (nextUsage.cachedTokens > 0) {
+                      const nextMetrics = mergeMetrics(metricsRef.current, {
+                        cachedTokens: nextUsage.cachedTokens,
+                      });
+                      metricsRef.current = nextMetrics;
+                      setMetrics(nextMetrics);
+                    }
+                    return nextUsage;
+                  });
                 } else if (emission.type === 'previewPayload') {
                   actionPreviewPayloadUrls = emission.value;
                 } else if (emission.type === 'partial') {
@@ -1464,7 +1498,7 @@ export function ChatController<
             >
               Browse examples
             </button>
-            {usage.totalTokens > 0
+            {usage.totalTokens > 0 || usage.cachedTokens > 0
               ? (
                 <span className='chatTokenUsageBadge'>
                   <span className='chatTokenUsageItem'>
@@ -1476,6 +1510,13 @@ export function ChatController<
                   <span className='chatTokenUsageItem chatTokenUsageTotal'>
                     Total {formatTokenCount(usage.totalTokens)}
                   </span>
+                  {usage.cachedTokens > 0
+                    ? (
+                      <span className='chatTokenUsageItem chatTokenUsageCached'>
+                        Cached {formatTokenCount(usage.cachedTokens)}
+                      </span>
+                    )
+                    : null}
                 </span>
               )
               : null}

@@ -56,6 +56,7 @@ export const EMPTY_CHAT_TOKEN_USAGE: Readonly<ChatTokenUsage> = {
   promptTokens: 0,
   completionTokens: 0,
   totalTokens: 0,
+  cachedTokens: 0,
 };
 
 export function createDefaultProviderSettings(): ProviderSettings {
@@ -197,15 +198,46 @@ export const CHAT_PROVIDER_SETTINGS_ADAPTER = {
   badge: compactProviderLabel,
 } satisfies ChatSettingsAdapter<ProviderSettings>;
 
-export function parseTokenUsage(value: unknown): ChatTokenUsage | null {
-  if (!value || typeof value !== 'object') return null;
-  const record = value as Record<string, unknown>;
+function toFiniteNumber(candidate: unknown): number {
+  return typeof candidate === 'number' && Number.isFinite(candidate)
+    ? candidate
+    : 0;
+}
+
+export function parseTokenUsage(
+  value: unknown,
+  cachedTokenValue?: unknown,
+): ChatTokenUsage | null {
+  if (
+    (!value || typeof value !== 'object')
+    && toFiniteNumber(cachedTokenValue) === 0
+  ) {
+    return null;
+  }
+  const record = value && typeof value === 'object'
+    ? value as Record<string, unknown>
+    : {};
   const pickNumber = (...keys: string[]): number => {
     for (const key of keys) {
-      const candidate = record[key];
-      if (typeof candidate === 'number' && Number.isFinite(candidate)) {
-        return candidate;
+      const value = toFiniteNumber(record[key]);
+      if (value > 0) return value;
+    }
+    return 0;
+  };
+  const pickNestedNumber = (
+    ...paths: readonly (readonly string[])[]
+  ): number => {
+    for (const path of paths) {
+      let candidate: unknown = record;
+      for (const key of path) {
+        if (!candidate || typeof candidate !== 'object') {
+          candidate = undefined;
+          break;
+        }
+        candidate = (candidate as Record<string, unknown>)[key];
       }
+      const value = toFiniteNumber(candidate);
+      if (value > 0) return value;
     }
     return 0;
   };
@@ -224,10 +256,30 @@ export function parseTokenUsage(value: unknown): ChatTokenUsage | null {
   );
   const totalTokens = pickNumber('totalTokens', 'total_tokens')
     || promptTokens + completionTokens;
-  if (promptTokens === 0 && completionTokens === 0 && totalTokens === 0) {
+  const cachedTokens = toFiniteNumber(cachedTokenValue)
+    || pickNumber(
+      'cachedTokens',
+      'cached_tokens',
+      'cachedInputTokens',
+      'cached_input_tokens',
+      'cacheReadInputTokens',
+      'cache_read_input_tokens',
+    )
+    || pickNestedNumber(
+      ['promptTokensDetails', 'cachedTokens'],
+      ['prompt_tokens_details', 'cached_tokens'],
+      ['inputTokensDetails', 'cachedTokens'],
+      ['input_tokens_details', 'cached_tokens'],
+    );
+  if (
+    promptTokens === 0
+    && completionTokens === 0
+    && totalTokens === 0
+    && cachedTokens === 0
+  ) {
     return null;
   }
-  return { promptTokens, completionTokens, totalTokens };
+  return { promptTokens, completionTokens, totalTokens, cachedTokens };
 }
 
 export function addTokenUsage(
@@ -238,6 +290,7 @@ export function addTokenUsage(
     promptTokens: current.promptTokens + next.promptTokens,
     completionTokens: current.completionTokens + next.completionTokens,
     totalTokens: current.totalTokens + next.totalTokens,
+    cachedTokens: current.cachedTokens + next.cachedTokens,
   };
 }
 

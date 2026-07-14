@@ -15,6 +15,34 @@ describe('shared chat helpers', () => {
       promptTokens: 2,
       completionTokens: 3,
       totalTokens: 5,
+      cachedTokens: 0,
+    });
+  });
+
+  test('parses cached token hits from top-level and nested keys', () => {
+    expect(parseTokenUsage({
+      input_tokens: 12,
+      output_tokens: 4,
+      input_tokens_details: { cached_tokens: 8 },
+    })).toEqual({
+      promptTokens: 12,
+      completionTokens: 4,
+      totalTokens: 16,
+      cachedTokens: 8,
+    });
+
+    expect(parseTokenUsage({ total_tokens: 20 }, 9)).toEqual({
+      promptTokens: 0,
+      completionTokens: 0,
+      totalTokens: 20,
+      cachedTokens: 9,
+    });
+
+    expect(parseTokenUsage(undefined, 6)).toEqual({
+      promptTokens: 0,
+      completionTokens: 0,
+      totalTokens: 0,
+      cachedTokens: 6,
     });
   });
 });
