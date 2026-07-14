@@ -8,6 +8,16 @@ on:
     secrets:
       CODECOV_TOKEN:
         required: true
+      MIDSCENE_MODEL_API_KEY:
+        required: false
+      MIDSCENE_MODEL_BASE_URL:
+        required: false
+      MIDSCENE_MODEL_FAMILY:
+        required: false
+      MIDSCENE_MODEL_NAME:
+        required: false
+      MIDSCENE_OPENAI_INIT_CONFIG_JSON:
+        required: false
 
 # Set minimum permissions to prevent unnecessary access
 permissions: {}
@@ -68,6 +78,11 @@ jobs:
       - name: Test
         env:
           CARGO_LLVM_COV_FLAGS_NO_RUNNER: --no-sparse
+          MIDSCENE_MODEL_API_KEY: ${{ secrets.MIDSCENE_MODEL_API_KEY }}
+          MIDSCENE_MODEL_BASE_URL: ${{ secrets.MIDSCENE_MODEL_BASE_URL }}
+          MIDSCENE_MODEL_FAMILY: ${{ secrets.MIDSCENE_MODEL_FAMILY }}
+          MIDSCENE_MODEL_NAME: ${{ secrets.MIDSCENE_MODEL_NAME }}
+          MIDSCENE_OPENAI_INIT_CONFIG_JSON: ${{ secrets.MIDSCENE_OPENAI_INIT_CONFIG_JSON }}
         run: |
           cargo llvm-cov nextest --all-targets --all-features --profile ci --config-file .cargo/nextest.toml --lcov --output-path lcov.info  --release
       - name: Upload coverage reports to Codecov

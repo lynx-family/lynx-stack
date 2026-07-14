@@ -1,129 +1,136 @@
-# @lynx-js/ui-judge
+# UI Judge
 
-`@lynx-js/ui-judge` judges an existing Playwright page with Midscene.
+`ui_judge` is a pure Rust library crate that renders a Lynx URL with the
+existing `lynx-headless-rust-test-runner`, performs optional natural-language
+steps, captures the software-renderer frame, and asks Agent SDK for a structured
+visual-correctness score. When a reference image is supplied, the crate also
+normalizes, aligns, and compares it with the same captured frame through a
+separate deterministic evaluation chain.
 
-The first public API is `judgePage`. Callers own the Playwright page lifecycle,
-including navigation, viewport, cookies, route mocks, and authentication. The
-judge reads `page.url()` for the returned JSON object and produces a single
-score from `0` to `5`.
+UI Judge has no Kitten-Lynx, Android, ADB, Playwright, Midscene, CLI, or npm
+runtime. It does not modify or duplicate the headless runner.
 
-```ts
-import { test } from '@playwright/test';
+## Rust API
 
-import { judgePage } from '@lynx-js/ui-judge';
+The crate root exposes only `judge_page`, `JudgePageRequest`, and the
+corresponding `UiJudgeResult` / `UiJudgeError` output types. Callers only need
+the request API to invoke it:
 
-test('judges generated UI', async ({ page }) => {
-  await page.goto('http://localhost:3000/render.html');
+```rust
+use std::time::Duration;
+use ui_judge::{judge_page, JudgePageRequest};
 
-  const result = await judgePage({
-    dimension: 'usability-interaction',
-    page,
-    task:
-      'The page should render a login form with email, password, and submit.',
-    steps: ['Click the submit button.'],
-  });
-});
-```
+#[tokio::main(flavor = "current_thread")]
+async fn main() {
+  let result = judge_page(JudgePageRequest {
+    reference: None,
+    reference_image: None,
+    screenshot_settle: Duration::from_millis(16),
+    steps: vec!["Tap the Save button".into()],
+    task: "The saved state should be clear and visually correct".into(),
+    timeout: Duration::from_secs(120),
+    url: "file:///absolute/path/to/dist/main.lynx.bundle".into(),
+  })
+  .await;
 
-`runVisualEvaluation` compares one prepared reference image with a rendered Lynx
-page URL. The `referenceImage` field accepts plain base64, a
-`data:image/...;base64,...` URL, or an `http://` / `https://` image URL.
-
-```ts
-import { runVisualEvaluation } from '@lynx-js/ui-judge';
-
-const result = await runVisualEvaluation({
-  referenceImage: 'data:image/png;base64,...',
-  templateUrl: 'http://localhost:3000/render.html',
-  capture: {
-    waitTimeMs: 500,
-  },
-});
-
-console.log(result.score, result.reason);
-console.log(result.artifacts.diffImageBase64);
-```
-
-The visual evaluation result follows this shape:
-
-```ts
-interface VisualEvaluationResponse {
-  ok: true;
-  score?: number;
-  reason?: string;
-  artifacts: {
-    referenceImageBase64: string;
-    deviceImageBase64: string;
-    alignedReferenceImageBase64: string;
-    alignedDeviceImageBase64: string;
-    diffImageBase64: string;
-  };
-  metrics: {
-    alignResult: AlignResult | null;
-    compareResult: CompareResult;
-    evaluationResult: EvaluationResult;
-  };
-  warnings?: string[];
+  println!("score: {}/5", result.score);
 }
 ```
 
-Tests and custom runtimes can inject `capture` and `evaluate` functions into
-`runVisualEvaluation`.
+`judge_page` accepts `file://`, `http://`, and `https://` URLs. Local bundles
+must use an absolute `file:///...` URL; bare filesystem paths are rejected
+before model or runtime initialization.
 
-`@lynx-js/ui-judge` intentionally exposes only a programming API for visual
-evaluation. It does not create an HTTP endpoint or perform caller
-authentication. If an implementation wires user-controlled requests into
-`runVisualEvaluation`, that implementation must enforce its own trust boundary,
-such as authentication, URL allowlists, and private-network filtering for
-`referenceImage` and `templateUrl`.
+`timeout` applies independently to connection, navigation, each natural
+language step, final screenshot capture, VLM scoring, and optional reference
+image comparison. It is not an overall deadline for the entire request; this
+preserves the behavior of the former TypeScript implementation.
 
-`judgeAndroidAgent` judges an Android Lynx screen through a Kitten-Lynx page.
-Callers own the Kitten-Lynx device/app lifecycle, including connection,
-navigation, and teardown. The judge reads `page.url()` for the returned JSON
-object, mirroring `judgePage`.
+`reference` remains an optional textual target for the model. Set
+`reference_image` to a plain base64 image, a `data:image/...;base64,...` URL, or
+an HTTP(S) image URL to enable deterministic visual comparison. UI Judge uses
+normalized cross-correlation to align the images, compares 32-pixel blocks,
+and returns `alignment_score`, `visual_similarity`, `different_blocks`,
+`total_blocks`, and `diff_image_base64` on `UiJudgeResult`.
 
-```ts
-import { Lynx } from '@lynx-js/kitten-lynx-test-infra';
-import { judgeAndroidAgent } from '@lynx-js/ui-judge';
+The VLM and reference-image comparison are independent consumers of the final
+screenshot. The VLM always receives only that screenshot plus `task` and the
+optional textual `reference`; it never receives `reference_image`, alignment
+output, pixel-diff output, or algorithmic similarity. Consequently the public
+`score`, `reason`, and `summary` fields always come from the VLM. The `error`
+field reports failures in the primary page-capture or VLM chain. A
+reference-image failure is reported separately as `reference_image_error` and
+does not replace a successful VLM result; a VLM failure likewise does not
+discard successful comparison diagnostics. The public crate surface remains
+`judge_page`, `JudgePageRequest`, `UiJudgeResult`, and `UiJudgeError`; comparison
+types and algorithms stay internal.
 
-const lynx = await Lynx.connect({ appPackage: 'com.lynx.explorer' });
-const page = await lynx.newPage();
-await page.goto('http://localhost:8080/main.lynx.bundle');
+The public VLM `score` remains an integer from 0 through 5. The independent
+`visual_similarity` diagnostic is a block-level ratio from 0 through 1. Input
+images are limited to 10 MiB compressed, 8192 pixels per dimension, and 8
+megapixels after decoding.
 
-const result = await judgeAndroidAgent({
-  page,
-  task: 'The Lynx app should show a checkout confirmation screen.',
-  steps: ['Dismiss permission dialog if it appears.'],
-});
+The function internally creates the model client from the environment,
+connects to headless Lynx, creates and navigates the page, executes steps,
+captures the final PNG, and releases the page and Lynx connection before the
+independent VLM and reference-image evaluations. Model, runner, page,
+screenshot-comparison, prompt, and fixture-helper types are implementation
+details and are not exported.
+
+Run `judge_page` sequentially on a Tokio current-thread runtime. The runner's
+native task pump and page state remain bound to their creation thread. The
+runner must have its standard runtime resources installed, including
+`lynx_core.js` beside the executable on Linux or in `LynxResources.bundle` on
+macOS.
+
+Natural-language steps are planned with Agent SDK from the current DOM and
+screenshot, then executed with selector-based tap and wait APIs. The runner has
+no public swipe, scroll, typing, or coordinate-touch API, so those actions
+produce an explicit unsupported error.
+
+## Model configuration
+
+The internal model client preserves the existing environment-variable
+interface:
+
+- `MIDSCENE_MODEL_API_KEY`
+- `MIDSCENE_MODEL_BASE_URL`
+- `MIDSCENE_MODEL_NAME`
+- `MIDSCENE_MODEL_FAMILY`
+- `MIDSCENE_MODEL_API` (`chat` or `responses`)
+- `MIDSCENE_MODEL_TIMEOUT` or `MIDSCENE_MODEL_TIMEOUT_MS`
+- `MIDSCENE_MODEL_INIT_CONFIG_JSON`
+- `MIDSCENE_OPENAI_INIT_CONFIG_JSON` (legacy alias)
+- `OPENAI_ORG_ID`
+- `OPENAI_PROJECT_ID`
+
+These names are retained for configuration compatibility; the implementation
+does not load Midscene. OpenAI-compatible `OPENAI_*` aliases are also accepted.
+The JSON init config preserves scalar `defaultHeaders` / `extraHeaders`,
+`defaultQuery`, `organization`, and `project` entries. Both Chat Completions and
+Responses wire formats feed Agent SDK structured-output validation. The legacy
+`/crawl?ak=` endpoint is Chat-only.
+
+Unit tests use `UI_JUDGE_MODEL_RESPONSE_JSON` or
+`UI_JUDGE_MODEL_RESPONSES_JSON` for deterministic model output. The
+`headless_e2e` integration test rejects both mock variables and calls the real
+configured model. If no supported credential environment variable is set, the
+integration test reports that it was skipped so fork pull requests can still
+run the rest of the Rust suite.
+
+## Tests
+
+From the workspace root, install and build repository dependencies, generate
+the React fixture, configure the model environment variables, then run the Rust
+tests:
+
+```bash
+pnpm install --frozen-lockfile
+pnpm turbo build
+NODE_ENV=production node packages/rspeedy/core/bin/rspeedy.js build \
+  --root packages/genui/ui-judge/tests/fixtures/react
+cargo test -p ui_judge --lib --tests --all-features
 ```
 
-When `dimension` is omitted, `judgePage` keeps the legacy
-`visual-correctness` prompt. GEQI scoring can pass one of these dimensions:
-
-- `usability-interaction`
-- `visual-aesthetics`
-- `consistency-standards`
-- `architecture-writing`
-- `accessibility-performance`
-
-Midscene reads its model configuration from the standard Midscene environment
-variables, such as `MIDSCENE_MODEL_BASE_URL`, `MIDSCENE_MODEL_API_KEY`,
-`MIDSCENE_MODEL_NAME`, and `MIDSCENE_MODEL_FAMILY`.
-
-The Playwright test suite uses the real Midscene service when
-`MIDSCENE_MODEL_NAME` is present. Without model configuration, the model-backed
-test is skipped and the error-path test still runs.
-
-The model-backed package test uses the A2UI playground preview server instead
-of a scratch HTTP fixture. It opens the playground's `render.html` demo route
-with `speed=0`, for example
-`/render.html?protocol=a2ui&demoUrl=.%2Fa2ui.web.js&theme=light&demo=recs&speed=0`.
-Prepare the playground artifacts first:
-
-```sh
-pnpm turbo build:lynx --filter genui-playground
-pnpm --filter @lynx-js/ui-judge test
-```
-
-The playground dev server binds to a local TCP port, so sandboxed runs need
-local-bind permission.
+The generated `.generated/main.lynx.bundle` is ignored by Git. Runtime-backed
+headless coverage runs on Linux and macOS.
