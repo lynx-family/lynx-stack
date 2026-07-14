@@ -36,7 +36,11 @@ export function parseRouteHash(hash: string): Route {
   let protocol: Protocol = DEFAULT_PROTOCOL;
   let rest = parts;
 
-  if (parts[0] === 'a2ui' || parts[0] === 'openui') {
+  if (
+    parts[0] === 'a2ui'
+    || parts[0] === 'openui'
+    || parts[0] === 'mcp-apps'
+  ) {
     protocol = getProtocol(parts[0]);
     rest = parts.slice(1);
   }

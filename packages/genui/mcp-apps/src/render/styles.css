@@ -1,0 +1,62 @@
+/* Copyright 2026 The Lynx Authors. All rights reserved.
+ * Licensed under the Apache License Version 2.0 that can be found in the
+ * LICENSE file in the root directory of this source tree. */
+
+page {
+  font-size: 16px;
+}
+
+.appPage {
+  width: 100%;
+  min-height: 100vh;
+  padding: 20px 16px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-start;
+  box-sizing: border-box;
+}
+
+.appPageLight {
+  background: linear-gradient(145deg, #d9f1ff 0%, #f3f8ff 52%, #eef2ff 100%);
+}
+
+.appPageDark {
+  background: linear-gradient(145deg, #071426 0%, #101b33 55%, #17162c 100%);
+}
+
+.appEmpty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 1.5rem;
+  border-radius: 1rem;
+  background-color: #1f3152;
+}
+
+.appEmptyTitle {
+  color: #ffffff;
+  font-size: 1rem;
+  font-weight: 700;
+}
+
+.appEmptyText {
+  margin-top: 0.5rem;
+  color: rgba(255, 255, 255, 0.72);
+  font-size: 0.78rem;
+  text-align: center;
+}
+
+.appMarkdown {
+  width: 100%;
+  max-width: 42rem;
+  padding: 1.25rem;
+  border-radius: 1rem;
+  background-color: #ffffff;
+  box-shadow: 0 0.75rem 2rem rgba(15, 23, 42, 0.12);
+  box-sizing: border-box;
+}
+
+.appMarkdownContent {
+  width: 100%;
+}

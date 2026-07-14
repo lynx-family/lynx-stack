@@ -36,6 +36,7 @@ export default defineConfig({
     },
     entry: {
       a2ui: './lynx-src/a2ui/index.tsx',
+      'mcp-apps': './lynx-src/mcp-apps/index.tsx',
       openui: './lynx-src/openui/index.tsx',
     },
   },

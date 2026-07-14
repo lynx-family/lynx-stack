@@ -18,63 +18,29 @@ import {
 } from '../../../agent/image-resolver';
 import { getA2UIAgentService } from '../../../service/a2ui-agent';
 import {
-  errorMessage,
-  extractUsageMetrics,
-  pickChatOptions,
-  readJsonBodyWithLimit,
   validateConversation,
   validateMessages,
-} from '../_shared';
+} from '../../common/chat-validation';
+import { corsPreflight, jsonWithCors } from '../../common/cors';
+import { errorMessage } from '../../common/errors';
+import { checkRateLimit, rateLimitSseResponse } from '../../common/rate-limit';
+import { readJsonBodyWithLimit } from '../../common/request';
+import { encodeSSE, sseHeaders } from '../../common/sse';
+import { createStreamLogger } from '../../common/stream-logger';
+import { extractUsageMetrics } from '../../common/usage';
+import { pickA2UIChatOptions } from '../_shared';
 import type { A2UIChatBody } from '../_shared';
-import { corsHeaders, corsPreflight, jsonWithCors } from '../cors';
 import { publishA2UIPayload } from '../payload-publisher';
-import { checkRateLimit, rateLimitSseResponse } from '../rate-limit';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
-
-function createStreamLogger(route: string) {
-  const requestId = crypto.randomUUID();
-  const startedAt = Date.now();
-  const log = (event: string, details: Record<string, unknown> = {}) => {
-    console.info('[a2ui:stream]');
-    console.dir({
-      route,
-      requestId,
-      event,
-      elapsedMs: Date.now() - startedAt,
-      ...details,
-    }, {
-      breakLength: 120,
-      depth: null,
-      maxArrayLength: null,
-      maxStringLength: 20000,
-    });
-  };
-
-  return { log, requestId };
-}
-
-function encodeSSE(event: string, data: unknown): Uint8Array {
-  const payload = typeof data === 'string' ? data : JSON.stringify(data);
-  return new TextEncoder().encode(`event: ${event}\ndata: ${payload}\n\n`);
-}
-
-function sseHeaders(req: Request): Headers {
-  return corsHeaders(req, {
-    'Content-Type': 'text/event-stream; charset=utf-8',
-    'Cache-Control': 'no-cache, no-transform',
-    Connection: 'keep-alive',
-    'X-Accel-Buffering': 'no',
-  });
-}
 
 export function OPTIONS(req: Request) {
   return corsPreflight(req);
 }
 
 export async function POST(req: Request) {
-  const { log, requestId } = createStreamLogger('/a2ui/stream');
+  const { log, requestId } = createStreamLogger('a2ui', '/a2ui/stream');
   log('request.received', {
     contentLength: req.headers.get('content-length'),
   });
@@ -137,7 +103,7 @@ export async function POST(req: Request) {
     durationMs: performance.now() - validationStartedAt,
   });
   const opts = {
-    ...pickChatOptions(body),
+    ...pickA2UIChatOptions(body),
     onPerformanceEvent: (event: string, details = {}) => {
       log(event, details);
     },

@@ -781,6 +781,9 @@ importers:
       '@lynx-js/genui-cli':
         specifier: workspace:*
         version: link:cli
+      '@lynx-js/genui-mcp-apps':
+        specifier: workspace:*
+        version: link:mcp-apps
       '@lynx-js/genui-openui':
         specifier: workspace:*
         version: link:openui
@@ -865,6 +868,18 @@ importers:
       typescript:
         specifier: ^5.9.3
         version: 5.9.3
+
+  packages/genui/mcp-apps:
+    devDependencies:
+      '@lynx-js/react':
+        specifier: workspace:*
+        version: link:../../react
+      '@lynx-js/types':
+        specifier: 4.0.0
+        version: 4.0.0
+      '@rstest/core':
+        specifier: catalog:rstest
+        version: 0.11.0(core-js@3.49.0)(jsdom@27.4.0)
 
   packages/genui/openui:
     dependencies:
@@ -981,6 +996,9 @@ importers:
       '@aws-sdk/client-s3':
         specifier: ^3.1053.0
         version: 3.1053.0
+      '@lynx-js/genui-mcp-apps':
+        specifier: workspace:*
+        version: link:../mcp-apps
       '@lynx-js/genui-openui':
         specifier: workspace:*
         version: link:../openui
@@ -990,6 +1008,9 @@ importers:
       '@sparticuz/chromium':
         specifier: ^149.0.0
         version: 149.0.0
+      ajv:
+        specifier: ^8.18.0
+        version: 8.18.0
       next:
         specifier: 16.2.6
         version: 16.2.6(@playwright/test@1.61.1)(react-dom@19.2.4(react@19.2.4))(react@19.2.4)(sass@1.99.0)
@@ -1006,6 +1027,9 @@ importers:
         specifier: ^3.25.76
         version: 3.25.76
     devDependencies:
+      '@rstest/core':
+        specifier: catalog:rstest
+        version: 0.11.0(core-js@3.49.0)(jsdom@27.4.0)
       '@types/node':
         specifier: ^24.10.13
         version: 24.10.13

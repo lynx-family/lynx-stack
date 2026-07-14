@@ -73,7 +73,21 @@
       "types": "./openui/dist/openui-prompt/index.d.ts",
       "default": "./openui/dist/openui-prompt/index.js"
     },
-    "./openui/styles/theme.css": "./openui/styles/theme.css"
+    "./openui/styles/theme.css": "./openui/styles/theme.css",
+    "./mcp-apps": {
+      "types": "./mcp-apps/dist/index.d.ts",
+      "default": "./mcp-apps/dist/index.js"
+    },
+    "./mcp-apps/render": {
+      "types": "./mcp-apps/dist/render/index.d.ts",
+      "default": "./mcp-apps/dist/render/index.js"
+    },
+    "./mcp-apps/protocol": {
+      "types": "./mcp-apps/dist/protocol.d.ts",
+      "default": "./mcp-apps/dist/protocol.js"
+    },
+    "./mcp-apps/render/styles.css": "./mcp-apps/dist/render/styles.css",
+    "./mcp-apps/styles.css": "./mcp-apps/dist/render/styles.css"
   },
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",
@@ -103,7 +117,8 @@
     "a2ui-catalog-extractor/README.md",
     "openui/dist",
     "openui/styles",
-    "openui/README.md"
+    "openui/README.md",
+    "mcp-apps/dist"
   ],
   "scripts": {
     "build": "pnpm run clean && tsc --project tsconfig.build.json",
@@ -121,6 +136,7 @@
     "@lynx-js/genui-a2ui-catalog-extractor": "workspace:*",
     "@lynx-js/genui-a2ui-prompt": "workspace:*",
     "@lynx-js/genui-cli": "workspace:*",
+    "@lynx-js/genui-mcp-apps": "workspace:*",
     "@lynx-js/genui-openui": "workspace:*",
     "@lynx-js/qrcode-rsbuild-plugin": "workspace:^",
     "@lynx-js/react": "workspace:^",

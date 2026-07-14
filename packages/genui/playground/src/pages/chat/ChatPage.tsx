@@ -3,6 +3,7 @@
 // LICENSE file in the root directory of this source tree.
 import { A2UI_CHAT_ADAPTER } from './a2ui.js';
 import { ChatController } from './ChatController.js';
+import { MCP_APPS_CHAT_ADAPTER } from './mcp-apps.js';
 import { OPENUI_CHAT_ADAPTER } from './openui.js';
 import type { Protocol } from '../../utils/protocol.js';
 
@@ -12,6 +13,15 @@ export interface ChatPageProps {
 }
 
 export function ChatPage(props: ChatPageProps) {
+  if (props.protocol.name === 'mcp-apps') {
+    return (
+      <ChatController
+        key='mcp-apps'
+        {...props}
+        adapter={MCP_APPS_CHAT_ADAPTER}
+      />
+    );
+  }
   if (props.protocol.name === 'openui') {
     return (
       <ChatController
