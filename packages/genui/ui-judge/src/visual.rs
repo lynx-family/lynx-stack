@@ -2,7 +2,6 @@
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
 
-use std::collections::BTreeMap;
 use std::io::Cursor;
 use std::time::Duration;
 
@@ -10,11 +9,7 @@ use base64::prelude::{Engine, BASE64_STANDARD, BASE64_STANDARD_NO_PAD};
 use image::imageops::{self, FilterType};
 use image::{DynamicImage, GrayImage, ImageFormat, ImageReader, Limits, Rgba, RgbaImage};
 use reqwest::header::{CONTENT_LENGTH, CONTENT_TYPE};
-use serde::{Deserialize, Serialize};
-use serde_json::{json, Value};
 use thiserror::Error;
-
-use crate::model::ModelClient;
 
 const MAX_IMAGE_BYTES: usize = 10 * 1024 * 1024;
 const MAX_DECODED_IMAGE_BYTES: u64 = 64 * 1024 * 1024;
@@ -35,213 +30,52 @@ const DEFAULT_BLOCK_SIZE: u32 = 32;
 const DEFAULT_PIXEL_TOLERANCE: f64 = 0.1;
 const DEFAULT_THRESHOLD: f64 = 0.1;
 
-pub const VISUAL_EVALUATION_SYSTEM_PROMPT: &str = r#"You are a strict visual quality evaluator for UI implementation fidelity.
+pub(crate) type VisualResult<T> = std::result::Result<T, VisualEvaluationError>;
 
-You compare two UI screenshots:
-1. reference_image: the target visual baseline
-2. rendered_image: the implementation screenshot
-
-Your job is to judge how closely rendered_image matches reference_image.
-Evaluate only visual fidelity. Do not judge code quality, implementation method, accessibility, or product semantics unless they visibly affect the screenshot.
-
-Return valid JSON only. Do not wrap the JSON in markdown. Do not include comments."#;
-
-pub const VISUAL_EVALUATION_USER_PROMPT: &str = r#"Compare reference_image and rendered_image for UI visual fidelity.
-
-Scoring:
-- Return "score" as a number from 0 to 1.
-- 1.00 means visually indistinguishable except for negligible anti-aliasing or compression noise.
-- 0.90-0.99 means excellent match with only tiny spacing, antialiasing, or color differences.
-- 0.75-0.89 means good match but visible differences exist in spacing, typography, color, sizing, or minor missing details.
-- 0.50-0.74 means partial match: overall structure is recognizable, but several important visual differences are present.
-- 0.25-0.49 means weak match: major layout, content, styling, or hierarchy differences.
-- 0.00-0.24 means unrelated or mostly incorrect rendering.
-
-Evaluate these dimensions:
-1. Layout and hierarchy: positions, alignment, grouping, size relationships, and overall structure.
-2. Spacing and geometry: margins, padding, gaps, border radii, widths, heights, and crop/overflow behavior.
-3. Typography: text content visibility, font size, weight, line height, truncation, alignment, and color.
-4. Color and visual style: backgrounds, fills, strokes, opacity, shadows, gradients, and contrast.
-5. Assets and icons: image presence, aspect ratio, crop, icon shape, and visual placement.
-6. State fidelity: selected states, disabled states, active tabs, badges, overlays, and other visible UI states.
-7. Completeness: missing, extra, duplicated, or incorrectly ordered visible elements.
-
-Ignore:
-- Tiny anti-aliasing differences.
-- Minor compression artifacts.
-- Subpixel differences that do not change perceived layout.
-- Screenshot capture noise that does not affect UI content.
-
-Do not ignore:
-- Missing text or incorrect text.
-- Incorrect hierarchy or reordered sections.
-- Noticeably wrong color, font size, weight, spacing, border radius, or image crop.
-- Extra visible UI elements not present in the reference.
-- Missing visible UI elements from the reference.
-
-Return JSON with this exact shape:
-{
-  "score": number,
-  "reason": string,
-  "summary": string,
-  "issues": [
-    {
-      "category": "layout" | "spacing" | "typography" | "color" | "asset" | "state" | "completeness" | "other",
-      "severity": "low" | "medium" | "high",
-      "description": string
-    }
-  ]
-}
-
-Rules for the JSON:
-- "score" must be between 0 and 1.
-- "reason" must be one concise sentence explaining the score.
-- "summary" must be a short paragraph summarizing the overall visual match.
-- "issues" must list the most important visible differences, ordered by severity.
-- If the images are nearly identical, use an empty "issues" array.
-- Mention approximate regions such as "top bar", "main card", "bottom section", or "right icon" when describing issues.
-- Do not invent hidden or non-visible differences."#;
-
-pub type VisualResult<T> = std::result::Result<T, VisualEvaluationError>;
-
-#[derive(Debug, Clone, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
-pub struct VisualEvaluationRequest {
-  #[serde(default)]
-  pub align_options: Option<VisualEvaluationAlignOptions>,
-  #[serde(default)]
-  pub compare_options: Option<VisualEvaluationCompareOptions>,
-  pub reference_png: Vec<u8>,
-  #[serde(default)]
-  pub reference: Option<String>,
-  pub rendered_png: Vec<u8>,
-  pub task: String,
-}
-
-#[derive(Debug, Clone, Default, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
-pub struct VisualEvaluationAlignOptions {
-  #[serde(default)]
-  pub downsample_width: Option<f64>,
-  #[serde(default)]
-  pub max_dx: Option<f64>,
-  #[serde(default)]
-  pub max_dy_ratio: Option<f64>,
-  #[serde(default)]
-  pub min_score: Option<f64>,
-  #[serde(default)]
-  pub target_width: Option<f64>,
-  #[serde(default)]
-  pub top_skip_ratio: Option<f64>,
-  #[serde(default)]
-  pub window_height_ratio: Option<f64>,
-}
-
-#[derive(Debug, Clone, Default, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
-pub struct VisualEvaluationCompareOptions {
-  #[serde(default)]
-  pub block_size: Option<u32>,
-  #[serde(default)]
-  pub pixel_tolerance: Option<f64>,
-  #[serde(default)]
-  pub threshold: Option<f64>,
-}
-
-#[derive(Debug, Clone, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
-pub struct VisualEvaluationResponse {
-  pub artifacts: VisualEvaluationArtifacts,
-  pub metrics: VisualEvaluationMetrics,
-  #[serde(skip_serializing_if = "Option::is_none")]
-  pub reason: Option<String>,
-  #[serde(skip_serializing_if = "Option::is_none")]
-  pub score: Option<f64>,
-  #[serde(skip_serializing_if = "Vec::is_empty")]
+#[derive(Debug, Clone)]
+pub(crate) struct ReferenceImageComparison {
+  pub alignment_score: Option<f64>,
+  pub diff_image_base64: String,
+  pub different_blocks: usize,
+  pub similarity: f64,
+  pub total_blocks: usize,
   pub warnings: Vec<String>,
 }
 
-#[derive(Debug, Clone, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
-pub struct VisualEvaluationArtifacts {
-  pub diff_image_base64: String,
+#[derive(Debug, Clone, Default)]
+struct VisualEvaluationAlignOptions {
+  pub downsample_width: Option<f64>,
+  pub max_dx: Option<f64>,
+  pub max_dy_ratio: Option<f64>,
+  pub min_score: Option<f64>,
+  pub target_width: Option<f64>,
+  pub top_skip_ratio: Option<f64>,
+  pub window_height_ratio: Option<f64>,
 }
 
-#[derive(Debug, Clone, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
-pub struct VisualEvaluationMetrics {
-  pub align_result: Option<AlignResult>,
-  pub compare_result: CompareResult,
-  pub evaluation_result: EvaluationResult,
+#[derive(Debug, Clone, Default)]
+struct VisualEvaluationCompareOptions {
+  pub block_size: Option<u32>,
+  pub pixel_tolerance: Option<f64>,
+  pub threshold: Option<f64>,
 }
 
-#[derive(Debug, Clone, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
-pub struct AlignResult {
-  pub crop: AlignCrop,
-  pub dx: i32,
-  pub dy: i32,
-  pub resized_height1: u32,
-  pub resized_height2: u32,
-  pub resized_width: u32,
-  pub score: f64,
+#[derive(Debug, Clone)]
+struct AlignResult {
+  score: f64,
 }
 
-#[derive(Debug, Clone, Serialize, Deserialize)]
-pub struct AlignCrop {
-  pub h: u32,
-  pub w: u32,
-  pub x: u32,
-  pub y: u32,
+#[derive(Debug, Clone)]
+struct CompareResult {
+  different_blocks: usize,
+  similarity: f64,
+  total_blocks: usize,
 }
 
-#[derive(Debug, Clone, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
-pub struct CompareResult {
-  pub diff_blocks_data: Vec<CompareDiffBlock>,
-  pub different_blocks: usize,
-  pub height: u32,
-  pub similarity: f64,
-  pub total_blocks: usize,
-  pub width: u32,
-}
-
-#[derive(Debug, Clone, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
-pub struct CompareDiffBlock {
-  pub diff_ratio: f64,
-  pub x: u32,
-  pub y: u32,
-}
-
-#[derive(Debug, Clone, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
-pub struct EvaluationResult {
-  pub issues: Vec<EvaluationIssue>,
-  #[serde(skip_serializing_if = "Option::is_none")]
-  pub reason: Option<String>,
-  #[serde(skip_serializing_if = "Option::is_none")]
-  pub score: Option<f64>,
-  #[serde(skip_serializing_if = "Option::is_none")]
-  pub summary: Option<String>,
-  #[serde(default, flatten, skip_serializing_if = "BTreeMap::is_empty")]
-  pub extra: BTreeMap<String, Value>,
-}
-
-#[derive(Debug, Clone, Serialize, Deserialize)]
-pub struct EvaluationIssue {
-  pub category: String,
-  pub description: String,
-  pub severity: String,
-}
-
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
-#[serde(rename_all = "SCREAMING_SNAKE_CASE")]
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum VisualEvaluationErrorCode {
-  EvaluationApiError,
   ImageAlignmentError,
   ImageCompareError,
-  InvalidRequest,
   ReferenceImageFetchFailed,
   ReferenceImageInvalid,
   VisualEvaluationError,
@@ -313,25 +147,18 @@ struct BlockStats {
   pixels: u32,
 }
 
-pub async fn run_visual_evaluation(
-  request: VisualEvaluationRequest,
-  model: &ModelClient,
-) -> VisualResult<VisualEvaluationResponse> {
-  let request = validate_request(request)?;
-  let VisualEvaluationRequest {
-    align_options,
-    compare_options,
-    reference,
-    reference_png,
-    rendered_png,
-    task,
-  } = request;
+pub(crate) async fn compare_reference_image(
+  reference_image: &str,
+  rendered_png: &[u8],
+) -> VisualResult<ReferenceImageComparison> {
+  let reference_png = load_reference_image(reference_image).await?;
+  let rendered_png = rendered_png.to_vec();
   let (alignment, comparison) = tokio::task::spawn_blocking(move || {
-    let alignment = align_images(&reference_png, &rendered_png, align_options.as_ref())?;
+    let alignment = align_images(&reference_png, &rendered_png, None)?;
     let comparison = compare_images(
       &alignment.aligned_reference_png,
       &alignment.aligned_rendered_png,
-      compare_options.as_ref(),
+      None,
     )?;
     Ok::<_, VisualEvaluationError>((alignment, comparison))
   })
@@ -349,235 +176,14 @@ pub async fn run_visual_evaluation(
   if align_result.is_none() {
     warnings.push("Image alignment confidence too low; compared original images.".to_string());
   }
-  let evaluation_result = evaluate_images_with_model(
-    model,
-    &alignment.aligned_reference_png,
-    &alignment.aligned_rendered_png,
-    &task,
-    reference.as_deref(),
-  )
-  .await?;
-
-  Ok(VisualEvaluationResponse {
-    artifacts: VisualEvaluationArtifacts {
-      diff_image_base64: BASE64_STANDARD.encode(&comparison.diff_png),
-    },
-    metrics: VisualEvaluationMetrics {
-      align_result,
-      compare_result: comparison.result,
-      evaluation_result: evaluation_result.clone(),
-    },
-    reason: evaluation_result.reason.clone(),
-    score: evaluation_result.score,
+  Ok(ReferenceImageComparison {
+    alignment_score: align_result.map(|alignment| alignment.score),
+    diff_image_base64: BASE64_STANDARD.encode(&comparison.diff_png),
+    different_blocks: comparison.result.different_blocks,
+    similarity: comparison.result.similarity,
+    total_blocks: comparison.result.total_blocks,
     warnings,
   })
-}
-
-pub fn parse_visual_model_result(raw: &str) -> VisualResult<EvaluationResult> {
-  let parsed: Value = serde_json::from_str(raw).map_err(|_| {
-    VisualEvaluationError::new(
-      502,
-      VisualEvaluationErrorCode::EvaluationApiError,
-      "Evaluation result must be valid JSON.",
-    )
-  })?;
-  let object = parsed.as_object().ok_or_else(|| {
-    VisualEvaluationError::new(
-      502,
-      VisualEvaluationErrorCode::EvaluationApiError,
-      "Evaluation result must be a JSON object.",
-    )
-  })?;
-
-  let score = object.get("score").and_then(numeric_value).ok_or_else(|| {
-    VisualEvaluationError::new(
-      502,
-      VisualEvaluationErrorCode::EvaluationApiError,
-      "Evaluation result is missing numeric score.",
-    )
-  })?;
-  if !score.is_finite() {
-    return Err(VisualEvaluationError::new(
-      502,
-      VisualEvaluationErrorCode::EvaluationApiError,
-      "Evaluation result score must be finite.",
-    ));
-  }
-  let score = score.clamp(0.0, 1.0);
-  let reason = object
-    .get("reason")
-    .and_then(Value::as_str)
-    .ok_or_else(|| {
-      VisualEvaluationError::new(
-        502,
-        VisualEvaluationErrorCode::EvaluationApiError,
-        "Evaluation result is missing required \"reason\" string.",
-      )
-    })?
-    .to_string();
-  let summary = object
-    .get("summary")
-    .and_then(Value::as_str)
-    .ok_or_else(|| {
-      VisualEvaluationError::new(
-        502,
-        VisualEvaluationErrorCode::EvaluationApiError,
-        "Evaluation result is missing required \"summary\" string.",
-      )
-    })?
-    .to_string();
-
-  let mut extra = object
-    .iter()
-    .filter(|(key, _)| {
-      key.as_str() != "score"
-        && key.as_str() != "reason"
-        && key.as_str() != "summary"
-        && key.as_str() != "issues"
-    })
-    .map(|(key, value)| (key.clone(), value.clone()))
-    .collect::<BTreeMap<_, _>>();
-  if extra.is_empty() {
-    extra = BTreeMap::new();
-  }
-
-  Ok(EvaluationResult {
-    issues: normalize_evaluation_issues(object.get("issues")),
-    reason: Some(reason),
-    score: Some(score),
-    summary: Some(summary),
-    extra,
-  })
-}
-
-fn validate_request(mut request: VisualEvaluationRequest) -> VisualResult<VisualEvaluationRequest> {
-  if request.reference_png.is_empty() {
-    return Err(invalid_request("reference PNG must not be empty."));
-  }
-  if request.rendered_png.is_empty() {
-    return Err(invalid_request("rendered PNG must not be empty."));
-  }
-  request.task = normalize_required_string(request.task, "task")?;
-  request.reference = request
-    .reference
-    .map(|reference| reference.trim().to_string())
-    .filter(|reference| !reference.is_empty());
-  if let Some(options) = &request.align_options {
-    validate_align_options(options)?;
-  }
-  if let Some(options) = &request.compare_options {
-    validate_compare_options(options)?;
-  }
-  Ok(request)
-}
-
-fn validate_align_options(options: &VisualEvaluationAlignOptions) -> VisualResult<()> {
-  validate_positive(options.target_width, "alignOptions.targetWidth")?;
-  validate_max(
-    options.target_width,
-    "alignOptions.targetWidth",
-    MAX_ALIGN_TARGET_WIDTH,
-  )?;
-  validate_positive(options.downsample_width, "alignOptions.downsampleWidth")?;
-  validate_max(
-    options.downsample_width,
-    "alignOptions.downsampleWidth",
-    MAX_ALIGN_TARGET_WIDTH,
-  )?;
-  validate_ratio(options.top_skip_ratio, "alignOptions.topSkipRatio")?;
-  validate_ratio(
-    options.window_height_ratio,
-    "alignOptions.windowHeightRatio",
-  )?;
-  validate_ratio(options.max_dy_ratio, "alignOptions.maxDyRatio")?;
-  validate_non_negative(options.max_dx, "alignOptions.maxDx")?;
-  validate_non_negative(options.min_score, "alignOptions.minScore")?;
-  Ok(())
-}
-
-fn validate_compare_options(options: &VisualEvaluationCompareOptions) -> VisualResult<()> {
-  if matches!(options.block_size, Some(0)) {
-    return Err(invalid_request(
-      "compareOptions.blockSize must be greater than 0.",
-    ));
-  }
-  validate_non_negative(options.threshold, "compareOptions.threshold")?;
-  validate_non_negative(options.pixel_tolerance, "compareOptions.pixelTolerance")?;
-  Ok(())
-}
-
-fn validate_positive(value: Option<f64>, field_name: &str) -> VisualResult<()> {
-  if let Some(value) = value {
-    if !value.is_finite() {
-      return Err(invalid_request(format!(
-        "{field_name} must be a finite number."
-      )));
-    }
-    if value <= 0.0 {
-      return Err(invalid_request(format!(
-        "{field_name} must be greater than 0."
-      )));
-    }
-  }
-  Ok(())
-}
-
-fn validate_max(value: Option<f64>, field_name: &str, max: f64) -> VisualResult<()> {
-  if let Some(value) = value {
-    if value > max {
-      return Err(invalid_request(format!(
-        "{field_name} must be less than or equal to {max}."
-      )));
-    }
-  }
-  Ok(())
-}
-
-fn validate_non_negative(value: Option<f64>, field_name: &str) -> VisualResult<()> {
-  if let Some(value) = value {
-    if !value.is_finite() {
-      return Err(invalid_request(format!(
-        "{field_name} must be a finite number."
-      )));
-    }
-    if value < 0.0 {
-      return Err(invalid_request(format!(
-        "{field_name} must be greater than or equal to 0."
-      )));
-    }
-  }
-  Ok(())
-}
-
-fn validate_ratio(value: Option<f64>, field_name: &str) -> VisualResult<()> {
-  if let Some(value) = value {
-    if !value.is_finite() {
-      return Err(invalid_request(format!(
-        "{field_name} must be a finite number."
-      )));
-    }
-    if !(0.0..=1.0).contains(&value) {
-      return Err(invalid_request(format!(
-        "{field_name} must be between 0 and 1."
-      )));
-    }
-  }
-  Ok(())
-}
-
-fn normalize_required_string(value: String, field_name: &str) -> VisualResult<String> {
-  let normalized = value.trim().to_string();
-  if normalized.is_empty() {
-    Err(invalid_request(format!(
-      "{field_name} must be a non-empty string."
-    )))
-  } else {
-    Ok(normalized)
-  }
-}
-
-fn invalid_request(message: impl Into<String>) -> VisualEvaluationError {
-  VisualEvaluationError::new(400, VisualEvaluationErrorCode::InvalidRequest, message)
 }
 
 pub(crate) async fn load_reference_image(input: &str) -> VisualResult<Vec<u8>> {
@@ -852,17 +458,6 @@ fn align_images(
     aligned_reference_png: encode_rgba_png(&aligned_reference)?,
     aligned_rendered_png: encode_rgba_png(&aligned_rendered)?,
     result: Some(AlignResult {
-      crop: AlignCrop {
-        h: crop.height,
-        w: crop.width,
-        x: crop.reference_x,
-        y: crop.reference_y,
-      },
-      dx,
-      dy,
-      resized_height1: resized_reference.height,
-      resized_height2: resized_rendered.height,
-      resized_width: target_width,
       score: best_candidate.score,
     }),
   })
@@ -922,7 +517,7 @@ fn compare_images(
     }
   }
 
-  let mut diff_blocks_data = Vec::new();
+  let mut different_blocks = 0;
   for block_y in 0..block_rows {
     for block_x in 0..block_columns {
       let block = &block_stats[(block_y * block_columns + block_x) as usize];
@@ -931,102 +526,24 @@ fn compare_images(
       }
       let diff_ratio = block.different_pixels as f64 / block.pixels as f64;
       if diff_ratio > threshold {
-        diff_blocks_data.push(CompareDiffBlock {
-          diff_ratio,
-          x: block_x * block_size,
-          y: block_y * block_size,
-        });
+        different_blocks += 1;
       }
     }
   }
 
   let total_blocks = (block_columns * block_rows) as usize;
-  let different_blocks = diff_blocks_data.len();
   Ok(CompareImagesOutput {
     diff_png: encode_rgba_png(&diff)?,
     result: CompareResult {
-      diff_blocks_data,
       different_blocks,
-      height,
       similarity: if total_blocks == 0 {
         1.0
       } else {
         (1.0 - different_blocks as f64 / total_blocks as f64).clamp(0.0, 1.0)
       },
       total_blocks,
-      width,
     },
   })
-}
-
-async fn evaluate_images_with_model(
-  model: &ModelClient,
-  aligned_reference_png: &[u8],
-  aligned_rendered_png: &[u8],
-  task: &str,
-  reference: Option<&str>,
-) -> VisualResult<EvaluationResult> {
-  let reference_data_url = png_data_url(aligned_reference_png);
-  let rendered_data_url = png_data_url(aligned_rendered_png);
-  let prompt = build_visual_evaluation_prompt(task, reference);
-  let raw = model
-    .evaluate_structured(
-      VISUAL_EVALUATION_SYSTEM_PROMPT,
-      &prompt,
-      &[&reference_data_url, &rendered_data_url],
-      "ui_judge_visual_comparison",
-      json!({
-        "type": "object",
-        "properties": {
-          "score": { "type": "number", "minimum": 0, "maximum": 1 },
-          "reason": { "type": "string" },
-          "summary": { "type": "string" },
-          "issues": {
-            "type": "array",
-            "items": {
-              "type": "object",
-              "properties": {
-                "category": {
-                  "type": "string",
-                  "enum": [
-                    "layout", "spacing", "typography", "color", "asset", "state",
-                    "completeness", "other"
-                  ]
-                },
-                "severity": { "type": "string", "enum": ["low", "medium", "high"] },
-                "description": { "type": "string" }
-              },
-              "required": ["category", "severity", "description"],
-              "additionalProperties": false
-            }
-          }
-        },
-        "required": ["score", "reason", "summary", "issues"],
-        "additionalProperties": false
-      }),
-    )
-    .await
-    .map_err(|error| {
-      VisualEvaluationError::new(
-        502,
-        VisualEvaluationErrorCode::EvaluationApiError,
-        error.to_string(),
-      )
-    })?;
-  parse_visual_model_result(&raw)
-}
-
-fn build_visual_evaluation_prompt(task: &str, reference: Option<&str>) -> String {
-  let reference = reference
-    .filter(|reference| !reference.trim().is_empty())
-    .map(|reference| format!("\nTextual target or reference:\n{}\n", reference.trim()))
-    .unwrap_or_default();
-
-  format!(
-    "{VISUAL_EVALUATION_USER_PROMPT}\n\nTask:\n{}\n{}",
-    task.trim(),
-    reference,
-  )
 }
 
 fn resize_to_width(image: &DynamicImage, width: u32) -> VisualResult<ResizedImage> {
@@ -1264,50 +781,9 @@ fn encode_rgba_png(image: &RgbaImage) -> VisualResult<Vec<u8>> {
   })
 }
 
+#[cfg(test)]
 fn png_data_url(bytes: &[u8]) -> String {
   format!("data:image/png;base64,{}", BASE64_STANDARD.encode(bytes))
-}
-
-fn normalize_evaluation_issues(value: Option<&Value>) -> Vec<EvaluationIssue> {
-  let Some(items) = value.and_then(Value::as_array) else {
-    return Vec::new();
-  };
-  items
-    .iter()
-    .filter_map(|item| {
-      let object = item.as_object()?;
-      let category = object.get("category")?.as_str()?;
-      let severity = object.get("severity")?.as_str()?;
-      let description = object.get("description")?.as_str()?;
-      if !is_issue_category(category) || !is_issue_severity(severity) {
-        return None;
-      }
-      Some(EvaluationIssue {
-        category: category.to_string(),
-        description: description.to_string(),
-        severity: severity.to_string(),
-      })
-    })
-    .collect()
-}
-
-fn is_issue_category(value: &str) -> bool {
-  matches!(
-    value,
-    "layout" | "spacing" | "typography" | "color" | "asset" | "state" | "completeness" | "other"
-  )
-}
-
-fn is_issue_severity(value: &str) -> bool {
-  matches!(value, "low" | "medium" | "high")
-}
-
-fn numeric_value(value: &Value) -> Option<f64> {
-  match value {
-    Value::Number(number) => number.as_f64(),
-    Value::String(string) => string.parse::<f64>().ok(),
-    _ => None,
-  }
 }
 
 fn invalid_image(kind: ImageKind) -> VisualEvaluationError {
@@ -1424,8 +900,7 @@ mod tests {
       Some(&options),
     )
     .expect("align images");
-    let result = output.result.expect("alignment result");
-    assert_eq!((result.dx, result.dy), (3, 5));
+    assert!(output.result.expect("alignment result").score >= 0.5);
 
     let comparison = compare_images(
       &output.aligned_reference_png,
@@ -1471,8 +946,6 @@ mod tests {
     assert_eq!(output.result.total_blocks, 4);
     assert_eq!(output.result.different_blocks, 1);
     assert_eq!(output.result.similarity, 0.75);
-    assert_eq!(output.result.diff_blocks_data[0].x, 32);
-    assert_eq!(output.result.diff_blocks_data[0].y, 32);
     let diff = image::load_from_memory(&output.diff_png)
       .expect("decode diff")
       .to_rgba8();
@@ -1487,38 +960,17 @@ mod tests {
     assert_eq!(output.result.similarity, 0.0);
   }
 
-  #[test]
-  fn parses_visual_model_result() {
-    let result = parse_visual_model_result(
-      r#"{
-        "score": 1.2,
-        "reason": "nearly identical",
-        "summary": "The rendered image closely matches the reference.",
-        "issues": [
-          { "category": "spacing", "severity": "low", "description": "Minor gap difference." },
-          { "category": "invalid", "severity": "low", "description": "Ignored." }
-        ],
-        "extraField": true
-      }"#,
-    )
-    .expect("parse model result");
-    assert_eq!(result.score, Some(1.0));
-    assert_eq!(result.issues.len(), 1);
-    assert!(result.extra.contains_key("extraField"));
-    assert!(parse_visual_model_result(
-      r#"{"score":"NaN","reason":"invalid","summary":"invalid","issues":[]}"#,
-    )
-    .is_err());
-  }
+  #[tokio::test]
+  async fn compares_a_reference_image_without_model_evaluation() {
+    let png = sample_png(Rgba([20, 40, 60, 255]));
+    let result = compare_reference_image(&png_data_url(&png), &png)
+      .await
+      .expect("compare reference image");
 
-  #[test]
-  fn visual_prompt_includes_task_and_textual_reference() {
-    let prompt = build_visual_evaluation_prompt(
-      "Render the checkout page",
-      Some("Match the approved design"),
-    );
-    assert!(prompt.contains("Render the checkout page"));
-    assert!(prompt.contains("Match the approved design"));
+    assert_eq!(result.similarity, 1.0);
+    assert_eq!(result.different_blocks, 0);
+    assert_eq!(result.total_blocks, 1);
+    assert!(!result.diff_image_base64.is_empty());
   }
 
   fn sample_png(color: Rgba<u8>) -> Vec<u8> {

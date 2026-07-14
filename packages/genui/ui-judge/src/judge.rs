@@ -33,8 +33,14 @@ pub struct UiJudgeResult {
   /// Number of blocks whose changed-pixel ratio exceeded the threshold.
   #[serde(skip_serializing_if = "Option::is_none")]
   pub different_blocks: Option<usize>,
+  /// Error from the primary page-capture or single-screenshot VLM chain.
   #[serde(skip_serializing_if = "Option::is_none")]
   pub error: Option<UiJudgeError>,
+  /// Error produced by the independent reference-image comparison chain.
+  ///
+  /// This never replaces the VLM result or its `error` field.
+  #[serde(skip_serializing_if = "Option::is_none")]
+  pub reference_image_error: Option<UiJudgeError>,
   /// Ratio of blocks that stayed within the configured difference threshold.
   #[serde(skip_serializing_if = "Option::is_none")]
   pub visual_similarity: Option<f64>,
@@ -114,6 +120,7 @@ pub(crate) async fn judge_screenshot(
         diff_image_base64: None,
         different_blocks: None,
         error: None,
+        reference_image_error: None,
         visual_similarity: None,
         reason: non_empty(model_result.reason),
         reference: request.reference,
@@ -221,6 +228,7 @@ pub(crate) fn error_result(
     error: Some(UiJudgeError {
       message: message.into(),
     }),
+    reference_image_error: None,
     visual_similarity: None,
     reason: None,
     reference,

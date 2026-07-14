@@ -4,7 +4,8 @@
 existing `lynx-headless-rust-test-runner`, performs optional natural-language
 steps, captures the software-renderer frame, and asks Agent SDK for a structured
 visual-correctness score. When a reference image is supplied, the crate also
-normalizes, aligns, and compares the two images before model scoring.
+normalizes, aligns, and compares it with the same captured frame through a
+separate deterministic evaluation chain.
 
 UI Judge has no Kitten-Lynx, Android, ADB, Playwright, Midscene, CLI, or npm
 runtime. It does not modify or duplicate the headless runner.
@@ -42,12 +43,22 @@ before model or runtime initialization.
 
 `reference` remains an optional textual target for the model. Set
 `reference_image` to a plain base64 image, a `data:image/...;base64,...` URL, or
-an HTTP(S) image URL to enable visual comparison. In that mode UI Judge uses
-normalized cross-correlation to align screenshots, compares 32-pixel blocks,
+an HTTP(S) image URL to enable deterministic visual comparison. UI Judge uses
+normalized cross-correlation to align the images, compares 32-pixel blocks,
 and returns `alignment_score`, `visual_similarity`, `different_blocks`,
-`total_blocks`, and `diff_image_base64` on `UiJudgeResult`. The public crate
-surface remains `judge_page`, `JudgePageRequest`, `UiJudgeResult`, and
-`UiJudgeError`; comparison types and algorithms stay internal.
+`total_blocks`, and `diff_image_base64` on `UiJudgeResult`.
+
+The VLM and reference-image comparison are independent consumers of the final
+screenshot. The VLM always receives only that screenshot plus `task` and the
+optional textual `reference`; it never receives `reference_image`, alignment
+output, pixel-diff output, or algorithmic similarity. Consequently the public
+`score`, `reason`, and `summary` fields always come from the VLM. The `error`
+field reports failures in the primary page-capture or VLM chain. A
+reference-image failure is reported separately as `reference_image_error` and
+does not replace a successful VLM result; a VLM failure likewise does not
+discard successful comparison diagnostics. The public crate surface remains
+`judge_page`, `JudgePageRequest`, `UiJudgeResult`, and `UiJudgeError`; comparison
+types and algorithms stay internal.
 
 The public VLM `score` remains an integer from 0 through 5. The independent
 `visual_similarity` diagnostic is a block-level ratio from 0 through 1. Input
@@ -56,10 +67,10 @@ megapixels after decoding.
 
 The function internally creates the model client from the environment,
 connects to headless Lynx, creates and navigates the page, executes steps,
-captures the final PNG, and releases the page and Lynx connection before image
-comparison and final scoring. Model, runner, page, screenshot-comparison,
-prompt, and fixture-helper types are implementation details and are not
-exported.
+captures the final PNG, and releases the page and Lynx connection before the
+independent VLM and reference-image evaluations. Model, runner, page,
+screenshot-comparison, prompt, and fixture-helper types are implementation
+details and are not exported.
 
 Run `judge_page` sequentially on a Tokio current-thread runtime. The runner's
 native task pump and page state remain bound to their creation thread. The
