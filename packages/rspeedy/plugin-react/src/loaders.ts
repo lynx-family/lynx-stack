@@ -1,11 +1,14 @@
 // Copyright 2024 The Lynx Authors. All rights reserved.
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
-import type { RsbuildPluginAPI, Rspack } from '@rsbuild/core'
+import path from 'node:path'
+
+import type { RsbuildPluginAPI, Rspack, RspackChain } from '@rsbuild/core'
 
 import { LAYERS, ReactWebpackPlugin } from '@lynx-js/react-webpack-plugin'
 
 import type { PluginReactLynxOptions } from './pluginReactLynx.js'
+import { resolveStripAllComponents } from './stripComponents.js'
 
 // The transforms an `es2019` SWC target lowers (ES2020+ syntax), expressed as
 // an explicit `env.include` so the main thread no longer relies on
@@ -32,6 +35,7 @@ function getLoaderOptions(
   api: RsbuildPluginAPI,
   options: Required<PluginReactLynxOptions>,
   isMainThread = false,
+  stripAllComponents = false,
 ) {
   const { output } = api.getRsbuildConfig()
 
@@ -68,9 +72,47 @@ function getLoaderOptions(
       ? {
         enableUiSourceMap,
         shake,
+        // The compile-time half of a root-level `<Background>`: only the
+        // main-thread (LEPUS) loader empties component render bodies.
+        stripAllComponents,
       }
       : {},
   }
+}
+
+/**
+ * Collect the source files an entry pulls in, so they can be scanned for a
+ * root-level `<Background>`. Paths are resolved against the project root so a
+ * relative entry (`./src/index.tsx`) is readable; bare specifiers and injected
+ * runtime entries survive resolution as non-existent paths, and
+ * {@link resolveStripAllComponents} skips whatever it cannot read.
+ */
+function collectEntryImports(
+  chain: RspackChain,
+  rootPath: string,
+): Set<string> {
+  const files = new Set<string>()
+  const add = (item: unknown) => {
+    if (typeof item === 'string') {
+      files.add(path.resolve(rootPath, item))
+    }
+  }
+  const entryPoints = chain.entryPoints.entries() ?? {}
+  for (const entryPoint of Object.values(entryPoints)) {
+    for (const value of entryPoint.values()) {
+      if (typeof value === 'string' || Array.isArray(value)) {
+        for (const item of Array.isArray(value) ? value : [value]) {
+          add(item)
+        }
+      } else if (value && typeof value === 'object' && 'import' in value) {
+        const imports = (value as { import?: string | string[] }).import
+        for (const item of Array.isArray(imports) ? imports : [imports]) {
+          add(item)
+        }
+      }
+    }
+  }
+  return files
 }
 
 const TESTING_RULE_NAME = 'react:testing'
@@ -96,6 +138,13 @@ export function applyLoaders(
   options: Required<PluginReactLynxOptions>,
 ): void {
   api.modifyBundlerChain((chain, { CHAIN_ID }) => {
+    // A root-level `<Background>` (or the explicit `experimental_stripAllComponents`
+    // switch) turns on emptying every component body from the main-thread bundle.
+    const stripAllComponents = resolveStripAllComponents(
+      options.experimental_stripAllComponents,
+      collectEntryImports(chain, api.context.rootPath),
+    )
+
     const rule = chain.module.rule(CHAIN_ID.RULE.JS)
     const jsMainRule = rule.oneOf(CHAIN_ID.ONE_OF.JS_MAIN)
     const type = jsMainRule.get('type') as string | undefined
@@ -165,7 +214,7 @@ export function applyLoaders(
       })
       .use(LAYERS.MAIN_THREAD)
         .loader(ReactWebpackPlugin.loaders.MAIN_THREAD)
-        .options(getLoaderOptions(api, options, true))
+        .options(getLoaderOptions(api, options, true, stripAllComponents))
       .end()
   })
 }

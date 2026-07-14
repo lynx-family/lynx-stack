@@ -340,6 +340,32 @@ export interface PluginReactLynxOptions {
       mainThread?: boolean
       background?: boolean
     }
+
+  /**
+   * Empty the render body of every component in the main-thread (LEPUS)
+   * bundle, keeping only the snapshot and worklet definitions the first-screen
+   * hydration needs. This is the compile-time half of a root-level
+   * `<Background>` — a 0.0 first screen, where the whole first frame is the
+   * static `fallback` and no component render logic ever reaches the main
+   * thread.
+   *
+   * @remarks
+   * This is the low-level switch behind the `<Background>` user-space API.
+   * Leaving it `undefined` (the default) lets the plugin light it up
+   * automatically when it detects a root-level `<Background>` in an entry
+   * (`root.render(<Background …>…</Background>)`). Set it explicitly to
+   * `true`/`false` to force or forbid the optimization regardless of
+   * detection.
+   *
+   * Because component bodies are gone from the main thread, a root
+   * `<Background>`'s `fallback` must be composed of host elements (e.g.
+   * `<view>`/`<text>`) rather than user components.
+   *
+   * @defaultValue `undefined` (auto-detected from a root-level `<Background>`)
+   *
+   * @alpha
+   */
+  experimental_stripAllComponents?: boolean | undefined
 }
 
 /**
@@ -392,6 +418,8 @@ export function pluginReactLynx(
     experimental_useElementTemplate: false,
     optimizeBundleSize: false,
     enableUiSourceMap: false,
+    // `undefined` means "auto-detect from a root-level `<Background>`".
+    experimental_stripAllComponents: undefined,
   }
   const resolvedOptions = Object.assign(defaultOptions, userOptions, {
     // Use `engineVersion` to override the default values
