@@ -94,6 +94,21 @@ export class ListUpdateInfoRecording implements ListUpdateInfo {
       });
     }
 
+    if (typeof __ALOG__ !== 'undefined' && __ALOG__) {
+      const listID = __GetElementUniqueID(listElement);
+      console.alog?.(
+        '[ReactLynxDebug] ReactLynx::listFlush::updateListInfo:\n'
+          + JSON.stringify(
+            {
+              listID,
+              updateListInfo,
+            },
+            null,
+            2,
+          ),
+      );
+    }
+
     __SetAttribute(listElement, 'update-list-info', updateListInfo);
     const [componentAtIndex, componentAtIndexes] = componentAtIndexFactory(this.list.childNodes, hydrate);
     __UpdateListCallbacks(

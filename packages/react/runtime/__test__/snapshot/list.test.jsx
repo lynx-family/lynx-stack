@@ -4650,7 +4650,7 @@ describe('nested list', () => {
   });
 });
 
-describe('update-list-info profile', () => {
+describe('update-list-info diagnostics', () => {
   const s1 = __SNAPSHOT__(
     <view>
       <text>111</text>
@@ -4660,6 +4660,22 @@ describe('update-list-info profile', () => {
   const s11 = __SNAPSHOT__(
     <list>{HOLE}</list>,
   );
+
+  function createEmptyListHydrationPair() {
+    const before = new SnapshotInstance(s1);
+    before.ensureElements();
+    const beforeList = new SnapshotInstance(s11);
+    beforeList.__slotIndex = 0;
+    before.insertBefore(beforeList);
+    __pendingListUpdates.flush();
+
+    const after = new SnapshotInstance(s1);
+    const afterList = new SnapshotInstance(s11);
+    afterList.__slotIndex = 0;
+    after.insertBefore(afterList);
+
+    return { after, before };
+  }
 
   it('flush & hydrate', () => {
     const b = new SnapshotInstance(s1);
@@ -4685,6 +4701,7 @@ describe('update-list-info profile', () => {
     b1.insertBefore(d2);
     b1.insertBefore(d3);
 
+    console.alog.mockClear();
     __pendingListUpdates.flush();
 
     const bb = new SnapshotInstance(s1);
@@ -4725,6 +4742,63 @@ describe('update-list-info profile', () => {
         ],
       ]
     `);
+
+    expect(console.alog).toHaveBeenCalledTimes(2);
+    const flushAlogPrefix = '[ReactLynxDebug] ReactLynx::listFlush::updateListInfo:\n';
+    const flushAlogMessage = console.alog.mock.calls[0][0];
+    expect(flushAlogMessage.startsWith(flushAlogPrefix)).toBe(true);
+    expect(JSON.parse(flushAlogMessage.slice(flushAlogPrefix.length))).toEqual({
+      listID: 4,
+      updateListInfo: {
+        insertAction: [
+          { position: 0, type: s3 },
+          { position: 1, type: s3 },
+          { position: 2, type: s3 },
+        ],
+        removeAction: [],
+        updateAction: [],
+      },
+    });
+
+    const hydrateAlogPrefix = '[ReactLynxDebug] ReactLynx::listHydrate::updateListInfo:\n';
+    const hydrateAlogMessage = console.alog.mock.calls[1][0];
+    expect(hydrateAlogMessage.startsWith(hydrateAlogPrefix)).toBe(true);
+    expect(JSON.parse(hydrateAlogMessage.slice(hydrateAlogPrefix.length))).toEqual({
+      listID: 4,
+      updateListInfo: {
+        insertAction: [],
+        removeAction: [2],
+        updateAction: [],
+      },
+    });
+  });
+
+  it('skips alog when disabled or undefined', () => {
+    const originalAlogFlag = globalThis.__ALOG__;
+    try {
+      for (const alogFlag of [false, undefined]) {
+        globalThis.__ALOG__ = alogFlag;
+        console.alog.mockClear();
+        const { after, before } = createEmptyListHydrationPair();
+
+        hydrate(before, after);
+
+        expect(console.alog).not.toHaveBeenCalled();
+      }
+    } finally {
+      globalThis.__ALOG__ = originalAlogFlag;
+    }
+  });
+
+  it('keeps alog optional', () => {
+    const originalAlog = console.alog;
+    console.alog = undefined;
+    try {
+      const { after, before } = createEmptyListHydrationPair();
+      expect(() => hydrate(before, after)).not.toThrow();
+    } finally {
+      console.alog = originalAlog;
+    }
   });
 });
 
