@@ -244,6 +244,18 @@ impl ModelClient {
     })
   }
 
+  #[cfg(test)]
+  pub(crate) fn mock(response: impl Into<String>) -> Self {
+    let mut client = Self::new(ModelOptions {
+      api_key: Some("ui-judge-test".to_string()),
+      ..ModelOptions::default()
+    })
+    .expect("construct test model client");
+    client.mock_response = Some(response.into());
+    client.mock_responses = None;
+    client
+  }
+
   pub async fn evaluate_structured(
     &self,
     system_prompt: &str,

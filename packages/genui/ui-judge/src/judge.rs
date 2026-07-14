@@ -24,8 +24,20 @@ pub struct UiJudgeError {
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct UiJudgeResult {
+  /// Normalized cross-correlation confidence for a successful alignment.
+  #[serde(skip_serializing_if = "Option::is_none")]
+  pub alignment_score: Option<f64>,
+  /// Base64-encoded PNG with pixels outside tolerance highlighted in red.
+  #[serde(skip_serializing_if = "Option::is_none")]
+  pub diff_image_base64: Option<String>,
+  /// Number of blocks whose changed-pixel ratio exceeded the threshold.
+  #[serde(skip_serializing_if = "Option::is_none")]
+  pub different_blocks: Option<usize>,
   #[serde(skip_serializing_if = "Option::is_none")]
   pub error: Option<UiJudgeError>,
+  /// Ratio of blocks that stayed within the configured difference threshold.
+  #[serde(skip_serializing_if = "Option::is_none")]
+  pub visual_similarity: Option<f64>,
   #[serde(skip_serializing_if = "Option::is_none")]
   pub reason: Option<String>,
   #[serde(skip_serializing_if = "Option::is_none")]
@@ -34,7 +46,13 @@ pub struct UiJudgeResult {
   pub steps: Vec<String>,
   #[serde(skip_serializing_if = "Option::is_none")]
   pub summary: Option<String>,
+  /// Total number of blocks in the aligned image comparison.
+  #[serde(skip_serializing_if = "Option::is_none")]
+  pub total_blocks: Option<usize>,
   pub url: String,
+  /// Non-fatal visual comparison diagnostics, such as alignment fallback.
+  #[serde(default, skip_serializing_if = "Vec::is_empty")]
+  pub warnings: Vec<String>,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -92,13 +110,19 @@ pub(crate) async fn judge_screenshot(
   {
     Ok(raw) => match parse_model_result(&raw) {
       Ok(model_result) => UiJudgeResult {
+        alignment_score: None,
+        diff_image_base64: None,
+        different_blocks: None,
         error: None,
+        visual_similarity: None,
         reason: non_empty(model_result.reason),
         reference: request.reference,
         score: model_result.score,
         steps: vec![],
         summary: non_empty(model_result.summary),
+        total_blocks: None,
         url: request.url,
+        warnings: vec![],
       },
       Err(error) => error_result(request.reference, request.url, error.to_string()),
     },
@@ -191,15 +215,21 @@ pub(crate) fn error_result(
   message: impl Into<String>,
 ) -> UiJudgeResult {
   UiJudgeResult {
+    alignment_score: None,
+    diff_image_base64: None,
+    different_blocks: None,
     error: Some(UiJudgeError {
       message: message.into(),
     }),
+    visual_similarity: None,
     reason: None,
     reference,
     score: 0,
     steps: vec![],
     summary: None,
+    total_blocks: None,
     url,
+    warnings: vec![],
   }
 }
 

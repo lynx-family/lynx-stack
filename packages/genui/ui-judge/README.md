@@ -3,7 +3,8 @@
 `ui_judge` is a pure Rust library crate that renders a Lynx URL with the
 existing `lynx-headless-rust-test-runner`, performs optional natural-language
 steps, captures the software-renderer frame, and asks Agent SDK for a structured
-visual-correctness score.
+visual-correctness score. When a reference image is supplied, the crate also
+normalizes, aligns, and compares the two images before model scoring.
 
 UI Judge has no Kitten-Lynx, Android, ADB, Playwright, Midscene, CLI, or npm
 runtime. It does not modify or duplicate the headless runner.
@@ -22,6 +23,7 @@ use ui_judge::{judge_page, JudgePageRequest};
 async fn main() {
   let result = judge_page(JudgePageRequest {
     reference: None,
+    reference_image: None,
     screenshot_settle: Duration::from_millis(16),
     steps: vec!["Tap the Save button".into()],
     task: "The saved state should be clear and visually correct".into(),
@@ -38,11 +40,26 @@ async fn main() {
 must use an absolute `file:///...` URL; bare filesystem paths are rejected
 before model or runtime initialization.
 
+`reference` remains an optional textual target for the model. Set
+`reference_image` to a plain base64 image, a `data:image/...;base64,...` URL, or
+an HTTP(S) image URL to enable visual comparison. In that mode UI Judge uses
+normalized cross-correlation to align screenshots, compares 32-pixel blocks,
+and returns `alignment_score`, `visual_similarity`, `different_blocks`,
+`total_blocks`, and `diff_image_base64` on `UiJudgeResult`. The public crate
+surface remains `judge_page`, `JudgePageRequest`, `UiJudgeResult`, and
+`UiJudgeError`; comparison types and algorithms stay internal.
+
+The public VLM `score` remains an integer from 0 through 5. The independent
+`visual_similarity` diagnostic is a block-level ratio from 0 through 1. Input
+images are limited to 10 MiB compressed, 8192 pixels per dimension, and 8
+megapixels after decoding.
+
 The function internally creates the model client from the environment,
 connects to headless Lynx, creates and navigates the page, executes steps,
-captures the final PNG, and releases the page and Lynx connection before final
-scoring. Model, runner, page, screenshot-comparison, prompt, and fixture-helper
-types are implementation details and are not exported.
+captures the final PNG, and releases the page and Lynx connection before image
+comparison and final scoring. Model, runner, page, screenshot-comparison,
+prompt, and fixture-helper types are implementation details and are not
+exported.
 
 Run `judge_page` sequentially on a Tokio current-thread runtime. The runner's
 native task pump and page state remain bound to their creation thread. The

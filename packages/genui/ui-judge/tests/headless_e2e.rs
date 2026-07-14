@@ -28,6 +28,7 @@ async fn drives_and_judges_the_existing_headless_runner_page_with_the_real_model
   std::env::set_var("LYNX_CORE_JS_PATH", fixture_lynx_core());
   let result = judge_page(JudgePageRequest {
     reference: None,
+    reference_image: None,
     screenshot_settle: Duration::from_millis(16),
     steps: vec!["Tap the Lynx logo to switch it to React.".to_string()],
     task: "Render the React Lynx welcome screen.".to_string(),

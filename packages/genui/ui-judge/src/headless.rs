@@ -12,6 +12,9 @@ use thiserror::Error;
 
 use crate::judge::{error_result, judge_screenshot, JudgeScreenshotRequest, UiJudgeResult};
 use crate::model::{ModelClient, ModelError, ModelOptions};
+use crate::visual::{
+  load_reference_image, run_visual_evaluation, VisualEvaluationRequest, VisualEvaluationResponse,
+};
 
 const MAX_ACTIONS_PER_STEP: usize = 8;
 const MAX_DOM_CHARS: usize = 40_000;
@@ -20,7 +23,10 @@ const STEP_SYSTEM_PROMPT: &str = "You control a headless Lynx page. Return exact
 
 #[derive(Debug, Clone)]
 pub struct JudgePageRequest {
+  /// Optional textual target included in the VLM prompt.
   pub reference: Option<String>,
+  /// Optional reference image as base64, a base64 data URL, or an HTTP(S) URL.
+  pub reference_image: Option<String>,
   pub screenshot_settle: Duration,
   pub steps: Vec<String>,
   pub task: String,
@@ -116,6 +122,34 @@ pub async fn judge_page(mut request: JudgePageRequest) -> UiJudgeResult {
   if request.task.trim().is_empty() {
     return page_request_error(&request, "judge_page requires a non-empty task.");
   }
+  if request
+    .reference_image
+    .as_ref()
+    .is_some_and(|reference_image| reference_image.trim().is_empty())
+  {
+    return page_request_error(
+      &request,
+      "judge_page reference_image must be a non-empty image source when provided.",
+    );
+  }
+  request.reference_image = request
+    .reference_image
+    .map(|reference_image| reference_image.trim().to_string());
+  let reference_png = match request.reference_image.as_deref() {
+    Some(reference_image) => {
+      match tokio::time::timeout(request.timeout, load_reference_image(reference_image)).await {
+        Ok(Ok(reference_png)) => Some(reference_png),
+        Ok(Err(error)) => return page_request_error(&request, error.to_string()),
+        Err(_) => {
+          return page_request_error(
+            &request,
+            operation_timeout("reference image loading", request.timeout).to_string(),
+          )
+        }
+      }
+    }
+    None => None,
+  };
 
   let model_options = match ModelOptions::from_env() {
     Ok(options) => options,
@@ -176,7 +210,7 @@ pub async fn judge_page(mut request: JudgePageRequest) -> UiJudgeResult {
   drop(page);
   lynx.close();
   match capture {
-    Ok(capture) => score_captured_page(&client, &request, capture).await,
+    Ok(capture) => score_captured_page(&client, &request, capture, reference_png.as_deref()).await,
     Err(result) => result,
   }
 }
@@ -238,28 +272,102 @@ async fn score_captured_page(
   client: &ModelClient,
   request: &JudgePageRequest,
   capture: CapturedPage,
+  reference_png: Option<&[u8]>,
 ) -> UiJudgeResult {
   let CapturedPage { png, steps, url } = capture;
   let reference = request.reference.clone();
-  let scoring = judge_screenshot(
-    client,
-    JudgeScreenshotRequest {
-      reference: request.reference.clone(),
-      screenshot_data_url: png_data_url(&png),
-      task: task_with_steps(&request.task, &steps),
-      url: url.clone(),
-    },
-  );
+  let scoring = score_screenshot(client, request, &png, &steps, &url, reference_png);
+  let timeout_operation = if reference_png.is_some() {
+    "reference-image visual evaluation"
+  } else {
+    "VLM scoring"
+  };
   let mut result = match tokio::time::timeout(request.timeout, scoring).await {
     Ok(result) => result,
     Err(_) => error_result(
       reference,
       url,
-      operation_timeout("VLM scoring", request.timeout).to_string(),
+      operation_timeout(timeout_operation, request.timeout).to_string(),
     ),
   };
   result.steps = steps;
   result
+}
+
+async fn score_screenshot(
+  client: &ModelClient,
+  request: &JudgePageRequest,
+  png: &[u8],
+  steps: &[String],
+  url: &str,
+  reference_png: Option<&[u8]>,
+) -> UiJudgeResult {
+  let task = task_with_steps(&request.task, steps);
+  let Some(reference_png) = reference_png else {
+    return judge_screenshot(
+      client,
+      JudgeScreenshotRequest {
+        reference: request.reference.clone(),
+        screenshot_data_url: png_data_url(png),
+        task,
+        url: url.to_string(),
+      },
+    )
+    .await;
+  };
+
+  match run_visual_evaluation(
+    VisualEvaluationRequest {
+      align_options: None,
+      compare_options: None,
+      reference: request.reference.clone(),
+      reference_png: reference_png.to_vec(),
+      rendered_png: png.to_vec(),
+      task,
+    },
+    client,
+  )
+  .await
+  {
+    Ok(visual) => visual_evaluation_result(request.reference.clone(), url.to_string(), visual),
+    Err(error) => error_result(
+      request.reference.clone(),
+      url.to_string(),
+      error.to_string(),
+    ),
+  }
+}
+
+fn visual_evaluation_result(
+  reference: Option<String>,
+  url: String,
+  visual: VisualEvaluationResponse,
+) -> UiJudgeResult {
+  let compare = &visual.metrics.compare_result;
+  let evaluation = &visual.metrics.evaluation_result;
+  UiJudgeResult {
+    alignment_score: visual
+      .metrics
+      .align_result
+      .as_ref()
+      .map(|alignment| alignment.score),
+    diff_image_base64: Some(visual.artifacts.diff_image_base64),
+    different_blocks: Some(compare.different_blocks),
+    error: None,
+    visual_similarity: Some(compare.similarity),
+    reason: visual.reason,
+    reference,
+    score: visual
+      .score
+      .filter(|score| score.is_finite())
+      .map(|score| (score * 5.0).round().clamp(0.0, 5.0) as u8)
+      .unwrap_or(0),
+    steps: vec![],
+    summary: evaluation.summary.clone(),
+    total_blocks: Some(compare.total_blocks),
+    url,
+    warnings: visual.warnings,
+  }
 }
 
 fn is_supported_page_url(url: &str) -> bool {
@@ -482,6 +590,7 @@ mod tests {
   fn page_request(url: &str, task: &str) -> JudgePageRequest {
     JudgePageRequest {
       reference: None,
+      reference_image: None,
       screenshot_settle: Duration::ZERO,
       steps: vec![" Tap Save ".to_string()],
       task: task.to_string(),
@@ -535,6 +644,59 @@ mod tests {
       result.error.expect("invalid request error").message,
       "judge_page requires a non-empty task."
     );
+  }
+
+  #[tokio::test(flavor = "current_thread")]
+  async fn judge_page_rejects_an_empty_reference_image_before_initializing_runtime_dependencies() {
+    let mut request = page_request("file:///tmp/ui.lynx.bundle", "Render the form");
+    request.reference_image = Some("  ".to_string());
+    let result = judge_page(request).await;
+
+    assert_eq!(result.steps, ["Tap Save"]);
+    assert_eq!(
+      result.error.expect("invalid request error").message,
+      "judge_page reference_image must be a non-empty image source when provided."
+    );
+  }
+
+  #[tokio::test(flavor = "current_thread")]
+  async fn judge_page_rejects_a_malformed_reference_image_before_initializing_runtime_dependencies()
+  {
+    let mut request = page_request("file:///tmp/ui.lynx.bundle", "Render the form");
+    request.reference_image = Some("not an image".to_string());
+    let result = judge_page(request).await;
+
+    assert_eq!(result.steps, ["Tap Save"]);
+    assert_eq!(
+      result.error.expect("invalid reference error").message,
+      "Reference image is empty, malformed, or unreadable."
+    );
+  }
+
+  #[tokio::test(flavor = "current_thread")]
+  async fn scores_a_reference_image_through_the_visual_comparison_path() {
+    const PNG_BASE64: &str =
+      "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNk+A8AAQUBAScY42YAAAAASUVORK5CYII=";
+    let png = BASE64_STANDARD.decode(PNG_BASE64).expect("decode fixture");
+    let mut request = page_request("file:///tmp/ui.lynx.bundle", "Render the form");
+    request.reference_image = Some(format!("data:image/png;base64,{PNG_BASE64}"));
+    let client = ModelClient::mock(
+      r#"{
+        "score": 0.8,
+        "reason": "The images match.",
+        "summary": "The rendered UI matches the supplied reference.",
+        "issues": []
+      }"#,
+    );
+
+    let result = score_screenshot(&client, &request, &png, &[], &request.url, Some(&png)).await;
+
+    assert!(result.error.is_none());
+    assert_eq!(result.score, 4);
+    assert_eq!(result.visual_similarity, Some(1.0));
+    assert_eq!(result.different_blocks, Some(0));
+    assert_eq!(result.total_blocks, Some(1));
+    assert!(result.diff_image_base64.is_some());
   }
 
   #[tokio::test(flavor = "current_thread")]

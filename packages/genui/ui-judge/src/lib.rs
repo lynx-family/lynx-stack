@@ -5,6 +5,7 @@
 mod headless;
 mod judge;
 mod model;
+mod visual;
 
 pub use headless::{judge_page, JudgePageRequest};
 pub use judge::{UiJudgeError, UiJudgeResult};
