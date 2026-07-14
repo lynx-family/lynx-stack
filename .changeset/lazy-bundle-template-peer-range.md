@@ -1,5 +1,4 @@
 ---
-"@lynx-js/react-webpack-plugin": patch
 "@lynx-js/css-extract-webpack-plugin": patch
 ---
 
