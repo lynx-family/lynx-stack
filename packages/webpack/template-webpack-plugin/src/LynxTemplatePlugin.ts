@@ -577,7 +577,13 @@ class LynxTemplatePluginImpl {
             const filename =
               LynxTemplatePluginImpl.#getLazyBundleNameByChunkId(compilation)
                 .get(asyncChunk.id!)
-                ?? hooks.asyncChunkName.call(asyncChunk.name!);
+                ?? (asyncChunk.name !== null && asyncChunk.name !== undefined
+                  ? hooks.asyncChunkName.call(asyncChunk.name)
+                  : undefined);
+
+            if (filename === undefined || filename === '') {
+              return undefined;
+            }
 
             return this.#getAsyncFilenameTemplate(filename);
           }),

@@ -7,7 +7,7 @@ import type { Chunk, RuntimeModule } from '@rspack/core';
 import { RuntimeGlobals } from '@lynx-js/webpack-runtime-globals';
 
 type LynxAsyncChunksRuntimeModule = new(
-  getFilenameTemplate: (chunk: Chunk) => string,
+  getFilenameTemplate: (chunk: Chunk) => string | undefined,
 ) => RuntimeModule;
 
 export function createLynxAsyncChunksRuntimeModule(
@@ -15,7 +15,7 @@ export function createLynxAsyncChunksRuntimeModule(
 ): LynxAsyncChunksRuntimeModule {
   return class LynxAsyncChunksRuntimeModule extends webpack.RuntimeModule {
     constructor(
-      public getFilenameTemplate: (chunk: Chunk) => string,
+      public getFilenameTemplate: (chunk: Chunk) => string | undefined,
     ) {
       super(
         'webpack/runtime/lynx async chunks',
@@ -30,9 +30,15 @@ export function createLynxAsyncChunksRuntimeModule(
       return `// lynx async chunks ids
 ${RuntimeGlobals.lynxAsyncChunkIds} = {${
         Array.from(chunk.getAllAsyncChunks())
-          .filter(c => c.name !== null && c.name !== undefined)
-          .map(c => {
+          .filter(c => c.id !== null && c.id !== undefined)
+          .flatMap(c => {
             const filename = this.getFilenameTemplate(c);
+
+            // Chunks without a lazy bundle (e.g. context imports) stay on the
+            // default webpack chunk loading.
+            if (filename === undefined) {
+              return [];
+            }
 
             // Modified from https://github.com/webpack/webpack/blob/11449f02175f055a4540d76aa4478958c4cb297e/lib/runtime/GetChunkFilenameRuntimeModule.js#L154-L157
             // Rspack currently ignores `hashWithLength` (also missing from its
@@ -45,7 +51,7 @@ ${RuntimeGlobals.lynxAsyncChunkIds} = {${
             } as Parameters<typeof compilation.getPath>[1];
             const chunkPath = compilation.getPath(filename, pathData);
 
-            return [c.id, chunkPath];
+            return [[c.id, chunkPath] as const];
           })
           // Do not use `JSON.stringify` on `chunkPath`, it may contains `+` which will be treated as string concatenation.
           .map(([id, path]) => `${JSON.stringify(id)}: "${path}"`).join(',\n')
