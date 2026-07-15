@@ -36,7 +36,7 @@ interface CssExtractRspackPluginOptions
   /**
    * The name of each output bundle.
    */
-  filename?: string;
+  filename?: string | ((pathData: PathData) => string);
 }
 
 const require = createRequire(import.meta.url);
@@ -319,8 +319,11 @@ class CssExtractRspackPluginImpl {
                 return [String(c.name ?? c.id), path] as const;
               });
 
+            const filename = typeof options.filename === 'function'
+              ? options.filename({ chunk })
+              : options.filename ?? '[name].css';
             const { path } = compilation.getPathWithInfo(
-              options.filename ?? '[name].css',
+              filename,
               { chunk },
             );
 

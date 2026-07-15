@@ -7,6 +7,7 @@
 import type { Compiler } from '@rspack/core';
 import type { CssExtractRspackPluginOptions as CssExtractRspackPluginOptions_2 } from '@rspack/core';
 import { LynxTemplatePlugin } from '@lynx-js/template-webpack-plugin';
+import type { PathData } from '@rspack/core';
 
 // @public
 export class CssExtractRspackPlugin {
@@ -20,7 +21,7 @@ export class CssExtractRspackPlugin {
 export interface CssExtractRspackPluginOptions extends CssExtractRspackPluginOptions_2 {
     chunkFilename?: string;
     cssPlugins?: Parameters<typeof LynxTemplatePlugin.convertCSSChunksToMap>[1];
-    filename?: string;
+    filename?: string | ((pathData: PathData) => string);
 }
 
 // @public
