@@ -104,11 +104,6 @@ export interface TemplateHooks {
     encodeData: EncodeRawData;
     filenameTemplate: string;
     /**
-     * The entry names covered by this template. Always empty for an async
-     * lazy bundle template, whose chunk groups are unnamed.
-     */
-    entryNames: string[];
-    /**
      * The chunk groups covered by this template.
      */
     chunkGroups: ChunkGroup[];
@@ -142,11 +137,6 @@ export interface TemplateHooks {
     outputName: string;
     mainThreadAssets: Asset[];
     cssChunks: Asset[];
-    /**
-     * The entry names covered by this template. Always empty for an async
-     * lazy bundle template, whose chunk groups are unnamed.
-     */
-    entryNames: string[];
     /**
      * The chunk groups covered by this template.
      */
@@ -745,7 +735,6 @@ class LynxTemplatePluginImpl {
     await this.#encodeByAssetsInformation(
       compilation,
       assetsInfoByGroups,
-      filteredEntryNames,
       filteredEntryNames
         .map(name =>
           compilation.namedChunkGroups.get(name)
@@ -918,10 +907,6 @@ class LynxTemplatePluginImpl {
     await Promise.all(
       Object.entries(asyncChunkGroups).map(
         ([filename, chunkGroups]): Promise<void> => {
-          // Async lazy bundle chunk groups are unnamed — the hooks of an
-          // async template always receive an empty `entryNames`.
-          const entryNames: string[] = [];
-
           // If no filename is found, avoid generating async template
           if (!filename) {
             return Promise.resolve();
@@ -948,7 +933,6 @@ class LynxTemplatePluginImpl {
           return this.#encodeByAssetsInformation(
             compilation,
             asyncAssetsInfoByGroups,
-            entryNames,
             chunkGroups,
             filenameTemplate,
             path.join(intermediateRoot, 'async', filename),
@@ -962,7 +946,6 @@ class LynxTemplatePluginImpl {
   async #encodeByAssetsInformation(
     compilation: Compilation,
     assetsInfoByGroups: AssetsInformationByGroups,
-    entryNames: string[],
     chunkGroups: ChunkGroup[],
     filenameTemplate: string,
     intermediate: string,
@@ -1069,7 +1052,6 @@ class LynxTemplatePluginImpl {
     const { encodeData } = await hooks.beforeEncode.promise({
       encodeData: encodeRawData,
       filenameTemplate,
-      entryNames,
       chunkGroups,
       intermediate,
       intermediateAssets: [],
@@ -1148,7 +1130,6 @@ class LynxTemplatePluginImpl {
         mainThreadAssets: [lepusCode.root, ...encodeData.lepusCode.chunks]
           .filter(i => i !== undefined),
         cssChunks: assetsInfoByGroups.css,
-        entryNames,
         chunkGroups,
       });
 

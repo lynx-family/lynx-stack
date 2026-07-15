@@ -223,11 +223,11 @@ describe('Lazy', () => {
     })
   })
 
-  test('lazy bundle beforeEncode entryNames', async () => {
+  test('lazy bundle beforeEncode chunkGroups', async () => {
     rstest.stubEnv('NODE_ENV', 'development')
     const { pluginReactLynx } = await import('../src/pluginReactLynx.js')
 
-    const entryNamesOfBeforeEncode: string[][] = []
+    const chunkGroupNamesOfBeforeEncode: (string | null | undefined)[][] = []
     let backgroundJSContent = ''
 
     // Isolate the dist root so this build cannot race other tests in this
@@ -317,7 +317,9 @@ describe('Lazy', () => {
                       hooks.beforeEncode.tap(
                         'beforeEncode-test',
                         (args) => {
-                          entryNamesOfBeforeEncode.push(args.entryNames)
+                          chunkGroupNamesOfBeforeEncode.push(
+                            args.chunkGroups.map(cg => cg.name),
+                          )
 
                           return args
                         },
@@ -335,13 +337,16 @@ describe('Lazy', () => {
     try {
       await rsbuild.build()
 
-      expect(entryNamesOfBeforeEncode).toMatchInlineSnapshot(`
+      expect(chunkGroupNamesOfBeforeEncode).toMatchInlineSnapshot(`
         [
           [
             "main__main-thread",
             "main",
           ],
-          [],
+          [
+            undefined,
+            undefined,
+          ],
         ]
       `)
       const cssHotUpdateList =

@@ -154,14 +154,12 @@ export interface TemplateHooks {
         outputName: string;
         mainThreadAssets: Asset[];
         cssChunks: Asset[];
-        entryNames: string[];
         chunkGroups: ChunkGroup[];
     }>;
     // @alpha
     beforeEncode: AsyncSeriesWaterfallHook<{
         encodeData: EncodeRawData;
         filenameTemplate: string;
-        entryNames: string[];
         chunkGroups: ChunkGroup[];
         intermediate: string;
         intermediateAssets: string[];

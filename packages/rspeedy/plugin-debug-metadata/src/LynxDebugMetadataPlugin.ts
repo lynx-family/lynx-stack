@@ -177,8 +177,10 @@ export class LynxDebugMetadataPluginImpl {
           // importer's blocks via `chunkGroup.origins` +
           // `moduleGraph.getResolvedModule` to recover the dynamic-import
           // target's resource path.
-          const fromMap = args.entryNames.flatMap(name =>
-            entryPathMap[name] ?? []
+          const fromMap = chunkGroups.flatMap(cg =>
+            cg.name === null || cg.name === undefined
+              ? []
+              : entryPathMap[cg.name] ?? []
           )
           const entryFiles = fromMap.length > 0
             ? dedupe(fromMap)

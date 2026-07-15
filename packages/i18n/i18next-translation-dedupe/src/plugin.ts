@@ -86,7 +86,9 @@ class LynxI18nextTranslationDedupeWebpackPlugin {
         hooks.beforeEncode.tap(
           'LynxI18nextTranslationDedupeWebpackPlugin',
           (args: BeforeEncodeArgs) => {
-            const entryName = args.entryNames[0];
+            const entryName = args.chunkGroups.find(cg =>
+              cg.name !== null && cg.name !== undefined
+            )?.name;
 
             if (!entryName) {
               return args;

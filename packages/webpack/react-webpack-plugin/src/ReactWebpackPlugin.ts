@@ -538,7 +538,9 @@ class ReactWebpackPlugin {
           (args) => {
             const { chunkGraph } = compilation;
             const elementTemplates = collectElementTemplatesForEntries(
-              args.entryNames,
+              args.chunkGroups.flatMap(cg =>
+                cg.name === null || cg.name === undefined ? [] : [cg.name]
+              ),
               (name) => compilation.namedChunkGroups.get(name),
               (chunk) =>
                 chunkGraph.getChunkModules(
