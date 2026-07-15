@@ -229,6 +229,15 @@ interface ReactWebpackPluginOptions {
    * @experimental
    */
   experimental_useElementTemplate?: boolean;
+
+  /**
+   * Resolved lazy-bundle fetcher mode. Decided by the caller (e.g.
+   * `pluginReactLynx`) from the host engine version and any
+   * `REACT_LAZY_BUNDLE_FETCHER` env override.
+   *
+   * @public
+   */
+  lazyBundleFetcher?: 'FetchBundle' | 'QueryComponent';
 }
 
 /**
@@ -306,6 +315,7 @@ class ReactWebpackPlugin {
       profile: undefined,
       workletRuntimePath: '',
       experimental_useElementTemplate: false,
+      lazyBundleFetcher: 'QueryComponent',
     });
 
   /**
@@ -374,6 +384,7 @@ class ReactWebpackPlugin {
       __USE_ELEMENT_TEMPLATE__: JSON.stringify(
         options.experimental_useElementTemplate,
       ),
+      __LAZY_BUNDLE_FETCHER__: JSON.stringify(options.lazyBundleFetcher),
     }).apply(compiler);
 
     compiler.hooks.thisCompilation.tap(this.constructor.name, compilation => {
@@ -382,11 +393,11 @@ class ReactWebpackPlugin {
       compilation.hooks.runtimeRequirementInTree.for(
         compiler.webpack.RuntimeGlobals.ensureChunkHandlers,
       ).tap('ReactWebpackPlugin', (_, runtimeRequirements) => {
-        runtimeRequirements.add(RuntimeGlobals.lynxProcessEvalResult);
+        runtimeRequirements.add(RuntimeGlobals.lynxProcessEvalResultByHost);
       });
 
       compilation.hooks.runtimeRequirementInTree.for(
-        RuntimeGlobals.lynxProcessEvalResult,
+        RuntimeGlobals.lynxProcessEvalResultByHost,
       ).tap('ReactWebpackPlugin', (chunk) => {
         if (onceForChunkSet.has(chunk)) {
           return;

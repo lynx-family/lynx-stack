@@ -9,6 +9,7 @@ import { detectLanHost, producerDevPort } from './demo-ports.js';
 
 const projectRoot = path.dirname(fileURLToPath(import.meta.url));
 const enableBundleAnalysis = !!process.env['RSPEEDY_BUNDLE_ANALYSIS'];
+const enableFetchBundle = !!process.env['LAZY_BUNDLE_FETCHBUNDLE'];
 const producerHost = detectLanHost();
 
 export default defineConfig({
@@ -21,7 +22,12 @@ export default defineConfig({
   },
   output: {
     distPath: {
-      root: path.join(projectRoot, 'dist-consumer'),
+      // Separate output per loader variant so `pnpm build` (querycomponent +
+      // fetchbundle) doesn't clobber the first pass.
+      root: path.join(
+        projectRoot,
+        enableFetchBundle ? 'dist-consumer-fetchbundle' : 'dist-consumer',
+      ),
     },
   },
   server: {
@@ -35,7 +41,9 @@ export default defineConfig({
     },
   },
   plugins: [
-    pluginReactLynx(),
+    pluginReactLynx({
+      ...(enableFetchBundle ? { engineVersion: '3.9' } : {}),
+    }),
     pluginQRCode({
       schema(url) {
         return `${url}?fullscreen=true`;

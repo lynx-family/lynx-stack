@@ -11,6 +11,9 @@ const config: RstestConfig = defineConfig(lynxRstestConfig({
   name: 'template-webpack-plugin',
   url: import.meta.url,
   setupExpect: true,
+  env: {
+    REACT_LAZY_BUNDLE_FETCHER: 'QueryComponent',
+  },
 }));
 
 export default config;
