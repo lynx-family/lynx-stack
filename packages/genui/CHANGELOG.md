@@ -1,5 +1,25 @@
 # @lynx-js/genui
 
+## 0.1.0
+
+### Minor Changes
+
+- Add mcp apps protocol support ([#2982](https://github.com/lynx-family/lynx-stack/pull/2982))
+
+### Patch Changes
+
+- Move the Material Icons `@font-face` out of `a2ui/styles/theme.css` into a separate `a2ui/styles/material-icons.css`, imported only by the two stylesheets that render the font (`catalog/Icon.css`, `catalog/DateTimeInput.css`). ([#2914](https://github.com/lynx-family/lynx-stack/pull/2914))
+
+  `theme.css` was 1,813,181 bytes, 99.9% of which was one base64 TTF data URI — and every `catalog/*.css` starts with `@import "../theme.css"`, so registering ANY catalog component shipped the 1.8 MB font even when no icon glyph was used (the CLI starter template pays this cost while registering no icon-bearing component). After this change `theme.css` is ~1.9 KB of theme tokens; apps that register `Icon` or `DateTimeInput` still get the font automatically via their catalog CSS, pixel-identical.
+
+  The font stays an embedded TTF (Lynx native cannot parse woff2 — see #2711); it just no longer rides along with unrelated components. Custom-catalog authors who use `var(--a2ui-icon-font-family)` without registering a built-in icon component can opt back in with `import '@lynx-js/genui/a2ui/styles/material-icons.css'` (newly exported).
+
+- Add `genui openui generate prompt` for writing the bundled OpenUI system prompt to stdout or a file. ([#2945](https://github.com/lynx-family/lynx-stack/pull/2945))
+
+- Update OpenUI dependencies to align with the upstream OpenUI Lang core release and support Zod 4-compatible peer ranges. ([#2943](https://github.com/lynx-family/lynx-stack/pull/2943))
+
+- Expand the OpenUI prompt catalog so generated prompts expose the ReactLynx renderer's layout, media, modal, tabs, picker, and date/time components. ([#2944](https://github.com/lynx-family/lynx-stack/pull/2944))
+
 ## 0.0.6
 
 ### Patch Changes

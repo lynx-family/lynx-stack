@@ -1,5 +1,72 @@
 # @lynx-js/react-rsbuild-plugin
 
+## 0.18.0
+
+### Minor Changes
+
+- Stop injecting `webpackChunkName` into dynamic imports so lazy bundle intermediate files stay inside the output directory. ([#2961](https://github.com/lynx-family/lynx-stack/pull/2961))
+
+  The ReactLynx transform injected `webpackChunkName: "<request>-react__<layer>"`, so a dynamic import resolving above the compiler context (e.g. `import('../../Foo.js')`) leaked `../` into `[name]`/`[id]` and the intermediate js/css/hmr files escaped the output directory. Async chunks now keep rspack's own ids, `__webpack_require__.lynx_aci` maps them by chunk id, and each lazy bundle's intermediate JS and CSS are emitted under `.rspeedy/async/<bundle-name>/<layer>.js` and `<layer>.css` next to its other intermediate outputs (`tasm.json`, `debug-metadata.json`, CSS hot-update files). Explicit `webpackChunkName` comments written by users are still honored and keep the user-controlled `[name]` placement. Main-thread chunks no longer emit CSS hot-update files — CSS only exists on the background thread, and the main-thread HMR runtime receives updates from it.
+
+  These packages release together and must be upgraded together: `@lynx-js/react-webpack-plugin` and `@lynx-js/css-extract-webpack-plugin` require `@lynx-js/template-webpack-plugin` `^0.13.0`, and `@lynx-js/react-rsbuild-plugin` requires `@lynx-js/react` `^0.123.0`.
+
+- Choose the lazy bundle loader from `engineVersion`: use the new `fetchBundle` ([#2584](https://github.com/lynx-family/lynx-stack/pull/2584))
+  loader when `engineVersion >= 3.9`, otherwise keep the legacy `QueryComponent`
+  loader.
+
+  ```js
+  import('./Foo.jsx', { with: { mode: 'sync' | 'async' } })
+  ```
+
+  Force a loader regardless of `engineVersion` with the `REACT_LAZY_BUNDLE_FETCHER`
+  env var (`FetchBundle` / `QueryComponent`).
+
+- Add `firstScreenSyncTiming: 'manual'` and a new `markFirstScreenSyncReady()` API exported by `@lynx-js/react`. ([#2826](https://github.com/lynx-family/lynx-stack/pull/2826))
+
+  In `'manual'` mode, the main thread holds the UI control after the first screen until the business calls `markFirstScreenSyncReady()`, so the handover timing to the background thread (for hydration) is fully controlled by the user. The API can be called from both threads (a background-thread call is forwarded to the main thread) and takes effect once the first-screen tree has finished rendering.
+
+  ```js
+  pluginReactLynx({
+    firstScreenSyncTiming: 'manual',
+  })
+  ```
+
+  ```js
+  import { markFirstScreenSyncReady } from '@lynx-js/react'
+
+  markFirstScreenSyncReady()
+  ```
+
+### Patch Changes
+
+- Add `compat.legacySlot` to `pluginReactLynx`. When enabled, dynamic children are compiled to the pre-SlotV2 form (JSX `children` + `wrapper` elements + `__DynamicPartChildren`/`__DynamicPartSlot` symbols instead of `$0`/`$1` slot props + `SlotV2`), so the compiled output stays compatible with legacy runtimes without `SlotV2` support (`< 0.120.0`, which shipped the SlotV2 refactor in #1764) — e.g. a standalone lazy bundle consumed by a host App that ships an older runtime. ([#2947](https://github.com/lynx-family/lynx-stack/pull/2947))
+
+  ```js
+  import { defineConfig } from '@lynx-js/rspeedy'
+  import { pluginReactLynx } from '@lynx-js/react-rsbuild-plugin'
+
+  export default defineConfig({
+    plugins: [
+      pluginReactLynx({
+        compat: {
+          legacySlot: true,
+        },
+      }),
+    ],
+  })
+  ```
+
+  The default (SlotV2) codegen is unchanged, and the runtime keeps supporting both forms.
+
+- Updated dependencies [[`0a5f3f2`](https://github.com/lynx-family/lynx-stack/commit/0a5f3f2347000124eb266ba24459c615a5bc5520), [`983e33d`](https://github.com/lynx-family/lynx-stack/commit/983e33d73d20f6a9558c5662c7b7983ff3a2fa7a), [`1064984`](https://github.com/lynx-family/lynx-stack/commit/1064984d887eb76f880b8ccfeea096c9d787beca), [`a10dbd8`](https://github.com/lynx-family/lynx-stack/commit/a10dbd8939842ca091981e2ec9fabc95b8920f45), [`34318ea`](https://github.com/lynx-family/lynx-stack/commit/34318ea3432b6484a383707458ed9c4ee19e2097), [`fec4237`](https://github.com/lynx-family/lynx-stack/commit/fec4237b2257455a40a68f33864fb713c147f7d4), [`2b5d83a`](https://github.com/lynx-family/lynx-stack/commit/2b5d83a4b8e3c1f5329de9d9fe7539d38e33e420), [`2b5d83a`](https://github.com/lynx-family/lynx-stack/commit/2b5d83a4b8e3c1f5329de9d9fe7539d38e33e420), [`fec4237`](https://github.com/lynx-family/lynx-stack/commit/fec4237b2257455a40a68f33864fb713c147f7d4), [`fec4237`](https://github.com/lynx-family/lynx-stack/commit/fec4237b2257455a40a68f33864fb713c147f7d4), [`fec4237`](https://github.com/lynx-family/lynx-stack/commit/fec4237b2257455a40a68f33864fb713c147f7d4), [`983e33d`](https://github.com/lynx-family/lynx-stack/commit/983e33d73d20f6a9558c5662c7b7983ff3a2fa7a)]:
+  - @lynx-js/react-webpack-plugin@0.10.0
+  - @lynx-js/react-refresh-webpack-plugin@0.4.1
+  - @lynx-js/react-alias-rsbuild-plugin@0.18.0
+  - @lynx-js/css-extract-webpack-plugin@0.9.0
+  - @lynx-js/template-webpack-plugin@0.13.0
+  - @lynx-js/use-sync-external-store@1.5.0
+  - @lynx-js/runtime-wrapper-webpack-plugin@0.2.2
+
 ## 0.17.2
 
 ### Patch Changes

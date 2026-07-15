@@ -1,5 +1,11 @@
 # @lynx-js/react-alias-rsbuild-plugin
 
+## 0.18.0
+
+### Patch Changes
+
+- Fix `Cannot find module '@lynx-js/react/jsx-runtime'` when a stray Yarn PnP manifest (`.pnp.cjs`) exists in an ancestor directory of an npm/pnpm project. Yarn PnP resolution is now only enabled when the build actually runs under the PnP runtime. ([#2920](https://github.com/lynx-family/lynx-stack/pull/2920))
+
 ## 0.17.2
 
 ### Patch Changes

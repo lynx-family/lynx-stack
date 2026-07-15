@@ -1,5 +1,60 @@
 # @lynx-js/react-webpack-plugin
 
+## 0.10.0
+
+### Minor Changes
+
+- Stop injecting `webpackChunkName` into dynamic imports so lazy bundle intermediate files stay inside the output directory. ([#2961](https://github.com/lynx-family/lynx-stack/pull/2961))
+
+  The ReactLynx transform injected `webpackChunkName: "<request>-react__<layer>"`, so a dynamic import resolving above the compiler context (e.g. `import('../../Foo.js')`) leaked `../` into `[name]`/`[id]` and the intermediate js/css/hmr files escaped the output directory. Async chunks now keep rspack's own ids, `__webpack_require__.lynx_aci` maps them by chunk id, and each lazy bundle's intermediate JS and CSS are emitted under `.rspeedy/async/<bundle-name>/<layer>.js` and `<layer>.css` next to its other intermediate outputs (`tasm.json`, `debug-metadata.json`, CSS hot-update files). Explicit `webpackChunkName` comments written by users are still honored and keep the user-controlled `[name]` placement. Main-thread chunks no longer emit CSS hot-update files — CSS only exists on the background thread, and the main-thread HMR runtime receives updates from it.
+
+  These packages release together and must be upgraded together: `@lynx-js/react-webpack-plugin` and `@lynx-js/css-extract-webpack-plugin` require `@lynx-js/template-webpack-plugin` `^0.13.0`, and `@lynx-js/react-rsbuild-plugin` requires `@lynx-js/react` `^0.123.0`.
+
+- Route `processEvalResult` to the host that requested the lazy bundle, so multiple ([#2584](https://github.com/lynx-family/lynx-stack/pull/2584))
+  hosts on one page each get their own eval result instead of sharing a single one.
+
+- Add `firstScreenSyncTiming: 'manual'` and a new `markFirstScreenSyncReady()` API exported by `@lynx-js/react`. ([#2826](https://github.com/lynx-family/lynx-stack/pull/2826))
+
+  In `'manual'` mode, the main thread holds the UI control after the first screen until the business calls `markFirstScreenSyncReady()`, so the handover timing to the background thread (for hydration) is fully controlled by the user. The API can be called from both threads (a background-thread call is forwarded to the main thread) and takes effect once the first-screen tree has finished rendering.
+
+  ```js
+  pluginReactLynx({
+    firstScreenSyncTiming: 'manual',
+  });
+  ```
+
+  ```js
+  import { markFirstScreenSyncReady } from '@lynx-js/react';
+
+  markFirstScreenSyncReady();
+  ```
+
+### Patch Changes
+
+- Add `compat.legacySlot` to `pluginReactLynx`. When enabled, dynamic children are compiled to the pre-SlotV2 form (JSX `children` + `wrapper` elements + `__DynamicPartChildren`/`__DynamicPartSlot` symbols instead of `$0`/`$1` slot props + `SlotV2`), so the compiled output stays compatible with legacy runtimes without `SlotV2` support (`< 0.120.0`, which shipped the SlotV2 refactor in #1764) — e.g. a standalone lazy bundle consumed by a host App that ships an older runtime. ([#2947](https://github.com/lynx-family/lynx-stack/pull/2947))
+
+  ```js
+  import { defineConfig } from '@lynx-js/rspeedy';
+  import { pluginReactLynx } from '@lynx-js/react-rsbuild-plugin';
+
+  export default defineConfig({
+    plugins: [
+      pluginReactLynx({
+        compat: {
+          legacySlot: true,
+        },
+      }),
+    ],
+  });
+  ```
+
+  The default (SlotV2) codegen is unchanged, and the runtime keeps supporting both forms.
+
+- Fix `globDynamicComponentEntry is not defined` when an external bundle's main-thread section is evaluated. An external bundle is not a dynamic component, so `globDynamicComponentEntry` (only in scope for the main card and dynamic components) is undeclared there. The snapshot / element-template transform now bakes the `__Card__` entry name into an external bundle's snapshots instead of referencing the bare identifier, via a new internal `isExternalBundle` loader option. ([#2934](https://github.com/lynx-family/lynx-stack/pull/2934))
+
+- Updated dependencies [[`fec4237`](https://github.com/lynx-family/lynx-stack/commit/fec4237b2257455a40a68f33864fb713c147f7d4)]:
+  - @lynx-js/webpack-runtime-globals@0.0.7
+
 ## 0.9.5
 
 ### Patch Changes

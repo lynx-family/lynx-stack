@@ -1,6 +1,6 @@
 {
   "name": "@lynx-js/debug-metadata-rsbuild-plugin",
-  "version": "0.1.2",
+  "version": "0.2.0",
   "description": "An rsbuild plugin that emits Lynx debug metadata (debug-metadata.json) alongside template builds.",
   "keywords": [
     "rsbuild",

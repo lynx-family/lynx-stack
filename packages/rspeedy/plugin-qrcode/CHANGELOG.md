@@ -1,5 +1,21 @@
 # @lynx-js/qrcode-rsbuild-plugin
 
+## 0.6.0
+
+### Minor Changes
+
+- Read QR code entries from Rspeedy server routes. ([#2930](https://github.com/lynx-family/lynx-stack/pull/2930))
+
+  BREAKING CHANGE: `@lynx-js/qrcode-rsbuild-plugin` now requires `@lynx-js/rspeedy@^0.16.0` because it relies on dev and preview server `routes` containing Lynx bundle entries. The plugin no longer reads the internal `rspeedy.env.entries` exposed API.
+
+### Patch Changes
+
+- Add `showQRCode` option to `registerConsoleShortcuts`. ([#2937](https://github.com/lynx-family/lynx-stack/pull/2937))
+
+  When passed `showQRCode: false`, the shortcut runtime still prints URL(s) and keeps the interactive schema/entry switching, but skips rendering the ASCII QR code. This lets embedders that always launch via a deep link (or wrap the plugin with their own connection flow — e.g. `@byted-lynx/hdt-rsbuild-plugin`) suppress the QR block without forking the shortcut loop. Default remains `true`, so existing behavior is unchanged.
+
+- Support Rspeedy v0.16.x. ([#2931](https://github.com/lynx-family/lynx-stack/pull/2931))
+
 ## 0.5.0
 
 ### Minor Changes

@@ -1,5 +1,32 @@
 # @lynx-js/template-webpack-plugin
 
+## 0.13.0
+
+### Minor Changes
+
+- Deduplicate lazy bundles: the same file imported via different paths (relative or alias) now produces a single bundle. ([#2961](https://github.com/lynx-family/lynx-stack/pull/2961))
+
+  Async chunk groups are grouped by the resolved module of their dynamic imports instead of the chunk name derived from the raw import request, so `./Foo.jsx`, `../Foo.jsx` and `@/Foo.jsx` all load the same `async/src/Foo.jsx.[fullhash].bundle`, and a request that resolves above the compiler context no longer escapes the `async/` directory.
+
+- Stop injecting `webpackChunkName` into dynamic imports so lazy bundle intermediate files stay inside the output directory. ([#2961](https://github.com/lynx-family/lynx-stack/pull/2961))
+
+  The ReactLynx transform injected `webpackChunkName: "<request>-react__<layer>"`, so a dynamic import resolving above the compiler context (e.g. `import('../../Foo.js')`) leaked `../` into `[name]`/`[id]` and the intermediate js/css/hmr files escaped the output directory. Async chunks now keep rspack's own ids, `__webpack_require__.lynx_aci` maps them by chunk id, and each lazy bundle's intermediate JS and CSS are emitted under `.rspeedy/async/<bundle-name>/<layer>.js` and `<layer>.css` next to its other intermediate outputs (`tasm.json`, `debug-metadata.json`, CSS hot-update files). Explicit `webpackChunkName` comments written by users are still honored and keep the user-controlled `[name]` placement. Main-thread chunks no longer emit CSS hot-update files — CSS only exists on the background thread, and the main-thread HMR runtime receives updates from it.
+
+  These packages release together and must be upgraded together: `@lynx-js/react-webpack-plugin` and `@lynx-js/css-extract-webpack-plugin` require `@lynx-js/template-webpack-plugin` `^0.13.0`, and `@lynx-js/react-rsbuild-plugin` requires `@lynx-js/react` `^0.123.0`.
+
+- Encode async lazy-bundle chunks with `customSections` (main-thread / background / ([#2584](https://github.com/lynx-family/lynx-stack/pull/2584))
+  CSS) for the `fetchBundle` loader, and emit a per-chunk `mode` map (empty maps
+  are skipped so no invalid `undefined = {}` is generated). Importing the same
+  bundle with conflicting `sync`/`async` modes now fails the build with one error
+  per bundle, naming the import request and the importing modules, and falls back
+  to `mode: 'async'` until fixed.
+
+### Patch Changes
+
+- Updated dependencies [[`60cb231`](https://github.com/lynx-family/lynx-stack/commit/60cb23172e40af8dd62a5f961a9f053c482030fc), [`fec4237`](https://github.com/lynx-family/lynx-stack/commit/fec4237b2257455a40a68f33864fb713c147f7d4)]:
+  - @lynx-js/web-core@0.22.2
+  - @lynx-js/webpack-runtime-globals@0.0.7
+
 ## 0.12.2
 
 ### Patch Changes
