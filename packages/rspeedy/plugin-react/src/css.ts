@@ -158,27 +158,9 @@ export function applyCSS(
     chain
       .plugin(CHAIN_ID.PLUGIN.MINI_CSS_EXTRACT)
       .tap(([options]) => {
-        // Route the main-thread entry's CSS next to the entry's other
-        // intermediate outputs (`.rspeedy/<entry>/main-thread.css`), matching
-        // the `<entry>__main-thread` → `<entry>/main-thread.js` JS mapping.
-        const filenameTemplate = (options as { filename?: string }).filename
-        const filename = typeof filenameTemplate === 'string'
-            && filenameTemplate.includes('[name]/[name].css')
-          ? (pathData: Rspack.PathData) => {
-            const name = pathData.chunk?.name
-            if (typeof name === 'string' && name.endsWith('__main-thread')) {
-              return filenameTemplate.replace(
-                '[name]/[name].css',
-                `${name.slice(0, -'__main-thread'.length)}/main-thread.css`,
-              )
-            }
-            return filenameTemplate
-          }
-          : filenameTemplate
         return [
           {
             ...options,
-            ...(filename === undefined ? {} : { filename }),
             enableRemoveCSSScope: enableRemoveCSSScope ?? true,
             enableCSSSelector,
             enableCSSInvalidation,
