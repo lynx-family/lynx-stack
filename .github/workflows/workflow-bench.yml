@@ -124,6 +124,7 @@ jobs:
           overwrite: true
       - name: Run benchmark (walltime)
         run: |
+          sync; echo 1 > /proc/sys/vm/drop_caches
           export HOME=/root
           . "$HOME/.cargo/env"
           taskset -c 176-191 codspeed run --mode walltime -- pnpm -r run --workspace-concurrency=1 bench
