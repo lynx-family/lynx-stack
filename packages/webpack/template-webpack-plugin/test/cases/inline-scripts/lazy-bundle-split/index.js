@@ -27,7 +27,7 @@ it('should load the lazy bundle', async () => {
 it('inlines every split background chunk of a lazy bundle', async () => {
   const tasmJSONPath = resolve(
     __dirname,
-    '.rspeedy/async/component.js/tasm.json',
+    '.rspeedy/async/component/tasm.json',
   );
   expect(existsSync(tasmJSONPath)).toBeTruthy();
 

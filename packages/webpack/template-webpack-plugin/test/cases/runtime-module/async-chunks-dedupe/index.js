@@ -2,10 +2,7 @@
 
 import { load } from './subdir/importer.js';
 
-import(
-  /* webpackChunkName: './dynamic.js:background' */
-  './dynamic.js'
-);
+import('./dynamic.js');
 
 load();
 

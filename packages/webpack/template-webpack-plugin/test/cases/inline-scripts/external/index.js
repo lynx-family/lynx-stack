@@ -24,7 +24,7 @@ it('should have correct chunk content', async () => {
 });
 
 it('lazy bundle bts is inlined even with inlineScripts: false', async () => {
-  const tasmJSONPath = resolve(__dirname, '.rspeedy/async/foo.js/tasm.json');
+  const tasmJSONPath = resolve(__dirname, '.rspeedy/async/foo/tasm.json');
   expect(existsSync(tasmJSONPath)).toBeTruthy();
 
   const content = await readFile(tasmJSONPath, 'utf-8');

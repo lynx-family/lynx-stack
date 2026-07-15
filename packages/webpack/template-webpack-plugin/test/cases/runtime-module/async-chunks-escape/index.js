@@ -1,9 +1,6 @@
 /// <reference types="@rstest/core/globals" />
 
-import(
-  /* webpackChunkName: './dynamic.js:background' */
-  './dynamic.js'
-);
+import('./dynamic.js');
 
 // `dynamic.js` resolves above the compiler `context` (set to `./nested`), so
 // its path relative to the context starts with `..`. The lazy bundle name must

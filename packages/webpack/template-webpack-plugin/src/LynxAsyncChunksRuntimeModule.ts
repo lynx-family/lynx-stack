@@ -3,8 +3,8 @@
 // LICENSE file in the root directory of this source tree.
 
 import type {
-  Chunk,
   AsyncDependenciesBlock,
+  Chunk,
   Compilation,
   Module,
   RuntimeModule,
@@ -184,7 +184,7 @@ export function createLynxAsyncChunksRuntimeModule(
         .filter(c => c.id !== null && c.id !== undefined);
 
       const ids = asyncChunks
-        .map(c => {
+        .flatMap(c => {
           const filename = this.getFilenameTemplate(c);
 
           // Chunks without a lazy bundle (e.g. context imports) stay on the

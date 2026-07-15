@@ -38,7 +38,7 @@ it('should have correct bar chunk content', async () => {
 });
 
 it('should generate correct foo template', async () => {
-  const tasmJSONPath = resolve(__dirname, '.rspeedy/async/foo.js/tasm.json');
+  const tasmJSONPath = resolve(__dirname, '.rspeedy/async/foo/tasm.json');
   expect(existsSync(tasmJSONPath)).toBeTruthy();
 
   const content = await readFile(tasmJSONPath, 'utf-8');
@@ -53,7 +53,7 @@ it('should generate correct foo template', async () => {
 });
 
 it('should generate correct bar template', async () => {
-  const tasmJSONPath = resolve(__dirname, '.rspeedy/async/bar.js/tasm.json');
+  const tasmJSONPath = resolve(__dirname, '.rspeedy/async/bar/tasm.json');
   expect(existsSync(tasmJSONPath)).toBeTruthy();
 
   const content = await readFile(tasmJSONPath, 'utf-8');

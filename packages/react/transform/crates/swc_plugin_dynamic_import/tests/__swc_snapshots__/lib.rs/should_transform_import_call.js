@@ -32,17 +32,17 @@ import { __dynamicImport } from "@lynx-js/react/internal";
             type: "component"
         }
     });
-    await import(/*webpackChunkName: "./index.js-test"*/ "./index.js", {
+    await import("./index.js", {
         with: {
             mode: "sync"
         }
     });
-    await import(/*webpackChunkName: "./index.js-test"*/ "./index.js", {
+    await import("./index.js", {
         with: {
             mode: "async"
         }
     });
-    await import(/*webpackChunkName: "ftp://www/a.js-test"*/ "ftp://www/a.js", {
+    await import("ftp://www/a.js", {
         with: {
             mode: "sync"
         }
@@ -52,7 +52,7 @@ import { __dynamicImport } from "@lynx-js/react/internal";
             mode: "async"
         }
     });
-    await import(/*webpackChunkName: "./index.js-test"*/ "./index.js", {
+    await import("./index.js", {
         with: {
             type: "component",
             mode: "sync"

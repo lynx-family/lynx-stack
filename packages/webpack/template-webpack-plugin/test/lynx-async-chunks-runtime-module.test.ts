@@ -44,7 +44,9 @@ function run(
   modules: FakeModule[] = [],
   blockChunkGroup: { chunks: FakeChunk[] } | null = null,
 ): { out: string; errors: Error[] } {
-  const mod = new LynxAsyncChunksRuntimeModule((chunkName) => chunkName);
+  const mod = new LynxAsyncChunksRuntimeModule((chunk) =>
+    (chunk as unknown as FakeChunk).name
+  );
   const errors: Error[] = [];
   Object.assign(mod, {
     chunk: { getAllAsyncChunks: () => new Set(asyncChunks) },

@@ -791,21 +791,20 @@ class LynxTemplatePluginImpl {
     asyncChunkGroups = groupBy(
       compilation.chunkGroups.filter(cg => !cg.isInitial()),
       cg => {
-        // A user-provided `webpackChunkName` is kept as-is. Otherwise group by
-        // the resolved modules of the dynamic imports so that the same file
-        // imported via different paths (relative or alias) produces a single
-        // lazy bundle. See https://github.com/lynx-family/lynx-stack/issues/455
+        // A `webpackChunkName` is user-provided (the react transform no longer
+        // injects one) — group by it, after the `asyncChunkName` hook. Unnamed
+        // chunk groups are grouped by the resolved modules of their dynamic
+        // imports so that the same file imported via different paths (relative
+        // or alias) produces a single lazy bundle.
+        // See https://github.com/lynx-family/lynx-stack/issues/455
         if (cg.name !== null && cg.name !== undefined) {
-          const strippedName = hooks.asyncChunkName.call(cg.name);
-          if (strippedName === cg.name) {
-            return strippedName;
-          }
+          return hooks.asyncChunkName.call(cg.name);
         }
         const chunkGroupResources = resources.get(cg);
         if (chunkGroupResources) {
           return resourcesToLazyBundleName(chunkGroupResources, context);
         }
-        return cg.name ?? '';
+        return '';
       },
     );
 
