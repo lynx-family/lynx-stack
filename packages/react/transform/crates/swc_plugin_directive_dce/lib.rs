@@ -1,9 +1,11 @@
+use rustc_hash::FxHashSet;
 use serde::Deserialize;
 use std::fmt::Debug;
 use swc_core::{
-  common::{errors::HANDLER, Span, DUMMY_SP},
+  common::{errors::HANDLER, Span, SyntaxContext, DUMMY_SP},
   ecma::{
     ast::*,
+    utils::collect_decls,
     visit::{Visit, VisitMut, VisitMutWith, VisitWith},
   },
 };
@@ -33,9 +35,12 @@ impl Eliminate for ArrowExpr {
     self.params.clear();
     match &mut *self.body {
       BlockStmtOrExpr::BlockStmt(block) => block.stmts.clear(),
-      // Expression-bodied arrow (`() => <jsx/>`): drop the JSX by replacing the
-      // body with `null`, so the elements/components it referenced become
-      // unreferenced and are shaken from the main-thread bundle.
+      // Expression-bodied arrow (`() => <jsx/>`): drop the JSX by replacing
+      // the body with `null`. Logic-only references become unreferenced and
+      // are shaken from the main-thread bundle; the *component* references the
+      // body held are preserved separately (harvested before elimination into
+      // the module-level keep-alive), because the modules they point at carry
+      // the snapshot/worklet definitions hydration still needs.
       BlockStmtOrExpr::Expr(expr) => {
         *expr = Box::new(Expr::Lit(Lit::Null(Null { span: DUMMY_SP })));
       }
@@ -90,6 +95,99 @@ fn block_returns_jsx(block: &BlockStmt) -> bool {
   finder.found
 }
 
+/// The callee name of the module-level keep-alive probe emitted after
+/// component bodies are emptied on the main thread:
+///
+/// ```js
+/// typeof __ifrKeepComponentRefs === "function" && __ifrKeepComponentRefs(Feed, UI);
+/// ```
+///
+/// No runtime ever defines it — the `typeof` guard makes the statement inert —
+/// but a call to an unresolved global can never be proven side-effect free, so
+/// the statement (and the component references it carries) survives every
+/// later dead-code-elimination layer: this pipeline's `simplify::dce` (which
+/// removes now-unused imports, `preserve_imports_with_side_effects: false`),
+/// and the bundler's tree shaking. That keeps the referenced modules — and the
+/// module-scope snapshot/worklet definitions hydration needs — in the
+/// main-thread bundle even though the render bodies that referenced them are
+/// gone.
+pub const KEEP_COMPONENT_REFS_PROBE: &str = "__ifrKeepComponentRefs";
+
+fn is_capitalized(sym: &str) -> bool {
+  sym.chars().next().is_some_and(char::is_uppercase)
+}
+
+/// Collects the *component* references a render body holds, so a body about to
+/// be emptied can hand them over to the module-level keep-alive instead of
+/// severing them. Severed references let the unused-import DCE downstream drop
+/// the referenced modules — and with them the hoisted snapshot/worklet
+/// definitions that first-screen hydration still needs (the cross-module
+/// hydration break of a whole-program strip).
+///
+/// "Component reference" is deliberately narrow, so logic-only imports (call
+/// targets, hook arguments, …) still shake out of the main-thread bundle:
+/// - a capitalized JSX element name (`<Feed/>`) — the JSX
+///   intrinsic-vs-component convention, which also skips the hoisted
+///   `__snapshot_*` element references, or
+/// - the root object of a JSX member-expression name (`<UI.Card/>`; member
+///   names are always components, whatever their casing), or
+/// - a capitalized bare identifier used directly as a JSX attribute value
+///   (`<Layout header={Header}/>` — a component passed as a prop).
+///
+/// It descends into nested functions (`items.map(it => <Card/>)` renders
+/// `Card` all the same), unlike the `ReturnsJsxFinder` discriminator.
+#[derive(Default)]
+struct ComponentRefCollector {
+  refs: Vec<Ident>,
+}
+
+impl ComponentRefCollector {
+  fn push_component(&mut self, ident: &Ident) {
+    self.refs.push(ident.clone());
+  }
+}
+
+impl Visit for ComponentRefCollector {
+  fn visit_jsx_element_name(&mut self, n: &JSXElementName) {
+    match n {
+      JSXElementName::Ident(ident) => {
+        if is_capitalized(ident.sym.as_str()) {
+          self.push_component(ident);
+        }
+      }
+      JSXElementName::JSXMemberExpr(member) => {
+        let mut obj = &member.obj;
+        loop {
+          match obj {
+            JSXObject::Ident(ident) => {
+              self.push_component(ident);
+              break;
+            }
+            JSXObject::JSXMemberExpr(inner) => obj = &inner.obj,
+          }
+        }
+      }
+      JSXElementName::JSXNamespacedName(_) => {}
+      #[cfg(swc_ast_unknown)]
+      _ => {}
+    }
+  }
+
+  fn visit_jsx_attr(&mut self, n: &JSXAttr) {
+    if let Some(JSXAttrValue::JSXExprContainer(container)) = &n.value {
+      if let JSXExpr::Expr(expr) = &container.expr {
+        if let Expr::Ident(ident) = &**expr {
+          if is_capitalized(ident.sym.as_str()) {
+            self.push_component(ident);
+          }
+        }
+      }
+    }
+    // Still descend: an attribute value may nest JSX (`fallback={<Spin/>}`).
+    n.visit_children_with(self);
+  }
+}
+
 #[derive(Deserialize, Clone, Debug, PartialEq)]
 pub struct DirectiveDCEVisitorConfig {
   /// @internal
@@ -100,6 +198,13 @@ pub struct DirectiveDCEVisitorConfig {
   /// `<Background>` (or the explicit main-thread-render opt-out) keeps all
   /// component render logic out of the main-thread bundle without per-component
   /// annotation.
+  ///
+  /// Emptying a body must not sever the component references it held: the
+  /// modules they point at carry the snapshot/worklet definitions that
+  /// first-screen hydration builds the real tree from. Every emptied body
+  /// therefore hands its component references over to a module-level
+  /// keep-alive statement (see [`KEEP_COMPONENT_REFS_PROBE`]), while its
+  /// logic-only references still shake out.
   /// @internal
   #[serde(default)]
   pub strip_all_components: bool,
@@ -116,16 +221,117 @@ impl Default for DirectiveDCEVisitorConfig {
 
 pub struct DirectiveDCEVisitor {
   opts: DirectiveDCEVisitorConfig,
+  /// Component references harvested from bodies emptied on the `LEPUS` target,
+  /// in source order, awaiting the module-level keep-alive flush.
+  kept_refs: Vec<Ident>,
+  /// Dedup index over `kept_refs` (`Id` = symbol + syntax context).
+  kept_ref_ids: FxHashSet<Id>,
 }
 
 impl DirectiveDCEVisitor {
   pub fn new(opts: DirectiveDCEVisitorConfig) -> Self {
-    DirectiveDCEVisitor { opts }
+    DirectiveDCEVisitor {
+      opts,
+      kept_refs: Vec::new(),
+      kept_ref_ids: FxHashSet::default(),
+    }
   }
 
   /// Whether "strip every component render body" is active for this pass.
   fn strip_all_active(&self) -> bool {
     self.opts.strip_all_components && self.opts.target == TransformTarget::LEPUS
+  }
+
+  /// Harvest the component references of a function-like that is about to be
+  /// eliminated, minus the bindings local to it (a body-local component dies
+  /// with the body — there is nothing left to reference).
+  ///
+  /// Only the `LEPUS` target harvests: an eliminated body's component subtree
+  /// still hydrates on the main thread (background render → main-thread
+  /// element construction through the module-scope snapshot/worklet
+  /// definitions), so those modules must stay referenced there. On the `JS`
+  /// target (`'use lepus only'` elimination) no such obligation exists.
+  fn harvest_component_refs<N>(&mut self, n: &N)
+  where
+    N: VisitWith<ComponentRefCollector> + VisitWith<swc_core::ecma::utils::BindingCollector<Id>>,
+  {
+    if self.opts.target != TransformTarget::LEPUS {
+      return;
+    }
+    let mut collector = ComponentRefCollector::default();
+    n.visit_with(&mut collector);
+    if collector.refs.is_empty() {
+      return;
+    }
+    let locals: FxHashSet<Id> = collect_decls(n);
+    for ident in collector.refs {
+      let id = ident.to_id();
+      if locals.contains(&id) {
+        continue;
+      }
+      if self.kept_ref_ids.insert(id) {
+        self.kept_refs.push(ident);
+      }
+    }
+  }
+
+  /// Append the keep-alive statement carrying every harvested component
+  /// reference of this module:
+  ///
+  /// ```js
+  /// typeof __ifrKeepComponentRefs === "function" && __ifrKeepComponentRefs(Feed, UI);
+  /// ```
+  ///
+  /// Inert at runtime (the probe is never defined), un-eliminable at compile
+  /// time (a call to an unresolved global is never provably pure) — see
+  /// [`KEEP_COMPONENT_REFS_PROBE`].
+  fn flush_kept_refs(&mut self) -> Option<Stmt> {
+    if self.kept_refs.is_empty() {
+      return None;
+    }
+    self.kept_ref_ids.clear();
+    let probe = Ident::new(
+      KEEP_COMPONENT_REFS_PROBE.into(),
+      DUMMY_SP,
+      SyntaxContext::empty(),
+    );
+    let probe_is_function = Expr::Bin(BinExpr {
+      span: DUMMY_SP,
+      op: BinaryOp::EqEqEq,
+      left: Box::new(Expr::Unary(UnaryExpr {
+        span: DUMMY_SP,
+        op: UnaryOp::TypeOf,
+        arg: Box::new(Expr::Ident(probe.clone())),
+      })),
+      right: Box::new(Expr::Lit(Lit::Str(Str {
+        span: DUMMY_SP,
+        value: "function".into(),
+        raw: None,
+      }))),
+    });
+    let keep_call = Expr::Call(CallExpr {
+      span: DUMMY_SP,
+      ctxt: SyntaxContext::empty(),
+      callee: Callee::Expr(Box::new(Expr::Ident(probe))),
+      args: self
+        .kept_refs
+        .drain(..)
+        .map(|ident| ExprOrSpread {
+          spread: None,
+          expr: Box::new(Expr::Ident(ident)),
+        })
+        .collect(),
+      type_args: None,
+    });
+    Some(Stmt::Expr(ExprStmt {
+      span: DUMMY_SP,
+      expr: Box::new(Expr::Bin(BinExpr {
+        span: DUMMY_SP,
+        op: BinaryOp::LogicalAnd,
+        left: Box::new(probe_is_function),
+        right: Box::new(keep_call),
+      })),
+    }))
   }
 
   fn should_eliminate(&self, n: &BlockStmt) -> (bool, Option<Span>) {
@@ -219,6 +425,7 @@ impl VisitMut for DirectiveDCEVisitor {
             self.should_eliminate(stmt).0 || (self.strip_all_active() && block_returns_jsx(stmt));
           // if should_eliminate, then clear the body
           if should_eliminate {
+            self.harvest_component_refs(&**function);
             function.eliminate();
           }
 
@@ -243,7 +450,8 @@ impl VisitMut for DirectiveDCEVisitor {
 
     // if should_eliminate, then clear the body and params
     if should_eliminate {
-      function.eliminate();
+      self.harvest_component_refs(&*n.function);
+      n.function.eliminate();
     }
 
     n.visit_mut_children_with(self);
@@ -262,6 +470,7 @@ impl VisitMut for DirectiveDCEVisitor {
 
     // if should_eliminate, then clear the body
     if should_eliminate {
+      self.harvest_component_refs(&*arrow);
       arrow.eliminate();
     }
 
@@ -278,6 +487,7 @@ impl VisitMut for DirectiveDCEVisitor {
 
     // if should_eliminate, then clear the body
     if should_eliminate {
+      self.harvest_component_refs(&*n.function);
       n.function.eliminate();
     }
 
@@ -291,6 +501,7 @@ impl VisitMut for DirectiveDCEVisitor {
         Some(stmt) => {
           let (should_eliminate, _) = self.should_eliminate(stmt);
           if should_eliminate {
+            self.harvest_component_refs(&**function);
             function.eliminate();
           }
 
@@ -302,19 +513,207 @@ impl VisitMut for DirectiveDCEVisitor {
       }
     }
   }
+
+  fn visit_mut_module(&mut self, n: &mut Module) {
+    n.visit_mut_children_with(self);
+    if let Some(stmt) = self.flush_kept_refs() {
+      n.body.push(ModuleItem::Stmt(stmt));
+    }
+  }
+
+  fn visit_mut_script(&mut self, n: &mut Script) {
+    n.visit_mut_children_with(self);
+    if let Some(stmt) = self.flush_kept_refs() {
+      n.body.push(stmt);
+    }
+  }
 }
 
 #[cfg(test)]
 mod tests {
   use crate::{DirectiveDCEVisitor, DirectiveDCEVisitorConfig};
   use swc_core::{
+    common::Mark,
     ecma::parser::Syntax,
+    ecma::transforms::base::resolver,
+    ecma::transforms::optimization::{simplifier, simplify},
     ecma::visit::visit_mut_pass,
     ecma::{parser::EsSyntax, transforms::testing::test},
   };
   use swc_plugins_shared::target::TransformTarget;
 
   // use crate::{DirectiveDCEVisitor, DirectiveDCEVisitorConfig};
+
+  // ---------------------------------------------------------------------------
+  // Keep-alive component references: emptying a body must not sever the
+  // component references it held (their modules carry the snapshot/worklet
+  // definitions first-screen hydration needs), while logic-only references
+  // must still shake out.
+  // ---------------------------------------------------------------------------
+
+  test!(
+    module,
+    Syntax::Es(EsSyntax {
+      jsx: true,
+      ..Default::default()
+    }),
+    |_| visit_mut_pass(DirectiveDCEVisitor::new(DirectiveDCEVisitorConfig {
+      target: TransformTarget::LEPUS,
+      strip_all_components: true,
+    })),
+    strip_all_components_keeps_cross_module_component_refs,
+    r#"
+    import { Feed } from './Feed.jsx';
+    import { Header } from './Header.jsx';
+    import * as UI from './ui.jsx';
+    import { formatFeed } from './heavy-format.js';
+
+    export function App() {
+      const items = formatFeed(1, 2, 3);
+      const Local = () => <text>local</text>;
+      return (
+        <view>
+          <Feed />
+          <Feed />
+          <UI.Card />
+          <Local />
+          {items.map((it) => <Header key={it} />)}
+        </view>
+      );
+    }
+    "#
+  );
+
+  test!(
+    module,
+    Syntax::Es(EsSyntax {
+      jsx: true,
+      ..Default::default()
+    }),
+    |_| visit_mut_pass(DirectiveDCEVisitor::new(DirectiveDCEVisitorConfig {
+      target: TransformTarget::LEPUS,
+      strip_all_components: true,
+    })),
+    strip_all_components_keeps_component_valued_attr_refs,
+    r#"
+    import { Layout } from './Layout.jsx';
+    import { Hero } from './Hero.jsx';
+
+    export const Page = () => <Layout header={Hero} />;
+    "#
+  );
+
+  test!(
+    module,
+    Syntax::Es(EsSyntax {
+      jsx: true,
+      ..Default::default()
+    }),
+    |_| visit_mut_pass(DirectiveDCEVisitor::new(DirectiveDCEVisitorConfig {
+      target: TransformTarget::LEPUS,
+      strip_all_components: true,
+    })),
+    strip_all_components_emits_no_keep_alive_without_component_refs,
+    r#"
+    export function App() {
+      return (
+        <view>
+          <text>host elements only</text>
+        </view>
+      );
+    }
+    "#
+  );
+
+  test!(
+    module,
+    Syntax::Es(EsSyntax {
+      jsx: true,
+      ..Default::default()
+    }),
+    |_| visit_mut_pass(DirectiveDCEVisitor::new(DirectiveDCEVisitorConfig {
+      target: TransformTarget::LEPUS,
+      strip_all_components: false,
+    })),
+    background_only_component_keeps_child_component_refs,
+    r#"
+    import { Wrapped } from './Wrapped.jsx';
+
+    export function Card() {
+      'background only';
+      return <Wrapped />;
+    }
+    "#
+  );
+
+  test!(
+    module,
+    Syntax::Es(EsSyntax {
+      jsx: true,
+      ..Default::default()
+    }),
+    |_| visit_mut_pass(DirectiveDCEVisitor::new(DirectiveDCEVisitorConfig {
+      target: TransformTarget::JS,
+      strip_all_components: false,
+    })),
+    lepus_only_elimination_on_js_target_emits_no_keep_alive,
+    r#"
+    import { Gadget } from './Gadget.jsx';
+
+    export function lepusOnly() {
+      'use lepus only';
+      return <Gadget />;
+    }
+    "#
+  );
+
+  // The regression proof for the cross-module hydration break: compose the
+  // strip with the same `simplify::dce` configuration the real pipeline runs
+  // right after it (`preserve_imports_with_side_effects: false` — the pass
+  // that severed the child modules). The keep-alive must carry the component
+  // import through, while the logic-only import still shakes out.
+  test!(
+    module,
+    Syntax::Es(EsSyntax {
+      jsx: true,
+      ..Default::default()
+    }),
+    |_| {
+      let unresolved_mark = Mark::new();
+      let top_level_mark = Mark::new();
+      (
+        resolver(unresolved_mark, top_level_mark, true),
+        visit_mut_pass(DirectiveDCEVisitor::new(DirectiveDCEVisitorConfig {
+          target: TransformTarget::LEPUS,
+          strip_all_components: true,
+        })),
+        simplifier(
+          top_level_mark,
+          simplify::Config {
+            dce: simplify::dce::Config {
+              preserve_imports_with_side_effects: false,
+              ..Default::default()
+            },
+            ..Default::default()
+          },
+        ),
+      )
+    },
+    strip_keep_alive_survives_simplify_dce,
+    r#"
+    import { Feed } from './Feed.jsx';
+    import { formatFeed } from './heavy-format.js';
+
+    export function App() {
+      const items = formatFeed(1, 2, 3);
+      return (
+        <view>
+          <Feed items={items} />
+        </view>
+      );
+    }
+    "#
+  );
 
   test!(
     module,

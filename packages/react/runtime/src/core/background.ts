@@ -101,18 +101,20 @@ export interface BackgroundProps {
  *
  * ```tsx
  * root.render(
- *   // host-element fallback only, since component bodies are stripped from the
- *   // main thread
  *   <Background fallback={<view><text>Loading…</text></view>}>
  *     <App />
  *   </Background>,
  * )
  * ```
  *
- * The build detects this and strips every component render body from the
- * main-thread bundle automatically — the whole-program endpoint of the same
- * boundary, with no per-component annotation. The `fallback` must then be
- * composed of host elements rather than user components.
+ * This is a runtime guarantee and always safe: every module stays in the
+ * main-thread bundle; only the fallback renders. To additionally keep every
+ * component's render body out of the main-thread bundle without per-component
+ * annotation — the whole-program endpoint of the same boundary — opt in to the
+ * experimental `experimental_stripAllComponents` build option (`'auto'`
+ * lights it up on a detected root `<Background>`). Under the strip the
+ * `fallback` must be composed of host elements rather than user components,
+ * since component bodies no longer exist on the main thread.
  *
  * @public
  */

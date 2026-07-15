@@ -80,7 +80,7 @@ export interface PluginReactLynxOptions {
     // @alpha
     experimental_isLazyBundle?: boolean;
     // @alpha
-    experimental_stripAllComponents?: boolean | undefined;
+    experimental_stripAllComponents?: boolean | 'auto' | undefined;
     experimental_useElementTemplate?: boolean;
     extractStr?: Partial<ExtractStrConfig> | boolean;
     firstScreenSyncTiming?: 'immediately' | 'jsReady' | 'manual';

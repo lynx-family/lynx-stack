@@ -1,6 +1,7 @@
 // Copyright 2024 The Lynx Authors. All rights reserved.
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
+import fs from 'node:fs'
 import path from 'node:path'
 
 import type { RsbuildPluginAPI, Rspack, RspackChain } from '@rsbuild/core'
@@ -8,7 +9,10 @@ import type { RsbuildPluginAPI, Rspack, RspackChain } from '@rsbuild/core'
 import { LAYERS, ReactWebpackPlugin } from '@lynx-js/react-webpack-plugin'
 
 import type { PluginReactLynxOptions } from './pluginReactLynx.js'
-import { resolveStripAllComponents } from './stripComponents.js'
+import {
+  resolveStripAllComponents,
+  rootBackgroundFallbackHasUserComponent,
+} from './stripComponents.js'
 
 // The transforms an `es2019` SWC target lowers (ES2020+ syntax), expressed as
 // an explicit `env.include` so the main thread no longer relies on
@@ -138,12 +142,38 @@ export function applyLoaders(
   options: Required<PluginReactLynxOptions>,
 ): void {
   api.modifyBundlerChain((chain, { CHAIN_ID }) => {
-    // A root-level `<Background>` (or the explicit `experimental_stripAllComponents`
-    // switch) turns on emptying every component body from the main-thread bundle.
+    // The whole-program strip is an explicit opt-in: `'auto'` empties every
+    // component body when an entry declares a root-level `<Background>`,
+    // `true` forces it. By default (`false`/`undefined`) a root `<Background>`
+    // is the runtime-only 0.0 — the fallback renders, all code stays.
+    const entryImports = collectEntryImports(chain, api.context.rootPath)
     const stripAllComponents = resolveStripAllComponents(
       options.experimental_stripAllComponents,
-      collectEntryImports(chain, api.context.rootPath),
+      entryImports,
     )
+
+    // Guardrail: with every component body emptied from the main-thread
+    // bundle, a *user component* inside the root `<Background>`'s `fallback`
+    // renders nothing on the first screen. Warn when the entry source shows
+    // one (best-effort — the canonical inline-fallback shape).
+    if (stripAllComponents) {
+      for (const file of entryImports) {
+        let source: string
+        try {
+          source = fs.readFileSync(file, 'utf8')
+        } catch {
+          continue
+        }
+        if (rootBackgroundFallbackHasUserComponent(source)) {
+          ;(api.logger ?? console).warn(
+            `experimental_stripAllComponents: the root <Background> fallback in ${file} `
+              + `appears to contain a user component. Component bodies are emptied from the `
+              + `main-thread bundle, so it would render nothing on the first screen — compose `
+              + `the fallback from host elements (<view>, <text>, …) instead.`,
+          )
+        }
+      }
+    }
 
     const rule = chain.module.rule(CHAIN_ID.RULE.JS)
     const jsMainRule = rule.oneOf(CHAIN_ID.ONE_OF.JS_MAIN)

@@ -350,22 +350,37 @@ export interface PluginReactLynxOptions {
    * thread.
    *
    * @remarks
-   * This is the low-level switch behind the `<Background>` user-space API.
-   * Leaving it `undefined` (the default) lets the plugin light it up
-   * automatically when it detects a root-level `<Background>` in an entry
-   * (`root.render(<Background …>…</Background>)`). Set it explicitly to
-   * `true`/`false` to force or forbid the optimization regardless of
-   * detection.
+   * This is the low-level switch behind the `<Background>` user-space API,
+   * and it is **off by default**: a root-level `<Background>` alone already
+   * yields a 0.0 first screen at *runtime* (only the `fallback` renders),
+   * with every module kept in the main-thread bundle — always safe. Removing
+   * deferred *code* from the main thread composes per-subtree with the
+   * `'background only'` directive (the L3 path), which needs no whole-program
+   * switch.
+   *
+   * - `'auto'` — strip when a root-level `<Background>`
+   *   (`root.render(<Background …>…</Background>)`) is detected in an entry.
+   * - `true` — force the strip regardless of detection (e.g. an entry shape
+   *   the detection cannot see).
+   * - `false` / `undefined` (default) — never strip.
+   *
+   * When a body is emptied, the component references it rendered are kept
+   * alive (an inert module-level statement), so the child modules — and the
+   * snapshot/worklet definitions hydration needs — stay in the main-thread
+   * bundle even across modules. Component references the strip cannot see
+   * (e.g. a component resolved through a runtime value) still shake out —
+   * prefer the `'background only'` composition for such trees.
    *
    * Because component bodies are gone from the main thread, a root
    * `<Background>`'s `fallback` must be composed of host elements (e.g.
-   * `<view>`/`<text>`) rather than user components.
+   * `<view>`/`<text>`) rather than user components; the build warns when it
+   * can see a user component in the fallback.
    *
-   * @defaultValue `undefined` (auto-detected from a root-level `<Background>`)
+   * @defaultValue `false`
    *
    * @alpha
    */
-  experimental_stripAllComponents?: boolean | undefined
+  experimental_stripAllComponents?: boolean | 'auto' | undefined
 }
 
 /**
@@ -418,8 +433,10 @@ export function pluginReactLynx(
     experimental_useElementTemplate: false,
     optimizeBundleSize: false,
     enableUiSourceMap: false,
-    // `undefined` means "auto-detect from a root-level `<Background>`".
-    experimental_stripAllComponents: undefined,
+    // Off by default: a root `<Background>` alone is the (always safe)
+    // runtime 0.0; the whole-program strip is an explicit opt-in
+    // (`'auto'` = root-`<Background>`-detected, `true` = forced).
+    experimental_stripAllComponents: false,
   }
   const resolvedOptions = Object.assign(defaultOptions, userOptions, {
     // Use `engineVersion` to override the default values

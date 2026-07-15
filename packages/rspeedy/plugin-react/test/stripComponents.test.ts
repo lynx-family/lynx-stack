@@ -8,6 +8,7 @@ import { describe, expect, test } from '@rstest/core'
 
 import {
   resolveStripAllComponents,
+  rootBackgroundFallbackHasUserComponent,
   sourceHasRootBackground,
 } from '../src/stripComponents.js'
 
@@ -86,39 +87,101 @@ describe('resolveStripAllComponents', () => {
       .toBe(false)
   })
 
-  test('auto-detects a root <Background> from the entry files', () => {
+  test('the default (`undefined`) never strips — a root <Background> alone is the runtime 0.0', () => {
     expect(
       resolveStripAllComponents(undefined, [fixture('root-background.jsx')]),
+    ).toBe(false)
+  })
+
+  test('\'auto\' detects a root <Background> from the entry files', () => {
+    expect(
+      resolveStripAllComponents('auto', [fixture('root-background.jsx')]),
     )
       .toBe(true)
   })
 
-  test('does not auto-detect a nested <Background>', () => {
+  test('\'auto\' does not detect a nested <Background>', () => {
     expect(
-      resolveStripAllComponents(undefined, [fixture('nested-background.jsx')]),
+      resolveStripAllComponents('auto', [fixture('nested-background.jsx')]),
     ).toBe(false)
   })
 
-  test('does not auto-detect a plain entry', () => {
-    expect(resolveStripAllComponents(undefined, [fixture('no-background.jsx')]))
+  test('\'auto\' does not detect a plain entry', () => {
+    expect(resolveStripAllComponents('auto', [fixture('no-background.jsx')]))
       .toBe(false)
   })
 
-  test('skips unreadable paths (bare specifiers, virtual entries)', () => {
+  test('\'auto\' skips unreadable paths (bare specifiers, virtual entries)', () => {
     expect(
-      resolveStripAllComponents(undefined, [
+      resolveStripAllComponents('auto', [
         '@lynx-js/react/refresh',
         fixture('root-background.jsx'),
       ]),
     ).toBe(true)
   })
 
-  test('returns false when no entry file declares a root <Background>', () => {
+  test('\'auto\' returns false when no entry file declares a root <Background>', () => {
     expect(
-      resolveStripAllComponents(undefined, [
+      resolveStripAllComponents('auto', [
         fixture('no-background.jsx'),
         fixture('nested-background.jsx'),
       ]),
     ).toBe(false)
+  })
+})
+
+describe('rootBackgroundFallbackHasUserComponent', () => {
+  test('flags a user component in the root <Background> fallback', () => {
+    expect(rootBackgroundFallbackHasUserComponent(`
+      import { Background, root } from '@lynx-js/react'
+      root.render(
+        <Background fallback={<Spinner />}>
+          <App/>
+        </Background>,
+      )
+    `)).toBe(true)
+  })
+
+  test('flags a user component nested under host elements in the fallback', () => {
+    expect(rootBackgroundFallbackHasUserComponent(`
+      import { Background, root } from '@lynx-js/react'
+      root.render(
+        <Background fallback={<view><text>Loading</text><Brand.Logo/></view>}>
+          <App/>
+        </Background>,
+      )
+    `)).toBe(true)
+  })
+
+  test('accepts a host-element-only fallback', () => {
+    expect(rootBackgroundFallbackHasUserComponent(`
+      import { Background, root } from '@lynx-js/react'
+      root.render(
+        <Background fallback={<view><text>Loading…</text></view>}>
+          <App/>
+        </Background>,
+      )
+    `)).toBe(false)
+  })
+
+  test('stays silent without a root <Background>', () => {
+    expect(rootBackgroundFallbackHasUserComponent(`
+      import { root } from '@lynx-js/react'
+      root.render(<App/>)
+    `)).toBe(false)
+  })
+
+  test('stays silent without an inline fallback element', () => {
+    expect(rootBackgroundFallbackHasUserComponent(`
+      import { Background, root } from '@lynx-js/react'
+      root.render(<Background fallback={fallbackFromElsewhere}><App/></Background>)
+    `)).toBe(false)
+  })
+
+  test('does not read a later fallback attribute as the root one', () => {
+    expect(rootBackgroundFallbackHasUserComponent(`
+      import { Background, root } from '@lynx-js/react'
+      root.render(<Background><App fallback={<Spinner/>}/></Background>)
+    `)).toBe(false)
   })
 })

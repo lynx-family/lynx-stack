@@ -72,4 +72,15 @@ impl VisitMut for DirectiveDCEVisitor {
   fn visit_mut_fn_expr(&mut self, n: &mut FnExpr) {
     self.inner.visit_mut_fn_expr(n)
   }
+  // The module/script hooks let the core visitor flush the keep-alive
+  // statement that carries the component references of every body it emptied
+  // (see `KEEP_COMPONENT_REFS_PROBE`). Forwarding them also roots the whole
+  // traversal in the core visitor, so its visit methods see the same tree the
+  // wasm plugin (which uses the core visitor directly) sees.
+  fn visit_mut_module(&mut self, n: &mut Module) {
+    self.inner.visit_mut_module(n)
+  }
+  fn visit_mut_script(&mut self, n: &mut Script) {
+    self.inner.visit_mut_script(n)
+  }
 }
