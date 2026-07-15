@@ -52,6 +52,14 @@ export interface EncodeOptions {
   enableJsBytecode?: boolean
 }
 
+// When preact devtools is enabled (`REACT_DEVTOOL`), keep function and class
+// names. Devtools relies on them to resolve component names (`type.name`) and
+// to reconstruct the hook tree (it matches minified stack frames by function
+// name). Minification would otherwise mangle/inline those names away. Only
+// enabled with devtools since it slightly increases bundle size. Mirrors
+// `pluginMinify` in @lynx-js/rspeedy (lynx-family/lynx-stack#2880).
+const keepNames = Boolean(process.env['REACT_DEVTOOL'])
+
 const DEFAULT_EXTERNAL_BUNDLE_MINIFY_CONFIG = {
   jsOptions: {
     minimizerOptions: {
@@ -63,7 +71,15 @@ const DEFAULT_EXTERNAL_BUNDLE_MINIFY_CONFIG = {
         negate_iife: false,
         // Allow return in module wrapper
         side_effects: false,
+
+        // `mangle.keep_*` below preserves most names, but the compressor can
+        // still inline single-use functions (incl. one-shot components) into
+        // anonymity; `compress.keep_*` stops that. Cheap, so we keep both.
+        ...(keepNames ? { keep_fnames: true, keep_classnames: true } : {}),
       },
+      ...(keepNames
+        ? { mangle: { keep_fnames: true, keep_classnames: true } }
+        : {}),
     },
   },
 }
