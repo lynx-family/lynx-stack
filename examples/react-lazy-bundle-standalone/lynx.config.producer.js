@@ -43,7 +43,7 @@ export default defineConfig({
   plugins: [
     pluginReactLynx({
       experimental_isLazyBundle: true,
-      ...(enableFetchBundle ? { engineVersion: '3.8' } : {}),
+      ...(enableFetchBundle ? { engineVersion: '3.9' } : {}),
     }),
   ],
   environments: {

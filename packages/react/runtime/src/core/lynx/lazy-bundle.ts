@@ -144,7 +144,7 @@ export const loadLazyBundle: <
       if (__DEV__ && mode !== undefined) {
         throw new Error(
           `Lazy bundle import \`mode: '${mode}'\` requires FetchBundle, but the current build uses QueryComponent. `
-            + `Set \`engineVersion: '3.8'\` (or higher) in \`pluginReactLynx\` to enable FetchBundle.`,
+            + `Set \`engineVersion: '3.9'\` (or higher) in \`pluginReactLynx\` to enable FetchBundle.`,
         );
       }
       const resolver = withSyncResolvers<T>();

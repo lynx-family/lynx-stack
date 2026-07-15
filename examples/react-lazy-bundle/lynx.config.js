@@ -35,7 +35,7 @@ export default defineConfig({
   },
   plugins: [
     pluginReactLynx({
-      ...(enableFetchBundle ? { engineVersion: '3.8' } : {}),
+      ...(enableFetchBundle ? { engineVersion: '3.9' } : {}),
     }),
     pluginQRCode({
       schema(url) {

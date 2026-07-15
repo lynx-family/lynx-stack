@@ -2,7 +2,7 @@
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
 
-const FETCH_BUNDLE_MIN_ENGINE_VERSION = '3.8'
+const FETCH_BUNDLE_MIN_ENGINE_VERSION = '3.9'
 
 export function resolveLazyBundleFetcher(
   engineVersion: string | undefined,

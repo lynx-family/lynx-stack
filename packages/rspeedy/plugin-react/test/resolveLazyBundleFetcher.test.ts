@@ -24,22 +24,22 @@ describe('resolveLazyBundleFetcher', () => {
       expect(resolveLazyBundleFetcher(undefined)).toBe('QueryComponent')
     })
 
-    test('engineVersion below 3.8 → QueryComponent', () => {
-      expect(resolveLazyBundleFetcher('3.7')).toBe('QueryComponent')
-      expect(resolveLazyBundleFetcher('3.7.9')).toBe('QueryComponent')
+    test('engineVersion below 3.9 → QueryComponent', () => {
+      expect(resolveLazyBundleFetcher('3.8')).toBe('QueryComponent')
+      expect(resolveLazyBundleFetcher('3.8.9')).toBe('QueryComponent')
       expect(resolveLazyBundleFetcher('2.16')).toBe('QueryComponent')
       expect(resolveLazyBundleFetcher('3.0')).toBe('QueryComponent')
     })
 
-    test('engineVersion at or above 3.8 → FetchBundle', () => {
-      expect(resolveLazyBundleFetcher('3.8')).toBe('FetchBundle')
-      expect(resolveLazyBundleFetcher('3.8.0')).toBe('FetchBundle')
-      expect(resolveLazyBundleFetcher('3.8.1')).toBe('FetchBundle')
+    test('engineVersion at or above 3.9 → FetchBundle', () => {
       expect(resolveLazyBundleFetcher('3.9')).toBe('FetchBundle')
+      expect(resolveLazyBundleFetcher('3.9.0')).toBe('FetchBundle')
+      expect(resolveLazyBundleFetcher('3.9.1')).toBe('FetchBundle')
+      expect(resolveLazyBundleFetcher('3.10')).toBe('FetchBundle')
       expect(resolveLazyBundleFetcher('4.0')).toBe('FetchBundle')
     })
 
-    test('multi-digit minor compares numerically (3.10 > 3.8)', () => {
+    test('multi-digit minor compares numerically (3.10 > 3.9)', () => {
       expect(resolveLazyBundleFetcher('3.10')).toBe('FetchBundle')
       expect(resolveLazyBundleFetcher('3.10.5')).toBe('FetchBundle')
     })
@@ -54,14 +54,14 @@ describe('resolveLazyBundleFetcher', () => {
   describe('REACT_LAZY_BUNDLE_FETCHER env override', () => {
     test('=FetchBundle with sufficient version → FetchBundle', () => {
       process.env['REACT_LAZY_BUNDLE_FETCHER'] = 'FetchBundle'
-      expect(resolveLazyBundleFetcher('3.8')).toBe('FetchBundle')
+      expect(resolveLazyBundleFetcher('3.9')).toBe('FetchBundle')
       expect(resolveLazyBundleFetcher('4.0')).toBe('FetchBundle')
     })
 
     test('=FetchBundle with insufficient version → throws', () => {
       process.env['REACT_LAZY_BUNDLE_FETCHER'] = 'FetchBundle'
-      expect(() => resolveLazyBundleFetcher('3.7')).toThrow(
-        /requires engineVersion >= 3\.8/,
+      expect(() => resolveLazyBundleFetcher('3.8')).toThrow(
+        /requires engineVersion >= 3\.9/,
       )
     })
 
@@ -70,9 +70,9 @@ describe('resolveLazyBundleFetcher', () => {
       expect(() => resolveLazyBundleFetcher(undefined)).toThrow(/<unset>/)
     })
 
-    test('=QueryComponent forces legacy path even on 3.8+', () => {
+    test('=QueryComponent forces legacy path even on 3.9+', () => {
       process.env['REACT_LAZY_BUNDLE_FETCHER'] = 'QueryComponent'
-      expect(resolveLazyBundleFetcher('3.8')).toBe('QueryComponent')
+      expect(resolveLazyBundleFetcher('3.9')).toBe('QueryComponent')
       expect(resolveLazyBundleFetcher('4.0')).toBe('QueryComponent')
     })
 
@@ -83,13 +83,13 @@ describe('resolveLazyBundleFetcher', () => {
 
     test('unrecognized override value falls through to default', () => {
       process.env['REACT_LAZY_BUNDLE_FETCHER'] = 'something-else'
-      expect(resolveLazyBundleFetcher('3.8')).toBe('FetchBundle')
-      expect(resolveLazyBundleFetcher('3.7')).toBe('QueryComponent')
+      expect(resolveLazyBundleFetcher('3.9')).toBe('FetchBundle')
+      expect(resolveLazyBundleFetcher('3.8')).toBe('QueryComponent')
     })
 
     test('empty string override → falls through to default', () => {
       process.env['REACT_LAZY_BUNDLE_FETCHER'] = ''
-      expect(resolveLazyBundleFetcher('3.8')).toBe('FetchBundle')
+      expect(resolveLazyBundleFetcher('3.9')).toBe('FetchBundle')
     })
   })
 })
