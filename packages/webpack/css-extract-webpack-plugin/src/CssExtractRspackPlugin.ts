@@ -197,6 +197,19 @@ class CssExtractRspackPluginImpl {
           compilation,
         );
 
+        const isMainThreadChunk = (chunk: Chunk): boolean => {
+          for (
+            const module of compilation.chunkGraph.getChunkModulesIterable(
+              chunk,
+            )
+          ) {
+            if (module.layer) {
+              return String(module.layer).split(':').pop() === 'main-thread';
+            }
+          }
+          return false;
+        };
+
         hooks.beforeEmit.tapPromise(this.name, async (args) => {
           const cssChunks = args.cssChunks;
           const content: string[] = cssChunks.map((chunk) =>
@@ -303,6 +316,10 @@ class CssExtractRspackPluginImpl {
             const chunk = this.chunk!;
 
             const asyncChunks = Array.from(chunk.getAllAsyncChunks())
+              // CSS only exists on the background thread (main-thread CSS is
+              // dropped by the ignore-css-loader), so main-thread chunks get
+              // no CSS hot update.
+              .filter(c => !isMainThreadChunk(c))
               .map(c => {
                 const layoutName = c.id !== null && c.id !== undefined
                   ? LynxTemplatePlugin.getAsyncChunkLayoutName(
@@ -354,6 +371,9 @@ ${RuntimeGlobals.require}.cssHotUpdateList = ${
         const handler = (chunk: Chunk, runtimeRequirements: Set<string>) => {
           if (onceForChunkSet.has(chunk)) return;
           onceForChunkSet.add(chunk);
+          // The main-thread CSS HMR runtime receives updates from the
+          // background thread instead of reading `cssHotUpdateList`.
+          if (isMainThreadChunk(chunk)) return;
           runtimeRequirements.add(RuntimeGlobals.publicPath);
           compilation.addRuntimeModule(
             chunk,
