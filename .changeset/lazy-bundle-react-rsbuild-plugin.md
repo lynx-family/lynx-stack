@@ -3,7 +3,7 @@
 ---
 
 Choose the lazy bundle loader from `engineVersion`: use the new `fetchBundle`
-loader when `engineVersion >= 3.8`, otherwise keep the legacy `QueryComponent`
+loader when `engineVersion >= 3.9`, otherwise keep the legacy `QueryComponent`
 loader.
 
 ```js
