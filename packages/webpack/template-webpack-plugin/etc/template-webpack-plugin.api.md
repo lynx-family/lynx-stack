@@ -7,6 +7,7 @@
 import type { Asset } from '@rspack/core';
 import { AsyncSeriesBailHook } from '@rspack/lite-tapable';
 import { AsyncSeriesWaterfallHook } from '@rspack/lite-tapable';
+import type { ChunkGroup } from '@rspack/core';
 import type { Compilation } from '@rspack/core';
 import type { Compiler } from '@rspack/core';
 import * as CSS from '@lynx-js/css-serializer';
@@ -79,6 +80,7 @@ export class LynxTemplatePlugin {
         cssSource: Record<string, string>;
     };
     static defaultOptions: Readonly<Required<LynxTemplatePluginOptions>>;
+    static getAsyncChunkLayoutName(compilation: Compilation, chunkId: string | number): string | undefined;
     static getLynxTemplatePluginHooks(compilation: Compilation): TemplateHooks;
 }
 
@@ -154,13 +156,13 @@ export interface TemplateHooks {
         outputName: string;
         mainThreadAssets: Asset[];
         cssChunks: Asset[];
-        entryNames: string[];
+        chunkGroups: ChunkGroup[];
     }>;
     // @alpha
     beforeEncode: AsyncSeriesWaterfallHook<{
         encodeData: EncodeRawData;
         filenameTemplate: string;
-        entryNames: string[];
+        chunkGroups: ChunkGroup[];
         intermediate: string;
         intermediateAssets: string[];
     }>;

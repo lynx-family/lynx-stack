@@ -155,38 +155,38 @@ export class LynxDebugMetadataPluginImpl {
         )
 
       // Carry per-template `intermediate` from `beforeEncode` to
-      // `beforeEmit`. `beforeEmit` args don't include `intermediate`,
-      // and lazy bundles emit their main-thread JS to `static/js/async/`
-      // while the bundle's `debug-metadata.json` lives at
-      // `<intermediateRoot>/async/<name>/` — deriving the metadata path
-      // from the JS asset's dir would 404 for lazy bundles. Keyed by
-      // sorted `entryNames` since each template covers a unique set.
-      const intermediateByEntryKey = new Map<string, string>()
+      // `beforeEmit`, whose args don't include it. Keyed by the
+      // `sourceContent` object: `beforeEmit`'s `finalEncodeOptions` is a
+      // shallow spread of `beforeEncode`'s `encodeData`, so the nested
+      // object identity is shared and unique per template — unlike
+      // `entryNames`, which is empty for every async lazy bundle template.
+      const intermediateBySourceContent = new WeakMap<object, string>()
 
       templateHooks.beforeEncode.tap(
         this.constructor.name,
         (args) => {
+          const chunkGroups = args.chunkGroups
           const uiSourceMapRecords = collectUiSourceMapRecords(
             compilation,
-            args.entryNames,
+            chunkGroups,
           )
           const git = getGit()
           const entryPathMap = getEntryPathMap()
           const baseDir = git?.rootDir ?? compiler.context
-          // Lazy-bundle entry names (e.g. `LazyComponent.js-react__main-thread`)
-          // are internal chunk-group names that never appear in rsbuild
-          // `source.entry`. When the map has nothing for any of this
-          // template's entry names, walk the importer's blocks via
-          // `chunkGroup.origins` + `moduleGraph.getResolvedModule` to
-          // recover the dynamic-import target's resource path.
-          const fromMap = args.entryNames.flatMap(name =>
-            entryPathMap[name] ?? []
+          // Named entries appear in the map. Lazy bundles do not, so walk the
+          // importer's blocks via `chunkGroup.origins` +
+          // `moduleGraph.getResolvedModule` to recover the dynamic-import
+          // target's resource path.
+          const fromMap = chunkGroups.flatMap(cg =>
+            cg.name === null || cg.name === undefined
+              ? []
+              : entryPathMap[cg.name] ?? []
           )
           const entryFiles = fromMap.length > 0
             ? dedupe(fromMap)
             : dedupe(
-              args.entryNames.flatMap(name =>
-                collectLazyBundleEntryResources(compilation, name).map(abs =>
+              chunkGroups.flatMap(cg =>
+                collectLazyBundleEntryResources(compilation, cg).map(abs =>
                   path.relative(baseDir, abs).split(path.sep).join('/')
                 )
               ),
@@ -196,7 +196,7 @@ export class LynxDebugMetadataPluginImpl {
             bundlePath: args.filenameTemplate,
           }
           const asset: DebugMetadataAsset = {
-            artifacts: collectArtifacts(compilation, args.entryNames),
+            artifacts: collectArtifacts(compilation, chunkGroups),
             uiSourceMap: createUiSourceMap(uiSourceMapRecords),
             buildInfo: {
               ...(git ? { git } : {}),
@@ -208,8 +208,8 @@ export class LynxDebugMetadataPluginImpl {
             dir: intermediate,
             base: DEBUG_METADATA_ASSET_NAME,
           })
-          intermediateByEntryKey.set(
-            entryKey(args.entryNames),
+          intermediateBySourceContent.set(
+            args.encodeData.sourceContent,
             intermediate,
           )
           compilation.emitAsset(
@@ -249,8 +249,8 @@ export class LynxDebugMetadataPluginImpl {
       templateHooks.beforeEmit.tap(
         this.constructor.name,
         (args) => {
-          const intermediate = intermediateByEntryKey.get(
-            entryKey(args.entryNames),
+          const intermediate = intermediateBySourceContent.get(
+            args.finalEncodeOptions['sourceContent'] as object,
           )
           if (intermediate === undefined) return args
           const debugMetadataAssetName = path.posix.format({
@@ -300,15 +300,6 @@ export class LynxDebugMetadataPluginImpl {
       )
     })
   }
-}
-
-/**
- * Stable join of an `entryNames` list for use as a Map key. Sorted so a
- * caller passing `['a','b']` and `['b','a']` lands on the same bucket;
- * the separator is `\0` to avoid collision with any entry-name char.
- */
-function entryKey(entryNames: string[]): string {
-  return [...entryNames].sort().join('\0')
 }
 
 /**

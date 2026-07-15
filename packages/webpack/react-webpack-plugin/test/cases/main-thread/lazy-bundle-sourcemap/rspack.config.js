@@ -10,7 +10,7 @@ const config = createConfig({
 }, {
   mainThreadChunks: [
     'main__main-thread.js',
-    './lazy.jsx-react__main-thread.js',
+    '.rspeedy/async/lazy.jsx/main-thread.js',
   ],
   experimental_isLazyBundle: true,
 });

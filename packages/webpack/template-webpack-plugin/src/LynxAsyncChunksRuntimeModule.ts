@@ -4,6 +4,7 @@
 
 import type {
   AsyncDependenciesBlock,
+  Chunk,
   Compilation,
   Module,
   RuntimeModule,
@@ -12,7 +13,7 @@ import type {
 import { RuntimeGlobals } from '@lynx-js/webpack-runtime-globals';
 
 type LynxAsyncChunksRuntimeModule = new(
-  getChunkName: (chunkName: string) => string,
+  getFilenameTemplate: (chunk: Chunk) => string | undefined,
 ) => RuntimeModule;
 
 type ChunkGraph = Compilation['chunkGraph'];
@@ -161,7 +162,7 @@ export function createLynxAsyncChunksRuntimeModule(
 ): LynxAsyncChunksRuntimeModule {
   return class LynxAsyncChunksRuntimeModule extends webpack.RuntimeModule {
     constructor(
-      public getChunkName: (chunkName: string) => string,
+      public getFilenameTemplate: (chunk: Chunk) => string | undefined,
     ) {
       super(
         'webpack/runtime/lynx async chunks',
@@ -180,11 +181,17 @@ export function createLynxAsyncChunksRuntimeModule(
       );
 
       const asyncChunks = Array.from(chunk.getAllAsyncChunks())
-        .filter(c => c.name !== null && c.name !== undefined);
+        .filter(c => c.id !== null && c.id !== undefined);
 
       const ids = asyncChunks
-        .map(c => {
-          const filename = this.getChunkName(c.name!);
+        .flatMap(c => {
+          const filename = this.getFilenameTemplate(c);
+
+          // Chunks without a lazy bundle (e.g. context imports) stay on the
+          // default webpack chunk loading.
+          if (filename === undefined) {
+            return [];
+          }
 
           // Modified from https://github.com/webpack/webpack/blob/11449f02175f055a4540d76aa4478958c4cb297e/lib/runtime/GetChunkFilenameRuntimeModule.js#L154-L157
           // Rspack currently ignores `hashWithLength` (also missing from its

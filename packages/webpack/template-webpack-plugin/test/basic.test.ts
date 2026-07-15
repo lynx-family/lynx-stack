@@ -137,7 +137,7 @@ globalThis.renderPage = function() {
           }),
         },
       } as never],
-      entryNames: ['main'],
+      chunkGroups: [],
     });
 
     expect(compilation.warnings).toHaveLength(1);
@@ -281,7 +281,7 @@ globalThis.renderPage = function() {
         column: aGenerated.column + 1,
       }),
       cssChunks: [aCssAsset],
-      entryNames: ['a'],
+      chunkGroups: [],
     });
     await hooks.beforeEmit.promise({
       ...createBeforeEmitArgs('b/template.js'),
@@ -292,7 +292,7 @@ globalThis.renderPage = function() {
         column: bGenerated.column + 1,
       }),
       cssChunks: [bCssAsset],
-      entryNames: ['b'],
+      chunkGroups: [],
     });
 
     // `toContain`: rspack prefixes warning messages with its `⚠` formatting.

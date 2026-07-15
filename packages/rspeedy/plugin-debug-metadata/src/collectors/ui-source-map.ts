@@ -93,15 +93,11 @@ export function createUiSourceMap(
  */
 export function collectUiSourceMapRecords(
   compilation: Rspack.Compilation,
-  entryNames: string[],
+  chunkGroups: Rspack.ChunkGroup[],
 ): UiSourceMapRecord[] {
   const moduleSet = new Set<ModuleWithUiSourceMapBuildInfo>()
 
-  for (const entryName of entryNames) {
-    const chunkGroup = compilation.namedChunkGroups.get(entryName)
-      ?? compilation.entrypoints.get(entryName)
-    if (!chunkGroup) continue
-
+  for (const chunkGroup of chunkGroups) {
     for (const chunk of chunkGroup.chunks) {
       for (
         const module of compilation.chunkGraph.getChunkModulesIterable(chunk)

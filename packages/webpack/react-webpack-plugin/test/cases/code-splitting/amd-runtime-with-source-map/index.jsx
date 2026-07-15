@@ -23,7 +23,7 @@ it('should have module.exports in foo.js template', async () => {
   const exports = ret();
 
   expect(exports).toHaveProperty('ids', [
-    './foo.js-react__main-thread',
+    '_react_main-thread_foo_js',
   ]);
 
   expect(exports).toHaveProperty('modules', {
@@ -46,7 +46,7 @@ it('should have module.exports in bar.js template', async () => {
   const exports = ret();
 
   expect(exports).toHaveProperty('ids', [
-    './bar.js-react__main-thread',
+    '_react_main-thread_bar_js',
   ]);
 
   expect(exports).toHaveProperty('modules', {
@@ -69,7 +69,7 @@ it('should have module.exports in baz.js template', async () => {
   const exports = ret();
 
   expect(exports).toHaveProperty('ids', [
-    './baz.js-react__main-thread',
+    '_react_main-thread_baz_js',
   ]);
 
   expect(exports).toHaveProperty('modules', {

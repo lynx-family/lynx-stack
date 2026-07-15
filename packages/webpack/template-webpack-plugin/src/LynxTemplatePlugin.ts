@@ -104,7 +104,10 @@ export interface TemplateHooks {
   beforeEncode: AsyncSeriesWaterfallHook<{
     encodeData: EncodeRawData;
     filenameTemplate: string;
-    entryNames: string[];
+    /**
+     * The chunk groups covered by this template.
+     */
+    chunkGroups: ChunkGroup[];
     intermediate: string;
     intermediateAssets: string[];
   }>;
@@ -135,7 +138,10 @@ export interface TemplateHooks {
     outputName: string;
     mainThreadAssets: Asset[];
     cssChunks: Asset[];
-    entryNames: string[];
+    /**
+     * The chunk groups covered by this template.
+     */
+    chunkGroups: ChunkGroup[];
   }>;
 
   /**
@@ -378,6 +384,18 @@ export class LynxTemplatePlugin {
   }
 
   /**
+   * Map an async chunk id to `<lazy bundle name>/<layer>`, used to route a lazy
+   * bundle's intermediate js/css/hmr outputs into a single per-bundle directory.
+   * Returns undefined for non-lazy chunks.
+   */
+  static getAsyncChunkLayoutName(
+    compilation: Compilation,
+    chunkId: string | number,
+  ): string | undefined {
+    return LynxTemplatePluginImpl.getAsyncChunkLayoutName(compilation, chunkId);
+  }
+
+  /**
    * `defaultOptions` is the default options that the {@link LynxTemplatePlugin} uses.
    *
    * @example
@@ -501,11 +519,63 @@ class LynxTemplatePluginImpl {
   // same-stage taps would otherwise feed the encode pool one template at a time.
   static #templateQueues: WeakMap<Compilation, Promise<void>[]> = new WeakMap();
 
+  static #asyncLayoutInstalled = new WeakSet<Compiler>();
+
+  /**
+   * Route a lazy bundle's intermediate JS chunk to
+   * `<intermediateRoot>/async/<name>/<layer>.js`, co-located with the bundle's
+   * other intermediate outputs (mirroring `<intermediateRoot>/main/`).
+   * Non-lazy chunks keep the default `output.chunkFilename`. Installed once
+   * per compiler — the plugin is instantiated once per entry.
+   */
+  static #installAsyncChunkLayout(
+    compiler: Compiler,
+    intermediateRoot: string,
+  ): void {
+    if (LynxTemplatePluginImpl.#asyncLayoutInstalled.has(compiler)) {
+      return;
+    }
+    LynxTemplatePluginImpl.#asyncLayoutInstalled.add(compiler);
+
+    const prefix = intermediateRoot === '.' ? '' : `${intermediateRoot}/`;
+    let compilation: Compilation | undefined;
+    compiler.hooks.thisCompilation.tap(this.name, c => {
+      compilation = c;
+    });
+
+    // `environment` fires after `applyRspackOptionsDefaults`, so the default
+    // `output.chunkFilename` is resolved and can serve as the fallback.
+    compiler.hooks.environment.tap(this.name, () => {
+      const original = compiler.options.output.chunkFilename;
+
+      compiler.options.output.chunkFilename = (pathData, assetInfo) => {
+        const id = pathData.chunk?.id;
+        if (compilation !== undefined && id !== undefined && id !== null) {
+          const layoutName = LynxTemplatePluginImpl.getAsyncChunkLayoutName(
+            compilation,
+            id,
+          );
+          if (layoutName !== undefined) {
+            return `${prefix}async/${layoutName}.js`;
+          }
+        }
+        return typeof original === 'function'
+          ? original(pathData, assetInfo)
+          : original ?? '[id].js';
+      };
+    });
+  }
+
   constructor(
     compiler: Compiler,
     options: Required<LynxTemplatePluginOptions>,
   ) {
     this.#options = options;
+
+    LynxTemplatePluginImpl.#installAsyncChunkLayout(
+      compiler,
+      path.dirname(options.intermediate).replace(/\\/g, '/'),
+    );
 
     // entryName to fileName conversion function
     const userOptionFilename = this.#options.filename;
@@ -583,8 +653,17 @@ class LynxTemplatePluginImpl {
 
         compilation.addRuntimeModule(
           chunk,
-          new LynxAsyncChunksRuntimeModule((chunkName) => {
-            const filename = hooks.asyncChunkName.call(chunkName);
+          new LynxAsyncChunksRuntimeModule((asyncChunk) => {
+            const filename =
+              LynxTemplatePluginImpl.#getLazyBundleNameByChunkId(compilation)
+                .get(asyncChunk.id!)
+                ?? (asyncChunk.name !== null && asyncChunk.name !== undefined
+                  ? hooks.asyncChunkName.call(asyncChunk.name)
+                  : undefined);
+
+            if (filename === undefined || filename === '') {
+              return undefined;
+            }
 
             return this.#getAsyncFilenameTemplate(filename);
           }),
@@ -678,7 +757,12 @@ class LynxTemplatePluginImpl {
     await this.#encodeByAssetsInformation(
       compilation,
       assetsInfoByGroups,
-      filteredEntryNames,
+      filteredEntryNames
+        .map(name =>
+          compilation.namedChunkGroups.get(name)
+            ?? compilation.entrypoints.get(name)
+        )
+        .filter((cg): cg is ChunkGroup => cg !== undefined),
       filenameTemplate,
       this.#options.intermediate,
       /** isAsync */ this.#options.experimental_isLazyBundle,
@@ -690,7 +774,7 @@ class LynxTemplatePluginImpl {
     Record<string, ChunkGroup[]>
   >();
 
-  #getAsyncChunkGroups(compilation: Compilation) {
+  static #getAsyncChunkGroups(compilation: Compilation) {
     let asyncChunkGroups = LynxTemplatePluginImpl.#asyncChunkGroups.get(
       compilation,
     );
@@ -701,16 +785,119 @@ class LynxTemplatePluginImpl {
 
     const hooks = LynxTemplatePlugin.getLynxTemplatePluginHooks(compilation);
 
+    const resources = collectChunkGroupResources(compilation);
+    const context = compilation.compiler.context;
+
     asyncChunkGroups = groupBy(
-      compilation.chunkGroups
-        .filter(cg => !cg.isInitial())
-        .filter(cg => cg.name !== null && cg.name !== undefined),
-      cg => hooks.asyncChunkName.call(cg.name!),
+      compilation.chunkGroups.filter(cg => !cg.isInitial()),
+      cg => {
+        // A `webpackChunkName` is user-provided (the react transform no longer
+        // injects one) — group by it, after the `asyncChunkName` hook. Unnamed
+        // chunk groups are grouped by the resolved modules of their dynamic
+        // imports so that the same file imported via different paths (relative
+        // or alias) produces a single lazy bundle.
+        // See https://github.com/lynx-family/lynx-stack/issues/455
+        if (cg.name !== null && cg.name !== undefined) {
+          return hooks.asyncChunkName.call(cg.name);
+        }
+        const chunkGroupResources = resources.get(cg);
+        if (chunkGroupResources) {
+          return resourcesToLazyBundleName(chunkGroupResources, context);
+        }
+        return '';
+      },
     );
 
     LynxTemplatePluginImpl.#asyncChunkGroups.set(compilation, asyncChunkGroups);
 
     return asyncChunkGroups;
+  }
+
+  static #lazyBundleNames = new WeakMap<
+    Compilation,
+    Map<string | number, string>
+  >();
+
+  static #getLazyBundleNameByChunkId(compilation: Compilation) {
+    let lazyBundleNames = LynxTemplatePluginImpl.#lazyBundleNames.get(
+      compilation,
+    );
+
+    if (lazyBundleNames) {
+      return lazyBundleNames;
+    }
+
+    lazyBundleNames = new Map<string | number, string>();
+
+    for (
+      const [filename, chunkGroups] of Object.entries(
+        LynxTemplatePluginImpl.#getAsyncChunkGroups(compilation),
+      )
+    ) {
+      for (const chunk of chunkGroups.flatMap(cg => cg.chunks)) {
+        if (chunk.id !== null && chunk.id !== undefined) {
+          lazyBundleNames.set(chunk.id, filename);
+        }
+      }
+    }
+
+    LynxTemplatePluginImpl.#lazyBundleNames.set(compilation, lazyBundleNames);
+
+    return lazyBundleNames;
+  }
+
+  static #asyncLayoutNames = new WeakMap<
+    Compilation,
+    Map<string | number, string>
+  >();
+
+  /**
+   * Map an async chunk id to `<lazy bundle name>/<layer>` (e.g.
+   * `src/Foo.tsx/main-thread`), so intermediate js/css/hmr outputs can be
+   * co-located per lazy bundle. Returns undefined for non-lazy chunks.
+   */
+  static getAsyncChunkLayoutName(
+    compilation: Compilation,
+    chunkId: string | number,
+  ): string | undefined {
+    let layoutNames = LynxTemplatePluginImpl.#asyncLayoutNames.get(compilation);
+
+    if (!layoutNames) {
+      layoutNames = new Map<string | number, string>();
+      const { chunkGraph } = compilation;
+      for (
+        const [name, chunkGroups] of Object.entries(
+          LynxTemplatePluginImpl.#getAsyncChunkGroups(compilation),
+        )
+      ) {
+        // A named chunk group means the user wrote an explicit
+        // `webpackChunkName` — keep the user-controlled `[name]` placement.
+        // Context imports (`import(`./x/${y}`)`) group under an empty name
+        // and are not lazy bundles — leave them on the default template.
+        if (
+          name === ''
+          || chunkGroups.some(cg => cg.name !== null && cg.name !== undefined)
+        ) {
+          continue;
+        }
+        for (const chunk of chunkGroups.flatMap(cg => cg.chunks)) {
+          if (chunk.id === null || chunk.id === undefined) {
+            continue;
+          }
+          let layer: string | undefined;
+          for (const module of chunkGraph.getChunkModulesIterable(chunk)) {
+            if (module.layer) {
+              layer = String(module.layer).split(':').pop();
+              break;
+            }
+          }
+          layoutNames.set(chunk.id, layer ? `${name}/${layer}` : name);
+        }
+      }
+      LynxTemplatePluginImpl.#asyncLayoutNames.set(compilation, layoutNames);
+    }
+
+    return layoutNames.get(chunkId);
   }
 
   #getAsyncFilenameTemplate(filename: string) {
@@ -723,11 +910,11 @@ class LynxTemplatePluginImpl {
   static #encodedTemplate = new WeakMap<Compilation, Set<string>>();
 
   async #generateAsyncTemplate(compilation: Compilation) {
-    const asyncChunkGroups = this.#getAsyncChunkGroups(compilation);
+    const asyncChunkGroups = LynxTemplatePluginImpl.#getAsyncChunkGroups(
+      compilation,
+    );
 
     const intermediateRoot = path.dirname(this.#options.intermediate);
-
-    const hooks = LynxTemplatePlugin.getLynxTemplatePluginHooks(compilation);
 
     // We cache the encoded template so that it will not be encoded twice
     if (!LynxTemplatePluginImpl.#encodedTemplate.has(compilation)) {
@@ -740,19 +927,7 @@ class LynxTemplatePluginImpl {
 
     await Promise.all(
       Object.entries(asyncChunkGroups).map(
-        ([_entryName, chunkGroups]): Promise<void> => {
-          const entryNames = // We use the chunk name(provided by `webpackChunkName`) as filename
-            chunkGroups
-              .filter(cg => cg.name !== null && cg.name !== undefined).map(cg =>
-                cg.name!
-              );
-
-          const chunkNames = entryNames.map(name =>
-            hooks.asyncChunkName.call(name)
-          );
-
-          const filename = Array.from(new Set(chunkNames)).join('_');
-
+        ([filename, chunkGroups]): Promise<void> => {
           // If no filename is found, avoid generating async template
           if (!filename) {
             return Promise.resolve();
@@ -769,15 +944,17 @@ class LynxTemplatePluginImpl {
 
           const asyncAssetsInfoByGroups = this.#getAssetsInformationByFilenames(
             compilation,
-            chunkGroups.flatMap(cg => cg.getFiles()).filter(chunkFile =>
-              predicateNonHotModuleReplacementAsset(chunkFile, compilation)
-            ),
+            // Merged chunk groups may share chunks, so dedupe the files.
+            Array.from(new Set(chunkGroups.flatMap(cg => cg.getFiles())))
+              .filter(chunkFile =>
+                predicateNonHotModuleReplacementAsset(chunkFile, compilation)
+              ),
           );
 
           return this.#encodeByAssetsInformation(
             compilation,
             asyncAssetsInfoByGroups,
-            entryNames,
+            chunkGroups,
             filenameTemplate,
             path.join(intermediateRoot, 'async', filename),
             /** isAsync */ true,
@@ -790,7 +967,7 @@ class LynxTemplatePluginImpl {
   async #encodeByAssetsInformation(
     compilation: Compilation,
     assetsInfoByGroups: AssetsInformationByGroups,
-    entryNames: string[],
+    chunkGroups: ChunkGroup[],
     filenameTemplate: string,
     intermediate: string,
     isAsync: boolean,
@@ -896,7 +1073,7 @@ class LynxTemplatePluginImpl {
     const { encodeData } = await hooks.beforeEncode.promise({
       encodeData: encodeRawData,
       filenameTemplate,
-      entryNames,
+      chunkGroups,
       intermediate,
       intermediateAssets: [],
     });
@@ -1000,7 +1177,7 @@ class LynxTemplatePluginImpl {
         mainThreadAssets: [lepusCode.root, ...encodeData.lepusCode.chunks]
           .filter(i => i !== undefined),
         cssChunks: assetsInfoByGroups.css,
-        entryNames,
+        chunkGroups,
       });
 
       compilation.emitAsset(filename, new RawSource(template, false));
@@ -1190,6 +1367,71 @@ export function isDebug(): boolean {
 
 export function isRsdoctor(): boolean {
   return process.env['RSDOCTOR'] === 'true';
+}
+
+/**
+ * Collect the resolved module paths of the dynamic imports that create each
+ * chunk group, by traversing the `AsyncDependenciesBlock`s of all modules.
+ */
+function collectChunkGroupResources(
+  compilation: Compilation,
+): Map<ChunkGroup, string[]> {
+  const { chunkGraph, moduleGraph } = compilation;
+  const resources = new Map<ChunkGroup, Set<string>>();
+
+  for (const module of compilation.modules) {
+    for (const block of module.blocks) {
+      const chunkGroup = chunkGraph.getBlockChunkGroup(block);
+      if (!chunkGroup) {
+        continue;
+      }
+      for (const dependency of block.dependencies) {
+        // `nameForCondition()` is the resource path of a `NormalModule`. It is
+        // `undefined` for `ContextModule`(e.g. `import(`./locales/${lang}`)`),
+        // which keeps context imports on the default chunk loading.
+        const resource = moduleGraph.getResolvedModule(dependency)
+          ?.nameForCondition();
+        if (!resource) {
+          continue;
+        }
+        let chunkGroupResources = resources.get(chunkGroup);
+        if (!chunkGroupResources) {
+          chunkGroupResources = new Set();
+          resources.set(chunkGroup, chunkGroupResources);
+        }
+        chunkGroupResources.add(resource);
+      }
+    }
+  }
+
+  return new Map(
+    Array.from(
+      resources,
+      ([chunkGroup, chunkGroupResources]) => [
+        chunkGroup,
+        Array.from(chunkGroupResources).sort(),
+      ],
+    ),
+  );
+}
+
+/**
+ * Derive a lazy bundle name from the resolved module paths. The name is
+ * relative to the compiler context with `..` segments replaced, so the
+ * bundle never escapes the `async/` output directory.
+ */
+function resourcesToLazyBundleName(
+  resources: string[],
+  context: string,
+): string {
+  return resources
+    .map(resource =>
+      path.relative(context, resource)
+        .split(path.sep)
+        .map(segment => segment === '..' ? '__' : segment)
+        .join('/')
+    )
+    .join('_');
 }
 
 export function predicateNonHotModuleReplacementAsset(

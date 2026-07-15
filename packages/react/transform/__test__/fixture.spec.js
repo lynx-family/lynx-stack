@@ -1322,7 +1322,7 @@ describe('dynamic import', () => {
     });
     expect(result.code).toMatchInlineSnapshot(`
       "import 'data:text/javascript;charset=utf-8,import { loadLazyBundle } from "@lynx-js/react/internal";lynx.loadLazyBundle = loadLazyBundle;';
-      await import(/*webpackChunkName: "./index.js-test"*/ /*webpackChunkName: "./index.js-"*/ "./index.js");
+      await import(/*webpackChunkName: "./index.js-test"*/ "./index.js");
       "
     `);
   });

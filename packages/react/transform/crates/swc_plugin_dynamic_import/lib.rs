@@ -2,12 +2,7 @@ use serde::Deserialize;
 use serde_json::Value;
 use std::{borrow::Cow, collections::HashSet, fmt::Debug};
 use swc_core::{
-  common::{
-    comments::{Comment, CommentKind, Comments},
-    errors::HANDLER,
-    util::take::Take,
-    Spanned, DUMMY_SP,
-  },
+  common::{comments::Comments, errors::HANDLER, util::take::Take, DUMMY_SP},
   ecma::{
     ast::*,
     utils::{calc_literal_cost, prepend_stmt},
@@ -48,7 +43,7 @@ where
   opts: DynamicImportVisitorConfig,
   has_inner_lazy_bundle: bool,
   named_imports: HashSet<Ident>,
-  comments: Option<C>,
+  _comments: Option<C>,
 }
 
 impl<C> Default for DynamicImportVisitor<C>
@@ -67,7 +62,7 @@ where
   pub fn new(opts: DynamicImportVisitorConfig, comments: Option<C>) -> Self {
     DynamicImportVisitor {
       opts,
-      comments,
+      _comments: comments,
       has_inner_lazy_bundle: false,
       named_imports: HashSet::new(),
     }
@@ -231,14 +226,6 @@ where
         return;
       }
 
-      self.comments.add_leading(
-        call_expr.args[0].span_lo(),
-        Comment {
-          span: DUMMY_SP,
-          kind: CommentKind::Block,
-          text: format!("webpackChunkName: \"{}-{}\"", str_lit, self.opts.layer).into(),
-        },
-      );
       self.has_inner_lazy_bundle = true;
     } else {
       let ident: Ident = "__dynamicImport".into();

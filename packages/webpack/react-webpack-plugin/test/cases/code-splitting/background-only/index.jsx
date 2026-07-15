@@ -13,19 +13,19 @@ it('should have chunkName', async () => {
     const content = await readFile(__filename, 'utf-8');
 
     expect(content).toContain(
-      `__webpack_require__.e(/*! import() | ./foo.js-react__background */ "./foo.js-react__background")`,
+      `__webpack_require__.e(/*! import() */ "_react_background_foo_js")`,
     );
   }
 });
 
 it('should not have duplicated chunk', async () => {
-  const files = await readdir(__dirname, { recursive: false });
+  const files = await readdir(join(__dirname, '.rspeedy/async'), {
+    recursive: true,
+  });
   expect(
-    files.filter(file => file.endsWith('.js')),
-  ).toHaveLength(
+    files.filter(file => file.endsWith('background.js')).length,
+  ).toBe(
     [
-      'main',
-      'main__background',
       'foo',
       'bar',
       'baz',
@@ -38,7 +38,7 @@ it('should have async chunks', () => {
     expect(['foo', 'bar', 'baz'].every(entry =>
       existsSync(join(
         __dirname,
-        `${entry}.js-react__background.js`,
+        `.rspeedy/async/${entry}.js/background.js`,
       ))
     )).toBeTruthy();
   }

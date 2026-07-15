@@ -12,10 +12,10 @@ it('should have chunkName', async () => {
 
   const content = await readFile(__filename, 'utf-8');
 
-  const LAYER = __LEPUS__ ? 'react__main-thread' : 'react__background';
+  const LAYER = __LEPUS__ ? 'main-thread' : 'background';
 
   expect(content).toContain(
-    `__webpack_require__.e(/* import() | ./foo.js-${LAYER} */ "./foo.js-${LAYER}")`,
+    `__webpack_require__.e(/* import() */ "_react_${LAYER}_foo_js")`,
   );
 });
 
@@ -34,7 +34,7 @@ it('should not have duplicated chunk', async () => {
 });
 
 it('should have async chunks', () => {
-  const LAYER = __LEPUS__ ? 'react__main-thread' : 'react__background';
+  const LAYER = __LEPUS__ ? 'main-thread' : 'background';
 
   expect([
     'foo',
@@ -43,7 +43,7 @@ it('should have async chunks', () => {
   ].every(entry =>
     existsSync(join(
       __dirname,
-      `${entry}.js-${LAYER}.js`,
+      `_react_${LAYER}_${entry}_js.js`,
     ))
   )).toBeTruthy();
 });
