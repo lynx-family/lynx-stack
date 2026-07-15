@@ -1,10 +1,17 @@
 // Copyright 2026 The Lynx Authors. All rights reserved.
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
-import { describe, expect, test } from '@rstest/core';
+import { describe, expect, rs, test } from '@rstest/core';
 
 import { A2UI_CHAT_ADAPTER } from './a2ui.js';
+import {
+  MCP_APPS_CHAT_ADAPTER,
+  PRODUCT_RESOURCE_URI,
+  WEATHER_RESOURCE_URI,
+} from './mcp-apps.js';
 import { OPENUI_CHAT_ADAPTER } from './openui.js';
+import { PRODUCT_API_NAME } from '../../../lynx-src/mcp-apps/product/api.js';
+import { WEATHER_API_NAME } from '../../../lynx-src/mcp-apps/weather/api.js';
 import { PROTOCOLS } from '../../utils/protocol.js';
 
 const reduceA2UIStream = A2UI_CHAT_ADAPTER.stream.reduce.bind(
@@ -250,5 +257,277 @@ describe('chat protocol adapters', () => {
     expect(userText).toContain('"orderId": 42');
     expect(userText).toContain('"formName": "checkout"');
     expect(userText).toContain('"size": "large"');
+  });
+
+  test('loads MCP Apps metadata before registering tools', async () => {
+    const host = {
+      origin: 'https://example.com',
+      hostname: 'example.com',
+      protocol: 'https:',
+      search: '',
+      baseUrl: 'https://example.com/',
+    };
+    const fetchMetadata = rs.fn(async (
+      _input: RequestInfo | URL,
+      _init?: RequestInit,
+    ) => ({
+      ok: true,
+      json: async () => ({
+        protocolVersion: '2025-11-25',
+        appProtocolVersion: '2026-01-26',
+        extensionId: 'io.modelcontextprotocol/ui',
+        resourceMimeType: 'text/html;profile=mcp-app',
+      }),
+    }));
+    const originalWindow = globalThis.window;
+    Object.defineProperty(globalThis, 'window', {
+      configurable: true,
+      value: { fetch: fetchMetadata },
+    });
+    const signal = new AbortController().signal;
+
+    try {
+      const chatRequest = await MCP_APPS_CHAT_ADAPTER.createRequest({
+        prompt: 'Weather in Hangzhou',
+        conversation: { history: [], dataModel: {} },
+        settings: {
+          preset: 'gpt-5.5',
+          apiKey: '',
+          baseURL: 'https://api.openai.com/v1',
+          model: 'gpt-5.5',
+        },
+        host,
+        signal,
+      });
+      expect(fetchMetadata).toHaveBeenCalledTimes(1);
+      expect(fetchMetadata.mock.calls[0]?.[0]).toBe(
+        'https://genui-server.vercel.app/mcp-apps/metadata',
+      );
+      expect(fetchMetadata.mock.calls[0]?.[1]).toMatchObject({ signal });
+      expect(chatRequest).toMatchObject({
+        url: 'https://genui-server.vercel.app/mcp-apps/stream',
+        body: {
+          registry: {
+            protocolVersion: '2025-11-25',
+            appProtocolVersion: '2026-01-26',
+            capabilities: {
+              extensions: {
+                'io.modelcontextprotocol/ui': {
+                  mimeTypes: ['text/html;profile=mcp-app'],
+                },
+              },
+            },
+            tools: [
+              {
+                name: WEATHER_API_NAME,
+                _meta: { ui: { visibility: ['model'] } },
+              },
+              {
+                name: PRODUCT_API_NAME,
+                _meta: { ui: { visibility: ['model'] } },
+              },
+            ],
+            resources: [
+              {
+                uri: WEATHER_RESOURCE_URI,
+                mimeType: 'text/html;profile=mcp-app',
+              },
+              {
+                uri: PRODUCT_RESOURCE_URI,
+                mimeType: 'text/html;profile=mcp-app',
+              },
+            ],
+          },
+        },
+      });
+
+      const request = {
+        jsonrpc: '2.0' as const,
+        id: 'weather-1',
+        method: 'tools/call' as const,
+        params: {
+          name: WEATHER_API_NAME,
+          arguments: { city: 'Hangzhou' },
+        },
+      };
+      const reduced = MCP_APPS_CHAT_ADAPTER.stream.reduce(
+        MCP_APPS_CHAT_ADAPTER.stream.initial(),
+        {
+          event: 'done',
+          data: {
+            protocolVersion: '2026-01-26',
+            toolCall: request,
+            resource: { uri: WEATHER_RESOURCE_URI },
+          },
+        },
+      );
+      const final = reduced.emissions.find((item) => item.type === 'final');
+      expect(final).toBeDefined();
+      if (!final || final.type !== 'final') return;
+      expect(final.output).toMatchObject({
+        kind: 'tool',
+        tool: { name: WEATHER_API_NAME },
+        resource: { uri: WEATHER_RESOURCE_URI },
+        toolResult: {
+          structuredContent: { weather: { city: 'Hangzhou' } },
+        },
+      });
+      expect(
+        MCP_APPS_CHAT_ADAPTER.preview.artifact(final.output).title,
+      ).toBe('MCP Apps Exchange');
+      const transcript = MCP_APPS_CHAT_ADAPTER.transcript.success(
+        final.output,
+      );
+      expect(transcript).toContainEqual({
+        kind: 'output',
+        tone: 'info',
+        text: 'LLM Tool Call',
+        payload: {
+          type: 'tool_call',
+          name: WEATHER_API_NAME,
+          arguments: { city: 'Hangzhou' },
+        },
+        payloadLayout: 'single',
+      });
+      expect(transcript).toContainEqual(expect.objectContaining({
+        text: 'MCP Apps Tool Result',
+      }));
+      expect(transcript.map((message) => message.text)).toEqual([
+        'LLM Tool Call',
+        `Called ${WEATHER_API_NAME} and rendered ${WEATHER_RESOURCE_URI}.`,
+        'MCP Apps Tool Result',
+      ]);
+
+      const hydrated = MCP_APPS_CHAT_ADAPTER.hydrate({
+        history: [{
+          role: 'assistant',
+          content: JSON.stringify(final.output),
+        }],
+        previewMessages: [],
+        previewPayloadUrls: null,
+      });
+      expect(hydrated.messages).toContainEqual(expect.objectContaining({
+        text: 'LLM Tool Call',
+        payload: {
+          type: 'tool_call',
+          name: WEATHER_API_NAME,
+          arguments: { city: 'Hangzhou' },
+        },
+      }));
+      expect(MCP_APPS_CHAT_ADAPTER.preview.source(final.output, {
+        protocol: PROTOCOLS['mcp-apps'],
+        theme: 'dark',
+        previewPayloadUrls: null,
+      })).toMatchObject({
+        kind: 'mcp-apps',
+        mcpAppData: {
+          renderer: 'weather',
+          input: { city: 'Hangzhou' },
+          result: { weather: { city: 'Hangzhou' } },
+        },
+        theme: 'dark',
+      });
+
+      const productRequest = {
+        jsonrpc: '2.0' as const,
+        id: 'product-1',
+        method: 'tools/call' as const,
+        params: {
+          name: PRODUCT_API_NAME,
+          arguments: { productId: 'sneaker' },
+        },
+      };
+      const productStep = MCP_APPS_CHAT_ADAPTER.stream.reduce(
+        MCP_APPS_CHAT_ADAPTER.stream.initial(),
+        {
+          event: 'done',
+          data: {
+            protocolVersion: '2026-01-26',
+            toolCall: productRequest,
+            resource: { uri: PRODUCT_RESOURCE_URI },
+          },
+        },
+      );
+      const productFinal = productStep.emissions.find((item) =>
+        item.type === 'final'
+      );
+      expect(productFinal).toBeDefined();
+      if (!productFinal || productFinal.type !== 'final') return;
+      expect(productFinal.output).toMatchObject({
+        kind: 'tool',
+        tool: { name: PRODUCT_API_NAME },
+        resource: { uri: PRODUCT_RESOURCE_URI },
+        toolResult: {
+          structuredContent: {
+            product: { id: 'sneaker', category: 'SNEAKERS' },
+          },
+        },
+      });
+      expect(MCP_APPS_CHAT_ADAPTER.preview.source(productFinal.output, {
+        protocol: PROTOCOLS['mcp-apps'],
+        theme: 'light',
+        previewPayloadUrls: null,
+      })).toMatchObject({
+        kind: 'mcp-apps',
+        mcpAppData: {
+          renderer: 'product',
+          input: { productId: 'sneaker' },
+          result: { product: { id: 'sneaker' } },
+        },
+        theme: 'light',
+      });
+      if (productFinal.output.kind !== 'tool') return;
+      expect(MCP_APPS_CHAT_ADAPTER.preview.source({
+        ...productFinal.output,
+        toolResult: {
+          content: [{ type: 'text', text: 'Stale product result' }],
+          structuredContent: {},
+        },
+      }, {
+        protocol: PROTOCOLS['mcp-apps'],
+        theme: 'light',
+        previewPayloadUrls: null,
+      })).toMatchObject({
+        kind: 'mcp-apps',
+        mcpAppData: {
+          renderer: 'product',
+          result: { product: { id: 'sneaker' } },
+        },
+      });
+
+      const messageStep = MCP_APPS_CHAT_ADAPTER.stream.reduce(
+        MCP_APPS_CHAT_ADAPTER.stream.initial(),
+        {
+          event: 'done',
+          data: {
+            protocolVersion: '2026-01-26',
+            message: '# Lynx\n\nLynx is a cross-platform UI framework.',
+          },
+        },
+      );
+      const messageFinal = messageStep.emissions.find((item) =>
+        item.type === 'final'
+      );
+      expect(messageFinal).toBeDefined();
+      if (!messageFinal || messageFinal.type !== 'final') return;
+      expect(MCP_APPS_CHAT_ADAPTER.preview.source(messageFinal.output, {
+        protocol: PROTOCOLS['mcp-apps'],
+        theme: 'light',
+        previewPayloadUrls: null,
+      })).toEqual({
+        kind: 'mcp-apps',
+        mcpAppData: {
+          markdown: '# Lynx\n\nLynx is a cross-platform UI framework.',
+        },
+        theme: 'light',
+      });
+      expect('action' in MCP_APPS_CHAT_ADAPTER).toBe(false);
+      expect(fetchMetadata).toHaveBeenCalledTimes(1);
+    } finally {
+      Object.defineProperty(globalThis, 'window', {
+        configurable: true,
+        value: originalWindow,
+      });
+    }
   });
 });

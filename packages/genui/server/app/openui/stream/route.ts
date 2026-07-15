@@ -4,14 +4,16 @@
 
 import { getOpenUIAgentService } from '../../../service/openui-agent';
 import {
-  errorMessage,
-  pickChatOptions,
-  readJsonBodyWithLimit,
   validateConversation,
   validateMessages,
-} from '../../a2ui/_shared';
-import { corsHeaders, corsPreflight, jsonWithCors } from '../../a2ui/cors';
-import { checkRateLimit, rateLimitSseResponse } from '../../a2ui/rate-limit';
+} from '../../common/chat-validation';
+import { corsPreflight, jsonWithCors } from '../../common/cors';
+import { errorMessage } from '../../common/errors';
+import { pickProviderOptions } from '../../common/provider-options';
+import { checkRateLimit, rateLimitSseResponse } from '../../common/rate-limit';
+import { readJsonBodyWithLimit } from '../../common/request';
+import { encodeSSE, sseHeaders } from '../../common/sse';
+import { createStreamLogger } from '../../common/stream-logger';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
@@ -26,48 +28,12 @@ interface OpenUIChatBody {
   api?: 'chat' | 'responses';
 }
 
-function createStreamLogger(route: string) {
-  const requestId = crypto.randomUUID();
-  const startedAt = Date.now();
-  const log = (event: string, details: Record<string, unknown> = {}) => {
-    console.info('[openui:stream]');
-    console.dir({
-      route,
-      requestId,
-      event,
-      elapsedMs: Date.now() - startedAt,
-      ...details,
-    }, {
-      breakLength: 120,
-      depth: null,
-      maxArrayLength: null,
-      maxStringLength: 20000,
-    });
-  };
-
-  return { log, requestId };
-}
-
-function encodeSSE(event: string, data: unknown): Uint8Array {
-  const payload = typeof data === 'string' ? data : JSON.stringify(data);
-  return new TextEncoder().encode(`event: ${event}\ndata: ${payload}\n\n`);
-}
-
-function sseHeaders(req: Request): Headers {
-  return corsHeaders(req, {
-    'Content-Type': 'text/event-stream; charset=utf-8',
-    'Cache-Control': 'no-cache, no-transform',
-    Connection: 'keep-alive',
-    'X-Accel-Buffering': 'no',
-  });
-}
-
 export function OPTIONS(req: Request) {
   return corsPreflight(req);
 }
 
 export async function POST(req: Request) {
-  const { log, requestId } = createStreamLogger('/openui/stream');
+  const { log, requestId } = createStreamLogger('openui', '/openui/stream');
   log('request.received', {
     contentLength: req.headers.get('content-length'),
   });
@@ -131,7 +97,7 @@ export async function POST(req: Request) {
   });
 
   const opts = {
-    ...pickChatOptions(body),
+    ...pickProviderOptions(body),
     onPerformanceEvent: (event: string, details = {}) => {
       log(event, details);
     },

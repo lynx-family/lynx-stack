@@ -1,0 +1,252 @@
+/* Copyright 2026 The Lynx Authors. All rights reserved.
+ * Licensed under the Apache License Version 2.0 that can be found in the
+ * LICENSE file in the root directory of this source tree. */
+
+.productCard {
+  width: 100%;
+  max-width: 420px;
+  flex-shrink: 0;
+  border: 1px solid rgba(24, 34, 52, 0.1);
+  border-radius: 1.5rem;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  background-color: #ffffff;
+  box-shadow: 0 1rem 2.5rem rgba(28, 36, 54, 0.18);
+  box-sizing: border-box;
+}
+
+.productMedia {
+  width: 100%;
+  height: 15rem;
+  flex-shrink: 0;
+  position: relative;
+  overflow: hidden;
+  background-color: #eef1f5;
+}
+
+.productImage {
+  width: 100%;
+  height: 15rem;
+}
+
+.productBadge {
+  min-height: 1.75rem;
+  padding: 0.35rem 0.72rem;
+  border-radius: 0.9rem;
+  position: absolute;
+  top: 1rem;
+  left: 1rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background-color: rgba(18, 24, 38, 0.88);
+  box-sizing: border-box;
+}
+
+.productBadgeText {
+  max-width: 12rem;
+  color: #ffffff;
+  font-size: 0.66rem;
+  font-weight: 700;
+  letter-spacing: 0.025rem;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.productContent {
+  padding: 1.25rem;
+  display: flex;
+  flex-direction: column;
+}
+
+.productMetaRow,
+.productPriceRow,
+.productPurchaseResult,
+.productActions,
+.productRefreshButton,
+.productBuyButton {
+  display: flex;
+}
+
+.productMetaRow {
+  flex-direction: row;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+}
+
+.productCategory {
+  flex: 1;
+  min-width: 0;
+  color: #667085;
+  font-size: 0.66rem;
+  font-weight: 700;
+  letter-spacing: 0.055rem;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.productAvailability {
+  flex-shrink: 0;
+  color: #067647;
+  font-size: 0.7rem;
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+.productAvailabilityLow {
+  color: #b54708;
+}
+
+.productAvailabilityUnavailable {
+  color: #b42318;
+}
+
+.productName {
+  width: 100%;
+  margin-top: 0.7rem;
+  color: #101828;
+  font-size: 1.45rem;
+  font-weight: 750;
+  line-height: 1.18;
+  white-space: normal;
+}
+
+.productDescription {
+  width: 100%;
+  margin-top: 0.55rem;
+  color: #667085;
+  font-size: 0.82rem;
+  line-height: 1.45;
+  white-space: normal;
+}
+
+.productRating {
+  margin-top: 0.7rem;
+  color: #475467;
+  font-size: 0.74rem;
+  font-weight: 600;
+}
+
+.productPriceRow {
+  margin-top: 1rem;
+  flex-direction: row;
+  align-items: baseline;
+}
+
+.productPrice {
+  color: #101828;
+  font-size: 1.55rem;
+  font-weight: 750;
+  letter-spacing: -0.03rem;
+}
+
+.productOriginalPrice {
+  margin-left: 0.6rem;
+  color: #98a2b3;
+  font-size: 0.8rem;
+  text-decoration: line-through;
+}
+
+.productPurchaseResult {
+  margin-top: 0.95rem;
+  padding: 0.78rem;
+  border: 1px solid #abefc6;
+  border-radius: 0.85rem;
+  flex-direction: row;
+  align-items: center;
+  background-color: #ecfdf3;
+}
+
+.productPurchaseIcon {
+  width: 1.65rem;
+  height: 1.65rem;
+  flex-shrink: 0;
+  border-radius: 0.83rem;
+  color: #ffffff;
+  font-size: 0.8rem;
+  font-weight: 700;
+  line-height: 1.65rem;
+  text-align: center;
+  background-color: #17b26a;
+}
+
+.productPurchaseCopy {
+  flex: 1;
+  min-width: 0;
+  margin-left: 0.65rem;
+  display: flex;
+  flex-direction: column;
+}
+
+.productPurchaseTitle {
+  color: #067647;
+  font-size: 0.78rem;
+  font-weight: 700;
+}
+
+.productPurchaseMessage {
+  width: 100%;
+  margin-top: 0.12rem;
+  color: #087443;
+  font-size: 0.68rem;
+  line-height: 1.35;
+  white-space: normal;
+}
+
+.productActions {
+  margin-top: 1.1rem;
+  flex-direction: row;
+  gap: 0.65rem;
+}
+
+.productRefreshButton,
+.productBuyButton {
+  min-height: 2.75rem;
+  border-radius: 1.38rem;
+  flex-direction: row;
+  align-items: center;
+  justify-content: center;
+  box-sizing: border-box;
+}
+
+.productRefreshButton {
+  flex: 0.85;
+  border: 1px solid #d0d5dd;
+  background-color: #ffffff;
+}
+
+.productRefreshIcon {
+  color: #344054;
+  font-size: 1rem;
+  font-weight: 700;
+}
+
+.productRefreshText {
+  margin-left: 0.3rem;
+  color: #344054;
+  font-size: 0.5rem;
+  font-weight: 700;
+}
+
+.productBuyButton {
+  flex: 1.15;
+  background: linear-gradient(135deg, #7f56d9 0%, #6941c6 100%);
+}
+
+.productBuyButtonDisabled {
+  background: #e4e7ec;
+}
+
+.productBuyButtonText {
+  color: #ffffff;
+  font-size: 0.8rem;
+  font-weight: 700;
+}
+
+.productBuyButtonTextDisabled {
+  color: #667085;
+}

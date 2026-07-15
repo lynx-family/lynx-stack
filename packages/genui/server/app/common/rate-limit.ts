@@ -1,7 +1,9 @@
 // Copyright 2026 The Lynx Authors. All rights reserved.
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
-import { corsHeaders, jsonWithCors } from './cors';
+
+import { jsonWithCors } from './cors';
+import { encodeSSE, sseHeaders } from './sse';
 
 interface WindowCounter {
   count: number;
@@ -144,11 +146,10 @@ export function rateLimitSseResponse(
   req: Request,
   decision: RateLimitDecision,
 ): Response {
-  const payload = JSON.stringify({
+  const body = encodeSSE('error', {
     message: 'rate limit exceeded, please retry later',
     retryAfterSec: decision.retryAfterSec,
   });
-  const body = new TextEncoder().encode(`event: error\ndata: ${payload}\n\n`);
   const stream = new ReadableStream<Uint8Array>({
     start(controller) {
       controller.enqueue(body);
@@ -156,12 +157,7 @@ export function rateLimitSseResponse(
     },
   });
   const headers = applyRateLimitHeaders(
-    corsHeaders(req, {
-      'Content-Type': 'text/event-stream; charset=utf-8',
-      'Cache-Control': 'no-cache, no-transform',
-      Connection: 'keep-alive',
-      'X-Accel-Buffering': 'no',
-    }),
+    sseHeaders(req),
     decision,
   );
   return new Response(stream, { status: 429, headers });

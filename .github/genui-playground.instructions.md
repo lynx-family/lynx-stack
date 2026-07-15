@@ -22,13 +22,23 @@ When serving the playground's native Lynx bundles as static Android test fixture
 
 ## Chat Page Architecture
 
-Route both protocols' Create tabs through `pages/chat/ChatPage.tsx`. Keep all shared React state, effects, conversation operations, provider controls, usage and preview metrics, streaming transport, examples, actions, and rendering in `pages/chat/ChatController.tsx`. Keep the shared conversation list, header, transcript/composer slots, resizable preview, delete confirmation, copy toast, and mobile tabs in `pages/chat/ChatWorkspace.tsx`, with styles in `pages/chat/ChatPage.css`.
+Route all protocol Create tabs through `pages/chat/ChatPage.tsx`. Keep all shared React state, effects, conversation operations, provider controls, usage and preview metrics, streaming transport, examples, actions, and rendering in `pages/chat/ChatController.tsx`. Keep the shared conversation list, header, transcript/composer slots, resizable preview, delete confirmation, copy toast, and mobile tabs in `pages/chat/ChatWorkspace.tsx`, with styles in `pages/chat/ChatPage.css`.
 
-Keep `pages/chat/a2ui.ts` and `pages/chat/openui.ts` as hook-free, JSX-free protocol adapters. They may define protocol request bodies, stream reducers, history conversion, persistence payloads, artifacts, examples, preview sources, and action conversion, but must not duplicate the controller's React state or host-side effects.
+Keep `pages/chat/a2ui.ts`, `pages/chat/openui.ts`, and `pages/chat/mcp-apps.ts` as hook-free, JSX-free protocol adapters. They may define protocol request bodies, stream reducers, history conversion, persistence payloads, artifacts, examples, preview sources, and action conversion, but must not duplicate the controller's React state or host-side effects.
+
+For MCP Apps tool turns, show the model's tool selection and the host-executed tool result as separate JSON transcript entries. Build those entries through the same pure helper for live success and history hydration so reopened conversations preserve the Tool Call/Tool Result sequence.
+
+Keep `lynx-src/mcp-apps` unaware of MCP Apps protocol details. Define renderer inputs and local APIs there, and perform MCP registry construction, `ui://` mapping, and the initial JSON-RPC tool selection in the chat adapter.
+
+Import MCP Apps Lynx host components, renderer definitions, and registries through `@lynx-js/genui/mcp-apps/render`. Keep shared data contracts on the compatibility root entry and MCP protocol metadata and JSON-RPC types on the separate `@lynx-js/genui/mcp-apps/protocol` entry.
+
+Keep MCP Apps card interactions local to the renderer. Refresh, purchase, and similar card actions must call the card's sibling `api.ts` directly and update renderer-owned state; do not relay them through `NativeModules`, `window.postMessage`, a Chat action adapter, or the agent. Register only model-visible tools needed to create the initial card.
+
+Use `mcpAppData` as the MCP Apps-specific preview payload field across Chat preview sources, render URLs, render-page init data, and Lynx `globalProps`. Do not expose this protocol-specific payload through a generic `appData` field.
 
 Keep OpenUI artifacts visually aligned with A2UI Generated Output cards: use the same transcript width, compact header alignment, single divider, and code-block density while preserving OpenUI-specific Raw/Parsed views and metadata.
 
-When rendering the unified `ChatPage`, key it by protocol so switching between A2UI and OpenUI fully remounts the controller. This prevents in-flight requests, import guards, provider state, transcript state, and preview refs from leaking across protocols.
+When rendering the unified `ChatPage`, key it by protocol so switching between A2UI, OpenUI, and MCP Apps fully remounts the controller. This prevents in-flight requests, import guards, provider state, transcript state, and preview refs from leaking across protocols.
 
 ## Protocol-Aware Conversation Data
 

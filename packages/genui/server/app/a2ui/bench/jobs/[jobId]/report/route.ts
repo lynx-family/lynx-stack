@@ -3,7 +3,7 @@
 // LICENSE file in the root directory of this source tree.
 
 import { getBenchJobStore } from '../../../../../../service/a2ui-bench-store';
-import { corsPreflight, jsonWithCors } from '../../../../cors';
+import { corsPreflight, jsonWithCors } from '../../../../../common/cors';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';

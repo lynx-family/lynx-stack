@@ -6,14 +6,17 @@
     "build": "next build",
     "dev": "next dev -p 3060",
     "lint": "eslint --ignore-pattern .next --ignore-pattern .vercel .",
-    "start": "next start -p 3060"
+    "start": "next start -p 3060",
+    "test": "rstest"
   },
   "dependencies": {
     "@ai-sdk/openai": "^3.0.63",
     "@aws-sdk/client-s3": "^3.1053.0",
+    "@lynx-js/genui-mcp-apps": "workspace:*",
     "@lynx-js/genui-openui": "workspace:*",
     "@mastra/core": "1.13.2",
     "@sparticuz/chromium": "^149.0.0",
+    "ajv": "^8.18.0",
     "next": "16.2.6",
     "playwright-core": "^1.61.1",
     "react": "19.2.4",
@@ -21,6 +24,7 @@
     "zod": "^3.25.76"
   },
   "devDependencies": {
+    "@rstest/core": "catalog:rstest",
     "@types/node": "^24.10.13",
     "@types/react": "^18.3.28",
     "@types/react-dom": "^19.2.3",

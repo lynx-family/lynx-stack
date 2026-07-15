@@ -50,6 +50,8 @@ const OPENUI_TABS: TabDef[] = [
   { id: 'catalog', label: 'Catalog' },
 ];
 
+const MCP_APPS_TABS: TabDef[] = [{ id: 'create', label: 'Create' }];
+
 function ensureDefaultRouteHash(): void {
   if (!isEmptyRouteHash(window.location.hash)) return;
   const url = new URL(window.location.href);
@@ -117,7 +119,12 @@ export function App() {
   const forcedTheme = useMemo(() => getForcedTheme(), []);
 
   const protocol = route.protocol;
-  const tabs = protocol.name === 'openui' ? OPENUI_TABS : A2UI_TABS;
+  let tabs = A2UI_TABS;
+  if (protocol.name === 'mcp-apps') {
+    tabs = MCP_APPS_TABS;
+  } else if (protocol.name === 'openui') {
+    tabs = OPENUI_TABS;
+  }
 
   useLayoutEffect(() => {
     ensureDefaultRouteHash();
@@ -148,6 +155,10 @@ export function App() {
   }, [protocol.name]);
 
   const handleProtocolSelect = useCallback((name: ProtocolName) => {
+    if (name === 'mcp-apps') {
+      window.location.hash = buildRouteHash(name, 'create');
+      return;
+    }
     // When switching to OpenUI and current tab is A2UI-only, fallback to examples.
     const tab = name === 'openui' && route.tab === 'bench'
       ? 'examples'
@@ -177,6 +188,8 @@ export function App() {
         theme={theme}
       />
     );
+
+    if (protocol.name === 'mcp-apps') return createPage;
 
     if (protocol.name === 'openui') {
       switch (route.tab) {
@@ -262,6 +275,9 @@ export function App() {
       >
         <option value='a2ui'>A2UI v{PROTOCOLS.a2ui.version}</option>
         <option value='openui'>OpenUI v{PROTOCOLS.openui.version}</option>
+        <option value='mcp-apps'>
+          MCP Apps v{PROTOCOLS['mcp-apps'].version}
+        </option>
       </select>
     </div>
   );
