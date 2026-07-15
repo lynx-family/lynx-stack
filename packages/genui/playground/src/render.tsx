@@ -25,7 +25,7 @@ import {
 } from './utils/renderUrl.js';
 
 interface InitData {
-  protocol?: '0.9' | 'a2ui' | 'openui';
+  protocol?: '0.9' | 'a2ui' | 'openui' | 'mcp-apps';
   messagesUrl?: string;
   messages?: unknown;
   actionMocksUrl?: string;
@@ -39,6 +39,7 @@ interface InitData {
   rawTextUrl?: string;
   playbackPaused?: boolean;
   liveAction?: boolean;
+  mcpAppData?: unknown;
 }
 
 interface InitLynxViewMessage {
@@ -62,6 +63,11 @@ interface PlaybackProgressMessage {
 
 interface UserActionMessage {
   type: 'A2UI_USER_ACTION';
+  action: unknown;
+}
+
+interface OpenUIUserActionMessage {
+  type: 'OPENUI_USER_ACTION';
   action: unknown;
 }
 
@@ -131,7 +137,10 @@ function readBoolean(value: unknown): boolean | undefined {
 }
 
 function readProtocol(value: unknown): InitData['protocol'] {
-  return value === '0.9' || value === 'a2ui' || value === 'openui'
+  return value === '0.9'
+      || value === 'a2ui'
+      || value === 'openui'
+      || value === 'mcp-apps'
     ? value
     : undefined;
 }
@@ -170,6 +179,7 @@ function readInitDataParam(raw: string | null): InitData | null {
   initData.rawTextUrl = readString(record.rawTextUrl);
   initData.playbackPaused = readBoolean(record.playbackPaused);
   initData.liveAction = readBoolean(record.liveAction);
+  if ('mcpAppData' in record) initData.mcpAppData = record.mcpAppData;
 
   return initData;
 }
@@ -193,10 +203,11 @@ function parseInitDataFromQuery(): InitData | null {
 
   const rawText = params.get('rawText');
   const rawTextUrl = params.get('rawTextUrl');
+  const mcpAppData = params.get('mcpAppData');
 
   if (
     !baseInitData && !protocol && !messagesUrl && !messages && !demoUrl
-    && !demo && !rawText && !rawTextUrl
+    && !demo && !rawText && !rawTextUrl && !mcpAppData
   ) {
     return null;
   }
@@ -224,6 +235,7 @@ function parseInitDataFromQuery(): InitData | null {
     liveAction: params.get('liveAction') === '1'
       ? true
       : baseInitData?.liveAction,
+    mcpAppData: baseInitData?.mcpAppData,
   };
 
   if (messages) {
@@ -234,6 +246,11 @@ function parseInitDataFromQuery(): InitData | null {
   if (actionMocks) {
     const parsed = parseJsonParam(actionMocks);
     if (parsed !== undefined) initData.actionMocks = parsed;
+  }
+
+  if (mcpAppData) {
+    const parsed = parseJsonParam(mcpAppData);
+    if (parsed !== undefined) initData.mcpAppData = parsed;
   }
 
   return initData;
@@ -294,6 +311,9 @@ function buildGlobalPropsFromInitData(
     out.playbackPaused = initData.playbackPaused;
   }
   if (initData.liveAction !== undefined) out.liveAction = initData.liveAction;
+  if (initData.mcpAppData !== undefined) {
+    out.mcpAppData = initData.mcpAppData;
+  }
   return Object.keys(out).length > 0 ? out : null;
 }
 
@@ -629,13 +649,26 @@ function Render() {
         }
         return;
       }
+      if (name === 'OPENUI_USER_ACTION') {
+        if (window.parent && window.parent !== window) {
+          window.parent.postMessage(
+            { type: 'OPENUI_USER_ACTION', action: data },
+            '*',
+          );
+        }
+        return;
+      }
     };
 
     return () => {
       if (lynxView.onNativeModulesCall === undefined) return;
       lynxView.onNativeModulesCall = undefined;
     };
-  }, [clearTtiTimer, scheduleFmpMetric, scheduleTtiMetric]);
+  }, [
+    clearTtiTimer,
+    scheduleFmpMetric,
+    scheduleTtiMetric,
+  ]);
 
   useEffect(() => {
     const handleMessage = (e: MessageEvent<unknown>) => {
@@ -654,6 +687,16 @@ function Render() {
         e.data
         && typeof e.data === 'object'
         && (e.data as UserActionMessage).type === 'A2UI_USER_ACTION'
+      ) {
+        if (window.parent && window.parent !== window) {
+          window.parent.postMessage(e.data, '*');
+        }
+        return;
+      }
+      if (
+        e.data
+        && typeof e.data === 'object'
+        && (e.data as OpenUIUserActionMessage).type === 'OPENUI_USER_ACTION'
       ) {
         if (window.parent && window.parent !== window) {
           window.parent.postMessage(e.data, '*');
@@ -716,7 +759,11 @@ function Render() {
     window.addEventListener('message', handleMessage);
     postRenderReady();
     return () => window.removeEventListener('message', handleMessage);
-  }, [flushPendingA2UIEvents, postRenderReady, schedulePendingA2UIFlush]);
+  }, [
+    flushPendingA2UIEvents,
+    postRenderReady,
+    schedulePendingA2UIFlush,
+  ]);
 
   useEffect(() => {
     const lynxView = lynxViewRef.current;

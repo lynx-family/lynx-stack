@@ -6,16 +6,6 @@ on:
         required: false
       LHCI_GITHUB_APP_TOKEN:
         required: false
-      MIDSCENE_MODEL_API_KEY:
-        required: false
-      MIDSCENE_MODEL_BASE_URL:
-        required: false
-      MIDSCENE_MODEL_FAMILY:
-        required: false
-      MIDSCENE_MODEL_NAME:
-        required: false
-      MIDSCENE_OPENAI_INIT_CONFIG_JSON:
-        required: false
     inputs:
       runs-on:
         required: true
@@ -100,11 +90,6 @@ jobs:
           CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           LHCI_GITHUB_APP_TOKEN: ${{ secrets.LHCI_GITHUB_APP_TOKEN }}
-          MIDSCENE_MODEL_API_KEY: ${{ secrets.MIDSCENE_MODEL_API_KEY }}
-          MIDSCENE_MODEL_BASE_URL: ${{ secrets.MIDSCENE_MODEL_BASE_URL }}
-          MIDSCENE_MODEL_FAMILY: ${{ secrets.MIDSCENE_MODEL_FAMILY }}
-          MIDSCENE_MODEL_NAME: ${{ secrets.MIDSCENE_MODEL_NAME }}
-          MIDSCENE_OPENAI_INIT_CONFIG_JSON: ${{ secrets.MIDSCENE_OPENAI_INIT_CONFIG_JSON }}
         run: ${{ inputs.run }}
       - name: Upload coverage reports to Codecov
         if: ${{ inputs.upload-codecov }}

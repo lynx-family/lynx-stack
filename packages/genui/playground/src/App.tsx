@@ -11,12 +11,11 @@ import {
 
 import { Button } from './components/Button.js';
 import { Moon, Sun } from './components/Icon.js';
-import { AIChatPage } from './pages/AIChatPage.js';
 import { BenchPage } from './pages/BenchPage.js';
 import { ComponentsPage } from './pages/catalog/ComponentsPage.js';
+import { ChatPage } from './pages/chat/ChatPage.js';
 import { DemosListPage } from './pages/demos/DemosListPage.js';
 import { DemosPage } from './pages/demos/DemosPage.js';
-import { OpenUICreatePage } from './pages/OpenUICreatePage.js';
 import type { Route, Tab } from './utils/appRoute.js';
 import {
   DEFAULT_ROUTE_HASH,
@@ -48,8 +47,10 @@ const A2UI_TABS: TabDef[] = [
 const OPENUI_TABS: TabDef[] = [
   { id: 'create', label: 'Create' },
   { id: 'examples', label: 'Examples' },
-  { id: 'components', label: 'Components' },
+  { id: 'catalog', label: 'Catalog' },
 ];
+
+const MCP_APPS_TABS: TabDef[] = [{ id: 'create', label: 'Create' }];
 
 function ensureDefaultRouteHash(): void {
   if (!isEmptyRouteHash(window.location.hash)) return;
@@ -118,7 +119,12 @@ export function App() {
   const forcedTheme = useMemo(() => getForcedTheme(), []);
 
   const protocol = route.protocol;
-  const tabs = protocol.name === 'openui' ? OPENUI_TABS : A2UI_TABS;
+  let tabs = A2UI_TABS;
+  if (protocol.name === 'mcp-apps') {
+    tabs = MCP_APPS_TABS;
+  } else if (protocol.name === 'openui') {
+    tabs = OPENUI_TABS;
+  }
 
   useLayoutEffect(() => {
     ensureDefaultRouteHash();
@@ -149,6 +155,10 @@ export function App() {
   }, [protocol.name]);
 
   const handleProtocolSelect = useCallback((name: ProtocolName) => {
+    if (name === 'mcp-apps') {
+      window.location.hash = buildRouteHash(name, 'create');
+      return;
+    }
     // When switching to OpenUI and current tab is A2UI-only, fallback to examples.
     const tab = name === 'openui' && route.tab === 'bench'
       ? 'examples'
@@ -171,11 +181,20 @@ export function App() {
       );
     }
 
+    const createPage = (
+      <ChatPage
+        key={`${protocol.name}-create`}
+        protocol={protocol}
+        theme={theme}
+      />
+    );
+
+    if (protocol.name === 'mcp-apps') return createPage;
+
     if (protocol.name === 'openui') {
       switch (route.tab) {
         case 'create':
-          return <OpenUICreatePage key='openui-create' protocol={protocol} />;
-        case 'components':
+          return createPage;
         case 'catalog':
           return (
             <ComponentsPage
@@ -226,7 +245,6 @@ export function App() {
             />
           );
       case 'catalog':
-      case 'components':
         return (
           <ComponentsPage
             key='components'
@@ -236,7 +254,7 @@ export function App() {
           />
         );
       default:
-        return <AIChatPage key='create' protocol={protocol} theme={theme} />;
+        return createPage;
     }
   }, [
     embedded,
@@ -257,6 +275,9 @@ export function App() {
       >
         <option value='a2ui'>A2UI v{PROTOCOLS.a2ui.version}</option>
         <option value='openui'>OpenUI v{PROTOCOLS.openui.version}</option>
+        <option value='mcp-apps'>
+          MCP Apps v{PROTOCOLS['mcp-apps'].version}
+        </option>
       </select>
     </div>
   );

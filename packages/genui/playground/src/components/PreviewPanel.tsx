@@ -29,6 +29,7 @@ import { DEFAULT_A2UI_DEMO_URL } from '../utils/demoUrl.js';
 import type { Protocol } from '../utils/protocol.js';
 import { publishOpenUIPayload } from '../utils/publishPayload.js';
 import {
+  buildMcpAppsRenderUrl,
   buildOpenUIRenderUrl,
   buildRenderUrl,
   canInlineOpenUIRenderUrl,
@@ -86,6 +87,7 @@ interface A2UIPreviewSource {
   actionMocks?: Record<string, unknown>;
   actionMocksUrl?: string;
   demoId?: string;
+  liveAction?: boolean;
   /**
    * When true, build the render URL in playback mode so the Lynx app waits
    * for `A2UI_PLAYBACK_PROGRESS` events instead of streaming on its own.
@@ -96,7 +98,15 @@ interface A2UIPreviewSource {
 interface OpenUIPreviewSource {
   kind: 'openui';
   rawText: string;
+  theme?: 'light' | 'dark';
+  liveAction?: boolean;
   playbackMode?: boolean;
+}
+
+export interface McpAppsPreviewSource {
+  kind: 'mcp-apps';
+  mcpAppData: unknown;
+  theme?: 'light' | 'dark';
 }
 
 interface PlaceholderPreviewSource {
@@ -107,6 +117,7 @@ interface PlaceholderPreviewSource {
 export type PreviewPanelSource =
   | A2UIPreviewSource
   | OpenUIPreviewSource
+  | McpAppsPreviewSource
   | PlaceholderPreviewSource;
 
 export type PreviewMetricName = 'fcp' | 'fmp' | 'tti' | 'render';
@@ -596,6 +607,7 @@ export function PreviewPanel(props: PreviewPanelProps) {
           theme: previewSource.theme,
           demoId: previewSource.demoId,
           speed,
+          liveAction: previewSource.liveAction,
           playbackMode: previewSource.playbackMode,
         },
         baseUrl,
@@ -714,6 +726,7 @@ export function PreviewPanel(props: PreviewPanelProps) {
               actionMocksUrl,
               theme: previewSource.theme,
               speed,
+              liveAction: previewSource.liveAction,
               playbackMode: previewSource.playbackMode,
             },
             baseUrl,
@@ -761,13 +774,46 @@ export function PreviewPanel(props: PreviewPanelProps) {
       return;
     }
 
+    if (previewSource.kind === 'mcp-apps') {
+      setRenderUrl(buildMcpAppsRenderUrl({
+        mcpAppData: previewSource.mcpAppData,
+        theme: previewSource.theme,
+      }, baseUrl));
+      setRenderShareUrl(buildMcpAppsRenderUrl({
+        mcpAppData: previewSource.mcpAppData,
+        theme: previewSource.theme,
+      }, shareBaseUrl));
+
+      if (!rspeedyDevUrl) {
+        setLynxDevUrl('');
+        return;
+      }
+      const nativeUrl = new URL(rspeedyDevUrl);
+      nativeUrl.pathname = nativeUrl.pathname.replace(
+        'a2ui.lynx',
+        'mcp-apps.lynx',
+      );
+      nativeUrl.searchParams.set(
+        'mcpAppData',
+        JSON.stringify(previewSource.mcpAppData),
+      );
+      if (previewSource.theme) {
+        nativeUrl.searchParams.set('theme', previewSource.theme);
+      }
+      setLynxDevUrl(nativeUrl.toString());
+      return;
+    }
+
     const inlineUrl = buildOpenUIRenderUrl({
       rawText: previewSource.rawText,
+      theme: previewSource.theme,
       speed,
+      liveAction: previewSource.liveAction,
       playbackMode: previewSource.playbackMode,
     }, baseUrl);
     const inlineShareUrl = buildOpenUIRenderUrl({
       rawText: previewSource.rawText,
+      theme: previewSource.theme,
       speed,
     }, shareBaseUrl);
     const canInline = canInlineOpenUIRenderUrl(inlineUrl)
@@ -785,6 +831,9 @@ export function PreviewPanel(props: PreviewPanelProps) {
       }
       const u = new URL(rspeedyDevUrl);
       u.pathname = u.pathname.replace('a2ui.lynx', 'openui.lynx');
+      if (previewSource.theme) {
+        u.searchParams.set('theme', previewSource.theme);
+      }
       if ('rawTextUrl' in payload) {
         u.searchParams.set('rawTextUrl', payload.rawTextUrl);
         u.searchParams.delete('rawText');
@@ -826,11 +875,14 @@ export function PreviewPanel(props: PreviewPanelProps) {
         setOpenUILynxDevUrl({ rawTextUrl });
         setRenderUrl(buildOpenUIRenderUrl({
           rawTextUrl,
+          theme: previewSource.theme,
           speed,
+          liveAction: previewSource.liveAction,
           playbackMode: previewSource.playbackMode,
         }, baseUrl));
         setRenderShareUrl(buildOpenUIRenderUrl({
           rawTextUrl,
+          theme: previewSource.theme,
           speed,
         }, shareBaseUrl));
       } catch (err) {
@@ -1200,6 +1252,7 @@ export function PreviewPanel(props: PreviewPanelProps) {
             {showSimulationBar
                 && previewSource
                 && previewSource.kind !== 'placeholder'
+                && previewSource.kind !== 'mcp-apps'
               ? (
                 <PreviewSimulationBar
                   speed={speed}

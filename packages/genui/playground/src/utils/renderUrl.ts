@@ -40,7 +40,14 @@ export interface OpenUIRenderInit {
   theme?: 'light' | 'dark';
   speed?: number;
   instant?: boolean;
+  /** When true, actions are forwarded to the parent frame for live agent handling. */
+  liveAction?: boolean;
   playbackMode?: boolean;
+}
+
+export interface McpAppsRenderInit {
+  mcpAppData: unknown;
+  theme?: 'light' | 'dark';
 }
 
 function buildRenderInitData(init: RenderInit): Record<string, unknown> {
@@ -155,10 +162,34 @@ export function buildOpenUIRenderUrl(
     url.searchParams.set('instant', '1');
   }
 
+  if (init.liveAction) {
+    url.searchParams.set('liveAction', '1');
+  }
+
   if (init.playbackMode) {
     url.searchParams.set('playbackMode', '1');
   }
 
+  return url.toString();
+}
+
+export function buildMcpAppsRenderUrl(
+  init: McpAppsRenderInit,
+  baseUrl: string,
+): string {
+  const url = new URL('render.html', baseUrl);
+  url.searchParams.set('protocol', 'mcp-apps');
+  url.searchParams.set('demoUrl', './mcp-apps.web.js');
+  url.searchParams.set(
+    RENDER_INIT_DATA_QUERY_PARAM,
+    encodeBase64Url(JSON.stringify({
+      protocol: 'mcp-apps',
+      demoUrl: './mcp-apps.web.js',
+      mcpAppData: init.mcpAppData,
+      ...(init.theme ? { theme: init.theme } : {}),
+    })),
+  );
+  if (init.theme) url.searchParams.set('theme', init.theme);
   return url.toString();
 }
 

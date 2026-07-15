@@ -12,6 +12,9 @@ use swc_plugins_shared::jsx_helpers::{
   jsx_attr_value, jsx_children_to_expr, jsx_is_list, jsx_is_list_item,
 };
 
+mod legacy_slot;
+pub use legacy_slot::LegacyListVisitor;
+
 pub struct ListVisitor<C>
 where
   C: Comments,

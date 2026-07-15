@@ -7,13 +7,19 @@ export function ProtocolSwitch(props: {
   protocol: Protocol;
 }) {
   const { protocol } = props;
+  let label = 'MCP Apps';
+  if (protocol.name === 'a2ui') {
+    label = 'A2UI';
+  } else if (protocol.name === 'openui') {
+    label = 'OpenUI';
+  }
   return (
     <div className='protocolSwitch' role='group' aria-label='Protocol version'>
       <button
         type='button'
         className='protocolButton active'
       >
-        {protocol.name === 'a2ui' ? 'A2UI' : 'OpenUI'} v{protocol.version}
+        {label} v{protocol.version}
       </button>
     </div>
   );

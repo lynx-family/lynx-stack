@@ -1729,7 +1729,7 @@ export function BenchPage() {
   }, [report]);
 
   const topJudge = useMemo(() => {
-    if (!report) return null;
+    if (!report || report.capabilities?.judge === 'disabled') return null;
     return [...report.summaries].sort(
       (a, b) => b.avgJudgeScore - a.avgJudgeScore,
     )[0] ?? null;

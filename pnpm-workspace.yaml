@@ -107,6 +107,10 @@ catalogs:
   rsbuild:
     "@rsbuild/core": "2.1.4"
 
+  # Rslib monorepo packages
+  rslib:
+    "@rslib/core": "0.23.2"
+
   # Rspack monorepo packages
   rspack:
     "@rspack/cli": "2.1.3"

@@ -19,6 +19,7 @@ import { injectCalledByNative } from './snapshot/lynx/calledByNative.js';
 import { setupLynxEnv } from './snapshot/lynx/env.js';
 import { injectLepusMethods } from './snapshot/lynx/injectLepusMethods.js';
 import { initTimingAPI } from './snapshot/lynx/performance.js';
+import { injectPrepareLazyBundleMTS } from './snapshot/lynx/prepareLazyBundleMTS.js';
 import { injectTt } from './snapshot/lynx/tt.js';
 import { injectUpdateMTRefInitValue } from './snapshot/worklet/ref/updateInitValue.js';
 import { lynxQueueMicrotask } from './utils.js';
@@ -37,6 +38,12 @@ if (typeof __MAIN_THREAD__ !== 'undefined' && __MAIN_THREAD__) {
   injectCalledByNative();
   injectUpdateMainThread();
   injectUpdateMTRefInitValue();
+  if (
+    typeof __LAZY_BUNDLE_FETCHER__ !== 'undefined'
+    && __LAZY_BUNDLE_FETCHER__ === 'FetchBundle'
+  ) {
+    injectPrepareLazyBundleMTS();
+  }
   // `injectLepusMethods` exposes the snapshot <-> element mapping that preact
   // devtools relies on, so it must also run when devtools is enabled in
   // production via `REACT_DEVTOOL=true`.

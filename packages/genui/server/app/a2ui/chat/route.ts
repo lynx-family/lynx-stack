@@ -3,16 +3,16 @@
 // LICENSE file in the root directory of this source tree.
 import { getA2UIAgentService } from '../../../service/a2ui-agent';
 import {
-  errorMessage,
-  extractUsageMetrics,
-  pickChatOptions,
-  readJsonBodyWithLimit,
   validateConversation,
   validateMessages,
-} from '../_shared';
+} from '../../common/chat-validation';
+import { corsPreflight, jsonWithCors } from '../../common/cors';
+import { errorMessage } from '../../common/errors';
+import { checkRateLimit, rateLimitJsonResponse } from '../../common/rate-limit';
+import { readJsonBodyWithLimit } from '../../common/request';
+import { extractUsageMetrics } from '../../common/usage';
+import { pickA2UIChatOptions } from '../_shared';
 import type { A2UIChatBody } from '../_shared';
-import { corsPreflight, jsonWithCors } from '../cors';
-import { checkRateLimit, rateLimitJsonResponse } from '../rate-limit';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
@@ -56,7 +56,7 @@ export async function POST(req: Request) {
   }
 
   const service = getA2UIAgentService();
-  const opts = pickChatOptions(body);
+  const opts = pickA2UIChatOptions(body);
 
   try {
     if (body.validate === false) {

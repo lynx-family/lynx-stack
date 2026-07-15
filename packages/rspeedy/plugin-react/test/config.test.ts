@@ -2357,6 +2357,7 @@ describe('Config', () => {
         "experimental_isLazyBundle": false,
         "filename": "main.lynx.bundle",
         "intermediate": ".rspeedy/main",
+        "lazyBundleFetcher": "QueryComponent",
         "removeDescendantSelectorScope": true,
         "targetSdkVersion": "3.2",
       }

@@ -3,17 +3,16 @@
 // LICENSE file in the root directory of this source tree.
 import type { A2UICatalog } from '../../../agent/a2ui-catalog';
 import { getA2UIAgentService } from '../../../service/a2ui-agent';
-import type { ChatMessage } from '../../../service/a2ui-agent';
+import type { ChatMessage } from '../../../service/common/types';
 import {
   MAX_MESSAGE_CHARS,
-  errorMessage,
-  pickChatOptions,
-  readJsonBodyWithLimit,
-  validateAction,
   validateConversation,
-} from '../_shared';
-import { corsPreflight, jsonWithCors } from '../cors';
-import { checkRateLimit, rateLimitJsonResponse } from '../rate-limit';
+} from '../../common/chat-validation';
+import { corsPreflight, jsonWithCors } from '../../common/cors';
+import { errorMessage } from '../../common/errors';
+import { checkRateLimit, rateLimitJsonResponse } from '../../common/rate-limit';
+import { readJsonBodyWithLimit } from '../../common/request';
+import { pickA2UIChatOptions, validateAction } from '../_shared';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
@@ -101,7 +100,7 @@ export async function POST(req: Request) {
     content: userContent,
   };
 
-  const opts = pickChatOptions(body);
+  const opts = pickA2UIChatOptions(body);
   try {
     const validated = await service.generateValidated(
       [userMessage],

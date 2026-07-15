@@ -292,7 +292,7 @@ export class LynxDebugMetadataPluginImpl {
 
           compilation.updateAsset(
             debugMetadataAssetName,
-            new RawSource(JSON.stringify(metadata, null, 2)),
+            new RawSource(JSON.stringify(metadata)),
           )
 
           return args

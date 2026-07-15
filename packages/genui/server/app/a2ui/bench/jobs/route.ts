@@ -5,9 +5,13 @@
 import { normalizeBenchJobRequest } from '../../../../service/a2ui-bench-request';
 import { startBenchJob } from '../../../../service/a2ui-bench-runner';
 import { getBenchJobStore } from '../../../../service/a2ui-bench-store';
-import { clientOverridesAllowed, readJsonBodyWithLimit } from '../../_shared';
-import { corsPreflight, jsonWithCors } from '../../cors';
-import { checkRateLimit, rateLimitJsonResponse } from '../../rate-limit';
+import { corsPreflight, jsonWithCors } from '../../../common/cors';
+import { clientOverridesAllowed } from '../../../common/provider-options';
+import {
+  checkRateLimit,
+  rateLimitJsonResponse,
+} from '../../../common/rate-limit';
+import { readJsonBodyWithLimit } from '../../../common/request';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';

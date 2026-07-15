@@ -12,7 +12,12 @@ describe('loadLazyBundle', () => {
       vi
         .unstubAllGlobals()
         .stubGlobal('__LEPUS__', true)
-        .stubGlobal('__MAIN_THREAD__', true);
+        .stubGlobal('__MAIN_THREAD__', true)
+        // Force the QueryComponent fetcher path. Production builds get
+        // `__LAZY_BUNDLE_FETCHER__` stamped in by DefinePlugin (default
+        // `'FetchBundle'`); unit tests don't run DefinePlugin so the
+        // global is undefined here unless we stub it explicitly.
+        .stubGlobal('__LAZY_BUNDLE_FETCHER__', 'QueryComponent');
     });
 
     test('should not have lynx.loadLazyBundle when not used', () => {
@@ -213,6 +218,8 @@ describe('loadLazyBundle', () => {
         .stubGlobal('__MAIN_THREAD__', false)
         .stubGlobal('__BACKGROUND__', true)
         .stubGlobal('__JS__', true)
+        // Force the QueryComponent fetcher path (see main-thread block).
+        .stubGlobal('__LAZY_BUNDLE_FETCHER__', 'QueryComponent')
         .stubGlobal('lynx', { QueryComponent })
         .stubGlobal('lynxCoreInject', { tt: { getDynamicComponentExports } });
     });

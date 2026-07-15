@@ -1,5 +1,6 @@
-fn main() -> Result<(), Box<dyn std::error::Error>> {
-  let report = lynx_headless_rust_test_runner::run_react_fixture()?;
+#[tokio::main(flavor = "current_thread")]
+async fn main() -> Result<(), Box<dyn std::error::Error>> {
+  let report = lynx_headless_rust_test_runner::run_react_fixture().await?;
   println!(
     "captured {}x{} software frame: visible_pixels={} white_pixels={} gradient_pixels={} logo_pixels={} arrow_pixels={} screenshot={}",
     report.width,

@@ -28,7 +28,7 @@ function getOpenUIParseError(raw: string): string {
 export const OPENUI_COMPONENT_CATALOG_SOURCE = {
   categories: OPENUI_CATEGORIES,
   components: OPENUI_COMPONENT_CATALOG,
-  routeSegment: 'components',
+  routeSegment: 'catalog',
   headerTitle: 'OpenUI Catalog',
   headerDescription:
     'Browse the OpenUI DSL component catalog, prop contracts, and usage snippets.',

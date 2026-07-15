@@ -3,8 +3,10 @@
 // LICENSE file in the root directory of this source tree.
 import { describe, expect, test } from '@rstest/core';
 
+import { decodeBase64Url } from './base64url.js';
 import {
   OPENUI_INLINE_RENDER_URL_MAX_LENGTH,
+  buildMcpAppsRenderUrl,
   buildOpenUIRenderUrl,
   canInlineOpenUIRenderUrl,
 } from './renderUrl.js';
@@ -36,9 +38,39 @@ describe('OpenUI render URLs', () => {
       rawText: 'root = Stack([])',
       theme: 'dark',
       instant: true,
+      liveAction: true,
     }, 'https://lynx-stack.dev/genui/');
 
     expect(new URL(url).searchParams.get('theme')).toBe('dark');
     expect(new URL(url).searchParams.get('instant')).toBe('1');
+    expect(new URL(url).searchParams.get('liveAction')).toBe('1');
+  });
+});
+
+describe('MCP Apps render URLs', () => {
+  test('encodes MCP Apps data for the Lynx renderer', () => {
+    const mcpAppData = {
+      renderer: 'weather',
+      input: { city: 'Hangzhou' },
+      result: { summary: 'Sunny', weather: { city: 'Hangzhou' } },
+    };
+    const url = new URL(buildMcpAppsRenderUrl({
+      mcpAppData,
+      theme: 'dark',
+    }, 'https://lynx-stack.dev/genui/'));
+
+    expect(url.searchParams.get('protocol')).toBe('mcp-apps');
+    expect(url.searchParams.get('demoUrl')).toBe('./mcp-apps.web.js');
+    expect(url.searchParams.get('theme')).toBe('dark');
+    expect(url.searchParams.has('liveAction')).toBe(false);
+    const initData = url.searchParams.get('initData');
+    expect(initData).toBeTruthy();
+    if (!initData) return;
+    expect(JSON.parse(decodeBase64Url(initData))).toEqual({
+      protocol: 'mcp-apps',
+      demoUrl: './mcp-apps.web.js',
+      mcpAppData,
+      theme: 'dark',
+    });
   });
 });

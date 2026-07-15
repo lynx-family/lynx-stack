@@ -1,0 +1,51 @@
+{
+  "name": "@lynx-js/genui-mcp-apps",
+  "version": "0.0.0",
+  "private": true,
+  "description": "Protocol-agnostic ReactLynx host primitives for MCP Apps renderers.",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/lynx-family/lynx-stack.git",
+    "directory": "packages/genui/mcp-apps"
+  },
+  "license": "Apache-2.0",
+  "sideEffects": [
+    "**/*.css"
+  ],
+  "type": "module",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.js"
+    },
+    "./render": {
+      "types": "./dist/render/index.d.ts",
+      "default": "./dist/render/index.js"
+    },
+    "./protocol": {
+      "types": "./dist/protocol.d.ts",
+      "default": "./dist/protocol.js"
+    },
+    "./render/styles.css": "./dist/render/styles.css",
+    "./styles.css": "./dist/render/styles.css",
+    "./package.json": "./package.json"
+  },
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "build": "pnpm run clean && tsc --project tsconfig.build.json && cp src/render/styles.css dist/render/styles.css",
+    "clean": "node -e \"require('node:fs').rmSync('dist',{recursive:true,force:true});\"",
+    "test": "rstest"
+  },
+  "devDependencies": {
+    "@lynx-js/react": "workspace:*",
+    "@lynx-js/types": "4.0.0",
+    "@rstest/core": "catalog:rstest"
+  },
+  "peerDependencies": {
+    "@lynx-js/react": ">=0.121.0"
+  }
+}

@@ -166,7 +166,13 @@ export class SnapshotInstance {
   }
 
   ensureElements(): void {
-    const { create, slot, isListHolder, cssId, entryName } = this.__snapshot_def;
+    const { create, slot, isListHolder, cssId } = this.__snapshot_def;
+    // FetchBundle intentionally removes CSS scope of entryName
+    const useFetchBundle = typeof __LAZY_BUNDLE_FETCHER__ !== 'undefined'
+      && __LAZY_BUNDLE_FETCHER__ === 'FetchBundle';
+    const entryName = useFetchBundle
+      ? undefined
+      : this.__snapshot_def.entryName;
     const elements = create!(this);
     this.__elements = elements;
     this.__element_root = elements[0];

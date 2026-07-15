@@ -54,6 +54,20 @@ impl Env {
     }
   }
 
+  pub fn set_devtool_app_info(&self, name: &str, value: &str) -> Result<()> {
+    let name = c_string(name, "devtool_app_info_name")?;
+    let value = c_string(value, "devtool_app_info_value")?;
+    unsafe {
+      (self.library.lynx_env_set_devtool_app_info)(name.as_ptr(), value.as_ptr());
+    }
+    Ok(())
+  }
+
+  pub fn connect_devtool(&self, url: &str) -> Result<bool> {
+    let url = c_string(url, "devtool_url")?;
+    Ok(unsafe { (self.library.lynx_env_connect_devtool)(url.as_ptr()) != 0 })
+  }
+
   pub fn is_devtool_enabled(&self) -> bool {
     unsafe { (self.library.lynx_env_is_devtool_enabled)() != 0 }
   }

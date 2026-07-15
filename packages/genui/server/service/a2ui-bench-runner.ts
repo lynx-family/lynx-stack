@@ -3,7 +3,6 @@
 // LICENSE file in the root directory of this source tree.
 
 import { getA2UIAgentService } from './a2ui-agent';
-import type { ChatMessage } from './a2ui-agent';
 import { resolveBenchCatalog } from './a2ui-bench-catalog';
 import { runBenchPreview } from './a2ui-bench-preview';
 import { getBenchJobStore } from './a2ui-bench-store';
@@ -18,6 +17,7 @@ import type {
   BenchRunResult,
   BenchScenarioRequest,
 } from './a2ui-bench-types';
+import type { ChatMessage } from './common/types';
 
 interface BenchRunItem {
   group: BenchGroupRequest;
@@ -381,7 +381,7 @@ function buildReport(
       renderMetrics: request.settings.renderMetricsEnabled
         ? 'enabled'
         : 'disabled',
-      judge: request.settings.judgeEnabled ? 'enabled' : 'disabled',
+      judge: 'disabled',
     },
     warnings,
     groups: request.groups,

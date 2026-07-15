@@ -63,6 +63,15 @@ fn runtime_env_loads_and_process_settings_are_callable() {
   env.set_logbox_enabled(original_logbox);
 
   assert_interior_nul(env.set_icu_data_path("bad\0icu"), "icu_data_path");
+  assert_interior_nul(
+    env.set_devtool_app_info("bad\0name", "value"),
+    "devtool_app_info_name",
+  );
+  assert_interior_nul(
+    env.set_devtool_app_info("name", "bad\0value"),
+    "devtool_app_info_value",
+  );
+  assert_interior_nul(env.connect_devtool("bad\0url").map(|_| ()), "devtool_url");
 }
 
 #[test]
@@ -102,6 +111,7 @@ fn runtime_builds_headless_view_and_validates_bundle_errors() {
     view.send_global_event("bad\0event", "{}"),
     "global_event_name",
   );
+  assert_interior_nul(view.send_touch_event("bad\0event", 1), "touch_event_name");
   view
     .update_data_json("{\"count\":1}", Some("{\"theme\":\"dark\"}"))
     .expect("update data JSON");
