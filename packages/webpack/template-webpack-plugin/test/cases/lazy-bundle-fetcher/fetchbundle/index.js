@@ -13,7 +13,7 @@ void import(/* webpackChunkName: 'foo:main-thread' */ './foo.mts.js');
 void import(/* webpackChunkName: 'foo:background' */ './foo.bts.js');
 
 it('FetchBundle: lazy bundle tasm.json carries customSections shape', async () => {
-  const tasmJSONPath = resolve(__dirname, '.rspeedy/async/foo/tasm.json');
+  const tasmJSONPath = resolve(__dirname, '.rspeedy/lazy-bundle/foo/tasm.json');
   expect(existsSync(tasmJSONPath)).toBeTruthy();
 
   const tasm = JSON.parse(await readFile(tasmJSONPath, 'utf-8'));

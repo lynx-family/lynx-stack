@@ -13,7 +13,7 @@ it('should have correct chunk content', async () => {
 });
 
 it('should have both foo and bar', async () => {
-  const tasmJSONPath = join(__dirname, 'async', 'test', 'tasm.json');
+  const tasmJSONPath = join(__dirname, 'lazy-bundle', 'test', 'tasm.json');
   expect(existsSync(tasmJSONPath));
   const content = await readFile(tasmJSONPath, 'utf-8');
 

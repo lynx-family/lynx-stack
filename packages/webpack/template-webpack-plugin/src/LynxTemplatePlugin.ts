@@ -187,7 +187,7 @@ export interface LynxTemplatePluginOptions {
   /**
    * The filename of the lazy bundle.
    *
-   * @defaultValue `'async/[name].[fullhash].bundle'`
+   * @defaultValue `'lazy-bundle/[name].[fullhash].bundle'`
    */
   lazyBundleFilename?: string;
 
@@ -419,7 +419,7 @@ export class LynxTemplatePlugin {
   static defaultOptions: Readonly<Required<LynxTemplatePluginOptions>> = Object
     .freeze<Required<LynxTemplatePluginOptions>>({
       filename: '[name].bundle',
-      lazyBundleFilename: 'async/[name].[fullhash].bundle',
+      lazyBundleFilename: 'lazy-bundle/[name].[fullhash].bundle',
       intermediate: '.rspeedy',
       chunks: 'all',
       excludeChunks: [],
@@ -523,7 +523,7 @@ class LynxTemplatePluginImpl {
 
   /**
    * Route a lazy bundle's intermediate JS chunk to
-   * `<intermediateRoot>/async/<name>/<layer>.js`, co-located with the bundle's
+   * `<intermediateRoot>/lazy-bundle/<name>/<layer>.js`, co-located with the bundle's
    * other intermediate outputs (mirroring `<intermediateRoot>/main/`).
    * Non-lazy chunks keep the default `output.chunkFilename`. Installed once
    * per compiler — the plugin is instantiated once per entry.
@@ -556,7 +556,7 @@ class LynxTemplatePluginImpl {
             id,
           );
           if (layoutName !== undefined) {
-            return `${prefix}async/${layoutName}.js`;
+            return `${prefix}lazy-bundle/${layoutName}.js`;
           }
         }
         return typeof original === 'function'
@@ -956,7 +956,7 @@ class LynxTemplatePluginImpl {
             asyncAssetsInfoByGroups,
             chunkGroups,
             filenameTemplate,
-            path.join(intermediateRoot, 'async', filename),
+            path.join(intermediateRoot, 'lazy-bundle', filename),
             /** isAsync */ true,
           );
         },
@@ -1418,7 +1418,7 @@ function collectChunkGroupResources(
 /**
  * Derive a lazy bundle name from the resolved module paths. The name is
  * relative to the compiler context with `..` segments replaced, so the
- * bundle never escapes the `async/` output directory.
+ * bundle never escapes the `lazy-bundle/` output directory.
  */
 function resourcesToLazyBundleName(
   resources: string[],

@@ -9,6 +9,6 @@ it('should have async templates', async () => {
   const { foo } = await importPromise;
   await expect(foo()).resolves.toBe(`foo bar baz`);
 
-  const asyncTemplates = await readdir(resolve(__dirname, 'async'));
+  const asyncTemplates = await readdir(resolve(__dirname, 'lazy-bundle'));
   expect(asyncTemplates).toHaveLength(3); // foo, bar, baz
 });

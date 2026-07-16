@@ -19,7 +19,7 @@ it('should have chunkName', async () => {
 });
 
 it('should not have duplicated chunk', async () => {
-  const files = await readdir(join(__dirname, '.rspeedy/async'), {
+  const files = await readdir(join(__dirname, '.rspeedy/lazy-bundle'), {
     recursive: true,
   });
   expect(
@@ -38,7 +38,7 @@ it('should have async chunks', () => {
     expect(['foo', 'bar', 'baz'].every(entry =>
       existsSync(join(
         __dirname,
-        `.rspeedy/async/${entry}.js/background.js`,
+        `.rspeedy/lazy-bundle/${entry}.js/background.js`,
       ))
     )).toBeTruthy();
   }

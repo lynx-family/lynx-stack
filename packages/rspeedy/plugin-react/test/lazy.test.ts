@@ -354,7 +354,7 @@ describe('Lazy', () => {
           backgroundJSContent,
         )![1]
       expect(cssHotUpdateList).toMatchInlineSnapshot(
-        `"[["_react_background_fixtures_lazy-bundle_LazyComponent_tsx",".rspeedy/async/fixtures/lazy-bundle/LazyComponent.tsx/background.css.hot-update.json"],["main",".rspeedy/main/main.css.hot-update.json"]]"`,
+        `"[["_react_background_fixtures_lazy-bundle_LazyComponent_tsx",".rspeedy/lazy-bundle/fixtures/lazy-bundle/LazyComponent.tsx/background.css.hot-update.json"],["main",".rspeedy/main/main.css.hot-update.json"]]"`,
       )
     } finally {
       rstest.unstubAllEnvs()
@@ -463,7 +463,7 @@ describe('Lazy', () => {
       await rsbuild.createDevServer()
       await waitCompilationDone()
       expect(appServiceJSContent).toMatchInlineSnapshot(
-        `"(function(){'use strict';function n({tt}){tt.define('/app-service.js',function(e,module,_,i,l,u,a,c,s,f,p,d,h,v,g,y,lynx){module.exports=lynx.requireModule("/.rspeedy/async/fixtures/lazy-bundle/LazyComponent.tsx/background.js",globDynamicComponentEntry?globDynamicComponentEntry:'__Card__');});return tt.require('/app-service.js');}return{init:n}})()"`,
+        `"(function(){'use strict';function n({tt}){tt.define('/app-service.js',function(e,module,_,i,l,u,a,c,s,f,p,d,h,v,g,y,lynx){module.exports=lynx.requireModule("/.rspeedy/lazy-bundle/fixtures/lazy-bundle/LazyComponent.tsx/background.js",globDynamicComponentEntry?globDynamicComponentEntry:'__Card__');});return tt.require('/app-service.js');}return{init:n}})()"`,
       )
 
       // Modify the fixtures/lazy-bundle/LazyComponent.tsx file
@@ -476,7 +476,7 @@ describe('Lazy', () => {
       await waitCompilationDone()
 
       expect(appServiceJSContent).toMatchInlineSnapshot(
-        `"(function(){'use strict';function n({tt}){tt.define('/app-service.js',function(e,module,_,i,l,u,a,c,s,f,p,d,h,v,g,y,lynx){module.exports=lynx.requireModule("/.rspeedy/async/fixtures/lazy-bundle/LazyComponent.tsx/background.js",globDynamicComponentEntry?globDynamicComponentEntry:'__Card__');});return tt.require('/app-service.js');}return{init:n}})()"`,
+        `"(function(){'use strict';function n({tt}){tt.define('/app-service.js',function(e,module,_,i,l,u,a,c,s,f,p,d,h,v,g,y,lynx){module.exports=lynx.requireModule("/.rspeedy/lazy-bundle/fixtures/lazy-bundle/LazyComponent.tsx/background.js",globDynamicComponentEntry?globDynamicComponentEntry:'__Card__');});return tt.require('/app-service.js');}return{init:n}})()"`,
       )
     } finally {
       if (tmpContent !== undefined) {

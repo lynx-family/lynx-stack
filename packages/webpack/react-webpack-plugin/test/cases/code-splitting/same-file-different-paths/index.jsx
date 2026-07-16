@@ -16,7 +16,7 @@ it('should resolve the same file imported via different paths', async () => {
 });
 
 it('should generate a single lazy bundle inside the async directory', async () => {
-  const bundles = (await readdir(join(__dirname, 'async'), {
+  const bundles = (await readdir(join(__dirname, 'lazy-bundle'), {
     recursive: true,
   })).filter(name => name.endsWith('.bundle'));
 

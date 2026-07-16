@@ -100,7 +100,7 @@ export function applyEntry(
         let templateFilename: string
         // `lazyBundleFilename` is only set when `bundle` is a function.
         // Otherwise `LynxTemplatePlugin` keeps its default
-        // (`async/[name].[fullhash].bundle`).
+        // (`lazy-bundle/[name].[fullhash].bundle`).
         let lazyBundleFilename: string | undefined
         if (typeof bundleFilename === 'function') {
           // A single function controls both the main bundle and the lazy

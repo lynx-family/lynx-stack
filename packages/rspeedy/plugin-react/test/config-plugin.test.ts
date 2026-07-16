@@ -137,7 +137,7 @@ describe('config plugin', () => {
     expect(templatePlugin?.options.filename).toBe('main.lynx.bundle')
 
     // The string form does not override `lazyBundleFilename`, so
-    // `LynxTemplatePlugin` keeps its default (`async/[name].[fullhash].bundle`).
+    // `LynxTemplatePlugin` keeps its default (`lazy-bundle/[name].[fullhash].bundle`).
     // @ts-expect-error private field
     // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
     expect(templatePlugin?.options.lazyBundleFilename).toBeUndefined()

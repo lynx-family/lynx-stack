@@ -55,7 +55,7 @@
     "sass-loader": "^16.0.7"
   },
   "peerDependencies": {
-    "@lynx-js/template-webpack-plugin": "^0.13.0"
+    "@lynx-js/template-webpack-plugin": "^0.14.0"
   },
   "engines": {
     "node": ">=18"

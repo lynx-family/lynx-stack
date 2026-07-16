@@ -9,14 +9,14 @@ it('should have async debug-info.json', async () => {
   const { foo } = await importPromise;
   await expect(foo()).resolves.toBe(`foo bar baz`);
 
-  const asyncAssets = await readdir(resolve(__dirname, '.rspeedy/async'));
+  const asyncAssets = await readdir(resolve(__dirname, '.rspeedy/lazy-bundle'));
   expect(asyncAssets).toContain('foo.js');
   expect(asyncAssets).toContain('bar.js');
   expect(asyncAssets).toContain('baz.js');
 });
 
 it('should have correct main-thread content', async () => {
-  const root = resolve(__dirname, '.rspeedy/async');
+  const root = resolve(__dirname, '.rspeedy/lazy-bundle');
   const foo = resolve(root, 'foo.js/tasm.json');
   const bar = resolve(root, 'bar.js/tasm.json');
   const baz = resolve(root, 'baz.js/tasm.json');

@@ -92,7 +92,7 @@ describe('stripDebugMetadataFromOutput', () => {
     const child = fakeChild({
       assets: [
         '.rspeedy/main/debug-metadata.json',
-        '.rspeedy/async/lazy-comp.jsx/debug-metadata.json',
+        '.rspeedy/lazy-bundle/lazy-comp.jsx/debug-metadata.json',
         '.rspeedy/main/main-thread.js',
       ],
     })
@@ -100,7 +100,7 @@ describe('stripDebugMetadataFromOutput', () => {
     child.trigger()
     expect(child.deleted).toEqual([
       '.rspeedy/main/debug-metadata.json',
-      '.rspeedy/async/lazy-comp.jsx/debug-metadata.json',
+      '.rspeedy/lazy-bundle/lazy-comp.jsx/debug-metadata.json',
     ])
   })
 

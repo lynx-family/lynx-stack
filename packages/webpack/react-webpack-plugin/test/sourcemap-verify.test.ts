@@ -172,7 +172,8 @@ describe('Lazy Bundle Sourcemap Verification', () => {
     ).toContain('main__main-thread.js');
     expect(
       mainThreadFiles.some(name =>
-        name.includes('.rspeedy/async/') && name.endsWith('main-thread.js')
+        name.includes('.rspeedy/lazy-bundle/')
+        && name.endsWith('main-thread.js')
       ),
       'Should capture at least one async main-thread asset from dynamic import',
     ).toBe(true);
@@ -185,7 +186,8 @@ describe('Lazy Bundle Sourcemap Verification', () => {
       nonLazyAsyncConfig,
       path.join(__dirname, 'cases/main-thread/lazy-bundle-sourcemap'),
       name =>
-        name.includes('.rspeedy/async/') && name.endsWith('main-thread.js'),
+        name.includes('.rspeedy/lazy-bundle/')
+        && name.endsWith('main-thread.js'),
     );
 
     const assetNames = [...capturedAssets.keys()];
