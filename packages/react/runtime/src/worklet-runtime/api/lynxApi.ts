@@ -1,8 +1,26 @@
 // Copyright 2024 The Lynx Authors. All rights reserved.
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
+import { initGlobalEventEmitter } from './globalEventEmitter.js';
 import { querySelector, querySelectorAll } from './lepusQuerySelector.js';
 import { isSdkVersionGt } from '../utils/version.js';
+
+const GLOBAL_EVENT_EMITTER_MODULE = 'GlobalEventEmitter';
+
+function installUnsupportedGlobalEventEmitter(): void {
+  const originalGetJSModule: ((name: string) => unknown) | undefined = typeof lynx.getJSModule === 'function'
+    ? lynx.getJSModule.bind(lynx)
+    : undefined;
+
+  lynx.getJSModule = ((name: string): unknown => {
+    if (name === GLOBAL_EVENT_EMITTER_MODULE) {
+      throw new Error(
+        'GlobalEventEmitter in main thread script requires Lynx sdk version 4.2',
+      );
+    }
+    return originalGetJSModule?.(name);
+  }) as typeof lynx.getJSModule;
+}
 
 function initApiEnv(): void {
   // @ts-expect-error type
@@ -37,6 +55,12 @@ function initApiEnv(): void {
 
   // @ts-expect-error type
   globalThis.cancelAnimationFrame = lynx.cancelAnimationFrame as (requestId: number) => void;
+
+  if (isSdkVersionGt(4, 1)) {
+    initGlobalEventEmitter();
+  } else {
+    installUnsupportedGlobalEventEmitter();
+  }
 }
 
 export { initApiEnv };
