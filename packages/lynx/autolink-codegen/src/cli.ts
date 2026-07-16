@@ -50,7 +50,7 @@ function parseArgs(argv: string[]): CliOptions {
 function printHelp(): void {
   console.info(`Usage: lynx-autolink-codegen [--root <dir>]
 
-Generate Lynx library JS, Android, and iOS specs from types/**/*.d.ts.
+Generate Lynx library JS, Android, iOS, and HarmonyOS specs from types/**/*.d.ts.
 
 Options:
   --root, -r <dir>  Library package root. Defaults to the current directory.

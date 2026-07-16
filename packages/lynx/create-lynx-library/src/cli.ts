@@ -74,19 +74,21 @@ const LIBRARY_FEATURE_LABELS: Record<LibraryFeature, string> = {
   service: 'Service',
 };
 const LIBRARY_FEATURE_HINTS: Record<LibraryFeature, string> = {
-  'native-module': 'JS bridge APIs for Android and iOS platform targets',
+  'native-module': 'JS bridge APIs for Android, iOS, and HarmonyOS targets',
   'napi-native-module': 'shared C++ N-API native module generated from typings',
-  element: 'native UI element for Android, iOS, and shared C++ targets',
+  element: 'native UI element for Android, iOS, HarmonyOS, and shared C++',
   service: 'native service implementation registered globally',
 };
 const LIBRARY_PLATFORM_LABELS: Record<LibraryPlatform, string> = {
   android: 'Android',
   ios: 'iOS',
+  harmony: 'HarmonyOS',
   lynxtron: 'Lynxtron',
 };
 const LIBRARY_PLATFORM_HINTS: Record<LibraryPlatform, string> = {
   android: 'Android native source directory and manifest entry',
   ios: 'iOS native source directory and podspec',
+  harmony: 'HarmonyOS HAR package and global registration provider',
   lynxtron: 'shared C++ sources and Node-API loader for Lynxtron',
 };
 
@@ -208,19 +210,20 @@ Options:
   --help, -h                   Show this help message.
 
 Library features:
-  native-module                JS bridge APIs for Android and iOS platform targets.
+  native-module                JS bridge APIs for Android, iOS, and HarmonyOS platform targets.
   napi-native-module           Shared C++ N-API native module generated from typings.
-  element                      Native UI element for Android, iOS, and shared C++ targets.
+  element                      Native UI element for Android, iOS, HarmonyOS, and shared C++ targets.
   service                      Native service implementation registered globally.
 
 Native platforms:
   android                      Android native source directory and manifest entry.
   ios                          iOS native source directory and podspec.
+  harmony                      HarmonyOS HAR package and global registration provider.
   lynxtron                     Shared C++ sources and Node-API loader for Lynxtron.
 
 Examples:
   create-lynx-library
-  create-lynx-library lynx-button --features native-module,napi-native-module,element,service --platforms android,ios,lynxtron
+  create-lynx-library lynx-button --features native-module,napi-native-module,element,service --platforms android,ios,harmony,lynxtron
   create-lynx-library lynx-kit --features all --platforms all
 `);
 }
