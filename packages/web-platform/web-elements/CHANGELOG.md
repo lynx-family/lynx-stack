@@ -1,5 +1,11 @@
 # @lynx-js/web-elements
 
+## 0.12.6
+
+### Patch Changes
+
+- Fix `x-text` custom inline truncation so inline `x-view` children are measured as one inline box instead of double-counting their descendants as extra lines. ([#2917](https://github.com/lynx-family/lynx-stack/pull/2917))
+
 ## 0.12.5
 
 ### Patch Changes

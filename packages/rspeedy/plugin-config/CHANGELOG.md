@@ -1,5 +1,11 @@
 # @lynx-js/config-rsbuild-plugin
 
+## 0.1.1
+
+### Patch Changes
+
+- Support Rspeedy v0.16.x. ([#2931](https://github.com/lynx-family/lynx-stack/pull/2931))
+
 ## 0.1.0
 
 ### Minor Changes

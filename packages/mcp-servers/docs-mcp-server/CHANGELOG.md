@@ -1,5 +1,11 @@
 # @lynx-js/docs-mcp-server
 
+## 0.2.4
+
+### Patch Changes
+
+- Add a disabled `dummyTool` so Codex can discover tool support during MCP startup without exposing any real tools. ([#2919](https://github.com/lynx-family/lynx-stack/pull/2919))
+
 ## 0.2.3
 
 ### Patch Changes

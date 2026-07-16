@@ -1,5 +1,11 @@
 # @lynx-js/react-umd
 
+## 0.123.0
+
+### Patch Changes
+
+- Build web-encoded `react-{dev,prod}.web.bundle` variants (via `EXTERNAL_BUNDLE_TARGET=web`), decodable by `@lynx-js/web-core` and exposed as the `./dev-web` and `./prod-web` exports, alongside the native `.lynx.bundle`. ([#2934](https://github.com/lynx-family/lynx-stack/pull/2934))
+
 ## 0.122.1
 
 ## 0.122.0

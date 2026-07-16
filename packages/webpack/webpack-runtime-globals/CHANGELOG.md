@@ -1,5 +1,13 @@
 # @lynx-js/webpack-runtime-globals
 
+## 0.0.7
+
+### Patch Changes
+
+- Add the lazy-bundle runtime globals the FetchBundle loader relies on: the ([#2584](https://github.com/lynx-family/lynx-stack/pull/2584))
+  async-chunk id/mode maps (`lynx_aci` / `lynx_acm`) and the `processEvalResult`
+  host hook.
+
 ## 0.0.6
 
 ### Patch Changes

@@ -1,5 +1,14 @@
 # @lynx-js/chunk-loading-webpack-plugin
 
+## 0.4.1
+
+### Patch Changes
+
+- Thread the requesting host and the import `mode` through the lazy-bundle runtime ([#2584](https://github.com/lynx-family/lynx-stack/pull/2584))
+  so it can route the eval result and honor sync/async loading.
+- Updated dependencies [[`fec4237`](https://github.com/lynx-family/lynx-stack/commit/fec4237b2257455a40a68f33864fb713c147f7d4)]:
+  - @lynx-js/webpack-runtime-globals@0.0.7
+
 ## 0.4.0
 
 ### Minor Changes

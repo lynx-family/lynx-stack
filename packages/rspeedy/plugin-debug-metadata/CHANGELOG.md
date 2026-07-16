@@ -1,5 +1,15 @@
 # @lynx-js/debug-metadata-rsbuild-plugin
 
+## 0.2.0
+
+### Minor Changes
+
+- Keep lazy bundle source maps in `debug-metadata.json` now that async chunk groups are unnamed: the collectors resolve a bundle's chunk groups from the files its encode data enumerates instead of looking them up by chunk-group name. ([#2961](https://github.com/lynx-family/lynx-stack/pull/2961))
+
+### Patch Changes
+
+- Minify `debug-metadata.json` to avoid invalid string length when development large projects ([#2966](https://github.com/lynx-family/lynx-stack/pull/2966))
+
 ## 0.1.2
 
 ### Patch Changes

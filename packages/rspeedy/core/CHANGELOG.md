@@ -1,5 +1,29 @@
 # @lynx-js/rspeedy
 
+## 0.16.0
+
+### Minor Changes
+
+- Upgrade Rsbuild v2.1.4 with Rspack v2.1.3. ([#2931](https://github.com/lynx-family/lynx-stack/pull/2931))
+
+### Patch Changes
+
+- Use the IPv4 loopback address for development asset URLs when no non-loopback IP address is available. ([#2973](https://github.com/lynx-family/lynx-stack/pull/2973))
+
+- Fix dev server host resolution for generated asset prefixes. ([#2935](https://github.com/lynx-family/lynx-stack/pull/2935))
+
+  Rspeedy now falls back from IPv4 to IPv6 when resolving the default dev host, keeps the configured server host when no local IP is found, and applies `server.host` updates from other plugins to the final dev asset prefix.
+
+- Expose Lynx bundle routes to preview server hooks. ([#2930](https://github.com/lynx-family/lynx-stack/pull/2930))
+
+  `onAfterStartPreviewServer` now receives the same Lynx bundle route entries as `onAfterStartDevServer`, so plugins can discover preview bundle entries from the `routes` parameter.
+
+- Updated dependencies [[`34318ea`](https://github.com/lynx-family/lynx-stack/commit/34318ea3432b6484a383707458ed9c4ee19e2097), [`fec4237`](https://github.com/lynx-family/lynx-stack/commit/fec4237b2257455a40a68f33864fb713c147f7d4), [`2b5d83a`](https://github.com/lynx-family/lynx-stack/commit/2b5d83a4b8e3c1f5329de9d9fe7539d38e33e420), [`dc37d60`](https://github.com/lynx-family/lynx-stack/commit/dc37d603f5eb1b359a13f2b876d56e6f6efea64f)]:
+  - @lynx-js/cache-events-webpack-plugin@0.2.0
+  - @lynx-js/chunk-loading-webpack-plugin@0.4.1
+  - @lynx-js/debug-metadata-rsbuild-plugin@0.2.0
+  - @lynx-js/web-rsbuild-server-middleware@0.22.2
+
 ## 0.15.2
 
 ### Patch Changes
