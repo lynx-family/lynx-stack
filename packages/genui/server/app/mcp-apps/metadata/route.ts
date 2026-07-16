@@ -6,9 +6,6 @@ import { MCP_APPS_PROTOCOL_METADATA } from '@lynx-js/genui-mcp-apps/protocol';
 
 import { corsPreflight, jsonWithCors } from '../../common/cors';
 
-export const runtime = 'nodejs';
-export const dynamic = 'force-dynamic';
-
 export function OPTIONS(req: Request) {
   return corsPreflight(req);
 }

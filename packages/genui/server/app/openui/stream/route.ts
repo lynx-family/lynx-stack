@@ -15,9 +15,6 @@ import { readJsonBodyWithLimit } from '../../common/request';
 import { encodeSSE, sseHeaders } from '../../common/sse';
 import { createStreamLogger } from '../../common/stream-logger';
 
-export const runtime = 'nodejs';
-export const dynamic = 'force-dynamic';
-
 interface OpenUIChatBody {
   messages?: unknown;
   conversation?: unknown;

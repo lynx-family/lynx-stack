@@ -1,7 +1,7 @@
 # GenUI Server
 
-This package contains the Next.js server for GenUI agent APIs, including
-A2UI, OpenUI, and MCP Apps.
+This package contains the Rslib-built Node.js server for GenUI agent APIs,
+including A2UI, OpenUI, and MCP Apps.
 
 ## Deployment Model
 
@@ -128,3 +128,7 @@ Build and start the production server from this package:
 pnpm build
 pnpm start
 ```
+
+Rslib emits the production entry at `dist/index.js`. Runtime packages are
+bundled except for `@mastra/core`, which remains external and must be present
+in the production install together with its transitive dependencies.

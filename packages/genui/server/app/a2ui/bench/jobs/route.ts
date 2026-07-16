@@ -13,9 +13,6 @@ import {
 } from '../../../common/rate-limit';
 import { readJsonBodyWithLimit } from '../../../common/request';
 
-export const runtime = 'nodejs';
-export const dynamic = 'force-dynamic';
-
 export function OPTIONS(req: Request) {
   return corsPreflight(req);
 }

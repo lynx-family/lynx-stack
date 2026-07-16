@@ -2,8 +2,6 @@
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
 
-import { NextResponse } from 'next/server';
-
 const DEFAULT_ALLOWED_ORIGINS = new Set([
   'https://lynx-stack.dev',
 ]);
@@ -81,8 +79,8 @@ export function jsonWithCors(
   req: Request,
   body: unknown,
   init?: ResponseInit,
-): NextResponse {
-  return NextResponse.json(body, {
+): Response {
+  return Response.json(body, {
     ...init,
     headers: corsHeaders(req, init?.headers),
   });
