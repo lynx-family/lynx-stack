@@ -4,7 +4,10 @@
 
 import { getA2UIAgentService } from './a2ui-agent';
 import { resolveBenchCatalog } from './a2ui-bench-catalog';
-import { runBenchPreview } from './a2ui-bench-preview';
+import {
+  BROWSER_BENCH_PREVIEW_ENABLED,
+  runBenchPreview,
+} from './a2ui-bench-preview';
 import { getBenchJobStore } from './a2ui-bench-store';
 import type {
   BenchCatalogLabel,
@@ -379,6 +382,7 @@ function buildReport(
     capabilities: {
       agent: 'enabled',
       renderMetrics: request.settings.renderMetricsEnabled
+          && BROWSER_BENCH_PREVIEW_ENABLED
         ? 'enabled'
         : 'disabled',
       judge: 'disabled',
