@@ -14,11 +14,66 @@ import { createElement } from './createElement.js';
 import type { Cloneable, NativeApp } from '../../../types/index.js';
 import { LynxCrossThreadContext } from '../../LynxCrossThreadContext.js';
 
+export interface WebDevtoolEvent {
+  type: string;
+  data: string;
+}
+
+export interface WebDevtool {
+  dispatchEvent(event: WebDevtoolEvent): void;
+  addEventListener(
+    type: string,
+    listener: (event: WebDevtoolEvent) => void,
+  ): void;
+  removeEventListener(
+    type: string,
+    listener: (event: WebDevtoolEvent) => void,
+  ): void;
+}
+
+/**
+ * The web counterpart of the native Lynx devtool channel: a typed event bus
+ * between the card's background thread and the hosting page, backed by a
+ * dedicated MessagePort. API shape mirrors native `lynx.getDevtool()`
+ * (`dispatchEvent` / `addEventListener` with `{ type, data }` events) so
+ * devtools clients written against native Lynx work unchanged.
+ */
+function createWebDevtool(port: MessagePort): WebDevtool {
+  const listeners = new Map<string, Set<(event: WebDevtoolEvent) => void>>();
+  port.onmessage = (ev: MessageEvent) => {
+    const { type, data } = (ev.data ?? {}) as WebDevtoolEvent;
+    listeners.get(type)?.forEach((listener) => {
+      try {
+        listener({ type, data });
+      } catch (e) {
+        console.warn('[lynx-web-core] devtool listener failed:', e);
+      }
+    });
+  };
+  return {
+    dispatchEvent(event) {
+      port.postMessage({ type: event.type, data: event.data });
+    },
+    addEventListener(type, listener) {
+      let set = listeners.get(type);
+      if (!set) {
+        set = new Set();
+        listeners.set(type, set);
+      }
+      set.add(listener);
+    },
+    removeEventListener(type, listener) {
+      listeners.get(type)?.delete(listener);
+    },
+  };
+}
+
 export function createBackgroundLynx(
   globalProps: Cloneable,
   customSections: Record<string, Cloneable>,
   nativeApp: NativeApp,
   mainThreadRpc: Rpc,
+  devtoolMessagePort?: MessagePort,
 ) {
   const coreContext = new LynxCrossThreadContext({
     rpc: mainThreadRpc,
@@ -28,8 +83,18 @@ export function createBackgroundLynx(
   const fetchExternalBundle = mainThreadRpc.createCall(
     fetchExternalBundleEndpoint,
   );
+  const devtool = devtoolMessagePort
+    ? createWebDevtool(devtoolMessagePort)
+    : undefined;
   return {
     __globalProps: globalProps,
+    ...(devtool
+      ? {
+        getDevtool(): WebDevtool {
+          return devtool;
+        },
+      }
+      : {}),
     getJSModule(_moduleName: string): any {
     },
     getNativeApp(): NativeApp {

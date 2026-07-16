@@ -8,6 +8,13 @@ import type { NativeModulesMap } from './NativeModules.js';
 
 export interface WorkerStartMessage {
   mainThreadMessagePort: MessagePort;
+  /**
+   * A dedicated pipe between the hosting page and this card's background
+   * thread, exposed to the card as `lynx.getDevtool()` (the web counterpart
+   * of the native Lynx devtool channel). The paired port is available on the
+   * hosting page via `lynxView.devtoolMessagePort`.
+   */
+  devtoolMessagePort?: MessagePort;
   systemInfo?: Record<string, any>;
   initData: Cloneable;
   globalProps: Cloneable;

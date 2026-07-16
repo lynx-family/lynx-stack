@@ -340,6 +340,19 @@ export class LynxViewElement extends HTMLElement {
 
   /**
    * @public
+   * @property
+   * The hosting page's end of this card's devtool channel — the web
+   * counterpart of the native Lynx devtool pipe. The other end is exposed to
+   * the card's background thread as `lynx.getDevtool()`; messages are
+   * `{ type: string, data: string }` events. Available once the card has
+   * started rendering; `undefined` before that.
+   */
+  get devtoolMessagePort(): MessagePort | undefined {
+    return this.#instance?.backgroundThread.devtoolMessagePort;
+  }
+
+  /**
+   * @public
    * @method
    * update the `__initData` and trigger essential flow
    */

@@ -16,6 +16,7 @@ export function startBackgroundThread(
 ): void {
   const {
     mainThreadMessagePort,
+    devtoolMessagePort,
     napiModulesMap,
     nativeModulesMap,
     initData,
@@ -52,6 +53,7 @@ export function startBackgroundThread(
         customSections,
         nativeApp,
         mainThreadRpc,
+        devtoolMessagePort,
       );
       const {
         loadCard,

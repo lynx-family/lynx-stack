@@ -73,6 +73,20 @@ export class BackgroundThread implements AsyncDisposable {
   readonly jsContext: LynxCrossThreadContext;
   #messagePort?: MessagePort;
 
+  /**
+   * A dedicated pipe between the hosting page and this card's background
+   * thread — the web counterpart of the native Lynx devtool channel. The
+   * paired port is transferred to the background worker and exposed to the
+   * card as `lynx.getDevtool()`. Created in the constructor so the hosting
+   * page can take this end before (or after) the worker starts; MessagePort
+   * buffers messages until both ends are consumed.
+   */
+  readonly #devtoolChannel = new MessageChannel();
+
+  get devtoolMessagePort(): MessagePort {
+    return this.#devtoolChannel.port1;
+  }
+
   readonly postTimingFlags: RpcCallType<typeof postTimingFlagsEndpoint>;
   readonly sendGlobalEvent: RpcCallType<typeof sendGlobalEventEndpoint>;
   readonly publicComponentEvent: RpcCallType<
@@ -157,6 +171,7 @@ export class BackgroundThread implements AsyncDisposable {
     this.#webWorker.postMessage(
       {
         mainThreadMessagePort: messageChannel.port2,
+        devtoolMessagePort: this.#devtoolChannel.port2,
         systemInfo: this.#lynxViewInstance.systemInfo,
         initData,
         globalProps,
@@ -166,7 +181,7 @@ export class BackgroundThread implements AsyncDisposable {
         napiModulesMap,
         entryTemplateUrl: this.#lynxViewInstance.templateUrl,
       } as WorkerStartMessage,
-      [messageChannel.port2],
+      [messageChannel.port2, this.#devtoolChannel.port2],
     );
     this.#messagePort = messageChannel.port1;
     this.#rpc.setMessagePort(messageChannel.port1);
