@@ -2,6 +2,9 @@
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
 
+// Browser-backed bench previews are being split out of genui-server. Keep the
+// complete implementation disabled until a browser-capable service owns it.
+/*
 import type { Browser, LaunchOptions } from 'playwright-core';
 
 import type { BenchJobRequest, BenchScenarioRequest } from './a2ui-bench-types';
@@ -367,3 +370,6 @@ export async function runBenchPreview(
     await page?.close().catch(noop);
   }
 }
+*/
+
+export {};

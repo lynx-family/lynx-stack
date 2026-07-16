@@ -2,10 +2,8 @@
 applyTo: "packages/genui/server/service/a2ui-bench-*.ts,packages/genui/server/app/a2ui/bench/**,packages/genui/playground/src/pages/BenchPage.tsx,packages/genui/server/next.config.mjs"
 ---
 
-A2UI bench jobs that enable render metrics should render generated messages through the playground `render.html` URL supplied by the client or `A2UI_BENCH_PLAYGROUND_BASE_URL`. Surface browser, screenshot, and preview-render failures in the item errors so reports explain missing metrics.
+A2UI bench jobs still run agent generation and validation in `genui-server`, but browser-backed render metrics and screenshots are disabled while that capability is split into a browser-capable service. Keep browser metrics marked as disabled in reports.
 
-The A2UI server uses Playwright and Chromium to render previews. Keep `@sparticuz/chromium` and `playwright-core` in `serverExternalPackages` so Turbopack does not bundle those server-only dependencies.
+Do not add `@sparticuz/chromium` or `playwright-core` back to `packages/genui/server`. Keep the entire browser-backed implementation in `a2ui-bench-preview.ts` and its runner import and call sites commented until preview rendering moves to its dedicated service. Do not add a fallback preview implementation, capability flag, or configuration switch while it is disabled.
 
 Bench job event streams can sit in a long-running phase without producing run events. Keep the `/a2ui/bench/jobs/[jobId]/events` SSE response alive with heartbeat comments, and let native EventSource disconnects reconnect unless the server sends an explicit `event: error` payload. Otherwise proxies or serverless hosts may close an idle stream and the playground will lose a still-running job.
-
-Local A2UI bench runs with render metrics need a usable Chromium runtime for preview capture. Either install the Playwright browser cache or start the server with `CHROME_EXECUTABLE_PATH` or `PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH`. If preview rendering fails, the report will show zero render metrics with a browser launch error.
