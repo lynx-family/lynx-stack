@@ -10,6 +10,8 @@ It scans native module declarations annotated with `/** @lynxmodule */`, reads
   when `platforms.android` is declared
 - iOS `<ModuleName>Spec.h` and `<ModuleName>Spec.m` from
   `types/platform-native-module.d.ts`, when `platforms.ios` is declared
+- HarmonyOS `<ModuleName>Spec.ets` from
+  `types/platform-native-module.d.ts`, when `platforms.harmony` is declared
 - shared C++ N-API binding files from `types/napi-native-module.d.ts`
 
 For NAPI native modules, codegen creates a minimal user-owned N-API callback
@@ -22,6 +24,11 @@ as platform native module declarations.
 
 `lynx.lib.json` must declare at least one supported Native platform under
 `platforms`.
+
+HarmonyOS specs support `void`, `string`, `number`, `boolean`, and nullable
+primitive types. The generated file is written under
+`<packageDir>/src/main/ets/generated/`, where `packageDir` defaults to
+`harmony`.
 
 Run it from a library package:
 

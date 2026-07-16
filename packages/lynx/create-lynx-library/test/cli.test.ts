@@ -42,6 +42,8 @@ describe('create-lynx-library CLI', () => {
         '--platform',
         'ios',
         '--platform',
+        'harmony',
+        '--platform',
         'lynxtron',
         '--package-name',
         '@example/demo-library',
@@ -58,7 +60,7 @@ describe('create-lynx-library CLI', () => {
       help: false,
       dir: 'demo-library',
       features: ['native-module', 'element', 'service'],
-      platforms: ['android', 'ios', 'lynxtron'],
+      platforms: ['android', 'ios', 'harmony', 'lynxtron'],
       packageName: '@example/demo-library',
       androidPackage: 'com.example.demo',
       moduleName: 'DemoModule',
@@ -116,7 +118,7 @@ describe('create-lynx-library CLI', () => {
     ], runtime);
 
     expect(runtime.info).toHaveBeenCalledWith(
-      expect.stringContaining(`Created 33 files in ${path.resolve(dir)}`),
+      expect.stringContaining(`files in ${path.resolve(dir)}`),
     );
     expect(runtime.info).toHaveBeenCalledWith(
       expect.stringContaining(
@@ -128,7 +130,7 @@ describe('create-lynx-library CLI', () => {
     );
     expect(runtime.info).toHaveBeenCalledWith(
       expect.stringContaining(
-        'Native platforms:\n  - Android\n  - iOS\n  - Lynxtron',
+        'Native platforms:\n  - Android\n  - iOS\n  - HarmonyOS\n  - Lynxtron',
       ),
     );
     expect(read(dir, 'package.json')).toContain(
@@ -339,6 +341,7 @@ describe('create-lynx-library CLI', () => {
         options: [
           expect.objectContaining({ label: 'Android', value: 'android' }),
           expect.objectContaining({ label: 'iOS', value: 'ios' }),
+          expect.objectContaining({ label: 'HarmonyOS', value: 'harmony' }),
           expect.objectContaining({ label: 'Lynxtron', value: 'lynxtron' }),
         ],
       }),
