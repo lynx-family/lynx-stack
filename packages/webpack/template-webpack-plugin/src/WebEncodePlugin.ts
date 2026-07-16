@@ -104,8 +104,8 @@ export class WebEncodePlugin {
               : {},
             customSections: encodeOptions.customSections ?? {},
           };
-          if (encodeOptions.elementTemplate !== undefined) {
-            tasmJSONInfo['elementTemplate'] = encodeOptions.elementTemplate;
+          if (encodeOptions.elementTemplates !== undefined) {
+            tasmJSONInfo['elementTemplates'] = encodeOptions.elementTemplates;
           }
           const isExperimentalWebBinary = process
             .env['EXPERIMENTAL_USE_WEB_BINARY_TEMPLATE'];

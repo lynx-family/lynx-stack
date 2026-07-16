@@ -12,16 +12,44 @@ export class RawTextAttributes {
   static observedAttributes = ['text'];
   readonly #dom: HTMLElement;
   #text?: Text;
+  #connected = false;
 
   constructor(currentElement: HTMLElement) {
     this.#dom = currentElement;
   }
-  @registerAttributeHandler('text', true)
-  _handleText(newVal: string | null) {
-    this.#text?.remove();
+
+  #syncText(newVal: string | null) {
+    if (this.#dom.childNodes.length > 0) {
+      this.#dom.replaceChildren();
+      this.#text = undefined;
+    } else {
+      this.#text?.remove();
+      this.#text = undefined;
+    }
     if (newVal) {
       this.#text = new Text(newVal);
       this.#dom.append(this.#text);
+    }
+  }
+
+  connectedCallback() {
+    this.#connected = true;
+    if (this.#dom.hasAttribute('text')) {
+      // Template and SSR nodes can carry parsed or cloned light children before
+      // upgrade. Rebuild once on connect so the text attribute owns exactly one
+      // internal text node and disconnected template construction stays inert.
+      this.#syncText(this.#dom.getAttribute('text'));
+    }
+  }
+
+  dispose() {
+    this.#connected = false;
+  }
+
+  @registerAttributeHandler('text', true)
+  _handleText(newVal: string | null) {
+    if (this.#connected) {
+      this.#syncText(newVal);
     }
   }
 }

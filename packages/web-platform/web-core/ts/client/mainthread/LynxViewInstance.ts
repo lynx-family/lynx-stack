@@ -27,6 +27,7 @@ import { ExposureServices } from './ExposureServices.js';
 import { createElementAPI } from './elementAPIs/createElementAPI.js';
 import { createMainThreadGlobalAPIs } from './createMainThreadGlobalAPIs.js';
 import { templateManager } from './TemplateManager.js';
+import { ensureElementTemplateDefinitions } from './registerElementTemplates.js';
 import { loadAllWebElements } from '../webElementsDynamicLoader.js';
 // @ts-expect-error
 import IN_SHADOW_CSS_MODERN from '../../../css/in_shadow.css?inline';
@@ -155,6 +156,7 @@ export class LynxViewInstance implements AsyncDisposable {
         this.transformVW,
         this.transformVH,
         this.transformREM,
+        this.templateUrl,
       ),
       createMainThreadGlobalAPIs(
         this,
@@ -173,6 +175,18 @@ export class LynxViewInstance implements AsyncDisposable {
           this.templateUrl === currentUrl ? undefined : currentUrl,
         );
       }
+    }
+  }
+
+  onElementTemplatesReady(
+    currentUrl: string,
+  ) {
+    const wasmContext = this.mtsWasmBinding.wasmContext;
+    if (wasmContext) {
+      ensureElementTemplateDefinitions(
+        templateManager.getBundle(currentUrl),
+        style => wasmContext.transform_element_template_style(style),
+      );
     }
   }
 

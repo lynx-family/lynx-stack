@@ -59,6 +59,7 @@ export class TemplateManager {
         const lynxViewInstance = await lynxViewInstancePromise;
         lynxViewInstance.backgroundThread.markTiming('decode_start');
         lynxViewInstance.onPageConfigReady(config);
+        lynxViewInstance.onElementTemplatesReady(url);
         lynxViewInstance.onStyleInfoReady(url);
         lynxViewInstance.onMTSScriptsLoaded(url, config.isLazy === 'true');
         lynxViewInstance.onBTSScriptsLoaded(url);
@@ -70,6 +71,7 @@ export class TemplateManager {
         const lynxViewInstance = await lynxViewInstancePromise;
         lynxViewInstance.backgroundThread.markTiming('decode_start');
         lynxViewInstance.onPageConfigReady(config);
+        lynxViewInstance.onElementTemplatesReady(url);
         lynxViewInstance.onStyleInfoReady(url);
         lynxViewInstance.onMTSScriptsLoaded(url, config.isLazy === 'true');
         lynxViewInstance.onBTSScriptsLoaded(url);
@@ -252,6 +254,14 @@ export class TemplateManager {
           bundle.styleSheet = resource;
         }
         instance.onStyleInfoReady(url);
+        break;
+      }
+      case TemplateSectionLabel.ElementTemplates: {
+        const bundle = this.#loadingBundles.get(url);
+        if (bundle) {
+          bundle.elementTemplates = data;
+        }
+        instance.onElementTemplatesReady(url);
         break;
       }
       case TemplateSectionLabel.LepusCode: {

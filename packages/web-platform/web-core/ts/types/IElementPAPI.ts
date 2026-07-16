@@ -22,6 +22,59 @@ type ElementPAPIEventHandler =
   | { type: 'worklet'; value: unknown }
   | undefined;
 
+export type ElementTemplateSlotValue = HTMLElement | HTMLElement[];
+
+export type SerializedElementTemplateNode = {
+  uid: string | number;
+  templateKey?: string;
+  bundleUrl?: string;
+  tag?: string;
+  attributes?: Record<string, Cloneable>;
+  attributeSlots?: Cloneable[];
+  elementSlots?: Array<SerializedElementTemplateNode[] | null | undefined>;
+  options?: Record<string, Cloneable>;
+};
+
+export type CreateElementTemplatePAPI = (
+  templateKey: string,
+  bundleUrl: string | null | undefined,
+  attributeSlots?: Cloneable[] | null,
+  elementSlots?: Array<ElementTemplateSlotValue | null | undefined> | null,
+  uid?: string | number | null,
+) => HTMLElement;
+
+export type CreateTypedElementTemplatePAPI = (
+  tag: string,
+  attributes?: Record<string, Cloneable> | null,
+  elementSlots?: Array<ElementTemplateSlotValue | null | undefined> | null,
+  uid?: string | number | null,
+  options?: Record<string, Cloneable> | null,
+) => HTMLElement;
+
+export type SetAttributeOfElementTemplatePAPI = (
+  element: HTMLElement,
+  attributeSlotIndex: number,
+  value: Cloneable,
+  options?: Record<string, Cloneable> | null,
+) => void;
+
+export type InsertNodeToElementTemplatePAPI = (
+  element: HTMLElement,
+  slotIndex: number,
+  child: HTMLElement,
+  reference?: HTMLElement | null,
+) => void;
+
+export type RemoveNodeFromElementTemplatePAPI = (
+  element: HTMLElement,
+  slotIndex: number,
+  child: HTMLElement,
+) => void;
+
+export type SerializeElementTemplatePAPI = (
+  element: HTMLElement,
+) => SerializedElementTemplateNode;
+
 export type AddEventPAPI = (
   element: HTMLElement,
   eventType: LynxEventType,
@@ -402,6 +455,12 @@ export interface ElementPAPIs {
   __CreateElement: CreateElementPAPI;
   __CreatePage: CreatePagePAPI;
   __CreateList: CreateListPAPI;
+  __CreateElementTemplate: CreateElementTemplatePAPI;
+  __CreateTypedElementTemplate: CreateTypedElementTemplatePAPI;
+  __SetAttributeOfElementTemplate: SetAttributeOfElementTemplatePAPI;
+  __InsertNodeToElementTemplate: InsertNodeToElementTemplatePAPI;
+  __RemoveNodeFromElementTemplate: RemoveNodeFromElementTemplatePAPI;
+  __SerializeElementTemplate: SerializeElementTemplatePAPI;
   __SetAttribute: SetAttributePAPI & SetAttributePAPIUpdateListInfo;
   __UpdateListCallbacks: UpdateListCallbacksPAPI;
   __AddClass: AddClassPAPI;

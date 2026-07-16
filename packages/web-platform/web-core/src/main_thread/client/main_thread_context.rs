@@ -4,10 +4,12 @@
  * LICENSE file in the root directory of this source tree.
  */
 
+use super::element_template::ElementTemplateInstance;
 use super::style_manager::StyleManager;
 use crate::constants;
 use crate::js_binding::RustMainthreadContextBinding;
 use crate::main_thread::element_data::LynxElementData;
+use crate::style_transformer::token_transformer::TransformerConfig;
 use crate::template::template_sections::style_info::StyleSheetResource;
 use fnv::{FnvHashMap, FnvHashSet};
 use std::cell::RefCell;
@@ -24,8 +26,10 @@ pub struct MainThreadWasmContext {
   pub(super) page_element_unique_id: Option<usize>,
   pub(super) mts_binding: RustMainthreadContextBinding,
   pub(super) config_enable_css_selector: bool,
+  pub(super) transformer_config: TransformerConfig,
   pub(super) style_manager: StyleManager,
   pub(super) global_bind_events: FnvHashMap<String, FnvHashSet<usize>>,
+  pub(super) element_template_instances: FnvHashMap<usize, ElementTemplateInstance>,
 }
 
 impl MainThreadWasmContext {
@@ -47,6 +51,9 @@ impl MainThreadWasmContext {
     root_node: web_sys::Node,
     mts_binding: RustMainthreadContextBinding,
     config_enable_css_selector: bool,
+    config_transform_vw: bool,
+    config_transform_vh: bool,
+    config_transform_rem: bool,
   ) -> MainThreadWasmContext {
     let style_manager = StyleManager::new(root_node.clone());
     MainThreadWasmContext {
@@ -57,8 +64,14 @@ impl MainThreadWasmContext {
       timing_flags: vec![],
       page_element_unique_id: None,
       config_enable_css_selector,
+      transformer_config: TransformerConfig {
+        transform_vw: config_transform_vw,
+        transform_vh: config_transform_vh,
+        transform_rem: config_transform_rem,
+      },
       style_manager,
       global_bind_events: FnvHashMap::default(),
+      element_template_instances: FnvHashMap::default(),
     }
   }
 
@@ -88,14 +101,12 @@ impl MainThreadWasmContext {
     */
     let unique_id = self.unique_id_to_element_map.len();
 
-    let css_id = {
-      if let Some(parent_component_data) =
-        self.get_element_data_by_unique_id(parent_component_unique_id)
-      {
-        parent_component_data.borrow().component_css_id
-      } else {
-        0
-      }
+    let css_id = if let Some(parent_component_data) =
+      self.get_element_data_by_unique_id(parent_component_unique_id)
+    {
+      parent_component_data.borrow().component_css_id
+    } else {
+      0
     };
     if !self.config_enable_css_selector {
       let _ = dom.set_attribute(constants::LYNX_UNIQUE_ID_ATTRIBUTE, &unique_id.to_string());
@@ -154,5 +165,6 @@ impl MainThreadWasmContext {
         *element_data = None;
       }
     }
+    self.gc_element_template_instances();
   }
 }

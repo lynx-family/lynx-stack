@@ -4,6 +4,8 @@
 
 export const lynxUniqueIdAttribute = /*#__PURE__*/ 'l-uid' as const;
 
+export const lynxUniqueIdProperty = /*#__PURE__*/ '__lynxUniqueId' as const;
+
 export const cssIdAttribute = /*#__PURE__*/ 'l-css-id' as const;
 
 export const lynxEntryNameAttribute = /*#__PURE__*/ 'l-e-name' as const;
@@ -12,6 +14,9 @@ export const lynxDisposedAttribute = /*#__PURE__*/ 'l-disposed' as const;
 
 export const lynxElementTemplateMarkerAttribute =
   /*#__PURE__*/ 'l-template' as const;
+
+export const elementTemplateSlotAnchorPrefix =
+  /*#__PURE__*/ 'lynx-et-slot:' as const;
 
 export const lynxPartIdAttribute = /*#__PURE__*/ 'dirtyID' as const;
 

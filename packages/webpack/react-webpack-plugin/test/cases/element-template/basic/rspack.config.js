@@ -35,20 +35,22 @@ export default {
             compilation,
           );
           hooks.beforeEncode.tap('element-template-test', (args) => {
-            if (!args.encodeData.elementTemplate) {
-              throw new Error('elementTemplate should exist');
+            if (!args.encodeData.elementTemplates) {
+              throw new Error('elementTemplates should exist');
             }
             expect(
               args.encodeData.sourceContent.config.enableUnifyFixedBehavior,
             )
               .toBe(true);
-            const userTemplateIds = Object.keys(args.encodeData.elementTemplate)
+            const userTemplateIds = Object.keys(
+              args.encodeData.elementTemplates,
+            )
               .filter(id => id !== '_et_builtin_raw_text');
             expect(userTemplateIds).toHaveLength(1);
             expect(userTemplateIds[0]).toMatch(/^_et_[a-f0-9]{12}$/);
-            expect(Object.keys(args.encodeData.elementTemplate).sort())
+            expect(Object.keys(args.encodeData.elementTemplates).sort())
               .toEqual(['_et_builtin_raw_text', userTemplateIds[0]].sort());
-            expect(args.encodeData.elementTemplate[userTemplateIds[0]])
+            expect(args.encodeData.elementTemplates[userTemplateIds[0]])
               .toMatchInlineSnapshot(`
                 {
                   "attributesArray": [],
@@ -75,7 +77,7 @@ export default {
                   "type": "view",
                 }
               `);
-            expect(args.encodeData.elementTemplate._et_builtin_raw_text)
+            expect(args.encodeData.elementTemplates._et_builtin_raw_text)
               .toMatchInlineSnapshot(`
                 {
                   "attributesArray": [

@@ -137,6 +137,73 @@ test.describe('web-elements test suite', () => {
       await gotoWebComponentPage(page, title);
       await diffScreenShot(page, title, 'index');
     });
+    test('text-attribute-connect-sync', async ({ page }) => {
+      await gotoWebComponentPage(page, 'x-text/text-attribute-text');
+      const result = await page.evaluate(async () => {
+        const rawText = document.createElement('raw-text');
+        rawText.setAttribute('text', 'hello');
+        const disconnectedChildCount = rawText.childNodes.length;
+        rawText.append('stale');
+        document.body.append(rawText);
+        await Promise.resolve();
+        const connectedText = rawText.textContent;
+        const connectedChildCount = rawText.childNodes.length;
+
+        rawText.setAttribute('text', 'world');
+        const updatedText = rawText.textContent;
+        const updatedChildCount = rawText.childNodes.length;
+
+        rawText.remove();
+        rawText.setAttribute('text', 'reconnected');
+        const disconnectedUpdateText = rawText.textContent;
+        const disconnectedUpdateChildCount = rawText.childNodes.length;
+        document.body.append(rawText);
+        await Promise.resolve();
+        const reconnectedText = rawText.textContent;
+        const reconnectedChildCount = rawText.childNodes.length;
+
+        const template = document.createElement('template');
+        const templateRawText = document.createElement('raw-text');
+        templateRawText.setAttribute('text', 'slot-off');
+        const templateChildCount = templateRawText.childNodes.length;
+        template.content.append(templateRawText);
+        const clonedRawText = template.content.firstElementChild!.cloneNode(
+          true,
+        ) as HTMLElement;
+        document.body.append(clonedRawText);
+        await Promise.resolve();
+
+        return {
+          disconnectedChildCount,
+          connectedText,
+          connectedChildCount,
+          updatedText,
+          updatedChildCount,
+          disconnectedUpdateText,
+          disconnectedUpdateChildCount,
+          reconnectedText,
+          reconnectedChildCount,
+          templateChildCount,
+          clonedText: clonedRawText.textContent,
+          clonedChildCount: clonedRawText.childNodes.length,
+        };
+      });
+
+      expect(result).toEqual({
+        disconnectedChildCount: 0,
+        connectedText: 'hello',
+        connectedChildCount: 1,
+        updatedText: 'world',
+        updatedChildCount: 1,
+        disconnectedUpdateText: 'world',
+        disconnectedUpdateChildCount: 1,
+        reconnectedText: 'reconnected',
+        reconnectedChildCount: 1,
+        templateChildCount: 0,
+        clonedText: 'slot-off',
+        clonedChildCount: 1,
+      });
+    });
     test('x-text/view-in-text', async ({ page }, { title }) => {
       await gotoWebComponentPage(page, title);
       await diffScreenShot(page, title, 'index');

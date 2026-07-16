@@ -37,7 +37,7 @@ export interface EncodeOptions {
         encoding?: 'JsBytecode' | 'CSS';
         content: string | Record<string, unknown> | undefined;
     }>;
-    elementTemplate?: Record<string, unknown>;
+    elementTemplates?: Record<string, unknown>;
     // (undocumented)
     lepusCode: {
         root: string | undefined;

@@ -87,7 +87,7 @@ class StreamReader {
   }
 }
 
-function decodeJSONMap<T>(buffer: Uint8Array): Record<string, T> {
+function decodeJSON<T>(buffer: Uint8Array): T {
   const utf16Array = new Uint16Array(
     buffer.buffer,
     buffer.byteOffset,
@@ -268,8 +268,11 @@ async function handleStream(
     switch (label) {
       case TemplateSectionLabel.Configurations: {
         config = overrideConfig
-          ? { ...decodeJSONMap<string>(content), ...overrideConfig }
-          : decodeJSONMap<string>(content);
+          ? {
+            ...decodeJSON<Record<string, string>>(content),
+            ...overrideConfig,
+          }
+          : decodeJSON<Record<string, string>>(content);
         postMessage(
           { type: 'section', label, url, data: config } as MainMessage,
         );
@@ -333,9 +336,14 @@ async function handleStream(
         break;
       }
       case TemplateSectionLabel.ElementTemplates: {
+        const elementTemplates = decodeJSON(content);
         postMessage(
-          { type: 'section', label, url, data: content } as MainMessage,
-          [content.buffer],
+          {
+            type: 'section',
+            label,
+            url,
+            data: elementTemplates,
+          } as MainMessage,
         );
         break;
       }
@@ -496,10 +504,8 @@ async function handleJSON(
 
   // ElementTemplates
   if (json.elementTemplates && Object.keys(json.elementTemplates).length > 0) {
-    // TemplateManager expects Uint8Array for ElementTemplates.
-    // We can't support this easily for JSON.
     throw new Error(
-      'ElementTemplates in JSON artifacts are not supported yet.',
+      'ElementTemplates in JSON artifacts are not supported.',
     );
   }
 }

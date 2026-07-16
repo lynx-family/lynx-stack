@@ -156,6 +156,10 @@ export function createElementAPI(
     wasmContext.add_class(el[uniqueIdSymbol], className);
   };
 
+  const unsupportedElementTemplatePAPI = () => {
+    throw new Error('Element Template is only supported by web-core CSR.');
+  };
+
   return {
     globalThisAPIs: {
       // Pure/Throwing Methods
@@ -373,6 +377,12 @@ export function createElementAPI(
         );
         return { [uniqueIdSymbol]: id } as unknown as DecoratedHTMLElement;
       }) as CreateListPAPI,
+      __CreateElementTemplate: unsupportedElementTemplatePAPI as any,
+      __CreateTypedElementTemplate: unsupportedElementTemplatePAPI as any,
+      __SetAttributeOfElementTemplate: unsupportedElementTemplatePAPI as any,
+      __InsertNodeToElementTemplate: unsupportedElementTemplatePAPI as any,
+      __RemoveNodeFromElementTemplate: unsupportedElementTemplatePAPI as any,
+      __SerializeElementTemplate: unsupportedElementTemplatePAPI as any,
       __CreatePage: ((_componentID: string, componentCSSID: number) => {
         const id = wasmContext.create_element(
           'div',

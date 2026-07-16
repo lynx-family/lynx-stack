@@ -45,7 +45,7 @@ export default {
               compilation,
             );
             hooks.beforeEncode.tap('element-template-test', (args) => {
-              args.encodeData.elementTemplate = {};
+              args.encodeData.elementTemplates = {};
               return args;
             });
           },

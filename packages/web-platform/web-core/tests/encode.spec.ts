@@ -508,6 +508,32 @@ describe('encodeCSS', () => {
 });
 
 describe('webEncoder', () => {
+  function readSections(buffer: Uint8Array) {
+    const view = new DataView(buffer.buffer);
+    let offset = 8 + 4; // Magic + Version
+    const sections: {
+      label: number;
+      content: Uint8Array;
+    }[] = [];
+
+    while (offset < buffer.byteLength) {
+      const label = view.getUint32(offset, true);
+      offset += 4;
+      const length = view.getUint32(offset, true);
+      offset += 4;
+      const end = offset + length;
+      expect(end).toBeLessThanOrEqual(buffer.byteLength);
+      sections.push({
+        label,
+        content: buffer.slice(offset, end),
+      });
+      offset = end;
+    }
+
+    expect(offset).toBe(buffer.byteLength);
+    return sections;
+  }
+
   test('should skip elementTemplates section if empty', () => {
     const tasmJSON: TasmJSONInfo = {
       styleInfo: {},
@@ -520,18 +546,94 @@ describe('webEncoder', () => {
       elementTemplates: {},
     };
     const buffer = encode(tasmJSON);
-    const view = new DataView(buffer.buffer);
-    let offset = 8 + 4; // Magic + Version
+    const sections = readSections(buffer);
 
-    while (offset < buffer.byteLength) {
-      const label = view.getUint32(offset, true);
-      offset += 4;
-      const length = view.getUint32(offset, true);
-      offset += 4;
-      if (label === TemplateSectionLabel.ElementTemplates) {
-        throw new Error('ElementTemplates section should not be present');
-      }
-      offset += length;
-    }
+    expect(sections.map(section => section.label)).toEqual([
+      TemplateSectionLabel.Configurations,
+      TemplateSectionLabel.LepusCode,
+      TemplateSectionLabel.CustomSections,
+      TemplateSectionLabel.StyleInfo,
+      TemplateSectionLabel.Manifest,
+    ]);
+  });
+
+  test('should encode elementTemplates section when present', () => {
+    const tasmJSON: TasmJSONInfo = {
+      styleInfo: {},
+      manifest: {},
+      cardType: 'card',
+      appType: 'card',
+      pageConfig: {},
+      lepusCode: {},
+      customSections: {},
+      elementTemplates: {
+        _et_test: {
+          kind: 'element',
+          type: 'view',
+          attributesArray: [
+            { kind: 'static', key: 'id', value: 'target' },
+          ],
+        },
+      },
+    };
+    const buffer = encode(tasmJSON);
+    const sections = readSections(buffer);
+
+    expect(sections.map(section => section.label)).toEqual([
+      TemplateSectionLabel.Configurations,
+      TemplateSectionLabel.ElementTemplates,
+      TemplateSectionLabel.LepusCode,
+      TemplateSectionLabel.CustomSections,
+      TemplateSectionLabel.StyleInfo,
+      TemplateSectionLabel.Manifest,
+    ]);
+
+    const elementTemplatesSection = sections.find(
+      section => section.label === TemplateSectionLabel.ElementTemplates,
+    );
+    expect(elementTemplatesSection).toBeDefined();
+    const decoded = JSON.parse(
+      new TextDecoder('utf-16le').decode(elementTemplatesSection!.content),
+    );
+    expect(decoded).toEqual([
+      {
+        templateId: '_et_test',
+        compiledTemplate: {
+          kind: 'element',
+          type: 'view',
+          attributesArray: [
+            { kind: 'static', key: 'id', value: 'target' },
+          ],
+        },
+      },
+    ]);
+  });
+
+  test('should reject page in elementTemplates during encode', () => {
+    const tasmJSON: TasmJSONInfo = {
+      styleInfo: {},
+      manifest: {},
+      cardType: 'card',
+      appType: 'card',
+      pageConfig: {},
+      lepusCode: {},
+      customSections: {},
+      elementTemplates: {
+        _et_bad_page: {
+          kind: 'element',
+          type: 'view',
+          children: [
+            {
+              kind: 'element',
+              type: 'page',
+            },
+          ],
+        },
+      },
+    };
+
+    expect(() => encode(tasmJSON)).toThrow(
+      'Element template "_et_bad_page" cannot contain <page />.',
+    );
   });
 });

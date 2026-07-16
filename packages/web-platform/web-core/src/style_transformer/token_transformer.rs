@@ -7,7 +7,7 @@
 use crate::css_tokenizer::token_types::*;
 use std::borrow::Cow;
 
-#[derive(Default)]
+#[derive(Clone, Copy, Default)]
 pub struct TransformerConfig {
   pub transform_vw: bool,
   pub transform_vh: bool,

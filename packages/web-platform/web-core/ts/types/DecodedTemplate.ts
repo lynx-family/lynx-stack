@@ -5,12 +5,23 @@
  */
 
 import type { PageConfig } from './PageConfig.js';
-import type { StyleSheetResource } from '../../binary/client/client.js';
+import type {
+  ElementTemplateDefinition,
+  StyleSheetResource,
+} from '../../binary/client/client.js';
+import type { ElementTemplateAsset } from './ElementTemplateData.js';
+
+export interface DecodedElementTemplateDefinition {
+  template: HTMLTemplateElement;
+  definition: ElementTemplateDefinition;
+}
 
 export interface DecodedTemplate {
   config?: PageConfig;
   lepusCode?: Record<string, string>;
   customSections?: Record<string, any>;
   backgroundCode?: Record<string, string>;
+  elementTemplates?: ElementTemplateAsset[];
+  elementTemplateDefinitions?: Map<string, DecodedElementTemplateDefinition>;
   styleSheet?: StyleSheetResource;
 }

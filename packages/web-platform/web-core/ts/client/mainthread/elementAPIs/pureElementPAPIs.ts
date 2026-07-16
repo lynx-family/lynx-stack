@@ -6,6 +6,8 @@ import {
   HTML_TAG_TO_LYNX_TAG_MAP,
   lynxElementTemplateMarkerAttribute,
   lynxPartIdAttribute,
+  lynxUniqueIdAttribute,
+  lynxUniqueIdProperty,
   uniqueIdSymbol,
 } from '../../../constants.js';
 
@@ -208,7 +210,16 @@ export const __MarkPartElement: MarkPartElementPAPI = (
 
 export const __GetElementUniqueID: GetElementUniqueIDPAPI = /*#__PURE__*/ (
   element,
-) => (element && (element as DecoratedHTMLElement)[uniqueIdSymbol]) ?? -1;
+) => {
+  if (!element) return -1;
+  const uniqueId = (element as DecoratedHTMLElement)[uniqueIdSymbol]
+    ?? (element as any)[lynxUniqueIdProperty];
+  if (uniqueId != null) return Number(uniqueId);
+  const attributeUniqueId = element.getAttribute?.(
+    lynxElementTemplateMarkerAttribute,
+  ) ?? element.getAttribute?.(lynxUniqueIdAttribute);
+  return attributeUniqueId == null ? -1 : Number(attributeUniqueId);
+};
 
 export const __UpdateListCallbacks: UpdateListCallbacksPAPI = /*#__PURE__*/ (
   element,
