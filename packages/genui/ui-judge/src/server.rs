@@ -4,7 +4,9 @@
 
 use std::io;
 use std::net::{Ipv4Addr, Ipv6Addr, SocketAddr};
-use std::num::ParseIntError;
+use std::num::{NonZeroU16, ParseIntError};
+use std::panic::{catch_unwind, resume_unwind, AssertUnwindSafe};
+use std::sync::atomic::{AtomicBool, Ordering};
 use std::sync::mpsc::{self, Receiver, SyncSender, TrySendError};
 use std::sync::{Arc, Mutex};
 use std::thread::{self, JoinHandle};
@@ -35,10 +37,15 @@ const MAX_QUEUED_CAPTURES: usize = 8;
 const MAX_REQUEST_BYTES: usize = 16 * 1024 * 1024;
 const TCP_BACKLOG: i32 = 1_024;
 
+type PrepareJudgePageRequest =
+  fn(JudgePageRequest) -> Result<(JudgePageRequest, ModelClient), Box<UiJudgeResult>>;
+
 #[derive(Debug, Error)]
 pub enum ServerError {
-  #[error("PORT must be an integer from 0 through 65535, got {port:?}: {source}")]
+  #[error("PORT must be an integer from 1 through 65535, got {port:?}: {source}")]
   InvalidPort { port: String, source: ParseIntError },
+  #[error("UI Judge headless worker panicked")]
+  HeadlessWorkerPanicked,
   #[error("UI Judge server I/O failed: {0}")]
   Io(#[from] io::Error),
 }
@@ -46,6 +53,7 @@ pub enum ServerError {
 #[derive(Clone)]
 struct AppState {
   headless: Arc<HeadlessExecutor>,
+  prepare_request: PrepareJudgePageRequest,
 }
 
 #[derive(Debug, Deserialize)]
@@ -137,23 +145,57 @@ struct CaptureResponse {
 }
 
 struct HeadlessExecutor {
-  sender: Option<SyncSender<CaptureJob>>,
+  failure_receiver: Mutex<Option<oneshot::Receiver<()>>>,
+  healthy: Arc<AtomicBool>,
+  sender: Mutex<Option<SyncSender<CaptureJob>>>,
   worker: Mutex<Option<JoinHandle<()>>>,
 }
 
 impl HeadlessExecutor {
   fn new() -> io::Result<Self> {
+    Self::new_with_worker(run_headless_worker)
+  }
+
+  fn new_with_worker<F>(worker_main: F) -> io::Result<Self>
+  where
+    F: FnOnce(Runtime, Receiver<CaptureJob>) + Send + 'static,
+  {
     let runtime = tokio::runtime::Builder::new_current_thread()
       .enable_all()
       .build()?;
     let (sender, receiver) = mpsc::sync_channel(MAX_QUEUED_CAPTURES);
+    let (failure_sender, failure_receiver) = oneshot::channel();
+    let healthy = Arc::new(AtomicBool::new(true));
+    let worker_healthy = Arc::clone(&healthy);
     let worker = thread::Builder::new()
       .name("ui-judge-headless".to_string())
-      .spawn(move || run_headless_worker(runtime, receiver))?;
+      .spawn(move || {
+        let result = catch_unwind(AssertUnwindSafe(move || worker_main(runtime, receiver)));
+        if let Err(payload) = result {
+          worker_healthy.store(false, Ordering::Release);
+          let _ = failure_sender.send(());
+          resume_unwind(payload);
+        }
+      })?;
     Ok(Self {
-      sender: Some(sender),
+      failure_receiver: Mutex::new(Some(failure_receiver)),
+      healthy,
+      sender: Mutex::new(Some(sender)),
       worker: Mutex::new(Some(worker)),
     })
+  }
+
+  fn take_failure_receiver(&self) -> oneshot::Receiver<()> {
+    self
+      .failure_receiver
+      .lock()
+      .unwrap_or_else(|poisoned| poisoned.into_inner())
+      .take()
+      .expect("headless worker failure receiver can only be taken once")
+  }
+
+  fn is_healthy(&self) -> bool {
+    self.healthy.load(Ordering::Acquire)
   }
 
   async fn capture(
@@ -167,12 +209,19 @@ impl HeadlessExecutor {
       request,
       response,
     };
-    match self
+    let send_result = self
       .sender
+      .lock()
+      .unwrap_or_else(|poisoned| poisoned.into_inner())
       .as_ref()
-      .expect("headless sender exists until executor drop")
-      .try_send(job)
-    {
+      .map(|sender| sender.try_send(job));
+    let Some(send_result) = send_result else {
+      return Err(ApiError::new(
+        StatusCode::SERVICE_UNAVAILABLE,
+        "The UI Judge headless worker is shutting down.",
+      ));
+    };
+    match send_result {
       Ok(()) => {}
       Err(TrySendError::Full(_)) => {
         return Err(ApiError::new(
@@ -194,20 +243,32 @@ impl HeadlessExecutor {
       )
     })
   }
+
+  fn shutdown(&self) -> Result<(), ServerError> {
+    let sender = self
+      .sender
+      .lock()
+      .unwrap_or_else(|poisoned| poisoned.into_inner())
+      .take();
+    // Closing the only sender lets the worker drain accepted jobs and exit.
+    drop(sender);
+    let worker = self
+      .worker
+      .lock()
+      .unwrap_or_else(|poisoned| poisoned.into_inner())
+      .take();
+    if let Some(worker) = worker {
+      worker
+        .join()
+        .map_err(|_| ServerError::HeadlessWorkerPanicked)?;
+    }
+    Ok(())
+  }
 }
 
 impl Drop for HeadlessExecutor {
   fn drop(&mut self) {
-    // Closing the only sender lets the worker drain accepted jobs and exit.
-    drop(self.sender.take());
-    let worker = self
-      .worker
-      .get_mut()
-      .unwrap_or_else(|poisoned| poisoned.into_inner())
-      .take();
-    if let Some(worker) = worker {
-      let _ = worker.join();
-    }
+    let _ = self.shutdown();
   }
 }
 
@@ -229,15 +290,13 @@ fn run_headless_worker(runtime: Runtime, receiver: Receiver<CaptureJob>) {
 /// addresses. Native Lynx capture remains on one dedicated thread, while
 /// completed captures are scored concurrently by the Tokio and Rayon pools.
 pub async fn serve(port: &str) -> Result<(), ServerError> {
-  let port = port
-    .parse::<u16>()
-    .map_err(|source| ServerError::InvalidPort {
-      port: port.to_string(),
-      source,
-    })?;
+  let port = parse_port(port)?;
   let (ipv4_listener, ipv6_listener) = bind_listeners(port)?;
+  let headless = Arc::new(HeadlessExecutor::new()?);
+  let worker_failure = headless.take_failure_receiver();
   let state = AppState {
-    headless: Arc::new(HeadlessExecutor::new()?),
+    headless: Arc::clone(&headless),
+    prepare_request: prepare_judge_page_request,
   };
   let app = Router::new()
     .route("/health", get(health))
@@ -245,6 +304,10 @@ pub async fn serve(port: &str) -> Result<(), ServerError> {
     .layer(DefaultBodyLimit::max(MAX_REQUEST_BYTES))
     .with_state(state);
   let (shutdown_sender, shutdown_receiver) = watch::channel(false);
+  let worker_failure_task = tokio::spawn(trigger_shutdown_on_worker_failure(
+    worker_failure,
+    shutdown_sender.clone(),
+  ));
   let signal_task = tokio::spawn(async move {
     if let Err(error) = shutdown_signal().await {
       eprintln!("[ui-judge-server] failed to listen for shutdown: {error}");
@@ -261,8 +324,20 @@ pub async fn serve(port: &str) -> Result<(), ServerError> {
 
   signal_task.abort();
   let _ = signal_task.await;
-  result?;
-  Ok(())
+  let worker_result = headless.shutdown();
+  let _ = worker_failure_task.await;
+  worker_result?;
+  result.map(|_| ()).map_err(ServerError::from)
+}
+
+fn parse_port(port: &str) -> Result<u16, ServerError> {
+  port
+    .parse::<NonZeroU16>()
+    .map(NonZeroU16::get)
+    .map_err(|source| ServerError::InvalidPort {
+      port: port.to_string(),
+      source,
+    })
 }
 
 fn bind_listeners(port: u16) -> io::Result<(TcpListener, TcpListener)> {
@@ -289,8 +364,15 @@ fn configure_listener(socket: Socket, address: SocketAddr) -> io::Result<TcpList
   TcpListener::from_std(socket.into())
 }
 
-async fn health() -> Json<Value> {
-  Json(json!({ "status": "ok" }))
+async fn health(State(state): State<AppState>) -> Result<Json<Value>, ApiError> {
+  if state.headless.is_healthy() {
+    Ok(Json(json!({ "status": "ok" })))
+  } else {
+    Err(ApiError::new(
+      StatusCode::SERVICE_UNAVAILABLE,
+      "The UI Judge headless worker is unavailable.",
+    ))
+  }
 }
 
 async fn judge(
@@ -298,7 +380,7 @@ async fn judge(
   Json(request): Json<HttpJudgePageRequest>,
 ) -> Result<Json<UiJudgeResult>, ApiError> {
   let request = request.into_judge_request()?;
-  let (request, client) = match prepare_judge_page_request(request) {
+  let (request, client) = match (state.prepare_request)(request) {
     Ok(prepared) => prepared,
     Err(result) => return Ok(Json(*result)),
   };
@@ -325,6 +407,15 @@ async fn wait_for_shutdown(mut receiver: watch::Receiver<bool>) {
   }
 }
 
+async fn trigger_shutdown_on_worker_failure(
+  worker_failure: oneshot::Receiver<()>,
+  shutdown_sender: watch::Sender<bool>,
+) {
+  if worker_failure.await.is_ok() {
+    let _ = shutdown_sender.send(true);
+  }
+}
+
 #[cfg(unix)]
 async fn shutdown_signal() -> io::Result<()> {
   let mut terminate = tokio::signal::unix::signal(tokio::signal::unix::SignalKind::terminate())?;
@@ -342,6 +433,7 @@ async fn shutdown_signal() -> io::Result<()> {
 #[cfg(test)]
 mod tests {
   use super::*;
+  use crate::model::ModelOptions;
 
   fn http_request(url: &str) -> HttpJudgePageRequest {
     HttpJudgePageRequest {
@@ -353,6 +445,39 @@ mod tests {
       timeout_ms: None,
       url: url.to_string(),
     }
+  }
+
+  fn test_client() -> ModelClient {
+    ModelClient::new(ModelOptions {
+      api_key: Some("ui-judge-test".to_string()),
+      ..ModelOptions::default()
+    })
+    .expect("create test model client")
+  }
+
+  fn completed_result(url: String) -> UiJudgeResult {
+    UiJudgeResult {
+      alignment_score: None,
+      diff_image_base64: None,
+      different_blocks: None,
+      error: None,
+      reference_image_error: None,
+      visual_similarity: None,
+      reason: None,
+      reference: None,
+      score: 5,
+      steps: vec![],
+      summary: None,
+      total_blocks: None,
+      url,
+      warnings: vec![],
+    }
+  }
+
+  fn prepare_test_request(
+    request: JudgePageRequest,
+  ) -> Result<(JudgePageRequest, ModelClient), Box<UiJudgeResult>> {
+    Ok((request, test_client()))
   }
 
   #[test]
@@ -376,19 +501,107 @@ mod tests {
     assert_eq!(error.status, StatusCode::BAD_REQUEST);
   }
 
+  #[test]
+  fn rejects_port_zero() {
+    assert!(matches!(
+      parse_port("0"),
+      Err(ServerError::InvalidPort { .. })
+    ));
+  }
+
   #[tokio::test]
   async fn handles_independent_http_requests_concurrently() {
+    let executed_urls = Arc::new(Mutex::new(Vec::new()));
+    let worker_urls = Arc::clone(&executed_urls);
+    let headless = Arc::new(
+      HeadlessExecutor::new_with_worker(move |_runtime, receiver| {
+        while let Ok(job) = receiver.recv() {
+          let url = job.request.url.clone();
+          worker_urls
+            .lock()
+            .unwrap_or_else(|poisoned| poisoned.into_inner())
+            .push(url.clone());
+          let _ = job.response.send(CaptureResponse {
+            capture: Err(completed_result(url)),
+            client: job.client,
+            request: job.request,
+          });
+        }
+      })
+      .expect("start deterministic headless worker"),
+    );
     let state = AppState {
-      headless: Arc::new(HeadlessExecutor::new().expect("start headless worker")),
+      headless: Arc::clone(&headless),
+      prepare_request: prepare_test_request,
     };
     let first = judge(
       State(state.clone()),
-      Json(http_request("first-invalid-url")),
+      Json(http_request("file:///tmp/first.lynx.bundle")),
     );
-    let second = judge(State(state), Json(http_request("second-invalid-url")));
+    let second = judge(
+      State(state),
+      Json(http_request("file:///tmp/second.lynx.bundle")),
+    );
     let (first, second) = tokio::join!(first, second);
+    let first_result = first.expect("first response").0;
+    let second_result = second.expect("second response").0;
 
-    assert_eq!(first.expect("first response").0.url, "first-invalid-url");
-    assert_eq!(second.expect("second response").0.url, "second-invalid-url");
+    assert_eq!(first_result.url, "file:///tmp/first.lynx.bundle");
+    assert_eq!(second_result.url, "file:///tmp/second.lynx.bundle");
+    assert_eq!(
+      *executed_urls
+        .lock()
+        .unwrap_or_else(|poisoned| poisoned.into_inner()),
+      vec![
+        "file:///tmp/first.lynx.bundle".to_string(),
+        "file:///tmp/second.lynx.bundle".to_string(),
+      ]
+    );
+    headless.shutdown().expect("stop mock headless worker");
+  }
+
+  #[tokio::test]
+  async fn worker_panic_marks_health_unavailable_and_triggers_shutdown() {
+    let headless = Arc::new(
+      HeadlessExecutor::new_with_worker(|_runtime, receiver| {
+        let _job = receiver.recv().expect("receive capture job");
+        panic!("intentional headless worker panic");
+      })
+      .expect("start panicking headless worker"),
+    );
+    let worker_failure = headless.take_failure_receiver();
+    let (shutdown_sender, mut shutdown_receiver) = watch::channel(false);
+    let failure_task = tokio::spawn(trigger_shutdown_on_worker_failure(
+      worker_failure,
+      shutdown_sender,
+    ));
+    let request = http_request("file:///tmp/panic.lynx.bundle")
+      .into_judge_request()
+      .expect("valid panic request");
+
+    let error = match headless.capture(request, test_client()).await {
+      Ok(_) => panic!("worker panic must fail the capture"),
+      Err(error) => error,
+    };
+    shutdown_receiver
+      .changed()
+      .await
+      .expect("worker panic must trigger shutdown");
+    failure_task.await.expect("join worker failure monitor");
+
+    assert_eq!(error.status, StatusCode::SERVICE_UNAVAILABLE);
+    assert!(*shutdown_receiver.borrow());
+    assert!(!headless.is_healthy());
+    let health_error = health(State(AppState {
+      headless: Arc::clone(&headless),
+      prepare_request: prepare_test_request,
+    }))
+    .await
+    .expect_err("unhealthy worker must fail readiness");
+    assert_eq!(health_error.status, StatusCode::SERVICE_UNAVAILABLE);
+    assert!(matches!(
+      headless.shutdown(),
+      Err(ServerError::HeadlessWorkerPanicked)
+    ));
   }
 }

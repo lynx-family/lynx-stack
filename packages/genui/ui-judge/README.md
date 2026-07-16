@@ -97,9 +97,9 @@ Turn on the `server` feature to serve UI Judge over HTTP:
 PORT=8080 cargo run -p ui_judge --features server --bin ui-judge-server
 ```
 
-`PORT` defaults to `8080`. The process listens on both `0.0.0.0:{PORT}` and
-`[::]:{PORT}`. Use `GET /health` for a readiness check and `POST /judge` to
-evaluate a page.
+`PORT` defaults to `8080` and must be between `1` and `65535`. The process
+listens on both `0.0.0.0:{PORT}` and `[::]:{PORT}`. Use `GET /health` for a
+readiness check and `POST /judge` to evaluate a page.
 
 The following request evaluates a local bundle. `url` and `task` are required.
 The other fields are optional.
@@ -122,7 +122,9 @@ The response is a JSON-encoded `UiJudgeResult`. A completed evaluation returns
 HTTP `200`, including evaluation failures reported in the result's `error`
 field. Invalid HTTP input returns `400`, `413`, or `422`. The server returns
 `503` when its bounded capture queue is full or the headless worker is no longer
-available. Request bodies are limited to 16 MiB.
+available. A headless-worker panic makes readiness return `503`, initiates
+graceful shutdown, and is propagated as a server error after the worker is
+joined. Request bodies are limited to 16 MiB.
 
 The server accepts connections concurrently. It keeps native Lynx capture on a
 dedicated current-thread runtime because the renderer is thread-bound. After a
