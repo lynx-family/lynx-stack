@@ -3,8 +3,9 @@
 // LICENSE file in the root directory of this source tree.
 
 // Browser-backed bench previews are being split out of genui-server. Keep the
-// Playwright import disabled until a browser-capable bench service owns it.
-// import type { Browser, LaunchOptions } from 'playwright-core';
+// complete implementation disabled until a browser-capable service owns it.
+/*
+import type { Browser, LaunchOptions } from 'playwright-core';
 
 import type { BenchJobRequest, BenchScenarioRequest } from './a2ui-bench-types';
 import type { A2UIMessage } from '../agent/a2ui-validator';
@@ -24,11 +25,6 @@ interface BenchPreviewResult {
   screenshotDataUrl?: string;
   ttiMs: number;
 }
-
-/*
- * Browser-backed preview implementation is intentionally retained here while
- * the capability is split out of genui-server. Keep this code commented until
- * a browser-capable bench service owns the Playwright runtime.
 
 interface PreviewMetricBag {
   fcp?: unknown;
@@ -376,24 +372,4 @@ export async function runBenchPreview(
 }
 */
 
-export const BROWSER_BENCH_PREVIEW_ENABLED: boolean = false;
-export const BROWSER_BENCH_PREVIEW_DISABLED_MESSAGE =
-  'preview render skipped: browser-backed bench preview is disabled in genui-server';
-
-export function runBenchPreview(
-  options: BenchPreviewOptions,
-): Promise<BenchPreviewResult> {
-  const shouldRender = options.request.settings.renderMetricsEnabled
-    || options.request.settings.judgeEnabled;
-  const errors = shouldRender && options.messages.length > 0
-    ? [BROWSER_BENCH_PREVIEW_DISABLED_MESSAGE]
-    : [];
-
-  return Promise.resolve({
-    errors,
-    fmpMs: 0,
-    judgeScore: 0,
-    renderMs: 0,
-    ttiMs: 0,
-  });
-}
+export {};
