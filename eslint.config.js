@@ -315,6 +315,13 @@ export default tseslint.config(
     },
     rules: {
       '@typescript-eslint/consistent-generic-constructors': 'off',
+      // Bumping typescript-eslint (8.56 -> 8.63, required because 8.56 caps its
+      // `typescript` peer at <6.0.0) tightened this rule: it now reports many
+      // genuinely-redundant assertions the old version missed. Auto-removal is
+      // unsafe here though -- dropping an assertion can break isolatedDeclarations
+      // emit or leave an imported type unused -- so keep the rule off to avoid
+      // churn from the lint-dep bump; a dedicated cleanup PR can re-enable it.
+      '@typescript-eslint/no-unnecessary-type-assertion': 'off',
     },
   },
   // JavaScript-related
@@ -373,6 +380,9 @@ export default tseslint.config(
       // now to avoid churn when updating linting deps.
       'vitest/no-conditional-expect': 'off',
       'vitest/no-interpolation-in-snapshots': 'off',
+      // `expect.poll(cb, { timeout })` legitimately passes an options argument;
+      // allow up to 2 arguments so the newer plugin does not flag it.
+      'vitest/valid-expect': ['error', { maxArgs: 2 }],
     },
     settings: {
       vitest: {

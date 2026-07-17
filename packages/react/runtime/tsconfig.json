@@ -2,11 +2,11 @@
   "extends": "../../../tsconfig.json",
   "compilerOptions": {
     "composite": true,
+    "types": ["node"],
     "outDir": "./lib",
     // Keep incremental metadata under lib so clearing generated outputs also
     // invalidates the runtime build cache for worklet-runtime artifacts.
     "tsBuildInfoFile": "./lib/tsconfig.tsbuildinfo",
-    "baseUrl": "./",
     "paths": {
       // Resolve public self-references back to source while building
       // runtime itself, so the emitted lib output never becomes its own input.
