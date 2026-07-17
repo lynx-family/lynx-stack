@@ -14,7 +14,7 @@ export default {
   devtool: 'source-map',
   output: {
     ...config.output,
-    chunkFilename: '.rspeedy/async/[name].js',
+    chunkFilename: '.rspeedy/lazy-bundle/[name].js',
   },
   plugins: [
     ...config.plugins,

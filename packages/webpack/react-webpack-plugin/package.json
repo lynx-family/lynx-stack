@@ -54,7 +54,7 @@
     "swc-loader": "^0.2.7"
   },
   "peerDependencies": {
-    "@lynx-js/template-webpack-plugin": "^0.13.0"
+    "@lynx-js/template-webpack-plugin": "^0.13.0 || ^0.14.0"
   },
   "peerDependenciesMeta": {
     "@lynx-js/react": {

@@ -15,7 +15,7 @@ export default {
   ...config,
   output: {
     ...config.output,
-    chunkFilename: '.rspeedy/async/[name].js',
+    chunkFilename: '.rspeedy/lazy-bundle/[name].js',
   },
   plugins: [
     ...config.plugins,

@@ -16,7 +16,7 @@ describe('rewriteSourceMappingURLToAbsolute', () => {
   const ASYNC_MAP = 'static/js/async/Lazy-react__main-thread.js.map'
   const ASYNC_MAP_ENC = encodeURIComponent(ASYNC_MAP)
   const BUNDLE_URL =
-    'http://host:3020/.rspeedy/async/Lazy.js/debug-metadata.json'
+    'http://host:3020/.rspeedy/lazy-bundle/Lazy.js/debug-metadata.json'
 
   test('replaces the directive with the caller-supplied metadata URL plus path query', () => {
     const before = wrap(

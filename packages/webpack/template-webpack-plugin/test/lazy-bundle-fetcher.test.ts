@@ -120,7 +120,7 @@ async function runAndGetMtEncoding(
 ): Promise<string | undefined> {
   const { captured, plugin } = captureBeforeEmit();
   await runWebpack(buildConfig(plugin, mode));
-  const lazy = captured.find((c) => c.outputName.startsWith('async/'));
+  const lazy = captured.find((c) => c.outputName.startsWith('lazy-bundle/'));
   return lazy?.customSections['main-thread']?.encoding;
 }
 

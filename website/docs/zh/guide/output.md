@@ -13,25 +13,20 @@
 ```
 dist/
 ├── [name].lynx.bundle
-├── async
-│   └── [name].lynx.bundle
+├── lazy-bundle
+│   └── [name].[fullhash].bundle
 └── static
     ├── image
     │   └── [name].[hash].png
-    ├── svg
-    │   └── [name].[hash].svg
-    └── js
-        ├── [id].[hash].js
-        │   └── async
-        │       └── [id].[hash].js
-        └── lib-preact.[hash].js
+    └── svg
+        └── [name].[hash].svg
 ```
 
 最常见的输出文件包括 Bundle 文件、JS 文件和静态资源：
 
 - Bundle（`[name].lynx.bundle`），可通过 [`output.filename.bundle`] 配置
-- 异步 Bundle（`async/[name].lynx.bundle`）
-- JS 文件（`static/js/*.js`），可通过 [`output.distPath.js`] 和 [`output.filename.js`] 配置
+- 懒加载 Bundle（`lazy-bundle/[name].[fullhash].bundle`）
+- JS 文件（`static/js/*.js`），仅在关闭 [`output.inlineScripts`] 时输出，可通过 [`output.distPath.js`] 和 [`output.filename.js`] 配置
 - 静态资源目录（`static/{font,image,media,svg}`）
 
 文件名中的占位符含义：
@@ -47,39 +42,36 @@ dist/
 ```
 dist/
 ├── .rspeedy
-│   ├── async
+│   ├── lazy-bundle
 │   │   └── [name]
-│   │       ├── debug-info.json
-│   │       ├── tasm.json
-│   │       └── [name].css
-│   ├── [name]
-│   │   ├── background.js
-│   │   ├── background.js.map
-│   │   ├── debug-info.json
-│   │   ├── [name].css
-│   │   ├── main-thread.js
-│   │   ├── main-thread.js.map
-│   │   └── tasm.json
-│   └── rspeedy.config.js
+│   │       ├── background.js
+│   │       ├── background.css
+│   │       ├── background.css.hot-update.json
+│   │       ├── debug-metadata.json
+│   │       ├── main-thread.js
+│   │       └── tasm.json
+│   └── [name]
+│       ├── background.js
+│       ├── debug-metadata.json
+│       ├── main-thread.js
+│       ├── [name].css
+│       ├── [name].css.hot-update.json
+│       └── tasm.json
 ├── [name].lynx.bundle
+├── lazy-bundle
+│   └── [name].[fullhash].bundle
 └── static
     ├── image
-    │   ├── [name].[hash].png
-    │   └── [name].[hash].svg
-    └── js
-        ├── [id].[hash].js
-        │   └── async
-        │       ├── [id].[hash].js
-        │       └── [id].[hash].js.map
-        ├── lib-preact.[hash].js
-        └── lib-preact.[hash].js.map
+    │   └── [name].[hash].png
+    └── svg
+        └── [name].[hash].svg
 ```
 
 开发环境额外生成的文件包括：
 
 - 后台线程脚本（Background Thread Script）：内联到 Bundle 中的脚本，默认输出到 `.rspeedy/[name]/background.js`
 - 主线程脚本（MainThread Thread Script）：默认输出到 `.rspeedy/[name]/main-thread.js`
-- Source Map 文件：与 JS 文件同目录，以 `.map` 为后缀
+- Source Map 文件：开启 [`output.sourceMap`] 后，与 JS 文件同目录，以 `.map` 为后缀
 
 ## 修改目录结构
 
@@ -119,6 +111,7 @@ dist
 ```
 
 [`output.filename`]: ../../api/rspeedy.output.filename
+[`output.inlineScripts`]: ../../api/rspeedy.output.inlinescripts
 [`output.filename.js`]: ../../api/rspeedy.filename.js
 [`output.filename.bundle`]: ../../api/rspeedy.filename.bundle
 [`output.distPath`]: ../../api/rspeedy.output.distpath

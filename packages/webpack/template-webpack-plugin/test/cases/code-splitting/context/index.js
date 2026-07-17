@@ -19,6 +19,6 @@ it('should have correct chunk content', async () => {
 });
 
 it('should not generate bundle for context', () => {
-  const tasmJSONPath = resolve(__dirname, '.rspeedy/async/a/tasm.json');
+  const tasmJSONPath = resolve(__dirname, '.rspeedy/lazy-bundle/a/tasm.json');
   expect(existsSync(tasmJSONPath)).toBeFalsy();
 });

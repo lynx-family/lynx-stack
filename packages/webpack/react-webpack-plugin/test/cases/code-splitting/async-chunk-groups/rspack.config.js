@@ -13,7 +13,7 @@ export default {
   ...config,
   output: {
     ...config.output,
-    chunkFilename: '.rspeedy/async/[name].js',
+    chunkFilename: '.rspeedy/lazy-bundle/[name].js',
   },
   plugins: [
     ...config.plugins,
@@ -39,7 +39,7 @@ export default {
               [ // main entry
                 'main__main-thread.js',
                 // foo.js lazy bundle
-                '.rspeedy/async/foo.js/main-thread.js',
+                '.rspeedy/lazy-bundle/foo.js/main-thread.js',
               ],
             );
             expect(
@@ -49,7 +49,7 @@ export default {
               [ // main entry
                 'main__background.js',
                 // foo.js lazy bundle
-                '.rspeedy/async/foo.js/background.js',
+                '.rspeedy/lazy-bundle/foo.js/background.js',
               ],
             );
           },

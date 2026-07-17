@@ -8,6 +8,6 @@ load();
 
 it('should map both import paths to the same bundle', () => {
   expect(Object.values(__webpack_require__['lynx_aci'])).toStrictEqual([
-    `async/dynamic.js.${__webpack_require__.h()}.bundle`,
+    `lazy-bundle/dynamic.js.${__webpack_require__.h()}.bundle`,
   ]);
 });

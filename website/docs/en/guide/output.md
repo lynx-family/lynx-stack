@@ -13,25 +13,20 @@ In production, the `dist/` directory contains all the files that need to be depl
 ```
 dist/
 ├── [name].lynx.bundle
-├── async
-│   └── [name].lynx.bundle
+├── lazy-bundle
+│   └── [name].[fullhash].bundle
 └── static
     ├── image
     │   └── [name].[hash].png
-    ├── svg
-    │   └── [name].[hash].svg
-    └── js
-        ├── [id].[hash].js
-        │   └── async
-        │       └── [id].[hash].js
-        └── lib-preact.[hash].js
+    └── svg
+        └── [name].[hash].svg
 ```
 
 The most common output files are Bundle files, JS files and static assets:
 
 - Bundle files(`[name].lynx.bundle`), which can be configured with [`output.filename.bundle`].
-- Async(lazy) bundle files(`async/[name].lynx.bundle`).
-- JS files(`static/js/*.js`), which can be configured with [`output.distPath.js`] and [`output.filename.js`].
+- Lazy bundle files(`lazy-bundle/[name].[fullhash].bundle`).
+- JS files(`static/js/*.js`), only emitted when [`output.inlineScripts`] is disabled, which can be configured with [`output.distPath.js`] and [`output.filename.js`].
 - Static assets(`static/{font,image,media,svg}`) directory.
 
 In the filename, `[name]` is the entry name corresponding to this file, such as `index`, `main`. `[hash]` is the hash value generated based on the content of the file. `[id]` is the internal chunk ID of Rspack.
@@ -43,39 +38,36 @@ In development, an `dist/.rspeedy` directory is emitted which contains the resou
 ```
 dist/
 ├── .rspeedy
-│   ├── async
+│   ├── lazy-bundle
 │   │   └── [name]
-│   │       ├── debug-info.json
-│   │       ├── tasm.json
-│   │       └── [name].css
-│   ├── [name]
-│   │   ├── background.js
-│   │   ├── background.js.map
-│   │   ├── debug-info.json
-│   │   ├── [name].css
-│   │   ├── main-thread.js
-│   │   ├── main-thread.js.map
-│   │   └── tasm.json
-│   └── rspeedy.config.js
+│   │       ├── background.js
+│   │       ├── background.css
+│   │       ├── background.css.hot-update.json
+│   │       ├── debug-metadata.json
+│   │       ├── main-thread.js
+│   │       └── tasm.json
+│   └── [name]
+│       ├── background.js
+│       ├── debug-metadata.json
+│       ├── main-thread.js
+│       ├── [name].css
+│       ├── [name].css.hot-update.json
+│       └── tasm.json
 ├── [name].lynx.bundle
+├── lazy-bundle
+│   └── [name].[fullhash].bundle
 └── static
     ├── image
-    │   ├── [name].[hash].png
-    │   └── [name].[hash].svg
-    └── js
-        ├── [id].[hash].js
-        │   └── async
-        │       ├── [id].[hash].js
-        │       └── [id].[hash].js.map
-        ├── lib-preact.[hash].js
-        └── lib-preact.[hash].js.map
+    │   └── [name].[hash].png
+    └── svg
+        └── [name].[hash].svg
 ```
 
 In addition, Rspeedy generates some extra files in development:
 
 - Background Thread Script(BTS): The background script file that is inlined into the bundle, default output to `.rspeedy/[name]/background.js`.
 - MainThread Thread Script(MTS): The main-thread script file that is inlined into the bundle, default output to `.rspeedy/[name]/main-thread.js`.
-- Source Map files: contains the source code mappings, which is output to the same level directory of JS files and adds a `.map` suffix.
+- Source Map files: contains the source code mappings, which is output to the same level directory of JS files and adds a `.map` suffix when [`output.sourceMap`] is enabled.
 
 ## Modify the Directory
 
@@ -117,6 +109,7 @@ dist
 ```
 
 [`output.filename`]: /api/rspeedy.output.filename
+[`output.inlineScripts`]: /api/rspeedy.output.inlinescripts
 [`output.filename.js`]: /api/rspeedy.filename.js
 [`output.filename.bundle`]: /api/rspeedy.filename.bundle
 [`output.distPath`]: /api/rspeedy.output.distpath

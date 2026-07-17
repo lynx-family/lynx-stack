@@ -11,7 +11,7 @@ it('should have module.exports in foo.js template', async () => {
 
   const tasmJSON = JSON.parse(
     await readFile(
-      resolve(__dirname, '.rspeedy/async/foo.js/tasm.json'),
+      resolve(__dirname, '.rspeedy/lazy-bundle/foo.js/tasm.json'),
       'utf-8',
     ),
   );
@@ -25,18 +25,18 @@ it('should have module.exports in foo.js template', async () => {
     expect.stringContaining('function (globDynamicComponentEntry)'),
   );
 
-  expect(tasmJSON.manifest['/.rspeedy/async/foo.js/background.js'])
+  expect(tasmJSON.manifest['/.rspeedy/lazy-bundle/foo.js/background.js'])
     .toBeDefined();
-  expect(tasmJSON.manifest['/.rspeedy/async/foo.js/background.js']).not
+  expect(tasmJSON.manifest['/.rspeedy/lazy-bundle/foo.js/background.js']).not
     .toContain('const module = { exports: {} }');
-  expect(tasmJSON.manifest['/.rspeedy/async/foo.js/background.js']).not
+  expect(tasmJSON.manifest['/.rspeedy/lazy-bundle/foo.js/background.js']).not
     .toContain('function (globDynamicComponentEntry)');
 });
 
 it('should have module.exports in bar.js template', async () => {
   const tasmJSON = JSON.parse(
     await readFile(
-      resolve(__dirname, '.rspeedy/async/bar.js/tasm.json'),
+      resolve(__dirname, '.rspeedy/lazy-bundle/bar.js/tasm.json'),
       'utf-8',
     ),
   );
@@ -50,18 +50,18 @@ it('should have module.exports in bar.js template', async () => {
     expect.stringContaining('function (globDynamicComponentEntry)'),
   );
 
-  expect(tasmJSON.manifest['/.rspeedy/async/bar.js/background.js'])
+  expect(tasmJSON.manifest['/.rspeedy/lazy-bundle/bar.js/background.js'])
     .toBeDefined();
-  expect(tasmJSON.manifest['/.rspeedy/async/bar.js/background.js']).not
+  expect(tasmJSON.manifest['/.rspeedy/lazy-bundle/bar.js/background.js']).not
     .toContain('const module = { exports: {} }');
-  expect(tasmJSON.manifest['/.rspeedy/async/bar.js/background.js']).not
+  expect(tasmJSON.manifest['/.rspeedy/lazy-bundle/bar.js/background.js']).not
     .toContain('function (globDynamicComponentEntry)');
 });
 
 it('should have module.exports in baz.js template', async () => {
   const tasmJSON = JSON.parse(
     await readFile(
-      resolve(__dirname, '.rspeedy/async/baz.js/tasm.json'),
+      resolve(__dirname, '.rspeedy/lazy-bundle/baz.js/tasm.json'),
       'utf-8',
     ),
   );
@@ -75,10 +75,10 @@ it('should have module.exports in baz.js template', async () => {
     expect.stringContaining('function (globDynamicComponentEntry)'),
   );
 
-  expect(tasmJSON.manifest['/.rspeedy/async/baz.js/background.js'])
+  expect(tasmJSON.manifest['/.rspeedy/lazy-bundle/baz.js/background.js'])
     .toBeDefined();
-  expect(tasmJSON.manifest['/.rspeedy/async/baz.js/background.js']).not
+  expect(tasmJSON.manifest['/.rspeedy/lazy-bundle/baz.js/background.js']).not
     .toContain('const module = { exports: {} }');
-  expect(tasmJSON.manifest['/.rspeedy/async/baz.js/background.js']).not
+  expect(tasmJSON.manifest['/.rspeedy/lazy-bundle/baz.js/background.js']).not
     .toContain('function (globDynamicComponentEntry)');
 });
