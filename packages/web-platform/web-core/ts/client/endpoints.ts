@@ -65,7 +65,7 @@ export const reportErrorEndpoint = createRpcEndpoint<
 
 export const callLepusMethodEndpoint = createRpcEndpoint<
   [name: string, data: unknown],
-  void
+  unknown
 >('callLepusMethod', false, true);
 
 export const invokeUIMethodEndpoint = createRpcEndpoint<
