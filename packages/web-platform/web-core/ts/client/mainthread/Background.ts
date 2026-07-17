@@ -183,7 +183,10 @@ export class BackgroundThread implements AsyncDisposable {
           this.#lynxViewInstance.mainThreadGlobalThis as any
         )[methodName];
         if (typeof method === 'function') {
-          method.call(this.#lynxViewInstance.mainThreadGlobalThis, data);
+          return method.call(
+            this.#lynxViewInstance.mainThreadGlobalThis,
+            data,
+          );
         } else {
           console.error(
             `Method ${methodName} not found on mainThreadGlobalThis`,
