@@ -15,6 +15,7 @@
     "src"
   ],
   "scripts": {
+    "bench": "vitest bench __test__/snapshot/background.bench.jsx",
     "build": "tsc --build",
     "test": "pnpm run test:snapshot && pnpm run test:core && pnpm run test:et",
     "test:core": "vitest run __test__/core",

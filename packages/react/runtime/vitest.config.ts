@@ -160,6 +160,7 @@ export default defineConfig({
         '__test__/snapshot/page.test.jsx',
         '**/*.d.ts',
         '**/*.test-d.*',
+        '**/*.bench.*',
       ],
       thresholds: {
         lines: 100,
