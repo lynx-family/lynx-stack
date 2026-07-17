@@ -30,6 +30,14 @@
 
   "labels": ["bot:renovate"],
 
+  // Raise the open-PR limits above Renovate's defaults (prConcurrentLimit: 10,
+  // prHourlyLimit: 2). This repo has enough active dependencies that a short
+  // triage lag lets the open-PR count reach 10, after which Renovate stops
+  // opening any new PR and parks every update as "Rate-Limited" on the
+  // Dependency Dashboard -- making it look like Renovate has stopped working.
+  "prConcurrentLimit": 20,
+  "prHourlyLimit": 4,
+
   "packageRules": [
     {
       "matchPackageNames": [
