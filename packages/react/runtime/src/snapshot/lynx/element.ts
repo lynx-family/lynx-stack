@@ -2,32 +2,75 @@
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
 
+import type { ComponentChildren, VNode } from 'preact';
 import { cloneElement as cloneElementBackground, createElement as createElementBackground } from 'preact/compat';
+import type { Attributes, ComponentType, ReactElement, ReactNode } from 'react';
 
 import { cloneElement as cloneElementMainThread, createElement as createElementMainThread } from '@lynx-js/react/lepus';
+import type { IntrinsicElements } from '@lynx-js/types';
 
 import { getCloneSnapshotInfo, getCloneSnapshotType, isCompiledSnapshot } from '../snapshot/utils.js';
 
-type CreateElement = typeof import('preact/compat').createElement;
-type CreateElementParams = Parameters<CreateElement>;
+/**
+ * The call signature of ReactLynx `createElement`.
+ *
+ * @public
+ */
+export interface CreateElement {
+  /** Creates an element for a Lynx intrinsic element. */
+  <Type extends keyof IntrinsicElements>(
+    type: Type,
+    props?: IntrinsicElements[Type] | null,
+    ...children: ReactNode[]
+  ): ReactElement<IntrinsicElements[Type], Type>;
+  /** Creates an element for a component. */
+  <Props extends object>(
+    type: ComponentType<Props> | string,
+    props?: (Attributes & Props) | null,
+    ...children: ReactNode[]
+  ): ReactElement<Props>;
+}
 
-type CloneElement = typeof import('preact/compat').cloneElement;
-type CloneElementParams = Parameters<CloneElement>;
+/**
+ * The call signature of ReactLynx `cloneElement`.
+ *
+ * @public
+ */
+export interface CloneElement {
+  /** Clones an element with optional replacement props and children. */
+  <Props>(
+    element: ReactElement<Props>,
+    props?: (Partial<Props> & Attributes) | null,
+    ...children: ReactNode[]
+  ): ReactElement<Props>;
+}
+
+type CreateElementParams = [
+  type: VNode['type'],
+  props: object | null | undefined,
+  ...children: ComponentChildren[],
+];
+
+type CloneElementParams = [
+  vnode: VNode<object>,
+  props: object | null | undefined,
+  ...children: ComponentChildren[],
+];
 
 function splitProps(
-  props: unknown,
+  props: CreateElementParams[1],
   rest: CreateElementParams[2][],
   initialKey: string | undefined = undefined,
 ): {
   key: string | undefined;
   children: CreateElementParams[2][];
-  spreadProps: Record<string, unknown>;
+  spreadProps: Record<string, ComponentChildren>;
 } {
   let key = initialKey;
   let children = rest;
-  let spreadProps: Record<string, unknown> = {};
+  let spreadProps: Record<string, ComponentChildren> = {};
   if (props && typeof props === 'object') {
-    spreadProps = props as Record<string, unknown>;
+    spreadProps = props as Record<string, ComponentChildren>;
     if ('key' in spreadProps) {
       const { key: keyValue, ...propsWithoutKey } = spreadProps;
       key = keyValue as string;
@@ -36,7 +79,7 @@ function splitProps(
     if ('children' in spreadProps) {
       const { children: childrenValue, ...propsWithoutChildren } = spreadProps;
       if (rest.length === 0) {
-        children = [childrenValue as CreateElementParams[2]];
+        children = [childrenValue];
       }
       spreadProps = propsWithoutChildren;
     }
@@ -48,8 +91,10 @@ function splitProps(
   };
 }
 
-function pickChildrenProps(props: Record<string, unknown>): Record<string, unknown> | undefined {
-  let childrenProps: Record<string, unknown> | undefined;
+function pickChildrenProps(
+  props: Record<string, ComponentChildren>,
+): Record<string, ComponentChildren> | undefined {
+  let childrenProps: Record<string, ComponentChildren> | undefined;
   for (const name in props) {
     if (name.startsWith('$')) {
       childrenProps ??= {};
@@ -60,11 +105,15 @@ function pickChildrenProps(props: Record<string, unknown>): Record<string, unkno
 }
 
 /**
- * export to users, and in framework would use preact createElement directly
+ * Creates a ReactLynx element using the snapshot runtime.
+ *
+ * @public
  */
 export const createElement =
   (function(type: CreateElementParams[0], props: CreateElementParams[1], ...rest: CreateElementParams[2][]) {
-    const _baseCreateElement = __BACKGROUND__ ? createElementBackground : createElementMainThread as CreateElement;
+    const _baseCreateElement = (__BACKGROUND__ ? createElementBackground : createElementMainThread) as (
+      ...args: CreateElementParams
+    ) => VNode;
     /**
      * for built-in element which would create snapshot instance
      *
@@ -92,7 +141,9 @@ export const createElement =
   }) as CreateElement;
 
 /**
- * export to users, and in framework would use preact cloneElement directly
+ * Clones a ReactLynx element using the snapshot runtime.
+ *
+ * @public
  */
 export const cloneElement =
   (function(vnode: CloneElementParams[0], props: CloneElementParams[1], ...rest: CloneElementParams[2][]) {
@@ -103,11 +154,13 @@ export const cloneElement =
     }
     if (!props && rest.length === 0) {
       // no props, no children. clone directly
-      const _baseCloneElement = __BACKGROUND__ ? cloneElementBackground : cloneElementMainThread as CloneElement;
+      const _baseCloneElement = (__BACKGROUND__ ? cloneElementBackground : cloneElementMainThread) as (
+        ...args: CloneElementParams
+      ) => VNode<object>;
       return _baseCloneElement(vnode, props, ...rest);
     }
-    const preProps = vnode.props as unknown as {
-      values?: Record<string, unknown>[];
+    const preProps = vnode.props as {
+      values?: Record<string, ComponentChildren>[];
       $0?: CreateElementParams[2];
     };
     const preValues = preProps.values ?? [];
@@ -128,12 +181,14 @@ export const cloneElement =
       if (children.length === 0 && '$0' in preProps) {
         children = [preProps.$0];
       }
-      return createElement(type, nextProps, ...children);
+      return (createElement as (...args: CreateElementParams) => VNode)(type, nextProps, ...children);
     }
 
     // normal compiled snapshot
     const values = preValues.slice();
-    const _baseCreateElement = __BACKGROUND__ ? createElementBackground : createElementMainThread as CreateElement;
+    const _baseCreateElement = (__BACKGROUND__ ? createElementBackground : createElementMainThread) as (
+      ...args: CreateElementParams
+    ) => VNode;
     const { cloneSpreadIndex } = getCloneSnapshotInfo(type) ?? {};
     let cloneType = type;
     if (cloneSpreadIndex === undefined) {

@@ -82,9 +82,9 @@ export { Fragment, Suspense } from 'react';
  * Legacy React APIs
  * @see https://react.dev/reference/react/legacy
  */
-export { Component, PureComponent, cloneElement, createElement, createRef, isValidElement } from 'react';
+export { Component, PureComponent, createRef, isValidElement } from 'react';
 
-export type { ReactLynxChildren } from '../runtime/lib/index.js';
+export type { CloneElement, CreateElement, ReactLynxChildren } from '../runtime/lib/index.js';
 
 /**
  * ReactLynx children utilities.
@@ -102,6 +102,26 @@ export const Children: ReactLynxChildren;
  * @public
  */
 export { createPortal } from '../runtime/lib/index.js';
+
+/**
+ * Creates a ReactLynx element from a Lynx intrinsic element name or a
+ * component type. Lynx intrinsic elements are processed by the ReactLynx
+ * snapshot runtime.
+ *
+ * @see https://react.dev/reference/react/createElement
+ * @public
+ */
+export { createElement } from '../runtime/lib/index.js';
+
+/**
+ * Clones an existing ReactLynx element and applies new props through the
+ * ReactLynx runtime. Runtime-created elements and components may also receive
+ * replacement children.
+ *
+ * @see https://react.dev/reference/react/cloneElement
+ * @public
+ */
+export { cloneElement } from '../runtime/lib/index.js';
 
 /**
  * RL-defined Lynx APIs
