@@ -332,6 +332,31 @@ test.describe('web core tests', () => {
     await wait(100);
     expect(jsonContent).toBe('{}');
   });
+  test('api-nativeApp-callLepusMethod-callback-receives-return-value', async ({ page, browserName }) => {
+    // firefox dose not support this.
+    test.skip(browserName === 'firefox');
+    await goto(page);
+
+    // Define a lepus method on the main-thread globalThis, like
+    // `injectLepusMethods` in @lynx-js/react does for `getUniqueIdListBySnapshotId`.
+    await page.evaluate(() => {
+      globalThis.runtime.callLepusMethodE2EEcho = (data: { value: number }) => {
+        return { doubled: data.value * 2 };
+      };
+    });
+
+    const backWorker = await getBackgroundThreadWorker(page);
+    const ret = await backWorker.evaluate(() => {
+      return new Promise((resolve) => {
+        globalThis.runtime.lynx.getNativeApp().callLepusMethod(
+          'callLepusMethodE2EEcho',
+          { value: 21 },
+          (ret: unknown) => resolve(ret),
+        );
+      });
+    });
+    expect(ret).toEqual({ doubled: 42 });
+  });
   test('registerDataProcessor-as-global-var-update', async ({ page, browserName }) => {
     await goto(page);
     const registerDataProcessor = await page.evaluate(() => {
