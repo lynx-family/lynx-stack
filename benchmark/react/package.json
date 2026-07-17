@@ -16,6 +16,8 @@
     "bench:009-eval-bench": "benchx_cli run dist/009-eval-bench.lynx.bundle --wait-for-id=stop-benchmark-true",
     "bench:010-transform-exponentiation-operator": "benchx_cli run dist/010-transform-exponentiation-operator.lynx.bundle --wait-for-id=stop-benchmark-true",
     "bench:011-transform-async-to-generator": "benchx_cli run dist/011-transform-async-to-generator.lynx.bundle --wait-for-id=stop-benchmark-true",
+    "bench:012-heavy-first-screen": "benchx_cli run dist/012-heavy-first-screen.lynx.bundle --wait-for-id=stop-benchmark-true",
+    "bench:013-background-boundary": "benchx_cli run dist/013-background-boundary.lynx.bundle --wait-for-id=stop-benchmark-true",
     "build": "rspeedy build",
     "dev": "rspeedy dev",
     "perfetto": "pnpm run --sequential --stream --aggregate-output '/^perfetto:.*/'",
@@ -30,6 +32,8 @@
     "perfetto:009-eval-bench": "benchx_cli -o dist/009-eval-bench.ptrace run dist/009-eval-bench.lynx.bundle --wait-for-id=stop-benchmark-true",
     "perfetto:010-transform-exponentiation-operator": "benchx_cli -o dist/010-transform-exponentiation-operator.ptrace run dist/010-transform-exponentiation-operator.lynx.bundle --wait-for-id=stop-benchmark-true",
     "perfetto:011-transform-async-to-generator": "benchx_cli -o dist/011-transform-async-to-generator.ptrace run dist/011-transform-async-to-generator.lynx.bundle --wait-for-id=stop-benchmark-true",
+    "perfetto:012-heavy-first-screen": "benchx_cli -o dist/012-heavy-first-screen.ptrace run dist/012-heavy-first-screen.lynx.bundle --wait-for-id=stop-benchmark-true",
+    "perfetto:013-background-boundary": "benchx_cli -o dist/013-background-boundary.ptrace run dist/013-background-boundary.lynx.bundle --wait-for-id=stop-benchmark-true",
     "test": "npm run perfetto && node scripts/detectLeak.mjs"
   },
   "dependencies": {

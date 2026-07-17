@@ -4725,6 +4725,7 @@ version = "0.1.0"
 dependencies = [
  "napi",
  "napi-derive",
+ "rustc-hash",
  "serde",
  "swc_core",
  "swc_plugin_define_dce",

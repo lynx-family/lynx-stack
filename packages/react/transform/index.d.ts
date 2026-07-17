@@ -459,6 +459,15 @@ export interface DefineDceVisitorConfig {
 export interface DirectiveDceVisitorConfig {
   /** @internal */
   target: 'LEPUS' | 'JS' | 'MIXED'
+  /**
+   * When `true` on the `LEPUS` target, empties the render body of every
+   * component while keeping the module-scope snapshot and worklet
+   * definitions — the compile-time half of a root-level `<Background>`
+   * (0.0 first screen), so component render logic never reaches the
+   * main-thread bundle without per-component annotation.
+   * @internal
+   */
+  stripAllComponents?: boolean
 }
 export interface DynamicImportVisitorConfig {
   /** @internal */

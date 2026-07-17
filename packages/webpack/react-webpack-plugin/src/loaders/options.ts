@@ -102,6 +102,17 @@ export interface ReactLoaderOptions {
    * @experimental
    */
   experimental_useElementTemplate?: boolean | undefined;
+
+  /**
+   * Empty the render body of every component from the main-thread (LEPUS)
+   * bundle, keeping only the snapshot and worklet definitions the first-screen
+   * hydration needs. This is the compile-time half of a root-level
+   * `<Background>` (a 0.0 first screen): no component render logic reaches the
+   * main thread, with no per-component annotation.
+   *
+   * @internal
+   */
+  stripAllComponents?: boolean | undefined;
 }
 
 function normalizeSlashes(file: string) {
@@ -325,6 +336,7 @@ export function getMainThreadTransformOptions(
     },
     directiveDCE: {
       target: 'LEPUS',
+      stripAllComponents: this.getOptions().stripAllComponents ?? false,
     },
   };
 }
