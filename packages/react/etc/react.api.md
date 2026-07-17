@@ -4,26 +4,28 @@
 
 ```ts
 
+import type { Attributes } from 'react';
 import { Children as Children_2 } from 'preact/compat';
-import { cloneElement } from 'react';
 import { Component } from 'react';
 import type { ComponentChild } from 'preact';
 import type { ComponentChildren } from 'preact';
 import type { ComponentClass } from 'react';
+import type { ComponentType } from 'react';
 import type { Consumer } from 'react';
 import { createContext } from 'react';
-import { createElement } from 'react';
 import { createRef } from 'react';
 import type { DependencyList } from 'react';
 import type { EffectCallback } from 'react';
 import type { FC } from 'react';
 import { forwardRef } from 'react';
 import { Fragment } from 'react';
+import type { IntrinsicElements } from '@lynx-js/types';
 import { isValidElement } from 'react';
 import { lazy } from 'react';
 import { memo } from 'react';
 import type { NodesRef } from '@lynx-js/types';
 import { PureComponent } from 'react';
+import type { ReactElement } from 'react';
 import type { ReactNode } from 'react';
 import type { RefObject } from 'react';
 import { Suspense } from 'react';
@@ -42,13 +44,26 @@ import type { VNode } from 'preact';
 // @public
 export const Children: ReactLynxChildren;
 
-export { cloneElement }
+// @public
+export interface CloneElement {
+    <Props>(element: ReactElement<Props>, props?: (Partial<Props> & Attributes) | null, ...children: ReactNode[]): ReactElement<Props>;
+}
+
+// @public
+export const cloneElement: CloneElement;
 
 export { Component }
 
 export { createContext }
 
-export { createElement }
+// @public
+export interface CreateElement {
+    <Type extends keyof IntrinsicElements>(type: Type, props?: IntrinsicElements[Type] | null, ...children: ReactNode[]): ReactElement<IntrinsicElements[Type], Type>;
+    <Props extends object>(type: ComponentType<Props> | string, props?: (Attributes & Props) | null, ...children: ReactNode[]): ReactElement<Props>;
+}
+
+// @public
+export const createElement: CreateElement;
 
 // @public
 export function createPortal(vnode: ComponentChild, container: NodesRef): VNode<any> | null;
