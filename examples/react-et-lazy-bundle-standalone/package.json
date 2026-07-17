@@ -18,7 +18,7 @@
     "@lynx-js/react": "workspace:*"
   },
   "devDependencies": {
-    "@lynx-js/preact-devtools": "5.0.1-20260624133547-6641319",
+    "@lynx-js/preact-devtools": "5.0.1-20260714130028-3bd2ab8",
     "@lynx-js/qrcode-rsbuild-plugin": "workspace:*",
     "@lynx-js/react-rsbuild-plugin": "workspace:*",
     "@lynx-js/rspeedy": "workspace:*",
