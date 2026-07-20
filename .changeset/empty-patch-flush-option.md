@@ -1,5 +1,5 @@
 ---
-"@lynx-js/react": minor
+"@lynx-js/react": patch
 ---
 
 Tell the main thread when a background commit produces no element mutations.
