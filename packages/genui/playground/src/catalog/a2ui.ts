@@ -8,6 +8,10 @@ import {
   buildLazyComponentBundleUrl,
   getA2UIPlaygroundBaseUrl,
 } from '../mock/basic/lazy-component.js';
+import {
+  buildMcpAppBundleUrl,
+  createWeatherMcpAppData,
+} from '../mock/basic/mcp-app.js';
 
 export interface ComponentProp {
   name: string;
@@ -450,6 +454,56 @@ export const COMPONENT_CATALOG: ComponentDoc[] = [
                 { label: 'Conversion', value: '6.3%', delta: '+1.1 pt' },
               ],
             },
+          },
+        },
+      ],
+      openui: [],
+    },
+  },
+  {
+    name: 'McpApp',
+    category: 'Display',
+    description:
+      'Renders a trusted MCP App Lynx bundle inside a frame and passes renderer data to the nested page.',
+    props: schemaToProps(catalogManifests.McpApp),
+    usage: {
+      a2ui: {
+        id: 'mcp-app',
+        component: 'McpApp',
+        url: buildMcpAppBundleUrl({
+          baseUrl: getA2UIPlaygroundBaseUrl(),
+          platform: 'lynx',
+        }),
+        webUrl: buildMcpAppBundleUrl({
+          baseUrl: getA2UIPlaygroundBaseUrl(),
+          platform: 'web',
+        }),
+        autoWidth: true,
+        autoHeight: true,
+        height: 456,
+        mcpAppData: createWeatherMcpAppData(),
+      },
+      openui: {},
+    },
+    usageExamples: {
+      a2ui: [
+        {
+          label: 'Weather MCP App',
+          value: {
+            id: 'mcp-app',
+            component: 'McpApp',
+            url: buildMcpAppBundleUrl({
+              baseUrl: getA2UIPlaygroundBaseUrl(),
+              platform: 'lynx',
+            }),
+            webUrl: buildMcpAppBundleUrl({
+              baseUrl: getA2UIPlaygroundBaseUrl(),
+              platform: 'web',
+            }),
+            autoWidth: true,
+            autoHeight: true,
+            height: 456,
+            mcpAppData: createWeatherMcpAppData(),
           },
         },
       ],

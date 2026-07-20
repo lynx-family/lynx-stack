@@ -59,7 +59,7 @@ Bundlers tree-shake unused components: pulling in `Text` does **not** drag
 
 ## The built-in components
 
-The package ships 21 A2UI v0.9 basic-catalog renderers. Each is an
+The package ships 22 A2UI v0.9 basic-catalog renderers. Each is an
 independent, tree-shakeable export, available from the root or from
 `@lynx-js/genui/a2ui/catalog/<Name>`.
 
@@ -83,6 +83,20 @@ independent, tree-shakeable export, available from the root or from
 | `Image`         | An image from a source URL.                                    |
 | `Icon`          | A named icon glyph.                                            |
 | `LazyComponent` | A ReactLynx lazy bundle loaded from a resource URL.            |
+| `McpApp`        | A trusted MCP App Lynx bundle hosted in a nested frame.        |
+
+`McpApp` is the Lynx-native A2UI-outer/MCP-App-inner composition: A2UI owns
+the surrounding surface, while `<frame>` runs the MCP App as a separate Lynx
+page. Pass its platform-specific bundle URLs and `mcpAppData` only after
+resolving a host-registered MCP Apps resource. Do not allow an agent to invent
+bundle URLs or arbitrary executable content.
+
+The frame stretches to the A2UI container width and enables `autoWidth` plus
+`autoHeight` by default, allowing its measured size to follow the nested page's
+reported content size. Keep the explicit width stretch in the host layout;
+auto-sizing itself follows nested content rather than measuring the parent.
+The wrapper uses border-box sizing, so a 288 px wrapper with a 1 px border on
+both sides provides a 286 px content width to the frame.
 
 **Input and actions**
 
@@ -201,6 +215,7 @@ import {
   DateTimeInput,
   Divider,
   LazyComponent,
+  McpApp,
   Icon,
   Image,
   LineChart,
@@ -237,6 +252,9 @@ import dividerManifest from '@lynx-js/genui/a2ui/catalog/Divider/catalog.json' w
   type: 'json',
 };
 import lazyComponentManifest from '@lynx-js/genui/a2ui/catalog/LazyComponent/catalog.json' with {
+  type: 'json',
+};
+import mcpAppManifest from '@lynx-js/genui/a2ui/catalog/McpApp/catalog.json' with {
   type: 'json',
 };
 import iconManifest from '@lynx-js/genui/a2ui/catalog/Icon/catalog.json' with {
@@ -290,6 +308,7 @@ export const allBuiltins = defineCatalog([
   [Button, buttonManifest],
   [Divider, dividerManifest],
   [LazyComponent, lazyComponentManifest],
+  [McpApp, mcpAppManifest],
   [LineChart, lineChartManifest],
   [PieChart, pieChartManifest],
   [TextField, textFieldManifest],

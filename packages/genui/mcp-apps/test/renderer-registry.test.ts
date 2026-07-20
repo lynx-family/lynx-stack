@@ -4,6 +4,7 @@
 
 import { describe, expect, test } from '@rstest/core';
 
+import { readMcpAppsHostData } from '../src/render/data.js';
 import {
   createAppRendererRegistry,
   defineAppRenderer,
@@ -23,6 +24,35 @@ const RENDERER = defineAppRenderer({
 });
 
 describe('MCP Apps render data', () => {
+  test('prefers reactive frame init data over global props', () => {
+    expect(readMcpAppsHostData(
+      {
+        embedded: true,
+        mcpAppData: { renderer: 'frame' },
+        theme: 'dark',
+      },
+      {
+        mcpAppData: { renderer: 'global' },
+        theme: 'light',
+      },
+    )).toEqual({
+      embedded: true,
+      mcpAppData: { renderer: 'frame' },
+      theme: 'dark',
+    });
+  });
+
+  test('falls back to standalone global props', () => {
+    expect(readMcpAppsHostData(undefined, {
+      mcpAppData: { renderer: 'global' },
+      theme: 'dark',
+    })).toEqual({
+      embedded: false,
+      mcpAppData: { renderer: 'global' },
+      theme: 'dark',
+    });
+  });
+
   test('reads URL-encoded Markdown data', () => {
     const value = encodeURIComponent(JSON.stringify({ markdown: '# Lynx' }));
 

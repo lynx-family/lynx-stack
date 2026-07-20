@@ -52,7 +52,7 @@ const catalog = defineCatalog([Text, Button]);
 
 ## 内置组件
 
-这个包提供 21 个 A2UI v0.9 basic-catalog renderer。每个都是独立、可 tree-shake
+这个包提供 22 个 A2UI v0.9 basic-catalog renderer。每个都是独立、可 tree-shake
 的导出，既可从根导入，也可从 `@lynx-js/genui/a2ui/catalog/<Name>` 导入。
 
 **布局与容器**
@@ -69,12 +69,24 @@ const catalog = defineCatalog([Text, Button]);
 
 **内容**
 
-| 组件            | 渲染什么                                      |
-| --------------- | --------------------------------------------- |
-| `Text`          | 一段文本，带 `variant`（如 `body`）控制样式。 |
-| `Image`         | 来自 source URL 的图片。                      |
-| `Icon`          | 一个具名 icon 字形。                          |
-| `LazyComponent` | 从资源 URL 加载的 ReactLynx lazy bundle。     |
+| 组件            | 渲染什么                                        |
+| --------------- | ----------------------------------------------- |
+| `Text`          | 一段文本，带 `variant`（如 `body`）控制样式。   |
+| `Image`         | 来自 source URL 的图片。                        |
+| `Icon`          | 一个具名 icon 字形。                            |
+| `LazyComponent` | 从资源 URL 加载的 ReactLynx lazy bundle。       |
+| `McpApp`        | 在嵌套 frame 中运行的可信 MCP App Lynx bundle。 |
+
+`McpApp` 对应 A2UI 外层、MCP App 内层的 Lynx 原生组合模式：A2UI 管理外围
+surface，`<frame>` 将 MCP App 作为独立 Lynx 页面运行。平台 bundle URL 和
+`mcpAppData` 必须由 host 从已注册的 MCP Apps resource 解析后提供，不能让 Agent
+自行编造 bundle URL 或任意可执行内容。
+
+frame 会拉伸到 A2UI 容器宽度，并默认开启 `autoWidth` 与 `autoHeight`，让自身尺寸
+跟随嵌套页面上报的内容尺寸。host 布局仍需保留显式的宽度拉伸；auto-sizing
+跟随的是内页内容，并不会自行测量父容器。
+wrapper 使用 border-box，因此 288 px 的 wrapper 扣除左右各 1 px border 后，
+提供给 frame 的内容宽度是 286 px。
 
 **输入与动作**
 
@@ -185,6 +197,7 @@ import {
   DateTimeInput,
   Divider,
   LazyComponent,
+  McpApp,
   Icon,
   Image,
   LineChart,
@@ -221,6 +234,9 @@ import dividerManifest from '@lynx-js/genui/a2ui/catalog/Divider/catalog.json' w
   type: 'json',
 };
 import lazyComponentManifest from '@lynx-js/genui/a2ui/catalog/LazyComponent/catalog.json' with {
+  type: 'json',
+};
+import mcpAppManifest from '@lynx-js/genui/a2ui/catalog/McpApp/catalog.json' with {
   type: 'json',
 };
 import iconManifest from '@lynx-js/genui/a2ui/catalog/Icon/catalog.json' with {
@@ -274,6 +290,7 @@ export const allBuiltins = defineCatalog([
   [Button, buttonManifest],
   [Divider, dividerManifest],
   [LazyComponent, lazyComponentManifest],
+  [McpApp, mcpAppManifest],
   [LineChart, lineChartManifest],
   [PieChart, pieChartManifest],
   [TextField, textFieldManifest],

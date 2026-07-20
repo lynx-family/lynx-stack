@@ -94,6 +94,7 @@ export {
   Column,
   Divider,
   LazyComponent,
+  McpApp,
   Image,
   LineChart,
   PieChart,

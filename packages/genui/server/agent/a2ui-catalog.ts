@@ -109,6 +109,8 @@ const COMPONENT_SUMMARIES: Record<string, string> = {
   List:
     'Scrollable repeating layout container. Use when repeated content needs scrolling; otherwise prefer Column or Row template children.',
   Loading: 'Animated progress indicator for pending content.',
+  McpApp:
+    'Host a trusted MCP App Lynx bundle in a nested frame and pass validated renderer data to it.',
   Modal:
     'Modal dialog with a trigger component and a content component. The trigger opens the modal locally when tapped.',
   PieChart: 'Display numeric slices as a pie or donut chart.',
@@ -350,6 +352,7 @@ export const BASIC_CATALOG: A2UICatalog = {
   extraRules: [
     'Use only components listed in this catalog; unsupported examples such as Video, AudioPlayer, DatePicker, or Checkbox are not available unless they appear here.',
     'The implemented checkbox component is named "CheckBox" with a capital B.',
+    'Use McpApp only with bundle URLs and mcpAppData supplied by a host-registered MCP Apps resource; never invent MCP App URLs or renderer data.',
   ],
   functions: functionsFromGeneratedCatalog(generatedCatalog),
   examples: BASIC_CATALOG_EXAMPLES,
@@ -404,6 +407,7 @@ function createA2UICatalogFromExtractedManifest(
     extraRules: [
       'Use only components listed in this catalog; unsupported examples such as Video, AudioPlayer, DatePicker, or Checkbox are not available unless they appear here.',
       'The implemented checkbox component is named "CheckBox" with a capital B.',
+      'Use McpApp only with bundle URLs and mcpAppData supplied by a host-registered MCP Apps resource; never invent MCP App URLs or renderer data.',
     ],
     examples: BASIC_CATALOG_EXAMPLES,
   });

@@ -4,6 +4,46 @@
 
 import type { AppRenderData } from '../contract.js';
 
+interface McpAppsHostData {
+  embedded: boolean;
+  mcpAppData: unknown;
+  theme: 'light' | 'dark';
+}
+
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return value !== null && typeof value === 'object' && !Array.isArray(value);
+}
+
+function readTheme(value: unknown): 'light' | 'dark' | undefined {
+  return value === 'light' || value === 'dark' ? value : undefined;
+}
+
+/** Resolve frame init data first and retain global-props compatibility. */
+export function readMcpAppsHostData(
+  initData: unknown,
+  globalProps: unknown,
+): McpAppsHostData {
+  const initRecord = isRecord(initData) ? initData : {};
+  const globalRecord = isRecord(globalProps) ? globalProps : {};
+  const hasInitAppData = Object.prototype.hasOwnProperty.call(
+    initRecord,
+    'mcpAppData',
+  );
+  const embedded = typeof initRecord['embedded'] === 'boolean'
+    ? initRecord['embedded']
+    : globalRecord['embedded'] === true;
+
+  return {
+    embedded,
+    mcpAppData: hasInitAppData
+      ? initRecord['mcpAppData']
+      : globalRecord['mcpAppData'],
+    theme: readTheme(initRecord['theme'])
+      ?? readTheme(globalRecord['theme'])
+      ?? 'light',
+  };
+}
+
 function parseJsonLikeString(value: string): unknown {
   let current = value;
   for (let index = 0; index < 4; index++) {
@@ -27,7 +67,7 @@ function readAppDataCandidate(value: unknown): unknown {
   return typeof value === 'string' ? parseJsonLikeString(value) : value;
 }
 
-/** Reads Markdown fallback content from MCP Apps global data. */
+/** Reads Markdown fallback content from MCP Apps host data. */
 export function readAppMarkdown(value: unknown): string {
   const candidate = readAppDataCandidate(value);
   if (
