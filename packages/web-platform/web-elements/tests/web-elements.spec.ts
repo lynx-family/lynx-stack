@@ -299,6 +299,24 @@ test.describe('web-elements test suite', () => {
         page.locator('#target'),
       ).not.toHaveAttribute('x-show-inline-truncation', '');
     });
+    test(
+      'x-text/text-maxline-with-inline-view-and-custom-truncation',
+      async ({ page }, { title }) => {
+        const errors: string[] = [];
+        page.on('pageerror', (error) => {
+          errors.push(error.message);
+        });
+        page.on('console', (message) => {
+          if (message.type() === 'error') {
+            errors.push(message.text());
+          }
+        });
+
+        await gotoWebComponentPage(page, title);
+        await wait(500);
+        expect(errors).toEqual([]);
+      },
+    );
 
     test('x-text/text-overflow-inherit', async ({ page }, { title }) => {
       await gotoWebComponentPage(page, title);
