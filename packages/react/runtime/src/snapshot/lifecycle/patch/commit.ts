@@ -36,6 +36,7 @@ import {
   delayedRunOnMainThreadData,
   takeDelayedRunOnMainThreadData,
 } from '../../../core/thread-function-call/main-thread.js';
+import { getCurrentRootContext, registerContextSlot } from '../../../root-context.js';
 import { profileEnd, profileStart } from '../../../shared/profile.js';
 import { COMMIT } from '../../../shared/render-constants.js';
 import { hook, isEmptyObject } from '../../../utils.js';
@@ -45,8 +46,32 @@ import { applyQueuedRefs } from '../../snapshot/ref.js';
 import { sendMTRefInitValueToMainThread } from '../../worklet/ref/updateInitValue.js';
 import { isRendering } from '../isRendering.js';
 
-const globalCommitTaskMap: Map<number, () => void> = /*@__PURE__*/ new Map<number, () => void>();
+let globalCommitTaskMap: Map<number, () => void> = /*@__PURE__*/ new Map<number, () => void>();
+// Note: `nextCommitTaskId` is intentionally NOT per-root: globally unique ids
+// guarantee one root's hydration ack never flushes another root's tasks.
 let nextCommitTaskId = 1;
+
+registerContextSlot({
+  id: 'commitTaskMap',
+  init: () => new Map<number, () => void>(),
+  save(bag) {
+    bag['commitTaskMap'] = globalCommitTaskMap;
+  },
+  load(bag) {
+    globalCommitTaskMap = bag['commitTaskMap'] as Map<number, () => void>;
+  },
+});
+
+registerContextSlot({
+  id: 'patchOptions',
+  init: () => ({}),
+  save(bag) {
+    bag['patchOptions'] = globalPatchOptions;
+  },
+  load(bag) {
+    globalPatchOptions = bag['patchOptions'] as GlobalPatchOptions;
+  },
+});
 
 /**
  * A single patch operation.
@@ -118,12 +143,15 @@ function replaceCommitHook(): void {
 
       const commitTaskId = genCommitTaskId();
 
-      // Register the commit task
+      // Register the commit task. Capture this root's instance registry: the
+      // task runs after the native ack, when another root's registry may be
+      // the current one.
+      const instanceValues = backgroundSnapshotInstanceManager.values;
       globalCommitTaskMap.set(commitTaskId, () => {
         if (backgroundSnapshotInstancesToRemove.length) {
           setTimeout(() => {
             backgroundSnapshotInstancesToRemove.forEach(id => {
-              backgroundSnapshotInstanceManager.values.get(id)?.tearDown();
+              instanceValues.get(id)?.tearDown();
             });
           }, 10000);
         }
@@ -160,12 +188,17 @@ function replaceCommitHook(): void {
       }
       const obj = commitPatchUpdate(patchList, patchOptions);
 
-      // Send the update to the native layer
-      lynx.getNativeApp().callLepusMethod(LifecycleConstant.patchUpdate, obj, () => {
-        const commitTask = globalCommitTaskMap.get(commitTaskId);
+      // Send the update to the native layer, through this root's own channel
+      // when it has one (multi-root: each root talks to its own native view).
+      // Capture this root's task map: by the time native acks, the current
+      // context may be a different root's.
+      const commitTaskMap = globalCommitTaskMap;
+      const ctxLynx = getCurrentRootContext().lynx ?? lynx;
+      ctxLynx.getNativeApp().callLepusMethod(LifecycleConstant.patchUpdate, obj, () => {
+        const commitTask = commitTaskMap.get(commitTaskId);
         if (commitTask) {
           commitTask();
-          globalCommitTaskMap.delete(commitTaskId);
+          commitTaskMap.delete(commitTaskId);
         }
       });
 

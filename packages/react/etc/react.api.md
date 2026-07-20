@@ -71,6 +71,17 @@ export function createPortal(vnode: ComponentChild, container: NodesRef): VNode<
 export { createRef }
 
 // @public
+export function createRoot(options?: CreateRootOptions): ReactLynxRoot;
+
+// @public
+export interface CreateRootOptions {
+    lynx?: RootLynx;
+    lynxCoreInject?: {
+        tt: RootTT;
+    };
+}
+
+// @public
 export interface DataProcessorDefinition {
     dataProcessors?: DataProcessors;
     defaultDataProcessor?: (rawInitData: InitDataRaw) => InitData;
@@ -160,6 +171,12 @@ export type ReactLynxChildren = Omit<typeof Children_2, 'map' | 'forEach' | 'toA
 };
 
 // @public
+export class ReactLynxRoot {
+    render(jsx: ReactNode): void;
+    unmount(): void;
+}
+
+// @public
 export interface Root {
     // @deprecated
     registerDataProcessors: (dataProcessorDefinition: DataProcessorDefinition) => void;
@@ -168,6 +185,38 @@ export interface Root {
 
 // @public
 export const root: Root;
+
+// @public
+export interface RootLynx {
+    // (undocumented)
+    getNativeApp(): RootNativeApp;
+}
+
+// @public
+export interface RootNativeApp {
+    // (undocumented)
+    callLepusMethod(name: string, data: object, callback?: (ret?: unknown) => void): void;
+}
+
+// @public
+export interface RootTT {
+    // (undocumented)
+    callDestroyLifetimeFun?: () => void;
+    // (undocumented)
+    onAppReload?: (...args: any[]) => void;
+    // (undocumented)
+    OnLifecycleEvent?: (...args: any[]) => void;
+    // (undocumented)
+    processCardConfig?: (...args: any[]) => void;
+    // (undocumented)
+    publicComponentEvent?: (componentId: string, handlerName: string, data: any) => void;
+    // (undocumented)
+    publishEvent?: (handlerName: string, data: any) => void;
+    // (undocumented)
+    updateCardData?: (...args: any[]) => void;
+    // (undocumented)
+    updateGlobalProps?: (newData: any) => void;
+}
 
 // @public
 export function runOnBackground<R, Fn extends (...args: any[]) => R>(f: Fn): (...args: Parameters<Fn>) => Promise<R>;

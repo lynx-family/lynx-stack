@@ -124,6 +124,17 @@ export { createElement } from '../runtime/lib/index.js';
 export { cloneElement } from '../runtime/lib/index.js';
 
 /**
+ * Create an independent root so multiple pages can render in one JS context
+ * without their component trees, state, or patch streams clobbering each
+ * other. Pass a card's own `lynx`/`lynxCoreInject` to bind the root to that
+ * card's native view.
+ *
+ * @public
+ */
+export { createRoot, ReactLynxRoot } from '../runtime/lib/index.js';
+export type { CreateRootOptions, RootLynx, RootNativeApp, RootTT } from '../runtime/lib/index.js';
+
+/**
  * RL-defined Lynx APIs
  */
 export * from '../runtime/lib/lynx-api.js';

@@ -93,3 +93,4 @@ export {
 };
 
 export * from './lynx-api.js';
+export * from './root-instance.js';

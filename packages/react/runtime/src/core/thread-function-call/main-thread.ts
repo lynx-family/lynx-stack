@@ -3,6 +3,7 @@
 // LICENSE file in the root directory of this source tree.
 
 import { onFunctionCall } from './return-value.js';
+import { registerContextSlot } from '../../root-context.js';
 import { isSdkVersionGt } from '../../utils.js';
 import { WorkletEvents } from '../../worklet-runtime/bindings/events.js';
 import type { RunWorkletCtxData } from '../../worklet-runtime/bindings/events.js';
@@ -16,6 +17,17 @@ interface RunOnMainThreadOptions {
 export type RunOnMainThread = <R, Fn extends (...args: any[]) => R>(fn: Fn) => (...args: Parameters<Fn>) => Promise<R>;
 
 export let delayedRunOnMainThreadData: RunWorkletCtxData[] = [];
+
+registerContextSlot({
+  id: 'delayedRunOnMainThreadData',
+  init: () => [],
+  save(bag) {
+    bag['delayedRunOnMainThreadData'] = delayedRunOnMainThreadData;
+  },
+  load(bag) {
+    delayedRunOnMainThreadData = bag['delayedRunOnMainThreadData'] as RunWorkletCtxData[];
+  },
+});
 
 export function enqueueDelayedRunOnMainThreadData(data: RunWorkletCtxData): void {
   delayedRunOnMainThreadData.push(data);

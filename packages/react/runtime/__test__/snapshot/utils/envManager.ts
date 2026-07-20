@@ -13,6 +13,7 @@ import { shouldDelayUiOps } from '../../../src/snapshot/lifecycle/ref/delay.js';
 import { clearListGlobal } from '../../../src/snapshot/list/list.js';
 import { globalPipelineOptions, setPipeline } from '../../../src/core/performance.js';
 import { __root, setRoot } from '../../../src/root.js';
+import { defaultRootContext, switchRootContext } from '../../../src/root-context.js';
 import { SnapshotInstance, snapshotInstanceManager } from '../../../src/snapshot/snapshot/snapshot.js';
 import { hydrationMap } from '../../../src/snapshot/snapshot/snapshotInstanceHydrationMap.js';
 import { clearWorkletRefLastIdForTesting } from '../../../src/snapshot/worklet/ref/workletRef.js';
@@ -76,6 +77,9 @@ export class EnvManager {
   }
 
   resetEnv(): void {
+    // Multi-root tests may leave a non-default context current; the resets
+    // below all target the default context's (module-level) state.
+    switchRootContext(defaultRootContext);
     if (this.target.__BACKGROUND__) {
       this.switchToMainThread();
     }
