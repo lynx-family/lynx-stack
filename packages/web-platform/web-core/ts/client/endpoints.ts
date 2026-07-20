@@ -10,6 +10,7 @@ import type {
   InvokeCallbackRes,
   ElementAnimationOptions,
   ExternalBundleResponse,
+  ContextCrossThreadEvent,
   UpdateDataOptions,
   TimingEntry,
 } from '../types/index.js';
@@ -179,6 +180,16 @@ export const dispatchJSContextOnMainThreadEndpoint = createRpcEndpoint<
   }],
   void
 >('dispatchJSContextOnMainThread', false, false);
+
+export const dispatchDevtoolEventOnBackgroundEndpoint = createRpcEndpoint<
+  [ContextCrossThreadEvent],
+  void
+>('dispatchDevtoolEventOnBackground', false, false);
+
+export const dispatchDevtoolEventOnMainThreadEndpoint = createRpcEndpoint<
+  [ContextCrossThreadEvent],
+  void
+>('dispatchDevtoolEventOnMainThread', false, false);
 
 export const triggerElementMethodEndpoint = createRpcEndpoint<
   [

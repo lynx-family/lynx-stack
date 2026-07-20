@@ -4,6 +4,8 @@
 
 import {
   dispatchCoreContextOnBackgroundEndpoint,
+  dispatchDevtoolEventOnBackgroundEndpoint,
+  dispatchDevtoolEventOnMainThreadEndpoint,
   dispatchJSContextOnMainThreadEndpoint,
   fetchExternalBundleEndpoint,
   reloadEndpoint,
@@ -25,6 +27,11 @@ export function createBackgroundLynx(
     receiveEventEndpoint: dispatchCoreContextOnBackgroundEndpoint,
     sendEventEndpoint: dispatchJSContextOnMainThreadEndpoint,
   });
+  const devtoolContext = new LynxCrossThreadContext({
+    rpc: mainThreadRpc,
+    receiveEventEndpoint: dispatchDevtoolEventOnBackgroundEndpoint,
+    sendEventEndpoint: dispatchDevtoolEventOnMainThreadEndpoint,
+  });
   const fetchExternalBundle = mainThreadRpc.createCall(
     fetchExternalBundleEndpoint,
   );
@@ -37,6 +44,9 @@ export function createBackgroundLynx(
     },
     getCoreContext() {
       return coreContext;
+    },
+    getDevtool() {
+      return devtoolContext;
     },
     getCustomSectionSync(key: string) {
       return customSections[key];

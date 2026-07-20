@@ -39,6 +39,7 @@ export type NativeLynx = {
   getJSModule(_moduleName: string): unknown;
   getNativeApp(): NativeApp;
   getCoreContext(): LynxContextEventTarget;
+  getDevtool(): LynxContextEventTarget;
   getCustomSectionSync(key: string): CloneableObject;
   getCustomSection(key: string): Promise<CloneableObject>;
 };
