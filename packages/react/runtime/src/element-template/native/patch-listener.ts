@@ -101,6 +101,10 @@ export function installElementTemplatePatchListener(): void {
       }
     }
 
+    if (!hasOps && !delayedRunOnMainThreadData?.length) {
+      flushOptions.emptyPatch = true;
+    }
+
     __FlushElementTree(__page, flushOptions);
 
     if (shouldProfilePatch) {

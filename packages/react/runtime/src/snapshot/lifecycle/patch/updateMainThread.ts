@@ -98,6 +98,12 @@ function updateMainThread(
   if (patchOptions.pipelineOptions) {
     flushOptions.pipelineOptions = patchOptions.pipelineOptions;
   }
+  if (
+    !delayedRunOnMainThreadData?.length
+    && patchList.every(({ snapshotPatch }) => !snapshotPatch?.length)
+  ) {
+    flushOptions.emptyPatch = true;
+  }
   __FlushElementTree(__page, flushOptions);
 
   if (flowIds) {

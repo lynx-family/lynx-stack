@@ -90,6 +90,7 @@ describe('ElementTemplate update timing (main thread patch)', () => {
       .calls;
     expect(flushCalls.length).toBeGreaterThan(0);
     expect(flushCalls[0]?.[1]).toMatchObject({ pipelineOptions });
+    expect(flushCalls[0]?.[1]).not.toHaveProperty('emptyPatch');
     expect(lynx.performance.profileStart).toHaveBeenCalledWith('ReactLynx::patch', {
       flowId: flowIds[0],
       flowIds,
@@ -158,7 +159,7 @@ describe('ElementTemplate update timing (main thread patch)', () => {
     const flushCalls = (__FlushElementTree as unknown as { mock: { calls: unknown[][] } }).mock
       .calls;
     expect(flushCalls.length).toBeGreaterThan(0);
-    expect(flushCalls[0]?.[1]).toMatchObject({ pipelineOptions });
+    expect(flushCalls[0]?.[1]).toMatchObject({ pipelineOptions, emptyPatch: true });
     expect(lynx.performance._markTiming.mock.calls).toEqual([
       ['pipelineID', 'mtsRenderStart'],
       ['pipelineID', 'parseChangesStart'],
