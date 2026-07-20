@@ -13,8 +13,9 @@ monorepo.
 pnpm add @lynx-js/genui @lynx-js/react
 ```
 
-`@lynx-js/react` is a peer dependency. Some built-in A2UI catalog components
-also use `@lynx-js/lynx-ui`; install it when your app renders those components.
+`@lynx-js/react` is a peer dependency. Some built-in A2UI components and the
+default OpenUI Library also use `@lynx-js/lynx-ui`; install it when your app
+uses those surfaces.
 
 ## Entry Points
 
@@ -102,11 +103,13 @@ export function OpenUIScreen() {
 }
 ```
 
-Renderer styles are explicit:
+Import the optional OpenUI theme tokens once in your app:
 
 ```ts
-import '@lynx-js/genui/openui/styles/renderer.css';
+import '@lynx-js/genui/openui/styles/theme.css';
 ```
+
+The renderer and component styles are imported by their modules.
 
 See [`openui/README.md`](./openui/README.md) for streaming and custom library
 examples.

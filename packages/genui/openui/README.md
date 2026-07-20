@@ -1,217 +1,121 @@
 # @lynx-js/genui/openui
 
-ReactLynx renderer for the [OpenUI DSL](https://www.openui.com/). Parses
-OpenUI functional notation into a renderable tree and renders it via a
-pluggable component catalog in Lynx applications.
+English | [简体中文](./README_zh.md)
 
-This package includes:
+`@lynx-js/genui/openui` is the ReactLynx client runtime for OpenUI Lang v0.5.
+It parses declarative OpenUI text, evaluates reactive state and data operations,
+and renders the result with a trusted ReactLynx component library.
 
-- `createOpenUiLibrary`: factory that builds an OpenUI `Library` instance
-  with built-in components, fully customizable via options.
-- `defineComponent`: define custom components with Zod-validated props.
-- `OpenUiRenderer`: ReactLynx component that parses and renders OpenUI Lang
-  v0.5 responses, including `$variables`, `Query()`, `Mutation()`, and
-  `Action([@...])` steps.
-- `createParser` / `createStreamingParser`: parse OpenUI DSL text
-  (functional notation) into a renderable AST.
-- `catalog/*`: built-in component renderers (Stack, Row, Column, List, Card,
-  CardHeader, Text, TextContent, Separator, Divider, Button, Buttons, Tag,
-  Image, Icon, Video, AudioPlayer, Loading, Tabs, Modal, CheckBox,
-  RadioGroup, ChoicePicker, Slider, TextField, DateTimeInput).
+Use this package when an Agent produces OpenUI Lang and your Lynx app owns the
+transport, tools, state persistence, and host actions. The Agent emits data, not
+executable UI code: it can only instantiate components described by the library
+you give to the renderer.
 
-## Exports
+If you are new to OpenUI, think of it this way:
 
-- `@lynx-js/genui/openui`: `createOpenUiLibrary`, `defineComponent`,
-  `OpenUiRenderer`, parser utilities, and all core types.
-- `@lynx-js/genui/openui/catalog`: re-exports of built-in catalog
-  components for tree-shake-friendly subpath access.
+- In React, your code chooses components and passes props.
+- In OpenUI, an Agent writes one assignment per line using the components in
+  your library.
+- The client parses those assignments and renders the real ReactLynx
+  components you registered.
 
-## Installation
+## Install
 
-Make sure your app provides the peer dependencies:
+Install the published GenUI package in a ReactLynx app:
 
-- `@lynx-js/react`
-
-```bash
-pnpm add @lynx-js/genui
+```sh
+pnpm add @lynx-js/genui @lynx-js/react @lynx-js/lynx-ui
 ```
 
-## Quick Start
+The built-in `RadioGroup`, `Slider`, and `TextField` components use
+`@lynx-js/lynx-ui`, so include that peer when using the default Library.
 
-1. Create a library.
-2. Pass raw OpenUI Lang text to `<OpenUiRenderer response={...}>`.
-3. Handle actions from `@ToAssistant()` / `@OpenUrl()` with `onAction`.
+Import the optional theme tokens once, then apply a light or dark theme class
+around the renderer. Renderer and component CSS are included by their modules;
+there is no separate renderer stylesheet to import.
+
+```ts
+import '@lynx-js/genui/openui/styles/theme.css';
+```
+
+## Quick start
+
+Create a library, pass raw OpenUI Lang to `<OpenUiRenderer>`, and handle actions
+that need the host application.
 
 ```tsx
 import { createOpenUiLibrary, OpenUiRenderer } from '@lynx-js/genui/openui';
 import { useMemo } from '@lynx-js/react';
 
-const rawText = `
-root = Stack([header, card], "column", "l", "center")
-header = TextContent("Hello OpenUI", "large-heavy")
-card = Card([content, btn], "card")
-content = TextContent("Welcome to OpenUI")
-btn = Buttons([Button("Get Started", Action([@ToAssistant("clicked")]), "primary")])
+import '@lynx-js/genui/openui/styles/theme.css';
+
+const response = String.raw`
+root = Stack([header, card], "column", false, "m", "stretch", "start")
+header = Text("Hello OpenUI", "h2")
+card = Card([message, actions])
+message = TextContent("This UI was described as data.")
+actions = Buttons([Button("Continue", Action([@ToAssistant("Continue")]), "primary")])
 `.trim();
 
-export function App() {
+export function GeneratedView() {
   const library = useMemo(() => createOpenUiLibrary(), []);
 
   return (
-    <OpenUiRenderer
-      response={rawText}
-      library={library}
-      onAction={(event) => {
-        console.log('Action:', event.humanFriendlyMessage);
-      }}
-    />
-  );
-}
-```
-
-## Streaming
-
-For real-time streaming scenarios (e.g., LLM output), feed chunks
-incrementally:
-
-```tsx
-import { createOpenUiLibrary, OpenUiRenderer } from '@lynx-js/genui/openui';
-import { useEffect, useMemo, useState } from '@lynx-js/react';
-
-const CHUNK_SIZE = 8;
-const STREAM_DELAY_MS = 30;
-
-export function StreamingApp({ rawText }: { rawText: string }) {
-  const library = useMemo(() => createOpenUiLibrary(), []);
-  const [response, setResponse] = useState('');
-  const [isStreaming, setIsStreaming] = useState(false);
-
-  useEffect(() => {
-    let cancelled = false;
-    setIsStreaming(true);
-    setResponse('');
-    let offset = 0;
-
-    const tick = () => {
-      if (cancelled || offset >= rawText.length) {
-        setIsStreaming(false);
-        return;
-      }
-      const chunk = rawText.slice(offset, offset + CHUNK_SIZE);
-      offset += CHUNK_SIZE;
-      setResponse((prev) => prev + chunk);
-      setTimeout(tick, STREAM_DELAY_MS);
-    };
-
-    tick();
-    return () => {
-      cancelled = true;
-    };
-  }, [library, rawText]);
-
-  return (
-    <OpenUiRenderer
-      response={response}
-      library={library}
-      isStreaming={isStreaming}
-    />
-  );
-}
-```
-
-## v0.5 Runtime
-
-Use the `response` renderer entry point for v0.5 features:
-
-```tsx
-const ui = `
-$title = ""
-data = Query("list_items", { search: $title }, { rows: [] })
-save = Mutation("save_item", { title: $title })
-root = Stack([
-  TextContent("Rows: " + @Count(data.rows)),
-  Button("Save", Action([@Run(save), @Run(data), @Reset($title)]))
-])
-`.trim();
-
-<OpenUiRenderer
-  response={ui}
-  library={library}
-  toolProvider={{
-    list_items: async (args) => ({ rows: [] }),
-    save_item: async (args) => ({ ok: true }),
-  }}
-  onStateUpdate={(state) => persist(state)}
-  initialState={{ $title: 'Draft' }}
-/>;
-```
-
-`OpenUiRenderer` still accepts `result={parseResult}` for legacy/static
-callers, but `Query()`, `Mutation()`, `$variables`, and runtime expression
-evaluation require the raw `response` path.
-
-## Customizing the Library
-
-`createOpenUiLibrary` accepts an optional `CreateOpenUiLibraryOptions`
-object. Provided `components` and `componentGroups` are **merged** with
-the built-in defaults (appended after the defaults):
-
-```tsx
-import { createOpenUiLibrary, defineComponent } from '@lynx-js/genui/openui';
-import { z } from 'zod/v4';
-
-const MyBanner = defineComponent({
-  name: 'Banner',
-  description: 'A promotional banner',
-  props: z.object({ title: z.string(), color: z.string().optional() }),
-  component: (props) => (
-    <view style={{ backgroundColor: props.color ?? '#f0f0f0' }}>
-      <text>{props.title}</text>
+    <view className='openui-light'>
+      <OpenUiRenderer
+        response={response}
+        library={library}
+        onAction={(event) => {
+          // Forward ContinueConversation/OpenUrl events to your host.
+          console.info(event.humanFriendlyMessage);
+        }}
+      />
     </view>
-  ),
-});
-
-const library = createOpenUiLibrary({
-  root: 'Stack',
-  components: [MyBanner],
-  componentGroups: [
-    { name: 'Custom', components: ['Banner'] },
-  ],
-});
+  );
+}
 ```
 
-### Options
+The raw response must be OpenUI Lang, not a Markdown code fence. Every line is
+an assignment, and the render entry point must be named `root`:
 
-| Option            | Type                 | Default       | Description                                    |
-| ----------------- | -------------------- | ------------- | ---------------------------------------------- |
-| `root`            | `string`             | `'Stack'`     | Name of the root component                     |
-| `components`      | `DefinedComponent[]` | `[]` (merged) | Additional components appended to built-in set |
-| `componentGroups` | `ComponentGroup[]`   | `[]` (merged) | Additional groups appended to built-in groups  |
-
-## OpenUI DSL Syntax
-
-The DSL uses a **functional notation** (not XML). Each statement assigns
-a component instance to an identifier:
-
-```
-root = Stack([header, card], "column", "l", "center")
-header = TextContent("Choose Your Plan", "large-heavy")
-card = Card([cardHeader, sep, features, btn], "card")
-cardHeader = CardHeader("Pro", "For growing teams")
-sep = Separator("horizontal", true)
-features = Stack([f1, f2], "column", "s")
-f1 = TextContent("✓  Unlimited projects")
-f2 = TextContent("✓  Priority support")
-btn = Buttons([Button("Start Trial", Action([@ToAssistant("start")]), "primary")])
+```text
+identifier = Component(positional, arguments)
+$variable = defaultValue
+data = Query("tool_name", { argument: $variable }, { fallback: true })
 ```
 
-## JSON Schema
+## What you own
 
-Generate a JSON Schema representation of the library for LLM agent
-handshakes:
+| Part                    | Owner            | Role                                                                                                    |
+| ----------------------- | ---------------- | ------------------------------------------------------------------------------------------------------- |
+| `@lynx-js/genui/openui` | This package     | OpenUI parser/runtime adapter, ReactLynx renderer, built-in library, state/actions, and prompt helpers. |
+| Your Agent service      | Your application | Calls a model with the OpenUI system prompt and returns raw OpenUI Lang text.                           |
+| Your transport adapter  | Your application | Streams or sets the accumulated response text and cancels stale requests.                               |
+| Your tool provider      | Your application | Implements the tools referenced by `Query()` and `Mutation()`.                                          |
+| Your host shell         | Your application | Persists state and handles assistant/open-URL actions emitted by the renderer.                          |
 
-```ts
-const library = createOpenUiLibrary();
-const schema = library.toJSONSchema();
-// Pass `schema` to your LLM / agent for structured output generation.
-```
+## First things to know
+
+- Prefer `<OpenUiRenderer response={...}>` for OpenUI v0.5. The legacy
+  `result={parseResult}` path renders pre-parsed static trees but does not own
+  the v0.5 query, mutation, or reactive-state runtime.
+- While a model is streaming, pass the accumulated response together with
+  `isStreaming`. The incremental parser keeps completed statements renderable,
+  and built-in interactions stay disabled until the stream finishes.
+- `Query()` executes after a complete response and re-runs when reactive
+  arguments change. `Mutation()` only runs through `@Run(...)` in an action.
+- `onAction` receives host actions such as `@ToAssistant(...)` and
+  `@OpenUrl(...)`. State steps and tool steps execute inside the runtime first.
+- `onError` returns structured parser, runtime, render, and tool errors suitable
+  for an Agent correction loop.
+- `createOpenUiLibrary()` includes 26 built-in components. Additional
+  definitions are appended, and a later component with the same name replaces
+  the built-in implementation.
+
+## More docs
+
+- [Overview and architecture](./docs/overview.md)
+- [Libraries, built-ins, and custom components](./docs/library-guide.md)
+- [System prompts](./docs/system-prompts.md)
+- [Open the GenUI playground](https://lynx-stack.dev/genui/#/openui)
+- [Read the OpenUI Lang v0.5 specification](https://www.openui.com/docs/openui-lang/specification-v05)
