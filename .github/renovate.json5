@@ -38,6 +38,19 @@
   "prConcurrentLimit": 20,
   "prHourlyLimit": 4,
 
+  // Keep the job inside Mend's hosted 3GB memory cap. Renovate was being killed
+  // by the kernel OOM killer while `pnpm install` regenerated `pnpm-lock.yaml`
+  // for this workspace (28 package definitions) during `updateArtifacts`.
+  // Capping the spawned Node heap and forcing pnpm to a single worker keeps
+  // peak RSS well under the limit.
+  // See https://docs.renovatebot.com/mend-hosted/faq/#im-hitting-a-timeout--kernel-out-of-memory-limit-with-a-pnpmyarn-project
+  "env": {
+    "PNPM_MAX_WORKERS": "1",
+  },
+  "toolSettings": {
+    "nodeMaxMemory": 1536,
+  },
+
   "packageRules": [
     {
       "matchPackageNames": [
