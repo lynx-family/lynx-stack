@@ -98,8 +98,10 @@ function updateMainThread(
   if (patchOptions.pipelineOptions) {
     flushOptions.pipelineOptions = patchOptions.pipelineOptions;
   }
+  // Hydration drives the first-screen pipeline, leave it untouched.
   if (
-    !delayedRunOnMainThreadData?.length
+    !patchOptions.isHydration
+    && !delayedRunOnMainThreadData?.length
     && patchList.every(({ snapshotPatch }) => !snapshotPatch?.length)
   ) {
     flushOptions.emptyPatch = true;

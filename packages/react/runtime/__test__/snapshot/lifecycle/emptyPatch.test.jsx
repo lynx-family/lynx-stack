@@ -40,11 +40,14 @@ function mountAndHydrate(jsx) {
   lynxCoreInject.tt.OnLifecycleEvent(...globalThis.__OnLifecycleEvent.mock.calls[0]);
 
   globalEnvManager.switchToMainThread();
+  globalThis.__FlushElementTree = vi.fn();
   const rLynxChange = lynx.getNativeApp().callLepusMethod.mock.calls.at(-1);
   globalThis[rLynxChange[0]](rLynxChange[1]);
+  const hydrateFlushOptions = globalThis.__FlushElementTree.mock.calls.at(-1)[1];
 
   globalEnvManager.switchToBackground();
   rLynxChange[2]?.();
+  return hydrateFlushOptions;
 }
 
 function flushLatestUpdate() {
@@ -89,5 +92,13 @@ describe('emptyPatch flush option', () => {
     await waitSchedule();
 
     expect(flushLatestUpdate()).not.toHaveProperty('emptyPatch');
+  });
+
+  it('never marks the hydration flush, even when it applies no patch', () => {
+    function App() {
+      return <text>hello</text>;
+    }
+
+    expect(mountAndHydrate(<App />)).not.toHaveProperty('emptyPatch');
   });
 });
