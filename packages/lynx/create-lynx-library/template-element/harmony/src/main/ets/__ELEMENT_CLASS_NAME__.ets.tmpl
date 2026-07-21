@@ -1,0 +1,30 @@
+import { UIBase } from '@lynx/lynx';
+
+@Builder
+function build__ELEMENT_CLASS_NAME__(ui: UIBase) {
+  Text((ui as __ELEMENT_CLASS_NAME__).label)
+    .width('100%')
+    .height('100%')
+    .textAlign(TextAlign.Center)
+}
+
+export class __ELEMENT_CLASS_NAME__ extends UIBase {
+  label: string = '__ELEMENT_NAME__';
+  readonly builder: WrappedBuilder<[UIBase]> = wrapBuilder<[UIBase]>(build__ELEMENT_CLASS_NAME__);
+
+  update(props: Record<string, Object>): void {
+    super.update(props);
+    const label = props['label'];
+    if (typeof label === 'string') {
+      this.label = label;
+      this.builderNode?.update(this);
+    }
+  }
+
+  layout(_x: number, _y: number, width: number, height: number, _paddingLeft: number,
+    _paddingTop: number, _paddingRight: number, _paddingBottom: number, _marginLeft: number,
+    _marginTop: number, _marginRight: number, _marginBottom: number, _sticky?: number[]): void {
+    this.width = width;
+    this.height = height;
+  }
+}

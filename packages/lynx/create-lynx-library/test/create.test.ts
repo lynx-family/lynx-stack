@@ -40,14 +40,16 @@ describe('create-lynx-library', () => {
   });
 
   it('parses non-interactive Native platform flags', () => {
-    expect(parseLibraryPlatforms('android,ios,lynxtron')).toEqual([
+    expect(parseLibraryPlatforms('android,ios,harmony,lynxtron')).toEqual([
       'android',
       'ios',
+      'harmony',
       'lynxtron',
     ]);
     expect(parseLibraryPlatforms('ALL')).toEqual([
       'android',
       'ios',
+      'harmony',
       'lynxtron',
     ]);
     expect(() => parseLibraryPlatforms('web')).toThrow(
@@ -88,6 +90,15 @@ describe('create-lynx-library', () => {
         'android/src/main/java/com/example/button/ButtonModule.java',
         'android/src/main/java/com/example/button/ButtonElement.java',
         'android/src/main/java/com/example/button/ButtonService.java',
+        'harmony/oh-package.json5',
+        'harmony/build-profile.json5',
+        'harmony/hvigorfile.ts',
+        'harmony/Index.ets',
+        'harmony/src/main/module.json5',
+        'harmony/src/main/ets/LynxLibraryProviderImpl.ets',
+        'harmony/src/main/ets/ButtonModule.ets',
+        'harmony/src/main/ets/ButtonElement.ets',
+        'harmony/src/main/ets/ButtonService.ets',
         'ios/src/ButtonModule.h',
         'ios/src/ButtonElement.h',
         'ios/src/ButtonElement.m',
@@ -112,7 +123,14 @@ describe('create-lynx-library', () => {
     >(dir, 'package.json');
 
     expect(packageJson.files).toEqual(
-      expect.arrayContaining(['android', 'dist', 'lynxtron', 'shared', 'ios']),
+      expect.arrayContaining([
+        'android',
+        'dist',
+        'harmony',
+        'lynxtron',
+        'shared',
+        'ios',
+      ]),
     );
     expect(packageJson.files).not.toContain('CMakeLists.txt');
     expect(packageJson.exports).toMatchObject({
@@ -149,6 +167,9 @@ describe('create-lynx-library', () => {
       ios: {
         sourceDir: 'ios',
         podspecPath: 'ios/build.podspec',
+      },
+      harmony: {
+        sourceDir: 'harmony',
       },
       'lynxtron': {
         path: 'dist',
@@ -237,6 +258,55 @@ describe('create-lynx-library', () => {
     );
     expect(read(dir, 'ios/src/ButtonService.h')).toContain(
       '#import <LynxServiceAPI/ServiceAPI.h>',
+    );
+    expect(readJson(dir, 'harmony/oh-package.json5')).toMatchObject({
+      name: '@example/lynx_button',
+      main: 'Index.ets',
+      dependencies: {
+        '@lynx/lynx': '@param:dependencies.lynx_version',
+      },
+    });
+    expect(readJson(dir, 'harmony/src/main/module.json5')).toMatchObject({
+      module: {
+        name: 'lynx_button',
+        type: 'har',
+      },
+    });
+    expect(read(dir, 'harmony/Index.ets')).toContain(
+      'export { LynxLibraryProviderImpl } from \'./src/main/ets/LynxLibraryProviderImpl\';',
+    );
+    expect(read(dir, 'harmony/Index.ets')).toContain(
+      'export { ButtonModule } from \'./src/main/ets/ButtonModule\';',
+    );
+    expect(read(dir, 'harmony/Index.ets')).toContain(
+      'export { ButtonElement } from \'./src/main/ets/ButtonElement\';',
+    );
+    expect(read(dir, 'harmony/Index.ets')).toContain(
+      'export { ButtonService } from \'./src/main/ets/ButtonService\';',
+    );
+    expect(read(dir, 'harmony/src/main/ets/LynxLibraryProviderImpl.ets'))
+      .toContain(
+        'registry.registerBehavior(\'x-button\', new Behavior(ButtonElement));',
+      );
+    expect(read(dir, 'harmony/src/main/ets/LynxLibraryProviderImpl.ets'))
+      .toContain(
+        'registry.registerModule(\'ButtonModule\', { moduleClass: ButtonModule });',
+      );
+    expect(read(dir, 'harmony/src/main/ets/LynxLibraryProviderImpl.ets'))
+      .toContain(
+        'registry.registerService(LynxServiceType.Extension, ButtonService.instance);',
+      );
+    expect(read(dir, 'harmony/src/main/ets/ButtonModule.ets')).toContain(
+      'export class ButtonModule extends ButtonModuleSpec',
+    );
+    expect(read(dir, 'harmony/src/main/ets/ButtonElement.ets')).toContain(
+      'export class ButtonElement extends UIBase',
+    );
+    expect(read(dir, 'harmony/src/main/ets/ButtonElement.ets')).toContain(
+      'super.update(props);',
+    );
+    expect(read(dir, 'harmony/src/main/ets/ButtonService.ets')).toContain(
+      'implements ILynxExtensionService',
     );
     expect(read(dir, 'shared/elements/ButtonElementRegistration.cc')).toContain(
       'LYNX_REGISTER_ELEMENT(',
@@ -511,6 +581,46 @@ describe('create-lynx-library', () => {
     expect(read(dir, 'ios/build.podspec')).toContain('LynxServiceAPI');
     expect(read(dir, 'README.md')).toContain('`ios/`');
     expect(read(dir, 'README.md')).not.toContain('`android/`');
+  });
+
+  it('creates Harmony-only projects with a global provider HAR', () => {
+    const dir = createTempDir('harmony-only');
+    const files = createLynxLibrary({
+      dir,
+      features: ['native-module', 'element', 'service'],
+      platforms: ['harmony'],
+      packageName: '@example/harmony-library',
+      moduleName: 'HarmonyModule',
+      elementName: 'x-harmony',
+      serviceName: 'HarmonyService',
+    });
+    const filePaths = files.map((file) => file.path);
+
+    expect(filePaths).toEqual(expect.arrayContaining([
+      'harmony/oh-package.json5',
+      'harmony/build-profile.json5',
+      'harmony/hvigorfile.ts',
+      'harmony/Index.ets',
+      'harmony/src/main/module.json5',
+      'harmony/src/main/ets/LynxLibraryProviderImpl.ets',
+      'harmony/src/main/ets/HarmonyModule.ets',
+      'harmony/src/main/ets/HarmonyElement.ets',
+      'harmony/src/main/ets/HarmonyService.ets',
+    ]));
+    expect(filePaths.some((file) => file.startsWith('android/'))).toBe(false);
+    expect(filePaths.some((file) => file.startsWith('ios/'))).toBe(false);
+    expect(filePaths.some((file) => file.startsWith('lynxtron/'))).toBe(false);
+    expect(readJson<Manifest>(dir, 'lynx.lib.json').platforms).toEqual({
+      harmony: {
+        sourceDir: 'harmony',
+      },
+    });
+    expect(readJson<PackageJson>(dir, 'package.json').files).toContain(
+      'harmony',
+    );
+    expect(read(dir, 'README.md')).toContain('`harmony/`');
+    expect(read(dir, 'README.md')).not.toContain('`android/`');
+    expect(read(dir, 'README.md')).not.toContain('`ios/`');
   });
 
   it('creates Element and Service projects with Lynx markers', () => {
