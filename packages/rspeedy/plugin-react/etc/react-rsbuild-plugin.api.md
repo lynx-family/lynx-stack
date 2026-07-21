@@ -80,6 +80,8 @@ export interface PluginReactLynxOptions {
     engineVersion?: string;
     // @alpha
     experimental_isLazyBundle?: boolean;
+    // @alpha
+    experimental_multiCardRoots?: boolean;
     experimental_useElementTemplate?: boolean;
     extractStr?: Partial<ExtractStrConfig> | boolean;
     firstScreenSyncTiming?: 'immediately' | 'jsReady' | 'manual';

@@ -193,7 +193,8 @@ function replaceCommitHook(): void {
       // Capture this root's task map: by the time native acks, the current
       // context may be a different root's.
       const commitTaskMap = globalCommitTaskMap;
-      const ctxLynx = getCurrentRootContext().lynx ?? lynx;
+      const ctxLynx =
+        (typeof __MULTI_CARD__ !== 'undefined' && __MULTI_CARD__ ? getCurrentRootContext().lynx : undefined) ?? lynx;
       ctxLynx.getNativeApp().callLepusMethod(LifecycleConstant.patchUpdate, obj, () => {
         const commitTask = commitTaskMap.get(commitTaskId);
         if (commitTask) {

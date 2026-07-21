@@ -48,6 +48,11 @@ const slots: RootContextSlot[] = [];
  * @internal
  */
 export function registerContextSlot(slot: RootContextSlot): void {
+  // Multi-card support is opt-in at build time; without it the runtime keeps
+  // exactly one root and no slot ever needs saving or loading.
+  if (typeof __MULTI_CARD__ === 'undefined' || !__MULTI_CARD__) {
+    return;
+  }
   slots.push(slot);
 }
 

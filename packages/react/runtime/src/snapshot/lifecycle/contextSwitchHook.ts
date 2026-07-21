@@ -34,4 +34,6 @@ const onRenderComponentHook = <T extends unknown[]>(
   if (old) old(...args);
 };
 
-hook(options, RENDER_COMPONENT, onRenderComponentHook);
+if (typeof __MULTI_CARD__ !== 'undefined' && __MULTI_CARD__) {
+  hook(options, RENDER_COMPONENT, onRenderComponentHook);
+}

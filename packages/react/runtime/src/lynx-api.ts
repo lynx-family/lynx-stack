@@ -94,10 +94,12 @@ export const root: Root = {
     } else {
       // A card bootstrapped via `__bootstrapCard` owns its own root; render
       // there so shared-context cards can keep using the classic `root.render`.
-      const cardRoot = getBootstrappedRoot();
-      if (cardRoot) {
-        cardRoot.render(jsx);
-        return;
+      if (typeof __MULTI_CARD__ !== 'undefined' && __MULTI_CARD__) {
+        const cardRoot = getBootstrappedRoot();
+        if (cardRoot) {
+          cardRoot.render(jsx);
+          return;
+        }
       }
       // The classic singleton `root` always renders the default context.
       switchRootContext(defaultRootContext);

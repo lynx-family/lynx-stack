@@ -13,6 +13,7 @@ declare global {
   declare const __REF_FIRE_IMMEDIATELY__: boolean;
   declare const __TESTING_FORCE_RENDER_TO_OPCODE__: boolean;
   declare const __FIRST_SCREEN_SYNC_TIMING__: 'immediately' | 'jsReady' | 'manual';
+  declare const __MULTI_CARD__: boolean;
   declare const __DEV__: boolean;
   declare const __JS__: boolean;
   declare const __LEPUS__: boolean;

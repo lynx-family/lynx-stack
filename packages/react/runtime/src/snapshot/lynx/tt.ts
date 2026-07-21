@@ -45,6 +45,9 @@ export { runWithForce };
  * calls into (one per card), so binding at injection time is enough.
  */
 function bindContext<T extends unknown[], R>(ctx: RootContext, fn: (...args: T) => R): (...args: T) => R {
+  if (typeof __MULTI_CARD__ === 'undefined' || !__MULTI_CARD__) {
+    return fn;
+  }
   return (...args: T) => {
     switchRootContext(ctx);
     return fn(...args);
@@ -204,7 +207,8 @@ function onLifecycleEventImpl(type: LifecycleConstant, data: unknown): void {
       sendMTRefInitValueToMainThread();
       // Send through this root's own channel, and capture this root's task
       // map: by the time native acks, the current context may have changed.
-      const ctxLynx = getCurrentRootContext().lynx ?? lynx;
+      const ctxLynx =
+        (typeof __MULTI_CARD__ !== 'undefined' && __MULTI_CARD__ ? getCurrentRootContext().lynx : undefined) ?? lynx;
       const commitTaskMap = globalCommitTaskMap;
       ctxLynx.getNativeApp().callLepusMethod(LifecycleConstant.patchUpdate, obj, () => {
         commitTaskMap.forEach((commitTask, id) => {
