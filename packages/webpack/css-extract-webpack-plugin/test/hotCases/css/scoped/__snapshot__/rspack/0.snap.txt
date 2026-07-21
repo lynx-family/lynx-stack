@@ -5,7 +5,7 @@
 
 ## Asset Files
 - Bundle: rspack-bundle.js
-- Manifest: main.css.hot-update.json, size: 1606
+- Manifest: main.css.hot-update.json, size: 1722
 
 ## Manifest
 
@@ -36,6 +36,9 @@
         "useNewSwiper": true,
         "enableNewIntersectionObserver": true,
         "enableNativeList": true,
+        "enableNewSticky": true,
+        "flexBasisZeroPercent": true,
+        "enableGridPlacementShorthands": true,
         "syncXElementRegistry": true,
         "enableA11y": true,
         "enableAccessibilityElement": false,
