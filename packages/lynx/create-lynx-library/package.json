@@ -36,9 +36,7 @@
     "test": "vitest run"
   },
   "dependencies": {
-    "@clack/prompts": "1.0.1"
-  },
-  "devDependencies": {
+    "@clack/prompts": "1.0.1",
     "@lynx-js/autolink-codegen": "workspace:^"
   },
   "engines": {

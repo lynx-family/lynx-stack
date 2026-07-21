@@ -1,0 +1,52 @@
+cmake_minimum_required(VERSION 3.18.1)
+
+project(__ADDON_TARGET_NAME__Android LANGUAGES C CXX)
+
+set(CMAKE_CXX_STANDARD 17)
+set(CMAKE_CXX_STANDARD_REQUIRED ON)
+set(CMAKE_POSITION_INDEPENDENT_CODE ON)
+
+get_filename_component(
+  LYNX_LIBRARY_PACKAGE_ROOT
+  "${CMAKE_CURRENT_SOURCE_DIR}/.."
+  ABSOLUTE
+)
+
+set(LYNX_LIBRARY_PLATFORM "android")
+set(LYNX_LIBRARY_NODE_API_WEAK_SUFFIX OFF CACHE BOOL "Use weak suffix NAPI symbols")
+set(LYNX_LIBRARY_USE_PRIMJS_NAPI_MODULE ON CACHE BOOL "Register NAPI modules through napi_module_register_xx" FORCE)
+set(LYNX_SHARED_BUILD_ELEMENTS OFF CACHE BOOL "Do not build element sources for Android addon" FORCE)
+
+if(NOT LYNX_PRIMJS_JNI_DIR)
+  message(FATAL_ERROR "LYNX_PRIMJS_JNI_DIR is required. Build through the generated Gradle project.")
+endif()
+
+set(LYNX_PRIMJS_ABI_DIR "${LYNX_PRIMJS_JNI_DIR}/${ANDROID_ABI}")
+
+add_library(lynx_primjs_napi SHARED IMPORTED)
+set_target_properties(lynx_primjs_napi PROPERTIES
+  IMPORTED_LOCATION "${LYNX_PRIMJS_ABI_DIR}/libnapi.so"
+)
+
+add_library(lynx_primjs_napi_adapter SHARED IMPORTED)
+set_target_properties(lynx_primjs_napi_adapter PROPERTIES
+  IMPORTED_LOCATION "${LYNX_PRIMJS_ABI_DIR}/libnapi_adapter.so"
+)
+
+add_subdirectory(
+  "${LYNX_LIBRARY_PACKAGE_ROOT}/shared"
+  "${CMAKE_CURRENT_BINARY_DIR}/shared"
+)
+
+add_library(__ADDON_TARGET_NAME__ SHARED
+  $<TARGET_OBJECTS:${LYNX_LIBRARY_NAPI_NATIVE_MODULE_TARGET}>
+)
+
+target_link_libraries(__ADDON_TARGET_NAME__ PRIVATE
+  lynx_primjs_napi_adapter
+  lynx_primjs_napi
+)
+
+set_target_properties(__ADDON_TARGET_NAME__ PROPERTIES
+  OUTPUT_NAME "__NODE_API_ADDON_NAME__"
+)

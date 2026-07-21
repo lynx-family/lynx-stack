@@ -1089,7 +1089,6 @@ importers:
       '@clack/prompts':
         specifier: 1.0.1
         version: 1.0.1
-    devDependencies:
       '@lynx-js/autolink-codegen':
         specifier: workspace:^
         version: link:../autolink-codegen

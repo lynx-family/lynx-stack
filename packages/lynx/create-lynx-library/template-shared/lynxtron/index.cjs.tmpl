@@ -11,6 +11,10 @@ const nativeBinding = require(path.join(
   '__ADDON_BINARY_NAME__.node',
 ));
 
+if (typeof nativeBinding.initialize !== 'function') {
+  nativeBinding.initialize = function initialize() {};
+}
+
 module.exports = nativeBinding;
 module.exports.default = nativeBinding;
 

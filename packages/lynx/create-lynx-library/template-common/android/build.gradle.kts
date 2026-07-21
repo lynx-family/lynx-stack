@@ -2,17 +2,21 @@ plugins {
   id("com.android.library")
 }
 
+__ANDROID_NAPI_BUILD_SETUP__
 android {
-  namespace = "__ANDROID_PACKAGE__"
-  compileSdk = 35
+  javaClass.methods.firstOrNull { it.name == "setNamespace" }
+    ?.invoke(this, "__ANDROID_PACKAGE__")
+  compileSdkVersion(35)
 
   defaultConfig {
-    minSdk = 23
+    minSdkVersion(23)
+__ANDROID_NAPI_DEFAULT_CONFIG__
   }
+__ANDROID_NAPI_EXTERNAL_NATIVE_BUILD__
 }
 
 dependencies {
-  implementation("org.lynxsdk.lynx:lynx:0.0.1-alpha.1")
-  implementation("org.lynxsdk.lynx:service-api:0.0.1-alpha.1")
-  annotationProcessor("org.lynxsdk.lynx:lynx-processor:0.0.1-alpha.1")
+__ANDROID_PLATFORM_DEPENDENCIES__
+__ANDROID_NAPI_DEPENDENCIES__
 }
+__ANDROID_NAPI_TASK_WIRING__
