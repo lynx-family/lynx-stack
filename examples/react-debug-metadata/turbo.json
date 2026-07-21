@@ -3,12 +3,8 @@
   "extends": ["//"],
   "tasks": {
     "build": {
-      "outputs": [
-        "dist-producer/**",
-        "dist-producer/.rspeedy/**",
-        "dist-consumer/**",
-        "dist-consumer/.rspeedy/**"
-      ]
+      "outputs": ["dist-producer/**", "dist-consumer/**"],
+      "cache": false
     }
   }
 }
