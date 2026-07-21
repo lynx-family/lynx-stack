@@ -242,7 +242,7 @@ if (!${RuntimeGlobals.lynxChunkEntries}[${chunkId}]) {
 const loadScriptBanner = (strictMode = true) =>
   `(function(){
   ${strictMode ? '\'use strict\';' : ';'}
-  var g = (new Function('return this;'))();
+  var g = globalThis;
   function __init_card_bundle__(lynxCoreInject) {
     g.__bundle__holder = undefined;
     var globDynamicComponentEntry = g.globDynamicComponentEntry || '__Card__';
@@ -251,8 +251,7 @@ const loadScriptBanner = (strictMode = true) =>
 const loadBundleBanner = (strictMode = true) =>
   `(function(){
   ${strictMode ? '\'use strict\';' : ';'}
-  var eval2 = eval;
-  var g = eval2("this");
+  var g = globalThis;
   function initBundle(lynxCoreInject) {
     var tt = lynxCoreInject.tt;
 `;
