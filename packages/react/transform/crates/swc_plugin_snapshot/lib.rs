@@ -1979,99 +1979,76 @@ mod tests {
     });
   }
 
-  fn transform_with_resolver(src: &str) -> String {
-    let mut output = String::new();
-
-    Tester::run(|tester| {
-      let top_level_mark = Mark::new();
-      let unresolved_mark = Mark::new();
-
-      let program = tester.apply_transform(
-        (
-          resolver(unresolved_mark, top_level_mark, true),
-          visit_mut_pass(JSXTransformer::<&SingleThreadedComments>::new(
-            super::JSXTransformerConfig {
-              preserve_jsx: true,
-              target: TransformTarget::MIXED,
-              ..Default::default()
-            },
-            None,
-            TransformMode::Test,
-            Some(tester.cm.clone()),
-          )),
-        ),
-        "input.js",
+  macro_rules! const_literal_test {
+    ($name:ident, $src:expr) => {
+      test!(
+        module,
         Syntax::Es(EsSyntax {
           jsx: true,
           ..Default::default()
         }),
-        Some(true),
-        src,
-      )?;
+        |t| {
+          let unresolved_mark = Mark::new();
+          let top_level_mark = Mark::new();
 
-      let comments = tester.comments.clone();
-      output = tester.print(&program, &comments);
-
-      Ok(())
-    });
-
-    output
+          (
+            resolver(unresolved_mark, top_level_mark, true),
+            visit_mut_pass(JSXTransformer::new(
+              super::JSXTransformerConfig {
+                preserve_jsx: true,
+                target: TransformTarget::MIXED,
+                ..Default::default()
+              },
+              Some(t.comments.clone()),
+              TransformMode::Test,
+              Some(t.cm.clone()),
+            )),
+          )
+        },
+        $name,
+        // Input codes
+        $src
+      );
+    };
   }
 
-  #[test]
-  fn should_treat_const_literal_attr_as_static() {
-    let output = transform_with_resolver(r#"const V = "foo"; const a = <view custom-attr={V} />;"#);
+  // `custom-attr` is baked into the snapshot creator instead of the `values` array.
+  const_literal_test!(
+    const_literal_attr_is_static,
+    r#"
+    const V = "foo";
+    const a = <view custom-attr={V} />;
+    "#
+  );
 
-    assert!(
-      output.contains(r#"__SetAttribute(el, "custom-attr", "foo")"#),
-      "a const literal attr should be baked into the snapshot creator; output:\n{output}",
-    );
-    assert!(
-      !output.contains("values="),
-      "a const literal attr should not produce a dynamic value; output:\n{output}",
-    );
-  }
+  // `{HOLE}` renders nothing, so the snapshot stays fully static and takes no slot.
+  const_literal_test!(
+    const_literal_child_takes_no_slot,
+    r#"
+    const HOLE = null;
+    const a = <view>{HOLE}</view>;
+    "#
+  );
 
-  #[test]
-  fn should_not_treat_const_literal_child_as_slot() {
-    let output = transform_with_resolver(r#"const HOLE = null; const a = <view>{HOLE}</view>;"#);
+  // The parameter shadows the const, so `custom-attr` must stay dynamic.
+  const_literal_test!(
+    shadowed_const_literal_stays_dynamic,
+    r#"
+    const HOLE = null;
+    function App(HOLE) {
+      return <view custom-attr={HOLE} />;
+    }
+    "#
+  );
 
-    assert!(
-      !output.contains("$0="),
-      "a child that renders nothing should not take up a slot; output:\n{output}",
-    );
-    assert!(
-      !output.contains("DynamicPartSlot"),
-      "a child that renders nothing should leave the snapshot fully static; output:\n{output}",
-    );
-  }
-
-  #[test]
-  fn should_keep_shadowed_binding_dynamic() {
-    let output = transform_with_resolver(
-      r#"
-      const HOLE = null;
-      function App(HOLE) {
-        return <view custom-attr={HOLE} />;
-      }
-      "#,
-    );
-
-    assert!(
-      output.contains("values="),
-      "a parameter shadowing a const literal must stay dynamic; output:\n{output}",
-    );
-  }
-
-  #[test]
-  fn should_keep_mutable_binding_dynamic() {
-    let output = transform_with_resolver(r#"let V = "foo"; const a = <view custom-attr={V} />;"#);
-
-    assert!(
-      output.contains("values="),
-      "a `let` binding may be reassigned, so it must stay dynamic; output:\n{output}",
-    );
-  }
+  // `let` may be reassigned, so `custom-attr` must stay dynamic.
+  const_literal_test!(
+    mutable_binding_stays_dynamic,
+    r#"
+    let V = "foo";
+    const a = <view custom-attr={V} />;
+    "#
+  );
 
   test!(
     module,
