@@ -16,7 +16,8 @@ import '@lynx-js/web-core/client';
 import '@lynx-js/web-elements/all';
 import '@lynx-js/web-elements/index.css';
 
-import lazyComponentDemo from './mock/basic/lazy-component.js';
+import { lazyComponentDemo } from './mock/basic/lazy-component.js';
+import { mcpAppDemo } from './mock/basic/mcp-app.js';
 import { decodeBase64Url } from './utils/base64url.js';
 import { DEFAULT_A2UI_DEMO_URL } from './utils/demoUrl.js';
 import {
@@ -553,6 +554,11 @@ function Render() {
       setInitData((prev) =>
         prev ? { ...prev, messages: lazyComponentDemo } : prev
       );
+      return;
+    }
+
+    if (demo === 'mcp-app') {
+      setInitData((prev) => prev ? { ...prev, messages: mcpAppDemo } : prev);
       return;
     }
 

@@ -153,7 +153,8 @@
       "required": [
         "child",
         "action"
-      ]
+      ],
+      "description": "Props for the built-in Button catalog component."
     },
     "Card": {
       "properties": {
@@ -175,7 +176,8 @@
       },
       "required": [
         "child"
-      ]
+      ],
+      "description": "Props for the built-in Card catalog component."
     },
     "CheckBox": {
       "properties": {
@@ -343,7 +345,8 @@
       "required": [
         "label",
         "value"
-      ]
+      ],
+      "description": "Props for the built-in CheckBox catalog component."
     },
     "ChoicePicker": {
       "properties": {
@@ -606,7 +609,8 @@
       "required": [
         "options",
         "value"
-      ]
+      ],
+      "description": "Props for the built-in ChoicePicker catalog component."
     },
     "Column": {
       "properties": {
@@ -661,7 +665,8 @@
       },
       "required": [
         "children"
-      ]
+      ],
+      "description": "Props for the built-in Column catalog component."
     },
     "DateTimeInput": {
       "properties": {
@@ -824,7 +829,8 @@
       },
       "required": [
         "value"
-      ]
+      ],
+      "description": "Props for the built-in DateTimeInput catalog component."
     },
     "Divider": {
       "properties": {
@@ -836,7 +842,8 @@
           ]
         }
       },
-      "required": []
+      "required": [],
+      "description": "Props for the built-in Divider catalog component."
     },
     "Icon": {
       "properties": {
@@ -1050,7 +1057,8 @@
       },
       "required": [
         "name"
-      ]
+      ],
+      "description": "Props for the built-in Icon catalog component."
     },
     "Image": {
       "properties": {
@@ -1090,6 +1098,42 @@
         },
         "weight": {
           "type": "number"
+        }
+      },
+      "required": [
+        "url"
+      ],
+      "description": "Props for the built-in Image catalog component."
+    },
+    "LazyComponent": {
+      "properties": {
+        "url": {
+          "type": "string",
+          "description": "URL of a ReactLynx standalone lazy bundle. The bundle must default-export a React component. Used by native Lynx rendering."
+        },
+        "webUrl": {
+          "type": "string",
+          "description": "Optional URL of the web lazy bundle. Lynx for Web uses this instead of `url`; when omitted, web rendering shows a fallback that asks the user to scan the native preview QR code on a mobile device."
+        },
+        "sourceData": {
+          "oneOf": [
+            {
+              "type": "object",
+              "additionalProperties": true
+            },
+            {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "additionalProperties": true
+              }
+            }
+          ],
+          "description": "Data passed to the lazy bundle component as `sourceData`."
+        },
+        "fallbackText": {
+          "type": "string",
+          "description": "Optional text shown while the lazy bundle is loading."
         }
       },
       "required": [
@@ -1190,7 +1234,8 @@
       "required": [
         "labels",
         "series"
-      ]
+      ],
+      "description": "Props for the built-in LineChart catalog component."
     },
     "List": {
       "properties": {
@@ -1240,7 +1285,8 @@
       },
       "required": [
         "children"
-      ]
+      ],
+      "description": "Props for the built-in List catalog component."
     },
     "Loading": {
       "properties": {
@@ -1253,7 +1299,54 @@
           "description": "Visual density for the skeleton placeholder."
         }
       },
-      "required": []
+      "required": [],
+      "description": "Props for the built-in Loading catalog component."
+    },
+    "McpApp": {
+      "properties": {
+        "url": {
+          "type": "string",
+          "description": "URL of the trusted native Lynx bundle that renders the MCP App."
+        },
+        "webUrl": {
+          "type": "string",
+          "description": "URL of the trusted Lynx for Web bundle. Web rendering uses this instead of `url` and shows a fallback when it is omitted."
+        },
+        "mcpAppData": {
+          "type": "object",
+          "additionalProperties": true,
+          "description": "Renderer id, tool input, and validated result passed to the MCP App."
+        },
+        "theme": {
+          "type": "string",
+          "enum": [
+            "light",
+            "dark"
+          ],
+          "description": "Color theme passed to the nested Lynx page."
+        },
+        "autoWidth": {
+          "type": "boolean",
+          "description": "Let the frame follow the nested Lynx page's content width."
+        },
+        "autoHeight": {
+          "type": "boolean",
+          "description": "Let the frame follow the nested Lynx page's content height."
+        },
+        "height": {
+          "type": "number",
+          "description": "Frame height in pixels, or the preset height when autoHeight is true."
+        },
+        "fallbackText": {
+          "type": "string",
+          "description": "Text shown when the platform-specific bundle URL is unavailable."
+        }
+      },
+      "required": [
+        "url",
+        "mcpAppData"
+      ],
+      "description": "Props for the built-in MCP App frame host. Bundle URLs and render data must come from a host-registered, trusted MCP Apps resource. They must not be invented by an agent or accepted as arbitrary executable content."
     },
     "Modal": {
       "properties": {
@@ -1269,7 +1362,8 @@
       "required": [
         "trigger",
         "content"
-      ]
+      ],
+      "description": "Props for the built-in Modal catalog component."
     },
     "PieChart": {
       "properties": {
@@ -1354,7 +1448,8 @@
       },
       "required": [
         "data"
-      ]
+      ],
+      "description": "Props for the built-in PieChart catalog component."
     },
     "RadioGroup": {
       "properties": {
@@ -1536,7 +1631,8 @@
       "required": [
         "items",
         "value"
-      ]
+      ],
+      "description": "Props for the built-in RadioGroup catalog component."
     },
     "Row": {
       "properties": {
@@ -1591,7 +1687,8 @@
       },
       "required": [
         "children"
-      ]
+      ],
+      "description": "Props for the built-in Row catalog component."
     },
     "Slider": {
       "properties": {
@@ -1772,7 +1869,8 @@
       "required": [
         "max",
         "value"
-      ]
+      ],
+      "description": "Props for the built-in Slider catalog component."
     },
     "Tabs": {
       "properties": {
@@ -1798,7 +1896,8 @@
       },
       "required": [
         "tabs"
-      ]
+      ],
+      "description": "Props for the built-in Tabs catalog component."
     },
     "Text": {
       "properties": {
@@ -1874,7 +1973,8 @@
       },
       "required": [
         "text"
-      ]
+      ],
+      "description": "Props for the built-in Text catalog component."
     },
     "TextField": {
       "properties": {
@@ -2019,7 +2119,8 @@
       },
       "required": [
         "label"
-      ]
+      ],
+      "description": "Props for the built-in TextField catalog component."
     }
   },
   "functions": {

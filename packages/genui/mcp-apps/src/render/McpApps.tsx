@@ -2,10 +2,10 @@
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
 
-import { useGlobalProps, useMemo } from '@lynx-js/react';
+import { useGlobalProps, useInitData, useMemo } from '@lynx-js/react';
 import type { ReactNode } from '@lynx-js/react';
 
-import { readAppMarkdown } from './data.js';
+import { readAppMarkdown, readMcpAppsHostData } from './data.js';
 import type { AppRendererRegistry } from './registry.js';
 import './styles.css';
 
@@ -35,23 +35,30 @@ export interface McpAppsProps {
 
 /**
  * Renders validated local MCP Apps data and falls back to streaming Markdown
- * when no registered renderer matches the supplied global data.
+ * when no registered renderer matches the supplied host data.
  */
 export function McpApps(props: McpAppsProps) {
+  const initData = useInitData();
   const globalProps = useGlobalProps() as Record<string, unknown> | null;
+  const hostData = useMemo(
+    () => readMcpAppsHostData(initData, globalProps),
+    [globalProps, initData],
+  );
   const renderData = useMemo(
-    () => props.registry.resolveRenderData(globalProps?.['mcpAppData']),
-    [globalProps, props.registry],
+    () => props.registry.resolveRenderData(hostData.mcpAppData),
+    [hostData.mcpAppData, props.registry],
   );
   const markdown = useMemo(
-    () => readAppMarkdown(globalProps?.['mcpAppData']),
-    [globalProps],
+    () => readAppMarkdown(hostData.mcpAppData),
+    [hostData.mcpAppData],
   );
 
-  const theme = globalProps?.['theme'] === 'dark' ? 'dark' : 'light';
-  const rootClassName = theme === 'dark'
+  const rootClassName = hostData.theme === 'dark'
     ? 'appPage appPageDark'
     : 'appPage appPageLight';
+  const embeddedClassName = hostData.embedded
+    ? `${rootClassName} appPageEmbedded`
+    : rootClassName;
   const Renderer = renderData?.renderer.component;
   let content: ReactNode;
 
@@ -89,7 +96,7 @@ export function McpApps(props: McpAppsProps) {
   }
 
   return (
-    <view className={rootClassName}>
+    <view className={embeddedClassName}>
       {content}
     </view>
   );
