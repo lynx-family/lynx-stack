@@ -2043,6 +2043,33 @@ test.describe('reactlynx3 tests', () => {
         'rgb(0, 128, 0)',
       ); // green;
     });
+    test('api-devtool-event', async ({ page }, { title }) => {
+      await goto(page, title);
+      const target = page.locator('#target');
+      await expect(target).toHaveText('ready');
+
+      const data = JSON.stringify({ key: 'value' });
+      const detail = await page.evaluate((data) => {
+        const lynxView = document.querySelector(
+          'lynx-view',
+        ) as LynxViewElement;
+        const devtoolMessage = new Promise((resolve) => {
+          lynxView.addEventListener(
+            'devtoolMessage',
+            (event) => resolve((event as CustomEvent).detail),
+            { once: true },
+          );
+        });
+        lynxView.sendDevtoolEvent('eventname', data);
+        return devtoolMessage;
+      }, data);
+
+      await expect(target).toHaveText(data);
+      expect(detail).toEqual({
+        type: 'PreactDevtools',
+        data,
+      });
+    });
     test('api-invoke-success', async ({ page }, { title }) => {
       await goto(page, title);
       await wait(100);

@@ -48,6 +48,7 @@ export interface BrowserConfig {
  *
  * @event error lynx card fired an error
  * @event i18nResourceMissed i18n resource cache miss
+ * @event devtoolMessage a devtool event dispatched by the background thread
  *
  * @example
  * HTML Example
@@ -370,6 +371,19 @@ export class LynxViewElement extends HTMLElement {
    */
   sendGlobalEvent(eventName: string, params: Cloneable[]) {
     this.#instance?.backgroundThread.sendGlobalEvent(eventName, params);
+  }
+
+  /**
+   * @public
+   * @method
+   * send a devtool event to the background thread, which can be listened to
+   * using `lynx.getDevtool().addEventListener()`
+   */
+  sendDevtoolEvent(eventName: string, data: string) {
+    this.#instance?.backgroundThread.sendDevtoolEvent({
+      type: eventName,
+      data,
+    });
   }
 
   /**

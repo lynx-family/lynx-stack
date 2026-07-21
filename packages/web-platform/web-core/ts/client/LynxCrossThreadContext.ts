@@ -2,9 +2,11 @@
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
 
-import type { dispatchCoreContextOnBackgroundEndpoint } from './endpoints.js';
-import type { LynxContextEventTarget } from '../types/index.js';
-import type { Rpc } from '@lynx-js/web-worker-rpc';
+import type {
+  ContextCrossThreadEvent,
+  LynxContextEventTarget,
+} from '../types/index.js';
+import type { Rpc, RpcEndpoint } from '@lynx-js/web-worker-rpc';
 
 export const DispatchEventResult = {
   // Event was not canceled by event handler or default event handler.
@@ -27,8 +29,8 @@ export const DispatchEventResult = {
 
 type LynxCrossThreadContextConfig = {
   rpc: Rpc;
-  receiveEventEndpoint: typeof dispatchCoreContextOnBackgroundEndpoint;
-  sendEventEndpoint: typeof dispatchCoreContextOnBackgroundEndpoint;
+  receiveEventEndpoint: RpcEndpoint<[ContextCrossThreadEvent], void>;
+  sendEventEndpoint: RpcEndpoint<[ContextCrossThreadEvent], void>;
 };
 export class LynxCrossThreadContext extends EventTarget
   implements LynxContextEventTarget
