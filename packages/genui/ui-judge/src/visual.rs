@@ -10,6 +10,7 @@ use std::time::Duration;
 use base64::prelude::{Engine, BASE64_STANDARD, BASE64_STANDARD_NO_PAD};
 use image::imageops::{self, FilterType};
 use image::{DynamicImage, GrayImage, ImageFormat, ImageReader, Limits, Rgba, RgbaImage};
+use rayon::{ThreadPool, ThreadPoolBuilder};
 use reqwest::header::{CONTENT_LENGTH, CONTENT_TYPE};
 use thiserror::Error;
 
@@ -31,7 +32,7 @@ const DEFAULT_WINDOW_HEIGHT_RATIO: f64 = 0.28;
 const DEFAULT_BLOCK_SIZE: u32 = 32;
 const DEFAULT_PIXEL_TOLERANCE: f64 = 0.1;
 const DEFAULT_THRESHOLD: f64 = 0.1;
-const MAX_VISUAL_WORKERS: usize = 2;
+const MAX_VISUAL_WORKERS: usize = 4;
 
 pub(crate) type VisualResult<T> = std::result::Result<T, VisualEvaluationError>;
 
@@ -188,13 +189,32 @@ impl Drop for CancelOnDrop {
 
 fn visual_worker_slots() -> Arc<tokio::sync::Semaphore> {
   static SLOTS: OnceLock<Arc<tokio::sync::Semaphore>> = OnceLock::new();
-  Arc::clone(SLOTS.get_or_init(|| {
-    let workers = std::thread::available_parallelism()
-      .map(usize::from)
-      .unwrap_or(1)
-      .min(MAX_VISUAL_WORKERS);
-    Arc::new(tokio::sync::Semaphore::new(workers))
-  }))
+  Arc::clone(SLOTS.get_or_init(|| Arc::new(tokio::sync::Semaphore::new(visual_worker_count()))))
+}
+
+fn visual_worker_count() -> usize {
+  std::thread::available_parallelism()
+    .map(usize::from)
+    .unwrap_or(1)
+    .min(MAX_VISUAL_WORKERS)
+}
+
+fn visual_worker_pool() -> VisualResult<&'static ThreadPool> {
+  static POOL: OnceLock<std::result::Result<ThreadPool, String>> = OnceLock::new();
+  match POOL.get_or_init(|| {
+    ThreadPoolBuilder::new()
+      .num_threads(visual_worker_count())
+      .thread_name(|index| format!("ui-judge-visual-{index}"))
+      .build()
+      .map_err(|error| error.to_string())
+  }) {
+    Ok(pool) => Ok(pool),
+    Err(error) => Err(VisualEvaluationError::new(
+      500,
+      VisualEvaluationErrorCode::VisualEvaluationError,
+      format!("Visual worker pool is unavailable: {error}"),
+    )),
+  }
 }
 
 async fn run_visual_worker<T, F>(operation: &'static str, work: F) -> VisualResult<T>
@@ -223,19 +243,28 @@ where
       format!("Visual {operation} worker pool is unavailable: {error}"),
     )
   })?;
+  let pool = visual_worker_pool()?;
+  let (result_tx, result_rx) = tokio::sync::oneshot::channel();
 
-  tokio::task::spawn_blocking(move || {
-    // Keep the permit in the blocking closure. Dropping the async waiter must
+  pool.spawn(move || {
+    // Keep the permit in the Rayon closure. Dropping the async waiter must
     // not release capacity while its CPU work is still running.
     let _permit = permit;
-    work(cancellation)
-  })
-  .await
-  .map_err(|error| {
+    let result = std::panic::catch_unwind(std::panic::AssertUnwindSafe(|| work(cancellation)))
+      .unwrap_or_else(|_| {
+        Err(VisualEvaluationError::new(
+          500,
+          VisualEvaluationErrorCode::VisualEvaluationError,
+          format!("Visual {operation} worker panicked."),
+        ))
+      });
+    let _ = result_tx.send(result);
+  });
+  result_rx.await.map_err(|_| {
     VisualEvaluationError::new(
       500,
       VisualEvaluationErrorCode::VisualEvaluationError,
-      format!("Visual {operation} worker failed: {error}"),
+      format!("Visual {operation} worker stopped before returning a result."),
     )
   })?
 }
@@ -1208,6 +1237,19 @@ mod tests {
       compare_images(&png, &png, None, &cancellation).expect_err("cancelled comparison must stop");
     assert_eq!(error.code, VisualEvaluationErrorCode::VisualEvaluationError);
     assert!(error.message.contains("cancelled"));
+  }
+
+  #[tokio::test]
+  async fn panicking_rayon_workers_return_errors_and_release_capacity() {
+    let slots = Arc::new(tokio::sync::Semaphore::new(1));
+    let error = run_visual_worker_with_slots(slots.clone(), "test", |_| -> VisualResult<()> {
+      panic!("worker failure")
+    })
+    .await
+    .expect_err("worker panic must become an error");
+
+    assert!(error.message.contains("panicked"));
+    assert_eq!(slots.available_permits(), 1);
   }
 
   fn sample_png(color: Rgba<u8>) -> Vec<u8> {
