@@ -117,7 +117,8 @@
     "a2ui-catalog-extractor/README.md",
     "openui/dist",
     "openui/styles",
-    "openui/README.md",
+    "openui/*.md",
+    "openui/docs/*.md",
     "mcp-apps/dist"
   ],
   "scripts": {
