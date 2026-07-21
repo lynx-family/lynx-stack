@@ -101,11 +101,6 @@ export function installElementTemplatePatchListener(): void {
       }
     }
 
-    // Hydration drives the first-screen pipeline, leave it untouched.
-    if (!isHydration && !hasOps && !delayedRunOnMainThreadData?.length) {
-      flushOptions.emptyPatch = true;
-    }
-
     __FlushElementTree(__page, flushOptions);
 
     if (shouldProfilePatch) {

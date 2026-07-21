@@ -1169,7 +1169,7 @@ describe('ElementTemplate patch stream (apply)', () => {
     expect(performance.profileStart).not.toHaveBeenCalled();
     expect(performance.profileEnd).not.toHaveBeenCalled();
     expect(mockFlushElementTree.mock.calls).toHaveLength(1);
-    expect(mockFlushElementTree.mock.calls[0]?.[1]).toEqual({ triggerDataUpdated: true, emptyPatch: true });
+    expect(mockFlushElementTree.mock.calls[0]?.[1]).toEqual({ triggerDataUpdated: true });
   });
 
   it('flushes option-only update payloads with empty ops', () => {
@@ -1191,7 +1191,7 @@ describe('ElementTemplate patch stream (apply)', () => {
     expect(performance.profileStart).not.toHaveBeenCalled();
     expect(performance.profileEnd).not.toHaveBeenCalled();
     expect(mockFlushElementTree.mock.calls).toHaveLength(1);
-    expect(mockFlushElementTree.mock.calls[0]?.[1]).toEqual({ triggerDataUpdated: true, emptyPatch: true });
+    expect(mockFlushElementTree.mock.calls[0]?.[1]).toEqual({ triggerDataUpdated: true });
   });
 
   it('reports illegal handleId 0 on create', () => {
@@ -3047,7 +3047,7 @@ describe('ElementTemplate patch stream (apply)', () => {
     expect(mockInsertNodeToElementTemplate.mock.calls).toHaveLength(0);
     expect(mockRemoveNodeFromElementTemplate.mock.calls).toHaveLength(0);
     expect(mockFlushElementTree.mock.calls).toHaveLength(1);
-    expect(mockFlushElementTree.mock.calls[0]?.[1]).toEqual({ triggerDataUpdated: true, emptyPatch: true });
+    expect(mockFlushElementTree.mock.calls[0]?.[1]).toEqual({ triggerDataUpdated: true });
     expect(lynx.performance._markTiming.mock.calls).toEqual([]);
   });
 });

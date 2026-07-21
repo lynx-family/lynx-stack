@@ -310,7 +310,7 @@ describe('triggerDataUpdated', () => {
           [
             "rLynxChange",
             {
-              "data": "{"patchList":[{"id":6}],"flushOptions":{"triggerDataUpdated":true}}",
+              "data": "{"patchList":[{"id":6}],"flushOptions":{"triggerDataUpdated":true,"emptyPatch":true}}",
               "patchOptions": {
                 "flowIds": [
                   666,
@@ -510,7 +510,7 @@ describe('triggerDataUpdated', () => {
           [
             "rLynxChange",
             {
-              "data": "{"patchList":[{"id":11}],"flushOptions":{"triggerDataUpdated":true}}",
+              "data": "{"patchList":[{"id":11}],"flushOptions":{"triggerDataUpdated":true,"emptyPatch":true}}",
               "patchOptions": {
                 "flowIds": [
                   666,
@@ -523,7 +523,7 @@ describe('triggerDataUpdated', () => {
           [
             "rLynxChange",
             {
-              "data": "{"patchList":[{"id":12}]}",
+              "data": "{"patchList":[{"id":12}],"flushOptions":{"emptyPatch":true}}",
               "patchOptions": {
                 "flowIds": [
                   666,
@@ -536,7 +536,7 @@ describe('triggerDataUpdated', () => {
           [
             "rLynxChange",
             {
-              "data": "{"patchList":[{"id":13}]}",
+              "data": "{"patchList":[{"id":13}],"flushOptions":{"emptyPatch":true}}",
               "patchOptions": {
                 "flowIds": [
                   666,
@@ -549,7 +549,7 @@ describe('triggerDataUpdated', () => {
           [
             "rLynxChange",
             {
-              "data": "{"patchList":[{"id":14}]}",
+              "data": "{"patchList":[{"id":14}],"flushOptions":{"emptyPatch":true}}",
               "patchOptions": {
                 "reloadVersion": 0,
               },
