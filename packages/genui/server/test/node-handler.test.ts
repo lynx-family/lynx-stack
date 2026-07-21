@@ -2,12 +2,12 @@
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
 
-import type { AddressInfo } from 'node:net';
+import { EventEmitter } from 'node:events';
+import type { IncomingMessage, ServerResponse } from 'node:http';
 
 import { describe, expect, test } from '@rstest/core';
 
 import { handler } from '../src/index.js';
-import { createGenUIServer, listen } from '../src/node-server.js';
 import { routeRequest } from '../src/routes.js';
 
 describe('routeRequest', () => {
@@ -53,24 +53,43 @@ describe('routeRequest', () => {
   });
 });
 
-describe('Node HTTP adapter', () => {
-  test('serves Web API route responses over HTTP', async () => {
-    const server = createGenUIServer(handler);
-    await listen(server, { host: '127.0.0.1', port: 0 });
-    try {
-      const address = server.address() as AddressInfo;
-      const response = await fetch(
-        `http://127.0.0.1:${address.port}/a2ui/health`,
-      );
+describe('Node handler', () => {
+  test('writes Web API route responses to ServerResponse', async () => {
+    const request = Object.assign(new EventEmitter(), {
+      headers: { host: 'server.test' },
+      method: 'GET',
+      url: '/a2ui/health',
+    }) as unknown as IncomingMessage;
+    const chunks: Uint8Array[] = [];
+    const headers = new Map<string, number | readonly string[] | string>();
+    const response = Object.assign(new EventEmitter(), {
+      destroyed: false,
+      headersSent: false,
+      statusCode: 0,
+      statusMessage: '',
+      writableFinished: false,
+      destroy() {
+        this.destroyed = true;
+      },
+      end(value?: Uint8Array | string) {
+        if (value !== undefined) chunks.push(Buffer.from(value));
+        this.writableFinished = true;
+      },
+      setHeader(name: string, value: number | readonly string[] | string) {
+        headers.set(name, value);
+      },
+      write(value: Uint8Array | string) {
+        chunks.push(Buffer.from(value));
+        return true;
+      },
+    }) as unknown as ServerResponse;
 
-      expect(response.status).toBe(200);
-      await expect(response.json()).resolves.toMatchObject({
-        provider: 'openai',
-      });
-    } finally {
-      await new Promise<void>((resolve, reject) => {
-        server.close((error) => error ? reject(error) : resolve());
-      });
-    }
+    await handler(request, response);
+
+    expect(response.statusCode).toBe(200);
+    expect(headers.get('content-type')).toBe('application/json');
+    expect(JSON.parse(Buffer.concat(chunks).toString('utf8'))).toMatchObject({
+      provider: 'openai',
+    });
   });
 });

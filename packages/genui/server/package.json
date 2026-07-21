@@ -5,9 +5,8 @@
   "type": "module",
   "scripts": {
     "build": "tsc --noEmit && rslib build",
-    "dev": "node scripts/dev.mjs",
+    "dev": "rslib build --watch",
     "lint": "eslint --ignore-pattern dist .",
-    "start": "node dist/server.js",
     "test": "rstest"
   },
   "dependencies": {

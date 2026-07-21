@@ -4,7 +4,7 @@
 
 import type { IncomingMessage, ServerResponse } from 'node:http';
 
-import { handleNodeRequest } from './node-server';
+import { handleNodeRequest } from './node-handler';
 
 export async function handler(
   request: IncomingMessage,

@@ -43,9 +43,7 @@ export PEXELS_API_KEY="..."
 When `PEXELS_API_KEY` is absent or Pexels returns no result, the server falls
 back to a deterministic Picsum URL.
 
-The server fails fast at startup (via `instrumentation.ts`) when any of
-these are missing in production. In development, a warning is logged
-instead so the playground keeps working.
+The hosting runtime must provide these variables before invoking the handler.
 
 ## Security
 
@@ -112,21 +110,18 @@ memory only, so refreshing the page starts a fresh conversation.
 
 ## Development
 
-Run the development server from this package:
+Watch and rebuild the handler bundle from this package:
 
 ```bash
 pnpm dev
 ```
 
-The server listens on port `3060` by default.
-
 ## Production
 
-Build and start the standalone production server from this package:
+Build the production handler from this package:
 
 ```bash
 pnpm build
-pnpm start
 ```
 
 Rslib emits a standard Node HTTP handler at `dist/index.js`:
@@ -137,8 +132,7 @@ export async function handler(request, response) {
 }
 ```
 
-Platforms that invoke Node handlers should use this entry directly. The
-standalone `pnpm start` command runs `dist/server.js`, which uses the same
-handler and owns the listening socket and graceful shutdown lifecycle. Runtime
-packages are bundled except for `@mastra/core`, which remains external and must
-be present in the production install together with its transitive dependencies.
+The package does not create a listening server or own a process lifecycle.
+Platforms should invoke this handler directly. Runtime packages are bundled
+except for `@mastra/core`, which remains external and must be present in the
+production install together with its transitive dependencies.

@@ -2,12 +2,7 @@
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
 
-import { createServer } from 'node:http';
-import type {
-  IncomingMessage,
-  Server,
-  ServerResponse,
-} from 'node:http';
+import type { IncomingMessage, ServerResponse } from 'node:http';
 import { Readable } from 'node:stream';
 
 import { routeRequest } from './routes';
@@ -15,16 +10,6 @@ import { routeRequest } from './routes';
 interface StreamingRequestInit extends RequestInit {
   duplex: 'half';
 }
-
-export interface ListenOptions {
-  host?: string;
-  port?: number;
-}
-
-export type NodeRequestHandler = (
-  request: IncomingMessage,
-  response: ServerResponse,
-) => Promise<void>;
 
 function requestHeaders(request: IncomingMessage): Headers {
   const headers = new Headers();
@@ -161,42 +146,4 @@ export async function handleNodeRequest(
   } finally {
     incoming.off('aborted', abort);
   }
-}
-
-export function createGenUIServer(handler: NodeRequestHandler): Server {
-  return createServer((incoming, outgoing) => {
-    void handler(incoming, outgoing);
-  });
-}
-
-export async function listen(
-  server: Server,
-  options: ListenOptions = {},
-): Promise<Server> {
-  const port = options.port ?? 3060;
-  const host = options.host ?? '0.0.0.0';
-  await new Promise<void>((resolve, reject) => {
-    const cleanup = () => {
-      server.off('error', handleError);
-      server.off('listening', handleListening);
-    };
-    const handleError = (error: Error) => {
-      cleanup();
-      reject(error);
-    };
-    const handleListening = () => {
-      cleanup();
-      resolve();
-    };
-
-    server.once('error', handleError);
-    server.once('listening', handleListening);
-    try {
-      server.listen(port, host);
-    } catch (error) {
-      cleanup();
-      reject(error instanceof Error ? error : new Error(String(error)));
-    }
-  });
-  return server;
 }
