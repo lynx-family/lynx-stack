@@ -35,6 +35,9 @@ export function computeChunkReleaseKey(
   chunkGraph: Rspack.Compilation['chunkGraph'],
   chunk: Rspack.Chunk,
 ): string {
+  const cached = releaseKeyCache.get(chunk)
+  if (cached !== undefined) return cached
+
   const moduleIds: string[] = []
   for (const module of chunkGraph.getChunkModules(chunk)) {
     moduleIds.push(module.identifier())
@@ -42,8 +45,20 @@ export function computeChunkReleaseKey(
   // `getChunkModules` order is not guaranteed stable; sort so the key is
   // deterministic for a given module set.
   moduleIds.sort()
-  return computeReleaseKey(chunk.name ?? '', chunk.hash ?? '', ...moduleIds)
+  const key = computeReleaseKey(
+    chunk.name ?? '',
+    chunk.hash ?? '',
+    ...moduleIds,
+  )
+  releaseKeyCache.set(chunk, key)
+  return key
 }
+
+/**
+ * The same chunk is keyed once for the banner plus once per mappable file per
+ * template. `Chunk` is per-compilation, so entries drop with it.
+ */
+const releaseKeyCache = new WeakMap<Rspack.Chunk, string>()
 
 export const RELEASE_DEFINE = '__DEBUG_METADATA_RELEASE__'
 
