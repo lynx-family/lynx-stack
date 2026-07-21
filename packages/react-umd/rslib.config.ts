@@ -2,12 +2,13 @@ import { defineExternalBundleRslibConfig } from '@lynx-js/lynx-bundle-rslib-conf
 import { pluginReactLynx } from '@lynx-js/react-rsbuild-plugin';
 
 const target = process.env['EXTERNAL_BUNDLE_TARGET'] === 'web' ? 'web' : 'tasm';
+const isDev = process.env.NODE_ENV === 'development';
 
 export default defineExternalBundleRslibConfig({
-  id: process.env.NODE_ENV === 'development' ? 'react-dev' : 'react-prod',
+  id: isDev ? 'react-dev' : 'react-prod',
   source: {
     entry: {
-      'ReactLynx': './src/index.ts',
+      'ReactLynx': isDev ? './src/index.dev.ts' : './src/index.ts',
     },
   },
   plugins: [
