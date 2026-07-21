@@ -17,7 +17,7 @@ use swc_core::{
   ecma::{
     ast::{JSXExpr, *},
     utils::{is_literal, prepend_stmt, private_ident},
-    visit::{VisitMut, VisitMutWith},
+    visit::{Visit, VisitMut, VisitMutWith, VisitWith},
   },
   quote, quote_expr,
 };
@@ -117,6 +117,70 @@ pub enum DynamicPart {
   Spread(Expr, i32, bool),
   Slot(Expr, i32),
   ListSlot(Expr, i32),
+}
+
+/// Collects `const` bindings whose initializer is a literal, so that JSX
+/// referencing one of them can be compiled as if the literal had been written
+/// inline. Keyed by the resolved binding id, so shadowed names stay distinct.
+#[derive(Default)]
+struct ConstLiteralCollector {
+  literals: HashMap<Id, Lit>,
+}
+
+impl Visit for ConstLiteralCollector {
+  fn visit_var_decl(&mut self, n: &VarDecl) {
+    n.visit_children_with(self);
+
+    if n.kind != VarDeclKind::Const {
+      return;
+    }
+
+    for decl in &n.decls {
+      if let (Pat::Ident(name), Some(init)) = (&decl.name, &decl.init) {
+        if let Expr::Lit(lit) = &**init {
+          self.literals.insert(name.id.to_id(), lit.clone());
+        }
+      }
+    }
+  }
+}
+
+/// Folds compile-time constants inside JSX before the snapshot is extracted:
+///
+/// - `{CONST}` becomes the literal it is bound to, so an attribute value ends
+///   up in the static snapshot instead of the `values` array.
+/// - `{null}` / `{true}` / `{false}` children render nothing, so they are
+///   dropped instead of taking up a slot.
+struct ConstLiteralFolder {
+  literals: HashMap<Id, Lit>,
+}
+
+impl VisitMut for ConstLiteralFolder {
+  fn visit_mut_jsx_expr_container(&mut self, n: &mut JSXExprContainer) {
+    n.visit_mut_children_with(self);
+
+    if let JSXExpr::Expr(expr) = &mut n.expr {
+      if let Expr::Ident(ident) = &**expr {
+        if let Some(lit) = self.literals.get(&ident.to_id()) {
+          **expr = Expr::Lit(lit.clone());
+        }
+      }
+    }
+  }
+
+  fn visit_mut_jsx_element_childs(&mut self, n: &mut Vec<JSXElementChild>) {
+    n.visit_mut_children_with(self);
+
+    n.retain(|child| {
+      !matches!(
+        child,
+        JSXElementChild::JSXExprContainer(JSXExprContainer {
+          expr: JSXExpr::Expr(expr),
+          ..
+        }) if matches!(&**expr, Expr::Lit(Lit::Null(_)) | Expr::Lit(Lit::Bool(_)))
+      )
+    });
+  }
 }
 
 pub fn i32_to_expr(i: &i32) -> Expr {
@@ -1724,6 +1788,12 @@ where
       self.css_id_value = Some(Expr::Lit(Lit::Num(0.into())));
     }
 
+    let mut collector = ConstLiteralCollector::default();
+    n.visit_with(&mut collector);
+    n.visit_mut_with(&mut ConstLiteralFolder {
+      literals: collector.literals,
+    });
+
     n.visit_mut_children_with(self);
 
     if let Expr::Ident(runtime_id) = &*self.runtime_id {
@@ -1907,6 +1977,100 @@ mod tests {
 
       Ok(())
     });
+  }
+
+  fn transform_with_resolver(src: &str) -> String {
+    let mut output = String::new();
+
+    Tester::run(|tester| {
+      let top_level_mark = Mark::new();
+      let unresolved_mark = Mark::new();
+
+      let program = tester.apply_transform(
+        (
+          resolver(unresolved_mark, top_level_mark, true),
+          visit_mut_pass(JSXTransformer::<&SingleThreadedComments>::new(
+            super::JSXTransformerConfig {
+              preserve_jsx: true,
+              target: TransformTarget::MIXED,
+              ..Default::default()
+            },
+            None,
+            TransformMode::Test,
+            Some(tester.cm.clone()),
+          )),
+        ),
+        "input.js",
+        Syntax::Es(EsSyntax {
+          jsx: true,
+          ..Default::default()
+        }),
+        Some(true),
+        src,
+      )?;
+
+      let comments = tester.comments.clone();
+      output = tester.print(&program, &comments);
+
+      Ok(())
+    });
+
+    output
+  }
+
+  #[test]
+  fn should_treat_const_literal_attr_as_static() {
+    let output = transform_with_resolver(r#"const V = "foo"; const a = <view custom-attr={V} />;"#);
+
+    assert!(
+      output.contains(r#"__SetAttribute(el, "custom-attr", "foo")"#),
+      "a const literal attr should be baked into the snapshot creator; output:\n{output}",
+    );
+    assert!(
+      !output.contains("values="),
+      "a const literal attr should not produce a dynamic value; output:\n{output}",
+    );
+  }
+
+  #[test]
+  fn should_not_treat_const_literal_child_as_slot() {
+    let output = transform_with_resolver(r#"const HOLE = null; const a = <view>{HOLE}</view>;"#);
+
+    assert!(
+      !output.contains("$0="),
+      "a child that renders nothing should not take up a slot; output:\n{output}",
+    );
+    assert!(
+      !output.contains("DynamicPartSlot"),
+      "a child that renders nothing should leave the snapshot fully static; output:\n{output}",
+    );
+  }
+
+  #[test]
+  fn should_keep_shadowed_binding_dynamic() {
+    let output = transform_with_resolver(
+      r#"
+      const HOLE = null;
+      function App(HOLE) {
+        return <view custom-attr={HOLE} />;
+      }
+      "#,
+    );
+
+    assert!(
+      output.contains("values="),
+      "a parameter shadowing a const literal must stay dynamic; output:\n{output}",
+    );
+  }
+
+  #[test]
+  fn should_keep_mutable_binding_dynamic() {
+    let output = transform_with_resolver(r#"let V = "foo"; const a = <view custom-attr={V} />;"#);
+
+    assert!(
+      output.contains("values="),
+      "a `let` binding may be reassigned, so it must stay dynamic; output:\n{output}",
+    );
   }
 
   test!(
