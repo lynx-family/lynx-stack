@@ -32,6 +32,7 @@ export interface CreatedFile {
 
 interface TemplateContext {
   addonBinaryName: string;
+  nodeApiAddonName: string;
   addonTargetName: string;
   packageName: string;
   androidPackage: string;
@@ -236,6 +237,7 @@ function createContext(
 
   return {
     addonBinaryName: toKebabCase(baseName) || 'lynx-library',
+    nodeApiAddonName: napiModuleName,
     addonTargetName: `${toCIdentifier(prefix, 'LynxLibrary')}Addon`,
     packageName,
     androidPackage,
@@ -375,12 +377,14 @@ function readDefaultDependencyVersions(): Record<string, string> {
   ) as PackageJson;
   const versions: Record<string, string> = {};
 
-  for (
-    const [name, version] of Object.entries(packageJson.devDependencies ?? {})
-  ) {
-    versions[name] = version.startsWith('workspace:')
-      ? readPackageVersion(name)
-      : version;
+  for (const field of ['dependencies', 'devDependencies'] as const) {
+    for (
+      const [name, version] of Object.entries(packageJson[field] ?? {})
+    ) {
+      versions[name] = version.startsWith('workspace:')
+        ? readPackageVersion(name)
+        : version;
+    }
   }
 
   return versions;
@@ -390,7 +394,7 @@ function readDefaultDependencyVersions(): Record<string, string> {
  * Reads the installed package version for a workspace dependency.
  */
 function readPackageVersion(packageName: string): string {
-  const packageJsonPath = findPackageJson(moduleRequire.resolve(packageName));
+  const packageJsonPath = resolvePackageJson(packageName);
   const packageJson = JSON.parse(
     fs.readFileSync(packageJsonPath, 'utf8'),
   ) as { version?: unknown };
@@ -402,6 +406,25 @@ function readPackageVersion(packageName: string): string {
   }
 
   return packageJson.version;
+}
+
+function resolvePackageJson(packageName: string): string {
+  try {
+    return findPackageJson(moduleRequire.resolve(packageName));
+  } catch (error) {
+    const packageJsonPath = path.join(
+      PACKAGE_ROOT,
+      'node_modules',
+      ...packageName.split('/'),
+      'package.json',
+    );
+
+    if (fs.existsSync(packageJsonPath)) {
+      return packageJsonPath;
+    }
+
+    throw error;
+  }
 }
 
 /**
@@ -468,7 +491,7 @@ function replacePackageDependencyVersions(
     throw new Error(
       `Template package.json "${filePath}" contains workspace dependencies without version mappings: ${
         Array.from(missingVersionPackages).join(', ')
-      }. Add these packages to create-lynx-library's devDependencies.`,
+      }. Add these packages to create-lynx-library's dependencies or devDependencies.`,
     );
   }
 
@@ -523,6 +546,7 @@ function createTemplateReplacements(
 ): Record<string, string> {
   return {
     ADDON_BINARY_NAME: context.addonBinaryName,
+    NODE_API_ADDON_NAME: context.nodeApiAddonName,
     ADDON_TARGET_NAME: context.addonTargetName,
     ANDROID_PACKAGE: context.androidPackage,
     ANDROID_PACKAGE_PATH: context.androidPackagePath,
@@ -532,13 +556,22 @@ function createTemplateReplacements(
     EXAMPLE_ELEMENT: exampleElement(context),
     EXAMPLE_IMPORT: exampleImport(context),
     EXAMPLE_MODULE_BUTTON: exampleModuleButton(context),
+    ANDROID_NAPI_BUILD_SETUP: androidNapiBuildSetup(context),
+    ANDROID_NAPI_DEFAULT_CONFIG: androidNapiDefaultConfig(context),
+    ANDROID_NAPI_DEPENDENCIES: androidNapiDependencies(context),
+    ANDROID_NAPI_EXTERNAL_NATIVE_BUILD: androidNapiExternalNativeBuild(context),
+    ANDROID_NAPI_TASK_WIRING: androidNapiTaskWiring(context),
+    ANDROID_PLATFORM_DEPENDENCIES: androidPlatformDependencies(context),
     IOS_SERVICE_API_DEPENDENCY: iosServiceApiDependency(context),
+    IOS_NAPI_ADDON_PODSPEC: iosNapiAddonPodspec(context),
     LYNX_ELEMENT_MODULE_NAME: elementModuleName(context),
     MODULE_NAME: context.moduleName,
     NAPI_MODULE_NAME: context.napiModuleName,
+    NAPI_NATIVE_MODULE_README: napiNativeModuleReadme(context),
     PACKAGE_NAME: context.packageName,
     PACKAGE_EXPORTS_FIELD: packageExportsField(context),
     PACKAGE_FILES: packageFiles(context),
+    PACKAGE_RUNTIME_DEPENDENCIES: packageRuntimeDependencies(context),
     PACKAGE_SELF_RENDER_DEV_DEPENDENCY: packageSelfRenderDevDependency(context),
     PACKAGE_SELF_RENDER_SCRIPTS: packageSelfRenderScripts(context),
     PLATFORM_DIRECTORY_LIST: platformDirectoryList(context),
@@ -551,6 +584,7 @@ function createTemplateReplacements(
     NAPI_NATIVE_MODULE_TYPES: napiNativeModuleTypes(context),
     PLATFORM_NATIVE_MODULE_TYPES: platformNativeModuleTypes(context),
     TYPES_INDEX: typesIndex(context),
+    TYPE_DECLARATION_README: typeDeclarationReadme(context),
   };
 }
 
@@ -644,15 +678,43 @@ function packageSelfRenderDevDependency(context: TemplateContext): string {
     return '';
   }
 
+  const dependencies: string[] = [];
+
+  if (!context.features.has('napi-native-module')) {
+    const headersVersion =
+      context.dependencyVersions[LYNX_EXTENSION_HEADERS_PACKAGE]
+        ?? LYNX_EXTENSION_HEADERS_VERSION;
+    const weakNodeApiVersion = context.dependencyVersions[WEAK_NODE_API_PACKAGE]
+      ?? WEAK_NODE_API_VERSION;
+    dependencies.push(
+      `    "${LYNX_EXTENSION_HEADERS_PACKAGE}": "${headersVersion}"`,
+      `    "${WEAK_NODE_API_PACKAGE}": "${weakNodeApiVersion}"`,
+    );
+  }
+
+  if (dependencies.length === 0) {
+    return '';
+  }
+
+  return `,
+${dependencies.join(',\n')}`;
+}
+
+function packageRuntimeDependencies(context: TemplateContext): string {
+  if (!context.features.has('napi-native-module')) {
+    return '';
+  }
+
+  const weakNodeApiVersion = context.dependencyVersions[WEAK_NODE_API_PACKAGE]
+    ?? WEAK_NODE_API_VERSION;
   const headersVersion =
     context.dependencyVersions[LYNX_EXTENSION_HEADERS_PACKAGE]
       ?? LYNX_EXTENSION_HEADERS_VERSION;
-  const weakNodeApiVersion = context.dependencyVersions[WEAK_NODE_API_PACKAGE]
-    ?? WEAK_NODE_API_VERSION;
 
-  return `,
-    "${LYNX_EXTENSION_HEADERS_PACKAGE}": "${headersVersion}",
-    "${WEAK_NODE_API_PACKAGE}": "${weakNodeApiVersion}"`;
+  return `  "dependencies": {
+    "${WEAK_NODE_API_PACKAGE}": "${weakNodeApiVersion}",
+    "${LYNX_EXTENSION_HEADERS_PACKAGE}": "${headersVersion}"
+  },`;
 }
 
 /**
@@ -793,10 +855,195 @@ function iosServiceApiDependency(context: TemplateContext): string {
     : '';
 }
 
+function androidNapiExternalNativeBuild(context: TemplateContext): string {
+  if (
+    !context.platforms.has('android')
+    || !context.features.has('napi-native-module')
+  ) {
+    return '';
+  }
+
+  return `
+
+  externalNativeBuild {
+    cmake {
+      path = file("CMakeLists.txt")
+      version = "3.18.1"
+    }
+  }`;
+}
+
+function hasAndroidNapiNativeModule(context: TemplateContext): boolean {
+  return context.platforms.has('android')
+    && context.features.has('napi-native-module');
+}
+
+function androidPlatformDependencies(context: TemplateContext): string {
+  if (
+    !context.platforms.has('android')
+    || ![...context.features].some((feature) =>
+      feature !== 'napi-native-module'
+    )
+  ) {
+    return '';
+  }
+
+  return `  implementation("org.lynxsdk.lynx:lynx:0.0.1-alpha.1")
+  implementation("org.lynxsdk.lynx:service-api:0.0.1-alpha.1")
+  annotationProcessor("org.lynxsdk.lynx:lynx-processor:0.0.1-alpha.1")`;
+}
+
+function androidNapiBuildSetup(context: TemplateContext): string {
+  if (!hasAndroidNapiNativeModule(context)) {
+    return '';
+  }
+
+  return `val lynxPrimjsVersion = providers.gradleProperty("lynx.primjs.version").orElse("4.+").get()
+val primjsNativeAar by configurations.creating
+val primjsNativeAarFiles = primjsNativeAar.incoming.artifactView {}.files
+val extractPrimjsNativeLibraries by tasks.registering(Sync::class) {
+  from(primjsNativeAarFiles.elements.map { files ->
+    files.map { zipTree(it.asFile) }
+  })
+  include("jni/**/*.so")
+  into(layout.buildDirectory.dir("primjs-native"))
+}
+
+`;
+}
+
+function androidNapiDefaultConfig(context: TemplateContext): string {
+  if (!hasAndroidNapiNativeModule(context)) {
+    return '';
+  }
+
+  return `
+
+    externalNativeBuild {
+      cmake {
+        arguments(
+          "-DLYNX_PRIMJS_JNI_DIR=${'$'}{layout.buildDirectory.dir("primjs-native/jni").get().asFile.absolutePath}"
+        )
+      }
+    }`;
+}
+
+function androidNapiDependencies(context: TemplateContext): string {
+  if (!hasAndroidNapiNativeModule(context)) {
+    return '';
+  }
+
+  return `
+  implementation("org.lynxsdk.lynx:primjs:${'$'}lynxPrimjsVersion")
+  primjsNativeAar("org.lynxsdk.lynx:primjs:${'$'}lynxPrimjsVersion@aar")`;
+}
+
+function androidNapiTaskWiring(context: TemplateContext): string {
+  if (!hasAndroidNapiNativeModule(context)) {
+    return '';
+  }
+
+  return `
+
+tasks.configureEach {
+  if (name.startsWith("configureCMake")
+      || name.startsWith("generateJsonModel")
+      || name.startsWith("externalNativeBuild")) {
+    dependsOn(extractPrimjsNativeLibraries)
+  }
+}`;
+}
+
+function iosNapiAddonPodspec(context: TemplateContext): string {
+  if (
+    !context.platforms.has('ios') || !context.features.has('napi-native-module')
+  ) {
+    return '';
+  }
+
+  return `
+  s.source_files = 'src/**/*.{h,m,mm}', 'generated/**/*.{cc,h,mm}', 'addon_use.h'
+  s.public_header_files = 'addon_use.h'
+  s.dependency 'LynxWeakNodeAPI'
+  s.pod_target_xcconfig = {
+    'HEADER_SEARCH_PATHS' => '$(inherited) "\${PODS_ROOT}/LynxWeakNodeAPI/packages/weak-node-api/headers" "\${PODS_ROOT}/PrimJS/src/napi" "\${PODS_ROOT}/PrimJS/src/napi/js_native_api"',
+    'GCC_PREPROCESSOR_DEFINITIONS' => '$(inherited) LYNX_LIBRARY_USE_PRIMJS_NAPI_MODULE=1'
+  }`;
+}
+
 function elementModuleName(context: TemplateContext): string {
   return `${
     toCIdentifier(toPascalCase(context.addonBinaryName), 'LynxLibrary')
   }ElementModule`;
+}
+
+function typeDeclarationReadme(context: TemplateContext): string {
+  const declarations = [
+    ...(context.features.has('native-module')
+      ? [
+        'Platform native module typings live in `types/platform-native-module.d.ts`.',
+      ]
+      : []),
+    ...(context.features.has('napi-native-module')
+      ? [
+        'NAPI native module typings live in `types/napi-native-module.d.ts` and use a minimal shared C++ N-API callback stub.',
+      ]
+      : []),
+  ];
+
+  if (declarations.length === 0) {
+    return 'This feature selection does not include native module typings.';
+  }
+
+  return `Generated JS specs are written to \`generated/\`.
+
+${declarations.join('\n\n')}`;
+}
+
+function napiNativeModuleReadme(context: TemplateContext): string {
+  if (!context.features.has('napi-native-module')) {
+    return '';
+  }
+
+  const mobilePlatforms = [
+    ...(context.platforms.has('android') ? ['Android'] : []),
+    ...(context.platforms.has('ios') ? ['iOS'] : []),
+  ];
+  const mobileShimReadme = mobilePlatforms.length > 0
+    ? `
+
+On ${formatList(mobilePlatforms)}, import the package root in BTS to install the
+generated \`NativeModules.${context.napiModuleName}\` shim. The generated
+TypeScript shim is only for the selected mobile runtimes; Lynxtron does not
+import it.
+`
+    : '';
+
+  return `
+
+## NAPI Native Module
+
+Codegen creates \`shared/nativeModule/${context.napiModuleName}.cc\` once and
+preserves it on later runs. After changing the typings, rerun codegen to refresh
+generated facade and registration files, then manually keep the user-owned C++
+callbacks and exports in sync. If the module class is renamed, also rename or
+remove the old C++ file and update the addon name in \`lynx.lib.json\`; codegen
+does not delete stale user-owned files or rewrite the manifest.${mobileShimReadme}
+${androidNapiReadme(context)}
+`;
+}
+
+function androidNapiReadme(context: TemplateContext): string {
+  if (!hasAndroidNapiNativeModule(context)) {
+    return '';
+  }
+
+  return `
+Android source builds resolve \`org.lynxsdk.lynx:primjs\` using the Gradle
+property \`lynx.primjs.version\`, defaulting to \`4.+\`. Set the property from
+the host root build when the App needs to pin the same PrimJS runtime version
+used by other Lynx dependencies.
+`;
 }
 
 function selfRenderReadme(context: TemplateContext): string {
@@ -804,10 +1051,22 @@ function selfRenderReadme(context: TemplateContext): string {
     return '';
   }
 
+  const napiBtsUsage = context.features.has('napi-native-module')
+    ? `
+
+Lynxtron BTS code does not import the package root or the generated mobile shim.
+It calls the registered runtime module directly:
+
+\`\`\`ts
+NativeModules.${context.napiModuleName}.<method>(...);
+\`\`\`
+`
+    : '';
+
   return `
 ## Lynxtron Library Target
 
-This package contains shared C++ sources for the selected NAPI Native Module and
+This package contains shared C++ sources for any selected NAPI Native Module or
 Element features. Build the current OS/architecture Lynxtron library with:
 
 \`\`\`bash
@@ -817,6 +1076,16 @@ npm run build:lynxtron
 The build writes \`dist/<platform>/<arch>/${context.addonBinaryName}.node\`.
 Run it on each OS/architecture you want to publish. The package also exposes
 \`./lynxtron\`, which loads the matching artifact for Lynxtron based hosts.
+\`npm pack\` and \`npm publish\` do not build native artifacts, so collect every
+supported platform/architecture under \`dist/\` before publishing.
+
+In the Lynxtron Node.js main thread:
+
+\`\`\`cjs
+const addon = require('${context.packageName}/lynxtron');
+addon.initialize();
+\`\`\`
+${napiBtsUsage}
 `;
 }
 
@@ -844,18 +1113,21 @@ function packageFiles(context: TemplateContext): string {
  */
 function platformManifestEntries(context: TemplateContext): string {
   const entries: string[] = [];
+  const iosPodspecPath = `ios/${podspecName(context.packageName)}.podspec`;
 
   if (context.platforms.has('android')) {
     entries.push(`    "android": {
       "packageName": ${JSON.stringify(context.androidPackage)},
-      "sourceDir": "android"
+      "sourceDir": "android"${androidNodeApiAddonsManifest(context)}
     }`);
   }
 
   if (context.platforms.has('ios')) {
     entries.push(`    "ios": {
       "sourceDir": "ios",
-      "podspecPath": "ios/build.podspec"
+      "podspecPath": ${JSON.stringify(iosPodspecPath)}${
+      iosNodeApiAddonsManifest(context, iosPodspecPath)
+    }
     }`);
   }
 
@@ -872,6 +1144,42 @@ function platformManifestEntries(context: TemplateContext): string {
   }
 
   return entries.join(',\n');
+}
+
+function androidNodeApiAddonsManifest(context: TemplateContext): string {
+  if (!context.features.has('napi-native-module')) {
+    return '';
+  }
+
+  return `,
+      "nodeApiAddons": [
+        {
+          "name": ${JSON.stringify(context.nodeApiAddonName)},
+          "libraryName": ${JSON.stringify(context.nodeApiAddonName)},
+          "jniLibsDir": "android/src/main/jniLibs",
+          "required": false
+        }
+      ]`;
+}
+
+function iosNodeApiAddonsManifest(
+  context: TemplateContext,
+  podspecPath: string,
+): string {
+  if (!context.features.has('napi-native-module')) {
+    return '';
+  }
+
+  return `,
+      "nodeApiAddons": [
+        {
+          "name": ${JSON.stringify(context.nodeApiAddonName)},
+          "podName": ${JSON.stringify(podspecName(context.packageName))},
+          "podspecPath": ${JSON.stringify(podspecPath)},
+          "addonUseHeader": "addon_use.h",
+          "required": true
+        }
+      ]`;
 }
 
 /**

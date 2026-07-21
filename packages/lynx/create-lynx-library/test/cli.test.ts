@@ -116,7 +116,7 @@ describe('create-lynx-library CLI', () => {
     ], runtime);
 
     expect(runtime.info).toHaveBeenCalledWith(
-      expect.stringContaining(`Created 33 files in ${path.resolve(dir)}`),
+      expect.stringContaining(`Created 34 files in ${path.resolve(dir)}`),
     );
     expect(runtime.info).toHaveBeenCalledWith(
       expect.stringContaining(
