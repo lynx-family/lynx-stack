@@ -15,18 +15,22 @@ import type { CompilerHandle } from './middleware.js'
 
 const PLUGIN_NAME = 'lynx:debug-metadata'
 
-/**
- * `DEBUG=rspeedy` (and friends) — mirrors `isDebug()` in
- * `@lynx-js/template-webpack-plugin`, replicated here to avoid widening that
- * package's public API for a single env check.
- */
 function isDebugMode(): boolean {
   const debug = process.env['DEBUG']
   if (!debug) return false
   const values = debug.toLocaleLowerCase().split(',')
-  return ['rspeedy', '*', 'rspeedy:*', 'rspeedy:template'].some((key) =>
-    values.includes(key)
-  )
+  return ['rspeedy', 'rsbuild', '*', 'rspeedy:*', 'rspeedy:template'].some((
+    key,
+  ) => values.includes(key))
+}
+
+function isAutomatedBuild(): boolean {
+  const { CI, CI_REPO_NAME, BUILD_VERSION } = process.env
+  return [BUILD_VERSION, CI_REPO_NAME, CI].some(Boolean)
+}
+
+function isLocalProductionBuild(isProd: boolean): boolean {
+  return isProd && !isAutomatedBuild() && !isDebugMode()
 }
 
 /**
@@ -152,12 +156,14 @@ export function pluginLynxDebugMetadata(): RsbuildPlugin {
         stripDebugMetadataFromOutput(compiler)
       })
 
-      api.modifyBundlerChain((chain, { environment }) => {
+      api.modifyBundlerChain((chain, { environment, isProd }) => {
         // biome `useHookAtTopLevel` lint doesn't trip — it's an rsbuild
         // API, not a React hook, but the name prefix matches.
         const exposed = api.useExposed<LynxTemplatePluginExposure>(
           Symbol.for('LynxTemplatePlugin'),
         )
+
+        if (isLocalProductionBuild(isProd)) return
 
         // Non-lynx envs (e.g. the `web` env in a multi-env build) share
         // the same `intermediate` dir with the lynx env in rspeedy's
