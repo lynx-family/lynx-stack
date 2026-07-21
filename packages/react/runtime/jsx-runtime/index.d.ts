@@ -10,6 +10,30 @@ export { jsx, jsxs, Fragment } from 'react/jsx-runtime';
 // Modified from
 // https://github.com/DefinitelyTyped/DefinitelyTyped/blob/981449c691b9be0fca569c48151fc57606f5ea7a/types/react/jsx-runtime.d.ts#L5
 export namespace JSX {
+  type LynxEventAttributeName =
+    | `bind${string}`
+    | `catch${string}`
+    | `capture-bind${string}`
+    | `capture-catch${string}`
+    | `global-bind${string}`
+    | `${string}:${string}`;
+  type CamelCaseAttributeName<Name extends string> = Name extends `${infer Head}-${infer Tail}`
+    ? `${Head}${Capitalize<CamelCaseAttributeName<Tail>>}`
+    : Name;
+  type CamelCaseAttributes<Attributes> =
+    & Attributes
+    & {
+      [
+        Name in keyof Attributes as Name extends string ? Name extends LynxEventAttributeName ? never
+          : CamelCaseAttributeName<Name>
+          : never
+      ]?: Attributes[Name];
+    };
+  type LynxIntrinsicElementsWithCamelCaseAttributes = {
+    [ElementName in keyof Lynx.IntrinsicElements]: CamelCaseAttributes<
+      Lynx.IntrinsicElements[ElementName]
+    >;
+  };
   type ElementType = React.JSX.ElementType;
   interface Element extends React.JSX.Element {}
   interface ElementClass extends React.JSX.ElementClass {}
@@ -22,5 +46,5 @@ export namespace JSX {
     key?: React.Key | null | undefined;
   }
   interface IntrinsicClassAttributes<T> extends React.JSX.IntrinsicClassAttributes<T> {}
-  interface IntrinsicElements extends Lynx.IntrinsicElements {}
+  interface IntrinsicElements extends LynxIntrinsicElementsWithCamelCaseAttributes {}
 }

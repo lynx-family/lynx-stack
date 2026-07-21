@@ -134,6 +134,18 @@ export interface PluginReactLynxOptions {
   enableAccessibilityElement?: boolean
 
   /**
+   * Enables camelCase names for attributes on Lynx intrinsic elements.
+   *
+   * @remarks
+   * Attributes that can be identified statically are converted during the
+   * React transform. Attributes supplied through JSX spread are converted at
+   * runtime. Event attributes are not converted.
+   *
+   * @defaultValue `false`
+   */
+  enableCamelCaseAttributes?: boolean
+
+  /**
    * enableCSSInheritance enables the default inheritance properties.
    *
    * @remarks
@@ -371,6 +383,7 @@ export function pluginReactLynx(
     debugInfoOutside: true,
     defaultDisplayLinear: true,
     enableAccessibilityElement: false,
+    enableCamelCaseAttributes: false,
     enableCSSInheritance: false,
     enableCSSInvalidation: true,
     enableCSSSelector: true,

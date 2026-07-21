@@ -1,9 +1,13 @@
-import { describe, expect, it, vi } from 'vitest';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { getEventValue } from '../../../../src/element-template/prop-adapters/event-value.js';
 import { prepareSpreadAttrSlot } from '../../../../src/element-template/prop-adapters/spread.js';
 
 describe('ElementTemplate spread prop adapter', () => {
+  beforeEach(() => {
+    globalThis.__ENABLE_CAMEL_CASE_ATTRIBUTES__ = false;
+  });
+
   it('normalizes host spread keys and emits ordinary event values', () => {
     const handleTap = vi.fn();
     const unsupportedWorkletEvent = vi.fn();
@@ -41,6 +45,37 @@ describe('ElementTemplate spread prop adapter', () => {
     const prepared = prepareSpreadAttrSlot(-2, 0, { className: null });
 
     expect(prepared).toEqual({ class: '' });
+  });
+
+  it('converts camelCase spread attribute names when enabled by the compilation macro', () => {
+    globalThis.__ENABLE_CAMEL_CASE_ATTRIBUTES__ = true;
+    const prepared = prepareSpreadAttrSlot(-2, 0, {
+      textMaxline: 2,
+      enableFontScaling: true,
+      clipRadius: 4,
+      bindTap: 'event',
+      className: 'label',
+    });
+
+    expect(prepared).toEqual({
+      'text-maxline': 2,
+      'enable-font-scaling': true,
+      'clip-radius': 4,
+      bindTap: getEventValue(-2, 0, 'bindTap'),
+      class: 'label',
+    });
+  });
+
+  it('keeps camelCase spread attribute names when the compilation macro is disabled', () => {
+    expect(prepareSpreadAttrSlot(-2, 0, { textMaxline: 2 })).toEqual({ textMaxline: 2 });
+  });
+
+  it('uses source order when camelCase and dash-case spread keys collide', () => {
+    globalThis.__ENABLE_CAMEL_CASE_ATTRIBUTES__ = true;
+    expect(prepareSpreadAttrSlot(-2, 0, {
+      'text-maxline': 1,
+      textMaxline: 2,
+    })).toEqual({ 'text-maxline': 2 });
   });
 
   it('emits null for removed event props', () => {

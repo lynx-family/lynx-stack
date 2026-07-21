@@ -70,6 +70,7 @@ export interface PluginReactLynxOptions {
     defaultDisplayLinear?: boolean;
     defineDCE?: Partial<DefineDceVisitorConfig> | undefined;
     enableAccessibilityElement?: boolean;
+    enableCamelCaseAttributes?: boolean;
     enableCSSInheritance?: boolean;
     enableCSSInvalidation?: boolean;
     enableCSSSelector?: boolean;

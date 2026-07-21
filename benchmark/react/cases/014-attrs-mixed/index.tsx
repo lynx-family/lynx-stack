@@ -9,10 +9,10 @@ import { RunBenchmarkUntilHydrate } from '../../src/RunBenchmarkUntil.js';
 const ELEMENT_COUNT = 100;
 
 const RUNTIME_ATTRIBUTES = {
-  'tail-color-convert': false,
-  'include-font-padding': false,
-  'text-fake-bold': false,
-  'text-selection': false,
+  tailColorConvert: false,
+  includeFontPadding: false,
+  textFakeBold: false,
+  textSelection: false,
 } as const;
 
 function App() {
@@ -20,10 +20,10 @@ function App() {
     <view>
       {Array.from({ length: ELEMENT_COUNT }, () => (
         <text
-          text-maxline='2'
-          text-maxlength='128'
-          enable-font-scaling={false}
-          text-vertical-align='center'
+          textMaxline='2'
+          textMaxlength='128'
+          enableFontScaling={false}
+          textVerticalAlign='center'
           {...RUNTIME_ATTRIBUTES}
         />
       ))}

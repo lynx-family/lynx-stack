@@ -635,6 +635,8 @@ export interface JsxTransformerConfig {
   /** @internal */
   isExternalBundle?: boolean
   /** @internal */
+  enableCamelCaseAttributes?: boolean
+  /** @internal */
   legacySlot?: boolean
 }
 /** @internal */
@@ -653,6 +655,8 @@ export interface ElementTemplateConfig {
   isDynamicComponent?: boolean
   /** @internal */
   isExternalBundle?: boolean
+  /** @internal */
+  enableCamelCaseAttributes?: boolean
 }
 export interface WorkletVisitorConfig {
   /**

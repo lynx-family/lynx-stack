@@ -4,6 +4,7 @@
 
 import { getEventValue } from './event-value.js';
 import { prepareSpreadRefAttrValue } from './ref.js';
+import { normalizeCamelCaseAttributeName } from '../../shared/attribute-name.js';
 import type { SerializableValue } from '../protocol/types.js';
 
 const eventPropKeyRegExp = /^(?:global-bind|bind|catch|capture-bind|capture-catch)[A-Za-z]+$/;
@@ -64,7 +65,8 @@ export function prepareSpreadAttrSlot(
       continue;
     }
 
-    prepared[key] = spreadValue as SerializableValue;
+    const normalizeKey = __ENABLE_CAMEL_CASE_ATTRIBUTES__ ? normalizeCamelCaseAttributeName(key) : key;
+    prepared[normalizeKey] = spreadValue as SerializableValue;
   }
 
   return prepared;

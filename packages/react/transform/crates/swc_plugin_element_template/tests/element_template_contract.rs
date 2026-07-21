@@ -664,6 +664,50 @@ fn should_keep_slot_descriptor_order_for_dynamic_attr_spread_event_and_ref() {
 }
 
 #[test]
+fn should_convert_direct_camel_case_attributes() {
+  let (code, template) = first_user_template_json_with_code(
+    r#"
+      <text
+        textMaxline={2}
+        tailColorConvert={enabled}
+        bindTap={handleTap}
+        onReady="ready"
+        {...props}
+      />
+    "#,
+    JSXTransformerConfig {
+      enable_camel_case_attributes: true,
+      ..element_template_config()
+    },
+  );
+
+  let attrs = template["attributesArray"]
+    .as_array()
+    .expect("attributesArray");
+  let keys = attrs
+    .iter()
+    .filter_map(|attr| attr["key"].as_str())
+    .collect::<Vec<_>>();
+  assert!(
+    keys.contains(&"text-maxline"),
+    "missing text-maxline: {attrs:?}"
+  );
+  assert!(
+    keys.contains(&"tail-color-convert"),
+    "missing tail-color-convert: {attrs:?}"
+  );
+  assert!(keys.contains(&"bindTap"), "event name changed: {attrs:?}");
+  assert!(
+    keys.contains(&"onReady"),
+    "React event name changed: {attrs:?}"
+  );
+  assert!(
+    without_whitespace(&code).contains("adaptSpreadAttrSlot") && code.contains("props"),
+    "ET spread values should remain on the common spread path, got: {code}"
+  );
+}
+
+#[test]
 fn should_keep_worklet_attr_descriptor_keys_for_namespaced_attrs() {
   let (code, template) = first_user_template_json_with_code(
     r#"

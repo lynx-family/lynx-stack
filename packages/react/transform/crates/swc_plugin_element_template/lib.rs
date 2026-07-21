@@ -44,7 +44,10 @@ type RuntimeIdInitializer = Box<dyn FnOnce() -> Expr>;
 pub mod napi;
 
 use swc_plugins_shared::{
-  jsx_helpers::{jsx_attr_value, jsx_children_to_expr, jsx_is_list_item, jsx_name},
+  jsx_helpers::{
+    jsx_attr_value, jsx_children_to_expr, jsx_is_list_item, jsx_name,
+    transform_camel_case_jsx_attributes,
+  },
   target::TransformTarget,
   transform_mode::TransformMode,
 };
@@ -200,6 +203,10 @@ pub struct JSXTransformerConfig {
   /// @internal
   #[serde(default)]
   pub is_external_bundle: Option<bool>,
+  /// Convert camelCase intrinsic element attribute names to dash-case.
+  /// @internal
+  #[serde(default)]
+  pub enable_camel_case_attributes: bool,
 }
 
 impl Default for JSXTransformerConfig {
@@ -214,6 +221,7 @@ impl Default for JSXTransformerConfig {
       target: TransformTarget::LEPUS,
       is_dynamic_component: Some(false),
       is_external_bundle: Some(false),
+      enable_camel_case_attributes: false,
     }
   }
 }
@@ -372,6 +380,9 @@ where
             return node.visit_mut_children_with(self);
           }
           if tag_str == "list" {
+            if self.cfg.enable_camel_case_attributes {
+              transform_camel_case_jsx_attributes(&mut node.opening.attrs);
+            }
             self.lower_typed_list_runtime_jsx(node);
             return;
           }
@@ -391,6 +402,9 @@ where
       _ => {
         return node.visit_mut_children_with(self);
       }
+    }
+    if self.cfg.enable_camel_case_attributes {
+      transform_camel_case_jsx_attributes(&mut node.opening.attrs);
     }
     let is_list_item = jsx_is_list_item(node);
 

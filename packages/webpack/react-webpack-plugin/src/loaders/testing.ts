@@ -27,6 +27,7 @@ function testingLoader(
   const {
     compat = false,
     defineDCE = { define: {} },
+    enableCamelCaseAttributes = false,
     engineVersion = '',
     experimental_useElementTemplate = false,
     shake = false,
@@ -70,6 +71,7 @@ function testingLoader(
         jsxImportSource: JSX_IMPORT_SOURCE.BACKGROUND,
         filename,
         target: 'MIXED',
+        ...(enableCamelCaseAttributes && { enableCamelCaseAttributes: true }),
       },
       elementTemplate: experimental_useElementTemplate
         ? {
@@ -78,11 +80,19 @@ function testingLoader(
           jsxImportSource: JSX_IMPORT_SOURCE.ELEMENT_TEMPLATE,
           filename,
           target: 'MIXED',
+          ...(enableCamelCaseAttributes && { enableCamelCaseAttributes: true }),
         } satisfies ElementTemplateConfig
         : false,
       // snapshot: true,
       directiveDCE: false,
-      defineDCE,
+      defineDCE: {
+        define: {
+          ...defineDCE.define,
+          __ENABLE_CAMEL_CASE_ATTRIBUTES__: JSON.stringify(
+            enableCamelCaseAttributes,
+          ),
+        },
+      },
       shake,
       compat: normalizedCompat,
       engineVersion,

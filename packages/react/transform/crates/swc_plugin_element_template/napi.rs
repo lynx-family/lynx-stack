@@ -58,6 +58,8 @@ pub struct JSXTransformerConfig {
   pub is_dynamic_component: Option<bool>,
   /// @internal
   pub is_external_bundle: Option<bool>,
+  /// @internal
+  pub enable_camel_case_attributes: Option<bool>,
 }
 
 impl Default for JSXTransformerConfig {
@@ -72,6 +74,7 @@ impl Default for JSXTransformerConfig {
       target: TransformTarget::LEPUS,
       is_dynamic_component: Some(false),
       is_external_bundle: Some(false),
+      enable_camel_case_attributes: Some(false),
     }
   }
 }
@@ -86,6 +89,7 @@ impl From<JSXTransformerConfig> for CoreElementTemplateTransformerConfig {
       target: val.target.into(),
       is_dynamic_component: val.is_dynamic_component,
       is_external_bundle: val.is_external_bundle,
+      enable_camel_case_attributes: val.enable_camel_case_attributes.unwrap_or(false),
     }
   }
 }

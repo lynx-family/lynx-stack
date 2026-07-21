@@ -16,6 +16,7 @@ export function injectGlobals() {
   globalThis.__MAIN_THREAD__ = true;
   globalThis.__REF_FIRE_IMMEDIATELY__ = false;
   globalThis.__ENABLE_SSR__ = true;
+  globalThis.__ENABLE_CAMEL_CASE_ATTRIBUTES__ = false;
   globalThis.__USE_ELEMENT_TEMPLATE__ = false;
   globalThis.__FIRST_SCREEN_SYNC_TIMING__ = 'immediately';
   globalThis.globDynamicComponentEntry = '__Card__';

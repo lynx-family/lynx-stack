@@ -84,6 +84,7 @@ export default defineConfig({
     pluginRepoFilePath(),
     pluginReactLynx({
       debugInfoOutside: false,
+      enableCamelCaseAttributes: true,
     }),
     pluginScriptLoad(),
     pluginQRCode({}),

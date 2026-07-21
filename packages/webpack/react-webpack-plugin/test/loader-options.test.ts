@@ -24,6 +24,34 @@ function createLoaderContext(options: Record<string, unknown>) {
 }
 
 describe('loader options', () => {
+  it('enables camelCase attributes in both transform backends and compilation macros', () => {
+    for (const experimental_useElementTemplate of [false, true]) {
+      const context = createLoaderContext({
+        enableCamelCaseAttributes: true,
+        experimental_useElementTemplate,
+      });
+
+      for (
+        const options of [
+          getMainThreadTransformOptions.call(context, undefined),
+          getBackgroundTransformOptions.call(context, undefined),
+        ]
+      ) {
+        const transformOptions = experimental_useElementTemplate
+          ? options.elementTemplate
+          : options.snapshot;
+        expect(transformOptions).toMatchObject({
+          enableCamelCaseAttributes: true,
+        });
+        expect(options.defineDCE).toMatchObject({
+          define: {
+            __ENABLE_CAMEL_CASE_ATTRIBUTES__: 'true',
+          },
+        });
+      }
+    }
+  });
+
   it('uses ET backend with all CSS scoped when enableRemoveCSSScope is false', () => {
     const context = createLoaderContext({
       enableRemoveCSSScope: false,
