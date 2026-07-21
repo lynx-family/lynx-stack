@@ -18,6 +18,7 @@ let bootstrappedRoot: ReactLynxRoot | undefined;
  * @internal
  */
 export function __bootstrapCard(options?: CreateRootOptions): ReactLynxRoot | undefined {
+  /* v8 ignore start -- compile-time dead branch: tests build with `__MULTI_CARD__` on */
   if (typeof __MULTI_CARD__ === 'undefined' || !__MULTI_CARD__) {
     if (__DEV__ && options) {
       console.error(
@@ -26,6 +27,7 @@ export function __bootstrapCard(options?: CreateRootOptions): ReactLynxRoot | un
     }
     return undefined;
   }
+  /* v8 ignore stop */
   if (typeof __BACKGROUND__ !== 'undefined' && __BACKGROUND__) {
     bootstrappedRoot = options ? new ReactLynxRoot(options) : undefined;
   }
