@@ -265,7 +265,6 @@ const SCREENSHOT_DIALOG_WIDTH_STORAGE_KEY =
 const EVENT_SOURCE_CLOSED_READY_STATE = 2;
 const BENCH_HISTORY_STORAGE_KEY = 'a2ui-bench-history';
 const BENCH_HISTORY_LIMIT = 20;
-const ONLINE_A2UI_SERVER_ORIGIN = 'https://genui-server.vercel.app';
 const LOCAL_A2UI_SERVER_PORT = '3060';
 
 const DEFAULT_GROUPS: BenchGroup[] = [
@@ -406,15 +405,11 @@ function isDevHost(hostname: string): boolean {
   );
 }
 
-function isTrustedOnlineEndpoint(endpoint: URL): boolean {
-  return endpoint.origin === ONLINE_A2UI_SERVER_ORIGIN;
-}
-
 function resolveTrustedA2UIEndpoint(raw: string): string | null {
   try {
     const endpoint = new URL(raw, window.location.origin);
     if (endpoint.origin === window.location.origin) return endpoint.toString();
-    if (isTrustedOnlineEndpoint(endpoint)) return endpoint.toString();
+    if (endpoint.protocol === 'https:') return endpoint.toString();
     const isTrustedDevEndpoint = endpoint.protocol === 'http:'
       && endpoint.port === LOCAL_A2UI_SERVER_PORT
       && isDevHost(endpoint.hostname);
@@ -454,7 +449,7 @@ function getA2UIBenchJobsEndpoint(): string {
   ) {
     return `http://${window.location.hostname}:${LOCAL_A2UI_SERVER_PORT}/a2ui/bench/jobs`;
   }
-  return `${ONLINE_A2UI_SERVER_ORIGIN}/a2ui/bench/jobs`;
+  return `${window.location.origin}/a2ui/bench/jobs`;
 }
 
 function getA2UIBenchHealthEndpoint(): string {
@@ -465,7 +460,7 @@ function getA2UIBenchHealthEndpoint(): string {
     url.search = '';
     return url.toString();
   } catch {
-    return `${ONLINE_A2UI_SERVER_ORIGIN}/a2ui/health`;
+    return `${window.location.origin}/a2ui/health`;
   }
 }
 
@@ -477,7 +472,7 @@ function getA2UIBenchReportEndpoint(jobId: string): string {
     url.search = '';
     return url.toString();
   } catch {
-    return `${ONLINE_A2UI_SERVER_ORIGIN}/a2ui/bench/jobs/${
+    return `${window.location.origin}/a2ui/bench/jobs/${
       encodeURIComponent(jobId)
     }/report`;
   }

@@ -35,7 +35,7 @@ function restartServer() {
     await stopServer();
     if (closing) return;
 
-    const child = spawn(process.execPath, ['dist/index.js'], {
+    const child = spawn(process.execPath, ['dist/server.js'], {
       env: { ...process.env, NODE_ENV: 'development' },
       stdio: 'inherit',
     });

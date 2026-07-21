@@ -28,7 +28,6 @@ export default tseslint.config(
       '**/.rslib/**',
       '**/.next/**',
       '**/.turbo/**',
-      '**/.vercel/**',
       '**/coverage/**',
       'output/**',
       'target/**',

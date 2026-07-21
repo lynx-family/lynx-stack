@@ -34,11 +34,12 @@ pnpm -C packages/genui/playground dev
 ```
 
 On `localhost`, the Create tab automatically targets your local server on
-`:3060`. To use the **hosted** agent without running a server of your own,
-append the endpoint override to the playground URL:
+`:3060`. Deployed builds use same-origin server routes by default. To use a
+separately deployed HTTPS server, append an endpoint override to the playground
+URL:
 
 ```text
-?a2uiEndpoint=https://genui-server.vercel.app/a2ui/stream
+?a2uiEndpoint=https://genui.example.com/a2ui/stream
 ```
 
 ### Server environment

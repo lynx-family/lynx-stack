@@ -301,11 +301,11 @@ describe('chat protocol adapters', () => {
       });
       expect(fetchMetadata).toHaveBeenCalledTimes(1);
       expect(fetchMetadata.mock.calls[0]?.[0]).toBe(
-        'https://genui-server.vercel.app/mcp-apps/metadata',
+        'https://example.com/mcp-apps/metadata',
       );
       expect(fetchMetadata.mock.calls[0]?.[1]).toMatchObject({ signal });
       expect(chatRequest).toMatchObject({
-        url: 'https://genui-server.vercel.app/mcp-apps/stream',
+        url: 'https://example.com/mcp-apps/stream',
         body: {
           registry: {
             protocolVersion: '2025-11-25',

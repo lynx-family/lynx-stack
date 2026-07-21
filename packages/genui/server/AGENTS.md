@@ -122,13 +122,23 @@ The server listens on port `3060` by default.
 
 ## Production
 
-Build and start the production server from this package:
+Build and start the standalone production server from this package:
 
 ```bash
 pnpm build
 pnpm start
 ```
 
-Rslib emits the production entry at `dist/index.js`. Runtime packages are
-bundled except for `@mastra/core`, which remains external and must be present
-in the production install together with its transitive dependencies.
+Rslib emits a standard Node HTTP handler at `dist/index.js`:
+
+```ts
+export async function handler(request, response) {
+  // Handle one IncomingMessage and write one ServerResponse.
+}
+```
+
+Platforms that invoke Node handlers should use this entry directly. The
+standalone `pnpm start` command runs `dist/server.js`, which uses the same
+handler and owns the listening socket and graceful shutdown lifecycle. Runtime
+packages are bundled except for `@mastra/core`, which remains external and must
+be present in the production install together with its transitive dependencies.

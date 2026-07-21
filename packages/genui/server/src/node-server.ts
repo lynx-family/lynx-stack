@@ -3,7 +3,11 @@
 // LICENSE file in the root directory of this source tree.
 
 import { createServer } from 'node:http';
-import type { IncomingMessage, Server, ServerResponse } from 'node:http';
+import type {
+  IncomingMessage,
+  Server,
+  ServerResponse,
+} from 'node:http';
 import { Readable } from 'node:stream';
 
 import { routeRequest } from './routes';
@@ -16,6 +20,11 @@ export interface ListenOptions {
   host?: string;
   port?: number;
 }
+
+export type NodeRequestHandler = (
+  request: IncomingMessage,
+  response: ServerResponse,
+) => Promise<void>;
 
 function requestHeaders(request: IncomingMessage): Headers {
   const headers = new Headers();
@@ -118,7 +127,7 @@ async function writeWebResponse(
   }
 }
 
-async function handleNodeRequest(
+export async function handleNodeRequest(
   incoming: IncomingMessage,
   outgoing: ServerResponse,
 ): Promise<void> {
@@ -154,9 +163,9 @@ async function handleNodeRequest(
   }
 }
 
-export function createGenUIServer(): Server {
+export function createGenUIServer(handler: NodeRequestHandler): Server {
   return createServer((incoming, outgoing) => {
-    void handleNodeRequest(incoming, outgoing);
+    void handler(incoming, outgoing);
   });
 }
 

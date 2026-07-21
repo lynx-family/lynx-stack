@@ -6,6 +6,7 @@ import type { AddressInfo } from 'node:net';
 
 import { describe, expect, test } from '@rstest/core';
 
+import { handler } from '../src/index.js';
 import { createGenUIServer, listen } from '../src/node-server.js';
 import { routeRequest } from '../src/routes.js';
 
@@ -54,7 +55,7 @@ describe('routeRequest', () => {
 
 describe('Node HTTP adapter', () => {
   test('serves Web API route responses over HTTP', async () => {
-    const server = createGenUIServer();
+    const server = createGenUIServer(handler);
     await listen(server, { host: '127.0.0.1', port: 0 });
     try {
       const address = server.address() as AddressInfo;

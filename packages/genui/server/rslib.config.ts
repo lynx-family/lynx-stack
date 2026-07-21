@@ -15,6 +15,7 @@ export default defineConfig({
       source: {
         entry: {
           index: './src/index.ts',
+          server: './src/server.ts',
         },
       },
       output: {
@@ -40,7 +41,6 @@ export default defineConfig({
         poll: 1_000,
         ignored: [
           '**/.git/**',
-          '**/.next/**',
           '**/.turbo/**',
           '**/dist/**',
           '**/node_modules/**',
