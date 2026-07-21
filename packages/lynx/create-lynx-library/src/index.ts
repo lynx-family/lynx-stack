@@ -11,7 +11,7 @@ export type LibraryFeature =
   | 'napi-native-module'
   | 'element'
   | 'service';
-export type LibraryPlatform = 'android' | 'ios' | 'lynxtron';
+export type LibraryPlatform = 'android' | 'ios' | 'harmony' | 'lynxtron';
 
 export interface CreateLynxLibraryOptions {
   dir: string;
@@ -41,6 +41,8 @@ interface TemplateContext {
   elementName: string;
   elementClassName: string;
   elementSymbolName: string;
+  harmonyPackageName: string;
+  harmonyModuleName: string;
   serviceName: string;
   serviceProtocolName: string;
   dependencyVersions: Record<string, string>;
@@ -64,11 +66,13 @@ export const LIBRARY_FEATURES: readonly LibraryFeature[] = [
 export const LIBRARY_PLATFORMS: readonly LibraryPlatform[] = [
   'android',
   'ios',
+  'harmony',
   'lynxtron',
 ] as const;
 export const DEFAULT_LIBRARY_PLATFORMS: readonly LibraryPlatform[] = [
   'android',
   'ios',
+  'harmony',
   'lynxtron',
 ] as const;
 
@@ -245,6 +249,8 @@ function createContext(
     elementName,
     elementClassName: `${elementPrefix}Element`,
     elementSymbolName: toCIdentifier(`${elementPrefix}Element`, 'LynxElement'),
+    harmonyPackageName: toHarmonyPackageName(packageName),
+    harmonyModuleName: toHarmonyModuleName(baseName),
     serviceName,
     serviceProtocolName: `${serviceName}Protocol`,
     dependencyVersions: options.dependencyVersions
@@ -335,6 +341,10 @@ function shouldCreateTemplateFile(
 
   if (relativePath.startsWith('ios/')) {
     return context.platforms.has('ios');
+  }
+
+  if (relativePath.startsWith('harmony/')) {
+    return context.platforms.has('harmony');
   }
 
   if (relativePath === 'types/platform-native-module.d.ts.tmpl') {
@@ -533,6 +543,12 @@ function createTemplateReplacements(
     EXAMPLE_IMPORT: exampleImport(context),
     EXAMPLE_MODULE_BUTTON: exampleModuleButton(context),
     IOS_SERVICE_API_DEPENDENCY: iosServiceApiDependency(context),
+    HARMONY_INDEX_EXPORTS: harmonyIndexExports(context),
+    HARMONY_MODULE_NAME: context.harmonyModuleName,
+    HARMONY_PACKAGE_NAME: context.harmonyPackageName,
+    HARMONY_PROVIDER_IMPORTS: harmonyProviderImports(context),
+    HARMONY_PROVIDER_REGISTRATIONS: harmonyProviderRegistrations(context),
+    HARMONY_SDK_IMPORTS: harmonySdkImports(context),
     LYNX_ELEMENT_MODULE_NAME: elementModuleName(context),
     MODULE_NAME: context.moduleName,
     NAPI_MODULE_NAME: context.napiModuleName,
@@ -799,6 +815,94 @@ function elementModuleName(context: TemplateContext): string {
   }ElementModule`;
 }
 
+function harmonyProviderImports(context: TemplateContext): string {
+  const imports: string[] = [];
+
+  if (context.features.has('native-module')) {
+    imports.push(
+      `import { ${context.moduleName} } from './${context.moduleName}';`,
+    );
+  }
+  if (context.features.has('element')) {
+    imports.push(
+      `import { ${context.elementClassName} } from './${context.elementClassName}';`,
+    );
+  }
+  if (context.features.has('service')) {
+    imports.push(
+      `import { ${context.serviceName} } from './${context.serviceName}';`,
+    );
+  }
+
+  return imports.join('\n');
+}
+
+function harmonySdkImports(context: TemplateContext): string {
+  const imports = ['LynxLibraryProvider', 'LynxLibraryRegistry'];
+
+  if (context.features.has('element')) {
+    imports.unshift('Behavior');
+  }
+  if (context.features.has('service')) {
+    imports.push('LynxServiceType');
+  }
+
+  return imports.join(', ');
+}
+
+function harmonyProviderRegistrations(context: TemplateContext): string {
+  const registrations: string[] = [];
+
+  if (context.features.has('element')) {
+    registrations.push(
+      `    registry.registerBehavior(${
+        JSON.stringify(context.elementName)
+      }, new Behavior(${context.elementClassName}));`,
+    );
+  }
+  if (context.features.has('native-module')) {
+    registrations.push(
+      `    registry.registerModule(${
+        JSON.stringify(context.moduleName)
+      }, { moduleClass: ${context.moduleName} });`,
+    );
+  }
+  if (context.features.has('service')) {
+    registrations.push(
+      `    registry.registerService(LynxServiceType.Extension, ${context.serviceName}.instance);`,
+    );
+  }
+
+  return registrations.join('\n');
+}
+
+function harmonyIndexExports(context: TemplateContext): string {
+  const exportStatements = [
+    `export { LynxLibraryProviderImpl } from './src/main/ets/LynxLibraryProviderImpl';`,
+  ];
+
+  if (context.features.has('native-module')) {
+    exportStatements.push(
+      `export { ${context.moduleName} } from './src/main/ets/${context.moduleName}';`,
+    );
+    exportStatements.push(
+      `export { ${context.moduleName}Spec } from './src/main/ets/generated/${context.moduleName}Spec';`,
+    );
+  }
+  if (context.features.has('element')) {
+    exportStatements.push(
+      `export { ${context.elementClassName} } from './src/main/ets/${context.elementClassName}';`,
+    );
+  }
+  if (context.features.has('service')) {
+    exportStatements.push(
+      `export { ${context.serviceName} } from './src/main/ets/${context.serviceName}';`,
+    );
+  }
+
+  return `${exportStatements.join('\n')}\n`;
+}
+
 function selfRenderReadme(context: TemplateContext): string {
   if (!hasLynxtronTarget(context)) {
     return '';
@@ -826,6 +930,7 @@ Run it on each OS/architecture you want to publish. The package also exposes
 function packageFiles(context: TemplateContext): string {
   const files = [
     ...(context.platforms.has('android') ? ['android'] : []),
+    ...(context.platforms.has('harmony') ? ['harmony'] : []),
     ...(hasLynxtronTarget(context) ? ['dist', 'lynxtron'] : []),
     ...(hasSharedSources(context) ? ['shared'] : []),
     'generated',
@@ -859,6 +964,12 @@ function platformManifestEntries(context: TemplateContext): string {
     }`);
   }
 
+  if (context.platforms.has('harmony')) {
+    entries.push(`    "harmony": {
+      "packageDir": "harmony"
+    }`);
+  }
+
   if (hasLynxtronTarget(context)) {
     entries.push(`    "lynxtron": {
       "path": "dist"
@@ -881,6 +992,7 @@ function platformDirectoryList(context: TemplateContext): string {
   const dirs = [
     ...(context.platforms.has('android') ? ['`android/`'] : []),
     ...(context.platforms.has('ios') ? ['`ios/`'] : []),
+    ...(context.platforms.has('harmony') ? ['`harmony/`'] : []),
     ...(hasLynxtronTarget(context) ? ['`lynxtron/`'] : []),
     ...(hasSharedSources(context) ? ['`shared/`'] : []),
   ];
@@ -932,6 +1044,28 @@ function toKebabCase(name: string): string {
 function toJavaPackageSegment(name: string): string {
   const segment = toKebabCase(name).replaceAll('-', '');
   return segment.length > 0 ? segment : 'library';
+}
+
+function toHarmonyPackageName(packageName: string): string {
+  const scoped = /^@([^/]+)\/(.+)$/.exec(packageName);
+  if (scoped !== null) {
+    return `@${toHarmonyNameSegment(scoped[1] ?? '')}/${
+      toHarmonyNameSegment(scoped[2] ?? '')
+    }`;
+  }
+  return toHarmonyNameSegment(packageName);
+}
+
+function toHarmonyModuleName(name: string): string {
+  const moduleName = toHarmonyNameSegment(name);
+  return /^\d/.test(moduleName) ? `_${moduleName}` : moduleName;
+}
+
+function toHarmonyNameSegment(name: string): string {
+  const segment = name.toLowerCase()
+    .replaceAll(/[^a-z0-9_]+/g, '_')
+    .replaceAll(/^_+|_+$/g, '');
+  return segment.length > 0 ? segment : 'lynx_library';
 }
 
 function toCIdentifier(name: string, fallback: string): string {

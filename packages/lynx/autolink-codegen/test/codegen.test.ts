@@ -242,6 +242,82 @@ export declare class StorageModule {
     ].sort());
   });
 
+  it('generates Harmony specs for primitive and nullable return types', () => {
+    const root = createFixture({
+      manifest: {
+        platforms: {
+          harmony: {},
+        },
+      },
+      types: `/** @lynxmodule */
+export declare class StorageModule {
+  setValue(key: string, value: string): void;
+  getValue(key: string): string | null;
+  size(): number;
+  enabled(): boolean;
+}
+`,
+    });
+
+    const files = generate({ root });
+    const harmonySpec = files.find((file) =>
+      file.path === 'harmony/src/main/ets/generated/StorageModuleSpec.ets'
+    );
+
+    expect(files.map((file) => file.path)).toContain(
+      'generated/StorageModule.ts',
+    );
+    expect(harmonySpec?.content).toContain(
+      'import { LynxModule } from \'@lynx/lynx\';',
+    );
+    expect(harmonySpec?.content).toContain(
+      'export abstract class StorageModuleSpec extends LynxModule',
+    );
+    expect(harmonySpec?.content).toContain(
+      'abstract getValue(key: string): string | null;',
+    );
+    expect(harmonySpec?.content).toContain('abstract size(): number;');
+    expect(harmonySpec?.content).toContain('abstract enabled(): boolean;');
+  });
+
+  it('uses a custom Harmony package directory', () => {
+    const root = createFixture({
+      manifest: {
+        platforms: {
+          harmony: { packageDir: 'native/harmony' },
+        },
+      },
+      types: `/** @lynxmodule */
+export declare class StorageModule {
+  clear(): void;
+}
+`,
+    });
+
+    expect(generate({ root }).map((file) => file.path)).toContain(
+      'native/harmony/src/main/ets/generated/StorageModuleSpec.ets',
+    );
+  });
+
+  it('rejects types unsupported by Harmony without narrowing other codegen targets', () => {
+    const root = createFixture({
+      manifest: {
+        platforms: {
+          harmony: {},
+        },
+      },
+      types: `/** @lynxmodule */
+export declare class StorageModule {
+  configure(options: object): void;
+}
+`,
+    });
+
+    expect(() => generate({ root })).toThrow(
+      /Unsupported Harmony type "object" for StorageModule\.configure\.options/,
+    );
+  });
+
   it('generates shared NAPI stubs from napi native module typings', () => {
     const root = createFixture({
       manifest: {
