@@ -7,6 +7,7 @@ import { afterEach, beforeAll, beforeEach, describe, expect, it, vi } from 'vite
 
 import { installComponentCompat } from '../../src/core/component';
 import { useState } from '../../src/index';
+import { __bootstrapCard } from '../../src/card-bootstrap';
 import { root } from '../../src/lynx-api';
 import { __root } from '../../src/root';
 import { defaultRootContext, switchRootContext } from '../../src/root-context';
@@ -53,6 +54,71 @@ describe('root-cause: default singleton shares one container', () => {
     // app clobbers the previous tree instead of coexisting with it.
     root.render(<B />);
     expect(textOf(__root)).toEqual(['B']);
+  });
+});
+
+describe('__bootstrapCard: classic root.render renders the bootstrapped card', () => {
+  afterEach(() => {
+    __bootstrapCard();
+  });
+
+  it('delegates root.render to the bootstrapped root, leaving __root untouched', () => {
+    globalEnvManager.switchToBackground();
+
+    const A = () => <text>{'A'}</text>;
+    const cardA = __bootstrapCard({});
+    root.render(<A />);
+
+    expect(textOf(cardA._container)).toEqual(['A']);
+    expect(__root.__firstChild).toBeNull();
+  });
+
+  it('a second card bootstrap does not clobber the first card tree', () => {
+    globalEnvManager.switchToBackground();
+
+    const A = () => <text>{'A'}</text>;
+    const B = () => <text>{'B'}</text>;
+
+    const cardA = __bootstrapCard({});
+    root.render(<A />);
+    const cardB = __bootstrapCard({});
+    root.render(<B />);
+
+    expect(cardA._container).not.toBe(cardB._container);
+    expect(textOf(cardA._container)).toEqual(['A']);
+    expect(textOf(cardB._container)).toEqual(['B']);
+  });
+
+  it('clearing the binding restores the classic singleton path', () => {
+    globalEnvManager.switchToBackground();
+
+    const A = () => <text>{'A'}</text>;
+    __bootstrapCard({});
+    __bootstrapCard();
+    root.render(<A />);
+
+    expect(textOf(__root)).toEqual(['A']);
+  });
+
+  it('does the first-screen handshake through the bootstrapped card channel', () => {
+    globalEnvManager.switchToBackground();
+
+    const callA = vi.fn((_name, _data, cb) => cb?.());
+    const lynxA = {
+      ...lynx,
+      getNativeApp: () => ({ ...lynx.getNativeApp(), callLepusMethod: callA }),
+    };
+
+    const old = globalThis.__FIRST_SCREEN_SYNC_TIMING__;
+    try {
+      globalThis.__FIRST_SCREEN_SYNC_TIMING__ = 'jsReady';
+      __bootstrapCard({ lynx: lynxA });
+      root.render(<text>{'A'}</text>);
+      const handshakes = callA.mock.calls.filter(c => c[0] === 'rLynxFirstScreenSyncReady');
+      expect(handshakes).toHaveLength(1);
+    } finally {
+      globalThis.__FIRST_SCREEN_SYNC_TIMING__ = old;
+    }
   });
 });
 

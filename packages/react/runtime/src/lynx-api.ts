@@ -6,6 +6,7 @@ import { createContext, createElement } from 'preact/compat';
 import { useState } from 'preact/hooks';
 import type { Consumer, FC, ReactNode } from 'react';
 
+import { getBootstrappedRoot } from './card-bootstrap.js';
 import { createGlobalProps } from './core/globalProps.js';
 import type { GlobalProps } from './core/globalProps.js';
 import { useLynxGlobalEventListener } from './core/hooks/useLynxGlobalEventListener.js';
@@ -91,6 +92,13 @@ export const root: Root = {
     if (typeof __MAIN_THREAD__ !== 'undefined' && __MAIN_THREAD__) {
       __root.__jsx = jsx;
     } else {
+      // A card bootstrapped via `__bootstrapCard` owns its own root; render
+      // there so shared-context cards can keep using the classic `root.render`.
+      const cardRoot = getBootstrappedRoot();
+      if (cardRoot) {
+        cardRoot.render(jsx);
+        return;
+      }
       // The classic singleton `root` always renders the default context.
       switchRootContext(defaultRootContext);
       __root.__jsx = jsx;
