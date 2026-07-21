@@ -135,6 +135,64 @@ requests release their request data, dropped visual waiters signal cooperative
 cancellation, and SIGINT or SIGTERM triggers graceful HTTP shutdown before the
 headless worker is joined.
 
+### Google Cloud Run
+
+The package Dockerfile builds a Linux x86-64 image containing the server,
+`libLynx_clay.so`, and `lynx_core.js`. Build it with the repository root as the
+Docker context so Cargo can resolve the workspace-local Lynx crates:
+
+```bash
+export PROJECT_ID="your-project"
+export REGION="us-central1"
+export REPOSITORY="containers"
+export IMAGE="${REGION}-docker.pkg.dev/${PROJECT_ID}/${REPOSITORY}/ui-judge:latest"
+
+gcloud auth configure-docker "${REGION}-docker.pkg.dev"
+docker buildx build \
+  --platform linux/amd64 \
+  --file packages/genui/ui-judge/Dockerfile \
+  --tag "${IMAGE}" \
+  --push \
+  .
+```
+
+Deploy the pushed image in Cloud Run's second-generation execution environment.
+Cloud Run injects `PORT`; the image defaults it to `8080` for local runs. A
+concurrency limit of eight matches the server's bounded capture queue:
+
+```bash
+gcloud run deploy ui-judge \
+  --image "${IMAGE}" \
+  --region "${REGION}" \
+  --execution-environment gen2 \
+  --concurrency 8 \
+  --port 8080
+```
+
+Configure the model environment variables listed below on the service before
+sending judge requests. Store API keys in Secret Manager rather than baking
+them into the image. The deploy command does not enable unauthenticated access;
+configure the service's IAM policy explicitly if public access is required.
+For Cloud Run requests, use an HTTP or HTTPS page URL. A `file://` URL refers to
+the container's filesystem, not the machine sending the request.
+
+Verify the authenticated service and its headless worker with the readiness
+endpoint:
+
+```bash
+export SERVICE_URL="$(
+  gcloud run services describe ui-judge \
+    --region "${REGION}" \
+    --format 'value(status.url)'
+)"
+
+curl \
+  --header "Authorization: Bearer $(gcloud auth print-identity-token)" \
+  "${SERVICE_URL}/health"
+```
+
+The endpoint returns `{"status":"ok"}` when the server is ready.
+
 ## Model configuration
 
 The internal model client preserves the existing environment-variable
