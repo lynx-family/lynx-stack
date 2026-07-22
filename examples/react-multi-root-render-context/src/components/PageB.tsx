@@ -1,6 +1,5 @@
 import { useState } from '@lynx-js/react';
-
-import { addClick, initCount, store } from '../Shared.js';
+import { addClick, initCount, store } from 'example-shared';
 
 export function PageB() {
   const [, setTick] = useState(0);

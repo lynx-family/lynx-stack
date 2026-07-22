@@ -36,7 +36,7 @@ export default defineConfig({
           mainThread: { sectionPath: 'ReactLynx__main-thread' },
           async: false,
         },
-        './Shared.js': {
+        'example-shared': {
           bundlePath: 'shared.lynx.bundle',
           libraryName: ['./Shared.js'],
           background: { sectionPath: './Shared.js' },

@@ -5,6 +5,9 @@
     "jsxImportSource": "@lynx-js/react",
     "noEmit": true,
     "isolatedDeclarations": false,
+    "paths": {
+      "example-shared": ["./src/Shared.ts"],
+    },
   },
   "include": ["src", "lynx.config.ts", "react.rslib.config.ts", "shared.rslib.config.ts"],
   "references": [
