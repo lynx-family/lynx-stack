@@ -78,6 +78,10 @@ export default defineConfig({
         './src/patchProfile.ts',
         './cases/014-attrs-mixed/index.tsx',
       ],
+      '015-attrs-component': [
+        './src/patchProfile.ts',
+        './cases/015-attrs-component/index.tsx',
+      ],
     },
   },
   plugins: [
