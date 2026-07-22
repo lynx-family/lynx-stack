@@ -214,7 +214,7 @@ interface ReactWebpackPluginOptions {
   /**
    * @alpha
    */
-  experimental_multiPageRoots?: boolean;
+  experimental_multiRootRenderContext?: boolean;
 
   /**
    * Whether to enable profile.
@@ -317,7 +317,7 @@ class ReactWebpackPlugin {
       mainThreadChunks: [],
       extractStr: false,
       experimental_isLazyBundle: false,
-      experimental_multiPageRoots: false,
+      experimental_multiRootRenderContext: false,
       profile: undefined,
       workletRuntimePath: '',
       experimental_useElementTemplate: false,
@@ -386,8 +386,8 @@ class ReactWebpackPlugin {
       // Multi-card roots for shared JS contexts are opt-in: only the shared
       // external runtime bundle (react-umd) is built with this on. Normal
       // apps get the machinery stripped entirely.
-      __MULTI_PAGE__: JSON.stringify(
-        options.experimental_multiPageRoots ?? false,
+      __MULTI_ROOT_RENDER_CONTEXT__: JSON.stringify(
+        options.experimental_multiRootRenderContext ?? false,
       ),
       __ENABLE_SSR__: JSON.stringify(options.enableSSR),
       __DISABLE_CREATE_SELECTOR_QUERY_INCOMPATIBLE_WARNING__: JSON.stringify(

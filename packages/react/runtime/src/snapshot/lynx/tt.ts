@@ -47,7 +47,7 @@ function bindContext<T extends unknown[], R>(ctx: RootContext, fn: (...args: T) 
 }
 
 function injectTt(): void {
-  if (typeof __MULTI_PAGE__ !== 'undefined' && __MULTI_PAGE__) {
+  if (typeof __MULTI_ROOT_RENDER_CONTEXT__ !== 'undefined' && __MULTI_ROOT_RENDER_CONTEXT__) {
     injectTtInto(lynxCoreInject.tt, defaultRootContext);
     return;
   }
@@ -117,7 +117,7 @@ function onLifecycleEventImpl(type: LifecycleConstant, data: unknown): void {
   switch (type) {
     case LifecycleConstant.firstScreen: {
       let processErr;
-      if (typeof __MULTI_PAGE__ !== 'undefined' && __MULTI_PAGE__) {
+      if (typeof __MULTI_ROOT_RENDER_CONTEXT__ !== 'undefined' && __MULTI_ROOT_RENDER_CONTEXT__) {
         const ctxBeforeProcess = getCurrentRootContext();
         try {
           process();
@@ -196,7 +196,7 @@ function onLifecycleEventImpl(type: LifecycleConstant, data: unknown): void {
         delayedEvents.length = 0;
       }
 
-      if (typeof __MULTI_PAGE__ !== 'undefined' && __MULTI_PAGE__) {
+      if (typeof __MULTI_ROOT_RENDER_CONTEXT__ !== 'undefined' && __MULTI_ROOT_RENDER_CONTEXT__) {
         const ctx = getCurrentRootContext();
         const tt = ctx.tt ?? lynxCoreInject.tt;
         tt.publishEvent = bindContext(ctx, publishEvent);
@@ -219,7 +219,7 @@ function onLifecycleEventImpl(type: LifecycleConstant, data: unknown): void {
       }
       const obj = commitPatchUpdate(patchList, { isHydration: true });
       sendMTRefInitValueToMainThread();
-      if (typeof __MULTI_PAGE__ !== 'undefined' && __MULTI_PAGE__) {
+      if (typeof __MULTI_ROOT_RENDER_CONTEXT__ !== 'undefined' && __MULTI_ROOT_RENDER_CONTEXT__) {
         const ctxLynx = getCurrentRootContext().lynx ?? lynx;
         const commitTaskMap = globalCommitTaskMap;
         ctxLynx.getNativeApp().callLepusMethod(LifecycleConstant.patchUpdate, obj, () => {

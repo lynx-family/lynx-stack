@@ -22,6 +22,6 @@ const onRenderComponentHook = <T extends unknown[]>(
   if (old) old(...args);
 };
 
-if (typeof __MULTI_PAGE__ !== 'undefined' && __MULTI_PAGE__) {
+if (typeof __MULTI_ROOT_RENDER_CONTEXT__ !== 'undefined' && __MULTI_ROOT_RENDER_CONTEXT__) {
   hook(options, RENDER_COMPONENT, onRenderComponentHook);
 }

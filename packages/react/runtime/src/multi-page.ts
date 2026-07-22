@@ -104,7 +104,7 @@ export interface RootWithBootstrap {
   __experimentalBootstrapPage?: (options?: BootstrapPageOptions) => ReactLynxRoot | undefined;
 }
 
-if (typeof __MULTI_PAGE__ !== 'undefined' && __MULTI_PAGE__) {
+if (typeof __MULTI_ROOT_RENDER_CONTEXT__ !== 'undefined' && __MULTI_ROOT_RENDER_CONTEXT__) {
   (root as RootWithBootstrap).__experimentalBootstrapPage = (
     options?: BootstrapPageOptions,
   ): ReactLynxRoot | undefined => {

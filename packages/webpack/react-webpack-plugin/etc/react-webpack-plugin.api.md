@@ -50,7 +50,7 @@ export interface ReactWebpackPluginOptions {
     // @alpha
     experimental_isLazyBundle?: boolean;
     // @alpha (undocumented)
-    experimental_multiPageRoots?: boolean;
+    experimental_multiRootRenderContext?: boolean;
     experimental_useElementTemplate?: boolean;
     extractStr?: Partial<ExtractStrConfig> | boolean;
     firstScreenSyncTiming?: 'immediately' | 'jsReady' | 'manual';

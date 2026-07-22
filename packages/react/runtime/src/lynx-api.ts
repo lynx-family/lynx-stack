@@ -92,7 +92,7 @@ export const root: Root = {
     if (typeof __MAIN_THREAD__ !== 'undefined' && __MAIN_THREAD__) {
       __root.__jsx = jsx;
     } else {
-      if (typeof __MULTI_PAGE__ !== 'undefined' && __MULTI_PAGE__) {
+      if (typeof __MULTI_ROOT_RENDER_CONTEXT__ !== 'undefined' && __MULTI_ROOT_RENDER_CONTEXT__) {
         if (bootstrappedRoot) {
           bootstrappedRoot.render(jsx);
           return;

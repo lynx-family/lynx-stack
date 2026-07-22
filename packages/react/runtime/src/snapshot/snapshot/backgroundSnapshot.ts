@@ -45,7 +45,10 @@ import { diffArrayAction, diffArrayLepus } from '../renderToOpcodes/hydrate.js';
 import { onPostWorkletCtx } from '../worklet/ctx.js';
 
 export function instanceValuesOf(ctx: RootContext | undefined): Map<number, BackgroundSnapshotInstance> {
-  if (typeof __MULTI_PAGE__ !== 'undefined' && __MULTI_PAGE__ && ctx && ctx !== getCurrentRootContext()) {
+  if (
+    typeof __MULTI_ROOT_RENDER_CONTEXT__ !== 'undefined' && __MULTI_ROOT_RENDER_CONTEXT__ && ctx
+    && ctx !== getCurrentRootContext()
+  ) {
     return ctx.slotValues['bsiValues'] as Map<number, BackgroundSnapshotInstance>;
   }
   return backgroundSnapshotInstanceManager.values;
@@ -175,7 +178,7 @@ export class BackgroundSnapshotInstance {
         createRuntimeSnapshot(type);
       }
     }
-    if (typeof __MULTI_PAGE__ !== 'undefined' && __MULTI_PAGE__) {
+    if (typeof __MULTI_ROOT_RENDER_CONTEXT__ !== 'undefined' && __MULTI_ROOT_RENDER_CONTEXT__) {
       this.__rootCtx = getCurrentRootContext();
     }
     this.__snapshot_def = snapshotManager.values.get(type)!;
@@ -338,7 +341,7 @@ export class BackgroundSnapshotInstance {
   }
 
   tearDown(): void {
-    if (typeof __MULTI_PAGE__ !== 'undefined' && __MULTI_PAGE__) {
+    if (typeof __MULTI_ROOT_RENDER_CONTEXT__ !== 'undefined' && __MULTI_ROOT_RENDER_CONTEXT__) {
       const values = instanceValuesOf(this.__rootCtx);
       traverseSnapshotInstance(this, v => {
         v.__parent = null;

@@ -24,7 +24,7 @@ import { backgroundSnapshotInstanceManager } from './snapshot/snapshot/backgroun
 import type { BackgroundSnapshotInstance } from './snapshot/snapshot/backgroundSnapshot.js';
 import type { RunWorkletCtxData } from './worklet-runtime/bindings/events.js';
 
-if (typeof __MULTI_PAGE__ !== 'undefined' && __MULTI_PAGE__) {
+if (typeof __MULTI_ROOT_RENDER_CONTEXT__ !== 'undefined' && __MULTI_ROOT_RENDER_CONTEXT__) {
   registerContextSlot<typeof __root | undefined>({
     id: 'root',
     init: () => undefined,

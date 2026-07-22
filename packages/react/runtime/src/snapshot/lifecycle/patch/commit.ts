@@ -127,7 +127,7 @@ function replaceCommitHook(): void {
 
       const commitTaskId = genCommitTaskId();
 
-      if (typeof __MULTI_PAGE__ !== 'undefined' && __MULTI_PAGE__) {
+      if (typeof __MULTI_ROOT_RENDER_CONTEXT__ !== 'undefined' && __MULTI_ROOT_RENDER_CONTEXT__) {
         const instanceValues = backgroundSnapshotInstanceManager.values;
         globalCommitTaskMap.set(commitTaskId, () => {
           if (backgroundSnapshotInstancesToRemove.length) {
@@ -184,7 +184,7 @@ function replaceCommitHook(): void {
       }
       const obj = commitPatchUpdate(patchList, patchOptions);
 
-      if (typeof __MULTI_PAGE__ !== 'undefined' && __MULTI_PAGE__) {
+      if (typeof __MULTI_ROOT_RENDER_CONTEXT__ !== 'undefined' && __MULTI_ROOT_RENDER_CONTEXT__) {
         const commitTaskMap = globalCommitTaskMap;
         const ctxLynx = getCurrentRootContext().lynx ?? lynx;
         ctxLynx.getNativeApp().callLepusMethod(LifecycleConstant.patchUpdate, obj, () => {
