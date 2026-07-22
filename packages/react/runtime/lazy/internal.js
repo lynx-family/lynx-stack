@@ -24,7 +24,6 @@ export const {
   __DynamicPartSlotV2,
   __DynamicPartSlotV2_0,
   __DynamicPartMultiChildren,
-  __experimentalBootstrapPage,
   __dynamicImport,
   __page,
   __pageId,

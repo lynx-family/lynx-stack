@@ -7,11 +7,10 @@ import { afterEach, beforeAll, beforeEach, describe, expect, it, vi } from 'vite
 
 import { installComponentCompat } from '../../src/core/component';
 import { useState } from '../../src/index';
-import { __experimentalBootstrapPage } from '../../src/page-bootstrap';
 import { root } from '../../src/lynx-api';
 import { __root } from '../../src/root';
 import { defaultRootContext, switchRootContext } from '../../src/root-context';
-import { createRoot, ReactLynxRoot } from '../../src/root-instance';
+import { BOOTSTRAP_PAGE, ReactLynxRoot } from '../../src/multi-page';
 import { backgroundSnapshotInstanceManager, setupPage } from '../../src/snapshot';
 import { replaceCommitHook } from '../../src/snapshot/lifecycle/patch/commit';
 import { initGlobalSnapshotPatch } from '../../src/snapshot/lifecycle/patch/snapshotPatch';
@@ -57,19 +56,19 @@ describe('root-cause: default singleton shares one container', () => {
   });
 });
 
-describe('__experimentalBootstrapPage: classic root.render renders the bootstrapped card', () => {
+describe('bootstrap hook: classic root.render renders the bootstrapped page', () => {
   afterEach(() => {
-    __experimentalBootstrapPage();
+    globalThis[BOOTSTRAP_PAGE]();
   });
 
   it('delegates root.render to the bootstrapped root, leaving __root untouched', () => {
     globalEnvManager.switchToBackground();
 
     const A = () => <text>{'A'}</text>;
-    const cardA = __experimentalBootstrapPage({});
+    const pageA = globalThis[BOOTSTRAP_PAGE]({});
     root.render(<A />);
 
-    expect(textOf(cardA._container)).toEqual(['A']);
+    expect(textOf(pageA._container)).toEqual(['A']);
     expect(__root.__firstChild).toBeNull();
   });
 
@@ -79,22 +78,22 @@ describe('__experimentalBootstrapPage: classic root.render renders the bootstrap
     const A = () => <text>{'A'}</text>;
     const B = () => <text>{'B'}</text>;
 
-    const cardA = __experimentalBootstrapPage({});
+    const pageA = globalThis[BOOTSTRAP_PAGE]({});
     root.render(<A />);
-    const cardB = __experimentalBootstrapPage({});
+    const pageB = globalThis[BOOTSTRAP_PAGE]({});
     root.render(<B />);
 
-    expect(cardA._container).not.toBe(cardB._container);
-    expect(textOf(cardA._container)).toEqual(['A']);
-    expect(textOf(cardB._container)).toEqual(['B']);
+    expect(pageA._container).not.toBe(pageB._container);
+    expect(textOf(pageA._container)).toEqual(['A']);
+    expect(textOf(pageB._container)).toEqual(['B']);
   });
 
   it('clearing the binding restores the classic singleton path', () => {
     globalEnvManager.switchToBackground();
 
     const A = () => <text>{'A'}</text>;
-    __experimentalBootstrapPage({});
-    __experimentalBootstrapPage();
+    globalThis[BOOTSTRAP_PAGE]({});
+    globalThis[BOOTSTRAP_PAGE]();
     root.render(<A />);
 
     expect(textOf(__root)).toEqual(['A']);
@@ -112,7 +111,7 @@ describe('__experimentalBootstrapPage: classic root.render renders the bootstrap
     const old = globalThis.__FIRST_SCREEN_SYNC_TIMING__;
     try {
       globalThis.__FIRST_SCREEN_SYNC_TIMING__ = 'jsReady';
-      __experimentalBootstrapPage({ lynx: lynxA });
+      globalThis[BOOTSTRAP_PAGE]({ lynx: lynxA });
       root.render(<text>{'A'}</text>);
       const handshakes = callA.mock.calls.filter(c => c[0] === 'rLynxFirstScreenSyncReady');
       expect(handshakes).toHaveLength(1);
@@ -122,21 +121,15 @@ describe('__experimentalBootstrapPage: classic root.render renders the bootstrap
   });
 });
 
-describe('createRoot: independent roots coexist', () => {
-  it('exposes createRoot / ReactLynxRoot from the public entry', () => {
-    expect(typeof createRoot).toBe('function');
-    const r = createRoot();
-    expect(r).toBeInstanceOf(ReactLynxRoot);
-  });
-
+describe('ReactLynxRoot: independent roots coexist', () => {
   it('renders two roots into isolated containers without clobbering', () => {
     globalEnvManager.switchToBackground();
 
     const A = () => <text>{'A'}</text>;
     const B = () => <text>{'B'}</text>;
 
-    const rootA = createRoot();
-    const rootB = createRoot();
+    const rootA = new ReactLynxRoot();
+    const rootB = new ReactLynxRoot();
 
     rootA.render(<A />);
     rootB.render(<B />);
@@ -161,8 +154,8 @@ describe('createRoot: independent roots coexist', () => {
       }
     }
 
-    const rootA = createRoot();
-    const rootB = createRoot();
+    const rootA = new ReactLynxRoot();
+    const rootB = new ReactLynxRoot();
     rootA.render(<Counter />);
     rootB.render(<Counter />);
 
@@ -180,7 +173,7 @@ describe('createRoot: independent roots coexist', () => {
     globalEnvManager.switchToBackground();
 
     const A = () => <text>{'A'}</text>;
-    const r = createRoot();
+    const r = new ReactLynxRoot();
     r.render(<A />);
     expect(textOf(r._container)).toEqual(['A']);
 
@@ -204,8 +197,8 @@ describe('createRoot: independent roots coexist', () => {
       return <text>{n}</text>;
     }
 
-    const rootA = createRoot();
-    const rootB = createRoot();
+    const rootA = new ReactLynxRoot();
+    const rootB = new ReactLynxRoot();
     rootA.render(<A />);
     rootB.render(<B />);
 
@@ -252,7 +245,7 @@ describe('createRoot: independent roots coexist', () => {
       return <text>{n}</text>;
     }
 
-    const rootC = createRoot({ lynx: lynxC });
+    const rootC = new ReactLynxRoot({ lynx: lynxC });
     rootC.render(<C />);
 
     switchRootContext(rootC._ctx);
@@ -282,7 +275,7 @@ describe('createRoot: independent roots coexist', () => {
     const old = globalThis.__FIRST_SCREEN_SYNC_TIMING__;
     try {
       globalThis.__FIRST_SCREEN_SYNC_TIMING__ = 'jsReady';
-      const rootD = createRoot({ lynx: lynxD });
+      const rootD = new ReactLynxRoot({ lynx: lynxD });
       rootD.render(<text>{'D'}</text>);
       expect(callD.mock.calls.map(c => c[0])).toContain('rLynxFirstScreenSyncReady');
       expect(lynx.getNativeApp().callLepusMethod).not.toHaveBeenCalled();
@@ -294,7 +287,7 @@ describe('createRoot: independent roots coexist', () => {
   it('tears instances down in their owner registry even when another root is current', () => {
     globalEnvManager.switchToBackground();
 
-    const rootA = createRoot();
+    const rootA = new ReactLynxRoot();
     rootA.render(<text>{'A'}</text>);
     const instance = rootA._container.__firstChild;
     const id = instance.__id;
@@ -317,12 +310,12 @@ describe('createRoot: independent roots coexist', () => {
 
     const A = () => <text>{'A'}</text>;
     const jsx = <A />;
-    const r = createRoot();
+    const r = new ReactLynxRoot();
     r.render(jsx);
 
     // Each card's main-thread VM runs a single root: `renderPage` renders the
     // default `__root.__jsx`, so createRoot delegates to it there — a card's
-    // entry can call `createRoot(...).render(...)` on both threads.
+    // entry can call `new ReactLynxRoot(...).render(...)` on both threads.
     expect(r._container).toBe(__root);
     expect(__root.__jsx).toBe(jsx);
     expect(r._container.__firstChild).toBeNull();
@@ -364,7 +357,7 @@ describe('multi-page: two roots on separate native channels', () => {
       ...lynx,
       getNativeApp: () => ({ ...lynx.getNativeApp(), callLepusMethod: callE }),
     };
-    const rootE = createRoot({ lynx: lynxE, lynxCoreInject: { tt: ttE } });
+    const rootE = new ReactLynxRoot({ lynx: lynxE, lynxCoreInject: { tt: ttE } });
     expect(typeof ttE.OnLifecycleEvent).toBe('function');
     rootE.render(<App />);
     lynx.getNativeApp().callLepusMethod.mockClear();

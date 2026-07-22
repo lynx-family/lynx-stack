@@ -4,6 +4,7 @@
 import { render } from 'preact';
 import type { ReactNode } from 'react';
 
+import { setBootstrappedRoot } from './page-root-ref.js';
 import { RootContext, getCurrentRootContext, switchRootContext } from './root-context.js';
 import type { RootLynx, RootTT } from './root-context.js';
 import { __root, setRoot } from './root.js';
@@ -20,29 +21,21 @@ type RootContainer = (SnapshotInstance | BackgroundSnapshotInstance) & {
 };
 
 /**
- * @public
+ * @internal
  */
-export interface CreateRootOptions {
+export interface BootstrapPageOptions {
   lynx?: RootLynx;
   lynxCoreInject?: { tt: RootTT };
 }
 
 /**
- * @public
+ * @internal
  */
 export class ReactLynxRoot {
-  /**
-   * @internal
-   */
   _container: RootContainer;
-
-  /**
-   * @internal
-   */
   _ctx: RootContext;
 
-  /** @internal */
-  constructor(options?: CreateRootOptions) {
+  constructor(options?: BootstrapPageOptions) {
     this._ctx = new RootContext();
     this._ctx.lynx = options?.lynx;
     this._ctx.tt = options?.lynxCoreInject?.tt;
@@ -63,9 +56,6 @@ export class ReactLynxRoot {
     }
   }
 
-  /**
-   * @public
-   */
   render(jsx: ReactNode): void {
     this._container.__jsx = jsx;
     if (typeof __BACKGROUND__ !== 'undefined' && __BACKGROUND__) {
@@ -87,9 +77,6 @@ export class ReactLynxRoot {
     }
   }
 
-  /**
-   * @public
-   */
   unmount(): void {
     if (typeof __BACKGROUND__ !== 'undefined' && __BACKGROUND__) {
       const prev = getCurrentRootContext();
@@ -110,10 +97,23 @@ export class ReactLynxRoot {
 }
 
 /**
- * @public
+ * @internal
  */
-export function createRoot(options?: CreateRootOptions): ReactLynxRoot {
-  return new ReactLynxRoot(options);
-}
+export const BOOTSTRAP_PAGE = Symbol.for('__REACTLYNX_BOOTSTRAP_PAGE__');
 
-export type { RootLynx, RootNativeApp, RootTT } from './root-context.js';
+if (typeof __MULTI_PAGE__ !== 'undefined' && __MULTI_PAGE__) {
+  (globalThis as Record<PropertyKey, unknown>)[BOOTSTRAP_PAGE] = (
+    options?: BootstrapPageOptions,
+  ): ReactLynxRoot | undefined => {
+    /* v8 ignore next */
+    if (typeof __BACKGROUND__ !== 'undefined' && __BACKGROUND__) {
+      const bootstrappedRoot = options ? new ReactLynxRoot(options) : undefined;
+      setBootstrappedRoot(bootstrappedRoot);
+      return bootstrappedRoot;
+      /* v8 ignore start */
+    } else {
+      return undefined;
+    }
+    /* v8 ignore stop */
+  };
+}

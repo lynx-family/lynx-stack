@@ -58,7 +58,7 @@ function injectTtInto(tt: RootTT, ctx: RootContext): void {
   tt.publishEvent = bindContext(ctx, delayedPublishEvent);
   tt.publicComponentEvent = bindContext(ctx, delayedPublicComponentEvent);
   tt.callDestroyLifetimeFun = bindContext(ctx, () => {
-    if (ctx === defaultRootContext) {
+    if (typeof __MULTI_PAGE__ === 'undefined' || !__MULTI_PAGE__ || ctx === defaultRootContext) {
       removeCtxNotFoundEventListener();
     }
     destroyWorklet();
@@ -100,13 +100,17 @@ function onLifecycleEventImpl(type: LifecycleConstant, data: unknown): void {
   switch (type) {
     case LifecycleConstant.firstScreen: {
       let processErr;
-      const ctxBeforeProcess = getCurrentRootContext();
+      const ctxBeforeProcess = typeof __MULTI_PAGE__ !== 'undefined' && __MULTI_PAGE__
+        ? getCurrentRootContext()
+        : undefined;
       try {
         process();
       } catch (e) {
         processErr = e;
       }
-      switchRootContext(ctxBeforeProcess);
+      if (typeof __MULTI_PAGE__ !== 'undefined' && __MULTI_PAGE__ && ctxBeforeProcess) {
+        switchRootContext(ctxBeforeProcess);
+      }
       const { root: lepusSide, firstScreenEventIdSwap } = data as FirstScreenData;
       if (typeof __PROFILE__ !== 'undefined' && __PROFILE__) {
         profileStart('ReactLynx::hydrate');
