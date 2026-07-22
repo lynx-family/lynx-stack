@@ -2486,7 +2486,7 @@ importers:
         specifier: 11.0.4
         version: 11.0.4
       fs-extra:
-        specifier: ^11.3.3
+        specifier: ^11.3.6
         version: 11.3.6
       path-serializer:
         specifier: ^0.5.1
