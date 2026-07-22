@@ -137,27 +137,22 @@ jobs:
           github.event_name == 'pull_request'
         env:
           BASE_REF: ${{ github.base_ref }}
-        # actions/checkout uses depth=1, so neither `origin/<base>` nor the
-        # PR/base merge-base are present. `changeset status --since=<ref>`
-        # calls `git merge-base <ref> HEAD`, which requires the common
-        # ancestor to be in local history. Deepen both sides iteratively until
-        # we have it. Deepen HEAD by its pinned SHA rather than via
-        # `refs/pull/<n>/merge`: GitHub regenerates that ref (same parents,
-        # new committer timestamp), and deepening the regenerated ref never
-        # connects the checked-out HEAD, failing merge-base deterministically.
+        # actions/checkout marks the depth-1 PR merge commit as a shallow
+        # boundary, so fetching its parent commits is not enough to make them
+        # reachable from HEAD. Unshallow the pinned merge SHA instead of the
+        # regenerated `refs/pull/<n>/merge` ref, then verify the ancestry that
+        # `changeset status --since=<ref>` requires.
         run: |
           git fetch --depth=1 origin \
             "$BASE_REF":"refs/remotes/origin/$BASE_REF"
-          for _ in 1 2 3 4 5 6 7 8 9 10; do
-            if git merge-base "refs/remotes/origin/$BASE_REF" HEAD >/dev/null 2>&1; then
-              exit 0
-            fi
-            git fetch -q --deepen=10 origin \
-              "$BASE_REF":"refs/remotes/origin/$BASE_REF" \
-              "$GITHUB_SHA"
-          done
-          echo "::error::Unable to find a merge base between origin/$BASE_REF and HEAD after 10 deepen iterations" >&2
-          exit 1
+          if ! git merge-base "refs/remotes/origin/$BASE_REF" HEAD >/dev/null 2>&1 && \
+            [ "$(git rev-parse --is-shallow-repository)" = true ]; then
+            git fetch --unshallow origin "$GITHUB_SHA"
+          fi
+          git merge-base "refs/remotes/origin/$BASE_REF" HEAD >/dev/null 2>&1 || {
+            echo "::error::Unable to find a merge base between origin/$BASE_REF and HEAD" >&2
+            exit 1
+          }
       - name: Collect packages with changesets
         id: changeset
         if: >
