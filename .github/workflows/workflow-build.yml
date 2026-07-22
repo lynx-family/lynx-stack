@@ -28,7 +28,7 @@ jobs:
     outputs:
       merge-base: ${{ steps.merge-base.outputs.merge-base }}
     steps:
-      - uses: actions/checkout@93cb6efe18208431cddfb8368fd83d5badbf9bfd # v5
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
         with:
           ref: ${{ env.HEAD_REF }}
           repository: ${{ github.event.pull_request.head.repo.full_name || github.repository }}
@@ -79,7 +79,7 @@ jobs:
     timeout-minutes: 45
     needs: get-merge-base
     steps:
-      - uses: actions/checkout@93cb6efe18208431cddfb8368fd83d5badbf9bfd # v5
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
         with:
           persist-credentials: false
       - name: Disable local Git maintenance
@@ -89,7 +89,7 @@ jobs:
         with:
           key: build
           save-if: ${{ github.ref_name == 'main' }}
-      - uses: astral-sh/setup-uv@d0cc045d04ccac9d8b7881df0226f9e82c39688e # v6
+      - uses: astral-sh/setup-uv@c771a70e6277c0a99b617c7a806ffedaca235ff9 # v9.0.0
       - name: TurboCache
         uses: lynx-infra/cache@5c6160a6a4c7fca80a2f3057bb9dfc9513fcb732
         with:
@@ -117,7 +117,7 @@ jobs:
           CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
       - name: Upload turbo summary
         if: runner.debug == '1'
-        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7
         with:
           name: turbo-summary-${{ github.sha }}
           path: .turbo/runs/*.json
