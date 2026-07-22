@@ -61,7 +61,7 @@ export class RootContext {
 /**
  * @internal
  */
-export const defaultRootContext: RootContext = new RootContext();
+export const defaultRootContext: RootContext = /* @__PURE__ */ new RootContext();
 
 let currentRootContext = defaultRootContext;
 
