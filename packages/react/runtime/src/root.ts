@@ -1,6 +1,7 @@
 // Copyright 2024 The Lynx Authors. All rights reserved.
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
+import { registerContextSlot } from './root-context.js';
 import { BackgroundSnapshotInstance } from './snapshot/snapshot/backgroundSnapshot.js';
 import { SnapshotInstance } from './snapshot/snapshot/snapshot.js';
 
@@ -33,6 +34,19 @@ if (typeof __MAIN_THREAD__ !== 'undefined' && __MAIN_THREAD__) {
   setRoot(new SnapshotInstance('root'));
 } else if (typeof __BACKGROUND__ !== 'undefined' && __BACKGROUND__) {
   setRoot(new BackgroundSnapshotInstance('root'));
+}
+
+if (typeof __MULTI_PAGE__ !== 'undefined' && __MULTI_PAGE__) {
+  registerContextSlot({
+    id: 'root',
+    init: () => undefined,
+    save(bag) {
+      bag['root'] = __root;
+    },
+    load(bag) {
+      setRoot(bag['root'] as typeof __root);
+    },
+  });
 }
 
 export { __root, setRoot };

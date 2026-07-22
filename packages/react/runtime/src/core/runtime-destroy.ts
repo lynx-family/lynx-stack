@@ -2,12 +2,23 @@
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
 
+import { registerContextSlot } from '../root-context.js';
+
 type DestroyTask = () => void;
 
-export let destroyTasks: Set<DestroyTask> = new Set<DestroyTask>();
+let destroyTasks = new Set<DestroyTask>();
 
-export function setDestroyTasks(tasks: Set<DestroyTask>): void {
-  destroyTasks = tasks;
+if (typeof __MULTI_PAGE__ !== 'undefined' && __MULTI_PAGE__) {
+  registerContextSlot({
+    id: 'destroyTasks',
+    init: () => new Set<DestroyTask>(),
+    save(bag) {
+      bag['destroyTasks'] = destroyTasks;
+    },
+    load(bag) {
+      destroyTasks = bag['destroyTasks'] as Set<DestroyTask>;
+    },
+  });
 }
 
 export function registerDestroyTask(task: DestroyTask): () => void {

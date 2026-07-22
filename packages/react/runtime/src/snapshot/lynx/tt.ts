@@ -178,12 +178,17 @@ function onLifecycleEventImpl(type: LifecycleConstant, data: unknown): void {
         delayedEvents.length = 0;
       }
 
-      {
+      if (typeof __MULTI_PAGE__ !== 'undefined' && __MULTI_PAGE__) {
         const ctx = getCurrentRootContext();
         const tt = ctx.tt ?? lynxCoreInject.tt;
         tt.publishEvent = bindContext(ctx, publishEvent);
         tt.publicComponentEvent = bindContext(ctx, publicComponentEvent);
+        /* v8 ignore start */
+      } else {
+        lynxCoreInject.tt.publishEvent = publishEvent;
+        lynxCoreInject.tt.publicComponentEvent = publicComponentEvent;
       }
+      /* v8 ignore stop */
 
       // console.debug("********** After hydration:");
       // printSnapshotInstance(__root as BackgroundSnapshotInstance);

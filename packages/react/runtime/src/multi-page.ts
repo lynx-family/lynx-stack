@@ -10,7 +10,6 @@ import { RootContext, getCurrentRootContext, switchRootContext } from './root-co
 import type { RootLynx, RootTT } from './root-context.js';
 import { __root, setRoot } from './root.js';
 import { LifecycleConstant } from './snapshot/lifecycle/constant.js';
-import './root-context-slots.js';
 import './snapshot/lifecycle/contextSwitchHook.js';
 import { globalCommitTaskMap } from './snapshot/lifecycle/patch/commit.js';
 import { flushDelayedLifecycleEvents, injectTtInto } from './snapshot/lynx/tt.js';

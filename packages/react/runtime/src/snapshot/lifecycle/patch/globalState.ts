@@ -9,8 +9,23 @@
 /**
  * List of background snapshot instances to remove during commit phase
  */
+import { registerContextSlot } from '../../../root-context.js';
+
 export let globalBackgroundSnapshotInstancesToRemove: number[] = [];
 
 export function setGlobalBackgroundSnapshotInstancesToRemove(ids: number[]): void {
   globalBackgroundSnapshotInstancesToRemove = ids;
+}
+
+if (typeof __MULTI_PAGE__ !== 'undefined' && __MULTI_PAGE__) {
+  registerContextSlot({
+    id: 'bgInstancesToRemove',
+    init: () => [],
+    save(bag) {
+      bag['bgInstancesToRemove'] = globalBackgroundSnapshotInstancesToRemove;
+    },
+    load(bag) {
+      globalBackgroundSnapshotInstancesToRemove = bag['bgInstancesToRemove'] as number[];
+    },
+  });
 }
