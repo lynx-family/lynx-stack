@@ -190,18 +190,17 @@ function onLifecycleEventImpl(type: LifecycleConstant, data: unknown): void {
         delayedEvents.length = 0;
       }
 
-      const upgradeCtx = typeof __MULTI_ROOT_RENDER_CONTEXT__ !== 'undefined' && __MULTI_ROOT_RENDER_CONTEXT__
-        ? getCurrentRootContext()
-        : undefined;
-      const tt = upgradeCtx?.tt ?? lynxCoreInject.tt;
-      tt.publishEvent =
-        typeof __MULTI_ROOT_RENDER_CONTEXT__ !== 'undefined' && __MULTI_ROOT_RENDER_CONTEXT__ && upgradeCtx
-          ? bindContext(upgradeCtx, publishEvent)
-          : publishEvent;
-      tt.publicComponentEvent =
-        typeof __MULTI_ROOT_RENDER_CONTEXT__ !== 'undefined' && __MULTI_ROOT_RENDER_CONTEXT__ && upgradeCtx
-          ? bindContext(upgradeCtx, publicComponentEvent)
-          : publicComponentEvent;
+      if (typeof __MULTI_ROOT_RENDER_CONTEXT__ !== 'undefined' && __MULTI_ROOT_RENDER_CONTEXT__) {
+        const ctx = getCurrentRootContext();
+        const tt = ctx.tt ?? lynxCoreInject.tt;
+        tt.publishEvent = bindContext(ctx, publishEvent);
+        tt.publicComponentEvent = bindContext(ctx, publicComponentEvent);
+        /* v8 ignore start */
+      } else {
+        lynxCoreInject.tt.publishEvent = publishEvent;
+        lynxCoreInject.tt.publicComponentEvent = publicComponentEvent;
+      }
+      /* v8 ignore stop */
 
       // console.debug("********** After hydration:");
       // printSnapshotInstance(__root as BackgroundSnapshotInstance);
