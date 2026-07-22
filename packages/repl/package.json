@@ -37,7 +37,7 @@
     "@types/react-dom": "^19.2.3",
     "css-tree": "^3.1.0",
     "hyphenate-style-name": "^1.1.0",
-    "monaco-editor": "^0.52.2",
+    "monaco-editor": "^0.55.1",
     "postcss": "^8.5.6",
     "tailwindcss": "^4.2.1",
     "tslib": "^2.8.1",
