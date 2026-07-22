@@ -67,7 +67,7 @@
   "devDependencies": {
     "@lynx-js/test-tools": "workspace:*",
     "@microsoft/api-extractor": "catalog:",
-    "@rsdoctor/core": "~1.5.6",
+    "@rsdoctor/core": "~1.6.0",
     "@rstest/core": "catalog:rstest",
     "@swc/core": "^1.15.30",
     "chokidar": "^4.0.3",
