@@ -208,8 +208,8 @@ importers:
         specifier: ^0.0.1
         version: 0.0.1
       '@lynx-js/type-element-api':
-        specifier: 0.0.3
-        version: 0.0.3
+        specifier: 0.0.8
+        version: 0.0.8
       '@lynx-js/types':
         specifier: 4.0.0
         version: 4.0.0
@@ -1327,8 +1327,8 @@ importers:
         specifier: 0.1.4
         version: 0.1.4
       '@lynx-js/type-element-api':
-        specifier: 0.0.3
-        version: 0.0.3
+        specifier: 0.0.8
+        version: 0.0.8
       '@lynx-js/types':
         specifier: 4.0.0
         version: 4.0.0
@@ -4469,8 +4469,8 @@ packages:
   '@lynx-js/type-config@3.6.0':
     resolution: {integrity: sha512-XS+Wdbs77iWaVqrs1HKp3LyTLLHbu/AwLwy837BinmyNO28YunkgnOz0dmuzjnGGsbKJB3Alm7RoYrH/PAsVuQ==}
 
-  '@lynx-js/type-element-api@0.0.3':
-    resolution: {integrity: sha512-e8+V1aU9VD6fmVJhS1VoE5ZxUD2udhEtTTsGBj2jlxYNscND2V6fyYFGF/dUPN+s9EwRiB80vUY/Im8tYSsMWA==}
+  '@lynx-js/type-element-api@0.0.8':
+    resolution: {integrity: sha512-5ey2UXcTzC9QiG6SQ+99zEDPkl6VqKDDJ3DN/6RYQhXHYg4bchGE2NRMWj8gjVpzjb9sXp9eP/6B44uvtxUynQ==}
 
   '@lynx-js/types@4.0.0':
     resolution: {integrity: sha512-FBtBV8wt+9/CAUbTdZwvbhGjJEnyzKLWVpq5gaTHTbhDztbhdP0avZ0nHD6I5HSgAhzYNB9oDrqMt/r6YqBkng==}
@@ -14000,7 +14000,7 @@ snapshots:
 
   '@lynx-js/type-config@3.6.0': {}
 
-  '@lynx-js/type-element-api@0.0.3': {}
+  '@lynx-js/type-element-api@0.0.8': {}
 
   '@lynx-js/types@4.0.0':
     dependencies:
