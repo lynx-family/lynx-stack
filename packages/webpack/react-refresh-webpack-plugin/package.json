@@ -46,7 +46,7 @@
     "@rspack/core": "catalog:rspack",
     "@rspack/lite-tapable": "1.1.0",
     "@rstest/core": "catalog:rstest",
-    "@types/node": "^24.10.13",
+    "@types/node": "^24.13.3",
     "swc-loader": "^0.2.7"
   },
   "peerDependencies": {

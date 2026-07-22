@@ -74,7 +74,7 @@
     "@rsbuild/plugin-source-build": "1.0.5",
     "@rslib/core": "catalog:rslib",
     "@rstest/core": "catalog:rstest",
-    "@types/node": "^24.10.13",
+    "@types/node": "^24.13.3",
     "binaryen": "^125.0.0",
     "eslint-plugin-compat": "^6.2.0",
     "fb-dotslash": "^0.5.8",

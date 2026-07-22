@@ -23,8 +23,8 @@
   },
   "devDependencies": {
     "@rstest/core": "catalog:rstest",
-    "@types/node": "^24.10.13",
-    "@types/react": "^18.3.28",
+    "@types/node": "^24.13.3",
+    "@types/react": "^18.3.31",
     "@types/react-dom": "^19.2.3",
     "typescript": "^6.0.3"
   }
