@@ -99,7 +99,9 @@ export class ReactLynxRoot {
 /**
  * @internal
  */
-export const BOOTSTRAP_PAGE = Symbol.for('__REACTLYNX_BOOTSTRAP_PAGE__');
+export const BOOTSTRAP_PAGE: unique symbol = /* @__PURE__ */ Symbol.for(
+  '__REACTLYNX_BOOTSTRAP_PAGE__',
+) as typeof BOOTSTRAP_PAGE;
 
 if (typeof __MULTI_PAGE__ !== 'undefined' && __MULTI_PAGE__) {
   (globalThis as Record<PropertyKey, unknown>)[BOOTSTRAP_PAGE] = (

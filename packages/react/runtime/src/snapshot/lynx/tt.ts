@@ -50,7 +50,12 @@ function bindContext<T extends unknown[], R>(ctx: RootContext, fn: (...args: T) 
 }
 
 function injectTt(): void {
-  injectTtInto(lynxCoreInject.tt, defaultRootContext);
+  injectTtInto(
+    lynxCoreInject.tt,
+    typeof __MULTI_PAGE__ !== 'undefined' && __MULTI_PAGE__
+      ? defaultRootContext
+      : (undefined as unknown as RootContext),
+  );
 }
 
 function injectTtInto(tt: RootTT, ctx: RootContext): void {

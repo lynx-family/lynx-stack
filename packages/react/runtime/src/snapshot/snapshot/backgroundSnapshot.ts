@@ -175,6 +175,9 @@ export class BackgroundSnapshotInstance {
         createRuntimeSnapshot(type);
       }
     }
+    if (typeof __MULTI_PAGE__ !== 'undefined' && __MULTI_PAGE__) {
+      this.__rootCtx = getCurrentRootContext();
+    }
     this.__snapshot_def = snapshotManager.values.get(type)!;
     const id = this.__id = backgroundSnapshotInstanceManager.nextId += 1;
     backgroundSnapshotInstanceManager.values.set(id, this);
@@ -189,10 +192,7 @@ export class BackgroundSnapshotInstance {
   __extraProps?: Record<string, unknown> | undefined;
   __slotIndex: number = 0;
   private __listItemPlatformInfoIndex?: number;
-  /* v8 ignore next 3 */
-  __rootCtx: RootContext | undefined = typeof __MULTI_PAGE__ !== 'undefined' && __MULTI_PAGE__
-    ? getCurrentRootContext()
-    : undefined;
+  __rootCtx: RootContext | undefined;
 
   private __parent: BackgroundSnapshotInstance | null = null;
   private __firstChild: BackgroundSnapshotInstance | null = null;
@@ -338,7 +338,10 @@ export class BackgroundSnapshotInstance {
   }
 
   tearDown(): void {
-    const values = instanceValuesOf(this.__rootCtx);
+    /* v8 ignore next 3 */
+    const values = typeof __MULTI_PAGE__ !== 'undefined' && __MULTI_PAGE__
+      ? instanceValuesOf(this.__rootCtx)
+      : backgroundSnapshotInstanceManager.values;
     traverseSnapshotInstance(this, v => {
       v.__parent = null;
       v.__previousSibling = null;
