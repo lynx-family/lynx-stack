@@ -38,7 +38,7 @@
     "test:type": "tsc --noEmit"
   },
   "dependencies": {
-    "@lynx-js/type-config": "3.6.0"
+    "@lynx-js/type-config": "4.1.1"
   },
   "devDependencies": {
     "@lynx-js/rspeedy": "workspace:*",
