@@ -67,5 +67,6 @@ target/
 
 # next
 .next
+.vercel
 
 .gradle

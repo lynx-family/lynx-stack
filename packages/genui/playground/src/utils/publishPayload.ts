@@ -2,6 +2,7 @@
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
 
+const ONLINE_A2UI_SERVER_ORIGIN = 'https://genui-server.vercel.app';
 const LOCAL_A2UI_SERVER_PORT = '3060';
 
 export interface PublishedPayload {
@@ -30,7 +31,7 @@ export function getA2UIPayloadEndpoint(): string {
   ) {
     return `http://${window.location.hostname}:${LOCAL_A2UI_SERVER_PORT}/a2ui/payload`;
   }
-  return new URL('/a2ui/payload', window.location.origin).toString();
+  return `${ONLINE_A2UI_SERVER_ORIGIN}/a2ui/payload`;
 }
 
 export function getOpenUIPayloadEndpoint(): string {
@@ -39,7 +40,7 @@ export function getOpenUIPayloadEndpoint(): string {
   ) {
     return `http://${window.location.hostname}:${LOCAL_A2UI_SERVER_PORT}/openui/payload`;
   }
-  return new URL('/openui/payload', window.location.origin).toString();
+  return `${ONLINE_A2UI_SERVER_ORIGIN}/openui/payload`;
 }
 
 /**
