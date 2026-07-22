@@ -110,7 +110,7 @@ catalogs:
 
   # Rsbuild monorepo packages
   rsbuild:
-    "@rsbuild/core": "2.1.4"
+    "@rsbuild/core": "2.1.6"
 
   # Rslib monorepo packages
   rslib:
