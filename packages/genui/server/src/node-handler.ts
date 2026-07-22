@@ -39,6 +39,7 @@ function toWebRequest(
   const headers = requestHeaders(request);
   const method = request.method?.toUpperCase() ?? 'GET';
   const bodyAllowed = method !== 'GET' && method !== 'HEAD';
+  if (!bodyAllowed) request.resume();
   const init: StreamingRequestInit = {
     method,
     headers,

@@ -118,11 +118,15 @@ pnpm dev
 
 ## Production
 
-Build the production handler from this package:
+Before relying on production artifacts, build the full repository from the
+repository root:
 
 ```bash
-pnpm build
+pnpm turbo build
 ```
+
+Use Turbo filters only for narrower diagnosis. Do not use a package-local
+`pnpm build` or a filtered build as a substitute for the repository-root build.
 
 Rslib emits a standard Node HTTP handler at `dist/index.js`:
 

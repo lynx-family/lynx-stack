@@ -55,9 +55,14 @@ describe('routeRequest', () => {
 
 describe('Node handler', () => {
   test('writes Web API route responses to ServerResponse', async () => {
+    let requestResumed = false;
     const request = Object.assign(new EventEmitter(), {
       headers: { host: 'server.test' },
       method: 'GET',
+      resume() {
+        requestResumed = true;
+        return this;
+      },
       url: '/a2ui/health',
     }) as unknown as IncomingMessage;
     const chunks: Uint8Array[] = [];
@@ -86,6 +91,7 @@ describe('Node handler', () => {
 
     await handler(request, response);
 
+    expect(requestResumed).toBe(true);
     expect(response.statusCode).toBe(200);
     expect(headers.get('content-type')).toBe('application/json');
     expect(JSON.parse(Buffer.concat(chunks).toString('utf8'))).toMatchObject({
