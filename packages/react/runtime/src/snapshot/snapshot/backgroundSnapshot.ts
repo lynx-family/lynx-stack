@@ -44,10 +44,11 @@ import { clearPendingPortalInsertBefore } from '../lynx/portalsPending.js';
 import { diffArrayAction, diffArrayLepus } from '../renderToOpcodes/hydrate.js';
 import { onPostWorkletCtx } from '../worklet/ctx.js';
 
-export function instanceValuesOf(ctx: RootContext): Map<number, BackgroundSnapshotInstance> {
-  return ctx === getCurrentRootContext()
-    ? backgroundSnapshotInstanceManager.values
-    : ctx.bag['bsiValues'] as Map<number, BackgroundSnapshotInstance>;
+export function instanceValuesOf(ctx: RootContext | undefined): Map<number, BackgroundSnapshotInstance> {
+  if (typeof __MULTI_PAGE__ !== 'undefined' && __MULTI_PAGE__ && ctx && ctx !== getCurrentRootContext()) {
+    return ctx.bag['bsiValues'] as Map<number, BackgroundSnapshotInstance>;
+  }
+  return backgroundSnapshotInstanceManager.values;
 }
 
 /**
@@ -188,7 +189,10 @@ export class BackgroundSnapshotInstance {
   __extraProps?: Record<string, unknown> | undefined;
   __slotIndex: number = 0;
   private __listItemPlatformInfoIndex?: number;
-  __rootCtx: RootContext = getCurrentRootContext();
+  /* v8 ignore next 3 */
+  __rootCtx: RootContext | undefined = typeof __MULTI_PAGE__ !== 'undefined' && __MULTI_PAGE__
+    ? getCurrentRootContext()
+    : undefined;
 
   private __parent: BackgroundSnapshotInstance | null = null;
   private __firstChild: BackgroundSnapshotInstance | null = null;

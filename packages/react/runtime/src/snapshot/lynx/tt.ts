@@ -40,13 +40,13 @@ import { sendMTRefInitValueToMainThread } from '../worklet/ref/updateInitValue.j
 export { runWithForce };
 
 function bindContext<T extends unknown[], R>(ctx: RootContext, fn: (...args: T) => R): (...args: T) => R {
-  if (typeof __MULTI_PAGE__ === 'undefined' || !__MULTI_PAGE__) {
-    return fn;
+  if (typeof __MULTI_PAGE__ !== 'undefined' && __MULTI_PAGE__) {
+    return (...args: T) => {
+      switchRootContext(ctx);
+      return fn(...args);
+    };
   }
-  return (...args: T) => {
-    switchRootContext(ctx);
-    return fn(...args);
-  };
+  return fn;
 }
 
 function injectTt(): void {

@@ -9,8 +9,15 @@ import type { CreateRootOptions } from './root-instance.js';
  * @internal
  */
 export function __experimentalBootstrapPage(options?: CreateRootOptions): ReactLynxRoot | undefined {
-  /* v8 ignore start */
-  if (typeof __MULTI_PAGE__ === 'undefined' || !__MULTI_PAGE__) {
+  /* v8 ignore next */
+  if (typeof __MULTI_PAGE__ !== 'undefined' && __MULTI_PAGE__) {
+    /* v8 ignore next */
+    if (typeof __BACKGROUND__ !== 'undefined' && __BACKGROUND__) {
+      setBootstrappedRoot(options ? new ReactLynxRoot(options) : undefined);
+    }
+    return bootstrappedRoot;
+    /* v8 ignore start */
+  } else {
     if (__DEV__ && options) {
       console.error(
         '[ReactLynx] __experimentalBootstrapPage called but the runtime was built without `__MULTI_PAGE__`; falling back to the classic singleton root.',
@@ -19,8 +26,4 @@ export function __experimentalBootstrapPage(options?: CreateRootOptions): ReactL
     return undefined;
   }
   /* v8 ignore stop */
-  if (typeof __BACKGROUND__ !== 'undefined' && __BACKGROUND__) {
-    setBootstrappedRoot(options ? new ReactLynxRoot(options) : undefined);
-  }
-  return bootstrappedRoot;
 }
