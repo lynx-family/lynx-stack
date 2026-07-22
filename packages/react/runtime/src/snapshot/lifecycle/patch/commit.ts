@@ -127,31 +127,17 @@ function replaceCommitHook(): void {
 
       const commitTaskId = genCommitTaskId();
 
-      if (typeof __MULTI_ROOT_RENDER_CONTEXT__ !== 'undefined' && __MULTI_ROOT_RENDER_CONTEXT__) {
-        const instanceValues = backgroundSnapshotInstanceManager.values;
-        globalCommitTaskMap.set(commitTaskId, () => {
-          if (backgroundSnapshotInstancesToRemove.length) {
-            setTimeout(() => {
-              backgroundSnapshotInstancesToRemove.forEach(id => {
-                instanceValues.get(id)?.tearDown();
-              });
-            }, 10000);
-          }
-        });
-        /* v8 ignore start */
-      } else {
-        // Register the commit task
-        globalCommitTaskMap.set(commitTaskId, () => {
-          if (backgroundSnapshotInstancesToRemove.length) {
-            setTimeout(() => {
-              backgroundSnapshotInstancesToRemove.forEach(id => {
-                backgroundSnapshotInstanceManager.values.get(id)?.tearDown();
-              });
-            }, 10000);
-          }
-        });
-      }
-      /* v8 ignore stop */
+      // Register the commit task
+      const instanceValues = backgroundSnapshotInstanceManager.values;
+      globalCommitTaskMap.set(commitTaskId, () => {
+        if (backgroundSnapshotInstancesToRemove.length) {
+          setTimeout(() => {
+            backgroundSnapshotInstancesToRemove.forEach(id => {
+              instanceValues.get(id)?.tearDown();
+            });
+          }, 10000);
+        }
+      });
 
       sendMTRefInitValueToMainThread();
 
