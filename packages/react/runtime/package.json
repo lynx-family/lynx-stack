@@ -27,7 +27,7 @@
     "@lynx-js/types": "4.0.0",
     "@types/node": "^24.10.13",
     "@types/react": "^18.3.28",
-    "pretty-format": "^30.2.0"
+    "pretty-format": "^30.4.1"
   },
   "peerDependencies": {
     "@types/react": "^18.0.0"

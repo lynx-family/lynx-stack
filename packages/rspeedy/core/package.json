@@ -70,7 +70,7 @@
     "@rsdoctor/core": "~1.5.6",
     "@rstest/core": "catalog:rstest",
     "@swc/core": "^1.15.30",
-    "chokidar": "^4.0.3",
+    "chokidar": "^5.0.0",
     "commander": "^13.1.0",
     "eventemitter3": "^5.0.4",
     "exit-hook": "^4.0.0",
@@ -82,7 +82,7 @@
     "rsbuild-plugin-publint": "0.3.4",
     "tiny-invariant": "^1.3.3",
     "ts-blank-space": "^0.7.0",
-    "type-fest": "^5.4.4",
+    "type-fest": "^5.8.0",
     "typia": "12.1.1",
     "typia-rspack-plugin": "3.0.1"
   },

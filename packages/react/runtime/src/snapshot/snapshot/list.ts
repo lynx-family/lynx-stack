@@ -41,7 +41,14 @@ export function snapshotCreateList(
 
 export function snapshotDestroyList(si: SnapshotInstance): void {
   const [, elementIndex] = si.__snapshot_def.slot[0]!;
-  const list = si.__elements![elementIndex]!;
+  const list = si.__elements?.[elementIndex];
+  // `takeElements` and hydration transfer the rendered elements to a new
+  // SnapshotInstance while leaving the old instance tree available for
+  // teardown. Only the instance that still owns the list element may clean up
+  // its callbacks and recycling state.
+  if (list === undefined) {
+    return;
+  }
   const listID = __GetElementUniqueID(list);
 
   __UpdateListCallbacks(list, () => -1, () => {}, () => {});

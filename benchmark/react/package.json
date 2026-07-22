@@ -19,6 +19,7 @@
     "bench:012-attrs-compile": "benchx_cli run dist/012-attrs-compile.lynx.bundle --wait-for-id=stop-benchmark-true",
     "bench:013-attrs-runtime": "benchx_cli run dist/013-attrs-runtime.lynx.bundle --wait-for-id=stop-benchmark-true",
     "bench:014-attrs-mixed": "benchx_cli run dist/014-attrs-mixed.lynx.bundle --wait-for-id=stop-benchmark-true",
+    "bench:015-attrs-component": "benchx_cli run dist/015-attrs-component.lynx.bundle --wait-for-id=stop-benchmark-true",
     "build": "rspeedy build",
     "dev": "rspeedy dev",
     "perfetto": "pnpm run --sequential --stream --aggregate-output '/^perfetto:.*/'",
@@ -36,6 +37,7 @@
     "perfetto:012-attrs-compile": "benchx_cli -o dist/012-attrs-compile.ptrace run dist/012-attrs-compile.lynx.bundle --wait-for-id=stop-benchmark-true",
     "perfetto:013-attrs-runtime": "benchx_cli -o dist/013-attrs-runtime.ptrace run dist/013-attrs-runtime.lynx.bundle --wait-for-id=stop-benchmark-true",
     "perfetto:014-attrs-mixed": "benchx_cli -o dist/014-attrs-mixed.ptrace run dist/014-attrs-mixed.lynx.bundle --wait-for-id=stop-benchmark-true",
+    "perfetto:015-attrs-component": "benchx_cli -o dist/015-attrs-component.ptrace run dist/015-attrs-component.lynx.bundle --wait-for-id=stop-benchmark-true",
     "test": "npm run perfetto && node scripts/detectLeak.mjs"
   },
   "dependencies": {
