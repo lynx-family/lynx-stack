@@ -40,22 +40,34 @@ import { sendMTRefInitValueToMainThread } from '../worklet/ref/updateInitValue.j
 export { runWithForce };
 
 function bindContext<T extends unknown[], R>(ctx: RootContext, fn: (...args: T) => R): (...args: T) => R {
-  if (typeof __MULTI_PAGE__ !== 'undefined' && __MULTI_PAGE__) {
-    return (...args: T) => {
-      switchRootContext(ctx);
-      return fn(...args);
-    };
-  }
-  return fn;
+  return (...args: T) => {
+    switchRootContext(ctx);
+    return fn(...args);
+  };
 }
 
 function injectTt(): void {
-  injectTtInto(
-    lynxCoreInject.tt,
-    typeof __MULTI_PAGE__ !== 'undefined' && __MULTI_PAGE__
-      ? defaultRootContext
-      : (undefined as unknown as RootContext),
-  );
+  if (typeof __MULTI_PAGE__ !== 'undefined' && __MULTI_PAGE__) {
+    injectTtInto(lynxCoreInject.tt, defaultRootContext);
+    return;
+  }
+  /* v8 ignore start */
+  const tt = lynxCoreInject.tt;
+  tt.OnLifecycleEvent = onLifecycleEvent;
+  tt.publishEvent = delayedPublishEvent;
+  tt.publicComponentEvent = delayedPublicComponentEvent;
+  tt.callDestroyLifetimeFun = () => {
+    removeCtxNotFoundEventListener();
+    destroyWorklet();
+    destroyBackground();
+  };
+  tt.updateGlobalProps = updateGlobalProps;
+  tt.updateCardData = updateCardData;
+  tt.onAppReload = reloadBackground;
+  tt.processCardConfig = () => {
+    // used to updateTheme, no longer rely on this function
+  };
+  /* v8 ignore stop */
 }
 
 function injectTtInto(tt: RootTT, ctx: RootContext): void {
@@ -63,7 +75,7 @@ function injectTtInto(tt: RootTT, ctx: RootContext): void {
   tt.publishEvent = bindContext(ctx, delayedPublishEvent);
   tt.publicComponentEvent = bindContext(ctx, delayedPublicComponentEvent);
   tt.callDestroyLifetimeFun = bindContext(ctx, () => {
-    if (typeof __MULTI_PAGE__ === 'undefined' || !__MULTI_PAGE__ || ctx === defaultRootContext) {
+    if (ctx === defaultRootContext) {
       removeCtxNotFoundEventListener();
     }
     destroyWorklet();
@@ -105,17 +117,23 @@ function onLifecycleEventImpl(type: LifecycleConstant, data: unknown): void {
   switch (type) {
     case LifecycleConstant.firstScreen: {
       let processErr;
-      const ctxBeforeProcess = typeof __MULTI_PAGE__ !== 'undefined' && __MULTI_PAGE__
-        ? getCurrentRootContext()
-        : undefined;
-      try {
-        process();
-      } catch (e) {
-        processErr = e;
-      }
-      if (typeof __MULTI_PAGE__ !== 'undefined' && __MULTI_PAGE__ && ctxBeforeProcess) {
+      if (typeof __MULTI_PAGE__ !== 'undefined' && __MULTI_PAGE__) {
+        const ctxBeforeProcess = getCurrentRootContext();
+        try {
+          process();
+        } catch (e) {
+          processErr = e;
+        }
         switchRootContext(ctxBeforeProcess);
+        /* v8 ignore start */
+      } else {
+        try {
+          process();
+        } catch (e) {
+          processErr = e;
+        }
       }
+      /* v8 ignore stop */
       const { root: lepusSide, firstScreenEventIdSwap } = data as FirstScreenData;
       if (typeof __PROFILE__ !== 'undefined' && __PROFILE__) {
         profileStart('ReactLynx::hydrate');
@@ -201,18 +219,31 @@ function onLifecycleEventImpl(type: LifecycleConstant, data: unknown): void {
       }
       const obj = commitPatchUpdate(patchList, { isHydration: true });
       sendMTRefInitValueToMainThread();
-      const ctxLynx =
-        (typeof __MULTI_PAGE__ !== 'undefined' && __MULTI_PAGE__ ? getCurrentRootContext().lynx : undefined) ?? lynx;
-      const commitTaskMap = globalCommitTaskMap;
-      ctxLynx.getNativeApp().callLepusMethod(LifecycleConstant.patchUpdate, obj, () => {
-        commitTaskMap.forEach((commitTask, id) => {
-          if (id > commitTaskId) {
-            return;
-          }
-          commitTask();
-          commitTaskMap.delete(id);
+      if (typeof __MULTI_PAGE__ !== 'undefined' && __MULTI_PAGE__) {
+        const ctxLynx = getCurrentRootContext().lynx ?? lynx;
+        const commitTaskMap = globalCommitTaskMap;
+        ctxLynx.getNativeApp().callLepusMethod(LifecycleConstant.patchUpdate, obj, () => {
+          commitTaskMap.forEach((commitTask, id) => {
+            if (id > commitTaskId) {
+              return;
+            }
+            commitTask();
+            commitTaskMap.delete(id);
+          });
         });
-      });
+        /* v8 ignore start */
+      } else {
+        lynx.getNativeApp().callLepusMethod(LifecycleConstant.patchUpdate, obj, () => {
+          globalCommitTaskMap.forEach((commitTask, id) => {
+            if (id > commitTaskId) {
+              return;
+            }
+            commitTask();
+            globalCommitTaskMap.delete(id);
+          });
+        });
+      }
+      /* v8 ignore stop */
       runDelayedUiOps();
 
       if (processErr) {

@@ -351,16 +351,24 @@ export class BackgroundSnapshotInstance {
   }
 
   tearDown(): void {
-    /* v8 ignore next 3 */
-    const values = typeof __MULTI_PAGE__ !== 'undefined' && __MULTI_PAGE__
-      ? instanceValuesOf(this.__rootCtx)
-      : backgroundSnapshotInstanceManager.values;
-    traverseSnapshotInstance(this, v => {
-      v.__parent = null;
-      v.__previousSibling = null;
-      v.__nextSibling = null;
-      values.delete(v.__id);
-    });
+    if (typeof __MULTI_PAGE__ !== 'undefined' && __MULTI_PAGE__) {
+      const values = instanceValuesOf(this.__rootCtx);
+      traverseSnapshotInstance(this, v => {
+        v.__parent = null;
+        v.__previousSibling = null;
+        v.__nextSibling = null;
+        values.delete(v.__id);
+      });
+      /* v8 ignore start */
+    } else {
+      traverseSnapshotInstance(this, v => {
+        v.__parent = null;
+        v.__previousSibling = null;
+        v.__nextSibling = null;
+        backgroundSnapshotInstanceManager.values.delete(v.__id);
+      });
+    }
+    /* v8 ignore stop */
   }
 
   get childNodes(): BackgroundSnapshotInstance[] {

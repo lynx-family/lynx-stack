@@ -142,16 +142,31 @@ function replaceCommitHook(): void {
 
       const commitTaskId = genCommitTaskId();
 
-      const instanceValues = backgroundSnapshotInstanceManager.values;
-      globalCommitTaskMap.set(commitTaskId, () => {
-        if (backgroundSnapshotInstancesToRemove.length) {
-          setTimeout(() => {
-            backgroundSnapshotInstancesToRemove.forEach(id => {
-              instanceValues.get(id)?.tearDown();
-            });
-          }, 10000);
-        }
-      });
+      if (typeof __MULTI_PAGE__ !== 'undefined' && __MULTI_PAGE__) {
+        const instanceValues = backgroundSnapshotInstanceManager.values;
+        globalCommitTaskMap.set(commitTaskId, () => {
+          if (backgroundSnapshotInstancesToRemove.length) {
+            setTimeout(() => {
+              backgroundSnapshotInstancesToRemove.forEach(id => {
+                instanceValues.get(id)?.tearDown();
+              });
+            }, 10000);
+          }
+        });
+        /* v8 ignore start */
+      } else {
+        // Register the commit task
+        globalCommitTaskMap.set(commitTaskId, () => {
+          if (backgroundSnapshotInstancesToRemove.length) {
+            setTimeout(() => {
+              backgroundSnapshotInstancesToRemove.forEach(id => {
+                backgroundSnapshotInstanceManager.values.get(id)?.tearDown();
+              });
+            }, 10000);
+          }
+        });
+      }
+      /* v8 ignore stop */
 
       sendMTRefInitValueToMainThread();
 
@@ -184,17 +199,28 @@ function replaceCommitHook(): void {
       }
       const obj = commitPatchUpdate(patchList, patchOptions);
 
-      const commitTaskMap = globalCommitTaskMap;
-      /* v8 ignore next 2 */
-      const ctxLynx =
-        (typeof __MULTI_PAGE__ !== 'undefined' && __MULTI_PAGE__ ? getCurrentRootContext().lynx : undefined) ?? lynx;
-      ctxLynx.getNativeApp().callLepusMethod(LifecycleConstant.patchUpdate, obj, () => {
-        const commitTask = commitTaskMap.get(commitTaskId);
-        if (commitTask) {
-          commitTask();
-          commitTaskMap.delete(commitTaskId);
-        }
-      });
+      if (typeof __MULTI_PAGE__ !== 'undefined' && __MULTI_PAGE__) {
+        const commitTaskMap = globalCommitTaskMap;
+        const ctxLynx = getCurrentRootContext().lynx ?? lynx;
+        ctxLynx.getNativeApp().callLepusMethod(LifecycleConstant.patchUpdate, obj, () => {
+          const commitTask = commitTaskMap.get(commitTaskId);
+          if (commitTask) {
+            commitTask();
+            commitTaskMap.delete(commitTaskId);
+          }
+        });
+        /* v8 ignore start */
+      } else {
+        // Send the update to the native layer
+        lynx.getNativeApp().callLepusMethod(LifecycleConstant.patchUpdate, obj, () => {
+          const commitTask = globalCommitTaskMap.get(commitTaskId);
+          if (commitTask) {
+            commitTask();
+            globalCommitTaskMap.delete(commitTaskId);
+          }
+        });
+      }
+      /* v8 ignore stop */
 
       applyQueuedRefs();
       originalPreactCommit?.(vnode, commitQueue);
