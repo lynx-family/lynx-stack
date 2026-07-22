@@ -1067,14 +1067,14 @@ importers:
         specifier: 4.0.0
         version: 4.0.0
       i18next:
-        specifier: 26.0.6
-        version: 26.0.6(typescript@6.0.3)
+        specifier: 26.3.6
+        version: 26.3.6(typescript@6.0.3)
       i18next-cli:
         specifier: 1.54.2
-        version: 1.54.2(@swc/helpers@0.5.23)(@types/node@24.10.13)(i18next@26.0.6(typescript@6.0.3))(react-dom@19.2.4(react@19.2.5))(typescript@6.0.3)
+        version: 1.54.2(@swc/helpers@0.5.23)(@types/node@24.10.13)(i18next@26.3.6(typescript@6.0.3))(react-dom@19.2.4(react@19.2.5))(typescript@6.0.3)
       rsbuild-plugin-i18next-extractor:
         specifier: 0.2.1
-        version: 0.2.1(@rsbuild/core@2.1.4(core-js@3.49.0))(i18next-cli@1.54.2(@swc/helpers@0.5.23)(@types/node@24.10.13)(i18next@26.0.6(typescript@6.0.3))(react-dom@19.2.4(react@19.2.5))(typescript@6.0.3))(rollup@4.34.9)
+        version: 0.2.1(@rsbuild/core@2.1.4(core-js@3.49.0))(i18next-cli@1.54.2(@swc/helpers@0.5.23)(@types/node@24.10.13)(i18next@26.3.6(typescript@6.0.3))(react-dom@19.2.4(react@19.2.5))(typescript@6.0.3))(rollup@4.34.9)
 
   packages/lynx/autolink-codegen: {}
 
@@ -8419,10 +8419,10 @@ packages:
     resolution: {integrity: sha512-n5UexwEVt0OoIAhG2MWpSnAVJW1U8mQrQTmXyxc5DMAx+NLhcLZhSMJo/FnUsA5JQ3obTYqTgB7YIuZKWpDgow==}
     hasBin: true
 
-  i18next@26.0.6:
-    resolution: {integrity: sha512-A4U6eCXodIbrhf8EarRurB9/4ebyaurH4+fu4gig9bqxmpSt+fCAFm/GpRQDcN1Xzu/LdFCx4nYHsnM1edIIbg==}
+  i18next@26.3.6:
+    resolution: {integrity: sha512-Bu5Z2nAXgfVyM8xvW3jk9EKRIuX37PudsrBViThNFx7CR7aaYTpP01cxNB/E4c4UUzTDiAZRstEhsRfPOL/8xA==}
     peerDependencies:
-      typescript: ^5 || ^6
+      typescript: ^5 || ^6 || ^7
     peerDependenciesMeta:
       typescript:
         optional: true
@@ -18518,7 +18518,7 @@ snapshots:
 
   hyphenate-style-name@1.1.0: {}
 
-  i18next-cli@1.54.2(@swc/helpers@0.5.23)(@types/node@24.10.13)(i18next@26.0.6(typescript@6.0.3))(react-dom@19.2.4(react@19.2.5))(typescript@6.0.3):
+  i18next-cli@1.54.2(@swc/helpers@0.5.23)(@types/node@24.10.13)(i18next@26.3.6(typescript@6.0.3))(react-dom@19.2.4(react@19.2.5))(typescript@6.0.3):
     dependencies:
       '@croct/json5-parser': 0.2.2
       '@swc/core': 1.15.30(@swc/helpers@0.5.23)
@@ -18534,7 +18534,7 @@ snapshots:
       minimatch: 10.2.5
       ora: 9.3.0
       react: 19.2.5
-      react-i18next: 17.0.4(i18next@26.0.6(typescript@6.0.3))(react-dom@19.2.4(react@19.2.5))(react@19.2.5)(typescript@6.0.3)
+      react-i18next: 17.0.4(i18next@26.3.6(typescript@6.0.3))(react-dom@19.2.4(react@19.2.5))(react@19.2.5)(typescript@6.0.3)
       yaml: 2.8.3
     transitivePeerDependencies:
       - '@swc/helpers'
@@ -18553,9 +18553,7 @@ snapshots:
     transitivePeerDependencies:
       - '@swc/helpers'
 
-  i18next@26.0.6(typescript@6.0.3):
-    dependencies:
-      '@babel/runtime': 7.29.2
+  i18next@26.3.6(typescript@6.0.3):
     optionalDependencies:
       typescript: 6.0.3
 
@@ -20587,11 +20585,11 @@ snapshots:
       react: 19.2.5
       scheduler: 0.27.0
 
-  react-i18next@17.0.4(i18next@26.0.6(typescript@6.0.3))(react-dom@19.2.4(react@19.2.5))(react@19.2.5)(typescript@6.0.3):
+  react-i18next@17.0.4(i18next@26.3.6(typescript@6.0.3))(react-dom@19.2.4(react@19.2.5))(react@19.2.5)(typescript@6.0.3):
     dependencies:
       '@babel/runtime': 7.29.2
       html-parse-stringify: 3.0.1
-      i18next: 26.0.6(typescript@6.0.3)
+      i18next: 26.3.6(typescript@6.0.3)
       react: 19.2.5
       use-sync-external-store: 1.6.0(react@19.2.5)
     optionalDependencies:
@@ -20966,12 +20964,12 @@ snapshots:
       '@typescript/native-preview': 7.0.0-dev.20260212.1
       typescript: 6.0.3
 
-  rsbuild-plugin-i18next-extractor@0.2.1(@rsbuild/core@2.1.4(core-js@3.49.0))(i18next-cli@1.54.2(@swc/helpers@0.5.23)(@types/node@24.10.13)(i18next@26.0.6(typescript@6.0.3))(react-dom@19.2.4(react@19.2.5))(typescript@6.0.3))(rollup@4.34.9):
+  rsbuild-plugin-i18next-extractor@0.2.1(@rsbuild/core@2.1.4(core-js@3.49.0))(i18next-cli@1.54.2(@swc/helpers@0.5.23)(@types/node@24.10.13)(i18next@26.3.6(typescript@6.0.3))(react-dom@19.2.4(react@19.2.5))(typescript@6.0.3))(rollup@4.34.9):
     dependencies:
       '@rollup/pluginutils': 5.3.0(rollup@4.34.9)
       '@rsbuild/core': 2.1.4(core-js@3.49.0)
       '@rspack/lite-tapable': 1.1.0
-      i18next-cli: 1.54.2(@swc/helpers@0.5.23)(@types/node@24.10.13)(i18next@26.0.6(typescript@6.0.3))(react-dom@19.2.4(react@19.2.5))(typescript@6.0.3)
+      i18next-cli: 1.54.2(@swc/helpers@0.5.23)(@types/node@24.10.13)(i18next@26.3.6(typescript@6.0.3))(react-dom@19.2.4(react@19.2.5))(typescript@6.0.3)
     transitivePeerDependencies:
       - rollup
 
