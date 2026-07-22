@@ -105,7 +105,7 @@ module.exports = {
       );
     }
 
-    const asyncRoot = path.join(compiler.outputPath, '.rspeedy/async');
+    const asyncRoot = path.join(compiler.outputPath, '.rspeedy/lazy-bundle');
     const asyncEntries = fs.readdirSync(asyncRoot, { recursive: true });
     const asyncDebugMetadataFile = asyncEntries.find(entry =>
       entry.endsWith('debug-metadata.json')

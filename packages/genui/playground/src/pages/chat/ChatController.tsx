@@ -940,11 +940,12 @@ export function ChatController<
 
     void (async () => {
       try {
-        const request = adapter.createRequest({
+        const request = await adapter.createRequest({
           prompt,
           conversation: requestConversation,
           settings: settingsRef.current,
           host,
+          signal: controller.signal,
         });
         const response = await window.fetch(
           request.url,
@@ -1455,15 +1456,19 @@ export function ChatController<
             >
               {adapter.copy.agentLabel}
             </span>
-            <button
-              type='button'
-              className='chatExamplesLink'
-              onClick={() => {
-                window.location.hash = `#/${protocol.name}/examples`;
-              }}
-            >
-              Browse examples
-            </button>
+            {protocol.name === 'mcp-apps'
+              ? null
+              : (
+                <button
+                  type='button'
+                  className='chatExamplesLink'
+                  onClick={() => {
+                    window.location.hash = `#/${protocol.name}/examples`;
+                  }}
+                >
+                  Browse examples
+                </button>
+              )}
             {usage.totalTokens > 0
               ? (
                 <span className='chatTokenUsageBadge'>

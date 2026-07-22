@@ -66,11 +66,10 @@ describe('collectGitMetadata', () => {
     expect(collectGitMetadata('/no/repo')).toBeNull()
   })
 
-  test('assembles GitMetadata from the four git commands', () => {
+  test('assembles GitMetadata from the git commands', () => {
     mockExecFileSync.mockReset()
     mockExecFileSync
-      .mockReturnValueOnce('abc123\n')
-      .mockReturnValueOnce('/repo\n')
+      .mockReturnValueOnce('abc123\n/repo\n')
       .mockReturnValueOnce('git@github.com:owner/repo.git\n')
 
     expect(collectGitMetadata('/repo')).toEqual({
@@ -81,11 +80,40 @@ describe('collectGitMetadata', () => {
     })
   })
 
+  test('CRLF output does not leak into the commit hash', () => {
+    mockExecFileSync.mockReset()
+    mockExecFileSync
+      .mockReturnValueOnce('abc123\r\n/repo\r\n')
+      .mockReturnValueOnce('git@github.com:owner/repo.git\n')
+
+    expect(collectGitMetadata('/repo')).toEqual({
+      commit: 'abc123',
+      rootDir: '/repo',
+      remoteUrl: 'https://github.com/owner/repo',
+      commitUrl: 'https://github.com/owner/repo/commit/abc123',
+    })
+  })
+
+  test('commit and rootDir come from a single `rev-parse` spawn', () => {
+    mockExecFileSync.mockReset()
+    mockExecFileSync
+      .mockReturnValueOnce('abc123\n/repo\n')
+      .mockReturnValueOnce('git@github.com:owner/repo.git\n')
+
+    collectGitMetadata('/repo')
+
+    expect(mockExecFileSync).toHaveBeenCalledTimes(2)
+    expect(mockExecFileSync.mock.calls[0]?.[1]).toEqual([
+      'rev-parse',
+      'HEAD',
+      '--show-toplevel',
+    ])
+  })
+
   test('omits commitUrl when no remote URL is configured', () => {
     mockExecFileSync.mockReset()
     mockExecFileSync
-      .mockReturnValueOnce('abc123\n')
-      .mockReturnValueOnce('/repo\n')
+      .mockReturnValueOnce('abc123\n/repo\n')
       .mockImplementationOnce(() => {
         throw new Error('no remote')
       })

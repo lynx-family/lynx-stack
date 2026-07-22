@@ -10,11 +10,11 @@ function toBase64(bytes: Uint8Array): string {
   for (const b of bytes) {
     bin += String.fromCharCode(b);
   }
-  return window.btoa(bin);
+  return globalThis.btoa(bin);
 }
 
 function fromBase64(base64: string): Uint8Array {
-  const bin = window.atob(base64);
+  const bin = globalThis.atob(base64);
   const out = new Uint8Array(bin.length);
   let i = 0;
   for (const ch of bin) {

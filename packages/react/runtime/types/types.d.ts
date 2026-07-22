@@ -24,6 +24,7 @@ declare global {
   declare const __ALOG_ELEMENT_API__: boolean | undefined;
   declare const __ENABLE_SSR__: boolean;
   declare const __GLOBAL_PROPS_MODE__: 'reactive' | 'event' | undefined;
+  declare const __LAZY_BUNDLE_FETCHER__: 'FetchBundle' | 'QueryComponent';
 
   declare function __CreatePage(componentId: string, cssId: number): FiberElement;
   declare function __CreateElement(
@@ -106,6 +107,12 @@ declare global {
     element: FiberElement,
     options: FlushOptions,
   ): void;
+  declare function __LoadStyleSheet(
+    sectionName: string,
+    bundleUrl: string,
+  ): StyleSheet | null;
+  declare function __AdoptStyleSheet(styleSheet: StyleSheet): void;
+  declare interface StyleSheet {}
   declare function __UpdateListCallbacks(
     list: FiberElement,
     componentAtIndex: ComponentAtIndexCallback | null,
@@ -291,7 +298,10 @@ declare module '@lynx-js/types/background' {
     getNativeLynx(): NativeLynx;
     reportError(e: Error): void;
     QueryComponent?(source: string, callback: (result: any) => void): void;
-    loadLazyBundle?<T extends { default: React.ComponentType<any> }>(source: string): Promise<T>;
+    loadLazyBundle?<T extends { default: React.ComponentType<any> }>(
+      source: string,
+      mode?: 'sync' | 'async',
+    ): Promise<T>;
 
     /**
      * @since 2.14

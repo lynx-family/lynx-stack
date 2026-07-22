@@ -1,5 +1,83 @@
 # @lynx-js/react
 
+## 0.123.0
+
+### Minor Changes
+
+- Stop injecting `webpackChunkName` into dynamic imports so lazy bundle intermediate files stay inside the output directory. ([#2961](https://github.com/lynx-family/lynx-stack/pull/2961))
+
+  The ReactLynx transform injected `webpackChunkName: "<request>-react__<layer>"`, so a dynamic import resolving above the compiler context (e.g. `import('../../Foo.js')`) leaked `../` into `[name]`/`[id]` and the intermediate js/css/hmr files escaped the output directory. Async chunks now keep rspack's own ids, `__webpack_require__.lynx_aci` maps them by chunk id, and each lazy bundle's intermediate JS and CSS are emitted under `.rspeedy/async/<bundle-name>/<layer>.js` and `<layer>.css` next to its other intermediate outputs (`tasm.json`, `debug-metadata.json`, CSS hot-update files). Explicit `webpackChunkName` comments written by users are still honored and keep the user-controlled `[name]` placement. Main-thread chunks no longer emit CSS hot-update files — CSS only exists on the background thread, and the main-thread HMR runtime receives updates from it.
+
+  These packages release together and must be upgraded together: `@lynx-js/react-webpack-plugin` and `@lynx-js/css-extract-webpack-plugin` require `@lynx-js/template-webpack-plugin` `^0.13.0`, and `@lynx-js/react-rsbuild-plugin` requires `@lynx-js/react` `^0.123.0`.
+
+- Add the `lynx.fetchBundle`-based lazy bundle loader. Control whether the first ([#2584](https://github.com/lynx-family/lynx-stack/pull/2584))
+  screen blocks on the fetch with the `mode` import attribute:
+
+  ```js
+  import('./Foo.jsx', { with: { mode: 'sync' } }); // block the first screen
+  import('./Foo.jsx', { with: { mode: 'async' } }); // default, non-blocking
+  ```
+
+  Enable it by setting `engineVersion: '3.9'` (or higher) in `pluginReactLynx`. The
+  lazy bundle's main-thread section is bytecoded by default (skipped in dev or when
+  `DEBUG` includes `rspeedy`).
+
+- Add `firstScreenSyncTiming: 'manual'` and a new `markFirstScreenSyncReady()` API exported by `@lynx-js/react`. ([#2826](https://github.com/lynx-family/lynx-stack/pull/2826))
+
+  In `'manual'` mode, the main thread holds the UI control after the first screen until the business calls `markFirstScreenSyncReady()`, so the handover timing to the background thread (for hydration) is fully controlled by the user. The API can be called from both threads (a background-thread call is forwarded to the main thread) and takes effect once the first-screen tree has finished rendering.
+
+  ```js
+  pluginReactLynx({
+    firstScreenSyncTiming: 'manual',
+  });
+  ```
+
+  ```js
+  import { markFirstScreenSyncReady } from '@lynx-js/react';
+
+  markFirstScreenSyncReady();
+  ```
+
+### Patch Changes
+
+- Add `compat.legacySlot` to `pluginReactLynx`. When enabled, dynamic children are compiled to the pre-SlotV2 form (JSX `children` + `wrapper` elements + `__DynamicPartChildren`/`__DynamicPartSlot` symbols instead of `$0`/`$1` slot props + `SlotV2`), so the compiled output stays compatible with legacy runtimes without `SlotV2` support (`< 0.120.0`, which shipped the SlotV2 refactor in #1764) — e.g. a standalone lazy bundle consumed by a host App that ships an older runtime. ([#2947](https://github.com/lynx-family/lynx-stack/pull/2947))
+
+  ```js
+  import { defineConfig } from '@lynx-js/rspeedy';
+  import { pluginReactLynx } from '@lynx-js/react-rsbuild-plugin';
+
+  export default defineConfig({
+    plugins: [
+      pluginReactLynx({
+        compat: {
+          legacySlot: true,
+        },
+      }),
+    ],
+  });
+  ```
+
+  The default (SlotV2) codegen is unchanged, and the runtime keeps supporting both forms.
+
+- Keep DevTools Lepus ID mapping wired to the shared snapshot instance manager, so production devtools builds can resolve native unique IDs without importing the full snapshot runtime into the main-thread bundle. ([#2960](https://github.com/lynx-family/lynx-stack/pull/2960))
+
+- Add ALOG diagnostics for list flush and hydration update information. ([#2975](https://github.com/lynx-family/lynx-stack/pull/2975))
+
+- Fix the error when using dynamic `key` with spread attributes on `<list-item>`. ([#1948](https://github.com/lynx-family/lynx-stack/pull/1948))
+
+  **Error Message:**
+
+  ```text
+  Native error:
+  code: 220201
+  message: Error for illegal list item-key in parse insert with indexes: [0, ]
+  fix_suggestion: Please check the legality of the item-key.
+  ```
+
+- Preserve list item platform info when item-key is provided through spread props. ([#2918](https://github.com/lynx-family/lynx-stack/pull/2918))
+
+- Bind the snapshot runtime via `import` in development instead of inline `require('@lynx-js/react/internal')`, so dev builds work with async (promise) externals. Dev snapshot creators now receive the runtime as a parameter (staying self-contained for cross-thread HMR `DEV_ONLY_AddSnapshot`) with a temporary `__runtime__ || require(...)` fallback for older runtimes that call creators with a single argument; production creators keep the statically tree-shakeable module-scope reference. ([#2939](https://github.com/lynx-family/lynx-stack/pull/2939))
+
 ## 0.122.1
 
 ### Patch Changes

@@ -78,7 +78,7 @@ jobs:
           # The build job runs on lynx-ubuntu-26.04-xlarge which writes to a
           # different OSS bucket than this physical-exclusive runner, so we
           # tolerate cache misses and let `pnpm turbo build` rebuild locally.
-          key: turbo-v4-${{ runner.os }}-${{ hashFiles('**/packages/**/src/**/*.rs') }}-${{ github.sha }}
+          key: turbo-v4-${{ runner.os }}-${{ hashFiles('packages/**/src/**/*.rs') }}-${{ github.sha }}
       - name: Build
         run: |
           pnpm turbo build
@@ -124,6 +124,7 @@ jobs:
           overwrite: true
       - name: Run benchmark (walltime)
         run: |
+          sync; echo 1 > /proc/sys/vm/drop_caches
           export HOME=/root
           . "$HOME/.cargo/env"
           taskset -c 176-191 codspeed run --mode walltime -- pnpm -r run --workspace-concurrency=1 bench

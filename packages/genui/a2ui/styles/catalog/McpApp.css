@@ -1,0 +1,47 @@
+/* Copyright 2026 The Lynx Authors. All rights reserved.
+ * Licensed under the Apache License Version 2.0 that can be found in the
+ * LICENSE file in the root directory of this source tree. */
+
+@import "../theme.css";
+
+.a2ui-mcp-app,
+.a2ui-mcp-app-frame {
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.a2ui-mcp-app {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  align-self: stretch;
+  flex-shrink: 0;
+  min-width: 0;
+  overflow: hidden;
+  border: 1px solid var(--a2ui-color-border-strong);
+  border-radius: 16px;
+  background-color: var(--a2ui-color-surface-muted);
+  box-shadow: 0 8px 24px var(--a2ui-color-overlay);
+}
+
+.a2ui-mcp-app-frame {
+  display: flex;
+  align-self: stretch;
+  flex-shrink: 0;
+  min-width: 0;
+}
+
+.a2ui-mcp-app-fallback {
+  width: 100%;
+  min-height: 40px;
+  padding: 12px;
+  border-radius: 8px;
+  background-color: var(--a2ui-color-surface-muted);
+  box-sizing: border-box;
+}
+
+.a2ui-mcp-app-fallback-text {
+  color: var(--a2ui-color-text-muted);
+  font-size: 12px;
+  line-height: 16px;
+}

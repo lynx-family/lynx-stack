@@ -1,6 +1,6 @@
 {
   "name": "@lynx-js/web-core",
-  "version": "0.22.1",
+  "version": "0.22.2",
   "description": "The Web Platform of Lynx / Lynx for Web",
   "repository": {
     "type": "git",
@@ -74,6 +74,7 @@
     "@rsbuild/plugin-source-build": "1.0.5",
     "@rslib/core": "catalog:rslib",
     "@rstest/core": "catalog:rstest",
+    "@types/node": "^24.10.13",
     "binaryen": "^125.0.0",
     "eslint-plugin-compat": "^6.2.0",
     "fb-dotslash": "^0.5.8",

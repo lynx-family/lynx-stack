@@ -1,6 +1,6 @@
 {
   "name": "@lynx-js/rspeedy",
-  "version": "0.15.2",
+  "version": "0.16.0",
   "description": "A webpack/rspack-based frontend toolchain for Lynx",
   "keywords": [
     "webpack",
@@ -87,7 +87,7 @@
     "typia-rspack-plugin": "3.0.1"
   },
   "peerDependencies": {
-    "typescript": "5.1.6 - 5.9.x"
+    "typescript": "5.1.6 - 6.0.x"
   },
   "peerDependenciesMeta": {
     "typescript": {

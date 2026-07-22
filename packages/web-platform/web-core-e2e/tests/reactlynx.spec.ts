@@ -2,7 +2,7 @@
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
 import { test, expect, swipe, dragAndHold } from '@lynx-js/playwright-fixtures';
-import type { Page } from '@playwright/test';
+import type { Locator, Page } from '@playwright/test';
 import type { LynxViewElement } from '@lynx-js/web-core/client';
 const isSSR = !!process.env['ENABLE_SSR'];
 
@@ -53,6 +53,25 @@ const expectHasText = async (page: Page, text: string) => {
 
 const expectNoText = async (page: Page, text: string) => {
   await expect(page.getByText(text)).toHaveCount(0);
+};
+
+const getInShadowCSS = (locator: Locator) => {
+  return locator.evaluate(async (element) => {
+    const shadowRoot = element.shadowRoot!;
+    const inlineCSS = Array.from(
+      shadowRoot.querySelectorAll('style'),
+      style => style.textContent ?? '',
+    );
+    const linkedCSS = await Promise.all(
+      Array.from(
+        shadowRoot.querySelectorAll<HTMLLinkElement>(
+          'link[rel="stylesheet"]',
+        ),
+        link => fetch(link.href).then(response => response.text()),
+      ),
+    );
+    return inlineCSS.concat(linkedCSS).join('\n');
+  });
 };
 
 const goto = async (
@@ -339,6 +358,14 @@ test.describe('reactlynx3 tests', () => {
       await expect(page.locator('#frame-ready')).toHaveText('frame:ready');
     });
 
+    test('api-frame-shadow-css', async ({ page }) => {
+      test.skip(isSSR, 'Nested frame source loading runs on the client');
+      await goto(page, 'api-frame-src');
+      await expect(page.locator('#frame-ready')).toHaveText('frame:ready');
+      const inShadowCSS = await getInShadowCSS(page.locator('#target'));
+      expect(inShadowCSS).toMatch(/:host\s*,\s*lynx-view\s*\{/);
+    });
+
     test('api-frame-data', async ({ page }, { title }) => {
       await goto(page, title);
       await expect(page.locator('#frame-data')).toHaveText('data:from-data');
@@ -369,14 +396,17 @@ test.describe('reactlynx3 tests', () => {
 
     test('api-frame-auto-height', async ({ page }, { title }) => {
       await goto(page, title);
-      await expect(page.locator('#target')).toHaveAttribute(
+      const target = page.locator('#target');
+      await expect(target).toHaveAttribute(
         'auto-height',
         'true',
       );
-      await expect(page.locator('#target')).not.toHaveAttribute(
+      await expect(target).not.toHaveAttribute(
         'height',
         'auto',
       );
+      await expect(target).toHaveCSS('contain', 'content');
+      expect((await target.boundingBox())?.height).toBeGreaterThan(0);
     });
 
     test('api-frame-auto-width', async ({ page }, { title }) => {
@@ -2043,6 +2073,33 @@ test.describe('reactlynx3 tests', () => {
         'rgb(0, 128, 0)',
       ); // green;
     });
+    test('api-devtool-event', async ({ page }, { title }) => {
+      await goto(page, title);
+      const target = page.locator('#target');
+      await expect(target).toHaveText('ready');
+
+      const data = JSON.stringify({ key: 'value' });
+      const detail = await page.evaluate((data) => {
+        const lynxView = document.querySelector(
+          'lynx-view',
+        ) as LynxViewElement;
+        const devtoolMessage = new Promise((resolve) => {
+          lynxView.addEventListener(
+            'devtoolMessage',
+            (event) => resolve((event as CustomEvent).detail),
+            { once: true },
+          );
+        });
+        lynxView.sendDevtoolEvent('eventname', data);
+        return devtoolMessage;
+      }, data);
+
+      await expect(target).toHaveText(data);
+      expect(detail).toEqual({
+        type: 'PreactDevtools',
+        data,
+      });
+    });
     test('api-invoke-success', async ({ page }, { title }) => {
       await goto(page, title);
       await wait(100);
@@ -2479,6 +2536,14 @@ test.describe('reactlynx3 tests', () => {
   test.describe('elements', () => {
     test.describe('lynx-view', () => {
       const elementName = 'lynx-view';
+      test('lynx-view styles are included in its shadow root', async ({ page }) => {
+        await goto(page, 'basic-element-lynx-view-not-auto');
+        await wait(100);
+        const inShadowCSS = await getInShadowCSS(
+          page.locator('lynx-view'),
+        );
+        expect(inShadowCSS).toMatch(/:host\s*,\s*lynx-view\s*\{/);
+      });
       test('basic-element-lynx-view-not-auto', async ({ page }, { title }) => {
         await goto(page, title);
         await wait(100);

@@ -86,61 +86,6 @@ jobs:
       runs-on: lynx-ubuntu-26.04-medium
       run: pnpm eslint . --flag v10_config_lookup_from_file
 
-  ui-judge:
-    needs: build
-    uses: ./.github/workflows/workflow-test.yml
-    secrets:
-      MIDSCENE_MODEL_API_KEY: ${{ secrets.MIDSCENE_MODEL_API_KEY }}
-      MIDSCENE_MODEL_BASE_URL: ${{ secrets.MIDSCENE_MODEL_BASE_URL }}
-      MIDSCENE_MODEL_FAMILY: ${{ secrets.MIDSCENE_MODEL_FAMILY }}
-      MIDSCENE_MODEL_NAME: ${{ secrets.MIDSCENE_MODEL_NAME }}
-      MIDSCENE_OPENAI_INIT_CONFIG_JSON: ${{ secrets.MIDSCENE_OPENAI_INIT_CONFIG_JSON }}
-    with:
-      runs-on: lynx-custom-container
-      is-web: true
-      upload-codecov: false
-      artifact-name: ui-judge-results
-      artifact-path: ui-judge-results.json
-      artifact-if-no-files-found: error
-      web-report-name: ui-judge-playwright-report
-      web-report-path: packages/genui/ui-judge/playwright-report
-      run: |
-        cd "$GITHUB_WORKSPACE"
-        set -eu
-        export UI_JUDGE_RESULT_FILE="$GITHUB_WORKSPACE/ui-judge-results.json"
-        if [ -z "${MIDSCENE_MODEL_NAME:-}" ] || [ -z "${MIDSCENE_MODEL_API_KEY:-}" ]; then
-          UI_JUDGE_RESULT_ERROR_MESSAGE="Midscene secrets are unavailable; UI Judge model test was skipped." node .github/scripts/write-ui-judge-result.mjs
-          echo "Midscene secrets are unavailable; skipping UI Judge."
-          exit 0
-        fi
-        echo "open files limit before: soft=$(ulimit -Sn), hard=$(ulimit -Hn)"
-        ulimit -Sn "$(ulimit -Hn)"
-        echo "open files limit after: soft=$(ulimit -Sn), hard=$(ulimit -Hn)"
-        pnpm --filter @lynx-js/ui-judge run test:playwright
-
-  ui-judge-comment:
-    needs: ui-judge
-    if: always()
-    runs-on: lynx-ubuntu-26.04-medium
-    permissions:
-      contents: read
-      issues: write
-      pull-requests: write
-    steps:
-      - uses: actions/checkout@93cb6efe18208431cddfb8368fd83d5badbf9bfd # v5
-        if: ${{ github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name == github.repository && needs.ui-judge.result != 'skipped' && needs.ui-judge.result != 'cancelled' }}
-        with:
-          persist-credentials: false
-      - uses: actions/download-artifact@634f93cb2916e3fdff6788551b99b062d0335ce0 # v5
-        if: ${{ github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name == github.repository && needs.ui-judge.result != 'skipped' && needs.ui-judge.result != 'cancelled' }}
-        with:
-          name: ui-judge-results
-      - name: Comment UI Judge result
-        if: ${{ github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name == github.repository && needs.ui-judge.result != 'skipped' && needs.ui-judge.result != 'cancelled' }}
-        uses: ./.github/actions/ui-judge-comment
-        with:
-          result-file: ui-judge-results.json
-
   lighthouse:
     needs: build
     uses: ./.github/workflows/workflow-test.yml
@@ -302,6 +247,11 @@ jobs:
     uses: ./.github/workflows/rust.yml
     secrets:
       CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
+      MIDSCENE_MODEL_API_KEY: ${{ secrets.MIDSCENE_MODEL_API_KEY }}
+      MIDSCENE_MODEL_BASE_URL: ${{ secrets.MIDSCENE_MODEL_BASE_URL }}
+      MIDSCENE_MODEL_FAMILY: ${{ secrets.MIDSCENE_MODEL_FAMILY }}
+      MIDSCENE_MODEL_NAME: ${{ secrets.MIDSCENE_MODEL_NAME }}
+      MIDSCENE_OPENAI_INIT_CONFIG_JSON: ${{ secrets.MIDSCENE_OPENAI_INIT_CONFIG_JSON }}
   test-type:
     needs: build
     uses: ./.github/workflows/workflow-test.yml
@@ -328,11 +278,6 @@ jobs:
     uses: ./.github/workflows/workflow-test.yml
     secrets:
       CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
-      MIDSCENE_MODEL_API_KEY: ${{ secrets.MIDSCENE_MODEL_API_KEY }}
-      MIDSCENE_MODEL_BASE_URL: ${{ secrets.MIDSCENE_MODEL_BASE_URL }}
-      MIDSCENE_MODEL_FAMILY: ${{ secrets.MIDSCENE_MODEL_FAMILY }}
-      MIDSCENE_MODEL_NAME: ${{ secrets.MIDSCENE_MODEL_NAME }}
-      MIDSCENE_OPENAI_INIT_CONFIG_JSON: ${{ secrets.MIDSCENE_OPENAI_INIT_CONFIG_JSON }}
     name: Kitten Lynx Android Emulator Test
     with:
       runs-on: lynx-ubuntu-26.04-physical-medium
@@ -382,13 +327,8 @@ jobs:
         done
         echo "Lynx Explorer is running."
 
-        # 8. Run the tests
+        # 8. Run Kitten Lynx's Android tests.
         pnpm --filter @lynx-js/kitten-lynx-test-infra run test --coverage --reporter=github-actions --reporter=dot --reporter=junit --outputFile=test-report.junit.xml --coverage.reporter='json' --coverage.reporter='text' --testTimeout=50000 --no-cache --logHeapUsage --silent
-        if [ -z "${MIDSCENE_MODEL_NAME:-}" ] || [ -z "${MIDSCENE_MODEL_API_KEY:-}" ]; then
-          echo "Midscene secrets are unavailable; skipping UI Judge Android integration."
-        else
-          UI_JUDGE_ANDROID_INTEGRATION=1 pnpm --filter @lynx-js/ui-judge run test:android --coverage --reporter=github-actions --reporter=dot --reporter=junit --outputFile=ui-judge-android-test-report.junit.xml --coverage.reporter='json' --coverage.reporter='text' --testTimeout=50000 --no-cache --logHeapUsage --silent
-        fi
 
   test-typos:
     runs-on: lynx-ubuntu-26.04-medium
@@ -451,8 +391,6 @@ jobs:
       - benchmark
       - code-style-check
       - eslint
-      - ui-judge
-      - ui-judge-comment
       # - playwright-linux
       - playwright-web-elements
       - test-api

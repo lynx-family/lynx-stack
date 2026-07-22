@@ -1,6 +1,6 @@
 {
   "name": "@lynx-js/genui",
-  "version": "0.0.6",
+  "version": "0.1.0",
   "description": "Generative UI for Lynx.",
   "repository": {
     "type": "git",
@@ -74,7 +74,21 @@
       "default": "./openui/dist/openui-prompt/index.js"
     },
     "./openui/skill": "./openui/skills/lynx-openui/SKILL.md",
-    "./openui/styles/theme.css": "./openui/styles/theme.css"
+    "./openui/styles/theme.css": "./openui/styles/theme.css",
+    "./mcp-apps": {
+      "types": "./mcp-apps/dist/index.d.ts",
+      "default": "./mcp-apps/dist/index.js"
+    },
+    "./mcp-apps/render": {
+      "types": "./mcp-apps/dist/render/index.d.ts",
+      "default": "./mcp-apps/dist/render/index.js"
+    },
+    "./mcp-apps/protocol": {
+      "types": "./mcp-apps/dist/protocol.d.ts",
+      "default": "./mcp-apps/dist/protocol.js"
+    },
+    "./mcp-apps/render/styles.css": "./mcp-apps/dist/render/styles.css",
+    "./mcp-apps/styles.css": "./mcp-apps/dist/render/styles.css"
   },
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",
@@ -105,7 +119,9 @@
     "openui/dist",
     "openui/skills",
     "openui/styles",
-    "openui/README.md"
+    "openui/*.md",
+    "openui/docs/*.md",
+    "mcp-apps/dist"
   ],
   "scripts": {
     "build": "pnpm run clean && tsc --project tsconfig.build.json",
@@ -123,6 +139,7 @@
     "@lynx-js/genui-a2ui-catalog-extractor": "workspace:*",
     "@lynx-js/genui-a2ui-prompt": "workspace:*",
     "@lynx-js/genui-cli": "workspace:*",
+    "@lynx-js/genui-mcp-apps": "workspace:*",
     "@lynx-js/genui-openui": "workspace:*",
     "@lynx-js/qrcode-rsbuild-plugin": "workspace:^",
     "@lynx-js/react": "workspace:^",

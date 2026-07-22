@@ -79,9 +79,9 @@ it('should allow result to return webpack chunk', () => {
 });
 
 it('should have async chunks', () => {
-  const LAYER = __LEPUS__ ? 'react__main-thread' : 'react__background';
+  const LAYER = __LEPUS__ ? 'main-thread' : 'background';
 
   expect(existsSync(
-    join(__dirname, `foo.js-${LAYER}.js`),
+    join(__dirname, `_react_${LAYER}_foo_js.js`),
   )).toBeTruthy();
 });

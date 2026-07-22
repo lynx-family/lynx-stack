@@ -1,5 +1,29 @@
 # @lynx-js/lynx-bundle-rslib-config
 
+## 0.6.0
+
+### Minor Changes
+
+- Keep JsBytecode debug info (per-function `pc2line` tables) out of external bundles, significantly reducing the size of bytecode-encoded main thread chunks. ([#2955](https://github.com/lynx-family/lynx-stack/pull/2955))
+
+- Add an `enableJsBytecode` option to control compiling main thread chunks to JsBytecode. Defaults to `false` when `NODE_ENV` is `'development'`, `true` otherwise. ([#2954](https://github.com/lynx-family/lynx-stack/pull/2954))
+
+- Support async externals in `defineExternalBundleRslibConfig`. An external can now use the object form `{ libraryName, async: true }` to emit a `promise` external, so importing modules await the library namespace mounted as a Promise by the host application and pick subpath segments after it resolves. ([#2928](https://github.com/lynx-family/lynx-stack/pull/2928))
+
+  The output library type also switches from Rslib's default `commonjs-static` to `commonjs2`, so an async entry exports its namespace Promise as a whole instead of a static per-name copy that would read `undefined`. A sync entry exports the same namespace object as before.
+
+- `output.externalsPresets` entries accept the `{ async: true }` object form, so a produced external bundle awaits its ReactLynx externals (the `promise` external) before reading a subpath — required on web. External bundle builds also flag their react loaders as `isExternalBundle` so ReactLynx snapshots use the `__Card__` entry name. ([#2934](https://github.com/lynx-family/lynx-stack/pull/2934))
+
+### Patch Changes
+
+- Support enabling preact devtools for external bundles via the `REACT_DEVTOOL` environment variable. ([#2980](https://github.com/lynx-family/lynx-stack/pull/2980))
+
+  When `REACT_DEVTOOL` is set, `defineExternalBundleRslibConfig` now keeps function and class names during minification (`keep_fnames`/`keep_classnames` on both `compress` and `mangle`), which devtools needs to resolve component names (`type.name`) and to reconstruct the hook tree (it matches minified stack frames by function name). The default output is unchanged when `REACT_DEVTOOL` is unset. This mirrors `pluginMinify` in `@lynx-js/rspeedy` (#2880).
+
+- Updated dependencies [[`60cb231`](https://github.com/lynx-family/lynx-stack/commit/60cb23172e40af8dd62a5f961a9f053c482030fc)]:
+  - @lynx-js/web-core@0.22.2
+  - @lynx-js/runtime-wrapper-webpack-plugin@0.2.2
+
 ## 0.5.1
 
 ### Patch Changes

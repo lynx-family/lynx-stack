@@ -7,6 +7,7 @@ import citywalkList from './mock/basic/citywalk-list.json';
 import fridgeSearch from './mock/basic/fridge-search.json';
 import hangzhouWeatherTrend from './mock/basic/hangzhou-weather-trend.json';
 import lazyComponent from './mock/basic/lazy-component.js';
+import mcpApp from './mock/basic/mcp-app.js';
 import pieChartChinaEvShare from './mock/basic/pie-chart-china-ev-share.json';
 import recs from './mock/basic/recs.json';
 import tripPlanner from './mock/basic/trip-planner.json';
@@ -123,6 +124,15 @@ export const EXTENDED_STATIC_DEMOS: StaticDemo[] = [
     hasStaticJson: false,
     tags: tagsFromMessages(lazyComponent),
     messages: lazyComponent,
+  },
+  {
+    id: 'mcp-app',
+    title: 'MCP App Frame',
+    description:
+      'Embeds the playground MCP App bundle in an A2UI surface through a Lynx frame.',
+    hasStaticJson: false,
+    tags: tagsFromMessages(mcpApp),
+    messages: mcpApp,
   },
   {
     id: 'cast-grid',

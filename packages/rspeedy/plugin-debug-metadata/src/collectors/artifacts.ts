@@ -22,16 +22,12 @@ import { computeChunkReleaseKey, computeReleaseKey } from '../release-banner.js'
  */
 export function collectArtifacts(
   compilation: Rspack.Compilation,
-  entryNames: string[],
+  chunkGroups: Rspack.ChunkGroup[],
 ): Artifact[] {
   const artifacts: Artifact[] = []
   const seen = new Set<string>()
 
-  for (const entryName of entryNames) {
-    const chunkGroup = compilation.namedChunkGroups.get(entryName)
-      ?? compilation.entrypoints.get(entryName)
-    if (!chunkGroup) continue
-
+  for (const chunkGroup of chunkGroups) {
     for (const chunk of chunkGroup.chunks) {
       for (const file of chunk.files) {
         if (!isMappableAsset(file)) continue

@@ -136,7 +136,7 @@ function fakeCompilation(args: {
 describe('collectLazyBundleEntryResources', () => {
   test('resolves a single dynamic import to its target resource', () => {
     const dep = { id: 'import-LazyComponent' }
-    const { compilation } = fakeCompilation({
+    const { compilation, cg } = fakeCompilation({
       name: 'LazyComponent.js-react__main-thread',
       origins: [{ blocks: [{ deps: [dep] }] }],
       resolveTo: new Map([[dep, '/abs/src/LazyComponent.tsx']]),
@@ -144,7 +144,7 @@ describe('collectLazyBundleEntryResources', () => {
     expect(
       collectLazyBundleEntryResources(
         compilation,
-        'LazyComponent.js-react__main-thread',
+        cg as Rspack.ChunkGroup,
       ),
     ).toEqual(['/abs/src/LazyComponent.tsx'])
   })
@@ -171,7 +171,12 @@ describe('collectLazyBundleEntryResources', () => {
             : { resource: '/abs/other.tsx' },
       },
     } as unknown as Rspack.Compilation
-    expect(collectLazyBundleEntryResources(compilation, 'name')).toEqual([
+    expect(
+      collectLazyBundleEntryResources(
+        compilation,
+        cg as unknown as Rspack.ChunkGroup,
+      ),
+    ).toEqual([
       '/abs/target.tsx',
     ])
   })
@@ -197,18 +202,29 @@ describe('collectLazyBundleEntryResources', () => {
         getResolvedModule: () => ({ resource: '/abs/shared.tsx' }),
       },
     } as unknown as Rspack.Compilation
-    expect(collectLazyBundleEntryResources(compilation, 'name')).toEqual([
+    expect(
+      collectLazyBundleEntryResources(
+        compilation,
+        cg as unknown as Rspack.ChunkGroup,
+      ),
+    ).toEqual([
       '/abs/shared.tsx',
     ])
   })
 
-  test('returns [] when the named chunkGroup does not exist', () => {
+  test('returns [] for a chunk group with no origins', () => {
     const compilation = {
-      namedChunkGroups: new Map(),
+      compiler: { webpack: fakeWebpack },
       chunkGraph: { getBlockChunkGroup: () => null },
       moduleGraph: { getResolvedModule: () => null },
     } as unknown as Rspack.Compilation
-    expect(collectLazyBundleEntryResources(compilation, 'missing')).toEqual([])
+    const cg = { origins: [] }
+    expect(
+      collectLazyBundleEntryResources(
+        compilation,
+        cg as unknown as Rspack.ChunkGroup,
+      ),
+    ).toEqual([])
   })
 
   test('returns [] when getResolvedModule yields no resource', () => {
@@ -221,7 +237,12 @@ describe('collectLazyBundleEntryResources', () => {
       chunkGraph: { getBlockChunkGroup: () => cg },
       moduleGraph: { getResolvedModule: () => null },
     } as unknown as Rspack.Compilation
-    expect(collectLazyBundleEntryResources(compilation, 'name')).toEqual([])
+    expect(
+      collectLazyBundleEntryResources(
+        compilation,
+        cg as unknown as Rspack.ChunkGroup,
+      ),
+    ).toEqual([])
   })
 
   test('drops non-absolute resources (defensive guard against virtual modules)', () => {
@@ -236,7 +257,12 @@ describe('collectLazyBundleEntryResources', () => {
         getResolvedModule: () => ({ resource: 'relative/x.tsx' }),
       },
     } as unknown as Rspack.Compilation
-    expect(collectLazyBundleEntryResources(compilation, 'name')).toEqual([])
+    expect(
+      collectLazyBundleEntryResources(
+        compilation,
+        cg as unknown as Rspack.ChunkGroup,
+      ),
+    ).toEqual([])
   })
 
   test('returns [] when chunkGraph or moduleGraph is unavailable', () => {
@@ -244,7 +270,12 @@ describe('collectLazyBundleEntryResources', () => {
     const compilation = {
       namedChunkGroups: new Map([['name', cg]]),
     } as unknown as Rspack.Compilation
-    expect(collectLazyBundleEntryResources(compilation, 'name')).toEqual([])
+    expect(
+      collectLazyBundleEntryResources(
+        compilation,
+        cg as unknown as Rspack.ChunkGroup,
+      ),
+    ).toEqual([])
   })
 
   test('returns [] for a plain entry origin that has no importer module', () => {
@@ -258,7 +289,10 @@ describe('collectLazyBundleEntryResources', () => {
       moduleGraph: { getResolvedModule: () => null },
     } as unknown as Rspack.Compilation
     expect(
-      collectLazyBundleEntryResources(compilation, 'card__background'),
+      collectLazyBundleEntryResources(
+        compilation,
+        cg as unknown as Rspack.ChunkGroup,
+      ),
     ).toEqual([])
   })
 })

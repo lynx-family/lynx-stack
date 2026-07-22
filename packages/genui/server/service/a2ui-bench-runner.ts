@@ -3,9 +3,8 @@
 // LICENSE file in the root directory of this source tree.
 
 import { getA2UIAgentService } from './a2ui-agent';
-import type { ChatMessage } from './a2ui-agent';
 import { resolveBenchCatalog } from './a2ui-bench-catalog';
-import { runBenchPreview } from './a2ui-bench-preview';
+// import { runBenchPreview } from './a2ui-bench-preview';
 import { getBenchJobStore } from './a2ui-bench-store';
 import type {
   BenchCatalogLabel,
@@ -18,6 +17,7 @@ import type {
   BenchRunResult,
   BenchScenarioRequest,
 } from './a2ui-bench-types';
+import type { ChatMessage } from './common/types';
 
 interface BenchRunItem {
   group: BenchGroupRequest;
@@ -185,6 +185,7 @@ async function runOne(
     emitRunPhase(jobId, item, 'validate');
     const agentMs = performance.now() - startedAt;
     const outputChars = result.text.length;
+    /*
     const preview = result.ok
       ? await runBenchPreviewForItem(jobId, request, item, result.messages)
       : {
@@ -194,6 +195,7 @@ async function runOne(
         renderMs: 0,
         ttiMs: 0,
       };
+    */
     return {
       id: runId,
       groupId: item.group.id,
@@ -208,20 +210,25 @@ async function runOne(
       catalog: catalogLabel,
       tokens: parseTotalTokens(result.usage),
       agentMs: Math.round(agentMs),
-      fmpMs: preview.fmpMs,
-      ttiMs: preview.ttiMs,
-      renderMs: preview.renderMs,
+      // fmpMs: preview.fmpMs,
+      fmpMs: 0,
+      // ttiMs: preview.ttiMs,
+      ttiMs: 0,
+      // renderMs: preview.renderMs,
+      renderMs: 0,
       attempts: result.attempts,
-      judgeScore: preview.judgeScore,
+      // judgeScore: preview.judgeScore,
+      judgeScore: 0,
       messageCount: result.messages.length,
       outputChars,
-      errors: [...result.errors, ...preview.errors],
+      // errors: [...result.errors, ...preview.errors],
+      errors: result.errors,
       finishReason: result.finishReason,
       usage: result.usage,
       messages: result.messages,
-      ...(preview.screenshotDataUrl
-        ? { screenshotDataUrl: preview.screenshotDataUrl }
-        : {}),
+      // ...(preview.screenshotDataUrl
+      //   ? { screenshotDataUrl: preview.screenshotDataUrl }
+      //   : {}),
       text: result.text,
     };
   } catch (error) {
@@ -254,6 +261,7 @@ async function runOne(
   }
 }
 
+/*
 async function runBenchPreviewForItem(
   jobId: string,
   request: BenchJobRequest,
@@ -298,6 +306,7 @@ async function runBenchPreviewForItem(
   }
   return preview;
 }
+*/
 
 function summarizeGroup(
   group: BenchGroupRequest,
@@ -378,10 +387,11 @@ function buildReport(
     },
     capabilities: {
       agent: 'enabled',
-      renderMetrics: request.settings.renderMetricsEnabled
-        ? 'enabled'
-        : 'disabled',
-      judge: request.settings.judgeEnabled ? 'enabled' : 'disabled',
+      // renderMetrics: request.settings.renderMetricsEnabled
+      //   ? 'enabled'
+      //   : 'disabled',
+      renderMetrics: 'disabled',
+      judge: 'disabled',
     },
     warnings,
     groups: request.groups,

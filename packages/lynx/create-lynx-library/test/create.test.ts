@@ -1,6 +1,7 @@
 // Copyright 2026 The Lynx Authors. All rights reserved.
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
+import { execFileSync } from 'node:child_process';
 import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
@@ -14,6 +15,15 @@ import {
 } from '../src/index.js';
 
 const tempDirs: string[] = [];
+
+function execNpm(args: string[], options: { cwd: string }): string {
+  const npmCommand = process.platform === 'win32' ? 'npm.cmd' : 'npm';
+  return execFileSync(npmCommand, args, {
+    ...options,
+    encoding: 'utf8',
+    shell: process.platform === 'win32',
+  });
+}
 
 afterEach(() => {
   for (const dir of tempDirs.splice(0)) {
@@ -123,11 +133,35 @@ describe('create-lynx-library', () => {
       './lynxtron': './lynxtron/index.cjs',
       './package.json': './package.json',
     });
+    expect(read(dir, 'android/build.gradle.kts')).toContain(
+      'javaClass.methods.firstOrNull { it.name == "setNamespace" }',
+    );
+    expect(read(dir, 'android/build.gradle.kts')).toContain(
+      'compileSdkVersion(35)',
+    );
+    expect(read(dir, 'android/build.gradle.kts')).toContain(
+      'minSdkVersion(23)',
+    );
+    expect(read(dir, 'android/src/main/AndroidManifest.xml')).toContain(
+      'package="com.example.button"',
+    );
+    expect(read(dir, 'example/lynx.config.ts')).toContain(
+      'main: \'./src/index.tsx\'',
+    );
+    expect(read(dir, 'example/src/index.tsx')).toContain(
+      'import { App } from \'./App\';',
+    );
+    expect(read(dir, 'README.md')).not.toContain(
+      '## NAPI Native Module',
+    );
+    expect(read(dir, 'README.md')).toContain(
+      'Platform native module typings live in `types/platform-native-module.d.ts`',
+    );
+    expect(read(dir, 'README.md')).not.toContain(
+      'NAPI native module typings live in `types/napi-native-module.d.ts`',
+    );
     expect(packageJson.devDependencies['@lynx-js/lynx-library-headers'])
       .toBe('*');
-    expect(packageJson.devDependencies['@lynx-js/weak-node-api']).toBe(
-      '^0.0.9',
-    );
     expect(read(dir, 'package.json')).toContain(
       '"build:lynxtron": "cmake -S lynxtron -B build/lynxtron -DCMAKE_BUILD_TYPE=Release && cmake --build build/lynxtron --config Release"',
     );
@@ -148,7 +182,7 @@ describe('create-lynx-library', () => {
       },
       ios: {
         sourceDir: 'ios',
-        podspecPath: 'ios/build.podspec',
+        podspecPath: 'ios/example-lynx-button.podspec',
       },
       'lynxtron': {
         path: 'dist',
@@ -165,6 +199,15 @@ describe('create-lynx-library', () => {
     );
     expect(read(dir, 'lynxtron/CMakeLists.txt')).toContain(
       'LYNX_LIBRARY_NODE_API_WEAK_SUFFIX',
+    );
+    expect(read(dir, 'lynxtron/index.cjs')).toContain(
+      'nativeBinding.initialize = function initialize() {};',
+    );
+    expect(read(dir, 'lynxtron/library_entry.cc')).not.toContain(
+      'lynx_env_register_native_module',
+    );
+    expect(read(dir, 'lynxtron/library_entry.cc')).not.toContain(
+      'napi_module_register_xx',
     );
     expect(read(dir, 'shared/CMakeLists.txt')).toContain(
       'CMAKE_SYSTEM_NAME STREQUAL "OHOS"',
@@ -187,7 +230,7 @@ describe('create-lynx-library', () => {
     expect(read(dir, 'shared/elements/CMakeLists.txt')).toMatch(
       /if\(LYNX_NATIVE_ELEMENT_BACKEND_TEXTURE\)[\s\S]*backends\/texture\/windows\/\*\.cc[\s\S]*else\(\)[\s\S]*backends\/native-ui\/windows\/\*\.cc/,
     );
-    expect(read(dir, 'ios/build.podspec')).toContain(
+    expect(read(dir, 'ios/example-lynx-button.podspec')).toContain(
       's.dependency \'LynxServiceAPI\'',
     );
     expect(read(dir, 'types/index.d.ts')).toContain(
@@ -295,7 +338,9 @@ describe('create-lynx-library', () => {
     expect(read(dir, 'src/index.ts')).toContain(
       'export { StorageModule } from \'../generated/StorageModule\';',
     );
-    expect(read(dir, 'ios/build.podspec')).not.toContain('LynxServiceAPI');
+    expect(read(dir, 'ios/storage-library.podspec')).not.toContain(
+      'LynxServiceAPI',
+    );
   });
 
   it('creates NAPI Native Module projects with split typings', () => {
@@ -310,6 +355,8 @@ describe('create-lynx-library', () => {
 
     expect(filePaths).toContain('shared/CMakeLists.txt');
     expect(filePaths).toContain('shared/nativeModule/CMakeLists.txt');
+    expect(filePaths).toContain('android/CMakeLists.txt');
+    expect(filePaths).toContain('ios/addon_use.h');
     expect(filePaths).toContain('lynxtron/CMakeLists.txt');
     expect(filePaths).toContain('types/napi-native-module.d.ts');
     expect(filePaths).not.toContain(
@@ -330,6 +377,149 @@ describe('create-lynx-library', () => {
     expect(read(dir, 'shared/nativeModule/CMakeLists.txt')).toContain(
       'NapiNativeModules',
     );
+    expect(read(dir, 'android/build.gradle.kts')).toContain(
+      'externalNativeBuild',
+    );
+    expect(read(dir, 'android/build.gradle.kts')).toContain(
+      'version = "3.18.1"',
+    );
+    expect(read(dir, 'android/CMakeLists.txt')).toContain(
+      'cmake_minimum_required(VERSION 3.18.1)',
+    );
+    expect(read(dir, 'shared/CMakeLists.txt')).toContain(
+      'cmake_minimum_required(VERSION 3.18.1)',
+    );
+    expect(read(dir, 'lynxtron/CMakeLists.txt')).toContain(
+      'cmake_minimum_required(VERSION 3.18.1)',
+    );
+    expect(read(dir, 'README.md')).toContain(
+      'Codegen creates `shared/nativeModule/StorageModule.cc` once',
+    );
+    expect(read(dir, 'README.md')).toContain(
+      'TypeScript shim is only for the selected mobile runtimes',
+    );
+    expect(read(dir, 'shared/.npmignore')).toContain('third_party/');
+    fs.mkdirSync(path.join(dir, 'shared/third_party'), { recursive: true });
+    fs.writeFileSync(path.join(dir, 'shared/third_party/cache.txt'), 'cache');
+    fs.mkdirSync(path.join(dir, 'dist/macos/arm64'), { recursive: true });
+    fs.writeFileSync(path.join(dir, 'dist/macos/arm64/addon.node'), 'addon');
+    const packResult = JSON.parse(
+      execNpm(['pack', '--dry-run', '--json'], { cwd: dir }),
+    ) as Array<{ files: Array<{ path: string }> }>;
+    const packedPaths = packResult[0]?.files.map((file) => file.path) ?? [];
+    expect(packedPaths).toContain('dist/macos/arm64/addon.node');
+    expect(packedPaths).not.toContain('shared/third_party/cache.txt');
+    expect(read(dir, 'android/build.gradle.kts')).toContain(
+      'providers.gradleProperty("lynx.primjs.version").orElse("4.+").get()',
+    );
+    expect(read(dir, 'android/build.gradle.kts')).toContain(
+      'org.lynxsdk.lynx:primjs:$lynxPrimjsVersion',
+    );
+    expect(read(dir, 'android/build.gradle.kts')).toContain(
+      'org.lynxsdk.lynx:primjs:$lynxPrimjsVersion@aar',
+    );
+    expect(read(dir, 'android/build.gradle.kts')).not.toContain(
+      '4.0.1-alpha.3',
+    );
+    expect(read(dir, 'android/build.gradle.kts')).not.toContain(
+      'org.lynxsdk.lynx:lynx:0.0.1-alpha.1',
+    );
+    expect(read(dir, 'android/build.gradle.kts')).not.toContain(
+      'org.lynxsdk.lynx:service-api:0.0.1-alpha.1',
+    );
+    expect(read(dir, 'android/build.gradle.kts')).not.toContain(
+      'org.lynxsdk.lynx:lynx-processor:0.0.1-alpha.1',
+    );
+    expect(read(dir, 'android/build.gradle.kts')).toContain(
+      'extractPrimjsNativeLibraries',
+    );
+    expect(read(dir, 'android/build.gradle.kts')).toContain(
+      '-DLYNX_PRIMJS_JNI_DIR=',
+    );
+    expect(read(dir, 'android/CMakeLists.txt')).toContain(
+      'OUTPUT_NAME "StorageModule"',
+    );
+    expect(read(dir, 'android/CMakeLists.txt')).toContain(
+      'LYNX_LIBRARY_NODE_API_WEAK_SUFFIX OFF',
+    );
+    expect(read(dir, 'android/CMakeLists.txt')).not.toContain(
+      'LYNX_LIBRARY_NODE_API_WEAK_SUFFIX ON',
+    );
+    expect(read(dir, 'android/CMakeLists.txt')).toContain(
+      'LYNX_LIBRARY_USE_PRIMJS_NAPI_MODULE ON',
+    );
+    expect(read(dir, 'android/CMakeLists.txt')).toContain(
+      'IMPORTED_LOCATION "${LYNX_PRIMJS_ABI_DIR}/libnapi_adapter.so"',
+    );
+    expect(read(dir, 'android/CMakeLists.txt')).toContain(
+      'IMPORTED_LOCATION "${LYNX_PRIMJS_ABI_DIR}/libnapi.so"',
+    );
+    expect(read(dir, 'android/CMakeLists.txt')).toContain(
+      'lynx_primjs_napi_adapter',
+    );
+    expect(read(dir, 'ios/napi-library.podspec')).toContain(
+      's.dependency \'LynxWeakNodeAPI\'',
+    );
+    expect(read(dir, 'ios/napi-library.podspec')).toContain(
+      '${PODS_ROOT}/LynxWeakNodeAPI/packages/weak-node-api/headers',
+    );
+    expect(read(dir, 'ios/napi-library.podspec')).toContain(
+      '${PODS_ROOT}/PrimJS/src/napi',
+    );
+    expect(read(dir, 'ios/napi-library.podspec')).toContain(
+      'generated/**/*.{cc,h,mm}',
+    );
+    expect(read(dir, 'ios/napi-library.podspec')).toContain(
+      'LYNX_LIBRARY_USE_PRIMJS_NAPI_MODULE=1',
+    );
+    expect(read(dir, 'ios/napi-library.podspec')).not.toContain(
+      'USE_WEAK_SUFFIX_NAPI',
+    );
+    expect(read(dir, 'ios/addon_use.h')).toContain('#ifndef NAPI_USE');
+    expect(read(dir, 'ios/addon_use.h')).toContain('NAPI_USE(StorageModule)');
+    expect(read(dir, 'ios/addon_use.h')).toContain(
+      '__attribute__((used)) static void*',
+    );
+    expect(
+      readJson<PackageJson>(dir, 'package.json').dependencies
+        ?.['@lynx-js/weak-node-api'],
+    ).toBe(
+      '^0.0.9',
+    );
+    expect(
+      readJson<PackageJson>(dir, 'package.json').dependencies
+        ?.['@lynx-js/lynx-library-headers'],
+    ).toBe(
+      '*',
+    );
+    expect(
+      readJson<PackageJson>(dir, 'package.json').devDependencies
+        ?.['@lynx-js/lynx-library-headers'],
+    ).toBeUndefined();
+    expect(read(dir, 'android/build.gradle.kts')).not.toContain(
+      'absolutePath}",',
+    );
+    expect(
+      readJson<Manifest>(dir, 'lynx.lib.json').platforms.android?.nodeApiAddons,
+    ).toEqual([
+      {
+        name: 'StorageModule',
+        libraryName: 'StorageModule',
+        jniLibsDir: 'android/src/main/jniLibs',
+        required: false,
+      },
+    ]);
+    expect(
+      readJson<Manifest>(dir, 'lynx.lib.json').platforms.ios?.nodeApiAddons,
+    ).toEqual([
+      {
+        name: 'StorageModule',
+        podName: 'napi-library',
+        podspecPath: 'ios/napi-library.podspec',
+        addonUseHeader: 'addon_use.h',
+        required: true,
+      },
+    ]);
   });
 
   it('creates Lynxtron projects with shared C++ sources', () => {
@@ -385,9 +575,11 @@ describe('create-lynx-library', () => {
       './lynxtron': './lynxtron/index.cjs',
       './package.json': './package.json',
     });
-    expect(packageJson.devDependencies['@lynx-js/lynx-library-headers'])
+    expect(packageJson.dependencies?.['@lynx-js/lynx-library-headers'])
       .toBe('*');
-    expect(packageJson.devDependencies['@lynx-js/weak-node-api']).toBe(
+    expect(packageJson.devDependencies['@lynx-js/lynx-library-headers'])
+      .toBeUndefined();
+    expect(packageJson.dependencies?.['@lynx-js/weak-node-api']).toBe(
       '^0.0.9',
     );
     expect(read(dir, 'package.json')).toContain(
@@ -410,6 +602,18 @@ describe('create-lynx-library', () => {
     expect(read(dir, 'lynxtron/CMakeLists.txt')).toContain(
       'LYNX_LIBRARY_NODE_API_WEAK_SUFFIX',
     );
+    expect(read(dir, 'lynxtron/index.cjs')).toContain(
+      'nativeBinding.initialize = function initialize() {};',
+    );
+    expect(read(dir, 'lynxtron/library_entry.cc')).toContain(
+      'LynxAutolinkRegisterNapiNativeModules',
+    );
+    expect(read(dir, 'lynxtron/library_entry.cc')).not.toContain(
+      'napi_module_register_xx',
+    );
+    expect(read(dir, 'lynxtron/CMakeLists.txt')).toContain(
+      'generated_napi_registration.cc',
+    );
     expect(read(dir, 'shared/CMakeLists.txt')).toContain(
       'CMAKE_SYSTEM_NAME STREQUAL "OHOS"',
     );
@@ -428,6 +632,12 @@ describe('create-lynx-library', () => {
     expect(read(dir, 'shared/nativeModule/CMakeLists.txt')).toContain(
       'LYNX_LIBRARY_NODE_API_WEAK_SUFFIX',
     );
+    expect(read(dir, 'shared/nativeModule/CMakeLists.txt')).toContain(
+      'LYNX_LIBRARY_USE_PRIMJS_NAPI_MODULE=1',
+    );
+    expect(read(dir, 'shared/CMakeLists.txt')).toContain(
+      'LYNX_LIBRARY_NAPI_NATIVE_MODULE_TARGET',
+    );
     expect(read(dir, 'shared/nativeModule/CMakeLists.txt')).not.toContain(
       'LYNX_SHARED_ENABLE_WEAK_NAPI',
     );
@@ -439,6 +649,18 @@ describe('create-lynx-library', () => {
     );
     expect(read(dir, 'README.md')).toContain('`lynxtron/`');
     expect(read(dir, 'README.md')).toContain('`shared/`');
+    expect(read(dir, 'README.md')).toContain(
+      '`npm pack` and `npm publish` do not build native artifacts',
+    );
+    expect(read(dir, 'README.md')).toContain(
+      `require('@example/lynxtron-library/lynxtron')`,
+    );
+    expect(read(dir, 'README.md')).toContain(
+      'Lynxtron BTS code does not import the package root',
+    );
+    expect(read(dir, 'README.md')).not.toContain(
+      'On Android and iOS, import the package root',
+    );
   });
 
   it('creates Android-only projects without iOS files', () => {
@@ -481,6 +703,29 @@ describe('create-lynx-library', () => {
     expect(read(dir, 'README.md')).not.toContain('`ios/`');
   });
 
+  it('documents the shim only for selected NAPI mobile platforms', () => {
+    const dir = createTempDir('android-napi-only');
+
+    createLynxLibrary({
+      dir,
+      features: ['napi-native-module'],
+      platforms: ['android'],
+      packageName: 'android-napi-library',
+      androidPackage: 'com.example.androidnapi',
+      moduleName: 'AndroidNapiModule',
+    });
+
+    expect(read(dir, 'README.md')).toContain(
+      'On Android, import the package root in BTS',
+    );
+    expect(read(dir, 'README.md')).not.toContain(
+      'On Android and iOS',
+    );
+    expect(read(dir, 'README.md')).not.toContain(
+      '## Lynxtron Library Target',
+    );
+  });
+
   it('creates iOS-only projects without Android files', () => {
     const dir = createTempDir('ios-only');
     const files = createLynxLibrary({
@@ -501,14 +746,14 @@ describe('create-lynx-library', () => {
     expect(readJson<Manifest>(dir, 'lynx.lib.json').platforms).toEqual({
       ios: {
         sourceDir: 'ios',
-        podspecPath: 'ios/build.podspec',
+        podspecPath: 'ios/ios-library.podspec',
       },
     });
     expect(readJson<PackageJson>(dir, 'package.json').files).toContain('ios');
     expect(readJson<PackageJson>(dir, 'package.json').files).not.toContain(
       'android',
     );
-    expect(read(dir, 'ios/build.podspec')).toContain('LynxServiceAPI');
+    expect(read(dir, 'ios/ios-library.podspec')).toContain('LynxServiceAPI');
     expect(read(dir, 'README.md')).toContain('`ios/`');
     expect(read(dir, 'README.md')).not.toContain('`android/`');
   });
@@ -565,6 +810,21 @@ describe('create-lynx-library', () => {
       },
     });
     expect(read(dir, 'example/src/App.tsx')).not.toContain('import {');
+    expect(read(dir, 'README.md')).toContain(
+      'This feature selection does not include native module typings.',
+    );
+    expect(read(dir, 'README.md')).not.toContain(
+      'types/platform-native-module.d.ts',
+    );
+    expect(read(dir, 'README.md')).not.toContain(
+      'types/napi-native-module.d.ts',
+    );
+    expect(read(dir, 'README.md')).not.toContain(
+      'Lynxtron BTS code does not import the package root',
+    );
+    expect(read(dir, 'README.md')).not.toContain(
+      'NativeModules.ViewLibraryModule',
+    );
   });
 
   it('fails when package templates contain unmapped workspace dependencies', () => {
@@ -671,9 +931,14 @@ function readJson<T>(root: string, file: string): T {
 }
 
 interface Manifest {
-  platforms: Record<string, unknown>;
+  platforms: Record<string, unknown> & {
+    android?: { nodeApiAddons?: unknown[] };
+    ios?: { nodeApiAddons?: unknown[] };
+  };
 }
 
 interface PackageJson {
   files: string[];
+  dependencies?: Record<string, string>;
+  devDependencies?: Record<string, string>;
 }

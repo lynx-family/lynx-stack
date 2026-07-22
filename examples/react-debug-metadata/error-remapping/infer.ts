@@ -26,7 +26,7 @@
  * So a case needs a `token` (the failing identifier) plus its `err` class; the
  * column is the token's start / end, the call expr end, or the module top.
  */
-import { readFileSync } from 'node:fs';
+import { existsSync, readFileSync } from 'node:fs';
 
 import type { MapEntry } from './remap-lib.js';
 
@@ -120,5 +120,14 @@ export function inferBgFrame(
       return { lineno: li + 1, colno: col0 + 1, release };
     }
   }
-  throw new Error(`find not located in any background bundle: ${find}`);
+  const scanned = [...index.entries()].map(([release, entry]) =>
+    `  ${entry.kind} ${release.slice(0, 12)}… ${entry.jsFile} (exists: ${
+      existsSync(entry.jsFile)
+    })`
+  );
+  throw new Error(
+    `find not located in any background bundle: ${find}\nscanned index:\n${
+      scanned.join('\n')
+    }`,
+  );
 }

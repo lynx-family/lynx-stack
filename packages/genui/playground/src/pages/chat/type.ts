@@ -187,6 +187,7 @@ export interface ChatRequestContext<TSettings> {
   conversation: ConversationContext;
   settings: TSettings;
   host: ChatHost;
+  signal: AbortSignal;
 }
 
 export interface ChatActionRequestContext<TAction, TSettings> {
@@ -254,7 +255,7 @@ export interface ChatProtocolAdapter<
   settings?: ChatSettingsAdapter<TSettings>;
   createRequest: (
     context: ChatRequestContext<TSettings>,
-  ) => ChatHttpRequest;
+  ) => ChatHttpRequest | Promise<ChatHttpRequest>;
   stream: ChatStreamAdapter<TStreamState, TOutput>;
   hydrate: (context: ChatHydrationContext) => ChatHydration<TOutput>;
   persist: (

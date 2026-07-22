@@ -11,7 +11,7 @@ it('should have module.exports in foo.js template', async () => {
 
   const tasmJSON = JSON.parse(
     await readFile(
-      resolve(__dirname, '.rspeedy/async/foo.js/tasm.json'),
+      resolve(__dirname, '.rspeedy/lazy-bundle/foo.js/tasm.json'),
       'utf-8',
     ),
   );
@@ -23,7 +23,7 @@ it('should have module.exports in foo.js template', async () => {
   const exports = ret();
 
   expect(exports).toHaveProperty('ids', [
-    './foo.js-react__main-thread',
+    '_react_main-thread_foo_js',
   ]);
 
   expect(exports).toHaveProperty('modules', {
@@ -34,7 +34,7 @@ it('should have module.exports in foo.js template', async () => {
 it('should have module.exports in bar.js template', async () => {
   const tasmJSON = JSON.parse(
     await readFile(
-      resolve(__dirname, '.rspeedy/async/bar.js/tasm.json'),
+      resolve(__dirname, '.rspeedy/lazy-bundle/bar.js/tasm.json'),
       'utf-8',
     ),
   );
@@ -46,7 +46,7 @@ it('should have module.exports in bar.js template', async () => {
   const exports = ret();
 
   expect(exports).toHaveProperty('ids', [
-    './bar.js-react__main-thread',
+    '_react_main-thread_bar_js',
   ]);
 
   expect(exports).toHaveProperty('modules', {
@@ -57,7 +57,7 @@ it('should have module.exports in bar.js template', async () => {
 it('should have module.exports in baz.js template', async () => {
   const tasmJSON = JSON.parse(
     await readFile(
-      resolve(__dirname, '.rspeedy/async/baz.js/tasm.json'),
+      resolve(__dirname, '.rspeedy/lazy-bundle/baz.js/tasm.json'),
       'utf-8',
     ),
   );
@@ -69,7 +69,7 @@ it('should have module.exports in baz.js template', async () => {
   const exports = ret();
 
   expect(exports).toHaveProperty('ids', [
-    './baz.js-react__main-thread',
+    '_react_main-thread_baz_js',
   ]);
 
   expect(exports).toHaveProperty('modules', {

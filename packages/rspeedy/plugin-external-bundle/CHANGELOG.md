@@ -1,5 +1,16 @@
 # @lynx-js/external-bundle-rsbuild-plugin
 
+## 0.4.0
+
+### Minor Changes
+
+- The `reactlynx` externals preset accepts `{ async: true }`, mounting ReactLynx as an awaited promise so async runtimes can load it via `fetchBundle().then` (the sync array form reads `React.memo` etc. off a pending promise and gets `undefined`). Externals presets resolve per environment (`environmentName` is available in the preset context): `lynx` / `lynx-*` environments use `react.lynx.bundle`, other environments (e.g. `web`) use the web-encoded `@lynx-js/react-umd/{dev,prod}-web` `react.web.bundle` — `async` only controls the mount form. ([#2934](https://github.com/lynx-family/lynx-stack/pull/2934))
+
+### Patch Changes
+
+- Updated dependencies [[`34318ea`](https://github.com/lynx-family/lynx-stack/commit/34318ea3432b6484a383707458ed9c4ee19e2097)]:
+  - @lynx-js/externals-loading-webpack-plugin@0.2.1
+
 ## 0.3.0
 
 ### Minor Changes

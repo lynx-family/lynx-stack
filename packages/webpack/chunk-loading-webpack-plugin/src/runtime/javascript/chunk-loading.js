@@ -32,6 +32,16 @@ export default function() {
               const promise = lynx.loadLazyBundle(
                 $RuntimeGlobals_publicPath$
                   + $RuntimeGlobals_lynxAsyncChunkIds$[chunkId],
+                // `lynx_acm` may be absent (e.g. a build that emits `lynx_aci`
+                // without the mode map); the loader treats a missing mode as
+                // `async`.
+                $RuntimeGlobals_lynxAsyncChunkMode$
+                  && $RuntimeGlobals_lynxAsyncChunkMode$[chunkId],
+                // The loading host's own entry, so the MT prepare routes this
+                // chunk's eval result to the host that owns its modules.
+                typeof globDynamicComponentEntry !== 'undefined'
+                  ? globDynamicComponentEntry
+                  : undefined,
               ).then((exports) => {
                 installChunk(exports);
                 return exports;

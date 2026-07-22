@@ -229,6 +229,15 @@ interface ReactWebpackPluginOptions {
    * @experimental
    */
   experimental_useElementTemplate?: boolean;
+
+  /**
+   * Resolved lazy-bundle fetcher mode. Decided by the caller (e.g.
+   * `pluginReactLynx`) from the host engine version and any
+   * `REACT_LAZY_BUNDLE_FETCHER` env override.
+   *
+   * @public
+   */
+  lazyBundleFetcher?: 'FetchBundle' | 'QueryComponent';
 }
 
 /**
@@ -306,6 +315,7 @@ class ReactWebpackPlugin {
       profile: undefined,
       workletRuntimePath: '',
       experimental_useElementTemplate: false,
+      lazyBundleFetcher: 'QueryComponent',
     });
 
   /**
@@ -374,6 +384,7 @@ class ReactWebpackPlugin {
       __USE_ELEMENT_TEMPLATE__: JSON.stringify(
         options.experimental_useElementTemplate,
       ),
+      __LAZY_BUNDLE_FETCHER__: JSON.stringify(options.lazyBundleFetcher),
     }).apply(compiler);
 
     compiler.hooks.thisCompilation.tap(this.constructor.name, compilation => {
@@ -382,18 +393,21 @@ class ReactWebpackPlugin {
       compilation.hooks.runtimeRequirementInTree.for(
         compiler.webpack.RuntimeGlobals.ensureChunkHandlers,
       ).tap('ReactWebpackPlugin', (_, runtimeRequirements) => {
-        runtimeRequirements.add(RuntimeGlobals.lynxProcessEvalResult);
+        runtimeRequirements.add(RuntimeGlobals.lynxProcessEvalResultByHost);
       });
 
       compilation.hooks.runtimeRequirementInTree.for(
-        RuntimeGlobals.lynxProcessEvalResult,
+        RuntimeGlobals.lynxProcessEvalResultByHost,
       ).tap('ReactWebpackPlugin', (chunk) => {
         if (onceForChunkSet.has(chunk)) {
           return;
         }
         onceForChunkSet.add(chunk);
 
-        if (!chunk.name?.includes('__main-thread')) {
+        const isMainThreadChunk = Array.from(
+          compilation.chunkGraph.getChunkModulesIterable(chunk),
+        ).some(module => module.layer === LAYERS.MAIN_THREAD);
+        if (!isMainThreadChunk) {
           return;
         }
 
@@ -529,23 +543,15 @@ class ReactWebpackPlugin {
         );
       }
 
-      // The react-transform will add `-react__${LAYER}` to the webpackChunkName.
-      // We replace it with an empty string here to make sure main-thread & background chunk match.
-      hooks.asyncChunkName.tap(
-        this.constructor.name,
-        (chunkName) =>
-          chunkName
-            ?.replaceAll(`-react__background`, '')
-            ?.replaceAll(`-react__main-thread`, ''),
-      );
-
       if (options.experimental_useElementTemplate) {
         hooks.beforeEncode.tap(
           `${this.constructor.name}.ElementTemplate`,
           (args) => {
             const { chunkGraph } = compilation;
             const elementTemplates = collectElementTemplatesForEntries(
-              args.entryNames,
+              args.chunkGroups.flatMap(cg =>
+                cg.name === null || cg.name === undefined ? [] : [cg.name]
+              ),
               (name) => compilation.namedChunkGroups.get(name),
               (chunk) =>
                 chunkGraph.getChunkModules(

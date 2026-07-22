@@ -4,6 +4,7 @@
 // LICENSE file in the root directory of this source tree.
 */
 
+:host,
 lynx-view {
   contain: strict;
   display: none;
@@ -16,25 +17,33 @@ lynx-view {
   --vh-unit: 1cqh;
 }
 
+:host([transform-vh]),
 lynx-view[transform-vh] {
   container-type: size;
 }
 
+:host([ssr]),
 lynx-view[ssr] {
   display: flex;
 }
 
+:host([width="auto"]),
 lynx-view[width="auto"] {
   --lynx-view-width: 100%;
   width: var(--lynx-view-width);
   inline-size: var(--lynx-view-width);
 }
 
+:host([height="auto"]),
+:host([auto-height]),
+:host([width="auto"]),
 lynx-view[height="auto"],
+lynx-view[auto-height],
 lynx-view[width="auto"] {
   contain: content;
 }
 
+[part="page"],
 lynx-view::part(page) {
   height: 100%;
   width: 100%;

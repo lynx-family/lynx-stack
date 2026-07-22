@@ -69,9 +69,10 @@ export function normalizeRemoteUrl(remoteUrl: string | null): string | null {
  * should omit the `meta.git` field entirely.
  */
 export function collectGitMetadata(cwd: string): GitMetadata | null {
-  const commit = tryRunGit(cwd, ['rev-parse', 'HEAD'])
+  // One spawn for both: each `git` costs ~20ms on the compile critical path.
+  const revParse = tryRunGit(cwd, ['rev-parse', 'HEAD', '--show-toplevel'])
+  const [commit, rootDir = null] = revParse?.split(/\r?\n/) ?? []
   if (!commit) return null
-  const rootDir = tryRunGit(cwd, ['rev-parse', '--show-toplevel'])
   const remoteUrl = normalizeRemoteUrl(
     tryRunGit(cwd, ['config', '--get', 'remote.origin.url']),
   )

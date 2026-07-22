@@ -53,6 +53,7 @@ export interface ReactWebpackPluginOptions {
     extractStr?: Partial<ExtractStrConfig> | boolean;
     firstScreenSyncTiming?: 'immediately' | 'jsReady' | 'manual';
     globalPropsMode?: 'reactive' | 'event';
+    lazyBundleFetcher?: 'FetchBundle' | 'QueryComponent';
     mainThreadChunks?: string[] | undefined;
     profile?: boolean | undefined;
     workletRuntimePath: string;

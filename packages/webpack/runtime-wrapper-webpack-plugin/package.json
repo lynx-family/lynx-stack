@@ -1,6 +1,6 @@
 {
   "name": "@lynx-js/runtime-wrapper-webpack-plugin",
-  "version": "0.2.1",
+  "version": "0.2.2",
   "description": "Use runtime wrapper which allow JavaScript to be load by Lynx.",
   "keywords": [
     "webpack",
@@ -42,7 +42,8 @@
     "@lynx-js/test-tools": "workspace:*",
     "@microsoft/api-extractor": "catalog:",
     "@rspack/core": "catalog:rspack",
-    "@rstest/core": "catalog:rstest"
+    "@rstest/core": "catalog:rstest",
+    "@types/node": "^24.10.13"
   },
   "engines": {
     "node": ">=18"

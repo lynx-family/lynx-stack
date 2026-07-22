@@ -31,6 +31,7 @@ lazy_static::lazy_static! {
     ("wrapper", "lynx-wrapper"),
     ("list", "x-list"),
     ("page", "div"),
+    ("textarea", "x-textarea"),
     ("svg", "x-svg"),
     ("frame", "lynx-view"),
   ]);

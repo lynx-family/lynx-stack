@@ -105,6 +105,12 @@ const reactLynxExternalTemplate = {
     mainThread: { sectionPath: 'ReactLynx__main-thread' },
     async: false,
   },
+  '@lynx-js/react/refresh': {
+    libraryName: ['ReactLynx', 'ReactRefresh'],
+    background: { sectionPath: 'ReactLynx' },
+    mainThread: { sectionPath: 'ReactLynx__main-thread' },
+    async: false,
+  },
   preact: {
     libraryName: ['ReactLynx', 'Preact'],
     background: { sectionPath: 'ReactLynx' },

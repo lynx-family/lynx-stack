@@ -79,6 +79,16 @@ describe('Plugins - Dev', () => {
           scopeid: 0,
         },
       ],
+      lo: [
+        {
+          address: '127.0.0.1',
+          family: 'IPv4',
+          internal: true,
+          netmask: '255.0.0.0',
+          mac: '00:00:00:00:00:00',
+          cidr: '127.0.0.1/8',
+        },
+      ],
     })
 
     const rsbuild = await createStubRspeedy({})
@@ -88,6 +98,60 @@ describe('Plugins - Dev', () => {
     expect(config.output?.publicPath).toBe('http://[fd00::1]:3000/')
     expect(rsbuild.getRsbuildConfig().server!.host).toBe('fd00::1')
     expect(rsbuild.getRsbuildConfig().dev!.client!.host).toBe('[fd00::1]')
+  })
+
+  test('defaults fallback to ipv4 loopback when no non-loopback ip is found', async () => {
+    const { default: os } = await import('node:os')
+
+    rstest.spyOn(os, 'networkInterfaces').mockReturnValue({
+      lo: [
+        {
+          address: '127.0.0.1',
+          family: 'IPv4',
+          internal: true,
+          netmask: '255.0.0.0',
+          mac: '00:00:00:00:00:00',
+          cidr: '127.0.0.1/8',
+        },
+      ],
+    })
+
+    const rsbuild = await createStubRspeedy({})
+
+    const config = await rsbuild.unwrapConfig()
+
+    expect(rsbuild.getRsbuildConfig().server!.host).toBe('0.0.0.0')
+    expect(config.output?.publicPath).toBe('http://127.0.0.1:3000/')
+    expect(rsbuild.getRsbuildConfig().dev!.client!.host).toBe('127.0.0.1')
+  })
+
+  test('explicit server.host does not fall back to ipv4 loopback', async () => {
+    const { default: os } = await import('node:os')
+
+    rstest.spyOn(os, 'networkInterfaces').mockReturnValue({
+      lo: [
+        {
+          address: '127.0.0.1',
+          family: 'IPv4',
+          internal: true,
+          netmask: '255.0.0.0',
+          mac: '00:00:00:00:00:00',
+          cidr: '127.0.0.1/8',
+        },
+      ],
+    })
+
+    const rsbuild = await createStubRspeedy({
+      server: {
+        host: '0.0.0.0',
+      },
+    })
+
+    const config = await rsbuild.unwrapConfig()
+
+    expect(rsbuild.getRsbuildConfig().server!.host).toBe('0.0.0.0')
+    expect(config.output?.publicPath).toBe('http://0.0.0.0:3000/')
+    expect(rsbuild.getRsbuildConfig().dev!.client!.host).toBe('0.0.0.0')
   })
 
   test('defaults keep server.host when no ip is found', async () => {

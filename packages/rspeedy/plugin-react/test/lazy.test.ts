@@ -223,11 +223,11 @@ describe('Lazy', () => {
     })
   })
 
-  test('lazy bundle beforeEncode entryNames', async () => {
+  test('lazy bundle beforeEncode chunkGroups', async () => {
     rstest.stubEnv('NODE_ENV', 'development')
     const { pluginReactLynx } = await import('../src/pluginReactLynx.js')
 
-    const entryNamesOfBeforeEncode: string[][] = []
+    const chunkGroupNamesOfBeforeEncode: (string | null | undefined)[][] = []
     let backgroundJSContent = ''
 
     // Isolate the dist root so this build cannot race other tests in this
@@ -289,7 +289,9 @@ describe('Lazy', () => {
                         'extractBackgroundJSContent',
                         (assets) => {
                           for (const key in assets) {
-                            if (/[\\/]background.js$/.test(key)) {
+                            if (
+                              /\.rspeedy[\\/]main[\\/]background\.js$/.test(key)
+                            ) {
                               backgroundJSContent = assets[key]!.source()
                                 .toString()!
                             }
@@ -315,7 +317,9 @@ describe('Lazy', () => {
                       hooks.beforeEncode.tap(
                         'beforeEncode-test',
                         (args) => {
-                          entryNamesOfBeforeEncode.push(args.entryNames)
+                          chunkGroupNamesOfBeforeEncode.push(
+                            args.chunkGroups.map(cg => cg.name),
+                          )
 
                           return args
                         },
@@ -333,15 +337,15 @@ describe('Lazy', () => {
     try {
       await rsbuild.build()
 
-      expect(entryNamesOfBeforeEncode).toMatchInlineSnapshot(`
+      expect(chunkGroupNamesOfBeforeEncode).toMatchInlineSnapshot(`
         [
           [
             "main__main-thread",
             "main",
           ],
           [
-            "./LazyComponent.js-react__background",
-            "./LazyComponent.js-react__main-thread",
+            undefined,
+            undefined,
           ],
         ]
       `)
@@ -350,7 +354,7 @@ describe('Lazy', () => {
           backgroundJSContent,
         )![1]
       expect(cssHotUpdateList).toMatchInlineSnapshot(
-        `"[["./LazyComponent.js-react__background",".rspeedy/async/./LazyComponent.js-react__background/./LazyComponent.js-react__background.css.hot-update.json"],["main",".rspeedy/main/main.css.hot-update.json"]]"`,
+        `"[["_react_background_fixtures_lazy-bundle_LazyComponent_tsx",".rspeedy/lazy-bundle/fixtures/lazy-bundle/LazyComponent.tsx/background.css.hot-update.json"],["main",".rspeedy/main/main.css.hot-update.json"]]"`,
       )
     } finally {
       rstest.unstubAllEnvs()
@@ -429,11 +433,7 @@ describe('Lazy', () => {
                       hooks.beforeEmit.tap(
                         'beforeEmit-test',
                         (args) => {
-                          if (
-                            args.entryNames.some((name) =>
-                              name.includes('LazyComponent')
-                            )
-                          ) {
+                          if (args.outputName.includes('LazyComponent')) {
                             appServiceJSContent = args.finalEncodeOptions
                               .manifest['/app-service.js']!
                           }
@@ -463,7 +463,7 @@ describe('Lazy', () => {
       await rsbuild.createDevServer()
       await waitCompilationDone()
       expect(appServiceJSContent).toMatchInlineSnapshot(
-        `"(function(){'use strict';function n({tt}){tt.define('/app-service.js',function(e,module,_,i,l,u,a,c,s,f,p,d,h,v,g,y,lynx){module.exports=lynx.requireModule("/static/js/async/./LazyComponent.js-react__background.js",globDynamicComponentEntry?globDynamicComponentEntry:'__Card__');});return tt.require('/app-service.js');}return{init:n}})()"`,
+        `"(function(){'use strict';function n({tt}){tt.define('/app-service.js',function(e,module,_,i,l,u,a,c,s,f,p,d,h,v,g,y,lynx){module.exports=lynx.requireModule("/.rspeedy/lazy-bundle/fixtures/lazy-bundle/LazyComponent.tsx/background.js",globDynamicComponentEntry?globDynamicComponentEntry:'__Card__');});return tt.require('/app-service.js');}return{init:n}})()"`,
       )
 
       // Modify the fixtures/lazy-bundle/LazyComponent.tsx file
@@ -476,7 +476,7 @@ describe('Lazy', () => {
       await waitCompilationDone()
 
       expect(appServiceJSContent).toMatchInlineSnapshot(
-        `"(function(){'use strict';function n({tt}){tt.define('/app-service.js',function(e,module,_,i,l,u,a,c,s,f,p,d,h,v,g,y,lynx){module.exports=lynx.requireModule("/static/js/async/./LazyComponent.js-react__background.js",globDynamicComponentEntry?globDynamicComponentEntry:'__Card__');});return tt.require('/app-service.js');}return{init:n}})()"`,
+        `"(function(){'use strict';function n({tt}){tt.define('/app-service.js',function(e,module,_,i,l,u,a,c,s,f,p,d,h,v,g,y,lynx){module.exports=lynx.requireModule("/.rspeedy/lazy-bundle/fixtures/lazy-bundle/LazyComponent.tsx/background.js",globDynamicComponentEntry?globDynamicComponentEntry:'__Card__');});return tt.require('/app-service.js');}return{init:n}})()"`,
       )
     } finally {
       if (tmpContent !== undefined) {
@@ -564,11 +564,7 @@ describe('Lazy', () => {
                           // The host card legitimately loads the lazy bundle via
                           // requireModuleAsync, so only inspect the dynamic
                           // component's own template.
-                          if (
-                            args.entryNames.some((name) =>
-                              name.includes('LazyComponent')
-                            )
-                          ) {
+                          if (args.outputName.includes('LazyComponent')) {
                             appServiceJSContent = args.finalEncodeOptions
                               .manifest['/app-service.js']!
                           }

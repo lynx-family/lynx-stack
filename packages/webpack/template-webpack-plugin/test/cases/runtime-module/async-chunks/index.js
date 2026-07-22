@@ -17,7 +17,7 @@ import(
 
 it('should have changed bundle', () => {
   expect(Object.values(__webpack_require__['lynx_aci'])).toStrictEqual([
-    `async/dynamic.${__webpack_require__.h()}.bundle`,
-    `async/dynamic-foo.${__webpack_require__.h()}.bundle`,
+    `lazy-bundle/dynamic.${__webpack_require__.h()}.bundle`,
+    `lazy-bundle/dynamic-foo.${__webpack_require__.h()}.bundle`,
   ]);
 });

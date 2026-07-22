@@ -131,6 +131,7 @@ export async function createNativeApp(
       );
       timingSystem.registerGlobalEmitter(tt.GlobalEventEmitter);
       (tt.lynx.getCoreContext() as LynxCrossThreadContext).__start();
+      (tt.lynx.getDevtool() as LynxCrossThreadContext).__start();
       nativeApp.tt = tt;
     },
     triggerComponentEvent,

@@ -36,6 +36,7 @@ import { createPortal } from './snapshot/lynx/portals.js';
 import { Suspense } from './snapshot/lynx/suspense.js';
 
 export type { ReactLynxChildren } from './snapshot/lynx/children.js';
+export type { CloneElement, CreateElement } from './snapshot/lynx/element.js';
 
 installComponentCompat();
 

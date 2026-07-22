@@ -1,0 +1,42 @@
+[package]
+name = "ui_judge"
+version = "0.1.0"
+autobins = false
+edition = "2021"
+license = "Apache-2.0"
+publish = false
+description = "Headless Lynx UI evaluation and VLM scoring"
+
+[lib]
+crate-type = ["rlib"]
+
+[features]
+default = []
+server = [
+  "dep:axum",
+  "dep:socket2",
+  "tokio/net",
+  "tokio/rt-multi-thread",
+  "tokio/signal",
+]
+
+[dependencies]
+agent-sdk = { version = "0.12.0", default-features = false }
+anyhow = "1.0.102"
+async-trait = "0.1.89"
+axum = { version = "0.8.8", optional = true }
+base64 = "0.22.1"
+image = { version = "0.25.10", default-features = false, features = ["jpeg", "png", "webp"] }
+lynx-headless-rust-test-runner = { path = "../../lynx/headless-rust-test-runner" }
+rayon = "1.11.0"
+reqwest = { version = "0.13.4", default-features = false, features = ["json", "rustls"] }
+serde = { workspace = true, features = ["derive"] }
+serde_json = { workspace = true, features = ["preserve_order"] }
+socket2 = { version = "0.6.4", optional = true }
+thiserror = "2.0.18"
+tokio = { workspace = true, features = ["macros", "rt", "sync", "time"] }
+
+[[bin]]
+name = "ui-judge-server"
+path = "src/main.rs"
+required-features = ["server"]

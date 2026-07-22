@@ -18,5 +18,8 @@
     "@lynx-js/swc-plugin-reactlynx": "workspace:*",
     "@lynx-js/swc-plugin-reactlynx-compat": "workspace:*",
     "@rspack/core": "catalog:rspack"
+  },
+  "devDependencies": {
+    "@types/node": "^24.10.13"
   }
 }

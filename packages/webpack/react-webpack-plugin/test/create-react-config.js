@@ -105,7 +105,7 @@ export function createConfig(loaderOptions, pluginOptions, swcLoaderOptions) {
         new compiler.rspack.BannerPlugin({
           banner: `var globDynamicComponentEntry;`,
           raw: true,
-          test: /background\.js$/,
+          test: /background[^/]*\.js$/,
         }).apply(compiler);
       },
     ],

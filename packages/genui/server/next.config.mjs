@@ -6,12 +6,6 @@
 const nextConfig = {
   serverExternalPackages: [
     '@mastra/core',
-    '@lynx-js/ui-judge',
-    '@midscene/core',
-    '@midscene/shared',
-    '@midscene/web',
-    '@sparticuz/chromium',
-    'playwright-core',
   ],
 };
 

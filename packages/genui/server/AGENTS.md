@@ -1,6 +1,7 @@
-# A2UI Server
+# GenUI Server
 
-This package contains the Next.js server for A2UI agent APIs.
+This package contains the Next.js server for GenUI agent APIs, including
+A2UI, OpenUI, and MCP Apps.
 
 ## Deployment Model
 
@@ -49,7 +50,8 @@ instead so the playground keeps working.
 ## Security
 
 By default, request bodies submitted to `/a2ui/chat`, `/a2ui/stream`,
-and `/a2ui/action` **cannot** override `apiKey` or `baseURL`. This
+`/a2ui/action`, and `/mcp-apps/stream` **cannot** override `apiKey` or
+`baseURL`. This
 prevents an unauthenticated client from turning the server into an open
 proxy that uses arbitrary keys against arbitrary OpenAI-compatible
 endpoints.
@@ -66,7 +68,8 @@ authentication and an allow-list are added in front of the server.
 
 ## Rate Limiting
 
-The `/a2ui/chat`, `/a2ui/stream`, and `/a2ui/action` routes share an
+The `/a2ui/chat`, `/a2ui/stream`, `/a2ui/action`, and `/mcp-apps/stream`
+routes share an
 in-process fixed-window rate limiter keyed by client IP (`x-forwarded-for`
 
 > `x-real-ip` > `unknown`). When a client exceeds the limit, the
@@ -92,8 +95,8 @@ front of this server.
 ## Conversation Context
 
 The server does not keep per-thread conversation memory. `/a2ui/chat`,
-`/a2ui/stream`, `/a2ui/action`, and `/a2ui/action/stream` accept an optional
-`conversation` request field:
+`/a2ui/stream`, `/a2ui/action`, `/a2ui/action/stream`, and
+`/mcp-apps/stream` accept an optional `conversation` request field:
 
 ```json
 {

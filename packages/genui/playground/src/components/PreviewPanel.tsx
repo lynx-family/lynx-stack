@@ -29,9 +29,11 @@ import { DEFAULT_A2UI_DEMO_URL } from '../utils/demoUrl.js';
 import type { Protocol } from '../utils/protocol.js';
 import { publishOpenUIPayload } from '../utils/publishPayload.js';
 import {
+  buildMcpAppsRenderUrl,
   buildOpenUIRenderUrl,
   buildRenderUrl,
   canInlineOpenUIRenderUrl,
+  hasShareableA2UIRenderPayload,
 } from '../utils/renderUrl.js';
 
 declare const __A2UI_PLAYGROUND_CLIENT_PAYLOAD_STORE__: boolean;
@@ -102,6 +104,12 @@ interface OpenUIPreviewSource {
   playbackMode?: boolean;
 }
 
+export interface McpAppsPreviewSource {
+  kind: 'mcp-apps';
+  mcpAppData: unknown;
+  theme?: 'light' | 'dark';
+}
+
 interface PlaceholderPreviewSource {
   kind: 'placeholder';
   item: PreviewQrItem;
@@ -110,6 +118,7 @@ interface PlaceholderPreviewSource {
 export type PreviewPanelSource =
   | A2UIPreviewSource
   | OpenUIPreviewSource
+  | McpAppsPreviewSource
   | PlaceholderPreviewSource;
 
 export type PreviewMetricName = 'fcp' | 'fmp' | 'tti' | 'render';
@@ -575,13 +584,9 @@ export function PreviewPanel(props: PreviewPanelProps) {
 
     if (previewSource.kind === 'a2ui') {
       const useClientPayloadStore = shouldUseClientPayloadStore();
-      const canSharePayload = !!previewSource.demoId
-        || !!previewSource.messagesUrl
+      const canSharePayload = hasShareableA2UIRenderPayload(previewSource)
         || useClientPayloadStore;
-      const hasInlineMessages = Array.isArray(previewSource.messages)
-        ? previewSource.messages.length > 0
-        : previewSource.messages !== undefined;
-      if (!canSharePayload && !hasInlineMessages) {
+      if (!canSharePayload) {
         setRenderUrl('');
         setRenderShareUrl('');
         setLynxDevUrl('');
@@ -766,6 +771,36 @@ export function PreviewPanel(props: PreviewPanelProps) {
       return;
     }
 
+    if (previewSource.kind === 'mcp-apps') {
+      setRenderUrl(buildMcpAppsRenderUrl({
+        mcpAppData: previewSource.mcpAppData,
+        theme: previewSource.theme,
+      }, baseUrl));
+      setRenderShareUrl(buildMcpAppsRenderUrl({
+        mcpAppData: previewSource.mcpAppData,
+        theme: previewSource.theme,
+      }, shareBaseUrl));
+
+      if (!rspeedyDevUrl) {
+        setLynxDevUrl('');
+        return;
+      }
+      const nativeUrl = new URL(rspeedyDevUrl);
+      nativeUrl.pathname = nativeUrl.pathname.replace(
+        'a2ui.lynx',
+        'mcp-apps.lynx',
+      );
+      nativeUrl.searchParams.set(
+        'mcpAppData',
+        JSON.stringify(previewSource.mcpAppData),
+      );
+      if (previewSource.theme) {
+        nativeUrl.searchParams.set('theme', previewSource.theme);
+      }
+      setLynxDevUrl(nativeUrl.toString());
+      return;
+    }
+
     const inlineUrl = buildOpenUIRenderUrl({
       rawText: previewSource.rawText,
       theme: previewSource.theme,
@@ -882,8 +917,7 @@ export function PreviewPanel(props: PreviewPanelProps) {
     }
 
     const showQrCode = previewSource.kind !== 'a2ui'
-      || !!previewSource.demoId
-      || !!previewSource.messagesUrl;
+      || hasShareableA2UIRenderPayload(previewSource);
 
     const cards: Array<{ key: string; item: PreviewQrItem }> = [];
     if (renderShareUrl) {
@@ -1214,6 +1248,7 @@ export function PreviewPanel(props: PreviewPanelProps) {
             {showSimulationBar
                 && previewSource
                 && previewSource.kind !== 'placeholder'
+                && previewSource.kind !== 'mcp-apps'
               ? (
                 <PreviewSimulationBar
                   speed={speed}

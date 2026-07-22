@@ -6,7 +6,7 @@ import { createOpenAI } from '@ai-sdk/openai';
 import type { AgentConfig } from '@mastra/core/agent';
 
 import { isOfficialOpenAIBaseURL } from './openai-utils';
-import type { ChatMessage } from '../service/a2ui-agent';
+import type { ChatMessage } from '../service/common/types';
 
 export interface OpenAIProviderOptions {
   apiKey?: string | undefined;

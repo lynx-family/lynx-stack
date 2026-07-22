@@ -2,12 +2,7 @@ use serde::Deserialize;
 use serde_json::Value;
 use std::{borrow::Cow, collections::HashSet, fmt::Debug};
 use swc_core::{
-  common::{
-    comments::{Comment, CommentKind, Comments},
-    errors::HANDLER,
-    util::take::Take,
-    Spanned, DUMMY_SP,
-  },
+  common::{comments::Comments, errors::HANDLER, util::take::Take, DUMMY_SP},
   ecma::{
     ast::*,
     utils::{calc_literal_cost, prepend_stmt},
@@ -48,7 +43,7 @@ where
   opts: DynamicImportVisitorConfig,
   has_inner_lazy_bundle: bool,
   named_imports: HashSet<Ident>,
-  comments: Option<C>,
+  _comments: Option<C>,
 }
 
 impl<C> Default for DynamicImportVisitor<C>
@@ -67,7 +62,7 @@ where
   pub fn new(opts: DynamicImportVisitorConfig, comments: Option<C>) -> Self {
     DynamicImportVisitor {
       opts,
-      comments,
+      _comments: comments,
       has_inner_lazy_bundle: false,
       named_imports: HashSet::new(),
     }
@@ -112,6 +107,24 @@ fn is_import_call_with_type(call_expr: &CallExpr) -> (bool, bool, Value) {
       _ => (true, false, Value::Null),
     },
     _ => (false, false, Value::Null),
+  }
+}
+
+fn import_call_has_with_key(call_expr: &CallExpr, key: &str) -> bool {
+  match &call_expr.callee {
+    Callee::Import(_) if call_expr.args.len() >= 2 => match &*call_expr.args[1].expr {
+      Expr::Object(object) => {
+        let (is_lit, _) = calc_literal_cost(object, false);
+        if is_lit {
+          let with = jsonify(Expr::Object(object.clone()));
+          with.pointer(&format!("/with/{key}")).is_some()
+        } else {
+          false
+        }
+      }
+      _ => false,
+    },
+    _ => false,
   }
 }
 
@@ -168,6 +181,10 @@ where
 
     let (is_import_call_lit, is_import_call_str_lit, str_lit) = is_import_call_str_lit(call_expr);
     let (has_option, is_import_call_with_type, _with_type) = is_import_call_with_type(call_expr);
+    // FetchBundle lazy bundles accept `{ with: { mode: 'sync' | 'async' } }`
+    // (read at build time via the dependency's import attributes), so a `mode`
+    // option is valid on its own without `type`.
+    let is_import_call_with_mode = import_call_has_with_key(call_expr, "mode");
 
     // TODO: reject dynamic import without `{ with: { type: "component" } }`
 
@@ -194,7 +211,7 @@ where
       || str_lit.starts_with("//");
 
     if is_import_call_str_lit && !is_explicitly_external {
-      if has_option && !is_import_call_with_type {
+      if has_option && !is_import_call_with_type && !is_import_call_with_mode {
         HANDLER.with(|handler| {
           handler
             .struct_span_err(
@@ -209,14 +226,6 @@ where
         return;
       }
 
-      self.comments.add_leading(
-        call_expr.args[0].span_lo(),
-        Comment {
-          span: DUMMY_SP,
-          kind: CommentKind::Block,
-          text: format!("webpackChunkName: \"{}-{}\"", str_lit, self.opts.layer).into(),
-        },
-      );
       self.has_inner_lazy_bundle = true;
     } else {
       let ident: Ident = "__dynamicImport".into();
@@ -324,6 +333,12 @@ mod tests {
       await import("https://www/a.js", { with: { type: "component" } });
       await import(url, { with: { type: "component" } });
       await import(url+"?v=1.0", { with: { type: "component" } });
+
+      await import("./index.js", { with: { mode: "sync" } });
+      await import("./index.js", { with: { mode: "async" } });
+      await import("ftp://www/a.js", { with: { mode: "sync" } });
+      await import("https://www/a.js", { with: { mode: "async" } });
+      await import("./index.js", { with: { type: "component", mode: "sync" } });
     })();
     "#
   );

@@ -14,10 +14,10 @@
 - Bundle: main3/template.js
 - Bundle: main4.js
 - Bundle: main4/template.js
-- Manifest: index.css.hot-update.json, size: 2354
-- Manifest: main2.css.hot-update.json, size: 2354
-- Manifest: main3.css.hot-update.json, size: 2354
-- Manifest: main4.css.hot-update.json, size: 2354
+- Manifest: index.css.hot-update.json, size: 2470
+- Manifest: main2.css.hot-update.json, size: 2470
+- Manifest: main3.css.hot-update.json, size: 2470
+- Manifest: main4.css.hot-update.json, size: 2470
 
 ## Manifest
 
@@ -48,6 +48,9 @@
         "useNewSwiper": true,
         "enableNewIntersectionObserver": true,
         "enableNativeList": true,
+        "enableNewSticky": true,
+        "flexBasisZeroPercent": true,
+        "enableGridPlacementShorthands": true,
         "syncXElementRegistry": true,
         "enableA11y": true,
         "enableAccessibilityElement": false,
@@ -208,6 +211,9 @@
         "useNewSwiper": true,
         "enableNewIntersectionObserver": true,
         "enableNativeList": true,
+        "enableNewSticky": true,
+        "flexBasisZeroPercent": true,
+        "enableGridPlacementShorthands": true,
         "syncXElementRegistry": true,
         "enableA11y": true,
         "enableAccessibilityElement": false,
@@ -368,6 +374,9 @@
         "useNewSwiper": true,
         "enableNewIntersectionObserver": true,
         "enableNativeList": true,
+        "enableNewSticky": true,
+        "flexBasisZeroPercent": true,
+        "enableGridPlacementShorthands": true,
         "syncXElementRegistry": true,
         "enableA11y": true,
         "enableAccessibilityElement": false,
@@ -528,6 +537,9 @@
         "useNewSwiper": true,
         "enableNewIntersectionObserver": true,
         "enableNativeList": true,
+        "enableNewSticky": true,
+        "flexBasisZeroPercent": true,
+        "enableGridPlacementShorthands": true,
         "syncXElementRegistry": true,
         "enableA11y": true,
         "enableAccessibilityElement": false,

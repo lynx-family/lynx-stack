@@ -7,6 +7,8 @@
 import { Rpc, type RpcCallType } from '@lynx-js/web-worker-rpc';
 import {
   dispatchCoreContextOnBackgroundEndpoint,
+  dispatchDevtoolEventOnBackgroundEndpoint,
+  dispatchDevtoolEventOnMainThreadEndpoint,
   dispatchJSContextOnMainThreadEndpoint,
   disposeEndpoint,
   markTimingEndpoint,
@@ -75,6 +77,9 @@ export class BackgroundThread implements AsyncDisposable {
 
   readonly postTimingFlags: RpcCallType<typeof postTimingFlagsEndpoint>;
   readonly sendGlobalEvent: RpcCallType<typeof sendGlobalEventEndpoint>;
+  readonly sendDevtoolEvent: RpcCallType<
+    typeof dispatchDevtoolEventOnBackgroundEndpoint
+  >;
   readonly publicComponentEvent: RpcCallType<
     typeof publicComponentEventEndpoint
   >;
@@ -114,6 +119,9 @@ export class BackgroundThread implements AsyncDisposable {
     this.#batchSendTimingInfo = this.#rpc.createCall(markTimingEndpoint);
     this.postTimingFlags = this.#rpc.createCall(postTimingFlagsEndpoint);
     this.sendGlobalEvent = this.#rpc.createCall(sendGlobalEventEndpoint);
+    this.sendDevtoolEvent = this.#rpc.createCall(
+      dispatchDevtoolEventOnBackgroundEndpoint,
+    );
     this.publicComponentEvent = this.#rpc.createCall(
       publicComponentEventEndpoint,
     );
@@ -183,7 +191,10 @@ export class BackgroundThread implements AsyncDisposable {
           this.#lynxViewInstance.mainThreadGlobalThis as any
         )[methodName];
         if (typeof method === 'function') {
-          method.call(this.#lynxViewInstance.mainThreadGlobalThis, data);
+          return method.call(
+            this.#lynxViewInstance.mainThreadGlobalThis,
+            data,
+          );
         } else {
           console.error(
             `Method ${methodName} not found on mainThreadGlobalThis`,
@@ -215,6 +226,19 @@ export class BackgroundThread implements AsyncDisposable {
         this.#lynxViewInstance.rootDom.dispatchEvent(
           new CustomEvent(eventType, {
             detail,
+            bubbles: true,
+            cancelable: true,
+            composed: true,
+          }),
+        );
+      },
+    );
+    this.#rpc.registerHandler(
+      dispatchDevtoolEventOnMainThreadEndpoint,
+      (event) => {
+        this.#lynxViewInstance.parentDom.dispatchEvent(
+          new CustomEvent('devtoolMessage', {
+            detail: event,
             bubbles: true,
             cancelable: true,
             composed: true,

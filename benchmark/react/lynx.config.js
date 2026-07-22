@@ -66,6 +66,18 @@ export default defineConfig({
       '011-transform-async-to-generator': [
         './cases/011-transform-async-to-generator/index.tsx',
       ],
+      '012-attrs-compile': [
+        './src/patchProfile.ts',
+        './cases/012-attrs-compile/index.tsx',
+      ],
+      '013-attrs-runtime': [
+        './src/patchProfile.ts',
+        './cases/013-attrs-runtime/index.tsx',
+      ],
+      '014-attrs-mixed': [
+        './src/patchProfile.ts',
+        './cases/014-attrs-mixed/index.tsx',
+      ],
     },
   },
   plugins: [

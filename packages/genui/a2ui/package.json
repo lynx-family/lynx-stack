@@ -98,6 +98,11 @@
       "default": "./dist/catalog/LazyComponent/index.js"
     },
     "./catalog/LazyComponent/catalog.json": "./dist/catalog/LazyComponent/catalog.json",
+    "./catalog/McpApp": {
+      "types": "./dist/catalog/McpApp/index.d.ts",
+      "default": "./dist/catalog/McpApp/index.js"
+    },
+    "./catalog/McpApp/catalog.json": "./dist/catalog/McpApp/catalog.json",
     "./catalog/TextField": {
       "types": "./dist/catalog/TextField/index.d.ts",
       "default": "./dist/catalog/TextField/index.js"

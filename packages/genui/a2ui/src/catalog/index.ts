@@ -38,6 +38,7 @@ export { PieChart } from './PieChart/index.jsx';
 export { Column } from './Column/index.jsx';
 export { Divider } from './Divider/index.jsx';
 export { LazyComponent } from './LazyComponent/index.jsx';
+export { McpApp } from './McpApp/index.jsx';
 export { Icon } from './Icon/index.jsx';
 export { Image } from './Image/index.jsx';
 export { List } from './List/index.jsx';

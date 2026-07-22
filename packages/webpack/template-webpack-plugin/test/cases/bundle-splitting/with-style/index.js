@@ -11,7 +11,7 @@ import { join } from 'node:path';
 it('should merge content of style chunk to cssMap for a lazy bundle', async () => {
   await import(/* webpackChunkName: 'test' */ './foo.js');
 
-  const tasmJSONPath = join(__dirname, 'async', 'test', 'tasm.json');
+  const tasmJSONPath = join(__dirname, 'lazy-bundle', 'test', 'tasm.json');
   const content = await readFile(tasmJSONPath, 'utf-8');
   const { css } = JSON.parse(content);
   expect(css.cssMap['0'][0].selectorText.value).toBe('.red');

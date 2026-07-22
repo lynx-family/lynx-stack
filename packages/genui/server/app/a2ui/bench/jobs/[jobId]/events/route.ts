@@ -4,7 +4,12 @@
 
 import { getBenchJobStore } from '../../../../../../service/a2ui-bench-store';
 import type { BenchJobEvent } from '../../../../../../service/a2ui-bench-types';
-import { corsHeaders, corsPreflight } from '../../../../cors';
+import { corsPreflight } from '../../../../../common/cors';
+import {
+  encodeSSE,
+  encodeSseComment,
+  sseHeaders,
+} from '../../../../../common/sse';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
@@ -25,14 +30,7 @@ async function readJobId(context: RouteContext): Promise<string> {
 }
 
 function encodeSseEvent(event: BenchJobEvent): Uint8Array {
-  const payload = JSON.stringify(event.data);
-  return new TextEncoder().encode(
-    `id: ${event.id}\nevent: ${event.event}\ndata: ${payload}\n\n`,
-  );
-}
-
-function encodeSseComment(comment: string): Uint8Array {
-  return new TextEncoder().encode(`: ${comment}\n\n`);
+  return encodeSSE(event.event, event.data, { id: event.id });
 }
 
 function isTerminalEvent(event: BenchJobEvent): boolean {
@@ -48,18 +46,9 @@ export async function GET(req: Request, context: RouteContext) {
   const store = getBenchJobStore();
   const job = store.getJob(jobId);
   if (!job) {
-    const body = new TextEncoder().encode(
-      `event: error\ndata: ${
-        JSON.stringify({ message: 'bench job not found' })
-      }\n\n`,
-    );
+    const body = encodeSSE('error', { message: 'bench job not found' });
     return new Response(body, {
-      headers: corsHeaders(req, {
-        'Content-Type': 'text/event-stream; charset=utf-8',
-        'Cache-Control': 'no-cache, no-transform',
-        Connection: 'keep-alive',
-        'X-Accel-Buffering': 'no',
-      }),
+      headers: sseHeaders(req),
     });
   }
 
@@ -129,11 +118,6 @@ export async function GET(req: Request, context: RouteContext) {
   });
 
   return new Response(stream, {
-    headers: corsHeaders(req, {
-      'Content-Type': 'text/event-stream; charset=utf-8',
-      'Cache-Control': 'no-cache, no-transform',
-      Connection: 'keep-alive',
-      'X-Accel-Buffering': 'no',
-    }),
+    headers: sseHeaders(req),
   });
 }

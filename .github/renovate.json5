@@ -1,5 +1,30 @@
 {
   "$schema": "https://docs.renovatebot.com/renovate-schema.json",
+
+  // Mend-hosted gives the whole job 3 GB, shared by Renovate itself and the
+  // pnpm it spawns. Measured: Renovate alone reaches ~2.0 GB by the time it
+  // runs pnpm, and one `pnpm update --lockfile-only --recursive` across this
+  // workspace needs another ~1.1-2.6 GB -- hence `kernel-out-of-memory`.
+  // Everything below exists to keep that sum under 3 GB.
+  // See: https://docs.renovatebot.com/mend-hosted/faq/#im-hitting-a-timeout--kernel-out-of-memory-limit-with-a-pnpmyarn-project
+  "env": {
+    "PNPM_MAX_WORKERS": "1",
+  },
+  // Node auto-sizes its heap to 1536 MB inside a 3 GB cgroup, so this only has
+  // any effect below that. 1024 is the floor -- pnpm dies with "JavaScript heap
+  // out of memory" at 768.
+  "toolSettings": {
+    "nodeMaxMemory": 1024,
+  },
+
+  // Renovate holds every alert's full advisory text in memory, and these
+  // branches force `rangeStrategy: update-lockfile`, which is what spawns the
+  // pnpm run that gets OOM-killed. GitHub's own Dependabot alerts still fire;
+  // only Renovate's automatic security PRs are lost.
+  "vulnerabilityAlerts": {
+    "enabled": false,
+  },
+
   "extends": [
     "config:recommended",
     ":maintainLockFilesWeekly",
@@ -29,6 +54,14 @@
   ],
 
   "labels": ["bot:renovate"],
+
+  // Lowered from 20/4 (#2996). Renovate's own memory grows with every branch it
+  // works through -- measured 1.99 GB at 20 vs 1.54 GB at 5 -- and that 0.45 GB
+  // is what the pnpm run needs to survive. The cost is a longer triage queue:
+  // updates past the limit park as "Rate-Limited" on the Dependency Dashboard.
+  "prConcurrentLimit": 5,
+  "branchConcurrentLimit": 5,
+  "prHourlyLimit": 2,
 
   "packageRules": [
     {
@@ -245,9 +278,9 @@
     },
   ],
 
-  "postUpdateOptions": [
-    "pnpmDedupe",
-  ],
+  // No `pnpmDedupe`: `pnpm dedupe` alone exhausts the 3 GB job budget even with
+  // the lockfile intact, and it runs right after every successful update.
+  "postUpdateOptions": [],
   "ignoreDeps": [
     // align Node.js version minimum requirements
     "node",

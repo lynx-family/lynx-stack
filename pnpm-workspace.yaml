@@ -59,6 +59,11 @@ minimumReleaseAgeExclude:
 # is available and skipped (with a warning) when it is not.
 minimumReleaseAgeStrict: false
 
+# Caps pnpm's concurrent registry fetches. Fewer in-flight packuments means a
+# lower peak: measured 2.56 -> 2.26 GB, which is what keeps the Renovate job
+# under Mend's 3 GB limit. Slower on a cold metadata cache, free on a warm one.
+networkConcurrency: 4
+
 peerDependencyRules:
   allowedVersions:
     "@lynx-js/lynx-ui>@types/react": "^19.2.0"

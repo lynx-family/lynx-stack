@@ -120,7 +120,11 @@ export function resolveSharedConversationProtocol(
   doc: Pick<SharedConversationDoc, 'protocol'>,
 ): ConversationProtocol | null {
   if (doc.protocol === undefined) return 'a2ui';
-  if (doc.protocol === 'a2ui' || doc.protocol === 'openui') {
+  if (
+    doc.protocol === 'a2ui'
+    || doc.protocol === 'openui'
+    || doc.protocol === 'mcp-apps'
+  ) {
     return doc.protocol;
   }
   return null;

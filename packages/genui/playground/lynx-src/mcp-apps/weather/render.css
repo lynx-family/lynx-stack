@@ -1,0 +1,251 @@
+/* Copyright 2026 The Lynx Authors. All rights reserved.
+ * Licensed under the Apache License Version 2.0 that can be found in the
+ * LICENSE file in the root directory of this source tree. */
+
+.weatherCard {
+  width: 100%;
+  max-width: 420px;
+  flex-shrink: 0;
+  padding: 1.25rem;
+  border-radius: 1.5rem;
+  display: flex;
+  flex-direction: column;
+  background: linear-gradient(145deg, #1d74d5 0%, #2958bb 52%, #433c9f 100%);
+  box-shadow: 0 1rem 2.5rem rgba(21, 58, 126, 0.28);
+  box-sizing: border-box;
+}
+
+.weatherHeader,
+.weatherCurrent,
+.weatherMetrics,
+.weatherForecast,
+.weatherRefresh {
+  display: flex;
+}
+
+.weatherHeader {
+  flex-direction: row;
+  justify-content: space-between;
+  align-items: flex-start;
+}
+
+.weatherLocationGroup {
+  flex: 1;
+  min-width: 0;
+  padding-right: 0.75rem;
+  display: flex;
+  flex-direction: column;
+}
+
+.weatherEyebrow {
+  color: rgba(255, 255, 255, 0.66);
+  font-size: 0.66rem;
+  font-weight: 700;
+  letter-spacing: 0.08rem;
+}
+
+.weatherCity {
+  width: 100%;
+  margin-top: 0.22rem;
+  color: #ffffff;
+  font-size: 1.45rem;
+  font-weight: 700;
+  line-height: 1.2;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.weatherUpdated {
+  margin-top: 0.2rem;
+  color: rgba(255, 255, 255, 0.68);
+  font-size: 0.72rem;
+}
+
+.weatherIconBubble {
+  width: 3.6rem;
+  height: 3.6rem;
+  flex-shrink: 0;
+  border-radius: 1.8rem;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  background-color: rgba(255, 255, 255, 0.15);
+}
+
+.weatherIcon {
+  font-size: 2rem;
+}
+
+.weatherCurrent {
+  margin-top: 1.5rem;
+  flex-direction: row;
+  align-items: flex-end;
+}
+
+.weatherTemperature {
+  flex-shrink: 0;
+  color: #ffffff;
+  font-size: 3.75rem;
+  font-weight: 300;
+  line-height: 1;
+  letter-spacing: -0.16rem;
+}
+
+.weatherCurrentCopy {
+  flex: 1;
+  min-width: 0;
+  margin-left: 0.8rem;
+  padding-bottom: 0.3rem;
+  display: flex;
+  flex-direction: column;
+}
+
+.weatherCondition {
+  width: 100%;
+  color: #ffffff;
+  font-size: 1rem;
+  font-weight: 600;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.weatherRange {
+  margin-top: 0.25rem;
+  color: rgba(255, 255, 255, 0.68);
+  font-size: 0.72rem;
+}
+
+.weatherMetrics {
+  margin-top: 1.35rem;
+  padding: 0.85rem 0;
+  flex-direction: row;
+  border-top: 1px solid rgba(255, 255, 255, 0.18);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.18);
+}
+
+.weatherMetric {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.weatherMetricDivider {
+  width: 1px;
+  background-color: rgba(255, 255, 255, 0.18);
+}
+
+.weatherMetricLabel {
+  color: rgba(255, 255, 255, 0.56);
+  font-size: 0.62rem;
+  font-weight: 700;
+  letter-spacing: 0.05rem;
+}
+
+.weatherMetricValue {
+  margin-top: 0.22rem;
+  color: #ffffff;
+  font-size: 0.92rem;
+  font-weight: 600;
+}
+
+.weatherForecast {
+  margin-top: 1.15rem;
+  flex-direction: row;
+  align-items: stretch;
+  gap: 0.5rem;
+}
+
+.weatherForecastDay {
+  flex: 1 1 0%;
+  min-width: 0;
+  padding: 0.72rem 0.42rem;
+  border-radius: 0.9rem;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  background-color: rgba(255, 255, 255, 0.11);
+}
+
+.weatherForecastLabel,
+.weatherForecastRange {
+  width: 100%;
+  color: rgba(255, 255, 255, 0.78);
+  font-size: 0.65rem;
+  overflow: hidden;
+  text-align: center;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.weatherForecastIcon {
+  margin-top: 0.35rem;
+  font-size: 1.4rem;
+}
+
+.weatherForecastCondition {
+  margin-top: 0.25rem;
+  color: #ffffff;
+  font-size: 0.63rem;
+  text-align: center;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  overflow: hidden;
+  width: 100%;
+}
+
+.weatherForecastRange {
+  margin-top: 0.3rem;
+  font-weight: 600;
+}
+
+.weatherRefresh {
+  margin-top: 1rem;
+  height: 2.75rem;
+  border-radius: 1.38rem;
+  flex-direction: row;
+  justify-content: center;
+  align-items: center;
+  background-color: rgba(255, 255, 255, 0.95);
+}
+
+.weatherRefreshIcon {
+  color: #2859b9;
+  font-size: 1.15rem;
+  font-weight: 700;
+}
+
+.weatherRefreshText {
+  margin-left: 0.42rem;
+  color: #2859b9;
+  font-size: 0.82rem;
+  font-weight: 700;
+}
+
+.weatherFooter {
+  margin-top: 0.72rem;
+  color: rgba(255, 255, 255, 0.5);
+  font-size: 0.62rem;
+  text-align: center;
+}
+
+.weatherError {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.weatherErrorTitle {
+  color: #ffffff;
+  font-size: 1rem;
+  font-weight: 700;
+}
+
+.weatherErrorText {
+  margin-top: 0.5rem;
+  color: rgba(255, 255, 255, 0.72);
+  font-size: 0.78rem;
+  text-align: center;
+}

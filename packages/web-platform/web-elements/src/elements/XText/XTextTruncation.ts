@@ -21,6 +21,50 @@ type NodeInfo = {
 type RectInfo = { rect: DOMRect; rectIndex: number } & NodeInfo;
 type RawLineInfo = RectInfo[];
 type LynxLineInfo = { start: number; end: number };
+type RangePosition = { container: Node; offset: number };
+
+const clamp = (value: number, min: number, max: number) =>
+  Math.min(Math.max(value, min), max);
+
+const getSiblingIndex = (node: Node) => {
+  let index = 0;
+  let previousNode = node.previousSibling;
+  while (previousNode) {
+    index++;
+    previousNode = previousNode.previousSibling;
+  }
+  return index;
+};
+
+const getRangePosition = (
+  nodeInfo: NodeInfo,
+  offsetInNode: number,
+): RangePosition => {
+  const { node } = nodeInfo;
+  if (node.nodeType === Node.TEXT_NODE) {
+    return {
+      container: node,
+      offset: clamp(offsetInNode, 0, (node as Text).data.length),
+    };
+  }
+
+  // Elements are one virtual character, while DOM Range offsets address child
+  // indexes. Use the parent's before/after-element boundary instead.
+  const elementOffset = offsetInNode > 0 ? 1 : 0;
+  const parentNode = node.parentNode;
+  if (!parentNode) {
+    return {
+      container: node,
+      offset: clamp(elementOffset, 0, node.childNodes.length),
+    };
+  }
+
+  return {
+    container: parentNode,
+    offset: getSiblingIndex(node) + elementOffset,
+  };
+};
+
 export class XTextTruncation
   implements InstanceType<AttributeReactiveClass<typeof XText>>
 {
@@ -163,17 +207,28 @@ export class XTextTruncation
           let currentNodeInfo: NodeInfo | undefined = measure
             .getNodeInfoByCharIndex(maxLineEndAt)!;
           const endCharInNodeIndex = end - currentNodeInfo.start;
-          range.setEnd(currentNodeInfo.node, endCharInNodeIndex);
-          range.setStart(currentNodeInfo.node, endCharInNodeIndex);
+          const initialRangePosition = getRangePosition(
+            currentNodeInfo,
+            endCharInNodeIndex,
+          );
+          range.setEnd(
+            initialRangePosition.container,
+            initialRangePosition.offset,
+          );
+          range.setStart(
+            initialRangePosition.container,
+            initialRangePosition.offset,
+          );
           while (
             range.getBoundingClientRect().width < inlineTruncationWidth
             && (maxLineEndAt -= 1)
             && (currentNodeInfo = measure.getNodeInfoByCharIndex(maxLineEndAt))
           ) {
-            range.setStart(
-              currentNodeInfo.node,
+            const rangePosition = getRangePosition(
+              currentNodeInfo,
               maxLineEndAt - currentNodeInfo.start,
             );
+            range.setStart(rangePosition.container, rangePosition.offset);
           }
         } else {
           maxLineEndAt = start;

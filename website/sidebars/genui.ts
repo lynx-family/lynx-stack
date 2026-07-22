@@ -13,9 +13,21 @@ export function createGenUIGuideReadmeDocs(options: {
   en: SidebarGroup;
   zh: SidebarGroup;
 } {
+  const genuiPackageRoot = path.join(
+    options.repositoryRoot,
+    'packages/genui',
+  );
   const a2uiPackageRoot = path.join(
     options.repositoryRoot,
     'packages/genui/a2ui',
+  );
+  const a2uiCatalogExtractorPackageRoot = path.join(
+    options.repositoryRoot,
+    'packages/genui/a2ui-catalog-extractor',
+  );
+  const openuiPackageRoot = path.join(
+    options.repositoryRoot,
+    'packages/genui/openui',
   );
   const enGuideRoot = path.join(
     options.websiteRoot,
@@ -25,6 +37,15 @@ export function createGenUIGuideReadmeDocs(options: {
     options.websiteRoot,
     'docs/zh/guide/genui',
   );
+
+  syncDoc({
+    outFile: path.join(enGuideRoot, 'index.md'),
+    sourceFile: path.join(genuiPackageRoot, 'docs/overview.md'),
+  });
+  syncDoc({
+    outFile: path.join(zhGuideRoot, 'index.md'),
+    sourceFile: path.join(genuiPackageRoot, 'docs/overview_zh.md'),
+  });
 
   removeGeneratedDoc(path.join(enGuideRoot, 'a2ui'));
   removeGeneratedDoc(path.join(zhGuideRoot, 'a2ui'));
@@ -75,6 +96,73 @@ export function createGenUIGuideReadmeDocs(options: {
     replacements: A2UI_ZH_LINK_REPLACEMENTS,
     sourceFile: path.join(a2uiPackageRoot, 'docs/system-prompts_zh.md'),
   });
+  syncReadme({
+    languageSwitch:
+      'English | <a href="/zh/guide/genui/a2ui/catalog-extractor">简体中文</a>',
+    outFile: path.join(enGuideRoot, 'a2ui/catalog-extractor.md'),
+    sourceFile: path.join(a2uiCatalogExtractorPackageRoot, 'README.md'),
+    switchPattern: /^English \| \[简体中文\]\(\.\/readme\.zh_cn\.md\)$/m,
+  });
+  syncReadme({
+    languageSwitch:
+      '<a href="/guide/genui/a2ui/catalog-extractor">English</a> | 简体中文',
+    outFile: path.join(zhGuideRoot, 'a2ui/catalog-extractor.md'),
+    sourceFile: path.join(
+      a2uiCatalogExtractorPackageRoot,
+      'readme.zh_cn.md',
+    ),
+    switchPattern: /^\[English\]\(\.\/README\.md\) \| 简体中文$/m,
+  });
+
+  removeGeneratedDoc(path.join(enGuideRoot, 'openui'));
+  removeGeneratedDoc(path.join(zhGuideRoot, 'openui'));
+
+  syncReadme({
+    languageSwitch: 'English | <a href="/zh/guide/genui/openui">简体中文</a>',
+    outFile: path.join(enGuideRoot, 'openui.md'),
+    replacements: OPENUI_EN_LINK_REPLACEMENTS,
+    sourceFile: path.join(openuiPackageRoot, 'README.md'),
+    switchPattern: /^English \| \[简体中文\]\(\.\/README_zh\.md\)$/m,
+  });
+
+  syncReadme({
+    languageSwitch: '<a href="/guide/genui/openui">English</a> | 简体中文',
+    outFile: path.join(zhGuideRoot, 'openui.md'),
+    replacements: OPENUI_ZH_LINK_REPLACEMENTS,
+    sourceFile: path.join(openuiPackageRoot, 'README_zh.md'),
+    switchPattern: /^\[English\]\(\.\/README\.md\) \| 简体中文$/m,
+  });
+
+  syncDoc({
+    outFile: path.join(enGuideRoot, 'openui/overview.md'),
+    replacements: OPENUI_EN_LINK_REPLACEMENTS,
+    sourceFile: path.join(openuiPackageRoot, 'docs/overview.md'),
+  });
+  syncDoc({
+    outFile: path.join(zhGuideRoot, 'openui/overview.md'),
+    replacements: OPENUI_ZH_LINK_REPLACEMENTS,
+    sourceFile: path.join(openuiPackageRoot, 'docs/overview_zh.md'),
+  });
+  syncDoc({
+    outFile: path.join(enGuideRoot, 'openui/library-guide.md'),
+    replacements: OPENUI_EN_LINK_REPLACEMENTS,
+    sourceFile: path.join(openuiPackageRoot, 'docs/library-guide.md'),
+  });
+  syncDoc({
+    outFile: path.join(zhGuideRoot, 'openui/library-guide.md'),
+    replacements: OPENUI_ZH_LINK_REPLACEMENTS,
+    sourceFile: path.join(openuiPackageRoot, 'docs/library-guide_zh.md'),
+  });
+  syncDoc({
+    outFile: path.join(enGuideRoot, 'openui/system-prompts.md'),
+    replacements: OPENUI_EN_LINK_REPLACEMENTS,
+    sourceFile: path.join(openuiPackageRoot, 'docs/system-prompts.md'),
+  });
+  syncDoc({
+    outFile: path.join(zhGuideRoot, 'openui/system-prompts.md'),
+    replacements: OPENUI_ZH_LINK_REPLACEMENTS,
+    sourceFile: path.join(openuiPackageRoot, 'docs/system-prompts_zh.md'),
+  });
 
   removeGeneratedDoc(
     path.join(
@@ -94,8 +182,20 @@ export function createGenUIGuideReadmeDocs(options: {
       text: 'GenUI',
       items: [
         {
+          text: 'Overview',
+          link: '/guide/genui',
+        },
+        {
           text: 'A2UI',
           items: A2UI_EN_SIDEBAR_ITEMS,
+        },
+        {
+          text: 'OpenUI',
+          items: OPENUI_EN_SIDEBAR_ITEMS,
+        },
+        {
+          text: 'Playground',
+          link: '/genui',
         },
       ],
     },
@@ -103,8 +203,20 @@ export function createGenUIGuideReadmeDocs(options: {
       text: 'GenUI',
       items: [
         {
+          text: '概览',
+          link: '/zh/guide/genui',
+        },
+        {
           text: 'A2UI',
           items: A2UI_ZH_SIDEBAR_ITEMS,
+        },
+        {
+          text: 'OpenUI',
+          items: OPENUI_ZH_SIDEBAR_ITEMS,
+        },
+        {
+          text: 'Playground',
+          link: '/zh/genui',
         },
       ],
     },
@@ -128,10 +240,6 @@ export const A2UI_EN_NAV_ITEMS = [
     text: 'System Prompts',
     link: '/guide/genui/a2ui/system-prompts',
   },
-  {
-    text: 'Playground',
-    link: '/genui',
-  },
 ];
 
 export const A2UI_ZH_NAV_ITEMS = [
@@ -151,6 +259,61 @@ export const A2UI_ZH_NAV_ITEMS = [
     text: 'System Prompts',
     link: '/zh/guide/genui/a2ui/system-prompts',
   },
+];
+
+export const OPENUI_EN_NAV_ITEMS = [
+  {
+    text: 'Introduction README',
+    link: '/guide/genui/openui',
+  },
+  {
+    text: 'Overview & Architecture',
+    link: '/guide/genui/openui/overview',
+  },
+  {
+    text: 'Libraries & Components',
+    link: '/guide/genui/openui/library-guide',
+  },
+  {
+    text: 'System Prompts',
+    link: '/guide/genui/openui/system-prompts',
+  },
+];
+
+export const OPENUI_ZH_NAV_ITEMS = [
+  {
+    text: '简介 README',
+    link: '/zh/guide/genui/openui',
+  },
+  {
+    text: '概览与架构',
+    link: '/zh/guide/genui/openui/overview',
+  },
+  {
+    text: 'Libraries 与组件',
+    link: '/zh/guide/genui/openui/library-guide',
+  },
+  {
+    text: 'System Prompts',
+    link: '/zh/guide/genui/openui/system-prompts',
+  },
+];
+
+export const GENUI_EN_NAV_ITEMS = [
+  {
+    text: 'GenUI Overview',
+    link: '/guide/genui',
+  },
+  {
+    text: 'A2UI',
+    link: '/guide/genui/a2ui',
+    items: A2UI_EN_NAV_ITEMS.slice(1),
+  },
+  {
+    text: 'OpenUI',
+    link: '/guide/genui/openui',
+    items: OPENUI_EN_NAV_ITEMS.slice(1),
+  },
   {
     text: 'Playground',
     link: '/genui',
@@ -167,6 +330,16 @@ const A2UI_ZH_SIDEBAR_ITEMS = A2UI_ZH_NAV_ITEMS.map(item => ({
   text: item.text.replace(' README', ''),
 }));
 
+const OPENUI_EN_SIDEBAR_ITEMS = OPENUI_EN_NAV_ITEMS.map(item => ({
+  ...item,
+  text: item.text.replace(' README', ''),
+}));
+
+const OPENUI_ZH_SIDEBAR_ITEMS = OPENUI_ZH_NAV_ITEMS.map(item => ({
+  ...item,
+  text: item.text.replace(' README', ''),
+}));
+
 const A2UI_EN_LINK_REPLACEMENTS = [
   ['./docs/overview.md', '/guide/genui/a2ui/overview'],
   ['./docs/catalog-guide.md', '/guide/genui/a2ui/catalog-guide'],
@@ -176,7 +349,7 @@ const A2UI_EN_LINK_REPLACEMENTS = [
   ['./system-prompts.md', '/guide/genui/a2ui/system-prompts'],
   [
     '../../a2ui-catalog-extractor/README.md',
-    'https://github.com/lynx-family/lynx-stack/tree/main/packages/genui/a2ui-catalog-extractor#readme',
+    '/guide/genui/a2ui/catalog-extractor',
   ],
   ['../README.md', '/guide/genui/a2ui'],
 ] as const;
@@ -190,9 +363,29 @@ const A2UI_ZH_LINK_REPLACEMENTS = [
   ['./system-prompts_zh.md', '/zh/guide/genui/a2ui/system-prompts'],
   [
     '../../a2ui-catalog-extractor/readme.zh_cn.md',
-    'https://github.com/lynx-family/lynx-stack/blob/main/packages/genui/a2ui-catalog-extractor/readme.zh_cn.md',
+    '/zh/guide/genui/a2ui/catalog-extractor',
   ],
   ['../README_zh.md', '/zh/guide/genui/a2ui'],
+] as const;
+
+const OPENUI_EN_LINK_REPLACEMENTS = [
+  ['./docs/overview.md', '/guide/genui/openui/overview'],
+  ['./docs/library-guide.md', '/guide/genui/openui/library-guide'],
+  ['./docs/system-prompts.md', '/guide/genui/openui/system-prompts'],
+  ['./overview.md', '/guide/genui/openui/overview'],
+  ['./library-guide.md', '/guide/genui/openui/library-guide'],
+  ['./system-prompts.md', '/guide/genui/openui/system-prompts'],
+  ['../README.md', '/guide/genui/openui'],
+] as const;
+
+const OPENUI_ZH_LINK_REPLACEMENTS = [
+  ['./docs/overview_zh.md', '/zh/guide/genui/openui/overview'],
+  ['./docs/library-guide_zh.md', '/zh/guide/genui/openui/library-guide'],
+  ['./docs/system-prompts_zh.md', '/zh/guide/genui/openui/system-prompts'],
+  ['./overview_zh.md', '/zh/guide/genui/openui/overview'],
+  ['./library-guide_zh.md', '/zh/guide/genui/openui/library-guide'],
+  ['./system-prompts_zh.md', '/zh/guide/genui/openui/system-prompts'],
+  ['../README_zh.md', '/zh/guide/genui/openui'],
 ] as const;
 
 function syncReadme(options: {

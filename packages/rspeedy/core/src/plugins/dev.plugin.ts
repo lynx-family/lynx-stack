@@ -423,7 +423,8 @@ async function resolveHostname(
     }
   }
 
-  return { hostname }
+  // Prefer an IPv4 loopback for client-facing URLs over the wildcard bind host.
+  return { hostname: await findIp('v4', true) ?? hostname }
 }
 
 function formatHostname(host: RsbuildServerHost | undefined): string {

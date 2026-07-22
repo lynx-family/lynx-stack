@@ -7,6 +7,7 @@
 import type { Asset } from '@rspack/core';
 import { AsyncSeriesBailHook } from '@rspack/lite-tapable';
 import { AsyncSeriesWaterfallHook } from '@rspack/lite-tapable';
+import type { ChunkGroup } from '@rspack/core';
 import type { Compilation } from '@rspack/core';
 import type { Compiler } from '@rspack/core';
 import * as CSS from '@lynx-js/css-serializer';
@@ -33,7 +34,8 @@ export interface EncodeOptions {
     // (undocumented)
     customSections: Record<string, {
         type?: 'lazy';
-        content: string | Record<string, unknown>;
+        encoding?: 'JsBytecode' | 'CSS';
+        content: string | Record<string, unknown> | undefined;
     }>;
     elementTemplate?: Record<string, unknown>;
     // (undocumented)
@@ -41,9 +43,9 @@ export interface EncodeOptions {
         root: string | undefined;
         lepusChunk: Record<string, string>;
         filename: string | undefined;
-    };
+    } | undefined;
     // (undocumented)
-    manifest: Record<string, string | undefined>;
+    manifest?: Record<string, string | undefined> | undefined;
 }
 
 // @public
@@ -78,6 +80,7 @@ export class LynxTemplatePlugin {
         cssSource: Record<string, string>;
     };
     static defaultOptions: Readonly<Required<LynxTemplatePluginOptions>>;
+    static getAsyncChunkLayoutName(compilation: Compilation, chunkId: string | number): string | undefined;
     static getLynxTemplatePluginHooks(compilation: Compilation): TemplateHooks;
 }
 
@@ -102,6 +105,7 @@ export interface LynxTemplatePluginOptions {
     experimental_isLazyBundle?: boolean;
     filename?: string | ((entryName: string) => string);
     intermediate?: string;
+    lazyBundleFetcher?: 'FetchBundle' | 'QueryComponent';
     lazyBundleFilename?: string;
     removeDescendantSelectorScope: boolean;
     targetSdkVersion: string;
@@ -152,13 +156,13 @@ export interface TemplateHooks {
         outputName: string;
         mainThreadAssets: Asset[];
         cssChunks: Asset[];
-        entryNames: string[];
+        chunkGroups: ChunkGroup[];
     }>;
     // @alpha
     beforeEncode: AsyncSeriesWaterfallHook<{
         encodeData: EncodeRawData;
         filenameTemplate: string;
-        entryNames: string[];
+        chunkGroups: ChunkGroup[];
         intermediate: string;
         intermediateAssets: string[];
     }>;
@@ -192,6 +196,6 @@ export class WebEncodePlugin {
 
 // Warnings were encountered during analysis:
 //
-// lib/LynxTemplatePlugin.d.ts:72:9 - (ae-forgotten-export) The symbol "EncodeRawData" needs to be exported by the entry point index.d.ts
+// lib/LynxTemplatePlugin.d.ts:73:9 - (ae-forgotten-export) The symbol "EncodeRawData" needs to be exported by the entry point index.d.ts
 
 ```

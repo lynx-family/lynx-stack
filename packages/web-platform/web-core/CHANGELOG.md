@@ -1,5 +1,15 @@
 # @lynx-js/web-core
 
+## 0.22.2
+
+### Patch Changes
+
+- Break a circular dependency in the web-core main thread runtime by using `import type` for type-only `LynxViewInstance` imports. ([#2927](https://github.com/lynx-family/lynx-stack/pull/2927))
+
+- Updated dependencies [[`db543ea`](https://github.com/lynx-family/lynx-stack/commit/db543ea9be725eb343cd6c2c4b0fc0785ab6a3d1)]:
+  - @lynx-js/web-elements@0.12.6
+  - @lynx-js/web-worker-rpc@0.22.2
+
 ## 0.22.1
 
 ### Patch Changes

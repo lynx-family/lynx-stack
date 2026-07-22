@@ -2,8 +2,9 @@
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
 
-import { createServer as createHttpServer } from 'node:http';
-
+// Browser-backed bench previews are being split out of genui-server. Keep the
+// complete implementation disabled until a browser-capable service owns it.
+/*
 import type { Browser, LaunchOptions } from 'playwright-core';
 
 import type { BenchJobRequest, BenchScenarioRequest } from './a2ui-bench-types';
@@ -32,34 +33,13 @@ interface PreviewMetricBag {
   tti?: unknown;
 }
 
-interface JudgeEnv {
-  apiKey?: string;
-  baseURL?: string;
-  model?: string;
-}
-
-interface JudgeProxy {
-  baseUrl: string;
-  close: () => Promise<void>;
-}
-
 const DEFAULT_PLAYGROUND_BASE_URL = 'https://lynx-stack.dev/genui/';
-const DEFAULT_JUDGE_TIMEOUT_MS = 120_000;
 const PREVIEW_WIDTH = 450;
 const PREVIEW_HEIGHT = 970;
 const IFRAME_WIDTH = 430;
 const IFRAME_HEIGHT = 932;
-const JUDGE_ENV_KEYS = [
-  'MIDSCENE_MODEL_API_KEY',
-  'MIDSCENE_MODEL_BASE_URL',
-  'MIDSCENE_MODEL_NAME',
-  'MIDSCENE_MODEL_TIMEOUT',
-  'OPENAI_API_KEY',
-  'OPENAI_BASE_URL',
-] as const;
 
 let browserPromise: Promise<Browser> | null = null;
-let judgeQueue: Promise<void> = Promise.resolve();
 
 const noop = () => undefined;
 
@@ -150,213 +130,6 @@ function readMetric(value: unknown): number {
   return typeof value === 'number' && Number.isFinite(value)
     ? Math.max(0, Math.round(value))
     : 0;
-}
-
-function normalizeOpenAIBaseUrl(raw: string): string {
-  try {
-    const url = new URL(raw);
-    url.pathname = url.pathname
-      .replace(/\/chat\/completions\/?$/u, '')
-      .replace(/\/responses\/?$/u, '');
-    return url.toString().replace(/\/$/u, '');
-  } catch {
-    return raw;
-  }
-}
-
-function usesQueryAkAuth(endpoint: string): boolean {
-  try {
-    return /\/crawl\/?$/u.test(new URL(endpoint).pathname);
-  } catch {
-    return false;
-  }
-}
-
-function shouldProxyJudgeBaseUrl(raw: string): boolean {
-  return usesQueryAkAuth(raw);
-}
-
-function resolveJudgeEnv(request: BenchJobRequest): JudgeEnv {
-  const apiKey = process.env.A2UI_BENCH_JUDGE_API_KEY
-    ?? process.env.MIDSCENE_MODEL_API_KEY
-    ?? request.provider.apiKey
-    ?? process.env.OPENAI_API_KEY;
-  const baseURL = process.env.A2UI_BENCH_JUDGE_BASE_URL
-    ?? process.env.MIDSCENE_MODEL_BASE_URL
-    ?? request.provider.baseURL
-    ?? process.env.OPENAI_BASE_URL;
-  const model = process.env.A2UI_BENCH_JUDGE_MODEL
-    ?? process.env.JUDGE_MODEL
-    ?? process.env.MIDSCENE_MODEL_NAME
-    ?? request.provider.model
-    ?? process.env.OPENAI_MODEL;
-  return { apiKey, baseURL, model };
-}
-
-function getMissingJudgeEnv(env: JudgeEnv): string[] {
-  const missing: string[] = [];
-  if (!env.apiKey) missing.push('MIDSCENE_MODEL_API_KEY');
-  if (!env.baseURL) missing.push('MIDSCENE_MODEL_BASE_URL');
-  if (!env.model) missing.push('MIDSCENE_MODEL_NAME');
-  return missing;
-}
-
-async function readRequestBody(req: import('node:http').IncomingMessage) {
-  const chunks: Uint8Array[] = [];
-  for await (const chunk of req as AsyncIterable<Uint8Array | string>) {
-    chunks.push(typeof chunk === 'string' ? Buffer.from(chunk) : chunk);
-  }
-  return Buffer.concat(chunks).toString('utf8');
-}
-
-async function startJudgeModelProxy(
-  endpoint: string,
-  apiKey: string,
-): Promise<JudgeProxy> {
-  const server = createHttpServer((req, res) => {
-    void (async () => {
-      if (req.method !== 'POST' || !req.url?.endsWith('/chat/completions')) {
-        res.statusCode = 404;
-        res.end('not found');
-        return;
-      }
-
-      const body = await readRequestBody(req);
-      const url = new URL(endpoint);
-      const headers: Record<string, string> = {
-        'Content-Type': 'application/json',
-      };
-      if (usesQueryAkAuth(endpoint)) {
-        url.searchParams.set('ak', apiKey);
-      } else {
-        headers.Authorization = `Bearer ${apiKey}`;
-      }
-
-      const upstream = await fetch(url, {
-        body,
-        headers,
-        method: 'POST',
-      });
-      const responseText = await upstream.text();
-      res.statusCode = upstream.status;
-      res.setHeader(
-        'Content-Type',
-        upstream.headers.get('content-type') ?? 'application/json',
-      );
-      res.end(responseText);
-    })().catch((error: unknown) => {
-      res.statusCode = 502;
-      res.setHeader('Content-Type', 'application/json');
-      res.end(JSON.stringify({
-        error: {
-          message: toErrorMessage(error),
-          type: 'a2ui_bench_judge_proxy_error',
-        },
-      }));
-    });
-  });
-
-  await new Promise<void>((resolve, reject) => {
-    server.once('error', reject);
-    server.listen(0, '127.0.0.1', resolve);
-  });
-
-  const address = server.address();
-  if (!address || typeof address === 'string') {
-    await new Promise<void>((resolve) => server.close(() => resolve()));
-    throw new Error('Failed to allocate a local ui-judge model proxy port.');
-  }
-
-  return {
-    baseUrl: `http://127.0.0.1:${address.port}/v1`,
-    close: () =>
-      new Promise<void>((resolve) => {
-        server.close(() => resolve());
-      }),
-  };
-}
-
-async function resolveJudgeRuntimeEnv(
-  env: JudgeEnv,
-): Promise<{ env: Required<JudgeEnv>; proxy?: JudgeProxy }> {
-  const missing = getMissingJudgeEnv(env);
-  if (missing.length > 0) {
-    throw new Error(
-      `ui-judge is enabled but missing judge model config: ${
-        missing.join(', ')
-      }.`,
-    );
-  }
-
-  const { apiKey, baseURL, model } = env;
-  if (!apiKey || !baseURL || !model) {
-    throw new Error('ui-judge model config failed normalization.');
-  }
-
-  const resolved: Required<JudgeEnv> = {
-    apiKey,
-    baseURL,
-    model,
-  };
-
-  if (!shouldProxyJudgeBaseUrl(resolved.baseURL)) {
-    return {
-      env: {
-        ...resolved,
-        baseURL: normalizeOpenAIBaseUrl(resolved.baseURL),
-      },
-    };
-  }
-
-  const proxy = await startJudgeModelProxy(resolved.baseURL, resolved.apiKey);
-  return {
-    env: {
-      ...resolved,
-      baseURL: proxy.baseUrl,
-    },
-    proxy,
-  };
-}
-
-function setEnvValue(key: string, value: string | undefined): void {
-  if (value === undefined) {
-    delete process.env[key];
-  } else {
-    process.env[key] = value;
-  }
-}
-
-async function withSerializedJudgeEnv<T>(
-  env: Required<JudgeEnv>,
-  fn: () => Promise<T>,
-): Promise<T> {
-  let release: () => void = noop;
-  const previous = judgeQueue.catch(noop);
-  judgeQueue = new Promise<void>((resolve) => {
-    release = resolve;
-  });
-
-  await previous;
-
-  const saved = new Map<string, string | undefined>();
-  for (const key of JUDGE_ENV_KEYS) {
-    saved.set(key, process.env[key]);
-  }
-
-  try {
-    process.env.MIDSCENE_MODEL_API_KEY = env.apiKey;
-    process.env.MIDSCENE_MODEL_BASE_URL = env.baseURL;
-    process.env.MIDSCENE_MODEL_NAME = env.model;
-    process.env.MIDSCENE_MODEL_TIMEOUT ??= String(DEFAULT_JUDGE_TIMEOUT_MS);
-    process.env.OPENAI_API_KEY = env.apiKey;
-    process.env.OPENAI_BASE_URL = env.baseURL;
-    return await fn();
-  } finally {
-    for (const key of JUDGE_ENV_KEYS) {
-      setEnvValue(key, saved.get(key));
-    }
-    release();
-  }
 }
 
 function isServerlessRuntime(): boolean {
@@ -532,37 +305,6 @@ async function renderMessagesInPreview(
   }
 }
 
-async function runJudge(
-  page: Awaited<ReturnType<Browser['newPage']>>,
-  options: BenchPreviewOptions,
-): Promise<number> {
-  const { judgePage } = await import('@lynx-js/ui-judge');
-  const runtime = await resolveJudgeRuntimeEnv(
-    resolveJudgeEnv(options.request),
-  );
-  try {
-    const result = await withSerializedJudgeEnv(runtime.env, () =>
-      judgePage({
-        dimension: 'visual-correctness',
-        page,
-        reference: options.scenario.prompt,
-        steps: options.scenario.judgeSteps,
-        task: options.scenario.judgeTask ?? options.scenario.prompt,
-        timeoutMs: Number(
-          process.env.A2UI_BENCH_JUDGE_TIMEOUT_MS
-            ?? process.env.JUDGE_TIMEOUT_MS
-            ?? DEFAULT_JUDGE_TIMEOUT_MS,
-        ),
-      }));
-    if (result.error) {
-      throw new Error(result.error.message);
-    }
-    return result.score;
-  } finally {
-    await runtime.proxy?.close().catch(noop);
-  }
-}
-
 async function capturePreviewScreenshot(
   page: Awaited<ReturnType<Browser['newPage']>>,
 ): Promise<string> {
@@ -602,19 +344,16 @@ export async function runBenchPreview(
       errors.push(`preview screenshot failed: ${toErrorMessage(error)}`);
     }
 
-    let judgeScore = 0;
     if (options.request.settings.judgeEnabled) {
-      try {
-        judgeScore = await runJudge(page, options);
-      } catch (error) {
-        errors.push(`ui-judge failed: ${toErrorMessage(error)}`);
-      }
+      errors.push(
+        'ui-judge failed: UI Judge server integration is temporarily unavailable; use the Rust library API.',
+      );
     }
 
     return {
       errors,
       fmpMs: readMetric(rendered.metrics.fmp),
-      judgeScore,
+      judgeScore: 0,
       renderMs: readMetric(rendered.metrics.render),
       ...(screenshotDataUrl ? { screenshotDataUrl } : {}),
       ttiMs: readMetric(rendered.metrics.tti),
@@ -631,3 +370,6 @@ export async function runBenchPreview(
     await page?.close().catch(noop);
   }
 }
+*/
+
+export {};

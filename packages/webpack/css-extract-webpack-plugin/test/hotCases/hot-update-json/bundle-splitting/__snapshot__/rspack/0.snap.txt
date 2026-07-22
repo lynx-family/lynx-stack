@@ -7,9 +7,9 @@
 - Bundle: async/common.js
 - Bundle: async/lazy.js
 - Bundle: entry.js
-- Manifest: async/common.css.hot-update.json, size: 1132
-- Manifest: async/lazy.css.hot-update.json, size: 1438
-- Manifest: entry.css.hot-update.json, size: 1702
+- Manifest: async/common.css.hot-update.json, size: 1248
+- Manifest: async/lazy.css.hot-update.json, size: 1554
+- Manifest: entry.css.hot-update.json, size: 1822
 
 ## Manifest
 
@@ -40,6 +40,9 @@
         "useNewSwiper": true,
         "enableNewIntersectionObserver": true,
         "enableNativeList": true,
+        "enableNewSticky": true,
+        "flexBasisZeroPercent": true,
+        "enableGridPlacementShorthands": true,
         "syncXElementRegistry": true,
         "enableA11y": true,
         "enableAccessibilityElement": false,
@@ -93,6 +96,9 @@
         "useNewSwiper": true,
         "enableNewIntersectionObserver": true,
         "enableNativeList": true,
+        "enableNewSticky": true,
+        "flexBasisZeroPercent": true,
+        "enableGridPlacementShorthands": true,
         "syncXElementRegistry": true,
         "enableA11y": true,
         "enableAccessibilityElement": false,
@@ -178,6 +184,9 @@
         "useNewSwiper": true,
         "enableNewIntersectionObserver": true,
         "enableNativeList": true,
+        "enableNewSticky": true,
+        "flexBasisZeroPercent": true,
+        "enableGridPlacementShorthands": true,
         "syncXElementRegistry": true,
         "enableA11y": true,
         "enableAccessibilityElement": false,

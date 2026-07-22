@@ -33,15 +33,15 @@ it('should have correct tasm.json', async () => {
 it('should generate correct bundle', async () => {
   const foo = path.resolve(
     __dirname,
-    `../async/foo.${__webpack_hash__}.bundle`,
+    `../lazy-bundle/foo.${__webpack_hash__}.bundle`,
   );
   const bar = path.resolve(
     __dirname,
-    `../async/bar.${__webpack_hash__}.bundle`,
+    `../lazy-bundle/bar.${__webpack_hash__}.bundle`,
   );
   const baz = path.resolve(
     __dirname,
-    `../async/baz.${__webpack_hash__}.bundle`,
+    `../lazy-bundle/baz.${__webpack_hash__}.bundle`,
   );
 
   expect([foo, bar, baz].every(p => fs.existsSync(p))).toBeTruthy();
@@ -56,7 +56,7 @@ it('should generate correct bundle', async () => {
   expect(bazContent).toContain('function baz()');
 
   const asyncTemplates = await fs.promises.readdir(
-    path.resolve(__dirname, '../async'),
+    path.resolve(__dirname, '../lazy-bundle'),
   );
   expect(asyncTemplates).toHaveLength(3); // foo, bar, baz
 });

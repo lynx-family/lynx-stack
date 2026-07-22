@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.20)
+cmake_minimum_required(VERSION 3.18.1)
 
 if(CMAKE_SOURCE_DIR STREQUAL CMAKE_CURRENT_SOURCE_DIR)
   project(__ADDON_TARGET_NAME__Shared LANGUAGES C CXX)
@@ -138,28 +138,26 @@ if(NOT DEFINED LYNX_LIBRARY_NODE_API_WEAK_SUFFIX)
   )
 endif()
 
-if(LYNX_LIBRARY_NODE_API_WEAK_SUFFIX)
-  if(NOT DEFINED LYNX_WEAK_NODE_API_HEADERS_DIR)
-    lynx_resolve_node_package(
-      "@lynx-js/weak-node-api"
-      LYNX_WEAK_NODE_API_PACKAGE_ROOT
-    )
-    set(
-      LYNX_WEAK_NODE_API_HEADERS_DIR
-      "${LYNX_SHARED_THIRD_PARTY_DIR}/weak-node-api/headers"
-    )
+if(NOT DEFINED LYNX_WEAK_NODE_API_HEADERS_DIR)
+  lynx_resolve_node_package(
+    "@lynx-js/weak-node-api"
+    LYNX_WEAK_NODE_API_PACKAGE_ROOT
+  )
+  set(
+    LYNX_WEAK_NODE_API_HEADERS_DIR
+    "${LYNX_SHARED_THIRD_PARTY_DIR}/weak-node-api/headers"
+  )
 
-    file(REMOVE_RECURSE "${LYNX_WEAK_NODE_API_HEADERS_DIR}")
-    file(MAKE_DIRECTORY "${LYNX_SHARED_THIRD_PARTY_DIR}/weak-node-api")
-    file(
-      COPY "${LYNX_WEAK_NODE_API_PACKAGE_ROOT}/headers"
-      DESTINATION "${LYNX_SHARED_THIRD_PARTY_DIR}/weak-node-api"
-    )
-  endif()
+  file(REMOVE_RECURSE "${LYNX_WEAK_NODE_API_HEADERS_DIR}")
+  file(MAKE_DIRECTORY "${LYNX_SHARED_THIRD_PARTY_DIR}/weak-node-api")
+  file(
+    COPY "${LYNX_WEAK_NODE_API_PACKAGE_ROOT}/headers"
+    DESTINATION "${LYNX_SHARED_THIRD_PARTY_DIR}/weak-node-api"
+  )
+endif()
 
-  if(NOT EXISTS "${LYNX_WEAK_NODE_API_HEADERS_DIR}/weak_napi_defines.h")
-    message(FATAL_ERROR "Missing weak-node-api headers. Run npm install first.")
-  endif()
+if(NOT EXISTS "${LYNX_WEAK_NODE_API_HEADERS_DIR}/weak_napi_defines.h")
+  message(FATAL_ERROR "Missing weak-node-api headers. Run npm install first.")
 endif()
 
 set(
@@ -256,6 +254,13 @@ endif()
 
 if(NOT CMAKE_SOURCE_DIR STREQUAL CMAKE_CURRENT_SOURCE_DIR)
   set(LYNX_SHARED_TARGETS ${LYNX_SHARED_TARGETS} PARENT_SCOPE)
+  if(DEFINED LYNX_LIBRARY_NAPI_NATIVE_MODULE_TARGET)
+    set(
+      LYNX_LIBRARY_NAPI_NATIVE_MODULE_TARGET
+      "${LYNX_LIBRARY_NAPI_NATIVE_MODULE_TARGET}"
+      PARENT_SCOPE
+    )
+  endif()
   set(LYNX_SHARED_PLATFORM_COMPILE_DEFINITIONS ${LYNX_SHARED_PLATFORM_COMPILE_DEFINITIONS} PARENT_SCOPE)
   set(LYNX_SHARED_PLATFORM_LINK_LIBRARIES ${LYNX_SHARED_PLATFORM_LINK_LIBRARIES} PARENT_SCOPE)
   set(LYNX_SHARED_PLATFORM_LINK_OPTIONS ${LYNX_SHARED_PLATFORM_LINK_OPTIONS} PARENT_SCOPE)
