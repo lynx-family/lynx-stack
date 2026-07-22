@@ -45,7 +45,7 @@
     "@rspack/core": "catalog:rspack",
     "@rstest/core": "catalog:rstest",
     "@types/semver": "^7.7.1",
-    "semver": "^7.7.4"
+    "semver": "^7.8.5"
   },
   "engines": {
     "node": ">=18"
