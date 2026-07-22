@@ -1,41 +1,45 @@
 # Lynx OpenUI Component Catalog
 
-Use these built-in component signatures exactly. Arguments are positional;
-`?` marks a trailing optional argument.
+## Contents
+
+- [Shared Types](#shared-types)
+- [Layout](#layout)
+- [Content](#content)
+- [Buttons](#buttons)
+- [Data Display](#data-display)
+- [Media](#media)
+- [Inputs](#inputs)
+- [Unsupported Components](#unsupported-unless-extended-by-the-host)
+
+Use these built-in component signatures exactly. Arguments are positional and
+`?` marks a schema-optional argument. Omit an optional argument only when every
+later argument is also omitted. If an optional argument precedes a required
+one, supply it so later positions do not shift. The signatures include exact
+argument types and allowed enum values.
+
+<!-- catalog-json-schema-sha256: 271b241a6bb56e11797ee0013bfc4b5bafe3a32deed58b8e9b1ac1f1d4dc154e -->
 
 ## Shared Types
 
-- `gap`: `"none" | "xs" | "s" | "m" | "l" | "xl"`
-- `align`: `"start" | "center" | "end" | "stretch"`
-- `StringLike`: string, number, boolean, or a host-supported legacy
-  `{ path: string }` binding. Prefer v0.5 expressions and `$state` over legacy
-  path objects.
-- `BooleanLike`: boolean or a host-supported legacy `{ path: string }`
-  binding.
+- `StringLike`: string, number, boolean, or a v0.5 expression that resolves to
+  one of those primitive values. Although the compatibility schema accepts
+  legacy object bindings, generated programs must not use them because the
+  built-in Lynx renderer does not resolve them.
+- `BooleanLike`: boolean or a v0.5 expression that resolves to boolean. Do not
+  generate legacy path objects.
 - `ActionExpression`: `Action([@step, ...])` or a host-supplied legacy action
   object. Prefer `Action` plans.
 
 ## Layout
 
-- `Stack(children, direction?, wrap?, gap?, align?, justify?)`
-- `Row(children, justify?, align?, gap?, wrap?)`
-- `Column(children, justify?, align?, gap?)`
-- `List(children?, items?, direction?, align?, gap?, divider?)`
-- `Tabs(tabs, value?)`
-- `Modal(trigger, content, title?, closeOnAction?)`
+- `Stack(children: any[], direction?: "row" | "column", wrap?: boolean, gap?: "none" | "xs" | "s" | "m" | "l" | "xl", align?: "start" | "center" | "end" | "stretch", justify?: "start" | "center" | "end" | "between")`
+- `Row(children: any[], justify?: "start" | "center" | "end" | "between" | "around" | "evenly" | "spaceBetween" | "spaceAround" | "spaceEvenly" | "stretch", align?: "start" | "center" | "end" | "stretch", gap?: "none" | "xs" | "s" | "m" | "l" | "xl", wrap?: boolean)`
+- `Column(children: any[], justify?: "start" | "center" | "end" | "between" | "around" | "evenly" | "spaceBetween" | "spaceAround" | "spaceEvenly" | "stretch", align?: "start" | "center" | "end" | "stretch", gap?: "none" | "xs" | "s" | "m" | "l" | "xl")`
+- `List(children?: any[] | TemplateChildren, items?: any[] | TemplateChildren, direction?: "vertical" | "horizontal", align?: "start" | "center" | "end" | "stretch", gap?: "none" | "xs" | "s" | "m" | "l" | "xl", divider?: boolean)`
 - `Separator()`
-- `Divider(axis?)`
-
-Allowed layout values:
-
-- `Stack.direction`: `"row" | "column"`
-- `Stack.justify`: `"start" | "center" | "end" | "between"`
-- `Row` and `Column` justify: `"start" | "center" | "end" | "between" |
-  "around" | "evenly" | "spaceBetween" | "spaceAround" | "spaceEvenly" |
-  "stretch"`
-- `List.direction`: `"vertical" | "horizontal"`
-- `Divider.axis`: `"horizontal" | "vertical"`
-- Each `Tabs` item: `{ value: "id", title: "Title", child: componentRef }`
+- `Divider(axis?: "horizontal" | "vertical")`
+- `Modal(trigger: any, content: any, title?: StringLike, closeOnAction?: boolean)`
+- `Tabs(tabs: {value: string, title: StringLike, child: any}[], value?: string)`
 
 For the built-in `List`, pass children as the first argument and normally omit
 the remaining arguments. The second position is the `items` alias, not
@@ -44,86 +48,58 @@ currently renders a diagnostic hint rather than expanding content.
 
 ## Content
 
-- `Card(children, variant?, direction?, wrap?, gap?, align?, justify?)`
-- `CardHeader(title, subtitle?)`
-- `Text(text, variant?)`
-- `TextContent(text, size?)`
+- `Card(children: any[], variant?: "card" | "sunk" | "clear", direction?: "row" | "column", wrap?: boolean, gap?: "none" | "xs" | "s" | "m" | "l" | "xl", align?: "start" | "center" | "end" | "stretch", justify?: "start" | "center" | "end" | "between")`
+- `CardHeader(title: string, subtitle?: string)`
+- `Text(text: StringLike, variant?: "h1" | "h2" | "h3" | "h4" | "h5" | "caption" | "body")`
+- `TextContent(text: string | number | boolean, size?: "small" | "default" | "large" | "small-heavy" | "large-heavy")`
 
-Allowed content values:
-
-- `Card.variant`: `"card" | "sunk" | "clear"`
-- `Text.variant`: `"h1" | "h2" | "h3" | "h4" | "h5" | "caption" |
-  "body"`
-- `TextContent.size`: `"small" | "default" | "large" | "small-heavy" |
-  "large-heavy"`
+`Text.text` uses `StringLike`. `TextContent.text` accepts only a string, number,
+boolean, or an expression that resolves to one of those primitives. Never pass
+an object binding to `TextContent`.
 
 ## Buttons
 
-- `Button(label, action?, variant?, type?, size?)`
-- `Buttons(buttons)`
-
-Allowed button values:
-
-- `variant`: `"primary" | "secondary" | "tertiary"`
-- `type`: `"normal" | "destructive"`
-- `size`: `"extra-small" | "small" | "medium" | "large"`
+- `Button(label: string, action?: ActionExpression, variant?: "primary" | "secondary" | "tertiary", type?: "normal" | "destructive", size?: "extra-small" | "small" | "medium" | "large")`
+- `Buttons(buttons: Button[])`
 
 A button without an action sends its label to the assistant. Use `Buttons`
 for a button group.
 
 ## Data Display
 
-- `Tag(text)`
-- `Icon(name, size?, color?)`
-- `Loading(variant?)`
-
-Allowed values:
-
-- `Icon.name`: `"account_circle" | "add" | "arrow_back" |
-  "arrow_forward" | "camera" | "check" | "close" | "delete" | "edit" |
-  "error" | "favorite" | "help" | "home" | "info" | "location_on" |
-  "lock" | "mail" | "menu" | "more_vert" | "pause" | "person" |
-  "play_arrow" | "refresh" | "search" | "send" | "settings" | "share" |
-  "star" | "warning"`
-- `Icon.size`: `"sm" | "md" | "lg"`
-- `Icon.color`: `"primary" | "muted" | "inherit"`
-- `Loading.variant`: `"inline" | "block"`
+- `Tag(text: string)`
+- `Icon(name: "account_circle" | "add" | "arrow_back" | "arrow_forward" | "camera" | "check" | "close" | "delete" | "edit" | "error" | "favorite" | "help" | "home" | "info" | "location_on" | "lock" | "mail" | "menu" | "more_vert" | "pause" | "person" | "play_arrow" | "refresh" | "search" | "send" | "settings" | "share" | "star" | "warning", size?: "sm" | "md" | "lg", color?: "primary" | "muted" | "inherit")`
+- `Loading(variant?: "inline" | "block")`
 
 ## Media
 
-- `Image(url, fit?, variant?)`
-- `AudioPlayer(url, description?)`
-- `Video(url, title?)`
-
-Allowed image values:
-
-- `fit`: `"contain" | "cover" | "fill" | "none" | "scale-down"`
-- `variant`: `"icon" | "avatar" | "smallFeature" | "mediumFeature" |
-  "largeFeature" | "header"`
+- `Image(url: StringLike, fit?: "contain" | "cover" | "fill" | "none" | "scale-down", variant?: "icon" | "avatar" | "smallFeature" | "mediumFeature" | "largeFeature" | "header")`
+- `AudioPlayer(url: StringLike, description?: StringLike)`
+- `Video(url: StringLike, title?: StringLike)`
 
 Use a supplied URL. Prefer an explicit image variant; the Lynx implementation
 maps variants to concrete dimensions.
 
 ## Inputs
 
-- `CheckBox(label, value?, action?, name?)`
-- `RadioGroup(items, value?, usageHint?, action?, name?)`
-- `ChoicePicker(label?, options, value?, variant?, displayStyle?, filterable?)`
-- `Slider(label?, min?, max?, value?, step?, action?, name?)`
-- `DateTimeInput(value, enableDate?, enableTime?, min?, max?, label?)`
-- `TextField(label, value?, variant?, validationRegexp?, action?, name?)`
+- `CheckBox(label: string, value?: boolean, action?: ActionExpression, name?: string)`
+- `RadioGroup(items: string[], value?: string, usageHint?: "default" | "card" | "row", action?: ActionExpression, name?: string)`
+- `ChoicePicker(label?: StringLike, options: (StringLike)[] | StringLike, value?: StringLike, variant?: "default" | "card", displayStyle?: "list" | "chips" | "dropdown", filterable?: BooleanLike)`
+- `Slider(label?: string, min?: number, max?: number, value?: number, step?: number, action?: ActionExpression, name?: string)`
+- `DateTimeInput(value: StringLike, enableDate?: BooleanLike, enableTime?: BooleanLike, min?: StringLike, max?: StringLike, label?: StringLike)`
+- `TextField(label: string, value?: string, variant?: "longText" | "number" | "shortText" | "obscured", validationRegexp?: string, action?: ActionExpression, name?: string)`
 
-Allowed input values:
-
-- `RadioGroup.usageHint`: `"default" | "card" | "row"`
-- `ChoicePicker.variant`: `"default" | "card"`
-- `ChoicePicker.displayStyle`: `"list" | "chips" | "dropdown"`
-- `TextField.variant`: `"longText" | "number" | "shortText" | "obscured"`
+`ChoicePicker.label` is schema-optional but precedes required `options`. Since
+OpenUI Lang calls are positional, always pass a label so `options` remains the
+second argument.
 
 Current Lynx runtime boundaries:
 
 - `CheckBox`, `RadioGroup`, `Slider`, and `TextField` persist host form state
   when given `name`; their action fires on value change.
+- To bind one of those inputs to `$state`, pass the exact state key including
+  `$` as its literal `name`, for example `"$city"`. See
+  [runtime.md](runtime.md#state).
 - `ChoicePicker` keeps selection only inside the component and has no `name` or
   action prop. Do not use it as a live `Query` filter.
 - `DateTimeInput` currently displays a date/time value; do not promise editable

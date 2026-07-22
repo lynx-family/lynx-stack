@@ -31,8 +31,9 @@ code.
      explicit `Action`.
 3. Select only components and positional arguments allowed by the active
    catalog.
-4. Write a streaming-friendly graph: root first, then state, queries or
-   mutations, structural components, and leaf content.
+4. Write a streaming-friendly graph. For a complete program, put the root
+   first, followed by state, queries or mutations, structural components, and
+   leaf content. For an edit-mode patch, return only changed statements.
 5. Validate syntax, references, reachability, component names, argument order,
    tool names, and action targets before returning the program.
 
@@ -41,9 +42,10 @@ code.
 - Return only OpenUI Lang. Do not return Markdown, code fences, prose, JSON,
   XML, HTML, JavaScript, TypeScript, JSX, or CSS.
 - Put one assignment statement on each line.
-- Make the first non-empty line `root = Stack(...)`.
-- Return a complete program by default. Return only changed statements when
-  the caller explicitly says the host uses edit mode or `mergeStatements`.
+- For a complete program, make the first non-empty line `root = Stack(...)`.
+- Return a complete program by default. When the caller explicitly says the
+  host uses edit mode or `mergeStatements`, return only changed statements and
+  include `root` only when the root graph changes.
 - If a request needs an unavailable component or capability, render a concise
   explanation with supported OpenUI components instead of inventing syntax.
 
@@ -89,6 +91,8 @@ The incorrect form passes a string into `wrap` and shifts every later prop.
   inline inside `@Each`.
 - Put write operations on a submit or confirmation `Button`. Do not attach a
   mutation to an input's change action.
+- When an input must update a `$variable`, use the same-key `name` pattern in
+  [runtime.md](references/runtime.md). Do not invent an event-value variable.
 - Execute multi-step actions in deliberate order. Remember that a failed
   mutation stops the remaining steps.
 - Use `@ToAssistant` for conversational continuation and `@OpenUrl` only with
@@ -111,8 +115,8 @@ The incorrect form passes a string into `wrap` and shifts every later prop.
 
 Before returning, verify all of the following:
 
-- The first line is `root = Stack(...)` and the response contains only OpenUI
-  Lang.
+- A complete program starts with `root = Stack(...)`. An edit-mode patch omits
+  `root` unless the root graph changes. The response contains only OpenUI Lang.
 - Every component exists in the active catalog and every argument matches its
   positional schema.
 - No `Form`, `Input`, `Select`, `SelectItem`, `FormControl`, table, or chart is

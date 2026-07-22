@@ -13,7 +13,8 @@
         "styles/**",
         "tsconfig.json",
         "tsconfig.build.json",
-        "package.json"
+        "package.json",
+        "$TURBO_ROOT$/packages/genui/package.json"
       ],
       "outputs": [
         "dist/**"

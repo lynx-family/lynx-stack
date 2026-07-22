@@ -34,6 +34,21 @@ taskList = List(@Each(tasks.rows, "task", Card([Text(task.title, "h4"), Tag(task
 refresh = Buttons([Button("Refresh", Action([@Run(tasks)]), "secondary")])
 ```
 
+## Query Driven By Text Input
+
+Assume the host supplies a `get_weather` read tool returning weather data for
+the requested city. This live pattern runs the query on each input change, so
+use it only when the tool can accept that request frequency.
+
+```openui
+root = Stack([cityInput, weatherCard, refresh], "column", false, "m", "stretch", "start")
+$city = "Seattle"
+weather = Query("get_weather", { city: $city }, { city: "Seattle", temp: 62, condition: "Cloudy" })
+cityInput = TextField("City", $city, "shortText", ".+", null, "$city")
+weatherCard = Card([CardHeader(weather.city, "Current weather"), TextContent(weather.temp + " degrees", "large-heavy"), TextContent(weather.condition)], "card", "column", false, "s")
+refresh = Button("Refresh", Action([@Run(weather)]), "secondary")
+```
+
 ## Mutation With Ordered Feedback
 
 Assume the host supplies a `save_preference` write tool.

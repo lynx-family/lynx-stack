@@ -3,10 +3,21 @@
 Read this reference for state, tool-backed data, actions, expressions, repeated
 data, or incremental edits.
 
+## Contents
+
+- [Program And Expressions](#program-and-expressions)
+- [State](#state)
+- [Query](#query)
+- [Mutation](#mutation)
+- [Actions](#actions)
+- [Data Built-ins](#data-built-ins)
+- [Streaming And Edits](#streaming-and-edits)
+
 ## Program And Expressions
 
 - Write one `identifier = Expression` statement per line.
-- Define `root = Stack(...)` first. Forward references are allowed.
+- In a complete program, define `root = Stack(...)` first. Forward references
+  are allowed. An edit-mode patch may omit `root`.
 - Use double-quoted strings, numbers, booleans, `null`, arrays, objects,
   component calls, and ordinary references.
 - Access fields and indices with `data.rows`, `rows[0]`, and
@@ -29,9 +40,27 @@ auto-created as `null`, but explicit defaults make rendering and reset behavior
 predictable. Use `$variables` in expressions, tool arguments, `@Set`, and
 `@Reset`.
 
-The built-in Lynx inputs are not generic two-way `$binding` components. Use
-their documented `name` prop for host form state, and use explicit buttons with
-`@Set` when a `$variable` must drive a query or expression.
+Built-in Lynx inputs write their `name` into the runtime state store. To bind an
+input directly to a `$variable`, pass the variable as its value and pass the
+exact variable name, including `$`, as the literal `name` argument:
+
+```openui
+$city = "Seattle"
+weather = Query("get_weather", { city: $city }, { city: "Seattle", temp: 62 })
+cityInput = TextField("City", $city, "shortText", ".+", null, "$city")
+```
+
+Here `null` fills the unused action position so `"$city"` reaches `name`.
+Typing writes back to `$city`, so expressions update and dependent queries run
+again. Do not use `"city"` and then try to copy its value with `@Set`: input
+actions do not expose an event-value variable. Use explicit `@Set` buttons for
+fixed choices instead.
+
+This same-key binding requires the v0.5 `response` runtime and no enclosing
+custom `Form`; a form writes the value into nested form state instead. Each
+input event updates the state immediately, without debounce or validation
+gating, so use a text-driven `Query` only when live requests on each change are
+acceptable.
 
 ## Query
 
