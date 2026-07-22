@@ -232,7 +232,7 @@ export const fetchExternalBundleEndpoint = createRpcEndpoint<
 >('fetchExternalBundle', false, true);
 
 export const updateBTSChunkEndpoint = createRpcEndpoint<
-  [/** url */ string, Record<string, string>],
+  [/** url */ string, Record<string, string>, isExternalBundle: boolean],
   void
 >('updateBTSChunkEndpoint', false, true);
 

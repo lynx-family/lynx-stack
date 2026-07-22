@@ -61,7 +61,10 @@ export class TemplateManager {
         lynxViewInstance.onPageConfigReady(config);
         lynxViewInstance.onStyleInfoReady(url);
         lynxViewInstance.onMTSScriptsLoaded(url, config.isLazy === 'true');
-        lynxViewInstance.onBTSScriptsLoaded(url);
+        lynxViewInstance.onBTSScriptsLoaded(
+          url,
+          config.isExternalBundle === 'true',
+        );
       })();
     } else if (this.#loadingPromises.has(url)) {
       return this.#loadingPromises.get(url)!.then(async () => {
@@ -72,7 +75,10 @@ export class TemplateManager {
         lynxViewInstance.onPageConfigReady(config);
         lynxViewInstance.onStyleInfoReady(url);
         lynxViewInstance.onMTSScriptsLoaded(url, config.isLazy === 'true');
-        lynxViewInstance.onBTSScriptsLoaded(url);
+        lynxViewInstance.onBTSScriptsLoaded(
+          url,
+          config.isExternalBundle === 'true',
+        );
       });
     } else {
       this.createBundle(url);
@@ -268,7 +274,10 @@ export class TemplateManager {
       case TemplateSectionLabel.Manifest: {
         const blobMap = data as Record<string, string>;
         this.#setBackgroundCode(url, blobMap);
-        instance.onBTSScriptsLoaded(url);
+        instance.onBTSScriptsLoaded(
+          url,
+          config?.['isExternalBundle'] === 'true',
+        );
         break;
       }
       default:
