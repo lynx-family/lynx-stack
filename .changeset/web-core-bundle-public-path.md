@@ -2,4 +2,4 @@
 "@lynx-js/web-core": patch
 ---
 
-Preserve each fetched bundle's virtual source URL while executing decoded background and main-thread scripts so `output.publicPath: 'auto'` resolves lazy assets relative to the bundle instead of Web Core's worker or blob URL. Add `lynx.loadLazyBundle` to execute decoded lazy bundles in either realm, and treat empty lazy main-thread chunks as no-ops instead of invalid `module.exports=` scripts.
+Preserve each fetched bundle's source while executing decoded background and main-thread scripts so `output.publicPath: 'auto'` resolves assets relative to the bundle instead of Web Core's worker or blob URL. External bundles retain their exact URL, while component chunks receive a virtual child URL that preserves Rspeedy's lazy-bundle directory correction. Add retryable `lynx.loadLazyBundle` support in either realm, keep lazy and external load state independent, and treat empty lazy main-thread chunks as no-ops instead of invalid `module.exports=` scripts.

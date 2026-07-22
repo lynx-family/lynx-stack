@@ -351,7 +351,7 @@ async function handleStream(
           blobMap[key] = URL.createObjectURL(blob);
         }
         postMessage(
-          { type: 'section', label, url, data: blobMap } as MainMessage,
+          { type: 'section', label, url, data: blobMap, config } as MainMessage,
         );
         break;
       }
@@ -433,7 +433,7 @@ async function handleJSON(
         code,
         `${url}/${key}`,
         isLazy,
-        false,
+        config['isExternalBundle'] === 'true',
       );
       blobMap[key] = URL.createObjectURL(blob);
     }
@@ -461,6 +461,7 @@ async function handleJSON(
       label: TemplateSectionLabel.Manifest,
       url,
       data: blobMap,
+      config,
     } as MainMessage);
   }
 

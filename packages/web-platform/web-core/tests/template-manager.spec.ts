@@ -287,6 +287,7 @@ describe('Template Manager', () => {
 
     const overrideConfig = {
       cardType: 'override-card',
+      isExternalBundle: 'true',
     };
 
     await templateManager.fetchBundle(
@@ -304,6 +305,10 @@ describe('Template Manager', () => {
         cardType: 'override-card',
         foo: 'bar',
       }),
+    );
+    expect(mockLynxViewInstance.onBTSScriptsLoaded).toHaveBeenCalledWith(
+      templateUrl,
+      true,
     );
   });
 
@@ -540,6 +545,7 @@ describe('Template Manager', () => {
       false,
       false,
       false,
+      { isExternalBundle: 'true' },
     );
 
     // Verify config
@@ -558,6 +564,10 @@ describe('Template Manager', () => {
 
     // Verify script decoding (LepusCode)
     expect(mockLynxViewInstance.onMTSScriptsLoaded).toHaveBeenCalled();
+    expect(mockLynxViewInstance.onBTSScriptsLoaded).toHaveBeenCalledWith(
+      templateUrl,
+      true,
+    );
   });
 
   test('should detect lazy appType from lepusCode.root prefix for json template', async () => {
