@@ -39,7 +39,7 @@
     "@lynx-js/template-webpack-plugin": "workspace:*",
     "@lynx-js/types": "4.0.0",
     "i18next": "26.0.6",
-    "i18next-cli": "1.54.2",
+    "i18next-cli": "1.66.2",
     "rsbuild-plugin-i18next-extractor": "0.2.1"
   },
   "peerDependencies": {
