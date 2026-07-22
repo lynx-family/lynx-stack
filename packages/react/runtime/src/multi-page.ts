@@ -4,6 +4,7 @@
 import { render } from 'preact';
 import type { ReactNode } from 'react';
 
+import { root } from './lynx-api.js';
 import { setBootstrappedRoot } from './page-root-ref.js';
 import { RootContext, getCurrentRootContext, switchRootContext } from './root-context.js';
 import type { RootLynx, RootTT } from './root-context.js';
@@ -99,12 +100,12 @@ export class ReactLynxRoot {
 /**
  * @internal
  */
-export const BOOTSTRAP_PAGE: unique symbol = /* @__PURE__ */ Symbol.for(
-  '__REACTLYNX_BOOTSTRAP_PAGE__',
-) as typeof BOOTSTRAP_PAGE;
+export interface RootWithBootstrap {
+  __experimentalBootstrapPage?: (options?: BootstrapPageOptions) => ReactLynxRoot | undefined;
+}
 
 if (typeof __MULTI_PAGE__ !== 'undefined' && __MULTI_PAGE__) {
-  (globalThis as Record<PropertyKey, unknown>)[BOOTSTRAP_PAGE] = (
+  (root as RootWithBootstrap).__experimentalBootstrapPage = (
     options?: BootstrapPageOptions,
   ): ReactLynxRoot | undefined => {
     /* v8 ignore next */

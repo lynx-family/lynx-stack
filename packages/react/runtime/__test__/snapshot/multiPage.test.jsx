@@ -10,7 +10,8 @@ import { useState } from '../../src/index';
 import { root } from '../../src/lynx-api';
 import { __root } from '../../src/root';
 import { defaultRootContext, switchRootContext } from '../../src/root-context';
-import { BOOTSTRAP_PAGE, ReactLynxRoot } from '../../src/multi-page';
+import { ReactLynxRoot } from '../../src/multi-page';
+import '../../src/multi-page';
 import { backgroundSnapshotInstanceManager, setupPage } from '../../src/snapshot';
 import { replaceCommitHook } from '../../src/snapshot/lifecycle/patch/commit';
 import { initGlobalSnapshotPatch } from '../../src/snapshot/lifecycle/patch/snapshotPatch';
@@ -58,14 +59,14 @@ describe('root-cause: default singleton shares one container', () => {
 
 describe('bootstrap hook: classic root.render renders the bootstrapped page', () => {
   afterEach(() => {
-    globalThis[BOOTSTRAP_PAGE]();
+    root.__experimentalBootstrapPage();
   });
 
   it('delegates root.render to the bootstrapped root, leaving __root untouched', () => {
     globalEnvManager.switchToBackground();
 
     const A = () => <text>{'A'}</text>;
-    const pageA = globalThis[BOOTSTRAP_PAGE]({});
+    const pageA = root.__experimentalBootstrapPage({});
     root.render(<A />);
 
     expect(textOf(pageA._container)).toEqual(['A']);
@@ -78,9 +79,9 @@ describe('bootstrap hook: classic root.render renders the bootstrapped page', ()
     const A = () => <text>{'A'}</text>;
     const B = () => <text>{'B'}</text>;
 
-    const pageA = globalThis[BOOTSTRAP_PAGE]({});
+    const pageA = root.__experimentalBootstrapPage({});
     root.render(<A />);
-    const pageB = globalThis[BOOTSTRAP_PAGE]({});
+    const pageB = root.__experimentalBootstrapPage({});
     root.render(<B />);
 
     expect(pageA._container).not.toBe(pageB._container);
@@ -92,8 +93,8 @@ describe('bootstrap hook: classic root.render renders the bootstrapped page', ()
     globalEnvManager.switchToBackground();
 
     const A = () => <text>{'A'}</text>;
-    globalThis[BOOTSTRAP_PAGE]({});
-    globalThis[BOOTSTRAP_PAGE]();
+    root.__experimentalBootstrapPage({});
+    root.__experimentalBootstrapPage();
     root.render(<A />);
 
     expect(textOf(__root)).toEqual(['A']);
@@ -111,7 +112,7 @@ describe('bootstrap hook: classic root.render renders the bootstrapped page', ()
     const old = globalThis.__FIRST_SCREEN_SYNC_TIMING__;
     try {
       globalThis.__FIRST_SCREEN_SYNC_TIMING__ = 'jsReady';
-      globalThis[BOOTSTRAP_PAGE]({ lynx: lynxA });
+      root.__experimentalBootstrapPage({ lynx: lynxA });
       root.render(<text>{'A'}</text>);
       const handshakes = callA.mock.calls.filter(c => c[0] === 'rLynxFirstScreenSyncReady');
       expect(handshakes).toHaveLength(1);
