@@ -44,16 +44,6 @@ import { clearPendingPortalInsertBefore } from '../lynx/portalsPending.js';
 import { diffArrayAction, diffArrayLepus } from '../renderToOpcodes/hydrate.js';
 import { onPostWorkletCtx } from '../worklet/ctx.js';
 
-export function instanceValuesOf(ctx: RootContext | undefined): Map<number, BackgroundSnapshotInstance> {
-  if (
-    typeof __MULTI_ROOT_RENDER_CONTEXT__ !== 'undefined' && __MULTI_ROOT_RENDER_CONTEXT__ && ctx
-    && ctx !== getCurrentRootContext()
-  ) {
-    return ctx.slotValues['bsiValues'] as Map<number, BackgroundSnapshotInstance>;
-  }
-  return backgroundSnapshotInstanceManager.values;
-}
-
 /**
  * Background snapshot instance manager that manages all background snapshot instances.
  */
@@ -342,7 +332,10 @@ export class BackgroundSnapshotInstance {
 
   tearDown(): void {
     if (typeof __MULTI_ROOT_RENDER_CONTEXT__ !== 'undefined' && __MULTI_ROOT_RENDER_CONTEXT__) {
-      const values = instanceValuesOf(this.__rootCtx);
+      const ctx = this.__rootCtx;
+      const values = ctx && ctx !== getCurrentRootContext()
+        ? ctx.slotValues['bsiValues'] as Map<number, BackgroundSnapshotInstance>
+        : backgroundSnapshotInstanceManager.values;
       traverseSnapshotInstance(this, v => {
         v.__parent = null;
         v.__previousSibling = null;

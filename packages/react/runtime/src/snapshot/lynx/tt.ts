@@ -117,23 +117,17 @@ function onLifecycleEventImpl(type: LifecycleConstant, data: unknown): void {
   switch (type) {
     case LifecycleConstant.firstScreen: {
       let processErr;
-      if (typeof __MULTI_ROOT_RENDER_CONTEXT__ !== 'undefined' && __MULTI_ROOT_RENDER_CONTEXT__) {
-        const ctxBeforeProcess = getCurrentRootContext();
-        try {
-          process();
-        } catch (e) {
-          processErr = e;
-        }
-        switchRootContext(ctxBeforeProcess);
-        /* v8 ignore start */
-      } else {
-        try {
-          process();
-        } catch (e) {
-          processErr = e;
-        }
+      const ctxBeforeProcess = typeof __MULTI_ROOT_RENDER_CONTEXT__ !== 'undefined' && __MULTI_ROOT_RENDER_CONTEXT__
+        ? getCurrentRootContext()
+        : undefined;
+      try {
+        process();
+      } catch (e) {
+        processErr = e;
       }
-      /* v8 ignore stop */
+      if (typeof __MULTI_ROOT_RENDER_CONTEXT__ !== 'undefined' && __MULTI_ROOT_RENDER_CONTEXT__ && ctxBeforeProcess) {
+        switchRootContext(ctxBeforeProcess);
+      }
       const { root: lepusSide, firstScreenEventIdSwap } = data as FirstScreenData;
       if (typeof __PROFILE__ !== 'undefined' && __PROFILE__) {
         profileStart('ReactLynx::hydrate');
@@ -196,17 +190,18 @@ function onLifecycleEventImpl(type: LifecycleConstant, data: unknown): void {
         delayedEvents.length = 0;
       }
 
-      if (typeof __MULTI_ROOT_RENDER_CONTEXT__ !== 'undefined' && __MULTI_ROOT_RENDER_CONTEXT__) {
-        const ctx = getCurrentRootContext();
-        const tt = ctx.tt ?? lynxCoreInject.tt;
-        tt.publishEvent = bindContext(ctx, publishEvent);
-        tt.publicComponentEvent = bindContext(ctx, publicComponentEvent);
-        /* v8 ignore start */
-      } else {
-        lynxCoreInject.tt.publishEvent = publishEvent;
-        lynxCoreInject.tt.publicComponentEvent = publicComponentEvent;
-      }
-      /* v8 ignore stop */
+      const upgradeCtx = typeof __MULTI_ROOT_RENDER_CONTEXT__ !== 'undefined' && __MULTI_ROOT_RENDER_CONTEXT__
+        ? getCurrentRootContext()
+        : undefined;
+      const tt = upgradeCtx?.tt ?? lynxCoreInject.tt;
+      tt.publishEvent =
+        typeof __MULTI_ROOT_RENDER_CONTEXT__ !== 'undefined' && __MULTI_ROOT_RENDER_CONTEXT__ && upgradeCtx
+          ? bindContext(upgradeCtx, publishEvent)
+          : publishEvent;
+      tt.publicComponentEvent =
+        typeof __MULTI_ROOT_RENDER_CONTEXT__ !== 'undefined' && __MULTI_ROOT_RENDER_CONTEXT__ && upgradeCtx
+          ? bindContext(upgradeCtx, publicComponentEvent)
+          : publicComponentEvent;
 
       // console.debug("********** After hydration:");
       // printSnapshotInstance(__root as BackgroundSnapshotInstance);
