@@ -66,7 +66,10 @@ function createMainThreadLynx(
           `lynx.loadScript: section "${sectionPath}" not found in bundle ${options.bundleName}`,
         );
       }
-      return lynxViewInstance.mtsRealm!.loadScriptSync(blobUrl);
+      return lynxViewInstance.mtsRealm!.loadScriptSync(
+        blobUrl,
+        options.bundleName,
+      );
     },
   };
 }
@@ -96,9 +99,12 @@ export function createMainThreadGlobalAPIs(
         if (!entryUrl || entryUrl === '__Card__') {
           entryUrl = lynxViewInstance.templateUrl;
         }
-        path = lynxViewInstance.lepusCodeUrls.get(entryUrl)
-          ?.[path] ?? path;
-        lynxViewInstance.mtsRealm!.loadScriptSync(path);
+        const chunkURL = lynxViewInstance.lepusCodeUrls.get(entryUrl)?.[path];
+        if (chunkURL === undefined) {
+          lynxViewInstance.mtsRealm!.loadScriptSync(path);
+        } else {
+          lynxViewInstance.mtsRealm!.loadScriptSync(chunkURL, entryUrl);
+        }
         return true;
       } catch (e) {
         console.error(`failed to load lepus chunk ${path}`, e);

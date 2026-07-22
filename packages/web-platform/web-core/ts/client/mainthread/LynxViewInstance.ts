@@ -190,6 +190,7 @@ export class LynxViewInstance implements AsyncDisposable {
     if (!isLazy && urlMap && urlMap['root']) {
       await this.mtsRealm.loadScript(
         urlMap['root'],
+        currentUrl,
       );
       this.onMTSScriptsExecuted();
     }
@@ -272,6 +273,7 @@ export class LynxViewInstance implements AsyncDisposable {
         }
         let lepusRootChunkExport = await this.mtsRealm.loadScript(
           rootUrl,
+          url,
         );
         lepusRootChunkExport = this.mainThreadGlobalThis.processEvalResult?.(
           lepusRootChunkExport,
