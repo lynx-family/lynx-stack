@@ -4884,3 +4884,35 @@ describe('clear __UpdateListCallbacks', () => {
     expect(listElement.componentAtIndexes()).toBeUndefined();
   });
 });
+
+describe('destroy list after element transfer', () => {
+  it('does not destroy a list after its elements are transferred', () => {
+    const parentSnapshot = __SNAPSHOT__(<view>{HOLE}</view>);
+    const childSnapshot = __SNAPSHOT__(<view>{HOLE}</view>);
+    const listSnapshot = __SNAPSHOT__(<list>{HOLE}</list>);
+
+    const parent = new SnapshotInstance(parentSnapshot, 101);
+    const child = new SnapshotInstance(childSnapshot, 102);
+    const list = new SnapshotInstance(listSnapshot, 103);
+    parent.ensureElements();
+    parent.insertBefore(child);
+    child.insertBefore(list);
+
+    const listElement = list.__elements[0];
+    const listID = __GetElementUniqueID(listElement);
+
+    const renderedOwner = parent.takeElements();
+    const transferredChild = renderedOwner.childNodes[0];
+    const transferredList = transferredChild.childNodes[0];
+
+    expect(list.__elements).toBeUndefined();
+    expect(transferredList.__elements[0]).toBe(listElement);
+    expect(() => parent.removeChild(child)).not.toThrow();
+    expect(gSignMap[listID]).toBeDefined();
+    expect(gRecycleMap[listID]).toBeDefined();
+
+    renderedOwner.removeChild(transferredChild);
+    expect(gSignMap[listID]).toBeUndefined();
+    expect(gRecycleMap[listID]).toBeUndefined();
+  });
+});
