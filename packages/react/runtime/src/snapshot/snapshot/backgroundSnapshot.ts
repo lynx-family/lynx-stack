@@ -46,7 +46,7 @@ import { onPostWorkletCtx } from '../worklet/ctx.js';
 
 export function instanceValuesOf(ctx: RootContext | undefined): Map<number, BackgroundSnapshotInstance> {
   if (typeof __MULTI_PAGE__ !== 'undefined' && __MULTI_PAGE__ && ctx && ctx !== getCurrentRootContext()) {
-    return ctx.bag['bsiValues'] as Map<number, BackgroundSnapshotInstance>;
+    return ctx.slotValues['bsiValues'] as Map<number, BackgroundSnapshotInstance>;
   }
   return backgroundSnapshotInstanceManager.values;
 }

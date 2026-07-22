@@ -5,11 +5,11 @@
 /**
  * @internal
  */
-export interface RootContextSlot {
+export interface RootContextSlot<T = unknown> {
   id: string;
-  init(): unknown;
-  save(bag: Record<string, unknown>): void;
-  load(bag: Record<string, unknown>): void;
+  init(): T;
+  save(): T;
+  load(value: T): void;
 }
 
 const slots: RootContextSlot[] = [];
@@ -17,8 +17,8 @@ const slots: RootContextSlot[] = [];
 /**
  * @internal
  */
-export function registerContextSlot(slot: RootContextSlot): void {
-  slots.push(slot);
+export function registerContextSlot<T>(slot: RootContextSlot<T>): void {
+  slots.push(slot as RootContextSlot);
 }
 
 /**
@@ -53,7 +53,7 @@ export interface RootTT {
  * @internal
  */
 export class RootContext {
-  bag: Record<string, unknown> = {};
+  slotValues: Record<string, unknown> = {};
   lynx: RootLynx | undefined;
   tt: RootTT | undefined;
 }
@@ -79,16 +79,16 @@ export function switchRootContext(next: RootContext): void {
   if (next === currentRootContext) {
     return;
   }
-  const oldBag = currentRootContext.bag;
+  const oldValues = currentRootContext.slotValues;
   for (const slot of slots) {
-    slot.save(oldBag);
+    oldValues[slot.id] = slot.save();
   }
-  const newBag = next.bag;
+  const newValues = next.slotValues;
   for (const slot of slots) {
-    if (!(slot.id in newBag)) {
-      newBag[slot.id] = slot.init();
+    if (!(slot.id in newValues)) {
+      newValues[slot.id] = slot.init();
     }
-    slot.load(newBag);
+    slot.load(newValues[slot.id]);
   }
   currentRootContext = next;
 }

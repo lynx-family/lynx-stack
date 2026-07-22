@@ -25,113 +25,75 @@ import type { BackgroundSnapshotInstance } from './snapshot/snapshot/backgroundS
 import type { RunWorkletCtxData } from './worklet-runtime/bindings/events.js';
 
 if (typeof __MULTI_PAGE__ !== 'undefined' && __MULTI_PAGE__) {
-  registerContextSlot({
+  registerContextSlot<typeof __root | undefined>({
     id: 'root',
     init: () => undefined,
-    save(bag) {
-      bag['root'] = __root;
-    },
-    load(bag) {
-      setRoot(bag['root'] as typeof __root);
-    },
+    save: () => __root,
+    load: (value) => setRoot(value!),
   });
 
-  registerContextSlot({
+  registerContextSlot<SnapshotPatch | undefined>({
     id: 'snapshotPatch',
     init: () => undefined,
-    save(bag) {
-      bag['snapshotPatch'] = __globalSnapshotPatch;
-    },
-    load(bag) {
-      setGlobalSnapshotPatch(bag['snapshotPatch'] as SnapshotPatch | undefined);
-    },
+    save: () => __globalSnapshotPatch,
+    load: setGlobalSnapshotPatch,
   });
 
-  registerContextSlot({
+  registerContextSlot<Map<number, () => void>>({
     id: 'commitTaskMap',
-    init: () => new Map<number, () => void>(),
-    save(bag) {
-      bag['commitTaskMap'] = globalCommitTaskMap;
-    },
-    load(bag) {
-      setGlobalCommitTaskMap(bag['commitTaskMap'] as Map<number, () => void>);
-    },
+    init: () => new Map(),
+    save: () => globalCommitTaskMap,
+    load: setGlobalCommitTaskMap,
   });
 
-  registerContextSlot({
+  registerContextSlot<GlobalPatchOptions>({
     id: 'patchOptions',
     init: () => ({}),
-    save(bag) {
-      bag['patchOptions'] = globalPatchOptions;
-    },
-    load(bag) {
-      setGlobalPatchOptions(bag['patchOptions'] as GlobalPatchOptions);
-    },
+    save: () => globalPatchOptions,
+    load: setGlobalPatchOptions,
   });
 
-  registerContextSlot({
+  registerContextSlot<number[]>({
     id: 'bgInstancesToRemove',
     init: () => [],
-    save(bag) {
-      bag['bgInstancesToRemove'] = globalBackgroundSnapshotInstancesToRemove;
-    },
-    load(bag) {
-      setGlobalBackgroundSnapshotInstancesToRemove(bag['bgInstancesToRemove'] as number[]);
-    },
+    save: () => globalBackgroundSnapshotInstancesToRemove,
+    load: setGlobalBackgroundSnapshotInstancesToRemove,
   });
 
-  registerContextSlot({
+  registerContextSlot<Map<number, BackgroundSnapshotInstance>>({
     id: 'bsiValues',
-    init: () => new Map<number, BackgroundSnapshotInstance>(),
-    save(bag) {
-      bag['bsiValues'] = backgroundSnapshotInstanceManager.values;
-    },
-    load(bag) {
-      backgroundSnapshotInstanceManager.values = bag['bsiValues'] as Map<number, BackgroundSnapshotInstance>;
+    init: () => new Map(),
+    save: () => backgroundSnapshotInstanceManager.values,
+    load: (value) => {
+      backgroundSnapshotInstanceManager.values = value;
     },
   });
 
-  registerContextSlot({
+  registerContextSlot<typeof delayedEvents>({
     id: 'delayedEvents',
     init: () => undefined,
-    save(bag) {
-      bag['delayedEvents'] = delayedEvents;
-    },
-    load(bag) {
-      setDelayedEvents(bag['delayedEvents'] as typeof delayedEvents);
-    },
+    save: () => delayedEvents,
+    load: setDelayedEvents,
   });
 
-  registerContextSlot({
+  registerContextSlot<typeof delayedLifecycleEvents>({
     id: 'delayedLifecycleEvents',
     init: () => [],
-    save(bag) {
-      bag['delayedLifecycleEvents'] = delayedLifecycleEvents;
-    },
-    load(bag) {
-      setDelayedLifecycleEvents(bag['delayedLifecycleEvents'] as typeof delayedLifecycleEvents);
-    },
+    save: () => delayedLifecycleEvents,
+    load: setDelayedLifecycleEvents,
   });
 
-  registerContextSlot({
+  registerContextSlot<Set<() => void>>({
     id: 'destroyTasks',
-    init: () => new Set<() => void>(),
-    save(bag) {
-      bag['destroyTasks'] = destroyTasks;
-    },
-    load(bag) {
-      setDestroyTasks(bag['destroyTasks'] as Set<() => void>);
-    },
+    init: () => new Set(),
+    save: () => destroyTasks,
+    load: setDestroyTasks,
   });
 
-  registerContextSlot({
+  registerContextSlot<RunWorkletCtxData[]>({
     id: 'delayedRunOnMainThreadData',
     init: () => [],
-    save(bag) {
-      bag['delayedRunOnMainThreadData'] = delayedRunOnMainThreadData;
-    },
-    load(bag) {
-      setDelayedRunOnMainThreadData(bag['delayedRunOnMainThreadData'] as RunWorkletCtxData[]);
-    },
+    save: () => delayedRunOnMainThreadData,
+    load: setDelayedRunOnMainThreadData,
   });
 }
