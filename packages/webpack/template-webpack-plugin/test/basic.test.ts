@@ -76,7 +76,7 @@ globalThis.renderPage = function() {
     expect(stats.compilation.getAsset('main.lepus')).not.toBeUndefined();
   });
 
-  test('skips assetless async chunk groups', async () => {
+  test('skips an assetless group sharing a resolved lazy-bundle name', async () => {
     const outputPath = await mkdtemp(join(tmpdir(), 'lynx-assetless-chunk-'));
 
     try {
@@ -98,6 +98,8 @@ globalThis.renderPage = function() {
           }),
           function(this: Compiler) {
             this.hooks.thisCompilation.tap('test', (compilation) => {
+              LynxTemplatePlugin.getLynxTemplatePluginHooks(compilation)
+                .asyncChunkName.tap('test', () => 'shared-details');
               compilation.emitAsset(
                 'main.lepus',
                 new this.webpack.sources.RawSource(
@@ -132,14 +134,35 @@ globalThis.renderPage = function() {
       expect(assetlessChunkGroups.map(chunkGroup => chunkGroup.name)).toContain(
         'catalog/Details',
       );
-      expect(
-        stats.compilation.getAssets().map(asset => asset.name),
-      ).not.toEqual(
-        expect.arrayContaining([expect.stringContaining('catalog/Details')]),
+      const emittingChunkGroups = stats.compilation.chunkGroups.filter(
+        chunkGroup =>
+          !chunkGroup.isInitial() && chunkGroup.getFiles().length > 0,
+      );
+      expect(emittingChunkGroups.map(chunkGroup => chunkGroup.name)).toContain(
+        'local-details',
       );
       expect(
-        stats.compilation.getAsset('main.js')?.source.source().toString(),
-      ).not.toContain('lazy-bundle/catalog/Details.');
+        stats.compilation.getAssets().map(asset => asset.name),
+      ).toEqual(
+        expect.arrayContaining([expect.stringContaining('shared-details')]),
+      );
+      const runtimeSource = stats.compilation.getAsset('main.js')?.source
+        .source()
+        .toString() ?? '';
+      const idsBlock =
+        (/\/\/ lynx async chunks ids\n[\s\S]*?(?=\n\/\/|$)/.exec(runtimeSource))
+          ?.[0] ?? '';
+      expect(idsBlock).toContain('lazy-bundle/shared-details.');
+      for (const chunkGroup of emittingChunkGroups) {
+        for (const chunk of chunkGroup.chunks) {
+          expect(idsBlock).toContain(`${JSON.stringify(chunk.id)}:`);
+        }
+      }
+      for (const chunkGroup of assetlessChunkGroups) {
+        for (const chunk of chunkGroup.chunks) {
+          expect(idsBlock).not.toContain(`${JSON.stringify(chunk.id)}:`);
+        }
+      }
     } finally {
       await rm(outputPath, { recursive: true, force: true });
     }

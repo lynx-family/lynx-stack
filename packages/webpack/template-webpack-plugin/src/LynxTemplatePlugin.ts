@@ -790,23 +790,21 @@ class LynxTemplatePluginImpl {
 
   static #chunkGroupCanEmitJavaScript(
     compilation: Compilation,
-    chunkGroups: ChunkGroup[],
+    chunkGroup: ChunkGroup,
   ) {
-    return chunkGroups.some(cg =>
-      cg.chunks.some(chunk => {
-        if (compilation.chunkGraph.getNumberOfEntryModules(chunk) > 0) {
-          return true;
-        }
-        const modules = compilation.chunkGraph
-          .getChunkModulesIterableBySourceType(chunk, 'javascript');
-        // Rspack exposes Module Federation remote placeholders as JavaScript
-        // modules even though they are fulfilled by the remotes runtime and do
-        // not emit a chunk asset.
-        return Array.from(modules ?? []).some(
-          module => module.type !== 'remote-module',
-        );
-      })
-    );
+    return chunkGroup.chunks.some(chunk => {
+      if (compilation.chunkGraph.getNumberOfEntryModules(chunk) > 0) {
+        return true;
+      }
+      const modules = compilation.chunkGraph
+        .getChunkModulesIterableBySourceType(chunk, 'javascript');
+      // Rspack exposes Module Federation remote placeholders as JavaScript
+      // modules even though they are fulfilled by the remotes runtime and do
+      // not emit a chunk asset.
+      return Array.from(modules ?? []).some(
+        module => module.type !== 'remote-module',
+      );
+    });
   }
 
   static #getAsyncChunkGroups(compilation: Compilation) {
@@ -869,19 +867,21 @@ class LynxTemplatePluginImpl {
         LynxTemplatePluginImpl.#getAsyncChunkGroups(compilation),
       )
     ) {
-      const mappedFilename =
-        LynxTemplatePluginImpl.#chunkGroupCanEmitJavaScript(
-            compilation,
-            chunkGroups,
-          )
-          ? filename
-          // Keep a tombstone for known assetless chunks so the named-chunk
-          // fallback does not invent a lazy-bundle URL for them.
-          : '';
+      for (const chunkGroup of chunkGroups) {
+        const mappedFilename =
+          LynxTemplatePluginImpl.#chunkGroupCanEmitJavaScript(
+              compilation,
+              chunkGroup,
+            )
+            ? filename
+            // Keep a tombstone for known assetless chunks so the named-chunk
+            // fallback does not invent a lazy-bundle URL for them.
+            : '';
 
-      for (const chunk of chunkGroups.flatMap(cg => cg.chunks)) {
-        if (chunk.id !== null && chunk.id !== undefined) {
-          lazyBundleNames.set(chunk.id, mappedFilename);
+        for (const chunk of chunkGroup.chunks) {
+          if (chunk.id !== null && chunk.id !== undefined) {
+            lazyBundleNames.set(chunk.id, mappedFilename);
+          }
         }
       }
     }
