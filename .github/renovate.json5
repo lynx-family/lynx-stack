@@ -47,6 +47,18 @@
       "rangeStrategy": "bump",
     },
     {
+      // Batch low-risk updates: all devDependencies minor/patch bumps share one
+      // rolling PR instead of one PR each. Kept FIRST on purpose -- the specific
+      // groups below (Rspack, types, linting, ...) match later and win, so they
+      // keep their own PRs; only otherwise-ungrouped dev deps land here.
+      // dependencies and every major update keep individual PRs for precise
+      // review and rollback.
+      "matchDepTypes": ["devDependencies"],
+      "matchUpdateTypes": ["minor", "patch"],
+      "groupName": "dev minor & patch",
+      "groupSlug": "dev-non-major",
+    },
+    {
       "groupName": "Rspack",
       "groupSlug": "Rspack",
       "addLabels": ["upstream:rspack"],
