@@ -11,7 +11,7 @@ import {
   delayedRunOnMainThreadData,
   takeDelayedRunOnMainThreadData,
 } from '../../core/thread-function-call/main-thread.js';
-import { defaultRootContext, getCurrentRootContext, switchRootContext } from '../../root-context.js';
+import { contextLynx, defaultRootContext, getCurrentRootContext, switchRootContext } from '../../root-context.js';
 import type { RootContext, RootTT } from '../../root-context.js';
 import { __root } from '../../root.js';
 import { profileEnd, profileStart } from '../../shared/profile.js';
@@ -219,31 +219,16 @@ function onLifecycleEventImpl(type: LifecycleConstant, data: unknown): void {
       }
       const obj = commitPatchUpdate(patchList, { isHydration: true });
       sendMTRefInitValueToMainThread();
-      if (typeof __MULTI_ROOT_RENDER_CONTEXT__ !== 'undefined' && __MULTI_ROOT_RENDER_CONTEXT__) {
-        const ctxLynx = getCurrentRootContext().lynx ?? lynx;
-        const commitTaskMap = globalCommitTaskMap;
-        ctxLynx.getNativeApp().callLepusMethod(LifecycleConstant.patchUpdate, obj, () => {
-          commitTaskMap.forEach((commitTask, id) => {
-            if (id > commitTaskId) {
-              return;
-            }
-            commitTask();
-            commitTaskMap.delete(id);
-          });
+      const commitTaskMap = globalCommitTaskMap;
+      contextLynx.getNativeApp().callLepusMethod(LifecycleConstant.patchUpdate, obj, () => {
+        commitTaskMap.forEach((commitTask, id) => {
+          if (id > commitTaskId) {
+            return;
+          }
+          commitTask();
+          commitTaskMap.delete(id);
         });
-        /* v8 ignore start */
-      } else {
-        lynx.getNativeApp().callLepusMethod(LifecycleConstant.patchUpdate, obj, () => {
-          globalCommitTaskMap.forEach((commitTask, id) => {
-            if (id > commitTaskId) {
-              return;
-            }
-            commitTask();
-            globalCommitTaskMap.delete(id);
-          });
-        });
-      }
-      /* v8 ignore stop */
+      });
       runDelayedUiOps();
 
       if (processErr) {

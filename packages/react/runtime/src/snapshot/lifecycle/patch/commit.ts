@@ -36,7 +36,7 @@ import {
   delayedRunOnMainThreadData,
   takeDelayedRunOnMainThreadData,
 } from '../../../core/thread-function-call/main-thread.js';
-import { getCurrentRootContext } from '../../../root-context.js';
+import { contextLynx } from '../../../root-context.js';
 import { profileEnd, profileStart } from '../../../shared/profile.js';
 import { COMMIT } from '../../../shared/render-constants.js';
 import { hook, isEmptyObject } from '../../../utils.js';
@@ -170,28 +170,15 @@ function replaceCommitHook(): void {
       }
       const obj = commitPatchUpdate(patchList, patchOptions);
 
-      if (typeof __MULTI_ROOT_RENDER_CONTEXT__ !== 'undefined' && __MULTI_ROOT_RENDER_CONTEXT__) {
-        const commitTaskMap = globalCommitTaskMap;
-        const ctxLynx = getCurrentRootContext().lynx ?? lynx;
-        ctxLynx.getNativeApp().callLepusMethod(LifecycleConstant.patchUpdate, obj, () => {
-          const commitTask = commitTaskMap.get(commitTaskId);
-          if (commitTask) {
-            commitTask();
-            commitTaskMap.delete(commitTaskId);
-          }
-        });
-        /* v8 ignore start */
-      } else {
-        // Send the update to the native layer
-        lynx.getNativeApp().callLepusMethod(LifecycleConstant.patchUpdate, obj, () => {
-          const commitTask = globalCommitTaskMap.get(commitTaskId);
-          if (commitTask) {
-            commitTask();
-            globalCommitTaskMap.delete(commitTaskId);
-          }
-        });
-      }
-      /* v8 ignore stop */
+      // Send the update to the native layer
+      const commitTaskMap = globalCommitTaskMap;
+      contextLynx.getNativeApp().callLepusMethod(LifecycleConstant.patchUpdate, obj, () => {
+        const commitTask = commitTaskMap.get(commitTaskId);
+        if (commitTask) {
+          commitTask();
+          commitTaskMap.delete(commitTaskId);
+        }
+      });
 
       applyQueuedRefs();
       originalPreactCommit?.(vnode, commitQueue);

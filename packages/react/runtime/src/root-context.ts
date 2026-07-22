@@ -68,6 +68,11 @@ let currentRootContext = defaultRootContext;
 /**
  * @internal
  */
+export let contextLynx: RootLynx = lynx;
+
+/**
+ * @internal
+ */
 export function getCurrentRootContext(): RootContext {
   return currentRootContext;
 }
@@ -90,5 +95,6 @@ export function switchRootContext(next: RootContext): void {
     }
     slot.load(newValues[slot.id]);
   }
+  contextLynx = next.lynx ?? lynx;
   currentRootContext = next;
 }
