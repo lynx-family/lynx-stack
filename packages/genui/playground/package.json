@@ -37,7 +37,7 @@
     "@lynx-js/rspeedy": "workspace:*",
     "@lynx-js/types": "4.0.0",
     "@rsbuild/core": "catalog:rsbuild",
-    "@rsbuild/plugin-react": "^2.0.0",
+    "@rsbuild/plugin-react": "2.0.0",
     "@rstest/core": "catalog:rstest",
     "@types/qrcode": "^1.5.5",
     "@types/react": "npm:@types/react@^19.2.14",

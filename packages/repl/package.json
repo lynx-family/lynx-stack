@@ -30,7 +30,7 @@
     "@lynx-js/web-core": "workspace:*",
     "@lynx-js/web-platform-rsbuild-plugin": "workspace:*",
     "@rsbuild/core": "catalog:rsbuild",
-    "@rsbuild/plugin-react": "^2.0.0",
+    "@rsbuild/plugin-react": "2.0.0",
     "@tailwindcss/postcss": "^4.2.1",
     "@types/css-tree": "^2.3.11",
     "@types/react": "npm:@types/react@^19.2.14",
