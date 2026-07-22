@@ -4,8 +4,8 @@
 import { render } from 'preact';
 import type { ReactNode } from 'react';
 
+import { setBoundRoot } from './bound-root.js';
 import { root } from './lynx-api.js';
-import { setBootstrappedRoot } from './page-root-ref.js';
 import { RootContext, getCurrentRootContext, switchRootContext } from './root-context.js';
 import type { RootLynx, RootTT } from './root-context.js';
 import { __root, setRoot } from './root.js';
@@ -24,7 +24,7 @@ type RootContainer = (SnapshotInstance | BackgroundSnapshotInstance) & {
 /**
  * @internal
  */
-export interface BootstrapPageOptions {
+export interface BindRenderContextOptions {
   lynx?: RootLynx;
   lynxCoreInject?: { tt: RootTT };
 }
@@ -36,7 +36,7 @@ export class ReactLynxRoot {
   _container: RootContainer;
   _ctx: RootContext;
 
-  constructor(options?: BootstrapPageOptions) {
+  constructor(options?: BindRenderContextOptions) {
     this._ctx = new RootContext();
     this._ctx.lynx = options?.lynx;
     this._ctx.tt = options?.lynxCoreInject?.tt;
@@ -100,19 +100,19 @@ export class ReactLynxRoot {
 /**
  * @internal
  */
-export interface RootWithBootstrap {
-  __experimentalBootstrapPage?: (options?: BootstrapPageOptions) => ReactLynxRoot | undefined;
+export interface RootWithBindRenderContext {
+  __experimentalBindRenderContext?: (options?: BindRenderContextOptions) => ReactLynxRoot | undefined;
 }
 
 if (typeof __MULTI_ROOT_RENDER_CONTEXT__ !== 'undefined' && __MULTI_ROOT_RENDER_CONTEXT__) {
-  (root as RootWithBootstrap).__experimentalBootstrapPage = (
-    options?: BootstrapPageOptions,
+  (root as RootWithBindRenderContext).__experimentalBindRenderContext = (
+    options?: BindRenderContextOptions,
   ): ReactLynxRoot | undefined => {
     /* v8 ignore next */
     if (typeof __BACKGROUND__ !== 'undefined' && __BACKGROUND__) {
-      const bootstrappedRoot = options ? new ReactLynxRoot(options) : undefined;
-      setBootstrappedRoot(bootstrappedRoot);
-      return bootstrappedRoot;
+      const boundRoot = options ? new ReactLynxRoot(options) : undefined;
+      setBoundRoot(boundRoot);
+      return boundRoot;
       /* v8 ignore start */
     } else {
       return undefined;

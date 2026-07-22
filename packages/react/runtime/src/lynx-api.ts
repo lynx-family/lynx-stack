@@ -6,11 +6,11 @@ import { createContext, createElement } from 'preact/compat';
 import { useState } from 'preact/hooks';
 import type { Consumer, FC, ReactNode } from 'react';
 
+import { boundRoot } from './bound-root.js';
 import { createGlobalProps } from './core/globalProps.js';
 import type { GlobalProps } from './core/globalProps.js';
 import { useLynxGlobalEventListener } from './core/hooks/useLynxGlobalEventListener.js';
 import { factory, withInitDataInState } from './core/initData.js';
-import { bootstrappedRoot } from './page-root-ref.js';
 import { defaultRootContext, switchRootContext } from './root-context.js';
 import { __root } from './root.js';
 import { profileEnd, profileStart } from './shared/profile.js';
@@ -93,8 +93,8 @@ export const root: Root = {
       __root.__jsx = jsx;
     } else {
       if (typeof __MULTI_ROOT_RENDER_CONTEXT__ !== 'undefined' && __MULTI_ROOT_RENDER_CONTEXT__) {
-        if (bootstrappedRoot) {
-          bootstrappedRoot.render(jsx);
+        if (boundRoot) {
+          boundRoot.render(jsx);
           return;
         }
         switchRootContext(defaultRootContext);

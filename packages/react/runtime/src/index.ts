@@ -34,7 +34,7 @@ import { Children } from './snapshot/lynx/children.js';
 import { cloneElement, createElement } from './snapshot/lynx/element.js';
 import { createPortal } from './snapshot/lynx/portals.js';
 import { Suspense } from './snapshot/lynx/suspense.js';
-import './multi-page.js';
+import './multi-root-render-context.js';
 
 export type { ReactLynxChildren } from './snapshot/lynx/children.js';
 export type { CloneElement, CreateElement } from './snapshot/lynx/element.js';
