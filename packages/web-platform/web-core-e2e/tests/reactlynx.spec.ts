@@ -396,14 +396,17 @@ test.describe('reactlynx3 tests', () => {
 
     test('api-frame-auto-height', async ({ page }, { title }) => {
       await goto(page, title);
-      await expect(page.locator('#target')).toHaveAttribute(
+      const target = page.locator('#target');
+      await expect(target).toHaveAttribute(
         'auto-height',
         'true',
       );
-      await expect(page.locator('#target')).not.toHaveAttribute(
+      await expect(target).not.toHaveAttribute(
         'height',
         'auto',
       );
+      await expect(target).toHaveCSS('contain', 'content');
+      expect((await target.boundingBox())?.height).toBeGreaterThan(0);
     });
 
     test('api-frame-auto-width', async ({ page }, { title }) => {

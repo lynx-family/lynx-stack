@@ -50,6 +50,15 @@ export interface McpAppsRenderInit {
   theme?: 'light' | 'dark';
 }
 
+export function hasShareableA2UIRenderPayload(
+  init: Pick<RenderInit, 'demoId' | 'messages' | 'messagesUrl'>,
+): boolean {
+  if (init.demoId || init.messagesUrl) return true;
+  return Array.isArray(init.messages)
+    ? init.messages.length > 0
+    : init.messages !== undefined;
+}
+
 function buildRenderInitData(init: RenderInit): Record<string, unknown> {
   const initData: Record<string, unknown> = {
     protocol: init.protocol.name,

@@ -9,7 +9,29 @@ import {
   buildMcpAppsRenderUrl,
   buildOpenUIRenderUrl,
   canInlineOpenUIRenderUrl,
+  hasShareableA2UIRenderPayload,
 } from './renderUrl.js';
+
+describe('A2UI render payloads', () => {
+  test('treats runtime-built inline messages as shareable', () => {
+    expect(hasShareableA2UIRenderPayload({
+      messages: [{ createSurface: { surfaceId: 'default' } }],
+    })).toBe(true);
+  });
+
+  test('requires content or an external payload reference', () => {
+    expect(hasShareableA2UIRenderPayload({ messages: [] })).toBe(false);
+    expect(hasShareableA2UIRenderPayload({ messages: undefined })).toBe(false);
+    expect(hasShareableA2UIRenderPayload({
+      demoId: 'mcp-app',
+      messages: [],
+    })).toBe(true);
+    expect(hasShareableA2UIRenderPayload({
+      messages: [],
+      messagesUrl: 'https://example.com/messages.json',
+    })).toBe(true);
+  });
+});
 
 describe('OpenUI render URLs', () => {
   test('marks oversized inline rawText URLs as unsafe', () => {
