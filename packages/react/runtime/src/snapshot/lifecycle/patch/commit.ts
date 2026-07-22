@@ -36,7 +36,7 @@ import {
   delayedRunOnMainThreadData,
   takeDelayedRunOnMainThreadData,
 } from '../../../core/thread-function-call/main-thread.js';
-import { getCurrentRootContext, registerContextSlot } from '../../../root-context.js';
+import { getCurrentRootContext } from '../../../root-context.js';
 import { profileEnd, profileStart } from '../../../shared/profile.js';
 import { COMMIT } from '../../../shared/render-constants.js';
 import { hook, isEmptyObject } from '../../../utils.js';
@@ -49,27 +49,12 @@ import { isRendering } from '../isRendering.js';
 let globalCommitTaskMap: Map<number, () => void> = /*@__PURE__*/ new Map<number, () => void>();
 let nextCommitTaskId = 1;
 
-if (typeof __MULTI_PAGE__ !== 'undefined' && __MULTI_PAGE__) {
-  registerContextSlot({
-    id: 'commitTaskMap',
-    init: () => new Map<number, () => void>(),
-    save(bag) {
-      bag['commitTaskMap'] = globalCommitTaskMap;
-    },
-    load(bag) {
-      globalCommitTaskMap = bag['commitTaskMap'] as Map<number, () => void>;
-    },
-  });
-  registerContextSlot({
-    id: 'patchOptions',
-    init: () => ({}),
-    save(bag) {
-      bag['patchOptions'] = globalPatchOptions;
-    },
-    load(bag) {
-      globalPatchOptions = bag['patchOptions'] as GlobalPatchOptions;
-    },
-  });
+export function setGlobalCommitTaskMap(map: Map<number, () => void>): void {
+  globalCommitTaskMap = map;
+}
+
+export function setGlobalPatchOptions(options: GlobalPatchOptions): void {
+  globalPatchOptions = options;
 }
 
 /**
