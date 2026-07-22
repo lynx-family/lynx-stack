@@ -6,11 +6,11 @@ import { createContext, createElement } from 'preact/compat';
 import { useState } from 'preact/hooks';
 import type { Consumer, FC, ReactNode } from 'react';
 
-import { getBootstrappedRoot } from './card-bootstrap.js';
 import { createGlobalProps } from './core/globalProps.js';
 import type { GlobalProps } from './core/globalProps.js';
 import { useLynxGlobalEventListener } from './core/hooks/useLynxGlobalEventListener.js';
 import { factory, withInitDataInState } from './core/initData.js';
+import { bootstrappedRoot } from './page-root-ref.js';
 import { defaultRootContext, switchRootContext } from './root-context.js';
 import { __root } from './root.js';
 import { profileEnd, profileStart } from './shared/profile.js';
@@ -92,16 +92,10 @@ export const root: Root = {
     if (typeof __MAIN_THREAD__ !== 'undefined' && __MAIN_THREAD__) {
       __root.__jsx = jsx;
     } else {
-      // A card bootstrapped via `__experimentalBootstrapCard` owns its own root; render
-      // there so shared-context cards can keep using the classic `root.render`.
-      if (typeof __MULTI_CARD__ !== 'undefined' && __MULTI_CARD__) {
-        const cardRoot = getBootstrappedRoot();
-        if (cardRoot) {
-          cardRoot.render(jsx);
-          return;
-        }
+      if (typeof __MULTI_PAGE__ !== 'undefined' && __MULTI_PAGE__ && bootstrappedRoot) {
+        bootstrappedRoot.render(jsx);
+        return;
       }
-      // The classic singleton `root` always renders the default context.
       switchRootContext(defaultRootContext);
       __root.__jsx = jsx;
       if (typeof __PROFILE__ !== 'undefined' && __PROFILE__) {

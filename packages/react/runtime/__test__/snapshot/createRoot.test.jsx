@@ -7,7 +7,7 @@ import { afterEach, beforeAll, beforeEach, describe, expect, it, vi } from 'vite
 
 import { installComponentCompat } from '../../src/core/component';
 import { useState } from '../../src/index';
-import { __experimentalBootstrapCard } from '../../src/card-bootstrap';
+import { __experimentalBootstrapPage } from '../../src/page-bootstrap';
 import { root } from '../../src/lynx-api';
 import { __root } from '../../src/root';
 import { defaultRootContext, switchRootContext } from '../../src/root-context';
@@ -57,16 +57,16 @@ describe('root-cause: default singleton shares one container', () => {
   });
 });
 
-describe('__experimentalBootstrapCard: classic root.render renders the bootstrapped card', () => {
+describe('__experimentalBootstrapPage: classic root.render renders the bootstrapped card', () => {
   afterEach(() => {
-    __experimentalBootstrapCard();
+    __experimentalBootstrapPage();
   });
 
   it('delegates root.render to the bootstrapped root, leaving __root untouched', () => {
     globalEnvManager.switchToBackground();
 
     const A = () => <text>{'A'}</text>;
-    const cardA = __experimentalBootstrapCard({});
+    const cardA = __experimentalBootstrapPage({});
     root.render(<A />);
 
     expect(textOf(cardA._container)).toEqual(['A']);
@@ -79,9 +79,9 @@ describe('__experimentalBootstrapCard: classic root.render renders the bootstrap
     const A = () => <text>{'A'}</text>;
     const B = () => <text>{'B'}</text>;
 
-    const cardA = __experimentalBootstrapCard({});
+    const cardA = __experimentalBootstrapPage({});
     root.render(<A />);
-    const cardB = __experimentalBootstrapCard({});
+    const cardB = __experimentalBootstrapPage({});
     root.render(<B />);
 
     expect(cardA._container).not.toBe(cardB._container);
@@ -93,8 +93,8 @@ describe('__experimentalBootstrapCard: classic root.render renders the bootstrap
     globalEnvManager.switchToBackground();
 
     const A = () => <text>{'A'}</text>;
-    __experimentalBootstrapCard({});
-    __experimentalBootstrapCard();
+    __experimentalBootstrapPage({});
+    __experimentalBootstrapPage();
     root.render(<A />);
 
     expect(textOf(__root)).toEqual(['A']);
@@ -112,7 +112,7 @@ describe('__experimentalBootstrapCard: classic root.render renders the bootstrap
     const old = globalThis.__FIRST_SCREEN_SYNC_TIMING__;
     try {
       globalThis.__FIRST_SCREEN_SYNC_TIMING__ = 'jsReady';
-      __experimentalBootstrapCard({ lynx: lynxA });
+      __experimentalBootstrapPage({ lynx: lynxA });
       root.render(<text>{'A'}</text>);
       const handshakes = callA.mock.calls.filter(c => c[0] === 'rLynxFirstScreenSyncReady');
       expect(handshakes).toHaveLength(1);
@@ -332,7 +332,7 @@ describe('createRoot: independent roots coexist', () => {
   });
 });
 
-describe('multi-card: two roots on separate native channels', () => {
+describe('multi-page: two roots on separate native channels', () => {
   it('hydrates two roots to the same main-thread ids and routes events independently', async () => {
     function App() {
       const [n, set] = useState(0);

@@ -83,7 +83,7 @@ export { registerWorkletOnBackground } from './snapshot/worklet/hmr.js';
 
 export { loadWorkletRuntime } from '@lynx-js/react/worklet-runtime/bindings';
 
-export { __experimentalBootstrapCard } from './card-bootstrap.js';
+export { __experimentalBootstrapPage } from './page-bootstrap.js';
 
 if (__DEV__) {
   // Dev snapshot creators take the runtime as a parameter (they are

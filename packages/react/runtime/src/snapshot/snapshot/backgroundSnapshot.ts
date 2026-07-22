@@ -44,9 +44,6 @@ import { clearPendingPortalInsertBefore } from '../lynx/portalsPending.js';
 import { diffArrayAction, diffArrayLepus } from '../renderToOpcodes/hydrate.js';
 import { onPostWorkletCtx } from '../worklet/ctx.js';
 
-/**
- * Resolve `ctx`'s instance registry, whether or not `ctx` is current.
- */
 export function instanceValuesOf(ctx: RootContext): Map<number, BackgroundSnapshotInstance> {
   return ctx === getCurrentRootContext()
     ? backgroundSnapshotInstanceManager.values
@@ -191,11 +188,6 @@ export class BackgroundSnapshotInstance {
   __extraProps?: Record<string, unknown> | undefined;
   __slotIndex: number = 0;
   private __listItemPlatformInfoIndex?: number;
-  /**
-   * The root context owning this instance, stamped at construction. Used by
-   * the `renderComponent` hook to re-establish the owner context before a
-   * component of this root re-renders.
-   */
   __rootCtx: RootContext = getCurrentRootContext();
 
   private __parent: BackgroundSnapshotInstance | null = null;
@@ -342,9 +334,6 @@ export class BackgroundSnapshotInstance {
   }
 
   tearDown(): void {
-    // Delete from the owning root's registry: `tearDown` may run
-    // asynchronously (e.g. from a commit task), when another root's registry
-    // is the current one.
     const values = instanceValuesOf(this.__rootCtx);
     traverseSnapshotInstance(this, v => {
       v.__parent = null;

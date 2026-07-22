@@ -327,13 +327,10 @@ export interface PluginReactLynxOptions {
   experimental_useElementTemplate?: boolean
 
   /**
-   * Enable multi-card roots for shared JS contexts. Only the shared external
-   * runtime bundle should be built with this on.
-   *
    * @defaultValue `false`
    * @alpha
    */
-  experimental_multiCardRoots?: boolean
+  experimental_multiPageRoots?: boolean
 
   /**
    * Optimize bundle size by removing unused code by Minify.mainThreadOptions and Minify.backgroundOptions.
@@ -400,7 +397,7 @@ export function pluginReactLynx(
 
     experimental_isLazyBundle: false,
     experimental_useElementTemplate: false,
-    experimental_multiCardRoots: false,
+    experimental_multiPageRoots: false,
     optimizeBundleSize: false,
     enableUiSourceMap: false,
   }

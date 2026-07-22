@@ -47,8 +47,6 @@ import { sendMTRefInitValueToMainThread } from '../../worklet/ref/updateInitValu
 import { isRendering } from '../isRendering.js';
 
 let globalCommitTaskMap: Map<number, () => void> = /*@__PURE__*/ new Map<number, () => void>();
-// Note: `nextCommitTaskId` is intentionally NOT per-root: globally unique ids
-// guarantee one root's hydration ack never flushes another root's tasks.
 let nextCommitTaskId = 1;
 
 export function setGlobalCommitTaskMap(map: Map<number, () => void>): void {
@@ -129,9 +127,6 @@ function replaceCommitHook(): void {
 
       const commitTaskId = genCommitTaskId();
 
-      // Register the commit task. Capture this root's instance registry: the
-      // task runs after the native ack, when another root's registry may be
-      // the current one.
       const instanceValues = backgroundSnapshotInstanceManager.values;
       globalCommitTaskMap.set(commitTaskId, () => {
         if (backgroundSnapshotInstancesToRemove.length) {
@@ -174,14 +169,10 @@ function replaceCommitHook(): void {
       }
       const obj = commitPatchUpdate(patchList, patchOptions);
 
-      // Send the update to the native layer, through this root's own channel
-      // when it has one (multi-root: each root talks to its own native view).
-      // Capture this root's task map: by the time native acks, the current
-      // context may be a different root's.
       const commitTaskMap = globalCommitTaskMap;
-      /* v8 ignore next 2 -- the `__MULTI_CARD__`-off arm is compile-time dead in tests */
+      /* v8 ignore next 2 */
       const ctxLynx =
-        (typeof __MULTI_CARD__ !== 'undefined' && __MULTI_CARD__ ? getCurrentRootContext().lynx : undefined) ?? lynx;
+        (typeof __MULTI_PAGE__ !== 'undefined' && __MULTI_PAGE__ ? getCurrentRootContext().lynx : undefined) ?? lynx;
       ctxLynx.getNativeApp().callLepusMethod(LifecycleConstant.patchUpdate, obj, () => {
         const commitTask = commitTaskMap.get(commitTaskId);
         if (commitTask) {

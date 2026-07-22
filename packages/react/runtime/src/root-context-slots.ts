@@ -1,12 +1,6 @@
 // Copyright 2026 The Lynx Authors. All rights reserved.
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
-
-/**
- * Every per-root state slot, registered in one place. Compiled in only for
- * multi-card builds (`__MULTI_CARD__`); the classic single-root flow never
- * registers or swaps any slot. See {@link ./root-context.ts}.
- */
 import { destroyTasks, setDestroyTasks } from './core/runtime-destroy.js';
 import { delayedRunOnMainThreadData, setDelayedRunOnMainThreadData } from './core/thread-function-call/main-thread.js';
 import { registerContextSlot } from './root-context.js';
@@ -30,7 +24,7 @@ import { backgroundSnapshotInstanceManager } from './snapshot/snapshot/backgroun
 import type { BackgroundSnapshotInstance } from './snapshot/snapshot/backgroundSnapshot.js';
 import type { RunWorkletCtxData } from './worklet-runtime/bindings/events.js';
 
-if (typeof __MULTI_CARD__ !== 'undefined' && __MULTI_CARD__) {
+if (typeof __MULTI_PAGE__ !== 'undefined' && __MULTI_PAGE__) {
   registerContextSlot({
     id: 'root',
     init: () => undefined,
@@ -44,7 +38,6 @@ if (typeof __MULTI_CARD__ !== 'undefined' && __MULTI_CARD__) {
 
   registerContextSlot({
     id: 'snapshotPatch',
-    // `undefined` marks "not hydrated yet"; each new root starts that way.
     init: () => undefined,
     save(bag) {
       bag['snapshotPatch'] = __globalSnapshotPatch;
@@ -86,11 +79,6 @@ if (typeof __MULTI_CARD__ !== 'undefined' && __MULTI_CARD__) {
       setGlobalBackgroundSnapshotInstancesToRemove(bag['bgInstancesToRemove'] as number[]);
     },
   });
-
-  // The instance registry is per-root: hydration rewrites background ids to
-  // the main-thread ids of the root's own card, and different cards' ids
-  // overlap. (`nextId` stays global on purpose, so pre-hydration ids never
-  // collide across roots.)
   registerContextSlot({
     id: 'bsiValues',
     init: () => new Map<number, BackgroundSnapshotInstance>(),

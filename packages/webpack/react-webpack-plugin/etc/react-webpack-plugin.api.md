@@ -49,8 +49,8 @@ export interface ReactWebpackPluginOptions {
     enableSSR?: boolean;
     // @alpha
     experimental_isLazyBundle?: boolean;
-    // @alpha
-    experimental_multiCardRoots?: boolean;
+    // @alpha (undocumented)
+    experimental_multiPageRoots?: boolean;
     experimental_useElementTemplate?: boolean;
     extractStr?: Partial<ExtractStrConfig> | boolean;
     firstScreenSyncTiming?: 'immediately' | 'jsReady' | 'manual';

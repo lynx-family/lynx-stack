@@ -39,13 +39,8 @@ import { sendMTRefInitValueToMainThread } from '../worklet/ref/updateInitValue.j
 
 export { runWithForce };
 
-/**
- * Wrap a native-facing handler so it re-establishes its root's context
- * before running. Native identifies the target root by which `tt` object it
- * calls into (one per card), so binding at injection time is enough.
- */
 function bindContext<T extends unknown[], R>(ctx: RootContext, fn: (...args: T) => R): (...args: T) => R {
-  if (typeof __MULTI_CARD__ === 'undefined' || !__MULTI_CARD__) {
+  if (typeof __MULTI_PAGE__ === 'undefined' || !__MULTI_PAGE__) {
     return fn;
   }
   return (...args: T) => {
@@ -58,19 +53,12 @@ function injectTt(): void {
   injectTtInto(lynxCoreInject.tt, defaultRootContext);
 }
 
-/**
- * Inject the ReactLynx handlers into `tt`, bound to `ctx`. Incoming native
- * calls on that `tt` then always operate on `ctx`'s state, which is what
- * lets several roots coexist in one shared background context.
- */
 function injectTtInto(tt: RootTT, ctx: RootContext): void {
   tt.OnLifecycleEvent = bindContext(ctx, onLifecycleEvent);
   tt.publishEvent = bindContext(ctx, delayedPublishEvent);
   tt.publicComponentEvent = bindContext(ctx, delayedPublicComponentEvent);
   tt.callDestroyLifetimeFun = bindContext(ctx, () => {
     if (ctx === defaultRootContext) {
-      // The ctx-not-found listener is context-global; destroying one card of
-      // a shared context must not tear it down for the remaining cards.
       removeCtxNotFoundEventListener();
     }
     destroyWorklet();
@@ -118,10 +106,6 @@ function onLifecycleEventImpl(type: LifecycleConstant, data: unknown): void {
       } catch (e) {
         processErr = e;
       }
-      // `process()` drains Preact's shared rerender queue, which may hold
-      // components of OTHER roots; rendering them switches the current context
-      // (see `contextSwitchHook`). Re-assert ours before hydrating `__root`,
-      // or we would hydrate another root's tree.
       switchRootContext(ctxBeforeProcess);
       const { root: lepusSide, firstScreenEventIdSwap } = data as FirstScreenData;
       if (typeof __PROFILE__ !== 'undefined' && __PROFILE__) {
@@ -186,8 +170,6 @@ function onLifecycleEventImpl(type: LifecycleConstant, data: unknown): void {
       }
 
       {
-        // Swap in the direct (non-delaying) event handlers on this root's own
-        // `tt` channel, keeping them bound to this root's context.
         const ctx = getCurrentRootContext();
         const tt = ctx.tt ?? lynxCoreInject.tt;
         tt.publishEvent = bindContext(ctx, publishEvent);
@@ -205,10 +187,8 @@ function onLifecycleEventImpl(type: LifecycleConstant, data: unknown): void {
       }
       const obj = commitPatchUpdate(patchList, { isHydration: true });
       sendMTRefInitValueToMainThread();
-      // Send through this root's own channel, and capture this root's task
-      // map: by the time native acks, the current context may have changed.
       const ctxLynx =
-        (typeof __MULTI_CARD__ !== 'undefined' && __MULTI_CARD__ ? getCurrentRootContext().lynx : undefined) ?? lynx;
+        (typeof __MULTI_PAGE__ !== 'undefined' && __MULTI_PAGE__ ? getCurrentRootContext().lynx : undefined) ?? lynx;
       const commitTaskMap = globalCommitTaskMap;
       ctxLynx.getNativeApp().callLepusMethod(LifecycleConstant.patchUpdate, obj, () => {
         commitTaskMap.forEach((commitTask, id) => {
