@@ -110,7 +110,7 @@ Keep both `web` and `lynx` environments enabled when the same lazy demo should r
 
 LazyComponent demo data should contain complete `url` and `webUrl` values before it reaches preview rendering. Build those URLs at data construction time from the runtime playground base URL, with query and hash removed and file paths such as `render.html` collapsed to their containing directory. Keep this resolution in the demo data layer, not in `PreviewPanel`.
 
-Only demos backed by files copied to `dist/demos/*.json` should use `demoId` short links. Runtime-built demos such as `lazy-component` should remain known playground scenarios but pass inline `messages` into web preview and native QR preview links, because no `demos/lazy-component.json` file exists.
+Only demos backed by files copied to `dist/demos/*.json` should use `demoId` short links. Runtime-built demos such as `lazy-component` and `mcp-app` should remain known playground scenarios but pass inline `messages` into web preview and native QR preview links, because no corresponding `dist/demos/*.json` file exists.
 
 Keep `PreviewPanel` unaware of LazyComponent payload structure. It should choose between `demoId`, `messagesUrl`, and inline `messages/actionMocks`, then pass the selected payload through unchanged for web preview and QR/native preview paths.
 

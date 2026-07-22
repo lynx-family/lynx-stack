@@ -35,8 +35,10 @@ lynx-view[width="auto"] {
 }
 
 :host([height="auto"]),
+:host([auto-height]),
 :host([width="auto"]),
 lynx-view[height="auto"],
+lynx-view[auto-height],
 lynx-view[width="auto"] {
   contain: content;
 }

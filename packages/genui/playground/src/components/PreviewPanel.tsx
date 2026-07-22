@@ -33,6 +33,7 @@ import {
   buildOpenUIRenderUrl,
   buildRenderUrl,
   canInlineOpenUIRenderUrl,
+  hasShareableA2UIRenderPayload,
 } from '../utils/renderUrl.js';
 
 declare const __A2UI_PLAYGROUND_CLIENT_PAYLOAD_STORE__: boolean;
@@ -583,13 +584,9 @@ export function PreviewPanel(props: PreviewPanelProps) {
 
     if (previewSource.kind === 'a2ui') {
       const useClientPayloadStore = shouldUseClientPayloadStore();
-      const canSharePayload = !!previewSource.demoId
-        || !!previewSource.messagesUrl
+      const canSharePayload = hasShareableA2UIRenderPayload(previewSource)
         || useClientPayloadStore;
-      const hasInlineMessages = Array.isArray(previewSource.messages)
-        ? previewSource.messages.length > 0
-        : previewSource.messages !== undefined;
-      if (!canSharePayload && !hasInlineMessages) {
+      if (!canSharePayload) {
         setRenderUrl('');
         setRenderShareUrl('');
         setLynxDevUrl('');
@@ -920,8 +917,7 @@ export function PreviewPanel(props: PreviewPanelProps) {
     }
 
     const showQrCode = previewSource.kind !== 'a2ui'
-      || !!previewSource.demoId
-      || !!previewSource.messagesUrl;
+      || hasShareableA2UIRenderPayload(previewSource);
 
     const cards: Array<{ key: string; item: PreviewQrItem }> = [];
     if (renderShareUrl) {
