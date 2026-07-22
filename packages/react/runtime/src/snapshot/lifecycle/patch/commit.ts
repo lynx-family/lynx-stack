@@ -172,7 +172,11 @@ function replaceCommitHook(): void {
 
       // Send the update to the native layer
       const commitTaskMap = globalCommitTaskMap;
-      contextLynx.getNativeApp().callLepusMethod(LifecycleConstant.patchUpdate, obj, () => {
+      /* v8 ignore next 3 */
+      const ctxLynx = typeof __MULTI_ROOT_RENDER_CONTEXT__ !== 'undefined' && __MULTI_ROOT_RENDER_CONTEXT__
+        ? contextLynx()
+        : lynx;
+      ctxLynx.getNativeApp().callLepusMethod(LifecycleConstant.patchUpdate, obj, () => {
         const commitTask = commitTaskMap.get(commitTaskId);
         if (commitTask) {
           commitTask();

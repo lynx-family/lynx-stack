@@ -214,7 +214,10 @@ function onLifecycleEventImpl(type: LifecycleConstant, data: unknown): void {
       const obj = commitPatchUpdate(patchList, { isHydration: true });
       sendMTRefInitValueToMainThread();
       const commitTaskMap = globalCommitTaskMap;
-      contextLynx.getNativeApp().callLepusMethod(LifecycleConstant.patchUpdate, obj, () => {
+      const ctxLynx = typeof __MULTI_ROOT_RENDER_CONTEXT__ !== 'undefined' && __MULTI_ROOT_RENDER_CONTEXT__
+        ? contextLynx()
+        : lynx;
+      ctxLynx.getNativeApp().callLepusMethod(LifecycleConstant.patchUpdate, obj, () => {
         commitTaskMap.forEach((commitTask, id) => {
           if (id > commitTaskId) {
             return;
