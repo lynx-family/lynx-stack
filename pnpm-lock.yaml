@@ -1228,7 +1228,7 @@ importers:
         specifier: ^18.3.28
         version: 18.3.28
       pretty-format:
-        specifier: ^30.2.0
+        specifier: ^30.4.1
         version: 30.4.1
 
   packages/react/testing-library:
