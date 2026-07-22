@@ -7,8 +7,8 @@ settings:
 catalogs:
   adb:
     '@yume-chan/adb':
-      specifier: ^2.5.1
-      version: 2.5.1
+      specifier: ^2.6.0
+      version: 2.6.0
     '@yume-chan/adb-server-node-tcp':
       specifier: ^2.5.2
       version: 2.5.2
@@ -1909,7 +1909,7 @@ importers:
         version: 0.1.1
       '@yume-chan/adb':
         specifier: catalog:adb
-        version: 2.5.1
+        version: 2.6.0
       '@yume-chan/adb-server-node-tcp':
         specifier: catalog:adb
         version: 2.5.2
@@ -6533,8 +6533,8 @@ packages:
   '@yume-chan/adb-server-node-tcp@2.5.2':
     resolution: {integrity: sha512-ga9icFBRUk1n6lO+ymlj83qE+90kMLV8sQA3w9mZAisfdxxEEIq1cvXitFQJvDgL0NuFQruVI4JoZA/wrgpKOw==}
 
-  '@yume-chan/adb@2.5.1':
-    resolution: {integrity: sha512-Nm9ZA0cOxfINE+BlZ7whgqjtoLpaZg1xcV8e0C7YbpG/KOHnQGseGTwbfqJFR6xdqbRvvrNL4jIGGpxvn31ykw==}
+  '@yume-chan/adb@2.6.0':
+    resolution: {integrity: sha512-1bM4/YwLUr7UHkvC3pe5fIPNNIgOQ97nUIvC4ooPZwRKG9pyHG39EihivZVmu3pm28XwHSGh5PC3sQi4ycoUXA==}
 
   '@yume-chan/async@4.1.3':
     resolution: {integrity: sha512-0vzhNJMkWUPyjKzUK4rqHEeCU6YQtF78RsB1kFRB6Y2BLupmEQNxcSb0mjKabPL9jZpCCiLa5KL8oTOJClUVaw==}
@@ -6547,6 +6547,9 @@ packages:
 
   '@yume-chan/stream-extra@2.1.0':
     resolution: {integrity: sha512-Sq1mDCLTIOu+TbI3VmFhcKL5hi+qZkDA3S+JezZb/AJm4ESC3hB7+LgQIQs3QEK/ZeRwMg37w4IOYHSh30R7BQ==}
+
+  '@yume-chan/stream-extra@2.6.1':
+    resolution: {integrity: sha512-GQ+Q0SQf9p6Fl7ZK0UO5vHVGBJgkTJm/WXKurUMpjHQV4VUpjZ2hrQ744aCfT7WwSol7Bz/uEiXWmk240Hr/hg==}
 
   '@yume-chan/struct@2.3.2':
     resolution: {integrity: sha512-afoCnSKV+5HRK7e4innVd9YTYDyNWdjA1CVQa1j8rWYnmr7HGZfdkHMQr+AESLk6GxWFMzOIPQIG6nYOTGMFIw==}
@@ -16271,17 +16274,17 @@ snapshots:
 
   '@yume-chan/adb-server-node-tcp@2.5.2':
     dependencies:
-      '@yume-chan/adb': 2.5.1
+      '@yume-chan/adb': 2.6.0
       '@yume-chan/async': 4.1.3
       '@yume-chan/stream-extra': 2.1.0
       '@yume-chan/struct': 2.3.2
 
-  '@yume-chan/adb@2.5.1':
+  '@yume-chan/adb@2.6.0':
     dependencies:
       '@yume-chan/async': 4.1.3
       '@yume-chan/event': 2.0.0
       '@yume-chan/no-data-view': 2.0.0
-      '@yume-chan/stream-extra': 2.1.0
+      '@yume-chan/stream-extra': 2.6.1
       '@yume-chan/struct': 2.3.2
 
   '@yume-chan/async@4.1.3': {}
@@ -16293,6 +16296,11 @@ snapshots:
   '@yume-chan/no-data-view@2.0.0': {}
 
   '@yume-chan/stream-extra@2.1.0':
+    dependencies:
+      '@yume-chan/async': 4.1.3
+      '@yume-chan/struct': 2.3.2
+
+  '@yume-chan/stream-extra@2.6.1':
     dependencies:
       '@yume-chan/async': 4.1.3
       '@yume-chan/struct': 2.3.2
