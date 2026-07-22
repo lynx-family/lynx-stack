@@ -19,3 +19,18 @@ test('empty lazy main-thread chunks remain valid JavaScript', async () => {
   expect(() => execute(module)).not.toThrow();
   expect(module.exports).toBeUndefined();
 });
+
+test('external main-thread chunks receive CommonJS bindings', async () => {
+  const blob = createLepusCodeBlob(
+    'exports.value = "external";',
+    'https://example.com/external.bundle/root',
+    false,
+    true,
+  );
+  const execute = new Function('module', await blob.text());
+  const module = { exports: undefined };
+
+  execute(module);
+
+  expect(module.exports).toEqual({ value: 'external' });
+});
