@@ -25,6 +25,6 @@
     "@lynx-js/web-elements": "workspace:*",
     "@rsbuild/core": "catalog:rsbuild",
     "@types/react": "^18.3.28",
-    "cross-env": "^7.0.3"
+    "cross-env": "^10.1.0"
   }
 }

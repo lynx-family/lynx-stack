@@ -45,7 +45,7 @@
     "@lynx-js/lynx-bundle-rslib-config": "workspace:*",
     "@lynx-js/react": "workspace:*",
     "@lynx-js/react-rsbuild-plugin": "workspace:*",
-    "cross-env": "^7.0.3",
+    "cross-env": "^10.1.0",
     "rimraf": "^6.1.3"
   }
 }
