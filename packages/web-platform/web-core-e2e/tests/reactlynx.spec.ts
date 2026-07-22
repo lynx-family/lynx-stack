@@ -5558,6 +5558,7 @@ test.describe('reactlynx3 tests', () => {
       // The external module is fetched + evaluated via lynx.fetchBundle +
       // lynx.loadScript (background and main-thread layers) and rendered.
       await expectHasText(page, 'hello-from-external');
+      await expectHasText(page, 'worker-event-target-ok');
       const publicPath = `http://localhost:${
         process.env['PORT'] ?? 3080
       }/resources/external-bundle/`;

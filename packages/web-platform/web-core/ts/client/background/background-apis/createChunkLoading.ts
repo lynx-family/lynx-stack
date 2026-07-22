@@ -12,7 +12,9 @@ function createExecutionGlobal(sourceURL: string): typeof globalThis {
   // Bundled runtimes use the worker's location to resolve `publicPath: 'auto'`.
   // Keep all other global operations on the real worker global.
   const sourceLocation = new URL(sourceURL, globalThis.location.href);
-  return new Proxy(globalThis, {
+  const callableCache = new WeakMap<Function, Function>();
+  let executionGlobal: typeof globalThis;
+  executionGlobal = new Proxy(globalThis, {
     get(target, property, receiver) {
       if (property === 'location') {
         return sourceLocation;
@@ -20,9 +22,29 @@ function createExecutionGlobal(sourceURL: string): typeof globalThis {
       if (property === 'globalThis' || property === 'self') {
         return receiver;
       }
-      return Reflect.get(target, property, target);
+      const value = Reflect.get(target, property, target);
+      if (typeof value !== 'function') {
+        return value;
+      }
+
+      let callable = callableCache.get(value);
+      if (callable === undefined) {
+        const wrapped = new Proxy(value, {
+          apply(targetFunction, thisArgument, argumentsList) {
+            return Reflect.apply(
+              targetFunction,
+              thisArgument === executionGlobal ? target : thisArgument,
+              argumentsList,
+            );
+          },
+        });
+        callableCache.set(value, wrapped);
+        callable = wrapped;
+      }
+      return callable;
     },
   });
+  return executionGlobal;
 }
 
 export function createChunkLoading(

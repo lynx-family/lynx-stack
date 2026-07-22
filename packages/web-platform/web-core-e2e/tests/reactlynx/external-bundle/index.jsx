@@ -6,7 +6,11 @@ import { root } from '@lynx-js/react';
 // external-bundle.config.ts). Using it at render time references it in both the
 // main-thread and background layers, exercising lynx.fetchBundle + lynx.loadScript
 // (and, for the main-thread layer, __LoadStyleSheet/__AdoptStyleSheet for its CSS).
-import { getGreeting, getPublicPath } from 'greeting-lib';
+import {
+  getGreeting,
+  getPublicPath,
+  getWorkerEventTargetStatus,
+} from 'greeting-lib';
 
 function App() {
   const publicPath = getPublicPath();
@@ -14,6 +18,9 @@ function App() {
     <view>
       <text id='target' className='external-greeting'>
         {getGreeting()}|{publicPath}
+      </text>
+      <text id='worker-event-target-status'>
+        {getWorkerEventTargetStatus()}
       </text>
       <text
         id='main-thread-public-path'

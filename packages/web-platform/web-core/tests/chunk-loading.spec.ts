@@ -33,3 +33,52 @@ test('external bundle execution uses the bundle URL as location', () => {
     globalThis.XMLHttpRequest = originalXMLHttpRequest;
   }
 });
+
+test('external bundle execution preserves global method receivers', () => {
+  const originalXMLHttpRequest = globalThis.XMLHttpRequest;
+  const methodName = '__lynxReceiverSensitiveMethod__';
+  const originalMethod = Object.getOwnPropertyDescriptor(
+    globalThis,
+    methodName,
+  );
+  Object.defineProperty(globalThis, methodName, {
+    configurable: true,
+    value: function(this: typeof globalThis) {
+      if (this !== globalThis) {
+        throw new TypeError('Illegal invocation');
+      }
+      return 'receiver-ok';
+    },
+  });
+  class FakeXMLHttpRequest {
+    status = 200;
+    responseText = `module.exports = [
+      globalThis.${methodName}(),
+      globalThis.self.${methodName}(),
+      globalThis.${methodName} === globalThis.${methodName},
+    ];`;
+    open() {}
+    send() {}
+  }
+  globalThis.XMLHttpRequest =
+    FakeXMLHttpRequest as unknown as typeof XMLHttpRequest;
+
+  try {
+    const { loadScript } = createChunkLoading('app.web.bundle', 'react');
+    const script = loadScript(
+      'catalog',
+      'https://cdn.example.com/remotes/catalog.web.bundle',
+    );
+
+    expect(
+      script.init({ tt: {} } as Parameters<typeof script.init>[0]),
+    ).toEqual(['receiver-ok', 'receiver-ok', true]);
+  } finally {
+    globalThis.XMLHttpRequest = originalXMLHttpRequest;
+    if (originalMethod === undefined) {
+      Reflect.deleteProperty(globalThis, methodName);
+    } else {
+      Object.defineProperty(globalThis, methodName, originalMethod);
+    }
+  }
+});
