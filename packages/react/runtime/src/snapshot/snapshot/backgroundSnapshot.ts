@@ -25,7 +25,7 @@ import { transformSpread } from './spread.js';
 import type { SerializedSnapshotInstance } from './types.js';
 import { isCloneSnapshot, isCompiledSnapshot, traverseSnapshotInstance } from './utils.js';
 import { globalPipelineOptions } from '../../core/performance.js';
-import { getCurrentRootContext, registerContextSlot } from '../../root-context.js';
+import { getCurrentRootContext } from '../../root-context.js';
 import type { RootContext } from '../../root-context.js';
 import { profileEnd, profileStart } from '../../shared/profile.js';
 import { isDirectOrDeepEqual } from '../../utils.js';
@@ -43,26 +43,6 @@ import type { SnapshotPatch } from '../lifecycle/patch/snapshotPatch.js';
 import { clearPendingPortalInsertBefore } from '../lynx/portalsPending.js';
 import { diffArrayAction, diffArrayLepus } from '../renderToOpcodes/hydrate.js';
 import { onPostWorkletCtx } from '../worklet/ctx.js';
-
-/**
- * The instance registry (`backgroundSnapshotInstanceManager.values`) is
- * per-root: hydration rewrites background ids to the main-thread ids of the
- * root's own card, and different cards' main-thread VMs produce overlapping
- * id ranges — a shared registry would collide after two roots hydrate.
- *
- * (`nextId` stays global on purpose, so pre-hydration ids never collide
- * across roots.)
- */
-registerContextSlot({
-  id: 'bsiValues',
-  init: () => new Map<number, BackgroundSnapshotInstance>(),
-  save(bag) {
-    bag['bsiValues'] = backgroundSnapshotInstanceManager.values;
-  },
-  load(bag) {
-    backgroundSnapshotInstanceManager.values = bag['bsiValues'] as Map<number, BackgroundSnapshotInstance>;
-  },
-});
 
 /**
  * Resolve `ctx`'s instance registry, whether or not `ctx` is current.

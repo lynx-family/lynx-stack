@@ -7,7 +7,7 @@ import { afterEach, beforeAll, beforeEach, describe, expect, it, vi } from 'vite
 
 import { installComponentCompat } from '../../src/core/component';
 import { useState } from '../../src/index';
-import { __bootstrapCard } from '../../src/card-bootstrap';
+import { __experimentalBootstrapCard } from '../../src/card-bootstrap';
 import { root } from '../../src/lynx-api';
 import { __root } from '../../src/root';
 import { defaultRootContext, switchRootContext } from '../../src/root-context';
@@ -57,16 +57,16 @@ describe('root-cause: default singleton shares one container', () => {
   });
 });
 
-describe('__bootstrapCard: classic root.render renders the bootstrapped card', () => {
+describe('__experimentalBootstrapCard: classic root.render renders the bootstrapped card', () => {
   afterEach(() => {
-    __bootstrapCard();
+    __experimentalBootstrapCard();
   });
 
   it('delegates root.render to the bootstrapped root, leaving __root untouched', () => {
     globalEnvManager.switchToBackground();
 
     const A = () => <text>{'A'}</text>;
-    const cardA = __bootstrapCard({});
+    const cardA = __experimentalBootstrapCard({});
     root.render(<A />);
 
     expect(textOf(cardA._container)).toEqual(['A']);
@@ -79,9 +79,9 @@ describe('__bootstrapCard: classic root.render renders the bootstrapped card', (
     const A = () => <text>{'A'}</text>;
     const B = () => <text>{'B'}</text>;
 
-    const cardA = __bootstrapCard({});
+    const cardA = __experimentalBootstrapCard({});
     root.render(<A />);
-    const cardB = __bootstrapCard({});
+    const cardB = __experimentalBootstrapCard({});
     root.render(<B />);
 
     expect(cardA._container).not.toBe(cardB._container);
@@ -93,8 +93,8 @@ describe('__bootstrapCard: classic root.render renders the bootstrapped card', (
     globalEnvManager.switchToBackground();
 
     const A = () => <text>{'A'}</text>;
-    __bootstrapCard({});
-    __bootstrapCard();
+    __experimentalBootstrapCard({});
+    __experimentalBootstrapCard();
     root.render(<A />);
 
     expect(textOf(__root)).toEqual(['A']);
@@ -112,7 +112,7 @@ describe('__bootstrapCard: classic root.render renders the bootstrapped card', (
     const old = globalThis.__FIRST_SCREEN_SYNC_TIMING__;
     try {
       globalThis.__FIRST_SCREEN_SYNC_TIMING__ = 'jsReady';
-      __bootstrapCard({ lynx: lynxA });
+      __experimentalBootstrapCard({ lynx: lynxA });
       root.render(<text>{'A'}</text>);
       const handshakes = callA.mock.calls.filter(c => c[0] === 'rLynxFirstScreenSyncReady');
       expect(handshakes).toHaveLength(1);

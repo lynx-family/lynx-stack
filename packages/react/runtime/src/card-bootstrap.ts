@@ -17,12 +17,12 @@ let bootstrappedRoot: ReactLynxRoot | undefined;
  *
  * @internal
  */
-export function __bootstrapCard(options?: CreateRootOptions): ReactLynxRoot | undefined {
+export function __experimentalBootstrapCard(options?: CreateRootOptions): ReactLynxRoot | undefined {
   /* v8 ignore start -- compile-time dead branch: tests build with `__MULTI_CARD__` on */
   if (typeof __MULTI_CARD__ === 'undefined' || !__MULTI_CARD__) {
     if (__DEV__ && options) {
       console.error(
-        '[ReactLynx] __bootstrapCard called but the runtime was built without multi-card support (`__MULTI_CARD__`); falling back to the classic singleton root.',
+        '[ReactLynx] __experimentalBootstrapCard called but the runtime was built without multi-card support (`__MULTI_CARD__`); falling back to the classic singleton root.',
       );
     }
     return undefined;

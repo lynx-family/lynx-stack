@@ -8,8 +8,6 @@
  * efficient transmission between threads and application to element tree.
  */
 
-import { registerContextSlot } from '../../../root-context.js';
-
 export const SnapshotOperation = {
   CreateElement: 0,
   InsertBefore: 1,
@@ -80,17 +78,9 @@ export type SnapshotPatch = unknown[];
 
 export let __globalSnapshotPatch: SnapshotPatch | undefined;
 
-registerContextSlot({
-  id: 'snapshotPatch',
-  // `undefined` marks "not hydrated yet"; each new root starts that way.
-  init: () => undefined,
-  save(bag) {
-    bag['snapshotPatch'] = __globalSnapshotPatch;
-  },
-  load(bag) {
-    __globalSnapshotPatch = bag['snapshotPatch'] as SnapshotPatch | undefined;
-  },
-});
+export function setGlobalSnapshotPatch(patch: SnapshotPatch | undefined): void {
+  __globalSnapshotPatch = patch;
+}
 
 export function takeGlobalSnapshotPatch(): SnapshotPatch | undefined {
   if (__globalSnapshotPatch) {

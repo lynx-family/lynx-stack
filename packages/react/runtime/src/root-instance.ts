@@ -8,8 +8,9 @@ import { RootContext, getCurrentRootContext, switchRootContext } from './root-co
 import type { RootLynx, RootTT } from './root-context.js';
 import { __root, setRoot } from './root.js';
 import { LifecycleConstant } from './snapshot/lifecycle/constant.js';
-// Side effect: registers the Preact `renderComponent` hook that re-establishes
-// the owner context before each component re-render.
+// Side effects, both gated on `__MULTI_CARD__`: the per-root state slots and
+// the Preact `renderComponent` hook that re-establishes the owner context.
+import './root-context-slots.js';
 import './snapshot/lifecycle/contextSwitchHook.js';
 import { globalCommitTaskMap } from './snapshot/lifecycle/patch/commit.js';
 import { flushDelayedLifecycleEvents, injectTtInto } from './snapshot/lynx/tt.js';

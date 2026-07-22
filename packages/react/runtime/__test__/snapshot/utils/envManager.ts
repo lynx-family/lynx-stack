@@ -77,8 +77,6 @@ export class EnvManager {
   }
 
   resetEnv(): void {
-    // Multi-root tests may leave a non-default context current; the resets
-    // below all target the default context's (module-level) state.
     switchRootContext(defaultRootContext);
     if (this.target.__BACKGROUND__) {
       this.switchToMainThread();

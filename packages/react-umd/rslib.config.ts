@@ -12,9 +12,7 @@ export default defineExternalBundleRslibConfig({
     },
   },
   plugins: [
-    // The shared external bundle serves several cards in one JS context, so
-    // it is built with multi-card roots on.
-    pluginReactLynx({ experimental_multiCardRoots: true }),
+    pluginReactLynx(),
   ],
   output: {
     cleanDistPath: false,

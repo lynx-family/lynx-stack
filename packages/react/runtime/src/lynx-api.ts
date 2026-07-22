@@ -92,7 +92,7 @@ export const root: Root = {
     if (typeof __MAIN_THREAD__ !== 'undefined' && __MAIN_THREAD__) {
       __root.__jsx = jsx;
     } else {
-      // A card bootstrapped via `__bootstrapCard` owns its own root; render
+      // A card bootstrapped via `__experimentalBootstrapCard` owns its own root; render
       // there so shared-context cards can keep using the classic `root.render`.
       if (typeof __MULTI_CARD__ !== 'undefined' && __MULTI_CARD__) {
         const cardRoot = getBootstrappedRoot();

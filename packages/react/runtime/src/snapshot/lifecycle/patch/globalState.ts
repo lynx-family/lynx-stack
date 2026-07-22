@@ -6,8 +6,6 @@
  * Global state shared across modules to avoid circular dependencies
  */
 
-import { registerContextSlot } from '../../../root-context.js';
-
 /**
  * List of background snapshot instances to remove during commit phase
  */
@@ -16,14 +14,3 @@ export let globalBackgroundSnapshotInstancesToRemove: number[] = [];
 export function setGlobalBackgroundSnapshotInstancesToRemove(ids: number[]): void {
   globalBackgroundSnapshotInstancesToRemove = ids;
 }
-
-registerContextSlot({
-  id: 'bgInstancesToRemove',
-  init: () => [],
-  save(bag) {
-    bag['bgInstancesToRemove'] = globalBackgroundSnapshotInstancesToRemove;
-  },
-  load(bag) {
-    globalBackgroundSnapshotInstancesToRemove = bag['bgInstancesToRemove'] as number[];
-  },
-});
