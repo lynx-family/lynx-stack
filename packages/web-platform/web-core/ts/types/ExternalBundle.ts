@@ -40,4 +40,9 @@ export interface ExternalBundleLynxAPIs {
     sectionPath: string,
     options: { bundleName: string },
   ): unknown;
+
+  /**
+   * Fetch, decode, and execute a lazy bundle, returning its module exports.
+   */
+  loadLazyBundle(source: string): Promise<unknown>;
 }

@@ -2196,7 +2196,7 @@ describe('Element APIs', () => {
     expect(result1).toBe(true);
     expect(lynxViewInstance.mtsRealm!.loadScriptSync).toHaveBeenCalledWith(
       'app-chunk.js',
-      'app.js',
+      'http://localhost/app.js/chunk.js',
     );
 
     // Testing dynamicComponentEntry
@@ -2206,7 +2206,7 @@ describe('Element APIs', () => {
     expect(result2).toBe(true);
     expect(lynxViewInstance.mtsRealm!.loadScriptSync).toHaveBeenCalledWith(
       'dynamic-chunk.js',
-      'dynamic.js',
+      'http://localhost/dynamic.js/chunk.js',
     );
 
     // Testing non-existing code url (should fallback to path)
@@ -2219,7 +2219,7 @@ describe('Element APIs', () => {
     );
   });
 
-  test('lynx.loadScript preserves the external bundle URL', () => {
+  test('lynx.loadScript preserves the external bundle source URL', () => {
     const bundleURL = 'https://cdn.example.com/remotes/catalog.web.bundle';
     const loadScriptSync = rstest.fn();
     const lynxViewInstance = {
@@ -2245,5 +2245,28 @@ describe('Element APIs', () => {
       'blob:https://host.example/catalog',
       bundleURL,
     );
+  });
+
+  test('lynx.loadLazyBundle loads a dynamic component', async () => {
+    const exports = { ids: ['catalog'], modules: {} };
+    const queryComponent = rstest.fn(async () => exports);
+    const lynxViewInstance = {
+      templateUrl: 'app.js',
+      globalprops: {},
+      systemInfo: {},
+      backgroundThread: {
+        markTiming: rstest.fn(),
+        jsContext: { dispatchEvent: rstest.fn() },
+      },
+      queryComponent,
+      i18nManager: { _I18nResourceTranslation: rstest.fn() },
+    } as unknown as LynxViewInstance;
+
+    await expect(
+      createMainThreadGlobalAPIs(lynxViewInstance).lynx.loadLazyBundle(
+        'catalog.bundle',
+      ),
+    ).resolves.toBe(exports);
+    expect(queryComponent).toHaveBeenCalledWith('catalog.bundle');
   });
 });

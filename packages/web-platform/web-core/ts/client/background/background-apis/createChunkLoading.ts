@@ -7,6 +7,7 @@ import type {
   BTSChunkEntry,
   BundleInitReturnObj,
 } from '../../../types/index.js';
+import { getExecutionSourceURL } from '../../executionSourceURL.js';
 
 function createExecutionGlobal(sourceURL: string): typeof globalThis {
   // Bundled runtimes use the worker's location to resolve `publicPath: 'auto'`.
@@ -54,13 +55,27 @@ export function createChunkLoading(
   readScript: NativeApp['readScript'];
   loadScript: NativeApp['loadScript'];
   loadScriptAsync: NativeApp['loadScriptAsync'];
+  markExternalBundle: (url: string) => void;
   templateCache: Map<string, Record<string, string>>;
 } {
   const templateCache = new Map<string, Record<string, string>>();
+  const externalBundles = new Set<string>();
   const resolveTemplateURL = (templateURL?: string) =>
     !templateURL || templateURL === '__Card__'
       ? entryTemplateUrl
       : templateURL;
+  const resolveExecutionSourceURL = (
+    sourceURL: string,
+    templateURL?: string,
+  ) => {
+    const resolvedTemplateURL = resolveTemplateURL(templateURL);
+    if (externalBundles.has(resolvedTemplateURL)) {
+      return resolvedTemplateURL;
+    }
+    return templateCache.get(resolvedTemplateURL)?.[`/${sourceURL}`]
+      ? getExecutionSourceURL(resolvedTemplateURL, sourceURL)
+      : sourceURL;
+  };
   const readScript: NativeApp['readScript'] = (
     sourceURL,
     templateUrl,
@@ -202,7 +217,7 @@ export function createChunkLoading(
       const jsContent = readScript(sourceURL, templateUrl);
       return createBundleInitReturnObj(
         jsContent,
-        resolveTemplateURL(templateUrl),
+        resolveExecutionSourceURL(sourceURL, templateUrl),
       );
     },
     loadScriptAsync: async (sourceURL, callback, templateUrl: string) => {
@@ -211,11 +226,12 @@ export function createChunkLoading(
           null,
           createBundleInitReturnObj(
             jsContent,
-            resolveTemplateURL(templateUrl),
+            resolveExecutionSourceURL(sourceURL, templateUrl),
           ),
         );
       });
     },
+    markExternalBundle: url => externalBundles.add(url),
     templateCache,
   };
 }

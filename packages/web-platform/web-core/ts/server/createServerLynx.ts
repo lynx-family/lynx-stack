@@ -66,6 +66,13 @@ export function createServerLynx(
           'lynx.fetchBundle is not supported during server-side rendering',
       });
     },
+    loadLazyBundle(_source: string) {
+      return Promise.reject(
+        new Error(
+          'lynx.loadLazyBundle is not supported during server-side rendering',
+        ),
+      );
+    },
     loadScript(_sectionPath: string, _options: { bundleName: string }) {
       throw new Error(
         'lynx.loadScript is not supported during server-side rendering',

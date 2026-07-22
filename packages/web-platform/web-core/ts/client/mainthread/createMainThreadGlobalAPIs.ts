@@ -8,6 +8,7 @@ import type {
   MainThreadGlobalAPIs,
   MainThreadLynx,
 } from '../../types/index.js';
+import { getExecutionSourceURL } from '../executionSourceURL.js';
 import { templateManager } from './TemplateManager.js';
 import type { LynxViewInstance } from './LynxViewInstance.js';
 import { createMainThreadLynxPerformance } from './createMainThreadLynxPerformance.js';
@@ -53,6 +54,9 @@ function createMainThreadLynx(
     clearInterval: clearIntervalBrowserImpl,
     fetchBundle(url: string) {
       return lynxViewInstance.loadExternalBundle(url);
+    },
+    loadLazyBundle(source: string) {
+      return lynxViewInstance.queryComponent(source);
     },
     loadScript(sectionPath: string, options: { bundleName: string }) {
       // An external bundle's mts chunk rides the `lepusCode` section: the decode
@@ -103,7 +107,10 @@ export function createMainThreadGlobalAPIs(
         if (chunkURL === undefined) {
           lynxViewInstance.mtsRealm!.loadScriptSync(path);
         } else {
-          lynxViewInstance.mtsRealm!.loadScriptSync(chunkURL, entryUrl);
+          lynxViewInstance.mtsRealm!.loadScriptSync(
+            chunkURL,
+            getExecutionSourceURL(entryUrl, path),
+          );
         }
         return true;
       } catch (e) {

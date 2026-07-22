@@ -21,6 +21,10 @@ export function createBackgroundLynx(
   customSections: Record<string, Cloneable>,
   nativeApp: NativeApp,
   mainThreadRpc: Rpc,
+  loadDynamicComponent?: (
+    tt: NonNullable<NativeApp['tt']>,
+    componentUrl: string,
+  ) => unknown,
 ) {
   const coreContext = new LynxCrossThreadContext({
     rpc: mainThreadRpc,
@@ -35,6 +39,60 @@ export function createBackgroundLynx(
   const fetchExternalBundle = mainThreadRpc.createCall(
     fetchExternalBundleEndpoint,
   );
+  const lazyBundleLoads = new Map<string, Promise<unknown>>();
+  const loadLazyBundle = (source: string): Promise<unknown> => {
+    const cached = lazyBundleLoads.get(source);
+    if (cached) {
+      return cached;
+    }
+    const pending = Promise.resolve().then(
+      () =>
+        new Promise((resolve, reject) => {
+          nativeApp.queryComponent(source, result => {
+            try {
+              let schema: string | undefined;
+              if ('__hasReady' in result) {
+                schema = source;
+              } else if (result.code === 0) {
+                schema = result.detail?.schema;
+              }
+              if (
+                typeof schema === 'string'
+                && nativeApp.tt
+                && loadDynamicComponent
+              ) {
+                const exports = loadDynamicComponent(nativeApp.tt, schema);
+                if (exports !== undefined) {
+                  resolve(exports);
+                  return;
+                }
+              }
+              if (typeof schema === 'string') {
+                reject(
+                  new Error(
+                    `Lazy bundle exports not found, schema: ${schema}`,
+                  ),
+                );
+                return;
+              }
+              const error = new Error(
+                `Lazy bundle load failed, schema: ${schema ?? source}`,
+              );
+              error.cause = JSON.stringify(result);
+              reject(error);
+            } catch (error) {
+              reject(error);
+            }
+          });
+        }),
+    );
+    const retryable = pending.catch(error => {
+      lazyBundleLoads.delete(source);
+      throw error;
+    });
+    lazyBundleLoads.set(source, retryable);
+    return retryable;
+  };
   return {
     __globalProps: globalProps,
     getJSModule(_moduleName: string): any {
@@ -77,6 +135,7 @@ export function createBackgroundLynx(
     fetchBundle(url: string) {
       return fetchExternalBundle(url);
     },
+    loadLazyBundle,
     loadScript(sectionPath: string, options: { bundleName: string }) {
       // `fetchBundle` registered the bundle's raw sections with the worker as
       // bts chunks (updateBTSChunk -> templateCache); hand the section's init

@@ -19,6 +19,7 @@ const wasmModuleLoadedPromise: Promise<void> = new Promise((resolve) => {
 });
 
 import { loadStyleFromJSON } from './cssLoader.js';
+import { createLepusCodeBlob } from './createLepusCodeBlob.js';
 import { decodeBinaryMap } from '../../common/decodeUtils.js';
 
 const HEARTBREAK_INTERVAL_MS = 1000;
@@ -302,29 +303,15 @@ async function handleStream(
       case TemplateSectionLabel.LepusCode: {
         const codeMap = decodeBinaryMap(content);
         const isLazy = config['isLazy'] === 'true';
-        // An external bundle's mts chunk is CommonJS-style (it writes to
-        // `exports`), so give it a `module.exports`/`exports` env. A card's own
-        // lepus chunk is either side-effecting (non-lazy) or an expression
-        // assigned to `module.exports` (lazy component root).
-        const prefix = config['isExternalBundle'] === 'true'
-          ? 'var exports=(module.exports={}); '
-          : isLazy
-          ? 'module.exports='
-          : '';
+        const isExternalBundle = config['isExternalBundle'] === 'true';
         const blobMap: Record<string, string> = {};
         for (const [key, code] of Object.entries(codeMap)) {
-          const blob = new Blob([
-            '//# allFunctionsCalledOnLoad\n(function(){ "use strict"; const navigator=void 0,postMessage=void 0,window=void 0; ',
-            prefix,
-            code as unknown as BlobPart,
-            ' \n })()\n//# sourceURL=',
-            url,
-            '/',
-            key,
-            '\n',
-          ], {
-            type: 'text/javascript; charset=utf-8',
-          });
+          const blob = createLepusCodeBlob(
+            code,
+            `${url}/${key}`,
+            isLazy,
+            isExternalBundle,
+          );
           blobMap[key] = URL.createObjectURL(blob);
         }
         postMessage(
@@ -442,14 +429,12 @@ async function handleJSON(
     const blobMap: Record<string, string> = {};
     for (const [key, code] of Object.entries(json.lepusCode)) {
       if (typeof code !== 'string') continue;
-      const prefix =
-        `//# allFunctionsCalledOnLoad\n(function(){ "use strict"; const navigator=void 0,postMessage=void 0,window=void 0; ${
-          isLazy ? 'module.exports=' : ''
-        } `;
-      const suffix = ` \n })()\n//# sourceURL=${url}/${key}\n`;
-      const blob = new Blob([prefix, code, suffix], {
-        type: 'text/javascript; charset=utf-8',
-      });
+      const blob = createLepusCodeBlob(
+        code,
+        `${url}/${key}`,
+        isLazy,
+        false,
+      );
       blobMap[key] = URL.createObjectURL(blob);
     }
     postMessage({
