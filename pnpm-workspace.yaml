@@ -96,7 +96,7 @@ catalogs:
     "@yume-chan/adb": ^2.5.1
     "@yume-chan/adb-scrcpy": ^2.3.2
     "@yume-chan/adb-server-node-tcp": ^2.5.2
-    "@yume-chan/async": ^2.1.0
+    "@yume-chan/async": ^2.2.0
     "@yume-chan/fetch-scrcpy-server": ^1.0.0
     "@yume-chan/scrcpy": ^2.3.0
     "@yume-chan/scrcpy-decoder-webcodecs": ^2.5.0
