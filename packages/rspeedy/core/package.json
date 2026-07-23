@@ -73,7 +73,7 @@
     "chokidar": "^5.0.0",
     "commander": "^13.1.0",
     "eventemitter3": "^5.0.4",
-    "exit-hook": "^4.0.0",
+    "exit-hook": "^5.1.0",
     "expect-type": "^1.2.1",
     "ipaddr.js": "^2.4.0",
     "javascript-stringify": "^2.1.0",
