@@ -304,8 +304,8 @@ importers:
         specifier: workspace:*
         version: link:../../packages/react
       react-compiler-runtime:
-        specifier: 0.0.0-experimental-fe727a3-20250909
-        version: 0.0.0-experimental-fe727a3-20250909(react@19.2.5)
+        specifier: 1.0.0
+        version: 1.0.0(react@19.2.5)
     devDependencies:
       '@lynx-js/qrcode-rsbuild-plugin':
         specifier: workspace:*
@@ -326,8 +326,8 @@ importers:
         specifier: ^18.3.28
         version: 18.3.28
       babel-plugin-react-compiler:
-        specifier: 0.0.0-experimental-fe727a3-20250909
-        version: 0.0.0-experimental-fe727a3-20250909
+        specifier: 1.0.0
+        version: 1.0.0
 
   examples/react-debug-metadata:
     dependencies:
@@ -1022,7 +1022,7 @@ importers:
         version: 8.20.0
       next:
         specifier: 16.2.6
-        version: 16.2.6(@babel/core@7.29.0(supports-color@8.1.1))(@playwright/test@1.61.1)(react-dom@19.2.4(react@19.2.4))(react@19.2.4)(sass@1.99.0)
+        version: 16.2.6(@babel/core@7.29.0(supports-color@8.1.1))(@playwright/test@1.61.1)(babel-plugin-react-compiler@1.0.0)(react-dom@19.2.4(react@19.2.4))(react@19.2.4)(sass@1.99.0)
       react:
         specifier: 19.2.4
         version: 19.2.4
@@ -1858,8 +1858,8 @@ importers:
         specifier: workspace:*
         version: link:../../../react
       react-compiler-runtime:
-        specifier: 0.0.0-experimental-fe727a3-20250909
-        version: 0.0.0-experimental-fe727a3-20250909(react@19.2.5)
+        specifier: 1.0.0
+        version: 1.0.0(react@19.2.5)
     devDependencies:
       '@babel/core':
         specifier: ^7.29.0
@@ -1898,8 +1898,8 @@ importers:
         specifier: ^18.3.28
         version: 18.3.28
       babel-plugin-react-compiler:
-        specifier: 0.0.0-experimental-fe727a3-20250909
-        version: 0.0.0-experimental-fe727a3-20250909
+        specifier: 1.0.0
+        version: 1.0.0
       vite-plugin-babel:
         specifier: ^1.7.3
         version: 1.7.3(@babel/core@7.29.0(supports-color@8.1.1))(vite@5.4.2(@types/node@24.10.13)(less@4.6.4)(lightningcss@1.31.1)(sass-embedded@1.99.0)(sass@1.99.0)(terser@5.48.0))
@@ -6843,8 +6843,8 @@ packages:
   axios@1.11.0:
     resolution: {integrity: sha512-1Lx3WLFQWm3ooKDYZD1eXmoGO9fxYQjrycfHFC8P0sCfQVXyROp0p9PFWBehewBOdCwHc+f/b8I0fMto5eSfwA==}
 
-  babel-plugin-react-compiler@0.0.0-experimental-fe727a3-20250909:
-    resolution: {integrity: sha512-muP9CBmj0Hn/ANC0llt6CZZ+lrSWdaGYiuaWMq+HcqQtBKlnFFjjFrSV6Xp7vxCwDYGCEC5alOfwoTT/JX7GYA==}
+  babel-plugin-react-compiler@1.0.0:
+    resolution: {integrity: sha512-Ixm8tFfoKKIPYdCCKYTsqv+Fd4IJ0DQqMyEimo+pxUOMUR9cVPlwTrFt9Avu+3cb6Zp3mAzl+t1MrG2fxxKsxw==}
 
   bail@2.0.2:
     resolution: {integrity: sha512-0xO6mYd7JB2YesxDKplafRpsiOzPt9V02ddPCLbY1xYGPOX24NTyN50qnUxgCPcSoYMhKpAuBTjQoRZCAkUDRw==}
@@ -10249,8 +10249,8 @@ packages:
     resolution: {integrity: sha512-K5zQjDllxWkf7Z5xJdV0/B0WTNqx6vxG70zJE4N0kBs4LovmEYWJzQGxC9bS9RAKu3bgM40lrd5zoLJ12MQ5BA==}
     engines: {node: '>= 0.10'}
 
-  react-compiler-runtime@0.0.0-experimental-fe727a3-20250909:
-    resolution: {integrity: sha512-nwfOfxeWxrGoo3L6cucrO+5OlkjONvsjBR+Sb6EGJreo9OGS43zFGW/MLEdQ4jb/rP/0TMLPKsvHIZ9EdR+XUQ==}
+  react-compiler-runtime@1.0.0:
+    resolution: {integrity: sha512-rRfjYv66HlG8896yPUDONgKzG5BxZD1nV9U6rkm+7VCuvQc903C4MjcoZR4zPw53IKSOX9wMQVpA1IAbRtzQ7w==}
     peerDependencies:
       react: ^17.0.0 || ^18.0.0 || ^19.0.0 || ^0.0.0-experimental
 
@@ -16692,7 +16692,7 @@ snapshots:
     transitivePeerDependencies:
       - debug
 
-  babel-plugin-react-compiler@0.0.0-experimental-fe727a3-20250909:
+  babel-plugin-react-compiler@1.0.0:
     dependencies:
       '@babel/types': 7.29.7
 
@@ -19994,7 +19994,7 @@ snapshots:
 
   neo-async@2.6.2: {}
 
-  next@16.2.6(@babel/core@7.29.0(supports-color@8.1.1))(@playwright/test@1.61.1)(react-dom@19.2.4(react@19.2.4))(react@19.2.4)(sass@1.99.0):
+  next@16.2.6(@babel/core@7.29.0(supports-color@8.1.1))(@playwright/test@1.61.1)(babel-plugin-react-compiler@1.0.0)(react-dom@19.2.4(react@19.2.4))(react@19.2.4)(sass@1.99.0):
     dependencies:
       '@next/env': 16.2.6
       '@swc/helpers': 0.5.15
@@ -20014,6 +20014,7 @@ snapshots:
       '@next/swc-win32-arm64-msvc': 16.2.6
       '@next/swc-win32-x64-msvc': 16.2.6
       '@playwright/test': 1.61.1
+      babel-plugin-react-compiler: 1.0.0
       sass: 1.99.0
       sharp: 0.34.5
     transitivePeerDependencies:
@@ -20655,7 +20656,7 @@ snapshots:
       iconv-lite: 0.7.2
       unpipe: 1.0.0
 
-  react-compiler-runtime@0.0.0-experimental-fe727a3-20250909(react@19.2.5):
+  react-compiler-runtime@1.0.0(react@19.2.5):
     dependencies:
       react: 19.2.5
 
