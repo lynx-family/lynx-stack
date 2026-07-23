@@ -124,23 +124,29 @@ if (__DEV__ && __JS__) {
  * interface for Preact's renderer to operate upon.
  */
 export class SnapshotInstance {
-  __id: number;
-  __snapshot_def: Snapshot;
-  __elements?: FiberElement[] | undefined;
-  __element_root?: FiberElement | undefined;
-  __values?: unknown[] | undefined;
+  // Fields are `declare`d (or assigned in the constructor) instead of being
+  // emitted as class fields: standard class-field semantics would define
+  // every field on every instance up front, which is measurable — this
+  // constructor runs once per element on every main-thread render.
+  declare type: string;
+  declare __id: number;
+  declare __snapshot_def: Snapshot;
+  declare __elements?: FiberElement[] | undefined;
+  declare __element_root?: FiberElement | undefined;
+  declare __values?: unknown[] | undefined;
   // current slot index for dynamic parts
   // only increment when inserting dynamic parts
   // when removing dynamic parts, the slot index will not change
   // cause there would be a wrapper to keep the slot index stable
   __current_slot_index = 0;
-  __worklet_ref_set?: Set<WorkletRefImpl<any> | Worklet>;
-  __listItemPlatformInfo?: PlatformInfo;
-  __extraProps?: Record<string, unknown> | undefined;
+  declare __worklet_ref_set?: Set<WorkletRefImpl<any> | Worklet>;
+  declare __listItemPlatformInfo?: PlatformInfo;
+  declare __extraProps?: Record<string, unknown> | undefined;
   __slotIndex: number = 0;
-  private __listItemPlatformInfoIndex?: number;
+  declare private __listItemPlatformInfoIndex?: number;
 
-  constructor(public type: string, id?: number) {
+  constructor(type: string, id?: number) {
+    this.type = type;
     let def = snapshotManager.values.get(type);
     // Suspense uses 'div'
     if (def === undefined && type !== 'div') {

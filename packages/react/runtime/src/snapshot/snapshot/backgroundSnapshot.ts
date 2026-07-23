@@ -159,7 +159,14 @@ function prepareSpreadForCommit(
 }
 
 export class BackgroundSnapshotInstance {
-  constructor(public type: string) {
+  // All fields below are `declare`d (or assigned in the constructor) instead
+  // of being emitted as class fields: standard class-field semantics would
+  // define every field on every instance up front, which is measurable — this
+  // constructor runs once per element on every background render.
+  declare type: string;
+
+  constructor(type: string) {
+    this.type = type;
     let def = snapshotManager.values.get(type);
     // Suspense uses 'div'
     if (def === undefined && type !== 'div') {
@@ -182,20 +189,20 @@ export class BackgroundSnapshotInstance {
     __globalSnapshotPatch?.push(SnapshotOperation.CreateElement, type, id);
   }
 
-  __id: number;
-  __values: unknown[] | undefined;
-  __snapshot_def: Snapshot;
-  __listItemPlatformInfo?: PlatformInfo;
-  __extraProps?: Record<string, unknown> | undefined;
+  declare __id: number;
+  declare __values: unknown[] | undefined;
+  declare __snapshot_def: Snapshot;
+  declare __listItemPlatformInfo?: PlatformInfo;
+  declare __extraProps?: Record<string, unknown> | undefined;
   __slotIndex: number = 0;
-  private __listItemPlatformInfoIndex?: number;
+  declare private __listItemPlatformInfoIndex?: number;
 
   private __parent: BackgroundSnapshotInstance | null = null;
   private __firstChild: BackgroundSnapshotInstance | null = null;
   private __lastChild: BackgroundSnapshotInstance | null = null;
   private __previousSibling: BackgroundSnapshotInstance | null = null;
   private __nextSibling: BackgroundSnapshotInstance | null = null;
-  private __removed_from_tree?: boolean;
+  declare private __removed_from_tree?: boolean;
 
   get parentNode(): BackgroundSnapshotInstance | null {
     return this.__parent;
