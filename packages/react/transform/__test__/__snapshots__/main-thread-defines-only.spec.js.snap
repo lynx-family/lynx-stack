@@ -1,7 +1,14 @@
 // Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
 
-exports[`collectMainThreadDefines > should collect snapshot and worklet registrations without changing the output 1`] = `
-"const __snapshot_a94a8_test_1 = "__snapshot_a94a8_test_1";
+exports[`mainThreadDefinesOnly > should replace the module with imports and defines 1`] = `
+"import "@lynx-js/react/lepus/jsx-runtime";
+import "@lynx-js/react/internal";
+import "@lynx-js/react";
+import "my-monitor";
+import './style.css';
+import './helper.js';
+import * as ReactLynx from "@lynx-js/react/internal";
+const __snapshot_a94a8_test_1 = "__snapshot_a94a8_test_1";
 ReactLynx.snapshotCreatorMap[__snapshot_a94a8_test_1] = (__snapshot_a94a8_test_1)=>ReactLynx.createSnapshot(__snapshot_a94a8_test_1, function() {
         const pageId = ReactLynx.__pageId;
         const el = __CreateView(pageId);
@@ -20,11 +27,13 @@ ReactLynx.snapshotCreatorMap[__snapshot_a94a8_test_1] = (__snapshot_a94a8_test_1
             1
         ]
     ], undefined, globDynamicComponentEntry, null, true);
+import { loadWorkletRuntime as __loadWorkletRuntime } from "@lynx-js/react/internal";
+var loadWorkletRuntime = __loadWorkletRuntime;
 const __workletRuntimeLoaded = loadWorkletRuntime(typeof globDynamicComponentEntry === 'undefined' ? undefined : globDynamicComponentEntry);
 __workletRuntimeLoaded && registerWorkletInternal("main-thread", "d3dd:test:1", function(e) {
     const onScroll = lynxWorkletImpl._workletMap["d3dd:test:1"].bind(this);
     'main thread';
-    console.log(e);
+    console.info(e);
 });
 "
 `;

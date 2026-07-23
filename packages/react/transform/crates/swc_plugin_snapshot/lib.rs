@@ -1743,25 +1743,26 @@ where
 
     if let Expr::Ident(runtime_id) = &*self.runtime_id {
       if self.snapshot_counter > 0 {
-        prepend_stmt(
-          &mut n.body,
-          ModuleItem::ModuleDecl(ModuleDecl::Import(ImportDecl {
+        let runtime_import = ModuleItem::ModuleDecl(ModuleDecl::Import(ImportDecl {
+          span: DUMMY_SP,
+          specifiers: vec![ImportSpecifier::Namespace(ImportStarAsSpecifier {
             span: DUMMY_SP,
-            specifiers: vec![ImportSpecifier::Namespace(ImportStarAsSpecifier {
-              span: DUMMY_SP,
-              local: runtime_id.clone(),
-            })],
-            src: Box::new(Str {
-              span: DUMMY_SP,
-              raw: None,
-              value: self.cfg.runtime_pkg.clone().into(),
-            }),
-            type_only: Default::default(),
-            // asserts: Default::default(),
-            with: Default::default(),
-            phase: ImportPhase::Evaluation,
-          })),
-        );
+            local: runtime_id.clone(),
+          })],
+          src: Box::new(Str {
+            span: DUMMY_SP,
+            raw: None,
+            value: self.cfg.runtime_pkg.clone().into(),
+          }),
+          type_only: Default::default(),
+          // asserts: Default::default(),
+          with: Default::default(),
+          phase: ImportPhase::Evaluation,
+        }));
+        if let Some(collector) = &self.main_thread_defs_collector {
+          collector.borrow_mut().insert(0, runtime_import.clone());
+        }
+        prepend_stmt(&mut n.body, runtime_import);
       }
     }
   }

@@ -62,7 +62,6 @@ export function applyEntry(
 
   api.modifyBundlerChain(async (chain, { environment, isDev, isProd }) => {
     const mainThreadChunks: string[] = []
-    const mainThreadCollectChunks: string[] = []
 
     const rsbuildConfig = api.getRsbuildConfig()
     const userConfig = api.getRsbuildConfig('original')
@@ -160,28 +159,11 @@ export function applyEntry(
 
         mainThreadChunks.push(mainThreadName)
 
-        if (!enableMTSRendering) {
-          const mainThreadCollectName = path.posix.join(
-            DEFAULT_DIST_PATH_INTERMEDIATE,
-            `${entryName}/main-thread-collect.js`,
-          )
-          mainThreadCollectChunks.push(mainThreadCollectName)
-          chain
-            .entry(`${entryName}__main-thread-collect`)
-            .add({
-              layer: LAYERS.MAIN_THREAD,
-              import: imports,
-              filename: mainThreadCollectName,
-            })
-        }
-
         chain
           .entry(mainThreadEntry)
           .add({
             layer: LAYERS.MAIN_THREAD,
-            import: enableMTSRendering
-              ? imports
-              : ['@lynx-js/react/internal/mts-defines'],
+            import: imports,
             filename: mainThreadName,
           })
           .when(enabledHMR, entry => {
@@ -329,7 +311,6 @@ export function applyEntry(
           ?.disableCreateSelectorQueryIncompatibleWarning ?? false,
         firstScreenSyncTiming,
         enableMTSRendering,
-        mainThreadCollectChunks,
         globalPropsMode,
         enableSSR,
         mainThreadChunks,

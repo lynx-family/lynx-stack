@@ -11,7 +11,6 @@ import { getMainThreadTransformOptions } from './options.js';
 import type { ReactLoaderOptions } from './options.js';
 
 export const ELEMENT_TEMPLATE_BUILD_INFO = 'lynx:element-templates';
-export const MAIN_THREAD_DEFINES_BUILD_INFO = 'lynx:main-thread-defines';
 
 const mainThreadLoader: LoaderDefinitionFunction<ReactLoaderOptions> = function(
   this: LoaderContext<ReactLoaderOptions>,
@@ -108,11 +107,6 @@ const mainThreadLoader: LoaderDefinitionFunction<ReactLoaderOptions> = function(
       buildInfo[ELEMENT_TEMPLATE_BUILD_INFO] = result.elementTemplates;
     } else {
       delete buildInfo[ELEMENT_TEMPLATE_BUILD_INFO];
-    }
-    if (result.mainThreadDefines) {
-      buildInfo[MAIN_THREAD_DEFINES_BUILD_INFO] = result.mainThreadDefines;
-    } else {
-      delete buildInfo[MAIN_THREAD_DEFINES_BUILD_INFO];
     }
   }
 

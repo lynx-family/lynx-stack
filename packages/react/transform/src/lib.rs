@@ -43,7 +43,7 @@ use swc_core::{
       optimization::{simplifier, simplify},
       react, typescript,
     },
-    visit::visit_mut_pass,
+    visit::{visit_mut_pass, Visit, VisitWith},
   },
 };
 
@@ -218,8 +218,8 @@ pub struct TransformNodiffOptions {
   #[napi(js_name = "directiveDCE")]
   pub directive_dce: Either<bool, DirectiveDCEVisitorConfig>,
   pub worklet: Either<bool, WorkletVisitorConfig>,
-  #[napi(js_name = "collectMainThreadDefines")]
-  pub collect_main_thread_defines: Option<bool>,
+  #[napi(js_name = "mainThreadDefinesOnly")]
+  pub main_thread_defines_only: Option<bool>,
   pub dynamic_import: Option<Either<bool, DynamicImportVisitorConfig>>,
   /// @internal
   pub inject: Option<Either<bool, InjectVisitorConfig>>,
@@ -248,7 +248,7 @@ impl Default for TransformNodiffOptions {
       define_dce: Either::A(false),
       directive_dce: Either::A(false),
       worklet: Either::A(false),
-      collect_main_thread_defines: None,
+      main_thread_defines_only: None,
       dynamic_import: Some(Either::B(Default::default())),
       inject: Some(Either::A(false)),
       input_source_map: None,
@@ -279,8 +279,34 @@ pub struct TransformNodiffOutput {
   /// @internal
   #[napi(js_name = "elementTemplates")]
   pub element_templates: Option<Vec<ElementTemplateAsset>>,
-  #[napi(js_name = "mainThreadDefines")]
-  pub main_thread_defines: Option<String>,
+}
+
+fn side_effect_import(src: Box<Str>, with: Option<Box<ObjectLit>>) -> ModuleItem {
+  ModuleItem::ModuleDecl(ModuleDecl::Import(ImportDecl {
+    span: DUMMY_SP,
+    specifiers: vec![],
+    src,
+    type_only: false,
+    with,
+    phase: ImportPhase::Evaluation,
+  }))
+}
+
+struct DynamicImportLiteralCollector {
+  literals: Vec<swc_core::atoms::Wtf8Atom>,
+}
+
+impl Visit for DynamicImportLiteralCollector {
+  fn visit_call_expr(&mut self, n: &CallExpr) {
+    if matches!(n.callee, Callee::Import(_)) {
+      if let Some(arg) = n.args.first() {
+        if let Expr::Lit(Lit::Str(src)) = &*arg.expr {
+          self.literals.push(src.value.clone());
+        }
+      }
+    }
+    n.visit_children_with(self);
+  }
 }
 
 type ElementTemplateCollector = Rc<RefCell<Vec<CoreElementTemplateAsset>>>;
@@ -381,7 +407,6 @@ fn transform_react_lynx_inner(
           warnings: warnings.read().unwrap().clone(),
           ui_source_map_records: vec![],
           element_templates: None,
-          main_thread_defines: None,
         };
       }
     };
@@ -390,14 +415,20 @@ fn transform_react_lynx_inner(
     let top_level_mark = Mark::new();
     let top_retain = WEBPACK_VARS.iter().map(|&s| s.into()).collect::<Vec<_>>();
 
-    let collect_main_thread_defines = options.collect_main_thread_defines.unwrap_or(false);
+    let main_thread_defines_only = options.main_thread_defines_only.unwrap_or(false);
+    let mut dynamic_import_literals: Vec<swc_core::atoms::Wtf8Atom> = vec![];
+    if main_thread_defines_only {
+      let mut collector = DynamicImportLiteralCollector { literals: vec![] };
+      program.visit_with(&mut collector);
+      dynamic_import_literals = collector.literals;
+    }
 
     let simplify_pass_1 = Optional::new(
       simplifier(
         top_level_mark,
         simplify::Config {
           dce: simplify::dce::Config {
-            preserve_imports_with_side_effects: collect_main_thread_defines,
+            preserve_imports_with_side_effects: main_thread_defines_only,
             top_retain: top_retain.clone(),
             ..Default::default()
           },
@@ -549,9 +580,9 @@ fn transform_react_lynx_inner(
     );
 
     let main_thread_defs_collector =
-      collect_main_thread_defines.then(|| Rc::new(RefCell::new(Vec::<ModuleItem>::new())));
+      main_thread_defines_only.then(|| Rc::new(RefCell::new(Vec::<ModuleItem>::new())));
     let main_thread_worklet_collector =
-      collect_main_thread_defines.then(|| Rc::new(RefCell::new(Vec::<Stmt>::new())));
+      main_thread_defines_only.then(|| Rc::new(RefCell::new(Vec::<ModuleItem>::new())));
 
     let snapshot_plugin = if use_snapshot_plugin {
       let transformer = SnapshotJSXTransformer::new(
@@ -638,7 +669,7 @@ fn transform_react_lynx_inner(
       top_level_mark,
       simplify::Config {
         dce: simplify::dce::Config {
-          preserve_imports_with_side_effects: collect_main_thread_defines,
+          preserve_imports_with_side_effects: main_thread_defines_only,
           top_retain: top_retain.clone(),
           ..Default::default()
         },
@@ -788,9 +819,65 @@ fn transform_react_lynx_inner(
       ),
     );
 
-    let program = helpers::HELPERS.set(&helpers::Helpers::new(true), || {
+    let mut program = helpers::HELPERS.set(&helpers::Helpers::new(true), || {
       HANDLER.set(&handler, || program.apply(pass))
     });
+
+    if main_thread_defines_only {
+      if let Program::Module(module) = &program {
+        let mut seen_srcs: std::collections::HashSet<swc_core::atoms::Wtf8Atom> = Default::default();
+        let mut items: Vec<ModuleItem> = vec![];
+        for item in &module.body {
+          match item {
+            ModuleItem::ModuleDecl(ModuleDecl::Import(import)) if !import.type_only => {
+              if seen_srcs.insert(import.src.value.clone()) {
+                items.push(side_effect_import(import.src.clone(), import.with.clone()));
+              }
+            }
+            ModuleItem::ModuleDecl(ModuleDecl::ExportNamed(export)) => {
+              if let Some(src) = &export.src {
+                if seen_srcs.insert(src.value.clone()) {
+                  items.push(side_effect_import(src.clone(), export.with.clone()));
+                }
+              }
+            }
+            ModuleItem::ModuleDecl(ModuleDecl::ExportAll(export)) => {
+              if seen_srcs.insert(export.src.value.clone()) {
+                items.push(side_effect_import(export.src.clone(), export.with.clone()));
+              }
+            }
+            _ => {}
+          }
+        }
+        for literal in dynamic_import_literals {
+          if seen_srcs.insert(literal.clone()) {
+            items.push(side_effect_import(
+              Box::new(Str {
+                span: DUMMY_SP,
+                raw: None,
+                value: literal,
+              }),
+              None,
+            ));
+          }
+        }
+        if let Some(collector) = &main_thread_defs_collector {
+          items.extend(collector.borrow_mut().drain(..));
+        }
+        if let Some(collector) = &main_thread_worklet_collector {
+          items.extend(collector.borrow_mut().drain(..));
+        }
+        program = Program::Module(Module {
+          span: DUMMY_SP,
+          body: items,
+          shebang: None,
+        })
+        .apply(hygiene_with_config(Config {
+          top_level_mark,
+          ..Default::default()
+        }));
+      }
+    }
 
     let result = c.print(
       &program,
@@ -824,29 +911,6 @@ fn transform_react_lynx_inner(
       },
     );
 
-    let mut main_thread_items: Vec<ModuleItem> = main_thread_defs_collector
-      .map(|collector| collector.borrow_mut().drain(..).collect())
-      .unwrap_or_default();
-    if let Some(collector) = &main_thread_worklet_collector {
-      main_thread_items.extend(collector.borrow_mut().drain(..).map(ModuleItem::Stmt));
-    }
-    let main_thread_defines = if main_thread_items.is_empty() {
-      None
-    } else {
-      let main_thread_program = Program::Module(Module {
-        span: DUMMY_SP,
-        body: main_thread_items,
-        shebang: None,
-      })
-      .apply(hygiene_with_config(Config {
-        top_level_mark,
-        ..Default::default()
-      }));
-      c.print(&main_thread_program, PrintArgs::default())
-        .ok()
-        .map(|output| output.code)
-    };
-
     match result {
       Ok(result) => {
         // Drain after the whole SWC pass finishes: dynamic-component transforms
@@ -865,7 +929,6 @@ fn transform_react_lynx_inner(
             clone_snapshot_ui_source_map_records(&snapshot_ui_source_map_records, &options.filename)
           },
           element_templates,
-          main_thread_defines,
         }
       }
       Err(_) => {
@@ -881,7 +944,6 @@ fn transform_react_lynx_inner(
             clone_snapshot_ui_source_map_records(&snapshot_ui_source_map_records, &options.filename)
           },
           element_templates,
-          main_thread_defines: None,
         };
       }
     }
@@ -896,7 +958,6 @@ fn transform_react_lynx_inner(
     // Preserve the element-template assets collected in the successful transform
     // path instead of dropping them in the final wrapper object.
     element_templates: result.element_templates,
-    main_thread_defines: result.main_thread_defines,
   };
 
   r

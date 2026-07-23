@@ -698,7 +698,7 @@ export interface TransformNodiffOptions {
   defineDCE: boolean | DefineDceVisitorConfig
   directiveDCE: boolean | DirectiveDceVisitorConfig
   worklet: boolean | WorkletVisitorConfig
-  collectMainThreadDefines?: boolean
+  mainThreadDefinesOnly?: boolean
   dynamicImport?: boolean | DynamicImportVisitorConfig
   /** @internal */
   inject?: boolean | InjectVisitorConfig
@@ -712,7 +712,6 @@ export interface TransformNodiffOutput {
   uiSourceMapRecords: Array<UiSourceMapRecord>
   /** @internal */
   elementTemplates?: Array<ElementTemplateAsset>
-  mainThreadDefines?: string
 }
 /** @internal */
 export interface ElementTemplateAsset {

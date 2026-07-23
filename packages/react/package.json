@@ -37,10 +37,6 @@
       "types": "./runtime/lib/document.d.ts",
       "default": "./runtime/lib/document.js"
     },
-    "./internal/mts-defines": {
-      "types": "./runtime/lib/mtsDefines.d.ts",
-      "default": "./runtime/lib/mtsDefines.js"
-    },
     "./element-template": {
       "types": "./runtime/lib/element-template/index.d.ts",
       "default": "./runtime/lib/element-template/index.js"

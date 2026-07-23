@@ -13,10 +13,7 @@ import { LynxTemplatePlugin } from '@lynx-js/template-webpack-plugin';
 import { RuntimeGlobals } from '@lynx-js/webpack-runtime-globals';
 
 import { LAYERS } from './layer.js';
-import {
-  ELEMENT_TEMPLATE_BUILD_INFO,
-  MAIN_THREAD_DEFINES_BUILD_INFO,
-} from './loaders/main-thread.js';
+import { ELEMENT_TEMPLATE_BUILD_INFO } from './loaders/main-thread.js';
 import { createLynxProcessEvalResultRuntimeModule } from './LynxProcessEvalResultRuntimeModule.js';
 
 const require = createRequire(import.meta.url);
@@ -48,32 +45,6 @@ export function collectElementTemplatesFromModule(
   }
 
   return elementTemplates;
-}
-
-export function collectMainThreadDefines(
-  modules: Iterable<ModuleWithElementTemplateBuildInfo>,
-): string[] {
-  const visited = new Set<ModuleWithElementTemplateBuildInfo>();
-  const codes = new Set<string>();
-  const visit = (module: ModuleWithElementTemplateBuildInfo) => {
-    if (visited.has(module)) {
-      return;
-    }
-    visited.add(module);
-    const code = module.buildInfo?.[MAIN_THREAD_DEFINES_BUILD_INFO];
-    if (typeof code === 'string' && code.length > 0) {
-      codes.add(code);
-    }
-    if (module.modules) {
-      for (const nestedModule of module.modules) {
-        visit(nestedModule);
-      }
-    }
-  };
-  for (const module of modules) {
-    visit(module);
-  }
-  return [...codes].sort();
 }
 
 function isPlainRecord(value: unknown): value is Record<string, unknown> {
@@ -230,8 +201,6 @@ interface ReactWebpackPluginOptions {
    */
   mainThreadChunks?: string[] | undefined;
 
-  mainThreadCollectChunks?: string[] | undefined;
-
   /**
    * Merge same string literals in JS and Lepus to reduce output bundle size.
    * Set to `false` to disable.
@@ -347,7 +316,6 @@ class ReactWebpackPlugin {
       globalPropsMode: 'reactive',
       enableSSR: false,
       mainThreadChunks: [],
-      mainThreadCollectChunks: [],
       extractStr: false,
       experimental_isLazyBundle: false,
       profile: undefined,
@@ -498,61 +466,6 @@ class ReactWebpackPlugin {
       const hooks = LynxTemplatePlugin.getLynxTemplatePluginHooks(compilation);
 
       const { RawSource, ConcatSource } = compiler.webpack.sources;
-
-      if (options.enableMTSRendering === false) {
-        hooks.beforeEncode.tap(
-          `${this.constructor.name}.MTSRenderingDisabled`,
-          (args) => {
-            args.intermediateAssets.push(
-              ...options.mainThreadCollectChunks ?? [],
-            );
-            return args;
-          },
-        );
-
-        compilation.hooks.processAssets.tap(
-          {
-            name: `${this.constructor.name}.MTSRenderingDisabled`,
-            stage:
-              compiler.webpack.Compilation.PROCESS_ASSETS_STAGE_OPTIMIZE_SIZE
-              + 1,
-          },
-          () => {
-            const mainThreadDefines = collectMainThreadDefines(
-              compilation.modules as Iterable<
-                ModuleWithElementTemplateBuildInfo
-              >,
-            );
-            if (mainThreadDefines.length === 0) {
-              return;
-            }
-            for (const file of options.mainThreadChunks ?? []) {
-              const asset = compilation.getAsset(file);
-              if (
-                !asset
-                || asset.source.source().toString().includes(
-                  'globalThis.__lynxMainThreadRuntime);',
-                )
-              ) {
-                continue;
-              }
-              compilation.updateAsset(
-                file,
-                old =>
-                  new ConcatSource(
-                    old,
-                    '\n;(function (ReactLynx) {\n',
-                    'var loadWorkletRuntime = ReactLynx.loadWorkletRuntime;\n',
-                    ...mainThreadDefines.map((code) =>
-                      `(function () {\n${code}})();\n`
-                    ),
-                    '})(globalThis.__lynxMainThreadRuntime);\n',
-                  ),
-              );
-            }
-          },
-        );
-      }
 
       hooks.beforeEncode.tap(
         this.constructor.name,

@@ -89,7 +89,6 @@ describe('enableMTSRendering: false', () => {
     const { tasm, backgroundSource } = await buildCase('disabled');
     const root = tasm.lepusCode.root;
 
-    expect(root).toContain('__lynxMainThreadRuntime');
     expect(root).toContain('snapshotCreatorMap[');
 
     expect(root).toContain('COMP_LIB_COUNTER_TEXT');

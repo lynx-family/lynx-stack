@@ -1,6 +1,7 @@
 // Copyright 2024 The Lynx Authors. All rights reserved.
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
+import fs from 'node:fs';
 import path from 'node:path';
 
 import type { LoaderContext } from '@rspack/core';
@@ -111,6 +112,51 @@ export interface ReactLoaderOptions {
 
 function normalizeSlashes(file: string) {
   return file.replaceAll(path.win32.sep, '/');
+}
+
+// With `enableMTSRendering: false`, every main-thread module is reduced to
+// its defines except the ReactLynx runtime and its dependencies, which the
+// defines import at runtime.
+const MTS_DEFINES_EXEMPT_PACKAGES = new Set([
+  '@lynx-js/react',
+  '@lynx-js/react-runtime',
+  '@lynx-js/internal-preact',
+  'preact',
+]);
+
+const exemptDirCache = new Map<string, boolean>();
+
+// Walks every ancestor: subpath entries (e.g. `preact/hooks`) have their own
+// nested package.json whose name differs from the package's.
+function isInsideExemptPackage(dir: string): boolean {
+  const cached = exemptDirCache.get(dir);
+  if (cached !== undefined) {
+    return cached;
+  }
+  let result = false;
+  const packageJsonPath = path.join(dir, 'package.json');
+  if (fs.existsSync(packageJsonPath)) {
+    try {
+      const { name } = JSON.parse(
+        fs.readFileSync(packageJsonPath, 'utf-8'),
+      ) as { name?: string };
+      result = name !== undefined && MTS_DEFINES_EXEMPT_PACKAGES.has(name);
+    } catch {
+      // ignore unreadable package.json
+    }
+  }
+  if (!result) {
+    const parent = path.dirname(dir);
+    if (parent !== dir) {
+      result = isInsideExemptPackage(parent);
+    }
+  }
+  exemptDirCache.set(dir, result);
+  return result;
+}
+
+function shouldReduceToDefines(resourcePath: string): boolean {
+  return !isInsideExemptPackage(path.dirname(resourcePath));
 }
 
 function getCommonOptions(
@@ -328,7 +374,8 @@ export function getMainThreadTransformOptions(
       ...commonOptions.worklet,
       target: 'LEPUS',
     },
-    collectMainThreadDefines: enableMTSRendering === false,
+    mainThreadDefinesOnly: enableMTSRendering === false
+      && shouldReduceToDefines(this.resourcePath),
     directiveDCE: {
       target: 'LEPUS',
     },

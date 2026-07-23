@@ -66,7 +66,7 @@ pub struct WorkletVisitor {
   shared_identifiers: FxHashSet<Id>,
   worklet_runtime_loaded: bool,
   worklet_runtime_loaded_ident: Ident,
-  main_thread_stmts_collector: Option<Rc<RefCell<Vec<Stmt>>>>,
+  main_thread_stmts_collector: Option<Rc<RefCell<Vec<ModuleItem>>>>,
 }
 
 impl Default for WorkletVisitor {
@@ -571,72 +571,72 @@ impl VisitMut for WorkletVisitor {
       // Sort to keep the output consistent
       specifiers.sort();
 
-      prepend_stmts(
-        &mut n.body,
-        vec![
-          ModuleItem::ModuleDecl(ModuleDecl::Import(ImportDecl {
-            span: DUMMY_SP,
-            phase: ImportPhase::Evaluation,
-            specifiers: specifiers
-              .iter()
-              .map(|imported| {
-                ImportSpecifier::Named(ImportNamedSpecifier {
-                  span: DUMMY_SP,
-                  is_type_only: false,
-                  local: Ident {
-                    ctxt: Default::default(),
-                    span: DUMMY_SP,
-                    sym: format!("__{imported}").into(),
-                    optional: false,
-                  },
-                  imported: Some(ModuleExportName::Ident(Ident {
-                    ctxt: Default::default(),
-                    span: DUMMY_SP,
-                    sym: imported.as_str().into(),
-                    optional: false,
-                  })),
-                })
-              })
-              .collect::<Vec<_>>(),
-            src: Box::new(Str {
-              span: DUMMY_SP,
-              raw: None,
-              value: self.cfg.runtime_pkg.clone().into(),
-            }),
-            type_only: Default::default(),
-            with: Default::default(),
-          })),
-          ModuleItem::Stmt(Stmt::Decl(Decl::Var(Box::new(VarDecl {
-            ctxt: Default::default(),
-            span: DUMMY_SP,
-            kind: VarDeclKind::Var,
-            declare: false,
-            decls: specifiers
-              .into_iter()
-              .map(|name| VarDeclarator {
+      let import_items = vec![
+        ModuleItem::ModuleDecl(ModuleDecl::Import(ImportDecl {
+          span: DUMMY_SP,
+          phase: ImportPhase::Evaluation,
+          specifiers: specifiers
+            .iter()
+            .map(|imported| {
+              ImportSpecifier::Named(ImportNamedSpecifier {
                 span: DUMMY_SP,
-                name: Pat::Ident(
-                  Ident {
-                    ctxt: Default::default(),
-                    span: DUMMY_SP,
-                    sym: name.as_str().into(),
-                    optional: false,
-                  }
-                  .into(),
-                ),
-                init: Some(Box::new(Expr::Ident(Ident {
+                is_type_only: false,
+                local: Ident {
                   ctxt: Default::default(),
                   span: DUMMY_SP,
-                  sym: format!("__{name}").into(),
+                  sym: format!("__{imported}").into(),
                   optional: false,
-                }))),
-                definite: false,
+                },
+                imported: Some(ModuleExportName::Ident(Ident {
+                  ctxt: Default::default(),
+                  span: DUMMY_SP,
+                  sym: imported.as_str().into(),
+                  optional: false,
+                })),
               })
-              .collect(),
-          })))),
-        ]
-        .into_iter(),
-      );
+            })
+            .collect::<Vec<_>>(),
+          src: Box::new(Str {
+            span: DUMMY_SP,
+            raw: None,
+            value: self.cfg.runtime_pkg.clone().into(),
+          }),
+          type_only: Default::default(),
+          with: Default::default(),
+        })),
+        ModuleItem::Stmt(Stmt::Decl(Decl::Var(Box::new(VarDecl {
+          ctxt: Default::default(),
+          span: DUMMY_SP,
+          kind: VarDeclKind::Var,
+          declare: false,
+          decls: specifiers
+            .into_iter()
+            .map(|name| VarDeclarator {
+              span: DUMMY_SP,
+              name: Pat::Ident(
+                Ident {
+                  ctxt: Default::default(),
+                  span: DUMMY_SP,
+                  sym: name.as_str().into(),
+                  optional: false,
+                }
+                .into(),
+              ),
+              init: Some(Box::new(Expr::Ident(Ident {
+                ctxt: Default::default(),
+                span: DUMMY_SP,
+                sym: format!("__{name}").into(),
+                optional: false,
+              }))),
+              definite: false,
+            })
+            .collect(),
+        })))),
+      ];
+      if let Some(collector) = &self.main_thread_stmts_collector {
+        collector.borrow_mut().extend(import_items.iter().cloned());
+      }
+      prepend_stmts(&mut n.body, import_items.into_iter());
     }
     if let Some(collector) = &self.main_thread_stmts_collector {
       collector.borrow_mut().extend(
@@ -644,7 +644,8 @@ impl VisitMut for WorkletVisitor {
           .stmts_to_insert_at_top_level
           .iter()
           .filter(|stmt| !stmt.is_empty())
-          .cloned(),
+          .cloned()
+          .map(ModuleItem::Stmt),
       );
     }
     // Add statements to insert at top level after processing all items
@@ -711,7 +712,10 @@ impl WorkletVisitor {
     self
   }
 
-  pub fn with_main_thread_stmts_collector(mut self, collector: Rc<RefCell<Vec<Stmt>>>) -> Self {
+  pub fn with_main_thread_stmts_collector(
+    mut self,
+    collector: Rc<RefCell<Vec<ModuleItem>>>,
+  ) -> Self {
     self.main_thread_stmts_collector = Some(collector);
     self
   }

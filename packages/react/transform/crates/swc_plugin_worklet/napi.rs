@@ -103,7 +103,7 @@ impl WorkletVisitor {
 
   pub fn with_main_thread_stmts_collector(
     mut self,
-    collector: std::rc::Rc<std::cell::RefCell<Vec<Stmt>>>,
+    collector: std::rc::Rc<std::cell::RefCell<Vec<ModuleItem>>>,
   ) -> Self {
     self.inner = self.inner.with_main_thread_stmts_collector(collector);
     self
