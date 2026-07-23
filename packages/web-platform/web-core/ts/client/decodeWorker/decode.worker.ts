@@ -20,6 +20,7 @@ const wasmModuleLoadedPromise: Promise<void> = new Promise((resolve) => {
 
 import { loadStyleFromJSON } from './cssLoader.js';
 import { createLepusCodeBlob } from './createLepusCodeBlob.js';
+import { getCSSScopeEntry } from './getCSSScopeEntry.js';
 import { decodeBinaryMap } from '../../common/decodeUtils.js';
 
 const HEARTBREAK_INTERVAL_MS = 1000;
@@ -280,7 +281,7 @@ async function handleStream(
         await wasmModuleLoadedPromise;
         const buffer = wasmInstance.decode_style_info(
           content,
-          config['isLazy'] === 'true' ? url : undefined,
+          getCSSScopeEntry(config, url),
           config['enableCSSSelector'] === 'true',
           transformVW,
           transformVH,
@@ -406,7 +407,7 @@ async function handleJSON(
       transformVW,
       transformVH,
       transformREM,
-      config['isLazy'] === 'true' ? url : undefined,
+      getCSSScopeEntry(config, url),
     );
     postMessage(
       {

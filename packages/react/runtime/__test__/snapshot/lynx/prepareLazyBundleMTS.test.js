@@ -115,6 +115,16 @@ describe('prepareLazyBundleMTS handler', () => {
     expect(adoptStyleSheet).toHaveBeenCalledWith({ id: 'sheet' });
   });
 
+  test('missing stylesheet APIs → chunk still installs', () => {
+    thenMock.mockImplementationOnce((cb) => cb({ code: 0, url: 'u' }));
+    vi.stubGlobal('__LoadStyleSheet', undefined);
+    vi.stubGlobal('__AdoptStyleSheet', undefined);
+
+    expect(() => invoke('foo')).not.toThrow();
+    expect(loadScript).toHaveBeenCalled();
+    expect(processEvalResult).toHaveBeenCalled();
+  });
+
   test('cache: second call with same url is a no-op', () => {
     thenMock.mockImplementation((cb) => cb({ code: 0, url: 'u' }));
     loadStyleSheet.mockReturnValue(null);

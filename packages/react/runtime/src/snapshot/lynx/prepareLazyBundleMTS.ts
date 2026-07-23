@@ -55,8 +55,13 @@ function prepareLazyBundleMTS(payload: { url: string; host?: string }): void {
     if (typeof processEvalResult === 'function') {
       processEvalResult(() => loaded, url);
     }
-    const styleSheet = __LoadStyleSheet(SECTION_CSS, response.url);
-    if (styleSheet !== null) __AdoptStyleSheet(styleSheet);
+    if (
+      typeof __LoadStyleSheet === 'function'
+      && typeof __AdoptStyleSheet === 'function'
+    ) {
+      const styleSheet = __LoadStyleSheet(SECTION_CSS, response.url);
+      if (styleSheet !== null) __AdoptStyleSheet(styleSheet);
+    }
   });
 }
 

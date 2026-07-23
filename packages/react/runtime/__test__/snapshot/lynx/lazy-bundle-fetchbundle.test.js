@@ -189,6 +189,24 @@ describe('loadLazyBundle (FetchBundle) — main thread sync', () => {
     });
     expect(resolved).toEqual({ default: 'C' });
   });
+
+  test('missing stylesheet APIs → chunk still resolves', async () => {
+    waitMock.mockReturnValueOnce({ code: 0, url: 'x' });
+    loadScript.mockReturnValueOnce(() => ({ default: 'C' }));
+    vi.stubGlobal('__LoadStyleSheet', undefined);
+    vi.stubGlobal('__AdoptStyleSheet', undefined);
+
+    const { loadLazyBundle } = await import(
+      '../../../src/core/lynx/lazy-bundle'
+    );
+
+    const promise = loadLazyBundle('foo', 'sync');
+    let resolved;
+    promise.then((value) => {
+      resolved = value;
+    });
+    expect(resolved).toEqual({ default: 'C' });
+  });
 });
 
 describe('loadLazyBundle (FetchBundle) — background sync', () => {

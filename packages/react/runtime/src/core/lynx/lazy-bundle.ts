@@ -219,9 +219,14 @@ export const loadLazyBundle: <
         result = lynx.loadScript<(entry: string) => T>(SECTION_MAIN_THREAD, {
           bundleName: response.url,
         })(source);
-        const styleSheet = __LoadStyleSheet(SECTION_CSS, response.url);
-        if (styleSheet !== null) {
-          __AdoptStyleSheet(styleSheet);
+        if (
+          typeof __LoadStyleSheet === 'function'
+          && typeof __AdoptStyleSheet === 'function'
+        ) {
+          const styleSheet = __LoadStyleSheet(SECTION_CSS, response.url);
+          if (styleSheet !== null) {
+            __AdoptStyleSheet(styleSheet);
+          }
         }
       } catch {
         return new Promise(() => {});

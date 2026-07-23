@@ -5,6 +5,22 @@
 import { expect, test } from '@rstest/core';
 
 import { createLepusCodeBlob } from '../ts/client/decodeWorker/createLepusCodeBlob.js';
+import { getCSSScopeEntry } from '../ts/client/decodeWorker/getCSSScopeEntry.js';
+
+test('FetchBundle CSS remains unscoped while lazy code stays callable', () => {
+  expect(
+    getCSSScopeEntry(
+      { isLazy: 'true', enableRemoveCSSScope: 'true' },
+      'https://example.com/lazy.bundle',
+    ),
+  ).toBeUndefined();
+  expect(
+    getCSSScopeEntry(
+      { isLazy: 'true', enableRemoveCSSScope: 'false' },
+      'https://example.com/scoped.bundle',
+    ),
+  ).toBe('https://example.com/scoped.bundle');
+});
 
 test('empty lazy main-thread chunks remain valid JavaScript', async () => {
   const blob = createLepusCodeBlob(
