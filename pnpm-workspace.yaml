@@ -93,7 +93,7 @@ catalog:
 
 catalogs:
   adb:
-    "@yume-chan/adb": ^2.5.1
+    "@yume-chan/adb": ^2.6.0
     "@yume-chan/adb-scrcpy": ^2.3.2
     "@yume-chan/adb-server-node-tcp": ^2.5.2
     "@yume-chan/async": ^4.1.3
