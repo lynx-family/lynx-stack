@@ -503,31 +503,53 @@ class ReactWebpackPlugin {
         hooks.beforeEncode.tap(
           `${this.constructor.name}.MTSRenderingDisabled`,
           (args) => {
-            const lepusCode = args.encodeData.lepusCode;
             args.intermediateAssets.push(
               ...options.mainThreadCollectChunks ?? [],
             );
+            return args;
+          },
+        );
+
+        compilation.hooks.processAssets.tap(
+          {
+            name: `${this.constructor.name}.MTSRenderingDisabled`,
+            stage:
+              compiler.webpack.Compilation.PROCESS_ASSETS_STAGE_OPTIMIZE_SIZE
+              + 1,
+          },
+          () => {
             const mainThreadDefines = collectMainThreadDefines(
               compilation.modules as Iterable<
                 ModuleWithElementTemplateBuildInfo
               >,
             );
-            if (mainThreadDefines.length === 0 || !lepusCode.root) {
-              return args;
+            if (mainThreadDefines.length === 0) {
+              return;
             }
-            lepusCode.root = {
-              ...lepusCode.root,
-              source: new ConcatSource(
-                lepusCode.root.source,
-                '\n;(function (ReactLynx) {\n',
-                'var loadWorkletRuntime = ReactLynx.loadWorkletRuntime;\n',
-                ...mainThreadDefines.map((code) =>
-                  `(function () {\n${code}})();\n`
-                ),
-                '})(globalThis.__lynxMainThreadRuntime);\n',
-              ),
-            };
-            return args;
+            for (const file of options.mainThreadChunks ?? []) {
+              const asset = compilation.getAsset(file);
+              if (
+                !asset
+                || asset.source.source().toString().includes(
+                  'globalThis.__lynxMainThreadRuntime);',
+                )
+              ) {
+                continue;
+              }
+              compilation.updateAsset(
+                file,
+                old =>
+                  new ConcatSource(
+                    old,
+                    '\n;(function (ReactLynx) {\n',
+                    'var loadWorkletRuntime = ReactLynx.loadWorkletRuntime;\n',
+                    ...mainThreadDefines.map((code) =>
+                      `(function () {\n${code}})();\n`
+                    ),
+                    '})(globalThis.__lynxMainThreadRuntime);\n',
+                  ),
+              );
+            }
           },
         );
       }
