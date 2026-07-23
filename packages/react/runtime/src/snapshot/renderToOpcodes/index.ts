@@ -41,8 +41,10 @@ const assign = /* @__PURE__ */ Object.assign;
 // only tracks the current component and `profileHooks` only traces
 // components — so the per-element hook dispatch can be skipped entirely.
 // Development keeps the full dispatch for component stacks and devtools.
+/* v8 ignore start */
 const ELEMENT_VNODE_HOOKS = (typeof __DEV__ !== 'undefined' && __DEV__)
   || (typeof __REACT_DEVTOOL__ !== 'undefined' && __REACT_DEVTOOL__);
+/* v8 ignore stop */
 
 // Global state for the current render pass
 let beforeDiff, beforeDiff2, afterDiff, renderHook, ummountHook;
