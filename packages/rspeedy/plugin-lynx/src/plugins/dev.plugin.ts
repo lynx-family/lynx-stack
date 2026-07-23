@@ -16,7 +16,7 @@ import color from 'picocolors'
 import type { Dev } from '../config/dev/index.js'
 import type { Server } from '../config/server/index.js'
 import { debug } from '../debug.js'
-import type { ExposedAPI } from '../index.js'
+import type { ExposedConfig } from '../plugin-api.js'
 import { isLynx } from '../utils/is-lynx.js'
 import { ProvidePlugin } from '../webpack/ProvidePlugin.js'
 
@@ -44,7 +44,7 @@ export function pluginDev(
       function getResolveBundleName() {
         if (!resolveBundleName) {
           // biome-ignore lint/correctness/useHookAtTopLevel: not react hooks
-          const rspeedyAPIs = api.useExposed<ExposedAPI>(
+          const rspeedyAPIs = api.useExposed<{ config: ExposedConfig }>(
             Symbol.for('rspeedy.api'),
           )!
           const defaultFilename = '[name].[platform].bundle'

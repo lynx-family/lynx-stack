@@ -4,7 +4,6 @@
 import { describe, expect, test } from '@rstest/core'
 
 import * as dev from '../../src/config/dev/index.js'
-import * as config from '../../src/config/index.js'
 import * as filename from '../../src/config/output/filename.js'
 import * as output from '../../src/config/output/index.js'
 import * as minify from '../../src/config/output/minify.js'
@@ -14,9 +13,6 @@ import * as source from '../../src/config/source/index.js'
 describe('Config Declaration', () => {
   test('should not export any JS', () => {
     const modules = [
-      // Entry point
-      config,
-
       // Output
       filename,
       minify,

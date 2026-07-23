@@ -29,7 +29,6 @@ import { pluginCssMinimizer } from '@rsbuild/plugin-css-minimizer'
 
 import { pluginLynxDebugMetadata } from '@lynx-js/debug-metadata-rsbuild-plugin'
 
-import type { Config } from './config/index.js'
 import { pluginLynxDefaults } from './defaults.js'
 import {
   pluginChunkLoading,
@@ -58,7 +57,7 @@ export function pluginLynx(): RsbuildPlugins {
   // The Lynx-shaped config published to DSL plugins. `output.filename.bundle`
   // is read by `pluginReactLynx` (to name the emitted template) and by
   // `pluginQRCode` (to build dev URLs).
-  const exposedConfig: Config = {
+  const exposedConfig = {
     output: {
       filename: {
         bundle: DEFAULT_FILENAME,
@@ -80,67 +79,9 @@ export function pluginLynx(): RsbuildPlugins {
     pluginResolve(),
     pluginRsdoctor(),
     pluginSourcemap(),
-    pluginStatsJson(exposedConfig),
+    pluginStatsJson(),
     pluginSwc(),
     pluginTarget(),
     pluginCssMinimizer(),
   ]
 }
-
-// The Lynx-shaped config surface. Re-exported by `@lynx-js/rspeedy` so the
-// `import { Config } from '@lynx-js/rspeedy'` used by DSL plugins keeps working.
-export type { ExposedAPI } from './api.js'
-export { mergeRspeedyConfig } from './config/mergeRspeedyConfig.js'
-export type { Config } from './config/index.js'
-
-// Dev
-export type { Dev } from './config/dev/index.js'
-export type { Client as DevClient } from './config/dev/client.js'
-
-// Output
-export type {
-  CssModules,
-  CssModuleLocalsConvention,
-} from './config/output/css-modules.js'
-export type { DistPath } from './config/output/dist-path.js'
-export type {
-  BundleFilename,
-  BundleFilenameContext,
-  Filename,
-} from './config/output/filename.js'
-export type { Minify } from './config/output/minify.js'
-export type { SourceMap } from './config/output/source-map.js'
-export type { Output } from './config/output/index.js'
-
-// Performance
-export type { ConsoleType, Performance } from './config/performance/index.js'
-export type { BuildCache } from './config/performance/build-cache.js'
-export type {
-  ChunkSplit,
-  ChunkSplitBySize,
-  ChunkSplitCustom,
-} from './config/performance/chunk-split.js'
-
-// Resolve
-export type { Resolve } from './config/resolve/index.js'
-
-// Server
-export type { Server } from './config/server/index.js'
-
-// Source
-export type { Source } from './config/source/index.js'
-export type { Decorators } from './config/source/decorators.js'
-export type { Entry, EntryDescription } from './config/source/entry.js'
-export type { TransformImport } from './config/source/transformImport.js'
-
-// Tools
-export type {
-  CssExtract,
-  CssExtractRspackLoaderOptions,
-  CssExtractRspackPluginOptions,
-} from './config/tools/css-extract.js'
-export type { CssLoader, CssLoaderModules } from './config/tools/css-loader.js'
-export type {
-  RsdoctorRspackPluginOptions,
-  Tools,
-} from './config/tools/index.js'

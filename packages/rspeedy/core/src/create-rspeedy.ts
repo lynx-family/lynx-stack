@@ -13,11 +13,9 @@ import type {
   RsbuildInstance,
 } from '@rsbuild/core'
 
-import type { Config } from '@lynx-js/rsbuild-plugin'
-import {
-  applyDefaultRspeedyConfig,
-  toRsbuildConfig,
-} from '@lynx-js/rsbuild-plugin/internal'
+import { applyDefaultRspeedyConfig } from './config/defaults.js'
+import type { Config } from './config/index.js'
+import { toRsbuildConfig } from './config/rsbuild/index.js'
 
 /**
  * The instance of Rspeedy.

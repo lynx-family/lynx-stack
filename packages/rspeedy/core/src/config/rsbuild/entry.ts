@@ -4,8 +4,8 @@
 
 import type { RsbuildEntry } from '@rsbuild/core'
 
-import { debug, debugList } from '../../debug.js'
-import type { Entry } from '../source/entry.js'
+import type { Entry } from '@lynx-js/rsbuild-plugin/internal'
+import { debug, debugList } from '@lynx-js/rsbuild-plugin/internal'
 
 const DEFAULT_ENTRY = './src/index.js'
 

@@ -20,17 +20,14 @@
  */
 
 // API
-// The Lynx build engine (plugins, config types, `ExposedAPI`, `mergeRspeedyConfig`)
-// now lives in `@lynx-js/rsbuild-plugin`; re-exported here so the
-// `@lynx-js/rspeedy` public API is unchanged for existing consumers.
-export type { ExposedAPI } from '@lynx-js/rsbuild-plugin'
+export type { ExposedAPI } from './api.js'
 export {
   createRspeedy,
   type RspeedyInstance,
   type CreateRspeedyOptions,
 } from './create-rspeedy.js'
 export { logger } from '@rsbuild/core'
-export { mergeRspeedyConfig } from '@lynx-js/rsbuild-plugin'
+export { mergeRspeedyConfig } from './config/mergeRspeedyConfig.js'
 
 // Config
 export { defineConfig } from './config/defineConfig.js'
@@ -40,6 +37,10 @@ export {
   type LoadConfigOptions,
   type LoadConfigResult,
 } from './config/loadConfig.js'
+export type { Config } from './config/index.js'
+// The granular option types are defined next to the plugins that consume
+// them in `@lynx-js/rsbuild-plugin`; re-exported here as public API since
+// they spell the `lynx.config.ts` schema.
 export type {
   BuildCache,
   BundleFilename,
@@ -47,7 +48,7 @@ export type {
   ChunkSplit,
   ChunkSplitBySize,
   ChunkSplitCustom,
-  Config,
+  Client as DevClient,
   ConsoleType,
   CssExtract,
   CssExtractRspackLoaderOptions,
@@ -58,7 +59,6 @@ export type {
   CssModules,
   Decorators,
   Dev,
-  DevClient,
   DistPath,
   Entry,
   EntryDescription,
@@ -73,7 +73,7 @@ export type {
   SourceMap,
   Tools,
   TransformImport,
-} from '@lynx-js/rsbuild-plugin'
+} from '@lynx-js/rsbuild-plugin/internal'
 
 // RsbuildPlugin
 export type { RsbuildPlugin, RsbuildPluginAPI } from '@rsbuild/core'
