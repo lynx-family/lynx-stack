@@ -16,9 +16,13 @@ import { rstest } from '@rstest/core'
 
 import { pluginLynxDebugMetadata } from '@lynx-js/debug-metadata-rsbuild-plugin'
 
-import type { Config } from '../src/config/index.js'
+// The `lynx.config.ts` schema and its Rsbuild translation belong to the
+// `@lynx-js/rspeedy` CLI. Imported from source (test-only) so this stub can
+// mirror `applyDefaultPlugins` without a package dependency back on the CLI.
+import { applyDefaultRspeedyConfig } from '../../core/src/config/defaults.js'
+import type { Config } from '../../core/src/config/index.js'
+import { toRsbuildConfig } from '../../core/src/config/rsbuild/index.js'
 import {
-  applyDefaultRspeedyConfig,
   pluginChunkLoading,
   pluginDev,
   pluginMinify,
@@ -30,7 +34,6 @@ import {
   pluginStatsJson,
   pluginSwc,
   pluginTarget,
-  toRsbuildConfig,
 } from '../src/internal.js'
 import { pluginLynxAPI } from '../src/plugin-api.js'
 
@@ -76,7 +79,7 @@ export async function createStubRspeedy(
     pluginResolve(),
     pluginRsdoctor(resolved.tools?.rsdoctor),
     pluginSourcemap(),
-    pluginStatsJson(resolved),
+    pluginStatsJson(resolved.performance),
     pluginSwc(),
     pluginTarget(),
     pluginCssMinimizer(),

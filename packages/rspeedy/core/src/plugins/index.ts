@@ -4,8 +4,9 @@
 
 import type { RsbuildInstance, RsbuildPlugin } from '@rsbuild/core'
 
-import type { Config } from '@lynx-js/rsbuild-plugin'
 import { debug, isDebug } from '@lynx-js/rsbuild-plugin/internal'
+
+import type { Config } from '../config/index.js'
 
 async function applyDebugPlugins(
   rsbuildInstance: RsbuildInstance,
@@ -57,7 +58,7 @@ export async function applyDefaultPlugins(
     pluginResolve(),
     pluginRsdoctor(config.tools?.rsdoctor),
     pluginSourcemap(),
-    pluginStatsJson(config),
+    pluginStatsJson(config.performance),
     pluginSwc(),
     pluginTarget(),
   ])

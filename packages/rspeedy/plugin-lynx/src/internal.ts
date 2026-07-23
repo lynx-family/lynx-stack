@@ -23,8 +23,62 @@ export { pluginStatsJson } from './plugins/statsJson.plugin.js'
 export { pluginSwc } from './plugins/swc.plugin.js'
 export { pluginTarget } from './plugins/target.plugin.js'
 
-export { debug, isDebug } from './debug.js'
+export { debug, debugList, isDebug } from './debug.js'
 export { isCI } from './utils/is-ci.js'
-export { applyDefaultRspeedyConfig } from './config/defaults.js'
-export { toRsbuildConfig } from './config/rsbuild/index.js'
 export { DEFAULT_DIST_PATH_INTERMEDIATE } from './config/output/dist-path.js'
+
+// The option types of the individual plugins above. The `Config` schema of
+// `lynx.config.ts` is NOT defined here — `@lynx-js/rspeedy` composes it from
+// these leaf types; `pluginLynx` itself takes no options.
+
+// Dev
+export type { Dev } from './config/dev/index.js'
+export type { Client } from './config/dev/client.js'
+
+// Output
+export type {
+  CssModules,
+  CssModuleLocalsConvention,
+} from './config/output/css-modules.js'
+export type { DistPath } from './config/output/dist-path.js'
+export type {
+  BundleFilename,
+  BundleFilenameContext,
+  Filename,
+} from './config/output/filename.js'
+export type { Minify } from './config/output/minify.js'
+export type { SourceMap } from './config/output/source-map.js'
+export type { Output } from './config/output/index.js'
+
+// Performance
+export type { ConsoleType, Performance } from './config/performance/index.js'
+export type { BuildCache } from './config/performance/build-cache.js'
+export type {
+  ChunkSplit,
+  ChunkSplitBySize,
+  ChunkSplitCustom,
+} from './config/performance/chunk-split.js'
+
+// Resolve
+export type { Resolve } from './config/resolve/index.js'
+
+// Server
+export type { Server } from './config/server/index.js'
+
+// Source
+export type { Source } from './config/source/index.js'
+export type { Decorators } from './config/source/decorators.js'
+export type { Entry, EntryDescription } from './config/source/entry.js'
+export type { TransformImport } from './config/source/transformImport.js'
+
+// Tools
+export type {
+  CssExtract,
+  CssExtractRspackLoaderOptions,
+  CssExtractRspackPluginOptions,
+} from './config/tools/css-extract.js'
+export type { CssLoader, CssLoaderModules } from './config/tools/css-loader.js'
+export type {
+  RsdoctorRspackPluginOptions,
+  Tools,
+} from './config/tools/index.js'

@@ -2,7 +2,7 @@
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
 
-import type { Config } from '@lynx-js/rsbuild-plugin'
+import type { Config } from '../config/index.js'
 
 export async function watchFiles(
   files: string[],

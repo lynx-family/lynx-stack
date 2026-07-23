@@ -45,16 +45,17 @@ rsbuild dev
   (`tools.htmlPlugin: false`, `output.polyfill: 'off'`, `output.charset`). These
   override your config and warn when you set a conflicting value.
 
-Config validation follows an allow-list: only the fields Lynx actually controls
-are managed. Any other Rsbuild field is passed through as-is and is your
-responsibility.
+`pluginLynx()` takes no options. Build configuration is written in
+`rsbuild.config.ts` with plain Rsbuild fields; DSL-specific options belong to
+the DSL plugins (e.g. `pluginReactLynx`). Only the fields Lynx actually
+controls are managed; any other Rsbuild field is passed through as-is.
 
 ## Status
 
 > [!NOTE]
-> This package now **owns** the Lynx build engine: the internal plugins live
+> This package **owns** the Lynx build engine: the internal plugins live
 > here and are exposed via `@lynx-js/rsbuild-plugin/internal`.
-> `@lynx-js/rspeedy` is a thin CLI shell on top that depends on this package and
-> re-composes those plugins to produce byte-identical output. The two share that
-> `/internal` contract, so they are expected to move in lockstep. This is an
-> experimental direction under evaluation.
+> `@lynx-js/rspeedy` is a thin CLI shell on top: it keeps the `lynx.config.ts`
+> schema (`Config`) and composes these plugins to produce byte-identical
+> output. The two share that `/internal` contract, so they are expected to move
+> in lockstep. This is an experimental direction under evaluation.

@@ -4,13 +4,15 @@
 
 import type { RsbuildConfig, RsbuildPlugins } from '@rsbuild/core'
 
-import type { Dev } from './dev/index.js'
-import type { Output } from './output/index.js'
-import type { Performance } from './performance/index.js'
-import type { Resolve } from './resolve/index.js'
-import type { Server } from './server/index.js'
-import type { Source } from './source/index.js'
-import type { Tools } from './tools/index.js'
+import type {
+  Dev,
+  Output,
+  Performance,
+  Resolve,
+  Server,
+  Source,
+  Tools,
+} from '@lynx-js/rsbuild-plugin/internal'
 
 /**
  * The `Config` is the configuration that `rspeedy` uses.
