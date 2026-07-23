@@ -52,7 +52,7 @@
     "@rspack/core": "catalog:rspack",
     "@rstest/core": "catalog:rstest",
     "css-loader": "^7.1.4",
-    "sass-loader": "^16.0.7"
+    "sass-loader": "^16.0.8"
   },
   "peerDependencies": {
     "@lynx-js/template-webpack-plugin": "^0.14.0"
