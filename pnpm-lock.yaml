@@ -114,7 +114,7 @@ importers:
         specifier: ^3.2.4
         version: 3.2.4(vitest@3.2.4)
       core-js:
-        specifier: ^3.48.0
+        specifier: ^3.49.0
         version: 3.49.0
       dprint:
         specifier: ^0.54.0

@@ -42,7 +42,7 @@
     "@vitest/coverage-v8": "^3.2.4",
     "@vitest/eslint-plugin": "^1.6.23",
     "@vitest/ui": "^3.2.4",
-    "core-js": "^3.48.0",
+    "core-js": "^3.49.0",
     "dprint": "^0.54.0",
     "eslint": "^9.39.5",
     "eslint-import-resolver-typescript": "^4.4.5",
