@@ -22,10 +22,16 @@ export function traverseSnapshotInstance<I extends WithChildren>(
   si: I,
   callback: (si: I) => void,
 ): void {
-  const c = si.childNodes;
+  // Walk the sibling chain directly instead of materializing a `childNodes`
+  // array per node. The callback may detach the visited node from its parent
+  // and siblings, so both the first child and each next sibling are captured
+  // before the corresponding callback can run.
+  let child = (si as unknown as { __firstChild: I | null }).__firstChild;
   callback(si);
-  for (const vv of c) {
-    traverseSnapshotInstance(vv as I, callback);
+  while (child) {
+    const next = (child as unknown as { __nextSibling: I | null }).__nextSibling;
+    traverseSnapshotInstance(child, callback);
+    child = next;
   }
 }
 

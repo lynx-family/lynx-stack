@@ -362,7 +362,7 @@ function _renderToString(
         continue;
 
       default: {
-        if (name.startsWith('$')) {
+        if (name.charCodeAt(0) === 36 /* '$' */) {
           children ??= [];
           children[+name.slice(1)] = v;
           hasNamedChildren = true;

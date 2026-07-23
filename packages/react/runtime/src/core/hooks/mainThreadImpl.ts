@@ -108,6 +108,14 @@ function useState<S>(initialState: S | (() => S)) {
   return useReducer(noop, initialState) as [S, Dispatch<unknown>];
 }
 
+// State updates are silently dropped on the main thread, so all hooks can
+// share a single dispatch function instead of allocating one per hook state.
+function mainThreadDispatch(_action: unknown): void {
+  if (__DEV__) {
+    console.error('Cannot update state in main thread!');
+  }
+}
+
 function useReducer<S, A>(
   _reducer: (prevState: S, action: A) => S,
   initialState: S | (() => S),
@@ -119,11 +127,7 @@ function useReducer<S, A>(
       /* v8 ignore start */
       init ? init(initialState as S) : invokeOrReturn(undefined, initialState as (() => S)),
       /* v8 ignore stop */
-      function(_action: A) {
-        if (__DEV__) {
-          console.error('Cannot update state in main thread!');
-        }
-      },
+      mainThreadDispatch,
     ];
     hookState[COMPONENT] = currentComponent;
   }

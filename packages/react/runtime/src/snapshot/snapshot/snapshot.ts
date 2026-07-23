@@ -141,8 +141,9 @@ export class SnapshotInstance {
   private __listItemPlatformInfoIndex?: number;
 
   constructor(public type: string, id?: number) {
+    let def = snapshotManager.values.get(type);
     // Suspense uses 'div'
-    if (!snapshotManager.values.has(type) && type !== 'div') {
+    if (def === undefined && type !== 'div') {
       if (snapshotCreatorMap[type]) {
         snapshotCreatorMap[type](type, snapshotCreatorRuntime);
       } else if (isCloneSnapshot(type)) {
@@ -157,8 +158,9 @@ export class SnapshotInstance {
       } else {
         createRuntimeSnapshot(type);
       }
+      def = snapshotManager.values.get(type);
     }
-    this.__snapshot_def = snapshotManager.values.get(type)!;
+    this.__snapshot_def = def!;
 
     id ??= snapshotInstanceManager.nextId -= 1;
     this.__id = id;
@@ -205,13 +207,13 @@ export class SnapshotInstance {
       );
     }
 
-    __pendingListUpdates.runWithoutUpdates(() => {
-      const values = this.__values;
-      if (values) {
+    const values = this.__values;
+    if (values) {
+      __pendingListUpdates.runWithoutUpdates(() => {
         this.__values = undefined;
         this.setAttribute('values', values);
-      }
-    });
+      });
+    }
 
     if (isListHolder) {
       // never recurse into list's children
@@ -228,12 +230,13 @@ export class SnapshotInstance {
       }
       __pendingListUpdates.flushWithId(this.__id);
     } else {
+      const isSlotV2 = this.__snapshot_def.isSlotV2;
       let index = 0;
       let child = this.__firstChild;
       while (child) {
         child.ensureElements();
 
-        const [type, elementIndex] = slot[this.__snapshot_def.isSlotV2 ? child.__slotIndex : index]!;
+        const [type, elementIndex] = slot[isSlotV2 ? child.__slotIndex : index]!;
         switch (type) {
           case DynamicPartType.Slot: {
             __ReplaceElement(child.__element_root!, elements[elementIndex]!);

@@ -25,6 +25,25 @@ import { getDisplayName, hook } from '../../utils.js';
 import { globalPatchOptions } from '../lifecycle/patch/commit.js';
 import { __globalSnapshotPatch } from '../lifecycle/patch/snapshotPatch.js';
 
+// Cache the `ReactLynx::diff::X` / `ReactLynx::render::X` trace labels per
+// component type — string concatenation would otherwise run on every render
+// of every component.
+const diffLabelCache = /* @__PURE__ */ new WeakMap<ComponentType, string>();
+const renderLabelCache = /* @__PURE__ */ new WeakMap<ComponentType, string>();
+
+function getProfileLabel(
+  cache: WeakMap<ComponentType, string>,
+  prefix: string,
+  type: ComponentType,
+): string {
+  let label = cache.get(type);
+  if (label === undefined) {
+    label = prefix + /* #__INLINE__ */ getDisplayName(type as ComponentClass);
+    cache.set(type, label);
+  }
+  return label;
+}
+
 const format = (val: unknown) => {
   if (typeof val === 'function') {
     return val.toString();
@@ -147,7 +166,7 @@ export function initProfileHook(): void {
         }
 
         profileStart(
-          `ReactLynx::diff::${/* #__INLINE__ */ getDisplayName(vnode.type as ComponentClass)}`,
+          getProfileLabel(diffLabelCache, 'ReactLynx::diff::', vnode.type as ComponentType),
           profileOptions,
         );
       }
@@ -228,7 +247,7 @@ export function initProfileHook(): void {
     // eslint-disable-next-line @typescript-eslint/unbound-method
     const originalRender = vnode[COMPONENT]!.render;
     vnode[COMPONENT]!.render = function render(this, props, state, context) {
-      profileStart(`ReactLynx::render::${/* #__INLINE__ */ getDisplayName(vnode.type as ComponentClass)}`);
+      profileStart(getProfileLabel(renderLabelCache, 'ReactLynx::render::', vnode.type as ComponentType));
       try {
         return originalRender.call(this, props, state, context);
       } finally {

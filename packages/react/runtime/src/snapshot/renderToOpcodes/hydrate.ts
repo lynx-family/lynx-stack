@@ -233,15 +233,17 @@ export function hydrate(before: SnapshotInstance, after: SnapshotInstance, optio
     swap[before.__id] = after.__id;
   }
 
-  __pendingListUpdates.runWithoutUpdates(() => {
-    after.__values?.forEach((value, index) => {
-      const old = before.__values![index];
-      if (value !== old) {
-        after.__values![index] = old;
-        after.setAttribute(index, value);
-      }
+  if (after.__values) {
+    __pendingListUpdates.runWithoutUpdates(() => {
+      after.__values!.forEach((value, index) => {
+        const old = before.__values![index];
+        if (value !== old) {
+          after.__values![index] = old;
+          after.setAttribute(index, value);
+        }
+      });
     });
-  });
+  }
 
   const { slot } = after.__snapshot_def;
 
@@ -269,6 +271,26 @@ export function hydrate(before: SnapshotInstance, after: SnapshotInstance, optio
         if (type === DynamicPartType.SlotV2) {
           filteredBeforeChildNodes = beforeChildNodes.filter(v => v.__slotIndex === index);
           filteredAfterChildNodes = afterChildNodes.filter(v => v.__slotIndex === index);
+        }
+
+        // Fast path: children match pairwise by type (the common hydration case),
+        // so the diff is empty — hydrate in place without allocating diff structures.
+        // This is exactly what `diffArrayLepus` + `diffArrayAction` would do.
+        const length = filteredBeforeChildNodes.length;
+        if (length === filteredAfterChildNodes.length) {
+          let samePairwise = true;
+          for (let i = 0; i < length; i++) {
+            if (filteredBeforeChildNodes[i]!.type !== filteredAfterChildNodes[i]!.type) {
+              samePairwise = false;
+              break;
+            }
+          }
+          if (samePairwise) {
+            for (let i = 0; i < length; i++) {
+              hydrate(filteredBeforeChildNodes[i]!, filteredAfterChildNodes[i]!, options);
+            }
+            break;
+          }
         }
 
         const diffResult = diffArrayLepus(

@@ -116,6 +116,13 @@ export const backgroundSnapshotInstanceManager: {
   },
 };
 
+/**
+ * Out-parameter of {@link BackgroundSnapshotInstance.setAttributeImpl}: whether
+ * the last computed value needs to be committed. Kept at module level to avoid
+ * allocating a `{ needUpdate, valueToCommit }` object per dynamic part.
+ */
+let needUpdateResult = false;
+
 function prepareWorkletForCommit(worklet: Worklet): Worklet | null {
   // Copy-on-commit: do not mutate the background-side worklet ctx.
   // `_execId` is injected into the payload object that will be sent to the main thread.
@@ -153,8 +160,9 @@ function prepareSpreadForCommit(
 
 export class BackgroundSnapshotInstance {
   constructor(public type: string) {
+    let def = snapshotManager.values.get(type);
     // Suspense uses 'div'
-    if (!snapshotManager.values.has(type) && type !== 'div') {
+    if (def === undefined && type !== 'div') {
       if (snapshotCreatorMap[type]) {
         snapshotCreatorMap[type](type, snapshotCreatorRuntime);
       } else if (isCloneSnapshot(type)) {
@@ -165,8 +173,9 @@ export class BackgroundSnapshotInstance {
         // add runtime snapshot to backgroundSnapshotInstanceManager
         createRuntimeSnapshot(type);
       }
+      def = snapshotManager.values.get(type);
     }
-    this.__snapshot_def = snapshotManager.values.get(type)!;
+    this.__snapshot_def = def!;
     const id = this.__id = backgroundSnapshotInstanceManager.nextId += 1;
     backgroundSnapshotInstanceManager.values.set(id, this);
 
@@ -352,12 +361,12 @@ export class BackgroundSnapshotInstance {
         const oldValues = this.__values;
         if (oldValues) {
           for (let index = 0; index < (value as unknown[]).length; index++) {
-            const { needUpdate, valueToCommit } = this.setAttributeImpl(
+            const valueToCommit = this.setAttributeImpl(
               (value as unknown[])[index],
               oldValues[index],
               index,
             );
-            if (needUpdate) {
+            if (needUpdateResult) {
               __globalSnapshotPatch.push(
                 SnapshotOperation.SetAttribute,
                 this.__id,
@@ -370,8 +379,7 @@ export class BackgroundSnapshotInstance {
           const patch = [];
           const length = (value as unknown[]).length;
           for (let index = 0; index < length; ++index) {
-            const { valueToCommit } = this.setAttributeImpl((value as unknown[])[index], null, index);
-            patch[index] = valueToCommit;
+            patch[index] = this.setAttributeImpl((value as unknown[])[index], null, index);
           }
           __globalSnapshotPatch.push(
             SnapshotOperation.SetAttributes,
@@ -441,16 +449,20 @@ export class BackgroundSnapshotInstance {
     );
   }
 
-  private setAttributeImpl(newValue: unknown, oldValue: unknown, index: number): {
-    needUpdate: boolean;
-    valueToCommit: unknown;
-  } {
+  /**
+   * Computes the value to commit for a dynamic part and reports whether it
+   * changed through the module-level {@link needUpdateResult} (instead of
+   * allocating a result object per value — this runs once per dynamic part
+   * on every commit).
+   */
+  private setAttributeImpl(newValue: unknown, oldValue: unknown, index: number): unknown {
     if (!newValue) {
       // `oldValue` can't be a spread.
       if (oldValue && typeof oldValue === 'object' && '__ref' in oldValue) {
         queueRefAttrUpdate(oldValue as Ref, null, this.__id, index);
       }
-      return { needUpdate: oldValue !== newValue, valueToCommit: newValue };
+      needUpdateResult = oldValue !== newValue;
+      return newValue;
     }
 
     const newType = typeof newValue;
@@ -468,54 +480,55 @@ export class BackgroundSnapshotInstance {
           this.__id,
           index,
         );
-        return {
-          needUpdate,
-          valueToCommit: needUpdate ? prepareSpreadForCommit(newSpread, oldSpread) : newSpread,
-        };
+        needUpdateResult = needUpdate;
+        return needUpdate ? prepareSpreadForCommit(newSpread, oldSpread) : newSpread;
       }
       if ('__ref' in newValueObj) {
         queueRefAttrUpdate(oldValue as Ref, newValueObj as unknown as Ref, this.__id, index);
-        return { needUpdate: false, valueToCommit: 1 };
+        needUpdateResult = false;
+        return 1;
       }
       if ('_wkltId' in newValueObj) {
         // Worklet ctx can be stable across rerenders (e.g. memoized by the user).
         // In that case we should NOT re-register / re-send it, otherwise `_execId` churn
         // will cause unnecessary patches.
         const needUpdate = oldValue !== newValue;
-        return {
-          needUpdate,
-          valueToCommit: needUpdate ? prepareWorkletForCommit(newValueObj as Worklet) : newValue,
-        };
+        needUpdateResult = needUpdate;
+        return needUpdate ? prepareWorkletForCommit(newValueObj as Worklet) : newValue;
       }
       if ('__isGesture' in newValueObj) {
         // Gestures are large objects; if the reference is stable, avoid reprocessing and patching.
         const needUpdate = oldValue !== newValue;
-        return {
-          needUpdate,
-          valueToCommit: needUpdate
-            ? prepareGestureForCommit(newValueObj as unknown as GestureKind)
-            : newValue,
-        };
+        needUpdateResult = needUpdate;
+        return needUpdate
+          ? prepareGestureForCommit(newValueObj as unknown as GestureKind)
+          : newValue;
       }
       if ('__ltf' in newValueObj) {
         // __lynx_timing_flag
         if (globalPipelineOptions && (oldValue as { __ltf?: unknown } | undefined)?.__ltf != newValueObj['__ltf']) {
           globalPipelineOptions.needTimestamps = true;
-          return { needUpdate: true, valueToCommit: newValue };
+          needUpdateResult = true;
+          return newValue;
         }
-        return { needUpdate: false, valueToCommit: newValue };
+        needUpdateResult = false;
+        return newValue;
       }
-      return { needUpdate: !isDirectOrDeepEqual(oldValue, newValue), valueToCommit: newValue };
+      needUpdateResult = !isDirectOrDeepEqual(oldValue, newValue);
+      return newValue;
     }
     if (newType === 'function') {
       if ((newValue as { __ref?: unknown }).__ref) {
         queueRefAttrUpdate(oldValue as Ref, newValue as Ref, this.__id, index);
-        return { needUpdate: false, valueToCommit: 1 };
+        needUpdateResult = false;
+        return 1;
       }
       /* event */
-      return { needUpdate: !oldValue, valueToCommit: 1 };
+      needUpdateResult = !oldValue;
+      return 1;
     }
-    return { needUpdate: oldValue !== newValue, valueToCommit: newValue };
+    needUpdateResult = oldValue !== newValue;
+    return newValue;
   }
 }
 
@@ -647,12 +660,12 @@ export function hydrate(
 
       const { slot } = after.__snapshot_def;
 
-      const beforeChildNodes = before.children ?? [];
-      const afterChildNodes = after.childNodes;
-
       if (!slot) {
         return;
       }
+
+      const beforeChildNodes = before.children ?? [];
+      const afterChildNodes = after.childNodes;
 
       slot.forEach(([type], index) => {
         switch (type) {
@@ -673,6 +686,29 @@ export function hydrate(
             if (type === DynamicPartType.SlotV2 || type === DynamicPartType.ListSlotV2) {
               filteredBeforeChildNodes = beforeChildNodes.filter(v => (v.slotIndex ?? 0) === index);
               filteredAfterChildNodes = afterChildNodes.filter(v => v.__slotIndex === index);
+            }
+
+            // Fast path (non-list slots only — list slots are keyed by `item-key`):
+            // children match pairwise by type, so the diff is empty — hydrate in
+            // place without allocating diff structures. This is exactly what
+            // `diffArrayLepus` + `diffArrayAction` would do.
+            if (type === DynamicPartType.SlotV2 || type === DynamicPartType.Children) {
+              const length = filteredBeforeChildNodes.length;
+              if (length === filteredAfterChildNodes.length) {
+                let samePairwise = true;
+                for (let i = 0; i < length; i++) {
+                  if (filteredBeforeChildNodes[i]!.type !== filteredAfterChildNodes[i]!.type) {
+                    samePairwise = false;
+                    break;
+                  }
+                }
+                if (samePairwise) {
+                  for (let i = 0; i < length; i++) {
+                    helper(filteredBeforeChildNodes[i]!, filteredAfterChildNodes[i]!);
+                  }
+                  break;
+                }
+              }
             }
 
             const diffResult = diffArrayLepus(
