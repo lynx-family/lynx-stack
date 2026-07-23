@@ -2,7 +2,7 @@
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
 import type { KeyboardEvent } from 'react';
-import { useState } from 'react';
+import { useRef, useState } from 'react';
 
 import type { BenchComparison, BenchMetricKey } from './phaseOne.js';
 import { PHASE_ONE_BENCH } from './phaseOne.js';
@@ -188,6 +188,100 @@ function EvidenceDisclosure(props: {
         />
       </a>
     </details>
+  );
+}
+
+function ScenarioEvidenceGallery() {
+  const dialogRef = useRef<HTMLDialogElement>(null);
+  const [evidenceId, setEvidenceId] = useState<BenchComparison['id']>('models');
+  const evidence = EVIDENCE[evidenceId];
+
+  return (
+    <>
+      <button
+        className='benchStudyScenarioEvidenceTrigger'
+        type='button'
+        onClick={() => dialogRef.current?.showModal()}
+      >
+        <span>
+          <strong>查看三组实验结果图</strong>
+          <small>模型 · System Prompt · Catalog</small>
+        </span>
+        <span aria-hidden='true'>打开</span>
+      </button>
+
+      <dialog
+        className='benchStudyEvidenceDialog'
+        ref={dialogRef}
+        aria-labelledby='bench-study-evidence-title'
+        onClick={(event) => {
+          if (event.target === event.currentTarget) {
+            event.currentTarget.close();
+          }
+        }}
+        onKeyDown={(event) => {
+          if (event.key === 'Escape') {
+            event.preventDefault();
+            event.currentTarget.close();
+          }
+        }}
+      >
+        <div className='benchStudyEvidenceDialogPanel'>
+          <header className='benchStudyEvidenceDialogHeader'>
+            <div>
+              <h3 id='bench-study-evidence-title'>三组实验结果图</h3>
+              <p>点击图片可在新窗口查看原图。</p>
+            </div>
+            <button
+              type='button'
+              aria-label='关闭实验结果图'
+              onClick={() => dialogRef.current?.close()}
+            >
+              关闭
+            </button>
+          </header>
+          <div
+            className='benchStudyEvidenceDialogTabs'
+            role='tablist'
+            aria-label='选择实验结果图'
+          >
+            {(Object.keys(EVIDENCE) as BenchComparison['id'][]).map((id) => (
+              <button
+                id={`bench-study-evidence-${id}`}
+                type='button'
+                role='tab'
+                aria-controls='bench-study-evidence-panel'
+                aria-selected={evidenceId === id}
+                tabIndex={evidenceId === id ? 0 : -1}
+                onClick={() => setEvidenceId(id)}
+                onKeyDown={moveTabFocus}
+                key={id}
+              >
+                {EXPERIMENT_LABELS[id]}
+              </button>
+            ))}
+          </div>
+          <figure
+            className='benchStudyEvidenceDialogFigure'
+            id='bench-study-evidence-panel'
+            role='tabpanel'
+            aria-labelledby={`bench-study-evidence-${evidenceId}`}
+          >
+            <a href={evidence.src} target='_blank' rel='noreferrer'>
+              <img
+                src={evidence.src}
+                alt={`${evidence.title}：${evidence.description}`}
+                loading='lazy'
+              />
+            </a>
+            <figcaption>
+              <strong>{evidence.title}</strong>
+              <span>{evidence.description}</span>
+            </figcaption>
+          </figure>
+        </div>
+      </dialog>
+    </>
   );
 }
 
@@ -469,6 +563,7 @@ export function BenchResultPage() {
             </article>
           ))}
         </div>
+        <ScenarioEvidenceGallery />
       </section>
 
       <section className='benchStudySection benchStudyMethod'>

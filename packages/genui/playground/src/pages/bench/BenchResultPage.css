@@ -727,6 +727,193 @@
   border-top: 1px solid var(--bench-study-line-strong);
 }
 
+.benchStudyScenarioEvidenceTrigger {
+  width: 100%;
+  min-height: 64px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 20px;
+  padding: 12px 18px;
+  margin-top: 30px;
+  border: 1px solid var(--bench-study-line-strong);
+  border-radius: 8px;
+  background: var(--bench-study-paper);
+  color: var(--bench-study-ink);
+  cursor: pointer;
+  font-family: inherit;
+  text-align: left;
+}
+
+.benchStudyScenarioEvidenceTrigger:hover {
+  background: var(--bench-study-surface);
+}
+
+.benchStudyScenarioEvidenceTrigger > span:first-child {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 14px;
+  align-items: baseline;
+}
+
+.benchStudyScenarioEvidenceTrigger strong {
+  font-size: 13px;
+  font-weight: 600;
+  line-height: 1.5;
+}
+
+.benchStudyScenarioEvidenceTrigger small,
+.benchStudyScenarioEvidenceTrigger > span:last-child {
+  color: var(--bench-study-muted);
+  font-size: 11px;
+  font-weight: 500;
+  line-height: 1.45;
+}
+
+.benchStudyEvidenceDialog {
+  width: min(1120px, calc(100% - 32px));
+  max-width: none;
+  max-height: calc(100dvh - 32px);
+  padding: 0;
+  border: 1px solid var(--bench-study-line-strong);
+  border-radius: 10px;
+  overflow: hidden;
+  background: var(--bench-study-paper);
+  box-shadow: 0 24px 80px color-mix(in srgb, #000 28%, transparent);
+  color: var(--bench-study-ink);
+  font-family: inherit;
+}
+
+.benchStudyEvidenceDialog::backdrop {
+  background: color-mix(in srgb, #000 42%, transparent);
+  backdrop-filter: blur(3px);
+}
+
+.benchStudyEvidenceDialogPanel {
+  max-height: calc(100dvh - 34px);
+  overflow-y: auto;
+}
+
+.benchStudyEvidenceDialogHeader {
+  position: sticky;
+  z-index: 1;
+  top: 0;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 24px;
+  padding: 18px 20px;
+  border-bottom: 1px solid var(--bench-study-line);
+  background: var(--bench-study-paper);
+}
+
+.benchStudyEvidenceDialogHeader h3 {
+  margin: 0;
+  font-size: 20px;
+  font-weight: 620;
+  letter-spacing: -0.02em;
+  line-height: 1.35;
+}
+
+.benchStudyEvidenceDialogHeader p {
+  margin: 3px 0 0;
+  color: var(--bench-study-muted);
+  font-size: 11px;
+  line-height: 1.45;
+}
+
+.benchStudyEvidenceDialogHeader button {
+  min-width: 52px;
+  min-height: 38px;
+  padding: 0 12px;
+  border: 1px solid var(--bench-study-line-strong);
+  border-radius: 5px;
+  background: var(--bench-study-paper);
+  color: var(--bench-study-ink);
+  cursor: pointer;
+  font-family: inherit;
+  font-size: 12px;
+  font-weight: 560;
+}
+
+.benchStudyEvidenceDialogHeader button:hover {
+  background: var(--bench-study-surface);
+}
+
+.benchStudyEvidenceDialogTabs {
+  display: flex;
+  border-bottom: 1px solid var(--bench-study-line);
+  background: var(--bench-study-paper);
+}
+
+.benchStudyEvidenceDialogTabs button {
+  min-width: 0;
+  min-height: 46px;
+  flex: 1;
+  padding: 0 14px;
+  border: 0;
+  border-right: 1px solid var(--bench-study-line);
+  background: transparent;
+  color: var(--bench-study-muted);
+  cursor: pointer;
+  font-family: inherit;
+  font-size: 12px;
+  font-weight: 560;
+}
+
+.benchStudyEvidenceDialogTabs button:last-child {
+  border-right: 0;
+}
+
+.benchStudyEvidenceDialogTabs button:hover {
+  background: var(--bench-study-surface);
+  color: var(--bench-study-ink);
+}
+
+.benchStudyEvidenceDialogTabs button[aria-selected="true"] {
+  background: var(--bench-study-ink);
+  color: var(--bench-study-paper);
+}
+
+.benchStudyEvidenceDialogFigure {
+  padding: 18px;
+  margin: 0;
+  background: var(--bench-study-surface);
+}
+
+.benchStudyEvidenceDialogFigure > a {
+  display: block;
+}
+
+.benchStudyEvidenceDialogFigure img {
+  display: block;
+  width: 100%;
+  height: auto;
+  border: 1px solid var(--bench-study-line);
+  border-radius: 3px;
+  background: #fff;
+}
+
+.benchStudyEvidenceDialogFigure figcaption {
+  display: flex;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 12px 2px 0;
+}
+
+.benchStudyEvidenceDialogFigure figcaption strong {
+  font-size: 13px;
+  font-weight: 600;
+  line-height: 1.5;
+}
+
+.benchStudyEvidenceDialogFigure figcaption span {
+  color: var(--bench-study-muted);
+  font-size: 11px;
+  line-height: 1.45;
+  text-align: right;
+}
+
 .benchStudyScenario {
   display: grid;
   grid-template-columns:
@@ -1149,6 +1336,28 @@
     text-align: right;
   }
 
+  .benchStudyEvidenceDialogFigure {
+    padding: 12px;
+  }
+
+  .benchStudyEvidenceDialogTabs button {
+    padding: 0 8px;
+    font-size: 11px;
+  }
+
+  .benchStudyEvidenceDialog {
+    width: calc(100% - 20px);
+    max-height: calc(100dvh - 20px);
+  }
+
+  .benchStudyEvidenceDialogPanel {
+    max-height: calc(100dvh - 22px);
+  }
+
+  .benchStudyEvidenceDialogHeader {
+    padding: 15px 16px;
+  }
+
   .benchStudyMethod {
     grid-template-columns: 1fr;
     gap: 52px;
@@ -1223,6 +1432,15 @@
 
   .benchStudyScenario {
     display: block;
+  }
+
+  .benchStudyScenarioEvidenceTrigger > span:first-child {
+    display: block;
+  }
+
+  .benchStudyScenarioEvidenceTrigger small {
+    display: block;
+    margin-top: 3px;
   }
 
   .benchStudyScenario > p {

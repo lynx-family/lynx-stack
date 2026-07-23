@@ -124,7 +124,7 @@ export const PHASE_ONE_BENCH = {
   description:
     '测试覆盖 3 类移动端 A2UI 场景。每组实验只替换一个变量，并用同一套指标记录生成成本、耗时、稳定性和视觉正确性。',
   conclusion:
-    '建议下一轮先用 gpt-5.5 + Token Efficient + Minimal Catalog 跑基线。Token Efficient 在本轮 Prompt 组表现最均衡；Minimal Catalog 的 Tokens 和 UI Judge 得分领先，但 Agent 耗时并不占优。',
+    '模型组中，gpt-5.5 的平均 Tokens 最少；Prompt 组中，Token Efficient 的综合表现最均衡；Catalog 组中，Minimal Catalog 的 Tokens 和 UI Judge 得分领先，但 Agent 耗时并不占优。',
   scope: {
     runs: 30,
     scenarios: 3,
