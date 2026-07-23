@@ -59,7 +59,6 @@ export function startBackgroundThread(
         customSections,
         nativeApp,
         mainThreadRpc,
-        loadDynamicComponent,
       );
       // @lynx-js/lynx-core >= 0.1.3 will export nativeGlobal and loadDynamicComponent
       if (nativeGlobal && loadDynamicComponent) {

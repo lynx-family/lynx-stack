@@ -56,32 +56,27 @@ test('QueryComponent shares an in-flight request after its template is decoded',
   });
 });
 
-test('background lynx loads lazy bundle exports through Lynx Core', async () => {
+test('background lynx shares an in-flight FetchBundle load', async () => {
   const exports = { ids: ['shared'], modules: {} };
-  const loadDynamicComponent = rstest.fn(() => exports);
-  const queryComponent = rstest.fn(
-    (
-      _source: string,
-      callback: Parameters<NativeApp['queryComponent']>[1],
-    ) => {
-      callback({ code: 0, detail: { schema: 'shared.bundle' } });
-    },
-  );
+  const fetchBundle = rstest.fn(async (source: string) => ({
+    code: 0,
+    errorMsg: '',
+    url: source,
+  }));
+  const loadScript = rstest.fn(() => exports);
   const nativeApp = {
+    callLepusMethod: (
+      _name: string,
+      _data: unknown,
+      callback: (result: unknown) => void,
+    ) => callback(undefined),
     i18nResource: { data: undefined },
-    queryComponent,
-    tt: {},
+    tt: { lynx: { loadScript } },
   } as unknown as NativeApp;
   const rpc = {
-    createCall: () => rstest.fn(),
+    createCall: () => fetchBundle,
   } as unknown as Rpc;
-  const lynx = createBackgroundLynx(
-    {},
-    {},
-    nativeApp,
-    rpc,
-    loadDynamicComponent,
-  );
+  const lynx = createBackgroundLynx({}, {}, nativeApp, rpc);
 
   const first = lynx.loadLazyBundle('shared.bundle');
   const second = lynx.loadLazyBundle('shared.bundle');
@@ -90,51 +85,82 @@ test('background lynx loads lazy bundle exports through Lynx Core', async () => 
     exports,
     exports,
   ]);
-  expect(queryComponent).toHaveBeenCalledTimes(1);
-  expect(loadDynamicComponent).toHaveBeenCalledWith(
-    nativeApp.tt,
-    'shared.bundle',
-  );
+  expect(fetchBundle).toHaveBeenCalledTimes(1);
+  expect(loadScript).toHaveBeenCalledTimes(1);
 });
 
-test('background lynx retries a lazy bundle after Lynx Core throws', async () => {
+test('background lynx loads FetchBundle sections before the app entry', async () => {
   const exports = { ids: ['shared'], modules: {} };
-  const loadDynamicComponent = rstest.fn()
+  const fetchBundle = rstest.fn(async (source: string) => ({
+    code: 0,
+    errorMsg: '',
+    url: source,
+  }));
+  const loadScript = rstest.fn(() => exports);
+  const callLepusMethod = rstest.fn(
+    (
+      _name: string,
+      _data: unknown,
+      callback: (result: unknown) => void,
+    ) => callback(undefined),
+  );
+  const queryComponent = rstest.fn();
+  const nativeApp = {
+    callLepusMethod,
+    i18nResource: { data: undefined },
+    queryComponent,
+    tt: { lynx: { loadScript } },
+  } as unknown as NativeApp;
+  const rpc = {
+    createCall: () => fetchBundle,
+  } as unknown as Rpc;
+  const lynx = createBackgroundLynx({}, {}, nativeApp, rpc);
+
+  await expect(lynx.loadLazyBundle('shared.bundle')).resolves.toBe(exports);
+  expect(fetchBundle).toHaveBeenCalledWith('shared.bundle');
+  expect(loadScript).toHaveBeenCalledWith('background', {
+    bundleName: 'shared.bundle',
+  });
+  expect(callLepusMethod).toHaveBeenCalledWith(
+    'rLynxPrepareLazyBundleMTS',
+    { url: 'shared.bundle' },
+    expect.any(Function),
+  );
+  expect(queryComponent).not.toHaveBeenCalled();
+});
+
+test('background lynx retries a lazy bundle after section execution throws', async () => {
+  const exports = { ids: ['shared'], modules: {} };
+  const fetchBundle = rstest.fn(async (source: string) => ({
+    code: 0,
+    errorMsg: '',
+    url: source,
+  }));
+  const loadScript = rstest.fn()
     .mockImplementationOnce(() => {
       throw new Error('load failed');
     })
     .mockReturnValue(exports);
-  const queryComponent = rstest.fn(
-    (
-      _source: string,
-      callback: Parameters<NativeApp['queryComponent']>[1],
-    ) => {
-      queueMicrotask(() => {
-        callback({ code: 0, detail: { schema: 'shared.bundle' } });
-      });
-    },
-  );
   const nativeApp = {
+    callLepusMethod: (
+      _name: string,
+      _data: unknown,
+      callback: (result: unknown) => void,
+    ) => callback(undefined),
     i18nResource: { data: undefined },
-    queryComponent,
-    tt: {},
+    tt: { lynx: { loadScript } },
   } as unknown as NativeApp;
   const rpc = {
-    createCall: () => rstest.fn(),
+    createCall: () => fetchBundle,
   } as unknown as Rpc;
-  const lynx = createBackgroundLynx(
-    {},
-    {},
-    nativeApp,
-    rpc,
-    loadDynamicComponent,
-  );
+  const lynx = createBackgroundLynx({}, {}, nativeApp, rpc);
 
   await expect(lynx.loadLazyBundle('shared.bundle')).rejects.toThrow(
     'load failed',
   );
   await expect(lynx.loadLazyBundle('shared.bundle')).resolves.toBe(exports);
-  expect(queryComponent).toHaveBeenCalledTimes(2);
+  expect(fetchBundle).toHaveBeenCalledTimes(2);
+  expect(loadScript).toHaveBeenCalledTimes(2);
 });
 
 test('bundle execution selects its source URL by bundle kind', () => {

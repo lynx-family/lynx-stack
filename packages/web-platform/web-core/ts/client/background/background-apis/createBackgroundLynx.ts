@@ -16,15 +16,13 @@ import { createElement } from './createElement.js';
 import type { Cloneable, NativeApp } from '../../../types/index.js';
 import { LynxCrossThreadContext } from '../../LynxCrossThreadContext.js';
 
+const PREPARE_LAZY_BUNDLE_MTS = 'rLynxPrepareLazyBundleMTS';
+
 export function createBackgroundLynx(
   globalProps: Cloneable,
   customSections: Record<string, Cloneable>,
   nativeApp: NativeApp,
   mainThreadRpc: Rpc,
-  loadDynamicComponent?: (
-    tt: NonNullable<NativeApp['tt']>,
-    componentUrl: string,
-  ) => unknown,
 ) {
   const coreContext = new LynxCrossThreadContext({
     rpc: mainThreadRpc,
@@ -45,46 +43,44 @@ export function createBackgroundLynx(
     if (cached) {
       return cached;
     }
-    const pending = Promise.resolve().then(
-      () =>
-        new Promise((resolve, reject) => {
-          nativeApp.queryComponent(source, result => {
-            try {
-              let schema: string | undefined;
-              if ('__hasReady' in result) {
-                schema = source;
-              } else if (result.code === 0) {
-                schema = result.detail?.schema;
-              }
-              if (
-                typeof schema === 'string'
-                && nativeApp.tt
-                && loadDynamicComponent
-              ) {
-                const exports = loadDynamicComponent(nativeApp.tt, schema);
-                if (exports !== undefined) {
-                  resolve(exports);
-                  return;
-                }
-              }
-              if (typeof schema === 'string') {
-                reject(
-                  new Error(
-                    `Lazy bundle exports not found, schema: ${schema}`,
-                  ),
-                );
-                return;
-              }
-              const error = new Error(
-                `Lazy bundle load failed, schema: ${schema ?? source}`,
-              );
-              error.cause = JSON.stringify(result);
-              reject(error);
-            } catch (error) {
-              reject(error);
-            }
+    const pending = Promise.resolve(fetchExternalBundle(source)).then(
+      response => {
+        if (response.code !== 0) {
+          const error = new Error(
+            `Lazy bundle load failed, schema: ${source}`,
+          );
+          error.cause = response.errorMsg;
+          throw error;
+        }
+        const runtimeLynx = nativeApp.tt?.lynx;
+        if (!runtimeLynx?.loadScript) {
+          throw new Error('lynx.loadScript is unavailable');
+        }
+        const runtimeGlobal = globalThis as {
+          globDynamicComponentEntry?: string;
+        };
+        const previousEntry = runtimeGlobal.globDynamicComponentEntry;
+        runtimeGlobal.globDynamicComponentEntry = source;
+        let exports: unknown;
+        try {
+          exports = runtimeLynx.loadScript('background', {
+            bundleName: response.url,
           });
-        }),
+        } finally {
+          runtimeGlobal.globDynamicComponentEntry = previousEntry;
+        }
+        return new Promise((resolve, reject) => {
+          try {
+            nativeApp.callLepusMethod(
+              PREPARE_LAZY_BUNDLE_MTS,
+              { url: source },
+              () => resolve(exports),
+            );
+          } catch (error) {
+            reject(error);
+          }
+        });
+      },
     );
     const retryable = pending.catch(error => {
       lazyBundleLoads.delete(source);
