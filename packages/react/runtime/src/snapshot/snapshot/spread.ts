@@ -19,15 +19,22 @@ import { extractListItemPlatformInfo, platformInfoAttributes, updateListItemPlat
 import { transformRef, updateRef } from './ref.js';
 import { updateWorkletEvent } from './workletEvent.js';
 import { updateWorkletRef } from './workletRef.js';
-import { isDirectOrDeepEqual, isEmptyObject } from '../../utils.js';
+import { isDirectOrDeepEqual } from '../../utils.js';
 import { retainGestureWorkletCtx } from '../gesture/processGesture.js';
 import type { GestureKind } from '../gesture/types.js';
 import { ListUpdateInfoRecording } from '../list/listUpdateInfo.js';
 import { __pendingListUpdates } from '../list/pendingListUpdates.js';
 import type { SnapshotInstance } from '../snapshot/snapshot.js';
 
-// eslint-disable-next-line regexp/no-unused-capturing-group
 const eventRegExp = /^(([A-Za-z-]*):)?(bind|catch|capture-bind|capture-catch|global-bind)([A-Za-z]+)$/;
+// Any key matching `eventRegExp` must contain "bind" or "catch" — check that
+// first so ordinary attribute keys skip the regex entirely.
+function execEventRegExp(key: string): RegExpMatchArray | null {
+  if (key.includes('bind') || key.includes('catch')) {
+    return eventRegExp.exec(key);
+  }
+  return null;
+}
 const eventTypeMap: Record<string, string> = {
   bind: 'bindEvent',
   catch: 'catchEvent',
@@ -60,7 +67,7 @@ function retainSpreadWorkletCtx(newValue: Record<string, unknown>, oldValue: Rec
         retainGestureWorkletCtx(value as GestureKind);
       }
     } else if (
-      (match = eventRegExp.exec(key)) && match[2] === 'main-thread' && value !== null && value !== undefined
+      (match = execEventRegExp(key)) && match[2] === 'main-thread' && value !== null && value !== undefined
       && typeof value === 'object'
     ) {
       retainWorkletCtx(value as Worklet);
@@ -122,7 +129,8 @@ function updateSpread(
     return;
   }
 
-  const dataset: Record<string, unknown> = {};
+  // Allocated lazily — most spreads carry no `data-*` keys.
+  let dataset: Record<string, unknown> | undefined;
   let match: RegExpMatchArray | null = null;
   for (const key in newValue) {
     const v = newValue[key];
@@ -183,7 +191,7 @@ function updateSpread(
           __elements: snapshot.__elements,
         } as SnapshotInstance;
         updateGesture(fakeSnapshot, index, oldValue[key], elementIndex, workletType);
-      } else if ((match = eventRegExp.exec(key))) {
+      } else if ((match = execEventRegExp(key))) {
         const workletType = match[2];
         const eventType = eventTypeMap[match[3]!]!;
         const eventName = match[4]!;
@@ -222,7 +230,7 @@ function updateSpread(
 
     // collect data regardless of whether it has changed
     if (key.startsWith('data-')) {
-      dataset[key.slice(5)] = v;
+      (dataset ??= {})[key.slice(5)] = v;
     }
   }
 
@@ -283,7 +291,7 @@ function updateSpread(
           __elements: snapshot.__elements,
         } as SnapshotInstance;
         updateGesture(fakeSnapshot, index, oldValue[key], elementIndex, workletType);
-      } else if ((match = eventRegExp.exec(key))) {
+      } else if ((match = execEventRegExp(key))) {
         const workletType = match[2];
         const eventType = eventTypeMap[match[3]!]!;
         const eventName = match[4]!;
@@ -326,8 +334,8 @@ function updateSpread(
   }
 
   // TODO: compare dataset before commit it to native?
-  if (hasOldDataset || !isEmptyObject(dataset)) {
-    __SetDataset(snapshot.__elements[elementIndex]!, dataset);
+  if (hasOldDataset || dataset) {
+    __SetDataset(snapshot.__elements[elementIndex]!, dataset ?? {});
   }
 }
 

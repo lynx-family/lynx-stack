@@ -36,6 +36,14 @@ const EMPTY_ARR = [];
 const isArray = /* @__PURE__ */ Array.isArray;
 const assign = /* @__PURE__ */ Object.assign;
 
+// In production (without devtools) no options-hook consumer on the main
+// thread does anything for element (string-typed) vnodes — `mainThreadImpl`
+// only tracks the current component and `profileHooks` only traces
+// components — so the per-element hook dispatch can be skipped entirely.
+// Development keeps the full dispatch for component stacks and devtools.
+const ELEMENT_VNODE_HOOKS = (typeof __DEV__ !== 'undefined' && __DEV__)
+  || (typeof __REACT_DEVTOOL__ !== 'undefined' && __REACT_DEVTOOL__);
+
 // Global state for the current render pass
 let beforeDiff, beforeDiff2, afterDiff, renderHook, ummountHook;
 
@@ -202,8 +210,10 @@ function _renderToString(
   // if (vnode.constructor !== undefined) return;
 
   vnode[PARENT] = parent;
-  if (beforeDiff) beforeDiff(vnode);
-  if (beforeDiff2) beforeDiff2(vnode, EMPTY_OBJ);
+  if (ELEMENT_VNODE_HOOKS || typeof vnode.type === 'function') {
+    if (beforeDiff) beforeDiff(vnode);
+    if (beforeDiff2) beforeDiff2(vnode, EMPTY_OBJ);
+  }
 
   let type = vnode.type,
     props = vnode.props,
@@ -410,9 +420,13 @@ function _renderToString(
     );
   }
 
-  if (afterDiff) afterDiff(vnode);
+  if (ELEMENT_VNODE_HOOKS) {
+    if (afterDiff) afterDiff(vnode);
+  }
   vnode[PARENT] = undefined;
-  if (ummountHook) ummountHook(vnode);
+  if (ELEMENT_VNODE_HOOKS) {
+    if (ummountHook) ummountHook(vnode);
+  }
 
   if (__ENABLE_SSR__) {
     opcodes.push(__OpEnd);
