@@ -56,7 +56,7 @@
     "uqr": "0.1.3"
   },
   "peerDependencies": {
-    "@lynx-js/rspeedy": "^0.16.0"
+    "@lynx-js/rspeedy": "^0.16.0 || ^0.17.0"
   },
   "engines": {
     "node": "^20.19.0 || >=22.12.0"
