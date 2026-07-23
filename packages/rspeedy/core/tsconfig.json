@@ -1,7 +1,13 @@
 {
   "extends": ["./tsconfig.build.json"],
   "compilerOptions": {
-    "rootDir": ".",
+    // Widened beyond the package (and `composite` turned off) because some
+    // tests import the engine's TS sources from `../plugin-lynx/src` — rstest
+    // aliases the engine package back to `src/` so mocks and the plugin under
+    // test share one module instance, and `tsc --noEmit` must follow the same
+    // resolution. This config is check-only; the build uses tsconfig.build.json.
+    "composite": false,
+    "rootDir": "../..",
     "noEmit": true,
   },
   "include": [

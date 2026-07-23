@@ -9,8 +9,12 @@ import { beforeEach, describe, expect, rstest, test } from '@rstest/core'
 
 import { createStubRspeedy } from '../createStubRspeedy.js'
 
-rstest.mock('../../src/webpack/EvalSourceMapDevToolPlugin.ts', { mock: true })
-rstest.mock('../../src/webpack/SourceMapDevToolPlugin.ts', { mock: true })
+rstest.mock('../../../plugin-lynx/src/webpack/EvalSourceMapDevToolPlugin.ts', {
+  mock: true,
+})
+rstest.mock('../../../plugin-lynx/src/webpack/SourceMapDevToolPlugin.ts', {
+  mock: true,
+})
 
 beforeEach(() => {
   rstest.resetAllMocks()
@@ -29,7 +33,7 @@ describe('sourcemap.plugin', () => {
     test('defaults', async () => {
       rstest.stubEnv('NODE_ENV', 'production')
       const { SourceMapDevToolPlugin } = await import(
-        '../../src/webpack/SourceMapDevToolPlugin.js'
+        '../../../plugin-lynx/src/webpack/SourceMapDevToolPlugin.js'
       )
 
       const rspeedy = await createStubRspeedy({})
@@ -49,7 +53,7 @@ describe('sourcemap.plugin', () => {
     test('with output.assetPrefix', async () => {
       rstest.stubEnv('NODE_ENV', 'production')
       const { SourceMapDevToolPlugin } = await import(
-        '../../src/webpack/SourceMapDevToolPlugin.js'
+        '../../../plugin-lynx/src/webpack/SourceMapDevToolPlugin.js'
       )
 
       const rspeedy = await createStubRspeedy({
@@ -74,7 +78,7 @@ describe('sourcemap.plugin', () => {
     test('with output.assetPrefix with output.sourceMap.js: "source-map"', async () => {
       rstest.stubEnv('NODE_ENV', 'production')
       const { SourceMapDevToolPlugin } = await import(
-        '../../src/webpack/SourceMapDevToolPlugin.js'
+        '../../../plugin-lynx/src/webpack/SourceMapDevToolPlugin.js'
       )
 
       const rspeedy = await createStubRspeedy({
@@ -106,7 +110,7 @@ describe('sourcemap.plugin', () => {
     test('with output.assetPrefix with output.sourceMap.js: "source-map-debugids"', async () => {
       rstest.stubEnv('NODE_ENV', 'production')
       const { SourceMapDevToolPlugin } = await import(
-        '../../src/webpack/SourceMapDevToolPlugin.js'
+        '../../../plugin-lynx/src/webpack/SourceMapDevToolPlugin.js'
       )
 
       const rspeedy = await createStubRspeedy({
@@ -138,7 +142,7 @@ describe('sourcemap.plugin', () => {
     test('with output.sourceMap.js: "cheap-module-source-map"', async () => {
       rstest.stubEnv('NODE_ENV', 'production')
       const { SourceMapDevToolPlugin } = await import(
-        '../../src/webpack/SourceMapDevToolPlugin.js'
+        '../../../plugin-lynx/src/webpack/SourceMapDevToolPlugin.js'
       )
 
       const rspeedy = await createStubRspeedy({
@@ -170,7 +174,7 @@ describe('sourcemap.plugin', () => {
     test('with output.sourceMap.js: "hidden-source-map"', async () => {
       rstest.stubEnv('NODE_ENV', 'production')
       const { SourceMapDevToolPlugin } = await import(
-        '../../src/webpack/SourceMapDevToolPlugin.js'
+        '../../../plugin-lynx/src/webpack/SourceMapDevToolPlugin.js'
       )
 
       const rspeedy = await createStubRspeedy({
@@ -203,7 +207,7 @@ describe('sourcemap.plugin', () => {
     test('with output.sourceMap: false', async () => {
       rstest.stubEnv('NODE_ENV', 'production')
       const { SourceMapDevToolPlugin } = await import(
-        '../../src/webpack/SourceMapDevToolPlugin.js'
+        '../../../plugin-lynx/src/webpack/SourceMapDevToolPlugin.js'
       )
 
       const rspeedy = await createStubRspeedy({
@@ -220,7 +224,7 @@ describe('sourcemap.plugin', () => {
     test('with output.sourceMap: true', async () => {
       rstest.stubEnv('NODE_ENV', 'production')
       const { SourceMapDevToolPlugin } = await import(
-        '../../src/webpack/SourceMapDevToolPlugin.js'
+        '../../../plugin-lynx/src/webpack/SourceMapDevToolPlugin.js'
       )
 
       const rspeedy = await createStubRspeedy({
@@ -250,7 +254,7 @@ describe('sourcemap.plugin', () => {
     test('with output.sourceMap.js: false', async () => {
       rstest.stubEnv('NODE_ENV', 'production')
       const { SourceMapDevToolPlugin } = await import(
-        '../../src/webpack/SourceMapDevToolPlugin.js'
+        '../../../plugin-lynx/src/webpack/SourceMapDevToolPlugin.js'
       )
 
       const rspeedy = await createStubRspeedy({
@@ -269,7 +273,7 @@ describe('sourcemap.plugin', () => {
     test('with output.sourceMap.js modified by plugin', async () => {
       rstest.stubEnv('NODE_ENV', 'production')
       const { SourceMapDevToolPlugin } = await import(
-        '../../src/webpack/SourceMapDevToolPlugin.js'
+        '../../../plugin-lynx/src/webpack/SourceMapDevToolPlugin.js'
       )
 
       const rspeedy = await createStubRspeedy({
@@ -315,7 +319,7 @@ describe('sourcemap.plugin', () => {
     test('defaults', async () => {
       rstest.stubEnv('NODE_ENV', 'development')
       const { SourceMapDevToolPlugin } = await import(
-        '../../src/webpack/SourceMapDevToolPlugin.js'
+        '../../../plugin-lynx/src/webpack/SourceMapDevToolPlugin.js'
       )
       const rspeedy = await createStubRspeedy({})
       const config = await rspeedy.unwrapConfig()
@@ -337,7 +341,7 @@ describe('sourcemap.plugin', () => {
     test('with server.port', async () => {
       rstest.stubEnv('NODE_ENV', 'development')
       const { SourceMapDevToolPlugin } = await import(
-        '../../src/webpack/SourceMapDevToolPlugin.js'
+        '../../../plugin-lynx/src/webpack/SourceMapDevToolPlugin.js'
       )
       const rspeedy = await createStubRspeedy({
         server: {
@@ -364,10 +368,10 @@ describe('sourcemap.plugin', () => {
     test('with output.sourceMap.js: "eval-cheap-module-source-map"', async () => {
       rstest.stubEnv('NODE_ENV', 'development')
       const { SourceMapDevToolPlugin } = await import(
-        '../../src/webpack/SourceMapDevToolPlugin.js'
+        '../../../plugin-lynx/src/webpack/SourceMapDevToolPlugin.js'
       )
       const { EvalSourceMapDevToolPlugin } = await import(
-        '../../src/webpack/EvalSourceMapDevToolPlugin.js'
+        '../../../plugin-lynx/src/webpack/EvalSourceMapDevToolPlugin.js'
       )
       const rspeedy = await createStubRspeedy({
         output: {
@@ -394,10 +398,10 @@ describe('sourcemap.plugin', () => {
     test('with output.sourceMap.js: "source-map-debugids"', async () => {
       rstest.stubEnv('NODE_ENV', 'development')
       const { SourceMapDevToolPlugin } = await import(
-        '../../src/webpack/SourceMapDevToolPlugin.js'
+        '../../../plugin-lynx/src/webpack/SourceMapDevToolPlugin.js'
       )
       const { EvalSourceMapDevToolPlugin } = await import(
-        '../../src/webpack/EvalSourceMapDevToolPlugin.js'
+        '../../../plugin-lynx/src/webpack/EvalSourceMapDevToolPlugin.js'
       )
       const rspeedy = await createStubRspeedy({
         output: {
@@ -426,11 +430,11 @@ describe('sourcemap.plugin', () => {
     test('with output.sourceMap.js: "eval"', async () => {
       rstest.stubEnv('NODE_ENV', 'development')
       const { SourceMapDevToolPlugin } = await import(
-        '../../src/webpack/SourceMapDevToolPlugin.js'
+        '../../../plugin-lynx/src/webpack/SourceMapDevToolPlugin.js'
       )
 
       const { EvalSourceMapDevToolPlugin } = await import(
-        '../../src/webpack/EvalSourceMapDevToolPlugin.js'
+        '../../../plugin-lynx/src/webpack/EvalSourceMapDevToolPlugin.js'
       )
       const rspeedy = await createStubRspeedy({
         output: {
@@ -449,10 +453,10 @@ describe('sourcemap.plugin', () => {
     test('with output.sourceMap.js: false', async () => {
       rstest.stubEnv('NODE_ENV', 'development')
       const { SourceMapDevToolPlugin } = await import(
-        '../../src/webpack/SourceMapDevToolPlugin.js'
+        '../../../plugin-lynx/src/webpack/SourceMapDevToolPlugin.js'
       )
       const { EvalSourceMapDevToolPlugin } = await import(
-        '../../src/webpack/EvalSourceMapDevToolPlugin.js'
+        '../../../plugin-lynx/src/webpack/EvalSourceMapDevToolPlugin.js'
       )
       const rspeedy = await createStubRspeedy({
         output: {
@@ -471,7 +475,7 @@ describe('sourcemap.plugin', () => {
     test('with dev.assetPrefix', async () => {
       rstest.stubEnv('NODE_ENV', 'development')
       const { SourceMapDevToolPlugin } = await import(
-        '../../src/webpack/SourceMapDevToolPlugin.js'
+        '../../../plugin-lynx/src/webpack/SourceMapDevToolPlugin.js'
       )
       const rspeedy = await createStubRspeedy({
         dev: {
@@ -497,7 +501,7 @@ describe('sourcemap.plugin', () => {
     test('with dev.assetPrefix contains "<port>"', async () => {
       rstest.stubEnv('NODE_ENV', 'development')
       const { SourceMapDevToolPlugin } = await import(
-        '../../src/webpack/SourceMapDevToolPlugin.js'
+        '../../../plugin-lynx/src/webpack/SourceMapDevToolPlugin.js'
       )
       const rspeedy = await createStubRspeedy({
         dev: {
@@ -540,7 +544,7 @@ describe('sourcemap.plugin', () => {
       })()
 
       const { SourceMapDevToolPlugin } = await import(
-        '../../src/webpack/SourceMapDevToolPlugin.js'
+        '../../../plugin-lynx/src/webpack/SourceMapDevToolPlugin.js'
       )
       const rspeedy = await createStubRspeedy({
         source: {
@@ -581,7 +585,7 @@ describe('sourcemap.plugin', () => {
     test('with dev.assetPrefix: false', async () => {
       rstest.stubEnv('NODE_ENV', 'development')
       const { SourceMapDevToolPlugin } = await import(
-        '../../src/webpack/SourceMapDevToolPlugin.js'
+        '../../../plugin-lynx/src/webpack/SourceMapDevToolPlugin.js'
       )
       const rspeedy = await createStubRspeedy({
         dev: {
@@ -598,7 +602,7 @@ describe('sourcemap.plugin', () => {
     test('with dev.assetPrefix: false and output.sourceMap.js: false', async () => {
       rstest.stubEnv('NODE_ENV', 'development')
       const { SourceMapDevToolPlugin } = await import(
-        '../../src/webpack/SourceMapDevToolPlugin.js'
+        '../../../plugin-lynx/src/webpack/SourceMapDevToolPlugin.js'
       )
       const rspeedy = await createStubRspeedy({
         dev: {
@@ -620,7 +624,7 @@ describe('sourcemap.plugin', () => {
     test('with dev.assetPrefix: false and output.sourceMap.js: "eval-source-map"', async () => {
       rstest.stubEnv('NODE_ENV', 'development')
       const { SourceMapDevToolPlugin } = await import(
-        '../../src/webpack/SourceMapDevToolPlugin.js'
+        '../../../plugin-lynx/src/webpack/SourceMapDevToolPlugin.js'
       )
       const rspeedy = await createStubRspeedy({
         dev: {
@@ -643,7 +647,7 @@ describe('sourcemap.plugin', () => {
     test.skip('with tools.rspack.output.sourceMapFilename', async () => {
       rstest.stubEnv('NODE_ENV', 'development')
       const { SourceMapDevToolPlugin } = await import(
-        '../../src/webpack/SourceMapDevToolPlugin.js'
+        '../../../plugin-lynx/src/webpack/SourceMapDevToolPlugin.js'
       )
       const rspeedy = await createStubRspeedy({
         tools: {
