@@ -446,7 +446,11 @@ function doRender(props, state, context) {
 function renderToTextNode(into: SnapshotInstance, text: string | number, opcodes: Opcode[], slotIndex: number) {
   const textNode = new SnapshotInstance(null);
   textNode.__slotIndex = slotIndex;
-  textNode.setAttribute(0, text);
+  // Equivalent to `textNode.setAttribute(0, text)`: the raw-text updater is a
+  // no-op while `__elements` is unset (they are created by `insertBefore`
+  // below, which applies `__values` through `ensureElements`), so store the
+  // value directly instead of running the whole update path.
+  textNode.__values = [text];
   into.insertBefore(textNode);
   if (__ENABLE_SSR__) {
     // We need store the just created SnapshotInstance, or it will be lost when we leave the function
