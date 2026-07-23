@@ -4,13 +4,13 @@
 
 import { defineConfig } from '@rsbuild/core';
 
-import { pluginLynxPreset } from '@lynx-js/preset-rsbuild-plugin';
 import { pluginQRCode } from '@lynx-js/qrcode-rsbuild-plugin';
 import { pluginReactLynx } from '@lynx-js/react-rsbuild-plugin';
+import { pluginLynx } from '@lynx-js/rsbuild-plugin';
 
 export default defineConfig({
   plugins: [
-    pluginLynxPreset(),
+    pluginLynx(),
     pluginReactLynx(),
     pluginQRCode({
       fullscreen: true,

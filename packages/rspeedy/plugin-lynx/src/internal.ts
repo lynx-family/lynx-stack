@@ -4,9 +4,9 @@
 
 // Internal building blocks shared with the `@lynx-js/rspeedy` CLI, which
 // composes them (threading the loaded `lynx.config.ts` into each plugin)
-// instead of using the batteries-included `pluginLynxPreset`.
+// instead of using the batteries-included `pluginLynx`.
 //
-// This is NOT part of the public API of `@lynx-js/preset-rsbuild-plugin`.
+// This is NOT part of the public API of `@lynx-js/rsbuild-plugin`.
 //
 // Keep these as plain `//` comments: a leading `/** @packageDocumentation */`
 // JSDoc block makes tsc's declaration emitter drop the first `export` below.

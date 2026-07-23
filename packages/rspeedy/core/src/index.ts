@@ -21,16 +21,16 @@
 
 // API
 // The Lynx build engine (plugins, config types, `ExposedAPI`, `mergeRspeedyConfig`)
-// now lives in `@lynx-js/preset-rsbuild-plugin`; re-exported here so the
+// now lives in `@lynx-js/rsbuild-plugin`; re-exported here so the
 // `@lynx-js/rspeedy` public API is unchanged for existing consumers.
-export type { ExposedAPI } from '@lynx-js/preset-rsbuild-plugin'
+export type { ExposedAPI } from '@lynx-js/rsbuild-plugin'
 export {
   createRspeedy,
   type RspeedyInstance,
   type CreateRspeedyOptions,
 } from './create-rspeedy.js'
 export { logger } from '@rsbuild/core'
-export { mergeRspeedyConfig } from '@lynx-js/preset-rsbuild-plugin'
+export { mergeRspeedyConfig } from '@lynx-js/rsbuild-plugin'
 
 // Config
 export { defineConfig } from './config/defineConfig.js'
@@ -73,7 +73,7 @@ export type {
   SourceMap,
   Tools,
   TransformImport,
-} from '@lynx-js/preset-rsbuild-plugin'
+} from '@lynx-js/rsbuild-plugin'
 
 // RsbuildPlugin
 export type { RsbuildPlugin, RsbuildPluginAPI } from '@rsbuild/core'

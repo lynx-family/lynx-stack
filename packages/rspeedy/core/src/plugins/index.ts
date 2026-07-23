@@ -4,8 +4,8 @@
 
 import type { RsbuildInstance, RsbuildPlugin } from '@rsbuild/core'
 
-import type { Config } from '@lynx-js/preset-rsbuild-plugin'
-import { debug, isDebug } from '@lynx-js/preset-rsbuild-plugin/internal'
+import type { Config } from '@lynx-js/rsbuild-plugin'
+import { debug, isDebug } from '@lynx-js/rsbuild-plugin/internal'
 
 async function applyDebugPlugins(
   rsbuildInstance: RsbuildInstance,
@@ -27,13 +27,13 @@ export async function applyDefaultPlugins(
   rsbuildInstance: RsbuildInstance,
   config: Config,
 ): Promise<void> {
-  // The default build plugins now live in `@lynx-js/preset-rsbuild-plugin`.
+  // The default build plugins now live in `@lynx-js/rsbuild-plugin`.
   // The CLI composes them itself (threading the loaded `lynx.config.ts` into
-  // each) rather than using the batteries-included `pluginLynxPreset`.
+  // each) rather than using the batteries-included `pluginLynx`.
   const defaultPlugins = Promise.all([
     import('./api.plugin.js'),
     import('@lynx-js/debug-metadata-rsbuild-plugin'),
-    import('@lynx-js/preset-rsbuild-plugin/internal'),
+    import('@lynx-js/rsbuild-plugin/internal'),
   ]).then(([{ pluginAPI }, { pluginLynxDebugMetadata }, {
     pluginChunkLoading,
     pluginDev,

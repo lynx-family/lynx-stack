@@ -8,7 +8,7 @@ import { logger } from '@rsbuild/core'
 import type { Command } from 'commander'
 import color from 'picocolors'
 
-import { isCI } from '@lynx-js/preset-rsbuild-plugin/internal'
+import { isCI } from '@lynx-js/rsbuild-plugin/internal'
 
 import type { CommonOptions } from './commands.js'
 import { exit } from './exit.js'

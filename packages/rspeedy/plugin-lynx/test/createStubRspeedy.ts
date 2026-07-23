@@ -48,7 +48,7 @@ interface RsbuildHelper {
  * A standalone stub that composes the default Lynx plugins directly on top of
  * `createRsbuild` — the same set (and order) the Rspeedy CLI applies via
  * `applyDefaultPlugins`, threading the config through `pluginLynxAPI`. It lives
- * here (rather than reusing `@lynx-js/rspeedy`'s `createRspeedy`) so the preset
+ * here (rather than reusing `@lynx-js/rspeedy`'s `createRspeedy`) so the plugin
  * package does not depend back on the CLI, keeping the build graph acyclic.
  */
 export async function createStubRspeedy(

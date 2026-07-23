@@ -5,8 +5,8 @@
 import { logger } from '@rsbuild/core'
 import type { RsbuildPlugin } from '@rsbuild/core'
 
-import type { Config, ExposedAPI } from '@lynx-js/preset-rsbuild-plugin'
-import { debug } from '@lynx-js/preset-rsbuild-plugin/internal'
+import type { Config, ExposedAPI } from '@lynx-js/rsbuild-plugin'
+import { debug } from '@lynx-js/rsbuild-plugin/internal'
 
 import { version } from '../version.js'
 

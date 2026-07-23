@@ -10,11 +10,11 @@ import type { RsbuildPlugin } from '@rsbuild/core'
 import { stringify } from 'javascript-stringify'
 import color from 'picocolors'
 
-import type { Config } from '@lynx-js/preset-rsbuild-plugin'
+import type { Config } from '@lynx-js/rsbuild-plugin'
 import {
   DEFAULT_DIST_PATH_INTERMEDIATE,
   debug,
-} from '@lynx-js/preset-rsbuild-plugin/internal'
+} from '@lynx-js/rsbuild-plugin/internal'
 
 export function pluginInspect(config: Config): RsbuildPlugin {
   return {

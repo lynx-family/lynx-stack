@@ -70,7 +70,7 @@ export function applyEntry(
         ? chunkSplitStrategy !== 'all-in-one'
         : rsbuildConfig.splitChunks !== false)
       : rsbuildConfig.splitChunks !== false
-    // `lynx.api` is exposed by `pluginLynxPreset` when running on Rsbuild
+    // `lynx.api` is exposed by `pluginLynx` when running on Rsbuild
     // directly (without the Rspeedy CLI).
     const lynxAPI = api.useExposed<ExposedAPI>(Symbol.for('lynx.api'))
     const rspeedyConfig = api.context.callerName === 'rspeedy'

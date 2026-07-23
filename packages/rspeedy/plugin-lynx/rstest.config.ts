@@ -26,8 +26,8 @@ const config: RstestConfig = defineConfig({
       // would otherwise resolve to the built `lib/` and break mock identity —
       // alias the package back to `src/` so the plugin under test and the mock
       // share a single module instance.
-      '@lynx-js/preset-rsbuild-plugin/internal': path.join(src, 'internal.ts'),
-      '@lynx-js/preset-rsbuild-plugin': path.join(src, 'index.ts'),
+      '@lynx-js/rsbuild-plugin/internal': path.join(src, 'internal.ts'),
+      '@lynx-js/rsbuild-plugin': path.join(src, 'index.ts'),
     },
   },
 })

@@ -15,10 +15,10 @@
  * import { defineConfig } from '@rsbuild/core'
  * import { pluginReactLynx } from '@lynx-js/react-rsbuild-plugin'
  *
- * import { pluginLynxPreset } from '@lynx-js/preset-rsbuild-plugin'
+ * import { pluginLynx } from '@lynx-js/rsbuild-plugin'
  *
  * export default defineConfig({
- *   plugins: [pluginLynxPreset(), pluginReactLynx()],
+ *   plugins: [pluginLynx(), pluginReactLynx()],
  *   environments: { lynx: {} },
  * })
  * ```
@@ -54,7 +54,7 @@ const DEFAULT_FILENAME = '[name].[platform].bundle'
  *
  * @public
  */
-export function pluginLynxPreset(): RsbuildPlugins {
+export function pluginLynx(): RsbuildPlugins {
   // The Lynx-shaped config published to DSL plugins. `output.filename.bundle`
   // is read by `pluginReactLynx` (to name the emitted template) and by
   // `pluginQRCode` (to build dev URLs).

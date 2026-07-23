@@ -1,17 +1,16 @@
 {
-  "name": "@lynx-js/preset-rsbuild-plugin",
+  "name": "@lynx-js/rsbuild-plugin",
   "version": "0.15.2",
   "description": "An Rsbuild plugin that builds a Lynx app with the Rsbuild CLI directly, without the Rspeedy CLI.",
   "keywords": [
     "rsbuild",
     "Lynx",
-    "ReactLynx",
-    "preset"
+    "ReactLynx"
   ],
   "repository": {
     "type": "git",
     "url": "https://github.com/lynx-family/lynx-stack.git",
-    "directory": "packages/rspeedy/plugin-preset"
+    "directory": "packages/rspeedy/plugin-lynx"
   },
   "license": "Apache-2.0",
   "author": {

@@ -4,8 +4,8 @@
 {
   "extends": "../../../api-extractor.json",
 
-  // The Lynx config schema now lives in `@lynx-js/preset-rsbuild-plugin` and is
+  // The Lynx config schema now lives in `@lynx-js/rsbuild-plugin` and is
   // re-exported from here. Inline those types into the rollup so the public API
   // report and the generated `/api/rspeedy.*` doc pages stay unchanged.
-  "bundledPackages": ["@lynx-js/preset-rsbuild-plugin"],
+  "bundledPackages": ["@lynx-js/rsbuild-plugin"],
 }
