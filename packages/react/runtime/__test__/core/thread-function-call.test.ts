@@ -3,7 +3,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { WorkletEvents, type RunWorkletCtxData } from '../../src/worklet-runtime/bindings/events.js';
 import {
   createRunOnMainThread,
-  delayedRunOnMainThreadData,
+  getDelayedRunOnMainThreadData,
   enqueueDelayedRunOnMainThreadData,
   takeDelayedRunOnMainThreadData,
 } from '../../src/core/thread-function-call/main-thread.js';
@@ -49,7 +49,7 @@ describe('thread-function-call main-thread primitives', () => {
   });
 
   it('keeps delayed main-thread data in a live shared queue', () => {
-    const pending = delayedRunOnMainThreadData;
+    const pending = getDelayedRunOnMainThreadData();
     const data = {
       worklet: { _wkltId: 'main-thread-function' },
       params: ['hello'],
@@ -58,11 +58,11 @@ describe('thread-function-call main-thread primitives', () => {
 
     enqueueDelayedRunOnMainThreadData(data);
 
-    expect(delayedRunOnMainThreadData).toHaveLength(1);
-    expect(delayedRunOnMainThreadData).toBe(pending);
+    expect(getDelayedRunOnMainThreadData()).toHaveLength(1);
+    expect(getDelayedRunOnMainThreadData()).toBe(pending);
     expect(takeDelayedRunOnMainThreadData()).toEqual([data]);
-    expect(delayedRunOnMainThreadData).toHaveLength(0);
-    expect(delayedRunOnMainThreadData).not.toBe(pending);
+    expect(getDelayedRunOnMainThreadData()).toHaveLength(0);
+    expect(getDelayedRunOnMainThreadData()).not.toBe(pending);
 
     enqueueDelayedRunOnMainThreadData(data);
     expect(takeDelayedRunOnMainThreadData()).toEqual([data]);
@@ -78,7 +78,7 @@ describe('thread-function-call main-thread primitives', () => {
 
     void runOnMainThread(worklet as unknown as (value: string) => void)('hello');
 
-    expect(delayedRunOnMainThreadData).toHaveLength(0);
+    expect(getDelayedRunOnMainThreadData()).toHaveLength(0);
     expect(coreContext.dispatchEvent).toHaveBeenCalledWith({
       type: WorkletEvents.runWorkletCtx,
       data: JSON.stringify({

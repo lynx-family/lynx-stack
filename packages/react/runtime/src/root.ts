@@ -1,14 +1,11 @@
 // Copyright 2024 The Lynx Authors. All rights reserved.
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
+import { getCurrentRootContext, onRootContextSwitch } from './root-context.js';
 import { BackgroundSnapshotInstance } from './snapshot/snapshot/backgroundSnapshot.js';
 import { SnapshotInstance } from './snapshot/snapshot/snapshot.js';
 
-/**
- * The internal ReactLynx's root.
- * {@link @lynx-js/react!Root | root}.
- */
-let __root: (SnapshotInstance | BackgroundSnapshotInstance) & {
+type RootInstance = (SnapshotInstance | BackgroundSnapshotInstance) & {
   __jsx?: React.ReactNode;
   __opcodes?: any[];
 
@@ -20,7 +17,17 @@ let __root: (SnapshotInstance | BackgroundSnapshotInstance) & {
   nodeType?: Element['nodeType'];
 };
 
-function setRoot(root: typeof __root): void {
+/**
+ * The internal ReactLynx's root.
+ * {@link @lynx-js/react!Root | root}.
+ *
+ * The storage lives on the current `RootContext`; this module-level binding
+ * is a maintained alias kept in sync on `setRoot` and on context switches.
+ */
+let __root: RootInstance;
+
+function setRoot(root: RootInstance): void {
+  getCurrentRootContext().root = root;
   __root = root;
 
   // A fake ELEMENT_NODE to make preact/debug happy.
@@ -28,6 +35,10 @@ function setRoot(root: typeof __root): void {
     __root.nodeType = 1;
   }
 }
+
+onRootContextSwitch(() => {
+  __root = getCurrentRootContext().root as RootInstance;
+});
 
 if (typeof __MAIN_THREAD__ !== 'undefined' && __MAIN_THREAD__) {
   setRoot(new SnapshotInstance('root'));

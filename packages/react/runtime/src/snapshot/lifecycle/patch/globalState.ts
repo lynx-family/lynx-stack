@@ -9,9 +9,12 @@
 /**
  * List of background snapshot instances to remove during commit phase
  */
+import { getCurrentRootContext } from '../../../root-context.js';
 
-export let globalBackgroundSnapshotInstancesToRemove: number[] = [];
+export function getGlobalBackgroundSnapshotInstancesToRemove(): number[] {
+  return getCurrentRootContext().bgInstancesToRemove;
+}
 
 export function setGlobalBackgroundSnapshotInstancesToRemove(ids: number[]): void {
-  globalBackgroundSnapshotInstancesToRemove = ids;
+  getCurrentRootContext().bgInstancesToRemove = ids;
 }

@@ -24,7 +24,7 @@ import { clearPendingPortalInsertBefore } from '../../../src/snapshot/lynx/porta
 import { globalEnvManager } from '../utils/envManager';
 import { elementTree } from '../utils/nativeMethod';
 import { backgroundSnapshotInstanceManager } from '../../../src/snapshot';
-import { globalBackgroundSnapshotInstancesToRemove } from '../../../src/snapshot/lifecycle/patch/globalState';
+import { getGlobalBackgroundSnapshotInstancesToRemove } from '../../../src/snapshot/lifecycle/patch/globalState';
 
 beforeAll(() => {
   installComponentCompat();
@@ -214,7 +214,7 @@ describe('createPortal', () => {
     // BSI cleanup is debounced 10s by commit's `setTimeout`; advance to
     // drain. This catches both the regular tree teardown AND the portal
     // subtree (via `fakeRoot.removeChild` enqueueing into
-    // `globalBackgroundSnapshotInstancesToRemove`).
+    // `getGlobalBackgroundSnapshotInstancesToRemove()`).
     vi.advanceTimersByTime(10000);
     vi.useRealTimers();
 
@@ -298,7 +298,7 @@ describe('createPortal', () => {
    * `BackgroundSnapshotInstance` entries into
    * `backgroundSnapshotInstanceManager`. The bg-side `fakeRoot.removeChild`
    * mirrors `BackgroundSnapshotInstance.removeChild` and enqueues the
-   * removed subtree id into `globalBackgroundSnapshotInstancesToRemove`
+   * removed subtree id into `getGlobalBackgroundSnapshotInstancesToRemove()`
    * so commit-time `tearDown` (debounced 10s) drops the BSIs.
    */
   it('does not leak BSI entries when a portal is toggled off post-hydrate', async () => {

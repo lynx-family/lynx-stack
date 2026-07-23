@@ -1,19 +1,15 @@
 // Copyright 2025 The Lynx Authors. All rights reserved.
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
+import { getCurrentRootContext } from '../../../root-context.js';
 import type { LifecycleConstant } from '../../lifecycle/constant.js';
 
-let delayedLifecycleEvents: [type: LifecycleConstant, data: unknown][] = [];
+function getDelayedLifecycleEvents(): [type: LifecycleConstant, data: unknown][] {
+  return getCurrentRootContext().delayedLifecycleEvents;
+}
 
 function delayLifecycleEvent(type: LifecycleConstant, data: unknown): void {
-  delayedLifecycleEvents.push([type, data]);
+  getCurrentRootContext().delayedLifecycleEvents.push([type, data]);
 }
 
-/**
- * @internal
- */
-function setDelayedLifecycleEvents(events: typeof delayedLifecycleEvents): void {
-  delayedLifecycleEvents = events;
-}
-
-export { delayedLifecycleEvents, delayLifecycleEvent, setDelayedLifecycleEvents };
+export { delayLifecycleEvent, getDelayedLifecycleEvents };

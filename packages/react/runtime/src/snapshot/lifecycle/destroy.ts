@@ -3,10 +3,8 @@
 // LICENSE file in the root directory of this source tree.
 import { render } from 'preact';
 
+import { getCurrentRootContext } from '../../root-context.js';
 import { __root } from '../../root.js';
-import { delayedEvents } from './event/delayEvents.js';
-import { delayedLifecycleEvents } from './event/delayLifecycleEvents.js';
-import { globalCommitTaskMap } from './patch/commit.js';
 import { profileEnd, profileStart } from '../../shared/profile.js';
 
 function destroyBackground(): void {
@@ -17,15 +15,16 @@ function destroyBackground(): void {
   // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
   render(null, __root as any);
 
-  globalCommitTaskMap.forEach(task => {
+  const ctx = getCurrentRootContext();
+  ctx.commitTaskMap.forEach(task => {
     task();
   });
-  globalCommitTaskMap.clear();
+  ctx.commitTaskMap.clear();
   // Clear delayed events which should not be executed after destroyed.
   // This is important when the page is performing a reload.
-  delayedLifecycleEvents.length = 0;
-  if (delayedEvents) {
-    delayedEvents.length = 0;
+  ctx.delayedLifecycleEvents.length = 0;
+  if (ctx.delayedEvents) {
+    ctx.delayedEvents.length = 0;
   }
   if (typeof __PROFILE__ !== 'undefined' && __PROFILE__) {
     profileEnd();

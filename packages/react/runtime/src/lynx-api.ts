@@ -92,13 +92,11 @@ export const root: Root = {
     if (typeof __MAIN_THREAD__ !== 'undefined' && __MAIN_THREAD__) {
       __root.__jsx = jsx;
     } else {
-      if (typeof __MULTI_ROOT_RENDER_CONTEXT__ !== 'undefined' && __MULTI_ROOT_RENDER_CONTEXT__) {
-        if (boundRoot) {
-          boundRoot.render(jsx);
-          return;
-        }
-        switchRootContext(defaultRootContext);
+      if (boundRoot) {
+        boundRoot.render(jsx);
+        return;
       }
+      switchRootContext(defaultRootContext);
       __root.__jsx = jsx;
       if (typeof __PROFILE__ !== 'undefined' && __PROFILE__) {
         profileStart('ReactLynx::renderBackground');

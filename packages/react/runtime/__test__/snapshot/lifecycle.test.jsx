@@ -4,7 +4,7 @@ import { afterEach, beforeAll, beforeEach, describe, expect, it, vi } from 'vite
 import { useEffect, useLayoutEffect, useState } from '../../src/index';
 import { globalEnvManager } from './utils/envManager';
 import { waitSchedule } from './utils/nativeMethod';
-import { globalCommitTaskMap, replaceCommitHook } from '../../src/snapshot/lifecycle/patch/commit';
+import { getGlobalCommitTaskMap, replaceCommitHook } from '../../src/snapshot/lifecycle/patch/commit';
 import { deinitGlobalSnapshotPatch, initGlobalSnapshotPatch } from '../../src/snapshot/lifecycle/patch/snapshotPatch';
 import { LifecycleConstant } from '../../src/snapshot/lifecycle/constant';
 import { CATCH_ERROR } from '../../src/shared/render-constants';
@@ -21,7 +21,7 @@ beforeEach(() => {
 });
 
 afterEach(() => {
-  globalCommitTaskMap.clear();
+  getGlobalCommitTaskMap().clear();
   globalEnvManager.resetEnv();
   deinitGlobalSnapshotPatch();
   vi.restoreAllMocks();

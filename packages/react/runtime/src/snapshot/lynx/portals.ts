@@ -10,7 +10,7 @@ import type { NodesRef } from '@lynx-js/types';
 import { serializeNodesRef } from './nodesRef.js';
 import { pendingInsertBefore } from './portalsPending.js';
 import { CHILDREN, MASK, PARENT, VNODE } from '../../shared/render-constants.js';
-import { globalBackgroundSnapshotInstancesToRemove } from '../lifecycle/patch/globalState.js';
+import { getGlobalBackgroundSnapshotInstancesToRemove } from '../lifecycle/patch/globalState.js';
 import { SnapshotOperation, __globalSnapshotPatch } from '../lifecycle/patch/snapshotPatch.js';
 import type { BackgroundSnapshotInstance } from '../snapshot/backgroundSnapshot.js';
 
@@ -116,7 +116,7 @@ function Portal(this: PortalThis, props: PortalProps): ComponentChildren {
         // post-hydrate paths because the BSI was registered in the manager
         // at construction time regardless of hydration state.
         (child as unknown as { __removed_from_tree: boolean }).__removed_from_tree = true;
-        globalBackgroundSnapshotInstancesToRemove.push(child.__id);
+        getGlobalBackgroundSnapshotInstancesToRemove().push(child.__id);
 
         if (__globalSnapshotPatch) {
           __globalSnapshotPatch.push(

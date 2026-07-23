@@ -10,9 +10,7 @@ import { RootContext, getCurrentRootContext, switchRootContext } from './root-co
 import type { RootLynx, RootTT } from './root-context.js';
 import { __root, setRoot } from './root.js';
 import { LifecycleConstant } from './snapshot/lifecycle/constant.js';
-import './root-context-slots.js';
-import './snapshot/lifecycle/contextSwitchHook.js';
-import { globalCommitTaskMap } from './snapshot/lifecycle/patch/commit.js';
+import { installContextSwitchHook } from './snapshot/lifecycle/contextSwitchHook.js';
 import { flushDelayedLifecycleEvents, injectTtInto } from './snapshot/lynx/tt.js';
 import { BackgroundSnapshotInstance } from './snapshot/snapshot/backgroundSnapshot.js';
 import type { SnapshotInstance } from './snapshot/snapshot/snapshot.js';
@@ -37,6 +35,7 @@ export class ReactLynxRoot {
   _ctx: RootContext;
 
   constructor(options?: BindRenderContextOptions) {
+    installContextSwitchHook();
     this._ctx = new RootContext();
     this._ctx.lynx = options?.lynx;
     this._ctx.tt = options?.lynxCoreInject?.tt;
@@ -85,10 +84,10 @@ export class ReactLynxRoot {
       try {
         // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
         render(null, this._container as any);
-        globalCommitTaskMap.forEach(task => {
+        this._ctx.commitTaskMap.forEach(task => {
           task();
         });
-        globalCommitTaskMap.clear();
+        this._ctx.commitTaskMap.clear();
       } finally {
         switchRootContext(prev);
       }

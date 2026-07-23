@@ -22,6 +22,19 @@ const onRenderComponentHook = <T extends unknown[]>(
   if (old) old(...args);
 };
 
-if (typeof __MULTI_ROOT_RENDER_CONTEXT__ !== 'undefined' && __MULTI_ROOT_RENDER_CONTEXT__) {
+let installed = false;
+
+/**
+ * Installs the render-component context switch lazily — only once the first
+ * non-default root context is created. The classic single-root path never
+ * pays for it.
+ *
+ * @internal
+ */
+export function installContextSwitchHook(): void {
+  if (installed) {
+    return;
+  }
+  installed = true;
   hook(options, RENDER_COMPONENT, onRenderComponentHook);
 }

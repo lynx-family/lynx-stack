@@ -32,7 +32,7 @@ import { isDirectOrDeepEqual } from '../../utils.js';
 import { clearSnapshotVNodeSource, getSnapshotVNodeSource, moveSnapshotVNodeSource } from '../debug/vnodeSource.js';
 import { prepareGestureForCommit } from '../gesture/processGestureBagkround.js';
 import type { GestureKind } from '../gesture/types.js';
-import { globalBackgroundSnapshotInstancesToRemove } from '../lifecycle/patch/globalState.js';
+import { getGlobalBackgroundSnapshotInstancesToRemove } from '../lifecycle/patch/globalState.js';
 import {
   SnapshotOperation,
   __globalSnapshotPatch,
@@ -55,7 +55,9 @@ export const backgroundSnapshotInstanceManager: {
   getValueBySign(str: string): unknown;
 } = {
   nextId: 0,
-  values: /* @__PURE__ */ new Map<number, BackgroundSnapshotInstance>(),
+  get values(): Map<number, BackgroundSnapshotInstance> {
+    return getCurrentRootContext().bsiValues;
+  },
   clear() {
     // not resetting `nextId` to prevent id collision
     this.values.clear();
@@ -168,9 +170,7 @@ export class BackgroundSnapshotInstance {
         createRuntimeSnapshot(type);
       }
     }
-    if (typeof __MULTI_ROOT_RENDER_CONTEXT__ !== 'undefined' && __MULTI_ROOT_RENDER_CONTEXT__) {
-      this.__rootCtx = getCurrentRootContext();
-    }
+    this.__rootCtx = getCurrentRootContext();
     this.__snapshot_def = snapshotManager.values.get(type)!;
     const id = this.__id = backgroundSnapshotInstanceManager.nextId += 1;
     backgroundSnapshotInstanceManager.values.set(id, this);
@@ -185,7 +185,7 @@ export class BackgroundSnapshotInstance {
   __extraProps?: Record<string, unknown> | undefined;
   __slotIndex: number = 0;
   private __listItemPlatformInfoIndex?: number;
-  __rootCtx: RootContext | undefined;
+  __rootCtx: RootContext;
 
   private __parent: BackgroundSnapshotInstance | null = null;
   private __firstChild: BackgroundSnapshotInstance | null = null;
@@ -327,31 +327,16 @@ export class BackgroundSnapshotInstance {
       0,
     );
 
-    globalBackgroundSnapshotInstancesToRemove.push(node.__id);
+    getGlobalBackgroundSnapshotInstancesToRemove().push(node.__id);
   }
 
   tearDown(): void {
-    if (typeof __MULTI_ROOT_RENDER_CONTEXT__ !== 'undefined' && __MULTI_ROOT_RENDER_CONTEXT__) {
-      const ctx = this.__rootCtx;
-      const values = ctx && ctx !== getCurrentRootContext()
-        ? ctx.slotValues['bsiValues'] as Map<number, BackgroundSnapshotInstance>
-        : backgroundSnapshotInstanceManager.values;
-      traverseSnapshotInstance(this, v => {
-        v.__parent = null;
-        v.__previousSibling = null;
-        v.__nextSibling = null;
-        values.delete(v.__id);
-      });
-      /* v8 ignore start */
-    } else {
-      traverseSnapshotInstance(this, v => {
-        v.__parent = null;
-        v.__previousSibling = null;
-        v.__nextSibling = null;
-        backgroundSnapshotInstanceManager.values.delete(v.__id);
-      });
-    }
-    /* v8 ignore stop */
+    traverseSnapshotInstance(this, v => {
+      v.__parent = null;
+      v.__previousSibling = null;
+      v.__nextSibling = null;
+      v.__rootCtx.bsiValues.delete(v.__id);
+    });
   }
 
   get childNodes(): BackgroundSnapshotInstance[] {

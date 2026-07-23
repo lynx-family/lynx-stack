@@ -14,7 +14,7 @@ import { clearElementTemplateRenderScope, resetElementTemplateRenderScope } from
 import { globalPipelineOptions, markTiming, markTimingLegacy, setPipeline } from '../../core/performance.js';
 import { getReloadVersion } from '../../core/reload-version.js';
 import {
-  delayedRunOnMainThreadData,
+  getDelayedRunOnMainThreadData,
   takeDelayedRunOnMainThreadData,
 } from '../../core/thread-function-call/main-thread.js';
 import { dropFunctionCallReturnIds } from '../../core/thread-function-call/return-value.js';
@@ -67,14 +67,14 @@ export function cancelElementTemplateRemovedSubtreeCleanup(): void {
 
 function flushElementTemplateCommitChanges(): void {
   const hasNativeOps = globalCommitContext.ops.length > 0;
-  const hasDelayedRunOnMainThread = delayedRunOnMainThreadData.length > 0;
+  const hasDelayedRunOnMainThread = getDelayedRunOnMainThreadData().length > 0;
   const hasUpdatePayload = hasNativeOps
     || !isEmptyObject(globalCommitContext.flushOptions)
     || hasDelayedRunOnMainThread;
   const removedSubtreesAwaitingTeardown = hasNativeOps ? takeRemovedSubtreesForPostDispatchTeardown() : [];
   let didFlushRefs = false;
   let didDispatchUpdatePayload = false;
-  let delayedRunOnMainThreadPayload: typeof delayedRunOnMainThreadData | undefined;
+  let delayedRunOnMainThreadPayload: ReturnType<typeof getDelayedRunOnMainThreadData> | undefined;
   try {
     if (hasUpdatePayload) {
       markTimingLegacy('updateDiffVdomEnd');
@@ -164,7 +164,7 @@ export function installElementTemplateCommitHook(): void {
         globalCommitContext.ops.length > 0
         || !isEmptyObject(globalCommitContext.flushOptions)
         || hasPendingRefs()
-        || delayedRunOnMainThreadData.length > 0
+        || getDelayedRunOnMainThreadData().length > 0
       )
     ) {
       flushElementTemplateCommitChanges();

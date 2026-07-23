@@ -1,16 +1,16 @@
 // Copyright 2025 The Lynx Authors. All rights reserved.
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
+import { getCurrentRootContext } from '../../../root-context.js';
 
-let delayedEvents: [handlerName: string, data: EventDataType][] | undefined;
+function getDelayedEvents(): [handlerName: string, data: EventDataType][] | undefined {
+  return getCurrentRootContext().delayedEvents;
+}
 
 function delayedPublishEvent(handlerName: string, data: EventDataType): void {
-  delayedEvents ??= [];
-  delayedEvents.push([handlerName, data]);
+  const ctx = getCurrentRootContext();
+  ctx.delayedEvents ??= [];
+  ctx.delayedEvents.push([handlerName, data]);
 }
 
-function setDelayedEvents(events: typeof delayedEvents): void {
-  delayedEvents = events;
-}
-
-export { delayedEvents, delayedPublishEvent, setDelayedEvents };
+export { delayedPublishEvent, getDelayedEvents };

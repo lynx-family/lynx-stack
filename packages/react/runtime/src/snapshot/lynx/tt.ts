@@ -8,7 +8,7 @@ import { updateGlobalProps as updateGlobalPropsCore } from '../../core/globalPro
 import { updateCardData } from '../../core/lynx-update-data.js';
 import { PerformanceTimingFlags, PipelineOrigins, beginPipeline, markTiming } from '../../core/performance.js';
 import {
-  delayedRunOnMainThreadData,
+  getDelayedRunOnMainThreadData,
   takeDelayedRunOnMainThreadData,
 } from '../../core/thread-function-call/main-thread.js';
 import { contextLynx, defaultRootContext, getCurrentRootContext, switchRootContext } from '../../root-context.js';
@@ -21,9 +21,9 @@ import { getSnapshotVNodeSource } from '../debug/vnodeSource.js';
 import { LifecycleConstant } from '../lifecycle/constant.js';
 import type { FirstScreenData } from '../lifecycle/constant.js';
 import { destroyBackground } from '../lifecycle/destroy.js';
-import { delayedEvents, delayedPublishEvent } from '../lifecycle/event/delayEvents.js';
-import { delayLifecycleEvent, delayedLifecycleEvents } from '../lifecycle/event/delayLifecycleEvents.js';
-import { commitPatchUpdate, genCommitTaskId, globalCommitTaskMap } from '../lifecycle/patch/commit.js';
+import { delayedPublishEvent, getDelayedEvents } from '../lifecycle/event/delayEvents.js';
+import { delayLifecycleEvent, getDelayedLifecycleEvents } from '../lifecycle/event/delayLifecycleEvents.js';
+import { commitPatchUpdate, genCommitTaskId } from '../lifecycle/patch/commit.js';
 import type { PatchList } from '../lifecycle/patch/commit.js';
 import { removeCtxNotFoundEventListener } from '../lifecycle/patch/error.js';
 import { runDelayedUiOps } from '../lifecycle/ref/delay.js';
@@ -47,27 +47,7 @@ function bindContext<T extends unknown[], R>(ctx: RootContext, fn: (...args: T) 
 }
 
 function injectTt(): void {
-  if (typeof __MULTI_ROOT_RENDER_CONTEXT__ !== 'undefined' && __MULTI_ROOT_RENDER_CONTEXT__) {
-    injectTtInto(lynxCoreInject.tt, defaultRootContext);
-    return;
-  }
-  /* v8 ignore start */
-  const tt = lynxCoreInject.tt;
-  tt.OnLifecycleEvent = onLifecycleEvent;
-  tt.publishEvent = delayedPublishEvent;
-  tt.publicComponentEvent = delayedPublicComponentEvent;
-  tt.callDestroyLifetimeFun = () => {
-    removeCtxNotFoundEventListener();
-    destroyWorklet();
-    destroyBackground();
-  };
-  tt.updateGlobalProps = updateGlobalProps;
-  tt.updateCardData = updateCardData;
-  tt.onAppReload = reloadBackground;
-  tt.processCardConfig = () => {
-    // used to updateTheme, no longer rely on this function
-  };
-  /* v8 ignore stop */
+  injectTtInto(lynxCoreInject.tt, defaultRootContext);
 }
 
 function injectTtInto(tt: RootTT, ctx: RootContext): void {
@@ -117,17 +97,15 @@ function onLifecycleEventImpl(type: LifecycleConstant, data: unknown): void {
   switch (type) {
     case LifecycleConstant.firstScreen: {
       let processErr;
-      const ctxBeforeProcess = typeof __MULTI_ROOT_RENDER_CONTEXT__ !== 'undefined' && __MULTI_ROOT_RENDER_CONTEXT__
-        ? getCurrentRootContext()
-        : undefined;
+      const ctxBeforeProcess = getCurrentRootContext();
       try {
         process();
       } catch (e) {
         processErr = e;
       }
-      if (typeof __MULTI_ROOT_RENDER_CONTEXT__ !== 'undefined' && __MULTI_ROOT_RENDER_CONTEXT__ && ctxBeforeProcess) {
-        switchRootContext(ctxBeforeProcess);
-      }
+      // Preact's shared rerender queue may have rendered another root's
+      // components; re-assert this root's context before hydrating.
+      switchRootContext(ctxBeforeProcess);
       const { root: lepusSide, firstScreenEventIdSwap } = data as FirstScreenData;
       if (typeof __PROFILE__ !== 'undefined' && __PROFILE__) {
         profileStart('ReactLynx::hydrate');
@@ -175,6 +153,7 @@ function onLifecycleEventImpl(type: LifecycleConstant, data: unknown): void {
 
       // TODO: It seems `delayedEvents` and `delayedLifecycleEvents` should be merged into one array to ensure the proper order of events.
       flushDelayedLifecycleEvents();
+      const delayedEvents = getDelayedEvents();
       if (delayedEvents) {
         delayedEvents.forEach((args) => {
           const [handlerName, data] = args;
@@ -190,17 +169,12 @@ function onLifecycleEventImpl(type: LifecycleConstant, data: unknown): void {
         delayedEvents.length = 0;
       }
 
-      if (typeof __MULTI_ROOT_RENDER_CONTEXT__ !== 'undefined' && __MULTI_ROOT_RENDER_CONTEXT__) {
-        const ctx = getCurrentRootContext();
+      {
+        const ctx = ctxBeforeProcess;
         const tt = ctx.tt ?? lynxCoreInject.tt;
         tt.publishEvent = bindContext(ctx, publishEvent);
         tt.publicComponentEvent = bindContext(ctx, publicComponentEvent);
-        /* v8 ignore start */
-      } else {
-        lynxCoreInject.tt.publishEvent = publishEvent;
-        lynxCoreInject.tt.publicComponentEvent = publicComponentEvent;
       }
-      /* v8 ignore stop */
 
       // console.debug("********** After hydration:");
       // printSnapshotInstance(__root as BackgroundSnapshotInstance);
@@ -208,16 +182,13 @@ function onLifecycleEventImpl(type: LifecycleConstant, data: unknown): void {
       const patchList: PatchList = {
         patchList: [{ snapshotPatch, id: commitTaskId }],
       };
-      if (delayedRunOnMainThreadData.length) {
+      if (getDelayedRunOnMainThreadData().length) {
         patchList.delayedRunOnMainThreadData = takeDelayedRunOnMainThreadData();
       }
       const obj = commitPatchUpdate(patchList, { isHydration: true });
       sendMTRefInitValueToMainThread();
-      const commitTaskMap = globalCommitTaskMap;
-      const ctxLynx = typeof __MULTI_ROOT_RENDER_CONTEXT__ !== 'undefined' && __MULTI_ROOT_RENDER_CONTEXT__
-        ? contextLynx()
-        : lynx;
-      ctxLynx.getNativeApp().callLepusMethod(LifecycleConstant.patchUpdate, obj, () => {
+      const commitTaskMap = ctxBeforeProcess.commitTaskMap;
+      contextLynx().getNativeApp().callLepusMethod(LifecycleConstant.patchUpdate, obj, () => {
         commitTaskMap.forEach((commitTask, id) => {
           if (id > commitTaskId) {
             return;
@@ -251,6 +222,7 @@ function flushDelayedLifecycleEvents(): void {
   // avoid stackoverflow
   if (flushingDelayedLifecycleEvents) return;
   flushingDelayedLifecycleEvents = true;
+  const delayedLifecycleEvents = getDelayedLifecycleEvents();
   if (delayedLifecycleEvents) {
     delayedLifecycleEvents.forEach((e) => {
       onLifecycleEvent(e);
