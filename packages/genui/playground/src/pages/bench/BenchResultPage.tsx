@@ -34,17 +34,17 @@ const METRIC_TABS = [
   {
     key: 'totalTokens',
     label: 'Tokens',
-    description: 'Total tokens · lower is better',
+    description: 'Tokens 总量 · 越低越好',
   },
   {
     key: 'agentMs',
-    label: 'Agent',
-    description: 'Generation latency · lower is better',
+    label: 'Agent 耗时',
+    description: 'Agent 生成耗时 · 越低越好',
   },
   {
     key: 'judge',
     label: 'UI Judge',
-    description: 'Visual correctness · higher is better',
+    description: 'UI Judge 得分 · 越高越好',
   },
 ] as const satisfies readonly {
   key: DisplayMetric;
@@ -53,25 +53,25 @@ const METRIC_TABS = [
 }[];
 
 const EXPERIMENT_LABELS = {
-  models: 'A · LLM',
-  prompts: 'B · Prompt',
+  models: 'A · 模型',
+  prompts: 'B · System Prompt',
   catalogs: 'C · Catalog',
 } as const satisfies Record<BenchComparison['id'], string>;
 
 const EVIDENCE = {
   models: {
-    title: 'Model comparison contact sheet',
-    description: '4 models × 3 scenarios',
+    title: '模型对比结果拼图',
+    description: '4 个模型 × 3 个场景',
     src: MODEL_EVIDENCE_URL,
   },
   prompts: {
-    title: 'Prompt comparison contact sheet',
-    description: '3 prompt variants × 3 scenarios',
+    title: 'System Prompt 对比结果拼图',
+    description: '3 个 Prompt × 3 个场景',
     src: PROMPT_EVIDENCE_URL,
   },
   catalogs: {
-    title: 'Catalog comparison contact sheet',
-    description: '3 catalog sizes × 3 scenarios',
+    title: 'Catalog 对比结果拼图',
+    description: '3 种 Catalog × 3 个场景',
     src: CATALOG_EVIDENCE_URL,
   },
 } as const satisfies Record<
@@ -130,7 +130,7 @@ function FullMetrics(props: { comparison: BenchComparison }) {
     <details className='benchStudyDisclosure'>
       <summary>
         <span>完整指标</span>
-        <small>Tokens · Agent · Runtime · Judge · Attempts</small>
+        <small>Tokens · Agent 耗时 · Runtime · UI Judge · 生成次数</small>
       </summary>
       <div className='benchStudyMetricsTableWrap'>
         <table className='benchStudyMetricsTable'>
@@ -138,12 +138,12 @@ function FullMetrics(props: { comparison: BenchComparison }) {
             <tr>
               <th scope='col'>{props.comparison.variable}</th>
               <th scope='col'>Tokens</th>
-              <th scope='col'>Agent</th>
+              <th scope='col'>Agent 耗时</th>
               <th scope='col'>Render</th>
               <th scope='col'>FMP</th>
               <th scope='col'>TTI</th>
-              <th scope='col'>Judge</th>
-              <th scope='col'>Attempts</th>
+              <th scope='col'>UI Judge</th>
+              <th scope='col'>生成次数</th>
             </tr>
           </thead>
           <tbody>
@@ -177,7 +177,7 @@ function EvidenceDisclosure(props: {
       key={props.experimentId}
     >
       <summary>
-        <span>查看当前实验的视觉证据</span>
+        <span>查看生成结果拼图</span>
         <small>{evidence.description}</small>
       </summary>
       <a href={evidence.src} target='_blank' rel='noreferrer'>
@@ -264,23 +264,21 @@ function ExperimentComparator(props: {
         role='tabpanel'
         aria-labelledby={`bench-experiment-${comparison.id} bench-metric-${metric}`}
       >
-        <div className='benchStudyCompareSummary' aria-live='polite'>
+        <div className='benchStudyCompareHeader' aria-live='polite'>
           <div>
-            <span>{comparison.fixedCondition}</span>
+            <span>当前实验</span>
             <h3>{comparison.title}</h3>
-            <p>{winner.strength}</p>
           </div>
-          <div className='benchStudyWinner'>
-            <small>综合建议 · 跨指标</small>
-            <strong>{winner.name}</strong>
-            <span>{winner.descriptor}</span>
-          </div>
+          <p>
+            <small>固定条件</small>
+            {comparison.fixedCondition}
+          </p>
         </div>
 
         <div className='benchStudyBars' aria-live='polite'>
           <div className='benchStudyBarsHeading'>
             <span>{metricDefinition.description}</span>
-            <small>Average across 3 scenarios</small>
+            <small>3 个场景的平均值</small>
           </div>
           {comparison.rows.map((row) => {
             const value = row.metrics[metric];
@@ -294,7 +292,7 @@ function ExperimentComparator(props: {
               >
                 <div className='benchStudyBarLabel'>
                   <strong>{row.name}</strong>
-                  {isBest ? <small>BEST</small> : null}
+                  {isBest ? <small>该指标最佳</small> : null}
                 </div>
                 <div className='benchStudyBarTrack' aria-hidden='true'>
                   <span style={{ width: `${width}%` }} />
@@ -304,6 +302,22 @@ function ExperimentComparator(props: {
             );
           })}
         </div>
+
+        <aside className='benchStudyWinner' aria-live='polite'>
+          <div className='benchStudyWinnerLead'>
+            <small>本组建议 · 综合指标</small>
+            <strong>{winner.name}</strong>
+            <span>{winner.descriptor}</span>
+          </div>
+          <div>
+            <small>为什么推荐</small>
+            <p>{winner.strength}</p>
+          </div>
+          <div>
+            <small>需要注意</small>
+            <p>{winner.risk}</p>
+          </div>
+        </aside>
       </div>
 
       <div className='benchStudyCompareDetails'>
@@ -321,30 +335,50 @@ export function BenchResultPage() {
     <main className='benchStudyPage'>
       <section className='benchStudyHero'>
         <div className='benchStudyHeroTopline'>
-          <span>Protocol Laboratory · Published report</span>
-          <span>Rev. {report.sourceRevision} · {report.scope.runs} runs</span>
+          <span>{report.eyebrow}</span>
+          <span>
+            数据版本 Rev. {report.sourceRevision} · {report.scope.runs} 次运行
+          </span>
         </div>
 
-        <div className='benchStudyHeroGrid'>
-          <div>
-            <p className='benchStudyEyebrow'>Lynx A2UI benchmark</p>
-            <h1>
-              <span>BENCH</span>
-              <span>/01</span>
-            </h1>
+        <div className='benchStudyHeroLead'>
+          <p className='benchStudyEyebrow'>一期测评结果</p>
+          <h1>{report.title}</h1>
+          <div className='benchStudyConclusion'>
+            <span>一期结论</span>
+            <p>{report.conclusion}</p>
           </div>
-          <div className='benchStudyHeroCopy'>
-            <p className='benchStudyThesis'>{report.conclusion}</p>
-            <p className='benchStudyHeroContext'>{report.description}</p>
-            <div className='benchStudyHeroActions'>
-              <a href='#/bench'>返回 Runner</a>
-              <a href='#/bench/phase-2'>Phase 02 计划 ↗</a>
-            </div>
+          <p className='benchStudyHeroContext'>{report.description}</p>
+          <div className='benchStudyHeroActions'>
+            <a href='#/bench'>打开 Runner</a>
+            <a href='#/bench/phase-2'>查看 Phase 02 计划</a>
           </div>
         </div>
+
+        <dl className='benchStudyScope' aria-label='实验范围'>
+          <div>
+            <dt>运行</dt>
+            <dd>{report.scope.runs}</dd>
+          </div>
+          <div>
+            <dt>场景</dt>
+            <dd>{report.scope.scenarios}</dd>
+          </div>
+          <div>
+            <dt>模型</dt>
+            <dd>{report.scope.models}</dd>
+          </div>
+          <div>
+            <dt>Prompt / Catalog</dt>
+            <dd>{report.scope.prompts} / {report.scope.catalogs}</dd>
+          </div>
+        </dl>
 
         <div className='benchStudyRecommendation'>
-          <span>Recommended baseline</span>
+          <div className='benchStudyRecommendationLead'>
+            <span>建议起始配置</span>
+            <p>{report.recommendation.summary}</p>
+          </div>
           <ol>
             {report.recommendation.combination.map((item) => (
               <li key={item.dimension}>
@@ -353,38 +387,41 @@ export function BenchResultPage() {
               </li>
             ))}
           </ol>
-          <p>
-            {report.recommendation.summary}
-            <small>来自三组单变量实验的外推；该组合尚未联测。</small>
+          <p className='benchStudyEvidenceBoundary'>
+            <strong>证据边界</strong>
+            这不是已经验证的最优组合：推荐来自三组单变量实验，三者尚未一起测试。
           </p>
         </div>
       </section>
 
       <section className='benchStudySection benchStudyFindings'>
         <header className='benchStudySectionHeader'>
-          <span>01 / Findings</span>
+          <span>01</span>
           <div>
-            <h2>
-              先看结论，<br />再看证据。
-            </h2>
-            <p>一期实验收敛成四个可以直接带走的数字。</p>
+            <h2>关键结果</h2>
+            <p>
+              从模型、System Prompt 和 Catalog 三组实验中，摘取 4 个关键结果。
+            </p>
           </div>
         </header>
-        <div className='benchStudyFindingGrid'>
+        <div className='benchStudyFindingList'>
           {report.highlights.map((highlight, index) => (
             <article
-              className={`benchStudyFinding tone-${index + 1}`}
+              className='benchStudyFinding'
               key={highlight.id}
             >
-              <div>
-                <span>{highlight.title}</span>
+              <div className='benchStudyFindingTitle'>
+                <span>0{index + 1}</span>
+                <h3>{highlight.title}</h3>
+              </div>
+              <div className='benchStudyFindingResult'>
+                <strong>{highlight.subject}</strong>
+                <p>{highlight.detail}</p>
+              </div>
+              <div className='benchStudyFindingMetric'>
+                <strong>{highlight.value}</strong>
                 <small>{highlight.metricLabel}</small>
               </div>
-              <strong>{highlight.value}</strong>
-              <footer>
-                <b>{highlight.subject}</b>
-                <p>{highlight.detail}</p>
-              </footer>
             </article>
           ))}
         </div>
@@ -392,14 +429,10 @@ export function BenchResultPage() {
 
       <section className='benchStudySection benchStudyExperiments'>
         <header className='benchStudySectionHeader'>
-          <span>02 / Experiments</span>
+          <span>02</span>
           <div>
-            <h2>
-              三组实验，<br />一个选择器。
-            </h2>
-            <p>
-              每次只比较一个变量和一个指标；完整数据与截图按需展开。
-            </p>
+            <h2>实验对比</h2>
+            <p>选择实验组和指标即可对比；完整指标与生成结果可按需展开。</p>
           </div>
         </header>
         <ExperimentComparator comparisons={report.comparisons} />
@@ -407,28 +440,30 @@ export function BenchResultPage() {
 
       <section className='benchStudySection benchStudyScenarios'>
         <header className='benchStudySectionHeader'>
-          <span>03 / Scenarios</span>
+          <span>03</span>
           <div>
-            <h2>
-              三种复杂度，<br />同一把尺。
-            </h2>
-            <p>从轻量信息卡到长内容规划，固定输入让变量之间可比较。</p>
+            <h2>测试场景</h2>
+            <p>所有实验复用相同输入，覆盖信息卡、购买卡和长内容规划。</p>
           </div>
         </header>
-        <div className='benchStudyScenarioGrid'>
+        <div className='benchStudyScenarioList'>
           {report.scenarios.map((scenario, index) => (
             <article
-              className={`benchStudyScenario tone-${index + 1}`}
+              className='benchStudyScenario'
               key={scenario.id}
             >
-              <div>
+              <div className='benchStudyScenarioTitle'>
                 <span>0{index + 1}</span>
-                <small>{scenario.complexity}复杂度</small>
+                <div>
+                  <h3>{scenario.name}</h3>
+                  <small>
+                    {scenario.businessMode} · {scenario.complexity}复杂度
+                  </small>
+                </div>
               </div>
-              <h3>{scenario.name}</h3>
               <p>{scenario.purpose}</p>
               <footer>
-                <span>{scenario.businessMode}</span>
+                <span>交互</span>
                 <b>{scenario.interaction}</b>
               </footer>
             </article>
@@ -438,7 +473,7 @@ export function BenchResultPage() {
 
       <section className='benchStudySection benchStudyMethod'>
         <div className='benchStudyMethodColumn'>
-          <span className='benchStudySectionIndex'>04 / Method</span>
+          <span className='benchStudySectionIndex'>04 · 实验方法</span>
           <h2>{report.methodology.title}</h2>
           <ol className='benchStudyMethodList'>
             {report.methodology.items.map((item, index) => (
@@ -453,8 +488,8 @@ export function BenchResultPage() {
           </ol>
         </div>
         <aside className='benchStudyLimitations'>
-          <span className='benchStudySectionIndex'>Read with care</span>
-          <h2>三个限制</h2>
+          <span className='benchStudySectionIndex'>结果解读</span>
+          <h2>阅读结果前，请注意</h2>
           <ol>
             {report.limitations.map((limitation) => (
               <li key={limitation}>{limitation}</li>
