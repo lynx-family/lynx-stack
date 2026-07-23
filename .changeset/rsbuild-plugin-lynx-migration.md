@@ -1,6 +1,6 @@
 ---
-"@lynx-js/rsbuild-plugin": patch
-"@lynx-js/rspeedy": patch
+"@lynx-js/rsbuild-plugin": minor
+"@lynx-js/rspeedy": minor
 "@lynx-js/react-rsbuild-plugin": patch
 ---
 
