@@ -307,6 +307,175 @@ describe('Template Manager', () => {
     );
   });
 
+  test('should reuse a bundle and ignore a later overrideConfig', async () => {
+    const templateUrl = 'http://example.com/template_override_blob_test';
+    const encoded = encode({
+      ...sampleTasm,
+      manifest: {
+        '/app-service.js': 'module.exports = "background";',
+      },
+    });
+
+    (globalThis.fetch as any).mockImplementation(() => {
+      const stream = new ReadableStream({
+        start(controller) {
+          controller.enqueue(encoded);
+          controller.close();
+        },
+      });
+      return Promise.resolve({
+        ok: true,
+        status: 200,
+        statusText: 'OK',
+        body: stream,
+      });
+    });
+
+    await templateManager.fetchBundle(
+      templateUrl,
+      Promise.resolve(mockLynxViewInstance),
+      false,
+      false,
+      false,
+      {
+        cardType: 'first-card',
+        enableCSSSelector: 'true',
+      },
+    );
+
+    const oldBundle = templateManager.getBundle(templateUrl);
+    expect(Object.values(oldBundle?.lepusCode ?? {}).length).toBeGreaterThan(0);
+    expect(Object.values(oldBundle?.backgroundCode ?? {}).length)
+      .toBeGreaterThan(0);
+
+    const createBundleSpy = rstest.spyOn(templateManager, 'createBundle');
+    const revokeObjectURLSpy = rstest.spyOn(URL, 'revokeObjectURL');
+    try {
+      await templateManager.fetchBundle(
+        templateUrl,
+        Promise.resolve(mockLynxViewInstance),
+        false,
+        false,
+        false,
+        {
+          cardType: 'ignored-card',
+        },
+      );
+
+      expect(globalThis.fetch).toHaveBeenCalledTimes(1);
+      expect(templateManager.getBundle(templateUrl)).toBe(oldBundle);
+      expect(templateManager.getBundle(templateUrl)?.config?.cardType)
+        .toBe('first-card');
+      expect(createBundleSpy).not.toHaveBeenCalled();
+      expect(revokeObjectURLSpy).not.toHaveBeenCalled();
+    } finally {
+      createBundleSpy.mockRestore();
+      revokeObjectURLSpy.mockRestore();
+    }
+  });
+
+  test('should not dispose a cached bundle for a later overrideConfig', async () => {
+    const templateUrl = 'http://example.com/template_override_conflict_test';
+    const encoded = encode(sampleTasm);
+
+    (globalThis.fetch as any).mockImplementation(() => {
+      const stream = new ReadableStream({
+        start(controller) {
+          controller.enqueue(encoded);
+          controller.close();
+        },
+      });
+      return Promise.resolve({
+        ok: true,
+        status: 200,
+        statusText: 'OK',
+        body: stream,
+      });
+    });
+
+    await templateManager.fetchBundle(
+      templateUrl,
+      Promise.resolve(mockLynxViewInstance),
+      false,
+      false,
+      false,
+      { cardType: 'first-card' },
+    );
+
+    const oldBundle = templateManager.getBundle(templateUrl);
+    expect(oldBundle?.styleSheet).toBeDefined();
+    const createBundleSpy = rstest.spyOn(templateManager, 'createBundle');
+    const revokeObjectURLSpy = rstest.spyOn(URL, 'revokeObjectURL');
+    const freeStyleSheetSpy = rstest.spyOn(oldBundle!.styleSheet!, 'free');
+    try {
+      await templateManager.fetchBundle(
+        templateUrl,
+        Promise.resolve(mockLynxViewInstance),
+        false,
+        false,
+        false,
+        { cardType: 'ignored-card' },
+      );
+
+      expect(globalThis.fetch).toHaveBeenCalledTimes(1);
+      expect(templateManager.getBundle(templateUrl)).toBe(oldBundle);
+      expect(templateManager.getBundle(templateUrl)?.config?.cardType)
+        .toBe('first-card');
+      expect(createBundleSpy).not.toHaveBeenCalled();
+      expect(revokeObjectURLSpy).not.toHaveBeenCalled();
+      expect(freeStyleSheetSpy).not.toHaveBeenCalled();
+    } finally {
+      createBundleSpy.mockRestore();
+      revokeObjectURLSpy.mockRestore();
+      freeStyleSheetSpy.mockRestore();
+    }
+  });
+
+  test('should ignore a later overrideConfig while the URL is loading', async () => {
+    const templateUrl =
+      'http://example.com/template_concurrent_override_conflict_test';
+    const encoded = encode(sampleTasm);
+    let streamController!: ReadableStreamDefaultController<Uint8Array>;
+    const stream = new ReadableStream<Uint8Array>({
+      start(controller) {
+        streamController = controller;
+      },
+    });
+
+    (globalThis.fetch as any).mockResolvedValue({
+      ok: true,
+      status: 200,
+      statusText: 'OK',
+      body: stream,
+    });
+
+    const firstLoad = templateManager.fetchBundle(
+      templateUrl,
+      Promise.resolve(mockLynxViewInstance),
+      false,
+      false,
+      false,
+      { cardType: 'first-card' },
+    );
+
+    const secondLoad = templateManager.fetchBundle(
+      templateUrl,
+      Promise.resolve(mockLynxViewInstance),
+      false,
+      false,
+      false,
+      { cardType: 'ignored-card' },
+    );
+
+    streamController.enqueue(encoded);
+    streamController.close();
+    await Promise.all([firstLoad, secondLoad]);
+
+    expect(globalThis.fetch).toHaveBeenCalledTimes(1);
+    expect(templateManager.getBundle(templateUrl)?.config?.cardType)
+      .toBe('first-card');
+  });
+
   test('should load web-core.main-thread.json correctly', async () => {
     const jsonContent = {
       'styleInfo': {
