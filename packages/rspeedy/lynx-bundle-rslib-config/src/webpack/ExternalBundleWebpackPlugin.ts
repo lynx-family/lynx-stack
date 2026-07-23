@@ -188,6 +188,8 @@ export class ExternalBundleWebpackPlugin {
     const compilerOptions: Record<string, unknown> = {
       enableFiberArch: true,
       useLepusNG: true,
+      isExternalBundle: true,
+      isLazy: false,
       // `lynx.fetchBundle` and `lynx.loadScript` require engineVersion >= 3.5
       targetSdkVersion: this.options.engineVersion ?? '3.5',
       enableCSSInvalidation: true,

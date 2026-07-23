@@ -128,6 +128,24 @@ function scheduleHeartbreak() {
   unrefTimer(heartbreakTimer);
 }
 
+function mergeConfigWithRuntimeFallback(
+  config: Partial<PageConfig>,
+  overrideConfig?: Partial<PageConfig>,
+): Partial<PageConfig> {
+  if (!overrideConfig) {
+    return config;
+  }
+
+  const merged = { ...config, ...overrideConfig };
+  if (config.isExternalBundle !== undefined) {
+    merged.isExternalBundle = config.isExternalBundle;
+    if (config.isLazy !== undefined) {
+      merged.isLazy = config.isLazy;
+    }
+  }
+  return merged;
+}
+
 self.onmessage = async (
   event:
     | MessageEvent<LoadTemplateMessage>
@@ -269,9 +287,10 @@ async function handleStream(
 
     switch (label) {
       case TemplateSectionLabel.Configurations: {
-        config = overrideConfig
-          ? { ...decodeJSONMap<string>(content), ...overrideConfig }
-          : decodeJSONMap<string>(content);
+        config = mergeConfigWithRuntimeFallback(
+          decodeJSONMap<string>(content),
+          overrideConfig,
+        );
         postMessage(
           { type: 'section', label, url, data: config } as MainMessage,
         );
@@ -385,9 +404,7 @@ async function handleJSON(
     config.isLazy = (appType === 'card') ? 'false' : 'true';
   }
 
-  if (overrideConfig) {
-    config = { ...config, ...overrideConfig };
-  }
+  config = mergeConfigWithRuntimeFallback(config, overrideConfig);
   config = Object.fromEntries(
     Object.entries(config).map(([key, value]) => [key, value.toString()]),
   );

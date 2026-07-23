@@ -1032,6 +1032,8 @@ describe('debug info outside', () => {
         fs.readFileSync(path.join(distRoot, 'tasm.json'), 'utf-8'),
       ) as { compilerOptions: Record<string, unknown> }
       expect(tasmJson.compilerOptions['debugInfoOutside']).toBe(true)
+      expect(tasmJson.compilerOptions['isExternalBundle']).toBe(true)
+      expect(tasmJson.compilerOptions['isLazy']).toBe(false)
     } finally {
       rstest.unstubAllEnvs()
     }

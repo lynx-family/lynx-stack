@@ -360,6 +360,55 @@ describe('Template Manager', () => {
     );
   });
 
+  test('should keep encoded external bundle mode over runtime fallback', async () => {
+    const templateUrl = 'http://example.com/template_encoded_mode_test';
+    const encoded = encode({
+      ...sampleTasm,
+      pageConfig: {
+        ...sampleTasm.pageConfig,
+        isExternalBundle: 'true',
+        isLazy: 'false',
+      },
+    });
+
+    const stream = new ReadableStream({
+      start(controller) {
+        controller.enqueue(encoded);
+        controller.close();
+      },
+    });
+    (globalThis.fetch as any).mockResolvedValue({
+      ok: true,
+      status: 200,
+      statusText: 'OK',
+      body: stream,
+    });
+
+    await templateManager.fetchBundle(
+      templateUrl,
+      Promise.resolve(mockLynxViewInstance),
+      false,
+      false,
+      false,
+      { isExternalBundle: 'false', isLazy: 'true' },
+    );
+
+    expect(mockLynxViewInstance.onPageConfigReady).toHaveBeenCalledWith(
+      expect.objectContaining({
+        isExternalBundle: 'true',
+        isLazy: 'false',
+      }),
+    );
+    expect(mockLynxViewInstance.onMTSScriptsLoaded).toHaveBeenCalledWith(
+      templateUrl,
+      false,
+    );
+    expect(mockLynxViewInstance.onBTSScriptsLoaded).toHaveBeenCalledWith(
+      templateUrl,
+      true,
+    );
+  });
+
   test('should reuse a bundle and ignore a later overrideConfig', async () => {
     const templateUrl = 'http://example.com/template_override_blob_test';
     const encoded = encode({
