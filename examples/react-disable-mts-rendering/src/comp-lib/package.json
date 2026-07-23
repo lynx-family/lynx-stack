@@ -1,0 +1,7 @@
+{
+  "sideEffects": false,
+  "type": "module",
+  "dependencies": {
+    "@lynx-js/react": "*"
+  }
+}

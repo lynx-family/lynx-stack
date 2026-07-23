@@ -102,6 +102,11 @@ export interface ReactLoaderOptions {
    * @experimental
    */
   experimental_useElementTemplate?: boolean | undefined;
+
+  /**
+   * {@inheritdoc @lynx-js/react-rsbuild-plugin#PluginReactLynxOptions.enableMTSRendering}
+   */
+  enableMTSRendering?: boolean | undefined;
 }
 
 function normalizeSlashes(file: string) {
@@ -240,7 +245,7 @@ export function getMainThreadTransformOptions(
 ): TransformNodiffOptions {
   const commonOptions = getCommonOptions.call(this, inputSourceMap);
 
-  const { shake } = this.getOptions();
+  const { shake, enableMTSRendering } = this.getOptions();
   const useElementTemplate = typeof commonOptions.elementTemplate === 'object';
 
   return {
@@ -323,6 +328,7 @@ export function getMainThreadTransformOptions(
       ...commonOptions.worklet,
       target: 'LEPUS',
     },
+    collectMainThreadCode: enableMTSRendering === false,
     directiveDCE: {
       target: 'LEPUS',
     },

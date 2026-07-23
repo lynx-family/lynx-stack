@@ -101,6 +101,14 @@ impl WorkletVisitor {
     self
   }
 
+  pub fn with_main_thread_stmts_collector(
+    mut self,
+    collector: std::rc::Rc<std::cell::RefCell<Vec<Stmt>>>,
+  ) -> Self {
+    self.inner = self.inner.with_main_thread_stmts_collector(collector);
+    self
+  }
+
   pub fn new(mode: TransformMode, cfg: WorkletVisitorConfig) -> Self {
     Self {
       inner: CoreVisitor::new(mode.into(), cfg.into()),

@@ -10,7 +10,9 @@ use gen_stmt::StmtGen;
 use hash::WorkletHash;
 use rustc_hash::FxHashSet;
 use serde::Deserialize;
+use std::cell::RefCell;
 use std::collections::HashSet;
+use std::rc::Rc;
 use std::vec;
 use swc_core::common::util::take::Take;
 use swc_core::common::{errors::HANDLER, Span, Spanned, DUMMY_SP};
@@ -64,6 +66,11 @@ pub struct WorkletVisitor {
   shared_identifiers: FxHashSet<Id>,
   worklet_runtime_loaded: bool,
   worklet_runtime_loaded_ident: Ident,
+  /// When set, the generated top-level worklet statements (the
+  /// `loadWorkletRuntime` guard and the `registerWorkletInternal` calls) are
+  /// also cloned into this collector so the caller can assemble the
+  /// main-thread code out-of-band. Only meaningful for the LEPUS target.
+  main_thread_stmts_collector: Option<Rc<RefCell<Vec<Stmt>>>>,
 }
 
 impl Default for WorkletVisitor {
@@ -635,6 +642,15 @@ impl VisitMut for WorkletVisitor {
         .into_iter(),
       );
     }
+    if let Some(collector) = &self.main_thread_stmts_collector {
+      collector.borrow_mut().extend(
+        self
+          .stmts_to_insert_at_top_level
+          .iter()
+          .filter(|stmt| !stmt.is_empty())
+          .cloned(),
+      );
+    }
     // Add statements to insert at top level after processing all items
     n.body.extend(
       self
@@ -699,6 +715,11 @@ impl WorkletVisitor {
     self
   }
 
+  pub fn with_main_thread_stmts_collector(mut self, collector: Rc<RefCell<Vec<Stmt>>>) -> Self {
+    self.main_thread_stmts_collector = Some(collector);
+    self
+  }
+
   pub fn new(mode: TransformMode, cfg: WorkletVisitorConfig) -> Self {
     WorkletVisitor {
       mode,
@@ -710,6 +731,7 @@ impl WorkletVisitor {
       shared_identifiers: FxHashSet::default(),
       worklet_runtime_loaded: false,
       worklet_runtime_loaded_ident: private_ident!("__workletRuntimeLoaded"),
+      main_thread_stmts_collector: None,
     }
   }
 

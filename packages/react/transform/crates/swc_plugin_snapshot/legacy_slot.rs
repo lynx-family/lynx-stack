@@ -1521,6 +1521,11 @@ where
   ));
 
   t.current_snapshot_id = Some(snapshot_id.clone());
+  if let Some(collector) = &t.main_thread_defs_collector {
+    let mut collector = collector.borrow_mut();
+    collector.push(entry_snapshot_uid_def.clone());
+    collector.push(snapshot_def.clone());
+  }
   t.current_snapshot_defs.push(entry_snapshot_uid_def);
   t.current_snapshot_defs.push(snapshot_def);
 

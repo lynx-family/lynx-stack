@@ -51,6 +51,7 @@ function getLoaderOptions(
     defineDCE,
     engineVersion,
     enableUiSourceMap,
+    enableMTSRendering,
 
     experimental_isLazyBundle,
     experimental_useElementTemplate,
@@ -68,6 +69,7 @@ function getLoaderOptions(
       ? {
         enableUiSourceMap,
         shake,
+        enableMTSRendering,
       }
       : {},
   }

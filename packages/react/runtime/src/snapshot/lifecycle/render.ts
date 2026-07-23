@@ -12,6 +12,13 @@ import { render as renderToString } from '../renderToOpcodes/index.js';
 import { SnapshotInstance } from '../snapshot/snapshot.js';
 
 function renderMainThread(): void {
+  // With `enableMTSRendering: false` the main thread does not render the
+  // first screen; the background thread renders the whole UI through
+  // hydration.
+  if (typeof __ENABLE_MTS_RENDERING__ !== 'undefined' && !__ENABLE_MTS_RENDERING__) {
+    return;
+  }
+
   let opcodes;
   try {
     if (typeof __PROFILE__ !== 'undefined' && __PROFILE__) {

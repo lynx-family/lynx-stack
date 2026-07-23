@@ -698,6 +698,14 @@ export interface TransformNodiffOptions {
   defineDCE: boolean | DefineDceVisitorConfig
   directiveDCE: boolean | DirectiveDceVisitorConfig
   worklet: boolean | WorkletVisitorConfig
+  /**
+   * @internal
+   * Collect the generated main-thread snapshot and worklet registrations of
+   * this module into {@link TransformNodiffOutput.mainThreadCode} without
+   * changing the transformed output. Only meaningful for the main-thread
+   * (LEPUS) transform.
+   */
+  collectMainThreadCode?: boolean
   dynamicImport?: boolean | DynamicImportVisitorConfig
   /** @internal */
   inject?: boolean | InjectVisitorConfig
@@ -711,6 +719,13 @@ export interface TransformNodiffOutput {
   uiSourceMapRecords: Array<UiSourceMapRecord>
   /** @internal */
   elementTemplates?: Array<ElementTemplateAsset>
+  /**
+   * @internal
+   * The generated main-thread snapshot and worklet registrations of this
+   * module, collected when {@link TransformNodiffOptions.collectMainThreadCode}
+   * is enabled.
+   */
+  mainThreadCode?: string
 }
 /** @internal */
 export interface ElementTemplateAsset {

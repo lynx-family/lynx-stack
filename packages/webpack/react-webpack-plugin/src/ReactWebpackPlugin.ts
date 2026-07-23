@@ -13,7 +13,10 @@ import { LynxTemplatePlugin } from '@lynx-js/template-webpack-plugin';
 import { RuntimeGlobals } from '@lynx-js/webpack-runtime-globals';
 
 import { LAYERS } from './layer.js';
-import { ELEMENT_TEMPLATE_BUILD_INFO } from './loaders/main-thread.js';
+import {
+  ELEMENT_TEMPLATE_BUILD_INFO,
+  MAIN_THREAD_CODE_BUILD_INFO,
+} from './loaders/main-thread.js';
 import { createLynxProcessEvalResultRuntimeModule } from './LynxProcessEvalResultRuntimeModule.js';
 
 const require = createRequire(import.meta.url);
@@ -45,6 +48,44 @@ export function collectElementTemplatesFromModule(
   }
 
   return elementTemplates;
+}
+
+/**
+ * Collects the per-module main-thread code (snapshot and worklet
+ * registrations) stored by the main-thread loader.
+ *
+ * It iterates every built module of the compilation instead of the chunk
+ * graph on purpose: modules removed by tree-shaking or `sideEffects: false`
+ * must still contribute their snapshot registrations to the main-thread
+ * bundle, otherwise background-driven patches would throw `Snapshot not
+ * found`.
+ */
+export function collectMainThreadCode(
+  modules: Iterable<ModuleWithElementTemplateBuildInfo>,
+): string[] {
+  const visited = new Set<ModuleWithElementTemplateBuildInfo>();
+  const codes = new Set<string>();
+  const visit = (module: ModuleWithElementTemplateBuildInfo) => {
+    if (visited.has(module)) {
+      return;
+    }
+    visited.add(module);
+    const code = module.buildInfo?.[MAIN_THREAD_CODE_BUILD_INFO];
+    if (typeof code === 'string' && code.length > 0) {
+      codes.add(code);
+    }
+    if (module.modules) {
+      for (const nestedModule of module.modules) {
+        visit(nestedModule);
+      }
+    }
+  };
+  for (const module of modules) {
+    visit(module);
+  }
+  // Registration order does not matter (each module's registrations are
+  // independent), but a stable order keeps the output deterministic.
+  return [...codes].sort();
 }
 
 function isPlainRecord(value: unknown): value is Record<string, unknown> {
@@ -182,6 +223,11 @@ interface ReactWebpackPluginOptions {
   firstScreenSyncTiming?: 'immediately' | 'jsReady' | 'manual';
 
   /**
+   * {@inheritdoc @lynx-js/react-rsbuild-plugin#PluginReactLynxOptions.enableMTSRendering}
+   */
+  enableMTSRendering?: boolean | undefined;
+
+  /**
    * {@inheritdoc @lynx-js/react-rsbuild-plugin#PluginReactLynxOptions.globalPropsMode}
    */
   globalPropsMode?: 'reactive' | 'event';
@@ -195,6 +241,14 @@ interface ReactWebpackPluginOptions {
    * The chunk names to be considered as main thread chunks.
    */
   mainThreadChunks?: string[] | undefined;
+
+  /**
+   * The chunk names that are compiled in the main-thread layer only to
+   * collect the per-module snapshot and worklet registrations when
+   * {@link ReactWebpackPluginOptions.enableMTSRendering} is `false`. They are
+   * treated as intermediate assets and removed from the production output.
+   */
+  mainThreadCollectChunks?: string[] | undefined;
 
   /**
    * Merge same string literals in JS and Lepus to reduce output bundle size.
@@ -307,9 +361,11 @@ class ReactWebpackPlugin {
     .freeze<Required<ReactWebpackPluginOptions>>({
       disableCreateSelectorQueryIncompatibleWarning: false,
       firstScreenSyncTiming: 'immediately',
+      enableMTSRendering: true,
       globalPropsMode: 'reactive',
       enableSSR: false,
       mainThreadChunks: [],
+      mainThreadCollectChunks: [],
       extractStr: false,
       experimental_isLazyBundle: false,
       profile: undefined,
@@ -329,6 +385,17 @@ class ReactWebpackPlugin {
       this.options,
     );
     const { BannerPlugin, DefinePlugin, EnvironmentPlugin } = compiler.webpack;
+
+    if (options.enableMTSRendering === false) {
+      // Every module of the main-thread layer must be built so the loader can
+      // collect its snapshot registrations — even a module that is only
+      // side-effect-imported and marked `sideEffects: false`, which the
+      // bundler would otherwise drop without building.
+      compiler.options.module.rules.push({
+        issuerLayer: LAYERS.MAIN_THREAD,
+        sideEffects: true,
+      });
+    }
 
     if (!options.experimental_isLazyBundle) {
       new BannerPlugin({
@@ -375,6 +442,9 @@ class ReactWebpackPlugin {
       __EXTRACT_STR__: JSON.stringify(Boolean(options.extractStr)),
       __FIRST_SCREEN_SYNC_TIMING__: JSON.stringify(
         options.firstScreenSyncTiming,
+      ),
+      __ENABLE_MTS_RENDERING__: JSON.stringify(
+        options.enableMTSRendering,
       ),
       __GLOBAL_PROPS_MODE__: JSON.stringify(options.globalPropsMode),
       __ENABLE_SSR__: JSON.stringify(options.enableSSR),
@@ -450,6 +520,45 @@ class ReactWebpackPlugin {
       const hooks = LynxTemplatePlugin.getLynxTemplatePluginHooks(compilation);
 
       const { RawSource, ConcatSource } = compiler.webpack.sources;
+
+      if (options.enableMTSRendering === false) {
+        // The main-thread chunk only boots the runtime in this mode; the
+        // per-module snapshot and worklet registrations collected by the
+        // main-thread loader are assembled here and appended after it.
+        // This tap runs before the worklet-runtime tap below so the appended
+        // registrations are visible to its `registerWorkletInternal` check.
+        hooks.beforeEncode.tap(
+          `${this.constructor.name}.MTSRenderingDisabled`,
+          (args) => {
+            const lepusCode = args.encodeData.lepusCode;
+            args.intermediateAssets.push(
+              ...options.mainThreadCollectChunks ?? [],
+            );
+            const mainThreadCode = collectMainThreadCode(
+              compilation.modules as Iterable<
+                ModuleWithElementTemplateBuildInfo
+              >,
+            );
+            if (mainThreadCode.length === 0 || !lepusCode.root) {
+              return args;
+            }
+            lepusCode.root = {
+              ...lepusCode.root,
+              source: new ConcatSource(
+                lepusCode.root.source,
+                '\n;(function (ReactLynx) {\n',
+                'var loadWorkletRuntime = ReactLynx.loadWorkletRuntime;\n',
+                ...mainThreadCode.map((code) =>
+                  `(function () {\n${code}})();\n`
+                ),
+                '})(globalThis.__lynxMainThreadRuntime);\n',
+              ),
+            };
+            return args;
+          },
+        );
+      }
+
       hooks.beforeEncode.tap(
         this.constructor.name,
         (args) => {

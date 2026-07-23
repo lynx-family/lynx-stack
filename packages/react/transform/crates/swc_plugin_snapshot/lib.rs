@@ -1177,6 +1177,10 @@ where
   comments: Option<C>,
   pub ui_source_map_records: Rc<RefCell<Vec<UISourceMapRecord>>>,
   pub source_map: Option<Lrc<SourceMap>>,
+  /// When set, every generated snapshot definition (the snapshot id `const`
+  /// and the `snapshotCreatorMap` registration) is also cloned into this
+  /// collector so the caller can assemble the main-thread code out-of-band.
+  pub main_thread_defs_collector: Option<Rc<RefCell<Vec<ModuleItem>>>>,
 }
 
 impl<C> JSXTransformer<C>
@@ -1216,7 +1220,16 @@ where
       comments,
       ui_source_map_records: Rc::new(RefCell::new(vec![])),
       source_map,
+      main_thread_defs_collector: None,
     }
+  }
+
+  pub fn with_main_thread_defs_collector(
+    mut self,
+    collector: Rc<RefCell<Vec<ModuleItem>>>,
+  ) -> Self {
+    self.main_thread_defs_collector = Some(collector);
+    self
   }
 
   fn parse_directives(&mut self, span: Span) {
@@ -1640,6 +1653,11 @@ where
     ));
 
     self.current_snapshot_id = Some(snapshot_id.clone());
+    if let Some(collector) = &self.main_thread_defs_collector {
+      let mut collector = collector.borrow_mut();
+      collector.push(entry_snapshot_uid_def.clone());
+      collector.push(snapshot_def.clone());
+    }
     self.current_snapshot_defs.push(entry_snapshot_uid_def);
     self.current_snapshot_defs.push(snapshot_def);
 

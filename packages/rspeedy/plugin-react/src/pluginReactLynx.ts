@@ -327,6 +327,23 @@ export interface PluginReactLynxOptions {
   experimental_useElementTemplate?: boolean
 
   /**
+   * Whether the main thread renders the first screen.
+   *
+   * When set to `false`, the main thread does not execute `renderPage` and
+   * skips first-screen rendering: the first frame is empty and the whole UI
+   * is rendered by the background thread through hydration. The main-thread
+   * bundle no longer contains the user code — it only boots the ReactLynx
+   * runtime, followed by the per-module snapshot and worklet registrations
+   * that the build tool collects from every compiled module (independent of
+   * tree-shaking, so a module removed by `sideEffects: false` still
+   * registers its snapshots).
+   *
+   * @defaultValue `true`
+   * @experimental
+   */
+  enableMTSRendering?: boolean
+
+  /**
    * Optimize bundle size by removing unused code by Minify.mainThreadOptions and Minify.backgroundOptions.
    *
    * When optimizeBundleSize or optimizeBundleSize.mainThread is true, main-thread code will be optimized.
@@ -388,6 +405,8 @@ export function pluginReactLynx(
     extractStr: false,
 
     globalPropsMode: 'reactive',
+
+    enableMTSRendering: true,
 
     experimental_isLazyBundle: false,
     experimental_useElementTemplate: false,
