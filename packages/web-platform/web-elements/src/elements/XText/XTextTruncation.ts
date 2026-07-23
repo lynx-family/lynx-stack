@@ -461,11 +461,11 @@ class TextRenderingMeasureTool {
     if (lastRectInfo.node.nodeType === Node.TEXT_NODE) {
       const { rect, rectIndex } = lastRectInfo;
       const textNode = lastRectInfo.node as Text;
-      const mesaurementRange = document.createRange();
-      mesaurementRange.selectNode(textNode);
+      const measurementRange = document.createRange();
+      measurementRange.selectNode(textNode);
       for (let charIndex = 0; charIndex < textNode.data.length; charIndex++) {
-        mesaurementRange.setEnd(textNode, charIndex);
-        const targetRect = mesaurementRange.getClientRects().item(rectIndex);
+        measurementRange.setEnd(textNode, charIndex);
+        const targetRect = measurementRange.getClientRects().item(rectIndex);
         if (targetRect && targetRect.right === rect.right) {
           return charIndex;
         }
