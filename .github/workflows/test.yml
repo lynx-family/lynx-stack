@@ -95,7 +95,7 @@ jobs:
       CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
       LHCI_GITHUB_APP_TOKEN: ${{ secrets.LHCI_GITHUB_APP_TOKEN }}
     with:
-      runs-on: lynx-custom-container
+      runs-on: lynx-custom-container-anti
       is-web: true
       run: |
         echo "open files limit before: soft=$(ulimit -Sn), hard=$(ulimit -Hn)"
@@ -114,7 +114,7 @@ jobs:
         shard: [1, 2]
     name: Playwright Web Elements Test (${{ matrix.shard }}/2)
     with:
-      runs-on: lynx-custom-container
+      runs-on: lynx-custom-container-anti
       is-web: true
       codecov-flags: "e2e"
       web-report-path: "packages/web-platform/web-elements/playwright-report"
