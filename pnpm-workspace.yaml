@@ -89,7 +89,7 @@ peerDependencyRules:
 
 # Default catalogs
 catalog:
-  "@microsoft/api-extractor": "7.58.11"
+  "@microsoft/api-extractor": "7.58.12"
 
 catalogs:
   adb:
