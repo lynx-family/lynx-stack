@@ -12,6 +12,11 @@ import { lynxRstestConfig } from '@lynx-js/test-tools/rstest-config'
 
 // Explicitly typed: the package compiles with `--isolatedDeclarations`, which
 // cannot infer default-export types.
+const engineSrc = path.join(
+  path.dirname(fileURLToPath(import.meta.url)),
+  '../plugin-lynx/src',
+)
+
 const config: RstestConfig = defineConfig({
   ...lynxRstestConfig({
     name: 'rspeedy',
@@ -21,6 +26,17 @@ const config: RstestConfig = defineConfig({
     // would treat builds as production (hashed filenames).
     env: { NODE_ENV: 'test' },
   }),
+  resolve: {
+    alias: {
+      // Some tests mock the engine's source modules (e.g. the webpack
+      // helpers). `applyDefaultPlugins` loads the engine through the package
+      // specifier, which would otherwise resolve to the built `lib/` and
+      // break mock identity — alias the package back to `src/` so the plugin
+      // under test and the mock share a single module instance.
+      '@lynx-js/rsbuild-plugin/internal': path.join(engineSrc, 'internal.ts'),
+      '@lynx-js/rsbuild-plugin': path.join(engineSrc, 'index.ts'),
+    },
+  },
   // Expand `src`'s typia macros; `include` keeps typia away from other
   // packages' compiled output (see rspeedy/plugin-config).
   tools: {

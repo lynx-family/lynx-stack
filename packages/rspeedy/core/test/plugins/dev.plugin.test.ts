@@ -20,7 +20,9 @@ import { createStubRspeedy } from '../createStubRspeedy.js'
 describe('Plugins - Dev', () => {
   beforeEach(async () => {
     rstest.stubEnv('NODE_ENV', 'development')
-    rstest.mock('../../src/webpack/ProvidePlugin.js', { mock: true })
+    rstest.mock('../../../plugin-lynx/src/webpack/ProvidePlugin.js', {
+      mock: true,
+    })
 
     const { default: os } = await import('node:os')
 
@@ -197,7 +199,9 @@ describe('Plugins - Dev', () => {
 
     await rsbuild.unwrapConfig()
 
-    const { ProvidePlugin } = await import('../../src/webpack/ProvidePlugin.js')
+    const { ProvidePlugin } = await import(
+      '../../../plugin-lynx/src/webpack/ProvidePlugin.js'
+    )
 
     expect(rstest.isMockFunction(ProvidePlugin)).toBe(true)
     expect(rstest.mocked(ProvidePlugin)).toBeCalled()
@@ -206,7 +210,7 @@ describe('Plugins - Dev', () => {
     })
     expect(ProvidePlugin).toHaveBeenCalledWith({
       __webpack_dev_server_client__: [
-        require.resolve('../../client/hmr/WebSocketClient.js'),
+        require.resolve('../../../plugin-lynx/client/hmr/WebSocketClient.js'),
         'default',
       ],
     })
@@ -242,13 +246,15 @@ describe('Plugins - Dev', () => {
 
     await rsbuild.unwrapConfig()
 
-    const { ProvidePlugin } = await import('../../src/webpack/ProvidePlugin.js')
+    const { ProvidePlugin } = await import(
+      '../../../plugin-lynx/src/webpack/ProvidePlugin.js'
+    )
 
     expect(rstest.isMockFunction(ProvidePlugin)).toBe(true)
     expect(rstest.mocked(ProvidePlugin)).toBeCalled()
     expect(ProvidePlugin).toBeCalledWith({
       __webpack_dev_server_client__: [
-        require.resolve('../../client/hmr/WebSocketClient.js'),
+        require.resolve('../../../plugin-lynx/client/hmr/WebSocketClient.js'),
         'default',
       ],
     })
@@ -260,7 +266,9 @@ describe('Plugins - Dev', () => {
 
     await rsbuild.unwrapConfig()
 
-    const { ProvidePlugin } = await import('../../src/webpack/ProvidePlugin.js')
+    const { ProvidePlugin } = await import(
+      '../../../plugin-lynx/src/webpack/ProvidePlugin.js'
+    )
 
     expect(ProvidePlugin).not.toBeCalled()
   })
@@ -491,7 +499,7 @@ describe('Plugins - Dev', () => {
 
     // dev.plugin.js will not be applied by default in production mode
     rsbuild.addPlugins([
-      await import('../../src/plugins/dev.plugin.js').then(
+      await import('../../../plugin-lynx/src/plugins/dev.plugin.js').then(
         ({ pluginDev }) => pluginDev(),
       ),
     ])
@@ -716,14 +724,16 @@ describe('Plugins - Dev', () => {
 
     await rsbuild.unwrapConfig()
 
-    const { ProvidePlugin } = await import('../../src/webpack/ProvidePlugin.js')
+    const { ProvidePlugin } = await import(
+      '../../../plugin-lynx/src/webpack/ProvidePlugin.js'
+    )
 
     expect(ProvidePlugin).toHaveBeenCalledWith({
       WebSocket: ['/foo', 'default'],
     })
     expect(ProvidePlugin).toHaveBeenCalledWith({
       __webpack_dev_server_client__: [
-        require.resolve('../../client/hmr/WebSocketClient.js'),
+        require.resolve('../../../plugin-lynx/client/hmr/WebSocketClient.js'),
         'default',
       ],
     })
