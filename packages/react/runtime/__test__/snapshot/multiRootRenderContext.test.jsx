@@ -62,6 +62,16 @@ describe('bootstrap hook: classic root.render renders the bootstrapped page', ()
     root.__experimentalBindRenderContext();
   });
 
+  it('is a no-op on the main thread', () => {
+    const prev = globalThis.__BACKGROUND__;
+    globalThis.__BACKGROUND__ = false;
+    try {
+      expect(root.__experimentalBindRenderContext({})).toBeUndefined();
+    } finally {
+      globalThis.__BACKGROUND__ = prev;
+    }
+  });
+
   it('delegates root.render to the bootstrapped root, leaving __root untouched', () => {
     globalEnvManager.switchToBackground();
 

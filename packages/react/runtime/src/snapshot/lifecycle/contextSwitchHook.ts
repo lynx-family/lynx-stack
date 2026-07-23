@@ -18,7 +18,6 @@ const onRenderComponentHook = <T extends unknown[]>(
   if (ctx) {
     switchRootContext(ctx);
   }
-  /* v8 ignore next */
   if (old) old(...args);
 };
 

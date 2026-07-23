@@ -107,15 +107,12 @@ if (typeof __MULTI_ROOT_RENDER_CONTEXT__ !== 'undefined' && __MULTI_ROOT_RENDER_
   (root as RootWithBindRenderContext).__experimentalBindRenderContext = (
     options?: BindRenderContextOptions,
   ): ReactLynxRoot | undefined => {
-    /* v8 ignore next */
     if (typeof __BACKGROUND__ !== 'undefined' && __BACKGROUND__) {
       const boundRoot = options ? new ReactLynxRoot(options) : undefined;
       setBoundRoot(boundRoot);
       return boundRoot;
-      /* v8 ignore start */
     } else {
       return undefined;
     }
-    /* v8 ignore stop */
   };
 }
