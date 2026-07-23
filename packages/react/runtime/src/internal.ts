@@ -91,6 +91,7 @@ if (__DEV__) {
   setSnapshotCreatorRuntime(ReactLynxInternalSelf);
 }
 
+/* v8 ignore start -- evaluated at module load, before tests can toggle the flag */
 if (
   typeof __MAIN_THREAD__ !== 'undefined' && __MAIN_THREAD__
   && typeof __ENABLE_MTS_RENDERING__ !== 'undefined' && !__ENABLE_MTS_RENDERING__
@@ -102,3 +103,4 @@ if (
   // @ts-expect-error Element implicitly has an 'any' type because type 'typeof globalThis' has no index signature
   globalThis.__lynxMainThreadRuntime = ReactLynxInternalSelf;
 }
+/* v8 ignore stop */
