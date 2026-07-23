@@ -87,7 +87,7 @@ export function BenchShell(props: BenchShellProps) {
           <span className='benchShellBrandMark'>
             <img src={LYNX_LOGO_URL} alt='' aria-hidden='true' />
           </span>
-          <strong>Lynx Bench</strong>
+          <strong>Lynx GenUI Bench</strong>
         </a>
 
         <nav className='benchShellNav' aria-label='Bench sections'>
