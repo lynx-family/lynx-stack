@@ -697,8 +697,8 @@ importers:
         version: link:../../packages/react
     devDependencies:
       '@lynx-js/preact-devtools':
-        specifier: 5.0.1-20260624133547-6641319
-        version: 5.0.1-20260624133547-6641319
+        specifier: 5.0.1-20260716151326-abdb87c
+        version: 5.0.1-20260716151326-abdb87c
       '@lynx-js/qrcode-rsbuild-plugin':
         specifier: workspace:*
         version: link:../../packages/rspeedy/plugin-qrcode
@@ -1676,7 +1676,7 @@ importers:
         specifier: ~1.5.6
         version: 1.5.6(@emnapi/core@1.11.1)(@emnapi/runtime@1.11.1)(@rsbuild/core@2.1.4(core-js@3.49.0))(@rspack/core@2.1.3(@swc/helpers@0.5.23))(supports-color@8.1.1)(webpack@5.105.2(@swc/core@1.15.30(@swc/helpers@0.5.23))(cssnano@7.1.2(postcss@8.5.14))(csso@5.0.5)(esbuild@0.27.3)(lightningcss@1.31.1)(postcss@8.5.14))
       ipaddr.js:
-        specifier: ^2.3.0
+        specifier: ^2.4.0
         version: 2.4.0
       picocolors:
         specifier: ^1.1.1
@@ -1704,7 +1704,7 @@ importers:
         specifier: ^1.15.30
         version: 1.15.30(@swc/helpers@0.5.23)
       type-fest:
-        specifier: ^5.4.4
+        specifier: ^5.8.0
         version: 5.8.0
 
   packages/rspeedy/plugin-qrcode:
@@ -4589,9 +4589,6 @@ packages:
     peerDependenciesMeta:
       '@lynx-js/types':
         optional: true
-
-  '@lynx-js/preact-devtools@5.0.1-20260624133547-6641319':
-    resolution: {integrity: sha512-VH0UuKgOuSM1yk8300/tyPhJcZG0FmaJD78MbgT9oXRXI6TLxMTmD6lcI11+4zmLHVHdV2kUn7AzTbbetflO4w==}
 
   '@lynx-js/preact-devtools@5.0.1-20260716151326-abdb87c':
     resolution: {integrity: sha512-a0k5zLVykaSx2SwoNhyHYkj94VI/Qx5irv2Xf9leJP4Mcb/7uP2g/bJLpijRPrfeLCDvKy5t6WmEWSucKZ7cug==}
@@ -14208,11 +14205,6 @@ snapshots:
       - '@emotion/is-prop-valid'
       - react
       - react-dom
-
-  '@lynx-js/preact-devtools@5.0.1-20260624133547-6641319':
-    dependencies:
-      errorstacks: 2.4.1
-      htm: 3.1.1
 
   '@lynx-js/preact-devtools@5.0.1-20260716151326-abdb87c':
     dependencies:
