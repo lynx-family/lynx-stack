@@ -34,7 +34,7 @@ jobs:
       BUCKET_NAME: ${{ secrets.BUCKET_NAME }}
       REGION: ${{ secrets.REGION }}
     steps:
-      - uses: actions/checkout@93cb6efe18208431cddfb8368fd83d5badbf9bfd # v5
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
         with:
           persist-credentials: false
       - name: Install
@@ -42,7 +42,7 @@ jobs:
         with:
           node-version: "24"
           save-if: ${{ github.ref_name == 'main' }}
-      - uses: astral-sh/setup-uv@d0cc045d04ccac9d8b7881df0226f9e82c39688e # v6
+      - uses: astral-sh/setup-uv@c771a70e6277c0a99b617c7a806ffedaca235ff9 # v9.0.0
       - name: Setup Rust
         shell: bash
         run: |
@@ -116,7 +116,7 @@ jobs:
         # profile is kept so a later regression can be diffed against main's
         # profile. include-hidden-files keeps the dotfiles.
         if: ${{ always() }}
-        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7
         with:
           name: codspeed-valgrind-tmp-${{ github.sha }}
           path: ${{ runner.temp }}/codspeed-valgrind-tmp
@@ -132,7 +132,7 @@ jobs:
         run: |
           pnpm -r run --workspace-concurrency=1 perfetto
       - name: React benchmark - Upload perfetto output
-        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7
         with:
           name: benchmark-react-ptrace-${{ github.sha }}
           path: ./benchmark/react/dist/*.ptrace
