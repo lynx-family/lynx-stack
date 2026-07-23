@@ -21,7 +21,7 @@
       "@lynx-js/rspeedy",
       "create-rspeedy",
       "upgrade-rspeedy",
-      "@lynx-js/preset-rsbuild-plugin"
+      "@lynx-js/rsbuild-plugin"
     ],
     [
       "@lynx-js/react",

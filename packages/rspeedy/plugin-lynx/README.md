@@ -1,4 +1,4 @@
-# @lynx-js/preset-rsbuild-plugin
+# @lynx-js/rsbuild-plugin
 
 A single Rsbuild plugin that turns a plain Rsbuild project into a Lynx one, so a
 Lynx app can be built with the **Rsbuild CLI directly** instead of the Rspeedy
@@ -7,7 +7,7 @@ CLI.
 ## Getting Started
 
 ```bash
-npm install -D @lynx-js/preset-rsbuild-plugin @rsbuild/core
+npm install -D @lynx-js/rsbuild-plugin @rsbuild/core
 ```
 
 ```ts
@@ -15,10 +15,10 @@ npm install -D @lynx-js/preset-rsbuild-plugin @rsbuild/core
 import { defineConfig } from '@rsbuild/core'
 import { pluginReactLynx } from '@lynx-js/react-rsbuild-plugin'
 
-import { pluginLynxPreset } from '@lynx-js/preset-rsbuild-plugin'
+import { pluginLynx } from '@lynx-js/rsbuild-plugin'
 
 export default defineConfig({
-  plugins: [pluginLynxPreset(), pluginReactLynx()],
+  plugins: [pluginLynx(), pluginReactLynx()],
   environments: {
     lynx: {},
   },
@@ -34,7 +34,7 @@ rsbuild dev
 
 ## What it does
 
-`pluginLynxPreset()` bundles everything the Rspeedy CLI applies by default:
+`pluginLynx()` bundles everything the Rspeedy CLI applies by default:
 
 - The Lynx internal plugins (chunk loading, resolve, target, swc, minify,
   output, sourcemap, dev/HMR, debug metadata, …).
@@ -53,7 +53,7 @@ responsibility.
 
 > [!NOTE]
 > This package now **owns** the Lynx build engine: the internal plugins live
-> here and are exposed via `@lynx-js/preset-rsbuild-plugin/internal`.
+> here and are exposed via `@lynx-js/rsbuild-plugin/internal`.
 > `@lynx-js/rspeedy` is a thin CLI shell on top that depends on this package and
 > re-composes those plugins to produce byte-identical output. The two share that
 > `/internal` contract, so they are expected to move in lockstep. This is an

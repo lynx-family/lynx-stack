@@ -5,7 +5,7 @@
 import color from 'picocolors'
 import * as typia from 'typia'
 
-import type { Config } from '@lynx-js/preset-rsbuild-plugin'
+import type { Config } from '@lynx-js/rsbuild-plugin'
 
 export const validateConfig: (
   input: unknown,

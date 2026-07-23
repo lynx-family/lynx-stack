@@ -4,7 +4,7 @@
 
 import { logger } from '@rsbuild/core'
 
-import { debug } from '@lynx-js/preset-rsbuild-plugin/internal'
+import { debug } from '@lynx-js/rsbuild-plugin/internal'
 
 import { exit } from './exit.js'
 import { rsbuildVersion, rspackVersion, version } from '../version.js'

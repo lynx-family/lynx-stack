@@ -23,7 +23,7 @@
     "src",
   ],
   "references": [
-    { "path": "../plugin-preset/tsconfig.build.json" },
+    { "path": "../plugin-lynx/tsconfig.build.json" },
     { "path": "../plugin-debug-metadata/tsconfig.build.json" },
   ],
 }

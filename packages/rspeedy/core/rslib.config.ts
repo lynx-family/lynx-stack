@@ -6,7 +6,7 @@ import { pluginAreTheTypesWrong } from 'rsbuild-plugin-arethetypeswrong'
 import { pluginPublint } from 'rsbuild-plugin-publint'
 import { TypiaRspackPlugin } from 'typia-rspack-plugin'
 
-import { BUNDLE_STATS_JSON_OPTIONS } from '../plugin-preset/src/plugins/statsJsonOptions.js'
+import { BUNDLE_STATS_JSON_OPTIONS } from '../plugin-lynx/src/plugins/statsJsonOptions.js'
 
 export default defineConfig({
   lib: [

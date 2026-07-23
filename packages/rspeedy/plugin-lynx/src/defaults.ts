@@ -20,7 +20,7 @@ import type { RsbuildConfig, RsbuildPlugin } from '@rsbuild/core'
  */
 export function pluginLynxDefaults(): RsbuildPlugin {
   return {
-    name: 'lynx:preset:defaults',
+    name: 'lynx:defaults',
     setup(api) {
       api.modifyRsbuildConfig((config, { mergeRsbuildConfig }) => {
         const original = api.getRsbuildConfig('original')
@@ -77,7 +77,7 @@ function warnForcedOverrides(original: RsbuildConfig): void {
     ?.htmlPlugin
   if (htmlPlugin !== undefined && htmlPlugin !== false) {
     logger.warn(
-      '[lynx-preset] `tools.htmlPlugin` is forced to `false`: Lynx does not produce an HTML page.',
+      '[pluginLynx] `tools.htmlPlugin` is forced to `false`: Lynx does not produce an HTML page.',
     )
   }
   if (
@@ -85,7 +85,7 @@ function warnForcedOverrides(original: RsbuildConfig): void {
     && original.output.polyfill !== 'off'
   ) {
     logger.warn(
-      '[lynx-preset] `output.polyfill` is forced to `"off"` for Lynx.',
+      '[pluginLynx] `output.polyfill` is forced to `"off"` for Lynx.',
     )
   }
 }
