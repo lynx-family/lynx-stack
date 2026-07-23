@@ -173,4 +173,17 @@ describe('LynxTemplatePlugin: FetchBundle main-thread bytecode encoding', () => 
       expect.any(String),
     );
   });
+
+  test('native lazy background contains the executable chunk, not app-service', async () => {
+    const { captured, plugin } = captureBeforeEmit();
+    await runWebpack(buildConfig(plugin, 'production'));
+    const lazy = captured.find((entry) =>
+      entry.outputName.startsWith('lazy-bundle/')
+    );
+    const background = lazy?.customSections['background']?.content;
+
+    expect(background).toEqual(expect.any(String));
+    expect(background).toContain('"background"');
+    expect(background).not.toContain('tt.define(\'/app-service.js\'');
+  });
 });

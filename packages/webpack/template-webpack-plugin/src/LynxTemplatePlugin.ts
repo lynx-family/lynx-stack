@@ -1270,6 +1270,14 @@ class LynxTemplatePluginImpl {
     const remainingManifest: Record<string, string> = {};
     let entryChunk: [string, string] | undefined;
     for (const [name, content] of Object.entries(manifest)) {
+      // LynxEncodePlugin prepends an app-service dispatcher. FetchBundle loads
+      // the background section directly, so select the executable chunk here.
+      if (
+        name === '/app-service.js'
+        && content.includes('tt.define(\'/app-service.js\'')
+      ) {
+        continue;
+      }
       if (!entryChunk) {
         entryChunk = [name, content];
         continue;
