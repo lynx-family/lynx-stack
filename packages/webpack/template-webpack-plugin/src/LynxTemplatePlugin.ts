@@ -1270,9 +1270,6 @@ class LynxTemplatePluginImpl {
     const remainingManifest: Record<string, string> = {};
     let entryChunk: [string, string] | undefined;
     for (const [name, content] of Object.entries(manifest)) {
-      if (name === '/app-service.js') {
-        continue;
-      }
       if (!entryChunk) {
         entryChunk = [name, content];
         continue;

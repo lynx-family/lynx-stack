@@ -87,22 +87,60 @@ export class WebEncodePlugin {
           name: WebEncodePlugin.name,
           stage: WebEncodePlugin.ENCODE_HOOK_STAGE,
         }, async ({ encodeOptions }) => {
-          const tasmJSONInfo: Record<string, unknown> = {
-            styleInfo: (encodeOptions['css'] as {
+          const styleInfo = {
+            ...(encodeOptions['css'] as {
               cssMap: Record<string, LynxStyleNode[]>;
             }).cssMap,
-            manifest: encodeOptions.manifest as Record<string, string>,
+          };
+          const manifest = {
+            ...(encodeOptions.manifest as Record<string, string>),
+          };
+          const lepusCode: Record<string, string> = encodeOptions.lepusCode
+            ? {
+              ...encodeOptions.lepusCode.lepusChunk,
+              root: encodeOptions.lepusCode.root!,
+            }
+            : {};
+          const customSections: Record<
+            string,
+            { content: unknown; encoding?: string }
+          > = {
+            ...(encodeOptions.customSections ?? {}),
+          };
+          const background = customSections['background'];
+          if (typeof background?.content === 'string') {
+            manifest['/background'] = background.content;
+            delete customSections['background'];
+          }
+          const mainThread = customSections['main-thread'];
+          if (typeof mainThread?.content === 'string') {
+            lepusCode['main-thread'] = mainThread.content;
+            delete customSections['main-thread'];
+          }
+          const css = customSections['CSS'];
+          const cssContent = typeof css?.content === 'object'
+              && css.content !== null
+            ? css.content as Record<string, unknown>
+            : undefined;
+          if (
+            css?.encoding === 'CSS'
+            && Array.isArray(cssContent?.['ruleList'])
+          ) {
+            let cssId = 0;
+            while (String(cssId) in styleInfo) cssId++;
+            styleInfo[String(cssId)] = cssContent[
+              'ruleList'
+            ] as LynxStyleNode[];
+            delete customSections['CSS'];
+          }
+          const tasmJSONInfo: Record<string, unknown> = {
+            styleInfo,
+            manifest,
             cardType: encodeOptions['cardType'] as string,
             appType: encodeOptions['appType'] as string,
             pageConfig: encodeOptions['pageConfig'] as Record<string, unknown>,
-            lepusCode: encodeOptions.lepusCode
-              ? {
-                // flatten the lepusCode to a single object
-                ...encodeOptions.lepusCode.lepusChunk,
-                root: encodeOptions.lepusCode.root!,
-              }
-              : {},
-            customSections: encodeOptions.customSections ?? {},
+            lepusCode,
+            customSections,
           };
           if (encodeOptions.elementTemplate !== undefined) {
             tasmJSONInfo['elementTemplate'] = encodeOptions.elementTemplate;

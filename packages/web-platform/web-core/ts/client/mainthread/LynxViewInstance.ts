@@ -6,6 +6,7 @@
 import type {
   Cloneable,
   ExternalBundleResponse,
+  FetchBundleOptions,
   InitI18nResources,
   InvokeUIMethodPAPI,
   JSRealm,
@@ -300,8 +301,13 @@ export class LynxViewInstance implements AsyncDisposable {
    * lepus root chunk. Resolves to a response object (never rejects) so the
    * externals plugin can branch on `code`.
    */
-  loadExternalBundle(url: string): Promise<ExternalBundleResponse> {
-    const cached = this.#externalBundleLoadCache.get(url);
+  loadExternalBundle(
+    url: string,
+    options?: FetchBundleOptions,
+  ): Promise<ExternalBundleResponse> {
+    const isLazyBundle = options?.isLazyBundle === true;
+    const cacheKey = `${isLazyBundle ? 'lazy' : 'external'}:${url}`;
+    const cached = this.#externalBundleLoadCache.get(cacheKey);
     if (cached) {
       return cached;
     }
@@ -309,18 +315,17 @@ export class LynxViewInstance implements AsyncDisposable {
       url,
       {
         enableCSSSelector: this.#pageConfig!['enableCSSSelector'],
-        // An external bundle ships global styles (they apply to the consumer's
-        // elements), so decode its StyleInfo unscoped rather than scoping it to
-        // the bundle url the way a lazy component's styles are scoped.
-        isLazy: 'false',
+        // External containers ship global styles; lazy components retain their
+        // URL scope and callable main-thread wrapper.
+        isLazy: isLazyBundle ? 'true' : 'false',
         // Mark the bundle external so the decode worker wraps its mts
         // (`lepusCode`) chunks with a CommonJS `module`/`exports` env.
-        isExternalBundle: 'true',
+        isExternalBundle: isLazyBundle ? 'false' : 'true',
       },
     ).then(
       () => ({ url, code: 0, errorMsg: '' }),
       (error) => {
-        this.#externalBundleLoadCache.delete(url);
+        this.#externalBundleLoadCache.delete(cacheKey);
         return {
           url,
           code: -1,
@@ -328,7 +333,7 @@ export class LynxViewInstance implements AsyncDisposable {
         };
       },
     );
-    this.#externalBundleLoadCache.set(url, promise);
+    this.#externalBundleLoadCache.set(cacheKey, promise);
     return promise;
   }
 

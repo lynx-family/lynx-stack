@@ -98,6 +98,32 @@ test('an external load followed by a lazy load keeps both results', async () => 
   expect(fetchBundle).toHaveBeenCalledTimes(2);
 });
 
+test('FetchBundle keeps lazy and external decode modes independent', async () => {
+  const instance = createInstance(rstest.fn());
+  const fetchBundle = rstest.spyOn(templateManager, 'fetchBundle')
+    .mockResolvedValue();
+  const url = 'https://cdn.example.com/catalog.web.bundle';
+
+  await Promise.all([
+    instance.loadExternalBundle(url),
+    instance.loadExternalBundle(url, { isLazyBundle: true }),
+  ]);
+
+  expect(fetchBundle).toHaveBeenCalledTimes(2);
+  expect(fetchBundle.mock.calls.map(call => call.at(-1))).toEqual([
+    {
+      enableCSSSelector: undefined,
+      isLazy: 'false',
+      isExternalBundle: 'true',
+    },
+    {
+      enableCSSSelector: undefined,
+      isLazy: 'true',
+      isExternalBundle: 'false',
+    },
+  ]);
+});
+
 test('a rejected lazy load can be retried', async () => {
   const exports = { ids: ['catalog'], modules: {} };
   const instance = createInstance(rstest.fn(async () => exports));

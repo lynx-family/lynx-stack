@@ -116,14 +116,22 @@ test('background lynx loads FetchBundle sections before the app entry', async ()
   } as unknown as Rpc;
   const lynx = createBackgroundLynx({}, {}, nativeApp, rpc);
 
-  await expect(lynx.loadLazyBundle('shared.bundle')).resolves.toBe(exports);
-  expect(fetchBundle).toHaveBeenCalledWith('shared.bundle');
+  await expect(
+    (lynx.loadLazyBundle as (
+      source: string,
+      mode?: string,
+      host?: string,
+    ) => Promise<unknown>)('shared.bundle', undefined, 'remote-host'),
+  ).resolves.toBe(exports);
+  expect(fetchBundle).toHaveBeenCalledWith('shared.bundle', {
+    isLazyBundle: true,
+  });
   expect(loadScript).toHaveBeenCalledWith('background', {
     bundleName: 'shared.bundle',
   });
   expect(callLepusMethod).toHaveBeenCalledWith(
     'rLynxPrepareLazyBundleMTS',
-    { url: 'shared.bundle' },
+    { url: 'shared.bundle', host: 'remote-host' },
     expect.any(Function),
   );
   expect(queryComponent).not.toHaveBeenCalled();

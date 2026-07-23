@@ -9,7 +9,7 @@ import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
 // `prepareLazyBundleMTS` is the MT-side handler registered for the
 // `rLynxPrepareLazyBundleMTS` lifecycle. It runs after BG calls
 // `callLepusMethod`, with the bundle already in native cache (so
-// `lynx.fetchBundle(url, {}).then(cb)` fires sync on lepus).
+// `lynx.fetchBundle(url, { isLazyBundle: true }).then(cb)` fires sync on lepus).
 
 describe('prepareLazyBundleMTS handler', () => {
   const HOST = '__Card__';
@@ -64,7 +64,9 @@ describe('prepareLazyBundleMTS handler', () => {
 
     invoke('foo');
 
-    expect(fetchBundle).toHaveBeenCalledWith('foo', {});
+    expect(fetchBundle).toHaveBeenCalledWith('foo', {
+      isLazyBundle: true,
+    });
     expect(loadScript).toHaveBeenCalledWith('main-thread', { bundleName: 'u' });
     // The bundle is evaluated with its own url as `globDynamicComponentEntry`.
     expect(evaluate).toHaveBeenCalledWith('foo');
@@ -133,8 +135,12 @@ describe('prepareLazyBundleMTS handler', () => {
     invoke('bar');
 
     expect(fetchBundle).toHaveBeenCalledTimes(2);
-    expect(fetchBundle).toHaveBeenNthCalledWith(1, 'foo', {});
-    expect(fetchBundle).toHaveBeenNthCalledWith(2, 'bar', {});
+    expect(fetchBundle).toHaveBeenNthCalledWith(1, 'foo', {
+      isLazyBundle: true,
+    });
+    expect(fetchBundle).toHaveBeenNthCalledWith(2, 'bar', {
+      isLazyBundle: true,
+    });
   });
 
   test('fetchBundle throws sync → silent skip, no side effects', () => {

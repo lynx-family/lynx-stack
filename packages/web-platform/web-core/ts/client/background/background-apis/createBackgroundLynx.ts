@@ -13,7 +13,11 @@ import {
 import type { Rpc } from '@lynx-js/web-worker-rpc';
 import { createGetCustomSection } from './crossThreadHandlers/createGetCustomSection.js';
 import { createElement } from './createElement.js';
-import type { Cloneable, NativeApp } from '../../../types/index.js';
+import type {
+  Cloneable,
+  FetchBundleOptions,
+  NativeApp,
+} from '../../../types/index.js';
 import { LynxCrossThreadContext } from '../../LynxCrossThreadContext.js';
 
 const PREPARE_LAZY_BUNDLE_MTS = 'rLynxPrepareLazyBundleMTS';
@@ -38,12 +42,18 @@ export function createBackgroundLynx(
     fetchExternalBundleEndpoint,
   );
   const lazyBundleLoads = new Map<string, Promise<unknown>>();
-  const loadLazyBundle = (source: string): Promise<unknown> => {
+  const loadLazyBundle = (
+    source: string,
+    _mode?: 'sync' | 'async',
+    host?: string,
+  ): Promise<unknown> => {
     const cached = lazyBundleLoads.get(source);
     if (cached) {
       return cached;
     }
-    const pending = Promise.resolve(fetchExternalBundle(source)).then(
+    const pending = Promise.resolve(
+      fetchExternalBundle(source, { isLazyBundle: true }),
+    ).then(
       response => {
         if (response.code !== 0) {
           const error = new Error(
@@ -71,9 +81,12 @@ export function createBackgroundLynx(
         }
         return new Promise((resolve, reject) => {
           try {
+            const payload = host === undefined
+              ? { url: source }
+              : { url: source, host };
             nativeApp.callLepusMethod(
               PREPARE_LAZY_BUNDLE_MTS,
-              { url: source },
+              payload,
               () => resolve(exports),
             );
           } catch (error) {
@@ -128,8 +141,8 @@ export function createBackgroundLynx(
     reload: () => {
       mainThreadRpc.invoke(reloadEndpoint, []);
     },
-    fetchBundle(url: string) {
-      return fetchExternalBundle(url);
+    fetchBundle(url: string, options?: FetchBundleOptions) {
+      return fetchExternalBundle(url, options);
     },
     loadLazyBundle,
     loadScript(sectionPath: string, options: { bundleName: string }) {

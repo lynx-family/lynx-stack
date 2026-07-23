@@ -52,7 +52,9 @@ describe('loadLazyBundle (FetchBundle) — main thread sync', () => {
 
     const promise = loadLazyBundle('foo', 'sync');
 
-    expect(fetchBundle).toHaveBeenCalledWith('foo', {});
+    expect(fetchBundle).toHaveBeenCalledWith('foo', {
+      isLazyBundle: true,
+    });
     expect(waitMock).toHaveBeenCalledWith(TIMEOUT_SECONDS);
     expect(loadScript).toHaveBeenCalledWith('main-thread', {
       bundleName: 'cached-url',
@@ -79,7 +81,9 @@ describe('loadLazyBundle (FetchBundle) — main thread sync', () => {
 
     // The main thread fires fetchBundle (fire-and-forget) to warm the native
     // cache so the background async path waits less...
-    expect(fetchBundle).toHaveBeenCalledWith('foo', {});
+    expect(fetchBundle).toHaveBeenCalledWith('foo', {
+      isLazyBundle: true,
+    });
     // ...but does no rendering work here and never resolves.
     expect(loadScript).not.toHaveBeenCalled();
     promise.then(
@@ -101,7 +105,9 @@ describe('loadLazyBundle (FetchBundle) — main thread sync', () => {
     const promise = loadLazyBundle('foo', 'async');
 
     // The warm-up fetch threw, but the error is swallowed and nothing renders.
-    expect(fetchBundle).toHaveBeenCalledWith('foo', {});
+    expect(fetchBundle).toHaveBeenCalledWith('foo', {
+      isLazyBundle: true,
+    });
     expect(loadScript).not.toHaveBeenCalled();
     promise.then(
       () => expect.fail('should not resolve'),
@@ -216,7 +222,9 @@ describe('loadLazyBundle (FetchBundle) — background sync', () => {
 
     const promise = loadLazyBundle('foo', 'sync');
 
-    expect(fetchBundle).toHaveBeenCalledWith('foo', {});
+    expect(fetchBundle).toHaveBeenCalledWith('foo', {
+      isLazyBundle: true,
+    });
     expect(loadScript).toHaveBeenCalledWith('background', { bundleName: 'u' });
     // A sync bundle loaded on the background thread still triggers the
     // main-thread prepare (createSnapshot side effect) so a non-first-screen

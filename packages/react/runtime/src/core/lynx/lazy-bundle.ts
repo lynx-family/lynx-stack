@@ -199,13 +199,13 @@ export const loadLazyBundle: <
         // and warms the native bundle cache; the background `async` path then
         // waits less. The main thread renders nothing here.
         try {
-          lynx.fetchBundle(source, {});
+          lynx.fetchBundle(source, { isLazyBundle: true });
         } catch {}
         return new Promise(() => {});
       }
       let response;
       try {
-        response = lynx.fetchBundle(source, {}).wait(
+        response = lynx.fetchBundle(source, { isLazyBundle: true }).wait(
           LYNX_LAZY_SYNC_TIMEOUT_SECONDS,
         );
       } catch {
@@ -239,7 +239,7 @@ export const loadLazyBundle: <
       if (mode === 'sync') {
         let response;
         try {
-          response = lynx.fetchBundle(source, {}).wait(
+          response = lynx.fetchBundle(source, { isLazyBundle: true }).wait(
             LYNX_LAZY_SYNC_TIMEOUT_SECONDS,
           );
         } catch (e) {
@@ -282,7 +282,7 @@ export const loadLazyBundle: <
       return new Promise<T>((resolve, reject) => {
         let handler;
         try {
-          handler = lynx.fetchBundle(source, {});
+          handler = lynx.fetchBundle(source, { isLazyBundle: true });
         } catch (e) {
           reject(e instanceof Error ? e : new Error(String(e)));
           return;

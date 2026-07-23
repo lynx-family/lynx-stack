@@ -15,7 +15,11 @@ import { dirname, join } from 'node:path';
 import { afterEach, beforeEach, describe, expect, test } from '@rstest/core';
 import webpack from 'webpack';
 
-import { LynxEncodePlugin, LynxTemplatePlugin } from '../src/index.js';
+import {
+  LynxEncodePlugin,
+  LynxTemplatePlugin,
+  WebEncodePlugin,
+} from '../src/index.js';
 
 const FIXTURE_ENTRY = './fixtures/lazy-bundle-fetcher/entry.js';
 const CONTEXT = dirname(new URL(import.meta.url).pathname);
@@ -48,6 +52,7 @@ function captureBeforeEmit() {
 function buildConfig(
   capturePlugin: (compiler: webpack.Compiler) => void,
   mode: 'development' | 'production',
+  normalizeWebManifest = false,
 ): webpack.Configuration {
   // Each build gets its own temp output dir so parallel/serial test runs
   // don't clobber each other (or the package's `dist/`).
@@ -65,7 +70,9 @@ function buildConfig(
         lazyBundleFetcher: 'FetchBundle',
         intermediate: '.rspeedy/main',
       }),
-      new LynxEncodePlugin(),
+      normalizeWebManifest
+        ? new WebEncodePlugin()
+        : new LynxEncodePlugin(),
       (compiler) => {
         compiler.hooks.thisCompilation.tap('strip', (compilation) => {
           const hooks = LynxTemplatePlugin.getLynxTemplatePluginHooks(
@@ -153,5 +160,17 @@ describe('LynxTemplatePlugin: FetchBundle main-thread bytecode encoding', () => 
   test('DEBUG=other → JsBytecode encoding still on', async () => {
     process.env['DEBUG'] = 'unrelated';
     expect(await runAndGetMtEncoding('production')).toBe('JsBytecode');
+  });
+
+  test('web-normalized lazy entry remains the background section', async () => {
+    const { captured, plugin } = captureBeforeEmit();
+    await runWebpack(buildConfig(plugin, 'production', true));
+    const lazy = captured.find((entry) =>
+      entry.outputName.startsWith('lazy-bundle/')
+    );
+
+    expect(lazy?.customSections['background']?.content).toEqual(
+      expect.any(String),
+    );
   });
 });

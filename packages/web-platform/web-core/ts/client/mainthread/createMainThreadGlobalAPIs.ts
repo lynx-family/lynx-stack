@@ -5,6 +5,7 @@
  */
 
 import type {
+  FetchBundleOptions,
   MainThreadGlobalAPIs,
   MainThreadLynx,
 } from '../../types/index.js';
@@ -52,8 +53,8 @@ function createMainThreadLynx(
     clearTimeout: clearTimeoutBrowserImpl,
     setInterval: setIntervalBrowserImpl,
     clearInterval: clearIntervalBrowserImpl,
-    fetchBundle(url: string) {
-      return lynxViewInstance.loadExternalBundle(url);
+    fetchBundle(url: string, options?: FetchBundleOptions) {
+      return lynxViewInstance.loadExternalBundle(url, options);
     },
     loadLazyBundle(source: string) {
       return lynxViewInstance.queryComponent(source);
