@@ -770,7 +770,7 @@ importers:
         version: 3.133.0(@lynx-js/react@packages+react)(@lynx-js/types@4.0.0)(@types/react@18.3.28)(react-dom@19.2.4(react@19.2.5))(react@19.2.5)
       '@openuidev/lang-core':
         specifier: ^0.2.7
-        version: 0.2.7(@modelcontextprotocol/sdk@1.25.2(hono@4.12.12)(supports-color@8.1.1)(zod@3.25.76))(zod@3.25.76)
+        version: 0.2.7(@modelcontextprotocol/sdk@1.26.0(supports-color@8.1.1)(zod@3.25.76))(zod@3.25.76)
       '@preact/signals':
         specifier: ^2.5.1
         version: 2.5.1(preact@10.29.1)
@@ -897,7 +897,7 @@ importers:
     dependencies:
       '@openuidev/lang-core':
         specifier: ^0.2.7
-        version: 0.2.7(@modelcontextprotocol/sdk@1.25.2(hono@4.12.12)(supports-color@8.1.1)(zod@3.25.76))(zod@3.25.76)
+        version: 0.2.7(@modelcontextprotocol/sdk@1.26.0(supports-color@8.1.1)(zod@3.25.76))(zod@3.25.76)
       zod:
         specifier: ^3.25.76 || ^4.0.0
         version: 3.25.76
@@ -940,7 +940,7 @@ importers:
         version: link:../../web-platform/web-elements
       '@openuidev/lang-core':
         specifier: ^0.2.7
-        version: 0.2.7(@modelcontextprotocol/sdk@1.25.2(hono@4.12.12)(supports-color@8.1.1)(zod@4.4.3))(zod@4.4.3)
+        version: 0.2.7(@modelcontextprotocol/sdk@1.26.0(supports-color@8.1.1)(zod@4.4.3))(zod@4.4.3)
       '@uiw/react-codemirror':
         specifier: ^4.25.9
         version: 4.25.9(@babel/runtime@7.29.2)(@codemirror/autocomplete@6.20.1)(@codemirror/language@6.12.3)(@codemirror/lint@6.9.5)(@codemirror/search@6.7.0)(@codemirror/state@6.6.0)(@codemirror/theme-one-dark@6.1.3)(@codemirror/view@6.41.1)(codemirror@6.0.2)(react-dom@19.2.4(react@19.2.4))(react@19.2.4)
@@ -1112,7 +1112,7 @@ importers:
     dependencies:
       '@modelcontextprotocol/sdk':
         specifier: ^1.25.2
-        version: 1.25.2(hono@4.12.12)(supports-color@8.1.1)(zod@4.4.3)
+        version: 1.26.0(supports-color@8.1.1)(zod@4.4.3)
       commander:
         specifier: ^13.1.0
         version: 13.1.0
@@ -4591,8 +4591,8 @@ packages:
   '@microsoft/tsdoc@0.16.0':
     resolution: {integrity: sha512-xgAyonlVVS+q7Vc7qLW0UrJU7rSFcETRWsqdXZtjzRU8dF+6CkozTK4V4y1LwOX7j8r/vHphjDeMeGI4tNGeGA==}
 
-  '@modelcontextprotocol/sdk@1.25.2':
-    resolution: {integrity: sha512-LZFeo4F9M5qOhC/Uc1aQSrBHxMrvxett+9KLHt7OhcExtoiRN9DKgbZffMP/nxjutWDQpfMDfP3nkHI4X9ijww==}
+  '@modelcontextprotocol/sdk@1.26.0':
+    resolution: {integrity: sha512-Y5RmPncpiDtTXDbLKswIJzTqu2hyBKxTNsgKqKclDbhIgg1wgtf1fRuvxgTnRfcnxtvvgbIEcqUOzZrJ6iSReg==}
     engines: {node: '>=18'}
     peerDependencies:
       '@cfworker/json-schema': ^4.1.1
@@ -7936,8 +7936,8 @@ packages:
     resolution: {integrity: sha512-/kP8CAwxzLVEeFrMm4kMmy4CCDlpipyA7MYLVrdJIkV0fYF0UaigQHRsxHiuY/GEea+bh4KSv3TIlgr+2UL6bw==}
     engines: {node: '>=12.0.0'}
 
-  express-rate-limit@7.5.1:
-    resolution: {integrity: sha512-7iN8iPMDzOMHPUYllBEsQdWVB6fPDMPqwjBaFrgr4Jgr/+okjvzAy+UHlYYL/Vs0OsOrMkwS6PJDkFlJwoxUnw==}
+  express-rate-limit@8.6.0:
+    resolution: {integrity: sha512-XKJXDsASUOo0LLtFwW5hCcQGH0N4WQc/Rn8/Pvoia+TJFOkkFPvrtW9lZOeeNcxQJspvOIERMwiRLsVFlhHEkA==}
     engines: {node: '>= 16'}
     peerDependencies:
       express: '>= 4.11'
@@ -8574,6 +8574,10 @@ packages:
   internal-slot@1.1.0:
     resolution: {integrity: sha512-4gd7VpWNQNB4UKKCFFVcp1AVv+FMOgs9NKzjHKusc8jTMhd5eL1NqQqOpE0KzMds804/yHlglp3uxgluOqAPLw==}
     engines: {node: '>= 0.4'}
+
+  ip-address@10.2.0:
+    resolution: {integrity: sha512-/+S6j4E9AHvW9SWMSEY9Xfy66O5PWvVEJ08O0y5JGyEKQpojb0K0GKpz/v5HJ/G0vi3D2sjGK78119oXZeE0qA==}
+    engines: {node: '>= 12'}
 
   ipaddr.js@1.9.1:
     resolution: {integrity: sha512-0KI/607xoxSToH7GjN1FfSbLoU0+btTicjsQSWQlh/hZykN8KpmMf7uYwPW3R+akZ6R/w18ZlXSHBYXiYUPO3g==}
@@ -14187,7 +14191,7 @@ snapshots:
       '@isaacs/ttlcache': 2.1.4
       '@lukeed/uuid': 2.0.1
       '@mastra/schema-compat': 1.2.4(zod@3.25.76)
-      '@modelcontextprotocol/sdk': 1.25.2(hono@4.12.12)(supports-color@8.1.1)(zod@3.25.76)
+      '@modelcontextprotocol/sdk': 1.26.0(supports-color@8.1.1)(zod@3.25.76)
       '@sindresorhus/slugify': 2.2.1
       '@standard-schema/spec': 1.1.0
       ajv: 8.20.0
@@ -14321,7 +14325,7 @@ snapshots:
 
   '@microsoft/tsdoc@0.16.0': {}
 
-  '@modelcontextprotocol/sdk@1.25.2(hono@4.12.12)(supports-color@8.1.1)(zod@3.25.76)':
+  '@modelcontextprotocol/sdk@1.26.0(supports-color@8.1.1)(zod@3.25.76)':
     dependencies:
       '@hono/node-server': 1.19.9(hono@4.12.12)
       ajv: 8.20.0
@@ -14332,7 +14336,8 @@ snapshots:
       eventsource: 3.0.7
       eventsource-parser: 3.1.0
       express: 5.2.1(supports-color@8.1.1)
-      express-rate-limit: 7.5.1(express@5.2.1(supports-color@8.1.1))
+      express-rate-limit: 8.6.0(express@5.2.1(supports-color@8.1.1))(supports-color@8.1.1)
+      hono: 4.12.12
       jose: 6.1.3
       json-schema-typed: 8.0.2
       pkce-challenge: 5.0.1
@@ -14340,10 +14345,9 @@ snapshots:
       zod: 3.25.76
       zod-to-json-schema: 3.25.2(zod@3.25.76)
     transitivePeerDependencies:
-      - hono
       - supports-color
 
-  '@modelcontextprotocol/sdk@1.25.2(hono@4.12.12)(supports-color@8.1.1)(zod@4.4.3)':
+  '@modelcontextprotocol/sdk@1.26.0(supports-color@8.1.1)(zod@4.4.3)':
     dependencies:
       '@hono/node-server': 1.19.9(hono@4.12.12)
       ajv: 8.20.0
@@ -14354,7 +14358,8 @@ snapshots:
       eventsource: 3.0.7
       eventsource-parser: 3.1.0
       express: 5.2.1(supports-color@8.1.1)
-      express-rate-limit: 7.5.1(express@5.2.1(supports-color@8.1.1))
+      express-rate-limit: 8.6.0(express@5.2.1(supports-color@8.1.1))(supports-color@8.1.1)
+      hono: 4.12.12
       jose: 6.1.3
       json-schema-typed: 8.0.2
       pkce-challenge: 5.0.1
@@ -14362,7 +14367,6 @@ snapshots:
       zod: 4.4.3
       zod-to-json-schema: 3.25.2(zod@4.4.3)
     transitivePeerDependencies:
-      - hono
       - supports-color
 
   '@napi-rs/cli@2.18.4(patch_hash=ba947eb1c48b2a85834e99f92cbbae896722ce61fd5ae67507a3be9041959ebd)': {}
@@ -14421,17 +14425,17 @@ snapshots:
       '@nodelib/fs.scandir': 2.1.5
       fastq: 1.17.1
 
-  '@openuidev/lang-core@0.2.7(@modelcontextprotocol/sdk@1.25.2(hono@4.12.12)(supports-color@8.1.1)(zod@3.25.76))(zod@3.25.76)':
+  '@openuidev/lang-core@0.2.7(@modelcontextprotocol/sdk@1.26.0(supports-color@8.1.1)(zod@3.25.76))(zod@3.25.76)':
     dependencies:
       zod: 3.25.76
     optionalDependencies:
-      '@modelcontextprotocol/sdk': 1.25.2(hono@4.12.12)(supports-color@8.1.1)(zod@3.25.76)
+      '@modelcontextprotocol/sdk': 1.26.0(supports-color@8.1.1)(zod@3.25.76)
 
-  '@openuidev/lang-core@0.2.7(@modelcontextprotocol/sdk@1.25.2(hono@4.12.12)(supports-color@8.1.1)(zod@4.4.3))(zod@4.4.3)':
+  '@openuidev/lang-core@0.2.7(@modelcontextprotocol/sdk@1.26.0(supports-color@8.1.1)(zod@4.4.3))(zod@4.4.3)':
     dependencies:
       zod: 4.4.3
     optionalDependencies:
-      '@modelcontextprotocol/sdk': 1.25.2(hono@4.12.12)(supports-color@8.1.1)(zod@4.4.3)
+      '@modelcontextprotocol/sdk': 1.26.0(supports-color@8.1.1)(zod@4.4.3)
 
   '@parcel/watcher-android-arm64@2.5.1':
     optional: true
@@ -17955,9 +17959,13 @@ snapshots:
 
   expect-type@1.2.1: {}
 
-  express-rate-limit@7.5.1(express@5.2.1(supports-color@8.1.1)):
+  express-rate-limit@8.6.0(express@5.2.1(supports-color@8.1.1))(supports-color@8.1.1):
     dependencies:
+      debug: 4.4.3(supports-color@8.1.1)
       express: 5.2.1(supports-color@8.1.1)
+      ip-address: 10.2.0
+    transitivePeerDependencies:
+      - supports-color
 
   express@4.22.2(supports-color@8.1.1):
     dependencies:
@@ -18762,6 +18770,8 @@ snapshots:
       es-errors: 1.3.0
       hasown: 2.0.2
       side-channel: 1.1.0
+
+  ip-address@10.2.0: {}
 
   ipaddr.js@1.9.1: {}
 
