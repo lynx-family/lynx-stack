@@ -30,7 +30,7 @@ const options = {
     runtimePkg: '@lynx-js/react/internal',
   },
   refresh: false,
-  collectMainThreadCode: true,
+  collectMainThreadDefines: true,
   snapshot: {
     preserveJsx: false,
     runtimePkg: '@lynx-js/react/internal',
@@ -40,7 +40,7 @@ const options = {
   },
 };
 
-describe('collectMainThreadCode', () => {
+describe('collectMainThreadDefines', () => {
   it('should collect snapshot and worklet registrations without changing the output', async () => {
     const result = await transformReactLynx(
       `
@@ -62,13 +62,12 @@ export function App() {
       options,
     );
 
-    expect(result.mainThreadCode).toContain('snapshotCreatorMap');
-    expect(result.mainThreadCode).toContain('registerWorkletInternal');
-    expect(result.mainThreadCode).not.toContain('useState');
-    // The transformed output is unchanged.
+    expect(result.mainThreadDefines).toContain('snapshotCreatorMap');
+    expect(result.mainThreadDefines).toContain('registerWorkletInternal');
+    expect(result.mainThreadDefines).not.toContain('useState');
     expect(result.code).toContain('function App');
     expect(result.code).toContain('snapshotCreatorMap');
-    expect(result.mainThreadCode).toMatchSnapshot();
+    expect(result.mainThreadDefines).toMatchSnapshot();
   });
 
   it('should keep imports of modules only rendered by the background thread', async () => {
@@ -83,9 +82,6 @@ export function App() {
       options,
     );
 
-    // `Counter` is unused after \`__MAIN_THREAD__\` is folded, but the module
-    // must stay in the main-thread module graph so its own snapshot
-    // registrations are collected.
     expect(result.code).toContain('import "./comp-lib/index.jsx"');
   });
 
@@ -96,10 +92,10 @@ export function App() {
   return <view />;
 }
 `,
-      { ...options, collectMainThreadCode: false },
+      { ...options, collectMainThreadDefines: false },
     );
 
-    expect(result.mainThreadCode).toBeUndefined();
+    expect(result.mainThreadDefines).toBeUndefined();
     expect(result.code).toContain('snapshotCreatorMap');
   });
 });

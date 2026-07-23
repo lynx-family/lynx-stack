@@ -161,11 +161,6 @@ export function applyEntry(
         mainThreadChunks.push(mainThreadName)
 
         if (!enableMTSRendering) {
-          // The packed main-thread chunk only boots the runtime. The user
-          // code is still compiled in the main-thread layer through the
-          // `__main-thread-collect` entry below so the loader can collect
-          // the per-module snapshot and worklet registrations, which
-          // `ReactWebpackPlugin` assembles and appends to the boot chunk.
           const mainThreadCollectName = path.posix.join(
             DEFAULT_DIST_PATH_INTERMEDIATE,
             `${entryName}/main-thread-collect.js`,

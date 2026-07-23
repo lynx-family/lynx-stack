@@ -66,10 +66,6 @@ pub struct WorkletVisitor {
   shared_identifiers: FxHashSet<Id>,
   worklet_runtime_loaded: bool,
   worklet_runtime_loaded_ident: Ident,
-  /// When set, the generated top-level worklet statements (the
-  /// `loadWorkletRuntime` guard and the `registerWorkletInternal` calls) are
-  /// also cloned into this collector so the caller can assemble the
-  /// main-thread code out-of-band. Only meaningful for the LEPUS target.
   main_thread_stmts_collector: Option<Rc<RefCell<Vec<Stmt>>>>,
 }
 

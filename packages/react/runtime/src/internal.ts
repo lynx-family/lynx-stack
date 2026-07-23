@@ -91,15 +91,11 @@ if (__DEV__) {
   setSnapshotCreatorRuntime(ReactLynxInternalSelf);
 }
 
-/* v8 ignore start -- evaluated at module load, before tests can toggle the flag */
+/* v8 ignore start */
 if (
   typeof __MAIN_THREAD__ !== 'undefined' && __MAIN_THREAD__
   && typeof __ENABLE_MTS_RENDERING__ !== 'undefined' && !__ENABLE_MTS_RENDERING__
 ) {
-  // With `enableMTSRendering: false` the main-thread chunk only boots the
-  // runtime; the per-module snapshot and worklet registrations assembled by
-  // the build tool are appended after it and read the runtime from this
-  // global.
   // @ts-expect-error Element implicitly has an 'any' type because type 'typeof globalThis' has no index signature
   globalThis.__lynxMainThreadRuntime = ReactLynxInternalSelf;
 }

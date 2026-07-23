@@ -19,10 +19,6 @@ const defaultConfig = createConfig({
 export default {
   context: import.meta.dirname,
   ...defaultConfig,
-  // Mirrors the rspeedy entry layout with `enableMTSRendering: false`: the
-  // packed main-thread chunk only boots the runtime, and the user code is
-  // compiled in the main-thread layer through the `collect` entry so the
-  // loader can collect the per-module snapshot and worklet registrations.
   entry: {
     'main__main-thread': {
       layer: LAYERS.MAIN_THREAD,

@@ -1177,9 +1177,6 @@ where
   comments: Option<C>,
   pub ui_source_map_records: Rc<RefCell<Vec<UISourceMapRecord>>>,
   pub source_map: Option<Lrc<SourceMap>>,
-  /// When set, every generated snapshot definition (the snapshot id `const`
-  /// and the `snapshotCreatorMap` registration) is also cloned into this
-  /// collector so the caller can assemble the main-thread code out-of-band.
   pub main_thread_defs_collector: Option<Rc<RefCell<Vec<ModuleItem>>>>,
 }
 

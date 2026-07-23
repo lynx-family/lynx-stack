@@ -2,8 +2,6 @@ import { useState } from '@lynx-js/react';
 
 import Counter from './comp-lib/index.jsx';
 
-// A module side effect: with `enableMTSRendering: false` it only runs on the
-// background thread — the main-thread bundle does not contain this module.
 console.info('[side-effect] App module evaluated');
 
 export function App() {

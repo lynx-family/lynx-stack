@@ -328,7 +328,7 @@ export function getMainThreadTransformOptions(
       ...commonOptions.worklet,
       target: 'LEPUS',
     },
-    collectMainThreadCode: enableMTSRendering === false,
+    collectMainThreadDefines: enableMTSRendering === false,
     directiveDCE: {
       target: 'LEPUS',
     },

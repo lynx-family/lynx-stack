@@ -89,25 +89,16 @@ describe('enableMTSRendering: false', () => {
     const { tasm, backgroundSource } = await buildCase('disabled');
     const root = tasm.lepusCode.root;
 
-    // The runtime boot exposes the runtime and the assembled registrations
-    // consume it.
     expect(root).toContain('__lynxMainThreadRuntime');
     expect(root).toContain('snapshotCreatorMap[');
 
-    // The `comp-lib` component is only rendered by the background thread
-    // (`__MAIN_THREAD__ ? null : <Counter />`) and its package sets
-    // `sideEffects: false`, but its snapshot registration is still collected
-    // into the main-thread script.
     expect(root).toContain('COMP_LIB_COUNTER_TEXT');
 
-    // Worklets are collected, and the worklet runtime is packed because the
-    // assembled registrations use it.
     expect(root).toContain('registerWorkletInternal');
     expect(Object.keys(tasm.lepusCode.lepusChunk)).toContain(
       'worklet-runtime',
     );
 
-    // Business logic and module side effects stay on the background thread.
     expect(root).not.toContain('MODULE_SIDE_EFFECT_MARKER');
     expect(backgroundSource).toContain('MODULE_SIDE_EFFECT_MARKER');
   });

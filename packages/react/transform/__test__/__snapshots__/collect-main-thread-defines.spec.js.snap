@@ -1,6 +1,6 @@
 // Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
 
-exports[`collectMainThreadCode > should collect snapshot and worklet registrations without changing the output 1`] = `
+exports[`collectMainThreadDefines > should collect snapshot and worklet registrations without changing the output 1`] = `
 "const __snapshot_a94a8_test_1 = "__snapshot_a94a8_test_1";
 ReactLynx.snapshotCreatorMap[__snapshot_a94a8_test_1] = (__snapshot_a94a8_test_1)=>ReactLynx.createSnapshot(__snapshot_a94a8_test_1, function() {
         const pageId = ReactLynx.__pageId;
