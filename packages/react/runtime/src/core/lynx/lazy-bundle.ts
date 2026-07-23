@@ -116,7 +116,9 @@ export const loadLazyBundle: <
     ? loadLazyBundleWithFetchBundle
     : loadLazyBundleWithQueryComponent;
 
-  lynx.loadLazyBundle = impl;
+  if (typeof lynx !== 'undefined') {
+    lynx.loadLazyBundle = impl;
+  }
 
   function loadLazyBundleWithQueryComponent<
     T extends { default: React.ComponentType<any> },
@@ -140,7 +142,7 @@ export const loadLazyBundle: <
       // We also should keep promise shape
       r.then = makeSyncThen(result);
       return r;
-    } else if (__JS__) {
+    } else if (typeof __JS__ === 'undefined' || __JS__) {
       if (__DEV__ && mode !== undefined) {
         throw new Error(
           `Lazy bundle import \`mode: '${mode}'\` requires FetchBundle, but the current build uses QueryComponent. `
@@ -193,7 +195,7 @@ export const loadLazyBundle: <
   function loadLazyBundleWithFetchBundle<
     T extends { default: React.ComponentType<any> },
   >(source: string, mode?: LazyBundleMode, host?: string): Promise<T> {
-    if (__MAIN_THREAD__) {
+    if (typeof __MAIN_THREAD__ !== 'undefined' && __MAIN_THREAD__) {
       if (mode !== 'sync') {
         // Fire the fetch and ignore the result so the request goes out early
         // and warms the native bundle cache; the background `async` path then
@@ -234,7 +236,7 @@ export const loadLazyBundle: <
       const r: Promise<T> = Promise.resolve(result);
       r.then = makeSyncThen(result);
       return r;
-    } else if (__JS__) {
+    } else if (typeof __JS__ === 'undefined' || __JS__) {
       const cached = fetchBundleBgCache.get(source);
       if (cached !== undefined) {
         const r: Promise<T> = Promise.resolve(cached as T);

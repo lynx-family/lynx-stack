@@ -17,6 +17,13 @@ afterEach(() => {
   vi.unstubAllGlobals();
 });
 
+test('the public loader module is importable outside a Lynx runtime', async () => {
+  vi.stubGlobal('lynx', undefined);
+  await expect(
+    import('../../../src/core/lynx/lazy-bundle'),
+  ).resolves.toMatchObject({ loadLazyBundle: expect.any(Function) });
+});
+
 describe('loadLazyBundle (FetchBundle) — main thread sync', () => {
   let fetchBundle;
   let waitMock;
@@ -259,6 +266,22 @@ describe('loadLazyBundle (FetchBundle) — background sync', () => {
       thenCalled = true;
     });
     expect(thenCalled).toBe(true);
+  });
+
+  test('absent realm globals default to the JavaScript background path', async () => {
+    delete globalThis.__MAIN_THREAD__;
+    delete globalThis.__JS__;
+    waitMock.mockReturnValueOnce({ code: 0, url: 'u' });
+    loadScript.mockReturnValueOnce({ default: 'BG' });
+
+    const { loadLazyBundle } = await import(
+      '../../../src/core/lynx/lazy-bundle'
+    );
+
+    await expect(loadLazyBundle('web-background', 'sync')).resolves.toEqual({
+      default: 'BG',
+    });
+    expect(loadScript).toHaveBeenCalledWith('background', { bundleName: 'u' });
   });
 
   test('a repeat sync load is served from the success cache (no re-fetch/prepare)', async () => {

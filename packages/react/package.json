@@ -28,6 +28,10 @@
       "types": "./runtime/lazy/import.d.ts",
       "default": "./runtime/lazy/import.js"
     },
+    "./experimental/lazy/load": {
+      "types": "./runtime/lib/core/lynx/lazy-bundle.d.ts",
+      "default": "./runtime/lib/core/lynx/lazy-bundle.js"
+    },
     "./internal": {
       "types": "./runtime/lib/internal.d.ts",
       "lazy": "./runtime/lazy/internal.js",
@@ -146,6 +150,9 @@
       ],
       "experimental/lazy/import": [
         "./runtime/lazy/import.d.ts"
+      ],
+      "experimental/lazy/load": [
+        "./runtime/lib/core/lynx/lazy-bundle.d.ts"
       ],
       "hooks": [
         "./runtime/lib/core/hooks/react.d.ts"
