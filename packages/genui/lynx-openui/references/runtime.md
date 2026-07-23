@@ -1,6 +1,6 @@
 # OpenUI Lang v0.5 Runtime
 
-Read this reference for state, tool-backed data, actions, expressions, repeated
+Consult this reference for state, tool-backed data, actions, expressions, repeated
 data, or incremental edits.
 
 ## Contents

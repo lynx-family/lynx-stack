@@ -3,9 +3,9 @@ name: lynx-openui
 description: Generate valid OpenUI Lang v0.5 functional-notation programs for the Lynx OpenUI renderer. Use when Codex must turn a natural-language UI request into raw OpenUI DSL for OpenUiRenderer, including static mobile UI, $state, Query/Mutation tool flows, Action plans, streaming-friendly output, or catalog-constrained revisions. Do not use for JSX, HTML, CSS, A2UI JSON, or implementing new ReactLynx components.
 ---
 
-# Lynx OpenUI Generator
+# Generate Lynx OpenUI Programs
 
-Generate raw OpenUI Lang v0.5 consumed by
+Generate valid OpenUI Lang v0.5 consumed by
 `<OpenUiRenderer response={...}>`. Produce declarative DSL, not application
 code.
 

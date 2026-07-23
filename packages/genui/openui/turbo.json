@@ -8,13 +8,10 @@
       ],
       "inputs": [
         "src/**",
-        "scripts/**",
-        "skills/**",
         "styles/**",
         "tsconfig.json",
         "tsconfig.build.json",
-        "package.json",
-        "$TURBO_ROOT$/packages/genui/package.json"
+        "package.json"
       ],
       "outputs": [
         "dist/**"

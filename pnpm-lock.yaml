@@ -1049,6 +1049,8 @@ importers:
         specifier: ^6.0.3
         version: 6.0.3
 
+  packages/genui/lynx-openui: {}
+
   packages/i18n/i18next-translation-dedupe:
     devDependencies:
       '@lynx-js/react':

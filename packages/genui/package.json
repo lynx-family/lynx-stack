@@ -73,7 +73,6 @@
       "types": "./openui/dist/openui-prompt/index.d.ts",
       "default": "./openui/dist/openui-prompt/index.js"
     },
-    "./openui/skill": "./openui/skills/lynx-openui/SKILL.md",
     "./openui/styles/theme.css": "./openui/styles/theme.css",
     "./mcp-apps": {
       "types": "./mcp-apps/dist/index.d.ts",
@@ -117,7 +116,6 @@
     "a2ui-catalog-extractor/skills",
     "a2ui-catalog-extractor/README.md",
     "openui/dist",
-    "openui/skills",
     "openui/styles",
     "openui/*.md",
     "openui/docs/*.md",

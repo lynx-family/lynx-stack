@@ -11,13 +11,11 @@
 - [Inputs](#inputs)
 - [Unsupported Components](#unsupported-unless-extended-by-the-host)
 
-Use these built-in component signatures exactly. Arguments are positional and
+Use the built-in component signatures exactly. Arguments are positional and
 `?` marks a schema-optional argument. Omit an optional argument only when every
 later argument is also omitted. If an optional argument precedes a required
 one, supply it so later positions do not shift. The signatures include exact
 argument types and allowed enum values.
-
-<!-- catalog-json-schema-sha256: 271b241a6bb56e11797ee0013bfc4b5bafe3a32deed58b8e9b1ac1f1d4dc154e -->
 
 ## Shared Types
 

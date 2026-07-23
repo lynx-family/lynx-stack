@@ -1,7 +1,7 @@
 # Lynx OpenUI Examples
 
-Each block is a complete, parser-validated OpenUI program. Adapt component
-choices and content to the request.
+Treat each block as a complete OpenUI program. Adapt component choices and
+content to the request.
 
 ## Static Card And Conversational Action
 
