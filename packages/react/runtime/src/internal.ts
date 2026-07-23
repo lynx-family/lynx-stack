@@ -90,13 +90,3 @@ if (__DEV__) {
   // their own module's runtime import, so this reference is dropped there.
   setSnapshotCreatorRuntime(ReactLynxInternalSelf);
 }
-
-/* v8 ignore start */
-if (
-  typeof __MAIN_THREAD__ !== 'undefined' && __MAIN_THREAD__
-  && typeof __ENABLE_MTS_RENDERING__ !== 'undefined' && !__ENABLE_MTS_RENDERING__
-) {
-  // @ts-expect-error Element implicitly has an 'any' type because type 'typeof globalThis' has no index signature
-  globalThis.__lynxMainThreadRuntime = ReactLynxInternalSelf;
-}
-/* v8 ignore stop */

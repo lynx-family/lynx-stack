@@ -181,7 +181,7 @@ export function applyEntry(
             layer: LAYERS.MAIN_THREAD,
             import: enableMTSRendering
               ? imports
-              : ['@lynx-js/react/internal'],
+              : ['@lynx-js/react/internal/mts-defines'],
             filename: mainThreadName,
           })
           .when(enabledHMR, entry => {

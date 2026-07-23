@@ -22,7 +22,7 @@ export default {
   entry: {
     'main__main-thread': {
       layer: LAYERS.MAIN_THREAD,
-      import: '@lynx-js/react/internal',
+      import: '@lynx-js/react/internal/mts-defines',
       filename: 'main__main-thread.js',
     },
     'main__main-thread-collect': {
