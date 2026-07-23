@@ -1,0 +1,1180 @@
+.benchStudyPage {
+  --bench-study-paper: var(--geist-background, #fff);
+  --bench-study-ink: var(--geist-foreground, #171717);
+  --bench-study-muted: var(--geist-secondary, #666);
+  --bench-study-line: var(--geist-border, #e5e5e5);
+  --bench-study-line-strong: color-mix(
+    in srgb,
+    var(--bench-study-ink) 22%,
+    var(--bench-study-line)
+  );
+  --bench-study-surface: var(--geist-surface, #f7f7f7);
+  --bench-study-soft: color-mix(
+    in srgb,
+    var(--bench-study-surface) 76%,
+    var(--bench-study-paper)
+  );
+  --bench-study-raised: color-mix(
+    in srgb,
+    var(--bench-study-paper) 94%,
+    var(--bench-study-surface)
+  );
+  --bench-study-gutter: clamp(20px, 4.5vw, 68px);
+  --bench-study-content: 1180px;
+
+  width: 100%;
+  height: 100%;
+  min-width: 0;
+  min-height: 0;
+  overflow-x: hidden;
+  overflow-y: auto;
+  background: var(--bench-study-paper);
+  color: var(--bench-study-ink);
+  font-family: var(--bench-font);
+  -webkit-font-smoothing: antialiased;
+}
+
+.benchStudyPage *,
+.benchStudyPage *::before,
+.benchStudyPage *::after {
+  box-sizing: border-box;
+}
+
+.benchStudyPage a {
+  color: inherit;
+}
+
+.benchStudyHero,
+.benchStudySection,
+.benchStudyFooter {
+  padding-right: max(
+    var(--bench-study-gutter),
+    calc((100% - var(--bench-study-content)) / 2 + var(--bench-study-gutter))
+  );
+  padding-left: max(
+    var(--bench-study-gutter),
+    calc((100% - var(--bench-study-content)) / 2 + var(--bench-study-gutter))
+  );
+}
+
+.benchStudyHero {
+  padding-top: clamp(34px, 5vw, 64px);
+  padding-bottom: clamp(42px, 6vw, 72px);
+  border-bottom: 1px solid var(--bench-study-line);
+}
+
+.benchStudyHeroTopline {
+  display: flex;
+  justify-content: space-between;
+  gap: 20px;
+  padding-bottom: 14px;
+  border-bottom: 1px solid var(--bench-study-line);
+  color: var(--bench-study-muted);
+  font-family: var(--geist-mono);
+  font-size: 10px;
+  font-weight: 500;
+  letter-spacing: 0.055em;
+  line-height: 1.5;
+  text-transform: uppercase;
+}
+
+.benchStudyHeroGrid {
+  display: grid;
+  grid-template-columns: minmax(280px, 0.78fr) minmax(360px, 1.22fr);
+  gap: clamp(44px, 8vw, 112px);
+  align-items: center;
+  padding: clamp(56px, 8vw, 96px) 0 clamp(48px, 7vw, 80px);
+}
+
+.benchStudyEyebrow,
+.benchStudySectionHeader > span,
+.benchStudySectionIndex {
+  display: block;
+  margin: 0 0 18px;
+  color: var(--bench-study-muted);
+  font-family: var(--geist-mono);
+  font-size: 10px;
+  font-weight: 550;
+  letter-spacing: 0.07em;
+  line-height: 1.5;
+  text-transform: uppercase;
+}
+
+.benchStudyEyebrow {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.benchStudyEyebrow::before {
+  width: 24px;
+  height: 1px;
+  background: var(--bench-study-ink);
+  content: "";
+}
+
+.benchStudyHero h1 {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 12px;
+  margin: 0;
+  font-family: var(--bench-font);
+  font-size: clamp(58px, 8vw, 104px);
+  font-weight: 650;
+  letter-spacing: -0.065em;
+  line-height: 0.92;
+}
+
+.benchStudyHero h1 span:last-child {
+  color: var(--bench-study-muted);
+  font-family: var(--geist-mono);
+  font-size: 0.31em;
+  font-weight: 500;
+  letter-spacing: -0.03em;
+}
+
+.benchStudyHeroCopy {
+  align-self: center;
+}
+
+.benchStudyThesis {
+  max-width: 640px;
+  margin: 0;
+  font-size: clamp(24px, 2.7vw, 36px);
+  font-weight: 600;
+  letter-spacing: -0.035em;
+  line-height: 1.28;
+  text-wrap: balance;
+}
+
+.benchStudyHeroContext {
+  max-width: 620px;
+  margin: 24px 0 0;
+  color: var(--bench-study-muted);
+  font-size: 14px;
+  line-height: 1.78;
+  text-wrap: pretty;
+}
+
+.benchStudyHeroActions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px 26px;
+  margin-top: 28px;
+}
+
+.benchStudyHeroActions a,
+.benchStudyFooter a {
+  font-size: 12px;
+  font-weight: 550;
+  text-decoration: underline;
+  text-decoration-color: var(--bench-study-line-strong);
+  text-decoration-thickness: 1px;
+  text-underline-offset: 4px;
+}
+
+.benchStudyHeroActions a:hover,
+.benchStudyFooter a:hover {
+  text-decoration-color: currentcolor;
+}
+
+.benchStudyRecommendation {
+  display: grid;
+  grid-template-columns: minmax(160px, 0.72fr) repeat(3, minmax(145px, 1fr));
+  overflow: hidden;
+  border: 1px solid var(--bench-study-line);
+  border-radius: 10px;
+  background: var(--bench-study-paper);
+  box-shadow: var(--geist-shadow-sm);
+}
+
+.benchStudyRecommendation > span {
+  display: flex;
+  align-items: center;
+  padding: 18px 20px;
+  background: var(--bench-study-soft);
+  color: var(--bench-study-muted);
+  font-family: var(--geist-mono);
+  font-size: 9px;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  line-height: 1.45;
+  text-transform: uppercase;
+}
+
+.benchStudyRecommendation ol {
+  display: contents;
+  padding: 0;
+  margin: 0;
+  list-style: none;
+}
+
+.benchStudyRecommendation li {
+  min-width: 0;
+  padding: 16px 20px;
+  border-left: 1px solid var(--bench-study-line);
+}
+
+.benchStudyRecommendation li small {
+  display: block;
+  margin-bottom: 6px;
+  color: var(--bench-study-muted);
+  font-family: var(--geist-mono);
+  font-size: 9px;
+  font-weight: 500;
+  letter-spacing: 0.03em;
+  text-transform: uppercase;
+}
+
+.benchStudyRecommendation li strong {
+  display: block;
+  overflow-wrap: anywhere;
+  font-size: 13px;
+  font-weight: 600;
+  line-height: 1.45;
+}
+
+.benchStudyRecommendation > p {
+  grid-column: 1 / -1;
+  padding: 15px 20px;
+  margin: 0;
+  border-top: 1px solid var(--bench-study-line);
+  color: var(--bench-study-muted);
+  font-size: 12px;
+  line-height: 1.65;
+}
+
+.benchStudyRecommendation > p small {
+  display: inline;
+  margin-left: 8px;
+  color: var(--bench-study-ink);
+  font-size: inherit;
+}
+
+.benchStudySection {
+  padding-top: clamp(72px, 8vw, 104px);
+  padding-bottom: clamp(72px, 8vw, 104px);
+  border-bottom: 1px solid var(--bench-study-line);
+}
+
+.benchStudySectionHeader {
+  display: grid;
+  grid-template-columns: minmax(120px, 0.22fr) minmax(0, 0.78fr);
+  gap: clamp(28px, 5vw, 68px);
+  align-items: start;
+  margin-bottom: clamp(40px, 5vw, 64px);
+}
+
+.benchStudySectionHeader > span {
+  padding-top: 8px;
+}
+
+.benchStudySectionHeader h2,
+.benchStudyMethod h2 {
+  margin: 0;
+  font-family: var(--bench-font);
+  font-size: clamp(36px, 4.6vw, 56px);
+  font-weight: 650;
+  letter-spacing: -0.045em;
+  line-height: 1.08;
+  text-wrap: balance;
+}
+
+.benchStudySectionHeader p {
+  max-width: 650px;
+  margin: 18px 0 0;
+  color: var(--bench-study-muted);
+  font-size: 15px;
+  line-height: 1.75;
+  text-wrap: pretty;
+}
+
+.benchStudyFindings {
+  background: var(--bench-study-paper);
+}
+
+.benchStudyFindingGrid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.benchStudyFinding {
+  min-height: 236px;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  padding: clamp(24px, 3.2vw, 38px);
+  border: 1px solid var(--bench-study-line);
+  border-radius: 10px;
+  background: var(--bench-study-paper);
+}
+
+.benchStudyFinding.tone-2,
+.benchStudyFinding.tone-4 {
+  background: var(--bench-study-soft);
+}
+
+.benchStudyFinding.tone-3 {
+  background: var(--bench-study-raised);
+}
+
+.benchStudyFinding > div {
+  display: flex;
+  justify-content: space-between;
+  gap: 20px;
+}
+
+.benchStudyFinding > div span,
+.benchStudyFinding > div small {
+  font-family: var(--geist-mono);
+  font-size: 9px;
+  font-weight: 550;
+  letter-spacing: 0.045em;
+  line-height: 1.5;
+  text-transform: uppercase;
+}
+
+.benchStudyFinding > div small {
+  color: var(--bench-study-muted);
+  text-align: right;
+}
+
+.benchStudyFinding > strong {
+  margin: 30px 0;
+  font-family: var(--bench-font);
+  font-size: clamp(48px, 6vw, 72px);
+  font-variant-numeric: tabular-nums;
+  font-weight: 650;
+  letter-spacing: -0.055em;
+  line-height: 0.95;
+}
+
+.benchStudyFinding footer b {
+  display: block;
+  overflow-wrap: anywhere;
+  font-size: 14px;
+  font-weight: 600;
+  line-height: 1.4;
+}
+
+.benchStudyFinding footer p {
+  max-width: 52ch;
+  margin: 7px 0 0;
+  color: var(--bench-study-muted);
+  font-size: 12px;
+  line-height: 1.65;
+}
+
+.benchStudyExperiments {
+  background: var(--bench-study-soft);
+}
+
+.benchStudyCompareShell {
+  overflow: hidden;
+  border: 1px solid var(--bench-study-line);
+  border-radius: 12px;
+  background: var(--bench-study-paper);
+  box-shadow: var(--geist-shadow-sm);
+}
+
+.benchStudyCompareToolbar {
+  display: flex;
+  justify-content: space-between;
+  border-bottom: 1px solid var(--bench-study-line);
+  background: var(--bench-study-paper);
+}
+
+.benchStudyTabs {
+  display: flex;
+  min-width: 0;
+}
+
+.benchStudyTabs button {
+  min-height: 46px;
+  padding: 0 18px;
+  border: 0;
+  border-right: 1px solid var(--bench-study-line);
+  background: transparent;
+  color: var(--bench-study-muted);
+  cursor: pointer;
+  font-family: var(--geist-mono);
+  font-size: 10px;
+  font-weight: 550;
+  letter-spacing: 0.025em;
+  transition: background var(--geist-transition), color var(--geist-transition);
+}
+
+.benchStudyMetricTabs button:first-child {
+  border-left: 1px solid var(--bench-study-line);
+}
+
+.benchStudyTabs button:hover {
+  background: var(--bench-study-soft);
+  color: var(--bench-study-ink);
+}
+
+.benchStudyTabs button[aria-selected="true"] {
+  background: var(--bench-study-ink);
+  color: var(--bench-study-paper);
+}
+
+.benchStudyCompareBody {
+  min-height: 430px;
+  display: grid;
+  grid-template-columns: minmax(250px, 0.32fr) minmax(0, 0.68fr);
+}
+
+.benchStudyCompareSummary {
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  padding: clamp(28px, 3.8vw, 46px);
+  border-right: 1px solid var(--bench-study-line);
+  background: var(--bench-study-soft);
+}
+
+.benchStudyCompareSummary > div:first-child > span {
+  display: block;
+  color: var(--bench-study-muted);
+  font-family: var(--geist-mono);
+  font-size: 9px;
+  font-weight: 500;
+  line-height: 1.6;
+  text-transform: uppercase;
+}
+
+.benchStudyCompareSummary h3 {
+  max-width: 12ch;
+  margin: 18px 0 0;
+  font-size: clamp(28px, 3.4vw, 42px);
+  font-weight: 650;
+  letter-spacing: -0.04em;
+  line-height: 1.08;
+}
+
+.benchStudyCompareSummary p {
+  margin: 22px 0 0;
+  font-size: 13px;
+  font-weight: 500;
+  line-height: 1.7;
+}
+
+.benchStudyWinner {
+  padding-top: 20px;
+  margin-top: 48px;
+  border-top: 1px solid var(--bench-study-line-strong);
+}
+
+.benchStudyWinner small,
+.benchStudyWinner span {
+  display: block;
+  color: var(--bench-study-muted);
+  font-family: var(--geist-mono);
+  font-size: 9px;
+  line-height: 1.5;
+  text-transform: uppercase;
+}
+
+.benchStudyWinner strong {
+  display: block;
+  margin: 7px 0;
+  overflow-wrap: anywhere;
+  font-size: 17px;
+  font-weight: 650;
+  line-height: 1.35;
+}
+
+.benchStudyBars {
+  display: grid;
+  align-content: center;
+  gap: 22px;
+  padding: clamp(32px, 5vw, 64px);
+  background: var(--bench-study-paper);
+}
+
+.benchStudyBarsHeading {
+  display: flex;
+  justify-content: space-between;
+  gap: 16px;
+  padding-bottom: 2px;
+  color: var(--bench-study-ink);
+  font-family: var(--geist-mono);
+  font-size: 9px;
+  font-weight: 550;
+  line-height: 1.5;
+  text-transform: uppercase;
+}
+
+.benchStudyBarsHeading small {
+  color: var(--bench-study-muted);
+  font-size: inherit;
+  font-weight: inherit;
+}
+
+.benchStudyBarRow {
+  display: grid;
+  grid-template-columns: minmax(130px, 0.35fr) minmax(150px, 0.65fr) 74px;
+  gap: 16px;
+  align-items: center;
+}
+
+.benchStudyBarLabel {
+  min-width: 0;
+}
+
+.benchStudyBarLabel strong {
+  overflow-wrap: anywhere;
+  font-size: 12px;
+  font-weight: 550;
+  line-height: 1.4;
+}
+
+.benchStudyBarLabel small {
+  display: inline-block;
+  padding: 2px 5px;
+  margin-left: 7px;
+  border: 1px solid var(--bench-study-line-strong);
+  border-radius: 3px;
+  color: var(--bench-study-muted);
+  font-family: var(--geist-mono);
+  font-size: 7px;
+  line-height: 1.2;
+  vertical-align: 2px;
+}
+
+.benchStudyBarTrack {
+  position: relative;
+  height: 22px;
+  overflow: hidden;
+  border: 1px solid var(--bench-study-line);
+  border-radius: 3px;
+  background:
+    repeating-linear-gradient(
+      90deg,
+      transparent 0,
+      transparent calc(25% - 1px),
+      color-mix(in srgb, var(--bench-study-ink) 8%, transparent) 25%
+    ),
+    var(--bench-study-soft);
+}
+
+.benchStudyBarTrack span {
+  position: absolute;
+  inset: 0 auto 0 0;
+  background: color-mix(
+    in srgb,
+    var(--bench-study-ink) 72%,
+    var(--bench-study-paper)
+  );
+  transition: width 280ms ease-out;
+}
+
+.benchStudyBarRow.isBest .benchStudyBarTrack span {
+  background: var(--bench-study-ink);
+}
+
+.benchStudyBarRow output {
+  font-family: var(--geist-mono);
+  font-size: 11px;
+  font-variant-numeric: tabular-nums;
+  font-weight: 600;
+  text-align: right;
+}
+
+.benchStudyCompareDetails {
+  border-top: 1px solid var(--bench-study-line);
+  background: var(--bench-study-paper);
+}
+
+.benchStudyDisclosure + .benchStudyDisclosure {
+  border-top: 1px solid var(--bench-study-line);
+}
+
+.benchStudyDisclosure summary {
+  min-height: 58px;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto auto;
+  gap: 20px;
+  align-items: center;
+  padding: 0 20px;
+  cursor: pointer;
+  list-style: none;
+}
+
+.benchStudyDisclosure summary::-webkit-details-marker {
+  display: none;
+}
+
+.benchStudyDisclosure summary:hover {
+  background: var(--bench-study-soft);
+}
+
+.benchStudyDisclosure summary span {
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.benchStudyDisclosure summary small {
+  color: var(--bench-study-muted);
+  font-family: var(--geist-mono);
+  font-size: 9px;
+}
+
+.benchStudyDisclosure summary::after {
+  content: "+";
+  color: var(--bench-study-muted);
+  font-family: var(--geist-mono);
+  font-size: 17px;
+  font-weight: 400;
+}
+
+.benchStudyDisclosure[open] summary::after {
+  content: "−";
+}
+
+.benchStudyMetricsTableWrap {
+  overflow-x: auto;
+  border-top: 1px solid var(--bench-study-line);
+}
+
+.benchStudyMetricsTable {
+  width: 100%;
+  min-width: 920px;
+  border-collapse: collapse;
+  font-family: var(--geist-mono);
+  font-size: 10px;
+  font-variant-numeric: tabular-nums;
+}
+
+.benchStudyMetricsTable th,
+.benchStudyMetricsTable td {
+  padding: 12px 14px;
+  border-right: 1px solid var(--bench-study-line);
+  border-bottom: 1px solid var(--bench-study-line);
+  text-align: left;
+}
+
+.benchStudyMetricsTable th:last-child,
+.benchStudyMetricsTable td:last-child {
+  border-right: 0;
+}
+
+.benchStudyMetricsTable tr:last-child th,
+.benchStudyMetricsTable tr:last-child td {
+  border-bottom: 0;
+}
+
+.benchStudyMetricsTable thead th {
+  background: var(--bench-study-soft);
+  color: var(--bench-study-muted);
+  font-size: 8px;
+  font-weight: 550;
+  text-transform: uppercase;
+}
+
+.benchStudyMetricsTable tbody th {
+  max-width: 220px;
+  overflow-wrap: anywhere;
+  font-family: var(--bench-font);
+  font-size: 11px;
+  font-weight: 550;
+}
+
+.benchStudyEvidence > a {
+  display: block;
+  padding: clamp(12px, 2.4vw, 28px);
+  border-top: 1px solid var(--bench-study-line);
+  background: var(--bench-study-soft);
+}
+
+.benchStudyEvidence img {
+  display: block;
+  width: 100%;
+  height: auto;
+  border: 1px solid var(--bench-study-line);
+  border-radius: 5px;
+  background: #fff;
+}
+
+.benchStudyScenarios {
+  background: var(--bench-study-paper);
+}
+
+.benchStudyScenarioGrid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.benchStudyScenario {
+  min-height: 280px;
+  display: flex;
+  flex-direction: column;
+  padding: clamp(24px, 3vw, 34px);
+  border: 1px solid var(--bench-study-line);
+  border-radius: 10px;
+  background: var(--bench-study-paper);
+}
+
+.benchStudyScenario.tone-2 {
+  background: var(--bench-study-soft);
+}
+
+.benchStudyScenario.tone-3 {
+  background: var(--bench-study-raised);
+}
+
+.benchStudyScenario > div {
+  display: flex;
+  justify-content: space-between;
+  gap: 20px;
+  color: var(--bench-study-muted);
+  font-family: var(--geist-mono);
+  font-size: 9px;
+  font-weight: 550;
+  line-height: 1.5;
+  text-transform: uppercase;
+}
+
+.benchStudyScenario > div span {
+  color: var(--bench-study-ink);
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.benchStudyScenario h3 {
+  margin: 42px 0 0;
+  font-size: clamp(22px, 2.3vw, 30px);
+  font-weight: 650;
+  letter-spacing: -0.035em;
+  line-height: 1.15;
+}
+
+.benchStudyScenario > p {
+  margin: 15px 0 30px;
+  color: var(--bench-study-muted);
+  font-size: 13px;
+  line-height: 1.7;
+}
+
+.benchStudyScenario footer {
+  display: flex;
+  justify-content: space-between;
+  gap: 20px;
+  padding-top: 15px;
+  margin-top: auto;
+  border-top: 1px solid var(--bench-study-line);
+  color: var(--bench-study-muted);
+  font-family: var(--geist-mono);
+  font-size: 9px;
+  line-height: 1.5;
+}
+
+.benchStudyScenario footer b {
+  color: var(--bench-study-ink);
+  font-weight: 600;
+  text-align: right;
+}
+
+.benchStudyMethod {
+  --bench-study-method-bg: var(--bench-study-ink);
+  --bench-study-method-text: var(--bench-study-paper);
+  --bench-study-method-muted: color-mix(
+    in srgb,
+    var(--bench-study-paper) 66%,
+    var(--bench-study-ink)
+  );
+  --bench-study-method-line: color-mix(
+    in srgb,
+    var(--bench-study-paper) 22%,
+    transparent
+  );
+
+  display: grid;
+  grid-template-columns: minmax(0, 1.05fr) minmax(320px, 0.75fr);
+  gap: clamp(50px, 8vw, 104px);
+  background: var(--bench-study-method-bg);
+  color: var(--bench-study-method-text);
+}
+
+.benchStudyMethod h2 {
+  max-width: 10ch;
+  color: inherit;
+  font-size: clamp(36px, 4.5vw, 52px);
+}
+
+.benchStudyMethod .benchStudySectionIndex {
+  color: var(--bench-study-method-muted);
+}
+
+.benchStudyMethodList,
+.benchStudyLimitations ol {
+  padding: 0;
+  margin: 38px 0 0;
+  list-style: none;
+}
+
+.benchStudyMethodList {
+  border-top: 1px solid var(--bench-study-method-line);
+}
+
+.benchStudyMethodList li {
+  display: grid;
+  grid-template-columns: 34px minmax(0, 1fr);
+  gap: 18px;
+  padding: 20px 0;
+  border-bottom: 1px solid var(--bench-study-method-line);
+}
+
+.benchStudyMethodList li > span {
+  color: var(--bench-study-method-muted);
+  font-family: var(--geist-mono);
+  font-size: 9px;
+}
+
+.benchStudyMethodList h3 {
+  margin: 0;
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.benchStudyMethodList p {
+  margin: 7px 0 0;
+  color: var(--bench-study-method-muted);
+  font-size: 12px;
+  line-height: 1.7;
+}
+
+.benchStudyLimitations {
+  align-self: start;
+  padding: clamp(26px, 3.5vw, 42px);
+  border: 1px solid var(--bench-study-method-line);
+  border-radius: 10px;
+  background: color-mix(
+    in srgb,
+    var(--bench-study-paper) 6%,
+    transparent
+  );
+}
+
+.benchStudyLimitations h2 {
+  font-size: clamp(30px, 3.6vw, 42px);
+}
+
+.benchStudyLimitations ol {
+  counter-reset: bench-study-limit;
+}
+
+.benchStudyLimitations li {
+  position: relative;
+  padding: 18px 0 18px 36px;
+  border-top: 1px solid var(--bench-study-method-line);
+  color: var(--bench-study-method-muted);
+  counter-increment: bench-study-limit;
+  font-size: 12px;
+  line-height: 1.7;
+}
+
+.benchStudyLimitations li::before {
+  position: absolute;
+  top: 19px;
+  left: 0;
+  content: "0" counter(bench-study-limit);
+  color: var(--bench-study-method-text);
+  font-family: var(--geist-mono);
+  font-size: 9px;
+}
+
+.benchStudyFooter {
+  display: flex;
+  justify-content: space-between;
+  gap: 24px;
+  padding-top: 30px;
+  padding-bottom: 30px;
+  background: var(--bench-study-paper);
+  color: var(--bench-study-muted);
+  font-family: var(--geist-mono);
+  font-size: 9px;
+  line-height: 1.5;
+  text-transform: uppercase;
+}
+
+.benchStudyFooter nav {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 18px;
+}
+
+.benchStudyFooter a {
+  font-size: inherit;
+}
+
+.benchStudyFooter a[aria-current="page"] {
+  color: var(--bench-study-ink);
+  font-weight: 650;
+}
+
+.benchStudyPage a:focus-visible,
+.benchStudyPage button:focus-visible,
+.benchStudyPage summary:focus-visible {
+  outline: 2px solid var(--bench-study-ink);
+  outline-offset: 3px;
+}
+
+.benchStudyMethod a:focus-visible,
+.benchStudyMethod button:focus-visible,
+.benchStudyMethod summary:focus-visible {
+  outline-color: var(--bench-study-method-text);
+}
+
+@media (max-width: 1060px) {
+  .benchStudyRecommendation {
+    grid-template-columns: minmax(150px, 0.72fr) repeat(3, minmax(0, 1fr));
+  }
+
+  .benchStudyCompareBody {
+    grid-template-columns: minmax(230px, 0.36fr) minmax(0, 0.64fr);
+  }
+
+  .benchStudyBarRow {
+    grid-template-columns: minmax(110px, 0.35fr) minmax(120px, 0.65fr) 68px;
+    gap: 12px;
+  }
+}
+
+@media (max-width: 820px) {
+  .benchStudyHero {
+    padding-top: 26px;
+    padding-bottom: 48px;
+  }
+
+  .benchStudyHeroTopline {
+    align-items: flex-start;
+    flex-direction: column;
+    gap: 4px;
+  }
+
+  .benchStudyHeroGrid {
+    grid-template-columns: 1fr;
+    gap: 38px;
+    padding: 54px 0 46px;
+  }
+
+  .benchStudyHero h1 {
+    font-size: clamp(54px, 16vw, 78px);
+  }
+
+  .benchStudyThesis {
+    font-size: clamp(23px, 6vw, 32px);
+  }
+
+  .benchStudyRecommendation {
+    display: block;
+  }
+
+  .benchStudyRecommendation > span,
+  .benchStudyRecommendation li,
+  .benchStudyRecommendation > p {
+    display: block;
+    padding: 15px 17px;
+    border-top: 1px solid var(--bench-study-line);
+    border-left: 0;
+  }
+
+  .benchStudyRecommendation > span {
+    border-top: 0;
+  }
+
+  .benchStudyRecommendation > p small {
+    display: block;
+    margin-top: 6px;
+    margin-left: 0;
+  }
+
+  .benchStudySection {
+    padding-top: 64px;
+    padding-bottom: 64px;
+  }
+
+  .benchStudySectionHeader {
+    display: block;
+    margin-bottom: 34px;
+  }
+
+  .benchStudySectionHeader > span {
+    padding-top: 0;
+  }
+
+  .benchStudySectionHeader h2,
+  .benchStudyMethod h2 {
+    font-size: clamp(34px, 9vw, 46px);
+  }
+
+  .benchStudyFinding {
+    min-height: 220px;
+  }
+
+  .benchStudyFinding > strong {
+    font-size: clamp(44px, 12vw, 64px);
+  }
+
+  .benchStudyCompareToolbar {
+    display: block;
+  }
+
+  .benchStudyTabs {
+    width: 100%;
+  }
+
+  .benchStudyTabs + .benchStudyTabs {
+    border-top: 1px solid var(--bench-study-line);
+  }
+
+  .benchStudyTabs button {
+    min-width: 0;
+    flex: 1;
+    padding: 0 8px;
+    font-size: 9px;
+  }
+
+  .benchStudyMetricTabs button:first-child {
+    border-left: 0;
+  }
+
+  .benchStudyTabs button:last-child {
+    border-right: 0;
+  }
+
+  .benchStudyCompareBody {
+    min-height: 0;
+    grid-template-columns: 1fr;
+  }
+
+  .benchStudyCompareSummary {
+    min-height: 300px;
+    border-right: 0;
+    border-bottom: 1px solid var(--bench-study-line);
+  }
+
+  .benchStudyCompareSummary h3 {
+    font-size: clamp(30px, 8vw, 40px);
+  }
+
+  .benchStudyBars {
+    gap: 26px;
+    padding: 34px 20px;
+  }
+
+  .benchStudyBarsHeading {
+    align-items: flex-start;
+    flex-direction: column;
+    gap: 4px;
+  }
+
+  .benchStudyBarRow {
+    grid-template-columns: minmax(0, 1fr) 66px;
+  }
+
+  .benchStudyBarLabel {
+    grid-column: 1 / -1;
+  }
+
+  .benchStudyDisclosure summary {
+    grid-template-columns: minmax(0, 1fr) auto;
+    gap: 12px;
+    padding: 12px 17px;
+  }
+
+  .benchStudyDisclosure summary small {
+    display: none;
+  }
+
+  .benchStudyScenarioGrid {
+    grid-template-columns: 1fr;
+  }
+
+  .benchStudyScenario {
+    min-height: 250px;
+  }
+
+  .benchStudyMethod {
+    grid-template-columns: 1fr;
+    gap: 60px;
+  }
+
+  .benchStudyLimitations {
+    width: 100%;
+  }
+
+  .benchStudyFooter {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+}
+
+@media (max-width: 560px) {
+  .benchStudyFindingGrid {
+    grid-template-columns: 1fr;
+  }
+
+  .benchStudyFinding {
+    min-height: 205px;
+  }
+
+  .benchStudyHeroActions {
+    gap: 12px 20px;
+  }
+
+  .benchStudyRecommendation {
+    border-radius: 8px;
+  }
+
+  .benchStudyCompareShell {
+    border-radius: 8px;
+  }
+
+  .benchStudyScenario {
+    border-radius: 8px;
+  }
+}
+
+@media (max-width: 380px) {
+  .benchStudyPage {
+    --bench-study-gutter: 16px;
+  }
+
+  .benchStudyHero h1 {
+    gap: 8px;
+    font-size: 50px;
+  }
+
+  .benchStudySectionHeader h2,
+  .benchStudyMethod h2 {
+    font-size: 32px;
+  }
+
+  .benchStudyTabs button {
+    padding: 0 5px;
+    font-size: 8px;
+  }
+
+  .benchStudyBars {
+    padding: 28px 16px;
+  }
+
+  .benchStudyBarRow {
+    grid-template-columns: minmax(0, 1fr) 60px;
+  }
+
+  .benchStudyLimitations {
+    padding: 22px 18px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .benchStudyBarTrack span {
+    transition: none;
+  }
+}
