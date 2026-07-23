@@ -248,18 +248,32 @@ export function initProfileHook(): void {
   }
 
   // Profile the user-provided `render`.
+  // The profiling wrapper is cached per original render function (it resolves
+  // the component type through `this[VNODE]` at call time), so re-rendering a
+  // component does not allocate a new closure. A wrapper maps to itself so an
+  // already-wrapped render is left untouched.
+  type RenderFn = NonNullable<Component['render']>;
+  const wrappedRenderCache = new WeakMap<RenderFn, RenderFn>();
   hook(options, RENDER, (old, vnode: VNode) => {
+    const component = vnode[COMPONENT]!;
     // eslint-disable-next-line @typescript-eslint/unbound-method
-    const originalRender = vnode[COMPONENT]!.render;
-    vnode[COMPONENT]!.render = function render(this, props, state, context) {
-      profileStart(getProfileLabel(renderLabelCache, 'ReactLynx::render::', vnode.type as ComponentType));
-      try {
-        return originalRender.call(this, props, state, context);
-      } finally {
-        profileEnd();
-        vnode[COMPONENT]!.render = originalRender;
-      }
-    };
+    const originalRender = component.render;
+    let wrapped = wrappedRenderCache.get(originalRender);
+    if (wrapped === undefined) {
+      wrapped = function render(this: Component, props, state, context) {
+        profileStart(
+          getProfileLabel(renderLabelCache, 'ReactLynx::render::', this[VNODE]!.type as ComponentType),
+        );
+        try {
+          return originalRender.call(this, props, state, context);
+        } finally {
+          profileEnd();
+        }
+      };
+      wrappedRenderCache.set(originalRender, wrapped);
+      wrappedRenderCache.set(wrapped, wrapped);
+    }
+    component.render = wrapped;
     old?.(vnode);
   });
 
