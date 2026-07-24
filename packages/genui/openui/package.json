@@ -47,7 +47,7 @@
     "@lynx-js/lynx-ui": "^3.133.0",
     "@lynx-js/react": "workspace:*",
     "@lynx-js/types": "4.0.0",
-    "@types/react": "^18.3.28"
+    "@types/react": "^18.3.31"
   },
   "peerDependencies": {
     "@lynx-js/lynx-ui": ">=3.133.0",
