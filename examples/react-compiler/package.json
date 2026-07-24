@@ -17,7 +17,7 @@
     "@lynx-js/rspeedy": "workspace:*",
     "@lynx-js/types": "4.0.0",
     "@rsbuild/plugin-babel": "1.1.2",
-    "@types/react": "^18.3.28",
+    "@types/react": "^18.3.31",
     "babel-plugin-react-compiler": "1.0.0"
   }
 }

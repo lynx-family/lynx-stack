@@ -2,7 +2,7 @@
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
 
-import type { FC, ReactNode, RefCallback, cloneElement as reactCloneElement } from 'react';
+import type { FC, JSX, ReactNode, RefCallback, cloneElement as reactCloneElement } from 'react';
 
 import { useCallback, useRef, useState } from '@lynx-js/react';
 import { preactCloneElement as _cloneElement } from '@lynx-js/react/internal';
