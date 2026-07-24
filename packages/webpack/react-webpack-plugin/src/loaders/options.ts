@@ -2,6 +2,7 @@
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
 import fs from 'node:fs';
+import { createRequire } from 'node:module';
 import path from 'node:path';
 
 import type { LoaderContext } from '@rspack/core';
@@ -114,49 +115,67 @@ function normalizeSlashes(file: string) {
   return file.replaceAll(path.win32.sep, '/');
 }
 
-// With `enableMTSRendering: false`, every main-thread module is reduced to
-// its defines except the ReactLynx runtime and its dependencies, which the
-// defines import at runtime.
-const MTS_DEFINES_EXEMPT_PACKAGES = new Set([
-  '@lynx-js/react',
-  '@lynx-js/react-runtime',
-  '@lynx-js/internal-preact',
-  'preact',
-]);
+const realpath = (p: string): string => {
+  try {
+    return fs.realpathSync(p);
+  } catch {
+    return p;
+  }
+};
 
-const exemptDirCache = new Map<string, boolean>();
+// With `enableMTSRendering: false`, every main-thread module is reduced to its
+// defines except the ReactLynx runtime and its dependency closure, which the
+// defines import and boot from at runtime. That closure is resolved from
+// `PUBLIC_RUNTIME_PKG` rather than hard-coded, so it tracks the runtime's real
+// dependencies (and a custom runtime resolved from the same context) instead
+// of drifting from a name list.
+const exemptRootsCache = new Map<string, string[]>();
 
-// Walks every ancestor: subpath entries (e.g. `preact/hooks`) have their own
-// nested package.json whose name differs from the package's.
-function isInsideExemptPackage(dir: string): boolean {
-  const cached = exemptDirCache.get(dir);
+function getExemptRoots(fromDir: string): string[] {
+  const cached = exemptRootsCache.get(fromDir);
   if (cached !== undefined) {
     return cached;
   }
-  let result = false;
-  const packageJsonPath = path.join(dir, 'package.json');
-  if (fs.existsSync(packageJsonPath)) {
+  const require = createRequire(path.join(fromDir, 'noop.js'));
+  const roots = new Set<string>();
+  const seenPkgJson = new Set<string>();
+  const queue: string[] = [PUBLIC_RUNTIME_PKG];
+  while (queue.length > 0) {
+    const pkg = queue.shift()!;
+    let pkgJsonPath: string;
     try {
-      const { name } = JSON.parse(
-        fs.readFileSync(packageJsonPath, 'utf-8'),
-      ) as { name?: string };
-      result = name !== undefined && MTS_DEFINES_EXEMPT_PACKAGES.has(name);
+      pkgJsonPath = require.resolve(`${pkg}/package.json`);
+    } catch {
+      continue;
+    }
+    if (seenPkgJson.has(pkgJsonPath)) {
+      continue;
+    }
+    seenPkgJson.add(pkgJsonPath);
+    // The runtime's implementation lives in a subdirectory of its package, so
+    // the package root covers it (and any nested package.json) without listing
+    // it separately.
+    roots.add(realpath(path.dirname(pkgJsonPath)) + path.sep);
+    try {
+      const { dependencies } = JSON.parse(
+        fs.readFileSync(pkgJsonPath, 'utf-8'),
+      ) as { dependencies?: Record<string, string> };
+      queue.push(...Object.keys(dependencies ?? {}));
     } catch {
       // ignore unreadable package.json
     }
   }
-  if (!result) {
-    const parent = path.dirname(dir);
-    if (parent !== dir) {
-      result = isInsideExemptPackage(parent);
-    }
-  }
-  exemptDirCache.set(dir, result);
+  const result = [...roots];
+  exemptRootsCache.set(fromDir, result);
   return result;
 }
 
-function shouldReduceToDefines(resourcePath: string): boolean {
-  return !isInsideExemptPackage(path.dirname(resourcePath));
+function shouldReduceToDefines(
+  resourcePath: string,
+  rootContext: string,
+): boolean {
+  const real = realpath(resourcePath);
+  return !getExemptRoots(rootContext).some((root) => real.startsWith(root));
 }
 
 function getCommonOptions(
@@ -375,7 +394,7 @@ export function getMainThreadTransformOptions(
       target: 'LEPUS',
     },
     mainThreadDefinesOnly: enableMTSRendering === false
-      && shouldReduceToDefines(this.resourcePath),
+      && shouldReduceToDefines(this.resourcePath, this.rootContext),
     directiveDCE: {
       target: 'LEPUS',
     },
