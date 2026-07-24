@@ -1,7 +1,7 @@
 import { createRequire } from 'node:module';
 import * as path from 'node:path';
 
-import type { Plugin, UserConfigExport } from 'vitest/config';
+import type { Plugin, ViteUserConfigExport } from 'vitest/config';
 import { defineConfig } from 'vitest/config';
 
 const require = createRequire(import.meta.url);
@@ -61,7 +61,7 @@ function transformReactLynxPlugin(): Plugin {
   };
 }
 
-const config: UserConfigExport = defineConfig({
+const config: ViteUserConfigExport = defineConfig({
   plugins: [
     transformReactLynxPlugin(),
   ],

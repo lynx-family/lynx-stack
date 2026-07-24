@@ -1,6 +1,6 @@
-import { defineProject, type UserConfigExport } from 'vitest/config';
+import { defineProject, type UserProjectConfigExport } from 'vitest/config';
 
-const config: UserConfigExport = defineProject({
+const config: UserProjectConfigExport = defineProject({
   test: {
     name: 'tailwind-preset',
     environment: 'node',
