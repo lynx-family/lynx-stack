@@ -34,6 +34,7 @@ lazy_static::lazy_static! {
     ("textarea", "x-textarea"),
     ("svg", "x-svg"),
     ("frame", "lynx-view"),
+    ("video", "x-video"),
   ]);
 
   pub static ref HTML_TAG_TO_LYNX_TAG_MAP: FnvHashMap<&'static str, &'static str> = FnvHashMap::from_iter(LYNX_TAG_TO_HTML_TAG_MAP
@@ -64,6 +65,8 @@ lazy_static::lazy_static! {
     ("x-overlay-ng", 7),
     ("x-viewpager-ng", 8),
     ("x-viewpager-item-ng", 8),
+    ("x-video", 9),
+    ("video", 9),
   ]);
 
   pub static ref ALREADY_LOADED_TAGS: FnvHashSet<&'static str> = FnvHashSet::from_iter(vec![
