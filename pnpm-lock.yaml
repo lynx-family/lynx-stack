@@ -30,8 +30,8 @@ catalogs:
       version: 2.1.3
   rstest:
     '@rstest/adapter-rsbuild':
-      specifier: 0.11.0
-      version: 0.11.0
+      specifier: 0.11.2
+      version: 0.11.2
     '@rstest/core':
       specifier: 0.11.2
       version: 0.11.2
@@ -1240,7 +1240,7 @@ importers:
         version: 2.1.4(core-js@3.49.0)
       '@rstest/adapter-rsbuild':
         specifier: catalog:rstest
-        version: 0.11.0(@rsbuild/core@2.1.4(core-js@3.49.0))(@rstest/core@0.11.2(core-js@3.49.0)(jsdom@27.4.0(supports-color@8.1.1)))
+        version: 0.11.2(@rsbuild/core@2.1.4(core-js@3.49.0))(@rstest/core@0.11.2(core-js@3.49.0)(jsdom@27.4.0(supports-color@8.1.1)))
       '@testing-library/dom':
         specifier: ^10.4.1
         version: 10.4.1
@@ -5344,11 +5344,11 @@ packages:
   '@rstack-dev/doc-ui@1.12.3':
     resolution: {integrity: sha512-5W70pjRxxwyNT3R4kTYDE8cPaMjsJKXMeZQn7+Q54+RCJ1ahN4pADnpaY7WvSEBWkjXdI4IR4GGvBs7nSU/8MA==}
 
-  '@rstest/adapter-rsbuild@0.11.0':
-    resolution: {integrity: sha512-otrR3yqQ5Uyskm0hu8c0fjP1eFk6bMJALnYhUl6V1CKp/monoowFMa6XEqdY2d4aHv6oa8XWGLfU4LWne1Vg9A==}
+  '@rstest/adapter-rsbuild@0.11.2':
+    resolution: {integrity: sha512-I/SOfNNyEGjNg4Te/2l0DN8x9DpIjH6w7/3rR2lUyRV1Zdvwpfqdbr5ofReXSciZVapVBsWmKhVH6KqnG81wvg==}
     peerDependencies:
-      '@rsbuild/core': '*'
-      '@rstest/core': ^0.11.0
+      '@rsbuild/core': ^1.0.0 || ^2.0.0
+      '@rstest/core': ^0.11.2
 
   '@rstest/core@0.11.2':
     resolution: {integrity: sha512-/CTLkvogDGozY+bCYsc+sKJDDsU/LvDdEZC545+QO1Iv9ds+6vgSWuA+Q2iQF3cReeSkOI9ySARfFemcCoSKpQ==}
@@ -14971,7 +14971,7 @@ snapshots:
       - react
       - react-dom
 
-  '@rstest/adapter-rsbuild@0.11.0(@rsbuild/core@2.1.4(core-js@3.49.0))(@rstest/core@0.11.2(core-js@3.49.0)(jsdom@27.4.0(supports-color@8.1.1)))':
+  '@rstest/adapter-rsbuild@0.11.2(@rsbuild/core@2.1.4(core-js@3.49.0))(@rstest/core@0.11.2(core-js@3.49.0)(jsdom@27.4.0(supports-color@8.1.1)))':
     dependencies:
       '@rsbuild/core': 2.1.4(core-js@3.49.0)
       '@rstest/core': 0.11.2(core-js@3.49.0)(jsdom@27.4.0(supports-color@8.1.1))
