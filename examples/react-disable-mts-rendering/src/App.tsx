@@ -2,6 +2,7 @@ import { useState } from '@lynx-js/react';
 
 import './App.css';
 import Counter from './comp-lib/index.js';
+import { MainThreadScripts } from './MainThreadScripts.js';
 
 console.info('[side-effect] App module evaluated');
 
@@ -20,6 +21,7 @@ export function App() {
         </view>
         {__MAIN_THREAD__ ? null : <Counter />}
       </view>
+      <MainThreadScripts />
     </view>
   );
 }

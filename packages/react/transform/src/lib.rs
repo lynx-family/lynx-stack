@@ -838,14 +838,53 @@ fn transform_react_lynx_inner(
     });
 
     if main_thread_defines_only {
+      // The collected defines are self-contained (they carry their own runtime
+      // imports) but were captured mid-pass, so hygiene them on their own to
+      // fix their internal locals (e.g. a creator's `el`/`el1`). Doing it here
+      // — rather than over the whole rebuilt module — avoids renaming the kept
+      // user imports that worklet bodies reference (e.g. `runOnBackground`).
+      let mut define_items: Vec<ModuleItem> = vec![];
+      if let Some(collector) = &main_thread_defs_collector {
+        define_items.extend(collector.borrow_mut().drain(..));
+      }
+      if let Some(collector) = &main_thread_worklet_collector {
+        define_items.extend(collector.borrow_mut().drain(..));
+      }
+      let define_body = match Program::Module(Module {
+        span: DUMMY_SP,
+        body: define_items,
+        shebang: None,
+      })
+      .apply(hygiene_with_config(Config {
+        top_level_mark,
+        ..Default::default()
+      })) {
+        Program::Module(m) => m.body,
+        _ => vec![],
+      };
+
       if let Program::Module(module) = &program {
+        let runtime_pkg = snapshot_plugin_config.runtime_pkg.as_str();
         let mut seen_srcs: std::collections::HashSet<swc_core::atoms::Wtf8Atom> = Default::default();
         let mut items: Vec<ModuleItem> = vec![];
         for item in &module.body {
           match item {
+            // Emit two imports per source: a side-effect import so the module
+            // is always evaluated (its snapshot registrations run — the
+            // `sideEffects: true` main-thread rule keeps it even when nothing
+            // is used), and the original import so its bindings stay available
+            // for worklet bodies and snapshot creators that reference them
+            // (e.g. `runOnBackground`). Unused bindings are tree-shaken. The
+            // runtime pkg is skipped because the collected defines import it.
             ModuleItem::ModuleDecl(ModuleDecl::Import(import)) if !import.type_only => {
+              if import.src.value.as_str() == Some(runtime_pkg) {
+                continue;
+              }
               if seen_srcs.insert(import.src.value.clone()) {
                 items.push(side_effect_import(import.src.clone(), import.with.clone()));
+                if !import.specifiers.is_empty() {
+                  items.push(item.clone());
+                }
               }
             }
             ModuleItem::ModuleDecl(ModuleDecl::ExportNamed(export)) => {
@@ -872,21 +911,12 @@ fn transform_react_lynx_inner(
             }
           }
         }
-        if let Some(collector) = &main_thread_defs_collector {
-          items.extend(collector.borrow_mut().drain(..));
-        }
-        if let Some(collector) = &main_thread_worklet_collector {
-          items.extend(collector.borrow_mut().drain(..));
-        }
+        items.extend(define_body);
         program = Program::Module(Module {
           span: DUMMY_SP,
           body: items,
           shebang: None,
-        })
-        .apply(hygiene_with_config(Config {
-          top_level_mark,
-          ..Default::default()
-        }));
+        });
       }
     }
 

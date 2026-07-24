@@ -2,7 +2,7 @@
 
 exports[`mainThreadDefinesOnly > should keep dynamic imports dynamic behind a runtime-false guard 1`] = `
 "import "@lynx-js/react/lepus/jsx-runtime";
-import "@lynx-js/react/internal";
+import { jsx as _jsx } from "@lynx-js/react/lepus/jsx-runtime";
 import 'data:text/javascript;charset=utf-8,import { loadLazyBundle } from "@lynx-js/react/internal";lynx.loadLazyBundle = loadLazyBundle;';
 globalThis.__lynxKeepLazyBundle && import('./lazy-comp.jsx');
 import * as ReactLynx from "@lynx-js/react/internal";
@@ -21,9 +21,11 @@ ReactLynx.snapshotCreatorMap[__snapshot_a94a8_test_1] = (__snapshot_a94a8_test_1
 
 exports[`mainThreadDefinesOnly > should replace the module with imports and defines 1`] = `
 "import "@lynx-js/react/lepus/jsx-runtime";
-import "@lynx-js/react/internal";
+import { jsx as _jsx } from "@lynx-js/react/lepus/jsx-runtime";
 import "@lynx-js/react";
+import { useState } from "@lynx-js/react";
 import "my-monitor";
+import { track } from "my-monitor";
 import './style.css';
 import './helper.js';
 import * as ReactLynx from "@lynx-js/react/internal";

@@ -72,11 +72,14 @@ export function App() {
     );
     expect(result.code).toContain('ReactLynx.snapshotCreatorMap');
     expect(result.code).toContain('registerWorkletInternal');
-    expect(result.code).toContain(`import "my-monitor"`);
+    // Imports keep their bindings (worklet bodies can reference them);
+    // re-exports become side-effect imports.
+    expect(result.code).toContain(`import { track } from "my-monitor"`);
     expect(result.code).toContain(`import './style.css'`);
     expect(result.code).toContain(`import './helper.js'`);
-    expect(result.code).not.toContain('useState');
+    // Business logic is stripped.
     expect(result.code).not.toContain('track(');
+    expect(result.code).not.toContain('setCount');
     expect(result.code).not.toContain('function App');
     expect(result.code).toMatchSnapshot();
   });
@@ -101,7 +104,7 @@ export function App() {
     expect(result.code).not.toContain('import "./lazy-comp.jsx"');
   });
 
-  it('should keep only side-effect imports for modules without defines', async () => {
+  it('should keep imports and strip business for modules without defines', async () => {
     const result = await transformReactLynx(
       `
 import { report } from './sdk.js';
@@ -111,7 +114,7 @@ report('module-side-effect');
       options,
     );
 
-    expect(result.code).toContain(`import './sdk.js'`);
+    expect(result.code).toContain(`import { report } from './sdk.js'`);
     expect(result.code).not.toContain('report(');
   });
 
