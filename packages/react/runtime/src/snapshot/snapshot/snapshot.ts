@@ -124,25 +124,32 @@ if (__DEV__ && __JS__) {
  * interface for Preact's renderer to operate upon.
  */
 export class SnapshotInstance {
-  __id: number;
-  __snapshot_def: Snapshot;
-  __elements?: FiberElement[] | undefined;
-  __element_root?: FiberElement | undefined;
-  __values?: unknown[] | undefined;
+  // Fields are `declare`d (or assigned in the constructor) instead of being
+  // emitted as class fields: standard class-field semantics would define
+  // every field on every instance up front, which is measurable — this
+  // constructor runs once per element on every main-thread render.
+  declare type: string;
+  declare __id: number;
+  declare __snapshot_def: Snapshot;
+  declare __elements?: FiberElement[] | undefined;
+  declare __element_root?: FiberElement | undefined;
+  declare __values?: unknown[] | undefined;
   // current slot index for dynamic parts
   // only increment when inserting dynamic parts
   // when removing dynamic parts, the slot index will not change
   // cause there would be a wrapper to keep the slot index stable
   __current_slot_index = 0;
-  __worklet_ref_set?: Set<WorkletRefImpl<any> | Worklet>;
-  __listItemPlatformInfo?: PlatformInfo;
-  __extraProps?: Record<string, unknown> | undefined;
+  declare __worklet_ref_set?: Set<WorkletRefImpl<any> | Worklet>;
+  declare __listItemPlatformInfo?: PlatformInfo;
+  declare __extraProps?: Record<string, unknown> | undefined;
   __slotIndex: number = 0;
-  private __listItemPlatformInfoIndex?: number;
+  declare private __listItemPlatformInfoIndex?: number;
 
-  constructor(public type: string, id?: number) {
+  constructor(type: string, id?: number) {
+    this.type = type;
+    let def = snapshotManager.values.get(type);
     // Suspense uses 'div'
-    if (!snapshotManager.values.has(type) && type !== 'div') {
+    if (def === undefined && type !== 'div') {
       if (snapshotCreatorMap[type]) {
         snapshotCreatorMap[type](type, snapshotCreatorRuntime);
       } else if (isCloneSnapshot(type)) {
@@ -157,8 +164,9 @@ export class SnapshotInstance {
       } else {
         createRuntimeSnapshot(type);
       }
+      def = snapshotManager.values.get(type);
     }
-    this.__snapshot_def = snapshotManager.values.get(type)!;
+    this.__snapshot_def = def!;
 
     id ??= snapshotInstanceManager.nextId -= 1;
     this.__id = id;
@@ -205,13 +213,13 @@ export class SnapshotInstance {
       );
     }
 
-    __pendingListUpdates.runWithoutUpdates(() => {
-      const values = this.__values;
-      if (values) {
+    const values = this.__values;
+    if (values) {
+      __pendingListUpdates.runWithoutUpdates(() => {
         this.__values = undefined;
         this.setAttribute('values', values);
-      }
-    });
+      });
+    }
 
     if (isListHolder) {
       // never recurse into list's children
@@ -228,12 +236,13 @@ export class SnapshotInstance {
       }
       __pendingListUpdates.flushWithId(this.__id);
     } else {
+      const isSlotV2 = this.__snapshot_def.isSlotV2;
       let index = 0;
       let child = this.__firstChild;
       while (child) {
         child.ensureElements();
 
-        const [type, elementIndex] = slot[this.__snapshot_def.isSlotV2 ? child.__slotIndex : index]!;
+        const [type, elementIndex] = slot[isSlotV2 ? child.__slotIndex : index]!;
         switch (type) {
           case DynamicPartType.Slot: {
             __ReplaceElement(child.__element_root!, elements[elementIndex]!);

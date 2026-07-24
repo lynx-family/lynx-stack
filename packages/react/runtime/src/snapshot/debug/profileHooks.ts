@@ -25,6 +25,25 @@ import { getDisplayName, hook } from '../../utils.js';
 import { globalPatchOptions } from '../lifecycle/patch/commit.js';
 import { __globalSnapshotPatch } from '../lifecycle/patch/snapshotPatch.js';
 
+// Cache the `ReactLynx::diff::X` / `ReactLynx::render::X` trace labels per
+// component type — string concatenation would otherwise run on every render
+// of every component.
+const diffLabelCache = /* @__PURE__ */ new WeakMap<ComponentType, string>();
+const renderLabelCache = /* @__PURE__ */ new WeakMap<ComponentType, string>();
+
+function getProfileLabel(
+  cache: WeakMap<ComponentType, string>,
+  prefix: string,
+  type: ComponentType,
+): string {
+  let label = cache.get(type);
+  if (label === undefined) {
+    label = prefix + /* #__INLINE__ */ getDisplayName(type as ComponentClass);
+    cache.set(type, label);
+  }
+  return label;
+}
+
 const format = (val: unknown) => {
   if (typeof val === 'function') {
     return val.toString();
@@ -128,7 +147,11 @@ export function initProfileHook(): void {
       );
     }
 
-    hook(options, DIFF2, (old, vnode, oldVNode) => {
+    // These hooks run for every vnode on every render, so they are installed
+    // directly (instead of through the variadic `hook()` helper, which
+    // allocates a rest-args array per invocation).
+    const oldDiff2 = options[DIFF2];
+    options[DIFF2] = (vnode, oldVNode) => {
       // We only add profiling trace for Component
       if (typeof vnode.type === 'function') {
         const profileOptions: TraceOption = {};
@@ -147,14 +170,15 @@ export function initProfileHook(): void {
         }
 
         profileStart(
-          `ReactLynx::diff::${/* #__INLINE__ */ getDisplayName(vnode.type as ComponentClass)}`,
+          getProfileLabel(diffLabelCache, 'ReactLynx::diff::', vnode.type as ComponentType),
           profileOptions,
         );
       }
-      old?.(vnode, oldVNode);
-    });
+      oldDiff2?.(vnode, oldVNode);
+    };
 
-    hook(options, DIFFED, (old, vnode) => {
+    const oldDiffed = options[DIFFED];
+    options[DIFFED] = (vnode) => {
       if (typeof __BACKGROUND__ !== 'undefined' && __BACKGROUND__) {
         const hooks = vnode[COMPONENT]?.[HOOKS];
         const hookList = hooks?.[LIST];
@@ -204,8 +228,8 @@ export function initProfileHook(): void {
       if (typeof vnode.type === 'function') {
         profileEnd(); // for options[DIFF2]
       }
-      old?.(vnode);
-    });
+      oldDiffed?.(vnode);
+    };
 
     if (typeof __BACKGROUND__ !== 'undefined' && __BACKGROUND__) {
       hook(options, COMMIT, (old, vnode, commitQueue) => {
@@ -224,18 +248,32 @@ export function initProfileHook(): void {
   }
 
   // Profile the user-provided `render`.
+  // The profiling wrapper is cached per original render function (it resolves
+  // the component type through `this[VNODE]` at call time), so re-rendering a
+  // component does not allocate a new closure. A wrapper maps to itself so an
+  // already-wrapped render is left untouched.
+  type RenderFn = NonNullable<Component['render']>;
+  const wrappedRenderCache = new WeakMap<RenderFn, RenderFn>();
   hook(options, RENDER, (old, vnode: VNode) => {
+    const component = vnode[COMPONENT]!;
     // eslint-disable-next-line @typescript-eslint/unbound-method
-    const originalRender = vnode[COMPONENT]!.render;
-    vnode[COMPONENT]!.render = function render(this, props, state, context) {
-      profileStart(`ReactLynx::render::${/* #__INLINE__ */ getDisplayName(vnode.type as ComponentClass)}`);
-      try {
-        return originalRender.call(this, props, state, context);
-      } finally {
-        profileEnd();
-        vnode[COMPONENT]!.render = originalRender;
-      }
-    };
+    const originalRender = component.render;
+    let wrapped = wrappedRenderCache.get(originalRender);
+    if (wrapped === undefined) {
+      wrapped = function render(this: Component, props, state, context) {
+        profileStart(
+          getProfileLabel(renderLabelCache, 'ReactLynx::render::', this[VNODE]!.type as ComponentType),
+        );
+        try {
+          return originalRender.call(this, props, state, context);
+        } finally {
+          profileEnd();
+        }
+      };
+      wrappedRenderCache.set(originalRender, wrapped);
+      wrappedRenderCache.set(wrapped, wrapped);
+    }
+    component.render = wrapped;
     old?.(vnode);
   });
 
@@ -244,14 +282,18 @@ export function initProfileHook(): void {
 
     type PatchedVNode = VNode & { [sPatchLength]?: number };
 
-    hook(options, DIFF, (old, vnode: PatchedVNode) => {
+    // Installed directly (not via `hook()`) — these run for every vnode on
+    // every render and `hook()` allocates a rest-args array per invocation.
+    const oldDiff = options[DIFF];
+    options[DIFF] = (vnode: PatchedVNode) => {
       if (typeof vnode.type === 'function' && __globalSnapshotPatch) {
         vnode[sPatchLength] = __globalSnapshotPatch.length;
       }
-      old?.(vnode);
-    });
+      oldDiff?.(vnode);
+    };
 
-    hook(options, DIFFED, (old, vnode: PatchedVNode) => {
+    const oldDiffed2 = options[DIFFED];
+    options[DIFFED] = (vnode: PatchedVNode) => {
       if (typeof vnode.type === 'function') {
         const patchLength = vnode[sPatchLength];
         delete vnode[sPatchLength];
@@ -264,7 +306,7 @@ export function initProfileHook(): void {
           });
         }
       }
-      old?.(vnode);
-    });
+      oldDiffed2?.(vnode);
+    };
   }
 }
