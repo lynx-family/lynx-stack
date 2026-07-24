@@ -4,6 +4,7 @@
 import {
   Catalog as A2UICoreCatalog,
   MessageProcessor as A2UICoreMessageProcessor,
+  getValue,
   isSignal,
 } from '@a2ui/web_core/v0_9';
 import type { DataContext, FunctionImplementation } from '@a2ui/web_core/v0_9';
@@ -53,7 +54,7 @@ function adaptUpstreamImpl(impl: FunctionImplementation): FunctionImpl {
       safeArgs,
       createUpstreamContext(context),
     );
-    if (isSignal(result)) return result.value as unknown;
+    if (isSignal(result)) return getValue(result) as unknown;
     return result;
   };
 }
@@ -75,7 +76,7 @@ function createBasicFunctionManifests(): Map<string, FunctionManifest> {
   const processor = new A2UICoreMessageProcessor([upstreamCatalog]);
   const inlineCatalog = processor.getClientCapabilities({
     includeInlineCatalogs: true,
-  })['v0.9'].inlineCatalogs?.[0];
+  })['v0.9']?.inlineCatalogs?.[0];
   const definitions = inlineCatalog?.functions ?? [];
   return new Map(definitions.map(definition => {
     const typedDefinition = definition as CatalogFunctionDefinition;

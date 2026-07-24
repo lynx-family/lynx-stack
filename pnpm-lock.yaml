@@ -36,8 +36,8 @@ catalogs:
       specifier: 0.11.2
       version: 0.11.2
     '@rstest/coverage-istanbul':
-      specifier: 0.11.0
-      version: 0.11.0
+      specifier: 0.11.2
+      version: 0.11.2
 
 overrides:
   '@lynx-js/react': workspace:*
@@ -88,7 +88,7 @@ importers:
         version: 0.11.2(core-js@3.49.0)(jsdom@27.4.0(supports-color@8.1.1))
       '@rstest/coverage-istanbul':
         specifier: catalog:rstest
-        version: 0.11.0(@rstest/core@0.11.2(core-js@3.49.0)(jsdom@27.4.0(supports-color@8.1.1)))(supports-color@8.1.1)
+        version: 0.11.2(@rstest/core@0.11.2(core-js@3.49.0)(jsdom@27.4.0(supports-color@8.1.1)))(supports-color@8.1.1)
       '@svitejs/changesets-changelog-github-compact':
         specifier: ^1.2.0
         version: 1.2.0
@@ -763,8 +763,8 @@ importers:
   packages/genui:
     dependencies:
       '@a2ui/web_core':
-        specifier: 0.9.1
-        version: 0.9.1
+        specifier: 0.10.5
+        version: 0.10.5
       '@lynx-js/lynx-ui':
         specifier: '>=3.133.0'
         version: 3.133.0(@lynx-js/react@packages+react)(@lynx-js/types@4.0.0)(@types/react@18.3.28)(react-dom@19.2.4(react@19.2.5))(react@19.2.5)
@@ -815,8 +815,8 @@ importers:
   packages/genui/a2ui:
     dependencies:
       '@a2ui/web_core':
-        specifier: 0.9.1
-        version: 0.9.1
+        specifier: 0.10.5
+        version: 0.10.5
       '@preact/signals':
         specifier: ^2.5.1
         version: 2.5.1(preact@10.29.1)
@@ -2107,7 +2107,7 @@ importers:
     dependencies:
       dompurify:
         specifier: ^3.3.1
-        version: 3.3.1
+        version: 3.4.0
       markdown-it:
         specifier: ^14.3.0
         version: 14.3.0
@@ -2630,8 +2630,8 @@ packages:
     resolution: {integrity: sha512-VTDuRS5V0ATbJ/LkaQlisMnTAeYKXAK6scMguVBstf+KIBQ7HIuKhiXLv+G/hvejkV+THoXzoNifInAkU81P1g==}
     engines: {node: '>=18'}
 
-  '@a2ui/web_core@0.9.1':
-    resolution: {integrity: sha512-qKFKOgdtPqe0TdiEreTlyqw3TuGjxb7NzVuYejWFUVqy1NQNwe7Hcd4zz8EP+MzWXHSo2sjWsGjuvWBWlVcuOQ==}
+  '@a2ui/web_core@0.10.5':
+    resolution: {integrity: sha512-q+HyK1V/jM8l+/VmuXRbBNCS9yDguqdjsJ7/8aqY9O/WUdRE14FbhkFyQyGWQNqPJa9QbVfQyAjGQIK0B1aQtg==}
 
   '@acemir/cssom@0.9.30':
     resolution: {integrity: sha512-9CnlMCI0LmCIq0olalQqdWrJHPzm0/tw3gzOA9zJSgvFX7Xau3D24mAGa4BtwxwY69nsuJW6kQqqCzf/mEcQgg==}
@@ -4576,8 +4576,8 @@ packages:
   '@polka/url@1.0.0-next.25':
     resolution: {integrity: sha512-j7P6Rgr3mmtdkeDGTe0E/aYyWEWVtc5yFXtHCRHs28/jptDEWfaVOc5T7cblqy1XKPPfCxJc/8DwQ5YgLOZOVQ==}
 
-  '@preact/signals-core@1.14.1':
-    resolution: {integrity: sha512-vxPpfXqrwUe9lpjqfYNjAF/0RF/eFGeLgdJzdmIIZjpOnTmGmAB4BjWone562mJGMRP4frU6iZ6ei3PDsu52Ng==}
+  '@preact/signals-core@1.14.4':
+    resolution: {integrity: sha512-HNB6HYeYKhQbJ1aKl+YRjrS4+QWHLKX6qKoUsfS/m0vqzsVaEBiZiaKbG/e+NKk2ch5ALQr/ihWaMHxiCuuWHA==}
 
   '@preact/signals@2.5.1':
     resolution: {integrity: sha512-VPjk5YFt7i11Fi4UK0tzaEe5xLwfhUxXL3l89ocxQ5aPz7bRo8M5+N73LjBMPklyXKYKz6YsNo4Smp8n6nplng==}
@@ -5363,10 +5363,10 @@ packages:
       jsdom:
         optional: true
 
-  '@rstest/coverage-istanbul@0.11.0':
-    resolution: {integrity: sha512-WeQ8NPDNWFdv5THtncsii7vk+8cKECLfn15yuk6KT+OXNGn5Pz1raLX/tdQPz0qsB/rI2Zo65wiOvk5ktD7PYg==}
+  '@rstest/coverage-istanbul@0.11.2':
+    resolution: {integrity: sha512-Zynn5AhEsVky02/YNM6008/kgGoT/B/kJTRUpff00nIAbQBmbGYOesk1T8xtDwo6c3Zja4EgTvtsTtML3S80UQ==}
     peerDependencies:
-      '@rstest/core': ^0.11.0
+      '@rstest/core': ^0.11.2
 
   '@rtsao/scc@1.1.0':
     resolution: {integrity: sha512-zt6OdqaDoOnJ1ZYsCYGt9YmWzDXl4vQdKTyJev62gFhRGKdx7mcT54V9KIjg+d2wi9EXsPvAPKe7i7WjfVWB8g==}
@@ -7159,8 +7159,8 @@ packages:
   dataloader@1.4.0:
     resolution: {integrity: sha512-68s5jYdlvasItOJnCuI2Q9s4q98g0pCyL3HrcKJu8KNugUl8ahgmZYg38ysLTgQjjXX3H8CJLkAvWrclWfcalw==}
 
-  date-fns@4.1.0:
-    resolution: {integrity: sha512-Ukq0owbQXxa/U3EGtsdVBkR1w7KOQ5gIBqdH2hkvknzZPYvBxb/aa6E8L7tmjFtkwZBu3UXBbjIgPo/Ez4xaNg==}
+  date-fns@4.4.0:
+    resolution: {integrity: sha512-+1UMbeh68lH1SegH83CGWwpb6OHHbpSgr3+s5Eww5M4CAgswBpoWS0AjTOfEJ33HiYKz1hdj/KTFprzXHmq/6w==}
 
   debug@2.6.9:
     resolution: {integrity: sha512-bC7ElrdJaJnPbAP+1EotYvqZsb3ecl5wi6Bfi6BJTUcNowp6cvspg0jXznRTKDjm/E7AdgFBVeAPVMNcKGsHMA==}
@@ -7316,8 +7316,8 @@ packages:
     resolution: {integrity: sha512-cgwlv/1iFQiFnU96XXgROh8xTeetsnJiDsTc7TYCLFd9+/WNkIqPTxiM/8pSd8VIrhXGTf1Ny1q1hquVqDJB5w==}
     engines: {node: '>= 4'}
 
-  dompurify@3.3.1:
-    resolution: {integrity: sha512-qkdCKzLNtrgPFP1Vo+98FRzJnBRGe4ffyCea9IwHB1fyxPOeNTHpLKYGd4Uk9xvNoH0ZoOjwZxNptyMwqrId1Q==}
+  dompurify@3.4.0:
+    resolution: {integrity: sha512-nolgK9JcaUXMSmW+j1yaSvaEaoXYHwWyGJlkoCTghc97KgGDDSnpoU/PlEnw63Ah+TGKFOyY+X5LnxaWbCSfXg==}
 
   domutils@3.2.2:
     resolution: {integrity: sha512-6kZKyUajlDuqlHKVX1w7gyslj9MPIXzIFiz/rGu35uC1wMi+kMhQwGhl4lt9unC9Vb9INnY9Z3/ZA3+FhASLaw==}
@@ -11739,10 +11739,10 @@ snapshots:
     transitivePeerDependencies:
       - supports-color
 
-  '@a2ui/web_core@0.9.1':
+  '@a2ui/web_core@0.10.5':
     dependencies:
-      '@preact/signals-core': 1.14.1
-      date-fns: 4.1.0
+      '@preact/signals-core': 1.14.4
+      date-fns: 4.4.0
       zod: 3.25.76
       zod-to-json-schema: 3.25.2(zod@3.25.76)
 
@@ -14099,11 +14099,11 @@ snapshots:
 
   '@polka/url@1.0.0-next.25': {}
 
-  '@preact/signals-core@1.14.1': {}
+  '@preact/signals-core@1.14.4': {}
 
   '@preact/signals@2.5.1(preact@10.29.1)':
     dependencies:
-      '@preact/signals-core': 1.14.1
+      '@preact/signals-core': 1.14.4
       preact: 10.29.1
 
   '@prefresh/core@1.5.9(preact@10.29.1)':
@@ -14986,7 +14986,7 @@ snapshots:
       - '@module-federation/runtime-tools'
       - core-js
 
-  '@rstest/coverage-istanbul@0.11.0(@rstest/core@0.11.2(core-js@3.49.0)(jsdom@27.4.0(supports-color@8.1.1)))(supports-color@8.1.1)':
+  '@rstest/coverage-istanbul@0.11.2(@rstest/core@0.11.2(core-js@3.49.0)(jsdom@27.4.0(supports-color@8.1.1)))(supports-color@8.1.1)':
     dependencies:
       '@rstest/core': 0.11.2(core-js@3.49.0)(jsdom@27.4.0(supports-color@8.1.1))
       istanbul-lib-coverage: 3.2.2
@@ -16859,7 +16859,7 @@ snapshots:
 
   dataloader@1.4.0: {}
 
-  date-fns@4.1.0: {}
+  date-fns@4.4.0: {}
 
   debug@2.6.9(supports-color@8.1.1):
     dependencies:
@@ -16980,7 +16980,7 @@ snapshots:
     dependencies:
       domelementtype: 2.3.0
 
-  dompurify@3.3.1:
+  dompurify@3.4.0:
     optionalDependencies:
       '@types/trusted-types': 2.0.7
 

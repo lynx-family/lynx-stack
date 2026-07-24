@@ -53,6 +53,8 @@ minimumReleaseAgeExclude:
   - "@rstest/*"
   # Renovate security update: turbo@2.9.14
   - turbo@2.9.14
+  # Renovate security update: dompurify@3.4.0
+  - dompurify@3.4.0
 # npm's abbreviated metadata omits the `time` field, so a strict check hard-fails
 # (`ERR_PNPM_MISSING_TIME`) on packages it cannot date — e.g. during
 # `pnpm dedupe --check`. Run non-strict so the age check is enforced when `time`
@@ -100,7 +102,7 @@ catalogs:
     "@yume-chan/fetch-scrcpy-server": ^1.0.0
     "@yume-chan/scrcpy": ^2.3.0
     "@yume-chan/scrcpy-decoder-webcodecs": ^2.5.3
-    "@yume-chan/stream-extra": ^2.1.0
+    "@yume-chan/stream-extra": ^2.6.1
     "@yume-chan/struct": ^2.1.0
 
   # Rsbuild monorepo packages
@@ -121,7 +123,7 @@ catalogs:
   # Rstest monorepo packages
   rstest:
     "@rstest/adapter-rsbuild": "0.11.0"
-    "@rstest/coverage-istanbul": "0.11.0"
+    "@rstest/coverage-istanbul": "0.11.2"
     "@rstest/core": "0.11.2"
 
 overrides:
