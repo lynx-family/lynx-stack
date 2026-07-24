@@ -772,8 +772,8 @@ importers:
         specifier: ^0.2.7
         version: 0.2.7(@modelcontextprotocol/sdk@1.25.2(hono@4.12.12)(supports-color@8.1.1)(zod@3.25.76))(zod@3.25.76)
       '@preact/signals':
-        specifier: ^2.5.1
-        version: 2.5.1(preact@10.29.1)
+        specifier: ^2.9.4
+        version: 2.9.4(preact@10.29.1)
       typedoc:
         specifier: ^0.28.19
         version: 0.28.19(typescript@6.0.3)
@@ -818,8 +818,8 @@ importers:
         specifier: 0.9.1
         version: 0.9.1
       '@preact/signals':
-        specifier: ^2.5.1
-        version: 2.5.1(preact@10.29.1)
+        specifier: ^2.9.4
+        version: 2.9.4(preact@10.29.1)
     devDependencies:
       '@lynx-js/genui-cli':
         specifier: workspace:*
@@ -4576,11 +4576,11 @@ packages:
   '@polka/url@1.0.0-next.25':
     resolution: {integrity: sha512-j7P6Rgr3mmtdkeDGTe0E/aYyWEWVtc5yFXtHCRHs28/jptDEWfaVOc5T7cblqy1XKPPfCxJc/8DwQ5YgLOZOVQ==}
 
-  '@preact/signals-core@1.14.1':
-    resolution: {integrity: sha512-vxPpfXqrwUe9lpjqfYNjAF/0RF/eFGeLgdJzdmIIZjpOnTmGmAB4BjWone562mJGMRP4frU6iZ6ei3PDsu52Ng==}
+  '@preact/signals-core@1.14.4':
+    resolution: {integrity: sha512-HNB6HYeYKhQbJ1aKl+YRjrS4+QWHLKX6qKoUsfS/m0vqzsVaEBiZiaKbG/e+NKk2ch5ALQr/ihWaMHxiCuuWHA==}
 
-  '@preact/signals@2.5.1':
-    resolution: {integrity: sha512-VPjk5YFt7i11Fi4UK0tzaEe5xLwfhUxXL3l89ocxQ5aPz7bRo8M5+N73LjBMPklyXKYKz6YsNo4Smp8n6nplng==}
+  '@preact/signals@2.9.4':
+    resolution: {integrity: sha512-JzAZXcRkmCNf9wVuxNI7UWseu3++Mm0dZ6UFyjFby44CyKIl7Y06oOsW3KA5Nx0L8tpE87OY5pLe0uQ0xcWKrg==}
     peerDependencies:
       preact: '>= 10.25.0 || >=11.0.0-0'
 
@@ -11741,7 +11741,7 @@ snapshots:
 
   '@a2ui/web_core@0.9.1':
     dependencies:
-      '@preact/signals-core': 1.14.1
+      '@preact/signals-core': 1.14.4
       date-fns: 4.1.0
       zod: 3.25.76
       zod-to-json-schema: 3.25.2(zod@3.25.76)
@@ -14099,11 +14099,11 @@ snapshots:
 
   '@polka/url@1.0.0-next.25': {}
 
-  '@preact/signals-core@1.14.1': {}
+  '@preact/signals-core@1.14.4': {}
 
-  '@preact/signals@2.5.1(preact@10.29.1)':
+  '@preact/signals@2.9.4(preact@10.29.1)':
     dependencies:
-      '@preact/signals-core': 1.14.1
+      '@preact/signals-core': 1.14.4
       preact: 10.29.1
 
   '@prefresh/core@1.5.9(preact@10.29.1)':
