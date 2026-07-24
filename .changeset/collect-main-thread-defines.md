@@ -2,6 +2,7 @@
 "@lynx-js/react-rsbuild-plugin": minor
 "@lynx-js/react-webpack-plugin": minor
 "@lynx-js/react": minor
+"@lynx-js/react-refresh-webpack-plugin": patch
 ---
 
 feat(react): add `enableMTSRendering` to render the first screen from the background thread
