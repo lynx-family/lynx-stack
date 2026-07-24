@@ -24,7 +24,7 @@
     "@openuidev/lang-core": "^0.2.7",
     "@uiw/react-codemirror": "^4.25.9",
     "idb": "^8.0.3",
-    "lucide-react": "^0.575.0",
+    "lucide-react": "^0.577.0",
     "qrcode": "^1.5.4",
     "react": "19.2.4",
     "react-dom": "19.2.4",
