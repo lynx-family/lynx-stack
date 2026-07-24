@@ -101,4 +101,21 @@ describe('enableMTSRendering: false', () => {
     expect(root).not.toContain('MODULE_SIDE_EFFECT_MARKER');
     expect(backgroundSource).toContain('MODULE_SIDE_EFFECT_MARKER');
   });
+
+  it('should strip main-thread-unsupported module side effects while keeping the registration', async () => {
+    const { tasm, backgroundSource } = await buildCase('disabled');
+    const root = tasm.lepusCode.root;
+
+    // `comp-lib` is a `sideEffects: false` package that is only rendered by
+    // the background thread, and its module body has a top-level side effect
+    // (`lynx.getJSModule(...).addListener(...)`) that the main thread does not
+    // support. The `sideEffects: true` rule keeps the module in the build so
+    // its snapshot registration is collected, but the transform reduces the
+    // module to its registration, so the unsupported side effect never reaches
+    // the main-thread script.
+    expect(root).toContain('COMP_LIB_COUNTER_TEXT');
+    expect(root).not.toContain('getJSModule');
+    expect(root).not.toContain('COMP_LIB_MT_UNSUPPORTED_EVENT');
+    expect(backgroundSource).toContain('COMP_LIB_MT_UNSUPPORTED_EVENT');
+  });
 });

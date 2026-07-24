@@ -1,7 +1,7 @@
 import { useState } from '@lynx-js/react';
 
 import './App.css';
-import Counter from './comp-lib/index.jsx';
+import Counter from './comp-lib/index.js';
 
 console.info('[side-effect] App module evaluated');
 
