@@ -39,9 +39,9 @@
     "@tsconfig/strictest": "^2.0.8",
     "@types/node": "^24.10.13",
     "@typescript/native-preview": "7.0.0-dev.20260212.1",
-    "@vitest/coverage-v8": "^3.2.4",
+    "@vitest/coverage-v8": "^4.1.10",
     "@vitest/eslint-plugin": "^1.6.23",
-    "@vitest/ui": "^3.2.4",
+    "@vitest/ui": "^4.1.10",
     "core-js": "^3.49.0",
     "dprint": "^0.54.0",
     "eslint": "^9.39.5",
@@ -61,7 +61,7 @@
     "turbo": "^2.10.5",
     "typescript": "^6.0.3",
     "typescript-eslint": "^8.64.0",
-    "vitest": "^3.2.4"
+    "vitest": "^4.1.10"
   },
   "packageManager": "pnpm@11.16.0+sha512.b767e9a98fc87aec0f42daefcd0e84941c2cdb45d73c4e1e68860fb2bdfdbe032ab592105479e5e05c237f740c8a5ffdbbb52385797ddc2296745a1bbb883e8d",
   "engines": {
