@@ -177,7 +177,7 @@ fn download_runtime(url: &str, runtime_path: &Path, sha256: &str) {
   let response = ureq::get(url)
     .call()
     .unwrap_or_else(|error| panic!("failed to download Lynx runtime from {url}: {error}"));
-  let mut response_body = response.into_reader();
+  let mut response_body = response.into_body().into_reader();
   let mut tmp_file = tempfile::Builder::new()
     .prefix(
       runtime_path
