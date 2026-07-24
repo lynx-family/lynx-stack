@@ -11,6 +11,8 @@ import {
   delayedRunOnMainThreadData,
   takeDelayedRunOnMainThreadData,
 } from '../../core/thread-function-call/main-thread.js';
+import { contextLynx, defaultRootContext, getCurrentRootContext, switchRootContext } from '../../root-context.js';
+import type { RootContext, RootTT } from '../../root-context.js';
 import { __root } from '../../root.js';
 import { profileEnd, profileStart } from '../../shared/profile.js';
 import { CHILDREN } from '../../shared/render-constants.js';
@@ -37,7 +39,19 @@ import { sendMTRefInitValueToMainThread } from '../worklet/ref/updateInitValue.j
 
 export { runWithForce };
 
+function bindContext<T extends unknown[], R>(ctx: RootContext, fn: (...args: T) => R): (...args: T) => R {
+  return (...args: T) => {
+    switchRootContext(ctx);
+    return fn(...args);
+  };
+}
+
 function injectTt(): void {
+  if (typeof __MULTI_ROOT_RENDER_CONTEXT__ !== 'undefined' && __MULTI_ROOT_RENDER_CONTEXT__) {
+    injectTtInto(lynxCoreInject.tt, defaultRootContext);
+    return;
+  }
+  /* v8 ignore start */
   const tt = lynxCoreInject.tt;
   tt.OnLifecycleEvent = onLifecycleEvent;
   tt.publishEvent = delayedPublishEvent;
@@ -50,6 +64,26 @@ function injectTt(): void {
   tt.updateGlobalProps = updateGlobalProps;
   tt.updateCardData = updateCardData;
   tt.onAppReload = reloadBackground;
+  tt.processCardConfig = () => {
+    // used to updateTheme, no longer rely on this function
+  };
+  /* v8 ignore stop */
+}
+
+function injectTtInto(tt: RootTT, ctx: RootContext): void {
+  tt.OnLifecycleEvent = bindContext(ctx, onLifecycleEvent);
+  tt.publishEvent = bindContext(ctx, delayedPublishEvent);
+  tt.publicComponentEvent = bindContext(ctx, delayedPublicComponentEvent);
+  tt.callDestroyLifetimeFun = bindContext(ctx, () => {
+    if (ctx === defaultRootContext) {
+      removeCtxNotFoundEventListener();
+    }
+    destroyWorklet();
+    destroyBackground();
+  });
+  tt.updateGlobalProps = bindContext(ctx, updateGlobalProps);
+  tt.updateCardData = bindContext(ctx, updateCardData);
+  tt.onAppReload = bindContext(ctx, reloadBackground);
   tt.processCardConfig = () => {
     // used to updateTheme, no longer rely on this function
   };
@@ -83,10 +117,16 @@ function onLifecycleEventImpl(type: LifecycleConstant, data: unknown): void {
   switch (type) {
     case LifecycleConstant.firstScreen: {
       let processErr;
+      const ctxBeforeProcess = typeof __MULTI_ROOT_RENDER_CONTEXT__ !== 'undefined' && __MULTI_ROOT_RENDER_CONTEXT__
+        ? getCurrentRootContext()
+        : undefined;
       try {
         process();
       } catch (e) {
         processErr = e;
+      }
+      if (typeof __MULTI_ROOT_RENDER_CONTEXT__ !== 'undefined' && __MULTI_ROOT_RENDER_CONTEXT__ && ctxBeforeProcess) {
+        switchRootContext(ctxBeforeProcess);
       }
       const { root: lepusSide, firstScreenEventIdSwap } = data as FirstScreenData;
       if (typeof __PROFILE__ !== 'undefined' && __PROFILE__) {
@@ -150,8 +190,17 @@ function onLifecycleEventImpl(type: LifecycleConstant, data: unknown): void {
         delayedEvents.length = 0;
       }
 
-      lynxCoreInject.tt.publishEvent = publishEvent;
-      lynxCoreInject.tt.publicComponentEvent = publicComponentEvent;
+      if (typeof __MULTI_ROOT_RENDER_CONTEXT__ !== 'undefined' && __MULTI_ROOT_RENDER_CONTEXT__) {
+        const ctx = getCurrentRootContext();
+        const tt = ctx.tt ?? lynxCoreInject.tt;
+        tt.publishEvent = bindContext(ctx, publishEvent);
+        tt.publicComponentEvent = bindContext(ctx, publicComponentEvent);
+        /* v8 ignore start */
+      } else {
+        lynxCoreInject.tt.publishEvent = publishEvent;
+        lynxCoreInject.tt.publicComponentEvent = publicComponentEvent;
+      }
+      /* v8 ignore stop */
 
       // console.debug("********** After hydration:");
       // printSnapshotInstance(__root as BackgroundSnapshotInstance);
@@ -164,13 +213,17 @@ function onLifecycleEventImpl(type: LifecycleConstant, data: unknown): void {
       }
       const obj = commitPatchUpdate(patchList, { isHydration: true });
       sendMTRefInitValueToMainThread();
-      lynx.getNativeApp().callLepusMethod(LifecycleConstant.patchUpdate, obj, () => {
-        globalCommitTaskMap.forEach((commitTask, id) => {
+      const commitTaskMap = globalCommitTaskMap;
+      const ctxLynx = typeof __MULTI_ROOT_RENDER_CONTEXT__ !== 'undefined' && __MULTI_ROOT_RENDER_CONTEXT__
+        ? contextLynx()
+        : lynx;
+      ctxLynx.getNativeApp().callLepusMethod(LifecycleConstant.patchUpdate, obj, () => {
+        commitTaskMap.forEach((commitTask, id) => {
           if (id > commitTaskId) {
             return;
           }
           commitTask();
-          globalCommitTaskMap.delete(id);
+          commitTaskMap.delete(id);
         });
       });
       runDelayedUiOps();
@@ -278,4 +331,4 @@ function updateGlobalProps(newData: Record<string, any>): void {
   });
 }
 
-export { injectTt, flushDelayedLifecycleEvents };
+export { injectTt, injectTtInto, flushDelayedLifecycleEvents };

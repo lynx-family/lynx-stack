@@ -3,7 +3,7 @@
 // LICENSE file in the root directory of this source tree.
 import type { LifecycleConstant } from '../../lifecycle/constant.js';
 
-const delayedLifecycleEvents: [type: LifecycleConstant, data: unknown][] = [];
+let delayedLifecycleEvents: [type: LifecycleConstant, data: unknown][] = [];
 
 function delayLifecycleEvent(type: LifecycleConstant, data: unknown): void {
   delayedLifecycleEvents.push([type, data]);
@@ -12,4 +12,8 @@ function delayLifecycleEvent(type: LifecycleConstant, data: unknown): void {
 /**
  * @internal
  */
-export { delayLifecycleEvent, delayedLifecycleEvents };
+function setDelayedLifecycleEvents(events: typeof delayedLifecycleEvents): void {
+  delayedLifecycleEvents = events;
+}
+
+export { delayedLifecycleEvents, delayLifecycleEvent, setDelayedLifecycleEvents };

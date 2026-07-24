@@ -36,6 +36,7 @@ import {
   delayedRunOnMainThreadData,
   takeDelayedRunOnMainThreadData,
 } from '../../../core/thread-function-call/main-thread.js';
+import { contextLynx } from '../../../root-context.js';
 import { profileEnd, profileStart } from '../../../shared/profile.js';
 import { COMMIT } from '../../../shared/render-constants.js';
 import { hook, isEmptyObject } from '../../../utils.js';
@@ -45,8 +46,16 @@ import { applyQueuedRefs } from '../../snapshot/ref.js';
 import { sendMTRefInitValueToMainThread } from '../../worklet/ref/updateInitValue.js';
 import { isRendering } from '../isRendering.js';
 
-const globalCommitTaskMap: Map<number, () => void> = /*@__PURE__*/ new Map<number, () => void>();
+let globalCommitTaskMap: Map<number, () => void> = /*@__PURE__*/ new Map<number, () => void>();
 let nextCommitTaskId = 1;
+
+export function setGlobalCommitTaskMap(map: Map<number, () => void>): void {
+  globalCommitTaskMap = map;
+}
+
+export function setGlobalPatchOptions(options: GlobalPatchOptions): void {
+  globalPatchOptions = options;
+}
 
 /**
  * A single patch operation.
@@ -119,11 +128,12 @@ function replaceCommitHook(): void {
       const commitTaskId = genCommitTaskId();
 
       // Register the commit task
+      const instanceValues = backgroundSnapshotInstanceManager.values;
       globalCommitTaskMap.set(commitTaskId, () => {
         if (backgroundSnapshotInstancesToRemove.length) {
           setTimeout(() => {
             backgroundSnapshotInstancesToRemove.forEach(id => {
-              backgroundSnapshotInstanceManager.values.get(id)?.tearDown();
+              instanceValues.get(id)?.tearDown();
             });
           }, 10000);
         }
@@ -161,11 +171,16 @@ function replaceCommitHook(): void {
       const obj = commitPatchUpdate(patchList, patchOptions);
 
       // Send the update to the native layer
-      lynx.getNativeApp().callLepusMethod(LifecycleConstant.patchUpdate, obj, () => {
-        const commitTask = globalCommitTaskMap.get(commitTaskId);
+      const commitTaskMap = globalCommitTaskMap;
+      /* v8 ignore next 3 */
+      const ctxLynx = typeof __MULTI_ROOT_RENDER_CONTEXT__ !== 'undefined' && __MULTI_ROOT_RENDER_CONTEXT__
+        ? contextLynx()
+        : lynx;
+      ctxLynx.getNativeApp().callLepusMethod(LifecycleConstant.patchUpdate, obj, () => {
+        const commitTask = commitTaskMap.get(commitTaskId);
         if (commitTask) {
           commitTask();
-          globalCommitTaskMap.delete(commitTaskId);
+          commitTaskMap.delete(commitTaskId);
         }
       });
 
