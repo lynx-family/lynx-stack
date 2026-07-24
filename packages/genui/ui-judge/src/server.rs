@@ -12,6 +12,7 @@ use std::sync::{Arc, Mutex};
 use std::thread::{self, JoinHandle};
 use std::time::Duration;
 
+use axum::extract::multipart::{Field, Multipart, MultipartError};
 use axum::extract::{DefaultBodyLimit, State};
 use axum::http::StatusCode;
 use axum::response::{IntoResponse, Response};
@@ -29,12 +30,15 @@ use crate::headless::{
   capture_prepared_page, prepare_judge_page_request, score_captured_page, CapturedPage,
 };
 use crate::model::ModelClient;
+use crate::visual::{
+  compare_uploaded_images, ReferenceImageComparison, VisualEvaluationError, MAX_IMAGE_BYTES,
+};
 use crate::{JudgePageRequest, UiJudgeError, UiJudgeResult};
 
 const DEFAULT_SCREENSHOT_SETTLE_MS: u64 = 16;
 const DEFAULT_TIMEOUT_MS: u64 = 60_000;
 const MAX_QUEUED_CAPTURES: usize = 8;
-const MAX_REQUEST_BYTES: usize = 16 * 1024 * 1024;
+const MAX_REQUEST_BYTES: usize = MAX_IMAGE_BYTES * 2 + 64 * 1024;
 const TCP_BACKLOG: i32 = 1_024;
 
 type PrepareJudgePageRequest =
@@ -71,6 +75,32 @@ struct HttpJudgePageRequest {
   #[serde(default, alias = "timeout_ms")]
   timeout_ms: Option<u64>,
   url: String,
+}
+
+#[derive(Debug, Serialize)]
+#[serde(rename_all = "camelCase")]
+struct HttpCompareImagesResponse {
+  #[serde(skip_serializing_if = "Option::is_none")]
+  alignment_score: Option<f64>,
+  diff_image_base64: String,
+  different_blocks: usize,
+  total_blocks: usize,
+  visual_similarity: f64,
+  #[serde(skip_serializing_if = "Vec::is_empty")]
+  warnings: Vec<String>,
+}
+
+impl From<ReferenceImageComparison> for HttpCompareImagesResponse {
+  fn from(comparison: ReferenceImageComparison) -> Self {
+    Self {
+      alignment_score: comparison.alignment_score,
+      diff_image_base64: comparison.diff_image_base64,
+      different_blocks: comparison.different_blocks,
+      total_blocks: comparison.total_blocks,
+      visual_similarity: comparison.similarity,
+      warnings: comparison.warnings,
+    }
+  }
 }
 
 impl HttpJudgePageRequest {
@@ -110,6 +140,13 @@ impl ApiError {
       message: message.into(),
       status,
     }
+  }
+}
+
+impl From<VisualEvaluationError> for ApiError {
+  fn from(error: VisualEvaluationError) -> Self {
+    let status = StatusCode::from_u16(error.status).unwrap_or(StatusCode::INTERNAL_SERVER_ERROR);
+    Self::new(status, error.to_string())
   }
 }
 
@@ -300,6 +337,7 @@ pub async fn serve(port: &str) -> Result<(), ServerError> {
   };
   let app = Router::new()
     .route("/health", get(health))
+    .route("/compare", post(compare))
     .route("/judge", post(judge))
     .layer(DefaultBodyLimit::max(MAX_REQUEST_BYTES))
     .with_state(state);
@@ -396,6 +434,75 @@ async fn judge(
   Ok(Json(result))
 }
 
+async fn compare(mut multipart: Multipart) -> Result<Json<HttpCompareImagesResponse>, ApiError> {
+  let mut reference_image = None;
+  let mut rendered_image = None;
+
+  while let Some(field) = multipart.next_field().await.map_err(multipart_error)? {
+    let name = field.name().unwrap_or_default().to_string();
+    match name.as_str() {
+      "referenceImage" | "reference_image" => {
+        if reference_image.is_some() {
+          return Err(ApiError::new(
+            StatusCode::BAD_REQUEST,
+            "referenceImage must be uploaded exactly once.",
+          ));
+        }
+        reference_image = Some(read_uploaded_image(field, "referenceImage").await?);
+      }
+      "renderedImage" | "rendered_image" => {
+        if rendered_image.is_some() {
+          return Err(ApiError::new(
+            StatusCode::BAD_REQUEST,
+            "renderedImage must be uploaded exactly once.",
+          ));
+        }
+        rendered_image = Some(read_uploaded_image(field, "renderedImage").await?);
+      }
+      _ => {
+        return Err(ApiError::new(
+          StatusCode::BAD_REQUEST,
+          format!("Unexpected multipart field {name:?}."),
+        ))
+      }
+    }
+  }
+
+  let reference_image = reference_image
+    .ok_or_else(|| ApiError::new(StatusCode::BAD_REQUEST, "Missing referenceImage upload."))?;
+  let rendered_image = rendered_image
+    .ok_or_else(|| ApiError::new(StatusCode::BAD_REQUEST, "Missing renderedImage upload."))?;
+  let comparison = compare_uploaded_images(&reference_image, &rendered_image).await?;
+  Ok(Json(comparison.into()))
+}
+
+async fn read_uploaded_image(mut field: Field<'_>, name: &str) -> Result<Vec<u8>, ApiError> {
+  let mut image = Vec::new();
+  while let Some(chunk) = field.chunk().await.map_err(multipart_error)? {
+    if image.len().saturating_add(chunk.len()) > MAX_IMAGE_BYTES {
+      return Err(ApiError::new(
+        StatusCode::PAYLOAD_TOO_LARGE,
+        format!("{name} exceeds the {MAX_IMAGE_BYTES}-byte image limit."),
+      ));
+    }
+    image.extend_from_slice(&chunk);
+  }
+  if image.is_empty() {
+    return Err(ApiError::new(
+      StatusCode::BAD_REQUEST,
+      format!("{name} must not be empty."),
+    ));
+  }
+  Ok(image)
+}
+
+fn multipart_error(error: MultipartError) -> ApiError {
+  ApiError::new(
+    error.status(),
+    format!("Invalid multipart request: {}", error.body_text()),
+  )
+}
+
 async fn wait_for_shutdown(mut receiver: watch::Receiver<bool>) {
   loop {
     if *receiver.borrow() {
@@ -432,6 +539,14 @@ async fn shutdown_signal() -> io::Result<()> {
 
 #[cfg(test)]
 mod tests {
+  use std::io::Cursor;
+
+  use axum::body::Body;
+  use axum::extract::FromRequest;
+  use axum::http::header::CONTENT_TYPE;
+  use axum::http::Request;
+  use image::{DynamicImage, ImageFormat, Rgba, RgbaImage};
+
   use super::*;
   use crate::model::ModelOptions;
 
@@ -480,6 +595,40 @@ mod tests {
     Ok((request, test_client()))
   }
 
+  fn sample_png(color: Rgba<u8>) -> Vec<u8> {
+    let image = DynamicImage::ImageRgba8(RgbaImage::from_pixel(8, 8, color));
+    let mut png = Vec::new();
+    image
+      .write_to(&mut Cursor::new(&mut png), ImageFormat::Png)
+      .expect("encode sample PNG");
+    png
+  }
+
+  async fn multipart(boundary: &str, fields: &[(&str, &[u8])]) -> Multipart {
+    let mut body = Vec::new();
+    for (name, bytes) in fields {
+      body.extend_from_slice(format!("--{boundary}\r\n").as_bytes());
+      body.extend_from_slice(
+        format!("Content-Disposition: form-data; name=\"{name}\"; filename=\"{name}.png\"\r\n")
+          .as_bytes(),
+      );
+      body.extend_from_slice(b"Content-Type: image/png\r\n\r\n");
+      body.extend_from_slice(bytes);
+      body.extend_from_slice(b"\r\n");
+    }
+    body.extend_from_slice(format!("--{boundary}--\r\n").as_bytes());
+    let request = Request::builder()
+      .header(
+        CONTENT_TYPE,
+        format!("multipart/form-data; boundary={boundary}"),
+      )
+      .body(Body::from(body))
+      .expect("build multipart request");
+    Multipart::from_request(request, &())
+      .await
+      .expect("extract multipart request")
+  }
+
   #[test]
   fn request_defaults_match_the_library_contract() {
     let request = http_request("file:///tmp/main.lynx.bundle")
@@ -507,6 +656,73 @@ mod tests {
       parse_port("0"),
       Err(ServerError::InvalidPort { .. })
     ));
+  }
+
+  #[tokio::test]
+  async fn health_reports_ready_while_the_worker_is_available() {
+    let headless = Arc::new(
+      HeadlessExecutor::new_with_worker(|_runtime, receiver| while receiver.recv().is_ok() {})
+        .expect("start deterministic headless worker"),
+    );
+    let response = health(State(AppState {
+      headless: Arc::clone(&headless),
+      prepare_request: prepare_test_request,
+    }))
+    .await
+    .expect("healthy worker must pass readiness");
+
+    assert_eq!(response.0, json!({ "status": "ok" }));
+    headless.shutdown().expect("stop mock headless worker");
+  }
+
+  #[tokio::test]
+  async fn compares_two_uploads_without_a_headless_or_model_request() {
+    let png = sample_png(Rgba([20, 40, 60, 255]));
+    let multipart = multipart(
+      "ui-judge-boundary",
+      &[
+        ("referenceImage", png.as_slice()),
+        ("renderedImage", png.as_slice()),
+      ],
+    )
+    .await;
+    let response = compare(multipart).await.expect("compare uploaded images").0;
+
+    assert_eq!(response.visual_similarity, 1.0);
+    assert_eq!(response.different_blocks, 0);
+    assert_eq!(response.total_blocks, 1);
+    assert!(!response.diff_image_base64.is_empty());
+  }
+
+  #[tokio::test]
+  async fn rejects_a_compare_request_missing_an_image() {
+    let png = sample_png(Rgba([20, 40, 60, 255]));
+    let multipart = multipart("ui-judge-boundary", &[("referenceImage", png.as_slice())]).await;
+    let error = compare(multipart)
+      .await
+      .expect_err("both image uploads are required");
+
+    assert_eq!(error.status, StatusCode::BAD_REQUEST);
+    assert!(error.message.contains("renderedImage"));
+  }
+
+  #[tokio::test]
+  async fn rejects_an_invalid_rendered_image_upload() {
+    let png = sample_png(Rgba([20, 40, 60, 255]));
+    let multipart = multipart(
+      "ui-judge-boundary",
+      &[
+        ("referenceImage", png.as_slice()),
+        ("renderedImage", b"not an image"),
+      ],
+    )
+    .await;
+    let error = compare(multipart)
+      .await
+      .expect_err("malformed image upload must fail");
+
+    assert_eq!(error.status, StatusCode::BAD_REQUEST);
+    assert!(error.message.contains("Rendered image"));
   }
 
   #[tokio::test]

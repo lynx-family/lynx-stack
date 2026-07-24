@@ -14,7 +14,7 @@ use rayon::{ThreadPool, ThreadPoolBuilder};
 use reqwest::header::{CONTENT_LENGTH, CONTENT_TYPE};
 use thiserror::Error;
 
-const MAX_IMAGE_BYTES: usize = 10 * 1024 * 1024;
+pub(crate) const MAX_IMAGE_BYTES: usize = 10 * 1024 * 1024;
 const MAX_DECODED_IMAGE_BYTES: u64 = 64 * 1024 * 1024;
 const MAX_IMAGE_DIMENSION: u32 = 8_192;
 const MAX_IMAGE_PIXELS: u64 = 8 * 1024 * 1024;
@@ -82,6 +82,8 @@ pub enum VisualEvaluationErrorCode {
   ImageCompareError,
   ReferenceImageFetchFailed,
   ReferenceImageInvalid,
+  RenderedImageFetchFailed,
+  RenderedImageInvalid,
   VisualEvaluationError,
 }
 
@@ -106,6 +108,7 @@ impl VisualEvaluationError {
 #[derive(Debug, Clone, Copy)]
 enum ImageKind {
   Reference,
+  Rendered,
 }
 
 #[derive(Debug)]
@@ -274,7 +277,29 @@ pub(crate) async fn compare_reference_image(
   rendered_png: &[u8],
 ) -> VisualResult<ReferenceImageComparison> {
   let reference_png = load_reference_image(reference_image).await?;
-  let rendered_png = rendered_png.to_vec();
+  compare_normalized_images(reference_png, rendered_png.to_vec()).await
+}
+
+pub(crate) async fn compare_uploaded_images(
+  reference_image: &[u8],
+  rendered_image: &[u8],
+) -> VisualResult<ReferenceImageComparison> {
+  let reference_image = reference_image.to_vec();
+  let rendered_image = rendered_image.to_vec();
+  let (reference_png, rendered_png) = run_visual_worker("normalization", move |cancellation| {
+    let reference_png =
+      normalize_image_to_png(&reference_image, ImageKind::Reference, &cancellation)?;
+    let rendered_png = normalize_image_to_png(&rendered_image, ImageKind::Rendered, &cancellation)?;
+    Ok((reference_png, rendered_png))
+  })
+  .await?;
+  compare_normalized_images(reference_png, rendered_png).await
+}
+
+async fn compare_normalized_images(
+  reference_png: Vec<u8>,
+  rendered_png: Vec<u8>,
+) -> VisualResult<ReferenceImageComparison> {
   run_visual_worker("comparison", move |cancellation| {
     let alignment = align_images(&reference_png, &rendered_png, None, &cancellation)?;
     let comparison = compare_images(
@@ -983,24 +1008,28 @@ impl ImageKind {
   fn label(self) -> &'static str {
     match self {
       ImageKind::Reference => "reference image",
+      ImageKind::Rendered => "rendered image",
     }
   }
 
   fn invalid_code(self) -> VisualEvaluationErrorCode {
     match self {
       ImageKind::Reference => VisualEvaluationErrorCode::ReferenceImageInvalid,
+      ImageKind::Rendered => VisualEvaluationErrorCode::RenderedImageInvalid,
     }
   }
 
   fn fetch_failed_code(self) -> VisualEvaluationErrorCode {
     match self {
       ImageKind::Reference => VisualEvaluationErrorCode::ReferenceImageFetchFailed,
+      ImageKind::Rendered => VisualEvaluationErrorCode::RenderedImageFetchFailed,
     }
   }
 
   fn invalid_message(self) -> &'static str {
     match self {
       ImageKind::Reference => "Reference image is empty, malformed, or unreadable.",
+      ImageKind::Rendered => "Rendered image is empty, malformed, or unreadable.",
     }
   }
 }
@@ -1155,6 +1184,29 @@ mod tests {
     assert_eq!(result.different_blocks, 0);
     assert_eq!(result.total_blocks, 1);
     assert!(!result.diff_image_base64.is_empty());
+  }
+
+  #[tokio::test]
+  async fn compares_two_uploaded_images_without_model_evaluation() {
+    let png = sample_png(Rgba([20, 40, 60, 255]));
+    let result = compare_uploaded_images(&png, &png)
+      .await
+      .expect("compare uploaded images");
+
+    assert_eq!(result.similarity, 1.0);
+    assert_eq!(result.different_blocks, 0);
+    assert_eq!(result.total_blocks, 1);
+    assert!(!result.diff_image_base64.is_empty());
+  }
+
+  #[tokio::test]
+  async fn identifies_an_invalid_rendered_upload() {
+    let png = sample_png(Rgba([20, 40, 60, 255]));
+    let error = compare_uploaded_images(&png, b"not an image")
+      .await
+      .expect_err("invalid rendered image must fail");
+
+    assert_eq!(error.code, VisualEvaluationErrorCode::RenderedImageInvalid);
   }
 
   #[tokio::test(flavor = "current_thread")]

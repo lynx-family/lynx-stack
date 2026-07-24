@@ -24,7 +24,7 @@ server = [
 agent-sdk = { version = "0.12.0", default-features = false }
 anyhow = "1.0.102"
 async-trait = "0.1.89"
-axum = { version = "0.8.8", optional = true }
+axum = { version = "0.8.8", optional = true, features = ["multipart"] }
 base64 = "0.22.1"
 image = { version = "0.25.10", default-features = false, features = ["jpeg", "png", "webp"] }
 lynx-headless-rust-test-runner = { path = "../../lynx/headless-rust-test-runner" }
