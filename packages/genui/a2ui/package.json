@@ -162,7 +162,7 @@
   },
   "dependencies": {
     "@a2ui/web_core": "0.9.1",
-    "@preact/signals": "^2.5.1"
+    "@preact/signals": "^2.9.4"
   },
   "devDependencies": {
     "@lynx-js/genui-cli": "workspace:*",
