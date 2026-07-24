@@ -701,6 +701,8 @@ export interface TransformNodiffOptions {
   dynamicImport?: boolean | DynamicImportVisitorConfig
   /** @internal */
   inject?: boolean | InjectVisitorConfig
+  /** @internal */
+  collectMainThreadDefines?: boolean
   inputSourceMap?: string
 }
 export interface TransformNodiffOutput {
@@ -711,6 +713,8 @@ export interface TransformNodiffOutput {
   uiSourceMapRecords: Array<UiSourceMapRecord>
   /** @internal */
   elementTemplates?: Array<ElementTemplateAsset>
+  /** @internal */
+  mainThreadDefines?: string
 }
 /** @internal */
 export interface ElementTemplateAsset {

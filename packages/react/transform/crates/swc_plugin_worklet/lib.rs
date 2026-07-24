@@ -10,7 +10,9 @@ use gen_stmt::StmtGen;
 use hash::WorkletHash;
 use rustc_hash::FxHashSet;
 use serde::Deserialize;
+use std::cell::RefCell;
 use std::collections::HashSet;
+use std::rc::Rc;
 use std::vec;
 use swc_core::common::util::take::Take;
 use swc_core::common::{errors::HANDLER, Span, Spanned, DUMMY_SP};
@@ -64,6 +66,11 @@ pub struct WorkletVisitor {
   shared_identifiers: FxHashSet<Id>,
   worklet_runtime_loaded: bool,
   worklet_runtime_loaded_ident: Ident,
+  // When set, the worklet registration statements inserted at top level
+  // (the `loadWorkletRuntime` guard + `registerWorkletInternal(...)` calls)
+  // are also cloned here, so a later build can regenerate a defines-only
+  // main-thread module from the registrations that survive tree-shaking.
+  main_thread_defs_collector: Option<Rc<RefCell<Vec<ModuleItem>>>>,
 }
 
 impl Default for WorkletVisitor {
@@ -636,13 +643,16 @@ impl VisitMut for WorkletVisitor {
       );
     }
     // Add statements to insert at top level after processing all items
-    n.body.extend(
-      self
-        .stmts_to_insert_at_top_level
-        .iter_mut()
-        .filter(|stmt| !stmt.is_empty())
-        .map(|stmt| stmt.take().into()),
-    );
+    let worklet_items: Vec<ModuleItem> = self
+      .stmts_to_insert_at_top_level
+      .iter_mut()
+      .filter(|stmt| !stmt.is_empty())
+      .map(|stmt| stmt.take().into())
+      .collect();
+    if let Some(collector) = &self.main_thread_defs_collector {
+      collector.borrow_mut().extend(worklet_items.iter().cloned());
+    }
+    n.body.extend(worklet_items);
   }
 }
 
@@ -710,7 +720,16 @@ impl WorkletVisitor {
       shared_identifiers: FxHashSet::default(),
       worklet_runtime_loaded: false,
       worklet_runtime_loaded_ident: private_ident!("__workletRuntimeLoaded"),
+      main_thread_defs_collector: None,
     }
+  }
+
+  pub fn with_main_thread_defs_collector(
+    mut self,
+    collector: Rc<RefCell<Vec<ModuleItem>>>,
+  ) -> Self {
+    self.main_thread_defs_collector = Some(collector);
+    self
   }
 
   fn check_is_worklet_block(&self, n: &mut BlockStmt) -> Option<WorkletType> {
