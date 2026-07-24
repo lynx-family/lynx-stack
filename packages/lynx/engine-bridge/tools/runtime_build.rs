@@ -174,10 +174,9 @@ fn download_runtime(url: &str, runtime_path: &Path, sha256: &str) {
     )
   });
 
-  let response = ureq::get(url)
-    .call()
+  let mut response = reqwest::blocking::get(url)
+    .and_then(reqwest::blocking::Response::error_for_status)
     .unwrap_or_else(|error| panic!("failed to download Lynx runtime from {url}: {error}"));
-  let mut response_body = response.into_reader();
   let mut tmp_file = tempfile::Builder::new()
     .prefix(
       runtime_path
@@ -193,7 +192,7 @@ fn download_runtime(url: &str, runtime_path: &Path, sha256: &str) {
         parent.display()
       )
     });
-  io::copy(&mut response_body, &mut tmp_file).unwrap_or_else(|error| {
+  io::copy(&mut response, &mut tmp_file).unwrap_or_else(|error| {
     panic!(
       "failed to write downloaded Lynx runtime to {}: {error}",
       tmp_file.path().display()
