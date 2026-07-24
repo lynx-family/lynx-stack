@@ -327,6 +327,14 @@ export interface PluginReactLynxOptions {
   experimental_useElementTemplate?: boolean
 
   /**
+   * Whether the main thread renders the first screen.
+   *
+   * @defaultValue `true`
+   * @experimental
+   */
+  enableMTSRendering?: boolean
+
+  /**
    * Optimize bundle size by removing unused code by Minify.mainThreadOptions and Minify.backgroundOptions.
    *
    * When optimizeBundleSize or optimizeBundleSize.mainThread is true, main-thread code will be optimized.
@@ -388,6 +396,8 @@ export function pluginReactLynx(
     extractStr: false,
 
     globalPropsMode: 'reactive',
+
+    enableMTSRendering: true,
 
     experimental_isLazyBundle: false,
     experimental_useElementTemplate: false,

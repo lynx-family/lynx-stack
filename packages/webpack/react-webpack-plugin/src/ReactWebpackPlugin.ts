@@ -182,6 +182,11 @@ interface ReactWebpackPluginOptions {
   firstScreenSyncTiming?: 'immediately' | 'jsReady' | 'manual';
 
   /**
+   * {@inheritdoc @lynx-js/react-rsbuild-plugin#PluginReactLynxOptions.enableMTSRendering}
+   */
+  enableMTSRendering?: boolean | undefined;
+
+  /**
    * {@inheritdoc @lynx-js/react-rsbuild-plugin#PluginReactLynxOptions.globalPropsMode}
    */
   globalPropsMode?: 'reactive' | 'event';
@@ -307,6 +312,7 @@ class ReactWebpackPlugin {
     .freeze<Required<ReactWebpackPluginOptions>>({
       disableCreateSelectorQueryIncompatibleWarning: false,
       firstScreenSyncTiming: 'immediately',
+      enableMTSRendering: true,
       globalPropsMode: 'reactive',
       enableSSR: false,
       mainThreadChunks: [],
@@ -329,6 +335,13 @@ class ReactWebpackPlugin {
       this.options,
     );
     const { BannerPlugin, DefinePlugin, EnvironmentPlugin } = compiler.webpack;
+
+    if (options.enableMTSRendering === false) {
+      compiler.options.module.rules.push({
+        issuerLayer: LAYERS.MAIN_THREAD,
+        sideEffects: true,
+      });
+    }
 
     if (!options.experimental_isLazyBundle) {
       new BannerPlugin({
@@ -375,6 +388,9 @@ class ReactWebpackPlugin {
       __EXTRACT_STR__: JSON.stringify(Boolean(options.extractStr)),
       __FIRST_SCREEN_SYNC_TIMING__: JSON.stringify(
         options.firstScreenSyncTiming,
+      ),
+      __ENABLE_MTS_RENDERING__: JSON.stringify(
+        options.enableMTSRendering,
       ),
       __GLOBAL_PROPS_MODE__: JSON.stringify(options.globalPropsMode),
       __ENABLE_SSR__: JSON.stringify(options.enableSSR),
