@@ -26,8 +26,8 @@
     "idb": "^8.0.3",
     "lucide-react": "^0.575.0",
     "qrcode": "^1.5.4",
-    "react": "19.2.4",
-    "react-dom": "19.2.4",
+    "react": "19.2.7",
+    "react-dom": "19.2.7",
     "vaul": "^1.1.2"
   },
   "devDependencies": {
