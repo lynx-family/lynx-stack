@@ -1141,8 +1141,8 @@ importers:
         specifier: 12.42.2
         version: 12.42.2
       motion-utils:
-        specifier: 12.23.6
-        version: 12.23.6
+        specifier: 12.39.0
+        version: 12.39.0
     devDependencies:
       '@lynx-js/react':
         specifier: workspace:*
@@ -19559,7 +19559,7 @@ snapshots:
 
   motion-dom@12.23.12:
     dependencies:
-      motion-utils: 12.23.6
+      motion-utils: 12.39.0
 
   motion-dom@12.42.2:
     dependencies:
