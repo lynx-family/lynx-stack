@@ -719,7 +719,7 @@ importers:
         version: 4.0.0
       '@rslib/core':
         specifier: catalog:rslib
-        version: 0.23.2(@microsoft/api-extractor@7.58.11(@types/node@24.10.13))(@typescript/native-preview@7.0.0-dev.20260212.1)(core-js@3.49.0)(typescript@6.0.3)
+        version: 0.23.2(@microsoft/api-extractor@7.58.12(@types/node@24.10.13))(@typescript/native-preview@7.0.0-dev.20260212.1)(core-js@3.49.0)(typescript@6.0.3)
       '@types/react':
         specifier: ^18.3.28
         version: 18.3.28
