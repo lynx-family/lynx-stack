@@ -1,0 +1,4 @@
+interface:
+  display_name: "Lynx OpenUI"
+  short_description: "Create valid OpenUI Lang v0.5 for Lynx"
+  default_prompt: "Use $lynx-openui to turn this UI request into valid OpenUI Lang v0.5 code for Lynx."

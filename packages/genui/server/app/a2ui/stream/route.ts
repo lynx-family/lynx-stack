@@ -32,9 +32,6 @@ import { pickA2UIChatOptions } from '../_shared';
 import type { A2UIChatBody } from '../_shared';
 import { publishA2UIPayload } from '../payload-publisher';
 
-export const runtime = 'nodejs';
-export const dynamic = 'force-dynamic';
-
 export function OPTIONS(req: Request) {
   return corsPreflight(req);
 }

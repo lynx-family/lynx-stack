@@ -39,6 +39,14 @@
   "prConcurrentLimit": 20,
   "prHourlyLimit": 4,
 
+  // Auto-generate a changeset for the dependency bump (see the script). No-op
+  // unless the command is allow-listed in the self-hosted `allowedCommands`.
+  "postUpgradeTasks": {
+    "commands": ["node .github/scripts/generate-renovate-changeset.cjs"],
+    "fileFilters": [".changeset/renovate-*.md"],
+    "executionMode": "branch",
+  },
+
   "packageRules": [
     {
       "matchPackageNames": [

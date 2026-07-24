@@ -8,9 +8,6 @@ import { checkRateLimit, rateLimitJsonResponse } from '../../common/rate-limit';
 import { readJsonBodyWithLimit } from '../../common/request';
 import { publishA2UIPayload } from '../payload-publisher';
 
-export const runtime = 'nodejs';
-export const dynamic = 'force-dynamic';
-
 interface A2UIPayloadBody {
   messages?: unknown;
   actionMocks?: unknown;

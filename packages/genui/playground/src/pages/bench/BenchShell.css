@@ -1,0 +1,265 @@
+.benchShell {
+  --bench-bg: #fff;
+  --bench-ink: #171719;
+  --bench-muted: #6d6d72;
+  --bench-line: #e5e5e7;
+  --bench-surface: #fff;
+  --bench-max-width: 1480px;
+  --bench-font-sans:
+    "Avenir Next", Avenir, "PingFang SC", "Hiragino Sans GB", "Segoe UI",
+    sans-serif;
+  --bench-font: var(--bench-font-sans);
+  --bench-mono: var(--geist-mono);
+  --geist-font: var(--bench-font-sans);
+
+  width: 100%;
+  min-width: 0;
+  min-height: 0;
+  display: grid;
+  flex: 1;
+  grid-template-rows: 56px minmax(0, 1fr);
+  overflow: hidden;
+  background-color: var(--bench-bg);
+  color: var(--bench-ink);
+  font-family: var(--bench-font-sans);
+}
+
+html[data-theme="dark"] .benchShell {
+  --bench-bg: #111112;
+  --bench-ink: #f2f2f3;
+  --bench-muted: #9a9a9f;
+  --bench-line: #2c2c2f;
+  --bench-surface: #111112;
+}
+
+.benchShellMasthead {
+  position: relative;
+  z-index: 10;
+  min-width: 0;
+  display: grid;
+  grid-template-columns: minmax(max-content, 1fr) auto minmax(max-content, 1fr);
+  align-items: center;
+  gap: clamp(12px, 2.5vw, 36px);
+  padding: 0 clamp(14px, 2.4vw, 36px);
+  border-bottom: 1px solid var(--bench-line);
+  background: var(--bench-bg);
+}
+
+.benchShellBrand {
+  display: flex;
+  align-items: center;
+  justify-self: start;
+  gap: 9px;
+  min-width: 0;
+  min-height: 44px;
+  color: var(--bench-ink);
+}
+
+.benchShellBrandMark {
+  width: 26px;
+  height: 28px;
+  display: grid;
+  flex: 0 0 auto;
+  place-items: center;
+}
+
+.benchShellBrandMark img {
+  width: 22px;
+  height: 24px;
+  display: block;
+}
+
+html[data-theme="dark"] .benchShellBrandMark img {
+  filter: invert(1);
+}
+
+.benchShellBrand strong {
+  color: var(--bench-ink);
+  font-size: 13px;
+  font-weight: 650;
+  letter-spacing: -0.015em;
+  white-space: nowrap;
+}
+
+.benchShellNav {
+  height: 100%;
+  display: flex;
+  align-items: stretch;
+  justify-content: center;
+  gap: clamp(4px, 1vw, 14px);
+}
+
+.benchShellNavItem {
+  position: relative;
+  min-height: 44px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0 clamp(8px, 1.2vw, 14px);
+  color: var(--bench-muted);
+  transition: background var(--geist-transition), color var(--geist-transition);
+  font-size: 12px;
+  font-weight: 550;
+  letter-spacing: -0.005em;
+  white-space: nowrap;
+}
+
+.benchShellNavItem:hover {
+  background: color-mix(in srgb, var(--bench-ink) 5%, transparent);
+  color: var(--bench-ink);
+}
+
+.benchShellNavItem::after {
+  position: absolute;
+  right: 10px;
+  bottom: -1px;
+  left: 10px;
+  height: 1px;
+  background: var(--bench-ink);
+  content: "";
+  opacity: 0;
+  transform: scaleX(0.45);
+  transition:
+    opacity var(--geist-transition),
+    transform var(--geist-transition);
+}
+
+.benchShellNavItem.active {
+  color: var(--bench-ink);
+  font-weight: 650;
+}
+
+.benchShellNavItem.active::after {
+  opacity: 1;
+  transform: scaleX(1);
+}
+
+.benchShellUtilities {
+  display: flex;
+  align-items: center;
+  justify-self: end;
+  gap: 2px;
+}
+
+.benchShellUtility {
+  min-width: 44px;
+  min-height: 44px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 5px;
+  padding: 0 8px;
+  border: 0;
+  background: transparent;
+  color: var(--bench-muted);
+  cursor: pointer;
+  font: inherit;
+  font-size: 11px;
+  font-weight: 550;
+  white-space: nowrap;
+  transition: background var(--geist-transition), color var(--geist-transition);
+}
+
+.benchShellUtility:hover {
+  background: color-mix(in srgb, var(--bench-ink) 5%, transparent);
+  color: var(--bench-ink);
+}
+
+.benchShellUtility svg {
+  width: 13px;
+  height: 13px;
+  stroke-width: 1.7;
+}
+
+.benchShellMain {
+  min-width: 0;
+  min-height: 0;
+  display: flex;
+  overflow: hidden;
+}
+
+.benchShellVisuallyHidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+.benchShell a:focus-visible,
+.benchShell button:focus-visible {
+  outline: 2px solid var(--bench-ink);
+  outline-offset: -3px;
+}
+
+@media (max-width: 680px) {
+  .benchShell {
+    grid-template-rows: 96px minmax(0, 1fr);
+  }
+
+  .benchShellMasthead {
+    grid-template-columns: minmax(0, 1fr) auto;
+    grid-template-rows: 48px 48px;
+    gap: 0;
+    padding: 0 10px;
+  }
+
+  .benchShellBrand {
+    grid-column: 1;
+    grid-row: 1;
+  }
+
+  .benchShellUtilities {
+    grid-column: 2;
+    grid-row: 1;
+  }
+
+  .benchShellNav {
+    grid-column: 1 / -1;
+    grid-row: 2;
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    width: 100%;
+    border-top: 1px solid var(--bench-line);
+  }
+
+  .benchShellNavItem {
+    min-width: 0;
+    padding: 0 4px;
+  }
+
+  .benchShellNavItem::after {
+    right: 16%;
+    left: 16%;
+  }
+}
+
+@media (max-width: 380px) {
+  .benchShellUtility[href] {
+    width: 44px;
+    padding: 0;
+  }
+
+  .benchShellUtility[href] span {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
+    border: 0;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .benchShellNavItem,
+  .benchShellNavItem::after {
+    transition: none;
+  }
+}

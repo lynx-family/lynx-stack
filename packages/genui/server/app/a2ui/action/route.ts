@@ -14,9 +14,6 @@ import { checkRateLimit, rateLimitJsonResponse } from '../../common/rate-limit';
 import { readJsonBodyWithLimit } from '../../common/request';
 import { pickA2UIChatOptions, validateAction } from '../_shared';
 
-export const runtime = 'nodejs';
-export const dynamic = 'force-dynamic';
-
 interface A2UIActionBody {
   conversation?: unknown;
   surfaceId?: string;

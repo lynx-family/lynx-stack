@@ -52,7 +52,7 @@ export class TemplateManager {
     transformREM: boolean,
     overrideConfig?: Record<string, string>,
   ): Promise<void> {
-    if (this.#bundles.has(url) && !overrideConfig) {
+    if (this.#bundles.has(url)) {
       return (async () => {
         const bundle = this.#bundles.get(url);
         const config = (bundle?.config || {}) as PageConfig;

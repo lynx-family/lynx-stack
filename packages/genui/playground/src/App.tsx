@@ -11,6 +11,9 @@ import {
 
 import { Button } from './components/Button.js';
 import { Moon, Sun } from './components/Icon.js';
+import { BenchPlannedPage } from './pages/bench/BenchPlannedPage.js';
+import { BenchResultPage } from './pages/bench/BenchResultPage.js';
+import { BenchShell } from './pages/bench/BenchShell.js';
 import { BenchPage } from './pages/BenchPage.js';
 import { ComponentsPage } from './pages/catalog/ComponentsPage.js';
 import { ChatPage } from './pages/chat/ChatPage.js';
@@ -154,6 +157,10 @@ export function App() {
     window.location.hash = buildRouteHash(protocol.name, id);
   }, [protocol.name]);
 
+  const handleThemeToggle = useCallback(() => {
+    setTheme((current) => current === 'dark' ? 'light' : 'dark');
+  }, []);
+
   const handleProtocolSelect = useCallback((name: ProtocolName) => {
     if (name === 'mcp-apps') {
       window.location.hash = buildRouteHash(name, 'create');
@@ -225,8 +232,31 @@ export function App() {
     }
 
     switch (route.tab) {
-      case 'bench':
-        return <BenchPage key='bench' />;
+      case 'bench': {
+        let benchPage = <BenchPage key='bench-runner' showHeader={false} />;
+        switch (route.benchSlug) {
+          case undefined:
+          case 'runner':
+            break;
+          case 'phase-1':
+            benchPage = <BenchResultPage key='bench-phase-1' />;
+            break;
+          case 'phase-2':
+            benchPage = <BenchPlannedPage key='bench-phase-2' />;
+            break;
+          default:
+            break;
+        }
+        return (
+          <BenchShell
+            activeSlug={route.benchSlug}
+            theme={theme}
+            onToggleTheme={handleThemeToggle}
+          >
+            {benchPage}
+          </BenchShell>
+        );
+      }
       case 'examples':
         return route.demoId
           ? (
@@ -262,7 +292,9 @@ export function App() {
     route.tab,
     route.componentName,
     route.demoId,
+    route.benchSlug,
     theme,
+    handleThemeToggle,
   ]);
 
   const protocolVersionControl = (
@@ -284,7 +316,7 @@ export function App() {
 
   return (
     <div className={embedded ? 'appShell appShellEmbedded' : 'appShell'}>
-      {embedded ? null : (
+      {embedded || route.tab === 'bench' ? null : (
         <div className='topBar'>
           <div className='brandGroup'>
             <img
@@ -320,7 +352,7 @@ export function App() {
             iconOnly
             iconBefore={theme === 'dark' ? Sun : Moon}
             className='themeToggle'
-            onClick={() => setTheme((t) => (t === 'dark' ? 'light' : 'dark'))}
+            onClick={handleThemeToggle}
             aria-label={`Switch to ${theme === 'dark' ? 'light' : 'dark'} mode`}
             title={`Switch to ${theme === 'dark' ? 'light' : 'dark'} mode`}
           />

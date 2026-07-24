@@ -26,11 +26,11 @@ jobs:
       contents: read
       actions: read
     steps:
-      - uses: actions/checkout@93cb6efe18208431cddfb8368fd83d5badbf9bfd # v5
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
         with:
           fetch-depth: 0
           persist-credentials: false
-      - uses: actions-rust-lang/setup-rust-toolchain@1780873c7b576612439a134613cc4cc74ce5538c # v1
+      - uses: actions-rust-lang/setup-rust-toolchain@166cdcfd11aee3cb47222f9ddb555ce30ddb9659 # v1
         with:
           cache: false
       - name: Install
@@ -42,7 +42,7 @@ jobs:
         run: |
           corepack pnpm turbo --filter !benchx_cli --filter "!@lynx-js/benchmark-*" build --summarize
       - name: Save Turbo Result
-        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7
         with:
           name: deploy-${{ github.sha }}
           path: .turbo
@@ -158,11 +158,11 @@ jobs:
       # See: https://docs.npmjs.com/generating-provenance-statements#publishing-packages-with-provenance-via-github-actions
       id-token: write
     steps:
-      - uses: actions/checkout@93cb6efe18208431cddfb8368fd83d5badbf9bfd # v5
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
         with:
           fetch-depth: 0
           persist-credentials: false
-      - uses: actions/setup-node@a0853c24544627f65ddf259abe73b1d18a591444 # v5
+      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7
         with:
           node-version: "24"
           registry-url: "https://registry.npmjs.org"
@@ -173,7 +173,7 @@ jobs:
           node-version: "24"
           save-if: ${{ github.ref_name == 'main' }}
       - name: Download Turbo Cache
-        uses: actions/download-artifact@634f93cb2916e3fdff6788551b99b062d0335ce0 # v5
+        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8
         timeout-minutes: 5
         with:
           name: deploy-${{ github.sha }}
@@ -185,7 +185,7 @@ jobs:
         id: date
         run: echo "::set-output name=date::$(date -u +'%Y-%m-%d %H:%M:%S')"
       - name: attempt to release
-        uses: changesets/action@6a0a831ff30acef54f2c6aa1cbbc1096b066edaf # v1.7.0
+        uses: changesets/action@a45c4d594aa4e2c509dc14a9f2b3b67ba3780d0d # v1.9.0
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
@@ -206,11 +206,11 @@ jobs:
       # See: https://docs.npmjs.com/generating-provenance-statements#publishing-packages-with-provenance-via-github-actions
       id-token: write
     steps:
-      - uses: actions/checkout@93cb6efe18208431cddfb8368fd83d5badbf9bfd # v5
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
         with:
           fetch-depth: 0
           persist-credentials: false
-      - uses: actions/setup-node@a0853c24544627f65ddf259abe73b1d18a591444 # v5
+      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7
         with:
           node-version: "24"
           registry-url: "https://registry.npmjs.org"
@@ -221,7 +221,7 @@ jobs:
           node-version: "24"
           save-if: ${{ github.ref_name == 'main' }}
       - name: Download Turbo Cache
-        uses: actions/download-artifact@634f93cb2916e3fdff6788551b99b062d0335ce0 # v5
+        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8
         timeout-minutes: 5
         with:
           name: deploy-${{ github.sha }}
@@ -263,4 +263,4 @@ jobs:
     steps:
       - name: Deploy to GitHub Pages
         id: deployment
-        uses: actions/deploy-pages@d6db90164ac5ed86f2b6aed7e0febac5b3c0c03e # v4
+        uses: actions/deploy-pages@cd2ce8fcbc39b97be8ca5fce6e763baed58fa128 # v5

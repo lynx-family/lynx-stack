@@ -14,9 +14,6 @@ import { extractUsageMetrics } from '../../common/usage';
 import { pickA2UIChatOptions } from '../_shared';
 import type { A2UIChatBody } from '../_shared';
 
-export const runtime = 'nodejs';
-export const dynamic = 'force-dynamic';
-
 export function OPTIONS(req: Request) {
   return corsPreflight(req);
 }

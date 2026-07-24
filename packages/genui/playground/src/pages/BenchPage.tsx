@@ -499,7 +499,7 @@ function getA2UIBenchJobIdFromUrl(): string | null {
 function getA2UIBenchRecoveryUrl(jobId: string): string {
   const url = new URL(window.location.href);
   url.searchParams.set('a2uiBenchJobId', jobId);
-  url.hash = '#/a2ui/bench';
+  url.hash = '#/bench';
   return url.toString();
 }
 
@@ -1058,7 +1058,11 @@ function getBenchRunBlockers(
   return issues;
 }
 
-export function BenchPage() {
+interface BenchPageProps {
+  showHeader?: boolean;
+}
+
+export function BenchPage({ showHeader = true }: BenchPageProps) {
   const [env, setEnv] = useState<BenchEnv>(DEFAULT_ENV);
   const [groups, setGroups] = useState<BenchGroup[]>(DEFAULT_GROUPS);
   const [scenarios, setScenarios] = useState<BenchScenario[]>(
@@ -1747,18 +1751,22 @@ export function BenchPage() {
 
   return (
     <div className='benchPage'>
-      <PageHeader
-        className='benchHeader'
-        title='Bench'
-        description='Compare A2UI model, prompt, and catalog variants across fixed generation scenarios.'
-        topContent={
-          <>
-            <span className='chip'>{activeGroups.length} groups</span>
-            <span className='chip'>{scenarios.length} scenarios</span>
-            <span className='chip'>{pluralize(runCount, 'run')}</span>
-          </>
-        }
-      />
+      {showHeader
+        ? (
+          <PageHeader
+            className='benchHeader'
+            title='Bench'
+            description='Compare A2UI model, prompt, and catalog variants across fixed generation scenarios.'
+            topContent={
+              <>
+                <span className='chip'>{activeGroups.length} groups</span>
+                <span className='chip'>{scenarios.length} scenarios</span>
+                <span className='chip'>{pluralize(runCount, 'run')}</span>
+              </>
+            }
+          />
+        )
+        : <h1 className='benchPageAccessibleTitle'>Bench Runner</h1>}
 
       <div
         className='benchBody'

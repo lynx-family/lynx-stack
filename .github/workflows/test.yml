@@ -51,7 +51,7 @@ jobs:
     runs-on: lynx-ubuntu-26.04-medium
     timeout-minutes: 10
     steps:
-      - uses: actions/checkout@93cb6efe18208431cddfb8368fd83d5badbf9bfd # v5
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
         with:
           # We need full history for changeset status check
           fetch-depth: 0
@@ -333,8 +333,8 @@ jobs:
   test-typos:
     runs-on: lynx-ubuntu-26.04-medium
     steps:
-      - uses: taiki-e/checkout-action@3ab630d442e198ebb0ca30872832406ca01c46eb # v1.4.0
-      - uses: crate-ci/typos@57b11c6b7e54c402ccd9cda953f1072ec4f78e33 # v1.43.5
+      - uses: taiki-e/checkout-action@7d1e50e93dc4fb3bba58f85018fadf77898aee8b # v1.4.2
+      - uses: crate-ci/typos@bee27e3a4fd1ea2111cf90ab89cd076c870fce14 # v1.48.0
         with:
           files: .
   test-vitest:
