@@ -1325,9 +1325,15 @@ importers:
       '@lynx-js/web-core':
         specifier: workspace:*
         version: link:../web-platform/web-core
+      '@lynx-js/web-elements':
+        specifier: workspace:*
+        version: link:../web-platform/web-elements
       '@lynx-js/web-platform-rsbuild-plugin':
         specifier: workspace:*
         version: link:../web-platform/web-rsbuild-plugin
+      '@lynx-js/web-worker-rpc':
+        specifier: workspace:*
+        version: link:../web-platform/web-worker-rpc
       '@rsbuild/core':
         specifier: catalog:rsbuild
         version: 2.1.4(core-js@3.49.0)
