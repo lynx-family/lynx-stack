@@ -1,5 +1,13 @@
 # @lynx-js/react
 
+## 0.123.1
+
+### Patch Changes
+
+- refactor type of createElement and cloneElement ([#2995](https://github.com/lynx-family/lynx-stack/pull/2995))
+
+- Prevent stale snapshot teardown from destroying list callbacks and recycling state after rendered elements are transferred to a new snapshot instance. ([#3122](https://github.com/lynx-family/lynx-stack/pull/3122))
+
 ## 0.123.0
 
 ### Minor Changes

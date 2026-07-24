@@ -1,5 +1,11 @@
 # @lynx-js/motion
 
+## 0.0.4
+
+### Patch Changes
+
+- Update `motion-dom` from `12.23.12` to `12.42.2` ([#3124](https://github.com/lynx-family/lynx-stack/pull/3124))
+
 ## 0.0.3
 
 ### Patch Changes

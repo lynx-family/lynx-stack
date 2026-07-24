@@ -1,5 +1,17 @@
 # @lynx-js/web-elements
 
+## 0.12.7
+
+### Patch Changes
+
+- Fix internal variable typo (`mesaurement` -> `measurement`). No behavior change. ([#3128](https://github.com/lynx-family/lynx-stack/pull/3128))
+
+- Fix x-text custom truncation when inline x-view elements are included in the measured text. ([#2998](https://github.com/lynx-family/lynx-stack/pull/2998))
+
+- Update `markdown-it` from `^14.1.0` to `^14.3.0` ([#3121](https://github.com/lynx-family/lynx-stack/pull/3121))
+
+- Document and verify the `message` event forwarded from an `x-webview` iframe. ([#3167](https://github.com/lynx-family/lynx-stack/pull/3167))
+
 ## 0.12.6
 
 ### Patch Changes
