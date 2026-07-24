@@ -11,7 +11,7 @@
   "dependencies": {
     "@lynx-js/react": "workspace:*",
     "clsx": "^2.1.1",
-    "tailwind-merge": "^3.4.0"
+    "tailwind-merge": "^3.6.0"
   },
   "devDependencies": {
     "@lynx-js/config-rsbuild-plugin": "workspace:*",
