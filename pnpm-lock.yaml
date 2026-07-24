@@ -1527,8 +1527,8 @@ importers:
   packages/rspeedy/plugin-config:
     dependencies:
       '@lynx-js/type-config':
-        specifier: 3.6.0
-        version: 3.6.0
+        specifier: 4.1.1
+        version: 4.1.1
     devDependencies:
       '@lynx-js/rspeedy':
         specifier: workspace:*
@@ -4351,8 +4351,8 @@ packages:
     resolution: {integrity: sha512-Zyl74cKi+BDggeXroLQG4frbBuiQ0DB0yH0C3pMkUHWv17abWTdJ2mw/H9Cd1QiIr+aQHn1U2SRtsrbkmWMtJw==}
     engines: {node: '>=18'}
 
-  '@lynx-js/type-config@3.6.0':
-    resolution: {integrity: sha512-XS+Wdbs77iWaVqrs1HKp3LyTLLHbu/AwLwy837BinmyNO28YunkgnOz0dmuzjnGGsbKJB3Alm7RoYrH/PAsVuQ==}
+  '@lynx-js/type-config@4.1.1':
+    resolution: {integrity: sha512-YuzuLkz71WoAgHnYEGkCgmocTW0mzcmQTDDF5zfvpNepD/Oxh4/yqxRhK+uaiJeJnPhTFM445ZRaFnBrSRTOag==}
 
   '@lynx-js/type-element-api@0.0.3':
     resolution: {integrity: sha512-e8+V1aU9VD6fmVJhS1VoE5ZxUD2udhEtTTsGBj2jlxYNscND2V6fyYFGF/dUPN+s9EwRiB80vUY/Im8tYSsMWA==}
@@ -13747,7 +13747,7 @@ snapshots:
     dependencies:
       immer: 10.2.0
 
-  '@lynx-js/type-config@3.6.0': {}
+  '@lynx-js/type-config@4.1.1': {}
 
   '@lynx-js/type-element-api@0.0.3': {}
 
