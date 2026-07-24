@@ -1,10 +1,10 @@
 // Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
 
-exports[`mainThreadDefinesOnly > should convert dynamic imports to static side-effect imports 1`] = `
+exports[`mainThreadDefinesOnly > should keep dynamic imports dynamic behind a runtime-false guard 1`] = `
 "import "@lynx-js/react/lepus/jsx-runtime";
 import "@lynx-js/react/internal";
 import 'data:text/javascript;charset=utf-8,import { loadLazyBundle } from "@lynx-js/react/internal";lynx.loadLazyBundle = loadLazyBundle;';
-import "./lazy-comp.jsx";
+globalThis.__lynxKeepLazyBundle && import('./lazy-comp.jsx');
 import * as ReactLynx from "@lynx-js/react/internal";
 const __snapshot_a94a8_test_1 = "__snapshot_a94a8_test_1";
 ReactLynx.snapshotCreatorMap[__snapshot_a94a8_test_1] = (__snapshot_a94a8_test_1)=>ReactLynx.createSnapshot(__snapshot_a94a8_test_1, function() {

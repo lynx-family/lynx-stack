@@ -81,7 +81,7 @@ export function App() {
     expect(result.code).toMatchSnapshot();
   });
 
-  it('should convert dynamic imports to static side-effect imports', async () => {
+  it('should keep dynamic imports dynamic behind a runtime-false guard', async () => {
     const result = await transformReactLynx(
       `
 export function App() {
@@ -93,8 +93,12 @@ export function App() {
     );
 
     expect(result.code).toMatchSnapshot();
-    expect(result.code).toContain('import "./lazy-comp.jsx"');
-    expect(result.code).not.toContain('import(');
+    // The dynamic import stays dynamic so webpack keeps the lazy bundle split
+    // (its own main-thread section), but is guarded so it never runs on the
+    // main thread, which renders nothing in this mode.
+    expect(result.code).toContain('__lynxKeepLazyBundle');
+    expect(result.code).toContain(`import('./lazy-comp.jsx')`);
+    expect(result.code).not.toContain('import "./lazy-comp.jsx"');
   });
 
   it('should keep only side-effect imports for modules without defines', async () => {

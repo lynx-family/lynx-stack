@@ -45,6 +45,7 @@ use swc_core::{
     },
     visit::{visit_mut_pass, Visit, VisitWith},
   },
+  quote,
 };
 
 // currently `use xxx as yyy` is not supported by napi-rs
@@ -292,21 +293,34 @@ fn side_effect_import(src: Box<Str>, with: Option<Box<ObjectLit>>) -> ModuleItem
   }))
 }
 
-struct DynamicImportLiteralCollector {
-  literals: Vec<swc_core::atoms::Wtf8Atom>,
+struct DynamicImportCollector {
+  imports: Vec<CallExpr>,
 }
 
-impl Visit for DynamicImportLiteralCollector {
+impl Visit for DynamicImportCollector {
   fn visit_call_expr(&mut self, n: &CallExpr) {
     if matches!(n.callee, Callee::Import(_)) {
       if let Some(arg) = n.args.first() {
-        if let Expr::Lit(Lit::Str(src)) = &*arg.expr {
-          self.literals.push(src.value.clone());
+        if matches!(&*arg.expr, Expr::Lit(Lit::Str(_))) {
+          self.imports.push(n.clone());
         }
       }
     }
     n.visit_children_with(self);
   }
+}
+
+// Keeps a dynamic `import()` alive for webpack's async-chunk (lazy bundle)
+// creation without executing it: the main thread renders nothing in
+// `enableMTSRendering: false`, so the lazy bundle must keep loading on demand
+// and register its snapshots from its own main-thread section. Converting the
+// import to a static one would instead inline that section into the main
+// chunk.
+fn keep_dynamic_import(call: CallExpr) -> ModuleItem {
+  ModuleItem::Stmt(quote!(
+    "globalThis.__lynxKeepLazyBundle && $call;" as Stmt,
+    call: Expr = Expr::Call(call),
+  ))
 }
 
 type ElementTemplateCollector = Rc<RefCell<Vec<CoreElementTemplateAsset>>>;
@@ -416,11 +430,11 @@ fn transform_react_lynx_inner(
     let top_retain = WEBPACK_VARS.iter().map(|&s| s.into()).collect::<Vec<_>>();
 
     let main_thread_defines_only = options.main_thread_defines_only.unwrap_or(false);
-    let mut dynamic_import_literals: Vec<swc_core::atoms::Wtf8Atom> = vec![];
+    let mut dynamic_imports: Vec<CallExpr> = vec![];
     if main_thread_defines_only {
-      let mut collector = DynamicImportLiteralCollector { literals: vec![] };
+      let mut collector = DynamicImportCollector { imports: vec![] };
       program.visit_with(&mut collector);
-      dynamic_import_literals = collector.literals;
+      dynamic_imports = collector.imports;
     }
 
     let simplify_pass_1 = Optional::new(
@@ -849,16 +863,13 @@ fn transform_react_lynx_inner(
             _ => {}
           }
         }
-        for literal in dynamic_import_literals {
-          if seen_srcs.insert(literal.clone()) {
-            items.push(side_effect_import(
-              Box::new(Str {
-                span: DUMMY_SP,
-                raw: None,
-                value: literal,
-              }),
-              None,
-            ));
+        let mut seen_dyn: std::collections::HashSet<swc_core::atoms::Wtf8Atom> =
+          Default::default();
+        for call in dynamic_imports {
+          if let Some(Expr::Lit(Lit::Str(src))) = call.args.first().map(|a| &*a.expr) {
+            if seen_dyn.insert(src.value.clone()) {
+              items.push(keep_dynamic_import(call));
+            }
           }
         }
         if let Some(collector) = &main_thread_defs_collector {
