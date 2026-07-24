@@ -36,8 +36,8 @@ catalogs:
       specifier: 0.11.2
       version: 0.11.2
     '@rstest/coverage-istanbul':
-      specifier: 0.11.0
-      version: 0.11.0
+      specifier: 0.11.2
+      version: 0.11.2
 
 overrides:
   '@lynx-js/react': workspace:*
@@ -88,7 +88,7 @@ importers:
         version: 0.11.2(core-js@3.49.0)(jsdom@27.4.0(supports-color@8.1.1))
       '@rstest/coverage-istanbul':
         specifier: catalog:rstest
-        version: 0.11.0(@rstest/core@0.11.2(core-js@3.49.0)(jsdom@27.4.0(supports-color@8.1.1)))(supports-color@8.1.1)
+        version: 0.11.2(@rstest/core@0.11.2(core-js@3.49.0)(jsdom@27.4.0(supports-color@8.1.1)))(supports-color@8.1.1)
       '@svitejs/changesets-changelog-github-compact':
         specifier: ^1.2.0
         version: 1.2.0
@@ -5363,10 +5363,10 @@ packages:
       jsdom:
         optional: true
 
-  '@rstest/coverage-istanbul@0.11.0':
-    resolution: {integrity: sha512-WeQ8NPDNWFdv5THtncsii7vk+8cKECLfn15yuk6KT+OXNGn5Pz1raLX/tdQPz0qsB/rI2Zo65wiOvk5ktD7PYg==}
+  '@rstest/coverage-istanbul@0.11.2':
+    resolution: {integrity: sha512-Zynn5AhEsVky02/YNM6008/kgGoT/B/kJTRUpff00nIAbQBmbGYOesk1T8xtDwo6c3Zja4EgTvtsTtML3S80UQ==}
     peerDependencies:
-      '@rstest/core': ^0.11.0
+      '@rstest/core': ^0.11.2
 
   '@rtsao/scc@1.1.0':
     resolution: {integrity: sha512-zt6OdqaDoOnJ1ZYsCYGt9YmWzDXl4vQdKTyJev62gFhRGKdx7mcT54V9KIjg+d2wi9EXsPvAPKe7i7WjfVWB8g==}
@@ -14986,7 +14986,7 @@ snapshots:
       - '@module-federation/runtime-tools'
       - core-js
 
-  '@rstest/coverage-istanbul@0.11.0(@rstest/core@0.11.2(core-js@3.49.0)(jsdom@27.4.0(supports-color@8.1.1)))(supports-color@8.1.1)':
+  '@rstest/coverage-istanbul@0.11.2(@rstest/core@0.11.2(core-js@3.49.0)(jsdom@27.4.0(supports-color@8.1.1)))(supports-color@8.1.1)':
     dependencies:
       '@rstest/core': 0.11.2(core-js@3.49.0)(jsdom@27.4.0(supports-color@8.1.1))
       istanbul-lib-coverage: 3.2.2
