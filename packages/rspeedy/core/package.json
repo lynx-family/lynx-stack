@@ -83,7 +83,7 @@
     "tiny-invariant": "^1.3.3",
     "ts-blank-space": "^0.7.0",
     "type-fest": "^5.8.0",
-    "typia": "12.1.1",
+    "typia": "13.1.19",
     "typia-rspack-plugin": "3.0.1"
   },
   "peerDependencies": {
