@@ -16,6 +16,10 @@ When runtime code needs to distinguish Lynx for Web from native Lynx, prefer `Sy
 
 When wiring playback state between the Lynx app and the web preview, prefer `NativeModules.bridge.call('A2UI_PLAYBACK_SYNC', state, callback)` on the Lynx side and `lynxView.onNativeModulesCall` on the web preview side. Keep `window.postMessage` only as a compatibility fallback for older bundles. Do not add new playback sync paths that bypass the NativeModules bridge.
 
+When automating A2UI preview benchmarks, wrap `render.html` in a parent iframe with a `previewMetricId`, listen for `A2UI_PREVIEW_METRIC` in the parent, and inject generated messages with `A2UI_LIVE_MESSAGES` after `A2UI_RENDER_READY`. Loading generated messages only through the initial query payload can capture FCP/FMP/TTI, but it does not exercise the Create page's live-delivery path that reports the repeatable Render metric.
+
+Treat Bench reports as a protocol-neutral product area. Use `#/bench` as the canonical Runner route, keep `#/bench/runner` as a compatibility alias, and publish studies under phase routes such as `#/bench/phase-1`. This leaves later phases free to compare A2UI with other protocols. Keep legacy `#/a2ui/bench` hashes only as compatibility inputs. This route guidance does not apply to the A2UI server API paths under `/a2ui/bench/jobs`.
+
 ### Native Test Bundles
 
 When serving the playground's native Lynx bundles as static Android test fixtures, keep HMR/React refresh out of `a2ui.lynx.js` and `openui.lynx.js`. The Android Lynx runtime does not provide globals such as `__prefresh_utils__` or Node's `process`, so normalize `process.env.NODE_ENV` at build time and disable HMR for these bundles instead of relying on the caller's `NODE_ENV`.
