@@ -48,7 +48,7 @@
   },
   "dependencies": {
     "framer-motion": "12.34.1",
-    "motion-dom": "12.23.12",
+    "motion-dom": "12.42.2",
     "motion-utils": "12.23.6"
   },
   "devDependencies": {
