@@ -2196,6 +2196,7 @@ describe('Element APIs', () => {
     expect(result1).toBe(true);
     expect(lynxViewInstance.mtsRealm!.loadScriptSync).toHaveBeenCalledWith(
       'app-chunk.js',
+      'http://localhost/app.js/chunk.js',
     );
 
     // Testing dynamicComponentEntry
@@ -2205,6 +2206,7 @@ describe('Element APIs', () => {
     expect(result2).toBe(true);
     expect(lynxViewInstance.mtsRealm!.loadScriptSync).toHaveBeenCalledWith(
       'dynamic-chunk.js',
+      'http://localhost/dynamic.js/chunk.js',
     );
 
     // Testing non-existing code url (should fallback to path)
@@ -2215,5 +2217,56 @@ describe('Element APIs', () => {
     expect(lynxViewInstance.mtsRealm!.loadScriptSync).toHaveBeenCalledWith(
       'other.js',
     );
+  });
+
+  test('lynx.loadScript preserves the external bundle source URL', () => {
+    const bundleURL = 'https://cdn.example.com/remotes/catalog.web.bundle';
+    const loadScriptSync = rstest.fn();
+    const lynxViewInstance = {
+      templateUrl: 'app.js',
+      globalprops: {},
+      systemInfo: {},
+      backgroundThread: {
+        markTiming: rstest.fn(),
+        jsContext: { dispatchEvent: rstest.fn() },
+      },
+      lepusCodeUrls: new Map([
+        [bundleURL, { catalog: 'blob:https://host.example/catalog' }],
+      ]),
+      mtsRealm: { loadScriptSync },
+      i18nManager: { _I18nResourceTranslation: rstest.fn() },
+    } as unknown as LynxViewInstance;
+
+    createMainThreadGlobalAPIs(lynxViewInstance).lynx.loadScript('catalog', {
+      bundleName: bundleURL,
+    });
+
+    expect(loadScriptSync).toHaveBeenCalledWith(
+      'blob:https://host.example/catalog',
+      bundleURL,
+    );
+  });
+
+  test('lynx.loadLazyBundle loads a dynamic component', async () => {
+    const exports = { ids: ['catalog'], modules: {} };
+    const queryComponent = rstest.fn(async () => exports);
+    const lynxViewInstance = {
+      templateUrl: 'app.js',
+      globalprops: {},
+      systemInfo: {},
+      backgroundThread: {
+        markTiming: rstest.fn(),
+        jsContext: { dispatchEvent: rstest.fn() },
+      },
+      queryComponent,
+      i18nManager: { _I18nResourceTranslation: rstest.fn() },
+    } as unknown as LynxViewInstance;
+
+    await expect(
+      createMainThreadGlobalAPIs(lynxViewInstance).lynx.loadLazyBundle(
+        'catalog.bundle',
+      ),
+    ).resolves.toBe(exports);
+    expect(queryComponent).toHaveBeenCalledWith('catalog.bundle');
   });
 });

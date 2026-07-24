@@ -5558,6 +5558,17 @@ test.describe('reactlynx3 tests', () => {
       // The external module is fetched + evaluated via lynx.fetchBundle +
       // lynx.loadScript (background and main-thread layers) and rendered.
       await expectHasText(page, 'hello-from-external');
+      await expectHasText(page, 'worker-event-target-ok');
+      const publicPath = `http://localhost:${
+        process.env['PORT'] ?? 3080
+      }/resources/external-bundle/`;
+      await expect(page.locator('#target')).toContainText(publicPath);
+      const mainThreadTarget = page.locator('#main-thread-public-path');
+      await mainThreadTarget.click();
+      await expect(mainThreadTarget).toHaveAttribute(
+        'data-public-path',
+        publicPath,
+      );
       // The external bundle's pre-processed style section is applied through the
       // wasm style engine (push_style_sheet) during lynx.fetchBundle, so the
       // element receives its background-color. (background-color, unlike color,

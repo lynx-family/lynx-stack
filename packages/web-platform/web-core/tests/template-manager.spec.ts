@@ -132,6 +132,54 @@ describe('Template Manager', () => {
     expect(decodedCustomSections).toEqual(sampleTasm.customSections);
   });
 
+  test('should wait for background chunks before resolving', async () => {
+    const templateUrl = 'http://example.com/template_background_ready';
+    const encoded = encode(sampleTasm);
+    let resolveBackgroundChunks!: () => void;
+    const backgroundChunksReady = new Promise<void>(resolve => {
+      resolveBackgroundChunks = resolve;
+    });
+    const lynxViewInstance = {
+      ...mockLynxViewInstance,
+      onBTSScriptsLoaded: rstest.fn(() => backgroundChunksReady),
+    } as unknown as LynxViewInstance;
+    const stream = new ReadableStream({
+      start(controller) {
+        controller.enqueue(encoded);
+        controller.close();
+      },
+    });
+    (globalThis.fetch as any).mockResolvedValue({
+      ok: true,
+      status: 200,
+      statusText: 'OK',
+      body: stream,
+    });
+
+    let settled = false;
+    const fetchPromise = templateManager.fetchBundle(
+      templateUrl,
+      Promise.resolve(lynxViewInstance),
+      false,
+      false,
+      false,
+    ).then(() => {
+      settled = true;
+    });
+    const startedAt = performance.now();
+    while (
+      !lynxViewInstance.onBTSScriptsLoaded.mock.calls.length
+      && performance.now() - startedAt < 5000
+    ) {
+      await new Promise(resolve => setTimeout(resolve, 10));
+    }
+
+    expect(lynxViewInstance.onBTSScriptsLoaded).toHaveBeenCalled();
+    expect(settled).toBe(false);
+    resolveBackgroundChunks();
+    await fetchPromise;
+  });
+
   test('should throw error for unsupported version', async () => {
     const templateUrl = 'http://example.com/template_unsupported_version';
     const encoded = encode(sampleTasm);
@@ -287,6 +335,7 @@ describe('Template Manager', () => {
 
     const overrideConfig = {
       cardType: 'override-card',
+      isExternalBundle: 'true',
     };
 
     await templateManager.fetchBundle(
@@ -304,6 +353,59 @@ describe('Template Manager', () => {
         cardType: 'override-card',
         foo: 'bar',
       }),
+    );
+    expect(mockLynxViewInstance.onBTSScriptsLoaded).toHaveBeenCalledWith(
+      templateUrl,
+      true,
+    );
+  });
+
+  test('should keep encoded external bundle mode over runtime fallback', async () => {
+    const templateUrl = 'http://example.com/template_encoded_mode_test';
+    const encoded = encode({
+      ...sampleTasm,
+      pageConfig: {
+        ...sampleTasm.pageConfig,
+        isExternalBundle: 'true',
+        isLazy: 'false',
+      },
+    });
+
+    const stream = new ReadableStream({
+      start(controller) {
+        controller.enqueue(encoded);
+        controller.close();
+      },
+    });
+    (globalThis.fetch as any).mockResolvedValue({
+      ok: true,
+      status: 200,
+      statusText: 'OK',
+      body: stream,
+    });
+
+    await templateManager.fetchBundle(
+      templateUrl,
+      Promise.resolve(mockLynxViewInstance),
+      false,
+      false,
+      false,
+      { isExternalBundle: 'false', isLazy: 'true' },
+    );
+
+    expect(mockLynxViewInstance.onPageConfigReady).toHaveBeenCalledWith(
+      expect.objectContaining({
+        isExternalBundle: 'true',
+        isLazy: 'false',
+      }),
+    );
+    expect(mockLynxViewInstance.onMTSScriptsLoaded).toHaveBeenCalledWith(
+      templateUrl,
+      false,
+    );
+    expect(mockLynxViewInstance.onBTSScriptsLoaded).toHaveBeenCalledWith(
+      templateUrl,
+      true,
     );
   });
 
@@ -540,6 +642,7 @@ describe('Template Manager', () => {
       false,
       false,
       false,
+      { isExternalBundle: 'true' },
     );
 
     // Verify config
@@ -558,6 +661,10 @@ describe('Template Manager', () => {
 
     // Verify script decoding (LepusCode)
     expect(mockLynxViewInstance.onMTSScriptsLoaded).toHaveBeenCalled();
+    expect(mockLynxViewInstance.onBTSScriptsLoaded).toHaveBeenCalledWith(
+      templateUrl,
+      true,
+    );
   });
 
   test('should detect lazy appType from lepusCode.root prefix for json template', async () => {

@@ -46,7 +46,7 @@ describe('WebEncodePlugin: lepusCode-undefined safety (FetchBundle)', () => {
     }
   });
 
-  test('encode hook handles encodeOptions.lepusCode === undefined without crashing', async () => {
+  test('encode hook maps FetchBundle sections to web runtime sections', async () => {
     const compiler = makeFakeCompiler();
     const compilation = makeFakeCompilation();
     new WebEncodePlugin().apply(compiler);
@@ -65,6 +65,7 @@ describe('WebEncodePlugin: lepusCode-undefined safety (FetchBundle)', () => {
           'main-thread': { content: '/* mts */' },
           'background': { content: '/* bts */' },
           'CSS': { encoding: 'CSS', content: { ruleList: [] } },
+          metadata: { content: { version: 1 } },
         },
         css: { cssMap: {} },
         cardType: 'react',
@@ -75,14 +76,18 @@ describe('WebEncodePlugin: lepusCode-undefined safety (FetchBundle)', () => {
 
     expect(result).toBeDefined();
     expect(Buffer.isBuffer(result?.buffer)).toBe(true);
-    // The emitted JSON should at minimum carry an empty lepusCode object,
-    // not crash on the undefined access we used to do.
-    const json = JSON.parse(result.buffer.toString()) as Record<
-      string,
-      unknown
-    >;
-    expect(json['lepusCode']).toEqual({});
-    expect(json['customSections']).toBeDefined();
+    const json = JSON.parse(result.buffer.toString()) as {
+      manifest: Record<string, string>;
+      lepusCode: Record<string, string>;
+      styleInfo: Record<string, unknown>;
+      customSections: Record<string, unknown>;
+    };
+    expect(json.manifest['/background']).toBe('/* bts */');
+    expect(json.lepusCode['main-thread']).toBe('/* mts */');
+    expect(json.styleInfo).toHaveProperty('0');
+    expect(json.customSections).toEqual({
+      metadata: { content: { version: 1 } },
+    });
   });
 
   test('legacy lepusCode-set path keeps the flattened shape', async () => {

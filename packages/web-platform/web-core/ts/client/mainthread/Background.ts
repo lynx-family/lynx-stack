@@ -30,6 +30,7 @@ import {
 } from '../endpoints.js';
 import type {
   Cloneable,
+  FetchBundleOptions,
   NapiModulesMap,
   NativeModulesMap,
   TimingEntry,
@@ -265,13 +266,13 @@ export class BackgroundThread implements AsyncDisposable {
     );
     this.#rpc.registerHandler(
       fetchExternalBundleEndpoint,
-      (url: string) => {
+      (url: string, options?: FetchBundleOptions) => {
         // `loadExternalBundle` decodes the bundle through the shared decode
         // worker; its `Manifest` section registers the bts chunks with the
         // worker (updateBTSChunk -> templateCache) and its `LepusCode` section
         // registers the mts chunks under `lepusCodeUrls`, so `lynx.loadScript`
         // can load either realm afterwards.
-        return this.#lynxViewInstance.loadExternalBundle(url);
+        return this.#lynxViewInstance.loadExternalBundle(url, options);
       },
     );
     registerReloadHandler(this.#rpc, this.#lynxViewInstance);

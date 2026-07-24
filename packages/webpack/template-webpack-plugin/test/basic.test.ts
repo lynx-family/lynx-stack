@@ -1,7 +1,8 @@
 // Copyright 2024 The Lynx Authors. All rights reserved.
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
-import { readFile } from 'node:fs/promises';
+import { mkdtemp, readFile, rm } from 'node:fs/promises';
+import { tmpdir } from 'node:os';
 import { dirname, join } from 'node:path';
 
 import { TraceMap, generatedPositionFor } from '@jridgewell/trace-mapping';
@@ -17,8 +18,14 @@ import type {
 import { SyncHook } from '@rspack/lite-tapable';
 import { describe, expect, test } from '@rstest/core';
 
+import { RuntimeGlobals } from '@lynx-js/webpack-runtime-globals';
+
 import { CssExtractRspackPlugin } from '../../css-extract-webpack-plugin/lib/index.js';
-import { LynxEncodePlugin, LynxTemplatePlugin } from '../src/index.js';
+import {
+  LynxEncodePlugin,
+  LynxTemplatePlugin,
+  WebEncodePlugin,
+} from '../src/index.js';
 import { getRequireModuleAsyncCachePolyfill } from '../src/polyfill/requireModuleAsync.js';
 
 // rspack types error/warning items as plain `Error`; diagnostics carry these.
@@ -67,6 +74,98 @@ globalThis.renderPage = function() {
 
     expect(stats.compilation.getAsset('main.js')).not.toBeUndefined();
     expect(stats.compilation.getAsset('main.lepus')).not.toBeUndefined();
+  });
+
+  test('skips an assetless group sharing a resolved lazy-bundle name', async () => {
+    const outputPath = await mkdtemp(join(tmpdir(), 'lynx-assetless-chunk-'));
+
+    try {
+      const stats = await runWebpack({
+        context: dirname(new URL(import.meta.url).pathname),
+        mode: 'development',
+        devtool: false,
+        entry: './fixtures/assetless-remote.js',
+        output: {
+          iife: false,
+          path: outputPath,
+        },
+        plugins: [
+          new rspack.container.ModuleFederationPluginV1({
+            name: 'host',
+            remotes: {
+              catalog: 'catalog@https://example.com/remoteEntry.js',
+            },
+          }),
+          function(this: Compiler) {
+            this.hooks.thisCompilation.tap('test', (compilation) => {
+              LynxTemplatePlugin.getLynxTemplatePluginHooks(compilation)
+                .asyncChunkName.tap('test', () => 'shared-details');
+              compilation.emitAsset(
+                'main.lepus',
+                new this.webpack.sources.RawSource(
+                  'globalThis.renderPage = function() {}',
+                ),
+                { entry: 'main' },
+              );
+              compilation.hooks.runtimeRequirementInTree.for(
+                this.webpack.RuntimeGlobals.ensureChunkHandlers,
+              ).tap('test', (_, set) => {
+                set.add(RuntimeGlobals.lynxAsyncChunkIds);
+              });
+            });
+          },
+          new LynxTemplatePlugin({
+            ...LynxTemplatePlugin.defaultOptions,
+            experimental_isLazyBundle: true,
+          }),
+          new WebEncodePlugin(),
+        ],
+      });
+
+      expect([...stats.compilation.errors]).toEqual([]);
+      expect(stats.compilation.children.flatMap(i => [...i.errors])).toEqual(
+        [],
+      );
+      const assetlessChunkGroups = stats.compilation.chunkGroups.filter(
+        chunkGroup =>
+          !chunkGroup.isInitial() && chunkGroup.getFiles().length === 0,
+      );
+      expect(assetlessChunkGroups).not.toHaveLength(0);
+      expect(assetlessChunkGroups.map(chunkGroup => chunkGroup.name)).toContain(
+        'catalog/Details',
+      );
+      const emittingChunkGroups = stats.compilation.chunkGroups.filter(
+        chunkGroup =>
+          !chunkGroup.isInitial() && chunkGroup.getFiles().length > 0,
+      );
+      expect(emittingChunkGroups.map(chunkGroup => chunkGroup.name)).toContain(
+        'local-details',
+      );
+      expect(
+        stats.compilation.getAssets().map(asset => asset.name),
+      ).toEqual(
+        expect.arrayContaining([expect.stringContaining('shared-details')]),
+      );
+      const runtimeSource = stats.compilation.getAsset('main.js')?.source
+        .source()
+        .toString() ?? '';
+      const idsBlock =
+        (/\/\/ lynx async chunks ids\n[\s\S]*?(?=\n\/\/|$)/.exec(runtimeSource))
+          ?.[0] ?? '';
+      expect(idsBlock).toContain('lazy-bundle/shared-details.');
+      for (const chunkGroup of emittingChunkGroups) {
+        for (const chunk of chunkGroup.chunks) {
+          expect(idsBlock).toContain(`${JSON.stringify(chunk.id)}:`);
+        }
+      }
+      for (const chunkGroup of assetlessChunkGroups) {
+        for (const chunk of chunkGroup.chunks) {
+          expect(idsBlock).not.toContain(`${JSON.stringify(chunk.id)}:`);
+        }
+      }
+    } finally {
+      await rm(outputPath, { recursive: true, force: true });
+    }
   });
 
   test('emits css diagnostics during beforeEmit with current css chunk source maps', async () => {

@@ -7,6 +7,46 @@ import type {
   BTSChunkEntry,
   BundleInitReturnObj,
 } from '../../../types/index.js';
+import { getExecutionSourceURL } from '../../executionSourceURL.js';
+
+function createExecutionGlobal(sourceURL: string): typeof globalThis {
+  // Bundled runtimes use the worker's location to resolve `publicPath: 'auto'`.
+  // Keep all other global operations on the real worker global.
+  const sourceLocation = new URL(sourceURL, globalThis.location.href);
+  const callableCache = new WeakMap<Function, Function>();
+  let executionGlobal: typeof globalThis;
+  executionGlobal = new Proxy(globalThis, {
+    get(target, property, receiver) {
+      if (property === 'location') {
+        return sourceLocation;
+      }
+      if (property === 'globalThis' || property === 'self') {
+        return receiver;
+      }
+      const value = Reflect.get(target, property, target);
+      if (typeof value !== 'function') {
+        return value;
+      }
+
+      let callable = callableCache.get(value);
+      if (callable === undefined) {
+        const wrapped = new Proxy(value, {
+          apply(targetFunction, thisArgument, argumentsList) {
+            return Reflect.apply(
+              targetFunction,
+              thisArgument === executionGlobal ? target : thisArgument,
+              argumentsList,
+            );
+          },
+        });
+        callableCache.set(value, wrapped);
+        callable = wrapped;
+      }
+      return callable;
+    },
+  });
+  return executionGlobal;
+}
 
 export function createChunkLoading(
   entryTemplateUrl: string,
@@ -15,17 +55,33 @@ export function createChunkLoading(
   readScript: NativeApp['readScript'];
   loadScript: NativeApp['loadScript'];
   loadScriptAsync: NativeApp['loadScriptAsync'];
+  markExternalBundle: (url: string) => void;
   templateCache: Map<string, Record<string, string>>;
 } {
   const templateCache = new Map<string, Record<string, string>>();
+  const externalBundles = new Set<string>();
+  const resolveTemplateURL = (templateURL?: string) =>
+    !templateURL || templateURL === '__Card__'
+      ? entryTemplateUrl
+      : templateURL;
+  const resolveExecutionSourceURL = (
+    sourceURL: string,
+    templateURL?: string,
+  ) => {
+    const resolvedTemplateURL = resolveTemplateURL(templateURL);
+    if (externalBundles.has(resolvedTemplateURL)) {
+      return resolvedTemplateURL;
+    }
+    return templateCache.get(resolvedTemplateURL)?.[`/${sourceURL}`]
+      ? getExecutionSourceURL(resolvedTemplateURL, sourceURL)
+      : sourceURL;
+  };
   const readScript: NativeApp['readScript'] = (
     sourceURL,
     templateUrl,
   ) => {
-    if (!templateUrl || templateUrl === '__Card__') {
-      templateUrl = entryTemplateUrl;
-    }
-    const finalSourceURL = templateCache.get(templateUrl!)
+    const resolvedTemplateURL = resolveTemplateURL(templateUrl);
+    const finalSourceURL = templateCache.get(resolvedTemplateURL)
       ?.[`/${sourceURL}`] ?? sourceURL;
     const xhr = new XMLHttpRequest();
     xhr.open('GET', finalSourceURL, false);
@@ -40,10 +96,8 @@ export function createChunkLoading(
     sourceURL: string,
     templateUrl: string,
   ) => Promise<string> = async (sourceURL, templateUrl) => {
-    if (!templateUrl || templateUrl === '__Card__') {
-      templateUrl = entryTemplateUrl;
-    }
-    const finalSourceURL = templateCache.get(templateUrl!)
+    const resolvedTemplateURL = resolveTemplateURL(templateUrl);
+    const finalSourceURL = templateCache.get(resolvedTemplateURL)
       ?.[`/${sourceURL}`] ?? sourceURL;
     return new Promise((resolve, reject) => {
       fetch(finalSourceURL).then((response) => {
@@ -61,6 +115,7 @@ export function createChunkLoading(
   };
   const createBundleInitReturnObj = (
     jsContent: string,
+    executionSourceURL: string,
   ): BundleInitReturnObj => {
     const paramNames: string[] = [
       'postMessage',
@@ -101,6 +156,7 @@ export function createChunkLoading(
       // Lynx API
       'requestAnimationFrame',
       'cancelAnimationFrame',
+      'globalThis',
     ];
     const foo = new Function(
       ...paramNames,
@@ -148,6 +204,7 @@ export function createChunkLoading(
           tt.global,
           tt.requestAnimationFrame,
           tt.cancelAnimationFrame,
+          createExecutionGlobal(executionSourceURL),
         ];
         (foo as Function).apply(undefined, args);
         return module.exports;
@@ -160,6 +217,7 @@ export function createChunkLoading(
       const jsContent = readScript(sourceURL, templateUrl);
       return createBundleInitReturnObj(
         jsContent,
+        resolveExecutionSourceURL(sourceURL, templateUrl),
       );
     },
     loadScriptAsync: async (sourceURL, callback, templateUrl: string) => {
@@ -168,10 +226,12 @@ export function createChunkLoading(
           null,
           createBundleInitReturnObj(
             jsContent,
+            resolveExecutionSourceURL(sourceURL, templateUrl),
           ),
         );
       });
     },
+    markExternalBundle: url => externalBundles.add(url),
     templateCache,
   };
 }

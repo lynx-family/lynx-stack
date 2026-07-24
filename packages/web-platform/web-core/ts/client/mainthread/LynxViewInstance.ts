@@ -6,6 +6,7 @@
 import type {
   Cloneable,
   ExternalBundleResponse,
+  FetchBundleOptions,
   InitI18nResources,
   InvokeUIMethodPAPI,
   JSRealm,
@@ -18,6 +19,7 @@ import {
   loadUnknownElementEventName,
   systemInfoBase,
 } from '../../constants.js';
+import { getExecutionSourceURL } from '../executionSourceURL.js';
 import { BackgroundThread } from './Background.js';
 import { BoundingClientRectService } from './BoundingClientRectService.js';
 import { I18nManager } from './I18n.js';
@@ -69,10 +71,12 @@ export class LynxViewInstance implements AsyncDisposable {
   readonly exposureServices: ExposureServices;
   readonly webElementsLoadingPromises: Promise<void>[] = [];
 
-  // A `.web.bundle` url is only ever loaded one way — as a lazy component
-  // (`queryComponent`) or as an external bundle (`loadExternalBundle`), never
-  // both — so both share a single per-url promise cache.
-  #bundleLoadCache: Map<string, Promise<unknown>> = new Map();
+  #lazyBundleLoadCache = new Map<string, Promise<unknown>>();
+  #externalBundleLoadCache = new Map<
+    string,
+    Promise<ExternalBundleResponse>
+  >();
+  #bundleDecodeQueue = new Map<string, Promise<void>>();
   #pageConfig?: PageConfig;
   #nativeModulesMap: NativeModulesMap;
   #napiModulesMap: NapiModulesMap;
@@ -190,6 +194,7 @@ export class LynxViewInstance implements AsyncDisposable {
     if (!isLazy && urlMap && urlMap['root']) {
       await this.mtsRealm.loadScript(
         urlMap['root'],
+        getExecutionSourceURL(currentUrl, 'root'),
       );
       this.onMTSScriptsExecuted();
     }
@@ -222,7 +227,7 @@ export class LynxViewInstance implements AsyncDisposable {
     this.mainThreadGlobalThis.__FlushElementTree();
   }
 
-  async onBTSScriptsLoaded(url: string) {
+  async onBTSScriptsLoaded(url: string, isExternalBundle = false) {
     const btsUrls = templateManager.getBundle(url)
       ?.backgroundCode as Record<
         string,
@@ -231,6 +236,7 @@ export class LynxViewInstance implements AsyncDisposable {
     await this.backgroundThread.updateBTSChunk(
       url,
       btsUrls,
+      isExternalBundle,
     );
     this.backgroundThread.startBTS();
   }
@@ -251,15 +257,12 @@ export class LynxViewInstance implements AsyncDisposable {
   }
 
   queryComponent(url: string): Promise<unknown> {
-    if (this.#bundleLoadCache.has(url)) {
-      return this.#bundleLoadCache.get(url)!;
+    const cached = this.#lazyBundleLoadCache.get(url);
+    if (cached) {
+      return cached;
     }
-    const promise = templateManager.fetchBundle(
+    const promise = this.#decodeBundle(
       url,
-      Promise.resolve(this),
-      this.transformVW,
-      this.transformVH,
-      this.transformREM,
       {
         enableCSSSelector: this.#pageConfig!['enableCSSSelector'],
       },
@@ -272,6 +275,7 @@ export class LynxViewInstance implements AsyncDisposable {
         }
         let lepusRootChunkExport = await this.mtsRealm.loadScript(
           rootUrl,
+          getExecutionSourceURL(url, 'root'),
         );
         lepusRootChunkExport = this.mainThreadGlobalThis.processEvalResult?.(
           lepusRootChunkExport,
@@ -279,48 +283,88 @@ export class LynxViewInstance implements AsyncDisposable {
         ) ?? lepusRootChunkExport;
         return lepusRootChunkExport;
       });
-    this.#bundleLoadCache.set(url, promise);
-    return promise;
+    const retryable = promise.catch(error => {
+      if (this.#lazyBundleLoadCache.get(url) === retryable) {
+        this.#lazyBundleLoadCache.delete(url);
+      }
+      throw error;
+    });
+    this.#lazyBundleLoadCache.set(url, retryable);
+    return retryable;
   }
 
   /**
    * Fetch + decode + cache an external `.lynx.bundle` for `lynx.fetchBundle`.
    * Reuses the same machinery as {@link queryComponent} — the shared decode
-   * worker, the bundle cache, and `onStyleInfoReady`, which applies the bundle's
+   * worker and `onStyleInfoReady`, which applies the bundle's
    * pre-processed style section via the wasm style engine — but does not load a
    * lepus root chunk. Resolves to a response object (never rejects) so the
    * externals plugin can branch on `code`.
    */
-  loadExternalBundle(url: string): Promise<ExternalBundleResponse> {
-    if (this.#bundleLoadCache.has(url)) {
-      return this.#bundleLoadCache.get(url)! as Promise<ExternalBundleResponse>;
+  loadExternalBundle(
+    url: string,
+    options?: FetchBundleOptions,
+  ): Promise<ExternalBundleResponse> {
+    const isLazyBundle = options?.isLazyBundle === true;
+    const cacheKey = `${isLazyBundle ? 'lazy' : 'external'}:${url}`;
+    const cached = this.#externalBundleLoadCache.get(cacheKey);
+    if (cached) {
+      return cached;
     }
-    const promise = templateManager.fetchBundle(
+    const promise = this.#decodeBundle(
       url,
-      Promise.resolve(this),
-      this.transformVW,
-      this.transformVH,
-      this.transformREM,
       {
         enableCSSSelector: this.#pageConfig!['enableCSSSelector'],
-        // An external bundle ships global styles (they apply to the consumer's
-        // elements), so decode its StyleInfo unscoped rather than scoping it to
-        // the bundle url the way a lazy component's styles are scoped.
-        isLazy: 'false',
+        // External containers ship global styles; lazy components retain their
+        // URL scope and callable main-thread wrapper.
+        isLazy: isLazyBundle ? 'true' : 'false',
         // Mark the bundle external so the decode worker wraps its mts
         // (`lepusCode`) chunks with a CommonJS `module`/`exports` env.
-        isExternalBundle: 'true',
+        isExternalBundle: isLazyBundle ? 'false' : 'true',
       },
     ).then(
       () => ({ url, code: 0, errorMsg: '' }),
-      (error) => ({
-        url,
-        code: -1,
-        errorMsg: (error as Error)?.message ?? String(error),
-      }),
+      (error) => {
+        this.#externalBundleLoadCache.delete(cacheKey);
+        return {
+          url,
+          code: -1,
+          errorMsg: (error as Error)?.message ?? String(error),
+        };
+      },
     );
-    this.#bundleLoadCache.set(url, promise);
+    this.#externalBundleLoadCache.set(cacheKey, promise);
     return promise;
+  }
+
+  #decodeBundle(
+    url: string,
+    overrideConfig: Record<string, string>,
+  ): Promise<void> {
+    const previous = this.#bundleDecodeQueue.get(url);
+    const promise = (previous?.catch(() => undefined) ?? Promise.resolve())
+      .then(() =>
+        templateManager.fetchBundle(
+          url,
+          Promise.resolve(this),
+          this.transformVW,
+          this.transformVH,
+          this.transformREM,
+          overrideConfig,
+        )
+      );
+    this.#bundleDecodeQueue.set(url, promise);
+    void promise.then(
+      () => this.#removeBundleDecode(url, promise),
+      () => this.#removeBundleDecode(url, promise),
+    );
+    return promise;
+  }
+
+  #removeBundleDecode(url: string, promise: Promise<void>): void {
+    if (this.#bundleDecodeQueue.get(url) === promise) {
+      this.#bundleDecodeQueue.delete(url);
+    }
   }
 
   async updateData(

@@ -12,7 +12,7 @@ function prepareLazyBundleMTS(payload: { url: string; host?: string }): void {
   if (cache.has(url)) return;
   let handler;
   try {
-    handler = lynx.fetchBundle(url, {});
+    handler = lynx.fetchBundle(url, { isLazyBundle: true });
   } catch {
     // fetchBundle threw — the bundle never loaded. Leave `url` out of the
     // cache so a later prepare for the same url can retry.
@@ -55,8 +55,13 @@ function prepareLazyBundleMTS(payload: { url: string; host?: string }): void {
     if (typeof processEvalResult === 'function') {
       processEvalResult(() => loaded, url);
     }
-    const styleSheet = __LoadStyleSheet(SECTION_CSS, response.url);
-    if (styleSheet !== null) __AdoptStyleSheet(styleSheet);
+    if (
+      typeof __LoadStyleSheet === 'function'
+      && typeof __AdoptStyleSheet === 'function'
+    ) {
+      const styleSheet = __LoadStyleSheet(SECTION_CSS, response.url);
+      if (styleSheet !== null) __AdoptStyleSheet(styleSheet);
+    }
   });
 }
 

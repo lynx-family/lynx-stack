@@ -5,9 +5,11 @@
  */
 
 import type {
+  FetchBundleOptions,
   MainThreadGlobalAPIs,
   MainThreadLynx,
 } from '../../types/index.js';
+import { getExecutionSourceURL } from '../executionSourceURL.js';
 import { templateManager } from './TemplateManager.js';
 import type { LynxViewInstance } from './LynxViewInstance.js';
 import { createMainThreadLynxPerformance } from './createMainThreadLynxPerformance.js';
@@ -51,8 +53,11 @@ function createMainThreadLynx(
     clearTimeout: clearTimeoutBrowserImpl,
     setInterval: setIntervalBrowserImpl,
     clearInterval: clearIntervalBrowserImpl,
-    fetchBundle(url: string) {
-      return lynxViewInstance.loadExternalBundle(url);
+    fetchBundle(url: string, options?: FetchBundleOptions) {
+      return lynxViewInstance.loadExternalBundle(url, options);
+    },
+    loadLazyBundle(source: string) {
+      return lynxViewInstance.queryComponent(source);
     },
     loadScript(sectionPath: string, options: { bundleName: string }) {
       // An external bundle's mts chunk rides the `lepusCode` section: the decode
@@ -66,7 +71,10 @@ function createMainThreadLynx(
           `lynx.loadScript: section "${sectionPath}" not found in bundle ${options.bundleName}`,
         );
       }
-      return lynxViewInstance.mtsRealm!.loadScriptSync(blobUrl);
+      return lynxViewInstance.mtsRealm!.loadScriptSync(
+        blobUrl,
+        options.bundleName,
+      );
     },
   };
 }
@@ -96,9 +104,15 @@ export function createMainThreadGlobalAPIs(
         if (!entryUrl || entryUrl === '__Card__') {
           entryUrl = lynxViewInstance.templateUrl;
         }
-        path = lynxViewInstance.lepusCodeUrls.get(entryUrl)
-          ?.[path] ?? path;
-        lynxViewInstance.mtsRealm!.loadScriptSync(path);
+        const chunkURL = lynxViewInstance.lepusCodeUrls.get(entryUrl)?.[path];
+        if (chunkURL === undefined) {
+          lynxViewInstance.mtsRealm!.loadScriptSync(path);
+        } else {
+          lynxViewInstance.mtsRealm!.loadScriptSync(
+            chunkURL,
+            getExecutionSourceURL(entryUrl, path),
+          );
+        }
         return true;
       } catch (e) {
         console.error(`failed to load lepus chunk ${path}`, e);

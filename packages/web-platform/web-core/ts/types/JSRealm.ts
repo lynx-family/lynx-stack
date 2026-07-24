@@ -6,6 +6,6 @@
 
 export type JSRealm = {
   globalWindow: typeof globalThis;
-  loadScript: (url: string) => Promise<unknown>;
-  loadScriptSync: (url: string) => unknown;
+  loadScript: (url: string, sourceURL?: string) => Promise<unknown>;
+  loadScriptSync: (url: string, sourceURL?: string) => unknown;
 };

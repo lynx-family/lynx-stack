@@ -10,6 +10,7 @@ import type {
   InvokeCallbackRes,
   ElementAnimationOptions,
   ExternalBundleResponse,
+  FetchBundleOptions,
   ContextCrossThreadEvent,
   UpdateDataOptions,
   TimingEntry,
@@ -227,12 +228,12 @@ export const queryComponentEndpoint = createRpcEndpoint<
  * so the bts `lynx.loadScript` can load them through the shared chunk loader.
  */
 export const fetchExternalBundleEndpoint = createRpcEndpoint<
-  [url: string],
+  [url: string, options?: FetchBundleOptions],
   ExternalBundleResponse
 >('fetchExternalBundle', false, true);
 
 export const updateBTSChunkEndpoint = createRpcEndpoint<
-  [/** url */ string, Record<string, string>],
+  [/** url */ string, Record<string, string>, isExternalBundle: boolean],
   void
 >('updateBTSChunkEndpoint', false, true);
 

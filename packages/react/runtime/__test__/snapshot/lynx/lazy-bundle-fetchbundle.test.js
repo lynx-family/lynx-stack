@@ -17,6 +17,13 @@ afterEach(() => {
   vi.unstubAllGlobals();
 });
 
+test('the public loader module is importable outside a Lynx runtime', async () => {
+  vi.stubGlobal('lynx', undefined);
+  await expect(
+    import('../../../src/core/lynx/lazy-bundle'),
+  ).resolves.toMatchObject({ loadLazyBundle: expect.any(Function) });
+});
+
 describe('loadLazyBundle (FetchBundle) — main thread sync', () => {
   let fetchBundle;
   let waitMock;
@@ -52,7 +59,9 @@ describe('loadLazyBundle (FetchBundle) — main thread sync', () => {
 
     const promise = loadLazyBundle('foo', 'sync');
 
-    expect(fetchBundle).toHaveBeenCalledWith('foo', {});
+    expect(fetchBundle).toHaveBeenCalledWith('foo', {
+      isLazyBundle: true,
+    });
     expect(waitMock).toHaveBeenCalledWith(TIMEOUT_SECONDS);
     expect(loadScript).toHaveBeenCalledWith('main-thread', {
       bundleName: 'cached-url',
@@ -79,7 +88,9 @@ describe('loadLazyBundle (FetchBundle) — main thread sync', () => {
 
     // The main thread fires fetchBundle (fire-and-forget) to warm the native
     // cache so the background async path waits less...
-    expect(fetchBundle).toHaveBeenCalledWith('foo', {});
+    expect(fetchBundle).toHaveBeenCalledWith('foo', {
+      isLazyBundle: true,
+    });
     // ...but does no rendering work here and never resolves.
     expect(loadScript).not.toHaveBeenCalled();
     promise.then(
@@ -101,7 +112,9 @@ describe('loadLazyBundle (FetchBundle) — main thread sync', () => {
     const promise = loadLazyBundle('foo', 'async');
 
     // The warm-up fetch threw, but the error is swallowed and nothing renders.
-    expect(fetchBundle).toHaveBeenCalledWith('foo', {});
+    expect(fetchBundle).toHaveBeenCalledWith('foo', {
+      isLazyBundle: true,
+    });
     expect(loadScript).not.toHaveBeenCalled();
     promise.then(
       () => expect.fail('should not resolve'),
@@ -183,6 +196,24 @@ describe('loadLazyBundle (FetchBundle) — main thread sync', () => {
     });
     expect(resolved).toEqual({ default: 'C' });
   });
+
+  test('missing stylesheet APIs → chunk still resolves', async () => {
+    waitMock.mockReturnValueOnce({ code: 0, url: 'x' });
+    loadScript.mockReturnValueOnce(() => ({ default: 'C' }));
+    vi.stubGlobal('__LoadStyleSheet', undefined);
+    vi.stubGlobal('__AdoptStyleSheet', undefined);
+
+    const { loadLazyBundle } = await import(
+      '../../../src/core/lynx/lazy-bundle'
+    );
+
+    const promise = loadLazyBundle('foo', 'sync');
+    let resolved;
+    promise.then((value) => {
+      resolved = value;
+    });
+    expect(resolved).toEqual({ default: 'C' });
+  });
 });
 
 describe('loadLazyBundle (FetchBundle) — background sync', () => {
@@ -216,7 +247,9 @@ describe('loadLazyBundle (FetchBundle) — background sync', () => {
 
     const promise = loadLazyBundle('foo', 'sync');
 
-    expect(fetchBundle).toHaveBeenCalledWith('foo', {});
+    expect(fetchBundle).toHaveBeenCalledWith('foo', {
+      isLazyBundle: true,
+    });
     expect(loadScript).toHaveBeenCalledWith('background', { bundleName: 'u' });
     // A sync bundle loaded on the background thread still triggers the
     // main-thread prepare (createSnapshot side effect) so a non-first-screen
@@ -233,6 +266,22 @@ describe('loadLazyBundle (FetchBundle) — background sync', () => {
       thenCalled = true;
     });
     expect(thenCalled).toBe(true);
+  });
+
+  test('absent realm globals default to the JavaScript background path', async () => {
+    delete globalThis.__MAIN_THREAD__;
+    delete globalThis.__JS__;
+    waitMock.mockReturnValueOnce({ code: 0, url: 'u' });
+    loadScript.mockReturnValueOnce({ default: 'BG' });
+
+    const { loadLazyBundle } = await import(
+      '../../../src/core/lynx/lazy-bundle'
+    );
+
+    await expect(loadLazyBundle('web-background', 'sync')).resolves.toEqual({
+      default: 'BG',
+    });
+    expect(loadScript).toHaveBeenCalledWith('background', { bundleName: 'u' });
   });
 
   test('a repeat sync load is served from the success cache (no re-fetch/prepare)', async () => {
