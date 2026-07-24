@@ -97,6 +97,40 @@ Turn on the `server` feature to serve UI Judge over HTTP:
 PORT=8080 cargo run -p ui_judge --features server --bin ui-judge-server
 ```
 
+Build the release server for Linux AMD64 from any directory with:
+
+```bash
+packages/genui/ui-judge/build.sh
+```
+
+The script writes a deployable bundle to `dist/linux-amd64`:
+
+```text
+dist/linux-amd64/
+├── ui-judge-server
+├── lynx_core.js
+├── start.sh
+└── lib/
+    └── libLynx_clay.so
+```
+
+Set `CARGO_TARGET_DIR` to change the intermediate Cargo output directory or
+`UI_JUDGE_OUTPUT_DIR` to change the final bundle directory. Cross-compiling
+from a different host requires the Rust standard library and a linker for the
+`x86_64-unknown-linux-gnu` target.
+
+Start the packaged server with:
+
+```bash
+PORT=8080 packages/genui/ui-judge/dist/linux-amd64/start.sh
+```
+
+`start.sh` resolves the bundle directory independently of the current working
+directory, configures `LYNX_LIB_PATH`, `LYNX_SDK_DIR`, and `LD_LIBRARY_PATH`,
+then starts the server. Model configuration and credentials continue to come
+from the caller's environment. Linux hosts must also provide the
+`libepoxy.so.0` system dependency.
+
 `PORT` defaults to `8080` and must be between `1` and `65535`. The process
 listens on both `0.0.0.0:{PORT}` and `[::]:{PORT}`. Use `GET /health` for a
 readiness check and `POST /judge` to evaluate a page.
