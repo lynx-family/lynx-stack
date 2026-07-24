@@ -30,16 +30,18 @@ export function MainThreadScripts() {
     void runOnBackground(setRoundTrip)(`tapped ${count}x (from MTS)`);
   }, [tapCountMTRef]);
 
+  // A main-thread function invoked from the background thread.
+  const doubleOnMainThread = useCallback((value: number): number => {
+    'main thread';
+    return value * 2;
+  }, []);
+
   // Background handler that hops to the main thread and back.
   const onTapRoundTrip = useCallback(() => {
-    const readOnMainThread = (value: number) => {
-      'main thread';
-      return value * 2;
-    };
-    void runOnMainThread(readOnMainThread)(21).then((doubled: number) => {
-      setRoundTrip(`main thread returned ${doubled}`);
+    void runOnMainThread(doubleOnMainThread)(21).then((doubled) => {
+      setRoundTrip(`main thread returned ${String(doubled)}`);
     });
-  }, []);
+  }, [doubleOnMainThread]);
 
   return (
     <view className='card' style={{ marginTop: '16px' }}>
