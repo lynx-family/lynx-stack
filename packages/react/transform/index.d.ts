@@ -703,6 +703,8 @@ export interface TransformNodiffOptions {
   inject?: boolean | InjectVisitorConfig
   /** @internal */
   collectMainThreadDefines?: boolean
+  /** @internal */
+  mainThreadDefinesOnly?: boolean
   inputSourceMap?: string
 }
 export interface TransformNodiffOutput {

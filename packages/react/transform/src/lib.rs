@@ -43,8 +43,9 @@ use swc_core::{
       optimization::{simplifier, simplify},
       react, typescript,
     },
-    visit::visit_mut_pass,
+    visit::{visit_mut_pass, Visit, VisitWith},
   },
+  quote,
 };
 
 // currently `use xxx as yyy` is not supported by napi-rs
@@ -227,6 +228,12 @@ pub struct TransformNodiffOptions {
   /// output. A later build regenerates a defines-only main-thread module from
   /// the registrations that survive tree-shaking.
   pub collect_main_thread_defines: Option<bool>,
+  /// @internal
+  /// When true, the module is reduced to its imports plus the collected
+  /// snapshot + worklet registrations (business logic is stripped). Used for
+  /// the main-thread layer under `enableMTSRendering: false`, where the main
+  /// thread renders nothing and only needs the registrations.
+  pub main_thread_defines_only: Option<bool>,
   pub input_source_map: Option<String>,
 }
 
@@ -255,6 +262,7 @@ impl Default for TransformNodiffOptions {
       dynamic_import: Some(Either::B(Default::default())),
       inject: Some(Either::A(false)),
       collect_main_thread_defines: None,
+      main_thread_defines_only: None,
       input_source_map: None,
     }
   }
@@ -288,6 +296,47 @@ pub struct TransformNodiffOutput {
   /// `collectMainThreadDefines` is set. `None` when collection is disabled.
   #[napi(js_name = "mainThreadDefines")]
   pub main_thread_defines: Option<String>,
+}
+
+fn side_effect_import(src: Box<Str>, with: Option<Box<ObjectLit>>) -> ModuleItem {
+  ModuleItem::ModuleDecl(ModuleDecl::Import(ImportDecl {
+    span: DUMMY_SP,
+    specifiers: vec![],
+    src,
+    type_only: false,
+    with,
+    phase: ImportPhase::Evaluation,
+  }))
+}
+
+struct DynamicImportCollector {
+  imports: Vec<CallExpr>,
+}
+
+impl Visit for DynamicImportCollector {
+  fn visit_call_expr(&mut self, n: &CallExpr) {
+    if matches!(n.callee, Callee::Import(_)) {
+      if let Some(arg) = n.args.first() {
+        if matches!(&*arg.expr, Expr::Lit(Lit::Str(_))) {
+          self.imports.push(n.clone());
+        }
+      }
+    }
+    n.visit_children_with(self);
+  }
+}
+
+// Keeps a dynamic `import()` alive for webpack's async-chunk (lazy bundle)
+// creation without executing it: the main thread renders nothing in
+// `enableMTSRendering: false`, so the lazy bundle must keep loading on demand
+// and register its snapshots from its own main-thread section. Converting the
+// import to a static one would instead inline that section into the main
+// chunk.
+fn keep_dynamic_import(call: CallExpr) -> ModuleItem {
+  ModuleItem::Stmt(quote!(
+    "globalThis.__lynxKeepLazyBundle && $call;" as Stmt,
+    call: Expr = Expr::Call(call),
+  ))
 }
 
 type ElementTemplateCollector = Rc<RefCell<Vec<CoreElementTemplateAsset>>>;
@@ -397,12 +446,20 @@ fn transform_react_lynx_inner(
     let top_level_mark = Mark::new();
     let top_retain = WEBPACK_VARS.iter().map(|&s| s.into()).collect::<Vec<_>>();
 
+    let main_thread_defines_only = options.main_thread_defines_only.unwrap_or(false);
+    let mut dynamic_imports: Vec<CallExpr> = vec![];
+    if main_thread_defines_only {
+      let mut collector = DynamicImportCollector { imports: vec![] };
+      program.visit_with(&mut collector);
+      dynamic_imports = collector.imports;
+    }
+
     let simplify_pass_1 = Optional::new(
       simplifier(
         top_level_mark,
         simplify::Config {
           dce: simplify::dce::Config {
-            preserve_imports_with_side_effects: false,
+            preserve_imports_with_side_effects: main_thread_defines_only,
             top_retain: top_retain.clone(),
             ..Default::default()
           },
@@ -554,12 +611,12 @@ fn transform_react_lynx_inner(
     );
 
     // Shared by the snapshot + worklet plugins: when set, each emitted
-    // registration is also cloned here so a later build can regenerate a
-    // defines-only main-thread module. `None` disables collection (no cost).
-    let main_thread_defs_collector: Option<Rc<RefCell<Vec<ModuleItem>>>> = options
-      .collect_main_thread_defines
-      .unwrap_or(false)
-      .then(|| Rc::new(RefCell::new(vec![])));
+    // registration is also cloned here. `collectMainThreadDefines` prints them
+    // into the `mainThreadDefines` output; `mainThreadDefinesOnly` rebuilds the
+    // module from them. `None` disables collection (no cost).
+    let main_thread_defs_collector: Option<Rc<RefCell<Vec<ModuleItem>>>> =
+      (options.collect_main_thread_defines.unwrap_or(false) || main_thread_defines_only)
+        .then(|| Rc::new(RefCell::new(vec![])));
 
     let snapshot_plugin = if use_snapshot_plugin {
       let transformer = SnapshotJSXTransformer::new(
@@ -646,7 +703,7 @@ fn transform_react_lynx_inner(
       top_level_mark,
       simplify::Config {
         dce: simplify::dce::Config {
-          preserve_imports_with_side_effects: false,
+          preserve_imports_with_side_effects: main_thread_defines_only,
           top_retain: top_retain.clone(),
           ..Default::default()
         },
@@ -796,9 +853,91 @@ fn transform_react_lynx_inner(
       ),
     );
 
-    let program = helpers::HELPERS.set(&helpers::Helpers::new(true), || {
+    let mut program = helpers::HELPERS.set(&helpers::Helpers::new(true), || {
       HANDLER.set(&handler, || program.apply(pass))
     });
+
+    if main_thread_defines_only {
+      // The collected defines are self-contained (they carry their own runtime
+      // imports) but were captured mid-pass, so hygiene them on their own to
+      // fix their internal locals (e.g. a creator's `el`/`el1`). Doing it here
+      // — rather than over the whole rebuilt module — avoids renaming the kept
+      // user imports that worklet bodies reference (e.g. `runOnBackground`).
+      let define_items: Vec<ModuleItem> = main_thread_defs_collector
+        .as_ref()
+        .map(|collector| collector.borrow_mut().drain(..).collect())
+        .unwrap_or_default();
+      let define_body = match Program::Module(Module {
+        span: DUMMY_SP,
+        body: define_items,
+        shebang: None,
+      })
+      .apply(hygiene_with_config(Config {
+        top_level_mark,
+        ..Default::default()
+      })) {
+        Program::Module(m) => m.body,
+        _ => vec![],
+      };
+
+      if let Program::Module(module) = &program {
+        let runtime_pkg = snapshot_plugin_config.runtime_pkg.as_str();
+        let mut seen_srcs: std::collections::HashSet<swc_core::atoms::Wtf8Atom> =
+          Default::default();
+        let mut items: Vec<ModuleItem> = vec![];
+        for item in &module.body {
+          match item {
+            // Emit two imports per source: a side-effect import so the module
+            // is always evaluated (its snapshot registrations run — the
+            // `sideEffects: true` main-thread rule keeps it even when nothing
+            // is used), and the original import so its bindings stay available
+            // for worklet bodies and snapshot creators that reference them
+            // (e.g. `runOnBackground`, and the `ReactLynx` runtime namespace
+            // the collected registrations call into). Unused bindings are
+            // tree-shaken.
+            ModuleItem::ModuleDecl(ModuleDecl::Import(import)) if !import.type_only => {
+              let is_runtime = import.src.value.as_str() == Some(runtime_pkg);
+              if seen_srcs.insert(import.src.value.clone()) {
+                if !is_runtime {
+                  items.push(side_effect_import(import.src.clone(), import.with.clone()));
+                }
+                if !import.specifiers.is_empty() {
+                  items.push(item.clone());
+                }
+              }
+            }
+            ModuleItem::ModuleDecl(ModuleDecl::ExportNamed(export)) => {
+              if let Some(src) = &export.src {
+                if seen_srcs.insert(src.value.clone()) {
+                  items.push(side_effect_import(src.clone(), export.with.clone()));
+                }
+              }
+            }
+            ModuleItem::ModuleDecl(ModuleDecl::ExportAll(export)) => {
+              if seen_srcs.insert(export.src.value.clone()) {
+                items.push(side_effect_import(export.src.clone(), export.with.clone()));
+              }
+            }
+            _ => {}
+          }
+        }
+        let mut seen_dyn: std::collections::HashSet<swc_core::atoms::Wtf8Atom> =
+          Default::default();
+        for call in dynamic_imports {
+          if let Some(Expr::Lit(Lit::Str(src))) = call.args.first().map(|a| &*a.expr) {
+            if seen_dyn.insert(src.value.clone()) {
+              items.push(keep_dynamic_import(call));
+            }
+          }
+        }
+        items.extend(define_body);
+        program = Program::Module(Module {
+          span: DUMMY_SP,
+          body: items,
+          shebang: None,
+        });
+      }
+    }
 
     let result = c.print(
       &program,
@@ -843,7 +982,10 @@ fn transform_react_lynx_inner(
         // they still reference the `ReactLynx` import binding by name) into a
         // standalone module string. A later build regenerates a defines-only
         // main-thread module by importing the runtime and appending this.
-        let main_thread_defines = main_thread_defs_collector.as_ref().map(|collector| {
+        let main_thread_defines = main_thread_defs_collector
+          .as_ref()
+          .filter(|_| options.collect_main_thread_defines.unwrap_or(false))
+          .map(|collector| {
           let body = collector.borrow().clone();
           // The registrations were cloned mid-pass (pre-hygiene), so a creator's
           // private `el`/`el1` locals still share the base name. Hygiene the

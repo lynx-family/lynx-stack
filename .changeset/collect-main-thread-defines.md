@@ -1,9 +1,9 @@
 ---
-
+"@lynx-js/react-rsbuild-plugin": minor
+"@lynx-js/react-webpack-plugin": minor
+"@lynx-js/react": minor
 ---
 
-feat(react): collect main-thread snapshot and worklet registrations in the transform
+feat(react): add `enableMTSRendering` to render the first screen from the background thread
 
-Add an internal `collectMainThreadDefines` transform option that gathers each
-emitted snapshot and worklet registration into a `mainThreadDefines` output.
-Groundwork for a defines-only main-thread build; no publishable package changes.
+With `enableMTSRendering: false` the main thread renders nothing on first screen and the background thread hydrates. Each main-thread module is reduced to its snapshot and worklet registrations (business logic is stripped), except the ReactLynx runtime and its dependency closure, so the main-thread bundle carries only what the registrations need.
