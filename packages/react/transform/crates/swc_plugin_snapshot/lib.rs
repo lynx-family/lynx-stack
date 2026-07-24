@@ -33,7 +33,7 @@ use swc_plugins_shared::{
   jsx_helpers::{
     jsx_attr_name, jsx_attr_to_prop, jsx_attr_value, jsx_children_to_expr, jsx_has_dynamic_key,
     jsx_is_children_full_dynamic, jsx_is_custom, jsx_is_list, jsx_is_list_item, jsx_name,
-    jsx_props_to_obj, jsx_text_to_str, transform_jsx_attr_str,
+    jsx_props_to_obj, jsx_text_to_str, transform_camel_case_jsx_attributes, transform_jsx_attr_str,
   },
   target::TransformTarget,
   transform_mode::TransformMode,
@@ -1140,6 +1140,10 @@ pub struct JSXTransformerConfig {
   /// @internal
   #[serde(default)]
   pub legacy_slot: Option<bool>,
+  /// Convert camelCase intrinsic element attribute names to dash-case.
+  /// @internal
+  #[serde(default)]
+  pub enable_camel_case_attributes: bool,
 }
 
 impl Default for JSXTransformerConfig {
@@ -1154,6 +1158,7 @@ impl Default for JSXTransformerConfig {
       is_dynamic_component: Some(false),
       is_external_bundle: Some(false),
       legacy_slot: Some(false),
+      enable_camel_case_attributes: false,
     }
   }
 }
@@ -1313,6 +1318,10 @@ where
       _ => {
         return node.visit_mut_children_with(self);
       }
+    }
+
+    if self.cfg.enable_camel_case_attributes {
+      transform_camel_case_jsx_attributes(&mut node.opening.attrs);
     }
 
     if matches!(self.cfg.legacy_slot, Some(true)) {
@@ -1783,6 +1792,69 @@ mod tests {
 
   use crate::JSXTransformer;
   use swc_plugins_shared::{target::TransformTarget, transform_mode::TransformMode};
+
+  #[test]
+  fn should_convert_direct_camel_case_attributes() {
+    Tester::run(|tester| {
+      let top_level_mark = Mark::new();
+      let unresolved_mark = Mark::new();
+
+      let program = tester.apply_transform(
+        (
+          resolver(unresolved_mark, top_level_mark, true),
+          visit_mut_pass(JSXTransformer::<&SingleThreadedComments>::new(
+            super::JSXTransformerConfig {
+              preserve_jsx: true,
+              target: TransformTarget::MIXED,
+              enable_camel_case_attributes: true,
+              ..Default::default()
+            },
+            None,
+            TransformMode::Test,
+            Some(tester.cm.clone()),
+          )),
+        ),
+        "input.js",
+        Syntax::Es(EsSyntax {
+          jsx: true,
+          ..Default::default()
+        }),
+        Some(true),
+        r#"
+          const node = (
+            <text
+              textMaxline={2}
+              tailColorConvert={enabled}
+              bindTap={handleTap}
+              onReady="ready"
+              {...props}
+            />
+          );
+        "#,
+      )?;
+
+      let comments = tester.comments.clone();
+      let output = tester.print(&program, &comments);
+      assert!(
+        output.contains("text-maxline") && output.contains("tail-color-convert"),
+        "ordinary camelCase attributes should be converted during Snapshot compilation; output:\n{output}",
+      );
+      assert!(
+        output.contains("bindTap") && output.contains("onReady"),
+        "event attributes should keep their authored names; output:\n{output}",
+      );
+      assert!(
+        output.contains("...props"),
+        "Snapshot spread values should remain unchanged; output:\n{output}",
+      );
+      assert!(
+        !output.contains("textMaxline") && !output.contains("tailColorConvert"),
+        "converted direct attribute names should not remain in output; output:\n{output}",
+      );
+
+      Ok(())
+    });
+  }
 
   #[test]
   fn should_keep_jsx_in_children_prop_map_callback_scope() {

@@ -87,6 +87,55 @@ pub fn jsx_attr_name(name: &JSXAttrName) -> Atom {
   }
 }
 
+fn is_event_attribute_name(name: &str) -> bool {
+  static EVENT_ATTRIBUTE_NAME: Lazy<Regex> = Lazy::new(|| {
+    Regex::new(r"^(?:global-bind|bind|catch|capture-bind|capture-catch)[A-Za-z]+$").unwrap()
+  });
+
+  let bytes = name.as_bytes();
+  (bytes.starts_with(b"on") && bytes.get(2).is_some_and(u8::is_ascii_uppercase))
+    || EVENT_ATTRIBUTE_NAME.is_match(name)
+}
+
+pub fn camel_case_attribute_name(name: &str) -> Cow<'_, str> {
+  if name == "className"
+    || name.contains(':')
+    || is_event_attribute_name(name)
+    || !name.bytes().any(|byte| byte.is_ascii_uppercase())
+  {
+    return Cow::Borrowed(name);
+  }
+
+  let mut normalized = String::with_capacity(name.len() + 4);
+  for (index, character) in name.chars().enumerate() {
+    if character.is_ascii_uppercase() {
+      if index != 0 {
+        normalized.push('-');
+      }
+      normalized.push(character.to_ascii_lowercase());
+    } else {
+      normalized.push(character);
+    }
+  }
+  Cow::Owned(normalized)
+}
+
+pub fn transform_camel_case_jsx_attributes(attributes: &mut [JSXAttrOrSpread]) {
+  for attribute in attributes {
+    let JSXAttrOrSpread::JSXAttr(JSXAttr {
+      name: JSXAttrName::Ident(name),
+      ..
+    }) = attribute
+    else {
+      continue;
+    };
+
+    if let Cow::Owned(normalized) = camel_case_attribute_name(name.sym.as_ref()) {
+      name.sym = normalized.into();
+    }
+  }
+}
+
 pub fn jsx_attr_value(value: Option<JSXAttrValue>) -> Box<Expr> {
   match value {
     Some(JSXAttrValue::Str(s)) => {
@@ -448,3 +497,31 @@ pub fn transform_jsx_attr_str(v: &Wtf8) -> Wtf8Buf {
 //       })
 //   }
 // }
+
+#[cfg(test)]
+mod tests {
+  use super::camel_case_attribute_name;
+
+  #[test]
+  fn normalizes_camel_case_attribute_names() {
+    assert_eq!(camel_case_attribute_name("textMaxline"), "text-maxline");
+    assert_eq!(camel_case_attribute_name("XMLFoo"), "x-m-l-foo");
+    assert_eq!(camel_case_attribute_name("text-maxline"), "text-maxline");
+  }
+
+  #[test]
+  fn preserves_class_and_event_attribute_names() {
+    for name in [
+      "className",
+      "bindTap",
+      "catchTap",
+      "capture-bindTap",
+      "capture-catchTap",
+      "global-bindTap",
+      "onTap",
+      "main-thread:bindTap",
+    ] {
+      assert_eq!(camel_case_attribute_name(name), name);
+    }
+  }
+}

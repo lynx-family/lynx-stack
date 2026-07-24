@@ -5,6 +5,7 @@ import type { Rspack } from '@rsbuild/core'
 import { assert, describe, expect, rstest, test } from '@rstest/core'
 
 import { LAYERS, ReactWebpackPlugin } from '@lynx-js/react-webpack-plugin'
+import type { ReactLoaderOptions } from '@lynx-js/react-webpack-plugin'
 
 import { createStubRspeedy as createRspeedy } from './createRspeedy.js'
 import { getLoaderOptions } from './getLoaderOptions.js'
@@ -58,6 +59,42 @@ function getJsMainRule(swcRule: Rspack.RuleSetRule) {
 }
 
 describe('SWC configuration', () => {
+  test('passes camelCase attribute support to both React transform layers', async () => {
+    const { pluginReactLynx } = await import('../src/pluginReactLynx.js')
+    const rsbuild = await createRspeedy({
+      rspeedyConfig: {
+        plugins: [
+          pluginStubRspeedyAPI(),
+          pluginReactLynx({ enableCamelCaseAttributes: true }),
+        ],
+      },
+    })
+
+    const [config] = await rsbuild.initConfigs()
+    const swcRule = config.module.rules.find(
+      (rule): rule is Rspack.RuleSetRule => {
+        return rule && rule !== '...'
+          && (rule.test as RegExp | undefined)?.toString()
+            === SCRIPT_REGEXP.toString()
+      },
+    )
+    assert(swcRule)
+
+    for (
+      const [layer, loader] of [
+        [LAYERS.BACKGROUND, ReactWebpackPlugin.loaders.BACKGROUND],
+        [LAYERS.MAIN_THREAD, ReactWebpackPlugin.loaders.MAIN_THREAD],
+      ] as const
+    ) {
+      const layerRule = getLayerRule(swcRule, layer)
+      assert(layerRule)
+      const options = getLoaderOptions<ReactLoaderOptions>({
+        module: { rules: [layerRule] },
+      }, loader)
+      expect(options?.enableCamelCaseAttributes).toBe(true)
+    }
+  })
+
   test('defaults', async () => {
     rstest.stubEnv('NODE_ENV', 'development')
     const { pluginReactLynx } = await import('../src/pluginReactLynx.js')

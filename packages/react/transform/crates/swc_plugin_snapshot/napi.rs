@@ -35,6 +35,8 @@ pub struct JSXTransformerConfig {
   pub is_external_bundle: Option<bool>,
   /// @internal
   pub legacy_slot: Option<bool>,
+  /// @internal
+  pub enable_camel_case_attributes: Option<bool>,
 }
 
 /// @internal
@@ -83,6 +85,7 @@ impl Default for JSXTransformerConfig {
       is_dynamic_component: Some(false),
       is_external_bundle: Some(false),
       legacy_slot: Some(false),
+      enable_camel_case_attributes: Some(false),
     }
   }
 }
@@ -99,6 +102,7 @@ impl From<JSXTransformerConfig> for CoreJSXTransformerConfig {
       is_dynamic_component: val.is_dynamic_component,
       is_external_bundle: val.is_external_bundle,
       legacy_slot: val.legacy_slot,
+      enable_camel_case_attributes: val.enable_camel_case_attributes.unwrap_or(false),
     }
   }
 }
@@ -115,6 +119,7 @@ impl From<CoreJSXTransformerConfig> for JSXTransformerConfig {
       is_dynamic_component: val.is_dynamic_component,
       is_external_bundle: val.is_external_bundle,
       legacy_slot: val.legacy_slot,
+      enable_camel_case_attributes: Some(val.enable_camel_case_attributes),
     }
   }
 }

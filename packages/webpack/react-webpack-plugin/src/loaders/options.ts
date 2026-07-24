@@ -51,6 +51,11 @@ export interface ReactLoaderOptions {
   enableUiSourceMap?: boolean | undefined;
 
   /**
+   * {@inheritdoc @lynx-js/react-rsbuild-plugin#PluginReactLynxOptions.enableCamelCaseAttributes}
+   */
+  enableCamelCaseAttributes?: boolean | undefined;
+
+  /**
    * Enable the Fast Refresh for ReactLynx.
    */
   refresh?: boolean | undefined;
@@ -120,6 +125,7 @@ function getCommonOptions(
     compat,
     enableRemoveCSSScope,
     enableUiSourceMap,
+    enableCamelCaseAttributes,
     inlineSourcesContent,
     isDynamicComponent,
     isExternalBundle,
@@ -198,6 +204,7 @@ function getCommonOptions(
       isDynamicComponent: isDynamicComponent ?? false,
       isExternalBundle: isExternalBundle ?? false,
       legacySlot: compat?.legacySlot ?? false,
+      ...(enableCamelCaseAttributes && { enableCamelCaseAttributes: true }),
     },
     elementTemplate: useElementTemplate
       ? {
@@ -208,6 +215,7 @@ function getCommonOptions(
         target: 'JS',
         isDynamicComponent: isDynamicComponent ?? false,
         isExternalBundle: isExternalBundle ?? false,
+        ...(enableCamelCaseAttributes && { enableCamelCaseAttributes: true }),
       } satisfies ElementTemplateConfig
       : false,
     engineVersion: engineVersion ?? '',
@@ -226,7 +234,14 @@ function getCommonOptions(
       target: 'MIXED',
     },
     directiveDCE: false,
-    defineDCE,
+    defineDCE: {
+      define: {
+        ...defineDCE.define,
+        __ENABLE_CAMEL_CASE_ATTRIBUTES__: JSON.stringify(
+          enableCamelCaseAttributes ?? false,
+        ),
+      },
+    },
     refresh: false,
     isModule: 'unknown',
   } satisfies Partial<TransformNodiffOptions>;

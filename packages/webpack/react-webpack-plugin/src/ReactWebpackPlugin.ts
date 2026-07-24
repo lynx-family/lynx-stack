@@ -192,6 +192,11 @@ interface ReactWebpackPluginOptions {
   enableSSR?: boolean;
 
   /**
+   * {@inheritdoc @lynx-js/react-rsbuild-plugin#PluginReactLynxOptions.enableCamelCaseAttributes}
+   */
+  enableCamelCaseAttributes?: boolean;
+
+  /**
    * The chunk names to be considered as main thread chunks.
    */
   mainThreadChunks?: string[] | undefined;
@@ -309,6 +314,7 @@ class ReactWebpackPlugin {
       firstScreenSyncTiming: 'immediately',
       globalPropsMode: 'reactive',
       enableSSR: false,
+      enableCamelCaseAttributes: false,
       mainThreadChunks: [],
       extractStr: false,
       experimental_isLazyBundle: false,
@@ -378,6 +384,9 @@ class ReactWebpackPlugin {
       ),
       __GLOBAL_PROPS_MODE__: JSON.stringify(options.globalPropsMode),
       __ENABLE_SSR__: JSON.stringify(options.enableSSR),
+      __ENABLE_CAMEL_CASE_ATTRIBUTES__: JSON.stringify(
+        options.enableCamelCaseAttributes,
+      ),
       __DISABLE_CREATE_SELECTOR_QUERY_INCOMPATIBLE_WARNING__: JSON.stringify(
         options.disableCreateSelectorQueryIncompatibleWarning,
       ),

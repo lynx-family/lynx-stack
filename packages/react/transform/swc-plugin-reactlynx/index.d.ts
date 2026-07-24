@@ -27,6 +27,8 @@ export interface JsxTransformerConfig {
   isDynamicComponent?: boolean;
   /** @internal */
   legacySlot?: boolean;
+  /** @internal */
+  enableCamelCaseAttributes?: boolean;
 }
 
 /** @internal */
@@ -43,6 +45,8 @@ export interface ElementTemplateConfig {
   target: 'LEPUS' | 'JS' | 'MIXED';
   /** @internal */
   isDynamicComponent?: boolean;
+  /** @internal */
+  enableCamelCaseAttributes?: boolean;
 }
 
 /**
