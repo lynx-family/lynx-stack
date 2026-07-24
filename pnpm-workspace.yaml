@@ -63,6 +63,8 @@ minimumReleaseAgeStrict: false
 
 peerDependencyRules:
   allowedVersions:
+    "@ai-sdk/provider-utils>zod": "^3.23.8 || ^4.0.0"
+    "@ai-sdk/ui-utils>zod": "^3.23.8 || ^4.0.0"
     "@lynx-js/lynx-ui>@types/react": "^19.2.0"
     "@lynx-js/lynx-ui-button>@types/react": "^19.2.0"
     "@lynx-js/lynx-ui-checkbox>@types/react": "^19.2.0"
