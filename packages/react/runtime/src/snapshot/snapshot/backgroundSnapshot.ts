@@ -25,12 +25,14 @@ import { transformSpread } from './spread.js';
 import type { SerializedSnapshotInstance } from './types.js';
 import { isCloneSnapshot, isCompiledSnapshot, traverseSnapshotInstance } from './utils.js';
 import { globalPipelineOptions } from '../../core/performance.js';
+import { getCurrentRootContext } from '../../root-context.js';
+import type { RootContext } from '../../root-context.js';
 import { profileEnd, profileStart } from '../../shared/profile.js';
 import { isDirectOrDeepEqual } from '../../utils.js';
 import { clearSnapshotVNodeSource, getSnapshotVNodeSource, moveSnapshotVNodeSource } from '../debug/vnodeSource.js';
 import { prepareGestureForCommit } from '../gesture/processGestureBagkround.js';
 import type { GestureKind } from '../gesture/types.js';
-import { globalBackgroundSnapshotInstancesToRemove } from '../lifecycle/patch/globalState.js';
+import { getGlobalBackgroundSnapshotInstancesToRemove } from '../lifecycle/patch/globalState.js';
 import {
   SnapshotOperation,
   __globalSnapshotPatch,
@@ -53,7 +55,9 @@ export const backgroundSnapshotInstanceManager: {
   getValueBySign(str: string): unknown;
 } = {
   nextId: 0,
-  values: /* @__PURE__ */ new Map<number, BackgroundSnapshotInstance>(),
+  get values(): Map<number, BackgroundSnapshotInstance> {
+    return getCurrentRootContext().bsiValues;
+  },
   clear() {
     // not resetting `nextId` to prevent id collision
     this.values.clear();
@@ -166,6 +170,7 @@ export class BackgroundSnapshotInstance {
         createRuntimeSnapshot(type);
       }
     }
+    this.__rootCtx = getCurrentRootContext();
     this.__snapshot_def = snapshotManager.values.get(type)!;
     const id = this.__id = backgroundSnapshotInstanceManager.nextId += 1;
     backgroundSnapshotInstanceManager.values.set(id, this);
@@ -180,6 +185,7 @@ export class BackgroundSnapshotInstance {
   __extraProps?: Record<string, unknown> | undefined;
   __slotIndex: number = 0;
   private __listItemPlatformInfoIndex?: number;
+  __rootCtx: RootContext;
 
   private __parent: BackgroundSnapshotInstance | null = null;
   private __firstChild: BackgroundSnapshotInstance | null = null;
@@ -321,7 +327,7 @@ export class BackgroundSnapshotInstance {
       0,
     );
 
-    globalBackgroundSnapshotInstancesToRemove.push(node.__id);
+    getGlobalBackgroundSnapshotInstancesToRemove().push(node.__id);
   }
 
   tearDown(): void {
@@ -329,7 +335,7 @@ export class BackgroundSnapshotInstance {
       v.__parent = null;
       v.__previousSibling = null;
       v.__nextSibling = null;
-      backgroundSnapshotInstanceManager.values.delete(v.__id);
+      v.__rootCtx.bsiValues.delete(v.__id);
     });
   }
 

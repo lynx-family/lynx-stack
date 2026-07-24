@@ -23,19 +23,17 @@ import { options } from 'preact';
 
 import type { RunWorkletCtxData } from '@lynx-js/react/worklet-runtime/bindings';
 
-import {
-  globalBackgroundSnapshotInstancesToRemove,
-  setGlobalBackgroundSnapshotInstancesToRemove,
-} from './globalState.js';
+import { setGlobalBackgroundSnapshotInstancesToRemove } from './globalState.js';
 import { takeGlobalSnapshotPatch } from './snapshotPatch.js';
 import type { SnapshotPatch } from './snapshotPatch.js';
 import { takeGlobalFlushOptions } from '../../../core/commit-context.js';
 import { globalPipelineOptions, markTiming, markTimingLegacy, setPipeline } from '../../../core/performance.js';
 import { getReloadVersion } from '../../../core/reload-version.js';
 import {
-  delayedRunOnMainThreadData,
+  getDelayedRunOnMainThreadData,
   takeDelayedRunOnMainThreadData,
 } from '../../../core/thread-function-call/main-thread.js';
+import { contextLynx, getCurrentRootContext } from '../../../root-context.js';
 import { profileEnd, profileStart } from '../../../shared/profile.js';
 import { COMMIT } from '../../../shared/render-constants.js';
 import { hook, isEmptyObject } from '../../../utils.js';
@@ -45,8 +43,9 @@ import { applyQueuedRefs } from '../../snapshot/ref.js';
 import { sendMTRefInitValueToMainThread } from '../../worklet/ref/updateInitValue.js';
 import { isRendering } from '../isRendering.js';
 
-const globalCommitTaskMap: Map<number, () => void> = /*@__PURE__*/ new Map<number, () => void>();
-let nextCommitTaskId = 1;
+export function getGlobalCommitTaskMap(): Map<number, () => void> {
+  return getCurrentRootContext().commitTaskMap;
+}
 
 /**
  * A single patch operation.
@@ -80,11 +79,15 @@ interface PatchOptions {
  * Allow to pass options to the patch operation
  */
 export type GlobalPatchOptions = Omit<PatchOptions, 'reloadVersion'>;
-export let globalPatchOptions: GlobalPatchOptions = {};
+
+export function getGlobalPatchOptions(): GlobalPatchOptions {
+  return getCurrentRootContext().patchOptions;
+}
 
 function takeGlobalPatchOptions(): GlobalPatchOptions {
-  const res = globalPatchOptions;
-  globalPatchOptions = {};
+  const ctx = getCurrentRootContext();
+  const res = ctx.patchOptions;
+  ctx.patchOptions = {};
   return res;
 }
 
@@ -113,17 +116,19 @@ function replaceCommitHook(): void {
       markTimingLegacy('updateDiffVdomEnd');
       markTiming('diffVdomEnd');
 
-      const backgroundSnapshotInstancesToRemove = globalBackgroundSnapshotInstancesToRemove;
+      const rootCtx = getCurrentRootContext();
+      const backgroundSnapshotInstancesToRemove = rootCtx.bgInstancesToRemove;
       setGlobalBackgroundSnapshotInstancesToRemove([]);
 
       const commitTaskId = genCommitTaskId();
 
       // Register the commit task
-      globalCommitTaskMap.set(commitTaskId, () => {
+      const instanceValues = backgroundSnapshotInstanceManager.values;
+      rootCtx.commitTaskMap.set(commitTaskId, () => {
         if (backgroundSnapshotInstancesToRemove.length) {
           setTimeout(() => {
             backgroundSnapshotInstancesToRemove.forEach(id => {
-              backgroundSnapshotInstanceManager.values.get(id)?.tearDown();
+              instanceValues.get(id)?.tearDown();
             });
           }, 10000);
         }
@@ -155,17 +160,18 @@ function replaceCommitHook(): void {
       if (!isEmptyObject(flushOptions)) {
         patchList.flushOptions = flushOptions;
       }
-      if (delayedRunOnMainThreadData.length) {
+      if (getDelayedRunOnMainThreadData().length) {
         patchList.delayedRunOnMainThreadData = takeDelayedRunOnMainThreadData();
       }
       const obj = commitPatchUpdate(patchList, patchOptions);
 
       // Send the update to the native layer
-      lynx.getNativeApp().callLepusMethod(LifecycleConstant.patchUpdate, obj, () => {
-        const commitTask = globalCommitTaskMap.get(commitTaskId);
+      const commitTaskMap = rootCtx.commitTaskMap;
+      contextLynx().getNativeApp().callLepusMethod(LifecycleConstant.patchUpdate, obj, () => {
+        const commitTask = commitTaskMap.get(commitTaskId);
         if (commitTask) {
           commitTask();
-          globalCommitTaskMap.delete(commitTaskId);
+          commitTaskMap.delete(commitTaskId);
         }
       });
 
@@ -218,26 +224,17 @@ function commitPatchUpdate(patchList: PatchList, patchOptions: GlobalPatchOption
  * Generates a unique ID for commit tasks
  */
 function genCommitTaskId(): number {
-  return nextCommitTaskId++;
+  return getCurrentRootContext().nextCommitTaskId++;
 }
 
 /**
  * Resets the commit task ID counter
  */
 function clearCommitTaskId(): void {
-  nextCommitTaskId = 1;
+  getCurrentRootContext().nextCommitTaskId = 1;
 }
 
 /**
  * @internal
  */
-export {
-  clearCommitTaskId,
-  commitPatchUpdate,
-  genCommitTaskId,
-  globalBackgroundSnapshotInstancesToRemove,
-  globalCommitTaskMap,
-  replaceCommitHook,
-  type PatchList,
-  type PatchOptions,
-};
+export { clearCommitTaskId, commitPatchUpdate, genCommitTaskId, replaceCommitHook, type PatchList, type PatchOptions };

@@ -3,7 +3,7 @@ import { Suspense, lazy } from 'preact/compat';
 import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { setupBackgroundDocument, setupDocument } from '../../src/document';
-import { globalBackgroundSnapshotInstancesToRemove } from '../../src/snapshot/lifecycle/patch/commit';
+import { getGlobalBackgroundSnapshotInstancesToRemove } from '../../src/snapshot/lifecycle/patch/globalState';
 import {
   deinitGlobalSnapshotPatch,
   initGlobalSnapshotPatch,
@@ -428,7 +428,7 @@ describe('document - background', () => {
           6,
         ]
       `);
-    expect(globalBackgroundSnapshotInstancesToRemove).toMatchInlineSnapshot(`
+    expect(getGlobalBackgroundSnapshotInstancesToRemove()).toMatchInlineSnapshot(`
       [
         2,
       ]

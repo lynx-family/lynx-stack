@@ -3,6 +3,7 @@
 // LICENSE file in the root directory of this source tree.
 
 import { onFunctionCall } from './return-value.js';
+import { getCurrentRootContext } from '../../root-context.js';
 import { isSdkVersionGt } from '../../utils.js';
 import { WorkletEvents } from '../../worklet-runtime/bindings/events.js';
 import type { RunWorkletCtxData } from '../../worklet-runtime/bindings/events.js';
@@ -15,15 +16,18 @@ interface RunOnMainThreadOptions {
 
 export type RunOnMainThread = <R, Fn extends (...args: any[]) => R>(fn: Fn) => (...args: Parameters<Fn>) => Promise<R>;
 
-export let delayedRunOnMainThreadData: RunWorkletCtxData[] = [];
-
-export function enqueueDelayedRunOnMainThreadData(data: RunWorkletCtxData): void {
-  delayedRunOnMainThreadData.push(data);
+export function getDelayedRunOnMainThreadData(): RunWorkletCtxData[] {
+  return getCurrentRootContext().delayedRunOnMainThreadData;
 }
 
-export function takeDelayedRunOnMainThreadData(): typeof delayedRunOnMainThreadData {
-  const data = delayedRunOnMainThreadData;
-  delayedRunOnMainThreadData = [];
+export function enqueueDelayedRunOnMainThreadData(data: RunWorkletCtxData): void {
+  getCurrentRootContext().delayedRunOnMainThreadData.push(data);
+}
+
+export function takeDelayedRunOnMainThreadData(): RunWorkletCtxData[] {
+  const ctx = getCurrentRootContext();
+  const data = ctx.delayedRunOnMainThreadData;
+  ctx.delayedRunOnMainThreadData = [];
   return data;
 }
 

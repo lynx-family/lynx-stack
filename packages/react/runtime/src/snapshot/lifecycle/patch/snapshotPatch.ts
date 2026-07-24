@@ -7,6 +7,7 @@
  * The patch operations are designed to be serializable and minimal, allowing
  * efficient transmission between threads and application to element tree.
  */
+import { getCurrentRootContext, onRootContextSwitch } from '../../../root-context.js';
 
 export const SnapshotOperation = {
   CreateElement: 0,
@@ -76,12 +77,25 @@ export const SnapshotOperationParams: Record<number, { name: string; params: str
 
 export type SnapshotPatch = unknown[];
 
+/**
+ * The storage lives on the current `RootContext`; this module-level binding
+ * is a maintained alias kept in sync on writes and on context switches.
+ */
 export let __globalSnapshotPatch: SnapshotPatch | undefined;
+
+onRootContextSwitch(() => {
+  __globalSnapshotPatch = getCurrentRootContext().snapshotPatch;
+});
+
+export function setGlobalSnapshotPatch(patch: SnapshotPatch | undefined): void {
+  getCurrentRootContext().snapshotPatch = patch;
+  __globalSnapshotPatch = patch;
+}
 
 export function takeGlobalSnapshotPatch(): SnapshotPatch | undefined {
   if (__globalSnapshotPatch) {
     const list = __globalSnapshotPatch;
-    __globalSnapshotPatch = [];
+    setGlobalSnapshotPatch([]);
     return list;
   } else {
     return undefined;
@@ -89,9 +103,9 @@ export function takeGlobalSnapshotPatch(): SnapshotPatch | undefined {
 }
 
 export function initGlobalSnapshotPatch(): void {
-  __globalSnapshotPatch = [];
+  setGlobalSnapshotPatch([]);
 }
 
 export function deinitGlobalSnapshotPatch(): void {
-  __globalSnapshotPatch = undefined;
+  setGlobalSnapshotPatch(undefined);
 }

@@ -8,9 +8,11 @@ import { updateGlobalProps as updateGlobalPropsCore } from '../../core/globalPro
 import { updateCardData } from '../../core/lynx-update-data.js';
 import { PerformanceTimingFlags, PipelineOrigins, beginPipeline, markTiming } from '../../core/performance.js';
 import {
-  delayedRunOnMainThreadData,
+  getDelayedRunOnMainThreadData,
   takeDelayedRunOnMainThreadData,
 } from '../../core/thread-function-call/main-thread.js';
+import { contextLynx, defaultRootContext, getCurrentRootContext, switchRootContext } from '../../root-context.js';
+import type { RootContext, RootTT } from '../../root-context.js';
 import { __root } from '../../root.js';
 import { profileEnd, profileStart } from '../../shared/profile.js';
 import { CHILDREN } from '../../shared/render-constants.js';
@@ -19,9 +21,9 @@ import { getSnapshotVNodeSource } from '../debug/vnodeSource.js';
 import { LifecycleConstant } from '../lifecycle/constant.js';
 import type { FirstScreenData } from '../lifecycle/constant.js';
 import { destroyBackground } from '../lifecycle/destroy.js';
-import { delayedEvents, delayedPublishEvent } from '../lifecycle/event/delayEvents.js';
-import { delayLifecycleEvent, delayedLifecycleEvents } from '../lifecycle/event/delayLifecycleEvents.js';
-import { commitPatchUpdate, genCommitTaskId, globalCommitTaskMap } from '../lifecycle/patch/commit.js';
+import { delayedPublishEvent, getDelayedEvents } from '../lifecycle/event/delayEvents.js';
+import { delayLifecycleEvent, getDelayedLifecycleEvents } from '../lifecycle/event/delayLifecycleEvents.js';
+import { commitPatchUpdate, genCommitTaskId } from '../lifecycle/patch/commit.js';
 import type { PatchList } from '../lifecycle/patch/commit.js';
 import { removeCtxNotFoundEventListener } from '../lifecycle/patch/error.js';
 import { runDelayedUiOps } from '../lifecycle/ref/delay.js';
@@ -37,19 +39,31 @@ import { sendMTRefInitValueToMainThread } from '../worklet/ref/updateInitValue.j
 
 export { runWithForce };
 
+function bindContext<T extends unknown[], R>(ctx: RootContext, fn: (...args: T) => R): (...args: T) => R {
+  return (...args: T) => {
+    switchRootContext(ctx);
+    return fn(...args);
+  };
+}
+
 function injectTt(): void {
-  const tt = lynxCoreInject.tt;
-  tt.OnLifecycleEvent = onLifecycleEvent;
-  tt.publishEvent = delayedPublishEvent;
-  tt.publicComponentEvent = delayedPublicComponentEvent;
-  tt.callDestroyLifetimeFun = () => {
-    removeCtxNotFoundEventListener();
+  injectTtInto(lynxCoreInject.tt, defaultRootContext);
+}
+
+function injectTtInto(tt: RootTT, ctx: RootContext): void {
+  tt.OnLifecycleEvent = bindContext(ctx, onLifecycleEvent);
+  tt.publishEvent = bindContext(ctx, delayedPublishEvent);
+  tt.publicComponentEvent = bindContext(ctx, delayedPublicComponentEvent);
+  tt.callDestroyLifetimeFun = bindContext(ctx, () => {
+    if (ctx === defaultRootContext) {
+      removeCtxNotFoundEventListener();
+    }
     destroyWorklet();
     destroyBackground();
-  };
-  tt.updateGlobalProps = updateGlobalProps;
-  tt.updateCardData = updateCardData;
-  tt.onAppReload = reloadBackground;
+  });
+  tt.updateGlobalProps = bindContext(ctx, updateGlobalProps);
+  tt.updateCardData = bindContext(ctx, updateCardData);
+  tt.onAppReload = bindContext(ctx, reloadBackground);
   tt.processCardConfig = () => {
     // used to updateTheme, no longer rely on this function
   };
@@ -83,11 +97,15 @@ function onLifecycleEventImpl(type: LifecycleConstant, data: unknown): void {
   switch (type) {
     case LifecycleConstant.firstScreen: {
       let processErr;
+      const ctxBeforeProcess = getCurrentRootContext();
       try {
         process();
       } catch (e) {
         processErr = e;
       }
+      // Preact's shared rerender queue may have rendered another root's
+      // components; re-assert this root's context before hydrating.
+      switchRootContext(ctxBeforeProcess);
       const { root: lepusSide, firstScreenEventIdSwap } = data as FirstScreenData;
       if (typeof __PROFILE__ !== 'undefined' && __PROFILE__) {
         profileStart('ReactLynx::hydrate');
@@ -135,6 +153,7 @@ function onLifecycleEventImpl(type: LifecycleConstant, data: unknown): void {
 
       // TODO: It seems `delayedEvents` and `delayedLifecycleEvents` should be merged into one array to ensure the proper order of events.
       flushDelayedLifecycleEvents();
+      const delayedEvents = getDelayedEvents();
       if (delayedEvents) {
         delayedEvents.forEach((args) => {
           const [handlerName, data] = args;
@@ -150,8 +169,12 @@ function onLifecycleEventImpl(type: LifecycleConstant, data: unknown): void {
         delayedEvents.length = 0;
       }
 
-      lynxCoreInject.tt.publishEvent = publishEvent;
-      lynxCoreInject.tt.publicComponentEvent = publicComponentEvent;
+      {
+        const ctx = ctxBeforeProcess;
+        const tt = ctx.tt ?? lynxCoreInject.tt;
+        tt.publishEvent = bindContext(ctx, publishEvent);
+        tt.publicComponentEvent = bindContext(ctx, publicComponentEvent);
+      }
 
       // console.debug("********** After hydration:");
       // printSnapshotInstance(__root as BackgroundSnapshotInstance);
@@ -159,18 +182,19 @@ function onLifecycleEventImpl(type: LifecycleConstant, data: unknown): void {
       const patchList: PatchList = {
         patchList: [{ snapshotPatch, id: commitTaskId }],
       };
-      if (delayedRunOnMainThreadData.length) {
+      if (getDelayedRunOnMainThreadData().length) {
         patchList.delayedRunOnMainThreadData = takeDelayedRunOnMainThreadData();
       }
       const obj = commitPatchUpdate(patchList, { isHydration: true });
       sendMTRefInitValueToMainThread();
-      lynx.getNativeApp().callLepusMethod(LifecycleConstant.patchUpdate, obj, () => {
-        globalCommitTaskMap.forEach((commitTask, id) => {
+      const commitTaskMap = ctxBeforeProcess.commitTaskMap;
+      contextLynx().getNativeApp().callLepusMethod(LifecycleConstant.patchUpdate, obj, () => {
+        commitTaskMap.forEach((commitTask, id) => {
           if (id > commitTaskId) {
             return;
           }
           commitTask();
-          globalCommitTaskMap.delete(id);
+          commitTaskMap.delete(id);
         });
       });
       runDelayedUiOps();
@@ -198,6 +222,7 @@ function flushDelayedLifecycleEvents(): void {
   // avoid stackoverflow
   if (flushingDelayedLifecycleEvents) return;
   flushingDelayedLifecycleEvents = true;
+  const delayedLifecycleEvents = getDelayedLifecycleEvents();
   if (delayedLifecycleEvents) {
     delayedLifecycleEvents.forEach((e) => {
       onLifecycleEvent(e);
@@ -278,4 +303,4 @@ function updateGlobalProps(newData: Record<string, any>): void {
   });
 }
 
-export { injectTt, flushDelayedLifecycleEvents };
+export { injectTt, injectTtInto, flushDelayedLifecycleEvents };

@@ -22,7 +22,7 @@ import {
   VNODE,
 } from '../../shared/render-constants.js';
 import { getDisplayName, hook } from '../../utils.js';
-import { globalPatchOptions } from '../lifecycle/patch/commit.js';
+import { getGlobalPatchOptions } from '../lifecycle/patch/commit.js';
 import { __globalSnapshotPatch } from '../lifecycle/patch/snapshotPatch.js';
 
 const format = (val: unknown) => {
@@ -139,6 +139,7 @@ export function initProfileHook(): void {
             const flowId = c[sFlowID];
             delete c[sFlowID];
             if (flowId) {
+              const globalPatchOptions = getGlobalPatchOptions();
               globalPatchOptions.flowIds ??= [];
               globalPatchOptions.flowIds.push(flowId);
               profileOptions.flowId = flowId;
@@ -209,6 +210,7 @@ export function initProfileHook(): void {
 
     if (typeof __BACKGROUND__ !== 'undefined' && __BACKGROUND__) {
       hook(options, COMMIT, (old, vnode, commitQueue) => {
+        const globalPatchOptions = getGlobalPatchOptions();
         profileStart('ReactLynx::commit', {
           ...globalPatchOptions.flowIds
             ? {
