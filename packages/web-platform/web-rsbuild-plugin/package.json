@@ -43,7 +43,7 @@
     "@rsbuild/core": "catalog:rsbuild",
     "@rspack/core": "catalog:rspack",
     "@rstest/core": "catalog:rstest",
-    "@types/loader-utils": "^2.0.6",
+    "@types/loader-utils": "^3.0.0",
     "typescript": "^6.0.3"
   },
   "peerDependencies": {

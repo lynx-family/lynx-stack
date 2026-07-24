@@ -24,7 +24,7 @@
     "@lynx-js/web-core": "workspace:*",
     "@lynx-js/web-elements": "workspace:*",
     "@rsbuild/core": "catalog:rsbuild",
-    "@types/react": "^18.3.28",
+    "@types/react": "^19.2.17",
     "cross-env": "^10.1.0"
   }
 }
