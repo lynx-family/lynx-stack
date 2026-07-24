@@ -1,6 +1,8 @@
 // Copyright 2024 The Lynx Authors. All rights reserved.
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
+import fs from 'node:fs';
+import { createRequire } from 'node:module';
 import path from 'node:path';
 
 import type { LoaderContext } from '@rspack/core';
@@ -102,10 +104,78 @@ export interface ReactLoaderOptions {
    * @experimental
    */
   experimental_useElementTemplate?: boolean | undefined;
+
+  /**
+   * {@inheritdoc @lynx-js/react-rsbuild-plugin#PluginReactLynxOptions.enableMTSRendering}
+   */
+  enableMTSRendering?: boolean | undefined;
 }
 
 function normalizeSlashes(file: string) {
   return file.replaceAll(path.win32.sep, '/');
+}
+
+const realpath = (p: string): string => {
+  try {
+    return fs.realpathSync(p);
+  } catch {
+    return p;
+  }
+};
+
+// With `enableMTSRendering: false`, every main-thread module is reduced to its
+// defines except the ReactLynx runtime and its dependency closure, which the
+// defines import and boot from at runtime. That closure is resolved from
+// `PUBLIC_RUNTIME_PKG` rather than hard-coded, so it tracks the runtime's real
+// dependencies (and a custom runtime resolved from the same context) instead
+// of drifting from a name list.
+const exemptRootsCache = new Map<string, string[]>();
+
+function getExemptRoots(fromDir: string): string[] {
+  const cached = exemptRootsCache.get(fromDir);
+  if (cached !== undefined) {
+    return cached;
+  }
+  const require = createRequire(path.join(fromDir, 'noop.js'));
+  const roots = new Set<string>();
+  const seenPkgJson = new Set<string>();
+  const queue: string[] = [PUBLIC_RUNTIME_PKG];
+  while (queue.length > 0) {
+    const pkg = queue.shift()!;
+    let pkgJsonPath: string;
+    try {
+      pkgJsonPath = require.resolve(`${pkg}/package.json`);
+    } catch {
+      continue;
+    }
+    if (seenPkgJson.has(pkgJsonPath)) {
+      continue;
+    }
+    seenPkgJson.add(pkgJsonPath);
+    // The runtime's implementation lives in a subdirectory of its package, so
+    // the package root covers it (and any nested package.json) without listing
+    // it separately.
+    roots.add(realpath(path.dirname(pkgJsonPath)) + path.sep);
+    try {
+      const { dependencies } = JSON.parse(
+        fs.readFileSync(pkgJsonPath, 'utf-8'),
+      ) as { dependencies?: Record<string, string> };
+      queue.push(...Object.keys(dependencies ?? {}));
+    } catch {
+      // ignore unreadable package.json
+    }
+  }
+  const result = [...roots];
+  exemptRootsCache.set(fromDir, result);
+  return result;
+}
+
+function shouldReduceToDefines(
+  resourcePath: string,
+  rootContext: string,
+): boolean {
+  const real = realpath(resourcePath);
+  return !getExemptRoots(rootContext).some((root) => real.startsWith(root));
 }
 
 function getCommonOptions(
@@ -240,7 +310,7 @@ export function getMainThreadTransformOptions(
 ): TransformNodiffOptions {
   const commonOptions = getCommonOptions.call(this, inputSourceMap);
 
-  const { shake } = this.getOptions();
+  const { shake, enableMTSRendering } = this.getOptions();
   const useElementTemplate = typeof commonOptions.elementTemplate === 'object';
 
   return {
@@ -323,6 +393,8 @@ export function getMainThreadTransformOptions(
       ...commonOptions.worklet,
       target: 'LEPUS',
     },
+    mainThreadDefinesOnly: enableMTSRendering === false
+      && shouldReduceToDefines(this.resourcePath, this.rootContext),
     directiveDCE: {
       target: 'LEPUS',
     },

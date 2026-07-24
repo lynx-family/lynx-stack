@@ -1174,6 +1174,11 @@ where
   snapshot_counter: u32,
   current_snapshot_defs: Vec<ModuleItem>,
   current_snapshot_id: Option<Ident>,
+  // When set, each emitted snapshot registration (the `const __snapshot_x`
+  // id decl + its `snapshotCreatorMap[x] = createSnapshot(...)` assignment) is
+  // also cloned here. A later build regenerates a defines-only main-thread
+  // module from the collected registrations that survive tree-shaking.
+  main_thread_defs_collector: Option<Rc<RefCell<Vec<ModuleItem>>>>,
   comments: Option<C>,
   pub ui_source_map_records: Rc<RefCell<Vec<UISourceMapRecord>>>,
   pub source_map: Option<Lrc<SourceMap>>,
@@ -1185,6 +1190,14 @@ where
 {
   pub fn with_content_hash(mut self, content_hash: String) -> Self {
     self.content_hash = content_hash;
+    self
+  }
+
+  pub fn with_main_thread_defs_collector(
+    mut self,
+    collector: Rc<RefCell<Vec<ModuleItem>>>,
+  ) -> Self {
+    self.main_thread_defs_collector = Some(collector);
     self
   }
 
@@ -1213,6 +1226,7 @@ where
       snapshot_counter: 0,
       current_snapshot_defs: vec![],
       current_snapshot_id: None,
+      main_thread_defs_collector: None,
       comments,
       ui_source_map_records: Rc::new(RefCell::new(vec![])),
       source_map,
@@ -1702,7 +1716,11 @@ where
     let mut new_items: Vec<ModuleItem> = Vec::with_capacity(n.len());
     for mut item in n.take() {
       item.visit_mut_with(self);
-      new_items.extend(self.current_snapshot_defs.take());
+      let defs = self.current_snapshot_defs.take();
+      if let Some(collector) = &self.main_thread_defs_collector {
+        collector.borrow_mut().extend(defs.iter().cloned());
+      }
+      new_items.extend(defs);
       new_items.push(item);
     }
 

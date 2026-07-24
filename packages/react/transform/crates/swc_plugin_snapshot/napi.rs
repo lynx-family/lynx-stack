@@ -145,6 +145,14 @@ where
     self
   }
 
+  pub fn with_main_thread_defs_collector(
+    mut self,
+    collector: Rc<RefCell<Vec<ModuleItem>>>,
+  ) -> Self {
+    self.inner.main_thread_defs_collector = Some(collector);
+    self
+  }
+
   pub fn new(
     cfg: JSXTransformerConfig,
     comments: Option<C>,

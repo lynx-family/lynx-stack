@@ -1,0 +1,58 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`mainThreadDefinesOnly > should keep dynamic imports dynamic behind a runtime-false guard 1`] = `
+"import "@lynx-js/react/lepus/jsx-runtime";
+import { jsx as _jsx } from "@lynx-js/react/lepus/jsx-runtime";
+import * as ReactLynx from "@lynx-js/react/internal";
+import 'data:text/javascript;charset=utf-8,import { loadLazyBundle } from "@lynx-js/react/internal";lynx.loadLazyBundle = loadLazyBundle;';
+globalThis.__lynxKeepLazyBundle && import('./lazy-comp.jsx');
+const __snapshot_a94a8_test_1 = "__snapshot_a94a8_test_1";
+ReactLynx.snapshotCreatorMap[__snapshot_a94a8_test_1] = (__snapshot_a94a8_test_1)=>ReactLynx.createSnapshot(__snapshot_a94a8_test_1, function() {
+        const pageId = ReactLynx.__pageId;
+        const el = __CreateView(pageId);
+        return [
+            el
+        ];
+    }, [
+        (snapshot, index, oldValue)=>ReactLynx.updateEvent(snapshot, index, oldValue, 0, "bindEvent", "tap", '')
+    ], null, undefined, globDynamicComponentEntry, null, true);
+"
+`;
+
+exports[`mainThreadDefinesOnly > should replace the module with imports and defines 1`] = `
+"import "@lynx-js/react/lepus/jsx-runtime";
+import { jsx as _jsx } from "@lynx-js/react/lepus/jsx-runtime";
+import * as ReactLynx from "@lynx-js/react/internal";
+import "@lynx-js/react";
+import { useState } from "@lynx-js/react";
+import "my-monitor";
+import { track } from "my-monitor";
+import './style.css';
+import './helper.js';
+const __workletRuntimeLoaded = loadWorkletRuntime(typeof globDynamicComponentEntry === 'undefined' ? undefined : globDynamicComponentEntry);
+__workletRuntimeLoaded && registerWorkletInternal("main-thread", "d3dd:test:1", function(e) {
+    const onScroll = lynxWorkletImpl._workletMap["d3dd:test:1"].bind(this);
+    'main thread';
+    console.info(e);
+});
+const __snapshot_a94a8_test_1 = "__snapshot_a94a8_test_1";
+ReactLynx.snapshotCreatorMap[__snapshot_a94a8_test_1] = (__snapshot_a94a8_test_1)=>ReactLynx.createSnapshot(__snapshot_a94a8_test_1, function() {
+        const pageId = ReactLynx.__pageId;
+        const el = __CreateView(pageId);
+        const el1 = __CreateText(pageId);
+        __AppendElement(el, el1);
+        return [
+            el,
+            el1
+        ];
+    }, [
+        (snapshot, index, oldValue)=>ReactLynx.updateWorkletEvent(snapshot, index, oldValue, 0, "main-thread", "bindEvent", "scroll"),
+        (snapshot, index, oldValue)=>ReactLynx.updateEvent(snapshot, index, oldValue, 1, "bindEvent", "tap", '')
+    ], [
+        [
+            ReactLynx.__DynamicPartSlotV2,
+            1
+        ]
+    ], undefined, globDynamicComponentEntry, null, true);
+"
+`;
