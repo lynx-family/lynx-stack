@@ -772,8 +772,8 @@ importers:
         specifier: ^0.2.7
         version: 0.2.7(@modelcontextprotocol/sdk@1.25.2(hono@4.12.12)(supports-color@8.1.1)(zod@4.4.3))(zod@4.4.3)
       '@preact/signals':
-        specifier: ^2.5.1
-        version: 2.5.1(preact@10.29.1)
+        specifier: ^2.9.4
+        version: 2.9.4(preact@10.29.1)
       typedoc:
         specifier: ^0.28.19
         version: 0.28.19(typescript@6.0.3)
@@ -818,8 +818,8 @@ importers:
         specifier: 0.10.5
         version: 0.10.5
       '@preact/signals':
-        specifier: ^2.5.1
-        version: 2.5.1(preact@10.29.1)
+        specifier: ^2.9.4
+        version: 2.9.4(preact@10.29.1)
     devDependencies:
       '@lynx-js/genui-cli':
         specifier: workspace:*
@@ -4587,8 +4587,8 @@ packages:
   '@preact/signals-core@1.14.4':
     resolution: {integrity: sha512-HNB6HYeYKhQbJ1aKl+YRjrS4+QWHLKX6qKoUsfS/m0vqzsVaEBiZiaKbG/e+NKk2ch5ALQr/ihWaMHxiCuuWHA==}
 
-  '@preact/signals@2.5.1':
-    resolution: {integrity: sha512-VPjk5YFt7i11Fi4UK0tzaEe5xLwfhUxXL3l89ocxQ5aPz7bRo8M5+N73LjBMPklyXKYKz6YsNo4Smp8n6nplng==}
+  '@preact/signals@2.9.4':
+    resolution: {integrity: sha512-JzAZXcRkmCNf9wVuxNI7UWseu3++Mm0dZ6UFyjFby44CyKIl7Y06oOsW3KA5Nx0L8tpE87OY5pLe0uQ0xcWKrg==}
     peerDependencies:
       preact: '>= 10.25.0 || >=11.0.0-0'
 
@@ -14099,7 +14099,7 @@ snapshots:
 
   '@preact/signals-core@1.14.4': {}
 
-  '@preact/signals@2.5.1(preact@10.29.1)':
+  '@preact/signals@2.9.4(preact@10.29.1)':
     dependencies:
       '@preact/signals-core': 1.14.4
       preact: 10.29.1
