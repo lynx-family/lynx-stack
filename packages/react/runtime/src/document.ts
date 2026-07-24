@@ -30,35 +30,6 @@ interface SnapshotDocumentAdapter {
 const document: SnapshotDocumentAdapter = {} as SnapshotDocumentAdapter;
 
 /**
- * Text node used by Preact's text diffing. The `data` setter lives on the
- * prototype so creating a text node does not pay for a per-instance
- * `Object.defineProperty`. Like the previous per-instance definition, there
- * is deliberately no getter — Preact reads `dom.data` before writing, and
- * `undefined` makes it always write.
- */
-class BackgroundTextSnapshotInstance extends BackgroundSnapshotInstance {
-  constructor(text: string) {
-    super(null as unknown as string);
-    this.setAttribute(0, text);
-  }
-
-  set data(v: string) {
-    this.setAttribute(0, v);
-  }
-}
-
-class TextSnapshotInstance extends SnapshotInstance {
-  constructor(text: string) {
-    super(null as unknown as string);
-    this.setAttribute(0, text);
-  }
-
-  set data(v: string) {
-    this.setAttribute(0, v);
-  }
-}
-
-/**
  * Sets up the document interface for the background thread.
  * All DOM operations are intercepted to create {@link BackgroundSnapshotInstance}.
  */
@@ -70,7 +41,14 @@ function setupBackgroundDocument(_document: SnapshotDocumentAdapter = document):
     return new BackgroundSnapshotInstance(type);
   };
   _document.createTextNode = function(text: string) {
-    return new BackgroundTextSnapshotInstance(text);
+    const i = new BackgroundSnapshotInstance(null as unknown as string);
+    i.setAttribute(0, text);
+    Object.defineProperty(i, 'data', {
+      set(v) {
+        i.setAttribute(0, v);
+      },
+    });
+    return i;
   };
 }
 
@@ -88,7 +66,14 @@ function setupDocument(_document: SnapshotDocumentAdapter = document): void {
     return si;
   };
   _document.createTextNode = function(text: string) {
-    return new TextSnapshotInstance(text);
+    const i = new SnapshotInstance(null as unknown as string);
+    i.setAttribute(0, text);
+    Object.defineProperty(i, 'data', {
+      set(v) {
+        i.setAttribute(0, v);
+      },
+    });
+    return i;
   };
 }
 
