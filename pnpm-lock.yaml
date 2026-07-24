@@ -1786,8 +1786,8 @@ importers:
         specifier: 0.2.4
         version: 0.2.4(@rsbuild/core@2.1.7(core-js@3.49.0))(tailwindcss@3.4.19)
       rslog:
-        specifier: ^1.3.2
-        version: 1.3.2
+        specifier: ^2.3.0
+        version: 2.3.0
       type-fest:
         specifier: ^5.8.0
         version: 5.8.0
@@ -10357,6 +10357,10 @@ packages:
 
   rslog@1.3.2:
     resolution: {integrity: sha512-1YyYXBvN0a2b1MSIDLwDTqqgjDzRKxUg/S/+KO6EAgbtZW1B3fdLHAMhEEtvk1patJYMqcRvlp3HQwnxj7AdGQ==}
+
+  rslog@2.3.0:
+    resolution: {integrity: sha512-g2wW/ermwzGTLlzGdJBDRc4YKz2/yPBjf57w9g5CvhtpZ91Xq95OaWku0oNHYi+XsuV6v8QrCo2oJJR/pCUR8g==}
+    engines: {node: ^20.19.0 || >=22.12.0}
 
   rspack-merge@1.0.1:
     resolution: {integrity: sha512-W/mzCdxfV+EXOdpfwcLWc2TZ9EYa2LYumAMgpTn27bSEOO0BQz/SA8qfnJRCMkJyNST2URxmwqBmQbh5tLFwsg==}
@@ -20670,6 +20674,8 @@ snapshots:
       '@rsbuild/core': 2.1.7(core-js@3.49.0)
 
   rslog@1.3.2: {}
+
+  rslog@2.3.0: {}
 
   rspack-merge@1.0.1: {}
 
