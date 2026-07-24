@@ -2409,7 +2409,7 @@ importers:
   packages/webpack/template-webpack-plugin:
     dependencies:
       '@jridgewell/trace-mapping':
-        specifier: ^0.3.29
+        specifier: ^0.3.31
         version: 0.3.31
       '@lynx-js/css-serializer':
         specifier: workspace:*

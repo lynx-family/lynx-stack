@@ -36,7 +36,7 @@
     "test": "rstest"
   },
   "dependencies": {
-    "@jridgewell/trace-mapping": "^0.3.29",
+    "@jridgewell/trace-mapping": "^0.3.31",
     "@lynx-js/css-serializer": "workspace:*",
     "@lynx-js/tasm": "0.0.39",
     "@lynx-js/web-core": "workspace:*",
