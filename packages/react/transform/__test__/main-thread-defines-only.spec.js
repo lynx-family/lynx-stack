@@ -92,6 +92,7 @@ export function App() {
       options,
     );
 
+    expect(result.code).toMatchSnapshot();
     expect(result.code).toContain('import "./lazy-comp.jsx"');
     expect(result.code).not.toContain('import(');
   });
