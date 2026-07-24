@@ -1456,11 +1456,11 @@ importers:
         specifier: ^5.8.0
         version: 5.8.0
       typia:
-        specifier: 12.1.1
-        version: 12.1.1(typescript@6.0.3)
+        specifier: 13.1.19
+        version: 13.1.19
       typia-rspack-plugin:
         specifier: 3.0.1
-        version: 3.0.1(@rspack/core@2.1.4(@swc/helpers@0.5.23))(typescript@6.0.3)(typia@12.1.1(typescript@6.0.3))
+        version: 3.0.1(@rspack/core@2.1.4(@swc/helpers@0.5.23))(typescript@6.0.3)(typia@13.1.19)
 
   packages/rspeedy/create-rspeedy:
     dependencies:
@@ -1564,11 +1564,11 @@ importers:
         specifier: ^4.0.0
         version: 4.0.0
       typia:
-        specifier: 12.1.1
-        version: 12.1.1(typescript@6.0.3)
+        specifier: 13.1.19
+        version: 13.1.19
       typia-rspack-plugin:
         specifier: 3.0.1
-        version: 3.0.1(@rspack/core@2.1.4(@swc/helpers@0.5.23))(typescript@6.0.3)(typia@12.1.1(typescript@6.0.3))
+        version: 3.0.1(@rspack/core@2.1.4(@swc/helpers@0.5.23))(typescript@6.0.3)(typia@13.1.19)
 
   packages/rspeedy/plugin-debug-metadata:
     dependencies:
@@ -1705,11 +1705,11 @@ importers:
         specifier: ^5.8.0
         version: 5.8.0
       typia:
-        specifier: 12.1.1
-        version: 12.1.1(typescript@6.0.3)
+        specifier: 13.1.19
+        version: 13.1.19
       typia-rspack-plugin:
         specifier: 3.0.1
-        version: 3.0.1(@rspack/core@2.1.4(@swc/helpers@0.5.23))(typescript@6.0.3)(typia@12.1.1(typescript@6.0.3))
+        version: 3.0.1(@rspack/core@2.1.4(@swc/helpers@0.5.23))(typescript@6.0.3)(typia@13.1.19)
 
   packages/rspeedy/plugin-react-alias:
     devDependencies:
@@ -6143,17 +6143,11 @@ packages:
     resolution: {integrity: sha512-VHAVbp8d2VGm90EK//brKIYvT3iPrLXMq4/LApCdkKww/Hfn33zPRVmig4rswNaJiVu8XhcdHld5yfMw6d5A9Q==}
     hasBin: true
 
-  '@typia/core@12.1.1':
-    resolution: {integrity: sha512-SfyugTNTCJa75pVwSXwfx6SwvS5YcNOCBg8VjxqykhSgCyoAXkZtc2PsWEkeeaB8EPut1JRBCrzlWtsXo1EZ8Q==}
+  '@typia/interface@13.1.19':
+    resolution: {integrity: sha512-s7X/TvpUgAMtwdNNmESlTnvEs832LOP0MGWIw2+7ZmB0YXVXvpM8zKDM8mgIqrZQs9FRrHXURArJyPoS9YT+hQ==}
 
-  '@typia/interface@12.1.1':
-    resolution: {integrity: sha512-FKLpgNX1mrGnPfeXhU6ztRyMhLvuK13OY8MgqaIucl59XNyCVtcRqgnCMc7dJGLpXEveVp3N5a5VGyZdNUHnCQ==}
-
-  '@typia/transform@12.1.1':
-    resolution: {integrity: sha512-RbWB9L/aqcBTbPrJBOYpIg8IyQh6eGliElAFww40F7QlgsXIlk13twjTV3EEWXvgvOTl5eOSDWUKYgL7iAgoOw==}
-
-  '@typia/utils@12.1.1':
-    resolution: {integrity: sha512-RQSHMEyVfPnpQJHGfFe2pxU1H5lJPUBF9CQcCB6/EtI+QKcBj/QmQBOJX7a/WRyvC5ojJlJGL0DEylufhBKxkQ==}
+  '@typia/utils@13.1.19':
+    resolution: {integrity: sha512-XH9s61NOghguiezQH7eR1VYCDvYLrUa9Dqvj4b8w47uJAaW6Nxq9MLj4meLHtQ/nhk6Nt4ZonkLVgOLfkCPeEg==}
 
   '@uiw/codemirror-extensions-basic-setup@4.25.9':
     resolution: {integrity: sha512-QFAqr+pu6lDmNpAlecODcF49TlsrZ0bj15zPzfhiqSDl+Um3EsDLFLppixC7kFLn+rdDM2LTvVjn5CPvefpRgw==}
@@ -6579,9 +6573,6 @@ packages:
     resolution: {integrity: sha512-FmeCCAenzH0KH381SPT5FZmiA/TmpndpcaShhfgEN9eCVjnFBqq3l1xrI42y8+PPLI6hypzou4GXw00WHmPBLQ==}
     engines: {node: '>= 0.4'}
 
-  array-timsort@1.0.3:
-    resolution: {integrity: sha512-/+3GRL7dDAGEfM6TseQk/U+mi18TU2Ms9I3UlLdUMhz2hbvGNTKdj9xniwXfUqgYhHxRx0+8UnKkvlNwVU+cWQ==}
-
   array-union@2.1.0:
     resolution: {integrity: sha512-HGyxoOTYUyCM6stUe6EJgnd4EoewAI7zMdfqO+kGjnlZmBDz/cR5pf8r/cR4Wq60sL/p0IkcjUEEPwS3GFrIyw==}
     engines: {node: '>=8'}
@@ -6941,10 +6932,6 @@ packages:
     resolution: {integrity: sha512-NOKm8xhkzAjzFx8B2v5OAHT+u5pRQc2UCa2Vq9jYL/31o2wi9mxBA7LIFs3sV5VSC49z6pEhfbMULvShKj26WA==}
     engines: {node: '>= 6'}
 
-  comment-json@4.2.5:
-    resolution: {integrity: sha512-bKw/r35jR3HGt5PEPm1ljsQQGyCrR8sFGNiN5L+ykDHdpO8Smxkrkla9Yi6NkQyUrb8V54PGhfMs6NrIwtxtdw==}
-    engines: {node: '>= 6'}
-
   comment-parser@1.4.1:
     resolution: {integrity: sha512-buhp5kePrmda3vhc5B9t7pUQXAb2Tnd0qgpkIhPhkHXxJpiPJ11H0ZEU0oBpJ2QztSbzG/ZxMj/CHsYJqRHmyg==}
     engines: {node: '>= 12.0.0'}
@@ -7003,9 +6990,6 @@ packages:
 
   core-js@3.49.0:
     resolution: {integrity: sha512-es1U2+YTtzpwkxVLwAFdSpaIMyQaq0PBgm3YD1W3Qpsn1NAmO3KSgZfu+oGSWVu6NvLHoHCV/aYcsE5wiB7ALg==}
-
-  core-util-is@1.0.3:
-    resolution: {integrity: sha512-ZQBvi1DcpJ4GDqanjucZ2Hj3wEO5pZDS89BWbkcrvdxksJorwUDDZamX9ldFkp9aw2lmBDLgkObEA4DWNJ9FYQ==}
 
   cors@2.8.6:
     resolution: {integrity: sha512-tJtZBBHA6vjIAaF6EnIaq6laBBP9aq/Y3ouVJjEfoHbRBcHBAHYcMh/w8LDrk2PvIMMq8gmopa5D4V8RmbrxGw==}
@@ -8092,10 +8076,6 @@ packages:
 
   has-flag@4.0.0:
     resolution: {integrity: sha512-EykJT/Q1KjTWctppgIAgfSO0tKVuZUjhgMr17kqTumMl6Afv3EISleU7qZUzoXDFTAHTDC4NOoG/ZxU3EvlMPQ==}
-    engines: {node: '>=8'}
-
-  has-own-prop@2.0.0:
-    resolution: {integrity: sha512-Pq0h+hvsVm6dDEa8x82GnLSYHOzNDt7f0ddFa3FqcQlgzEiptPqL+XrOJNavjOzSYiYWIrgeVYYgGlLmnxwilQ==}
     engines: {node: '>=8'}
 
   has-property-descriptors@1.0.2:
@@ -10232,10 +10212,6 @@ packages:
   remark-stringify@11.0.0:
     resolution: {integrity: sha512-1OSmLd3awB/t8qdoEOMazZkNsfVTeY4fTsgzcQFdXNq8ToTN4ZGwrMnlda4K6smTFKD+GRV6O48i6Z4iKgPPpw==}
 
-  repeat-string@1.6.1:
-    resolution: {integrity: sha512-PV0dzCYDNfRi1jCDbJzpW7jNNDRuCOG/jI5ctQcGKt/clZD+YcPS3yIlWuTJMmESC8aevCFmWJy5wjAFgNqN6w==}
-    engines: {node: '>=0.10'}
-
   require-directory@2.1.1:
     resolution: {integrity: sha512-fGxEI7+wsG9xrvdjsrlmL22OMTTiHRwAMroiEeMgq8gzoLC/PQr7RsRDSTLUg/bZAZtF+TVIkHc6/4RIKrui+Q==}
     engines: {node: '>=0.10.0'}
@@ -11274,11 +11250,17 @@ packages:
       typescript: '*'
       typia: '*'
 
-  typia@12.1.1:
-    resolution: {integrity: sha512-sgUjpsSW8EhvVoLVbalMyejo9XT42cJUPqFPmXPdf/bIh7xY0rIiNF4CJc9oTXZpqtiZR9II7M8qZ0dYkg93Gw==}
+  typia@13.1.19:
+    resolution: {integrity: sha512-y9bDIOZ4ThobE6W2Rd++/AN8imhC/WHN+StcNOTTraw2lp3SfTDBiQVsbZ+FkSQDA0ZI5Jg2fGzixnQ1o2FjCg==}
     hasBin: true
     peerDependencies:
-      typescript: '>=4.8.0 <7.0.0'
+      '@ttsc/unplugin': '>=0.19.2'
+      ttsc: '>=0.19.2'
+    peerDependenciesMeta:
+      '@ttsc/unplugin':
+        optional: true
+      ttsc:
+        optional: true
 
   uc.micro@2.1.0:
     resolution: {integrity: sha512-ARDJmphmdvUk6Glw7y9DQ2bFkKBHwQHLi2lsaH6PPmz/Ka9sFOBsBluozhDltWmnv9u/cF6Rt87znRTPV+yp/A==}
@@ -15793,22 +15775,11 @@ snapshots:
       '@typescript/native-preview-win32-arm64': 7.0.0-dev.20260212.1
       '@typescript/native-preview-win32-x64': 7.0.0-dev.20260212.1
 
-  '@typia/core@12.1.1':
-    dependencies:
-      '@typia/interface': 12.1.1
-      '@typia/utils': 12.1.1
+  '@typia/interface@13.1.19': {}
 
-  '@typia/interface@12.1.1': {}
-
-  '@typia/transform@12.1.1':
+  '@typia/utils@13.1.19':
     dependencies:
-      '@typia/core': 12.1.1
-      '@typia/interface': 12.1.1
-      '@typia/utils': 12.1.1
-
-  '@typia/utils@12.1.1':
-    dependencies:
-      '@typia/interface': 12.1.1
+      '@typia/interface': 13.1.19
 
   '@uiw/codemirror-extensions-basic-setup@4.25.9(@codemirror/autocomplete@6.20.1)(@codemirror/commands@6.10.3)(@codemirror/language@6.12.3)(@codemirror/lint@6.9.5)(@codemirror/search@6.7.0)(@codemirror/state@6.6.0)(@codemirror/view@6.41.1)':
     dependencies:
@@ -16254,8 +16225,6 @@ snapshots:
       is-string: 1.1.1
       math-intrinsics: 1.1.0
 
-  array-timsort@1.0.3: {}
-
   array-union@2.1.0: {}
 
   array.prototype.findlastindex@1.2.6:
@@ -16629,14 +16598,6 @@ snapshots:
 
   commander@4.1.1: {}
 
-  comment-json@4.2.5:
-    dependencies:
-      array-timsort: 1.0.3
-      core-util-is: 1.0.3
-      esprima: 4.0.1
-      has-own-prop: 2.0.0
-      repeat-string: 1.6.1
-
   comment-parser@1.4.1: {}
 
   commondir@1.0.1: {}
@@ -16678,8 +16639,6 @@ snapshots:
       browserslist: 4.28.1
 
   core-js@3.49.0: {}
-
-  core-util-is@1.0.3: {}
 
   cors@2.8.6:
     dependencies:
@@ -18001,8 +17960,6 @@ snapshots:
   has-bigints@1.0.2: {}
 
   has-flag@4.0.0: {}
-
-  has-own-prop@2.0.0: {}
 
   has-property-descriptors@1.0.2:
     dependencies:
@@ -20541,8 +20498,6 @@ snapshots:
       mdast-util-to-markdown: 2.1.2
       unified: 11.0.5
 
-  repeat-string@1.6.1: {}
-
   require-directory@2.1.1: {}
 
   require-from-string@2.0.2: {}
@@ -21612,25 +21567,21 @@ snapshots:
 
   typescript@6.0.3: {}
 
-  typia-rspack-plugin@3.0.1(@rspack/core@2.1.4(@swc/helpers@0.5.23))(typescript@6.0.3)(typia@12.1.1(typescript@6.0.3)):
+  typia-rspack-plugin@3.0.1(@rspack/core@2.1.4(@swc/helpers@0.5.23))(typescript@6.0.3)(typia@13.1.19):
     dependencies:
       '@rspack/core': 2.1.4(@swc/helpers@0.5.23)
       typescript: 6.0.3
-      typia: 12.1.1(typescript@6.0.3)
+      typia: 13.1.19
 
-  typia@12.1.1(typescript@6.0.3):
+  typia@13.1.19:
     dependencies:
       '@standard-schema/spec': 1.1.0
-      '@typia/core': 12.1.1
-      '@typia/interface': 12.1.1
-      '@typia/transform': 12.1.1
-      '@typia/utils': 12.1.1
+      '@typia/interface': 13.1.19
+      '@typia/utils': 13.1.19
       commander: 10.0.1
-      comment-json: 4.2.5
       inquirer: 8.2.6
-      package-manager-detector: 0.2.11
       randexp: 0.5.3
-      typescript: 6.0.3
+      tinyglobby: 0.2.15
 
   uc.micro@2.1.0: {}
 
