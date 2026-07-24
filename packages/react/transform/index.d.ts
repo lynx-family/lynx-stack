@@ -698,6 +698,7 @@ export interface TransformNodiffOptions {
   defineDCE: boolean | DefineDceVisitorConfig
   directiveDCE: boolean | DirectiveDceVisitorConfig
   worklet: boolean | WorkletVisitorConfig
+  mainThreadDefinesOnly?: boolean
   dynamicImport?: boolean | DynamicImportVisitorConfig
   /** @internal */
   inject?: boolean | InjectVisitorConfig

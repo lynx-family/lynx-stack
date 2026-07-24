@@ -1177,6 +1177,7 @@ where
   comments: Option<C>,
   pub ui_source_map_records: Rc<RefCell<Vec<UISourceMapRecord>>>,
   pub source_map: Option<Lrc<SourceMap>>,
+  pub main_thread_defs_collector: Option<Rc<RefCell<Vec<ModuleItem>>>>,
 }
 
 impl<C> JSXTransformer<C>
@@ -1216,7 +1217,16 @@ where
       comments,
       ui_source_map_records: Rc::new(RefCell::new(vec![])),
       source_map,
+      main_thread_defs_collector: None,
     }
+  }
+
+  pub fn with_main_thread_defs_collector(
+    mut self,
+    collector: Rc<RefCell<Vec<ModuleItem>>>,
+  ) -> Self {
+    self.main_thread_defs_collector = Some(collector);
+    self
   }
 
   fn parse_directives(&mut self, span: Span) {
@@ -1640,6 +1650,11 @@ where
     ));
 
     self.current_snapshot_id = Some(snapshot_id.clone());
+    if let Some(collector) = &self.main_thread_defs_collector {
+      let mut collector = collector.borrow_mut();
+      collector.push(entry_snapshot_uid_def.clone());
+      collector.push(snapshot_def.clone());
+    }
     self.current_snapshot_defs.push(entry_snapshot_uid_def);
     self.current_snapshot_defs.push(snapshot_def);
 
@@ -1728,25 +1743,26 @@ where
 
     if let Expr::Ident(runtime_id) = &*self.runtime_id {
       if self.snapshot_counter > 0 {
-        prepend_stmt(
-          &mut n.body,
-          ModuleItem::ModuleDecl(ModuleDecl::Import(ImportDecl {
+        let runtime_import = ModuleItem::ModuleDecl(ModuleDecl::Import(ImportDecl {
+          span: DUMMY_SP,
+          specifiers: vec![ImportSpecifier::Namespace(ImportStarAsSpecifier {
             span: DUMMY_SP,
-            specifiers: vec![ImportSpecifier::Namespace(ImportStarAsSpecifier {
-              span: DUMMY_SP,
-              local: runtime_id.clone(),
-            })],
-            src: Box::new(Str {
-              span: DUMMY_SP,
-              raw: None,
-              value: self.cfg.runtime_pkg.clone().into(),
-            }),
-            type_only: Default::default(),
-            // asserts: Default::default(),
-            with: Default::default(),
-            phase: ImportPhase::Evaluation,
-          })),
-        );
+            local: runtime_id.clone(),
+          })],
+          src: Box::new(Str {
+            span: DUMMY_SP,
+            raw: None,
+            value: self.cfg.runtime_pkg.clone().into(),
+          }),
+          type_only: Default::default(),
+          // asserts: Default::default(),
+          with: Default::default(),
+          phase: ImportPhase::Evaluation,
+        }));
+        if let Some(collector) = &self.main_thread_defs_collector {
+          collector.borrow_mut().insert(0, runtime_import.clone());
+        }
+        prepend_stmt(&mut n.body, runtime_import);
       }
     }
   }

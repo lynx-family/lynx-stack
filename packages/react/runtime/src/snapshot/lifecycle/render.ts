@@ -12,6 +12,10 @@ import { render as renderToString } from '../renderToOpcodes/index.js';
 import { SnapshotInstance } from '../snapshot/snapshot.js';
 
 function renderMainThread(): void {
+  if (typeof __ENABLE_MTS_RENDERING__ !== 'undefined' && !__ENABLE_MTS_RENDERING__) {
+    return;
+  }
+
   let opcodes;
   try {
     if (typeof __PROFILE__ !== 'undefined' && __PROFILE__) {

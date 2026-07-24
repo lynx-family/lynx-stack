@@ -27,7 +27,7 @@ use swc_core::{
     errors::{DiagnosticBuilder, Emitter, Handler, HANDLER},
     pass::Optional,
     sync::Lrc,
-    FileName, FilePathMapping, Mark, SourceMap, GLOBALS,
+    FileName, FilePathMapping, Mark, SourceMap, DUMMY_SP, GLOBALS,
   },
   ecma::{
     ast::*,
@@ -43,8 +43,9 @@ use swc_core::{
       optimization::{simplifier, simplify},
       react, typescript,
     },
-    visit::visit_mut_pass,
+    visit::{visit_mut_pass, Visit, VisitWith},
   },
+  quote,
 };
 
 // currently `use xxx as yyy` is not supported by napi-rs
@@ -218,6 +219,8 @@ pub struct TransformNodiffOptions {
   #[napi(js_name = "directiveDCE")]
   pub directive_dce: Either<bool, DirectiveDCEVisitorConfig>,
   pub worklet: Either<bool, WorkletVisitorConfig>,
+  #[napi(js_name = "mainThreadDefinesOnly")]
+  pub main_thread_defines_only: Option<bool>,
   pub dynamic_import: Option<Either<bool, DynamicImportVisitorConfig>>,
   /// @internal
   pub inject: Option<Either<bool, InjectVisitorConfig>>,
@@ -246,6 +249,7 @@ impl Default for TransformNodiffOptions {
       define_dce: Either::A(false),
       directive_dce: Either::A(false),
       worklet: Either::A(false),
+      main_thread_defines_only: None,
       dynamic_import: Some(Either::B(Default::default())),
       inject: Some(Either::A(false)),
       input_source_map: None,
@@ -276,6 +280,47 @@ pub struct TransformNodiffOutput {
   /// @internal
   #[napi(js_name = "elementTemplates")]
   pub element_templates: Option<Vec<ElementTemplateAsset>>,
+}
+
+fn side_effect_import(src: Box<Str>, with: Option<Box<ObjectLit>>) -> ModuleItem {
+  ModuleItem::ModuleDecl(ModuleDecl::Import(ImportDecl {
+    span: DUMMY_SP,
+    specifiers: vec![],
+    src,
+    type_only: false,
+    with,
+    phase: ImportPhase::Evaluation,
+  }))
+}
+
+struct DynamicImportCollector {
+  imports: Vec<CallExpr>,
+}
+
+impl Visit for DynamicImportCollector {
+  fn visit_call_expr(&mut self, n: &CallExpr) {
+    if matches!(n.callee, Callee::Import(_)) {
+      if let Some(arg) = n.args.first() {
+        if matches!(&*arg.expr, Expr::Lit(Lit::Str(_))) {
+          self.imports.push(n.clone());
+        }
+      }
+    }
+    n.visit_children_with(self);
+  }
+}
+
+// Keeps a dynamic `import()` alive for webpack's async-chunk (lazy bundle)
+// creation without executing it: the main thread renders nothing in
+// `enableMTSRendering: false`, so the lazy bundle must keep loading on demand
+// and register its snapshots from its own main-thread section. Converting the
+// import to a static one would instead inline that section into the main
+// chunk.
+fn keep_dynamic_import(call: CallExpr) -> ModuleItem {
+  ModuleItem::Stmt(quote!(
+    "globalThis.__lynxKeepLazyBundle && $call;" as Stmt,
+    call: Expr = Expr::Call(call),
+  ))
 }
 
 type ElementTemplateCollector = Rc<RefCell<Vec<CoreElementTemplateAsset>>>;
@@ -384,12 +429,20 @@ fn transform_react_lynx_inner(
     let top_level_mark = Mark::new();
     let top_retain = WEBPACK_VARS.iter().map(|&s| s.into()).collect::<Vec<_>>();
 
+    let main_thread_defines_only = options.main_thread_defines_only.unwrap_or(false);
+    let mut dynamic_imports: Vec<CallExpr> = vec![];
+    if main_thread_defines_only {
+      let mut collector = DynamicImportCollector { imports: vec![] };
+      program.visit_with(&mut collector);
+      dynamic_imports = collector.imports;
+    }
+
     let simplify_pass_1 = Optional::new(
       simplifier(
         top_level_mark,
         simplify::Config {
           dce: simplify::dce::Config {
-            preserve_imports_with_side_effects: false,
+            preserve_imports_with_side_effects: main_thread_defines_only,
             top_retain: top_retain.clone(),
             ..Default::default()
           },
@@ -540,6 +593,11 @@ fn transform_react_lynx_inner(
       jsx_backend_enabled && !preserve_jsx,
     );
 
+    let main_thread_defs_collector =
+      main_thread_defines_only.then(|| Rc::new(RefCell::new(Vec::<ModuleItem>::new())));
+    let main_thread_worklet_collector =
+      main_thread_defines_only.then(|| Rc::new(RefCell::new(Vec::<ModuleItem>::new())));
+
     let snapshot_plugin = if use_snapshot_plugin {
       let transformer = SnapshotJSXTransformer::new(
         snapshot_plugin_config.clone(),
@@ -551,6 +609,12 @@ fn transform_react_lynx_inner(
 
       let transformer = if enable_ui_source_map {
         transformer.with_ui_source_map_records(snapshot_ui_source_map_records.clone())
+      } else {
+        transformer
+      };
+
+      let transformer = if let Some(collector) = &main_thread_defs_collector {
+        transformer.with_main_thread_defs_collector(collector.clone())
       } else {
         transformer
       };
@@ -619,7 +683,7 @@ fn transform_react_lynx_inner(
       top_level_mark,
       simplify::Config {
         dce: simplify::dce::Config {
-          preserve_imports_with_side_effects: false,
+          preserve_imports_with_side_effects: main_thread_defines_only,
           top_retain: top_retain.clone(),
           ..Default::default()
         },
@@ -674,16 +738,25 @@ fn transform_react_lynx_inner(
       ),
     };
 
+    let with_worklet_collector = |visitor: WorkletVisitor| {
+      if let Some(collector) = &main_thread_worklet_collector {
+        visitor.with_main_thread_stmts_collector(collector.clone())
+      } else {
+        visitor
+      }
+    };
     let worklet_plugin = match options.worklet {
       Either::A(config) => Optional::new(
-        visit_mut_pass(WorkletVisitor::default().with_content_hash(content_hash)),
+        visit_mut_pass(with_worklet_collector(
+          WorkletVisitor::default().with_content_hash(content_hash),
+        )),
         config,
       ),
       Either::B(config) => Optional::new(
-        visit_mut_pass(
+        visit_mut_pass(with_worklet_collector(
           WorkletVisitor::new(options.mode.unwrap_or(TransformMode::Production), config)
             .with_content_hash(content_hash),
-        ),
+        )),
         true,
       ),
     };
@@ -760,9 +833,92 @@ fn transform_react_lynx_inner(
       ),
     );
 
-    let program = helpers::HELPERS.set(&helpers::Helpers::new(true), || {
+    let mut program = helpers::HELPERS.set(&helpers::Helpers::new(true), || {
       HANDLER.set(&handler, || program.apply(pass))
     });
+
+    if main_thread_defines_only {
+      // The collected defines are self-contained (they carry their own runtime
+      // imports) but were captured mid-pass, so hygiene them on their own to
+      // fix their internal locals (e.g. a creator's `el`/`el1`). Doing it here
+      // — rather than over the whole rebuilt module — avoids renaming the kept
+      // user imports that worklet bodies reference (e.g. `runOnBackground`).
+      let mut define_items: Vec<ModuleItem> = vec![];
+      if let Some(collector) = &main_thread_defs_collector {
+        define_items.extend(collector.borrow_mut().drain(..));
+      }
+      if let Some(collector) = &main_thread_worklet_collector {
+        define_items.extend(collector.borrow_mut().drain(..));
+      }
+      let define_body = match Program::Module(Module {
+        span: DUMMY_SP,
+        body: define_items,
+        shebang: None,
+      })
+      .apply(hygiene_with_config(Config {
+        top_level_mark,
+        ..Default::default()
+      })) {
+        Program::Module(m) => m.body,
+        _ => vec![],
+      };
+
+      if let Program::Module(module) = &program {
+        let runtime_pkg = snapshot_plugin_config.runtime_pkg.as_str();
+        let mut seen_srcs: std::collections::HashSet<swc_core::atoms::Wtf8Atom> = Default::default();
+        let mut items: Vec<ModuleItem> = vec![];
+        for item in &module.body {
+          match item {
+            // Emit two imports per source: a side-effect import so the module
+            // is always evaluated (its snapshot registrations run — the
+            // `sideEffects: true` main-thread rule keeps it even when nothing
+            // is used), and the original import so its bindings stay available
+            // for worklet bodies and snapshot creators that reference them
+            // (e.g. `runOnBackground`). Unused bindings are tree-shaken. The
+            // runtime pkg is skipped because the collected defines import it.
+            ModuleItem::ModuleDecl(ModuleDecl::Import(import)) if !import.type_only => {
+              if import.src.value.as_str() == Some(runtime_pkg) {
+                continue;
+              }
+              if seen_srcs.insert(import.src.value.clone()) {
+                items.push(side_effect_import(import.src.clone(), import.with.clone()));
+                if !import.specifiers.is_empty() {
+                  items.push(item.clone());
+                }
+              }
+            }
+            ModuleItem::ModuleDecl(ModuleDecl::ExportNamed(export)) => {
+              if let Some(src) = &export.src {
+                if seen_srcs.insert(src.value.clone()) {
+                  items.push(side_effect_import(src.clone(), export.with.clone()));
+                }
+              }
+            }
+            ModuleItem::ModuleDecl(ModuleDecl::ExportAll(export)) => {
+              if seen_srcs.insert(export.src.value.clone()) {
+                items.push(side_effect_import(export.src.clone(), export.with.clone()));
+              }
+            }
+            _ => {}
+          }
+        }
+        let mut seen_dyn: std::collections::HashSet<swc_core::atoms::Wtf8Atom> =
+          Default::default();
+        for call in dynamic_imports {
+          if let Some(Expr::Lit(Lit::Str(src))) = call.args.first().map(|a| &*a.expr) {
+            if seen_dyn.insert(src.value.clone()) {
+              items.push(keep_dynamic_import(call));
+            }
+          }
+        }
+        items.extend(define_body);
+        program = Program::Module(Module {
+          span: DUMMY_SP,
+          body: items,
+          shebang: None,
+        });
+      }
+    }
 
     let result = c.print(
       &program,

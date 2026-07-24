@@ -53,6 +53,7 @@ export function applyEntry(
     removeDescendantSelectorScope,
     targetSdkVersion,
     extractStr: originalExtractStr,
+    enableMTSRendering,
 
     experimental_isLazyBundle,
   } = options
@@ -309,6 +310,7 @@ export function applyEntry(
         disableCreateSelectorQueryIncompatibleWarning: compat
           ?.disableCreateSelectorQueryIncompatibleWarning ?? false,
         firstScreenSyncTiming,
+        enableMTSRendering,
         globalPropsMode,
         enableSSR,
         mainThreadChunks,
