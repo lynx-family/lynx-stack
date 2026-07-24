@@ -43,9 +43,25 @@ export default defineConfig({
       resolve: {
         alias: {
           '@': path.resolve(__dirname, 'src'),
+          '@lynx-js/web-core/client$': path.resolve(
+            __dirname,
+            '../web-platform/web-core/ts/client/index.ts',
+          ),
+          '@lynx-js/web-elements/all$': path.resolve(
+            __dirname,
+            '../web-platform/web-elements/src/elements/all.ts',
+          ),
+          '@lynx-js/web-elements$': path.resolve(
+            __dirname,
+            '../web-platform/web-elements/src/elements/index.ts',
+          ),
           '@lynx-js/type-element-api/types/element-api.d.ts': path.resolve(
             __dirname,
             'node_modules/@lynx-js/type-element-api/types/element-api.d.ts',
+          ),
+          '@lynx-js/web-worker-rpc$': path.resolve(
+            __dirname,
+            '../web-platform/web-worker-rpc/src/index.ts',
           ),
         },
         fallback: {
