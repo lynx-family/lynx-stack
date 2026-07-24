@@ -11,9 +11,6 @@ import {
   sseHeaders,
 } from '../../../../../common/sse';
 
-export const runtime = 'nodejs';
-export const dynamic = 'force-dynamic';
-
 const HEARTBEAT_INTERVAL_MS = 15_000;
 
 interface RouteContext {

@@ -22,9 +22,6 @@ import { checkRateLimit, rateLimitSseResponse } from '../../common/rate-limit';
 import { readJsonBodyWithLimit } from '../../common/request';
 import { encodeSSE, sseHeaders } from '../../common/sse';
 
-export const runtime = 'nodejs';
-export const dynamic = 'force-dynamic';
-
 interface McpAppsChatBody {
   messages?: unknown;
   conversation?: unknown;

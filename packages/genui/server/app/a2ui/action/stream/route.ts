@@ -39,9 +39,6 @@ import { extractUsageMetrics } from '../../../common/usage';
 import { pickA2UIChatOptions, validateAction } from '../../_shared';
 import { publishA2UIPayload } from '../../payload-publisher';
 
-export const runtime = 'nodejs';
-export const dynamic = 'force-dynamic';
-
 interface A2UIActionStreamBody {
   conversation?: unknown;
   surfaceId?: string;

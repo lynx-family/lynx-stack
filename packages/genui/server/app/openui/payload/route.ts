@@ -8,9 +8,6 @@ import { errorMessage } from '../../common/errors';
 import { checkRateLimit, rateLimitJsonResponse } from '../../common/rate-limit';
 import { readJsonBodyWithLimit } from '../../common/request';
 
-export const runtime = 'nodejs';
-export const dynamic = 'force-dynamic';
-
 interface OpenUIPayloadBody {
   rawText?: unknown;
 }

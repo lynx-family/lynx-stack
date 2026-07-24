@@ -1,7 +1,7 @@
 # GenUI Server
 
-This package contains the Next.js server for GenUI agent APIs, including
-A2UI, OpenUI, and MCP Apps.
+This package contains the Rslib-built Node.js server for GenUI agent APIs,
+including A2UI, OpenUI, and MCP Apps.
 
 ## Deployment Model
 
@@ -43,9 +43,7 @@ export PEXELS_API_KEY="..."
 When `PEXELS_API_KEY` is absent or Pexels returns no result, the server falls
 back to a deterministic Picsum URL.
 
-The server fails fast at startup (via `instrumentation.ts`) when any of
-these are missing in production. In development, a warning is logged
-instead so the playground keeps working.
+The hosting runtime must provide these variables before invoking the handler.
 
 ## Security
 
@@ -112,19 +110,33 @@ memory only, so refreshing the page starts a fresh conversation.
 
 ## Development
 
-Run the development server from this package:
+Watch and rebuild the handler bundle from this package:
 
 ```bash
 pnpm dev
 ```
 
-The server listens on port `3060` by default.
-
 ## Production
 
-Build and start the production server from this package:
+Before relying on production artifacts, build the full repository from the
+repository root:
 
 ```bash
-pnpm build
-pnpm start
+pnpm turbo build
 ```
+
+Use Turbo filters only for narrower diagnosis. Do not use a package-local
+`pnpm build` or a filtered build as a substitute for the repository-root build.
+
+Rslib emits a standard Node HTTP handler at `dist/index.js`:
+
+```ts
+export async function handler(request, response) {
+  // Handle one IncomingMessage and write one ServerResponse.
+}
+```
+
+The package does not create a listening server or own a process lifecycle.
+Platforms should invoke this handler directly. Runtime packages are bundled
+except for `@mastra/core`, which remains external and must be present in the
+production install together with its transitive dependencies.
