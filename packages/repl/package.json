@@ -21,7 +21,7 @@
     "react": "19.2.4",
     "react-dom": "19.2.4",
     "react-resizable-panels": "^4.6.5",
-    "tailwind-merge": "^3.4.0"
+    "tailwind-merge": "^3.6.0"
   },
   "devDependencies": {
     "@lynx-js/lynx-core": "0.1.4",
