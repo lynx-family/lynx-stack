@@ -133,7 +133,8 @@ from the caller's environment. Linux hosts must also provide the
 
 `PORT` defaults to `8080` and must be between `1` and `65535`. The process
 listens on both `0.0.0.0:{PORT}` and `[::]:{PORT}`. Use `GET /health` for a
-readiness check and `POST /judge` to evaluate a page.
+readiness check, `POST /judge` to evaluate a page, and `POST /compare` to
+compare two uploaded images without rendering a page or calling the VLM.
 
 The following request evaluates a local bundle. `url` and `task` are required.
 The other fields are optional.
@@ -152,13 +153,31 @@ curl --request POST http://127.0.0.1:8080/judge \
   }'
 ```
 
-The response is a JSON-encoded `UiJudgeResult`. A completed evaluation returns
-HTTP `200`, including evaluation failures reported in the result's `error`
-field. Invalid HTTP input returns `400`, `413`, or `422`. The server returns
-`503` when its bounded capture queue is full or the headless worker is no longer
-available. A headless-worker panic makes readiness return `503`, initiates
-graceful shutdown, and is propagated as a server error after the worker is
-joined. Request bodies are limited to 16 MiB.
+To run only the deterministic image alignment and pixel comparison, upload the
+two images as `multipart/form-data`:
+
+```bash
+curl --request POST http://127.0.0.1:8080/compare \
+  --form 'referenceImage=@/absolute/path/to/reference.png' \
+  --form 'renderedImage=@/absolute/path/to/rendered.png'
+```
+
+`reference_image` and `rendered_image` are accepted as aliases for clients that
+use snake-case form names. The response contains `alignmentScore`,
+`visualSimilarity`, `differentBlocks`, `totalBlocks`, `diffImageBase64`, and
+any non-fatal `warnings`. This route accepts PNG, JPEG, and WebP image content.
+It normalizes and compares the uploads on the bounded visual worker pool; it
+does not enqueue headless capture, initialize a model client, render a Lynx
+page, or perform VLM scoring.
+
+The `/judge` response is a JSON-encoded `UiJudgeResult`. A completed evaluation
+returns HTTP `200`, including evaluation failures reported in the result's
+`error` field. Invalid HTTP input returns `400`, `413`, or `422`. The server
+returns `503` when its bounded capture queue is full or the headless worker is
+no longer available. A headless-worker panic makes readiness return `503`,
+initiates graceful shutdown, and is propagated as a server error after the
+worker is joined. Each uploaded comparison image is limited to 10 MiB. Request
+bodies are limited to 20 MiB plus 64 KiB of multipart overhead.
 
 The server accepts connections concurrently. It keeps native Lynx capture on a
 dedicated current-thread runtime because the renderer is thread-bound. After a
