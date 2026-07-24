@@ -53,6 +53,8 @@ minimumReleaseAgeExclude:
   - "@rstest/*"
   # Renovate security update: turbo@2.9.14
   - turbo@2.9.14
+  # Renovate security update: @modelcontextprotocol/sdk@1.26.0
+  - "@modelcontextprotocol/sdk@1.26.0"
 # npm's abbreviated metadata omits the `time` field, so a strict check hard-fails
 # (`ERR_PNPM_MISSING_TIME`) on packages it cannot date — e.g. during
 # `pnpm dedupe --check`. Run non-strict so the age check is enforced when `time`
