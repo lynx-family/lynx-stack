@@ -4,8 +4,9 @@
 
 import type { RsbuildInstance, RsbuildPlugin } from '@rsbuild/core'
 
+import { debug, isDebug } from '@lynx-js/rsbuild-plugin/internal'
+
 import type { Config } from '../config/index.js'
-import { debug, isDebug } from '../debug.js'
 
 async function applyDebugPlugins(
   rsbuildInstance: RsbuildInstance,
@@ -27,54 +28,43 @@ export async function applyDefaultPlugins(
   rsbuildInstance: RsbuildInstance,
   config: Config,
 ): Promise<void> {
-  const defaultPlugins = Object.freeze<Promise<RsbuildPlugin>[]>([
-    import('./api.plugin.js').then(({ pluginAPI }) => pluginAPI(config)),
-
-    import('./chunkLoading.plugin.js').then(({ pluginChunkLoading }) =>
-      pluginChunkLoading()
-    ),
-
-    import('@lynx-js/debug-metadata-rsbuild-plugin').then(
-      ({ pluginLynxDebugMetadata }) => pluginLynxDebugMetadata(),
-    ),
-
-    import('./dev.plugin.js').then(({ pluginDev }) =>
-      pluginDev(config.dev, config.server)
-    ),
-
-    import('./minify.plugin.js').then(({ pluginMinify }) =>
-      pluginMinify(config.output?.minify)
-    ),
-
-    import('./optimization.plugin.js').then(({ pluginOptimization }) =>
-      pluginOptimization()
-    ),
-
-    import('./output.plugin.js').then(({ pluginOutput }) =>
-      pluginOutput(config.output)
-    ),
-
-    import('./resolve.plugin.js').then(({ pluginResolve }) => pluginResolve()),
-
-    import('./rsdoctor.plugin.js').then(({ pluginRsdoctor }) =>
-      pluginRsdoctor(config.tools?.rsdoctor)
-    ),
-
-    import('./sourcemap.plugin.js').then(({ pluginSourcemap }) =>
-      pluginSourcemap()
-    ),
-
-    import('./statsJson.plugin.js').then(({ pluginStatsJson }) =>
-      pluginStatsJson(config)
-    ),
-
-    import('./swc.plugin.js').then(({ pluginSwc }) => pluginSwc()),
-
-    import('./target.plugin.js').then(({ pluginTarget }) => pluginTarget()),
+  // The default build plugins now live in `@lynx-js/rsbuild-plugin`.
+  // The CLI composes them itself (threading the loaded `lynx.config.ts` into
+  // each) rather than using the batteries-included `pluginLynx`.
+  const defaultPlugins = Promise.all([
+    import('./api.plugin.js'),
+    import('@lynx-js/debug-metadata-rsbuild-plugin'),
+    import('@lynx-js/rsbuild-plugin/internal'),
+  ]).then(([{ pluginAPI }, { pluginLynxDebugMetadata }, {
+    pluginChunkLoading,
+    pluginDev,
+    pluginMinify,
+    pluginOptimization,
+    pluginOutput,
+    pluginResolve,
+    pluginRsdoctor,
+    pluginSourcemap,
+    pluginStatsJson,
+    pluginSwc,
+    pluginTarget,
+  }]) => [
+    pluginAPI(config),
+    pluginChunkLoading(),
+    pluginLynxDebugMetadata(),
+    pluginDev(config.dev, config.server),
+    pluginMinify(config.output?.minify),
+    pluginOptimization(),
+    pluginOutput(config.output),
+    pluginResolve(),
+    pluginRsdoctor(config.tools?.rsdoctor),
+    pluginSourcemap(),
+    pluginStatsJson(config.performance),
+    pluginSwc(),
+    pluginTarget(),
   ])
 
   const promises: Promise<void>[] = [
-    Promise.all(defaultPlugins).then(plugins => {
+    defaultPlugins.then(plugins => {
       rsbuildInstance.addPlugins(plugins)
     }),
   ]

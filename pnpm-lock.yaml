@@ -690,6 +690,37 @@ importers:
         specifier: ^18.3.28
         version: 18.3.28
 
+  examples/react-rsbuild:
+    dependencies:
+      '@lynx-js/react':
+        specifier: workspace:*
+        version: link:../../packages/react
+    devDependencies:
+      '@lynx-js/preact-devtools':
+        specifier: 5.0.1-20260716151326-abdb87c
+        version: 5.0.1-20260716151326-abdb87c
+      '@lynx-js/qrcode-rsbuild-plugin':
+        specifier: workspace:*
+        version: link:../../packages/rspeedy/plugin-qrcode
+      '@lynx-js/react-rsbuild-plugin':
+        specifier: workspace:*
+        version: link:../../packages/rspeedy/plugin-react
+      '@lynx-js/rsbuild-plugin':
+        specifier: workspace:*
+        version: link:../../packages/rspeedy/plugin-lynx
+      '@lynx-js/rspeedy':
+        specifier: workspace:*
+        version: link:../../packages/rspeedy/core
+      '@lynx-js/types':
+        specifier: 4.0.0
+        version: 4.0.0
+      '@rsbuild/core':
+        specifier: catalog:rsbuild
+        version: 2.1.4(core-js@3.49.0)
+      '@types/react':
+        specifier: ^18.3.28
+        version: 18.3.28
+
   examples/react-ui-sourcemap:
     dependencies:
       '@lynx-js/react':
@@ -1379,6 +1410,9 @@ importers:
       '@lynx-js/debug-metadata-rsbuild-plugin':
         specifier: workspace:^
         version: link:../plugin-debug-metadata
+      '@lynx-js/rsbuild-plugin':
+        specifier: workspace:*
+        version: link:../plugin-lynx
       '@lynx-js/web-rsbuild-server-middleware':
         specifier: workspace:*
         version: link:../../web-platform/web-rsbuild-server-middleware
@@ -1604,6 +1638,64 @@ importers:
       '@rsbuild/core':
         specifier: catalog:rsbuild
         version: 2.1.4(core-js@3.49.0)
+
+  packages/rspeedy/plugin-lynx:
+    dependencies:
+      '@lynx-js/cache-events-webpack-plugin':
+        specifier: workspace:^
+        version: link:../../webpack/cache-events-webpack-plugin
+      '@lynx-js/chunk-loading-webpack-plugin':
+        specifier: workspace:^
+        version: link:../../webpack/chunk-loading-webpack-plugin
+      '@lynx-js/debug-metadata-rsbuild-plugin':
+        specifier: workspace:*
+        version: link:../plugin-debug-metadata
+      '@lynx-js/web-rsbuild-server-middleware':
+        specifier: workspace:*
+        version: link:../../web-platform/web-rsbuild-server-middleware
+      '@lynx-js/webpack-dev-transport':
+        specifier: workspace:^
+        version: link:../../webpack/webpack-dev-transport
+      '@lynx-js/websocket':
+        specifier: workspace:^
+        version: link:../websocket
+      '@rsbuild/plugin-css-minimizer':
+        specifier: 2.0.0
+        version: 2.0.0(@rsbuild/core@2.1.4(core-js@3.49.0))(csso@5.0.5)(esbuild@0.27.3)(lightningcss@1.31.1)(webpack@5.105.2(@swc/core@1.15.30(@swc/helpers@0.5.23))(cssnano@7.1.2(postcss@8.5.14))(csso@5.0.5)(esbuild@0.27.3)(lightningcss@1.31.1)(postcss@8.5.14))
+      '@rsdoctor/rspack-plugin':
+        specifier: ~1.5.6
+        version: 1.5.6(@emnapi/core@1.11.1)(@emnapi/runtime@1.11.1)(@rsbuild/core@2.1.4(core-js@3.49.0))(@rspack/core@2.1.3(@swc/helpers@0.5.23))(supports-color@8.1.1)(webpack@5.105.2(@swc/core@1.15.30(@swc/helpers@0.5.23))(cssnano@7.1.2(postcss@8.5.14))(csso@5.0.5)(esbuild@0.27.3)(lightningcss@1.31.1)(postcss@8.5.14))
+      ipaddr.js:
+        specifier: ^2.4.0
+        version: 2.4.0
+      picocolors:
+        specifier: ^1.1.1
+        version: 1.1.1
+      tiny-invariant:
+        specifier: ^1.3.3
+        version: 1.3.3
+    devDependencies:
+      '@lynx-js/test-tools':
+        specifier: workspace:*
+        version: link:../../webpack/test-tools
+      '@microsoft/api-extractor':
+        specifier: 'catalog:'
+        version: 7.58.11(@types/node@24.10.13)
+      '@rsbuild/core':
+        specifier: catalog:rsbuild
+        version: 2.1.4(core-js@3.49.0)
+      '@rsdoctor/core':
+        specifier: ~1.5.6
+        version: 1.5.6(@emnapi/core@1.11.1)(@emnapi/runtime@1.11.1)(@rsbuild/core@2.1.4(core-js@3.49.0))(@rspack/core@2.1.3(@swc/helpers@0.5.23))(supports-color@8.1.1)(webpack@5.105.2(@swc/core@1.15.30(@swc/helpers@0.5.23))(cssnano@7.1.2(postcss@8.5.14))(csso@5.0.5)(esbuild@0.27.3)(lightningcss@1.31.1)(postcss@8.5.14))
+      '@rstest/core':
+        specifier: catalog:rstest
+        version: 0.11.0(core-js@3.49.0)(jsdom@27.4.0(supports-color@8.1.1))
+      '@swc/core':
+        specifier: ^1.15.30
+        version: 1.15.30(@swc/helpers@0.5.23)
+      type-fest:
+        specifier: ^5.8.0
+        version: 5.8.0
 
   packages/rspeedy/plugin-qrcode:
     devDependencies:

@@ -7,13 +7,13 @@ import path from 'node:path'
 import type { RsbuildPlugin } from '@rsbuild/core'
 
 import { BUNDLE_STATS_JSON_OPTIONS } from './statsJsonOptions.js'
-import type { Config } from '../config/index.js'
+import type { Performance } from '../config/performance/index.js'
 
-export function pluginStatsJson(config: Config): RsbuildPlugin {
+export function pluginStatsJson(performance?: Performance): RsbuildPlugin {
   return {
     name: 'lynx:stats-json',
     setup(api) {
-      if (!config.performance?.profile) {
+      if (!performance?.profile) {
         return
       }
 
