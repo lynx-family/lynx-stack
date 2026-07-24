@@ -11,7 +11,7 @@ serde = { workspace = true, features = ["derive"] }
 serde_json = { workspace = true }
 thiserror = "2.0.9"
 tokio = { workspace = true, features = ["fs", "io-util", "macros", "net", "rt", "sync", "time"] }
-ureq = "2.7.1"
+ureq = "3.3.0"
 url = "2.5.4"
 
 [[bin]]

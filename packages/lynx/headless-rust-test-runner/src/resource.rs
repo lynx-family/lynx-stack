@@ -149,6 +149,7 @@ fn fetch_http(url: &str) -> Result<Vec<u8>> {
   })?;
   let mut bytes = Vec::new();
   response
+    .into_body()
     .into_reader()
     .read_to_end(&mut bytes)
     .map_err(Error::from)?;

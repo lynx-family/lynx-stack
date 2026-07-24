@@ -15,4 +15,4 @@ thiserror = "2"
 fs2 = "0.4"
 sha2 = { workspace = true }
 tempfile = "3"
-ureq = "2"
+ureq = "3.3.0"
