@@ -6,15 +6,15 @@ import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
 import { runOnMainThread, useEffect } from '@lynx-js/react';
 import { act, render } from '@lynx-js/react/testing-library';
 
-import * as framerMotionDom from 'framer-motion/dom';
+import * as motion from 'motion';
 import * as motionDom from 'motion-dom';
 
 import { animate, motionValue, stagger } from '../../src/animation/index.js';
 import { ElementCompt } from '../../src/polyfill/element.js';
 
 // Mock dependencies
-vi.mock('framer-motion/dom', async (importOriginal) => {
-  const actual = await importOriginal<typeof framerMotionDom>();
+vi.mock('motion', async (importOriginal) => {
+  const actual = await importOriginal<typeof motion>();
   return {
     ...actual,
     animate: (...args: any[]) => {

@@ -8,12 +8,8 @@ import {
   clamp as clamp_,
   progress as progress_,
   stagger as stagger_,
-} from 'framer-motion/dom' with { runtime: 'shared' };
-import type {
-  AnimationSequence,
-  ObjectTarget,
-  SequenceOptions,
-} from 'framer-motion/dom';
+} from 'motion' with { runtime: 'shared' };
+import type { AnimationSequence, ObjectTarget, SequenceOptions } from 'motion';
 import {
   mapValue as mapValue_,
   mix as mix_,
