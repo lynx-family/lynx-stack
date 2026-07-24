@@ -20,7 +20,7 @@
     "lucide-react": "^0.575.0",
     "react": "19.2.4",
     "react-dom": "19.2.4",
-    "react-resizable-panels": "^4.6.5",
+    "react-resizable-panels": "^4.12.2",
     "tailwind-merge": "^3.4.0"
   },
   "devDependencies": {
