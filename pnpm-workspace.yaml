@@ -102,7 +102,7 @@ catalogs:
     "@yume-chan/fetch-scrcpy-server": ^1.0.0
     "@yume-chan/scrcpy": ^2.3.0
     "@yume-chan/scrcpy-decoder-webcodecs": ^2.5.3
-    "@yume-chan/stream-extra": ^2.1.0
+    "@yume-chan/stream-extra": ^2.6.1
     "@yume-chan/struct": ^2.1.0
 
   # Rsbuild monorepo packages
