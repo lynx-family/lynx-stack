@@ -9,7 +9,7 @@
   },
   "dependencies": {
     "@lynx-js/genui": "workspace:*",
-    "@lynx-js/lynx-ui": "^3.133.2",
+    "@lynx-js/lynx-ui": "^3.135.3",
     "@lynx-js/react": "workspace:*"
   },
   "devDependencies": {
