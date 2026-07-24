@@ -1,5 +1,26 @@
 # @lynx-js/template-webpack-plugin
 
+## 0.14.0
+
+### Minor Changes
+
+- Rename the lazy bundle output directory from `async/` to `lazy-bundle/`. ([#2993](https://github.com/lynx-family/lynx-stack/pull/2993))
+
+  Lazy bundles can now also be loaded synchronously with `import(..., { with: { mode: 'sync' } })`, so the `async/` directory name no longer matches how they are used. The default `lazyBundleFilename` becomes `lazy-bundle/[name].[fullhash].bundle`, and the intermediate outputs move from `.rspeedy/async/<name>/` to `.rspeedy/lazy-bundle/<name>/` accordingly.
+
+  Update deployment scripts that reference the `dist/async/` directory to use `dist/lazy-bundle/` instead.
+
+  `@lynx-js/css-extract-webpack-plugin` requires `@lynx-js/template-webpack-plugin` `^0.14.0`.
+
+### Patch Changes
+
+- Update `@jridgewell/trace-mapping` from `^0.3.29` to `^0.3.31` ([#3084](https://github.com/lynx-family/lynx-stack/pull/3084))
+
+- Enable new sticky, zero-percent flex basis, and grid placement shorthand config flags by default. ([#3013](https://github.com/lynx-family/lynx-stack/pull/3013))
+
+- Updated dependencies [[`7c08120`](https://github.com/lynx-family/lynx-stack/commit/7c08120315f1802d84d2f01a0075293c7e0059cb), [`924106b`](https://github.com/lynx-family/lynx-stack/commit/924106b049a0764900f2557abc1c31aec77ad037), [`f5da344`](https://github.com/lynx-family/lynx-stack/commit/f5da34447cc8884cf7ca518f6fc1c1544be61352), [`6369383`](https://github.com/lynx-family/lynx-stack/commit/63693831513364aae6c2d8d13b3f6a50303a8d42), [`e75b561`](https://github.com/lynx-family/lynx-stack/commit/e75b5619c567d9fd28897990281f6332bf6d88c4), [`40c9804`](https://github.com/lynx-family/lynx-stack/commit/40c9804713ee982b99da37981e2e34408c370c77)]:
+  - @lynx-js/web-core@0.23.0
+
 ## 0.13.0
 
 ### Minor Changes

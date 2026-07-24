@@ -1,5 +1,31 @@
 # @lynx-js/web-core
 
+## 0.23.0
+
+### Minor Changes
+
+- Add a bidirectional per-card devtool event channel. Background scripts can use `lynx.getDevtool()` to dispatch events to a `devtoolMessage` event on `<lynx-view>` and listen for events sent through `lynxView.sendDevtoolEvent()`. ([#2999](https://github.com/lynx-family/lynx-stack/pull/2999))
+
+### Patch Changes
+
+- fix `auto-height` for frame ([#3062](https://github.com/lynx-family/lynx-stack/pull/3062))
+
+- Reuse the first bundle loaded for a URL and ignore override configs from later requests without replacing or disposing the cached bundle. ([#3164](https://github.com/lynx-family/lynx-stack/pull/3164))
+
+- Fix `nativeApp.callLepusMethod` always invoking its callback with `undefined`: the UI-thread handler now returns the lepus method's result so the callback receives it. ([#2994](https://github.com/lynx-family/lynx-stack/pull/2994))
+
+- Include the `<lynx-view>` host and page baseline styles in its shadow root so client rendering and declarative Shadow DOM SSR do not depend on the outer document stylesheet. ([#3004](https://github.com/lynx-family/lynx-stack/pull/3004))
+
+- Map the Lynx `textarea` tag to the `x-textarea` custom element when creating elements on web. ([#2971](https://github.com/lynx-family/lynx-stack/pull/2971))
+
+  `__CreateElement` looked up `LYNX_TAG_TO_HTML_TAG_MAP`, which had no `textarea` entry, so `textarea` fell through to a bare HTML `<textarea>` instead of the `x-textarea` custom element registered by `@lynx-js/web-elements`. Because the element was never `x-textarea`, none of the Lynx event forwarding (`input`/`focus`/`blur`) was wired up, so typed input never bridged to the framework thread — any `bindinput`/`@input` binding (e.g. Vue's `v-model`) silently did nothing. `input` already worked because it was mapped to `x-input`.
+
+  Adding `textarea: 'x-textarea'` to the map makes `textarea` render as `x-textarea`, matching native Lynx and the existing `input` behavior; the runtime event tables already know how to bridge `x-textarea`'s `lynxinput`/`lynxfocus`/`lynxblur` events. The same entry is added to the parallel Rust map (`src/constants.rs`) so `textarea` type selectors in Lynx stylesheets are rewritten to `x-textarea` and keep matching the rendered element.
+
+- Updated dependencies [[`087a59b`](https://github.com/lynx-family/lynx-stack/commit/087a59b24b43f91df71450e63e91a31a40a88158), [`5a83170`](https://github.com/lynx-family/lynx-stack/commit/5a8317089341c4a5d594f92286980e7f17b9798c), [`226ac0e`](https://github.com/lynx-family/lynx-stack/commit/226ac0e7c2969aad37c9a4bffe7e82517e12e4eb), [`02c875c`](https://github.com/lynx-family/lynx-stack/commit/02c875cdfe772d552f119a386b3cf6e3fc7f9305)]:
+  - @lynx-js/web-elements@0.12.7
+  - @lynx-js/web-worker-rpc@0.23.0
+
 ## 0.22.2
 
 ### Patch Changes

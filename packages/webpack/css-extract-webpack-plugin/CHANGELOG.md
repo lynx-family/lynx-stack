@@ -1,5 +1,17 @@
 # @lynx-js/css-extract-webpack-plugin
 
+## 0.10.0
+
+### Minor Changes
+
+- Rename the lazy bundle output directory from `async/` to `lazy-bundle/`. ([#2993](https://github.com/lynx-family/lynx-stack/pull/2993))
+
+  Lazy bundles can now also be loaded synchronously with `import(..., { with: { mode: 'sync' } })`, so the `async/` directory name no longer matches how they are used. The default `lazyBundleFilename` becomes `lazy-bundle/[name].[fullhash].bundle`, and the intermediate outputs move from `.rspeedy/async/<name>/` to `.rspeedy/lazy-bundle/<name>/` accordingly.
+
+  Update deployment scripts that reference the `dist/async/` directory to use `dist/lazy-bundle/` instead.
+
+  `@lynx-js/css-extract-webpack-plugin` requires `@lynx-js/template-webpack-plugin` `^0.14.0`.
+
 ## 0.9.0
 
 ### Minor Changes

@@ -1,5 +1,11 @@
 # @lynx-js/docs-mcp-server
 
+## 0.2.5
+
+### Patch Changes
+
+- Update `empathic` from `^2.0.0` to `^2.0.1` ([#3086](https://github.com/lynx-family/lynx-stack/pull/3086))
+
 ## 0.2.4
 
 ### Patch Changes

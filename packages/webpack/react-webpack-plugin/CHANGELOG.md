@@ -1,5 +1,11 @@
 # @lynx-js/react-webpack-plugin
 
+## 0.10.1
+
+### Patch Changes
+
+- Accept `@lynx-js/template-webpack-plugin` `^0.14.0` as a peer dependency. ([#2993](https://github.com/lynx-family/lynx-stack/pull/2993))
+
 ## 0.10.0
 
 ### Minor Changes
