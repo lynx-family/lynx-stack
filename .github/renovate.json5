@@ -94,6 +94,23 @@
       "rangeStrategy": "pin",
     },
     {
+      // `@rstest/adapter-rsbuild` and `@rstest/coverage-istanbul` both peer on
+      // `@rstest/core`, so bumping one without the others fails
+      // `strictPeerDependencies` and Renovate cannot write the lock file —
+      // the PR then carries a catalog bump with no matching `pnpm-lock.yaml`.
+      "groupName": "Rstest",
+      "groupSlug": "Rstest",
+      "addLabels": ["upstream:rspack"],
+      "matchDepTypes": [
+        "devDependencies",
+        "dependencies",
+      ],
+      "matchPackageNames": [
+        "/@rstest/*/",
+      ],
+      "rangeStrategy": "pin",
+    },
+    {
       "groupName": "Rspress",
       "groupSlug": "Rspress",
       "matchDepTypes": [
