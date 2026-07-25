@@ -21,8 +21,7 @@ pub struct ElementTemplateAsset {
   #[napi(js_name = "templateId")]
   pub template_id: String,
   /// @internal
-  #[napi(js_name = "compiledTemplate")]
-  #[napi(ts_type = "unknown")]
+  #[napi(js_name = "compiledTemplate", ts_type = "unknown")]
   pub compiled_template: serde_json::Value,
   /// @internal
   #[napi(js_name = "sourceFile")]
