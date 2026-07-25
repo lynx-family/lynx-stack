@@ -30,8 +30,8 @@ catalogs:
       version: 2.1.3
   rstest:
     '@rstest/adapter-rsbuild':
-      specifier: 0.11.2
-      version: 0.11.2
+      specifier: 0.11.3
+      version: 0.11.3
     '@rstest/core':
       specifier: 0.11.3
       version: 0.11.3
@@ -1243,7 +1243,7 @@ importers:
         version: 2.1.4(core-js@3.49.0)
       '@rstest/adapter-rsbuild':
         specifier: catalog:rstest
-        version: 0.11.2(@rsbuild/core@2.1.4(core-js@3.49.0))(@rstest/core@0.11.3(core-js@3.49.0)(jsdom@27.4.0(supports-color@8.1.1)))
+        version: 0.11.3(@rsbuild/core@2.1.4(core-js@3.49.0))(@rstest/core@0.11.3(core-js@3.49.0)(jsdom@27.4.0(supports-color@8.1.1)))
       '@testing-library/dom':
         specifier: ^10.4.1
         version: 10.4.1
@@ -5344,11 +5344,11 @@ packages:
       '@rspress/core':
         optional: true
 
-  '@rstest/adapter-rsbuild@0.11.2':
-    resolution: {integrity: sha512-I/SOfNNyEGjNg4Te/2l0DN8x9DpIjH6w7/3rR2lUyRV1Zdvwpfqdbr5ofReXSciZVapVBsWmKhVH6KqnG81wvg==}
+  '@rstest/adapter-rsbuild@0.11.3':
+    resolution: {integrity: sha512-kVopE2qcDcKTZs+lNWk0pybj4t6p9jSi45sMJ3+iZhR+Utckt0dsKJktZ+pQsVDVJ7QoKEBG5UuSIQKKAOPMIw==}
     peerDependencies:
       '@rsbuild/core': ^1.0.0 || ^2.0.0
-      '@rstest/core': ^0.11.2
+      '@rstest/core': ^0.11.3
 
   '@rstest/core@0.11.3':
     resolution: {integrity: sha512-TXBvW8snHQntxRRYX71a3vTkhQ9SVvbG1PlqmiyxkSwcVxBXdwghJCpYEHu75L6Ay61eQtsc0R8MIq+Qd3aicA==}
@@ -15423,7 +15423,7 @@ snapshots:
     optionalDependencies:
       '@rspress/core': 2.0.18(@rspack/core@2.1.5(@swc/helpers@0.5.23))(@types/mdast@4.0.4)(@types/react@19.2.17)(core-js@3.49.0)(micromark-util-types@2.0.2)(micromark@4.0.2(supports-color@8.1.1))(supports-color@8.1.1)
 
-  '@rstest/adapter-rsbuild@0.11.2(@rsbuild/core@2.1.4(core-js@3.49.0))(@rstest/core@0.11.3(core-js@3.49.0)(jsdom@27.4.0(supports-color@8.1.1)))':
+  '@rstest/adapter-rsbuild@0.11.3(@rsbuild/core@2.1.4(core-js@3.49.0))(@rstest/core@0.11.3(core-js@3.49.0)(jsdom@27.4.0(supports-color@8.1.1)))':
     dependencies:
       '@rsbuild/core': 2.1.4(core-js@3.49.0)
       '@rstest/core': 0.11.3(core-js@3.49.0)(jsdom@27.4.0(supports-color@8.1.1))
