@@ -230,9 +230,15 @@
     {
       "groupName": "types",
       "groupSlug": "types",
+      // Anchor on the scope separator. `^@types/*` is `@types` followed by any
+      // number of slashes and is not anchored at the end, so it also matched
+      // `@typescript/native-preview` -- the tsgo preview compiler rode along in
+      // every "update types" PR. Its 20260212 -> 20260707 jump breaks
+      // declaration emit for `kitten-lynx` (six `TS2591: Cannot find name
+      // 'node:timers/promises'` and friends), which took #3083 down with it.
       "matchPackageNames": [
-        "/^@tsconfig/*/",
-        "/^@types/*/",
+        "/^@tsconfig\\//",
+        "/^@types\\//",
       ],
     },
     {
