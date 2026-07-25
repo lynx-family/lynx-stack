@@ -35,7 +35,10 @@ swc_core = "74.0.2"
 swc_sourcemap = "10.0.2"
 tokio = "1.52.3"
 version-compare = "0.2.0"
-wasm-bindgen = "0.2.108"
+# The bindgen schema must match the `wasm-bindgen` CLI pinned by dotslash in
+# packages/web-platform/web-core/scripts/wasm-bindgen exactly, so pin the crate
+# instead of letting `cargo update` drift it. Bump both together.
+wasm-bindgen = "=0.2.126"
 web-sys = "0.3.85"
 
 [profile.release]
