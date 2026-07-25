@@ -149,7 +149,7 @@
     "@lynx-js/playwright-fixtures": "workspace:*",
     "@playwright/test": "^1.61.1",
     "@rsbuild/core": "catalog:rsbuild",
-    "@rsbuild/plugin-source-build": "1.0.5",
+    "@rsbuild/plugin-source-build": "1.0.6",
     "@types/markdown-it": "^14.1.1",
     "@types/node": "^24.10.13",
     "nyc": "^18.0.0",
