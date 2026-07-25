@@ -1,0 +1,16 @@
+{
+  "$schema": "https://turbo.build/schema.json",
+  "extends": ["//"],
+  "tasks": {
+    "build": {
+      // `rsbuild` bundles `@lynx-js/web-core`'s `dist`, which imports
+      // `@lynx-js/web-worker-rpc`. That package has no build script of its own —
+      // its `dist` comes from the root `tsc --build`. Without this edge the two
+      // tasks race and the bundle fails to resolve it. Same reason
+      // `web-explorer`, which bundles the same thing, declares it.
+      "dependsOn": ["//#build", "^build"],
+      "inputs": ["scripts/**", "src/**", "*.ts", "*.json", "index.html"],
+      "outputs": ["dist/**"]
+    }
+  }
+}
