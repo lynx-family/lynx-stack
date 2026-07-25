@@ -10,7 +10,7 @@
     "test": "rstest"
   },
   "dependencies": {
-    "@ai-sdk/openai": "^3.0.63",
+    "@ai-sdk/openai": "^3.0.87",
     "@aws-sdk/client-s3": "^3.1053.0",
     "@lynx-js/genui-mcp-apps": "workspace:*",
     "@lynx-js/genui-openui": "workspace:*",
