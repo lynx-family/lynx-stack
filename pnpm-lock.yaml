@@ -2338,8 +2338,8 @@ importers:
         specifier: 2.1.5
         version: 2.1.5(@swc/helpers@0.5.23)
       '@rspack/lite-tapable':
-        specifier: 1.1.0
-        version: 1.1.0
+        specifier: 1.1.2
+        version: 1.1.2
       '@rstest/core':
         specifier: catalog:rstest
         version: 0.11.3(core-js@3.49.0)(jsdom@27.4.0(supports-color@8.1.1))
@@ -2381,8 +2381,8 @@ importers:
         specifier: 2.1.5
         version: 2.1.5(@swc/helpers@0.5.23)
       '@rspack/lite-tapable':
-        specifier: 1.1.0
-        version: 1.1.0
+        specifier: 1.1.2
+        version: 1.1.2
       '@rstest/core':
         specifier: catalog:rstest
         version: 0.11.3(core-js@3.49.0)(jsdom@27.4.0(supports-color@8.1.1))
@@ -2433,8 +2433,8 @@ importers:
         specifier: workspace:^
         version: link:../webpack-runtime-globals
       '@rspack/lite-tapable':
-        specifier: 1.1.0
-        version: 1.1.0
+        specifier: 1.1.2
+        version: 1.1.2
       css-tree:
         specifier: ^3.2.1
         version: 3.2.1
@@ -5270,9 +5270,6 @@ packages:
         optional: true
       '@swc/helpers':
         optional: true
-
-  '@rspack/lite-tapable@1.1.0':
-    resolution: {integrity: sha512-E2B0JhYFmVAwdDiG14+DW0Di4Ze4Jg10Pc4/lILUrd5DRCaklduz2OvJ5HYQ6G+hd+WTzqQb3QnDNfK4yvAFYw==}
 
   '@rspack/lite-tapable@1.1.2':
     resolution: {integrity: sha512-1OnyWChLGE46YzWyjlmYJssOu/Y0STAnnr2ueKPqDCYTf63GJMs0mxNnCul4dNiVqHYPKv3/fxrTY3IpqoVwZQ==}
@@ -15366,8 +15363,6 @@ snapshots:
     optionalDependencies:
       '@swc/helpers': 0.5.23
 
-  '@rspack/lite-tapable@1.1.0': {}
-
   '@rspack/lite-tapable@1.1.2': {}
 
   '@rspack/plugin-react-refresh@2.0.2(@rspack/core@2.1.5(@swc/helpers@0.5.23))(react-refresh@0.18.0)':
@@ -21322,7 +21317,7 @@ snapshots:
     dependencies:
       '@rollup/pluginutils': 5.3.0(rollup@4.62.2)
       '@rsbuild/core': 2.1.4(core-js@3.49.0)
-      '@rspack/lite-tapable': 1.1.0
+      '@rspack/lite-tapable': 1.1.2
       i18next-cli: 1.54.2(@swc/helpers@0.5.23)(@types/node@24.10.13)(i18next@26.3.6(typescript@6.0.3))(react-dom@19.2.8(react@19.2.8))(typescript@6.0.3)
     transitivePeerDependencies:
       - rollup
