@@ -1919,6 +1919,9 @@ importers:
       '@lynx-js/types':
         specifier: 4.0.0
         version: 4.0.0
+      '@types/node':
+        specifier: ^24.10.13
+        version: 24.10.13
       '@types/react':
         specifier: ^19.2.17
         version: 19.2.17
