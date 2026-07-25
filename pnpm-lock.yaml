@@ -1810,6 +1810,9 @@ importers:
 
   packages/tailwind-preset:
     devDependencies:
+      '@types/node':
+        specifier: ^24.10.13
+        version: 24.10.13
       tailwindcss:
         specifier: ^3.4.19
         version: 3.4.19
