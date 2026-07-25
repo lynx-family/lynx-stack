@@ -1197,8 +1197,8 @@ importers:
         specifier: workspace:*
         version: link:..
       '@prefresh/core':
-        specifier: ^1.5.9
-        version: 1.5.9(preact@10.29.1)
+        specifier: ^1.5.10
+        version: 1.5.10(preact@10.29.1)
       '@prefresh/utils':
         specifier: ^1.2.1
         version: 1.2.1
@@ -4466,8 +4466,8 @@ packages:
     peerDependencies:
       preact: '>= 10.25.0 || >=11.0.0-0'
 
-  '@prefresh/core@1.5.9':
-    resolution: {integrity: sha512-IKBKCPaz34OFVC+adiQ2qaTF5qdztO2/4ZPf4KsRTgjKosWqxVXmEbxCiUydYZRY8GVie+DQlKzQr9gt6HQ+EQ==}
+  '@prefresh/core@1.5.10':
+    resolution: {integrity: sha512-7yPTFbG56sutaFu8krp3B4a200KOFUvrtlllKWRuLjsYXo9UUucHOZRcer+gtgMkFTpv6ob8TGcTwA32bSwa1w==}
     peerDependencies:
       preact: ^10.0.0 || ^11.0.0-0
 
@@ -14531,7 +14531,7 @@ snapshots:
       '@preact/signals-core': 1.14.4
       preact: 10.29.1
 
-  '@prefresh/core@1.5.9(preact@10.29.1)':
+  '@prefresh/core@1.5.10(preact@10.29.1)':
     dependencies:
       preact: 10.29.1
 
