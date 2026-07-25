@@ -173,6 +173,9 @@ importers:
       vitest:
         specifier: ^3.2.4
         version: 3.2.7(@types/debug@4.1.12)(@types/node@24.10.13)(@vitest/ui@3.2.7)(jiti@2.6.1)(jsdom@27.4.0(supports-color@8.1.1))(less@4.6.4)(lightningcss@1.33.0)(sass-embedded@1.99.0)(sass@1.99.0)(supports-color@8.1.1)(terser@5.48.0)(yaml@2.9.0)
+      yaml:
+        specifier: ^2.9.0
+        version: 2.9.0
 
   benchmark/react:
     dependencies:
