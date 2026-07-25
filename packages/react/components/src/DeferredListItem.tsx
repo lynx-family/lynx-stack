@@ -2,16 +2,21 @@
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
 
-import type { FC, ReactNode, RefCallback, cloneElement as reactCloneElement } from 'react';
+import type { FC, ReactElement, ReactNode, RefCallback, cloneElement as reactCloneElement } from 'react';
 
 import { useCallback, useRef, useState } from '@lynx-js/react';
 import { preactCloneElement as _cloneElement } from '@lynx-js/react/internal';
 import type { SnapshotInstance } from '@lynx-js/react/internal';
 import { cloneElement as _cloneElementMainThread } from '@lynx-js/react/lepus';
 
+interface DeferredListItemElementProps {
+  isReady?: number;
+  ref?: RefCallback<SnapshotInstance>;
+}
+
 export interface DeferredListItemProps {
   defer?: boolean | { unmountRecycled?: boolean };
-  renderListItem: (children: ReactNode | undefined) => JSX.Element;
+  renderListItem: (children: ReactNode | undefined) => ReactElement<DeferredListItemElementProps>;
   renderChildren: () => ReactNode;
 }
 

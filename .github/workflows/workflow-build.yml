@@ -140,21 +140,29 @@ jobs:
         # actions/checkout uses depth=1, so neither `origin/<base>` nor the
         # PR/base merge-base are present. `changeset status --since=<ref>`
         # calls `git merge-base <ref> HEAD`, which requires the common
-        # ancestor to be in local history. Deepen both sides iteratively until
-        # we have it. Deepen HEAD by its pinned SHA rather than via
-        # `refs/pull/<n>/merge`: GitHub regenerates that ref (same parents,
-        # new committer timestamp), and deepening the regenerated ref never
-        # connects the checked-out HEAD, failing merge-base deterministically.
+        # ancestor to be in local history, so grow both sides until we have it.
+        #
+        # Ask for HEAD by its pinned SHA rather than via `refs/pull/<n>/merge`:
+        # GitHub regenerates that ref (same parents, new committer timestamp),
+        # so the ref may already point elsewhere by the time this runs.
+        #
+        # Use an absolute `--depth` rather than a relative `--deepen`. Once the
+        # merge ref has been regenerated the checked-out SHA is still fetchable
+        # but is no longer a ref tip, and the server silently ignores `--deepen`
+        # for it — the fetch succeeds, no history is added, and every iteration
+        # re-checks the same shallow boundary until the loop gives up.
         run: |
           git fetch --depth=1 origin \
             "$BASE_REF":"refs/remotes/origin/$BASE_REF"
+          depth=10
           for _ in 1 2 3 4 5 6 7 8 9 10; do
             if git merge-base "refs/remotes/origin/$BASE_REF" HEAD >/dev/null 2>&1; then
               exit 0
             fi
-            git fetch -q --deepen=10 origin \
+            git fetch -q --depth="$depth" origin \
               "$BASE_REF":"refs/remotes/origin/$BASE_REF" \
               "$GITHUB_SHA"
+            depth=$((depth * 2))
           done
           echo "::error::Unable to find a merge base between origin/$BASE_REF and HEAD after 10 deepen iterations" >&2
           exit 1

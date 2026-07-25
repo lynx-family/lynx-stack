@@ -20,8 +20,12 @@ hex = "0.4.3"
 indexmap = "2.11.4"
 js-sys = "0.3.85"
 lazy_static = "1.5.0"
-napi = { version = "2.7.0", default-features = false, features = ["napi4"] }
-napi-derive = "2.7.0"
+# Pinned exactly: napi 2.16 emits a second `napi_register_wasm_v1` definition,
+# which breaks the wasm32 build of `react-transform` with `symbol multiply
+# defined`. The renovate `ignoreDeps` entry for napi does not cover lock file
+# maintenance, so a caret range lets `cargo update` reintroduce the break.
+napi = { version = "=2.10.4", default-features = false, features = ["napi4"] }
+napi-derive = "=2.9.3"
 once_cell = "1.21.3"
 regex = "1.11.3"
 rustc-hash = "2.1.1"
@@ -35,7 +39,10 @@ swc_core = "74.0.2"
 swc_sourcemap = "10.0.2"
 tokio = "1.52.3"
 version-compare = "0.2.0"
-wasm-bindgen = "0.2.108"
+# The bindgen schema must match the `wasm-bindgen` CLI pinned by dotslash in
+# packages/web-platform/web-core/scripts/wasm-bindgen exactly, so pin the crate
+# instead of letting `cargo update` drift it. Bump both together.
+wasm-bindgen = "=0.2.126"
 web-sys = "0.3.85"
 
 [profile.release]

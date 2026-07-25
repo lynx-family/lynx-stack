@@ -35,7 +35,11 @@ function changedPackageJsons() {
   });
   return out
     .split('\n')
-    .filter((p) => p === 'package.json' || p.endsWith('/package.json'));
+    .filter((p) => p === 'package.json' || p.endsWith('/package.json'))
+    // Scaffolding templates are not workspace members and their `name` is an
+    // unsubstituted placeholder, so a changeset naming one makes
+    // `changeset version` fail with "which is not in the workspace".
+    .filter((p) => !p.split('/').includes('templates'));
 }
 
 // Entries added, changed, or removed in `cur` vs `base` (removals have an
