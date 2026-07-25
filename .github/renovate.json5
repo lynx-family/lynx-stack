@@ -67,6 +67,26 @@
       "groupSlug": "dev-non-major",
     },
     {
+      // These packages are a `dependencies` of one workspace package and a
+      // `devDependencies` of another. The group above matches devDependencies
+      // only, so it splits such a package across two PRs — one for each half.
+      // `sherif` requires a single version across the workspace, so neither
+      // half can merge on its own and both sit red forever (seen with
+      // `@rsdoctor/rspack-plugin` in #3117 vs #3179). Ungroup them so each
+      // keeps the default single PR covering every occurrence.
+      "matchPackageNames": [
+        "@clack/prompts",
+        "@rsdoctor/rspack-plugin",
+        "commander",
+        "css-tree",
+        "eventemitter3",
+        "nyc",
+        "tiny-invariant",
+        "wasm-feature-detect",
+      ],
+      "groupName": null,
+    },
+    {
       "groupName": "Rspack",
       "groupSlug": "Rspack",
       "addLabels": ["upstream:rspack"],
