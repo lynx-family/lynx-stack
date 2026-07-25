@@ -257,6 +257,21 @@
       ],
     },
     {
+      // rkyv 0.8 renames the derive attributes (`#[archive(...)]` ->
+      // `#[rkyv(...)]`, and `with` / `omit_bounds` move with it), so the bump
+      // needs `packages/web-platform/web-core` migrated by hand. Grouped with
+      // the rest of the cargo crates it fails the whole PR -- #3129 carried
+      // ~20 harmless patch/minor bumps and only rkyv broke, with 32 errors in
+      // `web-core (lib)`. Give it its own PR so the others can land.
+      "groupName": "rkyv",
+      "groupSlug": "rkyv",
+      "matchManagers": ["cargo"],
+      "matchPackageNames": [
+        "rkyv",
+        "rkyv_derive",
+      ],
+    },
+    {
       "groupName": "SWC",
       "groupSlug": "swc",
       "matchManagers": ["cargo"],
