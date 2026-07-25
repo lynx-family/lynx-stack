@@ -81,6 +81,15 @@ jobs:
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
         with:
+          # `changeset status --since` runs `git merge-base <ref> HEAD`, so the
+          # Ubuntu build -- the only job that publishes to pkg.pr.new -- needs
+          # real history. Growing it after a depth-1 checkout does not work:
+          # HEAD is `refs/pull/<n>/merge`, GitHub regenerates that ref whenever
+          # the base moves, and both `--depth <sha>` and `--deepen` then act on
+          # the ref's new tip while HEAD stays detached at the old commit.
+          # Ask for the history up front instead. Every other job, Windows
+          # included, keeps the shallow clone.
+          fetch-depth: ${{ inputs.runs-on == 'lynx-ubuntu-26.04-xlarge' && '0' || '1' }}
           persist-credentials: false
       - name: Disable local Git maintenance
         run: git config --local maintenance.auto false
@@ -138,22 +147,10 @@ jobs:
           github.event_name == 'pull_request'
         env:
           MERGE_BASE: ${{ needs.get-merge-base.outputs.merge-base }}
-        # `changeset status --since` runs `git merge-base <ref> HEAD`, so HEAD
-        # needs ancestry. `actions/checkout` clones at depth 1 and HEAD is
-        # `refs/pull/<n>/merge`, which is not a ref tip once GitHub regenerates
-        # that ref -- fetching it by SHA then deepens nothing. `--deepen` with
-        # no refspec grows the local shallow boundary instead, which is what
-        # HEAD sits on; it is the same call `@changesets/git` makes itself.
-        #
         # The merge base is already computed by the `get-merge-base` job, so
-        # pass it directly rather than deepening `origin/<base>` as well.
+        # pass that SHA straight to `--since` instead of resolving `origin/<base>`
+        # here. History comes from the `fetch-depth` above.
         run: |
-          depth=20
-          for _ in 1 2 3 4 5; do
-            git merge-base "$MERGE_BASE" HEAD >/dev/null 2>&1 && break
-            git fetch -q --deepen="$depth"
-            depth=$((depth * 2))
-          done
           pnpm changeset status --since="$MERGE_BASE" --output .changeset-status.json
           PACKAGE_DIRS=$(node .github/scripts/list-changeset-packages.cjs .changeset-status.json | tr '\n' ' ')
           if [ -z "$(echo "$PACKAGE_DIRS" | tr -d '[:space:]')" ]; then
