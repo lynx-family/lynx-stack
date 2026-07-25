@@ -131,50 +131,30 @@ jobs:
       # a read-only token with no base-repo secrets, and are gated by the
       # repo's required-approval setting — the same trust boundary the Build
       # step above (which already runs fork install/build scripts) relies on.
-      - name: Fetch base ref for changeset status
-        if: >
-          inputs.runs-on == 'lynx-ubuntu-26.04-xlarge' &&
-          github.event_name == 'pull_request'
-        env:
-          BASE_REF: ${{ github.base_ref }}
-        # actions/checkout uses depth=1, so neither `origin/<base>` nor the
-        # PR/base merge-base are present. `changeset status --since=<ref>`
-        # calls `git merge-base <ref> HEAD`, which requires the common
-        # ancestor to be in local history, so grow both sides until we have it.
-        #
-        # Ask for HEAD by its pinned SHA rather than via `refs/pull/<n>/merge`:
-        # GitHub regenerates that ref (same parents, new committer timestamp),
-        # so the ref may already point elsewhere by the time this runs.
-        #
-        # Use an absolute `--depth` rather than a relative `--deepen`. Once the
-        # merge ref has been regenerated the checked-out SHA is still fetchable
-        # but is no longer a ref tip, and the server silently ignores `--deepen`
-        # for it — the fetch succeeds, no history is added, and every iteration
-        # re-checks the same shallow boundary until the loop gives up.
-        run: |
-          git fetch --depth=1 origin \
-            "$BASE_REF":"refs/remotes/origin/$BASE_REF"
-          depth=10
-          for _ in 1 2 3 4 5 6 7 8 9 10; do
-            if git merge-base "refs/remotes/origin/$BASE_REF" HEAD >/dev/null 2>&1; then
-              exit 0
-            fi
-            git fetch -q --depth="$depth" origin \
-              "$BASE_REF":"refs/remotes/origin/$BASE_REF" \
-              "$GITHUB_SHA"
-            depth=$((depth * 2))
-          done
-          echo "::error::Unable to find a merge base between origin/$BASE_REF and HEAD after 10 deepen iterations" >&2
-          exit 1
       - name: Collect packages with changesets
         id: changeset
         if: >
           inputs.runs-on == 'lynx-ubuntu-26.04-xlarge' &&
           github.event_name == 'pull_request'
         env:
-          BASE_REF: ${{ github.base_ref }}
+          MERGE_BASE: ${{ needs.get-merge-base.outputs.merge-base }}
+        # `changeset status --since` runs `git merge-base <ref> HEAD`, so HEAD
+        # needs ancestry. `actions/checkout` clones at depth 1 and HEAD is
+        # `refs/pull/<n>/merge`, which is not a ref tip once GitHub regenerates
+        # that ref -- fetching it by SHA then deepens nothing. `--deepen` with
+        # no refspec grows the local shallow boundary instead, which is what
+        # HEAD sits on; it is the same call `@changesets/git` makes itself.
+        #
+        # The merge base is already computed by the `get-merge-base` job, so
+        # pass it directly rather than deepening `origin/<base>` as well.
         run: |
-          pnpm changeset status --since="origin/$BASE_REF" --output .changeset-status.json
+          depth=20
+          for _ in 1 2 3 4 5; do
+            git merge-base "$MERGE_BASE" HEAD >/dev/null 2>&1 && break
+            git fetch -q --deepen="$depth"
+            depth=$((depth * 2))
+          done
+          pnpm changeset status --since="$MERGE_BASE" --output .changeset-status.json
           PACKAGE_DIRS=$(node .github/scripts/list-changeset-packages.cjs .changeset-status.json | tr '\n' ' ')
           if [ -z "$(echo "$PACKAGE_DIRS" | tr -d '[:space:]')" ]; then
             echo "No publishable packages affected by changesets; skipping pkg.pr.new publish."
