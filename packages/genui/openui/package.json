@@ -40,7 +40,7 @@
     "build:api": "tsc -p tsconfig.build.json"
   },
   "dependencies": {
-    "@openuidev/lang-core": "^0.2.7",
+    "@openuidev/lang-core": "^0.2.9",
     "zod": "^3.25.76 || ^4.0.0"
   },
   "devDependencies": {
