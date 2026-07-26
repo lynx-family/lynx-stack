@@ -134,3 +134,26 @@ jobs:
           save-if: ${{ github.ref_name == 'main' }}
       - name: Clippy
         run: cargo clippy --tests --all-features -- -D warnings
+
+  lockfile:
+    runs-on: lynx-ubuntu-26.04-medium
+    timeout-minutes: 10
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+        with:
+          persist-credentials: false
+      - name: Setup Rust
+        uses: ./.github/actions/rustup
+        with:
+          key: lint
+          save-if: ${{ github.ref_name == 'main' }}
+      # A `Cargo.toml` edit that is not reflected in `Cargo.lock` does not fail
+      # any build: the first cargo invocation silently rewrites the lock file.
+      # That leaves a dirty tree behind, which breaks anything downstream that
+      # expects a clean checkout after a build — `pnpm publish` aborts with
+      # `ERR_PNPM_GIT_UNCLEAN`. `cargo metadata --locked` resolves the graph
+      # without compiling and without writing, so it fails fast instead.
+      - name: Check Cargo.lock is up to date
+        run: cargo metadata --locked --format-version 1 > /dev/null
