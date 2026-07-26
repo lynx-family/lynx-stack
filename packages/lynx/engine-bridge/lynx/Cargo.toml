@@ -9,10 +9,10 @@ path = "src/lib.rs"
 
 [dependencies]
 libloading = "0.9"
-thiserror = "2"
+thiserror = "2.0.19"
 
 [build-dependencies]
-fs2 = "0.4"
+fs2 = "0.4.3"
 sha2 = { workspace = true }
-tempfile = "3"
-ureq = "2"
+tempfile = "3.27.0"
+ureq = "2.12.1"
