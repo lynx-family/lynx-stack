@@ -92,6 +92,10 @@ jobs:
     needs: build-all
     uses: ./.github/workflows/rust.yml
     if: github.repository == 'lynx-family/lynx-stack'
+    # The called jobs declare `contents: read`; the workflow default here is
+    # `{}`, and a called workflow cannot request more than its caller grants.
+    permissions:
+      contents: read
     secrets:
       CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
   coverage:
