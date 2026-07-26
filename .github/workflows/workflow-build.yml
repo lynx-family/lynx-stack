@@ -79,7 +79,8 @@ jobs:
     timeout-minutes: 45
     needs: get-merge-base
     env:
-      # `turbo-v4` matches the saved caches; anything else matches nothing.
+      # `turbo-v4` matches the saved caches; anything else matches nothing,
+      # which is how a push to `main` starts from an empty cache.
       TURBO_RESTORE_PREFIX: ${{ github.event_name == 'push' && 'turbo-no-restore' || 'turbo-v4' }}
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
