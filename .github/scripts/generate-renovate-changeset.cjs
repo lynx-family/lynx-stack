@@ -13,6 +13,8 @@ const { createHash } = require('node:crypto');
 const { readFileSync, writeFileSync, existsSync } = require('node:fs');
 const { join } = require('node:path');
 
+const { parse: parseYaml } = require('yaml');
+
 const { isShallowEqual } = require('./check-dep-changes-have-changeset.cjs');
 
 // Two-dot `git diff <ref>` also picks up Renovate's not-yet-committed changes.
@@ -29,13 +31,67 @@ function gitShow(ref, path) {
   }
 }
 
-function changedPackageJsons() {
-  const out = execFileSync('git', ['diff', '--name-only', baseRef], {
+const WORKSPACE_FILE = 'pnpm-workspace.yaml';
+
+function gitChangedFiles() {
+  return execFileSync('git', ['diff', '--name-only', baseRef], {
     encoding: 'utf8',
-  });
-  return out
-    .split('\n')
-    .filter((p) => p === 'package.json' || p.endsWith('/package.json'));
+  }).split('\n');
+}
+
+// Every tracked `package.json`, used when the catalog moved: a catalog bump
+// changes the resolved version for its consumers without touching any of their
+// manifests, so the diff alone would show nothing to bump.
+function allPackageJsons() {
+  return execFileSync('git', ['ls-files', '*package.json'], {
+    encoding: 'utf8',
+  }).split('\n');
+}
+
+function changedPackageJsons() {
+  const changed = gitChangedFiles();
+  const files = changed.includes(WORKSPACE_FILE)
+    ? [...new Set([...changed, ...allPackageJsons()])]
+    : changed;
+  return files
+    .filter((p) => p === 'package.json' || p.endsWith('/package.json'))
+    // Scaffolding templates are not workspace members and their `name` is an
+    // unsubstituted placeholder, so a changeset naming one makes
+    // `changeset version` fail with "which is not in the workspace".
+    .filter((p) => !p.split('/').includes('templates'));
+}
+
+// `catalog:` / `catalog:<name>` resolve through `pnpm-workspace.yaml`, so a
+// dependency can change version with no edit to the package that declares it.
+// Resolve both sides against their own copy of the workspace file and the
+// existing comparison then sees the bump.
+function readCatalogs(raw) {
+  if (raw === null) return null;
+  let doc;
+  try {
+    doc = parseYaml(raw);
+  } catch {
+    return null;
+  }
+  return { default: doc?.catalog ?? {}, named: doc?.catalogs ?? {} };
+}
+
+function resolveCatalogs(deps, catalogs) {
+  const out = {};
+  for (const [name, spec] of Object.entries(deps ?? {})) {
+    if (!catalogs || typeof spec !== 'string' || !spec.startsWith('catalog:')) {
+      out[name] = spec;
+      continue;
+    }
+    const which = spec.slice('catalog:'.length) || 'default';
+    const table = which === 'default'
+      ? catalogs.default
+      : catalogs.named?.[which];
+    // An unknown catalog name is left as-is rather than dropped, so a typo
+    // shows up as an unchanged spec instead of a phantom bump.
+    out[name] = table?.[name] ?? spec;
+  }
+  return out;
 }
 
 // Entries added, changed, or removed in `cur` vs `base` (removals have an
@@ -60,6 +116,10 @@ function changedEntries(cur, base) {
 function analyze() {
   const names = new Set();
   const deps = new Map(); // `${name}\0${from}\0${to}` -> { name, from, to }
+  const curCatalogs = readCatalogs(
+    existsSync(WORKSPACE_FILE) ? readFileSync(WORKSPACE_FILE, 'utf8') : null,
+  );
+  const baseCatalogs = readCatalogs(gitShow(baseRef, WORKSPACE_FILE));
   for (const file of changedPackageJsons()) {
     const baseRaw = gitShow(baseRef, file);
     if (baseRaw === null) continue;
@@ -72,16 +132,17 @@ function analyze() {
       continue;
     }
     if (cur.private || !cur.name) continue;
-    const depsChanged = !isShallowEqual(cur.dependencies, base.dependencies);
-    const peerChanged = !isShallowEqual(
-      cur.peerDependencies,
-      base.peerDependencies,
-    );
+    const curDeps = resolveCatalogs(cur.dependencies, curCatalogs);
+    const baseDeps = resolveCatalogs(base.dependencies, baseCatalogs);
+    const curPeer = resolveCatalogs(cur.peerDependencies, curCatalogs);
+    const basePeer = resolveCatalogs(base.peerDependencies, baseCatalogs);
+    const depsChanged = !isShallowEqual(curDeps, baseDeps);
+    const peerChanged = !isShallowEqual(curPeer, basePeer);
     if (!depsChanged && !peerChanged) continue;
     names.add(cur.name);
     const entries = [
-      ...changedEntries(cur.dependencies, base.dependencies),
-      ...changedEntries(cur.peerDependencies, base.peerDependencies),
+      ...changedEntries(curDeps, baseDeps),
+      ...changedEntries(curPeer, basePeer),
     ];
     for (const e of entries) deps.set(`${e.name}\0${e.from}\0${e.to}`, e);
   }

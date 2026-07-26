@@ -8,6 +8,7 @@ use std::env;
 use std::ffi::OsStr;
 use std::fs::{self, File, OpenOptions};
 use std::io;
+use std::io::Read;
 use std::path::{Path, PathBuf};
 use std::process::Command;
 
@@ -235,14 +236,23 @@ fn file_sha256(path: &Path) -> String {
       path.display()
     )
   });
+  // sha2 0.11 dropped the `io::Write` impl (digest 0.11 has no `std` feature at
+  // all), and `finalize` now returns an `Array` that is not `LowerHex`.
   let mut hasher = Sha256::new();
-  io::copy(&mut file, &mut hasher).unwrap_or_else(|error| {
-    panic!(
-      "failed to read Lynx runtime for checksum {}: {error}",
-      path.display()
-    )
-  });
-  format!("{:x}", hasher.finalize())
+  let mut buffer = [0u8; 64 * 1024];
+  loop {
+    let read = file.read(&mut buffer).unwrap_or_else(|error| {
+      panic!(
+        "failed to read Lynx runtime for checksum {}: {error}",
+        path.display()
+      )
+    });
+    if read == 0 {
+      break;
+    }
+    hasher.update(&buffer[..read]);
+  }
+  hex::encode(hasher.finalize())
 }
 
 fn runtime_url_matches(runtime_path: &Path, url: &str) -> bool {

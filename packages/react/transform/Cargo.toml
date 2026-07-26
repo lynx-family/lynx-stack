@@ -37,10 +37,10 @@ swc_sourcemap = { workspace = true }
 version-compare = { workspace = true }
 
 [target."cfg(all(target_arch = \"wasm32\", target_os = \"unknown\"))".dependencies.getrandom]
-version = "0.3.3"
+version = "0.4.3"
 
 [build-dependencies]
-napi-build = "2.2.3"
+napi-build = "2.3.2"
 
 [features]
 noop = []

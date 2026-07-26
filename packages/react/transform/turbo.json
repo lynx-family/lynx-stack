@@ -3,7 +3,15 @@
   "extends": ["//"],
   "tasks": {
     "build:debug": {
-      "inputs": ["crates/**/*.rs", "crates/**/Cargo.toml", "src/**/*.rs", "build.rs", "Cargo.toml"],
+      "inputs": [
+        "crates/**/*.rs",
+        "crates/**/Cargo.toml",
+        "src/**/*.rs",
+        "build.rs",
+        "Cargo.toml",
+        "$TURBO_ROOT$/Cargo.toml",
+        "$TURBO_ROOT$/Cargo.lock"
+      ],
       "outputs": ["index.d.ts", "index.cjs", "*.node"]
     },
     "build:wasm": {
@@ -15,6 +23,8 @@
         "src/wasm.js",
         "build.rs",
         "Cargo.toml",
+        "$TURBO_ROOT$/Cargo.toml",
+        "$TURBO_ROOT$/Cargo.lock",
         "scripts/build_wasm.sh"
       ],
       "outputs": ["dist/wasm.cjs"]

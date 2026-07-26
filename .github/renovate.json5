@@ -67,6 +67,26 @@
       "groupSlug": "dev-non-major",
     },
     {
+      // These packages are a `dependencies` of one workspace package and a
+      // `devDependencies` of another. The group above matches devDependencies
+      // only, so it splits such a package across two PRs — one for each half.
+      // `sherif` requires a single version across the workspace, so neither
+      // half can merge on its own and both sit red forever (seen with
+      // `@rsdoctor/rspack-plugin` in #3117 vs #3179). Ungroup them so each
+      // keeps the default single PR covering every occurrence.
+      "matchPackageNames": [
+        "@clack/prompts",
+        "@rsdoctor/rspack-plugin",
+        "commander",
+        "css-tree",
+        "eventemitter3",
+        "nyc",
+        "tiny-invariant",
+        "wasm-feature-detect",
+      ],
+      "groupName": null,
+    },
+    {
       "groupName": "Rspack",
       "groupSlug": "Rspack",
       "addLabels": ["upstream:rspack"],
@@ -90,6 +110,23 @@
       "matchPackageNames": [
         "/@rsbuild/*/",
         "/rsbuild-plugin-*/",
+      ],
+      "rangeStrategy": "pin",
+    },
+    {
+      // `@rstest/adapter-rsbuild` and `@rstest/coverage-istanbul` both peer on
+      // `@rstest/core`, so bumping one without the others fails
+      // `strictPeerDependencies` and Renovate cannot write the lock file —
+      // the PR then carries a catalog bump with no matching `pnpm-lock.yaml`.
+      "groupName": "Rstest",
+      "groupSlug": "Rstest",
+      "addLabels": ["upstream:rspack"],
+      "matchDepTypes": [
+        "devDependencies",
+        "dependencies",
+      ],
+      "matchPackageNames": [
+        "/@rstest/*/",
       ],
       "rangeStrategy": "pin",
     },
@@ -193,9 +230,27 @@
     {
       "groupName": "types",
       "groupSlug": "types",
+      // Anchor on the scope separator. `^@types/*` is `@types` followed by any
+      // number of slashes and is not anchored at the end, so it also matched
+      // `@typescript/native-preview` -- the tsgo preview compiler rode along in
+      // every "update types" PR. Its 20260212 -> 20260707 jump breaks
+      // declaration emit for `kitten-lynx` (six `TS2591: Cannot find name
+      // 'node:timers/promises'` and friends), which took #3083 down with it.
       "matchPackageNames": [
-        "/^@tsconfig/*/",
-        "/^@types/*/",
+        "/^@tsconfig\\//",
+        "/^@types\\//",
+      ],
+    },
+    {
+      // Anchoring the `types` group above only moved this package: it is a
+      // devDependency, so it fell into "dev minor & patch" instead and took
+      // #3179 down the same way it took #3083. Give it its own PR -- the
+      // preview compiler ships breaking declaration-emit changes under a date
+      // version, so it needs to be reviewed and rolled back on its own.
+      "groupName": "tsgo",
+      "groupSlug": "tsgo",
+      "matchPackageNames": [
+        "@typescript/native-preview",
       ],
     },
     {
@@ -217,6 +272,21 @@
       "matchPackageNames": [
         "!swc",
         "!swc_*",
+      ],
+    },
+    {
+      // rkyv 0.8 renames the derive attributes (`#[archive(...)]` ->
+      // `#[rkyv(...)]`, and `with` / `omit_bounds` move with it), so the bump
+      // needs `packages/web-platform/web-core` migrated by hand. Grouped with
+      // the rest of the cargo crates it fails the whole PR -- #3129 carried
+      // ~20 harmless patch/minor bumps and only rkyv broke, with 32 errors in
+      // `web-core (lib)`. Give it its own PR so the others can land.
+      "groupName": "rkyv",
+      "groupSlug": "rkyv",
+      "matchManagers": ["cargo"],
+      "matchPackageNames": [
+        "rkyv",
+        "rkyv_derive",
       ],
     },
     {

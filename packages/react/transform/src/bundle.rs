@@ -169,6 +169,7 @@ pub fn transform_bundle_result_inner(
         orig: None,
         comments: Some(&comments),
         emit_source_map_columns: true,
+        emit_source_map_scopes: false,
         preamble: "",
         codegen_config: codegen::Config::default()
           .with_target(EsVersion::latest())

@@ -963,6 +963,7 @@ fn transform_react_lynx_inner(
         },
         comments: Some(&comments),
         emit_source_map_columns: options.source_map_columns.unwrap_or(true),
+        emit_source_map_scopes: false,
         preamble: "",
         codegen_config: codegen::Config::default()
           .with_target(EsVersion::latest())
@@ -1022,6 +1023,7 @@ fn transform_react_lynx_inner(
               orig: None,
               comments: Some(&comments),
               emit_source_map_columns: false,
+              emit_source_map_scopes: false,
               preamble: "",
               codegen_config: codegen::Config::default()
                 .with_target(EsVersion::latest())

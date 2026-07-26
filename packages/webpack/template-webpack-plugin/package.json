@@ -36,13 +36,13 @@
     "test": "rstest"
   },
   "dependencies": {
-    "@jridgewell/trace-mapping": "^0.3.29",
+    "@jridgewell/trace-mapping": "^0.3.31",
     "@lynx-js/css-serializer": "workspace:*",
-    "@lynx-js/tasm": "0.0.39",
+    "@lynx-js/tasm": "0.0.48",
     "@lynx-js/web-core": "workspace:*",
     "@lynx-js/webpack-runtime-globals": "workspace:^",
-    "@rspack/lite-tapable": "1.1.0",
-    "css-tree": "^3.1.0",
+    "@rspack/lite-tapable": "1.1.2",
+    "css-tree": "^3.2.1",
     "object.groupby": "^1.0.3",
     "tinypool": "^2.1.0"
   },
