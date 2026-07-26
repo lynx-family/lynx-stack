@@ -14,11 +14,11 @@
     "react-compiler-runtime": "1.0.0"
   },
   "devDependencies": {
-    "@babel/core": "^7.29.0",
-    "@babel/plugin-syntax-jsx": "^7.28.6",
-    "@babel/plugin-syntax-typescript": "^7.28.6",
-    "@babel/preset-react": "^7.28.5",
-    "@babel/preset-typescript": "^7.28.5",
+    "@babel/core": "^8.0.1",
+    "@babel/plugin-syntax-jsx": "^8.0.1",
+    "@babel/plugin-syntax-typescript": "^8.0.3",
+    "@babel/preset-react": "^8.0.1",
+    "@babel/preset-typescript": "^8.0.1",
     "@lynx-js/qrcode-rsbuild-plugin": "workspace:*",
     "@lynx-js/react-rsbuild-plugin": "workspace:*",
     "@lynx-js/rspeedy": "workspace:*",
