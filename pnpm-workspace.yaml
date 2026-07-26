@@ -63,6 +63,11 @@ minimumReleaseAgeStrict: false
 
 peerDependencyRules:
   allowedVersions:
+    # `vite-plugin-babel` only calls `loadOptions`, `loadPartialConfig` and
+    # `transformAsync`, which all still exist in Babel 8; its `^7.0.0` range
+    # predates the release. Verified by building and testing the one package
+    # that uses it, `testing-library/examples/react-compiler`.
+    "vite-plugin-babel>@babel/core": "^7.0.0 || ^8.0.0"
     "@ai-sdk/provider-utils>zod": "^3.23.8 || ^4.0.0"
     "@ai-sdk/ui-utils>zod": "^3.23.8 || ^4.0.0"
     "@lynx-js/lynx-ui>@types/react": "^19.2.0"
