@@ -78,6 +78,9 @@ jobs:
     runs-on: ${{ inputs.runs-on }}
     timeout-minutes: 45
     needs: get-merge-base
+    env:
+      # `turbo-v4` matches the saved caches; anything else matches nothing.
+      TURBO_RESTORE_PREFIX: ${{ github.event_name == 'push' && 'turbo-no-restore' || 'turbo-v4' }}
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
         with:
@@ -107,11 +110,23 @@ jobs:
           # We can restore caches from:
           #   1. Previous commit from base branch (merge base or base SHA)
           #   2. Any cache
+          #
+          # On a push to `main` (`deploy-main.yml`) the prefix below becomes one
+          # nothing is stored under, so this run starts from an empty cache and
+          # saves only what it built. Restoring there is what made the cache
+          # grow without bound: every PR restores main's cache through key 1, so
+          # main carrying the previous generation in and saving it back added a
+          # generation per merge -- 193 merges in three weeks, past the 5 GB the
+          # backend accepts, after which every save fails while still reporting
+          # success and downstream jobs die on a cache miss:
+          # https://github.com/lynx-family/lynx-stack/actions/runs/30186830273/job/89752986590
+          #
+          # The cold build this costs is on a post-merge run nobody waits on.
           restore-keys: |
-            turbo-v4-${{ runner.os }}-${{ hashFiles('packages/**/src/**/*.rs') }}-${{ needs.get-merge-base.outputs.merge-base }}
-            turbo-v4-${{ runner.os }}-${{ hashFiles('packages/**/src/**/*.rs') }}-${{ github.event.pull_request.base.sha || github.event.merge_group.base_sha || github.event.push.before }}
-            turbo-v4-${{ runner.os }}-${{ hashFiles('packages/**/src/**/*.rs') }}-
-            turbo-v4-${{ runner.os }}-
+            ${{ env.TURBO_RESTORE_PREFIX }}-${{ runner.os }}-${{ hashFiles('packages/**/src/**/*.rs') }}-${{ needs.get-merge-base.outputs.merge-base }}
+            ${{ env.TURBO_RESTORE_PREFIX }}-${{ runner.os }}-${{ hashFiles('packages/**/src/**/*.rs') }}-${{ github.event.pull_request.base.sha || github.event.merge_group.base_sha || github.event.push.before }}
+            ${{ env.TURBO_RESTORE_PREFIX }}-${{ runner.os }}-${{ hashFiles('packages/**/src/**/*.rs') }}-
+            ${{ env.TURBO_RESTORE_PREFIX }}-${{ runner.os }}-
       - name: Install
         uses: ./.github/actions/pnpm-install
         with:
@@ -128,41 +143,6 @@ jobs:
         env:
           NODE_OPTIONS: --max-old-space-size=32768
           CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
-      # The restored cache carries every previous run's entries and this job
-      # saves the whole thing back, so it only ever grows -- past 5 GB the
-      # backend rejects the upload while still printing "Cache saved
-      # successfully", and every downstream job then dies on a cache miss:
-      # https://github.com/lynx-family/lynx-stack/actions/runs/30186830273/job/89752986590
-      #
-      # Keep only the hashes this commit produces. Downstream jobs run the same
-      # `turbo build` at the same SHA, so those are exactly the entries they
-      # look for; anything else is from another lockfile and can never be hit.
-      - name: Drop cache entries this commit cannot use
-        shell: bash
-        run: |
-          pnpm turbo build --dry=json --filter '!benchx_cli' --filter '!@lynx-js/benchmark-*' \
-            | sed -n '/^{/,$p' > /tmp/turbo-dry.json
-          node -e '
-            const fs = require("node:fs"), path = require("node:path");
-            const dir = ".turbo/cache";
-            if (!fs.existsSync(dir)) process.exit(0);
-            const keep = new Set(
-              JSON.parse(fs.readFileSync("/tmp/turbo-dry.json", "utf8")).tasks.map((t) => t.hash),
-            );
-            const mb = (b) => Math.round(b / 1048576);
-            let kept = 0, dropped = 0, keptBytes = 0, droppedBytes = 0;
-            for (const name of fs.readdirSync(dir)) {
-              const file = path.join(dir, name);
-              const size = fs.statSync(file).size;
-              if (keep.has(name.replace(/\.tar\.zst$|-meta\.json$|-manifest\.json$/, ""))) {
-                kept++; keptBytes += size;
-              } else {
-                fs.rmSync(file, { force: true });
-                dropped++; droppedBytes += size;
-              }
-            }
-            console.log(`turbo cache: kept ${kept} entries (${mb(keptBytes)} MB), dropped ${dropped} (${mb(droppedBytes)} MB)`);
-          '
       - name: Upload turbo summary
         if: runner.debug == '1'
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7
