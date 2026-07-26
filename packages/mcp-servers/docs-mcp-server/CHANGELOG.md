@@ -1,5 +1,20 @@
 # @lynx-js/docs-mcp-server
 
+## 0.2.5
+
+### Patch Changes
+
+- Pin `@modelcontextprotocol/sdk` to 1.25.2. 1.29.0 added a `types` condition to ([#3220](https://github.com/lynx-family/lynx-stack/pull/3220))
+  its `./*` export wildcard, which resolves `server/mcp.js` to
+  `dist/esm/server/mcp.js.d.ts` — a file that does not exist, the real one being
+  `mcp.d.ts`. A caret range let any lockfile regeneration pull it in.
+
+- Update `undici` from `^6.23.0` to `^6.27.0` ([#3217](https://github.com/lynx-family/lynx-stack/pull/3217))
+
+- Update `empathic` from `^2.0.0` to `^2.0.1` ([#3086](https://github.com/lynx-family/lynx-stack/pull/3086))
+
+- Update `mdast-util-from-markdown` from `^2.0.2` to `^2.0.3` ([#3087](https://github.com/lynx-family/lynx-stack/pull/3087))
+
 ## 0.2.4
 
 ### Patch Changes
