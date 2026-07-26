@@ -1122,8 +1122,8 @@ importers:
         specifier: ^2.1.2
         version: 2.1.2
       undici:
-        specifier: ^6.23.0
-        version: 6.23.0
+        specifier: ^6.27.0
+        version: 6.27.0
     devDependencies:
       '@types/debug':
         specifier: ^4.1.13
@@ -11423,8 +11423,8 @@ packages:
   undici-types@7.28.0:
     resolution: {integrity: sha512-LJAfY+2w6HGeT8d8J1wNQsUGUEGio6NWWpwdwurQe4f6oojzCFuGLizl1KSve4irsTxyLly1QhEeE6iapdaIvQ==}
 
-  undici@6.23.0:
-    resolution: {integrity: sha512-VfQPToRA5FZs/qJxLIinmU59u0r7LXqoJkCzinq3ckNJp3vKEh7jTWN589YQ5+aoAC/TGRLyJLCPKcLQbM8r9g==}
+  undici@6.27.0:
+    resolution: {integrity: sha512-YmfV3YnEDzXRC5lZ2jWtWWHKGUm1zIt8AhesR1tens+HTNv+YZlN/dp6G727LOvMJ8xjP9Be7Y2Sdr96LDm+pg==}
     engines: {node: '>=18.17'}
 
   unhead@2.1.16:
@@ -22158,7 +22158,7 @@ snapshots:
 
   undici-types@7.28.0: {}
 
-  undici@6.23.0: {}
+  undici@6.27.0: {}
 
   unhead@2.1.16:
     dependencies:
