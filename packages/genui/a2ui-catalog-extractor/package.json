@@ -37,7 +37,7 @@
     "test": "rstest"
   },
   "dependencies": {
-    "typedoc": "^0.28.19"
+    "typedoc": "^0.28.20"
   },
   "devDependencies": {
     "@rstest/core": "catalog:rstest",
