@@ -11,6 +11,7 @@
     "emitDeclarationOnly": false,
     "isolatedDeclarations": true,
     "moduleResolution": "nodenext",
+    "types": ["node"],
   },
   "include": [
     "src",
