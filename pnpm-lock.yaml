@@ -1104,7 +1104,7 @@ importers:
   packages/mcp-servers/docs-mcp-server:
     dependencies:
       '@modelcontextprotocol/sdk':
-        specifier: ^1.25.2
+        specifier: 1.25.2
         version: 1.25.2(hono@4.12.12)(supports-color@8.1.1)(zod@4.4.3)
       commander:
         specifier: ^13.1.0
