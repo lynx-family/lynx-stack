@@ -16,11 +16,6 @@ on:
 env:
   CI: 1
   TURBO_TELEMETRY_DISABLED: 1
-  # [verification] Disable the primjs/QuickJS tracing (cycle) GC during benchmarks.
-  # Confirms the 012-attrs-compile serializeRoot "regression" is a one-time cycle-GC
-  # landing in that measured window (not real serialization cost). Head-only on this
-  # PR; to be reverted / moved into benchx once confirmed.
-  DISABLE_TRACING_GC: "1"
 jobs:
   nodejs-benchmark:
     permissions: {}
