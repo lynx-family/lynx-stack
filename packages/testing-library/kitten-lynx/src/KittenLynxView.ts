@@ -366,6 +366,7 @@ export class KittenLynxView {
 
     const stream = await this._connector.sendCDPStream(
       this._clientId,
+      sessionId,
       inputStream,
     );
 
