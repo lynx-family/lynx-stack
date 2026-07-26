@@ -3,6 +3,7 @@
 // LICENSE file in the root directory of this source tree.
 import '@testing-library/jest-dom';
 import { expect, it, vi } from 'vitest';
+import type { JSX } from '@lynx-js/react';
 import { render, fireEvent, screen } from '@lynx-js/react/testing-library';
 
 it('basic', async function() {

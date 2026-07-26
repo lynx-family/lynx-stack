@@ -1,3 +1,5 @@
+import type { JSX } from '@lynx-js/react';
+
 import { DemoCell } from '../components/index.js';
 
 const gridItems = ['01', '02', '03', '04', '05'];

@@ -63,6 +63,13 @@ minimumReleaseAgeStrict: false
 
 peerDependencyRules:
   allowedVersions:
+    # `vite-plugin-babel` only calls `loadOptions`, `loadPartialConfig` and
+    # `transformAsync`, which all still exist in Babel 8; its `^7.0.0` range
+    # predates the release. Verified by building and testing the one package
+    # that uses it, `testing-library/examples/react-compiler`.
+    "vite-plugin-babel>@babel/core": "^7.0.0 || ^8.0.0"
+    "@ai-sdk/provider-utils>zod": "^3.23.8 || ^4.0.0"
+    "@ai-sdk/ui-utils>zod": "^3.23.8 || ^4.0.0"
     "@lynx-js/lynx-ui>@types/react": "^19.2.0"
     "@lynx-js/lynx-ui-button>@types/react": "^19.2.0"
     "@lynx-js/lynx-ui-checkbox>@types/react": "^19.2.0"
@@ -107,7 +114,7 @@ catalogs:
 
   # Rsbuild monorepo packages
   rsbuild:
-    "@rsbuild/core": "2.1.4"
+    "@rsbuild/core": "2.1.7"
 
   # Rslib monorepo packages
   rslib:
@@ -115,16 +122,16 @@ catalogs:
 
   # Rspack monorepo packages
   rspack:
-    "@rspack/cli": "2.1.4"
-    "@rspack/core": "2.1.4"
+    "@rspack/cli": "2.1.5"
+    "@rspack/core": "2.1.5"
     "@rspack/dev-server": "2.1.0"
     "@rspack/test-tools": "2.1.3"
 
   # Rstest monorepo packages
   rstest:
-    "@rstest/adapter-rsbuild": "0.11.0"
-    "@rstest/coverage-istanbul": "0.11.2"
-    "@rstest/core": "0.11.2"
+    "@rstest/adapter-rsbuild": "0.11.3"
+    "@rstest/coverage-istanbul": "0.11.3"
+    "@rstest/core": "0.11.3"
 
 overrides:
   # Published @lynx-js/lynx-ui-* (pulled in by packages/genui/a2ui) peer-depend on
