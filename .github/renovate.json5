@@ -242,6 +242,18 @@
       ],
     },
     {
+      // Anchoring the `types` group above only moved this package: it is a
+      // devDependency, so it fell into "dev minor & patch" instead and took
+      // #3179 down the same way it took #3083. Give it its own PR -- the
+      // preview compiler ships breaking declaration-emit changes under a date
+      // version, so it needs to be reviewed and rolled back on its own.
+      "groupName": "tsgo",
+      "groupSlug": "tsgo",
+      "matchPackageNames": [
+        "@typescript/native-preview",
+      ],
+    },
+    {
       "groupName": "Lynx Engine",
       "groupSlug": "lynx-engine",
       "matchManagers": ["custom.regex"],
