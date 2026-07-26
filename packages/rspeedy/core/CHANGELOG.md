@@ -1,5 +1,21 @@
 # @lynx-js/rspeedy
 
+## 0.16.1
+
+### Patch Changes
+
+- Update `@rsdoctor/rspack-plugin` from `~1.5.6` to `~1.6.1` ([#3117](https://github.com/lynx-family/lynx-stack/pull/3117))
+
+- Update `@rsbuild/core` from `2.1.4` to `2.1.7` ([#3071](https://github.com/lynx-family/lynx-stack/pull/3071))
+
+- Update `@rsbuild/plugin-css-minimizer` from `2.0.0` to `2.0.1` ([#3067](https://github.com/lynx-family/lynx-stack/pull/3067))
+
+- Widen the optional `typescript` peer dependency range from `5.1.6 - 5.9.x` to `5.1.6 - 6.0.x` so projects on TypeScript 6.0 are supported. ([#2976](https://github.com/lynx-family/lynx-stack/pull/2976))
+
+- Updated dependencies [[`3897792`](https://github.com/lynx-family/lynx-stack/commit/38977927bf0229a330b5d4cf7bacc0a2bcb1bebc), [`d576431`](https://github.com/lynx-family/lynx-stack/commit/d576431db510756b9c2ac4dbedf0e0da6b10bc8b)]:
+  - @lynx-js/debug-metadata-rsbuild-plugin@0.2.1
+  - @lynx-js/web-rsbuild-server-middleware@0.23.0
+
 ## 0.16.0
 
 ### Minor Changes

@@ -1,5 +1,13 @@
 # @lynx-js/debug-metadata-rsbuild-plugin
 
+## 0.2.1
+
+### Patch Changes
+
+- Skip `debug-metadata.json` emission on local production builds — nothing reads it there, but collecting it walks every source map. Production builds now emit it only on an automated build, detected via `CI`, `CI_REPO_NAME` or `BUILD_VERSION`; `DEBUG=rspeedy` opts back in. Dev builds are unaffected. ([#3007](https://github.com/lynx-family/lynx-stack/pull/3007))
+
+- Reduce build-time overhead: memoize the chunk release key, and read the commit and worktree root in one `git rev-parse` spawn instead of two. ([#3008](https://github.com/lynx-family/lynx-stack/pull/3008))
+
 ## 0.2.0
 
 ### Minor Changes
