@@ -15,7 +15,7 @@ const src = path.join(path.dirname(fileURLToPath(import.meta.url)), 'src')
 // cannot infer default-export types.
 const config: RstestConfig = defineConfig({
   ...lynxRstestConfig({
-    name: 'preset',
+    name: 'rsbuild-plugin',
     url: import.meta.url,
     env: { NODE_ENV: 'test' },
   }),

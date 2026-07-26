@@ -32,6 +32,11 @@ export default defineConfig({
         '**/eslint.config.js',
 
         'packages/tools/canary-release/**',
+        // Covered by rstest; the V8 provider would remap their built `lib/`
+        // output back to `src/` through source maps and report line-granular
+        // misses that override the accurate rstest coverage on Codecov.
+        'packages/rspeedy/core/**',
+        'packages/rspeedy/plugin-lynx/**',
         'packages/web-platform/web-core-e2e/**',
         'packages/webpack/test-tools/**',
         'packages/testing-library/test-environment/**',
