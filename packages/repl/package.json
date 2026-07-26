@@ -14,7 +14,7 @@
     "dev": "node scripts/collect-lynx-types.mjs && rsbuild dev"
   },
   "dependencies": {
-    "@radix-ui/react-select": "^2.2.6",
+    "@radix-ui/react-select": "^2.3.5",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
     "lucide-react": "^1.25.0",
