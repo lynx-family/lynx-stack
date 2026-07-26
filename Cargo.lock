@@ -1904,6 +1904,7 @@ name = "lynx"
 version = "0.1.0"
 dependencies = [
  "fs2",
+ "hex",
  "libloading 0.9.0",
  "sha2 0.11.0",
  "tempfile",
