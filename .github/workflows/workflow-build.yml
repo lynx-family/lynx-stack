@@ -78,6 +78,9 @@ jobs:
     runs-on: ${{ inputs.runs-on }}
     timeout-minutes: 45
     needs: get-merge-base
+    env:
+      # `turbo-v4` matches the saved caches; anything else matches nothing.
+      TURBO_RESTORE_PREFIX: ${{ github.event_name == 'push' && 'turbo-no-restore' || 'turbo-v4' }}
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
         with:
@@ -107,11 +110,23 @@ jobs:
           # We can restore caches from:
           #   1. Previous commit from base branch (merge base or base SHA)
           #   2. Any cache
+          #
+          # On a push to `main` (`deploy-main.yml`) the prefix below becomes one
+          # nothing is stored under, so this run starts from an empty cache and
+          # saves only what it built. Restoring there is what made the cache
+          # grow without bound: every PR restores main's cache through key 1, so
+          # main carrying the previous generation in and saving it back added a
+          # generation per merge -- 193 merges in three weeks, past the 5 GB the
+          # backend accepts, after which every save fails while still reporting
+          # success and downstream jobs die on a cache miss:
+          # https://github.com/lynx-family/lynx-stack/actions/runs/30186830273/job/89752986590
+          #
+          # The cold build this costs is on a post-merge run nobody waits on.
           restore-keys: |
-            turbo-v4-${{ runner.os }}-${{ hashFiles('packages/**/src/**/*.rs') }}-${{ needs.get-merge-base.outputs.merge-base }}
-            turbo-v4-${{ runner.os }}-${{ hashFiles('packages/**/src/**/*.rs') }}-${{ github.event.pull_request.base.sha || github.event.merge_group.base_sha || github.event.push.before }}
-            turbo-v4-${{ runner.os }}-${{ hashFiles('packages/**/src/**/*.rs') }}-
-            turbo-v4-${{ runner.os }}-
+            ${{ env.TURBO_RESTORE_PREFIX }}-${{ runner.os }}-${{ hashFiles('packages/**/src/**/*.rs') }}-${{ needs.get-merge-base.outputs.merge-base }}
+            ${{ env.TURBO_RESTORE_PREFIX }}-${{ runner.os }}-${{ hashFiles('packages/**/src/**/*.rs') }}-${{ github.event.pull_request.base.sha || github.event.merge_group.base_sha || github.event.push.before }}
+            ${{ env.TURBO_RESTORE_PREFIX }}-${{ runner.os }}-${{ hashFiles('packages/**/src/**/*.rs') }}-
+            ${{ env.TURBO_RESTORE_PREFIX }}-${{ runner.os }}-
       - name: Install
         uses: ./.github/actions/pnpm-install
         with:
@@ -120,7 +135,11 @@ jobs:
       - name: Build
         id: build
         run: |
-          pnpm turbo build --summarize
+          # `benchx_cli` downloads an 86 MB binary only the benchmark job uses.
+          # `benchmark-*` goes with it -- it depends on `benchx_cli`, so
+          # excluding `benchx_cli` alone is a no-op. Same pair `deploy-main.yml`
+          # uses.
+          pnpm turbo build --summarize --filter '!benchx_cli' --filter '!@lynx-js/benchmark-*'
         env:
           NODE_OPTIONS: --max-old-space-size=32768
           CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
