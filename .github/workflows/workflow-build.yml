@@ -120,10 +120,49 @@ jobs:
       - name: Build
         id: build
         run: |
-          pnpm turbo build --summarize
+          # `benchx_cli` downloads an 86 MB binary only the benchmark job uses.
+          # `benchmark-*` goes with it -- it depends on `benchx_cli`, so
+          # excluding `benchx_cli` alone is a no-op. Same pair `deploy-main.yml`
+          # uses.
+          pnpm turbo build --summarize --filter '!benchx_cli' --filter '!@lynx-js/benchmark-*'
         env:
           NODE_OPTIONS: --max-old-space-size=32768
           CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
+      # The restored cache carries every previous run's entries and this job
+      # saves the whole thing back, so it only ever grows -- past 5 GB the
+      # backend rejects the upload while still printing "Cache saved
+      # successfully", and every downstream job then dies on a cache miss:
+      # https://github.com/lynx-family/lynx-stack/actions/runs/30186830273/job/89752986590
+      #
+      # Keep only the hashes this commit produces. Downstream jobs run the same
+      # `turbo build` at the same SHA, so those are exactly the entries they
+      # look for; anything else is from another lockfile and can never be hit.
+      - name: Drop cache entries this commit cannot use
+        shell: bash
+        run: |
+          pnpm turbo build --dry=json --filter '!benchx_cli' --filter '!@lynx-js/benchmark-*' \
+            | sed -n '/^{/,$p' > /tmp/turbo-dry.json
+          node -e '
+            const fs = require("node:fs"), path = require("node:path");
+            const dir = ".turbo/cache";
+            if (!fs.existsSync(dir)) process.exit(0);
+            const keep = new Set(
+              JSON.parse(fs.readFileSync("/tmp/turbo-dry.json", "utf8")).tasks.map((t) => t.hash),
+            );
+            const mb = (b) => Math.round(b / 1048576);
+            let kept = 0, dropped = 0, keptBytes = 0, droppedBytes = 0;
+            for (const name of fs.readdirSync(dir)) {
+              const file = path.join(dir, name);
+              const size = fs.statSync(file).size;
+              if (keep.has(name.replace(/\.tar\.zst$|-meta\.json$|-manifest\.json$/, ""))) {
+                kept++; keptBytes += size;
+              } else {
+                fs.rmSync(file, { force: true });
+                dropped++; droppedBytes += size;
+              }
+            }
+            console.log(`turbo cache: kept ${kept} entries (${mb(keptBytes)} MB), dropped ${dropped} (${mb(droppedBytes)} MB)`);
+          '
       - name: Upload turbo summary
         if: runner.debug == '1'
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7
