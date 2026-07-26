@@ -1901,8 +1901,8 @@ importers:
   packages/testing-library/kitten-lynx:
     dependencies:
       '@lynx-js/devtool-connector':
-        specifier: 0.1.1
-        version: 0.1.1
+        specifier: 0.9.5
+        version: 0.9.5
       '@yume-chan/adb':
         specifier: catalog:adb
         version: 2.6.0
@@ -3985,8 +3985,8 @@ packages:
     resolution: {integrity: sha512-qC72D4+CDdjGqJvkFMMEAtancHUQ7/d/tAiHf64z8MopFDmcrtbcJuerDtFceuAfQJ2pDSfCKCtbqoGBNnwg0w==}
     engines: {node: '>=8'}
 
-  '@lynx-js/devtool-connector@0.1.1':
-    resolution: {integrity: sha512-s8yfGgaZ3A5aTzvzcen4EaPW6mxCSuWzk/FxXVbyAIF6uCKKLEit863nxUW9pV+0HNyYyECsuVwCFf9eHaumnw==}
+  '@lynx-js/devtool-connector@0.9.5':
+    resolution: {integrity: sha512-lgKFQ11UuH71KpNHVRxtHwPsmp8PkmsS2ZIkfzYKH08rWT7Trfv7BrejQUbFQTVblIwyZvETugWSkNZsKdc9dQ==}
     engines: {node: '>=18.19'}
 
   '@lynx-js/gesture-runtime@2.1.1':
@@ -13457,7 +13457,12 @@ snapshots:
     dependencies:
       '@lukeed/csprng': 1.1.0
 
-  '@lynx-js/devtool-connector@0.1.1': {}
+  '@lynx-js/devtool-connector@0.9.5':
+    dependencies:
+      ws: 8.21.1
+    transitivePeerDependencies:
+      - bufferutil
+      - utf-8-validate
 
   '@lynx-js/gesture-runtime@2.1.1(@lynx-js/react@packages+react)(@lynx-js/types@4.0.0)':
     dependencies:
