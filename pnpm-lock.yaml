@@ -299,6 +299,25 @@ importers:
         specifier: workspace:*
         version: link:../../packages/rspeedy/core
 
+  examples/preact-ports-tailwind:
+    dependencies:
+      '@lynx-js/preact-runtime':
+        specifier: workspace:*
+        version: link:../../packages/preact-runtime
+    devDependencies:
+      '@lynx-js/rspeedy':
+        specifier: workspace:*
+        version: link:../../packages/rspeedy/core
+      '@lynx-js/tailwind-preset':
+        specifier: workspace:*
+        version: link:../../packages/tailwind-preset
+      rsbuild-plugin-tailwindcss:
+        specifier: 0.2.4
+        version: 0.2.4(@rsbuild/core@2.1.7(core-js@3.49.0))(tailwindcss@3.4.19)
+      tailwindcss:
+        specifier: ^3.4.19
+        version: 3.4.19
+
   examples/react:
     dependencies:
       '@lynx-js/react':
