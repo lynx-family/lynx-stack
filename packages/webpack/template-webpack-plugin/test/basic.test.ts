@@ -3,6 +3,7 @@
 // LICENSE file in the root directory of this source tree.
 import { readFile } from 'node:fs/promises';
 import { dirname, join } from 'node:path';
+import { fileURLToPath } from 'node:url';
 
 import { TraceMap, generatedPositionFor } from '@jridgewell/trace-mapping';
 import type { SourceMapInput } from '@jridgewell/trace-mapping';
@@ -30,7 +31,7 @@ type DiagnosticError = Error & {
 describe('LynxTemplatePlugin', () => {
   test('build with custom lepus', async () => {
     const stats = await runWebpack({
-      context: dirname(new URL(import.meta.url).pathname),
+      context: dirname(fileURLToPath(import.meta.url)),
       mode: 'development',
       devtool: false,
       output: {
@@ -70,7 +71,7 @@ globalThis.renderPage = function() {
   });
 
   test('emits css diagnostics during beforeEmit with current css chunk source maps', async () => {
-    const context = dirname(new URL(import.meta.url).pathname);
+    const context = dirname(fileURLToPath(import.meta.url));
     const compiler = {
       context,
       options: {
@@ -157,7 +158,7 @@ globalThis.renderPage = function() {
 
   test('maps css diagnostics to the matching source map for each entry', async () => {
     const context = join(
-      dirname(new URL(import.meta.url).pathname),
+      dirname(fileURLToPath(import.meta.url)),
       'fixtures',
       'css-diagnostics-mpa',
     );

@@ -1,8 +1,9 @@
+import { fileURLToPath } from 'node:url';
 import { createConfig } from '../../../helpers/create-config.js';
 
 /** @type {import('@rspack/core').Configuration} */
 export default {
-  context: new URL('.', import.meta.url).pathname,
+  context: fileURLToPath(new URL('.', import.meta.url)),
   ...createConfig(
     {
       backgroundLayer: 'background',
