@@ -194,6 +194,11 @@ export function pluginPreactLynx(): RsbuildPlugin {
           '@lynx-js/react$',
           require.resolve('@lynx-js/preact-runtime/compat'),
         );
+        // ReactLynx also aliases bare `react` (externals examples use it).
+        chain.resolve.alias.set(
+          'react$',
+          require.resolve('@lynx-js/preact-runtime/compat'),
+        );
         chain.resolve.alias.set(
           '@lynx-js/react/debug$',
           require.resolve('@lynx-js/preact-runtime/compat/debug'),

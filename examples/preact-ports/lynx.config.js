@@ -19,6 +19,8 @@ export default defineConfig({
       'react-et-mtf': '../react-et-mtf/src/index.tsx',
       'react-lazy-bundle': '../react-lazy-bundle/src/index.tsx',
       'react-et-lazy-bundle': '../react-et-lazy-bundle/src/index.tsx',
+      'react-externals': '../react-externals/src/index.tsx',
+      'react-externals-web': '../react-externals-web/src/index.tsx',
     },
   },
   plugins: [
