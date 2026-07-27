@@ -8,7 +8,7 @@ mod worklet_type;
 use extract_ident::{ExtractingIdentsCollector, ExtractingIdentsCollectorConfig};
 use gen_stmt::StmtGen;
 use hash::WorkletHash;
-use rustc_hash::FxHashSet;
+use rustc_hash::{FxHashMap, FxHashSet};
 use serde::Deserialize;
 use std::collections::HashSet;
 use std::vec;
@@ -64,6 +64,14 @@ pub struct WorkletVisitor {
   shared_identifiers: FxHashSet<Id>,
   worklet_runtime_loaded: bool,
   worklet_runtime_loaded_ident: Ident,
+  /// Maps a local binding introduced by an `import` declaration to the module
+  /// it comes from, so that we can tell whether an identifier captured into a
+  /// worklet closure (`_c`) is defined in another module.
+  import_srcs: FxHashMap<Id, Box<Str>>,
+  /// The modules that own an identifier captured into a worklet closure. On the
+  /// main thread these imports are the only thing that keeps a cross-module
+  /// `'main thread'` function reachable, see [`WorkletVisitor::record_captured_imports`].
+  captured_import_srcs: Vec<Str>,
 }
 
 impl Default for WorkletVisitor {
@@ -97,6 +105,7 @@ impl VisitMut for WorkletVisitor {
           shared_identifiers: Some(self.shared_identifiers.clone()),
         });
         n.visit_mut_with(&mut collector);
+        self.record_captured_imports(&collector);
 
         let should_use_getter = self.cfg.target == TransformTarget::JS
           && !n.as_method().unwrap().is_static
@@ -211,6 +220,7 @@ impl VisitMut for WorkletVisitor {
           shared_identifiers: Some(self.shared_identifiers.clone()),
         });
         value.visit_mut_with(&mut collector);
+        self.record_captured_imports(&collector);
 
         let function: Box<Function> = match value.as_ref() {
           Expr::Arrow(arrow) if arrow.body.is_block_stmt() => Box::new(Function {
@@ -316,6 +326,7 @@ impl VisitMut for WorkletVisitor {
       shared_identifiers: Some(self.shared_identifiers.clone()),
     });
     n.visit_mut_with(&mut collector);
+    self.record_captured_imports(&collector);
 
     let hash = self.hasher.gen(&self.cfg.filename, &self.content_hash);
     let (worklet_object_expr, register_worklet_stmt) = StmtGen::transform_worklet(
@@ -364,6 +375,7 @@ impl VisitMut for WorkletVisitor {
           shared_identifiers: Some(self.shared_identifiers.clone()),
         });
         n.visit_mut_with(&mut collector);
+        self.record_captured_imports(&collector);
 
         let hash = self.hasher.gen(&self.cfg.filename, &self.content_hash);
         let (worklet_object_expr, register_worklet_stmt) = StmtGen::transform_worklet(
@@ -420,6 +432,7 @@ impl VisitMut for WorkletVisitor {
           shared_identifiers: Some(self.shared_identifiers.clone()),
         });
         n.visit_mut_with(&mut collector);
+        self.record_captured_imports(&collector);
 
         let hash = self.hasher.gen(&self.cfg.filename, &self.content_hash);
         let (worklet_object_expr, register_worklet_stmt) = StmtGen::transform_worklet(
@@ -493,6 +506,7 @@ impl VisitMut for WorkletVisitor {
       .as_mut_fn_expr()
       .unwrap()
       .visit_mut_with(&mut collector);
+    self.record_captured_imports(&collector);
 
     let hash = self.hasher.gen(&self.cfg.filename, &self.content_hash);
     let (worklet_object_expr, register_worklet_stmt) = StmtGen::transform_worklet(
@@ -531,21 +545,26 @@ impl VisitMut for WorkletVisitor {
     // First process imports to detect shared-runtime modules
     for item in &n.body {
       if let ModuleItem::ModuleDecl(ModuleDecl::Import(import_decl)) = item {
-        if is_shared_runtime_import(import_decl) {
-          for specifier in &import_decl.specifiers {
-            match specifier {
-              ImportSpecifier::Named(named) => {
-                self.shared_identifiers.insert(named.local.to_id());
+        let is_shared_runtime = is_shared_runtime_import(import_decl);
+        for specifier in &import_decl.specifiers {
+          let local = match specifier {
+            ImportSpecifier::Named(named) => {
+              if named.is_type_only {
+                continue;
               }
-              ImportSpecifier::Default(default) => {
-                self.shared_identifiers.insert(default.local.to_id());
-              }
-              ImportSpecifier::Namespace(ns) => {
-                self.shared_identifiers.insert(ns.local.to_id());
-              }
-              #[cfg(swc_ast_unknown)]
-              _ => panic!("unknown node"),
+              &named.local
             }
+            ImportSpecifier::Default(default) => &default.local,
+            ImportSpecifier::Namespace(ns) => &ns.local,
+            #[cfg(swc_ast_unknown)]
+            _ => panic!("unknown node"),
+          };
+          if is_shared_runtime {
+            self.shared_identifiers.insert(local.to_id());
+          } else if !import_decl.type_only {
+            self
+              .import_srcs
+              .insert(local.to_id(), import_decl.src.clone());
           }
         }
       }
@@ -635,6 +654,28 @@ impl VisitMut for WorkletVisitor {
         .into_iter(),
       );
     }
+    // Keep the modules that own a captured identifier reachable. The named
+    // import they came from is dropped by DCE once the surrounding
+    // background-only code is shaken away, which would take a cross-module
+    // `'main thread'` function's `registerWorkletInternal()` call with it.
+    if !self.captured_import_srcs.is_empty() {
+      let side_effect_imports = self
+        .captured_import_srcs
+        .drain(..)
+        .map(|src| {
+          ModuleItem::ModuleDecl(ModuleDecl::Import(ImportDecl {
+            span: DUMMY_SP,
+            phase: ImportPhase::Evaluation,
+            specifiers: vec![],
+            src: Box::new(src),
+            type_only: false,
+            with: None,
+          }))
+        })
+        .collect::<Vec<_>>();
+      prepend_stmts(&mut n.body, side_effect_imports.into_iter());
+    }
+
     // Add statements to insert at top level after processing all items
     n.body.extend(
       self
@@ -710,6 +751,43 @@ impl WorkletVisitor {
       shared_identifiers: FxHashSet::default(),
       worklet_runtime_loaded: false,
       worklet_runtime_loaded_ident: private_ident!("__workletRuntimeLoaded"),
+      import_srcs: FxHashMap::default(),
+      captured_import_srcs: vec![],
+    }
+  }
+
+  /// Remember every module a worklet closure captures an identifier from.
+  ///
+  /// A `'main thread'` function that lives in another module compiles down to a
+  /// `{ _wkltId }` descriptor that the caller captures into `this._c`, plus a
+  /// `registerWorkletInternal()` call in the *defining* module. The caller's
+  /// worklet body reads the identifier back off `this._c`, so after the
+  /// main-thread passes drop the background-only code around it (`useEffect`,
+  /// `runOnMainThread`, ...) nothing references the import any more and the DCE
+  /// pass removes the import declaration altogether. The defining module then
+  /// never makes it into the main-thread bundle, `_workletMap[id]` is
+  /// `undefined`, and hydrating the worklet throws on `.bind`.
+  ///
+  /// Recording the module here lets [`VisitMut::visit_mut_module`] re-add it as
+  /// a side-effect-only import, which survives DCE and keeps the registration.
+  fn record_captured_imports(&mut self, collector: &ExtractingIdentsCollector) {
+    // The background bundle keeps the import: the captured identifier is still
+    // referenced there, by the closure object literal (`_c`) itself.
+    if self.cfg.target == TransformTarget::JS {
+      return;
+    }
+    for ident in collector.idents() {
+      let Some(src) = self.import_srcs.get(&ident.to_id()) else {
+        continue;
+      };
+      if self
+        .captured_import_srcs
+        .iter()
+        .any(|recorded| recorded.value == src.value)
+      {
+        continue;
+      }
+      self.captured_import_srcs.push((**src).clone());
     }
   }
 
@@ -1138,6 +1216,97 @@ function worklet(event: Event) {
     console.log(sharedRuntime);
     console.log(this.y1);
     let a: object = y1;
+}
+    "#
+  );
+
+  test!(
+    module,
+    Syntax::Es(EsSyntax {
+      ..Default::default()
+    }),
+    |_| (
+      resolver(Mark::new(), Mark::new(), true),
+      visit_mut_pass(WorkletVisitor::new(
+        TransformMode::Test,
+        WorkletVisitorConfig {
+          filename: "index.js".into(),
+          target: TransformTarget::LEPUS,
+          custom_global_ident_names: None,
+          runtime_pkg: "@lynx-js/react".into(),
+        }
+      )),
+      hygiene()
+    ),
+    should_keep_captured_import_alive_lepus,
+    r#"
+import { spin } from './spin.js';
+import { unrelated } from './unrelated.js';
+
+function worklet(event) {
+    "main thread";
+    spin(event.currentTarget, 45);
+}
+    "#
+  );
+
+  test!(
+    module,
+    Syntax::Es(EsSyntax {
+      ..Default::default()
+    }),
+    |_| (
+      resolver(Mark::new(), Mark::new(), true),
+      visit_mut_pass(WorkletVisitor::new(
+        TransformMode::Test,
+        WorkletVisitorConfig {
+          filename: "index.js".into(),
+          target: TransformTarget::JS,
+          custom_global_ident_names: None,
+          runtime_pkg: "@lynx-js/react".into(),
+        }
+      )),
+      hygiene()
+    ),
+    should_not_add_side_effect_import_js,
+    r#"
+import { spin } from './spin.js';
+
+function worklet(event) {
+    "main thread";
+    spin(event.currentTarget, 45);
+}
+    "#
+  );
+
+  test!(
+    module,
+    Syntax::Typescript(TsSyntax {
+      ..Default::default()
+    }),
+    |_| (
+      resolver(Mark::new(), Mark::new(), true),
+      visit_mut_pass(WorkletVisitor::new(
+        TransformMode::Test,
+        WorkletVisitorConfig {
+          filename: "index.js".into(),
+          target: TransformTarget::LEPUS,
+          custom_global_ident_names: None,
+          runtime_pkg: "@lynx-js/react".into(),
+        }
+      )),
+      hygiene()
+    ),
+    should_not_keep_type_only_captured_import_lepus,
+    r#"
+import type { Spin } from './spin-types.js';
+import { type Deg, spin } from './spin.js';
+
+function worklet(event: Event) {
+    "main thread";
+    let s: Spin = spin;
+    let d: Deg = 45;
+    spin(event.currentTarget, d);
 }
     "#
   );
