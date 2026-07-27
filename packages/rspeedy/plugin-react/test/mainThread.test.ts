@@ -95,6 +95,49 @@ describe('enableMainThread: false', () => {
     }
   })
 
+  test('registers components the main thread would not have compiled', async () => {
+    const { pluginReactLynx } = await import('../src/pluginReactLynx.js')
+
+    const assets: Record<string, string> = {}
+    const tmp = await fs.mkdtemp(
+      path.join(tmpdir(), 'rspeedy-react-test-main-thread-dropped-'),
+    )
+
+    const rsbuild = await createRspeedy({
+      rspeedyConfig: {
+        source: {
+          entry: {
+            main: fileURLToPath(
+              new URL(
+                './fixtures/main-thread-disabled/index.tsx',
+                import.meta.url,
+              ),
+            ),
+          },
+        },
+        output: { distPath: { root: tmp } },
+        plugins: [
+          pluginReactLynx({ enableMainThread: false }),
+          ignoreCSSLoaderWorkaround,
+        ],
+        tools: { rspack: { plugins: [collectAssets(assets)] } },
+      },
+    })
+
+    try {
+      await rsbuild.build()
+
+      // `__MAIN_THREAD__ ? null : <Counter />` drops the component from a
+      // main-thread compilation, which is what leaves the main thread without a
+      // definition for a snapshot the background can still create. Collecting
+      // from the background is what keeps it registered.
+      expect(assets['.rspeedy/main/main-thread.js'])
+        .toContain('counter-only-on-the-background')
+    } finally {
+      await fs.rm(tmp, { recursive: true, force: true })
+    }
+  })
+
   test('assembles a main-thread section for each lazy bundle', async () => {
     const { pluginReactLynx } = await import('../src/pluginReactLynx.js')
 
