@@ -67,11 +67,22 @@ pub struct WorkletVisitor {
   /// Maps a local binding introduced by an `import` declaration to the module
   /// it comes from, so that we can tell whether an identifier captured into a
   /// worklet closure (`_c`) is defined in another module.
-  import_srcs: FxHashMap<Id, Box<Str>>,
+  import_srcs: FxHashMap<Id, CapturedImport>,
   /// The modules that own an identifier captured into a worklet closure. On the
   /// main thread these imports are the only thing that keeps a cross-module
   /// `'main thread'` function reachable, see [`WorkletVisitor::record_captured_imports`].
-  captured_import_srcs: Vec<Str>,
+  captured_imports: Vec<CapturedImport>,
+}
+
+/// A module a worklet closure captures an identifier from, along with the
+/// import attributes it was imported with. The attributes have to be carried
+/// over to the side-effect import we re-emit: `with { type: 'json' }` selects
+/// how the module is parsed, and importing the same module twice with
+/// mismatched attributes is an error.
+#[derive(Clone)]
+struct CapturedImport {
+  src: Box<Str>,
+  with: Option<Box<ObjectLit>>,
 }
 
 impl Default for WorkletVisitor {
@@ -562,9 +573,13 @@ impl VisitMut for WorkletVisitor {
           if is_shared_runtime {
             self.shared_identifiers.insert(local.to_id());
           } else if !import_decl.type_only {
-            self
-              .import_srcs
-              .insert(local.to_id(), import_decl.src.clone());
+            self.import_srcs.insert(
+              local.to_id(),
+              CapturedImport {
+                src: import_decl.src.clone(),
+                with: import_decl.with.clone(),
+              },
+            );
           }
         }
       }
@@ -658,18 +673,22 @@ impl VisitMut for WorkletVisitor {
     // import they came from is dropped by DCE once the surrounding
     // background-only code is shaken away, which would take a cross-module
     // `'main thread'` function's `registerWorkletInternal()` call with it.
-    if !self.captured_import_srcs.is_empty() {
+    if !self.captured_imports.is_empty() {
       let side_effect_imports = self
-        .captured_import_srcs
+        .captured_imports
         .drain(..)
-        .map(|src| {
+        .map(|captured| {
           ModuleItem::ModuleDecl(ModuleDecl::Import(ImportDecl {
             span: DUMMY_SP,
+            // Always `Evaluation`: the point of this import is to run the
+            // module so its `registerWorkletInternal()` call happens. A
+            // deferred phase would defeat that, and a bare import cannot carry
+            // one anyway.
             phase: ImportPhase::Evaluation,
             specifiers: vec![],
-            src: Box::new(src),
+            src: captured.src,
             type_only: false,
-            with: None,
+            with: captured.with,
           }))
         })
         .collect::<Vec<_>>();
@@ -752,7 +771,7 @@ impl WorkletVisitor {
       worklet_runtime_loaded: false,
       worklet_runtime_loaded_ident: private_ident!("__workletRuntimeLoaded"),
       import_srcs: FxHashMap::default(),
-      captured_import_srcs: vec![],
+      captured_imports: vec![],
     }
   }
 
@@ -773,21 +792,28 @@ impl WorkletVisitor {
   fn record_captured_imports(&mut self, collector: &ExtractingIdentsCollector) {
     // The background bundle keeps the import: the captured identifier is still
     // referenced there, by the closure object literal (`_c`) itself.
+    //
+    // `MIXED` emits both that descriptor and the registration into one module,
+    // so its import is referenced too and the side-effect import we add is
+    // redundant. It is kept rather than skipped because it is harmless — ESM
+    // evaluates a module once — and because relying on the descriptor's
+    // reference would silently couple this pass to how `MIXED` is emitted. See
+    // `should_keep_captured_import_alive_mixed`.
     if self.cfg.target == TransformTarget::JS {
       return;
     }
     for ident in collector.idents() {
-      let Some(src) = self.import_srcs.get(&ident.to_id()) else {
+      let Some(captured) = self.import_srcs.get(&ident.to_id()) else {
         continue;
       };
       if self
-        .captured_import_srcs
+        .captured_imports
         .iter()
-        .any(|recorded| recorded.value == src.value)
+        .any(|recorded| recorded.src.value == captured.src.value)
       {
         continue;
       }
-      self.captured_import_srcs.push((**src).clone());
+      self.captured_imports.push(captured.clone());
     }
   }
 
@@ -905,6 +931,35 @@ function worklet(event: Event) {
     console.log(y1);
     console.log(this.y1);
     let a: object = y1;
+}
+    "#
+  );
+
+  test!(
+    module,
+    Syntax::Es(EsSyntax {
+      ..Default::default()
+    }),
+    |_| (
+      resolver(Mark::new(), Mark::new(), true),
+      visit_mut_pass(WorkletVisitor::new(
+        TransformMode::Test,
+        WorkletVisitorConfig {
+          filename: "index.js".into(),
+          target: TransformTarget::MIXED,
+          custom_global_ident_names: None,
+          runtime_pkg: "@lynx-js/react".into(),
+        }
+      )),
+      hygiene()
+    ),
+    should_keep_captured_import_alive_mixed,
+    r#"
+import { spin } from './spin.js';
+
+function worklet(event) {
+    "main thread";
+    spin(event.currentTarget, 45);
 }
     "#
   );
@@ -1275,6 +1330,35 @@ import { spin } from './spin.js';
 function worklet(event) {
     "main thread";
     spin(event.currentTarget, 45);
+}
+    "#
+  );
+
+  test!(
+    module,
+    Syntax::Typescript(TsSyntax {
+      ..Default::default()
+    }),
+    |_| (
+      resolver(Mark::new(), Mark::new(), true),
+      visit_mut_pass(WorkletVisitor::new(
+        TransformMode::Test,
+        WorkletVisitorConfig {
+          filename: "index.js".into(),
+          target: TransformTarget::LEPUS,
+          custom_global_ident_names: None,
+          runtime_pkg: "@lynx-js/react".into(),
+        }
+      )),
+      hygiene()
+    ),
+    should_keep_import_attributes_on_captured_import_lepus,
+    r#"
+import cfg from './config.json' with { type: 'json' };
+
+function worklet(event) {
+    "main thread";
+    event.currentTarget.setStyleProperty('color', cfg.color);
 }
     "#
   );

@@ -14,6 +14,9 @@ import { createStubRspeedy as createRspeedy } from './createRspeedy.js'
 const tempDirs: string[] = []
 
 afterAll(async () => {
+  // Runs even when a test fails, so the `NODE_ENV` stub below cannot leak into
+  // later suites sharing this worker.
+  rstest.unstubAllEnvs()
   await Promise.all(tempDirs.map(async (dir) => {
     await rm(dir, { recursive: true, force: true })
   }))
