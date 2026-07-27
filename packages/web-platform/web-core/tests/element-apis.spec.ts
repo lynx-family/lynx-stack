@@ -412,6 +412,22 @@ describe('Element APIs', () => {
     expect(mtsGlobalThis.__GetAttributeByName(ret, 'name')).toBe('name');
   });
 
+  test('__GetComputedStyleByKey returns the computed value', () => {
+    const view = mtsGlobalThis.__CreateView(0);
+    rootDom.appendChild(view);
+    mtsGlobalThis.__SetInlineStyles(view, 'color:red;margin-top:10px;');
+
+    expect(mtsGlobalThis.__GetComputedStyleByKey(view, 'color')).toBe(
+      'rgb(255, 0, 0)',
+    );
+    expect(mtsGlobalThis.__GetComputedStyleByKey(view, 'margin-top')).toBe(
+      '10px',
+    );
+    expect(mtsGlobalThis.__GetComputedStyleByKey(view, 'not-a-property')).toBe(
+      '',
+    );
+  });
+
   test('__CreateComponent drops __Card__ entryName', () => {
     const ret = mtsGlobalThis.__CreateComponent(
       0,
