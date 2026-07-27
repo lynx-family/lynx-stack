@@ -675,6 +675,29 @@ export function hydrate(
               filteredAfterChildNodes = afterChildNodes.filter(v => v.__slotIndex === index);
             }
 
+            // Non-list slots only (list slots are keyed by `item-key`): children
+            // match pairwise by type, so the diff is empty — do what
+            // `diffArrayLepus` + `diffArrayAction` would do without allocating
+            // the diff structures.
+            if (type === DynamicPartType.SlotV2 || type === DynamicPartType.Children) {
+              const length = filteredBeforeChildNodes.length;
+              if (length === filteredAfterChildNodes.length) {
+                let samePairwise = true;
+                for (let i = 0; i < length; i++) {
+                  if (filteredBeforeChildNodes[i]!.type !== filteredAfterChildNodes[i]!.type) {
+                    samePairwise = false;
+                    break;
+                  }
+                }
+                if (samePairwise) {
+                  for (let i = 0; i < length; i++) {
+                    helper(filteredBeforeChildNodes[i]!, filteredAfterChildNodes[i]!);
+                  }
+                  break;
+                }
+              }
+            }
+
             const diffResult = diffArrayLepus(
               filteredBeforeChildNodes,
               filteredAfterChildNodes,
