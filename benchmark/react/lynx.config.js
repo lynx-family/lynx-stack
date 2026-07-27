@@ -2,6 +2,7 @@
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
 
+import { pluginLynxConfig } from '@lynx-js/config-rsbuild-plugin';
 import { pluginQRCode } from '@lynx-js/qrcode-rsbuild-plugin';
 import { pluginReactLynx } from '@lynx-js/react-rsbuild-plugin';
 import { defineConfig } from '@lynx-js/rspeedy';
@@ -89,6 +90,14 @@ export default defineConfig({
     pluginReactLynx({
       debugInfoOutside: false,
     }),
+    // Disable the LepusNG cycle GC (primjs: `-1` disables automatic GC) so a
+    // threshold-triggered collection cannot land inside a measured region and
+    // be attributed to it. `lepusGCThreshold` is a valid Lynx config key but is
+    // not in `@lynx-js/type-config`'s key list yet, so pass it explicitly.
+    pluginLynxConfig(
+      /** @type {never} */ ({ lepusGCThreshold: -1 }),
+      { configKeys: ['lepusGCThreshold'], validate: (input) => input },
+    ),
     pluginScriptLoad(),
     pluginQRCode({}),
   ],
