@@ -446,6 +446,12 @@ function Render() {
   }, [initData]);
 
   useEffect(() => {
+    const theme = initData?.theme ?? 'light';
+    document.documentElement.dataset.theme = theme;
+    document.documentElement.style.colorScheme = theme;
+  }, [initData?.theme]);
+
+  useEffect(() => {
     if (!previewMetricId) return;
 
     const reportPaintEntries = (entries: readonly PaintTimingEntryLike[]) => {

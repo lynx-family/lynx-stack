@@ -24,17 +24,21 @@ If you are new to OpenUI, think of it this way:
 Install the published GenUI package in a ReactLynx app:
 
 ```sh
-pnpm add @lynx-js/genui @lynx-js/react @lynx-js/lynx-ui
+pnpm add @lynx-js/genui @lynx-js/react @lynx-js/lynx-ui @lynx-js/luna-styles
 ```
 
-The built-in `RadioGroup`, `Slider`, and `TextField` components use
-`@lynx-js/lynx-ui`, so include that peer when using the default Library.
+The default catalog uses the headless behavior primitives from
+`@lynx-js/lynx-ui` and the semantic visual tokens from
+`@lynx-js/luna-styles`. The built-in `Button`, `CheckBox`, `Modal`,
+`RadioGroup`, `Slider`, and `TextField` components use the lynx-ui primitives.
 
-Import the optional theme tokens once, then apply a light or dark theme class
+Import Luna before the OpenUI token adapter, then apply a Luna theme class
 around the renderer. Renderer and component CSS are included by their modules;
-there is no separate renderer stylesheet to import.
+there is no separate renderer stylesheet to import. Luna also provides
+`lunaris-light` and `lunaris-dark` when that palette is preferred.
 
 ```ts
+import '@lynx-js/luna-styles/index.css';
 import '@lynx-js/genui/openui/styles/theme.css';
 ```
 
@@ -47,6 +51,7 @@ that need the host application.
 import { createOpenUiLibrary, OpenUiRenderer } from '@lynx-js/genui/openui';
 import { useMemo } from '@lynx-js/react';
 
+import '@lynx-js/luna-styles/index.css';
 import '@lynx-js/genui/openui/styles/theme.css';
 
 const response = String.raw`
@@ -61,7 +66,7 @@ export function GeneratedView() {
   const library = useMemo(() => createOpenUiLibrary(), []);
 
   return (
-    <view className='openui-light'>
+    <view className='luna-light'>
       <OpenUiRenderer
         response={response}
         library={library}

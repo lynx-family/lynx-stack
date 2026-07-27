@@ -5,6 +5,7 @@ import type { ActionPlan } from '@openuidev/lang-core';
 import { BuiltinActionType } from '@openuidev/lang-core';
 import { z } from 'zod/v4';
 
+import { Checkbox, CheckboxIndicator } from '@lynx-js/lynx-ui';
 import { useEffect, useRef, useState } from '@lynx-js/react';
 
 import {
@@ -91,24 +92,21 @@ export const CheckBox = defineComponent({
         params: actionParams,
       });
     };
-    const onToggle = () => onChange(!checked);
 
     return (
-      <view
+      <Checkbox
         className='OpenUICheckBoxRow'
-        {...(isStreaming ? {} : ({ bindtap: onToggle }))}
+        checked={checked}
+        disabled={isStreaming}
+        onChange={onChange}
       >
-        <view
-          className={checked
-            ? 'OpenUICheckBoxInput ui-checked'
-            : 'OpenUICheckBoxInput'}
-        >
-          {checked ? <text className='OpenUICheckBoxMark'>✓</text> : null}
-        </view>
+        <CheckboxIndicator className='OpenUICheckBoxInput'>
+          <text className='OpenUICheckBoxMark'>✓</text>
+        </CheckboxIndicator>
         <view className='OpenUICheckBoxLabelHitbox'>
           <text className='OpenUICheckBoxLabel'>{props.label}</text>
         </view>
-      </view>
+      </Checkbox>
     );
   },
 });

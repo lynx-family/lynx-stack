@@ -97,8 +97,15 @@ are also exported from `@lynx-js/genui/openui/catalog`.
 | `TextField`     | Short text, number, password, or multiline input with optional regex validation. |
 | `DateTimeInput` | Date/time value with label, bounds, and date/time display flags.                 |
 
-`RadioGroup`, `Slider`, and `TextField` use `@lynx-js/lynx-ui`; add that peer
-dependency when those components are available to generated UI.
+`Button`, `CheckBox`, `Modal`, `RadioGroup`, `Slider`, and `TextField` use
+`@lynx-js/lynx-ui`; add that peer dependency when those components are
+available to generated UI.
+
+The default visual layer is Luna: import
+`@lynx-js/luna-styles/index.css` before
+`@lynx-js/genui/openui/styles/theme.css`, then place the renderer under
+`luna-light`, `luna-dark`, `lunaris-light`, or `lunaris-dark`. lynx-ui is
+headless, so Luna supplies tokens rather than replacement component classes.
 
 For exact current positional signatures and a live preview, open the
 [OpenUI Catalog](https://lynx-stack.dev/genui/#/openui/catalog). The schema is

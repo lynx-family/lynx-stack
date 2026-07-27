@@ -236,14 +236,23 @@ statusRow = Row([Text("Design", "h5"), Tag("In review"), Icon("arrow_forward", "
 milestoneColumn = Column([Text("1. API shape finalized", "body"), Text("2. Playground coverage added", "body"), Text("3. Browser verification complete", "body")], "start", "stretch", "s")
 listCard = Card([CardHeader("Checklist", "Tap each item to update local state"), List([CheckBox("Document usage snippets", true), CheckBox("Verify tabs and modal interactions", false), CheckBox("Confirm media placeholders render", false)], "vertical", "stretch", "s", true)], "sunk", "column", false, "m", "stretch", "start")`;
 
-const NEW_INTERACTIVE_CONTROLS_RAW = `$plan = "Pro"
-root = Column([header, tabs, modalLauncher], "start", "stretch", "m")
-header = Card([Text("Interactive Controls", "h2"), Text("Tabs, ChoicePicker, DateTimeInput and Modal in one flow.", "body")], "card", "column", false, "s", "start", "start")
-tabs = Tabs([{ value: "plan", title: "Plan", child: planCard }, { value: "schedule", title: "Schedule", child: scheduleCard }])
-planCard = Card([CardHeader("Plan", "ChoicePicker updates local visual state"), ChoicePicker("Tier", ["Free", "Pro", "Team"], $plan, "card", "chips", true), Buttons([Button("Set Free", Action([@Set($plan, "Free")]), "secondary"), Button("Set Team", Action([@Set($plan, "Team")]), "primary")])], "sunk", "column", false, "m", "stretch", "start")
-scheduleCard = Card([CardHeader("Schedule", "DateTimeInput displays date and time constraints"), DateTimeInput("2026-06-16T09:30:00", true, true, "2026-06-01", "2026-06-30", "Launch window")], "sunk", "column", false, "m", "stretch", "start")
-modalContent = Card([Text("Confirmation", "h3"), Text("The modal renders arbitrary OpenUI content.", "body"), Button("Looks good", Action([@ToAssistant("Confirmed modal content")]), "primary")], "card", "column", false, "m", "stretch", "start")
-modalLauncher = Modal(Button("Open confirmation", Action([@ToAssistant("Opened confirmation modal")]), "secondary"), modalContent, "Review details")`;
+const NEW_INTERACTIVE_CONTROLS_RAW = `$status = "Draft"
+root = Column([masthead, introRule, tabs, actionRule, actionBlock], "start", "stretch", "xl")
+masthead = Column([kicker, title, summary, meta], "start", "stretch", "s")
+kicker = Text("RELEASE REVIEW", "caption")
+title = Text("Shape the next release", "h1")
+summary = Text("Choose a workstream, review the proposed window, and prepare one clear handoff.", "body")
+meta = Row([Text("Status · " + $status, "caption"), Text("12 Aug 2026 · 10:00", "caption")], "between", "center", "m", true)
+introRule = Divider("horizontal")
+tabs = Tabs([{ value: "workstream", title: "Workstream", child: workstreamPanel }, { value: "timing", title: "Timing", child: timingPanel }], "workstream")
+workstreamPanel = Column([Text("Select the area that should lead this review.", "body"), picker], "start", "stretch", "m")
+picker = ChoicePicker("Primary workstream", ["Core UI", "Developer tools", "Documentation"], "Core UI", "default", "chips")
+timingPanel = Column([Text("The proposed window keeps the review within a two-week planning period.", "body"), schedule], "start", "stretch", "m")
+schedule = DateTimeInput("2026-08-12T10:00:00", true, true, "2026-08-05", "2026-08-19", "Proposed time")
+actionRule = Divider("horizontal")
+actionBlock = Column([Text("Nothing is shared until you confirm.", "caption"), launcher], "start", "stretch", "s")
+launcher = Modal(Button("Review plan", Action([@Set($status, "Ready")]), "primary"), reviewContent, "Review plan")
+reviewContent = Column([Text("Share the proposed review window with the assistant.", "body"), Text("12 August 2026 · 10:00", "h5"), Button("Confirm review", Action([@Set($status, "Confirmed"), @ToAssistant("Confirm the release review for 12 August 2026 at 10:00.")]), "primary")], "start", "stretch", "m")`;
 
 const NEW_MEDIA_CARDS_RAW =
   `root = Column([header, mediaTabs], "start", "stretch", "m")
@@ -261,7 +270,7 @@ export const OPENUI_SCENARIOS: OpenUIScenario[] = [
   },
   {
     id: 'new-interactive-controls',
-    title: 'New Interactive Controls',
+    title: 'Release Review',
     raw: NEW_INTERACTIVE_CONTROLS_RAW,
     parsed: parseOpenUIScenarioRaw(NEW_INTERACTIVE_CONTROLS_RAW),
   },
