@@ -276,6 +276,19 @@ importers:
         specifier: ^19.2.17
         version: 19.2.17
 
+  examples/preact:
+    dependencies:
+      '@lynx-js/preact-runtime':
+        specifier: workspace:*
+        version: link:../../packages/preact-runtime
+    devDependencies:
+      '@lynx-js/rspeedy':
+        specifier: workspace:*
+        version: link:../../packages/rspeedy/core
+      typescript:
+        specifier: ~5.9.2
+        version: 5.9.3
+
   examples/react:
     dependencies:
       '@lynx-js/react':
@@ -1156,6 +1169,25 @@ importers:
       rsbuild-plugin-publint:
         specifier: 1.0.0
         version: 1.0.0(@rsbuild/core@2.1.7(core-js@3.49.0))
+
+  packages/preact-runtime:
+    dependencies:
+      '@lynx-js/runtime-wrapper-webpack-plugin':
+        specifier: workspace:*
+        version: link:../webpack/runtime-wrapper-webpack-plugin
+      '@lynx-js/template-webpack-plugin':
+        specifier: workspace:*
+        version: link:../webpack/template-webpack-plugin
+      preact:
+        specifier: ^10.29.1
+        version: 10.29.1
+    devDependencies:
+      '@rsbuild/core':
+        specifier: catalog:rsbuild
+        version: 2.1.7(core-js@3.49.0)
+      '@rslib/core':
+        specifier: catalog:rslib
+        version: 0.23.2(@microsoft/api-extractor@7.58.12(@types/node@24.13.3))(@typescript/native-preview@7.0.0-dev.20260707.2)(core-js@3.49.0)(typescript@6.0.3)
 
   packages/react:
     dependencies:
