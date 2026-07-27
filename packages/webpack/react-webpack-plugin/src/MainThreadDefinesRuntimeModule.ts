@@ -109,19 +109,25 @@ export function collectMainThreadDefines<TChunk, TModule>(
   }
 
   // Definitions are identified by their content hash, so the same one reached
-  // through several modules is registered once.
-  const defines: MainThreadDefine[] = [];
-  const visitedDefines = new Set<string>();
+  // through several modules is registered once. Two definitions sharing an id
+  // but not their code would mean the id no longer identifies the content, and
+  // dropping either of them would silently change what the main thread runs.
+  const defines = new Map<string, MainThreadDefine>();
   for (const define of collected) {
     const key = `${define.kind}:${define.id}`;
-    if (visitedDefines.has(key)) {
+    const seen = defines.get(key);
+    if (seen === undefined) {
+      defines.set(key, define);
       continue;
     }
-    visitedDefines.add(key);
-    defines.push(define);
+    if (seen.code !== define.code) {
+      throw new Error(
+        `Two different main-thread definitions share the id ${define.id}.`,
+      );
+    }
   }
 
-  return defines;
+  return [...defines.values()];
 }
 
 /**

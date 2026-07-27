@@ -81,6 +81,17 @@ describe('collectMainThreadDefines', () => {
     expect(defines.map(({ id }) => id)).toEqual(['shared', 'a']);
   });
 
+  it('fails the build when an id no longer identifies its content', () => {
+    expect(() =>
+      collect([{
+        modules: [
+          asModule({ id: 'a', defines: [snapshot('x', 'one')] }),
+          asModule({ id: 'b', defines: [snapshot('x', 'another')] }),
+        ],
+      }])
+    ).toThrowError(/share the id x/);
+  });
+
   it('keeps definitions of different kinds that share an id', () => {
     const defines = collect([{
       modules: [
