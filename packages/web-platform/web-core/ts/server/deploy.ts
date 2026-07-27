@@ -26,7 +26,7 @@ export function executeTemplate(
   const config = result.config;
 
   const binding: SSRBinding = { ssrResult: '' };
-  const { globalThisAPIs: elementAPIs } = createElementAPI(
+  const { globalThisAPIs: elementAPIs, wasmContext } = createElementAPI(
     binding,
     result.styleInfo,
     viewAttributes ?? '',
@@ -65,13 +65,18 @@ export function executeTemplate(
 
   // Style Info block removed as it is passed to createElementAPI
 
-  // Lepus Code
-  const rootCodeBuf = result.lepusCode['root'];
-  if (rootCodeBuf) {
-    const rootCode = new TextDecoder('utf-8').decode(rootCodeBuf);
-    const isLazy = config['isLazy'] === 'true';
+  // `wasmContext` holds every element of this render inside the wasm linear
+  // memory. It is not reachable by the JS GC, so it has to be released
+  // explicitly once the html has been generated — otherwise each call retains
+  // its whole element tree for the lifetime of the process.
+  try {
+    // Lepus Code
+    const rootCodeBuf = result.lepusCode['root'];
+    if (rootCodeBuf) {
+      const rootCode = new TextDecoder('utf-8').decode(rootCodeBuf);
+      const isLazy = config['isLazy'] === 'true';
 
-    const wrappedCode = `
+      const wrappedCode = `
         (function() { 
           "use strict"; 
           const navigator = undefined;
@@ -82,25 +87,28 @@ export function executeTemplate(
         })()
       `;
 
-    // Execute root code
-    // This execution should trigger the assignment of globalThis.renderPage,
-    // which in turn triggers our setter, queues the microtask.
-    vm.runInContext(wrappedCode, context, {
-      filename: `root`,
-    });
-    const renderPageFunction = sandbox['renderPage'];
-    if (typeof renderPageFunction === 'function') {
-      const processData = sandbox['processData'];
-      const processedData = (config['enableJSDataProcessor'] !== 'true'
-          && config['enableJSDataProcessor'] !== true)
-          && processData
-        ? processData(initData)
-        : initData;
-      renderPageFunction(processedData);
-      elementAPIs.__FlushElementTree();
-      return binding.ssrResult;
+      // Execute root code
+      // This execution should trigger the assignment of globalThis.renderPage,
+      // which in turn triggers our setter, queues the microtask.
+      vm.runInContext(wrappedCode, context, {
+        filename: `root`,
+      });
+      const renderPageFunction = sandbox['renderPage'];
+      if (typeof renderPageFunction === 'function') {
+        const processData = sandbox['processData'];
+        const processedData = (config['enableJSDataProcessor'] !== 'true'
+            && config['enableJSDataProcessor'] !== true)
+            && processData
+          ? processData(initData)
+          : initData;
+        renderPageFunction(processedData);
+        elementAPIs.__FlushElementTree();
+        return binding.ssrResult;
+      }
     }
-  }
 
-  return undefined;
+    return undefined;
+  } finally {
+    wasmContext.free();
+  }
 }
