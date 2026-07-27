@@ -16,41 +16,42 @@
   align-items: center;
 }
 
+.OpenUIButton.ui-active {
+  opacity: 0.82;
+}
+
+.OpenUIButton.ui-disabled {
+  opacity: 0.4;
+}
+
 .OpenUIButtonPrimary {
-  background-color: var(--openui-color-primary-surface);
-  border-color: var(--openui-color-primary-border);
+  background-color: var(--primary, var(--openui-color-primary));
+  border-color: var(--primary, var(--openui-color-primary));
 }
 
 .OpenUIButtonSecondary {
-  background-color: var(--openui-color-surface-subtle);
-  border-color: var(--openui-color-border-strong);
+  background-color: var(
+    --secondary,
+    var(--openui-color-primary-surface)
+  );
+  border-color: var(--secondary, var(--openui-color-primary-border));
 }
 
 .OpenUIButtonGhost {
   background-color: transparent;
-  border-color: var(--openui-color-border-strong);
+  border-color: var(--line, var(--openui-color-border-strong));
 }
 
 .OpenUIButtonText {
-  color: var(--openui-color-text);
+  color: var(--content, var(--openui-color-text));
   font-size: 22rpx;
   font-weight: 600;
 }
 
-.dark .OpenUIButtonPrimary {
-  background-color: var(--openui-color-primary-surface);
-  border-color: var(--openui-color-primary-border);
+.OpenUIButtonPrimary .OpenUIButtonText {
+  color: var(--primary-content, var(--openui-color-on-primary));
 }
 
-.dark .OpenUIButtonSecondary {
-  background-color: var(--openui-color-surface-subtle);
-  border-color: var(--openui-color-border);
-}
-
-.dark .OpenUIButtonGhost {
-  border-color: var(--openui-color-border);
-}
-
-.dark .OpenUIButtonText {
-  color: var(--openui-color-text);
+.OpenUIButtonSecondary .OpenUIButtonText {
+  color: var(--secondary-content, var(--openui-color-text));
 }

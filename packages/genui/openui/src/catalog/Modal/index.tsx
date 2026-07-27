@@ -3,6 +3,14 @@
 // LICENSE file in the root directory of this source tree.
 import { z } from 'zod/v4';
 
+import {
+  DialogBackdrop,
+  DialogClose,
+  DialogContent,
+  DialogRoot,
+  DialogTrigger,
+  DialogView,
+} from '@lynx-js/lynx-ui';
 import { useMemo, useState } from '@lynx-js/react';
 import type { ReactNode } from '@lynx-js/react';
 
@@ -35,8 +43,6 @@ function ModalRenderer(
   const openUi = useOpenUI();
   const isStreaming = useIsStreaming();
   const closeOnAction = props.closeOnAction ?? true;
-  const onOpen = () => setOpen(true);
-  const onClose = () => setOpen(false);
   const triggerContext = useMemo(
     () => ({
       ...openUi,
@@ -65,44 +71,57 @@ function ModalRenderer(
   );
 
   return (
-    <view className='OpenUIModal'>
-      <OpenUIContext.Provider value={triggerContext}>
-        <view
-          className='OpenUIModalTrigger'
-          {...(isStreaming ? {} : ({ bindtap: onOpen }))}
+    <DialogRoot show={open} onShowChange={setOpen}>
+      <view className='OpenUIModal'>
+        <OpenUIContext.Provider value={triggerContext}>
+          <DialogTrigger
+            className='OpenUIModalTrigger'
+            disabled={isStreaming}
+          >
+            {renderNode(props.trigger)}
+          </DialogTrigger>
+        </OpenUIContext.Provider>
+      </view>
+      <DialogView
+        className='OpenUIModalView'
+        overlayLevel={4}
+      >
+        <DialogBackdrop
+          className='OpenUIModalMask'
+          clickToClose={!isStreaming}
+          transition={true}
+        />
+        <DialogContent
+          className='OpenUIModalContent'
+          transition={true}
         >
-          {renderNode(props.trigger)}
-        </view>
-      </OpenUIContext.Provider>
-      {open
-        ? (
-          <view className='OpenUIModalMask'>
-            <view className='OpenUIModalContent'>
-              <view className='OpenUIModalHeader'>
-                {props.title
-                  ? (
-                    <text className='OpenUIModalTitle'>
-                      {stringifyValue(props.title)}
-                    </text>
-                  )
-                  : null}
-                <view
-                  className='OpenUIModalClose'
-                  {...(isStreaming ? {} : ({ bindtap: onClose }))}
-                >
-                  <text className='OpenUIModalCloseText'>x</text>
-                </view>
-              </view>
-              <OpenUIContext.Provider value={contentContext}>
-                <view className='OpenUIModalBody'>
-                  {renderNode(props.content)}
-                </view>
-              </OpenUIContext.Provider>
-            </view>
+          <view className='OpenUIModalHeader'>
+            {props.title
+              ? (
+                <text className='OpenUIModalTitle'>
+                  {stringifyValue(props.title)}
+                </text>
+              )
+              : null}
+            <DialogClose
+              className='OpenUIModalClose'
+              disabled={isStreaming}
+            >
+              <text className='OpenUIModalCloseText'>x</text>
+            </DialogClose>
           </view>
-        )
-        : null}
-    </view>
+          <OpenUIContext.Provider value={contentContext}>
+            <scroll-view
+              className='OpenUIModalBody'
+              scroll-orientation='vertical'
+              enable-nested-scroll={true}
+            >
+              {renderNode(props.content)}
+            </scroll-view>
+          </OpenUIContext.Provider>
+        </DialogContent>
+      </DialogView>
+    </DialogRoot>
   );
 }
 

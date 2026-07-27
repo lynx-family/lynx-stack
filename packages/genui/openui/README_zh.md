@@ -21,17 +21,20 @@ ReactLynx 组件 Library 渲染结果。
 在 ReactLynx 应用中安装公开的 GenUI 包：
 
 ```sh
-pnpm add @lynx-js/genui @lynx-js/react @lynx-js/lynx-ui
+pnpm add @lynx-js/genui @lynx-js/react @lynx-js/lynx-ui @lynx-js/luna-styles
 ```
 
-内置的 `RadioGroup`、`Slider` 和 `TextField` 组件使用
-`@lynx-js/lynx-ui`，因此使用默认 Library 时应包含这个 peer dependency。
+默认 catalog 使用 `@lynx-js/lynx-ui` 的 headless 行为原语，并使用
+`@lynx-js/luna-styles` 的语义化视觉 tokens。内置的 `Button`、`CheckBox`、
+`Modal`、`RadioGroup`、`Slider` 和 `TextField` 使用 lynx-ui 原语。
 
-在入口处引入一次可选的主题 tokens，并在 renderer 外应用 light 或 dark 主题
-class。Renderer 和各组件的 CSS 会随对应模块自动引入，不需要额外导入 renderer
-样式表。
+先引入 Luna，再引入 OpenUI token 适配层，并在 renderer 外应用 Luna 主题
+class。Renderer 和各组件的 CSS 会随对应模块自动引入，不需要额外导入
+renderer 样式表。需要另一套配色时，也可以使用 Luna 提供的
+`lunaris-light` 和 `lunaris-dark`。
 
 ```ts
+import '@lynx-js/luna-styles/index.css';
 import '@lynx-js/genui/openui/styles/theme.css';
 ```
 
@@ -44,6 +47,7 @@ import '@lynx-js/genui/openui/styles/theme.css';
 import { createOpenUiLibrary, OpenUiRenderer } from '@lynx-js/genui/openui';
 import { useMemo } from '@lynx-js/react';
 
+import '@lynx-js/luna-styles/index.css';
 import '@lynx-js/genui/openui/styles/theme.css';
 
 const response = String.raw`
@@ -58,7 +62,7 @@ export function GeneratedView() {
   const library = useMemo(() => createOpenUiLibrary(), []);
 
   return (
-    <view className='openui-light'>
+    <view className='luna-light'>
       <OpenUiRenderer
         response={response}
         library={library}

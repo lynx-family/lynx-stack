@@ -23,9 +23,9 @@
   padding: 14rpx 16rpx;
   border-width: 1rpx;
   border-style: solid;
-  border-color: var(--openui-color-border);
+  border-color: var(--rule, var(--openui-color-border));
   border-radius: 14rpx;
-  background-color: var(--openui-color-surface-strong);
+  background-color: var(--paper-clear, var(--openui-color-surface-strong));
 }
 
 .OpenUIRadioOption {
@@ -36,10 +36,14 @@
   min-width: 0;
 }
 
+.OpenUIRadioOption.ui-active {
+  opacity: 0.82;
+}
+
 .OpenUIRadioLabel {
   font-size: 28rpx;
   font-weight: 500;
-  color: var(--openui-color-text);
+  color: var(--content, var(--openui-color-text));
   line-height: 1.5;
 }
 
@@ -49,8 +53,8 @@
   border-radius: 999rpx;
   border-width: 1.5rpx;
   border-style: solid;
-  border-color: var(--openui-color-border-input);
-  background-color: transparent;
+  border-color: var(--line, var(--openui-color-border-input));
+  background-color: var(--paper-clear, transparent);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -58,8 +62,8 @@
 }
 
 .OpenUIRadioItem.ui-checked {
-  border-color: var(--openui-color-primary);
-  background-color: var(--openui-color-primary);
+  border-color: var(--primary, var(--openui-color-primary));
+  background-color: var(--primary, var(--openui-color-primary));
 }
 
 .OpenUIRadioIndicator {
@@ -74,32 +78,9 @@
   width: 16rpx;
   height: 16rpx;
   border-radius: 999rpx;
-  background-color: var(--openui-color-on-primary);
+  background-color: var(--primary-content, var(--openui-color-on-primary));
 }
 
 .OpenUIRadioGroup-card .OpenUIRadioOption {
-  background-color: var(--openui-color-surface-muted);
-}
-
-.dark .OpenUIRadioLabel {
-  color: var(--openui-color-text);
-}
-
-.dark .OpenUIRadioItem {
-  border-color: var(--openui-color-border-input);
-  background-color: transparent;
-}
-
-.dark .OpenUIRadioItem.ui-checked {
-  border-color: var(--openui-color-primary);
-  background-color: var(--openui-color-primary);
-}
-
-.dark .OpenUIRadioIndicatorDot {
-  background-color: var(--openui-color-on-primary);
-}
-
-.dark .OpenUIRadioGroup-card .OpenUIRadioOption {
-  background-color: var(--openui-color-surface-muted);
-  border-color: var(--openui-color-border);
+  background-color: var(--paper, var(--openui-color-surface-muted));
 }
