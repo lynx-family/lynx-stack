@@ -21,6 +21,10 @@ export default defineConfig({
       'react-et-lazy-bundle': '../react-et-lazy-bundle/src/index.tsx',
       'react-externals': '../react-externals/src/index.tsx',
       'react-externals-web': '../react-externals-web/src/index.tsx',
+      'react-lazy-bundle-standalone': './src/react-lazy-bundle-standalone.ts',
+      'react-et-lazy-bundle-standalone':
+        './src/react-et-lazy-bundle-standalone.ts',
+      'react-debug-metadata': './src/react-debug-metadata.ts',
     },
   },
   plugins: [

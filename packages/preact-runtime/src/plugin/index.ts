@@ -220,6 +220,20 @@ export function pluginPreactLynx(): RsbuildPlugin {
         // standalone lazy-bundle templates whose evaluation re-runs the app.
         chain.output.set('asyncChunks', false);
 
+        // `import(url, { with: { type: 'component' } })` → runtime loader.
+        chain.module
+          .rule('preact-remote-import')
+          .test(/\.(?:js|jsx|ts|tsx|mjs|cjs)$/)
+          .exclude.add(/[\\/]node_modules[\\/]/)
+          .end()
+          .enforce('pre')
+          .use('import-attributes')
+          .loader(
+            require.resolve(
+              '@lynx-js/preact-runtime/loader/import-attributes-loader',
+            ),
+          );
+
         const { hmr, liveReload } = environment.config.dev ?? {};
         const enabledHMR = isDev && hmr !== false;
         const enabledLiveReload = isDev && liveReload !== false;
