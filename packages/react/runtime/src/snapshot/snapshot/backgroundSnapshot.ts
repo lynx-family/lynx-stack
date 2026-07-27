@@ -668,18 +668,22 @@ export function hydrate(
           case DynamicPartType.ListSlotV2:
           case DynamicPartType.Children:
           case DynamicPartType.ListChildren: {
+            // The two orthogonal dimensions of this block: slots are addressed
+            // by slot index, list children are keyed by `item-key`.
+            const isSlot = type === DynamicPartType.SlotV2 || type === DynamicPartType.ListSlotV2;
+            const isList = type === DynamicPartType.ListSlotV2 || type === DynamicPartType.ListChildren;
+
             let filteredBeforeChildNodes = beforeChildNodes;
             let filteredAfterChildNodes = afterChildNodes;
-            if (type === DynamicPartType.SlotV2 || type === DynamicPartType.ListSlotV2) {
+            if (isSlot) {
               filteredBeforeChildNodes = beforeChildNodes.filter(v => (v.slotIndex ?? 0) === index);
               filteredAfterChildNodes = afterChildNodes.filter(v => v.__slotIndex === index);
             }
 
-            // Non-list slots only (list slots are keyed by `item-key`): children
-            // match pairwise by type, so the diff is empty — do what
+            // Children match pairwise by type, so the diff is empty — do what
             // `diffArrayLepus` + `diffArrayAction` would do without allocating
-            // the diff structures.
-            if (type === DynamicPartType.SlotV2 || type === DynamicPartType.Children) {
+            // the diff structures. Keyed list children cannot use this.
+            if (!isList) {
               const length = filteredBeforeChildNodes.length;
               if (length === filteredAfterChildNodes.length) {
                 let samePairwise = true;
@@ -705,7 +709,7 @@ export function hydrate(
               (a, b) => {
                 helper(a, b);
               },
-              type === DynamicPartType.ListChildren || type === DynamicPartType.ListSlotV2,
+              isList,
             );
             diffArrayAction(
               filteredBeforeChildNodes,
