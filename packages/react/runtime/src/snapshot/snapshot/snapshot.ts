@@ -602,7 +602,7 @@ export class SnapshotInstance {
   }
 
   callUpdateIfNotDirectOrDeepEqual(index: number, oldValue: any, newValue: any): void {
-    if (isDirectOrDeepEqual(oldValue, newValue)) {}
+    if (isDirectOrDeepEqual(newValue, oldValue)) {}
     else {
       this.__snapshot_def.update![index]!(this, index, oldValue);
     }

@@ -459,7 +459,7 @@ export class BackgroundSnapshotInstance {
       if ('__spread' in newValueObj) {
         const oldSpread = (oldValue as { __spread?: Record<string, unknown> } | undefined)?.__spread;
         const newSpread = transformSpread(this, index, newValueObj);
-        const needUpdate = !isDirectOrDeepEqual(oldSpread, newSpread);
+        const needUpdate = !isDirectOrDeepEqual(newSpread, oldSpread);
         // use __spread to cache the transform result for next diff
         newValueObj['__spread'] = newSpread;
         queueRefAttrUpdate(
@@ -505,7 +505,7 @@ export class BackgroundSnapshotInstance {
         }
         return { needUpdate: false, valueToCommit: newValue };
       }
-      return { needUpdate: !isDirectOrDeepEqual(oldValue, newValue), valueToCommit: newValue };
+      return { needUpdate: !isDirectOrDeepEqual(newValue, oldValue), valueToCommit: newValue };
     }
     if (newType === 'function') {
       if ((newValue as { __ref?: unknown }).__ref) {

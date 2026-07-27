@@ -10,19 +10,73 @@ import { getCurrentVNode, getOwnerStack } from './shared/component-stack.js';
 export const noop: (...args: unknown[]) => unknown = () => {};
 /* v8 ignore end */
 
-export function isDirectOrDeepEqual(a: any, b: any): boolean {
-  if (a === b) {
-    return true;
-  }
-  try {
-    if (
-      typeof a == 'object' && a !== null && typeof b == 'object' && b !== null
-      && JSON.stringify(a) === JSON.stringify(b)
-    ) {
+/**
+ * Compares a candidate new value with the currently committed old value.
+ *
+ * The first argument must be the new value because circular-reference checks
+ * only track that value's current recursion path. A repeated new object throws
+ * even after the values are known to differ, preventing a circular value from
+ * being committed. Entries are removed while unwinding so acyclic shared
+ * references in sibling branches are still compared normally.
+ */
+export function isDirectOrDeepEqual(
+  newObj: unknown,
+  oldObj: unknown,
+  ancestors?: object[],
+): boolean {
+  // Equal root values do not need to be committed, so they do not need a
+  // circular-reference check. Equal nested objects still need checking when
+  // another part of the root value causes the whole value to be committed.
+  if (newObj === oldObj) {
+    if (!newObj || typeof newObj !== 'object' || !ancestors?.length) {
       return true;
     }
+  } else if (!newObj || typeof newObj !== 'object') {
+    return false;
+  }
+
+  ancestors ??= [];
+  const isRoot = ancestors.length === 0;
+  let isTracked = false;
+  try {
+    if (ancestors.includes(newObj)) {
+      throw new TypeError(`Cannot compare circular structures`);
+    }
+
+    const newKeys = Object.keys(newObj);
+    const oldIsObject = !!oldObj && typeof oldObj === 'object';
+    let isEqual = oldIsObject && newKeys.length === Object.keys(oldObj).length;
+    const newRecord = newObj as Record<string, unknown>;
+    const oldRecord = oldObj as Record<string, unknown>;
+
+    ancestors.push(newObj);
+    isTracked = true;
+    for (let index = 0; index < newKeys.length; index++) {
+      const key = newKeys[index]!;
+      const newValue = newRecord[key];
+
+      // Once a difference is found, only keep checking objects from the new
+      // value for circular references. Avoid all remaining old-value work and
+      // recursive calls for primitives.
+      if (!isEqual) {
+        if (newValue && typeof newValue === 'object') {
+          isDirectOrDeepEqual(newValue, undefined, ancestors);
+        }
+        continue;
+      }
+
+      if (!Object.prototype.hasOwnProperty.call(oldObj, key)) {
+        isEqual = false;
+        if (newValue && typeof newValue === 'object') {
+          isDirectOrDeepEqual(newValue, undefined, ancestors);
+        }
+      } else if (!isDirectOrDeepEqual(newValue, oldRecord[key], ancestors)) {
+        isEqual = false;
+      }
+    }
+    return isEqual;
   } catch (error) {
-    if (__DEV__ && /circular|cyclic/i.test((error as Error).message)) {
+    if (isRoot && __DEV__ && /circular|cyclic/i.test((error as Error).message)) {
       // JavaScript engines give this different errors name and messages:
       // PrimJS: "circular reference"
       // JavaScriptCore: "JSON.stringify cannot serialize cyclic structures"
@@ -34,8 +88,11 @@ export function isDirectOrDeepEqual(a: any, b: any): boolean {
       }
     }
     throw error;
+  } finally {
+    if (isTracked) {
+      ancestors.pop();
+    }
   }
-  return false;
 }
 
 export function isEmptyObject(obj?: object): obj is Record<string, never> {

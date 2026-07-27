@@ -11,7 +11,7 @@ import { initGlobalSnapshotPatch, takeGlobalSnapshotPatch } from '../../src/snap
 import { snapshotPatchApply } from '../../src/snapshot/lifecycle/patch/snapshotPatchApply';
 import { setupPage, snapshotInstanceManager, hydrate, backgroundSnapshotInstanceManager } from '../../src/snapshot';
 import { globalEnvManager } from './utils/envManager';
-import { elementTree } from './utils/nativeMethod';
+import { elementTree, nativeMethodQueue } from './utils/nativeMethod';
 
 let scratch;
 let scratchBackground;
@@ -277,6 +277,187 @@ describe('spreadUpdate', () => {
         </view>
       </page>
     `);
+  });
+
+  it('only commits changed dataset to native', async function() {
+    let patch;
+    let setSpread_;
+    function Comp() {
+      const [spread, setSpread] = useState({
+        id: 'id_str',
+        'data-a': 'a-a-a',
+        'data-object': { value: 'same' },
+      });
+      setSpread_ = setSpread;
+      return <text {...spread}>1</text>;
+    }
+
+    globalEnvManager.switchToMainThread();
+    render(<Comp />, scratch);
+    globalEnvManager.switchToBackground();
+    render(<Comp />, scratchBackground);
+    patch = hydrate(JSON.parse(JSON.stringify(scratch)), scratchBackground);
+    globalEnvManager.switchToMainThread();
+    snapshotPatchApply(patch);
+    globalEnvManager.switchToBackground();
+    initGlobalSnapshotPatch();
+
+    setSpread_({
+      id: 'id_str_2',
+      'data-a': 'a-a-a',
+      'data-object': { value: 'same' },
+    });
+    render(<Comp />, scratchBackground);
+    patch = takeGlobalSnapshotPatch();
+
+    nativeMethodQueue.clear();
+    globalEnvManager.switchToMainThread();
+    snapshotPatchApply(patch);
+    expect(nativeMethodQueue.filter(([name]) => name === '__SetDataset')).toHaveLength(0);
+
+    globalEnvManager.switchToBackground();
+    setSpread_({
+      id: 'id_str_3',
+      'data-a': 'changed',
+      'data-object': { value: 'same' },
+    });
+    render(<Comp />, scratchBackground);
+    patch = takeGlobalSnapshotPatch();
+
+    nativeMethodQueue.clear();
+    globalEnvManager.switchToMainThread();
+    snapshotPatchApply(patch);
+    const datasetCalls = nativeMethodQueue.filter(([name]) => name === '__SetDataset');
+    expect(datasetCalls).toHaveLength(1);
+    expect(datasetCalls[0][1][1]).toEqual({
+      a: 'changed',
+      object: { value: 'same' },
+    });
+  });
+
+  it('commits different dataset values with equal JSON representations', async function() {
+    let patch;
+    let setSpread_;
+    function Comp() {
+      const [spread, setSpread] = useState({
+        'data-x': { a: undefined },
+      });
+      setSpread_ = setSpread;
+      return <text {...spread}>1</text>;
+    }
+
+    globalEnvManager.switchToMainThread();
+    render(<Comp />, scratch);
+    globalEnvManager.switchToBackground();
+    render(<Comp />, scratchBackground);
+    patch = hydrate(JSON.parse(JSON.stringify(scratch)), scratchBackground);
+    globalEnvManager.switchToMainThread();
+    snapshotPatchApply(patch);
+    globalEnvManager.switchToBackground();
+    initGlobalSnapshotPatch();
+
+    setSpread_({
+      'data-x': { b: undefined },
+    });
+    render(<Comp />, scratchBackground);
+    patch = takeGlobalSnapshotPatch();
+
+    nativeMethodQueue.clear();
+    globalEnvManager.switchToMainThread();
+    snapshotPatchApply(patch);
+    const datasetCalls = nativeMethodQueue.filter(([name]) => name === '__SetDataset');
+    expect(datasetCalls).toHaveLength(1);
+    expect(datasetCalls[0][1][1]).toEqual({
+      x: { b: undefined },
+    });
+  });
+
+  it('commits a newly added dataset key with an undefined value', async function() {
+    let patch;
+    let setSpread_;
+    function Comp() {
+      const [spread, setSpread] = useState({
+        id: 'id_str',
+      });
+      setSpread_ = setSpread;
+      return <text {...spread}>1</text>;
+    }
+
+    globalEnvManager.switchToMainThread();
+    render(<Comp />, scratch);
+    globalEnvManager.switchToBackground();
+    render(<Comp />, scratchBackground);
+    patch = hydrate(JSON.parse(JSON.stringify(scratch)), scratchBackground);
+    globalEnvManager.switchToMainThread();
+    snapshotPatchApply(patch);
+    globalEnvManager.switchToBackground();
+    initGlobalSnapshotPatch();
+
+    setSpread_({
+      id: 'id_str_2',
+      'data-a': undefined,
+    });
+    render(<Comp />, scratchBackground);
+    patch = takeGlobalSnapshotPatch();
+
+    nativeMethodQueue.clear();
+    globalEnvManager.switchToMainThread();
+    snapshotPatchApply(patch);
+    const datasetCalls = nativeMethodQueue.filter(([name]) => name === '__SetDataset');
+    expect(datasetCalls).toHaveLength(1);
+    expect(datasetCalls[0][1][1]).toEqual({ a: undefined });
+  });
+
+  it('commits dataset when data keys are removed', async function() {
+    let patch;
+    let setSpread_;
+    function Comp() {
+      const [spread, setSpread] = useState({
+        id: 'id_str',
+        'data-a': 'a-a-a',
+        'data-b': 'b-b-b',
+      });
+      setSpread_ = setSpread;
+      return <text {...spread}>1</text>;
+    }
+
+    globalEnvManager.switchToMainThread();
+    render(<Comp />, scratch);
+    globalEnvManager.switchToBackground();
+    render(<Comp />, scratchBackground);
+    patch = hydrate(JSON.parse(JSON.stringify(scratch)), scratchBackground);
+    globalEnvManager.switchToMainThread();
+    snapshotPatchApply(patch);
+    globalEnvManager.switchToBackground();
+    initGlobalSnapshotPatch();
+
+    setSpread_({
+      id: 'id_str_2',
+      'data-b': 'b-b-b',
+    });
+    render(<Comp />, scratchBackground);
+    patch = takeGlobalSnapshotPatch();
+
+    nativeMethodQueue.clear();
+    globalEnvManager.switchToMainThread();
+    snapshotPatchApply(patch);
+    let datasetCalls = nativeMethodQueue.filter(([name]) => name === '__SetDataset');
+    expect(datasetCalls).toHaveLength(1);
+    expect(datasetCalls[0][1][1]).toEqual({ b: 'b-b-b' });
+
+    globalEnvManager.switchToBackground();
+    setSpread_({
+      id: 'id_str_3',
+    });
+    render(<Comp />, scratchBackground);
+    patch = takeGlobalSnapshotPatch();
+
+    nativeMethodQueue.clear();
+    globalEnvManager.switchToMainThread();
+    snapshotPatchApply(patch);
+    datasetCalls = nativeMethodQueue.filter(([name]) => name === '__SetDataset');
+    expect(datasetCalls).toHaveLength(1);
+    expect(datasetCalls[0][1][1]).toEqual({});
   });
 
   it('remove', async function() {
@@ -637,17 +818,37 @@ describe('spreadUpdate', () => {
     initGlobalSnapshotPatch();
     setSpread_(a);
 
-    expect(() => render(<Comp />, scratchBackground)).toThrowErrorMatchingInlineSnapshot(`
-      [TypeError: Converting circular structure to JSON
-          --> starting at object with constructor 'Object'
-          --- property 'a' closes the circle
+    expect(() => render(<Comp />, scratchBackground)).toThrowErrorMatchingInlineSnapshot(
+      `
+      [TypeError: Cannot compare circular structures
 
         in Bar
         in Comp
       ]
-    `);
+    `,
+    );
     patch = takeGlobalSnapshotPatch();
     expect(patch).toMatchInlineSnapshot(`[]`);
+  });
+
+  it('rejects a circular patch on the main thread', async () => {
+    await import('../../src/lynx');
+
+    function Comp() {
+      return <text {...{}}>1</text>;
+    }
+
+    const circular = {};
+    circular.a = circular;
+
+    globalEnvManager.switchToMainThread();
+    render(<Comp />, scratch);
+    nativeMethodQueue.clear();
+
+    expect(() => snapshotPatchApply([3, -2, 0, { a: circular }])).toThrowErrorMatchingInlineSnapshot(
+      `[TypeError: Cannot compare circular structures]`,
+    );
+    expect(nativeMethodQueue.filter(([name]) => name === '__SetAttribute')).toEqual([]);
   });
 
   it('should remove __self and __source when spreading props onto element', async function() {

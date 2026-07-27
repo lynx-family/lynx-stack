@@ -561,7 +561,7 @@ function hydrateAttributeSlots(
     const beforeValue = beforeSlots[slotIndex];
     const afterValue = afterSlots[slotIndex];
     if (
-      isDirectOrDeepEqual(beforeValue, afterValue)
+      isDirectOrDeepEqual(afterValue, beforeValue)
       && !shouldForceMTEventHydrateSlot(templateType, slotIndex, afterValue)
     ) {
       continue;
