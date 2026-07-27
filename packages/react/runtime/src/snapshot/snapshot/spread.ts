@@ -35,14 +35,6 @@ const eventTypeMap: Record<string, string> = {
   'capture-catch': 'capture-catch',
   'global-bind': 'global-bindEvent',
 };
-const noFlattenAttributes = /* @__PURE__ */ new Set<string>([
-  'name',
-  'clip-radius',
-  'overlap',
-  'exposure-scene',
-  'exposure-id',
-]);
-
 function retainSpreadWorkletCtx(newValue: Record<string, unknown>, oldValue: Record<string, unknown>): void {
   let match: RegExpMatchArray | null = null;
   for (const key in newValue) {
@@ -355,8 +347,16 @@ function transformSpread(
     } else if (key === '__self' || key === '__source') {
       // for react debug tools
     } else {
-      if (!hasNoFlattenAttributes && noFlattenAttributes.has(key)) {
-        hasNoFlattenAttributes = true;
+      if (!hasNoFlattenAttributes) {
+        // Keep the switch for a small fixed list; consider Set.has if the list grows significantly.
+        switch (key) {
+          case 'name':
+          case 'clip-radius':
+          case 'overlap':
+          case 'exposure-scene':
+          case 'exposure-id':
+            hasNoFlattenAttributes = true;
+        }
       }
       result[key] = value;
     }
