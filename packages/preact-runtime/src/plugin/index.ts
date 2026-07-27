@@ -67,6 +67,11 @@ export function pluginPreactLynx(): RsbuildPlugin {
     setup(api) {
       api.modifyRsbuildConfig((config, { mergeRsbuildConfig }) => {
         return mergeRsbuildConfig(config, {
+          output: {
+            // Route CSS through CssExtractRspackPlugin (replaced below with
+            // the Lynx-aware fork) instead of injecting <style> tags.
+            injectStyles: false,
+          },
           source: {
             define: {
               // The web BTS evaluates the chunk via
@@ -90,6 +95,48 @@ export function pluginPreactLynx(): RsbuildPlugin {
             },
           },
         });
+      });
+
+      // Swap rsbuild's CSS extraction for the Lynx-aware fork so `.css`
+      // assets become template style sections.
+      api.modifyBundlerChain(async (chain, { CHAIN_ID }) => {
+        const { CssExtractRspackPlugin } = await import(
+          '@lynx-js/css-extract-webpack-plugin'
+        );
+        const cssRules = [
+          CHAIN_ID.RULE.CSS,
+          CHAIN_ID.RULE.SASS,
+          CHAIN_ID.RULE.LESS,
+          CHAIN_ID.RULE.STYLUS,
+        ] as const;
+        cssRules
+          .filter((rule) => chain.module.rules.has(rule))
+          .forEach((ruleName) => {
+            const mainRuleName = ruleName === CHAIN_ID.RULE.CSS
+              ? CHAIN_ID.ONE_OF.CSS_MAIN
+              : ruleName;
+            const mainRule = chain.module.rule(ruleName).oneOf(mainRuleName);
+            if (mainRule.uses.has(CHAIN_ID.USE.LIGHTNINGCSS)) {
+              mainRule.uses.delete(CHAIN_ID.USE.LIGHTNINGCSS);
+            }
+            if (mainRule.uses.has(CHAIN_ID.USE.MINI_CSS_EXTRACT)) {
+              mainRule
+                .use(CHAIN_ID.USE.MINI_CSS_EXTRACT)
+                .loader(CssExtractRspackPlugin.loader);
+            }
+          });
+        if (chain.plugins.has(CHAIN_ID.PLUGIN.MINI_CSS_EXTRACT)) {
+          chain
+            .plugin(CHAIN_ID.PLUGIN.MINI_CSS_EXTRACT)
+            .init(
+              (_, args: unknown[]) =>
+                new CssExtractRspackPlugin(
+                  args[0] as ConstructorParameters<
+                    typeof CssExtractRspackPlugin
+                  >[0],
+                ),
+            );
+        }
       });
 
       api.modifyBundlerChain((chain, { environment, isDev }) => {
@@ -122,6 +169,28 @@ export function pluginPreactLynx(): RsbuildPlugin {
         ) {
           chain.resolve.alias.set(`${specifier}$`, require.resolve(specifier));
         }
+
+        // Let sources written against `@lynx-js/react` run unmodified.
+        chain.resolve.alias.set(
+          '@lynx-js/react$',
+          require.resolve('@lynx-js/preact-runtime/compat'),
+        );
+        chain.resolve.alias.set(
+          '@lynx-js/react/debug$',
+          require.resolve('@lynx-js/preact-runtime/compat/debug'),
+        );
+        chain.resolve.alias.set(
+          '@lynx-js/preact-devtools$',
+          require.resolve('@lynx-js/preact-runtime/compat/debug'),
+        );
+
+        // Example sources import './App.jsx' while the file is `App.tsx`.
+        chain.resolve.merge({
+          extensionAlias: {
+            '.js': ['.js', '.ts', '.tsx'],
+            '.jsx': ['.jsx', '.tsx'],
+          },
+        });
 
         const { hmr, liveReload } = environment.config.dev ?? {};
         const enabledHMR = isDev && hmr !== false;

@@ -15,6 +15,8 @@ const config: RslibConfig = defineConfig({
       source: {
         entry: {
           index: './src/index.ts',
+          'compat/index': './src/compat/index.ts',
+          'compat/debug': './src/compat/debug.ts',
         },
       },
       output: {

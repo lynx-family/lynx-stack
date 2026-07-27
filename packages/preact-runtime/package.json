@@ -15,6 +15,14 @@
       "types": "./dist/index.d.ts",
       "default": "./dist/index.js"
     },
+    "./compat": {
+      "types": "./dist/compat/index.d.ts",
+      "default": "./dist/compat/index.js"
+    },
+    "./compat/debug": {
+      "types": "./dist/compat/debug.d.ts",
+      "default": "./dist/compat/debug.js"
+    },
     "./plugin": {
       "types": "./dist/plugin/index.d.ts",
       "default": "./dist/plugin/index.js"
@@ -28,6 +36,7 @@
     "build": "rslib build"
   },
   "dependencies": {
+    "@lynx-js/css-extract-webpack-plugin": "workspace:*",
     "@lynx-js/runtime-wrapper-webpack-plugin": "workspace:*",
     "@lynx-js/template-webpack-plugin": "workspace:*",
     "preact": "^10.29.1"

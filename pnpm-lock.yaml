@@ -289,6 +289,16 @@ importers:
         specifier: ~5.9.2
         version: 5.9.3
 
+  examples/preact-ports:
+    dependencies:
+      '@lynx-js/preact-runtime':
+        specifier: workspace:*
+        version: link:../../packages/preact-runtime
+    devDependencies:
+      '@lynx-js/rspeedy':
+        specifier: workspace:*
+        version: link:../../packages/rspeedy/core
+
   examples/react:
     dependencies:
       '@lynx-js/react':
@@ -1172,6 +1182,9 @@ importers:
 
   packages/preact-runtime:
     dependencies:
+      '@lynx-js/css-extract-webpack-plugin':
+        specifier: workspace:*
+        version: link:../webpack/css-extract-webpack-plugin
       '@lynx-js/runtime-wrapper-webpack-plugin':
         specifier: workspace:*
         version: link:../webpack/runtime-wrapper-webpack-plugin
