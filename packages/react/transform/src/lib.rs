@@ -27,7 +27,7 @@ use swc_core::{
     errors::{DiagnosticBuilder, Emitter, Handler, HANDLER},
     pass::Optional,
     sync::Lrc,
-    FileName, FilePathMapping, Mark, SourceMap, GLOBALS,
+    FileName, FilePathMapping, Mark, SourceMap, DUMMY_SP, GLOBALS,
   },
   ecma::{
     ast::*,
@@ -40,6 +40,7 @@ use swc_core::{
         hygiene::{hygiene_with_config, Config},
         resolver,
       },
+      compat,
       optimization::{simplifier, simplify},
       react, typescript,
     },
@@ -69,6 +70,7 @@ use swc_plugin_snapshot::{
   UISourceMapRecord as SnapshotCoreUISourceMapRecord,
 };
 use swc_plugin_worklet::napi::{WorkletVisitor, WorkletVisitorConfig};
+use swc_plugins_shared::main_thread_defines::MainThreadDefinesCollector;
 use swc_plugins_shared::{
   engine_version::is_engine_version_ge,
   transform_mode_napi::TransformMode,
@@ -221,6 +223,12 @@ pub struct TransformNodiffOptions {
   pub dynamic_import: Option<Either<bool, DynamicImportVisitorConfig>>,
   /// @internal
   pub inject: Option<Either<bool, InjectVisitorConfig>>,
+  /// @internal
+  /// When true, each snapshot + worklet registration is collected (in addition
+  /// to being emitted normally) and printed into the `mainThreadDefines`
+  /// output. The main-thread bundle is assembled from these registrations when
+  /// the main thread does not compile business code.
+  pub collect_main_thread_defines: Option<bool>,
   pub input_source_map: Option<String>,
 }
 
@@ -248,6 +256,7 @@ impl Default for TransformNodiffOptions {
       worklet: Either::A(false),
       dynamic_import: Some(Either::B(Default::default())),
       inject: Some(Either::A(false)),
+      collect_main_thread_defines: None,
       input_source_map: None,
     }
   }
@@ -263,6 +272,23 @@ pub struct UiSourceMapRecord {
   pub snapshot_id: Option<String>,
 }
 
+/// @internal
+/// A snapshot, worklet or element template definition the main thread needs,
+/// collected while the background compiles the module.
+#[napi(object)]
+pub struct MainThreadDefine {
+  /// @internal
+  #[napi(ts_type = "'snapshot' | 'worklet' | 'elementTemplate'")]
+  pub kind: String,
+  /// @internal
+  /// The snapshot uid, worklet hash, or element template id. Definitions that
+  /// share an id are interchangeable, so duplicates can be dropped.
+  pub id: String,
+  /// @internal
+  /// A self-contained statement list registering the definition.
+  pub code: String,
+}
+
 #[napi(object)]
 pub struct TransformNodiffOutput {
   pub code: String,
@@ -276,6 +302,89 @@ pub struct TransformNodiffOutput {
   /// @internal
   #[napi(js_name = "elementTemplates")]
   pub element_templates: Option<Vec<ElementTemplateAsset>>,
+  /// @internal
+  /// The definitions the main thread needs, collected when
+  /// `collectMainThreadDefines` is set. `None` when collection is disabled.
+  #[napi(js_name = "mainThreadDefines")]
+  pub main_thread_defines: Option<Vec<MainThreadDefine>>,
+}
+
+// The main thread runs an ES2019 engine, and the collected registrations are
+// printed outside the loader chain that lowers the rest of the main-thread code,
+// so a worklet body written with syntax the background supports (`?.`, `??`,
+// `&&=`, class fields) has to be lowered here. Helpers are inlined: the printed
+// registrations are appended to a sealed bundle, where a `@swc/helpers` import
+// could no longer be resolved.
+fn lower_to_main_thread_syntax(
+  unresolved_mark: Mark,
+  top_level_mark: Mark,
+  comments: &SingleThreadedComments,
+) -> impl Pass + use<'_> {
+  (
+    compat::es2022(Default::default(), unresolved_mark),
+    compat::es2020::optional_chaining(Default::default(), unresolved_mark),
+    compat::es2020::nullish_coalescing(Default::default()),
+    compat::es2021::logical_assignments(),
+    helpers::inject_helpers(unresolved_mark),
+    hygiene_with_config(Config {
+      top_level_mark,
+      ..Default::default()
+    }),
+    fixer(Some(comments)),
+  )
+}
+
+/// Print one collected definition as a self-contained statement list.
+fn print_main_thread_define(
+  c: &Compiler,
+  items: Vec<ModuleItem>,
+  unresolved_mark: Mark,
+  top_level_mark: Mark,
+  comments: &SingleThreadedComments,
+) -> String {
+  let module = match Program::Module(Module {
+    span: DUMMY_SP,
+    body: items,
+    shebang: None,
+  })
+  .apply(&mut lower_to_main_thread_syntax(
+    unresolved_mark,
+    top_level_mark,
+    comments,
+  )) {
+    Program::Module(m) => m,
+    _ => Module {
+      span: DUMMY_SP,
+      body: vec![],
+      shebang: None,
+    },
+  };
+
+  c.print(
+    &Program::Module(module),
+    PrintArgs {
+      output: None,
+      source_root: "".into(),
+      source_file_name: None,
+      source_map_url: None,
+      source_map_ignore_list: None,
+      output_path: None,
+      inline_sources_content: true,
+      source_map: SourceMapsConfig::Bool(false),
+      source_map_names: &Default::default(),
+      orig: None,
+      comments: Some(comments),
+      emit_source_map_columns: false,
+      emit_source_map_scopes: false,
+      preamble: "",
+      codegen_config: codegen::Config::default()
+        .with_target(EsVersion::latest())
+        .with_minify(false)
+        .with_ascii_only(false),
+    },
+  )
+  .map(|r| r.code)
+  .unwrap_or_default()
 }
 
 type ElementTemplateCollector = Rc<RefCell<Vec<CoreElementTemplateAsset>>>;
@@ -376,6 +485,7 @@ fn transform_react_lynx_inner(
           warnings: warnings.read().unwrap().clone(),
           ui_source_map_records: vec![],
           element_templates: None,
+          main_thread_defines: None,
         };
       }
     };
@@ -540,6 +650,14 @@ fn transform_react_lynx_inner(
       jsx_backend_enabled && !preserve_jsx,
     );
 
+    // Shared by the snapshot + worklet plugins: when set, each emitted
+    // registration is also cloned here and printed into the
+    // `mainThreadDefines` output. `None` disables collection (no cost).
+    let main_thread_defs_collector: Option<MainThreadDefinesCollector> = options
+      .collect_main_thread_defines
+      .unwrap_or(false)
+      .then(|| Rc::new(RefCell::new(vec![])));
+
     let snapshot_plugin = if use_snapshot_plugin {
       let transformer = SnapshotJSXTransformer::new(
         snapshot_plugin_config.clone(),
@@ -551,6 +669,12 @@ fn transform_react_lynx_inner(
 
       let transformer = if enable_ui_source_map {
         transformer.with_ui_source_map_records(snapshot_ui_source_map_records.clone())
+      } else {
+        transformer
+      };
+
+      let transformer = if let Some(collector) = &main_thread_defs_collector {
+        transformer.with_main_thread_defs_collector(collector.clone())
       } else {
         transformer
       };
@@ -580,6 +704,12 @@ fn transform_react_lynx_inner(
         element_templates_collector.clone(),
       )
       .with_content_hash(content_hash.clone());
+
+      let transformer = if let Some(collector) = &main_thread_defs_collector {
+        transformer.with_main_thread_defs_collector(collector.clone())
+      } else {
+        transformer
+      };
 
       Optional::new(visit_mut_pass(transformer), true)
     } else {
@@ -675,17 +805,26 @@ fn transform_react_lynx_inner(
     };
 
     let worklet_plugin = match options.worklet {
-      Either::A(config) => Optional::new(
-        visit_mut_pass(WorkletVisitor::default().with_content_hash(content_hash)),
-        config,
-      ),
-      Either::B(config) => Optional::new(
-        visit_mut_pass(
+      Either::A(config) => {
+        let visitor = WorkletVisitor::default().with_content_hash(content_hash);
+        let visitor = if let Some(collector) = &main_thread_defs_collector {
+          visitor.with_main_thread_defs_collector(collector.clone())
+        } else {
+          visitor
+        };
+        Optional::new(visit_mut_pass(visitor), config)
+      }
+      Either::B(config) => {
+        let visitor =
           WorkletVisitor::new(options.mode.unwrap_or(TransformMode::Production), config)
-            .with_content_hash(content_hash),
-        ),
-        true,
-      ),
+            .with_content_hash(content_hash);
+        let visitor = if let Some(collector) = &main_thread_defs_collector {
+          visitor.with_main_thread_defs_collector(collector.clone())
+        } else {
+          visitor
+        };
+        Optional::new(visit_mut_pass(visitor), true)
+      }
     };
 
     let dynamic_import_plugin = match options.dynamic_import.unwrap_or(Either::A(true)) {
@@ -804,6 +943,31 @@ fn transform_react_lynx_inner(
         // the caller expects one stable array per transform invocation.
         let element_templates = take_element_templates(element_templates_collector);
 
+        // Print each collected definition on its own. They were cloned
+        // mid-pass, so they still reference the runtime namespace import by
+        // name and their locals are not hygiened yet; and the main thread runs
+        // an ES2019 engine while these are printed outside the loader chain
+        // that lowers the rest of the main-thread code.
+        let main_thread_defines = main_thread_defs_collector.as_ref().map(|collector| {
+          helpers::HELPERS.set(&helpers::Helpers::new(false), || {
+            collector
+              .borrow()
+              .iter()
+              .map(|define| MainThreadDefine {
+                kind: define.kind.as_str().into(),
+                id: define.id.clone(),
+                code: print_main_thread_define(
+                  &c,
+                  define.items.clone(),
+                  unresolved_mark,
+                  top_level_mark,
+                  &comments,
+                ),
+              })
+              .collect::<Vec<_>>()
+          })
+        });
+
         TransformNodiffOutput {
           code: result.code,
           map: result.map,
@@ -815,6 +979,7 @@ fn transform_react_lynx_inner(
             clone_snapshot_ui_source_map_records(&snapshot_ui_source_map_records, &options.filename)
           },
           element_templates,
+          main_thread_defines,
         }
       }
       Err(_) => {
@@ -830,6 +995,7 @@ fn transform_react_lynx_inner(
             clone_snapshot_ui_source_map_records(&snapshot_ui_source_map_records, &options.filename)
           },
           element_templates,
+          main_thread_defines: None,
         };
       }
     }
@@ -844,6 +1010,7 @@ fn transform_react_lynx_inner(
     // Preserve the element-template assets collected in the successful transform
     // path instead of dropping them in the final wrapper object.
     element_templates: result.element_templates,
+    main_thread_defines: result.main_thread_defines,
   };
 
   r

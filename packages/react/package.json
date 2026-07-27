@@ -33,6 +33,10 @@
       "lazy": "./runtime/lazy/internal.js",
       "default": "./runtime/lib/internal.js"
     },
+    "./internal/main-thread-defines": {
+      "types": "./runtime/lib/main-thread-defines.d.ts",
+      "default": "./runtime/lib/main-thread-defines.js"
+    },
     "./internal/document": {
       "types": "./runtime/lib/document.d.ts",
       "default": "./runtime/lib/document.js"
@@ -44,6 +48,10 @@
     "./element-template/internal": {
       "types": "./runtime/lib/element-template/internal.d.ts",
       "default": "./runtime/lib/element-template/internal.js"
+    },
+    "./element-template/internal/main-thread-defines": {
+      "types": "./runtime/lib/element-template/main-thread-defines.d.ts",
+      "default": "./runtime/lib/element-template/main-thread-defines.js"
     },
     "./element-template/jsx-runtime": {
       "types": "./runtime/lib/element-template/jsx-runtime/index.d.ts",

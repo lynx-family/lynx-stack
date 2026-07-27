@@ -73,6 +73,7 @@ export interface PluginReactLynxOptions {
     enableCSSInheritance?: boolean;
     enableCSSInvalidation?: boolean;
     enableCSSSelector?: boolean;
+    enableMainThread?: boolean;
     enableNewGesture?: boolean;
     enableRemoveCSSScope?: boolean | undefined;
     enableSSR?: boolean;

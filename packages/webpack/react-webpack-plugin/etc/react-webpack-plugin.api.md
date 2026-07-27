@@ -25,6 +25,7 @@ export const LAYERS: {
 export interface ReactLoaderOptions {
     compat?: CompatVisitorConfig | undefined;
     defineDCE?: DefineDceVisitorConfig | undefined;
+    enableMainThread?: boolean | undefined;
     enableRemoveCSSScope?: boolean | undefined;
     enableUiSourceMap?: boolean | undefined;
     engineVersion?: string | undefined;
@@ -46,6 +47,7 @@ export class ReactWebpackPlugin {
 // @public
 export interface ReactWebpackPluginOptions {
     disableCreateSelectorQueryIncompatibleWarning?: boolean | undefined;
+    enableMainThread?: boolean;
     enableSSR?: boolean;
     // @alpha
     experimental_isLazyBundle?: boolean;
@@ -55,6 +57,7 @@ export interface ReactWebpackPluginOptions {
     globalPropsMode?: 'reactive' | 'event';
     lazyBundleFetcher?: 'FetchBundle' | 'QueryComponent';
     mainThreadChunks?: string[] | undefined;
+    mainThreadEntries?: Record<string, string>;
     profile?: boolean | undefined;
     workletRuntimePath: string;
 }

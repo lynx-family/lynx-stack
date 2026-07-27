@@ -45,6 +45,9 @@ pub mod napi;
 
 use swc_plugins_shared::{
   jsx_helpers::{jsx_attr_value, jsx_children_to_expr, jsx_is_list_item, jsx_name},
+  main_thread_defines::{
+    collect_main_thread_define, MainThreadDefineKind, MainThreadDefinesCollector,
+  },
   target::TransformTarget,
   transform_mode::TransformMode,
 };
@@ -232,6 +235,13 @@ where
   attr_plan_signatures_by_canonical_content: HashMap<String, String>,
   template_identity_collision_guard: TemplateIdentityCollisionGuard,
   current_template_defs: Vec<ModuleItem>,
+  // When set, each emitted template registration (the `const _et_x` id decl +
+  // its `__etAttrPlanMap[x] = ...` assignment) is also collected here, so the
+  // main-thread bundle can be assembled from the registrations alone. Element
+  // Template registrations do not depend on the target, so the background's
+  // own output is what the main thread gets.
+  main_thread_defs_collector: Option<MainThreadDefinesCollector>,
+  current_template_id: Option<String>,
   comments: Option<C>,
   css_id_value: Option<f64>,
 }
@@ -242,6 +252,11 @@ where
 {
   pub fn with_content_hash(mut self, content_hash: String) -> Self {
     self.content_hash = content_hash;
+    self
+  }
+
+  pub fn with_main_thread_defs_collector(mut self, collector: MainThreadDefinesCollector) -> Self {
+    self.main_thread_defs_collector = Some(collector);
     self
   }
 
@@ -273,6 +288,8 @@ where
       attr_plan_signatures_by_canonical_content: HashMap::new(),
       template_identity_collision_guard: TemplateIdentityCollisionGuard::default(),
       current_template_defs: vec![],
+      main_thread_defs_collector: None,
+      current_template_id: None,
       comments,
       css_id_value: None,
     }
@@ -548,6 +565,7 @@ where
           template_ident = template_ident.clone(),
           entry_template_uid: Expr = entry_template_uid.clone(),
       ));
+      self.current_template_id = Some(template_uid.clone());
       self.current_template_defs.push(entry_template_uid_def);
       if !attr_plan_slots.is_empty() {
         let internal_runtime_id = self.internal_runtime_id.clone();
@@ -631,7 +649,16 @@ where
     let mut new_items: Vec<ModuleItem> = vec![];
     for item in n.iter_mut() {
       item.visit_mut_with(self);
-      new_items.extend(self.current_template_defs.take());
+      let defs = self.current_template_defs.take();
+      if let Some(template_id) = self.current_template_id.take() {
+        collect_main_thread_define(
+          &self.main_thread_defs_collector,
+          MainThreadDefineKind::ElementTemplate,
+          template_id,
+          defs.clone(),
+        );
+      }
+      new_items.extend(defs);
       new_items.push(item.take());
     }
 

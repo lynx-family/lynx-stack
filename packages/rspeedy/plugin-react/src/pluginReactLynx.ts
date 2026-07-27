@@ -248,6 +248,27 @@ export interface PluginReactLynxOptions {
   enableSSR?: boolean
 
   /**
+   * `enableMainThread` controls whether business code is compiled for the main
+   * thread.
+   *
+   * With `false`, the main thread renders no business code: it creates an empty
+   * page and root, and the background hydrates that empty root into the real UI
+   * with a full insert patch. The main-thread bundle only contains the ReactLynx
+   * main-thread runtime plus the snapshot and worklet definitions the background
+   * collected, which makes it much smaller and skips the main thread's first
+   * render.
+   *
+   * Use it for pages that do not need first-frame content from the main thread.
+   * Main-thread business behavior is dropped in this mode, including
+   * `defaultDataProcessor` and main-thread `useEffect`-free render side effects.
+   *
+   * @defaultValue `true`
+   *
+   * @public
+   */
+  enableMainThread?: boolean
+
+  /**
    * removeDescendantSelectorScope is used to remove the scope of descendant selectors.
    *
    * @defaultValue `true`
@@ -378,6 +399,7 @@ export function pluginReactLynx(
     enableRemoveCSSScope: true,
     firstScreenSyncTiming: 'immediately',
     enableSSR: false,
+    enableMainThread: true,
     removeDescendantSelectorScope: true,
     shake: undefined,
     defineDCE: undefined,

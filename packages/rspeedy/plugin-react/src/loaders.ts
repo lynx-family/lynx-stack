@@ -51,6 +51,7 @@ function getLoaderOptions(
     defineDCE,
     engineVersion,
     enableUiSourceMap,
+    enableMainThread,
 
     experimental_isLazyBundle,
     experimental_useElementTemplate,
@@ -64,6 +65,7 @@ function getLoaderOptions(
     defineDCE,
     engineVersion,
     experimental_useElementTemplate,
+    enableMainThread,
     ...isMainThread
       ? {
         enableUiSourceMap,
