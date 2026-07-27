@@ -6,7 +6,7 @@ import { describe, expect, test } from '@rstest/core'
 import { validate } from '../src/validate.js'
 
 describe('validate', () => {
-  describe('compile options', () => {
+  describe('unsupported keys', () => {
     test('multiple errors', () => {
       expect(() =>
         validate({
@@ -28,7 +28,12 @@ describe('validate', () => {
         validate({
           debugInfoOutside: false,
         })
-      ).not.toThrow()
+      ).toThrowErrorMatchingInlineSnapshot(`
+        [Error: [pluginLynxConfig] Invalid configuration.
+
+          Unsupported configuration: \`$input.debugInfoOutside\`
+        ]
+      `)
     })
 
     test('defaultDisplayLinear', () => {
@@ -36,7 +41,12 @@ describe('validate', () => {
         validate({
           defaultDisplayLinear: false,
         })
-      ).not.toThrow()
+      ).toThrowErrorMatchingInlineSnapshot(`
+        [Error: [pluginLynxConfig] Invalid configuration.
+
+          Unsupported configuration: \`$input.defaultDisplayLinear\`
+        ]
+      `)
     })
 
     test('defaultOverflowVisible', () => {
@@ -44,7 +54,12 @@ describe('validate', () => {
         validate({
           defaultOverflowVisible: false,
         })
-      ).not.toThrow()
+      ).toThrowErrorMatchingInlineSnapshot(`
+        [Error: [pluginLynxConfig] Invalid configuration.
+
+          Unsupported configuration: \`$input.defaultOverflowVisible\`
+        ]
+      `)
     })
 
     test('enableCSSInvalidation', () => {
@@ -52,7 +67,12 @@ describe('validate', () => {
         validate({
           enableCSSInvalidation: false,
         })
-      ).not.toThrow()
+      ).toThrowErrorMatchingInlineSnapshot(`
+        [Error: [pluginLynxConfig] Invalid configuration.
+
+          Unsupported configuration: \`$input.enableCSSInvalidation\`
+        ]
+      `)
     })
 
     test('enableCSSSelector', () => {
@@ -60,7 +80,12 @@ describe('validate', () => {
         validate({
           enableCSSSelector: false,
         })
-      ).not.toThrow()
+      ).toThrowErrorMatchingInlineSnapshot(`
+        [Error: [pluginLynxConfig] Invalid configuration.
+
+          Unsupported configuration: \`$input.enableCSSSelector\`
+        ]
+      `)
     })
 
     test('enableRemoveCSSScope', () => {
@@ -68,7 +93,12 @@ describe('validate', () => {
         validate({
           enableRemoveCSSScope: false,
         })
-      ).not.toThrow()
+      ).toThrowErrorMatchingInlineSnapshot(`
+        [Error: [pluginLynxConfig] Invalid configuration.
+
+          Unsupported configuration: \`$input.enableRemoveCSSScope\`
+        ]
+      `)
     })
 
     test('targetSdkVersion', () => {
@@ -76,24 +106,14 @@ describe('validate', () => {
         validate({
           targetSdkVersion: '1.1.0',
         })
-      ).not.toThrow()
-
-      expect(() =>
-        validate({
-          targetSdkVersion: false,
-        })
       ).toThrowErrorMatchingInlineSnapshot(`
         [Error: [pluginLynxConfig] Invalid configuration.
 
-        Invalid config on \`$input.targetSdkVersion\`.
-          - Expect to be (string | undefined)
-          - Got: boolean
+          Unsupported configuration: \`$input.targetSdkVersion\`
         ]
       `)
     })
-  })
 
-  describe('invalid config', () => {
     test('customCSSInheritanceList', () => {
       expect(() =>
         validate({
@@ -102,13 +122,7 @@ describe('validate', () => {
       ).toThrowErrorMatchingInlineSnapshot(`
         [Error: [pluginLynxConfig] Invalid configuration.
 
-        Invalid config on \`$input.customCSSInheritanceList[0]\`.
-          - Expect to be string
-          - Got: number
-
-        Invalid config on \`$input.customCSSInheritanceList[1]\`.
-          - Expect to be string
-          - Got: number
+          Unsupported configuration: \`$input.customCSSInheritanceList\`
         ]
       `)
     })
@@ -131,10 +145,8 @@ describe('validate', () => {
     expect(() =>
       validate({
         enableAccessibilityElement: true,
-        customCSSInheritanceList: ['foo', 'bar'],
         enableCSSInheritance: true,
         enableNewGesture: true,
-        pipelineSchedulerConfig: 1,
       })
     ).not.toThrow()
   })

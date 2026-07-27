@@ -222,6 +222,13 @@ test.describe('reactlynx3 tests', () => {
       await wait(100);
       await expect(await target.getAttribute('style')).toContain('pink');
     });
+    test('basic-element-x-webview-bindmessage', async ({ page }, { title }) => {
+      test.skip(isSSR, 'x-webview iframe messaging runs on the client');
+      await goto(page, title);
+      await expect(page.locator('#webview-message')).toHaveText(
+        'hello from iframe',
+      );
+    });
     test('basic-event-target-id', async ({ page }, { title }) => {
       await goto(page, title);
       await wait(100);

@@ -8,6 +8,8 @@
         ".cargo/**",
         "src/**/*.rs",
         "Cargo.toml",
+        "$TURBO_ROOT$/Cargo.toml",
+        "$TURBO_ROOT$/Cargo.lock",
         "build.js"
       ],
       "outputs": ["swc_plugin_reactlynx.wasm"]

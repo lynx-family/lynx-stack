@@ -25,14 +25,14 @@ type UnionToTuple<U, T extends unknown[] = []> = [U] extends [T[number]] ? T
 describe('config length', () => {
   it('type config compiler option should have expected length', () => {
     expectTypeOf<UnionToTuple<keyof TypeConfig.CompilerOptions>['length']>()
-      .toEqualTypeOf<26>()
+      .toEqualTypeOf<0>()
   })
   it('type config config should have expected length', () => {
     expectTypeOf<UnionToTuple<keyof TypeConfig.Config>['length']>()
-      .toEqualTypeOf<120>()
+      .toEqualTypeOf<31>()
   })
   it('pluginLynxConfig config should have expected length', () => {
     expectTypeOf<UnionToTuple<keyof Config>['length']>()
-      .toEqualTypeOf<145>()
+      .toEqualTypeOf<31>()
   })
 })

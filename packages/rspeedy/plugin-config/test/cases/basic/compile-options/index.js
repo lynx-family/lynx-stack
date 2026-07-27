@@ -3,11 +3,11 @@
 import { readFile } from 'node:fs/promises'
 import path from 'node:path'
 
-it('should override existing config', async () => {
+it('should not apply config to compiler options', async () => {
   const content = await readFile(path.join(__dirname, 'tasm.json'), 'utf-8')
   const { compilerOptions, sourceContent } = JSON.parse(content)
 
-  expect(compilerOptions).toHaveProperty('enableCSSSelector', false)
+  expect(compilerOptions).toHaveProperty('enableCSSSelector', true)
   expect(sourceContent.config).not.toHaveProperty('enableCSSSelector')
 })
 

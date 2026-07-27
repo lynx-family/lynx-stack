@@ -78,9 +78,22 @@ jobs:
     runs-on: ${{ inputs.runs-on }}
     timeout-minutes: 45
     needs: get-merge-base
+    env:
+      # `turbo-v4` matches the saved caches; anything else matches nothing,
+      # which is how a push to `main` starts from an empty cache.
+      TURBO_RESTORE_PREFIX: ${{ github.event_name == 'push' && 'turbo-no-restore' || 'turbo-v4' }}
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
         with:
+          # `changeset status --since` runs `git merge-base <ref> HEAD`, so the
+          # Ubuntu build -- the only job that publishes to pkg.pr.new -- needs
+          # real history. Growing it after a depth-1 checkout does not work:
+          # HEAD is `refs/pull/<n>/merge`, GitHub regenerates that ref whenever
+          # the base moves, and both `--depth <sha>` and `--deepen` then act on
+          # the ref's new tip while HEAD stays detached at the old commit.
+          # Ask for the history up front instead. Every other job, Windows
+          # included, keeps the shallow clone.
+          fetch-depth: ${{ inputs.runs-on == 'lynx-ubuntu-26.04-xlarge' && '0' || '1' }}
           persist-credentials: false
       - name: Disable local Git maintenance
         run: git config --local maintenance.auto false
@@ -98,11 +111,23 @@ jobs:
           # We can restore caches from:
           #   1. Previous commit from base branch (merge base or base SHA)
           #   2. Any cache
+          #
+          # On a push to `main` (`deploy-main.yml`) the prefix below becomes one
+          # nothing is stored under, so this run starts from an empty cache and
+          # saves only what it built. Restoring there is what made the cache
+          # grow without bound: every PR restores main's cache through key 1, so
+          # main carrying the previous generation in and saving it back added a
+          # generation per merge -- 193 merges in three weeks, past the 5 GB the
+          # backend accepts, after which every save fails while still reporting
+          # success and downstream jobs die on a cache miss:
+          # https://github.com/lynx-family/lynx-stack/actions/runs/30186830273/job/89752986590
+          #
+          # The cold build this costs is on a post-merge run nobody waits on.
           restore-keys: |
-            turbo-v4-${{ runner.os }}-${{ hashFiles('packages/**/src/**/*.rs') }}-${{ needs.get-merge-base.outputs.merge-base }}
-            turbo-v4-${{ runner.os }}-${{ hashFiles('packages/**/src/**/*.rs') }}-${{ github.event.pull_request.base.sha || github.event.merge_group.base_sha || github.event.push.before }}
-            turbo-v4-${{ runner.os }}-${{ hashFiles('packages/**/src/**/*.rs') }}-
-            turbo-v4-${{ runner.os }}-
+            ${{ env.TURBO_RESTORE_PREFIX }}-${{ runner.os }}-${{ hashFiles('packages/**/src/**/*.rs') }}-${{ needs.get-merge-base.outputs.merge-base }}
+            ${{ env.TURBO_RESTORE_PREFIX }}-${{ runner.os }}-${{ hashFiles('packages/**/src/**/*.rs') }}-${{ github.event.pull_request.base.sha || github.event.merge_group.base_sha || github.event.push.before }}
+            ${{ env.TURBO_RESTORE_PREFIX }}-${{ runner.os }}-${{ hashFiles('packages/**/src/**/*.rs') }}-
+            ${{ env.TURBO_RESTORE_PREFIX }}-${{ runner.os }}-
       - name: Install
         uses: ./.github/actions/pnpm-install
         with:
@@ -111,7 +136,11 @@ jobs:
       - name: Build
         id: build
         run: |
-          pnpm turbo build --summarize
+          # `benchx_cli` downloads an 86 MB binary only the benchmark job uses.
+          # `benchmark-*` goes with it -- it depends on `benchx_cli`, so
+          # excluding `benchx_cli` alone is a no-op. Same pair `deploy-main.yml`
+          # uses.
+          pnpm turbo build --summarize --filter '!benchx_cli' --filter '!@lynx-js/benchmark-*'
         env:
           NODE_OPTIONS: --max-old-space-size=32768
           CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
@@ -131,42 +160,18 @@ jobs:
       # a read-only token with no base-repo secrets, and are gated by the
       # repo's required-approval setting — the same trust boundary the Build
       # step above (which already runs fork install/build scripts) relies on.
-      - name: Fetch base ref for changeset status
-        if: >
-          inputs.runs-on == 'lynx-ubuntu-26.04-xlarge' &&
-          github.event_name == 'pull_request'
-        env:
-          BASE_REF: ${{ github.base_ref }}
-        # actions/checkout uses depth=1, so neither `origin/<base>` nor the
-        # PR/base merge-base are present. `changeset status --since=<ref>`
-        # calls `git merge-base <ref> HEAD`, which requires the common
-        # ancestor to be in local history. Deepen both sides iteratively until
-        # we have it. Deepen HEAD by its pinned SHA rather than via
-        # `refs/pull/<n>/merge`: GitHub regenerates that ref (same parents,
-        # new committer timestamp), and deepening the regenerated ref never
-        # connects the checked-out HEAD, failing merge-base deterministically.
-        run: |
-          git fetch --depth=1 origin \
-            "$BASE_REF":"refs/remotes/origin/$BASE_REF"
-          for _ in 1 2 3 4 5 6 7 8 9 10; do
-            if git merge-base "refs/remotes/origin/$BASE_REF" HEAD >/dev/null 2>&1; then
-              exit 0
-            fi
-            git fetch -q --deepen=10 origin \
-              "$BASE_REF":"refs/remotes/origin/$BASE_REF" \
-              "$GITHUB_SHA"
-          done
-          echo "::error::Unable to find a merge base between origin/$BASE_REF and HEAD after 10 deepen iterations" >&2
-          exit 1
       - name: Collect packages with changesets
         id: changeset
         if: >
           inputs.runs-on == 'lynx-ubuntu-26.04-xlarge' &&
           github.event_name == 'pull_request'
         env:
-          BASE_REF: ${{ github.base_ref }}
+          MERGE_BASE: ${{ needs.get-merge-base.outputs.merge-base }}
+        # The merge base is already computed by the `get-merge-base` job, so
+        # pass that SHA straight to `--since` instead of resolving `origin/<base>`
+        # here. History comes from the `fetch-depth` above.
         run: |
-          pnpm changeset status --since="origin/$BASE_REF" --output .changeset-status.json
+          pnpm changeset status --since="$MERGE_BASE" --output .changeset-status.json
           PACKAGE_DIRS=$(node .github/scripts/list-changeset-packages.cjs .changeset-status.json | tr '\n' ' ')
           if [ -z "$(echo "$PACKAGE_DIRS" | tr -d '[:space:]')" ]; then
             echo "No publishable packages affected by changesets; skipping pkg.pr.new publish."

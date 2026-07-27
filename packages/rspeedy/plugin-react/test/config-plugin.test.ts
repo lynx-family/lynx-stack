@@ -10,14 +10,14 @@ import type { LynxTemplatePlugin } from '@lynx-js/template-webpack-plugin'
 import { pluginReactLynx } from '../src/pluginReactLynx.js'
 
 describe('config plugin', () => {
-  test('use targetSdkVersion from pluginLynxConfig', async () => {
+  test('use targetSdkVersion from pluginReactLynx', async () => {
     const rspeedy = await createRspeedy({
       rspeedyConfig: {
         plugins: [
-          pluginReactLynx(),
-          pluginLynxConfig({
+          pluginReactLynx({
             targetSdkVersion: '3.4',
           }),
+          pluginLynxConfig({}),
         ],
       },
       // eslint-disable-next-line n/no-unsupported-features/node-builtins
@@ -41,7 +41,7 @@ describe('config plugin', () => {
         plugins: [
           pluginReactLynx(),
           pluginLynxConfig({
-            enableCSSSelector: false,
+            enableCSSInheritance: true,
           }),
         ],
       },
@@ -57,7 +57,7 @@ describe('config plugin', () => {
 
     // @ts-expect-error private field
     // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
-    expect(templatePlugin?.options.enableCSSSelector).toBe(false)
+    expect(templatePlugin?.options.enableCSSInheritance).toBe(true)
   })
 
   test('config in pluginLynxConfig should override user options', async () => {
@@ -65,10 +65,10 @@ describe('config plugin', () => {
       rspeedyConfig: {
         plugins: [
           pluginReactLynx({
-            enableCSSSelector: true,
+            enableCSSInheritance: false,
           }),
           pluginLynxConfig({
-            enableCSSSelector: false,
+            enableCSSInheritance: true,
           }),
         ],
       },
@@ -84,7 +84,7 @@ describe('config plugin', () => {
 
     // @ts-expect-error private field
     // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
-    expect(templatePlugin?.options.enableCSSSelector).toBe(false)
+    expect(templatePlugin?.options.enableCSSInheritance).toBe(true)
   })
 
   test('should not throw when having extra config in pluginLynxConfig', async () => {
@@ -93,7 +93,7 @@ describe('config plugin', () => {
         plugins: [
           pluginReactLynx(),
           pluginLynxConfig({
-            defaultOverflowVisible: false,
+            enableNativeList: false,
           }),
         ],
       },

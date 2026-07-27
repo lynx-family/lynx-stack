@@ -26,7 +26,7 @@ export function pluginStatsJson(config: Config): RsbuildPlugin {
         await mkdir(path.dirname(statsPath), { recursive: true })
         await writeFile(
           statsPath,
-          JSON.stringify(stats.toJson(BUNDLE_STATS_JSON_OPTIONS), null, 2),
+          JSON.stringify(stats.toJson(BUNDLE_STATS_JSON_OPTIONS)),
         )
       })
     },

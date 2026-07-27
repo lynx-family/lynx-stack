@@ -1,6 +1,6 @@
 {
   "name": "@lynx-js/web-elements",
-  "version": "0.12.6",
+  "version": "0.12.7",
   "private": false,
   "repository": {
     "type": "git",
@@ -142,16 +142,16 @@
     "test:update": "playwright test --ui --update-snapshots"
   },
   "dependencies": {
-    "dompurify": "^3.3.1",
-    "markdown-it": "^14.1.0"
+    "dompurify": "^3.4.12",
+    "markdown-it": "^14.3.0"
   },
   "devDependencies": {
     "@lynx-js/playwright-fixtures": "workspace:*",
     "@playwright/test": "^1.61.1",
     "@rsbuild/core": "catalog:rsbuild",
-    "@rsbuild/plugin-source-build": "1.0.5",
-    "@types/markdown-it": "^14.1.1",
-    "@types/node": "^24.10.13",
+    "@rsbuild/plugin-source-build": "1.0.6",
+    "@types/markdown-it": "^14.1.2",
+    "@types/node": "^24.13.3",
     "nyc": "^18.0.0",
     "tslib": "^2.8.1"
   },
