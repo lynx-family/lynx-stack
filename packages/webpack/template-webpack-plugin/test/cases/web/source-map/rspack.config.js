@@ -1,3 +1,5 @@
+import { fileURLToPath } from 'node:url';
+
 import { LynxTemplatePlugin, WebEncodePlugin } from '../../../../lib/index.js';
 
 // `a` is inlined into the encoded template and its standalone `a/a.js` is
@@ -14,7 +16,10 @@ export default {
     a: './a.js',
     b: './b.js',
   },
-  context: new URL('.', import.meta.url).pathname,
+  // `.pathname` on a file: URL yields a leading-slash path (/D:/...) on Windows,
+  // which rspack cannot resolve against. Every other case fixture in this
+  // package has the same line; this one does not, so it can run on Windows too.
+  context: fileURLToPath(new URL('.', import.meta.url)),
   devtool: 'source-map',
   output: {
     filename: '[name]/[name].js',
