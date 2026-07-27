@@ -14,6 +14,6 @@ thiserror = "2.0.19"
 [build-dependencies]
 fs2 = "0.4.3"
 hex = { workspace = true }
+reqwest = { version = "0.13.4", default-features = false, features = ["blocking", "rustls"] }
 sha2 = { workspace = true }
 tempfile = "3.27.0"
-ureq = "2.12.1"
