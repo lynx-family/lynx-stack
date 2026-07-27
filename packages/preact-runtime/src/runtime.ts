@@ -10,16 +10,49 @@
 import { render } from 'preact';
 import type { ComponentChild } from 'preact';
 
+import { enqueueOp } from './channel.js';
 import {
   RemoteDocument,
   RemoteElement,
   createPageContainer,
   nodesById,
 } from './document.js';
+import { BackgroundMainThreadElement } from './mainThreadElement.js';
+import * as Ops from './ops.js';
 
 declare const lynxCoreInject: {
   tt: Record<string, unknown>;
 };
+
+(globalThis as { __TRANSFORM_FREE_MTS__?: boolean }).__TRANSFORM_FREE_MTS__ =
+  true;
+
+const reportError = (message: string) => {
+  enqueueOp([Ops.ReportError, message]);
+};
+{
+  const target = globalThis as unknown as {
+    addEventListener?: (
+      type: string,
+      cb: (e: Record<string, unknown>) => void,
+    ) => void;
+  };
+  target.addEventListener?.('error', (e) => {
+    const error = e['error'] as Error | undefined;
+    const message = e['message'];
+    reportError(
+      error?.stack ?? error?.message
+        ?? (typeof message === 'string' ? message : ''),
+    );
+  });
+  target.addEventListener?.('unhandledrejection', (e) => {
+    reportError(`unhandledrejection: ${
+      String(
+        (e['reason'] as Error | undefined)?.stack ?? e['reason'],
+      )
+    }`);
+  });
+}
 
 let container: RemoteElement | undefined;
 
@@ -30,6 +63,19 @@ function dispatchEvent(handlerName: string, data: unknown): void {
   const key = handlerName.slice(first + 1);
   const node = nodesById.get(id);
   if (node instanceof RemoteElement) {
+    const mtListener = node._mtListeners.get(key);
+    if (mtListener) {
+      const wrapped = new BackgroundMainThreadElement(node);
+      const event = data && typeof data === 'object'
+        ? Object.assign({}, data, { currentTarget: wrapped, target: wrapped })
+        : data;
+      try {
+        mtListener(event);
+      } catch (error) {
+        (globalThis as { lynx?: { reportError?(e: unknown): void } }).lynx
+          ?.reportError?.(error);
+      }
+    }
     const listener = node._listeners.get(key);
     if (listener) {
       try {
@@ -74,6 +120,15 @@ function boot(): RemoteElement {
  */
 export const root = {
   render(vnode: ComponentChild): void {
-    render(vnode, boot() as unknown as HTMLElement);
+    const container = boot();
+    try {
+      render(vnode, container as unknown as HTMLElement);
+    } catch (error) {
+      enqueueOp([
+        Ops.ReportError,
+        String((error as Error | undefined)?.stack ?? error),
+      ]);
+      throw error;
+    }
   },
 };

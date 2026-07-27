@@ -27,7 +27,11 @@
       "default": "./dist/plugin/index.js"
     },
     "./main-thread": "./dist/main-thread.js",
-    "./loader/import-attributes-loader": "./loader/import-attributes-loader.cjs"
+    "./loader/import-attributes-loader": "./loader/import-attributes-loader.cjs",
+    "./compat/worklet-bindings": {
+      "types": "./dist/compat/worklet-bindings.d.ts",
+      "default": "./dist/compat/worklet-bindings.js"
+    }
   },
   "files": [
     "dist",

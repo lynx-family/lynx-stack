@@ -25,6 +25,9 @@ export default defineConfig({
       'react-et-lazy-bundle-standalone':
         './src/react-et-lazy-bundle-standalone.ts',
       'react-debug-metadata': './src/react-debug-metadata.ts',
+      'gesture': '../gesture/src/index.tsx',
+      'motion-main': '../motion/src/index.tsx',
+      'motion-mini': '../motion/src/Mini/index.tsx',
     },
   },
   plugins: [

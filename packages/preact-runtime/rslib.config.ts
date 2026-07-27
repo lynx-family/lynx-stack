@@ -18,6 +18,7 @@ const config: RslibConfig = defineConfig({
           index: './src/index.ts',
           'compat/index': './src/compat/index.ts',
           'compat/debug': './src/compat/debug.ts',
+          'compat/worklet-bindings': './src/compat/worklet-bindings.ts',
         },
       },
       output: {

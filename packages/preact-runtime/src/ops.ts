@@ -35,6 +35,12 @@ export const RegisterWorklet = 12;
 export const SetWorkletEvent = 13;
 /** `[RunWorklet, hash, args]` */
 export const RunWorklet = 14;
+/** `[AddInlineStyle, id, key, value]` */
+export const AddInlineStyle = 15;
+/** `[ElementAnimate, id, args]` */
+export const ElementAnimate = 16;
+/** `[ReportError, message]` */
+export const ReportError = 17;
 
 export type Op = unknown[];
 

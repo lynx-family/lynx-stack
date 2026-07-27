@@ -395,6 +395,25 @@ function applyOps(ops: Ops.Op[]): void {
         );
         break;
       }
+      case Ops.AddInlineStyle: {
+        __AddInlineStyle(
+          elements.get(op[1] as number)!,
+          op[2] as string,
+          op[3],
+        );
+        break;
+      }
+      case Ops.ElementAnimate: {
+        __ElementAnimate(
+          elements.get(op[1] as number)!,
+          op[2] as unknown[],
+        );
+        break;
+      }
+      case Ops.ReportError: {
+        console.error('[preact-runtime BTS]', op[1]);
+        break;
+      }
       case Ops.RunWorklet: {
         runWorklet({ _wkltId: op[1] as number }, op[2] as unknown[]);
         break;

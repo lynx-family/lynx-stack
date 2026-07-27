@@ -14,8 +14,8 @@
  */
 
 import { beforeFlush, enqueueOp } from './channel.js';
+import { BackgroundMainThreadElement } from './mainThreadElement.js';
 import * as Ops from './ops.js';
-import { registerWorklet } from './worklet.js';
 
 /** Matches ReactLynx event prop names, e.g. `bindtap`, `main-thread:bindtap`. */
 const eventRegExp =
@@ -178,7 +178,9 @@ export class RemoteElement extends RemoteNode {
   _tag: string;
   _children: RemoteNode[] = [];
   _listeners: Map<string, EventListenerFn> = new Map();
+  _mtListeners: Map<string, EventListenerFn> = new Map();
   _workletEvents: Map<string, number> = new Map();
+  _attributes: Map<string, unknown> = new Map();
   _dataset: Record<string, unknown> = {};
   _datasetDirty = false;
   _style: RemoteStyle | undefined;
@@ -306,6 +308,26 @@ export class RemoteElement extends RemoteNode {
     }
   }
 
+  _setMainThreadListener(
+    eventType: string,
+    eventName: string,
+    listener: EventListenerFn | null,
+  ): void {
+    const key = `${eventType}:${eventName}`;
+    const had = this._mtListeners.has(key);
+    if (listener) {
+      this._mtListeners.set(key, listener);
+      if (!had) {
+        enqueueOp([Ops.SetEvent, this._id, eventType, eventName, 1]);
+      }
+    } else if (had) {
+      this._mtListeners.delete(key);
+      if (!this._listeners.has(key)) {
+        enqueueOp([Ops.SetEvent, this._id, eventType, eventName, 0]);
+      }
+    }
+  }
+
   _setWorkletListener(
     eventType: string,
     eventName: string,
@@ -351,10 +373,13 @@ function routeProp(element: RemoteElement, name: string, value: unknown): void {
   if (match) {
     const [, prefix, type, eventName] = match;
     if (prefix === 'main-thread') {
-      const hash = typeof value === 'function'
-        ? registerWorklet(value as (...args: never[]) => unknown)
-        : 0;
-      element._setWorkletListener(eventTypeMap[type!]!, eventName!, hash);
+      // Without a compiler there is no closure extraction, so main-thread
+      // handlers run on the background thread against an op-backed Element.
+      element._setMainThreadListener(
+        eventTypeMap[type!]!,
+        eventName!,
+        typeof value === 'function' ? (value as EventListenerFn) : null,
+      );
       return;
     }
     const eventType = prefix === 'global'
@@ -365,6 +390,10 @@ function routeProp(element: RemoteElement, name: string, value: unknown): void {
       eventName!,
       typeof value === 'function' ? (value as EventListenerFn) : null,
     );
+    return;
+  }
+  if (name === 'main-thread:ref') {
+    assignMainThreadRef(element, value);
     return;
   }
   switch (name) {
@@ -396,12 +425,22 @@ function routeProp(element: RemoteElement, name: string, value: unknown): void {
     // Non-event function-valued props cannot cross the thread boundary.
     return;
   }
+  element._attributes.set(name, value === undefined ? null : value);
   enqueueOp([
     Ops.SetAttribute,
     element._id,
     name,
     value === undefined ? null : value,
   ]);
+}
+
+function assignMainThreadRef(element: RemoteElement, value: unknown): void {
+  const wrapped = new BackgroundMainThreadElement(element);
+  if (typeof value === 'function') {
+    (value as (el: unknown) => void)(wrapped);
+  } else if (value && typeof value === 'object') {
+    (value as { current: unknown }).current = wrapped;
+  }
 }
 
 /** Fields managed by {@link RemoteElement} itself; everything else that is

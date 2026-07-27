@@ -200,6 +200,10 @@ export function pluginPreactLynx(): RsbuildPlugin {
           require.resolve('@lynx-js/preact-runtime/compat'),
         );
         chain.resolve.alias.set(
+          '@lynx-js/react/worklet-runtime/bindings$',
+          require.resolve('@lynx-js/preact-runtime/compat/worklet-bindings'),
+        );
+        chain.resolve.alias.set(
           '@lynx-js/react/debug$',
           require.resolve('@lynx-js/preact-runtime/compat/debug'),
         );

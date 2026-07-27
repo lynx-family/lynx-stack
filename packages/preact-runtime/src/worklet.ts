@@ -33,7 +33,16 @@ export function registerWorklet(fn: AnyFunction): number {
  *
  * @public
  */
-export function runOnMainThread<Args extends unknown[]>(
+export function runOnMainThread<Args extends unknown[], Ret>(
+  fn: (...args: Args) => Ret,
+): (...args: Args) => Promise<Ret> {
+  // Background fallback: closure-capturing functions cannot cross threads
+  // without a compiler, so the function runs here against op-backed APIs.
+  return (...args) => Promise.resolve().then(() => fn(...args));
+}
+
+/** True main-thread execution for closure-free functions. */
+export function runOnMainThreadStrict<Args extends unknown[]>(
   fn: (...args: Args) => unknown,
 ): (...args: Args) => void {
   return (...args) => {
