@@ -445,37 +445,41 @@ describe('Lazy', () => {
       },
     })
 
-    await rsbuild.build()
+    try {
+      await rsbuild.build()
 
-    const intermediates = [...lepusRootByIntermediate.keys()]
-    const lazyIntermediate = intermediates.find(name =>
-      name.includes('/lazy-bundle/')
-    )
-    // The lazy bundle is encoded as its own template.
-    expect(lazyIntermediate).toBeDefined()
+      const intermediates = [...lepusRootByIntermediate.keys()]
+      const lazyIntermediate = intermediates.find(name =>
+        name.includes('/lazy-bundle/')
+      )
+      // The lazy bundle is encoded as its own template.
+      expect(lazyIntermediate).toBeDefined()
 
-    const lazyRoot = lepusRootByIntermediate.get(lazyIntermediate!)!
-    // Wrapped for `processEvalResult`, and in the chunk format the host's
-    // `__webpack_require__.C` installs. A main thread built outside this
-    // compilation cannot produce either.
-    expect(lazyRoot).toContain('(function (globDynamicComponentEntry) {')
-    expect(lazyRoot).toContain('exports.ids')
-    // Reduced to registrations: the lazy component's business logic is gone.
-    expect(lazyRoot).not.toContain('useState')
+      const lazyRoot = lepusRootByIntermediate.get(lazyIntermediate!)!
+      // Wrapped for `processEvalResult`, and in the chunk format the host's
+      // `__webpack_require__.C` installs. A main thread built outside this
+      // compilation cannot produce either.
+      expect(lazyRoot).toContain('(function (globDynamicComponentEntry) {')
+      expect(lazyRoot).toContain('exports.ids')
+      // Reduced to registrations: the lazy component's business logic is gone.
+      expect(lazyRoot).not.toContain('useState')
 
-    const cardIntermediate = intermediates.find(name =>
-      !name.includes('/lazy-bundle/')
-    )!
-    // `globDynamicComponentEntry` is a free variable of every main-thread
-    // chunk, so the card's own section must declare it.
-    expect(lepusRootByIntermediate.get(cardIntermediate)).toContain(
-      `globDynamicComponentEntry=globDynamicComponentEntry||'__Card__'`,
-    )
+      const cardIntermediate = intermediates.find(name =>
+        !name.includes('/lazy-bundle/')
+      )!
+      // `globDynamicComponentEntry` is a free variable of every main-thread
+      // chunk, so the card's own section must declare it.
+      expect(lepusRootByIntermediate.get(cardIntermediate)).toContain(
+        `globDynamicComponentEntry=globDynamicComponentEntry||'__Card__'`,
+      )
 
-    // The main-thread async chunk belongs to the lazy bundle template, not to
-    // the default async output directory.
-    expect(assetNames.filter(name => name.includes('static/js/async/')))
-      .toStrictEqual([])
+      // The main-thread async chunk belongs to the lazy bundle template, not to
+      // the default async output directory.
+      expect(assetNames.filter(name => name.includes('static/js/async/')))
+        .toStrictEqual([])
+    } finally {
+      await fs.rm(tmp, { recursive: true, force: true })
+    }
   })
 
   test('lazy bundle app-service.js should not load hot-update.js', async () => {
