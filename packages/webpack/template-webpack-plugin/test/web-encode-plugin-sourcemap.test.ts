@@ -13,6 +13,22 @@ interface AssetInfo {
 }
 
 async function drivePlugin(assetsInfo: Map<string, AssetInfo>) {
+  // `lynxRstestConfig` sets `DEBUG=rspeedy` for every webpack test package so
+  // debugging artifacts survive a run. That makes `isDebug()` true, and
+  // WebEncodePlugin then inlines nothing and deletes nothing — the branch under
+  // test never runs. Drop it for this driver only, and put it back afterwards
+  // so the rest of the suite keeps the value the config intends.
+  const debug = process.env['DEBUG'];
+  delete process.env['DEBUG'];
+  try {
+    return await drive(assetsInfo);
+  } finally {
+    if (debug === undefined) delete process.env['DEBUG'];
+    else process.env['DEBUG'] = debug;
+  }
+}
+
+async function drive(assetsInfo: Map<string, AssetInfo>) {
   const deleted: string[] = [];
   let processAssets: (() => void) | undefined;
 
@@ -53,12 +69,14 @@ async function drivePlugin(assetsInfo: Map<string, AssetInfo>) {
     webpack,
   } as unknown as webpack.Compiler;
 
-  new WebEncodePlugin().apply(compiler);
+  new WebEncodePlugin().apply(compiler as never);
   compiler.hooks.thisCompilation.call(compilation, {} as never);
 
   // `beforeEncode` is an AsyncSeriesWaterfallHook, so it is driven with
   // `.promise()` — the same way LynxTemplatePlugin itself calls it.
-  const hooks = LynxTemplatePlugin.getLynxTemplatePluginHooks(compilation);
+  const hooks = LynxTemplatePlugin.getLynxTemplatePluginHooks(
+    compilation as never,
+  );
   await hooks.beforeEncode.promise({
     encodeData: {
       manifest: { '/main.js': 'console.log(1)' },
@@ -110,6 +128,6 @@ describe('WebEncodePlugin: inlined assets keep their source maps', () => {
   test('an inlined asset with no source map is deleted unchanged', async () => {
     const { deleted } = await drivePlugin(new Map([['background.js', {}]]));
 
-    expect(deleted).toEqual(['background.js']);
+    expect(deleted).toEqual(['/main.js', 'background.js']);
   });
 });
