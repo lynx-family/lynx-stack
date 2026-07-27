@@ -132,4 +132,12 @@ describe('element PAPI', () => {
 
     expect(__GetComputedStyleByKey(view, 'non-existent-property')).toBe('');
   });
+
+  it('__GetComputedStyleByKey should only accept kebab-case', () => {
+    const view = __CreateView(0);
+    __SetInlineStyles(view, 'font-size: 16px;');
+
+    expect(__GetComputedStyleByKey(view, 'font-size')).toBe('16px');
+    expect(__GetComputedStyleByKey(view, 'fontSize')).toBe('');
+  });
 });

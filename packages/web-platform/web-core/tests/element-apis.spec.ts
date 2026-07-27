@@ -426,6 +426,8 @@ describe('Element APIs', () => {
     expect(mtsGlobalThis.__GetComputedStyleByKey(view, 'not-a-property')).toBe(
       '',
     );
+    // The style name must be in kebab-case, so camelCase resolves to nothing.
+    expect(mtsGlobalThis.__GetComputedStyleByKey(view, 'marginTop')).toBe('');
   });
 
   test('__GetComputedStyleByKey falls back to an empty string', () => {
