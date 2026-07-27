@@ -36,7 +36,7 @@ afterEach(() => {
 });
 
 async function importMainThreadDefines() {
-  await import('../../src/element-template/main-thread-defines.js');
+  await import('../../main-thread-defines/element-template.js');
 }
 
 describe('Element Template main-thread defines entry', () => {

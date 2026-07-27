@@ -2,6 +2,8 @@
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
 
+/* global __lynxMainThreadDefines, __webpack_require__ -- injected into the bundle by `@lynx-js/react-webpack-plugin` and webpack */
+
 /**
  * The main-thread entry of `enableMainThread: false`.
  *
@@ -18,15 +20,6 @@
 // share the runtime instance with the background, including when the runtime is
 // aliased (lazy) or externalized (`pluginExternalBundle`).
 import * as ReactLynx from '@lynx-js/react/internal';
-
-declare const __lynxMainThreadDefines:
-  | ((
-    runtime: unknown,
-    internalRuntime: unknown,
-    loadWorkletRuntime: typeof ReactLynx.loadWorkletRuntime,
-    require: () => unknown,
-  ) => void)
-  | undefined;
 
 // Getters, not copies: `__pageId` is a live binding assigned by `setupPage`.
 const runtime = {
@@ -93,7 +86,6 @@ const runtime = {
 // evaluated as a chunk installed into this bundle's runtime, so they read the
 // runtime from here. Keep the property name in sync with
 // `@lynx-js/react-webpack-plugin`.
-declare const __webpack_require__: Record<string, unknown> | undefined;
 if (typeof __webpack_require__ !== 'undefined') {
   __webpack_require__['mtDefinesRuntime'] = runtime;
 }

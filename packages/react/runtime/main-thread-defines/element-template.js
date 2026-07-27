@@ -2,22 +2,15 @@
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
 
+/* global __lynxMainThreadDefines, __webpack_require__ -- injected into the bundle by `@lynx-js/react-webpack-plugin` and webpack */
+
 /**
  * The main-thread entry of `enableMainThread: false` with Element Template
- * compilation. The snapshot counterpart is `../main-thread-defines.ts`; see it
- * for how the definitions reach this bundle.
+ * compilation. The snapshot counterpart is `./index.js`; see it for how the
+ * definitions reach this bundle.
  */
 
 import * as ReactLynxInternal from '@lynx-js/react/element-template/internal';
-
-declare const __lynxMainThreadDefines:
-  | ((
-    runtime: unknown,
-    internalRuntime: unknown,
-    loadWorkletRuntime: typeof ReactLynxInternal.loadWorkletRuntime,
-    require: () => unknown,
-  ) => void)
-  | undefined;
 
 const runtime = {
   get __etAttrPlanMap() {
@@ -40,7 +33,6 @@ const runtime = {
   },
 };
 
-declare const __webpack_require__: Record<string, unknown> | undefined;
 if (typeof __webpack_require__ !== 'undefined') {
   __webpack_require__['mtDefinesRuntime'] = runtime;
 }

@@ -14,7 +14,7 @@ afterEach(() => {
 });
 
 async function importMainThreadDefines() {
-  await import('../../src/main-thread-defines.js');
+  await import('../../main-thread-defines/index.js');
 }
 
 // The members the assembled definitions call. Keep in sync with
