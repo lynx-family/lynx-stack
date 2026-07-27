@@ -192,6 +192,10 @@ export function pluginPreactLynx(): RsbuildPlugin {
           },
         });
 
+        // Keep dynamic imports in the main chunk: async chunks would become
+        // standalone lazy-bundle templates whose evaluation re-runs the app.
+        chain.output.set('asyncChunks', false);
+
         const { hmr, liveReload } = environment.config.dev ?? {};
         const enabledHMR = isDev && hmr !== false;
         const enabledLiveReload = isDev && liveReload !== false;

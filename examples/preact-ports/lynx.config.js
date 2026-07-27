@@ -13,6 +13,9 @@ export default defineConfig({
       'react-main-thread-function':
         '../react-main-thread-function/src/index.tsx',
       'react-et-list': '../react-et-list/src/index.tsx',
+      'react-element-template': '../react-element-template/src/index.tsx',
+      'react-compiler': '../react-compiler/src/index.tsx',
+      'react-ui-sourcemap': '../react-ui-sourcemap/src/index.tsx',
     },
   },
   plugins: [

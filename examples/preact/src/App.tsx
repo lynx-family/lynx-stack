@@ -1,8 +1,11 @@
-import { useCallback, useState } from '@lynx-js/preact-runtime';
+import { Suspense, lazy, useCallback, useState } from '@lynx-js/preact-runtime';
+
+const LazyThing = lazy(() => import('./LazyThing.js'));
 
 export function App() {
   const [count, setCount] = useState(0);
   const [items, setItems] = useState<string[]>([]);
+  const [showLazy, setShowLazy] = useState(false);
 
   const onTap = useCallback(() => {
     setCount((c) => c + 1);
@@ -47,6 +50,12 @@ export function App() {
       >
         MT: tap to turn green
       </text>
+      <view id='lazybtn' bindtap={() => setShowLazy((v) => !v)}>
+        <text id='lazylabel'>{showLazy ? 'hide lazy' : 'show lazy'}</text>
+      </view>
+      <Suspense fallback={<text>loading lazy...</text>}>
+        {showLazy ? <LazyThing /> : <text id='nolazy'>no panel</text>}
+      </Suspense>
       <list
         id='rows'
         style={{ height: '120px', width: '300px', marginTop: '10px' }}
