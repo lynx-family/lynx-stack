@@ -18,6 +18,7 @@ export default defineConfig({
       'react-ui-sourcemap': '../react-ui-sourcemap/src/index.tsx',
       'react-et-mtf': '../react-et-mtf/src/index.tsx',
       'react-lazy-bundle': '../react-lazy-bundle/src/index.tsx',
+      'react-et-lazy-bundle': '../react-et-lazy-bundle/src/index.tsx',
     },
   },
   plugins: [

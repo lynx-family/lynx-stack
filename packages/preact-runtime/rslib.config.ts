@@ -13,6 +13,7 @@ const config: RslibConfig = defineConfig({
       syntax: 'es2021',
       dts: true,
       source: {
+        tsconfigPath: './tsconfig.build.json',
         entry: {
           index: './src/index.ts',
           'compat/index': './src/compat/index.ts',

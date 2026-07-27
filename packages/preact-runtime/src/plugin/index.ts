@@ -78,6 +78,25 @@ export function pluginPreactLynx(): RsbuildPlugin {
               // `new Function('document', ...)` with an undefined `document`
               // parameter that would shadow the worker global preact needs.
               document: 'globalThis.document',
+              // ReactLynx compile-time flags that example sources reference.
+              __DEV__: JSON.stringify(
+                process.env['NODE_ENV'] !== 'production',
+              ),
+              __BACKGROUND__: 'true',
+              __MAIN_THREAD__: 'false',
+              __LEPUS__: 'false',
+              __JS__: 'true',
+              __REACT_DEVTOOL__: 'false',
+              __PROFILE__: 'false',
+              __ALOG__: 'false',
+              __ALOG_ELEMENT_API__: 'false',
+              __EXTRACT_STR__: 'false',
+              __FIRST_SCREEN_SYNC_TIMING__: '"immediately"',
+              __GLOBAL_PROPS_MODE__: '"reactive"',
+              __ENABLE_SSR__: 'false',
+              __DISABLE_CREATE_SELECTOR_QUERY_INCOMPATIBLE_WARNING__: 'false',
+              __USE_ELEMENT_TEMPLATE__: 'false',
+              __LAZY_BUNDLE_FETCHER__: '"QueryComponent"',
             },
           },
           tools: {
