@@ -82,6 +82,8 @@ export function pluginPreactLynx(): RsbuildPlugin {
                   react: {
                     runtime: 'automatic',
                     importSource: 'preact',
+                    // `main-thread:bindtap` etc. are namespaced JSX attributes.
+                    throwIfNamespace: false,
                   },
                 },
               },

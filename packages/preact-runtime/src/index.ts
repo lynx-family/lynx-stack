@@ -41,3 +41,4 @@ export {
 export { lazy, Suspense } from 'preact/compat';
 
 export { root } from './runtime.js';
+export { runOnMainThread } from './worklet.js';

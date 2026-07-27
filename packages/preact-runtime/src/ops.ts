@@ -29,6 +29,12 @@ export const SetId = 9;
 export const SetDataset = 10;
 /** `[SetEvent, id, eventType, eventName, enabled]` */
 export const SetEvent = 11;
+/** `[RegisterWorklet, hash, fnString]` */
+export const RegisterWorklet = 12;
+/** `[SetWorkletEvent, id, eventType, eventName, hash]` — `hash === 0` removes. */
+export const SetWorkletEvent = 13;
+/** `[RunWorklet, hash, args]` */
+export const RunWorklet = 14;
 
 export type Op = unknown[];
 

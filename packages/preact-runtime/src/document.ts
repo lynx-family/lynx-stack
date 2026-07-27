@@ -15,6 +15,7 @@
 
 import { beforeFlush, enqueueOp } from './channel.js';
 import * as Ops from './ops.js';
+import { registerWorklet } from './worklet.js';
 
 /** Matches ReactLynx event prop names, e.g. `bindtap`, `main-thread:bindtap`. */
 const eventRegExp =
@@ -177,6 +178,7 @@ export class RemoteElement extends RemoteNode {
   _tag: string;
   _children: RemoteNode[] = [];
   _listeners: Map<string, EventListenerFn> = new Map();
+  _workletEvents: Map<string, number> = new Map();
   _dataset: Record<string, unknown> = {};
   _datasetDirty = false;
   _style: RemoteStyle | undefined;
@@ -304,6 +306,24 @@ export class RemoteElement extends RemoteNode {
     }
   }
 
+  _setWorkletListener(
+    eventType: string,
+    eventName: string,
+    hash: number,
+  ): void {
+    const key = `worklet:${eventType}:${eventName}`;
+    const prev = this._workletEvents.get(key) ?? 0;
+    if (prev === hash) {
+      return;
+    }
+    if (hash) {
+      this._workletEvents.set(key, hash);
+    } else {
+      this._workletEvents.delete(key);
+    }
+    enqueueOp([Ops.SetWorkletEvent, this._id, eventType, eventName, hash]);
+  }
+
   _setDataset(key: string, value: unknown): void {
     if (value == null) {
       delete this._dataset[key];
@@ -331,7 +351,10 @@ function routeProp(element: RemoteElement, name: string, value: unknown): void {
   if (match) {
     const [, prefix, type, eventName] = match;
     if (prefix === 'main-thread') {
-      // TODO(mts): main-thread event handlers.
+      const hash = typeof value === 'function'
+        ? registerWorklet(value as (...args: never[]) => unknown)
+        : 0;
+      element._setWorkletListener(eventTypeMap[type!]!, eventName!, hash);
       return;
     }
     const eventType = prefix === 'global'

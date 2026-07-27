@@ -34,6 +34,31 @@ export function App() {
       {count % 2 === 0
         ? <text id='even'>even</text>
         : <text id='odd' style={{ color: 'red' }}>odd</text>}
+      <text
+        id='mt'
+        main-thread:bindtap={(e: {
+          currentTarget: {
+            setStyleProperty(name: string, value: string): void;
+          };
+        }) => {
+          e.currentTarget.setStyleProperty('color', 'green');
+          e.currentTarget.setStyleProperty('font-weight', 'bold');
+        }}
+      >
+        MT: tap to turn green
+      </text>
+      <list
+        id='rows'
+        style={{ height: '120px', width: '300px', marginTop: '10px' }}
+        list-type='single'
+        span-count={1}
+      >
+        {items.map((item) => (
+          <list-item item-key={item} key={item}>
+            <text>{`row of ${item}`}</text>
+          </list-item>
+        ))}
+      </list>
     </view>
   );
 }
