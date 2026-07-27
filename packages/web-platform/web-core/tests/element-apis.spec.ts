@@ -428,6 +428,17 @@ describe('Element APIs', () => {
     );
   });
 
+  test('__GetComputedStyleByKey falls back to an empty string', () => {
+    // An element owned by a document with no browsing context has no
+    // defaultView, so there is no window to resolve computed styles against.
+    const detached = document.implementation.createHTMLDocument()
+      .createElement('div') as unknown as Parameters<
+        typeof mtsGlobalThis.__GetComputedStyleByKey
+      >[0];
+
+    expect(mtsGlobalThis.__GetComputedStyleByKey(detached, 'color')).toBe('');
+  });
+
   test('__CreateComponent drops __Card__ entryName', () => {
     const ret = mtsGlobalThis.__CreateComponent(
       0,
