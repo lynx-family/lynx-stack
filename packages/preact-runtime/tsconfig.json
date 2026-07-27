@@ -7,4 +7,5 @@
     "types": [],
   },
   "include": ["src"],
+  "exclude": ["src/plugin"],
 }

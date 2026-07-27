@@ -24,7 +24,6 @@
       "default": "./dist/compat/debug.js"
     },
     "./plugin": {
-      "types": "./dist/plugin/index.d.ts",
       "default": "./dist/plugin/index.js"
     },
     "./main-thread": "./dist/main-thread.js"

@@ -27,7 +27,9 @@ const config: RslibConfig = defineConfig({
       id: 'plugin',
       format: 'esm',
       syntax: 'es2022',
-      dts: true,
+      // The webpack helper packages this imports are built by the root
+      // `tsc --build`, which is not part of the turbo graph — skip dts.
+      dts: false,
       source: {
         entry: {
           'plugin/index': './src/plugin/index.ts',

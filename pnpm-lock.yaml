@@ -299,8 +299,8 @@ importers:
         specifier: workspace:*
         version: link:../../packages/rspeedy/core
       typescript:
-        specifier: ~5.9.2
-        version: 5.9.3
+        specifier: ^6.0.3
+        version: 6.0.3
 
   examples/preact-ports:
     dependencies:
