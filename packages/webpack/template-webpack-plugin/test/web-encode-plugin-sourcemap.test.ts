@@ -17,7 +17,7 @@ interface Asset {
   info: AssetInfo;
 }
 
-async function drivePlugin(assets: Map<string, Asset>) {
+async function drivePlugin(assets: Map<string, Asset>, cascade = true) {
   // `lynxRstestConfig` sets `DEBUG=rspeedy` for every webpack test package so
   // debugging artifacts survive a run. That makes `isDebug()` true, and
   // WebEncodePlugin then inlines nothing and deletes nothing — the branch under
@@ -26,15 +26,16 @@ async function drivePlugin(assets: Map<string, Asset>) {
   const debug = process.env['DEBUG'];
   delete process.env['DEBUG'];
   try {
-    return await drive(assets);
+    return await drive(assets, cascade);
   } finally {
     if (debug === undefined) delete process.env['DEBUG'];
     else process.env['DEBUG'] = debug;
   }
 }
 
-async function drive(assets: Map<string, Asset>) {
+async function drive(assets: Map<string, Asset>, cascade: boolean) {
   const deleted: string[] = [];
+  const emitted: string[] = [];
 
   let processAssets: (() => void) | undefined;
 
@@ -62,7 +63,9 @@ async function drive(assets: Map<string, Asset>) {
     deleteAsset: (name: string) => {
       deleted.push(name);
       // The real cascade: deleteAsset also drops everything in `related`.
-      const related = assets.get(name)?.info.related?.sourceMap;
+      const related = cascade
+        ? assets.get(name)?.info.related?.sourceMap
+        : undefined;
       assets.delete(name);
       if (related) {
         deleted.push(related);
@@ -70,6 +73,7 @@ async function drive(assets: Map<string, Asset>) {
       }
     },
     emitAsset: (name: string, source: string, info: AssetInfo = {}) => {
+      emitted.push(name);
       assets.set(name, { source, info });
     },
     // rspack ignores an `info` updater that tries to clear `related` — verified
@@ -110,7 +114,7 @@ async function drive(assets: Map<string, Asset>) {
   } as never);
 
   processAssets?.();
-  return { deleted, assets };
+  return { deleted, emitted, assets };
 }
 
 /** An asset whose `related.sourceMap` link cannot be rewritten, as on rspack. */
@@ -166,5 +170,23 @@ describe('WebEncodePlugin: inlined assets keep their source maps', () => {
 
     expect(deleted).toEqual(['/main.js', 'background.js']);
     expect(assets.size).toBe(0);
+  });
+
+  test('a map that survived the delete is left alone, not re-emitted over', async () => {
+    // The re-emit is guarded on the map being gone. If rspack ever stops
+    // cascading through `related`, this plugin must not write over an asset
+    // another plugin still owns — the source map is not ours to replace.
+    const { assets, emitted } = await drivePlugin(
+      new Map([
+        ['background.js', withMap('bg', 'background.js.map')],
+        ['background.js.map', plain('{"version":3,"sources":["real"]}')],
+      ]),
+      false,
+    );
+
+    expect(assets.get('background.js.map')?.source).toBe(
+      '{"version":3,"sources":["real"]}',
+    );
+    expect(emitted).not.toContain('background.js.map');
   });
 });
