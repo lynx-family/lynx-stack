@@ -112,8 +112,20 @@ if (typeof Codspeed !== 'undefined' && __BACKGROUND__) {
   );
 }
 
+/**
+ * How many update passes to drive before ending the run.
+ *
+ * Each pass commits one `setAttribute` per attribute kind, and every one of
+ * those calls is a round of the corresponding benchmark. With a single pass the
+ * `setAttribute__*` benchmarks were single samples of a ~2us operation, which
+ * WallTime cannot resolve — they drifted in and out of CodSpeed's 5% threshold
+ * on unrelated commits. The measured operation is unchanged; only the number of
+ * rounds it is averaged over grows.
+ */
+const UPDATE_PASSES = 100;
+
 function F() {
-  const [stopBenchmark, setStopBenchmark] = useState(false);
+  const [pass, setPass] = useState(0);
   const [values, setValues] = useState(
     [
       'some-exposure-id' as string,
@@ -140,30 +152,35 @@ function F() {
   );
 
   useEffect(() => {
+    if (pass >= UPDATE_PASSES) {
+      return;
+    }
+    // Every value differs from the previous pass, so each pass really does
+    // reach `setAttribute` instead of being skipped as unchanged.
     setValues([
-      'some-other-exposure-id',
-      'some-other-dataset',
+      `some-other-exposure-id-${pass}`,
+      `some-other-dataset-${pass}`,
       () => {},
       () => {
         'main thread';
       },
-      'width: 200rpx; height: 100rpx; background-color: #FACE00;',
+      `width: ${200 + pass}rpx; height: 100rpx; background-color: #FACE00;`,
       {
-        width: '200rpx',
+        width: `${200 + pass}rpx`,
         height: '100rpx',
         backgroundColor: '#FACE00',
       },
-      'some-other-css-class',
-      'some-other-id',
+      `some-other-css-class-${pass}`,
+      `some-other-id-${pass}`,
       (_e: NodesRef) => {},
-      'some_other_lynx_timing_flag',
+      `some_other_lynx_timing_flag_${pass}`,
       (_e: MainThread.Element) => {
         'main thread';
       },
-      'some-other-item-key',
+      `some-other-item-key-${pass}`,
     ]);
-    setStopBenchmark(true);
-  }, []);
+    setPass(pass + 1);
+  }, [pass]);
 
   if (isMainThread) {
     return null;
@@ -222,7 +239,7 @@ function F() {
         }
       />
 
-      <view id={`stop-benchmark-${stopBenchmark}`} />
+      <view id={`stop-benchmark-${pass >= UPDATE_PASSES}`} />
     </view>
   );
 }
