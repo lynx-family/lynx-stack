@@ -177,6 +177,19 @@ importers:
         specifier: ^2.9.0
         version: 2.9.0
 
+  benchmark/preact-runtime:
+    dependencies:
+      '@lynx-js/preact-runtime':
+        specifier: workspace:*
+        version: link:../../packages/preact-runtime
+      benchx_cli:
+        specifier: workspace:*
+        version: link:../../packages/lynx/benchx_cli
+    devDependencies:
+      '@lynx-js/rspeedy':
+        specifier: workspace:*
+        version: link:../../packages/rspeedy/core
+
   benchmark/react:
     dependencies:
       '@lynx-js/react':
