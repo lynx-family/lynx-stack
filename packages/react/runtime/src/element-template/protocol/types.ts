@@ -184,6 +184,7 @@ export interface ElementTemplateFlushOptions {
   // operationIDs?: any[];
   // asyncFlush?: boolean;
   triggerDataUpdated?: boolean;
+  emptyPatch?: boolean;
 }
 
 export interface ElementTemplateUpdateCommitContext {

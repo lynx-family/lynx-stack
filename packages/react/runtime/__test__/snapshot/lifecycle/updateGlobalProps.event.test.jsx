@@ -190,7 +190,7 @@ describe('updateGlobalProps event mode', () => {
           [
             "rLynxChange",
             {
-              "data": "{"patchList":[{"id":6}]}",
+              "data": "{"patchList":[{"id":6}],"flushOptions":{"emptyPatch":true}}",
               "patchOptions": {
                 "flowIds": [
                   666,

@@ -95,6 +95,10 @@ function flushElementTemplateCommitChanges(): void {
         profileEnd();
       }
 
+      if (!hasNativeOps && !hasDelayedRunOnMainThread) {
+        globalCommitContext.flushOptions.emptyPatch = true;
+      }
+
       delayedRunOnMainThreadPayload = hasDelayedRunOnMainThread
         ? takeDelayedRunOnMainThreadData()
         : undefined;
