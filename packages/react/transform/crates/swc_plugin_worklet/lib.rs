@@ -115,7 +115,7 @@ impl VisitMut for WorkletVisitor {
 
         let hash = self.hasher.gen(&self.cfg.filename, &self.content_hash);
         let collect_main_thread = self.main_thread_defs_collector.is_some();
-        let collected_hash = hash.clone();
+        let collected_hash = collect_main_thread.then(|| hash.clone());
         let m = n.as_method().unwrap().clone();
         let original_function = m.function.clone();
         let (worklet_object_expr, register_worklet_stmt, main_thread_stmt) =
@@ -248,7 +248,7 @@ impl VisitMut for WorkletVisitor {
 
         let hash = self.hasher.gen(&self.cfg.filename, &self.content_hash);
         let collect_main_thread = self.main_thread_defs_collector.is_some();
-        let collected_hash = hash.clone();
+        let collected_hash = collect_main_thread.then(|| hash.clone());
         let (worklet_object_expr, register_worklet_stmt, main_thread_stmt) =
           StmtGen::transform_worklet(
             self.mode,
@@ -338,7 +338,7 @@ impl VisitMut for WorkletVisitor {
 
     let hash = self.hasher.gen(&self.cfg.filename, &self.content_hash);
     let collect_main_thread = self.main_thread_defs_collector.is_some();
-    let collected_hash = hash.clone();
+    let collected_hash = collect_main_thread.then(|| hash.clone());
     let (worklet_object_expr, register_worklet_stmt, main_thread_stmt) = StmtGen::transform_worklet(
       self.mode,
       worklet_type.unwrap(),
@@ -390,7 +390,7 @@ impl VisitMut for WorkletVisitor {
 
         let hash = self.hasher.gen(&self.cfg.filename, &self.content_hash);
         let collect_main_thread = self.main_thread_defs_collector.is_some();
-        let collected_hash = hash.clone();
+        let collected_hash = collect_main_thread.then(|| hash.clone());
         let (worklet_object_expr, register_worklet_stmt, main_thread_stmt) =
           StmtGen::transform_worklet(
             self.mode,
@@ -451,7 +451,7 @@ impl VisitMut for WorkletVisitor {
 
         let hash = self.hasher.gen(&self.cfg.filename, &self.content_hash);
         let collect_main_thread = self.main_thread_defs_collector.is_some();
-        let collected_hash = hash.clone();
+        let collected_hash = collect_main_thread.then(|| hash.clone());
         let (worklet_object_expr, register_worklet_stmt, main_thread_stmt) =
           StmtGen::transform_worklet(
             self.mode,
@@ -529,7 +529,7 @@ impl VisitMut for WorkletVisitor {
 
     let hash = self.hasher.gen(&self.cfg.filename, &self.content_hash);
     let collect_main_thread = self.main_thread_defs_collector.is_some();
-    let collected_hash = hash.clone();
+    let collected_hash = collect_main_thread.then(|| hash.clone());
     let (worklet_object_expr, register_worklet_stmt, main_thread_stmt) = StmtGen::transform_worklet(
       self.mode,
       worklet_type.unwrap(),
@@ -758,8 +758,8 @@ impl WorkletVisitor {
 
   /// A collected worklet definition carries its own `loadWorkletRuntime` guard
   /// so it stays self-contained; the call is idempotent.
-  fn collect_worklet_define(&mut self, hash: String, stmt: Option<Stmt>) {
-    let Some(stmt) = stmt else {
+  fn collect_worklet_define(&mut self, hash: Option<String>, stmt: Option<Stmt>) {
+    let (Some(hash), Some(stmt)) = (hash, stmt) else {
       return;
     };
     let guard = quote!(

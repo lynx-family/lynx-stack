@@ -1683,19 +1683,8 @@ where
       }),
     };
 
-    let snapshot_create_call = build_snapshot_registration(
-      self.dev_creator_param,
-      self.runtime_id.clone(),
-      creator_runtime_expr.clone(),
-      creator_runtime_id.clone(),
-      snapshot_id.clone(),
-      snapshot_creator,
-      snapshot_dynamic_parts_def,
-      slot_expr.clone(),
-      css_id.clone(),
-      entry_name.clone(),
-      snapshot_refs_and_spread_index.clone(),
-    );
+    // The collected copy is built first so the emitted registration can take
+    // the originals: nothing is cloned when collection is off.
     let snapshot_create_call_mt = snapshot_creator_mt.map(|snapshot_creator_mt| {
       build_snapshot_registration(
         self.dev_creator_param,
@@ -1705,12 +1694,25 @@ where
         snapshot_id.clone(),
         snapshot_creator_mt,
         snapshot_dynamic_parts_def_mt,
-        slot_expr,
-        css_id,
-        entry_name,
-        snapshot_refs_and_spread_index,
+        slot_expr.clone(),
+        css_id.clone(),
+        entry_name.clone(),
+        snapshot_refs_and_spread_index.clone(),
       )
     });
+    let snapshot_create_call = build_snapshot_registration(
+      self.dev_creator_param,
+      self.runtime_id.clone(),
+      creator_runtime_expr,
+      creator_runtime_id,
+      snapshot_id.clone(),
+      snapshot_creator,
+      snapshot_dynamic_parts_def,
+      slot_expr,
+      css_id,
+      entry_name,
+      snapshot_refs_and_spread_index,
+    );
 
     let mut entry_snapshot_uid = quote!("$snapshot_uid" as Expr, snapshot_uid: Expr = Expr::Lit(Lit::Str(snapshot_uid.clone().into())));
     if matches!(self.cfg.is_dynamic_component, Some(true)) {
@@ -1733,7 +1735,7 @@ where
       collect_main_thread_define(
         &self.main_thread_defs_collector,
         MainThreadDefineKind::Snapshot,
-        snapshot_uid.clone(),
+        snapshot_uid,
         vec![
           entry_snapshot_uid_def.clone(),
           ModuleItem::Stmt(quote!(
