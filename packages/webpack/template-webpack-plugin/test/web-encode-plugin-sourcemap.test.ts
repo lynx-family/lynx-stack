@@ -12,7 +12,12 @@ interface AssetInfo {
   related?: { sourceMap?: string | undefined };
 }
 
-async function drivePlugin(assetsInfo: Map<string, AssetInfo>) {
+interface Asset {
+  source: string;
+  info: AssetInfo;
+}
+
+async function drivePlugin(assets: Map<string, Asset>) {
   // `lynxRstestConfig` sets `DEBUG=rspeedy` for every webpack test package so
   // debugging artifacts survive a run. That makes `isDebug()` true, and
   // WebEncodePlugin then inlines nothing and deletes nothing — the branch under
@@ -21,15 +26,16 @@ async function drivePlugin(assetsInfo: Map<string, AssetInfo>) {
   const debug = process.env['DEBUG'];
   delete process.env['DEBUG'];
   try {
-    return await drive(assetsInfo);
+    return await drive(assets);
   } finally {
     if (debug === undefined) delete process.env['DEBUG'];
     else process.env['DEBUG'] = debug;
   }
 }
 
-async function drive(assetsInfo: Map<string, AssetInfo>) {
+async function drive(assets: Map<string, Asset>) {
   const deleted: string[] = [];
+
   let processAssets: (() => void) | undefined;
 
   const compilation = {
@@ -37,9 +43,14 @@ async function drive(assetsInfo: Map<string, AssetInfo>) {
     errors: [],
     chunks: [],
     outputOptions: {},
+    assets: Object.fromEntries(
+      [...assets].map(([name, asset]) => [name, asset.source]),
+    ),
     getAsset: (name: string) => {
-      const info = assetsInfo.get(name);
-      return info ? { name, source: undefined, info } : undefined;
+      const asset = assets.get(name);
+      return asset
+        ? { name, source: asset.source, info: asset.info }
+        : undefined;
     },
     hooks: {
       processAssets: {
@@ -50,16 +61,25 @@ async function drive(assetsInfo: Map<string, AssetInfo>) {
     },
     deleteAsset: (name: string) => {
       deleted.push(name);
-      // Mirror the real cascade: deleteAsset also removes `related` assets.
-      const related = assetsInfo.get(name)?.related?.sourceMap;
-      if (related) deleted.push(related);
+      // The real cascade: deleteAsset also drops everything in `related`.
+      const related = assets.get(name)?.info.related?.sourceMap;
+      assets.delete(name);
+      if (related) {
+        deleted.push(related);
+        assets.delete(related);
+      }
     },
-    updateAsset: (
-      name: string,
-      _source: unknown,
-      update: (info: AssetInfo) => AssetInfo,
-    ) => {
-      assetsInfo.set(name, update(assetsInfo.get(name) ?? {}));
+    emitAsset: (name: string, source: string, info: AssetInfo = {}) => {
+      assets.set(name, { source, info });
+    },
+    // rspack ignores an `info` updater that tries to clear `related` — verified
+    // against rspack 2.1.2 on 2026-07-27 by reading `info.related.sourceMap`
+    // back immediately after the call and finding it unchanged. Modelling this
+    // as a plain mutable object is what let a "detach the link, then delete"
+    // fix pass its tests while changing nothing about the emitted output.
+    updateAsset: (name: string, update: (source: string) => string) => {
+      const asset = assets.get(name);
+      if (asset) asset.source = update(asset.source);
     },
   } as unknown as webpack.Compilation;
 
@@ -90,7 +110,16 @@ async function drive(assetsInfo: Map<string, AssetInfo>) {
   } as never);
 
   processAssets?.();
-  return { deleted, assetsInfo };
+  return { deleted, assets };
+}
+
+/** An asset whose `related.sourceMap` link cannot be rewritten, as on rspack. */
+function withMap(source: string, sourceMap: string): Asset {
+  return { source, info: { related: { sourceMap } } };
+}
+
+function plain(source: string): Asset {
+  return { source, info: {} };
 }
 
 describe('WebEncodePlugin: inlined assets keep their source maps', () => {
@@ -101,33 +130,41 @@ describe('WebEncodePlugin: inlined assets keep their source maps', () => {
   // 'hidden-source-map' produced NO map for background frames on the web
   // target, and only 'inline-source-map' worked, at ~10x bundle size.
   // See lynx-family/lynx-stack#2964.
-  test('the sidecar .map survives while the inlined .js is still deleted', async () => {
-    const { deleted } = await drivePlugin(
-      new Map([['background.js', {
-        related: { sourceMap: 'background.js.map' },
-      }]]),
+  test('the sidecar .map is still emitted after the inlined .js is deleted', async () => {
+    const { assets } = await drivePlugin(
+      new Map([
+        ['background.js', withMap('bg', 'background.js.map')],
+        ['background.js.map', plain('{"version":3}')],
+      ]),
     );
 
-    expect(deleted).toContain('background.js');
-    expect(deleted).not.toContain('background.js.map');
+    // This is the assertion that matters: the map is in the final asset set.
+    // Asserting only that it was never passed to `deleteAsset` would pass for
+    // an implementation that deletes it through the `related` cascade.
+    expect(assets.has('background.js.map')).toBe(true);
+    expect(assets.get('background.js.map')?.source).toBe('{"version":3}');
   });
 
-  test('the related link is detached rather than the deletion being skipped', async () => {
-    const { assetsInfo } = await drivePlugin(
-      new Map([['background.js', {
-        related: { sourceMap: 'background.js.map' },
-      }]]),
+  test('the inlined .js itself is still deleted', async () => {
+    const { assets, deleted } = await drivePlugin(
+      new Map([
+        ['background.js', withMap('bg', 'background.js.map')],
+        ['background.js.map', plain('{"version":3}')],
+      ]),
     );
 
-    // The asset info must no longer point at the map, which is what stops the
-    // cascade. Leaving the link and skipping deleteAsset would ship the
-    // un-inlined JS as dead weight instead.
-    expect(assetsInfo.get('background.js')?.related?.sourceMap).toBeUndefined();
+    // Keeping the map must not turn into keeping the JS: it is already inlined
+    // in the template, so shipping it too would be dead weight.
+    expect(deleted).toContain('background.js');
+    expect(assets.has('background.js')).toBe(false);
   });
 
   test('an inlined asset with no source map is deleted unchanged', async () => {
-    const { deleted } = await drivePlugin(new Map([['background.js', {}]]));
+    const { assets, deleted } = await drivePlugin(
+      new Map([['background.js', plain('bg')]]),
+    );
 
     expect(deleted).toEqual(['/main.js', 'background.js']);
+    expect(assets.size).toBe(0);
   });
 });
