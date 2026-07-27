@@ -1886,8 +1886,112 @@ mod tests {
     },
   };
 
+  use std::{cell::RefCell, rc::Rc};
+
   use crate::JSXTransformer;
-  use swc_plugins_shared::{target::TransformTarget, transform_mode::TransformMode};
+  use swc_plugins_shared::{
+    main_thread_defines::{MainThreadDefineKind, MainThreadDefinesCollector},
+    target::TransformTarget,
+    transform_mode::TransformMode,
+  };
+
+  #[test]
+  fn should_collect_main_thread_defines_while_targeting_js() {
+    Tester::run(|tester| {
+      let top_level_mark = Mark::new();
+      let unresolved_mark = Mark::new();
+      let collector: MainThreadDefinesCollector = Rc::new(RefCell::new(vec![]));
+
+      tester.apply_transform(
+        (
+          resolver(unresolved_mark, top_level_mark, true),
+          visit_mut_pass(
+            JSXTransformer::<&SingleThreadedComments>::new(
+              super::JSXTransformerConfig {
+                preserve_jsx: false,
+                target: TransformTarget::JS,
+                ..Default::default()
+              },
+              None,
+              TransformMode::Test,
+              Some(tester.cm.clone()),
+            )
+            .with_main_thread_defs_collector(collector.clone()),
+          ),
+        ),
+        "input.js",
+        Syntax::Es(EsSyntax {
+          jsx: true,
+          ..Default::default()
+        }),
+        Some(true),
+        r#"function App() { return <view><text>hi</text></view>; }"#,
+      )?;
+
+      let defines = collector.borrow();
+      assert_eq!(defines.len(), 1);
+      assert_eq!(defines[0].kind, MainThreadDefineKind::Snapshot);
+      assert!(defines[0].id.starts_with("__snapshot_"));
+      // A `JS` registration has no creator, but the collected one builds the
+      // elements the main thread needs.
+      let collected = format!("{:?}", defines[0].items);
+      assert!(collected.contains("__CreateView"));
+      assert!(collected.contains("__CreateText"));
+
+      Ok(())
+    });
+  }
+
+  #[test]
+  fn should_leave_the_emitted_code_unchanged_while_collecting() {
+    Tester::run(|tester| {
+      let comments = Rc::new(SingleThreadedComments::default());
+      let source = r#"function App() { return <view><text>hi</text></view>; }"#;
+
+      let mut transform = |collector: Option<MainThreadDefinesCollector>| {
+        let top_level_mark = Mark::new();
+        let unresolved_mark = Mark::new();
+        let transformer = JSXTransformer::<&SingleThreadedComments>::new(
+          super::JSXTransformerConfig {
+            preserve_jsx: false,
+            target: TransformTarget::JS,
+            ..Default::default()
+          },
+          None,
+          TransformMode::Test,
+          Some(tester.cm.clone()),
+        );
+        let transformer = match collector {
+          Some(collector) => transformer.with_main_thread_defs_collector(collector),
+          None => transformer,
+        };
+
+        tester
+          .apply_transform(
+            (
+              resolver(unresolved_mark, top_level_mark, true),
+              visit_mut_pass(transformer),
+            ),
+            "input.js",
+            Syntax::Es(EsSyntax {
+              jsx: true,
+              ..Default::default()
+            }),
+            Some(true),
+            source,
+          )
+          .map(|program| tester.print(&program, &comments))
+      };
+
+      let emitted = transform(None)?;
+      let emitted_while_collecting = transform(Some(Rc::new(RefCell::new(vec![]))))?;
+
+      // Collecting must not change what the background gets.
+      assert_eq!(emitted, emitted_while_collecting);
+
+      Ok(())
+    });
+  }
 
   #[test]
   fn should_keep_jsx_in_children_prop_map_callback_scope() {
