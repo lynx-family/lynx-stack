@@ -654,6 +654,106 @@ export function hydrate(
         return;
       }
 
+      // Hoisted out of the loop: none of this depends on the slot entry.
+      const diffChildren = (
+        filteredBeforeChildNodes: SerializedSnapshotInstance[],
+        filteredAfterChildNodes: BackgroundSnapshotInstance[],
+        isListHasItemKey: boolean,
+      ) => {
+        const diffResult = diffArrayLepus(
+          filteredBeforeChildNodes,
+          filteredAfterChildNodes,
+          (a, b) => a.type === b.type,
+          (a, b) => {
+            helper(a, b);
+          },
+          isListHasItemKey,
+        );
+        diffArrayAction(
+          filteredBeforeChildNodes,
+          diffResult,
+          (node, target) => {
+            if (shouldProfile) {
+              profileStart('ReactLynx::BSI::reconstructInstanceTree', {
+                args: {
+                  id: String(node.__id),
+                  snapshotType: String(node.type),
+                  source: getSnapshotVNodeSource(node.__id) ?? '',
+                },
+              });
+            }
+            try {
+              reconstructInstanceTree([node], before.id, target?.id);
+            } finally {
+              if (shouldProfile) {
+                profileEnd();
+              }
+            }
+            return undefined as unknown as SerializedSnapshotInstance;
+          },
+          node => {
+            if (shouldProfile) {
+              profileStart('ReactLynx::hydrate::removeChild', {
+                args: {
+                  id: String(node.id),
+                  snapshotType: String(node.type),
+                  source: getSnapshotVNodeSource(node.id) ?? '',
+                  parentId: String(before.id),
+                },
+              });
+              try {
+                __globalSnapshotPatch!.push(
+                  SnapshotOperation.RemoveChild,
+                  before.id,
+                  node.id,
+                );
+              } finally {
+                profileEnd();
+              }
+            } else {
+              __globalSnapshotPatch!.push(
+                SnapshotOperation.RemoveChild,
+                before.id,
+                node.id,
+              );
+            }
+          },
+          (node, target) => {
+            // changedList.push([SnapshotOperation.RemoveChild, before.id, node.id]);
+            if (shouldProfile) {
+              profileStart('ReactLynx::hydrate::insertBefore', {
+                args: {
+                  id: String(node.id),
+                  snapshotType: String(node.type),
+                  source: getSnapshotVNodeSource(node.id) ?? '',
+                  parentId: String(before.id),
+                  targetId: String(target?.id ?? ''),
+                },
+              });
+              try {
+                __globalSnapshotPatch!.push(
+                  SnapshotOperation.InsertBefore,
+                  before.id,
+                  node.id,
+                  target?.id,
+                  node.slotIndex ?? 0,
+                );
+              } finally {
+                profileEnd();
+              }
+            } else {
+              __globalSnapshotPatch!.push(
+                SnapshotOperation.InsertBefore,
+                before.id,
+                node.id,
+                target?.id,
+                node.slotIndex ?? 0,
+              );
+            }
+          },
+        );
+      };
+
       slot.forEach(([type], index) => {
         switch (type) {
           case DynamicPartType.Slot:
@@ -665,135 +765,47 @@ export function hydrate(
             break;
           }
           case DynamicPartType.SlotV2:
-          case DynamicPartType.ListSlotV2:
-          case DynamicPartType.Children:
-          case DynamicPartType.ListChildren: {
-            // The two orthogonal dimensions of this block: slots are addressed
-            // by slot index, list children are keyed by `item-key`.
-            const isSlot = type === DynamicPartType.SlotV2 || type === DynamicPartType.ListSlotV2;
-            const isList = type === DynamicPartType.ListSlotV2 || type === DynamicPartType.ListChildren;
-
+          case DynamicPartType.Children: {
             let filteredBeforeChildNodes = beforeChildNodes;
             let filteredAfterChildNodes = afterChildNodes;
-            if (isSlot) {
+            if (type === DynamicPartType.SlotV2) {
               filteredBeforeChildNodes = beforeChildNodes.filter(v => (v.slotIndex ?? 0) === index);
               filteredAfterChildNodes = afterChildNodes.filter(v => v.__slotIndex === index);
             }
 
             // Children match pairwise by type, so the diff is empty — do what
             // `diffArrayLepus` + `diffArrayAction` would do without allocating
-            // the diff structures. Keyed list children cannot use this.
-            if (!isList) {
-              const length = filteredBeforeChildNodes.length;
-              if (length === filteredAfterChildNodes.length) {
-                let samePairwise = true;
-                for (let i = 0; i < length; i++) {
-                  if (filteredBeforeChildNodes[i]!.type !== filteredAfterChildNodes[i]!.type) {
-                    samePairwise = false;
-                    break;
-                  }
-                }
-                if (samePairwise) {
-                  for (let i = 0; i < length; i++) {
-                    helper(filteredBeforeChildNodes[i]!, filteredAfterChildNodes[i]!);
-                  }
+            // the diff structures.
+            const length = filteredBeforeChildNodes.length;
+            if (length === filteredAfterChildNodes.length) {
+              let samePairwise = true;
+              for (let i = 0; i < length; i++) {
+                if (filteredBeforeChildNodes[i]!.type !== filteredAfterChildNodes[i]!.type) {
+                  samePairwise = false;
                   break;
                 }
               }
+              if (samePairwise) {
+                for (let i = 0; i < length; i++) {
+                  helper(filteredBeforeChildNodes[i]!, filteredAfterChildNodes[i]!);
+                }
+                break;
+              }
             }
 
-            const diffResult = diffArrayLepus(
-              filteredBeforeChildNodes,
-              filteredAfterChildNodes,
-              (a, b) => a.type === b.type,
-              (a, b) => {
-                helper(a, b);
-              },
-              isList,
-            );
-            diffArrayAction(
-              filteredBeforeChildNodes,
-              diffResult,
-              (node, target) => {
-                if (shouldProfile) {
-                  profileStart('ReactLynx::BSI::reconstructInstanceTree', {
-                    args: {
-                      id: String(node.__id),
-                      snapshotType: String(node.type),
-                      source: getSnapshotVNodeSource(node.__id) ?? '',
-                    },
-                  });
-                }
-                try {
-                  reconstructInstanceTree([node], before.id, target?.id);
-                } finally {
-                  if (shouldProfile) {
-                    profileEnd();
-                  }
-                }
-                return undefined as unknown as SerializedSnapshotInstance;
-              },
-              node => {
-                if (shouldProfile) {
-                  profileStart('ReactLynx::hydrate::removeChild', {
-                    args: {
-                      id: String(node.id),
-                      snapshotType: String(node.type),
-                      source: getSnapshotVNodeSource(node.id) ?? '',
-                      parentId: String(before.id),
-                    },
-                  });
-                  try {
-                    __globalSnapshotPatch!.push(
-                      SnapshotOperation.RemoveChild,
-                      before.id,
-                      node.id,
-                    );
-                  } finally {
-                    profileEnd();
-                  }
-                } else {
-                  __globalSnapshotPatch!.push(
-                    SnapshotOperation.RemoveChild,
-                    before.id,
-                    node.id,
-                  );
-                }
-              },
-              (node, target) => {
-                // changedList.push([SnapshotOperation.RemoveChild, before.id, node.id]);
-                if (shouldProfile) {
-                  profileStart('ReactLynx::hydrate::insertBefore', {
-                    args: {
-                      id: String(node.id),
-                      snapshotType: String(node.type),
-                      source: getSnapshotVNodeSource(node.id) ?? '',
-                      parentId: String(before.id),
-                      targetId: String(target?.id ?? ''),
-                    },
-                  });
-                  try {
-                    __globalSnapshotPatch!.push(
-                      SnapshotOperation.InsertBefore,
-                      before.id,
-                      node.id,
-                      target?.id,
-                      node.slotIndex ?? 0,
-                    );
-                  } finally {
-                    profileEnd();
-                  }
-                } else {
-                  __globalSnapshotPatch!.push(
-                    SnapshotOperation.InsertBefore,
-                    before.id,
-                    node.id,
-                    target?.id,
-                    node.slotIndex ?? 0,
-                  );
-                }
-              },
-            );
+            diffChildren(filteredBeforeChildNodes, filteredAfterChildNodes, false);
+            break;
+          }
+          case DynamicPartType.ListSlotV2:
+          case DynamicPartType.ListChildren: {
+            let filteredBeforeChildNodes = beforeChildNodes;
+            let filteredAfterChildNodes = afterChildNodes;
+            if (type === DynamicPartType.ListSlotV2) {
+              filteredBeforeChildNodes = beforeChildNodes.filter(v => (v.slotIndex ?? 0) === index);
+              filteredAfterChildNodes = afterChildNodes.filter(v => v.__slotIndex === index);
+            }
+
+            diffChildren(filteredBeforeChildNodes, filteredAfterChildNodes, true);
             break;
           }
           default:
