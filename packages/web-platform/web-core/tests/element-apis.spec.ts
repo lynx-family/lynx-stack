@@ -2080,6 +2080,29 @@ describe('Element APIs', () => {
       expect(html4).toContain('calc(10 * var(--rpx-unit))');
     });
 
+    test('ssr __GetComputedStyleByKey returns an empty string', () => {
+      const binding: SSRBinding = { ssrResult: '' };
+      const config = {
+        enableCSSSelector: true,
+        defaultOverflowVisible: false,
+        defaultDisplayLinear: true,
+      };
+      const { globalThisAPIs: api } = createServerElementAPI(
+        binding,
+        undefined,
+        '',
+        config,
+      );
+
+      const root = api.__CreatePage('page', 0);
+      const view = api.__CreateElement('view', api.__GetElementUniqueID(root));
+      api.__SetInlineStyles(view, 'color: red;');
+      api.__AppendElement(root, view);
+
+      // SSR has neither layout nor cascade resolution.
+      expect(api.__GetComputedStyleByKey(view, 'color')).toBe('');
+    });
+
     test('create element infer css id from parent component in SSR', () => {
       const binding: SSRBinding = {
         ssrResult: '',
