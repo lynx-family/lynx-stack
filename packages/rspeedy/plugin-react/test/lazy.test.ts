@@ -361,6 +361,123 @@ describe('Lazy', () => {
     }
   })
 
+  // A lazy bundle's main-thread section is an ordinary async chunk of the
+  // main-thread entry: the host card installs it into its own module registry,
+  // so it has to share that entry's module ids, chunk format and banner. This
+  // holds for `enableMTSRendering: false` too, where the modules are reduced to
+  // their snapshot registrations but the graph is otherwise unchanged.
+  test('lazy bundle keeps its main-thread section with enableMTSRendering false', async () => {
+    const { pluginReactLynx } = await import('../src/pluginReactLynx.js')
+
+    const lepusRootByIntermediate = new Map<string, string>()
+    let assetNames: string[] = []
+
+    const tmp = await fs.mkdtemp(
+      path.join(tmpdir(), 'rspeedy-react-test-lazy-bundle-no-mts-'),
+    )
+
+    const rsbuild = await createRspeedy({
+      rspeedyConfig: {
+        source: {
+          entry: {
+            main: fileURLToPath(
+              new URL('./fixtures/lazy-bundle/index.tsx', import.meta.url),
+            ),
+          },
+        },
+        output: { distPath: { root: tmp } },
+        plugins: [
+          pluginReactLynx({ enableMTSRendering: false }),
+          {
+            name: 'test',
+            pre: ['lynx:react'],
+            setup(api) {
+              api.modifyBundlerChain((chain, { CHAIN_ID }) => {
+                const rule = chain.module
+                  .rules.get('css:react:main-thread')
+                  .uses.get(CHAIN_ID.USE.IGNORE_CSS)
+                rule.loader(
+                  // add .ts suffix to ignore-css-loader
+                  // this workaround is needed because vitest
+                  // runs on our ts files.
+                  rule.get('loader') as string + '.ts',
+                )
+              })
+            },
+          } as RsbuildPlugin,
+        ],
+        tools: {
+          rspack: {
+            plugins: [
+              {
+                name: 'collect-lepus-root',
+                apply(compiler) {
+                  compiler.hooks.compilation.tap(
+                    'collect-lepus-root',
+                    (compilation) => {
+                      const hooks = LynxTemplatePlugin
+                        .getLynxTemplatePluginHooks(
+                          compilation as unknown as Parameters<
+                            typeof LynxTemplatePlugin.getLynxTemplatePluginHooks
+                          >[0],
+                        )
+                      hooks.beforeEncode.tap('collect-lepus-root', (args) => {
+                        lepusRootByIntermediate.set(
+                          args.intermediate.replaceAll('\\', '/'),
+                          args.encodeData.lepusCode.root?.source.source()
+                            .toString() ?? '',
+                        )
+                        return args
+                      })
+                      compilation.hooks.processAssets.tap(
+                        'collect-lepus-root',
+                        (assets) => {
+                          assetNames = Object.keys(assets)
+                        },
+                      )
+                    },
+                  )
+                },
+              } as Rspack.RspackPluginInstance,
+            ],
+          },
+        },
+      },
+    })
+
+    await rsbuild.build()
+
+    const intermediates = [...lepusRootByIntermediate.keys()]
+    const lazyIntermediate = intermediates.find(name =>
+      name.includes('/lazy-bundle/')
+    )
+    // The lazy bundle is encoded as its own template.
+    expect(lazyIntermediate).toBeDefined()
+
+    const lazyRoot = lepusRootByIntermediate.get(lazyIntermediate!)!
+    // Wrapped for `processEvalResult`, and in the chunk format the host's
+    // `__webpack_require__.C` installs. A main thread built outside this
+    // compilation cannot produce either.
+    expect(lazyRoot).toContain('(function (globDynamicComponentEntry) {')
+    expect(lazyRoot).toContain('exports.ids')
+    // Reduced to registrations: the lazy component's business logic is gone.
+    expect(lazyRoot).not.toContain('useState')
+
+    const cardIntermediate = intermediates.find(name =>
+      !name.includes('/lazy-bundle/')
+    )!
+    // `globDynamicComponentEntry` is a free variable of every main-thread
+    // chunk, so the card's own section must declare it.
+    expect(lepusRootByIntermediate.get(cardIntermediate)).toContain(
+      `globDynamicComponentEntry=globDynamicComponentEntry||'__Card__'`,
+    )
+
+    // The main-thread async chunk belongs to the lazy bundle template, not to
+    // the default async output directory.
+    expect(assetNames.filter(name => name.includes('static/js/async/')))
+      .toStrictEqual([])
+  })
+
   test('lazy bundle app-service.js should not load hot-update.js', async () => {
     rstest.stubEnv('NODE_ENV', 'development')
     const { pluginReactLynx } = await import('../src/pluginReactLynx.js')
