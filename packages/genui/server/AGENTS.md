@@ -45,6 +45,36 @@ back to a deterministic Picsum URL.
 
 The hosting runtime must provide these variables before invoking the handler.
 
+To enable UI Judge scoring for A2UI Bench jobs, run the independent Rust UI
+Judge HTTP server and configure its private base URL:
+
+```bash
+export UI_JUDGE_SERVER_URL="http://127.0.0.1:8080"
+```
+
+The server probes `GET /health` for each Bench job and reports Judge as enabled
+only when the sidecar worker is ready. This is a shallow readiness check; model
+credentials, the configured bundle, and runtime resources are validated by the
+first `/judge` request. Successful A2UI generations are submitted to
+`POST /judge`; generated messages are injected through server-owned Lynx
+`globalProps` and cannot be supplied or overridden by Bench clients.
+
+Before rendering, the Bench integration replaces `Image`, `LazyComponent`,
+`LineChart`, `McpApp`, and `PieChart` definitions with inert loading
+placeholders, downgrades Markdown text, and rejects recursive `openUrl`
+function calls. Bench prompt catalogs also omit `openUrl` to avoid generating
+those calls in the first place. Keep this boundary in place: model output must
+not make the server-side headless resource loader fetch arbitrary URLs, read
+local files, or execute nested bundles.
+
+By default, Judge renders
+`https://lynx-stack.dev/genui/a2ui.lynx.js`. Override that server-owned bundle
+URL when running a local or pinned bundle:
+
+```bash
+export UI_JUDGE_BUNDLE_URL="http://127.0.0.1:3000/a2ui.lynx.js"
+```
+
 ## Security
 
 By default, request bodies submitted to `/a2ui/chat`, `/a2ui/stream`,

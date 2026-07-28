@@ -4,6 +4,11 @@
 
 import { getA2UIAgentService } from './a2ui-agent';
 import { resolveBenchCatalog } from './a2ui-bench-catalog';
+import { probeBenchUiJudge, runBenchUiJudge } from './a2ui-bench-judge';
+import type {
+  BenchUiJudgeCapability,
+  BenchUiJudgeResult,
+} from './a2ui-bench-judge';
 // import { runBenchPreview } from './a2ui-bench-preview';
 import { getBenchJobStore } from './a2ui-bench-store';
 import type {
@@ -148,6 +153,8 @@ async function runOne(
   jobId: string,
   request: BenchJobRequest,
   item: BenchRunItem,
+  judgeCapability: BenchUiJudgeCapability,
+  signal: AbortSignal,
 ): Promise<BenchRunResult> {
   const store = getBenchJobStore();
   const runId = `${item.group.id}-${item.scenario.id}-${item.repeatIndex}`;
@@ -185,6 +192,27 @@ async function runOne(
     emitRunPhase(jobId, item, 'validate');
     const agentMs = performance.now() - startedAt;
     const outputChars = result.text.length;
+    const judgeSession = judgeCapability.session;
+    const judge: BenchUiJudgeResult | {
+      errors: [];
+      score: 0;
+      status: 'skipped';
+      warnings: [];
+    } = result.ok
+        && request.settings.judgeEnabled
+        && judgeSession
+        && !signal.aborted
+      ? await (async () => {
+        emitRunPhase(jobId, item, 'judge');
+        return await runBenchUiJudge({
+          messages: result.messages,
+          scenario: item.scenario,
+          session: judgeSession,
+          signal,
+          timeoutMs: request.settings.timeoutMs,
+        });
+      })()
+      : { errors: [], score: 0, status: 'skipped', warnings: [] };
     /*
     const preview = result.ok
       ? await runBenchPreviewForItem(jobId, request, item, result.messages)
@@ -217,12 +245,20 @@ async function runOne(
       // renderMs: preview.renderMs,
       renderMs: 0,
       attempts: result.attempts,
-      // judgeScore: preview.judgeScore,
-      judgeScore: 0,
+      judgeScore: judge.score,
+      judgeStatus: judge.status,
+      ...('reason' in judge && judge.reason
+        ? { judgeReason: judge.reason }
+        : {}),
+      ...('summary' in judge && judge.summary
+        ? { judgeSummary: judge.summary }
+        : {}),
+      ...(judge.warnings.length > 0
+        ? { judgeWarnings: judge.warnings }
+        : {}),
       messageCount: result.messages.length,
       outputChars,
-      // errors: [...result.errors, ...preview.errors],
-      errors: result.errors,
+      errors: [...result.errors, ...judge.errors],
       finishReason: result.finishReason,
       usage: result.usage,
       messages: result.messages,
@@ -253,6 +289,7 @@ async function runOne(
       renderMs: 0,
       attempts: 0,
       judgeScore: 0,
+      judgeStatus: 'skipped',
       messageCount: 0,
       outputChars: 0,
       errors: [message],
@@ -308,13 +345,14 @@ async function runBenchPreviewForItem(
 }
 */
 
-function summarizeGroup(
+export function summarizeGroup(
   group: BenchGroupRequest,
   results: BenchRunResult[],
 ): BenchGroupSummary {
   const groupResults = results.filter((item) => item.groupId === group.id);
   const successful = groupResults.filter((item) => item.ok);
   const base = successful.length > 0 ? successful : groupResults;
+  const judged = base.filter((item) => item.judgeStatus === 'complete');
   const failedRuns = groupResults.filter((item) => !item.ok).length;
   return {
     groupId: group.id,
@@ -330,7 +368,8 @@ function summarizeGroup(
     avgFmpMs: average(base.map((item) => item.fmpMs)),
     avgTtiMs: average(base.map((item) => item.ttiMs)),
     avgRenderMs: average(base.map((item) => item.renderMs)),
-    avgJudgeScore: average(base.map((item) => item.judgeScore)),
+    avgJudgeScore: average(judged.map((item) => item.judgeScore)),
+    judgeRunCount: judged.length,
     avgAttempts: average(base.map((item) => item.attempts)),
   };
 }
@@ -358,6 +397,7 @@ function buildReport(
   results: BenchRunResult[],
   warnings: string[],
   status: BenchReport['status'],
+  judgeCapability: BenchUiJudgeCapability,
 ): BenchReport {
   const enabledGroups = request.groups.filter((group) => group.enabled);
   const summary = summarizeReport(results);
@@ -391,7 +431,9 @@ function buildReport(
       //   ? 'enabled'
       //   : 'disabled',
       renderMetrics: 'disabled',
-      judge: 'disabled',
+      judge: request.settings.judgeEnabled && judgeCapability.enabled
+        ? 'enabled'
+        : 'disabled',
     },
     warnings,
     groups: request.groups,
@@ -406,13 +448,36 @@ export function startBenchJob(jobId: string): void {
   void runBenchJob(jobId);
 }
 
-async function runBenchJob(jobId: string): Promise<void> {
+export async function runBenchJob(jobId: string): Promise<void> {
   const store = getBenchJobStore();
   const job = store.getJob(jobId);
   if (!job) return;
   const activeJob = job;
   const request = activeJob.request;
   const matrix = buildRunMatrix(request);
+  const judgeCapability = await probeBenchUiJudge();
+  if (
+    activeJob.abortController.signal.aborted
+    || activeJob.status === 'cancelled'
+  ) {
+    const report = buildReport(
+      jobId,
+      request,
+      activeJob.results,
+      activeJob.warnings,
+      'cancelled',
+      judgeCapability,
+    );
+    store.setReport(jobId, report);
+    return;
+  }
+  if (
+    request.settings.judgeEnabled
+    && !judgeCapability.enabled
+    && judgeCapability.reason
+  ) {
+    activeJob.warnings.push(`UI Judge disabled: ${judgeCapability.reason}`);
+  }
 
   store.updateStatus(jobId, 'running');
 
@@ -425,7 +490,14 @@ async function runBenchJob(jobId: string): Promise<void> {
       const item = matrix[index];
       if (!item) return;
 
-      const result = await runOne(jobId, request, item);
+      const result = await runOne(
+        jobId,
+        request,
+        item,
+        judgeCapability,
+        activeJob.abortController.signal,
+      );
+      if (activeJob.abortController.signal.aborted) return;
       const updated = store.addResult(jobId, result);
       if (!updated) return;
       const event = result.ok ? 'run-complete' : 'run-error';
@@ -446,12 +518,14 @@ async function runBenchJob(jobId: string): Promise<void> {
     if (
       latest.abortController.signal.aborted || latest.status === 'cancelled'
     ) {
+      store.updateStatus(jobId, 'cancelled');
       const report = buildReport(
         jobId,
         request,
         latest.results,
         latest.warnings,
         'cancelled',
+        judgeCapability,
       );
       store.setReport(jobId, report);
       return;
@@ -468,6 +542,7 @@ async function runBenchJob(jobId: string): Promise<void> {
       latest.results,
       latest.warnings,
       'complete',
+      judgeCapability,
     );
     store.setReport(jobId, report);
   } catch (error) {
@@ -480,6 +555,7 @@ async function runBenchJob(jobId: string): Promise<void> {
       latest.results,
       latest.warnings,
       'failed',
+      judgeCapability,
     );
     store.setReport(jobId, report);
   }
