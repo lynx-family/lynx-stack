@@ -1011,6 +1011,9 @@ importers:
       '@aws-sdk/client-s3':
         specifier: ^3.1093.0
         version: 3.1093.0
+      '@hono/node-server':
+        specifier: ^2.0.11
+        version: 2.0.11(hono@4.12.12)
       '@lynx-js/genui-mcp-apps':
         specifier: workspace:*
         version: link:../mcp-apps
@@ -1020,6 +1023,9 @@ importers:
       '@mastra/core':
         specifier: 1.52.0
         version: 1.52.0(express@5.2.1(supports-color@10.2.2))(rxjs@7.8.2)(supports-color@10.2.2)(zod@4.4.3)
+      hono:
+        specifier: 4.12.12
+        version: 4.12.12
       zod:
         specifier: ^4.4.3
         version: 4.4.3
@@ -3699,6 +3705,12 @@ packages:
   '@hono/node-server@1.19.9':
     resolution: {integrity: sha512-vHL6w3ecZsky+8P5MD+eFfaGTyCeOHUIFYMGpQGbrBTSmNNoxv0if69rEZ5giu36weC5saFuznL411gRX7bJDw==}
     engines: {node: '>=18.14.1'}
+    peerDependencies:
+      hono: ^4
+
+  '@hono/node-server@2.0.11':
+    resolution: {integrity: sha512-bjD221KPLoJTWUwso1J6fGKiTXEUFedG/s0visavY4zakFPkeGURMRNly+FhBHs7T8Dz4qHaZIMX9ZoJHSJtKA==}
+    engines: {node: '>=20'}
     peerDependencies:
       hono: ^4
 
@@ -13366,6 +13378,10 @@ snapshots:
       '@shikijs/vscode-textmate': 10.0.2
 
   '@hono/node-server@1.19.9(hono@4.12.12)':
+    dependencies:
+      hono: 4.12.12
+
+  '@hono/node-server@2.0.11(hono@4.12.12)':
     dependencies:
       hono: 4.12.12
 

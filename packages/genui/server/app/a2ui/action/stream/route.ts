@@ -2,6 +2,8 @@
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
 
+import { Hono } from 'hono';
+
 import type { A2UICatalog } from '../../../../agent/a2ui-catalog';
 import { loadBasicCatalog } from '../../../../agent/a2ui-catalog';
 import {
@@ -26,7 +28,7 @@ import {
   MAX_MESSAGE_CHARS,
   validateConversation,
 } from '../../../common/chat-validation';
-import { corsPreflight, jsonWithCors } from '../../../common/cors';
+import { jsonWithCors } from '../../../common/cors';
 import { errorMessage } from '../../../common/errors';
 import {
   checkRateLimit,
@@ -52,11 +54,7 @@ interface A2UIActionStreamBody {
   maxRepairAttempts?: number;
 }
 
-export function OPTIONS(req: Request) {
-  return corsPreflight(req);
-}
-
-export async function POST(req: Request) {
+async function postA2UIActionStream(req: Request) {
   const { log, requestId } = createStreamLogger(
     'a2ui',
     '/a2ui/action/stream',
@@ -494,3 +492,9 @@ export async function POST(req: Request) {
 
   return new Response(stream, { status: 200, headers: sseHeaders(req) });
 }
+
+const route = new Hono();
+
+route.post('/', (context) => postA2UIActionStream(context.req.raw));
+
+export default route;

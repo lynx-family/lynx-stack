@@ -2,12 +2,14 @@
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
 
+import { Hono } from 'hono';
+
 import { getOpenUIAgentService } from '../../../service/openui-agent';
 import {
   validateConversation,
   validateMessages,
 } from '../../common/chat-validation';
-import { corsPreflight, jsonWithCors } from '../../common/cors';
+import { jsonWithCors } from '../../common/cors';
 import { errorMessage } from '../../common/errors';
 import { pickProviderOptions } from '../../common/provider-options';
 import { checkRateLimit, rateLimitSseResponse } from '../../common/rate-limit';
@@ -25,11 +27,7 @@ interface OpenUIChatBody {
   api?: 'chat' | 'responses';
 }
 
-export function OPTIONS(req: Request) {
-  return corsPreflight(req);
-}
-
-export async function POST(req: Request) {
+async function postOpenUIStream(req: Request) {
   const { log, requestId } = createStreamLogger('openui', '/openui/stream');
   log('request.received', {
     contentLength: req.headers.get('content-length'),
@@ -188,3 +186,9 @@ export async function POST(req: Request) {
 
   return new Response(stream, { status: 200, headers: sseHeaders(req) });
 }
+
+const route = new Hono();
+
+route.post('/', (context) => postOpenUIStream(context.req.raw));
+
+export default route;
