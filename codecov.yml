@@ -33,6 +33,7 @@ ignore:
   - "pnpm-lock.yaml"
   - "rstest.config.ts"
   - "**/__test__/**/fixtures/**"
+  - "**/vitest.config.ts"
 
 fixes:
   - "/home/runner/_work/lynx-stack::"
