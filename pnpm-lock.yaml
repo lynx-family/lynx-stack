@@ -304,6 +304,12 @@ importers:
 
   examples/preact-ports:
     dependencies:
+      '@lynx-js/gesture-runtime':
+        specifier: workspace:*
+        version: link:../../packages/lynx/gesture-runtime
+      '@lynx-js/motion':
+        specifier: workspace:*
+        version: link:../../packages/motion
       '@lynx-js/preact-runtime':
         specifier: workspace:*
         version: link:../../packages/preact-runtime

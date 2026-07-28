@@ -9,6 +9,8 @@
     "dev": "rspeedy dev"
   },
   "dependencies": {
+    "@lynx-js/gesture-runtime": "workspace:*",
+    "@lynx-js/motion": "workspace:*",
     "@lynx-js/preact-runtime": "workspace:*"
   },
   "devDependencies": {
