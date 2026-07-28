@@ -200,11 +200,17 @@ class MainThreadElement {
   }
 }
 
+// PrimJS has no `queueMicrotask`; fall back to the promise job queue.
+const scheduleMicrotask: (cb: () => void) => void =
+  typeof queueMicrotask === 'function'
+    ? queueMicrotask
+    : (cb) => void Promise.resolve().then(cb);
+
 let workletFlushScheduled = false;
 function scheduleWorkletFlush(): void {
   if (!workletFlushScheduled) {
     workletFlushScheduled = true;
-    queueMicrotask(() => {
+    scheduleMicrotask(() => {
       workletFlushScheduled = false;
       __FlushElementTree();
     });
@@ -429,6 +435,11 @@ function applyOps(ops: Ops.Op[]): void {
 Object.assign(globalThis, {
   renderPage(_data: unknown): void {
     ensurePage();
+  },
+  // Native engines call `processData` while loading the template; there are
+  // no data processors in this runtime, so pass the data through unchanged.
+  processData(data: unknown): unknown {
+    return data;
   },
   updatePage(): void {/* noop */},
   updateGlobalProps(): void {/* noop */},

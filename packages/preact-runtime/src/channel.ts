@@ -20,6 +20,12 @@ declare const lynx: {
   };
 };
 
+// PrimJS has no `queueMicrotask`; fall back to the promise job queue.
+const scheduleMicrotask: (cb: () => void) => void =
+  typeof queueMicrotask === 'function'
+    ? queueMicrotask
+    : (cb) => void Promise.resolve().then(cb);
+
 const queue: Op[] = [];
 let scheduled = false;
 
@@ -41,7 +47,7 @@ function scheduleFlush(): void {
     return;
   }
   scheduled = true;
-  queueMicrotask(flush);
+  scheduleMicrotask(flush);
 }
 
 export function flush(): void {
