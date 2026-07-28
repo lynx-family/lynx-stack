@@ -1520,9 +1520,6 @@ importers:
       '@rslib/core':
         specifier: catalog:rslib
         version: 0.23.2(@microsoft/api-extractor@7.58.12(@types/node@24.13.3))(@typescript/native-preview@7.0.0-dev.20260707.2)(core-js@3.49.0)(typescript@6.0.3)
-      '@rspack/core':
-        specifier: 2.1.5
-        version: 2.1.5(@swc/helpers@0.5.23)
       '@rstest/core':
         specifier: catalog:rstest
         version: 0.11.3(core-js@3.49.0)(jsdom@27.4.0(supports-color@10.2.2))
