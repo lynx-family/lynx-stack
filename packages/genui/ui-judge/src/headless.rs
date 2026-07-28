@@ -14,6 +14,7 @@ use crate::judge::{
   error_result, judge_screenshot, JudgeScreenshotRequest, UiJudgeError, UiJudgeResult,
 };
 use crate::model::{ModelClient, ModelError, ModelOptions};
+use crate::ui_bench::{apply_ui_bench_result, evaluate_ui_bench, UiBenchRequest};
 use crate::visual::compare_reference_image;
 
 const MAX_ACTIONS_PER_STEP: usize = 8;
@@ -44,6 +45,26 @@ pub struct JudgePageRequest {
   /// comparison each receive this full duration. This preserves the legacy UI
   /// Judge behavior and is not an overall deadline for the entire request.
   pub timeout: Duration,
+  /// Optional current prompt-specific TrueSkill mean for the primary candidate.
+  ///
+  /// Set this together with `ui_bench_candidate_sigma`. When both are absent,
+  /// the UI-Bench paper default of `mu = 25` and `sigma = 25 / 3` is used.
+  pub ui_bench_candidate_mu: Option<f64>,
+  /// Optional current prompt-specific TrueSkill uncertainty for the candidate.
+  pub ui_bench_candidate_sigma: Option<f64>,
+  /// Optional current prompt-specific TrueSkill mean for the opponent.
+  ///
+  /// Set this together with `ui_bench_opponent_sigma`.
+  pub ui_bench_opponent_mu: Option<f64>,
+  /// Optional current prompt-specific TrueSkill uncertainty for the opponent.
+  pub ui_bench_opponent_sigma: Option<f64>,
+  /// Optional second Lynx page generated from the same `task`.
+  ///
+  /// When present, UI Judge captures both pages, randomizes their anonymous
+  /// model order, forces a pairwise client-delivery preference with no tie,
+  /// and returns the updated prompt-specific TrueSkill ratings separately from
+  /// the primary visual-correctness result.
+  pub ui_bench_opponent_url: Option<String>,
   /// The `file://`, `http://`, or `https://` Lynx page URL to load.
   pub url: String,
 }
@@ -93,6 +114,11 @@ pub(crate) struct CapturedPage {
   url: String,
 }
 
+pub(crate) struct CapturedEvaluation {
+  candidate: CapturedPage,
+  ui_bench_opponent: Option<Result<CapturedPage, String>>,
+}
+
 /// Captures the current software-renderer frame exposed by the existing
 /// headless runner.
 async fn capture_page_png(page: &Page, settle: Duration) -> Result<Vec<u8>, HeadlessPageError> {
@@ -127,8 +153,8 @@ pub async fn judge_page(request: JudgePageRequest) -> UiJudgeResult {
     Ok(prepared) => prepared,
     Err(result) => return *result,
   };
-  match capture_prepared_page(&client, &request).await {
-    Ok(capture) => score_captured_page(&client, &request, capture).await,
+  match capture_prepared_evaluation(&client, &request).await {
+    Ok(capture) => score_captured_evaluation(&client, &request, capture).await,
     Err(result) => result,
   }
 }
@@ -158,6 +184,9 @@ pub(crate) fn prepare_judge_page_request(
   request.reference_image = request
     .reference_image
     .map(|reference_image| reference_image.trim().to_string());
+  request.ui_bench_opponent_url = request
+    .ui_bench_opponent_url
+    .map(|opponent_url| opponent_url.trim().to_string());
 
   let model_options = match ModelOptions::from_env() {
     Ok(options) => options,
@@ -168,6 +197,34 @@ pub(crate) fn prepare_judge_page_request(
     Err(error) => return Err(Box::new(page_request_error(&request, error.to_string()))),
   };
   Ok((request, client))
+}
+
+pub(crate) async fn capture_prepared_evaluation(
+  client: &ModelClient,
+  request: &JudgePageRequest,
+) -> Result<CapturedEvaluation, UiJudgeResult> {
+  let candidate = capture_prepared_page(client, request).await?;
+  let ui_bench_opponent = match request.ui_bench_opponent_url.as_deref() {
+    None => None,
+    Some(opponent_url) if !is_supported_page_url(opponent_url) => Some(Err(
+      "UI-Bench opponent URL must use file://, http://, or https://.".to_string(),
+    )),
+    Some(opponent_url) => {
+      let mut opponent_request = request.clone();
+      opponent_request.reference_image = None;
+      opponent_request.ui_bench_opponent_url = None;
+      opponent_request.url = opponent_url.to_string();
+      Some(
+        capture_prepared_page(client, &opponent_request)
+          .await
+          .map_err(result_error_message),
+      )
+    }
+  };
+  Ok(CapturedEvaluation {
+    candidate,
+    ui_bench_opponent,
+  })
 }
 
 pub(crate) async fn capture_prepared_page(
@@ -282,18 +339,40 @@ async fn capture_loaded_page(
   })
 }
 
+#[cfg(test)]
 pub(crate) async fn score_captured_page(
   client: &ModelClient,
   request: &JudgePageRequest,
   capture: CapturedPage,
 ) -> UiJudgeResult {
-  let CapturedPage { png, steps, url } = capture;
+  score_captured_evaluation(
+    client,
+    request,
+    CapturedEvaluation {
+      candidate: capture,
+      ui_bench_opponent: None,
+    },
+  )
+  .await
+}
+
+pub(crate) async fn score_captured_evaluation(
+  client: &ModelClient,
+  request: &JudgePageRequest,
+  capture: CapturedEvaluation,
+) -> UiJudgeResult {
+  let CapturedEvaluation {
+    candidate: CapturedPage { png, steps, url },
+    ui_bench_opponent,
+  } = capture;
+  let task = task_with_steps(&request.task, &steps);
+  let screenshot_data_url = png_data_url(&png);
   let vlm_scoring = judge_screenshot(
     client,
     JudgeScreenshotRequest {
       reference: request.reference.clone(),
-      screenshot_data_url: png_data_url(&png),
-      task: task_with_steps(&request.task, &steps),
+      screenshot_data_url: screenshot_data_url.clone(),
+      task: task.clone(),
       url: url.clone(),
     },
   );
@@ -309,12 +388,48 @@ pub(crate) async fn score_captured_page(
       None => None,
     }
   };
+  let ui_bench_evaluation = async {
+    let opponent_url = request.ui_bench_opponent_url.clone()?;
+    let evaluation = match ui_bench_opponent {
+      Some(Ok(opponent)) => {
+        let opponent_image = png_data_url(&opponent.png);
+        match tokio::time::timeout(
+          request.timeout,
+          evaluate_ui_bench(
+            client,
+            UiBenchRequest {
+              candidate_image: &screenshot_data_url,
+              candidate_mu: request.ui_bench_candidate_mu,
+              candidate_sigma: request.ui_bench_candidate_sigma,
+              opponent_image: &opponent_image,
+              opponent_mu: request.ui_bench_opponent_mu,
+              opponent_sigma: request.ui_bench_opponent_sigma,
+              reference: request.reference.as_deref(),
+              task: &task,
+            },
+          ),
+        )
+        .await
+        {
+          Ok(result) => result,
+          Err(_) => {
+            Err(operation_timeout("UI-Bench pairwise evaluation", request.timeout).to_string())
+          }
+        }
+      }
+      Some(Err(error)) => Err(error),
+      None => Err("UI-Bench opponent capture was not scheduled.".to_string()),
+    };
+    Some((opponent_url, evaluation))
+  };
 
   // The VLM and deterministic comparison are independent consumers of the
-  // captured PNG. Neither result is an input to the other evaluation chain.
-  let (vlm_result, comparison_result) = tokio::join!(
+  // captured PNG. The optional pairwise evaluator additionally receives only
+  // the anonymized opponent capture for the same task.
+  let (vlm_result, comparison_result, ui_bench_result) = tokio::join!(
     tokio::time::timeout(request.timeout, vlm_scoring),
     reference_comparison,
+    ui_bench_evaluation,
   );
   let mut result = match vlm_result {
     Ok(result) => result,
@@ -346,6 +461,9 @@ pub(crate) async fn score_captured_page(
       }
     }
   }
+  if let Some((opponent_url, ui_bench_result)) = ui_bench_result {
+    apply_ui_bench_result(&mut result, opponent_url, ui_bench_result);
+  }
   result.steps = steps;
   result
 }
@@ -366,6 +484,13 @@ fn page_request_error(request: &JudgePageRequest, message: impl Into<String>) ->
   );
   result.steps = normalize_steps(&request.steps);
   result
+}
+
+fn result_error_message(result: UiJudgeResult) -> String {
+  result
+    .error
+    .map(|error| error.message)
+    .unwrap_or_else(|| "UI-Bench opponent capture failed.".to_string())
 }
 
 async fn run_page_step(
@@ -575,6 +700,11 @@ mod tests {
       steps: vec![" Tap Save ".to_string()],
       task: task.to_string(),
       timeout: Duration::from_secs(1),
+      ui_bench_candidate_mu: None,
+      ui_bench_candidate_sigma: None,
+      ui_bench_opponent_mu: None,
+      ui_bench_opponent_sigma: None,
+      ui_bench_opponent_url: None,
       url: url.to_string(),
     }
   }
@@ -663,6 +793,151 @@ mod tests {
     assert_eq!(result.different_blocks, Some(0));
     assert_eq!(result.total_blocks, Some(1));
     assert!(result.diff_image_base64.is_some());
+  }
+
+  #[tokio::test(flavor = "current_thread")]
+  async fn returns_a_blinded_pairwise_vote_and_prompt_specific_trueskill() {
+    const PNG_BASE64: &str =
+      "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNk+A8AAQUBAScY42YAAAAASUVORK5CYII=";
+    let png = BASE64_STANDARD.decode(PNG_BASE64).expect("decode fixture");
+    let mut request = page_request("file:///tmp/candidate.lynx.bundle", "Render the form");
+    request.ui_bench_opponent_url = Some("file:///tmp/opponent.lynx.bundle".to_string());
+    let client = ModelClient::mock(
+      r#"{
+        "score": 4,
+        "summary": "The candidate is visually correct.",
+        "winner": "project_a",
+        "reason": "Project A is more ready for client delivery."
+      }"#,
+    );
+
+    let result = score_captured_evaluation(
+      &client,
+      &request,
+      CapturedEvaluation {
+        candidate: CapturedPage {
+          png: png.clone(),
+          steps: vec![],
+          url: request.url.clone(),
+        },
+        ui_bench_opponent: Some(Ok(CapturedPage {
+          png,
+          steps: vec![],
+          url: "file:///tmp/opponent.lynx.bundle".to_string(),
+        })),
+      },
+    )
+    .await;
+
+    assert!(result.error.is_none());
+    assert_eq!(result.score, 4);
+    assert!(result.ui_bench_error.is_none());
+    assert_eq!(result.ui_bench_evaluator.as_deref(), Some("vlm_proxy"));
+    assert_eq!(
+      result.ui_bench_opponent_url.as_deref(),
+      Some("file:///tmp/opponent.lynx.bundle")
+    );
+    assert!(matches!(
+      result.ui_bench_winner.as_deref(),
+      Some("candidate" | "opponent")
+    ));
+    let candidate_mu = result.ui_bench_candidate_mu.expect("candidate rating mean");
+    let opponent_mu = result.ui_bench_opponent_mu.expect("opponent rating mean");
+    match result.ui_bench_winner.as_deref() {
+      Some("candidate") => assert!(candidate_mu > opponent_mu),
+      Some("opponent") => assert!(opponent_mu > candidate_mu),
+      winner => panic!("unexpected pairwise winner: {winner:?}"),
+    }
+    assert!(result
+      .ui_bench_candidate_sigma
+      .is_some_and(|sigma| sigma < 25.0 / 3.0));
+    assert!(result
+      .ui_bench_opponent_sigma
+      .is_some_and(|sigma| sigma < 25.0 / 3.0));
+    let json = serde_json::to_value(&result).expect("serialize pairwise result");
+    assert!(matches!(
+      json["uiBenchWinner"].as_str(),
+      Some("candidate" | "opponent")
+    ));
+    assert_eq!(json["uiBenchEvaluator"], "vlm_proxy");
+    assert!(json.get("uiBenchScore").is_none());
+  }
+
+  #[tokio::test(flavor = "current_thread")]
+  async fn pairwise_failure_does_not_replace_visual_correctness() {
+    const PNG_BASE64: &str =
+      "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNk+A8AAQUBAScY42YAAAAASUVORK5CYII=";
+    let png = BASE64_STANDARD.decode(PNG_BASE64).expect("decode fixture");
+    let mut request = page_request("file:///tmp/candidate.lynx.bundle", "Render the form");
+    request.ui_bench_opponent_url = Some("file:///tmp/opponent.lynx.bundle".to_string());
+    let client =
+      ModelClient::mock(r#"{"score":4,"reason":"Correct.","summary":"The task is visible."}"#);
+
+    let result = score_captured_evaluation(
+      &client,
+      &request,
+      CapturedEvaluation {
+        candidate: CapturedPage {
+          png: png.clone(),
+          steps: vec![],
+          url: request.url.clone(),
+        },
+        ui_bench_opponent: Some(Ok(CapturedPage {
+          png,
+          steps: vec![],
+          url: "file:///tmp/opponent.lynx.bundle".to_string(),
+        })),
+      },
+    )
+    .await;
+
+    assert!(result.error.is_none());
+    assert_eq!(result.score, 4);
+    assert!(result.ui_bench_error.is_some());
+    assert!(result.ui_bench_winner.is_none());
+  }
+
+  #[tokio::test(flavor = "current_thread")]
+  async fn pairwise_success_survives_a_primary_vlm_failure() {
+    const PNG_BASE64: &str =
+      "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNk+A8AAQUBAScY42YAAAAASUVORK5CYII=";
+    let png = BASE64_STANDARD.decode(PNG_BASE64).expect("decode fixture");
+    let mut request = page_request("file:///tmp/candidate.lynx.bundle", "Render the form");
+    request.ui_bench_opponent_url = Some("file:///tmp/opponent.lynx.bundle".to_string());
+    let client = ModelClient::mock(
+      r#"{
+        "score": "NaN",
+        "winner": "project_b",
+        "reason": "Project B has the stronger visible composition."
+      }"#,
+    );
+
+    let result = score_captured_evaluation(
+      &client,
+      &request,
+      CapturedEvaluation {
+        candidate: CapturedPage {
+          png: png.clone(),
+          steps: vec![],
+          url: request.url.clone(),
+        },
+        ui_bench_opponent: Some(Ok(CapturedPage {
+          png,
+          steps: vec![],
+          url: "file:///tmp/opponent.lynx.bundle".to_string(),
+        })),
+      },
+    )
+    .await;
+
+    assert!(result.error.is_some());
+    assert!(result.ui_bench_error.is_none());
+    assert!(matches!(
+      result.ui_bench_winner.as_deref(),
+      Some("candidate" | "opponent")
+    ));
+    assert!(result.ui_bench_candidate_mu.is_some());
+    assert!(result.ui_bench_opponent_mu.is_some());
   }
 
   #[tokio::test(flavor = "current_thread")]
