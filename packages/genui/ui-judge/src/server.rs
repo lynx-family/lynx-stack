@@ -27,7 +27,8 @@ use tokio::runtime::Runtime;
 use tokio::sync::{oneshot, watch};
 
 use crate::headless::{
-  capture_prepared_page, prepare_judge_page_request, score_captured_page, CapturedPage,
+  capture_prepared_evaluation, prepare_judge_page_request, score_captured_evaluation,
+  CapturedEvaluation,
 };
 use crate::model::ModelClient;
 use crate::visual::{
@@ -74,6 +75,16 @@ struct HttpJudgePageRequest {
   task: String,
   #[serde(default, alias = "timeout_ms")]
   timeout_ms: Option<u64>,
+  #[serde(default, alias = "ui_bench_candidate_mu")]
+  ui_bench_candidate_mu: Option<f64>,
+  #[serde(default, alias = "ui_bench_candidate_sigma")]
+  ui_bench_candidate_sigma: Option<f64>,
+  #[serde(default, alias = "ui_bench_opponent_mu")]
+  ui_bench_opponent_mu: Option<f64>,
+  #[serde(default, alias = "ui_bench_opponent_sigma")]
+  ui_bench_opponent_sigma: Option<f64>,
+  #[serde(default, alias = "ui_bench_opponent_url")]
+  ui_bench_opponent_url: Option<String>,
   url: String,
 }
 
@@ -123,6 +134,11 @@ impl HttpJudgePageRequest {
       steps: self.steps,
       task: self.task,
       timeout: Duration::from_millis(timeout_ms),
+      ui_bench_candidate_mu: self.ui_bench_candidate_mu,
+      ui_bench_candidate_sigma: self.ui_bench_candidate_sigma,
+      ui_bench_opponent_mu: self.ui_bench_opponent_mu,
+      ui_bench_opponent_sigma: self.ui_bench_opponent_sigma,
+      ui_bench_opponent_url: self.ui_bench_opponent_url,
       url: self.url,
     })
   }
@@ -176,7 +192,7 @@ struct CaptureJob {
 }
 
 struct CaptureResponse {
-  capture: Result<CapturedPage, UiJudgeResult>,
+  capture: Result<CapturedEvaluation, UiJudgeResult>,
   client: ModelClient,
   request: JudgePageRequest,
 }
@@ -314,7 +330,7 @@ fn run_headless_worker(runtime: Runtime, receiver: Receiver<CaptureJob>) {
     if job.response.is_closed() {
       continue;
     }
-    let capture = runtime.block_on(capture_prepared_page(&job.client, &job.request));
+    let capture = runtime.block_on(capture_prepared_evaluation(&job.client, &job.request));
     let _ = job.response.send(CaptureResponse {
       capture,
       client: job.client,
@@ -428,7 +444,7 @@ async fn judge(
     request,
   } = state.headless.capture(request, client).await?;
   let result = match capture {
-    Ok(capture) => score_captured_page(&client, &request, capture).await,
+    Ok(capture) => score_captured_evaluation(&client, &request, capture).await,
     Err(result) => result,
   };
   Ok(Json(result))
@@ -558,6 +574,11 @@ mod tests {
       steps: vec![],
       task: "Render the page".to_string(),
       timeout_ms: None,
+      ui_bench_candidate_mu: None,
+      ui_bench_candidate_sigma: None,
+      ui_bench_opponent_mu: None,
+      ui_bench_opponent_sigma: None,
+      ui_bench_opponent_url: None,
       url: url.to_string(),
     }
   }
@@ -584,6 +605,15 @@ mod tests {
       steps: vec![],
       summary: None,
       total_blocks: None,
+      ui_bench_candidate_mu: None,
+      ui_bench_candidate_sigma: None,
+      ui_bench_error: None,
+      ui_bench_evaluator: None,
+      ui_bench_opponent_mu: None,
+      ui_bench_opponent_sigma: None,
+      ui_bench_opponent_url: None,
+      ui_bench_reason: None,
+      ui_bench_winner: None,
       url,
       warnings: vec![],
     }
@@ -637,6 +667,33 @@ mod tests {
 
     assert_eq!(request.screenshot_settle, Duration::from_millis(16));
     assert_eq!(request.timeout, Duration::from_secs(60));
+    assert!(request.ui_bench_opponent_url.is_none());
+    assert!(request.ui_bench_candidate_mu.is_none());
+    assert!(request.ui_bench_candidate_sigma.is_none());
+    assert!(request.ui_bench_opponent_mu.is_none());
+    assert!(request.ui_bench_opponent_sigma.is_none());
+  }
+
+  #[test]
+  fn maps_ui_bench_pairwise_state_into_the_library_request() {
+    let mut request = http_request("file:///tmp/main.lynx.bundle");
+    request.ui_bench_candidate_mu = Some(29.2);
+    request.ui_bench_candidate_sigma = Some(7.19);
+    request.ui_bench_opponent_mu = Some(20.8);
+    request.ui_bench_opponent_sigma = Some(7.19);
+    request.ui_bench_opponent_url = Some("file:///tmp/opponent.lynx.bundle".to_string());
+    let request = request
+      .into_judge_request()
+      .expect("valid UI-Bench request");
+
+    assert_eq!(request.ui_bench_candidate_mu, Some(29.2));
+    assert_eq!(request.ui_bench_candidate_sigma, Some(7.19));
+    assert_eq!(request.ui_bench_opponent_mu, Some(20.8));
+    assert_eq!(request.ui_bench_opponent_sigma, Some(7.19));
+    assert_eq!(
+      request.ui_bench_opponent_url.as_deref(),
+      Some("file:///tmp/opponent.lynx.bundle")
+    );
   }
 
   #[test]

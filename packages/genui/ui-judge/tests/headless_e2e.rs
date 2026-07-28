@@ -39,6 +39,11 @@ async fn drives_and_judges_the_existing_headless_runner_page_with_the_real_model
     steps: vec!["Tap the Lynx logo to switch it to React.".to_string()],
     task: "Render the React Lynx welcome screen.".to_string(),
     timeout: Duration::from_secs(120),
+    ui_bench_candidate_mu: None,
+    ui_bench_candidate_sigma: None,
+    ui_bench_opponent_mu: None,
+    ui_bench_opponent_sigma: None,
+    ui_bench_opponent_url: Some(fixture_url(&bundle)),
     url: fixture_url(&bundle),
   })
   .await;
@@ -66,6 +71,20 @@ async fn drives_and_judges_the_existing_headless_runner_page_with_the_real_model
   );
   assert_eq!(result.steps, ["Tap the Lynx logo to switch it to React."]);
   assert_eq!(result.url, fixture_url(&bundle));
+  assert!(
+    result.ui_bench_error.is_none(),
+    "unexpected UI-Bench error: {:?}",
+    result.ui_bench_error
+  );
+  assert_eq!(result.ui_bench_evaluator.as_deref(), Some("vlm_proxy"));
+  assert!(matches!(
+    result.ui_bench_winner.as_deref(),
+    Some("candidate" | "opponent")
+  ));
+  assert!(result.ui_bench_candidate_mu.is_some());
+  assert!(result.ui_bench_candidate_sigma.is_some());
+  assert!(result.ui_bench_opponent_mu.is_some());
+  assert!(result.ui_bench_opponent_sigma.is_some());
 }
 
 fn fixture_bundle() -> PathBuf {
