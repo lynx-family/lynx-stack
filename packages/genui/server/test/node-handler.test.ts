@@ -3,11 +3,11 @@
 // LICENSE file in the root directory of this source tree.
 
 import { EventEmitter } from 'node:events';
-import type { IncomingMessage, ServerResponse } from 'node:http';
 
 import { describe, expect, test } from '@rstest/core';
 
 import { handler } from '../src/index.js';
+import type { HttpRequest, HttpResponse } from '../src/node-handler.js';
 import { routeRequest } from '../src/routes.js';
 
 describe('routeRequest', () => {
@@ -54,17 +54,18 @@ describe('routeRequest', () => {
 });
 
 describe('Node handler', () => {
-  test('writes Web API route responses to ServerResponse', async () => {
+  test('writes Web API route responses to an HTTP/1 response', async () => {
     let requestResumed = false;
     const request = Object.assign(new EventEmitter(), {
       headers: { host: 'server.test' },
       method: 'GET',
+      path: '/a2ui/health',
       resume() {
         requestResumed = true;
         return this;
       },
       url: '/a2ui/health',
-    }) as unknown as IncomingMessage;
+    }) as unknown as HttpRequest;
     const chunks: Uint8Array[] = [];
     const headers = new Map<string, number | readonly string[] | string>();
     const response = Object.assign(new EventEmitter(), {
@@ -87,13 +88,67 @@ describe('Node handler', () => {
         chunks.push(Buffer.from(value));
         return true;
       },
-    }) as unknown as ServerResponse;
+    }) as unknown as HttpResponse;
 
     await handler(request, response);
 
     expect(requestResumed).toBe(true);
     expect(response.statusCode).toBe(200);
     expect(headers.get('content-type')).toBe('application/json');
+    expect(JSON.parse(Buffer.concat(chunks).toString('utf8'))).toMatchObject({
+      provider: 'openai',
+    });
+  });
+
+  test('uses HTTP/2 pseudo-headers without forwarding them', async () => {
+    let requestResumed = false;
+    const request = Object.assign(new EventEmitter(), {
+      headers: {
+        ':authority': 'server.test',
+        ':method': 'GET',
+        ':path': '/a2ui/health',
+        ':scheme': 'https',
+        origin: 'http://localhost:3000',
+      },
+      method: 'GET',
+      path: '/a2ui/health',
+      resume() {
+        requestResumed = true;
+        return this;
+      },
+      url: '/a2ui/health',
+    }) as unknown as HttpRequest;
+    const chunks: Uint8Array[] = [];
+    const headers = new Map<string, number | readonly string[] | string>();
+    const response = Object.assign(new EventEmitter(), {
+      destroyed: false,
+      headersSent: false,
+      statusCode: 0,
+      statusMessage: '',
+      writableFinished: false,
+      destroy() {
+        this.destroyed = true;
+      },
+      end(value?: Uint8Array | string) {
+        if (value !== undefined) chunks.push(Buffer.from(value));
+        this.writableFinished = true;
+      },
+      setHeader(name: string, value: number | readonly string[] | string) {
+        headers.set(name, value);
+      },
+      write(value: Uint8Array | string) {
+        chunks.push(Buffer.from(value));
+        return true;
+      },
+    }) as unknown as HttpResponse;
+
+    await handler(request, response);
+
+    expect(requestResumed).toBe(true);
+    expect(response.statusCode).toBe(200);
+    expect(headers.get('access-control-allow-origin')).toBe(
+      'http://localhost:3000',
+    );
     expect(JSON.parse(Buffer.concat(chunks).toString('utf8'))).toMatchObject({
       provider: 'openai',
     });
