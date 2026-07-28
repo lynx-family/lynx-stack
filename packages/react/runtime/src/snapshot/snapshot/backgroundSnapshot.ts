@@ -25,6 +25,8 @@ import { transformSpread } from './spread.js';
 import type { SerializedSnapshotInstance } from './types.js';
 import { isCloneSnapshot, isCompiledSnapshot, traverseSnapshotInstance } from './utils.js';
 import { globalPipelineOptions } from '../../core/performance.js';
+import { getCurrentRootContext } from '../../root-context.js';
+import type { RootContext } from '../../root-context.js';
 import { profileEnd, profileStart } from '../../shared/profile.js';
 import { isDirectOrDeepEqual } from '../../utils.js';
 import { clearSnapshotVNodeSource, getSnapshotVNodeSource, moveSnapshotVNodeSource } from '../debug/vnodeSource.js';
@@ -166,6 +168,9 @@ export class BackgroundSnapshotInstance {
         createRuntimeSnapshot(type);
       }
     }
+    if (typeof __MULTI_ROOT_RENDER_CONTEXT__ !== 'undefined' && __MULTI_ROOT_RENDER_CONTEXT__) {
+      this.__rootCtx = getCurrentRootContext();
+    }
     this.__snapshot_def = snapshotManager.values.get(type)!;
     const id = this.__id = backgroundSnapshotInstanceManager.nextId += 1;
     backgroundSnapshotInstanceManager.values.set(id, this);
@@ -180,6 +185,7 @@ export class BackgroundSnapshotInstance {
   __extraProps?: Record<string, unknown> | undefined;
   __slotIndex: number = 0;
   private __listItemPlatformInfoIndex?: number;
+  __rootCtx: RootContext | undefined;
 
   private __parent: BackgroundSnapshotInstance | null = null;
   private __firstChild: BackgroundSnapshotInstance | null = null;
@@ -325,12 +331,27 @@ export class BackgroundSnapshotInstance {
   }
 
   tearDown(): void {
-    traverseSnapshotInstance(this, v => {
-      v.__parent = null;
-      v.__previousSibling = null;
-      v.__nextSibling = null;
-      backgroundSnapshotInstanceManager.values.delete(v.__id);
-    });
+    if (typeof __MULTI_ROOT_RENDER_CONTEXT__ !== 'undefined' && __MULTI_ROOT_RENDER_CONTEXT__) {
+      const ctx = this.__rootCtx;
+      const values = ctx && ctx !== getCurrentRootContext()
+        ? ctx.slotValues['bsiValues'] as Map<number, BackgroundSnapshotInstance>
+        : backgroundSnapshotInstanceManager.values;
+      traverseSnapshotInstance(this, v => {
+        v.__parent = null;
+        v.__previousSibling = null;
+        v.__nextSibling = null;
+        values.delete(v.__id);
+      });
+      /* v8 ignore start */
+    } else {
+      traverseSnapshotInstance(this, v => {
+        v.__parent = null;
+        v.__previousSibling = null;
+        v.__nextSibling = null;
+        backgroundSnapshotInstanceManager.values.delete(v.__id);
+      });
+    }
+    /* v8 ignore stop */
   }
 
   get childNodes(): BackgroundSnapshotInstance[] {

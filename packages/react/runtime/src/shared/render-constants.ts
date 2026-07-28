@@ -22,6 +22,7 @@ export const INDEX = '__i';
 export const FLAGS = '__u';
 
 // Component properties
+export const PARENT_DOM = '__P';
 export const VNODE = '__v';
 export const DIRTY = '__d';
 export const FORCE = '__e';

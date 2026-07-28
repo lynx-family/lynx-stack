@@ -4,7 +4,11 @@
 
 type DestroyTask = () => void;
 
-const destroyTasks = new Set<DestroyTask>();
+export let destroyTasks: Set<DestroyTask> = new Set<DestroyTask>();
+
+export function setDestroyTasks(tasks: Set<DestroyTask>): void {
+  destroyTasks = tasks;
+}
 
 export function registerDestroyTask(task: DestroyTask): () => void {
   destroyTasks.add(task);

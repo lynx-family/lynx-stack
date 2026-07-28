@@ -78,6 +78,10 @@ export type SnapshotPatch = unknown[];
 
 export let __globalSnapshotPatch: SnapshotPatch | undefined;
 
+export function setGlobalSnapshotPatch(patch: SnapshotPatch | undefined): void {
+  __globalSnapshotPatch = patch;
+}
+
 export function takeGlobalSnapshotPatch(): SnapshotPatch | undefined {
   if (__globalSnapshotPatch) {
     const list = __globalSnapshotPatch;

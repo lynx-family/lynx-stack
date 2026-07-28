@@ -9,6 +9,7 @@
 /**
  * List of background snapshot instances to remove during commit phase
  */
+
 export let globalBackgroundSnapshotInstancesToRemove: number[] = [];
 
 export function setGlobalBackgroundSnapshotInstancesToRemove(ids: number[]): void {

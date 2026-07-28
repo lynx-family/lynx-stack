@@ -17,6 +17,10 @@ export type RunOnMainThread = <R, Fn extends (...args: any[]) => R>(fn: Fn) => (
 
 export let delayedRunOnMainThreadData: RunWorkletCtxData[] = [];
 
+export function setDelayedRunOnMainThreadData(data: RunWorkletCtxData[]): void {
+  delayedRunOnMainThreadData = data;
+}
+
 export function enqueueDelayedRunOnMainThreadData(data: RunWorkletCtxData): void {
   delayedRunOnMainThreadData.push(data);
 }

@@ -1,0 +1,28 @@
+{
+  "name": "@lynx-js/example-react-multi-root-render-context",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "build": "pnpm build:bundles && rspeedy build",
+    "build:bundle:react": "cross-env NODE_ENV=development rslib build --config react.rslib.config.ts",
+    "build:bundle:shared": "rslib build --config shared.rslib.config.ts",
+    "build:bundles": "pnpm build:bundle:react && pnpm build:bundle:shared",
+    "dev": "pnpm build:bundles && rspeedy dev"
+  },
+  "dependencies": {
+    "@lynx-js/react": "workspace:*"
+  },
+  "devDependencies": {
+    "@lynx-js/external-bundle-rsbuild-plugin": "workspace:*",
+    "@lynx-js/lynx-bundle-rslib-config": "workspace:*",
+    "@lynx-js/qrcode-rsbuild-plugin": "workspace:*",
+    "@lynx-js/react-rsbuild-plugin": "workspace:*",
+    "@lynx-js/react-umd": "workspace:*",
+    "@lynx-js/rspeedy": "workspace:*",
+    "@lynx-js/types": "4.0.0",
+    "@rslib/core": "catalog:rslib",
+    "@types/react": "^18.3.28",
+    "cross-env": "^10.1.0"
+  }
+}
