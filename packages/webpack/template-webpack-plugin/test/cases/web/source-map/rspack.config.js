@@ -43,16 +43,34 @@ export default {
           stage: Compilation.PROCESS_ASSETS_STAGE_REPORT + 2,
         }, assets => {
           const names = Object.keys(assets);
+          // `a/a.js` surviving has TWO causes that want OPPOSITE fixes, so one
+          // message for both is an instrument that reports the wrong failure:
+          //
+          //   - the encode ran and inlined it, but the delete did not happen
+          //     -> the regression this case exists to catch;
+          //   - the encode never ran, so `inlinedAssets` was empty and there was
+          //     nothing to delete -> a broken build wearing the regression's
+          //     clothes (e.g. web-core's encode binary missing).
+          //
+          // `a/template.js` is what the encode emits, so its presence tells them
+          // apart. The full emitted list goes into every message regardless, so
+          // the next run stays diagnostic even if that signal is ever wrong.
+          const emitted = `emitted: ${names.join(', ')}`;
+          const encodeRan = names.includes('a/template.js');
           if (names.includes('a/a.js')) {
             compilation.errors.push(
-              new Error('a/a.js should have been inlined and deleted'),
+              new Error(
+                encodeRan
+                  ? `a/a.js was inlined into a/template.js but NOT deleted; ${emitted}`
+                  : 'a/a.js survives because the encode never ran (no '
+                    + `a/template.js) — a broken build, not a delete regression; ${emitted}`,
+              ),
             );
           }
           if (!names.includes('a/a.js.map')) {
             compilation.errors.push(
               new Error(
-                'a/a.js.map was deleted with the asset it belongs to; emitted: '
-                  + names.filter(n => n.endsWith('.map')).join(', '),
+                `a/a.js.map was deleted with the asset it belongs to; ${emitted}`,
               ),
             );
           }
