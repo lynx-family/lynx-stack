@@ -50,6 +50,9 @@
     "@rspack/core": "catalog:rspack",
     "@rstest/core": "catalog:rstest"
   },
+  "peerDependencies": {
+    "@rslib/core": ">=0.22.0"
+  },
   "engines": {
     "node": "^20.19.0 || >=22.12.0"
   }
