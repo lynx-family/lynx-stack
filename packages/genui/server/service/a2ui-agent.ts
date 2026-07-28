@@ -2,16 +2,22 @@
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
 
+import { getMcpAppRegistry } from './mcp-apps';
 import { createA2UIAgent } from '../agent/a2ui-agent';
 import type { A2UIAgent } from '../agent/a2ui-agent';
 import type { A2UICatalog } from '../agent/a2ui-catalog';
 import { loadBasicCatalog } from '../agent/a2ui-catalog';
+import {
+  createA2UIMcpAppCatalogExtension,
+  prepareA2UIMcpAppStep,
+} from '../agent/a2ui-mcp-app-catalog';
 import {
   formatErrorsForModel,
   validateA2UIOutput,
 } from '../agent/a2ui-validator';
 import type { A2UIMessage, ValidationOptions } from '../agent/a2ui-validator';
 import { resolveA2UIImageUrls } from '../agent/image-resolver';
+import type { McpAppsClientRegistry } from '../agent/mcp-apps-registry';
 import {
   buildConversationMessages,
   sumContentChars,
@@ -40,6 +46,7 @@ import type {
 
 export interface A2UIChatOptions extends ChatOptions {
   catalog?: A2UICatalog | undefined;
+  mcpAppsRegistry?: McpAppsClientRegistry | undefined;
   maxRepairAttempts?: number | undefined;
 }
 
@@ -71,15 +78,37 @@ export default class A2UIAgentService {
 
   private async getAgent(opts: A2UIChatOptions): Promise<A2UIAgent> {
     const catalog = opts.catalog ?? await loadBasicCatalog();
+    const registryHash = createStableValueHash(opts.mcpAppsRegistry ?? null);
+    const extensions = opts.mcpAppsRegistry
+      ? [
+        createA2UIMcpAppCatalogExtension(
+          opts.mcpAppsRegistry,
+          getMcpAppRegistry(),
+        ),
+      ]
+      : [];
     return this.agentCache.get(
       opts,
       () =>
         createA2UIAgent({
           ...pickProviderConfig(opts),
           catalog,
+          extensions,
         }).then(({ agent }) => agent),
-      `${catalog.id}:${createStableValueHash(catalog)}`,
+      `${catalog.id}:${createStableValueHash(catalog)}:${registryHash}`,
     );
+  }
+
+  private buildRunOptions(opts: A2UIChatOptions) {
+    return {
+      ...buildOpenAIRunOptions(opts),
+      ...(opts.mcpAppsRegistry
+        ? {
+          maxSteps: 6,
+          prepareStep: prepareA2UIMcpAppStep,
+        }
+        : {}),
+    };
   }
 
   public async stream(
@@ -101,7 +130,7 @@ export default class A2UIAgentService {
     });
     const result = agent.stream(
       modelMessages,
-      buildOpenAIRunOptions(opts),
+      this.buildRunOptions(opts),
     ) as MastraStreamResult;
     opts.onPerformanceEvent?.('agent.stream.invoke.completed', {
       durationMs: performance.now() - streamStartedAt,
@@ -120,6 +149,7 @@ export default class A2UIAgentService {
       text: string | undefined;
       usage: unknown;
       finishReason: unknown;
+      toolResults: unknown;
     }>;
   }> {
     const buildConversationStartedAt = performance.now();
@@ -155,7 +185,7 @@ export default class A2UIAgentService {
     const agent = await this.getAgent(opts);
     return agent.generate(
       toModelMessages(messages),
-      buildOpenAIRunOptions(opts),
+      this.buildRunOptions(opts),
     );
   }
 
@@ -163,7 +193,12 @@ export default class A2UIAgentService {
     messages: ChatMessage[],
     opts: A2UIChatOptions = {},
     conversation?: ConversationContext,
-  ): Promise<{ text: string; usage: unknown; finishReason: unknown }> {
+  ): Promise<{
+    text: string;
+    usage: unknown;
+    finishReason: unknown;
+    toolResults: unknown;
+  }> {
     const result = await this.generate(
       buildConversationMessages(
         messages,
@@ -172,7 +207,8 @@ export default class A2UIAgentService {
       ),
       opts,
     ) as MastraResult;
-    return extractGenerationResult(result);
+    const generated = await extractGenerationResult(result);
+    return generated;
   }
 
   public async generateValidated(
@@ -199,12 +235,13 @@ export default class A2UIAgentService {
     for (let attempt = 1; attempt <= maxAttempts; attempt++) {
       const result = await agent.generate(
         toModelMessages(convo),
-        buildOpenAIRunOptions(opts),
+        this.buildRunOptions(opts),
       ) as MastraResult;
 
-      const text = await extractText(result);
-      lastText = text;
+      const generatedText = await extractText(result);
       const metadata = await finalizeResult(result);
+      const text = generatedText;
+      lastText = text;
       lastUsage = metadata.usage;
       lastFinishReason = metadata.finishReason;
 

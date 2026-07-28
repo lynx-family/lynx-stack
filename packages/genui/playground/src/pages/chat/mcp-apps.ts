@@ -8,19 +8,18 @@ import {
   isMcpToolsCallRequest,
   isRecord,
   parseMcpAppsOutput,
-  parseMcpAppsProtocolMetadata,
 } from '@lynx-js/genui/mcp-apps/protocol';
 import type {
-  McpAppsClientRegistry,
   McpAppsOutput,
-  McpAppsProtocolMetadata,
-  McpAppsResource,
-  McpAppsTool,
   McpAppsToolOutput,
   McpCallToolResult,
   McpToolsCallRequest,
 } from '@lynx-js/genui/mcp-apps/protocol';
 
+import {
+  fetchMcpAppsRegistration,
+  getActiveMcpAppsRegistration,
+} from './mcp-apps-registry.js';
 import {
   CHAT_PROVIDER_SETTINGS_ADAPTER,
   filterProviderRequestOptionsForEndpoint,
@@ -38,7 +37,6 @@ import type {
   ChatStreamStep,
 } from './type.js';
 import {
-  PRODUCT_API,
   PRODUCT_API_NAME,
   PRODUCT_RENDERER_ID,
   callProductApi,
@@ -48,7 +46,6 @@ import type {
   ProductApiResult,
 } from '../../../lynx-src/mcp-apps/product/api.js';
 import {
-  WEATHER_API,
   WEATHER_API_NAME,
   WEATHER_RENDERER_ID,
   callWeatherApi,
@@ -58,175 +55,20 @@ import type { WeatherApiResult } from '../../../lynx-src/mcp-apps/weather/api.js
 import type { ModelChatMessage } from '../../hooks/useConversation.js';
 import type { PreviewPerformanceMetrics } from '../../storage/types.js';
 
+export {
+  PRODUCT_RESOURCE_URI,
+  WEATHER_RESOURCE_URI,
+} from './mcp-apps-registry.js';
+
 export interface McpAppsStreamState {
   generatedText: string;
   output?: McpAppsOutput;
 }
 
-export const WEATHER_RESOURCE_URI = 'ui://lynx/weather/current';
-export const PRODUCT_RESOURCE_URI = 'ui://lynx/product/card';
-
-const WEATHER_TOOL: McpAppsTool = {
-  name: WEATHER_API.name,
-  title: WEATHER_API.title,
-  description: WEATHER_API.description,
-  inputSchema: WEATHER_API.inputSchema,
-  _meta: {
-    ui: {
-      resourceUri: WEATHER_RESOURCE_URI,
-      visibility: ['model'],
-    },
-  },
-};
-
-const PRODUCT_TOOL: McpAppsTool = {
-  name: PRODUCT_API.name,
-  title: PRODUCT_API.title,
-  description: PRODUCT_API.description,
-  inputSchema: PRODUCT_API.inputSchema,
-  _meta: {
-    ui: {
-      resourceUri: PRODUCT_RESOURCE_URI,
-      visibility: ['model'],
-    },
-  },
-};
-
-function createWeatherResource(
-  metadata: McpAppsProtocolMetadata,
-): McpAppsResource {
-  return {
-    uri: WEATHER_RESOURCE_URI,
-    name: 'lynx_weather_card',
-    title: 'Lynx Weather Card',
-    description:
-      'Responsive Lynx weather card with current conditions and forecast.',
-    mimeType: metadata.resourceMimeType,
-    _meta: {
-      ui: {
-        prefersBorder: true,
-        csp: {
-          connectDomains: [],
-          resourceDomains: [],
-        },
-      },
-      'lynxjs/template': {
-        renderer: WEATHER_RENDERER_ID,
-        webBundle: './mcp-apps.web.js',
-        nativeBundle: './mcp-apps.lynx.js',
-      },
-    },
-  };
-}
-
-function createProductResource(
-  metadata: McpAppsProtocolMetadata,
-): McpAppsResource {
-  return {
-    uri: PRODUCT_RESOURCE_URI,
-    name: 'lynx_product_card',
-    title: 'Lynx Product Card',
-    description:
-      'Responsive Lynx product card with price, availability, refresh, and purchase actions.',
-    mimeType: metadata.resourceMimeType,
-    _meta: {
-      ui: {
-        prefersBorder: true,
-        csp: {
-          connectDomains: [],
-          resourceDomains: ['https://images.unsplash.com'],
-        },
-      },
-      'lynxjs/template': {
-        renderer: PRODUCT_RENDERER_ID,
-        webBundle: './mcp-apps.web.js',
-        nativeBundle: './mcp-apps.lynx.js',
-      },
-    },
-  };
-}
-
-function createMcpAppsClientRegistry(
-  metadata: McpAppsProtocolMetadata,
-): McpAppsClientRegistry {
-  return {
-    protocolVersion: metadata.protocolVersion,
-    appProtocolVersion: metadata.appProtocolVersion,
-    clientInfo: {
-      name: 'lynx-genui-playground',
-      version: '0.1.0',
-    },
-    capabilities: {
-      extensions: {
-        [metadata.extensionId]: {
-          mimeTypes: [metadata.resourceMimeType],
-        },
-      },
-    },
-    tools: [WEATHER_TOOL, PRODUCT_TOOL],
-    resources: [
-      createWeatherResource(metadata),
-      createProductResource(metadata),
-    ],
-  };
-}
-
-interface McpAppsRegistration {
-  metadata: McpAppsProtocolMetadata;
-  registry: McpAppsClientRegistry;
-}
-
-const registrations = new Map<string, McpAppsRegistration>();
-let activeRegistration: McpAppsRegistration | null = null;
-
-function metadataEndpoint(streamEndpoint: string): string {
-  const url = new URL(streamEndpoint);
-  if (!/\/stream\/?$/u.test(url.pathname)) {
-    throw new Error('MCP Apps stream endpoint must end with /stream');
-  }
-  url.pathname = url.pathname.replace(/\/stream\/?$/u, '/metadata');
-  return url.toString();
-}
-
-async function fetchRegistration(
-  streamEndpoint: string,
-  signal: AbortSignal,
-): Promise<McpAppsRegistration> {
-  const url = metadataEndpoint(streamEndpoint);
-  const cached = registrations.get(url);
-  if (cached) {
-    activeRegistration = cached;
-    return activeRegistration;
-  }
-
-  const response = await window.fetch(url, {
-    method: 'GET',
-    headers: { Accept: 'application/json' },
-    signal,
-  });
-  const payload: unknown = await response.json().catch(() => null);
-  if (!response.ok) {
-    throw new Error(
-      `MCP Apps metadata request failed: ${normalizeError(payload)}`,
-    );
-  }
-  const metadata = parseMcpAppsProtocolMetadata(payload);
-  if (!metadata) {
-    throw new Error('MCP Apps metadata response is invalid');
-  }
-  activeRegistration = {
-    metadata,
-    registry: createMcpAppsClientRegistry(metadata),
-  };
-  registrations.set(url, activeRegistration);
-  return activeRegistration;
-}
-
-function getActiveRegistration(): McpAppsRegistration {
-  if (!activeRegistration) {
-    throw new Error('MCP Apps protocol metadata has not been loaded');
-  }
-  return activeRegistration;
+export interface RegisteredMcpApp {
+  url: string;
+  webUrl?: string;
+  mcpAppData: AppRenderData;
 }
 
 const WELCOME_MESSAGE: ChatMessageModel = {
@@ -296,7 +138,7 @@ function executeRegisteredMcpAppsTool(
 function resolveRegisteredToolOutput(
   request: McpToolsCallRequest,
   resourceValue?: unknown,
-  registration = getActiveRegistration(),
+  registration = getActiveMcpAppsRegistration(),
 ): McpAppsToolOutput {
   const { metadata, registry } = registration;
   const tool = registry.tools.find((item) => item.name === request.params.name);
@@ -335,7 +177,7 @@ function resolveRegisteredToolOutput(
 
 function normalizeDonePayload(payload: unknown): McpAppsOutput {
   if (!isRecord(payload)) throw new Error(normalizeError(payload));
-  const registration = getActiveRegistration();
+  const registration = getActiveMcpAppsRegistration();
   if (payload.protocolVersion !== registration.metadata.appProtocolVersion) {
     throw new Error('MCP Apps agent returned an unsupported protocol version');
   }
@@ -554,6 +396,65 @@ function appRenderData(output: McpAppsToolOutput): AppRenderData {
   throw new Error(`No renderer data adapter for ${output.tool.name}`);
 }
 
+function safeBundleReference(value: unknown): string | null {
+  if (typeof value !== 'string' || !value.trim()) return null;
+  const reference = value.trim();
+  if (reference.startsWith('./') || reference.startsWith('/')) return reference;
+  try {
+    const url = new URL(reference);
+    return url.protocol === 'http:' || url.protocol === 'https:'
+      ? reference
+      : null;
+  } catch {
+    return null;
+  }
+}
+
+function registeredMcpAppTemplate(
+  output: McpAppsToolOutput,
+  mcpAppData: AppRenderData,
+): Omit<RegisteredMcpApp, 'mcpAppData'> {
+  const metadata = output.resource._meta;
+  const template = isRecord(metadata)
+    ? metadata['lynxjs/template']
+    : undefined;
+  if (!isRecord(template)) {
+    throw new Error(
+      `Registered MCP Apps resource ${output.resource.uri} has no Lynx template`,
+    );
+  }
+  const renderer = typeof template.renderer === 'string'
+    ? template.renderer
+    : null;
+  const url = safeBundleReference(template.nativeBundle);
+  const webUrl = safeBundleReference(template.webBundle);
+  if (!renderer || !url) {
+    throw new Error(
+      `Registered MCP Apps resource ${output.resource.uri} has an invalid Lynx template`,
+    );
+  }
+  if (renderer !== mcpAppData.renderer) {
+    throw new Error(
+      `Registered MCP Apps resource ${output.resource.uri} selected an unexpected renderer`,
+    );
+  }
+  return {
+    url,
+    ...(webUrl ? { webUrl } : {}),
+  };
+}
+
+export function executeRegisteredMcpApp(
+  request: McpToolsCallRequest,
+): RegisteredMcpApp {
+  const output = resolveRegisteredToolOutput(request);
+  const mcpAppData = appRenderData(output);
+  return {
+    ...registeredMcpAppTemplate(output, mcpAppData),
+    mcpAppData,
+  };
+}
+
 export const MCP_APPS_CHAT_ADAPTER = {
   id: 'mcp-apps',
   copy: {
@@ -569,7 +470,7 @@ export const MCP_APPS_CHAT_ADAPTER = {
   settings: CHAT_PROVIDER_SETTINGS_ADAPTER,
   async createRequest({ prompt, conversation, settings, host, signal }) {
     const url = getChatEndpoint('mcp-apps', host);
-    const registration = await fetchRegistration(url, signal);
+    const registration = await fetchMcpAppsRegistration(url, signal);
     const provider = filterProviderRequestOptionsForEndpoint(
       toProviderRequestOptions(settings),
       url,
@@ -592,8 +493,11 @@ export const MCP_APPS_CHAT_ADAPTER = {
     };
   },
   stream: MCP_APPS_STREAM,
-  hydrate({ history, previewMessages }) {
-    return hydrate(history, previewMessages);
+  hydrate({ history, previewMessages, previewPayloadUrls }) {
+    return {
+      ...hydrate(history, previewMessages),
+      previewPayloadUrls,
+    };
   },
   persist(output) {
     return {

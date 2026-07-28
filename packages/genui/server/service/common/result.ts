@@ -70,16 +70,21 @@ export async function finalizeResult(result: MastraResult): Promise<{
   text: string | undefined;
   usage: unknown;
   finishReason: unknown;
+  toolResults: unknown;
 }> {
   const text = await Promise.resolve(result.text).catch(() => undefined);
   const usage = await Promise.resolve(result.usage).catch(() => undefined);
   const finishReason = await Promise.resolve(result.finishReason).catch(
     () => undefined,
   );
+  const toolResults = await Promise.resolve(result.toolResults).catch(
+    () => undefined,
+  );
   return {
     text: typeof text === 'string' ? text : undefined,
     usage,
     finishReason,
+    toolResults,
   };
 }
 
@@ -87,6 +92,7 @@ export async function extractGenerationResult(result: MastraResult): Promise<{
   text: string;
   usage: unknown;
   finishReason: unknown;
+  toolResults: unknown;
 }> {
   const [text, metadata] = await Promise.all([
     extractText(result),
@@ -96,5 +102,6 @@ export async function extractGenerationResult(result: MastraResult): Promise<{
     text,
     usage: metadata.usage,
     finishReason: metadata.finishReason,
+    toolResults: metadata.toolResults,
   };
 }

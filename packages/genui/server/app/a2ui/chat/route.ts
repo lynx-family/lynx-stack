@@ -11,7 +11,10 @@ import { errorMessage } from '../../common/errors';
 import { checkRateLimit, rateLimitJsonResponse } from '../../common/rate-limit';
 import { readJsonBodyWithLimit } from '../../common/request';
 import { extractUsageMetrics } from '../../common/usage';
-import { pickA2UIChatOptions } from '../_shared';
+import {
+  pickA2UIChatOptions,
+  validateOptionalA2UIMcpAppsRegistry,
+} from '../_shared';
 import type { A2UIChatBody } from '../_shared';
 
 export function OPTIONS(req: Request) {
@@ -51,9 +54,17 @@ export async function POST(req: Request) {
       { status: validatedConversation.status },
     );
   }
+  const validatedRegistry = validateOptionalA2UIMcpAppsRegistry(body.registry);
+  if (!validatedRegistry.ok) {
+    return jsonWithCors(
+      req,
+      { ok: false, error: validatedRegistry.error },
+      { status: validatedRegistry.status },
+    );
+  }
 
   const service = getA2UIAgentService();
-  const opts = pickA2UIChatOptions(body);
+  const opts = pickA2UIChatOptions(body, validatedRegistry.registry);
 
   try {
     if (body.validate === false) {

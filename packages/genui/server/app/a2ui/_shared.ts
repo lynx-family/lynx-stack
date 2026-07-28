@@ -3,6 +3,8 @@
 // LICENSE file in the root directory of this source tree.
 
 import type { A2UICatalog } from '../../agent/a2ui-catalog';
+import { validateMcpAppsClientRegistry } from '../../agent/mcp-apps-registry';
+import type { McpAppsClientRegistry } from '../../agent/mcp-apps-registry';
 import type { A2UIChatOptions } from '../../service/a2ui-agent';
 import type { OpenAIReasoningEffort } from '../../service/common/types';
 import { pickProviderOptions } from '../common/provider-options';
@@ -17,6 +19,7 @@ export interface A2UIChatBody {
   api?: 'chat' | 'responses';
   reasoningEffort?: OpenAIReasoningEffort;
   catalog?: A2UICatalog;
+  registry?: unknown;
   maxRepairAttempts?: number;
   validate?: boolean;
 }
@@ -33,12 +36,24 @@ export interface ValidatedAction {
   name: string;
 }
 
-export function pickA2UIChatOptions(body: A2UIChatBody): A2UIChatOptions {
+export function pickA2UIChatOptions(
+  body: A2UIChatBody,
+  mcpAppsRegistry?: McpAppsClientRegistry,
+): A2UIChatOptions {
   return {
     ...pickProviderOptions(body),
     catalog: body.catalog,
+    mcpAppsRegistry,
     maxRepairAttempts: body.maxRepairAttempts,
   };
+}
+
+export function validateOptionalA2UIMcpAppsRegistry(value: unknown):
+  | { ok: true; registry?: McpAppsClientRegistry }
+  | { ok: false; status: number; error: string }
+{
+  if (value === undefined) return { ok: true };
+  return validateMcpAppsClientRegistry(value);
 }
 
 function isRecord(value: unknown): value is Record<string, unknown> {

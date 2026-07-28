@@ -1,6 +1,10 @@
 // Copyright 2026 The Lynx Authors. All rights reserved.
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
+import { isMcpToolsCallRequest } from '@lynx-js/genui/mcp-apps/protocol';
+
+import { fetchMcpAppsRegistration } from './mcp-apps-registry.js';
+import { executeRegisteredMcpApp } from './mcp-apps.js';
 import {
   CHAT_PROVIDER_SETTINGS_ADAPTER,
   filterProviderRequestOptionsForEndpoint,
@@ -76,6 +80,10 @@ const SUGGESTIONS = [
     label: '⚡ Quiz card with actions',
     text:
       'Create a trivia quiz card. Show a question "Which shape has three sides?" with 4 answer buttons: Triangle, Square, Circle, Hexagon. When the user taps an answer, show whether it is correct with a brief explanation.',
+  },
+  {
+    label: '☁️ Use registered weather MCP App',
+    text: 'Show the Hangzhou weather card.',
   },
 ] as const;
 
@@ -184,6 +192,71 @@ function normalizeMessages(payload: unknown): A2UIOutput {
     : [];
 }
 
+interface ResolvedMcpAppComponent {
+  component: unknown;
+  resolved: boolean;
+}
+
+interface ResolvedA2UIOutput {
+  output: A2UIOutput;
+  resolvedMcpApp: boolean;
+}
+
+function resolveRegisteredMcpAppComponent(
+  value: unknown,
+): ResolvedMcpAppComponent {
+  if (!isRecord(value) || value.component !== 'McpApp') {
+    return { component: value, resolved: false };
+  }
+  if (!isRecord(value.mcpAppData)) {
+    return { component: value, resolved: false };
+  }
+  const toolCall = value.mcpAppData.toolCall;
+  if (!isMcpToolsCallRequest(toolCall)) {
+    return { component: value, resolved: false };
+  }
+  const {
+    url: _untrustedUrl,
+    webUrl: _untrustedWebUrl,
+    mcpAppData: _unresolvedMcpAppData,
+    ...component
+  } = value;
+  return {
+    component: {
+      ...component,
+      ...executeRegisteredMcpApp(toolCall),
+    },
+    resolved: true,
+  };
+}
+
+function resolveRegisteredMcpApps(messages: A2UIOutput): ResolvedA2UIOutput {
+  let resolvedMcpApp = false;
+  const output = messages.map((message) => {
+    if (!isRecord(message) || !isRecord(message.updateComponents)) {
+      return message;
+    }
+    const components = message.updateComponents.components;
+    if (!Array.isArray(components)) return message;
+    let resolvedMessage = false;
+    const nextComponents = components.map((component) => {
+      const resolution = resolveRegisteredMcpAppComponent(component);
+      resolvedMessage ||= resolution.resolved;
+      return resolution.component;
+    });
+    if (!resolvedMessage) return message;
+    resolvedMcpApp = true;
+    return {
+      ...message,
+      updateComponents: {
+        ...message.updateComponents,
+        components: nextComponents,
+      },
+    };
+  });
+  return { output, resolvedMcpApp };
+}
+
 function normalizePreviewPayload(payload: unknown) {
   if (!isRecord(payload)) return null;
   const preview = (payload as A2UIDonePayload).preview;
@@ -200,14 +273,19 @@ function normalizePreviewPayload(payload: unknown) {
 
 function metadataEmissions(
   payload: unknown,
+  invalidatePreviewPayload = false,
 ): ChatStreamEmission<A2UIOutput>[] {
   if (!isRecord(payload)) return [];
   const record = payload as A2UIDonePayload;
   const emissions: ChatStreamEmission<A2UIOutput>[] = [];
   const usage = parseTokenUsage(record.usage);
   if (usage) emissions.push({ type: 'usage', usage });
-  const preview = normalizePreviewPayload(payload);
-  if (preview) emissions.push({ type: 'previewPayload', value: preview });
+  if (invalidatePreviewPayload) {
+    emissions.push({ type: 'previewPayload', value: null });
+  } else {
+    const preview = normalizePreviewPayload(payload);
+    if (preview) emissions.push({ type: 'previewPayload', value: preview });
+  }
   return emissions;
 }
 
@@ -239,7 +317,9 @@ const A2UI_STREAM = {
     }
 
     if (frame.event === 'message') {
-      const nextMessages = normalizeMessages(frame.data);
+      const nextMessages = resolveRegisteredMcpApps(
+        normalizeMessages(frame.data),
+      ).output;
       if (nextMessages.length === 0) return streamStep(state, []);
       const nextState = {
         ...state,
@@ -254,8 +334,14 @@ const A2UI_STREAM = {
     }
 
     if (frame.event === 'done') {
-      const output = normalizeMessages(frame.data);
-      const metadata = metadataEmissions(frame.data);
+      const resolution = resolveRegisteredMcpApps(
+        normalizeMessages(frame.data),
+      );
+      const output = resolution.output;
+      const metadata = metadataEmissions(
+        frame.data,
+        resolution.resolvedMcpApp,
+      );
       if (output.length === 0) {
         throw new Error(normalizeErrorPayload(frame.data));
       }
@@ -272,18 +358,24 @@ const A2UI_STREAM = {
     return streamStep(state, []);
   },
   fromJson(payload: unknown): ChatStreamStep<A2UIStreamState, A2UIOutput> {
-    const output = normalizeMessages(payload);
+    const resolution = resolveRegisteredMcpApps(normalizeMessages(payload));
+    const output = resolution.output;
     if (output.length === 0) {
       throw new Error(normalizeErrorPayload(payload));
     }
     return streamStep(
       { generatedText: safeStringify(payload), messages: output },
-      [...metadataEmissions(payload), { type: 'final', output }],
+      [
+        ...metadataEmissions(payload, resolution.resolvedMcpApp),
+        { type: 'final', output },
+      ],
     );
   },
   finish(state: A2UIStreamState): A2UIOutput | null {
     if (state.messages.length > 0) return state.messages;
-    const output = normalizeMessages(state.generatedText);
+    const output = resolveRegisteredMcpApps(
+      normalizeMessages(state.generatedText),
+    ).output;
     return output.length > 0 ? output : null;
   },
   error: normalizeErrorPayload,
@@ -295,10 +387,19 @@ function includesCreateSurface(messages: readonly unknown[]): boolean {
   );
 }
 
-function outputFromHistory(history: readonly ModelChatMessage[]): A2UIOutput {
-  return history.flatMap((message) =>
-    message.role === 'assistant' ? normalizeMessages(message.content) : []
-  );
+function outputFromHistory(
+  history: readonly ModelChatMessage[],
+): ResolvedA2UIOutput {
+  let resolvedMcpApp = false;
+  const output = history.flatMap((message) => {
+    if (message.role !== 'assistant') return [];
+    const resolution = resolveRegisteredMcpApps(
+      normalizeMessages(message.content),
+    );
+    resolvedMcpApp ||= resolution.resolvedMcpApp;
+    return resolution.output;
+  });
+  return { output, resolvedMcpApp };
 }
 
 function parsePersistedAction(content: string): PersistedA2UIAction | null {
@@ -390,7 +491,9 @@ function hydrateMessages(
     }
 
     if (message.role !== 'assistant') continue;
-    const output = normalizeMessages(message.content);
+    const output = resolveRegisteredMcpApps(
+      normalizeMessages(message.content),
+    ).output;
     if (previousWasAction && output.length > 0) {
       messages.push(
         agentRespondedMessage(output.length, message.previewMetrics),
@@ -436,13 +539,18 @@ function hydrateMessages(
 }
 
 function hydrate(context: ChatHydrationContext): ChatHydration<A2UIOutput> {
-  const persistedPreview = context.previewMessages;
-  const output = includesCreateSurface(persistedPreview)
+  const persistedPreview = resolveRegisteredMcpApps(
+    context.previewMessages,
+  );
+  const resolution = includesCreateSurface(persistedPreview.output)
     ? persistedPreview
     : outputFromHistory(context.history);
   return {
     messages: hydrateMessages(context.history),
-    output: output.length > 0 ? output : null,
+    output: resolution.output.length > 0 ? resolution.output : null,
+    previewPayloadUrls: resolution.resolvedMcpApp
+      ? null
+      : context.previewPayloadUrls,
     metrics: lastMetrics(context.history),
   };
 }
@@ -475,8 +583,14 @@ export const A2UI_CHAT_ADAPTER = {
   },
   suggestions: SUGGESTIONS,
   settings: CHAT_PROVIDER_SETTINGS_ADAPTER,
-  createRequest({ prompt, conversation, settings, host }) {
+  async createRequest({ prompt, conversation, settings, host, signal }) {
     const url = getChatEndpoint('a2ui', host);
+    const mcpAppsUrl = getChatEndpoint('mcp-apps', host);
+    const registration = await fetchMcpAppsRegistration(mcpAppsUrl, signal)
+      .catch((error: unknown) => {
+        if (signal.aborted) throw error;
+        return null;
+      });
     const provider = filterProviderRequestOptionsForEndpoint(
       toProviderRequestOptions(settings),
       url,
@@ -489,6 +603,7 @@ export const A2UI_CHAT_ADAPTER = {
       body: {
         messages: [{ role: 'user', content: prompt }],
         conversation,
+        ...(registration ? { registry: registration.registry } : {}),
         ...provider,
       },
     };

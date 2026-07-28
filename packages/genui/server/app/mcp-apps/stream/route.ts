@@ -4,8 +4,8 @@
 
 import { MCP_APPS_PROTOCOL_VERSION } from '@lynx-js/genui-mcp-apps/protocol';
 
+import { findMcpAppInvocation } from '../../../agent/mcp-apps';
 import {
-  buildMcpAppsRegistrySystemMessage,
   parseMcpAppsAgentOutputs,
   resolveMcpAppsResource,
   validateMcpAppsClientRegistry,
@@ -77,14 +77,6 @@ export async function POST(req: Request) {
   const registry = validatedRegistry.registry;
   const opts = pickProviderOptions(parsed.body);
   const service = getMcpAppsAgentService();
-  const modelMessages = [
-    {
-      role: 'system' as const,
-      content: buildMcpAppsRegistrySystemMessage(registry),
-    },
-    ...validatedMessages.messages,
-  ];
-
   let closed = false;
   const generationController = new AbortController();
   const abortGeneration = (reason?: unknown) => {
@@ -112,12 +104,44 @@ export async function POST(req: Request) {
       };
       const run = async () => {
         try {
-          const { text, usage, finishReason } = await service.generateRaw(
-            modelMessages,
-            opts,
-            validatedConversation.conversation,
-            generationController.signal,
-          );
+          const { text, usage, finishReason, toolResults } = await service
+            .generateRaw(
+              validatedMessages.messages,
+              registry,
+              opts,
+              validatedConversation.conversation,
+              generationController.signal,
+            );
+          const invocation = findMcpAppInvocation(toolResults);
+          if (invocation) {
+            const tool = registry.tools.find((item) =>
+              item.name === invocation.toolName
+            );
+            if (!tool) {
+              throw new Error(
+                `registered tool ${invocation.toolName} is missing`,
+              );
+            }
+            const resource = resolveMcpAppsResource(tool, registry);
+            enqueue('done', {
+              ok: true,
+              protocolVersion: MCP_APPS_PROTOCOL_VERSION,
+              toolCall: {
+                jsonrpc: '2.0',
+                id: invocation.callId,
+                method: 'tools/call',
+                params: {
+                  name: invocation.toolName,
+                  arguments: invocation.input,
+                },
+              },
+              tool,
+              resource,
+              usage,
+              finishReason,
+            });
+            return;
+          }
           const selection = parseMcpAppsAgentOutputs(
             text,
             '',

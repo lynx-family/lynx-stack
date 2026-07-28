@@ -411,8 +411,11 @@ export const OPENUI_CHAT_ADAPTER = {
     return createOpenUIRequest(prompt, conversation, settings, host);
   },
   stream: CREATE_STREAM,
-  hydrate({ history }) {
-    return hydrateOpenUI(history);
+  hydrate({ history, previewPayloadUrls }) {
+    return {
+      ...hydrateOpenUI(history),
+      previewPayloadUrls,
+    };
   },
   persist(output) {
     return persistOutput(output);

@@ -110,7 +110,7 @@ const COMPONENT_SUMMARIES: Record<string, string> = {
     'Scrollable repeating layout container. Use when repeated content needs scrolling; otherwise prefer Column or Row template children.',
   Loading: 'Animated progress indicator for pending content.',
   McpApp:
-    'Host a trusted MCP App Lynx bundle in a nested frame and pass validated renderer data to it.',
+    'Generic host for a registered MCP App. After mcp_apps_list finds a matching app, use only the props returned by mcp_apps_call.',
   Modal:
     'Modal dialog with a trigger component and a content component. The trigger opens the modal locally when tapped.',
   PieChart: 'Display numeric slices as a pie or donut chart.',
@@ -352,7 +352,7 @@ export const BASIC_CATALOG: A2UICatalog = {
   extraRules: [
     'Use only components listed in this catalog; unsupported examples such as Video, AudioPlayer, DatePicker, or Checkbox are not available unless they appear here.',
     'The implemented checkbox component is named "CheckBox" with a capital B.',
-    'Use McpApp only with bundle URLs and mcpAppData supplied by a host-registered MCP Apps resource; never invent MCP App URLs or renderer data.',
+    'Before composing a response when MCP Apps tools are available, call mcp_apps_list. If an app matches, get and call it, then emit McpApp with the returned props exactly; otherwise continue with normal A2UI.',
   ],
   functions: functionsFromGeneratedCatalog(generatedCatalog),
   examples: BASIC_CATALOG_EXAMPLES,
@@ -407,7 +407,7 @@ function createA2UICatalogFromExtractedManifest(
     extraRules: [
       'Use only components listed in this catalog; unsupported examples such as Video, AudioPlayer, DatePicker, or Checkbox are not available unless they appear here.',
       'The implemented checkbox component is named "CheckBox" with a capital B.',
-      'Use McpApp only with bundle URLs and mcpAppData supplied by a host-registered MCP Apps resource; never invent MCP App URLs or renderer data.',
+      'Before composing a response when MCP Apps tools are available, call mcp_apps_list. If an app matches, get and call it, then emit McpApp with the returned props exactly; otherwise continue with normal A2UI.',
     ],
     examples: BASIC_CATALOG_EXAMPLES,
   });

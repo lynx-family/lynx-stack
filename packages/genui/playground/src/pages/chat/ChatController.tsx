@@ -754,7 +754,7 @@ export function ChatController<
     setInputValue('');
     setCurrentOutput(hydrated.output);
     setCurrentPreviewOutput(hydrated.output);
-    setCurrentPreviewPayloadUrls(persistedPreviewPayloadUrls);
+    setCurrentPreviewPayloadUrls(hydrated.previewPayloadUrls);
     const nextMetrics = hydrated.metrics ?? {};
     metricsRef.current = nextMetrics;
     setMetrics(nextMetrics);

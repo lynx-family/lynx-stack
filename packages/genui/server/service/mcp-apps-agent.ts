@@ -2,12 +2,15 @@
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
 
+import { McpAppRegistry, createMcpAppsTools } from '../agent/mcp-apps';
 import { createMcpAppsAgent } from '../agent/mcp-apps-agent';
 import type { McpAppsAgent } from '../agent/mcp-apps-agent';
+import type { McpAppsClientRegistry } from '../agent/mcp-apps-registry';
 import { buildConversationMessages, toModelMessages } from './common/messages';
 import {
   ProviderAgentCache,
   buildResourceRunOptions,
+  createStableValueHash,
   pickProviderConfig,
 } from './common/provider';
 import { extractGenerationResult } from './common/result';
@@ -20,16 +23,26 @@ import type {
 
 export class McpAppsAgentService {
   private readonly agentCache = new ProviderAgentCache<McpAppsAgent>();
+  private readonly hostApps = new McpAppRegistry();
 
-  private getAgent(opts: ChatOptions): Promise<McpAppsAgent> {
+  private getAgent(
+    opts: ChatOptions,
+    registry: McpAppsClientRegistry,
+  ): Promise<McpAppsAgent> {
     return this.agentCache.get(
       opts,
-      () => createMcpAppsAgent(pickProviderConfig(opts)).agent,
+      () =>
+        createMcpAppsAgent({
+          ...pickProviderConfig(opts),
+          tools: createMcpAppsTools(registry, this.hostApps),
+        }).agent,
+      createStableValueHash(registry),
     );
   }
 
   public async generateRaw(
     messages: ChatMessage[],
+    registry: McpAppsClientRegistry,
     opts: ChatOptions = {},
     conversation?: ConversationContext,
     abortSignal?: AbortSignal,
@@ -37,16 +50,20 @@ export class McpAppsAgentService {
     text: string;
     usage: unknown;
     finishReason: unknown;
+    toolResults: unknown;
   }> {
     abortSignal?.throwIfAborted();
-    const agent = await this.getAgent(opts);
+    const agent = await this.getAgent(opts, registry);
     abortSignal?.throwIfAborted();
     const modelMessages = toModelMessages(
       buildConversationMessages(messages, conversation),
     );
     const result = await agent.generate(
       modelMessages,
-      buildResourceRunOptions(opts, abortSignal),
+      {
+        ...buildResourceRunOptions(opts, abortSignal),
+        maxSteps: 4,
+      },
     ) as MastraResult;
     return extractGenerationResult(result);
   }

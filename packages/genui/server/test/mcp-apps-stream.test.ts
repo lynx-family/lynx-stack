@@ -16,10 +16,16 @@ import { POST } from '../app/mcp-apps/stream/route.js';
 interface MockMcpAppsService {
   generateRaw(
     messages: unknown,
+    registry: unknown,
     options: unknown,
     conversation: unknown,
     abortSignal?: AbortSignal,
-  ): Promise<never>;
+  ): Promise<{
+    text: string;
+    usage: unknown;
+    finishReason: unknown;
+    toolResults: unknown;
+  }>;
 }
 
 type GlobalWithMcpAppsService = typeof globalThis & {
@@ -60,7 +66,13 @@ describe('MCP Apps stream', () => {
     const previousService = global.__MCP_APPS_AGENT_SERVICE__;
     let receivedSignal: AbortSignal | undefined;
     global.__MCP_APPS_AGENT_SERVICE__ = {
-      generateRaw(_messages, _options, _conversation, abortSignal) {
+      generateRaw(
+        _messages,
+        _registry,
+        _options,
+        _conversation,
+        abortSignal,
+      ) {
         receivedSignal = abortSignal;
         return new Promise((_resolve, reject) => {
           const rejectAbort = () => {
@@ -96,6 +108,54 @@ describe('MCP Apps stream', () => {
       await reader.cancel('client disconnected');
 
       expect(receivedSignal?.aborted).toBe(true);
+    } finally {
+      global.__MCP_APPS_AGENT_SERVICE__ = previousService;
+    }
+  });
+
+  test('returns a tools/call request from the shared MCP Apps tools', async () => {
+    const global = globalThis as GlobalWithMcpAppsService;
+    const previousService = global.__MCP_APPS_AGENT_SERVICE__;
+    global.__MCP_APPS_AGENT_SERVICE__ = {
+      generateRaw() {
+        return Promise.resolve({
+          text: '',
+          usage: { totalTokens: 3 },
+          finishReason: 'stop',
+          toolResults: [{
+            type: 'tool-result',
+            payload: {
+              result: {
+                type: 'genui.mcp-app.tool-call',
+                callId: 'weather-call-1',
+                toolName: 'weather.current',
+                resourceUri: 'ui://weather/current',
+                input: { city: 'San Francisco' },
+              },
+            },
+          }],
+        });
+      },
+    };
+
+    try {
+      const response = await POST(
+        new Request(
+          'https://example.test/api/mcp-apps/stream',
+          {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              'x-forwarded-for': '203.0.113.42',
+            },
+            body: JSON.stringify(requestBody()),
+          },
+        ),
+      );
+      expect(response.status).toBe(200);
+      await expect(response.text()).resolves.toContain(
+        '"id":"weather-call-1","method":"tools/call","params":{"name":"weather.current","arguments":{"city":"San Francisco"}}',
+      );
     } finally {
       global.__MCP_APPS_AGENT_SERVICE__ = previousService;
     }

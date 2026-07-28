@@ -259,7 +259,7 @@ describe('chat protocol adapters', () => {
     expect(userText).toContain('"size": "large"');
   });
 
-  test('loads MCP Apps metadata before registering tools', async () => {
+  test('loads MCP Apps metadata before registering tools with both adapters', async () => {
     const host = {
       origin: 'https://example.com',
       hostname: 'example.com',
@@ -341,6 +341,26 @@ describe('chat protocol adapters', () => {
         },
       });
 
+      const a2uiRequest = await A2UI_CHAT_ADAPTER.createRequest({
+        prompt: 'Show the Hangzhou weather card',
+        conversation: { history: [], dataModel: {} },
+        settings: {
+          preset: 'gpt-5.5',
+          apiKey: '',
+          baseURL: 'https://api.openai.com/v1',
+          model: 'gpt-5.5',
+        },
+        host,
+        signal,
+      });
+      expect(fetchMetadata).toHaveBeenCalledTimes(1);
+      expect(a2uiRequest).toMatchObject({
+        url: 'https://genui-server.vercel.app/a2ui/stream',
+        body: {
+          registry: chatRequest.body.registry,
+        },
+      });
+
       const request = {
         jsonrpc: '2.0' as const,
         id: 'weather-1',
@@ -350,6 +370,107 @@ describe('chat protocol adapters', () => {
           arguments: { city: 'Hangzhou' },
         },
       };
+      const a2uiMcpStep = A2UI_CHAT_ADAPTER.stream.reduce(
+        A2UI_CHAT_ADAPTER.stream.initial(),
+        {
+          event: 'done',
+          data: {
+            validation: {
+              messages: [{
+                version: 'v0.9',
+                updateComponents: {
+                  surfaceId: 'main',
+                  components: [{
+                    id: 'root',
+                    component: 'McpApp',
+                    url: 'https://attacker.example/native.lynx.js',
+                    webUrl: 'https://attacker.example/web.web.js',
+                    mcpAppData: {
+                      renderer: 'weather',
+                      input: { city: 'Hangzhou' },
+                      toolCall: request,
+                    },
+                  }],
+                },
+              }],
+            },
+            preview: {
+              messagesUrl: 'https://example.com/unresolved-messages.json',
+              actionMocksUrl: 'https://example.com/actions.json',
+            },
+          },
+        },
+      );
+      expect(a2uiMcpStep.emissions).toContainEqual({
+        type: 'previewPayload',
+        value: null,
+      });
+      const a2uiMcpFinal = a2uiMcpStep.emissions.find((item) =>
+        item.type === 'final'
+      );
+      expect(a2uiMcpFinal).toBeDefined();
+      if (!a2uiMcpFinal || a2uiMcpFinal.type !== 'final') return;
+      expect(a2uiMcpFinal.output).toMatchObject([{
+        updateComponents: {
+          components: [{
+            component: 'McpApp',
+            url: './mcp-apps.lynx.js',
+            webUrl: './mcp-apps.web.js',
+            mcpAppData: {
+              renderer: 'weather',
+              input: { city: 'Hangzhou' },
+              result: { weather: { city: 'Hangzhou' } },
+            },
+          }],
+        },
+      }]);
+
+      const hydratedA2UIMcpApp = A2UI_CHAT_ADAPTER.hydrate({
+        history: [],
+        previewMessages: [{
+          createSurface: { surfaceId: 'main' },
+        }, {
+          updateComponents: {
+            surfaceId: 'main',
+            components: [{
+              id: 'root',
+              component: 'McpApp',
+              url: 'javascript:alert(1)',
+              webUrl: 'https://attacker.example/restored.web.js',
+              mcpAppData: { toolCall: request },
+            }],
+          },
+        }],
+        previewPayloadUrls: {
+          messagesUrl: 'https://example.com/unresolved-messages.json',
+        },
+      });
+      expect(hydratedA2UIMcpApp.output).toMatchObject([{
+        createSurface: { surfaceId: 'main' },
+      }, {
+        updateComponents: {
+          components: [{
+            component: 'McpApp',
+            url: './mcp-apps.lynx.js',
+            webUrl: './mcp-apps.web.js',
+            mcpAppData: {
+              renderer: 'weather',
+              result: { weather: { city: 'Hangzhou' } },
+            },
+          }],
+        },
+      }]);
+      expect(hydratedA2UIMcpApp.previewPayloadUrls).toBeNull();
+      expect(A2UI_CHAT_ADAPTER.preview.source(hydratedA2UIMcpApp.output, {
+        protocol: PROTOCOLS.a2ui,
+        theme: 'light',
+        previewPayloadUrls: hydratedA2UIMcpApp.previewPayloadUrls,
+      })).toMatchObject({
+        messages: hydratedA2UIMcpApp.output,
+        messagesUrl: undefined,
+        actionMocksUrl: undefined,
+      });
+
       const reduced = MCP_APPS_CHAT_ADAPTER.stream.reduce(
         MCP_APPS_CHAT_ADAPTER.stream.initial(),
         {

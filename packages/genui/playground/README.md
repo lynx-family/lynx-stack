@@ -13,16 +13,21 @@ conversation as a durable preview link.
 Run everything from the **repo root**.
 
 ```bash
-# 1. Install workspace dependencies (first time only)
-pnpm install
+# 1. Install workspace dependencies (first time only), then build the repo
+pnpm install --frozen-lockfile
+pnpm turbo build
 ```
 
 The **Create** (chat) tab talks to the GenUI server for agent responses and
-preview publishing. Start it on port `3060` with at least an OpenAI key:
+preview publishing. Configure the model provider and start the built server on
+port `3060`:
 
 ```bash
 # 2. Start the GenUI server → http://localhost:3060
-OPENAI_API_KEY=sk-... pnpm -C packages/genui/server dev
+export OPENAI_API_KEY="sk-..."
+export OPENAI_BASE_URL="https://api.openai.com/v1"
+export OPENAI_MODEL="gpt-4o-mini"
+pnpm -C packages/genui/server start
 ```
 
 Then start the playground and open the URL it prints (defaults to

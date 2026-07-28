@@ -76,7 +76,7 @@ export type ChatStreamEmission<TOutput> =
   | { type: 'partial'; output: TOutput }
   | { type: 'final'; output: TOutput }
   | { type: 'usage'; usage: ChatTokenUsage }
-  | { type: 'previewPayload'; value: PreviewPayloadUrls };
+  | { type: 'previewPayload'; value: PreviewPayloadUrls | null };
 
 export interface ChatStreamStep<TState, TOutput> {
   state: TState;
@@ -110,6 +110,7 @@ export interface ChatTurnPersistence {
 export interface ChatHydration<TOutput> {
   messages: ChatMessageModel[];
   output: TOutput | null;
+  previewPayloadUrls: PreviewPayloadUrls | null;
   metrics?: PreviewPerformanceMetrics;
 }
 

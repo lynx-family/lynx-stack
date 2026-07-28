@@ -28,7 +28,10 @@ import { readJsonBodyWithLimit } from '../../common/request';
 import { encodeSSE, sseHeaders } from '../../common/sse';
 import { createStreamLogger } from '../../common/stream-logger';
 import { extractUsageMetrics } from '../../common/usage';
-import { pickA2UIChatOptions } from '../_shared';
+import {
+  pickA2UIChatOptions,
+  validateOptionalA2UIMcpAppsRegistry,
+} from '../_shared';
 import type { A2UIChatBody } from '../_shared';
 import { publishA2UIPayload } from '../payload-publisher';
 
@@ -96,11 +99,23 @@ export async function POST(req: Request) {
       { status: validatedConversation.status },
     );
   }
+  const validatedRegistry = validateOptionalA2UIMcpAppsRegistry(body.registry);
+  if (!validatedRegistry.ok) {
+    log('registry.rejected', {
+      durationMs: performance.now() - validationStartedAt,
+      error: validatedRegistry.error,
+    });
+    return jsonWithCors(
+      req,
+      { ok: false, error: validatedRegistry.error },
+      { status: validatedRegistry.status },
+    );
+  }
   log('request.validated', {
     durationMs: performance.now() - validationStartedAt,
   });
   const opts = {
-    ...pickA2UIChatOptions(body),
+    ...pickA2UIChatOptions(body, validatedRegistry.registry),
     onPerformanceEvent: (event: string, details = {}) => {
       log(event, details);
     },

@@ -37,6 +37,7 @@ export interface MastraResult {
   text?: unknown;
   usage?: unknown;
   finishReason?: unknown;
+  toolResults?: unknown;
   content?: unknown;
   response?: unknown;
 }

@@ -14,11 +14,11 @@ import type { GenericComponentProps } from '../../store/types.js';
 import '../../../styles/catalog/McpApp.css';
 
 /**
- * Props for the built-in MCP App frame host.
+ * Props for the generic MCP App catalog component.
  *
- * Bundle URLs and render data must come from a host-registered, trusted MCP
- * Apps resource. They must not be invented by an agent or accepted as
- * arbitrary executable content.
+ * The agent chooses whether to use this component after calling a registered
+ * MCP App. Its bundle URLs and render data must be copied from that tool's
+ * trusted `ui://` resource rather than invented.
  *
  * @a2uiCatalog McpApp
  */

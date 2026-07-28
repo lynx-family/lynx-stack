@@ -116,6 +116,18 @@ Watch and rebuild the handler bundle from this package:
 pnpm dev
 ```
 
+This command only rebuilds `dist/index.js`; it does not listen for HTTP
+requests.
+
+After building the full repository, run the optional standalone HTTP server:
+
+```bash
+pnpm start
+```
+
+It listens on `0.0.0.0:3060` by default. Override the interface or port with
+`HOST` and `PORT`, respectively.
+
 ## Production
 
 Before relying on production artifacts, build the full repository from the
@@ -136,7 +148,9 @@ export async function handler(request, response) {
 }
 ```
 
-The package does not create a listening server or own a process lifecycle.
-Platforms should invoke this handler directly. Runtime packages are bundled
-except for `@mastra/core`, which remains external and must be present in the
-production install together with its transitive dependencies.
+Importing the package does not create a listening server or own a process
+lifecycle. Platforms should invoke this handler directly. The optional
+`scripts/start.mjs` entry point creates a standalone Node HTTP server for local
+development and self-hosted deployments. Runtime packages are bundled except
+for `@mastra/core`, which remains external and must be present in the production
+install together with its transitive dependencies.
