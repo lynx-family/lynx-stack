@@ -2,13 +2,12 @@
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
 
-import type { IncomingMessage, ServerResponse } from 'node:http';
-
+import type { HttpRequest, HttpResponse } from './node-handler';
 import { handleNodeRequest } from './node-handler';
 
 export async function handler(
-  request: IncomingMessage,
-  response: ServerResponse,
+  request: HttpRequest,
+  response: HttpResponse,
 ): Promise<void> {
   await handleNodeRequest(request, response);
 }

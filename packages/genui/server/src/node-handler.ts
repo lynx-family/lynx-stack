@@ -3,17 +3,33 @@
 // LICENSE file in the root directory of this source tree.
 
 import type { IncomingMessage, ServerResponse } from 'node:http';
+import type { Http2ServerRequest, Http2ServerResponse } from 'node:http2';
 import { Readable } from 'node:stream';
 
 import { routeRequest } from './routes';
+
+export type HttpRequest = (IncomingMessage | Http2ServerRequest) & {
+  path: string | null;
+  queryStringParameters?: Record<string, unknown>;
+  jsonBody?: Record<string, unknown>;
+};
+
+export type HttpResponse = ServerResponse | Http2ServerResponse;
 
 interface StreamingRequestInit extends RequestInit {
   duplex: 'half';
 }
 
-function requestHeaders(request: IncomingMessage): Headers {
+function firstHeaderValue(
+  value: string[] | string | undefined,
+): string | undefined {
+  return Array.isArray(value) ? value[0] : value;
+}
+
+function requestHeaders(request: HttpRequest): Headers {
   const headers = new Headers();
   for (const [name, value] of Object.entries(request.headers)) {
+    if (name.startsWith(':')) continue;
     if (Array.isArray(value)) {
       for (const item of value) headers.append(name, item);
     } else if (value !== undefined) {
@@ -23,17 +39,24 @@ function requestHeaders(request: IncomingMessage): Headers {
   return headers;
 }
 
-function requestURL(request: IncomingMessage, headers: Headers): URL {
+function requestURL(request: HttpRequest, headers: Headers): URL {
   const forwardedProtocol = headers.get('x-forwarded-proto')
     ?.split(',')[0]
     ?.trim();
-  const protocol = forwardedProtocol === 'https' ? 'https' : 'http';
-  const host = headers.get('host') ?? 'localhost';
-  return new URL(request.url ?? '/', `${protocol}://${host}`);
+  const protocol = forwardedProtocol
+    ?? firstHeaderValue(request.headers[':scheme'])
+    ?? 'http';
+  const host = headers.get('host')
+    ?? firstHeaderValue(request.headers[':authority'])
+    ?? 'localhost';
+  return new URL(
+    request.url ?? request.path ?? '/',
+    `${protocol === 'https' ? 'https' : 'http'}://${host}`,
+  );
 }
 
 function toWebRequest(
-  request: IncomingMessage,
+  request: HttpRequest,
   signal: AbortSignal,
 ): Request {
   const headers = requestHeaders(request);
@@ -56,7 +79,7 @@ function toWebRequest(
 
 function applyResponseHeaders(
   response: Response,
-  target: ServerResponse,
+  target: HttpResponse,
 ): void {
   const getSetCookie = (
     response.headers as Headers & { getSetCookie?: () => string[] }
@@ -68,7 +91,7 @@ function applyResponseHeaders(
   if (setCookies.length > 0) target.setHeader('set-cookie', setCookies);
 }
 
-function waitForDrainOrClose(response: ServerResponse): Promise<void> {
+function waitForDrainOrClose(response: HttpResponse): Promise<void> {
   return new Promise((resolve) => {
     const finish = () => {
       response.off('close', finish);
@@ -80,9 +103,17 @@ function waitForDrainOrClose(response: ServerResponse): Promise<void> {
   });
 }
 
+function writeResponseChunk(
+  response: HttpResponse,
+  chunk: Uint8Array,
+): boolean {
+  if ('stream' in response) return response.write(chunk);
+  return response.write(chunk);
+}
+
 async function writeWebResponse(
   response: Response,
-  target: ServerResponse,
+  target: HttpResponse,
 ): Promise<void> {
   target.statusCode = response.status;
   if (response.statusText) target.statusMessage = response.statusText;
@@ -102,7 +133,7 @@ async function writeWebResponse(
     while (!target.destroyed) {
       const { done, value } = await reader.read();
       if (done) break;
-      if (!target.write(Buffer.from(value))) {
+      if (!writeResponseChunk(target, Buffer.from(value))) {
         await waitForDrainOrClose(target);
       }
     }
@@ -114,8 +145,8 @@ async function writeWebResponse(
 }
 
 export async function handleNodeRequest(
-  incoming: IncomingMessage,
-  outgoing: ServerResponse,
+  incoming: HttpRequest,
+  outgoing: HttpResponse,
 ): Promise<void> {
   const abortController = new AbortController();
   const abort = () => {

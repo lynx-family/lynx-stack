@@ -128,15 +128,17 @@ pnpm turbo build
 Use Turbo filters only for narrower diagnosis. Do not use a package-local
 `pnpm build` or a filtered build as a substitute for the repository-root build.
 
-Rslib emits a standard Node HTTP handler at `dist/index.js`:
+Rslib emits a platform-compatible Node HTTP handler at `dist/index.js`:
 
 ```ts
 export async function handler(request, response) {
-  // Handle one IncomingMessage and write one ServerResponse.
+  // Handle one HTTP/1 or HTTP/2 request and response pair.
 }
 ```
 
 The package does not create a listening server or own a process lifecycle.
-Platforms should invoke this handler directly. Runtime packages are bundled
+Platforms should invoke this handler directly. The request accepts the
+platform-provided `path`, `queryStringParameters`, and `jsonBody` fields alongside
+the underlying Node HTTP/1 or HTTP/2 request. Runtime packages are bundled
 except for `@mastra/core`, which remains external and must be present in the
 production install together with its transitive dependencies.
