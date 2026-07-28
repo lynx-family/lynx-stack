@@ -48,8 +48,15 @@ append the endpoint override to the playground URL:
 | `OPENAI_API_KEY`                                                             | Agent model access (required for the Create tab)   | —                   |
 | `OPENAI_MODEL`                                                               | Model id                                           | `gpt-4o-mini`       |
 | `OPENAI_BASE_URL`                                                            | Custom OpenAI-compatible endpoint                  | OpenAI              |
+| `UI_JUDGE_SERVER_URL`                                                        | Rust UI Judge sidecar for Bench scoring            | disabled            |
+| `UI_JUDGE_BUNDLE_URL`                                                        | `a2ui.lynx.js` bundle rendered by UI Judge         | hosted GenUI bundle |
 | `SUPABASE_URL`, `SUPABASE_S3_ACCESS_KEY_ID`, `SUPABASE_S3_SECRET_ACCESS_KEY` | Short, shareable preview URLs via Supabase Storage | in-memory dev store |
 | `PEXELS_API_KEY`                                                             | Stock-image search in generated UIs                | —                   |
+
+Bench probes `UI_JUDGE_SERVER_URL/health` once per job and reports Judge as
+enabled only when that sidecar is ready. See
+[`../ui-judge/README.md`](../ui-judge/README.md#http-server) for the Rust server
+startup and model environment.
 
 Conversation **share** links and Web / Native Preview reuse the Supabase Storage
 payload-publishing path — see [`examples/README.md`](./examples/README.md) for
