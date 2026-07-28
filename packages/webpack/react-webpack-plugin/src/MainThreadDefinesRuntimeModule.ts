@@ -14,7 +14,7 @@ export const MAIN_THREAD_DEFINES_BUILD_INFO = 'lynx:main-thread-defines';
  * `@lynx-js/react/transform` while the background compiled the module.
  */
 export interface MainThreadDefine {
-  kind: 'snapshot' | 'worklet' | 'elementTemplate';
+  kind: 'snapshot' | 'worklet';
   id: string;
   code: string;
 }
@@ -24,7 +24,7 @@ export interface MainThreadDefine {
  * A definition calling anything else would reference an export that has been
  * tree-shaken away, so the assembly fails the build instead.
  */
-const SNAPSHOT_RUNTIME_MEMBERS: ReadonlySet<string> = new Set([
+const PROVIDED_RUNTIME_MEMBERS: ReadonlySet<string> = new Set([
   '__pageId',
   'createSnapshot',
   'snapshotCreatorMap',
@@ -45,18 +45,8 @@ const SNAPSHOT_RUNTIME_MEMBERS: ReadonlySet<string> = new Set([
   '__DynamicPartListChildren',
 ]);
 
-/** The members `@lynx-js/react/element-template/internal/main-thread-defines` provides. */
-const ELEMENT_TEMPLATE_RUNTIME_MEMBERS: ReadonlySet<string> = new Set([
-  '__etAttrPlanMap',
-  'adaptEventAttrSlot',
-  'adaptMTEventAttrSlot',
-  'adaptRefAttrSlot',
-  'adaptSpreadAttrSlot',
-]);
-
-// The namespace name the transform binds the runtime to: `ReactLynx` for
-// snapshots, `ReactLynxInternal` for Element Template.
-const RUNTIME_MEMBER_RE = /\bReactLynx(?:Internal)?\.([$A-Z_a-z][\w$]*)/g;
+// The namespace name the transform binds the runtime to.
+const RUNTIME_MEMBER_RE = /\bReactLynx\.([$A-Z_a-z][\w$]*)/g;
 
 interface ModuleWithMainThreadDefines {
   identifier?: (() => string) | undefined;
@@ -139,15 +129,11 @@ export function collectMainThreadDefines<TChunk, TModule>(
  */
 export function renderMainThreadDefines(
   defines: readonly MainThreadDefine[],
-  useElementTemplate = false,
 ): string {
-  const provided = useElementTemplate
-    ? ELEMENT_TEMPLATE_RUNTIME_MEMBERS
-    : SNAPSHOT_RUNTIME_MEMBERS;
   const missing = new Set<string>();
   for (const { code } of defines) {
     for (const [, member] of code.matchAll(RUNTIME_MEMBER_RE)) {
-      if (!provided.has(member!)) {
+      if (!PROVIDED_RUNTIME_MEMBERS.has(member!)) {
         missing.add(member!);
       }
     }
@@ -166,7 +152,7 @@ export function renderMainThreadDefines(
     .map(({ kind, id, code }) => `// ${kind} ${id}\n{\n${code}\n}`)
     .join('\n');
 
-  return `var __lynxMainThreadDefines = function (ReactLynx, ReactLynxInternal, loadWorkletRuntime, require) {
+  return `var __lynxMainThreadDefines = function (ReactLynx, loadWorkletRuntime, require) {
 ${body}
 };
 `;
@@ -189,7 +175,6 @@ const RUNTIME_HANDLE = 'mtDefinesRuntime';
 export function renderLazyMainThreadDefines(
   defines: readonly MainThreadDefine[],
   moduleId: string,
-  useElementTemplate = false,
 ): string {
   return `(function (globDynamicComponentEntry) {
   return {
@@ -200,8 +185,8 @@ export function renderLazyMainThreadDefines(
   }: function (module, exports, __webpack_require__) {
         var runtime = __webpack_require__.${RUNTIME_HANDLE};
         ${
-    renderMainThreadDefines(defines, useElementTemplate)
-  }        __lynxMainThreadDefines(runtime, runtime, runtime.loadWorkletRuntime, function () {
+    renderMainThreadDefines(defines)
+  }        __lynxMainThreadDefines(runtime, runtime.loadWorkletRuntime, function () {
           return runtime;
         });
       }
@@ -213,7 +198,6 @@ export function renderLazyMainThreadDefines(
 
 type MainThreadDefinesRuntimeModule = new(
   backgroundEntry: string,
-  useElementTemplate: boolean,
 ) => RuntimeModule;
 
 /**
@@ -228,10 +212,7 @@ export function createMainThreadDefinesRuntimeModule(
   webpack: typeof import('@rspack/core').rspack,
 ): MainThreadDefinesRuntimeModule {
   return class MainThreadDefinesRuntimeModule extends webpack.RuntimeModule {
-    constructor(
-      private readonly backgroundEntry: string,
-      private readonly useElementTemplate: boolean,
-    ) {
+    constructor(private readonly backgroundEntry: string) {
       super(
         'lynx main thread defines',
         webpack.RuntimeModule.STAGE_NORMAL,
@@ -252,7 +233,7 @@ export function createMainThreadDefinesRuntimeModule(
       const compilation = this.compilation as Compilation | null;
       const entrypoint = compilation?.entrypoints.get(this.backgroundEntry);
       if (!compilation || !entrypoint) {
-        return renderMainThreadDefines([], this.useElementTemplate);
+        return renderMainThreadDefines([]);
       }
 
       const { chunkGraph } = compilation;
@@ -262,7 +243,6 @@ export function createMainThreadDefinesRuntimeModule(
           (chunk: Chunk) => chunkGraph.getChunkModules(chunk),
           (module) => module.identifier(),
         ),
-        this.useElementTemplate,
       );
     }
   };

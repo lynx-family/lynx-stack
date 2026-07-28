@@ -124,29 +124,6 @@ describe('collectMainThreadDefines', () => {
     expect(result.code).toContain('snapshotCreatorMap');
   });
 
-  it('collects element template registrations', async () => {
-    const result = await transformReactLynx(
-      `export function App() {
-         return <view className="a" bindtap={() => {}}><text>hi</text></view>;
-       }`,
-      {
-        ...options('JS', { collectMainThreadDefines: true }),
-        snapshot: false,
-        elementTemplate: {
-          preserveJsx: false,
-          runtimePkg: '@lynx-js/react/element-template/internal',
-          jsxImportSource: '@lynx-js/react/element-template',
-          filename: 'test',
-          target: 'JS',
-        },
-      },
-    );
-
-    const template = result.mainThreadDefines.find(({ kind }) => kind === 'elementTemplate');
-    expect(template.id).toMatch(/^_et_/);
-    expect(template.code).toContain('__etAttrPlanMap');
-  });
-
   it('lowers the definitions to the main thread syntax baseline', async () => {
     const result = await transformReactLynx(
       `

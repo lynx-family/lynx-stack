@@ -145,27 +145,6 @@ describe('renderMainThreadDefines', () => {
     ).toThrowError(/renderMainThread/);
   });
 
-  it('checks the Element Template members against its own entry', () => {
-    expect(() =>
-      renderMainThreadDefines(
-        [{
-          kind: 'elementTemplate',
-          id: '_et_a',
-          code:
-            'ReactLynxInternal.__etAttrPlanMap[x] = [0, ReactLynxInternal.adaptEventAttrSlot];',
-        }],
-        true,
-      )
-    ).not.toThrow();
-    // A snapshot member is not provided by the Element Template entry.
-    expect(() =>
-      renderMainThreadDefines(
-        [snapshot('a', 'ReactLynx.createSnapshot();')],
-        true,
-      )
-    ).toThrowError(/createSnapshot/);
-  });
-
   it('accepts the runtime members the main-thread entry provides', () => {
     expect(() =>
       renderMainThreadDefines([

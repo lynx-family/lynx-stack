@@ -8,7 +8,6 @@ use swc_core::ecma::ast::ModuleItem;
 pub enum MainThreadDefineKind {
   Snapshot,
   Worklet,
-  ElementTemplate,
 }
 
 impl MainThreadDefineKind {
@@ -16,7 +15,6 @@ impl MainThreadDefineKind {
     match self {
       MainThreadDefineKind::Snapshot => "snapshot",
       MainThreadDefineKind::Worklet => "worklet",
-      MainThreadDefineKind::ElementTemplate => "elementTemplate",
     }
   }
 }
@@ -27,14 +25,14 @@ impl MainThreadDefineKind {
 #[derive(Debug, Clone)]
 pub struct MainThreadDefine {
   pub kind: MainThreadDefineKind,
-  /// The snapshot uid, worklet hash, or element template id. Definitions with
-  /// the same id are interchangeable, so the assembler can drop duplicates.
+  /// The snapshot uid or the worklet hash. Definitions with the same id are
+  /// interchangeable, so the assembler can drop duplicates.
   pub id: String,
   pub items: Vec<ModuleItem>,
 }
 
-/// Shared by the snapshot, worklet and element template plugins: when set, each
-/// plugin pushes the definitions it generates here, in emission order.
+/// Shared by the snapshot and worklet plugins: when set, each plugin pushes the
+/// definitions it generates here, in emission order.
 pub type MainThreadDefinesCollector = Rc<RefCell<Vec<MainThreadDefine>>>;
 
 /// Push a definition into `collector`, if collection is enabled.

@@ -24,7 +24,7 @@ beforeEach(() => {
 });
 
 afterEach(() => {
-  globalThis.__ENABLE_MAIN_THREAD__ = true;
+  globalThis.__ENABLE_MTS_RENDERING__ = true;
   elementTree.clear();
 });
 
@@ -37,9 +37,9 @@ function Comp() {
   );
 }
 
-describe('__ENABLE_MAIN_THREAD__ false', () => {
+describe('__ENABLE_MTS_RENDERING__ false', () => {
   it('should not render the first screen on the main thread', () => {
-    globalThis.__ENABLE_MAIN_THREAD__ = false;
+    globalThis.__ENABLE_MTS_RENDERING__ = false;
 
     // The main thread has no business code in this mode, so `__root.__jsx` is
     // never set. Setting it here proves `renderPage` ignores it.
@@ -54,7 +54,7 @@ describe('__ENABLE_MAIN_THREAD__ false', () => {
   });
 
   it('should hydrate the empty main-thread root into the full tree', async () => {
-    globalThis.__ENABLE_MAIN_THREAD__ = false;
+    globalThis.__ENABLE_MTS_RENDERING__ = false;
 
     // main thread: creates the page and an empty root
     renderPage();

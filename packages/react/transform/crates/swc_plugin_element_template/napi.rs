@@ -5,10 +5,7 @@ use swc_core::{
   common::{comments::Comments, sync::Lrc, SourceMap},
   ecma::{ast::*, visit::VisitMut},
 };
-use swc_plugins_shared::{
-  main_thread_defines::MainThreadDefinesCollector, target_napi::TransformTarget,
-  transform_mode_napi::TransformMode,
-};
+use swc_plugins_shared::{target_napi::TransformTarget, transform_mode_napi::TransformMode};
 
 use crate::{
   ElementTemplateAsset as CoreElementTemplateAsset,
@@ -128,13 +125,6 @@ where
   pub fn with_content_hash(mut self, content_hash: String) -> Self {
     self.inner.content_hash = content_hash;
     self
-  }
-
-  pub fn with_main_thread_defs_collector(self, collector: MainThreadDefinesCollector) -> Self {
-    Self {
-      inner: self.inner.with_main_thread_defs_collector(collector),
-      element_templates: self.element_templates,
-    }
   }
 
   pub fn new(

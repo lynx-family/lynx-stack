@@ -47,7 +47,7 @@ function collectAssets(assets: Record<string, string>) {
   } as Rspack.RspackPluginInstance
 }
 
-describe('enableMainThread: false', () => {
+describe('enableMTSRendering: false', () => {
   test('assembles the main-thread bundle from the collected definitions', async () => {
     const { pluginReactLynx } = await import('../src/pluginReactLynx.js')
 
@@ -67,7 +67,7 @@ describe('enableMainThread: false', () => {
         },
         output: { distPath: { root: tmp } },
         plugins: [
-          pluginReactLynx({ enableMainThread: false }),
+          pluginReactLynx({ enableMTSRendering: false }),
           ignoreCSSLoaderWorkaround,
         ],
         tools: { rspack: { plugins: [collectAssets(assets)] } },
@@ -117,7 +117,7 @@ describe('enableMainThread: false', () => {
         },
         output: { distPath: { root: tmp } },
         plugins: [
-          pluginReactLynx({ enableMainThread: false }),
+          pluginReactLynx({ enableMTSRendering: false }),
           ignoreCSSLoaderWorkaround,
         ],
         tools: { rspack: { plugins: [collectAssets(assets)] } },
@@ -158,7 +158,7 @@ describe('enableMainThread: false', () => {
         },
         output: { distPath: { root: tmp } },
         plugins: [
-          pluginReactLynx({ enableMainThread: false }),
+          pluginReactLynx({ enableMTSRendering: false }),
           ignoreCSSLoaderWorkaround,
         ],
         tools: {
@@ -221,44 +221,14 @@ describe('enableMainThread: false', () => {
     }
   })
 
-  test('assembles the Element Template registrations too', async () => {
+  test('rejects Element Template, which it does not support yet', async () => {
     const { pluginReactLynx } = await import('../src/pluginReactLynx.js')
 
-    const assets: Record<string, string> = {}
-    const tmp = await fs.mkdtemp(
-      path.join(tmpdir(), 'rspeedy-react-test-main-thread-et-'),
-    )
-
-    const rsbuild = await createRspeedy({
-      rspeedyConfig: {
-        source: {
-          entry: {
-            main: fileURLToPath(
-              new URL('./fixtures/element-template-basic.tsx', import.meta.url),
-            ),
-          },
-        },
-        output: { distPath: { root: tmp } },
-        plugins: [
-          pluginReactLynx({
-            enableMainThread: false,
-            experimental_useElementTemplate: true,
-          }),
-          ignoreCSSLoaderWorkaround,
-        ],
-        tools: { rspack: { plugins: [collectAssets(assets)] } },
-      },
-    })
-
-    try {
-      await rsbuild.build()
-
-      const mainThread = assets['.rspeedy/main/main-thread.js']!
-      // Element Template registers attribute plans instead of snapshots.
-      expect(mainThread).toContain('__etAttrPlanMap')
-      expect(mainThread).not.toContain('snapshotCreatorMap')
-    } finally {
-      await fs.rm(tmp, { recursive: true, force: true })
-    }
+    expect(() =>
+      pluginReactLynx({
+        enableMTSRendering: false,
+        experimental_useElementTemplate: true,
+      })
+    ).toThrowError(/experimental_useElementTemplate/)
   })
 })

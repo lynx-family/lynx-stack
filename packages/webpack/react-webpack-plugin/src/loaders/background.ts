@@ -6,7 +6,6 @@ import { createRequire } from 'node:module';
 import type { LoaderDefinitionFunction } from '@rspack/core';
 
 import { MAIN_THREAD_DEFINES_BUILD_INFO } from '../MainThreadDefinesRuntimeModule.js';
-import { ELEMENT_TEMPLATE_BUILD_INFO } from './main-thread.js';
 import { getBackgroundTransformOptions } from './options.js';
 import type { ReactLoaderOptions } from './options.js';
 
@@ -93,16 +92,9 @@ const backgroundLoader: LoaderDefinitionFunction<ReactLoaderOptions> = function(
     _module?: { buildInfo?: Record<string, unknown> };
   })._module?.buildInfo;
   if (buildInfo && result.mainThreadDefines) {
-    // With `enableMainThread: false` the main thread compiles no business code,
+    // With `enableMTSRendering: false` the main thread compiles no business code,
     // so the definitions it needs are the ones this transform just collected.
     buildInfo[MAIN_THREAD_DEFINES_BUILD_INFO] = result.mainThreadDefines;
-    // The element templates are collected from the main-thread layer, which has
-    // no business modules in that mode either.
-    if (result.elementTemplates && result.elementTemplates.length > 0) {
-      buildInfo[ELEMENT_TEMPLATE_BUILD_INFO] = result.elementTemplates;
-    } else {
-      delete buildInfo[ELEMENT_TEMPLATE_BUILD_INFO];
-    }
   }
 
   this.callback(null, result.code, result.map);

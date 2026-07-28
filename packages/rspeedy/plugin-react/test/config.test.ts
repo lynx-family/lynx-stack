@@ -412,7 +412,7 @@ describe('Config', () => {
       {
         "compat": undefined,
         "defineDCE": undefined,
-        "enableMainThread": true,
+        "enableMTSRendering": true,
         "enableRemoveCSSScope": true,
         "engineVersion": "3.2",
         "experimental_useElementTemplate": false,
@@ -538,7 +538,7 @@ describe('Config', () => {
       {
         "compat": undefined,
         "defineDCE": undefined,
-        "enableMainThread": true,
+        "enableMTSRendering": true,
         "enableRemoveCSSScope": undefined,
         "engineVersion": "3.2",
         "experimental_useElementTemplate": false,

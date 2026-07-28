@@ -132,8 +132,6 @@ export default defineConfig({
         'lib/**',
         'worklet-runtime/**',
         'src/element-template/**',
-        // Covered by the Element Template suite, like `src/element-template`.
-        'main-thread-defines/element-template.js',
         'src/core/hooks/mainThread.ts',
         'src/core/hooks/mainThreadImpl.ts',
         'src/shared/component-stack.ts',

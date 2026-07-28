@@ -5,7 +5,7 @@
 /* global __lynxMainThreadDefines, __webpack_require__ -- injected into the bundle by `@lynx-js/react-webpack-plugin` and webpack */
 
 /**
- * The main-thread entry of `enableMainThread: false`.
+ * The main-thread entry of `enableMTSRendering: false`.
  *
  * The main thread renders no business code in this mode: it boots the runtime
  * and registers the snapshot and worklet definitions that the background
@@ -91,10 +91,5 @@ if (typeof __webpack_require__ !== 'undefined') {
 }
 
 if (typeof __lynxMainThreadDefines !== 'undefined') {
-  __lynxMainThreadDefines(
-    runtime,
-    runtime,
-    ReactLynx.loadWorkletRuntime,
-    () => runtime,
-  );
+  __lynxMainThreadDefines(runtime, ReactLynx.loadWorkletRuntime, () => runtime);
 }

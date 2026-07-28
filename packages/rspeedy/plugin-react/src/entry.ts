@@ -50,7 +50,7 @@ export function applyEntry(
     firstScreenSyncTiming,
     globalPropsMode,
     enableSSR,
-    enableMainThread,
+    enableMTSRendering,
     removeDescendantSelectorScope,
     targetSdkVersion,
     extractStr: originalExtractStr,
@@ -68,15 +68,11 @@ export function applyEntry(
       { resolve: (request: string) => Promise<string> }
     >(Symbol.for('@lynx-js/react/internal:resolve'))!
 
-    // With `enableMainThread: false` the main thread renders no business code:
+    // With `enableMTSRendering: false` the main thread renders no business code:
     // its entry only boots the runtime and registers the snapshot and worklet
     // definitions collected while compiling the background.
-    const mainThreadImports = enableMainThread ? undefined : [
-      await resolve(
-        options.experimental_useElementTemplate
-          ? '@lynx-js/react/element-template/internal/main-thread-defines'
-          : '@lynx-js/react/internal/main-thread-defines',
-      ),
+    const mainThreadImports = enableMTSRendering ? undefined : [
+      await resolve('@lynx-js/react/internal/main-thread-defines'),
     ]
 
     const rsbuildConfig = api.getRsbuildConfig()
@@ -326,7 +322,7 @@ export function applyEntry(
         firstScreenSyncTiming,
         globalPropsMode,
         enableSSR,
-        enableMainThread,
+        enableMTSRendering,
         mainThreadChunks,
         mainThreadEntries,
         extractStr,

@@ -248,8 +248,8 @@ export interface PluginReactLynxOptions {
   enableSSR?: boolean
 
   /**
-   * `enableMainThread` controls whether business code is compiled for the main
-   * thread.
+   * `enableMTSRendering` controls whether business code is compiled for the
+   * main thread and rendered there.
    *
    * With `false`, the main thread renders no business code: it creates an empty
    * page and root, and the background hydrates that empty root into the real UI
@@ -266,7 +266,7 @@ export interface PluginReactLynxOptions {
    *
    * @public
    */
-  enableMainThread?: boolean
+  enableMTSRendering?: boolean
 
   /**
    * removeDescendantSelectorScope is used to remove the scope of descendant selectors.
@@ -399,7 +399,7 @@ export function pluginReactLynx(
     enableRemoveCSSScope: true,
     firstScreenSyncTiming: 'immediately',
     enableSSR: false,
-    enableMainThread: true,
+    enableMTSRendering: true,
     removeDescendantSelectorScope: true,
     shake: undefined,
     defineDCE: undefined,
@@ -421,6 +421,15 @@ export function pluginReactLynx(
     targetSdkVersion: engineVersion,
     engineVersion,
   })
+
+  if (
+    resolvedOptions.enableMTSRendering === false
+    && resolvedOptions.experimental_useElementTemplate
+  ) {
+    throw new Error(
+      '`enableMTSRendering: false` does not support `experimental_useElementTemplate` yet.',
+    )
+  }
 
   return [
     pluginReactAlias({

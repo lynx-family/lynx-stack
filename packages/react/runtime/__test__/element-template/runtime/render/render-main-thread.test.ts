@@ -25,7 +25,6 @@ import { renderOpcodesIntoElementTemplate as mockRenderOpcodesIntoElementTemplat
 
 describe('renderMainThread', () => {
   beforeEach(() => {
-    globalThis.__ENABLE_MAIN_THREAD__ = true;
     setRoot({ __jsx: { type: 'test-root' } });
     setupPage({ type: 'page', children: [] } as unknown as ElementRef);
     globalThis.__MAIN_THREAD__ = true;
@@ -177,23 +176,5 @@ describe('renderMainThread', () => {
     expect(vi.mocked(__SetAttributeOfElementTemplate).mock.invocationCallOrder[0]).toBeLessThan(
       vi.mocked(__SerializeElementTemplate).mock.invocationCallOrder[0]!,
     );
-  });
-});
-
-describe('renderMainThread with the main thread disabled', () => {
-  beforeEach(() => {
-    globalThis.__ENABLE_MAIN_THREAD__ = false;
-  });
-
-  afterEach(() => {
-    globalThis.__ENABLE_MAIN_THREAD__ = true;
-  });
-
-  it('renders nothing, so the background hydrates the empty root', () => {
-    vi.mocked(mockRender).mockClear();
-
-    renderMainThread();
-
-    expect(mockRender).not.toHaveBeenCalled();
   });
 });

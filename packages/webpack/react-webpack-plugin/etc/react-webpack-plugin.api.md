@@ -25,7 +25,7 @@ export const LAYERS: {
 export interface ReactLoaderOptions {
     compat?: CompatVisitorConfig | undefined;
     defineDCE?: DefineDceVisitorConfig | undefined;
-    enableMainThread?: boolean | undefined;
+    enableMTSRendering?: boolean | undefined;
     enableRemoveCSSScope?: boolean | undefined;
     enableUiSourceMap?: boolean | undefined;
     engineVersion?: string | undefined;
@@ -47,7 +47,7 @@ export class ReactWebpackPlugin {
 // @public
 export interface ReactWebpackPluginOptions {
     disableCreateSelectorQueryIncompatibleWarning?: boolean | undefined;
-    enableMainThread?: boolean;
+    enableMTSRendering?: boolean;
     enableSSR?: boolean;
     // @alpha
     experimental_isLazyBundle?: boolean;

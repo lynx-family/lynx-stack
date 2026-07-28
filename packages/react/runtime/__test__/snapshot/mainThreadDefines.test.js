@@ -49,8 +49,7 @@ describe('main-thread defines entry', () => {
     await importMainThreadDefines();
 
     expect(defines).toHaveBeenCalledTimes(1);
-    const [runtime, internalRuntime, loadWorkletRuntime, require] = defines.mock.calls[0];
-    expect(internalRuntime).toBe(runtime);
+    const [runtime, loadWorkletRuntime, require] = defines.mock.calls[0];
     for (const [member, type] of Object.entries(PROVIDED_MEMBERS)) {
       expect(runtime[member], member).toBeTypeOf(type);
     }

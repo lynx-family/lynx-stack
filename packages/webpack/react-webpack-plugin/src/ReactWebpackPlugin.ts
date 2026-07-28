@@ -236,14 +236,14 @@ interface ReactWebpackPluginOptions {
   experimental_useElementTemplate?: boolean;
 
   /**
-   * {@inheritdoc @lynx-js/react-rsbuild-plugin#PluginReactLynxOptions.enableMainThread}
+   * {@inheritdoc @lynx-js/react-rsbuild-plugin#PluginReactLynxOptions.enableMTSRendering}
    */
-  enableMainThread?: boolean;
+  enableMTSRendering?: boolean;
 
   /**
    * The background entry name of each main-thread entry. Used to assemble a
    * main-thread bundle from the background's collected snapshot and worklet
-   * definitions when {@link ReactWebpackPluginOptions.enableMainThread} is
+   * definitions when {@link ReactWebpackPluginOptions.enableMTSRendering} is
    * `false`.
    */
   mainThreadEntries?: Record<string, string>;
@@ -333,7 +333,7 @@ class ReactWebpackPlugin {
       profile: undefined,
       workletRuntimePath: '',
       experimental_useElementTemplate: false,
-      enableMainThread: true,
+      enableMTSRendering: true,
       mainThreadEntries: {},
       lazyBundleFetcher: 'QueryComponent',
     });
@@ -405,7 +405,7 @@ class ReactWebpackPlugin {
         options.experimental_useElementTemplate,
       ),
       __LAZY_BUNDLE_FETCHER__: JSON.stringify(options.lazyBundleFetcher),
-      __ENABLE_MAIN_THREAD__: JSON.stringify(options.enableMainThread),
+      __ENABLE_MTS_RENDERING__: JSON.stringify(options.enableMTSRendering),
     }).apply(compiler);
 
     compiler.hooks.thisCompilation.tap(this.constructor.name, compilation => {
@@ -440,7 +440,7 @@ class ReactWebpackPlugin {
         );
       });
 
-      if (options.enableMainThread === false) {
+      if (options.enableMTSRendering === false) {
         const MainThreadDefinesRuntimeModule =
           createMainThreadDefinesRuntimeModule(compiler.webpack);
 
@@ -460,10 +460,7 @@ class ReactWebpackPlugin {
               }
               compilation.addRuntimeModule(
                 chunk,
-                new MainThreadDefinesRuntimeModule(
-                  backgroundEntry,
-                  options.experimental_useElementTemplate,
-                ),
+                new MainThreadDefinesRuntimeModule(backgroundEntry),
               );
             }
           },
@@ -510,7 +507,7 @@ class ReactWebpackPlugin {
           // section is assembled from the definitions of the modules the
           // background put in its async chunks.
           if (
-            options.enableMainThread === false
+            options.enableMTSRendering === false
             && lepusCode.root === undefined
             && args.chunkGroups.length > 0
             && args.chunkGroups.every(cg => !cg.isInitial())
@@ -526,11 +523,7 @@ class ReactWebpackPlugin {
               lepusCode.root = {
                 name,
                 source: new RawSource(
-                  renderLazyMainThreadDefines(
-                    defines,
-                    `lynx:${name}`,
-                    options.experimental_useElementTemplate,
-                  ),
+                  renderLazyMainThreadDefines(defines, `lynx:${name}`),
                 ),
                 info: { ['lynx:main-thread']: true },
               };

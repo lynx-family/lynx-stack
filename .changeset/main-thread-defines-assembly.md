@@ -5,4 +5,4 @@
 "@lynx-js/testing-environment": patch
 ---
 
-Add `pluginReactLynx({ enableMainThread: false })`, which stops compiling business code for the main thread and assembles its bundle from the snapshot, worklet and element template definitions collected while compiling the background.
+Add `pluginReactLynx({ enableMTSRendering: false })`, which stops compiling business code for the main thread and assembles its bundle from the snapshot and worklet definitions collected while compiling the background.

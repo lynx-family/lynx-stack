@@ -273,16 +273,16 @@ pub struct UiSourceMapRecord {
 }
 
 /// @internal
-/// A snapshot, worklet or element template definition the main thread needs,
-/// collected while the background compiles the module.
+/// A snapshot or worklet definition the main thread needs, collected while the
+/// background compiles the module.
 #[napi(object)]
 pub struct MainThreadDefine {
   /// @internal
-  #[napi(ts_type = "'snapshot' | 'worklet' | 'elementTemplate'")]
+  #[napi(ts_type = "'snapshot' | 'worklet'")]
   pub kind: String,
   /// @internal
-  /// The snapshot uid, worklet hash, or element template id. Definitions that
-  /// share an id are interchangeable, so duplicates can be dropped.
+  /// The snapshot uid or the worklet hash. Definitions that share an id are
+  /// interchangeable, so duplicates can be dropped.
   pub id: String,
   /// @internal
   /// A self-contained statement list registering the definition.
@@ -704,12 +704,6 @@ fn transform_react_lynx_inner(
         element_templates_collector.clone(),
       )
       .with_content_hash(content_hash.clone());
-
-      let transformer = if let Some(collector) = &main_thread_defs_collector {
-        transformer.with_main_thread_defs_collector(collector.clone())
-      } else {
-        transformer
-      };
 
       Optional::new(visit_mut_pass(transformer), true)
     } else {

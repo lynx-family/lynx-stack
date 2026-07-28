@@ -104,9 +104,9 @@ export interface ReactLoaderOptions {
   experimental_useElementTemplate?: boolean | undefined;
 
   /**
-   * {@inheritdoc @lynx-js/react-rsbuild-plugin#PluginReactLynxOptions.enableMainThread}
+   * {@inheritdoc @lynx-js/react-rsbuild-plugin#PluginReactLynxOptions.enableMTSRendering}
    */
-  enableMainThread?: boolean | undefined;
+  enableMTSRendering?: boolean | undefined;
 }
 
 function normalizeSlashes(file: string) {
@@ -340,12 +340,12 @@ export function getBackgroundTransformOptions(
 ): TransformNodiffOptions {
   const commonOptions = getCommonOptions.call(this, inputSourceMap);
   const useElementTemplate = typeof commonOptions.elementTemplate === 'object';
-  const { enableMainThread } = this.getOptions();
+  const { enableMTSRendering } = this.getOptions();
   return {
     ...commonOptions,
     // Without a main thread of its own, the definitions it needs are collected
     // from this transform, so they cannot drift from what the background emits.
-    ...(enableMainThread === false && { collectMainThreadDefines: true }),
+    ...(enableMTSRendering === false && { collectMainThreadDefines: true }),
     compat: typeof commonOptions.compat === 'object'
       ? {
         ...commonOptions.compat,

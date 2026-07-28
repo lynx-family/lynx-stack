@@ -34,12 +34,6 @@ function removeMainThreadRootRefs(): void {
 }
 
 function renderMainThread(): void {
-  if (!__ENABLE_MAIN_THREAD__) {
-    // The main thread has no business code to render; the background hydrates
-    // the empty root and sends a full insert patch instead.
-    return;
-  }
-
   let opcodes;
   profileStart('ReactLynx::renderMainThread');
   try {

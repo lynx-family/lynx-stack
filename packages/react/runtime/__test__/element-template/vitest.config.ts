@@ -107,7 +107,7 @@ const config: UserConfigExport = defineConfig({
     name: 'react/runtime-et',
     include: ['**/__test__/element-template/**/*.{test,spec}.{js,ts,jsx,tsx}'],
     coverage: {
-      include: ['src/element-template/**', 'main-thread-defines/element-template.js'],
+      include: ['src/element-template/**'],
       exclude: [
         'src/element-template/**/*.d.ts',
         'src/element-template/protocol/types.ts',
