@@ -180,7 +180,7 @@ pub struct UiJudgeResult {
   /// Independently scored weighted GEQI dimensions, in stable weight order.
   #[serde(default, skip_serializing_if = "Vec::is_empty")]
   pub dimensions: Vec<UiJudgeDimensionResult>,
-  /// Error from the primary page-capture or single-screenshot VLM chain.
+  /// Error from page capture or the primary visual-correctness VLM dimension.
   #[serde(skip_serializing_if = "Option::is_none")]
   pub error: Option<UiJudgeError>,
   /// Error produced by the independent reference-image comparison chain.
@@ -212,6 +212,35 @@ pub struct UiJudgeResult {
   /// Total number of blocks in the aligned image comparison.
   #[serde(skip_serializing_if = "Option::is_none")]
   pub total_blocks: Option<usize>,
+  /// Updated prompt-specific TrueSkill mean for the primary candidate.
+  #[serde(skip_serializing_if = "Option::is_none")]
+  pub ui_bench_candidate_mu: Option<f64>,
+  /// Updated prompt-specific TrueSkill uncertainty for the primary candidate.
+  #[serde(skip_serializing_if = "Option::is_none")]
+  pub ui_bench_candidate_sigma: Option<f64>,
+  /// Error from the independent UI-Bench pairwise evaluation.
+  ///
+  /// This never replaces the primary visual-correctness result or `error`.
+  #[serde(skip_serializing_if = "Option::is_none")]
+  pub ui_bench_error: Option<UiJudgeError>,
+  /// Evaluator used for the pairwise vote. Currently `vlm_proxy`.
+  #[serde(skip_serializing_if = "Option::is_none")]
+  pub ui_bench_evaluator: Option<String>,
+  /// Updated prompt-specific TrueSkill mean for the opponent.
+  #[serde(skip_serializing_if = "Option::is_none")]
+  pub ui_bench_opponent_mu: Option<f64>,
+  /// Updated prompt-specific TrueSkill uncertainty for the opponent.
+  #[serde(skip_serializing_if = "Option::is_none")]
+  pub ui_bench_opponent_sigma: Option<f64>,
+  /// Opponent URL captured for the same task and pairwise comparison.
+  #[serde(skip_serializing_if = "Option::is_none")]
+  pub ui_bench_opponent_url: Option<String>,
+  /// Concise evidence for the forced pairwise preference.
+  #[serde(skip_serializing_if = "Option::is_none")]
+  pub ui_bench_reason: Option<String>,
+  /// Pairwise winner: `candidate` for `url`, or `opponent`.
+  #[serde(skip_serializing_if = "Option::is_none")]
+  pub ui_bench_winner: Option<String>,
   pub url: String,
   /// Non-fatal visual comparison diagnostics, such as alignment fallback.
   #[serde(default, skip_serializing_if = "Vec::is_empty")]
@@ -259,6 +288,15 @@ pub(crate) async fn judge_screenshot(
       steps: vec![],
       summary: non_empty(model_result.summary),
       total_blocks: None,
+      ui_bench_candidate_mu: None,
+      ui_bench_candidate_sigma: None,
+      ui_bench_error: None,
+      ui_bench_evaluator: None,
+      ui_bench_opponent_mu: None,
+      ui_bench_opponent_sigma: None,
+      ui_bench_opponent_url: None,
+      ui_bench_reason: None,
+      ui_bench_winner: None,
       url: request.url.clone(),
       warnings: vec![],
     },
@@ -532,6 +570,15 @@ pub(crate) fn error_result(
     steps: vec![],
     summary: None,
     total_blocks: None,
+    ui_bench_candidate_mu: None,
+    ui_bench_candidate_sigma: None,
+    ui_bench_error: None,
+    ui_bench_evaluator: None,
+    ui_bench_opponent_mu: None,
+    ui_bench_opponent_sigma: None,
+    ui_bench_opponent_url: None,
+    ui_bench_reason: None,
+    ui_bench_winner: None,
     url,
     warnings: vec![],
   }
@@ -576,6 +623,7 @@ mod tests {
     };
     let prompt = build_judge_prompt(&request, UiJudgeDimension::VisualCorrectness);
     assert!(prompt.contains("judging the visual correctness"));
+    assert!(!prompt.contains("client-delivery standard"));
     assert!(prompt.contains("Expected layout"));
     assert!(prompt.contains("Render a form"));
     assert!(prompt.contains("Required content"));

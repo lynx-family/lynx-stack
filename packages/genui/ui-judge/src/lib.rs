@@ -5,6 +5,7 @@
 mod headless;
 mod judge;
 mod model;
+mod ui_bench;
 mod visual;
 
 #[cfg(feature = "server")]
