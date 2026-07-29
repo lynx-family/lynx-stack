@@ -247,10 +247,6 @@ pub struct TransformNodiffOptions {
   /// @internal
   pub inject: Option<Either<bool, InjectVisitorConfig>>,
   /// @internal
-  /// When true, each snapshot + worklet registration is collected (in addition
-  /// to being emitted normally) and printed into the `mainThreadDefines`
-  /// output. The main-thread bundle is assembled from these registrations when
-  /// the main thread does not compile business code.
   pub collect_main_thread_defines: Option<bool>,
   pub input_source_map: Option<String>,
 }
@@ -297,19 +293,14 @@ pub struct UiSourceMapRecord {
 }
 
 /// @internal
-/// A snapshot or worklet definition the main thread needs, collected while the
-/// background compiles the module.
 #[napi(object)]
 pub struct MainThreadDefine {
   /// @internal
   #[napi(ts_type = "'snapshot' | 'worklet'")]
   pub kind: String,
   /// @internal
-  /// The snapshot uid or the worklet hash. Definitions that share an id are
-  /// interchangeable, so duplicates can be dropped.
   pub id: String,
   /// @internal
-  /// A self-contained statement list registering the definition.
   pub code: String,
 }
 
@@ -327,18 +318,10 @@ pub struct TransformNodiffOutput {
   #[napi(js_name = "elementTemplates")]
   pub element_templates: Option<Vec<ElementTemplateAsset>>,
   /// @internal
-  /// The definitions the main thread needs, collected when
-  /// `collectMainThreadDefines` is set. `None` when collection is disabled.
   #[napi(js_name = "mainThreadDefines")]
   pub main_thread_defines: Option<Vec<MainThreadDefine>>,
 }
 
-// The main thread runs an ES2019 engine, and the collected registrations are
-// printed outside the loader chain that lowers the rest of the main-thread code,
-// so a worklet body written with syntax the background supports (`?.`, `??`,
-// `&&=`, class fields) has to be lowered here. Helpers are inlined: the printed
-// registrations are appended to a sealed bundle, where a `@swc/helpers` import
-// could no longer be resolved.
 fn lower_to_main_thread_syntax(
   unresolved_mark: Mark,
   top_level_mark: Mark,
@@ -358,7 +341,6 @@ fn lower_to_main_thread_syntax(
   )
 }
 
-/// Print one collected definition as a self-contained statement list.
 fn print_main_thread_define(
   c: &Compiler,
   items: Vec<ModuleItem>,
@@ -674,9 +656,6 @@ fn transform_react_lynx_inner(
       jsx_backend_enabled && !preserve_jsx,
     );
 
-    // Shared by the snapshot + worklet plugins: when set, each emitted
-    // registration is also cloned here and printed into the
-    // `mainThreadDefines` output. `None` disables collection (no cost).
     let main_thread_defs_collector: Option<MainThreadDefinesCollector> = options
       .collect_main_thread_defines
       .unwrap_or(false)
@@ -977,11 +956,6 @@ fn transform_react_lynx_inner(
         // the caller expects one stable array per transform invocation.
         let element_templates = take_element_templates(element_templates_collector);
 
-        // Print each collected definition on its own. They were cloned
-        // mid-pass, so they still reference the runtime namespace import by
-        // name and their locals are not hygiened yet; and the main thread runs
-        // an ES2019 engine while these are printed outside the loader chain
-        // that lowers the rest of the main-thread code.
         let main_thread_defines = main_thread_defs_collector.as_ref().map(|collector| {
           helpers::HELPERS.set(&helpers::Helpers::new(false), || {
             collector

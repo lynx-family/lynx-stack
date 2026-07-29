@@ -26,10 +26,6 @@ interface StubElement {
   attributes: Record<string, unknown>
 }
 
-/**
- * The element PAPI and engine globals the main-thread bundle needs, enough to
- * boot it and apply a patch.
- */
 function createMainThreadEnv() {
   let nextId = 1
   const create = (tag: string): StubElement => ({
@@ -184,8 +180,6 @@ describe('enableMTSRendering: false runtime', () => {
     try {
       await rsbuild.build()
 
-      // The definitions survive minification only if the generated code and the
-      // main-thread entry that calls it are renamed together.
       const definitions = [
         ...new Set(mainThread.match(/__snapshot_[0-9a-f]+_[0-9a-f]+_\d+/g)),
       ]
@@ -198,12 +192,9 @@ describe('enableMTSRendering: false runtime', () => {
       const renderPage = env['renderPage'] as (data: unknown) => void
       expect(renderPage).toBeTypeOf('function')
 
-      // The main thread renders no business content: an empty page and root.
       renderPage({})
       expect(getPage()?.children).toHaveLength(0)
 
-      // The background hydrates that empty root and sends a full insert patch.
-      // Applying it has to find every collected definition.
       const rLynxChange = env['rLynxChange'] as (args: {
         data: string
         patchOptions: { reloadVersion: number }
@@ -211,7 +202,6 @@ describe('enableMTSRendering: false runtime', () => {
       const snapshotPatch: unknown[] = []
       definitions.forEach((definition, index) => {
         const id = index + 2
-        // CreateElement(type, id), InsertBefore(parentId, childId, beforeId)
         snapshotPatch.push(0, definition, id, 1, -1, id, undefined)
       })
       rLynxChange({

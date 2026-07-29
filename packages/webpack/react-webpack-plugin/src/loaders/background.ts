@@ -92,8 +92,6 @@ const backgroundLoader: LoaderDefinitionFunction<ReactLoaderOptions> = function(
     _module?: { buildInfo?: Record<string, unknown> };
   })._module?.buildInfo;
   if (buildInfo && result.mainThreadDefines) {
-    // With `enableMTSRendering: false` the main thread compiles no business code,
-    // so the definitions it needs are the ones this transform just collected.
     buildInfo[MAIN_THREAD_DEFINES_BUILD_INFO] = result.mainThreadDefines;
   }
 

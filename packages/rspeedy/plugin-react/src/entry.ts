@@ -68,9 +68,6 @@ export function applyEntry(
       { resolve: (request: string) => Promise<string> }
     >(Symbol.for('@lynx-js/react/internal:resolve'))!
 
-    // With `enableMTSRendering: false` the main thread renders no business code:
-    // its entry only boots the runtime and registers the snapshot and worklet
-    // definitions collected while compiling the background.
     const mainThreadImports = enableMTSRendering ? undefined : [
       await resolve('@lynx-js/react/internal/main-thread-defines'),
     ]

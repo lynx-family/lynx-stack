@@ -131,7 +131,6 @@ describe('renderMainThreadDefines', () => {
       { kind: 'worklet', id: 'b', code: 'const __workletRuntimeLoaded = 1;' },
     ]);
 
-    // Two definitions declaring the same guard must not collide.
     expect(code).toContain('var __lynxMainThreadDefines = function (');
     expect(code.match(/\{\nconst __workletRuntimeLoaded/g)).toHaveLength(2);
   });
@@ -174,23 +173,18 @@ describe('renderLazyMainThreadDefines', () => {
   );
 
   it('evaluates to a section the host installs as a chunk', () => {
-    // The host card evaluates the section and installs the returned chunk into
-    // its own main-thread runtime.
     expect(code).toMatch(/^\(function \(globDynamicComponentEntry\) \{/);
     expect(code).toContain('ids: ["lynx:lazy/main-thread.js"]');
     expect(code).toContain('function (module, exports, __webpack_require__)');
   });
 
   it('reuses the host runtime instead of bundling its own', () => {
-    // The same channel `@lynx-js/react/experimental/lazy/import` uses, so the
-    // handoff does not depend on the bundler.
     expect(code).toContain(
       'globalThis[Symbol.for(\'__REACT_LYNX_MAIN_THREAD_DEFINES_RUNTIME__\')]',
     );
   });
 
   it('keeps the lazy bundle entry name, so its CSS scope is applied', () => {
-    // `globDynamicComponentEntry` is the section parameter, not the host's.
     expect(code).toContain(
       'ReactLynx.createSnapshot(globDynamicComponentEntry)',
     );

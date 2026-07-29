@@ -17,8 +17,6 @@ rstest
   .stubEnv('USE_RSPACK', 'true')
   .stubEnv('NODE_ENV', 'development')
 
-// The main-thread CSS loader is resolved as a `.js` file, which this package's
-// tests cannot load; the same workaround as in `lazy.test.ts`.
 const ignoreCSSLoaderWorkaround = {
   name: 'ignore-css-loader-workaround',
   pre: ['lynx:react'],
@@ -80,13 +78,10 @@ describe('enableMTSRendering: false', () => {
       const mainThread = assets['.rspeedy/main/main-thread.js']!
       expect(mainThread).toBeTypeOf('string')
 
-      // The definitions the background collected, with the element creation the
-      // main thread needs to apply patches.
       expect(mainThread).toContain('snapshotCreatorMap')
       expect(mainThread).toContain('__CreateView')
       expect(mainThread).toContain('__CreateText')
 
-      // ... and none of the business code that produced them.
       expect(mainThread).not.toContain('business-only-marker')
       expect(assets['.rspeedy/main/background.js'])
         .toContain('business-only-marker')
@@ -127,10 +122,6 @@ describe('enableMTSRendering: false', () => {
     try {
       await rsbuild.build()
 
-      // `__MAIN_THREAD__ ? null : <Counter />` drops the component from a
-      // main-thread compilation, which is what leaves the main thread without a
-      // definition for a snapshot the background can still create. Collecting
-      // from the background is what keeps it registered.
       expect(assets['.rspeedy/main/main-thread.js'])
         .toContain('counter-only-on-the-background')
     } finally {
@@ -204,9 +195,6 @@ describe('enableMTSRendering: false', () => {
       )
       expect(lazyIntermediate).toBeTypeOf('string')
 
-      // The lazy bundle gets its own section: it registers with the lazy
-      // bundle's own entry name (its CSS scope), and reuses the host's runtime
-      // instead of bundling a second copy.
       const lazySection = lepusRoots[lazyIntermediate!]!
       expect(lazySection).toContain('function (globDynamicComponentEntry)')
       expect(lazySection).toContain(
@@ -214,8 +202,6 @@ describe('enableMTSRendering: false', () => {
       )
       expect(lazySection).toContain('"LazyComponent"')
 
-      // The lazy bundle's definitions stay out of the card, which would
-      // otherwise register them under the card's entry name.
       expect(assets['.rspeedy/main/main-thread.js'])
         .not.toContain('"LazyComponent"')
     } finally {

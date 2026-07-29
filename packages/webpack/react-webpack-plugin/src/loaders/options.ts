@@ -356,8 +356,6 @@ export function getBackgroundTransformOptions(
   const { enableMTSRendering } = this.getOptions();
   return {
     ...commonOptions,
-    // Without a main thread of its own, the definitions it needs are collected
-    // from this transform, so they cannot drift from what the background emits.
     ...(enableMTSRendering === false && { collectMainThreadDefines: true }),
     compat: typeof commonOptions.compat === 'object'
       ? {

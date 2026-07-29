@@ -74,14 +74,11 @@ describe('collectMainThreadDefines', () => {
     expect(worklet.kind).toBe('worklet');
     expect(worklet.code).toContain('registerWorkletInternal');
     expect(worklet.code).toContain('loadWorkletRuntime');
-    // The worklet keeps its captured module binding via the `_c` closure.
     expect(worklet.code).toContain('this["_c"]');
 
     expect(snapshot.kind).toBe('snapshot');
     expect(snapshot.id).toMatch(/^__snapshot_/);
     expect(snapshot.code).toContain('ReactLynx.createSnapshot');
-    // The background's own registration has no creator, but the collected one
-    // creates the elements the main thread has to build.
     expect(snapshot.code).toContain('__CreateView');
     expect(result.code).not.toContain('__CreateView');
   });
@@ -96,8 +93,6 @@ describe('collectMainThreadDefines', () => {
       options('LEPUS', { collectMainThreadDefines: true }),
     );
 
-    // One code path produces both, so the definitions the background collects
-    // cannot drift from the ones a main-thread compilation would produce.
     expect(fromBackground.mainThreadDefines).toStrictEqual(
       fromMainThread.mainThreadDefines,
     );
@@ -109,8 +104,6 @@ describe('collectMainThreadDefines', () => {
       options('JS', { collectMainThreadDefines: true }),
     );
 
-    // The creator builds a `view` wrapping a `text`; the two element locals must
-    // not collapse onto the same name after being collected pre-hygiene.
     const snapshot = mainThreadDefines.find(({ kind }) => kind === 'snapshot');
     expect(snapshot.code).toContain('const el = __CreateView');
     expect(snapshot.code).toContain('const el1 = __CreateText');
@@ -142,13 +135,9 @@ export function App() {
     );
 
     const code = result.mainThreadDefines.map(define => define.code).join('\n');
-    // The main thread runs an ES2019 engine, and the definitions skip the loader
-    // that lowers the rest of the main-thread code.
     expect(code).not.toContain('?.');
     expect(code).not.toContain('??');
     expect(code).not.toContain('current = v');
-    // Helpers are inlined instead of imported: the definitions are appended to
-    // an already sealed bundle.
     expect(code).not.toContain('@swc/helpers');
   });
 });

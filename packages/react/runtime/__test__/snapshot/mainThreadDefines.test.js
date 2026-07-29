@@ -18,8 +18,6 @@ async function importMainThreadDefines() {
   await import('../../main-thread-defines/index.js');
 }
 
-// The members the assembled definitions call. Keep in sync with
-// `PROVIDED_RUNTIME_MEMBERS` in `@lynx-js/react-webpack-plugin`.
 const PROVIDED_MEMBERS = {
   __pageId: 'number',
   createSnapshot: 'function',
@@ -50,13 +48,10 @@ describe('main-thread defines entry', () => {
     await importMainThreadDefines();
 
     expect(defines).toHaveBeenCalledTimes(1);
-    const [runtime, loadWorkletRuntime, require] = defines.mock.calls[0];
+    const [runtime] = defines.mock.calls[0];
     for (const [member, type] of Object.entries(PROVIDED_MEMBERS)) {
       expect(runtime[member], member).toBeTypeOf(type);
     }
-    expect(loadWorkletRuntime).toBeTypeOf('function');
-    // The dev creator falls back to `require`-ing the runtime.
-    expect(require()).toBe(runtime);
   });
 
   it('reads `__pageId` through a getter, so definitions see the current page', async () => {

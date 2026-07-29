@@ -70,8 +70,6 @@ pub struct WorkletVisitor {
   shared_identifiers: FxHashSet<Id>,
   worklet_runtime_loaded: bool,
   worklet_runtime_loaded_ident: Ident,
-  // When set, the `LEPUS` registration of each worklet is collected here, so
-  // the main-thread bundle can be assembled from the registrations alone.
   main_thread_defs_collector: Option<MainThreadDefinesCollector>,
 }
 
@@ -756,8 +754,6 @@ impl WorkletVisitor {
     self
   }
 
-  /// A collected worklet definition carries its own `loadWorkletRuntime` guard
-  /// so it stays self-contained; the call is idempotent.
   fn collect_worklet_define(&mut self, hash: Option<String>, stmt: Option<Stmt>) {
     let (Some(hash), Some(stmt)) = (hash, stmt) else {
       return;

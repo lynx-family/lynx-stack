@@ -41,8 +41,6 @@ describe('__ENABLE_MTS_RENDERING__ false', () => {
   it('should not render the first screen on the main thread', () => {
     globalThis.__ENABLE_MTS_RENDERING__ = false;
 
-    // The main thread has no business code in this mode, so `__root.__jsx` is
-    // never set. Setting it here proves `renderPage` ignores it.
     __root.__jsx = <Comp />;
     renderPage();
 
@@ -56,17 +54,13 @@ describe('__ENABLE_MTS_RENDERING__ false', () => {
   it('should hydrate the empty main-thread root into the full tree', async () => {
     globalThis.__ENABLE_MTS_RENDERING__ = false;
 
-    // main thread: creates the page and an empty root
     renderPage();
     expect(__root.__element_root.children).toHaveLength(0);
 
-    // background: renders the real tree
     globalEnvManager.switchToBackground();
     render(<Comp />, __root);
     lynx.getNativeApp().callLepusMethod.mockClear();
 
-    // hydrate: the background diffs against the empty root and sends the
-    // resulting insert patch back to the main thread
     lynxCoreInject.tt.OnLifecycleEvent(...globalThis.__OnLifecycleEvent.mock.calls[0]);
     globalThis.__OnLifecycleEvent.mockClear();
 

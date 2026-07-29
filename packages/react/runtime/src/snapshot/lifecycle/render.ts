@@ -13,8 +13,6 @@ import { SnapshotInstance } from '../snapshot/snapshot.js';
 
 function renderMainThread(): void {
   if (!__ENABLE_MTS_RENDERING__) {
-    // The main thread has no business code to render; the background hydrates
-    // the empty root and sends a full insert patch instead.
     return;
   }
 

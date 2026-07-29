@@ -241,10 +241,7 @@ interface ReactWebpackPluginOptions {
   enableMTSRendering?: boolean;
 
   /**
-   * The background entry name of each main-thread entry. Used to assemble a
-   * main-thread bundle from the background's collected snapshot and worklet
-   * definitions when {@link ReactWebpackPluginOptions.enableMTSRendering} is
-   * `false`.
+   * The background entry name of each main-thread entry.
    */
   mainThreadEntries?: Record<string, string>;
 

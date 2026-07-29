@@ -26,10 +26,6 @@ struct RegisterWorkletParams<'a> {
 }
 
 impl StmtGen {
-  /// Returns the worklet object expression, the registration to emit, and —
-  /// when `collect_main_thread` is set — the `LEPUS` registration the main
-  /// thread needs. Both registrations come from the same extraction, so the
-  /// collected definition cannot drift from the emitted one.
   #[allow(clippy::too_many_arguments)]
   pub fn transform_worklet(
     mode: TransformMode,
@@ -50,8 +46,6 @@ impl StmtGen {
     let extracted_js_fns = ident_collector.take_js_fns();
 
     let main_thread_stmt = collect_main_thread.then(|| {
-      // The main thread's `loadWorkletRuntime` binding is provided by the
-      // assembled bundle, so this must not add an import to the module.
       let mut collected_imports = HashSet::new();
       StmtGen::gen_register_worklet_stmt(RegisterWorkletParams {
         mode,

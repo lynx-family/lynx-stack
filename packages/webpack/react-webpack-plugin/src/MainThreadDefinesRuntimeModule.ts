@@ -3,27 +3,14 @@
 // LICENSE file in the root directory of this source tree.
 import type { Chunk, Compilation, RuntimeModule } from '@rspack/core';
 
-/**
- * The `buildInfo` key the background loader stores its collected definitions
- * under.
- */
 export const MAIN_THREAD_DEFINES_BUILD_INFO = 'lynx:main-thread-defines';
 
-/**
- * A definition the main thread needs, as collected by
- * `@lynx-js/react/transform` while the background compiled the module.
- */
 export interface MainThreadDefine {
   kind: 'snapshot' | 'worklet';
   id: string;
   code: string;
 }
 
-/**
- * The runtime members the main-thread entry hands to the assembled definitions.
- * A definition calling anything else would reference an export that has been
- * tree-shaken away, so the assembly fails the build instead.
- */
 const PROVIDED_RUNTIME_MEMBERS: ReadonlySet<string> = new Set([
   '__pageId',
   'createSnapshot',
@@ -45,7 +32,6 @@ const PROVIDED_RUNTIME_MEMBERS: ReadonlySet<string> = new Set([
   '__DynamicPartListChildren',
 ]);
 
-// The namespace name the transform binds the runtime to.
 const RUNTIME_MEMBER_RE = /\bReactLynx\.([$A-Z_a-z][\w$]*)/g;
 
 interface ModuleWithMainThreadDefines {
@@ -63,8 +49,6 @@ function collectFromModule(
     defines.push(...collected as MainThreadDefine[]);
   }
 
-  // Concatenated modules keep the original modules (and their `buildInfo`) as
-  // children.
   if (module.modules) {
     for (const nestedModule of module.modules) {
       collectFromModule(nestedModule, defines);
@@ -72,13 +56,6 @@ function collectFromModule(
   }
 }
 
-/**
- * Collect the definitions of every module in `chunks`. Async chunks are not
- * included: a lazy bundle registers its own definitions, under its own entry
- * name, when the host evaluates its main-thread section.
- *
- * @internal
- */
 export function collectMainThreadDefines<TChunk, TModule>(
   chunks: Iterable<TChunk>,
   getChunkModules: (chunk: TChunk) => Iterable<TModule>,
@@ -98,10 +75,6 @@ export function collectMainThreadDefines<TChunk, TModule>(
     }
   }
 
-  // Definitions are identified by their content hash, so the same one reached
-  // through several modules is registered once. Two definitions sharing an id
-  // but not their code would mean the id no longer identifies the content, and
-  // dropping either of them would silently change what the main thread runs.
   const defines = new Map<string, MainThreadDefine>();
   for (const define of collected) {
     const key = `${define.kind}:${define.id}`;
@@ -120,26 +93,9 @@ export function collectMainThreadDefines<TChunk, TModule>(
   return [...defines.values()];
 }
 
-/**
- * Where a card that can host a lazy bundle publishes its runtime members for
- * the lazy bundle's section to read, mirroring how
- * `@lynx-js/react/experimental/lazy/import` hands the host's exports to a lazy
- * bundle.
- *
- * A symbol on `globalThis`, not a property on the bundler's require function:
- * the main-thread entry ships in `@lynx-js/react`, so the channel has to be one
- * a non-webpack pipeline can also provide.
- */
 const RUNTIME_HANDLE =
   `globalThis[Symbol.for('__REACT_LYNX_MAIN_THREAD_DEFINES_RUNTIME__')]`;
 
-/**
- * Wrap the collected definitions into the function the main-thread entry calls.
- * Each module keeps its own block scope: definitions are printed per module and
- * declare same-named locals (e.g. the `__workletRuntimeLoaded` guard).
- *
- * @internal
- */
 export function renderMainThreadDefines(
   defines: readonly MainThreadDefine[],
 ): string {
@@ -159,27 +115,19 @@ export function renderMainThreadDefines(
     );
   }
 
-  // Each definition declares its own locals (a snapshot id, a worklet runtime
-  // guard), so it gets its own block scope.
   const body = defines
     .map(({ kind, id, code }) => `// ${kind} ${id}\n{\n${code}\n}`)
     .join('\n');
 
-  return `var __lynxMainThreadDefines = function (ReactLynx, loadWorkletRuntime, require) {
+  return `var __lynxMainThreadDefines = function (ReactLynx) {
   ${RUNTIME_HANDLE} = ReactLynx;
+  var loadWorkletRuntime = ReactLynx.loadWorkletRuntime;
+  var require = function () { return ReactLynx; };
 ${body}
 };
 `;
 }
 
-/**
- * Assemble a lazy bundle's main-thread section: a chunk that the host card
- * installs into its own main-thread runtime, so the definitions run with the
- * lazy bundle's `globDynamicComponentEntry` (its CSS scope) and reuse the
- * host's ReactLynx runtime instance.
- *
- * @internal
- */
 export function renderLazyMainThreadDefines(
   defines: readonly MainThreadDefine[],
   moduleId: string,
@@ -194,9 +142,7 @@ export function renderLazyMainThreadDefines(
         var runtime = ${RUNTIME_HANDLE};
         ${
     renderMainThreadDefines(defines)
-  }        __lynxMainThreadDefines(runtime, runtime.loadWorkletRuntime, function () {
-          return runtime;
-        });
+  }        __lynxMainThreadDefines(runtime);
       }
     }
   };
@@ -208,14 +154,6 @@ type MainThreadDefinesRuntimeModule = new(
   backgroundEntry: string,
 ) => RuntimeModule;
 
-/**
- * Registers the background's collected snapshot and worklet definitions in the
- * main-thread bundle. Emitted into the bundle runtime (not isolated, so the
- * main-thread entry can call it) after the module graph is sealed, which is the
- * earliest point where every module's definitions are known.
- *
- * @internal
- */
 export function createMainThreadDefinesRuntimeModule(
   webpack: typeof import('@rspack/core').rspack,
 ): MainThreadDefinesRuntimeModule {
@@ -225,14 +163,9 @@ export function createMainThreadDefinesRuntimeModule(
         'lynx main thread defines',
         webpack.RuntimeModule.STAGE_NORMAL,
       );
-      // The generated code comes from the background's modules, which this
-      // chunk does not depend on, so a rebuild that only touches the background
-      // would otherwise keep the previous definitions.
       this.fullHash = true;
     }
 
-    // Not isolated: the main-thread entry calls `__lynxMainThreadDefines`, so it
-    // has to be declared in the bundle scope the modules close over.
     override shouldIsolate(): boolean {
       return false;
     }

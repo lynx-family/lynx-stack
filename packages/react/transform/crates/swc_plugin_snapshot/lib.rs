@@ -1161,9 +1161,6 @@ impl Default for JSXTransformerConfig {
   }
 }
 
-/// The `snapshotCreatorMap[id] = ...` registration. The main-thread copy of a
-/// definition differs from the emitted one only in its creator and dynamic
-/// parts, so both go through here.
 #[allow(clippy::too_many_arguments)]
 fn build_snapshot_registration(
   dev_creator_param: bool,
@@ -1241,10 +1238,6 @@ where
   snapshot_counter: u32,
   current_snapshot_defs: Vec<ModuleItem>,
   current_snapshot_id: Option<Ident>,
-  // When set, each emitted snapshot registration (the `const __snapshot_x` id
-  // decl + its `snapshotCreatorMap[x] = createSnapshot(...)` assignment) is
-  // also cloned here, so the main-thread bundle can be assembled from the
-  // registrations alone.
   main_thread_defs_collector: Option<MainThreadDefinesCollector>,
   comments: Option<C>,
   pub ui_source_map_records: Rc<RefCell<Vec<UISourceMapRecord>>>,
@@ -1413,9 +1406,6 @@ where
     );
 
     let target = self.cfg.target;
-    // The main thread needs the `LEPUS` shape of every registration. It is
-    // built here, in the same traversal, so the definitions the background
-    // collects cannot drift from the ones it emits.
     let collecting = self.main_thread_defs_collector.is_some();
     let runtime_id = self.runtime_id.clone();
     // In dev the creator arrow is stringified for cross-thread HMR
@@ -1683,8 +1673,6 @@ where
       }),
     };
 
-    // The collected copy is built first so the emitted registration can take
-    // the originals: nothing is cloned when collection is off.
     let snapshot_create_call_mt = snapshot_creator_mt.map(|snapshot_creator_mt| {
       build_snapshot_registration(
         self.dev_creator_param,
@@ -1934,8 +1922,6 @@ mod tests {
       assert_eq!(defines.len(), 1);
       assert_eq!(defines[0].kind, MainThreadDefineKind::Snapshot);
       assert!(defines[0].id.starts_with("__snapshot_"));
-      // A `JS` registration has no creator, but the collected one builds the
-      // elements the main thread needs.
       let collected = format!("{:?}", defines[0].items);
       assert!(collected.contains("__CreateView"));
       assert!(collected.contains("__CreateText"));
@@ -1988,7 +1974,6 @@ mod tests {
       let emitted = transform(None)?;
       let emitted_while_collecting = transform(Some(Rc::new(RefCell::new(vec![]))))?;
 
-      // Collecting must not change what the background gets.
       assert_eq!(emitted, emitted_while_collecting);
 
       Ok(())
