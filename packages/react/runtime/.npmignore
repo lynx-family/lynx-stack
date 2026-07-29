@@ -11,7 +11,7 @@
 !lepus/*
 !lib/**
 !lib/*
-!main-thread-defines/*
-!main-thread-defines/**
+!mts-rendering-disabled/*
+!mts-rendering-disabled/**
 !worklet-runtime/*
 !worklet-runtime/**

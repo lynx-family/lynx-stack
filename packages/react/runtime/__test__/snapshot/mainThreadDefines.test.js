@@ -15,7 +15,7 @@ afterEach(() => {
 });
 
 async function importMainThreadDefines() {
-  await import('../../main-thread-defines/index.js');
+  await import('../../mts-rendering-disabled/index.js');
 }
 
 const PROVIDED_MEMBERS = {
@@ -67,7 +67,7 @@ describe('main-thread defines entry', () => {
 
   it('reaches for no bundler internal, so a non-webpack pipeline can supply the one binding it needs', () => {
     const source = readFileSync(
-      new URL('../../main-thread-defines/index.js', import.meta.url),
+      new URL('../../mts-rendering-disabled/index.js', import.meta.url),
       'utf8',
     );
 

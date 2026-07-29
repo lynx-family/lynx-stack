@@ -33,7 +33,6 @@
       "lazy": "./runtime/lazy/internal.js",
       "default": "./runtime/lib/internal.js"
     },
-    "./internal/main-thread-defines": "./runtime/main-thread-defines/index.js",
     "./internal/document": {
       "types": "./runtime/lib/document.d.ts",
       "default": "./runtime/lib/document.js"

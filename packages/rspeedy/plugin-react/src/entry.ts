@@ -69,7 +69,15 @@ export function applyEntry(
     >(Symbol.for('@lynx-js/react/internal:resolve'))!
 
     const mainThreadImports = enableMTSRendering ? undefined : [
-      await resolve('@lynx-js/react/internal/main-thread-defines'),
+      path.join(
+        path.dirname(
+          createRequire(import.meta.url).resolve(
+            '@lynx-js/react/package.json',
+            { paths: [api.context.rootPath] },
+          ),
+        ),
+        'runtime/mts-rendering-disabled/index.js',
+      ),
     ]
 
     const rsbuildConfig = api.getRsbuildConfig()
