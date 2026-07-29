@@ -74,7 +74,13 @@ async function drive(assetsInfo: Map<string, AssetInfo>) {
       _source: unknown,
       update: (info: AssetInfo) => AssetInfo,
     ) => {
-      assetsInfo.set(name, update(assetsInfo.get(name) ?? {}));
+      const prev = assetsInfo.get(name) ?? {};
+      // rspack's info updater does NOT clear `related`. Applying the updater
+      // faithfully models webpack, not the runtime this plugin ships on — and
+      // that gap is exactly why #3250 passed three green tests while changing
+      // nothing. A driver that grants the detach its intended effect can only
+      // ever agree with the approach that does not work.
+      assetsInfo.set(name, { ...update(prev), related: prev.related });
     },
   } as unknown as webpack.Compilation;
 
@@ -118,9 +124,15 @@ describe('WebEncodePlugin: inlined assets keep their source maps', () => {
   // See lynx-family/lynx-stack#2964.
   test('the sidecar .map survives while the inlined .js is still deleted', async () => {
     const { live } = await drivePlugin(
-      new Map([['background.js', {
-        related: { sourceMap: 'background.js.map' },
-      }]]),
+      // The map must exist as an ASSET, not merely be named by `related`: the
+      // fix captures its source through `getAsset(mapName)` before the delete.
+      // Naming it without registering it makes that read undefined, the re-emit
+      // guard short-circuits, and the test cannot pass against the fix it exists
+      // to cover.
+      new Map<string, AssetInfo>([
+        ['background.js', { related: { sourceMap: 'background.js.map' } }],
+        ['background.js.map', {}],
+      ]),
     );
 
     // Asserted on what would be EMITTED, not on the deletion log. The cascade
@@ -140,9 +152,15 @@ describe('WebEncodePlugin: inlined assets keep their source maps', () => {
   // it holds whether or not `related` survives.
   test('the map is restored even though the related link still points at it', async () => {
     const { assetsInfo, deleted, live } = await drivePlugin(
-      new Map([['background.js', {
-        related: { sourceMap: 'background.js.map' },
-      }]]),
+      // The map must exist as an ASSET, not merely be named by `related`: the
+      // fix captures its source through `getAsset(mapName)` before the delete.
+      // Naming it without registering it makes that read undefined, the re-emit
+      // guard short-circuits, and the test cannot pass against the fix it exists
+      // to cover.
+      new Map<string, AssetInfo>([
+        ['background.js', { related: { sourceMap: 'background.js.map' } }],
+        ['background.js.map', {}],
+      ]),
     );
 
     expect(assetsInfo.get('background.js')?.related?.sourceMap)
