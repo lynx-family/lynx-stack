@@ -80,7 +80,15 @@ async function drive(assetsInfo: Map<string, AssetInfo>) {
       // that gap is exactly why #3250 passed three green tests while changing
       // nothing. A driver that grants the detach its intended effect can only
       // ever agree with the approach that does not work.
-      assetsInfo.set(name, { ...update(prev), related: prev.related });
+      //
+      // Re-attached conditionally: under `exactOptionalPropertyTypes` an
+      // explicit `related: undefined` is not assignable to an optional
+      // property, so an unconditional spread does not compile here.
+      const next = update(prev);
+      assetsInfo.set(
+        name,
+        prev.related === undefined ? next : { ...next, related: prev.related },
+      );
     },
   } as unknown as webpack.Compilation;
 
