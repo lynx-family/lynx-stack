@@ -139,17 +139,16 @@ REQUIRE_HTTP_MESH=True \
   packages/genui/ui-judge/dist/linux-amd64/start.sh
 ```
 
-The packaged launcher then exports `LYNX_USE_HOST=127.0.0.1` and maps
-`MESH_INGRESS_PORT` to `LYNX_USE_PORT`. The UI Judge server directly consumes
-`LYNX_USE_PORT`, with `PORT` retained as a compatibility fallback, and the
-launcher fails immediately when the mesh port is missing. `LYNX_USE_HOST`
-describes the mesh endpoint; UI Judge itself continues to listen on both
-unspecified IPv4 and IPv6 addresses.
+The packaged launcher then exports `HOST=127.0.0.1` and maps
+`MESH_INGRESS_PORT` to `PORT`. The UI Judge server directly consumes both
+variables, and the launcher fails immediately when the mesh port is missing.
 
-`PORT` defaults to `8080` and must be between `1` and `65535`. The process
-listens on both `0.0.0.0:{PORT}` and `[::]:{PORT}`. Use `GET /health` for a
-readiness check, `POST /judge` to evaluate a page, and `POST /compare` to
-compare two uploaded images without rendering a page or calling the VLM.
+`HOST` defaults to `0.0.0.0` and must be an IPv4 or IPv6 address. `PORT`
+defaults to `8080` and must be between `1` and `65535`. The default host opens
+listeners on both `0.0.0.0:{PORT}` and `[::]:{PORT}`; a specific host such as
+the mesh loopback address opens one listener. Use `GET /health` for a readiness
+check, `POST /judge` to evaluate a page, and `POST /compare` to compare two
+uploaded images without rendering a page or calling the VLM.
 
 The following request evaluates a local bundle. `url` and `task` are required.
 The other fields are optional. `initialData` and `globalProps` accept JSON

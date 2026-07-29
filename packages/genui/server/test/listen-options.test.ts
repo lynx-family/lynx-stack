@@ -7,25 +7,13 @@ import { describe, expect, test } from '@rstest/core';
 import { resolveListenOptions } from '../src/listen-options.js';
 
 describe('resolveListenOptions', () => {
-  test('prefers LYNX_USE_HOST and LYNX_USE_PORT', () => {
+  test('reads HOST and PORT', () => {
     expect(resolveListenOptions({
-      HOST: '0.0.0.0',
-      LYNX_USE_HOST: '127.0.0.1',
-      LYNX_USE_PORT: '4321',
-      PORT: '3000',
+      HOST: '127.0.0.1',
+      PORT: '4321',
     })).toEqual({
       hostname: '127.0.0.1',
       port: 4_321,
-    });
-  });
-
-  test('falls back to HOST and PORT', () => {
-    expect(resolveListenOptions({
-      HOST: '127.0.0.2',
-      PORT: '8080',
-    })).toEqual({
-      hostname: '127.0.0.2',
-      port: 8_080,
     });
   });
 
@@ -36,12 +24,11 @@ describe('resolveListenOptions', () => {
     });
   });
 
-  test('reports an invalid LYNX_USE_PORT value', () => {
+  test('reports an invalid PORT value', () => {
     expect(() =>
       resolveListenOptions({
-        LYNX_USE_PORT: 'not-a-port',
-        PORT: '3000',
+        PORT: 'not-a-port',
       })
-    ).toThrow('Invalid LYNX_USE_PORT value: not-a-port');
+    ).toThrow('Invalid PORT value: not-a-port');
   });
 });

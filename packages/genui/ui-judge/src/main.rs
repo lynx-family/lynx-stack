@@ -5,37 +5,35 @@
 #[cfg(feature = "server")]
 #[tokio::main]
 async fn main() -> Result<(), ui_judge::server::ServerError> {
-  let port = resolve_port(
-    std::env::var("LYNX_USE_PORT").ok(),
-    std::env::var("PORT").ok(),
-  );
-  ui_judge::server::serve(&port).await
+  let (host, port) = resolve_listen_options(std::env::var("HOST").ok(), std::env::var("PORT").ok());
+  ui_judge::server::serve(&host, &port).await
 }
 
 #[cfg(feature = "server")]
-fn resolve_port(lynx_use_port: Option<String>, port: Option<String>) -> String {
-  lynx_use_port.or(port).unwrap_or_else(|| "8080".to_string())
+fn resolve_listen_options(host: Option<String>, port: Option<String>) -> (String, String) {
+  (
+    host.unwrap_or_else(|| "0.0.0.0".to_string()),
+    port.unwrap_or_else(|| "8080".to_string()),
+  )
 }
 
 #[cfg(all(test, feature = "server"))]
 mod tests {
-  use super::resolve_port;
+  use super::resolve_listen_options;
 
   #[test]
-  fn lynx_use_port_takes_priority() {
+  fn reads_host_and_port() {
     assert_eq!(
-      resolve_port(Some("4321".to_string()), Some("8080".to_string())),
-      "4321",
+      resolve_listen_options(Some("127.0.0.1".to_string()), Some("4321".to_string())),
+      ("127.0.0.1".to_string(), "4321".to_string()),
     );
   }
 
   #[test]
-  fn port_remains_a_compatibility_fallback() {
-    assert_eq!(resolve_port(None, Some("9090".to_string())), "9090");
-  }
-
-  #[test]
-  fn default_port_is_8080() {
-    assert_eq!(resolve_port(None, None), "8080");
+  fn uses_default_listen_options() {
+    assert_eq!(
+      resolve_listen_options(None, None),
+      ("0.0.0.0".to_string(), "8080".to_string()),
+    );
   }
 }

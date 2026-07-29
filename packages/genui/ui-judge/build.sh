@@ -62,11 +62,11 @@ if [[ "${REQUIRE_HTTP_MESH:-False}" == "True" ]]; then
       'MESH_INGRESS_PORT is required when REQUIRE_HTTP_MESH=True.\n' >&2
     exit 1
   fi
-  export LYNX_USE_HOST="127.0.0.1"
-  export LYNX_USE_PORT="${MESH_INGRESS_PORT}"
+  export HOST="127.0.0.1"
+  export PORT="${MESH_INGRESS_PORT}"
 else
-  export LYNX_USE_HOST="${LYNX_USE_HOST:-0.0.0.0}"
-  export LYNX_USE_PORT="${LYNX_USE_PORT:-${PORT:-8080}}"
+  export HOST="${HOST:-0.0.0.0}"
+  export PORT="${PORT:-8080}"
 fi
 
 exec "${SCRIPT_DIR}/ui-judge-server" "$@"

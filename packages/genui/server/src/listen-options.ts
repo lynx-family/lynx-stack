@@ -23,12 +23,8 @@ function readPort(value: string | undefined, variableName: string): number {
 export function resolveListenOptions(
   env: Readonly<NodeJS.ProcessEnv>,
 ): ListenOptions {
-  const portVariable = env.LYNX_USE_PORT === undefined
-    ? 'PORT'
-    : 'LYNX_USE_PORT';
-
   return {
-    hostname: env.LYNX_USE_HOST ?? env.HOST ?? DEFAULT_HOST,
-    port: readPort(env.LYNX_USE_PORT ?? env.PORT, portVariable),
+    hostname: env.HOST ?? DEFAULT_HOST,
+    port: readPort(env.PORT, 'PORT'),
   };
 }

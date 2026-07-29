@@ -174,9 +174,8 @@ checks for a supported Node.js 22 or 24 runtime and the built server artifact
 before launching the same `dist/index.js`.
 
 When `REQUIRE_HTTP_MESH=True`, `start.sh` requires `MESH_INGRESS_PORT`, binds
-the server to `127.0.0.1`, and publishes that port through `LYNX_USE_PORT`.
-The server directly consumes `LYNX_USE_HOST` and `LYNX_USE_PORT`, with `HOST`
-and `PORT` retained as compatibility fallbacks. Outside the mesh, the launcher
+the server to `127.0.0.1`, and publishes `MESH_INGRESS_PORT` through `PORT`.
+The server directly consumes `HOST` and `PORT`. Outside the mesh, the launcher
 preserves direct overrides and the `0.0.0.0:3000` default.
 
 Each protocol module default-exports a Hono sub-application. `src/app.ts`

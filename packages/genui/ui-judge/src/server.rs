@@ -3,7 +3,7 @@
 // LICENSE file in the root directory of this source tree.
 
 use std::io;
-use std::net::{Ipv4Addr, Ipv6Addr, SocketAddr};
+use std::net::{AddrParseError, IpAddr, Ipv6Addr, SocketAddr};
 use std::num::{NonZeroU16, ParseIntError};
 use std::panic::{catch_unwind, resume_unwind, AssertUnwindSafe};
 use std::sync::atomic::{AtomicBool, Ordering};
@@ -47,6 +47,11 @@ type PrepareJudgePageRequest =
 
 #[derive(Debug, Error)]
 pub enum ServerError {
+  #[error("HOST must be an IPv4 or IPv6 address, got {host:?}: {source}")]
+  InvalidHost {
+    host: String,
+    source: AddrParseError,
+  },
   #[error("PORT must be an integer from 1 through 65535, got {port:?}: {source}")]
   InvalidPort { port: String, source: ParseIntError },
   #[error("UI Judge headless worker panicked")]
@@ -360,12 +365,14 @@ fn run_headless_worker(runtime: Runtime, receiver: Receiver<CaptureJob>) {
   }
 }
 
-/// Runs the feature-gated UI Judge HTTP server on IPv4 and IPv6 unspecified
-/// addresses. Native Lynx capture remains on one dedicated thread, while
+/// Runs the feature-gated UI Judge HTTP server on the configured host and
+/// port. The default IPv4 unspecified host also opens an IPv6 unspecified
+/// listener. Native Lynx capture remains on one dedicated thread, while
 /// completed captures are scored concurrently by the Tokio and Rayon pools.
-pub async fn serve(port: &str) -> Result<(), ServerError> {
+pub async fn serve(host: &str, port: &str) -> Result<(), ServerError> {
+  let host = parse_host(host)?;
   let port = parse_port(port)?;
-  let (ipv4_listener, ipv6_listener) = bind_listeners(port)?;
+  let (primary_listener, secondary_listener) = bind_listeners(host, port)?;
   let headless = Arc::new(HeadlessExecutor::new()?);
   let worker_failure = headless.take_failure_receiver();
   let state = AppState {
@@ -390,12 +397,24 @@ pub async fn serve(port: &str) -> Result<(), ServerError> {
     let _ = shutdown_sender.send(true);
   });
 
-  println!("UI Judge server listening on 0.0.0.0:{port} and [::]:{port}");
-  let ipv4_server = axum::serve(ipv4_listener, app.clone())
+  let primary_address = primary_listener.local_addr()?;
+  if let Some(secondary_listener) = secondary_listener.as_ref() {
+    println!(
+      "UI Judge server listening on {primary_address} and {}",
+      secondary_listener.local_addr()?,
+    );
+  } else {
+    println!("UI Judge server listening on {primary_address}");
+  }
+  let primary_server = axum::serve(primary_listener, app.clone())
     .with_graceful_shutdown(wait_for_shutdown(shutdown_receiver.clone()));
-  let ipv6_server =
-    axum::serve(ipv6_listener, app).with_graceful_shutdown(wait_for_shutdown(shutdown_receiver));
-  let result = tokio::try_join!(ipv4_server, ipv6_server);
+  let result = if let Some(secondary_listener) = secondary_listener {
+    let secondary_server = axum::serve(secondary_listener, app)
+      .with_graceful_shutdown(wait_for_shutdown(shutdown_receiver));
+    tokio::try_join!(primary_server, secondary_server).map(|_| ())
+  } else {
+    primary_server.await
+  };
 
   signal_task.abort();
   let _ = signal_task.await;
@@ -415,15 +434,32 @@ fn parse_port(port: &str) -> Result<u16, ServerError> {
     })
 }
 
-fn bind_listeners(port: u16) -> io::Result<(TcpListener, TcpListener)> {
-  let ipv4 = bind_listener(
-    Domain::IPV4,
-    SocketAddr::from((Ipv4Addr::UNSPECIFIED, port)),
-  )?;
-  let ipv6 = Socket::new(Domain::IPV6, Type::STREAM, Some(Protocol::TCP))?;
-  ipv6.set_only_v6(true)?;
-  let ipv6 = configure_listener(ipv6, SocketAddr::from((Ipv6Addr::UNSPECIFIED, port)))?;
-  Ok((ipv4, ipv6))
+fn parse_host(host: &str) -> Result<IpAddr, ServerError> {
+  host.parse().map_err(|source| ServerError::InvalidHost {
+    host: host.to_string(),
+    source,
+  })
+}
+
+fn bind_listeners(host: IpAddr, port: u16) -> io::Result<(TcpListener, Option<TcpListener>)> {
+  match host {
+    IpAddr::V4(ipv4) => {
+      let primary = bind_listener(Domain::IPV4, SocketAddr::from((ipv4, port)))?;
+      let secondary = if ipv4.is_unspecified() {
+        Some(bind_ipv6_listener(Ipv6Addr::UNSPECIFIED, port)?)
+      } else {
+        None
+      };
+      Ok((primary, secondary))
+    }
+    IpAddr::V6(ipv6) => Ok((bind_ipv6_listener(ipv6, port)?, None)),
+  }
+}
+
+fn bind_ipv6_listener(address: Ipv6Addr, port: u16) -> io::Result<TcpListener> {
+  let socket = Socket::new(Domain::IPV6, Type::STREAM, Some(Protocol::TCP))?;
+  socket.set_only_v6(true)?;
+  configure_listener(socket, SocketAddr::from((address, port)))
 }
 
 fn bind_listener(domain: Domain, address: SocketAddr) -> io::Result<TcpListener> {
@@ -582,6 +618,8 @@ async fn shutdown_signal() -> io::Result<()> {
 
 #[cfg(test)]
 mod tests {
+  use std::net::Ipv4Addr;
+
   use std::io::Cursor;
 
   use axum::body::Body;
@@ -783,6 +821,42 @@ mod tests {
       parse_port("0"),
       Err(ServerError::InvalidPort { .. })
     ));
+  }
+
+  #[test]
+  fn rejects_a_non_ip_host() {
+    assert!(matches!(
+      parse_host("localhost"),
+      Err(ServerError::InvalidHost { .. })
+    ));
+  }
+
+  #[tokio::test]
+  async fn binds_only_the_configured_loopback_host() {
+    let (primary, secondary) =
+      bind_listeners(IpAddr::V4(Ipv4Addr::LOCALHOST), 0).expect("bind loopback listener");
+
+    assert_eq!(
+      primary.local_addr().expect("read listener address").ip(),
+      IpAddr::V4(Ipv4Addr::LOCALHOST),
+    );
+    assert!(secondary.is_none());
+  }
+
+  #[tokio::test]
+  async fn default_host_binds_unspecified_ipv4_and_ipv6() {
+    let (primary, secondary) =
+      bind_listeners(IpAddr::V4(Ipv4Addr::UNSPECIFIED), 0).expect("bind dual-stack listeners");
+    let secondary = secondary.expect("default host must add an IPv6 listener");
+
+    assert_eq!(
+      primary.local_addr().expect("read IPv4 address").ip(),
+      IpAddr::V4(Ipv4Addr::UNSPECIFIED),
+    );
+    assert_eq!(
+      secondary.local_addr().expect("read IPv6 address").ip(),
+      IpAddr::V6(Ipv6Addr::UNSPECIFIED),
+    );
   }
 
   #[tokio::test]
