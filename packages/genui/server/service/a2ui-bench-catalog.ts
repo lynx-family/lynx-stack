@@ -44,7 +44,14 @@ function filterCatalog(
       }.`,
     ],
     examples: BASIC_CATALOG.examples,
+    functions: filterBenchFunctions(BASIC_CATALOG.functions),
   };
+}
+
+function filterBenchFunctions(
+  functions: A2UICatalog['functions'],
+): A2UICatalog['functions'] {
+  return functions?.filter((fn) => fn.name !== 'openUrl');
 }
 
 export function resolveBenchCatalog(label: BenchCatalogLabel): A2UICatalog {
@@ -54,5 +61,8 @@ export function resolveBenchCatalog(label: BenchCatalogLabel): A2UICatalog {
   if (label === 'Minimal Catalog') {
     return filterCatalog(label, MINIMAL_COMPONENTS);
   }
-  return BASIC_CATALOG;
+  return {
+    ...BASIC_CATALOG,
+    functions: filterBenchFunctions(BASIC_CATALOG.functions),
+  };
 }

@@ -93,6 +93,12 @@ pub(crate) struct CapturedPage {
   url: String,
 }
 
+#[derive(Debug, Clone, Default, PartialEq, Eq)]
+pub(crate) struct PageLoadOptions {
+  pub(crate) global_props_json: Option<String>,
+  pub(crate) initial_data_json: Option<String>,
+}
+
 /// Captures the current software-renderer frame exposed by the existing
 /// headless runner.
 async fn capture_page_png(page: &Page, settle: Duration) -> Result<Vec<u8>, HeadlessPageError> {
@@ -174,6 +180,14 @@ pub(crate) async fn capture_prepared_page(
   client: &ModelClient,
   request: &JudgePageRequest,
 ) -> Result<CapturedPage, UiJudgeResult> {
+  capture_prepared_page_with_options(client, request, &PageLoadOptions::default()).await
+}
+
+pub(crate) async fn capture_prepared_page_with_options(
+  client: &ModelClient,
+  request: &JudgePageRequest,
+  load_options: &PageLoadOptions,
+) -> Result<CapturedPage, UiJudgeResult> {
   let lynx = match tokio::time::timeout(
     request.timeout,
     Lynx::connect(ConnectOptions {
@@ -192,7 +206,7 @@ pub(crate) async fn capture_prepared_page(
       ))
     }
   };
-  let capture = capture_with_lynx(&lynx, client, request).await;
+  let capture = capture_with_lynx(&lynx, client, request, load_options).await;
   lynx.close();
   capture
 }
@@ -201,6 +215,7 @@ async fn capture_with_lynx(
   lynx: &Lynx,
   client: &ModelClient,
   request: &JudgePageRequest,
+  load_options: &PageLoadOptions,
 ) -> Result<CapturedPage, UiJudgeResult> {
   let mut page = match lynx.new_page() {
     Ok(page) => page,
@@ -208,13 +223,7 @@ async fn capture_with_lynx(
   };
   let navigation = tokio::time::timeout(
     request.timeout,
-    page.goto(
-      &request.url,
-      GotoOptions {
-        timeout: Some(request.timeout),
-        ..GotoOptions::default()
-      },
-    ),
+    page.goto(&request.url, goto_options(request.timeout, load_options)),
   )
   .await;
   let navigation_error = match navigation {
@@ -227,6 +236,14 @@ async fn capture_with_lynx(
   }
 
   capture_loaded_page(client, &mut page, request).await
+}
+
+fn goto_options(timeout: Duration, load_options: &PageLoadOptions) -> GotoOptions {
+  GotoOptions {
+    global_props_json: load_options.global_props_json.clone(),
+    initial_data_json: load_options.initial_data_json.clone(),
+    timeout: Some(timeout),
+  }
 }
 
 async fn capture_loaded_page(
@@ -600,6 +617,32 @@ mod tests {
     assert!(prompt.contains(".class"));
     assert!(prompt.contains("swipe"));
     assert!(prompt.contains("unsupported"));
+  }
+
+  #[test]
+  fn page_load_options_are_forwarded_to_runner_navigation() {
+    let timeout = Duration::from_secs(9);
+    let options = goto_options(
+      timeout,
+      &PageLoadOptions {
+        global_props_json: Some(r#"{"messages":[]}"#.to_string()),
+        initial_data_json: Some(r#"{"theme":"light"}"#.to_string()),
+      },
+    );
+
+    assert_eq!(options.timeout, Some(timeout));
+    assert_eq!(
+      options.global_props_json.as_deref(),
+      Some(r#"{"messages":[]}"#)
+    );
+    assert_eq!(
+      options.initial_data_json.as_deref(),
+      Some(r#"{"theme":"light"}"#)
+    );
+
+    let defaults = goto_options(timeout, &PageLoadOptions::default());
+    assert!(defaults.global_props_json.is_none());
+    assert!(defaults.initial_data_json.is_none());
   }
 
   #[tokio::test(flavor = "current_thread")]

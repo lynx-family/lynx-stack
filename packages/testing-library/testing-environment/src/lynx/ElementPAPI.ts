@@ -423,6 +423,11 @@ export const initElementTree = () => {
       return ele.getAttribute(name);
     }
 
+    __GetComputedStyleByKey(ele: LynxElement, key: string): string {
+      return lynxTestingEnv.env.window.getComputedStyle(ele)
+        .getPropertyValue(key);
+    }
+
     /** @internal */
     animationMap = new Map<
       string,

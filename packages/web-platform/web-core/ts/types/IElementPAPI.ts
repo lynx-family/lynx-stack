@@ -323,6 +323,11 @@ export type GetAttributeByNamePAPI = (
   name: string,
 ) => string | null;
 
+export type GetComputedStyleByKeyPAPI = (
+  element: HTMLElement,
+  key: string,
+) => string;
+
 export type QueryComponentPAPI = (
   source: string,
   resultCallback?: (result: {
@@ -411,6 +416,7 @@ export interface ElementPAPIs {
   __SetCSSId: SetCSSIdPAPI;
   __GetPageElement: GetPageElementPAPI;
   __GetAttributeByName: GetAttributeByNamePAPI;
+  __GetComputedStyleByKey: GetComputedStyleByKeyPAPI;
   __ElementAnimate: ElementAnimatePAPI;
   __InvokeUIMethod: InvokeUIMethodPAPI;
   __QuerySelector: QuerySelectorPAPI;

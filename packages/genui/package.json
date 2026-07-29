@@ -142,7 +142,8 @@
     "@lynx-js/qrcode-rsbuild-plugin": "workspace:^",
     "@lynx-js/react": "workspace:^",
     "@lynx-js/react-rsbuild-plugin": "workspace:^",
-    "@lynx-js/rspeedy": "workspace:^"
+    "@lynx-js/rspeedy": "workspace:^",
+    "preact": "catalog:lynxjs"
   },
   "peerDependencies": {
     "@lynx-js/lynx-ui": ">=3.133.0",

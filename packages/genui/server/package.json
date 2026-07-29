@@ -5,16 +5,21 @@
   "type": "module",
   "scripts": {
     "build": "tsc --noEmit && rslib build",
-    "dev": "rslib build --watch",
+    "dev": "pnpm build && pnpm run --parallel \"/^dev:(build|server)$/\"",
+    "dev:build": "rslib build --watch",
+    "dev:server": "node --watch dist/index.js",
     "lint": "eslint --ignore-pattern dist .",
+    "start": "node dist/index.js",
     "test": "rstest"
   },
   "dependencies": {
     "@ai-sdk/openai": "^3.0.87",
     "@aws-sdk/client-s3": "^3.1093.0",
+    "@hono/node-server": "^2.0.11",
     "@lynx-js/genui-mcp-apps": "workspace:*",
     "@lynx-js/genui-openui": "workspace:*",
     "@mastra/core": "1.52.0",
+    "hono": "4.12.12",
     "zod": "^4.4.3"
   },
   "devDependencies": {
@@ -23,5 +28,8 @@
     "@types/node": "^24.13.3",
     "ajv": "^8.18.0",
     "typescript": "^6.0.3"
+  },
+  "engines": {
+    "node": "^22 || ^24"
   }
 }
