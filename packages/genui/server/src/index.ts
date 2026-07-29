@@ -7,6 +7,7 @@ import { createServer as createHttp2Server } from 'node:http2';
 import { serve } from '@hono/node-server';
 
 import app from './app.js';
+import { createGracefulShutdown } from './graceful-shutdown.js';
 
 const DEFAULT_PORT = 3_000;
 const DEFAULT_HOST = '0.0.0.0';
@@ -37,12 +38,7 @@ const server = serve(
   },
 );
 
-function shutdown(signal: NodeJS.Signals): void {
-  console.info(`Received ${signal}; shutting down GenUI server`);
-  server.close(() => {
-    console.info('GenUI server stopped');
-  });
-}
+const shutdown = createGracefulShutdown(server);
 
 process.once('SIGINT', shutdown);
 process.once('SIGTERM', shutdown);

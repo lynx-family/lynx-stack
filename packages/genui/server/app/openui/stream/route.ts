@@ -116,71 +116,113 @@ async function postOpenUIStream(req: Request) {
     hasBaseURL: Boolean(opts.baseURL),
   });
 
+  let closed = false;
+  const generationController = new AbortController();
+  const abortGeneration = (reason?: unknown) => {
+    if (!generationController.signal.aborted) {
+      generationController.abort(reason);
+    }
+  };
+  const onRequestAbort = () => abortGeneration(req.signal.reason);
+  if (req.signal.aborted) {
+    onRequestAbort();
+  } else {
+    req.signal.addEventListener('abort', onRequestAbort, { once: true });
+  }
+
   const stream = new ReadableStream<Uint8Array>({
-    async start(controller) {
+    start(controller) {
       const enqueue = (event: string, data: unknown) => {
-        controller.enqueue(encodeSSE(event, data));
+        if (closed) return false;
+        try {
+          controller.enqueue(encodeSSE(event, data));
+          return true;
+        } catch {
+          closed = true;
+          return false;
+        }
       };
 
-      try {
-        const connectStartedAt = performance.now();
-        log('agent.connect.started');
-        const { textStream, finalize } = await service.streamAsAsyncIterable(
-          messages,
-          opts,
-          validatedConversation.conversation,
-        );
-        log('agent.connect.completed', {
-          durationMs: performance.now() - connectStartedAt,
-        });
+      const run = async () => {
+        try {
+          const connectStartedAt = performance.now();
+          log('agent.connect.started');
+          const { textStream, finalize } = await service.streamAsAsyncIterable(
+            messages,
+            opts,
+            validatedConversation.conversation,
+            generationController.signal,
+          );
+          log('agent.connect.completed', {
+            durationMs: performance.now() - connectStartedAt,
+          });
 
-        let streamedText = '';
-        let chunkCount = 0;
-        let firstChunkLogged = false;
+          let streamedText = '';
+          let chunkCount = 0;
+          let firstChunkLogged = false;
 
-        log('upstream.stream.started');
+          log('upstream.stream.started');
 
-        for await (const chunk of textStream) {
-          chunkCount += 1;
-          if (!firstChunkLogged) {
-            firstChunkLogged = true;
-            log('upstream.first_chunk', {
-              durationSinceConnectStartedMs: performance.now()
-                - connectStartedAt,
-              chunkLength: chunk.length,
-            });
+          for await (const chunk of textStream) {
+            chunkCount += 1;
+            if (!firstChunkLogged) {
+              firstChunkLogged = true;
+              log('upstream.first_chunk', {
+                durationSinceConnectStartedMs: performance.now()
+                  - connectStartedAt,
+                chunkLength: chunk.length,
+              });
+            }
+            streamedText += chunk;
+            if (!enqueue('delta', { text: chunk })) break;
           }
-          streamedText += chunk;
-          enqueue('delta', { text: chunk });
+
+          generationController.signal.throwIfAborted();
+          log('upstream.stream.ended', {
+            chunkCount,
+            streamedTextLength: streamedText.length,
+          });
+
+          const { text, usage, finishReason } = await finalize();
+          generationController.signal.throwIfAborted();
+          const finalText = text ?? streamedText;
+          log('done.enqueued', {
+            finalTextLength: finalText.length,
+            finishReason,
+            hasUsage: usage !== undefined,
+            requestId,
+          });
+          enqueue('done', {
+            ok: true,
+            text: finalText,
+            usage,
+            finishReason,
+          });
+        } catch (err: unknown) {
+          if (!closed && !generationController.signal.aborted) {
+            const error = errorMessage(err);
+            log('error.enqueued', error);
+            enqueue('error', error);
+          }
+        } finally {
+          req.signal.removeEventListener('abort', onRequestAbort);
+          if (!closed) {
+            closed = true;
+            log('stream.closed');
+            try {
+              controller.close();
+            } catch {
+              // The reader may have canceled between the state check and close.
+            }
+          }
         }
-
-        log('upstream.stream.ended', {
-          chunkCount,
-          streamedTextLength: streamedText.length,
-        });
-
-        const { text, usage, finishReason } = await finalize();
-        const finalText = text ?? streamedText;
-        log('done.enqueued', {
-          finalTextLength: finalText.length,
-          finishReason,
-          hasUsage: usage !== undefined,
-          requestId,
-        });
-        enqueue('done', {
-          ok: true,
-          text: finalText,
-          usage,
-          finishReason,
-        });
-      } catch (err: unknown) {
-        const error = errorMessage(err);
-        log('error.enqueued', error);
-        enqueue('error', error);
-      } finally {
-        log('stream.closed');
-        controller.close();
-      }
+      };
+      void run();
+    },
+    cancel(reason) {
+      closed = true;
+      req.signal.removeEventListener('abort', onRequestAbort);
+      abortGeneration(reason);
     },
   });
 

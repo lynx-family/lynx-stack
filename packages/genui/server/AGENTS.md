@@ -97,13 +97,11 @@ authentication and an allow-list are added in front of the server.
 ## Rate Limiting
 
 The routes at `/a2ui/chat`, `/a2ui/stream`, `/a2ui/action`, and
-`/mcp-apps/stream` share an
-in-process fixed-window rate limiter keyed by client IP (`x-forwarded-for`
-
-> `x-real-ip` > `unknown`). When a client exceeds the limit, the
-> JSON routes respond with HTTP `429` and the SSE route emits a single
-> `event: error` frame; both responses include the standard
-> `Retry-After` and `X-RateLimit-*` headers.
+`/mcp-apps/stream` share an in-process fixed-window rate limiter keyed by
+client IP (`x-forwarded-for` > `x-real-ip` > `unknown`). When a client exceeds
+the limit, the JSON routes respond with HTTP `429` and the SSE route emits a
+single `event: error` frame; both responses include the standard `Retry-After`
+and `X-RateLimit-*` headers.
 
 Tune the limiter with the following optional environment variables:
 

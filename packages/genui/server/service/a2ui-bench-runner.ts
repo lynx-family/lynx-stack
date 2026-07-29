@@ -188,6 +188,9 @@ async function runOne(
         catalog,
         maxRepairAttempts: request.settings.maxRepairAttempts,
       },
+      undefined,
+      undefined,
+      signal,
     );
     emitRunPhase(jobId, item, 'validate');
     const agentMs = performance.now() - startedAt;

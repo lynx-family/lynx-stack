@@ -136,10 +136,31 @@ async function postA2UIStream(req: Request) {
     maxRepairAttempts: opts.maxRepairAttempts,
   });
 
+  let closed = false;
+  const generationController = new AbortController();
+  const abortGeneration = (reason?: unknown) => {
+    if (!generationController.signal.aborted) {
+      generationController.abort(reason);
+    }
+  };
+  const onRequestAbort = () => abortGeneration(req.signal.reason);
+  if (req.signal.aborted) {
+    onRequestAbort();
+  } else {
+    req.signal.addEventListener('abort', onRequestAbort, { once: true });
+  }
+
   const stream = new ReadableStream<Uint8Array>({
-    async start(controller) {
+    start(controller) {
       const enqueue = (event: string, data: unknown) => {
-        controller.enqueue(encodeSSE(event, data));
+        if (closed) return false;
+        try {
+          controller.enqueue(encodeSSE(event, data));
+          return true;
+        } catch {
+          closed = true;
+          return false;
+        }
       };
       const resolveMessagesForStreaming = async (
         messages: Parameters<typeof resolveA2UIImageUrlsIncrementally>[0],
@@ -169,248 +190,274 @@ async function postA2UIStream(req: Request) {
         return resolvedMessages;
       };
 
-      try {
-        const connectStartedAt = performance.now();
-        log('agent.connect.started');
-        const { textStream, finalize } = await service.streamAsAsyncIterable(
-          messages,
-          optsWithCatalog,
-          validatedConversation.conversation,
-        );
-        log('agent.connect.completed', {
-          durationMs: performance.now() - connectStartedAt,
-        });
-        const streamingImageResolutions: Promise<void>[] = [];
-        const streamingImageKeys = new Set<string>();
-        const protocolParser = new A2UIProtocolMessageStreamParser({
-          onStaticImageComponent: (surfaceId, component) => {
-            if (typeof component.url !== 'string') return;
-            const key = `${surfaceId}\0${component.id}\0${component.url}`;
-            if (streamingImageKeys.has(key)) return;
-            streamingImageKeys.add(key);
-            const resolution = resolveStaticA2UIImageComponent(
-              surfaceId,
-              component,
-            ).then((message) => {
-              if (!message) return;
-              enqueue('message', { messages: [message] });
-              log('images.resolved.enqueued', {
-                messageCount: 1,
-                streaming: true,
+      const run = async () => {
+        try {
+          const connectStartedAt = performance.now();
+          log('agent.connect.started');
+          const { textStream, finalize } = await service.streamAsAsyncIterable(
+            messages,
+            optsWithCatalog,
+            validatedConversation.conversation,
+            generationController.signal,
+          );
+          log('agent.connect.completed', {
+            durationMs: performance.now() - connectStartedAt,
+          });
+          const streamingImageResolutions: Promise<void>[] = [];
+          const streamingImageKeys = new Set<string>();
+          const protocolParser = new A2UIProtocolMessageStreamParser({
+            onStaticImageComponent: (surfaceId, component) => {
+              if (typeof component.url !== 'string') return;
+              const key = `${surfaceId}\0${component.id}\0${component.url}`;
+              if (streamingImageKeys.has(key)) return;
+              streamingImageKeys.add(key);
+              const resolution = resolveStaticA2UIImageComponent(
+                surfaceId,
+                component,
+              ).then((message) => {
+                if (!message) return;
+                enqueue('message', { messages: [message] });
+                log('images.resolved.enqueued', {
+                  messageCount: 1,
+                  streaming: true,
+                });
+              }).catch((err: unknown) => {
+                log('images.resolved.error', {
+                  streaming: true,
+                  error: errorMessage(err).message,
+                });
               });
-            }).catch((err: unknown) => {
-              log('images.resolved.error', {
-                streaming: true,
-                error: errorMessage(err).message,
+              streamingImageResolutions.push(resolution);
+            },
+          });
+          const streamedMessages: unknown[] = [];
+          let streamedText = '';
+          let chunkCount = 0;
+          let firstChunkLogged = false;
+
+          log('upstream.stream.started');
+
+          for await (const chunk of textStream) {
+            chunkCount += 1;
+            if (!firstChunkLogged) {
+              firstChunkLogged = true;
+              log('upstream.first_chunk', {
+                durationSinceConnectStartedMs: performance.now()
+                  - connectStartedAt,
+                chunkLength: chunk.length,
               });
-            });
-            streamingImageResolutions.push(resolution);
-          },
-        });
-        const streamedMessages: unknown[] = [];
-        let streamedText = '';
-        let chunkCount = 0;
-        let firstChunkLogged = false;
-
-        log('upstream.stream.started');
-
-        for await (const chunk of textStream) {
-          chunkCount += 1;
-          if (!firstChunkLogged) {
-            firstChunkLogged = true;
-            log('upstream.first_chunk', {
-              durationSinceConnectStartedMs: performance.now()
-                - connectStartedAt,
-              chunkLength: chunk.length,
-            });
+            }
+            streamedText += chunk;
+            if (!enqueue('delta', { text: chunk })) break;
+            const newMessages = protocolParser.push(chunk);
+            if (newMessages.length > 0) {
+              streamedMessages.push(...newMessages);
+              enqueue('message', { messages: newMessages });
+              log('protocol.messages', {
+                chunkCount,
+                newMessageCount: newMessages.length,
+                streamedMessageCount: streamedMessages.length,
+                streamedTextLength: streamedText.length,
+              });
+            }
           }
-          streamedText += chunk;
-          enqueue('delta', { text: chunk });
-          const newMessages = protocolParser.push(chunk);
-          if (newMessages.length > 0) {
-            streamedMessages.push(...newMessages);
-            enqueue('message', { messages: newMessages });
-            log('protocol.messages', {
-              chunkCount,
-              newMessageCount: newMessages.length,
-              streamedMessageCount: streamedMessages.length,
-              streamedTextLength: streamedText.length,
-            });
-          }
-        }
 
-        log('upstream.stream.ended', {
-          chunkCount,
-          streamedTextLength: streamedText.length,
-          streamedMessageCount: streamedMessages.length,
-        });
+          generationController.signal.throwIfAborted();
+          log('upstream.stream.ended', {
+            chunkCount,
+            streamedTextLength: streamedText.length,
+            streamedMessageCount: streamedMessages.length,
+          });
 
-        await Promise.allSettled(streamingImageResolutions);
+          await Promise.allSettled(streamingImageResolutions);
+          generationController.signal.throwIfAborted();
 
-        let { text: finalText, usage, finishReason } = await finalize();
-        let usageMetrics = extractUsageMetrics(usage);
-        let cachedTokens = usageMetrics.cachedTokens;
-        finalText ??= streamedText;
-        log('upstream.finalized', {
-          finalTextLength: finalText?.length ?? 0,
-          finishReason,
-          hasUsage: usage !== undefined,
-          catalogId: catalog.id,
-          model: opts.model ?? process.env.OPENAI_MODEL ?? 'default',
-          api: opts.api ?? process.env.OPENAI_API_STYLE ?? 'default',
-          ...usageMetrics,
-        });
-        let repair:
-          | {
-            attempted: true;
-            sourceErrors: string[];
+          let { text: finalText, usage, finishReason } = await finalize();
+          generationController.signal.throwIfAborted();
+          let usageMetrics = extractUsageMetrics(usage);
+          let cachedTokens = usageMetrics.cachedTokens;
+          finalText ??= streamedText;
+          log('upstream.finalized', {
+            finalTextLength: finalText?.length ?? 0,
+            finishReason,
+            hasUsage: usage !== undefined,
+            catalogId: catalog.id,
+            model: opts.model ?? process.env.OPENAI_MODEL ?? 'default',
+            api: opts.api ?? process.env.OPENAI_API_STYLE ?? 'default',
+            ...usageMetrics,
+          });
+          let repair:
+            | {
+              attempted: true;
+              sourceErrors: string[];
+              ok: boolean;
+              attempts: number;
+              errors?: string[];
+            }
+            | undefined;
+
+          let validation: {
             ok: boolean;
-            attempts: number;
-            errors?: string[];
-          }
-          | undefined;
-
-        let validation: {
-          ok: boolean;
-          errors: string[];
-          warnings: string[];
-          messages: unknown[];
-        } = {
-          ok: false,
-          errors: ['no text produced'],
-          warnings: [],
-          messages: [],
-        };
-        const v = validateA2UIOutput(
-          finalText ?? '',
-          catalog,
-        );
-        let resolvedMessages = v.ok
-          ? await resolveMessagesForStreaming(v.messages)
-          : [];
-        log('validation.completed', {
-          ok: v.ok,
-          errorCount: v.errors.length,
-          errors: v.errors,
-          warningCount: v.warnings.length,
-          warnings: v.warnings,
-          invalidData: v.ok
-            ? undefined
-            : getA2UIValidationDebugData(finalText ?? '', v.errors),
-          resolvedMessageCount: resolvedMessages.length,
-        });
-        validation = {
-          ok: v.ok,
-          errors: v.errors,
-          warnings: v.warnings,
-          messages: resolvedMessages,
-        };
-        if (!v.ok) {
-          try {
-            log('repair.started', {
-              sourceErrors: v.errors,
-            });
-            const repaired = await service.generateValidated(
-              messages,
-              optsWithCatalog,
-              validatedConversation.conversation,
-            );
-            repair = {
-              attempted: true,
-              sourceErrors: v.errors,
-              ok: repaired.ok,
-              attempts: repaired.attempts,
-            };
-            enqueue('repair', repair);
-            log('repair.completed', {
-              ok: repaired.ok,
-              attempts: repaired.attempts,
-              errorCount: repaired.errors.length,
-              errors: repaired.errors,
-              warningCount: repaired.warnings.length,
-              warnings: repaired.warnings,
-              textLength: repaired.text.length,
-              messageCount: repaired.messages.length,
-            });
-            if (repaired.ok) {
-              finalText = repaired.text;
-              usage = repaired.usage;
-              usageMetrics = extractUsageMetrics(usage);
-              cachedTokens = usageMetrics.cachedTokens;
-              finishReason = repaired.finishReason;
-              resolvedMessages = await resolveMessagesForStreaming(
-                repaired.messages,
+            errors: string[];
+            warnings: string[];
+            messages: unknown[];
+          } = {
+            ok: false,
+            errors: ['no text produced'],
+            warnings: [],
+            messages: [],
+          };
+          const v = validateA2UIOutput(
+            finalText ?? '',
+            catalog,
+          );
+          let resolvedMessages = v.ok
+            ? await resolveMessagesForStreaming(v.messages)
+            : [];
+          log('validation.completed', {
+            ok: v.ok,
+            errorCount: v.errors.length,
+            errors: v.errors,
+            warningCount: v.warnings.length,
+            warnings: v.warnings,
+            invalidData: v.ok
+              ? undefined
+              : getA2UIValidationDebugData(finalText ?? '', v.errors),
+            resolvedMessageCount: resolvedMessages.length,
+          });
+          validation = {
+            ok: v.ok,
+            errors: v.errors,
+            warnings: v.warnings,
+            messages: resolvedMessages,
+          };
+          if (!v.ok) {
+            try {
+              log('repair.started', {
+                sourceErrors: v.errors,
+              });
+              const repaired = await service.generateValidated(
+                messages,
+                optsWithCatalog,
+                validatedConversation.conversation,
+                undefined,
+                generationController.signal,
               );
-              validation = {
-                ok: true,
-                errors: [],
-                warnings: repaired.warnings,
-                messages: resolvedMessages,
+              repair = {
+                attempted: true,
+                sourceErrors: v.errors,
+                ok: repaired.ok,
+                attempts: repaired.attempts,
               };
-            } else {
+              enqueue('repair', repair);
+              log('repair.completed', {
+                ok: repaired.ok,
+                attempts: repaired.attempts,
+                errorCount: repaired.errors.length,
+                errors: repaired.errors,
+                warningCount: repaired.warnings.length,
+                warnings: repaired.warnings,
+                textLength: repaired.text.length,
+                messageCount: repaired.messages.length,
+              });
+              if (repaired.ok) {
+                finalText = repaired.text;
+                usage = repaired.usage;
+                usageMetrics = extractUsageMetrics(usage);
+                cachedTokens = usageMetrics.cachedTokens;
+                finishReason = repaired.finishReason;
+                resolvedMessages = await resolveMessagesForStreaming(
+                  repaired.messages,
+                );
+                validation = {
+                  ok: true,
+                  errors: [],
+                  warnings: repaired.warnings,
+                  messages: resolvedMessages,
+                };
+              } else {
+                validation = {
+                  ok: false,
+                  errors: repaired.errors,
+                  warnings: repaired.warnings,
+                  messages: [],
+                };
+              }
+            } catch (err: unknown) {
+              const repairError = errorMessage(err).message;
+              repair = {
+                attempted: true,
+                sourceErrors: v.errors,
+                ok: false,
+                attempts: 0,
+                errors: [repairError],
+              };
               validation = {
                 ok: false,
-                errors: repaired.errors,
-                warnings: repaired.warnings,
+                errors: [repairError],
+                warnings: [],
                 messages: [],
               };
+              enqueue('repair', repair);
+              log('repair.error', {
+                error: repairError,
+              });
             }
-          } catch (err: unknown) {
-            const repairError = errorMessage(err).message;
-            repair = {
-              attempted: true,
-              sourceErrors: v.errors,
-              ok: false,
-              attempts: 0,
-              errors: [repairError],
-            };
-            validation = {
-              ok: false,
-              errors: [repairError],
-              warnings: [],
-              messages: [],
-            };
-            enqueue('repair', repair);
-            log('repair.error', {
-              error: repairError,
-            });
+          }
+
+          generationController.signal.throwIfAborted();
+          const preview = validation.ok
+            ? await publishA2UIPayload(validation.messages)
+            : undefined;
+          generationController.signal.throwIfAborted();
+
+          log('done.enqueued', {
+            validationOk: validation.ok,
+            validationErrorCount: validation.errors.length,
+            messageCount: validation.messages.length,
+            hasPreviewUrl: Boolean(preview?.messagesUrl),
+            repairAttempted: repair?.attempted ?? false,
+            repairOk: repair?.ok,
+            catalogId: catalog.id,
+            model: opts.model ?? process.env.OPENAI_MODEL ?? 'default',
+            api: opts.api ?? process.env.OPENAI_API_STYLE ?? 'default',
+            ...usageMetrics,
+            requestId,
+          });
+          enqueue('done', {
+            text: finalText,
+            usage,
+            cachedTokens,
+            finishReason,
+            validation,
+            preview,
+            repair,
+          });
+        } catch (err: unknown) {
+          if (!closed && !generationController.signal.aborted) {
+            const error = errorMessage(err);
+            log('error.enqueued', error);
+            enqueue('error', error);
+          }
+        } finally {
+          req.signal.removeEventListener('abort', onRequestAbort);
+          if (!closed) {
+            closed = true;
+            log('stream.closed');
+            try {
+              controller.close();
+            } catch {
+              // The reader may have canceled between the state check and close.
+            }
           }
         }
-
-        const preview = validation.ok
-          ? await publishA2UIPayload(validation.messages)
-          : undefined;
-
-        log('done.enqueued', {
-          validationOk: validation.ok,
-          validationErrorCount: validation.errors.length,
-          messageCount: validation.messages.length,
-          hasPreviewUrl: Boolean(preview?.messagesUrl),
-          repairAttempted: repair?.attempted ?? false,
-          repairOk: repair?.ok,
-          catalogId: catalog.id,
-          model: opts.model ?? process.env.OPENAI_MODEL ?? 'default',
-          api: opts.api ?? process.env.OPENAI_API_STYLE ?? 'default',
-          ...usageMetrics,
-          requestId,
-        });
-        enqueue('done', {
-          text: finalText,
-          usage,
-          cachedTokens,
-          finishReason,
-          validation,
-          preview,
-          repair,
-        });
-      } catch (err: unknown) {
-        const error = errorMessage(err);
-        log('error.enqueued', error);
-        enqueue('error', error);
-      } finally {
-        log('stream.closed');
-        controller.close();
-      }
+      };
+      void run();
+    },
+    cancel(reason) {
+      closed = true;
+      req.signal.removeEventListener('abort', onRequestAbort);
+      abortGeneration(reason);
     },
   });
 

@@ -37,33 +37,15 @@ app.route('/mcp-apps/stream', mcpAppsStreamRoute);
 app.route('/openui/payload', openuiPayloadRoute);
 app.route('/openui/stream', openuiStreamRoute);
 
-const routeDefinitions = [
-  { path: '/a2ui/action', methods: ['POST', 'OPTIONS'] },
-  { path: '/a2ui/action/stream', methods: ['POST', 'OPTIONS'] },
-  { path: '/a2ui/bench/jobs', methods: ['POST', 'OPTIONS'] },
-  {
-    path: '/a2ui/bench/jobs/:jobId',
-    methods: ['GET', 'DELETE', 'OPTIONS'],
-  },
-  {
-    path: '/a2ui/bench/jobs/:jobId/events',
-    methods: ['GET', 'OPTIONS'],
-  },
-  {
-    path: '/a2ui/bench/jobs/:jobId/report',
-    methods: ['GET', 'OPTIONS'],
-  },
-  { path: '/a2ui/chat', methods: ['POST', 'OPTIONS'] },
-  { path: '/a2ui/health', methods: ['GET', 'OPTIONS'] },
-  { path: '/a2ui/payload', methods: ['POST', 'OPTIONS'] },
-  { path: '/a2ui/stream', methods: ['POST', 'OPTIONS'] },
-  { path: '/mcp-apps/metadata', methods: ['GET', 'OPTIONS'] },
-  { path: '/mcp-apps/stream', methods: ['POST', 'OPTIONS'] },
-  { path: '/openui/payload', methods: ['POST', 'OPTIONS'] },
-  { path: '/openui/stream', methods: ['POST', 'OPTIONS'] },
-] as const;
+const allowedMethodsByPath = new Map<string, Set<string>>();
+for (const { method, path } of app.routes) {
+  const methods = allowedMethodsByPath.get(path) ?? new Set<string>();
+  methods.add(method);
+  allowedMethodsByPath.set(path, methods);
+}
 
-for (const { path, methods } of routeDefinitions) {
+for (const [path, routeMethods] of allowedMethodsByPath) {
+  const methods = [...routeMethods, 'OPTIONS'];
   app.options(path, (context) => corsPreflight(context.req.raw));
   app.all(path, (context) =>
     jsonWithCors(
