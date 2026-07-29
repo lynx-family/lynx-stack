@@ -43,7 +43,9 @@ export class ExternalBundleWebpackPlugin {
 export interface ExternalBundleWebpackPluginOptions {
     bundleFileName: string;
     enableJsBytecode?: boolean | undefined;
-    encode: (opts: unknown) => Promise<{
+    encode: (opts: unknown) => {
+        buffer: Buffer;
+    } | Promise<{
         buffer: Buffer;
     }>;
     engineVersion?: string | undefined;
