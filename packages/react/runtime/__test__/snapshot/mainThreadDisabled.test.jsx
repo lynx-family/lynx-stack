@@ -7,7 +7,7 @@ import { afterEach, beforeAll, beforeEach, describe, expect, it } from 'vitest';
 
 import { useState } from '../../src/index';
 import { __root } from '../../src/root';
-import { setupPage, SnapshotInstance } from '../../src/snapshot';
+import { setupPage } from '../../src/snapshot';
 import { replaceCommitHook } from '../../src/snapshot/lifecycle/patch/commit';
 import { injectUpdateMainThread } from '../../src/snapshot/lifecycle/patch/updateMainThread';
 import { globalEnvManager } from './utils/envManager';
@@ -82,24 +82,6 @@ describe('__ENABLE_MTS_RENDERING__ false', () => {
           </text>
         </view>
       </page>
-    `);
-  });
-});
-
-describe('page attributes without a main-thread render', () => {
-  it('applies a spread the background sends to the root', () => {
-    globalEnvManager.switchToMainThread();
-    setupPage(__CreatePage('0', 0));
-
-    const root = new SnapshotInstance('root');
-    root.ensureElements();
-    root.setAttribute(0, { className: 'a b' });
-
-    expect(root.__elements[0]).toMatchInlineSnapshot(`
-      <page
-        class="a b"
-        cssId="default-entry-from-native:0"
-      />
     `);
   });
 });

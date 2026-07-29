@@ -69,25 +69,9 @@ export const snapshotManager: {
           /* v8 ignore stop */
           return [__page!];
         },
-        update: [
-          (ctx, index, oldValue) => {
-            /* v8 ignore start */
-            if (__JS__ && !__DEV__) {
-              return;
-            }
-            /* v8 ignore stop */
-            updateSpread(
-              ctx,
-              index,
-              oldValue as Record<string, unknown>,
-              0,
-              false,
-            );
-          },
-        ],
+        update: [],
         slot: __DynamicPartChildren_0,
         isListHolder: false,
-        refAndSpreadIndexes: [0],
         cssId: 0,
       },
     ],
