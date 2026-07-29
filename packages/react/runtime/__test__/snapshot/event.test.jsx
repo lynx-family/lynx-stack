@@ -6,7 +6,7 @@
 import { render } from 'preact';
 import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
 
-import { delayedLifecycleEvents } from '../../src/snapshot/lifecycle/event/delayLifecycleEvents';
+import { getDelayedLifecycleEvents } from '../../src/snapshot/lifecycle/event/delayLifecycleEvents';
 import { takeGlobalSnapshotPatch } from '../../src/snapshot/lifecycle/patch/snapshotPatch';
 import { snapshotPatchApply } from '../../src/snapshot/lifecycle/patch/snapshotPatchApply';
 import { injectUpdateMainThread } from '../../src/snapshot/lifecycle/patch/updateMainThread';
@@ -1259,7 +1259,7 @@ describe('call `root.render()` async', () => {
       const rLynxFirstScreen = globalThis.__OnLifecycleEvent.mock.calls[0];
       lynxCoreInject.tt.OnLifecycleEvent(...rLynxFirstScreen);
 
-      expect(delayedLifecycleEvents).toMatchInlineSnapshot(`
+      expect(getDelayedLifecycleEvents()).toMatchInlineSnapshot(`
         [
           [
             "rLynxFirstScreen",
@@ -1277,7 +1277,7 @@ describe('call `root.render()` async', () => {
       globalEnvManager.switchToBackground();
       root.render(jsxApp, __root);
 
-      expect(delayedLifecycleEvents).toMatchInlineSnapshot(`[]`);
+      expect(getDelayedLifecycleEvents()).toMatchInlineSnapshot(`[]`);
     }
 
     {

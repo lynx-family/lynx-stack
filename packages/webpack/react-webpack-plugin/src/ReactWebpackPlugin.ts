@@ -212,6 +212,11 @@ interface ReactWebpackPluginOptions {
   experimental_isLazyBundle?: boolean;
 
   /**
+   * @alpha
+   */
+  experimental_multiRootRenderContext?: boolean;
+
+  /**
    * Whether to enable profile.
    *
    * @defaultValue `false` when production, `true` when development
@@ -312,6 +317,7 @@ class ReactWebpackPlugin {
       mainThreadChunks: [],
       extractStr: false,
       experimental_isLazyBundle: false,
+      experimental_multiRootRenderContext: false,
       profile: undefined,
       workletRuntimePath: '',
       experimental_useElementTemplate: false,
@@ -377,6 +383,12 @@ class ReactWebpackPlugin {
         options.firstScreenSyncTiming,
       ),
       __GLOBAL_PROPS_MODE__: JSON.stringify(options.globalPropsMode),
+      // Multi-card roots for shared JS contexts are opt-in: only the shared
+      // external runtime bundle (react-umd) is built with this on. Normal
+      // apps get the machinery stripped entirely.
+      __MULTI_ROOT_RENDER_CONTEXT__: JSON.stringify(
+        options.experimental_multiRootRenderContext ?? false,
+      ),
       __ENABLE_SSR__: JSON.stringify(options.enableSSR),
       __DISABLE_CREATE_SELECTOR_QUERY_INCOMPATIBLE_WARNING__: JSON.stringify(
         options.disableCreateSelectorQueryIncompatibleWarning,

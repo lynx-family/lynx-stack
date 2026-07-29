@@ -8,7 +8,7 @@ import { useRef } from 'preact/hooks';
 
 import { createElement as createElementMainThread } from '@lynx-js/react/lepus';
 
-import { globalBackgroundSnapshotInstancesToRemove } from '../lifecycle/patch/commit.js';
+import { getGlobalBackgroundSnapshotInstancesToRemove } from '../lifecycle/patch/globalState.js';
 import type { BackgroundSnapshotInstance } from '../snapshot/backgroundSnapshot.js';
 
 export const Suspense: FunctionComponent<{ children: VNode | VNode[]; fallback: VNode }> = (
@@ -43,9 +43,10 @@ export const Suspense: FunctionComponent<{ children: VNode | VNode[]; fallback: 
       : {
         ref: (bsi: BackgroundSnapshotInstance) => {
           if (bsi && childrenRef.current) {
-            const i = globalBackgroundSnapshotInstancesToRemove.indexOf(childrenRef.current.__id);
+            const backgroundSnapshotInstancesToRemove = getGlobalBackgroundSnapshotInstancesToRemove();
+            const i = backgroundSnapshotInstancesToRemove.indexOf(childrenRef.current.__id);
             if (i !== -1) {
-              globalBackgroundSnapshotInstancesToRemove.splice(i, 1);
+              backgroundSnapshotInstancesToRemove.splice(i, 1);
             }
             childrenRef.current = undefined;
           }

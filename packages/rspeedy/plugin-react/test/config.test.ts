@@ -517,6 +517,66 @@ describe('Config', () => {
       .toBe(true)
   })
 
+  test('experimental_multiRootRenderContext defaults to false', async () => {
+    const { pluginReactLynx } = await import('../src/pluginReactLynx.js')
+
+    const rsbuild = await createRspeedy({
+      rspeedyConfig: {
+        plugins: [
+          pluginReactLynx(),
+          pluginStubRspeedyAPI(),
+        ],
+      },
+    })
+
+    const [config] = await rsbuild.initConfigs()
+
+    const ReactWebpackPlugin = config?.plugins?.find((
+      p,
+    ): p is ReactWebpackPlugin => p?.constructor.name === 'ReactWebpackPlugin')
+
+    expect(ReactWebpackPlugin).toBeDefined()
+    expect(
+      (
+        ReactWebpackPlugin as unknown as {
+          options?: { experimental_multiRootRenderContext?: boolean }
+        }
+      ).options?.experimental_multiRootRenderContext,
+    )
+      .toBe(false)
+  })
+
+  test('experimental_multiRootRenderContext passes through to ReactWebpackPlugin', async () => {
+    const { pluginReactLynx } = await import('../src/pluginReactLynx.js')
+
+    const rsbuild = await createRspeedy({
+      rspeedyConfig: {
+        plugins: [
+          pluginReactLynx({
+            experimental_multiRootRenderContext: true,
+          }),
+          pluginStubRspeedyAPI(),
+        ],
+      },
+    })
+
+    const [config] = await rsbuild.initConfigs()
+
+    const ReactWebpackPlugin = config?.plugins?.find((
+      p,
+    ): p is ReactWebpackPlugin => p?.constructor.name === 'ReactWebpackPlugin')
+
+    expect(ReactWebpackPlugin).toBeDefined()
+    expect(
+      (
+        ReactWebpackPlugin as unknown as {
+          options?: { experimental_multiRootRenderContext?: boolean }
+        }
+      ).options?.experimental_multiRootRenderContext,
+    )
+      .toBe(true)
+  })
+
   test('enableRemoveCSSScope can be set to undefined explicitly', async () => {
     const { pluginReactLynx } = await import('../src/pluginReactLynx.js')
 
