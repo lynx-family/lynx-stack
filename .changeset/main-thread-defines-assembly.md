@@ -2,6 +2,7 @@
 "@lynx-js/react": patch
 "@lynx-js/react-webpack-plugin": patch
 "@lynx-js/react-rsbuild-plugin": patch
+"@lynx-js/external-bundle-rsbuild-plugin": patch
 "@lynx-js/testing-environment": patch
 ---
 

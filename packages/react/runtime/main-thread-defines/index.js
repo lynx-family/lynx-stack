@@ -19,66 +19,90 @@
 // The public specifier, not a relative path: the main-thread bundle has to
 // share the runtime instance with the background, including when the runtime is
 // aliased (lazy) or externalized (`pluginExternalBundle`).
-import * as ReactLynx from '@lynx-js/react/internal';
+//
+// `@lynx-js/react/internal/main-thread`, not `@lynx-js/react/internal`: the
+// barrel re-exports `preact/compat`, whose module-level side effects cannot be
+// tree shaken out of a bundle that never renders a vnode.
+import {
+  __DynamicPartChildren,
+  __DynamicPartChildren_0,
+  __DynamicPartListChildren,
+  __DynamicPartListSlotV2,
+  __DynamicPartSlot,
+  __DynamicPartSlotV2,
+  __DynamicPartSlotV2_0,
+  __pageId,
+  createSnapshot,
+  loadWorkletRuntime,
+  snapshotCreateList,
+  snapshotCreatorMap,
+  updateEvent,
+  updateGesture,
+  updateListItemPlatformInfo,
+  updateRef,
+  updateSpread,
+  updateWorkletEvent,
+  updateWorkletRef,
+} from '@lynx-js/react/internal/main-thread';
 
 // Getters, not copies: `__pageId` is a live binding assigned by `setupPage`.
 const runtime = {
   get __pageId() {
-    return ReactLynx.__pageId;
+    return __pageId;
   },
   get createSnapshot() {
-    return ReactLynx.createSnapshot;
+    return createSnapshot;
   },
   get snapshotCreatorMap() {
-    return ReactLynx.snapshotCreatorMap;
+    return snapshotCreatorMap;
   },
   get snapshotCreateList() {
-    return ReactLynx.snapshotCreateList;
+    return snapshotCreateList;
   },
   get updateSpread() {
-    return ReactLynx.updateSpread;
+    return updateSpread;
   },
   get updateEvent() {
-    return ReactLynx.updateEvent;
+    return updateEvent;
   },
   get updateRef() {
-    return ReactLynx.updateRef;
+    return updateRef;
   },
   get updateWorkletEvent() {
-    return ReactLynx.updateWorkletEvent;
+    return updateWorkletEvent;
   },
   get updateWorkletRef() {
-    return ReactLynx.updateWorkletRef;
+    return updateWorkletRef;
   },
   get updateGesture() {
-    return ReactLynx.updateGesture;
+    return updateGesture;
   },
   get updateListItemPlatformInfo() {
-    return ReactLynx.updateListItemPlatformInfo;
+    return updateListItemPlatformInfo;
   },
   get __DynamicPartSlot() {
-    return ReactLynx.__DynamicPartSlot;
+    return __DynamicPartSlot;
   },
   get __DynamicPartSlotV2() {
-    return ReactLynx.__DynamicPartSlotV2;
+    return __DynamicPartSlotV2;
   },
   get __DynamicPartSlotV2_0() {
-    return ReactLynx.__DynamicPartSlotV2_0;
+    return __DynamicPartSlotV2_0;
   },
   get __DynamicPartListSlotV2() {
-    return ReactLynx.__DynamicPartListSlotV2;
+    return __DynamicPartListSlotV2;
   },
   get __DynamicPartChildren() {
-    return ReactLynx.__DynamicPartChildren;
+    return __DynamicPartChildren;
   },
   get __DynamicPartChildren_0() {
-    return ReactLynx.__DynamicPartChildren_0;
+    return __DynamicPartChildren_0;
   },
   get __DynamicPartListChildren() {
-    return ReactLynx.__DynamicPartListChildren;
+    return __DynamicPartListChildren;
   },
   get loadWorkletRuntime() {
-    return ReactLynx.loadWorkletRuntime;
+    return loadWorkletRuntime;
   },
 };
 
@@ -91,5 +115,5 @@ if (typeof __webpack_require__ !== 'undefined') {
 }
 
 if (typeof __lynxMainThreadDefines !== 'undefined') {
-  __lynxMainThreadDefines(runtime, ReactLynx.loadWorkletRuntime, () => runtime);
+  __lynxMainThreadDefines(runtime, loadWorkletRuntime, () => runtime);
 }

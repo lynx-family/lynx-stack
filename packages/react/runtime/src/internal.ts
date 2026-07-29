@@ -15,7 +15,6 @@ import { __root } from './root.js';
 import { factory as factory2 } from './snapshot/compat/componentIs.js';
 import { BackgroundSnapshotInstance } from './snapshot/snapshot/backgroundSnapshot.js';
 import { __page, __pageId, createSnapshot, snapshotManager } from './snapshot/snapshot/definition.js';
-import { DynamicPartType } from './snapshot/snapshot/dynamicPartType.js';
 import { snapshotCreateList } from './snapshot/snapshot/list.js';
 import { SnapshotInstance, snapshotCreatorMap } from './snapshot/snapshot/snapshot.js';
 import { setSnapshotCreatorRuntime } from './snapshot/snapshot/snapshotCreatorMap.js';
@@ -33,15 +32,16 @@ export {
   snapshotCreatorMap,
 };
 
-export const __DynamicPartSlot: DynamicPartType = DynamicPartType.Slot;
-export const __DynamicPartMultiChildren: DynamicPartType = DynamicPartType.MultiChildren;
-export const __DynamicPartChildren: DynamicPartType = DynamicPartType.Children;
-export const __DynamicPartListChildren: DynamicPartType = DynamicPartType.ListChildren;
-export { __DynamicPartChildren_0, __DynamicPartSlotV2_0 } from './snapshot/snapshot/dynamicPartType.js';
-
-// v2 slot
-export const __DynamicPartSlotV2: DynamicPartType = DynamicPartType.SlotV2;
-export const __DynamicPartListSlotV2: DynamicPartType = DynamicPartType.ListSlotV2;
+export {
+  __DynamicPartChildren,
+  __DynamicPartChildren_0,
+  __DynamicPartListChildren,
+  __DynamicPartListSlotV2,
+  __DynamicPartMultiChildren,
+  __DynamicPartSlot,
+  __DynamicPartSlotV2,
+  __DynamicPartSlotV2_0,
+} from './snapshot/snapshot/dynamicPartType.js';
 
 export { updateSpread } from './snapshot/snapshot/spread.js';
 export { updateEvent } from './snapshot/snapshot/event.js';

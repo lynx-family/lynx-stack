@@ -4,11 +4,18 @@
 
 import type { ComponentClass } from 'preact';
 
-import { getCurrentVNode, getOwnerStack } from './shared/component-stack.js';
-
 /* v8 ignore start */
 export const noop: (...args: unknown[]) => unknown = () => {};
 /* v8 ignore end */
+
+// Injected by `setupComponentStack` rather than imported: the component stack
+// lives in a module that pulls in `preact`, which a main thread that renders no
+// business code must not link.
+let getCurrentOwnerStack: (() => string | undefined) | undefined;
+
+export function setOwnerStackProvider(provider: () => string | undefined): void {
+  getCurrentOwnerStack = provider;
+}
 
 export function isDirectOrDeepEqual(a: any, b: any): boolean {
   if (a === b) {
@@ -27,9 +34,8 @@ export function isDirectOrDeepEqual(a: any, b: any): boolean {
       // PrimJS: "circular reference"
       // JavaScriptCore: "JSON.stringify cannot serialize cyclic structures"
       // V8: "Converting circular structure to JSON"
-      const vnode = getCurrentVNode();
-      if (vnode) {
-        const stack = getOwnerStack(vnode);
+      const stack = getCurrentOwnerStack?.();
+      if (stack) {
         (error as Error).message += `\n\n${stack}`;
       }
     }

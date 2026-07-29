@@ -7,7 +7,7 @@ import { options, render } from 'preact';
 import { afterEach, beforeAll, beforeEach, describe, expect, it } from 'vitest';
 
 import { setupDocument } from '../../../src/document';
-import { setupVNodeSourceHook } from '../../../src/snapshot/debug/vnodeSource';
+import { setupVNodeSourceHook } from '../../../src/snapshot/debug/vnodeSourceHook';
 import { SnapshotOperation, SnapshotOperationParams } from '../../../src/snapshot/lifecycle/patch/snapshotPatch';
 import { DIFFED, DOM } from '../../../src/shared/render-constants';
 import { __root } from '../../../src/root';

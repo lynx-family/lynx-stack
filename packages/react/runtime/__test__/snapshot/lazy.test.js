@@ -5,6 +5,7 @@ import * as ReactExports from '../../lazy/react.js';
 import * as ReactCompatExports from '../../lazy/compat.js';
 import * as ReactLepusExports from '../../lazy/react-lepus.js';
 import * as ReactInternalExports from '../../lazy/internal.js';
+import * as ReactInternalMainThreadExports from '../../lazy/internal-main-thread.js';
 import * as ReactJSXRuntimeExports from '../../lazy/jsx-runtime.js';
 import * as ReactJSXDevRuntimeExports from '../../lazy/jsx-dev-runtime.js';
 import * as ReactLegacyReactRuntimeExports from '../../lazy/legacy-react-runtime.js';
@@ -92,6 +93,19 @@ describe('Lazy Exports', () => {
 
     expect(
       new Set(Object.keys(ReactInternalExports)),
+    ).toStrictEqual(
+      new Set(Object.keys(realAPIs)),
+    );
+  });
+
+  test('export APIs from "internal/main-thread"', async () => {
+    const realAPIs = Object.assign(
+      {},
+      await import('@lynx-js/react/internal/main-thread'),
+    );
+
+    expect(
+      new Set(Object.keys(ReactInternalMainThreadExports)),
     ).toStrictEqual(
       new Set(Object.keys(realAPIs)),
     );

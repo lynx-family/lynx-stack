@@ -25,7 +25,7 @@ import { commitPatchUpdate, genCommitTaskId, globalCommitTaskMap } from '../life
 import type { PatchList } from '../lifecycle/patch/commit.js';
 import { removeCtxNotFoundEventListener } from '../lifecycle/patch/error.js';
 import { runDelayedUiOps } from '../lifecycle/ref/delay.js';
-import { reloadBackground } from '../lifecycle/reload.js';
+import { reloadBackground } from '../lifecycle/reload-background.js';
 import {
   BackgroundSnapshotInstance,
   backgroundSnapshotInstanceManager,

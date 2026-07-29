@@ -8,17 +8,30 @@
 
 import { __root } from '../../root.js';
 import { profileEnd, profileStart } from '../../shared/profile.js';
-import { render as renderToString } from '../renderToOpcodes/index.js';
 import { SnapshotInstance } from '../snapshot/snapshot.js';
 
+type RenderToString = (
+  jsx: unknown,
+  context: undefined,
+  root: SnapshotInstance,
+) => unknown[];
+
+// Injected by `lynx.ts` rather than imported: the renderer pulls in `preact`,
+// which a main thread that renders no business code must not link.
+let renderToString: RenderToString | undefined;
+
+function setMainThreadRenderer(render: RenderToString): void {
+  renderToString = render;
+}
+
 function renderMainThread(): void {
-  if (!__ENABLE_MTS_RENDERING__) {
+  if (!__ENABLE_MTS_RENDERING__ || !renderToString) {
     // The main thread has no business code to render; the background hydrates
     // the empty root and sends a full insert patch instead.
     return;
   }
 
-  let opcodes;
+  let opcodes: unknown[];
   try {
     if (typeof __PROFILE__ !== 'undefined' && __PROFILE__) {
       profileStart('ReactLynx::renderMainThread');
@@ -39,4 +52,4 @@ function renderMainThread(): void {
   }
 }
 
-export { renderMainThread };
+export { renderMainThread, setMainThreadRenderer };

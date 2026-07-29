@@ -3,13 +3,9 @@
 // LICENSE file in the root directory of this source tree.
 
 /**
- * Implements the reload (thinking of "refresh" in browser) for both main thread
- * and background thread.
+ * Implements the reload (thinking of "refresh" in browser) for the main thread.
  */
 
-import { render } from 'preact';
-
-import { destroyBackground } from './destroy.js';
 import { renderMainThread } from './render.js';
 import { increaseReloadVersion } from '../../core/reload-version.js';
 import { __root, setRoot } from '../../root.js';
@@ -22,8 +18,6 @@ import { __page } from '../snapshot/definition.js';
 import { SnapshotInstance, snapshotInstanceManager } from '../snapshot/snapshot.js';
 import { applyRefQueue } from '../snapshot/workletRef.js';
 import { clearFirstScreenEventIdSwap, isFirstScreenSynced } from './event/firstScreenSync.js';
-import { deinitGlobalSnapshotPatch } from './patch/snapshotPatch.js';
-import { shouldDelayUiOps } from './ref/delay.js';
 
 function reloadMainThread(data: unknown, options: UpdatePageOption): void {
   if (typeof __PROFILE__ !== 'undefined' && __PROFILE__) {
@@ -69,27 +63,4 @@ function reloadMainThread(data: unknown, options: UpdatePageOption): void {
   return;
 }
 
-function reloadBackground(updateData: Record<string, any>): void {
-  if (typeof __PROFILE__ !== 'undefined' && __PROFILE__) {
-    profileStart('ReactLynx::reloadBackground');
-  }
-
-  deinitGlobalSnapshotPatch();
-
-  destroyBackground();
-
-  increaseReloadVersion();
-
-  // COW when modify `lynx.__initData` to make sure Provider & Consumer works
-  lynx.__initData = Object.assign({}, lynx.__initData, updateData);
-
-  shouldDelayUiOps.value = true;
-  // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
-  render(__root.__jsx, __root as any);
-
-  if (typeof __PROFILE__ !== 'undefined' && __PROFILE__) {
-    profileEnd();
-  }
-}
-
-export { reloadBackground, reloadMainThread };
+export { reloadMainThread };

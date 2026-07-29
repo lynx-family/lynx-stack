@@ -1,10 +1,7 @@
 // Copyright 2026 The Lynx Authors. All rights reserved.
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
-import { options } from 'preact';
-
-import { RENDER_COMPONENT, ROOT } from '../shared/render-constants.js';
-import { hook, isSdkVersionGt } from '../utils.js';
+import { isSdkVersionGt } from '../utils.js';
 
 const PerformanceTimingKeys = [
   'updateSetStateTrigger',
@@ -53,6 +50,12 @@ let didInstallTimingAPIHooks = false;
 interface TimingAPIOptions {
   shouldStartUpdatePipeline: () => boolean;
   beginPipeline?: typeof beginPipeline;
+  /**
+   * Installs `onHook` on the render hooks of the caller's renderer. Passed in
+   * rather than imported so that this module, which the main thread needs for
+   * `markTiming`, does not depend on `preact`.
+   */
+  installRenderHooks: (onHook: (...args: unknown[]) => void) => void;
 }
 
 /**
@@ -167,8 +170,7 @@ function initTimingAPI(timingAPIOptions: TimingAPIOptions): void {
     /* v8 ignore stop */
   };
 
-  hook(options, RENDER_COMPONENT, onHook);
-  hook(options, ROOT, onHook);
+  timingAPIOptions.installRenderHooks(onHook as (...args: unknown[]) => void);
 }
 
 export {

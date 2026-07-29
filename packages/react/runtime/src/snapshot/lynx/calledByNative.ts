@@ -14,7 +14,7 @@ import {
   resetFirstScreenTreeReady,
   syncFirstScreen,
 } from '../lifecycle/event/firstScreenSync.js';
-import { reloadMainThread } from '../lifecycle/reload.js';
+import { reloadMainThread } from '../lifecycle/reload-main-thread.js';
 import { renderMainThread } from '../lifecycle/render.js';
 import { __pendingListUpdates } from '../list/pendingListUpdates.js';
 import { hydrate } from '../renderToOpcodes/hydrate.js';

@@ -6,50 +6,27 @@ import { options } from 'preact';
 import './core/hooks/react.js';
 
 import { document, setupBackgroundDocument } from './document.js';
+import { bootstrapMainThread } from './lynx-main-thread.js';
 import { setupComponentStack } from './shared/component-stack.js';
 import { isProfiling } from './shared/profile.js';
 import { initElementPAPICallAlog } from './snapshot/alog/elementPAPICall.js';
 import { initAlog } from './snapshot/alog/index.js';
 import { initProfileHook } from './snapshot/debug/profileHooks.js';
-import { setupVNodeSourceHook } from './snapshot/debug/vnodeSource.js';
+import { setupVNodeSourceHook } from './snapshot/debug/vnodeSourceHook.js';
 import { replaceCommitHook } from './snapshot/lifecycle/patch/commit.js';
 import { addCtxNotFoundEventListener } from './snapshot/lifecycle/patch/error.js';
-import { injectUpdateMainThread } from './snapshot/lifecycle/patch/updateMainThread.js';
-import { injectCalledByNative } from './snapshot/lynx/calledByNative.js';
+import { setMainThreadRenderer } from './snapshot/lifecycle/render.js';
 import { setupLynxEnv } from './snapshot/lynx/env.js';
-import { injectLepusMethods } from './snapshot/lynx/injectLepusMethods.js';
 import { initTimingAPI } from './snapshot/lynx/performance.js';
-import { injectPrepareLazyBundleMTS } from './snapshot/lynx/prepareLazyBundleMTS.js';
 import { injectTt } from './snapshot/lynx/tt.js';
-import { injectUpdateMTRefInitValue } from './snapshot/worklet/ref/updateInitValue.js';
+import { render as renderToString } from './snapshot/renderToOpcodes/index.js';
 import { lynxQueueMicrotask } from './utils.js';
 
 export { runWithForce } from './snapshot/lynx/runWithForce.js';
 
-// @ts-expect-error Element implicitly has an 'any' type because type 'typeof globalThis' has no index signature
-if (typeof __MAIN_THREAD__ !== 'undefined' && __MAIN_THREAD__ && typeof globalThis.processEvalResult === 'undefined') {
-  // @ts-expect-error Element implicitly has an 'any' type because type 'typeof globalThis' has no index signature
-  globalThis.processEvalResult = <T>(result: ((schema: string) => T) | undefined, schema: string) => {
-    return result?.(schema);
-  };
-}
-
 if (typeof __MAIN_THREAD__ !== 'undefined' && __MAIN_THREAD__) {
-  injectCalledByNative();
-  injectUpdateMainThread();
-  injectUpdateMTRefInitValue();
-  if (
-    typeof __LAZY_BUNDLE_FETCHER__ !== 'undefined'
-    && __LAZY_BUNDLE_FETCHER__ === 'FetchBundle'
-  ) {
-    injectPrepareLazyBundleMTS();
-  }
-  // `injectLepusMethods` exposes the snapshot <-> element mapping that preact
-  // devtools relies on, so it must also run when devtools is enabled in
-  // production via `REACT_DEVTOOL=true`.
-  if (__DEV__ || (typeof __REACT_DEVTOOL__ !== 'undefined' && __REACT_DEVTOOL__)) {
-    injectLepusMethods();
-  }
+  setMainThreadRenderer(renderToString);
+  bootstrapMainThread();
 }
 
 if (__DEV__) {

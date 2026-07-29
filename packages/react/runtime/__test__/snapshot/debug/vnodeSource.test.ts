@@ -10,8 +10,8 @@ import {
   clearSnapshotVNodeSource,
   getSnapshotVNodeSource,
   moveSnapshotVNodeSource,
-  setupVNodeSourceHook,
 } from '../../../src/snapshot/debug/vnodeSource';
+import { setupVNodeSourceHook } from '../../../src/snapshot/debug/vnodeSourceHook';
 import { DIFFED, DOM } from '../../../src/shared/render-constants';
 
 describe('vnodeSource', () => {

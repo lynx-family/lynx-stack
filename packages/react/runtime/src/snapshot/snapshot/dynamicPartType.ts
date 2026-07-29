@@ -19,6 +19,13 @@ export const DynamicPartType = {
 
 export type DynamicPartType = (typeof DynamicPartType)[keyof typeof DynamicPartType];
 
+export const __DynamicPartSlot: DynamicPartType = DynamicPartType.Slot;
+export const __DynamicPartMultiChildren: DynamicPartType = DynamicPartType.MultiChildren;
+export const __DynamicPartChildren: DynamicPartType = DynamicPartType.Children;
+export const __DynamicPartListChildren: DynamicPartType = DynamicPartType.ListChildren;
+export const __DynamicPartSlotV2: DynamicPartType = DynamicPartType.SlotV2;
+export const __DynamicPartListSlotV2: DynamicPartType = DynamicPartType.ListSlotV2;
+
 /**
  * Default dynamic part for children
  */

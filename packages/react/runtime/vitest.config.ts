@@ -88,6 +88,10 @@ export default defineConfig({
         find: /^@lynx-js\/react\/element-template$/,
         replacement: path.resolve(__dirname, './src/element-template/index.ts'),
       },
+      {
+        find: /^@lynx-js\/react\/internal\/main-thread$/,
+        replacement: path.resolve(__dirname, './src/internal-main-thread.ts'),
+      },
       { find: '@lynx-js/react/internal', replacement: path.resolve(__dirname, './src/internal.ts') },
       { find: '@lynx-js/react/jsx-dev-runtime', replacement: path.resolve(__dirname, './jsx-dev-runtime/index.js') },
       { find: '@lynx-js/react/jsx-runtime', replacement: path.resolve(__dirname, './jsx-runtime/index.js') },
@@ -139,6 +143,7 @@ export default defineConfig({
         'src/index.ts',
         'src/lynx-api.ts',
         'src/lynx.ts',
+        'src/lynx-main-thread.ts',
         'src/root.ts',
         'src/worklet-runtime/api/lepusQuerySelector.ts',
         'src/worklet-runtime/api/lynxApi.ts',

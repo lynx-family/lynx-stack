@@ -31,6 +31,7 @@ import { Fragment, options } from 'preact';
 import type { VNode } from 'preact';
 
 import { DIFF, DIFFED, RENDER, ROOT } from './render-constants.js';
+import { setOwnerStackProvider } from '../utils.js';
 
 interface PatchedVNode extends VNode {
   _owner?: PatchedVNode | null;
@@ -125,6 +126,11 @@ export function getOwnerStack(vnode: PatchedVNode): string {
  * debug messages for `this.setState` where the `vnode` is `undefined`.
  */
 export function setupComponentStack(): void {
+  setOwnerStackProvider(() => {
+    const vnode = getCurrentVNode();
+    return vnode ? getOwnerStack(vnode) : undefined;
+  });
+
   const oldDiff = options[DIFF];
   const oldDiffed = options[DIFFED];
   const oldRoot = options[ROOT];
