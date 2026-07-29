@@ -422,6 +422,53 @@ describe('Config', () => {
     `)
   })
 
+  test('builtin attribute-name rules are shared by compile and runtime', async () => {
+    const { pluginReactLynx } = await import('../src/pluginReactLynx.js')
+    const transformConfig = {
+      mode: 'dash-case' as const,
+      preserve: ['tailColorConvert'],
+      rename: {
+        textMaxline: 'custom-maxline',
+      },
+    }
+
+    const rsbuild = await createRspeedy({
+      rspeedyConfig: {
+        plugins: [
+          pluginReactLynx({
+            experimental_transformBuiltinAttributeNames: transformConfig,
+          }),
+          pluginStubRspeedyAPI(),
+        ],
+      },
+    })
+
+    expect(
+      await getBackgroundLayerOptions(rsbuild),
+    ).toHaveProperty(
+      'experimental_transformBuiltinAttributeNames',
+      transformConfig,
+    )
+
+    const [config] = await rsbuild.initConfigs()
+    const reactWebpackPlugin = config?.plugins?.find((
+      plugin,
+    ): plugin is ReactWebpackPlugin =>
+      plugin?.constructor.name === 'ReactWebpackPlugin'
+    )
+
+    expect(reactWebpackPlugin).toBeDefined()
+    expect(
+      (
+        reactWebpackPlugin as unknown as {
+          options?: {
+            experimental_transformBuiltinAttributeNames?: unknown
+          }
+        }
+      ).options?.experimental_transformBuiltinAttributeNames,
+    ).toEqual(transformConfig)
+  })
+
   test('experimental_useElementTemplate wires aliases and loader/plugin options', async () => {
     const { pluginReactLynx } = await import('../src/pluginReactLynx.js')
 
