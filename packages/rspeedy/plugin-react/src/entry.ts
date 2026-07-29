@@ -64,20 +64,15 @@ export function applyEntry(
     const mainThreadChunks: string[] = []
     const mainThreadEntries: Record<string, string> = {}
 
-    const { resolve } = api.useExposed<
-      { resolve: (request: string) => Promise<string> }
+    const { resolve, reactLynxDir } = api.useExposed<
+      {
+        resolve: (request: string) => Promise<string>
+        reactLynxDir: string
+      }
     >(Symbol.for('@lynx-js/react/internal:resolve'))!
 
     const mainThreadImports = enableMTSRendering ? undefined : [
-      path.join(
-        path.dirname(
-          createRequire(import.meta.url).resolve(
-            '@lynx-js/react/package.json',
-            { paths: [api.context.rootPath] },
-          ),
-        ),
-        'runtime/mts-rendering-disabled/index.js',
-      ),
+      path.join(reactLynxDir, 'runtime/mts-rendering-disabled/index.js'),
     ]
 
     const rsbuildConfig = api.getRsbuildConfig()
