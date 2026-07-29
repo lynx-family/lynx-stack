@@ -3,8 +3,14 @@ import type { MainThread } from '@lynx-js/types';
 
 import './App.css';
 
+const items = Array.from({ length: 20 }, (_, index) => ({
+  id: `item-${index}`,
+  title: `Row ${index}`,
+}));
+
 export function App() {
   const [count, setCount] = useState(0);
+  const [selected, setSelected] = useState('none');
 
   const onSpin = useCallback((e: MainThread.TouchEvent) => {
     'main thread';
@@ -31,6 +37,20 @@ export function App() {
       <view className='Card' bindtap={() => setCount(count + 1)}>
         <text className='Card__label'>Tapped {count} times</text>
       </view>
+      <text className='Description'>Selected: {selected}</text>
+      <list list-type='single' className='Feed'>
+        {items.map(item => (
+          <list-item
+            key={item.id}
+            item-key={item.id}
+            reuse-identifier='row'
+            className='FeedItem'
+            bindtap={() => setSelected(item.title)}
+          >
+            <text className='Card__label'>{item.title}</text>
+          </list-item>
+        ))}
+      </list>
     </view>
   );
 }
