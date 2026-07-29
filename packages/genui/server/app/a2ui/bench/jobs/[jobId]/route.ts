@@ -33,9 +33,13 @@ function deleteA2UIBenchJob(req: Request, jobId: string) {
 
 const route = new Hono();
 
-route.get('/:jobId', (context) =>
-  getA2UIBenchJob(context.req.raw, context.req.param('jobId')));
-route.delete('/:jobId', (context) =>
-  deleteA2UIBenchJob(context.req.raw, context.req.param('jobId')));
+route.get(
+  '/:jobId',
+  (context) => getA2UIBenchJob(context.req.raw, context.req.param('jobId')),
+);
+route.delete(
+  '/:jobId',
+  (context) => deleteA2UIBenchJob(context.req.raw, context.req.param('jobId')),
+);
 
 export default route;

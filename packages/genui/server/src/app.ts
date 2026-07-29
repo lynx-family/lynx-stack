@@ -81,7 +81,8 @@ app.notFound((context) =>
     context.req.raw,
     { ok: false, error: 'not found' },
     { status: 404 },
-  ));
+  )
+);
 
 app.onError((error, context) => {
   if (error instanceof URIError) {

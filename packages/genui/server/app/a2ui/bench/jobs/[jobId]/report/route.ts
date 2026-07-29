@@ -28,7 +28,10 @@ function getA2UIBenchJobReport(req: Request, jobId: string) {
 
 const route = new Hono();
 
-route.get('/:jobId/report', (context) =>
-  getA2UIBenchJobReport(context.req.raw, context.req.param('jobId')));
+route.get(
+  '/:jobId/report',
+  (context) =>
+    getA2UIBenchJobReport(context.req.raw, context.req.param('jobId')),
+);
 
 export default route;
