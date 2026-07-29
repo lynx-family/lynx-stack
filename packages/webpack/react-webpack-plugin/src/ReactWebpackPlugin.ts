@@ -446,7 +446,7 @@ class ReactWebpackPlugin {
 
         compilation.hooks.additionalTreeRuntimeRequirements.tap(
           this.constructor.name,
-          (chunk, runtimeRequirements) => {
+          (chunk) => {
             for (
               const [mainThreadEntry, backgroundEntry] of Object.entries(
                 options.mainThreadEntries ?? {},
@@ -458,12 +458,6 @@ class ReactWebpackPlugin {
               ) {
                 continue;
               }
-              // The assembled section publishes the runtime on the require
-              // function for lazy bundle sections to read, so the chunk has to
-              // emit one even when nothing else needs it.
-              runtimeRequirements.add(
-                compiler.webpack.RuntimeGlobals.require,
-              );
               compilation.addRuntimeModule(
                 chunk,
                 new MainThreadDefinesRuntimeModule(backgroundEntry),

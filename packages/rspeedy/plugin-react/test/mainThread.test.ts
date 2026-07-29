@@ -209,7 +209,9 @@ describe('enableMTSRendering: false', () => {
       // instead of bundling a second copy.
       const lazySection = lepusRoots[lazyIntermediate!]!
       expect(lazySection).toContain('function (globDynamicComponentEntry)')
-      expect(lazySection).toContain('__webpack_require__.mtDefinesRuntime')
+      expect(lazySection).toContain(
+        '__REACT_LYNX_MAIN_THREAD_DEFINES_RUNTIME__',
+      )
       expect(lazySection).toContain('"LazyComponent"')
 
       // The lazy bundle's definitions stay out of the card, which would
