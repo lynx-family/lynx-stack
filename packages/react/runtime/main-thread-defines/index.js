@@ -2,7 +2,7 @@
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
 
-/* global __lynxMainThreadDefines, __webpack_require__ -- injected into the bundle by `@lynx-js/react-webpack-plugin` and webpack */
+/* global __lynxMainThreadDefines -- injected into the bundle by `@lynx-js/react-webpack-plugin` */
 
 /**
  * The main-thread entry of `enableMTSRendering: false`.
@@ -82,14 +82,9 @@ const runtime = {
   },
 };
 
-// A lazy bundle's definitions are assembled the same way, but they are
-// evaluated as a chunk installed into this bundle's runtime, so they read the
-// runtime from here. Keep the property name in sync with
-// `@lynx-js/react-webpack-plugin`.
-if (typeof __webpack_require__ !== 'undefined') {
-  __webpack_require__['mtDefinesRuntime'] = runtime;
-}
-
+// `__lynxMainThreadDefines` is the whole contract with the bundler: nothing
+// here reaches for a bundler internal, so a non-webpack pipeline only has to
+// declare this one binding in the bundle scope.
 if (typeof __lynxMainThreadDefines !== 'undefined') {
   __lynxMainThreadDefines(runtime, ReactLynx.loadWorkletRuntime, () => runtime);
 }

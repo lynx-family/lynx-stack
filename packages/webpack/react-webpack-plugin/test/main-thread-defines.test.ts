@@ -136,6 +136,13 @@ describe('renderMainThreadDefines', () => {
     expect(code.match(/\{\nconst __workletRuntimeLoaded/g)).toHaveLength(2);
   });
 
+  it('publishes the runtime for lazy bundle sections, so the entry needs no bundler internal', () => {
+    expect(renderMainThreadDefines([], true)).toContain(
+      '__webpack_require__.mtDefinesRuntime = ReactLynx;',
+    );
+    expect(renderMainThreadDefines([])).not.toContain('__webpack_require__');
+  });
+
   it('fails the build when a definition needs an unprovided runtime member', () => {
     expect(() =>
       renderMainThreadDefines([
@@ -173,6 +180,10 @@ describe('renderLazyMainThreadDefines', () => {
 
   it('reuses the host runtime instead of bundling its own', () => {
     expect(code).toContain('__webpack_require__.mtDefinesRuntime');
+  });
+
+  it('does not republish the runtime it just read from the host', () => {
+    expect(code).not.toContain('__webpack_require__.mtDefinesRuntime =');
   });
 
   it('keeps the lazy bundle entry name, so its CSS scope is applied', () => {

@@ -2,6 +2,8 @@
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
 
+import { readFileSync } from 'node:fs';
+
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
 import { setupPage } from '../../src/snapshot';
@@ -10,7 +12,6 @@ import { __pageId } from '../../src/snapshot/snapshot/definition';
 afterEach(() => {
   vi.resetModules();
   delete globalThis.__lynxMainThreadDefines;
-  delete globalThis.__webpack_require__;
 });
 
 async function importMainThreadDefines() {
@@ -69,14 +70,13 @@ describe('main-thread defines entry', () => {
     expect(runtime.__pageId).toBe(__pageId);
   });
 
-  it('publishes the runtime for lazy bundle sections', async () => {
-    globalThis.__lynxMainThreadDefines = vi.fn();
-    globalThis.__webpack_require__ = {};
+  it('reaches for no bundler internal, so a non-webpack pipeline can supply the one binding it needs', () => {
+    const source = readFileSync(
+      new URL('../../main-thread-defines/index.js', import.meta.url),
+      'utf8',
+    );
 
-    await importMainThreadDefines();
-
-    expect(globalThis.__webpack_require__['mtDefinesRuntime'].createSnapshot)
-      .toBeTypeOf('function');
+    expect(source).not.toContain('__webpack_require__');
   });
 
   it('does nothing when the bundle has no definitions', async () => {
