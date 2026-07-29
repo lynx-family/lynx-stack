@@ -3,9 +3,6 @@
   "version": "0.1.0",
   "private": true,
   "type": "module",
-  "engines": {
-    "node": "^22 || ^24"
-  },
   "scripts": {
     "build": "tsc --noEmit && rslib build",
     "dev": "pnpm build && pnpm run --parallel \"/^dev:(build|server)$/\"",
@@ -31,5 +28,8 @@
     "@types/node": "^24.13.3",
     "ajv": "^8.18.0",
     "typescript": "^6.0.3"
+  },
+  "engines": {
+    "node": "^22 || ^24"
   }
 }
