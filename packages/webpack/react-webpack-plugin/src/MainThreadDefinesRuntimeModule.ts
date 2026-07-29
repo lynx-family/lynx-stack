@@ -121,6 +121,19 @@ export function collectMainThreadDefines<TChunk, TModule>(
 }
 
 /**
+ * Where a card that can host a lazy bundle publishes its runtime members for
+ * the lazy bundle's section to read, mirroring how
+ * `@lynx-js/react/experimental/lazy/import` hands the host's exports to a lazy
+ * bundle.
+ *
+ * A symbol on `globalThis`, not a property on the bundler's require function:
+ * the main-thread entry ships in `@lynx-js/react`, so the channel has to be one
+ * a non-webpack pipeline can also provide.
+ */
+const RUNTIME_HANDLE =
+  `globalThis[Symbol.for('__REACT_LYNX_MAIN_THREAD_DEFINES_RUNTIME__')]`;
+
+/**
  * Wrap the collected definitions into the function the main-thread entry calls.
  * Each module keeps its own block scope: definitions are printed per module and
  * declare same-named locals (e.g. the `__workletRuntimeLoaded` guard).
@@ -129,6 +142,7 @@ export function collectMainThreadDefines<TChunk, TModule>(
  */
 export function renderMainThreadDefines(
   defines: readonly MainThreadDefine[],
+  publishRuntime = false,
 ): string {
   const missing = new Set<string>();
   for (const { code } of defines) {
@@ -152,24 +166,67 @@ export function renderMainThreadDefines(
     .map(({ kind, id, code }) => `// ${kind} ${id}\n{\n${code}\n}`)
     .join('\n');
 
+  // Only a card that can host a lazy bundle publishes the handle, the way the
+  // transform only injects `@lynx-js/react/experimental/lazy/import` into a
+  // module that uses a dynamic import.
+  const publish = publishRuntime
+    ? `  ${RUNTIME_HANDLE} = ReactLynx;\n`
+    : '';
+
   return `var __lynxMainThreadDefines = function (ReactLynx, loadWorkletRuntime, require) {
-${body}
+${publish}${body}
 };
 `;
 }
 
 /**
- * Where the main-thread entry publishes its runtime members for a lazy bundle's
- * section to read, mirroring how `@lynx-js/react/experimental/lazy/import`
- * hands the host's exports to a lazy bundle. Keep in sync with
- * `@lynx-js/react/internal/main-thread-defines`.
- *
- * A symbol on `globalThis`, not a property on the bundler's require function:
- * the entry ships in `@lynx-js/react`, so the channel has to be one a
- * non-webpack pipeline can also provide.
+ * `@lynx-js/react/experimental/lazy/import`, which the transform injects into a
+ * module that loads a lazy bundle at runtime.
  */
-const RUNTIME_HANDLE =
-  `globalThis[Symbol.for('__REACT_LYNX_MAIN_THREAD_DEFINES_RUNTIME__')]`;
+const LAZY_IMPORT_RE =
+  /[/\\]react[/\\]runtime[/\\]lazy[/\\]import\.js(?:[?|]|$)/;
+
+// Concatenated modules keep the original modules as children, so the injected
+// import is only visible by walking into them.
+function moduleUsesLazyImport(module: ModuleWithMainThreadDefines): boolean {
+  if (LAZY_IMPORT_RE.test(module.identifier?.() ?? '')) {
+    return true;
+  }
+  if (module.modules) {
+    for (const nested of module.modules) {
+      if (moduleUsesLazyImport(nested)) {
+        return true;
+      }
+    }
+  }
+  return false;
+}
+
+/**
+ * Whether a lazy bundle can ever be installed into this card, and so whether it
+ * has to publish its runtime for the lazy bundle's section to read. A lazy
+ * bundle built in the same compilation is an async chunk; one built elsewhere
+ * is fetched by a dynamic import, which the transform rewrites.
+ *
+ * @internal
+ */
+export function usesLazyBundle<TChunk>(
+  chunks: Iterable<TChunk>,
+  getChunkModules: (chunk: TChunk) => Iterable<ModuleWithMainThreadDefines>,
+  hasAsyncChunk: boolean,
+): boolean {
+  if (hasAsyncChunk) {
+    return true;
+  }
+  for (const chunk of chunks) {
+    for (const module of getChunkModules(chunk)) {
+      if (moduleUsesLazyImport(module)) {
+        return true;
+      }
+    }
+  }
+  return false;
+}
 
 /**
  * Assemble a lazy bundle's main-thread section: a chunk that the host card
@@ -201,6 +258,10 @@ export function renderLazyMainThreadDefines(
   };
 })
 `;
+}
+
+function moduleIdentifier(module: { identifier: () => string }): string {
+  return module.identifier();
 }
 
 type MainThreadDefinesRuntimeModule = new(
@@ -244,11 +305,19 @@ export function createMainThreadDefinesRuntimeModule(
       }
 
       const { chunkGraph } = compilation;
+      const getChunkModules = (chunk: Chunk) =>
+        chunkGraph.getChunkModules(chunk);
+
       return renderMainThreadDefines(
         collectMainThreadDefines(
           entrypoint.chunks,
-          (chunk: Chunk) => chunkGraph.getChunkModules(chunk),
-          (module) => module.identifier(),
+          getChunkModules,
+          moduleIdentifier,
+        ),
+        usesLazyBundle(
+          entrypoint.chunks,
+          getChunkModules,
+          [...compilation.chunks].some(chunk => !chunk.canBeInitial()),
         ),
       );
     }

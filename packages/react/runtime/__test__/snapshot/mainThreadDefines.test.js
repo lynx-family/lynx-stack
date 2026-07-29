@@ -12,7 +12,6 @@ import { __pageId } from '../../src/snapshot/snapshot/definition';
 afterEach(() => {
   vi.resetModules();
   delete globalThis.__lynxMainThreadDefines;
-  delete globalThis[Symbol.for('__REACT_LYNX_MAIN_THREAD_DEFINES_RUNTIME__')];
 });
 
 async function importMainThreadDefines() {
@@ -69,17 +68,6 @@ describe('main-thread defines entry', () => {
     const [runtime] = defines.mock.calls[0];
     setupPage(__CreatePage('0', 0));
     expect(runtime.__pageId).toBe(__pageId);
-  });
-
-  it('publishes the runtime for lazy bundle sections', async () => {
-    globalThis.__lynxMainThreadDefines = vi.fn();
-
-    await importMainThreadDefines();
-
-    expect(
-      globalThis[Symbol.for('__REACT_LYNX_MAIN_THREAD_DEFINES_RUNTIME__')]
-        .createSnapshot,
-    ).toBeTypeOf('function');
   });
 
   it('reaches for no bundler internal, so a non-webpack pipeline can supply the one binding it needs', () => {

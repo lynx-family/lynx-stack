@@ -82,16 +82,9 @@ const runtime = {
   },
 };
 
-// A lazy bundle's definitions are assembled the same way, but they are
-// evaluated after the host card, so they read the host's runtime from here.
-// Same channel as `@lynx-js/react/experimental/lazy/import`, which hands the
-// host's exports to a lazy bundle the same way. Keep the key in sync with
-// `@lynx-js/react-webpack-plugin`.
-globalThis[Symbol.for('__REACT_LYNX_MAIN_THREAD_DEFINES_RUNTIME__')] = runtime;
-
 // `__lynxMainThreadDefines` is the whole contract with the bundler: nothing
-// here reaches for a bundler internal, so a non-webpack pipeline only has to
-// declare this one binding in the bundle scope.
+// here reaches for a bundler internal, and a card that can host a lazy bundle
+// publishes its runtime from there too, so a card without one carries neither.
 if (typeof __lynxMainThreadDefines !== 'undefined') {
   __lynxMainThreadDefines(runtime, ReactLynx.loadWorkletRuntime, () => runtime);
 }

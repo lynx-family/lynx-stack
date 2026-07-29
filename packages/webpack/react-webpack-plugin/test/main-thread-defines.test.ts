@@ -8,6 +8,7 @@ import {
   collectMainThreadDefines,
   renderLazyMainThreadDefines,
   renderMainThreadDefines,
+  usesLazyBundle,
 } from '../src/MainThreadDefinesRuntimeModule.js';
 import type { MainThreadDefine } from '../src/MainThreadDefinesRuntimeModule.js';
 
@@ -140,6 +141,15 @@ describe('renderMainThreadDefines', () => {
     expect(renderMainThreadDefines([])).not.toContain('__webpack_require__');
   });
 
+  it('publishes the runtime only for a card that can host a lazy bundle', () => {
+    expect(renderMainThreadDefines([], true)).toContain(
+      'globalThis[Symbol.for(\'__REACT_LYNX_MAIN_THREAD_DEFINES_RUNTIME__\')] = ReactLynx;',
+    );
+    expect(renderMainThreadDefines([])).not.toContain(
+      '__REACT_LYNX_MAIN_THREAD_DEFINES_RUNTIME__',
+    );
+  });
+
   it('fails the build when a definition needs an unprovided runtime member', () => {
     expect(() =>
       renderMainThreadDefines([
@@ -188,5 +198,52 @@ describe('renderLazyMainThreadDefines', () => {
     expect(code).toContain(
       'ReactLynx.createSnapshot(globDynamicComponentEntry)',
     );
+  });
+});
+
+interface FakeModule {
+  id: string;
+  modules?: { id: string }[];
+}
+
+function withModules(modules: FakeModule[], hasAsyncChunk = false): boolean {
+  return usesLazyBundle(
+    [modules],
+    (chunk: FakeModule[]) =>
+      chunk.map(module => ({
+        identifier: () => module.id,
+        modules: module.modules?.map(nested => ({
+          identifier: () => nested.id,
+        })),
+      })),
+    hasAsyncChunk,
+  );
+}
+
+describe('usesLazyBundle', () => {
+  const LAZY_IMPORT =
+    'javascript/auto|/repo/packages/react/runtime/lazy/import.js|react:background';
+
+  it('sees a lazy bundle built in the same compilation as an async chunk', () => {
+    expect(withModules([], true)).toBe(true);
+  });
+
+  it('sees a lazy bundle built elsewhere through the injected lazy import', () => {
+    expect(withModules([{ id: LAZY_IMPORT }])).toBe(true);
+  });
+
+  it('sees the injected lazy import inside a concatenated module', () => {
+    expect(
+      withModules([{ id: 'concatenated', modules: [{ id: LAZY_IMPORT }] }]),
+    ).toBe(true);
+  });
+
+  it('reports none for a card that never loads one', () => {
+    expect(
+      withModules([
+        { id: 'javascript/auto|/repo/packages/react/runtime/lib/internal.js' },
+        { id: 'javascript/auto|/repo/src/index.tsx' },
+      ]),
+    ).toBe(false);
   });
 });
