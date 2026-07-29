@@ -68,7 +68,6 @@ else
   export LYNX_USE_HOST="${LYNX_USE_HOST:-0.0.0.0}"
   export LYNX_USE_PORT="${LYNX_USE_PORT:-${PORT:-8080}}"
 fi
-export PORT="${LYNX_USE_PORT}"
 
 exec "${SCRIPT_DIR}/ui-judge-server" "$@"
 EOF

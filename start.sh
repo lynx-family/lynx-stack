@@ -40,8 +40,6 @@ else
   export LYNX_USE_HOST="${LYNX_USE_HOST:-${HOST:-0.0.0.0}}"
   export LYNX_USE_PORT="${LYNX_USE_PORT:-${PORT:-3000}}"
 fi
-export HOST="${LYNX_USE_HOST}"
-export PORT="${LYNX_USE_PORT}"
 
 cd "${SCRIPT_DIR}"
 exec node "${SERVER_ENTRY}" "$@"
