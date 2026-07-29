@@ -1,6 +1,6 @@
 # GenUI Server
 
-This package contains the Rslib-built Node.js server for GenUI agent APIs,
+This package contains the Rslib-built Hono server for GenUI agent APIs,
 including A2UI, OpenUI, and MCP Apps.
 
 ## Deployment Model
@@ -43,7 +43,7 @@ export PEXELS_API_KEY="..."
 When `PEXELS_API_KEY` is absent or Pexels returns no result, the server falls
 back to a deterministic Picsum URL.
 
-The hosting runtime must provide these variables before invoking the handler.
+The hosting runtime must provide these variables before starting the server.
 
 To enable UI Judge scoring for A2UI Bench jobs, run the independent Rust UI
 Judge HTTP server and configure its private base URL:
@@ -96,14 +96,12 @@ authentication and an allow-list are added in front of the server.
 
 ## Rate Limiting
 
-The `/a2ui/chat`, `/a2ui/stream`, `/a2ui/action`, and `/mcp-apps/stream`
-routes share an
-in-process fixed-window rate limiter keyed by client IP (`x-forwarded-for`
-
-> `x-real-ip` > `unknown`). When a client exceeds the limit, the
-> JSON routes respond with HTTP `429` and the SSE route emits a single
-> `event: error` frame; both responses include the standard
-> `Retry-After` and `X-RateLimit-*` headers.
+The routes at `/a2ui/chat`, `/a2ui/stream`, `/a2ui/action`, and
+`/mcp-apps/stream` share an in-process fixed-window rate limiter keyed by
+client IP (`x-forwarded-for` > `x-real-ip` > `unknown`). When a client exceeds
+the limit, the JSON routes respond with HTTP `429` and the SSE route emits a
+single `event: error` frame; both responses include the standard `Retry-After`
+and `X-RateLimit-*` headers.
 
 Tune the limiter with the following optional environment variables:
 
@@ -140,11 +138,18 @@ memory only, so refreshing the page starts a fresh conversation.
 
 ## Development
 
-Watch and rebuild the handler bundle from this package:
+Build, run, and restart the Hono server as sources change:
 
 ```bash
 pnpm dev
 ```
+
+The server listens on `0.0.0.0:3000` by default. Override the bind address and
+port with `HOST` and `PORT`.
+
+Set `GENUI_HTTP2=1` to start a cleartext HTTP/2 (h2c) server instead of the
+default HTTP/1 server. HTTP transport adaptation, including HTTP/2
+pseudo-header filtering, is owned by `@hono/node-server`.
 
 ## Production
 
@@ -158,17 +163,23 @@ pnpm turbo build
 Use Turbo filters only for narrower diagnosis. Do not use a package-local
 `pnpm build` or a filtered build as a substitute for the repository-root build.
 
-Rslib emits a platform-compatible Node HTTP handler at `dist/index.js`:
+Rslib emits the executable Hono server at `dist/index.js`. Start it with:
 
-```ts
-export async function handler(request, response) {
-  // Handle one HTTP/1 or HTTP/2 request and response pair.
-}
+```bash
+pnpm --filter a2ui-server start
 ```
 
-The package does not create a listening server or own a process lifecycle.
-Platforms should invoke this handler directly. The request accepts the
-platform-provided `path`, `queryStringParameters`, and `jsonBody` fields alongside
-the underlying Node HTTP/1 or HTTP/2 request. Runtime packages are bundled
-except for `@mastra/core`, which remains external and must be present in the
-production install together with its transitive dependencies.
+Each protocol module default-exports a Hono sub-application. `src/app.ts`
+assembles them, owns path and method matching, and supplies shared 404, 405,
+CORS preflight, and error responses. `src/index.ts` starts the Node server and
+owns SIGINT/SIGTERM shutdown. The package does not export endpoint request
+functions or contain a custom Node/FaaS transport adapter.
+
+Runtime packages are bundled except for `@mastra/core`, which remains external
+and must be present in the production install together with its transitive
+dependencies.
+
+The supported runtimes are the repository-level Node.js 22 and 24 release
+lines. Use explicit `.js` specifiers for relative ESM imports and exports;
+TypeScript resolves them to the corresponding source files while the emitted
+module remains directly loadable by Node.js.

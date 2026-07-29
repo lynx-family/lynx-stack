@@ -2,8 +2,10 @@
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
 
+import { Hono } from 'hono';
+
 import { publishOpenUIRawText } from '../../a2ui/payload-publisher';
-import { corsPreflight, jsonWithCors } from '../../common/cors';
+import { jsonWithCors } from '../../common/cors';
 import { errorMessage } from '../../common/errors';
 import { checkRateLimit, rateLimitJsonResponse } from '../../common/rate-limit';
 import { readJsonBodyWithLimit } from '../../common/request';
@@ -12,11 +14,7 @@ interface OpenUIPayloadBody {
   rawText?: unknown;
 }
 
-export function OPTIONS(req: Request) {
-  return corsPreflight(req);
-}
-
-export async function POST(req: Request) {
+async function postOpenUIPayload(req: Request) {
   const decision = checkRateLimit(req);
   if (!decision.ok) {
     return rateLimitJsonResponse(req, decision);
@@ -58,3 +56,9 @@ export async function POST(req: Request) {
     );
   }
 }
+
+const route = new Hono();
+
+route.post('/', (context) => postOpenUIPayload(context.req.raw));
+
+export default route;
