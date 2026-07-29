@@ -131,6 +131,20 @@ then starts the server. Model configuration and credentials continue to come
 from the caller's environment. Linux hosts must also provide the
 `libepoxy.so.0` system dependency.
 
+When the deployment requires an HTTP mesh, provide its ingress port:
+
+```bash
+REQUIRE_HTTP_MESH=True \
+  MESH_INGRESS_PORT=8080 \
+  packages/genui/ui-judge/dist/linux-amd64/start.sh
+```
+
+The packaged launcher then exports `LYNX_USE_HOST=127.0.0.1` and maps
+`MESH_INGRESS_PORT` to both `LYNX_USE_PORT` and `PORT`. It fails immediately
+when the mesh port is missing. `LYNX_USE_HOST` describes the mesh endpoint;
+UI Judge itself continues to listen on both unspecified IPv4 and IPv6
+addresses.
+
 `PORT` defaults to `8080` and must be between `1` and `65535`. The process
 listens on both `0.0.0.0:{PORT}` and `[::]:{PORT}`. Use `GET /health` for a
 readiness check, `POST /judge` to evaluate a page, and `POST /compare` to
