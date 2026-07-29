@@ -9,8 +9,8 @@ import { pathToFileURL } from 'node:url'
 import color from 'picocolors'
 
 import { register } from '#register'
+import { debug } from '@lynx-js/rsbuild-plugin/internal'
 
-import { debug } from '../debug.js'
 import type { ConfigExport } from './defineConfig.js'
 
 import type { Config } from './index.js'

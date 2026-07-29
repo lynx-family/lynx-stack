@@ -8,12 +8,13 @@ import { logger } from '@rsbuild/core'
 import type { Command } from 'commander'
 import color from 'picocolors'
 
+import { isCI } from '@lynx-js/rsbuild-plugin/internal'
+
 import type { CommonOptions } from './commands.js'
 import { exit } from './exit.js'
 import { createRspeedy } from '../create-rspeedy.js'
 import { init } from './init.js'
 import { getWatchedFiles, watchFiles } from './watch.js'
-import { isCI } from '../utils/is-ci.js'
 
 export type BuildOptions = CommonOptions & {
   environment?: string[] | undefined

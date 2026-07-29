@@ -1,0 +1,12 @@
+{
+  "extends": ["./tsconfig.build.json"],
+  "compilerOptions": {
+    "rootDir": ".",
+    "noEmit": true,
+  },
+  "include": ["src", "test", "rstest.config.ts", "package.json"],
+  "exclude": ["test/**/fixtures"],
+  "references": [
+    { "path": "../plugin-debug-metadata/tsconfig.build.json" },
+  ],
+}

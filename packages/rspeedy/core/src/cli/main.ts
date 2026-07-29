@@ -4,8 +4,9 @@
 
 import { logger } from '@rsbuild/core'
 
+import { debug } from '@lynx-js/rsbuild-plugin/internal'
+
 import { exit } from './exit.js'
-import { debug } from '../debug.js'
 import { rsbuildVersion, rspackVersion, version } from '../version.js'
 
 function initNodeEnv(argv: string[]) {

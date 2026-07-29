@@ -4,8 +4,8 @@
 import { mergeRsbuildConfig } from '@rsbuild/core'
 import type { RsbuildMode } from '@rsbuild/core'
 
-import { isDebug } from '../debug.js'
-import type { Filename } from './output/filename.js'
+import type { Filename } from '@lynx-js/rsbuild-plugin/internal'
+import { isDebug } from '@lynx-js/rsbuild-plugin/internal'
 
 import type { Config } from './index.js'
 

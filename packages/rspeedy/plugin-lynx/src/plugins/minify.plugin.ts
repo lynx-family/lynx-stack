@@ -2,9 +2,9 @@
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
 
+import { mergeRsbuildConfig } from '@rsbuild/core'
 import type { RsbuildConfig, RsbuildPlugin, Rspack } from '@rsbuild/core'
 
-import { mergeRspeedyConfig } from '../config/mergeRspeedyConfig.js'
 import type { Minify } from '../config/output/minify.js'
 import { debug } from '../debug.js'
 
@@ -15,11 +15,14 @@ function mergeJsOptions(
   baseOptions: NonNullable<Minify['jsOptions']>,
   threadOptions: NonNullable<Minify['jsOptions']> | undefined,
 ): NonNullable<Minify['jsOptions']> {
-  const merged = mergeRspeedyConfig(
+  interface JsOptionsWrapper {
+    output?: { minify?: { jsOptions?: Minify['jsOptions'] | undefined } }
+  }
+  const merged = mergeRsbuildConfig<JsOptionsWrapper>(
     { output: { minify: { jsOptions: baseOptions } } },
     { output: { minify: { jsOptions: threadOptions } } },
   )
-  return (merged.output?.minify as Minify | undefined)?.jsOptions ?? {}
+  return merged.output?.minify?.jsOptions ?? {}
 }
 
 export function pluginMinify(options?: Minify | boolean): RsbuildPlugin {
