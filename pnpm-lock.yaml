@@ -16,6 +16,10 @@ catalogs:
     '@microsoft/api-extractor':
       specifier: 7.58.12
       version: 7.58.12
+  lynxjs:
+    preact:
+      specifier: npm:@lynx-js/internal-preact@10.29.1-20260519060144-e6da44c
+      version: 10.29.1-20260519060144-e6da44c
   rsbuild:
     '@rsbuild/core':
       specifier: 2.1.7
@@ -776,7 +780,7 @@ importers:
         version: 0.2.9(@modelcontextprotocol/sdk@1.29.0(supports-color@10.2.2)(zod@4.4.3))(zod@4.4.3)
       '@preact/signals':
         specifier: ^2.9.4
-        version: 2.9.4(preact@10.29.1)
+        version: 2.9.4(@lynx-js/internal-preact@10.29.1-20260519060144-e6da44c)
       typedoc:
         specifier: ^0.28.20
         version: 0.28.20(typescript@6.0.3)
@@ -814,6 +818,9 @@ importers:
       '@lynx-js/rspeedy':
         specifier: workspace:^
         version: link:../rspeedy/core
+      preact:
+        specifier: catalog:lynxjs
+        version: '@lynx-js/internal-preact@10.29.1-20260519060144-e6da44c'
 
   packages/genui/a2ui:
     dependencies:
@@ -822,7 +829,7 @@ importers:
         version: 0.10.5
       '@preact/signals':
         specifier: ^2.9.4
-        version: 2.9.4(preact@10.29.1)
+        version: 2.9.4(@lynx-js/internal-preact@10.29.1-20260519060144-e6da44c)
     devDependencies:
       '@lynx-js/genui-cli':
         specifier: workspace:*
@@ -842,6 +849,9 @@ importers:
       '@types/react':
         specifier: ^19.2.17
         version: 19.2.17
+      preact:
+        specifier: catalog:lynxjs
+        version: '@lynx-js/internal-preact@10.29.1-20260519060144-e6da44c'
 
   packages/genui/a2ui-catalog-extractor:
     dependencies:
@@ -1160,7 +1170,7 @@ importers:
   packages/react:
     dependencies:
       preact:
-        specifier: npm:@lynx-js/internal-preact@10.29.1-20260519060144-e6da44c
+        specifier: catalog:lynxjs
         version: '@lynx-js/internal-preact@10.29.1-20260519060144-e6da44c'
     devDependencies:
       '@lynx-js/types':
@@ -1198,10 +1208,13 @@ importers:
         version: link:..
       '@prefresh/core':
         specifier: ^1.5.10
-        version: 1.5.10(preact@10.29.1)
+        version: 1.5.10(@lynx-js/internal-preact@10.29.1-20260519060144-e6da44c)
       '@prefresh/utils':
         specifier: ^1.2.1
         version: 1.2.1
+      preact:
+        specifier: catalog:lynxjs
+        version: '@lynx-js/internal-preact@10.29.1-20260519060144-e6da44c'
 
   packages/react/runtime:
     devDependencies:
@@ -10200,9 +10213,6 @@ packages:
       rxjs:
         optional: true
 
-  preact@10.29.1:
-    resolution: {integrity: sha512-gQCLc/vWroE8lIpleXtdJhTFDogTdZG9AjMUpVkDf2iTCNwYNWA+u16dL41TqUDJO4gm2IgrcMv3uTpjd4Pwmg==}
-
   prelude-ls@1.2.1:
     resolution: {integrity: sha512-vkcDPrRZo1QZLbn5RLGPpg/WmIQ65qoWWhcGKf/b5eplkkarX0m9z8ppCat4mlOqUsWpyNuYgO3VRyrYHSzX5g==}
     engines: {node: '>= 0.8.0'}
@@ -14759,14 +14769,14 @@ snapshots:
 
   '@preact/signals-core@1.14.4': {}
 
-  '@preact/signals@2.9.4(preact@10.29.1)':
+  '@preact/signals@2.9.4(@lynx-js/internal-preact@10.29.1-20260519060144-e6da44c)':
     dependencies:
       '@preact/signals-core': 1.14.4
-      preact: 10.29.1
+      preact: '@lynx-js/internal-preact@10.29.1-20260519060144-e6da44c'
 
-  '@prefresh/core@1.5.10(preact@10.29.1)':
+  '@prefresh/core@1.5.10(@lynx-js/internal-preact@10.29.1-20260519060144-e6da44c)':
     dependencies:
-      preact: 10.29.1
+      preact: '@lynx-js/internal-preact@10.29.1-20260519060144-e6da44c'
 
   '@prefresh/utils@1.2.1': {}
 
@@ -20953,8 +20963,6 @@ snapshots:
       '@posthog/core': 1.45.0
     optionalDependencies:
       rxjs: 7.8.2
-
-  preact@10.29.1: {}
 
   prelude-ls@1.2.1: {}
 
