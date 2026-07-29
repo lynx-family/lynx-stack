@@ -83,8 +83,9 @@ const runtime = {
 };
 
 // `__lynxMainThreadDefines` is the whole contract with the bundler: nothing
-// here reaches for a bundler internal, and a card that can host a lazy bundle
-// publishes its runtime from there too, so a card without one carries neither.
+// here reaches for a bundler internal, and the assembled section publishes this
+// runtime for lazy bundle sections to read, so a non-webpack pipeline only has
+// to declare this one binding in the bundle scope.
 if (typeof __lynxMainThreadDefines !== 'undefined') {
   __lynxMainThreadDefines(runtime, ReactLynx.loadWorkletRuntime, () => runtime);
 }
