@@ -501,6 +501,8 @@ class ReactWebpackPlugin {
               + 1,
           },
           () => {
+            const wrappedFiles = new Set<string>();
+
             compilation.chunkGroups.forEach(chunkGroup => {
               const isDynamicImport = !chunkGroup.isInitial()
                 && chunkGroup.origins.every(
@@ -520,11 +522,17 @@ class ReactWebpackPlugin {
                     continue;
                   }
 
+                  // A shared async chunk can belong to multiple chunk groups.
+                  if (wrappedFiles.has(file)) {
+                    continue;
+                  }
+
                   const asset = compilation.getAsset(file);
                   if (!asset) {
                     continue;
                   }
 
+                  wrappedFiles.add(file);
                   compilation.updateAsset(
                     file,
                     old =>
