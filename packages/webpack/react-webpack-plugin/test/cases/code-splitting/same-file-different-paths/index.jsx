@@ -1,6 +1,6 @@
 /// <reference types="vitest/globals" />
 
-import { readdir } from 'node:fs/promises';
+import { readFile, readdir } from 'node:fs/promises';
 import { join } from 'node:path';
 
 import { load } from './subdir/importer.js';
@@ -27,4 +27,18 @@ it('should generate a single lazy bundle inside the async directory', async () =
     name.endsWith('.bundle')
   );
   expect(escapedBundles).toHaveLength(0);
+});
+
+it('should wrap the shared main-thread asset once', async () => {
+  const tasmJSON = JSON.parse(
+    await readFile(
+      join(__dirname, '.rspeedy/lazy-bundle/foo.js/tasm.json'),
+      'utf-8',
+    ),
+  );
+
+  const wrappers = tasmJSON.lepusCode.root.match(
+    /\(function \(globDynamicComponentEntry\) \{/g,
+  );
+  expect(wrappers).toHaveLength(1);
 });
