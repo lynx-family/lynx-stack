@@ -5,22 +5,23 @@
   display: flex;
   flex-direction: column;
   box-sizing: border-box;
-  background-color: var(--canvas);
+  background-color: transparent;
   color: var(--content);
 }
 
 .openui-page {
   width: 100%;
   height: 100%;
-  padding: 10px;
+  padding: 0;
   box-sizing: border-box;
   color: var(--content);
-  background-color: var(--canvas);
+  background-color: transparent;
 }
 
 .openui-scroll {
   width: 100%;
   height: 100%;
+  background-color: transparent;
 }
 
 .openui-feedback {
@@ -30,4 +31,222 @@
 
 .openui-error {
   color: var(--openui-color-error);
+}
+
+/* Playground-only editorial treatment: transparent canvas, typographic scale,
+ * and whitespace replace stacked surfaces as the primary hierarchy. */
+.openui-editorial .OpenUIRenderer {
+  width: 100%;
+  min-width: 0;
+  padding-top: 56rpx;
+  padding-right: 48rpx;
+  padding-bottom: 112rpx;
+  padding-left: 48rpx;
+  box-sizing: border-box;
+}
+
+.openui-editorial .OpenUICard {
+  padding: 0;
+  border-radius: 0;
+  background-color: transparent;
+}
+
+.openui-editorial .OpenUICardVariantCard,
+.openui-editorial .OpenUICardVariantSunk,
+.openui-editorial .OpenUICardVariantClear {
+  border-width: 0;
+  background-color: transparent;
+}
+
+.openui-editorial .OpenUICardVariantSunk {
+  padding-top: 32rpx;
+  border-top-width: 1rpx;
+  border-top-style: solid;
+  border-top-color: var(--rule);
+}
+
+.openui-editorial .OpenUIGapXs {
+  gap: 8rpx;
+}
+
+.openui-editorial .OpenUIGapS {
+  gap: 16rpx;
+}
+
+.openui-editorial .OpenUIGapM {
+  gap: 24rpx;
+}
+
+.openui-editorial .OpenUIGapL {
+  gap: 36rpx;
+}
+
+.openui-editorial .OpenUIGapXl {
+  gap: 52rpx;
+}
+
+.openui-editorial .OpenUIText {
+  line-height: 1.5;
+}
+
+.openui-editorial .OpenUITextH1 {
+  font-size: 64rpx;
+  font-weight: 700;
+  line-height: 1.08;
+}
+
+.openui-editorial .OpenUITextH2 {
+  font-size: 50rpx;
+  font-weight: 680;
+  line-height: 1.14;
+}
+
+.openui-editorial .OpenUITextH3 {
+  font-size: 40rpx;
+  font-weight: 650;
+  line-height: 1.2;
+}
+
+.openui-editorial .OpenUITextH4,
+.openui-editorial .OpenUITextH5 {
+  font-weight: 620;
+}
+
+.openui-editorial .OpenUITextBody {
+  color: var(--content-muted);
+  font-size: 28rpx;
+  line-height: 1.6;
+}
+
+.openui-editorial .OpenUITextCaption {
+  color: var(--content-subtle);
+  font-size: 22rpx;
+  line-height: 1.4;
+}
+
+.openui-editorial .OpenUITabs {
+  gap: 36rpx;
+}
+
+.openui-editorial .OpenUITabList {
+  gap: 28rpx;
+  padding-bottom: 0;
+  border-bottom-width: 1rpx;
+  border-bottom-style: solid;
+  border-bottom-color: var(--rule);
+}
+
+.openui-editorial .OpenUITabTrigger {
+  padding-top: 12rpx;
+  padding-right: 0;
+  padding-bottom: 14rpx;
+  padding-left: 0;
+  border-top-width: 0;
+  border-right-width: 0;
+  border-bottom-width: 2rpx;
+  border-left-width: 0;
+  border-radius: 0;
+  background-color: transparent;
+}
+
+.openui-editorial .OpenUITabTriggerActive {
+  border-bottom-color: var(--content);
+  background-color: transparent;
+}
+
+.openui-editorial .OpenUITabTriggerInactive {
+  border-bottom-color: transparent;
+  background-color: transparent;
+}
+
+.openui-editorial .OpenUITabTriggerText {
+  font-size: 24rpx;
+  font-weight: 620;
+}
+
+.openui-editorial .OpenUIChoicePicker {
+  gap: 16rpx;
+}
+
+.openui-editorial .OpenUIChoicePickerLabel {
+  color: var(--content);
+  font-size: 25rpx;
+  font-weight: 620;
+}
+
+.openui-editorial .OpenUIChoicePickerOptions {
+  gap: 12rpx;
+}
+
+.openui-editorial .OpenUIChoiceItem {
+  padding-top: 12rpx;
+  padding-right: 18rpx;
+  padding-bottom: 12rpx;
+  padding-left: 18rpx;
+  border-radius: 8rpx;
+  border-color: var(--line);
+  background-color: transparent;
+}
+
+.openui-editorial .OpenUIChoiceItemSelected {
+  border-color: var(--content);
+  background-color: transparent;
+}
+
+.openui-editorial .OpenUIChoiceItemText {
+  font-size: 24rpx;
+  font-weight: 560;
+}
+
+.openui-editorial .OpenUIDateTimeInput {
+  padding-top: 22rpx;
+  padding-right: 0;
+  padding-bottom: 22rpx;
+  padding-left: 0;
+  border-top-width: 1rpx;
+  border-right-width: 0;
+  border-bottom-width: 1rpx;
+  border-left-width: 0;
+  border-radius: 0;
+  border-color: var(--rule);
+  background-color: transparent;
+  gap: 10rpx;
+}
+
+.openui-editorial .OpenUIDateTimeValue {
+  font-size: 32rpx;
+  font-weight: 620;
+}
+
+.openui-editorial .OpenUIButton {
+  padding-top: 14rpx;
+  padding-right: 22rpx;
+  padding-bottom: 14rpx;
+  padding-left: 22rpx;
+  border-radius: 8rpx;
+}
+
+.openui-editorial .OpenUIButtonPrimary {
+  border-color: var(--content);
+  background-color: var(--content);
+}
+
+.openui-editorial .OpenUIButtonPrimary .OpenUIButtonText {
+  color: var(--paper-clear);
+}
+
+.openui-editorial .OpenUIButtonSecondary,
+.openui-editorial .OpenUIButtonGhost {
+  border-color: var(--line);
+  background-color: transparent;
+}
+
+.openui-editorial .OpenUIButtonText {
+  font-size: 24rpx;
+  font-weight: 620;
+}
+
+.openui-editorial .OpenUIModalContent {
+  padding: 36rpx;
+  border-radius: 16rpx;
 }

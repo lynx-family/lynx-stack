@@ -10,6 +10,7 @@ import type { DefineDceVisitorConfig } from '@lynx-js/react/transform';
 import { ExtractStrConfig } from '@lynx-js/react/transform';
 import type { JsxTransformerConfig } from '@lynx-js/react/transform';
 import type { ShakeVisitorConfig } from '@lynx-js/react/transform';
+import type { TransformBuiltinAttributeNamesOptions } from '@lynx-js/react/transform';
 
 export { ExtractStrConfig }
 
@@ -29,6 +30,7 @@ export interface ReactLoaderOptions {
     enableRemoveCSSScope?: boolean | undefined;
     enableUiSourceMap?: boolean | undefined;
     engineVersion?: string | undefined;
+    experimental_transformBuiltinAttributeNames?: boolean | TransformBuiltinAttributeNamesOptions | undefined;
     experimental_useElementTemplate?: boolean | undefined;
     inlineSourcesContent?: boolean | undefined;
     jsx?: JsxTransformerConfig | undefined;

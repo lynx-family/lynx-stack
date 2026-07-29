@@ -51,8 +51,11 @@ export default class OpenUIAgentService {
   public async stream(
     messages: ChatMessage[],
     opts: ChatOptions = {},
+    abortSignal?: AbortSignal,
   ): Promise<MastraStreamResult> {
+    abortSignal?.throwIfAborted();
     const agent = await this.getAgent(opts);
+    abortSignal?.throwIfAborted();
     const modelMessagesStartedAt = performance.now();
     const modelMessages = toModelMessages(messages);
     opts.onPerformanceEvent?.('agent.model_messages.built', {
@@ -65,7 +68,7 @@ export default class OpenUIAgentService {
     opts.onPerformanceEvent?.('agent.stream.invoke.started');
     const result = agent.stream(
       modelMessages,
-      buildResourceRunOptions(opts),
+      buildResourceRunOptions(opts, abortSignal),
     ) as MastraStreamResult;
     opts.onPerformanceEvent?.('agent.stream.invoke.completed', {
       durationMs: performance.now() - streamStartedAt,
@@ -78,6 +81,7 @@ export default class OpenUIAgentService {
     messages: ChatMessage[],
     opts: ChatOptions = {},
     conversation?: ConversationContext,
+    abortSignal?: AbortSignal,
   ): Promise<{
     textStream: AsyncIterable<string>;
     finalize: () => Promise<{
@@ -103,7 +107,11 @@ export default class OpenUIAgentService {
       preparedContentChars: sumContentChars(preparedMessages),
     });
 
-    const streamResult = await this.stream(preparedMessages, opts);
+    const streamResult = await this.stream(
+      preparedMessages,
+      opts,
+      abortSignal,
+    );
     return {
       textStream: toAsyncIterable(streamResult.textStream),
       finalize: () => finalizeResult(streamResult),
@@ -114,8 +122,11 @@ export default class OpenUIAgentService {
     messages: ChatMessage[],
     opts: ChatOptions = {},
     conversation?: ConversationContext,
+    abortSignal?: AbortSignal,
   ): Promise<{ text: string; usage: unknown; finishReason: unknown }> {
+    abortSignal?.throwIfAborted();
     const agent = await this.getAgent(opts);
+    abortSignal?.throwIfAborted();
     const result = agent.generate(
       toModelMessages(
         buildConversationMessages(
@@ -124,7 +135,7 @@ export default class OpenUIAgentService {
           buildDataModelSystemMessage,
         ),
       ),
-      buildResourceRunOptions(opts),
+      buildResourceRunOptions(opts, abortSignal),
     ) as MastraResult;
     return extractGenerationResult(result);
   }

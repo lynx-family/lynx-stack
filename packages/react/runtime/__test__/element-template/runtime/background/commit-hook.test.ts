@@ -167,7 +167,7 @@ describe('ElementTemplate commit hook', () => {
     expect(updateEvents).toHaveLength(1);
     expect(updateEvents[0]).toEqual({
       ops: [],
-      flushOptions: { triggerDataUpdated: true },
+      flushOptions: { triggerDataUpdated: true, emptyPatch: true },
       flowIds: undefined,
       reloadVersion: getReloadVersion(),
     });
@@ -653,7 +653,7 @@ describe('ElementTemplate commit hook', () => {
     expect(updateEvents).toEqual([
       {
         ops: [],
-        flushOptions: { triggerDataUpdated: true },
+        flushOptions: { triggerDataUpdated: true, emptyPatch: true },
         flowIds: undefined,
         reloadVersion: getReloadVersion(),
       },

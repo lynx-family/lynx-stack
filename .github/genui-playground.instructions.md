@@ -96,6 +96,8 @@ OpenUI catalog styles are bundled by each catalog component's relative CSS impor
 
 OpenUI playground theming should apply matching classes such as `openui-light luna-light` or `openui-dark luna-dark` on the Lynx root view. Keep theme-specific feedback, loading, and scroll styling in the entry CSS instead of inline styles so Luna variables can control both the shell and renderer content.
 
+Gate host-specific OpenUI visual treatments behind an additional root class in the playground entry CSS instead of changing the shared OpenUI theme tokens. For transparent editorial previews, keep the root, page, and scroll backgrounds transparent; scope Card surface removal and enlarged typography/spacing to that host class so the package defaults and Modal/control boundaries remain intact. Keep the render document's `data-theme` and `color-scheme` synchronized with preview init data so transparent Lynx content inherits the correct neutral light or dark device canvas instead of the iframe's default white background.
+
 ### Large Preview Payloads
 
 When building OpenUI playground preview links, avoid inlining large OpenUI Lang source in `rawText` query parameters. URL-encoded Chinese or generated DSL can exceed common request-line limits on deployed hosts; publish large source text and pass `rawTextUrl` to `render.html` instead.

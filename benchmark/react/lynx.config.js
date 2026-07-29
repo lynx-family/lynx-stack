@@ -88,6 +88,7 @@ export default defineConfig({
     pluginRepoFilePath(),
     pluginReactLynx({
       debugInfoOutside: false,
+      experimental_transformBuiltinAttributeNames: true,
     }),
     pluginScriptLoad(),
     pluginQRCode({}),

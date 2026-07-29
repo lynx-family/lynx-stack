@@ -182,6 +182,8 @@ export function createElementAPI(
       __GetAttributeByName: (element: unknown, name: string) => {
         return getAttribute(element as ServerElement, name) ?? null;
       },
+      // There is no layout nor cascade resolution during SSR.
+      __GetComputedStyleByKey: () => '',
       __GetClasses: ((element: HTMLElement) => {
         const cls = getAttribute(element as ServerElement, 'class');
         if (!cls) return [];

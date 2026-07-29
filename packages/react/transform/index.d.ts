@@ -670,6 +670,35 @@ export interface WorkletVisitorConfig {
   target: 'LEPUS' | 'JS' | 'MIXED'
   runtimePkg: string
 }
+/**
+ * Serializable rules for transforming builtin element attribute names.
+ *
+ * Exact entries in `rename` take precedence over `preserve`, followed by the
+ * fallback behavior selected by `mode`.
+ *
+ * @public
+ */
+export interface TransformBuiltinAttributeNamesOptions {
+  /**
+   * The fallback behavior for attribute names not listed in `rename` or
+   * `preserve`.
+   *
+   * `'dash-case'` also applies the default React-style event mappings.
+   * `'mapping-only'` leaves all remaining names unchanged.
+   *
+   * @defaultValue `'dash-case'`
+   */
+  mode?: 'dash-case' | 'mapping-only'
+  /**
+   * Attribute names that should remain unchanged unless an exact `rename`
+   * entry is also present.
+   */
+  preserve?: ReadonlyArray<string>
+  /**
+   * Exact mappings from source attribute names to transformed attribute names.
+   */
+  rename?: Readonly<Record<string, string>>
+}
 export interface TransformNodiffOptions {
   /**
    * @internal
@@ -699,6 +728,19 @@ export interface TransformNodiffOptions {
   directiveDCE: boolean | DirectiveDceVisitorConfig
   worklet: boolean | WorkletVisitorConfig
   dynamicImport?: boolean | DynamicImportVisitorConfig
+  /**
+   * Transform attribute names on Lynx builtin elements.
+   *
+   * `true` applies the default rule: `onClick` becomes `bindtap`,
+   * `onCatchTap` becomes `catchtap`, other `onXXX` names become `bindxxx`,
+   * and remaining camelCase names become dash-case. An object provides
+   * serializable custom rules.
+   * Currently, only explicit JSX attributes are transformed during compilation.
+   * Runtime transformation of spread attributes is planned for a future release.
+   *
+   * @experimental
+   */
+  experimental_transformBuiltinAttributeNames?: boolean | TransformBuiltinAttributeNamesOptions
   /** @internal */
   inject?: boolean | InjectVisitorConfig
   /** @internal */
