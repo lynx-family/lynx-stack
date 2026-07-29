@@ -11,10 +11,10 @@ import { __pageId } from '../../src/snapshot/snapshot/definition';
 
 afterEach(() => {
   vi.resetModules();
-  delete globalThis.__lynxMainThreadDefines;
+  delete globalThis.__initMainThreadDefines;
 });
 
-async function importMainThreadDefines() {
+async function importMTSDefines() {
   await import('../../mts-rendering-disabled/index.js');
 }
 
@@ -43,9 +43,9 @@ const PROVIDED_MEMBERS = {
 describe('main-thread defines entry', () => {
   it('registers the definitions generated into the bundle', async () => {
     const defines = vi.fn();
-    globalThis.__lynxMainThreadDefines = defines;
+    globalThis.__initMainThreadDefines = defines;
 
-    await importMainThreadDefines();
+    await importMTSDefines();
 
     expect(defines).toHaveBeenCalledTimes(1);
     const [runtime] = defines.mock.calls[0];
@@ -56,9 +56,9 @@ describe('main-thread defines entry', () => {
 
   it('reads `__pageId` through a getter, so definitions see the current page', async () => {
     const defines = vi.fn();
-    globalThis.__lynxMainThreadDefines = defines;
+    globalThis.__initMainThreadDefines = defines;
 
-    await importMainThreadDefines();
+    await importMTSDefines();
 
     const [runtime] = defines.mock.calls[0];
     setupPage(__CreatePage('0', 0));
@@ -75,6 +75,6 @@ describe('main-thread defines entry', () => {
   });
 
   it('does nothing when the bundle has no definitions', async () => {
-    await expect(importMainThreadDefines()).resolves.not.toThrow();
+    await expect(importMTSDefines()).resolves.not.toThrow();
   });
 });

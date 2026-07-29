@@ -16,10 +16,10 @@ import { LAYERS } from './layer.js';
 import { ELEMENT_TEMPLATE_BUILD_INFO } from './loaders/main-thread.js';
 import { createLynxProcessEvalResultRuntimeModule } from './LynxProcessEvalResultRuntimeModule.js';
 import {
-  collectMainThreadDefines,
-  createMainThreadDefinesRuntimeModule,
-  renderLazyMainThreadDefines,
-} from './MainThreadDefinesRuntimeModule.js';
+  collectMTSDefines,
+  createMTSDefinesRuntimeModule,
+  renderLazyMTSDefines,
+} from './MTSDefinesRuntimeModule.js';
 
 const require = createRequire(import.meta.url);
 
@@ -438,8 +438,9 @@ class ReactWebpackPlugin {
       });
 
       if (options.enableMTSRendering === false) {
-        const MainThreadDefinesRuntimeModule =
-          createMainThreadDefinesRuntimeModule(compiler.webpack);
+        const MTSDefinesRuntimeModule = createMTSDefinesRuntimeModule(
+          compiler.webpack,
+        );
 
         compilation.hooks.additionalTreeRuntimeRequirements.tap(
           this.constructor.name,
@@ -467,7 +468,7 @@ class ReactWebpackPlugin {
               runtimeRequirements.add(compiler.webpack.RuntimeGlobals.require);
               compilation.addRuntimeModule(
                 chunk,
-                new MainThreadDefinesRuntimeModule(backgroundEntry),
+                new MTSDefinesRuntimeModule(backgroundEntry),
               );
             }
           },
@@ -520,7 +521,7 @@ class ReactWebpackPlugin {
             && args.chunkGroups.every(cg => !cg.isInitial())
           ) {
             const { chunkGraph } = compilation;
-            const defines = collectMainThreadDefines(
+            const defines = collectMTSDefines(
               args.chunkGroups.flatMap(cg => cg.chunks),
               (chunk) => chunkGraph.getChunkModules(chunk),
               (module) => module.identifier(),
@@ -530,7 +531,7 @@ class ReactWebpackPlugin {
               lepusCode.root = {
                 name,
                 source: new RawSource(
-                  renderLazyMainThreadDefines(defines, `lynx:${name}`),
+                  renderLazyMTSDefines(defines, `lynx:${name}`),
                 ),
                 info: { ['lynx:main-thread']: true },
               };

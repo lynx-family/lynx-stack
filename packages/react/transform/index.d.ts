@@ -744,7 +744,7 @@ export interface TransformNodiffOptions {
   /** @internal */
   inject?: boolean | InjectVisitorConfig
   /** @internal */
-  collectMainThreadDefines?: boolean
+  collectMTSDefines?: boolean
   inputSourceMap?: string
 }
 export interface TransformNodiffOutput {
@@ -756,14 +756,14 @@ export interface TransformNodiffOutput {
   /** @internal */
   elementTemplates?: Array<ElementTemplateAsset>
   /** @internal */
-  mainThreadDefines?: Array<MainThreadDefine>
+  mtsDefines?: Array<MTSDefine>
 }
 /**
  * @internal
  * A snapshot or worklet definition the main thread needs, collected while the
  * background compiles the module.
  */
-export interface MainThreadDefine {
+export interface MTSDefine {
   /** @internal */
   kind: 'snapshot' | 'worklet'
   /**

@@ -2,11 +2,11 @@
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
 
-/* global __lynxMainThreadDefines */
+/* global __initMainThreadDefines */
 
 import * as ReactLynx from '@lynx-js/react/internal';
 
-const runtime = {
+const simplifiedRuntime = {
   get __pageId() {
     return ReactLynx.__pageId;
   },
@@ -66,6 +66,6 @@ const runtime = {
   },
 };
 
-if (typeof __lynxMainThreadDefines !== 'undefined') {
-  __lynxMainThreadDefines(runtime);
+if (typeof __initMainThreadDefines !== 'undefined') {
+  __initMainThreadDefines(simplifiedRuntime);
 }

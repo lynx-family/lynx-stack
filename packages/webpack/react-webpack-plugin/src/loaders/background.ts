@@ -5,7 +5,7 @@ import { createRequire } from 'node:module';
 
 import type { LoaderDefinitionFunction } from '@rspack/core';
 
-import { MAIN_THREAD_DEFINES_BUILD_INFO } from '../MainThreadDefinesRuntimeModule.js';
+import { MTS_DEFINES_BUILD_INFO } from '../MTSDefinesRuntimeModule.js';
 import { getBackgroundTransformOptions } from './options.js';
 import type { ReactLoaderOptions } from './options.js';
 
@@ -91,8 +91,8 @@ const backgroundLoader: LoaderDefinitionFunction<ReactLoaderOptions> = function(
   const buildInfo = (this as typeof this & {
     _module?: { buildInfo?: Record<string, unknown> };
   })._module?.buildInfo;
-  if (buildInfo && result.mainThreadDefines) {
-    buildInfo[MAIN_THREAD_DEFINES_BUILD_INFO] = result.mainThreadDefines;
+  if (buildInfo && result.mtsDefines) {
+    buildInfo[MTS_DEFINES_BUILD_INFO] = result.mtsDefines;
   }
 
   this.callback(null, result.code, result.map);

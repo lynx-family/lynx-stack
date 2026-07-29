@@ -6,7 +6,7 @@ use swc_core::{
   ecma::{ast::*, visit::VisitMut},
 };
 use swc_plugins_shared::{
-  main_thread_defines::MainThreadDefinesCollector, target_napi::TransformTarget,
+  mts_defines::MtsDefinesCollector, target_napi::TransformTarget,
   transform_mode_napi::TransformMode,
 };
 
@@ -139,8 +139,8 @@ where
     self
   }
 
-  pub fn with_main_thread_defs_collector(mut self, collector: MainThreadDefinesCollector) -> Self {
-    self.inner.main_thread_defs_collector = Some(collector);
+  pub fn with_mts_defs_collector(mut self, collector: MtsDefinesCollector) -> Self {
+    self.inner.mts_defs_collector = Some(collector);
     self
   }
 

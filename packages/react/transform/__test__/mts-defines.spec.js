@@ -61,15 +61,15 @@ export function App() {
 }
 `;
 
-describe('collectMainThreadDefines', () => {
+describe('collectMTSDefines', () => {
   it('collects the definitions the main thread needs while compiling the background', async () => {
     const result = await transformReactLynx(
       source,
-      options('JS', { collectMainThreadDefines: true }),
+      options('JS', { collectMTSDefines: true }),
     );
 
-    expect(result.mainThreadDefines).toHaveLength(2);
-    const [worklet, snapshot] = result.mainThreadDefines;
+    expect(result.mtsDefines).toHaveLength(2);
+    const [worklet, snapshot] = result.mtsDefines;
 
     expect(worklet.kind).toBe('worklet');
     expect(worklet.code).toContain('registerWorkletInternal');
@@ -86,25 +86,25 @@ describe('collectMainThreadDefines', () => {
   it('collects the same definitions the main-thread transform would emit', async () => {
     const fromBackground = await transformReactLynx(
       source,
-      options('JS', { collectMainThreadDefines: true }),
+      options('JS', { collectMTSDefines: true }),
     );
     const fromMainThread = await transformReactLynx(
       source,
-      options('LEPUS', { collectMainThreadDefines: true }),
+      options('LEPUS', { collectMTSDefines: true }),
     );
 
-    expect(fromBackground.mainThreadDefines).toStrictEqual(
-      fromMainThread.mainThreadDefines,
+    expect(fromBackground.mtsDefines).toStrictEqual(
+      fromMainThread.mtsDefines,
     );
   });
 
   it('hygienes each definition on its own', async () => {
-    const { mainThreadDefines } = await transformReactLynx(
+    const { mtsDefines } = await transformReactLynx(
       source,
-      options('JS', { collectMainThreadDefines: true }),
+      options('JS', { collectMTSDefines: true }),
     );
 
-    const snapshot = mainThreadDefines.find(({ kind }) => kind === 'snapshot');
+    const snapshot = mtsDefines.find(({ kind }) => kind === 'snapshot');
     expect(snapshot.code).toContain('const el = __CreateView');
     expect(snapshot.code).toContain('const el1 = __CreateText');
     expect(snapshot.code).toContain('__AppendElement(el, el1)');
@@ -113,7 +113,7 @@ describe('collectMainThreadDefines', () => {
   it('is disabled by default and leaves the normal output unchanged', async () => {
     const result = await transformReactLynx(source, options('JS'));
 
-    expect(result.mainThreadDefines).toBeUndefined();
+    expect(result.mtsDefines).toBeUndefined();
     expect(result.code).toContain('snapshotCreatorMap');
   });
 
@@ -131,10 +131,10 @@ export function App() {
   return <view main-thread:bindtap={onTap} />;
 }
 `,
-      options('JS', { collectMainThreadDefines: true }),
+      options('JS', { collectMTSDefines: true }),
     );
 
-    const code = result.mainThreadDefines.map(define => define.code).join('\n');
+    const code = result.mtsDefines.map(define => define.code).join('\n');
     expect(code).not.toContain('?.');
     expect(code).not.toContain('??');
     expect(code).not.toContain('current = v');

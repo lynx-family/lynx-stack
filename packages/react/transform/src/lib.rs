@@ -75,7 +75,7 @@ pub use swc_plugin_transform_builtin_attribute_names::{
   TransformBuiltinAttributeNamesMode, TransformBuiltinAttributeNamesOptions,
 };
 use swc_plugin_worklet::napi::{WorkletVisitor, WorkletVisitorConfig};
-use swc_plugins_shared::main_thread_defines::MainThreadDefinesCollector;
+use swc_plugins_shared::mts_defines::MtsDefinesCollector;
 use swc_plugins_shared::{
   engine_version::is_engine_version_ge,
   transform_mode_napi::TransformMode,
@@ -247,7 +247,8 @@ pub struct TransformNodiffOptions {
   /// @internal
   pub inject: Option<Either<bool, InjectVisitorConfig>>,
   /// @internal
-  pub collect_main_thread_defines: Option<bool>,
+  #[napi(js_name = "collectMTSDefines")]
+  pub collect_mts_defines: Option<bool>,
   pub input_source_map: Option<String>,
 }
 
@@ -276,7 +277,7 @@ impl Default for TransformNodiffOptions {
       dynamic_import: Some(Either::B(Default::default())),
       experimental_transform_builtin_attribute_names: None,
       inject: Some(Either::A(false)),
-      collect_main_thread_defines: None,
+      collect_mts_defines: None,
       input_source_map: None,
     }
   }
@@ -294,7 +295,7 @@ pub struct UiSourceMapRecord {
 
 /// @internal
 #[napi(object)]
-pub struct MainThreadDefine {
+pub struct MTSDefine {
   /// @internal
   #[napi(ts_type = "'snapshot' | 'worklet'")]
   pub kind: String,
@@ -318,8 +319,8 @@ pub struct TransformNodiffOutput {
   #[napi(js_name = "elementTemplates")]
   pub element_templates: Option<Vec<ElementTemplateAsset>>,
   /// @internal
-  #[napi(js_name = "mainThreadDefines")]
-  pub main_thread_defines: Option<Vec<MainThreadDefine>>,
+  #[napi(js_name = "mtsDefines")]
+  pub mts_defines: Option<Vec<MTSDefine>>,
 }
 
 fn lower_to_main_thread_syntax(
@@ -491,7 +492,7 @@ fn transform_react_lynx_inner(
           warnings: warnings.read().unwrap().clone(),
           ui_source_map_records: vec![],
           element_templates: None,
-          main_thread_defines: None,
+          mts_defines: None,
         };
       }
     };
@@ -656,8 +657,8 @@ fn transform_react_lynx_inner(
       jsx_backend_enabled && !preserve_jsx,
     );
 
-    let main_thread_defs_collector: Option<MainThreadDefinesCollector> = options
-      .collect_main_thread_defines
+    let mts_defs_collector: Option<MtsDefinesCollector> = options
+      .collect_mts_defines
       .unwrap_or(false)
       .then(|| Rc::new(RefCell::new(vec![])));
 
@@ -676,8 +677,8 @@ fn transform_react_lynx_inner(
         transformer
       };
 
-      let transformer = if let Some(collector) = &main_thread_defs_collector {
-        transformer.with_main_thread_defs_collector(collector.clone())
+      let transformer = if let Some(collector) = &mts_defs_collector {
+        transformer.with_mts_defs_collector(collector.clone())
       } else {
         transformer
       };
@@ -820,8 +821,8 @@ fn transform_react_lynx_inner(
     let worklet_plugin = match options.worklet {
       Either::A(config) => {
         let visitor = WorkletVisitor::default().with_content_hash(content_hash);
-        let visitor = if let Some(collector) = &main_thread_defs_collector {
-          visitor.with_main_thread_defs_collector(collector.clone())
+        let visitor = if let Some(collector) = &mts_defs_collector {
+          visitor.with_mts_defs_collector(collector.clone())
         } else {
           visitor
         };
@@ -831,8 +832,8 @@ fn transform_react_lynx_inner(
         let visitor =
           WorkletVisitor::new(options.mode.unwrap_or(TransformMode::Production), config)
             .with_content_hash(content_hash);
-        let visitor = if let Some(collector) = &main_thread_defs_collector {
-          visitor.with_main_thread_defs_collector(collector.clone())
+        let visitor = if let Some(collector) = &mts_defs_collector {
+          visitor.with_mts_defs_collector(collector.clone())
         } else {
           visitor
         };
@@ -956,12 +957,12 @@ fn transform_react_lynx_inner(
         // the caller expects one stable array per transform invocation.
         let element_templates = take_element_templates(element_templates_collector);
 
-        let main_thread_defines = main_thread_defs_collector.as_ref().map(|collector| {
+        let mts_defines = mts_defs_collector.as_ref().map(|collector| {
           helpers::HELPERS.set(&helpers::Helpers::new(false), || {
             collector
               .borrow()
               .iter()
-              .map(|define| MainThreadDefine {
+              .map(|define| MTSDefine {
                 kind: define.kind.as_str().into(),
                 id: define.id.clone(),
                 code: print_main_thread_define(
@@ -987,7 +988,7 @@ fn transform_react_lynx_inner(
             clone_snapshot_ui_source_map_records(&snapshot_ui_source_map_records, &options.filename)
           },
           element_templates,
-          main_thread_defines,
+          mts_defines,
         }
       }
       Err(_) => {
@@ -1003,7 +1004,7 @@ fn transform_react_lynx_inner(
             clone_snapshot_ui_source_map_records(&snapshot_ui_source_map_records, &options.filename)
           },
           element_templates,
-          main_thread_defines: None,
+          mts_defines: None,
         };
       }
     }
@@ -1018,7 +1019,7 @@ fn transform_react_lynx_inner(
     // Preserve the element-template assets collected in the successful transform
     // path instead of dropping them in the final wrapper object.
     element_templates: result.element_templates,
-    main_thread_defines: result.main_thread_defines,
+    mts_defines: result.mts_defines,
   };
 
   r

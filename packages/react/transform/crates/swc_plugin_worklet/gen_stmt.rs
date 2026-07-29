@@ -38,14 +38,14 @@ impl StmtGen {
     is_class_member: bool,
     named_imports: &mut HashSet<String>,
     worklet_runtime_loaded_ident: Ident,
-    collect_main_thread: bool,
+    collect_mts: bool,
   ) -> (Box<Expr>, Stmt, Option<Stmt>) {
     let hash = Expr::Lit(hash.into());
     let extracted_value = ident_collector.take_values();
     let extracted_idents = ident_collector.take_idents();
     let extracted_js_fns = ident_collector.take_js_fns();
 
-    let main_thread_stmt = collect_main_thread.then(|| {
+    let main_thread_stmt = collect_mts.then(|| {
       let mut collected_imports = HashSet::new();
       StmtGen::gen_register_worklet_stmt(RegisterWorkletParams {
         mode,

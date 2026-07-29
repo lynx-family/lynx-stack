@@ -35,9 +35,7 @@ use swc_plugins_shared::{
     jsx_is_children_full_dynamic, jsx_is_custom, jsx_is_list, jsx_is_list_item, jsx_name,
     jsx_props_to_obj, jsx_text_to_str, transform_jsx_attr_str,
   },
-  main_thread_defines::{
-    collect_main_thread_define, MainThreadDefineKind, MainThreadDefinesCollector,
-  },
+  mts_defines::{collect_mts_define, MtsDefineKind, MtsDefinesCollector},
   target::TransformTarget,
   transform_mode::TransformMode,
   utils::{calc_hash, calc_hash_number},
@@ -1238,7 +1236,7 @@ where
   snapshot_counter: u32,
   current_snapshot_defs: Vec<ModuleItem>,
   current_snapshot_id: Option<Ident>,
-  main_thread_defs_collector: Option<MainThreadDefinesCollector>,
+  mts_defs_collector: Option<MtsDefinesCollector>,
   comments: Option<C>,
   pub ui_source_map_records: Rc<RefCell<Vec<UISourceMapRecord>>>,
   pub source_map: Option<Lrc<SourceMap>>,
@@ -1253,8 +1251,8 @@ where
     self
   }
 
-  pub fn with_main_thread_defs_collector(mut self, collector: MainThreadDefinesCollector) -> Self {
-    self.main_thread_defs_collector = Some(collector);
+  pub fn with_mts_defs_collector(mut self, collector: MtsDefinesCollector) -> Self {
+    self.mts_defs_collector = Some(collector);
     self
   }
 
@@ -1283,7 +1281,7 @@ where
       snapshot_counter: 0,
       current_snapshot_defs: vec![],
       current_snapshot_id: None,
-      main_thread_defs_collector: None,
+      mts_defs_collector: None,
       comments,
       ui_source_map_records: Rc::new(RefCell::new(vec![])),
       source_map,
@@ -1406,7 +1404,7 @@ where
     );
 
     let target = self.cfg.target;
-    let collecting = self.main_thread_defs_collector.is_some();
+    let collecting = self.mts_defs_collector.is_some();
     let runtime_id = self.runtime_id.clone();
     // In dev the creator arrow is stringified for cross-thread HMR
     // (`DEV_ONLY_AddSnapshot`), so everything inside it references the runtime
@@ -1507,24 +1505,19 @@ where
               Expr::Lit(Lit::Num(snapshot_dynamic_part_def.len().into())).into(),
             ));
           }
-          if collecting {
-            snapshot_dynamic_part_def_mt.push(Some(ExprOrSpread {
-              spread: None,
-              expr: Box::new(dynamic_part.to_updater(
-                creator_runtime_expr.clone(),
-                TransformTarget::LEPUS,
-                snapshot_dynamic_part_def.len() as i32,
-              )),
-            }));
-          }
-          snapshot_dynamic_part_def.push(Some(ExprOrSpread {
+          let updater_index = snapshot_dynamic_part_def.len() as i32;
+          let updater = |target: TransformTarget| ExprOrSpread {
             spread: None,
             expr: Box::new(dynamic_part.to_updater(
               creator_runtime_expr.clone(),
               target,
-              snapshot_dynamic_part_def.len() as i32,
+              updater_index,
             )),
-          }));
+          };
+          if collecting {
+            snapshot_dynamic_part_def_mt.push(Some(updater(TransformTarget::LEPUS)));
+          }
+          snapshot_dynamic_part_def.push(Some(updater(target)));
         }
         DynamicPart::Slot(_, _) => {}
         DynamicPart::ListSlot(_, _) => {}
@@ -1720,9 +1713,9 @@ where
     ));
 
     if let Some(snapshot_create_call_mt) = snapshot_create_call_mt {
-      collect_main_thread_define(
-        &self.main_thread_defs_collector,
-        MainThreadDefineKind::Snapshot,
+      collect_mts_define(
+        &self.mts_defs_collector,
+        MtsDefineKind::Snapshot,
         snapshot_uid,
         vec![
           entry_snapshot_uid_def.clone(),
@@ -1880,17 +1873,17 @@ mod tests {
 
   use crate::JSXTransformer;
   use swc_plugins_shared::{
-    main_thread_defines::{MainThreadDefineKind, MainThreadDefinesCollector},
+    mts_defines::{MtsDefineKind, MtsDefinesCollector},
     target::TransformTarget,
     transform_mode::TransformMode,
   };
 
   #[test]
-  fn should_collect_main_thread_defines_while_targeting_js() {
+  fn should_collect_mts_defines_while_targeting_js() {
     Tester::run(|tester| {
       let top_level_mark = Mark::new();
       let unresolved_mark = Mark::new();
-      let collector: MainThreadDefinesCollector = Rc::new(RefCell::new(vec![]));
+      let collector: MtsDefinesCollector = Rc::new(RefCell::new(vec![]));
 
       tester.apply_transform(
         (
@@ -1906,7 +1899,7 @@ mod tests {
               TransformMode::Test,
               Some(tester.cm.clone()),
             )
-            .with_main_thread_defs_collector(collector.clone()),
+            .with_mts_defs_collector(collector.clone()),
           ),
         ),
         "input.js",
@@ -1920,7 +1913,7 @@ mod tests {
 
       let defines = collector.borrow();
       assert_eq!(defines.len(), 1);
-      assert_eq!(defines[0].kind, MainThreadDefineKind::Snapshot);
+      assert_eq!(defines[0].kind, MtsDefineKind::Snapshot);
       assert!(defines[0].id.starts_with("__snapshot_"));
       let collected = format!("{:?}", defines[0].items);
       assert!(collected.contains("__CreateView"));
@@ -1936,7 +1929,7 @@ mod tests {
       let comments = Rc::new(SingleThreadedComments::default());
       let source = r#"function App() { return <view><text>hi</text></view>; }"#;
 
-      let mut transform = |collector: Option<MainThreadDefinesCollector>| {
+      let mut transform = |collector: Option<MtsDefinesCollector>| {
         let top_level_mark = Mark::new();
         let unresolved_mark = Mark::new();
         let transformer = JSXTransformer::<&SingleThreadedComments>::new(
@@ -1950,7 +1943,7 @@ mod tests {
           Some(tester.cm.clone()),
         );
         let transformer = match collector {
-          Some(collector) => transformer.with_main_thread_defs_collector(collector),
+          Some(collector) => transformer.with_mts_defs_collector(collector),
           None => transformer,
         };
 

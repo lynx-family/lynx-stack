@@ -356,7 +356,7 @@ export function getBackgroundTransformOptions(
   const { enableMTSRendering } = this.getOptions();
   return {
     ...commonOptions,
-    ...(enableMTSRendering === false && { collectMainThreadDefines: true }),
+    ...(enableMTSRendering === false && { collectMTSDefines: true }),
     compat: typeof commonOptions.compat === 'object'
       ? {
         ...commonOptions.compat,

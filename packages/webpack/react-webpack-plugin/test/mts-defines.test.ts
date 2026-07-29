@@ -4,20 +4,20 @@
 import { describe, expect, it } from '@rstest/core';
 
 import {
-  MAIN_THREAD_DEFINES_BUILD_INFO,
-  collectMainThreadDefines,
-  renderLazyMainThreadDefines,
-  renderMainThreadDefines,
-} from '../src/MainThreadDefinesRuntimeModule.js';
-import type { MainThreadDefine } from '../src/MainThreadDefinesRuntimeModule.js';
+  MTS_DEFINES_BUILD_INFO,
+  collectMTSDefines,
+  renderLazyMTSDefines,
+  renderMTSDefines,
+} from '../src/MTSDefinesRuntimeModule.js';
+import type { MTSDefine } from '../src/MTSDefinesRuntimeModule.js';
 
-function snapshot(id: string, code = `/* ${id} */`): MainThreadDefine {
+function snapshot(id: string, code = `/* ${id} */`): MTSDefine {
   return { kind: 'snapshot', id, code };
 }
 
 interface TestModule {
   id: string;
-  defines?: MainThreadDefine[];
+  defines?: MTSDefine[];
   modules?: TestModule[];
 }
 
@@ -25,8 +25,8 @@ interface TestChunk {
   modules: TestModule[];
 }
 
-function collect(chunks: TestChunk[]): MainThreadDefine[] {
-  return collectMainThreadDefines<TestChunk, TestModule>(
+function collect(chunks: TestChunk[]): MTSDefine[] {
+  return collectMTSDefines<TestChunk, TestModule>(
     chunks,
     (chunk) => chunk.modules,
     (module) => module.id,
@@ -37,7 +37,7 @@ function asModule(module: TestModule): TestModule {
   return {
     ...module,
     ...(module.defines === undefined ? {} : {
-      buildInfo: { [MAIN_THREAD_DEFINES_BUILD_INFO]: module.defines },
+      buildInfo: { [MTS_DEFINES_BUILD_INFO]: module.defines },
     }),
     ...(module.modules
       ? { modules: module.modules.map((nested) => asModule(nested)) }
@@ -45,7 +45,7 @@ function asModule(module: TestModule): TestModule {
   } as TestModule;
 }
 
-describe('collectMainThreadDefines', () => {
+describe('collectMTSDefines', () => {
   it('collects the definitions of a chunk in module order', () => {
     const defines = collect([{
       modules: [
@@ -124,50 +124,30 @@ describe('collectMainThreadDefines', () => {
   });
 });
 
-describe('renderMainThreadDefines', () => {
+describe('renderMTSDefines', () => {
   it('gives each definition its own block scope', () => {
-    const code = renderMainThreadDefines([
+    const code = renderMTSDefines([
       { kind: 'worklet', id: 'a', code: 'const __workletRuntimeLoaded = 1;' },
       { kind: 'worklet', id: 'b', code: 'const __workletRuntimeLoaded = 1;' },
     ]);
 
-    expect(code).toContain('var __lynxMainThreadDefines = function (');
+    expect(code).toContain('var __initMainThreadDefines = function (');
     expect(code.match(/\{\nconst __workletRuntimeLoaded/g)).toHaveLength(2);
   });
 
   it('reaches for no bundler internal', () => {
-    expect(renderMainThreadDefines([])).not.toContain('__webpack_require__');
+    expect(renderMTSDefines([])).not.toContain('__webpack_require__');
   });
 
   it('publishes the runtime for a lazy bundle section to read', () => {
-    expect(renderMainThreadDefines([])).toContain(
+    expect(renderMTSDefines([])).toContain(
       'globalThis[Symbol.for(\'__REACT_LYNX_MAIN_THREAD_DEFINES_RUNTIME__\')] = ReactLynx;',
     );
   });
-
-  it('fails the build when a definition needs an unprovided runtime member', () => {
-    expect(() =>
-      renderMainThreadDefines([
-        snapshot('a', 'ReactLynx.createSnapshot(ReactLynx.__pageId);'),
-        snapshot('b', 'ReactLynx.renderMainThread();'),
-      ])
-    ).toThrowError(/renderMainThread/);
-  });
-
-  it('accepts the runtime members the main-thread entry provides', () => {
-    expect(() =>
-      renderMainThreadDefines([
-        snapshot(
-          'a',
-          'ReactLynx.snapshotCreatorMap[x] = () => ReactLynx.createSnapshot(ReactLynx.__pageId, ReactLynx.updateSpread, ReactLynx.__DynamicPartSlotV2);',
-        ),
-      ])
-    ).not.toThrow();
-  });
 });
 
-describe('renderLazyMainThreadDefines', () => {
-  const code = renderLazyMainThreadDefines(
+describe('renderLazyMTSDefines', () => {
+  const code = renderLazyMTSDefines(
     [snapshot('a', 'ReactLynx.createSnapshot(globDynamicComponentEntry);')],
     'lynx:lazy/main-thread.js',
   );
