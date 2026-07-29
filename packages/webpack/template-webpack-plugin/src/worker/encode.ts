@@ -19,8 +19,28 @@ export default async function encode(
   const { getEncodeMode } =
     (await import(tasmPkg)) as typeof import('@lynx-js/tasm');
   // Napi will be used if supported
-  const encode = getEncodeMode(encodeBinary) as (
-    options: unknown,
-  ) => Promise<EncodeResult>;
-  return encode(encodeOptions);
+  const tasmEncode = getEncodeMode(encodeBinary);
+
+  if (!isDebug()) {
+    return tasmEncode(encodeOptions, false);
+  }
+
+  try {
+    return await tasmEncode(encodeOptions, true);
+  } finally {
+    // biome-ignore lint/suspicious/noConsoleLog: This is opt-in encode trace output.
+    console.log('[TASM Encode Trace] End!\n');
+  }
+}
+
+export function isDebug(): boolean {
+  if (!process.env['DEBUG']) {
+    return false;
+  }
+
+  const values = process.env['DEBUG'].toLocaleLowerCase().split(',');
+  return [
+    'rspeedy:*',
+    'rspeedy:template',
+  ].some(value => values.includes(value));
 }
