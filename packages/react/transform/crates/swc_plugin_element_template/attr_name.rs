@@ -1,12 +1,5 @@
-use once_cell::sync::Lazy;
-use regex::Regex;
-
 use swc_core::ecma::ast::*;
-
-static EVENT_KEY_RE: Lazy<Regex> = Lazy::new(|| {
-  Regex::new(r"^(global-bind|bind|catch|capture-bind|capture-catch)([A-Za-z]+)$")
-    .expect("event key regex must compile")
-});
+use swc_plugins_shared::lynx_event::is_lynx_event_attribute_name;
 
 #[derive(Debug, Clone)]
 pub enum AttrName {
@@ -37,7 +30,7 @@ impl From<String> for AttrName {
       AttrName::Ref
     } else if name == "__lynx_timing_flag" {
       AttrName::TimingFlag
-    } else if get_event_type_and_name(name.as_str()).is_some() {
+    } else if is_lynx_event_attribute_name(name.as_str()) {
       AttrName::Event
     } else {
       AttrName::Attr
@@ -73,21 +66,8 @@ impl AttrName {
 
     match name_str {
       "gesture" => AttrName::Gesture,
-      _ if get_event_type_and_name(name_str).is_some() => AttrName::WorkletEvent,
+      _ if is_lynx_event_attribute_name(name_str) => AttrName::WorkletEvent,
       _ => AttrName::Attr,
     }
   }
-}
-
-fn get_event_type_and_name(props_key: &str) -> Option<(String, String)> {
-  if let Some(captures) = EVENT_KEY_RE.captures(props_key) {
-    let event_type = if captures.get(1).unwrap().as_str().contains("capture") {
-      captures.get(1).unwrap().as_str().to_string()
-    } else {
-      format!("{}Event", captures.get(1).unwrap().as_str())
-    };
-    let event_name = captures.get(2).unwrap().as_str().to_string();
-    return Some((event_type, event_name));
-  }
-  None
 }

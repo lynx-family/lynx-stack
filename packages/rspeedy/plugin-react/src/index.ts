@@ -22,6 +22,7 @@ export type {
   DefineDceVisitorConfig,
   ExtractStrConfig,
   ShakeVisitorConfig,
+  TransformBuiltinAttributeNamesOptions,
 } from '@lynx-js/react-transform'
 
 interface LynxTemplatePlugin {
