@@ -204,6 +204,9 @@ describe('enableMTSRendering: false', () => {
 
       expect(assets['.rspeedy/main/main-thread.js'])
         .not.toContain('"LazyComponent"')
+
+      expect(assets['.rspeedy/main/main-thread.js'])
+        .toContain('globalThis.processEvalResultByHost')
     } finally {
       await fs.rm(tmp, { recursive: true, force: true })
     }

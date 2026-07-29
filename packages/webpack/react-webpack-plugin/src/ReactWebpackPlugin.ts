@@ -443,7 +443,7 @@ class ReactWebpackPlugin {
 
         compilation.hooks.additionalTreeRuntimeRequirements.tap(
           this.constructor.name,
-          (chunk) => {
+          (chunk, runtimeRequirements) => {
             for (
               const [mainThreadEntry, backgroundEntry] of Object.entries(
                 options.mainThreadEntries ?? {},
@@ -455,6 +455,16 @@ class ReactWebpackPlugin {
               ) {
                 continue;
               }
+              runtimeRequirements.add(
+                compiler.webpack.RuntimeGlobals.ensureChunkHandlers,
+              );
+              runtimeRequirements.add(
+                RuntimeGlobals.lynxProcessEvalResultByHost,
+              );
+              runtimeRequirements.add(
+                compiler.webpack.RuntimeGlobals.externalInstallChunk,
+              );
+              runtimeRequirements.add(compiler.webpack.RuntimeGlobals.require);
               compilation.addRuntimeModule(
                 chunk,
                 new MainThreadDefinesRuntimeModule(backgroundEntry),
