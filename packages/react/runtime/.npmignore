@@ -11,5 +11,7 @@
 !lepus/*
 !lib/**
 !lib/*
+!main-thread-defines/*
+!main-thread-defines/**
 !worklet-runtime/*
 !worklet-runtime/**

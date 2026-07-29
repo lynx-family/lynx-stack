@@ -51,6 +51,7 @@ function getLoaderOptions(
     defineDCE,
     engineVersion,
     enableUiSourceMap,
+    enableMTSRendering,
 
     experimental_transformBuiltinAttributeNames,
     experimental_isLazyBundle,
@@ -66,6 +67,7 @@ function getLoaderOptions(
     engineVersion,
     experimental_transformBuiltinAttributeNames,
     experimental_useElementTemplate,
+    enableMTSRendering,
     ...isMainThread
       ? {
         enableUiSourceMap,

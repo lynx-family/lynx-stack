@@ -50,6 +50,7 @@ export function applyEntry(
     firstScreenSyncTiming,
     globalPropsMode,
     enableSSR,
+    enableMTSRendering,
     removeDescendantSelectorScope,
     targetSdkVersion,
     extractStr: originalExtractStr,
@@ -61,6 +62,18 @@ export function applyEntry(
 
   api.modifyBundlerChain(async (chain, { environment, isDev, isProd }) => {
     const mainThreadChunks: string[] = []
+    const mainThreadEntries: Record<string, string> = {}
+
+    const { resolve } = api.useExposed<
+      { resolve: (request: string) => Promise<string> }
+    >(Symbol.for('@lynx-js/react/internal:resolve'))!
+
+    // With `enableMTSRendering: false` the main thread renders no business code:
+    // its entry only boots the runtime and registers the snapshot and worklet
+    // definitions collected while compiling the background.
+    const mainThreadImports = enableMTSRendering ? undefined : [
+      await resolve('@lynx-js/react/internal/main-thread-defines'),
+    ]
 
     const rsbuildConfig = api.getRsbuildConfig()
     const userConfig = api.getRsbuildConfig('original')
@@ -158,11 +171,13 @@ export function applyEntry(
 
         mainThreadChunks.push(mainThreadName)
 
+        mainThreadEntries[mainThreadEntry] = backgroundEntry
+
         chain
           .entry(mainThreadEntry)
           .add({
             layer: LAYERS.MAIN_THREAD,
-            import: imports,
+            import: mainThreadImports ?? imports,
             filename: mainThreadName,
           })
           .when(enabledHMR, entry => {
@@ -298,10 +313,6 @@ export function applyEntry(
       extractStr = false
     }
 
-    const { resolve } = api.useExposed<
-      { resolve: (request: string) => Promise<string> }
-    >(Symbol.for('@lynx-js/react/internal:resolve'))!
-
     chain
       .plugin(PLUGIN_NAME_REACT)
       .after(PLUGIN_NAME_TEMPLATE)
@@ -311,7 +322,9 @@ export function applyEntry(
         firstScreenSyncTiming,
         globalPropsMode,
         enableSSR,
+        enableMTSRendering,
         mainThreadChunks,
+        mainThreadEntries,
         extractStr,
         experimental_isLazyBundle,
         experimental_useElementTemplate:

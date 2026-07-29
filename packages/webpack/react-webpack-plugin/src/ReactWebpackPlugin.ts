@@ -15,6 +15,11 @@ import { RuntimeGlobals } from '@lynx-js/webpack-runtime-globals';
 import { LAYERS } from './layer.js';
 import { ELEMENT_TEMPLATE_BUILD_INFO } from './loaders/main-thread.js';
 import { createLynxProcessEvalResultRuntimeModule } from './LynxProcessEvalResultRuntimeModule.js';
+import {
+  collectMainThreadDefines,
+  createMainThreadDefinesRuntimeModule,
+  renderLazyMainThreadDefines,
+} from './MainThreadDefinesRuntimeModule.js';
 
 const require = createRequire(import.meta.url);
 
@@ -231,6 +236,19 @@ interface ReactWebpackPluginOptions {
   experimental_useElementTemplate?: boolean;
 
   /**
+   * {@inheritdoc @lynx-js/react-rsbuild-plugin#PluginReactLynxOptions.enableMTSRendering}
+   */
+  enableMTSRendering?: boolean;
+
+  /**
+   * The background entry name of each main-thread entry. Used to assemble a
+   * main-thread bundle from the background's collected snapshot and worklet
+   * definitions when {@link ReactWebpackPluginOptions.enableMTSRendering} is
+   * `false`.
+   */
+  mainThreadEntries?: Record<string, string>;
+
+  /**
    * Resolved lazy-bundle fetcher mode. Decided by the caller (e.g.
    * `pluginReactLynx`) from the host engine version and any
    * `REACT_LAZY_BUNDLE_FETCHER` env override.
@@ -315,6 +333,8 @@ class ReactWebpackPlugin {
       profile: undefined,
       workletRuntimePath: '',
       experimental_useElementTemplate: false,
+      enableMTSRendering: true,
+      mainThreadEntries: {},
       lazyBundleFetcher: 'QueryComponent',
     });
 
@@ -385,6 +405,7 @@ class ReactWebpackPlugin {
         options.experimental_useElementTemplate,
       ),
       __LAZY_BUNDLE_FETCHER__: JSON.stringify(options.lazyBundleFetcher),
+      __ENABLE_MTS_RENDERING__: JSON.stringify(options.enableMTSRendering),
     }).apply(compiler);
 
     compiler.hooks.thisCompilation.tap(this.constructor.name, compilation => {
@@ -418,6 +439,33 @@ class ReactWebpackPlugin {
           new LynxProcessEvalResultRuntimeModule(),
         );
       });
+
+      if (options.enableMTSRendering === false) {
+        const MainThreadDefinesRuntimeModule =
+          createMainThreadDefinesRuntimeModule(compiler.webpack);
+
+        compilation.hooks.additionalTreeRuntimeRequirements.tap(
+          this.constructor.name,
+          (chunk) => {
+            for (
+              const [mainThreadEntry, backgroundEntry] of Object.entries(
+                options.mainThreadEntries ?? {},
+              )
+            ) {
+              if (
+                compilation.entrypoints.get(mainThreadEntry)
+                  ?.getEntrypointChunk() !== chunk
+              ) {
+                continue;
+              }
+              compilation.addRuntimeModule(
+                chunk,
+                new MainThreadDefinesRuntimeModule(backgroundEntry),
+              );
+            }
+          },
+        );
+      }
 
       compilation.hooks.processAssets.tap(
         {
@@ -454,6 +502,35 @@ class ReactWebpackPlugin {
         this.constructor.name,
         (args) => {
           const lepusCode = args.encodeData.lepusCode;
+
+          // A lazy bundle has no main-thread chunk of its own in this mode: its
+          // section is assembled from the definitions of the modules the
+          // background put in its async chunks.
+          if (
+            options.enableMTSRendering === false
+            && lepusCode.root === undefined
+            && args.chunkGroups.length > 0
+            && args.chunkGroups.every(cg => !cg.isInitial())
+          ) {
+            const { chunkGraph } = compilation;
+            const defines = collectMainThreadDefines(
+              args.chunkGroups.flatMap(cg => cg.chunks),
+              (chunk) => chunkGraph.getChunkModules(chunk),
+              (module) => module.identifier(),
+            );
+            if (defines.length > 0) {
+              const name = `${args.intermediate}/main-thread.js`;
+              lepusCode.root = {
+                name,
+                source: new RawSource(
+                  renderLazyMainThreadDefines(defines, `lynx:${name}`),
+                ),
+                info: { ['lynx:main-thread']: true },
+              };
+              lepusCode.filename = 'main-thread.js';
+            }
+          }
+
           if (
             lepusCode.root?.source.source().toString()?.includes(
               'registerWorkletInternal',

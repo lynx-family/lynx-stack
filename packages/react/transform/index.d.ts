@@ -743,6 +743,8 @@ export interface TransformNodiffOptions {
   experimental_transformBuiltinAttributeNames?: boolean | TransformBuiltinAttributeNamesOptions
   /** @internal */
   inject?: boolean | InjectVisitorConfig
+  /** @internal */
+  collectMainThreadDefines?: boolean
   inputSourceMap?: string
 }
 export interface TransformNodiffOutput {
@@ -753,6 +755,28 @@ export interface TransformNodiffOutput {
   uiSourceMapRecords: Array<UiSourceMapRecord>
   /** @internal */
   elementTemplates?: Array<ElementTemplateAsset>
+  /** @internal */
+  mainThreadDefines?: Array<MainThreadDefine>
+}
+/**
+ * @internal
+ * A snapshot or worklet definition the main thread needs, collected while the
+ * background compiles the module.
+ */
+export interface MainThreadDefine {
+  /** @internal */
+  kind: 'snapshot' | 'worklet'
+  /**
+   * @internal
+   * The snapshot uid or the worklet hash. Definitions that share an id are
+   * interchangeable, so duplicates can be dropped.
+   */
+  id: string
+  /**
+   * @internal
+   * A self-contained statement list registering the definition.
+   */
+  code: string
 }
 /** @internal */
 export interface ElementTemplateAsset {
