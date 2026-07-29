@@ -11,6 +11,7 @@ import type {
   ElementTemplateConfig,
   JsxTransformerConfig,
   ShakeVisitorConfig,
+  TransformBuiltinAttributeNamesOptions,
   TransformNodiffOptions,
 } from '@lynx-js/react/transform';
 
@@ -49,6 +50,14 @@ export interface ReactLoaderOptions {
    * {@inheritdoc @lynx-js/react-rsbuild-plugin#PluginReactLynxOptions.enableUiSourceMap}
    */
   enableUiSourceMap?: boolean | undefined;
+
+  /**
+   * {@inheritdoc @lynx-js/react-rsbuild-plugin#PluginReactLynxOptions.experimental_transformBuiltinAttributeNames}
+   */
+  experimental_transformBuiltinAttributeNames?:
+    | boolean
+    | TransformBuiltinAttributeNamesOptions
+    | undefined;
 
   /**
    * Enable the Fast Refresh for ReactLynx.
@@ -120,6 +129,7 @@ function getCommonOptions(
     compat,
     enableRemoveCSSScope,
     enableUiSourceMap,
+    experimental_transformBuiltinAttributeNames,
     inlineSourcesContent,
     isDynamicComponent,
     isExternalBundle,
@@ -227,6 +237,9 @@ function getCommonOptions(
     },
     directiveDCE: false,
     defineDCE,
+    ...(experimental_transformBuiltinAttributeNames !== undefined && {
+      experimental_transformBuiltinAttributeNames,
+    }),
     refresh: false,
     isModule: 'unknown',
   } satisfies Partial<TransformNodiffOptions>;

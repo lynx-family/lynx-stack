@@ -101,6 +101,10 @@ catalog:
   "@microsoft/api-extractor": "7.58.12"
 
 catalogs:
+  # Packages vendored from the Lynx toolchain.
+  lynxjs:
+    preact: "npm:@lynx-js/internal-preact@10.29.1-20260519060144-e6da44c"
+
   adb:
     "@yume-chan/adb": ^2.6.0
     "@yume-chan/adb-scrcpy": ^2.3.2

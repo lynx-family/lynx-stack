@@ -106,6 +106,10 @@ export interface BenchRunResult {
   renderMs: number;
   attempts: number;
   judgeScore: number;
+  judgeReason?: string;
+  judgeStatus?: 'complete' | 'failed' | 'skipped';
+  judgeSummary?: string;
+  judgeWarnings?: string[];
   messageCount: number;
   outputChars: number;
   errors: string[];
@@ -130,6 +134,7 @@ export interface BenchGroupSummary {
   avgTtiMs: number;
   avgRenderMs: number;
   avgJudgeScore: number;
+  judgeRunCount: number;
   avgAttempts: number;
 }
 

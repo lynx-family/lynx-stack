@@ -15,7 +15,6 @@ hex = { workspace = true }
 napi = { workspace = true, optional = true, features = ["serde-json"] }
 napi-derive = { workspace = true, optional = true }
 once_cell = { workspace = true }
-regex = { workspace = true }
 serde = { workspace = true, features = ["derive"] }
 serde_json = { workspace = true, features = ["preserve_order"] }
 sha-1 = { workspace = true }

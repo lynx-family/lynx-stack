@@ -14,6 +14,75 @@ const TEST_SNAPSHOT_FILENAMES = {
   uiSourceMap: 'src/ui-source-map.js',
 };
 
+describe('transform builtin attribute names', () => {
+  it('should transform explicit attributes in the async transform task', async () => {
+    const result = await transformReactLynx(
+      'const node = <view textMaxline={2} onClick={() => {}} onCatchTap={() => {}} onReady={() => {}} {...spread} />;',
+      {
+        mode: 'test',
+        pluginName: '',
+        filename: 'test.jsx',
+        sourcemap: false,
+        cssScope: false,
+        snapshot: false,
+        jsx: true,
+        directiveDCE: false,
+        defineDCE: false,
+        shake: false,
+        compat: false,
+        worklet: false,
+        refresh: false,
+        experimental_transformBuiltinAttributeNames: true,
+      },
+    );
+
+    expect(result.errors).toEqual([]);
+    expect(result.code).toContain('text-maxline');
+    expect(result.code).not.toContain('textMaxline');
+    expect(result.code).toContain('bindtap');
+    expect(result.code).toContain('catchtap');
+    expect(result.code).toContain('bindready');
+    expect(result.code).not.toContain('onClick');
+    expect(result.code).not.toContain('onCatchTap');
+    expect(result.code).not.toContain('onReady');
+    expect(result.code).toContain('...spread');
+  });
+
+  it('should apply serializable custom rules in the async transform task', async () => {
+    const result = await transformReactLynx(
+      'const node = <view textMaxline={2} tailColorConvert accessibilityLabel="label" {...spread} />;',
+      {
+        mode: 'test',
+        pluginName: '',
+        filename: 'test.jsx',
+        sourcemap: false,
+        cssScope: false,
+        snapshot: false,
+        jsx: true,
+        directiveDCE: false,
+        defineDCE: false,
+        shake: false,
+        compat: false,
+        worklet: false,
+        refresh: false,
+        experimental_transformBuiltinAttributeNames: {
+          mode: 'dash-case',
+          preserve: ['tailColorConvert'],
+          rename: {
+            textMaxline: 'custom-maxline',
+          },
+        },
+      },
+    );
+
+    expect(result.errors).toEqual([]);
+    expect(result.code).toContain('custom-maxline');
+    expect(result.code).toContain('tailColorConvert');
+    expect(result.code).toContain('accessibility-label');
+    expect(result.code).toContain('...spread');
+  });
+});
+
 describe('shake', () => {
   it('should match', async () => {
     const inputContent = `

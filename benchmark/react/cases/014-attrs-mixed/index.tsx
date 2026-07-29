@@ -24,6 +24,7 @@ function App() {
           text-maxlength='128'
           enable-font-scaling={false}
           text-vertical-align='center'
+          bindtap={() => {}}
           {...RUNTIME_ATTRIBUTES}
         />
       ))}

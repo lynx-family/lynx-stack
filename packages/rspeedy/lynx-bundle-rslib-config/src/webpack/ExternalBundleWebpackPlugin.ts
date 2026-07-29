@@ -1,7 +1,7 @@
 // Copyright 2025 The Lynx Authors. All rights reserved.
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
-import type { Asset, Compilation, Compiler } from '@rspack/core'
+import type { Rspack } from '@rslib/core'
 
 import { cssChunksToMap } from '@lynx-js/css-serializer'
 import type { LynxStyleNode } from '@lynx-js/css-serializer'
@@ -80,7 +80,7 @@ const isDebug = (): boolean => {
 export class ExternalBundleWebpackPlugin {
   constructor(private options: ExternalBundleWebpackPluginOptions) {}
 
-  apply(compiler: Compiler): void {
+  apply(compiler: Rspack.Compiler): void {
     compiler.hooks.thisCompilation.tap(
       ExternalBundleWebpackPlugin.name,
       (compilation) => {
@@ -107,8 +107,8 @@ export class ExternalBundleWebpackPlugin {
   }
 
   async #generateExternalBundle(
-    compiler: Compiler,
-    compilation: Compilation,
+    compiler: Rspack.Compiler,
+    compilation: Rspack.Compilation,
   ): Promise<void> {
     const assets = compilation.getAssets()
     // `rslib build` always compiles with rspack mode `production`, so the
@@ -140,7 +140,10 @@ export class ExternalBundleWebpackPlugin {
     }
   }
 
-  async #encode(assets: readonly Asset[], enableJsBytecode: boolean) {
+  async #encode(
+    assets: readonly Rspack.Asset[],
+    enableJsBytecode: boolean,
+  ) {
     const customSections = assets
       .reduce<
         Record<string, {
