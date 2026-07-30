@@ -55,19 +55,7 @@ SCRIPT_DIR="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)"
 export LYNX_LIB_PATH="${SCRIPT_DIR}/lib/libLynx_clay.so"
 export LYNX_SDK_DIR="${SCRIPT_DIR}"
 export LD_LIBRARY_PATH="${SCRIPT_DIR}/lib${LD_LIBRARY_PATH:+:${LD_LIBRARY_PATH}}"
-
-if [[ "${REQUIRE_HTTP_MESH:-False}" == "True" ]]; then
-  if [[ -z "${MESH_INGRESS_PORT:-}" ]]; then
-    printf \
-      'MESH_INGRESS_PORT is required when REQUIRE_HTTP_MESH=True.\n' >&2
-    exit 1
-  fi
-  export HOST="127.0.0.1"
-  export PORT="${MESH_INGRESS_PORT}"
-else
-  export HOST="${HOST:-0.0.0.0}"
-  export PORT="${PORT:-8080}"
-fi
+export PORT="${PORT:-8080}"
 
 exec "${SCRIPT_DIR}/ui-judge-server" "$@"
 EOF
