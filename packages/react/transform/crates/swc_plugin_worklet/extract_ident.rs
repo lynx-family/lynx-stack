@@ -5,7 +5,6 @@ use rustc_hash::FxHashSet;
 use std::mem::{swap, take};
 use std::ops::Deref;
 use std::{borrow::Cow, cmp::max};
-use swc_core::common::errors::HANDLER;
 use swc_core::common::util::take::Take;
 use swc_core::common::EqIgnoreSpan;
 use swc_core::ecma::ast::*;
@@ -16,7 +15,6 @@ use swc_core::quote;
 pub struct ExtractingIdentsCollectorConfig {
   pub custom_global_ident_names: Option<Vec<String>>,
   pub shared_identifiers: Option<FxHashSet<Id>>,
-  pub reject_shared_identifiers: bool,
 }
 
 struct ScopeEnv {
@@ -279,19 +277,6 @@ impl VisitMut for ExtractingIdentsCollector {
     // Skip shared identifiers from shared-runtime imports
     if let Some(ref shared_idents) = self.cfg.shared_identifiers {
       if shared_idents.contains(&n.to_id()) {
-        if self.cfg.reject_shared_identifiers {
-          HANDLER.with(|handler| {
-            handler
-              .struct_span_err(
-                n.span,
-                &format!(
-                  "`enableMTSRendering: false` does not support a `runtime: 'shared'` import inside a main-thread function yet: `{}` has no binding on a main thread that compiles no business code.",
-                  n.sym
-                ),
-              )
-              .emit();
-          });
-        }
         return;
       }
     }

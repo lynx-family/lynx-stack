@@ -3,13 +3,15 @@ mod extract_ident;
 mod gen_stmt;
 mod globals;
 mod hash;
+mod shared_module;
 mod worklet_type;
 
 use extract_ident::{ExtractingIdentsCollector, ExtractingIdentsCollectorConfig};
 use gen_stmt::StmtGen;
 use hash::WorkletHash;
-use rustc_hash::FxHashSet;
+use rustc_hash::{FxHashMap, FxHashSet};
 use serde::Deserialize;
+use shared_module::{shared_module_id, SharedImportRef, SharedImportedName, SharedRefRewriter};
 use std::collections::HashSet;
 use std::vec;
 use swc_core::common::util::take::Take;
@@ -22,7 +24,10 @@ use swc_core::quote;
 use worklet_type::WorkletType;
 
 use swc_plugins_shared::{
-  mts_defines::{collect_mts_define, MtsDefineKind, MtsDefinesCollector},
+  mts_defines::{
+    collect_mts_define, MtsDefineKind, MtsDefinesCollector, MtsSharedImport,
+    MtsSharedImportsCollector,
+  },
   target::TransformTarget,
   transform_mode::TransformMode,
 };
@@ -66,9 +71,11 @@ pub struct WorkletVisitor {
   named_imports: HashSet<String>,
   hasher: WorkletHash,
   shared_identifiers: FxHashSet<Id>,
+  shared_import_refs: FxHashMap<Id, SharedImportRef>,
   worklet_runtime_loaded: bool,
   worklet_runtime_loaded_ident: Ident,
   mts_defs_collector: Option<MtsDefinesCollector>,
+  shared_imports_collector: Option<MtsSharedImportsCollector>,
 }
 
 impl Default for WorkletVisitor {
@@ -100,7 +107,6 @@ impl VisitMut for WorkletVisitor {
         let mut collector = ExtractingIdentsCollector::new(ExtractingIdentsCollectorConfig {
           custom_global_ident_names: self.cfg.custom_global_ident_names.clone(),
           shared_identifiers: Some(self.shared_identifiers.clone()),
-          reject_shared_identifiers: self.mts_defs_collector.is_some(),
         });
         n.visit_mut_with(&mut collector);
 
@@ -220,7 +226,6 @@ impl VisitMut for WorkletVisitor {
         let mut collector = ExtractingIdentsCollector::new(ExtractingIdentsCollectorConfig {
           custom_global_ident_names: self.cfg.custom_global_ident_names.clone(),
           shared_identifiers: Some(self.shared_identifiers.clone()),
-          reject_shared_identifiers: self.mts_defs_collector.is_some(),
         });
         value.visit_mut_with(&mut collector);
 
@@ -331,7 +336,6 @@ impl VisitMut for WorkletVisitor {
     let mut collector = ExtractingIdentsCollector::new(ExtractingIdentsCollectorConfig {
       custom_global_ident_names: self.cfg.custom_global_ident_names.clone(),
       shared_identifiers: Some(self.shared_identifiers.clone()),
-      reject_shared_identifiers: self.mts_defs_collector.is_some(),
     });
     n.visit_mut_with(&mut collector);
 
@@ -384,7 +388,6 @@ impl VisitMut for WorkletVisitor {
         let mut collector = ExtractingIdentsCollector::new(ExtractingIdentsCollectorConfig {
           custom_global_ident_names: self.cfg.custom_global_ident_names.clone(),
           shared_identifiers: Some(self.shared_identifiers.clone()),
-          reject_shared_identifiers: self.mts_defs_collector.is_some(),
         });
         n.visit_mut_with(&mut collector);
 
@@ -446,7 +449,6 @@ impl VisitMut for WorkletVisitor {
         let mut collector = ExtractingIdentsCollector::new(ExtractingIdentsCollectorConfig {
           custom_global_ident_names: self.cfg.custom_global_ident_names.clone(),
           shared_identifiers: Some(self.shared_identifiers.clone()),
-          reject_shared_identifiers: self.mts_defs_collector.is_some(),
         });
         n.visit_mut_with(&mut collector);
 
@@ -520,7 +522,6 @@ impl VisitMut for WorkletVisitor {
     let mut collector = ExtractingIdentsCollector::new(ExtractingIdentsCollectorConfig {
       custom_global_ident_names: self.cfg.custom_global_ident_names.clone(),
       shared_identifiers: Some(self.shared_identifiers.clone()),
-      reject_shared_identifiers: self.mts_defs_collector.is_some(),
     });
     n.as_mut_export_default_decl()
       .unwrap()
@@ -571,16 +572,40 @@ impl VisitMut for WorkletVisitor {
     for item in &n.body {
       if let ModuleItem::ModuleDecl(ModuleDecl::Import(import_decl)) = item {
         if is_shared_runtime_import(import_decl) {
+          let request = import_decl.src.value.to_string_lossy().into_owned();
+          let module_id = shared_module_id(&self.cfg.filename, &request);
+          let mut add = |local: &Ident, imported: SharedImportedName| {
+            self.shared_identifiers.insert(local.to_id());
+            self.shared_import_refs.insert(
+              local.to_id(),
+              SharedImportRef {
+                module_id: module_id.clone(),
+                request: request.clone(),
+                imported,
+              },
+            );
+          };
           for specifier in &import_decl.specifiers {
             match specifier {
               ImportSpecifier::Named(named) => {
-                self.shared_identifiers.insert(named.local.to_id());
+                let imported = match &named.imported {
+                  Some(ModuleExportName::Ident(ident)) => {
+                    SharedImportedName::Named(ident.sym.clone())
+                  }
+                  Some(ModuleExportName::Str(s)) => {
+                    SharedImportedName::NamedStr(s.value.to_string_lossy().into_owned())
+                  }
+                  None => SharedImportedName::Named(named.local.sym.clone()),
+                  #[cfg(swc_ast_unknown)]
+                  _ => panic!("unknown node"),
+                };
+                add(&named.local, imported);
               }
               ImportSpecifier::Default(default) => {
-                self.shared_identifiers.insert(default.local.to_id());
+                add(&default.local, SharedImportedName::Default);
               }
               ImportSpecifier::Namespace(ns) => {
-                self.shared_identifiers.insert(ns.local.to_id());
+                add(&ns.local, SharedImportedName::Namespace);
               }
               #[cfg(swc_ast_unknown)]
               _ => panic!("unknown node"),
@@ -685,6 +710,23 @@ impl VisitMut for WorkletVisitor {
   }
 }
 
+/// Digs the registered worklet function out of a collected define statement,
+/// whose shape is fixed by `gen_register_worklet_stmt`:
+/// `$loaded && registerWorkletInternal($type, $hash, function () { ... })`.
+fn find_registered_function(stmt: &mut Stmt) -> Option<&mut Function> {
+  let fn_expr = stmt
+    .as_mut_expr()?
+    .expr
+    .as_mut_bin()?
+    .right
+    .as_mut_call()?
+    .args
+    .get_mut(2)?
+    .expr
+    .as_mut_fn_expr()?;
+  Some(&mut fn_expr.function)
+}
+
 const INVALID_RUNTIME_MSG: &str = "Invalid runtime value. Only 'shared' is supported.";
 
 fn emit_invalid_runtime_error(span: Span) {
@@ -747,9 +789,11 @@ impl WorkletVisitor {
       hasher: WorkletHash::new(),
       named_imports: HashSet::default(),
       shared_identifiers: FxHashSet::default(),
+      shared_import_refs: FxHashMap::default(),
       worklet_runtime_loaded: false,
       worklet_runtime_loaded_ident: private_ident!("__workletRuntimeLoaded"),
       mts_defs_collector: None,
+      shared_imports_collector: None,
     }
   }
 
@@ -758,10 +802,16 @@ impl WorkletVisitor {
     self
   }
 
+  pub fn with_shared_imports_collector(mut self, collector: MtsSharedImportsCollector) -> Self {
+    self.shared_imports_collector = Some(collector);
+    self
+  }
+
   fn collect_worklet_define(&mut self, hash: Option<String>, stmt: Option<Stmt>) {
-    let (Some(hash), Some(stmt)) = (hash, stmt) else {
+    let (Some(hash), Some(mut stmt)) = (hash, stmt) else {
       return;
     };
+    self.rewrite_shared_refs_in_define(&mut stmt);
     let guard = quote!(
       "const $loaded = loadWorkletRuntime(typeof globDynamicComponentEntry === 'undefined' ? undefined : globDynamicComponentEntry)" as Stmt,
       loaded = self.worklet_runtime_loaded_ident.clone(),
@@ -772,6 +822,33 @@ impl WorkletVisitor {
       hash,
       vec![ModuleItem::Stmt(guard), ModuleItem::Stmt(stmt)],
     );
+  }
+
+  /// A collected define is assembled into a main-thread chunk detached from
+  /// any module graph, so a `runtime: 'shared'` local has no import statement
+  /// to bind to there. Rewrite those references to lookups of the runtime's
+  /// shared-module registry, and report the shared modules the define uses so
+  /// the bundler can compile them into the main-thread layer and register
+  /// them.
+  fn rewrite_shared_refs_in_define(&mut self, stmt: &mut Stmt) {
+    if self.shared_import_refs.is_empty() {
+      return;
+    }
+    let Some(function) = find_registered_function(stmt) else {
+      return;
+    };
+    let used = SharedRefRewriter::rewrite_function(&self.shared_import_refs, function);
+    if let Some(collector) = &self.shared_imports_collector {
+      let mut collector = collector.borrow_mut();
+      for u in used {
+        if !collector.iter().any(|s| s.id == u.module_id) {
+          collector.push(MtsSharedImport {
+            id: u.module_id,
+            request: u.request,
+          });
+        }
+      }
+    }
   }
 
   fn check_is_worklet_block(&self, n: &mut BlockStmt) -> Option<WorkletType> {
@@ -804,6 +881,65 @@ mod tests {
     ecma::visit::visit_mut_pass,
     ecma::{parser::EsSyntax, transforms::testing::test},
   };
+
+  use std::{cell::RefCell, rc::Rc};
+
+  use swc_core::ecma::transforms::testing::Tester;
+  use swc_plugins_shared::mts_defines::{MtsDefinesCollector, MtsSharedImportsCollector};
+
+  #[test]
+  fn should_rewrite_shared_refs_in_collected_defines() {
+    Tester::run(|tester| {
+      let collector: MtsDefinesCollector = Rc::new(RefCell::new(vec![]));
+      let shared_collector: MtsSharedImportsCollector = Rc::new(RefCell::new(vec![]));
+
+      tester.apply_transform(
+        (
+          resolver(Mark::new(), Mark::new(), true),
+          visit_mut_pass(
+            WorkletVisitor::new(
+              TransformMode::Test,
+              WorkletVisitorConfig {
+                filename: "index.js".into(),
+                target: TransformTarget::JS,
+                custom_global_ident_names: None,
+                runtime_pkg: "@lynx-js/react".into(),
+              },
+            )
+            .with_mts_defs_collector(collector.clone())
+            .with_shared_imports_collector(shared_collector.clone()),
+          ),
+        ),
+        "input.js",
+        Syntax::Typescript(TsSyntax {
+          ..Default::default()
+        }),
+        Some(true),
+        r#"
+import { spring } from './physics.js' with { runtime: "shared" };
+import { unused } from './unused.js' with { runtime: "shared" };
+
+function worklet(e) {
+    "main thread";
+    console.log(spring(e));
+}
+    "#,
+      )?;
+
+      let shared = shared_collector.borrow();
+      assert_eq!(shared.len(), 1);
+      assert_eq!(shared[0].request, "./physics.js");
+
+      let defines = collector.borrow();
+      assert_eq!(defines.len(), 1);
+      let collected = format!("{:?}", defines[0].items);
+      assert!(collected.contains("getSharedModule"));
+      assert!(collected.contains(&shared[0].id));
+      assert!(collected.contains("spring"));
+
+      Ok(())
+    });
+  }
 
   test!(
     module,
