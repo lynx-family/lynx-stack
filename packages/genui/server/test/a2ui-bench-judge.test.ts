@@ -7,7 +7,26 @@ import { describe, expect, test } from '@rstest/core';
 import {
   probeBenchUiJudge,
   runBenchUiJudge,
+  runBenchUiJudgeRequest,
 } from '../service/a2ui-bench-judge.js';
+import {
+  BENCH_SCREENSHOT_DATA_URL_PREFIX,
+  MAX_BENCH_SCREENSHOT_DECODED_BYTES,
+} from '../service/a2ui-bench-screenshot.js';
+
+function screenshotDataUrlForBytes(bytes: number): string {
+  const encodedLength = Math.ceil(bytes / 3) * 4;
+  const remainder = bytes % 3;
+  let padding = '';
+  if (remainder === 1) {
+    padding = '==';
+  } else if (remainder === 2) {
+    padding = '=';
+  }
+  return BENCH_SCREENSHOT_DATA_URL_PREFIX
+    + 'A'.repeat(encodedLength - padding.length)
+    + padding;
+}
 
 describe('probeBenchUiJudge', () => {
   test('stays disabled without the private sidecar URL', async () => {
@@ -53,6 +72,25 @@ describe('probeBenchUiJudge', () => {
     });
   });
 
+  test('accepts a protocol-specific bundle override', async () => {
+    const capability = await probeBenchUiJudge({
+      bundleUrl: 'file:///tmp/openui.lynx.js',
+      env: {
+        UI_JUDGE_BUNDLE_URL: 'https://assets.test/a2ui.lynx.js',
+        UI_JUDGE_SERVER_URL: 'http://judge.test',
+      },
+      fetch: () => Promise.resolve(Response.json({ status: 'ok' })),
+    });
+
+    expect(capability).toEqual({
+      enabled: true,
+      session: {
+        bundleUrl: 'file:///tmp/openui.lynx.js',
+        judgeUrl: 'http://judge.test/judge',
+      },
+    });
+  });
+
   test('keeps Judge disabled when the sidecar is not ready', async () => {
     const capability = await probeBenchUiJudge({
       env: {
@@ -75,6 +113,107 @@ describe('probeBenchUiJudge', () => {
 });
 
 describe('runBenchUiJudge', () => {
+  test('supports protocol-neutral global props', async () => {
+    let requestBody: unknown;
+    const result = await runBenchUiJudgeRequest(
+      {
+        globalProps: {
+          instant: true,
+          rawText: 'root = TextContent("Hello")',
+          theme: 'light',
+        },
+        scenario: {
+          prompt: 'Build a greeting',
+        },
+        session: {
+          bundleUrl: 'https://assets.test/openui.lynx.js',
+          judgeUrl: 'http://judge.test/judge',
+        },
+      },
+      (_input, init) => {
+        const body = typeof init?.body === 'string' ? init.body : '';
+        requestBody = JSON.parse(body) as unknown;
+        return Promise.resolve(Response.json({ score: 5 }));
+      },
+    );
+
+    expect(requestBody).toEqual({
+      globalProps: {
+        instant: true,
+        rawText: 'root = TextContent("Hello")',
+        theme: 'light',
+      },
+      steps: [],
+      task: 'Build a greeting',
+      url: 'https://assets.test/openui.lynx.js',
+    });
+    expect(result).toEqual({
+      errors: [],
+      score: 5,
+      status: 'complete',
+      warnings: [],
+    });
+  });
+
+  test('returns an explicitly requested captured PNG', async () => {
+    let requestBody: unknown;
+    const screenshotDataUrl =
+      'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAAB';
+    const result = await runBenchUiJudgeRequest(
+      {
+        globalProps: { instant: true },
+        includeScreenshot: true,
+        scenario: { prompt: 'Build a greeting' },
+        session: {
+          bundleUrl: 'file:///tmp/openui.lynx.js',
+          judgeUrl: 'http://judge.test/judge',
+        },
+      },
+      (_input, init) => {
+        if (typeof init?.body !== 'string') {
+          throw new Error('expected a JSON string request body');
+        }
+        requestBody = JSON.parse(init.body) as unknown;
+        return Promise.resolve(
+          Response.json({ score: 4, screenshotDataUrl }),
+        );
+      },
+    );
+
+    expect(requestBody).toMatchObject({ includeScreenshot: true });
+    expect(result).toMatchObject({
+      screenshotDataUrl,
+      status: 'complete',
+    });
+  });
+
+  test('discards a captured PNG larger than 2 MiB', async () => {
+    const screenshotDataUrl = screenshotDataUrlForBytes(
+      MAX_BENCH_SCREENSHOT_DECODED_BYTES + 1,
+    );
+    const result = await runBenchUiJudgeRequest(
+      {
+        globalProps: { instant: true },
+        includeScreenshot: true,
+        scenario: { prompt: 'Build a greeting' },
+        session: {
+          bundleUrl: 'file:///tmp/openui.lynx.js',
+          judgeUrl: 'http://judge.test/judge',
+        },
+      },
+      () => Promise.resolve(Response.json({ score: 4, screenshotDataUrl })),
+    );
+
+    expect(result).toEqual({
+      errors: [],
+      score: 4,
+      status: 'complete',
+      warnings: [
+        'ui-judge returned an invalid screenshotDataUrl; the screenshot was discarded.',
+      ],
+    });
+  });
+
   test('injects generated messages as server-owned global props', async () => {
     let requestUrl = '';
     let requestBody: unknown;
@@ -120,6 +259,7 @@ describe('runBenchUiJudge', () => {
     expect(requestUrl).toBe('http://judge.test/judge');
     expect(requestBody).toEqual({
       globalProps: {
+        benchMode: true,
         instant: true,
         messages: [{
           version: 'v0.9',

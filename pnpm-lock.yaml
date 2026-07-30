@@ -1033,6 +1033,9 @@ importers:
       '@mastra/core':
         specifier: 1.52.0
         version: 1.52.0(express@5.2.1(supports-color@10.2.2))(rxjs@7.8.2)(supports-color@10.2.2)(zod@4.4.3)
+      '@openuidev/lang-core':
+        specifier: ^0.2.9
+        version: 0.2.9(@modelcontextprotocol/sdk@1.29.0(supports-color@10.2.2)(zod@4.4.3))(zod@4.4.3)
       hono:
         specifier: 4.12.12
         version: 4.12.12
