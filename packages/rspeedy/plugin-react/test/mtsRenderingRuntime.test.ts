@@ -122,62 +122,65 @@ describe('enableMTSRendering: false runtime', () => {
       path.join(tmpdir(), 'rspeedy-react-test-main-thread-runtime-'),
     )
 
-    const rsbuild = await createRspeedy({
-      rspeedyConfig: {
-        mode: 'production',
-        source: {
-          entry: {
-            main: fileURLToPath(
-              new URL('./fixtures/mts-rendering-disabled.tsx', import.meta.url),
-            ),
-          },
-        },
-        output: { distPath: { root: tmp } },
-        plugins: [
-          pluginReactLynx({ enableMTSRendering: false }),
-          {
-            name: 'ignore-css-loader-workaround',
-            pre: ['lynx:react'],
-            setup(api) {
-              api.modifyBundlerChain((chain, { CHAIN_ID }) => {
-                const rule = chain.module
-                  .rules.get('css:react:main-thread')
-                  .uses.get(CHAIN_ID.USE.IGNORE_CSS)
-                rule.loader(rule.get('loader') as string + '.ts')
-              })
-            },
-          } as RsbuildPlugin,
-        ],
-        tools: {
-          rspack: {
-            plugins: [
-              {
-                name: 'collect-main-thread',
-                apply(compiler) {
-                  compiler.hooks.compilation.tap(
-                    'collect-main-thread',
-                    (compilation) => {
-                      compilation.hooks.processAssets.tap(
-                        'collect-main-thread',
-                        (assets) => {
-                          for (const name in assets) {
-                            if (name.endsWith('main-thread.js')) {
-                              mainThread = assets[name]!.source().toString()
-                            }
-                          }
-                        },
-                      )
-                    },
-                  )
-                },
-              } as Rspack.RspackPluginInstance,
-            ],
-          },
-        },
-      },
-    })
-
     try {
+      const rsbuild = await createRspeedy({
+        rspeedyConfig: {
+          mode: 'production',
+          source: {
+            entry: {
+              main: fileURLToPath(
+                new URL(
+                  './fixtures/mts-rendering-disabled.tsx',
+                  import.meta.url,
+                ),
+              ),
+            },
+          },
+          output: { distPath: { root: tmp } },
+          plugins: [
+            pluginReactLynx({ enableMTSRendering: false }),
+            {
+              name: 'ignore-css-loader-workaround',
+              pre: ['lynx:react'],
+              setup(api) {
+                api.modifyBundlerChain((chain, { CHAIN_ID }) => {
+                  const rule = chain.module
+                    .rules.get('css:react:main-thread')
+                    .uses.get(CHAIN_ID.USE.IGNORE_CSS)
+                  rule.loader(rule.get('loader') as string + '.ts')
+                })
+              },
+            } as RsbuildPlugin,
+          ],
+          tools: {
+            rspack: {
+              plugins: [
+                {
+                  name: 'collect-main-thread',
+                  apply(compiler) {
+                    compiler.hooks.compilation.tap(
+                      'collect-main-thread',
+                      (compilation) => {
+                        compilation.hooks.processAssets.tap(
+                          'collect-main-thread',
+                          (assets) => {
+                            for (const name in assets) {
+                              if (name.endsWith('main-thread.js')) {
+                                mainThread = assets[name]!.source().toString()
+                              }
+                            }
+                          },
+                        )
+                      },
+                    )
+                  },
+                } as Rspack.RspackPluginInstance,
+              ],
+            },
+          },
+        },
+      })
+
       await rsbuild.build()
 
       const definitions = [

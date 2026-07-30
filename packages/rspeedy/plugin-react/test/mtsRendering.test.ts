@@ -54,25 +54,28 @@ describe('enableMTSRendering: false', () => {
       path.join(tmpdir(), 'rspeedy-react-test-main-thread-'),
     )
 
-    const rsbuild = await createRspeedy({
-      rspeedyConfig: {
-        source: {
-          entry: {
-            main: fileURLToPath(
-              new URL('./fixtures/mts-rendering-disabled.tsx', import.meta.url),
-            ),
-          },
-        },
-        output: { distPath: { root: tmp } },
-        plugins: [
-          pluginReactLynx({ enableMTSRendering: false }),
-          ignoreCSSLoaderWorkaround,
-        ],
-        tools: { rspack: { plugins: [collectAssets(assets)] } },
-      },
-    })
-
     try {
+      const rsbuild = await createRspeedy({
+        rspeedyConfig: {
+          source: {
+            entry: {
+              main: fileURLToPath(
+                new URL(
+                  './fixtures/mts-rendering-disabled.tsx',
+                  import.meta.url,
+                ),
+              ),
+            },
+          },
+          output: { distPath: { root: tmp } },
+          plugins: [
+            pluginReactLynx({ enableMTSRendering: false }),
+            ignoreCSSLoaderWorkaround,
+          ],
+          tools: { rspack: { plugins: [collectAssets(assets)] } },
+        },
+      })
+
       await rsbuild.build()
 
       const mainThread = assets['.rspeedy/main/main-thread.js']!
@@ -98,34 +101,34 @@ describe('enableMTSRendering: false', () => {
       path.join(tmpdir(), 'rspeedy-react-test-main-thread-multi-'),
     )
 
-    const rsbuild = await createRspeedy({
-      rspeedyConfig: {
-        source: {
-          entry: {
-            first: fileURLToPath(
-              new URL(
-                './fixtures/mts-rendering-multi/first.tsx',
-                import.meta.url,
-              ),
-            ),
-            second: fileURLToPath(
-              new URL(
-                './fixtures/mts-rendering-multi/second.tsx',
-                import.meta.url,
-              ),
-            ),
-          },
-        },
-        output: { distPath: { root: tmp } },
-        plugins: [
-          pluginReactLynx({ enableMTSRendering: false }),
-          ignoreCSSLoaderWorkaround,
-        ],
-        tools: { rspack: { plugins: [collectAssets(assets)] } },
-      },
-    })
-
     try {
+      const rsbuild = await createRspeedy({
+        rspeedyConfig: {
+          source: {
+            entry: {
+              first: fileURLToPath(
+                new URL(
+                  './fixtures/mts-rendering-multi/first.tsx',
+                  import.meta.url,
+                ),
+              ),
+              second: fileURLToPath(
+                new URL(
+                  './fixtures/mts-rendering-multi/second.tsx',
+                  import.meta.url,
+                ),
+              ),
+            },
+          },
+          output: { distPath: { root: tmp } },
+          plugins: [
+            pluginReactLynx({ enableMTSRendering: false }),
+            ignoreCSSLoaderWorkaround,
+          ],
+          tools: { rspack: { plugins: [collectAssets(assets)] } },
+        },
+      })
+
       await rsbuild.build()
 
       const first = assets['.rspeedy/first/main-thread.js']!
@@ -151,28 +154,28 @@ describe('enableMTSRendering: false', () => {
       path.join(tmpdir(), 'rspeedy-react-test-main-thread-dropped-'),
     )
 
-    const rsbuild = await createRspeedy({
-      rspeedyConfig: {
-        source: {
-          entry: {
-            main: fileURLToPath(
-              new URL(
-                './fixtures/mts-rendering-disabled/index.tsx',
-                import.meta.url,
-              ),
-            ),
-          },
-        },
-        output: { distPath: { root: tmp } },
-        plugins: [
-          pluginReactLynx({ enableMTSRendering: false }),
-          ignoreCSSLoaderWorkaround,
-        ],
-        tools: { rspack: { plugins: [collectAssets(assets)] } },
-      },
-    })
-
     try {
+      const rsbuild = await createRspeedy({
+        rspeedyConfig: {
+          source: {
+            entry: {
+              main: fileURLToPath(
+                new URL(
+                  './fixtures/mts-rendering-disabled/index.tsx',
+                  import.meta.url,
+                ),
+              ),
+            },
+          },
+          output: { distPath: { root: tmp } },
+          plugins: [
+            pluginReactLynx({ enableMTSRendering: false }),
+            ignoreCSSLoaderWorkaround,
+          ],
+          tools: { rspack: { plugins: [collectAssets(assets)] } },
+        },
+      })
+
       await rsbuild.build()
 
       expect(assets['.rspeedy/main/main-thread.js'])
@@ -191,56 +194,59 @@ describe('enableMTSRendering: false', () => {
       path.join(tmpdir(), 'rspeedy-react-test-main-thread-lazy-'),
     )
 
-    const rsbuild = await createRspeedy({
-      rspeedyConfig: {
-        source: {
-          entry: {
-            main: fileURLToPath(
-              new URL('./fixtures/lazy-bundle/index.tsx', import.meta.url),
-            ),
-          },
-        },
-        output: { distPath: { root: tmp } },
-        plugins: [
-          pluginReactLynx({ enableMTSRendering: false }),
-          ignoreCSSLoaderWorkaround,
-        ],
-        tools: {
-          rspack: {
-            plugins: [
-              collectAssets(assets),
-              {
-                name: 'collect-lepus-roots',
-                apply(compiler) {
-                  compiler.hooks.compilation.tap(
-                    'collect-lepus-roots',
-                    (compilation) => {
-                      LynxTemplatePlugin
-                        .getLynxTemplatePluginHooks(
-                          compilation as unknown as Parameters<
-                            typeof LynxTemplatePlugin.getLynxTemplatePluginHooks
-                          >[0],
-                        )
-                        .beforeEncode.tap('collect-lepus-roots', (args) => {
-                          const { root } = args.encodeData.lepusCode
-                          if (root) {
-                            lepusRoots[args.intermediate] = root.source
-                              .source()
-                              .toString()
-                          }
-                          return args
-                        })
-                    },
-                  )
-                },
-              } as Rspack.RspackPluginInstance,
-            ],
-          },
-        },
-      },
-    })
-
     try {
+      const rsbuild = await createRspeedy({
+        rspeedyConfig: {
+          source: {
+            entry: {
+              main: fileURLToPath(
+                new URL(
+                  './fixtures/mts-rendering-lazy/index.tsx',
+                  import.meta.url,
+                ),
+              ),
+            },
+          },
+          output: { distPath: { root: tmp } },
+          plugins: [
+            pluginReactLynx({ enableMTSRendering: false }),
+            ignoreCSSLoaderWorkaround,
+          ],
+          tools: {
+            rspack: {
+              plugins: [
+                collectAssets(assets),
+                {
+                  name: 'collect-lepus-roots',
+                  apply(compiler) {
+                    compiler.hooks.compilation.tap(
+                      'collect-lepus-roots',
+                      (compilation) => {
+                        LynxTemplatePlugin
+                          .getLynxTemplatePluginHooks(
+                            compilation as unknown as Parameters<
+                              typeof LynxTemplatePlugin.getLynxTemplatePluginHooks
+                            >[0],
+                          )
+                          .beforeEncode.tap('collect-lepus-roots', (args) => {
+                            const { root } = args.encodeData.lepusCode
+                            if (root) {
+                              lepusRoots[args.intermediate] = root.source
+                                .source()
+                                .toString()
+                            }
+                            return args
+                          })
+                      },
+                    )
+                  },
+                } as Rspack.RspackPluginInstance,
+              ],
+            },
+          },
+        },
+      })
+
       await rsbuild.build()
 
       const lazyIntermediate = Object.keys(lepusRoots).find(name =>
