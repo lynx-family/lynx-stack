@@ -146,7 +146,7 @@ globalThis.renderPage = function() {
       'Unsupported property "unknown-prop" was removed during template encode.',
     );
     expect((compilation.warnings[0] as DiagnosticError)?.file).toBe(
-      `${context}/basic.test.ts`,
+      join(context, 'basic.test.ts'),
     );
     expect((compilation.warnings[0] as DiagnosticError)?.loc).toEqual({
       start: {
@@ -302,11 +302,11 @@ globalThis.renderPage = function() {
     expect(warnings[0]!.message).toContain(
       'Unsupported property "unknown-a" was removed during template encode.',
     );
-    expect((warnings[0] as DiagnosticError).file).toBe(`${context}/a.css`);
+    expect((warnings[0] as DiagnosticError).file).toBe(join(context, 'a.css'));
     expect(warnings[1]!.message).toContain(
       'Unsupported property "unknown-b" was removed during template encode.',
     );
-    expect((warnings[1] as DiagnosticError).file).toBe(`${context}/b.css`);
+    expect((warnings[1] as DiagnosticError).file).toBe(join(context, 'b.css'));
   });
 });
 
