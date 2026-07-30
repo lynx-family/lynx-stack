@@ -2,7 +2,7 @@
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
 
-/* global __initMainThreadDefines */
+/* global __initMTSDefines */
 
 import * as ReactLynx from '@lynx-js/react/internal';
 
@@ -66,6 +66,6 @@ const simplifiedRuntime = {
   },
 };
 
-if (typeof __initMainThreadDefines !== 'undefined') {
-  __initMainThreadDefines(simplifiedRuntime);
+if (typeof __initMTSDefines !== 'undefined') {
+  __initMTSDefines(simplifiedRuntime);
 }

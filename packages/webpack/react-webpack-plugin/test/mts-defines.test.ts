@@ -131,7 +131,7 @@ describe('renderMTSDefines', () => {
       { kind: 'worklet', id: 'b', code: 'const __workletRuntimeLoaded = 1;' },
     ]);
 
-    expect(code).toContain('var __initMainThreadDefines = function (');
+    expect(code).toContain('var __initMTSDefines = function (');
     expect(code.match(/\{\nconst __workletRuntimeLoaded/g)).toHaveLength(2);
   });
 
@@ -141,7 +141,7 @@ describe('renderMTSDefines', () => {
 
   it('publishes the runtime for a lazy bundle section to read', () => {
     expect(renderMTSDefines([])).toContain(
-      'globalThis[Symbol.for(\'__REACT_LYNX_MAIN_THREAD_DEFINES_RUNTIME__\')] = ReactLynx;',
+      'globalThis[Symbol.for(\'__REACT_LYNX_MTS_DEFINES_RUNTIME__\')] = ReactLynx;',
     );
   });
 });
@@ -160,7 +160,7 @@ describe('renderLazyMTSDefines', () => {
 
   it('reuses the host runtime instead of bundling its own', () => {
     expect(code).toContain(
-      'globalThis[Symbol.for(\'__REACT_LYNX_MAIN_THREAD_DEFINES_RUNTIME__\')]',
+      'globalThis[Symbol.for(\'__REACT_LYNX_MTS_DEFINES_RUNTIME__\')]',
     );
   });
 

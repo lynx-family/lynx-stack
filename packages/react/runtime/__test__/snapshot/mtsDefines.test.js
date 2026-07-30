@@ -11,7 +11,7 @@ import { __pageId } from '../../src/snapshot/snapshot/definition';
 
 afterEach(() => {
   vi.resetModules();
-  delete globalThis.__initMainThreadDefines;
+  delete globalThis.__initMTSDefines;
 });
 
 async function importMTSDefines() {
@@ -43,7 +43,7 @@ const PROVIDED_MEMBERS = {
 describe('main-thread defines entry', () => {
   it('registers the definitions generated into the bundle', async () => {
     const defines = vi.fn();
-    globalThis.__initMainThreadDefines = defines;
+    globalThis.__initMTSDefines = defines;
 
     await importMTSDefines();
 
@@ -56,7 +56,7 @@ describe('main-thread defines entry', () => {
 
   it('reads `__pageId` through a getter, so definitions see the current page', async () => {
     const defines = vi.fn();
-    globalThis.__initMainThreadDefines = defines;
+    globalThis.__initMTSDefines = defines;
 
     await importMTSDefines();
 

@@ -71,7 +71,7 @@ export function collectMTSDefines<TChunk, TModule>(
 }
 
 const RUNTIME_HANDLE =
-  `globalThis[Symbol.for('__REACT_LYNX_MAIN_THREAD_DEFINES_RUNTIME__')]`;
+  `globalThis[Symbol.for('__REACT_LYNX_MTS_DEFINES_RUNTIME__')]`;
 
 export function renderMTSDefines(
   defines: readonly MTSDefine[],
@@ -80,7 +80,7 @@ export function renderMTSDefines(
     .map(({ kind, id, code }) => `// ${kind} ${id}\n{\n${code}\n}`)
     .join('\n');
 
-  return `var __initMainThreadDefines = function (ReactLynx) {
+  return `var __initMTSDefines = function (ReactLynx) {
   ${RUNTIME_HANDLE} = ReactLynx;
   var loadWorkletRuntime = ReactLynx.loadWorkletRuntime;
   var require = function () { return ReactLynx; };
@@ -101,7 +101,7 @@ export function renderLazyMTSDefines(
     JSON.stringify(moduleId)
   }: function (module, exports, __webpack_require__) {
         var runtime = ${RUNTIME_HANDLE};
-        ${renderMTSDefines(defines)}        __initMainThreadDefines(runtime);
+        ${renderMTSDefines(defines)}        __initMTSDefines(runtime);
       }
     }
   };

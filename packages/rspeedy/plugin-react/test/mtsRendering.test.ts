@@ -59,7 +59,7 @@ describe('enableMTSRendering: false', () => {
         source: {
           entry: {
             main: fileURLToPath(
-              new URL('./fixtures/main-thread-disabled.tsx', import.meta.url),
+              new URL('./fixtures/mts-rendering-disabled.tsx', import.meta.url),
             ),
           },
         },
@@ -104,7 +104,7 @@ describe('enableMTSRendering: false', () => {
           entry: {
             main: fileURLToPath(
               new URL(
-                './fixtures/main-thread-disabled/index.tsx',
+                './fixtures/mts-rendering-disabled/index.tsx',
                 import.meta.url,
               ),
             ),
@@ -198,7 +198,7 @@ describe('enableMTSRendering: false', () => {
       const lazySection = lepusRoots[lazyIntermediate!]!
       expect(lazySection).toContain('function (globDynamicComponentEntry)')
       expect(lazySection).toContain(
-        '__REACT_LYNX_MAIN_THREAD_DEFINES_RUNTIME__',
+        '__REACT_LYNX_MTS_DEFINES_RUNTIME__',
       )
       expect(lazySection).toContain('"LazyComponent"')
 

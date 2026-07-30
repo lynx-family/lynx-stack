@@ -128,7 +128,7 @@ describe('enableMTSRendering: false runtime', () => {
         source: {
           entry: {
             main: fileURLToPath(
-              new URL('./fixtures/main-thread-disabled.tsx', import.meta.url),
+              new URL('./fixtures/mts-rendering-disabled.tsx', import.meta.url),
             ),
           },
         },
