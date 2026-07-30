@@ -67,6 +67,8 @@ jobs:
           pnpm biome check
       - name: Package Metadata Check
         run: pnpm --package=@pnpm/meta-updater@2.0.6 dlx meta-updater --test
+      - name: Preact Dedupe Check
+        run: node .github/scripts/check-single-preact-instance.cjs
       - name: API Check
         run: pnpm turbo api-extractor
       - name: Changeset Check
