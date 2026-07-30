@@ -29,7 +29,7 @@ if [[ ! -f "${SERVER_ENTRY}" ]]; then
 fi
 
 export HOST="${HOST:-0.0.0.0}"
-export PORT="${PORT:-3000}"
+export LYNX_USE_PORT="${LYNX_USE_PORT:-3000}"
 
 cd "${SCRIPT_DIR}"
 exec node "${SERVER_ENTRY}" "$@"

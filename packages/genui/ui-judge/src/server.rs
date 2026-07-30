@@ -47,7 +47,7 @@ type PrepareJudgePageRequest =
 
 #[derive(Debug, Error)]
 pub enum ServerError {
-  #[error("PORT must be an integer from 1 through 65535, got {port:?}: {source}")]
+  #[error("LYNX_USE_PORT must be an integer from 1 through 65535, got {port:?}: {source}")]
   InvalidPort { port: String, source: ParseIntError },
   #[error("UI Judge headless worker panicked")]
   HeadlessWorkerPanicked,

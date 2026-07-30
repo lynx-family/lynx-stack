@@ -12,6 +12,8 @@ Use `app/common/sse.ts` for standard SSE frames and response headers. Pass event
 
 Build `genui-server` as an executable ESM Hono server through `rslib.config.ts`. Each protocol `route.ts` default-exports a Hono sub-application, `src/app.ts` composes the route tree and common HTTP fallbacks, and `src/index.ts` starts `@hono/node-server` and owns graceful process shutdown. Do not export endpoint request functions or add a custom router or Node/FaaS transport adapter. Keep business handlers based on standard Web `Request` and `Response` internally.
 
+Read the server port from `LYNX_USE_PORT`, defaulting to `3000`; do not use `PORT` as a compatibility fallback.
+
 Derive CORS preflight and 405 `Allow` behavior from the composed Hono application's route table after mounting sub-applications. Do not maintain a second hand-written route and method inventory.
 
 Every SSE route that starts model generation must propagate both `Request.signal` aborts and response-stream cancellation to the upstream model call. Guard enqueues and stream closure against reader cancellation, remove abort listeners during cleanup, and cover the disconnect path with a test.

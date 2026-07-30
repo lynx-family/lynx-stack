@@ -94,7 +94,7 @@ produce an explicit unsupported error.
 Turn on the `server` feature to serve UI Judge over HTTP:
 
 ```bash
-PORT=8080 cargo run -p ui_judge --features server --bin ui-judge-server
+LYNX_USE_PORT=8080 cargo run -p ui_judge --features server --bin ui-judge-server
 ```
 
 Build the release server for Linux AMD64 from any directory with:
@@ -103,7 +103,10 @@ Build the release server for Linux AMD64 from any directory with:
 packages/genui/ui-judge/build.sh
 ```
 
-The script writes a deployable bundle to `dist/linux-amd64`:
+The Cargo build first writes a runnable server layout to
+`target/x86_64-unknown-linux-gnu/release`, including the downloaded Lynx
+runtime, `lynx_core.js`, and generated launcher. The script copies that layout
+to `dist/linux-amd64`:
 
 ```text
 dist/linux-amd64/
@@ -122,19 +125,20 @@ from a different host requires the Rust standard library and a linker for the
 Start the packaged server with:
 
 ```bash
-PORT=8080 packages/genui/ui-judge/dist/linux-amd64/start.sh
+LYNX_USE_PORT=8080 packages/genui/ui-judge/dist/linux-amd64/start.sh
 ```
 
 `start.sh` resolves the bundle directory independently of the current working
-directory, configures `LYNX_LIB_PATH`, `LYNX_SDK_DIR`, and `LD_LIBRARY_PATH`,
-then starts the server. Model configuration and credentials continue to come
+directory, then starts the `ui-judge-server` executable beside it. Model
+configuration, credentials, and Lynx runtime configuration continue to come
 from the caller's environment. Linux hosts must also provide the
 `libepoxy.so.0` system dependency.
 
-`PORT` defaults to `8080` and must be between `1` and `65535`. The process
-listens on both `0.0.0.0:{PORT}` and `[::]:{PORT}`. Use `GET /health` for a
-readiness check, `POST /judge` to evaluate a page, and `POST /compare` to
-compare two uploaded images without rendering a page or calling the VLM.
+`LYNX_USE_PORT` defaults to `8080` and must be between `1` and `65535`. The
+process listens on both `0.0.0.0:{LYNX_USE_PORT}` and
+`[::]:{LYNX_USE_PORT}`. Use `GET /health` for a readiness check,
+`POST /judge` to evaluate a page, and `POST /compare` to compare two uploaded
+images without rendering a page or calling the VLM.
 
 The following request evaluates a local bundle. `url` and `task` are required.
 The other fields are optional. `initialData` and `globalProps` accept JSON
