@@ -52,6 +52,7 @@ function getLoaderOptions(
     engineVersion,
     enableUiSourceMap,
 
+    experimental_transformBuiltinAttributeNames,
     experimental_isLazyBundle,
     experimental_useElementTemplate,
   } = options
@@ -63,6 +64,7 @@ function getLoaderOptions(
     inlineSourcesContent,
     defineDCE,
     engineVersion,
+    experimental_transformBuiltinAttributeNames,
     experimental_useElementTemplate,
     ...isMainThread
       ? {

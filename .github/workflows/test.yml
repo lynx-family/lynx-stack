@@ -67,6 +67,8 @@ jobs:
           pnpm biome check
       - name: Package Metadata Check
         run: pnpm --package=@pnpm/meta-updater@2.0.6 dlx meta-updater --test
+      - name: Preact Dedupe Check
+        run: node .github/scripts/check-single-preact-instance.cjs
       - name: API Check
         run: pnpm turbo api-extractor
       - name: Changeset Check
@@ -85,6 +87,25 @@ jobs:
     with:
       runs-on: lynx-ubuntu-26.04-medium
       run: pnpm eslint . --flag v10_config_lookup_from_file
+
+  sherif:
+    runs-on: lynx-ubuntu-26.04-medium
+    timeout-minutes: 10
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7
+        with:
+          node-version: "24"
+          package-manager-cache: false
+      - run: |
+          npm install -g corepack@latest
+          corepack enable
+          pnpm dedupe --check
+          pnpm dlx sherif@latest -i tailwindcss
 
   lighthouse:
     needs: build
@@ -393,6 +414,7 @@ jobs:
       - eslint
       # - playwright-linux
       - playwright-web-elements
+      - sherif
       - test-api
       - test-publish
       - test-react

@@ -175,6 +175,7 @@ declare global {
     operationIDs?: any[];
     asyncFlush?: boolean;
     triggerDataUpdated?: boolean;
+    emptyPatch?: boolean;
   }
 
   declare interface UpdatePageOption {

@@ -8,4 +8,8 @@ export const BUNDLE_STATS_JSON_OPTIONS = {
   modules: true,
   entrypoints: true,
   chunkGroups: true,
+  // `reasons` grows with the number of module edges and can push `stats.json`
+  // beyond V8's maximum string length on large projects, while bundle-analysis
+  // consumers only need module names and sizes.
+  reasons: false,
 } as const

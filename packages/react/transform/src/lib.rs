@@ -8,6 +8,7 @@ mod esbuild;
 mod swc_plugin_compat_post;
 mod swc_plugin_extract_str;
 mod swc_plugin_refresh;
+mod swc_plugin_transform_builtin_attribute_names;
 mod swc_plugin_worklet_post_process;
 
 use std::{cell::RefCell, rc::Rc, vec};
@@ -67,6 +68,10 @@ use swc_plugin_snapshot::{
     JSXTransformer as SnapshotJSXTransformer, JSXTransformerConfig as SnapshotJSXTransformerConfig,
   },
   UISourceMapRecord as SnapshotCoreUISourceMapRecord,
+};
+use swc_plugin_transform_builtin_attribute_names::TransformBuiltinAttributeNamesVisitor;
+pub use swc_plugin_transform_builtin_attribute_names::{
+  TransformBuiltinAttributeNamesMode, TransformBuiltinAttributeNamesOptions,
 };
 use swc_plugin_worklet::napi::{WorkletVisitor, WorkletVisitorConfig};
 use swc_plugins_shared::{
@@ -219,6 +224,24 @@ pub struct TransformNodiffOptions {
   pub directive_dce: Either<bool, DirectiveDCEVisitorConfig>,
   pub worklet: Either<bool, WorkletVisitorConfig>,
   pub dynamic_import: Option<Either<bool, DynamicImportVisitorConfig>>,
+  /**
+   * Transform attribute names on Lynx builtin elements.
+   *
+   * `true` applies the default rule: `onClick` becomes `bindtap`,
+   * `onCatchTap` becomes `catchtap`, other `onXXX` names become `bindxxx`,
+   * and remaining camelCase names become dash-case. An object provides
+   * serializable custom rules.
+   * Currently, only explicit JSX attributes are transformed during compilation.
+   * Runtime transformation of spread attributes is planned for a future release.
+   *
+   * @experimental
+   */
+  #[napi(
+    js_name = "experimental_transformBuiltinAttributeNames",
+    ts_type = "boolean | TransformBuiltinAttributeNamesOptions"
+  )]
+  pub experimental_transform_builtin_attribute_names:
+    Option<Either<bool, TransformBuiltinAttributeNamesOptions>>,
   /// @internal
   pub inject: Option<Either<bool, InjectVisitorConfig>>,
   pub input_source_map: Option<String>,
@@ -247,6 +270,7 @@ impl Default for TransformNodiffOptions {
       directive_dce: Either::A(false),
       worklet: Either::A(false),
       dynamic_import: Some(Either::B(Default::default())),
+      experimental_transform_builtin_attribute_names: None,
       inject: Some(Either::A(false)),
       input_source_map: None,
     }
@@ -641,6 +665,22 @@ fn transform_react_lynx_inner(
       ),
     };
 
+    let transform_builtin_attribute_names = options
+      .experimental_transform_builtin_attribute_names
+      .clone();
+    let enable_transform_builtin_attribute_names = !matches!(
+      transform_builtin_attribute_names,
+      None | Some(Either::A(false))
+    );
+    let transform_builtin_attribute_names_visitor = match transform_builtin_attribute_names {
+      Some(Either::B(options)) => TransformBuiltinAttributeNamesVisitor::new(options),
+      None | Some(Either::A(_)) => TransformBuiltinAttributeNamesVisitor::default(),
+    };
+    let transform_builtin_attribute_names_plugin = Optional::new(
+      visit_mut_pass(transform_builtin_attribute_names_visitor),
+      enable_transform_builtin_attribute_names,
+    );
+
     let compat_post_plugin = match options.compat {
       Either::A(config) => Optional::new(
         visit_mut_pass(CompatPostVisitor::new(
@@ -731,7 +771,7 @@ fn transform_react_lynx_inner(
       ),
       dynamic_import_plugin,
       refresh_plugin,
-      compat_plugin,
+      (compat_plugin, transform_builtin_attribute_names_plugin),
       worklet_plugin,
       css_scope_plugin,
       (
