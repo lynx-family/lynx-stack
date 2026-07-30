@@ -73,6 +73,29 @@ describe('published Phase 2 benchmark artifact', () => {
     ).toBe(true);
   });
 
+  it('publishes only the sampled repeat-1 screenshot assets', () => {
+    const screenshots = PHASE_TWO_PUBLISHED_REPORT.pairs.flatMap((pair) =>
+      (['a2ui', 'openui'] as const).flatMap((protocol) => {
+        const screenshotUrl = pair.runs[protocol]?.screenshotUrl;
+        return screenshotUrl
+          ? [{
+            protocol,
+            repeatIndex: pair.repeatIndex,
+            scenarioId: pair.scenarioId,
+            screenshotUrl,
+          }]
+          : [];
+      })
+    );
+
+    expect(screenshots).toHaveLength(6);
+    expect(screenshots.every((item) => item.repeatIndex === 1)).toBe(true);
+    expect(new Set(screenshots.map((item) => item.scenarioId)).size).toBe(3);
+    expect(new Set(screenshots.map((item) => item.protocol))).toEqual(
+      new Set(['a2ui', 'openui']),
+    );
+  });
+
   it('preserves the measured quality and efficiency trade-off', () => {
     const a2ui = PHASE_TWO_PUBLISHED_REPORT.modelProtocols.find(
       (item) => item.protocol === 'a2ui',

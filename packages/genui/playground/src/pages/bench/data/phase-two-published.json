@@ -807,8 +807,7 @@
           },
           "finalOutputChars": 2251,
           "errors": [],
-          "warnings": [],
-          "screenshotUrl": "/bench/phase-two/screenshots/weather-refresh-card-repeat-2-openui.png?v=20260730T072609742Z"
+          "warnings": []
         },
         "a2ui": {
           "id": "weather-refresh-card-repeat-2-a2ui",
@@ -832,8 +831,7 @@
           },
           "finalOutputChars": 3683,
           "errors": [],
-          "warnings": [],
-          "screenshotUrl": "/bench/phase-two/screenshots/weather-refresh-card-repeat-2-a2ui.png?v=20260730T072609742Z"
+          "warnings": []
         }
       }
     },
@@ -869,8 +867,7 @@
           },
           "finalOutputChars": 4650,
           "errors": [],
-          "warnings": [],
-          "screenshotUrl": "/bench/phase-two/screenshots/weather-refresh-card-repeat-3-a2ui.png?v=20260730T072609742Z"
+          "warnings": []
         },
         "openui": {
           "id": "weather-refresh-card-repeat-3-openui",
@@ -894,8 +891,7 @@
           },
           "finalOutputChars": 2278,
           "errors": [],
-          "warnings": [],
-          "screenshotUrl": "/bench/phase-two/screenshots/weather-refresh-card-repeat-3-openui.png?v=20260730T072609742Z"
+          "warnings": []
         }
       }
     },
@@ -931,8 +927,7 @@
           },
           "finalOutputChars": 2069,
           "errors": [],
-          "warnings": [],
-          "screenshotUrl": "/bench/phase-two/screenshots/weather-refresh-card-repeat-4-openui.png?v=20260730T072609742Z"
+          "warnings": []
         },
         "a2ui": {
           "id": "weather-refresh-card-repeat-4-a2ui",
@@ -956,8 +951,7 @@
           },
           "finalOutputChars": 4680,
           "errors": [],
-          "warnings": [],
-          "screenshotUrl": "/bench/phase-two/screenshots/weather-refresh-card-repeat-4-a2ui.png?v=20260730T072609742Z"
+          "warnings": []
         }
       }
     },
@@ -993,8 +987,7 @@
           },
           "finalOutputChars": 3411,
           "errors": [],
-          "warnings": [],
-          "screenshotUrl": "/bench/phase-two/screenshots/weather-refresh-card-repeat-5-a2ui.png?v=20260730T072609742Z"
+          "warnings": []
         },
         "openui": {
           "id": "weather-refresh-card-repeat-5-openui",
@@ -1018,8 +1011,7 @@
           },
           "finalOutputChars": 2898,
           "errors": [],
-          "warnings": [],
-          "screenshotUrl": "/bench/phase-two/screenshots/weather-refresh-card-repeat-5-openui.png?v=20260730T072609742Z"
+          "warnings": []
         }
       }
     },
@@ -1055,8 +1047,7 @@
           },
           "finalOutputChars": 2455,
           "errors": [],
-          "warnings": [],
-          "screenshotUrl": "/bench/phase-two/screenshots/weather-refresh-card-repeat-6-openui.png?v=20260730T072609742Z"
+          "warnings": []
         },
         "a2ui": {
           "id": "weather-refresh-card-repeat-6-a2ui",
@@ -1080,8 +1071,7 @@
           },
           "finalOutputChars": 4562,
           "errors": [],
-          "warnings": [],
-          "screenshotUrl": "/bench/phase-two/screenshots/weather-refresh-card-repeat-6-a2ui.png?v=20260730T072609742Z"
+          "warnings": []
         }
       }
     },
@@ -1117,8 +1107,7 @@
           },
           "finalOutputChars": 2867,
           "errors": [],
-          "warnings": [],
-          "screenshotUrl": "/bench/phase-two/screenshots/weather-refresh-card-repeat-7-a2ui.png?v=20260730T072609742Z"
+          "warnings": []
         },
         "openui": {
           "id": "weather-refresh-card-repeat-7-openui",
@@ -1142,8 +1131,7 @@
           },
           "finalOutputChars": 2105,
           "errors": [],
-          "warnings": [],
-          "screenshotUrl": "/bench/phase-two/screenshots/weather-refresh-card-repeat-7-openui.png?v=20260730T072609742Z"
+          "warnings": []
         }
       }
     },
@@ -1179,8 +1167,7 @@
           },
           "finalOutputChars": 1556,
           "errors": [],
-          "warnings": [],
-          "screenshotUrl": "/bench/phase-two/screenshots/weather-refresh-card-repeat-8-openui.png?v=20260730T072609742Z"
+          "warnings": []
         },
         "a2ui": {
           "id": "weather-refresh-card-repeat-8-a2ui",
@@ -1204,8 +1191,7 @@
           },
           "finalOutputChars": 4106,
           "errors": [],
-          "warnings": [],
-          "screenshotUrl": "/bench/phase-two/screenshots/weather-refresh-card-repeat-8-a2ui.png?v=20260730T072609742Z"
+          "warnings": []
         }
       }
     },
@@ -1241,8 +1227,7 @@
           },
           "finalOutputChars": 3867,
           "errors": [],
-          "warnings": [],
-          "screenshotUrl": "/bench/phase-two/screenshots/weather-refresh-card-repeat-9-a2ui.png?v=20260730T072609742Z"
+          "warnings": []
         },
         "openui": {
           "id": "weather-refresh-card-repeat-9-openui",
@@ -1266,8 +1251,7 @@
           },
           "finalOutputChars": 2067,
           "errors": [],
-          "warnings": [],
-          "screenshotUrl": "/bench/phase-two/screenshots/weather-refresh-card-repeat-9-openui.png?v=20260730T072609742Z"
+          "warnings": []
         }
       }
     },
@@ -1303,8 +1287,7 @@
           },
           "finalOutputChars": 2186,
           "errors": [],
-          "warnings": [],
-          "screenshotUrl": "/bench/phase-two/screenshots/weather-refresh-card-repeat-10-openui.png?v=20260730T072609742Z"
+          "warnings": []
         },
         "a2ui": {
           "id": "weather-refresh-card-repeat-10-a2ui",
@@ -1328,8 +1311,7 @@
           },
           "finalOutputChars": 5285,
           "errors": [],
-          "warnings": [],
-          "screenshotUrl": "/bench/phase-two/screenshots/weather-refresh-card-repeat-10-a2ui.png?v=20260730T072609742Z"
+          "warnings": []
         }
       }
     },
@@ -1427,8 +1409,7 @@
           },
           "finalOutputChars": 2318,
           "errors": [],
-          "warnings": [],
-          "screenshotUrl": "/bench/phase-two/screenshots/product-purchase-card-repeat-2-openui.png?v=20260730T072609742Z"
+          "warnings": []
         },
         "a2ui": {
           "id": "product-purchase-card-repeat-2-a2ui",
@@ -1452,8 +1433,7 @@
           },
           "finalOutputChars": 6327,
           "errors": [],
-          "warnings": [],
-          "screenshotUrl": "/bench/phase-two/screenshots/product-purchase-card-repeat-2-a2ui.png?v=20260730T072609742Z"
+          "warnings": []
         }
       }
     },
@@ -1489,8 +1469,7 @@
           },
           "finalOutputChars": 5006,
           "errors": [],
-          "warnings": [],
-          "screenshotUrl": "/bench/phase-two/screenshots/product-purchase-card-repeat-3-a2ui.png?v=20260730T072609742Z"
+          "warnings": []
         },
         "openui": {
           "id": "product-purchase-card-repeat-3-openui",
@@ -1514,8 +1493,7 @@
           },
           "finalOutputChars": 2302,
           "errors": [],
-          "warnings": [],
-          "screenshotUrl": "/bench/phase-two/screenshots/product-purchase-card-repeat-3-openui.png?v=20260730T072609742Z"
+          "warnings": []
         }
       }
     },
@@ -1551,8 +1529,7 @@
           },
           "finalOutputChars": 2623,
           "errors": [],
-          "warnings": [],
-          "screenshotUrl": "/bench/phase-two/screenshots/product-purchase-card-repeat-4-openui.png?v=20260730T072609742Z"
+          "warnings": []
         },
         "a2ui": {
           "id": "product-purchase-card-repeat-4-a2ui",
@@ -1576,8 +1553,7 @@
           },
           "finalOutputChars": 6102,
           "errors": [],
-          "warnings": [],
-          "screenshotUrl": "/bench/phase-two/screenshots/product-purchase-card-repeat-4-a2ui.png?v=20260730T072609742Z"
+          "warnings": []
         }
       }
     },
@@ -1613,8 +1589,7 @@
           },
           "finalOutputChars": 6511,
           "errors": [],
-          "warnings": [],
-          "screenshotUrl": "/bench/phase-two/screenshots/product-purchase-card-repeat-5-a2ui.png?v=20260730T072609742Z"
+          "warnings": []
         },
         "openui": {
           "id": "product-purchase-card-repeat-5-openui",
@@ -1638,8 +1613,7 @@
           },
           "finalOutputChars": 2329,
           "errors": [],
-          "warnings": [],
-          "screenshotUrl": "/bench/phase-two/screenshots/product-purchase-card-repeat-5-openui.png?v=20260730T072609742Z"
+          "warnings": []
         }
       }
     },
@@ -1675,8 +1649,7 @@
           },
           "finalOutputChars": 2279,
           "errors": [],
-          "warnings": [],
-          "screenshotUrl": "/bench/phase-two/screenshots/product-purchase-card-repeat-6-openui.png?v=20260730T072609742Z"
+          "warnings": []
         },
         "a2ui": {
           "id": "product-purchase-card-repeat-6-a2ui",
@@ -1700,8 +1673,7 @@
           },
           "finalOutputChars": 5659,
           "errors": [],
-          "warnings": [],
-          "screenshotUrl": "/bench/phase-two/screenshots/product-purchase-card-repeat-6-a2ui.png?v=20260730T072609742Z"
+          "warnings": []
         }
       }
     },
@@ -1737,8 +1709,7 @@
           },
           "finalOutputChars": 5915,
           "errors": [],
-          "warnings": [],
-          "screenshotUrl": "/bench/phase-two/screenshots/product-purchase-card-repeat-7-a2ui.png?v=20260730T072609742Z"
+          "warnings": []
         },
         "openui": {
           "id": "product-purchase-card-repeat-7-openui",
@@ -1762,8 +1733,7 @@
           },
           "finalOutputChars": 2516,
           "errors": [],
-          "warnings": [],
-          "screenshotUrl": "/bench/phase-two/screenshots/product-purchase-card-repeat-7-openui.png?v=20260730T072609742Z"
+          "warnings": []
         }
       }
     },
@@ -1799,8 +1769,7 @@
           },
           "finalOutputChars": 2824,
           "errors": [],
-          "warnings": [],
-          "screenshotUrl": "/bench/phase-two/screenshots/product-purchase-card-repeat-8-openui.png?v=20260730T072609742Z"
+          "warnings": []
         },
         "a2ui": {
           "id": "product-purchase-card-repeat-8-a2ui",
@@ -1824,8 +1793,7 @@
           },
           "finalOutputChars": 6004,
           "errors": [],
-          "warnings": [],
-          "screenshotUrl": "/bench/phase-two/screenshots/product-purchase-card-repeat-8-a2ui.png?v=20260730T072609742Z"
+          "warnings": []
         }
       }
     },
@@ -1861,8 +1829,7 @@
           },
           "finalOutputChars": 5567,
           "errors": [],
-          "warnings": [],
-          "screenshotUrl": "/bench/phase-two/screenshots/product-purchase-card-repeat-9-a2ui.png?v=20260730T072609742Z"
+          "warnings": []
         },
         "openui": {
           "id": "product-purchase-card-repeat-9-openui",
@@ -1886,8 +1853,7 @@
           },
           "finalOutputChars": 1954,
           "errors": [],
-          "warnings": [],
-          "screenshotUrl": "/bench/phase-two/screenshots/product-purchase-card-repeat-9-openui.png?v=20260730T072609742Z"
+          "warnings": []
         }
       }
     },
@@ -1923,8 +1889,7 @@
           },
           "finalOutputChars": 2240,
           "errors": [],
-          "warnings": [],
-          "screenshotUrl": "/bench/phase-two/screenshots/product-purchase-card-repeat-10-openui.png?v=20260730T072609742Z"
+          "warnings": []
         },
         "a2ui": {
           "id": "product-purchase-card-repeat-10-a2ui",
@@ -1948,8 +1913,7 @@
           },
           "finalOutputChars": 6449,
           "errors": [],
-          "warnings": [],
-          "screenshotUrl": "/bench/phase-two/screenshots/product-purchase-card-repeat-10-a2ui.png?v=20260730T072609742Z"
+          "warnings": []
         }
       }
     },
@@ -2047,8 +2011,7 @@
           },
           "finalOutputChars": 9658,
           "errors": [],
-          "warnings": [],
-          "screenshotUrl": "/bench/phase-two/screenshots/kyoto-trip-planner-repeat-2-openui.png?v=20260730T072609742Z"
+          "warnings": []
         },
         "a2ui": {
           "id": "kyoto-trip-planner-repeat-2-a2ui",
@@ -2072,8 +2035,7 @@
           },
           "finalOutputChars": 15301,
           "errors": [],
-          "warnings": [],
-          "screenshotUrl": "/bench/phase-two/screenshots/kyoto-trip-planner-repeat-2-a2ui.png?v=20260730T072609742Z"
+          "warnings": []
         }
       }
     },
@@ -2109,8 +2071,7 @@
           },
           "finalOutputChars": 26082,
           "errors": [],
-          "warnings": [],
-          "screenshotUrl": "/bench/phase-two/screenshots/kyoto-trip-planner-repeat-3-a2ui.png?v=20260730T072609742Z"
+          "warnings": []
         },
         "openui": {
           "id": "kyoto-trip-planner-repeat-3-openui",
@@ -2134,8 +2095,7 @@
           },
           "finalOutputChars": 10177,
           "errors": [],
-          "warnings": [],
-          "screenshotUrl": "/bench/phase-two/screenshots/kyoto-trip-planner-repeat-3-openui.png?v=20260730T072609742Z"
+          "warnings": []
         }
       }
     },
@@ -2171,8 +2131,7 @@
           },
           "finalOutputChars": 7860,
           "errors": [],
-          "warnings": [],
-          "screenshotUrl": "/bench/phase-two/screenshots/kyoto-trip-planner-repeat-4-openui.png?v=20260730T072609742Z"
+          "warnings": []
         },
         "a2ui": {
           "id": "kyoto-trip-planner-repeat-4-a2ui",
@@ -2196,8 +2155,7 @@
           },
           "finalOutputChars": 22166,
           "errors": [],
-          "warnings": [],
-          "screenshotUrl": "/bench/phase-two/screenshots/kyoto-trip-planner-repeat-4-a2ui.png?v=20260730T072609742Z"
+          "warnings": []
         }
       }
     },
@@ -2233,8 +2191,7 @@
           },
           "finalOutputChars": 20087,
           "errors": [],
-          "warnings": [],
-          "screenshotUrl": "/bench/phase-two/screenshots/kyoto-trip-planner-repeat-5-a2ui.png?v=20260730T072609742Z"
+          "warnings": []
         },
         "openui": {
           "id": "kyoto-trip-planner-repeat-5-openui",
@@ -2258,8 +2215,7 @@
           },
           "finalOutputChars": 9375,
           "errors": [],
-          "warnings": [],
-          "screenshotUrl": "/bench/phase-two/screenshots/kyoto-trip-planner-repeat-5-openui.png?v=20260730T072609742Z"
+          "warnings": []
         }
       }
     },
@@ -2295,8 +2251,7 @@
           },
           "finalOutputChars": 8954,
           "errors": [],
-          "warnings": [],
-          "screenshotUrl": "/bench/phase-two/screenshots/kyoto-trip-planner-repeat-6-openui.png?v=20260730T072609742Z"
+          "warnings": []
         },
         "a2ui": {
           "id": "kyoto-trip-planner-repeat-6-a2ui",
@@ -2320,8 +2275,7 @@
           },
           "finalOutputChars": 21833,
           "errors": [],
-          "warnings": [],
-          "screenshotUrl": "/bench/phase-two/screenshots/kyoto-trip-planner-repeat-6-a2ui.png?v=20260730T072609742Z"
+          "warnings": []
         }
       }
     },
@@ -2357,8 +2311,7 @@
           },
           "finalOutputChars": 24442,
           "errors": [],
-          "warnings": [],
-          "screenshotUrl": "/bench/phase-two/screenshots/kyoto-trip-planner-repeat-7-a2ui.png?v=20260730T072609742Z"
+          "warnings": []
         },
         "openui": {
           "id": "kyoto-trip-planner-repeat-7-openui",
@@ -2382,8 +2335,7 @@
           },
           "finalOutputChars": 11994,
           "errors": [],
-          "warnings": [],
-          "screenshotUrl": "/bench/phase-two/screenshots/kyoto-trip-planner-repeat-7-openui.png?v=20260730T072609742Z"
+          "warnings": []
         }
       }
     },
@@ -2419,8 +2371,7 @@
           },
           "finalOutputChars": 8646,
           "errors": [],
-          "warnings": [],
-          "screenshotUrl": "/bench/phase-two/screenshots/kyoto-trip-planner-repeat-8-openui.png?v=20260730T072609742Z"
+          "warnings": []
         },
         "a2ui": {
           "id": "kyoto-trip-planner-repeat-8-a2ui",
@@ -2444,8 +2395,7 @@
           },
           "finalOutputChars": 26260,
           "errors": [],
-          "warnings": [],
-          "screenshotUrl": "/bench/phase-two/screenshots/kyoto-trip-planner-repeat-8-a2ui.png?v=20260730T072609742Z"
+          "warnings": []
         }
       }
     },
@@ -2481,8 +2431,7 @@
           },
           "finalOutputChars": 16969,
           "errors": [],
-          "warnings": [],
-          "screenshotUrl": "/bench/phase-two/screenshots/kyoto-trip-planner-repeat-9-a2ui.png?v=20260730T072609742Z"
+          "warnings": []
         },
         "openui": {
           "id": "kyoto-trip-planner-repeat-9-openui",
@@ -2506,8 +2455,7 @@
           },
           "finalOutputChars": 11208,
           "errors": [],
-          "warnings": [],
-          "screenshotUrl": "/bench/phase-two/screenshots/kyoto-trip-planner-repeat-9-openui.png?v=20260730T072609742Z"
+          "warnings": []
         }
       }
     },
@@ -2543,8 +2491,7 @@
           },
           "finalOutputChars": 9583,
           "errors": [],
-          "warnings": [],
-          "screenshotUrl": "/bench/phase-two/screenshots/kyoto-trip-planner-repeat-10-openui.png?v=20260730T072609742Z"
+          "warnings": []
         },
         "a2ui": {
           "id": "kyoto-trip-planner-repeat-10-a2ui",
@@ -2568,8 +2515,7 @@
           },
           "finalOutputChars": 14119,
           "errors": [],
-          "warnings": [],
-          "screenshotUrl": "/bench/phase-two/screenshots/kyoto-trip-planner-repeat-10-a2ui.png?v=20260730T072609742Z"
+          "warnings": []
         }
       }
     }
