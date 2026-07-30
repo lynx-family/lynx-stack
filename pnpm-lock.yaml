@@ -1401,6 +1401,9 @@ importers:
       '@lynx-js/debug-metadata-rsbuild-plugin':
         specifier: workspace:^
         version: link:../plugin-debug-metadata
+      '@lynx-js/rsbuild-plugin':
+        specifier: workspace:*
+        version: link:../plugin-lynx
       '@lynx-js/web-rsbuild-server-middleware':
         specifier: workspace:*
         version: link:../../web-platform/web-rsbuild-server-middleware
@@ -1623,6 +1626,21 @@ importers:
       '@rsbuild/core':
         specifier: catalog:rsbuild
         version: 2.1.7(core-js@3.49.0)
+
+  packages/rspeedy/plugin-lynx:
+    devDependencies:
+      '@lynx-js/test-tools':
+        specifier: workspace:*
+        version: link:../../webpack/test-tools
+      '@microsoft/api-extractor':
+        specifier: 'catalog:'
+        version: 7.58.12(@types/node@24.13.3)
+      '@rsbuild/core':
+        specifier: catalog:rsbuild
+        version: 2.1.7(core-js@3.49.0)
+      '@rstest/core':
+        specifier: catalog:rstest
+        version: 0.11.3(core-js@3.49.0)(jsdom@27.4.0(supports-color@10.2.2))
 
   packages/rspeedy/plugin-qrcode:
     devDependencies:
