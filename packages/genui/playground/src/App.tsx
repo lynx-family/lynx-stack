@@ -11,9 +11,9 @@ import {
 
 import { Button } from './components/Button.js';
 import { Moon, Sun } from './components/Icon.js';
-import { BenchPlannedPage } from './pages/bench/BenchPlannedPage.js';
 import { BenchResultPage } from './pages/bench/BenchResultPage.js';
 import { BenchShell } from './pages/bench/BenchShell.js';
+import { PhaseTwoReportPage } from './pages/bench/PhaseTwoReportPage.js';
 import { BenchPage } from './pages/BenchPage.js';
 import { ComponentsPage } from './pages/catalog/ComponentsPage.js';
 import { ChatPage } from './pages/chat/ChatPage.js';
@@ -242,7 +242,7 @@ export function App() {
             benchPage = <BenchResultPage key='bench-phase-1' />;
             break;
           case 'phase-2':
-            benchPage = <BenchPlannedPage key='bench-phase-2' />;
+            benchPage = <PhaseTwoReportPage key='bench-phase-2-report' />;
             break;
           default:
             break;

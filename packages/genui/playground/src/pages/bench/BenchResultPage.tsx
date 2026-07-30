@@ -443,10 +443,6 @@ export function BenchResultPage() {
             <p>{report.conclusion}</p>
           </div>
           <p className='benchStudyHeroContext'>{report.description}</p>
-          <div className='benchStudyHeroActions'>
-            <a href='#/bench'>打开 Runner</a>
-            <a href='#/bench/phase-2'>查看 Phase 02 计划</a>
-          </div>
         </div>
 
         <dl className='benchStudyScope' aria-label='实验范围'>

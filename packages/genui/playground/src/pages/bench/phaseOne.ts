@@ -278,8 +278,8 @@ export const PHASE_ONE_BENCH = {
           },
         },
         {
-          id: 'doubao-seed-code',
-          name: 'doubao-seed-code',
+          id: 'z-model',
+          name: 'z',
           tone: 'warning',
           descriptor: 'Tokens 与 UI Judge 均不占优',
           strength: '3 个场景均完成，平均 Tokens 为 16.4k。',
