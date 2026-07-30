@@ -241,6 +241,11 @@ interface ReactWebpackPluginOptions {
   enableMTSRendering?: boolean;
 
   /**
+   * {@inheritdoc @lynx-js/react-rsbuild-plugin#PluginReactLynxOptions.experimental_backgroundOnlyAssembly}
+   */
+  experimental_backgroundOnlyAssembly?: boolean;
+
+  /**
    * The background entry name of each main-thread entry.
    */
   mainThreadEntries?: Record<string, string>;
@@ -331,6 +336,7 @@ class ReactWebpackPlugin {
       workletRuntimePath: '',
       experimental_useElementTemplate: false,
       enableMTSRendering: true,
+      experimental_backgroundOnlyAssembly: false,
       mainThreadEntries: {},
       lazyBundleFetcher: 'QueryComponent',
     });
@@ -403,6 +409,9 @@ class ReactWebpackPlugin {
       ),
       __LAZY_BUNDLE_FETCHER__: JSON.stringify(options.lazyBundleFetcher),
       __ENABLE_MTS_RENDERING__: JSON.stringify(options.enableMTSRendering),
+      __BACKGROUND_ONLY_ASSEMBLY__: JSON.stringify(
+        options.experimental_backgroundOnlyAssembly,
+      ),
     }).apply(compiler);
 
     compiler.hooks.thisCompilation.tap(this.constructor.name, compilation => {
@@ -469,6 +478,38 @@ class ReactWebpackPlugin {
               compilation.addRuntimeModule(
                 chunk,
                 new MTSDefinesRuntimeModule(backgroundEntry),
+              );
+            }
+          },
+        );
+      } else if (options.experimental_backgroundOnlyAssembly) {
+        const MTSDefinesRuntimeModule = createMTSDefinesRuntimeModule(
+          compiler.webpack,
+        );
+
+        // The main thread still compiles and renders business code; only the
+        // definitions of `'background only'` modules — compiled as stub
+        // shells on the main thread — arrive through assembly. Subtracting
+        // the main-thread entry's in-place definitions keeps a definition
+        // from registering twice when the two compilations disagree about a
+        // module (e.g. a shared component).
+        compilation.hooks.additionalTreeRuntimeRequirements.tap(
+          this.constructor.name,
+          (chunk) => {
+            for (
+              const [mainThreadEntry, backgroundEntry] of Object.entries(
+                options.mainThreadEntries ?? {},
+              )
+            ) {
+              if (
+                compilation.entrypoints.get(mainThreadEntry)
+                  ?.getEntrypointChunk() !== chunk
+              ) {
+                continue;
+              }
+              compilation.addRuntimeModule(
+                chunk,
+                new MTSDefinesRuntimeModule(backgroundEntry, mainThreadEntry),
               );
             }
           },

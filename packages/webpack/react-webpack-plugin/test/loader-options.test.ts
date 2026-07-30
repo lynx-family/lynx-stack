@@ -70,6 +70,47 @@ describe('loader options', () => {
     });
   });
 
+  it('turns on stubbing, in-place recording and scoped collection for the background-only assembly', () => {
+    const context = createLoaderContext({
+      experimental_backgroundOnlyAssembly: true,
+    });
+
+    const mainThreadOptions = getMainThreadTransformOptions.call(
+      context,
+      undefined,
+    );
+    const backgroundOptions = getBackgroundTransformOptions.call(
+      context,
+      undefined,
+    );
+
+    expect(mainThreadOptions.stubBackgroundOnlyModules).toBe(true);
+    expect(mainThreadOptions.collectMTSInPlaceDefines).toBe(true);
+    expect(mainThreadOptions.collectMTSDefines).toBeUndefined();
+    expect(backgroundOptions.collectMTSDefinesBackgroundOnly).toBe(true);
+    expect(backgroundOptions.collectMTSDefines).toBeUndefined();
+  });
+
+  it('keeps the background-only assembly off under HMR, where the main thread compiles MIXED', () => {
+    const context = {
+      ...createLoaderContext({ experimental_backgroundOnlyAssembly: true }),
+      hot: true,
+    };
+
+    const mainThreadOptions = getMainThreadTransformOptions.call(
+      context,
+      undefined,
+    );
+    const backgroundOptions = getBackgroundTransformOptions.call(
+      context,
+      undefined,
+    );
+
+    expect(mainThreadOptions.stubBackgroundOnlyModules).toBeUndefined();
+    expect(mainThreadOptions.collectMTSInPlaceDefines).toBeUndefined();
+    expect(backgroundOptions.collectMTSDefinesBackgroundOnly).toBeUndefined();
+  });
+
   it('keeps ET dynamic import output on the aliasable internal runtime package', () => {
     const context = createLoaderContext({
       experimental_useElementTemplate: true,

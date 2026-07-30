@@ -51,6 +51,7 @@ export function applyEntry(
     globalPropsMode,
     enableSSR,
     enableMTSRendering,
+    experimental_backgroundOnlyAssembly,
     removeDescendantSelectorScope,
     targetSdkVersion,
     extractStr: originalExtractStr,
@@ -177,6 +178,12 @@ export function applyEntry(
           .entry(mainThreadEntry)
           .add({
             layer: LAYERS.MAIN_THREAD,
+            // In the `'background only'` assembly mode the main thread keeps
+            // its business imports unchanged: the runtime's `internal` module
+            // self-registers the assembled definitions (gated by the
+            // `__BACKGROUND_ONLY_ASSEMBLY__` define), so no extra entry
+            // import is needed — a second entry module would break scope
+            // hoisting of the main-thread chunk.
             import: mainThreadImports ?? imports,
             filename: mainThreadName,
           })
@@ -323,6 +330,7 @@ export function applyEntry(
         globalPropsMode,
         enableSSR,
         enableMTSRendering,
+        experimental_backgroundOnlyAssembly,
         mainThreadChunks,
         mainThreadEntries,
         extractStr,

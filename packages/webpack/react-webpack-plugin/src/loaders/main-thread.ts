@@ -7,6 +7,7 @@ import type { LoaderContext, LoaderDefinitionFunction } from '@rspack/core';
 
 import { UI_SOURCE_MAP_RECORDS_BUILD_INFO } from '@lynx-js/debug-metadata';
 
+import { MTS_IN_PLACE_DEFINES_BUILD_INFO } from '../MTSDefinesRuntimeModule.js';
 import { getMainThreadTransformOptions } from './options.js';
 import type { ReactLoaderOptions } from './options.js';
 
@@ -107,6 +108,11 @@ const mainThreadLoader: LoaderDefinitionFunction<ReactLoaderOptions> = function(
       buildInfo[ELEMENT_TEMPLATE_BUILD_INFO] = result.elementTemplates;
     } else {
       delete buildInfo[ELEMENT_TEMPLATE_BUILD_INFO];
+    }
+    if (result.mtsInPlaceDefines) {
+      buildInfo[MTS_IN_PLACE_DEFINES_BUILD_INFO] = result.mtsInPlaceDefines;
+    } else {
+      delete buildInfo[MTS_IN_PLACE_DEFINES_BUILD_INFO];
     }
   }
 

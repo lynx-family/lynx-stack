@@ -116,6 +116,11 @@ export interface ReactLoaderOptions {
    * {@inheritdoc @lynx-js/react-rsbuild-plugin#PluginReactLynxOptions.enableMTSRendering}
    */
   enableMTSRendering?: boolean | undefined;
+
+  /**
+   * {@inheritdoc @lynx-js/react-rsbuild-plugin#PluginReactLynxOptions.experimental_backgroundOnlyAssembly}
+   */
+  experimental_backgroundOnlyAssembly?: boolean | undefined;
 }
 
 function normalizeSlashes(file: string) {
@@ -252,6 +257,19 @@ function getCommonOptions(
   return commonOptions;
 }
 
+/**
+ * Whether the `'background only'` assembly mode is active for this build.
+ * HMR compiles the main thread with a `MIXED` target, so the mode is
+ * consistently disabled there for both threads: the in-place path keeps
+ * working, and nothing is collected that would register twice.
+ */
+function isBackgroundOnlyAssemblyEnabled(
+  this: LoaderContext<ReactLoaderOptions>,
+): boolean {
+  const { experimental_backgroundOnlyAssembly } = this.getOptions();
+  return experimental_backgroundOnlyAssembly === true && !this.hot;
+}
+
 export function getMainThreadTransformOptions(
   this: LoaderContext<ReactLoaderOptions>,
   inputSourceMap: string | undefined,
@@ -263,6 +281,10 @@ export function getMainThreadTransformOptions(
 
   return {
     ...commonOptions,
+    ...(isBackgroundOnlyAssemblyEnabled.call(this) && {
+      stubBackgroundOnlyModules: true,
+      collectMTSInPlaceDefines: true,
+    }),
     compat: typeof commonOptions.compat === 'object'
       ? {
         ...commonOptions.compat,
@@ -357,6 +379,8 @@ export function getBackgroundTransformOptions(
   return {
     ...commonOptions,
     ...(enableMTSRendering === false && { collectMTSDefines: true }),
+    ...(isBackgroundOnlyAssemblyEnabled.call(this)
+      && { collectMTSDefinesBackgroundOnly: true }),
     compat: typeof commonOptions.compat === 'object'
       ? {
         ...commonOptions.compat,

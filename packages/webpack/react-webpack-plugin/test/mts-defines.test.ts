@@ -5,11 +5,16 @@ import { describe, expect, it } from '@rstest/core';
 
 import {
   MTS_DEFINES_BUILD_INFO,
+  MTS_IN_PLACE_DEFINES_BUILD_INFO,
   collectMTSDefines,
+  collectMTSInPlaceDefineIds,
   renderLazyMTSDefines,
   renderMTSDefines,
 } from '../src/MTSDefinesRuntimeModule.js';
-import type { MTSDefine } from '../src/MTSDefinesRuntimeModule.js';
+import type {
+  MTSDefine,
+  MTSDefineIdentity,
+} from '../src/MTSDefinesRuntimeModule.js';
 
 function snapshot(id: string, code = `/* ${id} */`): MTSDefine {
   return { kind: 'snapshot', id, code };
@@ -121,6 +126,103 @@ describe('collectMTSDefines', () => {
     }]);
 
     expect(defines.map(({ id }) => id)).toEqual(['OUTER', 'INNER']);
+  });
+
+  it('subtracts the definitions the main thread registers in place', () => {
+    const defines = collectMTSDefines<TestChunk, TestModule>(
+      [{
+        modules: [
+          asModule({ id: 'a', defines: [snapshot('shared'), snapshot('a')] }),
+        ],
+      }],
+      (chunk) => chunk.modules,
+      (module) => module.id,
+      new Set(['snapshot:shared']),
+    );
+
+    expect(defines.map(({ id }) => id)).toEqual(['a']);
+  });
+
+  it('subtracts by kind, so a worklet sharing a snapshot id survives', () => {
+    const defines = collectMTSDefines<TestChunk, TestModule>(
+      [{
+        modules: [
+          asModule({
+            id: 'a',
+            defines: [snapshot('x'), { kind: 'worklet', id: 'x', code: 'w' }],
+          }),
+        ],
+      }],
+      (chunk) => chunk.modules,
+      (module) => module.id,
+      new Set(['snapshot:x']),
+    );
+
+    expect(defines).toEqual([{ kind: 'worklet', id: 'x', code: 'w' }]);
+  });
+
+  it('keeps the collision alarm for ids the main thread also has in place', () => {
+    // Subtraction happens after the collision check: an id whose content
+    // drifts between two collected sources must still fail the build, even
+    // when it would be subtracted anyway.
+    expect(() =>
+      collectMTSDefines<TestChunk, TestModule>(
+        [{
+          modules: [
+            asModule({ id: 'a', defines: [snapshot('x', 'one')] }),
+            asModule({ id: 'b', defines: [snapshot('x', 'another')] }),
+          ],
+        }],
+        (chunk) => chunk.modules,
+        (module) => module.id,
+        new Set(['snapshot:x']),
+      )
+    ).toThrowError(/share the id x/);
+  });
+});
+
+function inPlaceModule(
+  id: string,
+  identities: MTSDefineIdentity[],
+): TestModule {
+  return {
+    id,
+    buildInfo: { [MTS_IN_PLACE_DEFINES_BUILD_INFO]: identities },
+  } as TestModule;
+}
+
+describe('collectMTSInPlaceDefineIds', () => {
+  it('collects the kind:id identities of a chunk', () => {
+    const ids = collectMTSInPlaceDefineIds<TestChunk, TestModule>(
+      [{
+        modules: [
+          inPlaceModule('a', [{ kind: 'snapshot', id: 'A' }]),
+          inPlaceModule('b', [{ kind: 'worklet', id: 'B' }]),
+          asModule({ id: 'c' }),
+        ],
+      }],
+      (chunk) => chunk.modules,
+      (module) => module.id,
+    );
+
+    expect([...ids].sort()).toEqual(['snapshot:A', 'worklet:B']);
+  });
+
+  it('collects the identities of concatenated inner modules', () => {
+    const ids = collectMTSInPlaceDefineIds<TestChunk, TestModule>(
+      [{
+        modules: [
+          {
+            id: 'concatenated',
+            modules: [inPlaceModule('inner', [{ kind: 'snapshot', id: 'I' }])],
+          } as TestModule,
+        ],
+      }],
+      (chunk) => chunk.modules,
+      (module) => module.id,
+    );
+
+    expect([...ids]).toEqual(['snapshot:I']);
   });
 });
 

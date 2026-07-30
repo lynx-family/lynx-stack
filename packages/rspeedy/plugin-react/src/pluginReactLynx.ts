@@ -282,6 +282,35 @@ export interface PluginReactLynxOptions {
   enableMTSRendering?: boolean
 
   /**
+   * Implement component-level `'background only'` on the main-thread-defines
+   * assembly infrastructure.
+   *
+   * @remarks
+   * A `'background only'` module — one with a module-level `'background only'`
+   * directive, or whose every export carries the component-level directive —
+   * compiles for the main thread as a stub shell: its exports survive as
+   * inert empty functions, while render bodies, top-level statements, and
+   * in-place snapshot/worklet definitions are dropped. The definitions the
+   * main thread needs for first-screen hydration are collected while
+   * compiling the background and assembled into the main-thread chunk
+   * instead.
+   *
+   * Compared to the default in-place strip (which only empties directive
+   * function bodies), the module's top-level statements no longer run on the
+   * main thread. Code relying on main-thread module-init side effects of a
+   * `'background only'` module must move them elsewhere; the build emits a
+   * warning when such statements are dropped.
+   *
+   * The `'background only'` semantics are unchanged — this option upgrades
+   * the implementation.
+   *
+   * @defaultValue `false`
+   *
+   * @experimental
+   */
+  experimental_backgroundOnlyAssembly?: boolean
+
+  /**
    * removeDescendantSelectorScope is used to remove the scope of descendant selectors.
    *
    * @defaultValue `true`
@@ -413,6 +442,7 @@ export function pluginReactLynx(
     firstScreenSyncTiming: 'immediately',
     enableSSR: false,
     enableMTSRendering: true,
+    experimental_backgroundOnlyAssembly: false,
     removeDescendantSelectorScope: true,
     shake: undefined,
     defineDCE: undefined,
@@ -443,6 +473,19 @@ export function pluginReactLynx(
     throw new Error(
       '`enableMTSRendering: false` does not support `experimental_useElementTemplate` yet.',
     )
+  }
+
+  if (resolvedOptions.experimental_backgroundOnlyAssembly) {
+    if (resolvedOptions.experimental_useElementTemplate) {
+      throw new Error(
+        '`experimental_backgroundOnlyAssembly` does not support `experimental_useElementTemplate` yet.',
+      )
+    }
+    if (resolvedOptions.enableMTSRendering === false) {
+      throw new Error(
+        '`experimental_backgroundOnlyAssembly` requires `enableMTSRendering: true` — with `enableMTSRendering: false` the whole main-thread bundle is already assembled from the collected definitions.',
+      )
+    }
   }
 
   return [

@@ -56,6 +56,7 @@ function getLoaderOptions(
     experimental_transformBuiltinAttributeNames,
     experimental_isLazyBundle,
     experimental_useElementTemplate,
+    experimental_backgroundOnlyAssembly,
   } = options
 
   return {
@@ -68,6 +69,7 @@ function getLoaderOptions(
     experimental_transformBuiltinAttributeNames,
     experimental_useElementTemplate,
     enableMTSRendering,
+    experimental_backgroundOnlyAssembly,
     ...isMainThread
       ? {
         enableUiSourceMap,

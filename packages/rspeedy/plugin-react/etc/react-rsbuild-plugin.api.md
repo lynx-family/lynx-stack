@@ -79,6 +79,7 @@ export interface PluginReactLynxOptions {
     enableSSR?: boolean;
     enableUiSourceMap?: boolean;
     engineVersion?: string;
+    experimental_backgroundOnlyAssembly?: boolean;
     // @alpha
     experimental_isLazyBundle?: boolean;
     experimental_transformBuiltinAttributeNames?: boolean | TransformBuiltinAttributeNamesOptions;
