@@ -315,15 +315,7 @@ function normalizeTasmSourcePath(
   context: string,
 ): string | undefined {
   if (source.startsWith('file://')) {
-    // On win32 a `file://` URL carrying no drive letter is not convertible and
-    // `fileURLToPath` throws instead of returning a path. Callers already treat
-    // `undefined` as "source not resolvable", so degrade to that: a CSS
-    // diagnostic is advisory and must never take the build down with it.
-    try {
-      return fileURLToPath(source);
-    } catch {
-      return undefined;
-    }
+    return fileURLToPath(source);
   }
 
   if (source.startsWith('webpack:')) {

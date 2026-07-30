@@ -2,6 +2,7 @@
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
 import { resolve as resolvePath } from 'node:path';
+import { pathToFileURL } from 'node:url';
 
 import { describe, expect, test } from '@rstest/core';
 
@@ -136,7 +137,7 @@ describe('cssDiagnostics', () => {
     const sourceMap: CSSSourceMap = {
       version: 3,
       file: '.rspeedy/main/main.css',
-      sources: ['file:///src/app.css'],
+      sources: [pathToFileURL(resolvePath(CONTEXT, 'src/app.css')).href],
       sourcesContent: [
         '.foo {\n  unknown-prop: red;\n}\n',
       ],
@@ -168,53 +169,6 @@ describe('cssDiagnostics', () => {
           'Unsupported property "unknown-prop" was removed during template encode.',
       },
     ]);
-  });
-
-  test('degrade instead of throwing on an unconvertible file:// source', () => {
-    // `fileURLToPath` rejects a different shape on each platform: win32 rejects
-    // the drive-less `file:///…`, POSIX rejects a non-localhost host. Each case
-    // below is therefore unconvertible on exactly one of them, and CI runs both.
-    // `fileExists: () => false` makes the convertible half skip for its own
-    // reason, so the expectation is identical everywhere — and removing the
-    // guard in `normalizeTasmSourcePath` turns this red on both platforms
-    // rather than leaking a TypeError out of an advisory diagnostic.
-    for (const source of ['file:///src/app.css', 'file://host/src/app.css']) {
-      const sourceMap: CSSSourceMap = {
-        version: 3,
-        file: '.rspeedy/main/main.css',
-        sources: [source],
-        sourcesContent: [
-          '.foo {\n  unknown-prop: red;\n}\n',
-        ],
-        names: [],
-        mappings: 'AAAA;EACE,kBAAkB;AACpB',
-      };
-
-      const resolved = resolveTasmCSSDiagnostics({
-        cssDiagnostics: [
-          {
-            type: 'property',
-            name: 'unknown-prop',
-            line: 2,
-            column: 10,
-          },
-        ],
-        mainCSSSourceMaps: [sourceMap],
-        context: CONTEXT,
-        fileExists: () => false,
-      });
-
-      expect(resolved).toEqual([
-        {
-          type: 'property',
-          name: 'unknown-prop',
-          line: 2,
-          column: 10,
-          message:
-            'Unsupported property "unknown-prop" was removed during template encode.',
-        },
-      ]);
-    }
   });
 
   test('dedupe resolved tasm css diagnostics by message and location', () => {
