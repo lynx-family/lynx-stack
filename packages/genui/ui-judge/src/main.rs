@@ -5,6 +5,6 @@
 #[cfg(feature = "server")]
 #[tokio::main]
 async fn main() -> Result<(), ui_judge::server::ServerError> {
-  let port = std::env::var("PORT").unwrap_or_else(|_| "8080".to_string());
+  let port = std::env::var("LYNX_USE_PORT").unwrap_or_else(|_| "8080".to_string());
   ui_judge::server::serve(&port).await
 }

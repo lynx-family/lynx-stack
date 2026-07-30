@@ -29,6 +29,6 @@ export function resolveListenOptions(
 ): ListenOptions {
   return {
     hostname: env.HOST ?? DEFAULT_HOST,
-    port: readPort(env.PORT, 'PORT'),
+    port: readPort(env.LYNX_USE_PORT, 'LYNX_USE_PORT'),
   };
 }

@@ -22,6 +22,7 @@ CARGO_TARGET_DIR="${BUILD_TARGET_DIR}" cargo build \
   --target "${TARGET}"
 
 BINARY_SOURCE="${BUILD_TARGET_DIR}/${TARGET}/release/${BINARY}"
+START_SCRIPT_SOURCE="${BUILD_TARGET_DIR}/${TARGET}/release/start.sh"
 if [[ -n "${LYNX_LIB_PATH:-}" ]]; then
   LYNX_RUNTIME_SOURCE="${LYNX_LIB_PATH}"
 elif [[ -n "${LYNX_SDK_DIR:-}" ]]; then
@@ -32,6 +33,7 @@ fi
 
 for required_file in \
   "${BINARY_SOURCE}" \
+  "${START_SCRIPT_SOURCE}" \
   "${LYNX_CORE_SOURCE}" \
   "${LYNX_RUNTIME_SOURCE}"; do
   if [[ ! -f "${required_file}" ]]; then
@@ -42,23 +44,8 @@ done
 
 mkdir -p "${OUTPUT_DIR}/lib"
 install -m 0755 "${BINARY_SOURCE}" "${OUTPUT_DIR}/${BINARY}"
+install -m 0755 "${START_SCRIPT_SOURCE}" "${OUTPUT_DIR}/start.sh"
 install -m 0644 "${LYNX_CORE_SOURCE}" "${OUTPUT_DIR}/lynx_core.js"
 install -m 0644 "${LYNX_RUNTIME_SOURCE}" "${OUTPUT_DIR}/lib/libLynx_clay.so"
-
-cat > "${OUTPUT_DIR}/start.sh" <<'EOF'
-#!/usr/bin/env bash
-
-set -euo pipefail
-
-SCRIPT_DIR="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)"
-
-export LYNX_LIB_PATH="${SCRIPT_DIR}/lib/libLynx_clay.so"
-export LYNX_SDK_DIR="${SCRIPT_DIR}"
-export LD_LIBRARY_PATH="${SCRIPT_DIR}/lib${LD_LIBRARY_PATH:+:${LD_LIBRARY_PATH}}"
-export PORT="${PORT:-8080}"
-
-exec "${SCRIPT_DIR}/ui-judge-server" "$@"
-EOF
-chmod 0755 "${OUTPUT_DIR}/start.sh"
 
 printf 'Built Linux AMD64 bundle at %s\n' "${OUTPUT_DIR}"
