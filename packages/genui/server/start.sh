@@ -3,7 +3,7 @@
 set -euo pipefail
 
 SCRIPT_DIR="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)"
-SERVER_ENTRY="${SCRIPT_DIR}/packages/genui/server/dist/index.js"
+SERVER_ENTRY="${SCRIPT_DIR}/dist/index.js"
 
 if ! command -v node >/dev/null 2>&1; then
   printf 'Node.js 22 or 24 is required to start the GenUI server.\n' >&2
@@ -24,22 +24,12 @@ esac
 
 if [[ ! -f "${SERVER_ENTRY}" ]]; then
   printf 'GenUI server build artifact not found: %s\n' "${SERVER_ENTRY}" >&2
-  printf 'Run ./build.sh before starting the server.\n' >&2
+  printf 'Run pnpm turbo build from the repository root before starting the server.\n' >&2
   exit 1
 fi
 
-if [[ "${REQUIRE_HTTP_MESH:-False}" == "True" ]]; then
-  if [[ -z "${MESH_INGRESS_PORT:-}" ]]; then
-    printf \
-      'MESH_INGRESS_PORT is required when REQUIRE_HTTP_MESH=True.\n' >&2
-    exit 1
-  fi
-  export HOST="127.0.0.1"
-  export PORT="${MESH_INGRESS_PORT}"
-else
-  export HOST="${HOST:-0.0.0.0}"
-  export PORT="${PORT:-3000}"
-fi
+export HOST="${HOST:-0.0.0.0}"
+export PORT="${PORT:-3000}"
 
 cd "${SCRIPT_DIR}"
 exec node "${SERVER_ENTRY}" "$@"
