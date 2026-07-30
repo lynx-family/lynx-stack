@@ -21,6 +21,9 @@ const wasmModuleLoadedPromise: Promise<void> = new Promise((resolve) => {
 import { loadStyleFromJSON } from './cssLoader.js';
 import { decodeBinaryMap } from '../../common/decodeUtils.js';
 
+const MTS_CODE_WRAPPER_PREFIX =
+  '//# allFunctionsCalledOnLoad\n(function(){ "use strict"; const navigator=void 0,postMessage=void 0; let window=void 0; ';
+
 const HEARTBREAK_INTERVAL_MS = 1000;
 let heartbreakTimer: ReturnType<typeof setTimeout> | undefined;
 
@@ -314,7 +317,7 @@ async function handleStream(
         const blobMap: Record<string, string> = {};
         for (const [key, code] of Object.entries(codeMap)) {
           const blob = new Blob([
-            '//# allFunctionsCalledOnLoad\n(function(){ "use strict"; const navigator=void 0,postMessage=void 0,window=void 0; ',
+            MTS_CODE_WRAPPER_PREFIX,
             prefix,
             code as unknown as BlobPart,
             ' \n })()\n//# sourceURL=',
@@ -442,10 +445,9 @@ async function handleJSON(
     const blobMap: Record<string, string> = {};
     for (const [key, code] of Object.entries(json.lepusCode)) {
       if (typeof code !== 'string') continue;
-      const prefix =
-        `//# allFunctionsCalledOnLoad\n(function(){ "use strict"; const navigator=void 0,postMessage=void 0,window=void 0; ${
-          isLazy ? 'module.exports=' : ''
-        } `;
+      const prefix = `${MTS_CODE_WRAPPER_PREFIX}${
+        isLazy ? 'module.exports=' : ''
+      } `;
       const suffix = ` \n })()\n//# sourceURL=${url}/${key}\n`;
       const blob = new Blob([prefix, code, suffix], {
         type: 'text/javascript; charset=utf-8',
