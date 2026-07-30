@@ -19,7 +19,16 @@ describe('resolveListenOptions', () => {
 
   test('uses the server defaults when no listen environment is provided', () => {
     expect(resolveListenOptions({})).toEqual({
-      hostname: '0.0.0.0',
+      hostname: '::',
+      port: 3_000,
+    });
+  });
+
+  test('accepts an explicit IPv6 host', () => {
+    expect(resolveListenOptions({
+      HOST: '::1',
+    })).toEqual({
+      hostname: '::1',
       port: 3_000,
     });
   });

@@ -3,7 +3,7 @@
 // LICENSE file in the root directory of this source tree.
 
 const DEFAULT_PORT = 3_000;
-const DEFAULT_HOST = '0.0.0.0';
+const DEFAULT_HOST = '::';
 
 export interface ListenOptions {
   hostname: string;
