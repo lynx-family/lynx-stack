@@ -1101,6 +1101,10 @@ importers:
       '@lynx-js/autolink-codegen':
         specifier: workspace:^
         version: link:../autolink-codegen
+    devDependencies:
+      '@lynx-js/rspeedy':
+        specifier: workspace:^
+        version: link:../../rspeedy/core
 
   packages/lynx/gesture-runtime:
     devDependencies:
