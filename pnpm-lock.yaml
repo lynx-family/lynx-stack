@@ -186,6 +186,9 @@ importers:
       '@lynx-js/react':
         specifier: workspace:*
         version: link:../../packages/react
+      '@preact/signals':
+        specifier: ^2.9.4
+        version: 2.9.4(@lynx-js/internal-preact@10.29.1-20260519060144-e6da44c)
       benchx_cli:
         specifier: workspace:*
         version: link:../../packages/lynx/benchx_cli
@@ -223,6 +226,9 @@ importers:
       '@types/react':
         specifier: ^19.2.17
         version: 19.2.17
+      preact:
+        specifier: catalog:lynxjs
+        version: '@lynx-js/internal-preact@10.29.1-20260519060144-e6da44c'
 
   examples/gesture:
     dependencies:
@@ -1257,6 +1263,9 @@ importers:
       '@lynx-js/testing-environment':
         specifier: workspace:*
         version: link:../../testing-library/testing-environment
+      '@preact/signals':
+        specifier: ^2.9.4
+        version: 2.9.4(@lynx-js/internal-preact@10.29.1-20260519060144-e6da44c)
       '@rsbuild/core':
         specifier: catalog:rsbuild
         version: 2.1.7(core-js@3.49.0)
@@ -1269,6 +1278,9 @@ importers:
       '@testing-library/jest-dom':
         specifier: ^6.9.1
         version: 6.9.1
+      preact:
+        specifier: catalog:lynxjs
+        version: '@lynx-js/internal-preact@10.29.1-20260519060144-e6da44c'
 
   packages/react/transform:
     devDependencies:
