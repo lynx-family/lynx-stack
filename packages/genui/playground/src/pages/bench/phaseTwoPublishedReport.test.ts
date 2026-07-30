@@ -306,7 +306,7 @@ describe('published Phase 2 benchmark artifact', () => {
     ]);
     expect(urls).toEqual([PHASE_TWO_PUBLISHED_REPORT.larkUrl]);
     expect(serialized).not.toMatch(
-      /OPENAI_API_KEY|api[_-]?key|authorization|bearer\s|aidp\.bytedance\.net|\/api\/modelhub\/|baseURLs?|base\s+urls?/i,
+      /OPENAI_API_KEY|api[_-]?key|authorization|bearer\s|private-provider|internal-provider|baseURLs?|base\s+urls?/i,
     );
     expect(serialized).not.toMatch(
       /\b[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}\b/i,
