@@ -4,6 +4,10 @@
 
 import { ElementCompt } from './element.js';
 
+const motionWindow = {
+  getComputedStyle: (element: ElementCompt) => element.getComputedStyle(),
+};
+
 // Capture timeOrigin correctly - use performance.timeOrigin if available, otherwise current timestamp
 const timeOrigin =
   (typeof performance !== 'undefined' && performance.timeOrigin)
@@ -31,6 +35,9 @@ function shimQueueMicroTask() {
 }
 
 function shimGlobals() {
+  const isLynxForWeb = typeof SystemInfo !== 'undefined'
+    && String(SystemInfo.platform) === 'web';
+
   // Only shim document if it doesn't exist
   if (!globalThis.document) {
     // @ts-expect-error error
@@ -52,34 +59,39 @@ function shimGlobals() {
   // eslint-disable-next-line @typescript-eslint/unbound-method
   document.querySelectorAll ??= lynx.querySelectorAll;
 
-  // Only shim NodeList if it doesn't exist
-  if (!globalThis.NodeList) {
+  // Browser constructors describe DOM nodes, not Lynx main-thread elements.
+  if (isLynxForWeb || !globalThis.NodeList) {
     // @ts-expect-error error
     globalThis.NodeList = class NodeList {};
   }
 
-  // Only shim SVGElement if it doesn't exist
-  if (!globalThis.SVGElement) {
+  if (isLynxForWeb || !globalThis.SVGElement) {
     // @ts-expect-error error
     globalThis.SVGElement = class SVGElement {};
   }
 
-  // Only shim HTMLElement if it doesn't exist
-  if (!globalThis.HTMLElement) {
+  if (isLynxForWeb || !globalThis.HTMLElement) {
     // @ts-expect-error error
-    globalThis.HTMLElement = class HTMLElement {};
+    globalThis.HTMLElement = isLynxForWeb
+      ? ElementCompt
+      : class HTMLElement {};
   }
 
-  // Only shim window if it doesn't exist
-  if (!globalThis.window) {
+  if (isLynxForWeb) {
+    // Lynx for Web wraps MTS code with a mutable, chunk-local `window`.
+    // @ts-expect-error The wrapper binding intentionally differs from Window.
+    window = motionWindow;
+    // These identifiers are not shadowed by the MTS wrapper, so replace the
+    // iframe's browser constructors with their Lynx equivalents.
+    // @ts-expect-error Lynx main-thread elements intentionally differ from DOM elements.
+    globalThis.Element = ElementCompt;
+    // @ts-expect-error Lynx main-thread elements intentionally differ from DOM event targets.
+    globalThis.EventTarget = ElementCompt;
+    // @ts-expect-error Lynx computed styles intentionally differ from CSSStyleDeclaration.
+    globalThis.getComputedStyle = motionWindow.getComputedStyle;
+  } else if (!globalThis.window) {
     // @ts-expect-error error
-    globalThis.window = {
-      // biome-ignore lint/suspicious/noExplicitAny: <explanation>
-      getComputedStyle: (ele: any) => {
-        // eslint-disable-next-line @typescript-eslint/no-unsafe-return, @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-member-access
-        return ele.getComputedStyle();
-      },
-    };
+    globalThis.window = motionWindow;
   }
   // @ts-expect-error error
   globalThis.Element ??= ElementCompt;
