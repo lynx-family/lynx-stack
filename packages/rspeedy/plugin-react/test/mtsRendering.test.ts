@@ -268,6 +268,70 @@ describe('enableMTSRendering: false', () => {
     }
   })
 
+  test('compiles the shared modules its worklets reference into the main-thread bundle', async () => {
+    const { pluginReactLynx } = await import('../src/pluginReactLynx.js')
+
+    const entry = {
+      main: fileURLToPath(
+        new URL('./fixtures/mts-rendering-shared/index.tsx', import.meta.url),
+      ),
+    }
+
+    const build = async (enableMTSRendering: boolean) => {
+      const assets: Record<string, string> = {}
+      const tmp = await fs.mkdtemp(
+        path.join(tmpdir(), 'rspeedy-react-test-main-thread-shared-'),
+      )
+      try {
+        const rsbuild = await createRspeedy({
+          rspeedyConfig: {
+            source: { entry },
+            output: { distPath: { root: tmp } },
+            plugins: [
+              pluginReactLynx({ enableMTSRendering }),
+              ignoreCSSLoaderWorkaround,
+            ],
+            tools: { rspack: { plugins: [collectAssets(assets)] } },
+          },
+        })
+        await rsbuild.build()
+      } finally {
+        await fs.rm(tmp, { recursive: true, force: true })
+      }
+      return assets
+    }
+
+    const assets = await build(false)
+
+    const mainThread = assets['.rspeedy/main/main-thread.js']!
+
+    // The shared module and its exports compile into the main-thread layer as
+    // a real module.
+    expect(mainThread).toContain('shared-module-marker')
+
+    // The wrapper registers the module under its build-stable id, and the
+    // collected defines look it up through the same id.
+    const registration =
+      /__REACT_LYNX_SHARED_MODULES__[\s\S]*?\.set\("([0-9a-f]{16})"/
+        .exec(mainThread)
+    expect(registration).not.toBeNull()
+    expect(mainThread).toContain(`getSharedModule("${registration![1]}")`)
+
+    // The background keeps its own copy of the shared module and none of the
+    // main-thread registry wiring.
+    const background = assets['.rspeedy/main/background.js']!
+    expect(background).toContain('shared-module-marker')
+    expect(background).not.toContain('getSharedModule("')
+
+    // The normal mode needs no registry: the shared import stays a module
+    // binding of the main-thread layer.
+    const normalAssets = await build(true)
+    expect(normalAssets['.rspeedy/main/main-thread.js'])
+      .toContain('shared-module-marker')
+    expect(normalAssets['.rspeedy/main/main-thread.js'])
+      .not.toContain('getSharedModule("')
+  })
+
   test('rejects Element Template, which it does not support yet', async () => {
     const { pluginReactLynx } = await import('../src/pluginReactLynx.js')
 

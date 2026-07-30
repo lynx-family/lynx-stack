@@ -5,7 +5,10 @@ import { createRequire } from 'node:module';
 
 import type { LoaderDefinitionFunction } from '@rspack/core';
 
-import { MTS_DEFINES_BUILD_INFO } from '../MTSDefinesRuntimeModule.js';
+import {
+  MTS_DEFINES_BUILD_INFO,
+  MTS_SHARED_IMPORTS_BUILD_INFO,
+} from '../MTSDefinesRuntimeModule.js';
 import { getBackgroundTransformOptions } from './options.js';
 import type { ReactLoaderOptions } from './options.js';
 
@@ -93,6 +96,9 @@ const backgroundLoader: LoaderDefinitionFunction<ReactLoaderOptions> = function(
   })._module?.buildInfo;
   if (buildInfo && result.mtsDefines) {
     buildInfo[MTS_DEFINES_BUILD_INFO] = result.mtsDefines;
+  }
+  if (buildInfo && result.sharedImports && result.sharedImports.length > 0) {
+    buildInfo[MTS_SHARED_IMPORTS_BUILD_INFO] = result.sharedImports;
   }
 
   this.callback(null, result.code, result.map);

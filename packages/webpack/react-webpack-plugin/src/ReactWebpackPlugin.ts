@@ -16,10 +16,13 @@ import { LAYERS } from './layer.js';
 import { ELEMENT_TEMPLATE_BUILD_INFO } from './loaders/main-thread.js';
 import { createLynxProcessEvalResultRuntimeModule } from './LynxProcessEvalResultRuntimeModule.js';
 import {
+  MTS_SHARED_IMPORTS_BUILD_INFO,
   collectMTSDefines,
   createMTSDefinesRuntimeModule,
   renderLazyMTSDefines,
+  sharedModuleWrapper,
 } from './MTSDefinesRuntimeModule.js';
+import type { MTSSharedImport } from './MTSDefinesRuntimeModule.js';
 
 const require = createRequire(import.meta.url);
 
@@ -405,6 +408,18 @@ class ReactWebpackPlugin {
       __ENABLE_MTS_RENDERING__: JSON.stringify(options.enableMTSRendering),
     }).apply(compiler);
 
+    if (options.enableMTSRendering === false) {
+      compiler.hooks.finishMake.tapPromise(
+        this.constructor.name,
+        (compilation) =>
+          this.#includeSharedModules(
+            compiler,
+            compilation,
+            Object.keys(options.mainThreadEntries ?? {}),
+          ),
+      );
+    }
+
     compiler.hooks.thisCompilation.tap(this.constructor.name, compilation => {
       const onceForChunkSet = new WeakSet<Chunk>();
 
@@ -660,6 +675,90 @@ class ReactWebpackPlugin {
         );
       }
     });
+  }
+
+  /**
+   * Compiles the `runtime: 'shared'` modules the collected main-thread
+   * definitions reference into the main-thread layer. Each one enters the
+   * main-thread entries behind a registering wrapper, so it becomes a real
+   * webpack-resolved module in the main-thread chunk — one live instance per
+   * thread. The wrapper is a real entry: it runs at chunk bootstrap, after
+   * the framework entry, which is early enough because the assembled
+   * definitions only look shared modules up at worklet invocation time.
+   */
+  async #includeSharedModules(
+    compiler: Compiler,
+    compilation: Compilation,
+    mainThreadEntries: string[],
+  ): Promise<void> {
+    const { EntryPlugin } = compiler.webpack;
+
+    if (mainThreadEntries.length === 0) {
+      return;
+    }
+
+    const resolver = compilation.resolverFactory.get('normal', {
+      dependencyType: 'esm',
+    });
+    const entries: Promise<void>[] = [];
+    const reserved = new Set<string>();
+    for (const module of compilation.modules) {
+      const sharedImports = (module.buildInfo
+        ?.[MTS_SHARED_IMPORTS_BUILD_INFO]) as MTSSharedImport[] | undefined;
+      if (!Array.isArray(sharedImports)) {
+        continue;
+      }
+      const context = module.context ?? compiler.context;
+      for (const { id, request } of sharedImports) {
+        if (reserved.has(id)) {
+          continue;
+        }
+        reserved.add(id);
+
+        // The request is resolved from the importing module here, since the
+        // virtual wrapper has no location of its own to resolve a relative
+        // request from; the wrapper then imports the resolved path.
+        const resource = await new Promise<string>((resolve, reject) => {
+          resolver.resolve({}, context, request, {}, (err, resolved) => {
+            if (err || typeof resolved !== 'string') {
+              reject(
+                new Error(
+                  `The shared import ${
+                    JSON.stringify(request)
+                  } of ${module.identifier()} resolved to no module to compile into the main-thread layer.`,
+                ),
+              );
+              return;
+            }
+            resolve(resolved);
+          });
+        });
+
+        // Which main-thread entry needs which shared module is unknowable
+        // before the chunk graph exists, so each one enters every main-thread
+        // entry. A registration nobody looks up costs size, not behavior.
+        for (const mainThreadEntry of mainThreadEntries) {
+          entries.push(
+            new Promise<void>((resolve, reject) => {
+              compilation.addEntry(
+                context,
+                EntryPlugin.createDependency(sharedModuleWrapper(id, resource)),
+                { name: mainThreadEntry, layer: LAYERS.MAIN_THREAD },
+                (err) => {
+                  if (err) {
+                    reject(err);
+                    return;
+                  }
+                  resolve();
+                },
+              );
+            }),
+          );
+        }
+      }
+    }
+
+    await Promise.all(entries);
   }
 
   #updateMainThreadInfo(compilation: Compilation, name: string) {

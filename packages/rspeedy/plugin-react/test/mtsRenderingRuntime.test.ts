@@ -2,6 +2,7 @@
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
 import fs from 'node:fs/promises'
+import { createRequire } from 'node:module'
 import { tmpdir } from 'node:os'
 import path from 'node:path'
 import { fileURLToPath } from 'node:url'
@@ -215,6 +216,141 @@ describe('enableMTSRendering: false runtime', () => {
       expect(getPage()?.children).toHaveLength(definitions.length)
       expect(JSON.stringify(getPage())).toContain('view')
       expect(JSON.stringify(getPage())).toContain('text')
+    } finally {
+      await fs.rm(tmp, { recursive: true, force: true })
+    }
+  })
+
+  test('its worklets call into one live shared module instance', async () => {
+    const { pluginReactLynx } = await import('../src/pluginReactLynx.js')
+
+    let mainThread = ''
+    const tmp = await fs.mkdtemp(
+      path.join(tmpdir(), 'rspeedy-react-test-main-thread-shared-runtime-'),
+    )
+
+    try {
+      const rsbuild = await createRspeedy({
+        rspeedyConfig: {
+          mode: 'production',
+          source: {
+            entry: {
+              main: fileURLToPath(
+                new URL(
+                  './fixtures/mts-rendering-shared/index.tsx',
+                  import.meta.url,
+                ),
+              ),
+            },
+          },
+          output: { distPath: { root: tmp } },
+          plugins: [
+            pluginReactLynx({ enableMTSRendering: false }),
+            {
+              name: 'ignore-css-loader-workaround',
+              pre: ['lynx:react'],
+              setup(api) {
+                api.modifyBundlerChain((chain, { CHAIN_ID }) => {
+                  const rule = chain.module
+                    .rules.get('css:react:main-thread')
+                    .uses.get(CHAIN_ID.USE.IGNORE_CSS)
+                  rule.loader(rule.get('loader') as string + '.ts')
+                })
+              },
+            } as RsbuildPlugin,
+          ],
+          tools: {
+            rspack: {
+              plugins: [
+                {
+                  name: 'collect-main-thread',
+                  apply(compiler) {
+                    compiler.hooks.compilation.tap(
+                      'collect-main-thread',
+                      (compilation) => {
+                        compilation.hooks.processAssets.tap(
+                          'collect-main-thread',
+                          (assets) => {
+                            for (const name in assets) {
+                              if (name.endsWith('main-thread.js')) {
+                                mainThread = assets[name]!.source().toString()
+                              }
+                            }
+                          },
+                        )
+                      },
+                    )
+                  },
+                } as Rspack.RspackPluginInstance,
+              ],
+            },
+          },
+        },
+      })
+
+      await rsbuild.build()
+
+      const workletIds = [
+        ...mainThread.matchAll(
+          /registerWorkletInternal\(\s*"main-thread"\s*,\s*"([^"]+)"/g,
+        ),
+      ].map(match => match[1]!)
+      expect(workletIds).toHaveLength(2)
+      const [bumpId, readId] = workletIds as [string, string]
+
+      const { env } = createMainThreadEnv()
+      Object.assign(env['lynx'] as Record<string, unknown>, {
+        getJSContext: () => ({
+          addEventListener: noop,
+          removeEventListener: noop,
+          dispatchEvent: noop,
+        }),
+        getCoreContext: () => ({
+          addEventListener: noop,
+          removeEventListener: noop,
+          dispatchEvent: noop,
+        }),
+      })
+      const require = createRequire(import.meta.url)
+      const workletRuntime = await fs.readFile(
+        require.resolve('@lynx-js/react/worklet-runtime'),
+        'utf-8',
+      )
+      env['__LoadLepusChunk'] = (name: string): boolean => {
+        if (name === 'worklet-runtime') {
+          vm.runInContext(workletRuntime, env, {
+            filename: 'worklet-runtime.js',
+          })
+          return true
+        }
+        return false
+      }
+      vm.createContext(env)
+      vm.runInContext(mainThread, env, { filename: 'main-thread.js' })
+
+      const runWorklet = env['runWorklet'] as (
+        ctx: { _wkltId: string },
+        params: unknown[],
+      ) => unknown
+      expect(runWorklet).toBeTypeOf('function')
+
+      const attributes: Record<string, unknown> = {}
+      const target = {
+        setAttribute: (name: string, value: unknown) => {
+          attributes[name] = value
+        },
+      }
+
+      // The first worklet mutates the shared module's state...
+      runWorklet({ _wkltId: bumpId }, [{ target, step: 2 }])
+      expect(attributes['total']).toBe(2)
+      runWorklet({ _wkltId: bumpId }, [{ target, step: 3 }])
+      expect(attributes['total']).toBe(5)
+
+      // ...and the second observes it: one live instance per thread.
+      runWorklet({ _wkltId: readId }, [{ target, step: 0 }])
+      expect(attributes['total']).toBe(5)
+      expect(attributes['marker']).toBe('shared-module-marker')
     } finally {
       await fs.rm(tmp, { recursive: true, force: true })
     }
