@@ -19,7 +19,7 @@ import { extractListItemPlatformInfo, platformInfoAttributes, updateListItemPlat
 import { transformRef, updateRef } from './ref.js';
 import { updateWorkletEvent } from './workletEvent.js';
 import { updateWorkletRef } from './workletRef.js';
-import { isDirectOrDeepEqual, isEmptyObject } from '../../utils.js';
+import { isDirectOrDeepEqual } from '../../utils.js';
 import { retainGestureWorkletCtx } from '../gesture/processGesture.js';
 import type { GestureKind } from '../gesture/types.js';
 import { ListUpdateInfoRecording } from '../list/listUpdateInfo.js';
@@ -74,7 +74,7 @@ function updateSpread(
   if (list?.__snapshot_def.isListHolder) {
     const oldPlatformInfo = extractListItemPlatformInfo(oldValue);
     const platformInfo = extractListItemPlatformInfo(newValue);
-    if (!isDirectOrDeepEqual(oldPlatformInfo, platformInfo)) {
+    if (!isDirectOrDeepEqual(platformInfo, oldPlatformInfo)) {
       if (__pendingListUpdates.values) {
         (__pendingListUpdates.values[list.__id] ??= new ListUpdateInfoRecording(list)).onSetAttribute(
           snapshot,
@@ -115,9 +115,20 @@ function updateSpread(
   }
 
   const dataset: Record<string, unknown> = {};
+  let datasetChanged = false;
   let match: RegExpMatchArray | null = null;
   for (const key in newValue) {
     const v = newValue[key];
+    if (key.startsWith('data-')) {
+      // collect data regardless of whether it has changed
+      dataset[key.slice(5)] = v;
+      // new dataset key or value changed
+      if (!datasetChanged) {
+        datasetChanged = !(key in oldValue) || !isDirectOrDeepEqual(v, oldValue[key]);
+      }
+      continue;
+    }
+
     if (v !== oldValue[key]) {
       if (key === 'className') {
         __SetClasses(snapshot.__elements[elementIndex]!, v as string);
@@ -127,8 +138,6 @@ function updateSpread(
         }
       } else if (key === 'id') {
         __SetID(snapshot.__elements[elementIndex]!, v as string);
-      } else if (key.startsWith('data-')) {
-        // collected below
       } else if (key === 'ref') {
         const fakeSnapshot = {
           __values: {
@@ -211,14 +220,8 @@ function updateSpread(
         __SetAttribute(snapshot.__elements[elementIndex]!, key, v);
       }
     }
-
-    // collect data regardless of whether it has changed
-    if (key.startsWith('data-')) {
-      dataset[key.slice(5)] = v;
-    }
   }
 
-  let hasOldDataset = false;
   for (const key in oldValue) {
     if (!(key in newValue)) {
       if (key === 'className') {
@@ -228,7 +231,8 @@ function updateSpread(
       } else if (key === 'id') {
         __SetID(snapshot.__elements[elementIndex]!, null);
       } else if (key.startsWith('data-')) {
-        // collected below
+        // removed dataset key
+        datasetChanged = true;
       } else if (key === 'ref') {
         const fakeSnapshot = {
           __values: {
@@ -310,15 +314,9 @@ function updateSpread(
         __SetAttribute(snapshot.__elements[elementIndex]!, key, null);
       }
     }
-
-    // collect data regardless of whether it has changed
-    if (key.startsWith('data-')) {
-      hasOldDataset = true;
-    }
   }
 
-  // TODO: compare dataset before commit it to native?
-  if (hasOldDataset || !isEmptyObject(dataset)) {
+  if (datasetChanged) {
     __SetDataset(snapshot.__elements[elementIndex]!, dataset);
   }
 }

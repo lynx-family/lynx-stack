@@ -305,8 +305,8 @@ export function updateElementTemplateListItem(
   const state = listStateByUid.get(uid)!;
   const index = findListItemIndexByUid(state.items, item.uid);
   const previous = state.items[index]!;
-  const hasCurrentChange = previous.templateKey !== item.templateKey
-    || !isDirectOrDeepEqual(previous.platformInfo, item.platformInfo);
+  const hasCurrentChange = !isDirectOrDeepEqual(item.platformInfo, previous.platformInfo)
+    || previous.templateKey !== item.templateKey;
   if (!hasCurrentChange) {
     // Hydrate emits retained item refreshes without serialized platformInfo, so
     // unchanged items must not dirty the list or trigger an empty final flush.
@@ -796,8 +796,8 @@ function collectRecordedListUpdateInfo(
     const beforeIndex = beforeIndexByUid.get(item.uid)!;
     const beforeItem = beforeItems[beforeIndex]!;
     if (
-      beforeItem.templateKey !== item.templateKey
-      || !isDirectOrDeepEqual(beforeItem.platformInfo, item.platformInfo)
+      !isDirectOrDeepEqual(item.platformInfo, beforeItem.platformInfo)
+      || beforeItem.templateKey !== item.templateKey
     ) {
       updateAction.push({
         ...item.platformInfo,

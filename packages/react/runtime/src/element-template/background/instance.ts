@@ -410,7 +410,7 @@ export class BackgroundElementTemplateInstance {
       const previous = this.getListItemPlatformInfo();
       const next = value as Record<string, SerializableValue>;
       this.listItemPlatformInfo = next;
-      if (!isDirectOrDeepEqual(previous, next)) {
+      if (!isDirectOrDeepEqual(next, previous)) {
         this.notifyParentListOfLogicalChildUpdate();
       }
     } else if (key === 'attributeSlots' && Array.isArray(value)) {
@@ -439,7 +439,7 @@ export class BackgroundElementTemplateInstance {
       for (let slotIndex = 0; slotIndex < maxLength; slotIndex += 1) {
         const previousValue = previousSlots[slotIndex];
         const nextValue = nextSlots[slotIndex];
-        if (isDirectOrDeepEqual(previousValue, nextValue)) {
+        if (isDirectOrDeepEqual(nextValue, previousValue)) {
           continue;
         }
         if (!canEmitUpdatePatch) {
@@ -535,7 +535,7 @@ export class BackgroundTypedElementTemplateInstance extends BackgroundElementTem
     if (
       isElementTemplateHydrated()
       && this.isMaterializedOnMainThread
-      && !isDirectOrDeepEqual(previousValue, nextValue)
+      && !isDirectOrDeepEqual(nextValue, previousValue)
     ) {
       pushOp(
         ElementTemplateUpdateOps.setAttribute,
