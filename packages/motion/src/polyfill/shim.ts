@@ -78,9 +78,15 @@ function shimGlobals() {
   }
 
   if (isLynxForWeb) {
-    // Lynx for Web wraps MTS code with a mutable, chunk-local `window`.
-    // @ts-expect-error The wrapper binding intentionally differs from Window.
-    window = motionWindow;
+    try {
+      // Lynx for Web wraps MTS code with a mutable, chunk-local `window`.
+      // @ts-expect-error The wrapper binding intentionally differs from Window.
+      window = motionWindow;
+    } catch {
+      // Older Lynx for Web runtimes declare the chunk-local `window` binding
+      // as a `const`, so this assignment throws. Skip the window facade there
+      // instead of failing the whole MTS chunk.
+    }
     // These identifiers are not shadowed by the MTS wrapper, so replace the
     // iframe's browser constructors with their Lynx equivalents.
     // @ts-expect-error Lynx main-thread elements intentionally differ from DOM elements.

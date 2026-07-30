@@ -102,6 +102,32 @@ describe('Shim', () => {
       globalThis.getComputedStyle,
     );
   });
+
+  test('should tolerate an immutable window binding from older Lynx for Web runtimes', async () => {
+    (globalThis as any).SystemInfo = { platform: 'web' };
+    // Older Lynx for Web MTS wrappers declare `window` as a `const`, so
+    // assigning to it throws in strict mode. A non-writable property fails
+    // the same way.
+    const immutableWindow = {} as Window & typeof globalThis;
+    Object.defineProperty(globalThis, 'window', {
+      value: immutableWindow,
+      writable: false,
+      configurable: true,
+    });
+
+    try {
+      await expect(import('../src/polyfill/shim.js')).resolves.toBeDefined();
+
+      // The window facade is skipped, but the remaining shims still apply.
+      expect(globalThis.window).toBe(immutableWindow);
+      expect(typeof globalThis.Element).toBe('function');
+      expect(globalThis.HTMLElement).toBe(globalThis.Element);
+      expect(globalThis.getComputedStyle).toBeDefined();
+    } finally {
+      // Make `window` assignable again so afterEach can restore it.
+      delete (globalThis as any).window;
+    }
+  });
 });
 
 describe('Shim queueMicrotask', () => {
