@@ -1,0 +1,108 @@
+// Copyright 2026 The Lynx Authors. All rights reserved.
+// Licensed under the Apache License Version 2.0 that can be found in the
+// LICENSE file in the root directory of this source tree.
+import type { RsbuildConfig, Rspack } from '@rsbuild/core'
+import { describe, expect, test } from '@rstest/core'
+
+import { createStubRsbuild } from './createStubRsbuild.js'
+
+interface MinimizerLike {
+  constructor: { name: string }
+  _args: [Rspack.SwcJsMinimizerRspackPluginOptions]
+}
+
+const findJsMinimizers = (config: Rspack.Configuration) =>
+  ((config.optimization?.minimizer ?? []) as unknown[]).filter(
+    (m): m is MinimizerLike =>
+      typeof m === 'object' && m !== null
+      && m.constructor.name === 'SwcJsMinimizerRspackPlugin',
+  )
+
+describe('pluginMinify', () => {
+  test('defaults', async () => {
+    const rsbuild = await createStubRsbuild({ mode: 'production' })
+    const config = await rsbuild.unwrapConfig({ action: 'build' })
+
+    const [minimizer] = findJsMinimizers(config)
+    const options = minimizer?._args[0]?.minimizerOptions
+
+    expect(options?.compress).toMatchObject({
+      negate_iife: false,
+      join_vars: false,
+      ecma: 2015,
+      inline: 2,
+      comparisons: false,
+      toplevel: true,
+      side_effects: false,
+    })
+    expect(options?.mangle).toMatchObject({ toplevel: true })
+    expect(options?.format).toMatchObject({
+      keep_quoted_props: true,
+      comments: false,
+    })
+  })
+
+  test('output.minify: false disables minification', async () => {
+    const rsbuild = await createStubRsbuild({
+      mode: 'production',
+      output: { minify: false },
+    })
+    const config = await rsbuild.unwrapConfig({ action: 'build' })
+
+    expect(config.optimization?.minimize).toBe(false)
+  })
+
+  test('user jsOptions are merged onto the Lynx defaults', async () => {
+    const rsbuild = await createStubRsbuild({
+      mode: 'production',
+      output: {
+        minify: {
+          jsOptions: {
+            minimizerOptions: {
+              compress: { pure_funcs: ['console.log'] },
+            },
+          },
+        },
+      },
+    })
+    const config = await rsbuild.unwrapConfig({ action: 'build' })
+
+    const [minimizer] = findJsMinimizers(config)
+    const options = minimizer?._args[0]?.minimizerOptions
+    const compress = options?.compress as Record<string, unknown>
+
+    expect(compress['pure_funcs']).toEqual(['console.log'])
+    expect(compress['negate_iife']).toBe(false)
+    expect(compress['toplevel']).toBe(true)
+  })
+
+  test('thread-specific js minimizers', async () => {
+    const rsbuild = await createStubRsbuild({
+      mode: 'production',
+      output: {
+        minify: {
+          mainThreadOptions: {
+            minimizerOptions: {
+              compress: { pure_funcs: ['__MAIN__'] },
+            },
+          },
+          backgroundOptions: {
+            minimizerOptions: {
+              compress: { pure_funcs: ['__BG__'] },
+            },
+          },
+        } as NonNullable<NonNullable<RsbuildConfig['output']>['minify']>,
+      },
+    })
+    const config = await rsbuild.unwrapConfig({ action: 'build' })
+
+    const minimizers = findJsMinimizers(config)
+    expect(minimizers.length).toBe(3)
+
+    const serialized = JSON.stringify(
+      minimizers.map((minimizer) => minimizer._args[0]),
+    )
+    expect(serialized).toContain('__MAIN__')
+    expect(serialized).toContain('__BG__')
+  })
+})
