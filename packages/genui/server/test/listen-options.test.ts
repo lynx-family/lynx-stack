@@ -31,4 +31,14 @@ describe('resolveListenOptions', () => {
       })
     ).toThrow('Invalid PORT value: not-a-port');
   });
+
+  test('rejects blank PORT values', () => {
+    for (const value of ['', '   ']) {
+      expect(() =>
+        resolveListenOptions({
+          PORT: value,
+        })
+      ).toThrow(`Invalid PORT value: ${value}`);
+    }
+  });
 });

@@ -13,6 +13,10 @@ export interface ListenOptions {
 function readPort(value: string | undefined, variableName: string): number {
   if (value === undefined) return DEFAULT_PORT;
 
+  if (value.trim() === '') {
+    throw new Error(`Invalid ${variableName} value: ${value}`);
+  }
+
   const port = Number(value);
   if (!Number.isInteger(port) || port < 0 || port > 65_535) {
     throw new Error(`Invalid ${variableName} value: ${value}`);
