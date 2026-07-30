@@ -12,7 +12,6 @@ import './BenchPage.css';
 
 import { Button } from '../components/Button.js';
 import {
-  ArrowUpRight,
   Copy,
   History,
   Maximize2,
@@ -28,7 +27,14 @@ import { PageHeader } from '../components/PageHeader.js';
 import { copyToClipboard } from '../utils/clipboard.js';
 
 type BenchRole = 'control' | 'experiment';
-type BenchVariable = 'model' | 'prompt' | 'catalog' | 'custom';
+type BenchProtocol = 'a2ui' | 'openui';
+type BenchProfile = 'native' | 'matched-core';
+type BenchVariable =
+  | 'protocol'
+  | 'model'
+  | 'prompt'
+  | 'catalog'
+  | 'custom';
 type BenchStatus = 'idle' | 'running' | 'complete' | 'failed' | 'cancelled';
 type BenchScreenshotState = 'captured' | 'failed' | 'missing';
 
@@ -41,6 +47,8 @@ interface BenchEnv {
 interface BenchGroup {
   id: string;
   role: BenchRole;
+  protocol: BenchProtocol;
+  profile: BenchProfile;
   name: string;
   variable: BenchVariable;
   model: string;
@@ -71,6 +79,8 @@ interface BenchResult {
   groupId: string;
   groupName: string;
   role: BenchRole;
+  protocol?: BenchProtocol;
+  profile?: BenchProfile;
   scenarioId: string;
   scenarioName: string;
   repeatIndex?: number;
@@ -98,6 +108,8 @@ interface BenchGroupSummary {
   groupId: string;
   groupName: string;
   role: BenchRole;
+  protocol?: BenchProtocol;
+  profile?: BenchProfile;
   runCount?: number;
   failedRuns?: number;
   successRate?: number;
@@ -120,7 +132,6 @@ interface BenchReport {
   settings: BenchSettings;
   env: {
     apiKeyConfigured: boolean;
-    baseURL: string;
     model: string;
     clientOverrideAccepted?: boolean;
   };
@@ -183,7 +194,6 @@ interface BenchJobSnapshot {
 interface BenchHistoryConfig {
   env: {
     apiKeyConfigured: boolean;
-    baseURL: string;
     model: string;
   };
   settings: BenchSettings;
@@ -275,7 +285,9 @@ const DEFAULT_GROUPS: BenchGroup[] = [
   {
     id: 'control-default',
     role: 'control',
-    name: 'Default Prompt',
+    protocol: 'a2ui',
+    profile: 'native',
+    name: '默认 Prompt',
     variable: 'prompt',
     model: 'gpt-5.5-2026-04-24',
     catalog: 'Full Catalog',
@@ -285,7 +297,9 @@ const DEFAULT_GROUPS: BenchGroup[] = [
   {
     id: 'experiment-token',
     role: 'experiment',
-    name: 'Token Efficient',
+    protocol: 'a2ui',
+    profile: 'native',
+    name: 'Token 精简',
     variable: 'prompt',
     model: 'gpt-5.5-2026-04-24',
     catalog: 'Full Catalog',
@@ -296,6 +310,8 @@ const DEFAULT_GROUPS: BenchGroup[] = [
   {
     id: 'experiment-core',
     role: 'experiment',
+    protocol: 'a2ui',
+    profile: 'native',
     name: 'Core Catalog',
     variable: 'catalog',
     model: 'gpt-5.5-2026-04-24',
@@ -304,6 +320,72 @@ const DEFAULT_GROUPS: BenchGroup[] = [
     enabled: true,
   },
 ];
+
+const EMPTY_GROUPS: BenchGroup[] = [
+  {
+    id: 'control-empty',
+    role: 'control',
+    protocol: 'a2ui',
+    profile: 'native',
+    name: 'Baseline',
+    variable: 'custom',
+    model: DEFAULT_ENV.model,
+    catalog: 'Full Catalog',
+    extraInstruction: '',
+    enabled: true,
+  },
+];
+
+const PROTOCOL_PAIR_GROUPS: BenchGroup[] = [
+  {
+    id: 'control-a2ui-matched',
+    role: 'control',
+    protocol: 'a2ui',
+    profile: 'matched-core',
+    name: 'A2UI',
+    variable: 'protocol',
+    model: DEFAULT_ENV.model,
+    catalog: 'Core Catalog',
+    extraInstruction: '',
+    enabled: true,
+  },
+  {
+    id: 'experiment-openui-matched',
+    role: 'experiment',
+    protocol: 'openui',
+    profile: 'matched-core',
+    name: 'OpenUI',
+    variable: 'protocol',
+    model: DEFAULT_ENV.model,
+    catalog: 'Core Catalog',
+    extraInstruction: '',
+    enabled: true,
+  },
+];
+
+const COMBINED_GROUPS: BenchGroup[] = [
+  ...DEFAULT_GROUPS,
+  ...PROTOCOL_PAIR_GROUPS,
+];
+
+type BenchGroupPreset =
+  | 'a2ui-variants'
+  | 'protocol-pair'
+  | 'combined'
+  | 'blank';
+
+function getBenchGroupPreset(preset: BenchGroupPreset): BenchGroup[] {
+  switch (preset) {
+    case 'a2ui-variants':
+      return DEFAULT_GROUPS;
+    case 'protocol-pair':
+      return PROTOCOL_PAIR_GROUPS;
+    case 'combined':
+      return COMBINED_GROUPS;
+    case 'blank':
+      return EMPTY_GROUPS;
+  }
+}
 
 const DEFAULT_SCENARIOS: BenchScenario[] = [
   {
@@ -486,6 +568,11 @@ function getA2UIBenchReportEndpoint(jobId: string): string {
   }
 }
 
+function getA2UIBenchJobEndpoint(jobId: string): string {
+  const jobsEndpoint = getA2UIBenchJobsEndpoint();
+  return `${jobsEndpoint}/${encodeURIComponent(jobId)}`;
+}
+
 function getA2UIBenchJobIdFromUrl(): string | null {
   const params = new URLSearchParams(window.location.search);
   const fromSearch = params.get('a2uiBenchJobId') ?? params.get('benchJobId');
@@ -554,29 +641,13 @@ function isProviderConfigured(env: BenchEnv): boolean {
     || (model.length > 0 && model !== DEFAULT_ENV.model);
 }
 
-function getProviderPlanLabel(
-  env: BenchEnv,
-  providerConfigured: boolean,
-): string {
-  if (!providerConfigured) return 'Server default';
-  return env.model || 'Model override';
-}
-
-function getProviderPlanMeta(
-  env: BenchEnv,
-  providerConfigured: boolean,
-): string {
-  if (!providerConfigured) return 'From /a2ui/health';
-  return env.apiKey.trim() ? 'Key set' : 'No key';
-}
-
 function getBenchHealthKeyLabel(
   health: BenchHealth | null,
   healthError: string | null,
 ): string {
-  if (health) return health.hasKey ? 'Configured' : 'Missing';
-  if (healthError) return 'Unknown';
-  return 'Checking...';
+  if (health) return health.hasKey ? '已配置' : '未配置';
+  if (healthError) return '状态未知';
+  return '检查中…';
 }
 
 function formatMs(value: number): string {
@@ -586,10 +657,6 @@ function formatMs(value: number): string {
 
 function formatNumber(value: number): string {
   return Math.round(value).toLocaleString();
-}
-
-function pluralize(count: number, singular: string, plural = `${singular}s`) {
-  return `${count} ${count === 1 ? singular : plural}`;
 }
 
 function cloneBenchGroups(groups: BenchGroup[]): BenchGroup[] {
@@ -602,6 +669,41 @@ function cloneBenchScenarios(scenarios: BenchScenario[]): BenchScenario[] {
 
 function cloneBenchSettings(settings: BenchSettings): BenchSettings {
   return { ...settings };
+}
+
+function createBenchPlanSignature(
+  groups: BenchGroup[],
+  scenarios: BenchScenario[],
+  settings: BenchSettings,
+  env: {
+    apiKey?: string;
+    apiKeyConfigured?: boolean;
+    baseURL: string;
+    model: string;
+  },
+): string {
+  return JSON.stringify({
+    groups: groups.map((group) => ({
+      id: group.id,
+      role: group.role,
+      protocol: group.protocol,
+      profile: group.profile,
+      name: group.name,
+      model: group.model,
+      catalog: usesCatalog(group) ? group.catalog : undefined,
+      extraInstruction: group.extraInstruction,
+      enabled: group.enabled,
+    })),
+    scenarios,
+    settings,
+    provider: {
+      apiKeyConfigured: env.apiKey === undefined
+        ? Boolean(env.apiKeyConfigured)
+        : Boolean(env.apiKey.trim()),
+      baseURL: env.baseURL,
+      model: env.model,
+    },
+  });
 }
 
 function readFiniteNumber(value: unknown, fallback: number): number {
@@ -619,10 +721,19 @@ function isBenchRole(value: unknown): value is BenchRole {
 }
 
 function isBenchVariable(value: unknown): value is BenchVariable {
-  return value === 'model'
+  return value === 'protocol'
+    || value === 'model'
     || value === 'prompt'
     || value === 'catalog'
     || value === 'custom';
+}
+
+function isBenchProtocol(value: unknown): value is BenchProtocol {
+  return value === 'a2ui' || value === 'openui';
+}
+
+function isBenchProfile(value: unknown): value is BenchProfile {
+  return value === 'native' || value === 'matched-core';
 }
 
 function createBenchSettingsFromReport(report: BenchReport): BenchSettings {
@@ -656,9 +767,16 @@ function createBenchGroupsFromReport(report: BenchReport): BenchGroup[] {
   const reportGroups = Array.isArray(report.groups) ? report.groups : [];
   const groups = reportGroups.map((group, index) => {
     const item = group as Partial<BenchGroup>;
+    const protocol = isBenchProtocol(item.protocol)
+      ? item.protocol
+      : 'a2ui';
     return {
       id: item.id ?? createId(`history-group-${index + 1}`),
       role: isBenchRole(item.role) ? item.role : 'experiment',
+      protocol,
+      profile: isBenchProfile(item.profile)
+        ? item.profile
+        : (protocol === 'openui' ? 'matched-core' : 'native'),
       name: item.name ?? `Group ${index + 1}`,
       variable: isBenchVariable(item.variable) ? item.variable : 'custom',
       model: item.model ?? fallbackModel,
@@ -680,7 +798,7 @@ function createBenchScenariosFromReport(report: BenchReport): BenchScenario[] {
       id: item.id ?? createId(`history-scenario-${index + 1}`),
       name: item.name ?? `Scenario ${index + 1}`,
       prompt: item.prompt ?? '',
-      type: item.type ?? 'Custom',
+      type: item.type ?? '自定义',
       complexity: readFiniteNumber(item.complexity, 1),
       action: item.action ?? '',
     };
@@ -715,10 +833,28 @@ function readBenchHistory(): BenchHistoryEntry[] {
     if (!raw) return [];
     const parsed = JSON.parse(raw) as unknown;
     if (!Array.isArray(parsed)) return [];
-    return parsed.filter((entry) => isBenchHistoryEntry(entry)).slice(
-      0,
-      BENCH_HISTORY_LIMIT,
-    );
+    return parsed.filter((entry) => isBenchHistoryEntry(entry)).map((entry) => {
+      const safeReport = sanitizeBenchReportValue(entry.report) as BenchReport;
+      const configReport = {
+        ...safeReport,
+        groups: entry.config.groups,
+        scenarios: entry.config.scenarios,
+        settings: entry.config.settings,
+      };
+      return {
+        ...entry,
+        report: safeReport,
+        config: {
+          env: {
+            apiKeyConfigured: Boolean(entry.config.env.apiKeyConfigured),
+            model: entry.config.env.model ?? DEFAULT_ENV.model,
+          },
+          groups: createBenchGroupsFromReport(configReport),
+          scenarios: createBenchScenariosFromReport(configReport),
+          settings: createBenchSettingsFromReport(configReport),
+        },
+      };
+    }).slice(0, BENCH_HISTORY_LIMIT);
   } catch {
     return [];
   }
@@ -726,9 +862,24 @@ function readBenchHistory(): BenchHistoryEntry[] {
 
 function persistBenchHistory(entries: BenchHistoryEntry[]): void {
   try {
+    const persistableEntries = entries.slice(0, BENCH_HISTORY_LIMIT).map(
+      (entry) => ({
+        ...entry,
+        report: sanitizeBenchReportValue(entry.report),
+        config: {
+          groups: entry.config.groups,
+          scenarios: entry.config.scenarios,
+          settings: entry.config.settings,
+          env: {
+            apiKeyConfigured: entry.config.env.apiKeyConfigured,
+            model: entry.config.env.model,
+          },
+        },
+      }),
+    );
     window.localStorage.setItem(
       BENCH_HISTORY_STORAGE_KEY,
-      JSON.stringify(entries.slice(0, BENCH_HISTORY_LIMIT)),
+      JSON.stringify(persistableEntries),
     );
   } catch {
     // History is a convenience layer; quota/private-mode failures should not
@@ -744,16 +895,22 @@ function createBenchHistoryEntry(
   settings: BenchSettings,
 ): BenchHistoryEntry {
   const totalRuns = report.summary?.totalRuns ?? report.results.length;
+  const protocols = [
+    ...new Set(
+      createBenchGroupsFromReport(report).map((group) =>
+        group.protocol === 'openui' ? 'OpenUI' : 'A2UI'
+      ),
+    ),
+  ];
   return {
     id: createId('bench-history'),
-    title: `${report.env.model || env.model} · ${pluralize(totalRuns, 'run')}`,
+    title: `${protocols.join(' + ')} · ${totalRuns} Runs`,
     savedAt: new Date().toISOString(),
-    report,
+    report: sanitizeBenchReportValue(report) as BenchReport,
     config: {
       env: {
         apiKeyConfigured: Boolean(env.apiKey.trim())
           || report.env.apiKeyConfigured,
-        baseURL: env.baseURL || report.env.baseURL,
         model: env.model || report.env.model,
       },
       settings: cloneBenchSettings(settings),
@@ -770,7 +927,7 @@ function createBenchHistoryEntryFromReport(
     report,
     {
       apiKey: '',
-      baseURL: report.env?.baseURL || DEFAULT_ENV.baseURL,
+      baseURL: DEFAULT_ENV.baseURL,
       model: report.env?.model || DEFAULT_ENV.model,
     },
     createBenchGroupsFromReport(report),
@@ -796,6 +953,48 @@ function getErrorMessage(error: unknown): string {
   return String(error);
 }
 
+export function shouldApplyBenchReportRequest(
+  controller: AbortController,
+  activeController: AbortController | null,
+): boolean {
+  return !controller.signal.aborted && activeController === controller;
+}
+
+function isSensitiveBenchReportKey(key: string): boolean {
+  const normalized = key.replaceAll(/[-_]/gu, '').toLowerCase();
+  return normalized === 'apikey'
+    || normalized === 'authorization'
+    || normalized === 'accesstoken'
+    || normalized === 'token'
+    || normalized === 'secret'
+    || normalized === 'baseurl'
+    || normalized === 'screenshotdataurl';
+}
+
+function sanitizeBenchReportValue(value: unknown): unknown {
+  if (typeof value === 'string') {
+    return value
+      .replace(/https?:\/\/[^\s"'<>]+/giu, '[redacted URL]')
+      .replace(/Bearer\s+\S+/giu, 'Bearer [redacted]');
+  }
+  if (Array.isArray(value)) {
+    return value.map((item) => sanitizeBenchReportValue(item));
+  }
+  if (!isRecord(value)) return value;
+
+  return Object.fromEntries(
+    Object.entries(value).flatMap(([key, item]) =>
+      isSensitiveBenchReportKey(key)
+        ? []
+        : [[key, sanitizeBenchReportValue(item)]]
+    ),
+  );
+}
+
+export function serializeBenchReport(report: BenchReport): string {
+  return JSON.stringify(sanitizeBenchReportValue(report), null, 2);
+}
+
 function readEventData<T>(event: MessageEvent<unknown>): T | null {
   if (typeof event.data !== 'string') return null;
   try {
@@ -803,11 +1002,6 @@ function readEventData<T>(event: MessageEvent<unknown>): T | null {
   } catch {
     return null;
   }
-}
-
-function average(values: number[]): number {
-  if (values.length === 0) return 0;
-  return values.reduce((sum, value) => sum + value, 0) / values.length;
 }
 
 function deltaText(value: number, baseline: number, suffix = ''): string {
@@ -818,9 +1012,9 @@ function deltaText(value: number, baseline: number, suffix = ''): string {
 }
 
 function getRunButtonText(status: BenchStatus): string {
-  if (status === 'running') return 'Running';
-  if (status === 'failed') return 'Retry Bench';
-  return 'Run Bench';
+  if (status === 'running') return '运行中';
+  if (status === 'failed') return '重新运行';
+  return '运行 Bench';
 }
 
 function getProgressWidth(
@@ -842,18 +1036,17 @@ function getRunMetaText(
   if (status === 'running') {
     return `${Math.round(progress)}% · ${runMessage}`;
   }
-  if (status === 'idle') return `${pluralize(runCount, 'planned run')}`;
+  if (status === 'idle') return `计划运行 ${runCount} Runs`;
   return runMessage;
 }
 
-function formatReportJudgeMetric(report: BenchReport | null): string {
-  if (report?.capabilities?.judge === 'disabled') return 'off';
-  if (!report || report.summaries.length === 0) return 'n/a';
-  const judged = report.summaries.filter((item) =>
-    item.judgeRunCount === undefined || item.judgeRunCount > 0
-  );
-  if (judged.length === 0) return 'n/a';
-  return `${average(judged.map((item) => item.avgJudgeScore)).toFixed(1)}/5`;
+function getReportSubtitle(
+  report: BenchReport | null,
+  reportIsStale: boolean,
+): string {
+  if (!report) return '暂无报告';
+  if (reportIsStale) return '当前计划已变更 · 显示上次 Report';
+  return new Date(report.createdAt).toLocaleString();
 }
 
 function formatSummaryJudgeMetric(
@@ -896,23 +1089,23 @@ function getScreenshotState(
 function getScreenshotStateLabelFromState(
   state: BenchScreenshotState,
 ): string {
-  if (state === 'captured') return 'Captured';
-  if (state === 'failed') return 'Failed';
-  return 'No capture';
+  if (state === 'captured') return '已截图';
+  if (state === 'failed') return '运行失败';
+  return '无截图';
 }
 
 function getScreenshotPlaceholderText(result: BenchResult | null): string {
   if (!result) {
-    return 'No bench result was reported for this slot.';
+    return '这个位置没有收到 Bench 结果。';
   }
   if (isBenchRunFailed(result)) {
     return result.error
       ?? result.errors?.[0]
-      ?? 'Run failed before a screenshot was captured.';
+      ?? '截图前运行已失败。';
   }
   return result.errors?.find((error) =>
     error.toLowerCase().includes('screenshot')
-  ) ?? 'No screenshot was captured for this run.';
+  ) ?? '这次运行没有保存截图。';
 }
 
 function createBenchGroupsForMatrix(report: BenchReport): BenchGroup[] {
@@ -926,6 +1119,9 @@ function createBenchGroupsForMatrix(report: BenchReport): BenchGroup[] {
     return [{
       id: result.groupId,
       role: result.role,
+      protocol: result.protocol ?? 'a2ui',
+      profile: result.profile
+        ?? (result.protocol === 'openui' ? 'matched-core' : 'native'),
       name: result.groupName,
       variable: 'custom' as BenchVariable,
       model: result.model ?? report.env?.model ?? DEFAULT_ENV.model,
@@ -953,7 +1149,7 @@ function createBenchScenariosForMatrix(report: BenchReport): BenchScenario[] {
       id: result.scenarioId,
       name: result.scenarioName,
       prompt: '',
-      type: 'Custom',
+      type: '自定义',
       complexity: 1,
       action: '',
     }];
@@ -1048,6 +1244,73 @@ function groupPatch<K extends keyof BenchGroup>(
   return { [key]: value } as Pick<BenchGroup, K>;
 }
 
+function usesCatalog(group: BenchGroup): boolean {
+  return group.protocol === 'a2ui' && group.profile === 'native';
+}
+
+function getBaselineCompatibilityScore(
+  candidate: BenchGroup,
+  group: BenchGroup,
+): number {
+  const catalogMatches = usesCatalog(candidate) && usesCatalog(group)
+    && candidate.catalog === group.catalog;
+  return Number(candidate.profile === group.profile) * 8
+    + Number(candidate.model === group.model) * 4
+    + Number(candidate.protocol === group.protocol) * 2
+    + Number(catalogMatches);
+}
+
+function findComparableBaseline(
+  group: BenchGroup,
+  groups: BenchGroup[],
+): BenchGroup | undefined {
+  if (group.role === 'control') return group;
+
+  const controls = groups.filter((candidate) =>
+    candidate.role === 'control' && candidate.id !== group.id
+  );
+  return controls.sort((left, right) => {
+    return getBaselineCompatibilityScore(right, group)
+      - getBaselineCompatibilityScore(left, group);
+  })[0] ?? groups[0];
+}
+
+function getBenchGroupDifferences(
+  group: BenchGroup,
+  baseline: BenchGroup | undefined,
+): string[] {
+  if (!baseline || group.id === baseline.id) return [];
+
+  const differences: string[] = [];
+  if (group.protocol !== baseline.protocol) differences.push('Protocol');
+  if (group.profile !== baseline.profile) differences.push('Profile');
+  if (group.model !== baseline.model) differences.push('Model');
+  if (
+    usesCatalog(group) && usesCatalog(baseline)
+    && group.catalog !== baseline.catalog
+  ) {
+    differences.push('Catalog');
+  }
+  if (group.extraInstruction !== baseline.extraInstruction) {
+    differences.push('Prompt');
+  }
+  return differences;
+}
+
+function inferBenchVariable(
+  group: BenchGroup,
+  baseline: BenchGroup | undefined,
+): BenchVariable {
+  const differences = getBenchGroupDifferences(group, baseline);
+  if (differences.length !== 1) return 'custom';
+  const [difference] = differences;
+  if (difference === 'Protocol') return 'protocol';
+  if (difference === 'Model') return 'model';
+  if (difference === 'Catalog') return 'catalog';
+  if (difference === 'Prompt') return 'prompt';
+  return 'custom';
+}
+
 function getBenchRunBlockers(
   activeGroupCount: number,
   scenarioCount: number,
@@ -1055,15 +1318,104 @@ function getBenchRunBlockers(
 ): string[] {
   const issues: string[] = [];
   if (activeGroupCount === 0) {
-    issues.push('Enable at least one control or experiment group.');
+    issues.push('至少启用一个对比组。');
   }
   if (scenarioCount === 0) {
-    issues.push('Add at least one scenario.');
+    issues.push('至少添加一个场景。');
   }
   if (repeats < 1) {
-    issues.push('Set repeats to at least 1.');
+    issues.push('Repeats 不能小于 1。');
   }
   return issues;
+}
+
+interface BenchDropdownOption<T extends string> {
+  value: T;
+  label: string;
+  description?: string;
+}
+
+function BenchDropdown<T extends string>(props: {
+  ariaLabel: string;
+  disabled?: boolean;
+  onChange: (value: T) => void;
+  options: readonly BenchDropdownOption<T>[];
+  value: T;
+}) {
+  const [open, setOpen] = useState(false);
+  const rootRef = useRef<HTMLDivElement | null>(null);
+  const selected = props.options.find((option) => option.value === props.value)
+    ?? props.options[0];
+
+  useEffect(() => {
+    if (!open) return;
+
+    const closeOnOutsidePointer = (event: PointerEvent) => {
+      if (
+        event.target instanceof Node
+        && !rootRef.current?.contains(event.target)
+      ) {
+        setOpen(false);
+      }
+    };
+    const closeOnEscape = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') setOpen(false);
+    };
+
+    document.addEventListener('pointerdown', closeOnOutsidePointer);
+    document.addEventListener('keydown', closeOnEscape);
+    return () => {
+      document.removeEventListener('pointerdown', closeOnOutsidePointer);
+      document.removeEventListener('keydown', closeOnEscape);
+    };
+  }, [open]);
+
+  return (
+    <div
+      className='benchDropdown'
+      data-disabled={props.disabled ?? undefined}
+      data-open={open ? true : undefined}
+      ref={rootRef}
+    >
+      <button
+        type='button'
+        className='benchDropdownTrigger'
+        aria-expanded={open}
+        aria-label={props.ariaLabel}
+        disabled={props.disabled}
+        onClick={() => setOpen((current) => !current)}
+      >
+        <span>{selected?.label ?? props.value}</span>
+      </button>
+      {open && !props.disabled
+        ? (
+          <div
+            className='benchDropdownMenu'
+            role='group'
+            aria-label={props.ariaLabel}
+          >
+            {props.options.map((option) => (
+              <button
+                type='button'
+                aria-pressed={option.value === props.value}
+                data-selected={option.value === props.value || undefined}
+                key={option.value}
+                onClick={() => {
+                  props.onChange(option.value);
+                  setOpen(false);
+                }}
+              >
+                <span>{option.label}</span>
+                {option.description
+                  ? <small>{option.description}</small>
+                  : null}
+              </button>
+            ))}
+          </div>
+        )
+        : null}
+    </div>
+  );
 }
 
 interface BenchPageProps {
@@ -1072,14 +1424,14 @@ interface BenchPageProps {
 
 export function BenchPage({ showHeader = true }: BenchPageProps) {
   const [env, setEnv] = useState<BenchEnv>(DEFAULT_ENV);
-  const [groups, setGroups] = useState<BenchGroup[]>(DEFAULT_GROUPS);
+  const [groups, setGroups] = useState<BenchGroup[]>(EMPTY_GROUPS);
   const [scenarios, setScenarios] = useState<BenchScenario[]>(
     DEFAULT_SCENARIOS,
   );
   const [settings, setSettings] = useState<BenchSettings>(DEFAULT_SETTINGS);
   const [status, setStatus] = useState<BenchStatus>('idle');
   const [progress, setProgress] = useState(0);
-  const [runMessage, setRunMessage] = useState('Ready');
+  const [runMessage, setRunMessage] = useState('准备就绪');
   const [configOpen, setConfigOpen] = useState(false);
   const [benchRunNoticeOpen, setBenchRunNoticeOpen] = useState(false);
   const [benchHealth, setBenchHealth] = useState<BenchHealth | null>(null);
@@ -1097,6 +1449,9 @@ export function BenchPage({ showHeader = true }: BenchPageProps) {
     false,
   );
   const [report, setReport] = useState<BenchReport | null>(null);
+  const [reportPlanSignature, setReportPlanSignature] = useState<string | null>(
+    null,
+  );
   const [historyItems, setHistoryItems] = useState<BenchHistoryEntry[]>(
     readBenchHistory,
   );
@@ -1107,12 +1462,65 @@ export function BenchPage({ showHeader = true }: BenchPageProps) {
   // eslint-disable-next-line n/no-unsupported-features/node-builtins
   const eventSourceRef = useRef<EventSource | null>(null);
   const benchAbortRef = useRef<AbortController | null>(null);
+  const historyReportAbortRef = useRef<AbortController | null>(null);
+  const activeJobIdRef = useRef<string | null>(null);
 
   const activeGroups = useMemo(
     () => groups.filter((group) => group.enabled),
     [groups],
   );
+  const controlGroupCount = useMemo(
+    () => groups.filter((group) => group.role === 'control').length,
+    [groups],
+  );
+  const runGroups = useMemo(
+    () =>
+      activeGroups.map((group) => ({
+        ...group,
+        variable: inferBenchVariable(
+          group,
+          findComparableBaseline(group, activeGroups),
+        ),
+      })),
+    [activeGroups],
+  );
+  const activeProtocols = useMemo(
+    () => [...new Set(activeGroups.map((group) => group.protocol))],
+    [activeGroups],
+  );
+  const groupBaselines = useMemo(
+    () =>
+      new Map(
+        groups.map((group) => [
+          group.id,
+          findComparableBaseline(group, activeGroups),
+        ]),
+      ),
+    [activeGroups, groups],
+  );
+  const groupDifferences = useMemo(
+    () =>
+      new Map(
+        groups.map((group) => [
+          group.id,
+          getBenchGroupDifferences(group, groupBaselines.get(group.id)),
+        ]),
+      ),
+    [groupBaselines, groups],
+  );
   const runCount = activeGroups.length * scenarios.length * settings.repeats;
+  const planLocked = status === 'running';
+  const planSignature = useMemo(
+    () => createBenchPlanSignature(runGroups, scenarios, settings, env),
+    [env, runGroups, scenarios, settings],
+  );
+  const reportIsStale = Boolean(
+    report && reportPlanSignature !== planSignature,
+  );
+  const reportSettings = useMemo(
+    () => report ? createBenchSettingsFromReport(report) : settings,
+    [report, settings],
+  );
   const activeScenarioTypes = useMemo(
     () => [...new Set(scenarios.map((scenario) => scenario.type))],
     [scenarios],
@@ -1133,7 +1541,22 @@ export function BenchPage({ showHeader = true }: BenchPageProps) {
     eventSourceRef.current = null;
     benchAbortRef.current?.abort();
     benchAbortRef.current = null;
+    historyReportAbortRef.current?.abort();
+    historyReportAbortRef.current = null;
   }, []);
+
+  const cancelActiveBenchJob = useCallback(() => {
+    const jobId = activeJobIdRef.current;
+    activeJobIdRef.current = null;
+    clearActiveJobConnection();
+    if (!jobId) return;
+    void window.fetch(getA2UIBenchJobEndpoint(jobId), {
+      method: 'DELETE',
+    }).catch(() => {
+      // Cancellation is best-effort; resetting the local runner must still
+      // work if the server has already finalized or expired the job.
+    });
+  }, [clearActiveJobConnection]);
 
   useEffect(() => clearActiveJobConnection, [clearActiveJobConnection]);
 
@@ -1209,13 +1632,19 @@ export function BenchPage({ showHeader = true }: BenchPageProps) {
     if (!jobId) return;
 
     let cancelled = false;
+    const controller = new AbortController();
+    historyReportAbortRef.current?.abort();
+    historyReportAbortRef.current = controller;
     setStatus('running');
     setProgress(0);
-    setRunMessage(`Loading report ${jobId.slice(0, 8)}...`);
+    setRunMessage(`正在载入 Report ${jobId.slice(0, 8)}…`);
 
     void (async () => {
       try {
-        const response = await window.fetch(getA2UIBenchReportEndpoint(jobId));
+        const response = await window.fetch(
+          getA2UIBenchReportEndpoint(jobId),
+          { signal: controller.signal },
+        );
         const payload = await response.json().catch(() => ({})) as
           | BenchReport
           | { error?: string };
@@ -1223,17 +1652,33 @@ export function BenchPage({ showHeader = true }: BenchPageProps) {
           throw new Error(
             'error' in payload && payload.error
               ? payload.error
-              : `Bench report load failed: ${response.status}`,
+              : `Report 载入失败：${response.status}`,
           );
         }
-        if (cancelled) return;
+        if (
+          cancelled
+          || !shouldApplyBenchReportRequest(
+            controller,
+            historyReportAbortRef.current,
+          )
+        ) {
+          return;
+        }
         const historyEntry = createBenchHistoryEntryFromReport(payload);
-        setReport(payload);
-        setEnv((current) => ({
-          apiKey: current.apiKey,
-          baseURL: historyEntry.config.env.baseURL,
+        const restoredEnv = {
+          ...DEFAULT_ENV,
           model: historyEntry.config.env.model,
-        }));
+        };
+        setReport(payload);
+        setReportPlanSignature(
+          createBenchPlanSignature(
+            historyEntry.config.groups,
+            historyEntry.config.scenarios,
+            historyEntry.config.settings,
+            restoredEnv,
+          ),
+        );
+        setEnv(restoredEnv);
         setGroups(cloneBenchGroups(historyEntry.config.groups));
         setScenarios(cloneBenchScenarios(historyEntry.config.scenarios));
         setSettings(cloneBenchSettings(historyEntry.config.settings));
@@ -1246,20 +1691,34 @@ export function BenchPage({ showHeader = true }: BenchPageProps) {
         setProgress(100);
         setRunMessage(
           payload.summary && payload.summary.failedRuns > 0
-            ? `Loaded report with ${
-              pluralize(payload.summary.failedRuns, 'failed run')
-            }`
-            : 'Loaded report',
+            ? `Report 已载入 · ${payload.summary.failedRuns} 个失败 Run`
+            : 'Report 已载入',
         );
       } catch (error) {
-        if (cancelled) return;
+        if (
+          cancelled
+          || !shouldApplyBenchReportRequest(
+            controller,
+            historyReportAbortRef.current,
+          )
+        ) {
+          return;
+        }
         setStatus('failed');
         setRunMessage(getErrorMessage(error));
+      } finally {
+        if (historyReportAbortRef.current === controller) {
+          historyReportAbortRef.current = null;
+        }
       }
     })();
 
     return () => {
       cancelled = true;
+      controller.abort();
+      if (historyReportAbortRef.current === controller) {
+        historyReportAbortRef.current = null;
+      }
     };
   }, []);
 
@@ -1278,18 +1737,91 @@ export function BenchPage({ showHeader = true }: BenchPageProps) {
       {
         id: createId(role),
         role,
-        name: role === 'control' ? 'New Control' : 'New Experiment',
+        protocol: 'a2ui',
+        profile: 'native',
+        name: role === 'control' ? '新基准组' : '新对比组',
         variable: 'custom',
-        model: DEFAULT_ENV.model,
+        model: env.model || DEFAULT_ENV.model,
         catalog: 'Full Catalog',
         extraInstruction: '',
         enabled: true,
       },
     ]);
-  }, []);
+  }, [env.model]);
+
+  const loadGroupPreset = useCallback((
+    preset: BenchGroupPreset,
+  ) => {
+    cancelActiveBenchJob();
+    const presetGroups = getBenchGroupPreset(preset);
+    setGroups(cloneBenchGroups(presetGroups));
+    if (preset === 'protocol-pair' || preset === 'combined') {
+      setSettings((current) => ({ ...current, parallelism: 1 }));
+    }
+    setReport(null);
+    setReportPlanSignature(null);
+    setStatus('idle');
+    setProgress(0);
+    setRunMessage('已载入预设');
+  }, [cancelActiveBenchJob]);
+
+  const updateGroupProtocol = useCallback(
+    (id: string, protocol: BenchProtocol) => {
+      setGroups((current) =>
+        current.map((group) =>
+          group.id === id
+            ? {
+              ...group,
+              protocol,
+              profile: protocol === 'openui'
+                ? 'matched-core'
+                : group.profile,
+              catalog: protocol === 'openui'
+                ? 'Core Catalog'
+                : group.catalog,
+            }
+            : group
+        )
+      );
+      if (protocol === 'openui') {
+        setSettings((current) => ({ ...current, parallelism: 1 }));
+      }
+    },
+    [],
+  );
+
+  const updateGroupProfile = useCallback(
+    (id: string, profile: BenchProfile) => {
+      setGroups((current) =>
+        current.map((group) =>
+          group.id === id
+            ? {
+              ...group,
+              profile,
+              catalog: profile === 'matched-core'
+                ? 'Core Catalog'
+                : group.catalog,
+            }
+            : group
+        )
+      );
+    },
+    [],
+  );
 
   const removeGroup = useCallback((id: string) => {
-    setGroups((current) => current.filter((group) => group.id !== id));
+    setGroups((current) => {
+      const next = current.filter((group) => group.id !== id);
+      if (
+        next.length > 0
+        && !next.some((group) => group.role === 'control')
+      ) {
+        return next.map((group, index) =>
+          index === 0 ? { ...group, role: 'control' } : group
+        );
+      }
+      return next;
+    });
   }, []);
 
   const updateScenario = useCallback(
@@ -1308,11 +1840,11 @@ export function BenchPage({ showHeader = true }: BenchPageProps) {
       ...current,
       {
         id: createId('scenario'),
-        name: 'Custom Scenario',
-        prompt: 'Describe the A2UI scenario to benchmark.',
-        type: 'Custom',
+        name: '自定义场景',
+        prompt: '描述需要生成和评测的 UI。',
+        type: '自定义',
         complexity: 1,
-        action: 'Primary Action',
+        action: '主操作',
       },
     ]);
   }, []);
@@ -1326,20 +1858,21 @@ export function BenchPage({ showHeader = true }: BenchPageProps) {
   }, []);
 
   const resetBench = useCallback(() => {
-    clearActiveJobConnection();
+    cancelActiveBenchJob();
     setEnv(DEFAULT_ENV);
-    setGroups(DEFAULT_GROUPS);
+    setGroups(EMPTY_GROUPS);
     setScenarios(DEFAULT_SCENARIOS);
     setSettings(DEFAULT_SETTINGS);
     setStatus('idle');
     setProgress(0);
-    setRunMessage('Ready');
+    setRunMessage('准备就绪');
     setReport(null);
+    setReportPlanSignature(null);
     setBenchHealth(null);
     setBenchHealthError(null);
     setBenchRunNoticeOpen(false);
     setScreenshotsOpen(false);
-  }, [clearActiveJobConnection]);
+  }, [cancelActiveBenchJob]);
 
   const loadBenchHealth = useCallback(() => {
     setBenchHealth(null);
@@ -1348,7 +1881,7 @@ export function BenchPage({ showHeader = true }: BenchPageProps) {
       try {
         const response = await window.fetch(getA2UIBenchHealthEndpoint());
         if (!response.ok) {
-          throw new Error(`Health check failed: ${response.status}`);
+          throw new Error(`Provider 状态检查失败：${response.status}`);
         }
         setBenchHealth(await response.json() as BenchHealth);
       } catch (error) {
@@ -1360,20 +1893,21 @@ export function BenchPage({ showHeader = true }: BenchPageProps) {
   const startBench = useCallback((confirmedServerDefaults = false) => {
     if (benchRunBlockers.length > 0 || runCount === 0) {
       setBenchRunNoticeOpen(true);
-      setRunMessage('Configuration required');
+      setRunMessage('请先完成运行配置');
       return;
     }
     if (!providerConfigured && !confirmedServerDefaults) {
       setBenchRunNoticeOpen(true);
-      setRunMessage('Confirm server defaults');
+      setRunMessage('请确认使用服务端默认配置');
       loadBenchHealth();
       return;
     }
-    clearActiveJobConnection();
+    cancelActiveBenchJob();
     setStatus('running');
     setProgress(0);
-    setRunMessage('Creating bench job...');
+    setRunMessage('正在创建 Bench 任务…');
     setReport(null);
+    setReportPlanSignature(null);
     setScreenshotsOpen(false);
 
     const controller = new AbortController();
@@ -1400,7 +1934,7 @@ export function BenchPage({ showHeader = true }: BenchPageProps) {
               judgeEnabled: settings.judgeEnabled,
               renderMetricsEnabled: settings.collectLiveRenderMetrics,
             },
-            groups: activeGroups,
+            groups: runGroups,
             scenarios,
           }),
           signal: controller.signal,
@@ -1411,14 +1945,15 @@ export function BenchPage({ showHeader = true }: BenchPageProps) {
         ) as BenchJobCreated;
         if (!response.ok || payload.ok === false || !payload.jobId) {
           throw new Error(
-            payload.error ?? `Bench request failed: ${response.status}`,
+            payload.error ?? `Bench 请求失败：${response.status}`,
           );
         }
 
+        activeJobIdRef.current = payload.jobId;
         setRunMessage(
           payload.warnings && payload.warnings.length > 0
             ? payload.warnings[0]
-            : `Job ${payload.jobId.slice(0, 8)} queued`,
+            : `Job ${payload.jobId.slice(0, 8)} 已进入队列`,
         );
 
         const eventsUrl = new URL(
@@ -1438,7 +1973,7 @@ export function BenchPage({ showHeader = true }: BenchPageProps) {
         };
 
         const describeRun = (value: unknown): string => {
-          if (!value || typeof value !== 'object') return 'Running bench...';
+          if (!value || typeof value !== 'object') return 'Bench 运行中…';
           const record = value as Record<string, unknown>;
           const groupId = typeof record.groupId === 'string'
             ? record.groupId
@@ -1452,11 +1987,11 @@ export function BenchPage({ showHeader = true }: BenchPageProps) {
           const phase = typeof record.phase === 'string'
             ? record.phase
             : 'agent';
-          const groupName = activeGroups.find((group) => group.id === groupId)
-            ?.name ?? 'Group';
+          const groupName = runGroups.find((group) => group.id === groupId)
+            ?.name ?? '对比组';
           const scenarioName = scenarios.find((scenario) =>
             scenario.id === scenarioId
-          )?.name ?? 'Scenario';
+          )?.name ?? '场景';
           return `${groupName} · ${scenarioName} · #${
             repeatIndex ?? 1
           } · ${phase}`;
@@ -1470,10 +2005,12 @@ export function BenchPage({ showHeader = true }: BenchPageProps) {
           updateProgress(snapshot.progress);
           if (snapshot.status === 'failed') {
             setStatus('failed');
-            setRunMessage(snapshot.error ?? 'Bench job failed');
+            activeJobIdRef.current = null;
+            setRunMessage(snapshot.error ?? 'Bench 任务失败');
           } else if (snapshot.status === 'cancelled') {
             setStatus('cancelled');
-            setRunMessage('Bench job cancelled');
+            activeJobIdRef.current = null;
+            setRunMessage('Bench 任务已取消');
           } else if (snapshot.status === 'complete') {
             setProgress(100);
           }
@@ -1499,11 +2036,14 @@ export function BenchPage({ showHeader = true }: BenchPageProps) {
           );
           if (!nextReport) return;
           setReport(nextReport);
+          setReportPlanSignature(
+            createBenchPlanSignature(runGroups, scenarios, settings, env),
+          );
           setHistoryItems((current) => {
             const entry = createBenchHistoryEntry(
               nextReport,
               env,
-              activeGroups,
+              runGroups,
               scenarios,
               settings,
             );
@@ -1512,13 +2052,12 @@ export function BenchPage({ showHeader = true }: BenchPageProps) {
             return next;
           });
           setStatus(nextReport.status ?? 'complete');
+          activeJobIdRef.current = null;
           setProgress(100);
           setRunMessage(
             nextReport.summary && nextReport.summary.failedRuns > 0
-              ? `Complete with ${
-                pluralize(nextReport.summary.failedRuns, 'failed run')
-              }`
-              : 'Bench complete',
+              ? `Bench 完成 · ${nextReport.summary.failedRuns} 个失败 Run`
+              : 'Bench 完成',
           );
           source.close();
           if (eventSourceRef.current === source) eventSourceRef.current = null;
@@ -1533,11 +2072,12 @@ export function BenchPage({ showHeader = true }: BenchPageProps) {
             !message
             && source.readyState !== EVENT_SOURCE_CLOSED_READY_STATE
           ) {
-            setRunMessage('Reconnecting bench stream...');
+            setRunMessage('正在重连 Bench 数据流…');
             return;
           }
           setStatus('failed');
-          setRunMessage(message ?? 'Bench stream disconnected');
+          activeJobIdRef.current = null;
+          setRunMessage(message ?? 'Bench 数据流已断开');
           source.close();
           if (eventSourceRef.current === source) eventSourceRef.current = null;
         });
@@ -1552,20 +2092,20 @@ export function BenchPage({ showHeader = true }: BenchPageProps) {
       }
     })();
   }, [
-    activeGroups,
     benchRunBlockers.length,
-    clearActiveJobConnection,
+    cancelActiveBenchJob,
     env,
     loadBenchHealth,
     providerConfigured,
     runCount,
+    runGroups,
     scenarios,
     settings,
   ]);
 
   const copyReport = useCallback(async () => {
     if (!report) return;
-    const copied = await copyToClipboard(JSON.stringify(report, null, 2));
+    const copied = await copyToClipboard(serializeBenchReport(report));
     if (!copied) return;
     setCopyState('copied');
     window.setTimeout(() => setCopyState('idle'), 1200);
@@ -1586,27 +2126,78 @@ export function BenchPage({ showHeader = true }: BenchPageProps) {
   );
 
   const restoreHistoryEntry = useCallback((entry: BenchHistoryEntry) => {
-    clearActiveJobConnection();
-    setEnv((current) => ({
-      apiKey: current.apiKey,
-      baseURL: entry.config.env.baseURL,
+    cancelActiveBenchJob();
+    const restoredEnv = {
+      ...env,
       model: entry.config.env.model,
-    }));
+    };
+    const restoredSignature = createBenchPlanSignature(
+      entry.config.groups,
+      entry.config.scenarios,
+      entry.config.settings,
+      restoredEnv,
+    );
+    setEnv(restoredEnv);
     setGroups(cloneBenchGroups(entry.config.groups));
     setScenarios(cloneBenchScenarios(entry.config.scenarios));
     setSettings(cloneBenchSettings(entry.config.settings));
     setReport(entry.report);
+    setReportPlanSignature(restoredSignature);
     setStatus(entry.report.status ?? 'complete');
     setProgress(100);
     setRunMessage(
       entry.report.summary && entry.report.summary.failedRuns > 0
-        ? `Loaded history · ${
-          pluralize(entry.report.summary.failedRuns, 'failed run')
-        }`
-        : 'Loaded history',
+        ? `历史 Report 已载入 · ${entry.report.summary.failedRuns} 个失败 Run`
+        : '历史 Report 已载入',
     );
     setHistoryOpen(false);
-  }, [clearActiveJobConnection]);
+    const jobId = entry.report.jobId;
+    if (!jobId) return;
+
+    setRunMessage('配置已恢复，正在载入完整 Report…');
+    const controller = new AbortController();
+    historyReportAbortRef.current = controller;
+    void (async () => {
+      try {
+        const response = await window.fetch(
+          getA2UIBenchReportEndpoint(jobId),
+          { signal: controller.signal },
+        );
+        const payload = await response.json().catch(() => ({})) as
+          | BenchReport
+          | { error?: string };
+        if (!response.ok || !('results' in payload)) {
+          throw new Error('完整 Report 暂不可用');
+        }
+        if (
+          !shouldApplyBenchReportRequest(
+            controller,
+            historyReportAbortRef.current,
+          )
+        ) {
+          return;
+        }
+        setReport(payload);
+        setReportPlanSignature(restoredSignature);
+        setStatus(payload.status ?? 'complete');
+        setRunMessage('完整 Report 已载入');
+      } catch {
+        if (
+          !shouldApplyBenchReportRequest(
+            controller,
+            historyReportAbortRef.current,
+          )
+        ) {
+          return;
+        }
+        setRunMessage('配置已恢复 · 完整 Report 暂不可用');
+      } finally {
+        if (historyReportAbortRef.current === controller) {
+          historyReportAbortRef.current = null;
+        }
+      }
+    })();
+  }, [cancelActiveBenchJob, env]);
 
   const deleteHistoryEntry = useCallback((id: string) => {
     setHistoryItems((current) => {
@@ -1721,11 +2312,23 @@ export function BenchPage({ showHeader = true }: BenchPageProps) {
     '--bench-screenshot-dialog-width': `${screenshotDialogWidth}px`,
   } as CSSProperties;
 
-  const baseline = useMemo(() => {
-    if (!report) return null;
-    return report.summaries.find((item) => item.role === 'control')
-      ?? report.summaries[0]
-      ?? null;
+  const summaryBaselines = useMemo(() => {
+    const baselines = new Map<string, BenchGroupSummary>();
+    if (!report) return baselines;
+
+    const reportGroups = createBenchGroupsFromReport(report);
+    for (const summary of report.summaries) {
+      const group = reportGroups.find((item) => item.id === summary.groupId);
+      const baselineGroup = group
+        ? findComparableBaseline(group, reportGroups)
+        : undefined;
+      const baselineSummary = report.summaries.find((item) =>
+        item.groupId === baselineGroup?.id
+      ) ?? report.summaries.find((item) => item.role === 'control')
+        ?? summary;
+      baselines.set(summary.groupId, baselineSummary);
+    }
+    return baselines;
   }, [report]);
 
   const bestTokens = useMemo(() => {
@@ -1765,18 +2368,18 @@ export function BenchPage({ showHeader = true }: BenchPageProps) {
         ? (
           <PageHeader
             className='benchHeader'
-            title='Bench'
-            description='Compare A2UI model, prompt, and catalog variants across fixed generation scenarios.'
+            title='Bench Runner'
+            description='自由组合 Protocol、Model、Prompt 与 Catalog，并在同一份 Report 中查看结果。'
             topContent={
               <>
-                <span className='chip'>{activeGroups.length} groups</span>
-                <span className='chip'>{scenarios.length} scenarios</span>
-                <span className='chip'>{pluralize(runCount, 'run')}</span>
+                <span className='chip'>{activeGroups.length} 个对比组</span>
+                <span className='chip'>{scenarios.length} 个场景</span>
+                <span className='chip'>{runCount} Runs</span>
               </>
             }
           />
         )
-        : <h1 className='benchPageAccessibleTitle'>Bench Runner</h1>}
+        : <h2 className='benchPageAccessibleTitle'>通用 Bench Runner</h2>}
 
       <div
         className='benchBody'
@@ -1784,40 +2387,8 @@ export function BenchPage({ showHeader = true }: BenchPageProps) {
         ref={benchBodyRef}
         style={benchBodyStyle}
       >
-        <main className='benchMain' aria-label='Bench workspace'>
+        <main className='benchMain' aria-label='Bench 工作区'>
           <section className='benchOverviewBand'>
-            <div className='benchOverviewCopy'>
-              <div className='benchEyebrow'>A2UI v0.9 bench plan</div>
-              <h2 className='benchOverviewTitle'>
-                Model, prompt, and catalog comparisons in one matrix.
-              </h2>
-            </div>
-            <div className='benchMetricStrip'>
-              <div className='benchMetric'>
-                <span className='benchMetricLabel'>Agent</span>
-                <strong>
-                  {report && report.summaries.length > 0
-                    ? formatMs(average(
-                      report.summaries.map((item) => item.avgAgentMs),
-                    ))
-                    : 'n/a'}
-                </strong>
-              </div>
-              <div className='benchMetric'>
-                <span className='benchMetricLabel'>Tokens</span>
-                <strong>
-                  {report && report.summaries.length > 0
-                    ? formatNumber(average(
-                      report.summaries.map((item) => item.avgTokens),
-                    ))
-                    : 'n/a'}
-                </strong>
-              </div>
-              <div className='benchMetric'>
-                <span className='benchMetricLabel'>Judge</span>
-                <strong>{formatReportJudgeMetric(report)}</strong>
-              </div>
-            </div>
             <div className='benchRunPanel'>
               <div className='benchRunActions'>
                 <Button
@@ -1833,21 +2404,31 @@ export function BenchPage({ showHeader = true }: BenchPageProps) {
                   variant='secondary'
                   size='lg'
                   iconBefore={Zap}
+                  disabled={planLocked}
                   onClick={() => setConfigOpen(true)}
                 >
-                  Configure
+                  运行设置
                 </Button>
                 <Button
                   variant='secondary'
                   size='lg'
                   iconOnly
                   iconBefore={RotateCcw}
-                  aria-label='Reset bench'
-                  title='Reset bench'
+                  aria-label={planLocked ? '停止并重置 Bench' : '重置 Bench'}
+                  title={planLocked ? '停止并重置 Bench' : '重置 Bench'}
                   onClick={resetBench}
                 />
               </div>
-              <div className='benchProgressTrack' aria-hidden='true'>
+              <div
+                className='benchProgressTrack'
+                role='progressbar'
+                aria-label='Bench 进度'
+                aria-valuemin={0}
+                aria-valuemax={100}
+                aria-valuenow={Math.round(
+                  getProgressWidth(status, progress, report),
+                )}
+              >
                 <div
                   className='benchProgressBar'
                   style={{
@@ -1858,56 +2439,114 @@ export function BenchPage({ showHeader = true }: BenchPageProps) {
               <div
                 className='benchRunMeta'
                 data-tone={status === 'failed' ? 'error' : status}
+                role='status'
+                aria-live='polite'
               >
                 {getRunMetaText(status, progress, runMessage, runCount)}
               </div>
             </div>
             <div className='benchPlanSummary'>
               <div className='benchPlanItem'>
-                <span>Provider</span>
-                <strong>{getProviderPlanLabel(env, providerConfigured)}</strong>
-                <small>{getProviderPlanMeta(env, providerConfigured)}</small>
+                <span>Protocol</span>
+                <strong>
+                  {activeProtocols.map((protocol) =>
+                    protocol === 'a2ui' ? 'A2UI' : 'OpenUI'
+                  ).join(' + ') || '未选择'}
+                </strong>
+                <small>{activeGroups.length} 个对比组</small>
               </div>
               <div className='benchPlanItem'>
-                <span>Runner</span>
+                <span>运行参数</span>
                 <strong>
-                  {settings.repeats}x / {settings.parallelism} parallel
+                  重复 {settings.repeats} 次 / 并发 {settings.parallelism}
                 </strong>
                 <small>
-                  {settings.judgeEnabled ? 'judge on' : 'judge off'} ·{' '}
-                  {settings.repairEnabled ? 'repair on' : 'repair off'}
+                  UI Judge {settings.judgeEnabled ? '开启' : '关闭'} · Repair
+                  {' '}
+                  {settings.repairEnabled ? '开启' : '关闭'}
                 </small>
               </div>
               <div className='benchPlanItem'>
-                <span>Scenarios</span>
-                <strong>{scenarios.length} prompts</strong>
+                <span>场景</span>
+                <strong>{scenarios.length} 个 Prompt</strong>
                 <small>{activeScenarioTypes.join(' / ')}</small>
               </div>
             </div>
           </section>
 
-          <section className='benchGroupsSection'>
+          <section
+            className='benchGroupsSection'
+            aria-busy={planLocked}
+            inert={planLocked}
+          >
             <div className='benchSectionHeader benchGroupsHeader'>
               <div>
-                <h3 className='benchSectionTitle'>Groups</h3>
-                <p className='benchSectionSub'>Controls and experiments</p>
+                <h3 className='benchSectionTitle'>对比组</h3>
+                <p className='benchSectionSub'>
+                  每个组都是一条可组合的运行条件
+                </p>
               </div>
               <div className='benchHeaderActions'>
+                <details className='benchTemplateMenu'>
+                  <summary>载入预设</summary>
+                  <div>
+                    <button
+                      type='button'
+                      onClick={(event) => {
+                        loadGroupPreset('a2ui-variants');
+                        event.currentTarget.closest('details')?.removeAttribute(
+                          'open',
+                        );
+                      }}
+                    >
+                      A2UI 变量对比
+                      <small>Model / Prompt / Catalog</small>
+                    </button>
+                    <button
+                      type='button'
+                      onClick={(event) => {
+                        loadGroupPreset('protocol-pair');
+                        event.currentTarget.closest('details')?.removeAttribute(
+                          'open',
+                        );
+                      }}
+                    >
+                      Protocol 对照
+                      <small>A2UI ↔ OpenUI · matched-core</small>
+                    </button>
+                    <button
+                      type='button'
+                      onClick={(event) => {
+                        loadGroupPreset('combined');
+                        event.currentTarget.closest('details')?.removeAttribute(
+                          'open',
+                        );
+                      }}
+                    >
+                      组合示例
+                      <small>把两类条件放进同一张 plan</small>
+                    </button>
+                    <button
+                      type='button'
+                      onClick={(event) => {
+                        loadGroupPreset('blank');
+                        event.currentTarget.closest('details')?.removeAttribute(
+                          'open',
+                        );
+                      }}
+                    >
+                      空白 plan
+                      <small>从一个 Baseline 开始</small>
+                    </button>
+                  </div>
+                </details>
                 <Button
                   variant='secondary'
                   size='sm'
                   iconBefore={MessageSquarePlus}
-                  onClick={() => addGroup('control')}
-                >
-                  Control
-                </Button>
-                <Button
-                  variant='secondary'
-                  size='sm'
-                  iconBefore={Sparkles}
                   onClick={() => addGroup('experiment')}
                 >
-                  Experiment
+                  添加对比组
                 </Button>
               </div>
             </div>
@@ -1924,6 +2563,7 @@ export function BenchPage({ showHeader = true }: BenchPageProps) {
                       <input
                         type='checkbox'
                         checked={group.enabled}
+                        aria-label={`启用 ${group.name}`}
                         onChange={(event) =>
                           updateGroup(
                             group.id,
@@ -1939,11 +2579,15 @@ export function BenchPage({ showHeader = true }: BenchPageProps) {
                           className={group.role === role
                             ? 'benchRoleButton active'
                             : 'benchRoleButton'}
+                          aria-pressed={group.role === role}
+                          disabled={role === 'experiment'
+                            && group.role === 'control'
+                            && controlGroupCount === 1}
                           key={role}
                           onClick={() =>
                             updateGroup(group.id, groupPatch('role', role))}
                         >
-                          {role}
+                          {role === 'control' ? '基准' : '对比'}
                         </button>
                       ))}
                     </div>
@@ -1952,8 +2596,8 @@ export function BenchPage({ showHeader = true }: BenchPageProps) {
                       size='sm'
                       iconOnly
                       iconBefore={Trash2}
-                      aria-label={`Remove ${group.name}`}
-                      title={`Remove ${group.name}`}
+                      aria-label={`删除 ${group.name}`}
+                      title={`删除 ${group.name}`}
                       disabled={groups.length <= 1}
                       onClick={() => removeGroup(group.id)}
                     />
@@ -1961,7 +2605,7 @@ export function BenchPage({ showHeader = true }: BenchPageProps) {
                   <input
                     className='benchGroupName'
                     value={group.name}
-                    aria-label='Group name'
+                    aria-label='对比组名称'
                     onChange={(event) =>
                       updateGroup(
                         group.id,
@@ -1969,72 +2613,127 @@ export function BenchPage({ showHeader = true }: BenchPageProps) {
                       )}
                   />
                   <div className='benchGroupSummary'>
-                    <span>{group.variable}</span>
-                    <span>{group.catalog}</span>
+                    <span data-protocol={group.protocol}>
+                      {group.protocol === 'a2ui' ? 'A2UI' : 'OpenUI'}
+                    </span>
+                    <span>{group.profile}</span>
                     <span>{group.model || env.model}</span>
+                    {(groupDifferences.get(group.id) ?? []).length === 0
+                      ? <span data-baseline='true'>基准</span>
+                      : (groupDifferences.get(group.id) ?? []).map(
+                        (difference) => (
+                          <span data-changed='true' key={difference}>
+                            {difference} 已变更
+                          </span>
+                        ),
+                      )}
+                    {group.role === 'experiment'
+                        && groupBaselines.get(group.id)
+                      ? (
+                        <span data-baseline='true'>
+                          相对 {groupBaselines.get(group.id)?.name}
+                        </span>
+                      )
+                      : null}
                   </div>
                   <details className='benchGroupDetails'>
-                    <summary>Configure</summary>
+                    <summary>配置</summary>
+                    <div className='benchGroupFields'>
+                      <div className='benchField'>
+                        <span className='benchFieldLabel'>Protocol</span>
+                        <BenchDropdown
+                          ariaLabel={`${group.name} Protocol`}
+                          value={group.protocol}
+                          options={[
+                            {
+                              value: 'a2ui',
+                              label: 'A2UI',
+                              description: '结构化消息流',
+                            },
+                            {
+                              value: 'openui',
+                              label: 'OpenUI',
+                              description: 'OpenUI Lang',
+                            },
+                          ]}
+                          onChange={(protocol) =>
+                            updateGroupProtocol(group.id, protocol)}
+                        />
+                      </div>
+                      <div className='benchField'>
+                        <span className='benchFieldLabel'>Profile</span>
+                        <BenchDropdown
+                          ariaLabel={`${group.name} Profile`}
+                          value={group.profile}
+                          disabled={group.protocol === 'openui'}
+                          options={[
+                            {
+                              value: 'native',
+                              label: 'native',
+                              description: '使用完整协议能力',
+                            },
+                            {
+                              value: 'matched-core',
+                              label: 'matched-core',
+                              description: '只使用公共能力子集',
+                            },
+                          ]}
+                          onChange={(profile) =>
+                            updateGroupProfile(group.id, profile)}
+                        />
+                      </div>
+                    </div>
+                    {group.profile === 'matched-core'
+                      ? (
+                        <p className='benchProfileHint'>
+                          <strong>matched-core</strong>{' '}
+                          只使用 A2UI 与 OpenUI 都支持的公共能力，适合做同条件
+                          Protocol 对照。
+                        </p>
+                      )
+                      : null}
                     <div className='benchGroupFields'>
                       <label className='benchField'>
-                        <span className='benchFieldLabel'>Variable</span>
-                        <select
-                          className='benchSelect'
-                          value={group.variable}
+                        <span className='benchFieldLabel'>Model</span>
+                        <input
+                          className='benchInput'
+                          type='text'
+                          value={group.model}
+                          placeholder={env.model}
                           onChange={(event) =>
                             updateGroup(
                               group.id,
-                              groupPatch(
-                                'variable',
-                                event.target.value as BenchVariable,
-                              ),
+                              groupPatch('model', event.target.value),
                             )}
-                        >
-                          <option value='model'>Model</option>
-                          <option value='prompt'>Prompt</option>
-                          <option value='catalog'>Catalog</option>
-                          <option value='custom'>Custom</option>
-                        </select>
+                        />
                       </label>
-                      <label className='benchField'>
+                      <div className='benchField'>
                         <span className='benchFieldLabel'>Catalog</span>
-                        <select
-                          className='benchSelect'
+                        <BenchDropdown
+                          ariaLabel={`${group.name} Catalog`}
                           value={group.catalog}
-                          onChange={(event) =>
+                          disabled={group.profile === 'matched-core'
+                            || group.protocol === 'openui'}
+                          options={CATALOG_OPTIONS.map((catalog) => ({
+                            value: catalog,
+                            label: catalog,
+                          }))}
+                          onChange={(catalog) =>
                             updateGroup(
                               group.id,
-                              groupPatch('catalog', event.target.value),
+                              groupPatch('catalog', catalog),
                             )}
-                        >
-                          {CATALOG_OPTIONS.map((catalog) => (
-                            <option key={catalog} value={catalog}>
-                              {catalog}
-                            </option>
-                          ))}
-                        </select>
-                      </label>
+                        />
+                      </div>
                     </div>
                     <label className='benchField'>
-                      <span className='benchFieldLabel'>Model override</span>
-                      <input
-                        className='benchInput'
-                        type='text'
-                        value={group.model}
-                        placeholder={env.model}
-                        onChange={(event) =>
-                          updateGroup(
-                            group.id,
-                            groupPatch('model', event.target.value),
-                          )}
-                      />
-                    </label>
-                    <label className='benchField'>
-                      <span className='benchFieldLabel'>Extra instruction</span>
+                      <span className='benchFieldLabel'>
+                        Prompt 附加指令
+                      </span>
                       <textarea
                         className='benchTextarea'
                         value={group.extraInstruction}
-                        placeholder='Additional system instruction for this group'
+                        placeholder='只对这个对比组追加的 Prompt'
                         onChange={(event) =>
                           updateGroup(
                             group.id,
@@ -2048,23 +2747,28 @@ export function BenchPage({ showHeader = true }: BenchPageProps) {
             </div>
           </section>
 
-          <section className='benchPlanSection'>
+          <section
+            className='benchPlanSection'
+            aria-busy={planLocked}
+            inert={planLocked}
+          >
             <div className='benchSectionHeader'>
               <div>
-                <h3 className='benchSectionTitle'>Plan</h3>
+                <h3 className='benchSectionTitle'>共享场景</h3>
                 <p className='benchSectionSub'>
-                  {pluralize(activeGroups.length, 'group')} ·{' '}
-                  {pluralize(scenarios.length, 'scenario')} ·{' '}
-                  {pluralize(settings.repeats, 'repeat')}
+                  {activeGroups.length} 个对比组 × {scenarios.length} 个场景 ×
+                  {' '}
+                  重复 {settings.repeats} 次 = {runCount} Runs
                 </p>
               </div>
               <Button
                 variant='ghost'
                 size='sm'
                 iconBefore={Zap}
+                disabled={planLocked}
                 onClick={() => setConfigOpen(true)}
               >
-                Edit
+                编辑场景
               </Button>
             </div>
             <div className='benchScenarioChips'>
@@ -2080,7 +2784,7 @@ export function BenchPage({ showHeader = true }: BenchPageProps) {
         <div
           className='benchResizeHandle'
           role='separator'
-          aria-label='Resize report panel'
+          aria-label='调整 Report 面板宽度'
           aria-orientation='vertical'
           aria-valuemin={REPORT_PANE_MIN_WIDTH}
           aria-valuemax={REPORT_PANE_MAX_WIDTH}
@@ -2092,14 +2796,15 @@ export function BenchPage({ showHeader = true }: BenchPageProps) {
           <span aria-hidden='true' />
         </div>
 
-        <aside className='benchReportPane' aria-label='Bench report'>
+        <aside className='benchReportPane' aria-label='Bench Report'>
           <div className='benchReportHeader'>
             <div>
               <h3 className='benchSectionTitle'>Report</h3>
-              <p className='benchSectionSub'>
-                {report
-                  ? new Date(report.createdAt).toLocaleString()
-                  : 'No report'}
+              <p
+                className='benchSectionSub'
+                data-stale={reportIsStale || undefined}
+              >
+                {getReportSubtitle(report, reportIsStale)}
               </p>
             </div>
             <div className='benchReportActions'>
@@ -2109,7 +2814,7 @@ export function BenchPage({ showHeader = true }: BenchPageProps) {
                 iconBefore={History}
                 onClick={() => setHistoryOpen(true)}
               >
-                History
+                历史
               </Button>
               <Button
                 variant='secondary'
@@ -2118,17 +2823,17 @@ export function BenchPage({ showHeader = true }: BenchPageProps) {
                 disabled={!report}
                 onClick={() => void copyReport()}
               >
-                {copyState === 'copied' ? 'Copied' : 'JSON'}
+                {copyState === 'copied' ? '已复制' : 'JSON'}
               </Button>
             </div>
           </div>
 
-          {report && baseline
+          {report && report.summaries.length > 0
             ? (
               <>
                 <div className='benchInsightGrid'>
                   <div className='benchInsight'>
-                    <span>Lowest tokens</span>
+                    <span>Token 最低</span>
                     <strong>{bestTokens?.groupName ?? 'n/a'}</strong>
                     <small>
                       {bestTokens
@@ -2137,7 +2842,7 @@ export function BenchPage({ showHeader = true }: BenchPageProps) {
                     </small>
                   </div>
                   <div className='benchInsight'>
-                    <span>Fastest agent</span>
+                    <span>Agent 最快</span>
                     <strong>{fastestAgent?.groupName ?? 'n/a'}</strong>
                     <small>
                       {fastestAgent
@@ -2146,7 +2851,7 @@ export function BenchPage({ showHeader = true }: BenchPageProps) {
                     </small>
                   </div>
                   <div className='benchInsight'>
-                    <span>Best judge</span>
+                    <span>Judge 最佳</span>
                     <strong>{topJudge?.groupName ?? 'n/a'}</strong>
                     <small>
                       {topJudge
@@ -2160,7 +2865,7 @@ export function BenchPage({ showHeader = true }: BenchPageProps) {
                   <table className='benchReportTable'>
                     <thead>
                       <tr>
-                        <th>Group</th>
+                        <th>对比组</th>
                         <th>Tokens</th>
                         <th>Agent</th>
                         <th>FMP</th>
@@ -2171,47 +2876,62 @@ export function BenchPage({ showHeader = true }: BenchPageProps) {
                       </tr>
                     </thead>
                     <tbody>
-                      {report.summaries.map((summary) => (
-                        <tr key={summary.groupId}>
-                          <td>
-                            <div className='benchTableGroup'>
-                              <span
-                                className={`benchRoleDot ${summary.role}`}
-                              />
-                              <span>{summary.groupName}</span>
-                            </div>
-                          </td>
-                          <td>
-                            <strong>{formatNumber(summary.avgTokens)}</strong>
-                            <small>
-                              {deltaText(
-                                summary.avgTokens,
-                                baseline.avgTokens,
+                      {report.summaries.map((summary) => {
+                        const summaryBaseline = summaryBaselines.get(
+                          summary.groupId,
+                        ) ?? summary;
+                        return (
+                          <tr key={summary.groupId}>
+                            <td>
+                              <div className='benchTableGroup'>
+                                <span
+                                  className={`benchRoleDot ${summary.role}`}
+                                />
+                                <span>
+                                  {summary.groupName}
+                                  <small>
+                                    {summary.protocol === 'openui'
+                                      ? 'OpenUI'
+                                      : 'A2UI'}
+                                    {summary.profile
+                                      ? ` · ${summary.profile}`
+                                      : ''}
+                                  </small>
+                                </span>
+                              </div>
+                            </td>
+                            <td>
+                              <strong>{formatNumber(summary.avgTokens)}</strong>
+                              <small>
+                                {deltaText(
+                                  summary.avgTokens,
+                                  summaryBaseline.avgTokens,
+                                )}
+                              </small>
+                            </td>
+                            <td>
+                              <strong>{formatMs(summary.avgAgentMs)}</strong>
+                              <small>
+                                {deltaText(
+                                  summary.avgAgentMs,
+                                  summaryBaseline.avgAgentMs,
+                                )}
+                              </small>
+                            </td>
+                            <td>{formatMs(summary.avgFmpMs)}</td>
+                            <td>{formatMs(summary.avgTtiMs)}</td>
+                            <td>{formatMs(summary.avgRenderMs)}</td>
+                            <td>{summary.avgAttempts.toFixed(1)}x</td>
+                            <td>
+                              {formatSummaryJudgeMetric(
+                                report,
+                                reportSettings,
+                                summary,
                               )}
-                            </small>
-                          </td>
-                          <td>
-                            <strong>{formatMs(summary.avgAgentMs)}</strong>
-                            <small>
-                              {deltaText(
-                                summary.avgAgentMs,
-                                baseline.avgAgentMs,
-                              )}
-                            </small>
-                          </td>
-                          <td>{formatMs(summary.avgFmpMs)}</td>
-                          <td>{formatMs(summary.avgTtiMs)}</td>
-                          <td>{formatMs(summary.avgRenderMs)}</td>
-                          <td>{summary.avgAttempts.toFixed(1)}x</td>
-                          <td>
-                            {formatSummaryJudgeMetric(
-                              report,
-                              settings,
-                              summary,
-                            )}
-                          </td>
-                        </tr>
-                      ))}
+                            </td>
+                          </tr>
+                        );
+                      })}
                     </tbody>
                   </table>
                 </div>
@@ -2219,9 +2939,9 @@ export function BenchPage({ showHeader = true }: BenchPageProps) {
                 <section className='benchScreenshotSection'>
                   <div className='benchSectionHeader'>
                     <div>
-                      <h3 className='benchSectionTitle'>Screenshots</h3>
+                      <h3 className='benchSectionTitle'>运行截图</h3>
                       <p className='benchSectionSub'>
-                        Complete run matrix with failed slots preserved
+                        每个 run 的实际渲染截图，失败位置也会保留
                       </p>
                     </div>
                     <Button
@@ -2231,7 +2951,7 @@ export function BenchPage({ showHeader = true }: BenchPageProps) {
                       disabled={screenshotMatrix.total === 0}
                       onClick={() => setScreenshotsOpen(true)}
                     >
-                      Open
+                      查看截图
                     </Button>
                   </div>
                   <div className='benchScreenshotSummaryGrid'>
@@ -2240,35 +2960,26 @@ export function BenchPage({ showHeader = true }: BenchPageProps) {
                       <strong>{formatNumber(screenshotMatrix.total)}</strong>
                     </div>
                     <div>
-                      <span>Captured</span>
+                      <span>已截图</span>
                       <strong>
                         {formatNumber(screenshotMatrix.captured)}
                       </strong>
                     </div>
                     <div>
-                      <span>Failed</span>
+                      <span>失败</span>
                       <strong>{formatNumber(screenshotMatrix.failed)}</strong>
                     </div>
                     <div>
-                      <span>Missing</span>
+                      <span>缺失</span>
                       <strong>{formatNumber(screenshotMatrix.missing)}</strong>
                     </div>
                   </div>
                 </section>
 
                 <div className='benchReportNotes'>
-                  <a
-                    href='https://lynxjs.org/zh/react/genui/a2ui.html'
-                    target='_blank'
-                    rel='noreferrer'
-                    className='benchDocLink'
-                  >
-                    A2UI docs
-                    <ArrowUpRight size={13} strokeWidth={2} />
-                  </a>
                   <span>
-                    Agent, Tokens, Attempts, and validation are measured by the
-                    server. Render and judge are marked when unavailable.
+                    Agent、Token、Attempts 与校验数据由服务端采集；Render 或 UI
+                    Judge 不可用时会明确标记。
                   </span>
                 </div>
                 {report.warnings && report.warnings.length > 0
@@ -2285,8 +2996,8 @@ export function BenchPage({ showHeader = true }: BenchPageProps) {
             : (
               <div className='benchEmptyReport'>
                 <Sparkles size={28} strokeWidth={1.8} />
-                <strong>Ready for benchmark data</strong>
-                <span>Run the matrix to produce a report.</span>
+                <strong>等待 Bench 数据</strong>
+                <span>运行当前计划后，这里会生成统一 Report。</span>
               </div>
             )}
         </aside>
@@ -2318,13 +3029,12 @@ export function BenchPage({ showHeader = true }: BenchPageProps) {
                     id='bench-screenshots-title'
                     className='benchConfigTitle'
                   >
-                    Screenshots
+                    运行截图
                   </h2>
                   <p className='benchConfigSub'>
-                    {pluralize(screenshotMatrix.rows.length, 'group')} ×{' '}
-                    {pluralize(screenshotMatrix.scenarios.length, 'scenario')}
-                    {' · '}
-                    {pluralize(screenshotMatrix.repeatCount, 'repeat')}
+                    {screenshotMatrix.rows.length} 个对比组 ×{' '}
+                    {screenshotMatrix.scenarios.length} 个场景 · 重复{' '}
+                    {screenshotMatrix.repeatCount} 次
                   </p>
                 </div>
                 <Button
@@ -2332,8 +3042,8 @@ export function BenchPage({ showHeader = true }: BenchPageProps) {
                   size='sm'
                   iconOnly
                   iconBefore={X}
-                  aria-label='Close screenshots'
-                  title='Close screenshots'
+                  aria-label='关闭截图'
+                  title='关闭截图'
                   onClick={() => setScreenshotsOpen(false)}
                 />
               </header>
@@ -2345,15 +3055,15 @@ export function BenchPage({ showHeader = true }: BenchPageProps) {
                     <strong>{formatNumber(screenshotMatrix.total)}</strong>
                   </div>
                   <div>
-                    <span>Captured</span>
+                    <span>已截图</span>
                     <strong>{formatNumber(screenshotMatrix.captured)}</strong>
                   </div>
                   <div>
-                    <span>Failed</span>
+                    <span>失败</span>
                     <strong>{formatNumber(screenshotMatrix.failed)}</strong>
                   </div>
                   <div>
-                    <span>Missing</span>
+                    <span>缺失</span>
                     <strong>{formatNumber(screenshotMatrix.missing)}</strong>
                   </div>
                 </div>
@@ -2363,7 +3073,7 @@ export function BenchPage({ showHeader = true }: BenchPageProps) {
                     className='benchScreenshotMatrix'
                     style={screenshotMatrixStyle}
                   >
-                    <div className='benchScreenshotMatrixCorner'>Group</div>
+                    <div className='benchScreenshotMatrixCorner'>对比组</div>
                     {screenshotMatrix.scenarios.map((scenario) => (
                       <div
                         className='benchScreenshotScenarioHeader'
@@ -2383,9 +3093,11 @@ export function BenchPage({ showHeader = true }: BenchPageProps) {
                           <div>
                             <strong>{row.group.name}</strong>
                             <span>
-                              {row.group.variable}
+                              {row.group.protocol === 'openui'
+                                ? 'OpenUI'
+                                : 'A2UI'}
                               {' · '}
-                              {row.group.catalog}
+                              {row.group.profile}
                             </span>
                           </div>
                         </div>
@@ -2441,7 +3153,7 @@ export function BenchPage({ showHeader = true }: BenchPageProps) {
                                           <span>
                                             Judge {formatRunJudgeMetric(
                                               report,
-                                              settings,
+                                              reportSettings,
                                               item,
                                             )}
                                           </span>
@@ -2451,7 +3163,7 @@ export function BenchPage({ showHeader = true }: BenchPageProps) {
                                           </span>
                                         </>
                                       )
-                                      : <span>No result</span>}
+                                      : <span>无结果</span>}
                                   </div>
                                 </article>
                               );
@@ -2470,13 +3182,13 @@ export function BenchPage({ showHeader = true }: BenchPageProps) {
                   size='sm'
                   onClick={() => setScreenshotsOpen(false)}
                 >
-                  Done
+                  完成
                 </Button>
               </footer>
               <div
                 className='benchScreenshotResizeHandle'
                 role='separator'
-                aria-label='Resize screenshots dialog'
+                aria-label='调整截图弹窗宽度'
                 aria-orientation='vertical'
                 aria-valuemin={SCREENSHOT_DIALOG_MIN_WIDTH}
                 aria-valuemax={SCREENSHOT_DIALOG_MAX_WIDTH}
@@ -2510,12 +3222,12 @@ export function BenchPage({ showHeader = true }: BenchPageProps) {
               <header className='benchConfigHeader'>
                 <div>
                   <h2 id='bench-history-title' className='benchConfigTitle'>
-                    Bench history
+                    Bench 历史
                   </h2>
                   <p className='benchConfigSub'>
                     {historyItems.length > 0
-                      ? `${pluralize(historyItems.length, 'saved run')}`
-                      : 'No saved runs yet'}
+                      ? `已保存 ${historyItems.length} 次运行`
+                      : '还没有保存的运行'}
                   </p>
                 </div>
                 <Button
@@ -2523,8 +3235,8 @@ export function BenchPage({ showHeader = true }: BenchPageProps) {
                   size='sm'
                   iconOnly
                   iconBefore={X}
-                  aria-label='Close bench history'
-                  title='Close bench history'
+                  aria-label='关闭 Bench 历史'
+                  title='关闭 Bench 历史'
                   onClick={() => setHistoryOpen(false)}
                 />
               </header>
@@ -2556,8 +3268,8 @@ export function BenchPage({ showHeader = true }: BenchPageProps) {
                                 data-tone={failedRuns > 0 ? 'warn' : 'ok'}
                               >
                                 {failedRuns > 0
-                                  ? pluralize(failedRuns, 'failed run')
-                                  : 'passed'}
+                                  ? `${failedRuns} 个失败 Run`
+                                  : '通过'}
                               </span>
                             </div>
 
@@ -2567,7 +3279,7 @@ export function BenchPage({ showHeader = true }: BenchPageProps) {
                                 <strong>{formatNumber(totalRuns)}</strong>
                               </div>
                               <div>
-                                <span>Success</span>
+                                <span>成功率</span>
                                 <strong>
                                   {summary
                                     ? `${
@@ -2598,23 +3310,17 @@ export function BenchPage({ showHeader = true }: BenchPageProps) {
                               <span>{entry.config.env.model}</span>
                               <span>
                                 {entry.config.env.apiKeyConfigured
-                                  ? 'key was set'
-                                  : 'no key'}
+                                  ? 'API key 已配置'
+                                  : '无 API key'}
                               </span>
                               <span>
-                                {pluralize(
-                                  entry.config.settings.repeats,
-                                  'repeat',
-                                )} / {entry.config.settings.parallelism}{' '}
-                                parallel
+                                重复 {entry.config.settings.repeats} 次 / 并发
+                                {' '}
+                                {entry.config.settings.parallelism}
                               </span>
                               <span>
-                                {pluralize(entry.config.groups.length, 'group')}
-                                {' · '}
-                                {pluralize(
-                                  entry.config.scenarios.length,
-                                  'scenario',
-                                )}
+                                {entry.config.groups.length} 个对比组 ·{' '}
+                                {entry.config.scenarios.length} 个场景
                               </span>
                               {jobId
                                 ? <span>job {jobId.slice(0, 8)}</span>
@@ -2622,16 +3328,12 @@ export function BenchPage({ showHeader = true }: BenchPageProps) {
                             </div>
 
                             <details className='benchHistoryDetails'>
-                              <summary>Configuration snapshot</summary>
+                              <summary>配置快照</summary>
                               <div className='benchHistorySnapshot'>
-                                <div>
-                                  <span>Base URL</span>
-                                  <strong>{entry.config.env.baseURL}</strong>
-                                </div>
                                 {jobId
                                   ? (
                                     <div>
-                                      <span>a2uiBenchJobId</span>
+                                      <span>Bench Job ID</span>
                                       <strong>{jobId}</strong>
                                     </div>
                                   )
@@ -2639,13 +3341,13 @@ export function BenchPage({ showHeader = true }: BenchPageProps) {
                                 {recoveryUrl
                                   ? (
                                     <div>
-                                      <span>Recovery URL</span>
+                                      <span>恢复链接</span>
                                       <strong>{recoveryUrl}</strong>
                                     </div>
                                   )
                                   : null}
                                 <div>
-                                  <span>Groups</span>
+                                  <span>对比组</span>
                                   <strong>
                                     {entry.config.groups.map((group) =>
                                       `${group.name} (${group.model})`
@@ -2653,7 +3355,7 @@ export function BenchPage({ showHeader = true }: BenchPageProps) {
                                   </strong>
                                 </div>
                                 <div>
-                                  <span>Scenarios</span>
+                                  <span>场景</span>
                                   <strong>
                                     {entry.config.scenarios.map((scenario) =>
                                       scenario.name
@@ -2670,28 +3372,30 @@ export function BenchPage({ showHeader = true }: BenchPageProps) {
                                 iconBefore={RotateCcw}
                                 onClick={() => restoreHistoryEntry(entry)}
                               >
-                                Restore
+                                恢复
                               </Button>
-                              <Button
-                                variant='secondary'
-                                size='sm'
-                                iconBefore={Copy}
-                                disabled={!jobId}
-                                onClick={() =>
-                                  void copyHistoryRecoveryUrl(entry)}
-                              >
-                                {historyCopyId === entry.id
-                                  ? 'Copied'
-                                  : 'Copy URL'}
-                              </Button>
-                              <Button
-                                variant='secondary'
-                                size='sm'
-                                iconBefore={Trash2}
-                                onClick={() => deleteHistoryEntry(entry.id)}
-                              >
-                                Delete
-                              </Button>
+                              <div className='benchHistorySecondaryActions'>
+                                <Button
+                                  variant='secondary'
+                                  size='sm'
+                                  iconBefore={Copy}
+                                  disabled={!jobId}
+                                  onClick={() =>
+                                    void copyHistoryRecoveryUrl(entry)}
+                                >
+                                  {historyCopyId === entry.id
+                                    ? '已复制'
+                                    : '复制链接'}
+                                </Button>
+                                <Button
+                                  variant='secondary'
+                                  size='sm'
+                                  iconBefore={Trash2}
+                                  onClick={() => deleteHistoryEntry(entry.id)}
+                                >
+                                  删除
+                                </Button>
+                              </div>
                             </div>
                           </article>
                         );
@@ -2701,8 +3405,8 @@ export function BenchPage({ showHeader = true }: BenchPageProps) {
                   : (
                     <div className='benchEmptyReport benchHistoryEmpty'>
                       <History size={28} strokeWidth={1.8} />
-                      <strong>No history yet</strong>
-                      <span>Completed bench runs will be saved here.</span>
+                      <strong>暂无历史</strong>
+                      <span>完成的 Bench 会自动保存在这里。</span>
                     </div>
                   )}
               </div>
@@ -2715,14 +3419,14 @@ export function BenchPage({ showHeader = true }: BenchPageProps) {
                   disabled={historyItems.length === 0}
                   onClick={clearHistory}
                 >
-                  Clear history
+                  清空历史
                 </Button>
                 <Button
                   variant='primary'
                   size='sm'
                   onClick={() => setHistoryOpen(false)}
                 >
-                  Done
+                  完成
                 </Button>
               </footer>
             </section>
@@ -2759,13 +3463,13 @@ export function BenchPage({ showHeader = true }: BenchPageProps) {
                       className='benchConfigTitle'
                     >
                       {benchRunBlockers.length > 0
-                        ? 'Bench needs configuration'
-                        : 'Run with server defaults?'}
+                        ? '还不能运行 Bench'
+                        : '使用服务端默认配置？'}
                     </h2>
                     <p id='bench-run-notice-desc' className='benchConfigSub'>
                       {benchRunBlockers.length > 0
-                        ? 'Complete the required setup before starting a run.'
-                        : 'No custom provider configuration was detected.'}
+                        ? '请先补全下面的必要配置。'
+                        : '当前没有填写自定义 Provider。'}
                     </p>
                   </div>
                 </div>
@@ -2774,8 +3478,8 @@ export function BenchPage({ showHeader = true }: BenchPageProps) {
                   size='md'
                   iconOnly
                   iconBefore={X}
-                  aria-label='Close bench notice'
-                  title='Close bench notice'
+                  aria-label='关闭提示'
+                  title='关闭提示'
                   onClick={() => setBenchRunNoticeOpen(false)}
                 />
               </header>
@@ -2792,9 +3496,8 @@ export function BenchPage({ showHeader = true }: BenchPageProps) {
                   : (
                     <>
                       <p className='benchRunNoticeText'>
-                        This bench will not send OPENAI_API_KEY,
-                        OPENAI_BASE_URL, or OPENAI_MODEL from the browser. The
-                        server will use its `/a2ui/health` defaults.
+                        本次运行将使用服务端已配置的 Provider，浏览器不会发送
+                        Provider 密钥、地址或默认 Model。
                       </p>
                       <div className='benchRunHealthCard'>
                         <div>
@@ -2809,13 +3512,7 @@ export function BenchPage({ showHeader = true }: BenchPageProps) {
                         <div>
                           <span>Model</span>
                           <strong>
-                            {benchHealth?.model ?? 'Server default'}
-                          </strong>
-                        </div>
-                        <div>
-                          <span>Base URL</span>
-                          <strong>
-                            {benchHealth?.baseURL ?? 'Server default'}
+                            {benchHealth?.model ?? '服务端默认'}
                           </strong>
                         </div>
                       </div>
@@ -2836,7 +3533,7 @@ export function BenchPage({ showHeader = true }: BenchPageProps) {
                   size='md'
                   onClick={() => setBenchRunNoticeOpen(false)}
                 >
-                  Close
+                  关闭
                 </Button>
                 <Button
                   variant={benchRunBlockers.length > 0
@@ -2849,7 +3546,7 @@ export function BenchPage({ showHeader = true }: BenchPageProps) {
                     setConfigOpen(true);
                   }}
                 >
-                  Configure
+                  去配置
                 </Button>
                 {benchRunBlockers.length === 0
                   ? (
@@ -2863,7 +3560,7 @@ export function BenchPage({ showHeader = true }: BenchPageProps) {
                         startBench(true);
                       }}
                     >
-                      Run with defaults
+                      使用默认配置运行
                     </Button>
                   )
                   : null}
@@ -2891,10 +3588,10 @@ export function BenchPage({ showHeader = true }: BenchPageProps) {
               <header className='benchConfigHeader'>
                 <div>
                   <h2 id='bench-config-title' className='benchConfigTitle'>
-                    Bench configuration
+                    运行设置
                   </h2>
                   <p className='benchConfigSub'>
-                    Provider, runner, and scenario inputs.
+                    配置 Provider、运行参数与场景。
                   </p>
                 </div>
                 <Button
@@ -2902,8 +3599,8 @@ export function BenchPage({ showHeader = true }: BenchPageProps) {
                   size='md'
                   iconOnly
                   iconBefore={X}
-                  aria-label='Close bench configuration'
-                  title='Close bench configuration'
+                  aria-label='关闭运行设置'
+                  title='关闭运行设置'
                   onClick={() => setConfigOpen(false)}
                 />
               </header>
@@ -2919,7 +3616,7 @@ export function BenchPage({ showHeader = true }: BenchPageProps) {
                         </p>
                       </div>
                       <span className='benchStatusPill'>
-                        {env.apiKey.trim() ? 'Key set' : 'No key'}
+                        {env.apiKey.trim() ? 'Key 已配置' : '无 Key'}
                       </span>
                     </div>
                     <label className='benchField'>
@@ -2950,7 +3647,9 @@ export function BenchPage({ showHeader = true }: BenchPageProps) {
                       />
                     </label>
                     <label className='benchField'>
-                      <span className='benchFieldLabel'>OPENAI_MODEL</span>
+                      <span className='benchFieldLabel'>
+                        新建对比组的默认 Model
+                      </span>
                       <input
                         className='benchInput'
                         type='text'
@@ -2967,9 +3666,9 @@ export function BenchPage({ showHeader = true }: BenchPageProps) {
                   <section className='benchConfigSection'>
                     <div className='benchSectionHeader'>
                       <div>
-                        <h3 className='benchSectionTitle'>Runner</h3>
+                        <h3 className='benchSectionTitle'>运行参数</h3>
                         <p className='benchSectionSub'>
-                          Repeats, parallelism, and checks
+                          Repeats、并发与检查项
                         </p>
                       </div>
                       <Zap size={15} strokeWidth={2} />
@@ -2995,7 +3694,7 @@ export function BenchPage({ showHeader = true }: BenchPageProps) {
                         />
                       </label>
                       <label className='benchField'>
-                        <span className='benchFieldLabel'>Parallel</span>
+                        <span className='benchFieldLabel'>并发</span>
                         <input
                           className='benchInput'
                           type='number'
@@ -3024,7 +3723,7 @@ export function BenchPage({ showHeader = true }: BenchPageProps) {
                             repairEnabled: event.target.checked,
                           }))}
                       />
-                      <span>Repair attempts</span>
+                      <span>启用 Repair attempts</span>
                     </label>
                     <label className='benchToggle'>
                       <input
@@ -3036,7 +3735,7 @@ export function BenchPage({ showHeader = true }: BenchPageProps) {
                             judgeEnabled: event.target.checked,
                           }))}
                       />
-                      <span>ui-judge score</span>
+                      <span>启用 UI Judge</span>
                     </label>
                     <label className='benchToggle'>
                       <input
@@ -3048,7 +3747,7 @@ export function BenchPage({ showHeader = true }: BenchPageProps) {
                             collectLiveRenderMetrics: event.target.checked,
                           }))}
                       />
-                      <span>Live render metrics</span>
+                      <span>采集实时 Render metrics</span>
                     </label>
                   </section>
                 </div>
@@ -3056,8 +3755,8 @@ export function BenchPage({ showHeader = true }: BenchPageProps) {
                 <section className='benchConfigSection benchConfigScenarios'>
                   <div className='benchSectionHeader'>
                     <div>
-                      <h3 className='benchSectionTitle'>Scenarios</h3>
-                      <p className='benchSectionSub'>Prompt suite</p>
+                      <h3 className='benchSectionTitle'>场景</h3>
+                      <p className='benchSectionSub'>共享 Prompt 集合</p>
                     </div>
                     <Button
                       variant='secondary'
@@ -3065,7 +3764,7 @@ export function BenchPage({ showHeader = true }: BenchPageProps) {
                       iconBefore={MessageSquarePlus}
                       onClick={addScenario}
                     >
-                      Add
+                      添加
                     </Button>
                   </div>
                   <div className='benchScenarioList'>
@@ -3075,7 +3774,7 @@ export function BenchPage({ showHeader = true }: BenchPageProps) {
                           <input
                             className='benchInlineInput benchScenarioName'
                             value={scenario.name}
-                            aria-label='Scenario name'
+                            aria-label='场景名称'
                             onChange={(event) =>
                               updateScenario(
                                 scenario.id,
@@ -3087,8 +3786,8 @@ export function BenchPage({ showHeader = true }: BenchPageProps) {
                             size='sm'
                             iconOnly
                             iconBefore={Trash2}
-                            aria-label={`Remove ${scenario.name}`}
-                            title={`Remove ${scenario.name}`}
+                            aria-label={`删除 ${scenario.name}`}
+                            title={`删除 ${scenario.name}`}
                             disabled={scenarios.length <= 1}
                             onClick={() =>
                               removeScenario(scenario.id)}
@@ -3139,14 +3838,14 @@ export function BenchPage({ showHeader = true }: BenchPageProps) {
                   iconBefore={RotateCcw}
                   onClick={resetBench}
                 >
-                  Reset
+                  重置
                 </Button>
                 <Button
                   variant='primary'
                   size='md'
                   onClick={() => setConfigOpen(false)}
                 >
-                  Done
+                  完成
                 </Button>
               </footer>
             </section>

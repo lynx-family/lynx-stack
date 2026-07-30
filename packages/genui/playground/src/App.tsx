@@ -12,9 +12,9 @@ import {
 import { Button } from './components/Button.js';
 import { Moon, Sun } from './components/Icon.js';
 import { BenchResultPage } from './pages/bench/BenchResultPage.js';
+import { BenchRunnerPage } from './pages/bench/BenchRunnerPage.js';
 import { BenchShell } from './pages/bench/BenchShell.js';
 import { PhaseTwoReportPage } from './pages/bench/PhaseTwoReportPage.js';
-import { BenchPage } from './pages/BenchPage.js';
 import { ComponentsPage } from './pages/catalog/ComponentsPage.js';
 import { ChatPage } from './pages/chat/ChatPage.js';
 import { DemosListPage } from './pages/demos/DemosListPage.js';
@@ -233,7 +233,7 @@ export function App() {
 
     switch (route.tab) {
       case 'bench': {
-        let benchPage = <BenchPage key='bench-runner' showHeader={false} />;
+        let benchPage = <BenchRunnerPage key='bench-runner' />;
         switch (route.benchSlug) {
           case undefined:
           case 'runner':
