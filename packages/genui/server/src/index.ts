@@ -8,26 +8,16 @@ import { serve } from '@hono/node-server';
 
 import app from './app.js';
 import { createGracefulShutdown } from './graceful-shutdown.js';
+import { resolveListenOptions } from './listen-options.js';
 
-const DEFAULT_PORT = 3_000;
-const DEFAULT_HOST = '0.0.0.0';
 const HTTP2_ENABLED = process.env.GENUI_HTTP2 === '1';
-
-function readPort(value: string | undefined): number {
-  if (value === undefined) return DEFAULT_PORT;
-
-  const port = Number(value);
-  if (!Number.isInteger(port) || port < 0 || port > 65_535) {
-    throw new Error(`Invalid PORT value: ${value}`);
-  }
-  return port;
-}
+const { hostname, port } = resolveListenOptions(process.env);
 
 const server = serve(
   {
     fetch: app.fetch,
-    hostname: process.env.HOST ?? DEFAULT_HOST,
-    port: readPort(process.env.PORT),
+    hostname,
+    port,
     ...(HTTP2_ENABLED ? { createServer: createHttp2Server } : {}),
   },
   ({ address, port }) => {

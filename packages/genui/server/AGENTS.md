@@ -169,6 +169,12 @@ Rslib emits the executable Hono server at `dist/index.js`. Start it with:
 pnpm --filter a2ui-server start
 ```
 
+At the package root, `./start.sh` provides the production entry point. It
+checks for a supported Node.js 22 or 24 runtime and the built server artifact
+before launching the same `dist/index.js`. The launcher and server directly
+consume `HOST` and `PORT`, preserving direct overrides and the
+`0.0.0.0:3000` default.
+
 Each protocol module default-exports a Hono sub-application. `src/app.ts`
 assembles them, owns path and method matching, and supplies shared 404, 405,
 CORS preflight, and error responses. `src/index.ts` starts the Node server and
