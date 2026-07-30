@@ -1160,7 +1160,7 @@ impl Default for JSXTransformerConfig {
 }
 
 #[allow(clippy::too_many_arguments)]
-fn build_snapshot_registration(
+pub(crate) fn build_snapshot_registration(
   dev_creator_param: bool,
   runtime_id: Expr,
   creator_runtime_expr: Expr,

@@ -222,15 +222,4 @@ describe('enableMTSRendering: false', () => {
       })
     ).toThrowError(/experimental_useElementTemplate/)
   })
-
-  test('rejects the legacy slot codegen, which it does not support yet', async () => {
-    const { pluginReactLynx } = await import('../src/pluginReactLynx.js')
-
-    expect(() =>
-      pluginReactLynx({
-        enableMTSRendering: false,
-        compat: { legacySlot: true },
-      })
-    ).toThrowError(/compat\.legacySlot/)
-  })
 })

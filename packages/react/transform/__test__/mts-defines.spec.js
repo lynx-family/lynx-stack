@@ -142,6 +142,38 @@ export function App() {
   });
 });
 
+function legacy(target, extra = {}) {
+  return options(target, {
+    snapshot: { ...options(target).snapshot, legacySlot: true },
+    ...extra,
+  });
+}
+
+describe('legacy slot codegen', () => {
+  it('collects the definitions its frozen codegen emits', async () => {
+    const { mtsDefines } = await transformReactLynx(source, legacy('JS', { collectMTSDefines: true }));
+
+    const snapshot = mtsDefines.find(({ kind }) => kind === 'snapshot');
+    expect(snapshot.code).toContain('__CreateView');
+    expect(snapshot.code).toContain('__CreateText');
+    expect(mtsDefines.some(({ kind }) => kind === 'worklet')).toBe(true);
+  });
+
+  it('collects the same definitions the main-thread transform would emit', async () => {
+    const fromBackground = await transformReactLynx(source, legacy('JS', { collectMTSDefines: true }));
+    const fromMainThread = await transformReactLynx(source, legacy('LEPUS', { collectMTSDefines: true }));
+
+    expect(fromBackground.mtsDefines).toStrictEqual(fromMainThread.mtsDefines);
+  });
+
+  it('leaves the emitted background code unchanged', async () => {
+    const withCollect = await transformReactLynx(source, legacy('JS', { collectMTSDefines: true }));
+    const withoutCollect = await transformReactLynx(source, legacy('JS'));
+
+    expect(withCollect.code).toBe(withoutCollect.code);
+  });
+});
+
 describe('shared runtime imports', () => {
   const sharedSource = `
 import { Foo } from './foo.js' with { runtime: 'shared' };
