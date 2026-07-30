@@ -1,0 +1,2191 @@
+.phaseTwoReportPage {
+  --phase-report-paper: var(--geist-background, #fff);
+  --phase-report-ink: var(--geist-foreground, #171717);
+  --phase-report-muted: var(--geist-secondary, #666);
+  --phase-report-line: var(--geist-border, #e5e5e5);
+  --phase-report-line-strong: color-mix(
+    in srgb,
+    var(--phase-report-ink) 28%,
+    var(--phase-report-line)
+  );
+  --phase-report-surface: var(--geist-surface, #f7f7f7);
+  --phase-report-a2ui: #2868d7;
+  --phase-report-a2ui-soft: color-mix(
+    in srgb,
+    var(--phase-report-a2ui) 10%,
+    var(--phase-report-paper)
+  );
+  --phase-report-openui: #c65c2b;
+  --phase-report-openui-soft: color-mix(
+    in srgb,
+    var(--phase-report-openui) 10%,
+    var(--phase-report-paper)
+  );
+  --phase-report-data:
+    var(--geist-mono), "SFMono-Regular", Consolas, "Liberation Mono", monospace;
+  --phase-report-body:
+    var(--bench-font), -apple-system, BlinkMacSystemFont, "PingFang SC",
+    "Microsoft YaHei", sans-serif;
+  --phase-report-gutter: clamp(20px, 4vw, 56px);
+  --phase-report-content: 1120px;
+
+  width: 100%;
+  height: 100%;
+  min-width: 0;
+  min-height: 0;
+  overflow-x: hidden;
+  overflow-y: auto;
+  background: var(--phase-report-paper);
+  color: var(--phase-report-ink);
+  font-family: var(--phase-report-body);
+  -webkit-font-smoothing: antialiased;
+}
+
+.phaseTwoReportPage *,
+.phaseTwoReportPage *::before,
+.phaseTwoReportPage *::after {
+  box-sizing: border-box;
+}
+
+.phaseTwoReportPage a {
+  color: inherit;
+}
+
+.phaseTwoReportHero,
+.phaseTwoReportSection,
+.phaseTwoReportFooter {
+  padding-right: max(
+    var(--phase-report-gutter),
+    calc((100% - var(--phase-report-content)) / 2 + var(--phase-report-gutter))
+  );
+  padding-left: max(
+    var(--phase-report-gutter),
+    calc((100% - var(--phase-report-content)) / 2 + var(--phase-report-gutter))
+  );
+}
+
+.phaseTwoReportHero {
+  padding-top: 28px;
+  padding-bottom: clamp(52px, 6vw, 76px);
+  border-bottom: 1px solid var(--phase-report-line);
+}
+
+.phaseTwoReportHeroMeta {
+  position: relative;
+  z-index: 20;
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 20px;
+  padding-bottom: 14px;
+  border-bottom: 1px solid var(--phase-report-line);
+  color: var(--phase-report-muted);
+  font-size: 11px;
+  font-weight: 520;
+  letter-spacing: 0.01em;
+  line-height: 1.5;
+}
+
+.phaseTwoReportMatchedCore {
+  position: relative;
+  flex: 0 0 auto;
+}
+
+.phaseTwoReportMatchedCoreTrigger {
+  min-height: 24px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: var(--phase-report-muted);
+  cursor: pointer;
+  font: inherit;
+  letter-spacing: inherit;
+  line-height: inherit;
+  text-align: left;
+  text-transform: none;
+}
+
+.phaseTwoReportMatchedCoreTrigger > span {
+  border-bottom: 1px dotted var(--phase-report-line-strong);
+}
+
+.phaseTwoReportMatchedCoreTrigger i {
+  width: 17px;
+  height: 17px;
+  display: grid;
+  flex: 0 0 auto;
+  place-items: center;
+  border: 1px solid var(--phase-report-line-strong);
+  border-radius: 50%;
+  color: var(--phase-report-ink);
+  font-family: var(--phase-report-data);
+  font-size: 9px;
+  font-style: normal;
+  font-weight: 700;
+  line-height: 1;
+}
+
+.phaseTwoReportMatchedCoreTrigger:hover,
+.phaseTwoReportMatchedCoreTrigger[aria-expanded="true"] {
+  color: var(--phase-report-ink);
+}
+
+.phaseTwoReportMatchedCoreTrigger:hover i,
+.phaseTwoReportMatchedCoreTrigger[aria-expanded="true"] i {
+  border-color: var(--phase-report-ink);
+  background: var(--phase-report-ink);
+  color: var(--phase-report-paper);
+}
+
+.phaseTwoReportMatchedCorePanel {
+  position: absolute;
+  z-index: 60;
+  top: calc(100% + 13px);
+  right: 0;
+  width: min(720px, calc(100vw - 40px));
+  padding: 22px;
+  border: 1px solid var(--phase-report-ink);
+  background: var(--phase-report-paper);
+  box-shadow: 0 18px 48px color-mix(in srgb, #000 16%, transparent);
+  color: var(--phase-report-ink);
+  font-family: var(--phase-report-body);
+  letter-spacing: normal;
+  text-transform: none;
+  animation: phaseTwoReportMatchedCoreEnter 160ms ease-out;
+}
+
+.phaseTwoReportMatchedCorePanel[hidden] {
+  display: none;
+}
+
+.phaseTwoReportMatchedCorePanel::before {
+  position: absolute;
+  top: -7px;
+  right: 6px;
+  width: 12px;
+  height: 12px;
+  border-top: 1px solid var(--phase-report-ink);
+  border-left: 1px solid var(--phase-report-ink);
+  background: var(--phase-report-paper);
+  content: "";
+  transform: rotate(45deg);
+}
+
+.phaseTwoReportMatchedCorePanel > header {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 20px;
+}
+
+.phaseTwoReportMatchedCorePanel header small,
+.phaseTwoReportMatchedCoreFlow small {
+  display: block;
+  color: var(--phase-report-muted);
+  font-family: var(--phase-report-data);
+  font-size: 9px;
+  font-weight: 600;
+  letter-spacing: 0.045em;
+  line-height: 1.45;
+  text-transform: uppercase;
+}
+
+.phaseTwoReportMatchedCorePanel header strong {
+  display: block;
+  margin-top: 5px;
+  font-size: 21px;
+  font-weight: 620;
+  letter-spacing: -0.025em;
+  line-height: 1.25;
+}
+
+.phaseTwoReportMatchedCorePanel header p {
+  max-width: 590px;
+  margin: 8px 0 0;
+  color: var(--phase-report-muted);
+  font-size: 12px;
+  line-height: 1.65;
+}
+
+.phaseTwoReportMatchedCorePanel > header > button {
+  align-self: start;
+  padding: 2px 0;
+  border: 0;
+  border-bottom: 1px solid var(--phase-report-line-strong);
+  background: transparent;
+  color: var(--phase-report-muted);
+  cursor: pointer;
+  font-family: inherit;
+  font-size: 10px;
+  font-weight: 520;
+  line-height: 1.4;
+}
+
+.phaseTwoReportMatchedCorePanel > header > button:hover {
+  border-color: var(--phase-report-ink);
+  color: var(--phase-report-ink);
+}
+
+.phaseTwoReportMatchedCoreFlow {
+  display: grid;
+  grid-template-columns:
+    minmax(0, 1.25fr) 18px minmax(120px, 0.8fr) 18px
+    minmax(0, 1.15fr);
+  align-items: stretch;
+  margin-top: 20px;
+  background: var(--phase-report-ink);
+  color: var(--phase-report-paper);
+}
+
+.phaseTwoReportMatchedCoreFlow > div {
+  min-width: 0;
+  padding: 15px;
+}
+
+.phaseTwoReportMatchedCoreFlow > span {
+  display: grid;
+  place-items: center;
+  color: color-mix(in srgb, var(--phase-report-paper) 45%, transparent);
+  font-family: var(--phase-report-data);
+  font-size: 13px;
+}
+
+.phaseTwoReportMatchedCoreFlow small {
+  color: color-mix(in srgb, var(--phase-report-paper) 58%, transparent);
+}
+
+.phaseTwoReportMatchedCoreFlow strong {
+  display: block;
+  margin-top: 7px;
+  font-family: var(--phase-report-data);
+  font-size: 10px;
+  font-weight: 580;
+  line-height: 1.45;
+}
+
+.phaseTwoReportMatchedCoreFlow p {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 5px;
+  margin: 7px 0 0;
+}
+
+.phaseTwoReportMatchedCoreFlow b {
+  padding: 3px 5px;
+  border: 1px solid currentcolor;
+  font-family: var(--phase-report-data);
+  font-size: 9px;
+  font-weight: 650;
+  line-height: 1.4;
+  text-align: center;
+}
+
+.phaseTwoReportMatchedCoreFlow b[data-protocol="a2ui"] {
+  color: #79a7ff;
+}
+
+.phaseTwoReportMatchedCoreFlow b[data-protocol="openui"] {
+  color: #f09a72;
+}
+
+.phaseTwoReportMatchedCoreNotes {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  margin: 18px 0 0;
+  border-top: 1px solid var(--phase-report-line);
+}
+
+.phaseTwoReportMatchedCoreNotes > div {
+  min-width: 0;
+  padding: 14px 15px 0;
+}
+
+.phaseTwoReportMatchedCoreNotes > div:first-child {
+  padding-left: 0;
+}
+
+.phaseTwoReportMatchedCoreNotes > div + div {
+  border-left: 1px solid var(--phase-report-line);
+}
+
+.phaseTwoReportMatchedCoreNotes dt {
+  margin: 0;
+  font-size: 11px;
+  font-weight: 650;
+  line-height: 1.45;
+}
+
+.phaseTwoReportMatchedCoreNotes dd {
+  margin: 5px 0 0;
+  color: var(--phase-report-muted);
+  font-size: 10px;
+  line-height: 1.6;
+}
+
+@keyframes phaseTwoReportMatchedCoreEnter {
+  from {
+    opacity: 0;
+    transform: translateY(-5px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.phaseTwoReportHeroGrid {
+  padding: clamp(46px, 6vw, 72px) 0 clamp(38px, 5vw, 56px);
+}
+
+.phaseTwoReportHeroLead {
+  max-width: 900px;
+}
+
+.phaseTwoReportEyebrow,
+.phaseTwoReportSectionHead > span,
+.phaseTwoReportSectionHead small,
+.phaseTwoReportMethodGrid header span {
+  display: block;
+  margin: 0;
+  color: var(--phase-report-muted);
+  font-family: var(--phase-report-data);
+  font-size: 11px;
+  font-weight: 550;
+  letter-spacing: 0.045em;
+  line-height: 1.5;
+  text-transform: uppercase;
+}
+
+.phaseTwoReportEyebrow {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 14px;
+}
+
+.phaseTwoReportEyebrow i {
+  position: relative;
+  width: 58px;
+  height: 1px;
+  background: var(--phase-report-line-strong);
+}
+
+.phaseTwoReportEyebrow i::after {
+  position: absolute;
+  top: -2px;
+  left: calc(50% - 2px);
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background: var(--phase-report-ink);
+  content: "";
+}
+
+.phaseTwoReportHero h1 {
+  max-width: 840px;
+  margin: 0;
+  font-size: clamp(38px, 5.2vw, 58px);
+  font-weight: 580;
+  letter-spacing: -0.045em;
+  line-height: 1.12;
+  text-wrap: balance;
+}
+
+.phaseTwoReportThesis {
+  max-width: 840px;
+  display: grid;
+  grid-template-columns: 72px minmax(0, 1fr);
+  gap: 18px;
+  padding-top: 22px;
+  margin-top: 28px;
+  border-top: 1px solid var(--phase-report-line-strong);
+}
+
+.phaseTwoReportThesis > span {
+  padding-top: 4px;
+  color: var(--phase-report-muted);
+  font-size: 11px;
+  font-weight: 600;
+  line-height: 1.5;
+}
+
+.phaseTwoReportThesis p {
+  margin: 0;
+  font-size: clamp(17px, 1.75vw, 20px);
+  font-weight: 500;
+  letter-spacing: -0.012em;
+  line-height: 1.68;
+  text-wrap: pretty;
+}
+
+.phaseTwoReportScope {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  padding: 0;
+  margin: clamp(38px, 5vw, 56px) 0 0;
+  border-top: 1px solid var(--phase-report-line);
+  border-bottom: 1px solid var(--phase-report-line);
+}
+
+.phaseTwoReportScope > div {
+  min-width: 0;
+  padding: 18px 20px;
+}
+
+.phaseTwoReportScope > div + div {
+  border-left: 1px solid var(--phase-report-line);
+}
+
+.phaseTwoReportScope dt {
+  min-height: 31px;
+  margin: 0 0 8px;
+  color: var(--phase-report-muted);
+  font-size: 11px;
+  line-height: 1.4;
+}
+
+.phaseTwoReportScope dd {
+  margin: 0;
+  font-family: var(--phase-report-data);
+  font-size: 27px;
+  font-variant-numeric: tabular-nums;
+  font-weight: 580;
+  letter-spacing: -0.045em;
+  line-height: 1;
+}
+
+.phaseTwoReportScope dd + small {
+  display: block;
+  margin-top: 7px;
+  color: var(--phase-report-muted);
+  font-family: var(--phase-report-data);
+  font-size: 9px;
+  line-height: 1.4;
+}
+
+.phaseTwoReportRunStrip {
+  display: grid;
+  grid-template-columns: 64px minmax(0, 1fr);
+  align-items: center;
+  gap: 24px;
+  padding: 16px 0;
+  border-top: 1px solid var(--phase-report-line);
+  border-bottom: 1px solid var(--phase-report-line);
+}
+
+.phaseTwoReportRunStrip > span {
+  color: var(--phase-report-muted);
+  font-family: var(--phase-report-data);
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.045em;
+}
+
+.phaseTwoReportRunStrip p {
+  margin: 0;
+  font-size: 12px;
+  line-height: 1.7;
+}
+
+.phaseTwoReportSection {
+  padding-top: clamp(58px, 7vw, 84px);
+  padding-bottom: clamp(58px, 7vw, 84px);
+  border-bottom: 1px solid var(--phase-report-line);
+}
+
+.phaseTwoReportDeltaSection {
+  background: var(--phase-report-surface);
+}
+
+.phaseTwoReportSectionHead {
+  display: grid;
+  grid-template-columns: 64px minmax(0, 1fr);
+  gap: 24px;
+  align-items: start;
+  max-width: 840px;
+  margin-bottom: clamp(34px, 4vw, 48px);
+}
+
+.phaseTwoReportSectionHead > span {
+  padding-top: 7px;
+}
+
+.phaseTwoReportSectionHead small {
+  margin-bottom: 8px;
+}
+
+.phaseTwoReportSectionHead h2 {
+  margin: 0;
+  font-size: clamp(28px, 3.2vw, 36px);
+  font-weight: 620;
+  letter-spacing: -0.035em;
+  line-height: 1.18;
+  text-wrap: balance;
+}
+
+.phaseTwoReportSectionHead p {
+  max-width: 680px;
+  margin: 12px 0 0;
+  color: var(--phase-report-muted);
+  font-size: 15px;
+  line-height: 1.7;
+}
+
+.phaseTwoReportProtocolPair {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 54px minmax(0, 1fr);
+  overflow: hidden;
+  border: 1px solid var(--phase-report-line);
+  border-top: 2px solid var(--phase-report-ink);
+  border-radius: 8px;
+  background: var(--phase-report-paper);
+}
+
+.phaseTwoReportProtocol {
+  min-width: 0;
+  padding: clamp(22px, 3.3vw, 38px);
+}
+
+.phaseTwoReportProtocol[data-protocol="a2ui"] {
+  box-shadow: inset 3px 0 0 var(--phase-report-a2ui);
+}
+
+.phaseTwoReportProtocol[data-protocol="openui"] {
+  box-shadow: inset -3px 0 0 var(--phase-report-openui);
+}
+
+.phaseTwoReportProtocol > header {
+  display: flex;
+  align-items: center;
+  gap: 15px;
+  padding-bottom: 22px;
+  border-bottom: 1px solid var(--phase-report-line);
+}
+
+.phaseTwoReportProtocol > header > span {
+  width: 42px;
+  height: 42px;
+  display: grid;
+  flex: 0 0 auto;
+  place-items: center;
+  border: 1px solid currentcolor;
+  border-radius: 6px;
+  font-family: var(--phase-report-data);
+  font-size: 18px;
+  font-weight: 700;
+}
+
+.phaseTwoReportProtocol[data-protocol="a2ui"] > header > span {
+  background: var(--phase-report-a2ui-soft);
+  color: var(--phase-report-a2ui);
+}
+
+.phaseTwoReportProtocol[data-protocol="openui"] > header > span {
+  background: var(--phase-report-openui-soft);
+  color: var(--phase-report-openui);
+}
+
+.phaseTwoReportProtocol h3 {
+  margin: 0;
+  font-size: 22px;
+  font-weight: 620;
+  letter-spacing: -0.025em;
+  line-height: 1.25;
+}
+
+.phaseTwoReportProtocol header p {
+  margin: 3px 0 0;
+  color: var(--phase-report-muted);
+  font-family: var(--phase-report-data);
+  font-size: 9px;
+  line-height: 1.4;
+}
+
+.phaseTwoReportProtocol dl {
+  padding: 12px 0 0;
+  margin: 0;
+}
+
+.phaseTwoReportProtocol dl > div {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 20px;
+  padding: 11px 0;
+  border-bottom: 1px solid var(--phase-report-line);
+}
+
+.phaseTwoReportProtocol dt {
+  color: var(--phase-report-muted);
+  font-size: 12px;
+  line-height: 1.5;
+}
+
+.phaseTwoReportProtocol dd {
+  margin: 0;
+  font-family: var(--phase-report-data);
+  font-size: 16px;
+  font-variant-numeric: tabular-nums;
+  font-weight: 600;
+  letter-spacing: -0.025em;
+  line-height: 1.25;
+  text-align: right;
+}
+
+.phaseTwoReportProtocol > footer {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 7px 15px;
+  padding-top: 15px;
+  color: var(--phase-report-muted);
+  font-family: var(--phase-report-data);
+  font-size: 9px;
+  line-height: 1.45;
+}
+
+.phaseTwoReportProtocolSpine {
+  display: grid;
+  grid-template-rows: 1fr auto 1fr;
+  place-items: center;
+  border-right: 1px solid var(--phase-report-line);
+  border-left: 1px solid var(--phase-report-line);
+  background: var(--phase-report-surface);
+}
+
+.phaseTwoReportProtocolSpine span {
+  width: 1px;
+  height: 100%;
+  background: var(--phase-report-line-strong);
+}
+
+.phaseTwoReportProtocolSpine b {
+  padding: 10px 0;
+  color: var(--phase-report-muted);
+  font-family: var(--phase-report-data);
+  font-size: 9px;
+  letter-spacing: 0.08em;
+  writing-mode: vertical-rl;
+}
+
+.phaseTwoReportEmptyState {
+  padding: 34px;
+  border: 1px solid var(--phase-report-line);
+  border-top: 2px solid var(--phase-report-ink);
+  border-radius: 8px;
+  background: var(--phase-report-paper);
+  text-align: center;
+}
+
+.phaseTwoReportFilters + .phaseTwoReportEmptyState {
+  margin-top: 24px;
+}
+
+.phaseTwoReportEmptyState strong {
+  display: block;
+  font-size: 17px;
+  font-weight: 620;
+}
+
+.phaseTwoReportEmptyState p {
+  max-width: 600px;
+  margin: 10px auto 18px;
+  color: var(--phase-report-muted);
+  font-size: 13px;
+  line-height: 1.7;
+}
+
+.phaseTwoReportFilters {
+  position: relative;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) minmax(220px, 0.8fr);
+  overflow: visible;
+  border: 1px solid var(--phase-report-line);
+  border-radius: 8px 8px 0 0;
+  background: var(--phase-report-paper);
+}
+
+.phaseTwoReportFilter {
+  min-width: 0;
+  padding: 15px 16px;
+}
+
+.phaseTwoReportFilter + .phaseTwoReportFilter,
+.phaseTwoReportFilterReadout {
+  border-left: 1px solid var(--phase-report-line);
+}
+
+.phaseTwoReportFilterLabel,
+.phaseTwoReportFilterReadout > span {
+  display: block;
+  margin-bottom: 7px;
+  color: var(--phase-report-muted);
+  font-family: var(--phase-report-data);
+  font-size: 9px;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  line-height: 1.4;
+  text-transform: uppercase;
+}
+
+.phaseTwoReportSelectControl {
+  position: relative;
+}
+
+.phaseTwoReportSelectTrigger {
+  display: flex;
+  width: 100%;
+  min-height: 42px;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 0 8px 0 12px;
+  overflow: hidden;
+  border: 1px solid var(--phase-report-line);
+  border-radius: 6px;
+  background: color-mix(
+    in srgb,
+    var(--phase-report-surface) 72%,
+    var(--phase-report-paper)
+  );
+  color: var(--phase-report-ink);
+  cursor: pointer;
+  font-family: var(--phase-report-body);
+  font-size: 13px;
+  font-weight: 400;
+  letter-spacing: 0;
+  line-height: 1.4;
+  text-align: left;
+  transition:
+    border-color 140ms ease,
+    background-color 140ms ease,
+    box-shadow 140ms ease;
+}
+
+.phaseTwoReportSelectTrigger > span:first-child {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.phaseTwoReportSelectChevron {
+  flex: 0 0 auto;
+  width: 26px;
+  height: 26px;
+  display: grid;
+  border: 1px solid var(--phase-report-line);
+  border-radius: 50%;
+  background: var(--phase-report-paper);
+  color: var(--phase-report-muted);
+  place-items: center;
+  pointer-events: none;
+  transition:
+    border-color 140ms ease,
+    background-color 140ms ease,
+    color 140ms ease,
+    transform 140ms ease;
+}
+
+.phaseTwoReportSelectChevron svg {
+  width: 14px;
+  height: 14px;
+  overflow: visible;
+}
+
+.phaseTwoReportSelectChevron path {
+  fill: none;
+  stroke: currentcolor;
+  stroke-linecap: square;
+  stroke-linejoin: miter;
+  stroke-width: 1.5;
+}
+
+.phaseTwoReportSelectTrigger:hover:not(:disabled) {
+  border-color: var(--phase-report-ink);
+  background: var(--phase-report-paper);
+}
+
+.phaseTwoReportSelectTrigger:hover:not(:disabled) .phaseTwoReportSelectChevron {
+  border-color: var(--phase-report-ink);
+  color: var(--phase-report-ink);
+}
+
+.phaseTwoReportSelectTrigger:focus-visible,
+.phaseTwoReportSelectTrigger[data-state="open"] {
+  border-color: var(--phase-report-ink);
+  outline: none;
+  box-shadow: 0 0 0 1px var(--phase-report-ink);
+}
+
+.phaseTwoReportSelectTrigger:focus-visible .phaseTwoReportSelectChevron,
+.phaseTwoReportSelectTrigger[data-state="open"] .phaseTwoReportSelectChevron {
+  border-color: var(--phase-report-ink);
+  background: var(--phase-report-ink);
+  color: var(--phase-report-paper);
+}
+
+.phaseTwoReportSelectTrigger[data-state="open"] .phaseTwoReportSelectChevron {
+  transform: rotate(180deg);
+}
+
+.phaseTwoReportSelectTrigger:disabled {
+  border-color: var(--phase-report-line);
+  background: var(--phase-report-surface);
+  color: var(--phase-report-muted);
+  cursor: not-allowed;
+  opacity: 0.68;
+}
+
+.phaseTwoReportSelectTrigger:disabled .phaseTwoReportSelectChevron {
+  background: transparent;
+}
+
+.phaseTwoReportSelectContent {
+  z-index: 80;
+  max-height: min(320px, var(--radix-select-content-available-height));
+  min-width: var(--radix-select-trigger-width);
+  overflow: hidden;
+  border: 1px solid var(--geist-foreground, #171717);
+  border-radius: 8px;
+  background: var(--geist-background, #fff);
+  box-shadow: 0 18px 44px rgb(0 0 0 / 16%), 0 2px 8px rgb(0 0 0 / 8%);
+  color: var(--geist-foreground, #171717);
+  font-family:
+    var(--bench-font), -apple-system, BlinkMacSystemFont, "PingFang SC",
+    "Microsoft YaHei", sans-serif;
+  transform-origin: var(--radix-select-content-transform-origin);
+  animation: phaseTwoReportSelectEnter 120ms ease-out;
+}
+
+.phaseTwoReportSelectViewport {
+  padding: 6px;
+}
+
+.phaseTwoReportSelectOption {
+  position: relative;
+  display: grid;
+  width: 100%;
+  min-height: 38px;
+  grid-template-columns: 20px minmax(0, 1fr);
+  align-items: center;
+  gap: 8px;
+  padding: 7px 10px;
+  border-radius: 4px;
+  cursor: default;
+  font-size: 13px;
+  font-weight: 400;
+  line-height: 1.4;
+  outline: none;
+  user-select: none;
+}
+
+.phaseTwoReportSelectOption[data-state="checked"] {
+  background: var(--geist-surface, #f7f7f7);
+}
+
+.phaseTwoReportSelectOption[data-highlighted] {
+  background: var(--geist-foreground, #171717);
+  color: var(--geist-background, #fff);
+}
+
+.phaseTwoReportSelectOption[data-disabled] {
+  pointer-events: none;
+  opacity: 0.36;
+}
+
+.phaseTwoReportSelectOptionCheck {
+  width: 16px;
+  height: 16px;
+  display: grid;
+  place-items: center;
+}
+
+.phaseTwoReportSelectOptionCheck svg {
+  width: 14px;
+  height: 14px;
+}
+
+.phaseTwoReportSelectOptionCheck path {
+  fill: none;
+  stroke: currentcolor;
+  stroke-linecap: square;
+  stroke-linejoin: miter;
+  stroke-width: 1.8;
+}
+
+@keyframes phaseTwoReportSelectEnter {
+  from {
+    opacity: 0;
+    transform: translateY(-3px) scale(0.985);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+.phaseTwoReportFilterReadout {
+  display: grid;
+  align-content: center;
+  padding: 15px 18px;
+  background: var(--phase-report-surface);
+}
+
+.phaseTwoReportFilterReadout > strong {
+  font-family: var(--phase-report-data);
+  font-size: 23px;
+  font-variant-numeric: tabular-nums;
+  font-weight: 620;
+  letter-spacing: -0.04em;
+  line-height: 1;
+}
+
+.phaseTwoReportFilterReadout > small {
+  margin-top: 6px;
+  color: var(--phase-report-muted);
+  font-size: 9px;
+  line-height: 1.4;
+}
+
+.phaseTwoReportMetricTabs {
+  display: grid;
+  grid-template-columns: repeat(6, minmax(0, 1fr));
+  border-right: 1px solid var(--phase-report-line);
+  border-bottom: 1px solid var(--phase-report-line);
+  border-left: 1px solid var(--phase-report-line);
+  background: var(--phase-report-paper);
+}
+
+.phaseTwoReportMetricTabs button {
+  min-width: 0;
+  min-height: 66px;
+  padding: 10px 9px;
+  border: 0;
+  border-right: 1px solid var(--phase-report-line);
+  background: transparent;
+  color: var(--phase-report-muted);
+  cursor: pointer;
+  font-family: inherit;
+  text-align: left;
+}
+
+.phaseTwoReportMetricTabs button:last-child {
+  border-right: 0;
+}
+
+.phaseTwoReportMetricTabs button:hover {
+  background: var(--phase-report-surface);
+  color: var(--phase-report-ink);
+}
+
+.phaseTwoReportMetricTabs button[aria-selected="true"] {
+  background: var(--phase-report-ink);
+  color: var(--phase-report-paper);
+}
+
+.phaseTwoReportMetricTabs button > span {
+  display: block;
+  overflow: hidden;
+  font-family: var(--phase-report-data);
+  font-size: 10px;
+  font-weight: 600;
+  line-height: 1.4;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.phaseTwoReportMetricTabs button > small {
+  display: block;
+  overflow: hidden;
+  margin-top: 5px;
+  font-size: 9px;
+  line-height: 1.35;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.phaseTwoReportBeamPanel {
+  overflow: hidden;
+  border: 1px solid var(--phase-report-line);
+  border-top: 0;
+  border-radius: 0 0 8px 8px;
+  background: var(--phase-report-paper);
+}
+
+.phaseTwoReportBeamHeader {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) max-content;
+  gap: 24px;
+  align-items: end;
+  padding: 22px 24px;
+  border-bottom: 1px solid var(--phase-report-line);
+}
+
+.phaseTwoReportBeamHeader > div {
+  display: grid;
+  gap: 5px;
+}
+
+.phaseTwoReportBeamHeader span,
+.phaseTwoReportBeamHeader small {
+  color: var(--phase-report-muted);
+  font-size: 10px;
+  line-height: 1.45;
+}
+
+.phaseTwoReportBeamHeader strong {
+  font-size: 17px;
+  font-weight: 620;
+  line-height: 1.45;
+}
+
+.phaseTwoReportPairRecord {
+  display: grid;
+  grid-template-columns: max-content max-content minmax(0, 1fr);
+  align-items: center;
+  gap: 18px;
+  padding: 13px 24px;
+  border-bottom: 1px solid var(--phase-report-line);
+  background: var(--phase-report-surface);
+}
+
+.phaseTwoReportPairRecord > span {
+  color: var(--phase-report-muted);
+  font-family: var(--phase-report-data);
+  font-size: 9px;
+  font-weight: 600;
+  letter-spacing: 0.055em;
+}
+
+.phaseTwoReportPairRecord > strong {
+  display: flex;
+  align-items: baseline;
+  gap: 6px;
+  font-family: var(--phase-report-data);
+  font-variant-numeric: tabular-nums;
+}
+
+.phaseTwoReportPairRecord > strong b {
+  font-size: 17px;
+  font-style: normal;
+  line-height: 1;
+}
+
+.phaseTwoReportPairRecord > strong b[data-outcome="win"] {
+  color: var(--phase-report-a2ui);
+}
+
+.phaseTwoReportPairRecord > strong b[data-outcome="loss"] {
+  color: var(--phase-report-openui);
+}
+
+.phaseTwoReportPairRecord > strong b[data-outcome="tie"] {
+  color: var(--phase-report-muted);
+}
+
+.phaseTwoReportPairRecord > strong i {
+  color: var(--phase-report-line-strong);
+  font-size: 12px;
+  font-style: normal;
+}
+
+.phaseTwoReportPairRecord > small {
+  justify-self: end;
+  color: var(--phase-report-muted);
+  font-size: 9px;
+  line-height: 1.4;
+}
+
+.phaseTwoReportBeam {
+  padding: 30px 24px 25px;
+}
+
+.phaseTwoReportBeamValue {
+  position: absolute;
+  top: 30px;
+  pointer-events: none;
+}
+
+.phaseTwoReportBeamValue[data-protocol="a2ui"] {
+  left: 24px;
+  text-align: left;
+}
+
+.phaseTwoReportBeamValue[data-protocol="openui"] {
+  right: 24px;
+  text-align: right;
+}
+
+.phaseTwoReportBeamValue span {
+  display: block;
+  margin-bottom: 4px;
+  font-family: var(--phase-report-data);
+  font-size: 9px;
+  font-weight: 650;
+  line-height: 1.4;
+  text-transform: uppercase;
+}
+
+.phaseTwoReportBeamValue[data-protocol="a2ui"] span {
+  color: var(--phase-report-a2ui);
+}
+
+.phaseTwoReportBeamValue[data-protocol="openui"] span {
+  color: var(--phase-report-openui);
+}
+
+.phaseTwoReportBeamValue strong {
+  font-family: var(--phase-report-data);
+  font-size: clamp(20px, 2.4vw, 29px);
+  font-variant-numeric: tabular-nums;
+  font-weight: 620;
+  letter-spacing: -0.05em;
+  line-height: 1;
+}
+
+.phaseTwoReportBeam {
+  position: relative;
+}
+
+.phaseTwoReportBeamAxis {
+  position: relative;
+  height: 84px;
+  margin: 0 clamp(110px, 16vw, 190px);
+}
+
+.phaseTwoReportBeamBaseline {
+  position: absolute;
+  top: 50%;
+  right: 0;
+  left: 0;
+  height: 1px;
+  background: var(--phase-report-line-strong);
+}
+
+.phaseTwoReportBeamBaseline::before,
+.phaseTwoReportBeamBaseline::after {
+  position: absolute;
+  top: -3px;
+  width: 7px;
+  height: 7px;
+  border: 1px solid var(--phase-report-line-strong);
+  border-radius: 50%;
+  background: var(--phase-report-paper);
+  content: "";
+}
+
+.phaseTwoReportBeamBaseline::before {
+  left: 0;
+}
+
+.phaseTwoReportBeamBaseline::after {
+  right: 0;
+}
+
+.phaseTwoReportBeamZero {
+  position: absolute;
+  z-index: 2;
+  top: calc(50% - 13px);
+  left: calc(50% - 13px);
+  width: 26px;
+  height: 26px;
+  display: grid;
+  place-items: center;
+  border: 1px solid var(--phase-report-line-strong);
+  border-radius: 50%;
+  background: var(--phase-report-paper);
+  color: var(--phase-report-muted);
+  font-family: var(--phase-report-data);
+  font-size: 9px;
+}
+
+.phaseTwoReportBeamFill {
+  position: absolute;
+  top: calc(50% - 4px);
+  height: 8px;
+  min-width: 5px;
+}
+
+.phaseTwoReportBeamFill[data-side="a2ui"] {
+  right: 50%;
+  border-radius: 4px 0 0 4px;
+  background: var(--phase-report-a2ui);
+}
+
+.phaseTwoReportBeamFill[data-side="openui"] {
+  left: 50%;
+  border-radius: 0 4px 4px 0;
+  background: var(--phase-report-openui);
+}
+
+.phaseTwoReportBeamTie {
+  position: absolute;
+  z-index: 3;
+  top: calc(50% - 4px);
+  left: calc(50% - 4px);
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--phase-report-ink);
+}
+
+.phaseTwoReportBeamLegend {
+  display: grid;
+  grid-template-columns: 1fr auto 1fr;
+  gap: 15px;
+  margin: 7px clamp(110px, 16vw, 190px) 0;
+  color: var(--phase-report-muted);
+  font-family: var(--phase-report-data);
+  font-size: 8px;
+  line-height: 1.4;
+}
+
+.phaseTwoReportBeamLegend span:nth-child(2) {
+  text-align: center;
+}
+
+.phaseTwoReportBeamLegend span:last-child {
+  text-align: right;
+}
+
+.phaseTwoReportLedgerWrap {
+  overflow-x: auto;
+  border: 1px solid var(--phase-report-line);
+  border-top: 2px solid var(--phase-report-ink);
+  border-radius: 8px;
+}
+
+.phaseTwoReportLedger {
+  width: 100%;
+  min-width: 910px;
+  border-collapse: collapse;
+  background: var(--phase-report-paper);
+}
+
+.phaseTwoReportLedger caption {
+  padding: 11px 15px;
+  border-bottom: 1px solid var(--phase-report-line);
+  color: var(--phase-report-muted);
+  font-family: var(--phase-report-data);
+  font-size: 9px;
+  letter-spacing: 0.04em;
+  text-align: left;
+  text-transform: uppercase;
+}
+
+.phaseTwoReportLedger th,
+.phaseTwoReportLedger td {
+  padding: 14px 13px;
+  border-right: 1px solid var(--phase-report-line);
+  border-bottom: 1px solid var(--phase-report-line);
+  text-align: left;
+  vertical-align: top;
+}
+
+.phaseTwoReportLedger th:last-child,
+.phaseTwoReportLedger td:last-child {
+  border-right: 0;
+}
+
+.phaseTwoReportLedger thead th {
+  background: var(--phase-report-surface);
+  color: var(--phase-report-muted);
+  font-size: 9px;
+  font-weight: 600;
+  letter-spacing: 0.025em;
+  line-height: 1.4;
+}
+
+.phaseTwoReportLedger tbody th {
+  min-width: 160px;
+  font-weight: 500;
+}
+
+.phaseTwoReportLedger tbody th strong,
+.phaseTwoReportLedger tbody th small {
+  display: block;
+}
+
+.phaseTwoReportLedger tbody th strong {
+  font-size: 12px;
+  line-height: 1.45;
+}
+
+.phaseTwoReportLedger tbody th small {
+  margin-top: 5px;
+  color: var(--phase-report-muted);
+  font-size: 9px;
+  line-height: 1.4;
+}
+
+.phaseTwoReportLedger tbody td {
+  font-family: var(--phase-report-data);
+  font-size: 10px;
+  font-variant-numeric: tabular-nums;
+  line-height: 1.5;
+}
+
+.phaseTwoReportLedger td[data-protocol="a2ui"] {
+  color: var(--phase-report-a2ui);
+  font-weight: 650;
+}
+
+.phaseTwoReportLedger td[data-protocol="openui"] {
+  color: var(--phase-report-openui);
+  font-weight: 650;
+}
+
+.phaseTwoReportLedgerCoverage {
+  display: block;
+  margin-top: 4px;
+  color: var(--phase-report-muted);
+  font-size: 8px;
+}
+
+.phaseTwoReportDiagnosticsRow > td {
+  padding: 0;
+  background: var(--phase-report-surface);
+}
+
+.phaseTwoReportDiagnosticsRow details {
+  padding: 11px 14px;
+}
+
+.phaseTwoReportDiagnosticsRow summary {
+  color: var(--phase-report-muted);
+  cursor: pointer;
+  font-family: var(--phase-report-body);
+  font-size: 10px;
+  font-weight: 600;
+}
+
+.phaseTwoReportDiagnosticsRow ul {
+  display: grid;
+  gap: 6px;
+  padding: 10px 0 0;
+  margin: 0;
+  list-style: none;
+}
+
+.phaseTwoReportDiagnosticsRow li {
+  position: relative;
+  display: grid;
+  grid-template-columns: 60px minmax(0, 1fr);
+  gap: 10px;
+  padding: 7px 10px 7px 18px;
+  border: 1px solid var(--phase-report-line);
+  background: var(--phase-report-paper);
+  font-family: var(--phase-report-body);
+  font-size: 10px;
+  line-height: 1.5;
+}
+
+.phaseTwoReportDiagnosticsRow li::after {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: 0;
+  width: 3px;
+  background: var(--phase-report-line-strong);
+  content: "";
+}
+
+.phaseTwoReportDiagnosticsRow li > strong {
+  font-family: var(--phase-report-data);
+  font-size: 9px;
+}
+
+.phaseTwoReportDiagnosticsRow li[data-protocol="a2ui"] > strong {
+  color: var(--phase-report-a2ui);
+}
+
+.phaseTwoReportDiagnosticsRow li[data-protocol="openui"] > strong {
+  color: var(--phase-report-openui);
+}
+
+.phaseTwoReportDiagnosticsRow li > span {
+  overflow-wrap: anywhere;
+  color: var(--phase-report-muted);
+}
+
+.phaseTwoReportDiagnosticsRow li[data-kind="error"]::after {
+  background: #c93434;
+}
+
+.phaseTwoReportLedgerEmptyRow td {
+  padding: 34px;
+  color: var(--phase-report-muted);
+  font-family: var(--phase-report-body);
+  font-size: 12px;
+  text-align: center;
+}
+
+.phaseTwoReportLedger tbody tr:last-child th,
+.phaseTwoReportLedger tbody tr:last-child td {
+  border-bottom: 0;
+}
+
+.phaseTwoReportEvidenceTrigger {
+  width: 100%;
+  min-height: 64px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 20px;
+  padding: 12px 18px;
+  margin-top: 30px;
+  border: 1px solid var(--phase-report-line-strong);
+  border-radius: 8px;
+  background: var(--phase-report-paper);
+  color: var(--phase-report-ink);
+  cursor: pointer;
+  font-family: inherit;
+  text-align: left;
+}
+
+.phaseTwoReportEvidenceTrigger:hover {
+  background: var(--phase-report-surface);
+}
+
+.phaseTwoReportEvidenceTrigger > span:first-child {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 14px;
+  align-items: baseline;
+}
+
+.phaseTwoReportEvidenceTrigger strong {
+  font-size: 13px;
+  font-weight: 600;
+  line-height: 1.5;
+}
+
+.phaseTwoReportEvidenceTrigger small,
+.phaseTwoReportEvidenceTrigger > span:last-child {
+  color: var(--phase-report-muted);
+  font-size: 11px;
+  font-weight: 500;
+  line-height: 1.45;
+}
+
+.phaseTwoReportEvidenceDialog {
+  width: min(1120px, calc(100% - 32px));
+  max-width: none;
+  max-height: calc(100dvh - 32px);
+  padding: 0;
+  border: 1px solid var(--phase-report-line-strong);
+  border-radius: 10px;
+  overflow: hidden;
+  background: var(--phase-report-paper);
+  box-shadow: 0 24px 80px color-mix(in srgb, #000 28%, transparent);
+  color: var(--phase-report-ink);
+  font-family: inherit;
+}
+
+.phaseTwoReportEvidenceDialog::backdrop {
+  background: color-mix(in srgb, #000 42%, transparent);
+  backdrop-filter: blur(3px);
+}
+
+.phaseTwoReportEvidenceDialogPanel {
+  max-height: calc(100dvh - 34px);
+  overflow-y: auto;
+}
+
+.phaseTwoReportEvidenceDialogHeader {
+  position: sticky;
+  z-index: 2;
+  top: 0;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 24px;
+  padding: 18px 20px;
+  border-bottom: 1px solid var(--phase-report-line);
+  background: var(--phase-report-paper);
+}
+
+.phaseTwoReportEvidenceDialogHeader h3 {
+  margin: 0;
+  font-size: 20px;
+  font-weight: 620;
+  letter-spacing: -0.02em;
+  line-height: 1.35;
+}
+
+.phaseTwoReportEvidenceDialogHeader p {
+  margin: 3px 0 0;
+  color: var(--phase-report-muted);
+  font-size: 11px;
+  line-height: 1.45;
+}
+
+.phaseTwoReportEvidenceDialogHeader button {
+  min-width: 52px;
+  min-height: 38px;
+  padding: 0 12px;
+  border: 1px solid var(--phase-report-line-strong);
+  border-radius: 5px;
+  background: var(--phase-report-paper);
+  color: var(--phase-report-ink);
+  cursor: pointer;
+  font-family: inherit;
+  font-size: 12px;
+  font-weight: 560;
+}
+
+.phaseTwoReportEvidenceDialogHeader button:hover {
+  background: var(--phase-report-surface);
+}
+
+.phaseTwoReportEvidenceDialogTabs {
+  display: flex;
+  border-bottom: 1px solid var(--phase-report-line);
+  background: var(--phase-report-paper);
+}
+
+.phaseTwoReportEvidenceDialogTabs button {
+  min-width: 0;
+  min-height: 46px;
+  flex: 1;
+  padding: 0 14px;
+  border: 0;
+  border-right: 1px solid var(--phase-report-line);
+  background: transparent;
+  color: var(--phase-report-muted);
+  cursor: pointer;
+  font-family: inherit;
+  font-size: 12px;
+  font-weight: 560;
+}
+
+.phaseTwoReportEvidenceDialogTabs button:last-child {
+  border-right: 0;
+}
+
+.phaseTwoReportEvidenceDialogTabs button:hover {
+  background: var(--phase-report-surface);
+  color: var(--phase-report-ink);
+}
+
+.phaseTwoReportEvidenceDialogTabs button[aria-selected="true"] {
+  background: var(--phase-report-ink);
+  color: var(--phase-report-paper);
+}
+
+.phaseTwoReportEvidenceDialogBody {
+  padding: 18px;
+  background: var(--phase-report-surface);
+}
+
+.phaseTwoReportEvidenceDialogBody > header {
+  display: flex;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 0 2px 12px;
+}
+
+.phaseTwoReportEvidenceDialogBody > header strong {
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.phaseTwoReportEvidenceDialogBody > header span {
+  color: var(--phase-report-muted);
+  font-size: 11px;
+}
+
+.phaseTwoReportEvidenceGrid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 14px;
+}
+
+.phaseTwoReportEvidenceGrid figure {
+  min-width: 0;
+  padding: 0;
+  margin: 0;
+  overflow: hidden;
+  border: 1px solid var(--phase-report-line);
+  border-radius: 6px;
+  background: var(--phase-report-paper);
+}
+
+.phaseTwoReportEvidenceGrid figure[data-protocol="a2ui"] {
+  border-top: 3px solid var(--phase-report-a2ui);
+}
+
+.phaseTwoReportEvidenceGrid figure[data-protocol="openui"] {
+  border-top: 3px solid var(--phase-report-openui);
+}
+
+.phaseTwoReportEvidenceGrid figure > a {
+  display: block;
+  padding: 10px;
+  background:
+    linear-gradient(
+      45deg,
+      var(--phase-report-line) 25%,
+      transparent 25% 75%,
+      var(--phase-report-line) 75%
+    ) 0 0 / 12px 12px,
+    linear-gradient(
+    45deg,
+    var(--phase-report-line) 25%,
+    var(--phase-report-paper) 25% 75%,
+    var(--phase-report-line) 75%
+  ) 6px 6px / 12px 12px;
+}
+
+.phaseTwoReportEvidenceGrid img {
+  display: block;
+  width: 100%;
+  height: auto;
+  min-height: 240px;
+  max-height: 62dvh;
+  object-fit: contain;
+  background: #fff;
+}
+
+.phaseTwoReportEvidenceGrid figcaption {
+  padding: 13px 14px 15px;
+  border-top: 1px solid var(--phase-report-line);
+}
+
+.phaseTwoReportEvidenceGrid figcaption > div {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.phaseTwoReportEvidenceGrid figcaption strong {
+  font-size: 13px;
+  font-weight: 620;
+}
+
+.phaseTwoReportEvidenceGrid figcaption span,
+.phaseTwoReportEvidenceGrid figcaption small {
+  color: var(--phase-report-muted);
+  font-family: var(--phase-report-data);
+  font-size: 9px;
+  line-height: 1.45;
+}
+
+.phaseTwoReportEvidenceGrid figcaption small {
+  display: block;
+  margin-top: 4px;
+  overflow-wrap: anywhere;
+}
+
+.phaseTwoReportEvidenceGrid figcaption p {
+  padding-top: 9px;
+  margin: 10px 0 0;
+  border-top: 1px solid var(--phase-report-line);
+  color: var(--phase-report-muted);
+  font-size: 11px;
+  line-height: 1.55;
+}
+
+.phaseTwoReportMethodGrid {
+  display: grid;
+  grid-template-columns: minmax(0, 1.1fr) minmax(0, 0.9fr);
+  overflow: hidden;
+  border: 1px solid var(--phase-report-line);
+  border-top: 2px solid var(--phase-report-ink);
+  border-radius: 8px;
+  background: var(--phase-report-paper);
+}
+
+.phaseTwoReportMethodGrid > article {
+  min-width: 0;
+  padding: clamp(23px, 3.5vw, 38px);
+}
+
+.phaseTwoReportMethodGrid > article + article {
+  border-left: 1px solid var(--phase-report-line);
+}
+
+.phaseTwoReportMethodGrid header {
+  margin-bottom: 22px;
+}
+
+.phaseTwoReportMethodGrid h3 {
+  margin: 0;
+  font-size: 22px;
+  font-weight: 620;
+  letter-spacing: -0.025em;
+  line-height: 1.3;
+}
+
+.phaseTwoReportMethodGrid dl {
+  padding: 0;
+  margin: 0;
+}
+
+.phaseTwoReportMethodGrid dl > div {
+  display: grid;
+  grid-template-columns: minmax(120px, 0.35fr) minmax(0, 0.65fr);
+  gap: 16px;
+  padding: 10px 0;
+  border-bottom: 1px solid var(--phase-report-line);
+}
+
+.phaseTwoReportMethodGrid dt {
+  color: var(--phase-report-muted);
+  font-size: 11px;
+  line-height: 1.55;
+}
+
+.phaseTwoReportMethodGrid dd {
+  margin: 0;
+  overflow-wrap: anywhere;
+  font-family: var(--phase-report-data);
+  font-size: 10px;
+  line-height: 1.55;
+  text-align: right;
+}
+
+.phaseTwoReportMethodGrid ul {
+  display: grid;
+  gap: 11px;
+  padding: 0;
+  margin: 0;
+  list-style: none;
+}
+
+.phaseTwoReportMethodGrid li {
+  position: relative;
+  padding-left: 18px;
+  color: var(--phase-report-muted);
+  font-size: 12px;
+  line-height: 1.65;
+}
+
+.phaseTwoReportMethodGrid li::before {
+  position: absolute;
+  top: 0.68em;
+  left: 0;
+  width: 6px;
+  height: 1px;
+  background: var(--phase-report-ink);
+  content: "";
+}
+
+.phaseTwoReportMethodGrid details {
+  padding-top: 18px;
+  margin-top: 22px;
+  border-top: 1px solid var(--phase-report-line);
+}
+
+.phaseTwoReportMethodGrid summary {
+  cursor: pointer;
+  font-size: 11px;
+  font-weight: 600;
+}
+
+.phaseTwoReportEmpty {
+  margin: 0;
+  color: var(--phase-report-muted);
+  font-size: 12px;
+  line-height: 1.65;
+}
+
+.phaseTwoReportFooter {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 30px;
+  padding-top: 30px;
+  padding-bottom: 42px;
+  background: var(--phase-report-surface);
+}
+
+.phaseTwoReportFooter > div > span {
+  color: var(--phase-report-muted);
+  font-family: var(--phase-report-data);
+  font-size: 9px;
+  letter-spacing: 0.06em;
+}
+
+.phaseTwoReportFooter p {
+  margin: 7px 0 0;
+  font-size: 12px;
+  line-height: 1.55;
+}
+
+.phaseTwoReportPage a:focus-visible,
+.phaseTwoReportPage button:focus-visible,
+.phaseTwoReportPage select:focus-visible,
+.phaseTwoReportPage summary:focus-visible {
+  outline: 2px solid var(--phase-report-ink);
+  outline-offset: 3px;
+}
+
+@media (max-width: 940px) {
+  .phaseTwoReportMetricTabs {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+
+  .phaseTwoReportMetricTabs button:nth-child(3) {
+    border-right: 0;
+  }
+
+  .phaseTwoReportMetricTabs button:nth-child(n+4) {
+    border-top: 1px solid var(--phase-report-line);
+  }
+
+  .phaseTwoReportProtocolPair {
+    grid-template-columns: minmax(0, 1fr) 44px minmax(0, 1fr);
+  }
+}
+
+@media (max-width: 720px) {
+  .phaseTwoReportHero {
+    padding-top: 22px;
+  }
+
+  .phaseTwoReportHeroMeta {
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  .phaseTwoReportMatchedCore {
+    width: 100%;
+  }
+
+  .phaseTwoReportMatchedCoreTrigger {
+    width: 100%;
+    min-height: 44px;
+    justify-content: space-between;
+  }
+
+  .phaseTwoReportMatchedCorePanel {
+    position: static;
+    width: 100%;
+    max-height: min(72dvh, 640px);
+    margin-top: 8px;
+    overflow-y: auto;
+  }
+
+  .phaseTwoReportMatchedCorePanel::before {
+    display: none;
+  }
+
+  .phaseTwoReportHeroGrid {
+    padding: 42px 0 36px;
+  }
+
+  .phaseTwoReportHero h1 {
+    font-size: clamp(32px, 7.8vw, 40px);
+  }
+
+  .phaseTwoReportThesis {
+    display: block;
+    padding-top: 18px;
+    margin-top: 22px;
+  }
+
+  .phaseTwoReportThesis > span {
+    display: block;
+    padding-top: 0;
+    margin-bottom: 8px;
+  }
+
+  .phaseTwoReportThesis p {
+    font-size: 17px;
+    line-height: 1.65;
+  }
+
+  .phaseTwoReportScope {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    margin-top: 36px;
+  }
+
+  .phaseTwoReportScope > div:nth-child(3) {
+    border-left: 0;
+  }
+
+  .phaseTwoReportScope > div:nth-child(n+3) {
+    border-top: 1px solid var(--phase-report-line);
+  }
+
+  .phaseTwoReportRunStrip {
+    display: block;
+  }
+
+  .phaseTwoReportRunStrip > span {
+    display: block;
+    margin-bottom: 7px;
+  }
+
+  .phaseTwoReportSection {
+    padding-top: 52px;
+    padding-bottom: 52px;
+  }
+
+  .phaseTwoReportSectionHead {
+    grid-template-columns: 38px minmax(0, 1fr);
+    gap: 12px;
+    margin-bottom: 30px;
+  }
+
+  .phaseTwoReportSectionHead h2 {
+    font-size: 29px;
+  }
+
+  .phaseTwoReportSectionHead p {
+    font-size: 14px;
+  }
+
+  .phaseTwoReportProtocolPair {
+    grid-template-columns: 1fr;
+  }
+
+  .phaseTwoReportProtocol[data-protocol] {
+    box-shadow: none;
+  }
+
+  .phaseTwoReportProtocol[data-protocol="a2ui"] {
+    border-left: 3px solid var(--phase-report-a2ui);
+  }
+
+  .phaseTwoReportProtocol[data-protocol="openui"] {
+    border-left: 3px solid var(--phase-report-openui);
+  }
+
+  .phaseTwoReportProtocolSpine {
+    min-height: 40px;
+    grid-template-rows: none;
+    grid-template-columns: 1fr auto 1fr;
+    border-top: 1px solid var(--phase-report-line);
+    border-right: 0;
+    border-bottom: 1px solid var(--phase-report-line);
+    border-left: 0;
+  }
+
+  .phaseTwoReportProtocolSpine span {
+    width: 100%;
+    height: 1px;
+  }
+
+  .phaseTwoReportProtocolSpine b {
+    padding: 0 10px;
+    writing-mode: horizontal-tb;
+  }
+
+  .phaseTwoReportFilters {
+    grid-template-columns: 1fr;
+  }
+
+  .phaseTwoReportFilter + .phaseTwoReportFilter,
+  .phaseTwoReportFilterReadout {
+    border-top: 1px solid var(--phase-report-line);
+    border-left: 0;
+  }
+
+  .phaseTwoReportSelectTrigger {
+    min-height: 44px;
+    font-size: 13px;
+  }
+
+  .phaseTwoReportMetricTabs {
+    display: flex;
+    overflow-x: auto;
+  }
+
+  .phaseTwoReportMetricTabs button {
+    min-width: 132px;
+    flex: 1;
+    border-top: 0 !important;
+  }
+
+  .phaseTwoReportMetricTabs button:nth-child(3) {
+    border-right: 1px solid var(--phase-report-line);
+  }
+
+  .phaseTwoReportBeamHeader {
+    display: block;
+  }
+
+  .phaseTwoReportBeamHeader > small {
+    display: block;
+    margin-top: 10px;
+  }
+
+  .phaseTwoReportPairRecord {
+    grid-template-columns: max-content 1fr;
+    gap: 8px 14px;
+  }
+
+  .phaseTwoReportPairRecord > small {
+    grid-column: 1 / -1;
+    justify-self: start;
+  }
+
+  .phaseTwoReportBeam {
+    padding-top: 92px;
+  }
+
+  .phaseTwoReportBeamValue {
+    top: 24px;
+  }
+
+  .phaseTwoReportBeamAxis,
+  .phaseTwoReportBeamLegend {
+    margin-right: 0;
+    margin-left: 0;
+  }
+
+  .phaseTwoReportEvidenceGrid {
+    grid-template-columns: 1fr;
+  }
+
+  .phaseTwoReportEvidenceGrid img {
+    max-height: none;
+  }
+
+  .phaseTwoReportMethodGrid {
+    grid-template-columns: 1fr;
+  }
+
+  .phaseTwoReportMethodGrid > article + article {
+    border-top: 1px solid var(--phase-report-line);
+    border-left: 0;
+  }
+
+  .phaseTwoReportMatchedCoreFlow {
+    grid-template-columns: 1fr;
+  }
+
+  .phaseTwoReportMatchedCoreFlow > span {
+    height: 18px;
+    transform: rotate(90deg);
+  }
+
+  .phaseTwoReportMatchedCoreNotes {
+    grid-template-columns: 1fr;
+  }
+
+  .phaseTwoReportMatchedCoreNotes > div {
+    padding: 12px 0;
+  }
+
+  .phaseTwoReportMatchedCoreNotes > div + div {
+    border-top: 1px solid var(--phase-report-line);
+    border-left: 0;
+  }
+
+  .phaseTwoReportFooter {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+}
+
+@media (max-width: 420px) {
+  .phaseTwoReportPage {
+    --phase-report-gutter: 16px;
+  }
+
+  .phaseTwoReportMatchedCorePanel {
+    padding: 18px;
+  }
+
+  .phaseTwoReportMatchedCorePanel > header {
+    gap: 12px;
+  }
+
+  .phaseTwoReportMatchedCorePanel header strong {
+    font-size: 19px;
+  }
+
+  .phaseTwoReportScope > div {
+    padding: 16px 14px;
+  }
+
+  .phaseTwoReportScope dd {
+    font-size: 24px;
+  }
+
+  .phaseTwoReportSectionHead {
+    display: block;
+  }
+
+  .phaseTwoReportSectionHead > span {
+    padding-top: 0;
+    margin-bottom: 8px;
+  }
+
+  .phaseTwoReportProtocol {
+    padding: 22px 18px;
+  }
+
+  .phaseTwoReportBeamValue strong {
+    font-size: 19px;
+  }
+
+  .phaseTwoReportBeamLegend {
+    grid-template-columns: 1fr 1fr;
+  }
+
+  .phaseTwoReportBeamLegend span:nth-child(2) {
+    display: none;
+  }
+
+  .phaseTwoReportMethodGrid dl > div {
+    display: block;
+  }
+
+  .phaseTwoReportMethodGrid dd {
+    margin-top: 4px;
+    text-align: left;
+  }
+
+  .phaseTwoReportEvidenceDialog {
+    width: calc(100% - 20px);
+    max-height: calc(100dvh - 20px);
+  }
+
+  .phaseTwoReportEvidenceDialogPanel {
+    max-height: calc(100dvh - 22px);
+  }
+
+  .phaseTwoReportEvidenceDialogHeader {
+    padding: 15px 16px;
+  }
+
+  .phaseTwoReportEvidenceDialogTabs button {
+    padding: 0 8px;
+    font-size: 11px;
+  }
+
+  .phaseTwoReportEvidenceDialogBody {
+    padding: 12px;
+  }
+
+  .phaseTwoReportEvidenceDialogBody > header {
+    align-items: flex-start;
+    flex-direction: column;
+    gap: 3px;
+  }
+
+  .phaseTwoReportEvidenceGrid figcaption > div {
+    align-items: flex-start;
+    flex-direction: column;
+    gap: 3px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .phaseTwoReportPage *,
+  .phaseTwoReportPage *::before,
+  .phaseTwoReportPage *::after {
+    scroll-behavior: auto !important;
+    animation-duration: 0.01ms !important;
+    transition-duration: 0.01ms !important;
+  }
+}
