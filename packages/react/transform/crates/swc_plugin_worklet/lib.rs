@@ -100,6 +100,7 @@ impl VisitMut for WorkletVisitor {
         let mut collector = ExtractingIdentsCollector::new(ExtractingIdentsCollectorConfig {
           custom_global_ident_names: self.cfg.custom_global_ident_names.clone(),
           shared_identifiers: Some(self.shared_identifiers.clone()),
+          reject_shared_identifiers: self.mts_defs_collector.is_some(),
         });
         n.visit_mut_with(&mut collector);
 
@@ -219,6 +220,7 @@ impl VisitMut for WorkletVisitor {
         let mut collector = ExtractingIdentsCollector::new(ExtractingIdentsCollectorConfig {
           custom_global_ident_names: self.cfg.custom_global_ident_names.clone(),
           shared_identifiers: Some(self.shared_identifiers.clone()),
+          reject_shared_identifiers: self.mts_defs_collector.is_some(),
         });
         value.visit_mut_with(&mut collector);
 
@@ -329,6 +331,7 @@ impl VisitMut for WorkletVisitor {
     let mut collector = ExtractingIdentsCollector::new(ExtractingIdentsCollectorConfig {
       custom_global_ident_names: self.cfg.custom_global_ident_names.clone(),
       shared_identifiers: Some(self.shared_identifiers.clone()),
+      reject_shared_identifiers: self.mts_defs_collector.is_some(),
     });
     n.visit_mut_with(&mut collector);
 
@@ -381,6 +384,7 @@ impl VisitMut for WorkletVisitor {
         let mut collector = ExtractingIdentsCollector::new(ExtractingIdentsCollectorConfig {
           custom_global_ident_names: self.cfg.custom_global_ident_names.clone(),
           shared_identifiers: Some(self.shared_identifiers.clone()),
+          reject_shared_identifiers: self.mts_defs_collector.is_some(),
         });
         n.visit_mut_with(&mut collector);
 
@@ -442,6 +446,7 @@ impl VisitMut for WorkletVisitor {
         let mut collector = ExtractingIdentsCollector::new(ExtractingIdentsCollectorConfig {
           custom_global_ident_names: self.cfg.custom_global_ident_names.clone(),
           shared_identifiers: Some(self.shared_identifiers.clone()),
+          reject_shared_identifiers: self.mts_defs_collector.is_some(),
         });
         n.visit_mut_with(&mut collector);
 
@@ -515,6 +520,7 @@ impl VisitMut for WorkletVisitor {
     let mut collector = ExtractingIdentsCollector::new(ExtractingIdentsCollectorConfig {
       custom_global_ident_names: self.cfg.custom_global_ident_names.clone(),
       shared_identifiers: Some(self.shared_identifiers.clone()),
+      reject_shared_identifiers: self.mts_defs_collector.is_some(),
     });
     n.as_mut_export_default_decl()
       .unwrap()

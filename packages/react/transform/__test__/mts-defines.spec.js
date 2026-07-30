@@ -141,3 +141,30 @@ export function App() {
     expect(code).not.toContain('@swc/helpers');
   });
 });
+
+describe('shared runtime imports', () => {
+  const sharedSource = `
+import { Foo } from './foo.js' with { runtime: 'shared' };
+
+function f() {
+  'main thread';
+  return new Foo();
+}
+`;
+
+  it('is left to the bundler when the main thread compiles business code', async () => {
+    const result = await transformReactLynx(sharedSource, options('LEPUS'));
+
+    expect(result.code).toContain('new Foo()');
+  });
+
+  it('fails the build while collecting, where the main thread has no binding for it', async () => {
+    const result = await transformReactLynx(
+      sharedSource,
+      options('JS', { collectMTSDefines: true }),
+    );
+
+    expect(result.errors).toHaveLength(1);
+    expect(result.errors[0].text).toMatch(/runtime: 'shared'/);
+  });
+});
