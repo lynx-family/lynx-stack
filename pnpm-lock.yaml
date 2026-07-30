@@ -1392,12 +1392,6 @@ importers:
 
   packages/rspeedy/core:
     dependencies:
-      '@lynx-js/cache-events-webpack-plugin':
-        specifier: workspace:^
-        version: link:../../webpack/cache-events-webpack-plugin
-      '@lynx-js/chunk-loading-webpack-plugin':
-        specifier: workspace:^
-        version: link:../../webpack/chunk-loading-webpack-plugin
       '@lynx-js/debug-metadata-rsbuild-plugin':
         specifier: workspace:^
         version: link:../plugin-debug-metadata
@@ -1628,6 +1622,13 @@ importers:
         version: 2.1.7(core-js@3.49.0)
 
   packages/rspeedy/plugin-lynx:
+    dependencies:
+      '@lynx-js/cache-events-webpack-plugin':
+        specifier: workspace:^
+        version: link:../../webpack/cache-events-webpack-plugin
+      '@lynx-js/chunk-loading-webpack-plugin':
+        specifier: workspace:^
+        version: link:../../webpack/chunk-loading-webpack-plugin
     devDependencies:
       '@lynx-js/test-tools':
         specifier: workspace:*
@@ -1641,6 +1642,9 @@ importers:
       '@rstest/core':
         specifier: catalog:rstest
         version: 0.11.3(core-js@3.49.0)(jsdom@27.4.0(supports-color@10.2.2))
+      '@swc/core':
+        specifier: ^1.15.30
+        version: 1.15.30(@swc/helpers@0.5.23)
 
   packages/rspeedy/plugin-qrcode:
     devDependencies:

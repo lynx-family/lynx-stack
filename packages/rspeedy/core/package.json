@@ -54,8 +54,6 @@
     "test:type": "tsc --noEmit"
   },
   "dependencies": {
-    "@lynx-js/cache-events-webpack-plugin": "workspace:^",
-    "@lynx-js/chunk-loading-webpack-plugin": "workspace:^",
     "@lynx-js/debug-metadata-rsbuild-plugin": "workspace:^",
     "@lynx-js/rsbuild-plugin": "workspace:*",
     "@lynx-js/web-rsbuild-server-middleware": "workspace:*",
