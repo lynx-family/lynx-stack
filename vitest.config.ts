@@ -32,6 +32,7 @@ export default defineConfig({
         '**/eslint.config.js',
 
         'packages/tools/canary-release/**',
+        'packages/rspeedy/plugin-lynx/**',
         'packages/web-platform/web-core-e2e/**',
         'packages/webpack/test-tools/**',
         'packages/testing-library/test-environment/**',
