@@ -445,6 +445,15 @@ export function pluginReactLynx(
     )
   }
 
+  if (
+    resolvedOptions.enableMTSRendering === false
+    && resolvedOptions.compat?.legacySlot
+  ) {
+    throw new Error(
+      '`enableMTSRendering: false` does not support `compat.legacySlot` yet.',
+    )
+  }
+
   return [
     pluginReactAlias({
       lazy: resolvedOptions.experimental_isLazyBundle,
