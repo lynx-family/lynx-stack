@@ -10,6 +10,9 @@ use swc_core::{
 
 use swc_plugins_shared::target::TransformTarget;
 
+pub mod background_only_module;
+pub use background_only_module::{is_background_only_module, BackgroundOnlyModuleStubVisitor};
+
 #[cfg(feature = "napi")]
 pub mod napi;
 

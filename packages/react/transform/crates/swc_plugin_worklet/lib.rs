@@ -22,7 +22,10 @@ use swc_core::quote;
 use worklet_type::WorkletType;
 
 use swc_plugins_shared::{
-  mts_defines::{collect_mts_define, MtsDefineKind, MtsDefinesCollector},
+  mts_defines::{
+    collect_mts_define, is_collecting_mts_defines, record_in_place_mts_define, MtsDefineKind,
+    MtsDefinesCollector,
+  },
   target::TransformTarget,
   transform_mode::TransformMode,
 };
@@ -100,7 +103,7 @@ impl VisitMut for WorkletVisitor {
         let mut collector = ExtractingIdentsCollector::new(ExtractingIdentsCollectorConfig {
           custom_global_ident_names: self.cfg.custom_global_ident_names.clone(),
           shared_identifiers: Some(self.shared_identifiers.clone()),
-          reject_shared_identifiers: self.mts_defs_collector.is_some(),
+          reject_shared_identifiers: is_collecting_mts_defines(&self.mts_defs_collector),
         });
         n.visit_mut_with(&mut collector);
 
@@ -111,8 +114,8 @@ impl VisitMut for WorkletVisitor {
             || collector.has_extracted_js_fns());
 
         let hash = self.hasher.gen(&self.cfg.filename, &self.content_hash);
-        let collect_mts = self.mts_defs_collector.is_some();
-        let collected_hash = collect_mts.then(|| hash.clone());
+        let collect_mts = is_collecting_mts_defines(&self.mts_defs_collector);
+        let define_hash = hash.clone();
         let m = n.as_method().unwrap().clone();
         let original_function = m.function.clone();
         let (worklet_object_expr, register_worklet_stmt, main_thread_stmt) =
@@ -190,7 +193,7 @@ impl VisitMut for WorkletVisitor {
           }
           .into();
         }
-        self.collect_worklet_define(collected_hash, main_thread_stmt);
+        self.collect_worklet_define(define_hash, main_thread_stmt);
         self
           .stmts_to_insert_at_top_level
           .push(register_worklet_stmt);
@@ -220,7 +223,7 @@ impl VisitMut for WorkletVisitor {
         let mut collector = ExtractingIdentsCollector::new(ExtractingIdentsCollectorConfig {
           custom_global_ident_names: self.cfg.custom_global_ident_names.clone(),
           shared_identifiers: Some(self.shared_identifiers.clone()),
-          reject_shared_identifiers: self.mts_defs_collector.is_some(),
+          reject_shared_identifiers: is_collecting_mts_defines(&self.mts_defs_collector),
         });
         value.visit_mut_with(&mut collector);
 
@@ -245,8 +248,8 @@ impl VisitMut for WorkletVisitor {
           || collector.has_extracted_js_fns();
 
         let hash = self.hasher.gen(&self.cfg.filename, &self.content_hash);
-        let collect_mts = self.mts_defs_collector.is_some();
-        let collected_hash = collect_mts.then(|| hash.clone());
+        let collect_mts = is_collecting_mts_defines(&self.mts_defs_collector);
+        let define_hash = hash.clone();
         let (worklet_object_expr, register_worklet_stmt, main_thread_stmt) =
           StmtGen::transform_worklet(
             self.mode,
@@ -303,7 +306,7 @@ impl VisitMut for WorkletVisitor {
           p.value = Some(worklet_object_expr);
         }
 
-        self.collect_worklet_define(collected_hash, main_thread_stmt);
+        self.collect_worklet_define(define_hash, main_thread_stmt);
         self
           .stmts_to_insert_at_top_level
           .push(register_worklet_stmt);
@@ -331,13 +334,13 @@ impl VisitMut for WorkletVisitor {
     let mut collector = ExtractingIdentsCollector::new(ExtractingIdentsCollectorConfig {
       custom_global_ident_names: self.cfg.custom_global_ident_names.clone(),
       shared_identifiers: Some(self.shared_identifiers.clone()),
-      reject_shared_identifiers: self.mts_defs_collector.is_some(),
+      reject_shared_identifiers: is_collecting_mts_defines(&self.mts_defs_collector),
     });
     n.visit_mut_with(&mut collector);
 
     let hash = self.hasher.gen(&self.cfg.filename, &self.content_hash);
-    let collect_mts = self.mts_defs_collector.is_some();
-    let collected_hash = collect_mts.then(|| hash.clone());
+    let collect_mts = is_collecting_mts_defines(&self.mts_defs_collector);
+    let define_hash = hash.clone();
     let (worklet_object_expr, register_worklet_stmt, main_thread_stmt) = StmtGen::transform_worklet(
       self.mode,
       worklet_type.unwrap(),
@@ -365,7 +368,7 @@ impl VisitMut for WorkletVisitor {
       }],
     }
     .into();
-    self.collect_worklet_define(collected_hash, main_thread_stmt);
+    self.collect_worklet_define(define_hash, main_thread_stmt);
     self
       .stmts_to_insert_at_top_level
       .push(register_worklet_stmt);
@@ -384,13 +387,13 @@ impl VisitMut for WorkletVisitor {
         let mut collector = ExtractingIdentsCollector::new(ExtractingIdentsCollectorConfig {
           custom_global_ident_names: self.cfg.custom_global_ident_names.clone(),
           shared_identifiers: Some(self.shared_identifiers.clone()),
-          reject_shared_identifiers: self.mts_defs_collector.is_some(),
+          reject_shared_identifiers: is_collecting_mts_defines(&self.mts_defs_collector),
         });
         n.visit_mut_with(&mut collector);
 
         let hash = self.hasher.gen(&self.cfg.filename, &self.content_hash);
-        let collect_mts = self.mts_defs_collector.is_some();
-        let collected_hash = collect_mts.then(|| hash.clone());
+        let collect_mts = is_collecting_mts_defines(&self.mts_defs_collector);
+        let define_hash = hash.clone();
         let (worklet_object_expr, register_worklet_stmt, main_thread_stmt) =
           StmtGen::transform_worklet(
             self.mode,
@@ -430,7 +433,7 @@ impl VisitMut for WorkletVisitor {
           );
 
         *n = *worklet_object_expr;
-        self.collect_worklet_define(collected_hash, main_thread_stmt);
+        self.collect_worklet_define(define_hash, main_thread_stmt);
         self
           .stmts_to_insert_at_top_level
           .push(register_worklet_stmt);
@@ -446,13 +449,13 @@ impl VisitMut for WorkletVisitor {
         let mut collector = ExtractingIdentsCollector::new(ExtractingIdentsCollectorConfig {
           custom_global_ident_names: self.cfg.custom_global_ident_names.clone(),
           shared_identifiers: Some(self.shared_identifiers.clone()),
-          reject_shared_identifiers: self.mts_defs_collector.is_some(),
+          reject_shared_identifiers: is_collecting_mts_defines(&self.mts_defs_collector),
         });
         n.visit_mut_with(&mut collector);
 
         let hash = self.hasher.gen(&self.cfg.filename, &self.content_hash);
-        let collect_mts = self.mts_defs_collector.is_some();
-        let collected_hash = collect_mts.then(|| hash.clone());
+        let collect_mts = is_collecting_mts_defines(&self.mts_defs_collector);
+        let define_hash = hash.clone();
         let (worklet_object_expr, register_worklet_stmt, main_thread_stmt) =
           StmtGen::transform_worklet(
             self.mode,
@@ -469,7 +472,7 @@ impl VisitMut for WorkletVisitor {
           );
 
         *n = *worklet_object_expr;
-        self.collect_worklet_define(collected_hash, main_thread_stmt);
+        self.collect_worklet_define(define_hash, main_thread_stmt);
         self
           .stmts_to_insert_at_top_level
           .push(register_worklet_stmt);
@@ -520,7 +523,7 @@ impl VisitMut for WorkletVisitor {
     let mut collector = ExtractingIdentsCollector::new(ExtractingIdentsCollectorConfig {
       custom_global_ident_names: self.cfg.custom_global_ident_names.clone(),
       shared_identifiers: Some(self.shared_identifiers.clone()),
-      reject_shared_identifiers: self.mts_defs_collector.is_some(),
+      reject_shared_identifiers: is_collecting_mts_defines(&self.mts_defs_collector),
     });
     n.as_mut_export_default_decl()
       .unwrap()
@@ -530,8 +533,8 @@ impl VisitMut for WorkletVisitor {
       .visit_mut_with(&mut collector);
 
     let hash = self.hasher.gen(&self.cfg.filename, &self.content_hash);
-    let collect_mts = self.mts_defs_collector.is_some();
-    let collected_hash = collect_mts.then(|| hash.clone());
+    let collect_mts = is_collecting_mts_defines(&self.mts_defs_collector);
+    let define_hash = hash.clone();
     let (worklet_object_expr, register_worklet_stmt, main_thread_stmt) = StmtGen::transform_worklet(
       self.mode,
       worklet_type.unwrap(),
@@ -556,7 +559,7 @@ impl VisitMut for WorkletVisitor {
       span: n.span(),
       expr: worklet_object_expr,
     });
-    self.collect_worklet_define(collected_hash, main_thread_stmt);
+    self.collect_worklet_define(define_hash, main_thread_stmt);
     self
       .stmts_to_insert_at_top_level
       .push(register_worklet_stmt);
@@ -758,8 +761,13 @@ impl WorkletVisitor {
     self
   }
 
-  fn collect_worklet_define(&mut self, hash: Option<String>, stmt: Option<Stmt>) {
-    let (Some(hash), Some(stmt)) = (hash, stmt) else {
+  fn collect_worklet_define(&mut self, hash: String, stmt: Option<Stmt>) {
+    record_in_place_mts_define(
+      &self.mts_defs_collector,
+      MtsDefineKind::Worklet,
+      hash.clone(),
+    );
+    let Some(stmt) = stmt else {
       return;
     };
     let guard = quote!(

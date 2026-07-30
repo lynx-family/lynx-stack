@@ -35,7 +35,10 @@ use swc_plugins_shared::{
     jsx_is_children_full_dynamic, jsx_is_custom, jsx_is_list, jsx_is_list_item, jsx_name,
     jsx_props_to_obj, jsx_text_to_str, transform_jsx_attr_str,
   },
-  mts_defines::{collect_mts_define, MtsDefineKind, MtsDefinesCollector},
+  mts_defines::{
+    collect_mts_define, is_collecting_mts_defines, record_in_place_mts_define, MtsDefineKind,
+    MtsDefinesCollector,
+  },
   target::TransformTarget,
   transform_mode::TransformMode,
   utils::{calc_hash, calc_hash_number},
@@ -1404,7 +1407,7 @@ where
     );
 
     let target = self.cfg.target;
-    let collecting = self.mts_defs_collector.is_some();
+    let collecting = is_collecting_mts_defines(&self.mts_defs_collector);
     let runtime_id = self.runtime_id.clone();
     // In dev the creator arrow is stringified for cross-thread HMR
     // (`DEV_ONLY_AddSnapshot`), so everything inside it references the runtime
@@ -1712,6 +1715,11 @@ where
         snapshot_create_call: Expr = snapshot_create_call,
     ));
 
+    record_in_place_mts_define(
+      &self.mts_defs_collector,
+      MtsDefineKind::Snapshot,
+      snapshot_uid.clone(),
+    );
     if let Some(snapshot_create_call_mt) = snapshot_create_call_mt {
       collect_mts_define(
         &self.mts_defs_collector,
@@ -1873,7 +1881,7 @@ mod tests {
 
   use crate::JSXTransformer;
   use swc_plugins_shared::{
-    mts_defines::{MtsDefineKind, MtsDefinesCollector},
+    mts_defines::{MtsDefineKind, MtsDefinesCollector, MtsDefinesRegistry},
     target::TransformTarget,
     transform_mode::TransformMode,
   };
@@ -1883,7 +1891,8 @@ mod tests {
     Tester::run(|tester| {
       let top_level_mark = Mark::new();
       let unresolved_mark = Mark::new();
-      let collector: MtsDefinesCollector = Rc::new(RefCell::new(vec![]));
+      let collector: MtsDefinesCollector =
+        Rc::new(RefCell::new(MtsDefinesRegistry::new(true, false)));
 
       tester.apply_transform(
         (
@@ -1911,10 +1920,12 @@ mod tests {
         r#"function App() { return <view><text>hi</text></view>; }"#,
       )?;
 
-      let defines = collector.borrow();
+      let registry = collector.borrow();
+      let defines = &registry.defines;
       assert_eq!(defines.len(), 1);
       assert_eq!(defines[0].kind, MtsDefineKind::Snapshot);
       assert!(defines[0].id.starts_with("__snapshot_"));
+      assert_eq!(registry.in_place.len(), 0);
       let collected = format!("{:?}", defines[0].items);
       assert!(collected.contains("__CreateView"));
       assert!(collected.contains("__CreateText"));
@@ -1965,7 +1976,9 @@ mod tests {
       };
 
       let emitted = transform(None)?;
-      let emitted_while_collecting = transform(Some(Rc::new(RefCell::new(vec![]))))?;
+      let emitted_while_collecting = transform(Some(Rc::new(RefCell::new(
+        MtsDefinesRegistry::new(true, false),
+      ))))?;
 
       assert_eq!(emitted, emitted_while_collecting);
 

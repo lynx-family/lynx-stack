@@ -745,6 +745,26 @@ export interface TransformNodiffOptions {
   inject?: boolean | InjectVisitorConfig
   /** @internal */
   collectMTSDefines?: boolean
+  /**
+   * @internal
+   * Collect the main-thread definitions only when the module is
+   * `'background only'` (module-level directive, or every export carrying
+   * the component-level directive).
+   */
+  collectMTSDefinesBackgroundOnly?: boolean
+  /**
+   * @internal
+   * Record the `kind:id` identities of the definitions this compilation
+   * emits in place, without changing its output. Assembly subtracts them.
+   */
+  collectMTSInPlaceDefines?: boolean
+  /**
+   * @internal
+   * Compile `'background only'` modules as main-thread stub shells: exports
+   * survive as inert empty functions; bodies, top-level statements and
+   * in-place definitions are dropped.
+   */
+  stubBackgroundOnlyModules?: boolean
   inputSourceMap?: string
 }
 export interface TransformNodiffOutput {
@@ -757,6 +777,13 @@ export interface TransformNodiffOutput {
   elementTemplates?: Array<ElementTemplateAsset>
   /** @internal */
   mtsDefines?: Array<MTSDefine>
+  /** @internal */
+  mtsInPlaceDefines?: Array<MTSDefineIdentity>
+  /**
+   * @internal
+   * Whether the module was compiled as a `'background only'` stub shell.
+   */
+  backgroundOnlyStub?: boolean
 }
 /**
  * @internal
@@ -777,6 +804,18 @@ export interface MTSDefine {
    * A self-contained statement list registering the definition.
    */
   code: string
+}
+/**
+ * @internal
+ * The identity of a definition a module registers in place — in its own
+ * main-thread output. Assembly subtracts these from the collected set so a
+ * definition never registers twice.
+ */
+export interface MTSDefineIdentity {
+  /** @internal */
+  kind: 'snapshot' | 'worklet'
+  /** @internal */
+  id: string
 }
 /** @internal */
 export interface ElementTemplateAsset {

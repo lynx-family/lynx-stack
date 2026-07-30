@@ -56,6 +56,7 @@ use swc_plugin_compat_post::CompatPostVisitor;
 use swc_plugin_css_scope::napi::{CSSScopeVisitor, CSSScopeVisitorConfig};
 use swc_plugin_define_dce::napi::DefineDCEVisitorConfig;
 use swc_plugin_directive_dce::napi::{DirectiveDCEVisitor, DirectiveDCEVisitorConfig};
+use swc_plugin_directive_dce::{is_background_only_module, BackgroundOnlyModuleStubVisitor};
 use swc_plugin_dynamic_import::napi::{DynamicImportVisitor, DynamicImportVisitorConfig};
 use swc_plugin_element_template::napi::{
   ElementTemplateAsset, ElementTemplateTransformer, ElementTemplateTransformerConfig,
@@ -75,7 +76,7 @@ pub use swc_plugin_transform_builtin_attribute_names::{
   TransformBuiltinAttributeNamesMode, TransformBuiltinAttributeNamesOptions,
 };
 use swc_plugin_worklet::napi::{WorkletVisitor, WorkletVisitorConfig};
-use swc_plugins_shared::mts_defines::MtsDefinesCollector;
+use swc_plugins_shared::mts_defines::{MtsDefinesCollector, MtsDefinesRegistry};
 use swc_plugins_shared::{
   engine_version::is_engine_version_ge,
   transform_mode_napi::TransformMode,
@@ -249,6 +250,23 @@ pub struct TransformNodiffOptions {
   /// @internal
   #[napi(js_name = "collectMTSDefines")]
   pub collect_mts_defines: Option<bool>,
+  /// @internal
+  /// Collect the main-thread definitions only when the module is
+  /// `'background only'` (module-level directive, or every export carrying
+  /// the component-level directive).
+  #[napi(js_name = "collectMTSDefinesBackgroundOnly")]
+  pub collect_mts_defines_background_only: Option<bool>,
+  /// @internal
+  /// Record the `kind:id` identities of the definitions this compilation
+  /// emits in place, without changing its output. Assembly subtracts them.
+  #[napi(js_name = "collectMTSInPlaceDefines")]
+  pub collect_mts_in_place_defines: Option<bool>,
+  /// @internal
+  /// Compile `'background only'` modules as main-thread stub shells: exports
+  /// survive as inert empty functions; bodies, top-level statements and
+  /// in-place definitions are dropped.
+  #[napi(js_name = "stubBackgroundOnlyModules")]
+  pub stub_background_only_modules: Option<bool>,
   pub input_source_map: Option<String>,
 }
 
@@ -278,6 +296,9 @@ impl Default for TransformNodiffOptions {
       experimental_transform_builtin_attribute_names: None,
       inject: Some(Either::A(false)),
       collect_mts_defines: None,
+      collect_mts_defines_background_only: None,
+      collect_mts_in_place_defines: None,
+      stub_background_only_modules: None,
       input_source_map: None,
     }
   }
@@ -305,6 +326,16 @@ pub struct MTSDefine {
   pub code: String,
 }
 
+/// @internal
+#[napi(object)]
+pub struct MTSDefineIdentity {
+  /// @internal
+  #[napi(ts_type = "'snapshot' | 'worklet'")]
+  pub kind: String,
+  /// @internal
+  pub id: String,
+}
+
 #[napi(object)]
 pub struct TransformNodiffOutput {
   pub code: String,
@@ -321,6 +352,13 @@ pub struct TransformNodiffOutput {
   /// @internal
   #[napi(js_name = "mtsDefines")]
   pub mts_defines: Option<Vec<MTSDefine>>,
+  /// @internal
+  #[napi(js_name = "mtsInPlaceDefines")]
+  pub mts_in_place_defines: Option<Vec<MTSDefineIdentity>>,
+  /// @internal
+  /// Whether the module was compiled as a `'background only'` stub shell.
+  #[napi(js_name = "backgroundOnlyStub")]
+  pub background_only_stub: Option<bool>,
 }
 
 fn lower_to_main_thread_syntax(
@@ -489,6 +527,8 @@ fn transform_react_lynx_inner(
           ui_source_map_records: vec![],
           element_templates: None,
           mts_defines: None,
+          mts_in_place_defines: None,
+          background_only_stub: None,
         };
       }
     };
@@ -653,10 +693,33 @@ fn transform_react_lynx_inner(
       jsx_backend_enabled && !preserve_jsx,
     );
 
-    let mts_defs_collector: Option<MtsDefinesCollector> = options
-      .collect_mts_defines
-      .unwrap_or(false)
-      .then(|| Rc::new(RefCell::new(vec![])));
+    // `'background only'`-ness is a property of the module source, computed
+    // on the parsed AST so the background and main-thread compilations of the
+    // same module agree by construction.
+    let is_background_only = program
+      .as_module()
+      .map(is_background_only_module)
+      .unwrap_or(false);
+
+    let collect_defines = options.collect_mts_defines.unwrap_or(false)
+      || (options.collect_mts_defines_background_only.unwrap_or(false) && is_background_only);
+    let record_in_place_defines = options.collect_mts_in_place_defines.unwrap_or(false);
+    let stub_background_only =
+      options.stub_background_only_modules.unwrap_or(false) && is_background_only;
+
+    let mts_defs_collector: Option<MtsDefinesCollector> = (collect_defines
+      || record_in_place_defines)
+      .then(|| {
+        Rc::new(RefCell::new(MtsDefinesRegistry::new(
+          collect_defines,
+          record_in_place_defines,
+        )))
+      });
+
+    let background_only_stub_plugin = Optional::new(
+      visit_mut_pass(BackgroundOnlyModuleStubVisitor::new()),
+      stub_background_only,
+    );
 
     let snapshot_plugin = if use_snapshot_plugin {
       let transformer = SnapshotJSXTransformer::new(
@@ -869,14 +932,20 @@ fn transform_react_lynx_inner(
     let pass = (
       &mut fixer(Some(&comments)),
       resolver(unresolved_mark, top_level_mark, true),
-      typescript::typescript(
-        typescript::Config {
-          verbatim_module_syntax: false,
-          import_not_used_as_values: typescript::ImportsNotUsedAsValues::Remove,
-          ..Default::default()
-        },
-        unresolved_mark,
-        top_level_mark,
+      (
+        // Replace a `'background only'` module with its stub shell before any
+        // other plugin runs, so the main-thread compilation skips the module's
+        // snapshot/worklet/JSX work entirely.
+        background_only_stub_plugin,
+        typescript::typescript(
+          typescript::Config {
+            verbatim_module_syntax: false,
+            import_not_used_as_values: typescript::ImportsNotUsedAsValues::Remove,
+            ..Default::default()
+          },
+          unresolved_mark,
+          top_level_mark,
+        ),
       ),
       dynamic_import_plugin,
       refresh_plugin,
@@ -954,10 +1023,28 @@ fn transform_react_lynx_inner(
         let element_templates = take_element_templates(element_templates_collector);
 
         let mut mts_define_errors: Vec<esbuild::PartialMessage> = vec![];
-        let mts_defines = mts_defs_collector.as_ref().map(|collector| {
+        let mts_in_place_defines = mts_defs_collector
+          .as_ref()
+          .filter(|collector| collector.borrow().is_recording_in_place())
+          .map(|collector| {
+            collector
+              .borrow()
+              .in_place
+              .iter()
+              .map(|identity| MTSDefineIdentity {
+                kind: identity.kind.as_str().into(),
+                id: identity.id.clone(),
+              })
+              .collect::<Vec<_>>()
+          });
+        let mts_defines = mts_defs_collector
+          .as_ref()
+          .filter(|collector| collector.borrow().is_collecting())
+          .map(|collector| {
           helpers::HELPERS.set(&helpers::Helpers::new(false), || {
             collector
               .borrow()
+              .defines
               .iter()
               .map(|define| MTSDefine {
                 kind: define.kind.as_str().into(),
@@ -1002,6 +1089,11 @@ fn transform_react_lynx_inner(
           },
           element_templates,
           mts_defines,
+          mts_in_place_defines,
+          background_only_stub: options
+            .stub_background_only_modules
+            .unwrap_or(false)
+            .then_some(stub_background_only),
         }
       }
       Err(_) => {
@@ -1018,6 +1110,8 @@ fn transform_react_lynx_inner(
           },
           element_templates,
           mts_defines: None,
+          mts_in_place_defines: None,
+          background_only_stub: None,
         };
       }
     }
@@ -1033,6 +1127,8 @@ fn transform_react_lynx_inner(
     // path instead of dropping them in the final wrapper object.
     element_templates: result.element_templates,
     mts_defines: result.mts_defines,
+    mts_in_place_defines: result.mts_in_place_defines,
+    background_only_stub: result.background_only_stub,
   };
 
   r
