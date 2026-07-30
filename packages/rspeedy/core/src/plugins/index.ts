@@ -50,10 +50,6 @@ export async function applyDefaultPlugins(
       pluginRsdoctor(config.tools?.rsdoctor)
     ),
 
-    import('./sourcemap.plugin.js').then(({ pluginSourcemap }) =>
-      pluginSourcemap()
-    ),
-
     import('./statsJson.plugin.js').then(({ pluginStatsJson }) =>
       pluginStatsJson(config)
     ),

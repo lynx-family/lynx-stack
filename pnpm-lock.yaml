@@ -1465,9 +1465,6 @@ importers:
       rsbuild-plugin-publint:
         specifier: 1.0.0
         version: 1.0.0(@rsbuild/core@2.1.7(core-js@3.49.0))
-      tiny-invariant:
-        specifier: ^1.3.3
-        version: 1.3.3
       ts-blank-space:
         specifier: ^0.7.0
         version: 0.7.0
@@ -1645,6 +1642,12 @@ importers:
       '@swc/core':
         specifier: ^1.15.30
         version: 1.15.30(@swc/helpers@0.5.23)
+      tiny-invariant:
+        specifier: ^1.3.3
+        version: 1.3.3
+      type-fest:
+        specifier: ^5.8.0
+        version: 5.8.0
 
   packages/rspeedy/plugin-qrcode:
     devDependencies:

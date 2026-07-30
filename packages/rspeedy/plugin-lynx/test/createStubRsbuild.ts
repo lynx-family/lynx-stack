@@ -5,7 +5,12 @@ import path from 'node:path'
 import { fileURLToPath } from 'node:url'
 
 import { createRsbuild } from '@rsbuild/core'
-import type { RsbuildConfig, RsbuildInstance, Rspack } from '@rsbuild/core'
+import type {
+  InitConfigsOptions,
+  RsbuildConfig,
+  RsbuildInstance,
+  Rspack,
+} from '@rsbuild/core'
 
 import { pluginLynx } from '../src/index.js'
 
@@ -13,7 +18,9 @@ export async function createStubRsbuild(
   rsbuildConfig: RsbuildConfig = {},
   cwd?: string,
 ): Promise<
-  RsbuildInstance & { unwrapConfig(): Promise<Rspack.Configuration> }
+  RsbuildInstance & {
+    unwrapConfig(options?: InitConfigsOptions): Promise<Rspack.Configuration>
+  }
 > {
   const rsbuild = await createRsbuild({
     cwd: cwd ?? path.dirname(fileURLToPath(import.meta.url)),
@@ -25,8 +32,8 @@ export async function createStubRsbuild(
   })
 
   return Object.assign(rsbuild, {
-    async unwrapConfig() {
-      const [config] = await rsbuild.initConfigs()
+    async unwrapConfig(options?: InitConfigsOptions) {
+      const [config] = await rsbuild.initConfigs(options)
       return config!
     },
   })
