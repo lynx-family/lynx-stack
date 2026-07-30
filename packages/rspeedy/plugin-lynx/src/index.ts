@@ -3,9 +3,13 @@
 // LICENSE file in the root directory of this source tree.
 import type { RsbuildPlugin } from '@rsbuild/core'
 
+import { pluginResolve } from './plugins/resolve.plugin.js'
+
 /**
  * @public
  */
 export function pluginLynx(): RsbuildPlugin[] {
-  return []
+  return [
+    pluginResolve(),
+  ]
 }
