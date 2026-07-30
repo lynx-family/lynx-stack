@@ -90,6 +90,59 @@ describe('enableMTSRendering: false', () => {
     }
   })
 
+  test('keeps each entry to its own definitions and shares the common ones', async () => {
+    const { pluginReactLynx } = await import('../src/pluginReactLynx.js')
+
+    const assets: Record<string, string> = {}
+    const tmp = await fs.mkdtemp(
+      path.join(tmpdir(), 'rspeedy-react-test-main-thread-multi-'),
+    )
+
+    const rsbuild = await createRspeedy({
+      rspeedyConfig: {
+        source: {
+          entry: {
+            first: fileURLToPath(
+              new URL(
+                './fixtures/mts-rendering-multi/first.tsx',
+                import.meta.url,
+              ),
+            ),
+            second: fileURLToPath(
+              new URL(
+                './fixtures/mts-rendering-multi/second.tsx',
+                import.meta.url,
+              ),
+            ),
+          },
+        },
+        output: { distPath: { root: tmp } },
+        plugins: [
+          pluginReactLynx({ enableMTSRendering: false }),
+          ignoreCSSLoaderWorkaround,
+        ],
+        tools: { rspack: { plugins: [collectAssets(assets)] } },
+      },
+    })
+
+    try {
+      await rsbuild.build()
+
+      const first = assets['.rspeedy/first/main-thread.js']!
+      const second = assets['.rspeedy/second/main-thread.js']!
+
+      expect(first).toContain('first-entry-only')
+      expect(first).not.toContain('second-entry-only')
+      expect(second).toContain('second-entry-only')
+      expect(second).not.toContain('first-entry-only')
+
+      expect(first).toContain('shared-across-entries')
+      expect(second).toContain('shared-across-entries')
+    } finally {
+      await fs.rm(tmp, { recursive: true, force: true })
+    }
+  })
+
   test('registers components the main thread would not have compiled', async () => {
     const { pluginReactLynx } = await import('../src/pluginReactLynx.js')
 
