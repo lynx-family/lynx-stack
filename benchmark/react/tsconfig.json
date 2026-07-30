@@ -11,6 +11,7 @@
   },
   "include": [
     "rspeedy-env.d.ts",
+    "types",
     "src",
     "lynx.config.js",
     "cases",

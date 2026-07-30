@@ -74,8 +74,9 @@ export async function applyDefaultPlugins(
   ])
 
   const promises: Promise<void>[] = [
-    Promise.all(defaultPlugins).then(plugins => {
-      rsbuildInstance.addPlugins(plugins)
+    Promise.all(defaultPlugins).then(async plugins => {
+      const { pluginLynx } = await import('@lynx-js/rsbuild-plugin')
+      rsbuildInstance.addPlugins([...pluginLynx(), ...plugins])
     }),
   ]
 

@@ -1,7 +1,7 @@
 // Copyright 2025 The Lynx Authors. All rights reserved.
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
-import type { BannerPluginArgument, Compiler } from '@rspack/core'
+import type { Rspack } from '@rslib/core'
 
 const PLUGIN_NAME = 'MainThreadRuntimeWrapperWebpackPlugin'
 
@@ -18,7 +18,7 @@ export interface MainThreadRuntimeWrapperWebpackPluginOptions {
    *
    * @public
    */
-  test: Extract<BannerPluginArgument, { banner: unknown }>['test']
+  test: Extract<Rspack.BannerPluginArgument, { banner: unknown }>['test']
 }
 /**
  * The main-thread runtime wrapper for external bundle.
@@ -30,7 +30,7 @@ export class MainThreadRuntimeWrapperWebpackPlugin {
     private options: Partial<MainThreadRuntimeWrapperWebpackPluginOptions> = {},
   ) {}
 
-  apply(compiler: Compiler): void {
+  apply(compiler: Rspack.Compiler): void {
     const { BannerPlugin } = compiler.webpack
     new BannerPlugin({
       test: this.options.test ?? /\.js$/,

@@ -137,7 +137,10 @@ readiness check, `POST /judge` to evaluate a page, and `POST /compare` to
 compare two uploaded images without rendering a page or calling the VLM.
 
 The following request evaluates a local bundle. `url` and `task` are required.
-The other fields are optional.
+The other fields are optional. `initialData` and `globalProps` accept JSON
+objects and are forwarded only by the HTTP server to the headless Lynx
+navigation request; `null` is treated as omitted. The Rust library's public
+`JudgePageRequest` remains unchanged.
 
 ```bash
 curl --request POST http://127.0.0.1:8080/judge \
@@ -145,6 +148,11 @@ curl --request POST http://127.0.0.1:8080/judge \
   --data '{
     "url": "file:///absolute/path/to/dist/main.lynx.bundle",
     "task": "The saved state should be clear and visually correct",
+    "globalProps": {
+      "messages": [],
+      "instant": true,
+      "theme": "light"
+    },
     "reference": null,
     "referenceImage": null,
     "steps": ["Tap the Save button"],

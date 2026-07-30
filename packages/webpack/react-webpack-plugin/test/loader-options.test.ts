@@ -11,6 +11,14 @@ import {
   getMainThreadTransformOptions,
 } from '../src/loaders/options.js';
 
+const transformBuiltinAttributeNames = {
+  mode: 'dash-case',
+  preserve: ['tailColorConvert'],
+  rename: {
+    textMaxline: 'custom-maxline',
+  },
+} as const;
+
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
 function createLoaderContext(options: Record<string, unknown>) {
@@ -24,6 +32,22 @@ function createLoaderContext(options: Record<string, unknown>) {
 }
 
 describe('loader options', () => {
+  it('passes camelCase attribute conversion as a transform option', () => {
+    const context = createLoaderContext({
+      experimental_transformBuiltinAttributeNames:
+        transformBuiltinAttributeNames,
+    });
+
+    expect(
+      getMainThreadTransformOptions.call(context, undefined)
+        .experimental_transformBuiltinAttributeNames,
+    ).toBe(transformBuiltinAttributeNames);
+    expect(
+      getBackgroundTransformOptions.call(context, undefined)
+        .experimental_transformBuiltinAttributeNames,
+    ).toBe(transformBuiltinAttributeNames);
+  });
+
   it('uses ET backend with all CSS scoped when enableRemoveCSSScope is false', () => {
     const context = createLoaderContext({
       enableRemoveCSSScope: false,

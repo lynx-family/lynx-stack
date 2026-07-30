@@ -17,6 +17,7 @@ const ATTRIBUTES = {
   'include-font-padding': false,
   'text-fake-bold': false,
   'text-selection': false,
+  bindtap: () => {},
 } as const;
 
 function App() {
