@@ -31,6 +31,7 @@ import type {
   CreateWrapperElementPAPI,
   DecoratedHTMLElement,
   ElementPAPIs,
+  GetAttributeNamesPAPI,
   GetAttributesPAPI,
   GetClassesPAPI,
   GetIDPAPI,
@@ -179,6 +180,10 @@ export function createElementAPI(
         const el = element as ServerElement;
         return wasmContext.get_attributes(el[uniqueIdSymbol]);
       }) as GetAttributesPAPI,
+      __GetAttributeNames: ((element: HTMLElement) => {
+        const el = element as ServerElement;
+        return Object.keys(wasmContext.get_attributes(el[uniqueIdSymbol]));
+      }) as GetAttributeNamesPAPI,
       __GetAttributeByName: (element: unknown, name: string) => {
         return getAttribute(element as ServerElement, name) ?? null;
       },

@@ -129,6 +129,10 @@ export type GetAttributesPAPI = (
   element: HTMLElement,
 ) => Record<string, string>;
 
+export type GetAttributeNamesPAPI = (
+  element: HTMLElement,
+) => string[];
+
 export type GetComponentIdPAPI = (
   element: HTMLElement,
 ) => string | null | undefined;
@@ -383,6 +387,7 @@ export interface ElementPAPIs {
   __GetDataset: GetDatasetPAPI;
   __GetDataByKey: GetDataByKeyPAPI;
   __GetAttributes: GetAttributesPAPI;
+  __GetAttributeNames: GetAttributeNamesPAPI;
   __GetComponentID: GetComponentIdPAPI;
   __GetElementConfig: GetElementConfigPAPI;
   __GetElementUniqueID: GetElementUniqueIDPAPI;
