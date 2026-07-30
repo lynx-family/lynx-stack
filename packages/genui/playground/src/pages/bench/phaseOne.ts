@@ -128,7 +128,7 @@ export const PHASE_ONE_BENCH = {
   scope: {
     runs: 30,
     scenarios: 3,
-    models: 4,
+    models: 3,
     prompts: 3,
     catalogs: 3,
   },
