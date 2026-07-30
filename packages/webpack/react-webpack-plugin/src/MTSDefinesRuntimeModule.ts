@@ -131,9 +131,16 @@ export function createMTSDefinesRuntimeModule(
 
     override generate(): string {
       const compilation = this.compilation as Compilation | null;
-      const entrypoint = compilation?.entrypoints.get(this.backgroundEntry);
-      if (!compilation || !entrypoint) {
+      if (!compilation) {
         return renderMTSDefines([]);
+      }
+      const entrypoint = compilation.entrypoints.get(this.backgroundEntry);
+      if (!entrypoint) {
+        throw new Error(
+          `No entrypoint named ${
+            JSON.stringify(this.backgroundEntry)
+          } to collect the main-thread definitions from.`,
+        );
       }
 
       const { chunkGraph } = compilation;

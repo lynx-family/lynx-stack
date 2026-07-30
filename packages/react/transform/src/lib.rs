@@ -348,7 +348,7 @@ fn print_main_thread_define(
   unresolved_mark: Mark,
   top_level_mark: Mark,
   comments: &SingleThreadedComments,
-) -> String {
+) -> Result<String, String> {
   let module = match Program::Module(Module {
     span: DUMMY_SP,
     body: items,
@@ -360,11 +360,7 @@ fn print_main_thread_define(
     comments,
   )) {
     Program::Module(m) => m,
-    _ => Module {
-      span: DUMMY_SP,
-      body: vec![],
-      shebang: None,
-    },
+    _ => return Err("lowering produced a non-module program".into()),
   };
 
   c.print(
@@ -391,7 +387,7 @@ fn print_main_thread_define(
     },
   )
   .map(|r| r.code)
-  .unwrap_or_default()
+  .map_err(|err| err.to_string())
 }
 
 type ElementTemplateCollector = Rc<RefCell<Vec<CoreElementTemplateAsset>>>;
@@ -957,6 +953,7 @@ fn transform_react_lynx_inner(
         // the caller expects one stable array per transform invocation.
         let element_templates = take_element_templates(element_templates_collector);
 
+        let mut mts_define_errors: Vec<esbuild::PartialMessage> = vec![];
         let mts_defines = mts_defs_collector.as_ref().map(|collector| {
           helpers::HELPERS.set(&helpers::Helpers::new(false), || {
             collector
@@ -965,13 +962,29 @@ fn transform_react_lynx_inner(
               .map(|define| MTSDefine {
                 kind: define.kind.as_str().into(),
                 id: define.id.clone(),
-                code: print_main_thread_define(
+                code: match print_main_thread_define(
                   &c,
                   define.items.clone(),
                   unresolved_mark,
                   top_level_mark,
                   &comments,
-                ),
+                ) {
+                  Ok(code) => code,
+                  Err(err) => {
+                    mts_define_errors.push(esbuild::PartialMessage {
+                      id: None,
+                      plugin_name: Some(options.plugin_name.clone()),
+                      text: Some(format!(
+                        "failed to print the collected main-thread definition `{}`: {}",
+                        define.id, err
+                      )),
+                      location: None,
+                      notes: None,
+                      detail: None,
+                    });
+                    "".into()
+                  }
+                },
               })
               .collect::<Vec<_>>()
           })
@@ -980,7 +993,7 @@ fn transform_react_lynx_inner(
         TransformNodiffOutput {
           code: result.code,
           map: result.map,
-          errors: vec![],
+          errors: mts_define_errors,
           warnings: vec![],
           ui_source_map_records: if use_element_template_plugin {
             vec![]

@@ -6,9 +6,6 @@ import { readFileSync } from 'node:fs';
 
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
-import { setupPage } from '../../src/snapshot';
-import { __pageId } from '../../src/snapshot/snapshot/definition';
-
 afterEach(() => {
   vi.resetModules();
   delete globalThis.__initMTSDefines;
@@ -59,10 +56,16 @@ describe('main-thread defines entry', () => {
     globalThis.__initMTSDefines = defines;
 
     await importMTSDefines();
+    // `vi.resetModules()` gives each test a fresh module graph; read the page
+    // setup from the same graph the entry closed over.
+    const [{ setupPage }, definition] = await Promise.all([
+      import('../../src/snapshot'),
+      import('../../src/snapshot/snapshot/definition'),
+    ]);
 
     const [runtime] = defines.mock.calls[0];
     setupPage(__CreatePage('0', 0));
-    expect(runtime.__pageId).toBe(__pageId);
+    expect(runtime.__pageId).toBe(definition.__pageId);
   });
 
   it('reaches for no bundler internal, so a non-webpack pipeline can supply the one binding it needs', () => {
