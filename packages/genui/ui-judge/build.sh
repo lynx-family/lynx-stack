@@ -8,8 +8,6 @@ TARGET="x86_64-unknown-linux-gnu"
 BINARY="ui-judge-server"
 BUILD_TARGET_DIR="${CARGO_TARGET_DIR:-${REPOSITORY_ROOT}/target}"
 OUTPUT_DIR="${UI_JUDGE_OUTPUT_DIR:-${SCRIPT_DIR}/dist/linux-amd64}"
-LYNX_CORE_SOURCE="${LYNX_CORE_JS_PATH:-${REPOSITORY_ROOT}/packages/lynx/headless-rust-test-runner/fixtures/react/lynx_core.js}"
-DEFAULT_LYNX_SDK_DIR="${REPOSITORY_ROOT}/packages/lynx/engine-bridge/target/lynx-engine-bridge-sdk"
 
 cd "${REPOSITORY_ROOT}"
 
@@ -23,13 +21,8 @@ CARGO_TARGET_DIR="${BUILD_TARGET_DIR}" cargo build \
 
 BINARY_SOURCE="${BUILD_TARGET_DIR}/${TARGET}/release/${BINARY}"
 START_SCRIPT_SOURCE="${BUILD_TARGET_DIR}/${TARGET}/release/start.sh"
-if [[ -n "${LYNX_LIB_PATH:-}" ]]; then
-  LYNX_RUNTIME_SOURCE="${LYNX_LIB_PATH}"
-elif [[ -n "${LYNX_SDK_DIR:-}" ]]; then
-  LYNX_RUNTIME_SOURCE="${LYNX_SDK_DIR}/lib/libLynx_clay.so"
-else
-  LYNX_RUNTIME_SOURCE="${DEFAULT_LYNX_SDK_DIR}/lib/libLynx_clay.so"
-fi
+LYNX_CORE_SOURCE="${BUILD_TARGET_DIR}/${TARGET}/release/lynx_core.js"
+LYNX_RUNTIME_SOURCE="${BUILD_TARGET_DIR}/${TARGET}/release/lib/libLynx_clay.so"
 
 for required_file in \
   "${BINARY_SOURCE}" \

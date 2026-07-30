@@ -103,7 +103,10 @@ Build the release server for Linux AMD64 from any directory with:
 packages/genui/ui-judge/build.sh
 ```
 
-The script writes a deployable bundle to `dist/linux-amd64`:
+The Cargo build first writes a runnable server layout to
+`target/x86_64-unknown-linux-gnu/release`, including the downloaded Lynx
+runtime, `lynx_core.js`, and generated launcher. The script copies that layout
+to `dist/linux-amd64`:
 
 ```text
 dist/linux-amd64/
