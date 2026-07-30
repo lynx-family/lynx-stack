@@ -2,6 +2,7 @@
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
 
+import { readBenchScreenshotDataUrl } from './a2ui-bench-screenshot';
 import type { BenchScenarioRequest } from './a2ui-bench-types';
 import type { A2UIMessage } from '../agent/a2ui-validator';
 
@@ -29,6 +30,7 @@ export interface BenchUiJudgeResult {
   errors: string[];
   reason?: string;
   score: number;
+  screenshotDataUrl?: string;
   status: 'complete' | 'failed';
   summary?: string;
   warnings: string[];
@@ -40,15 +42,37 @@ interface UiJudgeResponse {
   };
   reason?: unknown;
   score?: unknown;
+  screenshotDataUrl?: unknown;
   summary?: unknown;
+}
+
+export interface BenchUiJudgeScenario
+  extends Pick<BenchScenarioRequest, 'judgeSteps' | 'judgeTask' | 'prompt'>
+{
+  id?: string;
+  name?: string;
+  type?: string;
 }
 
 interface RunBenchUiJudgeOptions {
   messages: A2UIMessage[];
-  scenario: BenchScenarioRequest;
+  scenario: BenchUiJudgeScenario;
+  includeScreenshot?: boolean;
+  screenshotSettleMs?: number;
   session: BenchUiJudgeSession;
   signal?: AbortSignal;
   timeoutMs?: number;
+}
+
+export interface RunBenchUiJudgeRequestOptions {
+  globalProps: Record<string, unknown>;
+  scenario: BenchUiJudgeScenario;
+  includeScreenshot?: boolean;
+  screenshotSettleMs?: number;
+  session: BenchUiJudgeSession;
+  signal?: AbortSignal;
+  timeoutMs?: number;
+  warnings?: string[];
 }
 
 const RESOURCE_COMPONENTS = new Set([
@@ -203,7 +227,9 @@ function containsOpenUrlCall(
 
 export async function probeBenchUiJudge(
   options: {
+    bundleUrl?: string;
     env?: NodeJS.ProcessEnv;
+    expectedModel?: string;
     fetch?: FetchLike;
   } = {},
 ): Promise<BenchUiJudgeCapability> {
@@ -225,7 +251,8 @@ export async function probeBenchUiJudge(
     };
   }
 
-  const configuredBundleUrl = env.UI_JUDGE_BUNDLE_URL?.trim();
+  const configuredBundleUrl = options.bundleUrl?.trim()
+    ?? env.UI_JUDGE_BUNDLE_URL?.trim();
   const rawBundleUrl = configuredBundleUrl !== undefined
       && configuredBundleUrl.length > 0
     ? configuredBundleUrl
@@ -259,6 +286,19 @@ export async function probeBenchUiJudge(
         reason: 'UI Judge health check returned an invalid response.',
       };
     }
+    if (options.expectedModel) {
+      const actualModel = typeof body.model === 'string'
+        ? body.model.trim()
+        : '';
+      if (actualModel !== options.expectedModel) {
+        return {
+          enabled: false,
+          reason: actualModel
+            ? `UI Judge model mismatch: expected ${options.expectedModel}, received ${actualModel}.`
+            : `UI Judge health check did not report the required model ${options.expectedModel}.`,
+        };
+      }
+    }
   } catch (error) {
     return {
       enabled: false,
@@ -288,6 +328,34 @@ export async function runBenchUiJudge(
       warnings: sanitized.warnings,
     };
   }
+  return await runBenchUiJudgeRequest(
+    {
+      globalProps: {
+        benchMode: true,
+        instant: true,
+        messages: sanitized.messages,
+        speed: 0,
+        theme: 'light',
+      },
+      ...(options.includeScreenshot ? { includeScreenshot: true } : {}),
+      scenario: options.scenario,
+      ...(options.screenshotSettleMs === undefined
+        ? {}
+        : { screenshotSettleMs: options.screenshotSettleMs }),
+      session: options.session,
+      ...(options.signal ? { signal: options.signal } : {}),
+      ...(options.timeoutMs ? { timeoutMs: options.timeoutMs } : {}),
+      warnings: sanitized.warnings,
+    },
+    fetchImpl,
+  );
+}
+
+export async function runBenchUiJudgeRequest(
+  options: RunBenchUiJudgeRequestOptions,
+  fetchImpl: FetchLike = fetch,
+): Promise<BenchUiJudgeResult> {
+  const warnings = options.warnings ?? [];
   const operationTimeoutMs = options.timeoutMs
     ?? DEFAULT_OPERATION_TIMEOUT_MS;
   const requestTimeoutMs = operationTimeoutMs
@@ -301,16 +369,15 @@ export async function runBenchUiJudge(
       errors: [],
       score: 0,
       status: 'failed',
-      warnings: sanitized.warnings,
+      warnings,
     };
   }
   const body = {
-    globalProps: {
-      instant: true,
-      messages: sanitized.messages,
-      speed: 0,
-      theme: 'light',
-    },
+    globalProps: options.globalProps,
+    ...(options.includeScreenshot ? { includeScreenshot: true } : {}),
+    ...(options.screenshotSettleMs === undefined
+      ? {}
+      : { screenshotSettleMs: options.screenshotSettleMs }),
     steps: options.scenario.judgeSteps ?? [],
     task: options.scenario.judgeTask ?? options.scenario.prompt,
     ...(options.timeoutMs ? { timeoutMs: options.timeoutMs } : {}),
@@ -334,14 +401,14 @@ export async function runBenchUiJudge(
         errors: [],
         score: 0,
         status: 'failed',
-        warnings: sanitized.warnings,
+        warnings,
       };
     }
     return {
       errors: [`ui-judge request failed: ${toErrorMessage(error)}`],
       score: 0,
       status: 'failed',
-      warnings: sanitized.warnings,
+      warnings,
     };
   }
 
@@ -356,7 +423,7 @@ export async function runBenchUiJudge(
       ],
       score: 0,
       status: 'failed',
-      warnings: sanitized.warnings,
+      warnings,
     };
   }
 
@@ -365,7 +432,7 @@ export async function runBenchUiJudge(
       errors: ['ui-judge returned an invalid JSON response.'],
       score: 0,
       status: 'failed',
-      warnings: sanitized.warnings,
+      warnings,
     };
   }
   const result = payload as UiJudgeResponse;
@@ -394,13 +461,27 @@ export async function runBenchUiJudge(
   const summary = typeof result.summary === 'string' && result.summary.trim()
     ? result.summary.trim()
     : undefined;
+  const screenshotDataUrl = readBenchScreenshotDataUrl(
+    result.screenshotDataUrl,
+  );
+  const resultWarnings = [...warnings];
+  if (
+    options.includeScreenshot
+    && result.screenshotDataUrl !== undefined
+    && !screenshotDataUrl
+  ) {
+    resultWarnings.push(
+      'ui-judge returned an invalid screenshotDataUrl; the screenshot was discarded.',
+    );
+  }
 
   return {
     errors,
     ...(reason ? { reason } : {}),
     score: errors.length === 0 ? score : 0,
+    ...(screenshotDataUrl ? { screenshotDataUrl } : {}),
     status: errors.length === 0 ? 'complete' : 'failed',
     ...(summary ? { summary } : {}),
-    warnings: sanitized.warnings,
+    warnings: resultWarnings,
   };
 }

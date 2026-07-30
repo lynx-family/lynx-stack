@@ -3,7 +3,7 @@
 // LICENSE file in the root directory of this source tree.
 
 import { createOpenUIAgent } from '../agent/openui-agent';
-import type { OpenUIAgent } from '../agent/openui-agent';
+import type { OpenUIAgent, OpenUIAgentOptions } from '../agent/openui-agent';
 import {
   buildConversationMessages,
   sumContentChars,
@@ -12,6 +12,7 @@ import {
 import {
   ProviderAgentCache,
   buildResourceRunOptions,
+  createStableValueHash,
   pickProviderConfig,
 } from './common/provider';
 import {
@@ -27,6 +28,18 @@ import type {
   MastraStreamResult,
 } from './common/types';
 
+export interface OpenUIChatOptions extends ChatOptions {
+  /**
+   * Create an agent for this call without retaining request-scoped provider
+   * credentials in the shared provider cache.
+   */
+  disableAgentCache?: boolean | undefined;
+  promptComponentNames?: readonly string[] | undefined;
+  promptOptions?: OpenUIAgentOptions['promptOptions'];
+  promptRoot?: string | undefined;
+  systemAppendix?: string | undefined;
+}
+
 function buildDataModelSystemMessage(
   dataModel: Record<string, unknown>,
 ): ChatMessage {
@@ -41,16 +54,45 @@ function buildDataModelSystemMessage(
 export default class OpenUIAgentService {
   private readonly agentCache = new ProviderAgentCache<OpenUIAgent>();
 
-  private getAgent(opts: ChatOptions): Promise<OpenUIAgent> {
+  private getAgent(opts: OpenUIChatOptions): Promise<OpenUIAgent> {
+    const promptVariant = opts.promptComponentNames === undefined
+        && opts.promptOptions === undefined
+        && opts.promptRoot === undefined
+        && opts.systemAppendix === undefined
+      ? undefined
+      : createStableValueHash({
+        appendix: opts.systemAppendix,
+        componentNames: opts.promptComponentNames,
+        promptOptions: opts.promptOptions,
+        root: opts.promptRoot,
+      });
+    const createAgent = () =>
+      createOpenUIAgent({
+        ...pickProviderConfig(opts),
+        ...(opts.promptComponentNames === undefined
+          ? {}
+          : { promptComponentNames: opts.promptComponentNames }),
+        ...(opts.promptOptions === undefined
+          ? {}
+          : { promptOptions: opts.promptOptions }),
+        ...(opts.promptRoot === undefined
+          ? {}
+          : { promptRoot: opts.promptRoot }),
+        ...(opts.systemAppendix === undefined
+          ? {}
+          : { systemAppendix: opts.systemAppendix }),
+      }).agent;
+    if (opts.disableAgentCache) return Promise.resolve().then(createAgent);
     return this.agentCache.get(
       opts,
-      () => createOpenUIAgent(pickProviderConfig(opts)).agent,
+      createAgent,
+      promptVariant,
     );
   }
 
   public async stream(
     messages: ChatMessage[],
-    opts: ChatOptions = {},
+    opts: OpenUIChatOptions = {},
     abortSignal?: AbortSignal,
   ): Promise<MastraStreamResult> {
     abortSignal?.throwIfAborted();
@@ -79,7 +121,7 @@ export default class OpenUIAgentService {
 
   public async streamAsAsyncIterable(
     messages: ChatMessage[],
-    opts: ChatOptions = {},
+    opts: OpenUIChatOptions = {},
     conversation?: ConversationContext,
     abortSignal?: AbortSignal,
   ): Promise<{
@@ -120,14 +162,14 @@ export default class OpenUIAgentService {
 
   public async generateRaw(
     messages: ChatMessage[],
-    opts: ChatOptions = {},
+    opts: OpenUIChatOptions = {},
     conversation?: ConversationContext,
     abortSignal?: AbortSignal,
   ): Promise<{ text: string; usage: unknown; finishReason: unknown }> {
     abortSignal?.throwIfAborted();
     const agent = await this.getAgent(opts);
     abortSignal?.throwIfAborted();
-    const result = agent.generate(
+    const result = await agent.generate(
       toModelMessages(
         buildConversationMessages(
           messages,
