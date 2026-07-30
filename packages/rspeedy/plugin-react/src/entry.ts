@@ -20,6 +20,7 @@ import {
   WebEncodePlugin,
 } from '@lynx-js/template-webpack-plugin'
 
+import { resolveMTSRendering } from './mtsRendering.js'
 import type { PluginReactLynxOptions } from './pluginReactLynx.js'
 import { resolveLazyBundleFetcher } from './resolveLazyBundleFetcher.js'
 
@@ -50,7 +51,6 @@ export function applyEntry(
     firstScreenSyncTiming,
     globalPropsMode,
     enableSSR,
-    enableMTSRendering,
     removeDescendantSelectorScope,
     targetSdkVersion,
     extractStr: originalExtractStr,
@@ -71,7 +71,19 @@ export function applyEntry(
       }
     >(Symbol.for('@lynx-js/react/internal:resolve'))!
 
-    const mainThreadImports = enableMTSRendering ? undefined : [
+    // A root-level `<Background>` in an entry is the declarative trigger for
+    // the assembled main-thread bundle (`enableMTSRendering: false` is its
+    // implementation) — resolve `'auto'` against the entry sources before the
+    // entry points are rewritten below.
+    const resolvedEnableMTSRendering = resolveMTSRendering(
+      options,
+      isProd,
+      chain,
+      api.context.rootPath,
+      (message) => void (api.logger ?? console).warn(message),
+    )
+
+    const mainThreadImports = resolvedEnableMTSRendering ? undefined : [
       path.join(reactLynxDir, 'runtime/mts-rendering-disabled/index.js'),
     ]
 
@@ -322,7 +334,7 @@ export function applyEntry(
         firstScreenSyncTiming,
         globalPropsMode,
         enableSSR,
-        enableMTSRendering,
+        enableMTSRendering: resolvedEnableMTSRendering,
         mainThreadChunks,
         mainThreadEntries,
         extractStr,

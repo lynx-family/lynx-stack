@@ -275,11 +275,42 @@ export interface PluginReactLynxOptions {
   /**
    * Whether business code is compiled for the main thread and rendered there.
    *
-   * @defaultValue `true`
+   * @remarks
+   *
+   * The declarative way to use this mode is a root-level `<Background>`:
+   *
+   * ```tsx
+   * import { Background, root } from '@lynx-js/react'
+   *
+   * root.render(
+   *   <Background fallback={<view><text>Loading…</text></view>}>
+   *     <App />
+   *   </Background>,
+   * )
+   * ```
+   *
+   * - `'auto'` (the default) — production builds detect a root-level
+   *   `<Background>` in the entry sources and stop compiling business code
+   *   for the main thread: the main-thread bundle is assembled from the
+   *   definitions collected during the background compilation, and the first
+   *   frame renders the static `fallback` through them. Development builds
+   *   keep the classic dual-thread path (the `<Background>` component itself
+   *   renders the fallback — the same first frame, with HMR intact). Without
+   *   a root `<Background>` nothing changes.
+   * - `false` — force the assembled main-thread bundle regardless of the
+   *   entry shape (the escape hatch; a missing root `<Background>` fallback
+   *   renders an empty first frame).
+   * - `true` — force the classic dual-thread build.
+   *
+   * This option is the implementation detail behind the root `<Background>`
+   * API and may change while that direction stabilizes — prefer the
+   * declarative form.
+   *
+   * @defaultValue `'auto'`
    *
    * @public
    */
-  enableMTSRendering?: boolean
+  enableMTSRendering?: boolean | 'auto'
 
   /**
    * removeDescendantSelectorScope is used to remove the scope of descendant selectors.
@@ -412,7 +443,7 @@ export function pluginReactLynx(
     enableRemoveCSSScope: true,
     firstScreenSyncTiming: 'immediately',
     enableSSR: false,
-    enableMTSRendering: true,
+    enableMTSRendering: 'auto',
     removeDescendantSelectorScope: true,
     shake: undefined,
     defineDCE: undefined,
