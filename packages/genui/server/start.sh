@@ -28,7 +28,7 @@ if [[ ! -f "${SERVER_ENTRY}" ]]; then
   exit 1
 fi
 
-export HOST="${HOST:-0.0.0.0}"
+export HOST="${HOST:-::}"
 export LYNX_USE_PORT="${LYNX_USE_PORT:-3000}"
 
 cd "${SCRIPT_DIR}"
