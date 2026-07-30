@@ -573,6 +573,43 @@ function getA2UIBenchJobEndpoint(jobId: string): string {
   return `${jobsEndpoint}/${encodeURIComponent(jobId)}`;
 }
 
+type BenchJobCancellationDisposition = 'cleared' | 'retry';
+
+export function getBenchJobCancellationDisposition(response: {
+  ok: boolean;
+  status: number;
+}): BenchJobCancellationDisposition {
+  return response.ok || response.status === 404 ? 'cleared' : 'retry';
+}
+
+export function createBenchJobCancellationRequestInit(): RequestInit {
+  return {
+    method: 'DELETE',
+    keepalive: true,
+  };
+}
+
+export function shouldCancelCreatedBenchJob(
+  createdOperationId: number,
+  currentOperationId: number,
+): boolean {
+  return createdOperationId !== currentOperationId;
+}
+
+async function requestBenchJobCancellation(
+  jobId: string,
+): Promise<BenchJobCancellationDisposition> {
+  try {
+    const response = await window.fetch(
+      getA2UIBenchJobEndpoint(jobId),
+      createBenchJobCancellationRequestInit(),
+    );
+    return getBenchJobCancellationDisposition(response);
+  } catch {
+    return 'retry';
+  }
+}
+
 function getA2UIBenchJobIdFromUrl(): string | null {
   const params = new URLSearchParams(window.location.search);
   const fromSearch = params.get('a2uiBenchJobId') ?? params.get('benchJobId');
@@ -826,35 +863,15 @@ function isBenchHistoryEntry(value: unknown): value is BenchHistoryEntry {
     && Array.isArray(value.config.scenarios);
 }
 
-function readBenchHistory(): BenchHistoryEntry[] {
+export function readBenchHistory(): BenchHistoryEntry[] {
   if (typeof window === 'undefined') return [];
   try {
     const raw = window.localStorage.getItem(BENCH_HISTORY_STORAGE_KEY);
     if (!raw) return [];
     const parsed = JSON.parse(raw) as unknown;
-    if (!Array.isArray(parsed)) return [];
-    return parsed.filter((entry) => isBenchHistoryEntry(entry)).map((entry) => {
-      const safeReport = sanitizeBenchReportValue(entry.report) as BenchReport;
-      const configReport = {
-        ...safeReport,
-        groups: entry.config.groups,
-        scenarios: entry.config.scenarios,
-        settings: entry.config.settings,
-      };
-      return {
-        ...entry,
-        report: safeReport,
-        config: {
-          env: {
-            apiKeyConfigured: Boolean(entry.config.env.apiKeyConfigured),
-            model: entry.config.env.model ?? DEFAULT_ENV.model,
-          },
-          groups: createBenchGroupsFromReport(configReport),
-          scenarios: createBenchScenariosFromReport(configReport),
-          settings: createBenchSettingsFromReport(configReport),
-        },
-      };
-    }).slice(0, BENCH_HISTORY_LIMIT);
+    const entries = migrateBenchHistoryEntries(parsed);
+    persistBenchHistory(entries);
+    return entries;
   } catch {
     return [];
   }
@@ -862,24 +879,9 @@ function readBenchHistory(): BenchHistoryEntry[] {
 
 function persistBenchHistory(entries: BenchHistoryEntry[]): void {
   try {
-    const persistableEntries = entries.slice(0, BENCH_HISTORY_LIMIT).map(
-      (entry) => ({
-        ...entry,
-        report: sanitizeBenchReportValue(entry.report),
-        config: {
-          groups: entry.config.groups,
-          scenarios: entry.config.scenarios,
-          settings: entry.config.settings,
-          env: {
-            apiKeyConfigured: entry.config.env.apiKeyConfigured,
-            model: entry.config.env.model,
-          },
-        },
-      }),
-    );
     window.localStorage.setItem(
       BENCH_HISTORY_STORAGE_KEY,
-      JSON.stringify(persistableEntries),
+      serializeBenchHistoryEntries(entries),
     );
   } catch {
     // History is a convenience layer; quota/private-mode failures should not
@@ -906,7 +908,7 @@ function createBenchHistoryEntry(
     id: createId('bench-history'),
     title: `${protocols.join(' + ')} · ${totalRuns} Runs`,
     savedAt: new Date().toISOString(),
-    report: sanitizeBenchReportValue(report) as BenchReport,
+    report: sanitizeBenchReportValue(report, [env.apiKey]) as BenchReport,
     config: {
       env: {
         apiKeyConfigured: Boolean(env.apiKey.trim())
@@ -971,14 +973,43 @@ function isSensitiveBenchReportKey(key: string): boolean {
     || normalized === 'screenshotdataurl';
 }
 
-function sanitizeBenchReportValue(value: unknown): unknown {
+function redactBenchReportString(
+  value: string,
+  secrets: readonly string[],
+): string {
+  let sanitized = value;
+  for (
+    const secret of new Set(
+      secrets.map((item) => item.trim()).filter(
+        Boolean,
+      ),
+    )
+  ) {
+    sanitized = sanitized.replaceAll(secret, '[redacted credential]');
+    const encoded = encodeURIComponent(secret);
+    if (encoded !== secret) {
+      sanitized = sanitized.replaceAll(encoded, '[redacted credential]');
+    }
+  }
+  return sanitized
+    .replace(/https?:\/\/[^\s"'<>]+/giu, '[redacted URL]')
+    .replace(/\bBearer\s+\S+/giu, 'Bearer [redacted]')
+    .replace(
+      /\b(?:OPENAI_API_KEY|API[_-]?KEY|AUTHORIZATION|ACCESS[_-]?TOKEN|SECRET)\s*[:=]\s*(?:"[^"]*"|'[^']*'|[^\s,;]+)/giu,
+      'credential=[redacted]',
+    )
+    .replace(/\b(?:sk-[\w-]{8,}|[\w+/=-]{32,})\b/gu, '[redacted credential]');
+}
+
+function sanitizeBenchReportValue(
+  value: unknown,
+  secrets: readonly string[] = [],
+): unknown {
   if (typeof value === 'string') {
-    return value
-      .replace(/https?:\/\/[^\s"'<>]+/giu, '[redacted URL]')
-      .replace(/Bearer\s+\S+/giu, 'Bearer [redacted]');
+    return redactBenchReportString(value, secrets);
   }
   if (Array.isArray(value)) {
-    return value.map((item) => sanitizeBenchReportValue(item));
+    return value.map((item) => sanitizeBenchReportValue(item, secrets));
   }
   if (!isRecord(value)) return value;
 
@@ -986,13 +1017,65 @@ function sanitizeBenchReportValue(value: unknown): unknown {
     Object.entries(value).flatMap(([key, item]) =>
       isSensitiveBenchReportKey(key)
         ? []
-        : [[key, sanitizeBenchReportValue(item)]]
+        : [[key, sanitizeBenchReportValue(item, secrets)]]
     ),
   );
 }
 
-export function serializeBenchReport(report: BenchReport): string {
-  return JSON.stringify(sanitizeBenchReportValue(report), null, 2);
+export function migrateBenchHistoryEntries(
+  value: unknown,
+): BenchHistoryEntry[] {
+  if (!Array.isArray(value)) return [];
+  return value.filter((entry) => isBenchHistoryEntry(entry)).map((entry) => {
+    const safeReport = sanitizeBenchReportValue(entry.report) as BenchReport;
+    const configReport = {
+      ...safeReport,
+      groups: entry.config.groups,
+      scenarios: entry.config.scenarios,
+      settings: entry.config.settings,
+    };
+    return {
+      ...entry,
+      report: safeReport,
+      config: {
+        env: {
+          apiKeyConfigured: Boolean(entry.config.env.apiKeyConfigured),
+          model: entry.config.env.model ?? DEFAULT_ENV.model,
+        },
+        groups: createBenchGroupsFromReport(configReport),
+        scenarios: createBenchScenariosFromReport(configReport),
+        settings: createBenchSettingsFromReport(configReport),
+      },
+    };
+  }).slice(0, BENCH_HISTORY_LIMIT);
+}
+
+export function serializeBenchHistoryEntries(
+  entries: BenchHistoryEntry[],
+): string {
+  const persistableEntries = entries.slice(0, BENCH_HISTORY_LIMIT).map(
+    (entry) => ({
+      ...entry,
+      report: sanitizeBenchReportValue(entry.report),
+      config: {
+        groups: entry.config.groups,
+        scenarios: entry.config.scenarios,
+        settings: entry.config.settings,
+        env: {
+          apiKeyConfigured: entry.config.env.apiKeyConfigured,
+          model: entry.config.env.model,
+        },
+      },
+    }),
+  );
+  return JSON.stringify(persistableEntries);
+}
+
+export function serializeBenchReport(
+  report: BenchReport,
+  secrets: readonly string[] = [],
+): string {
+  return JSON.stringify(sanitizeBenchReportValue(report, secrets), null, 2);
 }
 
 function readEventData<T>(event: MessageEvent<unknown>): T | null {
@@ -1272,7 +1355,7 @@ function findComparableBaseline(
   return controls.sort((left, right) => {
     return getBaselineCompatibilityScore(right, group)
       - getBaselineCompatibilityScore(left, group);
-  })[0] ?? groups[0];
+  })[0];
 }
 
 function getBenchGroupDifferences(
@@ -1311,14 +1394,17 @@ function inferBenchVariable(
   return 'custom';
 }
 
-function getBenchRunBlockers(
+export function getBenchRunBlockers(
   activeGroupCount: number,
+  enabledControlCount: number,
   scenarioCount: number,
   repeats: number,
 ): string[] {
   const issues: string[] = [];
   if (activeGroupCount === 0) {
     issues.push('至少启用一个对比组。');
+  } else if (enabledControlCount === 0) {
+    issues.push('至少启用一个基准组。');
   }
   if (scenarioCount === 0) {
     issues.push('至少添加一个场景。');
@@ -1461,17 +1547,22 @@ export function BenchPage({ showHeader = true }: BenchPageProps) {
   const screenshotDialogRef = useRef<HTMLElement | null>(null);
   // eslint-disable-next-line n/no-unsupported-features/node-builtins
   const eventSourceRef = useRef<EventSource | null>(null);
-  const benchAbortRef = useRef<AbortController | null>(null);
   const historyReportAbortRef = useRef<AbortController | null>(null);
   const activeJobIdRef = useRef<string | null>(null);
+  const pendingCancellationJobIdsRef = useRef<Set<string>>(new Set());
+  const benchOperationIdRef = useRef(0);
 
   const activeGroups = useMemo(
     () => groups.filter((group) => group.enabled),
     [groups],
   );
-  const controlGroupCount = useMemo(
+  const configuredControlGroupCount = useMemo(
     () => groups.filter((group) => group.role === 'control').length,
     [groups],
+  );
+  const enabledControlGroupCount = useMemo(
+    () => activeGroups.filter((group) => group.role === 'control').length,
+    [activeGroups],
   );
   const runGroups = useMemo(
     () =>
@@ -1530,35 +1621,78 @@ export function BenchPage({ showHeader = true }: BenchPageProps) {
     () =>
       getBenchRunBlockers(
         activeGroups.length,
+        enabledControlGroupCount,
         scenarios.length,
         settings.repeats,
       ),
-    [activeGroups.length, scenarios.length, settings.repeats],
+    [
+      activeGroups.length,
+      enabledControlGroupCount,
+      scenarios.length,
+      settings.repeats,
+    ],
   );
 
   const clearActiveJobConnection = useCallback(() => {
     eventSourceRef.current?.close();
     eventSourceRef.current = null;
-    benchAbortRef.current?.abort();
-    benchAbortRef.current = null;
     historyReportAbortRef.current?.abort();
     historyReportAbortRef.current = null;
   }, []);
 
-  const cancelActiveBenchJob = useCallback(() => {
-    const jobId = activeJobIdRef.current;
-    activeJobIdRef.current = null;
-    clearActiveJobConnection();
-    if (!jobId) return;
-    void window.fetch(getA2UIBenchJobEndpoint(jobId), {
-      method: 'DELETE',
-    }).catch(() => {
-      // Cancellation is best-effort; resetting the local runner must still
-      // work if the server has already finalized or expired the job.
-    });
-  }, [clearActiveJobConnection]);
+  const cancelBenchJobs = useCallback(async (
+    jobIds: readonly string[],
+    notify: boolean,
+  ): Promise<boolean> => {
+    const uniqueJobIds = [...new Set(jobIds)];
+    for (const jobId of uniqueJobIds) {
+      pendingCancellationJobIdsRef.current.add(jobId);
+    }
+    const results = await Promise.all(
+      uniqueJobIds.map(async (jobId) => ({
+        jobId,
+        disposition: await requestBenchJobCancellation(jobId),
+      })),
+    );
+    const failedJobIds: string[] = [];
+    for (const result of results) {
+      if (result.disposition === 'cleared') {
+        pendingCancellationJobIdsRef.current.delete(result.jobId);
+        if (activeJobIdRef.current === result.jobId) {
+          activeJobIdRef.current = null;
+        }
+      } else {
+        failedJobIds.push(result.jobId);
+      }
+    }
+    if (notify && failedJobIds.length > 0) {
+      setRunMessage(
+        `Job ${failedJobIds[0].slice(0, 8)} 尚未取消，请再次重置重试`,
+      );
+    }
+    return failedJobIds.length === 0;
+  }, []);
 
-  useEffect(() => clearActiveJobConnection, [clearActiveJobConnection]);
+  const cancelActiveBenchJob = useCallback((options?: {
+    invalidatePendingStart?: boolean;
+    notify?: boolean;
+  }): Promise<boolean> => {
+    if (options?.invalidatePendingStart !== false) {
+      benchOperationIdRef.current += 1;
+    }
+    const jobId = activeJobIdRef.current;
+    clearActiveJobConnection();
+    const jobIds = [...pendingCancellationJobIdsRef.current];
+    if (jobId) jobIds.push(jobId);
+    if (jobIds.length === 0) return Promise.resolve(true);
+    return cancelBenchJobs(jobIds, options?.notify !== false);
+  }, [cancelBenchJobs, clearActiveJobConnection]);
+
+  useEffect(() => {
+    return () => {
+      void cancelActiveBenchJob({ notify: false });
+    };
+  }, [cancelActiveBenchJob]);
 
   useEffect(() => {
     if (
@@ -1752,7 +1886,7 @@ export function BenchPage({ showHeader = true }: BenchPageProps) {
   const loadGroupPreset = useCallback((
     preset: BenchGroupPreset,
   ) => {
-    cancelActiveBenchJob();
+    void cancelActiveBenchJob();
     const presetGroups = getBenchGroupPreset(preset);
     setGroups(cloneBenchGroups(presetGroups));
     if (preset === 'protocol-pair' || preset === 'combined') {
@@ -1858,7 +1992,7 @@ export function BenchPage({ showHeader = true }: BenchPageProps) {
   }, []);
 
   const resetBench = useCallback(() => {
-    cancelActiveBenchJob();
+    void cancelActiveBenchJob();
     setEnv(DEFAULT_ENV);
     setGroups(EMPTY_GROUPS);
     setScenarios(DEFAULT_SCENARIOS);
@@ -1902,18 +2036,36 @@ export function BenchPage({ showHeader = true }: BenchPageProps) {
       loadBenchHealth();
       return;
     }
-    cancelActiveBenchJob();
+    const operationId = ++benchOperationIdRef.current;
     setStatus('running');
     setProgress(0);
-    setRunMessage('正在创建 Bench 任务…');
+    setRunMessage(
+      activeJobIdRef.current || pendingCancellationJobIdsRef.current.size > 0
+        ? '正在停止上一项 Bench 任务…'
+        : '正在创建 Bench 任务…',
+    );
     setReport(null);
     setReportPlanSignature(null);
     setScreenshotsOpen(false);
 
-    const controller = new AbortController();
-    benchAbortRef.current = controller;
-
     void (async () => {
+      const previousJobsCancelled = await cancelActiveBenchJob({
+        invalidatePendingStart: false,
+      });
+      if (
+        !previousJobsCancelled
+        || benchOperationIdRef.current !== operationId
+      ) {
+        if (
+          !previousJobsCancelled
+          && benchOperationIdRef.current === operationId
+        ) {
+          setStatus('failed');
+        }
+        return;
+      }
+
+      setRunMessage('正在创建 Bench 任务…');
       try {
         const jobsEndpoint = getA2UIBenchJobsEndpoint();
         const response = await window.fetch(jobsEndpoint, {
@@ -1937,7 +2089,6 @@ export function BenchPage({ showHeader = true }: BenchPageProps) {
             groups: runGroups,
             scenarios,
           }),
-          signal: controller.signal,
         });
 
         const payload = await response.json().catch(
@@ -1949,7 +2100,28 @@ export function BenchPage({ showHeader = true }: BenchPageProps) {
           );
         }
 
+        if (
+          shouldCancelCreatedBenchJob(
+            operationId,
+            benchOperationIdRef.current,
+          )
+        ) {
+          activeJobIdRef.current ??= payload.jobId;
+          const cancelled = await cancelBenchJobs(
+            [payload.jobId],
+            benchOperationIdRef.current === operationId,
+          );
+          if (
+            !cancelled
+            && benchOperationIdRef.current === operationId
+          ) {
+            setStatus('failed');
+          }
+          return;
+        }
+
         activeJobIdRef.current = payload.jobId;
+        pendingCancellationJobIdsRef.current.delete(payload.jobId);
         setRunMessage(
           payload.warnings && payload.warnings.length > 0
             ? payload.warnings[0]
@@ -1963,6 +2135,12 @@ export function BenchPage({ showHeader = true }: BenchPageProps) {
         // eslint-disable-next-line n/no-unsupported-features/node-builtins
         const source = new EventSource(eventsUrl);
         eventSourceRef.current = source;
+        const clearTerminalJob = () => {
+          pendingCancellationJobIdsRef.current.delete(payload.jobId);
+          if (activeJobIdRef.current === payload.jobId) {
+            activeJobIdRef.current = null;
+          }
+        };
 
         const updateProgress = (
           progressPayload: BenchJobSnapshot['progress'],
@@ -2005,13 +2183,14 @@ export function BenchPage({ showHeader = true }: BenchPageProps) {
           updateProgress(snapshot.progress);
           if (snapshot.status === 'failed') {
             setStatus('failed');
-            activeJobIdRef.current = null;
+            clearTerminalJob();
             setRunMessage(snapshot.error ?? 'Bench 任务失败');
           } else if (snapshot.status === 'cancelled') {
             setStatus('cancelled');
-            activeJobIdRef.current = null;
+            clearTerminalJob();
             setRunMessage('Bench 任务已取消');
           } else if (snapshot.status === 'complete') {
+            clearTerminalJob();
             setProgress(100);
           }
         });
@@ -2052,7 +2231,7 @@ export function BenchPage({ showHeader = true }: BenchPageProps) {
             return next;
           });
           setStatus(nextReport.status ?? 'complete');
-          activeJobIdRef.current = null;
+          clearTerminalJob();
           setProgress(100);
           setRunMessage(
             nextReport.summary && nextReport.summary.failedRuns > 0
@@ -2076,24 +2255,34 @@ export function BenchPage({ showHeader = true }: BenchPageProps) {
             return;
           }
           setStatus('failed');
-          activeJobIdRef.current = null;
+          const normalizedMessage = message?.toLowerCase();
+          if (
+            normalizedMessage?.includes('not found')
+            || normalizedMessage?.includes('not-found')
+          ) {
+            clearTerminalJob();
+          }
           setRunMessage(message ?? 'Bench 数据流已断开');
           source.close();
           if (eventSourceRef.current === source) eventSourceRef.current = null;
         });
       } catch (error) {
-        if (controller.signal.aborted) return;
+        if (
+          shouldCancelCreatedBenchJob(
+            operationId,
+            benchOperationIdRef.current,
+          )
+        ) {
+          return;
+        }
         setStatus('failed');
         setRunMessage(getErrorMessage(error));
-      } finally {
-        if (benchAbortRef.current === controller) {
-          benchAbortRef.current = null;
-        }
       }
     })();
   }, [
     benchRunBlockers.length,
     cancelActiveBenchJob,
+    cancelBenchJobs,
     env,
     loadBenchHealth,
     providerConfigured,
@@ -2105,11 +2294,13 @@ export function BenchPage({ showHeader = true }: BenchPageProps) {
 
   const copyReport = useCallback(async () => {
     if (!report) return;
-    const copied = await copyToClipboard(serializeBenchReport(report));
+    const copied = await copyToClipboard(
+      serializeBenchReport(report, [env.apiKey]),
+    );
     if (!copied) return;
     setCopyState('copied');
     window.setTimeout(() => setCopyState('idle'), 1200);
-  }, [report]);
+  }, [env.apiKey, report]);
 
   const copyHistoryRecoveryUrl = useCallback(
     async (entry: BenchHistoryEntry) => {
@@ -2126,7 +2317,7 @@ export function BenchPage({ showHeader = true }: BenchPageProps) {
   );
 
   const restoreHistoryEntry = useCallback((entry: BenchHistoryEntry) => {
-    cancelActiveBenchJob();
+    void cancelActiveBenchJob();
     const restoredEnv = {
       ...env,
       model: entry.config.env.model,
@@ -2582,7 +2773,7 @@ export function BenchPage({ showHeader = true }: BenchPageProps) {
                           aria-pressed={group.role === role}
                           disabled={role === 'experiment'
                             && group.role === 'control'
-                            && controlGroupCount === 1}
+                            && configuredControlGroupCount === 1}
                           key={role}
                           onClick={() =>
                             updateGroup(group.id, groupPatch('role', role))}
