@@ -200,7 +200,10 @@ describe('enableMTSRendering: false', () => {
           source: {
             entry: {
               main: fileURLToPath(
-                new URL('./fixtures/lazy-bundle/index.tsx', import.meta.url),
+                new URL(
+                  './fixtures/mts-rendering-lazy/index.tsx',
+                  import.meta.url,
+                ),
               ),
             },
           },
