@@ -6,6 +6,8 @@ import { fileURLToPath, pathToFileURL } from 'node:url';
 
 import { afterEach, describe, expect, rs, test } from '@rstest/core';
 
+import { supportNapi } from '@lynx-js/tasm';
+
 import encode from '../src/worker/encode.js';
 
 const context = path.dirname(fileURLToPath(import.meta.url));
@@ -47,16 +49,16 @@ function isEncodeTraceRow(value: unknown): value is EncodeTraceRow {
 
 // The encode trace is printed by `@lynx-js/tasm`'s native binding, and that
 // package ships prebuilt binaries for two platforms only (`build/darwin`,
-// `build/linux`) behind its own gate
-// `process.platform === 'darwin' || (process.platform === 'linux' && process.arch === 'x64')`.
-// Anywhere else `getEncodeMode()` falls back to wasm, which emits no trace and
-// no `console.table` — so on Windows the trace assertion is testing a capability
-// the platform does not have, not `encode`'s behaviour. Only the test that
-// consumes real trace output is gated; the rest use the mock TASM and run
-// everywhere.
-const hasNativeTasm = process.platform === 'darwin'
-  || (process.platform === 'linux' && process.arch === 'x64');
-const testWithNativeTasm = hasNativeTasm ? test : test.skip;
+// `build/linux`). Anywhere else `getEncodeMode()` falls back to wasm, which
+// emits neither the trace header nor the `console.table` — so on Windows the
+// trace assertion is testing a capability the platform does not have, not
+// `encode`'s behaviour.
+//
+// Ask tasm rather than restating its rule: a local copy of the predicate would
+// go stale by SKIPPING a test that should run, and a skip turns nothing red.
+// Only the case that consumes real trace output is gated; the rest use the mock
+// TASM and run everywhere.
+const testWithNativeTasm = supportNapi() ? test : test.skip;
 
 describe('encode worker trace configuration', () => {
   afterEach(() => {
