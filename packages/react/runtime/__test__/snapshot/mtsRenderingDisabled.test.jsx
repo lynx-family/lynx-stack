@@ -51,6 +51,58 @@ describe('__ENABLE_MTS_RENDERING__ false', () => {
     `);
   });
 
+  it('replaces a pre-hydration root fallback with the background content', async () => {
+    globalThis.__ENABLE_MTS_RENDERING__ = false;
+    // `resetEnv` does not reset the mock — drop the earlier tests' first-screen
+    // payloads so the background hydrates against THIS render's root.
+    globalThis.__OnLifecycleEvent.mockClear();
+
+    // What the `mts-rendering-disabled` entry does when the assembled defines
+    // name a root `<Background>` fallback: link an instance under the root
+    // before `renderPage` builds the elements.
+    const fallback = new SnapshotInstance('view');
+    __root.insertBefore(fallback);
+    renderPage();
+
+    // The first frame is the fallback, not an empty page.
+    expect(__root.__element_root).toMatchInlineSnapshot(`
+      <page
+        cssId="default-entry-from-native:0"
+      >
+        <view />
+      </page>
+    `);
+
+    // The background renders the real tree; the first-screen hydration diff
+    // sees the unmatched fallback instance and replaces it.
+    globalEnvManager.switchToBackground();
+    render(<Comp />, __root);
+    lynx.getNativeApp().callLepusMethod.mockClear();
+
+    lynxCoreInject.tt.OnLifecycleEvent(...globalThis.__OnLifecycleEvent.mock.calls[0]);
+    globalThis.__OnLifecycleEvent.mockClear();
+
+    globalEnvManager.switchToMainThread();
+    const rLynxChange = lynx.getNativeApp().callLepusMethod.mock.calls[0];
+    globalThis[rLynxChange[0]](rLynxChange[1]);
+    rLynxChange[2]();
+    await waitSchedule();
+
+    expect(elementTree.root).toMatchInlineSnapshot(`
+      <page
+        cssId="default-entry-from-native:0"
+      >
+        <view>
+          <text>
+            <raw-text
+              text="Hello"
+            />
+          </text>
+        </view>
+      </page>
+    `);
+  });
+
   it('should hydrate the empty main-thread root into the full tree', async () => {
     globalThis.__ENABLE_MTS_RENDERING__ = false;
 

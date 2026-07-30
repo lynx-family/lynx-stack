@@ -170,3 +170,49 @@ describe('renderLazyMTSDefines', () => {
     );
   });
 });
+
+describe('root-fallback defines', () => {
+  it('renders as a setter call instead of a code block', () => {
+    const code = renderMTSDefines([
+      snapshot('__snapshot_a'),
+      { kind: 'root-fallback', id: '__snapshot_a', code: '' },
+    ]);
+
+    expect(code).toContain(
+      'typeof ReactLynx.__setRootMTSFallback === \'function\' && '
+        + 'ReactLynx.__setRootMTSFallback("__snapshot_a");',
+    );
+  });
+
+  it('dedupes with the same kind:id key as the other defines', () => {
+    const defines = collect([{
+      modules: [
+        asModule({
+          id: 'a',
+          defines: [
+            snapshot('__snapshot_a'),
+            { kind: 'root-fallback', id: '__snapshot_a', code: '' },
+          ],
+        }),
+        asModule({
+          id: 'b',
+          defines: [{ kind: 'root-fallback', id: '__snapshot_a', code: '' }],
+        }),
+      ],
+    }]);
+
+    expect(defines).toHaveLength(2);
+  });
+
+  it('never reaches a lazy bundle section', () => {
+    const code = renderLazyMTSDefines(
+      [
+        snapshot('a'),
+        { kind: 'root-fallback', id: '__snapshot_a', code: '' },
+      ],
+      'lynx:lazy/main-thread.js',
+    );
+
+    expect(code).not.toContain('__setRootMTSFallback');
+  });
+});

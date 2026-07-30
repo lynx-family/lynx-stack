@@ -81,3 +81,68 @@ describe('main-thread defines entry', () => {
     await expect(importMTSDefines()).resolves.not.toThrow();
   });
 });
+
+describe('root fallback', () => {
+  it('renders the fallback the defines name as the pre-hydration root content', async () => {
+    globalThis.__initMTSDefines = (runtime) => {
+      runtime.snapshotCreatorMap['__snapshot_test_fallback_1'] = (id) =>
+        runtime.createSnapshot(
+          id,
+          () => [__CreateView(runtime.__pageId)],
+          null,
+          [],
+          undefined,
+          undefined,
+          null,
+          true,
+        );
+      if (typeof runtime.__setRootMTSFallback === 'function') {
+        runtime.__setRootMTSFallback('__snapshot_test_fallback_1');
+      }
+    };
+
+    await importMTSDefines();
+
+    const { __root } = await import('../../src/root');
+    expect(__root.childNodes).toHaveLength(1);
+    expect(__root.childNodes[0].type).toBe('__snapshot_test_fallback_1');
+  });
+
+  it('keeps the first declared fallback when a stray second one arrives', async () => {
+    globalThis.__initMTSDefines = (runtime) => {
+      const creator = (id) =>
+        runtime.createSnapshot(
+          id,
+          () => [__CreateView(runtime.__pageId)],
+          null,
+          [],
+          undefined,
+          undefined,
+          null,
+          true,
+        );
+      runtime.snapshotCreatorMap['__snapshot_first_1'] = creator;
+      runtime.snapshotCreatorMap['__snapshot_second_1'] = creator;
+      runtime.__setRootMTSFallback('__snapshot_first_1');
+      runtime.__setRootMTSFallback('__snapshot_second_1');
+    };
+
+    await importMTSDefines();
+
+    const { __root } = await import('../../src/root');
+    expect(__root.childNodes.map((node) => node.type)).toEqual([
+      '__snapshot_first_1',
+    ]);
+  });
+
+  it('degrades to an empty root when the named definition is missing', async () => {
+    globalThis.__initMTSDefines = (runtime) => {
+      runtime.__setRootMTSFallback('__snapshot_not_generated_1');
+    };
+
+    await importMTSDefines();
+
+    const { __root } = await import('../../src/root');
+    expect(__root.childNodes).toHaveLength(0);
+  });
+});

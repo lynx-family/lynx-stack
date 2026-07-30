@@ -6,6 +6,8 @@ import { createRequire } from 'node:module';
 import type { LoaderDefinitionFunction } from '@rspack/core';
 
 import { MTS_DEFINES_BUILD_INFO } from '../MTSDefinesRuntimeModule.js';
+import type { MTSDefine } from '../MTSDefinesRuntimeModule.js';
+import { extractRootBackgroundFallback } from './extractRootBackgroundFallback.js';
 import { getBackgroundTransformOptions } from './options.js';
 import type { ReactLoaderOptions } from './options.js';
 
@@ -92,7 +94,21 @@ const backgroundLoader: LoaderDefinitionFunction<ReactLoaderOptions> = function(
     _module?: { buildInfo?: Record<string, unknown> };
   })._module?.buildInfo;
   if (buildInfo && result.mtsDefines) {
-    buildInfo[MTS_DEFINES_BUILD_INFO] = result.mtsDefines;
+    const mtsDefines: MTSDefine[] = [...result.mtsDefines as MTSDefine[]];
+
+    // A module that renders a root-level `<Background>` (the entry) may
+    // declare a static `fallback`. Its snapshot definition already travels
+    // through the defines above — record its id as an extra `root-fallback`
+    // define, so the assembled main-thread bundle can render it as the
+    // pre-hydration first frame.
+    const fallback = extractRootBackgroundFallback(result.code);
+    if (fallback?.id !== undefined) {
+      mtsDefines.push({ kind: 'root-fallback', id: fallback.id, code: '' });
+    } else if (fallback?.warning !== undefined) {
+      this.emitWarning(new Error(fallback.warning));
+    }
+
+    buildInfo[MTS_DEFINES_BUILD_INFO] = mtsDefines;
   }
 
   this.callback(null, result.code, result.map);

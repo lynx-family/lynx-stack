@@ -181,3 +181,135 @@ describe('background loader', () => {
     expect(result.code).toMatch(/_et_[a-f0-9]{12}(?![a-f0-9])/);
   });
 });
+
+describe('background loader root-fallback collection', () => {
+  function runWithBuildInfo(
+    content: string,
+    options: Record<string, unknown>,
+  ): Promise<{
+    code: string;
+    buildInfo: Record<string, unknown>;
+    warnings: Error[];
+  }> {
+    return new Promise((resolve, reject) => {
+      const loaderPath = path.resolve(
+        __dirname,
+        '../lib/loaders/background.js',
+      );
+
+      import(loaderPath).then(
+        (
+          mod: {
+            default: (
+              this: Record<string, unknown>,
+              content: string,
+              sourceMap?: string,
+            ) => void;
+          },
+        ) => {
+          const buildInfo: Record<string, unknown> = {};
+          const warnings: Error[] = [];
+          const ctx: Record<string, unknown> = {
+            getOptions: () => options,
+            resourcePath: path.resolve(__dirname, 'index.tsx'),
+            rootContext: __dirname,
+            sourceMap: false,
+            hot: false,
+            experiments: undefined,
+            _module: { buildInfo },
+            emitError: (err: Error) => reject(err),
+            emitWarning: (err: Error) => void warnings.push(err),
+            callback: (err: Error | null, code?: string) => {
+              if (err) reject(err);
+              else resolve({ code: code!, buildInfo, warnings });
+            },
+          };
+
+          mod.default.call(ctx, content, undefined);
+        },
+      ).catch(reject);
+    });
+  }
+
+  const rootBackgroundEntry = `
+    import { Background, root } from '@lynx-js/react';
+    root.render(
+      <Background fallback={<view><text>skeleton</text></view>}>
+        <view><text>app</text></view>
+      </Background>,
+    );
+  `;
+
+  it('records the root fallback snapshot as an extra define', async () => {
+    const { buildInfo, warnings } = await runWithBuildInfo(
+      rootBackgroundEntry,
+      {
+        engineVersion: '3.2',
+        enableMTSRendering: false,
+      },
+    );
+
+    const defines = buildInfo['lynx:mts-defines'] as
+      | { kind: string; id: string }[]
+      | undefined;
+    expect(defines).toBeDefined();
+
+    const rootFallback = defines!.filter(({ kind }) =>
+      kind === 'root-fallback'
+    );
+    expect(rootFallback).toHaveLength(1);
+    expect(rootFallback[0]!.id).toMatch(/^__snapshot_/);
+    // The named snapshot is one of the collected definitions.
+    expect(
+      defines!.some(({ kind, id }) =>
+        kind === 'snapshot' && id === rootFallback[0]!.id
+      ),
+    ).toBe(true);
+    expect(warnings).toHaveLength(0);
+  });
+
+  it('collects nothing extra without a root <Background>', async () => {
+    const { buildInfo } = await runWithBuildInfo(
+      `
+        import { root } from '@lynx-js/react';
+        root.render(<view><text>app</text></view>);
+      `,
+      { engineVersion: '3.2', enableMTSRendering: false },
+    );
+
+    const defines = buildInfo['lynx:mts-defines'] as
+      | { kind: string }[]
+      | undefined;
+    expect(defines).toBeDefined();
+    expect(defines!.every(({ kind }) => kind !== 'root-fallback')).toBe(true);
+  });
+
+  it('warns instead of collecting a non-static fallback', async () => {
+    const { buildInfo, warnings } = await runWithBuildInfo(
+      `
+        import { Background, root } from '@lynx-js/react';
+        const Spinner = () => <view />;
+        root.render(
+          <Background fallback={<Spinner />}>
+            <view><text>app</text></view>
+          </Background>,
+        );
+      `,
+      { engineVersion: '3.2', enableMTSRendering: false },
+    );
+
+    const defines = buildInfo['lynx:mts-defines'] as
+      | { kind: string }[]
+      | undefined;
+    expect(defines!.every(({ kind }) => kind !== 'root-fallback')).toBe(true);
+    expect(warnings.map(String).join('\n')).toMatch(/static host elements/);
+  });
+
+  it('leaves modules alone when MTS rendering stays on', async () => {
+    const { buildInfo } = await runWithBuildInfo(rootBackgroundEntry, {
+      engineVersion: '3.2',
+    });
+
+    expect(buildInfo['lynx:mts-defines']).toBeUndefined();
+  });
+});
