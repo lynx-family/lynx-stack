@@ -7,8 +7,11 @@ import { renderToStaticMarkup } from 'react-dom/server';
 
 import {
   createBenchJobCancellationRequestInit,
+  getBenchGroupDisplayName,
   getBenchJobCancellationDisposition,
   getBenchRunBlockers,
+  getBenchRunMessageText,
+  getBenchScenarioDisplayName,
   readBenchHistory,
   serializeBenchHistoryEntries,
   serializeBenchReport,
@@ -41,6 +44,55 @@ describe('BenchRunnerPage', () => {
     expect(markup).not.toContain('Phase 02');
     expect(markup).not.toContain('A2UI Bench');
     expect(markup).not.toContain('phase-2-runner');
+  });
+
+  test('renders the complete runner chrome in English', () => {
+    const markup = renderToStaticMarkup(
+      React.createElement(BenchRunnerPage, { locale: 'en-US' }),
+    );
+
+    expect(markup).toContain(
+      'Combine Protocol, Model, Prompt, and Catalog freely in one run plan.',
+    );
+    expect(markup).toContain('Comparison groups');
+    expect(markup).toContain('Load preset');
+    expect(markup).toContain('Run Bench');
+    expect(markup).toContain('Run settings');
+    expect(markup).toContain('Shared scenarios');
+    expect(markup).toContain('Waiting for Bench data');
+    expect(markup).not.toContain('对比组');
+    expect(markup).not.toContain('运行设置');
+    expect(markup).not.toMatch(/[\u3400-\u9fff]/u);
+  });
+
+  test('re-renders system state for a zh-CN to en-US locale switch', () => {
+    const message = { code: 'preset-loaded' } as const;
+    const group = {
+      name: '默认 Prompt',
+      systemName: 'default-prompt',
+    } as const;
+    const scenario = {
+      name: '自定义场景',
+      systemName: 'custom-scenario',
+    } as const;
+
+    expect(getBenchRunMessageText(message, 'zh-CN')).toBe('已载入预设');
+    expect(getBenchRunMessageText(message, 'en-US')).toBe('Preset loaded');
+    expect(getBenchGroupDisplayName(group, 'zh-CN')).toBe('默认 Prompt');
+    expect(getBenchGroupDisplayName(group, 'en-US')).toBe('Default Prompt');
+    expect(getBenchScenarioDisplayName(scenario, 'zh-CN')).toBe('自定义场景');
+    expect(getBenchScenarioDisplayName(scenario, 'en-US')).toBe(
+      'Custom scenario',
+    );
+
+    const userText = { code: 'raw', text: '用户自定义状态' } as const;
+    const customGroup = { name: '我的实验组' };
+    const customScenario = { name: '我的场景' };
+    expect(getBenchRunMessageText(userText, 'en-US')).toBe('用户自定义状态');
+    expect(getBenchGroupDisplayName(customGroup, 'en-US')).toBe('我的实验组');
+    expect(getBenchScenarioDisplayName(customScenario, 'en-US')).toBe(
+      '我的场景',
+    );
   });
 
   test('ignores stale and aborted report recovery requests', () => {
@@ -81,6 +133,9 @@ describe('BenchRunnerPage', () => {
     );
     expect(getBenchRunBlockers(1, 1, 1, 1)).not.toContain(
       '至少启用一个基准组。',
+    );
+    expect(getBenchRunBlockers(1, 0, 1, 1, 'en-US')).toContain(
+      'Enable at least one baseline group.',
     );
   });
 
