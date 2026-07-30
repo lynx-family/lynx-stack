@@ -146,7 +146,7 @@ pnpm dev
 
 The server listens on `[::]:3000` by default. Node uses this IPv6 unspecified
 address as a dual-stack listener, accepting both IPv6 and IPv4 connections.
-Override the bind address and port with `HOST` and `LYNX_USE_PORT`.
+Override the bind address and port with `LYNX_USE_HOST` and `LYNX_USE_PORT`.
 
 Set `GENUI_HTTP2=1` to start a cleartext HTTP/2 (h2c) server instead of the
 default HTTP/1 server. HTTP transport adaptation, including HTTP/2
@@ -173,8 +173,8 @@ pnpm --filter a2ui-server start
 At the package root, `./start.sh` provides the production entry point. It
 checks for a supported Node.js 22 or 24 runtime and the built server artifact
 before launching the same `dist/index.js`. The launcher and server directly
-consume `HOST` and `LYNX_USE_PORT`, preserving direct overrides and the
-dual-stack `[::]:3000` default.
+consume `LYNX_USE_HOST` and `LYNX_USE_PORT`, preserving direct overrides and
+the dual-stack `[::]:3000` default.
 
 Each protocol module default-exports a Hono sub-application. `src/app.ts`
 assembles them, owns path and method matching, and supplies shared 404, 405,

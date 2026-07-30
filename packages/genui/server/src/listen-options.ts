@@ -28,7 +28,7 @@ export function resolveListenOptions(
   env: Readonly<NodeJS.ProcessEnv>,
 ): ListenOptions {
   return {
-    hostname: env.HOST ?? DEFAULT_HOST,
+    hostname: env.LYNX_USE_HOST ?? DEFAULT_HOST,
     port: readPort(env.LYNX_USE_PORT, 'LYNX_USE_PORT'),
   };
 }
