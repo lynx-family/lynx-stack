@@ -2,14 +2,12 @@
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
 
+import { Hono } from 'hono';
+
 import { isOfficialOpenAIBaseURL } from '../../../agent/openai-utils';
-import { corsPreflight, jsonWithCors } from '../../common/cors';
+import { jsonWithCors } from '../../common/cors';
 
-export function OPTIONS(req: Request) {
-  return corsPreflight(req);
-}
-
-export function GET(req: Request) {
+function getA2UIHealth(req: Request) {
   const {
     OPENAI_API_KEY,
     OPENAI_API_STYLE,
@@ -31,3 +29,9 @@ export function GET(req: Request) {
     api,
   });
 }
+
+const route = new Hono();
+
+route.get('/', (context) => getA2UIHealth(context.req.raw));
+
+export default route;

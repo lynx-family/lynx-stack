@@ -142,10 +142,14 @@ export function buildResourceRunOptions(
   return pickDefined({ resourceId: opts.resourceId, abortSignal });
 }
 
-export function buildOpenAIRunOptions(opts: ChatOptions) {
+export function buildOpenAIRunOptions(
+  opts: ChatOptions,
+  abortSignal?: AbortSignal,
+) {
   const reasoningEffort = resolveReasoningEffort(opts);
   return pickDefined({
     resourceId: opts.resourceId,
+    abortSignal,
     providerOptions: reasoningEffort
       ? { openai: { reasoningEffort } }
       : undefined,

@@ -85,6 +85,8 @@ interface BenchResult {
   renderMs: number;
   attempts: number;
   judgeScore: number;
+  judgeStatus?: 'complete' | 'failed' | 'skipped';
+  judgeWarnings?: string[];
   messageCount?: number;
   outputChars?: number;
   errors?: string[];
@@ -105,6 +107,7 @@ interface BenchGroupSummary {
   avgTtiMs: number;
   avgRenderMs: number;
   avgJudgeScore: number;
+  judgeRunCount?: number;
   avgAttempts: number;
 }
 
@@ -846,9 +849,11 @@ function getRunMetaText(
 function formatReportJudgeMetric(report: BenchReport | null): string {
   if (report?.capabilities?.judge === 'disabled') return 'off';
   if (!report || report.summaries.length === 0) return 'n/a';
-  return `${
-    average(report.summaries.map((item) => item.avgJudgeScore)).toFixed(1)
-  }/5`;
+  const judged = report.summaries.filter((item) =>
+    item.judgeRunCount === undefined || item.judgeRunCount > 0
+  );
+  if (judged.length === 0) return 'n/a';
+  return `${average(judged.map((item) => item.avgJudgeScore)).toFixed(1)}/5`;
 }
 
 function formatSummaryJudgeMetric(
@@ -859,6 +864,7 @@ function formatSummaryJudgeMetric(
   if (!settings.judgeEnabled || report.capabilities?.judge === 'disabled') {
     return 'off';
   }
+  if (summary.judgeRunCount === 0) return 'n/a';
   return `${summary.avgJudgeScore.toFixed(1)}/5`;
 }
 
@@ -870,6 +876,8 @@ function formatRunJudgeMetric(
   if (!settings.judgeEnabled || report.capabilities?.judge === 'disabled') {
     return 'off';
   }
+  if (result.judgeStatus === 'failed') return 'error';
+  if (result.judgeStatus === 'skipped') return 'n/a';
   return `${result.judgeScore.toFixed(1)}/5`;
 }
 
@@ -1734,7 +1742,9 @@ export function BenchPage({ showHeader = true }: BenchPageProps) {
 
   const topJudge = useMemo(() => {
     if (!report || report.capabilities?.judge === 'disabled') return null;
-    return [...report.summaries].sort(
+    return report.summaries.filter((item) =>
+      item.judgeRunCount === undefined || item.judgeRunCount > 0
+    ).sort(
       (a, b) => b.avgJudgeScore - a.avgJudgeScore,
     )[0] ?? null;
   }, [report]);

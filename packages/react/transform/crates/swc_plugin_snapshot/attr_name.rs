@@ -1,6 +1,5 @@
-use regex::Regex;
-
 use swc_core::ecma::ast::*;
+use swc_plugins_shared::lynx_event::parse_lynx_event_attribute_name;
 
 #[derive(Debug, Clone)]
 pub enum AttrName {
@@ -75,15 +74,11 @@ impl AttrName {
 }
 
 fn get_event_type_and_name(props_key: &str) -> Option<(String, String)> {
-  let re = Regex::new(r"^(global-bind|bind|catch|capture-bind|capture-catch)([A-Za-z]+)$").unwrap();
-  if let Some(captures) = re.captures(props_key) {
-    let event_type = if captures.get(1).unwrap().as_str().contains("capture") {
-      captures.get(1).unwrap().as_str().to_string()
-    } else {
-      format!("{}Event", captures.get(1).unwrap().as_str())
-    };
-    let event_name = captures.get(2).unwrap().as_str().to_string();
-    return Some((event_type, event_name));
-  }
-  None
+  let (event_type, event_name) = parse_lynx_event_attribute_name(props_key)?;
+  let event_type = if event_type.contains("capture") {
+    event_type.to_string()
+  } else {
+    format!("{event_type}Event")
+  };
+  Some((event_type, event_name.to_string()))
 }

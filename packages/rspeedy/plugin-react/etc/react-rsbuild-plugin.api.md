@@ -80,6 +80,7 @@ export interface PluginReactLynxOptions {
     engineVersion?: string;
     // @alpha
     experimental_isLazyBundle?: boolean;
+    experimental_transformBuiltinAttributeNames?: boolean | TransformBuiltinAttributeNamesOptions;
     experimental_useElementTemplate?: boolean;
     extractStr?: Partial<ExtractStrConfig> | boolean;
     firstScreenSyncTiming?: 'immediately' | 'jsReady' | 'manual';
@@ -103,5 +104,12 @@ export interface ShakeVisitorConfig {
 }
 
 export { TemplateHooks }
+
+// @public
+export interface TransformBuiltinAttributeNamesOptions {
+    mode?: 'dash-case' | 'mapping-only'
+    preserve?: ReadonlyArray<string>
+    rename?: Readonly<Record<string, string>>
+}
 
 ```
