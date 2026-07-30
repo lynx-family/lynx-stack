@@ -9,3 +9,4 @@
  */
 
 export { RuntimeGlobals } from './RuntimeGlobals.js';
+export { deriveLynxHostId } from './deriveLynxHostId.js';

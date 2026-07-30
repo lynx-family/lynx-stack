@@ -10,7 +10,10 @@ import type {
   RuntimeModule,
 } from '@rspack/core';
 
-import { RuntimeGlobals } from '@lynx-js/webpack-runtime-globals';
+import {
+  RuntimeGlobals,
+  deriveLynxHostId,
+} from '@lynx-js/webpack-runtime-globals';
 
 type LynxAsyncChunksRuntimeModule = new(
   getFilenameTemplate: (chunk: Chunk) => string | undefined,
@@ -216,8 +219,19 @@ export function createLynxAsyncChunksRuntimeModule(
         )
         .join(',\n');
 
+      // The compile-time host id of this runtime chunk's entry. Chunk loading
+      // passes it as the `host` of a nested lazy-bundle import;
+      // `LynxProcessEvalResultRuntimeModule` (react-webpack-plugin) keys
+      // `processEvalResultByHost` with the same derivation.
+      const hostId = deriveLynxHostId(
+        compilation.outputOptions?.uniqueName,
+        chunk.runtime,
+      );
+
       const idsBlock = `// lynx async chunks ids
-${RuntimeGlobals.lynxAsyncChunkIds} = {${ids}}`;
+${RuntimeGlobals.lynxAsyncChunkIds} = {${ids}}
+// lynx host id
+${RuntimeGlobals.lynxHostId} = ${JSON.stringify(hostId)}`;
       if (modes.length === 0) {
         return idsBlock;
       }

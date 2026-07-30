@@ -432,7 +432,7 @@ class ReactWebpackPlugin {
           createLynxProcessEvalResultRuntimeModule(compiler.webpack);
         compilation.addRuntimeModule(
           chunk,
-          new LynxProcessEvalResultRuntimeModule(),
+          new LynxProcessEvalResultRuntimeModule(options.lazyBundleFetcher),
         );
       });
 
@@ -553,13 +553,30 @@ class ReactWebpackPlugin {
                   compilation.updateAsset(
                     file,
                     old =>
-                      new ConcatSource(
-                        `(function (globDynamicComponentEntry) {\n`,
-                        `  const module = { exports: {} }\n`,
-                        `  const exports = module.exports;\n`,
-                        old,
-                        `\n  ;return module.exports\n})`,
-                      ),
+                      options.lazyBundleFetcher === 'FetchBundle'
+                        // Same shell as the external-bundle main-thread
+                        // wrapper (`MainThreadRuntimeWrapperWebpackPlugin`):
+                        // a parameterless self-invoking IIFE whose completion
+                        // value is the exports. `lynx.loadScript` evaluates
+                        // the chunk as a program in the shared main-thread
+                        // realm, so the IIFE scopes the webpack bootstrap's
+                        // top-level bindings, which would otherwise clobber
+                        // the page's. The chunk needs no entry: FetchBundle
+                        // snapshot uids are content-hashed literals.
+                        ? new ConcatSource(
+                          `(function () {\n`,
+                          `  const module = { exports: {} }\n`,
+                          `  const exports = module.exports;\n`,
+                          old,
+                          `\n  ;return module.exports\n})()`,
+                        )
+                        : new ConcatSource(
+                          `(function (globDynamicComponentEntry) {\n`,
+                          `  const module = { exports: {} }\n`,
+                          `  const exports = module.exports;\n`,
+                          old,
+                          `\n  ;return module.exports\n})`,
+                        ),
                   );
                 }
               });

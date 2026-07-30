@@ -2,7 +2,8 @@
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
 
-import { SECTION_CSS, SECTION_MAIN_THREAD } from './lazyBundleConstants.js';
+import { SECTION_CSS } from './lazyBundleConstants.js';
+import { loadMainThreadSection } from '../../core/lynx/main-thread-section.js';
 import { LifecycleConstant } from '../lifecycle/constant.js';
 
 const cache = new Set<string>();
@@ -28,20 +29,16 @@ function prepareLazyBundleMTS(payload: { url: string; host?: string }): void {
     // A subsequent `loadScript` throw below is a BG-only bundle (deterministic,
     // not retryable), so caching here is still correct.
     cache.add(url);
-    let loaded: unknown;
-    try {
-      const evaluate = lynx.loadScript<(entry: string) => unknown>(
-        SECTION_MAIN_THREAD,
-        { bundleName: response.url },
-      );
-      loaded = evaluate(url);
-    } catch {
+    const loaded = loadMainThreadSection(response.url);
+    if (loaded === undefined) {
       // BG-only bundle (no main-thread section)
       return;
     }
-    // Route to the loading `host`'s handler — the chunk's modules install into
-    // that host's registry. No host (e.g. a standalone component loaded
-    // directly, self-contained in its own registry) → nothing to install here.
+    // Route to the loading `host`'s handler — the chunk's modules install
+    // into that host's registry, keyed by the compile-time host id chunk
+    // loading sent along. No host (e.g. a standalone component loaded
+    // directly, self-contained in its own registry) → nothing to install
+    // here.
     const processEvalResult = host == null
       ? undefined
       : (

@@ -40,10 +40,7 @@ describe('loadLazyBundle (FetchBundle) — main thread sync', () => {
 
   test('happy path: .wait → loadScript(main-thread) → CSS adopt → sync then', async () => {
     waitMock.mockReturnValueOnce({ code: 0, url: 'cached-url' });
-    // The main-thread bundle is wrapped as `(globDynamicComponentEntry) => exports`;
-    // the loader invokes it with the bundle's own `source`.
-    const mtEval = vi.fn(() => ({ default: 'MTChunk' }));
-    loadScript.mockReturnValueOnce(mtEval);
+    loadScript.mockReturnValueOnce({ default: 'MTChunk' });
     loadStyleSheet.mockReturnValueOnce({ id: 'sheet' });
 
     const { loadLazyBundle } = await import(
@@ -57,8 +54,6 @@ describe('loadLazyBundle (FetchBundle) — main thread sync', () => {
     expect(loadScript).toHaveBeenCalledWith('main-thread', {
       bundleName: 'cached-url',
     });
-    // Invoked with the bundle's own url so its `globDynamicComponentEntry` is `foo`.
-    expect(mtEval).toHaveBeenCalledWith('foo');
     expect(loadStyleSheet).toHaveBeenCalledWith('CSS', 'cached-url');
     expect(adoptStyleSheet).toHaveBeenCalledWith({ id: 'sheet' });
 
@@ -163,9 +158,30 @@ describe('loadLazyBundle (FetchBundle) — main thread sync', () => {
     await Promise.resolve();
   });
 
+  test('stylesheet load throws → never-resolving', async () => {
+    waitMock.mockReturnValueOnce({ code: 0, url: 'x' });
+    loadScript.mockReturnValueOnce({ default: 'C' });
+    loadStyleSheet.mockImplementationOnce(() => {
+      throw new Error('CSS section blew up');
+    });
+
+    const { loadLazyBundle } = await import(
+      '../../../src/core/lynx/lazy-bundle'
+    );
+
+    const promise = loadLazyBundle('foo', 'sync');
+
+    expect(adoptStyleSheet).not.toHaveBeenCalled();
+    promise.then(
+      () => expect.fail('should not resolve'),
+      () => expect.fail('should not reject'),
+    );
+    await Promise.resolve();
+  });
+
   test('null stylesheet → chunk still resolved, no AdoptStyleSheet', async () => {
     waitMock.mockReturnValueOnce({ code: 0, url: 'x' });
-    loadScript.mockReturnValueOnce(() => ({ default: 'C' }));
+    loadScript.mockReturnValueOnce({ default: 'C' });
     loadStyleSheet.mockReturnValueOnce(null);
 
     const { loadLazyBundle } = await import(

@@ -124,11 +124,18 @@ export function snapshotPatchApply(snapshotPatch: SnapshotPatch): void {
           const uniqID = snapshotPatch[++i] as string;
           const entryName = snapshotPatch[++i] as string;
 
-          // HMR-related
-          // Update the evaluated snapshot entryName from JS.
-          snapshotCreatorMap[uniqID] = evaluate<(uniqId: string) => string>(
-            snapshotCreatorMap[uniqID]!.toString().replace(/globDynamicComponentEntry/g, JSON.stringify(entryName)),
-          );
+          if (
+            typeof __LAZY_BUNDLE_FETCHER__ === 'undefined'
+            || __LAZY_BUNDLE_FETCHER__ !== 'FetchBundle'
+          ) {
+            // HMR-related
+            // Update the evaluated snapshot entryName from JS. FetchBundle
+            // creators embed a literal entry name, so there is nothing to
+            // rebind there and the branch compiles away.
+            snapshotCreatorMap[uniqID] = evaluate<(uniqId: string) => string>(
+              snapshotCreatorMap[uniqID]!.toString().replace(/globDynamicComponentEntry/g, JSON.stringify(entryName)),
+            );
+          }
         }
         break;
       }

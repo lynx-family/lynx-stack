@@ -6,6 +6,7 @@ import type { RsbuildPluginAPI, Rspack } from '@rsbuild/core'
 import { LAYERS, ReactWebpackPlugin } from '@lynx-js/react-webpack-plugin'
 
 import type { PluginReactLynxOptions } from './pluginReactLynx.js'
+import { resolveLazyBundleFetcher } from './resolveLazyBundleFetcher.js'
 
 // The transforms an `es2019` SWC target lowers (ES2020+ syntax), expressed as
 // an explicit `env.include` so the main thread no longer relies on
@@ -61,6 +62,8 @@ function getLoaderOptions(
     compat,
     enableRemoveCSSScope,
     isDynamicComponent: experimental_isLazyBundle,
+    isExternalBundle:
+      resolveLazyBundleFetcher(options.targetSdkVersion) === 'FetchBundle',
     inlineSourcesContent,
     defineDCE,
     engineVersion,

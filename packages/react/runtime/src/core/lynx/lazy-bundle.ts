@@ -8,7 +8,8 @@
 // sync with `snapshot/lifecycle/constant.ts`'s
 // `LifecycleConstant.prepareLazyBundleMTS`, the lifecycle name the snapshot
 // backend registers the main-thread prepare handler under.
-const SECTION_MAIN_THREAD = 'main-thread';
+import { loadMainThreadSection } from './main-thread-section.js';
+
 const SECTION_BACKGROUND = 'background';
 const SECTION_CSS = 'CSS';
 const LYNX_LAZY_SYNC_TIMEOUT_SECONDS = 5;
@@ -216,9 +217,13 @@ export const loadLazyBundle: <
       }
       let result: T;
       try {
-        result = lynx.loadScript<(entry: string) => T>(SECTION_MAIN_THREAD, {
-          bundleName: response.url,
-        })(source);
+        const loaded = loadMainThreadSection(response.url);
+        if (loaded === undefined) {
+          // A sync bundle without a main-thread section cannot first-screen
+          // render.
+          return new Promise(() => {});
+        }
+        result = loaded as T;
         const styleSheet = __LoadStyleSheet(SECTION_CSS, response.url);
         if (styleSheet !== null) {
           __AdoptStyleSheet(styleSheet);

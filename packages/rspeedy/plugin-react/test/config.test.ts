@@ -418,6 +418,7 @@ describe('Config', () => {
         "experimental_useElementTemplate": false,
         "inlineSourcesContent": true,
         "isDynamicComponent": false,
+        "isExternalBundle": false,
       }
     `)
   })
@@ -591,6 +592,7 @@ describe('Config', () => {
         "experimental_useElementTemplate": false,
         "inlineSourcesContent": true,
         "isDynamicComponent": false,
+        "isExternalBundle": false,
       }
     `)
 

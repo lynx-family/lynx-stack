@@ -90,21 +90,23 @@ async function build(
 }
 
 describe('ReactWebpackPlugin: lazyBundleFetcher', () => {
-  test('FetchBundle: main-thread chunk wrapped as parameterised non-IIFE', async () => {
-    // FetchBundle uses the same wrapper as QueryComponent: the loader invokes
-    // it with the bundle's own url as `globDynamicComponentEntry` (per-host
-    // module routing), rather than self-invoking with a hardcoded '__Card__'.
+  test('FetchBundle: main-thread chunk is a self-invoking scope shield', async () => {
+    // The legacy parameterised wrapper contract is gone, and the chunk never
+    // references `globDynamicComponentEntry`: snapshot uids are
+    // content-hashed literals and host routing uses compile-time ids. A
+    // parameterless IIFE scopes the webpack bootstrap's top-level bindings,
+    // which would otherwise clobber the page's globals in the shared
+    // main-thread realm.
     const { mainThread } = await build({ lazyBundleFetcher: 'FetchBundle' });
-    expect(mainThread).not.toContain(
-      `var globDynamicComponentEntry = '__Card__'`,
+    expect(mainThread).not.toContain('globDynamicComponentEntry');
+    expect(mainThread.trimStart().startsWith('(function () {')).toBe(true);
+    // `processEvalResultByHost` is keyed by the compile-time host id
+    // (`uniqueName#entryName`), not by the runtime entry.
+    expect(mainThread).toMatch(
+      /globalThis\.processEvalResultByHost = \{\}\)\)\["[^"]*#main"\]/,
     );
-    expect(
-      mainThread.trimStart().startsWith(
-        '(function (globDynamicComponentEntry) {',
-      ),
-    ).toBe(true);
-    // Importantly: NOT self-invoking.
-    expect(mainThread.trimEnd().endsWith('})()')).toBe(false);
+    // Importantly: self-invoking — the loader never calls the eval result.
+    expect(mainThread.trimEnd().endsWith('})()')).toBe(true);
   });
 
   test('QueryComponent (default): main-thread chunk wrapped as parameterised non-IIFE', async () => {
@@ -120,19 +122,31 @@ describe('ReactWebpackPlugin: lazyBundleFetcher', () => {
     expect(mainThread.trimEnd().endsWith('})')).toBe(true);
     // Importantly: NOT self-invoking.
     expect(mainThread.trimEnd().endsWith('})()')).toBe(false);
+    // The legacy protocol keeps the runtime-entry registration key.
+    expect(mainThread).toContain(
+      'globalThis.processEvalResultByHost = {}))[globDynamicComponentEntry]',
+    );
   });
 
   describe('__LAZY_BUNDLE_FETCHER__ define injection', () => {
     test('FetchBundle: define replaces references with literal "FetchBundle"', async () => {
       const { background } = await build({ lazyBundleFetcher: 'FetchBundle' });
       expect(background).toContain('"FetchBundle"');
-      expect(background).not.toContain('__LAZY_BUNDLE_FETCHER__');
+      // The probe reference is replaced (the raw token may still appear in
+      // bundled runtime comments).
+      expect(background).not.toContain(
+        '__lynx_fetcher_probe__ = __LAZY_BUNDLE_FETCHER__',
+      );
     });
 
     test('QueryComponent (default): define replaces references with literal "QueryComponent"', async () => {
       const { background } = await build({});
       expect(background).toContain('"QueryComponent"');
-      expect(background).not.toContain('__LAZY_BUNDLE_FETCHER__');
+      // The probe reference is replaced (the raw token may still appear in
+      // bundled runtime comments).
+      expect(background).not.toContain(
+        '__lynx_fetcher_probe__ = __LAZY_BUNDLE_FETCHER__',
+      );
     });
   });
 });
