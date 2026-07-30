@@ -3,7 +3,7 @@
 // LICENSE file in the root directory of this source tree.
 
 const DEFAULT_PORT = 3_000;
-const DEFAULT_HOST = '0.0.0.0';
+const DEFAULT_HOST = '::';
 
 export interface ListenOptions {
   hostname: string;
@@ -28,7 +28,7 @@ export function resolveListenOptions(
   env: Readonly<NodeJS.ProcessEnv>,
 ): ListenOptions {
   return {
-    hostname: env.HOST ?? DEFAULT_HOST,
+    hostname: env.LYNX_USE_HOST ?? DEFAULT_HOST,
     port: readPort(env.LYNX_USE_PORT, 'LYNX_USE_PORT'),
   };
 }

@@ -14,6 +14,8 @@ Build `genui-server` as an executable ESM Hono server through `rslib.config.ts`.
 
 Read the server port from `LYNX_USE_PORT`, defaulting to `3000`; do not use `PORT` as a compatibility fallback.
 
+Read the bind address from `LYNX_USE_HOST`, defaulting to the IPv6 unspecified address `::` so Node accepts both IPv6 and IPv4 connections through its dual-stack listener; do not use `HOST` as a compatibility fallback. Format IPv6 addresses with brackets when logging HTTP URLs.
+
 Derive CORS preflight and 405 `Allow` behavior from the composed Hono application's route table after mounting sub-applications. Do not maintain a second hand-written route and method inventory.
 
 Every SSE route that starts model generation must propagate both `Request.signal` aborts and response-stream cancellation to the upstream model call. Guard enqueues and stream closure against reader cancellation, remove abort listeners during cleanup, and cover the disconnect path with a test.
