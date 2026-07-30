@@ -54,8 +54,6 @@ export async function applyDefaultPlugins(
       pluginOutput(config.output)
     ),
 
-    import('./resolve.plugin.js').then(({ pluginResolve }) => pluginResolve()),
-
     import('./rsdoctor.plugin.js').then(({ pluginRsdoctor }) =>
       pluginRsdoctor(config.tools?.rsdoctor)
     ),
