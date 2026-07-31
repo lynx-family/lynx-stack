@@ -61,7 +61,7 @@ const EXPERIMENT_LABELS = {
 const EVIDENCE = {
   models: {
     title: '模型对比结果拼图',
-    description: '4 个模型 × 3 个场景',
+    description: '3 个模型 × 3 个场景',
     src: MODEL_EVIDENCE_URL,
   },
   prompts: {
