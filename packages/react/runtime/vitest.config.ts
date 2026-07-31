@@ -89,6 +89,10 @@ export default defineConfig({
         replacement: path.resolve(__dirname, './src/element-template/index.ts'),
       },
       { find: '@lynx-js/react/internal', replacement: path.resolve(__dirname, './src/internal.ts') },
+      {
+        find: /^@lynx-js\/react-signals\/lepus$/,
+        replacement: path.resolve(__dirname, '../../react-signals/src/mainThread.ts'),
+      },
       { find: '@lynx-js/react/jsx-dev-runtime', replacement: path.resolve(__dirname, './jsx-dev-runtime/index.js') },
       { find: '@lynx-js/react/jsx-runtime', replacement: path.resolve(__dirname, './jsx-runtime/index.js') },
       { find: /^@lynx-js\/react\/hooks$/, replacement: path.resolve(__dirname, './src/core/hooks/react.ts') },

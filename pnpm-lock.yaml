@@ -192,9 +192,9 @@ importers:
       '@lynx-js/react':
         specifier: workspace:*
         version: link:../../packages/react
-      '@preact/signals':
-        specifier: ^2.9.4
-        version: 2.9.4(@lynx-js/internal-preact@10.29.1-20260519060144-e6da44c)
+      '@lynx-js/react-signals':
+        specifier: workspace:*
+        version: link:../../packages/react-signals
       benchx_cli:
         specifier: workspace:*
         version: link:../../packages/lynx/benchx_cli
@@ -232,9 +232,6 @@ importers:
       '@types/react':
         specifier: ^19.2.17
         version: 19.2.17
-      preact:
-        specifier: catalog:lynxjs
-        version: '@lynx-js/internal-preact@10.29.1-20260519060144-e6da44c'
 
   examples/gesture:
     dependencies:
@@ -787,12 +784,12 @@ importers:
       '@lynx-js/lynx-ui':
         specifier: '>=3.133.0'
         version: 3.133.0(@lynx-js/react@packages+react)(@lynx-js/types@4.0.0)(@types/react@18.3.28)(react-dom@19.2.8(react@19.2.8))(react@19.2.8)
+      '@lynx-js/react-signals':
+        specifier: workspace:*
+        version: link:../react-signals
       '@openuidev/lang-core':
         specifier: ^0.2.9
         version: 0.2.9(@modelcontextprotocol/sdk@1.29.0(supports-color@10.2.2)(zod@4.4.3))(zod@4.4.3)
-      '@preact/signals':
-        specifier: ^2.9.4
-        version: 2.9.4(@lynx-js/internal-preact@10.29.1-20260519060144-e6da44c)
       typedoc:
         specifier: ^0.28.20
         version: 0.28.20(typescript@6.0.3)
@@ -830,18 +827,15 @@ importers:
       '@lynx-js/rspeedy':
         specifier: workspace:^
         version: link:../rspeedy/core
-      preact:
-        specifier: catalog:lynxjs
-        version: '@lynx-js/internal-preact@10.29.1-20260519060144-e6da44c'
 
   packages/genui/a2ui:
     dependencies:
       '@a2ui/web_core':
         specifier: 0.10.5
         version: 0.10.5
-      '@preact/signals':
-        specifier: ^2.9.4
-        version: 2.9.4(@lynx-js/internal-preact@10.29.1-20260519060144-e6da44c)
+      '@lynx-js/react-signals':
+        specifier: workspace:*
+        version: link:../../react-signals
     devDependencies:
       '@lynx-js/genui-cli':
         specifier: workspace:*
@@ -861,9 +855,6 @@ importers:
       '@types/react':
         specifier: ^19.2.17
         version: 19.2.17
-      preact:
-        specifier: catalog:lynxjs
-        version: '@lynx-js/internal-preact@10.29.1-20260519060144-e6da44c'
 
   packages/genui/a2ui-catalog-extractor:
     dependencies:
@@ -1217,6 +1208,25 @@ importers:
         specifier: ^19.2.17
         version: 19.2.17
 
+  packages/react-signals:
+    dependencies:
+      '@preact/signals':
+        specifier: ^2.9.4
+        version: 2.9.4(@lynx-js/internal-preact@10.29.1-20260519060144-e6da44c)
+      '@preact/signals-core':
+        specifier: ^1.14.4
+        version: 1.14.4
+    devDependencies:
+      '@lynx-js/react':
+        specifier: workspace:*
+        version: link:../react
+      '@rslib/core':
+        specifier: catalog:rslib
+        version: 1.0.0-beta.1(@microsoft/api-extractor@7.58.12(@types/node@24.13.3))(core-js@3.49.0)(typescript@7.0.2)
+      preact:
+        specifier: catalog:lynxjs
+        version: '@lynx-js/internal-preact@10.29.1-20260519060144-e6da44c'
+
   packages/react-umd:
     devDependencies:
       '@lynx-js/lynx-bundle-rslib-config':
@@ -1255,6 +1265,9 @@ importers:
       '@lynx-js/react':
         specifier: workspace:*
         version: link:..
+      '@lynx-js/react-signals':
+        specifier: workspace:*
+        version: link:../../react-signals
       '@lynx-js/react-transform':
         specifier: workspace:*
         version: link:../transform
@@ -1279,15 +1292,15 @@ importers:
       '@lynx-js/react-rsbuild-plugin':
         specifier: workspace:*
         version: link:../../rspeedy/plugin-react
+      '@lynx-js/react-signals':
+        specifier: workspace:*
+        version: link:../../react-signals
       '@lynx-js/rspeedy':
         specifier: workspace:*
         version: link:../../rspeedy/core
       '@lynx-js/testing-environment':
         specifier: workspace:*
         version: link:../../testing-library/testing-environment
-      '@preact/signals':
-        specifier: ^2.9.4
-        version: 2.9.4(@lynx-js/internal-preact@10.29.1-20260519060144-e6da44c)
       '@rsbuild/core':
         specifier: catalog:rsbuild
         version: 2.1.7(core-js@3.49.0)
@@ -1300,9 +1313,6 @@ importers:
       '@testing-library/jest-dom':
         specifier: ^6.9.1
         version: 6.9.1
-      preact:
-        specifier: catalog:lynxjs
-        version: '@lynx-js/internal-preact@10.29.1-20260519060144-e6da44c'
 
   packages/react/transform:
     devDependencies:
