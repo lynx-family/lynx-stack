@@ -17,9 +17,11 @@
     "@lynx-js/react-rsbuild-plugin": "workspace:*",
     "@lynx-js/rspeedy": "workspace:*",
     "@lynx-js/testing-environment": "workspace:*",
+    "@preact/signals": "^2.9.4",
     "@rsbuild/core": "catalog:rsbuild",
     "@rstest/adapter-rsbuild": "catalog:rstest",
     "@testing-library/dom": "^10.4.1",
-    "@testing-library/jest-dom": "^6.9.1"
+    "@testing-library/jest-dom": "^6.9.1",
+    "preact": "catalog:lynxjs"
   }
 }
