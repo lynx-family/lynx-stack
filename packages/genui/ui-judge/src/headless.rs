@@ -93,6 +93,12 @@ pub(crate) struct CapturedPage {
   url: String,
 }
 
+impl CapturedPage {
+  pub(crate) fn screenshot_data_url(&self) -> String {
+    png_data_url(&self.png)
+  }
+}
+
 #[derive(Debug, Clone, Default, PartialEq, Eq)]
 pub(crate) struct PageLoadOptions {
   pub(crate) global_props_json: Option<String>,

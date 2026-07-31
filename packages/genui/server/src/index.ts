@@ -22,8 +22,9 @@ const server = serve(
   },
   ({ address, port }) => {
     const protocol = HTTP2_ENABLED ? 'HTTP/2' : 'HTTP/1';
+    const formattedAddress = address.includes(':') ? `[${address}]` : address;
     console.info(
-      `GenUI ${protocol} server listening on http://${address}:${port}`,
+      `GenUI ${protocol} server listening on http://${formattedAddress}:${port}`,
     );
   },
 );

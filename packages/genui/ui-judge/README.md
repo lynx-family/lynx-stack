@@ -136,9 +136,10 @@ from the caller's environment. Linux hosts must also provide the
 
 `LYNX_USE_PORT` defaults to `8080` and must be between `1` and `65535`. The
 process listens on both `0.0.0.0:{LYNX_USE_PORT}` and
-`[::]:{LYNX_USE_PORT}`. Use `GET /health` for a readiness check,
-`POST /judge` to evaluate a page, and `POST /compare` to compare two uploaded
-images without rendering a page or calling the VLM.
+`[::]:{LYNX_USE_PORT}`. Use `GET /health` for a readiness check and the
+non-secret configured model name, `POST /judge` to evaluate a page, and
+`POST /compare` to compare two uploaded images without rendering a page or
+calling the VLM.
 
 The following request evaluates a local bundle. `url` and `task` are required.
 The other fields are optional. `initialData` and `globalProps` accept JSON
@@ -159,6 +160,7 @@ curl --request POST http://127.0.0.1:8080/judge \
     },
     "reference": null,
     "referenceImage": null,
+    "includeScreenshot": true,
     "steps": ["Tap the Save button"],
     "screenshotSettleMs": 16,
     "timeoutMs": 60000
@@ -182,14 +184,17 @@ It normalizes and compares the uploads on the bounded visual worker pool; it
 does not enqueue headless capture, initialize a model client, render a Lynx
 page, or perform VLM scoring.
 
-The `/judge` response is a JSON-encoded `UiJudgeResult`. A completed evaluation
-returns HTTP `200`, including evaluation failures reported in the result's
-`error` field. Invalid HTTP input returns `400`, `413`, or `422`. The server
-returns `503` when its bounded capture queue is full or the headless worker is
-no longer available. A headless-worker panic makes readiness return `503`,
-initiates graceful shutdown, and is propagated as a server error after the
-worker is joined. Each uploaded comparison image is limited to 10 MiB. Request
-bodies are limited to 20 MiB plus 64 KiB of multipart overhead.
+The `/judge` response contains the JSON-encoded `UiJudgeResult`. When
+`includeScreenshot` is true and capture succeeds, it additionally contains the
+exact judged PNG as `screenshotDataUrl`; the field is omitted by default to
+avoid inflating ordinary responses. A completed evaluation returns HTTP `200`,
+including evaluation failures reported in the result's `error` field. Invalid
+HTTP input returns `400`, `413`, or `422`. The server returns `503` when its
+bounded capture queue is full or the headless worker is no longer available. A
+headless-worker panic makes readiness return `503`, initiates graceful
+shutdown, and is propagated as a server error after the worker is joined. Each
+uploaded comparison image is limited to 10 MiB. Request bodies are limited to
+20 MiB plus 64 KiB of multipart overhead.
 
 The server accepts connections concurrently. It keeps native Lynx capture on a
 dedicated current-thread runtime because the renderer is thread-bound. After a

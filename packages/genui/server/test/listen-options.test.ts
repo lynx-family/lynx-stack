@@ -7,9 +7,9 @@ import { describe, expect, test } from '@rstest/core';
 import { resolveListenOptions } from '../src/listen-options.js';
 
 describe('resolveListenOptions', () => {
-  test('reads HOST and LYNX_USE_PORT', () => {
+  test('reads LYNX_USE_HOST and LYNX_USE_PORT', () => {
     expect(resolveListenOptions({
-      HOST: '127.0.0.1',
+      LYNX_USE_HOST: '127.0.0.1',
       LYNX_USE_PORT: '4321',
     })).toEqual({
       hostname: '127.0.0.1',
@@ -19,7 +19,25 @@ describe('resolveListenOptions', () => {
 
   test('uses the server defaults when no listen environment is provided', () => {
     expect(resolveListenOptions({})).toEqual({
-      hostname: '0.0.0.0',
+      hostname: '::',
+      port: 3_000,
+    });
+  });
+
+  test('accepts an explicit IPv6 host', () => {
+    expect(resolveListenOptions({
+      LYNX_USE_HOST: '::1',
+    })).toEqual({
+      hostname: '::1',
+      port: 3_000,
+    });
+  });
+
+  test('does not use HOST as a compatibility fallback', () => {
+    expect(resolveListenOptions({
+      HOST: '127.0.0.1',
+    })).toEqual({
+      hostname: '::',
       port: 3_000,
     });
   });

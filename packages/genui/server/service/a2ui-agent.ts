@@ -40,6 +40,11 @@ import type {
 
 export interface A2UIChatOptions extends ChatOptions {
   catalog?: A2UICatalog | undefined;
+  /**
+   * Create an agent for this call without retaining request-scoped provider
+   * credentials in the shared provider cache.
+   */
+  disableAgentCache?: boolean | undefined;
   maxRepairAttempts?: number | undefined;
 }
 
@@ -71,13 +76,15 @@ export default class A2UIAgentService {
 
   private async getAgent(opts: A2UIChatOptions): Promise<A2UIAgent> {
     const catalog = opts.catalog ?? await loadBasicCatalog();
+    const createAgent = () =>
+      createA2UIAgent({
+        ...pickProviderConfig(opts),
+        catalog,
+      }).then(({ agent }) => agent);
+    if (opts.disableAgentCache) return createAgent();
     return this.agentCache.get(
       opts,
-      () =>
-        createA2UIAgent({
-          ...pickProviderConfig(opts),
-          catalog,
-        }).then(({ agent }) => agent),
+      createAgent,
       `${catalog.id}:${createStableValueHash(catalog)}`,
     );
   }

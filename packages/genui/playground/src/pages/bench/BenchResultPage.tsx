@@ -61,7 +61,7 @@ const EXPERIMENT_LABELS = {
 const EVIDENCE = {
   models: {
     title: '模型对比结果拼图',
-    description: '4 个模型 × 3 个场景',
+    description: '3 个模型 × 3 个场景',
     src: MODEL_EVIDENCE_URL,
   },
   prompts: {
@@ -443,10 +443,6 @@ export function BenchResultPage() {
             <p>{report.conclusion}</p>
           </div>
           <p className='benchStudyHeroContext'>{report.description}</p>
-          <div className='benchStudyHeroActions'>
-            <a href='#/bench'>打开 Runner</a>
-            <a href='#/bench/phase-2'>查看 Phase 02 计划</a>
-          </div>
         </div>
 
         <dl className='benchStudyScope' aria-label='实验范围'>

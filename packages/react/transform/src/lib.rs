@@ -231,8 +231,9 @@ pub struct TransformNodiffOptions {
    * `onCatchTap` becomes `catchtap`, other `onXXX` names become `bindxxx`,
    * and remaining camelCase names become dash-case. An object provides
    * serializable custom rules.
-   * Currently, only explicit JSX attributes are transformed during compilation.
-   * Runtime transformation of spread attributes is planned for a future release.
+   * Explicit JSX attributes are transformed during compilation. Attributes
+   * supplied through JSX spreads are transformed by the runtime with the same
+   * rules.
    *
    * @experimental
    */

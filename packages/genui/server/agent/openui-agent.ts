@@ -5,15 +5,22 @@
 import { Agent } from '@mastra/core/agent';
 
 import { buildOpenUiSystemPrompt } from '@lynx-js/genui-openui/openui-prompt';
+import type {
+  BuildOpenUiSystemPromptOptions,
+} from '@lynx-js/genui-openui/openui-prompt';
 
 import { createLLMProvider } from './openai-provider';
 import type { OpenAIProviderOptions } from './openai-provider';
 
 export interface OpenUIAgentOptions extends OpenAIProviderOptions {
+  promptComponentNames?: readonly string[] | undefined;
+  promptOptions?: BuildOpenUiSystemPromptOptions['promptOptions'];
+  promptRoot?: string | undefined;
   systemAppendix?: string | undefined;
 }
 
 interface OpenUIAgentRunOptions {
+  abortSignal?: AbortSignal | undefined;
   resourceId?: string | undefined;
 }
 
@@ -31,9 +38,18 @@ export interface OpenUIAgent {
 export function createOpenUIAgent(opts: OpenUIAgentOptions = {}) {
   const { buildModel, model } = createLLMProvider(opts);
   const instructions = buildOpenUiSystemPrompt(
-    opts.systemAppendix === undefined
-      ? {}
-      : { appendix: opts.systemAppendix },
+    {
+      ...(opts.promptComponentNames === undefined
+        ? {}
+        : { componentNames: opts.promptComponentNames }),
+      ...(opts.promptOptions === undefined
+        ? {}
+        : { promptOptions: opts.promptOptions }),
+      ...(opts.promptRoot === undefined ? {} : { root: opts.promptRoot }),
+      ...(opts.systemAppendix === undefined
+        ? {}
+        : { appendix: opts.systemAppendix }),
+    },
   );
 
   const agent = new Agent({
