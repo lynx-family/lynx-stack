@@ -25,6 +25,7 @@ import {
 } from '../components/Icon.js';
 import { PageHeader } from '../components/PageHeader.js';
 import { copyToClipboard } from '../utils/clipboard.js';
+import type { BenchLocale } from './bench/benchLocale.js';
 
 type BenchRole = 'control' | 'experiment';
 type BenchProtocol = 'a2ui' | 'openui';
@@ -37,6 +38,192 @@ type BenchVariable =
   | 'custom';
 type BenchStatus = 'idle' | 'running' | 'complete' | 'failed' | 'cancelled';
 type BenchScreenshotState = 'captured' | 'failed' | 'missing';
+type BenchGroupSystemName =
+  | 'a2ui'
+  | 'baseline'
+  | 'core-catalog'
+  | 'default-prompt'
+  | 'new-baseline'
+  | 'new-comparison'
+  | 'openui'
+  | 'token-efficient';
+type BenchScenarioSystemText =
+  | 'custom'
+  | 'custom-prompt'
+  | 'custom-scenario'
+  | 'primary-action';
+type BenchRunMessage =
+  | { code: 'bench-cancelled' }
+  | { code: 'bench-complete'; failedRuns?: number }
+  | { code: 'bench-failed' }
+  | { code: 'bench-request-failed'; status: number }
+  | { code: 'cancellation-failed'; jobId: string }
+  | { code: 'complete-report-loaded' }
+  | { code: 'creating-job' }
+  | { code: 'defaults-confirmation-required' }
+  | { code: 'history-report-loaded'; failedRuns?: number }
+  | { code: 'job-queued'; jobId: string }
+  | { code: 'loading-report'; jobId: string }
+  | { code: 'preset-loaded' }
+  | { code: 'raw'; text: string }
+  | { code: 'ready' }
+  | { code: 'reconnecting' }
+  | { code: 'report-load-failed'; status: number }
+  | { code: 'report-loaded'; failedRuns?: number }
+  | {
+    code: 'run-progress';
+    group?: Pick<BenchGroup, 'name' | 'systemName'>;
+    phase: string;
+    repeatIndex: number;
+    scenario?: Pick<BenchScenario, 'name' | 'systemName'>;
+  }
+  | { code: 'run-config-required' }
+  | { code: 'running' }
+  | { code: 'setup-restored-loading-report' }
+  | { code: 'setup-restored-report-unavailable' }
+  | { code: 'stopping-previous-job' }
+  | { code: 'stream-disconnected' };
+
+function benchText(
+  locale: BenchLocale,
+  chinese: string,
+  english: string,
+): string {
+  return locale === 'en-US' ? english : chinese;
+}
+
+export function getBenchRunMessageText(
+  message: BenchRunMessage,
+  locale: BenchLocale,
+): string {
+  switch (message.code) {
+    case 'bench-cancelled':
+      return benchText(locale, 'Bench 任务已取消', 'Bench job cancelled');
+    case 'bench-complete':
+      return message.failedRuns
+        ? benchText(
+          locale,
+          `Bench 完成 · ${message.failedRuns} 个失败 Run`,
+          `Bench complete · ${message.failedRuns} failed runs`,
+        )
+        : benchText(locale, 'Bench 完成', 'Bench complete');
+    case 'bench-failed':
+      return benchText(locale, 'Bench 任务失败', 'Bench job failed');
+    case 'bench-request-failed':
+      return benchText(
+        locale,
+        `Bench 请求失败：${message.status}`,
+        `Bench request failed: ${message.status}`,
+      );
+    case 'cancellation-failed':
+      return benchText(
+        locale,
+        `Job ${message.jobId} 尚未取消，请再次重置重试`,
+        `Job ${message.jobId} was not cancelled. Reset again to retry.`,
+      );
+    case 'complete-report-loaded':
+      return benchText(
+        locale,
+        '完整 Report 已载入',
+        'Complete report loaded',
+      );
+    case 'creating-job':
+      return benchText(locale, '正在创建 Bench 任务…', 'Creating Bench job…');
+    case 'defaults-confirmation-required':
+      return benchText(
+        locale,
+        '请确认使用服务端默认配置',
+        'Confirm that you want to use the server defaults',
+      );
+    case 'history-report-loaded':
+      return message.failedRuns
+        ? benchText(
+          locale,
+          `历史 Report 已载入 · ${message.failedRuns} 个失败 Run`,
+          `Saved report loaded · ${message.failedRuns} failed runs`,
+        )
+        : benchText(locale, '历史 Report 已载入', 'Saved report loaded');
+    case 'job-queued':
+      return benchText(
+        locale,
+        `Job ${message.jobId} 已进入队列`,
+        `Job ${message.jobId} queued`,
+      );
+    case 'loading-report':
+      return benchText(
+        locale,
+        `正在载入 Report ${message.jobId}…`,
+        `Loading report ${message.jobId}…`,
+      );
+    case 'preset-loaded':
+      return benchText(locale, '已载入预设', 'Preset loaded');
+    case 'raw':
+      return message.text;
+    case 'ready':
+      return benchText(locale, '准备就绪', 'Ready');
+    case 'reconnecting':
+      return benchText(
+        locale,
+        '正在重连 Bench 数据流…',
+        'Reconnecting to the Bench event stream…',
+      );
+    case 'report-load-failed':
+      return benchText(
+        locale,
+        `Report 载入失败：${message.status}`,
+        `Failed to load report: ${message.status}`,
+      );
+    case 'report-loaded':
+      return message.failedRuns
+        ? benchText(
+          locale,
+          `Report 已载入 · ${message.failedRuns} 个失败 Run`,
+          `Report loaded · ${message.failedRuns} failed runs`,
+        )
+        : benchText(locale, 'Report 已载入', 'Report loaded');
+    case 'run-config-required':
+      return benchText(
+        locale,
+        '请先完成运行配置',
+        'Complete the run setup first',
+      );
+    case 'run-progress': {
+      const groupName = message.group
+        ? getBenchGroupDisplayName(message.group, locale)
+        : benchText(locale, '对比组', 'Comparison group');
+      const scenarioName = message.scenario
+        ? getBenchScenarioDisplayName(message.scenario, locale)
+        : benchText(locale, '场景', 'Scenario');
+      return `${groupName} · ${scenarioName} · #${message.repeatIndex} · ${message.phase}`;
+    }
+    case 'running':
+      return benchText(locale, 'Bench 运行中…', 'Bench running…');
+    case 'setup-restored-loading-report':
+      return benchText(
+        locale,
+        '配置已恢复，正在载入完整 Report…',
+        'Setup restored. Loading the complete report…',
+      );
+    case 'setup-restored-report-unavailable':
+      return benchText(
+        locale,
+        '配置已恢复 · 完整 Report 暂不可用',
+        'Setup restored · Complete report unavailable',
+      );
+    case 'stopping-previous-job':
+      return benchText(
+        locale,
+        '正在停止上一项 Bench 任务…',
+        'Stopping the previous Bench job…',
+      );
+    case 'stream-disconnected':
+      return benchText(
+        locale,
+        'Bench 数据流已断开',
+        'Bench event stream disconnected',
+      );
+  }
+}
 
 interface BenchEnv {
   apiKey: string;
@@ -55,6 +242,7 @@ interface BenchGroup {
   catalog: string;
   extraInstruction: string;
   enabled: boolean;
+  systemName?: BenchGroupSystemName;
 }
 
 interface BenchScenario {
@@ -64,6 +252,10 @@ interface BenchScenario {
   type: string;
   complexity: number;
   action: string;
+  systemAction?: BenchScenarioSystemText;
+  systemName?: BenchScenarioSystemText;
+  systemPrompt?: BenchScenarioSystemText;
+  systemType?: BenchScenarioSystemText;
 }
 
 interface BenchSettings {
@@ -165,6 +357,10 @@ interface BenchHealth {
   api?: 'chat' | 'responses';
 }
 
+type BenchHealthError =
+  | { kind: 'raw'; message: string }
+  | { kind: 'status'; status: number };
+
 interface BenchJobCreated {
   ok?: boolean;
   jobId?: string;
@@ -243,6 +439,145 @@ type BenchReportSettingsPayload = Partial<BenchSettings> & {
   renderMetricsEnabled?: boolean;
 };
 
+function getBenchGroupSystemNameText(
+  systemName: BenchGroupSystemName,
+  locale: BenchLocale,
+): string {
+  switch (systemName) {
+    case 'default-prompt':
+      return benchText(locale, '默认 Prompt', 'Default Prompt');
+    case 'token-efficient':
+      return benchText(locale, 'Token 精简', 'Token Efficient');
+    case 'new-baseline':
+      return benchText(locale, '新基准组', 'New baseline');
+    case 'new-comparison':
+      return benchText(locale, '新对比组', 'New comparison');
+    case 'a2ui':
+      return 'A2UI';
+    case 'baseline':
+      return 'Baseline';
+    case 'core-catalog':
+      return 'Core Catalog';
+    case 'openui':
+      return 'OpenUI';
+  }
+}
+
+export function getBenchGroupDisplayName(
+  group: Pick<BenchGroup, 'name' | 'systemName'>,
+  locale: BenchLocale,
+): string {
+  return group.systemName
+    ? getBenchGroupSystemNameText(group.systemName, locale)
+    : group.name;
+}
+
+function isBenchGroupSystemNameText(
+  value: string,
+  systemName: BenchGroupSystemName,
+): boolean {
+  return value === getBenchGroupSystemNameText(systemName, 'zh-CN')
+    || value === getBenchGroupSystemNameText(systemName, 'en-US');
+}
+
+function inferBenchGroupSystemName(
+  group: Pick<BenchGroup, 'id' | 'name' | 'systemName'>,
+): BenchGroupSystemName | undefined {
+  if (group.systemName) return group.systemName;
+  const byId: Record<string, BenchGroupSystemName> = {
+    'control-a2ui-matched': 'a2ui',
+    'control-default': 'default-prompt',
+    'control-empty': 'baseline',
+    'experiment-core': 'core-catalog',
+    'experiment-openui-matched': 'openui',
+    'experiment-token': 'token-efficient',
+  };
+  const idMatch = byId[group.id];
+  if (idMatch && isBenchGroupSystemNameText(group.name, idMatch)) {
+    return idMatch;
+  }
+  return ([
+    'new-baseline',
+    'new-comparison',
+  ] as const).find((systemName) =>
+    isBenchGroupSystemNameText(group.name, systemName)
+  );
+}
+
+function restoreBenchGroupSystemNames(groups: BenchGroup[]): BenchGroup[] {
+  return groups.map((group) => ({
+    ...group,
+    systemName: inferBenchGroupSystemName(group),
+  }));
+}
+
+function getBenchScenarioSystemText(
+  systemText: BenchScenarioSystemText,
+  locale: BenchLocale,
+): string {
+  switch (systemText) {
+    case 'custom':
+      return benchText(locale, '自定义', 'Custom');
+    case 'custom-prompt':
+      return benchText(
+        locale,
+        '描述需要生成和评测的 UI。',
+        'Describe the UI to generate and evaluate.',
+      );
+    case 'custom-scenario':
+      return benchText(locale, '自定义场景', 'Custom scenario');
+    case 'primary-action':
+      return benchText(locale, '主操作', 'Primary action');
+  }
+}
+
+function getBenchScenarioFieldText(
+  value: string,
+  systemText: BenchScenarioSystemText | undefined,
+  locale: BenchLocale,
+): string {
+  return systemText
+    ? getBenchScenarioSystemText(systemText, locale)
+    : value;
+}
+
+export function getBenchScenarioDisplayName(
+  scenario: Pick<BenchScenario, 'name' | 'systemName'>,
+  locale: BenchLocale,
+): string {
+  return getBenchScenarioFieldText(
+    scenario.name,
+    scenario.systemName,
+    locale,
+  );
+}
+
+function inferBenchScenarioSystemText(
+  value: string,
+  expected: BenchScenarioSystemText,
+): BenchScenarioSystemText | undefined {
+  return value === getBenchScenarioSystemText(expected, 'zh-CN')
+      || value === getBenchScenarioSystemText(expected, 'en-US')
+    ? expected
+    : undefined;
+}
+
+function restoreBenchScenarioSystemTexts(
+  scenarios: BenchScenario[],
+): BenchScenario[] {
+  return scenarios.map((scenario) => ({
+    ...scenario,
+    systemAction: scenario.systemAction
+      ?? inferBenchScenarioSystemText(scenario.action, 'primary-action'),
+    systemName: scenario.systemName
+      ?? inferBenchScenarioSystemText(scenario.name, 'custom-scenario'),
+    systemPrompt: scenario.systemPrompt
+      ?? inferBenchScenarioSystemText(scenario.prompt, 'custom-prompt'),
+    systemType: scenario.systemType
+      ?? inferBenchScenarioSystemText(scenario.type, 'custom'),
+  }));
+}
+
 const CATALOG_OPTIONS = [
   'Full Catalog',
   'Core Catalog',
@@ -293,6 +628,7 @@ const DEFAULT_GROUPS: BenchGroup[] = [
     catalog: 'Full Catalog',
     extraInstruction: '',
     enabled: true,
+    systemName: 'default-prompt',
   },
   {
     id: 'experiment-token',
@@ -306,6 +642,7 @@ const DEFAULT_GROUPS: BenchGroup[] = [
     extraInstruction:
       'Keep the A2UI message stream as short as possible while preserving all required content.',
     enabled: true,
+    systemName: 'token-efficient',
   },
   {
     id: 'experiment-core',
@@ -318,6 +655,7 @@ const DEFAULT_GROUPS: BenchGroup[] = [
     catalog: 'Core Catalog',
     extraInstruction: '',
     enabled: true,
+    systemName: 'core-catalog',
   },
 ];
 
@@ -333,6 +671,7 @@ const EMPTY_GROUPS: BenchGroup[] = [
     catalog: 'Full Catalog',
     extraInstruction: '',
     enabled: true,
+    systemName: 'baseline',
   },
 ];
 
@@ -348,6 +687,7 @@ const PROTOCOL_PAIR_GROUPS: BenchGroup[] = [
     catalog: 'Core Catalog',
     extraInstruction: '',
     enabled: true,
+    systemName: 'a2ui',
   },
   {
     id: 'experiment-openui-matched',
@@ -360,6 +700,7 @@ const PROTOCOL_PAIR_GROUPS: BenchGroup[] = [
     catalog: 'Core Catalog',
     extraInstruction: '',
     enabled: true,
+    systemName: 'openui',
   },
 ];
 
@@ -680,11 +1021,29 @@ function isProviderConfigured(env: BenchEnv): boolean {
 
 function getBenchHealthKeyLabel(
   health: BenchHealth | null,
-  healthError: string | null,
+  healthError: BenchHealthError | null,
+  locale: BenchLocale = 'zh-CN',
 ): string {
-  if (health) return health.hasKey ? '已配置' : '未配置';
-  if (healthError) return '状态未知';
-  return '检查中…';
+  if (health) {
+    return health.hasKey
+      ? benchText(locale, '已配置', 'Configured')
+      : benchText(locale, '未配置', 'Not configured');
+  }
+  if (healthError) return benchText(locale, '状态未知', 'Unknown');
+  return benchText(locale, '检查中…', 'Checking…');
+}
+
+function getBenchHealthErrorText(
+  error: BenchHealthError,
+  locale: BenchLocale,
+): string {
+  return error.kind === 'status'
+    ? benchText(
+      locale,
+      `Provider 状态检查失败：${error.status}`,
+      `Provider status check failed: ${error.status}`,
+    )
+    : error.message;
 }
 
 function formatMs(value: number): string {
@@ -702,6 +1061,36 @@ function cloneBenchGroups(groups: BenchGroup[]): BenchGroup[] {
 
 function cloneBenchScenarios(scenarios: BenchScenario[]): BenchScenario[] {
   return scenarios.map((scenario) => ({ ...scenario }));
+}
+
+function createBenchRequestGroups(
+  groups: BenchGroup[],
+): BenchGroup[] {
+  return groups.map((group) => ({
+    id: group.id,
+    role: group.role,
+    protocol: group.protocol,
+    profile: group.profile,
+    name: group.name,
+    variable: group.variable,
+    model: group.model,
+    catalog: group.catalog,
+    extraInstruction: group.extraInstruction,
+    enabled: group.enabled,
+  }));
+}
+
+function createBenchRequestScenarios(
+  scenarios: BenchScenario[],
+): BenchScenario[] {
+  return scenarios.map((scenario) => ({
+    id: scenario.id,
+    name: scenario.name,
+    prompt: scenario.prompt,
+    type: scenario.type,
+    complexity: scenario.complexity,
+    action: scenario.action,
+  }));
 }
 
 function cloneBenchSettings(settings: BenchSettings): BenchSettings {
@@ -731,7 +1120,14 @@ function createBenchPlanSignature(
       extraInstruction: group.extraInstruction,
       enabled: group.enabled,
     })),
-    scenarios,
+    scenarios: scenarios.map((scenario) => ({
+      id: scenario.id,
+      name: scenario.name,
+      prompt: scenario.prompt,
+      type: scenario.type,
+      complexity: scenario.complexity,
+      action: scenario.action,
+    })),
     settings,
     provider: {
       apiKeyConfigured: env.apiKey === undefined
@@ -822,7 +1218,9 @@ function createBenchGroupsFromReport(report: BenchReport): BenchGroup[] {
       enabled: readBoolean(item.enabled, true),
     };
   });
-  return groups.length > 0 ? groups : cloneBenchGroups(DEFAULT_GROUPS);
+  return groups.length > 0
+    ? restoreBenchGroupSystemNames(groups)
+    : cloneBenchGroups(getBenchGroupPreset('a2ui-variants'));
 }
 
 function createBenchScenariosFromReport(report: BenchReport): BenchScenario[] {
@@ -835,13 +1233,13 @@ function createBenchScenariosFromReport(report: BenchReport): BenchScenario[] {
       id: item.id ?? createId(`history-scenario-${index + 1}`),
       name: item.name ?? `Scenario ${index + 1}`,
       prompt: item.prompt ?? '',
-      type: item.type ?? '自定义',
+      type: item.type ?? 'Custom',
       complexity: readFiniteNumber(item.complexity, 1),
       action: item.action ?? '',
     };
   });
   return scenarios.length > 0
-    ? scenarios
+    ? restoreBenchScenarioSystemTexts(scenarios)
     : cloneBenchScenarios(DEFAULT_SCENARIOS);
 }
 
@@ -1094,10 +1492,13 @@ function deltaText(value: number, baseline: number, suffix = ''): string {
   return `${sign}${delta.toFixed(1)}%${suffix}`;
 }
 
-function getRunButtonText(status: BenchStatus): string {
-  if (status === 'running') return '运行中';
-  if (status === 'failed') return '重新运行';
-  return '运行 Bench';
+function getRunButtonText(
+  status: BenchStatus,
+  locale: BenchLocale = 'zh-CN',
+): string {
+  if (status === 'running') return benchText(locale, '运行中', 'Running');
+  if (status === 'failed') return benchText(locale, '重新运行', 'Run again');
+  return benchText(locale, '运行 Bench', 'Run Bench');
 }
 
 function getProgressWidth(
@@ -1113,23 +1514,41 @@ function getProgressWidth(
 function getRunMetaText(
   status: BenchStatus,
   progress: number,
-  runMessage: string,
+  runMessage: BenchRunMessage,
   runCount: number,
+  locale: BenchLocale = 'zh-CN',
 ): string {
   if (status === 'running') {
-    return `${Math.round(progress)}% · ${runMessage}`;
+    return `${Math.round(progress)}% · ${
+      getBenchRunMessageText(runMessage, locale)
+    }`;
   }
-  if (status === 'idle') return `计划运行 ${runCount} Runs`;
-  return runMessage;
+  if (status === 'idle') {
+    return benchText(
+      locale,
+      `计划运行 ${runCount} Runs`,
+      `${runCount} runs planned`,
+    );
+  }
+  return getBenchRunMessageText(runMessage, locale);
 }
 
 function getReportSubtitle(
   report: BenchReport | null,
   reportIsStale: boolean,
+  locale: BenchLocale = 'zh-CN',
 ): string {
-  if (!report) return '暂无报告';
-  if (reportIsStale) return '当前计划已变更 · 显示上次 Report';
-  return new Date(report.createdAt).toLocaleString();
+  if (!report) return benchText(locale, '暂无报告', 'No report yet');
+  if (reportIsStale) {
+    return benchText(
+      locale,
+      '当前计划已变更 · 显示上次 Report',
+      'Plan changed · Showing the previous report',
+    );
+  }
+  return new Date(report.createdAt).toLocaleString(
+    locale === 'en-US' ? 'en-US' : 'zh-CN',
+  );
 }
 
 function formatSummaryJudgeMetric(
@@ -1171,29 +1590,47 @@ function getScreenshotState(
 
 function getScreenshotStateLabelFromState(
   state: BenchScreenshotState,
+  locale: BenchLocale = 'zh-CN',
 ): string {
-  if (state === 'captured') return '已截图';
-  if (state === 'failed') return '运行失败';
-  return '无截图';
+  if (state === 'captured') return benchText(locale, '已截图', 'Captured');
+  if (state === 'failed') return benchText(locale, '运行失败', 'Run failed');
+  return benchText(locale, '无截图', 'No screenshot');
 }
 
-function getScreenshotPlaceholderText(result: BenchResult | null): string {
+function getScreenshotPlaceholderText(
+  result: BenchResult | null,
+  locale: BenchLocale = 'zh-CN',
+): string {
   if (!result) {
-    return '这个位置没有收到 Bench 结果。';
+    return benchText(
+      locale,
+      '这个位置没有收到 Bench 结果。',
+      'No Bench result was received for this slot.',
+    );
   }
   if (isBenchRunFailed(result)) {
     return result.error
       ?? result.errors?.[0]
-      ?? '截图前运行已失败。';
+      ?? benchText(
+        locale,
+        '截图前运行已失败。',
+        'The run failed before a screenshot was captured.',
+      );
   }
   return result.errors?.find((error) =>
     error.toLowerCase().includes('screenshot')
-  ) ?? '这次运行没有保存截图。';
+  ) ?? benchText(
+    locale,
+    '这次运行没有保存截图。',
+    'This run did not save a screenshot.',
+  );
 }
 
 function createBenchGroupsForMatrix(report: BenchReport): BenchGroup[] {
   const reportGroups = Array.isArray(report.groups) ? report.groups : [];
-  if (reportGroups.length > 0) return createBenchGroupsFromReport(report);
+  if (reportGroups.length > 0) {
+    return createBenchGroupsFromReport(report);
+  }
 
   const seen = new Set<string>();
   const groupsFromResults = report.results.flatMap((result) => {
@@ -1214,15 +1651,17 @@ function createBenchGroupsForMatrix(report: BenchReport): BenchGroup[] {
     }];
   });
   return groupsFromResults.length > 0
-    ? groupsFromResults
-    : cloneBenchGroups(DEFAULT_GROUPS);
+    ? restoreBenchGroupSystemNames(groupsFromResults)
+    : cloneBenchGroups(getBenchGroupPreset('a2ui-variants'));
 }
 
 function createBenchScenariosForMatrix(report: BenchReport): BenchScenario[] {
   const reportScenarios = Array.isArray(report.scenarios)
     ? report.scenarios
     : [];
-  if (reportScenarios.length > 0) return createBenchScenariosFromReport(report);
+  if (reportScenarios.length > 0) {
+    return createBenchScenariosFromReport(report);
+  }
 
   const seen = new Set<string>();
   const scenariosFromResults = report.results.flatMap((result) => {
@@ -1232,7 +1671,8 @@ function createBenchScenariosForMatrix(report: BenchReport): BenchScenario[] {
       id: result.scenarioId,
       name: result.scenarioName,
       prompt: '',
-      type: '自定义',
+      type: 'Custom',
+      systemType: 'custom' as const,
       complexity: 1,
       action: '',
     }];
@@ -1399,18 +1839,39 @@ export function getBenchRunBlockers(
   enabledControlCount: number,
   scenarioCount: number,
   repeats: number,
+  locale: BenchLocale = 'zh-CN',
 ): string[] {
   const issues: string[] = [];
   if (activeGroupCount === 0) {
-    issues.push('至少启用一个对比组。');
+    issues.push(
+      benchText(
+        locale,
+        '至少启用一个对比组。',
+        'Enable at least one comparison group.',
+      ),
+    );
   } else if (enabledControlCount === 0) {
-    issues.push('至少启用一个基准组。');
+    issues.push(
+      benchText(
+        locale,
+        '至少启用一个基准组。',
+        'Enable at least one baseline group.',
+      ),
+    );
   }
   if (scenarioCount === 0) {
-    issues.push('至少添加一个场景。');
+    issues.push(
+      benchText(locale, '至少添加一个场景。', 'Add at least one scenario.'),
+    );
   }
   if (repeats < 1) {
-    issues.push('Repeats 不能小于 1。');
+    issues.push(
+      benchText(
+        locale,
+        'Repeats 不能小于 1。',
+        'Repeats must be at least 1.',
+      ),
+    );
   }
   return issues;
 }
@@ -1505,10 +1966,14 @@ function BenchDropdown<T extends string>(props: {
 }
 
 interface BenchPageProps {
+  locale?: BenchLocale;
   showHeader?: boolean;
 }
 
-export function BenchPage({ showHeader = true }: BenchPageProps) {
+export function BenchPage({
+  locale = 'zh-CN',
+  showHeader = true,
+}: BenchPageProps) {
   const [env, setEnv] = useState<BenchEnv>(DEFAULT_ENV);
   const [groups, setGroups] = useState<BenchGroup[]>(EMPTY_GROUPS);
   const [scenarios, setScenarios] = useState<BenchScenario[]>(
@@ -1517,11 +1982,15 @@ export function BenchPage({ showHeader = true }: BenchPageProps) {
   const [settings, setSettings] = useState<BenchSettings>(DEFAULT_SETTINGS);
   const [status, setStatus] = useState<BenchStatus>('idle');
   const [progress, setProgress] = useState(0);
-  const [runMessage, setRunMessage] = useState('准备就绪');
+  const [runMessage, setRunMessage] = useState<BenchRunMessage>({
+    code: 'ready',
+  });
   const [configOpen, setConfigOpen] = useState(false);
   const [benchRunNoticeOpen, setBenchRunNoticeOpen] = useState(false);
   const [benchHealth, setBenchHealth] = useState<BenchHealth | null>(null);
-  const [benchHealthError, setBenchHealthError] = useState<string | null>(null);
+  const [benchHealthError, setBenchHealthError] = useState<
+    BenchHealthError | null
+  >(null);
   const [historyOpen, setHistoryOpen] = useState(false);
   const [screenshotsOpen, setScreenshotsOpen] = useState(false);
   const [reportPaneWidth, setReportPaneWidth] = useState(
@@ -1613,8 +2082,18 @@ export function BenchPage({ showHeader = true }: BenchPageProps) {
     [report, settings],
   );
   const activeScenarioTypes = useMemo(
-    () => [...new Set(scenarios.map((scenario) => scenario.type))],
-    [scenarios],
+    () => [
+      ...new Set(
+        scenarios.map((scenario) =>
+          getBenchScenarioFieldText(
+            scenario.type,
+            scenario.systemType,
+            locale,
+          )
+        ),
+      ),
+    ],
+    [locale, scenarios],
   );
   const providerConfigured = useMemo(() => isProviderConfigured(env), [env]);
   const benchRunBlockers = useMemo(
@@ -1624,12 +2103,14 @@ export function BenchPage({ showHeader = true }: BenchPageProps) {
         enabledControlGroupCount,
         scenarios.length,
         settings.repeats,
+        locale,
       ),
     [
       activeGroups.length,
       enabledControlGroupCount,
       scenarios.length,
       settings.repeats,
+      locale,
     ],
   );
 
@@ -1666,9 +2147,10 @@ export function BenchPage({ showHeader = true }: BenchPageProps) {
       }
     }
     if (notify && failedJobIds.length > 0) {
-      setRunMessage(
-        `Job ${failedJobIds[0].slice(0, 8)} 尚未取消，请再次重置重试`,
-      );
+      setRunMessage({
+        code: 'cancellation-failed',
+        jobId: failedJobIds[0].slice(0, 8),
+      });
     }
     return failedJobIds.length === 0;
   }, []);
@@ -1771,7 +2253,7 @@ export function BenchPage({ showHeader = true }: BenchPageProps) {
     historyReportAbortRef.current = controller;
     setStatus('running');
     setProgress(0);
-    setRunMessage(`正在载入 Report ${jobId.slice(0, 8)}…`);
+    setRunMessage({ code: 'loading-report', jobId: jobId.slice(0, 8) });
 
     void (async () => {
       try {
@@ -1783,11 +2265,15 @@ export function BenchPage({ showHeader = true }: BenchPageProps) {
           | BenchReport
           | { error?: string };
         if (!response.ok || !('results' in payload)) {
-          throw new Error(
-            'error' in payload && payload.error
-              ? payload.error
-              : `Report 载入失败：${response.status}`,
-          );
+          if ('error' in payload && payload.error) {
+            throw new Error(payload.error);
+          }
+          setStatus('failed');
+          setRunMessage({
+            code: 'report-load-failed',
+            status: response.status,
+          });
+          return;
         }
         if (
           cancelled
@@ -1813,8 +2299,16 @@ export function BenchPage({ showHeader = true }: BenchPageProps) {
           ),
         );
         setEnv(restoredEnv);
-        setGroups(cloneBenchGroups(historyEntry.config.groups));
-        setScenarios(cloneBenchScenarios(historyEntry.config.scenarios));
+        setGroups(
+          restoreBenchGroupSystemNames(
+            cloneBenchGroups(historyEntry.config.groups),
+          ),
+        );
+        setScenarios(
+          restoreBenchScenarioSystemTexts(
+            cloneBenchScenarios(historyEntry.config.scenarios),
+          ),
+        );
         setSettings(cloneBenchSettings(historyEntry.config.settings));
         setHistoryItems((current) => {
           const next = upsertBenchHistoryEntry(current, historyEntry);
@@ -1823,11 +2317,10 @@ export function BenchPage({ showHeader = true }: BenchPageProps) {
         });
         setStatus(payload.status ?? 'complete');
         setProgress(100);
-        setRunMessage(
-          payload.summary && payload.summary.failedRuns > 0
-            ? `Report 已载入 · ${payload.summary.failedRuns} 个失败 Run`
-            : 'Report 已载入',
-        );
+        setRunMessage({
+          code: 'report-loaded',
+          failedRuns: payload.summary?.failedRuns,
+        });
       } catch (error) {
         if (
           cancelled
@@ -1839,7 +2332,7 @@ export function BenchPage({ showHeader = true }: BenchPageProps) {
           return;
         }
         setStatus('failed');
-        setRunMessage(getErrorMessage(error));
+        setRunMessage({ code: 'raw', text: getErrorMessage(error) });
       } finally {
         if (historyReportAbortRef.current === controller) {
           historyReportAbortRef.current = null;
@@ -1873,12 +2366,17 @@ export function BenchPage({ showHeader = true }: BenchPageProps) {
         role,
         protocol: 'a2ui',
         profile: 'native',
-        name: role === 'control' ? '新基准组' : '新对比组',
+        name: role === 'control'
+          ? 'New baseline'
+          : 'New comparison',
         variable: 'custom',
         model: env.model || DEFAULT_ENV.model,
         catalog: 'Full Catalog',
         extraInstruction: '',
         enabled: true,
+        systemName: role === 'control'
+          ? 'new-baseline'
+          : 'new-comparison',
       },
     ]);
   }, [env.model]);
@@ -1896,7 +2394,7 @@ export function BenchPage({ showHeader = true }: BenchPageProps) {
     setReportPlanSignature(null);
     setStatus('idle');
     setProgress(0);
-    setRunMessage('已载入预设');
+    setRunMessage({ code: 'preset-loaded' });
   }, [cancelActiveBenchJob]);
 
   const updateGroupProtocol = useCallback(
@@ -1974,11 +2472,15 @@ export function BenchPage({ showHeader = true }: BenchPageProps) {
       ...current,
       {
         id: createId('scenario'),
-        name: '自定义场景',
-        prompt: '描述需要生成和评测的 UI。',
-        type: '自定义',
+        name: 'Custom scenario',
+        prompt: 'Describe the UI to generate and evaluate.',
+        type: 'Custom',
         complexity: 1,
-        action: '主操作',
+        action: 'Primary action',
+        systemAction: 'primary-action',
+        systemName: 'custom-scenario',
+        systemPrompt: 'custom-prompt',
+        systemType: 'custom',
       },
     ]);
   }, []);
@@ -1999,7 +2501,7 @@ export function BenchPage({ showHeader = true }: BenchPageProps) {
     setSettings(DEFAULT_SETTINGS);
     setStatus('idle');
     setProgress(0);
-    setRunMessage('准备就绪');
+    setRunMessage({ code: 'ready' });
     setReport(null);
     setReportPlanSignature(null);
     setBenchHealth(null);
@@ -2015,11 +2517,18 @@ export function BenchPage({ showHeader = true }: BenchPageProps) {
       try {
         const response = await window.fetch(getA2UIBenchHealthEndpoint());
         if (!response.ok) {
-          throw new Error(`Provider 状态检查失败：${response.status}`);
+          setBenchHealthError({
+            kind: 'status',
+            status: response.status,
+          });
+          return;
         }
         setBenchHealth(await response.json() as BenchHealth);
       } catch (error) {
-        setBenchHealthError(getErrorMessage(error));
+        setBenchHealthError({
+          kind: 'raw',
+          message: getErrorMessage(error),
+        });
       }
     })();
   }, []);
@@ -2027,12 +2536,12 @@ export function BenchPage({ showHeader = true }: BenchPageProps) {
   const startBench = useCallback((confirmedServerDefaults = false) => {
     if (benchRunBlockers.length > 0 || runCount === 0) {
       setBenchRunNoticeOpen(true);
-      setRunMessage('请先完成运行配置');
+      setRunMessage({ code: 'run-config-required' });
       return;
     }
     if (!providerConfigured && !confirmedServerDefaults) {
       setBenchRunNoticeOpen(true);
-      setRunMessage('请确认使用服务端默认配置');
+      setRunMessage({ code: 'defaults-confirmation-required' });
       loadBenchHealth();
       return;
     }
@@ -2041,8 +2550,8 @@ export function BenchPage({ showHeader = true }: BenchPageProps) {
     setProgress(0);
     setRunMessage(
       activeJobIdRef.current || pendingCancellationJobIdsRef.current.size > 0
-        ? '正在停止上一项 Bench 任务…'
-        : '正在创建 Bench 任务…',
+        ? { code: 'stopping-previous-job' }
+        : { code: 'creating-job' },
     );
     setReport(null);
     setReportPlanSignature(null);
@@ -2065,7 +2574,7 @@ export function BenchPage({ showHeader = true }: BenchPageProps) {
         return;
       }
 
-      setRunMessage('正在创建 Bench 任务…');
+      setRunMessage({ code: 'creating-job' });
       try {
         const jobsEndpoint = getA2UIBenchJobsEndpoint();
         const response = await window.fetch(jobsEndpoint, {
@@ -2086,8 +2595,8 @@ export function BenchPage({ showHeader = true }: BenchPageProps) {
               judgeEnabled: settings.judgeEnabled,
               renderMetricsEnabled: settings.collectLiveRenderMetrics,
             },
-            groups: runGroups,
-            scenarios,
+            groups: createBenchRequestGroups(runGroups),
+            scenarios: createBenchRequestScenarios(scenarios),
           }),
         });
 
@@ -2095,9 +2604,13 @@ export function BenchPage({ showHeader = true }: BenchPageProps) {
           () => ({}),
         ) as BenchJobCreated;
         if (!response.ok || payload.ok === false || !payload.jobId) {
-          throw new Error(
-            payload.error ?? `Bench 请求失败：${response.status}`,
-          );
+          if (payload.error) throw new Error(payload.error);
+          setStatus('failed');
+          setRunMessage({
+            code: 'bench-request-failed',
+            status: response.status,
+          });
+          return;
         }
 
         if (
@@ -2124,8 +2637,8 @@ export function BenchPage({ showHeader = true }: BenchPageProps) {
         pendingCancellationJobIdsRef.current.delete(payload.jobId);
         setRunMessage(
           payload.warnings && payload.warnings.length > 0
-            ? payload.warnings[0]
-            : `Job ${payload.jobId.slice(0, 8)} 已进入队列`,
+            ? { code: 'raw', text: payload.warnings[0] }
+            : { code: 'job-queued', jobId: payload.jobId.slice(0, 8) },
         );
 
         const eventsUrl = new URL(
@@ -2150,8 +2663,10 @@ export function BenchPage({ showHeader = true }: BenchPageProps) {
           setProgress(total > 0 ? Math.min(100, (completed / total) * 100) : 0);
         };
 
-        const describeRun = (value: unknown): string => {
-          if (!value || typeof value !== 'object') return 'Bench 运行中…';
+        const describeRun = (value: unknown): BenchRunMessage => {
+          if (!value || typeof value !== 'object') {
+            return { code: 'running' };
+          }
           const record = value as Record<string, unknown>;
           const groupId = typeof record.groupId === 'string'
             ? record.groupId
@@ -2165,14 +2680,13 @@ export function BenchPage({ showHeader = true }: BenchPageProps) {
           const phase = typeof record.phase === 'string'
             ? record.phase
             : 'agent';
-          const groupName = runGroups.find((group) => group.id === groupId)
-            ?.name ?? '对比组';
-          const scenarioName = scenarios.find((scenario) =>
-            scenario.id === scenarioId
-          )?.name ?? '场景';
-          return `${groupName} · ${scenarioName} · #${
-            repeatIndex ?? 1
-          } · ${phase}`;
+          return {
+            code: 'run-progress',
+            group: runGroups.find((group) => group.id === groupId),
+            phase,
+            repeatIndex: repeatIndex ?? 1,
+            scenario: scenarios.find((scenario) => scenario.id === scenarioId),
+          };
         };
 
         source.addEventListener('job', (event) => {
@@ -2184,11 +2698,15 @@ export function BenchPage({ showHeader = true }: BenchPageProps) {
           if (snapshot.status === 'failed') {
             setStatus('failed');
             clearTerminalJob();
-            setRunMessage(snapshot.error ?? 'Bench 任务失败');
+            setRunMessage(
+              snapshot.error
+                ? { code: 'raw', text: snapshot.error }
+                : { code: 'bench-failed' },
+            );
           } else if (snapshot.status === 'cancelled') {
             setStatus('cancelled');
             clearTerminalJob();
-            setRunMessage('Bench 任务已取消');
+            setRunMessage({ code: 'bench-cancelled' });
           } else if (snapshot.status === 'complete') {
             clearTerminalJob();
             setProgress(100);
@@ -2233,11 +2751,10 @@ export function BenchPage({ showHeader = true }: BenchPageProps) {
           setStatus(nextReport.status ?? 'complete');
           clearTerminalJob();
           setProgress(100);
-          setRunMessage(
-            nextReport.summary && nextReport.summary.failedRuns > 0
-              ? `Bench 完成 · ${nextReport.summary.failedRuns} 个失败 Run`
-              : 'Bench 完成',
-          );
+          setRunMessage({
+            code: 'bench-complete',
+            failedRuns: nextReport.summary?.failedRuns,
+          });
           source.close();
           if (eventSourceRef.current === source) eventSourceRef.current = null;
         });
@@ -2251,7 +2768,7 @@ export function BenchPage({ showHeader = true }: BenchPageProps) {
             !message
             && source.readyState !== EVENT_SOURCE_CLOSED_READY_STATE
           ) {
-            setRunMessage('正在重连 Bench 数据流…');
+            setRunMessage({ code: 'reconnecting' });
             return;
           }
           setStatus('failed');
@@ -2262,7 +2779,11 @@ export function BenchPage({ showHeader = true }: BenchPageProps) {
           ) {
             clearTerminalJob();
           }
-          setRunMessage(message ?? 'Bench 数据流已断开');
+          setRunMessage(
+            message
+              ? { code: 'raw', text: message }
+              : { code: 'stream-disconnected' },
+          );
           source.close();
           if (eventSourceRef.current === source) eventSourceRef.current = null;
         });
@@ -2276,7 +2797,7 @@ export function BenchPage({ showHeader = true }: BenchPageProps) {
           return;
         }
         setStatus('failed');
-        setRunMessage(getErrorMessage(error));
+        setRunMessage({ code: 'raw', text: getErrorMessage(error) });
       }
     })();
   }, [
@@ -2329,23 +2850,28 @@ export function BenchPage({ showHeader = true }: BenchPageProps) {
       restoredEnv,
     );
     setEnv(restoredEnv);
-    setGroups(cloneBenchGroups(entry.config.groups));
-    setScenarios(cloneBenchScenarios(entry.config.scenarios));
+    setGroups(
+      restoreBenchGroupSystemNames(cloneBenchGroups(entry.config.groups)),
+    );
+    setScenarios(
+      restoreBenchScenarioSystemTexts(
+        cloneBenchScenarios(entry.config.scenarios),
+      ),
+    );
     setSettings(cloneBenchSettings(entry.config.settings));
     setReport(entry.report);
     setReportPlanSignature(restoredSignature);
     setStatus(entry.report.status ?? 'complete');
     setProgress(100);
-    setRunMessage(
-      entry.report.summary && entry.report.summary.failedRuns > 0
-        ? `历史 Report 已载入 · ${entry.report.summary.failedRuns} 个失败 Run`
-        : '历史 Report 已载入',
-    );
+    setRunMessage({
+      code: 'history-report-loaded',
+      failedRuns: entry.report.summary?.failedRuns,
+    });
     setHistoryOpen(false);
     const jobId = entry.report.jobId;
     if (!jobId) return;
 
-    setRunMessage('配置已恢复，正在载入完整 Report…');
+    setRunMessage({ code: 'setup-restored-loading-report' });
     const controller = new AbortController();
     historyReportAbortRef.current = controller;
     void (async () => {
@@ -2358,7 +2884,7 @@ export function BenchPage({ showHeader = true }: BenchPageProps) {
           | BenchReport
           | { error?: string };
         if (!response.ok || !('results' in payload)) {
-          throw new Error('完整 Report 暂不可用');
+          throw new Error('complete report unavailable');
         }
         if (
           !shouldApplyBenchReportRequest(
@@ -2371,7 +2897,7 @@ export function BenchPage({ showHeader = true }: BenchPageProps) {
         setReport(payload);
         setReportPlanSignature(restoredSignature);
         setStatus(payload.status ?? 'complete');
-        setRunMessage('完整 Report 已载入');
+        setRunMessage({ code: 'complete-report-loaded' });
       } catch {
         if (
           !shouldApplyBenchReportRequest(
@@ -2381,7 +2907,7 @@ export function BenchPage({ showHeader = true }: BenchPageProps) {
         ) {
           return;
         }
-        setRunMessage('配置已恢复 · 完整 Report 暂不可用');
+        setRunMessage({ code: 'setup-restored-report-unavailable' });
       } finally {
         if (historyReportAbortRef.current === controller) {
           historyReportAbortRef.current = null;
@@ -2552,6 +3078,18 @@ export function BenchPage({ showHeader = true }: BenchPageProps) {
       screenshotMatrix.scenarios.length,
     ),
   } as CSSProperties;
+  const reportGroupsById = new Map(
+    report
+      ? createBenchGroupsFromReport(report).map((group) => [group.id, group])
+      : [],
+  );
+  const getReportGroupDisplayName = (summary: BenchGroupSummary | null) => {
+    if (!summary) return 'n/a';
+    const group = reportGroupsById.get(summary.groupId);
+    return group
+      ? getBenchGroupDisplayName(group, locale)
+      : summary.groupName;
+  };
 
   return (
     <div className='benchPage'>
@@ -2560,17 +3098,37 @@ export function BenchPage({ showHeader = true }: BenchPageProps) {
           <PageHeader
             className='benchHeader'
             title='Bench Runner'
-            description='自由组合 Protocol、Model、Prompt 与 Catalog，并在同一份 Report 中查看结果。'
+            description={benchText(
+              locale,
+              '自由组合 Protocol、Model、Prompt 与 Catalog，并在同一份 Report 中查看结果。',
+              'Combine Protocol, Model, Prompt, and Catalog freely, then review the results in one report.',
+            )}
             topContent={
               <>
-                <span className='chip'>{activeGroups.length} 个对比组</span>
-                <span className='chip'>{scenarios.length} 个场景</span>
+                <span className='chip'>
+                  {benchText(
+                    locale,
+                    `${activeGroups.length} 个对比组`,
+                    `${activeGroups.length} comparison groups`,
+                  )}
+                </span>
+                <span className='chip'>
+                  {benchText(
+                    locale,
+                    `${scenarios.length} 个场景`,
+                    `${scenarios.length} scenarios`,
+                  )}
+                </span>
                 <span className='chip'>{runCount} Runs</span>
               </>
             }
           />
         )
-        : <h2 className='benchPageAccessibleTitle'>通用 Bench Runner</h2>}
+        : (
+          <h2 className='benchPageAccessibleTitle'>
+            {benchText(locale, '通用 Bench Runner', 'Universal Bench Runner')}
+          </h2>
+        )}
 
       <div
         className='benchBody'
@@ -2578,7 +3136,10 @@ export function BenchPage({ showHeader = true }: BenchPageProps) {
         ref={benchBodyRef}
         style={benchBodyStyle}
       >
-        <main className='benchMain' aria-label='Bench 工作区'>
+        <main
+          className='benchMain'
+          aria-label={benchText(locale, 'Bench 工作区', 'Bench workspace')}
+        >
           <section className='benchOverviewBand'>
             <div className='benchRunPanel'>
               <div className='benchRunActions'>
@@ -2589,7 +3150,7 @@ export function BenchPage({ showHeader = true }: BenchPageProps) {
                   disabled={status === 'running'}
                   onClick={() => startBench()}
                 >
-                  {getRunButtonText(status)}
+                  {getRunButtonText(status, locale)}
                 </Button>
                 <Button
                   variant='secondary'
@@ -2598,22 +3159,38 @@ export function BenchPage({ showHeader = true }: BenchPageProps) {
                   disabled={planLocked}
                   onClick={() => setConfigOpen(true)}
                 >
-                  运行设置
+                  {benchText(locale, '运行设置', 'Run settings')}
                 </Button>
                 <Button
                   variant='secondary'
                   size='lg'
                   iconOnly
                   iconBefore={RotateCcw}
-                  aria-label={planLocked ? '停止并重置 Bench' : '重置 Bench'}
-                  title={planLocked ? '停止并重置 Bench' : '重置 Bench'}
+                  aria-label={planLocked
+                    ? benchText(
+                      locale,
+                      '停止并重置 Bench',
+                      'Stop and reset Bench',
+                    )
+                    : benchText(locale, '重置 Bench', 'Reset Bench')}
+                  title={planLocked
+                    ? benchText(
+                      locale,
+                      '停止并重置 Bench',
+                      'Stop and reset Bench',
+                    )
+                    : benchText(locale, '重置 Bench', 'Reset Bench')}
                   onClick={resetBench}
                 />
               </div>
               <div
                 className='benchProgressTrack'
                 role='progressbar'
-                aria-label='Bench 进度'
+                aria-label={benchText(
+                  locale,
+                  'Bench 进度',
+                  'Bench progress',
+                )}
                 aria-valuemin={0}
                 aria-valuemax={100}
                 aria-valuenow={Math.round(
@@ -2633,7 +3210,13 @@ export function BenchPage({ showHeader = true }: BenchPageProps) {
                 role='status'
                 aria-live='polite'
               >
-                {getRunMetaText(status, progress, runMessage, runCount)}
+                {getRunMetaText(
+                  status,
+                  progress,
+                  runMessage,
+                  runCount,
+                  locale,
+                )}
               </div>
             </div>
             <div className='benchPlanSummary'>
@@ -2642,24 +3225,44 @@ export function BenchPage({ showHeader = true }: BenchPageProps) {
                 <strong>
                   {activeProtocols.map((protocol) =>
                     protocol === 'a2ui' ? 'A2UI' : 'OpenUI'
-                  ).join(' + ') || '未选择'}
-                </strong>
-                <small>{activeGroups.length} 个对比组</small>
-              </div>
-              <div className='benchPlanItem'>
-                <span>运行参数</span>
-                <strong>
-                  重复 {settings.repeats} 次 / 并发 {settings.parallelism}
+                  ).join(' + ')
+                    || benchText(locale, '未选择', 'Not selected')}
                 </strong>
                 <small>
-                  UI Judge {settings.judgeEnabled ? '开启' : '关闭'} · Repair
-                  {' '}
-                  {settings.repairEnabled ? '开启' : '关闭'}
+                  {benchText(
+                    locale,
+                    `${activeGroups.length} 个对比组`,
+                    `${activeGroups.length} comparison groups`,
+                  )}
                 </small>
               </div>
               <div className='benchPlanItem'>
-                <span>场景</span>
-                <strong>{scenarios.length} 个 Prompt</strong>
+                <span>{benchText(locale, '运行参数', 'Run parameters')}</span>
+                <strong>
+                  {benchText(
+                    locale,
+                    `重复 ${settings.repeats} 次 / 并发 ${settings.parallelism}`,
+                    `${settings.repeats} repeats / ${settings.parallelism} concurrent`,
+                  )}
+                </strong>
+                <small>
+                  UI Judge {settings.judgeEnabled
+                    ? benchText(locale, '开启', 'on')
+                    : benchText(locale, '关闭', 'off')} · Repair{' '}
+                  {settings.repairEnabled
+                    ? benchText(locale, '开启', 'on')
+                    : benchText(locale, '关闭', 'off')}
+                </small>
+              </div>
+              <div className='benchPlanItem'>
+                <span>{benchText(locale, '场景', 'Scenarios')}</span>
+                <strong>
+                  {benchText(
+                    locale,
+                    `${scenarios.length} 个 Prompt`,
+                    `${scenarios.length} prompts`,
+                  )}
+                </strong>
                 <small>{activeScenarioTypes.join(' / ')}</small>
               </div>
             </div>
@@ -2672,14 +3275,22 @@ export function BenchPage({ showHeader = true }: BenchPageProps) {
           >
             <div className='benchSectionHeader benchGroupsHeader'>
               <div>
-                <h3 className='benchSectionTitle'>对比组</h3>
+                <h3 className='benchSectionTitle'>
+                  {benchText(locale, '对比组', 'Comparison groups')}
+                </h3>
                 <p className='benchSectionSub'>
-                  每个组都是一条可组合的运行条件
+                  {benchText(
+                    locale,
+                    '每个组都是一条可组合的运行条件',
+                    'Each group is a composable run condition',
+                  )}
                 </p>
               </div>
               <div className='benchHeaderActions'>
                 <details className='benchTemplateMenu'>
-                  <summary>载入预设</summary>
+                  <summary>
+                    {benchText(locale, '载入预设', 'Load preset')}
+                  </summary>
                   <div>
                     <button
                       type='button'
@@ -2690,7 +3301,11 @@ export function BenchPage({ showHeader = true }: BenchPageProps) {
                         );
                       }}
                     >
-                      A2UI 变量对比
+                      {benchText(
+                        locale,
+                        'A2UI 变量对比',
+                        'A2UI variable comparison',
+                      )}
                       <small>Model / Prompt / Catalog</small>
                     </button>
                     <button
@@ -2702,7 +3317,11 @@ export function BenchPage({ showHeader = true }: BenchPageProps) {
                         );
                       }}
                     >
-                      Protocol 对照
+                      {benchText(
+                        locale,
+                        'Protocol 对照',
+                        'Protocol comparison',
+                      )}
                       <small>A2UI ↔ OpenUI · matched-core</small>
                     </button>
                     <button
@@ -2714,8 +3333,14 @@ export function BenchPage({ showHeader = true }: BenchPageProps) {
                         );
                       }}
                     >
-                      组合示例
-                      <small>把两类条件放进同一张 plan</small>
+                      {benchText(locale, '组合示例', 'Combined example')}
+                      <small>
+                        {benchText(
+                          locale,
+                          '把两类条件放进同一张 plan',
+                          'Put both condition types in one plan',
+                        )}
+                      </small>
                     </button>
                     <button
                       type='button'
@@ -2726,8 +3351,14 @@ export function BenchPage({ showHeader = true }: BenchPageProps) {
                         );
                       }}
                     >
-                      空白 plan
-                      <small>从一个 Baseline 开始</small>
+                      {benchText(locale, '空白 plan', 'Blank plan')}
+                      <small>
+                        {benchText(
+                          locale,
+                          '从一个 Baseline 开始',
+                          'Start from one baseline',
+                        )}
+                      </small>
                     </button>
                   </div>
                 </details>
@@ -2737,7 +3368,11 @@ export function BenchPage({ showHeader = true }: BenchPageProps) {
                   iconBefore={MessageSquarePlus}
                   onClick={() => addGroup('experiment')}
                 >
-                  添加对比组
+                  {benchText(
+                    locale,
+                    '添加对比组',
+                    'Add comparison group',
+                  )}
                 </Button>
               </div>
             </div>
@@ -2754,7 +3389,11 @@ export function BenchPage({ showHeader = true }: BenchPageProps) {
                       <input
                         type='checkbox'
                         checked={group.enabled}
-                        aria-label={`启用 ${group.name}`}
+                        aria-label={benchText(
+                          locale,
+                          `启用 ${getBenchGroupDisplayName(group, locale)}`,
+                          `Enable ${getBenchGroupDisplayName(group, locale)}`,
+                        )}
                         onChange={(event) =>
                           updateGroup(
                             group.id,
@@ -2778,7 +3417,9 @@ export function BenchPage({ showHeader = true }: BenchPageProps) {
                           onClick={() =>
                             updateGroup(group.id, groupPatch('role', role))}
                         >
-                          {role === 'control' ? '基准' : '对比'}
+                          {role === 'control'
+                            ? benchText(locale, '基准', 'Baseline')
+                            : benchText(locale, '对比', 'Comparison')}
                         </button>
                       ))}
                     </div>
@@ -2787,21 +3428,33 @@ export function BenchPage({ showHeader = true }: BenchPageProps) {
                       size='sm'
                       iconOnly
                       iconBefore={Trash2}
-                      aria-label={`删除 ${group.name}`}
-                      title={`删除 ${group.name}`}
+                      aria-label={benchText(
+                        locale,
+                        `删除 ${getBenchGroupDisplayName(group, locale)}`,
+                        `Delete ${getBenchGroupDisplayName(group, locale)}`,
+                      )}
+                      title={benchText(
+                        locale,
+                        `删除 ${getBenchGroupDisplayName(group, locale)}`,
+                        `Delete ${getBenchGroupDisplayName(group, locale)}`,
+                      )}
                       disabled={groups.length <= 1}
                       onClick={() => removeGroup(group.id)}
                     />
                   </div>
                   <input
                     className='benchGroupName'
-                    value={group.name}
-                    aria-label='对比组名称'
+                    value={getBenchGroupDisplayName(group, locale)}
+                    aria-label={benchText(
+                      locale,
+                      '对比组名称',
+                      'Comparison group name',
+                    )}
                     onChange={(event) =>
-                      updateGroup(
-                        group.id,
-                        groupPatch('name', event.target.value),
-                      )}
+                      updateGroup(group.id, {
+                        name: event.target.value,
+                        systemName: undefined,
+                      })}
                   />
                   <div className='benchGroupSummary'>
                     <span data-protocol={group.protocol}>
@@ -2810,11 +3463,19 @@ export function BenchPage({ showHeader = true }: BenchPageProps) {
                     <span>{group.profile}</span>
                     <span>{group.model || env.model}</span>
                     {(groupDifferences.get(group.id) ?? []).length === 0
-                      ? <span data-baseline='true'>基准</span>
+                      ? (
+                        <span data-baseline='true'>
+                          {benchText(locale, '基准', 'Baseline')}
+                        </span>
+                      )
                       : (groupDifferences.get(group.id) ?? []).map(
                         (difference) => (
                           <span data-changed='true' key={difference}>
-                            {difference} 已变更
+                            {benchText(
+                              locale,
+                              `${difference} 已变更`,
+                              `${difference} changed`,
+                            )}
                           </span>
                         ),
                       )}
@@ -2822,24 +3483,44 @@ export function BenchPage({ showHeader = true }: BenchPageProps) {
                         && groupBaselines.get(group.id)
                       ? (
                         <span data-baseline='true'>
-                          相对 {groupBaselines.get(group.id)?.name}
+                          {benchText(
+                            locale,
+                            `相对 ${
+                              getBenchGroupDisplayName(
+                                groupBaselines.get(group.id)!,
+                                locale,
+                              )
+                            }`,
+                            `vs. ${
+                              getBenchGroupDisplayName(
+                                groupBaselines.get(group.id)!,
+                                locale,
+                              )
+                            }`,
+                          )}
                         </span>
                       )
                       : null}
                   </div>
                   <details className='benchGroupDetails'>
-                    <summary>配置</summary>
+                    <summary>{benchText(locale, '配置', 'Configure')}</summary>
                     <div className='benchGroupFields'>
                       <div className='benchField'>
                         <span className='benchFieldLabel'>Protocol</span>
                         <BenchDropdown
-                          ariaLabel={`${group.name} Protocol`}
+                          ariaLabel={`${
+                            getBenchGroupDisplayName(group, locale)
+                          } Protocol`}
                           value={group.protocol}
                           options={[
                             {
                               value: 'a2ui',
                               label: 'A2UI',
-                              description: '结构化消息流',
+                              description: benchText(
+                                locale,
+                                '结构化消息流',
+                                'Structured message stream',
+                              ),
                             },
                             {
                               value: 'openui',
@@ -2854,19 +3535,29 @@ export function BenchPage({ showHeader = true }: BenchPageProps) {
                       <div className='benchField'>
                         <span className='benchFieldLabel'>Profile</span>
                         <BenchDropdown
-                          ariaLabel={`${group.name} Profile`}
+                          ariaLabel={`${
+                            getBenchGroupDisplayName(group, locale)
+                          } Profile`}
                           value={group.profile}
                           disabled={group.protocol === 'openui'}
                           options={[
                             {
                               value: 'native',
                               label: 'native',
-                              description: '使用完整协议能力',
+                              description: benchText(
+                                locale,
+                                '使用完整协议能力',
+                                'Use the full protocol capability set',
+                              ),
                             },
                             {
                               value: 'matched-core',
                               label: 'matched-core',
-                              description: '只使用公共能力子集',
+                              description: benchText(
+                                locale,
+                                '只使用公共能力子集',
+                                'Use only the shared capability subset',
+                              ),
                             },
                           ]}
                           onChange={(profile) =>
@@ -2877,9 +3568,11 @@ export function BenchPage({ showHeader = true }: BenchPageProps) {
                     {group.profile === 'matched-core'
                       ? (
                         <p className='benchProfileHint'>
-                          <strong>matched-core</strong>{' '}
-                          只使用 A2UI 与 OpenUI 都支持的公共能力，适合做同条件
-                          Protocol 对照。
+                          <strong>matched-core</strong> {benchText(
+                            locale,
+                            '只使用 A2UI 与 OpenUI 都支持的公共能力，适合做同条件 Protocol 对照。',
+                            'uses only capabilities shared by A2UI and OpenUI, making it suitable for a like-for-like Protocol comparison.',
+                          )}
                         </p>
                       )
                       : null}
@@ -2901,7 +3594,9 @@ export function BenchPage({ showHeader = true }: BenchPageProps) {
                       <div className='benchField'>
                         <span className='benchFieldLabel'>Catalog</span>
                         <BenchDropdown
-                          ariaLabel={`${group.name} Catalog`}
+                          ariaLabel={`${
+                            getBenchGroupDisplayName(group, locale)
+                          } Catalog`}
                           value={group.catalog}
                           disabled={group.profile === 'matched-core'
                             || group.protocol === 'openui'}
@@ -2919,12 +3614,20 @@ export function BenchPage({ showHeader = true }: BenchPageProps) {
                     </div>
                     <label className='benchField'>
                       <span className='benchFieldLabel'>
-                        Prompt 附加指令
+                        {benchText(
+                          locale,
+                          'Prompt 附加指令',
+                          'Additional prompt instructions',
+                        )}
                       </span>
                       <textarea
                         className='benchTextarea'
                         value={group.extraInstruction}
-                        placeholder='只对这个对比组追加的 Prompt'
+                        placeholder={benchText(
+                          locale,
+                          '只对这个对比组追加的 Prompt',
+                          'Prompt appended only to this comparison group',
+                        )}
                         onChange={(event) =>
                           updateGroup(
                             group.id,
@@ -2945,11 +3648,15 @@ export function BenchPage({ showHeader = true }: BenchPageProps) {
           >
             <div className='benchSectionHeader'>
               <div>
-                <h3 className='benchSectionTitle'>共享场景</h3>
+                <h3 className='benchSectionTitle'>
+                  {benchText(locale, '共享场景', 'Shared scenarios')}
+                </h3>
                 <p className='benchSectionSub'>
-                  {activeGroups.length} 个对比组 × {scenarios.length} 个场景 ×
-                  {' '}
-                  重复 {settings.repeats} 次 = {runCount} Runs
+                  {benchText(
+                    locale,
+                    `${activeGroups.length} 个对比组 × ${scenarios.length} 个场景 × 重复 ${settings.repeats} 次 = ${runCount} Runs`,
+                    `${activeGroups.length} comparison groups × ${scenarios.length} scenarios × ${settings.repeats} repeats = ${runCount} runs`,
+                  )}
                 </p>
               </div>
               <Button
@@ -2959,13 +3666,13 @@ export function BenchPage({ showHeader = true }: BenchPageProps) {
                 disabled={planLocked}
                 onClick={() => setConfigOpen(true)}
               >
-                编辑场景
+                {benchText(locale, '编辑场景', 'Edit scenarios')}
               </Button>
             </div>
             <div className='benchScenarioChips'>
               {scenarios.map((scenario) => (
                 <span className='benchScenarioChip' key={scenario.id}>
-                  {scenario.name}
+                  {getBenchScenarioDisplayName(scenario, locale)}
                 </span>
               ))}
             </div>
@@ -2975,7 +3682,11 @@ export function BenchPage({ showHeader = true }: BenchPageProps) {
         <div
           className='benchResizeHandle'
           role='separator'
-          aria-label='调整 Report 面板宽度'
+          aria-label={benchText(
+            locale,
+            '调整 Report 面板宽度',
+            'Resize report panel',
+          )}
           aria-orientation='vertical'
           aria-valuemin={REPORT_PANE_MIN_WIDTH}
           aria-valuemax={REPORT_PANE_MAX_WIDTH}
@@ -2995,7 +3706,7 @@ export function BenchPage({ showHeader = true }: BenchPageProps) {
                 className='benchSectionSub'
                 data-stale={reportIsStale || undefined}
               >
-                {getReportSubtitle(report, reportIsStale)}
+                {getReportSubtitle(report, reportIsStale, locale)}
               </p>
             </div>
             <div className='benchReportActions'>
@@ -3005,7 +3716,7 @@ export function BenchPage({ showHeader = true }: BenchPageProps) {
                 iconBefore={History}
                 onClick={() => setHistoryOpen(true)}
               >
-                历史
+                {benchText(locale, '历史', 'History')}
               </Button>
               <Button
                 variant='secondary'
@@ -3014,7 +3725,9 @@ export function BenchPage({ showHeader = true }: BenchPageProps) {
                 disabled={!report}
                 onClick={() => void copyReport()}
               >
-                {copyState === 'copied' ? '已复制' : 'JSON'}
+                {copyState === 'copied'
+                  ? benchText(locale, '已复制', 'Copied')
+                  : 'JSON'}
               </Button>
             </div>
           </div>
@@ -3024,8 +3737,10 @@ export function BenchPage({ showHeader = true }: BenchPageProps) {
               <>
                 <div className='benchInsightGrid'>
                   <div className='benchInsight'>
-                    <span>Token 最低</span>
-                    <strong>{bestTokens?.groupName ?? 'n/a'}</strong>
+                    <span>
+                      {benchText(locale, 'Token 最低', 'Lowest tokens')}
+                    </span>
+                    <strong>{getReportGroupDisplayName(bestTokens)}</strong>
                     <small>
                       {bestTokens
                         ? formatNumber(bestTokens.avgTokens)
@@ -3033,8 +3748,10 @@ export function BenchPage({ showHeader = true }: BenchPageProps) {
                     </small>
                   </div>
                   <div className='benchInsight'>
-                    <span>Agent 最快</span>
-                    <strong>{fastestAgent?.groupName ?? 'n/a'}</strong>
+                    <span>
+                      {benchText(locale, 'Agent 最快', 'Fastest agent')}
+                    </span>
+                    <strong>{getReportGroupDisplayName(fastestAgent)}</strong>
                     <small>
                       {fastestAgent
                         ? formatMs(fastestAgent.avgAgentMs)
@@ -3042,8 +3759,10 @@ export function BenchPage({ showHeader = true }: BenchPageProps) {
                     </small>
                   </div>
                   <div className='benchInsight'>
-                    <span>Judge 最佳</span>
-                    <strong>{topJudge?.groupName ?? 'n/a'}</strong>
+                    <span>
+                      {benchText(locale, 'Judge 最佳', 'Best judge score')}
+                    </span>
+                    <strong>{getReportGroupDisplayName(topJudge)}</strong>
                     <small>
                       {topJudge
                         ? `${topJudge.avgJudgeScore.toFixed(1)}/5`
@@ -3056,7 +3775,13 @@ export function BenchPage({ showHeader = true }: BenchPageProps) {
                   <table className='benchReportTable'>
                     <thead>
                       <tr>
-                        <th>对比组</th>
+                        <th>
+                          {benchText(
+                            locale,
+                            '对比组',
+                            'Comparison group',
+                          )}
+                        </th>
                         <th>Tokens</th>
                         <th>Agent</th>
                         <th>FMP</th>
@@ -3079,7 +3804,7 @@ export function BenchPage({ showHeader = true }: BenchPageProps) {
                                   className={`benchRoleDot ${summary.role}`}
                                 />
                                 <span>
-                                  {summary.groupName}
+                                  {getReportGroupDisplayName(summary)}
                                   <small>
                                     {summary.protocol === 'openui'
                                       ? 'OpenUI'
@@ -3130,9 +3855,15 @@ export function BenchPage({ showHeader = true }: BenchPageProps) {
                 <section className='benchScreenshotSection'>
                   <div className='benchSectionHeader'>
                     <div>
-                      <h3 className='benchSectionTitle'>运行截图</h3>
+                      <h3 className='benchSectionTitle'>
+                        {benchText(locale, '运行截图', 'Run screenshots')}
+                      </h3>
                       <p className='benchSectionSub'>
-                        每个 run 的实际渲染截图，失败位置也会保留
+                        {benchText(
+                          locale,
+                          '每个 run 的实际渲染截图，失败位置也会保留',
+                          'Actual render screenshots for every run, including failed slots',
+                        )}
                       </p>
                     </div>
                     <Button
@@ -3142,7 +3873,7 @@ export function BenchPage({ showHeader = true }: BenchPageProps) {
                       disabled={screenshotMatrix.total === 0}
                       onClick={() => setScreenshotsOpen(true)}
                     >
-                      查看截图
+                      {benchText(locale, '查看截图', 'View screenshots')}
                     </Button>
                   </div>
                   <div className='benchScreenshotSummaryGrid'>
@@ -3151,17 +3882,17 @@ export function BenchPage({ showHeader = true }: BenchPageProps) {
                       <strong>{formatNumber(screenshotMatrix.total)}</strong>
                     </div>
                     <div>
-                      <span>已截图</span>
+                      <span>{benchText(locale, '已截图', 'Captured')}</span>
                       <strong>
                         {formatNumber(screenshotMatrix.captured)}
                       </strong>
                     </div>
                     <div>
-                      <span>失败</span>
+                      <span>{benchText(locale, '失败', 'Failed')}</span>
                       <strong>{formatNumber(screenshotMatrix.failed)}</strong>
                     </div>
                     <div>
-                      <span>缺失</span>
+                      <span>{benchText(locale, '缺失', 'Missing')}</span>
                       <strong>{formatNumber(screenshotMatrix.missing)}</strong>
                     </div>
                   </div>
@@ -3169,8 +3900,11 @@ export function BenchPage({ showHeader = true }: BenchPageProps) {
 
                 <div className='benchReportNotes'>
                   <span>
-                    Agent、Token、Attempts 与校验数据由服务端采集；Render 或 UI
-                    Judge 不可用时会明确标记。
+                    {benchText(
+                      locale,
+                      'Agent、Token、Attempts 与校验数据由服务端采集；Render 或 UI Judge 不可用时会明确标记。',
+                      'Agent, token, attempts, and validation data are collected by the server. Unavailable Render or UI Judge data is explicitly marked.',
+                    )}
                   </span>
                 </div>
                 {report.warnings && report.warnings.length > 0
@@ -3187,8 +3921,20 @@ export function BenchPage({ showHeader = true }: BenchPageProps) {
             : (
               <div className='benchEmptyReport'>
                 <Sparkles size={28} strokeWidth={1.8} />
-                <strong>等待 Bench 数据</strong>
-                <span>运行当前计划后，这里会生成统一 Report。</span>
+                <strong>
+                  {benchText(
+                    locale,
+                    '等待 Bench 数据',
+                    'Waiting for Bench data',
+                  )}
+                </strong>
+                <span>
+                  {benchText(
+                    locale,
+                    '运行当前计划后，这里会生成统一 Report。',
+                    'Run the current plan to generate a unified report here.',
+                  )}
+                </span>
               </div>
             )}
         </aside>
@@ -3220,12 +3966,14 @@ export function BenchPage({ showHeader = true }: BenchPageProps) {
                     id='bench-screenshots-title'
                     className='benchConfigTitle'
                   >
-                    运行截图
+                    {benchText(locale, '运行截图', 'Run screenshots')}
                   </h2>
                   <p className='benchConfigSub'>
-                    {screenshotMatrix.rows.length} 个对比组 ×{' '}
-                    {screenshotMatrix.scenarios.length} 个场景 · 重复{' '}
-                    {screenshotMatrix.repeatCount} 次
+                    {benchText(
+                      locale,
+                      `${screenshotMatrix.rows.length} 个对比组 × ${screenshotMatrix.scenarios.length} 个场景 · 重复 ${screenshotMatrix.repeatCount} 次`,
+                      `${screenshotMatrix.rows.length} comparison groups × ${screenshotMatrix.scenarios.length} scenarios · ${screenshotMatrix.repeatCount} repeats`,
+                    )}
                   </p>
                 </div>
                 <Button
@@ -3233,8 +3981,16 @@ export function BenchPage({ showHeader = true }: BenchPageProps) {
                   size='sm'
                   iconOnly
                   iconBefore={X}
-                  aria-label='关闭截图'
-                  title='关闭截图'
+                  aria-label={benchText(
+                    locale,
+                    '关闭截图',
+                    'Close screenshots',
+                  )}
+                  title={benchText(
+                    locale,
+                    '关闭截图',
+                    'Close screenshots',
+                  )}
                   onClick={() => setScreenshotsOpen(false)}
                 />
               </header>
@@ -3246,15 +4002,15 @@ export function BenchPage({ showHeader = true }: BenchPageProps) {
                     <strong>{formatNumber(screenshotMatrix.total)}</strong>
                   </div>
                   <div>
-                    <span>已截图</span>
+                    <span>{benchText(locale, '已截图', 'Captured')}</span>
                     <strong>{formatNumber(screenshotMatrix.captured)}</strong>
                   </div>
                   <div>
-                    <span>失败</span>
+                    <span>{benchText(locale, '失败', 'Failed')}</span>
                     <strong>{formatNumber(screenshotMatrix.failed)}</strong>
                   </div>
                   <div>
-                    <span>缺失</span>
+                    <span>{benchText(locale, '缺失', 'Missing')}</span>
                     <strong>{formatNumber(screenshotMatrix.missing)}</strong>
                   </div>
                 </div>
@@ -3264,14 +4020,28 @@ export function BenchPage({ showHeader = true }: BenchPageProps) {
                     className='benchScreenshotMatrix'
                     style={screenshotMatrixStyle}
                   >
-                    <div className='benchScreenshotMatrixCorner'>对比组</div>
+                    <div className='benchScreenshotMatrixCorner'>
+                      {benchText(
+                        locale,
+                        '对比组',
+                        'Comparison group',
+                      )}
+                    </div>
                     {screenshotMatrix.scenarios.map((scenario) => (
                       <div
                         className='benchScreenshotScenarioHeader'
                         key={scenario.id}
                       >
-                        <strong>{scenario.name}</strong>
-                        <span>{scenario.type}</span>
+                        <strong>
+                          {getBenchScenarioDisplayName(scenario, locale)}
+                        </strong>
+                        <span>
+                          {getBenchScenarioFieldText(
+                            scenario.type,
+                            scenario.systemType,
+                            locale,
+                          )}
+                        </span>
                       </div>
                     ))}
                     {screenshotMatrix.rows.map((row) => (
@@ -3282,7 +4052,9 @@ export function BenchPage({ showHeader = true }: BenchPageProps) {
                             aria-hidden='true'
                           />
                           <div>
-                            <strong>{row.group.name}</strong>
+                            <strong>
+                              {getBenchGroupDisplayName(row.group, locale)}
+                            </strong>
                             <span>
                               {row.group.protocol === 'openui'
                                 ? 'OpenUI'
@@ -3313,6 +4085,7 @@ export function BenchPage({ showHeader = true }: BenchPageProps) {
                                     >
                                       {getScreenshotStateLabelFromState(
                                         slot.state,
+                                        locale,
                                       )}
                                     </span>
                                   </div>
@@ -3320,7 +4093,17 @@ export function BenchPage({ showHeader = true }: BenchPageProps) {
                                     ? (
                                       <div className='benchScreenshotImageFrame'>
                                         <img
-                                          alt={`${cell.group.name} ${cell.scenario.name} #${slot.repeatIndex}`}
+                                          alt={`${
+                                            getBenchGroupDisplayName(
+                                              cell.group,
+                                              locale,
+                                            )
+                                          } ${
+                                            getBenchScenarioDisplayName(
+                                              cell.scenario,
+                                              locale,
+                                            )
+                                          } #${slot.repeatIndex}`}
                                           src={item.screenshotDataUrl}
                                         />
                                       </div>
@@ -3330,10 +4113,14 @@ export function BenchPage({ showHeader = true }: BenchPageProps) {
                                         <strong>
                                           {getScreenshotStateLabelFromState(
                                             slot.state,
+                                            locale,
                                           )}
                                         </strong>
                                         <span>
-                                          {getScreenshotPlaceholderText(item)}
+                                          {getScreenshotPlaceholderText(
+                                            item,
+                                            locale,
+                                          )}
                                         </span>
                                       </div>
                                     )}
@@ -3354,7 +4141,15 @@ export function BenchPage({ showHeader = true }: BenchPageProps) {
                                           </span>
                                         </>
                                       )
-                                      : <span>无结果</span>}
+                                      : (
+                                        <span>
+                                          {benchText(
+                                            locale,
+                                            '无结果',
+                                            'No result',
+                                          )}
+                                        </span>
+                                      )}
                                   </div>
                                 </article>
                               );
@@ -3373,13 +4168,17 @@ export function BenchPage({ showHeader = true }: BenchPageProps) {
                   size='sm'
                   onClick={() => setScreenshotsOpen(false)}
                 >
-                  完成
+                  {benchText(locale, '完成', 'Done')}
                 </Button>
               </footer>
               <div
                 className='benchScreenshotResizeHandle'
                 role='separator'
-                aria-label='调整截图弹窗宽度'
+                aria-label={benchText(
+                  locale,
+                  '调整截图弹窗宽度',
+                  'Resize screenshot dialog',
+                )}
                 aria-orientation='vertical'
                 aria-valuemin={SCREENSHOT_DIALOG_MIN_WIDTH}
                 aria-valuemax={SCREENSHOT_DIALOG_MAX_WIDTH}
@@ -3413,12 +4212,20 @@ export function BenchPage({ showHeader = true }: BenchPageProps) {
               <header className='benchConfigHeader'>
                 <div>
                   <h2 id='bench-history-title' className='benchConfigTitle'>
-                    Bench 历史
+                    {benchText(locale, 'Bench 历史', 'Bench history')}
                   </h2>
                   <p className='benchConfigSub'>
                     {historyItems.length > 0
-                      ? `已保存 ${historyItems.length} 次运行`
-                      : '还没有保存的运行'}
+                      ? benchText(
+                        locale,
+                        `已保存 ${historyItems.length} 次运行`,
+                        `${historyItems.length} saved runs`,
+                      )
+                      : benchText(
+                        locale,
+                        '还没有保存的运行',
+                        'No saved runs yet',
+                      )}
                   </p>
                 </div>
                 <Button
@@ -3426,8 +4233,16 @@ export function BenchPage({ showHeader = true }: BenchPageProps) {
                   size='sm'
                   iconOnly
                   iconBefore={X}
-                  aria-label='关闭 Bench 历史'
-                  title='关闭 Bench 历史'
+                  aria-label={benchText(
+                    locale,
+                    '关闭 Bench 历史',
+                    'Close Bench history',
+                  )}
+                  title={benchText(
+                    locale,
+                    '关闭 Bench 历史',
+                    'Close Bench history',
+                  )}
                   onClick={() => setHistoryOpen(false)}
                 />
               </header>
@@ -3451,7 +4266,9 @@ export function BenchPage({ showHeader = true }: BenchPageProps) {
                               <div>
                                 <h3>{entry.title}</h3>
                                 <p>
-                                  {new Date(entry.savedAt).toLocaleString()}
+                                  {new Date(entry.savedAt).toLocaleString(
+                                    locale === 'en-US' ? 'en-US' : 'zh-CN',
+                                  )}
                                 </p>
                               </div>
                               <span
@@ -3459,8 +4276,12 @@ export function BenchPage({ showHeader = true }: BenchPageProps) {
                                 data-tone={failedRuns > 0 ? 'warn' : 'ok'}
                               >
                                 {failedRuns > 0
-                                  ? `${failedRuns} 个失败 Run`
-                                  : '通过'}
+                                  ? benchText(
+                                    locale,
+                                    `${failedRuns} 个失败 Run`,
+                                    `${failedRuns} failed runs`,
+                                  )
+                                  : benchText(locale, '通过', 'Passed')}
                               </span>
                             </div>
 
@@ -3470,7 +4291,9 @@ export function BenchPage({ showHeader = true }: BenchPageProps) {
                                 <strong>{formatNumber(totalRuns)}</strong>
                               </div>
                               <div>
-                                <span>成功率</span>
+                                <span>
+                                  {benchText(locale, '成功率', 'Success rate')}
+                                </span>
                                 <strong>
                                   {summary
                                     ? `${
@@ -3501,17 +4324,30 @@ export function BenchPage({ showHeader = true }: BenchPageProps) {
                               <span>{entry.config.env.model}</span>
                               <span>
                                 {entry.config.env.apiKeyConfigured
-                                  ? 'API key 已配置'
-                                  : '无 API key'}
+                                  ? benchText(
+                                    locale,
+                                    'API key 已配置',
+                                    'API key configured',
+                                  )
+                                  : benchText(
+                                    locale,
+                                    '无 API key',
+                                    'No API key',
+                                  )}
                               </span>
                               <span>
-                                重复 {entry.config.settings.repeats} 次 / 并发
-                                {' '}
-                                {entry.config.settings.parallelism}
+                                {benchText(
+                                  locale,
+                                  `重复 ${entry.config.settings.repeats} 次 / 并发 ${entry.config.settings.parallelism}`,
+                                  `${entry.config.settings.repeats} repeats / ${entry.config.settings.parallelism} concurrent`,
+                                )}
                               </span>
                               <span>
-                                {entry.config.groups.length} 个对比组 ·{' '}
-                                {entry.config.scenarios.length} 个场景
+                                {benchText(
+                                  locale,
+                                  `${entry.config.groups.length} 个对比组 · ${entry.config.scenarios.length} 个场景`,
+                                  `${entry.config.groups.length} comparison groups · ${entry.config.scenarios.length} scenarios`,
+                                )}
                               </span>
                               {jobId
                                 ? <span>job {jobId.slice(0, 8)}</span>
@@ -3519,7 +4355,13 @@ export function BenchPage({ showHeader = true }: BenchPageProps) {
                             </div>
 
                             <details className='benchHistoryDetails'>
-                              <summary>配置快照</summary>
+                              <summary>
+                                {benchText(
+                                  locale,
+                                  '配置快照',
+                                  'Setup snapshot',
+                                )}
+                              </summary>
                               <div className='benchHistorySnapshot'>
                                 {jobId
                                   ? (
@@ -3532,24 +4374,43 @@ export function BenchPage({ showHeader = true }: BenchPageProps) {
                                 {recoveryUrl
                                   ? (
                                     <div>
-                                      <span>恢复链接</span>
+                                      <span>
+                                        {benchText(
+                                          locale,
+                                          '恢复链接',
+                                          'Recovery link',
+                                        )}
+                                      </span>
                                       <strong>{recoveryUrl}</strong>
                                     </div>
                                   )
                                   : null}
                                 <div>
-                                  <span>对比组</span>
+                                  <span>
+                                    {benchText(
+                                      locale,
+                                      '对比组',
+                                      'Comparison groups',
+                                    )}
+                                  </span>
                                   <strong>
                                     {entry.config.groups.map((group) =>
-                                      `${group.name} (${group.model})`
+                                      `${
+                                        getBenchGroupDisplayName(group, locale)
+                                      } (${group.model})`
                                     ).join(', ')}
                                   </strong>
                                 </div>
                                 <div>
-                                  <span>场景</span>
+                                  <span>
+                                    {benchText(locale, '场景', 'Scenarios')}
+                                  </span>
                                   <strong>
                                     {entry.config.scenarios.map((scenario) =>
-                                      scenario.name
+                                      getBenchScenarioDisplayName(
+                                        scenario,
+                                        locale,
+                                      )
                                     ).join(', ')}
                                   </strong>
                                 </div>
@@ -3563,7 +4424,7 @@ export function BenchPage({ showHeader = true }: BenchPageProps) {
                                 iconBefore={RotateCcw}
                                 onClick={() => restoreHistoryEntry(entry)}
                               >
-                                恢复
+                                {benchText(locale, '恢复', 'Restore')}
                               </Button>
                               <div className='benchHistorySecondaryActions'>
                                 <Button
@@ -3575,8 +4436,12 @@ export function BenchPage({ showHeader = true }: BenchPageProps) {
                                     void copyHistoryRecoveryUrl(entry)}
                                 >
                                   {historyCopyId === entry.id
-                                    ? '已复制'
-                                    : '复制链接'}
+                                    ? benchText(locale, '已复制', 'Copied')
+                                    : benchText(
+                                      locale,
+                                      '复制链接',
+                                      'Copy link',
+                                    )}
                                 </Button>
                                 <Button
                                   variant='secondary'
@@ -3584,7 +4449,7 @@ export function BenchPage({ showHeader = true }: BenchPageProps) {
                                   iconBefore={Trash2}
                                   onClick={() => deleteHistoryEntry(entry.id)}
                                 >
-                                  删除
+                                  {benchText(locale, '删除', 'Delete')}
                                 </Button>
                               </div>
                             </div>
@@ -3596,8 +4461,16 @@ export function BenchPage({ showHeader = true }: BenchPageProps) {
                   : (
                     <div className='benchEmptyReport benchHistoryEmpty'>
                       <History size={28} strokeWidth={1.8} />
-                      <strong>暂无历史</strong>
-                      <span>完成的 Bench 会自动保存在这里。</span>
+                      <strong>
+                        {benchText(locale, '暂无历史', 'No history yet')}
+                      </strong>
+                      <span>
+                        {benchText(
+                          locale,
+                          '完成的 Bench 会自动保存在这里。',
+                          'Completed Bench runs are saved here automatically.',
+                        )}
+                      </span>
                     </div>
                   )}
               </div>
@@ -3610,14 +4483,14 @@ export function BenchPage({ showHeader = true }: BenchPageProps) {
                   disabled={historyItems.length === 0}
                   onClick={clearHistory}
                 >
-                  清空历史
+                  {benchText(locale, '清空历史', 'Clear history')}
                 </Button>
                 <Button
                   variant='primary'
                   size='sm'
                   onClick={() => setHistoryOpen(false)}
                 >
-                  完成
+                  {benchText(locale, '完成', 'Done')}
                 </Button>
               </footer>
             </section>
@@ -3654,13 +4527,29 @@ export function BenchPage({ showHeader = true }: BenchPageProps) {
                       className='benchConfigTitle'
                     >
                       {benchRunBlockers.length > 0
-                        ? '还不能运行 Bench'
-                        : '使用服务端默认配置？'}
+                        ? benchText(
+                          locale,
+                          '还不能运行 Bench',
+                          'Bench is not ready to run',
+                        )
+                        : benchText(
+                          locale,
+                          '使用服务端默认配置？',
+                          'Use the server defaults?',
+                        )}
                     </h2>
                     <p id='bench-run-notice-desc' className='benchConfigSub'>
                       {benchRunBlockers.length > 0
-                        ? '请先补全下面的必要配置。'
-                        : '当前没有填写自定义 Provider。'}
+                        ? benchText(
+                          locale,
+                          '请先补全下面的必要配置。',
+                          'Complete the required setup below first.',
+                        )
+                        : benchText(
+                          locale,
+                          '当前没有填写自定义 Provider。',
+                          'No custom Provider is configured.',
+                        )}
                     </p>
                   </div>
                 </div>
@@ -3669,8 +4558,12 @@ export function BenchPage({ showHeader = true }: BenchPageProps) {
                   size='md'
                   iconOnly
                   iconBefore={X}
-                  aria-label='关闭提示'
-                  title='关闭提示'
+                  aria-label={benchText(
+                    locale,
+                    '关闭提示',
+                    'Close notice',
+                  )}
+                  title={benchText(locale, '关闭提示', 'Close notice')}
                   onClick={() => setBenchRunNoticeOpen(false)}
                 />
               </header>
@@ -3687,8 +4580,11 @@ export function BenchPage({ showHeader = true }: BenchPageProps) {
                   : (
                     <>
                       <p className='benchRunNoticeText'>
-                        本次运行将使用服务端已配置的 Provider，浏览器不会发送
-                        Provider 密钥、地址或默认 Model。
+                        {benchText(
+                          locale,
+                          '本次运行将使用服务端已配置的 Provider，浏览器不会发送 Provider 密钥、地址或默认 Model。',
+                          'This run will use the Provider configured on the server. The browser will not send a Provider key, address, or default Model.',
+                        )}
                       </p>
                       <div className='benchRunHealthCard'>
                         <div>
@@ -3697,20 +4593,29 @@ export function BenchPage({ showHeader = true }: BenchPageProps) {
                             {getBenchHealthKeyLabel(
                               benchHealth,
                               benchHealthError,
+                              locale,
                             )}
                           </strong>
                         </div>
                         <div>
                           <span>Model</span>
                           <strong>
-                            {benchHealth?.model ?? '服务端默认'}
+                            {benchHealth?.model
+                              ?? benchText(
+                                locale,
+                                '服务端默认',
+                                'Server default',
+                              )}
                           </strong>
                         </div>
                       </div>
                       {benchHealthError
                         ? (
                           <p className='benchRunNoticeError'>
-                            {benchHealthError}
+                            {getBenchHealthErrorText(
+                              benchHealthError,
+                              locale,
+                            )}
                           </p>
                         )
                         : null}
@@ -3724,7 +4629,7 @@ export function BenchPage({ showHeader = true }: BenchPageProps) {
                   size='md'
                   onClick={() => setBenchRunNoticeOpen(false)}
                 >
-                  关闭
+                  {benchText(locale, '关闭', 'Close')}
                 </Button>
                 <Button
                   variant={benchRunBlockers.length > 0
@@ -3737,7 +4642,7 @@ export function BenchPage({ showHeader = true }: BenchPageProps) {
                     setConfigOpen(true);
                   }}
                 >
-                  去配置
+                  {benchText(locale, '去配置', 'Open settings')}
                 </Button>
                 {benchRunBlockers.length === 0
                   ? (
@@ -3751,7 +4656,11 @@ export function BenchPage({ showHeader = true }: BenchPageProps) {
                         startBench(true);
                       }}
                     >
-                      使用默认配置运行
+                      {benchText(
+                        locale,
+                        '使用默认配置运行',
+                        'Run with defaults',
+                      )}
                     </Button>
                   )
                   : null}
@@ -3779,10 +4688,14 @@ export function BenchPage({ showHeader = true }: BenchPageProps) {
               <header className='benchConfigHeader'>
                 <div>
                   <h2 id='bench-config-title' className='benchConfigTitle'>
-                    运行设置
+                    {benchText(locale, '运行设置', 'Run settings')}
                   </h2>
                   <p className='benchConfigSub'>
-                    配置 Provider、运行参数与场景。
+                    {benchText(
+                      locale,
+                      '配置 Provider、运行参数与场景。',
+                      'Configure the Provider, run parameters, and scenarios.',
+                    )}
                   </p>
                 </div>
                 <Button
@@ -3790,8 +4703,16 @@ export function BenchPage({ showHeader = true }: BenchPageProps) {
                   size='md'
                   iconOnly
                   iconBefore={X}
-                  aria-label='关闭运行设置'
-                  title='关闭运行设置'
+                  aria-label={benchText(
+                    locale,
+                    '关闭运行设置',
+                    'Close run settings',
+                  )}
+                  title={benchText(
+                    locale,
+                    '关闭运行设置',
+                    'Close run settings',
+                  )}
                   onClick={() => setConfigOpen(false)}
                 />
               </header>
@@ -3807,7 +4728,13 @@ export function BenchPage({ showHeader = true }: BenchPageProps) {
                         </p>
                       </div>
                       <span className='benchStatusPill'>
-                        {env.apiKey.trim() ? 'Key 已配置' : '无 Key'}
+                        {env.apiKey.trim()
+                          ? benchText(
+                            locale,
+                            'Key 已配置',
+                            'Key configured',
+                          )
+                          : benchText(locale, '无 Key', 'No key')}
                       </span>
                     </div>
                     <label className='benchField'>
@@ -3839,7 +4766,11 @@ export function BenchPage({ showHeader = true }: BenchPageProps) {
                     </label>
                     <label className='benchField'>
                       <span className='benchFieldLabel'>
-                        新建对比组的默认 Model
+                        {benchText(
+                          locale,
+                          '新建对比组的默认 Model',
+                          'Default Model for new comparison groups',
+                        )}
                       </span>
                       <input
                         className='benchInput'
@@ -3857,9 +4788,15 @@ export function BenchPage({ showHeader = true }: BenchPageProps) {
                   <section className='benchConfigSection'>
                     <div className='benchSectionHeader'>
                       <div>
-                        <h3 className='benchSectionTitle'>运行参数</h3>
+                        <h3 className='benchSectionTitle'>
+                          {benchText(locale, '运行参数', 'Run parameters')}
+                        </h3>
                         <p className='benchSectionSub'>
-                          Repeats、并发与检查项
+                          {benchText(
+                            locale,
+                            'Repeats、并发与检查项',
+                            'Repeats, concurrency, and checks',
+                          )}
                         </p>
                       </div>
                       <Zap size={15} strokeWidth={2} />
@@ -3885,7 +4822,9 @@ export function BenchPage({ showHeader = true }: BenchPageProps) {
                         />
                       </label>
                       <label className='benchField'>
-                        <span className='benchFieldLabel'>并发</span>
+                        <span className='benchFieldLabel'>
+                          {benchText(locale, '并发', 'Concurrency')}
+                        </span>
                         <input
                           className='benchInput'
                           type='number'
@@ -3914,7 +4853,13 @@ export function BenchPage({ showHeader = true }: BenchPageProps) {
                             repairEnabled: event.target.checked,
                           }))}
                       />
-                      <span>启用 Repair attempts</span>
+                      <span>
+                        {benchText(
+                          locale,
+                          '启用 Repair attempts',
+                          'Enable Repair attempts',
+                        )}
+                      </span>
                     </label>
                     <label className='benchToggle'>
                       <input
@@ -3926,7 +4871,13 @@ export function BenchPage({ showHeader = true }: BenchPageProps) {
                             judgeEnabled: event.target.checked,
                           }))}
                       />
-                      <span>启用 UI Judge</span>
+                      <span>
+                        {benchText(
+                          locale,
+                          '启用 UI Judge',
+                          'Enable UI Judge',
+                        )}
+                      </span>
                     </label>
                     <label className='benchToggle'>
                       <input
@@ -3938,7 +4889,13 @@ export function BenchPage({ showHeader = true }: BenchPageProps) {
                             collectLiveRenderMetrics: event.target.checked,
                           }))}
                       />
-                      <span>采集实时 Render metrics</span>
+                      <span>
+                        {benchText(
+                          locale,
+                          '采集实时 Render metrics',
+                          'Collect live Render metrics',
+                        )}
+                      </span>
                     </label>
                   </section>
                 </div>
@@ -3946,8 +4903,16 @@ export function BenchPage({ showHeader = true }: BenchPageProps) {
                 <section className='benchConfigSection benchConfigScenarios'>
                   <div className='benchSectionHeader'>
                     <div>
-                      <h3 className='benchSectionTitle'>场景</h3>
-                      <p className='benchSectionSub'>共享 Prompt 集合</p>
+                      <h3 className='benchSectionTitle'>
+                        {benchText(locale, '场景', 'Scenarios')}
+                      </h3>
+                      <p className='benchSectionSub'>
+                        {benchText(
+                          locale,
+                          '共享 Prompt 集合',
+                          'Shared prompt collection',
+                        )}
+                      </p>
                     </div>
                     <Button
                       variant='secondary'
@@ -3955,7 +4920,7 @@ export function BenchPage({ showHeader = true }: BenchPageProps) {
                       iconBefore={MessageSquarePlus}
                       onClick={addScenario}
                     >
-                      添加
+                      {benchText(locale, '添加', 'Add')}
                     </Button>
                   </div>
                   <div className='benchScenarioList'>
@@ -3964,12 +4929,22 @@ export function BenchPage({ showHeader = true }: BenchPageProps) {
                         <div className='benchScenarioTop'>
                           <input
                             className='benchInlineInput benchScenarioName'
-                            value={scenario.name}
-                            aria-label='场景名称'
+                            value={getBenchScenarioDisplayName(
+                              scenario,
+                              locale,
+                            )}
+                            aria-label={benchText(
+                              locale,
+                              '场景名称',
+                              'Scenario name',
+                            )}
                             onChange={(event) =>
                               updateScenario(
                                 scenario.id,
-                                { name: event.target.value },
+                                {
+                                  name: event.target.value,
+                                  systemName: undefined,
+                                },
                               )}
                           />
                           <Button
@@ -3977,8 +4952,24 @@ export function BenchPage({ showHeader = true }: BenchPageProps) {
                             size='sm'
                             iconOnly
                             iconBefore={Trash2}
-                            aria-label={`删除 ${scenario.name}`}
-                            title={`删除 ${scenario.name}`}
+                            aria-label={benchText(
+                              locale,
+                              `删除 ${
+                                getBenchScenarioDisplayName(scenario, locale)
+                              }`,
+                              `Delete ${
+                                getBenchScenarioDisplayName(scenario, locale)
+                              }`,
+                            )}
+                            title={benchText(
+                              locale,
+                              `删除 ${
+                                getBenchScenarioDisplayName(scenario, locale)
+                              }`,
+                              `Delete ${
+                                getBenchScenarioDisplayName(scenario, locale)
+                              }`,
+                            )}
                             disabled={scenarios.length <= 1}
                             onClick={() =>
                               removeScenario(scenario.id)}
@@ -3986,33 +4977,60 @@ export function BenchPage({ showHeader = true }: BenchPageProps) {
                         </div>
                         <textarea
                           className='benchTextarea benchScenarioPrompt'
-                          value={scenario.prompt}
-                          aria-label={`${scenario.name} prompt`}
+                          value={getBenchScenarioFieldText(
+                            scenario.prompt,
+                            scenario.systemPrompt,
+                            locale,
+                          )}
+                          aria-label={`${
+                            getBenchScenarioDisplayName(scenario, locale)
+                          } prompt`}
                           onChange={(event) =>
                             updateScenario(
                               scenario.id,
-                              { prompt: event.target.value },
+                              {
+                                prompt: event.target.value,
+                                systemPrompt: undefined,
+                              },
                             )}
                         />
                         <div className='benchScenarioMetaRow'>
                           <input
                             className='benchInlineInput'
-                            value={scenario.type}
-                            aria-label={`${scenario.name} type`}
+                            value={getBenchScenarioFieldText(
+                              scenario.type,
+                              scenario.systemType,
+                              locale,
+                            )}
+                            aria-label={`${
+                              getBenchScenarioDisplayName(scenario, locale)
+                            } type`}
                             onChange={(event) =>
                               updateScenario(
                                 scenario.id,
-                                { type: event.target.value },
+                                {
+                                  type: event.target.value,
+                                  systemType: undefined,
+                                },
                               )}
                           />
                           <input
                             className='benchInlineInput'
-                            value={scenario.action}
-                            aria-label={`${scenario.name} action`}
+                            value={getBenchScenarioFieldText(
+                              scenario.action,
+                              scenario.systemAction,
+                              locale,
+                            )}
+                            aria-label={`${
+                              getBenchScenarioDisplayName(scenario, locale)
+                            } action`}
                             onChange={(event) =>
                               updateScenario(
                                 scenario.id,
-                                { action: event.target.value },
+                                {
+                                  action: event.target.value,
+                                  systemAction: undefined,
+                                },
                               )}
                           />
                         </div>
@@ -4029,14 +5047,14 @@ export function BenchPage({ showHeader = true }: BenchPageProps) {
                   iconBefore={RotateCcw}
                   onClick={resetBench}
                 >
-                  重置
+                  {benchText(locale, '重置', 'Reset')}
                 </Button>
                 <Button
                   variant='primary'
                   size='md'
                   onClick={() => setConfigOpen(false)}
                 >
-                  完成
+                  {benchText(locale, '完成', 'Done')}
                 </Button>
               </footer>
             </section>

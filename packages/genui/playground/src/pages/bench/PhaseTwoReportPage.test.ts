@@ -607,6 +607,73 @@ describe('Phase 2 report page integration', () => {
     ).toHaveLength(1);
   });
 
+  test('renders the Phase 2 chrome in explicit Chinese and English locales', () => {
+    const report = publishedFixture();
+    const chineseHtml = renderToStaticMarkup(
+      React.createElement(PhaseTwoReportPage, {
+        locale: 'zh-CN',
+        report,
+      }),
+    );
+    const englishHtml = renderToStaticMarkup(
+      React.createElement(PhaseTwoReportPage, {
+        locale: 'en-US',
+        report,
+      }),
+    );
+
+    expect(chineseHtml).toContain('结论');
+    expect(chineseHtml).toContain('什么是 matched-core？');
+    expect(chineseHtml).toContain('缺少计划运行结果');
+    expect(chineseHtml).toContain('aria-label="报告筛选条件"');
+    expect(chineseHtml).not.toContain('What is matched-core?');
+
+    expect(englishHtml).toContain('Conclusion');
+    expect(englishHtml).toContain('What is matched-core?');
+    expect(englishHtml).toContain('Same task × model × repeat');
+    expect(englishHtml).toContain(
+      'Start with the overview, then inspect the delta',
+    );
+    expect(englishHtml).toContain('Final valid rate');
+    expect(englishHtml).toContain('Missing planned run result');
+    expect(englishHtml).toContain('aria-label="Report filters"');
+    expect(englishHtml).toContain(
+      'aria-label="Select a paired metric"',
+    );
+    expect(englishHtml).toContain('Evaluation methodology');
+    expect(englishHtml).toContain(
+      'Protocol differences should be grounded in paired evidence',
+    );
+    expect(englishHtml).not.toMatch(/[\u3400-\u9fff]/u);
+  });
+
+  test('localizes the checked-in report limitations without mutating report data', () => {
+    const originalLimitation = PHASE_TWO_PUBLISHED_REPORT.limitations[0];
+    const chineseHtml = renderToStaticMarkup(
+      React.createElement(PhaseTwoReportPage, {
+        locale: 'zh-CN',
+      }),
+    );
+    const englishHtml = renderToStaticMarkup(
+      React.createElement(PhaseTwoReportPage, {
+        locale: 'en-US',
+      }),
+    );
+
+    expect(originalLimitation).toContain('本轮只覆盖 3 个合成场景');
+    expect(chineseHtml).toContain(originalLimitation);
+    expect(englishHtml).toContain(
+      'This run covers only three synthetic scenarios',
+    );
+    expect(englishHtml).toContain(
+      'The independent Render evaluator was disabled',
+    );
+    expect(englishHtml).not.toMatch(/[\u3400-\u9fff]/u);
+    expect(PHASE_TWO_PUBLISHED_REPORT.limitations[0]).toBe(
+      originalLimitation,
+    );
+  });
+
   test('aligns the Phase 2 identity with Phase 1 and omits document links', () => {
     const report = publishedFixture();
     report.larkUrl = 'https://example.test/phase-two-report';
@@ -664,6 +731,12 @@ describe('Phase 2 report page integration', () => {
         report,
       }),
     );
+    const englishHtml = renderToStaticMarkup(
+      React.createElement(PhaseTwoReportPage, {
+        locale: 'en-US',
+        report,
+      }),
+    );
     const evidence = collectFormalScreenshotEvidence(report);
 
     expect(evidence.map((item) => item.id)).toEqual([
@@ -686,6 +759,18 @@ describe('Phase 2 report page integration', () => {
       'canonical report 未保存截图或完整协议输出',
     );
     expect(html).not.toMatch(/代表性复跑|证据复跑|不参与汇总指标/);
+    expect(englishHtml).toContain('View UI Judge render results');
+    expect(englishHtml).toContain(
+      'Each image comes from the same Lynx capture scored by UI Judge',
+    );
+    expect(englishHtml).toContain(
+      'aria-label="Close UI Judge render results"',
+    );
+    expect(englishHtml).toContain(
+      'aria-label="Select a UI Judge screenshot scenario"',
+    );
+    expect(englishHtml).toContain('A2UI Lynx render for Weather');
+    expect(englishHtml).not.toContain('查看 UI Judge 实际渲染结果');
   });
 
   test('does not render untrusted or incomplete screenshot pairs', () => {
