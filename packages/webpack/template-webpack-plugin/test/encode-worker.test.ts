@@ -2,13 +2,15 @@
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
 import path from 'node:path';
-import { pathToFileURL } from 'node:url';
+import { fileURLToPath, pathToFileURL } from 'node:url';
 
 import { afterEach, describe, expect, rs, test } from '@rstest/core';
 
+import { supportNapi } from '@lynx-js/tasm';
+
 import encode from '../src/worker/encode.js';
 
-const context = path.dirname(new URL(import.meta.url).pathname);
+const context = path.dirname(fileURLToPath(import.meta.url));
 const tasmPkg = pathToFileURL(
   path.join(context, 'fixtures/mock-tasm.mjs'),
 ).href;
@@ -45,6 +47,19 @@ function isEncodeTraceRow(value: unknown): value is EncodeTraceRow {
     && typeof value.duration_ms === 'number';
 }
 
+// The encode trace is printed by `@lynx-js/tasm`'s native binding, and that
+// package ships prebuilt binaries for two platforms only (`build/darwin`,
+// `build/linux`). Anywhere else `getEncodeMode()` falls back to wasm, which
+// emits neither the trace header nor the `console.table` — so on Windows the
+// trace assertion is testing a capability the platform does not have, not
+// `encode`'s behaviour.
+//
+// Ask tasm rather than restating its rule: a local copy of the predicate would
+// go stale by SKIPPING a test that should run, and a skip turns nothing red.
+// Only the case that consumes real trace output is gated; the rest use the mock
+// TASM and run everywhere.
+const testWithNativeTasm = supportNapi() ? test : test.skip;
+
 describe('encode worker trace configuration', () => {
   afterEach(() => {
     rs.restoreAllMocks();
@@ -73,7 +88,7 @@ describe('encode worker trace configuration', () => {
     },
   );
 
-  test('prints the TASM encode trace when enabled', async () => {
+  testWithNativeTasm('prints the TASM encode trace when enabled', async () => {
     rs.stubEnv('DEBUG', 'rspeedy:template');
     const log = rs.spyOn(console, 'log').mockImplementation(() => void 0);
     const table = rs.spyOn(console, 'table').mockImplementation(() => void 0);

@@ -1,3 +1,4 @@
+import { fileURLToPath } from 'node:url';
 import { LynxEncodePlugin, LynxTemplatePlugin } from '../../../../lib/index.js';
 
 /** @type {import('@rspack/core').Configuration} */
@@ -9,7 +10,7 @@ export default {
     d: './d.js',
     e: './e.js',
   },
-  context: new URL('.', import.meta.url).pathname,
+  context: fileURLToPath(new URL('.', import.meta.url)),
   output: {
     filename: '[name]/[name].js',
   },

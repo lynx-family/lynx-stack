@@ -294,6 +294,19 @@ jobs:
         --coverage
         --testTimeout=50000
         --hookTimeout=50000
+  test-rstest-windows:
+    needs: build-windows
+    uses: ./.github/workflows/workflow-test.yml
+    secrets:
+      CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
+    with:
+      runs-on: lynx-windows-2022-large
+      run: >
+        pnpm exec rstest run
+        -c rstest.config.ts
+        --coverage
+        --testTimeout=50000
+        --hookTimeout=50000
   kitten-lynx-android-emulator:
     needs: build
     uses: ./.github/workflows/workflow-test.yml
@@ -421,6 +434,7 @@ jobs:
       - test-rust
       - test-type
       - test-rstest
+      - test-rstest-windows
       - test-typos
       - test-vitest
       - test-vitest-windows
