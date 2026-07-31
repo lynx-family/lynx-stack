@@ -123,6 +123,9 @@
       "path": "./packages/react"
     },
     {
+      "path": "./packages/react-signals"
+    },
+    {
       "path": "./packages/lynx"
     },
     {

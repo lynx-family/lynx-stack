@@ -125,6 +125,8 @@ export function pluginReactAlias(options: Options): RsbuildPlugin {
           preact: preactHooks,
         }
 
+        const signalsMainThread = '@lynx-js/react-signals/lepus'
+
         // dprint-ignore
         chain
           .module
@@ -142,6 +144,7 @@ export function pluginReactAlias(options: Options): RsbuildPlugin {
                   .set('preact/hooks', reactHooks.mainThread)
                   .set('@lynx-js/react/hooks', reactHooks.mainThread)
                   .set('@lynx-js/react/lepus/hooks', reactHooks.mainThread)
+                  .set('@lynx-js/react-signals$', signalsMainThread)
                 .end()
               .end()
             .end()

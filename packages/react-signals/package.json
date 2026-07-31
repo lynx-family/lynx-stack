@@ -1,0 +1,57 @@
+{
+  "name": "@lynx-js/react-signals",
+  "version": "0.0.1",
+  "description": "Thread-aware Preact Signals integration for ReactLynx.",
+  "keywords": [
+    "lynx",
+    "preact",
+    "react",
+    "signals"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/lynx-family/lynx-stack.git",
+    "directory": "packages/react-signals"
+  },
+  "license": "Apache-2.0",
+  "type": "module",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.js"
+    },
+    "./lepus": {
+      "types": "./dist/index.d.ts",
+      "default": "./dist/mainThread.js"
+    },
+    "./package.json": "./package.json"
+  },
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "files": [
+    "dist",
+    "README.md"
+  ],
+  "scripts": {
+    "build": "rslib build"
+  },
+  "dependencies": {
+    "@preact/signals": "^2.9.4",
+    "@preact/signals-core": "^1.14.4"
+  },
+  "devDependencies": {
+    "@lynx-js/react": "workspace:*",
+    "@rslib/core": "catalog:rslib",
+    "preact": "catalog:lynxjs"
+  },
+  "peerDependencies": {
+    "@lynx-js/react": "^0.123.0",
+    "preact": "*"
+  },
+  "engines": {
+    "node": ">=18"
+  },
+  "publishConfig": {
+    "access": "public"
+  }
+}
