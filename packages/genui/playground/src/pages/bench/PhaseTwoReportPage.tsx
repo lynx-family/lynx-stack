@@ -739,6 +739,17 @@ function formalScreenshotVersion(completedAt: string): string | undefined {
   return instant.toISOString().replace(/[-:.]/gu, '');
 }
 
+export function resolveFormalScreenshotAssetUrl(
+  screenshotUrl: string,
+  assetPrefix = import.meta.env.ASSET_PREFIX ?? '',
+): string {
+  const normalizedPrefix = assetPrefix.replace(/\/+$/u, '');
+  const normalizedPath = screenshotUrl.startsWith('/')
+    ? screenshotUrl
+    : `/${screenshotUrl}`;
+  return `${normalizedPrefix}${normalizedPath}`;
+}
+
 function isFormalScreenshotUrl(
   run: PublishedRun,
   source: PublishedSource,
@@ -798,7 +809,7 @@ export function collectFormalScreenshotEvidence(
         scenarioName: pair.scenarioName,
         protocol: run.protocol,
         repeatIndex: pair.repeatIndex,
-        screenshotUrl: run.screenshotUrl,
+        screenshotUrl: resolveFormalScreenshotAssetUrl(run.screenshotUrl),
         judge: run.judge,
         totalTokens: run.totalTokens,
         generationMs: run.generationMs,

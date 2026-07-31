@@ -1,7 +1,7 @@
 // Copyright 2026 The Lynx Authors. All rights reserved.
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
-import { describe, expect, test } from '@rstest/core';
+import { afterEach, describe, expect, rstest, test } from '@rstest/core';
 import * as React from 'react';
 import { renderToStaticMarkup } from 'react-dom/server';
 
@@ -14,12 +14,17 @@ import {
   buildThesis,
   collectFormalScreenshotEvidence,
   combinePublishedMetrics,
+  resolveFormalScreenshotAssetUrl,
   summarizePairedOutcomes,
   summarizePublishedSelection,
 } from './PhaseTwoReportPage.js';
 
 // Rstest compiles standalone TSX imports with the classic JSX runtime.
 (globalThis as typeof globalThis & { React: typeof React }).React = React;
+
+afterEach(() => {
+  rstest.unstubAllEnvs();
+});
 
 type PhaseTwoPublishedReport = typeof PHASE_TWO_PUBLISHED_REPORT;
 type PhaseTwoPublishedMetrics = PhaseTwoPublishedReport['summary'];
@@ -701,6 +706,7 @@ describe('Phase 2 report page integration', () => {
   });
 
   test('renders captured Judge screenshots in an accessible dialog', () => {
+    rstest.stubEnv('ASSET_PREFIX', '/genui/');
     const report = publishedFixture();
     report.sources = [{
       id: 'report',
@@ -743,6 +749,10 @@ describe('Phase 2 report page integration', () => {
       'run-a2ui',
       'run-openui',
     ]);
+    expect(evidence.map((item) => item.screenshotUrl)).toEqual([
+      '/genui/bench/phase-two/screenshots/run-a2ui.png?v=20260729T000100000Z',
+      '/genui/bench/phase-two/screenshots/run-openui.png?v=20260729T000100000Z',
+    ]);
     expect(evidence.every((item) => item.pairId === 'pair-1')).toBe(true);
     expect(html).toContain('查看 UI Judge 实际渲染结果');
     expect(html).toContain('<dialog');
@@ -750,6 +760,12 @@ describe('Phase 2 report page integration', () => {
     expect(html).toContain('role="tabpanel"');
     expect(html).toContain('run-a2ui.png');
     expect(html).toContain('run-openui.png');
+    expect(html).toContain(
+      'href="/genui/bench/phase-two/screenshots/run-a2ui.png',
+    );
+    expect(html).toContain(
+      'src="/genui/bench/phase-two/screenshots/run-openui.png',
+    );
     expect(html).not.toContain('run-a2ui-2.png');
     expect(html).toContain('Weather content is complete.');
     expect(html).toContain(
@@ -771,6 +787,27 @@ describe('Phase 2 report page integration', () => {
     );
     expect(englishHtml).toContain('A2UI Lynx render for Weather');
     expect(englishHtml).not.toContain('查看 UI Judge 实际渲染结果');
+  });
+
+  test('resolves formal screenshots against the Rsbuild asset prefix', () => {
+    const screenshotUrl =
+      '/bench/phase-two/screenshots/run-a2ui.png?v=20260729T000100000Z';
+
+    expect(resolveFormalScreenshotAssetUrl(screenshotUrl, '')).toBe(
+      screenshotUrl,
+    );
+    expect(resolveFormalScreenshotAssetUrl(screenshotUrl, '/')).toBe(
+      screenshotUrl,
+    );
+    expect(resolveFormalScreenshotAssetUrl(screenshotUrl, '/genui/')).toBe(
+      `/genui${screenshotUrl}`,
+    );
+    expect(
+      resolveFormalScreenshotAssetUrl(
+        screenshotUrl,
+        'https://static.example.com/genui/',
+      ),
+    ).toBe(`https://static.example.com/genui${screenshotUrl}`);
   });
 
   test('does not render untrusted or incomplete screenshot pairs', () => {

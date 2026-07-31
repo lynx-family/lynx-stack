@@ -5,7 +5,7 @@
     "moduleResolution": "bundler",
     "target": "ES2020",
     "lib": ["ESNext", "DOM"],
-    "types": ["react", "react-dom"],
+    "types": ["react", "react-dom", "@rsbuild/core/types"],
     "noEmit": true,
     "skipLibCheck": true,
   },
