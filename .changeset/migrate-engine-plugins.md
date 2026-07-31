@@ -3,4 +3,4 @@
 "@lynx-js/rspeedy": patch
 ---
 
-Move `pluginChunkLoading`, `pluginOptimization`, `pluginSwc`, and `pluginTarget` into `pluginLynx()`.
+Move `pluginChunkLoading`, `pluginOptimization`, `pluginResolve`, `pluginSourcemap`, `pluginSwc`, and `pluginTarget` into `pluginLynx()`. `@lynx-js/rspeedy` now depends on `@lynx-js/rsbuild-plugin`.
