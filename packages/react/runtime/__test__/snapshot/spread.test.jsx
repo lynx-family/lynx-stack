@@ -46,6 +46,25 @@ afterEach(() => {
 });
 
 describe('spreadUpdate', () => {
+  it('preserves spread attribute names when the compile-time config is unavailable', () => {
+    Reflect.deleteProperty(globalThis, '__EXPERIMENTAL_TRANSFORM_BUILTIN_ATTRIBUTE_NAMES__');
+
+    expect(
+      transformSpread(
+        { __id: 6 },
+        1,
+        {
+          __spread: true,
+          textMaxline: 2,
+          onClick: vi.fn(),
+        },
+      ),
+    ).toEqual({
+      textMaxline: 2,
+      onClick: '6:1:onClick',
+    });
+  });
+
   it('transforms builtin attribute names and preserves event handler lookup keys', () => {
     globalThis.__EXPERIMENTAL_TRANSFORM_BUILTIN_ATTRIBUTE_NAMES__ = true;
 

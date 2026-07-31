@@ -41,7 +41,8 @@ export function prepareSpreadAttrSlot(
       continue;
     }
 
-    const transformedKey = __EXPERIMENTAL_TRANSFORM_BUILTIN_ATTRIBUTE_NAMES__
+    const transformedKey = typeof __EXPERIMENTAL_TRANSFORM_BUILTIN_ATTRIBUTE_NAMES__ !== 'undefined'
+        && __EXPERIMENTAL_TRANSFORM_BUILTIN_ATTRIBUTE_NAMES__
       ? transformAttrName(key)
       : key;
     if (isEventPropKey(transformedKey)) {

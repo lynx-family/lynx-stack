@@ -193,4 +193,18 @@ describe('worklet lifecycle without elements', () => {
       'item-key': 'item-0',
     });
   });
+
+  it('does not transform spread platform info when the compile-time config is unavailable', () => {
+    Reflect.deleteProperty(globalThis, '__EXPERIMENTAL_TRANSFORM_BUILTIN_ATTRIBUTE_NAMES__');
+
+    expect(
+      getListItemPlatformInfoFromIndexedValue({
+        __spread: true,
+        itemKey: 'camel-case',
+        'item-key': 'normalized',
+      }),
+    ).toEqual({
+      'item-key': 'normalized',
+    });
+  });
 });
