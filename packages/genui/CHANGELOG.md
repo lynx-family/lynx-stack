@@ -1,5 +1,11 @@
 # @lynx-js/genui
 
+## 0.2.1
+
+### Patch Changes
+
+- Adopt lynx-ui primitives and Luna theme tokens for OpenUI controls, and refresh the OpenUI playground experience. ([#3257](https://github.com/lynx-family/lynx-stack/pull/3257))
+
 ## 0.2.0
 
 ### Minor Changes

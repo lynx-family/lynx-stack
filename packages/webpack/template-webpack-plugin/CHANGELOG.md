@@ -1,5 +1,16 @@
 # @lynx-js/template-webpack-plugin
 
+## 0.14.1
+
+### Patch Changes
+
+- Print TASM encode timing output for `DEBUG=rspeedy:template` and `DEBUG=rspeedy:*`. ([#3285](https://github.com/lynx-family/lynx-stack/pull/3285))
+
+- Keep the sidecar source maps of the intermediate assets that `WebEncodePlugin` inlines into the encoded `.web.bundle`. Fixes #2964. ([#3250](https://github.com/lynx-family/lynx-stack/pull/3250))
+
+- Updated dependencies [[`080da86`](https://github.com/lynx-family/lynx-stack/commit/080da8606b9792b2eb5aa59cbcbd7807ad598ce2), [`aeb9438`](https://github.com/lynx-family/lynx-stack/commit/aeb9438f817473f0f04baf719ef04d709f3894d6), [`e42a1a6`](https://github.com/lynx-family/lynx-stack/commit/e42a1a6e089a49f2647694ccae3301a291ff1129)]:
+  - @lynx-js/web-core@0.23.1
+
 ## 0.14.0
 
 ### Minor Changes
