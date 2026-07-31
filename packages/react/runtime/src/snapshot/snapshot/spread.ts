@@ -350,12 +350,14 @@ function transformSpread(
     } else if (key === '__self' || key === '__source') {
       // for react debug tools
     } else if (typeof value === 'function') {
-      const transformedKey = __EXPERIMENTAL_TRANSFORM_BUILTIN_ATTRIBUTE_NAMES__
+      const transformedKey = typeof __EXPERIMENTAL_TRANSFORM_BUILTIN_ATTRIBUTE_NAMES__ !== 'undefined'
+          && __EXPERIMENTAL_TRANSFORM_BUILTIN_ATTRIBUTE_NAMES__
         ? transformAttrName(key)
         : key;
       result[transformedKey] = `${snapshot.__id}:${index}:${key}`;
     } else {
-      const transformedKey = __EXPERIMENTAL_TRANSFORM_BUILTIN_ATTRIBUTE_NAMES__
+      const transformedKey = typeof __EXPERIMENTAL_TRANSFORM_BUILTIN_ATTRIBUTE_NAMES__ !== 'undefined'
+          && __EXPERIMENTAL_TRANSFORM_BUILTIN_ATTRIBUTE_NAMES__
         ? transformAttrName(key)
         : key;
       if (!hasNoFlattenAttributes) {

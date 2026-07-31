@@ -41,7 +41,8 @@ function collectListItemPlatformInfo(
 ): PlatformInfo {
   const result: Record<string, unknown> = {};
   for (const key in object) {
-    const transformedKey = __EXPERIMENTAL_TRANSFORM_BUILTIN_ATTRIBUTE_NAMES__
+    const transformedKey = typeof __EXPERIMENTAL_TRANSFORM_BUILTIN_ATTRIBUTE_NAMES__ !== 'undefined'
+        && __EXPERIMENTAL_TRANSFORM_BUILTIN_ATTRIBUTE_NAMES__
         && transformAttributeNames
       ? transformAttrName(key)
       : key;

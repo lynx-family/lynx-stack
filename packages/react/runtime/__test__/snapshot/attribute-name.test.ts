@@ -28,6 +28,12 @@ describe('transformAttrName', () => {
     expect(transformAttrName('bindtap')).toBe('bindtap');
   });
 
+  it('does not transform names when the compile-time config is unavailable', () => {
+    Reflect.deleteProperty(globalThis, '__EXPERIMENTAL_TRANSFORM_BUILTIN_ATTRIBUTE_NAMES__');
+
+    expect(transformAttrName('textMaxline')).toBe('textMaxline');
+  });
+
   it('applies the default builtin and event mappings', () => {
     globalThis.__EXPERIMENTAL_TRANSFORM_BUILTIN_ATTRIBUTE_NAMES__ = true;
 

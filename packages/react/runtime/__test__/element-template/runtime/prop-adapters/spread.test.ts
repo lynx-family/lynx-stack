@@ -8,6 +8,18 @@ afterEach(() => {
 });
 
 describe('ElementTemplate spread prop adapter', () => {
+  it('preserves spread attribute names when the compile-time config is unavailable', () => {
+    Reflect.deleteProperty(globalThis, '__EXPERIMENTAL_TRANSFORM_BUILTIN_ATTRIBUTE_NAMES__');
+
+    expect(
+      prepareSpreadAttrSlot(-1, 0, {
+        textMaxline: 2,
+      }),
+    ).toEqual({
+      textMaxline: 2,
+    });
+  });
+
   it('transforms builtin attribute names and preserves event handler lookup keys', () => {
     globalThis.__EXPERIMENTAL_TRANSFORM_BUILTIN_ATTRIBUTE_NAMES__ = true;
 
