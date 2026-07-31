@@ -412,9 +412,9 @@ describe('Config', () => {
       {
         "compat": undefined,
         "defineDCE": undefined,
-        "enableMTSRendering": true,
         "enableRemoveCSSScope": true,
         "engineVersion": "3.2",
+        "experimental_enableMTSRendering": true,
         "experimental_transformBuiltinAttributeNames": false,
         "experimental_useElementTemplate": false,
         "inlineSourcesContent": true,
@@ -586,9 +586,9 @@ describe('Config', () => {
       {
         "compat": undefined,
         "defineDCE": undefined,
-        "enableMTSRendering": true,
         "enableRemoveCSSScope": undefined,
         "engineVersion": "3.2",
+        "experimental_enableMTSRendering": true,
         "experimental_transformBuiltinAttributeNames": false,
         "experimental_useElementTemplate": false,
         "inlineSourcesContent": true,

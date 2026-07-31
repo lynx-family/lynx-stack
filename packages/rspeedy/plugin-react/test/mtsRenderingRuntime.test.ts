@@ -113,7 +113,7 @@ function createMainThreadEnv() {
   }
 }
 
-describe('enableMTSRendering: false runtime', () => {
+describe('experimental_enableMTSRendering: false runtime', () => {
   test('the assembled bundle applies a patch that creates the real elements', async () => {
     const { pluginReactLynx } = await import('../src/pluginReactLynx.js')
 
@@ -138,7 +138,7 @@ describe('enableMTSRendering: false runtime', () => {
           },
           output: { distPath: { root: tmp } },
           plugins: [
-            pluginReactLynx({ enableMTSRendering: false }),
+            pluginReactLynx({ experimental_enableMTSRendering: false }),
             {
               name: 'ignore-css-loader-workaround',
               pre: ['lynx:react'],

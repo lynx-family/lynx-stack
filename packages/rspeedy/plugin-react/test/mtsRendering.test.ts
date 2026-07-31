@@ -45,7 +45,7 @@ function collectAssets(assets: Record<string, string>) {
   } as Rspack.RspackPluginInstance
 }
 
-describe('enableMTSRendering: false', () => {
+describe('experimental_enableMTSRendering: false', () => {
   test('assembles the main-thread bundle from the collected definitions', async () => {
     const { pluginReactLynx } = await import('../src/pluginReactLynx.js')
 
@@ -69,7 +69,7 @@ describe('enableMTSRendering: false', () => {
           },
           output: { distPath: { root: tmp } },
           plugins: [
-            pluginReactLynx({ enableMTSRendering: false }),
+            pluginReactLynx({ experimental_enableMTSRendering: false }),
             ignoreCSSLoaderWorkaround,
           ],
           tools: { rspack: { plugins: [collectAssets(assets)] } },
@@ -122,7 +122,7 @@ describe('enableMTSRendering: false', () => {
           },
           output: { distPath: { root: tmp } },
           plugins: [
-            pluginReactLynx({ enableMTSRendering: false }),
+            pluginReactLynx({ experimental_enableMTSRendering: false }),
             ignoreCSSLoaderWorkaround,
           ],
           tools: { rspack: { plugins: [collectAssets(assets)] } },
@@ -169,7 +169,7 @@ describe('enableMTSRendering: false', () => {
           },
           output: { distPath: { root: tmp } },
           plugins: [
-            pluginReactLynx({ enableMTSRendering: false }),
+            pluginReactLynx({ experimental_enableMTSRendering: false }),
             ignoreCSSLoaderWorkaround,
           ],
           tools: { rspack: { plugins: [collectAssets(assets)] } },
@@ -209,7 +209,7 @@ describe('enableMTSRendering: false', () => {
           },
           output: { distPath: { root: tmp } },
           plugins: [
-            pluginReactLynx({ enableMTSRendering: false }),
+            pluginReactLynx({ experimental_enableMTSRendering: false }),
             ignoreCSSLoaderWorkaround,
           ],
           tools: {
@@ -276,7 +276,7 @@ describe('enableMTSRendering: false', () => {
 
     expect(() =>
       pluginReactLynx({
-        enableMTSRendering: false,
+        experimental_enableMTSRendering: false,
         experimental_useElementTemplate: true,
       })
     ).toThrowError(/experimental_useElementTemplate/)

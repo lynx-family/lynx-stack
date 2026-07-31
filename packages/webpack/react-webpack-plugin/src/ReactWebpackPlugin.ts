@@ -239,9 +239,9 @@ interface ReactWebpackPluginOptions {
   experimental_useElementTemplate?: boolean;
 
   /**
-   * {@inheritdoc @lynx-js/react-rsbuild-plugin#PluginReactLynxOptions.enableMTSRendering}
+   * {@inheritdoc @lynx-js/react-rsbuild-plugin#PluginReactLynxOptions.experimental_enableMTSRendering}
    */
-  enableMTSRendering?: boolean;
+  experimental_enableMTSRendering?: boolean;
 
   /**
    * The background entry name of each main-thread entry.
@@ -343,7 +343,7 @@ class ReactWebpackPlugin {
       profile: undefined,
       workletRuntimePath: '',
       experimental_useElementTemplate: false,
-      enableMTSRendering: true,
+      experimental_enableMTSRendering: true,
       mainThreadEntries: {},
       experimental_transformBuiltinAttributeNames: false,
       lazyBundleFetcher: 'QueryComponent',
@@ -419,7 +419,9 @@ class ReactWebpackPlugin {
         options.experimental_transformBuiltinAttributeNames,
       ),
       __LAZY_BUNDLE_FETCHER__: JSON.stringify(options.lazyBundleFetcher),
-      __ENABLE_MTS_RENDERING__: JSON.stringify(options.enableMTSRendering),
+      __ENABLE_MTS_RENDERING__: JSON.stringify(
+        options.experimental_enableMTSRendering,
+      ),
     }).apply(compiler);
 
     compiler.hooks.thisCompilation.tap(this.constructor.name, compilation => {
@@ -454,7 +456,7 @@ class ReactWebpackPlugin {
         );
       });
 
-      if (options.enableMTSRendering === false) {
+      if (options.experimental_enableMTSRendering === false) {
         const MTSDefinesRuntimeModule = createMTSDefinesRuntimeModule(
           compiler.webpack,
         );
@@ -532,7 +534,7 @@ class ReactWebpackPlugin {
           // section is assembled from the definitions of the modules the
           // background put in its async chunks.
           if (
-            options.enableMTSRendering === false
+            options.experimental_enableMTSRendering === false
             && lepusCode.root === undefined
             && args.chunkGroups.length > 0
             && args.chunkGroups.every(cg => !cg.isInitial())

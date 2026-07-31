@@ -50,7 +50,7 @@ export function applyEntry(
     firstScreenSyncTiming,
     globalPropsMode,
     enableSSR,
-    enableMTSRendering,
+    experimental_enableMTSRendering,
     removeDescendantSelectorScope,
     targetSdkVersion,
     extractStr: originalExtractStr,
@@ -72,7 +72,7 @@ export function applyEntry(
       }
     >(Symbol.for('@lynx-js/react/internal:resolve'))!
 
-    const mainThreadImports = enableMTSRendering ? undefined : [
+    const mainThreadImports = experimental_enableMTSRendering ? undefined : [
       path.join(reactLynxDir, 'runtime/mts-rendering-disabled/index.js'),
     ]
 
@@ -323,7 +323,7 @@ export function applyEntry(
         firstScreenSyncTiming,
         globalPropsMode,
         enableSSR,
-        enableMTSRendering,
+        experimental_enableMTSRendering,
         mainThreadChunks,
         mainThreadEntries,
         extractStr,
