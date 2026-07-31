@@ -754,7 +754,9 @@ const externalBundleRsbuildPlugin = ({
           .end()
         }
 
-        let encode: (opts: unknown) => Promise<{ buffer: Buffer }>
+        let encode: (
+          opts: unknown,
+        ) => { buffer: Buffer } | Promise<{ buffer: Buffer }>
         if (isWeb) {
           const { getWebEncodeMode } = await import('./webpack/webEncode.js')
           encode = getWebEncodeMode()

@@ -27,6 +27,17 @@ describe('Hono application', () => {
     });
   });
 
+  test('allows IPv6 loopback origins during local development', async () => {
+    const response = await app.request('/a2ui/health', {
+      headers: { Origin: 'http://[::1]:3000' },
+    });
+
+    expect(response.status).toBe(200);
+    expect(response.headers.get('Access-Control-Allow-Origin')).toBe(
+      'http://[::1]:3000',
+    );
+  });
+
   test('extracts dynamic job parameters', async () => {
     const response = await app.request('/a2ui/bench/jobs/missing');
 

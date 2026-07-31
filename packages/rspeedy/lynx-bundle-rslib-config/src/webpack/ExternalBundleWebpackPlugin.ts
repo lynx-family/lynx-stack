@@ -35,7 +35,7 @@ export interface ExternalBundleWebpackPluginOptions {
    * })
    * ```
    */
-  encode: (opts: unknown) => Promise<{ buffer: Buffer }>
+  encode: (opts: unknown) => { buffer: Buffer } | Promise<{ buffer: Buffer }>
   /**
    * The engine version of the external bundle.
    *

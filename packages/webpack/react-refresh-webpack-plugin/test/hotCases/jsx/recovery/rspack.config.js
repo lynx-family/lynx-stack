@@ -1,3 +1,4 @@
+import { fileURLToPath } from 'node:url';
 import {ReactWebpackPlugin} from '@lynx-js/react-webpack-plugin'
 import {ReactRefreshRspackPlugin} from '../../../../lib/index.js'
 import {TestEnvPlugin} from '../../../TestEnvPlugin.ts'
@@ -5,7 +6,7 @@ import { createRequire } from 'node:module'
 import path from 'path'
 
 const require = createRequire(import.meta.url);
-const __dirname = new URL('.', import.meta.url).pathname;
+const __dirname = fileURLToPath(new URL('.', import.meta.url));
 
 /** @type {import('@rspack/core').Configuration} */
 export default {

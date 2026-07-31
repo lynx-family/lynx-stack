@@ -1,0 +1,228 @@
+.benchRunnerPage {
+  --bench-runner-canvas: #f7f7f5;
+  --bench-runner-paper: #fff;
+  --geist-radius-sm: 2px;
+  --geist-radius-md: 2px;
+
+  width: 100%;
+  min-width: 0;
+  min-height: 0;
+  display: grid;
+  grid-template-rows: 76px minmax(0, 1fr);
+  overflow: hidden;
+  background: var(--bench-runner-canvas);
+  color: var(--bench-ink);
+}
+
+html[data-theme="dark"] .benchRunnerPage {
+  --bench-runner-canvas: #0e0e0f;
+  --bench-runner-paper: #151516;
+}
+
+.benchRunnerHeader {
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 24px;
+  padding: 0 clamp(22px, 3vw, 44px);
+  border-bottom: 1px solid var(--bench-line);
+  background: var(--bench-runner-paper);
+}
+
+.benchRunnerHeader > div {
+  min-width: 0;
+  display: flex;
+  align-items: baseline;
+  gap: clamp(14px, 2vw, 24px);
+}
+
+.benchRunnerHeader h1 {
+  margin: 0;
+  font-size: clamp(21px, 2vw, 27px);
+  font-weight: 620;
+  letter-spacing: -0.04em;
+  line-height: 1;
+  white-space: nowrap;
+}
+
+.benchRunnerHeader p {
+  margin: 0;
+  color: var(--bench-muted);
+  font-size: 12px;
+  line-height: 1.45;
+}
+
+.benchRunnerHeader > span {
+  flex: 0 0 auto;
+  color: var(--bench-muted);
+  font-family: var(--bench-mono);
+  font-size: 9px;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.benchRunnerWorkspace {
+  min-width: 0;
+  min-height: 0;
+  overflow: hidden;
+}
+
+.benchRunnerWorkspace .benchPage {
+  height: 100%;
+  background: var(--bench-runner-canvas);
+}
+
+.benchRunnerWorkspace .benchMain,
+.benchRunnerWorkspace .benchReportPane {
+  padding: clamp(22px, 2.5vw, 36px);
+  background: var(--bench-runner-paper);
+}
+
+.benchRunnerWorkspace .benchSection,
+.benchRunnerWorkspace .benchGroupsSection,
+.benchRunnerWorkspace .benchOverviewBand,
+.benchRunnerWorkspace .benchPlanSection,
+.benchRunnerWorkspace .benchRunPanel,
+.benchRunnerWorkspace .benchReportTableWrap,
+.benchRunnerWorkspace .benchScreenshotSection,
+.benchRunnerWorkspace .benchMetric,
+.benchRunnerWorkspace .benchInsight,
+.benchRunnerWorkspace .benchPlanItem,
+.benchRunnerWorkspace .benchGroupCard,
+.benchRunnerWorkspace .benchScenarioItem {
+  border-radius: 0;
+  box-shadow: none;
+}
+
+.benchRunnerWorkspace .benchOverviewBand {
+  border-width: 1px 0;
+  background: transparent;
+}
+
+.benchRunnerWorkspace .benchSection,
+.benchRunnerWorkspace .benchGroupsSection {
+  border-color: var(--bench-line);
+  background: transparent;
+}
+
+.benchRunnerWorkspace .benchGroupCard:hover {
+  box-shadow: inset 3px 0 0 var(--bench-ink);
+  transform: none;
+}
+
+.benchRunnerWorkspace .benchRoleControl,
+.benchRunnerWorkspace .benchRoleButton,
+.benchRunnerWorkspace .benchGroupSummary span,
+.benchRunnerWorkspace .benchScenarioChip {
+  border-radius: 2px;
+}
+
+.benchRunnerWorkspace .benchReportHeader .benchSectionSub[data-stale="true"] {
+  color: var(--bench-ink);
+  font-weight: 600;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+html[data-theme="dark"]
+  .benchRunnerWorkspace
+  .benchGroupSummary
+  span[data-protocol="a2ui"] {
+  border-color: #78aaff;
+  color: #8bb7ff;
+}
+
+html[data-theme="dark"]
+  .benchRunnerWorkspace
+  .benchGroupSummary
+  span[data-protocol="openui"] {
+  border-color: #efa563;
+  color: #ffb777;
+}
+
+.benchRunnerWorkspace .benchInput,
+.benchRunnerWorkspace .benchSelect,
+.benchRunnerWorkspace .benchInlineInput,
+.benchRunnerWorkspace .benchGroupName,
+.benchRunnerWorkspace .benchTextarea {
+  border-radius: 0;
+}
+
+.benchRunnerWorkspace .btn {
+  border-radius: 2px;
+}
+
+.benchRunnerWorkspace .benchInput,
+.benchRunnerWorkspace .benchSelect,
+.benchRunnerWorkspace .benchInlineInput {
+  min-height: 40px;
+}
+
+.benchRunnerWorkspace .benchSelect {
+  appearance: none;
+  padding-right: 32px;
+  background-image:
+    linear-gradient(45deg, transparent 50%, currentcolor 50%),
+    linear-gradient(135deg, currentcolor 50%, transparent 50%);
+  background-position:
+    calc(100% - 15px) 50%,
+    calc(100% - 10px) 50%;
+  background-repeat: no-repeat;
+  background-size: 5px 5px, 5px 5px;
+}
+
+@media (max-width: 1240px) {
+  .benchRunnerPage {
+    grid-template-rows: auto minmax(0, 1fr);
+  }
+
+  .benchRunnerHeader {
+    min-height: 76px;
+  }
+
+  .benchRunnerHeader > div {
+    display: grid;
+    gap: 5px;
+  }
+
+  .benchRunnerWorkspace .benchBody {
+    grid-template-columns: 1fr;
+    overflow: auto;
+  }
+
+  .benchRunnerWorkspace .benchMain,
+  .benchRunnerWorkspace .benchReportPane {
+    min-height: auto;
+    overflow: visible;
+  }
+
+  .benchRunnerWorkspace .benchMain {
+    border-bottom: 1px solid var(--bench-line);
+  }
+
+  .benchRunnerWorkspace .benchResizeHandle {
+    display: none;
+  }
+}
+
+@media (max-width: 620px) {
+  .benchRunnerHeader {
+    min-height: 78px;
+    padding: 12px 18px;
+  }
+
+  .benchRunnerHeader h1 {
+    font-size: 23px;
+  }
+
+  .benchRunnerHeader > span {
+    display: none;
+  }
+
+  .benchRunnerWorkspace .benchMain,
+  .benchRunnerWorkspace .benchReportPane {
+    padding: 18px;
+  }
+}

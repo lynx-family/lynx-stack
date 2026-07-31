@@ -8,7 +8,10 @@ import { createRequire } from 'node:module';
 import type { Chunk, Compilation, Compiler } from '@rspack/core';
 import invariant from 'tiny-invariant';
 
-import type { ExtractStrConfig } from '@lynx-js/react/transform';
+import type {
+  ExtractStrConfig,
+  TransformBuiltinAttributeNamesOptions,
+} from '@lynx-js/react/transform';
 import { LynxTemplatePlugin } from '@lynx-js/template-webpack-plugin';
 import { RuntimeGlobals } from '@lynx-js/webpack-runtime-globals';
 
@@ -246,6 +249,16 @@ interface ReactWebpackPluginOptions {
   mainThreadEntries?: Record<string, string>;
 
   /**
+   * The builtin attribute-name transform configuration used by runtime spread
+   * attributes.
+   *
+   * @experimental
+   */
+  experimental_transformBuiltinAttributeNames?:
+    | boolean
+    | TransformBuiltinAttributeNamesOptions;
+
+  /**
    * Resolved lazy-bundle fetcher mode. Decided by the caller (e.g.
    * `pluginReactLynx`) from the host engine version and any
    * `REACT_LAZY_BUNDLE_FETCHER` env override.
@@ -332,6 +345,7 @@ class ReactWebpackPlugin {
       experimental_useElementTemplate: false,
       enableMTSRendering: true,
       mainThreadEntries: {},
+      experimental_transformBuiltinAttributeNames: false,
       lazyBundleFetcher: 'QueryComponent',
     });
 
@@ -400,6 +414,9 @@ class ReactWebpackPlugin {
       ),
       __USE_ELEMENT_TEMPLATE__: JSON.stringify(
         options.experimental_useElementTemplate,
+      ),
+      __EXPERIMENTAL_TRANSFORM_BUILTIN_ATTRIBUTE_NAMES__: JSON.stringify(
+        options.experimental_transformBuiltinAttributeNames,
       ),
       __LAZY_BUNDLE_FETCHER__: JSON.stringify(options.lazyBundleFetcher),
       __ENABLE_MTS_RENDERING__: JSON.stringify(options.enableMTSRendering),

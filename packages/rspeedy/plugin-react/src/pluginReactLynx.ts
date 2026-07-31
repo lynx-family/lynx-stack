@@ -146,9 +146,9 @@ export interface PluginReactLynxOptions {
    * `rename` take precedence over `preserve`, followed by the fallback behavior
    * selected by `mode`.
    *
-   * Currently, only explicit JSX attributes are transformed at compile time.
-   * Runtime transformation for JSX spread attributes is not supported yet and
-   * is planned for a future release.
+   * Explicit JSX attributes are transformed at compile time. Attributes
+   * supplied through JSX spreads are transformed at runtime with the same
+   * rules.
    *
    * @defaultValue `false`
    *

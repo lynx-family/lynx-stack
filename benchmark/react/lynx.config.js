@@ -82,6 +82,18 @@ export default defineConfig({
         './src/patchProfile.ts',
         './cases/015-attrs-component/index.tsx',
       ],
+      '016-use-state-local-attribute-update': [
+        './cases/016-use-state-local-attribute-update/index.tsx',
+      ],
+      '017-use-signal-local-attribute-update': [
+        './cases/017-use-signal-local-attribute-update/index.tsx',
+      ],
+      '018-use-state-full-attribute-update': [
+        './cases/018-use-state-full-attribute-update/index.tsx',
+      ],
+      '019-use-signal-full-attribute-update': [
+        './cases/019-use-signal-full-attribute-update/index.tsx',
+      ],
     },
   },
   plugins: [

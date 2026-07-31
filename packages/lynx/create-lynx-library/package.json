@@ -39,6 +39,9 @@
     "@clack/prompts": "1.7.0",
     "@lynx-js/autolink-codegen": "workspace:^"
   },
+  "devDependencies": {
+    "@lynx-js/rspeedy": "workspace:^"
+  },
   "engines": {
     "node": "^20 || ^22 || ^24"
   }
