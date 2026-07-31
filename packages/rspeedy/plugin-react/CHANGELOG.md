@@ -1,5 +1,19 @@
 # @lynx-js/react-rsbuild-plugin
 
+## 0.18.2
+
+### Patch Changes
+
+- Add the experimental `experimental_transformBuiltinAttributeNames` option for transforming builtin element attribute names. `false` preserves attribute names. `true` transforms `onClick` to `bindtap`, `onCatchTap` to `catchtap`, other `onXXX` event names to `bindxxx`, and remaining camelCase names to dash-case. An object supports serializable custom rules through `mode`, `preserve`, and `rename`. Explicit JSX attributes are transformed during compilation, and spread attributes are transformed at runtime. ([#3274](https://github.com/lynx-family/lynx-stack/pull/3274))
+
+- Updated dependencies [[`4315634`](https://github.com/lynx-family/lynx-stack/commit/43156341e2449e48fd5badd6794937bad7c2b7c3), [`a03e15c`](https://github.com/lynx-family/lynx-stack/commit/a03e15cf157d3451b15987756c14ccd202597481), [`fa2ef9b`](https://github.com/lynx-family/lynx-stack/commit/fa2ef9b6fa2ff9e881a77ff5d80f300950fbca0d), [`7795a43`](https://github.com/lynx-family/lynx-stack/commit/7795a43797ac9daf59e5f18dc978e1596948f94b)]:
+  - @lynx-js/template-webpack-plugin@0.14.1
+  - @lynx-js/react-webpack-plugin@0.10.2
+  - @lynx-js/react-alias-rsbuild-plugin@0.18.2
+  - @lynx-js/use-sync-external-store@1.5.0
+  - @lynx-js/react-refresh-webpack-plugin@0.4.1
+  - @lynx-js/css-extract-webpack-plugin@0.10.0
+
 ## 0.18.1
 
 ### Patch Changes
