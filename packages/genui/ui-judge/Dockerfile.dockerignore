@@ -1,0 +1,13 @@
+.git
+.github
+.agents
+.codex
+.turbo
+**/.turbo
+**/coverage
+**/dist
+**/node_modules
+**/target
+**/test-results
+**/*.tsbuildinfo
+playwright-report
