@@ -175,6 +175,11 @@ function Portal(this: PortalThis, props: PortalProps): ComponentChildren {
  *   participate in main-thread first-screen rendering.
  * - Mounting across pages or across native containers is not supported.
  *
+ * @param vnode - The React node to render into `container`.
+ * @param container - The `NodesRef` target to render into.
+ * @returns A `ReactNode` placeholder to include in the JSX at the call site;
+ * the rendered output goes into `container`.
+ *
  * @public
  */
 export function createPortal(
