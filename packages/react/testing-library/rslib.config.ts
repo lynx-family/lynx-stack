@@ -80,18 +80,10 @@ export default defineConfig({
     rspack(config, { appendRules }) {
       // Rslib separates generated chunk names and their lib index with `~`.
       // Vite refuses to load any path containing `~` on Windows (an 8.3
-      // short-name guard), so replace the separator for every generated name.
-      if (typeof config.output?.chunkFilename === 'string') {
-        config.output.chunkFilename = config.output.chunkFilename.replaceAll(
-          '~',
-          '-',
-        );
-      }
-      const runtimeChunk = config.optimization?.runtimeChunk;
-      if (
-        typeof runtimeChunk === 'object' && typeof runtimeChunk.name === 'string'
-      ) {
-        runtimeChunk.name = runtimeChunk.name.replaceAll('~', '-');
+      // short-name guard), so replace the separator in initial chunk names.
+      const filename = config.output?.filename;
+      if (typeof filename === 'function') {
+        config.output.filename = (pathData, assetInfo) => filename(pathData, assetInfo).replaceAll('~', '-');
       }
       appendRules({
         test: /\.jsx$/,
