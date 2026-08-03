@@ -26,9 +26,11 @@ pub struct ShakeVisitorConfig {
   /// })
   /// ```
   ///
+  /// @defaultValue `['@lynx-js/react-runtime']`
+  ///
   /// @remarks
-  /// Default value: `['@lynx-js/react-runtime']`
   /// The provided values will be merged with the default values instead of replacing them.
+  ///
   /// @public
   pub pkg_name: Vec<String>,
 
@@ -50,8 +52,9 @@ pub struct ShakeVisitorConfig {
   /// })
   /// ```
   ///
+  /// @defaultValue `['constructor', 'render', 'getDerivedStateFromProps', 'state', 'defaultDataProcessor', 'dataProcessors', 'contextType', 'defaultProps']`
+  ///
   /// @remarks
-  /// Default value: `['constructor', 'render', 'getDerivedStateFromProps', 'state', 'defaultDataProcessor', 'dataProcessors', 'contextType', 'defaultProps']`
   /// The provided values will be merged with the default values instead of replacing them.
   ///
   /// @public
@@ -75,8 +78,9 @@ pub struct ShakeVisitorConfig {
   /// })
   /// ```
   ///
+  /// @defaultValue `['useEffect', 'useLayoutEffect', '__runInJS', 'useLynxGlobalEventListener', 'useImperativeHandle']`
+  ///
   /// @remarks
-  /// Default value: `['useEffect', 'useLayoutEffect', '__runInJS', 'useLynxGlobalEventListener', 'useImperativeHandle']`
   /// The provided values will be merged with the default values instead of replacing them.
   ///
   /// @public
@@ -100,8 +104,9 @@ pub struct ShakeVisitorConfig {
   /// })
   /// ```
   ///
+  /// @defaultValue `[]`
+  ///
   /// @remarks
-  /// Default value: `[]`
   /// The provided values will be merged with the default values instead of replacing them.
   ///
   /// @public
