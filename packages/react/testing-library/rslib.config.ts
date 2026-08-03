@@ -1,4 +1,5 @@
 import { createRequire } from 'node:module';
+import { fileURLToPath } from 'node:url';
 
 import { defineConfig } from '@rslib/core';
 
@@ -59,6 +60,9 @@ export default defineConfig({
       dts: {
         bundle: true,
         tsgo: true,
+        typescriptPath: fileURLToPath(
+          import.meta.resolve('@typescript/native-preview'),
+        ),
       },
       output: {
         filename: {
@@ -74,11 +78,9 @@ export default defineConfig({
   ],
   tools: {
     rspack(config, { appendRules }) {
-      // Rslib prefixes chunk names with `<libIndex>~` when a config has more
-      // than one `lib` entry. Vite refuses to load any path containing `~` on
-      // Windows (an 8.3 short-name guard), so `dist/pure.js` importing
-      // `./0~rslib-runtime.js` breaks every Windows consumer that runs it
-      // through Vite. Swap the separator for `-`.
+      // Rslib separates generated chunk names and their lib index with `~`.
+      // Vite refuses to load any path containing `~` on Windows (an 8.3
+      // short-name guard), so replace the separator for every generated name.
       if (typeof config.output?.chunkFilename === 'string') {
         config.output.chunkFilename = config.output.chunkFilename.replaceAll(
           '~',
