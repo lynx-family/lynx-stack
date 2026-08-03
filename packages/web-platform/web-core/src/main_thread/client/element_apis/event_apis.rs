@@ -263,7 +263,7 @@ impl MainThreadWasmContext {
           };
           is_caught = catch_handler.is_some();
           for handler in [bind_handler, catch_handler].iter().flatten() {
-            self.mts_binding.publish_event(
+            if let Err(error) = self.mts_binding.publish_event(
               handler,
               current_target_parent_component_id.as_deref(),
               serialized_event,
@@ -271,7 +271,9 @@ impl MainThreadWasmContext {
               &target_element_dataset.clone().into(),
               *unique_id,
               &current_target_element_data.dataset.clone().into(),
-            );
+            ) {
+              self.defer_binding_error(error);
+            }
           }
         }
       }
@@ -284,24 +286,28 @@ impl MainThreadWasmContext {
         if bind_handler.is_some() || catch_handler.is_some() {
           is_caught = catch_handler.is_some();
           if let Some(handler) = bind_handler {
-            self.mts_binding.publish_mts_event(
+            if let Err(error) = self.mts_binding.publish_mts_event(
               &handler,
               serialized_event,
               target_unique_id,
               &target_element_dataset.clone().into(),
               *unique_id,
               &current_target_element_data.dataset.clone().into(),
-            );
+            ) {
+              self.defer_binding_error(error);
+            }
           }
           if let Some(handler) = catch_handler {
-            self.mts_binding.publish_mts_event(
+            if let Err(error) = self.mts_binding.publish_mts_event(
               &handler,
               serialized_event,
               target_unique_id,
               &target_element_dataset.clone().into(),
               *unique_id,
               &current_target_element_data.dataset.clone().into(),
-            );
+            ) {
+              self.defer_binding_error(error);
+            }
           }
         }
       }
@@ -378,7 +384,7 @@ impl MainThreadWasmContext {
               .and_then(|binding| binding.borrow().component_id.clone())
           }
         };
-        self.mts_binding.publish_event(
+        if let Err(error) = self.mts_binding.publish_event(
           &handler,
           current_target_parent_component_id.as_deref(),
           serialized_event,
@@ -386,20 +392,24 @@ impl MainThreadWasmContext {
           &target_element_dataset.clone().into(),
           unique_id,
           &current_target_element_data.dataset.clone().into(),
-        );
+        ) {
+          self.defer_binding_error(error);
+        }
       }
 
       let run_worklet_handler = current_target_element_data
         .get_framework_run_worklet_event_handler(&event_name_lowercase, "global-bindevent");
       if let Some(handler) = run_worklet_handler {
-        self.mts_binding.publish_mts_event(
+        if let Err(error) = self.mts_binding.publish_mts_event(
           &handler,
           serialized_event,
           target_unique_id,
           &target_element_dataset.clone().into(),
           unique_id,
           &current_target_element_data.dataset.clone().into(),
-        );
+        ) {
+          self.defer_binding_error(error);
+        }
       }
     }
   }
@@ -420,10 +430,20 @@ impl MainThreadWasmContext {
  *
  */
 impl MainThreadWasmContext {
+  fn defer_binding_error(&self, error: JsValue) {
+    let _ = self.mts_binding.defer_report_error(&error);
+  }
+
   pub(super) fn enable_event(&mut self, event_name: &String) {
     if !self.enabled_events.contains(event_name) {
-      self.enabled_events.insert(event_name.clone());
-      self.mts_binding.add_event_listener(event_name);
+      match self.mts_binding.add_event_listener(event_name) {
+        Ok(()) => {
+          self.enabled_events.insert(event_name.clone());
+        }
+        Err(error) => {
+          self.defer_binding_error(error);
+        }
+      }
     }
   }
 }

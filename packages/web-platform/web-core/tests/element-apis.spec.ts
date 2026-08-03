@@ -1670,6 +1670,259 @@ describe('Element APIs', () => {
     );
   });
 
+  test('cross-thread event errors do not escape the wasm boundary', async () => {
+    const reportError = rstest.fn(() => mtsGlobalThis.__CreateView(0));
+    mtsBinding = new WASMJSBinding(
+      createTestLynxViewInstance(rootDom, {
+        _ReportError: reportError,
+      } as any),
+    );
+    mtsGlobalThis = createElementAPI(
+      rootDom,
+      mtsBinding,
+      true,
+      true,
+      true,
+    );
+    const publishError = new DOMException(
+      'The object could not be cloned.',
+      'DataCloneError',
+    );
+    mtsBinding.lynxViewInstance.backgroundThread.publishEvent = rstest.fn(
+      () => {
+        throw publishError;
+      },
+    );
+
+    const page = mtsGlobalThis.__CreatePage('0', 0);
+    const target = mtsGlobalThis.__CreateView(0);
+    mtsGlobalThis.__AppendElement(page, target);
+    mtsGlobalThis.__SetID(target, 'publish-error-target');
+    mtsGlobalThis.__AddEvent(target, 'bindEvent', 'tap', 'handler');
+    mtsGlobalThis.__FlushElementTree();
+
+    expect(() => {
+      rootDom.querySelector('#publish-error-target')?.dispatchEvent(
+        new window.Event('click'),
+      );
+    }).not.toThrow();
+    expect(reportError).not.toHaveBeenCalled();
+    await Promise.resolve();
+    expect(reportError).toHaveBeenCalledTimes(1);
+    expect(reportError).toHaveBeenCalledWith(publishError, undefined);
+    expect(() => mtsGlobalThis.__CreateView(0)).not.toThrow();
+  });
+
+  test('worklet errors do not escape the wasm boundary', async () => {
+    const workletError = {
+      name: 'TypeError',
+      message: 'worklet failed',
+      stack: 'TypeError: worklet failed\n    at worklet.js:1:1',
+    };
+    const reportError = rstest.fn(() => mtsGlobalThis.__CreateView(0));
+    mtsBinding = new WASMJSBinding(
+      createTestLynxViewInstance(rootDom, {
+        _ReportError: reportError,
+        runWorklet: () => {
+          throw workletError;
+        },
+      } as any),
+    );
+    mtsGlobalThis = createElementAPI(
+      rootDom,
+      mtsBinding,
+      true,
+      true,
+      true,
+    );
+
+    const page = mtsGlobalThis.__CreatePage('0', 0);
+    const target = mtsGlobalThis.__CreateView(0);
+    mtsGlobalThis.__AppendElement(page, target);
+    mtsGlobalThis.__SetID(target, 'worklet-error-target');
+    mtsGlobalThis.__AddEvent(
+      target,
+      'bindEvent',
+      'tap',
+      { value: 'worklet' } as any,
+    );
+    mtsGlobalThis.__FlushElementTree();
+
+    expect(() => {
+      rootDom.querySelector('#worklet-error-target')?.dispatchEvent(
+        new window.Event('click'),
+      );
+    }).not.toThrow();
+    expect(reportError).not.toHaveBeenCalled();
+    await Promise.resolve();
+    expect(reportError).toHaveBeenCalledTimes(1);
+    expect(reportError).toHaveBeenCalledWith(
+      expect.objectContaining(workletError),
+      undefined,
+    );
+    expect(() => mtsGlobalThis.__CreateView(0)).not.toThrow();
+  });
+
+  test('wasm reports unexpected publish binding errors and remains usable', async () => {
+    const reportError = rstest.fn();
+    mtsBinding = new WASMJSBinding(
+      createTestLynxViewInstance(rootDom, {
+        _ReportError: reportError,
+      } as any),
+    );
+    mtsGlobalThis = createElementAPI(
+      rootDom,
+      mtsBinding,
+      true,
+      true,
+      true,
+    );
+    const page = mtsGlobalThis.__CreatePage('0', 0);
+    const target = mtsGlobalThis.__CreateView(0);
+    mtsGlobalThis.__AppendElement(page, target);
+    mtsGlobalThis.__SetID(target, 'binding-error-target');
+    mtsGlobalThis.__AddEvent(target, 'bindEvent', 'tap', 'handler');
+    mtsGlobalThis.__FlushElementTree();
+    rstest.spyOn(mtsBinding, 'publishEvent').mockImplementation(() => {
+      throw new Error('unexpected binding failure');
+    });
+
+    expect(() => {
+      rootDom.querySelector('#binding-error-target')?.dispatchEvent(
+        new window.Event('click'),
+      );
+    }).not.toThrow();
+    expect(reportError).not.toHaveBeenCalled();
+    await Promise.resolve();
+    expect(reportError).toHaveBeenCalledTimes(1);
+    expect(reportError).toHaveBeenCalledWith(
+      expect.objectContaining({ message: 'unexpected binding failure' }),
+      undefined,
+    );
+    expect(() => mtsGlobalThis.__CreateView(0)).not.toThrow();
+  });
+
+  test('wasm reports unexpected worklet binding errors and remains usable', async () => {
+    const reportError = rstest.fn();
+    mtsBinding = new WASMJSBinding(
+      createTestLynxViewInstance(rootDom, {
+        _ReportError: reportError,
+      } as any),
+    );
+    mtsGlobalThis = createElementAPI(
+      rootDom,
+      mtsBinding,
+      true,
+      true,
+      true,
+    );
+    const page = mtsGlobalThis.__CreatePage('0', 0);
+    const target = mtsGlobalThis.__CreateView(0);
+    mtsGlobalThis.__AppendElement(page, target);
+    mtsGlobalThis.__SetID(target, 'worklet-binding-error-target');
+    mtsGlobalThis.__AddEvent(
+      target,
+      'bindEvent',
+      'tap',
+      { value: 'worklet' } as any,
+    );
+    mtsGlobalThis.__FlushElementTree();
+    rstest.spyOn(mtsBinding, 'runWorklet').mockImplementation(() => {
+      throw new Error('unexpected worklet binding failure');
+    });
+
+    expect(() => {
+      rootDom.querySelector('#worklet-binding-error-target')?.dispatchEvent(
+        new window.Event('click'),
+      );
+    }).not.toThrow();
+    expect(reportError).not.toHaveBeenCalled();
+    await Promise.resolve();
+    expect(reportError).toHaveBeenCalledTimes(1);
+    expect(reportError).toHaveBeenCalledWith(
+      expect.objectContaining({
+        message: 'unexpected worklet binding failure',
+      }),
+      undefined,
+    );
+    expect(() => mtsGlobalThis.__CreateView(0)).not.toThrow();
+  });
+
+  test('event listener registration retries after a binding error', async () => {
+    const reportError = rstest.fn();
+    mtsBinding = new WASMJSBinding(
+      createTestLynxViewInstance(rootDom, {
+        _ReportError: reportError,
+      } as any),
+    );
+    mtsGlobalThis = createElementAPI(
+      rootDom,
+      mtsBinding,
+      true,
+      true,
+      true,
+    );
+    const page = mtsGlobalThis.__CreatePage('0', 0);
+    const target = mtsGlobalThis.__CreateView(0);
+    mtsGlobalThis.__AppendElement(page, target);
+    mtsGlobalThis.__FlushElementTree();
+    const addEventListenerSpy = rstest
+      .spyOn(rootDom, 'addEventListener')
+      .mockImplementationOnce(() => {
+        throw new Error('listener registration failed');
+      });
+
+    expect(() => {
+      mtsGlobalThis.__AddEvent(target, 'bindEvent', 'tap', 'handler');
+    }).not.toThrow();
+    expect(() => {
+      mtsGlobalThis.__AddEvent(target, 'bindEvent', 'tap', 'handler');
+    }).not.toThrow();
+    expect(reportError).not.toHaveBeenCalled();
+    await Promise.resolve();
+    expect(reportError).toHaveBeenCalledTimes(1);
+    expect(reportError).toHaveBeenCalledWith(
+      expect.objectContaining({ message: 'listener registration failed' }),
+      undefined,
+    );
+    expect(addEventListenerSpy).toHaveBeenCalledTimes(2);
+    rootDom.querySelector('x-view')?.dispatchEvent(
+      new window.Event('click'),
+    );
+    expect(mtsBinding.lynxViewInstance.backgroundThread.publishEvent)
+      .toHaveBeenCalledWith('handler', expect.any(Object));
+    expect(mtsGlobalThis.__GetEvents(target)).toEqual([
+      expect.objectContaining({
+        event_name: 'tap',
+        event_type: 'bindevent',
+        event_handler: 'handler',
+      }),
+    ]);
+    expect(() => mtsGlobalThis.__CreateView(0)).not.toThrow();
+  });
+
+  test('error reporter failures fall back to console', async () => {
+    const originalError = new Error('original failure');
+    const reporterError = new Error('reporter failure');
+    const consoleError = rstest.spyOn(console, 'error').mockImplementation(
+      () => {},
+    );
+    mtsBinding = new WASMJSBinding(
+      createTestLynxViewInstance(rootDom, {
+        _ReportError: () => {
+          throw reporterError;
+        },
+      } as any),
+    );
+
+    mtsBinding.deferReportError(originalError);
+    await Promise.resolve();
+
+    expect(consoleError).toHaveBeenCalledTimes(1);
+    expect(consoleError).toHaveBeenCalledWith(originalError, reporterError);
+    consoleError.mockRestore();
+  });
+
   test('event with bubbles: false should not bubble to parent', () => {
     rstest.spyOn(mtsBinding, 'addEventListener');
     rstest.spyOn(mtsBinding, 'publishEvent');

@@ -3,31 +3,36 @@
 // LICENSE file in the root directory of this source tree.
 import { root, useCallback, useState } from '@lynx-js/react';
 function App() {
-  const [data, setData] = useState({});
+  const [data, setData] = useState(null);
   const bindLayout = useCallback((e) => {
+    const firstLine = e.detail.lines[0];
     setData({
       lineCount: e.detail.lineCount,
-      lines: [
-        {
-          start: e.detail.lines[1].start,
-          end: e.detail.lines[1].end,
-          ellipsisCount: e.detail.lines[1].ellipsisCount,
-        },
-      ],
+      linesIsArray: Array.isArray(e.detail.lines),
+      firstLineIsValid: firstLine !== undefined
+        && typeof firstLine.start === 'number'
+        && typeof firstLine.end === 'number'
+        && typeof firstLine.ellipsisCount === 'number',
     });
   }, [setData]);
   return (
     <view style='display:flex;flex-direction: column;'>
-      <view style='display:flex;flex-direction: row'>
-        <text bindlayout={bindLayout}>bind-layout-a-long-long-string</text>
-        <text>bind-layout-a-long-long-string</text>
-        <text>bind-layout-a-long-long-string</text>
-        <text>bind-layout-a-long-long-string</text>
-      </view>
-      <view style='display:flex;'>
-        <text>{data.lineCount}</text>
-        <text>{JSON.stringify(data.lines)}</text>
-      </view>
+      <text
+        bindlayout={bindLayout}
+        id='layout-event-target'
+        style='width:100px;word-break:break-all;'
+        text-maxline='2'
+      >
+        bind-layout-a-long-long-string
+      </text>
+      <text id='layout-result'>
+        {data
+          ? `${typeof data.lineCount}:${String(data.linesIsArray)}:${
+            String(data.firstLineIsValid)
+          }`
+          : 'pending'}
+      </text>
+      {data && <view id='created-after-layout-event' />}
     </view>
   );
 }

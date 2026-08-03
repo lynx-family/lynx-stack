@@ -2773,10 +2773,17 @@ test.describe('reactlynx3 tests', () => {
       );
 
       test('basic-element-text-bindlayout', async ({ page }, { title }) => {
-        test.skip(true, 'the text layout event should be improved'); // FIXME
         await goto(page, title);
-        await wait(100);
-        await diffScreenShot(page, 'text', 'bindlayout');
+        await page.locator('#layout-event-target').evaluate((element) => {
+          element.setAttribute('text-maxlength', '20');
+        });
+        await expect(page.locator('#layout-result')).not.toHaveText('pending');
+        await expect(page.locator('#layout-result')).toHaveText(
+          'number:true:true',
+        );
+        await expect(page.locator('#created-after-layout-event')).toHaveCount(
+          1,
+        );
       });
 
       test(

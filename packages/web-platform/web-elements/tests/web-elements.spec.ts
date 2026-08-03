@@ -208,6 +208,33 @@ test.describe('web-elements test suite', () => {
       await wait(100);
       await diffScreenShot(page, title, title);
     });
+    test('x-text/layout-detail-cloneable', async ({ page }, { title }) => {
+      await gotoWebComponentPage(page, title);
+      const detail = await page.evaluate(() =>
+        new Promise<unknown>((resolve) => {
+          const element = document.createElement('x-text');
+          element.style.width = '100px';
+          element.style.wordBreak = 'break-all';
+          element.setAttribute('text-maxline', '1');
+          element.textContent =
+            'This text is long enough to span several lines and be truncated.';
+          element.addEventListener('layout', (event) => {
+            resolve(structuredClone((event as CustomEvent).detail));
+          });
+          document.body.append(element);
+        })
+      );
+      expect(detail).toEqual({
+        lineCount: expect.any(Number),
+        lines: expect.arrayContaining([
+          {
+            start: expect.any(Number),
+            end: expect.any(Number),
+            ellipsisCount: expect.any(Number),
+          },
+        ]),
+      });
+    });
     test(
       'x-text/text-maxline-basic-with-lynx-wrapper',
       async ({ page }, { title }) => {

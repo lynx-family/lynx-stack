@@ -30,6 +30,8 @@ export interface RustMainthreadContextBinding {
     currentTargetDataset: CloneableObject,
   ): void;
 
+  deferReportError(error: unknown): void;
+
   addEventListener(event_name: string): void;
 
   markExposureRelatedElementByUniqueId(

@@ -373,59 +373,42 @@ export class XTextTruncation
 
   #sendLayoutEvent(truncateAt?: number) {
     if (!this.#enableLayoutEvent) return;
-    const detail = new Proxy(this, {
-      get(that, property): any {
-        if (property === 'lineCount') {
-          if (!that.#textMeasure) {
-            that.#textMeasure = new TextRenderingMeasureTool(
-              that.#dom,
-              that.#dom.getBoundingClientRect(),
-            );
-          }
-          return that.#textMeasure.getLineCount();
-        } else if (property === 'lines') {
-          // event.detail.lines
-          return new Proxy(that, {
-            get(that, lineIndex): any {
-              // event.detail.lines[num]
-              const lineIndexNum = parseFloat(lineIndex.toString());
-              if (!isNaN(lineIndexNum)) {
-                if (!that.#textMeasure) {
-                  that.#textMeasure = new TextRenderingMeasureTool(
-                    that.#dom,
-                    that.#dom.getBoundingClientRect(),
-                  );
-                }
-                const lineInfo = that.#textMeasure.getLineInfo(lineIndexNum);
-                if (lineInfo) {
-                  return new Proxy(lineInfo, {
-                    get(lineInfo, property): any {
-                      // event.detail.lines[num].(<start>, <end>, <ellipsisCount>)
-                      switch (property) {
-                        case 'start':
-                        case 'end':
-                          return lineInfo[property];
-                        case 'ellipsisCount':
-                          if (
-                            truncateAt !== undefined
-                            && truncateAt >= lineInfo.start
-                            && truncateAt < lineInfo.end
-                          ) {
-                            return lineInfo.end - truncateAt;
-                          }
-                          return 0;
-                      }
-                    },
-                  });
-                }
-              }
-            },
-          });
-        }
-      },
-    });
+    let lineCount: number | undefined;
+    let lines:
+      | { start: number; end: number; ellipsisCount: number }[]
+      | undefined;
+    const getTextMeasure = () =>
+      this.#textMeasure ??= new TextRenderingMeasureTool(
+        this.#dom,
+        this.#dom.getBoundingClientRect(),
+      );
+    const getLineCount = () => lineCount ??= getTextMeasure().getLineCount();
+    const getLines = () =>
+      lines ??= Array.from({ length: getLineCount() }, (_, lineIndex) => {
+        const lineInfo = getTextMeasure().getLineInfo(lineIndex)!;
+        const ellipsisCount = truncateAt !== undefined
+            && truncateAt >= lineInfo.start
+            && truncateAt < lineInfo.end
+          ? lineInfo.end - truncateAt
+          : 0;
+        return {
+          start: lineInfo.start,
+          end: lineInfo.end,
+          ellipsisCount,
+        };
+      });
     this.#dom.dispatchEvent(
-      new CustomEvent('layout', { ...commonComponentEventSetting, detail }),
+      new CustomEvent('layout', {
+        ...commonComponentEventSetting,
+        detail: {
+          get lineCount() {
+            return getLineCount();
+          },
+          get lines() {
+            return getLines();
+          },
+        },
+      }),
     );
   }
 

@@ -29,6 +29,35 @@ export type WASMJSBindingInjectedHandler = {
 
 const DOCUMENT_LEVEL_EVENTS = new Set(['keydown', 'keyup']);
 
+function normalizeError(error: unknown): Error {
+  try {
+    if (error instanceof Error) return error;
+    if (typeof error !== 'object' || error === null) {
+      return new Error(String(error));
+    }
+
+    const errorLike = error as {
+      message?: unknown;
+      name?: unknown;
+      stack?: unknown;
+    };
+    const normalizedError = new Error(
+      typeof errorLike.message === 'string'
+        ? errorLike.message
+        : String(error),
+    );
+    if (typeof errorLike.name === 'string') {
+      normalizedError.name = errorLike.name;
+    }
+    if (typeof errorLike.stack === 'string') {
+      normalizedError.stack = errorLike.stack;
+    }
+    return normalizedError;
+  } catch {
+    return new Error('Unknown error');
+  }
+}
+
 export class WASMJSBinding implements RustMainthreadContextBinding {
   wasmContext: InstanceType<MainThreadWasmContext> | undefined;
   disposeWasmContext?: () => void;
@@ -96,6 +125,27 @@ export class WASMJSBinding implements RustMainthreadContextBinding {
     return undefined;
   }
 
+  deferReportError(error: unknown): void {
+    queueMicrotask(() => {
+      const normalizedError = normalizeError(error);
+      try {
+        const reportError = this.lynxViewInstance.mainThreadGlobalThis
+          ._ReportError;
+        if (reportError) {
+          reportError(normalizedError, undefined);
+        } else {
+          console.error(normalizedError);
+        }
+      } catch (reporterError) {
+        try {
+          console.error(normalizedError, reporterError);
+        } catch {
+          return;
+        }
+      }
+    });
+  }
+
   runWorklet(
     handler: { value: unknown },
     eventObject: LynxCrossThreadEvent,
@@ -104,30 +154,36 @@ export class WASMJSBinding implements RustMainthreadContextBinding {
     currentTargetUniqueId: number,
     currentTargetDataset: Record<string, string>,
   ) {
-    const target = this.getElementByUniqueId(targetUniqueId);
-    const currentTarget = this.getElementByUniqueId(
-      currentTargetUniqueId,
-    );
-    const resolvedTarget = (target ?? currentTarget) as
-      | DecoratedHTMLElement
-      | undefined;
-    if (!resolvedTarget) return;
-    const resolvedTargetDataset = target ? targetDataset : currentTargetDataset;
-    eventObject.target = this.generateTargetObject(
-      resolvedTarget,
-      resolvedTargetDataset,
-    );
-    eventObject.currentTarget = this.generateTargetObject(
-      currentTarget as DecoratedHTMLElement,
-      currentTargetDataset,
-    );
-    // @ts-expect-error
-    eventObject.target.elementRefptr = resolvedTarget;
-    // @ts-expect-error
-    eventObject.currentTarget.elementRefptr = currentTarget;
-    this.lynxViewInstance.mainThreadGlobalThis.runWorklet?.(handler.value, [
-      eventObject,
-    ]);
+    try {
+      const target = this.getElementByUniqueId(targetUniqueId);
+      const currentTarget = this.getElementByUniqueId(
+        currentTargetUniqueId,
+      );
+      const resolvedTarget = (target ?? currentTarget) as
+        | DecoratedHTMLElement
+        | undefined;
+      if (!resolvedTarget) return;
+      const resolvedTargetDataset = target
+        ? targetDataset
+        : currentTargetDataset;
+      eventObject.target = this.generateTargetObject(
+        resolvedTarget,
+        resolvedTargetDataset,
+      );
+      eventObject.currentTarget = this.generateTargetObject(
+        currentTarget as DecoratedHTMLElement,
+        currentTargetDataset,
+      );
+      // @ts-expect-error
+      eventObject.target.elementRefptr = resolvedTarget;
+      // @ts-expect-error
+      eventObject.currentTarget.elementRefptr = currentTarget;
+      this.lynxViewInstance.mainThreadGlobalThis.runWorklet?.(handler.value, [
+        eventObject,
+      ]);
+    } catch (error) {
+      this.deferReportError(error);
+    }
   }
 
   publishEvent(
@@ -139,37 +195,43 @@ export class WASMJSBinding implements RustMainthreadContextBinding {
     currentTargetUniqueId: number,
     currentTargetDataset: CloneableObject,
   ) {
-    const target = this.getElementByUniqueId(targetUniqueId);
-    const currentTarget = this.getElementByUniqueId(currentTargetUniqueId);
-    // The Rust dispatcher only reaches this code with target_unique_id == 0
-    // on the global-bindevent path (regular bind/catch handlers early-return
-    // when the bubble path has no element). For that case the DOM event
-    // originated outside the Lynx element tree, so fall back to currentTarget
-    // (the element that registered the global handler).
-    const resolvedTarget = (target ?? currentTarget) as
-      | DecoratedHTMLElement
-      | undefined;
-    if (!resolvedTarget) return;
-    const resolvedTargetDataset = target ? targetDataset : currentTargetDataset;
-    eventObject.target = this.generateTargetObject(
-      resolvedTarget,
-      resolvedTargetDataset,
-    );
-    eventObject.currentTarget = this.generateTargetObject(
-      currentTarget as DecoratedHTMLElement,
-      currentTargetDataset,
-    );
-    if (parentComponentId) {
-      this.lynxViewInstance?.backgroundThread.publicComponentEvent(
-        parentComponentId,
-        handlerName,
-        eventObject,
+    try {
+      const target = this.getElementByUniqueId(targetUniqueId);
+      const currentTarget = this.getElementByUniqueId(currentTargetUniqueId);
+      // The Rust dispatcher only reaches this code with target_unique_id == 0
+      // on the global-bindevent path (regular bind/catch handlers early-return
+      // when the bubble path has no element). For that case the DOM event
+      // originated outside the Lynx element tree, so fall back to currentTarget
+      // (the element that registered the global handler).
+      const resolvedTarget = (target ?? currentTarget) as
+        | DecoratedHTMLElement
+        | undefined;
+      if (!resolvedTarget) return;
+      const resolvedTargetDataset = target
+        ? targetDataset
+        : currentTargetDataset;
+      eventObject.target = this.generateTargetObject(
+        resolvedTarget,
+        resolvedTargetDataset,
       );
-    } else {
-      this.lynxViewInstance.backgroundThread.publishEvent(
-        handlerName,
-        eventObject,
+      eventObject.currentTarget = this.generateTargetObject(
+        currentTarget as DecoratedHTMLElement,
+        currentTargetDataset,
       );
+      if (parentComponentId) {
+        this.lynxViewInstance?.backgroundThread.publicComponentEvent(
+          parentComponentId,
+          handlerName,
+          eventObject,
+        );
+      } else {
+        this.lynxViewInstance.backgroundThread.publishEvent(
+          handlerName,
+          eventObject,
+        );
+      }
+    } catch (error) {
+      this.deferReportError(error);
     }
   }
 
@@ -215,14 +277,13 @@ export class WASMJSBinding implements RustMainthreadContextBinding {
   addEventListener(eventName: string) {
     const w3cEventName = LynxEventNameToW3cCommon[eventName] ?? eventName;
     if (this.#addedEventListeners.has(w3cEventName)) return;
-    this.#addedEventListeners.add(w3cEventName);
     const isDocumentLevel = DOCUMENT_LEVEL_EVENTS.has(w3cEventName);
     if (isDocumentLevel) {
-      this.#documentEventListeners.add(w3cEventName);
       document.addEventListener(w3cEventName, this.#commonEventHandler, {
         passive: true,
         capture: true,
       });
+      this.#documentEventListeners.add(w3cEventName);
     } else {
       this.lynxViewInstance.rootDom.addEventListener(
         w3cEventName,
@@ -233,6 +294,7 @@ export class WASMJSBinding implements RustMainthreadContextBinding {
         },
       );
     }
+    this.#addedEventListeners.add(w3cEventName);
   }
 
   // Synchronously detach all DOM listeners. Safe to call multiple times.
