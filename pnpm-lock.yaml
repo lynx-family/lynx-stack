@@ -16,6 +16,9 @@ catalogs:
     '@microsoft/api-extractor':
       specifier: 7.58.12
       version: 7.58.12
+    typescript:
+      specifier: 6.0.3
+      version: 6.0.3
   lynxjs:
     preact:
       specifier: npm:@lynx-js/internal-preact@10.29.1-20260519060144-e6da44c
@@ -50,7 +53,7 @@ overrides:
   '@rsdoctor/rspack-plugin>@rspack/core': 2.1.5
   '@rsdoctor/types>@rspack/core': 2.1.5
 
-packageExtensionsChecksum: sha256-BUwt5m2tRMyYg9pgFVHNTHCYEBuM0/o7IdJqk+vWTGs=
+packageExtensionsChecksum: sha256-Y9ZLHWMP51V1VaeUicx/UxFRX96fq7QFLXtege8aEOA=
 
 patchedDependencies:
   '@napi-rs/cli@2.18.4': ba947eb1c48b2a85834e99f92cbbae896722ce61fd5ae67507a3be9041959ebd
@@ -169,7 +172,7 @@ importers:
         specifier: ^2.10.5
         version: 2.10.5
       typescript:
-        specifier: ^6.0.3
+        specifier: 'catalog:'
         version: 6.0.3
       typescript-eslint:
         specifier: ^8.64.0
@@ -16640,6 +16643,7 @@ snapshots:
     dependencies:
       '@typia/interface': 12.1.1
       '@typia/utils': 12.1.1
+      typescript: 6.0.3
 
   '@typia/interface@12.1.1': {}
 
@@ -16648,6 +16652,7 @@ snapshots:
       '@typia/core': 12.1.1
       '@typia/interface': 12.1.1
       '@typia/utils': 12.1.1
+      typescript: 6.0.3
 
   '@typia/utils@12.1.1':
     dependencies:
