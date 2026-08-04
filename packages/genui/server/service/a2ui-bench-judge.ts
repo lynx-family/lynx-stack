@@ -503,16 +503,17 @@ export async function runBenchUiJudgeRequest(
       'ui-judge returned an invalid screenshotDataUrl; the screenshot was discarded.',
     );
   }
+  const complete = errors.length === 0;
 
   return {
-    ...(dimensions ? { dimensions } : {}),
+    ...(complete && dimensions ? { dimensions } : {}),
     errors,
-    ...(geqiScore === undefined ? {} : { geqiScore }),
-    ...(reason ? { reason } : {}),
-    score: responseError ? 0 : score,
+    ...(complete && geqiScore !== undefined ? { geqiScore } : {}),
+    ...(complete && reason ? { reason } : {}),
+    score: complete ? score : 0,
     ...(screenshotDataUrl ? { screenshotDataUrl } : {}),
-    status: errors.length === 0 ? 'complete' : 'failed',
-    ...(summary ? { summary } : {}),
+    status: complete ? 'complete' : 'failed',
+    ...(complete && summary ? { summary } : {}),
     warnings: resultWarnings,
   };
 }

@@ -39,6 +39,7 @@ function geqiResponse(score: number): {
   dimensions: Array<{
     dimension: string;
     dimensionLabel: string;
+    error?: { message: string };
     score: number;
     weight: number;
   }>;
@@ -358,6 +359,41 @@ describe('runBenchUiJudge', () => {
     });
   });
 
+  test('fails the whole Judge result when one GEQI dimension fails', async () => {
+    const response = geqiResponse(4);
+    response.dimensions[2] = {
+      ...response.dimensions[2],
+      error: { message: 'dimension request timed out' },
+      score: 0,
+    };
+    response.geqiScore = 56 / 85 * 100;
+    const result = await runBenchUiJudge(
+      {
+        messages: [],
+        scenario: {
+          id: 'weather',
+          name: 'Weather',
+          prompt: 'Build a weather card',
+          type: 'Information',
+        },
+        session: {
+          bundleUrl: 'https://assets.test/a2ui.lynx.js',
+          judgeUrl: 'http://judge.test/judge',
+        },
+      },
+      () => Promise.resolve(Response.json(response)),
+    );
+
+    expect(result).toEqual({
+      errors: [
+        'ui-judge consistency-standards failed: dimension request timed out',
+      ],
+      score: 0,
+      status: 'failed',
+      warnings: [],
+    });
+  });
+
   test('rejects inconsistent GEQI weights', async () => {
     const response = geqiResponse(4);
     response.dimensions[0] = {
@@ -382,7 +418,9 @@ describe('runBenchUiJudge', () => {
     );
 
     expect(result.status).toBe('failed');
-    expect(result.score).toBe(4);
+    expect(result.score).toBe(0);
+    expect(result.dimensions).toBeUndefined();
+    expect(result.geqiScore).toBeUndefined();
     expect(result.errors).toContain(
       'ui-judge returned invalid usability-interaction score metadata.',
     );
@@ -409,7 +447,9 @@ describe('runBenchUiJudge', () => {
     );
 
     expect(result.status).toBe('failed');
-    expect(result.score).toBe(4);
+    expect(result.score).toBe(0);
+    expect(result.dimensions).toBeUndefined();
+    expect(result.geqiScore).toBeUndefined();
     expect(result.errors).toContain(
       'ui-judge returned an inconsistent GEQI score: 79 vs 80.',
     );

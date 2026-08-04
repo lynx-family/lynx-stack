@@ -350,6 +350,8 @@ async function runA2UINativeOne(
         });
       })()
       : { errors: [], score: 0, status: 'skipped', warnings: [] };
+    const runErrors = [...result.errors, ...judge.errors];
+    const runOk = result.ok && judge.status !== 'failed';
     /*
     const preview = result.ok
       ? await runBenchPreviewForItem(jobId, request, item, result.messages)
@@ -371,8 +373,8 @@ async function runA2UINativeOne(
       scenarioId: item.scenario.id,
       scenarioName: item.scenario.name,
       repeatIndex: item.repeatIndex,
-      status: result.ok ? 'complete' : 'failed',
-      ok: result.ok,
+      status: runOk ? 'complete' : 'failed',
+      ok: runOk,
       model: model ?? process.env.OPENAI_MODEL ?? 'server default',
       catalog: catalogLabel,
       tokens: result.usage.reduce<number>(
@@ -387,18 +389,20 @@ async function runA2UINativeOne(
       // renderMs: preview.renderMs,
       renderMs: 0,
       attempts: result.attempts,
-      ...('dimensions' in judge && judge.dimensions
+      ...(judge.status === 'complete' && 'dimensions' in judge
+          && judge.dimensions
         ? { judgeDimensions: judge.dimensions }
         : {}),
-      ...('geqiScore' in judge && judge.geqiScore !== undefined
+      ...(judge.status === 'complete' && 'geqiScore' in judge
+          && judge.geqiScore !== undefined
         ? { judgeGeqiScore: judge.geqiScore }
         : {}),
-      judgeScore: judge.score,
+      judgeScore: judge.status === 'complete' ? judge.score : 0,
       judgeStatus: judge.status,
-      ...('reason' in judge && judge.reason
+      ...(judge.status === 'complete' && 'reason' in judge && judge.reason
         ? { judgeReason: judge.reason }
         : {}),
-      ...('summary' in judge && judge.summary
+      ...(judge.status === 'complete' && 'summary' in judge && judge.summary
         ? { judgeSummary: judge.summary }
         : {}),
       ...([...result.warnings, ...judge.warnings].length > 0
@@ -406,7 +410,15 @@ async function runA2UINativeOne(
         : {}),
       messageCount: result.messages.length,
       outputChars,
-      errors: [...result.errors, ...judge.errors],
+      errors: runErrors,
+      ...(runOk
+        ? {}
+        : {
+          error: runErrors.join('; ')
+            || (judge.status === 'failed'
+              ? 'UI Judge failed'
+              : 'A2UI output failed validation'),
+        }),
       finishReason: result.finishReason,
       usage: result.usage,
       messages: result.messages,
@@ -564,6 +576,8 @@ async function runProtocolAdapterOne(
       ...judge.warnings,
     ];
     const agentMs = performance.now() - startedAt;
+    const runErrors = [...artifact.finalErrors, ...judge.errors];
+    const runOk = artifact.finalValid && judge.status !== 'failed';
     const result: BenchRunResult = {
       id: runId,
       groupId: item.group.id,
@@ -574,8 +588,8 @@ async function runProtocolAdapterOne(
       scenarioId: item.scenario.id,
       scenarioName: item.scenario.name,
       repeatIndex: item.repeatIndex,
-      status: artifact.finalValid ? 'complete' : 'failed',
-      ok: artifact.finalValid,
+      status: runOk ? 'complete' : 'failed',
+      ok: runOk,
       model: model ?? process.env.OPENAI_MODEL ?? 'server default',
       catalog: catalogLabel,
       tokens,
@@ -584,18 +598,20 @@ async function runProtocolAdapterOne(
       ttiMs: 0,
       renderMs: 0,
       attempts: attempts.length,
-      ...('dimensions' in judge && judge.dimensions
+      ...(judge.status === 'complete' && 'dimensions' in judge
+          && judge.dimensions
         ? { judgeDimensions: judge.dimensions }
         : {}),
-      ...('geqiScore' in judge && judge.geqiScore !== undefined
+      ...(judge.status === 'complete' && 'geqiScore' in judge
+          && judge.geqiScore !== undefined
         ? { judgeGeqiScore: judge.geqiScore }
         : {}),
-      judgeScore: judge.score,
+      judgeScore: judge.status === 'complete' ? judge.score : 0,
       judgeStatus: judge.status,
-      ...('reason' in judge && judge.reason
+      ...(judge.status === 'complete' && 'reason' in judge && judge.reason
         ? { judgeReason: judge.reason }
         : {}),
-      ...('summary' in judge && judge.summary
+      ...(judge.status === 'complete' && 'summary' in judge && judge.summary
         ? { judgeSummary: judge.summary }
         : {}),
       ...(judgeWarnings.length > 0 ? { judgeWarnings } : {}),
@@ -603,12 +619,14 @@ async function runProtocolAdapterOne(
       outputChars: artifact.finalText?.length
         ?? attempts[attempts.length - 1]?.outputChars
         ?? 0,
-      errors: [...artifact.finalErrors, ...judge.errors],
-      ...(artifact.finalValid
+      errors: runErrors,
+      ...(runOk
         ? {}
         : {
-          error: artifact.finalErrors.join('; ')
-            || `${protocol} output failed validation`,
+          error: runErrors.join('; ')
+            || (judge.status === 'failed'
+              ? 'UI Judge failed'
+              : `${protocol} output failed validation`),
         }),
       ...(attempts[attempts.length - 1]?.finishReason === undefined
         ? {}

@@ -185,6 +185,83 @@ describe('A2UI Bench UI Judge integration', () => {
     expect(summary.plannedRuns).toBe(3);
   });
 
+  test('marks a matched-core run failed when Judge fails', async () => {
+    rstest.mocked(probeGenuiBenchUiJudge).mockResolvedValueOnce({
+      enabled: true,
+      session: {
+        bundleUrl: 'https://bundle.example/bench.lynx.js',
+        judgeUrl: 'https://judge.example/judge',
+      },
+    });
+    rstest.mocked(runGenuiBenchUiJudge).mockResolvedValueOnce({
+      dimensions: geqiDimensions(4),
+      errors: ['ui-judge consistency-standards failed'],
+      geqiScore: 80,
+      reason: 'Partial visual result',
+      score: 4,
+      status: 'failed',
+      summary: 'Partial GEQI result',
+      warnings: [],
+    });
+    const openui: ProtocolBenchAdapter = {
+      protocol: 'openui',
+      generate() {
+        return Promise.resolve({
+          attempts: [{
+            index: 1,
+            durationMs: 1,
+            inputTokens: 2,
+            outputTokens: 3,
+            totalTokens: 5,
+            valid: true,
+            validationErrors: [],
+            outputChars: 10,
+          }],
+          finalValid: true,
+          finalText: 'root = Text("ready")',
+          finalErrors: [],
+          judgePayload: {
+            kind: 'openui-text',
+            rawText: 'root = Text("ready")',
+          },
+        });
+      },
+    };
+    const benchRequest = request();
+    benchRequest.groups = [{
+      ...group,
+      profile: 'matched-core',
+      protocol: 'openui',
+    }];
+    const store = getBenchJobStore();
+    const job = store.createJob(benchRequest, 1);
+
+    await runBenchJob(job.id, { adapters: { openui } });
+
+    const report = store.getJob(job.id)?.report;
+    expect(report?.results[0]).toMatchObject({
+      error: 'ui-judge consistency-standards failed',
+      errors: ['ui-judge consistency-standards failed'],
+      judgeScore: 0,
+      judgeStatus: 'failed',
+      ok: false,
+      status: 'failed',
+    });
+    expect(report?.results[0]?.judgeDimensions).toBeUndefined();
+    expect(report?.results[0]?.judgeGeqiScore).toBeUndefined();
+    expect(report?.results[0]?.judgeReason).toBeUndefined();
+    expect(report?.results[0]?.judgeSummary).toBeUndefined();
+    expect(report?.summary).toMatchObject({
+      failedRuns: 1,
+      successRate: 0,
+    });
+    expect(report?.summaries[0]).toMatchObject({
+      avgJudgeScore: 0,
+      judgeRunCount: 0,
+    });
+    expect(report?.summaries[0]?.avgJudgeGeqiScore).toBeUndefined();
+  });
+
   test('runs mixed protocol arms serially and rotates their order per sample', async () => {
     const order: string[] = [];
     const adapter = (
@@ -633,6 +710,76 @@ describe('A2UI Bench UI Judge integration', () => {
       attempts: 2,
       screenshotDataUrl:
         'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAAB',
+    });
+  });
+
+  test('marks a native A2UI run failed when Judge fails', async () => {
+    rstest.mocked(probeBenchUiJudge).mockResolvedValueOnce({
+      enabled: true,
+      session: {
+        bundleUrl: 'https://bundle.example/a2ui.lynx.js',
+        judgeUrl: 'https://judge.example/judge',
+      },
+    });
+    rstest.mocked(runGenuiBenchUiJudge).mockResolvedValueOnce({
+      dimensions: geqiDimensions(4),
+      errors: ['ui-judge visual-aesthetics failed'],
+      geqiScore: 80,
+      score: 4,
+      status: 'failed',
+      warnings: [],
+    });
+    rstest.mocked(getA2UIAgentService).mockReturnValueOnce({
+      generateRaw(_messages: unknown, options: {
+        catalog?: { id?: string };
+      }) {
+        return Promise.resolve({
+          text: JSON.stringify([
+            {
+              version: 'v0.9',
+              createSurface: {
+                surfaceId: 'main',
+                catalogId: options.catalog?.id,
+              },
+            },
+            {
+              version: 'v0.9',
+              updateComponents: {
+                surfaceId: 'main',
+                components: [{
+                  id: 'root',
+                  component: 'Text',
+                  text: 'Ready',
+                  variant: 'body',
+                }],
+              },
+            },
+          ]),
+          usage: { total_tokens: 7 },
+          finishReason: 'stop',
+        });
+      },
+    } as unknown as ReturnType<typeof getA2UIAgentService>);
+    const store = getBenchJobStore();
+    const job = store.createJob(request(), 1);
+
+    await runBenchJob(job.id);
+
+    const report = store.getJob(job.id)?.report;
+    expect(report?.results[0]).toMatchObject({
+      error: 'ui-judge visual-aesthetics failed',
+      errors: ['ui-judge visual-aesthetics failed'],
+      judgeScore: 0,
+      judgeStatus: 'failed',
+      ok: false,
+      profile: 'native',
+      status: 'failed',
+    });
+    expect(report?.results[0]?.judgeDimensions).toBeUndefined();
+    expect(report?.results[0]?.judgeGeqiScore).toBeUndefined();
+    expect(report?.summary).toMatchObject({
+      failedRuns: 1,
+      successRate: 0,
     });
   });
 });
