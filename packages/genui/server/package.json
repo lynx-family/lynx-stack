@@ -4,7 +4,7 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "build": "tsc --noEmit && rslib build",
+    "build": "tsc6 --noEmit && rslib build",
     "dev": "pnpm build && pnpm run --parallel \"/^dev:(build|server)$/\"",
     "dev:build": "rslib build --watch",
     "dev:server": "node --watch dist/index.js",

@@ -36,7 +36,7 @@
     "dist"
   ],
   "scripts": {
-    "build": "pnpm run clean && tsc --project tsconfig.build.json && cp src/render/styles.css dist/render/styles.css",
+    "build": "pnpm run clean && tsc6 --project tsconfig.build.json && cp src/render/styles.css dist/render/styles.css",
     "clean": "node -e \"require('node:fs').rmSync('dist',{recursive:true,force:true});\"",
     "test": "rstest"
   },

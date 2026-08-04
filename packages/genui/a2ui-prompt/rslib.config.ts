@@ -13,9 +13,8 @@ const config: RslibConfig = defineConfig({
       syntax: 'es2022',
       dts: {
         bundle: true,
-        tsgo: true,
         typescriptPath: fileURLToPath(
-          import.meta.resolve('@typescript/native-preview'),
+          import.meta.resolve('@typescript/native'),
         ),
       },
     },

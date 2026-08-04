@@ -8,9 +8,8 @@ export default defineConfig({
       format: 'esm',
       syntax: 'es2022',
       dts: {
-        tsgo: true,
         typescriptPath: fileURLToPath(
-          import.meta.resolve('@typescript/native-preview'),
+          import.meta.resolve('@typescript/native'),
         ),
       },
     },
