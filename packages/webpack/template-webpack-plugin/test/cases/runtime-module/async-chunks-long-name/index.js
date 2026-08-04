@@ -6,6 +6,6 @@ import(
 
 it('should shorten an overlong lazy bundle name', () => {
   expect(Object.values(__webpack_require__['lynx_aci'])).toStrictEqual([
-    `lazy-bundle/dynamic.js-43236c58.${__webpack_require__.h()}.bundle`,
+    `lazy-bundle/a-very-long-directory-name-to-exceed-the-limit-1_dynamic.js-43236c58.${__webpack_require__.h()}.bundle`,
   ]);
 });
