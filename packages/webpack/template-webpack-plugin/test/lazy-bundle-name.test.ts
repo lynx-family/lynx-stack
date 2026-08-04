@@ -14,12 +14,12 @@ const resolve = (...segments: string[]) => path.join(context, ...segments);
 describe('resourcesToLazyBundleName', () => {
   test('keeps a short path readable', () => {
     expect(resourcesToLazyBundleName([resolve('src', 'Foo.tsx')], context))
-      .toBe('src/Foo.tsx');
+      .toBe('src_Foo.tsx');
   });
 
   test('escapes `..` so the bundle stays under the output directory', () => {
     expect(resourcesToLazyBundleName([resolve('..', 'Foo.tsx')], context))
-      .toBe('__/Foo.tsx');
+      .toBe('___Foo.tsx');
   });
 
   test('joins the resources of one chunk group', () => {
@@ -28,7 +28,7 @@ describe('resourcesToLazyBundleName', () => {
         [resolve('src', 'a.tsx'), resolve('src', 'b.tsx')],
         context,
       ),
-    ).toBe('src/a.tsx_src/b.tsx');
+    ).toBe('src_a.tsx_src_b.tsx');
   });
 
   test('replaces the directories of an overlong path with a digest', () => {

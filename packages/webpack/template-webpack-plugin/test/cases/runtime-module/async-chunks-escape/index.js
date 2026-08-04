@@ -8,7 +8,7 @@ import('./dynamic.js');
 it('should keep a bundle resolved outside the context inside lazy-bundle/', () => {
   const names = Object.values(__webpack_require__['lynx_aci']);
   expect(names).toStrictEqual([
-    `lazy-bundle/__/dynamic.js.${__webpack_require__.h()}.bundle`,
+    `lazy-bundle/___dynamic.js.${__webpack_require__.h()}.bundle`,
   ]);
   for (const name of names) {
     expect(name.startsWith('lazy-bundle/')).toBe(true);

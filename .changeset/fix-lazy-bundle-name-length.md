@@ -2,4 +2,4 @@
 "@lynx-js/template-webpack-plugin": minor
 ---
 
-Shorten a lazy bundle name longer than 100 characters to its file name plus a digest, so the path stays short where the bundle is unpacked.
+Flatten lazy bundle names into a single path segment, and replace the directories of a name longer than 100 characters with a digest.

@@ -1447,7 +1447,7 @@ export function resourcesToLazyBundleName(
 
   return name.length > LAZY_BUNDLE_NAME_LIMIT
     ? shortenLazyBundleName(name)
-    : name;
+    : name.replace(/\//g, '_');
 }
 
 export function predicateNonHotModuleReplacementAsset(
