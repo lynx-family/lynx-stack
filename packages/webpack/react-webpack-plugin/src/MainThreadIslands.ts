@@ -5,7 +5,7 @@
 /**
  * The plugin half of a main-thread island — the opt-in direction of the
  * first-screen dial, on the assembled main-thread bundle of
- * `enableMTSRendering: false`.
+ * `experimental_enableMTSRendering: false`.
  *
  * The assembled bundle's rule is "no business module enters the main-thread
  * layer; every definition the main thread needs travels as data". An island

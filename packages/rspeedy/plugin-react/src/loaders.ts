@@ -32,7 +32,7 @@ const MAIN_THREAD_ENV_TARGETS = { chrome: '120' }
 function getLoaderOptions(
   api: RsbuildPluginAPI,
   options: Required<PluginReactLynxOptions>,
-  enableMTSRendering: boolean,
+  resolvedEnableMTSRendering: boolean,
   isMainThread = false,
 ) {
   const { output } = api.getRsbuildConfig()
@@ -68,7 +68,9 @@ function getLoaderOptions(
     engineVersion,
     experimental_transformBuiltinAttributeNames,
     experimental_useElementTemplate,
-    enableMTSRendering,
+    // The *resolved* boolean, not `options.experimental_enableMTSRendering`:
+    // `'auto'` has already been answered against the entry sources.
+    experimental_enableMTSRendering: resolvedEnableMTSRendering,
     ...isMainThread
       ? {
         enableUiSourceMap,
@@ -96,7 +98,7 @@ export function applyTestingLoaders(
         getLoaderOptions(
           api,
           options,
-          options.enableMTSRendering === false ? false : true,
+          options.experimental_enableMTSRendering === false ? false : true,
         ),
       )
       .end()
@@ -112,7 +114,7 @@ export function applyLoaders(
     // a detected root-level first-screen boundary turns the assembled
     // main-thread bundle on, and the background loader then collects the MTS
     // defines.
-    const enableMTSRendering = resolveMTSRendering(
+    const resolvedEnableMTSRendering = resolveMTSRendering(
       options,
       isProd,
       chain,
@@ -141,7 +143,7 @@ export function applyLoaders(
       .end()
       .use(LAYERS.BACKGROUND)
         .loader(ReactWebpackPlugin.loaders.BACKGROUND)
-        .options(getLoaderOptions(api, options, enableMTSRendering))
+        .options(getLoaderOptions(api, options, resolvedEnableMTSRendering))
       .end()
 
     const mainThreadRule = jsMainRule.oneOf(LAYERS.MAIN_THREAD)
@@ -188,7 +190,7 @@ export function applyLoaders(
       })
       .use(LAYERS.MAIN_THREAD)
         .loader(ReactWebpackPlugin.loaders.MAIN_THREAD)
-        .options(getLoaderOptions(api, options, enableMTSRendering, true))
+        .options(getLoaderOptions(api, options, resolvedEnableMTSRendering, true))
       .end()
   })
 }

@@ -37,7 +37,7 @@ async function buildIslandFixture(
       },
       output: { distPath: { root: tmp } },
       plugins: [
-        // The declarative trigger: no `enableMTSRendering` option at all.
+        // The declarative trigger: no `experimental_enableMTSRendering` option at all.
         pluginReactLynx(),
         {
           name: 'ignore-css-loader-workaround',

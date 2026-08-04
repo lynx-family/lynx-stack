@@ -7,14 +7,14 @@ import { mergeRspeedyConfig, type Config } from '@lynx-js/rspeedy';
 
 import { commonConfig } from './commonConfig.js';
 
-// One matrix case, one `enableMTSRendering` value, one build. Building the
+// One matrix case, one `experimental_enableMTSRendering` value, one build. Building the
 // whole matrix in a single pass would share the mode across every entry —
 // an entry whose boundary went undetected would then inherit "mode on" from
 // a sibling, which is a different question from the one each case asks.
 const name = process.env['BG_CASE']!;
 const variant = process.env['BG_VARIANT']!;
 
-const enableMTSRendering = variant === 'auto'
+const experimental_enableMTSRendering = variant === 'auto'
   ? undefined
   : variant === 'off'
   ? false
@@ -22,7 +22,9 @@ const enableMTSRendering = variant === 'auto'
 
 const config: Config = mergeRspeedyConfig(
   commonConfig(
-    enableMTSRendering === undefined ? {} : { enableMTSRendering },
+    experimental_enableMTSRendering === undefined
+      ? {}
+      : { experimental_enableMTSRendering },
   ),
   {
     source: {

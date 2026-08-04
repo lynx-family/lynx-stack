@@ -77,6 +77,7 @@ describe('create-lynx-library', () => {
       serviceName: 'ButtonService',
       dependencyVersions: {
         '@lynx-js/autolink-codegen': '^0.123.0',
+        '@lynx-js/rspeedy': '^0.456.0',
       },
     });
 
@@ -172,6 +173,10 @@ describe('create-lynx-library', () => {
       '"@lynx-js/autolink-codegen": "^0.0.0"',
     );
     expect(read(dir, 'package.json')).not.toContain('workspace:');
+    expect(read(dir, 'example/package.json')).toContain(
+      '"@lynx-js/rspeedy": "^0.456.0"',
+    );
+    expect(read(dir, 'example/package.json')).not.toContain('workspace:');
     expect(read(dir, 'lynx.lib.json')).toContain(
       '"packageName": "com.example.button"',
     );
@@ -834,7 +839,9 @@ describe('create-lynx-library', () => {
       createLynxLibrary({
         dir,
         features: ['native-module'],
-        dependencyVersions: {},
+        dependencyVersions: {
+          '@lynx-js/rspeedy': '^0.456.0',
+        },
       })
     ).toThrow(
       /workspace dependencies without version mappings: @lynx-js\/autolink-codegen/,

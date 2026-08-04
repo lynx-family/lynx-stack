@@ -19,8 +19,8 @@ export const MODES: readonly Mode[] = ['ifr', 'mts'];
 export const PHASES: readonly Phase[] = ['main-thread', 'stamped', 'hydrated'];
 
 export const MODE_LABEL: Record<Mode, string> = {
-  ifr: 'enableMTSRendering: true',
-  mts: 'enableMTSRendering: false',
+  ifr: 'experimental_enableMTSRendering: true',
+  mts: 'experimental_enableMTSRendering: false',
 };
 
 export const PHASE_LABEL: Record<Phase, string> = {

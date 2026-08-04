@@ -285,7 +285,7 @@ impl VisitMut for ExtractingIdentsCollector {
               .struct_span_err(
                 n.span,
                 &format!(
-                  "`enableMTSRendering: false` does not support a `runtime: 'shared'` import inside a main-thread function yet: `{}` has no binding on a main thread that compiles no business code.",
+                  "`experimental_enableMTSRendering: false` does not support a `runtime: 'shared'` import inside a main-thread function yet: `{}` has no binding on a main thread that compiles no business code.",
                   n.sym
                 ),
               )

@@ -349,6 +349,7 @@ export function validateA2UIOutput(
       }
       const bucket = componentsBySurface.get(sId)
         ?? new Map<string, A2UIComponent>();
+      const idsInMessage = new Set<string>();
       for (const rawComponent of msg.updateComponents.components) {
         const comp = rawComponent as A2UIComponent;
         for (const fn of collectFunctionCalls(comp, `component.${comp.id}`)) {
@@ -376,11 +377,12 @@ export function validateA2UIOutput(
             }.`,
           );
         }
-        if (bucket.has(comp.id)) {
+        if (idsInMessage.has(comp.id)) {
           errors.push(
-            `Duplicate component id "${comp.id}" in surface "${sId}".`,
+            `Duplicate component id "${comp.id}" in one updateComponents message for surface "${sId}".`,
           );
         }
+        idsInMessage.add(comp.id);
         bucket.set(comp.id, comp);
         const componentPaths: string[] = [];
         collectPaths(comp, componentPaths);

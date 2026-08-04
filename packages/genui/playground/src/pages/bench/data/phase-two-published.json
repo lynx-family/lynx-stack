@@ -1,0 +1,2571 @@
+{
+  "schemaVersion": "genui-bench-phase-2/published-v1",
+  "title": "A2UI vs OpenUI",
+  "larkUrl": "https://bytedance.larkoffice.com/docx/E6xPdVshBoV4bkxHGdwc5SoTnub",
+  "sources": [
+    {
+      "id": "phase-two-formal-source-1",
+      "jobId": "phase-two-formal-2026-07-30",
+      "status": "complete",
+      "createdAt": "2026-07-30T06:53:21.502Z",
+      "completedAt": "2026-07-30T07:26:09.742Z",
+      "model": "gpt-5.5-2026-04-24",
+      "plannedRuns": 60,
+      "runCount": 60,
+      "failedRuns": 0
+    }
+  ],
+  "scope": {
+    "reportCount": 1,
+    "completeReportCount": 1,
+    "modelCount": 1,
+    "scenarioCount": 3,
+    "pairCount": 30,
+    "plannedRuns": 60,
+    "runCount": 60,
+    "failedRuns": 0
+  },
+  "summary": {
+    "plannedRuns": 60,
+    "runCount": 60,
+    "completedRuns": 60,
+    "failedRuns": 0,
+    "passAt1Runs": 60,
+    "passAt1Rate": 1,
+    "finalValidRuns": 60,
+    "finalValidRate": 1,
+    "renderEnabledPlannedRuns": 0,
+    "renderEvaluatedRuns": 0,
+    "renderPassedRuns": 0,
+    "renderCoverageRate": 0,
+    "renderPassRate": null,
+    "judgeEnabledPlannedRuns": 60,
+    "judgeEvaluatedRuns": 60,
+    "judgePassedRuns": 60,
+    "judgeCoverageRate": 1,
+    "judgeScoreTotal": 159,
+    "avgJudgeScoreAllRuns": 2.65,
+    "attemptsTotal": 60,
+    "avgAttemptsAllRuns": 1,
+    "tokensTotal": 293139,
+    "avgTokensAllRuns": 4885.65,
+    "generationMsTotal": 1493127,
+    "avgGenerationMsAllRuns": 24885.45
+  },
+  "models": [
+    {
+      "model": "gpt-5.5-2026-04-24",
+      "metrics": {
+        "plannedRuns": 60,
+        "runCount": 60,
+        "completedRuns": 60,
+        "failedRuns": 0,
+        "passAt1Runs": 60,
+        "passAt1Rate": 1,
+        "finalValidRuns": 60,
+        "finalValidRate": 1,
+        "renderEnabledPlannedRuns": 0,
+        "renderEvaluatedRuns": 0,
+        "renderPassedRuns": 0,
+        "renderCoverageRate": 0,
+        "renderPassRate": null,
+        "judgeEnabledPlannedRuns": 60,
+        "judgeEvaluatedRuns": 60,
+        "judgePassedRuns": 60,
+        "judgeCoverageRate": 1,
+        "judgeScoreTotal": 159,
+        "avgJudgeScoreAllRuns": 2.65,
+        "attemptsTotal": 60,
+        "avgAttemptsAllRuns": 1,
+        "tokensTotal": 293139,
+        "avgTokensAllRuns": 4885.65,
+        "generationMsTotal": 1493127,
+        "avgGenerationMsAllRuns": 24885.45
+      },
+      "protocols": [
+        {
+          "protocol": "a2ui",
+          "metrics": {
+            "plannedRuns": 30,
+            "runCount": 30,
+            "completedRuns": 30,
+            "failedRuns": 0,
+            "passAt1Runs": 30,
+            "passAt1Rate": 1,
+            "finalValidRuns": 30,
+            "finalValidRate": 1,
+            "renderEnabledPlannedRuns": 0,
+            "renderEvaluatedRuns": 0,
+            "renderPassedRuns": 0,
+            "renderCoverageRate": 0,
+            "renderPassRate": null,
+            "judgeEnabledPlannedRuns": 30,
+            "judgeEvaluatedRuns": 30,
+            "judgePassedRuns": 30,
+            "judgeCoverageRate": 1,
+            "judgeScoreTotal": 91,
+            "avgJudgeScoreAllRuns": 3.033333333333333,
+            "attemptsTotal": 30,
+            "avgAttemptsAllRuns": 1,
+            "tokensTotal": 198296,
+            "avgTokensAllRuns": 6609.866666666667,
+            "generationMsTotal": 899302,
+            "avgGenerationMsAllRuns": 29976.733333333334
+          }
+        },
+        {
+          "protocol": "openui",
+          "metrics": {
+            "plannedRuns": 30,
+            "runCount": 30,
+            "completedRuns": 30,
+            "failedRuns": 0,
+            "passAt1Runs": 30,
+            "passAt1Rate": 1,
+            "finalValidRuns": 30,
+            "finalValidRate": 1,
+            "renderEnabledPlannedRuns": 0,
+            "renderEvaluatedRuns": 0,
+            "renderPassedRuns": 0,
+            "renderCoverageRate": 0,
+            "renderPassRate": null,
+            "judgeEnabledPlannedRuns": 30,
+            "judgeEvaluatedRuns": 30,
+            "judgePassedRuns": 30,
+            "judgeCoverageRate": 1,
+            "judgeScoreTotal": 68,
+            "avgJudgeScoreAllRuns": 2.2666666666666666,
+            "attemptsTotal": 30,
+            "avgAttemptsAllRuns": 1,
+            "tokensTotal": 94843,
+            "avgTokensAllRuns": 3161.4333333333334,
+            "generationMsTotal": 593825,
+            "avgGenerationMsAllRuns": 19794.166666666668
+          }
+        }
+      ]
+    }
+  ],
+  "modelProtocols": [
+    {
+      "id": "gpt-5.5-2026-04-24\u0000a2ui",
+      "model": "gpt-5.5-2026-04-24",
+      "protocol": "a2ui",
+      "metrics": {
+        "plannedRuns": 30,
+        "runCount": 30,
+        "completedRuns": 30,
+        "failedRuns": 0,
+        "passAt1Runs": 30,
+        "passAt1Rate": 1,
+        "finalValidRuns": 30,
+        "finalValidRate": 1,
+        "renderEnabledPlannedRuns": 0,
+        "renderEvaluatedRuns": 0,
+        "renderPassedRuns": 0,
+        "renderCoverageRate": 0,
+        "renderPassRate": null,
+        "judgeEnabledPlannedRuns": 30,
+        "judgeEvaluatedRuns": 30,
+        "judgePassedRuns": 30,
+        "judgeCoverageRate": 1,
+        "judgeScoreTotal": 91,
+        "avgJudgeScoreAllRuns": 3.033333333333333,
+        "attemptsTotal": 30,
+        "avgAttemptsAllRuns": 1,
+        "tokensTotal": 198296,
+        "avgTokensAllRuns": 6609.866666666667,
+        "generationMsTotal": 899302,
+        "avgGenerationMsAllRuns": 29976.733333333334
+      }
+    },
+    {
+      "id": "gpt-5.5-2026-04-24\u0000openui",
+      "model": "gpt-5.5-2026-04-24",
+      "protocol": "openui",
+      "metrics": {
+        "plannedRuns": 30,
+        "runCount": 30,
+        "completedRuns": 30,
+        "failedRuns": 0,
+        "passAt1Runs": 30,
+        "passAt1Rate": 1,
+        "finalValidRuns": 30,
+        "finalValidRate": 1,
+        "renderEnabledPlannedRuns": 0,
+        "renderEvaluatedRuns": 0,
+        "renderPassedRuns": 0,
+        "renderCoverageRate": 0,
+        "renderPassRate": null,
+        "judgeEnabledPlannedRuns": 30,
+        "judgeEvaluatedRuns": 30,
+        "judgePassedRuns": 30,
+        "judgeCoverageRate": 1,
+        "judgeScoreTotal": 68,
+        "avgJudgeScoreAllRuns": 2.2666666666666666,
+        "attemptsTotal": 30,
+        "avgAttemptsAllRuns": 1,
+        "tokensTotal": 94843,
+        "avgTokensAllRuns": 3161.4333333333334,
+        "generationMsTotal": 593825,
+        "avgGenerationMsAllRuns": 19794.166666666668
+      }
+    }
+  ],
+  "scenarios": [
+    {
+      "id": "weather-refresh-card",
+      "name": "Weather Refresh Card",
+      "type": "Information",
+      "complexity": 1,
+      "models": [
+        "gpt-5.5-2026-04-24"
+      ],
+      "metrics": {
+        "plannedRuns": 20,
+        "runCount": 20,
+        "completedRuns": 20,
+        "failedRuns": 0,
+        "passAt1Runs": 20,
+        "passAt1Rate": 1,
+        "finalValidRuns": 20,
+        "finalValidRate": 1,
+        "renderEnabledPlannedRuns": 0,
+        "renderEvaluatedRuns": 0,
+        "renderPassedRuns": 0,
+        "renderCoverageRate": 0,
+        "renderPassRate": null,
+        "judgeEnabledPlannedRuns": 20,
+        "judgeEvaluatedRuns": 20,
+        "judgePassedRuns": 20,
+        "judgeCoverageRate": 1,
+        "judgeScoreTotal": 66,
+        "avgJudgeScoreAllRuns": 3.3,
+        "attemptsTotal": 20,
+        "avgAttemptsAllRuns": 1,
+        "tokensTotal": 73628,
+        "avgTokensAllRuns": 3681.4,
+        "generationMsTotal": 246921,
+        "avgGenerationMsAllRuns": 12346.05
+      },
+      "protocols": [
+        {
+          "protocol": "a2ui",
+          "metrics": {
+            "plannedRuns": 10,
+            "runCount": 10,
+            "completedRuns": 10,
+            "failedRuns": 0,
+            "passAt1Runs": 10,
+            "passAt1Rate": 1,
+            "finalValidRuns": 10,
+            "finalValidRate": 1,
+            "renderEnabledPlannedRuns": 0,
+            "renderEvaluatedRuns": 0,
+            "renderPassedRuns": 0,
+            "renderCoverageRate": 0,
+            "renderPassRate": null,
+            "judgeEnabledPlannedRuns": 10,
+            "judgeEvaluatedRuns": 10,
+            "judgePassedRuns": 10,
+            "judgeCoverageRate": 1,
+            "judgeScoreTotal": 38,
+            "avgJudgeScoreAllRuns": 3.8,
+            "attemptsTotal": 10,
+            "avgAttemptsAllRuns": 1,
+            "tokensTotal": 51059,
+            "avgTokensAllRuns": 5105.9,
+            "generationMsTotal": 160346,
+            "avgGenerationMsAllRuns": 16034.6
+          }
+        },
+        {
+          "protocol": "openui",
+          "metrics": {
+            "plannedRuns": 10,
+            "runCount": 10,
+            "completedRuns": 10,
+            "failedRuns": 0,
+            "passAt1Runs": 10,
+            "passAt1Rate": 1,
+            "finalValidRuns": 10,
+            "finalValidRate": 1,
+            "renderEnabledPlannedRuns": 0,
+            "renderEvaluatedRuns": 0,
+            "renderPassedRuns": 0,
+            "renderCoverageRate": 0,
+            "renderPassRate": null,
+            "judgeEnabledPlannedRuns": 10,
+            "judgeEvaluatedRuns": 10,
+            "judgePassedRuns": 10,
+            "judgeCoverageRate": 1,
+            "judgeScoreTotal": 28,
+            "avgJudgeScoreAllRuns": 2.8,
+            "attemptsTotal": 10,
+            "avgAttemptsAllRuns": 1,
+            "tokensTotal": 22569,
+            "avgTokensAllRuns": 2256.9,
+            "generationMsTotal": 86575,
+            "avgGenerationMsAllRuns": 8657.5
+          }
+        }
+      ],
+      "modelProtocols": [
+        {
+          "id": "gpt-5.5-2026-04-24\u0000a2ui",
+          "model": "gpt-5.5-2026-04-24",
+          "protocol": "a2ui",
+          "metrics": {
+            "plannedRuns": 10,
+            "runCount": 10,
+            "completedRuns": 10,
+            "failedRuns": 0,
+            "passAt1Runs": 10,
+            "passAt1Rate": 1,
+            "finalValidRuns": 10,
+            "finalValidRate": 1,
+            "renderEnabledPlannedRuns": 0,
+            "renderEvaluatedRuns": 0,
+            "renderPassedRuns": 0,
+            "renderCoverageRate": 0,
+            "renderPassRate": null,
+            "judgeEnabledPlannedRuns": 10,
+            "judgeEvaluatedRuns": 10,
+            "judgePassedRuns": 10,
+            "judgeCoverageRate": 1,
+            "judgeScoreTotal": 38,
+            "avgJudgeScoreAllRuns": 3.8,
+            "attemptsTotal": 10,
+            "avgAttemptsAllRuns": 1,
+            "tokensTotal": 51059,
+            "avgTokensAllRuns": 5105.9,
+            "generationMsTotal": 160346,
+            "avgGenerationMsAllRuns": 16034.6
+          }
+        },
+        {
+          "id": "gpt-5.5-2026-04-24\u0000openui",
+          "model": "gpt-5.5-2026-04-24",
+          "protocol": "openui",
+          "metrics": {
+            "plannedRuns": 10,
+            "runCount": 10,
+            "completedRuns": 10,
+            "failedRuns": 0,
+            "passAt1Runs": 10,
+            "passAt1Rate": 1,
+            "finalValidRuns": 10,
+            "finalValidRate": 1,
+            "renderEnabledPlannedRuns": 0,
+            "renderEvaluatedRuns": 0,
+            "renderPassedRuns": 0,
+            "renderCoverageRate": 0,
+            "renderPassRate": null,
+            "judgeEnabledPlannedRuns": 10,
+            "judgeEvaluatedRuns": 10,
+            "judgePassedRuns": 10,
+            "judgeCoverageRate": 1,
+            "judgeScoreTotal": 28,
+            "avgJudgeScoreAllRuns": 2.8,
+            "attemptsTotal": 10,
+            "avgAttemptsAllRuns": 1,
+            "tokensTotal": 22569,
+            "avgTokensAllRuns": 2256.9,
+            "generationMsTotal": 86575,
+            "avgGenerationMsAllRuns": 8657.5
+          }
+        }
+      ],
+      "warnings": [],
+      "errors": []
+    },
+    {
+      "id": "product-purchase-card",
+      "name": "Product Purchase Card",
+      "type": "Commerce",
+      "complexity": 2,
+      "models": [
+        "gpt-5.5-2026-04-24"
+      ],
+      "metrics": {
+        "plannedRuns": 20,
+        "runCount": 20,
+        "completedRuns": 20,
+        "failedRuns": 0,
+        "passAt1Runs": 20,
+        "passAt1Rate": 1,
+        "finalValidRuns": 20,
+        "finalValidRate": 1,
+        "renderEnabledPlannedRuns": 0,
+        "renderEvaluatedRuns": 0,
+        "renderPassedRuns": 0,
+        "renderCoverageRate": 0,
+        "renderPassRate": null,
+        "judgeEnabledPlannedRuns": 20,
+        "judgeEvaluatedRuns": 20,
+        "judgePassedRuns": 20,
+        "judgeCoverageRate": 1,
+        "judgeScoreTotal": 51,
+        "avgJudgeScoreAllRuns": 2.55,
+        "attemptsTotal": 20,
+        "avgAttemptsAllRuns": 1,
+        "tokensTotal": 81781,
+        "avgTokensAllRuns": 4089.05,
+        "generationMsTotal": 339347,
+        "avgGenerationMsAllRuns": 16967.35
+      },
+      "protocols": [
+        {
+          "protocol": "a2ui",
+          "metrics": {
+            "plannedRuns": 10,
+            "runCount": 10,
+            "completedRuns": 10,
+            "failedRuns": 0,
+            "passAt1Runs": 10,
+            "passAt1Rate": 1,
+            "finalValidRuns": 10,
+            "finalValidRate": 1,
+            "renderEnabledPlannedRuns": 0,
+            "renderEvaluatedRuns": 0,
+            "renderPassedRuns": 0,
+            "renderCoverageRate": 0,
+            "renderPassRate": null,
+            "judgeEnabledPlannedRuns": 10,
+            "judgeEvaluatedRuns": 10,
+            "judgePassedRuns": 10,
+            "judgeCoverageRate": 1,
+            "judgeScoreTotal": 31,
+            "avgJudgeScoreAllRuns": 3.1,
+            "attemptsTotal": 10,
+            "avgAttemptsAllRuns": 1,
+            "tokensTotal": 56951,
+            "avgTokensAllRuns": 5695.1,
+            "generationMsTotal": 216477,
+            "avgGenerationMsAllRuns": 21647.7
+          }
+        },
+        {
+          "protocol": "openui",
+          "metrics": {
+            "plannedRuns": 10,
+            "runCount": 10,
+            "completedRuns": 10,
+            "failedRuns": 0,
+            "passAt1Runs": 10,
+            "passAt1Rate": 1,
+            "finalValidRuns": 10,
+            "finalValidRate": 1,
+            "renderEnabledPlannedRuns": 0,
+            "renderEvaluatedRuns": 0,
+            "renderPassedRuns": 0,
+            "renderCoverageRate": 0,
+            "renderPassRate": null,
+            "judgeEnabledPlannedRuns": 10,
+            "judgeEvaluatedRuns": 10,
+            "judgePassedRuns": 10,
+            "judgeCoverageRate": 1,
+            "judgeScoreTotal": 20,
+            "avgJudgeScoreAllRuns": 2,
+            "attemptsTotal": 10,
+            "avgAttemptsAllRuns": 1,
+            "tokensTotal": 24830,
+            "avgTokensAllRuns": 2483,
+            "generationMsTotal": 122870,
+            "avgGenerationMsAllRuns": 12287
+          }
+        }
+      ],
+      "modelProtocols": [
+        {
+          "id": "gpt-5.5-2026-04-24\u0000a2ui",
+          "model": "gpt-5.5-2026-04-24",
+          "protocol": "a2ui",
+          "metrics": {
+            "plannedRuns": 10,
+            "runCount": 10,
+            "completedRuns": 10,
+            "failedRuns": 0,
+            "passAt1Runs": 10,
+            "passAt1Rate": 1,
+            "finalValidRuns": 10,
+            "finalValidRate": 1,
+            "renderEnabledPlannedRuns": 0,
+            "renderEvaluatedRuns": 0,
+            "renderPassedRuns": 0,
+            "renderCoverageRate": 0,
+            "renderPassRate": null,
+            "judgeEnabledPlannedRuns": 10,
+            "judgeEvaluatedRuns": 10,
+            "judgePassedRuns": 10,
+            "judgeCoverageRate": 1,
+            "judgeScoreTotal": 31,
+            "avgJudgeScoreAllRuns": 3.1,
+            "attemptsTotal": 10,
+            "avgAttemptsAllRuns": 1,
+            "tokensTotal": 56951,
+            "avgTokensAllRuns": 5695.1,
+            "generationMsTotal": 216477,
+            "avgGenerationMsAllRuns": 21647.7
+          }
+        },
+        {
+          "id": "gpt-5.5-2026-04-24\u0000openui",
+          "model": "gpt-5.5-2026-04-24",
+          "protocol": "openui",
+          "metrics": {
+            "plannedRuns": 10,
+            "runCount": 10,
+            "completedRuns": 10,
+            "failedRuns": 0,
+            "passAt1Runs": 10,
+            "passAt1Rate": 1,
+            "finalValidRuns": 10,
+            "finalValidRate": 1,
+            "renderEnabledPlannedRuns": 0,
+            "renderEvaluatedRuns": 0,
+            "renderPassedRuns": 0,
+            "renderCoverageRate": 0,
+            "renderPassRate": null,
+            "judgeEnabledPlannedRuns": 10,
+            "judgeEvaluatedRuns": 10,
+            "judgePassedRuns": 10,
+            "judgeCoverageRate": 1,
+            "judgeScoreTotal": 20,
+            "avgJudgeScoreAllRuns": 2,
+            "attemptsTotal": 10,
+            "avgAttemptsAllRuns": 1,
+            "tokensTotal": 24830,
+            "avgTokensAllRuns": 2483,
+            "generationMsTotal": 122870,
+            "avgGenerationMsAllRuns": 12287
+          }
+        }
+      ],
+      "warnings": [],
+      "errors": []
+    },
+    {
+      "id": "kyoto-trip-planner",
+      "name": "Kyoto Trip Planner",
+      "type": "Long content",
+      "complexity": 3,
+      "models": [
+        "gpt-5.5-2026-04-24"
+      ],
+      "metrics": {
+        "plannedRuns": 20,
+        "runCount": 20,
+        "completedRuns": 20,
+        "failedRuns": 0,
+        "passAt1Runs": 20,
+        "passAt1Rate": 1,
+        "finalValidRuns": 20,
+        "finalValidRate": 1,
+        "renderEnabledPlannedRuns": 0,
+        "renderEvaluatedRuns": 0,
+        "renderPassedRuns": 0,
+        "renderCoverageRate": 0,
+        "renderPassRate": null,
+        "judgeEnabledPlannedRuns": 20,
+        "judgeEvaluatedRuns": 20,
+        "judgePassedRuns": 20,
+        "judgeCoverageRate": 1,
+        "judgeScoreTotal": 42,
+        "avgJudgeScoreAllRuns": 2.1,
+        "attemptsTotal": 20,
+        "avgAttemptsAllRuns": 1,
+        "tokensTotal": 137730,
+        "avgTokensAllRuns": 6886.5,
+        "generationMsTotal": 906859,
+        "avgGenerationMsAllRuns": 45342.95
+      },
+      "protocols": [
+        {
+          "protocol": "a2ui",
+          "metrics": {
+            "plannedRuns": 10,
+            "runCount": 10,
+            "completedRuns": 10,
+            "failedRuns": 0,
+            "passAt1Runs": 10,
+            "passAt1Rate": 1,
+            "finalValidRuns": 10,
+            "finalValidRate": 1,
+            "renderEnabledPlannedRuns": 0,
+            "renderEvaluatedRuns": 0,
+            "renderPassedRuns": 0,
+            "renderCoverageRate": 0,
+            "renderPassRate": null,
+            "judgeEnabledPlannedRuns": 10,
+            "judgeEvaluatedRuns": 10,
+            "judgePassedRuns": 10,
+            "judgeCoverageRate": 1,
+            "judgeScoreTotal": 22,
+            "avgJudgeScoreAllRuns": 2.2,
+            "attemptsTotal": 10,
+            "avgAttemptsAllRuns": 1,
+            "tokensTotal": 90286,
+            "avgTokensAllRuns": 9028.6,
+            "generationMsTotal": 522479,
+            "avgGenerationMsAllRuns": 52247.9
+          }
+        },
+        {
+          "protocol": "openui",
+          "metrics": {
+            "plannedRuns": 10,
+            "runCount": 10,
+            "completedRuns": 10,
+            "failedRuns": 0,
+            "passAt1Runs": 10,
+            "passAt1Rate": 1,
+            "finalValidRuns": 10,
+            "finalValidRate": 1,
+            "renderEnabledPlannedRuns": 0,
+            "renderEvaluatedRuns": 0,
+            "renderPassedRuns": 0,
+            "renderCoverageRate": 0,
+            "renderPassRate": null,
+            "judgeEnabledPlannedRuns": 10,
+            "judgeEvaluatedRuns": 10,
+            "judgePassedRuns": 10,
+            "judgeCoverageRate": 1,
+            "judgeScoreTotal": 20,
+            "avgJudgeScoreAllRuns": 2,
+            "attemptsTotal": 10,
+            "avgAttemptsAllRuns": 1,
+            "tokensTotal": 47444,
+            "avgTokensAllRuns": 4744.4,
+            "generationMsTotal": 384380,
+            "avgGenerationMsAllRuns": 38438
+          }
+        }
+      ],
+      "modelProtocols": [
+        {
+          "id": "gpt-5.5-2026-04-24\u0000a2ui",
+          "model": "gpt-5.5-2026-04-24",
+          "protocol": "a2ui",
+          "metrics": {
+            "plannedRuns": 10,
+            "runCount": 10,
+            "completedRuns": 10,
+            "failedRuns": 0,
+            "passAt1Runs": 10,
+            "passAt1Rate": 1,
+            "finalValidRuns": 10,
+            "finalValidRate": 1,
+            "renderEnabledPlannedRuns": 0,
+            "renderEvaluatedRuns": 0,
+            "renderPassedRuns": 0,
+            "renderCoverageRate": 0,
+            "renderPassRate": null,
+            "judgeEnabledPlannedRuns": 10,
+            "judgeEvaluatedRuns": 10,
+            "judgePassedRuns": 10,
+            "judgeCoverageRate": 1,
+            "judgeScoreTotal": 22,
+            "avgJudgeScoreAllRuns": 2.2,
+            "attemptsTotal": 10,
+            "avgAttemptsAllRuns": 1,
+            "tokensTotal": 90286,
+            "avgTokensAllRuns": 9028.6,
+            "generationMsTotal": 522479,
+            "avgGenerationMsAllRuns": 52247.9
+          }
+        },
+        {
+          "id": "gpt-5.5-2026-04-24\u0000openui",
+          "model": "gpt-5.5-2026-04-24",
+          "protocol": "openui",
+          "metrics": {
+            "plannedRuns": 10,
+            "runCount": 10,
+            "completedRuns": 10,
+            "failedRuns": 0,
+            "passAt1Runs": 10,
+            "passAt1Rate": 1,
+            "finalValidRuns": 10,
+            "finalValidRate": 1,
+            "renderEnabledPlannedRuns": 0,
+            "renderEvaluatedRuns": 0,
+            "renderPassedRuns": 0,
+            "renderCoverageRate": 0,
+            "renderPassRate": null,
+            "judgeEnabledPlannedRuns": 10,
+            "judgeEvaluatedRuns": 10,
+            "judgePassedRuns": 10,
+            "judgeCoverageRate": 1,
+            "judgeScoreTotal": 20,
+            "avgJudgeScoreAllRuns": 2,
+            "attemptsTotal": 10,
+            "avgAttemptsAllRuns": 1,
+            "tokensTotal": 47444,
+            "avgTokensAllRuns": 4744.4,
+            "generationMsTotal": 384380,
+            "avgGenerationMsAllRuns": 38438
+          }
+        }
+      ],
+      "warnings": [],
+      "errors": []
+    }
+  ],
+  "pairs": [
+    {
+      "id": "phase-two-formal-source-1\u0000weather-refresh-card-repeat-1",
+      "sourceReportId": "phase-two-formal-source-1",
+      "pairId": "weather-refresh-card-repeat-1",
+      "model": "gpt-5.5-2026-04-24",
+      "scenarioId": "weather-refresh-card",
+      "scenarioName": "Weather Refresh Card",
+      "repeatIndex": 1,
+      "complete": true,
+      "runs": {
+        "a2ui": {
+          "id": "weather-refresh-card-repeat-1-a2ui",
+          "orderInPair": 1,
+          "protocol": "a2ui",
+          "status": "complete",
+          "passAt1": true,
+          "finalValid": true,
+          "attemptCount": 1,
+          "totalTokens": 4988,
+          "generationMs": 16824,
+          "render": {
+            "status": "not-run",
+            "durationMs": 0
+          },
+          "judge": {
+            "status": "passed",
+            "score": 4,
+            "model": "gpt-5.5-2026-04-24",
+            "durationMs": 6020
+          },
+          "finalOutputChars": 3507,
+          "errors": [],
+          "warnings": [],
+          "screenshotUrl": "/bench/phase-two/screenshots/weather-refresh-card-repeat-1-a2ui.png?v=20260730T072609742Z"
+        },
+        "openui": {
+          "id": "weather-refresh-card-repeat-1-openui",
+          "orderInPair": 2,
+          "protocol": "openui",
+          "status": "complete",
+          "passAt1": true,
+          "finalValid": true,
+          "attemptCount": 1,
+          "totalTokens": 2228,
+          "generationMs": 10937,
+          "render": {
+            "status": "not-run",
+            "durationMs": 0
+          },
+          "judge": {
+            "status": "passed",
+            "score": 2,
+            "model": "gpt-5.5-2026-04-24",
+            "durationMs": 7458
+          },
+          "finalOutputChars": 1737,
+          "errors": [],
+          "warnings": [],
+          "screenshotUrl": "/bench/phase-two/screenshots/weather-refresh-card-repeat-1-openui.png?v=20260730T072609742Z"
+        }
+      }
+    },
+    {
+      "id": "phase-two-formal-source-1\u0000weather-refresh-card-repeat-2",
+      "sourceReportId": "phase-two-formal-source-1",
+      "pairId": "weather-refresh-card-repeat-2",
+      "model": "gpt-5.5-2026-04-24",
+      "scenarioId": "weather-refresh-card",
+      "scenarioName": "Weather Refresh Card",
+      "repeatIndex": 2,
+      "complete": true,
+      "runs": {
+        "openui": {
+          "id": "weather-refresh-card-repeat-2-openui",
+          "orderInPair": 1,
+          "protocol": "openui",
+          "status": "complete",
+          "passAt1": true,
+          "finalValid": true,
+          "attemptCount": 1,
+          "totalTokens": 2203,
+          "generationMs": 7225,
+          "render": {
+            "status": "not-run",
+            "durationMs": 0
+          },
+          "judge": {
+            "status": "passed",
+            "score": 2,
+            "model": "gpt-5.5-2026-04-24",
+            "durationMs": 9753
+          },
+          "finalOutputChars": 2251,
+          "errors": [],
+          "warnings": []
+        },
+        "a2ui": {
+          "id": "weather-refresh-card-repeat-2-a2ui",
+          "orderInPair": 2,
+          "protocol": "a2ui",
+          "status": "complete",
+          "passAt1": true,
+          "finalValid": true,
+          "attemptCount": 1,
+          "totalTokens": 5022,
+          "generationMs": 16960,
+          "render": {
+            "status": "not-run",
+            "durationMs": 0
+          },
+          "judge": {
+            "status": "passed",
+            "score": 4,
+            "model": "gpt-5.5-2026-04-24",
+            "durationMs": 5791
+          },
+          "finalOutputChars": 3683,
+          "errors": [],
+          "warnings": []
+        }
+      }
+    },
+    {
+      "id": "phase-two-formal-source-1\u0000weather-refresh-card-repeat-3",
+      "sourceReportId": "phase-two-formal-source-1",
+      "pairId": "weather-refresh-card-repeat-3",
+      "model": "gpt-5.5-2026-04-24",
+      "scenarioId": "weather-refresh-card",
+      "scenarioName": "Weather Refresh Card",
+      "repeatIndex": 3,
+      "complete": true,
+      "runs": {
+        "a2ui": {
+          "id": "weather-refresh-card-repeat-3-a2ui",
+          "orderInPair": 1,
+          "protocol": "a2ui",
+          "status": "complete",
+          "passAt1": true,
+          "finalValid": true,
+          "attemptCount": 1,
+          "totalTokens": 5311,
+          "generationMs": 15622,
+          "render": {
+            "status": "not-run",
+            "durationMs": 0
+          },
+          "judge": {
+            "status": "passed",
+            "score": 3,
+            "model": "gpt-5.5-2026-04-24",
+            "durationMs": 7340
+          },
+          "finalOutputChars": 4650,
+          "errors": [],
+          "warnings": []
+        },
+        "openui": {
+          "id": "weather-refresh-card-repeat-3-openui",
+          "orderInPair": 2,
+          "protocol": "openui",
+          "status": "complete",
+          "passAt1": true,
+          "finalValid": true,
+          "attemptCount": 1,
+          "totalTokens": 2389,
+          "generationMs": 10991,
+          "render": {
+            "status": "not-run",
+            "durationMs": 0
+          },
+          "judge": {
+            "status": "passed",
+            "score": 2,
+            "model": "gpt-5.5-2026-04-24",
+            "durationMs": 7794
+          },
+          "finalOutputChars": 2278,
+          "errors": [],
+          "warnings": []
+        }
+      }
+    },
+    {
+      "id": "phase-two-formal-source-1\u0000weather-refresh-card-repeat-4",
+      "sourceReportId": "phase-two-formal-source-1",
+      "pairId": "weather-refresh-card-repeat-4",
+      "model": "gpt-5.5-2026-04-24",
+      "scenarioId": "weather-refresh-card",
+      "scenarioName": "Weather Refresh Card",
+      "repeatIndex": 4,
+      "complete": true,
+      "runs": {
+        "openui": {
+          "id": "weather-refresh-card-repeat-4-openui",
+          "orderInPair": 1,
+          "protocol": "openui",
+          "status": "complete",
+          "passAt1": true,
+          "finalValid": true,
+          "attemptCount": 1,
+          "totalTokens": 2191,
+          "generationMs": 7199,
+          "render": {
+            "status": "not-run",
+            "durationMs": 0
+          },
+          "judge": {
+            "status": "passed",
+            "score": 4,
+            "model": "gpt-5.5-2026-04-24",
+            "durationMs": 6547
+          },
+          "finalOutputChars": 2069,
+          "errors": [],
+          "warnings": []
+        },
+        "a2ui": {
+          "id": "weather-refresh-card-repeat-4-a2ui",
+          "orderInPair": 2,
+          "protocol": "a2ui",
+          "status": "complete",
+          "passAt1": true,
+          "finalValid": true,
+          "attemptCount": 1,
+          "totalTokens": 5330,
+          "generationMs": 18462,
+          "render": {
+            "status": "not-run",
+            "durationMs": 0
+          },
+          "judge": {
+            "status": "passed",
+            "score": 3,
+            "model": "gpt-5.5-2026-04-24",
+            "durationMs": 6635
+          },
+          "finalOutputChars": 4680,
+          "errors": [],
+          "warnings": []
+        }
+      }
+    },
+    {
+      "id": "phase-two-formal-source-1\u0000weather-refresh-card-repeat-5",
+      "sourceReportId": "phase-two-formal-source-1",
+      "pairId": "weather-refresh-card-repeat-5",
+      "model": "gpt-5.5-2026-04-24",
+      "scenarioId": "weather-refresh-card",
+      "scenarioName": "Weather Refresh Card",
+      "repeatIndex": 5,
+      "complete": true,
+      "runs": {
+        "a2ui": {
+          "id": "weather-refresh-card-repeat-5-a2ui",
+          "orderInPair": 1,
+          "protocol": "a2ui",
+          "status": "complete",
+          "passAt1": true,
+          "finalValid": true,
+          "attemptCount": 1,
+          "totalTokens": 4846,
+          "generationMs": 13634,
+          "render": {
+            "status": "not-run",
+            "durationMs": 0
+          },
+          "judge": {
+            "status": "passed",
+            "score": 4,
+            "model": "gpt-5.5-2026-04-24",
+            "durationMs": 4695
+          },
+          "finalOutputChars": 3411,
+          "errors": [],
+          "warnings": []
+        },
+        "openui": {
+          "id": "weather-refresh-card-repeat-5-openui",
+          "orderInPair": 2,
+          "protocol": "openui",
+          "status": "complete",
+          "passAt1": true,
+          "finalValid": true,
+          "attemptCount": 1,
+          "totalTokens": 2394,
+          "generationMs": 9606,
+          "render": {
+            "status": "not-run",
+            "durationMs": 0
+          },
+          "judge": {
+            "status": "passed",
+            "score": 3,
+            "model": "gpt-5.5-2026-04-24",
+            "durationMs": 10252
+          },
+          "finalOutputChars": 2898,
+          "errors": [],
+          "warnings": []
+        }
+      }
+    },
+    {
+      "id": "phase-two-formal-source-1\u0000weather-refresh-card-repeat-6",
+      "sourceReportId": "phase-two-formal-source-1",
+      "pairId": "weather-refresh-card-repeat-6",
+      "model": "gpt-5.5-2026-04-24",
+      "scenarioId": "weather-refresh-card",
+      "scenarioName": "Weather Refresh Card",
+      "repeatIndex": 6,
+      "complete": true,
+      "runs": {
+        "openui": {
+          "id": "weather-refresh-card-repeat-6-openui",
+          "orderInPair": 1,
+          "protocol": "openui",
+          "status": "complete",
+          "passAt1": true,
+          "finalValid": true,
+          "attemptCount": 1,
+          "totalTokens": 2297,
+          "generationMs": 8534,
+          "render": {
+            "status": "not-run",
+            "durationMs": 0
+          },
+          "judge": {
+            "status": "passed",
+            "score": 4,
+            "model": "gpt-5.5-2026-04-24",
+            "durationMs": 10135
+          },
+          "finalOutputChars": 2455,
+          "errors": [],
+          "warnings": []
+        },
+        "a2ui": {
+          "id": "weather-refresh-card-repeat-6-a2ui",
+          "orderInPair": 2,
+          "protocol": "a2ui",
+          "status": "complete",
+          "passAt1": true,
+          "finalValid": true,
+          "attemptCount": 1,
+          "totalTokens": 5196,
+          "generationMs": 19219,
+          "render": {
+            "status": "not-run",
+            "durationMs": 0
+          },
+          "judge": {
+            "status": "passed",
+            "score": 4,
+            "model": "gpt-5.5-2026-04-24",
+            "durationMs": 6129
+          },
+          "finalOutputChars": 4562,
+          "errors": [],
+          "warnings": []
+        }
+      }
+    },
+    {
+      "id": "phase-two-formal-source-1\u0000weather-refresh-card-repeat-7",
+      "sourceReportId": "phase-two-formal-source-1",
+      "pairId": "weather-refresh-card-repeat-7",
+      "model": "gpt-5.5-2026-04-24",
+      "scenarioId": "weather-refresh-card",
+      "scenarioName": "Weather Refresh Card",
+      "repeatIndex": 7,
+      "complete": true,
+      "runs": {
+        "a2ui": {
+          "id": "weather-refresh-card-repeat-7-a2ui",
+          "orderInPair": 1,
+          "protocol": "a2ui",
+          "status": "complete",
+          "passAt1": true,
+          "finalValid": true,
+          "attemptCount": 1,
+          "totalTokens": 4698,
+          "generationMs": 12382,
+          "render": {
+            "status": "not-run",
+            "durationMs": 0
+          },
+          "judge": {
+            "status": "passed",
+            "score": 4,
+            "model": "gpt-5.5-2026-04-24",
+            "durationMs": 5819
+          },
+          "finalOutputChars": 2867,
+          "errors": [],
+          "warnings": []
+        },
+        "openui": {
+          "id": "weather-refresh-card-repeat-7-openui",
+          "orderInPair": 2,
+          "protocol": "openui",
+          "status": "complete",
+          "passAt1": true,
+          "finalValid": true,
+          "attemptCount": 1,
+          "totalTokens": 2255,
+          "generationMs": 8652,
+          "render": {
+            "status": "not-run",
+            "durationMs": 0
+          },
+          "judge": {
+            "status": "passed",
+            "score": 3,
+            "model": "gpt-5.5-2026-04-24",
+            "durationMs": 8080
+          },
+          "finalOutputChars": 2105,
+          "errors": [],
+          "warnings": []
+        }
+      }
+    },
+    {
+      "id": "phase-two-formal-source-1\u0000weather-refresh-card-repeat-8",
+      "sourceReportId": "phase-two-formal-source-1",
+      "pairId": "weather-refresh-card-repeat-8",
+      "model": "gpt-5.5-2026-04-24",
+      "scenarioId": "weather-refresh-card",
+      "scenarioName": "Weather Refresh Card",
+      "repeatIndex": 8,
+      "complete": true,
+      "runs": {
+        "openui": {
+          "id": "weather-refresh-card-repeat-8-openui",
+          "orderInPair": 1,
+          "protocol": "openui",
+          "status": "complete",
+          "passAt1": true,
+          "finalValid": true,
+          "attemptCount": 1,
+          "totalTokens": 2049,
+          "generationMs": 7556,
+          "render": {
+            "status": "not-run",
+            "durationMs": 0
+          },
+          "judge": {
+            "status": "passed",
+            "score": 2,
+            "model": "gpt-5.5-2026-04-24",
+            "durationMs": 7520
+          },
+          "finalOutputChars": 1556,
+          "errors": [],
+          "warnings": []
+        },
+        "a2ui": {
+          "id": "weather-refresh-card-repeat-8-a2ui",
+          "orderInPair": 2,
+          "protocol": "a2ui",
+          "status": "complete",
+          "passAt1": true,
+          "finalValid": true,
+          "attemptCount": 1,
+          "totalTokens": 5054,
+          "generationMs": 13204,
+          "render": {
+            "status": "not-run",
+            "durationMs": 0
+          },
+          "judge": {
+            "status": "passed",
+            "score": 4,
+            "model": "gpt-5.5-2026-04-24",
+            "durationMs": 4550
+          },
+          "finalOutputChars": 4106,
+          "errors": [],
+          "warnings": []
+        }
+      }
+    },
+    {
+      "id": "phase-two-formal-source-1\u0000weather-refresh-card-repeat-9",
+      "sourceReportId": "phase-two-formal-source-1",
+      "pairId": "weather-refresh-card-repeat-9",
+      "model": "gpt-5.5-2026-04-24",
+      "scenarioId": "weather-refresh-card",
+      "scenarioName": "Weather Refresh Card",
+      "repeatIndex": 9,
+      "complete": true,
+      "runs": {
+        "a2ui": {
+          "id": "weather-refresh-card-repeat-9-a2ui",
+          "orderInPair": 1,
+          "protocol": "a2ui",
+          "status": "complete",
+          "passAt1": true,
+          "finalValid": true,
+          "attemptCount": 1,
+          "totalTokens": 5151,
+          "generationMs": 18867,
+          "render": {
+            "status": "not-run",
+            "durationMs": 0
+          },
+          "judge": {
+            "status": "passed",
+            "score": 4,
+            "model": "gpt-5.5-2026-04-24",
+            "durationMs": 4302
+          },
+          "finalOutputChars": 3867,
+          "errors": [],
+          "warnings": []
+        },
+        "openui": {
+          "id": "weather-refresh-card-repeat-9-openui",
+          "orderInPair": 2,
+          "protocol": "openui",
+          "status": "complete",
+          "passAt1": true,
+          "finalValid": true,
+          "attemptCount": 1,
+          "totalTokens": 2176,
+          "generationMs": 6512,
+          "render": {
+            "status": "not-run",
+            "durationMs": 0
+          },
+          "judge": {
+            "status": "passed",
+            "score": 4,
+            "model": "gpt-5.5-2026-04-24",
+            "durationMs": 4915
+          },
+          "finalOutputChars": 2067,
+          "errors": [],
+          "warnings": []
+        }
+      }
+    },
+    {
+      "id": "phase-two-formal-source-1\u0000weather-refresh-card-repeat-10",
+      "sourceReportId": "phase-two-formal-source-1",
+      "pairId": "weather-refresh-card-repeat-10",
+      "model": "gpt-5.5-2026-04-24",
+      "scenarioId": "weather-refresh-card",
+      "scenarioName": "Weather Refresh Card",
+      "repeatIndex": 10,
+      "complete": true,
+      "runs": {
+        "openui": {
+          "id": "weather-refresh-card-repeat-10-openui",
+          "orderInPair": 1,
+          "protocol": "openui",
+          "status": "complete",
+          "passAt1": true,
+          "finalValid": true,
+          "attemptCount": 1,
+          "totalTokens": 2387,
+          "generationMs": 9363,
+          "render": {
+            "status": "not-run",
+            "durationMs": 0
+          },
+          "judge": {
+            "status": "passed",
+            "score": 2,
+            "model": "gpt-5.5-2026-04-24",
+            "durationMs": 4408
+          },
+          "finalOutputChars": 2186,
+          "errors": [],
+          "warnings": []
+        },
+        "a2ui": {
+          "id": "weather-refresh-card-repeat-10-a2ui",
+          "orderInPair": 2,
+          "protocol": "a2ui",
+          "status": "complete",
+          "passAt1": true,
+          "finalValid": true,
+          "attemptCount": 1,
+          "totalTokens": 5463,
+          "generationMs": 15172,
+          "render": {
+            "status": "not-run",
+            "durationMs": 0
+          },
+          "judge": {
+            "status": "passed",
+            "score": 4,
+            "model": "gpt-5.5-2026-04-24",
+            "durationMs": 4515
+          },
+          "finalOutputChars": 5285,
+          "errors": [],
+          "warnings": []
+        }
+      }
+    },
+    {
+      "id": "phase-two-formal-source-1\u0000product-purchase-card-repeat-1",
+      "sourceReportId": "phase-two-formal-source-1",
+      "pairId": "product-purchase-card-repeat-1",
+      "model": "gpt-5.5-2026-04-24",
+      "scenarioId": "product-purchase-card",
+      "scenarioName": "Product Purchase Card",
+      "repeatIndex": 1,
+      "complete": true,
+      "runs": {
+        "a2ui": {
+          "id": "product-purchase-card-repeat-1-a2ui",
+          "orderInPair": 1,
+          "protocol": "a2ui",
+          "status": "complete",
+          "passAt1": true,
+          "finalValid": true,
+          "attemptCount": 1,
+          "totalTokens": 5587,
+          "generationMs": 20119,
+          "render": {
+            "status": "not-run",
+            "durationMs": 0
+          },
+          "judge": {
+            "status": "passed",
+            "score": 3,
+            "model": "gpt-5.5-2026-04-24",
+            "durationMs": 9161
+          },
+          "finalOutputChars": 5757,
+          "errors": [],
+          "warnings": [],
+          "screenshotUrl": "/bench/phase-two/screenshots/product-purchase-card-repeat-1-a2ui.png?v=20260730T072609742Z"
+        },
+        "openui": {
+          "id": "product-purchase-card-repeat-1-openui",
+          "orderInPair": 2,
+          "protocol": "openui",
+          "status": "complete",
+          "passAt1": true,
+          "finalValid": true,
+          "attemptCount": 1,
+          "totalTokens": 2393,
+          "generationMs": 10182,
+          "render": {
+            "status": "not-run",
+            "durationMs": 0
+          },
+          "judge": {
+            "status": "passed",
+            "score": 2,
+            "model": "gpt-5.5-2026-04-24",
+            "durationMs": 7715
+          },
+          "finalOutputChars": 2296,
+          "errors": [],
+          "warnings": [],
+          "screenshotUrl": "/bench/phase-two/screenshots/product-purchase-card-repeat-1-openui.png?v=20260730T072609742Z"
+        }
+      }
+    },
+    {
+      "id": "phase-two-formal-source-1\u0000product-purchase-card-repeat-2",
+      "sourceReportId": "phase-two-formal-source-1",
+      "pairId": "product-purchase-card-repeat-2",
+      "model": "gpt-5.5-2026-04-24",
+      "scenarioId": "product-purchase-card",
+      "scenarioName": "Product Purchase Card",
+      "repeatIndex": 2,
+      "complete": true,
+      "runs": {
+        "openui": {
+          "id": "product-purchase-card-repeat-2-openui",
+          "orderInPair": 1,
+          "protocol": "openui",
+          "status": "complete",
+          "passAt1": true,
+          "finalValid": true,
+          "attemptCount": 1,
+          "totalTokens": 2351,
+          "generationMs": 8868,
+          "render": {
+            "status": "not-run",
+            "durationMs": 0
+          },
+          "judge": {
+            "status": "passed",
+            "score": 2,
+            "model": "gpt-5.5-2026-04-24",
+            "durationMs": 8654
+          },
+          "finalOutputChars": 2318,
+          "errors": [],
+          "warnings": []
+        },
+        "a2ui": {
+          "id": "product-purchase-card-repeat-2-a2ui",
+          "orderInPair": 2,
+          "protocol": "a2ui",
+          "status": "complete",
+          "passAt1": true,
+          "finalValid": true,
+          "attemptCount": 1,
+          "totalTokens": 5729,
+          "generationMs": 21787,
+          "render": {
+            "status": "not-run",
+            "durationMs": 0
+          },
+          "judge": {
+            "status": "passed",
+            "score": 3,
+            "model": "gpt-5.5-2026-04-24",
+            "durationMs": 6117
+          },
+          "finalOutputChars": 6327,
+          "errors": [],
+          "warnings": []
+        }
+      }
+    },
+    {
+      "id": "phase-two-formal-source-1\u0000product-purchase-card-repeat-3",
+      "sourceReportId": "phase-two-formal-source-1",
+      "pairId": "product-purchase-card-repeat-3",
+      "model": "gpt-5.5-2026-04-24",
+      "scenarioId": "product-purchase-card",
+      "scenarioName": "Product Purchase Card",
+      "repeatIndex": 3,
+      "complete": true,
+      "runs": {
+        "a2ui": {
+          "id": "product-purchase-card-repeat-3-a2ui",
+          "orderInPair": 1,
+          "protocol": "a2ui",
+          "status": "complete",
+          "passAt1": true,
+          "finalValid": true,
+          "attemptCount": 1,
+          "totalTokens": 5484,
+          "generationMs": 23042,
+          "render": {
+            "status": "not-run",
+            "durationMs": 0
+          },
+          "judge": {
+            "status": "passed",
+            "score": 3,
+            "model": "gpt-5.5-2026-04-24",
+            "durationMs": 8187
+          },
+          "finalOutputChars": 5006,
+          "errors": [],
+          "warnings": []
+        },
+        "openui": {
+          "id": "product-purchase-card-repeat-3-openui",
+          "orderInPair": 2,
+          "protocol": "openui",
+          "status": "complete",
+          "passAt1": true,
+          "finalValid": true,
+          "attemptCount": 1,
+          "totalTokens": 2387,
+          "generationMs": 9524,
+          "render": {
+            "status": "not-run",
+            "durationMs": 0
+          },
+          "judge": {
+            "status": "passed",
+            "score": 2,
+            "model": "gpt-5.5-2026-04-24",
+            "durationMs": 9453
+          },
+          "finalOutputChars": 2302,
+          "errors": [],
+          "warnings": []
+        }
+      }
+    },
+    {
+      "id": "phase-two-formal-source-1\u0000product-purchase-card-repeat-4",
+      "sourceReportId": "phase-two-formal-source-1",
+      "pairId": "product-purchase-card-repeat-4",
+      "model": "gpt-5.5-2026-04-24",
+      "scenarioId": "product-purchase-card",
+      "scenarioName": "Product Purchase Card",
+      "repeatIndex": 4,
+      "complete": true,
+      "runs": {
+        "openui": {
+          "id": "product-purchase-card-repeat-4-openui",
+          "orderInPair": 1,
+          "protocol": "openui",
+          "status": "complete",
+          "passAt1": true,
+          "finalValid": true,
+          "attemptCount": 1,
+          "totalTokens": 2664,
+          "generationMs": 18697,
+          "render": {
+            "status": "not-run",
+            "durationMs": 0
+          },
+          "judge": {
+            "status": "passed",
+            "score": 2,
+            "model": "gpt-5.5-2026-04-24",
+            "durationMs": 7616
+          },
+          "finalOutputChars": 2623,
+          "errors": [],
+          "warnings": []
+        },
+        "a2ui": {
+          "id": "product-purchase-card-repeat-4-a2ui",
+          "orderInPair": 2,
+          "protocol": "a2ui",
+          "status": "complete",
+          "passAt1": true,
+          "finalValid": true,
+          "attemptCount": 1,
+          "totalTokens": 5662,
+          "generationMs": 21900,
+          "render": {
+            "status": "not-run",
+            "durationMs": 0
+          },
+          "judge": {
+            "status": "passed",
+            "score": 3,
+            "model": "gpt-5.5-2026-04-24",
+            "durationMs": 7334
+          },
+          "finalOutputChars": 6102,
+          "errors": [],
+          "warnings": []
+        }
+      }
+    },
+    {
+      "id": "phase-two-formal-source-1\u0000product-purchase-card-repeat-5",
+      "sourceReportId": "phase-two-formal-source-1",
+      "pairId": "product-purchase-card-repeat-5",
+      "model": "gpt-5.5-2026-04-24",
+      "scenarioId": "product-purchase-card",
+      "scenarioName": "Product Purchase Card",
+      "repeatIndex": 5,
+      "complete": true,
+      "runs": {
+        "a2ui": {
+          "id": "product-purchase-card-repeat-5-a2ui",
+          "orderInPair": 1,
+          "protocol": "a2ui",
+          "status": "complete",
+          "passAt1": true,
+          "finalValid": true,
+          "attemptCount": 1,
+          "totalTokens": 5783,
+          "generationMs": 20942,
+          "render": {
+            "status": "not-run",
+            "durationMs": 0
+          },
+          "judge": {
+            "status": "passed",
+            "score": 3,
+            "model": "gpt-5.5-2026-04-24",
+            "durationMs": 8694
+          },
+          "finalOutputChars": 6511,
+          "errors": [],
+          "warnings": []
+        },
+        "openui": {
+          "id": "product-purchase-card-repeat-5-openui",
+          "orderInPair": 2,
+          "protocol": "openui",
+          "status": "complete",
+          "passAt1": true,
+          "finalValid": true,
+          "attemptCount": 1,
+          "totalTokens": 2476,
+          "generationMs": 11569,
+          "render": {
+            "status": "not-run",
+            "durationMs": 0
+          },
+          "judge": {
+            "status": "passed",
+            "score": 2,
+            "model": "gpt-5.5-2026-04-24",
+            "durationMs": 6988
+          },
+          "finalOutputChars": 2329,
+          "errors": [],
+          "warnings": []
+        }
+      }
+    },
+    {
+      "id": "phase-two-formal-source-1\u0000product-purchase-card-repeat-6",
+      "sourceReportId": "phase-two-formal-source-1",
+      "pairId": "product-purchase-card-repeat-6",
+      "model": "gpt-5.5-2026-04-24",
+      "scenarioId": "product-purchase-card",
+      "scenarioName": "Product Purchase Card",
+      "repeatIndex": 6,
+      "complete": true,
+      "runs": {
+        "openui": {
+          "id": "product-purchase-card-repeat-6-openui",
+          "orderInPair": 1,
+          "protocol": "openui",
+          "status": "complete",
+          "passAt1": true,
+          "finalValid": true,
+          "attemptCount": 1,
+          "totalTokens": 2296,
+          "generationMs": 9454,
+          "render": {
+            "status": "not-run",
+            "durationMs": 0
+          },
+          "judge": {
+            "status": "passed",
+            "score": 2,
+            "model": "gpt-5.5-2026-04-24",
+            "durationMs": 11499
+          },
+          "finalOutputChars": 2279,
+          "errors": [],
+          "warnings": []
+        },
+        "a2ui": {
+          "id": "product-purchase-card-repeat-6-a2ui",
+          "orderInPair": 2,
+          "protocol": "a2ui",
+          "status": "complete",
+          "passAt1": true,
+          "finalValid": true,
+          "attemptCount": 1,
+          "totalTokens": 6037,
+          "generationMs": 26967,
+          "render": {
+            "status": "not-run",
+            "durationMs": 0
+          },
+          "judge": {
+            "status": "passed",
+            "score": 3,
+            "model": "gpt-5.5-2026-04-24",
+            "durationMs": 5520
+          },
+          "finalOutputChars": 5659,
+          "errors": [],
+          "warnings": []
+        }
+      }
+    },
+    {
+      "id": "phase-two-formal-source-1\u0000product-purchase-card-repeat-7",
+      "sourceReportId": "phase-two-formal-source-1",
+      "pairId": "product-purchase-card-repeat-7",
+      "model": "gpt-5.5-2026-04-24",
+      "scenarioId": "product-purchase-card",
+      "scenarioName": "Product Purchase Card",
+      "repeatIndex": 7,
+      "complete": true,
+      "runs": {
+        "a2ui": {
+          "id": "product-purchase-card-repeat-7-a2ui",
+          "orderInPair": 1,
+          "protocol": "a2ui",
+          "status": "complete",
+          "passAt1": true,
+          "finalValid": true,
+          "attemptCount": 1,
+          "totalTokens": 5661,
+          "generationMs": 21103,
+          "render": {
+            "status": "not-run",
+            "durationMs": 0
+          },
+          "judge": {
+            "status": "passed",
+            "score": 3,
+            "model": "gpt-5.5-2026-04-24",
+            "durationMs": 7612
+          },
+          "finalOutputChars": 5915,
+          "errors": [],
+          "warnings": []
+        },
+        "openui": {
+          "id": "product-purchase-card-repeat-7-openui",
+          "orderInPair": 2,
+          "protocol": "openui",
+          "status": "complete",
+          "passAt1": true,
+          "finalValid": true,
+          "attemptCount": 1,
+          "totalTokens": 2362,
+          "generationMs": 10399,
+          "render": {
+            "status": "not-run",
+            "durationMs": 0
+          },
+          "judge": {
+            "status": "passed",
+            "score": 2,
+            "model": "gpt-5.5-2026-04-24",
+            "durationMs": 6959
+          },
+          "finalOutputChars": 2516,
+          "errors": [],
+          "warnings": []
+        }
+      }
+    },
+    {
+      "id": "phase-two-formal-source-1\u0000product-purchase-card-repeat-8",
+      "sourceReportId": "phase-two-formal-source-1",
+      "pairId": "product-purchase-card-repeat-8",
+      "model": "gpt-5.5-2026-04-24",
+      "scenarioId": "product-purchase-card",
+      "scenarioName": "Product Purchase Card",
+      "repeatIndex": 8,
+      "complete": true,
+      "runs": {
+        "openui": {
+          "id": "product-purchase-card-repeat-8-openui",
+          "orderInPair": 1,
+          "protocol": "openui",
+          "status": "complete",
+          "passAt1": true,
+          "finalValid": true,
+          "attemptCount": 1,
+          "totalTokens": 2725,
+          "generationMs": 15760,
+          "render": {
+            "status": "not-run",
+            "durationMs": 0
+          },
+          "judge": {
+            "status": "passed",
+            "score": 2,
+            "model": "gpt-5.5-2026-04-24",
+            "durationMs": 6918
+          },
+          "finalOutputChars": 2824,
+          "errors": [],
+          "warnings": []
+        },
+        "a2ui": {
+          "id": "product-purchase-card-repeat-8-a2ui",
+          "orderInPair": 2,
+          "protocol": "a2ui",
+          "status": "complete",
+          "passAt1": true,
+          "finalValid": true,
+          "attemptCount": 1,
+          "totalTokens": 5696,
+          "generationMs": 20429,
+          "render": {
+            "status": "not-run",
+            "durationMs": 0
+          },
+          "judge": {
+            "status": "passed",
+            "score": 3,
+            "model": "gpt-5.5-2026-04-24",
+            "durationMs": 6739
+          },
+          "finalOutputChars": 6004,
+          "errors": [],
+          "warnings": []
+        }
+      }
+    },
+    {
+      "id": "phase-two-formal-source-1\u0000product-purchase-card-repeat-9",
+      "sourceReportId": "phase-two-formal-source-1",
+      "pairId": "product-purchase-card-repeat-9",
+      "model": "gpt-5.5-2026-04-24",
+      "scenarioId": "product-purchase-card",
+      "scenarioName": "Product Purchase Card",
+      "repeatIndex": 9,
+      "complete": true,
+      "runs": {
+        "a2ui": {
+          "id": "product-purchase-card-repeat-9-a2ui",
+          "orderInPair": 1,
+          "protocol": "a2ui",
+          "status": "complete",
+          "passAt1": true,
+          "finalValid": true,
+          "attemptCount": 1,
+          "totalTokens": 5565,
+          "generationMs": 18406,
+          "render": {
+            "status": "not-run",
+            "durationMs": 0
+          },
+          "judge": {
+            "status": "passed",
+            "score": 4,
+            "model": "gpt-5.5-2026-04-24",
+            "durationMs": 8256
+          },
+          "finalOutputChars": 5567,
+          "errors": [],
+          "warnings": []
+        },
+        "openui": {
+          "id": "product-purchase-card-repeat-9-openui",
+          "orderInPair": 2,
+          "protocol": "openui",
+          "status": "complete",
+          "passAt1": true,
+          "finalValid": true,
+          "attemptCount": 1,
+          "totalTokens": 2440,
+          "generationMs": 11036,
+          "render": {
+            "status": "not-run",
+            "durationMs": 0
+          },
+          "judge": {
+            "status": "passed",
+            "score": 2,
+            "model": "gpt-5.5-2026-04-24",
+            "durationMs": 7571
+          },
+          "finalOutputChars": 1954,
+          "errors": [],
+          "warnings": []
+        }
+      }
+    },
+    {
+      "id": "phase-two-formal-source-1\u0000product-purchase-card-repeat-10",
+      "sourceReportId": "phase-two-formal-source-1",
+      "pairId": "product-purchase-card-repeat-10",
+      "model": "gpt-5.5-2026-04-24",
+      "scenarioId": "product-purchase-card",
+      "scenarioName": "Product Purchase Card",
+      "repeatIndex": 10,
+      "complete": true,
+      "runs": {
+        "openui": {
+          "id": "product-purchase-card-repeat-10-openui",
+          "orderInPair": 1,
+          "protocol": "openui",
+          "status": "complete",
+          "passAt1": true,
+          "finalValid": true,
+          "attemptCount": 1,
+          "totalTokens": 2736,
+          "generationMs": 17381,
+          "render": {
+            "status": "not-run",
+            "durationMs": 0
+          },
+          "judge": {
+            "status": "passed",
+            "score": 2,
+            "model": "gpt-5.5-2026-04-24",
+            "durationMs": 23622
+          },
+          "finalOutputChars": 2240,
+          "errors": [],
+          "warnings": []
+        },
+        "a2ui": {
+          "id": "product-purchase-card-repeat-10-a2ui",
+          "orderInPair": 2,
+          "protocol": "a2ui",
+          "status": "complete",
+          "passAt1": true,
+          "finalValid": true,
+          "attemptCount": 1,
+          "totalTokens": 5747,
+          "generationMs": 21782,
+          "render": {
+            "status": "not-run",
+            "durationMs": 0
+          },
+          "judge": {
+            "status": "passed",
+            "score": 3,
+            "model": "gpt-5.5-2026-04-24",
+            "durationMs": 6444
+          },
+          "finalOutputChars": 6449,
+          "errors": [],
+          "warnings": []
+        }
+      }
+    },
+    {
+      "id": "phase-two-formal-source-1\u0000kyoto-trip-planner-repeat-1",
+      "sourceReportId": "phase-two-formal-source-1",
+      "pairId": "kyoto-trip-planner-repeat-1",
+      "model": "gpt-5.5-2026-04-24",
+      "scenarioId": "kyoto-trip-planner",
+      "scenarioName": "Kyoto Trip Planner",
+      "repeatIndex": 1,
+      "complete": true,
+      "runs": {
+        "a2ui": {
+          "id": "kyoto-trip-planner-repeat-1-a2ui",
+          "orderInPair": 1,
+          "protocol": "a2ui",
+          "status": "complete",
+          "passAt1": true,
+          "finalValid": true,
+          "attemptCount": 1,
+          "totalTokens": 7912,
+          "generationMs": 41755,
+          "render": {
+            "status": "not-run",
+            "durationMs": 0
+          },
+          "judge": {
+            "status": "passed",
+            "score": 2,
+            "model": "gpt-5.5-2026-04-24",
+            "durationMs": 10744
+          },
+          "finalOutputChars": 15855,
+          "errors": [],
+          "warnings": [],
+          "screenshotUrl": "/bench/phase-two/screenshots/kyoto-trip-planner-repeat-1-a2ui.png?v=20260730T072609742Z"
+        },
+        "openui": {
+          "id": "kyoto-trip-planner-repeat-1-openui",
+          "orderInPair": 2,
+          "protocol": "openui",
+          "status": "complete",
+          "passAt1": true,
+          "finalValid": true,
+          "attemptCount": 1,
+          "totalTokens": 5465,
+          "generationMs": 43128,
+          "render": {
+            "status": "not-run",
+            "durationMs": 0
+          },
+          "judge": {
+            "status": "passed",
+            "score": 2,
+            "model": "gpt-5.5-2026-04-24",
+            "durationMs": 7556
+          },
+          "finalOutputChars": 11924,
+          "errors": [],
+          "warnings": [],
+          "screenshotUrl": "/bench/phase-two/screenshots/kyoto-trip-planner-repeat-1-openui.png?v=20260730T072609742Z"
+        }
+      }
+    },
+    {
+      "id": "phase-two-formal-source-1\u0000kyoto-trip-planner-repeat-2",
+      "sourceReportId": "phase-two-formal-source-1",
+      "pairId": "kyoto-trip-planner-repeat-2",
+      "model": "gpt-5.5-2026-04-24",
+      "scenarioId": "kyoto-trip-planner",
+      "scenarioName": "Kyoto Trip Planner",
+      "repeatIndex": 2,
+      "complete": true,
+      "runs": {
+        "openui": {
+          "id": "kyoto-trip-planner-repeat-2-openui",
+          "orderInPair": 1,
+          "protocol": "openui",
+          "status": "complete",
+          "passAt1": true,
+          "finalValid": true,
+          "attemptCount": 1,
+          "totalTokens": 4576,
+          "generationMs": 34257,
+          "render": {
+            "status": "not-run",
+            "durationMs": 0
+          },
+          "judge": {
+            "status": "passed",
+            "score": 2,
+            "model": "gpt-5.5-2026-04-24",
+            "durationMs": 8449
+          },
+          "finalOutputChars": 9658,
+          "errors": [],
+          "warnings": []
+        },
+        "a2ui": {
+          "id": "kyoto-trip-planner-repeat-2-a2ui",
+          "orderInPair": 2,
+          "protocol": "a2ui",
+          "status": "complete",
+          "passAt1": true,
+          "finalValid": true,
+          "attemptCount": 1,
+          "totalTokens": 7857,
+          "generationMs": 41279,
+          "render": {
+            "status": "not-run",
+            "durationMs": 0
+          },
+          "judge": {
+            "status": "passed",
+            "score": 3,
+            "model": "gpt-5.5-2026-04-24",
+            "durationMs": 8105
+          },
+          "finalOutputChars": 15301,
+          "errors": [],
+          "warnings": []
+        }
+      }
+    },
+    {
+      "id": "phase-two-formal-source-1\u0000kyoto-trip-planner-repeat-3",
+      "sourceReportId": "phase-two-formal-source-1",
+      "pairId": "kyoto-trip-planner-repeat-3",
+      "model": "gpt-5.5-2026-04-24",
+      "scenarioId": "kyoto-trip-planner",
+      "scenarioName": "Kyoto Trip Planner",
+      "repeatIndex": 3,
+      "complete": true,
+      "runs": {
+        "a2ui": {
+          "id": "kyoto-trip-planner-repeat-3-a2ui",
+          "orderInPair": 1,
+          "protocol": "a2ui",
+          "status": "complete",
+          "passAt1": true,
+          "finalValid": true,
+          "attemptCount": 1,
+          "totalTokens": 10670,
+          "generationMs": 66984,
+          "render": {
+            "status": "not-run",
+            "durationMs": 0
+          },
+          "judge": {
+            "status": "passed",
+            "score": 2,
+            "model": "gpt-5.5-2026-04-24",
+            "durationMs": 10632
+          },
+          "finalOutputChars": 26082,
+          "errors": [],
+          "warnings": []
+        },
+        "openui": {
+          "id": "kyoto-trip-planner-repeat-3-openui",
+          "orderInPair": 2,
+          "protocol": "openui",
+          "status": "complete",
+          "passAt1": true,
+          "finalValid": true,
+          "attemptCount": 1,
+          "totalTokens": 4548,
+          "generationMs": 35112,
+          "render": {
+            "status": "not-run",
+            "durationMs": 0
+          },
+          "judge": {
+            "status": "passed",
+            "score": 2,
+            "model": "gpt-5.5-2026-04-24",
+            "durationMs": 7455
+          },
+          "finalOutputChars": 10177,
+          "errors": [],
+          "warnings": []
+        }
+      }
+    },
+    {
+      "id": "phase-two-formal-source-1\u0000kyoto-trip-planner-repeat-4",
+      "sourceReportId": "phase-two-formal-source-1",
+      "pairId": "kyoto-trip-planner-repeat-4",
+      "model": "gpt-5.5-2026-04-24",
+      "scenarioId": "kyoto-trip-planner",
+      "scenarioName": "Kyoto Trip Planner",
+      "repeatIndex": 4,
+      "complete": true,
+      "runs": {
+        "openui": {
+          "id": "kyoto-trip-planner-repeat-4-openui",
+          "orderInPair": 1,
+          "protocol": "openui",
+          "status": "complete",
+          "passAt1": true,
+          "finalValid": true,
+          "attemptCount": 1,
+          "totalTokens": 4217,
+          "generationMs": 35270,
+          "render": {
+            "status": "not-run",
+            "durationMs": 0
+          },
+          "judge": {
+            "status": "passed",
+            "score": 2,
+            "model": "gpt-5.5-2026-04-24",
+            "durationMs": 8715
+          },
+          "finalOutputChars": 7860,
+          "errors": [],
+          "warnings": []
+        },
+        "a2ui": {
+          "id": "kyoto-trip-planner-repeat-4-a2ui",
+          "orderInPair": 2,
+          "protocol": "a2ui",
+          "status": "complete",
+          "passAt1": true,
+          "finalValid": true,
+          "attemptCount": 1,
+          "totalTokens": 9422,
+          "generationMs": 53118,
+          "render": {
+            "status": "not-run",
+            "durationMs": 0
+          },
+          "judge": {
+            "status": "passed",
+            "score": 2,
+            "model": "gpt-5.5-2026-04-24",
+            "durationMs": 8315
+          },
+          "finalOutputChars": 22166,
+          "errors": [],
+          "warnings": []
+        }
+      }
+    },
+    {
+      "id": "phase-two-formal-source-1\u0000kyoto-trip-planner-repeat-5",
+      "sourceReportId": "phase-two-formal-source-1",
+      "pairId": "kyoto-trip-planner-repeat-5",
+      "model": "gpt-5.5-2026-04-24",
+      "scenarioId": "kyoto-trip-planner",
+      "scenarioName": "Kyoto Trip Planner",
+      "repeatIndex": 5,
+      "complete": true,
+      "runs": {
+        "a2ui": {
+          "id": "kyoto-trip-planner-repeat-5-a2ui",
+          "orderInPair": 1,
+          "protocol": "a2ui",
+          "status": "complete",
+          "passAt1": true,
+          "finalValid": true,
+          "attemptCount": 1,
+          "totalTokens": 8908,
+          "generationMs": 50281,
+          "render": {
+            "status": "not-run",
+            "durationMs": 0
+          },
+          "judge": {
+            "status": "passed",
+            "score": 2,
+            "model": "gpt-5.5-2026-04-24",
+            "durationMs": 8175
+          },
+          "finalOutputChars": 20087,
+          "errors": [],
+          "warnings": []
+        },
+        "openui": {
+          "id": "kyoto-trip-planner-repeat-5-openui",
+          "orderInPair": 2,
+          "protocol": "openui",
+          "status": "complete",
+          "passAt1": true,
+          "finalValid": true,
+          "attemptCount": 1,
+          "totalTokens": 4638,
+          "generationMs": 38450,
+          "render": {
+            "status": "not-run",
+            "durationMs": 0
+          },
+          "judge": {
+            "status": "passed",
+            "score": 2,
+            "model": "gpt-5.5-2026-04-24",
+            "durationMs": 8422
+          },
+          "finalOutputChars": 9375,
+          "errors": [],
+          "warnings": []
+        }
+      }
+    },
+    {
+      "id": "phase-two-formal-source-1\u0000kyoto-trip-planner-repeat-6",
+      "sourceReportId": "phase-two-formal-source-1",
+      "pairId": "kyoto-trip-planner-repeat-6",
+      "model": "gpt-5.5-2026-04-24",
+      "scenarioId": "kyoto-trip-planner",
+      "scenarioName": "Kyoto Trip Planner",
+      "repeatIndex": 6,
+      "complete": true,
+      "runs": {
+        "openui": {
+          "id": "kyoto-trip-planner-repeat-6-openui",
+          "orderInPair": 1,
+          "protocol": "openui",
+          "status": "complete",
+          "passAt1": true,
+          "finalValid": true,
+          "attemptCount": 1,
+          "totalTokens": 4370,
+          "generationMs": 30518,
+          "render": {
+            "status": "not-run",
+            "durationMs": 0
+          },
+          "judge": {
+            "status": "passed",
+            "score": 2,
+            "model": "gpt-5.5-2026-04-24",
+            "durationMs": 9319
+          },
+          "finalOutputChars": 8954,
+          "errors": [],
+          "warnings": []
+        },
+        "a2ui": {
+          "id": "kyoto-trip-planner-repeat-6-a2ui",
+          "orderInPair": 2,
+          "protocol": "a2ui",
+          "status": "complete",
+          "passAt1": true,
+          "finalValid": true,
+          "attemptCount": 1,
+          "totalTokens": 9348,
+          "generationMs": 53759,
+          "render": {
+            "status": "not-run",
+            "durationMs": 0
+          },
+          "judge": {
+            "status": "passed",
+            "score": 2,
+            "model": "gpt-5.5-2026-04-24",
+            "durationMs": 7024
+          },
+          "finalOutputChars": 21833,
+          "errors": [],
+          "warnings": []
+        }
+      }
+    },
+    {
+      "id": "phase-two-formal-source-1\u0000kyoto-trip-planner-repeat-7",
+      "sourceReportId": "phase-two-formal-source-1",
+      "pairId": "kyoto-trip-planner-repeat-7",
+      "model": "gpt-5.5-2026-04-24",
+      "scenarioId": "kyoto-trip-planner",
+      "scenarioName": "Kyoto Trip Planner",
+      "repeatIndex": 7,
+      "complete": true,
+      "runs": {
+        "a2ui": {
+          "id": "kyoto-trip-planner-repeat-7-a2ui",
+          "orderInPair": 1,
+          "protocol": "a2ui",
+          "status": "complete",
+          "passAt1": true,
+          "finalValid": true,
+          "attemptCount": 1,
+          "totalTokens": 9959,
+          "generationMs": 60247,
+          "render": {
+            "status": "not-run",
+            "durationMs": 0
+          },
+          "judge": {
+            "status": "passed",
+            "score": 2,
+            "model": "gpt-5.5-2026-04-24",
+            "durationMs": 9454
+          },
+          "finalOutputChars": 24442,
+          "errors": [],
+          "warnings": []
+        },
+        "openui": {
+          "id": "kyoto-trip-planner-repeat-7-openui",
+          "orderInPair": 2,
+          "protocol": "openui",
+          "status": "complete",
+          "passAt1": true,
+          "finalValid": true,
+          "attemptCount": 1,
+          "totalTokens": 5463,
+          "generationMs": 52736,
+          "render": {
+            "status": "not-run",
+            "durationMs": 0
+          },
+          "judge": {
+            "status": "passed",
+            "score": 2,
+            "model": "gpt-5.5-2026-04-24",
+            "durationMs": 8463
+          },
+          "finalOutputChars": 11994,
+          "errors": [],
+          "warnings": []
+        }
+      }
+    },
+    {
+      "id": "phase-two-formal-source-1\u0000kyoto-trip-planner-repeat-8",
+      "sourceReportId": "phase-two-formal-source-1",
+      "pairId": "kyoto-trip-planner-repeat-8",
+      "model": "gpt-5.5-2026-04-24",
+      "scenarioId": "kyoto-trip-planner",
+      "scenarioName": "Kyoto Trip Planner",
+      "repeatIndex": 8,
+      "complete": true,
+      "runs": {
+        "openui": {
+          "id": "kyoto-trip-planner-repeat-8-openui",
+          "orderInPair": 1,
+          "protocol": "openui",
+          "status": "complete",
+          "passAt1": true,
+          "finalValid": true,
+          "attemptCount": 1,
+          "totalTokens": 4339,
+          "generationMs": 31585,
+          "render": {
+            "status": "not-run",
+            "durationMs": 0
+          },
+          "judge": {
+            "status": "passed",
+            "score": 2,
+            "model": "gpt-5.5-2026-04-24",
+            "durationMs": 10583
+          },
+          "finalOutputChars": 8646,
+          "errors": [],
+          "warnings": []
+        },
+        "a2ui": {
+          "id": "kyoto-trip-planner-repeat-8-a2ui",
+          "orderInPair": 2,
+          "protocol": "a2ui",
+          "status": "complete",
+          "passAt1": true,
+          "finalValid": true,
+          "attemptCount": 1,
+          "totalTokens": 10476,
+          "generationMs": 65564,
+          "render": {
+            "status": "not-run",
+            "durationMs": 0
+          },
+          "judge": {
+            "status": "passed",
+            "score": 2,
+            "model": "gpt-5.5-2026-04-24",
+            "durationMs": 6772
+          },
+          "finalOutputChars": 26260,
+          "errors": [],
+          "warnings": []
+        }
+      }
+    },
+    {
+      "id": "phase-two-formal-source-1\u0000kyoto-trip-planner-repeat-9",
+      "sourceReportId": "phase-two-formal-source-1",
+      "pairId": "kyoto-trip-planner-repeat-9",
+      "model": "gpt-5.5-2026-04-24",
+      "scenarioId": "kyoto-trip-planner",
+      "scenarioName": "Kyoto Trip Planner",
+      "repeatIndex": 9,
+      "complete": true,
+      "runs": {
+        "a2ui": {
+          "id": "kyoto-trip-planner-repeat-9-a2ui",
+          "orderInPair": 1,
+          "protocol": "a2ui",
+          "status": "complete",
+          "passAt1": true,
+          "finalValid": true,
+          "attemptCount": 1,
+          "totalTokens": 8226,
+          "generationMs": 49116,
+          "render": {
+            "status": "not-run",
+            "durationMs": 0
+          },
+          "judge": {
+            "status": "passed",
+            "score": 3,
+            "model": "gpt-5.5-2026-04-24",
+            "durationMs": 8660
+          },
+          "finalOutputChars": 16969,
+          "errors": [],
+          "warnings": []
+        },
+        "openui": {
+          "id": "kyoto-trip-planner-repeat-9-openui",
+          "orderInPair": 2,
+          "protocol": "openui",
+          "status": "complete",
+          "passAt1": true,
+          "finalValid": true,
+          "attemptCount": 1,
+          "totalTokens": 4978,
+          "generationMs": 40833,
+          "render": {
+            "status": "not-run",
+            "durationMs": 0
+          },
+          "judge": {
+            "status": "passed",
+            "score": 2,
+            "model": "gpt-5.5-2026-04-24",
+            "durationMs": 8838
+          },
+          "finalOutputChars": 11208,
+          "errors": [],
+          "warnings": []
+        }
+      }
+    },
+    {
+      "id": "phase-two-formal-source-1\u0000kyoto-trip-planner-repeat-10",
+      "sourceReportId": "phase-two-formal-source-1",
+      "pairId": "kyoto-trip-planner-repeat-10",
+      "model": "gpt-5.5-2026-04-24",
+      "scenarioId": "kyoto-trip-planner",
+      "scenarioName": "Kyoto Trip Planner",
+      "repeatIndex": 10,
+      "complete": true,
+      "runs": {
+        "openui": {
+          "id": "kyoto-trip-planner-repeat-10-openui",
+          "orderInPair": 1,
+          "protocol": "openui",
+          "status": "complete",
+          "passAt1": true,
+          "finalValid": true,
+          "attemptCount": 1,
+          "totalTokens": 4850,
+          "generationMs": 42491,
+          "render": {
+            "status": "not-run",
+            "durationMs": 0
+          },
+          "judge": {
+            "status": "passed",
+            "score": 2,
+            "model": "gpt-5.5-2026-04-24",
+            "durationMs": 7716
+          },
+          "finalOutputChars": 9583,
+          "errors": [],
+          "warnings": []
+        },
+        "a2ui": {
+          "id": "kyoto-trip-planner-repeat-10-a2ui",
+          "orderInPair": 2,
+          "protocol": "a2ui",
+          "status": "complete",
+          "passAt1": true,
+          "finalValid": true,
+          "attemptCount": 1,
+          "totalTokens": 7508,
+          "generationMs": 40376,
+          "render": {
+            "status": "not-run",
+            "durationMs": 0
+          },
+          "judge": {
+            "status": "passed",
+            "score": 2,
+            "model": "gpt-5.5-2026-04-24",
+            "durationMs": 7872
+          },
+          "finalOutputChars": 14119,
+          "errors": [],
+          "warnings": []
+        }
+      }
+    }
+  ],
+  "methodology": {
+    "modes": [
+      "matched-core"
+    ],
+    "capabilityProfiles": [
+      "matched-core-v1"
+    ],
+    "protocolVersions": {
+      "a2ui": [
+        "v0.9"
+      ],
+      "openui": [
+        "v0.5"
+      ]
+    },
+    "providerApis": [
+      "chat"
+    ],
+    "judgeModels": [
+      "gpt-5.5-2026-04-24"
+    ],
+    "repeats": [
+      10
+    ],
+    "maxAttempts": [
+      2
+    ],
+    "timeoutMs": [
+      120000
+    ],
+    "renderEnabled": [
+      false
+    ],
+    "judgeEnabled": [
+      true
+    ]
+  },
+  "warnings": [],
+  "limitations": [
+    "本轮只覆盖 3 个合成场景、单一生成模型与单一 UI Judge，未执行显著性检验。",
+    "生成模型与 UI Judge 使用同一模型版本，Judge 结论可能存在同模型偏差。",
+    "matched-core 统一场景、模型、运行环境与 Judge，但协议 schema、组件表达和适配 prompt 并不相同。",
+    "UI Judge 只检查固定视口的静态 Lynx 截图，没有执行点击、滚动或其他交互步骤。",
+    "未固定 temperature 或 seed；生成耗时包含外部模型服务波动与本机轻量任务影响，只适合方向性比较。",
+    "Bench job store 为本地内存态，服务重启后不能从 API 恢复历史 job。",
+    "正式运行来自 dirty worktree；源码基线 commit 不能单独复现 bundle，需结合当时 diff 与飞书报告中的 bundle SHA-256。",
+    "独立 Render evaluator 未启用；本报告不能推导 Render、FMP 或 TTI。"
+  ]
+}

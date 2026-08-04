@@ -8,7 +8,10 @@ import { createRequire } from 'node:module';
 import type { Chunk, Compilation, Compiler } from '@rspack/core';
 import invariant from 'tiny-invariant';
 
-import type { ExtractStrConfig } from '@lynx-js/react/transform';
+import type {
+  ExtractStrConfig,
+  TransformBuiltinAttributeNamesOptions,
+} from '@lynx-js/react/transform';
 import { LynxTemplatePlugin } from '@lynx-js/template-webpack-plugin';
 import { RuntimeGlobals } from '@lynx-js/webpack-runtime-globals';
 
@@ -241,22 +244,22 @@ interface ReactWebpackPluginOptions {
   experimental_useElementTemplate?: boolean;
 
   /**
-   * {@inheritdoc @lynx-js/react-rsbuild-plugin#PluginReactLynxOptions.enableMTSRendering}
+   * {@inheritdoc @lynx-js/react-rsbuild-plugin#PluginReactLynxOptions.experimental_enableMTSRendering}
    */
-  enableMTSRendering?: boolean;
+  experimental_enableMTSRendering?: boolean;
 
   /**
    * Whether the main thread has anything to render on the first screen.
    *
    * @remarks
    *
-   * This is the runtime half of `enableMTSRendering` and diverges from
+   * This is the runtime half of `experimental_enableMTSRendering` and diverges from
    * it in exactly one case: the main thread compiles no business code, yet an
    * entry declares a root `<Background>` whose fallback *is* compiled for it.
    * The build is then still the assembled one, while the first screen renders
    * that fallback.
    *
-   * @defaultValue the value of `enableMTSRendering`
+   * @defaultValue the value of `experimental_enableMTSRendering`
    */
   rendersOnMainThread?: boolean | undefined;
 
@@ -264,6 +267,16 @@ interface ReactWebpackPluginOptions {
    * The background entry name of each main-thread entry.
    */
   mainThreadEntries?: Record<string, string>;
+
+  /**
+   * The builtin attribute-name transform configuration used by runtime spread
+   * attributes.
+   *
+   * @experimental
+   */
+  experimental_transformBuiltinAttributeNames?:
+    | boolean
+    | TransformBuiltinAttributeNamesOptions;
 
   /**
    * Resolved lazy-bundle fetcher mode. Decided by the caller (e.g.
@@ -350,11 +363,13 @@ class ReactWebpackPlugin {
       profile: undefined,
       workletRuntimePath: '',
       experimental_useElementTemplate: false,
-      enableMTSRendering: true,
-      // Left unset so it resolves to `enableMTSRendering`; only a build that
-      // compiles a root `<Background>`'s fallback for the main thread sets it.
+      experimental_enableMTSRendering: true,
+      // Left unset so it resolves to `experimental_enableMTSRendering`; only
+      // a build that compiles a `<Background>`'s fallback for the main thread
+      // sets it.
       rendersOnMainThread: undefined,
       mainThreadEntries: {},
+      experimental_transformBuiltinAttributeNames: false,
       lazyBundleFetcher: 'QueryComponent',
     });
 
@@ -424,13 +439,16 @@ class ReactWebpackPlugin {
       __USE_ELEMENT_TEMPLATE__: JSON.stringify(
         options.experimental_useElementTemplate,
       ),
+      __EXPERIMENTAL_TRANSFORM_BUILTIN_ATTRIBUTE_NAMES__: JSON.stringify(
+        options.experimental_transformBuiltinAttributeNames,
+      ),
       __LAZY_BUNDLE_FETCHER__: JSON.stringify(options.lazyBundleFetcher),
       __ENABLE_MTS_RENDERING__: JSON.stringify(
-        options.rendersOnMainThread ?? options.enableMTSRendering,
+        options.rendersOnMainThread ?? options.experimental_enableMTSRendering,
       ),
     }).apply(compiler);
 
-    if (options.enableMTSRendering === false) {
+    if (options.experimental_enableMTSRendering === false) {
       compiler.hooks.finishMake.tapPromise(
         this.constructor.name,
         (compilation) =>
@@ -475,7 +493,7 @@ class ReactWebpackPlugin {
         );
       });
 
-      if (options.enableMTSRendering === false) {
+      if (options.experimental_enableMTSRendering === false) {
         const MTSDefinesRuntimeModule = createMTSDefinesRuntimeModule(
           compiler.webpack,
         );
@@ -553,7 +571,7 @@ class ReactWebpackPlugin {
           // section is assembled from the definitions of the modules the
           // background put in its async chunks.
           if (
-            options.enableMTSRendering === false
+            options.experimental_enableMTSRendering === false
             && lepusCode.root === undefined
             && args.chunkGroups.length > 0
             && args.chunkGroups.every(cg => !cg.isInitial())
@@ -704,7 +722,7 @@ class ReactWebpackPlugin {
    * Compile the modules that declare main-thread islands into the
    * main-thread layer.
    *
-   * Under `enableMTSRendering: false` the main thread compiles only what a
+   * Under `experimental_enableMTSRendering: false` the main thread compiles only what a
    * root first-screen boundary names, reached from the entry. A marked
    * component that nothing on that path references — an island placed
    * behind a `<Background>`, or resolved indirectly — would not be there at

@@ -46,8 +46,7 @@ export class WebEncodePlugin {
             // `related.sourceMap` is where SourceMapDevToolPlugin records the
             // sidecar `.map`. The JS itself is inlined into the template and
             // must go, but its source map is the only way to symbolicate
-            // production `/app-service.js` frames, so detach the link first and
-            // let the map survive as an ordinary asset.
+            // production `/app-service.js` frames, so the map has to outlive it.
             //
             // Without this, `output.sourceMap.js: 'source-map'` and
             // `'hidden-source-map'` both emit no map for the background chunk on
@@ -55,13 +54,22 @@ export class WebEncodePlugin {
             // embedding the map into the shipped `.web.bundle` (~10x size).
             // rsbuild emits the sidecar in this situation; this makes the web
             // target behave the same.
-            if (compilation.getAsset(name)?.info.related?.sourceMap) {
-              compilation.updateAsset(name, source => source, info => ({
-                ...info,
-                related: { ...info.related, sourceMap: undefined },
-              }));
-            }
+            //
+            // Detaching `related.sourceMap` first does NOT work: `updateAsset`'s
+            // info updater does not clear `related` on rspack, so the cascade
+            // still fires and the map still disappears. Take a reference to the
+            // map before the delete and put it back afterwards instead — that
+            // depends on nothing but `emitAsset`.
+            const mapName = compilation.getAsset(name)?.info.related?.sourceMap;
+            const map = mapName ? compilation.getAsset(mapName) : undefined;
+            const mapSource = map?.source;
+            const mapInfo = map?.info;
+
             compilation.deleteAsset(name);
+
+            if (mapName && mapSource && !compilation.getAsset(mapName)) {
+              compilation.emitAsset(mapName, mapSource, mapInfo);
+            }
           });
           inlinedAssets.clear();
         });

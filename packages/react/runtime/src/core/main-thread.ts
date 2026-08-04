@@ -44,7 +44,7 @@ export interface MainThreadProps {
  * ```
  *
  * A production build detects that root-level `<MainThread>` and stops
- * compiling business code for the main thread (the same `enableMTSRendering`
+ * compiling business code for the main thread (the same `experimental_enableMTSRendering`
  * switch a root `<Background>` flips) — *except* for what the boundary keeps
  * referencing. `Shell`, and everything it renders, is compiled for the main
  * thread and runs there, with working main-thread event handlers and
@@ -75,7 +75,7 @@ export interface MainThreadProps {
  *
  * @remarks
  * On a build that already renders everything on the main thread's first frame
- * (`enableMTSRendering: true`, the classic dual-thread build) the boundary is
+ * (`experimental_enableMTSRendering: true`, the classic dual-thread build) the boundary is
  * a pass-through and changes nothing.
  *
  * What adoption covers is exactly what IFR's hydration covers, because it is

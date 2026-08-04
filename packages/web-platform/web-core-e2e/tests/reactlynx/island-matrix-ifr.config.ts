@@ -10,7 +10,7 @@ import { commonConfig } from './commonConfig.js';
 
 /**
  * One half of the island permutation matrix: every case in
- * `island-matrix/` built with `enableMTSRendering: true` (the classic dual-thread build).
+ * `island-matrix/` built with `experimental_enableMTSRendering: true` (the classic dual-thread build).
  *
  * The two halves are separate builds because the switch is a build-wide
  * decision, and the whole point of the matrix is to hold the *source* fixed
@@ -22,7 +22,7 @@ const cases = await Array.fromAsync(glob(
 ));
 
 const config: Config = mergeRspeedyConfig(
-  commonConfig({ enableMTSRendering: true }),
+  commonConfig({ experimental_enableMTSRendering: true }),
   {
     source: {
       entry: Object.fromEntries(cases.map((entry) => [

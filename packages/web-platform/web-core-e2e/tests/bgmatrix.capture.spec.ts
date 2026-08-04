@@ -33,9 +33,12 @@ const cases = JSON.parse(
 >;
 
 const VARIANTS = [
-  { suffix: 'auto', label: `enableMTSRendering: 'auto' (default)` },
-  { suffix: 'off', label: 'enableMTSRendering: false' },
-  { suffix: 'on', label: 'enableMTSRendering: true' },
+  {
+    suffix: 'auto',
+    label: `experimental_enableMTSRendering: 'auto' (default)`,
+  },
+  { suffix: 'off', label: 'experimental_enableMTSRendering: false' },
+  { suffix: 'on', label: 'experimental_enableMTSRendering: true' },
 ];
 
 /** See `background-island.spec.ts` — only the `lynx-bg` worker is held. */

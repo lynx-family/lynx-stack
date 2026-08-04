@@ -6,7 +6,7 @@
 
 Add main-thread islands: `<MainThread>` and the `'main thread component'` directive.
 
-They are the opt-in end of the first-screen dial, the mirror of `<Background>` and `'background only'`. On a build whose main thread compiles no business code of its own (`enableMTSRendering: false`, which a root-level boundary turns on by itself), a root `<MainThread>` promotes one subtree back onto the first frame:
+They are the opt-in end of the first-screen dial, the mirror of `<Background>` and `'background only'`. On a build whose main thread compiles no business code of its own (`experimental_enableMTSRendering: false`, which a root-level boundary turns on by itself), a root `<MainThread>` promotes one subtree back onto the first frame:
 
 ```tsx
 root.render(

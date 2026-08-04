@@ -25,7 +25,7 @@ import {
  * The first-screen boundary matrix, end to end.
  *
  * Thirteen placements of `<Background>` and `<MainThread>` relative to each
- * other, each built twice — once with `enableMTSRendering: true` (the classic
+ * other, each built twice — once with `experimental_enableMTSRendering: true` (the classic
  * dual-thread build) and once with `false` (the assembled main-thread bundle)
  * — from *identical source*. Each build is observed three times:
  *

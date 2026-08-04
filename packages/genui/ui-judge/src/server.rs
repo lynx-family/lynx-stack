@@ -30,7 +30,7 @@ use crate::headless::{
   capture_prepared_page_with_options, prepare_judge_page_request, score_captured_page,
   CapturedPage, PageLoadOptions,
 };
-use crate::model::ModelClient;
+use crate::model::{configured_model_name, ModelClient};
 use crate::visual::{
   compare_uploaded_images, ReferenceImageComparison, VisualEvaluationError, MAX_IMAGE_BYTES,
 };
@@ -47,7 +47,7 @@ type PrepareJudgePageRequest =
 
 #[derive(Debug, Error)]
 pub enum ServerError {
-  #[error("PORT must be an integer from 1 through 65535, got {port:?}: {source}")]
+  #[error("LYNX_USE_PORT must be an integer from 1 through 65535, got {port:?}: {source}")]
   InvalidPort { port: String, source: ParseIntError },
   #[error("UI Judge headless worker panicked")]
   HeadlessWorkerPanicked,
@@ -58,6 +58,7 @@ pub enum ServerError {
 #[derive(Clone)]
 struct AppState {
   headless: Arc<HeadlessExecutor>,
+  model_name: Arc<str>,
   prepare_request: PrepareJudgePageRequest,
 }
 
@@ -66,6 +67,8 @@ struct AppState {
 struct HttpJudgePageRequest {
   #[serde(default, alias = "global_props")]
   global_props: Option<Value>,
+  #[serde(default, alias = "include_screenshot")]
+  include_screenshot: bool,
   #[serde(default, alias = "initial_data")]
   initial_data: Option<Value>,
   #[serde(default)]
@@ -84,8 +87,18 @@ struct HttpJudgePageRequest {
 
 #[derive(Debug)]
 struct HttpCaptureRequest {
+  include_screenshot: bool,
   load_options: PageLoadOptions,
   request: JudgePageRequest,
+}
+
+#[derive(Debug, Serialize)]
+#[serde(rename_all = "camelCase")]
+struct HttpJudgePageResponse {
+  #[serde(flatten)]
+  result: UiJudgeResult,
+  #[serde(skip_serializing_if = "Option::is_none")]
+  screenshot_data_url: Option<String>,
 }
 
 #[derive(Debug, Serialize)]
@@ -126,6 +139,7 @@ impl HttpJudgePageRequest {
     let global_props_json = page_data_json("globalProps", self.global_props)?;
     let initial_data_json = page_data_json("initialData", self.initial_data)?;
     Ok(HttpCaptureRequest {
+      include_screenshot: self.include_screenshot,
       load_options: PageLoadOptions {
         global_props_json,
         initial_data_json,
@@ -370,6 +384,7 @@ pub async fn serve(port: &str) -> Result<(), ServerError> {
   let worker_failure = headless.take_failure_receiver();
   let state = AppState {
     headless: Arc::clone(&headless),
+    model_name: configured_model_name().into(),
     prepare_request: prepare_judge_page_request,
   };
   let app = Router::new()
@@ -441,7 +456,10 @@ fn configure_listener(socket: Socket, address: SocketAddr) -> io::Result<TcpList
 
 async fn health(State(state): State<AppState>) -> Result<Json<Value>, ApiError> {
   if state.headless.is_healthy() {
-    Ok(Json(json!({ "status": "ok" })))
+    Ok(Json(json!({
+      "model": state.model_name.as_ref(),
+      "status": "ok"
+    })))
   } else {
     Err(ApiError::new(
       StatusCode::SERVICE_UNAVAILABLE,
@@ -453,14 +471,20 @@ async fn health(State(state): State<AppState>) -> Result<Json<Value>, ApiError> 
 async fn judge(
   State(state): State<AppState>,
   Json(request): Json<HttpJudgePageRequest>,
-) -> Result<Json<UiJudgeResult>, ApiError> {
+) -> Result<Json<HttpJudgePageResponse>, ApiError> {
   let HttpCaptureRequest {
+    include_screenshot,
     load_options,
     request,
   } = request.into_capture_request()?;
   let (request, client) = match (state.prepare_request)(request) {
     Ok(prepared) => prepared,
-    Err(result) => return Ok(Json(*result)),
+    Err(result) => {
+      return Ok(Json(HttpJudgePageResponse {
+        result: *result,
+        screenshot_data_url: None,
+      }))
+    }
   };
   let CaptureResponse {
     capture,
@@ -470,11 +494,20 @@ async fn judge(
     .headless
     .capture(request, client, load_options)
     .await?;
-  let result = match capture {
-    Ok(capture) => score_captured_page(&client, &request, capture).await,
-    Err(result) => result,
+  let (result, screenshot_data_url) = match capture {
+    Ok(capture) => {
+      let screenshot_data_url = include_screenshot.then(|| capture.screenshot_data_url());
+      (
+        score_captured_page(&client, &request, capture).await,
+        screenshot_data_url,
+      )
+    }
+    Err(result) => (result, None),
   };
-  Ok(Json(result))
+  Ok(Json(HttpJudgePageResponse {
+    result,
+    screenshot_data_url,
+  }))
 }
 
 async fn compare(mut multipart: Multipart) -> Result<Json<HttpCompareImagesResponse>, ApiError> {
@@ -596,6 +629,7 @@ mod tests {
   fn http_request(url: &str) -> HttpJudgePageRequest {
     HttpJudgePageRequest {
       global_props: None,
+      include_screenshot: false,
       initial_data: None,
       reference: None,
       reference_image: None,
@@ -734,6 +768,38 @@ mod tests {
   }
 
   #[test]
+  fn screenshot_capture_is_opt_in_and_supports_snake_case() {
+    let default_request = http_request("file:///tmp/a2ui.lynx.bundle")
+      .into_capture_request()
+      .expect("valid default request");
+    assert!(!default_request.include_screenshot);
+
+    let request: HttpJudgePageRequest = serde_json::from_value(json!({
+      "include_screenshot": true,
+      "task": "Render the A2UI page",
+      "url": "file:///tmp/a2ui.lynx.bundle"
+    }))
+    .expect("deserialize screenshot opt-in");
+    let capture_request = request.into_capture_request().expect("valid request");
+    assert!(capture_request.include_screenshot);
+  }
+
+  #[test]
+  fn screenshot_response_flattens_the_existing_result_contract() {
+    let response = HttpJudgePageResponse {
+      result: completed_result("file:///tmp/a2ui.lynx.bundle".to_string()),
+      screenshot_data_url: Some("data:image/png;base64,iVBORw0KGgo=".to_string()),
+    };
+    let value = serde_json::to_value(response).expect("serialize response");
+
+    assert_eq!(value["score"], 5);
+    assert_eq!(
+      value["screenshotDataUrl"],
+      "data:image/png;base64,iVBORw0KGgo="
+    );
+  }
+
+  #[test]
   fn accepts_snake_case_page_data_aliases() {
     let request: HttpJudgePageRequest = serde_json::from_value(json!({
       "global_props": {"messages": []},
@@ -793,12 +859,16 @@ mod tests {
     );
     let response = health(State(AppState {
       headless: Arc::clone(&headless),
+      model_name: "judge-model".into(),
       prepare_request: prepare_test_request,
     }))
     .await
     .expect("healthy worker must pass readiness");
 
-    assert_eq!(response.0, json!({ "status": "ok" }));
+    assert_eq!(
+      response.0,
+      json!({ "model": "judge-model", "status": "ok" })
+    );
     headless.shutdown().expect("stop mock headless worker");
   }
 
@@ -875,6 +945,7 @@ mod tests {
     );
     let state = AppState {
       headless: Arc::clone(&headless),
+      model_name: "judge-model".into(),
       prepare_request: prepare_test_request,
     };
     let mut first_request = http_request("file:///tmp/first.lynx.bundle");
@@ -888,8 +959,8 @@ mod tests {
     let first_result = first.expect("first response").0;
     let second_result = second.expect("second response").0;
 
-    assert_eq!(first_result.url, "file:///tmp/first.lynx.bundle");
-    assert_eq!(second_result.url, "file:///tmp/second.lynx.bundle");
+    assert_eq!(first_result.result.url, "file:///tmp/first.lynx.bundle");
+    assert_eq!(second_result.result.url, "file:///tmp/second.lynx.bundle");
     assert_eq!(
       *executed_requests
         .lock()
@@ -948,6 +1019,7 @@ mod tests {
     assert!(!headless.is_healthy());
     let health_error = health(State(AppState {
       headless: Arc::clone(&headless),
+      model_name: "judge-model".into(),
       prepare_request: prepare_test_request,
     }))
     .await

@@ -13,7 +13,7 @@ import type { Config } from '@lynx-js/rspeedy';
 const name = process.env['BG_CASE']!;
 const variant = process.env['BG_VARIANT']!;
 
-const enableMTSRendering = variant === 'auto'
+const experimental_enableMTSRendering = variant === 'auto'
   ? undefined
   : variant === 'off'
   ? false
@@ -22,7 +22,9 @@ const enableMTSRendering = variant === 'auto'
 const config: Config = {
   plugins: [
     pluginReactLynx(
-      enableMTSRendering === undefined ? {} : { enableMTSRendering },
+      experimental_enableMTSRendering === undefined
+        ? {}
+        : { experimental_enableMTSRendering },
     ),
   ],
   source: {
