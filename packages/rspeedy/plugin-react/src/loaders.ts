@@ -5,7 +5,10 @@ import type { RsbuildPluginAPI, Rspack } from '@rsbuild/core'
 
 import { LAYERS, ReactWebpackPlugin } from '@lynx-js/react-webpack-plugin'
 
-import { resolveMTSRendering } from './mtsRendering.js'
+import {
+  resolveBackgroundIslands,
+  resolveMTSRendering,
+} from './mtsRendering.js'
 import type { PluginReactLynxOptions } from './pluginReactLynx.js'
 
 // The transforms an `es2019` SWC target lowers (ES2020+ syntax), expressed as
@@ -33,6 +36,7 @@ function getLoaderOptions(
   api: RsbuildPluginAPI,
   options: Required<PluginReactLynxOptions>,
   enableMTSRendering: boolean,
+  backgroundIslands = false,
   isMainThread = false,
 ) {
   const { output } = api.getRsbuildConfig()
@@ -69,6 +73,7 @@ function getLoaderOptions(
     experimental_transformBuiltinAttributeNames,
     experimental_useElementTemplate,
     enableMTSRendering,
+    experimental_backgroundIslands: backgroundIslands,
     ...isMainThread
       ? {
         enableUiSourceMap,
@@ -117,6 +122,13 @@ export function applyLoaders(
       chain,
       api.context.rootPath,
     )
+    // Independent of the above: the fold and the assembled definitions also
+    // apply while the main thread compiles business code.
+    const backgroundIslands = resolveBackgroundIslands(
+      options,
+      enableMTSRendering,
+      isProd,
+    )
 
     const rule = chain.module.rule(CHAIN_ID.RULE.JS)
     const jsMainRule = rule.oneOf(CHAIN_ID.ONE_OF.JS_MAIN)
@@ -140,7 +152,9 @@ export function applyLoaders(
       .end()
       .use(LAYERS.BACKGROUND)
         .loader(ReactWebpackPlugin.loaders.BACKGROUND)
-        .options(getLoaderOptions(api, options, enableMTSRendering))
+        .options(
+          getLoaderOptions(api, options, enableMTSRendering, backgroundIslands),
+        )
       .end()
 
     const mainThreadRule = jsMainRule.oneOf(LAYERS.MAIN_THREAD)
@@ -187,7 +201,15 @@ export function applyLoaders(
       })
       .use(LAYERS.MAIN_THREAD)
         .loader(ReactWebpackPlugin.loaders.MAIN_THREAD)
-        .options(getLoaderOptions(api, options, enableMTSRendering, true))
+        .options(
+          getLoaderOptions(
+            api,
+            options,
+            enableMTSRendering,
+            backgroundIslands,
+            true,
+          ),
+        )
       .end()
   })
 }

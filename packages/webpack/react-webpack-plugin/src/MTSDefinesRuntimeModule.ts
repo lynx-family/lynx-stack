@@ -80,7 +80,7 @@ export function collectMTSDefines<TChunk, TModule>(
   chunks: Iterable<TChunk>,
   getChunkModules: (chunk: TChunk) => Iterable<TModule>,
   getModuleIdentifier: (module: TModule) => string,
-  owned?: ReadonlySet<string> | undefined,
+  owned?: ReadonlySet<string>,
 ): MTSDefine[] {
   const collected: MTSDefine[] = [];
   const visitedModules = new Set<string>();
@@ -160,13 +160,24 @@ export function renderLazyMTSDefines(
 
 type MTSDefinesRuntimeModule = new(
   backgroundEntry: string,
+  mainThreadEntry?: string,
 ) => RuntimeModule;
 
 export function createMTSDefinesRuntimeModule(
   webpack: typeof import('@rspack/core').rspack,
 ): MTSDefinesRuntimeModule {
   return class MTSDefinesRuntimeModule extends webpack.RuntimeModule {
-    constructor(private readonly backgroundEntry: string) {
+    /**
+     * @param backgroundEntry - the background entrypoint whose collected
+     * definitions the assembly is built from.
+     * @param mainThreadEntry - the main-thread entrypoint whose own
+     * definitions are subtracted. Both sides of the subtraction are then
+     * scoped to an entrypoint's chunks rather than to a single chunk.
+     */
+    constructor(
+      private readonly backgroundEntry: string,
+      private readonly mainThreadEntry?: string,
+    ) {
       super(
         'lynx main thread defines',
         webpack.RuntimeModule.STAGE_NORMAL,
@@ -195,12 +206,20 @@ export function createMTSDefinesRuntimeModule(
       const { chunkGraph } = compilation;
       const getModules = (chunk: Chunk) => chunkGraph.getChunkModules(chunk);
 
-      // What this main-thread chunk already carries as real code — the
-      // fallbacks it compiles — so the assembly describes only the deferred
-      // subtrees it does not.
-      const owned = this.chunk
-        ? collectOwnedMTSDefineKeys([this.chunk as Chunk], getModules)
-        : new Set<string>();
+      // What the main-thread bundle already carries as real code — the
+      // fallbacks, plus everything outside the boundaries when it renders too
+      // — so the assembly describes only the deferred subtrees it does not.
+      //
+      // Scoped to the same unit as the minuend above: `splitChunks` routinely
+      // puts a main-thread entry's modules in more than one initial chunk,
+      // and a definition owned in a sibling chunk would otherwise be
+      // assembled as well as emitted.
+      const mainThreadEntrypoint = this.mainThreadEntry === undefined
+        ? undefined
+        : compilation.entrypoints.get(this.mainThreadEntry);
+      const ownedChunks = mainThreadEntrypoint?.chunks
+        ?? (this.chunk ? [this.chunk as Chunk] : []);
+      const owned = collectOwnedMTSDefineKeys(ownedChunks, getModules);
 
       return renderMTSDefines(
         collectMTSDefines(

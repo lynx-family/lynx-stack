@@ -256,6 +256,11 @@ interface ReactWebpackPluginOptions {
   rendersOnMainThread?: boolean | undefined;
 
   /**
+   * {@inheritdoc @lynx-js/react-rsbuild-plugin#PluginReactLynxOptions.experimental_backgroundIslands}
+   */
+  experimental_backgroundIslands?: boolean;
+
+  /**
    * The background entry name of each main-thread entry.
    */
   mainThreadEntries?: Record<string, string>;
@@ -349,6 +354,7 @@ class ReactWebpackPlugin {
       // Left unset so it resolves to `enableMTSRendering`; only a build that
       // compiles a root `<Background>`'s fallback for the main thread sets it.
       rendersOnMainThread: undefined,
+      experimental_backgroundIslands: false,
       mainThreadEntries: {},
       lazyBundleFetcher: 'QueryComponent',
     });
@@ -423,6 +429,9 @@ class ReactWebpackPlugin {
       __ENABLE_MTS_RENDERING__: JSON.stringify(
         options.rendersOnMainThread ?? options.enableMTSRendering,
       ),
+      __BACKGROUND_ISLANDS__: JSON.stringify(
+        options.experimental_backgroundIslands ?? false,
+      ),
     }).apply(compiler);
 
     compiler.hooks.thisCompilation.tap(this.constructor.name, compilation => {
@@ -457,7 +466,14 @@ class ReactWebpackPlugin {
         );
       });
 
-      if (options.enableMTSRendering === false) {
+      // Both modes that fold `<Background>` need the assembled section: the
+      // deferred subtrees leave the main-thread graph either way, so their
+      // definitions have to arrive from the background compilation.
+      if (
+        options.enableMTSRendering === false
+        || options.experimental_backgroundIslands
+      ) {
+        const assembledMainThreadIsEmpty = options.enableMTSRendering === false;
         const MTSDefinesRuntimeModule = createMTSDefinesRuntimeModule(
           compiler.webpack,
         );
@@ -476,19 +492,26 @@ class ReactWebpackPlugin {
               ) {
                 continue;
               }
-              runtimeRequirements.add(
-                compiler.webpack.RuntimeGlobals.ensureChunkHandlers,
-              );
-              runtimeRequirements.add(
-                RuntimeGlobals.lynxProcessEvalResultByHost,
-              );
-              runtimeRequirements.add(
-                compiler.webpack.RuntimeGlobals.externalInstallChunk,
-              );
-              runtimeRequirements.add(compiler.webpack.RuntimeGlobals.require);
+              if (assembledMainThreadIsEmpty) {
+                // The assembled shim is the entry, so the chunk needs the
+                // loading runtime it reaches for. With islands the main-thread
+                // entry is the app itself and already carries whatever it uses.
+                runtimeRequirements.add(
+                  compiler.webpack.RuntimeGlobals.ensureChunkHandlers,
+                );
+                runtimeRequirements.add(
+                  RuntimeGlobals.lynxProcessEvalResultByHost,
+                );
+                runtimeRequirements.add(
+                  compiler.webpack.RuntimeGlobals.externalInstallChunk,
+                );
+                runtimeRequirements.add(
+                  compiler.webpack.RuntimeGlobals.require,
+                );
+              }
               compilation.addRuntimeModule(
                 chunk,
-                new MTSDefinesRuntimeModule(backgroundEntry),
+                new MTSDefinesRuntimeModule(backgroundEntry, mainThreadEntry),
               );
             }
           },

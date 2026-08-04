@@ -22,6 +22,7 @@ import {
 
 import {
   entriesDeclaringRootBackground,
+  resolveBackgroundIslands,
   resolveMTSRendering,
 } from './mtsRendering.js'
 import type { PluginReactLynxOptions } from './pluginReactLynx.js'
@@ -370,6 +371,11 @@ export function applyEntry(
         enableSSR,
         enableMTSRendering: resolvedEnableMTSRendering,
         rendersOnMainThread,
+        experimental_backgroundIslands: resolveBackgroundIslands(
+          options,
+          resolvedEnableMTSRendering,
+          isProd,
+        ),
         mainThreadChunks,
         mainThreadEntries,
         extractStr,

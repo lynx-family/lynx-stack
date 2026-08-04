@@ -116,6 +116,36 @@ export interface ReactLoaderOptions {
    * {@inheritdoc @lynx-js/react-rsbuild-plugin#PluginReactLynxOptions.enableMTSRendering}
    */
   enableMTSRendering?: boolean | undefined;
+
+  /**
+   * {@inheritdoc @lynx-js/react-rsbuild-plugin#PluginReactLynxOptions.experimental_backgroundIslands}
+   */
+  experimental_backgroundIslands?: boolean | undefined;
+}
+
+/**
+ * Whether this compilation folds `<Background>` boundaries and moves the
+ * deferred subtrees' definitions into the assembled section.
+ *
+ * True in both modes that do it: `enableMTSRendering: false`, where the main
+ * thread compiles only the entry and its fallbacks, and
+ * `experimental_backgroundIslands`, where it compiles everything around the
+ * boundaries as well. The transform work is identical — only how much is
+ * left standing around the holes differs.
+ *
+ * Off under HMR, where the main thread compiles a `MIXED` target and the
+ * boundary is left to the runtime component.
+ */
+function foldsBackgroundBoundaries(
+  this: LoaderContext<ReactLoaderOptions>,
+): boolean {
+  const { enableMTSRendering, experimental_backgroundIslands } = this
+    .getOptions();
+  if (this.hot) {
+    return false;
+  }
+  return enableMTSRendering === false
+    || experimental_backgroundIslands === true;
 }
 
 function normalizeSlashes(file: string) {
@@ -258,21 +288,22 @@ export function getMainThreadTransformOptions(
 ): TransformNodiffOptions {
   const commonOptions = getCommonOptions.call(this, inputSourceMap);
 
-  const { shake, enableMTSRendering } = this.getOptions();
+  const { shake } = this.getOptions();
   const useElementTemplate = typeof commonOptions.elementTemplate === 'object';
 
   return {
     ...commonOptions,
-    // With no business code of its own, the main thread renders a
-    // `<Background>`'s fallback and nothing else — folding the boundary here
-    // is what drops the `children` reference, and with it the deferred
-    // subtree's module closure, from the main-thread bundle.
+    // Folding the boundary here is what drops the `children` reference, and
+    // with it the deferred subtree's module closure, from the main-thread
+    // bundle. Under `enableMTSRendering: false` that leaves only the entry
+    // and its fallbacks; under `experimental_backgroundIslands` everything
+    // outside the boundaries stays and is compiled as usual.
     //
     // Collecting alongside it does not change this output (unlike on the
     // background target, where it moves the definitions out): it only reports
     // which definitions this bundle already carries as real code, so the
     // assembled ones can leave them out.
-    ...(enableMTSRendering === false && {
+    ...(foldsBackgroundBoundaries.call(this) && {
       foldBackgroundToFallback: true,
       collectMTSDefines: true,
     }),
@@ -366,10 +397,14 @@ export function getBackgroundTransformOptions(
 ): TransformNodiffOptions {
   const commonOptions = getCommonOptions.call(this, inputSourceMap);
   const useElementTemplate = typeof commonOptions.elementTemplate === 'object';
-  const { enableMTSRendering } = this.getOptions();
   return {
     ...commonOptions,
-    ...(enableMTSRendering === false && { collectMTSDefines: true }),
+    // The whole background graph is collected, not the deferred subtrees
+    // alone: the assembly subtracts what the main thread owns, so collecting
+    // a subset here would make coverage depend on knowing that subset
+    // exactly, while subtracting from the total cannot leave a definition
+    // undescribed.
+    ...(foldsBackgroundBoundaries.call(this) && { collectMTSDefines: true }),
     compat: typeof commonOptions.compat === 'object'
       ? {
         ...commonOptions.compat,
