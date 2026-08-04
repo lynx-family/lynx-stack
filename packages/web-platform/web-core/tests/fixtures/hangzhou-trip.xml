@@ -1,0 +1,913 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE lynx>
+<lynx version="5.4.2">
+<style><![CDATA[
+  :root {
+    background-color: #edf4ef;
+  }
+
+  * {
+    box-sizing: border-box;
+  }
+
+  .page {
+    width: 100%;
+    height: 100vh;
+    font-size: calc(100vw / 23.4375);
+    background-color: #edf4ef;
+  }
+
+  .page-scroll {
+    width: 100%;
+    height: 100vh;
+  }
+
+  .app-shell {
+    width: 100%;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 1rem 0.875rem 1.75rem;
+    background: linear-gradient(180deg, #e8f3ec 0%, #f7f2e8 48%, #eef2ed 100%);
+  }
+
+  .trip-card {
+    width: 100%;
+    max-width: 26.875rem;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    border: 0.0625rem solid rgba(31, 68, 54, 0.08);
+    border-radius: 1.75rem;
+    background-color: #fbfcf8;
+    box-shadow: 0 1.125rem 2.625rem rgba(37, 72, 57, 0.16);
+  }
+
+  .hero {
+    width: 100%;
+    height: 15.75rem;
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    padding: 1.375rem 1.25rem 1.25rem;
+    background: linear-gradient(145deg, #123f35 0%, #17614f 58%, #4c8665 100%);
+  }
+
+  .hero-orb {
+    position: absolute;
+    border-radius: 62.5rem;
+    background-color: rgba(255, 255, 255, 0.07);
+  }
+
+  .hero-orb-large {
+    width: 13.5rem;
+    height: 13.5rem;
+    top: -5.75rem;
+    right: -4.75rem;
+  }
+
+  .hero-orb-small {
+    width: 7rem;
+    height: 7rem;
+    right: 3.25rem;
+    bottom: -4.5rem;
+    background-color: rgba(219, 194, 128, 0.14);
+  }
+
+  .hero-grid-line {
+    position: absolute;
+    width: 18rem;
+    height: 0.0625rem;
+    right: -4rem;
+    bottom: 4.5rem;
+    opacity: 0.2;
+    background-color: #d6dfc5;
+    transform: rotate(-24deg);
+  }
+
+  .hero-top {
+    width: 100%;
+    z-index: 1;
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    justify-content: space-between;
+  }
+
+  .hero-kicker {
+    color: rgba(246, 246, 232, 0.68);
+    font-size: 0.625rem;
+    font-weight: 700;
+    letter-spacing: 0.1125rem;
+    white-space: nowrap;
+  }
+
+  .hero-badge {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    padding: 0.375rem 0.625rem;
+    border: 0.0625rem solid rgba(255, 255, 255, 0.14);
+    border-radius: 62.5rem;
+    background-color: rgba(255, 255, 255, 0.09);
+  }
+
+  .hero-badge-dot {
+    width: 0.375rem;
+    height: 0.375rem;
+    margin-right: 0.375rem;
+    border-radius: 0.1875rem;
+    background-color: #efc66f;
+  }
+
+  .hero-badge-text {
+    color: #f7f4e7;
+    font-size: 0.625rem;
+    font-weight: 700;
+    white-space: nowrap;
+  }
+
+  .hero-main {
+    z-index: 1;
+    display: flex;
+    flex: 1;
+    flex-direction: row;
+    align-items: flex-end;
+    justify-content: space-between;
+    padding-bottom: 1rem;
+  }
+
+  .hero-copy {
+    min-width: 0;
+    display: flex;
+    flex: 1;
+    flex-direction: column;
+  }
+
+  .hero-location {
+    color: #e5c981;
+    font-size: 0.6875rem;
+    font-weight: 800;
+    letter-spacing: 0.0875rem;
+  }
+
+  .hero-title {
+    margin-top: 0.3125rem;
+    color: #f9f7ed;
+    font-size: 2rem;
+    font-weight: 800;
+    line-height: 1.08;
+  }
+
+  .hero-subtitle {
+    margin-top: 0.5625rem;
+    color: rgba(247, 247, 234, 0.67);
+    font-size: 0.6875rem;
+    line-height: 1.5;
+  }
+
+  .hero-day-mark {
+    width: 4.625rem;
+    flex-shrink: 0;
+    margin-left: 0.75rem;
+    color: rgba(251, 248, 232, 0.12);
+    font-size: 3.75rem;
+    font-weight: 800;
+    line-height: 1;
+    text-align: right;
+  }
+
+  .hero-stats {
+    width: 100%;
+    z-index: 1;
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    padding-top: 0.875rem;
+    border-top: 0.0625rem solid rgba(255, 255, 255, 0.12);
+  }
+
+  .hero-stat {
+    display: flex;
+    flex: 1;
+    flex-direction: column;
+  }
+
+  .hero-stat-center {
+    padding-left: 1rem;
+    border-left: 0.0625rem solid rgba(255, 255, 255, 0.12);
+    border-right: 0.0625rem solid rgba(255, 255, 255, 0.12);
+  }
+
+  .hero-stat-last {
+    padding-left: 1rem;
+  }
+
+  .hero-stat-value {
+    color: #fffdf3;
+    font-size: 0.8125rem;
+    font-weight: 800;
+  }
+
+  .hero-stat-label {
+    margin-top: 0.1875rem;
+    color: rgba(247, 247, 234, 0.54);
+    font-size: 0.5625rem;
+  }
+
+  .content {
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    padding: 1.125rem;
+  }
+
+  .tabs-label {
+    color: #76817a;
+    font-size: 0.5625rem;
+    font-weight: 800;
+    letter-spacing: 0.0875rem;
+  }
+
+  .tabs-section {
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+  }
+
+  .day-tabs {
+    width: 100%;
+    display: flex;
+    flex-direction: row;
+    gap: 0.5rem;
+    margin-top: 0.625rem;
+    padding: 0.3125rem;
+    border-radius: 1rem;
+    background-color: #edf1eb;
+  }
+
+  .day-tab {
+    min-width: 0;
+    display: flex;
+    flex: 1;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 0.6875rem 0.25rem 0.625rem;
+    border: 0.0625rem solid transparent;
+    border-radius: 0.75rem;
+    transition: all 180ms ease-out;
+  }
+
+  .day-tab:active {
+    opacity: 0.72;
+    transform: scale(0.97);
+  }
+
+  .day-tab.active {
+    border-color: rgba(31, 91, 72, 0.08);
+    background-color: #ffffff;
+    box-shadow: 0 0.25rem 0.875rem rgba(39, 77, 61, 0.09);
+  }
+
+  .day-tab-number {
+    color: #9aa29d;
+    font-size: 0.5625rem;
+    font-weight: 800;
+    letter-spacing: 0.0375rem;
+  }
+
+  .day-tab.active .day-tab-number {
+    color: #277158;
+  }
+
+  .day-tab-name {
+    margin-top: 0.1875rem;
+    color: #66716b;
+    font-size: 0.6875rem;
+    font-weight: 700;
+  }
+
+  .day-tab.active .day-tab-name {
+    color: #193f34;
+  }
+
+  .day-tab-dot {
+    width: 0.875rem;
+    height: 0.125rem;
+    margin-top: 0.375rem;
+    border-radius: 0.0625rem;
+    opacity: 0;
+    background-color: #d8b65e;
+  }
+
+  .day-tab.active .day-tab-dot {
+    opacity: 1;
+  }
+
+  .day-slot {
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+  }
+
+  .day-panel {
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    padding-top: 1.25rem;
+  }
+
+  .day-heading {
+    width: 100%;
+    display: flex;
+    flex-direction: row;
+    align-items: flex-start;
+  }
+
+  .day-number-box {
+    width: 3rem;
+    height: 3rem;
+    flex-shrink: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 1rem;
+    background: linear-gradient(145deg, #1c5c49 0%, #39806a 100%);
+  }
+
+  .day-number {
+    color: #fffdf2;
+    font-size: 1.125rem;
+    font-weight: 800;
+  }
+
+  .day-heading-copy {
+    min-width: 0;
+    display: flex;
+    flex: 1;
+    flex-direction: column;
+    margin-left: 0.875rem;
+  }
+
+  .day-eyebrow {
+    color: #b08c39;
+    font-size: 0.5625rem;
+    font-weight: 800;
+    letter-spacing: 0.075rem;
+  }
+
+  .day-title {
+    margin-top: 0.1875rem;
+    color: #17382f;
+    font-size: 1.25rem;
+    font-weight: 800;
+    line-height: 1.2;
+  }
+
+  .day-subtitle {
+    margin-top: 0.3125rem;
+    color: #7a847f;
+    font-size: 0.65625rem;
+    line-height: 1.45;
+  }
+
+  .day-meta {
+    width: 100%;
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    justify-content: space-between;
+    margin-top: 1rem;
+    padding: 0.6875rem 0.75rem;
+    border-radius: 0.75rem;
+    background-color: #f3f0e7;
+  }
+
+  .day-meta-item {
+    min-width: 0;
+    display: flex;
+    flex: 1;
+    flex-direction: row;
+    align-items: center;
+  }
+
+  .day-meta-item-last {
+    justify-content: flex-end;
+  }
+
+  .day-meta-icon {
+    margin-right: 0.375rem;
+    color: #9b7b2f;
+    font-size: 0.75rem;
+  }
+
+  .day-meta-text {
+    color: #5e625e;
+    font-size: 0.625rem;
+    font-weight: 700;
+    white-space: nowrap;
+  }
+
+  .route-list {
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    margin-top: 1.125rem;
+  }
+
+  .route-item {
+    width: 100%;
+    display: flex;
+    flex-direction: row;
+  }
+
+  .route-rail {
+    width: 1.25rem;
+    flex-shrink: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+  }
+
+  .route-dot {
+    width: 0.625rem;
+    height: 0.625rem;
+    flex-shrink: 0;
+    margin-top: 0.3125rem;
+    border: 0.1875rem solid #d6e7df;
+    border-radius: 0.3125rem;
+    background-color: #237159;
+  }
+
+  .route-line {
+    width: 0.0625rem;
+    min-height: 4.75rem;
+    flex: 1;
+    margin-top: 0.25rem;
+    background-color: #dce4df;
+  }
+
+  .route-line-last {
+    background-color: transparent;
+  }
+
+  .route-card {
+    min-width: 0;
+    display: flex;
+    flex: 1;
+    flex-direction: column;
+    margin-left: 0.625rem;
+    padding: 0 0 1.125rem;
+  }
+
+  .route-topline {
+    width: 100%;
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    justify-content: space-between;
+  }
+
+  .route-time {
+    color: #1f5847;
+    font-size: 0.6875rem;
+    font-weight: 800;
+    letter-spacing: 0.025rem;
+  }
+
+  .route-duration {
+    padding: 0.25rem 0.4375rem;
+    border-radius: 62.5rem;
+    color: #98762a;
+    font-size: 0.5rem;
+    font-weight: 800;
+    background-color: #f5edda;
+    white-space: nowrap;
+  }
+
+  .route-place {
+    margin-top: 0.375rem;
+    color: #1e2f2a;
+    font-size: 0.9375rem;
+    font-weight: 800;
+    line-height: 1.25;
+  }
+
+  .route-detail {
+    margin-top: 0.3125rem;
+    color: #828b86;
+    font-size: 0.625rem;
+    line-height: 1.5;
+  }
+
+  .tip-card {
+    width: 100%;
+    display: flex;
+    flex-direction: row;
+    align-items: flex-start;
+    padding: 0.875rem;
+    border: 0.0625rem solid #eadfbd;
+    border-radius: 0.875rem;
+    background-color: #faf5e8;
+  }
+
+  .tip-icon {
+    width: 1.75rem;
+    height: 1.75rem;
+    flex-shrink: 0;
+    border-radius: 0.625rem;
+    color: #8f6c24;
+    font-size: 0.8125rem;
+    line-height: 1.75rem;
+    text-align: center;
+    background-color: #efe2ba;
+  }
+
+  .tip-copy {
+    min-width: 0;
+    display: flex;
+    flex: 1;
+    flex-direction: column;
+    margin-left: 0.6875rem;
+  }
+
+  .tip-title {
+    color: #6e5521;
+    font-size: 0.625rem;
+    font-weight: 800;
+  }
+
+  .tip-text {
+    margin-top: 0.25rem;
+    color: #89764d;
+    font-size: 0.59375rem;
+    line-height: 1.5;
+  }
+
+  .footer {
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    margin-top: 1.25rem;
+    padding-top: 1rem;
+    border-top: 0.0625rem solid #e3e8e3;
+  }
+
+  .footer-mark {
+    color: #2a6e58;
+    font-size: 0.6875rem;
+    font-weight: 800;
+    letter-spacing: 0.1875rem;
+  }
+
+  .footer-text {
+    margin-top: 0.375rem;
+    color: #98a09b;
+    font-size: 0.5625rem;
+  }
+]]></style>
+
+<script main-thread="true"><![CDATA[
+  const days = [
+    {
+      number: "01",
+      tab: "湖光",
+      eyebrow: "DAY 01 · 湖光初见",
+      title: "西湖慢游",
+      subtitle: "沿着白堤与苏堤，把第一天交给湖风和日落。",
+      distance: "约 11.8 km",
+      rhythm: "轻松漫步",
+      tip: "音乐喷泉场次会随季节调整；若想坐船，可在花港观鱼附近灵活加入约 40 分钟的游船体验。",
+      items: [
+        {
+          time: "09:00",
+          duration: "2 小时",
+          place: "断桥残雪 · 白堤",
+          detail: "从北山街进入西湖，沿白堤慢慢走到孤山，晨光和人流都更温柔。",
+        },
+        {
+          time: "11:30",
+          duration: "午餐",
+          place: "孤山 · 浙江博物馆",
+          detail: "在孤山附近吃杭帮菜，饭后看一场小展，为下午的长走留足体力。",
+        },
+        {
+          time: "14:30",
+          duration: "3 小时",
+          place: "曲院风荷 · 苏堤",
+          detail: "从曲院风荷一路向南，经过花港观鱼，在梧桐影里完成西湖经典线。",
+        },
+        {
+          time: "18:30",
+          duration: "日落",
+          place: "湖滨 · 音乐喷泉",
+          detail: "在湖滨等一场金色日落，晚餐后用喷泉与城市夜景结束第一天。",
+        },
+      ],
+    },
+    {
+      number: "02",
+      tab: "茶山",
+      eyebrow: "DAY 02 · 山寺茶香",
+      title: "灵隐与龙井",
+      subtitle: "从千年古刹走进茶山，把城市的喧闹留在身后。",
+      distance: "约 9.6 km",
+      rhythm: "登高寻幽",
+      tip: "灵隐景区建议早点出发；九溪步道路面湿滑时，穿防滑运动鞋，并为龙井村到九溪预留机动时间。",
+      items: [
+        {
+          time: "08:00",
+          duration: "3 小时",
+          place: "灵隐寺 · 飞来峰",
+          detail: "避开午后客流，在石刻与古木之间慢走，感受北高峰脚下的清幽。",
+        },
+        {
+          time: "11:30",
+          duration: "午餐",
+          place: "天竺路 · 素面小馆",
+          detail: "沿天竺路找一碗清爽素面，短暂休息后再前往茶山。",
+        },
+        {
+          time: "14:00",
+          duration: "3 小时",
+          place: "龙井村 · 九溪烟树",
+          detail: "从茶园高处走向九溪，沿溪水与杉林下行，遇见杭州最松弛的绿色。",
+        },
+        {
+          time: "18:30",
+          duration: "晚餐",
+          place: "河坊街 · 南宋御街",
+          detail: "回到老城吃葱包桧和定胜糕，在青石板路上散步消食。",
+        },
+      ],
+    },
+    {
+      number: "03",
+      tab: "宋韵",
+      eyebrow: "DAY 03 · 运河宋韵",
+      title: "古今杭城",
+      subtitle: "沿大运河读城市肌理，再去吴山收下一场告别日落。",
+      distance: "约 8.4 km",
+      rhythm: "人文漫游",
+      tip: "德寿宫与部分博物馆可能需要提前预约；若遇闭馆，可把下午替换为胡雪岩故居与十五奎巷。",
+      items: [
+        {
+          time: "09:00",
+          duration: "2 小时",
+          place: "拱宸桥 · 运河博物馆",
+          detail: "从拱宸桥看船只往来，沿桥西历史街区认识因运河而生的杭州。",
+        },
+        {
+          time: "11:30",
+          duration: "午餐",
+          place: "小河直街",
+          detail: "在白墙黛瓦之间找一间临河小店，留一点时间给手作铺与旧码头。",
+        },
+        {
+          time: "14:30",
+          duration: "2 小时",
+          place: "南宋德寿宫遗址博物馆",
+          detail: "从红墙与遗址中读南宋临安，理解杭州温柔表象下的历史厚度。",
+        },
+        {
+          time: "17:30",
+          duration: "日落",
+          place: "吴山城隍阁 · 鼓楼",
+          detail: "登高回望西湖与老城，在鼓楼附近吃最后一顿杭帮菜，结束三日旅程。",
+        },
+      ],
+    },
+  ];
+
+  const page = __CreatePage("0", 0);
+  const pageId = __GetElementUniqueID(page);
+  const engine = lynx.getEngine();
+  const backgroundThread = lynx.getJSContext();
+  const elementListeners = [];
+  const tabNodes = [];
+  let activeDayIndex = 0;
+  let daySlot;
+  let rendered = false;
+
+  __SetClasses(page, "page");
+
+  Object.assign(globalThis, {
+    processData(data) {
+      return data;
+    },
+  });
+
+  function createView(className) {
+    const node = __CreateView(pageId);
+    __SetClasses(node, className);
+    return node;
+  }
+
+  function createText(className, value) {
+    const node = __CreateText(pageId);
+    __SetClasses(node, className);
+    __AppendElement(node, __CreateRawText(value));
+    return node;
+  }
+
+  function append(parent, child) {
+    __AppendElement(parent, child);
+    return child;
+  }
+
+  function bindTap(node, handler) {
+    const options = {};
+    __AddEventListener(node, "tap", handler, options);
+    elementListeners.push({ node, name: "tap", handler, options });
+  }
+
+  function createHero() {
+    const hero = createView("hero");
+    append(hero, createView("hero-orb hero-orb-large"));
+    append(hero, createView("hero-orb hero-orb-small"));
+    append(hero, createView("hero-grid-line"));
+
+    const top = append(hero, createView("hero-top"));
+    append(top, createText("hero-kicker", "CITY ESCAPE · 03 DAYS"));
+    const badge = append(top, createView("hero-badge"));
+    append(badge, createView("hero-badge-dot"));
+    append(badge, createText("hero-badge-text", "杭州 HANGZHOU"));
+
+    const main = append(hero, createView("hero-main"));
+    const copy = append(main, createView("hero-copy"));
+    append(copy, createText("hero-location", "30.2741° N · 120.1551° E"));
+    append(copy, createText("hero-title", "山水入城\n三日漫游"));
+    append(copy, createText("hero-subtitle", "湖光、茶山与宋韵\n一份留有呼吸感的杭州路线"));
+    append(main, createText("hero-day-mark", "03"));
+
+    const stats = append(hero, createView("hero-stats"));
+    const statOne = append(stats, createView("hero-stat"));
+    append(statOne, createText("hero-stat-value", "3 DAYS"));
+    append(statOne, createText("hero-stat-label", "行程天数"));
+    const statTwo = append(stats, createView("hero-stat hero-stat-center"));
+    append(statTwo, createText("hero-stat-value", "12 STOPS"));
+    append(statTwo, createText("hero-stat-label", "精选停靠"));
+    const statThree = append(stats, createView("hero-stat hero-stat-last"));
+    append(statThree, createText("hero-stat-value", "29.8 KM"));
+    append(statThree, createText("hero-stat-label", "建议步行"));
+    return hero;
+  }
+
+  function createTabs() {
+    const section = createView("tabs-section");
+    append(section, createText("tabs-label", "SELECT YOUR DAY"));
+    const tabs = append(section, createView("day-tabs"));
+
+    days.forEach((day, index) => {
+      const tab = append(tabs, createView(index === activeDayIndex ? "day-tab active" : "day-tab"));
+      __SetAttribute(tab, "aria-label", "查看第 " + String(index + 1) + " 天行程：" + day.tab);
+      append(tab, createText("day-tab-number", "DAY " + String(index + 1)));
+      append(tab, createText("day-tab-name", day.tab));
+      append(tab, createView("day-tab-dot"));
+      bindTap(tab, () => selectDay(index));
+      tabNodes.push(tab);
+    });
+
+    return section;
+  }
+
+  function createDayMeta(day) {
+    const meta = createView("day-meta");
+    const distance = append(meta, createView("day-meta-item"));
+    append(distance, createText("day-meta-icon", "⌁"));
+    append(distance, createText("day-meta-text", day.distance));
+    const rhythm = append(meta, createView("day-meta-item day-meta-item-last"));
+    append(rhythm, createText("day-meta-icon", "◷"));
+    append(rhythm, createText("day-meta-text", day.rhythm));
+    return meta;
+  }
+
+  function createRouteItem(item, isLast) {
+    const row = createView("route-item");
+    const rail = append(row, createView("route-rail"));
+    append(rail, createView("route-dot"));
+    append(rail, createView(isLast ? "route-line route-line-last" : "route-line"));
+
+    const card = append(row, createView("route-card"));
+    const topline = append(card, createView("route-topline"));
+    append(topline, createText("route-time", item.time));
+    append(topline, createText("route-duration", item.duration));
+    append(card, createText("route-place", item.place));
+    append(card, createText("route-detail", item.detail));
+    return row;
+  }
+
+  function createTip(day) {
+    const tip = createView("tip-card");
+    append(tip, createText("tip-icon", "✦"));
+    const copy = append(tip, createView("tip-copy"));
+    append(copy, createText("tip-title", "出发前的小提示"));
+    append(copy, createText("tip-text", day.tip));
+    return tip;
+  }
+
+  function createDayPanel(day) {
+    const panel = createView("day-panel");
+    const heading = append(panel, createView("day-heading"));
+    const numberBox = append(heading, createView("day-number-box"));
+    append(numberBox, createText("day-number", day.number));
+    const headingCopy = append(heading, createView("day-heading-copy"));
+    append(headingCopy, createText("day-eyebrow", day.eyebrow));
+    append(headingCopy, createText("day-title", day.title));
+    append(headingCopy, createText("day-subtitle", day.subtitle));
+    append(panel, createDayMeta(day));
+
+    const routeList = append(panel, createView("route-list"));
+    day.items.forEach((item, index) => {
+      append(routeList, createRouteItem(item, index === day.items.length - 1));
+    });
+    append(panel, createTip(day));
+    return panel;
+  }
+
+  function updateTabs() {
+    tabNodes.forEach((tab, index) => {
+      __SetClasses(tab, index === activeDayIndex ? "day-tab active" : "day-tab");
+    });
+  }
+
+  function selectDay(index) {
+    if (index === activeDayIndex) {
+      return;
+    }
+    activeDayIndex = index;
+    updateTabs();
+    __ReplaceElements(daySlot, [createDayPanel(days[index])], __GetChildren(daySlot));
+    __FlushElementTree();
+  }
+
+  function createFooter() {
+    const footer = createView("footer");
+    append(footer, createText("footer-mark", "HANGZHOU · 杭州"));
+    append(footer, createText("footer-text", "把城市留给步行，把日落留给西湖"));
+    return footer;
+  }
+
+  function renderPage() {
+    if (rendered) {
+      return;
+    }
+    rendered = true;
+    const scroll = __CreateScrollView(pageId);
+    __SetClasses(scroll, "page-scroll");
+    __SetAttribute(scroll, "scroll-orientation", "vertical");
+    __SetAttribute(scroll, "scroll-bar-enable", false);
+    append(page, scroll);
+
+    const shell = append(scroll, createView("app-shell"));
+    const card = append(shell, createView("trip-card"));
+    append(card, createHero());
+    const content = append(card, createView("content"));
+    append(content, createTabs());
+    daySlot = append(content, createView("day-slot"));
+    append(daySlot, createDayPanel(days[activeDayIndex]));
+    append(content, createFooter());
+  }
+
+  function onRenderPage() {
+    renderPage();
+  }
+
+  function cleanup() {
+    const currentListeners = elementListeners.splice(0);
+    currentListeners.forEach((listener) => {
+      __RemoveEventListener(
+        listener.node,
+        listener.name,
+        listener.handler,
+        listener.options,
+      );
+    });
+    engine.removeEventListener("__RenderPage", onRenderPage);
+    engine.removeEventListener("__DestroyLifetime", cleanup);
+    backgroundThread.dispatchEvent({
+      type: "__DestroyLifetime",
+      data: undefined,
+    });
+    tabNodes.splice(0);
+    daySlot = undefined;
+  }
+
+  engine.addEventListener("__RenderPage", onRenderPage);
+  engine.addEventListener("__DestroyLifetime", cleanup);
+]]></script>
+
+<script background="true"><![CDATA[
+  const mainThread = lynx.getCoreContext();
+
+  function cleanupBackground() {
+    mainThread.removeEventListener("__DestroyLifetime", cleanupBackground);
+  }
+
+  mainThread.addEventListener("__DestroyLifetime", cleanupBackground);
+]]></script>
+</lynx>
