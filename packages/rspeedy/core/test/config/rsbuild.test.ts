@@ -554,6 +554,36 @@ describe('Config - toRsBuildConfig', () => {
 
       expect(rsbuildConfig.output?.legalComments).toBe('inline')
     })
+
+    test('transform output.minify false', () => {
+      const rsbuildConfig = toRsbuildConfig({
+        output: {
+          minify: false,
+        },
+      })
+      expect(rsbuildConfig.output?.minify).toBe(false)
+    })
+
+    test('transform output.minify object', () => {
+      const rsbuildConfig = toRsbuildConfig({
+        output: {
+          minify: {
+            jsOptions: {
+              minimizerOptions: {
+                compress: { pure_funcs: ['console.log'] },
+              },
+            },
+          },
+        },
+      })
+      expect(rsbuildConfig.output?.minify).toStrictEqual({
+        jsOptions: {
+          minimizerOptions: {
+            compress: { pure_funcs: ['console.log'] },
+          },
+        },
+      })
+    })
   })
 
   describe('Performance', () => {

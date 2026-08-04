@@ -108,5 +108,16 @@ describe('pluginMinify', () => {
     )
     expect(serialized).toContain('__MAIN__')
     expect(serialized).toContain('__BG__')
+
+    const mainThreadPattern = /.*main-thread(?:\.[A-Fa-f0-9]*)?\.js$/
+    const backgroundPattern = /.*background(?:\.[A-Fa-f0-9]*)?\.js$/
+    const [defaultOptions, mainThreadOptions, backgroundOptions] = minimizers
+      .map((minimizer) => minimizer._args[0])
+
+    expect(defaultOptions?.exclude).toEqual(
+      expect.arrayContaining([mainThreadPattern, backgroundPattern]),
+    )
+    expect(mainThreadOptions?.include).toEqual([mainThreadPattern])
+    expect(backgroundOptions?.include).toEqual([backgroundPattern])
   })
 })
