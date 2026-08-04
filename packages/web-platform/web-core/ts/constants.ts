@@ -26,6 +26,20 @@ export const LYNX_TIMING_FLAG_ATTRIBUTE =
 
 export const i18nResourceMissedEventName = 'i18nResourceMissed' as const;
 
+/**
+ * Message event types the engine dispatches onto the Engine context proxy
+ * returned by `lynx.getEngine()`.
+ *
+ * Mirrors the `kMessageEventType*` constants in
+ * `core/runtime/js/runtime_constant.h` of the Lynx C++ SDK.
+ */
+export const EngineMessageEventType = /*#__PURE__*/ {
+  RenderPage: '__RenderPage',
+  UpdatePage: '__UpdatePage',
+  DestroyLifetime: '__DestroyLifetime',
+  UpdateGlobalProps: '__UpdateGlobalProps',
+} as const;
+
 export const uniqueIdSymbol = /*#__PURE__*/ Symbol('uniqueId');
 
 export const systemInfoBase = /*#__PURE__*/ {
