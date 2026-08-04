@@ -1,3 +1,5 @@
+import { fileURLToPath } from 'node:url';
+
 import { defineConfig } from '@rslib/core';
 import { pluginPublint } from 'rsbuild-plugin-publint';
 
@@ -15,7 +17,12 @@ export default defineConfig({
       bundle: false,
       format: 'esm',
       syntax: 'es2021',
-      dts: { tsgo: true },
+      dts: {
+        tsgo: true,
+        typescriptPath: fileURLToPath(
+          import.meta.resolve('@typescript/native-preview'),
+        ),
+      },
     },
     {
       bundle: false,

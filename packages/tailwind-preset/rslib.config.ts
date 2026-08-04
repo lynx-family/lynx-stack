@@ -1,3 +1,5 @@
+import { fileURLToPath } from 'node:url';
+
 import { defineConfig } from '@rslib/core';
 
 export default defineConfig({
@@ -9,7 +11,12 @@ export default defineConfig({
   },
   lib: [
     {
-      dts: { tsgo: true },
+      dts: {
+        tsgo: true,
+        typescriptPath: fileURLToPath(
+          import.meta.resolve('@typescript/native-preview'),
+        ),
+      },
       format: 'esm',
     },
     {
