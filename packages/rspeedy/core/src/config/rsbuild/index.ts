@@ -44,6 +44,10 @@ export function toRsbuildConfig(
 
       distPath: config.output?.distPath,
 
+      filename: typeof config.output?.filename === 'object'
+        ? config.output.filename
+        : undefined,
+
       filenameHash: config.output?.filenameHash,
 
       inlineScripts: config.output?.inlineScripts,
@@ -51,6 +55,8 @@ export function toRsbuildConfig(
       // TODO(OSS): change the default value to `linked`(or `undefined`) when OSS.
       // We expect to use different default legalComments with Rsbuild
       legalComments: config.output?.legalComments ?? 'none',
+
+      minify: config.output?.minify,
 
       polyfill: 'off',
 

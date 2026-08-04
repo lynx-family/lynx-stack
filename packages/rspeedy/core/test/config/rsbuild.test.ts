@@ -464,9 +464,11 @@ describe('Config - toRsBuildConfig', () => {
           "cssModules": undefined,
           "dataUriLimit": 2048,
           "distPath": undefined,
+          "filename": undefined,
           "filenameHash": undefined,
           "inlineScripts": undefined,
           "legalComments": "none",
+          "minify": undefined,
           "polyfill": "off",
           "sourceMap": undefined,
         }
@@ -514,6 +516,24 @@ describe('Config - toRsBuildConfig', () => {
       expect(rsbuildConfig.output?.distPath).toHaveProperty('root', 'foo')
     })
 
+    test('transform output.filename object', () => {
+      const rsbuildConfig = toRsbuildConfig({
+        output: {
+          filename: { css: 'style.css' },
+        },
+      })
+      expect(rsbuildConfig.output?.filename).toHaveProperty('css', 'style.css')
+    })
+
+    test('transform output.filename string is not forwarded', () => {
+      const rsbuildConfig = toRsbuildConfig({
+        output: {
+          filename: 'main.bundle',
+        },
+      })
+      expect(rsbuildConfig.output?.filename).toBeUndefined()
+    })
+
     test('transform output.inlineScripts', () => {
       const rsbuildConfig = toRsbuildConfig({
         output: {
@@ -533,6 +553,36 @@ describe('Config - toRsBuildConfig', () => {
       })
 
       expect(rsbuildConfig.output?.legalComments).toBe('inline')
+    })
+
+    test('transform output.minify false', () => {
+      const rsbuildConfig = toRsbuildConfig({
+        output: {
+          minify: false,
+        },
+      })
+      expect(rsbuildConfig.output?.minify).toBe(false)
+    })
+
+    test('transform output.minify object', () => {
+      const rsbuildConfig = toRsbuildConfig({
+        output: {
+          minify: {
+            jsOptions: {
+              minimizerOptions: {
+                compress: { pure_funcs: ['console.log'] },
+              },
+            },
+          },
+        },
+      })
+      expect(rsbuildConfig.output?.minify).toStrictEqual({
+        jsOptions: {
+          minimizerOptions: {
+            compress: { pure_funcs: ['console.log'] },
+          },
+        },
+      })
     })
   })
 

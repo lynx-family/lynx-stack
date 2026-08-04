@@ -2,27 +2,37 @@
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
 
+import { mergeRsbuildConfig } from '@rsbuild/core'
 import type { RsbuildConfig, RsbuildPlugin, Rspack } from '@rsbuild/core'
 
-import { mergeRspeedyConfig } from '../config/mergeRspeedyConfig.js'
-import type { Minify } from '../config/output/minify.js'
 import { debug } from '../debug.js'
 
 const MAIN_THREAD_JS_PATTERN = /.*main-thread(?:\.[A-Fa-f0-9]*)?\.js$/
 const BACKGROUND_JS_PATTERN = /.*background(?:\.[A-Fa-f0-9]*)?\.js$/
 
+// TODO: `mainThreadOptions` and `backgroundOptions` are non-standard keys
+// tunneled through the Rsbuild config. They should be supported by the DSL
+// plugin (e.g. `pluginReactLynx`) with typed options instead of being read
+// here in `pluginLynx`.
+interface Minify {
+  js?: boolean | undefined
+  jsOptions?: Rspack.SwcJsMinimizerRspackPluginOptions | undefined
+  mainThreadOptions?: Rspack.SwcJsMinimizerRspackPluginOptions | undefined
+  backgroundOptions?: Rspack.SwcJsMinimizerRspackPluginOptions | undefined
+}
+
 function mergeJsOptions(
   baseOptions: NonNullable<Minify['jsOptions']>,
   threadOptions: NonNullable<Minify['jsOptions']> | undefined,
 ): NonNullable<Minify['jsOptions']> {
-  const merged = mergeRspeedyConfig(
+  const merged = mergeRsbuildConfig(
     { output: { minify: { jsOptions: baseOptions } } },
     { output: { minify: { jsOptions: threadOptions } } },
   )
   return (merged.output?.minify as Minify | undefined)?.jsOptions ?? {}
 }
 
-export function pluginMinify(options?: Minify | boolean): RsbuildPlugin {
+export function pluginMinify(): RsbuildPlugin {
   // When preact devtools is enabled (`REACT_DEVTOOL`), keep function and class
   // names. Devtools relies on them to resolve component names (`type.name`) and
   // to reconstruct the hook tree (it matches stack frames by function name).
@@ -115,26 +125,20 @@ export function pluginMinify(options?: Minify | boolean): RsbuildPlugin {
     name: 'lynx:rsbuild:minify',
     setup(api) {
       api.modifyRsbuildConfig((config, { mergeRsbuildConfig }) => {
+        const userMinify = config.output?.minify
+
         // Disable minification
-        if (options === false) {
+        if (userMinify === false) {
           debug(`minification disabled`)
-          return mergeRsbuildConfig(config, {
-            output: { minify: false },
-          })
+          return config
         }
 
-        const configs = [config, defaultConfig]
-
-        if (options !== true && options !== undefined) {
+        if (typeof userMinify === 'object') {
           debug(`merging minification options`)
-          configs.push({
-            output: {
-              minify: options,
-            },
-          } as RsbuildConfig)
+          return mergeRsbuildConfig(defaultConfig, config)
         }
 
-        return mergeRsbuildConfig(...configs)
+        return mergeRsbuildConfig(config, defaultConfig)
       })
 
       api.modifyBundlerChain((chain, { rspack, CHAIN_ID }) => {

@@ -38,14 +38,6 @@ export async function applyDefaultPlugins(
       pluginDev(config.dev, config.server)
     ),
 
-    import('./minify.plugin.js').then(({ pluginMinify }) =>
-      pluginMinify(config.output?.minify)
-    ),
-
-    import('./output.plugin.js').then(({ pluginOutput }) =>
-      pluginOutput(config.output)
-    ),
-
     import('./rsdoctor.plugin.js').then(({ pluginRsdoctor }) =>
       pluginRsdoctor(config.tools?.rsdoctor)
     ),
