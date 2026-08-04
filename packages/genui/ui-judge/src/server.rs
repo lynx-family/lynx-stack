@@ -71,6 +71,8 @@ struct HttpJudgePageRequest {
   include_screenshot: bool,
   #[serde(default, alias = "initial_data")]
   initial_data: Option<Value>,
+  #[serde(default, alias = "include_geqi")]
+  include_geqi: bool,
   #[serde(default)]
   reference: Option<String>,
   #[serde(default, alias = "reference_image")]
@@ -145,6 +147,7 @@ impl HttpJudgePageRequest {
         initial_data_json,
       },
       request: JudgePageRequest {
+        include_geqi: self.include_geqi,
         reference: self.reference,
         reference_image: self.reference_image,
         screenshot_settle: Duration::from_millis(
@@ -631,6 +634,7 @@ mod tests {
       global_props: None,
       include_screenshot: false,
       initial_data: None,
+      include_geqi: false,
       reference: None,
       reference_image: None,
       screenshot_settle_ms: None,
@@ -654,7 +658,9 @@ mod tests {
       alignment_score: None,
       diff_image_base64: None,
       different_blocks: None,
+      dimensions: vec![],
       error: None,
+      geqi_score: None,
       reference_image_error: None,
       visual_similarity: None,
       reason: None,
@@ -730,6 +736,7 @@ mod tests {
         "messages": [{"beginRendering": {"surfaceId": "main"}}],
         "theme": "light"
       },
+      "includeGeqi": true,
       "initialData": {
         "messages": [{"surfaceUpdate": {"surfaceId": "main"}}]
       },
@@ -738,6 +745,8 @@ mod tests {
     }))
     .expect("deserialize HTTP request");
     let capture_request = request.into_capture_request().expect("valid HTTP request");
+
+    assert!(capture_request.request.include_geqi);
 
     assert_eq!(
       capture_request
@@ -803,12 +812,15 @@ mod tests {
   fn accepts_snake_case_page_data_aliases() {
     let request: HttpJudgePageRequest = serde_json::from_value(json!({
       "global_props": {"messages": []},
+      "include_geqi": true,
       "initial_data": {"playbackMode": true},
       "task": "Render the A2UI page",
       "url": "file:///tmp/a2ui.lynx.bundle"
     }))
     .expect("deserialize aliased HTTP request");
     let capture_request = request.into_capture_request().expect("valid HTTP request");
+
+    assert!(capture_request.request.include_geqi);
 
     assert_eq!(
       capture_request.load_options.global_props_json.as_deref(),

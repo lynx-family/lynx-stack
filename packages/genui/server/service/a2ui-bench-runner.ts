@@ -387,6 +387,12 @@ async function runA2UINativeOne(
       // renderMs: preview.renderMs,
       renderMs: 0,
       attempts: result.attempts,
+      ...('dimensions' in judge && judge.dimensions
+        ? { judgeDimensions: judge.dimensions }
+        : {}),
+      ...('geqiScore' in judge && judge.geqiScore !== undefined
+        ? { judgeGeqiScore: judge.geqiScore }
+        : {}),
       judgeScore: judge.score,
       judgeStatus: judge.status,
       ...('reason' in judge && judge.reason
@@ -578,6 +584,12 @@ async function runProtocolAdapterOne(
       ttiMs: 0,
       renderMs: 0,
       attempts: attempts.length,
+      ...('dimensions' in judge && judge.dimensions
+        ? { judgeDimensions: judge.dimensions }
+        : {}),
+      ...('geqiScore' in judge && judge.geqiScore !== undefined
+        ? { judgeGeqiScore: judge.geqiScore }
+        : {}),
       judgeScore: judge.score,
       judgeStatus: judge.status,
       ...('reason' in judge && judge.reason
@@ -737,6 +749,9 @@ export function summarizeGroup(
   const groupResults = results.filter((item) => item.groupId === group.id);
   const successfulRuns = groupResults.filter((item) => item.ok).length;
   const judged = groupResults.filter((item) => item.judgeStatus === 'complete');
+  const geqiJudged = judged.filter((item) =>
+    typeof item.judgeGeqiScore === 'number'
+  );
   const failedRuns = Math.max(0, plannedRuns - successfulRuns);
   return {
     groupId: group.id,
@@ -772,6 +787,14 @@ export function summarizeGroup(
       judged.map((item) => item.judgeScore),
       plannedRuns,
     ),
+    ...(geqiJudged.length > 0
+      ? {
+        avgJudgeGeqiScore: averagePlanned(
+          geqiJudged.map((item) => item.judgeGeqiScore ?? 0),
+          plannedRuns,
+        ),
+      }
+      : {}),
     judgeRunCount: judged.length,
     avgAttempts: averagePlanned(
       groupResults.map((item) => item.attempts),

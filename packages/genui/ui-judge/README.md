@@ -24,6 +24,7 @@ use ui_judge::{judge_page, JudgePageRequest};
 #[tokio::main(flavor = "current_thread")]
 async fn main() {
   let result = judge_page(JudgePageRequest {
+    include_geqi: true,
     reference: None,
     reference_image: None,
     screenshot_settle: Duration::from_millis(16),
@@ -43,9 +44,28 @@ must use an absolute `file:///...` URL; bare filesystem paths are rejected
 before model or runtime initialization.
 
 `timeout` applies independently to connection, navigation, each natural
-language step, final screenshot capture, VLM scoring, and optional reference
-image comparison. It is not an overall deadline for the entire request; this
-preserves the behavior of the former TypeScript implementation.
+language step, final screenshot capture, visual-correctness scoring, every
+enabled GEQI dimension, and optional reference-image comparison. It is not an
+overall deadline for the entire request; this preserves the behavior of the
+former TypeScript implementation.
+
+Set `include_geqi` to score the final screenshot independently across four
+weighted GEQI dimensions. The top-level `score`, `reason`, and `summary`
+remain the separate visual-correctness result. `dimensions` contains the four
+0-5 results and their relative weights, while `geqi_score` normalizes their
+weighted result to a 0-100 score:
+
+- Usability & Interaction Logic: weight 30
+- Visual Communication & Aesthetics: weight 25
+- Consistency & Standards: weight 15
+- Information Architecture & UX Writing: weight 15
+
+All five VLM evaluations consume the same final screenshot and run
+independently. A failed GEQI dimension is returned with `score: 0` and its own
+`error`; it does not replace the visual-correctness result. The weighted score
+retains the historical calculation in which such an error result contributes
+zero, so callers should inspect every dimension error before treating the
+aggregate as a complete evaluation.
 
 `reference` remains an optional textual target for the model. Set
 `reference_image` to a plain base64 image, a `data:image/...;base64,...` URL, or
@@ -58,7 +78,8 @@ The VLM and reference-image comparison are independent consumers of the final
 screenshot. The VLM always receives only that screenshot plus `task` and the
 optional textual `reference`; it never receives `reference_image`, alignment
 output, pixel-diff output, or algorithmic similarity. Consequently the public
-`score`, `reason`, and `summary` fields always come from the VLM. The `error`
+`score`, `reason`, `summary`, `dimensions`, and `geqi_score` fields come from
+the VLM evaluations. The `error`
 field reports failures in the primary page-capture or VLM chain. A
 reference-image failure is reported separately as `reference_image_error` and
 does not replace a successful VLM result; a VLM failure likewise does not
@@ -158,6 +179,7 @@ curl --request POST http://127.0.0.1:8080/judge \
       "instant": true,
       "theme": "light"
     },
+    "includeGeqi": true,
     "reference": null,
     "referenceImage": null,
     "includeScreenshot": true,

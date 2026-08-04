@@ -94,6 +94,40 @@ function result(
   };
 }
 
+function geqiDimensions(score: number): Array<{
+  dimension: string;
+  dimensionLabel: string;
+  score: number;
+  weight: number;
+}> {
+  return [
+    {
+      dimension: 'usability-interaction',
+      dimensionLabel: 'Usability & Interaction Logic',
+      score,
+      weight: 30,
+    },
+    {
+      dimension: 'visual-aesthetics',
+      dimensionLabel: 'Visual Communication & Aesthetics',
+      score,
+      weight: 25,
+    },
+    {
+      dimension: 'consistency-standards',
+      dimensionLabel: 'Consistency & Standards',
+      score,
+      weight: 15,
+    },
+    {
+      dimension: 'architecture-writing',
+      dimensionLabel: 'Information Architecture & UX Writing',
+      score,
+      weight: 15,
+    },
+  ];
+}
+
 function screenshotDataUrlForBytes(bytes: number): string {
   const encodedLength = Math.ceil(bytes / 3) * 4;
   const remainder = bytes % 3;
@@ -137,13 +171,16 @@ describe('A2UI Bench UI Judge integration', () => {
   });
 
   test('uses the planned-run denominator for Judge averages', () => {
+    const completed = result('complete', 'complete', 4);
+    completed.judgeGeqiScore = 80;
     const summary = summarizeGroup(group, [
-      result('complete', 'complete', 4),
+      completed,
       result('failed', 'failed', 0),
       result('skipped', 'skipped', 0),
     ]);
 
     expect(summary.avgJudgeScore).toBe(4 / 3);
+    expect(summary.avgJudgeGeqiScore).toBe(80 / 3);
     expect(summary.judgeRunCount).toBe(1);
     expect(summary.plannedRuns).toBe(3);
   });
@@ -231,7 +268,9 @@ describe('A2UI Bench UI Judge integration', () => {
       },
     });
     rstest.mocked(runGenuiBenchUiJudge).mockResolvedValue({
+      dimensions: geqiDimensions(4),
       errors: [],
+      geqiScore: 80,
       score: 4,
       screenshotDataUrl,
       status: 'complete',
@@ -302,10 +341,14 @@ describe('A2UI Bench UI Judge integration', () => {
     });
     expect(store.getJob(job.id)?.report?.results).toEqual([
       expect.objectContaining({
+        judgeDimensions: geqiDimensions(4),
+        judgeGeqiScore: 80,
         protocol: 'a2ui',
         screenshotDataUrl,
       }),
       expect.objectContaining({
+        judgeDimensions: geqiDimensions(4),
+        judgeGeqiScore: 80,
         protocol: 'openui',
         screenshotDataUrl,
       }),
@@ -525,7 +568,9 @@ describe('A2UI Bench UI Judge integration', () => {
       },
     });
     rstest.mocked(runGenuiBenchUiJudge).mockResolvedValueOnce({
+      dimensions: geqiDimensions(4),
       errors: [],
+      geqiScore: 80,
       score: 4,
       screenshotDataUrl:
         'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAAB',
@@ -580,6 +625,8 @@ describe('A2UI Bench UI Judge integration', () => {
     await runBenchJob(job.id);
 
     expect(store.getJob(job.id)?.report?.results[0]).toMatchObject({
+      judgeDimensions: geqiDimensions(4),
+      judgeGeqiScore: 80,
       protocol: 'a2ui',
       profile: 'native',
       tokens: 12,

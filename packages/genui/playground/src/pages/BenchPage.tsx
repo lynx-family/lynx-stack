@@ -286,6 +286,8 @@ interface BenchResult {
   ttiMs: number;
   renderMs: number;
   attempts: number;
+  judgeDimensions?: BenchJudgeDimensionResult[];
+  judgeGeqiScore?: number;
   judgeScore: number;
   judgeStatus?: 'complete' | 'failed' | 'skipped';
   judgeWarnings?: string[];
@@ -294,6 +296,16 @@ interface BenchResult {
   errors?: string[];
   error?: string;
   screenshotDataUrl?: string;
+}
+
+interface BenchJudgeDimensionResult {
+  dimension: string;
+  dimensionLabel: string;
+  error?: string;
+  reason?: string;
+  score: number;
+  summary?: string;
+  weight: number;
 }
 
 interface BenchGroupSummary {
@@ -311,6 +323,7 @@ interface BenchGroupSummary {
   avgTtiMs: number;
   avgRenderMs: number;
   avgJudgeScore: number;
+  avgJudgeGeqiScore?: number;
   judgeRunCount?: number;
   avgAttempts: number;
 }
@@ -1560,7 +1573,10 @@ function formatSummaryJudgeMetric(
     return 'off';
   }
   if (summary.judgeRunCount === 0) return 'n/a';
-  return `${summary.avgJudgeScore.toFixed(1)}/5`;
+  const visual = `${summary.avgJudgeScore.toFixed(1)}/5`;
+  return summary.avgJudgeGeqiScore === undefined
+    ? visual
+    : `${visual} · ${summary.avgJudgeGeqiScore.toFixed(1)}/100 GEQI`;
 }
 
 function formatRunJudgeMetric(
@@ -1573,7 +1589,10 @@ function formatRunJudgeMetric(
   }
   if (result.judgeStatus === 'failed') return 'error';
   if (result.judgeStatus === 'skipped') return 'n/a';
-  return `${result.judgeScore.toFixed(1)}/5`;
+  const visual = `${result.judgeScore.toFixed(1)}/5`;
+  return result.judgeGeqiScore === undefined
+    ? visual
+    : `${visual} · ${result.judgeGeqiScore.toFixed(1)}/100 GEQI`;
 }
 
 function isBenchRunFailed(result: BenchResult): boolean {

@@ -28,6 +28,35 @@ function screenshotDataUrlForBytes(bytes: number): string {
     + padding;
 }
 
+const GEQI_DIMENSIONS = [
+  ['usability-interaction', 'Usability & Interaction Logic', 30],
+  ['visual-aesthetics', 'Visual Communication & Aesthetics', 25],
+  ['consistency-standards', 'Consistency & Standards', 15],
+  ['architecture-writing', 'Information Architecture & UX Writing', 15],
+] as const;
+
+function geqiResponse(score: number): {
+  dimensions: Array<{
+    dimension: string;
+    dimensionLabel: string;
+    score: number;
+    weight: number;
+  }>;
+  geqiScore: number;
+  score: number;
+} {
+  return {
+    dimensions: GEQI_DIMENSIONS.map(([dimension, dimensionLabel, weight]) => ({
+      dimension,
+      dimensionLabel,
+      score,
+      weight,
+    })),
+    geqiScore: score * 20,
+    score,
+  };
+}
+
 describe('probeBenchUiJudge', () => {
   test('stays disabled without the private sidecar URL', async () => {
     let called = false;
@@ -133,7 +162,7 @@ describe('runBenchUiJudge', () => {
       (_input, init) => {
         const body = typeof init?.body === 'string' ? init.body : '';
         requestBody = JSON.parse(body) as unknown;
-        return Promise.resolve(Response.json({ score: 5 }));
+        return Promise.resolve(Response.json(geqiResponse(5)));
       },
     );
 
@@ -143,12 +172,15 @@ describe('runBenchUiJudge', () => {
         rawText: 'root = TextContent("Hello")',
         theme: 'light',
       },
+      includeGeqi: true,
       steps: [],
       task: 'Build a greeting',
       url: 'https://assets.test/openui.lynx.js',
     });
     expect(result).toEqual({
+      dimensions: geqiResponse(5).dimensions,
       errors: [],
+      geqiScore: 100,
       score: 5,
       status: 'complete',
       warnings: [],
@@ -175,7 +207,7 @@ describe('runBenchUiJudge', () => {
         }
         requestBody = JSON.parse(init.body) as unknown;
         return Promise.resolve(
-          Response.json({ score: 4, screenshotDataUrl }),
+          Response.json({ ...geqiResponse(4), screenshotDataUrl }),
         );
       },
     );
@@ -201,11 +233,16 @@ describe('runBenchUiJudge', () => {
           judgeUrl: 'http://judge.test/judge',
         },
       },
-      () => Promise.resolve(Response.json({ score: 4, screenshotDataUrl })),
+      () =>
+        Promise.resolve(
+          Response.json({ ...geqiResponse(4), screenshotDataUrl }),
+        ),
     );
 
     expect(result).toEqual({
+      dimensions: geqiResponse(4).dimensions,
       errors: [],
+      geqiScore: 80,
       score: 4,
       status: 'complete',
       warnings: [
@@ -248,8 +285,8 @@ describe('runBenchUiJudge', () => {
         requestBody = JSON.parse(init.body) as unknown;
         return Promise.resolve(
           Response.json({
+            ...geqiResponse(4),
             reason: 'The saved state is clear.',
-            score: 4,
             summary: 'Strong result.',
           }),
         );
@@ -271,13 +308,16 @@ describe('runBenchUiJudge', () => {
         speed: 0,
         theme: 'light',
       },
+      includeGeqi: true,
       steps: ['Tap Save'],
       task: 'The saved state is visible',
       timeoutMs: 45_000,
       url: 'https://assets.test/a2ui.lynx.js',
     });
     expect(result).toEqual({
+      dimensions: geqiResponse(4).dimensions,
       errors: [],
+      geqiScore: 80,
       reason: 'The saved state is clear.',
       score: 4,
       status: 'complete',
@@ -316,6 +356,63 @@ describe('runBenchUiJudge', () => {
       status: 'failed',
       warnings: [],
     });
+  });
+
+  test('rejects inconsistent GEQI weights', async () => {
+    const response = geqiResponse(4);
+    response.dimensions[0] = {
+      ...response.dimensions[0],
+      weight: 29,
+    };
+    const result = await runBenchUiJudge(
+      {
+        messages: [],
+        scenario: {
+          id: 'weather',
+          name: 'Weather',
+          prompt: 'Build a weather card',
+          type: 'Information',
+        },
+        session: {
+          bundleUrl: 'https://assets.test/a2ui.lynx.js',
+          judgeUrl: 'http://judge.test/judge',
+        },
+      },
+      () => Promise.resolve(Response.json(response)),
+    );
+
+    expect(result.status).toBe('failed');
+    expect(result.score).toBe(4);
+    expect(result.errors).toContain(
+      'ui-judge returned invalid usability-interaction score metadata.',
+    );
+  });
+
+  test('rejects an inconsistent GEQI aggregate', async () => {
+    const response = geqiResponse(4);
+    response.geqiScore = 79;
+    const result = await runBenchUiJudge(
+      {
+        messages: [],
+        scenario: {
+          id: 'weather',
+          name: 'Weather',
+          prompt: 'Build a weather card',
+          type: 'Information',
+        },
+        session: {
+          bundleUrl: 'https://assets.test/a2ui.lynx.js',
+          judgeUrl: 'http://judge.test/judge',
+        },
+      },
+      () => Promise.resolve(Response.json(response)),
+    );
+
+    expect(result.status).toBe('failed');
+    expect(result.score).toBe(4);
+    expect(result.errors).toContain(
+      'ui-judge returned an inconsistent GEQI score: 79 vs 80.',
+    );
   });
 
   test('maps non-success HTTP responses to run errors', async () => {
@@ -419,7 +516,7 @@ describe('runBenchUiJudge', () => {
           throw new Error('expected a JSON string request body');
         }
         requestBody = JSON.parse(init.body) as Record<string, unknown>;
-        return Promise.resolve(Response.json({ score: 3 }));
+        return Promise.resolve(Response.json(geqiResponse(3)));
       },
     );
 
@@ -446,7 +543,9 @@ describe('runBenchUiJudge', () => {
       { component: 'Loading', id: 'pie-chart', variant: 'block' },
     ]);
     expect(result).toEqual({
+      dimensions: geqiResponse(3).dimensions,
       errors: [],
+      geqiScore: 60,
       score: 3,
       status: 'complete',
       warnings: [
