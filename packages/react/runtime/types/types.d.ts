@@ -33,6 +33,13 @@ declare global {
   declare const __initMTSDefines: ((runtime: unknown) => void) | undefined;
   declare const __GLOBAL_PROPS_MODE__: 'reactive' | 'event' | undefined;
   declare const __LAZY_BUNDLE_FETCHER__: 'FetchBundle' | 'QueryComponent';
+  declare const __EXPERIMENTAL_TRANSFORM_BUILTIN_ATTRIBUTE_NAMES__:
+    | boolean
+    | {
+      mode?: 'dash-case' | 'mapping-only';
+      preserve?: ReadonlyArray<string>;
+      rename?: Readonly<Record<string, string>>;
+    };
 
   declare function __CreatePage(componentId: string, cssId: number): FiberElement;
   declare function __CreateElement(

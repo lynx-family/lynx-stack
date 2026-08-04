@@ -24,18 +24,23 @@ import type { RspackChain } from '@rsbuild/core'
  * @internal
  */
 
-// A named import of `Background` from `@lynx-js/react` (or a subpath such as
-// `@lynx-js/react/internal`), scoped to a *single* import statement: `[^}]*`
-// keeps the match inside one `{ … }` (it may span lines), and only whitespace
-// is allowed between `}` and `from`, so a `Background` imported from another
-// module never binds to a separate `@lynx-js/react` import.
-const BACKGROUND_IMPORT_RE =
-  /import[^{}]*\{[^}]*\bBackground\b[^}]*\}\s*from\s*['"]@lynx-js\/react(?:\/[^'"]*)?['"]/
-
-// The imported binding used as a JSX element somewhere in the module. The
-// import above already proved the binding is the runtime's, so any usage of
-// it is a boundary regardless of where it sits in the tree.
-const BACKGROUND_ELEMENT_RE = /<\s*Background[\s/>]/
+// `Background` bound from `@lynx-js/react` (or a subpath) by *any* statement
+// shape: a named import, an aliased one, a re-export, or a namespace import
+// of the package as a whole. `[^{}]*` keeps a braced match inside a single
+// `{ … }` so a `Background` from another module never binds to a separate
+// `@lynx-js/react` statement.
+const LYNX_REACT = String.raw`['"]@lynx-js\/react(?:\/[^'"]*)?['"]`
+// import { Background } / { Background as B } / export { Background } from …
+const NAMED = String.raw`(?:import|export)[^{}]*\{[^}]*\bBackground\b[^}]*\}`
+// import * as ReactLynx from … — the namespace carries `Background` too.
+const NAMESPACE = String.raw`import\s*\*\s*as\s+\w+`
+// export * from … — re-exports the boundary along with everything else.
+const STAR = String.raw`export\s*\*`
+const BACKGROUND_BINDING_RE = new RegExp(
+  [NAMED, NAMESPACE, STAR]
+    .map(shape => String.raw`${shape}\s*from\s*${LYNX_REACT}`)
+    .join('|'),
+)
 
 // Relative specifiers only: a boundary inside a dependency is not something
 // this app can act on, and walking `node_modules` at config time would cost
@@ -61,14 +66,24 @@ const RESOLVE_EXTENSIONS = [
 ]
 
 /**
- * Whether a single module's source uses a `<Background>` imported from the
- * runtime — at any position, not only the render root.
+ * Whether a single module binds `Background` from the runtime.
+ *
+ * Deliberately asks about the *binding*, not about a `<Background>` element:
+ * the answer only decides whether the entry is compiled for the main thread
+ * at all, and compiling it is the safe direction. Getting that wrong the
+ * other way is not a missed optimization but a blank first screen — the main
+ * thread would be left with nothing to render even though the app has a
+ * boundary the scan could not see through an alias, a namespace, a re-export
+ * or a computed element type.
+ *
+ * The cost of a false positive is close to nil: an entry with no boundary
+ * compiles exactly as it would have, and the assembled definitions subtract
+ * everything the main-thread bundle already owns, which is all of it.
  *
  * @internal
  */
 export function sourceHasBackground(source: string): boolean {
-  return BACKGROUND_IMPORT_RE.test(source)
-    && BACKGROUND_ELEMENT_RE.test(source)
+  return BACKGROUND_BINDING_RE.test(source)
 }
 
 /**
@@ -136,7 +151,8 @@ export function entryHasBackground(entryFile: string): boolean {
 }
 
 /**
- * Resolve the `enableMTSRendering` option to the boolean the build uses.
+ * Resolve the `experimental_enableMTSRendering` option to the boolean the
+ * build uses.
  *
  * - `true` — business code is compiled for the main thread and rendered
  *   there (the classic dual-thread build). A root-level `<Background>` still
@@ -181,7 +197,7 @@ export function resolveEnableMTSRendering(
  * keeps compiling and rendering everything around them.
  *
  * The fold and the assembled definitions do not depend on the main thread
- * being empty — `enableMTSRendering: false` merely happens to leave it that
+ * being empty — `experimental_enableMTSRendering: false` merely happens to leave it that
  * way. Turning them on under the classic build is what makes a boundary a
  * *hole* in a rendered tree rather than the whole first frame, and lets a
  * multi-entry build defer in one entry without emptying another's first
@@ -199,16 +215,16 @@ export function resolveBackgroundIslands(
     experimental_useElementTemplate: boolean
     enableSSR: boolean
   },
-  enableMTSRendering: boolean,
+  experimental_enableMTSRendering: boolean,
   isProd: boolean,
 ): boolean {
   if (!options.experimental_backgroundIslands || !isProd) {
     return false
   }
-  // `enableMTSRendering: false` already folds every boundary for the whole
+  // `experimental_enableMTSRendering: false` already folds every boundary for the whole
   // build; `pluginReactLynx` rejects the combination up front, and a `'auto'`
   // detection landing on it resolves here.
-  if (!enableMTSRendering) {
+  if (!experimental_enableMTSRendering) {
     return false
   }
   // Same demotions as the assembled bundle: neither backend can consume the
@@ -328,7 +344,7 @@ const noop = (): void => {
  */
 export function resolveMTSRendering(
   options: {
-    enableMTSRendering: boolean | 'auto'
+    experimental_enableMTSRendering: boolean | 'auto'
     experimental_useElementTemplate: boolean
     enableSSR: boolean
   },
@@ -337,11 +353,11 @@ export function resolveMTSRendering(
   rootPath: string,
   warn: (message: string) => void = noop,
 ): boolean {
-  if (typeof options.enableMTSRendering === 'boolean') {
+  if (typeof options.experimental_enableMTSRendering === 'boolean') {
     // The explicit switches skip detection entirely. `false` +
     // `experimental_useElementTemplate` is rejected eagerly by
     // `pluginReactLynx` before any hook runs.
-    return options.enableMTSRendering
+    return options.experimental_enableMTSRendering
   }
   if (!isProd) {
     return true
@@ -380,7 +396,7 @@ export function resolveMTSRendering(
         } defers nothing with a <Background>, but another `
           + `entry turned main-thread rendering off for this build — its first frame will be `
           + `empty until the background hydrates. Add a <Background fallback={…}> to it, `
-          + `or set \`enableMTSRendering: true\` to keep the classic build.`,
+          + `or set \`experimental_enableMTSRendering: true\` to keep the classic build.`,
       )
     }
   }

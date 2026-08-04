@@ -101,7 +101,7 @@ async function buildFixture(
   return assets
 }
 
-describe('root <Background> detection (enableMTSRendering: "auto")', () => {
+describe('root <Background> detection (experimental_enableMTSRendering: "auto")', () => {
   test('a root <Background> entry assembles the main-thread bundle by default', async () => {
     const assets = await buildFixture({ main: 'index.tsx' }, undefined)
 
@@ -161,10 +161,10 @@ describe('root <Background> detection (enableMTSRendering: "auto")', () => {
     expect(mainThread).toContain('no-background-entry')
   })
 
-  test('`enableMTSRendering: true` is the escape hatch back to the classic build', async () => {
+  test('`experimental_enableMTSRendering: true` is the escape hatch back to the classic build', async () => {
     const assets = await buildFixture(
       { main: 'index.tsx' },
-      { enableMTSRendering: true },
+      { experimental_enableMTSRendering: true },
     )
 
     const mainThread = assets['.rspeedy/main/main-thread.js']!
@@ -266,6 +266,31 @@ describe('root <Background> detection (enableMTSRendering: "auto")', () => {
     expect(both).toEqual([])
     expect(ids.some((id) => assembled.includes(id))).toBe(true)
     expect(ids.some((id) => rest.includes(id))).toBe(true)
+  })
+
+  test('does not cost the main thread its scope hoisting', async () => {
+    // The assembled bundle enters through the definitions runtime *and* the
+    // app's entry. Listing those as two entry imports is the obvious
+    // spelling, and it makes every module they share — the whole main-thread
+    // runtime — reachable from two concatenation roots, so it is emitted
+    // module by module instead of hoisted. The result was a main-thread
+    // chunk ~40 KB *larger* than the classic build it is supposed to shrink.
+    const [assembled, classic] = await Promise.all([
+      buildFixture({ main: 'index.tsx' }, undefined),
+      buildFixture({ main: 'index.tsx' }, {
+        experimental_enableMTSRendering: true,
+      }),
+    ])
+
+    const mainThread = assembled['.rspeedy/main/main-thread.js']!
+    expect(mainThread).toContain('__initMTSDefines')
+
+    // The fixture app is small, so what is left is the mode's fixed cost:
+    // the definitions runtime and the assembled block. A regression here is
+    // not subtle — losing concatenation costs an order of magnitude more.
+    const overhead = mainThread.length
+      - classic['.rspeedy/main/main-thread.js']!.length
+    expect(overhead).toBeLessThan(20_000)
   })
 
   test('warns on an entry left without a root <Background> in a multi-entry build', async () => {

@@ -92,14 +92,14 @@ async function mainThread(
 }
 
 const ISLANDS: PluginReactLynxOptions = {
-  enableMTSRendering: true,
+  experimental_enableMTSRendering: true,
   experimental_backgroundIslands: true,
 }
 
 describe('the fold\'s boundary', () => {
   test('eliminates top-level side effects when every reference is enclosed', async () => {
     const islands = await mainThread(ISLANDS)
-    const classic = await mainThread({ enableMTSRendering: true })
+    const classic = await mainThread({ experimental_enableMTSRendering: true })
 
     const enclosed = [
       // the deferred module's own top level
@@ -148,7 +148,7 @@ describe('the fold\'s boundary', () => {
     // What is left for `'background only'` to do: the reference survives, so
     // the module stays, but its render body does not have to.
     const islands = await mainThread(ISLANDS)
-    const classic = await mainThread({ enableMTSRendering: true })
+    const classic = await mainThread({ experimental_enableMTSRendering: true })
 
     for (const marker of ['MK_E_BODY_LOGIC', 'MK_F_BODY_LOGIC']) {
       expect(islands).not.toContain(marker)

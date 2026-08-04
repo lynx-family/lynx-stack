@@ -25,13 +25,13 @@ export function App() {
 
   return (
     <view className='App'>
-      <text className='Title'>enableMTSRendering: false</text>
+      <text className='Title'>experimental_enableMTSRendering: false</text>
       <text className='Description'>
         The main thread renders nothing: this UI is inserted by the background
         thread, using the snapshot and worklet definitions collected while
         compiling it.
       </text>
-      <view className='Card' main-thread:bindtap={onSpin}>
+      <view className='Card' flatten={false} main-thread:bindtap={onSpin}>
         <text className='Card__label'>Tap to spin on the main thread</text>
       </view>
       <view className='Card' bindtap={() => setCount(count + 1)}>

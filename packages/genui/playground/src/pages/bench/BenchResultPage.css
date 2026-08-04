@@ -137,14 +137,6 @@
   text-wrap: pretty;
 }
 
-.benchStudyHeroActions {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 12px 26px;
-  margin-top: 26px;
-}
-
-.benchStudyHeroActions a,
 .benchStudyFooter a {
   font-size: 12px;
   font-weight: 560;
@@ -154,7 +146,6 @@
   text-underline-offset: 4px;
 }
 
-.benchStudyHeroActions a:hover,
 .benchStudyFooter a:hover {
   text-decoration-color: currentcolor;
 }

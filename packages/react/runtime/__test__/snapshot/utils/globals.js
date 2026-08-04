@@ -152,6 +152,7 @@ function injectGlobals() {
   globalThis.__BACKGROUND_ISLANDS__ = false;
   globalThis.__FIRST_SCREEN_SYNC_TIMING__ = 'immediately';
   globalThis.__GLOBAL_PROPS_MODE__ = 'reactive';
+  globalThis.__EXPERIMENTAL_TRANSFORM_BUILTIN_ATTRIBUTE_NAMES__ = false;
   globalThis.globDynamicComponentEntry = '__Card__';
   globalThis.lynxCoreInject = {};
   globalThis.lynxCoreInject.tt = {

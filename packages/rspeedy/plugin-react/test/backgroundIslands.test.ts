@@ -4,11 +4,11 @@
 
 /**
  * `experimental_backgroundIslands`: the same `<Background>` fold as
- * `enableMTSRendering: false`, but with the main thread still compiling and
+ * `experimental_enableMTSRendering: false`, but with the main thread still compiling and
  * rendering everything around the boundaries.
  *
  * The two are told apart by what happens *outside* a boundary: under
- * `enableMTSRendering: false` the main thread compiles only the entry and its
+ * `experimental_enableMTSRendering: false` the main thread compiles only the entry and its
  * fallbacks, so an entry that defers nothing has an empty first frame. Under
  * this option it compiles the app as usual and each boundary is a hole in it.
  */
@@ -132,7 +132,7 @@ function definitionIds(source: string): Set<string> {
 }
 
 const ISLANDS: PluginReactLynxOptions = {
-  enableMTSRendering: true,
+  experimental_enableMTSRendering: true,
   experimental_backgroundIslands: true,
 }
 
@@ -143,7 +143,7 @@ describe('experimental_backgroundIslands', () => {
     expect(mainThread).toBeTypeOf('string')
 
     // Not deferred: still compiled for and rendered by the main thread. Under
-    // `enableMTSRendering: false` this only survives because it sits in the
+    // `experimental_enableMTSRendering: false` this only survives because it sits in the
     // entry's own closure; here it is ordinary main-thread business code.
     expect(mainThread).toContain('middle-not-deferred-logic')
 
@@ -179,7 +179,7 @@ describe('experimental_backgroundIslands', () => {
   })
 
   test('an entry that defers nothing is untouched', async () => {
-    // The reason this option exists next to `enableMTSRendering: false`: that
+    // The reason this option exists next to `experimental_enableMTSRendering: false`: that
     // mode applies to the whole build, so a second entry without a boundary
     // renders an empty first frame. Here it compiles and renders normally.
     const assets = await buildFixture(
@@ -205,7 +205,7 @@ describe('experimental_backgroundIslands', () => {
     // tree) and nothing in both (a definition registered twice).
     const islands = await buildFixture({ main: 'multi-island.tsx' }, ISLANDS)
     const classic = await buildFixture({ main: 'multi-island.tsx' }, {
-      enableMTSRendering: true,
+      experimental_enableMTSRendering: true,
     })
 
     const mainThread = islands['.rspeedy/main/main-thread.js']!
@@ -290,8 +290,8 @@ describe('experimental_backgroundIslands', () => {
     expect(() =>
       pluginReactLynx({
         experimental_backgroundIslands: true,
-        enableMTSRendering: false,
+        experimental_enableMTSRendering: false,
       })
-    ).toThrowError(/enableMTSRendering/)
+    ).toThrowError(/experimental_enableMTSRendering/)
   })
 })

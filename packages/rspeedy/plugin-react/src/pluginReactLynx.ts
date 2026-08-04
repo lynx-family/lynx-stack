@@ -146,9 +146,9 @@ export interface PluginReactLynxOptions {
    * `rename` take precedence over `preserve`, followed by the fallback behavior
    * selected by `mode`.
    *
-   * Currently, only explicit JSX attributes are transformed at compile time.
-   * Runtime transformation for JSX spread attributes is not supported yet and
-   * is planned for a future release.
+   * Explicit JSX attributes are transformed at compile time. Attributes
+   * supplied through JSX spreads are transformed at runtime with the same
+   * rules.
    *
    * @defaultValue `false`
    *
@@ -311,9 +311,9 @@ export interface PluginReactLynxOptions {
    *
    * @defaultValue `'auto'`
    *
-   * @public
+   * @experimental
    */
-  enableMTSRendering?: boolean | 'auto'
+  experimental_enableMTSRendering?: boolean | 'auto'
 
   /**
    * Compile `<Background>` subtrees out of the main-thread bundle while the
@@ -321,7 +321,7 @@ export interface PluginReactLynxOptions {
    *
    * @remarks
    *
-   * The same fold `enableMTSRendering: false` applies — each `<Background>`
+   * The same fold `experimental_enableMTSRendering: false` applies — each `<Background>`
    * is rewritten to its `fallback` on the main-thread target, so the deferred
    * subtree's module closure leaves that bundle and its element definitions
    * are assembled there from the background compilation instead. The
@@ -333,13 +333,13 @@ export interface PluginReactLynxOptions {
    *
    * | | main thread compiles | first frame |
    * |---|---|---|
-   * | `enableMTSRendering: false` | the entry and its fallbacks | the fallbacks |
+   * | `experimental_enableMTSRendering: false` | the entry and its fallbacks | the fallbacks |
    * | this option | everything except deferred subtrees | the app, with fallbacks in the holes |
    * | neither | everything | the app, `<Background>` renders its fallback at runtime |
    *
    * Reach for this when only part of the screen is deferred, or when a
    * multi-entry build has boundaries in some entries but not others —
-   * `enableMTSRendering: false` applies to the whole build, so an entry
+   * `experimental_enableMTSRendering: false` applies to the whole build, so an entry
    * without a boundary would render an empty first frame.
    *
    * @defaultValue `false`
@@ -479,7 +479,7 @@ export function pluginReactLynx(
     enableRemoveCSSScope: true,
     firstScreenSyncTiming: 'immediately',
     enableSSR: false,
-    enableMTSRendering: 'auto',
+    experimental_enableMTSRendering: 'auto',
     removeDescendantSelectorScope: true,
     shake: undefined,
     defineDCE: undefined,
@@ -505,11 +505,11 @@ export function pluginReactLynx(
   })
 
   if (
-    resolvedOptions.enableMTSRendering === false
+    resolvedOptions.experimental_enableMTSRendering === false
     && resolvedOptions.experimental_useElementTemplate
   ) {
     throw new Error(
-      '`enableMTSRendering: false` does not support `experimental_useElementTemplate` yet.',
+      '`experimental_enableMTSRendering: false` does not support `experimental_useElementTemplate` yet.',
     )
   }
 
@@ -519,9 +519,9 @@ export function pluginReactLynx(
         '`experimental_backgroundIslands` does not support `experimental_useElementTemplate` yet.',
       )
     }
-    if (resolvedOptions.enableMTSRendering === false) {
+    if (resolvedOptions.experimental_enableMTSRendering === false) {
       throw new Error(
-        '`experimental_backgroundIslands` conflicts with `enableMTSRendering: false`, which already '
+        '`experimental_backgroundIslands` conflicts with `experimental_enableMTSRendering: false`, which already '
           + 'folds every `<Background>` and assembles the definitions for the whole build. Drop one of them.',
       )
     }

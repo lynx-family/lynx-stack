@@ -113,9 +113,9 @@ export interface ReactLoaderOptions {
   experimental_useElementTemplate?: boolean | undefined;
 
   /**
-   * {@inheritdoc @lynx-js/react-rsbuild-plugin#PluginReactLynxOptions.enableMTSRendering}
+   * {@inheritdoc @lynx-js/react-rsbuild-plugin#PluginReactLynxOptions.experimental_enableMTSRendering}
    */
-  enableMTSRendering?: boolean | undefined;
+  experimental_enableMTSRendering?: boolean | undefined;
 
   /**
    * {@inheritdoc @lynx-js/react-rsbuild-plugin#PluginReactLynxOptions.experimental_backgroundIslands}
@@ -127,7 +127,8 @@ export interface ReactLoaderOptions {
  * Whether this compilation folds `<Background>` boundaries and moves the
  * deferred subtrees' definitions into the assembled section.
  *
- * True in both modes that do it: `enableMTSRendering: false`, where the main
+ * True in both modes that do it: `experimental_enableMTSRendering: false`,
+ * where the main
  * thread compiles only the entry and its fallbacks, and
  * `experimental_backgroundIslands`, where it compiles everything around the
  * boundaries as well. The transform work is identical — only how much is
@@ -139,12 +140,12 @@ export interface ReactLoaderOptions {
 function foldsBackgroundBoundaries(
   this: LoaderContext<ReactLoaderOptions>,
 ): boolean {
-  const { enableMTSRendering, experimental_backgroundIslands } = this
-    .getOptions();
+  const { experimental_enableMTSRendering, experimental_backgroundIslands } =
+    this.getOptions();
   if (this.hot) {
     return false;
   }
-  return enableMTSRendering === false
+  return experimental_enableMTSRendering === false
     || experimental_backgroundIslands === true;
 }
 
@@ -295,7 +296,7 @@ export function getMainThreadTransformOptions(
     ...commonOptions,
     // Folding the boundary here is what drops the `children` reference, and
     // with it the deferred subtree's module closure, from the main-thread
-    // bundle. Under `enableMTSRendering: false` that leaves only the entry
+    // bundle. Under `experimental_enableMTSRendering: false` that leaves only
     // and its fallbacks; under `experimental_backgroundIslands` everything
     // outside the boundaries stays and is compiled as usual.
     //

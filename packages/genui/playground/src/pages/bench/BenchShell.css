@@ -141,6 +141,39 @@ html[data-theme="dark"] .benchShellBrandMark img {
   gap: 2px;
 }
 
+.benchShellLocale {
+  height: 28px;
+  display: inline-flex;
+  align-items: center;
+  padding: 2px;
+  border: 1px solid var(--bench-line);
+  border-radius: 999px;
+}
+
+.benchShellLocale button {
+  min-width: 34px;
+  height: 22px;
+  padding: 0 7px;
+  border: 0;
+  border-radius: 999px;
+  background: transparent;
+  color: var(--bench-muted);
+  cursor: pointer;
+  font: inherit;
+  font-size: 10px;
+  font-weight: 600;
+  line-height: 1;
+}
+
+.benchShellLocale button.active {
+  background: var(--bench-ink);
+  color: var(--bench-bg);
+}
+
+.benchShellLocale button:hover:not(.active) {
+  color: var(--bench-ink);
+}
+
 .benchShellUtility {
   min-width: 44px;
   min-height: 44px;
@@ -216,6 +249,10 @@ html[data-theme="dark"] .benchShellBrandMark img {
   .benchShellUtilities {
     grid-column: 2;
     grid-row: 1;
+  }
+
+  .benchShellLocale {
+    height: 26px;
   }
 
   .benchShellNav {

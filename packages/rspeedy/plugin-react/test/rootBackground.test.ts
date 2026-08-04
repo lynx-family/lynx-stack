@@ -44,14 +44,37 @@ describe('sourceHasBackground', () => {
     `)).toBe(true)
   })
 
-  test('does not see an aliased element name — a known, safe blind spot', () => {
-    // The *fold* follows the import binding and handles this correctly; only
-    // this config-time scan matches the name literally. Missing it keeps the
-    // classic build, which is the harmless direction.
+  test('detects an aliased binding, whatever the element is called', () => {
+    // The scan asks about the *binding*, not the element name: the fold
+    // follows the import binding, so an alias defers exactly as much as the
+    // plain name does. Answering `false` here would leave the main thread
+    // with nothing to compile — a blank first screen, not a missed
+    // optimization.
     expect(sourceHasBackground(`
       import { Background as Boundary } from '@lynx-js/react'
       export const x = <Boundary fallback={<view/>}><App/></Boundary>
-    `)).toBe(false)
+    `)).toBe(true)
+  })
+
+  test('detects a namespace import — the namespace carries Background', () => {
+    expect(sourceHasBackground(`
+      import * as ReactLynx from '@lynx-js/react'
+      export const x = (
+        <ReactLynx.Background fallback={<view/>}><App/></ReactLynx.Background>
+      )
+    `)).toBe(true)
+  })
+
+  test('detects a re-export, which is how a barrel module passes it on', () => {
+    expect(sourceHasBackground(`
+      export { Background } from '@lynx-js/react'
+    `)).toBe(true)
+  })
+
+  test('detects an export-star of the runtime', () => {
+    expect(sourceHasBackground(`
+      export * from '@lynx-js/react'
+    `)).toBe(true)
   })
 
   test('detects a subpath import of Background', () => {
@@ -68,11 +91,24 @@ describe('sourceHasBackground', () => {
     `)).toBe(false)
   })
 
-  test('ignores an import that is never used as an element', () => {
+  test('does not let a Background from elsewhere bind to a runtime import', () => {
+    // `[^{}]*` keeps a braced match inside one `{ … }`, so the two statements
+    // below cannot be spliced into a single match.
+    expect(sourceHasBackground(`
+      import { Background } from './my-background.js'
+      import { root } from '@lynx-js/react'
+      root.render(<Background><App/></Background>)
+    `)).toBe(false)
+  })
+
+  test('detects a binding that is only re-exported, never rendered here', () => {
+    // A false positive costs close to nothing — the entry compiles as it
+    // would have, and the assembly subtracts what the main-thread bundle
+    // already owns — while a false negative costs the whole first frame.
     expect(sourceHasBackground(`
       import { Background } from '@lynx-js/react'
       export { Background }
-    `)).toBe(false)
+    `)).toBe(true)
   })
 
   test('ignores a module with no Background at all', () => {

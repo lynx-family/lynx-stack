@@ -105,8 +105,8 @@ describe('collectMTSDefines', () => {
     );
 
     const snapshot = mtsDefines.find(({ kind }) => kind === 'snapshot');
-    expect(snapshot.code).toContain('const el = __CreateView');
-    expect(snapshot.code).toContain('const el1 = __CreateText');
+    expect(snapshot.code).toContain('var el = __CreateView');
+    expect(snapshot.code).toContain('var el1 = __CreateText');
     expect(snapshot.code).toContain('__AppendElement(el, el1)');
   });
 
@@ -137,6 +137,7 @@ export function App() {
     const code = result.mtsDefines.map(define => define.code).join('\n');
     expect(code).not.toContain('?.');
     expect(code).not.toContain('??');
+    expect(code).not.toContain('const ');
     expect(code).not.toContain('current = v');
     expect(code).not.toContain('@swc/helpers');
   });
@@ -198,6 +199,23 @@ function f() {
 
     expect(result.errors).toHaveLength(1);
     expect(result.errors[0].text).toMatch(/runtime: 'shared'/);
+  });
+
+  it('is still left to the bundler when the main thread only reports ids', async () => {
+    // The hazard is relocation, not collection: on this target the
+    // definitions stay where they are — collection only reports which ids
+    // this bundle owns, so the import resolves as it always has. A
+    // `<Background>` fallback may therefore use a shared-runtime module.
+    const result = await transformReactLynx(
+      sharedSource,
+      options('LEPUS', {
+        collectMTSDefines: true,
+        foldBackgroundToFallback: true,
+      }),
+    );
+
+    expect(result.errors).toHaveLength(0);
+    expect(result.code).toContain('new Foo()');
   });
 });
 

@@ -2,6 +2,7 @@
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
 import { dirname } from 'node:path';
+import { fileURLToPath } from 'node:url';
 
 import { rspack } from '@rspack/core';
 import type { Configuration, Stats } from '@rspack/core';
@@ -9,7 +10,7 @@ import { describe, expect, test } from '@rstest/core';
 
 import { LynxEncodePlugin, LynxTemplatePlugin } from '../src/index.js';
 
-const context = dirname(new URL(import.meta.url).pathname);
+const context = dirname(fileURLToPath(import.meta.url));
 
 function runWebpack(config: Configuration): Promise<Stats> {
   const compiler = rspack(config);

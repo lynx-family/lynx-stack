@@ -234,8 +234,9 @@ pub struct TransformNodiffOptions {
    * `onCatchTap` becomes `catchtap`, other `onXXX` names become `bindxxx`,
    * and remaining camelCase names become dash-case. An object provides
    * serializable custom rules.
-   * Currently, only explicit JSX attributes are transformed during compilation.
-   * Runtime transformation of spread attributes is planned for a future release.
+   * Explicit JSX attributes are transformed during compilation. Attributes
+   * supplied through JSX spreads are transformed by the runtime with the same
+   * rules.
    *
    * @experimental
    */
@@ -345,6 +346,7 @@ fn lower_to_main_thread_syntax(
     compat::es2020::optional_chaining(Default::default(), unresolved_mark),
     compat::es2020::nullish_coalescing(Default::default()),
     compat::es2021::logical_assignments(),
+    compat::es2015::block_scoping(unresolved_mark),
     helpers::inject_helpers(unresolved_mark),
     hygiene_with_config(Config {
       top_level_mark,
