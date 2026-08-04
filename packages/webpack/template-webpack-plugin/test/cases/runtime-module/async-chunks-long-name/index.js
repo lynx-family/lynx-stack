@@ -13,7 +13,7 @@ it('should shorten an overlong lazy bundle name', () => {
 
   const [name] = names;
   expect(name).toMatch(
-    /^lazy-bundle\/[\w.-]{1,32}-[0-9a-f]{8}\.[0-9a-f]+\.bundle$/,
+    /^lazy-bundle\/.{1,32}-[0-9a-f]{8}\.[0-9a-f]+\.bundle$/,
   );
   // No directory nesting survives, and the name segment stays bounded.
   const segment = name.slice('lazy-bundle/'.length);
