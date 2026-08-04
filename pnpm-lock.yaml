@@ -1580,6 +1580,9 @@ importers:
       '@lynx-js/test-tools':
         specifier: workspace:*
         version: link:../../webpack/test-tools
+      '@microsoft/api-extractor':
+        specifier: 'catalog:'
+        version: 7.58.12(@types/node@24.13.3)
       '@rsbuild/core':
         specifier: catalog:rsbuild
         version: 2.1.7(core-js@3.49.0)
