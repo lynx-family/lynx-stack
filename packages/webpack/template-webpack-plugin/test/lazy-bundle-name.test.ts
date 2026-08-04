@@ -38,8 +38,8 @@ describe('resourcesToLazyBundleName', () => {
       context,
     );
 
-    expect(name).toMatch(/^(a{16}_)+Foo\.tsx-[0-9a-f]{8}$/);
-    expect(name.length).toBeLessThanOrEqual(112);
+    expect(name).toMatch(/^(a{16}_)+Foo\.tsx-[0-9a-f]{16}$/);
+    expect(name.length).toBeLessThanOrEqual(120);
     expect(name).not.toContain('/');
   });
 

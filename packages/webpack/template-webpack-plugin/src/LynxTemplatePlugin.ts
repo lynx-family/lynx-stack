@@ -1431,7 +1431,7 @@ function shortenLazyBundleName(name: string): string {
     }
     tail = longerTail;
   }
-  const digest = createHash('sha256').update(name).digest('hex').slice(0, 8);
+  const digest = createHash('sha256').update(name).digest('hex').slice(0, 16);
   return `${tail.replace(/\//g, '_')}-${digest}`;
 }
 
