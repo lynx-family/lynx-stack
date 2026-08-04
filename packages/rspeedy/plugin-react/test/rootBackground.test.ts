@@ -7,95 +7,97 @@ import { fileURLToPath } from 'node:url'
 import { describe, expect, test } from '@rstest/core'
 
 import {
+  entryHasBackground,
   resolveEnableMTSRendering,
-  sourceHasRootBackground,
+  sourceHasBackground,
 } from '../src/mtsRendering.js'
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url))
 const fixture = (name: string) =>
   path.resolve(__dirname, 'fixtures/root-background-detect', name)
 
-describe('sourceHasRootBackground', () => {
-  test('detects a root-level <Background> in render position', () => {
-    expect(sourceHasRootBackground(`
+describe('sourceHasBackground', () => {
+  test('detects a <Background> at the render root', () => {
+    expect(sourceHasBackground(`
       import { Background, root } from '@lynx-js/react'
       root.render(<Background fallback={<view/>}><App/></Background>)
     `)).toBe(true)
   })
 
-  test('detects it across multiple lines', () => {
-    expect(sourceHasRootBackground(`
-      import { Background, root } from '@lynx-js/react'
-      root.render(
-        <Background fallback={<view><text>Loading…</text></view>}>
-          <App/>
-        </Background>,
-      )
-    `)).toBe(true)
-  })
-
   test('detects it through a <page> host wrapper', () => {
-    expect(sourceHasRootBackground(`
+    expect(sourceHasBackground(`
       import { Background, root } from '@lynx-js/react'
       root.render(
         <page>
-          <Background fallback={<Skeleton />}>
-            <App/>
-          </Background>
+          <Background fallback={<Skeleton />}><App/></Background>
         </page>,
       )
     `)).toBe(true)
   })
 
-  test('ignores a component wrapper, which is not statically the root', () => {
-    expect(sourceHasRootBackground(`
-      import { Background, root } from '@lynx-js/react'
-      root.render(
-        <Shell>
-          <Background fallback={<Skeleton />}><App/></Background>
-        </Shell>,
-      )
+  test('detects one nested inside a component — position does not matter', () => {
+    expect(sourceHasBackground(`
+      import { Background } from '@lynx-js/react'
+      export function Middle() {
+        return <view><Background fallback={<Sk/>}><Feed/></Background></view>
+      }
+    `)).toBe(true)
+  })
+
+  test('does not see an aliased element name — a known, safe blind spot', () => {
+    // The *fold* follows the import binding and handles this correctly; only
+    // this config-time scan matches the name literally. Missing it keeps the
+    // classic build, which is the harmless direction.
+    expect(sourceHasBackground(`
+      import { Background as Boundary } from '@lynx-js/react'
+      export const x = <Boundary fallback={<view/>}><App/></Boundary>
     `)).toBe(false)
   })
 
   test('detects a subpath import of Background', () => {
-    expect(sourceHasRootBackground(`
-      import { root } from '@lynx-js/react'
+    expect(sourceHasBackground(`
       import { Background } from '@lynx-js/react/internal'
-      root.render(<Background fallback={<view/>}><App/></Background>)
+      export const x = <Background fallback={<view/>}><App/></Background>
     `)).toBe(true)
   })
 
-  test('detects a self-closing root <Background/>', () => {
-    expect(sourceHasRootBackground(`
-      import { Background, root } from '@lynx-js/react'
-      root.render(<Background fallback={<view/>}/>)
-    `)).toBe(true)
-  })
-
-  test('ignores a <Background> nested inside the app (a partial opt-out)', () => {
-    expect(sourceHasRootBackground(`
-      import { Background, root } from '@lynx-js/react'
-      function App() {
-        return <view><Background fallback={<text/>}><Feed/></Background></view>
-      }
-      root.render(<App/>)
-    `)).toBe(false)
-  })
-
-  test('ignores a <Background> not imported from @lynx-js/react', () => {
-    expect(sourceHasRootBackground(`
+  test('ignores a Background imported from elsewhere', () => {
+    expect(sourceHasBackground(`
       import { Background } from './my-background.js'
-      import { root } from '@lynx-js/react'
-      root.render(<Background><App/></Background>)
+      export const x = <Background><App/></Background>
     `)).toBe(false)
   })
 
-  test('ignores a plain root.render(<App/>)', () => {
-    expect(sourceHasRootBackground(`
+  test('ignores an import that is never used as an element', () => {
+    expect(sourceHasBackground(`
+      import { Background } from '@lynx-js/react'
+      export { Background }
+    `)).toBe(false)
+  })
+
+  test('ignores a module with no Background at all', () => {
+    expect(sourceHasBackground(`
       import { root } from '@lynx-js/react'
       root.render(<App/>)
     `)).toBe(false)
+  })
+})
+
+describe('entryHasBackground', () => {
+  test('finds a boundary in the entry itself', () => {
+    expect(entryHasBackground(fixture('root-background.jsx'))).toBe(true)
+  })
+
+  test('finds one reachable only through a relative import', () => {
+    expect(entryHasBackground(fixture('entry-importing-middle.jsx'))).toBe(true)
+  })
+
+  test('stays false for an app that defers nothing', () => {
+    expect(entryHasBackground(fixture('no-background.jsx'))).toBe(false)
+  })
+
+  test('stays false for an unreadable entry', () => {
+    expect(entryHasBackground('@lynx-js/react/refresh')).toBe(false)
   })
 })
 
@@ -134,12 +136,22 @@ describe('resolveEnableMTSRendering', () => {
     ).toBe(true)
   })
 
-  test('\'auto\' does not detect a nested <Background>', () => {
+  test('\'auto\' turns the mode on for a nested <Background> too', () => {
+    // Position does not change the mechanism: the boundary is folded where it
+    // sits, and only its own deferred subtree leaves the bundle.
     expect(
       resolveEnableMTSRendering('auto', true, [
         fixture('nested-background.jsx'),
       ]),
-    ).toBe(true)
+    ).toBe(false)
+  })
+
+  test('\'auto\' follows relative imports to find a boundary', () => {
+    expect(
+      resolveEnableMTSRendering('auto', true, [
+        fixture('entry-importing-middle.jsx'),
+      ]),
+    ).toBe(false)
   })
 
   test('\'auto\' does not detect a plain entry', () => {

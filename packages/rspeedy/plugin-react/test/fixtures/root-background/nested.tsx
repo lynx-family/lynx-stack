@@ -1,13 +1,15 @@
 import { Background, root } from '@lynx-js/react'
 
-// `<Background>` is used, but NOT at the render root: it keeps meaning
-// per-subtree runtime deferral and must not turn the whole-program mode on.
+import { FeedC } from './FeedC.js'
+
+// `<Background>` is not at the render root: it defers one subtree while the
+// header around it stays on the first screen.
 function App(): JSX.Element {
   return (
     <view>
       <text>header-on-the-first-screen</text>
       <Background fallback={<text>feed-skeleton</text>}>
-        <text>feed-from-the-background</text>
+        <FeedC />
       </Background>
     </view>
   )

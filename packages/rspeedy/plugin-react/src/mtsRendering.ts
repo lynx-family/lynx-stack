@@ -7,22 +7,19 @@ import path from 'node:path'
 import type { RspackChain } from '@rsbuild/core'
 
 /**
- * A root-level `<Background>` — `root.render(<Background …>…</Background>)` —
- * declares a 0.0 first screen: the whole app's first frame is the static
- * `fallback`, so no business code needs to *run* on the main thread. That is
- * the condition under which the main thread can stop compiling business code
- * altogether (`enableMTSRendering: false`, the assembled main-thread bundle
- * of #3284) — the mode becomes the implementation detail of the declarative
- * root `<Background>` API.
+ * A `<Background>` declares that its subtree does not participate in the
+ * first screen. On the main-thread target the transform folds the boundary to
+ * its `fallback`, so the deferred subtree's module closure leaves the
+ * main-thread bundle while the fallback is compiled for it as ordinary code.
  *
- * The runtime half of the declaration is always on — the `<Background>`
- * component renders its `fallback` on the main thread with no build support.
- * The compile-time half resolves here: `'auto'` (the default) lights the mode
- * up for production builds when a root-level `<Background>` is detected in
- * the entry sources; `false` forces the mode; `true` forces it off. A
- * `<Background>` nested *inside* the app keeps meaning per-subtree runtime
- * deferral and never appears in the entry's `.render(...)`, so detection
- * correctly ignores it.
+ * How much that removes depends on where the boundaries sit, not on how many
+ * there are: at the render root it takes the whole app, deeper in the tree it
+ * takes each deferred subtree and leaves everything around them — the same
+ * mechanism across the range, which is why detection only has to answer
+ * "does this app defer anything at all?".
+ *
+ * `'auto'` (the default) answers that from the entry's own module graph;
+ * `false` forces the mode; `true` forces it off.
  *
  * @internal
  */
@@ -35,23 +32,107 @@ import type { RspackChain } from '@rsbuild/core'
 const BACKGROUND_IMPORT_RE =
   /import[^{}]*\{[^}]*\bBackground\b[^}]*\}\s*from\s*['"]@lynx-js\/react(?:\/[^'"]*)?['"]/
 
-// `<Background>` at the root of a `.render(` call (`root.render(...)`,
-// `createRoot().render(...)`, …). Host-element wrappers are allowed in
-// between — `root.render(<page><Background …>…</page>)` is the idiomatic
-// shape — and only those: a JSX name starting with a lowercase letter is a
-// host element by the JSX rules, while a *component* wrapper would mean the
-// boundary is not statically at the root and must not be detected.
-const ROOT_BACKGROUND_RENDER_RE =
-  /\.render\(\s*(?:<[a-z][\w.-]*(?:\s[^>]*?)?>\s*)*<Background[\s/>]/
+// The imported binding used as a JSX element somewhere in the module. The
+// import above already proved the binding is the runtime's, so any usage of
+// it is a boundary regardless of where it sits in the tree.
+const BACKGROUND_ELEMENT_RE = /<\s*Background[\s/>]/
+
+// Relative specifiers only: a boundary inside a dependency is not something
+// this app can act on, and walking `node_modules` at config time would cost
+// far more than it can find.
+const RELATIVE_IMPORT_RE = /(?:import|export)[^'"]*?from\s*['"](\.[^'"]*)['"]/g
+
+// Depth is bounded so a deep or cyclic graph cannot stall the config phase.
+// Overrunning it only means the mode stays off — the safe direction.
+const MAX_SCAN_DEPTH = 12
+
+const RESOLVE_EXTENSIONS = [
+  '',
+  '.tsx',
+  '.ts',
+  '.jsx',
+  '.js',
+  '.mjs',
+  '.cjs',
+  '/index.tsx',
+  '/index.ts',
+  '/index.jsx',
+  '/index.js',
+]
 
 /**
- * Whether a single entry's source declares a root-level `<Background>`.
+ * Whether a single module's source uses a `<Background>` imported from the
+ * runtime — at any position, not only the render root.
  *
  * @internal
  */
-export function sourceHasRootBackground(source: string): boolean {
+export function sourceHasBackground(source: string): boolean {
   return BACKGROUND_IMPORT_RE.test(source)
-    && ROOT_BACKGROUND_RENDER_RE.test(source)
+    && BACKGROUND_ELEMENT_RE.test(source)
+}
+
+/**
+ * Resolve a relative import the way the bundler would, well enough to read
+ * it. A specifier that does not land on a readable file is skipped: the scan
+ * is an optimization hint, and a miss only keeps the classic build.
+ */
+function resolveRelative(
+  fromFile: string,
+  specifier: string,
+): string | undefined {
+  const base = path.resolve(path.dirname(fromFile), specifier)
+  // `./App.js` habitually refers to `./App.tsx` in this codebase's sources.
+  const withoutExt = base.replace(/\.(?:js|mjs|cjs)$/, '')
+  for (const candidate of [base, withoutExt]) {
+    for (const ext of RESOLVE_EXTENSIONS) {
+      const file = candidate + ext
+      try {
+        if (fs.statSync(file).isFile()) {
+          return file
+        }
+      } catch {
+        // Not this one.
+      }
+    }
+  }
+  return undefined
+}
+
+/**
+ * Whether an entry defers anything: a `<Background>` in the entry itself or
+ * in any module reachable from it through relative imports.
+ *
+ * @internal
+ */
+export function entryHasBackground(entryFile: string): boolean {
+  const visited = new Set<string>()
+
+  const walk = (file: string, depth: number): boolean => {
+    if (depth > MAX_SCAN_DEPTH || visited.has(file)) {
+      return false
+    }
+    visited.add(file)
+
+    const source = tryReadFile(file)
+    if (source === undefined) {
+      return false
+    }
+    if (sourceHasBackground(source)) {
+      return true
+    }
+
+    RELATIVE_IMPORT_RE.lastIndex = 0
+    let match: RegExpExecArray | null
+    while ((match = RELATIVE_IMPORT_RE.exec(source)) !== null) {
+      const next = resolveRelative(file, match[1]!)
+      if (next !== undefined && walk(next, depth + 1)) {
+        return true
+      }
+    }
+    return false
+  }
+
+  return walk(entryFile, 0)
 }
 
 /**
@@ -87,8 +168,7 @@ export function resolveEnableMTSRendering(
   }
 
   for (const file of entryFiles) {
-    const source = tryReadFile(file)
-    if (source !== undefined && sourceHasRootBackground(source)) {
+    if (entryHasBackground(file)) {
       return false
     }
   }
@@ -177,8 +257,7 @@ export function entriesDeclaringRootBackground(
     const [entryName, files] of collectEntryImportsByEntry(chain, rootPath)
   ) {
     for (const file of files) {
-      const source = tryReadFile(file)
-      if (source !== undefined && sourceHasRootBackground(source)) {
+      if (entryHasBackground(file)) {
         declaring.add(entryName)
         break
       }
@@ -223,23 +302,14 @@ export function resolveMTSRendering(
     return true
   }
 
-  const byEntry = collectEntryImportsByEntry(chain, rootPath)
-  const sourcesByEntry = new Map<string, string[]>()
-  let detected = false
-  for (const [entryName, files] of byEntry) {
-    const sources = files
-      .map(tryReadFile)
-      .filter((source): source is string => source !== undefined)
-    sourcesByEntry.set(entryName, sources)
-    detected ||= sources.some(sourceHasRootBackground)
-  }
-  if (!detected) {
+  const deferringEntries = entriesDeclaringRootBackground(chain, rootPath)
+  if (deferringEntries.size === 0) {
     return true
   }
 
   if (options.experimental_useElementTemplate) {
     warn(
-      'A root-level <Background> was detected, but `experimental_useElementTemplate` '
+      'A <Background> was detected, but `experimental_useElementTemplate` '
         + 'does not support disabling main-thread rendering yet — keeping the classic build. '
         + 'The <Background> fallback still renders on the main thread at runtime.',
     )
@@ -247,24 +317,24 @@ export function resolveMTSRendering(
   }
   if (options.enableSSR) {
     warn(
-      'A root-level <Background> was detected, but `enableSSR` '
+      'A <Background> was detected, but `enableSSR` '
         + 'does not support disabling main-thread rendering yet — keeping the classic build. '
         + 'The <Background> fallback still renders on the main thread at runtime.',
     )
     return true
   }
 
-  for (const [entryName, sources] of sourcesByEntry) {
-    if (!sources.some(sourceHasRootBackground)) {
+  for (const entryName of collectEntryImportsByEntry(chain, rootPath).keys()) {
+    if (!deferringEntries.has(entryName)) {
       // The mode applies to the whole build: an entry without a root
       // <Background> gets an empty first frame (the `fallback={null}`
       // degenerate case) — worth saying out loud under `'auto'`.
       warn(
         `Entry ${
           JSON.stringify(entryName)
-        } has no root-level <Background>, but another `
+        } defers nothing with a <Background>, but another `
           + `entry turned main-thread rendering off for this build — its first frame will be `
-          + `empty until the background hydrates. Add a root <Background fallback={…}> to it, `
+          + `empty until the background hydrates. Add a <Background fallback={…}> to it, `
           + `or set \`enableMTSRendering: true\` to keep the classic build.`,
       )
     }

@@ -5,6 +5,17 @@ import type { Chunk, Compilation, RuntimeModule } from '@rspack/core';
 
 export const MTS_DEFINES_BUILD_INFO = 'lynx:mts-defines';
 
+/**
+ * The `kind:id` keys a main-thread module already carries as real code.
+ *
+ * A `<Background>` fallback is compiled for the main thread, so its module
+ * lands in both graphs: the background collects its definitions like any
+ * other module's, and the main thread emits them itself. Assembling both
+ * would describe the same definition twice — once per island — so the
+ * assembly subtracts what the main-thread bundle already owns.
+ */
+export const MTS_DEFINES_OWNED_BUILD_INFO = 'lynx:mts-defines-owned';
+
 export interface MTSDefine {
   kind: 'snapshot' | 'worklet';
   id: string;
@@ -33,10 +44,43 @@ function collectFromModule(
   }
 }
 
+/**
+ * The `kind:id` keys the given modules already carry as real main-thread code.
+ */
+export function collectOwnedMTSDefineKeys<TChunk, TModule>(
+  chunks: Iterable<TChunk>,
+  getChunkModules: (chunk: TChunk) => Iterable<TModule>,
+): Set<string> {
+  const owned = new Set<string>();
+
+  const walk = (module: ModuleWithMTSDefines): void => {
+    const keys = module.buildInfo?.[MTS_DEFINES_OWNED_BUILD_INFO];
+    if (Array.isArray(keys)) {
+      for (const key of keys as string[]) {
+        owned.add(key);
+      }
+    }
+    if (module.modules) {
+      for (const nested of module.modules) {
+        walk(nested);
+      }
+    }
+  };
+
+  for (const chunk of chunks) {
+    for (const module of getChunkModules(chunk)) {
+      walk(module as ModuleWithMTSDefines);
+    }
+  }
+
+  return owned;
+}
+
 export function collectMTSDefines<TChunk, TModule>(
   chunks: Iterable<TChunk>,
   getChunkModules: (chunk: TChunk) => Iterable<TModule>,
   getModuleIdentifier: (module: TModule) => string,
+  owned?: ReadonlySet<string> | undefined,
 ): MTSDefine[] {
   const collected: MTSDefine[] = [];
   const visitedModules = new Set<string>();
@@ -55,6 +99,11 @@ export function collectMTSDefines<TChunk, TModule>(
   const defines = new Map<string, MTSDefine>();
   for (const define of collected) {
     const key = `${define.kind}:${define.id}`;
+    if (owned?.has(key)) {
+      // Already in the main-thread bundle as real code — an island's own
+      // definition. Describing it again would only grow the assembly.
+      continue;
+    }
     const seen = defines.get(key);
     if (seen === undefined) {
       defines.set(key, define);
@@ -144,12 +193,21 @@ export function createMTSDefinesRuntimeModule(
       }
 
       const { chunkGraph } = compilation;
+      const getModules = (chunk: Chunk) => chunkGraph.getChunkModules(chunk);
+
+      // What this main-thread chunk already carries as real code — the
+      // fallbacks it compiles — so the assembly describes only the deferred
+      // subtrees it does not.
+      const owned = this.chunk
+        ? collectOwnedMTSDefineKeys([this.chunk as Chunk], getModules)
+        : new Set<string>();
 
       return renderMTSDefines(
         collectMTSDefines(
           entrypoint.chunks,
-          (chunk: Chunk) => chunkGraph.getChunkModules(chunk),
+          getModules,
           (module) => module.identifier(),
+          owned,
         ),
       );
     }

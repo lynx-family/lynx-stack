@@ -7,6 +7,7 @@ import type { LoaderContext, LoaderDefinitionFunction } from '@rspack/core';
 
 import { UI_SOURCE_MAP_RECORDS_BUILD_INFO } from '@lynx-js/debug-metadata';
 
+import { MTS_DEFINES_OWNED_BUILD_INFO } from '../MTSDefinesRuntimeModule.js';
 import { getMainThreadTransformOptions } from './options.js';
 import type { ReactLoaderOptions } from './options.js';
 
@@ -103,6 +104,16 @@ const mainThreadLoader: LoaderDefinitionFunction<ReactLoaderOptions> = function(
     | undefined;
   if (buildInfo) {
     buildInfo[UI_SOURCE_MAP_RECORDS_BUILD_INFO] = result.uiSourceMapRecords;
+    // The definitions this module already carries as real main-thread code.
+    // The assembled definitions subtract them, so a module that survives into
+    // the main-thread bundle is not also described by the assembly.
+    if (result.mtsDefines) {
+      buildInfo[MTS_DEFINES_OWNED_BUILD_INFO] = result.mtsDefines.map((
+        { kind, id },
+      ) => `${kind}:${id}`);
+    } else {
+      delete buildInfo[MTS_DEFINES_OWNED_BUILD_INFO];
+    }
     if (result.elementTemplates && result.elementTemplates.length > 0) {
       buildInfo[ELEMENT_TEMPLATE_BUILD_INFO] = result.elementTemplates;
     } else {

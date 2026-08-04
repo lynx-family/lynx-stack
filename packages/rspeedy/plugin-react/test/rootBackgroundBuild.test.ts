@@ -135,16 +135,30 @@ describe('root <Background> detection (enableMTSRendering: "auto")', () => {
     expect(mainThread).not.toContain('HeavyApp')
   })
 
-  test('a nested <Background> does not turn the mode on', async () => {
+  test('a nested <Background> turns the mode on and defers only its own subtree', async () => {
     const assets = await buildFixture({ main: 'nested.tsx' }, undefined)
 
     const mainThread = assets['.rspeedy/main/main-thread.js']!
     expect(mainThread).toBeTypeOf('string')
 
-    // The classic dual-thread build: business code is compiled for the main
-    // thread, and no assembled-defines runtime exists.
-    expect(mainThread).not.toContain('__initMTSDefines')
+    // Position does not change the mechanism — the boundary is folded where
+    // it sits, so the mode is on...
+    expect(mainThread).toContain('__initMTSDefines')
+    // ...the surrounding first-screen content is compiled for the main
+    // thread, as is the boundary's fallback...
     expect(mainThread).toContain('header-on-the-first-screen')
+    expect(mainThread).toContain('feed-skeleton')
+    // ...and only the deferred subtree's logic is gone (its element
+    // definitions still travel here for hydration).
+    expect(mainThread).not.toContain('feed-C-deferred-logic')
+  })
+
+  test('an app that defers nothing keeps the classic build', async () => {
+    const assets = await buildFixture({ main: 'no-background.tsx' }, undefined)
+
+    const mainThread = assets['.rspeedy/main/main-thread.js']!
+    expect(mainThread).not.toContain('__initMTSDefines')
+    expect(mainThread).toContain('no-background-entry')
   })
 
   test('`enableMTSRendering: true` is the escape hatch back to the classic build', async () => {
@@ -186,11 +200,79 @@ describe('root <Background> detection (enableMTSRendering: "auto")', () => {
     expect(warnings().join('\n')).not.toMatch(/user component/)
   })
 
+  test('folds every boundary where it stands, however many there are', async () => {
+    const assets = await buildFixture({ main: 'multi-island.tsx' }, undefined)
+
+    const mainThread = assets['.rspeedy/main/main-thread.js']!
+
+    // Three boundaries with no tree relationship between them: two siblings
+    // under the page and one inside a component that is itself first-screen
+    // content. Every fallback is compiled for the main thread...
+    for (const island of ['A', 'B', 'C']) {
+      expect(mainThread).toContain(`skeleton-${island}-logic`)
+    }
+    // ...the component that positions the third one comes along, because it
+    // is not deferred and has to render...
+    expect(mainThread).toContain('middle-not-deferred-logic')
+    // ...and each deferred subtree's logic is gone.
+    for (const feed of ['A', 'B', 'C']) {
+      expect(mainThread).not.toContain(`feed-${feed}-deferred-logic`)
+    }
+  })
+
+  test('a boundary reachable only through an import still turns the mode on', async () => {
+    // The entry has no `<Background>` of its own — detection follows its
+    // relative imports to the one inside `Middle`.
+    const assets = await buildFixture({ main: 'middle-only.tsx' }, undefined)
+
+    const mainThread = assets['.rspeedy/main/main-thread.js']!
+    expect(mainThread).toContain('__initMTSDefines')
+    expect(mainThread).toContain('skeleton-C-logic')
+    expect(mainThread).not.toContain('feed-C-deferred-logic')
+  })
+
+  test('does not describe a fallback the main-thread bundle already carries', async () => {
+    const assets = await buildFixture({ main: 'multi-island.tsx' }, undefined)
+
+    const mainThread = assets['.rspeedy/main/main-thread.js']!
+    const start = mainThread.indexOf('__initMTSDefines')
+    expect(start).toBeGreaterThan(-1)
+
+    // Walk to the end of the assembled-definitions function.
+    let depth = 0
+    let end = -1
+    for (let i = mainThread.indexOf('{', start); i < mainThread.length; i++) {
+      const ch = mainThread[i]
+      if (ch === '{') depth++
+      else if (ch === '}') {
+        depth--
+        if (depth === 0) {
+          end = i
+          break
+        }
+      }
+    }
+    const assembled = mainThread.slice(start, end + 1)
+    const rest = mainThread.slice(0, start) + mainThread.slice(end + 1)
+
+    const ids = [
+      ...new Set(mainThread.match(/__snapshot_[0-9a-f]+_[0-9a-f]+_\d+/g) ?? []),
+    ]
+    expect(ids.length).toBeGreaterThan(0)
+
+    // Every definition is described once: either the main thread compiles it
+    // (an island) or the assembly carries it (a deferred subtree).
+    const both = ids.filter((id) => assembled.includes(id) && rest.includes(id))
+    expect(both).toEqual([])
+    expect(ids.some((id) => assembled.includes(id))).toBe(true)
+    expect(ids.some((id) => rest.includes(id))).toBe(true)
+  })
+
   test('warns on an entry left without a root <Background> in a multi-entry build', async () => {
     const warnings = collectWarnings()
 
     const assets = await buildFixture(
-      { first: 'index.tsx', second: 'nested.tsx' },
+      { first: 'index.tsx', second: 'no-background.tsx' },
       undefined,
     )
 
@@ -202,7 +284,7 @@ describe('root <Background> detection (enableMTSRendering: "auto")', () => {
       '__initMTSDefines',
     )
     expect(warnings().join('\n')).toMatch(
-      /"second"[\s\S]*no root-level <Background>/,
+      /"second"[\s\S]*defers nothing with a <Background>/,
     )
   })
 })
