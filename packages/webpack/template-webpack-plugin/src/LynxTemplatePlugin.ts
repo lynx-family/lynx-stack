@@ -1419,21 +1419,9 @@ function collectChunkGroupResources(
   );
 }
 
-// A lazy bundle name ends up as a path on the device's file system, where an
-// offline package unpacks it. Resolved module paths are unbounded — a pnpm
-// virtual store directory alone can be 200+ characters — so past this limit the
-// name is replaced by a readable label plus a digest. Names below it keep their
-// full path, so existing output names are unaffected.
 const LAZY_BUNDLE_NAME_LIMIT = 100;
 
-/**
- * Shorten a lazy bundle name to a single bounded segment. The digest is taken
- * over the full name, so the result stays unique, stable across builds, and
- * identical for the main-thread and background chunks of one lazy bundle.
- */
 function shortenLazyBundleName(name: string): string {
-  // Keep the file name, which identifies the module and is short in practice,
-  // and drop the directories — the unbounded part.
   const label = name.slice(name.lastIndexOf('/') + 1);
   const digest = createHash('sha256').update(name).digest('hex').slice(0, 8);
   return `${label}-${digest}`;
