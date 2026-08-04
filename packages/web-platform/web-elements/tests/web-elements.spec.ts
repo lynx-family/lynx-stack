@@ -2258,6 +2258,40 @@ test.describe('web-elements test suite', () => {
         await expect(scrolled).toBe(4);
       },
     );
+    test('auto-scroll-follows-orientation', async ({ page }) => {
+      await gotoWebComponentPage(page, 'x-list/scroll-orientation');
+      const scrollByCalls = await page.evaluate(() => {
+        const calls: Record<string, ScrollToOptions> = {};
+        return new Promise<Record<string, ScrollToOptions>>((resolve) => {
+          for (const id of ['vertical', 'horizontal']) {
+            const list = document.querySelector(`#${id}`) as any;
+            const content = list.shadowRoot.querySelector('#content');
+            content.scrollBy = (options: ScrollToOptions) => {
+              calls[id] = options;
+              if (Object.keys(calls).length !== 2) return;
+              for (const id of ['vertical', 'horizontal']) {
+                (document.querySelector(`#${id}`) as any).autoScroll({
+                  rate: 100,
+                  start: false,
+                });
+              }
+              resolve(calls);
+            };
+            list.autoScroll({ rate: 100, start: true });
+          }
+        });
+      });
+      expect(scrollByCalls['vertical']).toEqual(expect.objectContaining({
+        left: 0,
+        top: expect.any(Number),
+      }));
+      expect(scrollByCalls['vertical']!.top).toBeGreaterThan(0);
+      expect(scrollByCalls['horizontal']).toEqual(expect.objectContaining({
+        left: expect.any(Number),
+        top: 0,
+      }));
+      expect(scrollByCalls['horizontal']!.left).toBeGreaterThan(0);
+    });
     test(
       'get-visible-cells',
       async ({ page, browserName }, { titlePath }) => {
@@ -2320,7 +2354,7 @@ test.describe('web-elements test suite', () => {
           return (document.querySelector('x-list') as any)?.scrollWidth;
         });
         expect(
-          typeof info2 === 'object' && info2.scrollLeft === 200
+          typeof info2 === 'object' && info2.scrollLeft === 0
             && info2.scrollTop === 200 && info2.scrollHeight !== 0
             && info2.scrollWidth !== 0,
         ).toBeTruthy();
@@ -2328,6 +2362,20 @@ test.describe('web-elements test suite', () => {
         expect(scrollWidth2).toBe(info2.scrollWidth);
       },
     );
+    test('get-scroll-container-info-horizontal', async ({ page }) => {
+      await gotoWebComponentPage(page, 'x-list/scroll-orientation');
+      const info = await page.locator('#horizontal').evaluate(
+        (element: any) => {
+          const content = element.shadowRoot.querySelector('#content');
+          content.scrollLeft = 200;
+          return element.getScrollContainerInfo();
+        },
+      );
+      expect(info).toEqual(expect.objectContaining({
+        scrollLeft: 200,
+        scrollTop: 0,
+      }));
+    });
 
     test('recyclable-false', async ({ page }, { titlePath }) => {
       const title = getTitle(titlePath);
