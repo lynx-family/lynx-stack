@@ -105,8 +105,8 @@ describe('collectMTSDefines', () => {
     );
 
     const snapshot = mtsDefines.find(({ kind }) => kind === 'snapshot');
-    expect(snapshot.code).toContain('const el = __CreateView');
-    expect(snapshot.code).toContain('const el1 = __CreateText');
+    expect(snapshot.code).toContain('var el = __CreateView');
+    expect(snapshot.code).toContain('var el1 = __CreateText');
     expect(snapshot.code).toContain('__AppendElement(el, el1)');
   });
 
@@ -137,6 +137,7 @@ export function App() {
     const code = result.mtsDefines.map(define => define.code).join('\n');
     expect(code).not.toContain('?.');
     expect(code).not.toContain('??');
+    expect(code).not.toContain('const ');
     expect(code).not.toContain('current = v');
     expect(code).not.toContain('@swc/helpers');
   });

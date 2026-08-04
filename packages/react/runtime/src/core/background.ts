@@ -102,7 +102,8 @@ export interface BackgroundProps {
  * ```
  *
  * A production build detects the root-level `<Background>` and stops compiling
- * the *deferred* subtree for the main thread (see the `enableMTSRendering`
+ * the *deferred* subtree for the main thread (see the
+ * `experimental_enableMTSRendering`
  * option of `pluginReactLynx`): the boundary is folded to its `fallback` at
  * compile time, so `children` — and the module closure reachable only through
  * it — never enters the main-thread bundle, while the app's element

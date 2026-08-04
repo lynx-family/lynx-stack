@@ -7,7 +7,7 @@
 //! `<Background fallback={F}>{C}</Background>` renders `F` on the main thread
 //! and `C` on the background thread — that is the component's runtime
 //! semantics. When the main thread compiles no business code of its own
-//! (`enableMTSRendering: false`), the *reference* to `C` is what keeps the
+//! (`experimental_enableMTSRendering: false`), the *reference* to `C` is what keeps the
 //! whole app in the main-thread module graph, so the same decision is made
 //! here at compile time instead:
 //!
@@ -153,7 +153,8 @@ impl BackgroundFallbackVisitor {
             handler
               .struct_span_err(
                 spread.span(),
-                "`enableMTSRendering: false` does not support a spread on `<Background>`: the \
+                "`experimental_enableMTSRendering: false` does not support a spread on \
+                 `<Background>`: the \
                  main thread compiles no business code, so its `fallback` has to be resolvable \
                  at compile time. Pass `fallback` as an explicit attribute.",
               )

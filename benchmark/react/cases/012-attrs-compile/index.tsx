@@ -15,13 +15,13 @@ function App() {
       {Array.from({ length: ELEMENT_COUNT }, () => (
         <text
           textMaxline='2'
-          text-maxlength='128'
+          textMaxlength='128'
           enableFontScaling={false}
-          text-vertical-align='center'
+          textVerticalAlign='center'
           tailColorConvert={false}
-          include-font-padding={false}
+          includeFontPadding={false}
           textFakeBold={false}
-          text-selection={false}
+          textSelection={false}
           onClick={handleClick}
         />
       ))}

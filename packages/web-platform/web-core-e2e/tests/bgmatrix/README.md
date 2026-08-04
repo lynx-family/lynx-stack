@@ -7,7 +7,7 @@ LICENSE file in the root directory of this source tree.
 # The `<Background>` matrix
 
 Every position, import shape and fallback shape a `<Background>` can take,
-built under all three `enableMTSRendering` settings and captured twice: once
+built under all three `experimental_enableMTSRendering` settings and captured twice: once
 with the background thread held, which is the frame the main thread produced
 on its own (MTR), and once after releasing it (BTR).
 
@@ -25,7 +25,7 @@ node tests/bgmatrix.report.mjs                # → bgmatrix-report/index.html
 
 Three things are deliberate about the build step:
 
-- **One build per permutation.** `enableMTSRendering` is a property of the
+- **One build per permutation.** `experimental_enableMTSRendering` is a property of the
   build, so batching the cases would let one case's detection decide another's
   mode — every "did detection see this shape?" answer would be a sibling's.
 - **Both targets.** The web bundle packs both threads into one artifact, so it

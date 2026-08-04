@@ -162,6 +162,13 @@ impl ModelOptions {
   }
 }
 
+pub(crate) fn configured_model_name() -> String {
+  ModelOptions::from_env()
+    .ok()
+    .and_then(|options| options.model)
+    .unwrap_or_else(|| DEFAULT_MODEL.to_string())
+}
+
 #[derive(Clone)]
 pub struct ModelClient {
   mock_response: Option<String>,
@@ -357,15 +364,25 @@ impl LlmProvider for OpenAiCompatibleProvider {
     };
     let mut reply = self.post_json(&body).await?;
 
-    // A number of otherwise OpenAI-compatible gateways predate JSON-schema
-    // wire constraints. Keep the SDK's local validation while retrying once
-    // without that optional wire constraint when the gateway says so.
-    if reply.status.is_client_error()
-      && has_structured_format(self.api, &body)
-      && response_format_is_unsupported(&reply.body)
-    {
-      remove_structured_format(self.api, &mut body);
-      reply = self.post_json(&body).await?;
+    // Some OpenAI-compatible models accept only their default temperature,
+    // while older gateways may reject JSON-schema wire constraints. Keep the
+    // SDK's local structured validation and retry only after an explicit
+    // compatibility error, removing at most one optional field per retry.
+    for _ in 0..2 {
+      if !reply.status.is_client_error() {
+        break;
+      }
+      if body.get("temperature").is_some() && temperature_is_unsupported(&reply.body) {
+        remove_temperature(&mut body);
+        reply = self.post_json(&body).await?;
+        continue;
+      }
+      if has_structured_format(self.api, &body) && response_format_is_unsupported(&reply.body) {
+        remove_structured_format(self.api, &mut body);
+        reply = self.post_json(&body).await?;
+        continue;
+      }
+      break;
     }
 
     http_reply_to_outcome(reply, &self.model, self.api)
@@ -753,6 +770,12 @@ fn remove_structured_format(api: ModelApi, body: &mut Value) {
   }
 }
 
+fn remove_temperature(body: &mut Value) {
+  if let Some(object) = body.as_object_mut() {
+    object.remove("temperature");
+  }
+}
+
 fn wire_message(message: &Message) -> Value {
   json!({
     "role": match message.role {
@@ -1113,6 +1136,14 @@ fn family_avoids_openai_response_format(family: &str) -> bool {
 fn response_format_is_unsupported(body: &str) -> bool {
   let body = body.to_ascii_lowercase();
   body.contains("response_format") || body.contains("json_schema")
+}
+
+fn temperature_is_unsupported(body: &str) -> bool {
+  let body = body.to_ascii_lowercase();
+  body.contains("temperature")
+    && (body.contains("unsupported")
+      || body.contains("does not support")
+      || body.contains("only the default"))
 }
 
 fn parse_retry_after_seconds(value: &str) -> Option<Duration> {
@@ -1504,5 +1535,16 @@ mod tests {
     assert!(!response_format_is_unsupported(
       r#"{"error":"unknown model"}"#
     ));
+  }
+
+  #[test]
+  fn marks_only_temperature_compatibility_errors_for_retry() {
+    assert!(temperature_is_unsupported(
+      r#"{"error":"Unsupported value: temperature only supports the default"}"#
+    ));
+    assert!(temperature_is_unsupported(
+      r#"{"error":"temperature does not support 0.0"}"#
+    ));
+    assert!(!temperature_is_unsupported(r#"{"error":"unknown model"}"#));
   }
 }

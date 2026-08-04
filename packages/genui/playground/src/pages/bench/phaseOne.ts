@@ -2,6 +2,8 @@
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
 
+import type { BenchLocale } from './benchLocale.js';
+
 export type BenchMetricKey =
   | 'totalTokens'
   | 'agentMs'
@@ -67,7 +69,7 @@ export interface BenchScenario {
   id: string;
   name: string;
   businessMode: string;
-  complexity: '低' | '中' | '高';
+  complexity: 'High' | 'Low' | 'Medium' | '低' | '中' | '高';
   interaction: string;
   prompt: string;
   purpose: string;
@@ -83,7 +85,7 @@ export interface BenchRecommendation {
   title: string;
   summary: string;
   combination: readonly {
-    dimension: '模型' | 'Prompt' | 'Catalog';
+    dimension: 'Catalog' | 'Model' | 'Prompt' | '模型';
     comparisonId: string;
     label: string;
   }[];
@@ -128,7 +130,7 @@ export const PHASE_ONE_BENCH = {
   scope: {
     runs: 30,
     scenarios: 3,
-    models: 4,
+    models: 3,
     prompts: 3,
     catalogs: 3,
   },
@@ -273,24 +275,6 @@ export const PHASE_ONE_BENCH = {
             fmpMs: 141,
             ttiMs: 1421,
             judge: 3,
-            attempts: 1.7,
-            success: 100,
-          },
-        },
-        {
-          id: 'doubao-seed-code',
-          name: 'doubao-seed-code',
-          tone: 'warning',
-          descriptor: 'Tokens 与 UI Judge 均不占优',
-          strength: '3 个场景均完成，平均 Tokens 为 16.4k。',
-          risk: 'UI Judge 得分平均 2.3/5，为模型组最低；Agent 耗时 42.8s。',
-          metrics: {
-            totalTokens: 16435,
-            agentMs: 42790,
-            renderMs: 9,
-            fmpMs: 128,
-            ttiMs: 1427,
-            judge: 2.3,
             attempts: 1.7,
             success: 100,
           },
@@ -535,3 +519,288 @@ export const PHASE_ONE_BENCH = {
     'UI Judge 由模型自动评分，只适合横向比较与基础合理性检查，不能替代人工 UI 评审。',
   ],
 } as const satisfies PhaseOneBench;
+
+type PhaseOneHighlightId = typeof PHASE_ONE_BENCH.highlights[number]['id'];
+type PhaseOneMethodItemId =
+  typeof PHASE_ONE_BENCH.methodology.items[number]['id'];
+type PhaseOneScenarioId = typeof PHASE_ONE_BENCH.scenarios[number]['id'];
+
+interface ComparisonCopy {
+  fixedCondition: string;
+  rows: Record<
+    string,
+    {
+      descriptor: string;
+      risk: string;
+      strength: string;
+    }
+  >;
+  title: string;
+  variable: string;
+}
+
+const ENGLISH_HIGHLIGHTS = {
+  'lowest-model-cost': {
+    title: 'Model: lowest average token usage',
+    metricLabel: 'Average tokens',
+    detail:
+      'Used the fewest average tokens in the model comparison and tied for the highest UI Judge score.',
+  },
+  'fastest-model': {
+    title: 'Model: lowest agent latency',
+    metricLabel: 'Average agent latency',
+    detail:
+      'Recorded the lowest average agent latency in the model comparison, but used more tokens than gpt-5.5.',
+  },
+  'best-prompt': {
+    title: 'System Prompt: best overall',
+    metricLabel: 'UI Judge score',
+    detail:
+      'Averaged 8.3k tokens and 24.4s of agent latency, outperforming the baseline on all three primary metrics.',
+  },
+  'best-catalog': {
+    title: 'Catalog: best token usage and UI Judge score',
+    metricLabel: 'UI Judge score',
+    detail:
+      'Averaged 7.9k tokens with a six-component Catalog, although agent latency was not the lowest in the group.',
+  },
+} as const satisfies Record<
+  PhaseOneHighlightId,
+  {
+    detail: string;
+    metricLabel: string;
+    title: string;
+  }
+>;
+
+const ENGLISH_COMPARISONS: Record<
+  BenchComparison['id'],
+  ComparisonCopy
+> = {
+  models: {
+    title: 'Experiment A · Model comparison',
+    variable: 'Model',
+    fixedCondition:
+      'Default A2UI Prompt as the System Prompt and the full base Catalog.',
+    rows: {
+      'deepseek-coder': {
+        descriptor: 'Lowest agent latency',
+        strength:
+          'Average agent latency was 13.9s, the lowest in the model group.',
+        risk:
+          'Average token usage was 15.4k, higher than gpt-5.5; the UI Judge score was 3.0/5.',
+      },
+      'gemini-3-pro': {
+        descriptor: 'Tied UI Judge score, highest token usage and latency',
+        strength:
+          'Averaged 3.0/5 on UI Judge, tied for the highest score in the model group.',
+        risk:
+          'Averaged 22.9k tokens, 61.1s of agent latency, and 2.0 generation attempts.',
+      },
+      'gpt-5-5': {
+        descriptor: 'Lowest token usage, tied for highest UI Judge score',
+        strength:
+          'Averaged 9.3k tokens and 3.0/5 on UI Judge; all three scenarios completed in one attempt.',
+        risk:
+          'Average agent latency was 37.8s. When low latency is the priority, deepseek-coder is faster.',
+      },
+    },
+  },
+  prompts: {
+    title: 'Experiment B · System Prompt comparison',
+    variable: 'System Prompt',
+    fixedCondition:
+      'gpt-5.5-2026-04-24 as the model and the full base Catalog.',
+    rows: {
+      baseline: {
+        descriptor: 'Default A2UI Prompt',
+        strength:
+          'Averaged 3.0/5 on UI Judge and provides a useful default baseline.',
+        risk:
+          'Averaged 12.6k tokens, 41.3s of agent latency, and 1.3 attempts; some runs triggered Repair.',
+      },
+      'token-efficient': {
+        descriptor: 'Best overall result in this round',
+        strength:
+          'Averaged 4.0/5 on UI Judge while reducing token usage to 8.3k and agent latency to 24.4s.',
+        risk:
+          'The output is more restrained. For richer visual expression, restore visual constraints one at a time and revalidate.',
+      },
+      'visual-polish': {
+        descriptor: 'Lower UI Judge score after adding visual requirements',
+        strength:
+          'Averaged 9.7k tokens, and all three scenarios completed in one attempt.',
+        risk:
+          'Averaged only 1.7/5 on UI Judge while agent latency rose to 40.7s.',
+      },
+    },
+  },
+  catalogs: {
+    title: 'Experiment C · Catalog comparison',
+    variable: 'Catalog',
+    fixedCondition:
+      'gpt-5.5-2026-04-24 as the model and Default A2UI Prompt as the System Prompt.',
+    rows: {
+      'full-catalog': {
+        descriptor: '19 components · full base Catalog',
+        strength:
+          'Includes all 19 base components, and all three scenarios completed in one attempt.',
+        risk:
+          'Averaged 9.2k tokens and 3.0/5 on UI Judge; agent latency was 35.3s, lower than Minimal Catalog.',
+      },
+      'core-catalog': {
+        descriptor: '9 components · core capability set',
+        strength: 'Averaged 3.3/5 on UI Judge, higher than Full Catalog.',
+        risk:
+          'Averaged 13.5k tokens, 63.8s of agent latency, and 2.0 generation attempts.',
+      },
+      'minimal-catalog': {
+        descriptor: '6 components · best token usage and UI Judge score',
+        strength:
+          'Averaged 7.9k tokens, the lowest in the group, and 3.7/5 on UI Judge, the highest in the group.',
+        risk:
+          'Average agent latency was 43.7s, higher than Full Catalog. Its six components require separate validation for complex scenarios.',
+      },
+    },
+  },
+};
+
+const ENGLISH_SCENARIOS = {
+  'weather-refresh-card': {
+    name: 'Weather refresh card',
+    businessMode: 'Information lookup',
+    complexity: 'Low',
+    interaction: 'Read + refresh',
+    purpose:
+      'Tests whether the model can control component count in a lightweight information card and avoid overdesign.',
+  },
+  'product-purchase-card': {
+    name: 'Product purchase card',
+    businessMode: 'E-commerce conversion',
+    complexity: 'Medium',
+    interaction: 'Select + convert',
+    purpose:
+      'Tests whether purchase actions, pricing, and variant details form a clear hierarchy.',
+  },
+  'kyoto-trip-planner': {
+    name: 'Kyoto trip planner',
+    businessMode: 'Long-form browsing',
+    complexity: 'High',
+    interaction: 'Browse + save',
+    purpose:
+      'Tests token overhead and structural correctness in long-form flows with deep nesting.',
+  },
+} as const satisfies Record<
+  PhaseOneScenarioId,
+  {
+    businessMode: string;
+    complexity: BenchScenario['complexity'];
+    interaction: string;
+    name: string;
+    purpose: string;
+  }
+>;
+
+const ENGLISH_METHOD_ITEMS = {
+  generation: {
+    title: 'A2UI generation',
+    detail:
+      'Each experiment uses its corresponding A2UI System Prompt and the same project Validator. When validation fails, Repair follows the Runner configuration; attempt count records the actual number of calls.',
+  },
+  rendering: {
+    title: 'A2UI rendering',
+    detail:
+      'Every result is rendered in the same Lynx4Web Playground Preview Runtime, with metrics collected under one consistent definition.',
+  },
+  metrics: {
+    title: 'Metric definitions',
+    detail:
+      'Agent latency is model wall time including Repair. Render, FMP, and TTI are collected by the Preview Runtime. FCP is collected but is not a primary metric in this report.',
+  },
+  judge: {
+    title: 'UI Judge scoring',
+    detail:
+      'UI Judge assigns a 0–5 visual-correctness score. The judge model is gpt-5.5-2026-04-24.',
+  },
+} as const satisfies Record<
+  PhaseOneMethodItemId,
+  {
+    detail: string;
+    title: string;
+  }
+>;
+
+export const PHASE_ONE_BENCH_EN = {
+  ...PHASE_ONE_BENCH,
+  title: 'How should you choose a model, System Prompt, and Catalog?',
+  description:
+    'The benchmark covers three mobile A2UI scenarios. Each experiment changes one variable at a time and uses the same metrics for generation cost, latency, stability, and visual correctness.',
+  conclusion:
+    'In the model group, gpt-5.5 used the fewest average tokens. In the Prompt group, Token Efficient delivered the best balance. In the Catalog group, Minimal Catalog led in token usage and UI Judge score, but not in agent latency.',
+  metricDefinitions: PHASE_ONE_BENCH.metricDefinitions.map((definition) => ({
+    ...definition,
+    label: {
+      totalTokens: 'Tokens',
+      agentMs: 'Agent latency',
+      renderMs: 'Render',
+      fmpMs: 'FMP',
+      ttiMs: 'TTI',
+      judge: 'UI Judge',
+      attempts: 'Generation attempts',
+      success: 'Success',
+    }[definition.key],
+  })),
+  highlights: PHASE_ONE_BENCH.highlights.map((highlight) => ({
+    ...highlight,
+    ...ENGLISH_HIGHLIGHTS[highlight.id],
+  })),
+  recommendation: {
+    title: 'Recommended starting configuration',
+    summary:
+      'Use this configuration as a baseline, then add components gradually for each real-world scenario.',
+    combination: [
+      {
+        ...PHASE_ONE_BENCH.recommendation.combination[0],
+        dimension: 'Model',
+      },
+      PHASE_ONE_BENCH.recommendation.combination[1],
+      PHASE_ONE_BENCH.recommendation.combination[2],
+    ],
+  },
+  comparisons: PHASE_ONE_BENCH.comparisons.map((comparison) => {
+    const copy = ENGLISH_COMPARISONS[comparison.id];
+    return {
+      ...comparison,
+      title: copy.title,
+      variable: copy.variable,
+      fixedCondition: copy.fixedCondition,
+      rows: comparison.rows.map((row) => ({
+        ...row,
+        ...copy.rows[row.id],
+      })),
+    };
+  }),
+  scenarios: PHASE_ONE_BENCH.scenarios.map((scenario) => ({
+    ...scenario,
+    ...ENGLISH_SCENARIOS[scenario.id],
+  })),
+  methodology: {
+    title: 'Methodology and metric definitions',
+    sequence: ['Choose a model', 'Tune the Prompt', 'Reduce the Catalog'],
+    items: PHASE_ONE_BENCH.methodology.items.map((item) => ({
+      ...item,
+      ...ENGLISH_METHOD_ITEMS[item.id],
+    })),
+  },
+  limitations: [
+    'Token counts come from model-provider usage. If Repair is triggered, the total includes the initial generation and every Repair; attempt count is reported separately.',
+    'Render, FMP, and TTI reflect only the local Lynx4Web Preview and do not represent real mobile performance.',
+    'UI Judge is model-based automation intended for relative comparison and basic plausibility checks; it does not replace human UI review.',
+  ],
+} satisfies PhaseOneBench;
+
+export function getPhaseOneBench(
+  locale: BenchLocale = 'zh-CN',
+): PhaseOneBench {
+  return locale === 'en-US' ? PHASE_ONE_BENCH_EN : PHASE_ONE_BENCH;
+}

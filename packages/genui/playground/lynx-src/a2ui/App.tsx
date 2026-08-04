@@ -272,6 +272,9 @@ async function loadActionMocks(
 
 export function App() {
   const globalProps = useGlobalProps();
+  const benchMode = (
+    globalProps as Record<string, unknown> | null
+  )?.benchMode === true;
 
   const rawInitData = useInitData();
 
@@ -611,7 +614,7 @@ export function App() {
 
   return (
     <view
-      className={`page ${themeClassName}`}
+      className={`page ${themeClassName}${benchMode ? ' bench-page' : ''}`}
     >
       {error
         ? (

@@ -355,7 +355,7 @@ for (const { prefix, title, blurb } of GROUPS) {
     }
         </div>
         <div class="scroll"><table class="frames">
-          <thead><tr><th>enableMTSRendering</th><th class="mtr">MTR — main thread alone</th><th class="btr">BTR — after hydration</th><th>main-thread chunk</th></tr></thead>
+          <thead><tr><th>experimental_enableMTSRendering</th><th class="mtr">MTR — main thread alone</th><th class="btr">BTR — after hydration</th><th>main-thread chunk</th></tr></thead>
           <tbody>${rows}</tbody>
         </table></div>
       </div>

@@ -62,6 +62,7 @@ export function applyEntry(
     extractStr: originalExtractStr,
 
     experimental_isLazyBundle,
+    experimental_transformBuiltinAttributeNames,
   } = options
 
   const lazyBundleFetcher = resolveLazyBundleFetcher(targetSdkVersion)
@@ -78,7 +79,8 @@ export function applyEntry(
     >(Symbol.for('@lynx-js/react/internal:resolve'))!
 
     // A root-level `<Background>` in an entry is the declarative trigger for
-    // the assembled main-thread bundle (`enableMTSRendering: false` is its
+    // the assembled main-thread bundle (`experimental_enableMTSRendering:
+    // false` is its
     // implementation) — resolve `'auto'` against the entry sources before the
     // entry points are rewritten below.
     const resolvedEnableMTSRendering = resolveMTSRendering(
@@ -390,7 +392,7 @@ export function applyEntry(
         firstScreenSyncTiming,
         globalPropsMode,
         enableSSR,
-        enableMTSRendering: resolvedEnableMTSRendering,
+        experimental_enableMTSRendering: resolvedEnableMTSRendering,
         rendersOnMainThread,
         mainThreadChunks,
         mainThreadEntries,
@@ -398,6 +400,7 @@ export function applyEntry(
         experimental_isLazyBundle,
         experimental_useElementTemplate:
           options.experimental_useElementTemplate,
+        experimental_transformBuiltinAttributeNames,
         profile: getDefaultProfile(),
         workletRuntimePath: await resolve(
           `@lynx-js/react/${isDev ? 'worklet-dev-runtime' : 'worklet-runtime'}`,

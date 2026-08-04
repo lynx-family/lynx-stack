@@ -151,7 +151,8 @@ export function entryHasBackground(entryFile: string): boolean {
 }
 
 /**
- * Resolve the `enableMTSRendering` option to the boolean the build uses.
+ * Resolve the `experimental_enableMTSRendering` option to the boolean the
+ * build uses.
  *
  * - `true` — business code is compiled for the main thread and rendered
  *   there (the classic dual-thread build). A root-level `<Background>` still
@@ -298,7 +299,7 @@ const noop = (): void => {
  */
 export function resolveMTSRendering(
   options: {
-    enableMTSRendering: boolean | 'auto'
+    experimental_enableMTSRendering: boolean | 'auto'
     experimental_useElementTemplate: boolean
     enableSSR: boolean
   },
@@ -307,11 +308,11 @@ export function resolveMTSRendering(
   rootPath: string,
   warn: (message: string) => void = noop,
 ): boolean {
-  if (typeof options.enableMTSRendering === 'boolean') {
+  if (typeof options.experimental_enableMTSRendering === 'boolean') {
     // The explicit switches skip detection entirely. `false` +
     // `experimental_useElementTemplate` is rejected eagerly by
     // `pluginReactLynx` before any hook runs.
-    return options.enableMTSRendering
+    return options.experimental_enableMTSRendering
   }
   if (!isProd) {
     return true
@@ -350,7 +351,7 @@ export function resolveMTSRendering(
         } defers nothing with a <Background>, but another `
           + `entry turned main-thread rendering off for this build — its first frame will be `
           + `empty until the background hydrates. Add a <Background fallback={…}> to it, `
-          + `or set \`enableMTSRendering: true\` to keep the classic build.`,
+          + `or set \`experimental_enableMTSRendering: true\` to keep the classic build.`,
       )
     }
   }

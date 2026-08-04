@@ -146,9 +146,9 @@ export interface PluginReactLynxOptions {
    * `rename` take precedence over `preserve`, followed by the fallback behavior
    * selected by `mode`.
    *
-   * Currently, only explicit JSX attributes are transformed at compile time.
-   * Runtime transformation for JSX spread attributes is not supported yet and
-   * is planned for a future release.
+   * Explicit JSX attributes are transformed at compile time. Attributes
+   * supplied through JSX spreads are transformed at runtime with the same
+   * rules.
    *
    * @defaultValue `false`
    *
@@ -311,9 +311,9 @@ export interface PluginReactLynxOptions {
    *
    * @defaultValue `'auto'`
    *
-   * @public
+   * @experimental
    */
-  enableMTSRendering?: boolean | 'auto'
+  experimental_enableMTSRendering?: boolean | 'auto'
 
   /**
    * removeDescendantSelectorScope is used to remove the scope of descendant selectors.
@@ -446,7 +446,7 @@ export function pluginReactLynx(
     enableRemoveCSSScope: true,
     firstScreenSyncTiming: 'immediately',
     enableSSR: false,
-    enableMTSRendering: 'auto',
+    experimental_enableMTSRendering: 'auto',
     removeDescendantSelectorScope: true,
     shake: undefined,
     defineDCE: undefined,
@@ -471,11 +471,11 @@ export function pluginReactLynx(
   })
 
   if (
-    resolvedOptions.enableMTSRendering === false
+    resolvedOptions.experimental_enableMTSRendering === false
     && resolvedOptions.experimental_useElementTemplate
   ) {
     throw new Error(
-      '`enableMTSRendering: false` does not support `experimental_useElementTemplate` yet.',
+      '`experimental_enableMTSRendering: false` does not support `experimental_useElementTemplate` yet.',
     )
   }
 

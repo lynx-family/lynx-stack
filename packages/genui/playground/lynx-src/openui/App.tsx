@@ -112,9 +112,11 @@ export function App() {
   const theme = useMemo<Theme>(() => {
     return readTheme(globalProps?.theme) ?? 'light';
   }, [globalProps]);
+  const benchMode = globalProps?.benchMode === true;
+  const layoutClassName = benchMode ? 'openui-bench' : 'openui-editorial';
   const themeClassName = theme === 'dark'
-    ? 'openui-page openui-editorial openui-dark luna-dark'
-    : 'openui-page openui-editorial openui-light luna-light';
+    ? `openui-page ${layoutClassName} openui-dark luna-dark`
+    : `openui-page ${layoutClassName} openui-light luna-light`;
 
   // Speed multiplier from globalProps (e.g. ?speed=2)
   const streamDelay = useMemo(() => {

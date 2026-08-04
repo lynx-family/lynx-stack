@@ -101,7 +101,7 @@ async function buildFixture(
   return assets
 }
 
-describe('root <Background> detection (enableMTSRendering: "auto")', () => {
+describe('root <Background> detection (experimental_enableMTSRendering: "auto")', () => {
   test('a root <Background> entry assembles the main-thread bundle by default', async () => {
     const assets = await buildFixture({ main: 'index.tsx' }, undefined)
 
@@ -161,10 +161,10 @@ describe('root <Background> detection (enableMTSRendering: "auto")', () => {
     expect(mainThread).toContain('no-background-entry')
   })
 
-  test('`enableMTSRendering: true` is the escape hatch back to the classic build', async () => {
+  test('`experimental_enableMTSRendering: true` is the escape hatch back to the classic build', async () => {
     const assets = await buildFixture(
       { main: 'index.tsx' },
-      { enableMTSRendering: true },
+      { experimental_enableMTSRendering: true },
     )
 
     const mainThread = assets['.rspeedy/main/main-thread.js']!
@@ -277,7 +277,9 @@ describe('root <Background> detection (enableMTSRendering: "auto")', () => {
     // chunk ~40 KB *larger* than the classic build it is supposed to shrink.
     const [assembled, classic] = await Promise.all([
       buildFixture({ main: 'index.tsx' }, undefined),
-      buildFixture({ main: 'index.tsx' }, { enableMTSRendering: true }),
+      buildFixture({ main: 'index.tsx' }, {
+        experimental_enableMTSRendering: true,
+      }),
     ])
 
     const mainThread = assembled['.rspeedy/main/main-thread.js']!
