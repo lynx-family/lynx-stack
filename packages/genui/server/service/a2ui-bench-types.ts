@@ -5,7 +5,14 @@
 import type { A2UIMessage } from '../agent/a2ui-validator';
 
 export type BenchRole = 'control' | 'experiment';
-export type BenchVariable = 'model' | 'prompt' | 'catalog' | 'custom';
+export type BenchProtocol = 'a2ui' | 'openui';
+export type BenchProfile = 'native' | 'matched-core';
+export type BenchVariable =
+  | 'model'
+  | 'prompt'
+  | 'catalog'
+  | 'protocol'
+  | 'custom';
 export type BenchCatalogLabel =
   | 'Full Catalog'
   | 'Core Catalog'
@@ -52,6 +59,8 @@ export interface BenchGroupRequest {
   name: string;
   variable: BenchVariable;
   enabled: boolean;
+  protocol?: BenchProtocol;
+  profile?: BenchProfile;
   model?: string;
   catalog?: BenchCatalogLabel;
   extraInstruction?: string;
@@ -92,13 +101,15 @@ export interface BenchRunResult {
   groupId: string;
   groupName: string;
   role: BenchRole;
+  protocol: BenchProtocol;
+  profile: BenchProfile;
   scenarioId: string;
   scenarioName: string;
   repeatIndex: number;
   status: 'complete' | 'failed';
   ok: boolean;
   model: string;
-  catalog: BenchCatalogLabel;
+  catalog: BenchCatalogLabel | 'matched-core';
   tokens: number;
   agentMs: number;
   fmpMs: number;
@@ -118,6 +129,7 @@ export interface BenchRunResult {
   usage?: unknown;
   messages?: A2UIMessage[];
   screenshotDataUrl?: string;
+  adapterMetadata?: Record<string, unknown>;
   text?: string;
 }
 
@@ -125,6 +137,9 @@ export interface BenchGroupSummary {
   groupId: string;
   groupName: string;
   role: BenchRole;
+  protocol: BenchProtocol;
+  profile: BenchProfile;
+  plannedRuns: number;
   runCount: number;
   failedRuns: number;
   successRate: number;
@@ -156,10 +171,7 @@ export interface BenchReport {
   status: BenchJobStatus;
   settings: BenchSettings;
   env: {
-    apiKeyConfigured: boolean;
-    baseURL: string;
     model: string;
-    clientOverrideAccepted: boolean;
   };
   capabilities: {
     agent: 'enabled';

@@ -309,6 +309,7 @@ function injectMainThreadGlobals(target?: any, polyfills?: any) {
   target.__TESTING_FORCE_RENDER_TO_OPCODE__ = false;
   target.__ENABLE_SSR__ = false;
   target.__ENABLE_MTS_RENDERING__ = true;
+  target.__EXPERIMENTAL_TRANSFORM_BUILTIN_ATTRIBUTE_NAMES__ = false;
   target.globDynamicComponentEntry = '__Card__';
 
   const native = {
@@ -452,6 +453,7 @@ function injectBackgroundThreadGlobals(target?: any, polyfills?: any) {
   target.__MAIN_THREAD__ = false;
   target.__ENABLE_SSR__ = false;
   target.__ENABLE_MTS_RENDERING__ = true;
+  target.__EXPERIMENTAL_TRANSFORM_BUILTIN_ATTRIBUTE_NAMES__ = false;
   target.globDynamicComponentEntry = '__Card__';
   target.lynxCoreInject = {};
   target.lynxCoreInject.tt = {

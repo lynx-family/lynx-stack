@@ -8,12 +8,20 @@ type LynxTextProps = LynxIntrinsicElements['text'];
 interface TransformedTextProps {
   /** React-style alias of `text-maxline`. */
   textMaxline?: LynxTextProps['text-maxline'];
+  /** React-style alias of `text-maxlength`. */
+  textMaxlength?: LynxTextProps['text-maxlength'];
   /** React-style alias of `enable-font-scaling`. */
   enableFontScaling?: LynxTextProps['enable-font-scaling'];
+  /** React-style alias of `text-vertical-align`. */
+  textVerticalAlign?: LynxTextProps['text-vertical-align'];
   /** React-style alias of `tail-color-convert`. */
   tailColorConvert?: LynxTextProps['tail-color-convert'];
+  /** React-style alias of `include-font-padding`. */
+  includeFontPadding?: LynxTextProps['include-font-padding'];
   /** React-style alias of `text-fake-bold`. */
   textFakeBold?: LynxTextProps['text-fake-bold'];
+  /** React-style alias of `text-selection`. */
+  textSelection?: LynxTextProps['text-selection'];
   /** React-style alias of `bindtap`. */
   onClick?: LynxTextProps['bindtap'];
 }

@@ -50,12 +50,13 @@ export function applyEntry(
     firstScreenSyncTiming,
     globalPropsMode,
     enableSSR,
-    enableMTSRendering,
+    experimental_enableMTSRendering,
     removeDescendantSelectorScope,
     targetSdkVersion,
     extractStr: originalExtractStr,
 
     experimental_isLazyBundle,
+    experimental_transformBuiltinAttributeNames,
   } = options
 
   const lazyBundleFetcher = resolveLazyBundleFetcher(targetSdkVersion)
@@ -71,7 +72,7 @@ export function applyEntry(
       }
     >(Symbol.for('@lynx-js/react/internal:resolve'))!
 
-    const mainThreadImports = enableMTSRendering ? undefined : [
+    const mainThreadImports = experimental_enableMTSRendering ? undefined : [
       path.join(reactLynxDir, 'runtime/mts-rendering-disabled/index.js'),
     ]
 
@@ -322,13 +323,14 @@ export function applyEntry(
         firstScreenSyncTiming,
         globalPropsMode,
         enableSSR,
-        enableMTSRendering,
+        experimental_enableMTSRendering,
         mainThreadChunks,
         mainThreadEntries,
         extractStr,
         experimental_isLazyBundle,
         experimental_useElementTemplate:
           options.experimental_useElementTemplate,
+        experimental_transformBuiltinAttributeNames,
         profile: getDefaultProfile(),
         workletRuntimePath: await resolve(
           `@lynx-js/react/${isDev ? 'worklet-dev-runtime' : 'worklet-runtime'}`,

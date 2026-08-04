@@ -60,10 +60,11 @@ pub struct UsedSharedModule {
 /// Rewrites references to `runtime: 'shared'` imports inside a collected
 /// main-thread definition into lookups of the runtime's shared-module
 /// registry. The namespace is cached in a local at worklet entry, so the
-/// registry is consulted once per invocation rather than once per access:
+/// registry is consulted once per invocation rather than once per access
+/// (the `const` is lowered to `var` when the define is printed):
 ///
 /// ```js
-/// const _$sharedModule = getSharedModule("<id>");
+/// var _$sharedModule = getSharedModule("<id>");
 /// _$sharedModule.springCurve(...)
 /// ```
 pub struct SharedRefRewriter<'a> {

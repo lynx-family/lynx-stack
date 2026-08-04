@@ -5564,9 +5564,16 @@ test.describe('reactlynx3 tests', () => {
       'mts-rendering-disabled-shared-module',
       async ({ page }, { title }) => {
         await goto(page, title);
-        await wait(100);
         const target = page.locator('#target');
         const observer = page.locator('#observer');
+
+        // Under the mode the elements arrive with the background's hydrate
+        // patch, which also wires the worklet handlers. Waiting on the initial
+        // style rather than a fixed delay keeps a cold load from racing the tap.
+        await expect(target).toHaveCSS(
+          'background-color',
+          'rgb(255, 192, 203)',
+        );
 
         // The main thread compiles no business code under the mode, so the
         // worklet reaches the shared module through the runtime registry. Tapping
@@ -5590,8 +5597,11 @@ test.describe('reactlynx3 tests', () => {
       'mts-rendering-disabled-shared-isolation',
       async ({ page }, { title }) => {
         await goto(page, title);
-        await wait(200);
         const target = page.locator('#target');
+        await expect(target).toHaveCSS(
+          'background-color',
+          'rgb(255, 192, 203)',
+        );
 
         // The background bumped its own instance three times on mount. The
         // main thread holds an independent instance, so its first bump reads 1.

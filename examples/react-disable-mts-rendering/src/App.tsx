@@ -31,7 +31,7 @@ export function App() {
         thread, using the snapshot and worklet definitions collected while
         compiling it.
       </text>
-      <view className='Card' main-thread:bindtap={onSpin}>
+      <view className='Card' flatten={false} main-thread:bindtap={onSpin}>
         <text className='Card__label'>Tap to spin on the main thread</text>
       </view>
       <view className='Card' bindtap={() => setCount(count + 1)}>

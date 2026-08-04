@@ -45,7 +45,7 @@ function collectAssets(assets: Record<string, string>) {
   } as Rspack.RspackPluginInstance
 }
 
-describe('enableMTSRendering: false', () => {
+describe('experimental_enableMTSRendering: false', () => {
   test('assembles the main-thread bundle from the collected definitions', async () => {
     const { pluginReactLynx } = await import('../src/pluginReactLynx.js')
 
@@ -69,7 +69,7 @@ describe('enableMTSRendering: false', () => {
           },
           output: { distPath: { root: tmp } },
           plugins: [
-            pluginReactLynx({ enableMTSRendering: false }),
+            pluginReactLynx({ experimental_enableMTSRendering: false }),
             ignoreCSSLoaderWorkaround,
           ],
           tools: { rspack: { plugins: [collectAssets(assets)] } },
@@ -122,7 +122,7 @@ describe('enableMTSRendering: false', () => {
           },
           output: { distPath: { root: tmp } },
           plugins: [
-            pluginReactLynx({ enableMTSRendering: false }),
+            pluginReactLynx({ experimental_enableMTSRendering: false }),
             ignoreCSSLoaderWorkaround,
           ],
           tools: { rspack: { plugins: [collectAssets(assets)] } },
@@ -169,7 +169,7 @@ describe('enableMTSRendering: false', () => {
           },
           output: { distPath: { root: tmp } },
           plugins: [
-            pluginReactLynx({ enableMTSRendering: false }),
+            pluginReactLynx({ experimental_enableMTSRendering: false }),
             ignoreCSSLoaderWorkaround,
           ],
           tools: { rspack: { plugins: [collectAssets(assets)] } },
@@ -200,13 +200,16 @@ describe('enableMTSRendering: false', () => {
           source: {
             entry: {
               main: fileURLToPath(
-                new URL('./fixtures/lazy-bundle/index.tsx', import.meta.url),
+                new URL(
+                  './fixtures/mts-rendering-lazy/index.tsx',
+                  import.meta.url,
+                ),
               ),
             },
           },
           output: { distPath: { root: tmp } },
           plugins: [
-            pluginReactLynx({ enableMTSRendering: false }),
+            pluginReactLynx({ experimental_enableMTSRendering: false }),
             ignoreCSSLoaderWorkaround,
           ],
           tools: {
@@ -277,7 +280,7 @@ describe('enableMTSRendering: false', () => {
       ),
     }
 
-    const build = async (enableMTSRendering: boolean) => {
+    const build = async (experimental_enableMTSRendering: boolean) => {
       const assets: Record<string, string> = {}
       const tmp = await fs.mkdtemp(
         path.join(tmpdir(), 'rspeedy-react-test-main-thread-shared-'),
@@ -288,7 +291,7 @@ describe('enableMTSRendering: false', () => {
             source: { entry },
             output: { distPath: { root: tmp } },
             plugins: [
-              pluginReactLynx({ enableMTSRendering }),
+              pluginReactLynx({ experimental_enableMTSRendering }),
               ignoreCSSLoaderWorkaround,
             ],
             tools: { rspack: { plugins: [collectAssets(assets)] } },
@@ -361,7 +364,7 @@ describe('enableMTSRendering: false', () => {
           },
           output: { distPath: { root: tmp } },
           plugins: [
-            pluginReactLynx({ enableMTSRendering: false }),
+            pluginReactLynx({ experimental_enableMTSRendering: false }),
             ignoreCSSLoaderWorkaround,
           ],
           tools: { rspack: { plugins: [collectAssets(assets)] } },
@@ -391,7 +394,7 @@ describe('enableMTSRendering: false', () => {
 
     expect(() =>
       pluginReactLynx({
-        enableMTSRendering: false,
+        experimental_enableMTSRendering: false,
         experimental_useElementTemplate: true,
       })
     ).toThrowError(/experimental_useElementTemplate/)

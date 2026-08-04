@@ -18,6 +18,17 @@
   background-color: transparent;
 }
 
+.openui-bench {
+  padding: 10px;
+  background-color: var(--canvas);
+}
+
+.openui-bench .OpenUIRenderer {
+  width: 100%;
+  min-width: 0;
+  box-sizing: border-box;
+}
+
 .openui-scroll {
   width: 100%;
   height: 100%;

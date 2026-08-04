@@ -8,7 +8,10 @@ import { createRequire } from 'node:module';
 import type { Chunk, Compilation, Compiler } from '@rspack/core';
 import invariant from 'tiny-invariant';
 
-import type { ExtractStrConfig } from '@lynx-js/react/transform';
+import type {
+  ExtractStrConfig,
+  TransformBuiltinAttributeNamesOptions,
+} from '@lynx-js/react/transform';
 import { LynxTemplatePlugin } from '@lynx-js/template-webpack-plugin';
 import { RuntimeGlobals } from '@lynx-js/webpack-runtime-globals';
 
@@ -239,14 +242,24 @@ interface ReactWebpackPluginOptions {
   experimental_useElementTemplate?: boolean;
 
   /**
-   * {@inheritdoc @lynx-js/react-rsbuild-plugin#PluginReactLynxOptions.enableMTSRendering}
+   * {@inheritdoc @lynx-js/react-rsbuild-plugin#PluginReactLynxOptions.experimental_enableMTSRendering}
    */
-  enableMTSRendering?: boolean;
+  experimental_enableMTSRendering?: boolean;
 
   /**
    * The background entry name of each main-thread entry.
    */
   mainThreadEntries?: Record<string, string>;
+
+  /**
+   * The builtin attribute-name transform configuration used by runtime spread
+   * attributes.
+   *
+   * @experimental
+   */
+  experimental_transformBuiltinAttributeNames?:
+    | boolean
+    | TransformBuiltinAttributeNamesOptions;
 
   /**
    * Resolved lazy-bundle fetcher mode. Decided by the caller (e.g.
@@ -333,8 +346,9 @@ class ReactWebpackPlugin {
       profile: undefined,
       workletRuntimePath: '',
       experimental_useElementTemplate: false,
-      enableMTSRendering: true,
+      experimental_enableMTSRendering: true,
       mainThreadEntries: {},
+      experimental_transformBuiltinAttributeNames: false,
       lazyBundleFetcher: 'QueryComponent',
     });
 
@@ -404,11 +418,16 @@ class ReactWebpackPlugin {
       __USE_ELEMENT_TEMPLATE__: JSON.stringify(
         options.experimental_useElementTemplate,
       ),
+      __EXPERIMENTAL_TRANSFORM_BUILTIN_ATTRIBUTE_NAMES__: JSON.stringify(
+        options.experimental_transformBuiltinAttributeNames,
+      ),
       __LAZY_BUNDLE_FETCHER__: JSON.stringify(options.lazyBundleFetcher),
-      __ENABLE_MTS_RENDERING__: JSON.stringify(options.enableMTSRendering),
+      __ENABLE_MTS_RENDERING__: JSON.stringify(
+        options.experimental_enableMTSRendering,
+      ),
     }).apply(compiler);
 
-    if (options.enableMTSRendering === false) {
+    if (options.experimental_enableMTSRendering === false) {
       compiler.hooks.finishMake.tapPromise(
         this.constructor.name,
         (compilation) =>
@@ -452,7 +471,7 @@ class ReactWebpackPlugin {
         );
       });
 
-      if (options.enableMTSRendering === false) {
+      if (options.experimental_enableMTSRendering === false) {
         const MTSDefinesRuntimeModule = createMTSDefinesRuntimeModule(
           compiler.webpack,
         );
@@ -530,7 +549,7 @@ class ReactWebpackPlugin {
           // section is assembled from the definitions of the modules the
           // background put in its async chunks.
           if (
-            options.enableMTSRendering === false
+            options.experimental_enableMTSRendering === false
             && lepusCode.root === undefined
             && args.chunkGroups.length > 0
             && args.chunkGroups.every(cg => !cg.isInitial())

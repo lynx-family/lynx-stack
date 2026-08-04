@@ -73,12 +73,12 @@ export interface PluginReactLynxOptions {
     enableCSSInheritance?: boolean;
     enableCSSInvalidation?: boolean;
     enableCSSSelector?: boolean;
-    enableMTSRendering?: boolean;
     enableNewGesture?: boolean;
     enableRemoveCSSScope?: boolean | undefined;
     enableSSR?: boolean;
     enableUiSourceMap?: boolean;
     engineVersion?: string;
+    experimental_enableMTSRendering?: boolean;
     // @alpha
     experimental_isLazyBundle?: boolean;
     experimental_transformBuiltinAttributeNames?: boolean | TransformBuiltinAttributeNamesOptions;

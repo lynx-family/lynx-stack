@@ -15,7 +15,7 @@ const cases = await Array.fromAsync(glob(
 ));
 
 const config: Config = mergeRspeedyConfig(
-  commonConfig({ enableMTSRendering: false }),
+  commonConfig({ experimental_enableMTSRendering: false }),
   {
     source: {
       entry: Object.fromEntries(cases.map((entry) => {

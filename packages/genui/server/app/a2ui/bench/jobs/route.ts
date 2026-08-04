@@ -42,11 +42,27 @@ async function postA2UIBenchJob(req: Request) {
   }
 
   const store = getBenchJobStore();
-  const job = store.createJob(
+  const admission = store.tryCreateJob(
     normalized.request,
     normalized.totalRuns,
     normalized.warnings,
   );
+  if (!admission.ok) {
+    return jsonWithCors(
+      req,
+      {
+        ok: false,
+        error: 'Bench active job capacity reached; retry later',
+        activeJobs: admission.activeJobs,
+        limit: admission.limit,
+      },
+      {
+        status: 503,
+        headers: { 'Retry-After': '5' },
+      },
+    );
+  }
+  const { job } = admission;
   startBenchJob(job.id);
 
   return jsonWithCors(req, {

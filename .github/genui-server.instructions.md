@@ -8,9 +8,15 @@ Keep protocol-neutral request infrastructure in `app/common`. Request-size enfor
 
 Keep shared agent-service contracts and helpers in `service/common`. `ChatMessage`, `ConversationContext`, generic provider options, provider agent caching, conversation assembly, model-message conversion, Mastra result extraction, and stream adaptation must not be imported from `service/a2ui-agent` by OpenUI or MCP Apps. Extend the generic options inside `service/a2ui-agent` only for A2UI-specific catalog and repair settings.
 
+Keep public provider integrations vendor-neutral. Do not commit deployment-only gateway rewrites, private hostnames, environment-specific authentication conventions, or credentials; inject those only through the deployment environment.
+
 Use `app/common/sse.ts` for standard SSE frames and response headers. Pass event IDs or additional headers through its options instead of cloning the SSE framing and header literals in individual functions.
 
 Build `genui-server` as an executable ESM Hono server through `rslib.config.ts`. Each protocol `route.ts` default-exports a Hono sub-application, `src/app.ts` composes the route tree and common HTTP fallbacks, and `src/index.ts` starts `@hono/node-server` and owns graceful process shutdown. Do not export endpoint request functions or add a custom router or Node/FaaS transport adapter. Keep business handlers based on standard Web `Request` and `Response` internally.
+
+Read the server port from `LYNX_USE_PORT`, defaulting to `3000`; do not use `PORT` as a compatibility fallback.
+
+Read the bind address from `LYNX_USE_HOST`, defaulting to the IPv6 unspecified address `::` so Node accepts both IPv6 and IPv4 connections through its dual-stack listener; do not use `HOST` as a compatibility fallback. Format IPv6 addresses with brackets when logging HTTP URLs.
 
 Derive CORS preflight and 405 `Allow` behavior from the composed Hono application's route table after mounting sub-applications. Do not maintain a second hand-written route and method inventory.
 

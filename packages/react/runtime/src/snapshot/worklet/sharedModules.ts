@@ -4,7 +4,7 @@
 
 /**
  * The main-thread registry of `runtime: 'shared'` modules when
- * `enableMTSRendering: false`. Worklet definitions assembled into the
+ * `experimental_enableMTSRendering: false`. Worklet definitions assembled into the
  * main-thread chunk are detached from any module graph, so a shared import
  * referenced inside them cannot resolve as a module binding. Instead the
  * bundler compiles each shared module into the main-thread layer behind a

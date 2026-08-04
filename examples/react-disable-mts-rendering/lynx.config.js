@@ -7,7 +7,7 @@ const enableBundleAnalysis = !!process.env['RSPEEDY_BUNDLE_ANALYSIS'];
 export default defineConfig({
   plugins: [
     pluginReactLynx({
-      enableMTSRendering: false,
+      experimental_enableMTSRendering: false,
     }),
     pluginQRCode({
       schema(url) {

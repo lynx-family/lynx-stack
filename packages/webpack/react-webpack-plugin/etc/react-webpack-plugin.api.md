@@ -26,10 +26,10 @@ export const LAYERS: {
 export interface ReactLoaderOptions {
     compat?: CompatVisitorConfig | undefined;
     defineDCE?: DefineDceVisitorConfig | undefined;
-    enableMTSRendering?: boolean | undefined;
     enableRemoveCSSScope?: boolean | undefined;
     enableUiSourceMap?: boolean | undefined;
     engineVersion?: string | undefined;
+    experimental_enableMTSRendering?: boolean | undefined;
     experimental_transformBuiltinAttributeNames?: boolean | TransformBuiltinAttributeNamesOptions | undefined;
     experimental_useElementTemplate?: boolean | undefined;
     inlineSourcesContent?: boolean | undefined;
@@ -49,10 +49,11 @@ export class ReactWebpackPlugin {
 // @public
 export interface ReactWebpackPluginOptions {
     disableCreateSelectorQueryIncompatibleWarning?: boolean | undefined;
-    enableMTSRendering?: boolean;
     enableSSR?: boolean;
+    experimental_enableMTSRendering?: boolean;
     // @alpha
     experimental_isLazyBundle?: boolean;
+    experimental_transformBuiltinAttributeNames?: boolean | TransformBuiltinAttributeNamesOptions;
     experimental_useElementTemplate?: boolean;
     extractStr?: Partial<ExtractStrConfig> | boolean;
     firstScreenSyncTiming?: 'immediately' | 'jsReady' | 'manual';
