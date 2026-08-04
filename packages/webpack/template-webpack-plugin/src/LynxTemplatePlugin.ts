@@ -1422,16 +1422,17 @@ function collectChunkGroupResources(
 const LAZY_BUNDLE_NAME_LIMIT = 100;
 
 function shortenLazyBundleName(name: string): string {
+  const digest = createHash('sha256').update(name).digest('hex').slice(0, 16);
+  const budget = LAZY_BUNDLE_NAME_LIMIT - digest.length - 1;
   const segments = name.split('/');
   let tail = segments.at(-1)!;
   for (let index = segments.length - 2; index >= 0; index--) {
     const longerTail = `${segments[index]!}/${tail}`;
-    if (longerTail.length > LAZY_BUNDLE_NAME_LIMIT) {
+    if (longerTail.length > budget) {
       break;
     }
     tail = longerTail;
   }
-  const digest = createHash('sha256').update(name).digest('hex').slice(0, 16);
   return `${tail.replace(/\//g, '_')}-${digest}`;
 }
 

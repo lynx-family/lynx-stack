@@ -39,7 +39,7 @@ describe('resourcesToLazyBundleName', () => {
     );
 
     expect(name).toMatch(/^(a{16}_)+Foo\.tsx-[0-9a-f]{16}$/);
-    expect(name.length).toBeLessThanOrEqual(120);
+    expect(name.length).toBeLessThanOrEqual(100);
     expect(name).not.toContain('/');
   });
 
