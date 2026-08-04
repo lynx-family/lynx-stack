@@ -25,7 +25,13 @@ const LINUX_X86_64_RUNTIME_URL: &str = concat!(
 const LINUX_X86_64_RUNTIME_SHA256: &str =
   "244b45c4cc82ecbedc5d10f297a2c8695d93cc59793e430bdc6f4718500e1709";
 
+#[allow(dead_code)]
 fn main() {
+  let root = engine_bridge_root();
+  prepare_runtime_for(&root);
+}
+
+pub(crate) fn prepare_runtime_for(root: &Path) -> Option<PathBuf> {
   println!("cargo:rerun-if-env-changed=LYNX_LIB_PATH");
   println!("cargo:rerun-if-env-changed=LYNX_SDK_DIR");
   println!("cargo:rerun-if-env-changed=LYNX_RUNTIME_URL");
@@ -34,22 +40,21 @@ fn main() {
   println!("cargo:rerun-if-env-changed=LYNX_SKIP_ADHOC_SIGN");
 
   if let Some(lib_path) = env::var_os("LYNX_LIB_PATH") {
-    emit_runtime_env("LYNX_LIB_PATH", PathBuf::from(lib_path));
-    return;
+    let lib_path = PathBuf::from(lib_path);
+    emit_runtime_env("LYNX_LIB_PATH", &lib_path);
+    return Some(lib_path);
   }
   if let Some(sdk_dir) = env::var_os("LYNX_SDK_DIR") {
-    emit_runtime_env("LYNX_SDK_DIR", PathBuf::from(sdk_dir));
-    return;
+    let sdk_dir = PathBuf::from(sdk_dir);
+    emit_runtime_env("LYNX_SDK_DIR", &sdk_dir);
+    return target_library_name().map(|library_name| sdk_dir.join("lib").join(library_name));
   }
 
-  let Some(library_name) = target_library_name() else {
-    return;
-  };
+  let library_name = target_library_name()?;
   if !should_download_runtime() {
-    return;
+    return None;
   }
 
-  let root = engine_bridge_root();
   let build_helper = root.join("tools/runtime_build.rs");
   println!("cargo:rerun-if-changed={}", build_helper.display());
 
@@ -60,9 +65,10 @@ fn main() {
   prepare_runtime(&sdk_dir, &runtime_path, &url, &sha256);
 
   emit_runtime_env("LYNX_SDK_DIR", sdk_dir);
+  Some(runtime_path)
 }
 
-fn target_library_name() -> Option<&'static str> {
+pub(crate) fn target_library_name() -> Option<&'static str> {
   match env::var("CARGO_CFG_TARGET_OS").as_deref() {
     Ok("macos") => Some("libLynx_clay.dylib"),
     Ok("linux") => Some("libLynx_clay.so"),
@@ -175,10 +181,9 @@ fn download_runtime(url: &str, runtime_path: &Path, sha256: &str) {
     )
   });
 
-  let response = ureq::get(url)
-    .call()
+  let mut response = reqwest::blocking::get(url)
+    .and_then(reqwest::blocking::Response::error_for_status)
     .unwrap_or_else(|error| panic!("failed to download Lynx runtime from {url}: {error}"));
-  let mut response_body = response.into_reader();
   let mut tmp_file = tempfile::Builder::new()
     .prefix(
       runtime_path
@@ -194,7 +199,7 @@ fn download_runtime(url: &str, runtime_path: &Path, sha256: &str) {
         parent.display()
       )
     });
-  io::copy(&mut response_body, &mut tmp_file).unwrap_or_else(|error| {
+  io::copy(&mut response, &mut tmp_file).unwrap_or_else(|error| {
     panic!(
       "failed to write downloaded Lynx runtime to {}: {error}",
       tmp_file.path().display()

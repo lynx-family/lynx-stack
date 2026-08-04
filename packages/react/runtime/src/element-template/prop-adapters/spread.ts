@@ -4,14 +4,8 @@
 
 import { getEventValue } from './event-value.js';
 import { prepareSpreadRefAttrValue } from './ref.js';
+import { isEventPropKey, isNamespacedEventPropKey, transformAttrName } from '../../shared/attribute-name.js';
 import type { SerializableValue } from '../protocol/types.js';
-
-const eventPropKeyRegExp = /^(?:global-bind|bind|catch|capture-bind|capture-catch)[A-Za-z]+$/;
-const namespacedEventKeyRegExp = /^[A-Za-z-]+:(?:global-bind|bind|catch|capture-bind|capture-catch)[A-Za-z]+$/;
-
-function isEventPropKey(key: string): boolean {
-  return eventPropKeyRegExp.test(key);
-}
 
 function isSpreadRecord(value: unknown): value is Record<string, unknown> {
   return value !== null && typeof value === 'object' && !Array.isArray(value);
@@ -47,8 +41,12 @@ export function prepareSpreadAttrSlot(
       continue;
     }
 
-    if (isEventPropKey(key)) {
-      prepared[key] = spreadValue === null || spreadValue === undefined || spreadValue === false
+    const transformedKey = typeof __EXPERIMENTAL_TRANSFORM_BUILTIN_ATTRIBUTE_NAMES__ !== 'undefined'
+        && __EXPERIMENTAL_TRANSFORM_BUILTIN_ATTRIBUTE_NAMES__
+      ? transformAttrName(key)
+      : key;
+    if (isEventPropKey(transformedKey)) {
+      prepared[transformedKey] = spreadValue === null || spreadValue === undefined || spreadValue === false
         ? null
         : getEventValue(handleId, attrSlotIndex, key);
       continue;
@@ -56,15 +54,15 @@ export function prepareSpreadAttrSlot(
 
     if (
       spreadValue === undefined
-      || key.endsWith(':ref')
-      || key.endsWith(':gesture')
-      || namespacedEventKeyRegExp.test(key)
+      || transformedKey.endsWith(':ref')
+      || transformedKey.endsWith(':gesture')
+      || isNamespacedEventPropKey(key)
       || typeof spreadValue === 'function'
     ) {
       continue;
     }
 
-    prepared[key] = spreadValue as SerializableValue;
+    prepared[transformedKey] = spreadValue as SerializableValue;
   }
 
   return prepared;

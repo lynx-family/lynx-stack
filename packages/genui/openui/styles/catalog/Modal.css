@@ -8,29 +8,74 @@
 
 .OpenUIModalTrigger {
   width: 100%;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.OpenUIModalView {
+  width: 100%;
+  height: 100%;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  padding: 20rpx;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
 }
 
 .OpenUIModalMask {
-  width: 100%;
-  min-width: 0;
-  padding: 10rpx 0 0;
-  display: flex;
-  align-items: stretch;
-  justify-content: flex-start;
+  background-color: var(--backdrop, var(--openui-color-backdrop));
+  transition: opacity 0.18s ease;
+}
+
+.OpenUIModalMask.ui-entering,
+.OpenUIModalMask.ui-open {
+  opacity: 1;
+}
+
+.OpenUIModalMask.ui-leaving,
+.OpenUIModalMask.ui-closed {
+  opacity: 0;
 }
 
 .OpenUIModalContent {
   width: 100%;
+  max-width: 680rpx;
+  max-height: 86vh;
   min-width: 0;
-  padding: 16rpx;
-  border-radius: 16rpx;
+  padding: 24rpx;
+  border-radius: 22rpx;
   border-width: 1rpx;
   border-style: solid;
-  border-color: var(--openui-color-border);
-  background-color: var(--openui-color-surface-raised);
+  border-color: var(--line, var(--openui-color-border-strong));
+  background-color: var(--paper-clear, var(--openui-color-surface-raised));
   display: flex;
   flex-direction: column;
   gap: 14rpx;
+  z-index: 1;
+  box-shadow: 0 16rpx 40rpx
+    var(
+      --backdrop-subtle,
+      rgba(15, 23, 42, 0.18)
+    );
+  transition: opacity 0.18s ease, transform 0.18s ease;
+}
+
+.OpenUIModalContent.ui-entering,
+.OpenUIModalContent.ui-open {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.OpenUIModalContent.ui-leaving,
+.OpenUIModalContent.ui-closed {
+  opacity: 0;
+  transform: translateY(8rpx);
 }
 
 .OpenUIModalHeader {
@@ -43,7 +88,7 @@
 
 .OpenUIModalTitle {
   min-width: 0;
-  color: var(--openui-color-text);
+  color: var(--content, var(--openui-color-text));
   font-size: 28rpx;
   font-weight: 700;
 }
@@ -52,44 +97,34 @@
   width: 40rpx;
   height: 40rpx;
   border-radius: 999rpx;
-  background-color: var(--openui-color-surface-subtle);
+  background-color: var(--neutral-faint, var(--openui-color-surface-subtle));
   display: flex;
   align-items: center;
   justify-content: center;
   flex-shrink: 0;
 }
 
+.OpenUIModalClose.ui-active {
+  opacity: 0.72;
+}
+
+.OpenUIModalClose.ui-disabled {
+  opacity: 0.4;
+}
+
 .OpenUIModalCloseText {
-  color: var(--openui-color-text-body);
+  color: var(--secondary-content, var(--openui-color-text-body));
   font-size: 24rpx;
   font-weight: 700;
 }
 
 .OpenUIModalBody {
   width: 100%;
+  max-height: 68vh;
   min-width: 0;
+  min-height: 0;
+  flex-shrink: 1;
   display: flex;
   flex-direction: column;
   gap: 12rpx;
-}
-
-.dark .OpenUIModalMask {
-  background-color: transparent;
-}
-
-.dark .OpenUIModalContent {
-  background-color: var(--openui-color-surface-raised);
-  border-color: var(--openui-color-border);
-}
-
-.dark .OpenUIModalTitle {
-  color: var(--openui-color-text);
-}
-
-.dark .OpenUIModalClose {
-  background-color: var(--openui-color-surface-subtle);
-}
-
-.dark .OpenUIModalCloseText {
-  color: var(--openui-color-text-body);
 }

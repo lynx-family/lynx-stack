@@ -1,0 +1,11 @@
+{
+  "module": {
+    "name": "__HARMONY_MODULE_NAME__",
+    "type": "har",
+    "deviceTypes": [
+      "default",
+      "tablet",
+      "2in1"
+    ]
+  }
+}

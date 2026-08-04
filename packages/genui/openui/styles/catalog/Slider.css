@@ -18,7 +18,7 @@
 
 .OpenUISliderLabel {
   min-width: 0;
-  color: var(--openui-color-text-muted);
+  color: var(--content-muted, var(--openui-color-text-muted));
   font-size: 26rpx;
   font-weight: 600;
   line-height: 1.5;
@@ -26,7 +26,7 @@
 
 .OpenUISliderValue {
   flex-shrink: 0;
-  color: var(--openui-color-text-muted);
+  color: var(--content-muted, var(--openui-color-text-muted));
   font-size: 22rpx;
   line-height: 1.5;
 }
@@ -48,13 +48,13 @@
   width: 100%;
   height: 16rpx;
   border-radius: 999rpx;
-  background-color: var(--openui-color-surface-subtle);
+  background-color: var(--neutral-faint, var(--openui-color-surface-subtle));
 }
 
 .OpenUISliderIndicator {
   height: 100%;
   border-radius: 999rpx;
-  background-color: var(--openui-color-primary);
+  background-color: var(--primary, var(--openui-color-primary));
 }
 
 .OpenUISliderThumb {
@@ -71,27 +71,6 @@
   border-radius: 999rpx;
   border-width: 4rpx;
   border-style: solid;
-  border-color: var(--openui-color-primary);
-  background-color: var(--openui-color-surface-strong);
-}
-
-.dark .OpenUISliderLabel {
-  color: var(--openui-color-text-muted);
-}
-
-.dark .OpenUISliderValue {
-  color: var(--openui-color-text-muted);
-}
-
-.dark .OpenUISliderTrack {
-  background-color: var(--openui-color-surface-subtle);
-}
-
-.dark .OpenUISliderIndicator {
-  background-color: var(--openui-color-primary);
-}
-
-.dark .OpenUISliderThumbDot {
-  border-color: var(--openui-color-primary);
-  background-color: var(--openui-color-surface-strong);
+  border-color: var(--primary, var(--openui-color-primary));
+  background-color: var(--paper-clear, var(--openui-color-surface-strong));
 }

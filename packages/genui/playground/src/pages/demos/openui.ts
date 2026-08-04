@@ -32,14 +32,15 @@ export const OPENUI_DEMOS_LIST_SOURCE = {
       layout: 'flow',
     },
   ],
-  createPreviewUrl({ baseUrl, scenario }) {
+  createPreviewUrl({ baseUrl, scenario, theme }) {
     return buildOpenUIRenderUrl({
       rawText: scenario.raw,
+      theme,
       instant: true,
     }, baseUrl);
   },
-  createResetKey({ protocol }) {
-    return protocol.name;
+  createResetKey({ protocol, theme }) {
+    return `${protocol.name}|${theme}`;
   },
 } satisfies DemosListSource<OpenUIScenario>;
 
@@ -79,10 +80,11 @@ export const OPENUI_DEMOS_PAGE_SOURCE = {
       },
     };
   },
-  createPreviewSource({ input, isPlaybackActive }) {
+  createPreviewSource({ input, isPlaybackActive, theme }) {
     return {
       kind: 'openui',
       rawText: input.rawText,
+      theme,
       playbackMode: isPlaybackActive,
     };
   },

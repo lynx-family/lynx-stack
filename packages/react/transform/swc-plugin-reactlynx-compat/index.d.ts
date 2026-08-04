@@ -57,8 +57,7 @@ export interface CompatVisitorConfig {
    * @public
    * Specifies the list of component package names that need compatibility processing
    *
-   * @remarks
-   * Default value: `['@lynx-js/react-components']`
+   * @defaultValue `['@lynx-js/react-components']`
    *
    * @example
    *
@@ -82,8 +81,7 @@ export interface CompatVisitorConfig {
    * @public
    * Specifies the list of old runtime package names that need compatibility processing
    *
-   * @remarks
-   * Default value: `['@lynx-js/react-runtime']`
+   * @defaultValue `['@lynx-js/react-runtime']`
    *
    * @example
    *
@@ -107,8 +105,7 @@ export interface CompatVisitorConfig {
    * @public
    * Specifies the new runtime package name
    *
-   * @remarks
-   * Default value: `'@lynx-js/react'`
+   * @defaultValue `'@lynx-js/react'`
    *
    * @example
    *
@@ -132,10 +129,10 @@ export interface CompatVisitorConfig {
    * @public
    * Specifies additional component attributes list, these attributes will be passed to the wrapped `<view>` instead of the component.
    *
+   * @defaultValue `[]`
+   *
    * @remarks
    * This only takes effect when {@link CompatVisitorConfig.addComponentElement} is enabled.
-   *
-   * Default value: `[]`
    *
    * @example
    *
@@ -159,8 +156,7 @@ export interface CompatVisitorConfig {
    * @public
    * Controls whether to add wrapper elements for components
    *
-   * @remarks
-   * Default value: `false`
+   * @defaultValue `false`
    *
    * @example
    *
@@ -217,8 +213,7 @@ export interface CompatVisitorConfig {
    *
    * Instead, use `background-only` on class methods for explicit and maintainable behavior
    *
-   * @remarks
-   * Default value: `false`
+   * @defaultValue `false`
    *
    * @example
    *
@@ -246,8 +241,7 @@ export interface CompatVisitorConfig {
    *
    * If your code depends on this switch, when distributing it to other projects through npm packages or other means, you'll also need to enable this switch. This will lead to the proliferation of switches, which is not conducive to code reuse between different projects.
    *
-   * @remarks
-   * Default value: `None`
+   * @defaultValue `undefined`
    *
    * @example
    *
@@ -271,8 +265,7 @@ export interface CompatVisitorConfig {
    * @public
    * Whether to disable deprecated warnings
    *
-   * @remarks
-   * Default value: `false`
+   * @defaultValue `false`
    *
    * @example
    *
@@ -299,8 +292,7 @@ export interface CompatVisitorConfig {
    * @deprecated
    * Dark mode configuration
    *
-   * @remarks
-   * Default value: `None`
+   * @defaultValue `undefined`
    *
    * @example
    *

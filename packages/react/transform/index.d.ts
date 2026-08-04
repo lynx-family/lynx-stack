@@ -99,8 +99,7 @@ export interface CompatVisitorConfig {
    * @public
    * Specifies the list of component package names that need compatibility processing
    *
-   * @remarks
-   * Default value: `['@lynx-js/react-components']`
+   * @defaultValue `['@lynx-js/react-components']`
    *
    * @example
    *
@@ -124,8 +123,7 @@ export interface CompatVisitorConfig {
    * @public
    * Specifies the list of old runtime package names that need compatibility processing
    *
-   * @remarks
-   * Default value: `['@lynx-js/react-runtime']`
+   * @defaultValue `['@lynx-js/react-runtime']`
    *
    * @example
    *
@@ -149,8 +147,7 @@ export interface CompatVisitorConfig {
    * @public
    * Specifies the new runtime package name
    *
-   * @remarks
-   * Default value: `'@lynx-js/react'`
+   * @defaultValue `'@lynx-js/react'`
    *
    * @example
    *
@@ -174,10 +171,10 @@ export interface CompatVisitorConfig {
    * @public
    * Specifies additional component attributes list, these attributes will be passed to the wrapped `<view>` instead of the component.
    *
+   * @defaultValue `[]`
+   *
    * @remarks
    * This only takes effect when {@link CompatVisitorConfig.addComponentElement} is enabled.
-   *
-   * Default value: `[]`
    *
    * @example
    *
@@ -201,8 +198,7 @@ export interface CompatVisitorConfig {
    * @public
    * Controls whether to add wrapper elements for components
    *
-   * @remarks
-   * Default value: `false`
+   * @defaultValue `false`
    *
    * @example
    *
@@ -259,8 +255,7 @@ export interface CompatVisitorConfig {
    *
    * Instead, use `background-only` on class methods for explicit and maintainable behavior
    *
-   * @remarks
-   * Default value: `false`
+   * @defaultValue `false`
    *
    * @example
    *
@@ -288,8 +283,7 @@ export interface CompatVisitorConfig {
    *
    * If your code depends on this switch, when distributing it to other projects through npm packages or other means, you'll also need to enable this switch. This will lead to the proliferation of switches, which is not conducive to code reuse between different projects.
    *
-   * @remarks
-   * Default value: `None`
+   * @defaultValue `undefined`
    *
    * @example
    *
@@ -313,8 +307,7 @@ export interface CompatVisitorConfig {
    * @public
    * Whether to disable deprecated warnings
    *
-   * @remarks
-   * Default value: `false`
+   * @defaultValue `false`
    *
    * @example
    *
@@ -341,8 +334,7 @@ export interface CompatVisitorConfig {
    * @deprecated
    * Dark mode configuration
    *
-   * @remarks
-   * Default value: `None`
+   * @defaultValue `undefined`
    *
    * @example
    *
@@ -477,8 +469,7 @@ export interface ExtractStrConfig {
    * @public
    * The minimum length of string literals to be extracted.
    *
-   * @remarks
-   * Default value: `20`.
+   * @defaultValue `20`
    *
    * @example
    *
@@ -531,9 +522,11 @@ export interface ShakeVisitorConfig {
    * })
    * ```
    *
+   * @defaultValue `['@lynx-js/react-runtime']`
+   *
    * @remarks
-   * Default value: `['@lynx-js/react-runtime']`
    * The provided values will be merged with the default values instead of replacing them.
+   *
    * @public
    */
   pkgName: Array<string>
@@ -556,8 +549,9 @@ export interface ShakeVisitorConfig {
    * })
    * ```
    *
+   * @defaultValue `['constructor', 'render', 'getDerivedStateFromProps', 'state', 'defaultDataProcessor', 'dataProcessors', 'contextType', 'defaultProps']`
+   *
    * @remarks
-   * Default value: `['constructor', 'render', 'getDerivedStateFromProps', 'state', 'defaultDataProcessor', 'dataProcessors', 'contextType', 'defaultProps']`
    * The provided values will be merged with the default values instead of replacing them.
    *
    * @public
@@ -582,8 +576,9 @@ export interface ShakeVisitorConfig {
    * })
    * ```
    *
+   * @defaultValue `['useEffect', 'useLayoutEffect', '__runInJS', 'useLynxGlobalEventListener', 'useImperativeHandle']`
+   *
    * @remarks
-   * Default value: `['useEffect', 'useLayoutEffect', '__runInJS', 'useLynxGlobalEventListener', 'useImperativeHandle']`
    * The provided values will be merged with the default values instead of replacing them.
    *
    * @public
@@ -608,8 +603,9 @@ export interface ShakeVisitorConfig {
    * })
    * ```
    *
+   * @defaultValue `[]`
+   *
    * @remarks
-   * Default value: `[]`
    * The provided values will be merged with the default values instead of replacing them.
    *
    * @public
@@ -670,6 +666,35 @@ export interface WorkletVisitorConfig {
   target: 'LEPUS' | 'JS' | 'MIXED'
   runtimePkg: string
 }
+/**
+ * Serializable rules for transforming builtin element attribute names.
+ *
+ * Exact entries in `rename` take precedence over `preserve`, followed by the
+ * fallback behavior selected by `mode`.
+ *
+ * @public
+ */
+export interface TransformBuiltinAttributeNamesOptions {
+  /**
+   * The fallback behavior for attribute names not listed in `rename` or
+   * `preserve`.
+   *
+   * `'dash-case'` also applies the default React-style event mappings.
+   * `'mapping-only'` leaves all remaining names unchanged.
+   *
+   * @defaultValue `'dash-case'`
+   */
+  mode?: 'dash-case' | 'mapping-only'
+  /**
+   * Attribute names that should remain unchanged unless an exact `rename`
+   * entry is also present.
+   */
+  preserve?: ReadonlyArray<string>
+  /**
+   * Exact mappings from source attribute names to transformed attribute names.
+   */
+  rename?: Readonly<Record<string, string>>
+}
 export interface TransformNodiffOptions {
   /**
    * @internal
@@ -699,6 +724,20 @@ export interface TransformNodiffOptions {
   directiveDCE: boolean | DirectiveDceVisitorConfig
   worklet: boolean | WorkletVisitorConfig
   dynamicImport?: boolean | DynamicImportVisitorConfig
+  /**
+   * Transform attribute names on Lynx builtin elements.
+   *
+   * `true` applies the default rule: `onClick` becomes `bindtap`,
+   * `onCatchTap` becomes `catchtap`, other `onXXX` names become `bindxxx`,
+   * and remaining camelCase names become dash-case. An object provides
+   * serializable custom rules.
+   * Explicit JSX attributes are transformed during compilation. Attributes
+   * supplied through JSX spreads are transformed by the runtime with the same
+   * rules.
+   *
+   * @experimental
+   */
+  experimental_transformBuiltinAttributeNames?: boolean | TransformBuiltinAttributeNamesOptions
   /** @internal */
   inject?: boolean | InjectVisitorConfig
   inputSourceMap?: string

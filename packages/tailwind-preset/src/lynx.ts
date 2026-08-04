@@ -58,6 +58,8 @@ import { lynxTheme } from './theme.js';
  * // enable debug mode
  * createLynxPreset({ debug: true });
  *
+ * ```
+ *
  * @since 0.1.0
  */
 function createLynxPreset({

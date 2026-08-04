@@ -24,6 +24,7 @@ use ui_judge::{judge_page, JudgePageRequest};
 #[tokio::main(flavor = "current_thread")]
 async fn main() {
   let result = judge_page(JudgePageRequest {
+    include_geqi: true,
     reference: None,
     reference_image: None,
     screenshot_settle: Duration::from_millis(16),
@@ -43,9 +44,28 @@ must use an absolute `file:///...` URL; bare filesystem paths are rejected
 before model or runtime initialization.
 
 `timeout` applies independently to connection, navigation, each natural
-language step, final screenshot capture, VLM scoring, and optional reference
-image comparison. It is not an overall deadline for the entire request; this
-preserves the behavior of the former TypeScript implementation.
+language step, final screenshot capture, visual-correctness scoring, every
+enabled GEQI dimension, and optional reference-image comparison. It is not an
+overall deadline for the entire request; this preserves the behavior of the
+former TypeScript implementation.
+
+Set `include_geqi` to score the final screenshot independently across four
+weighted GEQI dimensions. The top-level `score`, `reason`, and `summary`
+remain the separate visual-correctness result. `dimensions` contains the four
+0-5 results and their relative weights, while `geqi_score` normalizes their
+weighted result to a 0-100 score:
+
+- Usability & Interaction Logic: weight 30
+- Visual Communication & Aesthetics: weight 25
+- Consistency & Standards: weight 15
+- Information Architecture & UX Writing: weight 15
+
+All five VLM evaluations consume the same final screenshot and run
+independently. A failed GEQI dimension is returned with `score: 0` and its own
+`error`; it does not replace the visual-correctness result. The weighted score
+retains the historical calculation in which such an error result contributes
+zero, so callers should inspect every dimension error before treating the
+aggregate as a complete evaluation.
 
 `reference` remains an optional textual target for the model. Set
 `reference_image` to a plain base64 image, a `data:image/...;base64,...` URL, or
@@ -58,7 +78,8 @@ The VLM and reference-image comparison are independent consumers of the final
 screenshot. The VLM always receives only that screenshot plus `task` and the
 optional textual `reference`; it never receives `reference_image`, alignment
 output, pixel-diff output, or algorithmic similarity. Consequently the public
-`score`, `reason`, and `summary` fields always come from the VLM. The `error`
+`score`, `reason`, `summary`, `dimensions`, and `geqi_score` fields come from
+the VLM evaluations. The `error`
 field reports failures in the primary page-capture or VLM chain. A
 reference-image failure is reported separately as `reference_image_error` and
 does not replace a successful VLM result; a VLM failure likewise does not
@@ -94,7 +115,7 @@ produce an explicit unsupported error.
 Turn on the `server` feature to serve UI Judge over HTTP:
 
 ```bash
-PORT=8080 cargo run -p ui_judge --features server --bin ui-judge-server
+LYNX_USE_PORT=8080 cargo run -p ui_judge --features server --bin ui-judge-server
 ```
 
 Build the release server for Linux AMD64 from any directory with:
@@ -103,7 +124,10 @@ Build the release server for Linux AMD64 from any directory with:
 packages/genui/ui-judge/build.sh
 ```
 
-The script writes a deployable bundle to `dist/linux-amd64`:
+The Cargo build first writes a runnable server layout to
+`target/x86_64-unknown-linux-gnu/release`, including the downloaded Lynx
+runtime, `lynx_core.js`, and generated launcher. The script copies that layout
+to `dist/linux-amd64`:
 
 ```text
 dist/linux-amd64/
@@ -122,22 +146,27 @@ from a different host requires the Rust standard library and a linker for the
 Start the packaged server with:
 
 ```bash
-PORT=8080 packages/genui/ui-judge/dist/linux-amd64/start.sh
+LYNX_USE_PORT=8080 packages/genui/ui-judge/dist/linux-amd64/start.sh
 ```
 
 `start.sh` resolves the bundle directory independently of the current working
-directory, configures `LYNX_LIB_PATH`, `LYNX_SDK_DIR`, and `LD_LIBRARY_PATH`,
-then starts the server. Model configuration and credentials continue to come
+directory, then starts the `ui-judge-server` executable beside it. Model
+configuration, credentials, and Lynx runtime configuration continue to come
 from the caller's environment. Linux hosts must also provide the
 `libepoxy.so.0` system dependency.
 
-`PORT` defaults to `8080` and must be between `1` and `65535`. The process
-listens on both `0.0.0.0:{PORT}` and `[::]:{PORT}`. Use `GET /health` for a
-readiness check, `POST /judge` to evaluate a page, and `POST /compare` to
-compare two uploaded images without rendering a page or calling the VLM.
+`LYNX_USE_PORT` defaults to `8080` and must be between `1` and `65535`. The
+process listens on both `0.0.0.0:{LYNX_USE_PORT}` and
+`[::]:{LYNX_USE_PORT}`. Use `GET /health` for a readiness check and the
+non-secret configured model name, `POST /judge` to evaluate a page, and
+`POST /compare` to compare two uploaded images without rendering a page or
+calling the VLM.
 
 The following request evaluates a local bundle. `url` and `task` are required.
-The other fields are optional.
+The other fields are optional. `initialData` and `globalProps` accept JSON
+objects and are forwarded only by the HTTP server to the headless Lynx
+navigation request; `null` is treated as omitted. The Rust library's public
+`JudgePageRequest` remains unchanged.
 
 ```bash
 curl --request POST http://127.0.0.1:8080/judge \
@@ -145,8 +174,15 @@ curl --request POST http://127.0.0.1:8080/judge \
   --data '{
     "url": "file:///absolute/path/to/dist/main.lynx.bundle",
     "task": "The saved state should be clear and visually correct",
+    "globalProps": {
+      "messages": [],
+      "instant": true,
+      "theme": "light"
+    },
+    "includeGeqi": true,
     "reference": null,
     "referenceImage": null,
+    "includeScreenshot": true,
     "steps": ["Tap the Save button"],
     "screenshotSettleMs": 16,
     "timeoutMs": 60000
@@ -170,14 +206,17 @@ It normalizes and compares the uploads on the bounded visual worker pool; it
 does not enqueue headless capture, initialize a model client, render a Lynx
 page, or perform VLM scoring.
 
-The `/judge` response is a JSON-encoded `UiJudgeResult`. A completed evaluation
-returns HTTP `200`, including evaluation failures reported in the result's
-`error` field. Invalid HTTP input returns `400`, `413`, or `422`. The server
-returns `503` when its bounded capture queue is full or the headless worker is
-no longer available. A headless-worker panic makes readiness return `503`,
-initiates graceful shutdown, and is propagated as a server error after the
-worker is joined. Each uploaded comparison image is limited to 10 MiB. Request
-bodies are limited to 20 MiB plus 64 KiB of multipart overhead.
+The `/judge` response contains the JSON-encoded `UiJudgeResult`. When
+`includeScreenshot` is true and capture succeeds, it additionally contains the
+exact judged PNG as `screenshotDataUrl`; the field is omitted by default to
+avoid inflating ordinary responses. A completed evaluation returns HTTP `200`,
+including evaluation failures reported in the result's `error` field. Invalid
+HTTP input returns `400`, `413`, or `422`. The server returns `503` when its
+bounded capture queue is full or the headless worker is no longer available. A
+headless-worker panic makes readiness return `503`, initiates graceful
+shutdown, and is propagated as a server error after the worker is joined. Each
+uploaded comparison image is limited to 10 MiB. Request bodies are limited to
+20 MiB plus 64 KiB of multipart overhead.
 
 The server accepts connections concurrently. It keeps native Lynx capture on a
 dedicated current-thread runtime because the renderer is thread-bound. After a

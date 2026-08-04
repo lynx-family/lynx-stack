@@ -1,5 +1,17 @@
 # @lynx-js/rspeedy
 
+## 0.16.2
+
+### Patch Changes
+
+- Move `pluginChunkLoading`, `pluginOptimization`, `pluginResolve`, `pluginSourcemap`, `pluginSwc`, and `pluginTarget` into `pluginLynx()`. `@lynx-js/rspeedy` now depends on `@lynx-js/rsbuild-plugin`. ([#3301](https://github.com/lynx-family/lynx-stack/pull/3301))
+
+- Minify `stats.json` and exclude module `reasons` to avoid invalid string length when building large projects ([#3239](https://github.com/lynx-family/lynx-stack/pull/3239))
+
+- Updated dependencies [[`ae05f98`](https://github.com/lynx-family/lynx-stack/commit/ae05f984807079abb7a6574b3e083f33bbeec708), [`c1136da`](https://github.com/lynx-family/lynx-stack/commit/c1136da9ce58fc4b09ee7753d46e1b057740926d)]:
+  - @lynx-js/rsbuild-plugin@0.0.1
+  - @lynx-js/web-rsbuild-server-middleware@0.23.1
+
 ## 0.16.1
 
 ### Patch Changes

@@ -1,5 +1,18 @@
 # @lynx-js/web-core
 
+## 0.23.1
+
+### Patch Changes
+
+- Wait for main-thread lazy-component evaluation before invoking background callbacks. ([#3252](https://github.com/lynx-family/lynx-stack/pull/3252))
+
+- Support the `__GetComputedStyleByKey` element PAPI. ([#3262](https://github.com/lynx-family/lynx-stack/pull/3262))
+
+- Allow Web-gated MTS compatibility shims to replace the chunk-local window binding. ([#3294](https://github.com/lynx-family/lynx-stack/pull/3294))
+
+- Updated dependencies []:
+  - @lynx-js/web-worker-rpc@0.23.1
+
 ## 0.23.0
 
 ### Minor Changes

@@ -39,7 +39,6 @@ import { useReducer } from 'react';
 import { useRef } from 'react';
 import { useState } from 'react';
 import { useSyncExternalStore } from 'react';
-import type { VNode } from 'preact';
 
 // @public
 export const Children: ReactLynxChildren;
@@ -66,7 +65,7 @@ export interface CreateElement {
 export const createElement: CreateElement;
 
 // @public
-export function createPortal(vnode: ComponentChild, container: NodesRef): VNode<any> | null;
+export function createPortal(vnode: ComponentChild, container: NodesRef): ReactNode;
 
 export { createRef }
 

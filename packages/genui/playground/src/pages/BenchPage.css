@@ -279,6 +279,127 @@
   cursor: pointer;
 }
 
+.benchDropdown {
+  position: relative;
+  width: 100%;
+  min-width: 0;
+}
+
+.benchDropdown[data-open="true"] {
+  z-index: 30;
+}
+
+.benchDropdownTrigger {
+  width: 100%;
+  min-width: 0;
+  height: 40px;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 12px;
+  padding: 0 12px;
+  border: 1px solid var(--geist-border);
+  border-radius: 0;
+  background: var(--geist-background);
+  color: var(--geist-foreground);
+  cursor: pointer;
+  font: inherit;
+  font-size: 13px;
+  font-weight: 500;
+  text-align: left;
+}
+
+.benchDropdownTrigger > span {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.benchDropdownTrigger::after {
+  width: 6px;
+  height: 6px;
+  border-right: 1px solid currentcolor;
+  border-bottom: 1px solid currentcolor;
+  content: "";
+  transform: translateY(-2px) rotate(45deg);
+  transition: transform var(--geist-transition);
+}
+
+.benchDropdown[data-open="true"] .benchDropdownTrigger {
+  border-color: var(--geist-foreground);
+}
+
+.benchDropdown[data-open="true"] .benchDropdownTrigger::after {
+  transform: translateY(2px) rotate(225deg);
+}
+
+.benchDropdownTrigger:focus-visible {
+  outline: 2px solid
+    color-mix(in srgb, var(--geist-foreground) 22%, transparent);
+  outline-offset: 2px;
+}
+
+.benchDropdown[data-disabled="true"] .benchDropdownTrigger {
+  cursor: not-allowed;
+  opacity: 0.5;
+}
+
+.benchDropdownMenu {
+  position: absolute;
+  top: calc(100% + 5px);
+  right: 0;
+  left: 0;
+  display: grid;
+  max-height: 240px;
+  padding: 4px;
+  overflow: auto;
+  border: 1px solid var(--geist-foreground);
+  background: var(--geist-background);
+  box-shadow: 0 12px 30px
+    color-mix(in srgb, var(--geist-foreground) 15%, transparent);
+}
+
+.benchDropdownMenu button {
+  position: relative;
+  min-height: 42px;
+  display: grid;
+  align-content: center;
+  gap: 2px;
+  padding: 7px 30px 7px 9px;
+  border: 0;
+  background: transparent;
+  color: var(--geist-foreground);
+  cursor: pointer;
+  font: inherit;
+  font-size: 12px;
+  font-weight: 550;
+  text-align: left;
+}
+
+.benchDropdownMenu button:hover,
+.benchDropdownMenu button:focus-visible {
+  outline: none;
+  background: var(--geist-surface);
+}
+
+.benchDropdownMenu button[data-selected="true"]::after {
+  position: absolute;
+  top: 50%;
+  right: 11px;
+  width: 8px;
+  height: 4px;
+  border-bottom: 1.5px solid currentcolor;
+  border-left: 1.5px solid currentcolor;
+  content: "";
+  transform: translateY(-65%) rotate(-45deg);
+}
+
+.benchDropdownMenu button small {
+  color: var(--geist-secondary);
+  font-size: 10px;
+  font-weight: 450;
+}
+
 .benchRunnerGrid,
 .benchGroupFields,
 .benchScenarioMetaRow {
@@ -311,7 +432,7 @@
 
 .benchRunActions {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) auto;
+  grid-template-columns: minmax(0, 1fr) auto auto;
   gap: 8px;
   margin-top: 14px;
 }
@@ -538,6 +659,82 @@
   gap: 8px;
 }
 
+.benchTemplateMenu {
+  position: relative;
+  z-index: 4;
+}
+
+.benchTemplateMenu > summary {
+  min-height: 32px;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 0 11px;
+  border: 1px solid var(--geist-border);
+  background: var(--geist-background);
+  color: var(--geist-foreground);
+  cursor: pointer;
+  font-size: 12px;
+  font-weight: 650;
+  list-style: none;
+}
+
+.benchTemplateMenu > summary::-webkit-details-marker {
+  display: none;
+}
+
+.benchTemplateMenu > summary::after {
+  width: 5px;
+  height: 5px;
+  border-right: 1px solid currentcolor;
+  border-bottom: 1px solid currentcolor;
+  content: "";
+  transform: translateY(-2px) rotate(45deg);
+}
+
+.benchTemplateMenu[open] > summary {
+  border-color: var(--geist-foreground);
+}
+
+.benchTemplateMenu > div {
+  position: absolute;
+  top: calc(100% + 6px);
+  right: 0;
+  width: 230px;
+  display: grid;
+  padding: 5px;
+  border: 1px solid var(--geist-border);
+  background: var(--geist-background);
+  box-shadow: var(--geist-shadow-md);
+}
+
+.benchTemplateMenu button {
+  min-height: 46px;
+  display: grid;
+  align-content: center;
+  gap: 2px;
+  padding: 7px 9px;
+  border: 0;
+  background: transparent;
+  color: var(--geist-foreground);
+  cursor: pointer;
+  font: inherit;
+  font-size: 12px;
+  font-weight: 650;
+  text-align: left;
+}
+
+.benchTemplateMenu button:hover,
+.benchTemplateMenu button:focus-visible {
+  background: var(--geist-surface);
+}
+
+.benchTemplateMenu button small {
+  color: var(--geist-secondary);
+  font-size: 10px;
+  font-weight: 500;
+}
+
 .benchGroupGrid {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
@@ -655,6 +852,11 @@
   box-shadow: var(--geist-shadow-sm);
 }
 
+.benchRoleButton:disabled {
+  cursor: not-allowed;
+  opacity: 0.5;
+}
+
 .benchGroupName {
   height: 32px;
   padding: 0 10px;
@@ -686,6 +888,30 @@
   font-weight: 650;
   text-overflow: ellipsis;
   white-space: nowrap;
+}
+
+.benchGroupSummary span[data-protocol="a2ui"] {
+  border-color: color-mix(in srgb, #185fc7 32%, var(--geist-border));
+  color: #185fc7;
+}
+
+.benchGroupSummary span[data-protocol="openui"] {
+  border-color: color-mix(in srgb, #9b4a08 32%, var(--geist-border));
+  color: #9b4a08;
+}
+
+.benchGroupSummary span[data-baseline="true"] {
+  color: var(--geist-foreground);
+}
+
+.benchGroupSummary span[data-changed="true"] {
+  border-left: 2px solid var(--geist-foreground);
+  color: var(--geist-foreground);
+}
+
+.benchSelect:disabled {
+  cursor: not-allowed;
+  opacity: 0.56;
 }
 
 .benchGroupDetails {
@@ -730,6 +956,24 @@
 
 .benchGroupDetails .benchGroupFields {
   margin-top: 6px;
+}
+
+.benchGroupDetails .benchGroupFields + .benchGroupFields {
+  margin-top: 10px;
+}
+
+.benchProfileHint {
+  margin: 9px 0 0;
+  padding-left: 9px;
+  border-left: 2px solid var(--geist-foreground);
+  color: var(--geist-secondary);
+  font-size: 11px;
+  line-height: 1.55;
+}
+
+.benchProfileHint strong {
+  color: var(--geist-foreground);
+  font-weight: 650;
 }
 
 .benchPlanSection {
@@ -1272,6 +1516,18 @@
   gap: 12px;
 }
 
+.benchHistoryActions {
+  align-items: center;
+  justify-content: flex-start;
+}
+
+.benchHistorySecondaryActions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-left: auto;
+}
+
 .benchHistoryCard h3 {
   margin: 0;
   overflow-wrap: anywhere;
@@ -1711,7 +1967,6 @@
   .benchMetricStrip,
   .benchInsightGrid,
   .benchHistoryStats,
-  .benchPlanSummary,
   .benchRunnerGrid,
   .benchScreenshotSummaryGrid,
   .benchGroupFields,
@@ -1750,5 +2005,28 @@
   .benchReportActions {
     align-items: stretch;
     flex-direction: column;
+  }
+
+  .benchHistorySecondaryActions {
+    width: 100%;
+    margin-left: 0;
+  }
+
+  .benchHistorySecondaryActions .btn {
+    flex: 1;
+  }
+}
+
+@media (max-width: 480px) {
+  .benchPlanSummary {
+    grid-template-columns: 1fr;
+  }
+
+  .benchRunActions {
+    grid-template-columns: minmax(0, 1fr) auto;
+  }
+
+  .benchRunActions > :first-child {
+    grid-column: 1 / -1;
   }
 }

@@ -10,7 +10,6 @@ export default defineConfig({
       format: 'esm',
       syntax: 'es2022',
       bundle: true,
-      autoExternal: false,
       dts: false,
       source: {
         entry: {
@@ -19,6 +18,7 @@ export default defineConfig({
       },
       output: {
         target: 'node',
+        autoExternal: false,
         externals: [/^@mastra\/core(?:\/.*)?$/u],
       },
     },

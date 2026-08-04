@@ -15,7 +15,7 @@
     "src"
   ],
   "scripts": {
-    "build": "tsc --build",
+    "build": "tsc6 --build",
     "test": "pnpm run test:snapshot && pnpm run test:core && pnpm run test:et",
     "test:core": "vitest run __test__/core",
     "test:et": "vitest run -c __test__/element-template/vitest.config.ts --coverage",

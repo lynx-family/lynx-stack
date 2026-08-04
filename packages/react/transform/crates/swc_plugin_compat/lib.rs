@@ -16,7 +16,10 @@ use swc_core::{
   quote,
 };
 
-use swc_plugins_shared::target::TransformTarget;
+use swc_plugins_shared::{
+  lynx_event::{is_lynx_event_attribute_name, transform_legacy_react_event_attribute_name},
+  target::TransformTarget,
+};
 
 mod is_component_class;
 mod simplify_ctor_like_react_lynx_2;
@@ -108,8 +111,7 @@ pub struct CompatVisitorConfig {
   /// @public
   /// Specifies the list of component package names that need compatibility processing
   ///
-  /// @remarks
-  /// Default value: `['@lynx-js/react-components']`
+  /// @defaultValue `['@lynx-js/react-components']`
   ///
   /// @example
   ///
@@ -131,8 +133,7 @@ pub struct CompatVisitorConfig {
   /// @public
   /// Specifies the list of old runtime package names that need compatibility processing
   ///
-  /// @remarks
-  /// Default value: `['@lynx-js/react-runtime']`
+  /// @defaultValue `['@lynx-js/react-runtime']`
   ///
   /// @example
   ///
@@ -154,8 +155,7 @@ pub struct CompatVisitorConfig {
   /// @public
   /// Specifies the new runtime package name
   ///
-  /// @remarks
-  /// Default value: `'@lynx-js/react'`
+  /// @defaultValue `'@lynx-js/react'`
   ///
   /// @example
   ///
@@ -177,10 +177,10 @@ pub struct CompatVisitorConfig {
   /// @public
   /// Specifies additional component attributes list, these attributes will be passed to the wrapped `<view>` instead of the component.
   ///
+  /// @defaultValue `[]`
+  ///
   /// @remarks
   /// This only takes effect when {@link CompatVisitorConfig.addComponentElement} is enabled.
-  ///
-  /// Default value: `[]`
   ///
   /// @example
   ///
@@ -202,8 +202,7 @@ pub struct CompatVisitorConfig {
   /// @public
   /// Controls whether to add wrapper elements for components
   ///
-  /// @remarks
-  /// Default value: `false`
+  /// @defaultValue `false`
   ///
   /// @example
   ///
@@ -258,8 +257,7 @@ pub struct CompatVisitorConfig {
   ///
   /// Instead, use `background-only` on class methods for explicit and maintainable behavior
   ///
-  /// @remarks
-  /// Default value: `false`
+  /// @defaultValue `false`
   ///
   /// @example
   ///
@@ -286,8 +284,7 @@ pub struct CompatVisitorConfig {
   ///
   /// If your code depends on this switch, when distributing it to other projects through npm packages or other means, you'll also need to enable this switch. This will lead to the proliferation of switches, which is not conducive to code reuse between different projects.
   ///
-  /// @remarks
-  /// Default value: `None`
+  /// @defaultValue `undefined`
   ///
   /// @example
   ///
@@ -309,8 +306,7 @@ pub struct CompatVisitorConfig {
   /// @public
   /// Whether to disable deprecated warnings
   ///
-  /// @remarks
-  /// Default value: `false`
+  /// @defaultValue `false`
   ///
   /// @example
   ///
@@ -335,8 +331,7 @@ pub struct CompatVisitorConfig {
   /// @deprecated
   /// Dark mode configuration
   ///
-  /// @remarks
-  /// Default value: `None`
+  /// @defaultValue `undefined`
   ///
   /// @example
   ///
@@ -876,12 +871,11 @@ where
                 return false;
               }
 
-              let re1 =
-                Regex::new(r"^(global-bind|bind|catch|capture-bind|capture-catch)([A-Za-z]+)$")
-                  .unwrap();
               let re2 = Regex::new(r"^data-([A-Za-z]+)$").unwrap();
 
-              if re1.is_match(ident_str.as_str()) || re2.is_match(ident_str.as_str()) {
+              if is_lynx_event_attribute_name(ident_str.as_str())
+                || re2.is_match(ident_str.as_str())
+              {
                 primitive_attrs.push(JSXAttrOrSpread::JSXAttr(attr.clone()));
                 return false;
               }
@@ -902,10 +896,7 @@ where
               name,
               span: _,
             }) => {
-              let re1 =
-                Regex::new(r"^(global-bind|bind|catch|capture-bind|capture-catch)([A-Za-z]+)$")
-                  .unwrap();
-              if re1.is_match(name.sym.to_string().as_str()) {
+              if is_lynx_event_attribute_name(name.sym.as_ref()) {
                 primitive_attrs.push(JSXAttrOrSpread::JSXAttr(attr.clone()));
                 return false;
               }
@@ -968,24 +959,6 @@ where
     // <View onClick={} /> => <View bindtap={} />
     // <View onTouchStart={} /> => <View bindtouchstart={} />
 
-    fn transform_event_name(mut props_key: &str) -> Option<String> {
-      if props_key.starts_with("on") {
-        let prefix = if props_key.ends_with("Catch") {
-          props_key = &props_key[..props_key.len() - 5];
-          "catch"
-        } else {
-          "bind"
-        };
-        let suffix = if props_key.starts_with("onClick") {
-          "tap".into()
-        } else {
-          props_key[2..].to_lowercase()
-        };
-        return Some(format!("{prefix}{suffix}"));
-      }
-      None
-    }
-
     let warning_transform_event_name = |old_name: &str, new_name: &str| {
       self.emit_deprecation_warning(
         n.span,
@@ -996,13 +969,13 @@ where
     if *self.is_target_jsx_element.last().unwrap_or(&false) {
       match &n.name {
         JSXAttrName::Ident(id) => {
-          if let Some(new_name) = transform_event_name(id.sym.to_string().as_str()) {
+          if let Some(new_name) = transform_legacy_react_event_attribute_name(id.sym.as_ref()) {
             warning_transform_event_name(&id.sym, &new_name);
             n.name = JSXAttrName::Ident(IdentName::new(new_name.into(), id.span));
           }
         }
         JSXAttrName::JSXNamespacedName(JSXNamespacedName { ns, name, span }) => {
-          if let Some(new_name) = transform_event_name(name.sym.to_string().as_str()) {
+          if let Some(new_name) = transform_legacy_react_event_attribute_name(name.sym.as_ref()) {
             warning_transform_event_name(&name.sym, &new_name);
             n.name = JSXAttrName::JSXNamespacedName(JSXNamespacedName {
               ns: ns.clone(),
