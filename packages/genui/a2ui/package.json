@@ -155,8 +155,8 @@
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",
   "scripts": {
-    "build": "tsc --project tsconfig.build.json && npm run build:catalog",
-    "build:api": "tsc --project tsconfig.build.json",
+    "build": "tsc6 --project tsconfig.build.json && npm run build:catalog",
+    "build:api": "tsc6 --project tsconfig.build.json",
     "build:catalog": "genui a2ui generate catalog --catalog-dir src/catalog --out-dir dist --catalog-id https://unpkg.com/@lynx-js/genui/a2ui/dist/catalog.json && node scripts/writeBasicFunctionCatalogs.js dist && node scripts/writeCatalogManifestIndex.js",
     "test": "rstest"
   },

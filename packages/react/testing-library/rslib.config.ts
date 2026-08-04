@@ -59,9 +59,8 @@ export default defineConfig({
       format: 'esm',
       dts: {
         bundle: true,
-        tsgo: true,
         typescriptPath: fileURLToPath(
-          import.meta.resolve('@typescript/native-preview'),
+          import.meta.resolve('@typescript/native'),
         ),
       },
       output: {

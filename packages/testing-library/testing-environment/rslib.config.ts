@@ -18,9 +18,8 @@ export default defineConfig({
       format: 'esm',
       syntax: 'es2021',
       dts: {
-        tsgo: true,
         typescriptPath: fileURLToPath(
-          import.meta.resolve('@typescript/native-preview'),
+          import.meta.resolve('@typescript/native'),
         ),
       },
     },

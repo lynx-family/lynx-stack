@@ -6,7 +6,7 @@
   "scripts": {
     "build": "rspeedy build",
     "dev": "rspeedy dev",
-    "test:type": "tsc --noEmit"
+    "test:type": "tsc6 --noEmit"
   },
   "dependencies": {
     "@lynx-js/gesture-runtime": "workspace:*",

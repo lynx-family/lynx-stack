@@ -35,7 +35,7 @@
     "api-extractor": "api-extractor run --verbose",
     "build": "rslib build",
     "test": "rstest",
-    "test:type": "tsc --noEmit"
+    "test:type": "tsc6 --noEmit"
   },
   "dependencies": {
     "@lynx-js/type-config": "4.1.3"
