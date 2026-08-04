@@ -108,16 +108,31 @@ describe('root <Background> detection (enableMTSRendering: "auto")', () => {
     const mainThread = assets['.rspeedy/main/main-thread.js']!
     expect(mainThread).toBeTypeOf('string')
 
-    // Assembled, with the fallback snapshot named for the pre-hydration frame.
+    // Assembled from the background-collected definitions.
     expect(mainThread).toContain('__initMTSDefines')
-    expect(mainThread).toMatch(/__setRootMTSFallback\("__snapshot_[^"]+"\)/)
 
-    // Business logic stays off the main thread; the background keeps it.
+    // The static fallback still renders, through the entry's own main-thread
+    // compilation rather than a metadata channel.
+    expect(mainThread).toContain('root-background-skeleton-marker')
+
+    // The deferred app's logic stays off the main thread; the background
+    // keeps it. Only its element definitions travel here, for hydration.
     expect(mainThread).not.toContain('root-background-business-marker')
     const background = Object.entries(assets).find(([name]) =>
       /^\.rspeedy\/main\/background[^/]*\.js$/.test(name)
     )?.[1]
     expect(background).toContain('root-background-business-marker')
+  })
+
+  test('the entry module itself still runs on the main thread', async () => {
+    // `root.render` has to run there for the fallback to exist at all, so an
+    // entry's top-level code is executed on both threads — the fold only
+    // drops the *deferred subtree's* closure.
+    const assets = await buildFixture({ main: 'index.tsx' }, undefined)
+
+    const mainThread = assets['.rspeedy/main/main-thread.js']!
+    expect(mainThread).toContain('root.render')
+    expect(mainThread).not.toContain('HeavyApp')
   })
 
   test('a nested <Background> does not turn the mode on', async () => {
@@ -155,7 +170,7 @@ describe('root <Background> detection (enableMTSRendering: "auto")', () => {
     expect(mainThread).toContain('root-background-business-marker')
   })
 
-  test('warns when the root fallback contains a user component', async () => {
+  test('compiles a user component in the root fallback for the main thread', async () => {
     const warnings = collectWarnings()
 
     const assets = await buildFixture(
@@ -163,13 +178,12 @@ describe('root <Background> detection (enableMTSRendering: "auto")', () => {
       undefined,
     )
 
-    // The mode still turns on — the warning explains the empty fallback.
-    expect(assets['.rspeedy/main/main-thread.js']).toContain(
-      '__initMTSDefines',
-    )
-    expect(warnings().join('\n')).toMatch(
-      /fallback[\s\S]*user component/,
-    )
+    const mainThread = assets['.rspeedy/main/main-thread.js']!
+    expect(mainThread).toContain('__initMTSDefines')
+    // The fallback component's body is real main-thread code now, so nothing
+    // about it is worth warning over.
+    expect(mainThread).toContain('spinner-from-fallback-logic')
+    expect(warnings().join('\n')).not.toMatch(/user component/)
   })
 
   test('warns on an entry left without a root <Background> in a multi-entry build', async () => {

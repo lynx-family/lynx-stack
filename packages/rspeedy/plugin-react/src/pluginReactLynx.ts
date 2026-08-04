@@ -290,16 +290,19 @@ export interface PluginReactLynxOptions {
    * ```
    *
    * - `'auto'` (the default) — production builds detect a root-level
-   *   `<Background>` in the entry sources and stop compiling business code
-   *   for the main thread: the main-thread bundle is assembled from the
-   *   definitions collected during the background compilation, and the first
-   *   frame renders the static `fallback` through them. Development builds
+   *   `<Background>` in the entry sources and stop compiling the *deferred*
+   *   subtree for the main thread: the boundary is folded to its `fallback`
+   *   at compile time, so the app's module closure never enters the
+   *   main-thread bundle, while its element definitions are assembled there
+   *   from the background compilation for hydration to build from. The
+   *   `fallback` is compiled for the main thread as ordinary code and renders
+   *   the first frame, so it may contain user components. Development builds
    *   keep the classic dual-thread path (the `<Background>` component itself
    *   renders the fallback — the same first frame, with HMR intact). Without
    *   a root `<Background>` nothing changes.
-   * - `false` — force the assembled main-thread bundle regardless of the
-   *   entry shape (the escape hatch; a missing root `<Background>` fallback
-   *   renders an empty first frame).
+   * - `false` — force the mode regardless of the entry shape (the escape
+   *   hatch; an entry with no root `<Background>` compiles nothing at all for
+   *   the main thread and renders an empty first frame).
    * - `true` — force the classic dual-thread build.
    *
    * This option is the implementation detail behind the root `<Background>`

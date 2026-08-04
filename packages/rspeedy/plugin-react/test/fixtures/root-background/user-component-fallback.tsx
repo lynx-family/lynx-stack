@@ -1,9 +1,13 @@
 import { Background, root } from '@lynx-js/react'
 
+function spinnerLabel(): string {
+  return 'spinner-from-fallback-logic'
+}
+
 function Spinner(): JSX.Element {
   return (
     <view>
-      <text>spinner</text>
+      <text>{spinnerLabel()}</text>
     </view>
   )
 }

@@ -5,6 +5,7 @@
 extern crate napi_derive;
 mod bundle;
 mod esbuild;
+mod swc_plugin_background_fallback;
 mod swc_plugin_compat_post;
 mod swc_plugin_extract_str;
 mod swc_plugin_refresh;
@@ -249,6 +250,16 @@ pub struct TransformNodiffOptions {
   /// @internal
   #[napi(js_name = "collectMTSDefines")]
   pub collect_mts_defines: Option<bool>,
+  /// Fold `<Background>` to its `fallback` at compile time.
+  ///
+  /// Set on the main-thread target when the main thread compiles no business
+  /// code of its own: the `children` reference is what would otherwise keep
+  /// the whole app in the main-thread module graph, while the `fallback` is
+  /// compiled for the main thread as ordinary code.
+  ///
+  /// @internal
+  #[napi(js_name = "foldBackgroundToFallback")]
+  pub fold_background_to_fallback: Option<bool>,
   pub input_source_map: Option<String>,
 }
 
@@ -278,6 +289,7 @@ impl Default for TransformNodiffOptions {
       experimental_transform_builtin_attribute_names: None,
       inject: Some(Either::A(false)),
       collect_mts_defines: None,
+      fold_background_to_fallback: None,
       input_source_map: None,
     }
   }
@@ -866,6 +878,11 @@ fn transform_react_lynx_inner(
       ),
     };
 
+    let background_fallback_plugin = Optional::new(
+      visit_mut_pass(swc_plugin_background_fallback::BackgroundFallbackVisitor::new()),
+      options.fold_background_to_fallback.unwrap_or(false),
+    );
+
     let pass = (
       &mut fixer(Some(&comments)),
       resolver(unresolved_mark, top_level_mark, true),
@@ -880,7 +897,14 @@ fn transform_react_lynx_inner(
       ),
       dynamic_import_plugin,
       refresh_plugin,
-      (compat_plugin, transform_builtin_attribute_names_plugin),
+      (
+        // Before any JSX-consuming pass: the folded-away `children` must never
+        // reach the snapshot/worklet transforms, so no definition is generated
+        // for a subtree the main thread will not render.
+        background_fallback_plugin,
+        compat_plugin,
+        transform_builtin_attribute_names_plugin,
+      ),
       worklet_plugin,
       css_scope_plugin,
       (

@@ -241,6 +241,21 @@ interface ReactWebpackPluginOptions {
   enableMTSRendering?: boolean;
 
   /**
+   * Whether the main thread has anything to render on the first screen.
+   *
+   * @remarks
+   *
+   * This is the runtime half of `enableMTSRendering` and diverges from
+   * it in exactly one case: the main thread compiles no business code, yet an
+   * entry declares a root `<Background>` whose fallback *is* compiled for it.
+   * The build is then still the assembled one, while the first screen renders
+   * that fallback.
+   *
+   * @defaultValue the value of `enableMTSRendering`
+   */
+  rendersOnMainThread?: boolean | undefined;
+
+  /**
    * The background entry name of each main-thread entry.
    */
   mainThreadEntries?: Record<string, string>;
@@ -331,6 +346,9 @@ class ReactWebpackPlugin {
       workletRuntimePath: '',
       experimental_useElementTemplate: false,
       enableMTSRendering: true,
+      // Left unset so it resolves to `enableMTSRendering`; only a build that
+      // compiles a root `<Background>`'s fallback for the main thread sets it.
+      rendersOnMainThread: undefined,
       mainThreadEntries: {},
       lazyBundleFetcher: 'QueryComponent',
     });
@@ -402,7 +420,9 @@ class ReactWebpackPlugin {
         options.experimental_useElementTemplate,
       ),
       __LAZY_BUNDLE_FETCHER__: JSON.stringify(options.lazyBundleFetcher),
-      __ENABLE_MTS_RENDERING__: JSON.stringify(options.enableMTSRendering),
+      __ENABLE_MTS_RENDERING__: JSON.stringify(
+        options.rendersOnMainThread ?? options.enableMTSRendering,
+      ),
     }).apply(compiler);
 
     compiler.hooks.thisCompilation.tap(this.constructor.name, compilation => {

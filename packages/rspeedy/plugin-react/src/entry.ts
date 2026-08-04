@@ -20,7 +20,10 @@ import {
   WebEncodePlugin,
 } from '@lynx-js/template-webpack-plugin'
 
-import { resolveMTSRendering } from './mtsRendering.js'
+import {
+  entriesDeclaringRootBackground,
+  resolveMTSRendering,
+} from './mtsRendering.js'
 import type { PluginReactLynxOptions } from './pluginReactLynx.js'
 import { resolveLazyBundleFetcher } from './resolveLazyBundleFetcher.js'
 
@@ -83,9 +86,40 @@ export function applyEntry(
       (message) => void (api.logger ?? console).warn(message),
     )
 
-    const mainThreadImports = resolvedEnableMTSRendering ? undefined : [
-      path.join(reactLynxDir, 'runtime/mts-rendering-disabled/index.js'),
-    ]
+    const mtsDefinesEntry = path.join(
+      reactLynxDir,
+      'runtime/mts-rendering-disabled/index.js',
+    )
+
+    // Which entries declare a root `<Background>`, and so have a fallback the
+    // main thread should compile and render. An entry without one keeps the
+    // degenerate shape: the assembled definitions only, and an empty first
+    // frame until the background hydrates.
+    const entriesWithRootBackground = resolvedEnableMTSRendering
+      ? new Set<string>()
+      : entriesDeclaringRootBackground(chain, api.context.rootPath)
+
+    /**
+     * The main thread compiles the entry only to render a root
+     * `<Background>`'s fallback: the transform folds the boundary to that
+     * fallback, so the app's own module closure never reaches this bundle.
+     */
+    const mainThreadImportsFor = (
+      entryName: string,
+      imports: string[],
+    ): string[] | undefined => {
+      if (resolvedEnableMTSRendering) {
+        return undefined
+      }
+      return entriesWithRootBackground.has(entryName)
+        ? [mtsDefinesEntry, ...imports]
+        : [mtsDefinesEntry]
+    }
+
+    // The main thread only has something to render when at least one entry
+    // brought a fallback with it; otherwise the render path is shaken out.
+    const rendersOnMainThread = resolvedEnableMTSRendering
+      || entriesWithRootBackground.size > 0
 
     const rsbuildConfig = api.getRsbuildConfig()
     const userConfig = api.getRsbuildConfig('original')
@@ -189,7 +223,7 @@ export function applyEntry(
           .entry(mainThreadEntry)
           .add({
             layer: LAYERS.MAIN_THREAD,
-            import: mainThreadImports ?? imports,
+            import: mainThreadImportsFor(entryName, imports) ?? imports,
             filename: mainThreadName,
           })
           .when(enabledHMR, entry => {
@@ -335,6 +369,7 @@ export function applyEntry(
         globalPropsMode,
         enableSSR,
         enableMTSRendering: resolvedEnableMTSRendering,
+        rendersOnMainThread,
         mainThreadChunks,
         mainThreadEntries,
         extractStr,

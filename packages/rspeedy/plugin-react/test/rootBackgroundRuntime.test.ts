@@ -70,10 +70,32 @@ function createMainThreadEnv() {
     __CreateList: () => create('list'),
     __AppendElement: (parent: StubElement, child: StubElement) =>
       parent.children.push(child),
-    __InsertElementBefore: (parent: StubElement, child: StubElement) =>
-      parent.children.push(child),
+    __InsertElementBefore: (
+      parent: StubElement,
+      child: StubElement,
+      before?: StubElement,
+    ) => {
+      const index = before ? parent.children.indexOf(before) : -1
+      if (index === -1) {
+        parent.children.push(child)
+      } else {
+        parent.children.splice(index, 0, child)
+      }
+    },
     __RemoveElement: (parent: StubElement, child: StubElement) => {
       parent.children = parent.children.filter(element => element !== child)
+    },
+    __ReplaceElement: (newElement: StubElement, oldElement: StubElement) => {
+      const walk = (node: StubElement | undefined): boolean => {
+        if (!node) return false
+        const index = node.children.indexOf(oldElement)
+        if (index !== -1) {
+          node.children[index] = newElement
+          return true
+        }
+        return node.children.some(walk)
+      }
+      walk(page)
     },
     __SetAttribute: (
       element: StubElement,
@@ -97,6 +119,7 @@ function createMainThreadEnv() {
       key: string,
       value: unknown,
     ) => (element.attributes[`data-${key}`] = value),
+    __GetTag: (element: StubElement) => element.tag,
     __SetCSSId: noop,
     __AddEvent: noop,
     __SetEvents: noop,
@@ -125,7 +148,7 @@ interface SerializedInstance {
   children?: SerializedInstance[] | undefined
 }
 
-async function buildRootBackgroundFixture(entry: string, tmp: string) {
+async function buildFixture(entry: string, tmp: string) {
   const { pluginReactLynx } = await import('../src/pluginReactLynx.js')
 
   let mainThread = ''
@@ -188,33 +211,26 @@ async function buildRootBackgroundFixture(entry: string, tmp: string) {
 
   await rsbuild.build()
 
-  return { getMainThread: () => mainThread }
+  return mainThread
 }
 
-describe('root <Background fallback> runtime (enableMTSRendering: "auto")', () => {
-  test('the first frame renders the static fallback, and hydration replaces it', async () => {
+describe('root <Background fallback> with a user component', () => {
+  test('the first frame renders the fallback component, and hydration replaces it', async () => {
     const tmp = await fs.mkdtemp(
       path.join(tmpdir(), 'rspeedy-react-test-root-background-runtime-'),
     )
 
     try {
-      const { getMainThread } = await buildRootBackgroundFixture(
-        'index.tsx',
-        tmp,
-      )
-      const mainThread = getMainThread()
+      const mainThread = await buildFixture('component-fallback.tsx', tmp)
 
-      // The bundle is assembled from the background-collected definitions and
-      // names the root fallback snapshot.
+      // The fallback is real main-thread code: the *logic* of `Skeleton`'s
+      // body — a helper it calls, not an element definition — was compiled
+      // into this bundle.
+      expect(mainThread).toContain('-from-fallback-logic')
+      // The deferred app's logic was not: only its element definitions travel
+      // here, through the assembly channel, for hydration to build from.
+      expect(mainThread).not.toContain('root-background-business-marker')
       expect(mainThread).toContain('__initMTSDefines')
-      const fallbackId = /__setRootMTSFallback\("(__snapshot_[^"]+)"\)/
-        .exec(mainThread)?.[1]
-      expect(fallbackId).toBeTypeOf('string')
-
-      const definitions = [
-        ...new Set(mainThread.match(/__snapshot_[0-9a-f]+_[0-9a-f]+_\d+/g)),
-      ]
-      expect(definitions.length).toBeGreaterThan(1)
 
       const { env, getPage, lifecycleEvents } = createMainThreadEnv()
       vm.createContext(env)
@@ -225,14 +241,16 @@ describe('root <Background fallback> runtime (enableMTSRendering: "auto")', () =
 
       renderPage({})
 
-      // The pre-hydration first frame is the skeleton, not an empty page.
-      const page = getPage()
-      expect(page?.children).toHaveLength(1)
-      expect(JSON.stringify(page)).toContain('root-background-skeleton-marker')
+      // The pre-hydration first frame is what the component rendered: all
+      // three rows, each label computed by its body at runtime — not a static
+      // blob, and not an empty page.
+      const firstFrame = JSON.stringify(getPage())
+      for (const row of [0, 1, 2]) {
+        expect(firstFrame).toContain(`skeleton-row-${row}-from-fallback-logic`)
+      }
 
-      // The first-screen sync carries the fallback instance to the background,
-      // where the ordinary hydration diff replaces it: simulate the resulting
-      // patch (remove the unmatched fallback, insert the real content).
+      // The first-screen sync hands that tree to the background, whose
+      // ordinary hydration diff replaces it with the real content.
       const firstScreen = lifecycleEvents.find((event) =>
         Array.isArray(event) && event[0] === 'rLynxFirstScreen'
       ) as [string, { root: string }] | undefined
@@ -241,13 +259,14 @@ describe('root <Background fallback> runtime (enableMTSRendering: "auto")', () =
       const serializedRoot = JSON.parse(
         firstScreen![1].root,
       ) as SerializedInstance
-      expect(serializedRoot.children).toHaveLength(1)
-      const fallbackInstance = serializedRoot.children![0]!
-      expect(fallbackInstance.type).toBe(fallbackId)
+      expect(serializedRoot.children?.length).toBeGreaterThan(0)
 
-      const contentId = definitions.find((definition) =>
-        definition !== fallbackId
-      )!
+      const definitions = [
+        ...new Set(mainThread.match(/__snapshot_[0-9a-f]+_[0-9a-f]+_\d+/g)),
+      ]
+      const contentId = definitions.at(-1)!
+      const fallbackRoot = serializedRoot.children![0]!
+
       const rLynxChange = env['rLynxChange'] as (args: {
         data: string
         patchOptions: { reloadVersion: number }
@@ -261,23 +280,21 @@ describe('root <Background fallback> runtime (enableMTSRendering: "auto")', () =
               contentId,
               100,
               /* InsertBefore(parent, child, before, slotIndex) */ 1,
-              serializedRoot.id,
+              fallbackRoot.id,
               100,
               undefined,
               0,
               /* RemoveChild(parent, child) */ 2,
-              serializedRoot.id,
-              fallbackInstance.id,
+              fallbackRoot.id,
+              fallbackRoot.children![0]!.id,
             ],
           }],
         }),
         patchOptions: { reloadVersion: 0 },
       })
 
-      const hydrated = getPage()
-      expect(hydrated?.children).toHaveLength(1)
-      expect(JSON.stringify(hydrated)).not.toContain(
-        'root-background-skeleton-marker',
+      expect(JSON.stringify(getPage())).not.toContain(
+        'skeleton-row-0-from-fallback-logic',
       )
     } finally {
       await fs.rm(tmp, { recursive: true, force: true })

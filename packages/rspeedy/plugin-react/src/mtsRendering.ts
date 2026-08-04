@@ -35,10 +35,14 @@ import type { RspackChain } from '@rsbuild/core'
 const BACKGROUND_IMPORT_RE =
   /import[^{}]*\{[^}]*\bBackground\b[^}]*\}\s*from\s*['"]@lynx-js\/react(?:\/[^'"]*)?['"]/
 
-// `<Background>` sitting directly inside a `.render(` call (`root.render(...)`,
-// `createRoot().render(...)`, …). `\s*` spans the whitespace/newlines a
-// formatter inserts between `.render(` and the opening tag.
-const ROOT_BACKGROUND_RENDER_RE = /\.render\(\s*<Background[\s/>]/
+// `<Background>` at the root of a `.render(` call (`root.render(...)`,
+// `createRoot().render(...)`, …). Host-element wrappers are allowed in
+// between — `root.render(<page><Background …>…</page>)` is the idiomatic
+// shape — and only those: a JSX name starting with a lowercase letter is a
+// host element by the JSX rules, while a *component* wrapper would mean the
+// boundary is not statically at the root and must not be detected.
+const ROOT_BACKGROUND_RENDER_RE =
+  /\.render\(\s*(?:<[a-z][\w.-]*(?:\s[^>]*?)?>\s*)*<Background[\s/>]/
 
 /**
  * Whether a single entry's source declares a root-level `<Background>`.
@@ -102,84 +106,6 @@ function tryReadFile(file: string): string | undefined {
 }
 
 /**
- * Best-effort extraction of the root `<Background>`'s `fallback={…}` attribute
- * value from an entry source: find the `<Background` that sits in a
- * `.render(...)` call, then the `fallback` attribute inside that tag (scanning
- * with brace balance, since the value may nest JSX with its own braces).
- *
- * Returns `undefined` when there is no root `<Background>` or no inline
- * `fallback` attribute to inspect (e.g. `fallback={fallbackFromElsewhere}` is
- * still inspected, but yields no element to flag).
- */
-function extractRootBackgroundFallback(source: string): string | undefined {
-  const render = ROOT_BACKGROUND_RENDER_RE.exec(source)
-  if (!render) {
-    return undefined
-  }
-  const tagStart = source.indexOf('<Background', render.index)
-  if (tagStart === -1) {
-    return undefined
-  }
-
-  // The opening tag ends at the first `>` at brace depth 0 (a `>` inside a
-  // `fallback={<view/>}` value sits at depth ≥ 1).
-  let tagEnd = source.length
-  let depth = 0
-  for (let i = tagStart; i < source.length; i++) {
-    const ch = source[i]
-    if (ch === '{') depth++
-    else if (ch === '}') depth--
-    else if (ch === '>' && depth === 0) {
-      tagEnd = i
-      break
-    }
-  }
-
-  const fallbackIdx = source.slice(tagStart, tagEnd).search(/\bfallback\s*=/)
-  if (fallbackIdx === -1) {
-    return undefined
-  }
-  const braceStart = source.indexOf('{', tagStart + fallbackIdx)
-  if (braceStart === -1 || braceStart >= tagEnd) {
-    return undefined
-  }
-  depth = 0
-  for (let i = braceStart; i < source.length; i++) {
-    const ch = source[i]
-    if (ch === '{') depth++
-    else if (ch === '}') {
-      depth--
-      if (depth === 0) {
-        return source.slice(braceStart + 1, i)
-      }
-    }
-  }
-  return undefined
-}
-
-/**
- * Guardrail for the assembled main-thread bundle: a root `<Background>`'s
- * `fallback` is what the 0.0 first screen renders, and with no business code
- * compiled for the main thread a *user component* in that fallback would
- * silently render nothing. Flags a capitalized JSX tag in the fallback so the
- * build can warn.
- *
- * Best-effort by design (regex + brace scan, not a parse): it flags the
- * canonical inline-fallback shape and stays silent on anything it cannot see.
- *
- * @internal
- */
-export function rootBackgroundFallbackHasUserComponent(
-  source: string,
-): boolean {
-  const fallback = extractRootBackgroundFallback(source)
-  if (fallback === undefined) {
-    return false
-  }
-  return /<\s*[A-Z]/.test(fallback)
-}
-
-/**
  * The file paths every entry of the chain imports, resolved against the
  * project root. Non-string entry items (`dependOn`-style descriptors are
  * unwrapped; anything else is skipped) never end up in the set.
@@ -234,6 +160,31 @@ export function collectEntryImportsByEntry(
     byEntry.set(entryName, files)
   }
   return byEntry
+}
+
+/**
+ * The entries whose sources declare a root-level `<Background>`, and so bring
+ * a fallback the main thread should compile and render.
+ *
+ * @internal
+ */
+export function entriesDeclaringRootBackground(
+  chain: RspackChain,
+  rootPath: string,
+): Set<string> {
+  const declaring = new Set<string>()
+  for (
+    const [entryName, files] of collectEntryImportsByEntry(chain, rootPath)
+  ) {
+    for (const file of files) {
+      const source = tryReadFile(file)
+      if (source !== undefined && sourceHasRootBackground(source)) {
+        declaring.add(entryName)
+        break
+      }
+    }
+  }
+  return declaring
 }
 
 const noop = (): void => {
@@ -304,8 +255,7 @@ export function resolveMTSRendering(
   }
 
   for (const [entryName, sources] of sourcesByEntry) {
-    const declaring = sources.filter(sourceHasRootBackground)
-    if (declaring.length === 0) {
+    if (!sources.some(sourceHasRootBackground)) {
       // The mode applies to the whole build: an entry without a root
       // <Background> gets an empty first frame (the `fallback={null}`
       // degenerate case) — worth saying out loud under `'auto'`.
@@ -317,19 +267,6 @@ export function resolveMTSRendering(
           + `empty until the background hydrates. Add a root <Background fallback={…}> to it, `
           + `or set \`enableMTSRendering: true\` to keep the classic build.`,
       )
-      continue
-    }
-    for (const source of declaring) {
-      if (rootBackgroundFallbackHasUserComponent(source)) {
-        warn(
-          `The root <Background> fallback of entry ${
-            JSON.stringify(entryName)
-          } `
-            + `appears to contain a user component. Business code is not compiled for the `
-            + `main thread in this mode, so it would render nothing on the first screen — compose `
-            + `the fallback from static host elements (<view>, <text>, …) instead.`,
-        )
-      }
     }
   }
 
