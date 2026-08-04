@@ -5559,6 +5559,48 @@ test.describe('reactlynx3 tests', () => {
     );
   });
 
+  test.describe('mts-rendering-disabled', () => {
+    test(
+      'mts-rendering-disabled-shared-module',
+      async ({ page }, { title }) => {
+        await goto(page, title);
+        await wait(100);
+        const target = page.locator('#target');
+        const observer = page.locator('#observer');
+
+        // The main thread compiles no business code under the mode, so the
+        // worklet reaches the shared module through the runtime registry. Tapping
+        // runs `next()` on it: pink -> green.
+        await target.click();
+        await expect(target).toHaveCSS('background-color', 'rgb(0, 128, 0)');
+
+        // A second worklet reading `current()` sees the same live instance.
+        await observer.click();
+        await expect(observer).toHaveCSS('background-color', 'rgb(0, 128, 0)');
+
+        // The instance stays live across invocations: green -> blue.
+        await target.click();
+        await expect(target).toHaveCSS('background-color', 'rgb(0, 0, 255)');
+        await observer.click();
+        await expect(observer).toHaveCSS('background-color', 'rgb(0, 0, 255)');
+      },
+    );
+
+    test(
+      'mts-rendering-disabled-shared-isolation',
+      async ({ page }, { title }) => {
+        await goto(page, title);
+        await wait(200);
+        const target = page.locator('#target');
+
+        // The background bumped its own instance three times on mount. The
+        // main thread holds an independent instance, so its first bump reads 1.
+        await target.click();
+        await expect(target).toHaveAttribute('data-count', '1');
+      },
+    );
+  });
+
   test.describe('external-bundle', () => {
     test('external-bundle', async ({ page }, { title }) => {
       await goto(page, title);

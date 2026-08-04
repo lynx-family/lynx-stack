@@ -332,6 +332,60 @@ describe('enableMTSRendering: false', () => {
       .not.toContain('getSharedModule("')
   })
 
+  test('gives every main-thread entry the shared modules it may reference', async () => {
+    const { pluginReactLynx } = await import('../src/pluginReactLynx.js')
+
+    const assets: Record<string, string> = {}
+    const tmp = await fs.mkdtemp(
+      path.join(tmpdir(), 'rspeedy-react-test-main-thread-shared-multi-'),
+    )
+
+    try {
+      const rsbuild = await createRspeedy({
+        rspeedyConfig: {
+          source: {
+            entry: {
+              first: fileURLToPath(
+                new URL(
+                  './fixtures/mts-rendering-shared-multi/first.tsx',
+                  import.meta.url,
+                ),
+              ),
+              second: fileURLToPath(
+                new URL(
+                  './fixtures/mts-rendering-shared-multi/second.tsx',
+                  import.meta.url,
+                ),
+              ),
+            },
+          },
+          output: { distPath: { root: tmp } },
+          plugins: [
+            pluginReactLynx({ enableMTSRendering: false }),
+            ignoreCSSLoaderWorkaround,
+          ],
+          tools: { rspack: { plugins: [collectAssets(assets)] } },
+        },
+      })
+
+      await rsbuild.build()
+
+      // Two entries importing the same shared module used to abort the build:
+      // the shared modules were resolved while the compilation's module graph
+      // was still being iterated.
+      for (const entry of ['first', 'second']) {
+        const mainThread = assets[`.rspeedy/${entry}/main-thread.js`]!
+        expect(mainThread, entry).toBeTypeOf('string')
+        expect(mainThread, entry).toContain('shared-module-marker')
+        expect(mainThread, entry).toMatch(
+          /__REACT_LYNX_SHARED_MODULES__[\s\S]*?\.set\("[0-9a-f]{16}"/,
+        )
+      }
+    } finally {
+      await fs.rm(tmp, { recursive: true, force: true })
+    }
+  })
+
   test('rejects Element Template, which it does not support yet', async () => {
     const { pluginReactLynx } = await import('../src/pluginReactLynx.js')
 

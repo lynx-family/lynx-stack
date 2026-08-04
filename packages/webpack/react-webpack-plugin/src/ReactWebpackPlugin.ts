@@ -697,11 +697,16 @@ class ReactWebpackPlugin {
       return;
     }
 
-    const resolver = compilation.resolverFactory.get('normal', {
-      dependencyType: 'esm',
-    });
-    const entries: Promise<void>[] = [];
-    const reserved = new Set<string>();
+    // Snapshot the requests before doing anything asynchronous: awaiting while
+    // iterating `compilation.modules` lets the compilation take back the module
+    // graph the iterator is reading, which aborts the build.
+    const requests: {
+      id: string;
+      request: string;
+      context: string;
+      from: string;
+    }[] = [];
+    const seen = new Set<string>();
     for (const module of compilation.modules) {
       const sharedImports = (module.buildInfo
         ?.[MTS_SHARED_IMPORTS_BUILD_INFO]) as MTSSharedImport[] | undefined;
@@ -710,55 +715,70 @@ class ReactWebpackPlugin {
       }
       const context = module.context ?? compiler.context;
       for (const { id, request } of sharedImports) {
-        if (reserved.has(id)) {
+        if (seen.has(id)) {
           continue;
         }
-        reserved.add(id);
-
-        // The request is resolved from the importing module here, since the
-        // virtual wrapper has no location of its own to resolve a relative
-        // request from; the wrapper then imports the resolved path.
-        const resource = await new Promise<string>((resolve, reject) => {
-          resolver.resolve({}, context, request, {}, (err, resolved) => {
-            if (err || typeof resolved !== 'string') {
-              reject(
-                new Error(
-                  `The shared import ${
-                    JSON.stringify(request)
-                  } of ${module.identifier()} resolved to no module to compile into the main-thread layer.`,
-                ),
-              );
-              return;
-            }
-            resolve(resolved);
-          });
-        });
-
-        // Which main-thread entry needs which shared module is unknowable
-        // before the chunk graph exists, so each one enters every main-thread
-        // entry. A registration nobody looks up costs size, not behavior.
-        for (const mainThreadEntry of mainThreadEntries) {
-          entries.push(
-            new Promise<void>((resolve, reject) => {
-              compilation.addEntry(
-                context,
-                EntryPlugin.createDependency(sharedModuleWrapper(id, resource)),
-                { name: mainThreadEntry, layer: LAYERS.MAIN_THREAD },
-                (err) => {
-                  if (err) {
-                    reject(err);
-                    return;
-                  }
-                  resolve();
-                },
-              );
-            }),
-          );
-        }
+        seen.add(id);
+        requests.push({ id, request, context, from: module.identifier() });
       }
     }
 
-    await Promise.all(entries);
+    if (requests.length === 0) {
+      return;
+    }
+
+    const resolver = compilation.resolverFactory.get('normal', {
+      dependencyType: 'esm',
+    });
+
+    // The request is resolved from the importing module, since the virtual
+    // wrapper has no location of its own to resolve a relative request from;
+    // the wrapper then imports the resolved path.
+    const resolved = await Promise.all(
+      requests.map(({ id, request, context, from }) =>
+        new Promise<{ id: string; context: string; resource: string }>(
+          (resolve, reject) => {
+            resolver.resolve({}, context, request, {}, (err, resource) => {
+              if (err || typeof resource !== 'string') {
+                reject(
+                  new Error(
+                    `The shared import ${
+                      JSON.stringify(request)
+                    } of ${from} resolved to no module to compile into the main-thread layer.`,
+                  ),
+                );
+                return;
+              }
+              resolve({ id, context, resource });
+            });
+          },
+        )
+      ),
+    );
+
+    // Which main-thread entry needs which shared module is unknowable before
+    // the chunk graph exists, so each one enters every main-thread entry. A
+    // registration nobody looks up costs size, not behavior.
+    await Promise.all(
+      resolved.flatMap(({ id, context, resource }) =>
+        mainThreadEntries.map((mainThreadEntry) =>
+          new Promise<void>((resolve, reject) => {
+            compilation.addEntry(
+              context,
+              EntryPlugin.createDependency(sharedModuleWrapper(id, resource)),
+              { name: mainThreadEntry, layer: LAYERS.MAIN_THREAD },
+              (err) => {
+                if (err) {
+                  reject(err);
+                  return;
+                }
+                resolve();
+              },
+            );
+          })
+        )
+      ),
+    );
   }
 
   #updateMainThreadInfo(compilation: Compilation, name: string) {
