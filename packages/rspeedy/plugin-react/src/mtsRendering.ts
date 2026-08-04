@@ -24,27 +24,36 @@ import type { RspackChain } from '@rsbuild/core'
  * @internal
  */
 
-// A named import of `Background` from `@lynx-js/react` (or a subpath such as
-// `@lynx-js/react/internal`), scoped to a *single* import statement: `[^}]*`
-// keeps the match inside one `{ … }` (it may span lines), and only whitespace
-// is allowed between `}` and `from`, so a `Background` imported from another
-// module never binds to a separate `@lynx-js/react` import.
-const BACKGROUND_IMPORT_RE =
-  /import[^{}]*\{[^}]*\bBackground\b[^}]*\}\s*from\s*['"]@lynx-js\/react(?:\/[^'"]*)?['"]/
+// `Background` bound from `@lynx-js/react` (or a subpath) by *any* statement
+// shape: a named import, an aliased one, a re-export, or a namespace import
+// of the package as a whole. `[^{}]*` keeps a braced match inside a single
+// `{ … }` so a `Background` from another module never binds to a separate
+// `@lynx-js/react` statement.
+const LYNX_REACT = String.raw`['"]@lynx-js\/react(?:\/[^'"]*)?['"]`
+// import * as ReactLynx from … — the namespace carries either boundary.
+const NAMESPACE = String.raw`import\s*\*\s*as\s+\w+`
+// export * from … — re-exports the boundary along with everything else.
+const STAR = String.raw`export\s*\*`
+// import { X } / { X as Y } / export { X } from …
+const bindingRe = (name: string) =>
+  new RegExp(
+    [
+      String.raw`(?:import|export)[^{}]*\{[^}]*\b${name}\b[^}]*\}`,
+      NAMESPACE,
+      STAR,
+    ]
+      .map(shape => String.raw`${shape}\s*from\s*${LYNX_REACT}`)
+      .join('|'),
+  )
 
-// The imported binding used as a JSX element somewhere in the module. The
-// import above already proved the binding is the runtime's, so any usage of
-// it is a boundary regardless of where it sits in the tree.
-const BACKGROUND_ELEMENT_RE = /<\s*Background[\s/>]/
+const BACKGROUND_BINDING_RE = bindingRe('Background')
 
-// The opt-in twin, matched the same way. `<MainThread>` says the wrapped
-// island renders on the main thread's first frame, which is the same
-// whole-program statement a `<Background>` makes from the other end: the
-// main thread compiles what the boundaries leave standing, and nothing else.
-const MAIN_THREAD_IMPORT_RE =
-  /import[^{}]*\{[^}]*\bMainThread\b[^}]*\}\s*from\s*['"]@lynx-js\/react(?:\/[^'"]*)?['"]/
-
-const MAIN_THREAD_ELEMENT_RE = /<\s*MainThread[\s/>]/
+// The opt-in twin, matched the same way and for the same reason. A
+// `<MainThread>` says the wrapped island renders on the main thread's first
+// frame, which is the same whole-program statement a `<Background>` makes
+// from the other end: the main thread compiles what the boundaries leave
+// standing, and nothing else.
+const MAIN_THREAD_BINDING_RE = bindingRe('MainThread')
 
 // Relative specifiers only: a boundary inside a dependency is not something
 // this app can act on, and walking `node_modules` at config time would cost
@@ -70,25 +79,35 @@ const RESOLVE_EXTENSIONS = [
 ]
 
 /**
- * Whether a single module's source uses a `<Background>` imported from the
- * runtime — at any position, not only the render root.
+ * Whether a single module binds `Background` from the runtime.
+ *
+ * Deliberately asks about the *binding*, not about a `<Background>` element:
+ * the answer only decides whether the entry is compiled for the main thread
+ * at all, and compiling it is the safe direction. Getting that wrong the
+ * other way is not a missed optimization but a blank first screen — the main
+ * thread would be left with nothing to render even though the app has a
+ * boundary the scan could not see through an alias, a namespace, a re-export
+ * or a computed element type.
+ *
+ * The cost of a false positive is close to nil: an entry with no boundary
+ * compiles exactly as it would have, and the assembled definitions subtract
+ * everything the main-thread bundle already owns, which is all of it.
  *
  * @internal
  */
 export function sourceHasBackground(source: string): boolean {
-  return BACKGROUND_IMPORT_RE.test(source)
-    && BACKGROUND_ELEMENT_RE.test(source)
+  return BACKGROUND_BINDING_RE.test(source)
 }
 
 /**
- * Whether a single module's source uses a `<MainThread>` imported from the
- * runtime — the opt-in twin of `<Background>`.
+ * Whether a single module binds `MainThread` from the runtime — the opt-in
+ * twin of `<Background>`, asked the same way and for the same reason: a miss
+ * is a blank first screen, a false positive costs nothing.
  *
  * @internal
  */
 export function sourceHasMainThread(source: string): boolean {
-  return MAIN_THREAD_IMPORT_RE.test(source)
-    && MAIN_THREAD_ELEMENT_RE.test(source)
+  return MAIN_THREAD_BINDING_RE.test(source)
 }
 
 /**

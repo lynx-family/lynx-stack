@@ -3,6 +3,7 @@
 // LICENSE file in the root directory of this source tree.
 import { createRequire } from 'node:module'
 import path from 'node:path'
+import { fileURLToPath } from 'node:url'
 
 import type {
   NormalizedEnvironmentConfig,
@@ -20,6 +21,7 @@ import {
   WebEncodePlugin,
 } from '@lynx-js/template-webpack-plugin'
 
+import { MTS_ENTRY_QUERY } from './loaders/mts-defines-entry-loader.js'
 import {
   entriesDeclaringRootBoundary,
   resolveMTSRendering,
@@ -31,6 +33,7 @@ const PLUGIN_NAME_REACT = 'lynx:react'
 const PLUGIN_NAME_TEMPLATE = 'lynx:template'
 const PLUGIN_NAME_RUNTIME_WRAPPER = 'lynx:runtime-wrapper'
 const PLUGIN_NAME_WEB = 'lynx:web'
+const RULE_MTS_DEFINES_ENTRY = 'react:mts-defines-entry'
 
 const DEFAULT_DIST_PATH_INTERMEDIATE = '.rspeedy'
 const DEFAULT_FILENAME_HASH = '.[contenthash:8]'
@@ -106,6 +109,10 @@ export function applyEntry(
      * the boundary down to so the app's own module closure never reaches this
      * bundle — or a `<MainThread>`'s island, which is compiled for the main
      * thread precisely because the boundary keeps referencing it.
+     *
+     * The definitions runtime and the entry are pulled in through a single
+     * generated root rather than as two entry imports — see
+     * `loaders/mts-defines-entry-loader`, which is where the reason lives.
      */
     const mainThreadImportsFor = (
       entryName: string,
@@ -114,9 +121,24 @@ export function applyEntry(
       if (resolvedEnableMTSRendering) {
         return undefined
       }
-      return entriesWithRootBoundary.has(entryName)
-        ? [mtsDefinesEntry, ...imports]
-        : [mtsDefinesEntry]
+      if (!entriesWithRootBoundary.has(entryName)) {
+        return [mtsDefinesEntry]
+      }
+      return [
+        `${mtsDefinesEntry}?${MTS_ENTRY_QUERY}=${
+          encodeURIComponent(JSON.stringify(imports))
+        }`,
+      ]
+    }
+
+    if (!resolvedEnableMTSRendering) {
+      chain
+        .module
+        .rule(RULE_MTS_DEFINES_ENTRY)
+        .test(mtsDefinesEntry)
+        .resourceQuery(new RegExp(`[?&]${MTS_ENTRY_QUERY}=`))
+        .use(RULE_MTS_DEFINES_ENTRY)
+        .loader(mtsDefinesEntryLoaderPath())
     }
 
     // The main thread only has something to render when at least one entry
@@ -409,6 +431,20 @@ export function applyEntry(
       return undefined
     }
   })
+}
+
+/**
+ * Carries this module's own extension, so the path resolves both from the
+ * published `dist/index.js` and from `src/entry.ts` under the test runner —
+ * rspack resolves loaders with the JS extension list, which would not find a
+ * `.ts` sibling on its own.
+ */
+function mtsDefinesEntryLoaderPath(): string {
+  const self = fileURLToPath(import.meta.url)
+  return path.resolve(
+    path.dirname(self),
+    `loaders/mts-defines-entry-loader${path.extname(self)}`,
+  )
 }
 
 export const isDebug = (): boolean => {

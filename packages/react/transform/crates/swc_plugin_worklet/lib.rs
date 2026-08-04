@@ -100,7 +100,7 @@ impl VisitMut for WorkletVisitor {
         let mut collector = ExtractingIdentsCollector::new(ExtractingIdentsCollectorConfig {
           custom_global_ident_names: self.cfg.custom_global_ident_names.clone(),
           shared_identifiers: Some(self.shared_identifiers.clone()),
-          reject_shared_identifiers: self.mts_defs_collector.is_some(),
+          reject_shared_identifiers: self.rejects_shared_identifiers(),
         });
         n.visit_mut_with(&mut collector);
 
@@ -220,7 +220,7 @@ impl VisitMut for WorkletVisitor {
         let mut collector = ExtractingIdentsCollector::new(ExtractingIdentsCollectorConfig {
           custom_global_ident_names: self.cfg.custom_global_ident_names.clone(),
           shared_identifiers: Some(self.shared_identifiers.clone()),
-          reject_shared_identifiers: self.mts_defs_collector.is_some(),
+          reject_shared_identifiers: self.rejects_shared_identifiers(),
         });
         value.visit_mut_with(&mut collector);
 
@@ -331,7 +331,7 @@ impl VisitMut for WorkletVisitor {
     let mut collector = ExtractingIdentsCollector::new(ExtractingIdentsCollectorConfig {
       custom_global_ident_names: self.cfg.custom_global_ident_names.clone(),
       shared_identifiers: Some(self.shared_identifiers.clone()),
-      reject_shared_identifiers: self.mts_defs_collector.is_some(),
+      reject_shared_identifiers: self.rejects_shared_identifiers(),
     });
     n.visit_mut_with(&mut collector);
 
@@ -384,7 +384,7 @@ impl VisitMut for WorkletVisitor {
         let mut collector = ExtractingIdentsCollector::new(ExtractingIdentsCollectorConfig {
           custom_global_ident_names: self.cfg.custom_global_ident_names.clone(),
           shared_identifiers: Some(self.shared_identifiers.clone()),
-          reject_shared_identifiers: self.mts_defs_collector.is_some(),
+          reject_shared_identifiers: self.rejects_shared_identifiers(),
         });
         n.visit_mut_with(&mut collector);
 
@@ -446,7 +446,7 @@ impl VisitMut for WorkletVisitor {
         let mut collector = ExtractingIdentsCollector::new(ExtractingIdentsCollectorConfig {
           custom_global_ident_names: self.cfg.custom_global_ident_names.clone(),
           shared_identifiers: Some(self.shared_identifiers.clone()),
-          reject_shared_identifiers: self.mts_defs_collector.is_some(),
+          reject_shared_identifiers: self.rejects_shared_identifiers(),
         });
         n.visit_mut_with(&mut collector);
 
@@ -520,7 +520,7 @@ impl VisitMut for WorkletVisitor {
     let mut collector = ExtractingIdentsCollector::new(ExtractingIdentsCollectorConfig {
       custom_global_ident_names: self.cfg.custom_global_ident_names.clone(),
       shared_identifiers: Some(self.shared_identifiers.clone()),
-      reject_shared_identifiers: self.mts_defs_collector.is_some(),
+      reject_shared_identifiers: self.rejects_shared_identifiers(),
     });
     n.as_mut_export_default_decl()
       .unwrap()
@@ -751,6 +751,20 @@ impl WorkletVisitor {
       worklet_runtime_loaded_ident: private_ident!("__workletRuntimeLoaded"),
       mts_defs_collector: None,
     }
+  }
+
+  /// Whether a `runtime: 'shared'` import inside a main-thread function has
+  /// to be rejected.
+  ///
+  /// The hazard is not collection itself but *relocation*: on the background
+  /// target the collected definitions are lifted out of this module and
+  /// assembled into the main-thread bundle, where the module's imports do not
+  /// exist, so a shared identifier would have no binding there. Collecting on
+  /// the main-thread target leaves the definitions where they are — the
+  /// identities are only being reported — and the bundler resolves the import
+  /// as it always has.
+  fn rejects_shared_identifiers(&self) -> bool {
+    self.mts_defs_collector.is_some() && self.cfg.target == TransformTarget::JS
   }
 
   pub fn with_mts_defs_collector(mut self, collector: MtsDefinesCollector) -> Self {

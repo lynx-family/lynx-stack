@@ -202,6 +202,23 @@ function f() {
     expect(result.errors).toHaveLength(1);
     expect(result.errors[0].text).toMatch(/runtime: 'shared'/);
   });
+
+  it('is still left to the bundler when the main thread only reports ids', async () => {
+    // The hazard is relocation, not collection: on this target the
+    // definitions stay where they are — collection only reports which ids
+    // this bundle owns, so the import resolves as it always has. A
+    // `<Background>` fallback may therefore use a shared-runtime module.
+    const result = await transformReactLynx(
+      sharedSource,
+      options('LEPUS', {
+        collectMTSDefines: true,
+        foldBackgroundToFallback: true,
+      }),
+    );
+
+    expect(result.errors).toHaveLength(0);
+    expect(result.code).toContain('new Foo()');
+  });
 });
 
 describe('root <Background> fold on the main thread', () => {

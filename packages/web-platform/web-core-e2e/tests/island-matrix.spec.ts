@@ -8,6 +8,10 @@ import { expect, test } from '@lynx-js/playwright-fixtures';
 import type { Page } from '@playwright/test';
 
 import {
+  holdBackgroundThread,
+  releaseBackgroundThread,
+} from './holdBackgroundThread.js';
+import {
   COLOR,
   type Frame,
   type Mode,
@@ -42,73 +46,6 @@ import {
  * 2. The main thread's own frame is what the model predicts, per case.
  * 3. Islands are adopted; fallbacks are replaced.
  */
-
-/**
- * Hold the background thread by buffering the messages that start it: the RPC
- * hands over its `MessagePort` in the first one, so until it is delivered the
- * background thread has nothing to run and what is on screen is the main
- * thread's own frame. Only the `lynx-bg` worker is held — holding the decode
- * worker would stall the template itself.
- *
- * Installed once and idempotent. A page that runs this twice would wrap its
- * own wrapper: the second `Worker` subclass extends the first, and the second
- * release then flushes *into* the first hold, which is still armed and holds
- * everything again. That deadlock is invisible until a case navigates twice.
- */
-async function holdBackgroundThread(page: Page): Promise<void> {
-  await page.addInitScript(() => {
-    const installed = '__releaseBackgroundThread';
-    if (installed in globalThis) {
-      return;
-    }
-    const backgroundWorkers = new WeakSet<Worker>();
-    const held: { target: Worker; args: unknown[] }[] = [];
-
-    const OriginalWorker = globalThis.Worker;
-    globalThis.Worker = class extends OriginalWorker {
-      constructor(url: string | URL, options?: WorkerOptions) {
-        super(url, options);
-        if (options?.name === 'lynx-bg') {
-          backgroundWorkers.add(this);
-        }
-      }
-    } as typeof Worker;
-
-    const originalPostMessage = OriginalWorker.prototype.postMessage;
-    OriginalWorker.prototype.postMessage = function(
-      this: Worker,
-      ...args: unknown[]
-    ) {
-      if (backgroundWorkers.has(this)) {
-        held.push({ target: this, args });
-        return;
-      }
-      (originalPostMessage as (...a: unknown[]) => void).apply(this, args);
-    } as typeof Worker.prototype.postMessage;
-
-    (globalThis as unknown as { __releaseBackgroundThread: () => number })
-      .__releaseBackgroundThread = () => {
-        const pending = held.splice(0);
-        for (const { target, args } of pending) {
-          (originalPostMessage as (...a: unknown[]) => void).apply(
-            target,
-            args,
-          );
-        }
-        for (const worker of pending) {
-          backgroundWorkers.delete(worker.target);
-        }
-        return pending.length;
-      };
-  });
-}
-
-async function releaseBackgroundThread(page: Page): Promise<number> {
-  return await page.evaluate(() =>
-    (globalThis as unknown as { __releaseBackgroundThread: () => number })
-      .__releaseBackgroundThread()
-  );
-}
 
 /**
  * The identified elements on screen, in document order, with the colour each
