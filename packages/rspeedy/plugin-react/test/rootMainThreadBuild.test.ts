@@ -148,6 +148,59 @@ describe('root <MainThread> island build', () => {
     }
   })
 
+  test('an island inside the tree renders on the main thread', async () => {
+    // No boundary at the render root: `<MainThread>` sits next to a
+    // `<Background>` in the entry's own tree. The entry is compiled for the
+    // main thread either way, so the spine down to the island is real code —
+    // and only what the `<Background>` defers folds away.
+    const tmp = await fs.mkdtemp(
+      path.join(tmpdir(), 'rspeedy-react-test-in-tree-island-'),
+    )
+
+    try {
+      const { mainThread, warnings } = await buildIslandFixture(
+        'in-tree.tsx',
+        tmp,
+      )
+
+      expect(warnings).toEqual([])
+      expect(mainThread).toContain('__initMTSDefines')
+
+      // The island renders on the first frame, where it sits.
+      expect(mainThread).toContain('root-main-thread-header-body-marker')
+      expect(mainThread).toContain('root-main-thread-header-marker')
+      // Its `<Background>` sibling still folds away.
+      expect(mainThread).not.toContain('root-main-thread-feed-body-marker')
+      expect(mainThread).not.toContain('root-main-thread-heavy-marker')
+    } finally {
+      await fs.rm(tmp, { recursive: true, force: true })
+    }
+  })
+
+  test('an island behind a folded <Background> does not reach the main thread', async () => {
+    // The boundary the fold removes takes everything under it, `<MainThread>`
+    // included — the main thread never walks into the deferred subtree, so
+    // there is nothing there to promote. Placing an island there needs the
+    // spine projection this milestone does not build (D2 v3 of the RFC); the
+    // `'main thread component'` marker is what gets its *module* compiled in
+    // the meantime.
+    const tmp = await fs.mkdtemp(
+      path.join(tmpdir(), 'rspeedy-react-test-island-behind-background-'),
+    )
+
+    try {
+      const { mainThread } = await buildIslandFixture(
+        'island-behind-background.tsx',
+        tmp,
+      )
+
+      expect(mainThread).toContain('__initMTSDefines')
+      expect(mainThread).not.toContain('root-main-thread-header-body-marker')
+    } finally {
+      await fs.rm(tmp, { recursive: true, force: true })
+    }
+  })
+
   test(`'main thread component' reaches the main thread with nothing referencing it there`, async () => {
     const tmp = await fs.mkdtemp(
       path.join(tmpdir(), 'rspeedy-react-test-main-thread-component-'),
