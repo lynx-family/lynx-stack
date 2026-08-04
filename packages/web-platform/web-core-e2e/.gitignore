@@ -1,2 +1,7 @@
 # Built external bundle (produced by `pnpm build:external-libs`)
 resources/external-bundle/
+
+# `<Background>` matrix outputs — regenerate with tests/bgmatrix.build.mjs,
+# the bgmatrix Playwright config, and tests/bgmatrix.report.mjs.
+bgmatrix-report/
+dist-bundle/
