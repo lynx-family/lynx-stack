@@ -40,6 +40,11 @@ import type {
 
 export interface A2UIChatOptions extends ChatOptions {
   catalog?: A2UICatalog | undefined;
+  /**
+   * Create an agent for this call without retaining request-scoped provider
+   * credentials in the shared provider cache.
+   */
+  disableAgentCache?: boolean | undefined;
   maxRepairAttempts?: number | undefined;
 }
 
@@ -71,13 +76,15 @@ export default class A2UIAgentService {
 
   private async getAgent(opts: A2UIChatOptions): Promise<A2UIAgent> {
     const catalog = opts.catalog ?? await loadBasicCatalog();
+    const createAgent = () =>
+      createA2UIAgent({
+        ...pickProviderConfig(opts),
+        catalog,
+      }).then(({ agent }) => agent);
+    if (opts.disableAgentCache) return createAgent();
     return this.agentCache.get(
       opts,
-      () =>
-        createA2UIAgent({
-          ...pickProviderConfig(opts),
-          catalog,
-        }).then(({ agent }) => agent),
+      createAgent,
       `${catalog.id}:${createStableValueHash(catalog)}`,
     );
   }
@@ -85,8 +92,11 @@ export default class A2UIAgentService {
   public async stream(
     messages: ChatMessage[],
     opts: A2UIChatOptions = {},
+    abortSignal?: AbortSignal,
   ): Promise<MastraStreamResult> {
+    abortSignal?.throwIfAborted();
     const agent = await this.getAgent(opts);
+    abortSignal?.throwIfAborted();
     const modelMessagesStartedAt = performance.now();
     const modelMessages = toModelMessages(messages);
     opts.onPerformanceEvent?.('agent.model_messages.built', {
@@ -101,7 +111,7 @@ export default class A2UIAgentService {
     });
     const result = agent.stream(
       modelMessages,
-      buildOpenAIRunOptions(opts),
+      buildOpenAIRunOptions(opts, abortSignal),
     ) as MastraStreamResult;
     opts.onPerformanceEvent?.('agent.stream.invoke.completed', {
       durationMs: performance.now() - streamStartedAt,
@@ -114,6 +124,7 @@ export default class A2UIAgentService {
     messages: ChatMessage[],
     opts: A2UIChatOptions = {},
     conversation?: ConversationContext,
+    abortSignal?: AbortSignal,
   ): Promise<{
     textStream: AsyncIterable<string>;
     finalize: () => Promise<{
@@ -141,6 +152,7 @@ export default class A2UIAgentService {
     const streamResult: MastraStreamResult = await this.stream(
       preparedMessages,
       opts,
+      abortSignal,
     );
     return {
       textStream: toAsyncIterable(streamResult.textStream),
@@ -151,11 +163,14 @@ export default class A2UIAgentService {
   public async generate(
     messages: ChatMessage[],
     opts: A2UIChatOptions = {},
+    abortSignal?: AbortSignal,
   ): Promise<unknown> {
+    abortSignal?.throwIfAborted();
     const agent = await this.getAgent(opts);
+    abortSignal?.throwIfAborted();
     return agent.generate(
       toModelMessages(messages),
-      buildOpenAIRunOptions(opts),
+      buildOpenAIRunOptions(opts, abortSignal),
     );
   }
 
@@ -163,6 +178,7 @@ export default class A2UIAgentService {
     messages: ChatMessage[],
     opts: A2UIChatOptions = {},
     conversation?: ConversationContext,
+    abortSignal?: AbortSignal,
   ): Promise<{ text: string; usage: unknown; finishReason: unknown }> {
     const result = await this.generate(
       buildConversationMessages(
@@ -171,6 +187,7 @@ export default class A2UIAgentService {
         buildDataModelSystemMessage,
       ),
       opts,
+      abortSignal,
     ) as MastraResult;
     return extractGenerationResult(result);
   }
@@ -180,10 +197,13 @@ export default class A2UIAgentService {
     opts: A2UIChatOptions = {},
     conversation?: ConversationContext,
     validationOptions?: ValidationOptions,
+    abortSignal?: AbortSignal,
   ): Promise<A2UIResponse> {
+    abortSignal?.throwIfAborted();
     const catalog = opts.catalog ?? await loadBasicCatalog();
     const maxAttempts = Math.max(1, opts.maxRepairAttempts ?? 2) + 1;
     const agent = await this.getAgent({ ...opts, catalog });
+    abortSignal?.throwIfAborted();
 
     const convo = buildConversationMessages(
       messages,
@@ -197,9 +217,10 @@ export default class A2UIAgentService {
     let lastFinishReason: unknown;
 
     for (let attempt = 1; attempt <= maxAttempts; attempt++) {
+      abortSignal?.throwIfAborted();
       const result = await agent.generate(
         toModelMessages(convo),
-        buildOpenAIRunOptions(opts),
+        buildOpenAIRunOptions(opts, abortSignal),
       ) as MastraResult;
 
       const text = await extractText(result);
@@ -207,10 +228,12 @@ export default class A2UIAgentService {
       const metadata = await finalizeResult(result);
       lastUsage = metadata.usage;
       lastFinishReason = metadata.finishReason;
+      abortSignal?.throwIfAborted();
 
       const validation = validateA2UIOutput(text, catalog, validationOptions);
       if (validation.ok) {
         const messages = await resolveA2UIImageUrls(validation.messages);
+        abortSignal?.throwIfAborted();
         return {
           ok: true,
           text,

@@ -3,6 +3,7 @@
 // LICENSE file in the root directory of this source tree.
 import { readFile } from 'node:fs/promises';
 import { dirname, join } from 'node:path';
+import { fileURLToPath } from 'node:url';
 
 import { TraceMap, generatedPositionFor } from '@jridgewell/trace-mapping';
 import type { SourceMapInput } from '@jridgewell/trace-mapping';
@@ -30,7 +31,7 @@ type DiagnosticError = Error & {
 describe('LynxTemplatePlugin', () => {
   test('build with custom lepus', async () => {
     const stats = await runWebpack({
-      context: dirname(new URL(import.meta.url).pathname),
+      context: dirname(fileURLToPath(import.meta.url)),
       mode: 'development',
       devtool: false,
       output: {
@@ -70,7 +71,7 @@ globalThis.renderPage = function() {
   });
 
   test('emits css diagnostics during beforeEmit with current css chunk source maps', async () => {
-    const context = dirname(new URL(import.meta.url).pathname);
+    const context = dirname(fileURLToPath(import.meta.url));
     const compiler = {
       context,
       options: {
@@ -145,7 +146,7 @@ globalThis.renderPage = function() {
       'Unsupported property "unknown-prop" was removed during template encode.',
     );
     expect((compilation.warnings[0] as DiagnosticError)?.file).toBe(
-      `${context}/basic.test.ts`,
+      join(context, 'basic.test.ts'),
     );
     expect((compilation.warnings[0] as DiagnosticError)?.loc).toEqual({
       start: {
@@ -157,7 +158,7 @@ globalThis.renderPage = function() {
 
   test('maps css diagnostics to the matching source map for each entry', async () => {
     const context = join(
-      dirname(new URL(import.meta.url).pathname),
+      dirname(fileURLToPath(import.meta.url)),
       'fixtures',
       'css-diagnostics-mpa',
     );
@@ -301,11 +302,11 @@ globalThis.renderPage = function() {
     expect(warnings[0]!.message).toContain(
       'Unsupported property "unknown-a" was removed during template encode.',
     );
-    expect((warnings[0] as DiagnosticError).file).toBe(`${context}/a.css`);
+    expect((warnings[0] as DiagnosticError).file).toBe(join(context, 'a.css'));
     expect(warnings[1]!.message).toContain(
       'Unsupported property "unknown-b" was removed during template encode.',
     );
-    expect((warnings[1] as DiagnosticError).file).toBe(`${context}/b.css`);
+    expect((warnings[1] as DiagnosticError).file).toBe(join(context, 'b.css'));
   });
 });
 

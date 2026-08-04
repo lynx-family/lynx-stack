@@ -17,6 +17,7 @@ describe('Shim', () => {
   const origGetComputedStyle = globalThis.getComputedStyle;
   const origEventTarget = (globalThis as any).EventTarget;
   const origLynx = (globalThis as any).lynx;
+  const origSystemInfo = (globalThis as any).SystemInfo;
 
   beforeEach(() => {
     vi.resetModules();
@@ -68,6 +69,7 @@ describe('Shim', () => {
     globalThis.getComputedStyle = origGetComputedStyle;
     (globalThis as any).EventTarget = origEventTarget;
     (globalThis as any).lynx = origLynx;
+    (globalThis as any).SystemInfo = origSystemInfo;
     delete (globalThis as any).__MAIN_THREAD__;
     delete (globalThis as any).__DEV__;
   });
@@ -79,6 +81,52 @@ describe('Shim', () => {
     // Check that shims were applied (they may already exist in test env)
     // The shim only applies if they don't exist, so we just verify no errors
     expect(true).toBe(true);
+  });
+
+  test('should replace browser DOM globals in Lynx for Web', async () => {
+    const BrowserElement = class Element {};
+    const BrowserHTMLElement = class HTMLElement {};
+    const BrowserEventTarget = class EventTarget {};
+    (globalThis as any).Element = BrowserElement;
+    globalThis.HTMLElement = BrowserHTMLElement;
+    (globalThis as any).EventTarget = BrowserEventTarget;
+    (globalThis as any).SystemInfo = { platform: 'web' };
+    globalThis.window = {} as Window & typeof globalThis;
+
+    await import('../src/polyfill/shim.js');
+
+    expect(globalThis.Element).not.toBe(BrowserElement);
+    expect(globalThis.HTMLElement).toBe(globalThis.Element);
+    expect(globalThis.EventTarget).toBe(globalThis.Element);
+    expect(globalThis.window.getComputedStyle).toBe(
+      globalThis.getComputedStyle,
+    );
+  });
+
+  test('should tolerate an immutable window binding from older Lynx for Web runtimes', async () => {
+    (globalThis as any).SystemInfo = { platform: 'web' };
+    // Older Lynx for Web MTS wrappers declare `window` as a `const`, so
+    // assigning to it throws in strict mode. A non-writable property fails
+    // the same way.
+    const immutableWindow = {} as Window & typeof globalThis;
+    Object.defineProperty(globalThis, 'window', {
+      value: immutableWindow,
+      writable: false,
+      configurable: true,
+    });
+
+    try {
+      await expect(import('../src/polyfill/shim.js')).resolves.toBeDefined();
+
+      // The window facade is skipped, but the remaining shims still apply.
+      expect(globalThis.window).toBe(immutableWindow);
+      expect(typeof globalThis.Element).toBe('function');
+      expect(globalThis.HTMLElement).toBe(globalThis.Element);
+      expect(globalThis.getComputedStyle).toBeDefined();
+    } finally {
+      // Make `window` assignable again so afterEach can restore it.
+      delete (globalThis as any).window;
+    }
   });
 });
 

@@ -8,7 +8,10 @@ import { createRequire } from 'node:module';
 import type { Chunk, Compilation, Compiler } from '@rspack/core';
 import invariant from 'tiny-invariant';
 
-import type { ExtractStrConfig } from '@lynx-js/react/transform';
+import type {
+  ExtractStrConfig,
+  TransformBuiltinAttributeNamesOptions,
+} from '@lynx-js/react/transform';
 import { LynxTemplatePlugin } from '@lynx-js/template-webpack-plugin';
 import { RuntimeGlobals } from '@lynx-js/webpack-runtime-globals';
 
@@ -231,6 +234,16 @@ interface ReactWebpackPluginOptions {
   experimental_useElementTemplate?: boolean;
 
   /**
+   * The builtin attribute-name transform configuration used by runtime spread
+   * attributes.
+   *
+   * @experimental
+   */
+  experimental_transformBuiltinAttributeNames?:
+    | boolean
+    | TransformBuiltinAttributeNamesOptions;
+
+  /**
    * Resolved lazy-bundle fetcher mode. Decided by the caller (e.g.
    * `pluginReactLynx`) from the host engine version and any
    * `REACT_LAZY_BUNDLE_FETCHER` env override.
@@ -315,6 +328,7 @@ class ReactWebpackPlugin {
       profile: undefined,
       workletRuntimePath: '',
       experimental_useElementTemplate: false,
+      experimental_transformBuiltinAttributeNames: false,
       lazyBundleFetcher: 'QueryComponent',
     });
 
@@ -383,6 +397,9 @@ class ReactWebpackPlugin {
       ),
       __USE_ELEMENT_TEMPLATE__: JSON.stringify(
         options.experimental_useElementTemplate,
+      ),
+      __EXPERIMENTAL_TRANSFORM_BUILTIN_ATTRIBUTE_NAMES__: JSON.stringify(
+        options.experimental_transformBuiltinAttributeNames,
       ),
       __LAZY_BUNDLE_FETCHER__: JSON.stringify(options.lazyBundleFetcher),
     }).apply(compiler);
@@ -501,6 +518,8 @@ class ReactWebpackPlugin {
               + 1,
           },
           () => {
+            const wrappedFiles = new Set<string>();
+
             compilation.chunkGroups.forEach(chunkGroup => {
               const isDynamicImport = !chunkGroup.isInitial()
                 && chunkGroup.origins.every(
@@ -520,11 +539,17 @@ class ReactWebpackPlugin {
                     continue;
                   }
 
+                  // A shared async chunk can belong to multiple chunk groups.
+                  if (wrappedFiles.has(file)) {
+                    continue;
+                  }
+
                   const asset = compilation.getAsset(file);
                   if (!asset) {
                     continue;
                   }
 
+                  wrappedFiles.add(file);
                   compilation.updateAsset(
                     file,
                     old =>

@@ -4,8 +4,13 @@
 import type { KeyboardEvent } from 'react';
 import { useRef, useState } from 'react';
 
-import type { BenchComparison, BenchMetricKey } from './phaseOne.js';
-import { PHASE_ONE_BENCH } from './phaseOne.js';
+import type { BenchLocale } from './benchLocale.js';
+import type {
+  BenchComparison,
+  BenchMetricKey,
+  PhaseOneBench,
+} from './phaseOne.js';
+import { getPhaseOneBench } from './phaseOne.js';
 import './BenchResultPage.css';
 
 const MODEL_EVIDENCE_URL = new URL(
@@ -30,54 +35,250 @@ type DisplayMetric = Extract<
   'totalTokens' | 'agentMs' | 'judge'
 >;
 
-const METRIC_TABS = [
-  {
-    key: 'totalTokens',
-    label: 'Tokens',
-    description: 'Tokens 总量 · 越低越好',
+const UI_COPY = {
+  'zh-CN': {
+    metricTabs: [
+      {
+        key: 'totalTokens',
+        label: 'Tokens',
+        description: 'Tokens 总量 · 越低越好',
+      },
+      {
+        key: 'agentMs',
+        label: 'Agent 耗时',
+        description: 'Agent 生成耗时 · 越低越好',
+      },
+      {
+        key: 'judge',
+        label: 'UI Judge',
+        description: 'UI Judge 得分 · 越高越好',
+      },
+    ],
+    experimentLabels: {
+      models: 'A · 模型',
+      prompts: 'B · System Prompt',
+      catalogs: 'C · Catalog',
+    },
+    fullMetrics: '完整指标',
+    fullMetricsSummary: 'Tokens · Agent 耗时 · Runtime · UI Judge · 生成次数',
+    agentLatency: 'Agent 耗时',
+    generationAttempts: '生成次数',
+    viewEvidence: '查看生成结果拼图',
+    viewAllEvidence: '查看三组实验结果图',
+    evidenceKinds: '模型 · System Prompt · Catalog',
+    open: '打开',
+    evidenceDialogTitle: '三组实验结果图',
+    evidenceDialogHint: '点击图片可在新窗口查看原图。',
+    closeEvidenceAria: '关闭实验结果图',
+    close: '关闭',
+    chooseEvidenceAria: '选择实验结果图',
+    chooseExperimentAria: '选择实验',
+    chooseMetricAria: '选择指标',
+    currentExperiment: '当前实验',
+    fixedCondition: '固定条件',
+    scenarioAverage: (count: number) => `${count} 个场景的平均值`,
+    metricBest: '该指标最佳',
+    groupRecommendation: '本组建议 · 综合指标',
+    whyRecommended: '为什么推荐',
+    caveat: '需要注意',
+    dataRevision: (revision: number, runs: number) =>
+      `数据版本 Rev. ${revision} · ${runs} 次运行`,
+    phaseResults: '一期测评结果',
+    phaseConclusion: '一期结论',
+    scopeAria: '实验范围',
+    runs: '运行',
+    scenarios: '场景',
+    models: '模型',
+    evidenceBoundary: '证据边界',
+    evidenceBoundaryDetail:
+      '这不是已经验证的最优组合：推荐来自三组单变量实验，三者尚未一起测试。',
+    keyResults: '关键结果',
+    keyResultsDetail: (count: number) =>
+      `从模型、System Prompt 和 Catalog 三组实验中，摘取 ${count} 个关键结果。`,
+    experimentComparison: '实验对比',
+    experimentComparisonDetail:
+      '选择实验组和指标即可对比；完整指标与生成结果可按需展开。',
+    testScenarios: '测试场景',
+    testScenariosDetail:
+      '所有实验复用相同输入，覆盖信息卡、购买卡和长内容规划。',
+    complexitySuffix: '复杂度',
+    interaction: '交互',
+    methodIndex: '04 · 实验方法',
+    interpretation: '结果解读',
+    limitationsTitle: '阅读结果前，请注意',
   },
-  {
-    key: 'agentMs',
-    label: 'Agent 耗时',
-    description: 'Agent 生成耗时 · 越低越好',
-  },
-  {
-    key: 'judge',
-    label: 'UI Judge',
-    description: 'UI Judge 得分 · 越高越好',
-  },
-] as const satisfies readonly {
-  key: DisplayMetric;
-  label: string;
-  description: string;
-}[];
-
-const EXPERIMENT_LABELS = {
-  models: 'A · 模型',
-  prompts: 'B · System Prompt',
-  catalogs: 'C · Catalog',
-} as const satisfies Record<BenchComparison['id'], string>;
-
-const EVIDENCE = {
-  models: {
-    title: '模型对比结果拼图',
-    description: '4 个模型 × 3 个场景',
-    src: MODEL_EVIDENCE_URL,
-  },
-  prompts: {
-    title: 'System Prompt 对比结果拼图',
-    description: '3 个 Prompt × 3 个场景',
-    src: PROMPT_EVIDENCE_URL,
-  },
-  catalogs: {
-    title: 'Catalog 对比结果拼图',
-    description: '3 种 Catalog × 3 个场景',
-    src: CATALOG_EVIDENCE_URL,
+  'en-US': {
+    metricTabs: [
+      {
+        key: 'totalTokens',
+        label: 'Tokens',
+        description: 'Total tokens · lower is better',
+      },
+      {
+        key: 'agentMs',
+        label: 'Agent latency',
+        description: 'Agent generation latency · lower is better',
+      },
+      {
+        key: 'judge',
+        label: 'UI Judge',
+        description: 'UI Judge score · higher is better',
+      },
+    ],
+    experimentLabels: {
+      models: 'A · Model',
+      prompts: 'B · System Prompt',
+      catalogs: 'C · Catalog',
+    },
+    fullMetrics: 'Full metrics',
+    fullMetricsSummary:
+      'Tokens · Agent latency · Runtime · UI Judge · Attempts',
+    agentLatency: 'Agent latency',
+    generationAttempts: 'Attempts',
+    viewEvidence: 'View generated-result collage',
+    viewAllEvidence: 'View all three experiment result sets',
+    evidenceKinds: 'Model · System Prompt · Catalog',
+    open: 'Open',
+    evidenceDialogTitle: 'Three experiment result sets',
+    evidenceDialogHint: 'Open an image to view it at full size.',
+    closeEvidenceAria: 'Close experiment results',
+    close: 'Close',
+    chooseEvidenceAria: 'Choose experiment results',
+    chooseExperimentAria: 'Choose experiment',
+    chooseMetricAria: 'Choose metric',
+    currentExperiment: 'Current experiment',
+    fixedCondition: 'Fixed condition',
+    scenarioAverage: (count: number) => `Average across ${count} scenarios`,
+    metricBest: 'Best for this metric',
+    groupRecommendation: 'Group recommendation · overall',
+    whyRecommended: 'Why it is recommended',
+    caveat: 'What to consider',
+    dataRevision: (revision: number, runs: number) =>
+      `Data revision ${revision} · ${runs} runs`,
+    phaseResults: 'Phase 1 benchmark results',
+    phaseConclusion: 'Phase 1 conclusion',
+    scopeAria: 'Experiment scope',
+    runs: 'Runs',
+    scenarios: 'Scenarios',
+    models: 'Models',
+    evidenceBoundary: 'Evidence boundary',
+    evidenceBoundaryDetail:
+      'This is not a validated optimal combination. The recommendation comes from three single-variable experiments; the three choices have not yet been tested together.',
+    keyResults: 'Key results',
+    keyResultsDetail: (count: number) =>
+      `${count} key results from the Model, System Prompt, and Catalog experiments.`,
+    experimentComparison: 'Experiment comparison',
+    experimentComparisonDetail:
+      'Choose an experiment and metric to compare results; expand full metrics and generated results when needed.',
+    testScenarios: 'Test scenarios',
+    testScenariosDetail:
+      'Every experiment reuses the same inputs across an information card, a purchase card, and long-form planning.',
+    complexitySuffix: ' complexity',
+    interaction: 'Interaction',
+    methodIndex: '04 · Methodology',
+    interpretation: 'Interpreting the results',
+    limitationsTitle: 'Before reading the results',
   },
 } as const satisfies Record<
-  BenchComparison['id'],
-  { title: string; description: string; src: string }
+  BenchLocale,
+  {
+    metricTabs: readonly {
+      key: DisplayMetric;
+      label: string;
+      description: string;
+    }[];
+    experimentLabels: Record<BenchComparison['id'], string>;
+    fullMetrics: string;
+    fullMetricsSummary: string;
+    agentLatency: string;
+    generationAttempts: string;
+    viewEvidence: string;
+    viewAllEvidence: string;
+    evidenceKinds: string;
+    open: string;
+    evidenceDialogTitle: string;
+    evidenceDialogHint: string;
+    closeEvidenceAria: string;
+    close: string;
+    chooseEvidenceAria: string;
+    chooseExperimentAria: string;
+    chooseMetricAria: string;
+    currentExperiment: string;
+    fixedCondition: string;
+    scenarioAverage: (count: number) => string;
+    metricBest: string;
+    groupRecommendation: string;
+    whyRecommended: string;
+    caveat: string;
+    dataRevision: (revision: number, runs: number) => string;
+    phaseResults: string;
+    phaseConclusion: string;
+    scopeAria: string;
+    runs: string;
+    scenarios: string;
+    models: string;
+    evidenceBoundary: string;
+    evidenceBoundaryDetail: string;
+    keyResults: string;
+    keyResultsDetail: (count: number) => string;
+    experimentComparison: string;
+    experimentComparisonDetail: string;
+    testScenarios: string;
+    testScenariosDetail: string;
+    complexitySuffix: string;
+    interaction: string;
+    methodIndex: string;
+    interpretation: string;
+    limitationsTitle: string;
+  }
 >;
+
+function getEvidence(
+  locale: BenchLocale,
+  scope: PhaseOneBench['scope'],
+): Record<
+  BenchComparison['id'],
+  { description: string; src: string; title: string }
+> {
+  if (locale === 'en-US') {
+    return {
+      models: {
+        title: 'Model comparison result collage',
+        description: `${scope.models} models × ${scope.scenarios} scenarios`,
+        src: MODEL_EVIDENCE_URL,
+      },
+      prompts: {
+        title: 'System Prompt comparison result collage',
+        description: `${scope.prompts} Prompts × ${scope.scenarios} scenarios`,
+        src: PROMPT_EVIDENCE_URL,
+      },
+      catalogs: {
+        title: 'Catalog comparison result collage',
+        description:
+          `${scope.catalogs} Catalogs × ${scope.scenarios} scenarios`,
+        src: CATALOG_EVIDENCE_URL,
+      },
+    };
+  }
+
+  return {
+    models: {
+      title: '模型对比结果拼图',
+      description: `${scope.models} 个模型 × ${scope.scenarios} 个场景`,
+      src: MODEL_EVIDENCE_URL,
+    },
+    prompts: {
+      title: 'System Prompt 对比结果拼图',
+      description: `${scope.prompts} 个 Prompt × ${scope.scenarios} 个场景`,
+      src: PROMPT_EVIDENCE_URL,
+    },
+    catalogs: {
+      title: 'Catalog 对比结果拼图',
+      description: `${scope.catalogs} 种 Catalog × ${scope.scenarios} 个场景`,
+      src: CATALOG_EVIDENCE_URL,
+    },
+  };
+}
 
 function formatMetric(metric: DisplayMetric, value: number): string {
   if (metric === 'totalTokens') {
@@ -125,12 +326,17 @@ function moveTabFocus(event: KeyboardEvent<HTMLButtonElement>) {
   tabs[nextIndex]?.click();
 }
 
-function FullMetrics(props: { comparison: BenchComparison }) {
+function FullMetrics(props: {
+  comparison: BenchComparison;
+  locale: BenchLocale;
+}) {
+  const copy = UI_COPY[props.locale];
+
   return (
     <details className='benchStudyDisclosure'>
       <summary>
-        <span>完整指标</span>
-        <small>Tokens · Agent 耗时 · Runtime · UI Judge · 生成次数</small>
+        <span>{copy.fullMetrics}</span>
+        <small>{copy.fullMetricsSummary}</small>
       </summary>
       <div className='benchStudyMetricsTableWrap'>
         <table className='benchStudyMetricsTable'>
@@ -138,12 +344,12 @@ function FullMetrics(props: { comparison: BenchComparison }) {
             <tr>
               <th scope='col'>{props.comparison.variable}</th>
               <th scope='col'>Tokens</th>
-              <th scope='col'>Agent 耗时</th>
+              <th scope='col'>{copy.agentLatency}</th>
               <th scope='col'>Render</th>
               <th scope='col'>FMP</th>
               <th scope='col'>TTI</th>
               <th scope='col'>UI Judge</th>
-              <th scope='col'>生成次数</th>
+              <th scope='col'>{copy.generationAttempts}</th>
             </tr>
           </thead>
           <tbody>
@@ -168,8 +374,11 @@ function FullMetrics(props: { comparison: BenchComparison }) {
 
 function EvidenceDisclosure(props: {
   experimentId: BenchComparison['id'];
+  locale: BenchLocale;
+  scope: PhaseOneBench['scope'];
 }) {
-  const evidence = EVIDENCE[props.experimentId];
+  const copy = UI_COPY[props.locale];
+  const evidence = getEvidence(props.locale, props.scope)[props.experimentId];
 
   return (
     <details
@@ -177,13 +386,15 @@ function EvidenceDisclosure(props: {
       key={props.experimentId}
     >
       <summary>
-        <span>查看生成结果拼图</span>
+        <span>{copy.viewEvidence}</span>
         <small>{evidence.description}</small>
       </summary>
       <a href={evidence.src} target='_blank' rel='noreferrer'>
         <img
           src={evidence.src}
-          alt={`${evidence.title}: ${evidence.description}`}
+          alt={`${evidence.title}${
+            props.locale === 'zh-CN' ? '：' : ': '
+          }${evidence.description}`}
           loading='lazy'
         />
       </a>
@@ -191,10 +402,15 @@ function EvidenceDisclosure(props: {
   );
 }
 
-function ScenarioEvidenceGallery() {
+function ScenarioEvidenceGallery(props: {
+  locale: BenchLocale;
+  scope: PhaseOneBench['scope'];
+}) {
   const dialogRef = useRef<HTMLDialogElement>(null);
   const [evidenceId, setEvidenceId] = useState<BenchComparison['id']>('models');
-  const evidence = EVIDENCE[evidenceId];
+  const copy = UI_COPY[props.locale];
+  const evidenceCollection = getEvidence(props.locale, props.scope);
+  const evidence = evidenceCollection[evidenceId];
 
   return (
     <>
@@ -204,10 +420,10 @@ function ScenarioEvidenceGallery() {
         onClick={() => dialogRef.current?.showModal()}
       >
         <span>
-          <strong>查看三组实验结果图</strong>
-          <small>模型 · System Prompt · Catalog</small>
+          <strong>{copy.viewAllEvidence}</strong>
+          <small>{copy.evidenceKinds}</small>
         </span>
-        <span aria-hidden='true'>打开</span>
+        <span aria-hidden='true'>{copy.open}</span>
       </button>
 
       <dialog
@@ -229,37 +445,41 @@ function ScenarioEvidenceGallery() {
         <div className='benchStudyEvidenceDialogPanel'>
           <header className='benchStudyEvidenceDialogHeader'>
             <div>
-              <h3 id='bench-study-evidence-title'>三组实验结果图</h3>
-              <p>点击图片可在新窗口查看原图。</p>
+              <h3 id='bench-study-evidence-title'>
+                {copy.evidenceDialogTitle}
+              </h3>
+              <p>{copy.evidenceDialogHint}</p>
             </div>
             <button
               type='button'
-              aria-label='关闭实验结果图'
+              aria-label={copy.closeEvidenceAria}
               onClick={() => dialogRef.current?.close()}
             >
-              关闭
+              {copy.close}
             </button>
           </header>
           <div
             className='benchStudyEvidenceDialogTabs'
             role='tablist'
-            aria-label='选择实验结果图'
+            aria-label={copy.chooseEvidenceAria}
           >
-            {(Object.keys(EVIDENCE) as BenchComparison['id'][]).map((id) => (
-              <button
-                id={`bench-study-evidence-${id}`}
-                type='button'
-                role='tab'
-                aria-controls='bench-study-evidence-panel'
-                aria-selected={evidenceId === id}
-                tabIndex={evidenceId === id ? 0 : -1}
-                onClick={() => setEvidenceId(id)}
-                onKeyDown={moveTabFocus}
-                key={id}
-              >
-                {EXPERIMENT_LABELS[id]}
-              </button>
-            ))}
+            {(Object.keys(evidenceCollection) as BenchComparison['id'][]).map(
+              (id) => (
+                <button
+                  id={`bench-study-evidence-${id}`}
+                  type='button'
+                  role='tab'
+                  aria-controls='bench-study-evidence-panel'
+                  aria-selected={evidenceId === id}
+                  tabIndex={evidenceId === id ? 0 : -1}
+                  onClick={() => setEvidenceId(id)}
+                  onKeyDown={moveTabFocus}
+                  key={id}
+                >
+                  {copy.experimentLabels[id]}
+                </button>
+              ),
+            )}
           </div>
           <figure
             className='benchStudyEvidenceDialogFigure'
@@ -270,7 +490,9 @@ function ScenarioEvidenceGallery() {
             <a href={evidence.src} target='_blank' rel='noreferrer'>
               <img
                 src={evidence.src}
-                alt={`${evidence.title}：${evidence.description}`}
+                alt={`${evidence.title}${
+                  props.locale === 'zh-CN' ? '：' : ': '
+                }${evidence.description}`}
                 loading='lazy'
               />
             </a>
@@ -287,7 +509,11 @@ function ScenarioEvidenceGallery() {
 
 function ExperimentComparator(props: {
   comparisons: readonly BenchComparison[];
+  locale: BenchLocale;
+  scope: PhaseOneBench['scope'];
 }) {
+  const copy = UI_COPY[props.locale];
+  const metricTabs = copy.metricTabs;
   const [experimentId, setExperimentId] = useState<
     BenchComparison['id']
   >('prompts');
@@ -297,8 +523,8 @@ function ExperimentComparator(props: {
   ) ?? props.comparisons[0];
   const winner = comparison.rows.find((row) => row.tone === 'positive')
     ?? comparison.rows[0];
-  const metricDefinition = METRIC_TABS.find((item) => item.key === metric)
-    ?? METRIC_TABS[0];
+  const metricDefinition = metricTabs.find((item) => item.key === metric)
+    ?? metricTabs[0];
   const values = comparison.rows.map((row) => row.metrics[metric]);
   const maximum = metric === 'judge' ? 5 : Math.max(...values);
   const bestValue = metric === 'judge'
@@ -311,7 +537,7 @@ function ExperimentComparator(props: {
         <div
           className='benchStudyTabs'
           role='tablist'
-          aria-label='选择实验'
+          aria-label={copy.chooseExperimentAria}
         >
           {props.comparisons.map((item) => (
             <button
@@ -325,16 +551,16 @@ function ExperimentComparator(props: {
               onKeyDown={moveTabFocus}
               key={item.id}
             >
-              {EXPERIMENT_LABELS[item.id]}
+              {copy.experimentLabels[item.id]}
             </button>
           ))}
         </div>
         <div
           className='benchStudyTabs benchStudyMetricTabs'
           role='tablist'
-          aria-label='选择指标'
+          aria-label={copy.chooseMetricAria}
         >
-          {METRIC_TABS.map((item) => (
+          {metricTabs.map((item) => (
             <button
               id={`bench-metric-${item.key}`}
               type='button'
@@ -360,11 +586,11 @@ function ExperimentComparator(props: {
       >
         <div className='benchStudyCompareHeader' aria-live='polite'>
           <div>
-            <span>当前实验</span>
+            <span>{copy.currentExperiment}</span>
             <h3>{comparison.title}</h3>
           </div>
           <p>
-            <small>固定条件</small>
+            <small>{copy.fixedCondition}</small>
             {comparison.fixedCondition}
           </p>
         </div>
@@ -372,7 +598,7 @@ function ExperimentComparator(props: {
         <div className='benchStudyBars' aria-live='polite'>
           <div className='benchStudyBarsHeading'>
             <span>{metricDefinition.description}</span>
-            <small>3 个场景的平均值</small>
+            <small>{copy.scenarioAverage(props.scope.scenarios)}</small>
           </div>
           {comparison.rows.map((row) => {
             const value = row.metrics[metric];
@@ -386,7 +612,7 @@ function ExperimentComparator(props: {
               >
                 <div className='benchStudyBarLabel'>
                   <strong>{row.name}</strong>
-                  {isBest ? <small>该指标最佳</small> : null}
+                  {isBest ? <small>{copy.metricBest}</small> : null}
                 </div>
                 <div className='benchStudyBarTrack' aria-hidden='true'>
                   <span style={{ width: `${width}%` }} />
@@ -399,67 +625,77 @@ function ExperimentComparator(props: {
 
         <aside className='benchStudyWinner' aria-live='polite'>
           <div className='benchStudyWinnerLead'>
-            <small>本组建议 · 综合指标</small>
+            <small>{copy.groupRecommendation}</small>
             <strong>{winner.name}</strong>
             <span>{winner.descriptor}</span>
           </div>
           <div>
-            <small>为什么推荐</small>
+            <small>{copy.whyRecommended}</small>
             <p>{winner.strength}</p>
           </div>
           <div>
-            <small>需要注意</small>
+            <small>{copy.caveat}</small>
             <p>{winner.risk}</p>
           </div>
         </aside>
       </div>
 
       <div className='benchStudyCompareDetails'>
-        <FullMetrics comparison={comparison} />
-        <EvidenceDisclosure experimentId={comparison.id} />
+        <FullMetrics comparison={comparison} locale={props.locale} />
+        <EvidenceDisclosure
+          experimentId={comparison.id}
+          locale={props.locale}
+          scope={props.scope}
+        />
       </div>
     </div>
   );
 }
 
-export function BenchResultPage() {
-  const report = PHASE_ONE_BENCH;
+export interface BenchResultPageProps {
+  locale?: BenchLocale;
+}
+
+export function BenchResultPage({
+  locale = 'zh-CN',
+}: BenchResultPageProps) {
+  const report = getPhaseOneBench(locale);
+  const copy = UI_COPY[locale];
 
   return (
-    <main className='benchStudyPage'>
+    <main className='benchStudyPage' lang={locale}>
       <section className='benchStudyHero'>
         <div className='benchStudyHeroTopline'>
           <span>{report.eyebrow}</span>
           <span>
-            数据版本 Rev. {report.sourceRevision} · {report.scope.runs} 次运行
+            {copy.dataRevision(
+              report.sourceRevision,
+              report.scope.runs,
+            )}
           </span>
         </div>
 
         <div className='benchStudyHeroLead'>
-          <p className='benchStudyEyebrow'>一期测评结果</p>
+          <p className='benchStudyEyebrow'>{copy.phaseResults}</p>
           <h1>{report.title}</h1>
           <div className='benchStudyConclusion'>
-            <span>一期结论</span>
+            <span>{copy.phaseConclusion}</span>
             <p>{report.conclusion}</p>
           </div>
           <p className='benchStudyHeroContext'>{report.description}</p>
-          <div className='benchStudyHeroActions'>
-            <a href='#/bench'>打开 Runner</a>
-            <a href='#/bench/phase-2'>查看 Phase 02 计划</a>
-          </div>
         </div>
 
-        <dl className='benchStudyScope' aria-label='实验范围'>
+        <dl className='benchStudyScope' aria-label={copy.scopeAria}>
           <div>
-            <dt>运行</dt>
+            <dt>{copy.runs}</dt>
             <dd>{report.scope.runs}</dd>
           </div>
           <div>
-            <dt>场景</dt>
+            <dt>{copy.scenarios}</dt>
             <dd>{report.scope.scenarios}</dd>
           </div>
           <div>
-            <dt>模型</dt>
+            <dt>{copy.models}</dt>
             <dd>{report.scope.models}</dd>
           </div>
           <div>
@@ -470,7 +706,7 @@ export function BenchResultPage() {
 
         <div className='benchStudyRecommendation'>
           <div className='benchStudyRecommendationLead'>
-            <span>建议起始配置</span>
+            <span>{report.recommendation.title}</span>
             <p>{report.recommendation.summary}</p>
           </div>
           <ol>
@@ -482,8 +718,8 @@ export function BenchResultPage() {
             ))}
           </ol>
           <p className='benchStudyEvidenceBoundary'>
-            <strong>证据边界</strong>
-            这不是已经验证的最优组合：推荐来自三组单变量实验，三者尚未一起测试。
+            <strong>{copy.evidenceBoundary}</strong>
+            {copy.evidenceBoundaryDetail}
           </p>
         </div>
       </section>
@@ -492,10 +728,8 @@ export function BenchResultPage() {
         <header className='benchStudySectionHeader'>
           <span>01</span>
           <div>
-            <h2>关键结果</h2>
-            <p>
-              从模型、System Prompt 和 Catalog 三组实验中，摘取 4 个关键结果。
-            </p>
+            <h2>{copy.keyResults}</h2>
+            <p>{copy.keyResultsDetail(report.highlights.length)}</p>
           </div>
         </header>
         <div className='benchStudyFindingList'>
@@ -525,19 +759,23 @@ export function BenchResultPage() {
         <header className='benchStudySectionHeader'>
           <span>02</span>
           <div>
-            <h2>实验对比</h2>
-            <p>选择实验组和指标即可对比；完整指标与生成结果可按需展开。</p>
+            <h2>{copy.experimentComparison}</h2>
+            <p>{copy.experimentComparisonDetail}</p>
           </div>
         </header>
-        <ExperimentComparator comparisons={report.comparisons} />
+        <ExperimentComparator
+          comparisons={report.comparisons}
+          locale={locale}
+          scope={report.scope}
+        />
       </section>
 
       <section className='benchStudySection benchStudyScenarios'>
         <header className='benchStudySectionHeader'>
           <span>03</span>
           <div>
-            <h2>测试场景</h2>
-            <p>所有实验复用相同输入，覆盖信息卡、购买卡和长内容规划。</p>
+            <h2>{copy.testScenarios}</h2>
+            <p>{copy.testScenariosDetail}</p>
           </div>
         </header>
         <div className='benchStudyScenarioList'>
@@ -551,24 +789,25 @@ export function BenchResultPage() {
                 <div>
                   <h3>{scenario.name}</h3>
                   <small>
-                    {scenario.businessMode} · {scenario.complexity}复杂度
+                    {scenario.businessMode} · {scenario.complexity}
+                    {copy.complexitySuffix}
                   </small>
                 </div>
               </div>
               <p>{scenario.purpose}</p>
               <footer>
-                <span>交互</span>
+                <span>{copy.interaction}</span>
                 <b>{scenario.interaction}</b>
               </footer>
             </article>
           ))}
         </div>
-        <ScenarioEvidenceGallery />
+        <ScenarioEvidenceGallery locale={locale} scope={report.scope} />
       </section>
 
       <section className='benchStudySection benchStudyMethod'>
         <div className='benchStudyMethodColumn'>
-          <span className='benchStudySectionIndex'>04 · 实验方法</span>
+          <span className='benchStudySectionIndex'>{copy.methodIndex}</span>
           <h2>{report.methodology.title}</h2>
           <ol className='benchStudyMethodList'>
             {report.methodology.items.map((item, index) => (
@@ -583,8 +822,8 @@ export function BenchResultPage() {
           </ol>
         </div>
         <aside className='benchStudyLimitations'>
-          <span className='benchStudySectionIndex'>结果解读</span>
-          <h2>阅读结果前，请注意</h2>
+          <span className='benchStudySectionIndex'>{copy.interpretation}</span>
+          <h2>{copy.limitationsTitle}</h2>
           <ol>
             {report.limitations.map((limitation) => (
               <li key={limitation}>{limitation}</li>

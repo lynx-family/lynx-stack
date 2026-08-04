@@ -14,7 +14,7 @@
     "main.ts"
   ],
   "scripts": {
-    "build": "tsc"
+    "build": "tsc6"
   },
   "dependencies": {
     "@modelcontextprotocol/sdk": "1.25.2",

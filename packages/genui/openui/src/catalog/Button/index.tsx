@@ -5,6 +5,7 @@
 import { ACTION_STEPS, BuiltinActionType } from '@openuidev/lang-core';
 import { z } from 'zod/v4';
 
+import { Button as LynxUIButton } from '@lynx-js/lynx-ui';
 import type { ReactNode } from '@lynx-js/react';
 
 import {
@@ -90,12 +91,13 @@ function ButtonRenderer({ props }: { props: ButtonProps }) {
   };
 
   return (
-    <view
+    <LynxUIButton
       className={className}
-      {...(isStreaming ? {} : ({ bindtap: onTap }))}
+      disabled={isStreaming}
+      onClick={onTap}
     >
       <text className='OpenUIButtonText'>{label}</text>
-    </view>
+    </LynxUIButton>
   );
 }
 

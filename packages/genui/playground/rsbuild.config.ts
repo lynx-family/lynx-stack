@@ -2,14 +2,23 @@
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
 import { randomUUID } from 'node:crypto';
+import { existsSync, readdirSync } from 'node:fs';
 import type { IncomingMessage, ServerResponse } from 'node:http';
 import { networkInterfaces } from 'node:os';
+import { fileURLToPath } from 'node:url';
 
 import { defineConfig } from '@rsbuild/core';
 import type { RsbuildPlugin } from '@rsbuild/core';
 import { pluginReact } from '@rsbuild/plugin-react';
 
 const PORT = Number(process.env.PORT ?? 3000);
+const PHASE_TWO_SCREENSHOT_DIRECTORY = fileURLToPath(
+  new URL('./src/pages/bench/assets/phase-two/screenshots', import.meta.url),
+);
+const HAS_PHASE_TWO_SCREENSHOTS = existsSync(PHASE_TWO_SCREENSHOT_DIRECTORY)
+  && readdirSync(PHASE_TWO_SCREENSHOT_DIRECTORY).some((fileName) =>
+    fileName.endsWith('.png')
+  );
 const CLIENT_PAYLOAD_STORE_ENABLED = process.env.NODE_ENV !== 'production'
   && process.env.A2UI_PLAYGROUND_CLIENT_PAYLOAD_PUBLISH !== '0';
 
@@ -263,6 +272,12 @@ export default defineConfig({
         from: 'src/mock/a2ui-gallery/*.json',
         to: 'demos/[name][ext]',
       },
+      ...(HAS_PHASE_TWO_SCREENSHOTS
+        ? [{
+          from: 'src/pages/bench/assets/phase-two/screenshots/*.png',
+          to: 'bench/phase-two/screenshots/[name][ext]',
+        }]
+        : []),
     ],
   },
   server: {

@@ -42,7 +42,34 @@ export class WebEncodePlugin {
           stage: Compilation.PROCESS_ASSETS_STAGE_REPORT + 1,
         }, () => {
           inlinedAssets.forEach((name) => {
+            // `deleteAsset` also deletes everything in `assetInfo.related`, and
+            // `related.sourceMap` is where SourceMapDevToolPlugin records the
+            // sidecar `.map`. The JS itself is inlined into the template and
+            // must go, but its source map is the only way to symbolicate
+            // production `/app-service.js` frames, so the map has to outlive it.
+            //
+            // Without this, `output.sourceMap.js: 'source-map'` and
+            // `'hidden-source-map'` both emit no map for the background chunk on
+            // the web target, while `'inline-source-map'` works only by
+            // embedding the map into the shipped `.web.bundle` (~10x size).
+            // rsbuild emits the sidecar in this situation; this makes the web
+            // target behave the same.
+            //
+            // Detaching `related.sourceMap` first does NOT work: `updateAsset`'s
+            // info updater does not clear `related` on rspack, so the cascade
+            // still fires and the map still disappears. Take a reference to the
+            // map before the delete and put it back afterwards instead — that
+            // depends on nothing but `emitAsset`.
+            const mapName = compilation.getAsset(name)?.info.related?.sourceMap;
+            const map = mapName ? compilation.getAsset(mapName) : undefined;
+            const mapSource = map?.source;
+            const mapInfo = map?.info;
+
             compilation.deleteAsset(name);
+
+            if (mapName && mapSource && !compilation.getAsset(mapName)) {
+              compilation.emitAsset(mapName, mapSource, mapInfo);
+            }
           });
           inlinedAssets.clear();
         });

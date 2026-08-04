@@ -1,9 +1,70 @@
-import { describe, expect, it, vi } from 'vitest';
+import { afterEach, describe, expect, it, vi } from 'vitest';
 
 import { getEventValue } from '../../../../src/element-template/prop-adapters/event-value.js';
 import { prepareSpreadAttrSlot } from '../../../../src/element-template/prop-adapters/spread.js';
 
+afterEach(() => {
+  globalThis.__EXPERIMENTAL_TRANSFORM_BUILTIN_ATTRIBUTE_NAMES__ = false;
+});
+
 describe('ElementTemplate spread prop adapter', () => {
+  it('preserves spread attribute names when the compile-time config is unavailable', () => {
+    Reflect.deleteProperty(globalThis, '__EXPERIMENTAL_TRANSFORM_BUILTIN_ATTRIBUTE_NAMES__');
+
+    expect(
+      prepareSpreadAttrSlot(-1, 0, {
+        textMaxline: 2,
+      }),
+    ).toEqual({
+      textMaxline: 2,
+    });
+  });
+
+  it('transforms builtin attribute names and preserves event handler lookup keys', () => {
+    globalThis.__EXPERIMENTAL_TRANSFORM_BUILTIN_ATTRIBUTE_NAMES__ = true;
+
+    const prepared = prepareSpreadAttrSlot(-1, 0, {
+      textMaxline: 2,
+      tailColorConvert: false,
+      onClick: vi.fn(),
+      onCatchTap: vi.fn(),
+      onReady: null,
+      bindchange: vi.fn(),
+    });
+
+    expect(prepared).toEqual({
+      'text-maxline': 2,
+      'tail-color-convert': false,
+      bindtap: getEventValue(-1, 0, 'onClick'),
+      catchtap: getEventValue(-1, 0, 'onCatchTap'),
+      bindready: null,
+      bindchange: getEventValue(-1, 0, 'bindchange'),
+    });
+  });
+
+  it('transforms only after identifying special spread attributes', () => {
+    globalThis.__EXPERIMENTAL_TRANSFORM_BUILTIN_ATTRIBUTE_NAMES__ = {
+      rename: {
+        className: 'renamed-class',
+        ref: 'renamed-ref',
+        textMaxline: 'custom-maxline',
+      },
+    };
+    const ref = vi.fn();
+
+    expect(
+      prepareSpreadAttrSlot(-2, 0, {
+        className: 'primary',
+        ref,
+        textMaxline: 2,
+      }),
+    ).toEqual({
+      class: 'primary',
+      ref: '-2-0',
+      'custom-maxline': 2,
+    });
+  });
+
   it('normalizes host spread keys and emits ordinary event values', () => {
     const handleTap = vi.fn();
     const unsupportedWorkletEvent = vi.fn();

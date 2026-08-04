@@ -19,6 +19,7 @@ import type {
   GetAttributesPAPI,
   GetChildrenPAPI,
   GetClassesPAPI,
+  GetComputedStyleByKeyPAPI,
   GetElementUniqueIDPAPI,
   GetIDPAPI,
   GetParentPAPI,
@@ -124,6 +125,14 @@ export const __GetAttributeByName: GetAttributeByNamePAPI = /*#__PURE__*/ (
   element,
   name,
 ) => element.getAttribute(name);
+
+export const __GetComputedStyleByKey: GetComputedStyleByKeyPAPI =
+  /*#__PURE__*/ (
+    element,
+    key,
+  ) =>
+    element.ownerDocument.defaultView?.getComputedStyle(element)
+      .getPropertyValue(key) ?? '';
 
 export const __GetID: GetIDPAPI = /*#__PURE__*/ (element) =>
   element.getAttribute('id');

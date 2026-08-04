@@ -1,6 +1,6 @@
 {
   "name": "@lynx-js/genui",
-  "version": "0.2.0",
+  "version": "0.2.1",
   "description": "Generative UI for Lynx.",
   "repository": {
     "type": "git",
@@ -122,7 +122,7 @@
     "mcp-apps/dist"
   ],
   "scripts": {
-    "build": "pnpm run clean && tsc --project tsconfig.build.json",
+    "build": "pnpm run clean && tsc6 --project tsconfig.build.json",
     "clean": "node -e \"require('node:fs').rmSync('dist',{recursive:true,force:true});\""
   },
   "dependencies": {
@@ -142,7 +142,8 @@
     "@lynx-js/qrcode-rsbuild-plugin": "workspace:^",
     "@lynx-js/react": "workspace:^",
     "@lynx-js/react-rsbuild-plugin": "workspace:^",
-    "@lynx-js/rspeedy": "workspace:^"
+    "@lynx-js/rspeedy": "workspace:^",
+    "preact": "catalog:lynxjs"
   },
   "peerDependencies": {
     "@lynx-js/lynx-ui": ">=3.133.0",
