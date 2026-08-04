@@ -131,8 +131,11 @@ function parseReasoningEffort(
 export function resolveReasoningEffort(
   opts: ChatOptions,
 ): OpenAIReasoningEffort | undefined {
-  return parseReasoningEffort(opts.reasoningEffort)
-    ?? parseReasoningEffort(process.env.OPENAI_REASONING_EFFORT);
+  const explicit = parseReasoningEffort(opts.reasoningEffort);
+  if (explicit !== undefined) return explicit;
+  return opts.inheritReasoningEffort === false
+    ? undefined
+    : parseReasoningEffort(process.env.OPENAI_REASONING_EFFORT);
 }
 
 export function buildResourceRunOptions(
@@ -142,10 +145,14 @@ export function buildResourceRunOptions(
   return pickDefined({ resourceId: opts.resourceId, abortSignal });
 }
 
-export function buildOpenAIRunOptions(opts: ChatOptions) {
+export function buildOpenAIRunOptions(
+  opts: ChatOptions,
+  abortSignal?: AbortSignal,
+) {
   const reasoningEffort = resolveReasoningEffort(opts);
   return pickDefined({
     resourceId: opts.resourceId,
+    abortSignal,
     providerOptions: reasoningEffort
       ? { openai: { reasoningEffort } }
       : undefined,

@@ -148,13 +148,9 @@ export async function createNativeApp(
     __SetSourceMapRelease: (err: Error) => release = err.message,
     __GetSourceMapRelease: (_url: string) => release,
     queryComponent: (source, callback) => {
-      if (templateCache.has(source)) {
-        callback({ __hasReady: true });
-      } else {
-        queryComponent(source).then(res => {
-          callback?.(res);
-        });
-      }
+      queryComponent(source).then(res => {
+        callback?.(res);
+      });
     },
   };
   return nativeApp;

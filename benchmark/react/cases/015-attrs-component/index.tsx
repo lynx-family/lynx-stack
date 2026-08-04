@@ -16,7 +16,8 @@ interface TextProps {
   textMaxlength: string;
   textMaxline: string;
   textSelection: boolean;
-  textVerticalAlign: string;
+  textVerticalAlign: 'bottom' | 'center' | 'top';
+  onClick: () => void;
 }
 
 function Text(props: TextProps) {
@@ -30,6 +31,7 @@ function Text(props: TextProps) {
       include-font-padding={props.includeFontPadding}
       text-fake-bold={props.textFakeBold}
       text-selection={props.textSelection}
+      bindtap={props.onClick}
     />
   );
 }
@@ -47,6 +49,7 @@ function App() {
           includeFontPadding={false}
           textFakeBold={false}
           textSelection={false}
+          onClick={() => {}}
         />
       ))}
     </view>

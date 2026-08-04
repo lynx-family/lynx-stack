@@ -36,8 +36,8 @@
     "README.md"
   ],
   "scripts": {
-    "build": "tsc -p tsconfig.build.json && cp src/core/renderer.css dist/core/renderer.css",
-    "build:api": "tsc -p tsconfig.build.json"
+    "build": "tsc6 -p tsconfig.build.json && cp src/core/renderer.css dist/core/renderer.css",
+    "build:api": "tsc6 -p tsconfig.build.json"
   },
   "dependencies": {
     "@openuidev/lang-core": "^0.2.9",

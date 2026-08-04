@@ -26,6 +26,8 @@ export type OpenUiPromptLibrary = Library<HeadlessRenderer>;
 export interface CreateOpenUiPromptLibraryOptions {
   /** Override the root component name. Defaults to `'Stack'`. */
   root?: string;
+  /** Limit built-ins to these names. Custom `components` are still appended. */
+  componentNames?: readonly string[];
   /** Replace or extend the built-in component set. */
   components?: OpenUiPromptComponent[];
   /** Replace or extend the built-in component groups. */
@@ -575,16 +577,29 @@ const DEFAULT_EXAMPLES = [
   ].join('\n'),
 ];
 
-function withDefaultPromptOptions(options?: PromptOptions): PromptOptions {
+const RESTRICTED_COMPONENT_RULES = [
+  'Use only the components listed in this prompt; do not invent component names or named-argument syntax.',
+  'Prefer compact, mobile-friendly layouts built from the available layout and content components.',
+  'Return only OpenUI Lang code unless inlineMode is explicitly enabled.',
+];
+
+function withDefaultPromptOptions(
+  options?: PromptOptions,
+  restrictedComponents = false,
+): PromptOptions {
+  const defaultRules = restrictedComponents
+    ? RESTRICTED_COMPONENT_RULES
+    : DEFAULT_ADDITIONAL_RULES;
   return {
     bindings: true,
-    toolCalls: true,
+    toolCalls: !restrictedComponents,
     ...options,
     additionalRules: [
-      ...DEFAULT_ADDITIONAL_RULES,
+      ...defaultRules,
       ...(options?.additionalRules ?? []),
     ],
-    examples: options?.examples ?? DEFAULT_EXAMPLES,
+    examples: options?.examples
+      ?? (restrictedComponents ? [] : DEFAULT_EXAMPLES),
   };
 }
 
@@ -597,14 +612,32 @@ function withDefaultPromptOptions(options?: PromptOptions): PromptOptions {
 export function createOpenUiPromptLibrary(
   options: CreateOpenUiPromptLibraryOptions = {},
 ): OpenUiPromptLibrary {
+  const root = options.root ?? 'Stack';
+  const componentNames = options.componentNames
+    ? new Set([...options.componentNames, root])
+    : null;
+  const defaultComponents = componentNames
+    ? DEFAULT_COMPONENTS.filter((component) =>
+      componentNames.has(component.name)
+    )
+    : DEFAULT_COMPONENTS;
+  const defaultComponentGroups = componentNames
+    ? DEFAULT_COMPONENT_GROUPS
+      .map((group) => ({
+        ...group,
+        components: group.components.filter((name) => componentNames.has(name)),
+      }))
+      .filter((group) => group.components.length > 0)
+    : DEFAULT_COMPONENT_GROUPS;
+
   return createLibrary<HeadlessRenderer>({
-    root: options.root ?? 'Stack',
+    root,
     components: options.components
-      ? [...DEFAULT_COMPONENTS, ...options.components]
-      : DEFAULT_COMPONENTS,
+      ? [...defaultComponents, ...options.components]
+      : defaultComponents,
     componentGroups: options.componentGroups
-      ? [...DEFAULT_COMPONENT_GROUPS, ...options.componentGroups]
-      : DEFAULT_COMPONENT_GROUPS,
+      ? [...defaultComponentGroups, ...options.componentGroups]
+      : defaultComponentGroups,
   });
 }
 
@@ -618,6 +651,9 @@ export function buildOpenUiSystemPrompt(
   if (options.root !== undefined) {
     libraryOptions.root = options.root;
   }
+  if (options.componentNames !== undefined) {
+    libraryOptions.componentNames = options.componentNames;
+  }
   if (options.components !== undefined) {
     libraryOptions.components = options.components;
   }
@@ -626,7 +662,10 @@ export function buildOpenUiSystemPrompt(
   }
   const library = createOpenUiPromptLibrary(libraryOptions);
   const prompt = library.prompt(
-    withDefaultPromptOptions(options.promptOptions),
+    withDefaultPromptOptions(
+      options.promptOptions,
+      options.componentNames !== undefined,
+    ),
   );
   return options.appendix ? `${prompt}\n\n${options.appendix}` : prompt;
 }

@@ -209,12 +209,46 @@ function createPolyfills() {
     }),
   };
 
-  const ee = new EventEmitter();
-  // @ts-ignore
-  ee.dispatchEvent = ({
-    type,
-    data,
-  }) => {
+  // Model the engine's ContextProxy routing
+  // (`core/runtime/common/bindings/event/context_proxy.cc`): each thread owns
+  // its own proxy pair, and an event whose target equals the dispatching
+  // proxy's origin is delivered locally on that same proxy — it never crosses
+  // threads. A cross-thread event fires on the peer thread's proxy of the
+  // sender:
+  //
+  //   main thread `getJSContext().dispatchEvent`
+  //     -> background `getCoreContext()` listeners
+  //   background `getCoreContext().dispatchEvent`
+  //     -> main thread `getJSContext()` listeners
+  //   main thread `getCoreContext().dispatchEvent`
+  //     -> main thread `getCoreContext()` listeners (self-loop)
+  //   background `getJSContext().dispatchEvent`
+  //     -> background `getJSContext()` listeners (self-loop)
+  const createContextProxy = () => {
+    const ee = new EventEmitter();
+    // @ts-ignore
+    ee.addEventListener = ee.addListener;
+    // @ts-ignore
+    ee.removeEventListener = ee.removeListener;
+    return ee;
+  };
+
+  const mainThreadContexts = {
+    CoreContext: createContextProxy(),
+    JsContext: createContextProxy(),
+  };
+  const backgroundThreadContexts = {
+    CoreContext: createContextProxy(),
+    JsContext: createContextProxy(),
+  };
+
+  const deliverEvent = (
+    receiver: EventEmitter,
+    receiverThread: 'main' | 'background',
+    type: string,
+    data: unknown,
+    origin: 'CoreContext' | 'JSContext',
+  ) => {
     // Avoid ReferenceError: lynxTestingEnv is not defined
     // This error happens because worklet runtime may dispatch event
     // after the vitest environment is torn down
@@ -222,35 +256,60 @@ function createPolyfills() {
       return;
     }
 
-    const origin = __MAIN_THREAD__ ? 'CoreContext' : 'JSContext';
-    // Switch to another thread
-    if (origin === 'CoreContext') {
-      lynxTestingEnv.switchToBackgroundThread();
-    } else {
+    const wasMainThread = __MAIN_THREAD__;
+    // Ensure listeners run with the receiving thread's globals active
+    if (receiverThread === 'main') {
       lynxTestingEnv.switchToMainThread();
+    } else {
+      lynxTestingEnv.switchToBackgroundThread();
     }
 
-    // Ensure the code is running on the background thread
-    ee.emit(type, {
+    receiver.emit(type, {
       data: data,
       origin,
     });
 
     // Finish executing, restore the original thread state
-    if (origin === 'CoreContext') {
+    if (wasMainThread) {
       lynxTestingEnv.switchToMainThread();
     } else {
       lynxTestingEnv.switchToBackgroundThread();
     }
   };
-  // @ts-ignore
-  ee.addEventListener = ee.addListener;
-  // @ts-ignore
-  ee.removeEventListener = ee.removeListener;
 
-  const CoreContext = ee;
+  // Main thread proxies (origin: CoreContext)
+  // @ts-ignore
+  mainThreadContexts.CoreContext.dispatchEvent = ({ type, data }) =>
+    deliverEvent(
+      mainThreadContexts.CoreContext,
+      'main',
+      type,
+      data,
+      'CoreContext',
+    );
+  // @ts-ignore
+  mainThreadContexts.JsContext.dispatchEvent = ({ type, data }) =>
+    deliverEvent(
+      backgroundThreadContexts.CoreContext,
+      'background',
+      type,
+      data,
+      'CoreContext',
+    );
 
-  const JsContext = ee;
+  // Background thread proxies (origin: JSContext)
+  // @ts-ignore
+  backgroundThreadContexts.CoreContext.dispatchEvent = ({ type, data }) =>
+    deliverEvent(mainThreadContexts.JsContext, 'main', type, data, 'JSContext');
+  // @ts-ignore
+  backgroundThreadContexts.JsContext.dispatchEvent = ({ type, data }) =>
+    deliverEvent(
+      backgroundThreadContexts.JsContext,
+      'background',
+      type,
+      data,
+      'JSContext',
+    );
 
   function __LoadLepusChunk(
     chunkName: string,
@@ -277,8 +336,8 @@ function createPolyfills() {
   return {
     app,
     performance,
-    CoreContext,
-    JsContext,
+    mainThreadContexts,
+    backgroundThreadContexts,
     __LoadLepusChunk,
   };
 }
@@ -288,8 +347,7 @@ function injectMainThreadGlobals(target?: any, polyfills?: any) {
 
   const {
     performance,
-    CoreContext,
-    JsContext,
+    mainThreadContexts,
     __LoadLepusChunk,
   } = polyfills || {};
   if (typeof target === 'undefined') {
@@ -308,6 +366,7 @@ function injectMainThreadGlobals(target?: any, polyfills?: any) {
   target.__FIRST_SCREEN_SYNC_TIMING__ = 'immediately';
   target.__TESTING_FORCE_RENDER_TO_OPCODE__ = false;
   target.__ENABLE_SSR__ = false;
+  target.__EXPERIMENTAL_TRANSFORM_BUILTIN_ATTRIBUTE_NAMES__ = false;
   target.globDynamicComponentEntry = '__Card__';
 
   const native = {
@@ -339,20 +398,21 @@ function injectMainThreadGlobals(target?: any, polyfills?: any) {
   target.lynx = {
     performance,
     getNative: () => native,
-    getCoreContext: (() => CoreContext),
     /*
-
-    background thread -> main thread:
+    receive events dispatched from the background thread:
     lynx.getJSContext().addEventListener("message", (e: Event) => {
       console.log('message', e)
-      });
-    main thread -> background thread:
-    lynx.getJSContext().postMessage({
+    });
+    send events to the background thread:
+    lynx.getJSContext().dispatchEvent({
       type: 'message',
       data: [3, 4, 5]
     });
+    (dispatching on getCoreContext() from the main thread is a self-loop
+    and never reaches the background thread, same as the real engine)
     */
-    getJSContext: (() => JsContext),
+    getCoreContext: (() => mainThreadContexts.CoreContext),
+    getJSContext: (() => mainThreadContexts.JsContext),
     reportError: (e: Error) => {
       throw e;
     },
@@ -433,8 +493,7 @@ function injectBackgroundThreadGlobals(target?: any, polyfills?: any) {
   const {
     app,
     performance,
-    CoreContext,
-    JsContext,
+    backgroundThreadContexts,
     __LoadLepusChunk,
   } = polyfills || {};
   if (typeof target === 'undefined') {
@@ -450,6 +509,7 @@ function injectBackgroundThreadGlobals(target?: any, polyfills?: any) {
   target.__BACKGROUND__ = true;
   target.__MAIN_THREAD__ = false;
   target.__ENABLE_SSR__ = false;
+  target.__EXPERIMENTAL_TRANSFORM_BUILTIN_ATTRIBUTE_NAMES__ = false;
   target.globDynamicComponentEntry = '__Card__';
   target.lynxCoreInject = {};
   target.lynxCoreInject.tt = {
@@ -492,18 +552,20 @@ function injectBackgroundThreadGlobals(target?: any, polyfills?: any) {
       };
     }),
     /*
-    main thread -> background thread:
+    receive events dispatched from the main thread:
     lynx.getCoreContext().addEventListener("message", (e: Event) => {
       console.log('message', e)
     });
-    background thread -> main thread:
-    lynx.getCoreContext().postMessage({
+    send events to the main thread:
+    lynx.getCoreContext().dispatchEvent({
       type: 'message',
       data: [1, 2, 3]
     });
+    (dispatching on getJSContext() from the background thread is a self-loop
+    and never reaches the main thread, same as the real engine)
     */
-    getCoreContext: (() => CoreContext),
-    getJSContext: (() => JsContext),
+    getCoreContext: (() => backgroundThreadContexts.CoreContext),
+    getJSContext: (() => backgroundThreadContexts.JsContext),
     getJSModule: (moduleName) => {
       if (moduleName === 'GlobalEventEmitter') {
         return globalEventEmitter;

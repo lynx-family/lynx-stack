@@ -3,8 +3,36 @@
 // LICENSE file in the root directory of this source tree.
 
 #[cfg(feature = "server")]
-#[tokio::main]
-async fn main() -> Result<(), ui_judge::server::ServerError> {
-  let port = std::env::var("PORT").unwrap_or_else(|_| "8080".to_string());
-  ui_judge::server::serve(&port).await
+fn main() -> Result<(), ui_judge::server::ServerError> {
+  configure_packaged_runtime();
+  let port = std::env::var("LYNX_USE_PORT").unwrap_or_else(|_| "8080".to_string());
+  tokio::runtime::Builder::new_multi_thread()
+    .enable_all()
+    .build()?
+    .block_on(ui_judge::server::serve(&port))
+}
+
+#[cfg(feature = "server")]
+fn configure_packaged_runtime() {
+  if std::env::var_os("LYNX_LIB_PATH").is_some() || std::env::var_os("LYNX_SDK_DIR").is_some() {
+    return;
+  }
+
+  let Some(executable_dir) = std::env::current_exe()
+    .ok()
+    .and_then(|executable| executable.parent().map(ToOwned::to_owned))
+  else {
+    return;
+  };
+  let runtime_name = if cfg!(target_os = "macos") {
+    "libLynx_clay.dylib"
+  } else if cfg!(target_os = "linux") {
+    "libLynx_clay.so"
+  } else {
+    return;
+  };
+  let runtime_path = executable_dir.join("lib").join(runtime_name);
+  if runtime_path.is_file() {
+    std::env::set_var("LYNX_LIB_PATH", runtime_path);
+  }
 }

@@ -11,7 +11,7 @@ import {
   MCP_PROTOCOL_VERSION,
 } from '@lynx-js/genui-mcp-apps/protocol';
 
-import { POST } from '../app/mcp-apps/stream/route.js';
+import app from '../src/app.js';
 
 interface MockMcpAppsService {
   generateRaw(
@@ -76,18 +76,16 @@ describe('MCP Apps stream', () => {
     };
 
     try {
-      const response = await POST(
-        new Request(
-          'https://example.test/api/mcp-apps/stream',
-          {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json',
-              'x-forwarded-for': '203.0.113.41',
-            },
-            body: JSON.stringify(requestBody()),
+      const response = await app.request(
+        '/mcp-apps/stream',
+        {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'x-forwarded-for': '203.0.113.41',
           },
-        ),
+          body: JSON.stringify(requestBody()),
+        },
       );
       expect(response.status).toBe(200);
       const reader = response.body?.getReader();

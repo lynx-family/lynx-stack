@@ -19,6 +19,7 @@ import type {
   DefineDceVisitorConfig,
   ExtractStrConfig,
   ShakeVisitorConfig,
+  TransformBuiltinAttributeNamesOptions,
 } from '@lynx-js/react-transform'
 import { LAYERS } from '@lynx-js/react-webpack-plugin'
 import { LynxTemplatePlugin } from '@lynx-js/template-webpack-plugin'
@@ -132,6 +133,30 @@ export interface PluginReactLynxOptions {
    * @defaultValue `false`
    */
   enableAccessibilityElement?: boolean
+
+  /**
+   * Transform attribute names on Lynx builtin elements.
+   *
+   * @remarks
+   *
+   * `false` disables the conversion. `true` applies the default rule:
+   * `onClick` becomes `bindtap`, `onCatchTap` becomes `catchtap`, other
+   * `onXXX` names become `bindxxx`, and remaining camelCase names become
+   * dash-case. An object provides serializable custom rules. Exact entries in
+   * `rename` take precedence over `preserve`, followed by the fallback behavior
+   * selected by `mode`.
+   *
+   * Explicit JSX attributes are transformed at compile time. Attributes
+   * supplied through JSX spreads are transformed at runtime with the same
+   * rules.
+   *
+   * @defaultValue `false`
+   *
+   * @experimental
+   */
+  experimental_transformBuiltinAttributeNames?:
+    | boolean
+    | TransformBuiltinAttributeNamesOptions
 
   /**
    * enableCSSInheritance enables the default inheritance properties.
@@ -390,6 +415,7 @@ export function pluginReactLynx(
     globalPropsMode: 'reactive',
 
     experimental_isLazyBundle: false,
+    experimental_transformBuiltinAttributeNames: false,
     experimental_useElementTemplate: false,
     optimizeBundleSize: false,
     enableUiSourceMap: false,

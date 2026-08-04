@@ -2,6 +2,8 @@
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
 
+import { Hono } from 'hono';
+
 import { MCP_APPS_PROTOCOL_VERSION } from '@lynx-js/genui-mcp-apps/protocol';
 
 import {
@@ -15,7 +17,7 @@ import {
   validateConversation,
   validateMessages,
 } from '../../common/chat-validation';
-import { corsPreflight, jsonWithCors } from '../../common/cors';
+import { jsonWithCors } from '../../common/cors';
 import { errorMessage } from '../../common/errors';
 import { pickProviderOptions } from '../../common/provider-options';
 import { checkRateLimit, rateLimitSseResponse } from '../../common/rate-limit';
@@ -33,11 +35,7 @@ interface McpAppsChatBody {
   api?: 'chat' | 'responses';
 }
 
-export function OPTIONS(req: Request) {
-  return corsPreflight(req);
-}
-
-export async function POST(req: Request) {
+async function postMcpAppsStream(req: Request) {
   const decision = checkRateLimit(req);
   if (!decision.ok) return rateLimitSseResponse(req, decision);
 
@@ -185,3 +183,9 @@ export async function POST(req: Request) {
 
   return new Response(stream, { status: 200, headers: sseHeaders(req) });
 }
+
+const route = new Hono();
+
+route.post('/', (context) => postMcpAppsStream(context.req.raw));
+
+export default route;

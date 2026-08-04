@@ -4,6 +4,7 @@
 
 import { createElement, render } from 'preact';
 import type { Component, ComponentChild, ComponentChildren, ContainerNode, RenderableProps, VNode } from 'preact';
+import type { ReactNode } from 'react';
 
 import type { NodesRef } from '@lynx-js/types';
 
@@ -156,14 +157,35 @@ function Portal(this: PortalThis, props: PortalProps): ComponentChildren {
 }
 
 /**
- * Create a `Portal` to continue rendering the vnode tree at a different DOM node.
+ * Renders `vnode` into `container` instead of the current component's position
+ * in the element tree, while keeping it in the React tree.
+ *
+ * `container` is a `NodesRef`, obtained either from a callback `ref` or from
+ * `lynx.createSelectorQuery().select(...)`.
+ *
+ * @remarks
+ * Context still flows across the portal boundary, and state updates inside the
+ * portal behave like they do in any other component. A few behaviors differ
+ * from `react-dom`:
+ *
+ * - Events do not bubble along the React tree. ReactLynx follows Preact's
+ *   approach, which has no synthetic event system, so events follow the actual
+ *   element structure of the page.
+ * - The portaled subtree renders on the background thread only, and does not
+ *   participate in main-thread first-screen rendering.
+ * - Mounting across pages or across native containers is not supported.
+ *
+ * @param vnode - The React node to render into `container`.
+ * @param container - The `NodesRef` target to render into.
+ * @returns A `ReactNode` placeholder to include in the JSX at the call site;
+ * the rendered output goes into `container`.
  *
  * @public
  */
 export function createPortal(
   vnode: ComponentChild,
   container: NodesRef,
-): VNode<any> | null {
+): ReactNode {
   // Main-thread bundle never renders Portal — the JSX is run only on the
   // background thread. Bail early so the rest of the module (preact's
   // `render` / `createElement`, the BSI cast, etc.) tree-shakes out of
@@ -175,5 +197,7 @@ export function createPortal(
     _container: container,
   });
   (el as VNode<any> & { containerInfo?: NodesRef }).containerInfo = container;
-  return el;
+  // preact's `VNode` and React's `ReactNode` describe the same runtime value
+  // here; the public signature speaks React types like the rest of the surface.
+  return el as unknown as ReactNode;
 }

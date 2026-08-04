@@ -974,7 +974,7 @@ describe('createElement', () => {
       globalThis[rLynxChange[0]](rLynxChange[1]);
       expect(rLynxChange[1]).toMatchInlineSnapshot(`
         {
-          "data": "{"patchList":[{"id":3}]}",
+          "data": "{"patchList":[{"id":3}],"flushOptions":{"emptyPatch":true}}",
           "patchOptions": {
             "flowIds": [
               666,

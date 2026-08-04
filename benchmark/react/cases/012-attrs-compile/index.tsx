@@ -7,20 +7,22 @@ import { root } from '@lynx-js/react';
 import { RunBenchmarkUntilHydrate } from '../../src/RunBenchmarkUntil.js';
 
 const ELEMENT_COUNT = 100;
+const handleClick = () => undefined;
 
 function App() {
   return (
     <view>
       {Array.from({ length: ELEMENT_COUNT }, () => (
         <text
-          text-maxline='2'
-          text-maxlength='128'
-          enable-font-scaling={false}
-          text-vertical-align='center'
-          tail-color-convert={false}
-          include-font-padding={false}
-          text-fake-bold={false}
-          text-selection={false}
+          textMaxline='2'
+          textMaxlength='128'
+          enableFontScaling={false}
+          textVerticalAlign='center'
+          tailColorConvert={false}
+          includeFontPadding={false}
+          textFakeBold={false}
+          textSelection={false}
+          onClick={handleClick}
         />
       ))}
     </view>

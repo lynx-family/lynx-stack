@@ -4,6 +4,7 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { updateGesture } from '../../src/snapshot/snapshot/gesture';
+import { getListItemPlatformInfoFromIndexedValue } from '../../src/snapshot/snapshot/platformInfo';
 import { updateSpread } from '../../src/snapshot/snapshot/spread';
 import { updateWorkletEvent } from '../../src/snapshot/snapshot/workletEvent';
 import { updateWorkletRef } from '../../src/snapshot/snapshot/workletRef';
@@ -31,6 +32,7 @@ describe('worklet lifecycle without elements', () => {
   afterEach(() => {
     vi.restoreAllMocks();
     delete globalThis.lynxWorkletImpl;
+    globalThis.__EXPERIMENTAL_TRANSFORM_BUILTIN_ATTRIBUTE_NAMES__ = false;
   });
 
   it('retains main-thread event worklet ctx before elements are materialized', () => {
@@ -148,5 +150,61 @@ describe('worklet lifecycle without elements', () => {
         "item-key": "item-0",
       }
     `);
+  });
+
+  it('transforms list-item platform attribute names before extracting spread info', () => {
+    globalThis.__EXPERIMENTAL_TRANSFORM_BUILTIN_ATTRIBUTE_NAMES__ = true;
+    const snapshot = createSnapshot({
+      __spread: true,
+      estimatedHeightPx: 10,
+      fullSpan: true,
+      itemKey: 'item-0',
+    });
+
+    updateSpread(snapshot, 0, {}, 0, true);
+
+    expect(snapshot.__listItemPlatformInfo).toEqual({
+      'estimated-height-px': 10,
+      'full-span': true,
+      'item-key': 'item-0',
+    });
+    expect(snapshot.__values[0]).toEqual({
+      'estimated-height-px': 10,
+      'full-span': true,
+      'item-key': 'item-0',
+    });
+  });
+
+  it('does not transform normalized spread platform info again', () => {
+    globalThis.__EXPERIMENTAL_TRANSFORM_BUILTIN_ATTRIBUTE_NAMES__ = {
+      mode: 'mapping-only',
+      rename: {
+        itemKey: 'item-key',
+        'item-key': 'renamed-item-key',
+      },
+    };
+
+    expect(
+      getListItemPlatformInfoFromIndexedValue(
+        { 'item-key': 'item-0' },
+        true,
+      ),
+    ).toEqual({
+      'item-key': 'item-0',
+    });
+  });
+
+  it('does not transform spread platform info when the compile-time config is unavailable', () => {
+    Reflect.deleteProperty(globalThis, '__EXPERIMENTAL_TRANSFORM_BUILTIN_ATTRIBUTE_NAMES__');
+
+    expect(
+      getListItemPlatformInfoFromIndexedValue({
+        __spread: true,
+        itemKey: 'camel-case',
+        'item-key': 'normalized',
+      }),
+    ).toEqual({
+      'item-key': 'normalized',
+    });
   });
 });

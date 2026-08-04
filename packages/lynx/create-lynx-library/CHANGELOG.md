@@ -1,5 +1,18 @@
 # create-lynx-library
 
+## 0.5.0
+
+### Minor Changes
+
+- Add HarmonyOS Native Module spec generation and complete HAR scaffolding for Lynx Autolink libraries. ([#2990](https://github.com/lynx-family/lynx-stack/pull/2990))
+
+### Patch Changes
+
+- Keep the generated example's `@lynx-js/rspeedy` version aligned with the workspace release. ([#3308](https://github.com/lynx-family/lynx-stack/pull/3308))
+
+- Updated dependencies [[`46dfcc2`](https://github.com/lynx-family/lynx-stack/commit/46dfcc2166a3750bbf2c5f5600d7b3721eac4dd2)]:
+  - @lynx-js/autolink-codegen@0.4.0
+
 ## 0.4.0
 
 ### Minor Changes

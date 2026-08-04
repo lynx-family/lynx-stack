@@ -12,6 +12,7 @@ Before **v0.4.0**, `uiVariants` was **disabled by default** and had to be enable
 
 Starting with **v0.4.0**, `uiVariants` is **enabled by default**.
 You only need to configure it explicitly if you want to disable it or customize its options.
+With the default options, only the `ui` prefix is registered. The built-in `ui-side` and `ui-align` prefix value maps are available as explicit opt-ins.
 
 ## How to Customize
 
@@ -49,10 +50,9 @@ createLynxPreset({
 });
 ```
 
-> Tip: `uiVariants: {}` (empty object) and `uiVariants: true` both enable the plugin with default options.
-
+> Tip: `uiVariants: {}` (empty object) and `uiVariants: true` both enable the plugin with the default `ui` prefix.
 > Note: Passing an object replaces the default prefixes.
-> To extend/merge with defaults, use the function form shown below.
+> To extend or merge built-in prefix value maps, use the function form shown below.
 
 ### Customize Prefixes and Values
 
@@ -71,17 +71,17 @@ createLynxPreset({
 });
 ```
 
-### Advanced: Extend or Override Defaults Programmatically
+### Advanced: Extend or Override Built-ins Programmatically
 
-For full control while preserving built-in defaults, pass a function to prefixes. This allows extending, overriding, or merging prefix-value maps:
+For full control, pass a function to `prefixes`. The function receives all built-in prefix value maps, including the opt-in `ui-side` and `ui-align` maps. This allows enabling, extending, overriding, or merging them:
 
 ```ts
 createLynxPreset({
   lynxUIPlugins: {
     uiVariants: {
-      prefixes: (defaults) => ({
-        ...defaults,
-        ui: [...defaults.ui, 'expanded'], // extend existing
+      prefixes: (builtins) => ({
+        ...builtins, // explicitly enable all built-in prefixes
+        ui: [...builtins.ui, 'expanded'], // extend existing
         'ui-side': ['top', 'bottom'], // override
         'aria-expanded': ['true', 'false'], // add new prefix
       }),
@@ -92,9 +92,9 @@ createLynxPreset({
 
 This approach ensures forward compatibility while allowing you to tailor variants to your component system.
 
-### Default Prefixes and Values
+### Built-in Prefixes and Values
 
-When enabled with `true`, the plugin registers the following default variants:
+The plugin provides the following built-in prefix value maps:
 
 ```ts
 {
@@ -113,25 +113,45 @@ When enabled with `true`, the plugin registers the following default variants:
     'entering',
     'animating',
     'busy',
+    'focused',
+    'complete',
+    'filled',
+    'dragging',
   ],
   'ui-side': ['left', 'right', 'top', 'bottom'],
   'ui-align': ['start', 'end', 'center'],
 }
 ```
 
-These defaults are designed to support common component states and layout roles found in design systems and headless UI libraries.
+Only `ui` is registered by default. To register the other built-in prefixes, pass them explicitly:
+
+```ts
+createLynxPreset({
+  lynxUIPlugins: {
+    uiVariants: {
+      prefixes: ['ui', 'ui-side', 'ui-align'],
+    },
+  },
+});
+```
+
+These built-ins are designed to support common component states and optional layout roles found in design systems and headless UI libraries.
 
 ## Basic Usage Examples
 
 ```tsx
 // Generates: .ui-open:bg-blue-500
-<Popover className="ui-open:bg-blue-500" />
+<Popover className='ui-open:bg-blue-500' />;
+```
 
+The `ui-side` and `ui-align` examples require explicitly enabling their built-in prefixes as shown above:
+
+```tsx
 // Generates: .ui-side-left:border-l
-<Popover className="ui-side-left:border-l" />
+<Popover className='ui-side-left:border-l' />;
 
 // Generates: .ui-align-end:text-right
-<Popover className="ui-align-end:text-right" />
+<Popover className='ui-align-end:text-right' />;
 ```
 
 These variants enable component-aware styling by aligning Tailwind utilities with a component's runtime state or role in a scalable, declarative way.

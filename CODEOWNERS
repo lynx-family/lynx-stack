@@ -9,5 +9,6 @@ packages/lynx/engine-bridge/** @pupiltong
 packages/rspeedy/plugin-react/** @upupming
 packages/react/** @hzy @HuJean @Yradex
 packages/react/transform/** @gaoachao
+packages/tailwind-preset/** @Dugyu @upupming
 packages/genui/** @pupiltong @Sherry-hue @gaoachao @HuJean @fzx2666-fz
 benchmark/react/** @hzy @HuJean @upupming
