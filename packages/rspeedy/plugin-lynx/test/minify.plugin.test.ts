@@ -23,8 +23,10 @@ describe('pluginMinify', () => {
     const rsbuild = await createStubRsbuild({ mode: 'production' })
     const config = await rsbuild.unwrapConfig({ action: 'build' })
 
-    const [minimizer] = findJsMinimizers(config)
-    const options = minimizer?._args[0]?.minimizerOptions
+    const minimizers = findJsMinimizers(config)
+    expect(minimizers).toHaveLength(1)
+
+    const options = minimizers[0]?._args[0]?.minimizerOptions
 
     expect(options?.compress).toMatchObject({
       negate_iife: false,
@@ -67,8 +69,10 @@ describe('pluginMinify', () => {
     })
     const config = await rsbuild.unwrapConfig({ action: 'build' })
 
-    const [minimizer] = findJsMinimizers(config)
-    const options = minimizer?._args[0]?.minimizerOptions
+    const minimizers = findJsMinimizers(config)
+    expect(minimizers).toHaveLength(1)
+
+    const options = minimizers[0]?._args[0]?.minimizerOptions
     const compress = options?.compress as Record<string, unknown>
 
     expect(compress['pure_funcs']).toEqual(['console.log'])

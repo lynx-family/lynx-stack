@@ -10,6 +10,10 @@ import { debug } from '../debug.js'
 const MAIN_THREAD_JS_PATTERN = /.*main-thread(?:\.[A-Fa-f0-9]*)?\.js$/
 const BACKGROUND_JS_PATTERN = /.*background(?:\.[A-Fa-f0-9]*)?\.js$/
 
+// TODO: `mainThreadOptions` and `backgroundOptions` are non-standard keys
+// tunneled through the Rsbuild config. They should be supported by the DSL
+// plugin (e.g. `pluginReactLynx`) with typed options instead of being read
+// here in `pluginLynx`.
 interface Minify {
   js?: boolean | undefined
   jsOptions?: Rspack.SwcJsMinimizerRspackPluginOptions | undefined
