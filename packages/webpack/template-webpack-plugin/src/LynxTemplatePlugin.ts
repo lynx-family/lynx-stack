@@ -1444,7 +1444,7 @@ function shortenLazyBundleName(name: string): string {
  * relative to the compiler context with `..` segments replaced, so the
  * bundle never escapes the `lazy-bundle/` output directory.
  */
-function resourcesToLazyBundleName(
+export function resourcesToLazyBundleName(
   resources: string[],
   context: string,
 ): string {
