@@ -11,14 +11,14 @@ import type { RsbuildPlugin, Rspack } from '@rsbuild/core'
 import { describe, expect, rstest, test } from '@rstest/core'
 
 import { createMainThreadEnv } from './createMainThreadEnv.js'
-import type { SerializedInstance } from './createMainThreadEnv.js'
+import type { SerializedInstance, StubElement } from './createMainThreadEnv.js'
 import { createStubRspeedy as createRspeedy } from './createRspeedy.js'
 
 rstest
   .stubEnv('USE_RSPACK', 'true')
   .stubEnv('NODE_ENV', 'production')
 
-async function buildRootBackgroundFixture(entry: string, tmp: string) {
+async function buildIslandFixture(entry: string, tmp: string): Promise<string> {
   const { pluginReactLynx } = await import('../src/pluginReactLynx.js')
 
   let mainThread = ''
@@ -29,13 +29,12 @@ async function buildRootBackgroundFixture(entry: string, tmp: string) {
       source: {
         entry: {
           main: fileURLToPath(
-            new URL(`./fixtures/root-background/${entry}`, import.meta.url),
+            new URL(`./fixtures/root-main-thread/${entry}`, import.meta.url),
           ),
         },
       },
       output: { distPath: { root: tmp } },
       plugins: [
-        // The declarative trigger: no `enableMTSRendering` option at all.
         pluginReactLynx(),
         {
           name: 'ignore-css-loader-workaround',
@@ -81,33 +80,33 @@ async function buildRootBackgroundFixture(entry: string, tmp: string) {
 
   await rsbuild.build()
 
-  return { getMainThread: () => mainThread }
+  return mainThread
 }
 
-describe('root <Background fallback> runtime (enableMTSRendering: "auto")', () => {
-  test('the first frame renders the static fallback, and hydration replaces it', async () => {
+function flatten(element: StubElement | undefined): StubElement[] {
+  if (!element) {
+    return []
+  }
+  return [element, ...element.children.flatMap((child) => flatten(child))]
+}
+
+function flattenInstances(
+  instance: SerializedInstance,
+): SerializedInstance[] {
+  return [
+    instance,
+    ...(instance.children ?? []).flatMap((child) => flattenInstances(child)),
+  ]
+}
+
+describe('root <MainThread> island runtime', () => {
+  test('renders the island as the first frame and keeps its elements through hydration', async () => {
     const tmp = await fs.mkdtemp(
-      path.join(tmpdir(), 'rspeedy-react-test-root-background-runtime-'),
+      path.join(tmpdir(), 'rspeedy-react-test-root-main-thread-runtime-'),
     )
 
     try {
-      const { getMainThread } = await buildRootBackgroundFixture(
-        'index.tsx',
-        tmp,
-      )
-      const mainThread = getMainThread()
-
-      // The bundle is assembled from the background-collected definitions and
-      // names the root fallback snapshot.
-      expect(mainThread).toContain('__initMTSDefines')
-      const fallbackId = /__setRootMTSFallback\("(__snapshot_[^"]+)"\)/
-        .exec(mainThread)?.[1]
-      expect(fallbackId).toBeTypeOf('string')
-
-      const definitions = [
-        ...new Set(mainThread.match(/__snapshot_[0-9a-f]+_[0-9a-f]+_\d+/g)),
-      ]
-      expect(definitions.length).toBeGreaterThan(1)
+      const mainThread = await buildIslandFixture('index.tsx', tmp)
 
       const { env, getPage, lifecycleEvents } = createMainThreadEnv()
       vm.createContext(env)
@@ -118,14 +117,25 @@ describe('root <Background fallback> runtime (enableMTSRendering: "auto")', () =
 
       renderPage({})
 
-      // The pre-hydration first frame is the skeleton, not an empty page.
+      // The first frame is the island, not the static fallback: the main
+      // thread ran `Shell`'s render body.
       const page = getPage()
-      expect(page?.children).toHaveLength(1)
-      expect(JSON.stringify(page)).toContain('root-background-skeleton-marker')
+      const painted = JSON.stringify(page)
+      expect(painted).toContain('root-main-thread-island-marker')
+      expect(painted).not.toContain('root-main-thread-fallback-marker')
+      // …including what `<Background>` defers: its fallback, not `Feed`.
+      expect(painted).toContain('feed-skeleton')
+      expect(painted).not.toContain('root-main-thread-feed-marker')
 
-      // The first-screen sync carries the fallback instance to the background,
-      // where the ordinary hydration diff replaces it: simulate the resulting
-      // patch (remove the unmatched fallback, insert the real content).
+      // The island's element identities, before the background exists.
+      const before = flatten(page)
+      const islandText = before.find((element) =>
+        element.attributes['text'] === 'root-main-thread-island-marker'
+      )
+      expect(islandText).toBeDefined()
+
+      // The first-screen sync carries the island's instance tree over, which
+      // is what the background's hydrate diffs against.
       const firstScreen = lifecycleEvents.find((event) =>
         Array.isArray(event) && event[0] === 'rLynxFirstScreen'
       ) as [string, { root: string }] | undefined
@@ -134,12 +144,18 @@ describe('root <Background fallback> runtime (enableMTSRendering: "auto")', () =
       const serializedRoot = JSON.parse(
         firstScreen![1].root,
       ) as SerializedInstance
-      expect(serializedRoot.children).toHaveLength(1)
-      const fallbackInstance = serializedRoot.children![0]!
-      expect(fallbackInstance.type).toBe(fallbackId)
+      const instances = flattenInstances(serializedRoot)
+      // Not the "empty root" of the plain assembled bundle: the island's
+      // whole subtree is there for the diff to match against.
+      expect(instances.length).toBeGreaterThan(2)
 
-      const contentId = definitions.find((definition) =>
-        definition !== fallbackId
+      // What the background's hydrate produces for an island it adopts: the
+      // matched instances keep their ids, and only the `<Background>`
+      // boundary — whose fallback the main thread rendered instead of
+      // `Feed` — is removed and replaced.
+      const islandRoot = serializedRoot.children![0]!
+      const skeleton = flattenInstances(islandRoot).find((instance) =>
+        instance !== islandRoot && (instance.children ?? []).length === 0
       )!
       const rLynxChange = env['rLynxChange'] as (args: {
         data: string
@@ -150,27 +166,21 @@ describe('root <Background fallback> runtime (enableMTSRendering: "auto")', () =
           patchList: [{
             id: 1,
             snapshotPatch: [
-              /* CreateElement(type, id) */ 0,
-              contentId,
-              100,
-              /* InsertBefore(parent, child, before, slotIndex) */ 1,
-              serializedRoot.id,
-              100,
-              undefined,
-              0,
               /* RemoveChild(parent, child) */ 2,
-              serializedRoot.id,
-              fallbackInstance.id,
+              islandRoot.id,
+              skeleton.id,
             ],
           }],
         }),
         patchOptions: { reloadVersion: 0 },
       })
 
-      const hydrated = getPage()
-      expect(hydrated?.children).toHaveLength(1)
-      expect(JSON.stringify(hydrated)).not.toContain(
-        'root-background-skeleton-marker',
+      // Adoption, not replacement: the island's elements are the same objects
+      // after the handover — nothing was torn down and rebuilt.
+      const after = flatten(getPage())
+      expect(after).toContain(islandText)
+      expect(JSON.stringify(getPage())).toContain(
+        'root-main-thread-island-marker',
       )
     } finally {
       await fs.rm(tmp, { recursive: true, force: true })

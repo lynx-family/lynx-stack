@@ -71,20 +71,29 @@ export function applyEntry(
       }
     >(Symbol.for('@lynx-js/react/internal:resolve'))!
 
-    // A root-level `<Background>` in an entry is the declarative trigger for
-    // the assembled main-thread bundle (`enableMTSRendering: false` is its
-    // implementation) — resolve `'auto'` against the entry sources before the
+    // A root-level `<Background>` — or its opt-in twin, a root-level
+    // `<MainThread>` — in an entry is the declarative trigger for the
+    // assembled main-thread bundle (`enableMTSRendering: false` is its
+    // implementation). Resolve `'auto'` against the entry sources before the
     // entry points are rewritten below.
-    const resolvedEnableMTSRendering = resolveMTSRendering(
-      options,
-      isProd,
-      chain,
-      api.context.rootPath,
-      (message) => void (api.logger ?? console).warn(message),
-    )
+    const { enableMTSRendering: resolvedEnableMTSRendering, hasRootIsland } =
+      resolveMTSRendering(
+        options,
+        isProd,
+        chain,
+        api.context.rootPath,
+        (message) => void (api.logger ?? console).warn(message),
+      )
 
+    // The island entry is the same assembled bundle plus the main-thread
+    // renderer, which only a build with an island pays for.
     const mainThreadImports = resolvedEnableMTSRendering ? undefined : [
-      path.join(reactLynxDir, 'runtime/mts-rendering-disabled/index.js'),
+      path.join(
+        reactLynxDir,
+        hasRootIsland
+          ? 'runtime/mts-rendering-disabled/islands.js'
+          : 'runtime/mts-rendering-disabled/index.js',
+      ),
     ]
 
     const rsbuildConfig = api.getRsbuildConfig()

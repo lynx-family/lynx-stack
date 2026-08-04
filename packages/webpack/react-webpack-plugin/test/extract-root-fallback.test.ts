@@ -3,11 +3,11 @@
 // LICENSE file in the root directory of this source tree.
 import { describe, expect, it } from '@rstest/core';
 
-import { extractRootBackgroundFallback } from '../src/loaders/extractRootBackgroundFallback.js';
+import { extractRootFallback } from '../src/loaders/extractRootFallback.js';
 
-describe('extractRootBackgroundFallback', () => {
+describe('extractRootFallback', () => {
   it('extracts the static fallback snapshot of a root <Background>', () => {
-    const result = extractRootBackgroundFallback(`
+    const result = extractRootFallback(`
 root.render(/*#__PURE__*/ _jsx(Background, {
     fallback: /*#__PURE__*/ _jsx(__snapshot_e540c_index_1, {}),
     children: /*#__PURE__*/ _jsx(App, {})
@@ -18,7 +18,7 @@ root.render(/*#__PURE__*/ _jsx(Background, {
   });
 
   it('finds the fallback prop after a children prop', () => {
-    const result = extractRootBackgroundFallback(`
+    const result = extractRootFallback(`
 root.render(_jsxs(Background, {
     children: [_jsx(App, {}), _jsx(Other, { header: { fallback: 1 } })],
     fallback: _jsx(__snapshot_a_b_1, {})
@@ -28,13 +28,13 @@ root.render(_jsxs(Background, {
   });
 
   it('returns nothing for a module without a root <Background>', () => {
-    expect(extractRootBackgroundFallback(`
+    expect(extractRootFallback(`
 root.render(/*#__PURE__*/ _jsx(App, {}));
 `)).toBeUndefined();
   });
 
   it('treats a missing fallback prop as the fallback={null} degenerate case', () => {
-    const result = extractRootBackgroundFallback(`
+    const result = extractRootFallback(`
 root.render(_jsx(Background, {
     children: _jsx(App, {})
 }));
@@ -43,7 +43,7 @@ root.render(_jsx(Background, {
   });
 
   it('warns on a fallback that is not a snapshot (a user component)', () => {
-    const result = extractRootBackgroundFallback(`
+    const result = extractRootFallback(`
 root.render(_jsx(Background, {
     fallback: /*#__PURE__*/ _jsx(Spinner, {}),
     children: _jsx(App, {})
@@ -54,7 +54,7 @@ root.render(_jsx(Background, {
   });
 
   it('warns on a snapshot fallback with dynamic parts', () => {
-    const result = extractRootBackgroundFallback(`
+    const result = extractRootFallback(`
 root.render(_jsx(Background, {
     fallback: _jsx(__snapshot_a_b_1, {
         values: [label]
@@ -67,7 +67,7 @@ root.render(_jsx(Background, {
   });
 
   it('does not read a nested fallback key as the root one', () => {
-    const result = extractRootBackgroundFallback(`
+    const result = extractRootFallback(`
 root.render(_jsx(Background, {
     children: _jsx(App, {
         fallback: _jsx(__snapshot_nested_1, {})
@@ -78,7 +78,7 @@ root.render(_jsx(Background, {
   });
 
   it('is not fooled by braces inside string props', () => {
-    const result = extractRootBackgroundFallback(`
+    const result = extractRootFallback(`
 root.render(_jsx(Background, {
     label: "not } a { boundary",
     fallback: _jsx(__snapshot_a_b_2, {})

@@ -8,7 +8,7 @@ import { describe, expect, test } from '@rstest/core'
 
 import {
   resolveEnableMTSRendering,
-  rootBackgroundFallbackHasUserComponent,
+  rootFallbackHasUserComponent,
   sourceHasRootBackground,
 } from '../src/mtsRendering.js'
 
@@ -148,9 +148,9 @@ describe('resolveEnableMTSRendering', () => {
   })
 })
 
-describe('rootBackgroundFallbackHasUserComponent', () => {
+describe('rootFallbackHasUserComponent', () => {
   test('flags a user component in the root <Background> fallback', () => {
-    expect(rootBackgroundFallbackHasUserComponent(`
+    expect(rootFallbackHasUserComponent(`
       import { Background, root } from '@lynx-js/react'
       root.render(
         <Background fallback={<Spinner />}>
@@ -161,7 +161,7 @@ describe('rootBackgroundFallbackHasUserComponent', () => {
   })
 
   test('flags a user component nested under host elements in the fallback', () => {
-    expect(rootBackgroundFallbackHasUserComponent(`
+    expect(rootFallbackHasUserComponent(`
       import { Background, root } from '@lynx-js/react'
       root.render(
         <Background fallback={<view><text>Loading</text><Brand.Logo/></view>}>
@@ -172,7 +172,7 @@ describe('rootBackgroundFallbackHasUserComponent', () => {
   })
 
   test('accepts a host-element-only fallback', () => {
-    expect(rootBackgroundFallbackHasUserComponent(`
+    expect(rootFallbackHasUserComponent(`
       import { Background, root } from '@lynx-js/react'
       root.render(
         <Background fallback={<view><text>Loading…</text></view>}>
@@ -183,21 +183,21 @@ describe('rootBackgroundFallbackHasUserComponent', () => {
   })
 
   test('stays silent without a root <Background>', () => {
-    expect(rootBackgroundFallbackHasUserComponent(`
+    expect(rootFallbackHasUserComponent(`
       import { root } from '@lynx-js/react'
       root.render(<App/>)
     `)).toBe(false)
   })
 
   test('stays silent without an inline fallback element', () => {
-    expect(rootBackgroundFallbackHasUserComponent(`
+    expect(rootFallbackHasUserComponent(`
       import { Background, root } from '@lynx-js/react'
       root.render(<Background fallback={fallbackFromElsewhere}><App/></Background>)
     `)).toBe(false)
   })
 
   test('does not read a later fallback attribute as the root one', () => {
-    expect(rootBackgroundFallbackHasUserComponent(`
+    expect(rootFallbackHasUserComponent(`
       import { Background, root } from '@lynx-js/react'
       root.render(<Background><App fallback={<Spinner/>}/></Background>)
     `)).toBe(false)

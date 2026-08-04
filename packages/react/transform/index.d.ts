@@ -757,6 +757,59 @@ export interface TransformNodiffOutput {
   elementTemplates?: Array<ElementTemplateAsset>
   /** @internal */
   mtsDefines?: Array<MTSDefine>
+  /** @internal */
+  mainThreadIslands?: MainThreadIslands
+}
+/**
+ * @internal
+ * The compile-time half of the main-thread islands declared by one module:
+ * the components marked with the `'main thread component'` directive, and a
+ * root-level `<MainThread>` naming the island that is the first frame.
+ */
+export interface MainThreadIslands {
+  /** @internal */
+  components: Array<MainThreadIslandComponent>
+  /** @internal */
+  rootIsland?: RootMainThreadIsland
+  /**
+   * @internal
+   * Why a root-level `<MainThread>` did not name an island, when one was
+   * declared but its child could not be resolved to a component.
+   */
+  rootIslandWarning?: string
+}
+/** @internal */
+export interface MainThreadIslandComponent {
+  /**
+   * @internal
+   * The declared (local) name, for diagnostics.
+   */
+  name: string
+  /**
+   * @internal
+   * The name the component is exported under, when it is exported.
+   */
+  exported?: string
+}
+/** @internal */
+export interface RootMainThreadIsland {
+  /**
+   * @internal
+   * The module specifier the island component is imported from, or
+   * `undefined` when it is declared in the entry module itself.
+   */
+  source?: string
+  /**
+   * @internal
+   * The name the island is imported under in its own module (`'default'` for
+   * a default import).
+   */
+  imported?: string
+  /**
+   * @internal
+   * The local identifier, for diagnostics.
+   */
+  local: string
 }
 /**
  * @internal

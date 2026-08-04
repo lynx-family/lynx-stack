@@ -40,6 +40,7 @@ import { createGlobalProps } from '../core/globalProps.js';
 import type { GlobalProps } from '../core/globalProps.js';
 import { useLynxGlobalEventListener } from '../core/hooks/useLynxGlobalEventListener.js';
 import { factory, withInitDataInState } from '../core/initData.js';
+import { MainThread } from '../core/main-thread.js';
 import type { InitData } from '../lynx-api.js';
 import './native/index.js';
 
@@ -79,10 +80,12 @@ export default {
   lazy,
   createElement,
   Background,
+  MainThread,
 };
 
 export {
   Background,
+  MainThread,
   Children,
   createRef,
   Fragment,
@@ -132,6 +135,7 @@ export const useGlobalPropsChanged: (callback: (data: GlobalProps) => void) => v
 export { withInitDataInState };
 export { useLynxGlobalEventListener };
 export type { BackgroundProps } from '../core/background.js';
+export type { MainThreadProps } from '../core/main-thread.js';
 
 export * from './client/root.js';
 export { runOnBackground } from './runtime/template/main-thread-background-function.js';

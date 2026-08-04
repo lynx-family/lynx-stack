@@ -37,6 +37,16 @@ export function collectMTSDefines<TChunk, TModule>(
   chunks: Iterable<TChunk>,
   getChunkModules: (chunk: TChunk) => Iterable<TModule>,
   getModuleIdentifier: (module: TModule) => string,
+  /**
+   * The modules already compiled into the main-thread layer — the island
+   * modules the build pulled in, and everything they import.
+   *
+   * Their definitions are registered by their own module code, so assembling
+   * them again would register every snapshot and worklet twice: same ids,
+   * same behavior, wasted bytes. Skipping them here is what lets an island
+   * coexist with the assembled bundle.
+   */
+  isCompiledOnMainThread: (module: TModule) => boolean = () => false,
 ): MTSDefine[] {
   const collected: MTSDefine[] = [];
   const visitedModules = new Set<string>();
@@ -48,6 +58,9 @@ export function collectMTSDefines<TChunk, TModule>(
         continue;
       }
       visitedModules.add(identifier);
+      if (isCompiledOnMainThread(module)) {
+        continue;
+      }
       collectFromModule(module as ModuleWithMTSDefines, collected);
     }
   }
@@ -124,13 +137,17 @@ export function renderLazyMTSDefines(
 
 type MTSDefinesRuntimeModule = new(
   backgroundEntry: string,
+  mainThreadEntry: string,
 ) => RuntimeModule;
 
 export function createMTSDefinesRuntimeModule(
   webpack: typeof import('@rspack/core').rspack,
 ): MTSDefinesRuntimeModule {
   return class MTSDefinesRuntimeModule extends webpack.RuntimeModule {
-    constructor(private readonly backgroundEntry: string) {
+    constructor(
+      private readonly backgroundEntry: string,
+      private readonly mainThreadEntry: string,
+    ) {
       super(
         'lynx main thread defines',
         webpack.RuntimeModule.STAGE_NORMAL,
@@ -158,11 +175,32 @@ export function createMTSDefinesRuntimeModule(
 
       const { chunkGraph } = compilation;
 
+      // Every resource the main-thread chunk compiles for itself. An island
+      // module lands here, and so does everything it imports, so the
+      // assembled definitions can leave all of them out.
+      const mainThreadResources = new Set<string>();
+      for (
+        const chunk of compilation.entrypoints.get(this.mainThreadEntry)?.chunks
+          ?? []
+      ) {
+        for (const module of chunkGraph.getChunkModules(chunk)) {
+          const resource = (module as { resource?: string }).resource;
+          if (typeof resource === 'string') {
+            mainThreadResources.add(resource);
+          }
+        }
+      }
+
       return renderMTSDefines(
         collectMTSDefines(
           entrypoint.chunks,
           (chunk: Chunk) => chunkGraph.getChunkModules(chunk),
           (module) => module.identifier(),
+          (module) => {
+            const resource = (module as { resource?: string }).resource;
+            return typeof resource === 'string'
+              && mainThreadResources.has(resource);
+          },
         ),
       );
     }

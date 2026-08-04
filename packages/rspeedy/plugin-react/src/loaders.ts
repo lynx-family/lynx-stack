@@ -111,7 +111,7 @@ export function applyLoaders(
     // Same resolution as `applyEntry` (which owns the user-facing warnings):
     // a detected root-level `<Background>` turns the assembled main-thread
     // bundle on, and the background loader then collects the MTS defines.
-    const enableMTSRendering = resolveMTSRendering(
+    const { enableMTSRendering } = resolveMTSRendering(
       options,
       isProd,
       chain,

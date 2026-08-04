@@ -40,6 +40,14 @@ const BACKGROUND_IMPORT_RE =
 // formatter inserts between `.render(` and the opening tag.
 const ROOT_BACKGROUND_RENDER_RE = /\.render\(\s*<Background[\s/>]/
 
+// The opt-in twin. `<MainThread>` at the render root declares that the wrapped
+// island — and only it — is the main thread's first frame, which is the same
+// whole-program statement a root `<Background>` makes from the other end: no
+// business code needs to be compiled for the main thread except the island.
+const MAIN_THREAD_IMPORT_RE =
+  /import[^{}]*\{[^}]*\bMainThread\b[^}]*\}\s*from\s*['"]@lynx-js\/react(?:\/[^'"]*)?['"]/
+const ROOT_MAIN_THREAD_RENDER_RE = /\.render\(\s*<MainThread[\s/>]/
+
 /**
  * Whether a single entry's source declares a root-level `<Background>`.
  *
@@ -48,6 +56,26 @@ const ROOT_BACKGROUND_RENDER_RE = /\.render\(\s*<Background[\s/>]/
 export function sourceHasRootBackground(source: string): boolean {
   return BACKGROUND_IMPORT_RE.test(source)
     && ROOT_BACKGROUND_RENDER_RE.test(source)
+}
+
+/**
+ * Whether a single entry's source declares a root-level `<MainThread>` — the
+ * island that is the first frame.
+ *
+ * @internal
+ */
+export function sourceHasRootMainThread(source: string): boolean {
+  return MAIN_THREAD_IMPORT_RE.test(source)
+    && ROOT_MAIN_THREAD_RENDER_RE.test(source)
+}
+
+/**
+ * Whether a single entry's source declares either root-level boundary.
+ *
+ * @internal
+ */
+export function sourceHasRootBoundary(source: string): boolean {
+  return sourceHasRootBackground(source) || sourceHasRootMainThread(source)
 }
 
 /**
@@ -84,7 +112,7 @@ export function resolveEnableMTSRendering(
 
   for (const file of entryFiles) {
     const source = tryReadFile(file)
-    if (source !== undefined && sourceHasRootBackground(source)) {
+    if (source !== undefined && sourceHasRootBoundary(source)) {
       return false
     }
   }
@@ -111,12 +139,13 @@ function tryReadFile(file: string): string | undefined {
  * `fallback` attribute to inspect (e.g. `fallback={fallbackFromElsewhere}` is
  * still inspected, but yields no element to flag).
  */
-function extractRootBackgroundFallback(source: string): string | undefined {
+function extractRootFallbackAttribute(source: string): string | undefined {
   const render = ROOT_BACKGROUND_RENDER_RE.exec(source)
+    ?? ROOT_MAIN_THREAD_RENDER_RE.exec(source)
   if (!render) {
     return undefined
   }
-  const tagStart = source.indexOf('<Background', render.index)
+  const tagStart = source.indexOf('<', render.index + '.render('.length - 1)
   if (tagStart === -1) {
     return undefined
   }
@@ -169,10 +198,10 @@ function extractRootBackgroundFallback(source: string): string | undefined {
  *
  * @internal
  */
-export function rootBackgroundFallbackHasUserComponent(
+export function rootFallbackHasUserComponent(
   source: string,
 ): boolean {
-  const fallback = extractRootBackgroundFallback(source)
+  const fallback = extractRootFallbackAttribute(source)
   if (fallback === undefined) {
     return false
   }
@@ -206,6 +235,16 @@ export function collectEntryImports(
  *
  * @internal
  */
+function addEntryImport(
+  files: string[],
+  rootPath: string,
+  item: unknown,
+): void {
+  if (typeof item === 'string') {
+    files.push(path.resolve(rootPath, item))
+  }
+}
+
 export function collectEntryImportsByEntry(
   chain: RspackChain,
   rootPath: string,
@@ -214,20 +253,15 @@ export function collectEntryImportsByEntry(
   const entryPoints = chain.entryPoints.entries() ?? {}
   for (const [entryName, entryPoint] of Object.entries(entryPoints)) {
     const files: string[] = []
-    const add = (item: unknown) => {
-      if (typeof item === 'string') {
-        files.push(path.resolve(rootPath, item))
-      }
-    }
     for (const value of entryPoint.values()) {
       if (typeof value === 'string' || Array.isArray(value)) {
         for (const item of Array.isArray(value) ? value : [value]) {
-          add(item)
+          addEntryImport(files, rootPath, item)
         }
       } else if (value && typeof value === 'object' && 'import' in value) {
         const imports = (value as { import?: string | string[] }).import
         for (const item of Array.isArray(imports) ? imports : [imports]) {
-          add(item)
+          addEntryImport(files, rootPath, item)
         }
       }
     }
@@ -238,6 +272,22 @@ export function collectEntryImportsByEntry(
 
 const noop = (): void => {
   // The loaders hook resolves silently; the entry hook owns the warnings.
+}
+
+/**
+ * How the first screen is built for this compilation.
+ *
+ * @internal
+ */
+export interface ResolvedMTSRendering {
+  /** Whether business code is compiled for, and rendered by, the main thread. */
+  enableMTSRendering: boolean
+  /**
+   * Whether an entry declares a root-level `<MainThread>`, i.e. whether the
+   * assembled main-thread bundle needs the island entry (which brings the
+   * main-thread renderer back in for the island's subtree).
+   */
+  hasRootIsland: boolean
 }
 
 /**
@@ -261,58 +311,71 @@ export function resolveMTSRendering(
   chain: RspackChain,
   rootPath: string,
   warn: (message: string) => void = noop,
-): boolean {
+): ResolvedMTSRendering {
+  const sourcesByEntry = new Map<string, string[]>()
+  for (
+    const [entryName, files] of collectEntryImportsByEntry(chain, rootPath)
+  ) {
+    sourcesByEntry.set(
+      entryName,
+      files
+        .map((file) => tryReadFile(file))
+        .filter((source): source is string => source !== undefined),
+    )
+  }
+  const hasRootIsland = [...sourcesByEntry.values()]
+    .some((sources) =>
+      sources.some((source) => sourceHasRootMainThread(source))
+    )
+
   if (typeof options.enableMTSRendering === 'boolean') {
     // The explicit switches skip detection entirely. `false` +
     // `experimental_useElementTemplate` is rejected eagerly by
-    // `pluginReactLynx` before any hook runs.
-    return options.enableMTSRendering
+    // `pluginReactLynx` before any hook runs. An island still needs the
+    // island entry, so the root `<MainThread>` scan runs either way — it is
+    // the placement of the first frame, not the mode.
+    return {
+      enableMTSRendering: options.enableMTSRendering,
+      hasRootIsland: hasRootIsland && !options.enableMTSRendering,
+    }
   }
   if (!isProd) {
-    return true
+    return { enableMTSRendering: true, hasRootIsland: false }
   }
 
-  const byEntry = collectEntryImportsByEntry(chain, rootPath)
-  const sourcesByEntry = new Map<string, string[]>()
-  let detected = false
-  for (const [entryName, files] of byEntry) {
-    const sources = files
-      .map(tryReadFile)
-      .filter((source): source is string => source !== undefined)
-    sourcesByEntry.set(entryName, sources)
-    detected ||= sources.some(sourceHasRootBackground)
-  }
+  const detected = [...sourcesByEntry.values()]
+    .some((sources) => sources.some((source) => sourceHasRootBoundary(source)))
   if (!detected) {
-    return true
+    return { enableMTSRendering: true, hasRootIsland: false }
   }
 
   if (options.experimental_useElementTemplate) {
     warn(
-      'A root-level <Background> was detected, but `experimental_useElementTemplate` '
+      'A root-level first-screen boundary was detected, but `experimental_useElementTemplate` '
         + 'does not support disabling main-thread rendering yet — keeping the classic build. '
-        + 'The <Background> fallback still renders on the main thread at runtime.',
+        + 'The boundary still renders on the main thread at runtime.',
     )
-    return true
+    return { enableMTSRendering: true, hasRootIsland: false }
   }
   if (options.enableSSR) {
     warn(
-      'A root-level <Background> was detected, but `enableSSR` '
+      'A root-level first-screen boundary was detected, but `enableSSR` '
         + 'does not support disabling main-thread rendering yet — keeping the classic build. '
-        + 'The <Background> fallback still renders on the main thread at runtime.',
+        + 'The boundary still renders on the main thread at runtime.',
     )
-    return true
+    return { enableMTSRendering: true, hasRootIsland: false }
   }
 
   for (const [entryName, sources] of sourcesByEntry) {
-    const declaring = sources.filter(sourceHasRootBackground)
+    const declaring = sources.filter((source) => sourceHasRootBoundary(source))
     if (declaring.length === 0) {
       // The mode applies to the whole build: an entry without a root
-      // <Background> gets an empty first frame (the `fallback={null}`
+      // boundary gets an empty first frame (the `fallback={null}`
       // degenerate case) — worth saying out loud under `'auto'`.
       warn(
         `Entry ${
           JSON.stringify(entryName)
-        } has no root-level <Background>, but another `
+        } has no root-level <Background> or <MainThread>, but another `
           + `entry turned main-thread rendering off for this build — its first frame will be `
           + `empty until the background hydrates. Add a root <Background fallback={…}> to it, `
           + `or set \`enableMTSRendering: true\` to keep the classic build.`,
@@ -320,9 +383,13 @@ export function resolveMTSRendering(
       continue
     }
     for (const source of declaring) {
-      if (rootBackgroundFallbackHasUserComponent(source)) {
+      // A user component in the *fallback* renders nothing: the fallback is
+      // painted from an assembled snapshot definition, not from code. That
+      // holds for both boundaries — a `<MainThread>` renders its island, not
+      // its fallback, so the fallback is still the no-code path.
+      if (rootFallbackHasUserComponent(source)) {
         warn(
-          `The root <Background> fallback of entry ${
+          `The root first-screen fallback of entry ${
             JSON.stringify(entryName)
           } `
             + `appears to contain a user component. Business code is not compiled for the `
@@ -333,5 +400,5 @@ export function resolveMTSRendering(
     }
   }
 
-  return false
+  return { enableMTSRendering: false, hasRootIsland }
 }

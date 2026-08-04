@@ -147,6 +147,15 @@ export interface Lynx {
     triggerGlobalEventFromLepus: (eventName: string, params: any) => void;
 }
 
+// @public
+export function MainThread(props: MainThreadProps): ReactNode;
+
+// @public
+export interface MainThreadProps {
+    children?: ReactNode | undefined;
+    fallback?: ReactNode | undefined;
+}
+
 // Warning: (ae-forgotten-export) The symbol "WorkletRef" needs to be exported by the entry point react.docs.d.ts
 //
 // @public

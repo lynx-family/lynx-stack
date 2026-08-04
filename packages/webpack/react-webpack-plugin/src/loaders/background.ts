@@ -5,9 +5,11 @@ import { createRequire } from 'node:module';
 
 import type { LoaderDefinitionFunction } from '@rspack/core';
 
+import { MTS_ISLANDS_BUILD_INFO } from '../MainThreadIslands.js';
+import type { MTSIslands } from '../MainThreadIslands.js';
 import { MTS_DEFINES_BUILD_INFO } from '../MTSDefinesRuntimeModule.js';
 import type { MTSDefine } from '../MTSDefinesRuntimeModule.js';
-import { extractRootBackgroundFallback } from './extractRootBackgroundFallback.js';
+import { extractRootFallback } from './extractRootFallback.js';
 import { getBackgroundTransformOptions } from './options.js';
 import type { ReactLoaderOptions } from './options.js';
 
@@ -101,7 +103,7 @@ const backgroundLoader: LoaderDefinitionFunction<ReactLoaderOptions> = function(
     // through the defines above — record its id as an extra `root-fallback`
     // define, so the assembled main-thread bundle can render it as the
     // pre-hydration first frame.
-    const fallback = extractRootBackgroundFallback(result.code);
+    const fallback = extractRootFallback(result.code);
     if (fallback?.id !== undefined) {
       mtsDefines.push({ kind: 'root-fallback', id: fallback.id, code: '' });
     } else if (fallback?.warning !== undefined) {
@@ -109,6 +111,28 @@ const backgroundLoader: LoaderDefinitionFunction<ReactLoaderOptions> = function(
     }
 
     buildInfo[MTS_DEFINES_BUILD_INFO] = mtsDefines;
+  }
+
+  if (buildInfo) {
+    // The opt-in half: components marked `'main thread component'`, plus the
+    // island a root-level `<MainThread>` names. The plugin turns both into
+    // extra main-thread entries — the modules that are compiled into the
+    // main-thread layer even though the mode compiles no business code there.
+    //
+    // Written unconditionally (including the empty case) so a rebuild that
+    // *removes* the last marker does not leave a stale island behind.
+    const islands = result.mainThreadIslands;
+    if (islands && (islands.components.length > 0 || islands.rootIsland)) {
+      buildInfo[MTS_ISLANDS_BUILD_INFO] = {
+        components: islands.components,
+        rootIsland: islands.rootIsland,
+      } satisfies MTSIslands;
+    } else {
+      delete buildInfo[MTS_ISLANDS_BUILD_INFO];
+    }
+    if (islands?.rootIslandWarning !== undefined) {
+      this.emitWarning(new Error(islands.rootIslandWarning));
+    }
   }
 
   this.callback(null, result.code, result.map);

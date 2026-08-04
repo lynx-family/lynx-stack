@@ -3,9 +3,9 @@
 // LICENSE file in the root directory of this source tree.
 
 /**
- * Best-effort extraction of the snapshot id a root-level `<Background>`
- * declares as its static `fallback`, from the *transformed* background output
- * of an entry module.
+ * Best-effort extraction of the snapshot id a root-level first-screen
+ * boundary — `<Background>` or `<MainThread>` — declares as its static
+ * `fallback`, from the *transformed* background output of an entry module.
  *
  * By the time this runs, the snapshot transform has already replaced the
  * fallback's JSX with a reference to its hoisted definition:
@@ -28,17 +28,22 @@
  * reported through `warning` so the build can say why.
  */
 
-// `<Background>` sitting directly inside a `.render(...)` call, compiled to
+// A root boundary sitting directly inside a `.render(...)` call, compiled to
 // the automatic JSX runtime. The raw-source detection in the rsbuild plugin
-// only matches a non-aliased `Background` import, and the transform preserves
-// the identifier, so `Background` is matched literally here as well.
-const ROOT_BACKGROUND_RENDER_RE =
-  /\.render\(\s*(?:\/\*#__PURE__\*\/\s*)?_jsxs?\(Background,\s*\{/g;
+// only matches a non-aliased import, and the transform preserves the
+// identifier, so the names are matched literally here as well.
+//
+// `<MainThread>` is the opt-in twin of `<Background>`: it declares an island
+// as the first frame, and its `fallback` is what paints when the island did
+// not make it into the main-thread bundle. Both take the same static
+// `fallback`, so both are extracted the same way.
+const ROOT_BOUNDARY_RENDER_RE =
+  /\.render\(\s*(?:\/\*#__PURE__\*\/\s*)?_jsxs?\((?:Background|MainThread),\s*\{/g;
 
 const FALLBACK_SNAPSHOT_RE =
-  /^fallback:\s*(?:\/\*#__PURE__\*\/\s*)?_jsxs?\(\s*(__snapshot_[A-Za-z0-9_$]+)\s*,\s*\{\s*\}\s*[,)]/;
+  /^fallback:\s*(?:\/\*#__PURE__\*\/\s*)?_jsxs?\(\s*(__snapshot_[\w$]+)\s*,\s*\{\s*\}\s*[,)]/;
 
-export interface RootBackgroundFallback {
+export interface RootFallback {
   /**
    * The snapshot id of the static fallback, when the entry declares one this
    * extraction can prove static.
@@ -53,16 +58,16 @@ export interface RootBackgroundFallback {
 }
 
 /**
- * Scan the props object of the root `<Background>` for a top-level
+ * Scan the props object of the root boundary for a top-level
  * `fallback:` property and classify its value.
  *
- * Returns `undefined` when the module has no root `<Background>` at all.
+ * Returns `undefined` when the module has no root boundary at all.
  */
-export function extractRootBackgroundFallback(
+export function extractRootFallback(
   code: string,
-): RootBackgroundFallback | undefined {
-  ROOT_BACKGROUND_RENDER_RE.lastIndex = 0;
-  const render = ROOT_BACKGROUND_RENDER_RE.exec(code);
+): RootFallback | undefined {
+  ROOT_BOUNDARY_RENDER_RE.lastIndex = 0;
+  const render = ROOT_BOUNDARY_RENDER_RE.exec(code);
   if (!render) {
     return undefined;
   }
@@ -112,7 +117,7 @@ export function extractRootBackgroundFallback(
       }
       return {
         warning:
-          'The root <Background> `fallback` did not compile into a single static snapshot, '
+          'The root first-screen boundary\'s `fallback` did not compile into a single static snapshot, '
           + 'so it will not be rendered as the pre-hydration first frame. '
           + 'Compose the fallback from static host elements (<view>, <text>, …) '
           + 'with literal attributes — no user components, no dynamic expressions.',
