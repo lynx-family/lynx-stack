@@ -5,6 +5,17 @@ import type { Chunk, Compilation, RuntimeModule } from '@rspack/core';
 
 export const MTS_DEFINES_BUILD_INFO = 'lynx:mts-defines';
 
+/**
+ * The `kind:id` keys a main-thread module already carries as real code.
+ *
+ * A `<Background>` fallback is compiled for the main thread, so its module
+ * lands in both graphs: the background collects its definitions like any
+ * other module's, and the main thread emits them itself. Assembling both
+ * would describe the same definition twice — once per island — so the
+ * assembly subtracts what the main-thread bundle already owns.
+ */
+export const MTS_DEFINES_OWNED_BUILD_INFO = 'lynx:mts-defines-owned';
+
 export interface MTSDefine {
   kind: 'snapshot' | 'worklet';
   id: string;
@@ -33,20 +44,43 @@ function collectFromModule(
   }
 }
 
+/**
+ * The `kind:id` keys the given modules already carry as real main-thread code.
+ */
+export function collectOwnedMTSDefineKeys<TChunk, TModule>(
+  chunks: Iterable<TChunk>,
+  getChunkModules: (chunk: TChunk) => Iterable<TModule>,
+): Set<string> {
+  const owned = new Set<string>();
+
+  const walk = (module: ModuleWithMTSDefines): void => {
+    const keys = module.buildInfo?.[MTS_DEFINES_OWNED_BUILD_INFO];
+    if (Array.isArray(keys)) {
+      for (const key of keys as string[]) {
+        owned.add(key);
+      }
+    }
+    if (module.modules) {
+      for (const nested of module.modules) {
+        walk(nested);
+      }
+    }
+  };
+
+  for (const chunk of chunks) {
+    for (const module of getChunkModules(chunk)) {
+      walk(module as ModuleWithMTSDefines);
+    }
+  }
+
+  return owned;
+}
+
 export function collectMTSDefines<TChunk, TModule>(
   chunks: Iterable<TChunk>,
   getChunkModules: (chunk: TChunk) => Iterable<TModule>,
   getModuleIdentifier: (module: TModule) => string,
-  /**
-   * The modules already compiled into the main-thread layer — the island
-   * modules the build pulled in, and everything they import.
-   *
-   * Their definitions are registered by their own module code, so assembling
-   * them again would register every snapshot and worklet twice: same ids,
-   * same behavior, wasted bytes. Skipping them here is what lets an island
-   * coexist with the assembled bundle.
-   */
-  isCompiledOnMainThread: (module: TModule) => boolean = () => false,
+  owned?: ReadonlySet<string>,
 ): MTSDefine[] {
   const collected: MTSDefine[] = [];
   const visitedModules = new Set<string>();
@@ -58,9 +92,6 @@ export function collectMTSDefines<TChunk, TModule>(
         continue;
       }
       visitedModules.add(identifier);
-      if (isCompiledOnMainThread(module)) {
-        continue;
-      }
       collectFromModule(module as ModuleWithMTSDefines, collected);
     }
   }
@@ -68,6 +99,11 @@ export function collectMTSDefines<TChunk, TModule>(
   const defines = new Map<string, MTSDefine>();
   for (const define of collected) {
     const key = `${define.kind}:${define.id}`;
+    if (owned?.has(key)) {
+      // Already in the main-thread bundle as real code — an island's own
+      // definition. Describing it again would only grow the assembly.
+      continue;
+    }
     const seen = defines.get(key);
     if (seen === undefined) {
       defines.set(key, define);
@@ -124,17 +160,13 @@ export function renderLazyMTSDefines(
 
 type MTSDefinesRuntimeModule = new(
   backgroundEntry: string,
-  mainThreadEntry: string,
 ) => RuntimeModule;
 
 export function createMTSDefinesRuntimeModule(
   webpack: typeof import('@rspack/core').rspack,
 ): MTSDefinesRuntimeModule {
   return class MTSDefinesRuntimeModule extends webpack.RuntimeModule {
-    constructor(
-      private readonly backgroundEntry: string,
-      private readonly mainThreadEntry: string,
-    ) {
+    constructor(private readonly backgroundEntry: string) {
       super(
         'lynx main thread defines',
         webpack.RuntimeModule.STAGE_NORMAL,
@@ -161,33 +193,21 @@ export function createMTSDefinesRuntimeModule(
       }
 
       const { chunkGraph } = compilation;
+      const getModules = (chunk: Chunk) => chunkGraph.getChunkModules(chunk);
 
-      // Every resource the main-thread chunk compiles for itself. An island
-      // module lands here, and so does everything it imports, so the
-      // assembled definitions can leave all of them out.
-      const mainThreadResources = new Set<string>();
-      for (
-        const chunk of compilation.entrypoints.get(this.mainThreadEntry)?.chunks
-          ?? []
-      ) {
-        for (const module of chunkGraph.getChunkModules(chunk)) {
-          const resource = (module as { resource?: string }).resource;
-          if (typeof resource === 'string') {
-            mainThreadResources.add(resource);
-          }
-        }
-      }
+      // What this main-thread chunk already carries as real code — the
+      // fallbacks it compiles — so the assembly describes only the deferred
+      // subtrees it does not.
+      const owned = this.chunk
+        ? collectOwnedMTSDefineKeys([this.chunk as Chunk], getModules)
+        : new Set<string>();
 
       return renderMTSDefines(
         collectMTSDefines(
           entrypoint.chunks,
-          (chunk: Chunk) => chunkGraph.getChunkModules(chunk),
+          getModules,
           (module) => module.identifier(),
-          (module) => {
-            const resource = (module as { resource?: string }).resource;
-            return typeof resource === 'string'
-              && mainThreadResources.has(resource);
-          },
+          owned,
         ),
       );
     }

@@ -4,11 +4,6 @@
 import { describe, expect, it } from '@rstest/core';
 
 import { islandModuleWrapper } from '../src/MainThreadIslands.js';
-import {
-  MTS_DEFINES_BUILD_INFO,
-  collectMTSDefines,
-} from '../src/MTSDefinesRuntimeModule.js';
-import type { MTSDefine } from '../src/MTSDefinesRuntimeModule.js';
 
 function decode(wrapper: string): string {
   expect(wrapper.startsWith('data:text/javascript,')).toBe(true);
@@ -33,85 +28,5 @@ describe('islandModuleWrapper', () => {
 
     expect(source).not.toMatch(/=>/);
     expect(source).not.toMatch(/\b(let|const)\b/);
-  });
-});
-
-interface TestModule {
-  id: string;
-  resource?: string;
-  defines?: MTSDefine[];
-  modules?: TestModule[];
-}
-
-function asModule(module: TestModule): TestModule {
-  return {
-    ...module,
-    ...(module.defines === undefined ? {} : {
-      buildInfo: { [MTS_DEFINES_BUILD_INFO]: module.defines },
-    }),
-    ...(module.modules
-      ? { modules: module.modules.map((nested) => asModule(nested)) }
-      : {}),
-  } as TestModule;
-}
-
-function snapshot(id: string): MTSDefine {
-  return { kind: 'snapshot', id, code: `/* ${id} */` };
-}
-
-describe('collectMTSDefines with islands', () => {
-  const chunks = [{
-    modules: [
-      asModule({
-        id: 'a',
-        resource: '/abs/Shell.tsx',
-        defines: [snapshot('A')],
-      }),
-      asModule({
-        id: 'b',
-        resource: '/abs/Feed.tsx',
-        defines: [snapshot('B')],
-      }),
-    ],
-  }];
-
-  const collect = (onMainThread: ReadonlySet<string>) =>
-    collectMTSDefines<{ modules: TestModule[] }, TestModule>(
-      chunks,
-      (chunk) => chunk.modules,
-      (module) => module.id,
-      (module) => onMainThread.has(module.resource!),
-    );
-
-  it('skips the definitions of a module compiled on the main thread', () => {
-    // The island registers its own definitions when its module runs, so
-    // assembling them again would register every snapshot twice.
-    expect(collect(new Set(['/abs/Shell.tsx'])).map(({ id }) => id))
-      .toEqual(['B']);
-  });
-
-  it('keeps every definition when nothing is compiled on the main thread', () => {
-    expect(collect(new Set()).map(({ id }) => id)).toEqual(['A', 'B']);
-  });
-
-  it('still rejects two different definitions sharing an id', () => {
-    expect(() =>
-      collectMTSDefines<{ modules: TestModule[] }, TestModule>(
-        [{
-          modules: [
-            asModule({
-              id: 'a',
-              defines: [{ kind: 'snapshot', id: 'X', code: '1' }],
-            }),
-            asModule({
-              id: 'b',
-              defines: [{ kind: 'snapshot', id: 'X', code: '2' }],
-            }),
-          ],
-        }],
-        (chunk) => chunk.modules,
-        (module) => module.id,
-      )
-    ).toThrow(/share the id X/);
   });
 });

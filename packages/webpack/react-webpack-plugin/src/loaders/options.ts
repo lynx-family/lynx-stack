@@ -263,11 +263,19 @@ export function getMainThreadTransformOptions(
 
   return {
     ...commonOptions,
-    // With no business code of its own, the main thread renders a root
+    // With no business code of its own, the main thread renders a
     // `<Background>`'s fallback and nothing else — folding the boundary here
-    // is what drops the `children` reference, and with it the app's module
-    // closure, from the main-thread bundle.
-    ...(enableMTSRendering === false && { foldBackgroundToFallback: true }),
+    // is what drops the `children` reference, and with it the deferred
+    // subtree's module closure, from the main-thread bundle.
+    //
+    // Collecting alongside it does not change this output (unlike on the
+    // background target, where it moves the definitions out): it only reports
+    // which definitions this bundle already carries as real code, so the
+    // assembled ones can leave them out.
+    ...(enableMTSRendering === false && {
+      foldBackgroundToFallback: true,
+      collectMTSDefines: true,
+    }),
     compat: typeof commonOptions.compat === 'object'
       ? {
         ...commonOptions.compat,

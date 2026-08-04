@@ -16,6 +16,7 @@
     "test": "playwright test",
     "test:debug": "playwright test --ui",
     "test:install": "playwright install --with-deps chromium firefox webkit",
+    "test:island": "playwright test --config=playwright.island.config.ts",
     "test:server": "rstest",
     "test:update": "playwright test --ui --update-snapshots"
   },
