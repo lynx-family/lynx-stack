@@ -35,18 +35,25 @@ import type { RspackChain } from '@rsbuild/core'
 const BACKGROUND_IMPORT_RE =
   /import[^{}]*\{[^}]*\bBackground\b[^}]*\}\s*from\s*['"]@lynx-js\/react(?:\/[^'"]*)?['"]/
 
-// `<Background>` sitting directly inside a `.render(` call (`root.render(...)`,
-// `createRoot().render(...)`, …). `\s*` spans the whitespace/newlines a
-// formatter inserts between `.render(` and the opening tag.
-const ROOT_BACKGROUND_RENDER_RE = /\.render\(\s*<Background[\s/>]/
+// `<Background>` at the root of a `.render(` call (`root.render(...)`,
+// `createRoot().render(...)`, …). Host-element wrappers are allowed in
+// between — `root.render(<page><Background …>…</page>)` is the idiomatic
+// shape — and only those: a JSX name starting with a lowercase letter is a
+// host element by the JSX rules, while a *component* wrapper would mean the
+// boundary is not statically at the root and must not be detected.
+const ROOT_BACKGROUND_RENDER_RE =
+  /\.render\(\s*(?:<[a-z][\w.-]*(?:\s[^>]*)?>\s*)*<Background[\s/>]/
 
-// The opt-in twin. `<MainThread>` at the render root declares that the wrapped
-// island — and only it — is the main thread's first frame, which is the same
-// whole-program statement a root `<Background>` makes from the other end: no
-// business code needs to be compiled for the main thread except the island.
+// The opt-in twin, matched the same way. `<MainThread>` at the render root
+// says the wrapped island — and only it — is the main thread's first frame,
+// which is the same whole-program statement a root `<Background>` makes from
+// the other end: no business code needs to be compiled for the main thread
+// except what the boundary names.
 const MAIN_THREAD_IMPORT_RE =
   /import[^{}]*\{[^}]*\bMainThread\b[^}]*\}\s*from\s*['"]@lynx-js\/react(?:\/[^'"]*)?['"]/
-const ROOT_MAIN_THREAD_RENDER_RE = /\.render\(\s*<MainThread[\s/>]/
+
+const ROOT_MAIN_THREAD_RENDER_RE =
+  /\.render\(\s*(?:<[a-z][\w.-]*(?:\s[^>]*)?>\s*)*<MainThread[\s/>]/
 
 /**
  * Whether a single entry's source declares a root-level `<Background>`.
@@ -70,7 +77,10 @@ export function sourceHasRootMainThread(source: string): boolean {
 }
 
 /**
- * Whether a single entry's source declares either root-level boundary.
+ * Whether a single entry's source declares either root-level first-screen
+ * boundary. Both mean the same thing to the build: this entry is compiled for
+ * the main thread, and what it renders there is what the boundary names — a
+ * `<Background>`'s fallback, or a `<MainThread>`'s island.
  *
  * @internal
  */
@@ -112,7 +122,7 @@ export function resolveEnableMTSRendering(
 
   for (const file of entryFiles) {
     const source = tryReadFile(file)
-    if (source !== undefined && sourceHasRootBoundary(source)) {
+    if (source !== undefined && sourceHasRootBackground(source)) {
       return false
     }
   }
@@ -127,85 +137,6 @@ function tryReadFile(file: string): string | undefined {
     // Not a readable local file (e.g. a bare specifier or a virtual entry).
     return undefined
   }
-}
-
-/**
- * Best-effort extraction of the root `<Background>`'s `fallback={…}` attribute
- * value from an entry source: find the `<Background` that sits in a
- * `.render(...)` call, then the `fallback` attribute inside that tag (scanning
- * with brace balance, since the value may nest JSX with its own braces).
- *
- * Returns `undefined` when there is no root `<Background>` or no inline
- * `fallback` attribute to inspect (e.g. `fallback={fallbackFromElsewhere}` is
- * still inspected, but yields no element to flag).
- */
-function extractRootFallbackAttribute(source: string): string | undefined {
-  const render = ROOT_BACKGROUND_RENDER_RE.exec(source)
-    ?? ROOT_MAIN_THREAD_RENDER_RE.exec(source)
-  if (!render) {
-    return undefined
-  }
-  const tagStart = source.indexOf('<', render.index + '.render('.length - 1)
-  if (tagStart === -1) {
-    return undefined
-  }
-
-  // The opening tag ends at the first `>` at brace depth 0 (a `>` inside a
-  // `fallback={<view/>}` value sits at depth ≥ 1).
-  let tagEnd = source.length
-  let depth = 0
-  for (let i = tagStart; i < source.length; i++) {
-    const ch = source[i]
-    if (ch === '{') depth++
-    else if (ch === '}') depth--
-    else if (ch === '>' && depth === 0) {
-      tagEnd = i
-      break
-    }
-  }
-
-  const fallbackIdx = source.slice(tagStart, tagEnd).search(/\bfallback\s*=/)
-  if (fallbackIdx === -1) {
-    return undefined
-  }
-  const braceStart = source.indexOf('{', tagStart + fallbackIdx)
-  if (braceStart === -1 || braceStart >= tagEnd) {
-    return undefined
-  }
-  depth = 0
-  for (let i = braceStart; i < source.length; i++) {
-    const ch = source[i]
-    if (ch === '{') depth++
-    else if (ch === '}') {
-      depth--
-      if (depth === 0) {
-        return source.slice(braceStart + 1, i)
-      }
-    }
-  }
-  return undefined
-}
-
-/**
- * Guardrail for the assembled main-thread bundle: a root `<Background>`'s
- * `fallback` is what the 0.0 first screen renders, and with no business code
- * compiled for the main thread a *user component* in that fallback would
- * silently render nothing. Flags a capitalized JSX tag in the fallback so the
- * build can warn.
- *
- * Best-effort by design (regex + brace scan, not a parse): it flags the
- * canonical inline-fallback shape and stays silent on anything it cannot see.
- *
- * @internal
- */
-export function rootFallbackHasUserComponent(
-  source: string,
-): boolean {
-  const fallback = extractRootFallbackAttribute(source)
-  if (fallback === undefined) {
-    return false
-  }
-  return /<\s*[A-Z]/.test(fallback)
 }
 
 /**
@@ -270,24 +201,33 @@ export function collectEntryImportsByEntry(
   return byEntry
 }
 
-const noop = (): void => {
-  // The loaders hook resolves silently; the entry hook owns the warnings.
-}
-
 /**
- * How the first screen is built for this compilation.
+ * The entries whose sources declare a root-level `<Background>`, and so bring
+ * a fallback the main thread should compile and render.
  *
  * @internal
  */
-export interface ResolvedMTSRendering {
-  /** Whether business code is compiled for, and rendered by, the main thread. */
-  enableMTSRendering: boolean
-  /**
-   * Whether an entry declares a root-level `<MainThread>`, i.e. whether the
-   * assembled main-thread bundle needs the island entry (which brings the
-   * main-thread renderer back in for the island's subtree).
-   */
-  hasRootIsland: boolean
+export function entriesDeclaringRootBoundary(
+  chain: RspackChain,
+  rootPath: string,
+): Set<string> {
+  const declaring = new Set<string>()
+  for (
+    const [entryName, files] of collectEntryImportsByEntry(chain, rootPath)
+  ) {
+    for (const file of files) {
+      const source = tryReadFile(file)
+      if (source !== undefined && sourceHasRootBoundary(source)) {
+        declaring.add(entryName)
+        break
+      }
+    }
+  }
+  return declaring
+}
+
+const noop = (): void => {
+  // The loaders hook resolves silently; the entry hook owns the warnings.
 }
 
 /**
@@ -311,42 +251,29 @@ export function resolveMTSRendering(
   chain: RspackChain,
   rootPath: string,
   warn: (message: string) => void = noop,
-): ResolvedMTSRendering {
-  const sourcesByEntry = new Map<string, string[]>()
-  for (
-    const [entryName, files] of collectEntryImportsByEntry(chain, rootPath)
-  ) {
-    sourcesByEntry.set(
-      entryName,
-      files
-        .map((file) => tryReadFile(file))
-        .filter((source): source is string => source !== undefined),
-    )
-  }
-  const hasRootIsland = [...sourcesByEntry.values()]
-    .some((sources) =>
-      sources.some((source) => sourceHasRootMainThread(source))
-    )
-
+): boolean {
   if (typeof options.enableMTSRendering === 'boolean') {
     // The explicit switches skip detection entirely. `false` +
     // `experimental_useElementTemplate` is rejected eagerly by
-    // `pluginReactLynx` before any hook runs. An island still needs the
-    // island entry, so the root `<MainThread>` scan runs either way — it is
-    // the placement of the first frame, not the mode.
-    return {
-      enableMTSRendering: options.enableMTSRendering,
-      hasRootIsland: hasRootIsland && !options.enableMTSRendering,
-    }
+    // `pluginReactLynx` before any hook runs.
+    return options.enableMTSRendering
   }
   if (!isProd) {
-    return { enableMTSRendering: true, hasRootIsland: false }
+    return true
   }
 
-  const detected = [...sourcesByEntry.values()]
-    .some((sources) => sources.some((source) => sourceHasRootBoundary(source)))
+  const byEntry = collectEntryImportsByEntry(chain, rootPath)
+  const sourcesByEntry = new Map<string, string[]>()
+  let detected = false
+  for (const [entryName, files] of byEntry) {
+    const sources = files
+      .map((file) => tryReadFile(file))
+      .filter((source): source is string => source !== undefined)
+    sourcesByEntry.set(entryName, sources)
+    detected ||= sources.some((source) => sourceHasRootBoundary(source))
+  }
   if (!detected) {
-    return { enableMTSRendering: true, hasRootIsland: false }
+    return true
   }
 
   if (options.experimental_useElementTemplate) {
@@ -355,7 +282,7 @@ export function resolveMTSRendering(
         + 'does not support disabling main-thread rendering yet — keeping the classic build. '
         + 'The boundary still renders on the main thread at runtime.',
     )
-    return { enableMTSRendering: true, hasRootIsland: false }
+    return true
   }
   if (options.enableSSR) {
     warn(
@@ -363,14 +290,13 @@ export function resolveMTSRendering(
         + 'does not support disabling main-thread rendering yet — keeping the classic build. '
         + 'The boundary still renders on the main thread at runtime.',
     )
-    return { enableMTSRendering: true, hasRootIsland: false }
+    return true
   }
 
   for (const [entryName, sources] of sourcesByEntry) {
-    const declaring = sources.filter((source) => sourceHasRootBoundary(source))
-    if (declaring.length === 0) {
+    if (!sources.some((source) => sourceHasRootBoundary(source))) {
       // The mode applies to the whole build: an entry without a root
-      // boundary gets an empty first frame (the `fallback={null}`
+      // <Background> gets an empty first frame (the `fallback={null}`
       // degenerate case) — worth saying out loud under `'auto'`.
       warn(
         `Entry ${
@@ -380,25 +306,8 @@ export function resolveMTSRendering(
           + `empty until the background hydrates. Add a root <Background fallback={…}> to it, `
           + `or set \`enableMTSRendering: true\` to keep the classic build.`,
       )
-      continue
-    }
-    for (const source of declaring) {
-      // A user component in the *fallback* renders nothing: the fallback is
-      // painted from an assembled snapshot definition, not from code. That
-      // holds for both boundaries — a `<MainThread>` renders its island, not
-      // its fallback, so the fallback is still the no-code path.
-      if (rootFallbackHasUserComponent(source)) {
-        warn(
-          `The root first-screen fallback of entry ${
-            JSON.stringify(entryName)
-          } `
-            + `appears to contain a user component. Business code is not compiled for the `
-            + `main thread in this mode, so it would render nothing on the first screen — compose `
-            + `the fallback from static host elements (<view>, <text>, …) instead.`,
-        )
-      }
     }
   }
 
-  return { enableMTSRendering: false, hasRootIsland }
+  return false
 }

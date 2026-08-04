@@ -92,7 +92,7 @@ async function buildIslandFixture(
 }
 
 describe('root <MainThread> island build', () => {
-  test('compiles the island into the main thread and nothing else', async () => {
+  test('compiles the island for the main thread and nothing behind a <Background>', async () => {
     const tmp = await fs.mkdtemp(
       path.join(tmpdir(), 'rspeedy-react-test-root-main-thread-'),
     )
@@ -105,33 +105,31 @@ describe('root <MainThread> island build', () => {
 
       expect(warnings).toEqual([])
 
-      // The mode is on: the bundle is assembled from the definitions the
+      // A root `<MainThread>` turns the mode on by itself, exactly as a root
+      // `<Background>` does: the bundle is assembled from the definitions the
       // background compilation collected.
       expect(mainThread).toContain('__initMTSDefines')
 
       // The island's render *body* is on the main thread — not just its
-      // markup, which a snapshot definition would have carried anyway.
+      // markup, which a snapshot definition would have carried anyway…
       expect(mainThread).toContain('root-main-thread-body-marker')
       expect(mainThread).toContain('root-main-thread-island-marker')
       // …and so is its worklet.
       expect(mainThread).toContain('root-main-thread-worklet-marker')
-      // …registered as the first frame through the island entry.
-      expect(mainThread).toContain('__REACT_LYNX_MTS_ROOT_ISLAND__')
 
-      // The deferred subtree is not. `Feed` is `'background only'`, so only
-      // its element definition survives into the main-thread layer — the
-      // hydration needs that to build the real content — while the code its
-      // body pulled in is gone.
-      expect(mainThread).toContain('root-main-thread-feed-marker')
+      // What the island defers is not. The `<Background>` inside it folds to
+      // its fallback on the main thread, so `Feed`'s body — and the code it
+      // imported — never reaches this bundle. Its element definition still
+      // travels, through the assembled definitions, because the hydration
+      // needs it to build the real content.
+      expect(mainThread).not.toContain('root-main-thread-feed-body-marker')
       expect(mainThread).not.toContain('root-main-thread-heavy-marker')
+      expect(mainThread).toContain('root-main-thread-feed-marker')
       expect(background).toContain('root-main-thread-heavy-marker')
 
-      // Every snapshot definition is registered exactly once: the island's
-      // module registers its own, so the assembly must leave it out.
-      const islandSnapshot = /__snapshot_[0-9a-f]+_[0-9a-f]+_\d+/.exec(
-        mainThread.slice(mainThread.indexOf('root-main-thread-island-marker')),
-      )
-      expect(islandSnapshot).not.toBeNull()
+      // Every snapshot definition is registered exactly once: a module
+      // compiled for the main thread registers its own, so the assembly must
+      // leave it out.
       for (
         const id of new Set(
           mainThread.match(/__snapshot_[0-9a-f]+_[0-9a-f]+_\d+/g) ?? [],
@@ -150,28 +148,23 @@ describe('root <MainThread> island build', () => {
     }
   })
 
-  test('says so when the root boundary wraps an unmarked component', async () => {
+  test(`'main thread component' reaches the main thread with nothing referencing it there`, async () => {
     const tmp = await fs.mkdtemp(
-      path.join(tmpdir(), 'rspeedy-react-test-root-main-thread-unmarked-'),
+      path.join(tmpdir(), 'rspeedy-react-test-main-thread-component-'),
     )
 
     try {
-      const { mainThread, warnings } = await buildIslandFixture(
-        'unmarked.tsx',
-        tmp,
-      )
+      const { mainThread } = await buildIslandFixture('index.tsx', tmp)
 
-      expect(warnings.join('\n')).toContain(`'main thread component'`)
-      expect(warnings.join('\n')).toContain('<Plain>')
-
-      // The component's render body stays off the main thread — only its
-      // snapshot definition travels, as for any other module…
-      expect(mainThread).not.toContain('root-main-thread-unmarked-body-marker')
-      expect(mainThread).toContain('root-main-thread-unmarked-marker')
-      // …so the boundary's static fallback paints instead, through the same
-      // channel a root `<Background fallback>` uses.
-      expect(mainThread).toContain('__setRootMTSFallback')
-      expect(mainThread).toContain('root-main-thread-fallback-marker')
+      // `Widget` sits inside `Feed`, behind the `<Background>` the main
+      // thread folds away — nothing on the first-frame render path
+      // references it. The marker is what puts its module in the bundle
+      // anyway, so it is there to render whenever it is placed.
+      expect(mainThread).toContain('root-main-thread-widget-body-marker')
+      expect(mainThread).toContain('root-main-thread-widget-marker')
+      // Its owner is still out, which is the point: the marker pulls in one
+      // module, not the subtree it was reached through.
+      expect(mainThread).not.toContain('root-main-thread-feed-body-marker')
     } finally {
       await fs.rm(tmp, { recursive: true, force: true })
     }

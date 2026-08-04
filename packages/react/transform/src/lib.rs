@@ -5,6 +5,7 @@
 extern crate napi_derive;
 mod bundle;
 mod esbuild;
+mod swc_plugin_background_fallback;
 mod swc_plugin_compat_post;
 mod swc_plugin_extract_str;
 mod swc_plugin_refresh;
@@ -250,6 +251,16 @@ pub struct TransformNodiffOptions {
   /// @internal
   #[napi(js_name = "collectMTSDefines")]
   pub collect_mts_defines: Option<bool>,
+  /// Fold `<Background>` to its `fallback` at compile time.
+  ///
+  /// Set on the main-thread target when the main thread compiles no business
+  /// code of its own: the `children` reference is what would otherwise keep
+  /// the whole app in the main-thread module graph, while the `fallback` is
+  /// compiled for the main thread as ordinary code.
+  ///
+  /// @internal
+  #[napi(js_name = "foldBackgroundToFallback")]
+  pub fold_background_to_fallback: Option<bool>,
   pub input_source_map: Option<String>,
 }
 
@@ -279,6 +290,7 @@ impl Default for TransformNodiffOptions {
       experimental_transform_builtin_attribute_names: None,
       inject: Some(Either::A(false)),
       collect_mts_defines: None,
+      fold_background_to_fallback: None,
       input_source_map: None,
     }
   }
@@ -327,21 +339,14 @@ pub struct TransformNodiffOutput {
   pub main_thread_islands: Option<MainThreadIslands>,
 }
 
-/// The compile-time half of the main-thread islands declared by one module:
-/// the components marked with the `'main thread component'` directive, and a
-/// root-level `<MainThread>` naming the island that is the first frame.
+/// The components one module marks with the `'main thread component'`
+/// directive — the definition-site half of a main-thread island.
 ///
 /// @internal
 #[napi(object)]
 pub struct MainThreadIslands {
   /// @internal
   pub components: Vec<MainThreadIslandComponent>,
-  /// @internal
-  #[napi(js_name = "rootIsland")]
-  pub root_island: Option<RootMainThreadIsland>,
-  /// @internal
-  #[napi(js_name = "rootIslandWarning")]
-  pub root_island_warning: Option<String>,
 }
 
 /// @internal
@@ -351,17 +356,6 @@ pub struct MainThreadIslandComponent {
   pub name: String,
   /// @internal
   pub exported: Option<String>,
-}
-
-/// @internal
-#[napi(object)]
-pub struct RootMainThreadIsland {
-  /// @internal
-  pub source: Option<String>,
-  /// @internal
-  pub imported: Option<String>,
-  /// @internal
-  pub local: String,
 }
 
 fn lower_to_main_thread_syntax(
@@ -450,8 +444,7 @@ fn take_element_templates(
 /// not use them.
 fn take_main_thread_islands(collector: &MainThreadIslandCollector) -> Option<MainThreadIslands> {
   let info = collector.borrow();
-  if info.components.is_empty() && info.root_island.is_none() && info.root_island_warning.is_none()
-  {
+  if info.components.is_empty() {
     return None;
   }
   Some(MainThreadIslands {
@@ -463,15 +456,6 @@ fn take_main_thread_islands(collector: &MainThreadIslandCollector) -> Option<Mai
         exported: component.exported.clone(),
       })
       .collect(),
-    root_island: info
-      .root_island
-      .as_ref()
-      .map(|island| RootMainThreadIsland {
-        source: island.source.clone(),
-        imported: island.imported.clone(),
-        local: island.local.clone(),
-      }),
-    root_island_warning: info.root_island_warning.clone(),
   })
 }
 
@@ -946,6 +930,11 @@ fn transform_react_lynx_inner(
       ),
     };
 
+    let background_fallback_plugin = Optional::new(
+      visit_mut_pass(swc_plugin_background_fallback::BackgroundFallbackVisitor::new()),
+      options.fold_background_to_fallback.unwrap_or(false),
+    );
+
     let pass = (
       &mut fixer(Some(&comments)),
       resolver(unresolved_mark, top_level_mark, true),
@@ -966,7 +955,14 @@ fn transform_react_lynx_inner(
         main_thread_component_plugin,
       ),
       refresh_plugin,
-      (compat_plugin, transform_builtin_attribute_names_plugin),
+      (
+        // Before any JSX-consuming pass: the folded-away `children` must never
+        // reach the snapshot/worklet transforms, so no definition is generated
+        // for a subtree the main thread will not render.
+        background_fallback_plugin,
+        compat_plugin,
+        transform_builtin_attribute_names_plugin,
+      ),
       worklet_plugin,
       css_scope_plugin,
       (

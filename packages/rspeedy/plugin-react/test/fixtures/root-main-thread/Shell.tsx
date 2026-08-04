@@ -2,12 +2,10 @@ import { Background } from '@lynx-js/react'
 
 import { Feed } from './Feed.js'
 
-export function Shell(): JSX.Element {
-  'main thread component'
-
+export function Shell() {
   // Body code, not markup: it reaches the main thread only because this
-  // module is compiled into the main-thread layer. A snapshot definition
-  // would carry the elements but not this.
+  // module is compiled for the main thread. A snapshot definition would
+  // carry the elements but not this.
   console.info('root-main-thread-body-marker')
 
   const onTap = (): void => {

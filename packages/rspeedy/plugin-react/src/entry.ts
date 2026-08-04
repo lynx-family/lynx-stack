@@ -20,7 +20,10 @@ import {
   WebEncodePlugin,
 } from '@lynx-js/template-webpack-plugin'
 
-import { resolveMTSRendering } from './mtsRendering.js'
+import {
+  entriesDeclaringRootBoundary,
+  resolveMTSRendering,
+} from './mtsRendering.js'
 import type { PluginReactLynxOptions } from './pluginReactLynx.js'
 import { resolveLazyBundleFetcher } from './resolveLazyBundleFetcher.js'
 
@@ -76,25 +79,50 @@ export function applyEntry(
     // assembled main-thread bundle (`enableMTSRendering: false` is its
     // implementation). Resolve `'auto'` against the entry sources before the
     // entry points are rewritten below.
-    const { enableMTSRendering: resolvedEnableMTSRendering, hasRootIsland } =
-      resolveMTSRendering(
-        options,
-        isProd,
-        chain,
-        api.context.rootPath,
-        (message) => void (api.logger ?? console).warn(message),
-      )
+    const resolvedEnableMTSRendering = resolveMTSRendering(
+      options,
+      isProd,
+      chain,
+      api.context.rootPath,
+      (message) => void (api.logger ?? console).warn(message),
+    )
 
-    // The island entry is the same assembled bundle plus the main-thread
-    // renderer, which only a build with an island pays for.
-    const mainThreadImports = resolvedEnableMTSRendering ? undefined : [
-      path.join(
-        reactLynxDir,
-        hasRootIsland
-          ? 'runtime/mts-rendering-disabled/islands.js'
-          : 'runtime/mts-rendering-disabled/index.js',
-      ),
-    ]
+    const mtsDefinesEntry = path.join(
+      reactLynxDir,
+      'runtime/mts-rendering-disabled/index.js',
+    )
+
+    // Which entries declare a root first-screen boundary, and so have
+    // something the main thread should compile and render. An entry without
+    // one keeps the degenerate shape: the assembled definitions only, and an
+    // empty first frame until the background hydrates.
+    const entriesWithRootBoundary = resolvedEnableMTSRendering
+      ? new Set<string>()
+      : entriesDeclaringRootBoundary(chain, api.context.rootPath)
+
+    /**
+     * The main thread compiles the entry only to render what its root
+     * boundary names: a `<Background>`'s fallback, which the transform folds
+     * the boundary down to so the app's own module closure never reaches this
+     * bundle — or a `<MainThread>`'s island, which is compiled for the main
+     * thread precisely because the boundary keeps referencing it.
+     */
+    const mainThreadImportsFor = (
+      entryName: string,
+      imports: string[],
+    ): string[] | undefined => {
+      if (resolvedEnableMTSRendering) {
+        return undefined
+      }
+      return entriesWithRootBoundary.has(entryName)
+        ? [mtsDefinesEntry, ...imports]
+        : [mtsDefinesEntry]
+    }
+
+    // The main thread only has something to render when at least one entry
+    // brought a first frame with it; otherwise the render path is shaken out.
+    const rendersOnMainThread = resolvedEnableMTSRendering
+      || entriesWithRootBoundary.size > 0
 
     const rsbuildConfig = api.getRsbuildConfig()
     const userConfig = api.getRsbuildConfig('original')
@@ -198,7 +226,7 @@ export function applyEntry(
           .entry(mainThreadEntry)
           .add({
             layer: LAYERS.MAIN_THREAD,
-            import: mainThreadImports ?? imports,
+            import: mainThreadImportsFor(entryName, imports) ?? imports,
             filename: mainThreadName,
           })
           .when(enabledHMR, entry => {
@@ -344,6 +372,7 @@ export function applyEntry(
         globalPropsMode,
         enableSSR,
         enableMTSRendering: resolvedEnableMTSRendering,
+        rendersOnMainThread,
         mainThreadChunks,
         mainThreadEntries,
         extractStr,

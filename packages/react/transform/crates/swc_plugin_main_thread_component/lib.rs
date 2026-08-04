@@ -1,29 +1,22 @@
 //! The compile-time half of a main-thread island.
 //!
-//! Two independent things are recognised here, both of which only *report*
-//! (plus strip the directive) — no codegen happens in this pass:
+//! `'main thread component'` is the definition-site marker of an island. It
+//! is the symmetric twin of `'background only'`: instead of keeping a
+//! component's render body *out* of the main-thread bundle, it pulls the
+//! whole module *into* the main-thread layer, so the component can render on
+//! the first frame even when the main thread otherwise compiles only what a
+//! root first-screen boundary reaches (`enableMTSRendering: false`).
 //!
-//! 1. `'main thread component'`, the definition-site marker. It is the
-//!    symmetric twin of `'background only'`: instead of keeping a component's
-//!    render body *out* of the main-thread bundle, it pulls the whole module
-//!    *into* the main-thread layer, so the component can render on the first
-//!    frame even when the main thread otherwise compiles no business code
-//!    (`enableMTSRendering: false`).
-//!
-//! 2. A root-level `<MainThread>` — `root.render(<MainThread>…</MainThread>)`
-//!    — which names the island that *is* the first frame. The build resolves
-//!    the wrapped component back to the module it is imported from and makes
-//!    the main-thread entry render it.
+//! This pass only *reports* (and strips the directive) — no codegen happens
+//! here; the build turns the report into an extra main-thread entry.
 //!
 //! The marker string is `"main thread component"` and not `"main thread"`:
 //! a component is a function, and `"main thread"` already means *worklet* to
 //! `swc_plugin_worklet` (`WorkletType::from_directive`, exact match). The two
 //! never collide.
 //!
-//! This pass must run before the worklet, snapshot and JSX transforms: it
-//! reads the directive prologue that the worklet transform also inspects, and
-//! it matches on JSX that the React transform would otherwise have rewritten
-//! into `_jsx(…)` calls.
+//! This pass must run before the worklet transform, which inspects the same
+//! directive prologue.
 
 use std::cell::RefCell;
 use std::rc::Rc;
@@ -35,12 +28,6 @@ use swc_core::ecma::{
 
 /// The definition-site marker of a main-thread component.
 pub const MAIN_THREAD_COMPONENT_DIRECTIVE: &str = "main thread component";
-
-/// The component name of the `<MainThread>` boundary, as imported from
-/// `@lynx-js/react`.
-const MAIN_THREAD_BOUNDARY: &str = "MainThread";
-
-const REACT_PACKAGE: &str = "@lynx-js/react";
 
 /// A component marked with [`MAIN_THREAD_COMPONENT_DIRECTIVE`].
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -54,28 +41,10 @@ pub struct MainThreadComponent {
   pub exported: Option<String>,
 }
 
-/// The island a root-level `<MainThread>` wraps.
-#[derive(Debug, Clone, PartialEq, Eq)]
-pub struct RootMainThreadIsland {
-  /// The module specifier the island component is imported from, or `None`
-  /// when it is declared in this very module.
-  pub source: Option<String>,
-  /// The name the island is imported under in its own module (`"default"`
-  /// for a default import), or `None` for a locally declared component.
-  pub imported: Option<String>,
-  /// The local identifier, for diagnostics.
-  pub local: String,
-}
-
 /// Everything this pass learned about one module.
 #[derive(Debug, Clone, Default, PartialEq, Eq)]
 pub struct MainThreadIslandInfo {
   pub components: Vec<MainThreadComponent>,
-  pub root_island: Option<RootMainThreadIsland>,
-  /// A root-level `<MainThread>` whose child could not be resolved to a
-  /// component. Reported so the build can explain the degraded first frame
-  /// instead of silently painting nothing.
-  pub root_island_warning: Option<String>,
 }
 
 pub type MainThreadIslandCollector = Rc<RefCell<MainThreadIslandInfo>>;
@@ -84,9 +53,6 @@ pub type MainThreadIslandCollector = Rc<RefCell<MainThreadIslandInfo>>;
 pub struct MainThreadComponentVisitor {
   collector: Option<MainThreadIslandCollector>,
 
-  /// `local ident` → `(module specifier, imported name)`, for every ES import
-  /// binding in the module.
-  imports: Vec<(Id, String, String)>,
   /// `local ident` → exported name.
   exports: Vec<(Id, String)>,
 }
@@ -111,14 +77,6 @@ impl MainThreadComponentVisitor {
         exported,
       });
     }
-  }
-
-  fn lookup_import(&self, local: &Ident) -> Option<(String, String)> {
-    self
-      .imports
-      .iter()
-      .find(|(id, _, _)| *id == local.to_id())
-      .map(|(_, source, imported)| (source.clone(), imported.clone()))
   }
 
   /// Strip a leading [`MAIN_THREAD_COMPONENT_DIRECTIVE`] from a function body,
@@ -160,29 +118,6 @@ impl MainThreadComponentVisitor {
   fn collect_bindings(&mut self, module: &Module) {
     for item in &module.body {
       match item {
-        ModuleItem::ModuleDecl(ModuleDecl::Import(import)) => {
-          let source = import.src.value.to_string_lossy().into_owned();
-          for specifier in &import.specifiers {
-            match specifier {
-              ImportSpecifier::Named(named) => {
-                let imported = match &named.imported {
-                  Some(ModuleExportName::Ident(ident)) => ident.sym.to_string(),
-                  Some(ModuleExportName::Str(str)) => str.value.to_string_lossy().into_owned(),
-                  None => named.local.sym.to_string(),
-                };
-                self
-                  .imports
-                  .push((named.local.to_id(), source.clone(), imported));
-              }
-              ImportSpecifier::Default(default) => {
-                self
-                  .imports
-                  .push((default.local.to_id(), source.clone(), "default".to_string()));
-              }
-              ImportSpecifier::Namespace(_) => {}
-            }
-          }
-        }
         ModuleItem::ModuleDecl(ModuleDecl::ExportDecl(export)) => match &export.decl {
           Decl::Fn(fn_decl) => {
             self
@@ -223,102 +158,6 @@ impl MainThreadComponentVisitor {
           }
         }
         _ => {}
-      }
-    }
-  }
-
-  /// `root.render(<MainThread>…</MainThread>)` — the declaration that the
-  /// wrapped subtree is the main thread's first frame.
-  fn visit_root_render(&mut self, call: &CallExpr) {
-    let Callee::Expr(callee) = &call.callee else {
-      return;
-    };
-    let Expr::Member(MemberExpr {
-      prop: MemberProp::Ident(prop),
-      ..
-    }) = &**callee
-    else {
-      return;
-    };
-    if prop.sym != *"render" {
-      return;
-    }
-    let Some(first) = call.args.first() else {
-      return;
-    };
-    if first.spread.is_some() {
-      return;
-    }
-    let Expr::JSXElement(element) = &*first.expr else {
-      return;
-    };
-    let JSXElementName::Ident(name) = &element.opening.name else {
-      return;
-    };
-    // Only a `MainThread` imported from `@lynx-js/react` (or a subpath of it)
-    // is the boundary; a same-named local component is not.
-    match self.lookup_import(name) {
-      Some((source, imported))
-        if imported == MAIN_THREAD_BOUNDARY
-          && (source == REACT_PACKAGE || source.starts_with(&format!("{REACT_PACKAGE}/"))) => {}
-      _ => return,
-    }
-
-    let island = element.children.iter().find_map(|child| match child {
-      JSXElementChild::JSXElement(child) => match &child.opening.name {
-        JSXElementName::Ident(ident) => Some(ident.clone()),
-        _ => None,
-      },
-      _ => None,
-    });
-
-    let Some(island) = island else {
-      self.warn_root_island(
-        "The root <MainThread> has no component child to render on the first frame.",
-      );
-      return;
-    };
-
-    // A host element (`<view>`, `<text>`, …) is not an island: it has no
-    // render body to compile into the main-thread layer. The static
-    // `fallback` channel already paints those.
-    if !island
-      .sym
-      .chars()
-      .next()
-      .is_some_and(|c| c.is_ascii_uppercase())
-    {
-      self.warn_root_island(&format!(
-        "The root <MainThread> wraps the host element <{}>. Wrap a component marked with the '{}' directive instead, or declare the static markup through <Background fallback>.",
-        island.sym, MAIN_THREAD_COMPONENT_DIRECTIVE,
-      ));
-      return;
-    }
-
-    let (source, imported) = match self.lookup_import(&island) {
-      Some((source, imported)) => (Some(source), Some(imported)),
-      None => (None, None),
-    };
-
-    if let Some(collector) = &self.collector {
-      let mut info = collector.borrow_mut();
-      // One render root per module: the first declaration wins, exactly like
-      // the root `<Background>` fallback.
-      if info.root_island.is_none() {
-        info.root_island = Some(RootMainThreadIsland {
-          source,
-          imported,
-          local: island.sym.to_string(),
-        });
-      }
-    }
-  }
-
-  fn warn_root_island(&mut self, message: &str) {
-    if let Some(collector) = &self.collector {
-      let mut info = collector.borrow_mut();
-      if info.root_island_warning.is_none() {
-        info.root_island_warning = Some(message.to_string());
       }
     }
   }
@@ -374,11 +213,6 @@ impl VisitMut for MainThreadComponentVisitor {
         }
       }
     }
-    node.visit_mut_children_with(self);
-  }
-
-  fn visit_mut_call_expr(&mut self, node: &mut CallExpr) {
-    self.visit_root_render(node);
     node.visit_mut_children_with(self);
   }
 }
@@ -470,6 +304,41 @@ mod tests {
   }
 
   #[test]
+  fn marks_a_default_exported_component() {
+    let (info, _) = run(
+      r#"
+      export default function Header() {
+        'main thread component';
+        return null;
+      }
+      "#,
+    );
+    assert_eq!(
+      info.components,
+      vec![MainThreadComponent {
+        name: "Header".into(),
+        exported: Some("default".into())
+      }]
+    );
+  }
+
+  #[test]
+  fn only_matches_the_first_statement() {
+    // A directive prologue is the first statement or nothing; anything else
+    // is an ordinary string expression the author did not mean as a marker.
+    let (info, _) = run(
+      r#"
+      export function Header() {
+        const x = 1;
+        'main thread component';
+        return null;
+      }
+      "#,
+    );
+    assert!(info.components.is_empty());
+  }
+
+  #[test]
   fn ignores_the_worklet_directive() {
     let (info, _) = run(
       r#"
@@ -480,68 +349,5 @@ mod tests {
       "#,
     );
     assert!(info.components.is_empty());
-  }
-
-  #[test]
-  fn resolves_a_root_main_thread_island() {
-    let (info, _) = run(
-      r#"
-      import { root, MainThread } from '@lynx-js/react';
-      import { Shell } from './Shell.js';
-      root.render(<MainThread fallback={<view />}><Shell /></MainThread>);
-      "#,
-    );
-    assert_eq!(
-      info.root_island,
-      Some(RootMainThreadIsland {
-        source: Some("./Shell.js".into()),
-        imported: Some("Shell".into()),
-        local: "Shell".into(),
-      })
-    );
-    assert_eq!(info.root_island_warning, None);
-  }
-
-  #[test]
-  fn ignores_a_main_thread_boundary_from_another_package() {
-    let (info, _) = run(
-      r#"
-      import { MainThread } from './my-ui.js';
-      import { Shell } from './Shell.js';
-      root.render(<MainThread><Shell /></MainThread>);
-      "#,
-    );
-    assert_eq!(info.root_island, None);
-  }
-
-  #[test]
-  fn warns_when_the_root_boundary_wraps_a_host_element() {
-    let (info, _) = run(
-      r#"
-      import { MainThread } from '@lynx-js/react';
-      root.render(<MainThread><view /></MainThread>);
-      "#,
-    );
-    assert_eq!(info.root_island, None);
-    assert!(info.root_island_warning.is_some());
-  }
-
-  #[test]
-  fn resolves_a_default_imported_island() {
-    let (info, _) = run(
-      r#"
-      import { MainThread } from '@lynx-js/react/internal';
-      import Shell from './Shell.js';
-      root.render(<MainThread><Shell /></MainThread>);
-      "#,
-    );
-    assert_eq!(
-      info.root_island,
-      Some(RootMainThreadIsland {
-        source: Some("./Shell.js".into()),
-        imported: Some("default".into()),
-        local: "Shell".into(),
-      })
-    );
   }
 }

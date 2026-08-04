@@ -18,7 +18,6 @@ import { createLynxProcessEvalResultRuntimeModule } from './LynxProcessEvalResul
 import {
   MTS_ISLANDS_BUILD_INFO,
   islandModuleWrapper,
-  rootIslandWrapper,
 } from './MainThreadIslands.js';
 import type { MTSIslands } from './MainThreadIslands.js';
 import {
@@ -56,21 +55,6 @@ export function collectElementTemplatesFromModule(
   }
 
   return elementTemplates;
-}
-
-/**
- * The requests an entry was configured with, as written in the entry map.
- *
- * Used to attribute a module that declares a root-level `<MainThread>` to the
- * entry it is the entry module of, before the chunk graph exists.
- */
-function entryRequests(compilation: Compilation, name: string): string[] {
-  const entry = (compilation as unknown as {
-    entries?: Map<string, { dependencies?: { request?: string }[] }>;
-  }).entries?.get(name);
-  return (entry?.dependencies ?? [])
-    .map((dependency) => dependency.request)
-    .filter((request): request is string => typeof request === 'string');
 }
 
 function isPlainRecord(value: unknown): value is Record<string, unknown> {
@@ -262,6 +246,21 @@ interface ReactWebpackPluginOptions {
   enableMTSRendering?: boolean;
 
   /**
+   * Whether the main thread has anything to render on the first screen.
+   *
+   * @remarks
+   *
+   * This is the runtime half of `enableMTSRendering` and diverges from
+   * it in exactly one case: the main thread compiles no business code, yet an
+   * entry declares a root `<Background>` whose fallback *is* compiled for it.
+   * The build is then still the assembled one, while the first screen renders
+   * that fallback.
+   *
+   * @defaultValue the value of `enableMTSRendering`
+   */
+  rendersOnMainThread?: boolean | undefined;
+
+  /**
    * The background entry name of each main-thread entry.
    */
   mainThreadEntries?: Record<string, string>;
@@ -352,6 +351,9 @@ class ReactWebpackPlugin {
       workletRuntimePath: '',
       experimental_useElementTemplate: false,
       enableMTSRendering: true,
+      // Left unset so it resolves to `enableMTSRendering`; only a build that
+      // compiles a root `<Background>`'s fallback for the main thread sets it.
+      rendersOnMainThread: undefined,
       mainThreadEntries: {},
       lazyBundleFetcher: 'QueryComponent',
     });
@@ -423,7 +425,9 @@ class ReactWebpackPlugin {
         options.experimental_useElementTemplate,
       ),
       __LAZY_BUNDLE_FETCHER__: JSON.stringify(options.lazyBundleFetcher),
-      __ENABLE_MTS_RENDERING__: JSON.stringify(options.enableMTSRendering),
+      __ENABLE_MTS_RENDERING__: JSON.stringify(
+        options.rendersOnMainThread ?? options.enableMTSRendering,
+      ),
     }).apply(compiler);
 
     if (options.enableMTSRendering === false) {
@@ -700,13 +704,14 @@ class ReactWebpackPlugin {
    * Compile the modules that declare main-thread islands into the
    * main-thread layer.
    *
-   * Under `enableMTSRendering: false` the main-thread entry is a framework
-   * entry and no business module reaches the main-thread layer. An island is
-   * the deliberate exception: each module that marks a component with
-   * `'main thread component'` enters the main-thread entries as an extra
-   * entry module, compiled with the LEPUS target, so its render body exists
-   * on the first frame. The module a root-level `<MainThread>` names
-   * additionally registers itself as *the* first frame.
+   * Under `enableMTSRendering: false` the main thread compiles only what a
+   * root first-screen boundary names, reached from the entry. A marked
+   * component that nothing on that path references — an island placed
+   * behind a `<Background>`, or resolved indirectly — would not be there at
+   * all, so each module that marks one enters the main-thread entries as an
+   * extra entry module, compiled with the LEPUS target. The marker is the
+   * definition-site guarantee that the component is first-frame capable,
+   * independent of who happens to reference it.
    *
    * Because the added modules are compiled in the main-thread layer, their
    * loader is the main-thread one, which never collects MTS defines — so an
@@ -732,135 +737,37 @@ class ReactWebpackPlugin {
       return;
     }
 
-    // Snapshot everything the module graph is asked for *before* the first
-    // `await`: awaiting while iterating `compilation.modules` lets the
-    // compilation take back the module graph the iterator is reading, which
-    // aborts the build.
+    // Drain the module graph before doing anything asynchronous: awaiting
+    // while iterating `compilation.modules` lets the compilation take back
+    // the module graph the iterator is reading, which aborts the build.
     const islandModules: string[] = [];
-    const rootIslands: {
-      resource: string;
-      context: string;
-      island: NonNullable<MTSIslands['rootIsland']>;
-    }[] = [];
-    const declaredBy = new Map<string, MTSIslands>();
-
     for (const module of compilation.modules) {
       const islands = module.buildInfo?.[MTS_ISLANDS_BUILD_INFO] as
         | MTSIslands
         | undefined;
-      if (!islands) {
+      if (!islands || islands.components.length === 0) {
         continue;
       }
       const resource = (module as { resource?: string }).resource;
-      if (typeof resource !== 'string') {
-        continue;
-      }
-      declaredBy.set(resource, islands);
-      if (islands.components.length > 0) {
+      if (typeof resource === 'string') {
         islandModules.push(resource);
       }
-      if (islands.rootIsland) {
-        rootIslands.push({
-          resource,
-          context: module.context ?? compiler.context,
-          island: islands.rootIsland,
-        });
-      }
     }
 
-    // Which main-thread entry an entry module belongs to is not knowable
-    // before the chunk graph exists, so entry ownership is resolved from the
-    // configured entry requests. A build whose entries the match cannot see
-    // falls back to registering everywhere, which is correct for the single
-    // entry case and only ambiguous for several islands in one build.
-    const entryOwners = new Map<string, string[]>();
-    for (
-      const [mainThreadEntry, backgroundEntry] of Object.entries(
-        mainThreadEntryMap,
-      )
-    ) {
-      for (const request of entryRequests(compilation, backgroundEntry)) {
-        const owners = entryOwners.get(request) ?? [];
-        owners.push(mainThreadEntry);
-        entryOwners.set(request, owners);
-      }
-    }
-
-    if (islandModules.length === 0 && rootIslands.length === 0) {
+    if (islandModules.length === 0) {
       return;
     }
 
-    const resolver = compilation.resolverFactory.get('normal', {
-      dependencyType: 'esm',
-    });
-    const resolve = (context: string, request: string, from: string) =>
-      new Promise<string>((resolve, reject) => {
-        resolver.resolve({}, context, request, {}, (err, resource) => {
-          if (err || typeof resource !== 'string') {
-            reject(
-              new Error(
-                `The main-thread island ${JSON.stringify(request)} of ${from} `
-                  + `resolved to no module to compile into the main-thread layer.`,
-              ),
-            );
-            return;
-          }
-          resolve(resource);
-        });
-      });
-
-    const entries: { wrapper: string; context: string; names: string[] }[] = [];
-
-    for (const resource of islandModules) {
-      entries.push({
-        wrapper: islandModuleWrapper(resource),
-        context: compiler.context,
-        // A marked component can be rendered from any entry, so every
-        // main-thread entry gets it. A module nobody renders costs size,
-        // not behavior.
-        names: mainThreadEntries,
-      });
-    }
-
-    for (const { resource, context, island } of rootIslands) {
-      // The island may be declared in the entry module itself, in which case
-      // there is no import to resolve.
-      const islandResource = island.source === undefined
-        ? resource
-        : await resolve(context, island.source, resource);
-
-      const declared = declaredBy.get(islandResource);
-      const imported = island.imported ?? island.local;
-      const isMarked = declared?.components.some(
-        (component) => component.exported === imported,
-      );
-      if (!isMarked) {
-        compilation.warnings.push(
-          new compiler.webpack.WebpackError(
-            `The root <MainThread> renders <${island.local}>, which is not `
-              + `marked with the 'main thread component' directive, so its render `
-              + `code is not compiled into the main-thread bundle. The first frame `
-              + `falls back to the boundary's static \`fallback\`. Add `
-              + `'main thread component' as the first statement of ${island.local}.`,
-          ),
-        );
-        continue;
-      }
-
-      entries.push({
-        wrapper: rootIslandWrapper(islandResource, imported),
-        context,
-        names: entryOwners.get(resource) ?? mainThreadEntries,
-      });
-    }
-
     await Promise.all(
-      entries.flatMap(({ wrapper, context, names }) =>
-        names.map((name) =>
+      islandModules.flatMap((resource) =>
+        // A marked component can be rendered from any entry, so every
+        // main-thread entry gets it. A module nobody renders costs size, not
+        // behavior.
+        mainThreadEntries.map((name) =>
           new Promise<void>((resolve, reject) => {
             compilation.addEntry(
-              context,
-              EntryPlugin.createDependency(wrapper),
+              compiler.context,
+              EntryPlugin.createDependency(islandModuleWrapper(resource)),
               { name, layer: LAYERS.MAIN_THREAD },
               (err) => {
                 if (err) {

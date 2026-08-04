@@ -3,7 +3,7 @@
 // LICENSE file in the root directory of this source tree.
 
 import { render } from 'preact';
-import { afterEach, beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, beforeAll, beforeEach, describe, expect, it } from 'vitest';
 
 import { Background, MainThread, useState } from '../../src/index';
 import { MAIN_THREAD_ROOT_ISLAND, installMainThreadIslandFirstFrame } from '../../src/main-thread-island';
@@ -24,22 +24,18 @@ beforeAll(() => {
 
 beforeEach(() => {
   globalEnvManager.resetEnv();
-  globalThis.__ENABLE_MTS_RENDERING__ = false;
   globalThis.__OnLifecycleEvent.mockClear();
 });
 
 afterEach(() => {
-  globalThis.__ENABLE_MTS_RENDERING__ = true;
-  delete globalThis[MAIN_THREAD_ROOT_ISLAND];
-  setMainThreadFirstFrame(undefined);
   elementTree.clear();
 });
 
 /**
- * The island: what the `'main thread component'` directive designates. Its
- * module is compiled into the main-thread layer, so this body runs on both
- * threads. `<Background>` inside it is the per-subtree opt-out — the main
- * thread renders the skeleton, the background renders the real feed.
+ * The island: the subtree a root `<MainThread>` wraps. Its module is compiled
+ * for the main thread, so this body runs on both threads. `<Background>`
+ * inside it is the per-subtree opt-out — the main thread renders the
+ * skeleton, the background renders the real feed.
  */
 function Shell() {
   const [title] = useState('island');
@@ -61,10 +57,17 @@ function Feed() {
   );
 }
 
-/** What `runtime/mts-rendering-disabled/islands.js` does at chunk bootstrap. */
-function installIsland(Island, renderStaticFallback = () => {}) {
-  globalThis[MAIN_THREAD_ROOT_ISLAND] = Island;
-  installMainThreadIslandFirstFrame(renderStaticFallback);
+/**
+ * What the entry does on the main thread once the build has compiled it:
+ * `root.render(<MainThread><Island/></MainThread>)`, then `renderPage`.
+ */
+function renderIsland(Island) {
+  __root.__jsx = (
+    <MainThread>
+      <Island />
+    </MainThread>
+  );
+  renderPage();
 }
 
 /** Hand the main thread's first screen over and apply the resulting patch. */
@@ -117,8 +120,7 @@ function operations(patch) {
 
 describe('main-thread island', () => {
   it('renders the island as the first frame', () => {
-    installIsland(Shell);
-    renderPage();
+    renderIsland(Shell);
 
     // Not the empty page of the plain assembled bundle: the island ran on the
     // main thread, and `<Background>` inside it rendered its fallback.
@@ -145,8 +147,7 @@ describe('main-thread island', () => {
   });
 
   it('adopts the island instead of recreating it', async () => {
-    installIsland(Shell);
-    renderPage();
+    renderIsland(Shell);
 
     // The elements the main thread built, by identity.
     const islandView = __root.__element_root.children[0];
@@ -224,8 +225,7 @@ describe('main-thread island', () => {
       );
     }
 
-    installIsland(Interactive);
-    renderPage();
+    renderIsland(Interactive);
 
     const islandText = __root.__element_root.children[0].children[0];
     expect(islandText.props.event['bindEvent:tap']).toBeDefined();
@@ -245,20 +245,17 @@ describe('main-thread island', () => {
     expect(islandText.props.event['bindEvent:tap']).toBeDefined();
   });
 
-  it('falls back to the static first frame when no island was registered', () => {
-    // What a build that could not compile the island into the main-thread
-    // bundle degrades to.
-    const renderStaticFallback = vi.fn();
-    installMainThreadIslandFirstFrame(renderStaticFallback);
+  it('paints nothing when the entry brought no island', () => {
+    // What a build whose entry declares no root boundary degrades to: the
+    // main thread has nothing to render, and the background's first-screen
+    // hydration inserts the whole tree.
     renderPage();
 
-    expect(renderStaticFallback).toHaveBeenCalledOnce();
     expect(__root.__element_root.children).toHaveLength(0);
   });
 
   it('keeps rendering the island when `updatePage` runs before the first screen', () => {
-    installIsland(Shell);
-    renderPage();
+    renderIsland(Shell);
 
     const before = JSON.stringify(__root.__element_root);
     // Native may push data before the background is ready; the pre-hydration

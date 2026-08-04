@@ -3,10 +3,7 @@
 // LICENSE file in the root directory of this source tree.
 import { describe, expect, it } from '@rstest/core';
 
-import {
-  islandModuleWrapper,
-  rootIslandWrapper,
-} from '../src/MainThreadIslands.js';
+import { islandModuleWrapper } from '../src/MainThreadIslands.js';
 import {
   MTS_DEFINES_BUILD_INFO,
   collectMTSDefines,
@@ -36,25 +33,6 @@ describe('islandModuleWrapper', () => {
 
     expect(source).not.toMatch(/=>/);
     expect(source).not.toMatch(/\b(let|const)\b/);
-  });
-});
-
-describe('rootIslandWrapper', () => {
-  it('registers a named export as the first frame', () => {
-    const source = decode(rootIslandWrapper('/abs/Shell.tsx', 'Shell'));
-
-    expect(source).toContain(
-      'import { Shell as island } from "/abs/Shell.tsx";',
-    );
-    expect(source).toContain(
-      'globalThis[Symbol.for("__REACT_LYNX_MTS_ROOT_ISLAND__")] = island;',
-    );
-  });
-
-  it('registers a default export as the first frame', () => {
-    const source = decode(rootIslandWrapper('/abs/Shell.tsx', 'default'));
-
-    expect(source).toContain('import island from "/abs/Shell.tsx";');
   });
 });
 

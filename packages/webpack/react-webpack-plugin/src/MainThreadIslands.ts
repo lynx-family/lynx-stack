@@ -26,23 +26,9 @@ export interface MTSIslandComponent {
   exported?: string | undefined;
 }
 
-/** The island a root-level `<MainThread>` wraps. */
-export interface MTSRootIsland {
-  /**
-   * The specifier the island component is imported from, or `undefined` when
-   * it is declared in the entry module itself.
-   */
-  source?: string | undefined;
-  /** The name it is imported under in its own module. */
-  imported?: string | undefined;
-  /** The local identifier, for diagnostics. */
-  local: string;
-}
-
 /** What one module contributed, as reported by the transform. */
 export interface MTSIslands {
   components: MTSIslandComponent[];
-  rootIsland?: MTSRootIsland | undefined;
 }
 
 /**
@@ -74,35 +60,6 @@ export function islandModuleWrapper(resource: string): string {
     `(globalThis[registry] = globalThis[registry] || new Map()).set(${
       JSON.stringify(resource)
     }, ns);`,
-  ].join('\n');
-  return `data:text/javascript,${encodeURIComponent(source)}`;
-}
-
-/**
- * The global the island entry hands the root island's component over through.
- * Must match `MAIN_THREAD_ROOT_ISLAND` in
- * `@lynx-js/react/internal/main-thread-island`.
- */
-const ROOT_ISLAND_SYMBOL = '__REACT_LYNX_MTS_ROOT_ISLAND__';
-
-/**
- * The virtual entry module that registers the root island — the component a
- * root-level `<MainThread>` wraps, i.e. the one the main thread renders as
- * its first frame.
- *
- * It is a real entry, so it runs at chunk bootstrap *after* the framework
- * entry. That ordering is why the framework entry (`islands.js`) defers the
- * first frame to `renderPage` instead of painting at module scope.
- */
-export function rootIslandWrapper(
-  resource: string,
-  imported: string,
-): string {
-  const source = [
-    imported === 'default'
-      ? `import island from ${JSON.stringify(resource)};`
-      : `import { ${imported} as island } from ${JSON.stringify(resource)};`,
-    `globalThis[Symbol.for(${JSON.stringify(ROOT_ISLAND_SYMBOL)})] = island;`,
   ].join('\n');
   return `data:text/javascript,${encodeURIComponent(source)}`;
 }

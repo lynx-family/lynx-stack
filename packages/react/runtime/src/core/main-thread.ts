@@ -17,19 +17,6 @@ export interface MainThreadProps {
    * adopts the elements the main thread already created.
    */
   children?: ReactNode | undefined;
-
-  /**
-   * The placeholder rendered on the first screen when the island is not
-   * available on the main thread — for example when the build could not
-   * compile it into the main-thread bundle.
-   *
-   * Keep the fallback static, for the same reason `<Background fallback>` has
-   * to be static: it only ever exists on the main thread, and the first-screen
-   * hydration replaces it.
-   *
-   * @defaultValue `null` (an empty first frame)
-   */
-  fallback?: ReactNode | undefined;
 }
 
 /**
@@ -50,7 +37,7 @@ export interface MainThreadProps {
  * import { Shell } from './Shell.js'
  *
  * root.render(
- *   <MainThread fallback={<view className='skeleton' />}>
+ *   <MainThread>
  *     <Shell />
  *   </MainThread>,
  * )
@@ -58,24 +45,18 @@ export interface MainThreadProps {
  *
  * A production build detects that root-level `<MainThread>` and stops
  * compiling business code for the main thread (the same `enableMTSRendering`
- * switch a root `<Background>` flips), *except* for the island: the module
- * `Shell` comes from is compiled into the main-thread layer, so the main
- * thread renders it — with working main-thread event handlers and worklets —
- * before the background exists.
+ * switch a root `<Background>` flips) — *except* for what the boundary keeps
+ * referencing. `Shell`, and everything it renders, is compiled for the main
+ * thread and runs there, with working main-thread event handlers and
+ * worklets, before the background exists.
  *
- * Because both threads render `children`, the first-screen hydration matches
- * the background's render against the island the main thread already built
- * and **adopts** it: the elements, their worklet contexts and their gesture
- * state survive the handover instead of being torn down and re-inserted.
- *
- * The island component itself must be authored with the
- * `'main thread component'` directive, which is what puts its module in the
- * main-thread bundle:
+ * Use `<Background>` inside the island for the parts that should not come
+ * along; the build folds those boundaries down to their `fallback`, so the
+ * deferred subtree's code never reaches the main-thread bundle:
  *
  * ```tsx
  * // Shell.tsx
  * export function Shell() {
- *   'main thread component';
  *   return (
  *     <view className='page'>
  *       <Header />
@@ -87,14 +68,15 @@ export interface MainThreadProps {
  * }
  * ```
  *
- * Everything the island renders is compiled into the main-thread layer with
- * it, so keep the island's imports small and mark the deferred parts with
- * `'background only'`.
+ * Because both threads render `children`, the first-screen hydration matches
+ * the background's render against the island the main thread already built
+ * and **adopts** it: the elements are taken over rather than torn down and
+ * re-inserted.
  *
  * @remarks
  * On a build that already renders everything on the main thread's first frame
  * (`enableMTSRendering: true`, the classic dual-thread build) the boundary is
- * a pass-through: both threads render `children` and `fallback` is unused.
+ * a pass-through and changes nothing.
  *
  * What adoption covers is exactly what IFR's hydration covers, because it is
  * the same hydration — the island is simply the only part of the tree the
@@ -103,6 +85,12 @@ export interface MainThreadProps {
  * than re-created. A `main-thread:ref` that no worklet closes over follows
  * the ordinary first-screen ref semantics: its first-screen cell is not
  * carried into the hydrated ref.
+ *
+ * A component that must be on the main thread even though nothing on the
+ * first-frame render path references it — one placed behind a
+ * `<Background>`, or resolved indirectly — declares that at its definition
+ * with the `'main thread component'` directive, which puts its module in the
+ * main-thread bundle regardless of who references it.
  *
  * @public
  */

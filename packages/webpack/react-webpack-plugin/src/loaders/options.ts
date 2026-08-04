@@ -258,11 +258,16 @@ export function getMainThreadTransformOptions(
 ): TransformNodiffOptions {
   const commonOptions = getCommonOptions.call(this, inputSourceMap);
 
-  const { shake } = this.getOptions();
+  const { shake, enableMTSRendering } = this.getOptions();
   const useElementTemplate = typeof commonOptions.elementTemplate === 'object';
 
   return {
     ...commonOptions,
+    // With no business code of its own, the main thread renders a root
+    // `<Background>`'s fallback and nothing else — folding the boundary here
+    // is what drops the `children` reference, and with it the app's module
+    // closure, from the main-thread bundle.
+    ...(enableMTSRendering === false && { foldBackgroundToFallback: true }),
     compat: typeof commonOptions.compat === 'object'
       ? {
         ...commonOptions.compat,

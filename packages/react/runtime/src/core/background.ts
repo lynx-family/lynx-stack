@@ -102,13 +102,17 @@ export interface BackgroundProps {
  * ```
  *
  * A production build detects the root-level `<Background>` and stops compiling
- * business code for the main thread altogether (see the `enableMTSRendering`
- * option of `pluginReactLynx`): the main-thread bundle is assembled from the
- * element and main-thread-script definitions collected while compiling the
- * background, and the first frame renders the static `fallback` through those
- * assembled definitions. Because no component body exists on the main thread
- * in this mode, the root fallback must be composed of static host elements
- * (`<view>`, `<text>`, …) rather than user components.
+ * the *deferred* subtree for the main thread (see the `enableMTSRendering`
+ * option of `pluginReactLynx`): the boundary is folded to its `fallback` at
+ * compile time, so `children` — and the module closure reachable only through
+ * it — never enters the main-thread bundle, while the app's element
+ * definitions still travel there for hydration to build the real tree from.
+ *
+ * The `fallback` stays ordinary main-thread code, so it may contain user
+ * components, hooks and computed children like any other subtree. What it
+ * must not do is reach for the deferred app: whatever the fallback references
+ * is compiled for the main thread, and that is the cost it pays for the first
+ * frame.
  *
  * @public
  */

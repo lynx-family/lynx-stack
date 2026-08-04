@@ -6,7 +6,7 @@ import type { Chunk, Compilation, RuntimeModule } from '@rspack/core';
 export const MTS_DEFINES_BUILD_INFO = 'lynx:mts-defines';
 
 export interface MTSDefine {
-  kind: 'snapshot' | 'worklet' | 'root-fallback';
+  kind: 'snapshot' | 'worklet';
   id: string;
   code: string;
 }
@@ -90,16 +90,7 @@ export function renderMTSDefines(
   defines: readonly MTSDefine[],
 ): string {
   const body = defines
-    .map(({ kind, id, code }) =>
-      // A `root-fallback` define carries no code of its own — it names the
-      // snapshot the entry's root `<Background>` declared as its static
-      // `fallback`, for the main-thread entry to render pre-hydration.
-      kind === 'root-fallback'
-        ? `// ${kind} ${id}\n`
-          + `typeof ReactLynx.__setRootMTSFallback === 'function' && `
-          + `ReactLynx.__setRootMTSFallback(${JSON.stringify(id)});`
-        : `// ${kind} ${id}\n{\n${code}\n}`
-    )
+    .map(({ kind, id, code }) => `// ${kind} ${id}\n{\n${code}\n}`)
     .join('\n');
 
   return `var __initMTSDefines = function (ReactLynx) {
@@ -115,10 +106,6 @@ export function renderLazyMTSDefines(
   defines: readonly MTSDefine[],
   moduleId: string,
 ): string {
-  // A lazy bundle has no render root of its own: its section installs
-  // definitions only, so a stray `root-fallback` define never re-targets the
-  // host card's first frame.
-  defines = defines.filter((define) => define.kind !== 'root-fallback');
   return `(function (globDynamicComponentEntry) {
   return {
     ids: [${JSON.stringify(moduleId)}],

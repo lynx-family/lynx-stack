@@ -122,7 +122,6 @@ describe('root <MainThread> island runtime', () => {
       const page = getPage()
       const painted = JSON.stringify(page)
       expect(painted).toContain('root-main-thread-island-marker')
-      expect(painted).not.toContain('root-main-thread-fallback-marker')
       // …including what `<Background>` defers: its fallback, not `Feed`.
       expect(painted).toContain('feed-skeleton')
       expect(painted).not.toContain('root-main-thread-feed-marker')

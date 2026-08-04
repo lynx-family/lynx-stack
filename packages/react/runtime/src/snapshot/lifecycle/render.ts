@@ -11,35 +11,15 @@ import { profileEnd, profileStart } from '../../shared/profile.js';
 import { render as renderToString } from '../renderToOpcodes/index.js';
 import { SnapshotInstance } from '../snapshot/snapshot.js';
 
-/**
- * What the main thread paints when it does *not* render the whole tree —
- * the assembled main-thread bundle of `enableMTSRendering: false` installs it
- * (see `runtime/mts-rendering-disabled/`).
- *
- * It runs from {@link renderMainThread}, i.e. inside `renderPage` after the
- * page element and `__root`'s elements exist, and not at module scope: the
- * island's component only becomes reachable once the entry chunk's *later*
- * entry modules — the ones the build adds for the island — have run.
- */
-let mainThreadFirstFrame: (() => void) | undefined;
-
-/**
- * @internal
- */
-function setMainThreadFirstFrame(render: () => void): void {
-  mainThreadFirstFrame = render;
-}
-
 function renderMainThread(): void {
   if (!__ENABLE_MTS_RENDERING__) {
-    if (mainThreadFirstFrame) {
-      try {
-        mainThreadFirstFrame();
-      } catch (e) {
-        lynx.reportError(e as Error);
-        (__root as SnapshotInstance).removeChildren();
-      }
-    }
+    return;
+  }
+
+  // With the main thread compiling no business code, an entry that declares
+  // no root `<Background>` never calls `root.render`, so there is nothing to
+  // render even though a sibling entry in the same build brought a fallback.
+  if (__root.__jsx === undefined) {
     return;
   }
 
@@ -64,4 +44,4 @@ function renderMainThread(): void {
   }
 }
 
-export { renderMainThread, setMainThreadFirstFrame };
+export { renderMainThread };
