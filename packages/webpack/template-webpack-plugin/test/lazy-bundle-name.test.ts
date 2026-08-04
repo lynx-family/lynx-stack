@@ -33,7 +33,10 @@ describe('resourcesToLazyBundleName', () => {
 
   test('replaces the directories of an overlong path with a digest', () => {
     const deep = resolve(...Array.from({ length: 8 }, () => 'a'.repeat(16)));
-    const name = resourcesToLazyBundleName([path.join(deep, 'Foo.tsx')], context);
+    const name = resourcesToLazyBundleName(
+      [path.join(deep, 'Foo.tsx')],
+      context,
+    );
 
     expect(name).toMatch(/^Foo\.tsx-[0-9a-f]{8}$/);
     expect(name).not.toContain('/');
