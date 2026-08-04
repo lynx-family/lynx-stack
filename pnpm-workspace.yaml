@@ -99,6 +99,7 @@ peerDependencyRules:
 # Default catalogs
 catalog:
   "@microsoft/api-extractor": "7.58.12"
+  typescript: &typescript-version "6.0.3"
 
 catalogs:
   # Packages vendored from the Lynx toolchain.
@@ -150,6 +151,14 @@ overrides:
   "@rsdoctor/types>@rspack/core": "$@rspack/core"
 
 packageExtensions:
+  # Typia's internal packages import TypeScript without declaring it. Keep
+  # their TypeFlags aligned with the TypeScript instance used by the transformer.
+  "@typia/core@*":
+    dependencies:
+      typescript: *typescript-version
+  "@typia/transform@*":
+    dependencies:
+      typescript: *typescript-version
   "@rspack/test-tools@*":
     dependencies:
       wast-loader: ^1.14.1

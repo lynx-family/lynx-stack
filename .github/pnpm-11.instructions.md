@@ -13,3 +13,5 @@ When bumping the `packageManager` pnpm version in package.json files, keep the `
 When adding Renovate npm minimum-release-age presets, mirror the delay in pnpm with `minimumReleaseAge` in `pnpm-workspace.yaml`; Renovate delegates lockfile maintenance to the package manager and does not enforce its own minimum release age for those updates.
 
 Do not add broad React or React DOM overrides in `pnpm-workspace.yaml`. Keep workspace React consumers on exact `react` and `react-dom` patch versions, and use scoped package metadata fixes when a tool package such as Rspress needs its internal React dependencies pinned to the same patch; Rspress SSG fails when pnpm resolves `react` and `react-dom` to different patch versions.
+
+When a tool's internal package imports TypeScript without declaring it, add an exact TypeScript dependency through a version-scoped `packageExtensions` entry. Do not override TypeScript globally, because tools such as `ts-blank-space` intentionally require an older TypeScript version.
