@@ -14,6 +14,14 @@ const SKIPPED_DIRECTORIES = new Set([
   'target',
 ]);
 
+function readPackageJson(path) {
+  try {
+    return JSON.parse(readFileSync(path, 'utf8'));
+  } catch {
+    return undefined;
+  }
+}
+
 function collectPackageJsonPaths(directory, found = new Map()) {
   for (const entry of readdirSync(directory, { withFileTypes: true })) {
     if (entry.isDirectory()) {
@@ -22,12 +30,10 @@ function collectPackageJsonPaths(directory, found = new Map()) {
       }
     } else if (entry.name === 'package.json') {
       const path = join(directory, entry.name);
-      try {
-        const { name } = JSON.parse(readFileSync(path, 'utf8'));
-        if (name && !found.has(name)) {
-          found.set(name, path);
-        }
-      } catch {}
+      const name = readPackageJson(path)?.name;
+      if (name && !found.has(name)) {
+        found.set(name, path);
+      }
     }
   }
   return found;
@@ -46,12 +52,7 @@ function majorsDeclaredInChangesets(changesets) {
 }
 
 function findBumpedPeers(packageJsonPath, bumpedByName) {
-  let peerDependencies;
-  try {
-    ({ peerDependencies } = JSON.parse(readFileSync(packageJsonPath, 'utf8')));
-  } catch {
-    return [];
-  }
+  const peerDependencies = readPackageJson(packageJsonPath)?.peerDependencies;
   return Object.entries(peerDependencies ?? {})
     .filter(([name]) => bumpedByName.has(name))
     .map(([name, range]) => ({
