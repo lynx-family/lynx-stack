@@ -2291,6 +2291,26 @@ test.describe('web-elements test suite', () => {
         top: 0,
       }));
       expect(scrollByCalls['horizontal']!.left).toBeGreaterThan(0);
+      await page.evaluate(() =>
+        new Promise<void>((resolve) => requestAnimationFrame(() => resolve()))
+      );
+      const changedScrollByCall = await page.evaluate(() => {
+        const list = document.querySelector('#vertical') as any;
+        list.setAttribute('scroll-orientation', 'horizontal');
+        const content = list.shadowRoot.querySelector('#content');
+        return new Promise<ScrollToOptions>((resolve) => {
+          content.scrollBy = (options: ScrollToOptions) => {
+            list.autoScroll({ rate: 100, start: false });
+            resolve(options);
+          };
+          list.autoScroll({ rate: 100, start: true });
+        });
+      });
+      expect(changedScrollByCall).toEqual(expect.objectContaining({
+        left: expect.any(Number),
+        top: 0,
+      }));
+      expect(changedScrollByCall.left).toBeGreaterThan(0);
     });
     test(
       'get-visible-cells',
