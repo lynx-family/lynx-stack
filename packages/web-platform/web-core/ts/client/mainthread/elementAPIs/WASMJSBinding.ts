@@ -32,6 +32,11 @@ const DOCUMENT_LEVEL_EVENTS = new Set(['keydown', 'keyup']);
 export class WASMJSBinding implements RustMainthreadContextBinding {
   wasmContext: InstanceType<MainThreadWasmContext> | undefined;
   disposeWasmContext?: () => void;
+  /**
+   * Detaches every listener registered via `__AddEventListener`. Installed by
+   * `createElementAPI`.
+   */
+  disposeElementEventListeners?: () => void;
   #addedEventListeners: Set<string> = new Set();
   #documentEventListeners: Set<string> = new Set();
   toBeEnabledElement: Set<HTMLElement> = new Set();
@@ -240,6 +245,7 @@ export class WASMJSBinding implements RustMainthreadContextBinding {
   // before another LynxView instance mounts, otherwise stale handlers stay
   // attached to `document` and fire against a torn-down wasmContext.
   disposeEventListeners() {
+    this.disposeElementEventListeners?.();
     for (const eventName of this.#addedEventListeners) {
       if (this.#documentEventListeners.has(eventName)) {
         document.removeEventListener(eventName, this.#commonEventHandler, true);

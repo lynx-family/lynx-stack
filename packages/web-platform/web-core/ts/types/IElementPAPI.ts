@@ -3,7 +3,7 @@ import type {
   ComponentAtIndexCallback,
   EnqueueComponentCallback,
 } from './Element.js';
-import type { LynxEventType } from './EventType.js';
+import type { LynxEventType, MainThreadScriptEvent } from './EventType.js';
 import type {
   I18nResourceTranslationOptions,
   PerformancePipelineOptions,
@@ -51,6 +51,49 @@ export type SetEventsPAPI = (
     function: ElementPAPIEventHandler;
   }[],
 ) => void;
+
+/**
+ * `options` accepted by `__AddEventListener` / `__RemoveEventListener`.
+ *
+ * Mirrors the keys read by `FiberAddEventListener` in
+ * `core/runtime/lepus/bindings/renderer_functions.cc`.
+ */
+export interface ElementEventListenerOptions {
+  capture?: boolean;
+  once?: boolean;
+  passive?: boolean;
+  /**
+   * Accepted for signature parity with the C++ PAPI. `AbortSignal`-style
+   * cancellation is not implemented on web; use `__RemoveEventListener`.
+   */
+  signal?: boolean;
+  /**
+   * `ClosureEventListener::ClosureType`: 0 `kNone` (plain callback),
+   * 1 `kJS`, 2 `kCore` (`bind` / `main-thread:bind`), 3 `kClient`
+   * (`native:bind`, callback is a handler *name*). Defaults to `kNone`.
+   */
+  closure_type?: number;
+  /**
+   * `Event::BindType`: 0 `kNone`, 1 `kBubble`, 2 `kCapture`,
+   * 3 `kCaptureCatch`, 4 `kBubbleCatch`, 5 `kGlobalBind`. Defaults to
+   * `kBubble`.
+   */
+  bind_type?: number;
+}
+
+/**
+ * The *function callback* form of element event binding, as used by buildless
+ * (vanilla) Lynx cards. Distinct from {@link AddEventPAPI} (`__AddEvent`),
+ * which binds a string handler name or a worklet object.
+ */
+export type AddEventListenerPAPI = (
+  element: HTMLElement,
+  name: string,
+  callback: ((event: MainThreadScriptEvent) => void) | string,
+  options?: ElementEventListenerOptions,
+) => void;
+
+export type RemoveEventListenerPAPI = AddEventListenerPAPI;
 
 export type AppendElementPAPI = (
   parent: HTMLElement,
@@ -364,6 +407,8 @@ export interface ElementPAPIs {
   __MarkPartElement: MarkPartElementPAPI;
   __MarkTemplateElement: MarkTemplateElementPAPI;
   __AddEvent: AddEventPAPI;
+  __AddEventListener: AddEventListenerPAPI;
+  __RemoveEventListener: RemoveEventListenerPAPI;
   __GetEvent: GetEventPAPI;
   __GetEvents: GetEventsPAPI;
   __SetEvents: SetEventsPAPI;
