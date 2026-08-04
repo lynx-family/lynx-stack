@@ -488,7 +488,7 @@ class ReactWebpackPlugin {
               runtimeRequirements.add(compiler.webpack.RuntimeGlobals.require);
               compilation.addRuntimeModule(
                 chunk,
-                new MTSDefinesRuntimeModule(backgroundEntry),
+                new MTSDefinesRuntimeModule(backgroundEntry, mainThreadEntry),
               );
             }
           },

@@ -170,3 +170,65 @@ describe('renderLazyMTSDefines', () => {
     );
   });
 });
+
+describe('subtracting what the main thread owns', () => {
+  const owned = (...keys: string[]) => new Set(keys);
+
+  const collectWithOwned = (
+    chunks: TestChunk[],
+    ownedKeys: Set<string>,
+  ): MTSDefine[] =>
+    collectMTSDefines<TestChunk, TestModule>(
+      chunks,
+      (chunk) => chunk.modules,
+      (module) => module.id,
+      ownedKeys,
+    );
+
+  it('drops a definition the main-thread bundle already carries', () => {
+    const defines = collectWithOwned([{
+      modules: [
+        asModule({
+          id: 'a',
+          defines: [snapshot('island'), snapshot('deferred')],
+        }),
+      ],
+    }], owned('snapshot:island'));
+
+    expect(defines.map(({ id }) => id)).toEqual(['deferred']);
+  });
+
+  it('still fails the build on id drift the main thread happens to own', () => {
+    // The drift alarm answers "do two background modules disagree on what
+    // this id means", which has nothing to do with who else emits it.
+    expect(() =>
+      collectWithOwned([{
+        modules: [
+          asModule({ id: 'a', defines: [snapshot('x', 'one')] }),
+          asModule({ id: 'b', defines: [snapshot('x', 'another')] }),
+        ],
+      }], owned('snapshot:x'))
+    ).toThrowError(/share the id x/);
+  });
+
+  it('subtracts by kind as well as id', () => {
+    const defines = collectWithOwned([{
+      modules: [
+        asModule({
+          id: 'a',
+          defines: [snapshot('x'), { kind: 'worklet', id: 'x', code: 'w' }],
+        }),
+      ],
+    }], owned('snapshot:x'));
+
+    expect(defines.map(({ kind }) => kind)).toEqual(['worklet']);
+  });
+
+  it('collects everything when the main thread owns nothing', () => {
+    const defines = collectWithOwned([{
+      modules: [asModule({ id: 'a', defines: [snapshot('A'), snapshot('B')] })],
+    }], owned());
+
+    expect(defines.map(({ id }) => id)).toEqual(['A', 'B']);
+  });
+});

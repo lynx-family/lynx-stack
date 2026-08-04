@@ -99,11 +99,6 @@ export function collectMTSDefines<TChunk, TModule>(
   const defines = new Map<string, MTSDefine>();
   for (const define of collected) {
     const key = `${define.kind}:${define.id}`;
-    if (owned?.has(key)) {
-      // Already in the main-thread bundle as real code — an island's own
-      // definition. Describing it again would only grow the assembly.
-      continue;
-    }
     const seen = defines.get(key);
     if (seen === undefined) {
       defines.set(key, define);
@@ -114,6 +109,13 @@ export function collectMTSDefines<TChunk, TModule>(
         `Two different main-thread definitions share the id ${define.id}.`,
       );
     }
+  }
+
+  // Subtract only once every definition has been through the drift check
+  // above: whether the main thread happens to own an id says nothing about
+  // whether two background modules disagree on what it means.
+  for (const key of owned ?? []) {
+    defines.delete(key);
   }
 
   return [...defines.values()];
@@ -160,13 +162,17 @@ export function renderLazyMTSDefines(
 
 type MTSDefinesRuntimeModule = new(
   backgroundEntry: string,
+  mainThreadEntry: string,
 ) => RuntimeModule;
 
 export function createMTSDefinesRuntimeModule(
   webpack: typeof import('@rspack/core').rspack,
 ): MTSDefinesRuntimeModule {
   return class MTSDefinesRuntimeModule extends webpack.RuntimeModule {
-    constructor(private readonly backgroundEntry: string) {
+    constructor(
+      private readonly backgroundEntry: string,
+      private readonly mainThreadEntry: string,
+    ) {
       super(
         'lynx main thread defines',
         webpack.RuntimeModule.STAGE_NORMAL,
@@ -195,11 +201,19 @@ export function createMTSDefinesRuntimeModule(
       const { chunkGraph } = compilation;
       const getModules = (chunk: Chunk) => chunkGraph.getChunkModules(chunk);
 
-      // What this main-thread chunk already carries as real code — the
-      // fallbacks it compiles — so the assembly describes only the deferred
-      // subtrees it does not.
-      const owned = this.chunk
-        ? collectOwnedMTSDefineKeys([this.chunk as Chunk], getModules)
+      // What the main thread already carries as real code — the fallbacks it
+      // compiles — so the assembly describes only the deferred subtrees it
+      // does not.
+      //
+      // Both sides of the subtraction are scoped to a whole entrypoint. Using
+      // this runtime module's own chunk instead would hide anything the main
+      // thread owns in a sibling initial chunk, which `splitChunks` produces
+      // as soon as the main thread compiles more than a few fallbacks.
+      const mainThreadEntrypoint = compilation.entrypoints.get(
+        this.mainThreadEntry,
+      );
+      const owned = mainThreadEntrypoint
+        ? collectOwnedMTSDefineKeys(mainThreadEntrypoint.chunks, getModules)
         : new Set<string>();
 
       return renderMTSDefines(
